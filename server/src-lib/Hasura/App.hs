@@ -56,7 +56,8 @@ import           Hasura.EncJSON
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.EventTrigger
 import           Hasura.Eventing.ScheduledTrigger
-import           Hasura.GraphQL.Execute                     (MonadGQLExecutionCheck (..),
+import           Hasura.GraphQL.Execute                     (ExecutionStep (..),
+                                                             MonadGQLExecutionCheck (..),
                                                              checkQueryInAllowlist)
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Action.Subscription
@@ -771,6 +772,9 @@ instance MonadGQLExecutionCheck PGMetadataStorageApp where
     req <- toParsed query
     checkQueryInAllowlist enableAL userInfo req sc
     return req
+
+  executeIntrospection _ introspectionQuery _ =
+    pure $ Right $ ExecStepRaw introspectionQuery
 
 instance MonadConfigApiHandler PGMetadataStorageApp where
   runConfigApiHandler = configApiGetHandler

@@ -423,7 +423,10 @@ The various types of queries are listed in the following table:
      - 1
      - Drop an inherited role
 
-
+   * - :ref:`metadata_set_graphql_introspection_options`
+     - :ref:`set_graphql_schema_introspection_options_args <set_graphql_schema_introspection_options_syntax>`
+     - 1
+     - Set graphql introspection options
 
 **See:**
 
@@ -537,3 +540,4 @@ The version is incremented on any operation that modified metadata as well as ``
   Custom Types <custom-types>
   Actions <actions>
   Manage Metadata <manage-metadata>
+  Introspection options <introspection>

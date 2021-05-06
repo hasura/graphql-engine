@@ -60,6 +60,7 @@ convertQuerySelSet
   :: forall m .
      ( MonadError QErr m
      , HasVersion
+     , MonadGQLExecutionCheck m
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -71,8 +72,10 @@ convertQuerySelSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
+  -> SetGraphqlIntrospectionOptions
   -> m (ExecutionPlan, [QueryRootField UnpreparedValue], G.SelectionSet G.NoFragments Variable)
-convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs varValsM = do
+convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs varValsM
+  introspectionDisabledRoles = do
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability, normalizedSelectionSet) <- parseGraphQLQuery gqlContext varDefs varValsM fields
 
@@ -91,8 +94,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
         AQQuery s -> (AEPSync $ resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders usrVars), _aaeName s, _aaeForwardClientHeaders s)
         AQAsync s -> (AEPAsyncQuery $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s, _aaaqName s, _aaaqForwardClientHeaders s)
       pure $ ExecStepAction (action, (ActionsInfo actionName fch))
-    RFRaw r ->
-      pure $ ExecStepRaw r
+    RFRaw r -> flip onLeft throwError =<< executeIntrospection userInfo r introspectionDisabledRoles
 
   -- See Note [Temporarily disabling query plan caching]
   pure (executionPlan, OMap.elems unpreparedQueries, normalizedSelectionSet)

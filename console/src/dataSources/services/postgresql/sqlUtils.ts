@@ -65,6 +65,21 @@ export const getFetchTablesListQuery = (options: {
   SELECT
     COALESCE(Json_agg(Row_to_json(info)), '[]' :: json) AS tables
   FROM (
+    with partitions as (
+      select array(
+        SELECT
+        child.relname       AS partition
+    FROM pg_inherits
+        JOIN pg_class child             ON pg_inherits.inhrelid   = child.oid
+        JOIN pg_namespace nmsp_child    ON nmsp_child.oid   = child.relnamespace
+    ${generateWhereClause(
+      options,
+      'child.relname',
+      'nmsp_child.nspname',
+      'where'
+    )}
+      ) as names
+    )
     SELECT
       pgn.nspname as table_schema,
       pgc.relname as table_name,
@@ -80,7 +95,7 @@ export const getFetchTablesListQuery = (options: {
       COALESCE(json_agg(DISTINCT row_to_json(ist) :: jsonb || jsonb_build_object('comment', obj_description(pgt.oid))) filter (WHERE ist.trigger_name IS NOT NULL), '[]' :: json) AS triggers,
       row_to_json(isv) AS view_info
 
-    FROM pg_class as pgc
+    FROM partitions, pg_class as pgc
     INNER JOIN pg_namespace as pgn
       ON pgc.relnamespace = pgn.oid
 
@@ -162,6 +177,7 @@ export const getFetchTablesListQuery = (options: {
   
     WHERE
       pgc.relkind IN ('r', 'v', 'f', 'm', 'p')
+      and NOT (pgc.relname = ANY (partitions.names)) 
       ${whereQuery}
     GROUP BY pgc.oid, pgn.nspname, pgc.relname, table_type, isv.*
   ) AS info;

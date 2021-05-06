@@ -133,6 +133,7 @@ func (o *ConsoleOptions) Run() error {
 		"dataApiVersion":       "",
 		"hasAccessKey":         adminSecretHeader == cli.XHasuraAccessKey,
 		"adminSecret":          o.EC.Config.ServerConfig.AdminSecret,
+		"assetsPath":           templateProvider.GetAssetsCDN(),
 		"assetsVersion":        consoleAssetsVersion,
 		"enableTelemetry":      o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":              o.EC.GlobalConfig.UUID,

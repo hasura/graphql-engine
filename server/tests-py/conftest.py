@@ -180,6 +180,15 @@ This option may result in test failures if the schema has to change between the 
         default="postgres"
     )
 
+    parser.addoption(
+        "--pro-tests",
+        action="store_true",
+        default=False,
+        help="Flag to specify if the pro tests are to be run"
+    )
+
+
+
 #By default,
 #1) Set default parallelism to one
 #2) Set test grouping to by filename (--dist=loadfile)
@@ -325,6 +334,12 @@ def functions_permissions_fixtures(hge_ctx):
 def inherited_role_fixtures(hge_ctx):
     if not hge_ctx.inherited_roles_tests:
         pytest.skip('These tests are meant to be run with --test-inherited-roles set')
+        return
+
+@pytest.fixture(scope='class')
+def pro_tests_fixtures(hge_ctx):
+    if not hge_ctx.pro_tests:
+        pytest.skip('These tests are meant to be run with --pro-tests set')
         return
 
 @pytest.fixture(scope='class')

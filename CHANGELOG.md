@@ -2,8 +2,17 @@
 
 ## Next release
 
+### Bug fixes and improvements
+
 (Add entries below in the order of: server, console, cli, docs, others)
 
+- server: fix query execution of custom function containing a composite argument type
+- server: fix a bug in query validation that would cause some queries using default variable values to be rejected (fix #6867)
+- server: custom URI schemes are now supported in CORS config (fix #5818) (#5940)
+- console: read-only modify page for mssql
+- console: filter out partitions from track table list and display partition info
+- console: fixes an issue where no schemas are listed on an MSSQL source
+- server: REST endpoint bugfix for UUID url params
 
 ## v2.0.0-alpha.10
 

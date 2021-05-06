@@ -202,6 +202,8 @@ parsePGValue ty val = case (ty, val) of
       PGLtxtquery -> PGValLtxtquery <$> parseJSON val
       PGUnknown tyName ->
         fail $ "A string is expected for type: " ++ T.unpack tyName
+      PGCompositeScalar tyName ->
+        fail $ "A string is expected for type: " ++ T.unpack tyName
 
 txtEncodedVal :: PGScalarValue -> TxtEncodedVal
 txtEncodedVal = \case
@@ -243,34 +245,35 @@ txtEncodedVal = \case
 
 pgTypeOid :: PGScalarType -> PQ.Oid
 pgTypeOid = \case
-  PGSmallInt    -> PTI.int2
-  PGInteger     -> PTI.int4
-  PGBigInt      -> PTI.int8
-  PGSerial      -> PTI.int4
-  PGBigSerial   -> PTI.int8
-  PGFloat       -> PTI.float4
-  PGDouble      -> PTI.float8
-  PGNumeric     -> PTI.numeric
-  PGMoney       -> PTI.numeric
-  PGBoolean     -> PTI.bool
-  PGChar        -> PTI.char
-  PGVarchar     -> PTI.varchar
-  PGText        -> PTI.text
-  PGCitext      -> PTI.text -- Explict type cast to citext needed, See also Note [Type casting prepared params]
-  PGDate        -> PTI.date
-  PGTimeStamp   -> PTI.timestamp
-  PGTimeStampTZ -> PTI.timestamptz
-  PGTimeTZ      -> PTI.timetz
-  PGJSON        -> PTI.json
-  PGJSONB       -> PTI.jsonb
-  PGGeometry    -> PTI.text -- we are using the ST_GeomFromGeoJSON($i) instead of $i
-  PGGeography   -> PTI.text
-  PGRaster      -> PTI.text -- we are using the ST_RastFromHexWKB($i) instead of $i
-  PGUUID        -> PTI.uuid
-  PGLtree       -> PTI.text
-  PGLquery      -> PTI.text
-  PGLtxtquery   -> PTI.text
-  (PGUnknown _) -> PTI.auto
+  PGSmallInt          -> PTI.int2
+  PGInteger           -> PTI.int4
+  PGBigInt            -> PTI.int8
+  PGSerial            -> PTI.int4
+  PGBigSerial         -> PTI.int8
+  PGFloat             -> PTI.float4
+  PGDouble            -> PTI.float8
+  PGNumeric           -> PTI.numeric
+  PGMoney             -> PTI.numeric
+  PGBoolean           -> PTI.bool
+  PGChar              -> PTI.char
+  PGVarchar           -> PTI.varchar
+  PGText              -> PTI.text
+  PGCitext            -> PTI.text -- Explict type cast to citext needed, See also Note [Type casting prepared params]
+  PGDate              -> PTI.date
+  PGTimeStamp         -> PTI.timestamp
+  PGTimeStampTZ       -> PTI.timestamptz
+  PGTimeTZ            -> PTI.timetz
+  PGJSON              -> PTI.json
+  PGJSONB             -> PTI.jsonb
+  PGGeometry          -> PTI.text -- we are using the ST_GeomFromGeoJSON($i) instead of $i
+  PGGeography         -> PTI.text
+  PGRaster            -> PTI.text -- we are using the ST_RastFromHexWKB($i) instead of $i
+  PGUUID              -> PTI.uuid
+  PGLtree             -> PTI.text
+  PGLquery            -> PTI.text
+  PGLtxtquery         -> PTI.text
+  (PGUnknown _)       -> PTI.auto
+  PGCompositeScalar _ -> PTI.auto
 
 binEncoder :: PGScalarValue -> Q.PrepArg
 binEncoder = \case

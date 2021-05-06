@@ -200,6 +200,7 @@ const loadSchema = configOptions => {
         ),
       ],
     };
+
     if (dataSource?.checkConstraintsSql) {
       body.args.push(
         getRunSqlQuery(
@@ -356,6 +357,7 @@ const fetchDataInit = (source, driver) => (dispatch, getState) => {
         schemaList,
       });
       let newSchema = '';
+      const { locationBeforeTransitions } = getState().routing;
       if (schemaList.length) {
         newSchema =
           dataSource.defaultRedirectSchema &&
@@ -363,7 +365,11 @@ const fetchDataInit = (source, driver) => (dispatch, getState) => {
             ? dataSource.defaultRedirectSchema
             : schemaList.sort(Intl.Collator().compare)[0];
       }
-      dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: newSchema });
+      if (
+        locationBeforeTransitions &&
+        !locationBeforeTransitions.pathname.includes('tables')
+      )
+        dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: newSchema });
       return dispatch(updateSchemaInfo()); // TODO
     },
     error => {
@@ -916,6 +922,52 @@ const fetchColumnTypeInfo = () => {
   };
 };
 
+const fetchPartitionDetails = table => {
+  return (dispatch, getState) => {
+    const url = Endpoints.query;
+    const currState = getState();
+    const { currentDataSource } = currState.tables;
+    const query = getRunSqlQuery(
+      dataSource.getPartitionDetailsSql(table.table_name, table.table_schema),
+      currentDataSource,
+      false,
+      true
+    );
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(query),
+    };
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        try {
+          const partitions = data.result.slice(1).map(row => ({
+            parent_schema: row[0],
+            parent_table: row[1],
+            partition_name: row[2],
+            partition_schema: row[3],
+            partition_def: row[4],
+            partition_key: row[5],
+          }));
+          return partitions;
+        } catch (err) {
+          console.log(err);
+        }
+      },
+      error => {
+        dispatch(
+          showErrorNotification(
+            'Error fetching partition information',
+            null,
+            error
+          )
+        );
+      }
+    );
+  };
+};
+
 /* ******************************************************* */
 const dataReducer = (state = defaultState, action) => {
   // eslint-disable-line no-unused-vars
@@ -1114,4 +1166,5 @@ export {
   fetchAdditionalColumnsInfo,
   SET_FILTER_SCHEMA,
   SET_FILTER_TABLES,
+  fetchPartitionDetails,
 };

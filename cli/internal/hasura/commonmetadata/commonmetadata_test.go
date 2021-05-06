@@ -60,11 +60,12 @@ func TestClient_ExportMetadata(t *testing.T) {
       "configuration": {
         "connection_info": {
           "use_prepared_statements": true,
-          "isolation_level": "read-committed",
           "database_url": {
             "from_env": "HASURA_GRAPHQL_DATABASE_URL"
           },
+          "isolation_level": "read-committed",
           "pool_settings": {
+			"connection_lifetime": 600,
             "retries": 1,
             "idle_timeout": 180,
             "max_connections": 50
@@ -96,7 +97,7 @@ func TestClient_ExportMetadata(t *testing.T) {
 			}
 			b, err := ioutil.ReadAll(gotMetadata)
 			assert.NoError(t, err)
-			assert.Equal(t, tt.wantMetadata, string(b))
+			assert.JSONEq(t, tt.wantMetadata, string(b))
 
 		})
 	}

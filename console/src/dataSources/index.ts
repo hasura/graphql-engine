@@ -315,6 +315,7 @@ export interface DataSourcesAPI {
   aggregationPermissionsAllowed: boolean;
   supportedFeatures?: SupportedFeaturesType;
   defaultRedirectSchema?: string;
+  getPartitionDetailsSql?: (tableName: string, tableSchema: string) => string;
 }
 
 export let currentDriver: Driver = 'postgres';

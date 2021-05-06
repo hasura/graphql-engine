@@ -28,6 +28,7 @@ import qualified Control.Immortal                            as Immortal
 import qualified Data.Aeson.Extended                         as J
 import qualified Data.UUID.V4                                as UUID
 import qualified StmContainers.Map                           as STMMap
+import qualified System.Metrics.Gauge                        as EKG.Gauge
 
 import           Control.Concurrent.Extended                 (forkImmortal, sleep)
 import           Control.Exception                           (mask_)
@@ -49,6 +50,7 @@ import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common                     (SourceName, unNonNegativeDiffTime)
 import           Hasura.RQL.Types.Error
+import           Hasura.Server.Init                          (ServerMetrics (..))
 
 -- | The top-level datatype that holds the state for all active live queries.
 --
@@ -88,6 +90,7 @@ addLiveQuery
   :: forall b
    . BackendTransport b
   => L.Logger L.Hasura
+  -> ServerMetrics
   -> SubscriberMetadata
   -> LiveQueriesState
   -> SourceName
@@ -95,7 +98,7 @@ addLiveQuery
   -> OnChange
   -- ^ the action to be executed when result changes
   -> IO LiveQueryId
-addLiveQuery logger subscriberMetadata lqState source plan onResultAction = do
+addLiveQuery logger serverMetrics subscriberMetadata lqState source plan onResultAction = do
   -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
   -- disposable UUIDs:
@@ -135,6 +138,8 @@ addLiveQuery logger subscriberMetadata lqState source plan onResultAction = do
 #endif
     STM.atomically $ STM.putTMVar (_pIOState handler) pState
 
+  liftIO $ EKG.Gauge.inc $ smActiveSubscriptions serverMetrics
+
   pure $ LiveQueryId handlerId cohortKey subscriberId
   where
     LiveQueriesState lqOpts lqMap postPollHook _ = lqState
@@ -156,16 +161,18 @@ addLiveQuery logger subscriberMetadata lqState source plan onResultAction = do
 
 removeLiveQuery
   :: L.Logger L.Hasura
+  -> ServerMetrics
   -> LiveQueriesState
   -- the query and the associated operation
   -> LiveQueryId
   -> IO ()
-removeLiveQuery logger lqState lqId@(LiveQueryId handlerId cohortId sinkId) = mask_ $ do
+removeLiveQuery logger serverMetrics lqState lqId@(LiveQueryId handlerId cohortId sinkId) = mask_ $ do
   mbCleanupIO <- STM.atomically $ do
     detM <- getQueryDet
     fmap join $ forM detM $ \(Poller cohorts ioState, cohort) ->
       cleanHandlerC cohorts ioState cohort
   sequence_ mbCleanupIO
+  liftIO $ EKG.Gauge.dec $ smActiveSubscriptions serverMetrics
   where
     lqMap = _lqsLiveQueryMap lqState
 

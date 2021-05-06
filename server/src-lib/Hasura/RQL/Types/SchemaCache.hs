@@ -122,25 +122,25 @@ module Hasura.RQL.Types.SchemaCache
 
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy                as BL
-import qualified Data.HashMap.Strict                 as M
-import qualified Data.HashSet                        as HS
-import qualified Language.GraphQL.Draft.Syntax       as G
+import qualified Data.ByteString.Lazy                        as BL
+import qualified Data.HashMap.Strict                         as M
+import qualified Data.HashSet                                as HS
+import qualified Language.GraphQL.Draft.Syntax               as G
 
-import           Control.Lens                        (makeLenses)
+import           Control.Lens                                (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.TH
-import           Data.Int                            (Int64)
+import           Data.Int                                    (Int64)
 import           Data.Text.Extended
 import           System.Cron.Types
 
-import qualified Hasura.Backends.Postgres.Connection as PG
-import qualified Hasura.GraphQL.Parser               as P
-import qualified Hasura.SQL.AnyBackend               as AB
+import qualified Hasura.Backends.Postgres.Connection         as PG
+import qualified Hasura.GraphQL.Parser                       as P
+import qualified Hasura.SQL.AnyBackend                       as AB
 
-import           Hasura.GraphQL.Context              (GQLContext, RemoteField, RoleContext)
-import           Hasura.Incremental                  (Cacheable, Dependency, MonadDepend (..),
-                                                      selectKeyD)
+import           Hasura.GraphQL.Context                      (GQLContext, RemoteField, RoleContext)
+import           Hasura.Incremental                          (Cacheable, Dependency,
+                                                              MonadDepend (..), selectKeyD)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.ApiLimit
@@ -153,6 +153,7 @@ import           Hasura.RQL.Types.Endpoint
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
+import           Hasura.RQL.Types.GraphqlSchemaIntrospection
 import           Hasura.RQL.Types.Metadata.Object
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.Relationship
@@ -162,7 +163,7 @@ import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.Session
-import           Hasura.Tracing                      (TraceT)
+import           Hasura.Tracing                              (TraceT)
 
 
 newtype MetadataResourceVersion
@@ -307,21 +308,22 @@ unsafeTableInfo sourceName tableName cache =
 
 data SchemaCache
   = SchemaCache
-  { scSources                     :: !SourceCache
-  , scActions                     :: !ActionCache
-  , scRemoteSchemas               :: !RemoteSchemaMap
-  , scAllowlist                   :: !(HS.HashSet GQLQuery)
-  , scGQLContext                  :: !(HashMap RoleName (RoleContext GQLContext))
-  , scUnauthenticatedGQLContext   :: !GQLContext
-  , scRelayContext                :: !(HashMap RoleName (RoleContext GQLContext))
-  , scUnauthenticatedRelayContext :: !GQLContext
-  , scDepMap                      :: !DepMap
-  , scInconsistentObjs            :: ![InconsistentMetadata]
-  , scCronTriggers                :: !(M.HashMap TriggerName CronTriggerInfo)
-  , scEndpoints                   :: !(EndpointTrie GQLQueryWithText)
-  , scApiLimits                   :: !ApiLimit
-  , scMetricsConfig               :: !MetricsConfig
-  , scMetadataResourceVersion     :: !(Maybe MetadataResourceVersion)
+  { scSources                        :: !SourceCache
+  , scActions                        :: !ActionCache
+  , scRemoteSchemas                  :: !RemoteSchemaMap
+  , scAllowlist                      :: !(HS.HashSet GQLQuery)
+  , scGQLContext                     :: !(HashMap RoleName (RoleContext GQLContext))
+  , scUnauthenticatedGQLContext      :: !GQLContext
+  , scRelayContext                   :: !(HashMap RoleName (RoleContext GQLContext))
+  , scUnauthenticatedRelayContext    :: !GQLContext
+  , scDepMap                         :: !DepMap
+  , scInconsistentObjs               :: ![InconsistentMetadata]
+  , scCronTriggers                   :: !(M.HashMap TriggerName CronTriggerInfo)
+  , scEndpoints                      :: !(EndpointTrie GQLQueryWithText)
+  , scApiLimits                      :: !ApiLimit
+  , scMetricsConfig                  :: !MetricsConfig
+  , scMetadataResourceVersion        :: !(Maybe MetadataResourceVersion)
+  , scSetGraphqlIntrospectionOptions :: !SetGraphqlIntrospectionOptions
   }
 $(deriveToJSON hasuraJSON ''SchemaCache)
 

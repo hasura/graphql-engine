@@ -124,6 +124,10 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
         case _rmv2Metadata of
           RMWithSources (Metadata { _metaInheritedRoles }) -> _metaInheritedRoles
           RMWithoutSources _                               -> mempty
+      introspectionDisabledRoles =
+        case _rmv2Metadata of
+          RMWithSources m    -> _metaSetGraphqlIntrospectionOptions m
+          RMWithoutSources _ -> mempty
   when (inheritedRoles /= mempty && (EFInheritedRoles `notElem` experimentalFeatures)) $
     throw400 ConstraintViolation $ "inherited_roles can only be added when it's enabled in the experimental features"
   oldMetadata <- getMetadata
@@ -140,7 +144,7 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
       pure $ Metadata (OMap.singleton defaultSource newDefaultSourceMetadata)
                         _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist
                         _mnsCustomTypes _mnsActions _mnsCronTriggers (_metaRestEndpoints oldMetadata)
-                        emptyApiLimit emptyMetricsConfig mempty
+                        emptyApiLimit emptyMetricsConfig mempty introspectionDisabledRoles
   putMetadata metadata
 
   case _rmv2AllowInconsistentMetadata of

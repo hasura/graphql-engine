@@ -18,7 +18,7 @@ endif
 .PHONY: assets
 assets:
 ifndef HAS_PKGER
-	go get github.com/markbates/pkger/cmd/pkger
+	cd ~ && go get github.com/markbates/pkger/cmd/pkger  && cd -
 endif
 	pkger -o pkg/console/templates/packed -include /pkg/console/templates/gohtml/
 

@@ -50,6 +50,7 @@ genMetadata =
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
+    <*> arbitrary
 
 instance (Arbitrary k, Eq k, Hashable k, Arbitrary v) => Arbitrary (InsOrdHashMap k v) where
   arbitrary = OM.fromList <$> arbitrary
@@ -472,3 +473,6 @@ sampleUniqueParamConfigs = [ UPCIpAddress
                            , UPCSessionVar ["x-hasura-user-id", "x-hasura-team-id"]
                            , UPCSessionVar ["x-hasura-user-id", "x-hasura-team-id", "x-hasura-org-id"]
                            ]
+
+instance Arbitrary SetGraphqlIntrospectionOptions where
+  arbitrary = genericArbitrary

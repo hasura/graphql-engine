@@ -385,6 +385,8 @@ data ServerMetrics
   -- ^ Current Number of active Warp threads
   , smWebsocketConnections :: !EKG.Gauge.Gauge
   -- ^ Current number of active websocket connections
+  , smActiveSubscriptions  :: !EKG.Gauge.Gauge
+  -- ^ Current number of active subscriptions
   , smNumEventsFetched     :: !EKG.Distribution.Distribution
   -- ^ Total Number of events fetched from last 'Event Trigger Fetch'
   , smNumEventHTTPWorkers  :: !EKG.Gauge.Gauge
@@ -397,6 +399,7 @@ createServerMetrics :: EKG.Store -> IO ServerMetrics
 createServerMetrics store = do
   smWarpThreads <- EKG.createGauge "warp_threads" store
   smWebsocketConnections <- EKG.createGauge "websocket_connections" store
+  smActiveSubscriptions <- EKG.createGauge "active_subscriptions" store
   smNumEventsFetched <- EKG.createDistribution "num_events_fetched" store
   smNumEventHTTPWorkers <- EKG.createGauge "num_event_trigger_http_workers" store
   smEventLockTime <- EKG.createDistribution "event_lock_time" store

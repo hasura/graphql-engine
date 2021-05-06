@@ -805,7 +805,7 @@ mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enable
 
     lqState <- liftIO $ EL.initLiveQueriesState lqOpts postPollHook
     wsServerEnv <- WS.createWSServerEnv logger lqState getSchemaCache httpManager
-                                        corsPolicy sqlGenCtx enableAL keepAliveDelay {- planCache -}
+                                        corsPolicy sqlGenCtx enableAL keepAliveDelay serverMetrics {- planCache -}
 
     let serverCtx = ServerCtx
                     { scLogger                       =  logger
@@ -831,7 +831,7 @@ mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enable
       Spock.spockAsApp $ Spock.spockT lowerIO $
         httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
 
-    let wsServerApp  = WS.createWSServerApp env mode serverMetrics wsServerEnv -- TODO: Lyndon: Can we pass environment through wsServerEnv?
+    let wsServerApp  = WS.createWSServerApp env mode wsServerEnv -- TODO: Lyndon: Can we pass environment through wsServerEnv?
         stopWSServer = WS.stopWSServerApp wsServerEnv
 
     waiApp <- liftWithStateless $ \lowerIO ->

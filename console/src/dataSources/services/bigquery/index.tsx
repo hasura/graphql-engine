@@ -62,7 +62,7 @@ const operators = [
 ];
 
 // eslint-disable-next-line no-useless-escape
-const createSQLRegex = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/g;
+const createSQLRegex = /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<tableWithSchema>\"?\w+\"?)|(?<table>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim;
 
 export const displayTableName = (table: Table) => {
   const tableName = table.table_name;
@@ -100,6 +100,21 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     modify: {
       enabled: false,
+      columns: false,
+      columns_edit: false,
+      computedFields: false,
+      primaryKeys: false,
+      primaryKeys_edit: false,
+      foreginKeys: false,
+      foreginKeys_edit: false,
+      uniqueKeys: false,
+      uniqueKeys_edit: false,
+      triggers: false,
+      checkConstraints: false,
+      customGqlRoot: false,
+      setAsEnum: false,
+      untrack: false,
+      delete: false,
     },
     relationships: {
       enabled: true,

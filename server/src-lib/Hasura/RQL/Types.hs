@@ -32,43 +32,44 @@ module Hasura.RQL.Types
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                 as M
-import qualified Database.PG.Query                   as Q
+import qualified Data.HashMap.Strict                         as M
+import qualified Database.PG.Query                           as Q
 
-import           Control.Lens                        (at, (^.))
+import           Control.Lens                                (at, (^.))
 import           Control.Monad.Unique
 import           Data.Text.Extended
-import           Network.HTTP.Client.Extended        (HasHttpManagerM (..))
+import           Network.HTTP.Client.Extended                (HasHttpManagerM (..))
 
-import           Hasura.Backends.Postgres.Connection as R
-import           Hasura.RQL.IR.BoolExp               as R
-import           Hasura.RQL.Types.Action             as R
-import           Hasura.RQL.Types.ApiLimit           as R
-import           Hasura.RQL.Types.Backend            as R
-import           Hasura.RQL.Types.Column             as R
-import           Hasura.RQL.Types.Common             as R
-import           Hasura.RQL.Types.ComputedField      as R
-import           Hasura.RQL.Types.CustomTypes        as R
-import           Hasura.RQL.Types.Endpoint           as R
-import           Hasura.RQL.Types.Error              as R
-import           Hasura.RQL.Types.EventTrigger       as R
-import           Hasura.RQL.Types.Function           as R
-import           Hasura.RQL.Types.InheritedRoles     as R
-import           Hasura.RQL.Types.Metadata           as R
-import           Hasura.RQL.Types.Metadata.Backend   as R
-import           Hasura.RQL.Types.Metadata.Object    as R
-import           Hasura.RQL.Types.Permission         as R
-import           Hasura.RQL.Types.QueryCollection    as R
-import           Hasura.RQL.Types.Relationship       as R
-import           Hasura.RQL.Types.RemoteRelationship as R
-import           Hasura.RQL.Types.RemoteSchema       as R
-import           Hasura.RQL.Types.ScheduledTrigger   as R
-import           Hasura.RQL.Types.SchemaCache        as R
-import           Hasura.RQL.Types.SchemaCache.Build  as R
-import           Hasura.RQL.Types.SchemaCacheTypes   as R
-import           Hasura.RQL.Types.Source             as R
-import           Hasura.RQL.Types.Table              as R
-import           Hasura.SQL.Backend                  as R
+import           Hasura.Backends.Postgres.Connection         as R
+import           Hasura.RQL.IR.BoolExp                       as R
+import           Hasura.RQL.Types.Action                     as R
+import           Hasura.RQL.Types.ApiLimit                   as R
+import           Hasura.RQL.Types.Backend                    as R
+import           Hasura.RQL.Types.Column                     as R
+import           Hasura.RQL.Types.Common                     as R
+import           Hasura.RQL.Types.ComputedField              as R
+import           Hasura.RQL.Types.CustomTypes                as R
+import           Hasura.RQL.Types.Endpoint                   as R
+import           Hasura.RQL.Types.Error                      as R
+import           Hasura.RQL.Types.EventTrigger               as R
+import           Hasura.RQL.Types.Function                   as R
+import           Hasura.RQL.Types.GraphqlSchemaIntrospection as R
+import           Hasura.RQL.Types.InheritedRoles             as R
+import           Hasura.RQL.Types.Metadata                   as R
+import           Hasura.RQL.Types.Metadata.Backend           as R
+import           Hasura.RQL.Types.Metadata.Object            as R
+import           Hasura.RQL.Types.Permission                 as R
+import           Hasura.RQL.Types.QueryCollection            as R
+import           Hasura.RQL.Types.Relationship               as R
+import           Hasura.RQL.Types.RemoteRelationship         as R
+import           Hasura.RQL.Types.RemoteSchema               as R
+import           Hasura.RQL.Types.ScheduledTrigger           as R
+import           Hasura.RQL.Types.SchemaCache                as R
+import           Hasura.RQL.Types.SchemaCache.Build          as R
+import           Hasura.RQL.Types.SchemaCacheTypes           as R
+import           Hasura.RQL.Types.Source                     as R
+import           Hasura.RQL.Types.Table                      as R
+import           Hasura.SQL.Backend                          as R
 import           Hasura.Server.Types
 import           Hasura.Session
 import           Hasura.Tracing
@@ -294,4 +295,3 @@ askRemoteRel fieldInfoMap relName = do
     (FIRemoteRelationship remoteFieldInfo) -> return remoteFieldInfo
     _                                      ->
       throw400 UnexpectedPayload "expecting a remote relationship"
-
