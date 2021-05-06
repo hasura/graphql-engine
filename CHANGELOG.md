@@ -11,6 +11,7 @@
 - console: read-only modify page for mssql
 - console: filter out partitions from track table list and display partition info
 - console: fixes an issue where no schemas are listed on an MSSQL source
+- server: REST endpoint bugfix for UUID url params
 
 ## v2.0.0-alpha.10
 

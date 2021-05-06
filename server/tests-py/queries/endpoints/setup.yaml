@@ -13,6 +13,8 @@ args:
         query: "query ($first_name:String!) { test_table(where: {first_name: { _eq: $first_name } }) { first_name last_name } }"
       - name: query_with_args
         query: "query ($first_name: String!, $last_name:String!) { test_table(where: {first_name: { _eq: $first_name } last_name: { _eq: $last_name }}) { first_name last_name } }"
+      - name: query_with_uuid_arg
+        query: "query ($id: uuid!) { test_table(where: {id: { _neq: $id }}) { first_name last_name } }"
       - name: simple_subscription
         query: "subscription { test_table { first_name last_name } }"
 
@@ -74,6 +76,17 @@ args:
 
 - type: create_rest_endpoint
   args:
+    url: with_uuid/:id
+    name: with_uuid
+    methods:
+      - GET
+    definition:
+      query:
+        collection_name: test_collection
+        query_name: query_with_uuid_arg
+
+- type: create_rest_endpoint
+  args:
     url: to_be_dropped
     name: to_be_dropped
     methods:
@@ -92,7 +105,8 @@ args:
     sql: |
       create table test_table(
           first_name text,
-          last_name text
+          last_name text,
+          id UUID NOT NULL DEFAULT gen_random_uuid()
       );
 
 - type: track_table
