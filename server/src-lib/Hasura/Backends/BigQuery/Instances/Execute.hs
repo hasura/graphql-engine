@@ -144,5 +144,5 @@ bqDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
     $ encJFromJValue
     $ ExplainPlan
         fieldName
-        (Just ("--\n" <> DataLoader.drawActionsForestSQL actionsForest))
-        (Just ("": T.lines (DataLoader.drawActionsForest actionsForest)))
+        (Just $ DataLoader.drawActionsForestSQL actionsForest)
+        (Just $ T.lines $ DataLoader.drawActionsForest actionsForest)
