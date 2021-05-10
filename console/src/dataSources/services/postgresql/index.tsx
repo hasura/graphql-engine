@@ -581,6 +581,7 @@ export const supportedFeatures: SupportedFeaturesType = {
     tracking: true,
   },
   connectDbForm: {
+    enabled: true,
     connectionParameters: true,
     databaseURL: true,
     environmentVariable: true,
