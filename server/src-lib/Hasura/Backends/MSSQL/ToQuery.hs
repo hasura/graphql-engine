@@ -5,7 +5,6 @@
 
 module Hasura.Backends.MSSQL.ToQuery
   ( fromSelect
-  , withExplain
   , fromReselect
   , toSQL
   , toQueryFlat
@@ -176,15 +175,6 @@ fromSelect Select {..} = wrapFor selectFor result
       , fromWhere selectWhere
       , fromOrderBys selectTop selectOffset selectOrderBy
       , fromFor selectFor
-      ]
-
-withExplain :: Printer -> Printer
-withExplain p =
-  SepByPrinter
-    NewlinePrinter
-      [ "SET SHOWPLAN_TEXT ON"
-      , p
-      , "SET SHOWPLAN_TEXT OFF"
       ]
 
 fromJoinSource :: JoinSource -> Printer

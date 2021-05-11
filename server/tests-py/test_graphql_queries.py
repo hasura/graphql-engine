@@ -875,17 +875,18 @@ class TestUnauthorizedRolePermission:
     def test_unauth_role(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/unauthorized_role.yaml', transport, False)
 
-@usefixtures('per_class_tests_db_state')
+@pytest.mark.parametrize("backend", ['postgres', 'mssql'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
 class TestGraphQLExplain:
     @classmethod
     def dir(cls):
         return 'queries/explain'
 
-    def test_simple_query(self, hge_ctx):
-        self.with_admin_secret(hge_ctx, self.dir() + '/simple_query.yaml')
+    def test_simple_query(self, hge_ctx, backend):
+        self.with_admin_secret(hge_ctx, self.dir() + hge_ctx.backend_suffix('/simple_query') + ".yaml")
 
-    def test_permissions_query(self, hge_ctx):
-        self.with_admin_secret(hge_ctx, self.dir() + '/permissions_query.yaml')
+    def test_permissions_query(self, hge_ctx, backend):
+        self.with_admin_secret(hge_ctx, self.dir() + hge_ctx.backend_suffix('/permissions_query') + ".yaml")
 
     def with_admin_secret(self, hge_ctx, f):
         conf = get_conf_f(f)
@@ -895,8 +896,7 @@ class TestGraphQLExplain:
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
         status_code, resp_json, _ = hge_ctx.anyq(conf['url'], conf['query'], headers)
         assert status_code == 200, resp_json
-        # Comparing only with generated 'sql' since the 'plan' is not consistent
-        # across all Postgres versions
+        # Comparing only with generated 'sql' since the 'plan' may differ
         resp_sql = resp_json[0]['sql']
         exp_sql = conf['response'][0]['sql']
         assert resp_sql == exp_sql, resp_json

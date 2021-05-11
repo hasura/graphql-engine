@@ -76,6 +76,16 @@ msDBQueryPlan _env _manager _reqHeaders userInfo _directives sourceName sourceCo
     . AB.mkAnyBackend
     $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) odbcQuery
 
+runShowplan
+  :: ODBC.Query -> ODBC.Connection -> IO [Text]
+runShowplan query conn = do
+  ODBC.exec conn "SET SHOWPLAN_TEXT ON"
+  texts <- ODBC.query conn query
+  ODBC.exec conn "SET SHOWPLAN_TEXT OFF"
+  -- we don't need to use 'finally' here - if an exception occurs,
+  -- the connection is removed from the resource pool in 'withResource'.
+  pure texts
+
 msDBQueryExplain
   :: MonadError QErr m
   => G.Name
@@ -85,28 +95,33 @@ msDBQueryExplain
   -> QueryDB 'MSSQL (UnpreparedValue 'MSSQL)
   -> m (AB.AnyBackend DBStepInfo)
 msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
-  select <- withExplain . fromSelect <$> planNoPlan userInfo qrf
-  let queryString = ODBC.renderQuery $ toQueryPretty select
+  select <- fromSelect <$> planNoPlan userInfo qrf
+  let query = toQueryPretty select
+      queryString = ODBC.renderQuery $ query
       pool        = _mscConnectionPool sourceConfig
-      -- TODO: execute `select` in separate batch
-      -- https://github.com/hasura/graphql-engine-mono/issues/1024
-      odbcQuery   = runJSONPathQuery pool (toQueryFlat select) <&> \explainInfo ->
-        encJFromJValue $ ExplainPlan fieldName (Just queryString) (Just [explainInfo])
+      odbcQuery   =
+        withMSSQLPool
+          pool
+          (\conn -> do
+            showplan <- runShowplan query conn
+            pure (encJFromJValue $
+                  ExplainPlan
+                    fieldName
+                    (Just queryString)
+                    (Just showplan)))
   pure
     $ AB.mkAnyBackend
     $ DBStepInfo @'MSSQL sourceName sourceConfig Nothing odbcQuery
 
 msDBLiveQueryExplain
-  :: MonadError QErr m
+  :: (MonadIO m, MonadError QErr m)
   => LiveQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL) -> m LiveQueryPlanExplanation
-msDBLiveQueryExplain (LiveQueryPlan plan _sourceConfig variables) = do
-  let query = _plqpQuery plan
-      -- TODO: execute `select` in separate batch
-      -- https://github.com/hasura/graphql-engine-mono/issues/1024
-      -- select    = withExplain $ QueryPrinter query
-      -- pool      = _mscConnectionPool sourceConfig
-      -- explainInfo <- runJSONPathQuery pool (toQueryFlat select)
-  pure $ LiveQueryPlanExplanation (T.toTxt query) [] variables
+msDBLiveQueryExplain (LiveQueryPlan plan sourceConfig variables) = do
+  let (MultiplexedQuery' reselect) = _plqpQuery plan
+      query = toQueryPretty $ fromSelect $ multiplexRootReselect [(dummyCohortId, variables)] reselect
+      pool = _mscConnectionPool sourceConfig
+  explainInfo <- withMSSQLPool pool (runShowplan query)
+  pure $ LiveQueryPlanExplanation (T.toTxt query) explainInfo variables
 
 --------------------------------------------------------------------------------
 -- Producing the correct SQL-level list comprehension to multiplex a query
