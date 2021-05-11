@@ -24,6 +24,7 @@ import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.Execute.Mutation
 import           Hasura.Backends.Postgres.Translate.Returning
 import           Hasura.Backends.Postgres.Types.Table
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types

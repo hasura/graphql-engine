@@ -31,6 +31,7 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.Column (toTxtValue)
 import           Hasura.Backends.Postgres.Types.Column
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Parser

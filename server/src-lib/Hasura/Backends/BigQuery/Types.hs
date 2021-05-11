@@ -4,33 +4,33 @@
 
 module Hasura.Backends.BigQuery.Types where
 
-import           Control.DeepSeq
-import           Data.Aeson                             (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
+import           Hasura.Prelude
+
 import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Types                       as J
-import           Data.ByteString                        (ByteString)
 import qualified Data.ByteString.Base64                 as Base64
 import qualified Data.ByteString.Lazy                   as L
-import           Data.Coerce
-import           Data.Data
-import           Data.Hashable
-import           Data.Hashable.Time                     ()
-import           Data.Scientific
 import qualified Data.Text                              as T
 import qualified Data.Text.Encoding                     as T
-import           Data.Text.Extended
 import qualified Data.Text.Read                         as TR
+import qualified Language.GraphQL.Draft.Syntax          as G
+
+import           Data.Aeson                             (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
+import           Data.ByteString                        (ByteString)
+import           Data.Coerce
+import           Data.Hashable.Time                     ()
+import           Data.Scientific
+import           Data.Text.Extended
 import           Data.Time
 import           Data.Time.Format.ISO8601               (iso8601Show)
 import           Data.Vector                            (Vector)
 import           Data.Vector.Instances                  ()
-import           GHC.Generics
-import           Hasura.Incremental.Internal.Dependency
-import           Hasura.Prelude
-import           Hasura.RQL.Types.Error
-import qualified Language.GraphQL.Draft.Syntax          as G
 import           Language.Haskell.TH.Syntax
 import           Text.ParserCombinators.ReadP           (readP_to_S)
+
+import           Hasura.Base.Error
+import           Hasura.Incremental.Internal.Dependency
+
 
 data Select = Select
   { selectTop               :: !Top

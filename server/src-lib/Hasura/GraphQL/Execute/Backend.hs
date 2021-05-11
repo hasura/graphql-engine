@@ -17,6 +17,7 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.RQL.IR.RemoteJoin               as IR
 import qualified Hasura.SQL.AnyBackend                  as AB
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action.Types    (ActionExecutionPlan)
@@ -26,7 +27,6 @@ import           Hasura.RQL.IR.RemoteJoin
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Backend
 import           Hasura.Server.Version                  (HasVersion)

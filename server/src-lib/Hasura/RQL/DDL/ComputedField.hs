@@ -19,6 +19,7 @@ import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend      as AB
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.DDL.Deps

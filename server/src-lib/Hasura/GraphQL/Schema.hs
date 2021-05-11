@@ -17,11 +17,12 @@ import           Control.Lens.Extended
 import           Control.Monad.Unique
 import           Data.Has
 import           Data.List.Extended                    (duplicates)
+import           Data.Text.Extended
 
 import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.SQL.AnyBackend                 as AB
 
-import           Data.Text.Extended
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Parser                 (Kind (..), Parser, Schema (..),

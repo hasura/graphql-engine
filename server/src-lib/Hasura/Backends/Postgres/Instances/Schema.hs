@@ -31,6 +31,7 @@ import           Hasura.Backends.Postgres.SQL.Types     as PG hiding (FunctionNa
 import           Hasura.Backends.Postgres.SQL.Value     as PG
 import           Hasura.Backends.Postgres.Types.BoolExp
 import           Hasura.Backends.Postgres.Types.Column
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser                  hiding (EnumValueInfo, field)
 import           Hasura.GraphQL.Parser.Internal.Parser  hiding (field)

@@ -66,6 +66,7 @@ import           Data.Text.Extended
 import qualified Hasura.GraphQL.Execute.LiveQuery.TMap    as TMap
 import qualified Hasura.Logging                           as L
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
@@ -73,7 +74,6 @@ import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common                  (SourceName, getNonNegativeInt)
-import           Hasura.RQL.Types.Error
 import           Hasura.Session
 
 

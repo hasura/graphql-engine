@@ -22,6 +22,7 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.Logging                         as L
 import qualified Hasura.SQL.AnyBackend                  as AB
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Backend
@@ -33,6 +34,7 @@ import           Hasura.GraphQL.Parser
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
+
 
 parseGraphQLQuery
   :: MonadError QErr m

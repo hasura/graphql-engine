@@ -23,6 +23,7 @@ import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.Backends.Postgres.Translate.Column
 import           Hasura.Backends.Postgres.Types.Column
+import           Hasura.Base.Error
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Session

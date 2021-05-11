@@ -18,6 +18,7 @@ import qualified Hasura.Logging                          as L
 import           Hasura.Backends.MSSQL.Connection
 import           Hasura.Backends.MSSQL.Instances.Execute
 import           Hasura.Backends.MSSQL.ToQuery
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Plan

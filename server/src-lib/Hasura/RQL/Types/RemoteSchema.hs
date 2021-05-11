@@ -15,11 +15,11 @@ import qualified Language.GraphQL.Draft.Syntax  as G
 import qualified Network.URI.Extended           as N
 import qualified Text.Builder                   as TB
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser.Schema   (Variable)
 import           Hasura.Incremental             (Cacheable)
 import           Hasura.RQL.DDL.Headers         (HeaderConf (..))
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
 import           Hasura.Session
 
 type UrlFromEnv = Text

@@ -19,9 +19,9 @@ import           Data.String
 import           Hasura.Backends.MSSQL.Connection
 import           Hasura.Backends.MSSQL.Instances.Types ()
 import           Hasura.Backends.MSSQL.Types
+import           Hasura.Base.Error
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common               (OID (..))
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 

@@ -33,9 +33,11 @@ import           Data.List.Extended                 (duplicates)
 import qualified Hasura.SQL.AnyBackend              as AB
 
 import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
+import           Hasura.Base.Error
 import           Hasura.RQL.DDL.Schema.Common
 import           Hasura.RQL.Types                   hiding (ConstraintName, fmFunction,
                                                      tmComputedFields, tmTable)
+
 
 data FunctionMeta
   = FunctionMeta

@@ -13,9 +13,9 @@ import qualified Hasura.Backends.MSSQL.Connection as MSSQL
 import qualified Hasura.Backends.MSSQL.Types      as MSSQL
 
 import           Hasura.Backends.MSSQL.ToQuery    ()
+import           Hasura.Base.Error
 import           Hasura.RQL.DDL.Headers           ()
 import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 
 

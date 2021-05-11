@@ -28,12 +28,12 @@ import           Data.Type.Equality
 import           Language.GraphQL.Draft.Syntax        hiding (Definition)
 
 import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser.Class.Parse
 import           Hasura.GraphQL.Parser.Collect
 import           Hasura.GraphQL.Parser.Internal.Types
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.CustomTypes
-import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils                  (englishList)
 
 

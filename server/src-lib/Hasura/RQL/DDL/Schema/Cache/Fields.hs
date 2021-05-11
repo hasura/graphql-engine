@@ -19,6 +19,7 @@ import           Data.Text.Extended
 import qualified Hasura.Incremental                 as Inc
 import qualified Hasura.SQL.AnyBackend              as AB
 
+import           Hasura.Base.Error
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema.Cache.Common

@@ -43,6 +43,7 @@ import qualified Hasura.SQL.AnyBackend                    as AB
 import qualified Hasura.Tracing                           as Tracing
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Schema                    (buildGQLContext)
 import           Hasura.Metadata.Class

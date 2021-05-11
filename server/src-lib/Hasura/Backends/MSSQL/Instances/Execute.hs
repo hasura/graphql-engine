@@ -13,7 +13,6 @@ import qualified Language.GraphQL.Draft.Syntax         as G
 import qualified Network.HTTP.Client                   as HTTP
 import qualified Network.HTTP.Types                    as HTTP
 
-
 import qualified Hasura.SQL.AnyBackend                 as AB
 
 import           Hasura.Backends.MSSQL.Connection
@@ -22,6 +21,7 @@ import           Hasura.Backends.MSSQL.Plan
 import           Hasura.Backends.MSSQL.SQL.Value       (toTxtEncodedVal)
 import           Hasura.Backends.MSSQL.ToQuery
 import           Hasura.Backends.MSSQL.Types           as TSQL
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Backend

@@ -14,6 +14,7 @@ import qualified Hasura.Backends.Postgres.SQL.DML      as S
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Types.Column
+import           Hasura.Base.Error
 import           Hasura.RQL.Instances                  ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types

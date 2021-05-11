@@ -14,7 +14,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Data.Text.Encoding            (encodeUtf8)
 
-import           Hasura.RQL.Types.Error
+import           Hasura.Base.Error
 import           Hasura.SQL.Backend
 
 

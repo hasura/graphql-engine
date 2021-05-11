@@ -20,6 +20,7 @@ import qualified Hasura.GraphQL.Execute.Query           as E
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.SQL.AnyBackend                  as AB
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Backend

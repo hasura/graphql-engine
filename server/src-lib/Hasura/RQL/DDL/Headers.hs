@@ -1,15 +1,15 @@
 module Hasura.RQL.DDL.Headers where
 
 import           Data.Aeson
-import           Hasura.Incremental         (Cacheable)
+import           Hasura.Base.Error
+import           Hasura.Incremental   (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.Instances       ()
-import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Instances ()
 
-import qualified Data.CaseInsensitive       as CI
-import qualified Data.Environment           as Env
-import qualified Data.Text                  as T
-import qualified Network.HTTP.Types         as HTTP
+import qualified Data.CaseInsensitive as CI
+import qualified Data.Environment     as Env
+import qualified Data.Text            as T
+import qualified Network.HTTP.Types   as HTTP
 
 
 data HeaderConf = HeaderConf HeaderName HeaderValue

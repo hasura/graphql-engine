@@ -86,13 +86,13 @@ import           Control.Lens                  (makeLenses, makePrisms)
 import           Data.Aeson.Extended
 import           Data.Text.Extended
 
+import           Hasura.Base.Error
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.CustomTypes
-import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 import           Hasura.Session
 

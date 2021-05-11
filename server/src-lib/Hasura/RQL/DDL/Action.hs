@@ -31,6 +31,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import           Control.Lens                  ((.~))
 import           Data.Text.Extended
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.CustomTypes    (lookupPGScalar)

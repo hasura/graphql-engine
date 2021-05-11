@@ -6,13 +6,7 @@ module Hasura.Server.Auth.WebHook
   , type ReqsText
   ) where
 
-import           Control.Exception.Lifted               (try)
-import           Control.Lens
-import           Control.Monad.Trans.Control            (MonadBaseControl)
-import           Control.Monad.Trans.Maybe
-import           Data.Aeson
-import           Data.Time.Clock                        (UTCTime, addUTCTime, getCurrentTime)
-import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
 import qualified Data.ByteString.Lazy                   as BL
@@ -22,17 +16,25 @@ import qualified Network.HTTP.Client                    as H
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wreq                           as Wreq
 
+import           Control.Exception.Lifted               (try)
+import           Control.Lens
+import           Control.Monad.Trans.Control            (MonadBaseControl)
+import           Data.Aeson
+import           Data.Time.Clock                        (UTCTime, addUTCTime, getCurrentTime)
+import           Hasura.Server.Version                  (HasVersion)
+
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.Tracing                         as Tracing
+
 import           Data.Parser.CacheControl
 import           Data.Parser.Expires
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import           Hasura.Base.Error
 import           Hasura.HTTP
 import           Hasura.Logging
-import           Hasura.Prelude
-import           Hasura.RQL.Types
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 import           Hasura.Session
-import qualified Hasura.Tracing                         as Tracing
+
 
 data AuthHookType
   = AHTGet

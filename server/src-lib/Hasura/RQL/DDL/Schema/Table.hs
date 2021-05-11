@@ -43,6 +43,7 @@ import qualified Hasura.Incremental                 as Inc
 import qualified Hasura.SQL.AnyBackend              as AB
 
 import           Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Schema.Common       (textToName)

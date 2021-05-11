@@ -11,6 +11,7 @@ import           Data.Aeson.Types
 import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.Translate.BoolExp
+import           Hasura.Base.Error
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.Session

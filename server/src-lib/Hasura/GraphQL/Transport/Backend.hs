@@ -7,13 +7,13 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 
 import qualified Hasura.Logging                         as L
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Logging                 (MonadQueryLog)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 import           Hasura.Server.Types                    (RequestId)
 import           Hasura.Session

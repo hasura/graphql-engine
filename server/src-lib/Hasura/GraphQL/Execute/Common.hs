@@ -20,6 +20,7 @@ import qualified Hasura.Tracing                              as Tracing
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.Execute.RemoteJoin
 import           Hasura.Backends.Postgres.Translate.Select   (asSingleRowJsonResp)
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Prepare

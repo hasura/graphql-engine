@@ -7,9 +7,26 @@ module Hasura.Server.SchemaUpdate
   )
 where
 
+import           Hasura.Prelude
+
+import qualified Control.Concurrent.Extended   as C
+import qualified Control.Concurrent.STM        as STM
+import qualified Control.Immortal              as Immortal
+import qualified Data.HashMap.Strict           as HM
+import qualified Data.HashSet                  as HS
+import qualified Database.PG.Query             as Q
+import qualified Network.HTTP.Client           as HTTP
+
+import           Control.Monad.Trans.Control   (MonadBaseControl)
+import           Control.Monad.Trans.Managed   (ManagedT)
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Data.IORef
+
+import           Hasura.Base.Error
 import           Hasura.Logging
 import           Hasura.Metadata.Class
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema         (runCacheRWT)
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.Types
@@ -19,20 +36,6 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Types           (InstanceId (..))
 import           Hasura.Session
 
-import           Control.Monad.Trans.Control   (MonadBaseControl)
-import           Control.Monad.Trans.Managed   (ManagedT)
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
-import           Data.IORef
-
-import qualified Control.Concurrent.Extended   as C
-import qualified Control.Concurrent.STM        as STM
-import qualified Control.Immortal              as Immortal
-import qualified Data.HashMap.Strict           as HM
-import qualified Data.HashSet                  as HS
-import qualified Database.PG.Query             as Q
-import qualified Network.HTTP.Client           as HTTP
 
 data ThreadType
   = TTListener

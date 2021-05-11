@@ -23,6 +23,7 @@ import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend         as AB
 
+import           Hasura.Base.Error
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.Types
 import           Hasura.Session

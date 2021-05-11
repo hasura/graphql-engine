@@ -11,6 +11,7 @@ import qualified Data.HashMap.Strict.InsOrd as OMap
 
 import qualified Hasura.SQL.AnyBackend      as AB
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
 

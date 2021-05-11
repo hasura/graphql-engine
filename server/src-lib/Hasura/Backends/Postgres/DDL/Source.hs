@@ -16,9 +16,9 @@ import           Data.FileEmbed                      (makeRelativeToProject)
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Base.Error
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table

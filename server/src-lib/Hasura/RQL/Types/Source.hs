@@ -14,10 +14,10 @@ import qualified Hasura.SQL.AnyBackend               as AB
 import qualified Hasura.Tracing                      as Tracing
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Base.Error
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Instances          ()
 import           Hasura.RQL.Types.Table

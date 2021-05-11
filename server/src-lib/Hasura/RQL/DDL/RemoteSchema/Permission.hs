@@ -39,19 +39,22 @@ module Hasura.RQL.DDL.RemoteSchema.Permission (
 
 import           Hasura.Prelude
 
-import           Control.Monad.Validate
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as S
-import           Data.List.Extended            (duplicates, getDifference)
 import qualified Data.List.NonEmpty            as NE
 import qualified Data.Text                     as T
-import           Data.Text.Extended
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Control.Monad.Validate
+import           Data.List.Extended            (duplicates, getDifference)
+import           Data.Text.Extended
+
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.RQL.Types              hiding (GraphQLType, defaultScalars)
 import           Hasura.Server.Utils           (englishList, isSessionVariable)
 import           Hasura.Session
+
 
 data FieldDefinitionType
   = ObjectField

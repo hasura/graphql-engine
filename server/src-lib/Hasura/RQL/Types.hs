@@ -41,6 +41,7 @@ import           Data.Text.Extended
 import           Network.HTTP.Client.Extended                (HasHttpManagerM (..))
 
 import           Hasura.Backends.Postgres.Connection         as R
+import           Hasura.Base.Error
 import           Hasura.RQL.IR.BoolExp                       as R
 import           Hasura.RQL.Types.Action                     as R
 import           Hasura.RQL.Types.ApiLimit                   as R
@@ -50,7 +51,6 @@ import           Hasura.RQL.Types.Common                     as R
 import           Hasura.RQL.Types.ComputedField              as R
 import           Hasura.RQL.Types.CustomTypes                as R
 import           Hasura.RQL.Types.Endpoint                   as R
-import           Hasura.RQL.Types.Error                      as R
 import           Hasura.RQL.Types.EventTrigger               as R
 import           Hasura.RQL.Types.Function                   as R
 import           Hasura.RQL.Types.GraphqlSchemaIntrospection as R

@@ -2,15 +2,17 @@ module Hasura.Server.Migrate.Internal
   ( runTx
   , getCatalogVersion
   , from3To4
-  )
-where
-import           Hasura.Backends.Postgres.Connection
+  ) where
+
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Error
-import           Hasura.RQL.Types.EventTrigger
 
 import qualified Data.Aeson                          as A
 import qualified Database.PG.Query                   as Q
+
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Base.Error
+import           Hasura.RQL.Types.EventTrigger
+
 
 runTx :: (MonadTx m) => Q.Query -> m ()
 runTx = liftTx . Q.multiQE defaultTxErrorHandler

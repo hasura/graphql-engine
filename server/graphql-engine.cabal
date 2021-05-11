@@ -302,6 +302,8 @@ library
                      , Hasura.App
                      , Hasura.Metadata.Class
 
+                     , Hasura.Base.Error
+
                      , Hasura.Backends.BigQuery.Connection
                      , Hasura.Backends.BigQuery.DataLoader.Execute
                      , Hasura.Backends.BigQuery.DataLoader.Plan
@@ -435,7 +437,6 @@ library
                      , Hasura.RQL.Types.CustomTypes
                      , Hasura.RQL.Types.Endpoint
                      , Hasura.RQL.Types.Endpoint.Trie
-                     , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.EventTrigger
                      , Hasura.RQL.Types.GraphqlSchemaIntrospection
                      , Hasura.RQL.Types.Function

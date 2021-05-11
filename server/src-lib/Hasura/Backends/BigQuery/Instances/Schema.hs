@@ -16,15 +16,16 @@ import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Schema.Build           as GSB
 import qualified Hasura.RQL.IR.Select                  as IR
 import qualified Hasura.RQL.IR.Update                  as IR
-import qualified Hasura.RQL.Types.Error                as RQL
 import qualified Language.GraphQL.Draft.Syntax         as G
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser                 hiding (EnumValueInfo, field)
 import           Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.RQL.Types
+
 
 ----------------------------------------------------------------
 -- BackendSchema instance
@@ -194,7 +195,7 @@ msColumnParser columnType (G.Nullability isNullable) =
                     . either (parseErrorWith ParseFailed . qeError) pure
                     . runAesonParser (J.withText "TimestampColumn" BigQuery.textToUTCTime)
           }
-      ty -> throwError $ RQL.internalError $ T.pack $ "Type currently unsupported for BigQuery: " ++ show ty
+      ty -> throwError $ internalError $ T.pack $ "Type currently unsupported for BigQuery: " ++ show ty
     ColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (Map.toList enumValues) of
         Just enumValuesList -> do

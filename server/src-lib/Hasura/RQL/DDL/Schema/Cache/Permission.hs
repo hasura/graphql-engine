@@ -24,6 +24,7 @@ import           Data.Text.Extended
 import qualified Hasura.Incremental                     as Inc
 import qualified Hasura.SQL.AnyBackend                  as AB
 
+import           Hasura.Base.Error
 import           Hasura.Incremental.Internal.Dependency ()
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal

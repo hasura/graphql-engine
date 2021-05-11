@@ -2,13 +2,17 @@ module Hasura.RQL.DDL.Relationship.Rename
   (runRenameRel)
 where
 
-import           Data.Text.Extended
-import           Hasura.EncJSON
 import           Hasura.Prelude
+
+import qualified Data.HashMap.Strict   as Map
+
+import           Data.Text.Extended
+
+import           Hasura.Base.Error
+import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Schema (renameRelationshipInMetadata)
 import           Hasura.RQL.Types
 
-import qualified Data.HashMap.Strict   as Map
 
 renameRelP2
   :: forall b m

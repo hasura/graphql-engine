@@ -50,6 +50,7 @@ import qualified Hasura.RQL.IR.OrderBy                      as IR
 import qualified Hasura.RQL.IR.Select                       as IR
 import qualified Hasura.SQL.AnyBackend                      as AB
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser                      (FieldParser, InputFieldsParser,
                                                              Kind (..), Parser,

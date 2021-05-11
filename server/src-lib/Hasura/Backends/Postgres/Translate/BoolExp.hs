@@ -14,8 +14,10 @@ import qualified Hasura.Backends.Postgres.SQL.DML         as S
 import           Hasura.Backends.Postgres.Instances.Types ()
 import           Hasura.Backends.Postgres.SQL.Types       hiding (TableName)
 import           Hasura.Backends.Postgres.Types.BoolExp
+import           Hasura.Base.Error
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+
 
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null

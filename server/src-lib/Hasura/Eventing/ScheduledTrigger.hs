@@ -138,6 +138,7 @@ import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Backends.Postgres.DDL.Table     (getHeaderInfosFromConf)
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Base.Error
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.Eventing.ScheduledTrigger.Types
@@ -147,6 +148,7 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Server.Version                  (HasVersion)
+
 
 -- | runCronEventsGenerator makes sure that all the cron triggers
 --   have an adequate buffer of cron events.

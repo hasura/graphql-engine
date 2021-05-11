@@ -52,6 +52,7 @@ import qualified Hasura.GraphQL.Transport.WebSocket.Server  as WS
 import qualified Hasura.Tracing                             as Tracing
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.EventTrigger
@@ -84,6 +85,7 @@ import           Hasura.Server.Telemetry
 import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
+
 
 data ExitCode
 -- these are used during server initialization:

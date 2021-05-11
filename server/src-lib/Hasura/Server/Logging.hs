@@ -26,6 +26,7 @@ import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Int                      (Int64)
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser.Schema  (Variable)
 import           Hasura.HTTP
 import           Hasura.Logging

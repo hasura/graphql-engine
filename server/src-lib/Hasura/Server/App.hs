@@ -55,6 +55,7 @@ import qualified Hasura.Server.API.V2Query                 as V2Q
 import qualified Hasura.Tracing                            as Tracing
 
 import           Hasura.Backends.Postgres.Execute.Types
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                    (MonadQueryLog)
 import           Hasura.HTTP
@@ -75,6 +76,7 @@ import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.Session
+
 
 data SchemaCacheRef
   = SchemaCacheRef

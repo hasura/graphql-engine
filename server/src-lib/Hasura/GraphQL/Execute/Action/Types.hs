@@ -16,6 +16,7 @@ import qualified Hasura.Logging                as L
 import qualified Hasura.RQL.IR.Select          as RS
 import qualified Hasura.Tracing                as Tracing
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Parser
 import           Hasura.RQL.DDL.Headers

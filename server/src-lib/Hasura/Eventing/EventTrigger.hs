@@ -75,6 +75,7 @@ import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Backends.Postgres.Execute.Types
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Base.Error
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.HTTP

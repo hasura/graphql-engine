@@ -44,8 +44,8 @@ import           Network.HTTP.Client.Extended
 import qualified Hasura.Tracing                      as Tracing
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Base.Error
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.Metadata.Object
 import           Hasura.RQL.Types.RemoteSchema       (RemoteSchemaName)
