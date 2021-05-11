@@ -335,7 +335,7 @@ class TestGraphQLQueryOffsets:
         return 'queries/graphql_query/offset'
 
 
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
 @pytest.mark.parametrize("backend", ['mssql', 'postgres'])
 @usefixtures('per_class_tests_db_state', 'per_backend_tests')
 class TestGraphQLQueryBoolExpBasicCommon:
@@ -520,7 +520,7 @@ class TestGraphQLInheritedRoles:
         check_query_f(hge_ctx, self.dir() + '/inherited_role_with_some_roles_having_no_permissions.yaml')
 
 
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
 @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
 @usefixtures('per_class_tests_db_state', 'per_backend_tests')
 class TestGraphQLQueryBoolExpSearchCommon:

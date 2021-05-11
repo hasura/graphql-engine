@@ -17,6 +17,10 @@ module Hasura.Backends.MSSQL.ToQuery
 import           Hasura.Prelude              hiding (GT, LT)
 
 import qualified Data.Text                   as T
+import qualified Data.Text.Extended          as T
+import qualified Data.Text.Lazy              as L
+import qualified Data.Text.Lazy.Builder      as L
+import qualified Text.Builder                as TB
 
 import           Data.List                   (intersperse)
 import           Data.String
@@ -52,7 +56,7 @@ instance IsString Printer where
 -- Instances
 
 instance ToSQL Expression where
-  toSQL = fromString . show . toQueryFlat . fromExpression
+  toSQL = TB.text . T.toTxt . toQueryFlat . fromExpression
 
 
 --------------------------------------------------------------------------------
@@ -63,7 +67,7 @@ fromExpression =
   \case
     JsonQueryExpression e -> "JSON_QUERY(" <+> fromExpression e <+> ")"
     JsonValueExpression e path ->
-      "JSON_VALUE(" <+> fromExpression e <+> ", " <+> fromPath path <+> ")"
+      "JSON_VALUE(" <+> fromExpression e <+> fromPath path <+> ")"
     ValueExpression value -> QueryPrinter (toSql value)
     AndExpression xs ->
       SepByPrinter
@@ -119,10 +123,16 @@ fromOp =
     NLIKE -> "NOT LIKE"
 
 fromPath :: JsonPath -> Printer
-fromPath = \case
-  RootPath      -> "$"
-  IndexPath r i -> fromPath r <+> "[" <+> fromString (show i) <+> "]"
-  FieldPath r f -> fromPath r <+> ".\"" <+> fromString (T.unpack f) <+> "\""
+fromPath path =
+  ", " <+> string path
+  where
+    string = fromExpression .
+             ValueExpression . TextValue . L.toStrict . L.toLazyText . go
+    go =
+      \case
+        RootPath      -> "$"
+        IndexPath r i -> go r <> "[" <> L.fromString (show i) <> "]"
+        FieldPath r f -> go r <> ".\"" <> L.fromText f <> "\""
 
 fromFieldName :: FieldName -> Printer
 fromFieldName (FieldName {..}) =
@@ -338,7 +348,11 @@ fromJsonFieldSpec =
     UuidField name mPath   -> fromNameText name <+> " UNIQUEIDENTIFIER" <+> quote mPath
     JsonField name mPath   -> fromJsonFieldSpec (StringField name mPath) <+> " AS JSON"
     where
-      quote mPath = maybe "" ((\p -> " '" <+> p <+> "'"). fromPath) mPath
+      quote mPath = maybe "" ((\p -> " '" <+> p <+> "'"). go) mPath
+      go = \case
+        RootPath      -> "$"
+        IndexPath r i -> go r <+> "[" <+> fromString (show i) <+> "]"
+        FieldPath r f -> go r <+> ".\"" <+> fromString (T.unpack f) <+> "\""
 
 fromTableName :: TableName -> Printer
 fromTableName TableName {tableName, tableSchema} =

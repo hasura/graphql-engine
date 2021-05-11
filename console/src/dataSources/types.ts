@@ -289,6 +289,7 @@ export type SupportedFeaturesType = {
     tracking: boolean;
   };
   connectDbForm: {
+    enabled: boolean;
     connectionParameters: boolean;
     databaseURL: boolean;
     environmentVariable: boolean;
