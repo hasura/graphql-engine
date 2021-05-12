@@ -6,6 +6,7 @@
 
 (Add entries below in the order of: server, console, cli, docs, others)
 
+- server: sanitise event trigger and scheduled trigger logs to omit possibly sensitive request body and headers
 - server: fix parsing of values for Postgres char columns (fix #6814)
 - server: fix query execution of custom function containing a composite argument type
 - server: fix a bug in query validation that would cause some queries using default variable values to be rejected (fix #6867)

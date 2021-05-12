@@ -252,6 +252,7 @@ mkServeOptions rso = do
            schemaPollInterval
            experimentalFeatures
            eventsFetchBatchSize
+           devMode
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
