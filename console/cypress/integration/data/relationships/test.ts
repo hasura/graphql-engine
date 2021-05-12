@@ -15,7 +15,9 @@ import { getIndexRoute } from '../../../helpers/dataHelpers';
 const setup = () => {
   describe('Check Data Tab', () => {
     it('Clicking on Data tab opens the correct route', () => {
-      cy.visit(getIndexRoute()).then(setMetaData);
+      cy.visit(getIndexRoute());
+      cy.wait(7000);
+      setMetaData();
     });
   });
 };

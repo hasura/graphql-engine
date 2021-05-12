@@ -9,7 +9,9 @@ import {
   failDuplicateNameDb,
   addsNewPgDBWithConParams,
   addsNewPgDBWithEnvVar,
-  deleteTestDBs,
+  deleteTestDBWithUrl,
+  deleteTestDBWithConParams,
+  deleteTestDDWithEnvVar,
 } from './spec';
 import { testMode } from '../../../helpers/common';
 
@@ -40,7 +42,15 @@ export const runManageDatabaseTests = () => {
       addsNewPgDBWithEnvVar
     );
     it('Fails to connect db with duplicate name', failDuplicateNameDb);
-    it('Successfully delete all test DBs', deleteTestDBs);
+    it('Successfully deletes test DB added with URL', deleteTestDBWithUrl);
+    it(
+      'Successfully deletes test DB added with connection params',
+      deleteTestDBWithConParams
+    );
+    it(
+      'Successfully deletes test DB added with env variable',
+      deleteTestDDWithEnvVar
+    );
   });
 };
 

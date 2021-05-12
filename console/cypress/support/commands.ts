@@ -24,40 +24,10 @@
 // -- This is will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
-Cypress.Commands.add('getBySel', (selector, ...args) =>
-  cy.get(`[data-test=${selector}]`, ...args)
-);
+Cypress.Commands.add('getBySel', (selector, ...args) => {
+  return cy.get(`[data-test=${selector}]`, ...args);
+});
 
-Cypress.Commands.add('getBySelLike', (selector, ...args) =>
-  cy.get(`[data-test*=${selector}]`, ...args)
-);
-
-interface NotificationOptions {
-  timeout?: number;
-  type?: 'error' | 'success' | 'info';
-}
-
-Cypress.Commands.add(
-  'checkNotification',
-  (content: string, options?: NotificationOptions) => {
-    const type = options?.type ?? 'success';
-    const timeout = options?.timeout ?? 0;
-    cy.get(`.notification-${type}`, timeout ? { timeout } : {})
-      .contains(content)
-      .should('be.visible')
-      .click({ multiple: true, force: true });
-  }
-);
-
-Cypress.Commands.add('setPrompt', (value: string, callback = () => {}) => {
-  const sandbox = Cypress.sinon.createSandbox();
-  cy.window()
-    .then(win => {
-      sandbox.stub(win, 'prompt').returns(value);
-      callback();
-      return null;
-    })
-    .then(() => {
-      sandbox.restore();
-    });
+Cypress.Commands.add('getBySelLike', (selector, ...args) => {
+  return cy.get(`[data-test*=${selector}]`, ...args);
 });
