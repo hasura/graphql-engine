@@ -80,7 +80,6 @@ module QuickType
     , ActionDefinitionType (..)
     , CustomTypeObjectRelationshipType (..)
     , Columns (..)
-    , Filter (..)
     , decodeTopLevel
     ) where
 
@@ -734,11 +733,15 @@ https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/tab
 customColumnNames:
 Customise the column names
 
+customName:
+Customise the table name
+
 customRootFields:
 Customise the root fields
 -}
 data TableConfig = TableConfig
     { customColumnNamesTableConfig :: Maybe (HashMap Text Text)
+    , customNameTableConfig :: Maybe Text
     , customRootFieldsTableConfig :: Maybe CustomRootFields
     } deriving (Show)
 
@@ -814,14 +817,8 @@ filter:
 Only the rows where this precondition holds true are updatable
 -}
 data DeletePermission = DeletePermission
-    { filterDeletePermission :: Maybe (HashMap Text Filter)
+    { filterDeletePermission :: Maybe (HashMap Text (Maybe Text))
     } deriving (Show)
-
-data Filter
-    = AnythingMapInFilter (HashMap Text (Maybe Text))
-    | DoubleInFilter Float
-    | StringInFilter Text
-    deriving (Show)
 
 {-| NOTE: The metadata type doesn't QUITE match the 'create' arguments here
 
@@ -960,7 +957,7 @@ Preset values for columns that can be sourced from session variables or static v
 -}
 data InsertPermission = InsertPermission
     { backendOnlyInsertPermission :: Maybe Bool
-    , checkInsertPermission :: Maybe (HashMap Text Filter)
+    , checkInsertPermission :: Maybe (HashMap Text (Maybe Text))
     , columnsInsertPermission :: EventTriggerColumns
     , setInsertPermission :: Maybe (HashMap Text Text)
     } deriving (Show)
@@ -1103,7 +1100,7 @@ data SelectPermission = SelectPermission
     { allowAggregationsSelectPermission :: Maybe Bool
     , columnsSelectPermission :: EventTriggerColumns
     , computedFieldsSelectPermission :: Maybe (Vector Text)
-    , filterSelectPermission :: Maybe (HashMap Text Filter)
+    , filterSelectPermission :: Maybe (HashMap Text (Maybe Text))
     , limitSelectPermission :: Maybe Int
     } deriving (Show)
 
@@ -1143,9 +1140,9 @@ set:
 Preset values for columns that can be sourced from session variables or static values
 -}
 data UpdatePermission = UpdatePermission
-    { checkUpdatePermission :: Maybe (HashMap Text Filter)
+    { checkUpdatePermission :: Maybe (HashMap Text (Maybe Text))
     , columnsUpdatePermission :: EventTriggerColumns
-    , filterUpdatePermission :: Maybe (HashMap Text Filter)
+    , filterUpdatePermission :: Maybe (HashMap Text (Maybe Text))
     , setUpdatePermission :: Maybe (HashMap Text Text)
     } deriving (Show)
 
@@ -1927,15 +1924,17 @@ instance FromJSON ComputedFieldDefinition where
         <*> v .:? "table_argument"
 
 instance ToJSON TableConfig where
-    toJSON (TableConfig customColumnNamesTableConfig customRootFieldsTableConfig) =
+    toJSON (TableConfig customColumnNamesTableConfig customNameTableConfig customRootFieldsTableConfig) =
         object
         [ "custom_column_names" .= customColumnNamesTableConfig
+        , "custom_name" .= customNameTableConfig
         , "custom_root_fields" .= customRootFieldsTableConfig
         ]
 
 instance FromJSON TableConfig where
     parseJSON (Object v) = TableConfig
         <$> v .:? "custom_column_names"
+        <*> v .:? "custom_name"
         <*> v .:? "custom_root_fields"
 
 instance ToJSON CustomRootFields where
@@ -1987,16 +1986,6 @@ instance ToJSON DeletePermission where
 instance FromJSON DeletePermission where
     parseJSON (Object v) = DeletePermission
         <$> v .:? "filter"
-
-instance ToJSON Filter where
-    toJSON (AnythingMapInFilter x) = toJSON x
-    toJSON (DoubleInFilter x) = toJSON x
-    toJSON (StringInFilter x) = toJSON x
-
-instance FromJSON Filter where
-    parseJSON xs@(Object _) = (fmap AnythingMapInFilter . parseJSON) xs
-    parseJSON xs@(Number _) = (fmap DoubleInFilter . parseJSON) xs
-    parseJSON xs@(String _) = (fmap StringInFilter . parseJSON) xs
 
 instance ToJSON EventTrigger where
     toJSON (EventTrigger definitionEventTrigger headersEventTrigger nameEventTrigger retryConfEventTrigger webhookEventTrigger webhookFromEnvEventTrigger) =

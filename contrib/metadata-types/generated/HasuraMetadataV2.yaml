@@ -54,6 +54,10 @@ definitions:
     title: TableConfig
     type: object
     properties:
+      custom_name:
+        description: Customise the table name
+        type: string
+        title: custom_name
       custom_root_fields:
         description: Customise the root fields
         $ref: '#/definitions/CustomRootFields'
@@ -415,14 +419,8 @@ definitions:
       check:
         description: This expression has to hold true for every new row that is inserted
         type: object
-        additionalProperties:
-          anyOf:
-            - type: object
-              properties: {}
-              additionalProperties: true
-            - type:
-                - string
-                - number
+        properties: {}
+        additionalProperties: true
         title: check
       set:
         description: >-
@@ -505,14 +503,8 @@ definitions:
       filter:
         description: Only the rows where this precondition holds true are selectable
         type: object
-        additionalProperties:
-          anyOf:
-            - type: object
-              properties: {}
-              additionalProperties: true
-            - type:
-                - string
-                - number
+        properties: {}
+        additionalProperties: true
         title: filter
     required:
       - columns
@@ -546,14 +538,8 @@ definitions:
       check:
         description: Postcondition which must be satisfied by rows which have been updated
         type: object
-        additionalProperties:
-          anyOf:
-            - type: object
-              properties: {}
-              additionalProperties: true
-            - type:
-                - string
-                - number
+        properties: {}
+        additionalProperties: true
         title: check
       set:
         description: >-
@@ -574,14 +560,8 @@ definitions:
       filter:
         description: Only the rows where this precondition holds true are updatable
         type: object
-        additionalProperties:
-          anyOf:
-            - type: object
-              properties: {}
-              additionalProperties: true
-            - type:
-                - string
-                - number
+        properties: {}
+        additionalProperties: true
         title: filter
     required:
       - columns
@@ -615,14 +595,8 @@ definitions:
       filter:
         description: Only the rows where this precondition holds true are updatable
         type: object
-        additionalProperties:
-          anyOf:
-            - type: object
-              properties: {}
-              additionalProperties: true
-            - type:
-                - string
-                - number
+        properties: {}
+        additionalProperties: true
         title: filter
   ComputedField:
     description: >-
