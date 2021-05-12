@@ -112,6 +112,7 @@ const ColumnEditorList = ({
         <GqlCompatibilityWarning
           identifier={colName}
           className={styles.add_mar_left_small}
+          ifWarningCanBeFixed
         />
       );
     };

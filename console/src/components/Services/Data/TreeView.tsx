@@ -116,6 +116,7 @@ const LeafItemsView: React.FC<LeafItemsViewProps> = ({
               <GqlCompatibilityWarning
                 identifier={item.name}
                 className={styles.add_mar_left_mid}
+                ifWarningCanBeFixed
               />
             </>
           )}

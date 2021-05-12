@@ -399,6 +399,7 @@ class Schema extends Component {
                 <GqlCompatibilityWarning
                   identifier={tableName}
                   className={styles.add_mar_left_mid}
+                  ifWarningCanBeFixed
                 />
               </div>
             );

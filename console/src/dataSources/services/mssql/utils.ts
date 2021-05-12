@@ -190,12 +190,10 @@ export const getGraphQLQueryForBrowseRows = ({
   ]
     .filter(Boolean)
     .join(',')}`;
-
+  const tableName = tableConfiguration?.custom_name || originalTable;
   return `query TableRows {
       ${
-        currentSchema === 'dbo'
-          ? originalTable
-          : `${currentSchema}_${originalTable}`
+        currentSchema === 'dbo' ? tableName : `${currentSchema}_${tableName}`
       } ${clauses && `(${clauses})`} {
           ${getColQuery(
             view.query.columns,
@@ -255,11 +253,11 @@ const processTableRowData = (
     return acc;
   }, {});
 
+  const tableConfiguration = config?.tableConfiguration;
+  const tableName = tableConfiguration?.custom_name || originalTable;
   const results =
     data.data[
-      currentSchema === 'dbo'
-        ? originalTable
-        : `${currentSchema}_${originalTable}`
+      currentSchema === 'dbo' ? tableName : `${currentSchema}_${tableName}`
     ];
 
   const rows = isEmpty(reversedCustomColumns)

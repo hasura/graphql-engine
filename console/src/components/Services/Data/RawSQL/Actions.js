@@ -20,6 +20,7 @@ import requestAction from '../../../../utils/requestAction';
 import {
   dataSource,
   escapeTableColumns,
+  escapeTableName,
   findTable,
 } from '../../../../dataSources';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
@@ -62,12 +63,15 @@ const trackAllItems = (sql, isMigration, migrationName, source, driver) => (
       req = getTrackFunctionQuery(name, schema, source, {}, driver);
     } else {
       const tableDef = { name, schema };
-      const table = findTable(getState().tables.allSchemas, tableDef);
+      const { allSchemas } = getState().tables;
+      const table = findTable(allSchemas, tableDef);
+      console.log({ table });
       req = getTrackTableQuery({
         tableDef,
         source,
         driver,
         customColumnNames: escapeTableColumns(table),
+        customName: escapeTableName(name),
       });
     }
     changes.push(req);
