@@ -40,7 +40,6 @@ RUN apt-get -y update     \
     && curl -Lo /tmp/docker-${docker_ver}.tgz https://download.docker.com/linux/static/stable/x86_64/docker-${docker_ver}.tgz     \
     && tar -xz -C /tmp -f /tmp/docker-${docker_ver}.tgz     \
     && mv /tmp/docker/* /usr/bin     \
-    && apt-get -y purge curl     \
     && apt-get -y auto-remove     \
     && apt-get -y clean     \
     && rm -rf /var/lib/apt/lists/*     \
@@ -75,3 +74,12 @@ RUN apt -y update \
     && cd / \
     && rm -rf ghc \
     && rm -rf /opt/ghc/  /root/.cabal/store
+
+# adding this install step here to make use of build cache on docker build
+# if not it'll trigger a rebuild of GHC
+
+# if the man directories are missing, postgresql-client fails to install in debian
+RUN mkdir -p /usr/share/man/man{1,7} && apt-get -y update
+
+RUN apt-get -y update \
+    && apt-get -y install pgbouncer jq postgresql-client-13

@@ -1,7 +1,7 @@
 # anchor refs to be used elsewhere
 refs:
   constants:
-  - &server_builder_image hasura/graphql-engine-server-builder:252ba880c8ca6b189f9959962c7b8e2602539cbc4b18e259a76c90b74eb87353
+  - &server_builder_image hasura/graphql-engine-server-builder:39458e30010b18e28badb68391d9c741cbb9729935f1ae0c851c63c52cda1131
   skip_job_on_ciignore: &skip_job_on_ciignore
     run:
       name: checking if job should be terminated or not
@@ -107,19 +107,6 @@ refs:
     - *skip_server_tests
     - *wait_for_postgres
     - run:
-        name: Install deps
-        # if the man directories are missing, postgresql-client fails
-        # to install in debian
-        command: |
-          mkdir -p /usr/share/man/man{1,7}
-          apt-get update
-          apt install --yes curl apt-transport-https
-          curl -s https://packages.microsoft.com/config/debian/9/prod.list > /etc/apt/sources.list.d/mssql-release.list
-          curl -s https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-          apt-get update
-          apt install --yes pgbouncer jq postgresql-client-13 g++ gcc libc6-dev unixodbc-dev
-          ACCEPT_EULA=Y apt install --yes msodbcsql17
-    - run:
         name: Ensure databases are present
         environment:
           # sqlalchemy throws warnings with postgres://
@@ -195,11 +182,6 @@ jobs:
         - cabal-packages-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-
         - cabal-packages-v3-{{ checksum "server/cabal.project" }}-
         - cabal-packages-v3-
-    - run:
-        name: Install latest postgresql client tools
-        command: |
-          apt-get -y update
-          apt-get -y install postgresql-client-13
     - run:
         name: Build the binary
         working_directory: ./server
