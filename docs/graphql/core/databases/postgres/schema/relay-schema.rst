@@ -42,11 +42,11 @@ Relay's client-side benefits include:
   - Components can only access data they've asked for. This **data masking** prevents implicit data dependency bugs.
   - Components only re-render when the exact data they're using is updated, preventing unnecessary re-renders.
 
-- **Performance**: The Relay compiler composes your GraphQL fragments into optimized and efficient batches to reduce round-trips to the server. The compiler also applies `transforms <https://relay.dev/docs/en/compiler-architecture.html#transforms>`__ to your queries to remove redundancies and shorten query strings, which reduces upload bytes.
+- **Performance**: The Relay compiler composes your GraphQL fragments into optimized and efficient batches to reduce round-trips to the server. The compiler also applies `transforms <https://relay.dev/docs/principles-and-architecture/compiler-architecture/#transforms>`__ to your queries to remove redundancies and shorten query strings, which reduces upload bytes.
 
 - **Strong typing**: The compiler automatically generates Flow (or TypeScript) types, which you can import into your component for type checking in your code editor and during build time.
 
-To learn more about these and other Relay features, like persisted queries, local state management, passing arguments to fragments, and fetching data as early as possible, check out the `Relay docs <https://relay.dev/docs/en/experimental/a-guided-tour-of-relay>`__.
+To learn more about these and other Relay features, like persisted queries, local state management, passing arguments to fragments, and fetching data as early as possible, check out the `Relay docs <https://relay.dev/docs/getting-started/step-by-step-guide/>`__.
 
 .. note::
   For a more detailed breakdown of Relay and its benefits, check out our `deep-dive on Relay <https://hasura.io/blog/deep-dive-into-relay-graphql-client/>`__.
