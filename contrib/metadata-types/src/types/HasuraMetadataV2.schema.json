@@ -483,19 +483,8 @@
       "properties": {
         "check": {
           "description": "This expression has to hold true for every new row that is inserted",
-          "type": "object",
-          "additionalProperties": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {},
-                "additionalProperties": true
-              },
-              {
-                "type": ["string", "number"]
-              }
-            ]
-          },
+          "type": ["object", "null"],
+          "additionalProperties": true,
           "title": "check"
         },
         "set": {
@@ -592,18 +581,7 @@
         "filter": {
           "description": "Only the rows where this precondition holds true are selectable",
           "type": "object",
-          "additionalProperties": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {},
-                "additionalProperties": true
-              },
-              {
-                "type": ["string", "number"]
-              }
-            ]
-          },
+          "additionalProperties": true,
           "title": "filter"
         }
       },
@@ -639,19 +617,8 @@
       "properties": {
         "check": {
           "description": "Postcondition which must be satisfied by rows which have been updated",
-          "type": "object",
-          "additionalProperties": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {},
-                "additionalProperties": true
-              },
-              {
-                "type": ["string", "number"]
-              }
-            ]
-          },
+          "type": ["object", "null"],
+          "additionalProperties": true,
           "title": "check"
         },
         "set": {
@@ -678,18 +645,7 @@
         "filter": {
           "description": "Only the rows where this precondition holds true are updatable",
           "type": "object",
-          "additionalProperties": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {},
-                "additionalProperties": true
-              },
-              {
-                "type": ["string", "number"]
-              }
-            ]
-          },
+          "additionalProperties": true,
           "title": "filter"
         }
       },
@@ -726,18 +682,7 @@
         "filter": {
           "description": "Only the rows where this precondition holds true are updatable",
           "type": "object",
-          "additionalProperties": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {},
-                "additionalProperties": true
-              },
-              {
-                "type": ["string", "number"]
-              }
-            ]
-          },
+          "additionalProperties": true,
           "title": "filter"
         }
       }
