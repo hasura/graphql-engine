@@ -2,17 +2,6 @@ module Hasura.Server.Utils where
 
 import           Hasura.Prelude
 
-import           Control.Lens               ((^..))
-import           Data.Aeson
-import           Data.Aeson.Internal
-import           Data.Char
-import           Data.Text.Extended
-import           Data.Time
-import           Language.Haskell.TH.Syntax (Q, TExp)
-import           System.Environment
-import           System.Exit
-import           System.Process
-
 import qualified Data.ByteString            as B
 import qualified Data.CaseInsensitive       as CI
 import qualified Data.HashSet               as Set
@@ -31,7 +20,19 @@ import qualified Text.Regex.TDFA            as TDFA
 import qualified Text.Regex.TDFA.ReadRegex  as TDFA
 import qualified Text.Regex.TDFA.TDFA       as TDFA
 
-import           Hasura.RQL.Instances       ()
+import           Control.Lens               ((^..))
+import           Data.Aeson
+import           Data.Aeson.Internal
+import           Data.Char
+import           Data.Text.Extended
+import           Data.Time
+import           Language.Haskell.TH.Syntax (Q, TExp)
+import           System.Environment
+import           System.Exit
+import           System.Process
+
+import           Hasura.Base.Instances      ()
+
 
 jsonHeader :: HTTP.Header
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")

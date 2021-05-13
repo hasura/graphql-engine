@@ -38,8 +38,8 @@ import           Data.Aeson.TH
 import           Data.Text.Extended
 
 import           Hasura.Base.Error
+import           Hasura.Base.Instances         ()
 import           Hasura.Incremental            (Cacheable)
-import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend

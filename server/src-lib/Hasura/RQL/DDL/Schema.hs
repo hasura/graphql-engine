@@ -48,13 +48,13 @@ import           Data.Aeson.TH
 
 import           Hasura.Backends.Postgres.DDL.RunSQL
 import           Hasura.Base.Error
+import           Hasura.Base.Instances               ()
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.Instances                ()
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                 (quoteRegex)
 

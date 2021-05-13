@@ -303,6 +303,7 @@ library
                      , Hasura.Metadata.Class
 
                      , Hasura.Base.Error
+                     , Hasura.Base.Instances
 
                      , Hasura.Backends.BigQuery.Connection
                      , Hasura.Backends.BigQuery.DataLoader.Execute
@@ -426,7 +427,6 @@ library
                      , Hasura.Server.Migrate.Internal
                      , Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
-                     , Hasura.RQL.Instances
                      , Hasura.RQL.Types
                      , Hasura.RQL.Types.Action
                      , Hasura.RQL.Types.ApiLimit

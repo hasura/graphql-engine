@@ -35,7 +35,7 @@ import qualified Data.Text                        as T
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
-import           Hasura.RQL.Instances             ()
+import           Hasura.Base.Instances            ()
 import           Hasura.RQL.Types.Endpoint.Trie   as Trie
 import           Hasura.RQL.Types.QueryCollection (CollectionName, QueryName)
 import           Web.HttpApiData                  (FromHttpApiData (..))
