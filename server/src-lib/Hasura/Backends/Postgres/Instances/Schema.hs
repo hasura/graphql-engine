@@ -11,7 +11,6 @@ import qualified Data.HashMap.Strict.Extended           as M
 import qualified Data.HashMap.Strict.InsOrd.Extended    as OMap
 import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Text                              as T
-import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Data.Has
@@ -195,28 +194,29 @@ columnParser columnType (G.Nullability isNullable) =
   -- recursive simply for performance reasons, since it’s likely to be hammered
   -- during schema generation. Need to profile to see whether or not it’s a win.
   opaque . fmap (ColumnValue columnType) <$> case columnType of
-    ColumnScalar scalarType -> possiblyNullable scalarType <$> case scalarType of
-      PGInteger -> pure (PGValInteger <$> P.int)
-      PGBoolean -> pure (PGValBoolean <$> P.boolean)
-      PGFloat   -> pure (PGValDouble  <$> P.float)
-      PGText    -> pure (PGValText    <$> P.string)
-      PGVarchar -> pure (PGValVarchar <$> P.string)
-      PGJSON    -> pure (PGValJSON  . Q.JSON  <$> P.json)
-      PGJSONB   -> pure (PGValJSONB . Q.JSONB <$> P.jsonb)
-      -- For all other scalars, we convert the value to JSON and use the
-      -- FromJSON instance. The major upside is that this avoids having to write
-      -- new parsers for each custom type: if the JSON parser is sound, so will
-      -- this one, and it avoids the risk of having two separate ways of parsing
-      -- a value in the codebase, which could lead to inconsistencies.
-      _  -> do
-        name <- mkScalarTypeName scalarType
-        let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
-        pure $ Parser
-          { pType = schemaType
-          , pParser =
-              valueToJSON (P.toGraphQLType schemaType) >=>
-              either (parseErrorWith ParseFailed . qeError) pure . runAesonParser (parsePGValue scalarType)
-          }
+    ColumnScalar scalarType -> possiblyNullable scalarType <$> do
+      -- We convert the value to JSON and use the FromJSON instance. This avoids
+      -- having two separate ways of parsing a value in the codebase, which
+      -- could lead to inconsistencies.
+      --
+      -- The mapping from postgres type to GraphQL scalar name is done by
+      -- 'mkScalarTypeName'. This is confusing, and we might want to fix it
+      -- later, as we will parse values differently here than how they'd be
+      -- parsed in other places using the same scalar name; for instance, we
+      -- will accept strings for postgres columns of type "Integer", despite the
+      -- fact that they will be represented as GraphQL ints, which otherwise do
+      -- not accept strings.
+      --
+      -- TODO: introduce new dedicated scalars for Postgres column types.
+      name <- mkScalarTypeName scalarType
+      let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
+      pure $ Parser
+        { pType = schemaType
+        , pParser = valueToJSON (P.toGraphQLType schemaType) >=> \case
+            J.Null -> parseError $ "unexpected null value for type " <>> name
+            value  -> runAesonParser (parsePGValue scalarType) value
+                      `onLeft` (parseErrorWith ParseFailed . qeError)
+        }
     ColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (Map.toList enumValues) of
         Just enumValuesList -> do

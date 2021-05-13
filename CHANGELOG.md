@@ -6,6 +6,7 @@
 
 (Add entries below in the order of: server, console, cli, docs, others)
 
+- server: fix a regression from V1 and allow string values for most Postgres column types
 - server: sanitise event trigger and scheduled trigger logs to omit possibly sensitive request body and headers
 - server: fix parsing of values for Postgres char columns (fix #6814)
 - server: fix query execution of custom function containing a composite argument type
