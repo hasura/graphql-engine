@@ -30,15 +30,32 @@ There are two kinds of relationships:
 - one-to-one or ``object relationships`` (e.g. ``author``).
 - one-to-many or ``array relationships`` (e.g. ``articles``).
 
+The above represents the same table relationship from different perspectives:
+there is a single ``author`` for every ``article`` (one-to-one), but there
+may be multiple ``articles`` for every ``author`` (one-to-many).
+
+A table relationship may be one-to-one from both perspectives. For
+example, given tables ``author`` and ``author_details``, if the ``author_details``
+table has a primary key ``author_id`` which is a foreign key to the
+``author`` table's primary key ``id``. In this case there will be a single ``author``
+for every ``author_details`` and a single ``details`` for every ``author``
+
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
 .. _create_object_relationship:
 
 create_object_relationship
 --------------------------
 
 ``create_object_relationship`` is used to create an object relationship on a
-table. There cannot be an existing column or relationship with the same name. 
+table. There cannot be an existing column or relationship with the same name.
 
-There are 2 ways in which you can create an object relationship.
+There are 3 ways in which you can create an object relationship.
 
 1. Using foreign key constraint on a column
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -63,23 +80,53 @@ Create an ``object relationship`` ``author`` on ``article`` *table*,  *using* th
        }
    }
 
+2. Using foreign key constraint on a remote table
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Create an ``object relationship`` ``details`` on ``author`` *table*, *using* the
+*foreign_key_constraint_on* the ``author_details`` *table*'s ``id`` *column*:
+
+.. code-block:: http
+
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type": "create_object_relationship",
+       "args": {
+           "table": "author",
+           "name": "details",
+           "using": {
+               "foreign_key_constraint_on" : {
+                   "table": "author_details",
+                   "column": "author_id"
+               }
+           }
+       }
+   }
+
+.. admonition:: Supported from
+
+    Relationships via remote table are supported for versions ``v2.0.0-alpha.3`` and above.
 
 .. _manual_obj_relationship:
 
-2. Manual configuration
+3. Manual configuration
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 This is an advanced feature which is mostly used to define relationships on or
 to views. We cannot rely on foreign key constraints as they are not valid to or
 from views. So, when using manual configuration, we have to specify the remote
 table and how columns in this table are mapped to the columns of the
-remote table. 
+remote table.
 
 Let's say we have a view called ``article_detail`` which has three columns
 ``article_id`` and ``view_count`` and ``average_rating``. We can now define an
 object relationship called ``article_detail`` on the ``article`` table as
-follows: 
- 
+follows:
+
 .. code-block:: http
 
    POST /v1/query HTTP/1.1
@@ -133,58 +180,12 @@ Args syntax
      - Name of the new relationship
    * - using
      - true
-     - ObjRelUsing_
+     - :ref:`ObjRelUsing`
      - Use one of the available ways to define an object relationship
    * - comment
      - false
      - text
      - comment
-
-.. _ObjRelUsing:
-
-ObjRelUsing
-&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - foreign_key_constraint_on
-     - false
-     - :ref:`PGColumn <PGColumn>`
-     - The column with foreign key constraint
-   * - manual_configuration
-     - false
-     - ObjRelUsingManualMapping_
-     - Manual mapping of table and columns
-
-.. note::
-
-   There has to be at least one and only one of ``foreign_key_constraint_on``
-   and ``manual_configuration``. 
-
-
-ObjRelUsingManualMapping
-&&&&&&&&&&&&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - remote_table
-     - true
-     - :ref:`TableName`
-     - The table to which the relationship has to be established
-   * - column_mapping
-     - true
-     - Object (:ref:`PGColumn` : :ref:`PGColumn`)
-     - Mapping of columns from current table to remote table
 
 .. _create_array_relationship:
 
@@ -192,7 +193,7 @@ create_array_relationship
 -------------------------
 
 ``create_array_relationship`` is used to create an array relationship on a
-table. There cannot be an existing column or relationship with the same name. 
+table. There cannot be an existing column or relationship with the same name.
 
 There are 2 ways in which you can create an array relationship.
 
@@ -290,71 +291,12 @@ Args syntax
      - Name of the new relationship
    * - using
      - true
-     - ArrRelUsing_
+     - :ref:`ArrRelUsing`
      - Use one of the available ways to define an array relationship
    * - comment
      - false
      - text
      - comment
-
-.. _ArrRelUsing:
-
-ArrRelUsing
-&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - foreign_key_constraint_on
-     - false
-     - ArrRelUsingFKeyOn_
-     - The column with foreign key constraint
-   * - manual_configuration
-     - false
-     - ArrRelUsingManualMapping_
-     - Manual mapping of table and columns
-
-ArrRelUsingFKeyOn
-&&&&&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - table
-     - true
-     - :ref:`TableName`
-     - Name of the table
-   * - column
-     - true
-     - :ref:`PGColumn`
-     - Name of the column with foreign key constraint
-
-ArrRelUsingManualMapping
-&&&&&&&&&&&&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - remote_table
-     - true
-     - :ref:`TableName`
-     - The table to which the relationship has to be established
-   * - column_mapping
-     - true
-     - Object (:ref:`PGColumn` : :ref:`PGColumn`)
-     - Mapping of columns from current table to remote table
 
 .. _drop_relationship:
 
@@ -365,7 +307,7 @@ drop_relationship
 a table. If there are other objects dependent on this relationship like
 permissions and query templates, etc., the request will fail and report the dependencies
 unless ``cascade`` is set to ``true``. If ``cascade`` is set to ``true``, the
-dependent objects are also dropped. 
+dependent objects are also dropped.
 
 An example:
 
@@ -419,7 +361,7 @@ set_relationship_comment
 ------------------------
 
 ``set_relationship_comment`` is used to set/update the comment on a
-relationship. Setting the comment to ``null`` removes it. 
+relationship. Setting the comment to ``null`` removes it.
 
 An example:
 

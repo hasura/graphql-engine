@@ -27,8 +27,12 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Check status on a different server:
   hasura migrate status --endpoint "<endpoint>"`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return validateConfigV3Flags(cmd, ec)
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.EC.Spin("Fetching migration status...")
+			opts.Source = ec.Source
 			status, err := opts.Run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
@@ -39,16 +43,16 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return nil
 		},
 	}
-
 	return migrateStatusCmd
 }
 
 type MigrateStatusOptions struct {
-	EC *cli.ExecutionContext
+	EC     *cli.ExecutionContext
+	Source cli.Source
 }
 
 func (o *MigrateStatusOptions) Run() (*migrate.Status, error) {
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Source.Name, o.Source.Kind)
 	if err != nil {
 		return nil, err
 	}

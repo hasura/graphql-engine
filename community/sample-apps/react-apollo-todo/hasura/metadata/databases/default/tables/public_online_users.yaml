@@ -1,0 +1,10 @@
+select_permissions:
+- permission:
+    columns:
+    - name
+    - last_seen
+    filter: {}
+  role: user
+table:
+  name: online_users
+  schema: public

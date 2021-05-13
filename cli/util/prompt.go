@@ -44,6 +44,14 @@ func GetSelectPrompt(message string, options []string) (selection string, err er
 	return
 }
 
+func GetInputPrompt(message string) (input string, err error) {
+	prompt := promptui.Prompt{
+		Label: message,
+	}
+	input, err = prompt.Run()
+	return
+}
+
 func GetFSPathPrompt(message string, def string) (input string, err error) {
 	prompt := promptui.Prompt{
 		Label:    message,

@@ -1,0 +1,36 @@
+# Column comparison of a relationship table's column with a compatible root table's column
+- description: Trying to order more number of an item than present in the inventory should fail
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  response:
+    errors:
+      - extensions:
+          path: $.selectionSet.insert_order_cart.args.objects
+          code: permission-error
+        message: check constraint of an insert/update permission has failed
+  query:
+    query: |
+      mutation {
+        insert_order_cart( objects: { item_id: 1, quantity: 106 }) {
+          affected_rows
+        }
+      }
+
+- description: When the order quantity is less than the item's inventory quantity, it should succeed
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  response:
+    data:
+      insert_order_cart:
+        affected_rows: 1
+  query:
+    query: |
+      mutation {
+        insert_order_cart( objects: { item_id: 1, quantity: 6 }) {
+          affected_rows
+        }
+      }

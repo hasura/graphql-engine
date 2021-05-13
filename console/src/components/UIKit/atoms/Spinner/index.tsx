@@ -54,13 +54,13 @@ export const Spinner: React.FC<SpinnerProps> = props => {
         <div
           key={i}
           css={css`
-              ${spinnerChildStyles}
-              transform: rotate(${30 * i}deg);
+            ${spinnerChildStyles}
+            transform: rotate(${30 * i}deg);
 
-              &:before {
-                animation-delay: ${-1.1 + i / 10}s;
-              }
-            `}
+            &:before {
+              animation-delay: ${-1.1 + i / 10}s;
+            }
+          `}
         />
       ))}
     </StyledSpinner>

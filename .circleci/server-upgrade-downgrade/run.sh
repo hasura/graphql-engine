@@ -80,7 +80,10 @@ CURRENT_SERVER_LOG=$SERVER_OUTPUT_DIR/upgrade-test-current-server.log
 HGE_ENDPOINT=http://localhost:$HASURA_GRAPHQL_SERVER_PORT
 PYTEST_DIR="${ROOT}/../../server/tests-py"
 
-pip3 -q install -r "${PYTEST_DIR}/requirements.txt"
+# This seems to flake out relatively often; try a mirror if so.
+# Might also need to disable ipv6 or use a longer --timeout
+pip3 -q install -r "${PYTEST_DIR}/requirements.txt" ||\
+pip3 -q install -i http://mirrors.digitalocean.com/pypi/web/simple --trusted-host mirrors.digitalocean.com  -r "${PYTEST_DIR}/requirements.txt"
 
 # export them so that GraphQL Engine can use it
 export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES="$HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES"
@@ -89,6 +92,7 @@ export GHCRTS='-N1'
 # Required for event trigger tests
 export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
 export EVENT_WEBHOOK_HEADER="MyEnvValue"
+export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
 
 # graphql-engine will be run on this port
 fail_if_port_busy ${HASURA_GRAPHQL_SERVER_PORT}
@@ -161,7 +165,7 @@ get_server_upgrade_tests() {
 	cd $RELEASE_PYTEST_DIR
 	tmpfile="$(mktemp --dry-run)"
 	set -x
-	# FIX ME: Deselecting some introspection tests from the previous test suite
+	# FIX ME: Deselecting some introspection tests and event trigger tests from the previous test suite
 	# which throw errors on the latest build. Even when the output of the current build is more accurate.
 	# Remove these deselects after the next stable release
 	python3 -m pytest -q --collect-only --collect-upgrade-tests-to-file "$tmpfile" \
@@ -172,6 +176,11 @@ get_server_upgrade_tests() {
                 --deselect test_graphql_mutations.py::TestGraphqlInsertPermission::test_backend_user_no_admin_secret_fail \
                 --deselect test_graphql_mutations.py::TestGraphqlMutationCustomSchema::test_update_article \
                 --deselect test_graphql_queries.py::TestGraphQLQueryEnums::test_introspect_user_role \
+                --deselect test_schema_stitching.py::TestRemoteSchemaQueriesOverWebsocket::test_remote_query_error \
+                --deselect test_events.py::TestCreateAndDelete::test_create_reset \
+                --deselect test_events.py::TestUpdateEvtQuery::test_update_basic \
+                --deselect test_schema_stitching.py::TestAddRemoteSchemaTbls::test_add_schema \
+                --deselect test_schema_stitching.py::TestAddRemoteSchemaTbls::test_add_conflicting_table \
 		"${args[@]}" 1>/dev/null 2>/dev/null
 	set +x
 	cat "$tmpfile"

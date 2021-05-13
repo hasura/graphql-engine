@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards      #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Tracing
@@ -21,24 +20,26 @@ module Hasura.Tracing
   ) where
 
 import           Hasura.Prelude
-import           Control.Lens                ((^?))
-import           Control.Monad.Trans.Control
+
+import qualified Data.Aeson                   as J
+import qualified Data.Aeson.Lens              as JL
+import qualified Data.Binary                  as Bin
+import qualified Data.ByteString              as BS
+import qualified Data.ByteString.Base16       as Hex
+import qualified Data.ByteString.Lazy         as BL
+import qualified Network.HTTP.Client.Extended as HTTP
+import qualified Network.HTTP.Types.Header    as HTTP
+import qualified System.Random                as Rand
+import qualified Web.HttpApiData              as HTTP
+
+import           Control.Lens                 ((^?))
+import           Control.Monad.Catch          (MonadCatch, MonadMask, MonadThrow)
 import           Control.Monad.Morph
+import           Control.Monad.Trans.Control
 import           Control.Monad.Unique
-import           Data.String                 (fromString)
-import           Network.URI                 (URI)
+import           Data.String                  (fromString)
+import           Network.URI                  (URI)
 
-import qualified Data.Aeson                  as J
-import qualified Data.Aeson.Lens             as JL
-import qualified Data.ByteString             as BS
-import qualified Data.ByteString.Lazy        as BL
-import qualified Network.HTTP.Client         as HTTP
-import qualified Network.HTTP.Types.Header   as HTTP
-import qualified System.Random               as Rand
-import qualified Web.HttpApiData             as HTTP
-
-import qualified Data.Binary                 as Bin
-import qualified Data.ByteString.Base16      as Hex
 
 
 -- | Any additional human-readable key-value pairs relevant
@@ -81,15 +82,15 @@ instance HasReporter m => HasReporter (ExceptT e m) where
 -- the active span within that trace, and the span's parent,
 -- unless the current span is the root.
 data TraceContext = TraceContext
-  { tcCurrentTrace   :: !Word64
-  , tcCurrentSpan    :: !Word64
-  , tcCurrentParent  :: !(Maybe Word64)
+  { tcCurrentTrace  :: !Word64
+  , tcCurrentSpan   :: !Word64
+  , tcCurrentParent :: !(Maybe Word64)
   }
 
 -- | The 'TraceT' monad transformer adds the ability to keep track of
 -- the current trace context.
 newtype TraceT m a = TraceT { unTraceT :: ReaderT (TraceContext, Reporter) (WriterT TracingMetadata m) a }
-  deriving (Functor, Applicative, Monad, MonadIO, MonadUnique)
+  deriving (Functor, Applicative, Monad, MonadIO, MonadUnique, MonadMask, MonadCatch, MonadThrow)
 
 instance MonadTrans TraceT where
   lift = TraceT . lift . lift
@@ -107,6 +108,10 @@ instance MonadError e m => MonadError e (TraceT m) where
 instance MonadReader r m => MonadReader r (TraceT m) where
   ask = TraceT $ lift ask
   local f m = TraceT $ mapReaderT (local f) (unTraceT m)
+
+instance (HTTP.HasHttpManagerM m) => HTTP.HasHttpManagerM (TraceT m) where
+  askHttpManager = lift HTTP.askHttpManager
+
 
 -- | Run an action in the 'TraceT' monad transformer.
 -- 'runTraceT' delimits a new trace with its root span, and the arguments
@@ -208,14 +213,11 @@ word64ToHex randNum = bsToTxt $ Hex.encode numInBytes
   where numInBytes = BL.toStrict (Bin.encode  randNum)
 
 -- | Decode 16 character hex string to Word64
--- | Hex.Decode returns two tuples: (properly decoded data, string starts at the first invalid base16 sequence)
 hexToWord64 :: Text -> Maybe Word64
 hexToWord64 randText = do
-  let (decoded, leftovers) = Hex.decode $ txtToBs randText
-      decodedWord64 = Bin.decode $ BL.fromStrict decoded
-  guard (BS.null leftovers)
-  pure decodedWord64
-
+  case Hex.decode $ txtToBs randText of
+    Left _        -> Nothing
+    Right decoded -> Just $ Bin.decode $ BL.fromStrict decoded
 
 -- | Inject the trace context as a set of HTTP headers.
 injectHttpContext :: TraceContext -> [HTTP.Header]
@@ -244,8 +246,8 @@ extractHttpContext hdrs = do
 injectEventContext :: TraceContext -> J.Value
 injectEventContext TraceContext{..} =
   J.object
-    [ "trace_id" J..= tcCurrentTrace
-    , "span_id"  J..= tcCurrentSpan
+    [ "trace_id" J..= word64ToHex tcCurrentTrace
+    , "span_id"  J..= word64ToHex tcCurrentSpan
     ]
 
 -- | Extract a trace context from an event trigger payload.
@@ -253,9 +255,9 @@ extractEventContext :: J.Value -> IO (Maybe TraceContext)
 extractEventContext e = do
   freshSpanId <- liftIO Rand.randomIO
   pure $ TraceContext
-    <$> (e ^? JL.key "trace_context" . JL.key "trace_id" . JL._Integral)
+    <$> (hexToWord64 =<< e ^? JL.key "trace_context" . JL.key "trace_id" . JL._String)
     <*> pure freshSpanId
-    <*> pure (e ^? JL.key "trace_context" . JL.key "span_id" . JL._Integral)
+    <*> pure (hexToWord64 =<< e ^? JL.key "trace_context" . JL.key "span_id" . JL._String)
 
 -- | Perform HTTP request which supports Trace headers
 tracedHttpRequest
@@ -270,11 +272,11 @@ tracedHttpRequest req f = do
       uri = show @URI (HTTP.getUri req)
   trace (method <> " " <> fromString uri) do
     let reqBytes = case HTTP.requestBody req of
-          HTTP.RequestBodyBS bs -> Just (fromIntegral (BS.length bs))
-          HTTP.RequestBodyLBS bs -> Just (BL.length bs)
+          HTTP.RequestBodyBS bs         -> Just (fromIntegral (BS.length bs))
+          HTTP.RequestBodyLBS bs        -> Just (BL.length bs)
           HTTP.RequestBodyBuilder len _ -> Just len
-          HTTP.RequestBodyStream len _ -> Just len
-          _ -> Nothing
+          HTTP.RequestBodyStream len _  -> Just len
+          _                             -> Nothing
     for_ reqBytes \b ->
       attachMetadata [("request_body_bytes", fromString (show b))]
     ctx <- currentContext

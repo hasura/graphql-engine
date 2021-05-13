@@ -1,0 +1,17 @@
+description: Select descendants of an `ltree` argument
+url: /v1/query
+status: 200
+response:
+  - path: "Tree.Science"
+  - path: "Tree.Science.Astronomy"
+  - path: "Tree.Science.Astronomy.Astrophysics"
+  - path: "Tree.Science.Astronomy.Cosmology"
+query:
+  type: select
+  args:
+    table: tree
+    where:
+      path:
+        $descendant: "Tree.Science"
+    columns:
+      - path

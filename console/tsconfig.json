@@ -9,8 +9,10 @@
     "esModuleInterop": true,
     "noEmitOnError": false,
     "noEmit": true,
-    "types": ["react"]
+    "types": ["react", "jest"],
+    "typeRoots": ["./src/types", "node_modules/@types"],
+    "resolveJsonModule": true,
   },
-  "exclude": ["node_modules", "cypress"],
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "cypress"],
   "include": ["src/**/*"]
 }

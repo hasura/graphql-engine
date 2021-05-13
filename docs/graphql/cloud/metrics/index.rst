@@ -17,11 +17,11 @@ Introduction
 
 Hasura Cloud projects include Pro features for enhanced reliability and performance
 
-.. thumbnail:: /img/graphql/cloud/metrics/pro-tab-overview.png
+.. thumbnail:: /img/graphql/cloud/metrics/monitoring-tab-overview.png
    :alt: Hasura Cloud Console overview tab
 
-Learn more
-----------
+Features
+--------
 
 .. toctree::
    :maxdepth: 1
@@ -33,3 +33,4 @@ Learn more
    operations
    websockets
    subscription-workers
+   Integrations <integrations/index>

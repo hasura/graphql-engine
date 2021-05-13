@@ -1,167 +1,41 @@
 {-# OPTIONS_HADDOCK not-home #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE StrictData          #-}
-{-# LANGUAGE ViewPatterns        #-}
+{-# LANGUAGE StrictData #-}
 
 -- | Defines the 'Parser' type and its primitive combinators.
-module Hasura.GraphQL.Parser.Internal.Parser where
+module Hasura.GraphQL.Parser.Internal.Parser
+  ( module Hasura.GraphQL.Parser.Internal.Parser
+  , Parser(..)
+  , parserType
+  , runParser
+  , ParserInput
+  ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as A
-import qualified Data.HashMap.Strict.Extended  as M
-import qualified Data.HashMap.Strict.InsOrd    as OMap
-import qualified Data.HashSet                  as S
-import qualified Data.Text                     as T
-import qualified Data.List.Extended            as LE
+import qualified Data.Aeson                           as A
+import qualified Data.HashMap.Strict.Extended         as M
+import qualified Data.HashMap.Strict.InsOrd           as OMap
+import qualified Data.HashSet                         as S
+import qualified Data.List.Extended                   as LE
+import qualified Data.UUID                            as UUID
 
-import           Control.Lens.Extended         hiding (enum, index)
-import           Data.Int                      (Int32, Int64)
-import           Data.Scientific               (toBoundedInteger)
+import           Control.Lens.Extended                hiding (enum, index)
+import           Data.Int                             (Int32, Int64)
 import           Data.Parser.JSONPath
+import           Data.Scientific                      (toBoundedInteger)
+import           Data.Text.Extended
 import           Data.Type.Equality
-import           Language.GraphQL.Draft.Syntax hiding (Definition)
+import           Language.GraphQL.Draft.Syntax        hiding (Definition)
 
-import           Hasura.GraphQL.Parser.Class
+import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Base.Error
+import           Hasura.GraphQL.Parser.Class.Parse
 import           Hasura.GraphQL.Parser.Collect
+import           Hasura.GraphQL.Parser.Internal.Types
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.CustomTypes
-import           Hasura.RQL.Types.Error
-import           Hasura.Server.Utils           (englishList)
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
+import           Hasura.Server.Utils                  (englishList)
 
-
--- -----------------------------------------------------------------------------
--- type definitions
-
--- | A 'Parser' that corresponds to a type in the GraphQL schema. A 'Parser' is
--- really two things at once:
---
---   1. As its name implies, a 'Parser' can be used to parse GraphQL queries
---      (via 'runParser').
---
---   2. Less obviously, a 'Parser' represents a slice of the GraphQL schema,
---      since every 'Parser' corresponds to a particular GraphQL type, and
---      information about that type can be recovered (via 'parserType').
---
--- A natural way to view this is that 'Parser's support a sort of dynamic
--- reflection: in addition to running a 'Parser' on an input query, you can ask
--- it to tell you about what type of input it expects. Importantly, you can do
--- this even if you don’t have a query to parse; this is necessary to implement
--- GraphQL introspection, which provides precisely this sort of reflection on
--- types.
---
--- Another way of viewing a 'Parser' is a little more quantum: just as light
--- “sometimes behaves like a particle and sometimes behaves like a wave,” a
--- 'Parser' “sometimes behaves like a query parser and sometimes behaves like a
--- type.” In this way, you can think of a function that produces a 'Parser' as
--- simultaneously both a function that constructs a GraphQL schema and a
--- function that parses a GraphQL query. 'Parser' constructors therefore
--- interleave two concerns: information about a type definition (like the type’s
--- name and description) and information about how to parse a query on that type.
---
--- Notably, these two concerns happen at totally different phases in the
--- program: GraphQL schema construction happens when @graphql-engine@ first
--- starts up, before it receives any GraphQL queries at all. But query parsing
--- obviously can’t happen until there is actually a query to parse. For that
--- reason, it’s useful to take care to distinguish which effects are happening
--- at which phase during 'Parser' construction, since otherwise you may get
--- mixed up!
---
--- For some more information about how to interpret the meaning of a 'Parser',
--- see Note [The meaning of Parser 'Output].
-data Parser k m a = Parser
-  { pType   :: ~(Type k)
-  -- ^ Lazy for knot-tying reasons; see Note [Tying the knot] in
-  -- Hasura.GraphQL.Parser.Class.
-  , pParser :: ParserInput k -> m a
-  } deriving (Functor)
-
-parserType :: Parser k m a -> Type k
-parserType = pType
-
-runParser :: Parser k m a -> ParserInput k -> m a
-runParser = pParser
-
-instance HasName (Parser k m a) where
-  getName = getName . pType
-
-instance HasDefinition (Parser k m a) (TypeInfo k) where
-  definitionLens f parser = definitionLens f (pType parser) <&> \pType -> parser { pType }
-
-type family ParserInput k where
-  -- see Note [The 'Both kind] in Hasura.GraphQL.Parser.Schema
-  ParserInput 'Both = InputValue Variable
-  ParserInput 'Input = InputValue Variable
-  -- see Note [The meaning of Parser 'Output]
-  ParserInput 'Output = SelectionSet NoFragments Variable
-
-{- Note [The meaning of Parser 'Output]
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The ParserInput type family determines what a Parser accepts as input during
-query parsing, which varies based on its Kind. A `Parser 'Input`,
-unsurprisingly, parses GraphQL input values, much in the same way aeson
-`Parser`s parse JSON values.
-
-Therefore, one might naturally conclude that `Parser 'Output` ought to parse
-GraphQL output values. But it doesn’t---a Parser is used to parse GraphQL
-*queries*, and output values don’t show up in queries anywhere! Rather, the
-output values are the results of executing the query, not something the user
-sends us, so we don’t have to parse those at all.
-
-What output types really correspond to in GraphQL queries is selection sets. For
-example, if we have the GraphQL types
-
-    type User {
-      posts(filters: PostFilters): [Post]
-    }
-
-    input PostFilters {
-      newer_than: Date
-    }
-
-    type Post {
-      id: Int
-      title: String
-      body: String
-    }
-
-then we might receive a query that looks like this:
-
-    query list_user_posts($user_id: Int, $date: Date) {
-      user_by_id(id: $user_id) {
-        posts(filters: {newer_than: $date}) {
-          id
-          title
-        }
-      }
-    }
-
-We have Parsers to represent each of these types: a `Parser 'Input` for
-PostFilters, and two `Parser 'Output`s for User and Post. When we parse the
-query, we pass the `{newer_than: $date}` input value to the PostFilters parser,
-as expected. But what do we pass to the User parser? The answer is this
-selection set:
-
-    {
-      posts(filters: {newer_than: $date}) {
-        id
-        title
-      }
-    }
-
-Likewise, the Post parser eventually receives the inner selection set:
-
-    {
-      id
-      title
-    }
-
-These Parsers handle interpreting the fields of the selection sets. This is why
-`ParserInput 'Output` is SelectionSet---the GraphQL *type* associated with the
-Parser is an output type, but the part of the *query* that corresponds to that
-output type isn’t an output value but a selection set. -}
 
 -- | The constraint @(''Input' '<:' k)@ entails @('ParserInput' k ~ 'Value')@,
 -- but GHC can’t figure that out on its own, so we have to be explicit to give
@@ -207,6 +81,9 @@ data FieldParser m a = FieldParser
   , fParser     :: Field NoFragments Variable -> m a
   } deriving (Functor)
 
+instance HasDefinition (FieldParser m a) FieldInfo where
+  definitionLens f parser = definitionLens f (fDefinition parser) <&> \fDefinition -> parser { fDefinition }
+
 infixl 1 `bindField`
 bindField :: Monad m => FieldParser m a -> (a -> m b) -> FieldParser m b
 bindField p f = p { fParser = fParser p >=> f }
@@ -247,9 +124,9 @@ scalar name description representation = Parser
         JSONValue    (A.Bool   b) -> pure b
         _                         -> typeMismatch name "a boolean" v
       SRInt -> case v of
-        GraphQLValue (VInt i)     -> convertWith scientificToInteger $ fromInteger i
-        JSONValue (A.Number n)    -> convertWith scientificToInteger n
-        _                         -> typeMismatch name "a 32-bit integer" v
+        GraphQLValue (VInt i)  -> convertWith scientificToInteger $ fromInteger i
+        JSONValue (A.Number n) -> convertWith scientificToInteger n
+        _                      -> typeMismatch name "a 32-bit integer" v
       SRFloat -> case v of
         GraphQLValue (VFloat f)   -> convertWith scientificToFloat f
         GraphQLValue (VInt   i)   -> convertWith scientificToFloat $ fromInteger i
@@ -270,8 +147,8 @@ There's a delicate balance between GraphQL types and Postgres types.
 
 The mapping is done in the 'column' parser. But we want to only have
 one source of truth for parsing postgres values, which happens to be
-the JSON parsing code in SQL.Value. So here we reuse some of that code
-despite not having a JSON value.
+the JSON parsing code in Backends.Postgres.SQL.Value. So here we reuse
+some of that code despite not having a JSON value.
 
 -}
 
@@ -287,6 +164,19 @@ float = scalar floatScalar Nothing SRFloat
 string :: MonadParse m => Parser 'Both m Text
 string = scalar stringScalar Nothing SRString
 
+uuid :: MonadParse m => Parser 'Both m UUID.UUID
+uuid = Parser
+  { pType = schemaType
+  , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
+      GraphQLValue (VString s) -> parseUUID $ A.String s
+      JSONValue    v           -> parseUUID v
+      v                        -> typeMismatch name "a UUID" v
+  }
+  where
+    name = $$(litName "uuid")
+    schemaType = NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
+    parseUUID = either (parseErrorWith ParseFailed . qeError) pure . runAesonParser A.parseJSON
+
 -- | As an input type, any string or integer input value should be coerced to ID as Text
 -- https://spec.graphql.org/June2018/#sec-ID
 identifier :: MonadParse m => Parser 'Both m Text
@@ -294,7 +184,7 @@ identifier = Parser
   { pType = schemaType
   , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
       GraphQLValue (VString  s) -> pure s
-      GraphQLValue (VInt     i) -> pure $ T.pack $ show i
+      GraphQLValue (VInt     i) -> pure $ tshow i
       JSONValue    (A.String s) -> pure s
       JSONValue    (A.Number n) -> parseScientific n
       v                         -> typeMismatch idName "a String or a 32-bit integer" v
@@ -303,7 +193,7 @@ identifier = Parser
     idName = idScalar
     schemaType = NonNullable $ TNamed $ mkDefinition idName Nothing TIScalar
     parseScientific = either (parseErrorWith ParseFailed . qeError)
-      (pure . T.pack . show @Int) . runAesonParser scientificToInteger
+      (pure . tshow @Int) . runAesonParser scientificToInteger
 
 namedJSON :: MonadParse m => Name -> Maybe Description -> Parser 'Both m A.Value
 namedJSON name description = Parser
@@ -346,10 +236,9 @@ enum name description values = Parser
   where
     schemaType = NonNullable $ TNamed $ mkDefinition name description $ TIEnum (fst <$> values)
     valuesMap = M.fromList $ over (traverse._1) dName $ toList values
-    validate value = case M.lookup value valuesMap of
-      Just result -> pure result
-      Nothing -> parseError $ "expected one of the values "
-        <> englishList "or" (dquoteTxt . dName . fst <$> values) <> " for type "
+    validate value = onNothing (M.lookup value valuesMap) $
+      parseError $ "expected one of the values "
+        <> englishList "or" (toTxt . dName . fst <$> values) <> " for type "
         <> name <<> ", but found " <>> value
 
 nullable :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m (Maybe a)
@@ -385,6 +274,10 @@ field = field
 nonNullableParser :: forall m a . Parser 'Output m a -> Parser 'Output m a
 nonNullableParser parser = parser { pType = nonNullableType (pType parser) }
 
+-- | Make a schema output as nullable
+nullableParser :: forall m a . Parser 'Output m a -> Parser 'Output m a
+nullableParser parser = parser { pType = nullableType (pType parser) }
+
 multiple :: Parser 'Output m a -> Parser 'Output m a
 multiple parser = parser { pType = Nullable $ TList $ pType parser }
 
@@ -414,6 +307,10 @@ list parser = gcastWith (inputParserInput @k) Parser
   where
     schemaType = NonNullable $ TList $ pType parser
 
+-- TODO: if we had an optional "strict" mode, we could (and should!) enforce
+-- that `fieldName` isn't empty, which sadly can't be done at the type level.
+-- This would prevent the creation of an object with no fields, which is against
+-- the spec.
 object
   :: MonadParse m
   => Name
@@ -688,7 +585,7 @@ safeSelectionSet
   -> n (Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a)))
 safeSelectionSet name desc fields
   | S.null duplicates = pure $ selectionSetObject name desc fields []
-  | otherwise         = throw500 $ "found duplicate fields in selection set: " <> T.intercalate ", " (unName <$> toList duplicates)
+  | otherwise         = throw500 $ "found duplicate fields in selection set: " <> commaSeparated (unName <$> toList duplicates)
   where
     duplicates = LE.duplicates $ getName . fDefinition <$> fields
 
@@ -727,7 +624,7 @@ selectionSetObject name description parsers implementsInterfaces = Parser
 
       -- TODO(PDV) This probably accepts invalid queries, namely queries that use
       -- type names that do not exist.
-      fields <- collectFields (name:parsedInterfaceNames) input
+      fields <- collectFields (name:parsedInterfaceNames) (runParser boolean) input
       for fields \selectionField@Field{ _fName, _fAlias } -> if
         | _fName == $$(litName "__typename") ->
             pure $ SelectTypename name
@@ -822,10 +719,23 @@ selection
   -> InputFieldsParser m a -- ^ parser for the input arguments
   -> Parser 'Both m b -- ^ type of the result
   -> FieldParser m a
-selection name description argumentsParser resultParser = FieldParser
+selection name description argumentsParser resultParser =
+  rawSelection name description argumentsParser resultParser
+  <&> \(_alias, _args, a) -> a
+
+rawSelection
+  :: forall m a b
+   . MonadParse m
+  => Name
+  -> Maybe Description
+  -> InputFieldsParser m a -- ^ parser for the input arguments
+  -> Parser 'Both m b -- ^ type of the result
+  -> FieldParser m (Maybe Name, HashMap Name (Value Variable), a)
+  -- ^ alias provided (if any), and the arguments
+rawSelection name description argumentsParser resultParser = FieldParser
   { fDefinition = mkDefinition name description $
       FieldInfo (ifDefinitions argumentsParser) (pType resultParser)
-  , fParser = \Field{ _fArguments, _fSelectionSet } -> do
+  , fParser = \Field{ _fAlias, _fArguments, _fSelectionSet } -> do
       unless (null _fSelectionSet) $
         parseError "unexpected subselection set for non-object field"
       -- check for extraneous arguments here, since the InputFieldsParser just
@@ -833,10 +743,16 @@ selection name description argumentsParser resultParser = FieldParser
       for_ (M.keys _fArguments) \argumentName ->
         unless (argumentName `S.member` argumentNames) $
           parseError $ name <<> " has no argument named " <>> argumentName
-      withPath (++[Key "args"]) $ ifParser argumentsParser $ GraphQLValue <$> _fArguments
+      fmap (_fAlias, _fArguments, ) $ withPath (++[Key "args"]) $ ifParser argumentsParser $ GraphQLValue <$> _fArguments
   }
   where
-    argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
+    -- If  `ifDefinitions` is empty, then not forcing this will lead to
+    -- a thunk which is usually never forced because the definition is only used
+    -- inside the loop which checks arguments have the correct name.
+    -- Forcing it will lead to the statically allocated empty set.
+    -- If it's non-empty then it will be forced the first time the parser
+    -- is used so might as well force it when constructing the parser.
+    !argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
 
 -- | Builds a 'FieldParser' for a field that takes a subselection set, i.e. a
 -- field that returns an object.
@@ -850,17 +766,29 @@ subselection
   -> InputFieldsParser m a -- ^ parser for the input arguments
   -> Parser 'Output m b -- ^ parser for the subselection set
   -> FieldParser m (a, b)
-subselection name description argumentsParser bodyParser = FieldParser
+subselection name description argumentsParser bodyParser =
+  rawSubselection name description argumentsParser bodyParser
+  <&> \(_alias, _args, a, b) -> (a, b)
+
+rawSubselection
+  :: forall m a b
+   . MonadParse m
+  => Name
+  -> Maybe Description
+  -> InputFieldsParser m a -- ^ parser for the input arguments
+  -> Parser 'Output m b -- ^ parser for the subselection set
+  -> FieldParser m (Maybe Name, HashMap Name (Value Variable), a, b)
+rawSubselection name description argumentsParser bodyParser = FieldParser
   { fDefinition = mkDefinition name description $
       FieldInfo (ifDefinitions argumentsParser) (pType bodyParser)
-  , fParser = \Field{ _fArguments, _fSelectionSet } -> do
+  , fParser = \Field{ _fAlias, _fArguments, _fSelectionSet } -> do
       -- check for extraneous arguments here, since the InputFieldsParser just
       -- handles parsing the fields it cares about
       for_ (M.keys _fArguments) \argumentName ->
         unless (argumentName `S.member` argumentNames) $
           parseError $ name <<> " has no argument named " <>> argumentName
-      (,) <$> withPath (++[Key "args"]) (ifParser argumentsParser $ GraphQLValue <$> _fArguments)
-          <*> pParser bodyParser _fSelectionSet
+      (_fAlias,_fArguments,,) <$> withPath (++[Key "args"]) (ifParser argumentsParser $ GraphQLValue <$> _fArguments)
+        <*> pParser bodyParser _fSelectionSet
   }
   where
     argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
@@ -883,7 +811,6 @@ subselection_
   -> FieldParser m a
 subselection_ name description bodyParser =
   snd <$> subselection name description (pure ()) bodyParser
-
 
 -- -----------------------------------------------------------------------------
 -- helpers

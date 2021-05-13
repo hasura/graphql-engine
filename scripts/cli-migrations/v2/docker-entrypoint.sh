@@ -95,7 +95,7 @@ if [ -d "$HASURA_GRAPHQL_METADATA_DIR" ]; then
     echo "version: 2" > config.yaml
     echo "endpoint: http://localhost:$HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT" >> config.yaml
     echo "metadata_directory: metadata" >> config.yaml
-    hasura-cli metadata apply
+    hasura-cli metadata apply 
 else
     log "migrations-apply" "directory $HASURA_GRAPHQL_METADATA_DIR does not exist, skipping metadata"
 fi

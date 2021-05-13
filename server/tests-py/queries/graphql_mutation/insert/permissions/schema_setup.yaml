@@ -2,6 +2,15 @@ type: bulk
 args:
 
 #Author table
+
+
+
+  # Tables to test '_exist' field
+
+
+
+  # a sales role can only update the leads added by them
+
 - type: run_sql
   args:
     sql: |
@@ -11,15 +20,6 @@ args:
           bio text,
           is_registered boolean not null default false
       );
-- type: track_table
-  args:
-    schema: public
-    name: author
-
-#Article table
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -38,7 +38,69 @@ args:
             OR content ilike ('%' || search || '%')
           ) AND author_id = author_row.id
       $$ LANGUAGE sql STABLE;
+      CREATE TABLE resident (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        age INTEGER NOT NULL,
+        is_user BOOLEAN DEFAULT FALSE NOT NULL
+      );
+      CREATE TABLE address (
+        id SERIAL PRIMARY KEY,
+        door_no TEXT NOT NULL,
+        street TEXT NOT NULL,
+        city TEXT NOT NULL,
+        resident_id INTEGER REFERENCES resident(id)
+      );
+      CREATE TABLE "Company" (
+      "id" SERIAL PRIMARY KEY,
+      "name" TEXT
+      );
+      CREATE TABLE blog (
+        id serial primary key,
+        title text not null,
+        content text,
+        author_id INTEGER REFERENCES author(id),
+        last_updated timestamptz,
+        updated_by INTEGER REFERENCES author(id)
+      );
+      CREATE TABLE computer (
+        id          SERIAL PRIMARY KEY,
+        name        TEXT    NOT NULL,
+        spec        JSONB   NOT NULL
+      );
+      create table "user" (
+        id serial primary key,
+        name text not null unique,
+        is_admin boolean default false
+      );
 
+      create table account (
+        id serial primary key,
+        account_no integer not null
+      );
+      create table leads (
+        id serial primary key,
+        name text not null,
+        added_by text not null
+      );
+      create table items (
+        id serial primary key,
+        name text,
+        quantity int
+      );
+      create table order_cart (
+        id serial primary key,
+        item_id int not null references items(id),
+        quantity int
+      );
+
+
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
 - type: track_table
   args:
     schema: public
@@ -53,44 +115,18 @@ args:
       table_argument: author_row
 
 #Create resident table
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE resident (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL UNIQUE,
-        age INTEGER NOT NULL,
-        is_user BOOLEAN DEFAULT FALSE NOT NULL
-      )
 - type: track_table
   args:
     schema: public
     name: resident
 
 #Create address table
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE address (
-        id SERIAL PRIMARY KEY,
-        door_no TEXT NOT NULL,
-        street TEXT NOT NULL,
-        city TEXT NOT NULL,
-        resident_id INTEGER REFERENCES resident(id)
-      )
 - type: track_table
   args:
     schema: public
     name: address
 
 #Create Company table
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE "Company" (
-      "id" SERIAL PRIMARY KEY,
-      "name" TEXT
-      )
 - type: track_table
   args:
     schema: public
@@ -126,6 +162,18 @@ args:
           - author_id: X-HASURA-USER-ID
           - is_published: true
 
+#Article select permission for restricted
+- type: create_select_permission
+  args:
+    table: article
+    role: restricted
+    permission:
+      columns: '*'
+      filter:
+        $or:
+          - author_id: X-HASURA-USER-ID
+          - is_published: true
+
 #Article select permission for editor
 - type: create_select_permission
   args:
@@ -144,6 +192,15 @@ args:
   args:
     table: article
     role: user
+    permission:
+      check:
+        author_id: X-Hasura-User-Id
+
+#Article insert permission for restricted
+- type: create_insert_permission
+  args:
+    table: article
+    role: restricted
     permission:
       check:
         author_id: X-Hasura-User-Id
@@ -168,6 +225,16 @@ args:
       filter:
         author_id: X-Hasura-User-Id
       columns: '*'
+
+#Article udpate permission for restricted
+- type: create_update_permission
+  args:
+    table: article
+    role: restricted
+    permission:
+      filter:
+        author_id: X-Hasura-User-Id
+      columns: []
 
 #Author select permission for user
 - type: create_select_permission
@@ -329,18 +396,6 @@ args:
 
 
 #Create blog table
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE blog (
-        id serial primary key,
-        title text not null,
-        content text,
-        author_id INTEGER REFERENCES author(id),
-        last_updated timestamptz,
-        updated_by INTEGER REFERENCES author(id)
-      );
-
 - type: track_table
   args:
     name: blog
@@ -372,17 +427,8 @@ args:
       - content
       filter: {}
       set:
-        last_updated: 'NOW()'
+        last_updated: NOW()
         updated_by: X-Hasura-User-Id
-
-- type: run_sql
-  args:
-    sql: |
-     CREATE TABLE computer (
-       id          SERIAL PRIMARY KEY,
-       name        TEXT    NOT NULL,
-       spec        JSONB   NOT NULL
-     );
 
 - type: track_table
   args:
@@ -424,22 +470,6 @@ args:
     permission:
       columns: '*'
       filter: {}
-
-# Tables to test '_exist' field
-- type: run_sql
-  args:
-    sql: |
-      create table "user" (
-        id serial primary key,
-        name text not null unique,
-        is_admin boolean default false
-      );
-
-      create table account (
-        id serial primary key,
-        account_no integer not null
-      );
-
 - type: track_table
   args:
     name: user
@@ -522,15 +552,6 @@ args:
       set:
         is_admin: false
 
-- type: run_sql
-  args:
-    sql: |
-      create table leads (
-        id serial primary key,
-        name text not null,
-        added_by text not null
-      );
-
 - type: track_table
   args:
     schema: public
@@ -555,7 +576,40 @@ args:
     permission:
       columns: [name]
       filter:
-        added_by: "X-Hasura-User-Id"
+        added_by: X-Hasura-User-Id
       check:
         name:
-          _ne: ""
+          _ne: ''
+
+- type: track_table
+  args:
+    schema: public
+    name: items
+
+- type: track_table
+  args:
+    schema: public
+    name: order_cart
+
+- type: create_object_relationship
+  args:
+    table: order_cart
+    name: item
+    using:
+      foreign_key_constraint_on: item_id
+
+# an user can add an item in the order_cart
+# iff there are enough of the them present
+- type: create_insert_permission
+  args:
+    table: order_cart
+    role:  user
+    permission:
+      columns: [item_id, quantity]
+      check:
+        item:
+          quantity:
+            _cgte:
+              - $
+              - quantity
+      set: {}

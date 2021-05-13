@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use hasura migrate create to create migration files for Hasura migrations with the Hasura CLI
+   :description: Create files required for a migration using the Hasura CLI
    :keywords: hasura, docs, CLI, hasura migrate create
 
 .. _hasura_migrate_create:
@@ -38,34 +38,41 @@ Examples
 
     # Take pg_dump from server and save it as a migration and specify the schemas to include
     hasura migrate create init --sql-from-server --schema myschema1,myschema2
+    
+    # Create up and down SQL migrations, providing contents as flags
+    hasura migrate create migration-name --up-sql "CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL);"  --down-sql "DROP TABLE article;"
+
 
 Options
 ~~~~~~~
 
 ::
 
-      --from-server                 get SQL statements and Hasura metadata from the server
+      --down-sql string             sql string/query that is to be used to create a down migration
+      --from-server                 take pg_dump of schema (default: public) and Hasura metadata from the server
   -h, --help                        help for create
       --metadata-from-file string   path to a hasura metadata file to be used for up actions
       --metadata-from-server        take metadata from the server and write it as an up migration file
       --schema strings              name of Postgres schema to export as a migration. provide multiple schemas with a comma separated list e.g. --schema public,user (default [public])
       --sql-from-file string        path to an SQL file which contains the SQL statements
-      --sql-from-server             take pg_dump from the server and save it as a migration
+      --sql-from-server             take pg_dump from the server (default: public) and save it as a migration
+      --up-sql string               sql string/query that is to be used to create an up migration
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
-      --admin-secret string            admin secret for Hasura GraphQL engine
-      --certificate-authority string   path to a cert file for the certificate authority
-      --endpoint string                http(s) endpoint for Hasura GraphQL engine
+      --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
+      --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
+      --database-name string           database on which operation should be applied
+      --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
       --envfile string                 .env filename to load ENV vars from (default ".env")
-      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false)
+      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
       --log-level string               log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color                       do not colorize output (default: false)
       --project string                 directory where commands are executed (default: current dir)
-      --skip-update-check              Skip automatic update check on command execution
+      --skip-update-check              skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

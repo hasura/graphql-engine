@@ -29,7 +29,7 @@ var ec *cli.ExecutionContext
 // rootCmd is the main "hasura" command
 var rootCmd = &cobra.Command{
 	Use:           "hasura",
-	Short:         "Hasura GraphQL Engine command line tool",
+	Short:         "Hasura GraphQL engine command line tool",
 	Long:          hasuraASCIIText,
 	SilenceUsage:  true,
 	SilenceErrors: true,
@@ -76,7 +76,7 @@ func init() {
 	f := rootCmd.PersistentFlags()
 	f.StringVar(&ec.LogLevel, "log-level", "INFO", "log level (DEBUG, INFO, WARN, ERROR, FATAL)")
 	f.StringVar(&ec.ExecutionDirectory, "project", "", "directory where commands are executed (default: current dir)")
-	f.BoolVar(&ec.SkipUpdateCheck, "skip-update-check", false, "Skip automatic update check on command execution")
+	f.BoolVar(&ec.SkipUpdateCheck, "skip-update-check", false, "skip automatic update check on command execution")
 	f.BoolVar(&ec.NoColor, "no-color", false, "do not colorize output (default: false)")
 	f.StringVar(&ec.Envfile, "envfile", ".env", ".env filename to load ENV vars from")
 }

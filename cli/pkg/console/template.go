@@ -43,6 +43,7 @@ type TemplateProvider interface {
 	// > v1.2.1-rc.03    -> rc/v1.2
 	// > v1.1.0          -> stable/v1.1
 	GetAssetsVersion(v *version.Version) string
+	GetAssetsCDN() string
 }
 
 // DefaultTemplateProvider implements the github.com/hasura/graphl-engine/cli/pkg/templates.DefaultTemplateProvider interface
@@ -134,10 +135,12 @@ func (p *DefaultTemplateProvider) GetAssetsVersion(v *version.Version) string {
 			preRelease := v.ServerSemver.Prerelease()
 			channel := "stable"
 			if preRelease != "" {
-				// Get the correct channel from the prerelease tag
 				var re = regexp.MustCompile(`^[a-z]+`)
 				tag := re.FindString(preRelease)
-				if tag != "" {
+				// cloud and pro will be tagged like v2.0.0-cloud.9
+				// so, tag will be set as cloud/pro
+				// then assets should be loaded from stable channel
+				if tag != "" && tag != "cloud" && tag != "pro" {
 					channel = tag
 				}
 			}
@@ -148,4 +151,8 @@ func (p *DefaultTemplateProvider) GetAssetsVersion(v *version.Version) string {
 	}
 	// server doesn't have a version - very old server :(
 	return preReleaseVersion
+}
+
+func (p *DefaultTemplateProvider) GetAssetsCDN() string {
+	return "https://graphql-engine-cdn.hasura.io/console/assets"
 }

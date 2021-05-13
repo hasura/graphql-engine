@@ -658,15 +658,20 @@ func (q CustomQuery) MergeTableCustomFields(squashList *database.CustomList) err
 		if g.Key == nil {
 			continue
 		}
-		var prevElem *list.Element
+		var prevElemSetTableCustomFieldsV2Input, prevElemSetTableCustomizationInput *list.Element
 		for _, val := range g.Group {
 			element := val.(*list.Element)
 			switch element.Value.(type) {
 			case *setTableCustomFieldsV2Input:
-				if prevElem != nil {
-					squashList.Remove(prevElem)
+				if prevElemSetTableCustomFieldsV2Input != nil {
+					squashList.Remove(prevElemSetTableCustomFieldsV2Input)
 				}
-				prevElem = element
+				prevElemSetTableCustomFieldsV2Input = element
+			case *setTableCustomizationInput:
+				if prevElemSetTableCustomizationInput != nil {
+					squashList.Remove(prevElemSetTableCustomizationInput)
+				}
+				prevElemSetTableCustomizationInput = element
 			}
 		}
 	}
@@ -796,6 +801,10 @@ func (q CustomQuery) MergeTables(squashList *database.CustomList) error {
 				}
 				prevElems = append(prevElems, element)
 			case *setTableCustomFieldsV2Input:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot set custom fields when table %s on schema %s is untracked", tblCfg.name, tblCfg.schema)
+				}
+			case *setTableCustomizationInput:
 				if tblCfg.GetState() == "untracked" {
 					return fmt.Errorf("cannot set custom fields when table %s on schema %s is untracked", tblCfg.name, tblCfg.schema)
 				}
@@ -1428,6 +1437,11 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 					args.Table.Name,
 					args.Table.Schema,
 				}
+			case *setTableCustomizationInput:
+				return tableMap{
+					args.Table.Name,
+					args.Table.Schema,
+				}
 			}
 			return nil
 		}, func(element *list.Element) *list.Element {
@@ -1458,6 +1472,11 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 					args.tableSchema.Schema,
 				}
 			case *setTableCustomFieldsV2Input:
+				return tableMap{
+					args.Table.Name,
+					args.Table.Schema,
+				}
+			case *setTableCustomizationInput:
 				return tableMap{
 					args.Table.Name,
 					args.Table.Schema,
@@ -1739,6 +1758,8 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		case *setTableCustomFieldsV2Input:
 			q.Version = v2
 			q.Type = setTableCustomFields
+		case *setTableCustomizationInput:
+			q.Type = setTableCustomization
 		case *createObjectRelationshipInput:
 			q.Type = createObjectRelationship
 		case *createArrayRelationshipInput:

@@ -40,7 +40,8 @@ The configuration file can be configured with the following config keys:
     pg_dump: 
     version: 
   metadata_directory:
-  migrations_directory: 
+  migrations_directory:
+  seeds_directory:
   actions:
     kind: 
     handler_webhook_baseurl: 
@@ -59,11 +60,11 @@ The configuration file can be configured with the following config keys:
    * - version
      - false
      - 1
-     - 2
+     - 3
    * - endpoint
      - true
      - 1
-     - http://localhost:8080
+     - ``http://localhost:8080``
    * - admin_secret
      - false
      - 1
@@ -112,6 +113,10 @@ The configuration file can be configured with the following config keys:
      - false
      - 1
      - migrations
+   * - seeds_directory
+     - false
+     - 2
+     - 
    * - actions
      - false
      - 2
@@ -123,7 +128,7 @@ The configuration file can be configured with the following config keys:
    * - actions.handler_webhook_baseurl
      - true
      - 2
-     - http://localhost:3000
+     - ``http://localhost:3000``
    * - actions.codegen
      - false
      - 2
@@ -143,13 +148,7 @@ The configuration file can be configured with the following config keys:
 
 .. note::
 
-  The above structure is for the ``config v2`` file which is supported since ``v1.2.0``. Refer to :ref:`this page <migrations_upgrade_v2>` on how to upgrade to ``config v2``.
-
-  A ``config v1`` file of your Hasura project would look like:
-
-  .. code-block:: yaml
-
-      endpoint: http://localhost:8080
+  The above structure is for the ``config v3`` file which is supported since ``v2.0.0-alpha.1``. Refer to :ref:`this page <migrations_upgrade_v3>` on how to upgrade to ``config v2``.
 
 Environment variables
 ---------------------
@@ -218,6 +217,10 @@ The configuration can also be set in the form of environment variables:
      - ``migrations_directory``
      - Defines the directory where the migration files were stored.
 
+   * - ``HASURA_GRAPHQL_SEEDS_DIRECTORY``
+     - ``seeds_directory``
+     - Defines the directory where the seed files were stored.
+
    * - ``HASURA_GRAPHQL_ACTIONS_KIND``
      - ``actions.kind``
      - Kind to be used for actions.
@@ -266,7 +269,7 @@ project root directory.
 
 .. admonition:: Supported from
 
-   ``.env`` file is supported in versions ``v.1.2.0`` and above.
+   ``.env`` file is supported in versions ``v1.2.0`` and above.
 
 .. note::
 

@@ -104,7 +104,7 @@ func TestSeedsCreateCmd(t *testing.T, ec *cli.ExecutionContext) {
 			// check if the contents match
 			gotBytes, err := afero.ReadFile(tc.args.fs, *gotFilename)
 			assert.NoError(t, err)
-			assert.Equal(t, string(gotBytes), string(inData.Bytes()))
+			assert.Equal(t, string(gotBytes), inData.String())
 		})
 	}
 }
@@ -124,7 +124,8 @@ func TestSeedsApplyCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"can apply all seeds",
 			&commands.SeedApplyOptions{
-				EC: ec,
+				EC:     ec,
+				Driver: seed.NewDriver(ec.APIClient.V1Query.Bulk, ec.APIClient.PGDump),
 			},
 			false,
 		},
@@ -133,6 +134,7 @@ func TestSeedsApplyCmd(t *testing.T, ec *cli.ExecutionContext) {
 			&commands.SeedApplyOptions{
 				EC:        ec,
 				FileNames: []string{"1591867862409_test.sql"},
+				Driver:    seed.NewDriver(ec.APIClient.V1Query.Bulk, ec.APIClient.PGDump),
 			},
 			false,
 		},
@@ -141,6 +143,7 @@ func TestSeedsApplyCmd(t *testing.T, ec *cli.ExecutionContext) {
 			&commands.SeedApplyOptions{
 				EC:        ec,
 				FileNames: []string{"1591867862419_test2.sql"},
+				Driver:    seed.NewDriver(ec.APIClient.V1Query.Bulk, ec.APIClient.PGDump),
 			},
 			true,
 		},
@@ -149,7 +152,7 @@ func TestSeedsApplyCmd(t *testing.T, ec *cli.ExecutionContext) {
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.opts.Run()
-			if (err != nil) && (tc.wantErr == false) {
+			if (err != nil) && (!tc.wantErr) {
 				t.Fatalf("%s: expected no error got %v", tc.name, err)
 			}
 		})

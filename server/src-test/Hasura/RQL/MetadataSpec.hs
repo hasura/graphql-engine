@@ -9,15 +9,15 @@ import           Test.Hspec
 import           Test.QuickCheck
 
 import           Hasura.EncJSON
-import           Hasura.RQL.DDL.Metadata.Generator (genReplaceMetadata)
-import           Hasura.RQL.DDL.Metadata.Types     (ReplaceMetadata, replaceMetadataToOrdJSON)
+import           Hasura.RQL.DDL.Metadata.Generator (genMetadata)
+import           Hasura.RQL.Types.Metadata         (Metadata, metadataToOrdJSON)
 
 spec :: Spec
-spec = describe "replaceMetadataToOrdJSON" $ do
-  it "produces JSON that can be parsed by the FromJSON instance for ReplaceMetadata" $
+spec = describe "metadataToOrdJSON" $ do
+  it "produces JSON that can be parsed by the FromJSON instance for Metadata" $
     withMaxSuccess 20 $
-    forAll (resize 3 genReplaceMetadata) $ \metadata ->
-      let encodedString = encJToBS $ AO.toEncJSON $ replaceMetadataToOrdJSON metadata
-      in case eitherDecodeStrict @ReplaceMetadata encodedString of
+    forAll (resize 3 genMetadata) $ \metadata ->
+      let encodedString = encJToBS $ AO.toEncJSON $ metadataToOrdJSON metadata
+      in case eitherDecodeStrict @Metadata encodedString of
            Left err -> counterexample err False
            Right _  -> property True

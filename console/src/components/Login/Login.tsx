@@ -9,8 +9,8 @@ import { CLI_CONSOLE_MODE } from '../../constants';
 import { getAdminSecret } from '../Services/ApiExplorer/ApiRequest/utils';
 import { ConnectInjectedProps } from '../../types';
 
-const styles = require('./Login.scss');
-const hasuraLogo = require('./blue-logo.svg');
+import styles from './Login.scss';
+import hasuraLogo from './black-logo.svg';
 
 const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
   // request state

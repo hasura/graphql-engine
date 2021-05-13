@@ -1,5 +1,4 @@
-{-# LANGUAGE CPP                #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE CPP #-}
 
 -- | A version of aeson that parses with key order preserved.
 --
@@ -179,7 +178,7 @@ fromOrdered v = case v of
   Bool boolean  -> J.Bool boolean
   Null          -> J.Null
 
-asObject :: Value -> Either Text Object
+asObject :: IsString s => Value -> Either s Object
 asObject = \case
   Object o -> Right o
   _        -> Left "expecting ordered object"

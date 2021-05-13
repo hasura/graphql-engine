@@ -1,0 +1,19 @@
+description: Query function as a role without permission being configured for the role
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+response:
+  errors:
+    - extensions:
+        path: $.selectionSet.get_articles
+        code: validation-failed
+      message: "field \"get_articles\" not found in type: 'query_root'"
+query:
+  query: |
+    query {
+      get_articles(args: {search: "art"}) {
+        title
+        content
+      }
+    }

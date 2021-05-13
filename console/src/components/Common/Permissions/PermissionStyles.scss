@@ -1,9 +1,10 @@
-@import "../../Services/Data/TableModify/ModifyTable.scss";
+@import '../../Services/Data/TableModify/ModifyTable.scss';
 
 .permissionsTable {
-width: 85%;
+  width: 85%;
 
-  td, th {
+  td,
+  th {
     text-align: center;
     vertical-align: middle !important;
     position: relative;
@@ -13,27 +14,23 @@ width: 85%;
     font-weight: bold;
   }
 
-  td:first-child, th:first-child {
+  td:first-child,
+  th:first-child {
     overflow: auto;
     border-right: 4px double #ddd;
     max-width: 250px;
     width: 250px;
   }
 
- //.permissionDelete {
-//  cursor: pointer;
-//  margin-left: 10px;
-//}
-
   .bulkSelect {
     margin-right: 10px !important;
   }
 
-   // TODO: make common with Roles page
+  // TODO: make common with Roles page
   .clickableCell {
     cursor: pointer;
 
-     .editPermsIcon {
+    .editPermsIcon {
       font-size: 12px;
       position: absolute;
       right: 10px;
@@ -46,16 +43,17 @@ width: 85%;
   .clickableCell:hover {
     background-color: #ebf7de;
 
-     .editPermsIcon {
+    .editPermsIcon {
       display: inline-block;
     }
   }
 
-  .currEdit, .currEdit:hover {
-    background-color: #FFF3D5;
-    color: #FD9540;
+  .currEdit,
+  .currEdit:hover {
+    background-color: #fff3d5;
+    color: #fd9540;
 
-     .editPermsIcon {
+    .editPermsIcon {
       display: inline-block;
     }
   }
@@ -65,15 +63,10 @@ width: 85%;
   font-size: 12px;
   margin-right: 5px;
   margin-bottom: 20px;
-  //float: right;
-  //clear: both;
 
   .permissionsLegendValue {
     margin-right: 15px;
   }
-}
-
-.newRoleInput {
 }
 
 .fkSelect {
@@ -117,34 +110,34 @@ width: 85%;
           margin-top: 10px;
           margin-bottom: 10px;
 
-           label {
+          label {
             cursor: pointer;
             min-height: 20px;
             font-weight: normal;
 
-             input:not([disabled]) {
+            input:not([disabled]) {
               cursor: pointer;
             }
           }
         }
 
-         .insertSetConfigRow {
+        .insertSetConfigRow {
           margin: 10px 0px;
           display: flex;
           align-items: center;
 
-           .input_element_wrapper {
+          .input_element_wrapper {
             width: 20%;
 
-             i {
+            i {
               cursor: pointer;
             }
 
-             select {
+            select {
               width: 100%;
             }
 
-             input {
+            input {
               width: 100%;
             }
           }
@@ -152,19 +145,78 @@ width: 85%;
       }
     }
   }
+
+  .tree {
+    a {
+      color: #2f88e7;
+      text-decoration: none;
+    }
+    button {
+      border: 0;
+      cursor: pointer;
+      background-color: transparent;
+      transition: 0.1s;
+      &:hover {
+        text-shadow: 0px 0px 2px #d9d9d9;
+      }
+      &:focus {
+        outline: auto;
+      }
+    }
+    ul {
+      list-style: none;
+    }
+    label {
+      transition: 0.1s;
+      &:hover {
+        text-shadow: 0px 0px 2px #d9d9d9;
+      }
+    }
+  }
+
+  .sessionVarButton {
+    margin-left: 10px;
+    color: #080;
+    font-size: 10px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .treeNodes {
+    ul {
+      border-left: 2px dotted #ccc;
+    }
+  }
+
+  .fw_medium {
+    font-weight: 400;
+  }
+
+  .fw_large {
+    font-weight: 600;
+  }
+
+  .argSelect {
+    cursor: pointer;
+  }
 }
 
 .permissionSymbolNA {
-color: firebrick;
+  color: firebrick;
 }
 
 .permissionSymbolFA {
   color: green;
 }
 
+.permissionSymbolPAW {
+  color: #ffc627;
+}
+
 .permissionSymbolNA,
 .permissionSymbolFA,
-.permissionSymbolPA {
+.permissionSymbolPA,
+.permissionSymbolPAW {
   font-size: 16px;
 }
 

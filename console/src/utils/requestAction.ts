@@ -12,14 +12,14 @@ import {
 } from '../components/App/Actions';
 import { globalCookiePolicy } from '../Endpoints';
 
-const requestAction = (
+const requestAction = <T = any>(
   url: string,
   options: RequestInit = {},
   SUCCESS?: string,
   ERROR?: string,
   includeCredentials = true,
   includeAdminHeaders = false
-): Thunk<Promise<any>> => {
+): Thunk<Promise<T>> => {
   return (dispatch: any, getState: any) => {
     const requestOptions = { ...options };
 

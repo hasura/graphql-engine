@@ -23,8 +23,9 @@ const HandlerEditor = ({ value, onChange, className, disabled = false }) => {
         type="text"
         value={value}
         onChange={onChange}
-        placeholder={'http://custom-logic.com/api'}
+        placeholder="http://custom-logic.com/api"
         className={`form-control ${styles.inputWidthLarge}`}
+        data-test="action-create-handler-input"
       />
       <br />
       <small>

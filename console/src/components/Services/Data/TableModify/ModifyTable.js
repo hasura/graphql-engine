@@ -1,9 +1,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+
 import TableHeader from '../TableCommon/TableHeader';
-
 import { getAllDataTypeMap } from '../Common/utils';
-
 import {
   deleteTableSql,
   untrackTableSql,
@@ -32,32 +31,35 @@ import CheckConstraints from './CheckConstraints';
 import RootFields from './RootFields';
 import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
-
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
-  getTableCheckConstraints,
+  currentDriver,
   findTable,
   generateTableDef,
-  getTableCustomRootFields,
   getTableCustomColumnNames,
-} from '../../../Common/utils/pgUtils';
+  isFeatureSupported,
+} from '../../../../dataSources';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
-import ComputedFieldsEditor from './ComputedFieldsEditor';
-import ToolTip from '../../../Common/Tooltip/Tooltip';
 import {
   foreignKeyDescription,
   primaryKeyDescription,
   uniqueKeyDescription,
   checkConstraintsDescription,
 } from '../Common/TooltipMessages';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
+import { NotSupportedNote } from '../../../Common/NotSupportedNote';
+import ConnectedComputedFields from './ComputedFields';
+import FeatureDisabled from '../FeatureDisabled';
+import PartitionInfo from './PartitionInfo';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
+    if (!isFeatureSupported('tables.modify.enabled')) return;
     const { dispatch } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
-    dispatch(fetchColumnTypeInfo());
+    if (!isFeatureSupported('tables.modify.readOnly'))
+      dispatch(fetchColumnTypeInfo());
     dispatch(fetchFunctionInit());
   }
 
@@ -71,8 +73,6 @@ class ModifyTable extends React.Component {
     const {
       tableName,
       allTables,
-      nonTrackableFunctions,
-      trackableFunctions,
       dispatch,
       migrationMode,
       readOnlyMode,
@@ -88,9 +88,19 @@ class ModifyTable extends React.Component {
       columnDefaultFunctions,
       schemaList,
       tableEnum,
-      rootFieldsEdit,
       postgresVersion,
+      currentSource,
     } = this.props;
+
+    if (!isFeatureSupported('tables.modify.enabled')) {
+      return (
+        <FeatureDisabled
+          tab="modify"
+          tableName={tableName}
+          schemaName={currentSchema}
+        />
+      );
+    }
 
     const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
 
@@ -99,8 +109,7 @@ class ModifyTable extends React.Component {
       generateTableDef(tableName, currentSchema)
     );
 
-    if (!table) {
-      // throw a 404 exception
+    if (!table && isFeatureSupported('tables.modify.enabled')) {
       throw new NotFoundError();
     }
 
@@ -158,161 +167,193 @@ class ModifyTable extends React.Component {
       );
     };
 
-    // if (table.primary_key.columns > 0) {}
-    const getTableRootFieldsSection = () => {
-      const existingRootFields = getTableCustomRootFields(table);
-
-      return (
-        <React.Fragment>
-          <h4 className={styles.subheading_text}>
-            Custom GraphQL Root Fields
-            <Tooltip
-              message={
-                'Change the root fields for the table in the GraphQL API'
-              }
-            />
-          </h4>
-          <RootFields
-            existingRootFields={existingRootFields}
-            rootFieldsEdit={rootFieldsEdit}
-            dispatch={dispatch}
-            tableName={tableName}
-          />
-          <hr />
-        </React.Fragment>
-      );
-    };
-
-    const getComputedFieldsSection = () => {
-      const allFunctions = nonTrackableFunctions.concat(trackableFunctions);
-
-      return (
-        <React.Fragment>
-          <h4 className={styles.subheading_text}>
-            Computed fields
-            <Tooltip
-              message={'Add a function as a virtual field in the GraphQL API'}
-            />
-            <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/computed-fields.html" />
-          </h4>
-          <ComputedFieldsEditor
-            table={table}
-            currentSchema={currentSchema}
-            functions={allFunctions} // TODO: fix cross schema functions
-            schemaList={schemaList}
-            dispatch={dispatch}
-          />
-          <hr />
-        </React.Fragment>
-      );
-    };
-
-    // if (tableSchema.primary_key.columns > 0) {}
     return (
-      <div className={`${styles.container} container-fluid`}>
-        <TableHeader
-          dispatch={dispatch}
-          table={table}
-          tabName="modify"
-          migrationMode={migrationMode}
-          readOnlyMode={readOnlyMode}
-        />
-        <br />
-        <div className={`container-fluid ${styles.padd_left_remove}`}>
-          <div
-            className={
-              `col-xs-10 ${styles.padd_left_remove}` +
-              ' ' +
-              styles.modifyMinWidth
-            }
-          >
-            <TableCommentEditor
-              tableComment={tableComment}
-              tableCommentEdit={tableCommentEdit}
-              tableType="TABLE"
-              dispatch={dispatch}
-            />
-            <EnumTableModifyWarning isEnum={table.is_enum} />
-            <h4 className={styles.subheading_text}>Columns</h4>
-            <ColumnEditorList
-              validTypeCasts={validTypeCasts}
-              dataTypeIndexMap={dataTypeIndexMap}
-              tableSchema={table}
-              columnEdit={columnEdit}
-              dispatch={dispatch}
-              currentSchema={currentSchema}
-              columnDefaultFunctions={columnDefaultFunctions}
-              customColumnNames={getTableCustomColumnNames(table)}
-            />
-            <ColumnCreator
-              dispatch={dispatch}
-              tableName={tableName}
-              dataTypes={dataTypes}
-              validTypeCasts={validTypeCasts}
-              columnDefaultFunctions={columnDefaultFunctions}
-              postgresVersion={postgresVersion}
-            />
-            <hr />
-            {getComputedFieldsSection()}
-            <h4 className={styles.subheading_text}>
-              Primary Key &nbsp; &nbsp;
-              <ToolTip message={primaryKeyDescription} />
-            </h4>
-            <PrimaryKeyEditor
-              tableSchema={table}
-              pkModify={pkModify}
-              dispatch={dispatch}
-              currentSchema={currentSchema}
-            />
-            <hr />
-            <h4 className={styles.subheading_text}>
-              Foreign Keys &nbsp; &nbsp;
-              <ToolTip message={foreignKeyDescription} />
-            </h4>
-            <ForeignKeyEditor
-              tableSchema={table}
-              currentSchema={currentSchema}
-              allSchemas={allTables}
-              schemaList={schemaList}
-              dispatch={dispatch}
-              fkModify={fkModify}
-            />
-            <hr />
-            <h4 className={styles.subheading_text}>
-              Unique Keys &nbsp; &nbsp;
-              <ToolTip message={uniqueKeyDescription} />
-            </h4>
-            <UniqueKeyEditor
-              tableSchema={table}
-              currentSchema={currentSchema}
-              allSchemas={allTables}
-              dispatch={dispatch}
-              uniqueKeys={uniqueKeyModify}
-              setUniqueKeys={setUniqueKeys}
-            />
-            <hr />
-            <h4 className={styles.subheading_text}>Triggers</h4>
-            <TriggerEditorList tableSchema={table} dispatch={dispatch} />
-            <hr />
-            <h4 className={styles.subheading_text}>
-              Check Constraints &nbsp; &nbsp;
-              <ToolTip message={checkConstraintsDescription} />
-            </h4>
-            <CheckConstraints
-              constraints={getTableCheckConstraints(table)}
-              checkConstraintsModify={checkConstraintsModify}
-              dispatch={dispatch}
-            />
-            <hr />
-            {getTableRootFieldsSection()}
-            {getEnumsSection()}
-            {untrackBtn}
-            {deleteBtn}
-            <br />
-            <br />
+      <RightContainer>
+        <div className={`${styles.container} container-fluid`}>
+          <TableHeader
+            dispatch={dispatch}
+            table={table}
+            source={currentSource}
+            tabName="modify"
+            migrationMode={migrationMode}
+            readOnlyMode={readOnlyMode}
+          />
+          <br />
+          <div className={`container-fluid ${styles.padd_left_remove}`}>
+            <div
+              className={`col-xs-10 ${styles.padd_left_remove} ${styles.modifyMinWidth}`}
+            >
+              {isFeatureSupported('tables.modify.readOnly') && (
+                <div className={styles.readOnly}>
+                  <p className={styles.readOnlyText}>
+                    <i className="fa fa-flask" aria-hidden="true" /> Coming soon
+                    for {currentDriver.toUpperCase()}
+                  </p>
+                  <p className={styles.noMargin}>
+                    This page is currently read-only, but we're actively working
+                    on making it available for the Console.
+                  </p>
+                </div>
+              )}
+
+              {isFeatureSupported('tables.modify.comments') && (
+                <>
+                  <TableCommentEditor
+                    tableComment={tableComment}
+                    tableCommentEdit={tableCommentEdit}
+                    tableType="TABLE"
+                    dispatch={dispatch}
+                  />
+                  <EnumTableModifyWarning isEnum={table.is_enum} />
+                </>
+              )}
+
+              {isFeatureSupported('tables.modify.columns') && (
+                <>
+                  <h4 className={styles.subheading_text}>Columns</h4>
+                  <ColumnEditorList
+                    validTypeCasts={validTypeCasts}
+                    dataTypeIndexMap={dataTypeIndexMap}
+                    tableSchema={table}
+                    columnEdit={columnEdit}
+                    dispatch={dispatch}
+                    readOnlyMode={
+                      !isFeatureSupported('tables.modify.columns_edit')
+                    }
+                    currentSchema={currentSchema}
+                    columnDefaultFunctions={columnDefaultFunctions}
+                    customColumnNames={getTableCustomColumnNames(table)}
+                  />
+                </>
+              )}
+              {isFeatureSupported('tables.modify.columns_edit') && (
+                <>
+                  <ColumnCreator
+                    dispatch={dispatch}
+                    tableName={tableName}
+                    dataTypes={dataTypes}
+                    validTypeCasts={validTypeCasts}
+                    columnDefaultFunctions={columnDefaultFunctions}
+                    postgresVersion={postgresVersion}
+                  />
+                  <hr />
+                </>
+              )}
+
+              {isFeatureSupported('tables.modify.computedFields') && (
+                <>
+                  <ConnectedComputedFields tableSchema={table} />
+                  <hr />
+                </>
+              )}
+
+              {isFeatureSupported('tables.modify.primaryKeys') && (
+                <>
+                  <h4 className={styles.subheading_text}>
+                    Primary Key &nbsp; &nbsp;
+                    <Tooltip message={primaryKeyDescription} />
+                  </h4>
+                  <PrimaryKeyEditor
+                    tableSchema={table}
+                    readOnlyMode={
+                      !isFeatureSupported('tables.modify.primaryKeys_edit')
+                    }
+                    pkModify={pkModify}
+                    dispatch={dispatch}
+                    currentSchema={currentSchema}
+                  />
+                  <hr />
+                </>
+              )}
+
+              {isFeatureSupported('tables.modify.foreginKeys') && (
+                <>
+                  <h4 className={styles.subheading_text}>
+                    Foreign Keys &nbsp; &nbsp;
+                    <Tooltip message={foreignKeyDescription} />
+                  </h4>
+                  <ForeignKeyEditor
+                    tableSchema={table}
+                    currentSchema={currentSchema}
+                    allSchemas={allTables}
+                    schemaList={schemaList}
+                    dispatch={dispatch}
+                    fkModify={fkModify}
+                    readOnlyMode={
+                      !isFeatureSupported('tables.modify.foreginKeys_edit')
+                    }
+                  />
+                  <hr />
+                </>
+              )}
+
+              {isFeatureSupported('tables.modify.uniqueKeys') && (
+                <>
+                  <h4 className={styles.subheading_text}>
+                    Unique Keys &nbsp; &nbsp;
+                    <Tooltip message={uniqueKeyDescription} />
+                  </h4>
+                  <UniqueKeyEditor
+                    tableSchema={table}
+                    currentSchema={currentSchema}
+                    allSchemas={allTables}
+                    dispatch={dispatch}
+                    uniqueKeys={uniqueKeyModify}
+                    setUniqueKeys={setUniqueKeys}
+                    readOnlyMode={
+                      !isFeatureSupported('tables.modify.uniqueKeys_edit')
+                    }
+                  />
+                  <hr />
+                </>
+              )}
+
+              {isFeatureSupported('tables.modify.triggers') && (
+                <>
+                  <div className={styles.add_mar_bottom}>
+                    <h4 className={styles.subheading_text_no_padd}>Triggers</h4>
+                    <NotSupportedNote unsupported={['mysql']} />
+                  </div>
+                  <TriggerEditorList tableSchema={table} dispatch={dispatch} />
+                  <hr />
+                </>
+              )}
+              {isFeatureSupported('tables.modify.checkConstraints') && (
+                <>
+                  <div className={styles.add_mar_bottom}>
+                    <h4 className={styles.subheading_text_no_padd}>
+                      Check Constraints &nbsp; &nbsp;
+                      <Tooltip message={checkConstraintsDescription} />
+                    </h4>
+                    <NotSupportedNote unsupported={['mysql']} />
+                  </div>
+                  <CheckConstraints
+                    constraints={table.check_constraints}
+                    checkConstraintsModify={checkConstraintsModify}
+                    dispatch={dispatch}
+                  />
+                  <hr />
+                </>
+              )}
+              {table.table_type === 'PARTITIONED TABLE' && (
+                <PartitionInfo table={table} dispatch={dispatch} />
+              )}
+              {isFeatureSupported('tables.modify.customGqlRoot') && (
+                <>
+                  <RootFields tableSchema={table} />
+                  <hr />
+                </>
+              )}
+              {isFeatureSupported('tables.modify.setAsEnum') &&
+                getEnumsSection()}
+              {isFeatureSupported('tables.modify.untrack') && untrackBtn}
+              {isFeatureSupported('tables.modify.delete') && deleteBtn}
+              <br />
+              <br />
+            </div>
           </div>
         </div>
-      </div>
+      </RightContainer>
     );
   }
 }
@@ -340,8 +381,6 @@ ModifyTable.propTypes = {
 const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   allTables: state.tables.allSchemas,
-  nonTrackableFunctions: state.tables.nonTrackablePostgresFunctions || [],
-  trackableFunctions: state.tables.postgresFunctions || [],
   migrationMode: state.main.migrationMode,
   readOnlyMode: state.main.readOnlyMode,
   serverVersion: state.main.serverVersion,
@@ -355,6 +394,7 @@ const mapStateToProps = (state, ownProps) => ({
   columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
   schemaList: state.tables.schemaList,
   postgresVersion: state.main.postgresVersion,
+  currentSource: state.tables.currentDataSource,
   ...state.tables.modify,
 });
 

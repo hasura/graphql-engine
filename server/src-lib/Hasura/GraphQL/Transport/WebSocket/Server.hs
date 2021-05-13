@@ -1,6 +1,5 @@
+{-# LANGUAGE CPP                      #-}
 {-# LANGUAGE NondecreasingIndentation #-}
-{-# LANGUAGE RankNTypes               #-}
-{-# LANGUAGE CPP #-}
 
 module Hasura.GraphQL.Transport.WebSocket.Server
   ( WSId(..)
@@ -74,7 +73,7 @@ data MessageDetails
   { _mdMessage     :: !TBS.TByteString
   , _mdMessageSize :: !Int64
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''MessageDetails)
+$(J.deriveToJSON hasuraJSON ''MessageDetails)
 
 data WSEvent
   = EConnectionRequest
@@ -174,7 +173,7 @@ closeConnWithCode wsConn code bs = do
 -- writes to a queue instead of the raw connection
 -- so that sendMsg doesn't block
 sendMsg :: WSConn a -> WSQueueResponse -> IO ()
-sendMsg wsConn = \ !resp -> do
+sendMsg wsConn !resp = do
 #ifndef PROFILING
   $assertNFHere resp  -- so we don't write thunks to mutable vars
 #endif
@@ -297,7 +296,9 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
       --      Requires a fork of 'wai-websockets' and 'websockets', it looks like.
       --      Adding `package` stanzas with -Xstrict -XStrictData for those two packages
       --      helped, cutting the number of thunks approximately in half.
+#   ifndef PROFILING
       liftIO $ $assertNFHere wsConn  -- so we don't write thunks to mutable vars
+#   endif
 
       let whenAcceptingInsertConn = liftIO $ STM.atomically $ do
             status <- STM.readTVar serverStatus

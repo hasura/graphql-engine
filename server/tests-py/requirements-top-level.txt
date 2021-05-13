@@ -1,3 +1,4 @@
+# IF YOU CHANGE THIS PLEASE INCREMENT DEVSH_VERSION in `scripts/dev.sh`
 psycopg2-binary
 sqlalchemy
 pytest==4.5.0
@@ -11,3 +12,5 @@ cryptography
 graphene
 ruamel.yaml > 0.15
 graphql-core
+redis
+croniter

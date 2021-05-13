@@ -1,0 +1,7 @@
+{
+  "type": "array",
+  "items": {
+    "$ref": "./HasuraMetadataV2.schema.json#definitions/CronTrigger"
+  },
+  "title": "cron_triggers"
+}

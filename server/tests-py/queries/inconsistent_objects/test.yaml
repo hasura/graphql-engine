@@ -50,18 +50,8 @@ inconsistent_objects:
 - definition:
     schema: public
     name: article
-  reason: 'no such table/view exists in postgres: "article"'
+  reason: 'no such table/view exists in source: "article"'
   type: table
-- definition:
-    using:
-      foreign_key_constraint_on: author_id
-    name: author
-    comment:
-    table:
-      schema: public
-      name: article
-  reason: 'table "article" does not exist'
-  type: object_relation
 - definition:
     using:
       foreign_key_constraint_on:
@@ -70,6 +60,7 @@ inconsistent_objects:
           schema: public
           name: article
     name: articles
+    source: default
     comment:
     table:
       schema: public

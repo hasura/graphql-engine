@@ -19,16 +19,18 @@ import {
   passModifyUniqueKey,
   passRemoveUniqueKey,
   passMTChangeDefaultValueForPKey,
+  passMTFunctionList,
 } from './spec';
 
 import { testMode } from '../../../helpers/common';
 import { setMetaData } from '../../validators/validators';
+import { getIndexRoute } from '../../../helpers/dataHelpers';
 
 const setup = () => {
   describe('Check Data Tab', () => {
     it('Clicking on Data tab opens the correct route', () => {
       // Visit the index route
-      cy.visit('/data/schema/public');
+      cy.visit(getIndexRoute());
       cy.wait(7000);
       // Get and set validation metadata
       setMetaData();
@@ -41,6 +43,10 @@ export const runModifyTableTests = () => {
     it('Creating a table', passMTCreateTable);
     it('Moving to the table', passMTMoveToTable);
     it('Modify table button opens the correct route', passMTCheckRoute);
+    it(
+      'Can create computed field with compatible functions',
+      passMTFunctionList
+    );
     it('Pass renaming table', passMTRenameTable);
     it('Pass renaming column', passMTRenameColumn);
     it('Fails to add column without column name', failMTWithoutColName);

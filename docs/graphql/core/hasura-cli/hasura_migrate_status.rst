@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use hasura migrate status to display the current status of Hasura migrations on the Hasura CLI
+   :description: Display current status of migrations on a database using the Hasura CLI
    :keywords: hasura, docs, CLI, hasura migrate status
 
 .. _hasura_migrate_status:
@@ -42,15 +42,16 @@ Options inherited from parent commands
 
 ::
 
-      --admin-secret string            admin secret for Hasura GraphQL engine
-      --certificate-authority string   path to a cert file for the certificate authority
-      --endpoint string                http(s) endpoint for Hasura GraphQL engine
+      --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
+      --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
+      --database-name string           database on which operation should be applied
+      --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
       --envfile string                 .env filename to load ENV vars from (default ".env")
-      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false)
+      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
       --log-level string               log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color                       do not colorize output (default: false)
       --project string                 directory where commands are executed (default: current dir)
-      --skip-update-check              Skip automatic update check on command execution
+      --skip-update-check              skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

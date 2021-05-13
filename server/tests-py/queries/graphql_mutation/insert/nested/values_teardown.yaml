@@ -8,5 +8,7 @@ args:
       delete from article;
       SELECT setval('article_id_seq', 1, FALSE);
 
+      delete from author_detail;
+
       delete from author;
       SELECT setval('author_id_seq', 1, FALSE);

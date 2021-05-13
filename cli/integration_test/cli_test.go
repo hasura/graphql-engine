@@ -9,8 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/commands"
-
 	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli"
 	integrationtest "github.com/hasura/graphql-engine/cli/integration_test"
@@ -18,6 +16,7 @@ import (
 
 	v1 "github.com/hasura/graphql-engine/cli/integration_test/v1"
 	v2 "github.com/hasura/graphql-engine/cli/integration_test/v2"
+	v3 "github.com/hasura/graphql-engine/cli/integration_test/v3"
 	"github.com/sirupsen/logrus/hooks/test"
 )
 
@@ -104,21 +103,6 @@ func TestCommands(t *testing.T) {
 		})
 
 		skip(t)
-		if cliExtManifestFilePath := os.Getenv("HASURA_GRAPHQL_TEST_CLI_EXT_MANIFEST_FILE_PATH"); cliExtManifestFilePath != "" {
-			t.Run("cli-ext-plugin-install", func(t *testing.T) {
-				installOpts := &commands.PluginInstallOptions{
-					EC:           ec,
-					Name:         cli.CLIExtPluginName,
-					ManifestFile: cliExtManifestFilePath,
-				}
-				err := installOpts.Run()
-				if err != nil {
-					t.Fatalf("unable to install %s plugin, got %v", cli.CLIExtPluginName, err)
-				}
-			})
-		}
-
-		skip(t)
 		t.Run("console command", func(t *testing.T) {
 			v2.TestConsoleCmd(t, ec)
 		})
@@ -143,7 +127,7 @@ func TestCommands(t *testing.T) {
 			v2.TestSeedsApplyCmd(t, ec)
 		})
 	})
-	t.Run("config=v2/incomplete_metadata_dir", func(t *testing.T) {
+	t.Run("config=v3", func(t *testing.T) {
 		ec := cli.NewExecutionContext()
 		ec.Config = &cli.Config{}
 		logger, _ := test.NewNullLogger()
@@ -163,7 +147,7 @@ func TestCommands(t *testing.T) {
 		skip(t)
 		// This will init the project dir
 		t.Run("init command", func(t *testing.T) {
-			v2.TestInitCmd(t, ec, initDir)
+			v3.TestInitCmd(t, ec, initDir)
 		})
 
 		skip(t)
@@ -173,25 +157,29 @@ func TestCommands(t *testing.T) {
 		})
 
 		skip(t)
-		if cliExtManifestFilePath := os.Getenv("HASURA_GRAPHQL_TEST_CLI_EXT_MANIFEST_FILE_PATH"); cliExtManifestFilePath != "" {
-			t.Run("cli-ext-plugin-install", func(t *testing.T) {
-				installOpts := &commands.PluginInstallOptions{
-					EC:           ec,
-					Name:         cli.CLIExtPluginName,
-					ManifestFile: cliExtManifestFilePath,
-				}
-				err := installOpts.Run()
-				if err != nil {
-					t.Fatalf("unable to install %s plugin, got %v", cli.CLIExtPluginName, err)
-				}
-			})
-		}
-
-		skip(t)
-		t.Run("metadata apply", func(t *testing.T) {
-			v2.TestIncompleteMetadataDir(t, ec)
+		t.Run("console command", func(t *testing.T) {
+			v3.TestConsoleCmd(t, ec)
 		})
 
+		skip(t)
+		t.Run("migrate commands", func(t *testing.T) {
+			v3.TestMigrateCmd(t, ec)
+		})
+
+		skip(t)
+		t.Run("metadata commands", func(t *testing.T) {
+			v3.TestMetadataCmd(t, ec)
+		})
+
+		skip(t)
+		t.Run("seed create command", func(t *testing.T) {
+			v3.TestSeedsCreateCmd(t, ec)
+		})
+
+		skip(t)
+		t.Run("seed apply commands", func(t *testing.T) {
+			v3.TestSeedsApplyCmd(t, ec)
+		})
 	})
 }
 

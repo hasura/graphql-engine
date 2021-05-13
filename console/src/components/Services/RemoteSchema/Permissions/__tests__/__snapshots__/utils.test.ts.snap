@@ -1,0 +1,5906 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Utils.ts generateSDL 1`] = `
+"schema{
+      query: query_root
+}
+ 
+type query_root{
+      users(distinct_on : [users_select_column!] limit : Int offset : Int order_by : [users_order_by!] where : users_bool_exp ): [users!]!
+}
+
+type books{
+      author : Int!
+      book_name : String!
+      id : Int!
+      user : users!
+}
+
+type users{
+      books : [books!]!
+      books_aggregate : books_aggregate!
+      id : Int!
+      name : String!
+}
+
+type books_aggregate{
+      aggregate : books_aggregate_fields
+      nodes : [books!]!
+}
+
+type books_aggregate_fields{
+      avg : books_avg_fields
+      count : Int
+      max : books_max_fields
+      min : books_min_fields
+      stddev : books_stddev_fields
+      stddev_pop : books_stddev_pop_fields
+      stddev_samp : books_stddev_samp_fields
+      sum : books_sum_fields
+      var_pop : books_var_pop_fields
+      var_samp : books_var_samp_fields
+      variance : books_variance_fields
+}
+
+type books_avg_fields{
+      author : Float
+      id : Float
+}
+
+type books_max_fields{
+      author : Int
+      book_name : String
+      id : Int
+}
+
+type books_min_fields{
+      author : Int
+      book_name : String
+      id : Int
+}
+
+type books_stddev_fields{
+      author : Float
+      id : Float
+}
+
+type books_stddev_pop_fields{
+      author : Float
+      id : Float
+}
+
+type books_stddev_samp_fields{
+      author : Float
+      id : Float
+}
+
+type books_sum_fields{
+      author : Int
+      id : Int
+}
+
+type books_var_pop_fields{
+      author : Float
+      id : Float
+}
+
+type books_var_samp_fields{
+      author : Float
+      id : Float
+}
+
+type books_variance_fields{
+      author : Float
+      id : Float
+}
+
+input users_order_by{
+      books_aggregate : books_aggregate_order_by
+      id : order_by
+      name : order_by
+}
+
+input books_aggregate_order_by{
+      avg : books_avg_order_by
+      count : order_by
+      max : books_max_order_by
+      min : books_min_order_by
+      stddev : books_stddev_order_by
+      stddev_pop : books_stddev_pop_order_by
+      stddev_samp : books_stddev_samp_order_by
+      sum : books_sum_order_by
+      var_pop : books_var_pop_order_by
+      var_samp : books_var_samp_order_by
+      variance : books_variance_order_by
+}
+
+input books_avg_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_max_order_by{
+      author : order_by
+      book_name : order_by
+      id : order_by
+}
+
+input books_min_order_by{
+      author : order_by
+      book_name : order_by
+      id : order_by
+}
+
+input books_stddev_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_stddev_pop_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_stddev_samp_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_sum_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_var_pop_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_var_samp_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_variance_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_bool_exp{
+      _and : [books_bool_exp]
+      _not : books_bool_exp
+      _or : [books_bool_exp]
+      author : Int_comparison_exp
+      book_name : String_comparison_exp
+      id : Int_comparison_exp
+      user : users_bool_exp
+}
+
+input Int_comparison_exp{
+      _eq : Int
+      _gt : Int
+      _gte : Int
+      _in : [Int!]
+      _is_null : Boolean
+      _lt : Int
+      _lte : Int
+      _neq : Int
+      _nin : [Int!]
+}
+
+input String_comparison_exp{
+      _eq : String
+      _gt : String
+      _gte : String
+      _ilike : String
+      _in : [String!]
+      _is_null : Boolean
+      _like : String
+      _lt : String
+      _lte : String
+      _neq : String
+      _nilike : String
+      _nin : [String!]
+      _nlike : String
+      _nsimilar : String
+      _similar : String
+}
+
+input users_bool_exp{
+      _and : [users_bool_exp]
+      _not : users_bool_exp
+      _or : [users_bool_exp]
+      books : books_bool_exp
+      id : Int_comparison_exp
+      name : String_comparison_exp
+}
+
+enum order_by{
+      asc
+      asc_nulls_first
+      asc_nulls_last
+      desc
+      desc_nulls_first
+      desc_nulls_last
+}
+
+enum users_select_column{
+      id
+      name
+}
+"
+`;
+
+exports[`Utils.ts generateSDL 2`] = `
+"schema{
+      query: query_root
+}
+ 
+type query_root{
+      users(distinct_on : [users_select_column!] limit : Int offset : Int order_by : [users_order_by!] where : users_bool_exp ): [users!]!
+}
+
+type books{
+      author : Int!
+      book_name : String!
+      id : Int!
+      user : users!
+}
+
+type users{
+      books : [books!]!
+      books_aggregate : books_aggregate!
+      id : Int!
+      name : String!
+}
+
+type books_aggregate{
+      aggregate : books_aggregate_fields
+      nodes : [books!]!
+}
+
+type books_aggregate_fields{
+      avg : books_avg_fields
+      count : Int
+      max : books_max_fields
+      min : books_min_fields
+      stddev : books_stddev_fields
+      stddev_pop : books_stddev_pop_fields
+      stddev_samp : books_stddev_samp_fields
+      sum : books_sum_fields
+      var_pop : books_var_pop_fields
+      var_samp : books_var_samp_fields
+      variance : books_variance_fields
+}
+
+type books_avg_fields{
+      author : Float
+      id : Float
+}
+
+type books_max_fields{
+      author : Int
+      book_name : String
+      id : Int
+}
+
+type books_min_fields{
+      author : Int
+      book_name : String
+      id : Int
+}
+
+type books_stddev_fields{
+      author : Float
+      id : Float
+}
+
+type books_stddev_pop_fields{
+      author : Float
+      id : Float
+}
+
+type books_stddev_samp_fields{
+      author : Float
+      id : Float
+}
+
+type books_sum_fields{
+      author : Int
+      id : Int
+}
+
+type books_var_pop_fields{
+      author : Float
+      id : Float
+}
+
+type books_var_samp_fields{
+      author : Float
+      id : Float
+}
+
+type books_variance_fields{
+      author : Float
+      id : Float
+}
+
+input users_order_by{
+      books_aggregate : books_aggregate_order_by
+      id : order_by
+      name : order_by
+}
+
+input books_aggregate_order_by{
+      avg : books_avg_order_by
+      count : order_by
+      max : books_max_order_by
+      min : books_min_order_by
+      stddev : books_stddev_order_by
+      stddev_pop : books_stddev_pop_order_by
+      stddev_samp : books_stddev_samp_order_by
+      sum : books_sum_order_by
+      var_pop : books_var_pop_order_by
+      var_samp : books_var_samp_order_by
+      variance : books_variance_order_by
+}
+
+input books_avg_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_max_order_by{
+      author : order_by
+      book_name : order_by
+      id : order_by
+}
+
+input books_min_order_by{
+      author : order_by
+      book_name : order_by
+      id : order_by
+}
+
+input books_stddev_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_stddev_pop_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_stddev_samp_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_sum_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_var_pop_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_var_samp_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_variance_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_bool_exp{
+      _and : [books_bool_exp]
+      _not : books_bool_exp
+      _or : [books_bool_exp]
+      author : Int_comparison_exp
+      book_name : String_comparison_exp
+      id : Int_comparison_exp
+      user : users_bool_exp
+}
+
+input Int_comparison_exp{
+      _eq : Int
+      _gt : Int
+      _gte : Int
+      _in : [Int!]
+      _is_null : Boolean
+      _lt : Int
+      _lte : Int
+      _neq : Int
+      _nin : [Int!]
+}
+
+input String_comparison_exp{
+      _eq : String
+      _gt : String
+      _gte : String
+      _ilike : String
+      _in : [String!]
+      _is_null : Boolean
+      _like : String
+      _lt : String
+      _lte : String
+      _neq : String
+      _nilike : String
+      _nin : [String!]
+      _nlike : String
+      _nsimilar : String
+      _similar : String
+}
+
+input users_bool_exp{
+      _and : [users_bool_exp]
+      _not : users_bool_exp
+      _or : [users_bool_exp]
+      books : books_bool_exp
+      id : Int_comparison_exp
+      name : String_comparison_exp
+}
+
+enum order_by{
+      asc
+      asc_nulls_first
+      asc_nulls_last
+      desc
+      desc_nulls_first
+      desc_nulls_last
+}
+
+enum users_select_column{
+      id
+      name
+}
+"
+`;
+
+exports[`Utils.ts generateSDL 3`] = `
+"schema{
+      query: Query
+}
+ 
+type Query{
+      continents(filter : ContinentFilterInput ): [Continent!]!
+}
+
+type Continent{
+      code : ID!
+      name : String!
+      countries : [Country!]!
+}
+
+type Country{
+      code : ID!
+      name : String!
+      native : String!
+      phone : String!
+      continent : Continent!
+      capital : String
+      currency : String
+      languages : [Language!]!
+      emoji : String!
+      emojiU : String!
+      states : [State!]!
+}
+
+type Language{
+      code : ID!
+      name : String
+      native : String
+      rtl : Boolean!
+}
+
+type State{
+      code : String
+      name : String!
+      country : Country!
+}
+
+input ContinentFilterInput{
+      code : StringQueryOperatorInput
+}
+
+input StringQueryOperatorInput{
+      eq : String
+      ne : String
+      in : [String]
+      nin : [String]
+      regex : String
+      glob : String
+}
+"
+`;
+
+exports[`Utils.ts generateSDL 4`] = `
+"schema{
+      query: Query
+}
+ 
+type Query{
+      continents(filter : ContinentFilterInput ): [Continent!]!
+}
+
+type Continent{
+      code : ID!
+      name : String!
+      countries : [Country!]!
+}
+
+type Country{
+      code : ID!
+      name : String!
+      native : String!
+      phone : String!
+      continent : Continent!
+      capital : String
+      currency : String
+      languages : [Language!]!
+      emoji : String!
+      emojiU : String!
+      states : [State!]!
+}
+
+type Language{
+      code : ID!
+      name : String
+      native : String
+      rtl : Boolean!
+}
+
+type State{
+      code : String
+      name : String!
+      country : Country!
+}
+
+input ContinentFilterInput{
+      code : StringQueryOperatorInput
+}
+
+input StringQueryOperatorInput{
+      eq : String
+      ne : String
+      in : [String]
+      nin : [String]
+      regex : String
+      glob : String
+}
+"
+`;
+
+exports[`Utils.ts getRemoteSchemaFields 1`] = `
+Array [
+  Object {
+    "children": Array [
+      Object {
+        "args": Object {
+          "distinct_on": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "distinct select on columns",
+            "extensions": undefined,
+            "name": "distinct_on",
+            "type": "[books_select_column!]",
+          },
+          "limit": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "limit the number of rows returned",
+            "extensions": undefined,
+            "name": "limit",
+            "type": "Int",
+          },
+          "offset": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "skip the first n rows. Use only with order_by",
+            "extensions": undefined,
+            "name": "offset",
+            "type": "Int",
+          },
+          "order_by": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "sort the rows by one or more columns",
+            "extensions": undefined,
+            "name": "order_by",
+            "type": "[books_order_by!]",
+          },
+          "where": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "filter the rows returned",
+            "extensions": undefined,
+            "name": "where",
+            "type": "books_bool_exp",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "fetch data from the table: \\"books\\"",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "books",
+        "resolve": undefined,
+        "return": "[books!]!",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "distinct_on": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "distinct select on columns",
+            "extensions": undefined,
+            "name": "distinct_on",
+            "type": "[books_select_column!]",
+          },
+          "limit": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "limit the number of rows returned",
+            "extensions": undefined,
+            "name": "limit",
+            "type": "Int",
+          },
+          "offset": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "skip the first n rows. Use only with order_by",
+            "extensions": undefined,
+            "name": "offset",
+            "type": "Int",
+          },
+          "order_by": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "sort the rows by one or more columns",
+            "extensions": undefined,
+            "name": "order_by",
+            "type": "[books_order_by!]",
+          },
+          "where": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "filter the rows returned",
+            "extensions": undefined,
+            "name": "where",
+            "type": "books_bool_exp",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "fetch aggregated fields from the table: \\"books\\"",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "books_aggregate",
+        "resolve": undefined,
+        "return": "books_aggregate!",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int!",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "fetch data from the table: \\"books\\" using primary key columns",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "books_by_pk",
+        "resolve": undefined,
+        "return": "books",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "distinct_on": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "distinct select on columns",
+            "extensions": undefined,
+            "name": "distinct_on",
+            "type": "[users_select_column!]",
+          },
+          "limit": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "limit the number of rows returned",
+            "extensions": undefined,
+            "name": "limit",
+            "type": "Int",
+          },
+          "offset": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "skip the first n rows. Use only with order_by",
+            "extensions": undefined,
+            "name": "offset",
+            "type": "Int",
+          },
+          "order_by": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "sort the rows by one or more columns",
+            "extensions": undefined,
+            "name": "order_by",
+            "type": "[users_order_by!]",
+          },
+          "where": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "filter the rows returned",
+            "extensions": undefined,
+            "name": "where",
+            "type": "users_bool_exp",
+          },
+        },
+        "astNode": undefined,
+        "checked": true,
+        "deprecationReason": null,
+        "description": "fetch data from the table: \\"users\\"",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "users",
+        "resolve": undefined,
+        "return": "[users!]!",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "distinct_on": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "distinct select on columns",
+            "extensions": undefined,
+            "name": "distinct_on",
+            "type": "[users_select_column!]",
+          },
+          "limit": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "limit the number of rows returned",
+            "extensions": undefined,
+            "name": "limit",
+            "type": "Int",
+          },
+          "offset": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "skip the first n rows. Use only with order_by",
+            "extensions": undefined,
+            "name": "offset",
+            "type": "Int",
+          },
+          "order_by": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "sort the rows by one or more columns",
+            "extensions": undefined,
+            "name": "order_by",
+            "type": "[users_order_by!]",
+          },
+          "where": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "filter the rows returned",
+            "extensions": undefined,
+            "name": "where",
+            "type": "users_bool_exp",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "fetch aggregated fields from the table: \\"users\\"",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "users_aggregate",
+        "resolve": undefined,
+        "return": "users_aggregate!",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int!",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "fetch data from the table: \\"users\\" using primary key columns",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "users_by_pk",
+        "resolve": undefined,
+        "return": "users",
+        "subscribe": undefined,
+      },
+    ],
+    "name": "type query_root",
+    "typeName": "__query_root",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "args": Object {
+          "where": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "filter the rows which have to be deleted",
+            "extensions": undefined,
+            "name": "where",
+            "type": "books_bool_exp!",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "delete data from the table: \\"books\\"",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "delete_books",
+        "resolve": undefined,
+        "return": "books_mutation_response",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int!",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "delete single row from the table: \\"books\\"",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "delete_books_by_pk",
+        "resolve": undefined,
+        "return": "books",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "where": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "filter the rows which have to be deleted",
+            "extensions": undefined,
+            "name": "where",
+            "type": "users_bool_exp!",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "delete data from the table: \\"users\\"",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "delete_users",
+        "resolve": undefined,
+        "return": "users_mutation_response",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int!",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "delete single row from the table: \\"users\\"",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "delete_users_by_pk",
+        "resolve": undefined,
+        "return": "users",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "objects": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "the rows to be inserted",
+            "extensions": undefined,
+            "name": "objects",
+            "type": "[books_insert_input!]!",
+          },
+          "on_conflict": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "on conflict condition",
+            "extensions": undefined,
+            "name": "on_conflict",
+            "type": "books_on_conflict",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "insert data into the table: \\"books\\"",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "insert_books",
+        "resolve": undefined,
+        "return": "books_mutation_response",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "object": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "the row to be inserted",
+            "extensions": undefined,
+            "name": "object",
+            "type": "books_insert_input!",
+          },
+          "on_conflict": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "on conflict condition",
+            "extensions": undefined,
+            "name": "on_conflict",
+            "type": "books_on_conflict",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "insert a single row into the table: \\"books\\"",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "insert_books_one",
+        "resolve": undefined,
+        "return": "books",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "objects": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "the rows to be inserted",
+            "extensions": undefined,
+            "name": "objects",
+            "type": "[users_insert_input!]!",
+          },
+          "on_conflict": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "on conflict condition",
+            "extensions": undefined,
+            "name": "on_conflict",
+            "type": "users_on_conflict",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "insert data into the table: \\"users\\"",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "insert_users",
+        "resolve": undefined,
+        "return": "users_mutation_response",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "object": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "the row to be inserted",
+            "extensions": undefined,
+            "name": "object",
+            "type": "users_insert_input!",
+          },
+          "on_conflict": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "on conflict condition",
+            "extensions": undefined,
+            "name": "on_conflict",
+            "type": "users_on_conflict",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "insert a single row into the table: \\"users\\"",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "insert_users_one",
+        "resolve": undefined,
+        "return": "users",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "_inc": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "increments the integer columns with given value of the filtered values",
+            "extensions": undefined,
+            "name": "_inc",
+            "type": "books_inc_input",
+          },
+          "_set": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "sets the columns of the filtered rows to the given values",
+            "extensions": undefined,
+            "name": "_set",
+            "type": "books_set_input",
+          },
+          "where": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "filter the rows which have to be updated",
+            "extensions": undefined,
+            "name": "where",
+            "type": "books_bool_exp!",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "update data of the table: \\"books\\"",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "update_books",
+        "resolve": undefined,
+        "return": "books_mutation_response",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "_inc": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "increments the integer columns with given value of the filtered values",
+            "extensions": undefined,
+            "name": "_inc",
+            "type": "books_inc_input",
+          },
+          "_set": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "sets the columns of the filtered rows to the given values",
+            "extensions": undefined,
+            "name": "_set",
+            "type": "books_set_input",
+          },
+          "pk_columns": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "pk_columns",
+            "type": "books_pk_columns_input!",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "update single row of the table: \\"books\\"",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "update_books_by_pk",
+        "resolve": undefined,
+        "return": "books",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "_inc": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "increments the integer columns with given value of the filtered values",
+            "extensions": undefined,
+            "name": "_inc",
+            "type": "users_inc_input",
+          },
+          "_set": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "sets the columns of the filtered rows to the given values",
+            "extensions": undefined,
+            "name": "_set",
+            "type": "users_set_input",
+          },
+          "where": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "filter the rows which have to be updated",
+            "extensions": undefined,
+            "name": "where",
+            "type": "users_bool_exp!",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "update data of the table: \\"users\\"",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "update_users",
+        "resolve": undefined,
+        "return": "users_mutation_response",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "_inc": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "increments the integer columns with given value of the filtered values",
+            "extensions": undefined,
+            "name": "_inc",
+            "type": "users_inc_input",
+          },
+          "_set": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "sets the columns of the filtered rows to the given values",
+            "extensions": undefined,
+            "name": "_set",
+            "type": "users_set_input",
+          },
+          "pk_columns": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "pk_columns",
+            "type": "users_pk_columns_input!",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "update single row of the table: \\"users\\"",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "update_users_by_pk",
+        "resolve": undefined,
+        "return": "users",
+        "subscribe": undefined,
+      },
+    ],
+    "name": "type mutation_root",
+    "typeName": "__mutation_root",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "Int!",
+      },
+      Object {
+        "checked": true,
+        "name": "book_name",
+        "return": "String!",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "Int!",
+      },
+      Object {
+        "checked": true,
+        "name": "user",
+        "return": "users!",
+      },
+    ],
+    "name": "type books",
+    "typeName": "books",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "books",
+        "return": "[books!]!",
+      },
+      Object {
+        "checked": true,
+        "name": "books_aggregate",
+        "return": "books_aggregate!",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "Int!",
+      },
+      Object {
+        "checked": true,
+        "name": "name",
+        "return": "String!",
+      },
+    ],
+    "name": "type users",
+    "typeName": "users",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "aggregate",
+        "return": "books_aggregate_fields",
+      },
+      Object {
+        "checked": true,
+        "name": "nodes",
+        "return": "[books!]!",
+      },
+    ],
+    "name": "type books_aggregate",
+    "typeName": "books_aggregate",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "avg",
+        "return": "books_avg_fields",
+      },
+      Object {
+        "checked": true,
+        "name": "count",
+        "return": "Int",
+      },
+      Object {
+        "checked": true,
+        "name": "max",
+        "return": "books_max_fields",
+      },
+      Object {
+        "checked": true,
+        "name": "min",
+        "return": "books_min_fields",
+      },
+      Object {
+        "checked": true,
+        "name": "stddev",
+        "return": "books_stddev_fields",
+      },
+      Object {
+        "checked": true,
+        "name": "stddev_pop",
+        "return": "books_stddev_pop_fields",
+      },
+      Object {
+        "checked": true,
+        "name": "stddev_samp",
+        "return": "books_stddev_samp_fields",
+      },
+      Object {
+        "checked": true,
+        "name": "sum",
+        "return": "books_sum_fields",
+      },
+      Object {
+        "checked": true,
+        "name": "var_pop",
+        "return": "books_var_pop_fields",
+      },
+      Object {
+        "checked": true,
+        "name": "var_samp",
+        "return": "books_var_samp_fields",
+      },
+      Object {
+        "checked": true,
+        "name": "variance",
+        "return": "books_variance_fields",
+      },
+    ],
+    "name": "type books_aggregate_fields",
+    "typeName": "books_aggregate_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "Float",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type books_avg_fields",
+    "typeName": "books_avg_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "Int",
+      },
+      Object {
+        "checked": true,
+        "name": "book_name",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "Int",
+      },
+    ],
+    "name": "type books_max_fields",
+    "typeName": "books_max_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "Int",
+      },
+      Object {
+        "checked": true,
+        "name": "book_name",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "Int",
+      },
+    ],
+    "name": "type books_min_fields",
+    "typeName": "books_min_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "Float",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type books_stddev_fields",
+    "typeName": "books_stddev_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "Float",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type books_stddev_pop_fields",
+    "typeName": "books_stddev_pop_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "Float",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type books_stddev_samp_fields",
+    "typeName": "books_stddev_samp_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "Int",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "Int",
+      },
+    ],
+    "name": "type books_sum_fields",
+    "typeName": "books_sum_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "Float",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type books_var_pop_fields",
+    "typeName": "books_var_pop_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "Float",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type books_var_samp_fields",
+    "typeName": "books_var_samp_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "Float",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type books_variance_fields",
+    "typeName": "books_variance_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "aggregate",
+        "return": "users_aggregate_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "nodes",
+        "return": "[users!]!",
+      },
+    ],
+    "name": "type users_aggregate",
+    "typeName": "users_aggregate",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "avg",
+        "return": "users_avg_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "count",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "max",
+        "return": "users_max_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "min",
+        "return": "users_min_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "stddev",
+        "return": "users_stddev_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "stddev_pop",
+        "return": "users_stddev_pop_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "stddev_samp",
+        "return": "users_stddev_samp_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "sum",
+        "return": "users_sum_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "var_pop",
+        "return": "users_var_pop_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "var_samp",
+        "return": "users_var_samp_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "variance",
+        "return": "users_variance_fields",
+      },
+    ],
+    "name": "type users_aggregate_fields",
+    "typeName": "users_aggregate_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type users_avg_fields",
+    "typeName": "users_avg_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "String",
+      },
+    ],
+    "name": "type users_max_fields",
+    "typeName": "users_max_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "String",
+      },
+    ],
+    "name": "type users_min_fields",
+    "typeName": "users_min_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type users_stddev_fields",
+    "typeName": "users_stddev_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type users_stddev_pop_fields",
+    "typeName": "users_stddev_pop_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type users_stddev_samp_fields",
+    "typeName": "users_stddev_samp_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+    ],
+    "name": "type users_sum_fields",
+    "typeName": "users_sum_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type users_var_pop_fields",
+    "typeName": "users_var_pop_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type users_var_samp_fields",
+    "typeName": "users_var_samp_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type users_variance_fields",
+    "typeName": "users_variance_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "affected_rows",
+        "return": "Int!",
+      },
+      Object {
+        "checked": false,
+        "name": "returning",
+        "return": "[books!]!",
+      },
+    ],
+    "name": "type books_mutation_response",
+    "typeName": "books_mutation_response",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "affected_rows",
+        "return": "Int!",
+      },
+      Object {
+        "checked": false,
+        "name": "returning",
+        "return": "[users!]!",
+      },
+    ],
+    "name": "type users_mutation_response",
+    "typeName": "users_mutation_response",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "book_name",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "user",
+        "return": "users_order_by",
+      },
+    ],
+    "name": "input books_order_by",
+    "typeName": "books_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "books_aggregate",
+        "return": "books_aggregate_order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "name",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_order_by",
+    "typeName": "users_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "avg",
+        "return": "books_avg_order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "count",
+        "return": "order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "max",
+        "return": "books_max_order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "min",
+        "return": "books_min_order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "stddev",
+        "return": "books_stddev_order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "stddev_pop",
+        "return": "books_stddev_pop_order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "stddev_samp",
+        "return": "books_stddev_samp_order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "sum",
+        "return": "books_sum_order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "var_pop",
+        "return": "books_var_pop_order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "var_samp",
+        "return": "books_var_samp_order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "variance",
+        "return": "books_variance_order_by",
+      },
+    ],
+    "name": "input books_aggregate_order_by",
+    "typeName": "books_aggregate_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_avg_order_by",
+    "typeName": "books_avg_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "book_name",
+        "return": "order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_max_order_by",
+    "typeName": "books_max_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "book_name",
+        "return": "order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_min_order_by",
+    "typeName": "books_min_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_stddev_order_by",
+    "typeName": "books_stddev_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_stddev_pop_order_by",
+    "typeName": "books_stddev_pop_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_stddev_samp_order_by",
+    "typeName": "books_stddev_samp_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_sum_order_by",
+    "typeName": "books_sum_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_var_pop_order_by",
+    "typeName": "books_var_pop_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_var_samp_order_by",
+    "typeName": "books_var_samp_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_variance_order_by",
+    "typeName": "books_variance_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "_and",
+        "return": "[books_bool_exp]",
+      },
+      Object {
+        "checked": true,
+        "name": "_not",
+        "return": "books_bool_exp",
+      },
+      Object {
+        "checked": true,
+        "name": "_or",
+        "return": "[books_bool_exp]",
+      },
+      Object {
+        "checked": true,
+        "name": "author",
+        "return": "Int_comparison_exp",
+      },
+      Object {
+        "checked": true,
+        "name": "book_name",
+        "return": "String_comparison_exp",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "Int_comparison_exp",
+      },
+      Object {
+        "checked": true,
+        "name": "user",
+        "return": "users_bool_exp",
+      },
+    ],
+    "name": "input books_bool_exp",
+    "typeName": "books_bool_exp",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "_eq",
+        "return": "Int",
+      },
+      Object {
+        "checked": true,
+        "name": "_gt",
+        "return": "Int",
+      },
+      Object {
+        "checked": true,
+        "name": "_gte",
+        "return": "Int",
+      },
+      Object {
+        "checked": true,
+        "name": "_in",
+        "return": "[Int!]",
+      },
+      Object {
+        "checked": true,
+        "name": "_is_null",
+        "return": "Boolean",
+      },
+      Object {
+        "checked": true,
+        "name": "_lt",
+        "return": "Int",
+      },
+      Object {
+        "checked": true,
+        "name": "_lte",
+        "return": "Int",
+      },
+      Object {
+        "checked": true,
+        "name": "_neq",
+        "return": "Int",
+      },
+      Object {
+        "checked": true,
+        "name": "_nin",
+        "return": "[Int!]",
+      },
+    ],
+    "name": "input Int_comparison_exp",
+    "typeName": "Int_comparison_exp",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "_eq",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "_gt",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "_gte",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "_ilike",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "_in",
+        "return": "[String!]",
+      },
+      Object {
+        "checked": true,
+        "name": "_is_null",
+        "return": "Boolean",
+      },
+      Object {
+        "checked": true,
+        "name": "_like",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "_lt",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "_lte",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "_neq",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "_nilike",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "_nin",
+        "return": "[String!]",
+      },
+      Object {
+        "checked": true,
+        "name": "_nlike",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "_nsimilar",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "_similar",
+        "return": "String",
+      },
+    ],
+    "name": "input String_comparison_exp",
+    "typeName": "String_comparison_exp",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "_and",
+        "return": "[users_bool_exp]",
+      },
+      Object {
+        "checked": true,
+        "name": "_not",
+        "return": "users_bool_exp",
+      },
+      Object {
+        "checked": true,
+        "name": "_or",
+        "return": "[users_bool_exp]",
+      },
+      Object {
+        "checked": true,
+        "name": "books",
+        "return": "books_bool_exp",
+      },
+      Object {
+        "checked": true,
+        "name": "id",
+        "return": "Int_comparison_exp",
+      },
+      Object {
+        "checked": true,
+        "name": "name",
+        "return": "String_comparison_exp",
+      },
+    ],
+    "name": "input users_bool_exp",
+    "typeName": "users_bool_exp",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "book_name",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "user",
+        "return": "users_obj_rel_insert_input",
+      },
+    ],
+    "name": "input books_insert_input",
+    "typeName": "books_insert_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "data",
+        "return": "users_insert_input!",
+      },
+      Object {
+        "checked": false,
+        "name": "on_conflict",
+        "return": "users_on_conflict",
+      },
+    ],
+    "name": "input users_obj_rel_insert_input",
+    "typeName": "users_obj_rel_insert_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "books",
+        "return": "books_arr_rel_insert_input",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "String",
+      },
+    ],
+    "name": "input users_insert_input",
+    "typeName": "users_insert_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "data",
+        "return": "[books_insert_input!]!",
+      },
+      Object {
+        "checked": false,
+        "name": "on_conflict",
+        "return": "books_on_conflict",
+      },
+    ],
+    "name": "input books_arr_rel_insert_input",
+    "typeName": "books_arr_rel_insert_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "constraint",
+        "return": "books_constraint!",
+      },
+      Object {
+        "checked": false,
+        "name": "update_columns",
+        "return": "[books_update_column!]!",
+      },
+      Object {
+        "checked": false,
+        "name": "where",
+        "return": "books_bool_exp",
+      },
+    ],
+    "name": "input books_on_conflict",
+    "typeName": "books_on_conflict",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "constraint",
+        "return": "users_constraint!",
+      },
+      Object {
+        "checked": false,
+        "name": "update_columns",
+        "return": "[users_update_column!]!",
+      },
+      Object {
+        "checked": false,
+        "name": "where",
+        "return": "users_bool_exp",
+      },
+    ],
+    "name": "input users_on_conflict",
+    "typeName": "users_on_conflict",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+    ],
+    "name": "input books_inc_input",
+    "typeName": "books_inc_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "book_name",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+    ],
+    "name": "input books_set_input",
+    "typeName": "books_set_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int!",
+      },
+    ],
+    "name": "input books_pk_columns_input",
+    "typeName": "books_pk_columns_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+    ],
+    "name": "input users_inc_input",
+    "typeName": "users_inc_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "String",
+      },
+    ],
+    "name": "input users_set_input",
+    "typeName": "users_set_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int!",
+      },
+    ],
+    "name": "input users_pk_columns_input",
+    "typeName": "users_pk_columns_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "data",
+        "return": "books_insert_input!",
+      },
+      Object {
+        "checked": false,
+        "name": "on_conflict",
+        "return": "books_on_conflict",
+      },
+    ],
+    "name": "input books_obj_rel_insert_input",
+    "typeName": "books_obj_rel_insert_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "avg",
+        "return": "users_avg_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "count",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "max",
+        "return": "users_max_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "min",
+        "return": "users_min_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "stddev",
+        "return": "users_stddev_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "stddev_pop",
+        "return": "users_stddev_pop_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "stddev_samp",
+        "return": "users_stddev_samp_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "sum",
+        "return": "users_sum_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "var_pop",
+        "return": "users_var_pop_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "var_samp",
+        "return": "users_var_samp_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "variance",
+        "return": "users_variance_order_by",
+      },
+    ],
+    "name": "input users_aggregate_order_by",
+    "typeName": "users_aggregate_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_avg_order_by",
+    "typeName": "users_avg_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_max_order_by",
+    "typeName": "users_max_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_min_order_by",
+    "typeName": "users_min_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_stddev_order_by",
+    "typeName": "users_stddev_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_stddev_pop_order_by",
+    "typeName": "users_stddev_pop_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_stddev_samp_order_by",
+    "typeName": "users_stddev_samp_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_sum_order_by",
+    "typeName": "users_sum_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_var_pop_order_by",
+    "typeName": "users_var_pop_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_var_samp_order_by",
+    "typeName": "users_var_samp_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_variance_order_by",
+    "typeName": "users_variance_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "data",
+        "return": "[users_insert_input!]!",
+      },
+      Object {
+        "checked": false,
+        "name": "on_conflict",
+        "return": "users_on_conflict",
+      },
+    ],
+    "name": "input users_arr_rel_insert_input",
+    "typeName": "users_arr_rel_insert_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+      },
+      Object {
+        "checked": false,
+        "name": "book_name",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+      },
+    ],
+    "name": "enum books_select_column",
+    "typeName": "books_select_column",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "asc",
+      },
+      Object {
+        "checked": true,
+        "name": "asc_nulls_first",
+      },
+      Object {
+        "checked": true,
+        "name": "asc_nulls_last",
+      },
+      Object {
+        "checked": true,
+        "name": "desc",
+      },
+      Object {
+        "checked": true,
+        "name": "desc_nulls_first",
+      },
+      Object {
+        "checked": true,
+        "name": "desc_nulls_last",
+      },
+    ],
+    "name": "enum order_by",
+    "typeName": "order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "id",
+      },
+      Object {
+        "checked": true,
+        "name": "name",
+      },
+    ],
+    "name": "enum users_select_column",
+    "typeName": "users_select_column",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "books_pkey",
+      },
+    ],
+    "name": "enum books_constraint",
+    "typeName": "books_constraint",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+      },
+      Object {
+        "checked": false,
+        "name": "book_name",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+      },
+    ],
+    "name": "enum books_update_column",
+    "typeName": "books_update_column",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "users_pkey",
+      },
+    ],
+    "name": "enum users_constraint",
+    "typeName": "users_constraint",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+      },
+    ],
+    "name": "enum users_update_column",
+    "typeName": "users_update_column",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "scalar Int",
+      },
+    ],
+    "name": "scalar Int",
+    "typeName": "Int",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "scalar Boolean",
+      },
+    ],
+    "name": "scalar Boolean",
+    "typeName": "Boolean",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "scalar String",
+      },
+    ],
+    "name": "scalar String",
+    "typeName": "String",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "scalar Float",
+      },
+    ],
+    "name": "scalar Float",
+    "typeName": "Float",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "scalar ID",
+      },
+    ],
+    "name": "scalar ID",
+    "typeName": "ID",
+  },
+]
+`;
+
+exports[`Utils.ts getRemoteSchemaFields 2`] = `
+Array [
+  Object {
+    "children": Array [
+      Object {
+        "args": Object {
+          "filter": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "filter",
+            "type": "ContinentFilterInput",
+          },
+        },
+        "astNode": undefined,
+        "checked": true,
+        "deprecationReason": null,
+        "description": "",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "continents",
+        "resolve": undefined,
+        "return": "[Continent!]!",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "code": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "code",
+            "type": "ID!",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "continent",
+        "resolve": undefined,
+        "return": "Continent",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "filter": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "filter",
+            "type": "CountryFilterInput",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "countries",
+        "resolve": undefined,
+        "return": "[Country!]!",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "code": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "code",
+            "type": "ID!",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "country",
+        "resolve": undefined,
+        "return": "Country",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "filter": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "filter",
+            "type": "LanguageFilterInput",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "languages",
+        "resolve": undefined,
+        "return": "[Language!]!",
+        "subscribe": undefined,
+      },
+      Object {
+        "args": Object {
+          "code": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "code",
+            "type": "ID!",
+          },
+        },
+        "astNode": undefined,
+        "checked": false,
+        "deprecationReason": null,
+        "description": "",
+        "extensions": undefined,
+        "isDeprecated": false,
+        "name": "language",
+        "resolve": undefined,
+        "return": "Language",
+        "subscribe": undefined,
+      },
+    ],
+    "name": "type Query",
+    "typeName": "__query_root",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "code",
+        "return": "ID!",
+      },
+      Object {
+        "checked": true,
+        "name": "name",
+        "return": "String!",
+      },
+      Object {
+        "checked": true,
+        "name": "countries",
+        "return": "[Country!]!",
+      },
+    ],
+    "name": "type Continent",
+    "typeName": "Continent",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "code",
+        "return": "ID!",
+      },
+      Object {
+        "checked": true,
+        "name": "name",
+        "return": "String!",
+      },
+      Object {
+        "checked": true,
+        "name": "native",
+        "return": "String!",
+      },
+      Object {
+        "checked": true,
+        "name": "phone",
+        "return": "String!",
+      },
+      Object {
+        "checked": true,
+        "name": "continent",
+        "return": "Continent!",
+      },
+      Object {
+        "checked": true,
+        "name": "capital",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "currency",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "languages",
+        "return": "[Language!]!",
+      },
+      Object {
+        "checked": true,
+        "name": "emoji",
+        "return": "String!",
+      },
+      Object {
+        "checked": true,
+        "name": "emojiU",
+        "return": "String!",
+      },
+      Object {
+        "checked": true,
+        "name": "states",
+        "return": "[State!]!",
+      },
+    ],
+    "name": "type Country",
+    "typeName": "Country",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "code",
+        "return": "ID!",
+      },
+      Object {
+        "checked": true,
+        "name": "name",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "native",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "rtl",
+        "return": "Boolean!",
+      },
+    ],
+    "name": "type Language",
+    "typeName": "Language",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "code",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "name",
+        "return": "String!",
+      },
+      Object {
+        "checked": true,
+        "name": "country",
+        "return": "Country!",
+      },
+    ],
+    "name": "type State",
+    "typeName": "State",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "code",
+        "return": "StringQueryOperatorInput",
+      },
+    ],
+    "name": "input ContinentFilterInput",
+    "typeName": "ContinentFilterInput",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "eq",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "ne",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "in",
+        "return": "[String]",
+      },
+      Object {
+        "checked": true,
+        "name": "nin",
+        "return": "[String]",
+      },
+      Object {
+        "checked": true,
+        "name": "regex",
+        "return": "String",
+      },
+      Object {
+        "checked": true,
+        "name": "glob",
+        "return": "String",
+      },
+    ],
+    "name": "input StringQueryOperatorInput",
+    "typeName": "StringQueryOperatorInput",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "code",
+        "return": "StringQueryOperatorInput",
+      },
+      Object {
+        "checked": false,
+        "name": "currency",
+        "return": "StringQueryOperatorInput",
+      },
+      Object {
+        "checked": false,
+        "name": "continent",
+        "return": "StringQueryOperatorInput",
+      },
+    ],
+    "name": "input CountryFilterInput",
+    "typeName": "CountryFilterInput",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "code",
+        "return": "StringQueryOperatorInput",
+      },
+    ],
+    "name": "input LanguageFilterInput",
+    "typeName": "LanguageFilterInput",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "PUBLIC",
+      },
+      Object {
+        "checked": false,
+        "name": "PRIVATE",
+      },
+    ],
+    "name": "enum CacheControlScope",
+    "typeName": "CacheControlScope",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "scalar String",
+      },
+    ],
+    "name": "scalar String",
+    "typeName": "String",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "scalar ID",
+      },
+    ],
+    "name": "scalar ID",
+    "typeName": "ID",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": true,
+        "name": "scalar Boolean",
+      },
+    ],
+    "name": "scalar Boolean",
+    "typeName": "Boolean",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "scalar Upload",
+      },
+    ],
+    "name": "scalar Upload",
+    "typeName": "Upload",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "scalar Int",
+      },
+    ],
+    "name": "scalar Int",
+    "typeName": "Int",
+  },
+]
+`;
+
+exports[`Utils.ts getSchemaRoots 1`] = `
+Array [
+  "query_root",
+  "mutation_root",
+  "subscription_root",
+]
+`;
+
+exports[`Utils.ts getSchemaRoots 2`] = `
+Array [
+  "Query",
+]
+`;
+
+exports[`Utils.ts getSchemaRoots 3`] = `
+Array [
+  "query_root",
+  "mutation_root",
+  "subscription_root",
+]
+`;
+
+exports[`Utils.ts getSchemaRoots 4`] = `
+Array [
+  "Query",
+]
+`;
+
+exports[`Utils.ts getTree 1`] = `
+Array [
+  Object {
+    "args": Object {
+      "distinct_on": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "distinct select on columns",
+        "extensions": undefined,
+        "name": "distinct_on",
+        "type": "[books_select_column!]",
+      },
+      "limit": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "limit the number of rows returned",
+        "extensions": undefined,
+        "name": "limit",
+        "type": "Int",
+      },
+      "offset": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "skip the first n rows. Use only with order_by",
+        "extensions": undefined,
+        "name": "offset",
+        "type": "Int",
+      },
+      "order_by": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "sort the rows by one or more columns",
+        "extensions": undefined,
+        "name": "order_by",
+        "type": "[books_order_by!]",
+      },
+      "where": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "filter the rows returned",
+        "extensions": undefined,
+        "name": "where",
+        "type": "books_bool_exp",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "fetch data from the table: \\"books\\"",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "books",
+    "resolve": undefined,
+    "return": "[books!]!",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "distinct_on": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "distinct select on columns",
+        "extensions": undefined,
+        "name": "distinct_on",
+        "type": "[books_select_column!]",
+      },
+      "limit": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "limit the number of rows returned",
+        "extensions": undefined,
+        "name": "limit",
+        "type": "Int",
+      },
+      "offset": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "skip the first n rows. Use only with order_by",
+        "extensions": undefined,
+        "name": "offset",
+        "type": "Int",
+      },
+      "order_by": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "sort the rows by one or more columns",
+        "extensions": undefined,
+        "name": "order_by",
+        "type": "[books_order_by!]",
+      },
+      "where": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "filter the rows returned",
+        "extensions": undefined,
+        "name": "where",
+        "type": "books_bool_exp",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "fetch aggregated fields from the table: \\"books\\"",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "books_aggregate",
+    "resolve": undefined,
+    "return": "books_aggregate!",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "id": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": null,
+        "extensions": undefined,
+        "name": "id",
+        "type": "Int!",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "fetch data from the table: \\"books\\" using primary key columns",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "books_by_pk",
+    "resolve": undefined,
+    "return": "books",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "distinct_on": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "distinct select on columns",
+        "extensions": undefined,
+        "name": "distinct_on",
+        "type": "[users_select_column!]",
+      },
+      "limit": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "limit the number of rows returned",
+        "extensions": undefined,
+        "name": "limit",
+        "type": "Int",
+      },
+      "offset": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "skip the first n rows. Use only with order_by",
+        "extensions": undefined,
+        "name": "offset",
+        "type": "Int",
+      },
+      "order_by": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "sort the rows by one or more columns",
+        "extensions": undefined,
+        "name": "order_by",
+        "type": "[users_order_by!]",
+      },
+      "where": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "filter the rows returned",
+        "extensions": undefined,
+        "name": "where",
+        "type": "users_bool_exp",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "fetch data from the table: \\"users\\"",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "users",
+    "resolve": undefined,
+    "return": "[users!]!",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "distinct_on": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "distinct select on columns",
+        "extensions": undefined,
+        "name": "distinct_on",
+        "type": "[users_select_column!]",
+      },
+      "limit": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "limit the number of rows returned",
+        "extensions": undefined,
+        "name": "limit",
+        "type": "Int",
+      },
+      "offset": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "skip the first n rows. Use only with order_by",
+        "extensions": undefined,
+        "name": "offset",
+        "type": "Int",
+      },
+      "order_by": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "sort the rows by one or more columns",
+        "extensions": undefined,
+        "name": "order_by",
+        "type": "[users_order_by!]",
+      },
+      "where": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "filter the rows returned",
+        "extensions": undefined,
+        "name": "where",
+        "type": "users_bool_exp",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "fetch aggregated fields from the table: \\"users\\"",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "users_aggregate",
+    "resolve": undefined,
+    "return": "users_aggregate!",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "id": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": null,
+        "extensions": undefined,
+        "name": "id",
+        "type": "Int!",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "fetch data from the table: \\"users\\" using primary key columns",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "users_by_pk",
+    "resolve": undefined,
+    "return": "users",
+    "subscribe": undefined,
+  },
+]
+`;
+
+exports[`Utils.ts getTree 2`] = `
+Array [
+  Object {
+    "args": Object {
+      "where": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "filter the rows which have to be deleted",
+        "extensions": undefined,
+        "name": "where",
+        "type": "books_bool_exp!",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "delete data from the table: \\"books\\"",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "delete_books",
+    "resolve": undefined,
+    "return": "books_mutation_response",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "id": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": null,
+        "extensions": undefined,
+        "name": "id",
+        "type": "Int!",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "delete single row from the table: \\"books\\"",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "delete_books_by_pk",
+    "resolve": undefined,
+    "return": "books",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "where": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "filter the rows which have to be deleted",
+        "extensions": undefined,
+        "name": "where",
+        "type": "users_bool_exp!",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "delete data from the table: \\"users\\"",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "delete_users",
+    "resolve": undefined,
+    "return": "users_mutation_response",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "id": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": null,
+        "extensions": undefined,
+        "name": "id",
+        "type": "Int!",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "delete single row from the table: \\"users\\"",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "delete_users_by_pk",
+    "resolve": undefined,
+    "return": "users",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "objects": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "the rows to be inserted",
+        "extensions": undefined,
+        "name": "objects",
+        "type": "[books_insert_input!]!",
+      },
+      "on_conflict": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "on conflict condition",
+        "extensions": undefined,
+        "name": "on_conflict",
+        "type": "books_on_conflict",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "insert data into the table: \\"books\\"",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "insert_books",
+    "resolve": undefined,
+    "return": "books_mutation_response",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "object": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "the row to be inserted",
+        "extensions": undefined,
+        "name": "object",
+        "type": "books_insert_input!",
+      },
+      "on_conflict": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "on conflict condition",
+        "extensions": undefined,
+        "name": "on_conflict",
+        "type": "books_on_conflict",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "insert a single row into the table: \\"books\\"",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "insert_books_one",
+    "resolve": undefined,
+    "return": "books",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "objects": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "the rows to be inserted",
+        "extensions": undefined,
+        "name": "objects",
+        "type": "[users_insert_input!]!",
+      },
+      "on_conflict": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "on conflict condition",
+        "extensions": undefined,
+        "name": "on_conflict",
+        "type": "users_on_conflict",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "insert data into the table: \\"users\\"",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "insert_users",
+    "resolve": undefined,
+    "return": "users_mutation_response",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "object": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "the row to be inserted",
+        "extensions": undefined,
+        "name": "object",
+        "type": "users_insert_input!",
+      },
+      "on_conflict": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "on conflict condition",
+        "extensions": undefined,
+        "name": "on_conflict",
+        "type": "users_on_conflict",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "insert a single row into the table: \\"users\\"",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "insert_users_one",
+    "resolve": undefined,
+    "return": "users",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "_inc": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "increments the integer columns with given value of the filtered values",
+        "extensions": undefined,
+        "name": "_inc",
+        "type": "books_inc_input",
+      },
+      "_set": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "sets the columns of the filtered rows to the given values",
+        "extensions": undefined,
+        "name": "_set",
+        "type": "books_set_input",
+      },
+      "where": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "filter the rows which have to be updated",
+        "extensions": undefined,
+        "name": "where",
+        "type": "books_bool_exp!",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "update data of the table: \\"books\\"",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "update_books",
+    "resolve": undefined,
+    "return": "books_mutation_response",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "_inc": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "increments the integer columns with given value of the filtered values",
+        "extensions": undefined,
+        "name": "_inc",
+        "type": "books_inc_input",
+      },
+      "_set": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "sets the columns of the filtered rows to the given values",
+        "extensions": undefined,
+        "name": "_set",
+        "type": "books_set_input",
+      },
+      "pk_columns": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": null,
+        "extensions": undefined,
+        "name": "pk_columns",
+        "type": "books_pk_columns_input!",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "update single row of the table: \\"books\\"",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "update_books_by_pk",
+    "resolve": undefined,
+    "return": "books",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "_inc": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "increments the integer columns with given value of the filtered values",
+        "extensions": undefined,
+        "name": "_inc",
+        "type": "users_inc_input",
+      },
+      "_set": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "sets the columns of the filtered rows to the given values",
+        "extensions": undefined,
+        "name": "_set",
+        "type": "users_set_input",
+      },
+      "where": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "filter the rows which have to be updated",
+        "extensions": undefined,
+        "name": "where",
+        "type": "users_bool_exp!",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "update data of the table: \\"users\\"",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "update_users",
+    "resolve": undefined,
+    "return": "users_mutation_response",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "_inc": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "increments the integer columns with given value of the filtered values",
+        "extensions": undefined,
+        "name": "_inc",
+        "type": "users_inc_input",
+      },
+      "_set": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "sets the columns of the filtered rows to the given values",
+        "extensions": undefined,
+        "name": "_set",
+        "type": "users_set_input",
+      },
+      "pk_columns": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": null,
+        "extensions": undefined,
+        "name": "pk_columns",
+        "type": "users_pk_columns_input!",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "update single row of the table: \\"users\\"",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "update_users_by_pk",
+    "resolve": undefined,
+    "return": "users",
+    "subscribe": undefined,
+  },
+]
+`;
+
+exports[`Utils.ts getTree 3`] = `
+Array [
+  Object {
+    "args": Object {
+      "filter": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "",
+        "extensions": undefined,
+        "name": "filter",
+        "type": "ContinentFilterInput",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "continents",
+    "resolve": undefined,
+    "return": "[Continent!]!",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "code": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "",
+        "extensions": undefined,
+        "name": "code",
+        "type": "ID!",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "continent",
+    "resolve": undefined,
+    "return": "Continent",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "filter": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "",
+        "extensions": undefined,
+        "name": "filter",
+        "type": "CountryFilterInput",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "countries",
+    "resolve": undefined,
+    "return": "[Country!]!",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "code": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "",
+        "extensions": undefined,
+        "name": "code",
+        "type": "ID!",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "country",
+    "resolve": undefined,
+    "return": "Country",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "filter": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "",
+        "extensions": undefined,
+        "name": "filter",
+        "type": "LanguageFilterInput",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "languages",
+    "resolve": undefined,
+    "return": "[Language!]!",
+    "subscribe": undefined,
+  },
+  Object {
+    "args": Object {
+      "code": Object {
+        "astNode": undefined,
+        "defaultValue": undefined,
+        "description": "",
+        "extensions": undefined,
+        "name": "code",
+        "type": "ID!",
+      },
+    },
+    "astNode": undefined,
+    "checked": false,
+    "deprecationReason": null,
+    "description": "",
+    "extensions": undefined,
+    "isDeprecated": false,
+    "name": "language",
+    "resolve": undefined,
+    "return": "Language",
+    "subscribe": undefined,
+  },
+]
+`;
+
+exports[`Utils.ts getTree 4`] = `Array []`;
+
+exports[`Utils.ts getTypes 1`] = `
+Array [
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "Int!",
+      },
+      Object {
+        "checked": false,
+        "name": "book_name",
+        "return": "String!",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int!",
+      },
+      Object {
+        "checked": false,
+        "name": "user",
+        "return": "users!",
+      },
+    ],
+    "name": "type books",
+    "typeName": "books",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "books",
+        "return": "[books!]!",
+      },
+      Object {
+        "checked": false,
+        "name": "books_aggregate",
+        "return": "books_aggregate!",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int!",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "String!",
+      },
+    ],
+    "name": "type users",
+    "typeName": "users",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "aggregate",
+        "return": "books_aggregate_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "nodes",
+        "return": "[books!]!",
+      },
+    ],
+    "name": "type books_aggregate",
+    "typeName": "books_aggregate",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "avg",
+        "return": "books_avg_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "count",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "max",
+        "return": "books_max_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "min",
+        "return": "books_min_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "stddev",
+        "return": "books_stddev_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "stddev_pop",
+        "return": "books_stddev_pop_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "stddev_samp",
+        "return": "books_stddev_samp_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "sum",
+        "return": "books_sum_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "var_pop",
+        "return": "books_var_pop_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "var_samp",
+        "return": "books_var_samp_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "variance",
+        "return": "books_variance_fields",
+      },
+    ],
+    "name": "type books_aggregate_fields",
+    "typeName": "books_aggregate_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "Float",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type books_avg_fields",
+    "typeName": "books_avg_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "book_name",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+    ],
+    "name": "type books_max_fields",
+    "typeName": "books_max_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "book_name",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+    ],
+    "name": "type books_min_fields",
+    "typeName": "books_min_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "Float",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type books_stddev_fields",
+    "typeName": "books_stddev_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "Float",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type books_stddev_pop_fields",
+    "typeName": "books_stddev_pop_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "Float",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type books_stddev_samp_fields",
+    "typeName": "books_stddev_samp_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+    ],
+    "name": "type books_sum_fields",
+    "typeName": "books_sum_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "Float",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type books_var_pop_fields",
+    "typeName": "books_var_pop_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "Float",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type books_var_samp_fields",
+    "typeName": "books_var_samp_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "Float",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type books_variance_fields",
+    "typeName": "books_variance_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "aggregate",
+        "return": "users_aggregate_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "nodes",
+        "return": "[users!]!",
+      },
+    ],
+    "name": "type users_aggregate",
+    "typeName": "users_aggregate",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "avg",
+        "return": "users_avg_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "count",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "max",
+        "return": "users_max_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "min",
+        "return": "users_min_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "stddev",
+        "return": "users_stddev_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "stddev_pop",
+        "return": "users_stddev_pop_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "stddev_samp",
+        "return": "users_stddev_samp_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "sum",
+        "return": "users_sum_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "var_pop",
+        "return": "users_var_pop_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "var_samp",
+        "return": "users_var_samp_fields",
+      },
+      Object {
+        "checked": false,
+        "name": "variance",
+        "return": "users_variance_fields",
+      },
+    ],
+    "name": "type users_aggregate_fields",
+    "typeName": "users_aggregate_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type users_avg_fields",
+    "typeName": "users_avg_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "String",
+      },
+    ],
+    "name": "type users_max_fields",
+    "typeName": "users_max_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "String",
+      },
+    ],
+    "name": "type users_min_fields",
+    "typeName": "users_min_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type users_stddev_fields",
+    "typeName": "users_stddev_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type users_stddev_pop_fields",
+    "typeName": "users_stddev_pop_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type users_stddev_samp_fields",
+    "typeName": "users_stddev_samp_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+    ],
+    "name": "type users_sum_fields",
+    "typeName": "users_sum_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type users_var_pop_fields",
+    "typeName": "users_var_pop_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type users_var_samp_fields",
+    "typeName": "users_var_samp_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Float",
+      },
+    ],
+    "name": "type users_variance_fields",
+    "typeName": "users_variance_fields",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "affected_rows",
+        "return": "Int!",
+      },
+      Object {
+        "checked": false,
+        "name": "returning",
+        "return": "[books!]!",
+      },
+    ],
+    "name": "type books_mutation_response",
+    "typeName": "books_mutation_response",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "affected_rows",
+        "return": "Int!",
+      },
+      Object {
+        "checked": false,
+        "name": "returning",
+        "return": "[users!]!",
+      },
+    ],
+    "name": "type users_mutation_response",
+    "typeName": "users_mutation_response",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "book_name",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "user",
+        "return": "users_order_by",
+      },
+    ],
+    "name": "input books_order_by",
+    "typeName": "books_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "books_aggregate",
+        "return": "books_aggregate_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_order_by",
+    "typeName": "users_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "avg",
+        "return": "books_avg_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "count",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "max",
+        "return": "books_max_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "min",
+        "return": "books_min_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "stddev",
+        "return": "books_stddev_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "stddev_pop",
+        "return": "books_stddev_pop_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "stddev_samp",
+        "return": "books_stddev_samp_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "sum",
+        "return": "books_sum_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "var_pop",
+        "return": "books_var_pop_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "var_samp",
+        "return": "books_var_samp_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "variance",
+        "return": "books_variance_order_by",
+      },
+    ],
+    "name": "input books_aggregate_order_by",
+    "typeName": "books_aggregate_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_avg_order_by",
+    "typeName": "books_avg_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "book_name",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_max_order_by",
+    "typeName": "books_max_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "book_name",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_min_order_by",
+    "typeName": "books_min_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_stddev_order_by",
+    "typeName": "books_stddev_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_stddev_pop_order_by",
+    "typeName": "books_stddev_pop_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_stddev_samp_order_by",
+    "typeName": "books_stddev_samp_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_sum_order_by",
+    "typeName": "books_sum_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_var_pop_order_by",
+    "typeName": "books_var_pop_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_var_samp_order_by",
+    "typeName": "books_var_samp_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input books_variance_order_by",
+    "typeName": "books_variance_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "_and",
+        "return": "[books_bool_exp]",
+      },
+      Object {
+        "checked": false,
+        "name": "_not",
+        "return": "books_bool_exp",
+      },
+      Object {
+        "checked": false,
+        "name": "_or",
+        "return": "[books_bool_exp]",
+      },
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "Int_comparison_exp",
+      },
+      Object {
+        "checked": false,
+        "name": "book_name",
+        "return": "String_comparison_exp",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int_comparison_exp",
+      },
+      Object {
+        "checked": false,
+        "name": "user",
+        "return": "users_bool_exp",
+      },
+    ],
+    "name": "input books_bool_exp",
+    "typeName": "books_bool_exp",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "_eq",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "_gt",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "_gte",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "_in",
+        "return": "[Int!]",
+      },
+      Object {
+        "checked": false,
+        "name": "_is_null",
+        "return": "Boolean",
+      },
+      Object {
+        "checked": false,
+        "name": "_lt",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "_lte",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "_neq",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "_nin",
+        "return": "[Int!]",
+      },
+    ],
+    "name": "input Int_comparison_exp",
+    "typeName": "Int_comparison_exp",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "_eq",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "_gt",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "_gte",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "_ilike",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "_in",
+        "return": "[String!]",
+      },
+      Object {
+        "checked": false,
+        "name": "_is_null",
+        "return": "Boolean",
+      },
+      Object {
+        "checked": false,
+        "name": "_like",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "_lt",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "_lte",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "_neq",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "_nilike",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "_nin",
+        "return": "[String!]",
+      },
+      Object {
+        "checked": false,
+        "name": "_nlike",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "_nsimilar",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "_similar",
+        "return": "String",
+      },
+    ],
+    "name": "input String_comparison_exp",
+    "typeName": "String_comparison_exp",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "_and",
+        "return": "[users_bool_exp]",
+      },
+      Object {
+        "checked": false,
+        "name": "_not",
+        "return": "users_bool_exp",
+      },
+      Object {
+        "checked": false,
+        "name": "_or",
+        "return": "[users_bool_exp]",
+      },
+      Object {
+        "checked": false,
+        "name": "books",
+        "return": "books_bool_exp",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int_comparison_exp",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "String_comparison_exp",
+      },
+    ],
+    "name": "input users_bool_exp",
+    "typeName": "users_bool_exp",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "book_name",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "user",
+        "return": "users_obj_rel_insert_input",
+      },
+    ],
+    "name": "input books_insert_input",
+    "typeName": "books_insert_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "data",
+        "return": "users_insert_input!",
+      },
+      Object {
+        "checked": false,
+        "name": "on_conflict",
+        "return": "users_on_conflict",
+      },
+    ],
+    "name": "input users_obj_rel_insert_input",
+    "typeName": "users_obj_rel_insert_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "books",
+        "return": "books_arr_rel_insert_input",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "String",
+      },
+    ],
+    "name": "input users_insert_input",
+    "typeName": "users_insert_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "data",
+        "return": "[books_insert_input!]!",
+      },
+      Object {
+        "checked": false,
+        "name": "on_conflict",
+        "return": "books_on_conflict",
+      },
+    ],
+    "name": "input books_arr_rel_insert_input",
+    "typeName": "books_arr_rel_insert_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "constraint",
+        "return": "books_constraint!",
+      },
+      Object {
+        "checked": false,
+        "name": "update_columns",
+        "return": "[books_update_column!]!",
+      },
+      Object {
+        "checked": false,
+        "name": "where",
+        "return": "books_bool_exp",
+      },
+    ],
+    "name": "input books_on_conflict",
+    "typeName": "books_on_conflict",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "constraint",
+        "return": "users_constraint!",
+      },
+      Object {
+        "checked": false,
+        "name": "update_columns",
+        "return": "[users_update_column!]!",
+      },
+      Object {
+        "checked": false,
+        "name": "where",
+        "return": "users_bool_exp",
+      },
+    ],
+    "name": "input users_on_conflict",
+    "typeName": "users_on_conflict",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+    ],
+    "name": "input books_inc_input",
+    "typeName": "books_inc_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "book_name",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+    ],
+    "name": "input books_set_input",
+    "typeName": "books_set_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int!",
+      },
+    ],
+    "name": "input books_pk_columns_input",
+    "typeName": "books_pk_columns_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+    ],
+    "name": "input users_inc_input",
+    "typeName": "users_inc_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "String",
+      },
+    ],
+    "name": "input users_set_input",
+    "typeName": "users_set_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "Int!",
+      },
+    ],
+    "name": "input users_pk_columns_input",
+    "typeName": "users_pk_columns_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "data",
+        "return": "books_insert_input!",
+      },
+      Object {
+        "checked": false,
+        "name": "on_conflict",
+        "return": "books_on_conflict",
+      },
+    ],
+    "name": "input books_obj_rel_insert_input",
+    "typeName": "books_obj_rel_insert_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "avg",
+        "return": "users_avg_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "count",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "max",
+        "return": "users_max_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "min",
+        "return": "users_min_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "stddev",
+        "return": "users_stddev_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "stddev_pop",
+        "return": "users_stddev_pop_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "stddev_samp",
+        "return": "users_stddev_samp_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "sum",
+        "return": "users_sum_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "var_pop",
+        "return": "users_var_pop_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "var_samp",
+        "return": "users_var_samp_order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "variance",
+        "return": "users_variance_order_by",
+      },
+    ],
+    "name": "input users_aggregate_order_by",
+    "typeName": "users_aggregate_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_avg_order_by",
+    "typeName": "users_avg_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_max_order_by",
+    "typeName": "users_max_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_min_order_by",
+    "typeName": "users_min_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_stddev_order_by",
+    "typeName": "users_stddev_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_stddev_pop_order_by",
+    "typeName": "users_stddev_pop_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_stddev_samp_order_by",
+    "typeName": "users_stddev_samp_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_sum_order_by",
+    "typeName": "users_sum_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_var_pop_order_by",
+    "typeName": "users_var_pop_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_var_samp_order_by",
+    "typeName": "users_var_samp_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+        "return": "order_by",
+      },
+    ],
+    "name": "input users_variance_order_by",
+    "typeName": "users_variance_order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "data",
+        "return": "[users_insert_input!]!",
+      },
+      Object {
+        "checked": false,
+        "name": "on_conflict",
+        "return": "users_on_conflict",
+      },
+    ],
+    "name": "input users_arr_rel_insert_input",
+    "typeName": "users_arr_rel_insert_input",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+      },
+      Object {
+        "checked": false,
+        "name": "book_name",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+      },
+    ],
+    "name": "enum books_select_column",
+    "typeName": "books_select_column",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "asc",
+      },
+      Object {
+        "checked": false,
+        "name": "asc_nulls_first",
+      },
+      Object {
+        "checked": false,
+        "name": "asc_nulls_last",
+      },
+      Object {
+        "checked": false,
+        "name": "desc",
+      },
+      Object {
+        "checked": false,
+        "name": "desc_nulls_first",
+      },
+      Object {
+        "checked": false,
+        "name": "desc_nulls_last",
+      },
+    ],
+    "name": "enum order_by",
+    "typeName": "order_by",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+      },
+    ],
+    "name": "enum users_select_column",
+    "typeName": "users_select_column",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "books_pkey",
+      },
+    ],
+    "name": "enum books_constraint",
+    "typeName": "books_constraint",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "author",
+      },
+      Object {
+        "checked": false,
+        "name": "book_name",
+      },
+      Object {
+        "checked": false,
+        "name": "id",
+      },
+    ],
+    "name": "enum books_update_column",
+    "typeName": "books_update_column",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "users_pkey",
+      },
+    ],
+    "name": "enum users_constraint",
+    "typeName": "users_constraint",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "id",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+      },
+    ],
+    "name": "enum users_update_column",
+    "typeName": "users_update_column",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "scalar Int",
+      },
+    ],
+    "name": "scalar Int",
+    "typeName": "Int",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "scalar Boolean",
+      },
+    ],
+    "name": "scalar Boolean",
+    "typeName": "Boolean",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "scalar String",
+      },
+    ],
+    "name": "scalar String",
+    "typeName": "String",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "scalar Float",
+      },
+    ],
+    "name": "scalar Float",
+    "typeName": "Float",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "scalar ID",
+      },
+    ],
+    "name": "scalar ID",
+    "typeName": "ID",
+  },
+]
+`;
+
+exports[`Utils.ts getTypes 2`] = `
+Array [
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "code",
+        "return": "ID!",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "String!",
+      },
+      Object {
+        "checked": false,
+        "name": "countries",
+        "return": "[Country!]!",
+      },
+    ],
+    "name": "type Continent",
+    "typeName": "Continent",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "code",
+        "return": "ID!",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "String!",
+      },
+      Object {
+        "checked": false,
+        "name": "native",
+        "return": "String!",
+      },
+      Object {
+        "checked": false,
+        "name": "phone",
+        "return": "String!",
+      },
+      Object {
+        "checked": false,
+        "name": "continent",
+        "return": "Continent!",
+      },
+      Object {
+        "checked": false,
+        "name": "capital",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "currency",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "languages",
+        "return": "[Language!]!",
+      },
+      Object {
+        "checked": false,
+        "name": "emoji",
+        "return": "String!",
+      },
+      Object {
+        "checked": false,
+        "name": "emojiU",
+        "return": "String!",
+      },
+      Object {
+        "checked": false,
+        "name": "states",
+        "return": "[State!]!",
+      },
+    ],
+    "name": "type Country",
+    "typeName": "Country",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "code",
+        "return": "ID!",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "native",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "rtl",
+        "return": "Boolean!",
+      },
+    ],
+    "name": "type Language",
+    "typeName": "Language",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "code",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "name",
+        "return": "String!",
+      },
+      Object {
+        "checked": false,
+        "name": "country",
+        "return": "Country!",
+      },
+    ],
+    "name": "type State",
+    "typeName": "State",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "code",
+        "return": "StringQueryOperatorInput",
+      },
+    ],
+    "name": "input ContinentFilterInput",
+    "typeName": "ContinentFilterInput",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "eq",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "ne",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "in",
+        "return": "[String]",
+      },
+      Object {
+        "checked": false,
+        "name": "nin",
+        "return": "[String]",
+      },
+      Object {
+        "checked": false,
+        "name": "regex",
+        "return": "String",
+      },
+      Object {
+        "checked": false,
+        "name": "glob",
+        "return": "String",
+      },
+    ],
+    "name": "input StringQueryOperatorInput",
+    "typeName": "StringQueryOperatorInput",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "code",
+        "return": "StringQueryOperatorInput",
+      },
+      Object {
+        "checked": false,
+        "name": "currency",
+        "return": "StringQueryOperatorInput",
+      },
+      Object {
+        "checked": false,
+        "name": "continent",
+        "return": "StringQueryOperatorInput",
+      },
+    ],
+    "name": "input CountryFilterInput",
+    "typeName": "CountryFilterInput",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "code",
+        "return": "StringQueryOperatorInput",
+      },
+    ],
+    "name": "input LanguageFilterInput",
+    "typeName": "LanguageFilterInput",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "PUBLIC",
+      },
+      Object {
+        "checked": false,
+        "name": "PRIVATE",
+      },
+    ],
+    "name": "enum CacheControlScope",
+    "typeName": "CacheControlScope",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "scalar String",
+      },
+    ],
+    "name": "scalar String",
+    "typeName": "String",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "scalar ID",
+      },
+    ],
+    "name": "scalar ID",
+    "typeName": "ID",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "scalar Boolean",
+      },
+    ],
+    "name": "scalar Boolean",
+    "typeName": "Boolean",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "scalar Upload",
+      },
+    ],
+    "name": "scalar Upload",
+    "typeName": "Upload",
+  },
+  Object {
+    "children": Array [
+      Object {
+        "checked": false,
+        "name": "scalar Int",
+      },
+    ],
+    "name": "scalar Int",
+    "typeName": "Int",
+  },
+]
+`;

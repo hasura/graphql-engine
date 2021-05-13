@@ -125,3 +125,7 @@ If the ``X-Hasura-Role`` and the ``X-Hasura-User-Id`` session variables are set 
     }
 
 Observe that the ``private_info`` field is returned as ``null`` for all rows without the appropriate access.
+
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

@@ -1,0 +1,41 @@
+- description: Select `ltree` paths matching any `lquery` regex in an array
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      tree:
+        - path: Tree.Hobbies
+        - path: Tree.Hobbies.Amateurs_Astronomy
+        - path: Tree.Collections.Pictures
+        - path: Tree.Collections.Pictures.Astronomy
+        - path: Tree.Collections.Pictures.Astronomy.Stars
+        - path: Tree.Collections.Pictures.Astronomy.Galaxies
+        - path: Tree.Collections.Pictures.Astronomy.Astronauts
+  query:
+    query: |
+      query {
+        tree (
+          where: {path: {_matches_any: ["*.Pictures.*", "*.Hobbies.*"]}}
+        ) {
+          path
+        }
+      }
+
+- description: Select `ltree` paths matching invalid `lquery` regexes in an array
+  url: /v1/graphql
+  status: 200
+  response:
+    errors:
+    - extensions:
+        path: $.query
+        code: validation-failed
+      message: not a valid graphql query
+  query:
+    query: |
+      query {
+        tree (
+          where: {path: {_matches_any: ["*.Pictures.*\", "*.Hobbies.*\"]}}
+        ) {
+          path
+        }
+      }

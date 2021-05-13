@@ -280,3 +280,7 @@ For ``update`` operations or for GraphQL mutations of the type *update*, you can
 For ``delete`` operations or for GraphQL mutations of the type *delete*, you can configure the following:
 
 * :ref:`Row-level permissions<row-level-permissions>`
+
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

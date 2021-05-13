@@ -38,6 +38,7 @@ const state = {
   derive: {
     operation: '',
   },
+  comment: '',
 };
 
 export default state;
