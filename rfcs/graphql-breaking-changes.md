@@ -4,6 +4,12 @@ For V2, despite the many internal changes to the engine, we have tried as much a
 
 The goal of this document is to list all such potential changes. They are in no particular order. Not all of those will necessary be implemented.
 
+Proposed changes:
+- [non-overloaded graphql scalars](#non-overloaded-graphql-scalars)
+- [explicit transaction semantics](#explicit-transaction-semantics)
+- [explicit boolean collapse](#explicit-boolean-collapse)
+- [new order_by syntax](#new-order_by-syntax)
+
 ## Non-overloaded graphql scalars
 
 At time of writing, the way a given scalar will be parsed *depends on where it is used*. For instance:
