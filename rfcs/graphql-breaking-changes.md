@@ -26,19 +26,19 @@ V2 brought heterogeneous queries to the engine: it is possible to emit a query o
 
 ```graphql
 query {
-  // stored on Postgres
+  # stored on Postgres
   purchases(limit: 10) {
     name
     date
   }
 
-  // stored on MSSQL
+  # stored on MSSQL
   invoices(where: {id: {_eq: {42}}}) {
     tag
     value
   }
 
-  // remote server
+  # remote server
   finances {
     monthly {
       balance
@@ -55,7 +55,7 @@ The proposed change would be to introduce *explicit* transaction semantics. The 
 
 ```graphql
 mutation {
-  // all going to the same database
+  # all going to the same database
   transaction {
     insert_author_one(object: {id: 101, name: "Mark Z. Danielewski"}) {
       name
@@ -64,7 +64,7 @@ mutation {
       name
     }
   }
-  // can go to a different source, as it's not part of the transaction
+  # can go to a different source, as it's not part of the transaction
   insert_diary_one(object: {entry: "ſtaires! We have found ſtaires!"}) {
     date
     entry
