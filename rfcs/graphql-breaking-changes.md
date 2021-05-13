@@ -10,6 +10,8 @@ Proposed changes:
 - [explicit boolean collapse](#explicit-boolean-collapse)
 - [new order_by syntax](#new-order_by-syntax)
 
+<br/>
+
 ## Non-overloaded graphql scalars
 
 At time of writing, the way a given scalar will be parsed *depends on where it is used*. For instance:
@@ -25,6 +27,8 @@ It'd be preferable if there was a 1:1 mapping between the type as it is declared
 This would be a breaking change, since queries using variables of type `Int` for any of those fields would now be rejected with a type error.
 
 Furthermore, as a side bonus, this could be an opportunity to harmonize different parsers (Postgres column values have several different parsers: from JSON, in the schema... and disagreements between them as been a source of issues.)
+
+<br/>
 
 ## Explicit transaction semantics
 
@@ -78,6 +82,8 @@ mutation {
 }
 ```
 
+<br/>
+
 ## Explicit boolean collapse
 
 In v2, we introduced a breaking change, that aimed at fixing a [long-standing issue](https://github.com/hasura/graphql-engine/issues/704): a null value in a boolean expression would always evaluate to `True` for all rows. For example, the following queries were all equivalent:
@@ -125,6 +131,8 @@ mutation($deleteId: Int) {
   }
 }
 ```
+
+<br/>
 
 ## New order_by syntax
 
