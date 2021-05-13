@@ -1,6 +1,6 @@
 .. meta::
    :description: Upgrading to Hasura GraphQL engine v2
-   :keywords: hasura, docs, guide, compatibility
+   :keywords: hasura, docs, guide, compatibility, upgrade v2
 
 .. _upgrade_hasura_v2:
 
@@ -52,7 +52,7 @@ Breaking behaviour changes
   According to the discussion in `issue 704 <https://github.com/hasura/graphql-engine/issues/704#issuecomment-635571407>`_, an explicit ``null``
   value in a comparison input object will be treated as an error rather than resulting in the expression being evaluated to ``True``.
 
-  For example: ``delete_users(where: {id: {_eq: $userId}}) { name }`` will yield an error if ``$userId`` is ``null`` instead of deleting
+  For example: The mutation ``delete_users(where: {id: {_eq: $userId}}) { name }`` will yield an error if ``$userId`` is ``null`` instead of deleting
   all users.
 
   The older behaviour can be preserved by setting the ``HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE`` env var to ``true``.
@@ -64,11 +64,36 @@ Breaking behaviour changes
   the remote relationship field will be ``null``. Earlier, the remote schema was queried with the ``null`` value arguments and the response
   depended upon how the remote schema handled the ``null`` arguments but as per user feedback, this behaviour was clearly not expected.
 
+- **Order of keys in objects passed as "order_by" operator inputs is not preserved**
+
+  The ``order_by`` operator accepts an array of objects as input to allow ordering by multiple fields in a given order, i.e.
+  ``[{field1: sortOrder}, {field2: sortOrder}]`` but it is also accepts a single object with multiple keys as an input,
+  i.e. ``{field1: sortOrder, field2: sortOrder}``. In earlier versions, Hasura's query parsing logic used to maintain the order of keys in the
+  input object and hence the appropriate ``order by`` clauses with the fields in the right order were generated .
+
+  As the `GraphQL spec <http://spec.graphql.org/June2018/#sec-Input-Object-Values>`__ mentions that input object keys are unordered, Hasura v2.0's
+  new and stricter query parsing logic doesn't maintain the order of keys in the input object taking away the guarantee of the generated ``order by``
+  clauses to have the fields in the given order.
+
+  For example: The query ``fetch_users(order_by: {age: desc, name: asc}) {id name age}`` which is intended to fetch users ordered by their age
+  and then by their name is now not guaranteed to return results first ordered by age and then by their name as the ``order_by`` input is passed
+  as an object. To achieve the expected behaviour, the following query ``fetch_users(order_by: [{age: desc}, {name: asc}]) {id name age}`` should
+  be used which uses an array to define the order of fields to generate the appropriate ``order by`` clause.
+
 - **Incompatibility with older Hasura version remote schemas**
 
   With v2.0, some of the auto-generated schema types have been extended. For example, ``String_comparison_exp`` has an additional ``regex`` input
   object field. This means if you have a Hasura API with an older Hasura version added as a remote schema then it will have a type conflict. You
   should upgrade all Hasura remote schemas to avoid such type conflicts.
+
+- **Migrations are not executed under a single transaction**
+
+  While applying multiple migrations, in earlier Hasura CLI versions all migration files were run under one transaction block. i.e. if any migration
+  threw an error, all the previously successfully executed migrations would be rolled back. With Hasura CLI v2.0, each migration file is run in
+  its own transaction block but all the migrations are not executed under one. i.e. if any migration throws an error, applying further migrations
+  will be stopped but the other successfully executed migrations up till that point will not be rolled back.
+
+.. _hasura_v2_config_changes:
 
 Hasura configuration
 ^^^^^^^^^^^^^^^^^^^^
@@ -89,19 +114,32 @@ Hasura configuration
 - The database set using the ``HASURA_GRAPHQL_DATABASE_URL`` env var is connected automatically with the name
   ``default`` in Hasura v2 while upgrading an existing instance or while starting a fresh instance.
 
-  Setting this env var post initial setup/upgrade will have no effect as the Hasura metadata for data sources would already
-  have been initialized and the env var will be treated as any other custom env var.
+  Setting this env var post initial setup/upgrade will have no effect as the Hasura metadata for data sources
+  would already have been initialized and the env var will be treated as any other custom env var.
 
   It is now not mandatory to set this env var if a dedicated ``HASURA_GRAPHQL_METADATA_DATABASE_URL`` is set.
 
-- The values of the env vars ``HASURA_GRAPHQL_PG_CONNECTIONS``, ``HASURA_GRAPHQL_PG_TIMEOUT`` and ``HASURA_GRAPHQL_NO_OF_RETRIES``
-  are used to define the connection parameters of the ``default`` database while upgrading an existing instance
-  or while starting a fresh instance.
-
-  Post initial setup/upgrade, these env vars can be considered as Deprecated. Changing or setting values of these env vars
-  will have no impact as the values in the Hasura metadata are now used to define the connection parameters.
-
 - Custom env vars can now be used to connect databases dynamically at runtime.
+
+.. _hasura_v2_env_changes:
+
+- The values of the following env vars are used to define the connection parameters of the ``default`` database
+  while upgrading an existing instance or while starting a fresh instance. During metadata initialization, their values
+  are moved to the metadata of the ``default`` source as defined :ref:`here <PGConfiguration>`.
+
+  - ``HASURA_GRAPHQL_PG_CONNECTIONS``
+  - ``HASURA_GRAPHQL_PG_TIMEOUT``
+  - ``HASURA_GRAPHQL_NO_OF_RETRIES``
+  - ``HASURA_GRAPHQL_PG_CONN_LIFETIME``
+  - ``HASURA_GRAPHQL_PG_POOL_TIMEOUT``
+  - ``HASURA_GRAPHQL_USE_PREPARED_STATEMENTS``
+  - ``HASURA_GRAPHQL_TX_ISOLATION``
+  - ``HASURA_GRAPHQL_READ_REPLICA_URLS``
+  - ``HASURA_GRAPHQL_CONNECTIONS_PER_READ_REPLICA``
+
+  **Post the initial setup/upgrade once the metadata is initialized, these env vars can be considered as Deprecated.**
+  i.e. Changing or setting values of these env vars will have no impact as the values in the Hasura metadata are
+  now used to define the connection parameters.
 
 Hasura Cloud
 ^^^^^^^^^^^^
@@ -110,8 +148,8 @@ Hasura Cloud projects' metadata is now stored in metadata DBs managed by Hasura 
 the ``HASURA_GRAPHQL_METADATA_DATABASE_URL`` env var is not configurable on Hasura Cloud and is managed
 by Hasura Cloud itself.
 
-By default Hasura Cloud projects are created without any databases connected to them. See :ref:`connecting databases <connect_database>`
-to add a database to a Hasura Cloud v2 project.
+By default Hasura Cloud projects are created without any databases connected to them. See
+:ref:`connecting databases <connect_database>` to add a database to a Hasura Cloud v2 project.
 
 See the below section on :ref:`hasura_v1_v2_compatibility` to use a Hasura v2 Cloud project like a Hasura v1
 Cloud project.
@@ -124,8 +162,8 @@ Moving from Hasura v1 to Hasura v2
 Hasura v1 and Hasura v2 compatibility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-All existing metadata and migrations from a Hasura v1 instance are assumed to belong to a database named ``default`` in
-Hasura v2.
+All existing metadata and migrations from a Hasura v1 instance are assumed to belong to a database named ``default``
+in Hasura v2.
 
 Hence **in Hasura v2, a database with name "default" needs to be added to apply metadata and migrations from a
 Hasura v1 instance**.
