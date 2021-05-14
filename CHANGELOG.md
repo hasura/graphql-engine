@@ -21,6 +21,11 @@
 - console: read-only modify page for mssql
 - console: filter out partitions from track table list and display partition info
 - console: fixes an issue where no schemas are listed on an MSSQL source
+- cli: add `-o`/`--output` flag for `metadata` `apply` & `export` subcommands
+```
+# export metadata and write to stdout
+$ hasura metadata export -o json
+```
 
 ## v2.0.0-alpha.10
 

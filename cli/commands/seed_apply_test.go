@@ -8,7 +8,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gbytes"
 	. "github.com/onsi/gomega/gexec"
 )
 
@@ -38,18 +37,18 @@ var _ = Describe("seed_apply", func() {
 	})
 
 	Context("seed apply test", func() {
-		up_sql := `CREATE TABLE "public"."table1" ("id" serial NOT NULL, PRIMARY KEY ("id") );`
+		upSql := `CREATE TABLE "public"."table1" ("id" serial NOT NULL, PRIMARY KEY ("id") );`
 
 		data := `INSERT INTO public.table1 (id) VALUES (1);
 		INSERT INTO public.table1 (id) VALUES (2);
 		INSERT INTO public.table1 (id) VALUES (3);
 		INSERT INTO public.table1 (id) VALUES (4);`
 
-		down_sql := `DROP TABLE "public"."table1";`
+		downSql := `DROP TABLE "public"."table1";`
 
 		It("should apply the seed file inside seed/default ", func() {
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args:             []string{"migrate", "create", "table1", "--up-sql", up_sql, "--down-sql", down_sql, "--database-name", "default"},
+				Args:             []string{"migrate", "create", "table1", "--up-sql", upSql, "--down-sql", downSql, "--database-name", "default"},
 				WorkingDirectory: dirName,
 			})
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
@@ -57,6 +56,7 @@ var _ = Describe("seed_apply", func() {
 				WorkingDirectory: dirName,
 			})
 			err := os.Mkdir(filepath.Join(filepath.Join(dirName, "seeds"), "default"), 0755)
+
 			if err != nil {
 				fmt.Println(err, "error creating default directory in seeds")
 			}
@@ -72,14 +72,8 @@ var _ = Describe("seed_apply", func() {
 				Args:             []string{"seed", "apply", "--file", "table_seed.sql", "--database-name", "default"},
 				WorkingDirectory: dirName,
 			})
-			wantKeywordList := []string{
-				".*Seeds planted*.",
-			}
-
-			for _, keyword := range wantKeywordList {
-				Eventually(session, 60*60).Should(Say(keyword))
-			}
 			Eventually(session, 60*60).Should(Exit(0))
+			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring("Seeds planted"))
 		})
 	})
 })

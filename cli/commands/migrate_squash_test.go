@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/hasura/graphql-engine/cli/internal/testutil"
@@ -16,7 +17,6 @@ import (
 var _ = Describe("migrate_squash", func() {
 
 	var dirName string
-	var session *Session
 	var teardown func()
 	BeforeEach(func() {
 		dirName = testutil.RandDirName()
@@ -28,7 +28,6 @@ var _ = Describe("migrate_squash", func() {
 		editEndpointInConfig(filepath.Join(dirName, defaultConfigFilename), hgeEndpoint)
 
 		teardown = func() {
-			session.Kill()
 			os.RemoveAll(dirName)
 			teardownHGE()
 		}
@@ -40,16 +39,16 @@ var _ = Describe("migrate_squash", func() {
 
 	Context("migrate squash test", func() {
 		It("should squash the migrations in local project dir", func() {
-			out := testutil.RunCommandAndSucceed(testutil.CmdOpts{
+			session := testutil.RunCommandAndSucceed(testutil.CmdOpts{
 				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;", "--database-name", "default"},
 				WorkingDirectory: dirName,
 			})
-			contents := string(out.Out.Contents())
-			contents_list := strings.Split(contents, ",")
-			last := contents_list[len(contents_list)-1]
-			version_no := last[10:23]
+			Eventually(session, 60*40).Should(Exit(0))
+			logs := string(session.Wait().Err.Contents())
+			version := regexp.MustCompile(`"version":\d+`)
+			matches := version.FindStringSubmatch(logs)
 			session = testutil.Hasura(testutil.CmdOpts{
-				Args:             []string{"migrate", "squash", "--database-name", "default", "--from", version_no, "--delete-source"},
+				Args:             []string{"migrate", "squash", "--database-name", "default", "--from", strings.Split(matches[0], ":")[1], "--delete-source"},
 				WorkingDirectory: dirName,
 			})
 			wantKeywordList := []string{
@@ -60,7 +59,7 @@ var _ = Describe("migrate_squash", func() {
 			}
 
 			for _, keyword := range wantKeywordList {
-				Eventually(session, 60*40).Should(Say(keyword))
+				Eventually(session.Err, 60*40).Should(Say(keyword))
 			}
 			Eventually(session, 60*40).Should(Exit(0))
 		})

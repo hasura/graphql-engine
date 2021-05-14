@@ -36,27 +36,34 @@ func GetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) Objects 
 	ec.Version.GetServerFeatureFlags()
 	objects := make(Objects, 0)
 	if ec.Config.Version >= cli.V2 && metadataDir != "" {
-		objects = append(objects, version.New(ec, metadataDir))
-		objects = append(objects, querycollections.New(ec, metadataDir))
-		objects = append(objects, allowlist.New(ec, metadataDir))
-		objects = append(objects, remoteschemas.New(ec, metadataDir))
-		objects = append(objects, actions.New(ec, metadataDir))
-		objects = append(objects, crontriggers.New(ec, metadataDir))
-		objects = append(objects, restendpoints.New(ec, metadataDir))
-		objects = append(objects, inheritedroles.New(ec, metadataDir))
-		objects = append(objects, apilimits.New(ec, metadataDir))
-
+		// hasura core metadata objects
 		if ec.HasMetadataV3 {
 			if ec.Config.Version >= cli.V3 {
+				objects = append(objects, version.New(ec, metadataDir))
 				objects = append(objects, sources.New(ec, metadataDir))
 			} else {
+				objects = append(objects, version.NewV3MetadataVersion(ec, metadataDir))
 				objects = append(objects, tables.NewV3MetadataTableConfig(ec, metadataDir))
 				objects = append(objects, functions.NewV3MetadataFunctionConfig(ec, metadataDir))
-				objects = append(objects, version.NewV3MetadataVersion(ec, metadataDir))
 			}
 		} else {
+			objects = append(objects, version.New(ec, metadataDir))
 			objects = append(objects, tables.New(ec, metadataDir))
 			objects = append(objects, functions.New(ec, metadataDir))
+		}
+		objects = append(objects, remoteschemas.New(ec, metadataDir))
+		objects = append(objects, querycollections.New(ec, metadataDir))
+		objects = append(objects, allowlist.New(ec, metadataDir))
+		objects = append(objects, actions.New(ec, metadataDir))
+		objects = append(objects, crontriggers.New(ec, metadataDir))
+
+		if ec.HasMetadataV3 && ec.Config.Version >= cli.V3 {
+			// metadata objects supported in metadata v3
+			objects = append(objects, restendpoints.New(ec, metadataDir))
+			objects = append(objects, inheritedroles.New(ec, metadataDir))
+
+			// hasura pro specific metadata objects
+			objects = append(objects, apilimits.New(ec, metadataDir))
 		}
 	}
 

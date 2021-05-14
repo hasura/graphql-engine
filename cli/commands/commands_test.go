@@ -1,11 +1,12 @@
 package commands
 
 import (
+	"io/ioutil"
+	"testing"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/internal/testutil"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

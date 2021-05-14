@@ -34,8 +34,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"metadata-export",
 			&commands.MetadataExportOptions{
-				EC:         ec,
-				ActionType: "export",
+				EC: ec,
 			},
 			nil,
 			"",
@@ -44,8 +43,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"metadata-apply",
 			&commands.MetadataApplyOptions{
-				EC:         ec,
-				ActionType: "apply",
+				EC: ec,
 			},
 			nil,
 			filepath.Join(currDir, getMetadataDir(ec.Version.ServerSemver), "2_metadata"),
@@ -54,8 +52,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"metadata-export",
 			&commands.MetadataExportOptions{
-				EC:         ec,
-				ActionType: "export",
+				EC: ec,
 			},
 			nil,
 			"",
@@ -64,8 +61,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"metadata-clear",
 			&commands.MetadataClearOptions{
-				EC:         ec,
-				ActionType: "clear",
+				EC: ec,
 			},
 			nil,
 			"",
@@ -74,8 +70,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"metadata-export",
 			&commands.MetadataExportOptions{
-				EC:         ec,
-				ActionType: "export",
+				EC: ec,
 			},
 			nil,
 			"",
@@ -117,7 +112,9 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 					t.Fatalf("%s: unable to copy metadata file, got %v", tc.name, err)
 				}
 			}
+
 			err := tc.opts.Run()
+
 			if err != tc.err {
 				t.Fatalf("%s: expected %v, got %v", tc.name, tc.err, err)
 			}
@@ -157,8 +154,7 @@ func TestIncompleteMetadataDir(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"t1",
 			&commands.MetadataExportOptions{
-				EC:         ec,
-				ActionType: "apply",
+				EC: ec,
 			},
 			nil,
 			filepath.Join(currDir, "testdata/incomplete_metadata/t1/metadata"),
@@ -167,8 +163,7 @@ func TestIncompleteMetadataDir(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"t2",
 			&commands.MetadataExportOptions{
-				EC:         ec,
-				ActionType: "apply",
+				EC: ec,
 			},
 			nil,
 			filepath.Join(currDir, "testdata/incomplete_metadata/t2/metadata"),

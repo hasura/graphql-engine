@@ -30,8 +30,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"metadata-export",
 			&commands.MetadataExportOptions{
-				EC:         ec,
-				ActionType: "export",
+				EC: ec,
 			},
 			nil,
 			"",
@@ -40,8 +39,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"metadata-apply",
 			&commands.MetadataApplyOptions{
-				EC:         ec,
-				ActionType: "apply",
+				EC: ec,
 			},
 			nil,
 			filepath.Join(currDir, getMetadataDir(ec.Version.ServerSemver), "2_metadata.yaml"),
@@ -50,8 +48,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"metadata-export",
 			&commands.MetadataExportOptions{
-				EC:         ec,
-				ActionType: "export",
+				EC: ec,
 			},
 			nil,
 			"",
@@ -60,8 +57,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"metadata-clear",
 			&commands.MetadataClearOptions{
-				EC:         ec,
-				ActionType: "clear",
+				EC: ec,
 			},
 			nil,
 			"",
@@ -70,8 +66,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"metadata-export",
 			&commands.MetadataExportOptions{
-				EC:         ec,
-				ActionType: "export",
+				EC: ec,
 			},
 			nil,
 			"",

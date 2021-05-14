@@ -54,7 +54,7 @@ var _ = Describe("migrate_apply", func() {
 			}
 
 			for _, keyword := range wantKeywordList {
-				Eventually(session, 60*40).Should(Say(keyword))
+				Eventually(session.Err, 60*40).Should(Say(keyword))
 			}
 			Eventually(session, 60*40).Should(Exit(0))
 		})

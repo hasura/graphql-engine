@@ -8,7 +8,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gbytes"
 	. "github.com/onsi/gomega/gexec"
 )
 
@@ -43,10 +42,8 @@ var _ = Describe("metadata_diff", func() {
 				Args:             []string{"metadata", "diff"},
 				WorkingDirectory: dirName,
 			})
-
-			Eventually(session, 60*40).Should(Say(".*rest_endpoints*."))
-			Eventually(session, 60*40).Should(Say(".*sources*."))
 			Eventually(session, 60*40).Should(Exit(0))
+			Eventually(session.Wait().Out.Contents()).Should(ContainSubstring("name: default"))
 		})
 	})
 })

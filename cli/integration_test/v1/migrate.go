@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ghodss/yaml"
+	"github.com/goccy/go-yaml"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/commands"
 	"github.com/hasura/graphql-engine/cli/migrate"

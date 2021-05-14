@@ -879,6 +879,7 @@ func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
 		logger := logrus.New()
 		ec.Logger = logger
+		ec.Logger.SetOutput(os.Stderr)
 	}
 
 	if ec.LogLevel != "" {

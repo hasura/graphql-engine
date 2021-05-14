@@ -303,19 +303,19 @@ func TestClient_GetInconsistentMetadata(t *testing.T) {
 	}
 	createTable := strings.NewReader(`
 {
-	"type": "run_sql",
-	"args": {
-		"sql": "CREATE TABLE test();"
-	}
+    "type": "run_sql",
+    "args": {
+        "sql": "CREATE TABLE test();"
+    }
 }
 `)
 	dropTable := strings.NewReader(`
 {
-	"type": "run_sql",
-	"args": {
-		"sql": "DROP TABLE test;",
-		"check_metadata_consistency": false
-	}
+    "type": "run_sql",
+    "args": {
+        "sql": "DROP TABLE test;",
+        "check_metadata_consistency": false
+    }
 }
 `)
 	trackTable := strings.NewReader(`

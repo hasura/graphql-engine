@@ -8,7 +8,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gbytes"
 	. "github.com/onsi/gomega/gexec"
 )
 
@@ -44,14 +43,14 @@ var _ = Describe("actions_use_codegen", func() {
 				WorkingDirectory: dirName,
 			})
 			wantKeywordList := []string{
-				".*Starter kit cloned at*.",
-				".*Codegen configuration updated in config.yaml*.",
+				"Starter kit cloned at",
+				"Codegen configuration updated in config.yaml",
 			}
 
-			for _, keyword := range wantKeywordList {
-				Eventually(session, 60*40).Should(Say(keyword))
-			}
 			Eventually(session, 60*40).Should(Exit(0))
+			for _, keyword := range wantKeywordList {
+				Eventually(session.Wait().Err.Contents(), 60*40).Should(ContainSubstring(keyword))
+			}
 		})
 	})
 })

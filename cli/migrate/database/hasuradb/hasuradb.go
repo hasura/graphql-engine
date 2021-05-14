@@ -20,7 +20,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
-	yaml "github.com/ghodss/yaml"
+	"github.com/goccy/go-yaml"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/parnurzeal/gorequest"
 	log "github.com/sirupsen/logrus"

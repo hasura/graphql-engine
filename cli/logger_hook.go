@@ -1,11 +1,10 @@
 package cli
 
 import (
-	"io/ioutil"
-
 	"github.com/briandowns/spinner"
 	"github.com/mattn/go-colorable"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
 )
 
 type spinnerHook struct {
@@ -33,7 +32,7 @@ func newSpinnerHandlerHook(parent *logrus.Logger, spinner *spinner.Spinner, isTe
 				PrettyPrint: false,
 			}
 		}
-		logger.Out = colorable.NewColorableStdout()
+		logger.Out = colorable.NewColorableStderr()
 		logger.Level = parent.GetLevel()
 	}
 	return &spinnerHook{

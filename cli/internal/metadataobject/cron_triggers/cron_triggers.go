@@ -49,32 +49,27 @@ func (c *CronTriggers) CreateFiles() error {
 }
 
 func (c *CronTriggers) Build(metadata *yaml.MapSlice) error {
-	if !c.serverFeatureFlags.HasCronTriggers {
-		c.logger.WithField("metadata_plugin", "cron_triggers").Warnf("Skipping building %s", fileName)
-		return nil
-	}
 	data, err := ioutil.ReadFile(filepath.Join(c.MetadataDir, fileName))
 	if err != nil {
 		return err
 	}
 
-	item := yaml.MapItem{
-		Key:   metadataKey,
-		Value: []yaml.MapSlice{},
-	}
-	err = yaml.Unmarshal(data, &item.Value)
+	var obj []yaml.MapSlice
+	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
 		return err
 	}
-	*metadata = append(*metadata, item)
+	if len(obj) > 0 {
+		item := yaml.MapItem{
+			Key:   metadataKey,
+			Value: obj,
+		}
+		*metadata = append(*metadata, item)
+	}
 	return nil
 }
 
 func (c *CronTriggers) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
-	if !c.serverFeatureFlags.HasCronTriggers {
-		c.logger.Debugf("Skipping creating %s", fileName)
-		return make(map[string][]byte), nil
-	}
 	var cronTriggers interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
