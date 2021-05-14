@@ -65,7 +65,8 @@ class TestSubscriptionCtrl(object):
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 
-@usefixtures('per_method_tests_db_state', 'ws_conn_init')
+@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
+@usefixtures('per_class_tests_db_state', 'ws_conn_init', 'per_backend_tests')
 class TestSubscriptionBasic:
     @classmethod
     def dir(cls):

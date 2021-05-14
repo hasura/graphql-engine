@@ -17,6 +17,7 @@ import qualified Hasura.Backends.Postgres.SQL.DML          as S
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.Select
+import           Hasura.Base.Error
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.Returning
 import           Hasura.RQL.IR.Select

@@ -158,6 +158,7 @@ export const supportedFeatures: SupportedFeaturesType = {
     tracking: true,
   },
   connectDbForm: {
+    enabled: true,
     connectionParameters: false,
     databaseURL: true,
     environmentVariable: true,
@@ -397,11 +398,11 @@ FROM sys.objects as obj
     return `
   SELECT
     schema_name (tab.schema_id) AS table_schema,
-    pk.name AS constraint_name,
     tab.name AS table_name,
     (
       SELECT
-        col.name
+        col.name,
+        pk.name AS constraint_name
       FROM
         sys.indexes pk
         INNER JOIN sys.index_columns ic ON ic.object_id = pk.object_id
@@ -409,12 +410,17 @@ FROM sys.objects as obj
         INNER JOIN sys.columns col ON pk.object_id = col.object_id
           AND col.column_id = ic.column_id
       WHERE
-        tab.object_id = pk.object_id FOR json path) AS columns
+        tab.object_id = pk.object_id AND pk.is_primary_key = 1 FOR json path) AS constraints
     FROM
       sys.tables tab
       INNER JOIN sys.indexes pk ON tab.object_id = pk.object_id
-        AND pk.is_primary_key = 1 
-        ${whereClause} FOR JSON PATH;
+        AND pk.is_primary_key = 1
+        ${whereClause}
+    GROUP BY
+      tab.name,
+      tab.schema_id,
+      tab.object_id
+    FOR JSON PATH;
     `;
   },
   checkConstraintsSql: () => {
@@ -429,13 +435,13 @@ FROM sys.objects as obj
         .join(',')})`;
     }
     return `
-  SELECT
+    SELECT
     schema_name (tab.schema_id) AS table_schema,
-    idx.name AS constraint_name,
     tab.name AS table_name,
     (
       SELECT
-        col.name
+        col.name,
+        idx.name AS constraint_name
       FROM
         sys.indexes idx
         INNER JOIN sys.index_columns ic ON ic.object_id = idx.object_id
@@ -443,11 +449,18 @@ FROM sys.objects as obj
         INNER JOIN sys.columns col ON idx.object_id = col.object_id
           AND col.column_id = ic.column_id
       WHERE
-        tab.object_id = idx.object_id for json path) AS columns
+        tab.object_id = idx.object_id
+        AND idx.is_unique_constraint = 1 FOR json path) AS constraints
     FROM
       sys.tables tab
-      INNER JOIN sys.indexes idx ON tab.object_id = idx.object_id AND idx.is_unique_constraint = 1 
-      ${whereClause} FOR JSON PATH;
+      INNER JOIN sys.indexes idx ON tab.object_id = idx.object_id
+        AND idx.is_unique_constraint = 1
+      ${whereClause}
+    GROUP BY
+      tab.name,
+      tab.schema_id,
+      tab.object_id
+    FOR JSON PATH;
     `;
   },
   frequentlyUsedColumns: [],

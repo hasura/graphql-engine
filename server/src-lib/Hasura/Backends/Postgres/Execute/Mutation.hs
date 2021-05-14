@@ -33,6 +33,8 @@ import           Hasura.Backends.Postgres.Translate.Mutation
 import           Hasura.Backends.Postgres.Translate.Returning
 import           Hasura.Backends.Postgres.Translate.Select
 import           Hasura.Backends.Postgres.Translate.Update
+import           Hasura.Base.Error
+import           Hasura.Base.Instances                        ()
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.Delete
@@ -40,7 +42,6 @@ import           Hasura.RQL.IR.Insert
 import           Hasura.RQL.IR.Returning
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.IR.Update
-import           Hasura.RQL.Instances                         ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Server.Version                        (HasVersion)

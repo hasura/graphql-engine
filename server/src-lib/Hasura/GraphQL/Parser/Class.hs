@@ -17,11 +17,11 @@ import           Data.Tuple.Extended
 import           GHC.Stack                            (HasCallStack)
 import           Type.Reflection                      (Typeable)
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser.Class.Parse
 import           Hasura.GraphQL.Parser.Internal.Types
 import           Hasura.GraphQL.Parser.Schema         (HasDefinition)
 import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 -- import           Hasura.SQL.Backend

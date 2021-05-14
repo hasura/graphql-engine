@@ -5,10 +5,10 @@ module Hasura.SQL.WKT
 
 import           Hasura.Prelude
 
-import           Data.List              (intersperse)
+import           Data.List          (intersperse)
 
-import qualified Hasura.RQL.Types.Error as E
-import qualified Hasura.SQL.GeoJSON     as G
+import qualified Hasura.Base.Error  as E
+import qualified Hasura.SQL.GeoJSON as G
 
 
 newtype WKT = WKT { getWKT :: Text }

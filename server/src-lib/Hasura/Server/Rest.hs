@@ -23,6 +23,7 @@ import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Syntax          as G
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                 (MonadQueryLog)
 import           Hasura.GraphQL.Transport.HTTP.Protocol

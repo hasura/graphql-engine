@@ -40,6 +40,7 @@ import           System.Directory                    (doesFileExist)
 import qualified Hasura.SQL.AnyBackend               as AB
 
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Base.Error
 import           Hasura.Logging                      (Hasura, LogLevel (..), ToEngineLog (..))
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DDL.Schema.LegacyCatalog

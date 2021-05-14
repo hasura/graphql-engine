@@ -25,6 +25,7 @@ import qualified Hasura.SQL.AnyBackend                      as AB
 import qualified Hasura.Tracing                             as Tracing
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Backend

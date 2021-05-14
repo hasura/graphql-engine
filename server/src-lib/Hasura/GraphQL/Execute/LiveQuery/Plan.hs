@@ -89,6 +89,7 @@ Additional details are provided by the documentation for individual bindings.
 -}
 module Hasura.GraphQL.Execute.LiveQuery.Plan
   ( CohortId
+  , dummyCohortId
   , newCohortId
   , CohortIdArray(..)
   , CohortVariablesArray(..)
@@ -108,6 +109,7 @@ import qualified Data.Aeson.Extended                as J
 import qualified Data.Aeson.TH                      as J
 import qualified Data.HashMap.Strict                as Map
 import qualified Data.HashSet                       as Set
+import qualified Data.UUID                          as UUID
 import qualified Data.UUID.V4                       as UUID
 import qualified Database.PG.Query                  as Q
 import qualified Database.PG.Query.PTI              as PTI
@@ -129,6 +131,9 @@ newtype CohortId = CohortId { unCohortId :: UUID }
 
 newCohortId :: (MonadIO m) => m CohortId
 newCohortId = CohortId <$> liftIO UUID.nextRandom
+
+dummyCohortId :: CohortId
+dummyCohortId = CohortId UUID.nil
 
 data CohortVariables
   = CohortVariables

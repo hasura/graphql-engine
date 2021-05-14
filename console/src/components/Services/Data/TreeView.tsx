@@ -116,6 +116,7 @@ const LeafItemsView: React.FC<LeafItemsViewProps> = ({
               <GqlCompatibilityWarning
                 identifier={item.name}
                 className={styles.add_mar_left_mid}
+                ifWarningCanBeFixed
               />
             </>
           )}
@@ -140,7 +141,6 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
   setActiveSchema,
   pathname,
   databaseLoading,
-  ...props
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const showActiveStyle =
@@ -162,7 +162,6 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
         role="button"
         className={styles.padd_bottom_small}
         style={showActiveStyle ? activeStyle : {}}
-        {...props}
       >
         <span
           className={
@@ -264,7 +263,6 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
                 setActiveSchema={handleSelectSchema}
                 key={key}
                 pathname={pathname}
-                data-test={`${child.name}_schema`}
                 databaseLoading={databaseLoading}
               />
             </li>

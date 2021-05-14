@@ -14,6 +14,7 @@ import           Data.Text.Extended
 import qualified Hasura.SQL.AnyBackend               as AB
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Schema.Common

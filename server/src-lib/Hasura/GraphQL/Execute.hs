@@ -28,7 +28,6 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 
-
 import           Data.Text.Extended
 
 import qualified Hasura.GraphQL.Context                 as C
@@ -47,6 +46,7 @@ import qualified Hasura.SQL.AnyBackend                  as AB
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Hasura.Tracing                         as Tracing
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
 import           Hasura.GraphQL.Parser.Schema           (Variable)

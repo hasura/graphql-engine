@@ -23,6 +23,7 @@ import           Data.Tuple                 (swap)
 
 import qualified Hasura.SQL.AnyBackend      as AB
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission

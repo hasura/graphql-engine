@@ -39,6 +39,7 @@ module Hasura.Eventing.EventTrigger
   , Event(..)
   , unlockEvents
   , EventEngineCtx(..)
+  , ResponseLogBehavior(..)
   ) where
 
 import           Hasura.Prelude
@@ -75,6 +76,7 @@ import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Backends.Postgres.Execute.Types
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Base.Error
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.HTTP
@@ -235,8 +237,9 @@ processEventQueue
   -> LockedEventsCtx
   -> ServerMetrics
   -> MaintenanceMode
+  -> ResponseLogBehavior
   -> m void
-processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} LockedEventsCtx{leEvents} serverMetrics maintenanceMode = do
+processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} LockedEventsCtx{leEvents} serverMetrics maintenanceMode responseLogBehavior = do
   events0 <- popEventsBatch
   -- Track number of events fetched in EKG
   _ <- liftIO $ EKG.Distribution.add (smNumEventsFetched serverMetrics) (fromIntegral $ length events0)
@@ -408,7 +411,7 @@ processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} Locked
                       (liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics)
                       (liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics)
                       (runExceptT $ tryWebhook headers responseTimeout payload webhook)
-              logHTTPForET res extraLogCtx requestDetails
+              logHTTPForET res extraLogCtx requestDetails responseLogBehavior
               let decodedHeaders = map (decodeHeader logenv headerInfos) headers
               either
                 (processError sourceConfig e retryConf decodedHeaders ep maintenanceModeVersion)

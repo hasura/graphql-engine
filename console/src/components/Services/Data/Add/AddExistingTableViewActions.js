@@ -12,6 +12,7 @@ import { dataSource, currentDriver } from '../../../../dataSources';
 import {
   findTable,
   escapeTableColumns,
+  escapeTableName,
   getQualifiedTableDef,
 } from '../../../../dataSources/common';
 import { exportMetadata } from '../../../../metadata/actions';
@@ -51,13 +52,13 @@ const addExistingTableSql = (name, customSchema, skipRouting = false) => {
       },
       currentDriver
     );
-
-    const table = findTable(getState().tables.allSchemas, tableDef);
-
+    const { allSchemas } = getState().tables;
+    const table = findTable(allSchemas, tableDef);
     const requestBodyUp = getTrackTableQuery({
       tableDef,
       source: currentDataSource,
       customColumnNames: escapeTableColumns(table),
+      customName: escapeTableName(tableName),
     });
 
     const requestBodyDown = getUntrackTableQuery(tableDef, currentDataSource);
@@ -203,6 +204,7 @@ const addAllUntrackedTablesSql = tableList => {
             tableDef,
             source: currentDataSource,
             customColumnNames: escapeTableColumns(table),
+            customName: escapeTableName(tableList[i].table_name),
           })
         );
         bulkQueryDown.push(

@@ -10,6 +10,7 @@ import           Data.FileEmbed                     (makeRelativeToProject)
 import qualified Hasura.SQL.AnyBackend              as AB
 
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Base.Error
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission

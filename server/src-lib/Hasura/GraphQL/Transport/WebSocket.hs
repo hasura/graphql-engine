@@ -59,6 +59,7 @@ import qualified Hasura.Server.Telemetry.Counters             as Telem
 import qualified Hasura.Tracing                               as Tracing
 
 import           Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Transport.Backend

@@ -1,18 +1,23 @@
 -- | The RQL query ('/v2/query')
 module Hasura.Server.API.V2Query where
 
-import           Control.Lens
+import           Hasura.Prelude
+
+import qualified Data.Environment                    as Env
+import qualified Network.HTTP.Client                 as HTTP
+
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Data.Environment                    as Env
-import qualified Network.HTTP.Client                 as HTTP
+import qualified Hasura.Backends.BigQuery.DDL.RunSQL as BigQuery
+import qualified Hasura.Backends.MSSQL.DDL.RunSQL    as MSSQL
+import qualified Hasura.Tracing                      as Tracing
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
@@ -26,9 +31,6 @@ import           Hasura.Server.Types
 import           Hasura.Server.Version               (HasVersion)
 import           Hasura.Session
 
-import qualified Hasura.Backends.BigQuery.DDL.RunSQL as BigQuery
-import qualified Hasura.Backends.MSSQL.DDL.RunSQL    as MSSQL
-import qualified Hasura.Tracing                      as Tracing
 
 data RQLQuery
   = RQInsert !InsertQuery

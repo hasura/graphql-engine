@@ -25,6 +25,7 @@ import           Hasura.Backends.Postgres.SQL.Rewrite
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.Backends.Postgres.Translate.Types
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Schema.Common               (currentNodeIdVersion, nodeIdVersionInt)
 import           Hasura.RQL.DML.Internal

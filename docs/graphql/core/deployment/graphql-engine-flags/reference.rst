@@ -180,22 +180,34 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - Maximum number of Postgres connections that can be opened per stripe (default: 50).
        When the maximum is reached we will block until a new connection becomes available,
        even if there is capacity in other stripes.
+       (Deprecated in versions > v2.0.0. :ref:`See details <hasura_v2_env_changes>`)
 
    * - ``--timeout <SECONDS>``
      - ``HASURA_GRAPHQL_PG_TIMEOUT``
      - Each connection's idle time before it is closed (default: 180 sec)
+       (Deprecated in versions > v2.0.0. :ref:`See details <hasura_v2_env_changes>`)
 
    * - ``--use-prepared-statements <true|false>``
      - ``HASURA_GRAPHQL_USE_PREPARED_STATEMENTS``
      - Use prepared statements for queries (default: true)
+       (Deprecated in versions > v2.0.0. :ref:`See details <hasura_v2_env_changes>`)
 
    * - ``-i, --tx-iso <TXISO>``
      - ``HASURA_GRAPHQL_TX_ISOLATION``
      - Transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)
+       (Deprecated in versions > v2.0.0. :ref:`See details <hasura_v2_env_changes>`)
 
    * - ``--retries <NO_OF_RETRIES>``
      - ``HASURA_GRAPHQL_NO_OF_RETRIES``
      - Number of retries if Postgres connection error occurs (default: 1)
+       (Deprecated in versions > v2.0.0. :ref:`See details <hasura_v2_env_changes>`)
+
+   * - ``--conn-lifetime <SECONDS>``
+     - ``HASURA_GRAPHQL_PG_CONN_LIFETIME``
+     - Time from connection creation after which the connection should be destroyed and a new one created.
+       A value of 0 indicates we should never destroy an active connection. If 0 is passed, memory from large query
+       results may not be reclaimed. (default: 600 sec)
+       (Deprecated in versions > v2.0.0. :ref:`See details <hasura_v2_env_changes>`)
 
    * - ``--stringify-numeric-types``
      - ``HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES``

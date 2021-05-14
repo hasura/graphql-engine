@@ -19,6 +19,7 @@ import {
   ValueNode,
   GraphQLInputType,
   buildSchema,
+  GraphQLUnionType,
 } from 'graphql';
 import {
   isJsonString,
@@ -215,6 +216,7 @@ export const getType = (
   const scalarTypes: RemoteSchemaFields[] = [];
   const inputObjectTypes: RemoteSchemaFields[] = [];
   const objectTypes: RemoteSchemaFields[] = [];
+  const unionTypes: RemoteSchemaFields[] = [];
 
   Object.entries(introspectionSchemaFields).forEach(([key, value]: any) => {
     if (
@@ -222,7 +224,8 @@ export const getType = (
         value instanceof GraphQLObjectType ||
         value instanceof GraphQLInputObjectType ||
         value instanceof GraphQLEnumType ||
-        value instanceof GraphQLScalarType
+        value instanceof GraphQLScalarType ||
+        value instanceof GraphQLUnionType
       )
     )
       return;
@@ -323,8 +326,51 @@ export const getType = (
       if (value instanceof GraphQLObjectType) objectTypes.push(type);
       if (value instanceof GraphQLInputObjectType) inputObjectTypes.push(type);
     }
+
+    if (value instanceof GraphQLUnionType) {
+      let isFieldPresent = true;
+      let permissionsTypesVal: any;
+
+      // Check if the type is present in the permission schema coming from user.
+      if (permissionsSchema !== null && permissionsSchemaFields !== null) {
+        if (key in permissionsSchemaFields) {
+          permissionsTypesVal = permissionsSchemaFields[key].getTypes();
+        } else {
+          isFieldPresent = false;
+        }
+      }
+
+      type.name = `union ${name}`;
+      const childArray: CustomFieldType[] = [];
+      const typesVal = value.getTypes();
+      Object.entries(typesVal).forEach(([k, v]) => {
+        let checked = false;
+        if (
+          permissionsSchema !== null &&
+          isFieldPresent &&
+          k in permissionsTypesVal
+        ) {
+          checked = true;
+        }
+        const field: CustomFieldType = {
+          name: v.name,
+          checked,
+          return: v.name,
+        };
+        childArray.push(field);
+      });
+
+      type.children = childArray;
+      unionTypes.push(type);
+    }
   });
-  return [...objectTypes, ...inputObjectTypes, ...enumTypes, ...scalarTypes];
+  return [
+    ...objectTypes,
+    ...inputObjectTypes,
+    ...unionTypes,
+    ...enumTypes,
+    ...scalarTypes,
+  ];
 };
 
 export const getRemoteSchemaFields = (
@@ -480,6 +526,18 @@ const getSDLField = (
     if (type.typeName && checkDefaultGQLScalarType(type.typeName))
       return result; // if default GQL scalar type, return empty string
     result = `${typeName}`;
+    return `${result}\n`;
+  }
+
+  // add union fields to SDL
+  if (typeName.startsWith('union') && type.children) {
+    result = `${typeName} =`;
+    type.children.forEach(t => {
+      if (t.checked) {
+        result = `${result} ${t.name} |`;
+      }
+    });
+    result = result.substring(0, result.length - 1);
     return `${result}\n`;
   }
 

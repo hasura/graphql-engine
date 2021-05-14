@@ -23,6 +23,7 @@ import           Control.Monad.Unique
 import           Data.Text.Extended
 import           Network.HTTP.Client.Extended
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.DDL.Deps

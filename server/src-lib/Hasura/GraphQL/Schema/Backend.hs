@@ -10,6 +10,7 @@ import           Language.GraphQL.Draft.Syntax (Nullability)
 import qualified Hasura.RQL.IR.Select          as IR
 import qualified Hasura.RQL.IR.Update          as IR
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Schema.Common

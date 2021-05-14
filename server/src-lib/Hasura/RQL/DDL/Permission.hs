@@ -45,13 +45,13 @@ import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend              as AB
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Session
-
 
 
 {- Note [Backend only permissions]

@@ -14,6 +14,7 @@ import           Data.Aeson.TH
 import           Data.String                      (fromString)
 
 import           Hasura.Backends.MSSQL.Connection
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Schema            (RunSQLRes (..))
 import           Hasura.RQL.Types

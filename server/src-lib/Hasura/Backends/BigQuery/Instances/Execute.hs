@@ -2,6 +2,8 @@
 
 module Hasura.Backends.BigQuery.Instances.Execute () where
 
+import           Hasura.Prelude
+
 import qualified Data.Aeson                                  as Aeson
 import qualified Data.Environment                            as Env
 import qualified Data.HashMap.Strict.InsOrd                  as OMap
@@ -12,16 +14,16 @@ import qualified Network.HTTP.Types                          as HTTP
 
 import qualified Hasura.Backends.BigQuery.DataLoader.Execute as DataLoader
 import qualified Hasura.Backends.BigQuery.DataLoader.Plan    as DataLoader
-import qualified Hasura.RQL.Types.Error                      as RQL
+import qualified Hasura.Base.Error                           as E
 import qualified Hasura.SQL.AnyBackend                       as AB
 import qualified Hasura.Tracing                              as Tracing
 
 import           Hasura.Backends.BigQuery.Plan
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Parser
-import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Session
 
@@ -35,17 +37,17 @@ instance BackendExecute 'BigQuery where
   mkDBQueryPlan = bqDBQueryPlan
   mkDBMutationPlan = bqDBMutationPlan
   mkDBSubscriptionPlan _ _ _ _ =
-    throwError $ RQL.internalError "Cannot currently perform subscriptions on BigQuery sources."
+    throwError $ E.internalError "Cannot currently perform subscriptions on BigQuery sources."
   mkDBQueryExplain = bqDBQueryExplain
   mkLiveQueryExplain _ =
-    throwError $ RQL.internalError "Cannot currently retrieve query execution plans on BigQuery sources."
+    throwError $ E.internalError "Cannot currently retrieve query execution plans on BigQuery sources."
 
 
 -- query
 
 bqDBQueryPlan
   :: forall m.
-     ( MonadError QErr m
+     ( MonadError E.QErr m
      )
   => Env.Environment
   -> HTTP.Manager
@@ -110,7 +112,7 @@ recordSetToEncJSON DataLoader.RecordSet {rows} =
 
 bqDBMutationPlan
   :: forall m.
-     ( MonadError QErr m
+     ( MonadError E.QErr m
      )
   => Env.Environment
   -> HTTP.Manager
@@ -128,7 +130,7 @@ bqDBMutationPlan _env _manager _reqHeaders _userInfo _stringifyNum _sourceName _
 -- explain
 
 bqDBQueryExplain
-  :: MonadError QErr m
+  :: MonadError E.QErr m
   => G.Name
   -> UserInfo
   -> SourceName
@@ -144,5 +146,5 @@ bqDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
     $ encJFromJValue
     $ ExplainPlan
         fieldName
-        (Just ("--\n" <> DataLoader.drawActionsForestSQL actionsForest))
-        (Just ("": T.lines (DataLoader.drawActionsForest actionsForest)))
+        (Just $ DataLoader.drawActionsForestSQL actionsForest)
+        (Just $ T.lines $ DataLoader.drawActionsForest actionsForest)

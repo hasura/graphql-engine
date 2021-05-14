@@ -29,6 +29,7 @@ import qualified Hasura.Tracing                               as Tracing
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                        (HasVersion)

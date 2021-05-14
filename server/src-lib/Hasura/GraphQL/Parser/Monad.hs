@@ -27,9 +27,9 @@ import           Data.Proxy                   (Proxy (..))
 import           System.IO.Unsafe             (unsafeInterleaveIO)
 import           Type.Reflection              (Typeable, typeRep, (:~:) (..))
 
+import           Hasura.Base.Error            (Code)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.RQL.Types.Error       (Code)
 
 -- -------------------------------------------------------------------------------------------------
 -- schema construction

@@ -9,20 +9,23 @@ module Hasura.Metadata.Class
   )
 where
 
+import           Hasura.Prelude
+
+import qualified Network.HTTP.Types                     as HTTP
+
 import           Control.Monad.Morph                    (MFunctor, hoist)
 import           Control.Monad.Trans.Control            (MonadBaseControl)
 import           Data.Aeson
 
-import qualified Network.HTTP.Types                     as HTTP
+import qualified Hasura.Tracing                         as Tracing
 
+import           Hasura.Base.Error
 import           Hasura.Eventing.HTTP
 import           Hasura.Eventing.ScheduledTrigger.Types
-import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Types
 import           Hasura.Session
 
-import qualified Hasura.Tracing                         as Tracing
 
 data SchemaSyncEventProcessResult
   = SchemaSyncEventProcessResult

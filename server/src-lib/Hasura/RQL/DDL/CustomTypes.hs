@@ -21,6 +21,7 @@ import           Control.Monad.Validate
 import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.SQL.Tag

@@ -75,11 +75,11 @@ import           Data.URL.Template
 
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Headers             ()
 import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend                 (BackendType)
 import           Hasura.SQL.Types
 

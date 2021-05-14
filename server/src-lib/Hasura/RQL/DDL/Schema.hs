@@ -22,18 +22,18 @@ load and modify the Hasura catalog and schema cache.
 -}
 
 module Hasura.RQL.DDL.Schema
- ( module Hasura.RQL.DDL.Schema.Cache
- , module Hasura.RQL.DDL.Schema.Catalog
- , module Hasura.RQL.DDL.Schema.Function
- , module Hasura.RQL.DDL.Schema.Rename
- , module Hasura.RQL.DDL.Schema.Table
+  ( module Hasura.RQL.DDL.Schema.Cache
+  , module Hasura.RQL.DDL.Schema.Catalog
+  , module Hasura.RQL.DDL.Schema.Function
+  , module Hasura.RQL.DDL.Schema.Rename
+  , module Hasura.RQL.DDL.Schema.Table
 
- , RunSQL(..)
- , runRunSQL
- , isSchemaCacheBuildRequiredRunSQL
+  , RunSQL(..)
+  , runRunSQL
+  , isSchemaCacheBuildRequiredRunSQL
 
- , RunSQLRes(..)
- ) where
+  , RunSQLRes(..)
+  ) where
 
 import           Hasura.Prelude
 
@@ -47,15 +47,17 @@ import           Data.Aeson
 import           Data.Aeson.TH
 
 import           Hasura.Backends.Postgres.DDL.RunSQL
+import           Hasura.Base.Error
+import           Hasura.Base.Instances               ()
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.Instances                ()
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                 (quoteRegex)
+
 
 data RunSQL
   = RunSQL

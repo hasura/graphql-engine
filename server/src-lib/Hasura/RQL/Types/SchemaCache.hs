@@ -138,6 +138,7 @@ import qualified Hasura.Backends.Postgres.Connection         as PG
 import qualified Hasura.GraphQL.Parser                       as P
 import qualified Hasura.SQL.AnyBackend                       as AB
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Context                      (GQLContext, RemoteField, RoleContext)
 import           Hasura.Incremental                          (Cacheable, Dependency,
                                                               MonadDepend (..), selectKeyD)
@@ -150,7 +151,6 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Endpoint
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.GraphqlSchemaIntrospection

@@ -33,10 +33,11 @@ import qualified Hasura.Backends.BigQuery.DataLoader.Execute as Execute
 import qualified Hasura.Backends.BigQuery.DataLoader.Plan    as Plan
 
 import           Hasura.Backends.BigQuery.Source             (BigQuerySourceConfig (..))
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Schema                       (RunSQLRes (..))
-import           Hasura.RQL.Types                            (CacheRWM, Code (..), MetadataM, QErr,
-                                                              SourceName, askSourceConfig, throw400)
+import           Hasura.RQL.Types                            (CacheRWM, MetadataM, SourceName,
+                                                              askSourceConfig)
 import           Hasura.SQL.Backend
 
 

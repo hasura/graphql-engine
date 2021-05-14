@@ -19,13 +19,13 @@ import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.SQL.Types  as PG (PGDescription)
 
+import           Hasura.Base.Error
 import           Hasura.Incremental                  (Cacheable)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.Relationship

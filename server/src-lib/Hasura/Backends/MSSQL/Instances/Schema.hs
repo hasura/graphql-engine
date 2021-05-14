@@ -20,6 +20,7 @@ import qualified Hasura.GraphQL.Schema.Build           as GSB
 import qualified Hasura.RQL.IR.Select                  as IR
 import qualified Hasura.RQL.IR.Update                  as IR
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser                 hiding (EnumValueInfo, field)
 import           Hasura.GraphQL.Parser.Internal.Parser hiding (field)

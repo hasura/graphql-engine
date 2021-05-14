@@ -7,6 +7,7 @@ import {
   BaseTableColumn,
   SupportedFeaturesType,
 } from '../../types';
+import globals from '../../../Globals';
 import { generateTableRowRequest } from './utils';
 
 const permissionColumnDataTypes = {
@@ -151,6 +152,7 @@ export const supportedFeatures: SupportedFeaturesType = {
     tracking: false,
   },
   connectDbForm: {
+    enabled: globals.consoleType !== 'cloud',
     connectionParameters: false,
     databaseURL: true,
     environmentVariable: true,

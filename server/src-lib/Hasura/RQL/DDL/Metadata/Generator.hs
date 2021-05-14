@@ -458,6 +458,9 @@ instance Arbitrary ApiLimit where
 instance Arbitrary DepthLimit where
   arbitrary = genericArbitrary
 
+instance Arbitrary NodeLimit where
+  arbitrary = genericArbitrary
+
 instance Arbitrary RateLimit where
   arbitrary = genericArbitrary
 

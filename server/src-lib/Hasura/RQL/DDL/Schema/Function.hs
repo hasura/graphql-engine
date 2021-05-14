@@ -14,9 +14,11 @@ import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend      as AB
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.Session
+
 
 newtype TrackFunction b
   = TrackFunction

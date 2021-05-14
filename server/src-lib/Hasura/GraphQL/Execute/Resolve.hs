@@ -15,8 +15,8 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 
 import           Data.Text.Extended
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.RQL.Types.Error
 
 resolveVariables
   :: forall m fragments

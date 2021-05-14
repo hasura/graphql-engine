@@ -2,32 +2,35 @@
 
 module Hasura.Backends.BigQuery.Connection where
 
+import           Hasura.Prelude
+
+import qualified Data.Aeson                       as J
+import qualified Data.Aeson.Casing                as J
+import qualified Data.Aeson.TH                    as J
+import qualified Data.ByteArray.Encoding          as BAE
+import qualified Data.ByteString                  as BS
+import qualified Data.ByteString.Char8            as B8
+import qualified Data.ByteString.Lazy             as BL
+import qualified Data.Environment                 as Env
+import qualified Data.Text                        as T
+import qualified Data.Text.Encoding               as TE
+import qualified Data.Text.Encoding.Error         as TE
 
 import           Control.Concurrent.MVar
 import           Control.Exception
-import           Crypto.Hash.Algorithms (SHA256(..))
-import           Crypto.PubKey.RSA.PKCS15 (signSafer)
-import           Crypto.PubKey.RSA.Types as Cry (Error)
-import           Data.Bifunctor (bimap)
-import qualified Data.ByteArray.Encoding as BAE
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BL
-import qualified Data.ByteString.Char8 as B8
-import qualified Data.Aeson as J
-import qualified Data.Aeson.Casing as J
-import qualified Data.Aeson.TH as J
-import qualified Data.Environment as Env
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
-import qualified Data.Text.Encoding.Error as TE
-import           Data.Time.Clock.POSIX (getPOSIXTime)
+import           Crypto.Hash.Algorithms           (SHA256 (..))
+import           Crypto.PubKey.RSA.PKCS15         (signSafer)
+import           Crypto.PubKey.RSA.Types          as Cry (Error)
+import           Data.Bifunctor                   (bimap)
 import           Data.Time.Clock
-import           Hasura.Prelude
-import           Hasura.Backends.BigQuery.Source
-import qualified Hasura.Backends.MSSQL.Connection as MSSQLConn (getEnv)
-import           Hasura.RQL.Types.Error
+import           Data.Time.Clock.POSIX            (getPOSIXTime)
 import           Network.HTTP.Simple
 import           Network.HTTP.Types
+
+import qualified Hasura.Backends.MSSQL.Connection as MSSQLConn (getEnv)
+
+import           Hasura.Backends.BigQuery.Source
+import           Hasura.Base.Error
 
 
 newtype Scope
@@ -69,7 +72,7 @@ resolveConfigurationJson env = \case
   FromEnvJSON v -> do
     fileContents <- MSSQLConn.getEnv env v
     case J.eitherDecode . BL.fromStrict . TE.encodeUtf8 $ fileContents of
-      Left e -> pure . Left $ e
+      Left e   -> pure . Left $ e
       Right sa -> pure . Right $ sa
 
 
@@ -80,7 +83,7 @@ resolveConfigurationInput ::
   m Text
 resolveConfigurationInput env = \case
   FromYaml s -> pure s
-  FromEnv v -> MSSQLConn.getEnv env v
+  FromEnv v  -> MSSQLConn.getEnv env v
 
 
 resolveConfigurationInputs ::
@@ -90,7 +93,7 @@ resolveConfigurationInputs ::
   m [Text]
 resolveConfigurationInputs env = \case
   FromYamls a -> pure a
-  FromEnvs v -> filter (not . T.null) . T.splitOn "," <$> MSSQLConn.getEnv env v
+  FromEnvs v  -> filter (not . T.null) . T.splitOn "," <$> MSSQLConn.getEnv env v
 
 
 getAccessToken :: MonadIO m => ServiceAccount -> m (Either TokenProblem TokenResp)
@@ -141,7 +144,7 @@ getAccessToken sa = do
       inp <- mkSigInput . truncate <$> liftIO getPOSIXTime
       signRes <- liftIO $ signSafer (Just SHA256) (unPKey _saPrivateKey) inp
       case signRes of
-        Left e -> pure . Left . BearerTokenSignsaferProblem $ e
+        Left e    -> pure . Left . BearerTokenSignsaferProblem $ e
         Right sig -> pure . Right $ inp <> "." <> truncateEquals (base64 sig)
       where
         mkSigInput :: Int -> BS.ByteString
@@ -171,7 +174,7 @@ getUsableToken BigQuerySourceConfig{_scServiceAccount, _scAccessTokenMVar} =
       Nothing -> do
         refreshedToken <- getAccessToken _scServiceAccount
         case refreshedToken of
-          Left e -> pure (Nothing, Left e)
+          Left e  -> pure (Nothing, Left e)
           Right t -> pure (Just t, Right t)
       Just t@TokenResp{_trAccessToken, _trExpiresAt} -> do
         pt <- liftIO $ getPOSIXTime
@@ -179,7 +182,7 @@ getUsableToken BigQuerySourceConfig{_scServiceAccount, _scAccessTokenMVar} =
           then do
             refreshedToken' <- getAccessToken _scServiceAccount
             case refreshedToken' of
-              Left e -> pure (Just t, Left e)
+              Left e   -> pure (Just t, Left e)
               Right t' -> pure (Just t', Right t')
           else pure (Just t, Right t)
 

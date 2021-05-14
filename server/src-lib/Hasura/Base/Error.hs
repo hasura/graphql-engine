@@ -1,55 +1,55 @@
 {-# LANGUAGE Arrows #-}
 
-module Hasura.RQL.Types.Error
-       ( Code(..)
-       , QErr(..)
-       , encodeJSONPath
-       , encodeQErr
-       , encodeGQLErr
-       , noInternalQErrEnc
-       , err400
-       , err404
-       , err405
-       , err401
-       , err409
-       , err500
-       , internalError
+module Hasura.Base.Error
+  ( Code(..)
+  , QErr(..)
+  , encodeJSONPath
+  , encodeQErr
+  , encodeGQLErr
+  , noInternalQErrEnc
+  , err400
+  , err404
+  , err405
+  , err401
+  , err409
+  , err500
+  , internalError
 
-       , QErrM
-       , throw400
-       , throw404
-       , throw405
-       , throw409
-       , throw500
-       , throw500WithDetail
-       , throw401
+  , QErrM
+  , throw400
+  , throw404
+  , throw405
+  , throw409
+  , throw500
+  , throw500WithDetail
+  , throw401
 
-       , iResultToMaybe
+  , iResultToMaybe
 
-         -- Aeson helpers
-       , runAesonParser
-       , decodeValue
+    -- Aeson helpers
+  , runAesonParser
+  , decodeValue
 
-         -- Modify error messages
-       , modifyErr
-       , modifyErrAndSet500
-       , modifyQErr
-       , modifyErrA
+    -- Modify error messages
+  , modifyErr
+  , modifyErrAndSet500
+  , modifyQErr
+  , modifyErrA
 
-         -- Attach context
-       , withPathK
-       , withPathKA
-       , withPathI
-       , withPathIA
-       , indexedFoldM
-       , indexedFoldlA'
-       , indexedForM
-       , indexedMapM
-       , indexedTraverseA
-       , indexedForM_
-       , indexedMapM_
-       , indexedTraverseA_
-       ) where
+    -- Attach context
+  , withPathK
+  , withPathKA
+  , withPathI
+  , withPathIA
+  , indexedFoldM
+  , indexedFoldlA'
+  , indexedForM
+  , indexedMapM
+  , indexedTraverseA
+  , indexedForM_
+  , indexedMapM_
+  , indexedTraverseA_
+  ) where
 
 import           Hasura.Prelude
 

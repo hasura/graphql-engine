@@ -10,9 +10,9 @@ import           Data.Text.Extended                    (dquote, (<<>))
 
 import           Hasura.Backends.MSSQL.Instances.Types ()
 import           Hasura.Backends.MSSQL.Types           hiding (ColumnType)
+import           Hasura.Base.Error
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types

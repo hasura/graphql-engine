@@ -26,8 +26,8 @@ import qualified Hasura.RQL.Types.Column       as RQL
 
 import           Hasura.Backends.MSSQL.FromIr  as TSQL
 import           Hasura.Backends.MSSQL.Types   as TSQL
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Context
-import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 import           Hasura.Session
 
@@ -195,9 +195,9 @@ prepareValueMultiplex globalVariables =
     GraphQL.UVParameter mVariableInfo columnValue ->
       case fmap GraphQL.getName mVariableInfo of
         Nothing -> do
+          currentIndex <- (toInteger . length) <$> gets positionalArguments
           modify' (\s -> s {
             positionalArguments = positionalArguments s <> [columnValue] })
-          index <- (toInteger . length) <$> gets positionalArguments
           pure
             (JsonValueExpression
                (ColumnExpression
@@ -205,7 +205,7 @@ prepareValueMultiplex globalVariables =
                     { fieldNameEntity = rowAlias
                     , fieldName = resultVarsAlias
                     })
-               (RootPath `FieldPath` "synthetic" `IndexPath` index))
+               (RootPath `FieldPath` "synthetic" `IndexPath` currentIndex))
         Just name -> do
           modify
             (\s ->

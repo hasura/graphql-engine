@@ -16,6 +16,7 @@ import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend              as AB
 
+import           Hasura.Base.Error
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 

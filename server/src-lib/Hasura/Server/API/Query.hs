@@ -18,6 +18,7 @@ import           Network.HTTP.Client.Extended
 
 import qualified Hasura.Tracing                     as Tracing
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
@@ -46,6 +47,7 @@ import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
+
 
 data RQLQueryV1
   = RQAddExistingTableOrView !(TrackTable ('Postgres 'Vanilla))

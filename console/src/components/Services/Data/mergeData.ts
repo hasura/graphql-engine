@@ -59,8 +59,10 @@ type MSSqlFk = {
 type MSSqlConstraint = {
   table_name: string;
   table_schema: string;
-  constraint_name: string;
-  columns: { name: string }[];
+  constraints: {
+    constraint_name: string;
+    name: string;
+  }[];
 };
 
 export const mergeDataMssql = (
@@ -91,23 +93,58 @@ export const mergeDataMssql = (
       ? (JSON.parse(data[1].result?.slice(1).join('')) as MSSqlFk[])
       : [];
 
-    primaryKeys = data[2].result
-      ? (JSON.parse(
-          data[2].result?.slice(1).join('')
-        ) as MSSqlConstraint[]).map(pk => ({
-          ...pk,
-          columns: pk.columns.map(({ name }) => name),
-        }))
+    // one row per table
+    const parsedPKs: MSSqlConstraint[] = data[2].result
+      ? JSON.parse(data[2].result?.slice(1).join(''))
       : [];
 
-    uniqueKeys = data[3].result
-      ? (JSON.parse(
-          data[3].result?.slice(1).join('')
-        ) as MSSqlConstraint[]).map(pk => ({
-          ...pk,
-          columns: pk.columns.map(({ name }) => name),
-        }))
+    primaryKeys = parsedPKs.reduce((acc: Table['primary_key'][], pk) => {
+      const { table_name, table_schema, constraints } = pk;
+
+      const columnsByConstraintName: { [name: string]: string[] } = {};
+      constraints.forEach(c => {
+        columnsByConstraintName[c.constraint_name] = [
+          ...(columnsByConstraintName[c.constraint_name] || []),
+          c.name,
+        ];
+      });
+
+      const constraintInfo = Object.keys(columnsByConstraintName).map(
+        pkName => ({
+          table_schema,
+          table_name,
+          constraint_name: pkName,
+          columns: columnsByConstraintName[pkName],
+        })
+      );
+      return [...acc, ...constraintInfo];
+    }, []);
+
+    const parsedUKs: MSSqlConstraint[] = data[3].result
+      ? JSON.parse(data[3].result?.slice(1).join(''))
       : [];
+
+    uniqueKeys = parsedUKs.reduce((acc, uk) => {
+      const { table_name, table_schema, constraints } = uk;
+
+      const columnsByConstraintName: { [name: string]: string[] } = {};
+      constraints.forEach(c => {
+        columnsByConstraintName[c.constraint_name] = [
+          ...(columnsByConstraintName[c.constraint_name] || []),
+          c.name,
+        ];
+      });
+
+      const constraintInfo = Object.keys(columnsByConstraintName).map(
+        pkName => ({
+          table_schema,
+          table_name,
+          constraint_name: pkName,
+          columns: columnsByConstraintName[pkName],
+        })
+      );
+      return [...acc, ...constraintInfo];
+    }, [] as Exclude<Table['unique_constraints'], null>);
   } catch (e) {
     console.error(e);
   }

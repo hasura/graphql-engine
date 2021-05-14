@@ -45,6 +45,7 @@ import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.ScheduledTrigger
 import           Hasura.RQL.DDL.Schema
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types

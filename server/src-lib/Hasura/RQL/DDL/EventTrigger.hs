@@ -28,6 +28,7 @@ import qualified Hasura.SQL.AnyBackend                  as AB
 import           Hasura.Backends.Postgres.DDL.Table
 import           Hasura.Backends.Postgres.Execute.Types
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.Session

@@ -8,7 +8,9 @@ import           Hasura.Prelude
 
 import           Data.Text.Extended
 
+import           Hasura.Base.Error
 import           Hasura.RQL.Types
+
 
 reportDeps :: (QErrM m) => [SchemaObjId] -> m ()
 reportDeps deps =

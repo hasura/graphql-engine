@@ -16,8 +16,10 @@ import qualified Hasura.GraphQL.Execute.Types       as ET (GraphQLQueryType)
 import qualified Hasura.GraphQL.Parser              as P
 import qualified Hasura.RQL.IR.Select               as IR
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser              (UnpreparedValue)
 import           Hasura.RQL.Types
+
 
 type SelectExp           b = IR.AnnSimpleSelG       b (UnpreparedValue b)
 type AggSelectExp        b = IR.AnnAggregateSelectG b (UnpreparedValue b)

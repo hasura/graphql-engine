@@ -9,9 +9,9 @@ import           Data.Kind                     (Type)
 import           Data.Text.Extended
 import           Data.Typeable                 (Typeable)
 
+import           Hasura.Base.Error
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.DDL.Headers        ()
-import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Tag
 import           Hasura.SQL.Types

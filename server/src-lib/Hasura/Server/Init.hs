@@ -6,6 +6,8 @@ module Hasura.Server.Init
   , module Hasura.Server.Init.Config
   ) where
 
+import           Hasura.Prelude
+
 import qualified Data.Aeson                               as J
 import qualified Data.Aeson.TH                            as J
 import qualified Data.HashSet                             as Set
@@ -13,13 +15,13 @@ import qualified Data.String                              as DataString
 import qualified Data.Text                                as T
 import qualified Database.PG.Query                        as Q
 import qualified Language.Haskell.TH.Syntax               as TH
+import qualified Network.WebSockets                       as WS
 import qualified Text.PrettyPrint.ANSI.Leijen             as PP
 
 import           Data.FileEmbed                           (embedStringFile, makeRelativeToProject)
 import           Data.Time                                (NominalDiffTime)
 import           Data.URL.Template
 import           Network.Wai.Handler.Warp                 (HostPreference)
-import qualified Network.WebSockets                       as WS
 import           Options.Applicative
 
 import qualified Hasura.Cache.Bounded                     as Cache
@@ -28,8 +30,8 @@ import qualified Hasura.GraphQL.Execute.Plan              as E
 import qualified Hasura.Logging                           as L
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Base.Error
 import           Hasura.Eventing.EventTrigger             (defaultFetchBatchSize)
-import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
@@ -39,6 +41,7 @@ import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
 import           Network.URI                              (parseURI)
+
 
 getDbId :: Q.TxE QErr Text
 getDbId =
@@ -249,6 +252,7 @@ mkServeOptions rso = do
            schemaPollInterval
            experimentalFeatures
            eventsFetchBatchSize
+           devMode
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]

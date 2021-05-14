@@ -39,13 +39,14 @@ import           Data.Time.Clock             (UTCTime)
 
 import qualified Hasura.Tracing              as Tracing
 
+import           Hasura.Base.Error
 import           Hasura.Logging
-import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT      hiding (processJwt_)
 import           Hasura.Server.Auth.WebHook
 import           Hasura.Server.Utils
 import           Hasura.Server.Version       (HasVersion)
 import           Hasura.Session
+
 
 -- | Typeclass representing the @UserInfo@ authorization and resolving effect
 class (Monad m) => UserAuthentication m where

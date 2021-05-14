@@ -52,6 +52,7 @@ import qualified Hasura.GraphQL.Transport.WebSocket.Server  as WS
 import qualified Hasura.Tracing                             as Tracing
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.EventTrigger
@@ -84,6 +85,7 @@ import           Hasura.Server.Telemetry
 import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
+
 
 data ExitCode
 -- these are used during server initialization:
@@ -523,6 +525,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
     fetchI        = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
     logEnvHeaders = soLogHeadersFromEnv
     allPgSources  = mapMaybe (unsafeSourceConfiguration @('Postgres 'Vanilla)) $ HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
+    eventResponseLogBehaviour = if soInDevelopmentMode then LogEntireResponse else LogSanitisedResponse
 
   -- TODO: is this correct?
   -- event triggers should be tied to the life cycle of a source
@@ -548,6 +551,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
                         lockedEventsCtx
                         serverMetrics
                         soEnableMaintenanceMode
+                        eventResponseLogBehaviour
 
   -- start a backgroud thread to handle async actions
   case soAsyncActionsFetchInterval of
@@ -572,6 +576,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
   _scheduledEventsThread <- C.forkManagedT "processScheduledTriggers" logger $
     processScheduledTriggers env logger logEnvHeaders _scHttpManager
                              (getSCFromRef cacheRef) lockedEventsCtx
+                             eventResponseLogBehaviour
 
   -- start a background thread to check for updates
   _updateThread <- C.forkManagedT "checkForUpdates" logger $ liftIO $

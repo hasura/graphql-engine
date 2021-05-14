@@ -51,6 +51,7 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value          (PGScalarValue (..))
 import           Hasura.Backends.Postgres.Translate.Column   (toTxtValue)
 import           Hasura.Backends.Postgres.Translate.Select   (asSingleRowJsonResp)
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Action.Types         as Types
 import           Hasura.GraphQL.Execute.Prepare
@@ -65,6 +66,7 @@ import           Hasura.Server.Utils                         (mkClientHeadersFor
                                                               mkSetCookieHeaders)
 import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
+
 
 fetchActionLogResponses
   :: (MonadError QErr m, MonadMetadataStorage (MetadataStorageT m), Foldable t)

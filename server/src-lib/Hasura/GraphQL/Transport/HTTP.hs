@@ -47,6 +47,7 @@ import qualified Hasura.Server.Telemetry.Counters             as Telem
 import qualified Hasura.Tracing                               as Tracing
 
 import           Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Logging                       (MonadQueryLog (logQueryLog),
@@ -63,7 +64,6 @@ import           Hasura.Server.Init.Config
 import           Hasura.Server.Logging
 import           Hasura.Server.Types                          (RequestId)
 import           Hasura.Server.Version                        (HasVersion)
-
 import           Hasura.Session
 import           Hasura.Tracing                               (MonadTrace, TraceT, trace)
 

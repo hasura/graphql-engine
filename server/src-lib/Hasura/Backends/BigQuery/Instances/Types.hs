@@ -2,24 +2,24 @@
 
 module Hasura.Backends.BigQuery.Instances.Types where
 
-import           Data.Coerce
-import           Data.Functor.Const
 import           Hasura.Prelude
-import           Hasura.SQL.Types
-import qualified Text.Builder as TB
 
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Language.GraphQL.Draft.Syntax    as G
+import qualified Text.Builder                     as TB
 
 import           Data.Aeson
+import           Data.Functor.Const
+import           Hasura.SQL.Types
 
-import qualified Hasura.Backends.BigQuery.Types as BigQuery
-import qualified Hasura.Backends.BigQuery.Source as BigQuery
+import qualified Hasura.Backends.BigQuery.Source  as BigQuery
+import qualified Hasura.Backends.BigQuery.ToQuery as BigQuery (fromExpression, toTextPretty)
+import qualified Hasura.Backends.BigQuery.Types   as BigQuery
 
-import qualified Hasura.Backends.BigQuery.ToQuery as BigQuery (toTextPretty, fromExpression)
-import           Hasura.RQL.DDL.Headers ()
+import           Hasura.Base.Error
+import           Hasura.RQL.DDL.Headers           ()
 import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
+
 
 instance ToSQL BigQuery.Expression where
   toSQL = TB.text . BigQuery.toTextPretty . BigQuery.fromExpression

@@ -217,7 +217,7 @@ txtEncodedVal = \case
   -- with 2 decimal places.
   PGValMoney m    -> TELit $ T.pack $ formatScientific Fixed (Just 2) m
   PGValBoolean b  -> TELit $ bool "false" "true" b
-  PGValChar t     -> TELit $ tshow t
+  PGValChar t     -> TELit $ T.singleton t
   PGValVarchar t  -> TELit t
   PGValText t     -> TELit t
   PGValCitext t   -> TELit t

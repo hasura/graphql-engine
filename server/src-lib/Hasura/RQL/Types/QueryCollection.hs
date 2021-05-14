@@ -31,8 +31,8 @@ import           Data.Aeson.TH
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
+import           Hasura.Base.Instances         ()
 import           Hasura.Incremental            (Cacheable)
-import           Hasura.RQL.Instances          ()
 
 
 

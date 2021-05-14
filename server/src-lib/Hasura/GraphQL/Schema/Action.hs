@@ -21,6 +21,7 @@ import qualified Hasura.RQL.IR.Select                  as RQL
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Types.Column
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
                                                         Parser, UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Class

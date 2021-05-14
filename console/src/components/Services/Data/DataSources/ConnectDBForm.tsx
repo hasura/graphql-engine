@@ -3,7 +3,7 @@ import React, { ChangeEvent, Dispatch, useState } from 'react';
 import { ConnectDBActions, ConnectDBState, connectionTypes } from './state';
 import { LabeledInput } from '../../../Common/LabeledInput';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
-import { Driver } from '../../../../dataSources';
+import { Driver, getSupportedDrivers } from '../../../../dataSources';
 import { readFile } from './utils';
 
 import styles from './DataSources.scss';
@@ -47,6 +47,15 @@ const dbTypePlaceholders: Record<Driver, string> = {
 };
 
 const defaultTitle = 'Connect Database Via';
+
+const driverToLabel: Record<Driver, string> = {
+  mysql: 'MySQL',
+  postgres: 'PostgreSQL',
+  mssql: 'MS Server',
+  bigquery: 'BigQuery',
+};
+
+const supportedDrivers = getSupportedDrivers('connectDbForm.enabled');
 
 const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
   connectionDBState,
@@ -146,15 +155,11 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
               className={`form-control ${styles.connect_db_input_pad}`}
               data-test="database-type"
             >
-              <option key="postgres" value="postgres">
-                Postgres
-              </option>
-              <option key="mssql" value="mssql">
-                MS Server
-              </option>
-              <option key="bigquery" value="bigquery">
-                BigQuery
-              </option>
+              {supportedDrivers.map(driver => (
+                <option key={driver} value={driver}>
+                  {driverToLabel[driver]}
+                </option>
+              ))}
             </select>
           </>
         )}

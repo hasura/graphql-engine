@@ -63,8 +63,8 @@ import           Data.Aeson.TH
 import           Data.Aeson.Types              (toJSONKeyText)
 import           Data.Text.Extended
 
+import           Hasura.Base.Error
 import           Hasura.Incremental            (Cacheable)
-import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
 
 

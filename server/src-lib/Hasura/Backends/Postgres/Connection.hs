@@ -62,10 +62,10 @@ import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Backends.Postgres.Execute.Types as ET
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Incremental                     (Cacheable (..))
 import           Hasura.RQL.Types.Common                (UrlConf)
-import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
 import           Hasura.Server.Utils                    (parseConnLifeTime, readIsoLevel)
 import           Hasura.Session

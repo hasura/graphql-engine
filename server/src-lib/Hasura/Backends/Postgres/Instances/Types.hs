@@ -13,9 +13,9 @@ import qualified Hasura.Backends.Postgres.SQL.Types     as PG
 import qualified Hasura.Backends.Postgres.SQL.Value     as PG
 import qualified Hasura.Backends.Postgres.Types.BoolExp as PG
 
+import           Hasura.Base.Error
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Tag
 

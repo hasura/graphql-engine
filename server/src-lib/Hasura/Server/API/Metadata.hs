@@ -14,6 +14,7 @@ import           Data.Aeson.TH
 
 import qualified Hasura.Tracing                            as Tracing
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
