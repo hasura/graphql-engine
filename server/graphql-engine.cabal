@@ -122,6 +122,7 @@ library
                      , kan-extensions
                      , lifted-base
                      , monad-control
+                     , monad-loops
                      , monad-validate
                      , mtl
                      , optparse-applicative

@@ -76,7 +76,6 @@ module Hasura.Eventing.ScheduledTrigger
   , generateScheduleTimes
 
   , CronEventSeed(..)
-  , initLockedEventsCtx
   , LockedEventsCtx(..)
 
   -- * Database interactions
@@ -124,8 +123,8 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Text.Builder                           as TB
 
 import           Control.Arrow.Extended                 (dup)
-import           Control.Concurrent.Extended            (sleep)
-import           Control.Concurrent.STM.TVar
+import           Control.Concurrent.Extended            (Forever (..), sleep)
+import           Control.Concurrent.STM
 import           Data.Has
 import           Data.Int                               (Int64)
 import           Data.List                              (unfoldr)
@@ -169,6 +168,7 @@ runCronEventsGenerator logger getSC = do
       -- Poll the DB only when there's at-least one cron trigger present
       -- in the schema cache
       -- get cron trigger stats from db
+      -- When shutdown is initiated, we stop generating new cron events
       eitherRes <- runMetadataStorageT $ do
         deprivedCronTriggerStats <- getDeprivedCronTriggerStats
         -- join stats with cron triggers and produce @[(CronTriggerInfo, CronTriggerStats)]@
@@ -304,19 +304,19 @@ processScheduledTriggers
   -> IO SchemaCache
   -> LockedEventsCtx
   -> ResponseLogBehavior
-  -> m void
-processScheduledTriggers env logger logEnv httpMgr getSC LockedEventsCtx {..} responseLogBehavior =
-  forever $ do
+  -> m (Forever m)
+processScheduledTriggers env logger logEnv httpMgr getSC LockedEventsCtx {..} responseLogBehavior = do
+  return $ Forever () $ const $ do
     result <- runMetadataStorageT getScheduledEventsForDelivery
     case result of
       Left e -> logInternalError e
       Right (cronEvents, oneOffEvents) -> do
         processCronEvents logger logEnv httpMgr cronEvents getSC leCronEvents responseLogBehavior
         processOneOffScheduledEvents env logger logEnv httpMgr oneOffEvents leOneOffEvents responseLogBehavior
-    -- NOTE: cron events are scheduled at times with minute resolution (as on
-    -- unix), while one-off events can be set for arbitrary times. The sleep
-    -- time here determines how overdue a scheduled event (cron or one-off)
-    -- might be before we begin processing:
+        -- NOTE: cron events are scheduled at times with minute resolution (as on
+        -- unix), while one-off events can be set for arbitrary times. The sleep
+        -- time here determines how overdue a scheduled event (cron or one-off)
+        -- might be before we begin processing:
     liftIO $ sleep (seconds 10)
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err

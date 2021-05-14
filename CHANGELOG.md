@@ -6,6 +6,8 @@
 
 (Add entries below in the order of: server, console, cli, docs, others)
 
+- server: introduce `--graceful-shutdown-timeout` server config which will wait for the in-flight scheduled and event trigger 
+  events and async actions to complete before shutting down
 - server: fix a regression from V1 and allow string values for most Postgres column types
 - server: sanitise event trigger and scheduled trigger logs to omit possibly sensitive request body and headers
 - server: fix parsing of values for Postgres char columns (fix #6814)

@@ -106,6 +106,7 @@ data RawServeOptions impl
   , rsoSchemaPollInterval            :: !(Maybe Milliseconds)
   , rsoExperimentalFeatures          :: !(Maybe [ExperimentalFeature])
   , rsoEventsFetchBatchSize          :: !(Maybe NonNegativeInt)
+  , rsoGracefulShutdownTimeout       :: !(Maybe Seconds)
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -164,6 +165,7 @@ data ServeOptions impl
   , soExperimentalFeatures          :: !(Set.HashSet ExperimentalFeature)
   , soEventsFetchBatchSize          :: !NonNegativeInt
   , soInDevelopmentMode             :: !Bool
+  , soGracefulShutdownTimeout       :: !Seconds
   }
 
 data DowngradeOptions
@@ -354,6 +356,9 @@ instance FromEnv LQ.RefetchInterval where
     maybe (Left "refetch interval should be a non negative integer") Right $ LQ.mkRefetchInterval val
 
 instance FromEnv Milliseconds where
+  fromEnv = fmap fromInteger . readEither
+
+instance FromEnv Seconds where
   fromEnv = fmap fromInteger . readEither
 
 instance FromEnv JWTConfig where

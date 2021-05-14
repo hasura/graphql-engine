@@ -218,6 +218,9 @@ mkServeOptions rso = do
     fromMaybe defaultFetchBatchSize
     <$> withEnv (rsoEventsFetchBatchSize rso) (fst eventsFetchBatchSizeEnv)
 
+  gracefulShutdownTime <-
+    fromMaybe 60 <$> withEnv (rsoGracefulShutdownTimeout rso) (fst gracefulShutdownEnv)
+
   pure $ ServeOptions
            port
            host
@@ -253,6 +256,7 @@ mkServeOptions rso = do
            experimentalFeatures
            eventsFetchBatchSize
            devMode
+           gracefulShutdownTime
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -624,6 +628,13 @@ experimentalFeaturesEnv =
   , "Comma separated list of experimental features. (all: inherited_roles)"
   )
 
+gracefulShutdownEnv :: (String, String)
+gracefulShutdownEnv =
+  ( "HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT"
+  , "Timeout for graceful shutdown before which in-flight scheduled events, " <>
+     " cron events and async actions to complete (default: 60 seconds)"
+  )
+
 consoleAssetsDirEnv :: (String, String)
 consoleAssetsDirEnv =
   ( "HASURA_GRAPHQL_CONSOLE_ASSETS_DIR"
@@ -958,6 +969,14 @@ parseExperimentalFeatures = optional $
            help (snd experimentalFeaturesEnv)
          )
 
+parseGracefulShutdownTimeout :: Parser (Maybe Seconds)
+parseGracefulShutdownTimeout = optional $
+  option (eitherReader readEither)
+         ( long "graceful-shutdown-timeout" <>
+           metavar "<INTERVAL (seconds)>" <>
+           help (snd gracefulShutdownEnv)
+         )
+
 parseMxRefetchInt :: Parser (Maybe LQ.RefetchInterval)
 parseMxRefetchInt =
   optional $
@@ -1177,6 +1196,7 @@ serveOptsToLog so =
       , "enable_maintenance_mode" J..= soEnableMaintenanceMode so
       , "experimental_features" J..= soExperimentalFeatures so
       , "events_fetch_batch_size" J..= soEventsFetchBatchSize so
+      , "graceful_shutdown_timeout" J..= soGracefulShutdownTimeout so
       ]
 
 mkGenericStrLog :: L.LogLevel -> Text -> String -> StartupLog
@@ -1232,6 +1252,7 @@ serveOptionsParser =
   <*> parseSchemaPollInterval
   <*> parseExperimentalFeatures
   <*> parseEventsFetchBatchSize
+  <*> parseGracefulShutdownTimeout
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.

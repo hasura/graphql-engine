@@ -111,7 +111,6 @@ class (MonadError QErr m) => MonadMetadataStorage m where
   unlockScheduledEvents :: ScheduledEventType -> [ScheduledEventId] -> m Int
   unlockAllLockedScheduledEvents :: m ()
   clearFutureCronEvents :: TriggerName -> m ()
-  -- Console API requirements
   getOneOffScheduledEvents :: ScheduledEventPagination -> [ScheduledEventStatus] -> m (WithTotalCount [OneOffScheduledEvent])
   getCronEvents :: TriggerName -> ScheduledEventPagination -> [ScheduledEventStatus] -> m (WithTotalCount [CronEvent])
   getInvocations :: GetInvocationsBy -> ScheduledEventPagination -> m (WithTotalCount [ScheduledEventInvocation])
@@ -125,6 +124,7 @@ class (MonadError QErr m) => MonadMetadataStorage m where
   setActionStatus :: ActionId -> AsyncActionStatus -> m ()
   fetchActionResponse :: ActionId -> m ActionLogResponse
   clearActionData :: ActionName -> m ()
+  setProcessingActionLogsToPending :: LockedActionIdArray -> m ()
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (ReaderT r m) where
   fetchMetadataResourceVersion         = lift fetchMetadataResourceVersion
@@ -157,6 +157,8 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ReaderT r m) where
   setActionStatus a b                  = lift $ setActionStatus a b
   fetchActionResponse                  = lift . fetchActionResponse
   clearActionData                      = lift . clearActionData
+  setProcessingActionLogsToPending     = lift . setProcessingActionLogsToPending
+
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (StateT s m) where
   fetchMetadataResourceVersion         = lift fetchMetadataResourceVersion
@@ -189,6 +191,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (StateT s m) where
   setActionStatus a b                  = lift $ setActionStatus a b
   fetchActionResponse                  = lift . fetchActionResponse
   clearActionData                      = lift . clearActionData
+  setProcessingActionLogsToPending     = lift . setProcessingActionLogsToPending
 
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) where
@@ -222,6 +225,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) whe
   setActionStatus a b                  = lift $ setActionStatus a b
   fetchActionResponse                  = lift . fetchActionResponse
   clearActionData                      = lift . clearActionData
+  setProcessingActionLogsToPending     = lift . setProcessingActionLogsToPending
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (ExceptT QErr m) where
   fetchMetadataResourceVersion         = lift fetchMetadataResourceVersion
@@ -254,6 +258,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ExceptT QErr m) where
   setActionStatus a b                  = lift $ setActionStatus a b
   fetchActionResponse                  = lift . fetchActionResponse
   clearActionData                      = lift . clearActionData
+  setProcessingActionLogsToPending     = lift . setProcessingActionLogsToPending
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (MetadataT m) where
   fetchMetadataResourceVersion         = lift fetchMetadataResourceVersion
@@ -286,6 +291,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (MetadataT m) where
   setActionStatus a b                  = lift $ setActionStatus a b
   fetchActionResponse                  = lift . fetchActionResponse
   clearActionData                      = lift . clearActionData
+  setProcessingActionLogsToPending     = lift . setProcessingActionLogsToPending
 
 {- Note [Generic MetadataStorageT transformer]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -370,24 +376,25 @@ instance (Monad m, Monad (t m), MonadTrans t, MonadMetadataStorage (MetadataStor
   getDatabaseUid = hoist lift getDatabaseUid
   checkMetadataStorageHealth = hoist lift checkMetadataStorageHealth
 
-  getDeprivedCronTriggerStats        = hoist lift getDeprivedCronTriggerStats
-  getScheduledEventsForDelivery      = hoist lift getScheduledEventsForDelivery
-  insertScheduledEvent               = hoist lift . insertScheduledEvent
-  insertScheduledEventInvocation a b = hoist lift $ insertScheduledEventInvocation a b
-  setScheduledEventOp a b c          = hoist lift $ setScheduledEventOp a b c
-  unlockScheduledEvents a b          = hoist lift $ unlockScheduledEvents a b
-  unlockAllLockedScheduledEvents     = hoist lift $ unlockAllLockedScheduledEvents
-  clearFutureCronEvents              = hoist lift . clearFutureCronEvents
-  getOneOffScheduledEvents a b       = hoist lift $ getOneOffScheduledEvents a b
-  getCronEvents a b c                = hoist lift $ getCronEvents a b c
-  getInvocations a b                 = hoist lift $ getInvocations a b
-  deleteScheduledEvent a b           = hoist lift $ deleteScheduledEvent a b
+  getDeprivedCronTriggerStats          = hoist lift getDeprivedCronTriggerStats
+  getScheduledEventsForDelivery        = hoist lift getScheduledEventsForDelivery
+  insertScheduledEvent                 = hoist lift . insertScheduledEvent
+  insertScheduledEventInvocation a b   = hoist lift $ insertScheduledEventInvocation a b
+  setScheduledEventOp a b c            = hoist lift $ setScheduledEventOp a b c
+  unlockScheduledEvents a b            = hoist lift $ unlockScheduledEvents a b
+  unlockAllLockedScheduledEvents       = hoist lift $ unlockAllLockedScheduledEvents
+  clearFutureCronEvents                = hoist lift . clearFutureCronEvents
+  getOneOffScheduledEvents a b         = hoist lift $ getOneOffScheduledEvents a b
+  getCronEvents a b c                  = hoist lift $ getCronEvents a b c
+  getInvocations a b                   = hoist lift $ getInvocations a b
+  deleteScheduledEvent a b             = hoist lift $ deleteScheduledEvent a b
 
-  insertAction a b c d               = hoist lift $ insertAction a b c d
-  fetchUndeliveredActionEvents       = hoist lift fetchUndeliveredActionEvents
-  setActionStatus a b                = hoist lift $ setActionStatus a b
-  fetchActionResponse                = hoist lift . fetchActionResponse
-  clearActionData                    = hoist lift . clearActionData
+  insertAction a b c d                 = hoist lift $ insertAction a b c d
+  fetchUndeliveredActionEvents         = hoist lift fetchUndeliveredActionEvents
+  setActionStatus a b                  = hoist lift $ setActionStatus a b
+  fetchActionResponse                  = hoist lift . fetchActionResponse
+  clearActionData                      = hoist lift . clearActionData
+  setProcessingActionLogsToPending     = hoist lift . setProcessingActionLogsToPending
 
 -- | Operations from @'MonadMetadataStorage' used in '/v1/query' and '/v1/metadata' APIs
 class (MonadMetadataStorage m) => MonadMetadataStorageQueryAPI m where

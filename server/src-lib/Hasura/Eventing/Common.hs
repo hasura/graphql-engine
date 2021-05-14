@@ -3,6 +3,7 @@ module Hasura.Eventing.Common where
 import           Control.Concurrent.STM.TVar
 import           Control.Monad.STM
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Action           (LockedActionEventId)
 import           Hasura.RQL.Types.EventTrigger     (EventId)
 import           Hasura.RQL.Types.ScheduledTrigger (CronEventId, OneOffScheduledEventId)
 
@@ -13,14 +14,8 @@ data LockedEventsCtx
   { leCronEvents   :: TVar (Set.Set CronEventId)
   , leOneOffEvents :: TVar (Set.Set OneOffScheduledEventId)
   , leEvents       :: TVar (Set.Set EventId)
+  , leActionEvents :: TVar (Set.Set LockedActionEventId)
   }
-
-initLockedEventsCtx :: STM LockedEventsCtx
-initLockedEventsCtx = do
-  leCronEvents   <- newTVar Set.empty
-  leOneOffEvents <- newTVar Set.empty
-  leEvents       <- newTVar Set.empty
-  return $ LockedEventsCtx{..}
 
 -- | After the events are fetched from the DB, we store the locked events
 --   in a hash set(order doesn't matter and look ups are faster) in the
