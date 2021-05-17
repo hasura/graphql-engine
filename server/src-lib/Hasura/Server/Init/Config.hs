@@ -48,33 +48,34 @@ instance J.ToJSON MaintenanceMode where
 
 data RawServeOptions impl
   = RawServeOptions
-  { rsoPort                  :: !(Maybe Int)
-  , rsoHost                  :: !(Maybe HostPreference)
-  , rsoConnParams            :: !RawConnParams
-  , rsoTxIso                 :: !(Maybe Q.TxIsolation)
-  , rsoAdminSecret           :: !(Maybe AdminSecretHash)
-  , rsoAuthHook              :: !RawAuthHook
-  , rsoJwtSecret             :: !(Maybe JWTConfig)
-  , rsoUnAuthRole            :: !(Maybe RoleName)
-  , rsoCorsConfig            :: !(Maybe CorsConfig)
-  , rsoEnableConsole         :: !Bool
-  , rsoConsoleAssetsDir      :: !(Maybe Text)
-  , rsoEnableTelemetry       :: !(Maybe Bool)
-  , rsoWsReadCookie          :: !Bool
-  , rsoStringifyNum          :: !Bool
-  , rsoEnabledAPIs           :: !(Maybe [API])
-  , rsoMxRefetchInt          :: !(Maybe LQ.RefetchInterval)
-  , rsoMxBatchSize           :: !(Maybe LQ.BatchSize)
-  , rsoEnableAllowlist       :: !Bool
-  , rsoEnabledLogTypes       :: !(Maybe [L.EngineLogType impl])
-  , rsoLogLevel              :: !(Maybe L.LogLevel)
-  , rsoPlanCacheSize         :: !(Maybe Cache.CacheSize)
-  , rsoDevMode               :: !Bool
-  , rsoAdminInternalErrors   :: !(Maybe Bool)
-  , rsoEventsHttpPoolSize    :: !(Maybe Int)
-  , rsoEventsFetchInterval   :: !(Maybe Milliseconds)
-  , rsoLogHeadersFromEnv     :: !Bool
-  , rsoEnableMaintenanceMode :: !Bool
+  { rsoPort                    :: !(Maybe Int)
+  , rsoHost                    :: !(Maybe HostPreference)
+  , rsoConnParams              :: !RawConnParams
+  , rsoTxIso                   :: !(Maybe Q.TxIsolation)
+  , rsoAdminSecret             :: !(Maybe AdminSecretHash)
+  , rsoAuthHook                :: !RawAuthHook
+  , rsoJwtSecret               :: !(Maybe JWTConfig)
+  , rsoUnAuthRole              :: !(Maybe RoleName)
+  , rsoCorsConfig              :: !(Maybe CorsConfig)
+  , rsoEnableConsole           :: !Bool
+  , rsoConsoleAssetsDir        :: !(Maybe Text)
+  , rsoEnableTelemetry         :: !(Maybe Bool)
+  , rsoWsReadCookie            :: !Bool
+  , rsoStringifyNum            :: !Bool
+  , rsoEnabledAPIs             :: !(Maybe [API])
+  , rsoMxRefetchInt            :: !(Maybe LQ.RefetchInterval)
+  , rsoMxBatchSize             :: !(Maybe LQ.BatchSize)
+  , rsoEnableAllowlist         :: !Bool
+  , rsoEnabledLogTypes         :: !(Maybe [L.EngineLogType impl])
+  , rsoLogLevel                :: !(Maybe L.LogLevel)
+  , rsoPlanCacheSize           :: !(Maybe Cache.CacheSize)
+  , rsoDevMode                 :: !Bool
+  , rsoAdminInternalErrors     :: !(Maybe Bool)
+  , rsoEventsHttpPoolSize      :: !(Maybe Int)
+  , rsoEventsFetchInterval     :: !(Maybe Milliseconds)
+  , rsoLogHeadersFromEnv       :: !Bool
+  , rsoEnableMaintenanceMode   :: !Bool
+  , rsoGracefulShutdownTimeout :: !(Maybe Seconds)
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -118,6 +119,7 @@ data ServeOptions impl
   , soEventsFetchInterval          :: !(Maybe Milliseconds)
   , soLogHeadersFromEnv            :: !Bool
   , soEnableMaintenanceMode        :: !MaintenanceMode
+  , soGracefulShutdownTimeout      :: !Seconds
   }
 
 data DowngradeOptions
@@ -154,7 +156,7 @@ data API
   | DEVELOPER
   | CONFIG
   deriving (Show, Eq, Read, Generic)
-  
+
 $(J.deriveJSON (J.defaultOptions { J.constructorTagModifier = map toLower })
   ''API)
 
@@ -275,6 +277,9 @@ instance FromEnv LQ.RefetchInterval where
   fromEnv = fmap (LQ.RefetchInterval . milliseconds . fromInteger) . readEither
 
 instance FromEnv Milliseconds where
+  fromEnv = fmap fromInteger . readEither
+
+instance FromEnv Seconds where
   fromEnv = fmap fromInteger . readEither
 
 instance FromEnv JWTConfig where

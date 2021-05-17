@@ -172,13 +172,15 @@ mkServeOptions rso = do
   maintenanceMode <-
     bool MaintenanceModeDisabled MaintenanceModeEnabled
     <$> withEnvBool (rsoEnableMaintenanceMode rso) (fst maintenanceModeEnv)
+  gracefulShutdownTime <-
+    fromMaybe 60 <$> withEnv (rsoGracefulShutdownTimeout rso) (fst gracefulShutdownEnv)
 
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
                         internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
-                        logHeadersFromEnv maintenanceMode
+                        logHeadersFromEnv maintenanceMode gracefulShutdownTime
 
   where
 #ifdef DeveloperAPIs
@@ -485,6 +487,13 @@ enabledAPIsEnv :: (String, String)
 enabledAPIsEnv =
   ( "HASURA_GRAPHQL_ENABLED_APIS"
   , "Comma separated list of enabled APIs. (default: metadata,graphql,pgdump,config)"
+  )
+
+gracefulShutdownEnv :: (String, String)
+gracefulShutdownEnv =
+  ( "HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT"
+  , "Timeout for graceful shutdown before which in-flight scheduled events, " <>
+     " cron events and async actions to complete (default: 60 seconds)"
   )
 
 consoleAssetsDirEnv :: (String, String)
@@ -900,6 +909,14 @@ parseLogLevel = optional $
            help (snd logLevelEnv)
          )
 
+parseGracefulShutdownTimeout :: Parser (Maybe Seconds)
+parseGracefulShutdownTimeout = optional $
+  option (eitherReader readEither)
+         ( long "graceful-shutdown-timeout" <>
+           metavar "<INTERVAL (seconds)>" <>
+           help (snd gracefulShutdownEnv)
+         )
+
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog
 connInfoToLog connInfo =
@@ -952,6 +969,7 @@ serveOptsToLog so =
       , "log_level" J..= soLogLevel so
       , "plan_cache_options" J..= soPlanCacheOptions so
       , "enable_maintenance_mode" J..= soEnableMaintenanceMode so
+      , "graceful_shutdown_timeout" J..= soGracefulShutdownTimeout so
       ]
 
 mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog
@@ -998,6 +1016,7 @@ serveOptionsParser =
   <*> parseGraphqlEventsFetchInterval
   <*> parseLogHeadersFromEnv
   <*> parseEnableMaintenanceMode
+  <*> parseGracefulShutdownTimeout
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.

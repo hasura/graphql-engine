@@ -40,7 +40,7 @@ module Hasura.Eventing.EventTrigger
   , EventEngineCtx(..)
   ) where
 
-import           Control.Concurrent.Extended          (sleep)
+import           Control.Concurrent.Extended          (sleep, Forever (..))
 import           Control.Concurrent.STM.TVar
 import           Control.Monad.Catch                  (MonadMask, bracket_)
 import           Control.Monad.STM
@@ -150,6 +150,8 @@ initEventEngineCtx maxT _eeCtxFetchInterval = do
   _eeCtxEventThreadsCapacity <- newTVar maxT
   return $ EventEngineCtx{..}
 
+type FetchEventArguments = ([Event], Int , Bool)
+
 -- | Service events from our in-DB queue.
 --
 -- There are a few competing concerns and constraints here; we want to...
@@ -160,7 +162,7 @@ initEventEngineCtx maxT _eeCtxFetchInterval = do
 --   - try not to cause webhook workers to stall waiting on DB fetch
 --   - limit webhook HTTP concurrency per HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE
 processEventQueue
-  :: forall m void
+  :: forall m
    . ( HasVersion
      , MonadIO m
      , Tracing.HasReporter m
@@ -175,10 +177,10 @@ processEventQueue
   -> IO SchemaCache
   -> EventEngineCtx
   -> LockedEventsCtx
-  -> m void
+  -> m (Forever m)
 processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx{..} LockedEventsCtx{leEvents} = do
   events0 <- popEventsBatch
-  go events0 0 False
+  return $ Forever (events0, 0, False) go
   where
     fetchBatchSize = 100
     popEventsBatch = do
@@ -203,8 +205,8 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
 
     -- work on this batch of events while prefetching the next. Recurse after we've forked workers
     -- for each in the batch, minding the requested pool size.
-    go :: [Event] -> Int -> Bool -> m void
-    go events !fullFetchCount !alreadyWarned = do
+    go :: FetchEventArguments -> m FetchEventArguments
+    go (events, !fullFetchCount, !alreadyWarned) = do
       -- process events ASAP until we've caught up; only then can we sleep
       when (null events) . liftIO $ sleep _eeCtxFetchInterval
 
@@ -241,14 +243,14 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
                    "Events processor may not be keeping up with events generated in postgres, " <>
                    "or we're working on a backlog of events. Consider increasing " <>
                    "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-             go eventsNext (fullFetchCount+1) (alreadyWarned || clearlyBehind)
+             return (eventsNext, (fullFetchCount+1), (alreadyWarned || clearlyBehind))
 
          | otherwise -> do
              when (lenEvents /= fetchBatchSize && alreadyWarned) $
                -- emit as warning in case users are only logging warning severity and saw above
                L.unLogger logger $ L.UnstructuredLog L.LevelWarn $ fromString $
                  "It looks like the events processor is keeping up again."
-             go eventsNext 0 False
+             return (eventsNext, 0, False)
 
     processEvent
       :: forall io r

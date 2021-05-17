@@ -15,14 +15,17 @@ module Hasura.GraphQL.Resolve.Action
 import           Hasura.Prelude
 
 import           Control.Concurrent                   (threadDelay)
+import           Control.Concurrent.Extended          (Forever (..))
 import           Control.Exception                    (try)
 import           Control.Lens
 import           Control.Monad.Trans.Control          (MonadBaseControl)
 import           Data.Has
 import           Data.Int                             (Int64)
 import           Data.IORef
+import           Data.Set                             (Set)
 
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
+import qualified Control.Concurrent.STM               as STM
 import qualified Data.Environment                     as Env
 import qualified Data.Aeson                           as J
 import qualified Data.Aeson.Casing                    as J
@@ -45,6 +48,7 @@ import qualified Hasura.Tracing                       as Tracing
 import qualified Hasura.Logging                       as L
 
 import           Hasura.EncJSON
+import           Hasura.Eventing.Common
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Select        (processTableSelectionSet)
@@ -403,7 +407,7 @@ data ActionLogItem
 -- | Process async actions from hdb_catalog.hdb_action_log table. This functions is executed in a background thread.
 -- See Note [Async action architecture] above
 asyncActionsProcessor
-  :: forall m void .
+  :: forall m .
   ( HasVersion
   , MonadIO m
   , MonadBaseControl IO m
@@ -413,14 +417,25 @@ asyncActionsProcessor
   => Env.Environment
   -> L.Logger L.Hasura
   -> IORef (RebuildableSchemaCache Run, SchemaCacheVer)
+  -> STM.TVar (Set LockedActionEventId)
   -> Q.PGPool
   -> HTTP.Manager
-  -> m void
-asyncActionsProcessor env logger cacheRef pgPool httpManager = forever $ do
-  asyncInvocations <- liftIO getUndeliveredEvents
-  actionCache <- scActions . lastBuiltSchemaCache . fst <$> liftIO (readIORef cacheRef)
-  LA.mapConcurrently_ (callHandler actionCache) asyncInvocations
-  liftIO $ threadDelay (1 * 1000 * 1000)
+  -> m (Forever m)
+asyncActionsProcessor env logger cacheRef lockedActionEvents pgPool httpManager =
+  return $ Forever () $ const $ do
+    asyncInvocations <- liftIO getUndeliveredEvents
+    actionCache <- scActions . lastBuiltSchemaCache . fst <$> liftIO (readIORef cacheRef)
+    -- save the actions that are currently fetched from the DB to
+    -- be processed in a TVar (Set LockedActionEventId) and when
+    -- the action is processed we remove it from the set. This set
+    -- is maintained because on shutdown of the graphql-engine, we
+    -- would like to wait for a certain time (see `--graceful-shutdown-time`)
+    -- during which to complete all the in-flight actions. So, when this
+    -- locked action events set TVar is empty, it will mean that there are
+    -- no events that are in the 'processing' state
+    saveLockedEvents (map (UUID.toText . _aliId) asyncInvocations) lockedActionEvents
+    LA.mapConcurrently_ (callHandler actionCache) asyncInvocations
+    liftIO $ threadDelay (1 * 1000 * 1000)
   where
     runTx :: (Monoid a) => Q.TxE QErr a -> IO a
     runTx q = do
@@ -447,6 +462,7 @@ asyncActionsProcessor env logger cacheRef pgPool httpManager = forever $ do
                        forwardClientHeaders webhookUrl
                        (ActionWebhookPayload actionContext sessionVariables inputPayload)
                        timeout
+          removeEventFromLockedEvents (UUID.toText actionId) lockedActionEvents
           liftIO $ case eitherRes of
             Left e                     -> setError actionId e
             Right (responsePayload, _) -> setCompleted actionId $ J.toJSON responsePayload

@@ -32,6 +32,8 @@ module Hasura.RQL.Types.Action
 
   , ActionMetadata(..)
   , ActionPermissionMetadata(..)
+  , LockedActionEventId
+  , LockedActionIdArray (..)
   ) where
 
 
@@ -41,6 +43,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.EventTrigger (EventId)
 import           Hasura.Session
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax    (Lift)
@@ -49,8 +52,11 @@ import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.UUID                     as UUID
 import qualified Database.PG.Query             as Q
+import qualified Database.PG.Query.PTI         as PTI
 import qualified Language.GraphQL.Draft.Syntax as G
+import qualified PostgreSQL.Binary.Encoding    as PE
 
 newtype ActionName
   = ActionName { unActionName :: G.Name }
@@ -229,3 +235,15 @@ instance J.FromJSON ActionMetadata where
       <*> o J..:? "comment"
       <*> o J..: "definition"
       <*> o J..:? "permissions" J..!= []
+
+type LockedActionEventId = EventId
+
+-- This type exists only to use the Postgres array encoding.
+newtype LockedActionIdArray = LockedActionIdArray { unCohortIdArray :: [LockedActionEventId] }
+  deriving (Show, Eq)
+
+instance Q.ToPrepArg LockedActionIdArray where
+  toPrepVal (LockedActionIdArray l) =
+    Q.toPrepValHelper PTI.unknown encoder $ mapMaybe UUID.fromText l
+    where
+      encoder = PE.array 2950 . PE.dimensionArray foldl' (PE.encodingArray . PE.uuid)

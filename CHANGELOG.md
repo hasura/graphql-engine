@@ -2,6 +2,10 @@
 
 ## Next release
 
+
+- server: introduce `--graceful-shutdown-timeout` server config which will wait for the in-flight scheduled and event trigger
+  events and async actions to complete before shutting down
+
 ### Server - Support for mapping session variables to default JWT claims
 
 Some auth providers do not let users add custom claims in JWT. In such cases, the server can take a JWT configuration option called `claims_map` to specify a mapping of Hasura session variables to values in existing claims via JSONPath or literal values.
@@ -45,7 +49,7 @@ The corresponding JWT config can be:
 - server: limit the length of event trigger names (close #5786)
 - server: enable HASURA_GRAPHQL_PG_CONN_LIFETIME by default to reclaim memory
 - server: Configurable websocket keep-alive interval. Add `--websocket-keepalive` command-line flag
-          and handle `HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE` env variable (fix #3539) 
+          and handle `HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE` env variable (fix #3539)
 **NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
 - server: fix issue with tracking custom functions that return `SETOF` materialized view (close #5294) (#5945)
 - server: allow remote relationships with union, interface and enum type fields as well (fixes #5875) (#6080)

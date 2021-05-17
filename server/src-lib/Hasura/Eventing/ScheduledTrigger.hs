@@ -65,7 +65,6 @@ module Hasura.Eventing.ScheduledTrigger
   , CronEventSeed(..)
   , generateScheduleTimes
   , insertCronEvents
-  , initLockedEventsCtx
   , LockedEventsCtx(..)
   , unlockCronEvents
   , unlockOneOffScheduledEvents
@@ -73,7 +72,7 @@ module Hasura.Eventing.ScheduledTrigger
   ) where
 
 import           Control.Arrow.Extended      (dup)
-import           Control.Concurrent.Extended (sleep)
+import           Control.Concurrent.Extended (sleep, Forever (..))
 import           Control.Concurrent.STM.TVar
 import           Data.Has
 import           Data.Int                    (Int64)
@@ -466,9 +465,9 @@ processScheduledTriggers
   -> Q.PGPool
   -> IO SchemaCache
   -> LockedEventsCtx
-  -> m void
+  -> m (Forever m)
 processScheduledTriggers env logger logEnv httpMgr pgpool getSC LockedEventsCtx {..} =
-  forever $ do
+  return $ Forever () $ const $ do
     processCronEvents logger logEnv httpMgr pgpool getSC leCronEvents
     processOneOffScheduledEvents env logger logEnv httpMgr pgpool leOneOffEvents
     liftIO $ sleep (minutes 1)

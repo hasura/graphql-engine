@@ -21,6 +21,8 @@ module Hasura.RQL.DDL.Action
   , DropActionPermission
   , runDropActionPermission
   , deleteActionPermissionFromCatalog
+
+  , setProcessingActionLogsToPendingTx
   ) where
 
 import           Hasura.EncJSON
@@ -294,3 +296,11 @@ deleteActionPermissionFromCatalog actionName role =
         WHERE action_name = $1
           AND role_name = $2
       |] (actionName, role) True
+
+setProcessingActionLogsToPendingTx :: LockedActionIdArray -> Q.TxE QErr ()
+setProcessingActionLogsToPendingTx lockedActions =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+    UPDATE hdb_catalog.hdb_action_log
+    SET status = 'created'
+    WHERE status = 'processing' AND id = ANY($1::uuid[])
+  |] (Identity lockedActions) False

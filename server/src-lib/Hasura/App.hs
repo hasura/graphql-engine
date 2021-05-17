@@ -2,13 +2,13 @@
 
 module Hasura.App where
 
-import           Control.Concurrent.STM.TVar               (TVar, readTVarIO)
+import           Control.Concurrent.STM.TVar               (TVar, readTVarIO, newTVarIO)
 import           Control.Exception                         (throwIO)
 import           Control.Lens                              (view, _2)
 import           Control.Monad.Base
 import           Control.Monad.Catch                       (Exception, MonadCatch, MonadMask,
                                                             MonadThrow, onException)
-import           Control.Monad.Trans.Managed               (ManagedT(..), allocate)
+import           Control.Monad.Trans.Managed               (ManagedT(..))
 import           Control.Monad.Morph                       (hoist)
 import           Control.Monad.Stateless
 import           Control.Monad.STM                         (atomically)
@@ -51,12 +51,13 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Cache
+import           Hasura.RQL.DDL.Action                     (setProcessingActionLogsToPendingTx)
 import           Hasura.RQL.Types                          (CacheRWM, Code (..), HasHttpManager,
                                                             HasSQLGenCtx, HasSystemDefined,
                                                             QErr (..), SQLGenCtx (..),
                                                             SchemaCache (..), UserInfoM,
                                                             buildSchemaCacheStrict, decodeValue,
-                                                            throw400, withPathK)
+                                                            throw400, withPathK, LockedActionIdArray (..))
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query                   (fetchLastUpdate, requiresAdmin,
                                                             runQueryM)
@@ -361,22 +362,47 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime postPollHook = 
     fetchI        = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
     logEnvHeaders = soLogHeadersFromEnv
 
-  lockedEventsCtx <- allocate
-    (liftIO $ atomically initLockedEventsCtx)
-    (\lockedEventsCtx -> liftIO $ shutdownEvents _icPgPool logger lockedEventsCtx)
+  lockedEventsCtx <-
+    liftIO $
+    LockedEventsCtx
+    <$> newTVarIO mempty
+    <*> newTVarIO mempty
+    <*> newTVarIO mempty
+    <*> newTVarIO mempty
 
   -- prepare event triggers data
   prepareEvents _icPgPool logger
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
+
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
 
-  _eventQueueThread <- C.forkManagedT "processEventQueue" logger $
-    processEventQueue logger logEnvHeaders
-    _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx
+  _eventQueueThread <- do
+    let eventsGracefulShutdownAction =
+           waitForProcessingAction logger
+                                   _icPgPool
+                                   "event_triggers"
+                                   (length <$> readTVarIO (leEvents lockedEventsCtx))
+                                   (shutdownEvents _icPgPool logger lockedEventsCtx)
+                                   soGracefulShutdownTimeout
+    C.forkManagedTWithGracefulShutdown "processEventQueue"
+                                       logger
+                                       (C.ThreadShutdown $ liftIO eventsGracefulShutdownAction) $
+      processEventQueue logger logEnvHeaders
+      _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx
 
-  -- start a backgroud thread to handle async actions
-  _asyncActionsThread <- C.forkManagedT "asyncActionsProcessor" logger $
-    asyncActionsProcessor env logger (_scrCache cacheRef) _icPgPool _icHttpManager
+  -- start a background thread to handle async actions
+  _asyncActionsThread <- do
+    let asyncActionGracefulShutdownAction =
+          waitForProcessingAction logger
+                                  _icPgPool
+                                  "async_actions"
+                                  (length <$> readTVarIO (leActionEvents lockedEventsCtx))
+                                  (shutdownAsyncActions _icPgPool logger lockedEventsCtx)
+                                  soGracefulShutdownTimeout
+    C.forkManagedTWithGracefulShutdown "asyncActionsProcessor"
+                                       logger
+                                       (C.ThreadShutdown $ liftIO asyncActionGracefulShutdownAction) $
+       asyncActionsProcessor env logger (_scrCache cacheRef) (leActionEvents lockedEventsCtx) _icPgPool _icHttpManager
 
   -- start a background thread to create new cron events
   _cronEventsThread <- C.forkManagedT "runCronEventsGenerator" logger . liftIO $
@@ -386,8 +412,18 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime postPollHook = 
   lift $ prepareScheduledEvents _icPgPool logger
 
   -- start a background thread to deliver the scheduled events
-  _scheduledEventsThread <- C.forkManagedT "processScheduledTriggers" logger $
-    processScheduledTriggers env logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef) lockedEventsCtx
+  _scheduledEventsThread <- do
+    let scheduledEventsGracefulShutdownAction =
+           waitForProcessingAction logger
+                                   _icPgPool
+                                   "scheduled_events"
+                                   (getProcessingScheduledEventsCount lockedEventsCtx)
+                                   (shutdownScheduledEvents _icPgPool logger lockedEventsCtx)
+                                   soGracefulShutdownTimeout
+    C.forkManagedTWithGracefulShutdown "processScheduledTriggers"
+                                       logger
+                                       (C.ThreadShutdown $ liftIO scheduledEventsGracefulShutdownAction) $
+      processScheduledTriggers env logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef) lockedEventsCtx
 
   -- start a background thread to check for updates
   _updateThread <- C.forkManagedT "checkForUpdates" logger $ liftIO $
@@ -455,6 +491,12 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime postPollHook = 
       res <- liftIO $ runTx pool (Q.ReadCommitted, Nothing) unlockAllLockedScheduledEvents
       either (printErrJExit EventSubSystemError) return res
 
+    getProcessingScheduledEventsCount :: LockedEventsCtx -> IO Int
+    getProcessingScheduledEventsCount LockedEventsCtx {..} = do
+       processingCronEvents <- readTVarIO leCronEvents
+       processingOneOffEvents <- readTVarIO leOneOffEvents
+       return $ length processingOneOffEvents + length processingCronEvents
+
     -- | shutdownEvents will be triggered when a graceful shutdown has been inititiated, it will
     -- get the locked events from the event engine context and the scheduled event engine context
     -- then it will unlock all those events.
@@ -469,9 +511,34 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime postPollHook = 
     shutdownEvents pool hasuraLogger@(Logger logger) LockedEventsCtx {..} = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "unlocking events that are locked by the HGE"
       unlockEventsForShutdown pool hasuraLogger "event_triggers" "" unlockEvents leEvents
+
+    shutdownScheduledEvents
+      :: Q.PGPool
+      -> Logger Hasura
+      -> LockedEventsCtx
+      -> IO ()
+    shutdownScheduledEvents pool hasuraLogger@(Logger logger) LockedEventsCtx {..} = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "unlocking scheduled events that are locked by the HGE"
       unlockEventsForShutdown pool hasuraLogger "scheduled_triggers" "cron events" unlockCronEvents leCronEvents
       unlockEventsForShutdown pool hasuraLogger "scheduled_triggers" "scheduled events" unlockCronEvents leOneOffEvents
+
+
+    shutdownAsyncActions
+      :: Q.PGPool
+      -> Logger Hasura
+      -> LockedEventsCtx
+      -> IO ()
+    shutdownAsyncActions pool (Logger logger) lockedEventsCtx = do
+      lockedActionEvents <- liftIO $ readTVarIO $ leActionEvents lockedEventsCtx
+      unless (Set.null lockedActionEvents) $ do
+        result <-
+           runTx pool (Q.ReadCommitted, Nothing) $
+             setProcessingActionLogsToPendingTx (LockedActionIdArray $ toList lockedActionEvents)
+        case result of
+          Left err -> logger $ mkGenericStrLog LevelWarn "async_actions" $
+            "Error while unlocking " ++ "async actions: " ++ show err
+          Right () -> logger $ mkGenericStrLog LevelInfo "async_actions" $
+            "Locked async actions have been successfully unlocked"
 
     unlockEventsForShutdown
       :: Q.PGPool
@@ -494,6 +561,41 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime postPollHook = 
     runTx :: Q.PGPool -> Q.TxMode -> Q.TxE QErr a -> IO (Either QErr a)
     runTx pool txLevel tx =
       liftIO $ runExceptT $ Q.runTx pool txLevel tx
+
+    -- This function is a helper function to do couple of things:
+    --
+    -- 1. When the value of the `graceful-shutdown-timeout` > 0, we poll
+    --    the in-flight events queue we maintain using the `processingEventsCountAction`
+    --    number of in-flight processing events, in case of actions it is the
+    --    actions which are in 'processing' state and in scheduled events
+    --    it is the events which are in 'locked' state. The in-flight events queue is polled
+    --    every 5 seconds until either the graceful shutdown time is exhausted
+    --    or the number of in-flight processing events is 0.
+    -- 2. After step 1, we unlock all the events which were attempted to process by the current
+    --    graphql-engine instance that are still in the processing
+    --    state. In actions, it means to set the status of such actions to 'pending'
+    --    and in scheduled events, the status will be set to 'unlocked'.
+    waitForProcessingAction
+      :: Logger Hasura
+      -> Q.PGPool
+      -> String
+      -> IO Int
+      -> IO ()
+      -- ^ Shutdown action
+      -> Seconds
+      -> IO ()
+    waitForProcessingAction l@(Logger logger) pgPool actionType processingEventsCountAction' shutdownAction maxTimeout
+      | maxTimeout <= 0 = shutdownAction
+      | otherwise = do
+          processingEventsCount <- processingEventsCountAction'
+          if (processingEventsCount == 0)
+          then logger $ mkGenericStrLog LevelInfo (T.pack actionType) $
+               "All in-flight events have finished processing"
+          else
+            unless (processingEventsCount == 0) $ do
+              C.sleep (5) -- sleep for 5 seconds and then repeat
+              waitForProcessingAction l pgPool actionType processingEventsCountAction' shutdownAction (maxTimeout - (Seconds 5))
+
 
 runAsAdmin
   :: (MonadIO m)

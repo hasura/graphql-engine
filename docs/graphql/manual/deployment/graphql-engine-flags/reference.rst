@@ -220,6 +220,12 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - ``HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS``
      - Include the ``internal`` key in the errors extensions of the response for GraphQL requests with the admin role (if required).
 
+   * - ``--graceful-shutdown-timeout``
+     - ``HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT``
+     - Timeout (in seconds) to wait for the in-flight events (event triggers and scheduled triggers) and async actions to complete before the
+       server shuts down completely (default: 60 seconds). If the in-flight events are not completed within the
+       timeout, those events are marked as pending.
+
 .. note::
 
   When the equivalent flags for environment variables are used, the flags will take precedence.
