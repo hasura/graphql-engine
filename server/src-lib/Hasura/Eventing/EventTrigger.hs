@@ -243,8 +243,6 @@ processEventQueue
   -> m (Forever m)
 processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} LockedEventsCtx{leEvents} serverMetrics maintenanceMode responseLogBehaviour = do
   events0 <- popEventsBatch
-  -- Track number of events fetched in EKG
-  _ <- liftIO $ EKG.Distribution.add (smNumEventsFetched serverMetrics) (fromIntegral $ length events0)
   return $ Forever (events0, 0, False) go
   where
     fetchBatchSize = getNonNegativeInt _eeCtxFetchSize
@@ -283,6 +281,8 @@ processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} Locked
                       liftIO $ L.unLogger logger $ EventInternalErr err
                       return []
                     Right events -> do
+                      -- Track number of events fetched in EKG
+                      _ <- liftIO $ EKG.Distribution.add (smNumEventsFetchedPerBatch serverMetrics) (fromIntegral $ length events)
                       -- The time when the events were fetched. This is used to calculate the average lock time of an event.
                       eventsFetchedTime <- liftIO getCurrentTime
                       saveLockedEvents (map eId events) leEvents
@@ -358,11 +358,11 @@ processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} Locked
       => EventWithSource ('Postgres 'Vanilla)
       -> io ()
     processEvent (e, sourceConfig, eventFetchedTime) = do
-      -- Track Lock Time of Event
-      -- Lock Time = Time when the event was fetched from DB - Time when the event is being processed
+      -- Track Queue Time of Event (in seconds). See `smEventQueueTime`
+      -- Queue Time = Time when the event was fetched from DB - Time when the event is being processed
       eventProcessTime <- liftIO getCurrentTime
-      let eventLockTime = realToFrac $ diffUTCTime eventProcessTime eventFetchedTime
-      _ <- liftIO $ EKG.Distribution.add (smEventLockTime serverMetrics) eventLockTime
+      let eventQueueTime = realToFrac $ diffUTCTime eventProcessTime eventFetchedTime
+      _ <- liftIO $ EKG.Distribution.add (smEventQueueTime serverMetrics) eventQueueTime
 
       cache <- liftIO getSchemaCache
 
