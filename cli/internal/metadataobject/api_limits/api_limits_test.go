@@ -55,7 +55,7 @@ func TestMetadataObject_Build(t *testing.T) {
 			err := m.Build(tt.args.metadata)
 			if tt.wantErr {
 				require.Error(t, err)
-			}else {
+			} else {
 				b, err := yaml.Marshal(tt.args.metadata)
 				assert.NoError(t, err)
 				assert.Equal(t, tt.want, string(b))
@@ -115,7 +115,7 @@ rate_limit:
 			got, err := obj.Export(tt.args.metadata)
 			if tt.wantErr {
 				require.Error(t, err)
-			}else {
+			} else {
 				require.NoError(t, err)
 				var wantContent = map[string]string{}
 				var gotContent = map[string]string{}
