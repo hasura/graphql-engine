@@ -26,6 +26,7 @@
 # export metadata and write to stdout
 $ hasura metadata export -o json
 ```
+- cli: add support for `graphql_schema_introspection` metadata object
 
 ## v2.0.0-alpha.10
 
