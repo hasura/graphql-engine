@@ -7,11 +7,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/stretchr/testify/require"
 
 	"github.com/Pallinder/go-randomdata"
 
@@ -32,7 +34,6 @@ type TestingT interface {
 }
 
 func StartHasura(t TestingT, version string) (port string, teardown func()) {
-	checkIfSkippable(t)
 	if len(version) == 0 {
 		t.Fatal("no hasura version provided, probably use testutil.HasuraVersion")
 	}
@@ -67,23 +68,28 @@ func StartHasura(t TestingT, version string) (port string, teardown func()) {
 	}); err != nil {
 		t.Fatal(err)
 	}
+
+	envs := []string{
+		fmt.Sprintf("HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:postgrespassword@%s:%s/postgres", DockerSwitchIP, pg.GetPort("5432/tcp")),
+		`HASURA_GRAPHQL_ENABLE_CONSOLE=true`,
+		"HASURA_GRAPHQL_DEV_MODE=true",
+		"HASURA_GRAPHQL_ENABLED_LOG_TYPES=startup, http-log, webhook-log, websocket-log, query-log",
+	}
+	adminSecret := os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET")
+	if len(adminSecret) > 0 {
+		envs = append(envs, fmt.Sprintf("HASURA_GRAPHQL_ADMIN_SECRET=%s", adminSecret))
+	}
 	hasuraopts := &dockertest.RunOptions{
-		Name:       fmt.Sprintf("%s-%s", uniqueName, "hasura"),
-		Repository: "hasura/graphql-engine",
-		Tag:        version,
-		Env: []string{
-			fmt.Sprintf("HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:postgrespassword@%s:%s/postgres", DockerSwitchIP, pg.GetPort("5432/tcp")),
-			`HASURA_GRAPHQL_ENABLE_CONSOLE=true`,
-			"HASURA_GRAPHQL_DEV_MODE=true",
-			"HASURA_GRAPHQL_ENABLED_LOG_TYPES=startup, http-log, webhook-log, websocket-log, query-log",
-		},
+		Name:         fmt.Sprintf("%s-%s", uniqueName, "hasura"),
+		Repository:   HasuraDockerRepo,
+		Tag:          version,
+		Env:          envs,
 		ExposedPorts: []string{"8080/tcp"},
 	}
 	hasura, err := pool.RunWithOptions(hasuraopts)
 	if err != nil {
 		t.Fatalf("Could not start resource: %s", err)
 	}
-
 	if err = pool.Retry(func() error {
 		var err error
 		resp, err := http.Get(fmt.Sprintf("http://localhost:%s/healthz", hasura.GetPort("8080/tcp")))
@@ -110,7 +116,6 @@ func StartHasura(t TestingT, version string) (port string, teardown func()) {
 }
 
 func StartHasuraWithMetadataDatabase(t *testing.T, version string) (port string, teardown func()) {
-	checkIfSkippable(t)
 	if len(version) == 0 {
 		t.Fatal("no hasura version provided, probably use testutil.HasuraVersion")
 	}
@@ -144,16 +149,21 @@ func StartHasuraWithMetadataDatabase(t *testing.T, version string) (port string,
 	}); err != nil {
 		t.Fatal(err)
 	}
+	envs := []string{
+		fmt.Sprintf("HASURA_GRAPHQL_METADATA_DATABASE_URL=postgres://postgres:postgrespassword@%s:%s/postgres", DockerSwitchIP, pg.GetPort("5432/tcp")),
+		`HASURA_GRAPHQL_ENABLE_CONSOLE=true`,
+		"HASURA_GRAPHQL_DEV_MODE=true",
+		"HASURA_GRAPHQL_ENABLED_LOG_TYPES=startup, http-log, webhook-log, websocket-log, query-log",
+	}
+	adminSecret := os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET")
+	if len(adminSecret) > 0 {
+		envs = append(envs, fmt.Sprintf("HASURA_GRAPHQL_ADMIN_SECRET=%s", adminSecret))
+	}
 	hasuraopts := &dockertest.RunOptions{
-		Name:       fmt.Sprintf("%s-%s", uniqueName, "hasura"),
-		Repository: "hasura/graphql-engine",
-		Tag:        version,
-		Env: []string{
-			fmt.Sprintf("HASURA_GRAPHQL_METADATA_DATABASE_URL=postgres://postgres:postgrespassword@%s:%s/postgres", DockerSwitchIP, pg.GetPort("5432/tcp")),
-			`HASURA_GRAPHQL_ENABLE_CONSOLE=true`,
-			"HASURA_GRAPHQL_DEV_MODE=true",
-			"HASURA_GRAPHQL_ENABLED_LOG_TYPES=startup, http-log, webhook-log, websocket-log, query-log",
-		},
+		Name:         fmt.Sprintf("%s-%s", uniqueName, "hasura"),
+		Repository:   HasuraDockerRepo,
+		Tag:          version,
+		Env:          envs,
 		ExposedPorts: []string{"8080/tcp"},
 	}
 	hasura, err := pool.RunWithOptions(hasuraopts)
@@ -264,10 +274,17 @@ func addSourceToHasura(t *testing.T, hasuraEndpoint, connectionString, sourceNam
 `, sourceName, connectionString)
 	fmt.Println(connectionString)
 	fmt.Println(hasuraEndpoint)
-	r, err := http.Post(url, "application/json", strings.NewReader(body))
-	if err != nil {
-		t.Fatal(err)
+
+	req, err := http.NewRequest("POST", url, strings.NewReader(body))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	adminSecret := os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET")
+	if adminSecret != "" {
+		req.Header.Set("x-hasura-admin-secret", adminSecret)
 	}
+
+	r, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
 	if r.StatusCode != http.StatusOK {
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -278,6 +295,13 @@ func addSourceToHasura(t *testing.T, hasuraEndpoint, connectionString, sourceNam
 	}
 }
 func NewHttpcClient(t *testing.T, port string, headers map[string]string) *httpc.Client {
+	adminSecret := os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET")
+	if headers == nil {
+		headers = make(map[string]string)
+	}
+	if len(adminSecret) > 0 {
+		headers["x-hasura-admin-secret"] = adminSecret
+	}
 	c, err := httpc.New(nil, fmt.Sprintf("%s:%s/", BaseURL, port), headers)
 	if err != nil {
 		t.Fatal(err)
@@ -292,10 +316,4 @@ func getUniqueName(t TestingT) string {
 		t.Fatalf("Could not connect to docker: %s", err)
 	}
 	return u.String() + "-" + randomdata.SillyName()
-}
-
-func checkIfSkippable(t TestingT) {
-	if SkipDockerTests {
-		t.Skip()
-	}
 }

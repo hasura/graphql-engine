@@ -61,9 +61,9 @@ var _ = Describe("metadata_apply", func() {
 
 		Context("metadata dry run ", func() {
 			args := strings.Join([]string{
-				"hasura", "metadata", "export", "-o", "json",
+				testutil.CLIBinaryPath, "metadata", "export", "-o", "json",
 				"|", "jq", `'.sources[0].configuration.connection_info.pool_settings.max_connections = 51'`,
-				"|", "hasura", "md", "apply", "--dry-run",
+				"|", testutil.CLIBinaryPath, "md", "apply", "--dry-run",
 			}, " ")
 			cmd := exec.Command("bash", "-c", args)
 			cmd.Dir = dirName
@@ -78,9 +78,9 @@ var _ = Describe("metadata_apply", func() {
 		})
 		Context("metadata apply metadata from pipe", func() {
 			args := strings.Join([]string{
-				"hasura", "metadata", "export", "-o", "json",
+				testutil.CLIBinaryPath, "metadata", "export", "-o", "json",
 				"|", "jq", `'.sources[0].configuration.connection_info.pool_settings.max_connections = 51'`,
-				"|", "hasura", "md", "apply",
+				"|", testutil.CLIBinaryPath, "md", "apply",
 			}, " ")
 			cmd := exec.Command("bash", "-c", args)
 			cmd.Dir = dirName

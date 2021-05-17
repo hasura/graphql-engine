@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 
@@ -157,7 +158,7 @@ func TestClient_ReloadMetadata(t *testing.T) {
 			}
 			b, err := ioutil.ReadAll(gotMetadata)
 			assert.NoError(t, err)
-			assert.Equal(t, tt.want, string(b))
+			assert.JSONEq(t, tt.want, string(b))
 		})
 	}
 }
@@ -216,7 +217,7 @@ func TestClient_DropInconsistentMetadata(t *testing.T) {
 			}
 			b, err := ioutil.ReadAll(gotMetadata)
 			assert.NoError(t, err)
-			assert.Equal(t, tt.want, string(b))
+			assert.JSONEq(t, tt.want, string(b))
 		})
 	}
 }
@@ -276,7 +277,7 @@ func TestClient_ResetMetadata(t *testing.T) {
 				}
 				b, err := ioutil.ReadAll(got)
 				assert.NoError(t, err)
-				assert.Equal(t, tt.want, string(b))
+				assert.JSONEq(t, tt.want, string(b))
 			})
 		})
 	}
@@ -287,7 +288,16 @@ func TestClient_GetInconsistentMetadata(t *testing.T) {
 	defer teardownLatest()
 	// create a table track it and delete it
 	sendReq := func(body io.Reader, url string) {
-		resp, err := http.Post(fmt.Sprintf("http://%s:%s/%s", "0.0.0.0", portHasuraLatest, url), "application/json", body)
+		req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:%s/%s", "0.0.0.0", portHasuraLatest, url), body)
+		assert.NoError(t, err)
+
+		req.Header.Set("Content-Type", "application/json")
+		adminSecret := os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET")
+		if adminSecret != "" {
+			req.Header.Set("x-hasura-admin-secret", adminSecret)
+		}
+
+		resp, err := http.DefaultClient.Do(req)
 		assert.NoError(t, err)
 		defer resp.Body.Close()
 		if err != nil {
@@ -450,7 +460,7 @@ func TestClient_ReplaceMetadata(t *testing.T) {
 				}
 				b, err := ioutil.ReadAll(got)
 				assert.NoError(t, err)
-				assert.Equal(t, tt.want, string(b))
+				assert.JSONEq(t, tt.want, string(b))
 			})
 		})
 	}

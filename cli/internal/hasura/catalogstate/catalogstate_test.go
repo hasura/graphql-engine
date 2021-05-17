@@ -79,7 +79,7 @@ func TestClientCatalogState_Set(t *testing.T) {
 				assert.NoError(t, err)
 				wantb, err := ioutil.ReadAll(tt.want)
 				assert.NoError(t, err)
-				assert.Equal(t, string(wantb), string(gotb))
+				assert.JSONEq(t, string(wantb), string(gotb))
 			} else {
 				assert.Error(t, err)
 			}
