@@ -91,7 +91,7 @@ func (o *updateOptions) run(showPrompt bool) (err error) {
 				versionToBeInstalled = latestVersion
 			case hasPreReleaseUpdate:
 				o.EC.Logger.Infof(`a new pre-release version is available:
-- %s (changelog: %s)
+- %s (changelog: \u200B%s\u200B)
 to update cli to this version, execute:
 
   hasura update-cli --version %s
