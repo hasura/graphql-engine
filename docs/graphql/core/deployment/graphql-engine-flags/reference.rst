@@ -1,11 +1,11 @@
 .. meta::
-   :description: Hasura GraphQL engine server flags reference
-   :keywords: hasura, docs, deployment, server, flags
+   :description: Hasura GraphQL engine server config reference
+   :keywords: hasura, docs, deployment, server, config, flags, env vars
 
 .. _server_flag_reference:
 
-GraphQL engine server flags reference
-=====================================
+GraphQL engine server config reference
+======================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -23,8 +23,8 @@ Every GraphQL engine command is structured as:
 
 The flags can be passed as ENV variables as well.
 
-Server flags
-------------
+Server config
+-------------
 
 For the ``graphql-engine`` command these are the available flags and ENV variables:
 
@@ -69,8 +69,8 @@ Or you can specify the following options *(only via flags)*:
 
 .. _command-flags:
 
-Command flags
--------------
+Command config
+--------------
 
 For the ``serve`` sub-command these are the available flags and ENV variables:
 
@@ -178,6 +178,14 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - ``HASURA_GRAPHQL_NO_OF_RETRIES``
      - Number of retries if Postgres connection error occurs (default: 1)
 
+   * - ``--conn-lifetime <SECONDS>``
+     - ``HASURA_GRAPHQL_PG_CONN_LIFETIME``
+     - Time from connection creation after which the connection should be destroyed and a new one created.
+       A value of 0 indicates we should never destroy an active connection. If 0 is passed, memory from large query
+       results may not be reclaimed. (default: 600 sec)
+
+       *(Available for versions > v1.3.0)*
+
    * - ``--stringify-numeric-types``
      - ``HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES``
      - Stringify certain Postgres numeric types, specifically ``bigint``, ``numeric``, ``decimal`` and
@@ -201,12 +209,12 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
    * - ``--enable-allowlist``
      - ``HASURA_GRAPHQL_ENABLE_ALLOWLIST``
      - Restrict queries allowed to be executed by the GraphQL engine to those that are part of the configured
-       allow-list. Default: ``false`` *(Available for versions > v1.0.0-beta.1)*
+       allow-list. Default: ``false``
 
    * - ``--console-assets-dir``
      - ``HASURA_GRAPHQL_CONSOLE_ASSETS_DIR``
      - Set the value to ``/srv/console-assets`` for the console to load assets from the server itself
-       instead of CDN *(Available for versions > v1.0.0-beta.1)*
+       instead of CDN
 
    * - ``--enabled-log-types``
      - ``HASURA_GRAPHQL_ENABLED_LOG_TYPES``
@@ -222,6 +230,8 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
    * - ``--dev-mode``
      - ``HASURA_GRAPHQL_DEV_MODE``
      - Set dev mode for GraphQL requests; include the ``internal`` key in the errors extensions of the response (if required).
+
+       *(Available for versions > v1.2.0)*
 
    * - ``--admin-internal-errors``
      - ``HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS``
