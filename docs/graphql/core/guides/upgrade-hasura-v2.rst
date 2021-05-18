@@ -1,11 +1,11 @@
 .. meta::
-   :description: Upgrading to Hasura GraphQL engine v2
-   :keywords: hasura, docs, guide, compatibility, upgrade v2
+   :description: Updating to Hasura GraphQL engine v2
+   :keywords: hasura, docs, guide, compatibility, update v2
 
 .. _upgrade_hasura_v2:
 
-Upgrading to Hasura GraphQL engine v2
-=====================================
+Updating to Hasura GraphQL engine v2
+====================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -16,7 +16,7 @@ Introduction
 ------------
 
 This page talks about the conceptual changes introduces in Hasura v2 and things to
-keep in mind while upgrading from Hasura v1 to v2.
+keep in mind while updating from Hasura v1 to v2.
 
 Do reach out to us if you run into any issues while using Hasura v2 or have any questions
 regarding any changes introduced.
@@ -84,7 +84,7 @@ Breaking behaviour changes
 
   With v2.0, some of the auto-generated schema types have been extended. For example, ``String_comparison_exp`` has an additional ``regex`` input
   object field. This means if you have a Hasura API with an older Hasura version added as a remote schema then it will have a type conflict. You
-  should upgrade all Hasura remote schemas to avoid such type conflicts.
+  should update all Hasura remote schemas to avoid such type conflicts.
 
 - **Migrations are not executed under a single transaction**
 
@@ -112,9 +112,9 @@ Hasura configuration
   its metadata.
 
 - The database set using the ``HASURA_GRAPHQL_DATABASE_URL`` env var is connected automatically with the name
-  ``default`` in Hasura v2 while upgrading an existing instance or while starting a fresh instance.
+  ``default`` in Hasura v2 while updating an existing instance or while starting a fresh instance.
 
-  Setting this env var post initial setup/upgrade will have no effect as the Hasura metadata for data sources
+  Setting this env var post initial setup/update will have no effect as the Hasura metadata for data sources
   would already have been initialized and the env var will be treated as any other custom env var.
 
   It is now not mandatory to set this env var if a dedicated ``HASURA_GRAPHQL_METADATA_DATABASE_URL`` is set.
@@ -123,8 +123,8 @@ Hasura configuration
 
 .. _hasura_v2_env_changes:
 
-- The values of the following env vars are used to define the connection parameters of the ``default`` database
-  while upgrading an existing instance or while starting a fresh instance. During metadata initialization, their values
+- In v2.0, the values of the following env vars are used to define the connection parameters of the ``default`` database
+  while updating an existing instance or while starting a fresh instance. During metadata initialization, their values
   are moved to the metadata of the ``default`` source as defined :ref:`here <PGConfiguration>`.
 
   - ``HASURA_GRAPHQL_PG_CONNECTIONS``
@@ -137,7 +137,7 @@ Hasura configuration
   - ``HASURA_GRAPHQL_READ_REPLICA_URLS``
   - ``HASURA_GRAPHQL_CONNECTIONS_PER_READ_REPLICA``
 
-  **Post the initial setup/upgrade once the metadata is initialized, these env vars can be considered as Deprecated.**
+  **Post the initial setup/update once the metadata is initialized, these env vars can be considered as Deprecated.**
   i.e. Changing or setting values of these env vars will have no impact as the values in the Hasura metadata are
   now used to define the connection parameters.
 
@@ -198,8 +198,8 @@ being applied also uses the appropriate env vars.
 
   Though we would recommend to upgrade to ``config v3`` anyway as it includes some useful directory structure changes.
 
-Updates to CI/CD after upgrading to Hasura v2
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Updates to CI/CD after updating to Hasura v2
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following commands need to be executed in the specified order to apply metadata and migrations in CI/CD workflows
 

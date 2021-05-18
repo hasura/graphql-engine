@@ -122,7 +122,7 @@ window.hdocs = (function () {
       }
     },
     setExternalLinks: function () {
-      Array.from(document.getElementsByClassName('.external')).forEach(function (el) { el.setAttribute('target', '_blank') });
+      Array.from(document.getElementsByClassName('external')).forEach(function (el) { el.setAttribute('target', '_blank') });
     },
     setupIntercom: function () {
       window.intercomSettings = {
