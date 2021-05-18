@@ -1,11 +1,12 @@
-package apilimits
+package graphqlschemaintrospection
 
 import (
+	"io/ioutil"
+	"testing"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
-	"testing"
 
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -35,13 +36,9 @@ func TestMetadataObject_Build(t *testing.T) {
 			args{
 				metadata: new(yaml.MapSlice),
 			},
-			`api_limits:
-  disabled: false
-  rate_limit:
-    per_role: {}
-    global:
-      unique_params: IP
-      max_reqs_per_min: 1
+			`graphql_schema_introspection:
+  disabled_for_roles:
+  - child
 `,
 			false,
 		},
@@ -80,7 +77,7 @@ func TestMetadataObject_Export(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"can export metadata with api_limits",
+			"can export metadata with graphql_schema_introspection",
 			fields{
 				MetadataDir: "testdata/metadata",
 				logger:      logrus.New(),
@@ -95,12 +92,8 @@ func TestMetadataObject_Export(t *testing.T) {
 				}(),
 			},
 			map[string][]byte{
-				"testdata/metadata/api_limits.yaml": []byte(`disabled: false
-rate_limit:
-  per_role: {}
-  global:
-    unique_params: IP
-    max_reqs_per_min: 1
+				"testdata/metadata/graphql_schema_introspection.yaml": []byte(`disabled_for_roles:
+- child
 `),
 			},
 			false,
