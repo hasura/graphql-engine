@@ -51,6 +51,9 @@ class TestMetadata:
     def test_pg_multisource_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_multisource_query.yaml')
 
+    def test_pg_multisource_table_name_conflict(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/pg_multisource_table_name_conflict.yaml')
+
     @classmethod
     def dir(cls):
         return "queries/v1/metadata"

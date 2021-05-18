@@ -33,8 +33,7 @@ module Hasura.RQL.Types.CustomTypes
   , emptyAnnotatedCustomTypes
   ) where
 
-import           Control.Lens.TH                          (makeLenses)
-import           Data.Text.Extended
+import           Hasura.Prelude
 
 import qualified Data.Aeson                               as J
 import qualified Data.Aeson.TH                            as J
@@ -46,10 +45,12 @@ import qualified Language.GraphQL.Draft.Printer           as GPrint
 import qualified Language.GraphQL.Draft.Syntax            as G
 import qualified Text.Builder                             as T
 
+import           Control.Lens.TH                          (makeLenses)
+import           Data.Text.Extended
+
 import           Hasura.Backends.Postgres.Instances.Types ()
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                       (Cacheable)
-import           Hasura.Prelude
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common

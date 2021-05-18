@@ -83,29 +83,18 @@ remoteField'
   => RemoteSchemaIntrospection
   -> RemoteSchemaFieldDefinition
   -> m (FieldParser n (Field NoFragments RemoteSchemaVariable))
-remoteField' schemaDoc (G.FieldDefinition description name argsDefinition gType _) =
-  let
-    addNullableList :: FieldParser n (Field NoFragments RemoteSchemaVariable) -> FieldParser n (Field NoFragments RemoteSchemaVariable)
-    addNullableList (P.FieldParser (Definition name' un desc (FieldInfo args typ)) parser)
-      = P.FieldParser (Definition name' un desc (FieldInfo args (Nullable (TList typ)))) parser
-
-    addNonNullableList :: FieldParser n (Field NoFragments RemoteSchemaVariable) -> FieldParser n (Field NoFragments RemoteSchemaVariable)
-    addNonNullableList (P.FieldParser (Definition name' un desc (FieldInfo args typ)) parser)
-      = P.FieldParser (Definition name' un desc (FieldInfo args (NonNullable (TList typ)))) parser
-
+remoteField' schemaDoc (G.FieldDefinition description name argsDefinition gType _) = convertType gType
+  where
     -- TODO add directives, deprecation
-    convertType :: G.GType -> m (FieldParser n (Field NoFragments RemoteSchemaVariable))
-    convertType gType' = do
-        case gType' of
-          G.TypeNamed (Nullability True) fieldTypeName ->
-            P.nullableField <$> remoteFieldFromName schemaDoc name description fieldTypeName argsDefinition
-          G.TypeList (Nullability True) gType'' ->
-            addNullableList <$> convertType gType''
-          G.TypeNamed (Nullability False) fieldTypeName -> do
-            P.nonNullableField <$> remoteFieldFromName schemaDoc name description fieldTypeName argsDefinition
-          G.TypeList (Nullability False) gType'' ->
-            addNonNullableList <$> convertType gType''
-  in convertType gType
+    convertType = \case
+      G.TypeNamed (Nullability True)  fieldTypeName ->
+        P.nullableField    <$> remoteFieldFromName schemaDoc name description fieldTypeName argsDefinition
+      G.TypeNamed (Nullability False) fieldTypeName -> do
+        P.nonNullableField <$> remoteFieldFromName schemaDoc name description fieldTypeName argsDefinition
+      G.TypeList (Nullability True)  gType' ->
+        P.nullableField    . P.multipleField <$> convertType gType'
+      G.TypeList (Nullability False) gType' ->
+        P.nonNullableField . P.multipleField <$> convertType gType'
 
 -- | 'remoteSchemaObject' returns a output parser for a given 'ObjectTypeDefinition'.
 remoteSchemaObject

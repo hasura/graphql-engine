@@ -33,15 +33,16 @@ import           Hasura.RQL.Types
 -- > }
 orderByExp
   :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => TableName b
+  => SourceName
+  -> TableInfo b
   -> SelPermInfo b
   -> m (Parser 'Input n [IR.AnnOrderByItemG b (UnpreparedValue b)])
-orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
-  tableGQLName <- getTableGQLName @b table
+orderByExp sourceName tableInfo selectPermissions = memoizeOn 'orderByExp (sourceName, tableInfoName tableInfo) $ do
+  tableGQLName <- getTableGQLName tableInfo
   let name = tableGQLName <> $$(G.litName "_order_by")
   let description = G.Description $
-        "Ordering options when selecting data from " <> table <<> "."
-  tableFields  <- tableSelectFields table selectPermissions
+        "Ordering options when selecting data from " <> tableInfoName tableInfo <<> "."
+  tableFields  <- tableSelectFields sourceName tableInfo selectPermissions
   fieldParsers <- sequenceA . catMaybes <$> traverse mkField tableFields
   pure $ concat . catMaybes <$> P.object name (Just description) fieldParsers
   where
@@ -55,19 +56,19 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
           pure $ P.fieldOptional fieldName Nothing (orderByOperator @b)
             <&> fmap (pure . mkOrderByItemG @b (IR.AOCColumn columnInfo)) . join
         FIRelationship relationshipInfo -> do
-          let remoteTable = riRTable relationshipInfo
+          remoteTableInfo <- askTableInfo @b sourceName $ riRTable relationshipInfo
           fieldName <- hoistMaybe $ G.mkName $ relNameToTxt $ riName relationshipInfo
-          perms <- MaybeT $ tableSelectPermissions remoteTable
+          perms <- MaybeT $ tableSelectPermissions remoteTableInfo
           let newPerms = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter perms
           case riType relationshipInfo of
             ObjRel -> do
-              otherTableParser <- lift $ orderByExp remoteTable perms
+              otherTableParser <- lift $ orderByExp sourceName remoteTableInfo perms
               pure $ do
                 otherTableOrderBy <- join <$> P.fieldOptional fieldName Nothing (P.nullable otherTableParser)
                 pure $ fmap (map $ fmap $ IR.AOCObjectRelation relationshipInfo newPerms) otherTableOrderBy
             ArrRel -> do
               let aggregateFieldName = fieldName <> $$(G.litName "_aggregate")
-              aggregationParser <- lift $ orderByAggregation remoteTable perms
+              aggregationParser <- lift $ orderByAggregation sourceName remoteTableInfo perms
               pure $ do
                 aggregationOrderBy <- join <$> P.fieldOptional aggregateFieldName Nothing (P.nullable aggregationParser)
                 pure $ fmap (map $ fmap $ IR.AOCArrayAggregation relationshipInfo newPerms) aggregationOrderBy
@@ -81,16 +82,17 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
 
 orderByAggregation
   :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => TableName b
+  => SourceName
+  -> TableInfo b
   -> SelPermInfo b
   -> m (Parser 'Input n [IR.OrderByItemG b (IR.AnnAggregateOrderBy b)])
-orderByAggregation table selectPermissions = memoizeOn 'orderByAggregation table do
+orderByAggregation sourceName tableInfo selectPermissions = memoizeOn 'orderByAggregation (sourceName, tableName) do
   -- WIP NOTE
   -- there is heavy duplication between this and Select.tableAggregationFields
   -- it might be worth putting some of it in common, just to avoid issues when
   -- we change one but not the other?
-  tableGQLName <- getTableGQLName @b table
-  allColumns   <- tableSelectColumns table selectPermissions
+  tableGQLName <- getTableGQLName @b tableInfo
+  allColumns   <- tableSelectColumns sourceName tableInfo selectPermissions
   let numColumns  = onlyNumCols allColumns
       compColumns = onlyComparableCols allColumns
       numFields   = catMaybes <$> traverse mkField numColumns
@@ -109,9 +111,11 @@ orderByAggregation table selectPermissions = memoizeOn 'orderByAggregation table
             parseOperator operator tableGQLName compFields
         ]
   let objectName  = tableGQLName <> $$(G.litName "_aggregate_order_by")
-      description = G.Description $ "order by aggregate values of table " <>> table
+      description = G.Description $ "order by aggregate values of table " <>> tableName
   pure $ P.object objectName (Just description) aggFields
   where
+    tableName = tableInfoName tableInfo
+
     mkField :: ColumnInfo b -> InputFieldsParser n (Maybe (ColumnInfo b, (BasicOrderType b, NullsOrderType b)))
     mkField columnInfo =
       P.fieldOptional (pgiName columnInfo) (pgiDescription columnInfo) (orderByOperator @b)
@@ -125,7 +129,7 @@ orderByAggregation table selectPermissions = memoizeOn 'orderByAggregation table
     parseOperator operator tableGQLName columns =
       let opText     = G.unName operator
           objectName = tableGQLName <> $$(G.litName "_") <> operator <> $$(G.litName "_order_by")
-          objectDesc = Just $ G.Description $ "order by " <> opText <> "() on columns of table " <>> table
+          objectDesc = Just $ G.Description $ "order by " <> opText <> "() on columns of table " <>> tableName
       in  P.fieldOptional operator Nothing (P.object objectName objectDesc columns)
         `mapField` map (\(col, info) -> mkOrderByItemG (IR.AAOOp opText col) info)
 

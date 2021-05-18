@@ -261,15 +261,11 @@ nonNullableField (FieldParser (Definition n u d (FieldInfo as t)) p) =
 nullableField :: forall m a . FieldParser m a -> FieldParser m a
 nullableField (FieldParser (Definition n u d (FieldInfo as t)) p) =
   FieldParser (Definition n u d (FieldInfo as (nullableType t))) p
-{-
-field = field
-  { fDefinition = (fDefinition field)
-    { dInfo = (dInfo (fDefinition field))
-      { fType = nonNullableType (fType (dInfo (fDefinition field)))
-      }
-    }
-  }
--}
+
+multipleField :: forall m a. FieldParser m a -> FieldParser m a
+multipleField (FieldParser (Definition n u d (FieldInfo as t)) p) =
+  FieldParser (Definition n u d (FieldInfo as (Nullable (TList t)))) p
+
 -- | Decorate a schema output type as NON_NULL
 nonNullableParser :: forall m a . Parser 'Output m a -> Parser 'Output m a
 nonNullableParser parser = parser { pType = nonNullableType (pType parser) }
@@ -278,8 +274,9 @@ nonNullableParser parser = parser { pType = nonNullableType (pType parser) }
 nullableParser :: forall m a . Parser 'Output m a -> Parser 'Output m a
 nullableParser parser = parser { pType = nullableType (pType parser) }
 
-multiple :: Parser 'Output m a -> Parser 'Output m a
+multiple :: forall m a . Parser 'Output m a -> Parser 'Output m a
 multiple parser = parser { pType = Nullable $ TList $ pType parser }
+
 
 list :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m [a]
 list parser = gcastWith (inputParserInput @k) Parser
@@ -585,9 +582,12 @@ safeSelectionSet
   -> n (Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a)))
 safeSelectionSet name desc fields
   | S.null duplicates = pure $ selectionSetObject name desc fields []
-  | otherwise         = throw500 $ "found duplicate fields in selection set: " <> commaSeparated (unName <$> toList duplicates)
+  | otherwise         = throw500 $ case desc of
+      Nothing -> "found duplicate fields in selection set: " <> duplicatesList
+      Just d  -> "found duplicate fields in selection set for " <> unDescription d <> ": " <> duplicatesList
   where
     duplicates = LE.duplicates $ getName . fDefinition <$> fields
+    duplicatesList = commaSeparated $ unName <$> toList duplicates
 
 -- Should this rather take a non-empty `FieldParser` list?
 -- See also Note [Selectability of tables].

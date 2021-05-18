@@ -6,8 +6,8 @@
 
 (Add entries below in the order of: server, console, cli, docs, others)
 
-- server: introduce `--graceful-shutdown-timeout` server config which will wait for the in-flight scheduled and event trigger 
-  events and async actions to complete before shutting down
+- server: fix erroneous schema type for action output fields (fix #6631)
+- server: introduce `--graceful-shutdown-timeout` server config which will wait for the in-flight scheduled and event trigger events and async actions to complete before shutting down
 - server: fix a regression from V1 and allow string values for most Postgres column types
 - server: sanitise event trigger and scheduled trigger logs to omit possibly sensitive request body and headers
 - server: fix parsing of values for Postgres char columns (fix #6814)
@@ -17,6 +17,7 @@
 - server: custom URI schemes are now supported in CORS config (fix #5818) (#5940)
 - server: explaining/analyzing a query now works for mssql sources
 - server: fix MSSQL multiplexed subscriptions (fix #6887)
+- server: fix bug preventing tables with the same name in different sources
 - console: add union types to remote schema permissions
 - console: read-only modify page for mssql
 - console: filter out partitions from track table list and display partition info
@@ -28,6 +29,7 @@ $ hasura metadata export -o json
 ```
 - cli: add support for `graphql_schema_introspection` metadata object
 - cli: fix applying migrations in a different environment after config v3 update (#6861)
+- cli: fixes bug caused by usage of space character in database name (#6852)
 
 ## v2.0.0-alpha.10
 

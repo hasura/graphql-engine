@@ -35,7 +35,7 @@ assertPermDefined
 assertPermDefined role pa tableInfo =
   unless (permissionIsDefined rpi pa) $ throw400 PermissionDenied $ mconcat
   [ "'" <> tshow (permAccToType pa) <> "'"
-  , " permission on " <>> _tciName (_tiCoreInfo tableInfo)
+  , " permission on " <>> tableInfoName tableInfo
   , " for role " <>> role
   , " does not exist"
   ]
@@ -53,7 +53,7 @@ askPermInfo tabInfo roleName pa =
   `onNothing`
   throw400 PermissionDenied
   (mconcat
-    [ pt <> " permission on " <>> _tciName (_tiCoreInfo tabInfo)
+    [ pt <> " permission on " <>> tableInfoName tabInfo
     , " for role " <>> roleName
     , " does not exist"
     ])

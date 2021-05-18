@@ -146,22 +146,25 @@ has a sub directory ``default`` which corresponds to the connected database.
 Changes needed in existing workflows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-With the introduction of multiple databases and it's configuration being in metadata, it brings a change of workflow with it.
+With the introduction of multiple databases and it's configuration being stored in metadata, it brings a change of workflow with it.
 
 The steps to apply migrations and metadata to a new Hasura instance will be:
 
 .. code-block:: bash
   
-  # first apply metadata, this will connect Hasura to the configured databases
+  # first apply metadata, this will connect Hasura to the configured databases.
   hasura metadata apply
-  # now we can apply migrations to the connected databases
+  # now we can apply migrations to the connected databases.
   hasura migrate apply --all-databases
-  # follow it with a metadata reload to make sure Hasura is aware of any newly created database objects
+  # follow it with a metadata reload to make sure Hasura is aware of any newly created database objects.
   hasura metadata reload
 
 The reason why we have to do ``metadata apply`` first instead of ``migrate apply`` (that we are used to doing in ``config v2``) is that
-if we do a ``migrate apply`` first then Hasura might not be aware about the databases it has to connect to. Earlier we could not start Hasura
-without a connected database, but now we can.
+if we do a ``migrate apply`` first then Hasura might not yet be aware about the databases it has to connect to as that information is present
+in metadata. Earlier we could not start Hasura without a connected database, but now we can.
+
+As we are now applying metadata before migrations, your metadata might be in an **inconsistent state** after the initial ``metadata apply``
+till the ``metadata reload`` step as some database objects referred to in metadata might not be available till the migrations are applied.
 
 Also, ``hasura seeds`` and ``hasura migrate`` commands now accept a required flag ``--database-name``.
 
