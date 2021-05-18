@@ -582,9 +582,12 @@ safeSelectionSet
   -> n (Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a)))
 safeSelectionSet name desc fields
   | S.null duplicates = pure $ selectionSetObject name desc fields []
-  | otherwise         = throw500 $ "found duplicate fields in selection set: " <> commaSeparated (unName <$> toList duplicates)
+  | otherwise         = throw500 $ case desc of
+      Nothing -> "found duplicate fields in selection set: " <> duplicatesList
+      Just d  -> "found duplicate fields in selection set for " <> unDescription d <> ": " <> duplicatesList
   where
     duplicates = LE.duplicates $ getName . fDefinition <$> fields
+    duplicatesList = commaSeparated $ unName <$> toList duplicates
 
 -- Should this rather take a non-empty `FieldParser` list?
 -- See also Note [Selectability of tables].

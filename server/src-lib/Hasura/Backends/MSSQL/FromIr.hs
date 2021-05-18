@@ -279,10 +279,10 @@ unfurlAnnOrderByElement =
   \case
     IR.AOCColumn pgColumnInfo ->
       lift (fromPGColumnInfo pgColumnInfo)
-    IR.AOCObjectRelation IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
-      selectFrom <- lift (lift (fromQualifiedTable table))
+    IR.AOCObjectRelation IR.RelInfo {riMapping = mapping, riRTable = tableName} annBoolExp annOrderByElementG -> do
+      selectFrom <- lift (lift (fromQualifiedTable tableName))
       joinAliasEntity <-
-        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText table))))
+        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText tableName))))
       foreignKeyConditions <- lift (fromMapping selectFrom mapping)
       -- TODO: Because these object relations are re-used by regular
       -- object mapping queries, this WHERE may be unnecessarily
@@ -315,16 +315,16 @@ unfurlAnnOrderByElement =
                    , joinJoinAlias =
                        JoinAlias {joinAliasEntity, joinAliasField = Nothing}
                    }
-             , unfurledObjectTableAlias = Just (table, EntityAlias joinAliasEntity)
+             , unfurledObjectTableAlias = Just (tableName, EntityAlias joinAliasEntity)
              })
       local
         (const (EntityAlias joinAliasEntity))
         (unfurlAnnOrderByElement annOrderByElementG)
-    IR.AOCArrayAggregation IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annAggregateOrderBy -> do
-      selectFrom <- lift (lift (fromQualifiedTable table))
+    IR.AOCArrayAggregation IR.RelInfo {riMapping = mapping, riRTable = tableName} annBoolExp annAggregateOrderBy -> do
+      selectFrom <- lift (lift (fromQualifiedTable tableName))
       let alias = aggFieldName
       joinAliasEntity <-
-        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText table))))
+        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText tableName))))
       foreignKeyConditions <- lift (fromMapping selectFrom mapping)
       whereExpression <-
         lift (local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp))

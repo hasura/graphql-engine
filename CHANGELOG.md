@@ -17,6 +17,7 @@
 - server: custom URI schemes are now supported in CORS config (fix #5818) (#5940)
 - server: explaining/analyzing a query now works for mssql sources
 - server: fix MSSQL multiplexed subscriptions (fix #6887)
+- server: fix bug preventing tables with the same name in different sources
 - console: add union types to remote schema permissions
 - console: read-only modify page for mssql
 - console: filter out partitions from track table list and display partition info

@@ -212,7 +212,7 @@ actionOutputFields outputType annotatedObject = do
     relationshipFieldParser
       :: TypeRelationship (TableInfo ('Postgres 'Vanilla)) (ColumnInfo ('Postgres 'Vanilla))
       -> m (Maybe [FieldParser n (RQL.AnnFieldG ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla)))])
-    relationshipFieldParser (TypeRelationship relName relType _ tableInfo fieldMapping) = runMaybeT do
+    relationshipFieldParser (TypeRelationship relName relType sourceName tableInfo fieldMapping) = runMaybeT do
       let tableName     = _tciName $ _tiCoreInfo tableInfo
           fieldName     = unRelationshipName relName
           tableRelName  = RelName $ mkNonEmptyTextUnsafe $ G.unName fieldName
@@ -224,7 +224,7 @@ actionOutputFields outputType annotatedObject = do
       case relType of
         ObjRel -> do
           let desc = Just $ G.Description "An object relationship"
-          selectionSetParser <- lift $ tableSelectionSet tableName tablePerms
+          selectionSetParser <- lift $ tableSelectionSet sourceName tableInfo tablePerms
           pure $ pure $ P.nonNullableField $
             P.subselection_ fieldName desc selectionSetParser
               <&> \fields -> RQL.AFObjectRelation $ RQL.AnnRelationSelectG tableRelName columnMapping $
@@ -232,12 +232,12 @@ actionOutputFields outputType annotatedObject = do
                              fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter tablePerms
         ArrRel -> do
           let desc = Just $ G.Description "An array relationship"
-          otherTableParser <- lift $ selectTable tableName fieldName desc tablePerms
+          otherTableParser <- lift $ selectTable sourceName tableInfo fieldName desc tablePerms
           let arrayRelField = otherTableParser <&> \selectExp -> RQL.AFArrayRelation $
                 RQL.ASSimple $ RQL.AnnRelationSelectG tableRelName columnMapping selectExp
               relAggFieldName = fieldName <> $$(G.litName "_aggregate")
               relAggDesc      = Just $ G.Description "An aggregate relationship"
-          tableAggField <- lift $ selectTableAggregate tableName relAggFieldName relAggDesc tablePerms
+          tableAggField <- lift $ selectTableAggregate sourceName tableInfo relAggFieldName relAggDesc tablePerms
           pure $ catMaybes [ Just arrayRelField
                            , fmap (RQL.AFArrayRelation . RQL.ASAggregate . RQL.AnnRelationSelectG tableRelName columnMapping) <$> tableAggField
                            ]

@@ -436,18 +436,19 @@ buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> funct
   roleName <- askRoleName
   functionPermsCtx <- asks $ qcFunctionPermsContext . getter
   tableSelectExpParsers <- for (Map.toList tables) \(tableName, tableInfo) -> do
-    tableGQLName <- getTableGQLName @b tableName
+    tableGQLName <- getTableGQLName @b tableInfo
     -- FIXME: retrieve permissions directly from tableInfo to avoid a sourceCache lookup
-    selectPerms  <- tableSelectPermissions tableName
+    selectPerms  <- tableSelectPermissions tableInfo
     for selectPerms $ buildTableQueryFields sourceName sourceConfig tableName tableInfo tableGQLName
   functionSelectExpParsers <- for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
     guard
       $ roleName == adminRoleName
       || roleName `elem` _fiPermissions functionInfo
       || functionPermsCtx == FunctionPermissionsInferred
-    let targetTable = _fiReturnType functionInfo
-    selectPerms <- MaybeT $ tableSelectPermissions targetTable
-    lift $ buildFunctionQueryFields sourceName sourceConfig functionName functionInfo targetTable selectPerms
+    let targetTableName = _fiReturnType functionInfo
+    targetTableInfo <- askTableInfo sourceName targetTableName
+    selectPerms <- MaybeT $ tableSelectPermissions targetTableInfo
+    lift $ buildFunctionQueryFields sourceName sourceConfig functionName functionInfo targetTableName selectPerms
   pure $ concat $ catMaybes $ tableSelectExpParsers <> functionSelectExpParsers
 
 buildRelayQueryFields
@@ -460,17 +461,18 @@ buildRelayQueryFields
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
 buildRelayQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> functions) = do
   tableConnectionFields <- for (Map.toList tables) \(tableName, tableInfo) -> runMaybeT do
-    tableGQLName <- getTableGQLName @b tableName
+    tableGQLName <- getTableGQLName @b tableInfo
     pkeyColumns  <- hoistMaybe $ tableInfo ^? tiCoreInfo.tciPrimaryKey._Just.pkColumns
     -- FIXME: retrieve permissions directly from tableInfo to avoid a sourceCache lookup
-    selectPerms  <- MaybeT $ tableSelectPermissions tableName
+    selectPerms  <- MaybeT $ tableSelectPermissions tableInfo
     MaybeT $ buildTableRelayQueryFields sourceName sourceConfig tableName tableInfo tableGQLName pkeyColumns selectPerms
   functionConnectionFields <- for (Map.toList functions) $ \(functionName, functionInfo) -> runMaybeT do
-    let returnTable = _fiReturnType functionInfo
+    let returnTableName = _fiReturnType functionInfo
     -- FIXME: only extract the TableInfo once to avoid redundant cache lookups
-    pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns) <$> askTableInfo returnTable
-    selectPerms <- MaybeT $ tableSelectPermissions returnTable
-    MaybeT $ buildFunctionRelayQueryFields sourceName sourceConfig functionName functionInfo returnTable pkeyColumns selectPerms
+    returnTableInfo <- lift $ askTableInfo sourceName returnTableName
+    pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns) <$> pure returnTableInfo
+    selectPerms <- MaybeT $ tableSelectPermissions returnTableInfo
+    MaybeT $ buildFunctionRelayQueryFields sourceName sourceConfig functionName functionInfo returnTableName pkeyColumns selectPerms
   pure $ catMaybes $ tableConnectionFields <> functionConnectionFields
 
 buildMutationFields
@@ -485,9 +487,9 @@ buildMutationFields
 buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMutation -> functions) = do
   roleName <- askRoleName
   tableMutations <- for (Map.toList tables) \(tableName, tableInfo) -> do
-    tableGQLName  <- getTableGQLName @b tableName
+    tableGQLName  <- getTableGQLName @b tableInfo
     -- FIXME: retrieve permissions directly from tableInfo to avoid a sourceCache lookup
-    tablePerms    <- tablePermissions tableName
+    tablePerms    <- tablePermissions tableInfo
     for tablePerms \RolePermInfo{..} -> do
       let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
       inserts <- runMaybeT $ do
@@ -511,15 +513,16 @@ buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMu
         lift $ buildTableDeleteMutationFields sourceName sourceConfig tableName tableInfo tableGQLName deletePerms _permSel
       pure $ concat $ catMaybes [inserts, updates, deletes]
   functionMutations <- for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
-    let targetTable = _fiReturnType functionInfo
-    selectPerms <- MaybeT $ tableSelectPermissions targetTable
+    let targetTableName = _fiReturnType functionInfo
+    targetTableInfo <- askTableInfo sourceName targetTableName
+    selectPerms <- MaybeT $ tableSelectPermissions targetTableInfo
     -- A function exposed as mutation must have a function permission
     -- configured for the role. See Note [Function Permissions]
     guard $
       -- when function permissions are inferred, we don't expose the
       -- mutation functions for non-admin roles. See Note [Function Permissions]
       roleName == adminRoleName || roleName `elem` (_fiPermissions functionInfo)
-    lift $ buildFunctionMutationFields sourceName sourceConfig functionName functionInfo targetTable selectPerms
+    lift $ buildFunctionMutationFields sourceName sourceConfig functionName functionInfo targetTableName selectPerms
   pure $ concat $ catMaybes $ tableMutations <> functionMutations
 
 
