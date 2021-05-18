@@ -383,12 +383,13 @@ updateColInRel source fromQT rn rnCol = do
   let maybeRelInfo =
         tables ^? ix fromQT.tiCoreInfo.tciFieldInfoMap.ix (fromRel rn)._FIRelationship
   forM_ maybeRelInfo $ \relInfo ->
-    tell $ MetadataModifier $ tableMetadataSetter source fromQT %~
-    case riType relInfo of
-      ObjRel -> tmObjectRelationships.ix rn.rdUsing %~
-                updateColInObjRel fromQT (riRTable relInfo) rnCol
-      ArrRel -> tmArrayRelationships.ix rn.rdUsing %~
-                updateColInArrRel fromQT (riRTable relInfo) rnCol
+    let relTableName = riRTable relInfo
+    in tell $ MetadataModifier $ tableMetadataSetter source fromQT %~
+      case riType relInfo of
+        ObjRel -> tmObjectRelationships.ix rn.rdUsing %~
+                  updateColInObjRel fromQT relTableName rnCol
+        ArrRel -> tmArrayRelationships.ix rn.rdUsing %~
+                  updateColInArrRel fromQT relTableName rnCol
 
 updateColInRemoteRelationship
   :: forall b m

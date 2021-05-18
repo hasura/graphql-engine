@@ -509,6 +509,12 @@ instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => T
   toJSON = genericToJSON hasuraJSON
 $(makeLenses ''TableInfo)
 
+tiName :: Lens' (TableInfo b) (TableName b)
+tiName = tiCoreInfo . tciName
+
+tableInfoName :: TableInfo b -> TableName b
+tableInfoName = view tiName
+
 type TableCoreCache b = M.HashMap (TableName b) (TableCoreInfo b)
 type TableCache b = M.HashMap (TableName b) (TableInfo b) -- info of all tables
 

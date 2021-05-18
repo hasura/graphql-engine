@@ -88,7 +88,7 @@ askPermInfo pa tableInfo = do
   roleName  <- askCurRole
   mPermInfo <- askPermInfo' pa tableInfo
   onNothing mPermInfo $ throw400 PermissionDenied $ mconcat
-    [ pt <> " on " <>> _tciName (_tiCoreInfo tableInfo)
+    [ pt <> " on " <>> tableInfoName tableInfo
     , " for role " <>> roleName
     , " is not allowed. "
     ]

@@ -149,3 +149,7 @@ If you'd like to stay informed about the status of SQL Server support, subscribe
 
 - https://hasura.io/newsletter/
 - https://discord.com/invite/hasura
+
+.. admonition:: Additional Resources
+
+  This Hands-on Demo walks you through Getting Started with Hasura on SQL Server & common use cases. - `View Recording here <https://hasura.io/events/webinar/hasura-sql-server/?pg=docs&plcmt=body&cta=view-recording&tech=>`__.

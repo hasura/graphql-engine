@@ -257,14 +257,22 @@ in the ``metadata/`` directory on a new instance at ``http://another-graphql-ins
 .. code-block:: bash
 
    # in project dir
+
+   # apply metadata, this will connect Hasura to the configured databases.
    hasura metadata apply --endpoint http://another-graphql-instance.hasura.app
-   hasura migrate apply --endpoint http://another-graphql-instance.hasura.app --database-name <database-name>
-   hasura metadata reload --endpoint http://another-graphql-instance.hasura.app 
+   # apply migrations to the connected databases.
+   hasura migrate apply --all-databases --endpoint http://another-graphql-instance.hasura.app
+   # reload metadata to make sure Hasura is aware of any newly created database objects.
+   hasura metadata reload --endpoint http://another-graphql-instance.hasura.app
 
 In case you need an automated way of applying the migrations and metadata, take a look at the
 :ref:`cli-migrations <auto_apply_migrations>` Docker image, which can start the
 GraphQL engine after automatically applying the migrations and metadata which are
 mounted onto directories.
+
+As we are applying metadata before migrations, your metadata might be in an **inconsistent state** after the initial
+``metadata apply`` till the ``metadata reload`` step as some database objects referred to in metadata might not
+be available till the migrations are applied.
 
 If you now open the console of the new instance, you can see that the three tables have
 been created and are tracked:

@@ -153,7 +153,7 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
       => TableInfo b -> FieldName -> Getting (First a) (FieldInfo b) a -> Text -> Either Text a
     resolveField tableInfo fieldName fieldType fieldTypeName = do
       let coreInfo = _tiCoreInfo tableInfo
-          tableName = _tciName coreInfo
+          tableName = tableInfoName tableInfo
       fieldInfo <- M.lookup fieldName (_tciFieldInfoMap coreInfo) `onNothing` Left
         ("table " <> tableName <<> " has no field named " <>> fieldName)
       (fieldInfo ^? fieldType) `onNothing` Left
