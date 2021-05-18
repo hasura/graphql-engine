@@ -7,6 +7,7 @@ import (
 	apilimits "github.com/hasura/graphql-engine/cli/internal/metadataobject/api_limits"
 	crontriggers "github.com/hasura/graphql-engine/cli/internal/metadataobject/cron_triggers"
 	"github.com/hasura/graphql-engine/cli/internal/metadataobject/functions"
+	graphqlschemaintrospection "github.com/hasura/graphql-engine/cli/internal/metadataobject/graphql_schema_introspection"
 	inheritedroles "github.com/hasura/graphql-engine/cli/internal/metadataobject/inherited_roles"
 	"github.com/hasura/graphql-engine/cli/internal/metadataobject/querycollections"
 	"github.com/hasura/graphql-engine/cli/internal/metadataobject/remoteschemas"
@@ -64,6 +65,7 @@ func GetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) Objects 
 
 			// hasura pro specific metadata objects
 			objects = append(objects, apilimits.New(ec, metadataDir))
+			objects = append(objects, graphqlschemaintrospection.New(ec, metadataDir))
 		}
 	}
 

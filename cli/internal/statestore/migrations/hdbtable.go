@@ -9,6 +9,11 @@ import (
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 )
 
+const (
+	DefaultMigrationsTable = "schema_migrations"
+	DefaultSchema          = "hdb_catalog"
+)
+
 // until version 1.4 migration state was stored a special table
 // this struct will implement the methods required
 type MigrationStateStoreHdbTable struct {

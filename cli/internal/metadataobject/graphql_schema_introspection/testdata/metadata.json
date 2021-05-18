@@ -1,0 +1,9 @@
+{
+    "version": 3,
+    "sources": [],
+    "graphql_schema_introspection": {
+        "disabled_for_roles": [
+            "child"
+        ]
+    }
+}

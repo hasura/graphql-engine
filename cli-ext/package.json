@@ -4,7 +4,7 @@
   "description": "A service to generate Hasura action scaffolds",
   "main": "src/server.js",
   "scripts": {
-    "get-shared-modules": "rm -rf src/shared/* && cp -r ../console/src/shared ./src/shared",
+    "get-shared-modules": "rm -rf src/shared/ && cp -r ../console/src/shared ./src/shared",
     "pretranspile": "npm run get-shared-modules",
     "transpile": "rm -rf build/* && babel --extensions '.ts,.js' ./src ./tests --out-dir build",
     "prebuild": "npm run transpile",

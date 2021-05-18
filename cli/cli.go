@@ -433,6 +433,12 @@ type ExecutionContext struct {
 	// current database on which operation is being done
 	Source        Source
 	HasMetadataV3 bool
+
+	// after a `scripts update-config-v3` all migrate commands will try to automatically
+	// move cli state from hdb_catalog.* tables to catalog state if that hasn't happened
+	// already this configuration option will disable this step
+	// more details in: https://github.com/hasura/graphql-engine/issues/6861
+	DisableAutoStateMigration bool
 }
 
 type Source struct {
@@ -923,16 +929,11 @@ func GetCommonMetadataOps(ec *ExecutionContext) hasura.CommonMetadataOperations 
 }
 
 func GetMigrationsStateStore(ec *ExecutionContext) statestore.MigrationsStateStore {
-	const (
-		defaultMigrationsTable = "schema_migrations"
-		defaultSchema          = "hdb_catalog"
-	)
-
 	if ec.Config.Version <= V2 {
 		if !ec.HasMetadataV3 {
-			return migrations.NewMigrationStateStoreHdbTable(ec.APIClient.V1Query, defaultSchema, defaultMigrationsTable)
+			return migrations.NewMigrationStateStoreHdbTable(ec.APIClient.V1Query, migrations.DefaultSchema, migrations.DefaultMigrationsTable)
 		}
-		return migrations.NewMigrationStateStoreHdbTable(ec.APIClient.V2Query, defaultSchema, defaultMigrationsTable)
+		return migrations.NewMigrationStateStoreHdbTable(ec.APIClient.V2Query, migrations.DefaultSchema, migrations.DefaultMigrationsTable)
 	}
 	return migrations.NewCatalogStateStore(statestore.NewCLICatalogState(ec.APIClient.V1Metadata))
 }

@@ -336,7 +336,7 @@ asyncActionsProcessor env logger cacheRef lockedActionEvents httpManager sleepTi
       -- no events that are in the 'processing' state
       saveLockedEvents (map (EventId . actionIdToText . _aliId) asyncInvocations) lockedActionEvents
       LA.mapConcurrently_ (callHandler actionCache) asyncInvocations
-      liftIO $ sleep $ milliseconds sleepTime
+    liftIO $ sleep $ milliseconds sleepTime
   where
     callHandler :: ActionCache -> ActionLogItem -> m ()
     callHandler actionCache actionLogItem = Tracing.runTraceT "async actions processor" do
