@@ -175,31 +175,39 @@ actionOutputFields
   -> m (Parser 'Output n (RQL.AnnFieldsG ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla))))
 actionOutputFields outputType annotatedObject = do
   let outputObject = _aotDefinition annotatedObject
-      scalarOrEnumFields = map scalarOrEnumFieldParser $ toList $ _otdFields outputObject
+      scalarOrEnumFields = map outputFieldParser $ toList $ _otdFields outputObject
   relationshipFields <- forM (_otdRelationships outputObject) $ traverse relationshipFieldParser
   let allFieldParsers = scalarOrEnumFields <>
                         maybe [] (concat . catMaybes . toList) relationshipFields
       outputTypeName = unObjectTypeName $ _otdName outputObject
       outputTypeDescription = _otdDescription outputObject
-  pure $ mkOutputParserModifier outputType $
+  pure $ outputParserModifier outputType $
     P.selectionSet outputTypeName outputTypeDescription allFieldParsers
     <&> parsedSelectionsToFields RQL.AFExpression
   where
-    scalarOrEnumFieldParser
+    outputParserModifier :: G.GType -> Parser 'Output n a -> Parser 'Output n a
+    outputParserModifier = \case
+      G.TypeNamed (G.Nullability True)  _ -> P.nullableParser
+      G.TypeNamed (G.Nullability False) _ -> P.nonNullableParser
+      G.TypeList  (G.Nullability True)  t -> P.nullableParser    . P.multiple . outputParserModifier t
+      G.TypeList  (G.Nullability False) t -> P.nonNullableParser . P.multiple . outputParserModifier t
+
+    outputFieldParser
       :: ObjectFieldDefinition (G.GType, AnnotatedObjectFieldType)
       -> FieldParser n (RQL.AnnFieldG ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla)))
-    scalarOrEnumFieldParser (ObjectFieldDefinition name _ description ty) =
-      let (gType, objectFieldType) = ty
-          fieldName = unObjectFieldName name
-          -- FIXME? (from master)
-          pgColumnInfo = ColumnInfo (unsafePGCol $ G.unName fieldName)
-                         fieldName 0 (ColumnScalar PGJSON) (G.isNullable gType) Nothing
-          fieldParser = case objectFieldType of
+    outputFieldParser (ObjectFieldDefinition name _ description (gType, objectFieldType)) =
+      let fieldName   = unObjectFieldName name
+          selection   = P.selection_ fieldName description $ case objectFieldType of
             AOFTScalar def -> customScalarParser def
-            AOFTEnum def   -> customEnumParser def
-      in bool P.nonNullableField id (G.isNullable gType) $
-         P.selection_ (unObjectFieldName name) description fieldParser
-         $> RQL.mkAnnColumnField pgColumnInfo Nothing Nothing
+            AOFTEnum   def -> customEnumParser   def
+          fieldParser = \case
+            G.TypeNamed (G.Nullability True)  _ -> P.nullableField    selection
+            G.TypeNamed (G.Nullability False) _ -> P.nonNullableField selection
+            G.TypeList  (G.Nullability True)  t -> P.nullableField    $ P.multipleField $ fieldParser t
+            G.TypeList  (G.Nullability False) t -> P.nonNullableField $ P.multipleField $ fieldParser t
+          pgColumnInfo =
+            ColumnInfo (unsafePGCol $ G.unName fieldName) fieldName 0 (ColumnScalar PGJSON) (G.isNullable gType) Nothing
+      in fieldParser gType $> RQL.mkAnnColumnField pgColumnInfo Nothing Nothing
 
     relationshipFieldParser
       :: TypeRelationship (TableInfo ('Postgres 'Vanilla)) (ColumnInfo ('Postgres 'Vanilla))
@@ -234,14 +242,6 @@ actionOutputFields outputType annotatedObject = do
                            , fmap (RQL.AFArrayRelation . RQL.ASAggregate . RQL.AnnRelationSelectG tableRelName columnMapping) <$> tableAggField
                            ]
 
-mkOutputParserModifier :: G.GType -> Parser 'Output m a -> Parser 'Output m a
-mkOutputParserModifier = \case
-  G.TypeNamed nullable _ -> nullableModifier nullable
-  G.TypeList nullable ty ->
-    nullableModifier nullable . P.multiple . mkOutputParserModifier ty
-  where
-    nullableModifier nullable =
-      if G.unNullability nullable then P.nullableParser else P.nonNullableParser
 
 mkDefinitionList :: AnnotatedObjectType -> [(PGCol, ScalarType ('Postgres 'Vanilla))]
 mkDefinitionList AnnotatedObjectType{..} =

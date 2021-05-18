@@ -500,7 +500,6 @@ class TestActionsMetadata:
     def test_create_with_headers(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_with_headers.yaml')
 
-# Test case for bug reported at https://github.com/hasura/graphql-engine/issues/5166
 @pytest.mark.usefixtures('per_class_tests_db_state')
 class TestActionIntrospection:
 
@@ -517,6 +516,10 @@ class TestActionIntrospection:
         code, resp, _ = hge_ctx.anyq(conf['url'], conf['query'], headers)
         assert code == 200, resp
         assert 'data' in resp, resp
+
+    def test_output_types(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/output_types_query.yaml')
+
 
 @use_action_fixtures
 class TestActionTimeout:
