@@ -4,7 +4,7 @@ import { connect, ConnectedProps } from 'react-redux';
 
 import Button from '../../../Common/Button/Button';
 import styles from './styles.scss';
-import { ReduxState } from '../../../../types';
+import { Dispatch, ReduxState } from '../../../../types';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { DataSource } from '../../../../metadata/types';
 import { Driver } from '../../../../dataSources';
@@ -19,13 +19,12 @@ import { getConfirmation } from '../../../Common/utils/jsUtils';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 import _push from '../push';
 import { isInconsistentSource } from '../utils';
-
-const driverToLabel: Record<Driver, string> = {
-  mysql: 'MySQL',
-  postgres: 'PostgreSQL',
-  mssql: 'MS Server',
-  bigquery: 'Big Query',
-};
+import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
+import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
+import requestAction from '../../../../utils/requestAction';
+import { showErrorNotification } from '../../Common/Notification';
+import { services } from '../../../../dataSources/services';
+import CollapsibleToggle from './CollapsibleToggle';
 
 type DatabaseListItemProps = {
   dataSource: DataSource;
@@ -34,6 +33,8 @@ type DatabaseListItemProps = {
   onReload: (name: string, driver: Driver, cb: () => void) => void;
   onRemove: (name: string, driver: Driver, cb: () => void) => void;
   pushRoute: (route: string) => void;
+  dispatch: Dispatch;
+  dataHeaders: Record<string, string>;
 };
 
 const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
@@ -43,10 +44,47 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
   onRemove,
   dataSource,
   inconsistentObjects,
+  dispatch,
+  dataHeaders,
 }) => {
   const [reloading, setReloading] = useState(false);
   const [removing, setRemoving] = useState(false);
   const [showUrl, setShowUrl] = useState(false);
+  const [dbVersion, setDbVersion] = useState('');
+
+  const fetchDBVersion = () => {
+    const query = services[dataSource.driver].getDatabaseVersionSql ?? '';
+
+    if (!query) {
+      setDbVersion('');
+      return;
+    }
+
+    const url = Endpoints.query;
+    const options: RequestInit = {
+      method: 'POST',
+      credentials: globalCookiePolicy,
+      headers: dataHeaders,
+      body: JSON.stringify(
+        getRunSqlQuery(query, dataSource.name, false, true, dataSource.driver)
+      ),
+    };
+
+    dispatch(requestAction(url, options)).then(
+      data => {
+        setDbVersion(data.result[1][0]);
+      },
+      error => {
+        dispatch(
+          showErrorNotification('Failed to fetch Database version', null, error)
+        );
+      }
+    );
+  };
+
+  useEffect(() => {
+    fetchDBVersion();
+  }, []);
 
   const viewDB = () => {
     if (dataSource?.name) pushRoute(`/data/${dataSource.name}/schema`);
@@ -60,7 +98,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
       className={`${styles.flex_space_between} ${styles.add_pad_min} ${styles.db_list_item}`}
       data-test={dataSource.name}
     >
-      <div className={styles.display_flex}>
+      <div className={`${styles.display_flex_container} ${styles.flex_width}`}>
         <Button
           size="xs"
           color="white"
@@ -96,18 +134,10 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
         >
           {removing ? 'Removing...' : 'Remove'}
         </Button>
-        <div className={styles.flexColumn}>
-          <div
-            className={`${styles.displayFlexContainer} ${styles.add_pad_left} ${styles.add_pad_top_10}`}
-          >
-            <b>{dataSource.name}</b>&nbsp;
-            <p>({driverToLabel[dataSource.driver]})</p>
-            {!!dataSource?.read_replicas?.length && (
-              <div className={styles.replica_badge}>
-                {dataSource.read_replicas.length} Replicas
-              </div>
-            )}
-          </div>
+        <div
+          className={`${styles.flexColumn} ${styles.container_max_width} ${styles.displayFlexContainer} ${styles.add_pad_left}`}
+        >
+          <CollapsibleToggle dataSource={dataSource} dbVersion={dbVersion} />
         </div>
         {isInconsistentDataSource && (
           <ToolTip
@@ -122,9 +152,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
           </ToolTip>
         )}
       </div>
-      <span
-        className={`${styles.db_large_string_break_words} ${styles.add_pad_top_10}`}
-      >
+      <div className={`${styles.db_large_string_break_words}`}>
         {showUrl ? (
           typeof dataSource.url === 'string' ? (
             dataSource.url
@@ -157,7 +185,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
             />
           </ToolTip>
         )}
-      </span>
+      </div>
     </div>
   );
 };
@@ -171,6 +199,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   dispatch,
   inconsistentObjects,
   location,
+  dataHeaders,
 }) => {
   useEffect(() => {
     if (dataSources.length === 0 && !autoRedirectedToConnectPage) {
@@ -259,6 +288,8 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
                   pushRoute={pushRoute}
                   onReload={onReload}
                   onRemove={onRemove}
+                  dispatch={dispatch}
+                  dataHeaders={dataHeaders}
                 />
               ))
             ) : (
@@ -276,6 +307,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
 
 const mapStateToProps = (state: ReduxState) => {
   return {
+    dataHeaders: state.tables.dataHeaders,
     schemaList: state.tables.schemaList,
     dataSources: getDataSources(state),
     currentDataSource: state.tables.currentDataSource,

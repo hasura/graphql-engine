@@ -1448,6 +1448,7 @@ code {
 .db_list_item {
   border-bottom: 1px solid rgb(232, 232, 232);
   padding-left: 0;
+  min-width: 1100px;
 }
 
 .db_list_item:last-of-type {
@@ -1473,8 +1474,15 @@ code {
 .db_large_string_break_words {
   max-width: 40%;
   word-break: break-word;
-  padding: 1em;
-  display: flex;
+  flex: 1;
+
+  i {
+    cursor: pointer;
+  }
+}
+
+.flex_width {
+  width: 80%;
 }
 
 .text_red {

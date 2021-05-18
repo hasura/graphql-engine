@@ -385,7 +385,8 @@ export const bigquery: DataSourcesAPI = {
     return query;
   },
   supportedFeatures,
-  getDatabaseVersionSql: 'SELECT @@VERSION;',
+  // getDatabaseVersionSql: 'SELECT @@VERSION;',
+  getDatabaseVersionSql: '', // TODO fixme;
   permissionColumnDataTypes,
   viewsSupported: false,
   supportedColumnOperators,

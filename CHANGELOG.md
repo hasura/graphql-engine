@@ -65,6 +65,7 @@ only when there are enough present in the items inventory.
 - server: support query multiplexing in MSSQL subscriptions
 - server: an inherited role's limit will be the max limit of all the roles (#6671)
 - console: add bigquery support (#1000)
+- console: show db version in manage db page and remove from about page (#1166)
 - cli: add support for bigquery in metadata operations
 
 ## v2.0.0-alpha.8

@@ -2,73 +2,25 @@ import React, { Component } from 'react';
 import { Connect } from 'react-redux';
 import Helmet from 'react-helmet';
 
-import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-
 import globals from '../../../../Globals';
 
 import styles from '../Settings.scss';
-import requestAction from '../../../../utils/requestAction';
-import { showErrorNotification } from '../../Common/Notification';
-import { versionGT } from '../../../../helpers/versionUtils';
 import { ReduxState, ConnectInjectedProps } from '../../../../types';
-import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
-import { dataSource } from '../../../../dataSources';
 
 type AboutState = {
   consoleAssetVersion?: string;
-  dataSourceVersion: string | null;
 };
 
 class About extends Component<ConnectInjectedProps & StateProps> {
   // had to add this here as the state type is not being read properly if added above.
   state: AboutState = {
     consoleAssetVersion: globals.consoleAssetVersion,
-    dataSourceVersion: null,
   };
 
-  componentDidMount() {
-    const fetchDBVersion = () => {
-      const { dispatch, dataHeaders, source } = this.props;
-      const query = dataSource?.getDatabaseVersionSql ?? '';
-
-      if (!query) {
-        this.setState({ dataSourceVersion: '' });
-        return;
-      }
-
-      const url = Endpoints.query;
-      const options: RequestInit = {
-        method: 'POST',
-        credentials: globalCookiePolicy,
-        headers: dataHeaders,
-        body: JSON.stringify(getRunSqlQuery(query, source, false, true)),
-      };
-
-      dispatch(requestAction(url, options)).then(
-        (data: Record<'result', Array<unknown[]>>) => {
-          this.setState({
-            dataSourceVersion: data.result[1][0],
-          });
-        },
-        (error: Error) => {
-          dispatch(
-            showErrorNotification(
-              'Failed to fetch Database version',
-              null,
-              error
-            )
-          );
-        }
-      );
-    };
-
-    fetchDBVersion();
-  }
-
   render() {
-    const { consoleAssetVersion, dataSourceVersion } = this.state;
+    const { consoleAssetVersion } = this.state;
 
-    const { serverVersion, latestStableServerVersion } = this.props;
+    const { serverVersion } = this.props;
 
     const spinner = <i className="fa fa-spinner fa-spin" />;
 
@@ -78,50 +30,6 @@ class About extends Component<ConnectInjectedProps & StateProps> {
           <b>Current server version: </b>
           <span className={styles.add_mar_left_mid}>
             {serverVersion || spinner}
-          </span>
-        </div>
-      );
-    };
-
-    const getLatestServerVersionSection = () => {
-      let updateLinks;
-      if (
-        serverVersion &&
-        latestStableServerVersion &&
-        versionGT(latestStableServerVersion, serverVersion)
-      ) {
-        updateLinks = (
-          <span className={styles.add_mar_left_mid}>
-            <a
-              href={`https://github.com/hasura/graphql-engine/releases/tag/${latestStableServerVersion}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span>
-                <i>View Changelog</i>
-              </span>
-            </a>
-            <span>
-              &nbsp;<b>&middot;</b>&nbsp;
-            </span>
-            <a
-              href="https://hasura.io/docs/latest/graphql/core/deployment/updating.html"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span>
-                <i>Update Now</i>
-              </span>
-            </a>
-          </span>
-        );
-      }
-
-      return (
-        <div>
-          <b>Latest stable server version: </b>
-          <span className={styles.add_mar_left_mid}>
-            {latestStableServerVersion || spinner} {updateLinks}
           </span>
         </div>
       );
@@ -138,17 +46,6 @@ class About extends Component<ConnectInjectedProps & StateProps> {
       );
     };
 
-    const getPgVersionSection = () => {
-      return (
-        <div>
-          <b>Database version ({this.props.source}): </b>
-          <span className={styles.add_mar_left_mid}>
-            {dataSourceVersion || spinner}
-          </span>
-        </div>
-      );
-    };
-
     return (
       <div
         className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
@@ -158,12 +55,8 @@ class About extends Component<ConnectInjectedProps & StateProps> {
           <h2 className={styles.headerText}>About</h2>
           <div className={styles.add_mar_top}>{getServerVersionSection()}</div>
           <div className={styles.add_mar_top}>
-            {getLatestServerVersionSection()}
-          </div>
-          <div className={styles.add_mar_top}>
             {getConsoleAssetVersionSection()}
           </div>
-          <div className={styles.add_mar_top}>{getPgVersionSection()}</div>
         </div>
       </div>
     );
