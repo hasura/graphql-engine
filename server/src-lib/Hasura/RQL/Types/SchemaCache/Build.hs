@@ -234,7 +234,7 @@ buildSchemaCacheFor objectId metadataModifier = do
 
   for_ (M.lookup objectId newInconsistentObjects) $ \matchingObjects -> do
     let reasons = commaSeparated $ imReason <$> matchingObjects
-    throwError (err400 ConstraintViolation reasons) { qeInternal = Just $ toJSON matchingObjects }
+    throwError (err400 InvalidConfiguration reasons) { qeInternal = Just $ toJSON matchingObjects }
 
   unless (null newInconsistentObjects) $
     throwError (err400 Unexpected "cannot continue due to new inconsistent metadata")

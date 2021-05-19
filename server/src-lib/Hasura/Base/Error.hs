@@ -93,6 +93,7 @@ data Code
   | BadRequest
   | MethodNotAllowed
   | Conflict
+  | InvalidConfiguration
   -- Graphql error
   | NoTables
   | ValidationFailed
@@ -160,6 +161,7 @@ instance Show Code where
     MethodNotAllowed            -> "method-not-allowed"
     Conflict                    -> "conflict"
     BigQueryError               -> "bigquery-error"
+    InvalidConfiguration        -> "invalid-configuration"
     ActionWebhookCode t         -> T.unpack t
     CustomCode t                -> T.unpack t
 

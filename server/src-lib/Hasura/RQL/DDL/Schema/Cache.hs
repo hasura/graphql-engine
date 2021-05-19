@@ -202,14 +202,14 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
     endpoints              = buildEndpointsTrie (M.elems $ _boEndpoints resolvedOutputs)
 
-    duplicateF md          = DuplicateRestVariables ("Duplicate variables found in endpoint path " <> (ceUrlTxt md)) (endpointObject md)
+    duplicateF md          = DuplicateRestVariables (ceUrlTxt md) (endpointObject md)
     duplicateRestVariables = map duplicateF $ filter duplicateVariables (M.elems $ _boEndpoints resolvedOutputs)
 
-    invalidF md            = InvalidRestSegments ("Empty segments or unnamed variables are not allowed: " <> (ceUrlTxt md)) (endpointObject md)
+    invalidF md            = InvalidRestSegments (ceUrlTxt md) (endpointObject md)
     invalidRestSegments    = map invalidF $ filter hasInvalidSegments (M.elems $ _boEndpoints resolvedOutputs)
 
     ambiguousF' ep         = MetadataObject (endpointObjId ep) (toJSON ep)
-    ambiguousF mds         = AmbiguousRestEndpoints ("Ambiguous URL paths: " <> commaSeparated (map _ceUrl mds)) (map ambiguousF' mds)
+    ambiguousF mds         = AmbiguousRestEndpoints (commaSeparated $ map _ceUrl mds) (map ambiguousF' mds)
     ambiguousRestEndpoints = map (ambiguousF . S.elems . snd) $ ambiguousPathsGrouped endpoints
 
   returnA -< SchemaCache
