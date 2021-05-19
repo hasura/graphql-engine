@@ -27,10 +27,12 @@ module Hasura.RQL.DDL.Schema.Table
 
 import           Hasura.Prelude
 
+import qualified Data.Aeson.Ordered                 as JO
 import qualified Data.HashMap.Strict.Extended       as Map
 import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.HashSet                       as S
 import qualified Language.GraphQL.Draft.Syntax      as G
+
 
 import           Control.Arrow.Extended
 import           Control.Lens.Extended              hiding ((.=))
@@ -164,14 +166,15 @@ checkConflictingNode sc tnGQL = do
     Left _ -> pure ()
     Right (results, _reusability) -> do
       case OMap.lookup $$(G.litName "__schema") results of
-        Just (RFRaw (Object schema)) -> do
+        Just (RFRaw (JO.Object schema)) -> do
           let names = do
-                Object queryType <- Map.lookup "queryType" schema
-                Array fields <- Map.lookup "fields" queryType
-                traverse (\case Object field -> do
-                                  String name <- Map.lookup "name" field
-                                  pure name
-                                _ -> Nothing) fields
+                JO.Object queryType <- JO.lookup "queryType" schema
+                JO.Array fields <- JO.lookup "fields" queryType
+                for fields \case
+                  JO.Object field -> do
+                    JO.String name <- JO.lookup "name" field
+                    pure name
+                  _ -> Nothing
           case names of
             Nothing -> pure ()
             Just ns ->

@@ -6,7 +6,7 @@ module Hasura.GraphQL.Schema
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                            as J
+import qualified Data.Aeson.Ordered                    as JO
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
 import qualified Data.HashSet                          as Set
@@ -271,8 +271,8 @@ buildRelayRoleContext (SQLGenCtx stringifyNum boolCollapse, queryType, functionP
     mutationParserBackend <-
       buildMutationParser mempty allActionInfos nonObjectCustomTypes mutationBackendFields
 
-    subscriptionParser <- P.safeSelectionSet subscriptionRoot Nothing queryPGFields
-                             <&> fmap (fmap (P.handleTypename (RFRaw . J.String. G.unName)))
+    subscriptionParser <-
+      P.safeSelectionSet subscriptionRoot Nothing queryPGFields <&> fmap (fmap typenameToRawRF)
     queryParserFrontend <- queryWithIntrospectionHelper queryPGFields
       mutationParserFrontend subscriptionParser
     queryParserBackend <- queryWithIntrospectionHelper queryPGFields
@@ -349,11 +349,9 @@ unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsC
   mutationParser <-
     if null adminMutationRemotes
     then pure Nothing
-    else P.safeSelectionSet mutationRoot Nothing mutationFields
-         <&> Just . fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+    else P.safeSelectionSet mutationRoot Nothing mutationFields <&> Just . fmap (fmap typenameToRawRF)
   subscriptionParser <-
-    P.safeSelectionSet subscriptionRoot Nothing []
-    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+    P.safeSelectionSet subscriptionRoot Nothing [] <&> fmap (fmap typenameToRawRF)
   queryParser <- queryWithIntrospectionHelper queryFields mutationParser subscriptionParser
   pure $ GQLContext (finalizeParser queryParser) (finalizeParser <$> mutationParser)
 
@@ -581,8 +579,7 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
         }
   let partialQueryFields =
         basicQueryFP ++ (fmap RFRaw <$> [schema partialSchema, typeIntrospection partialSchema])
-  P.safeSelectionSet queryRoot Nothing partialQueryFields
-    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+  P.safeSelectionSet queryRoot Nothing partialQueryFields <&> fmap (fmap typenameToRawRF)
 
 queryRootFromFields
   :: forall n m
@@ -590,8 +587,7 @@ queryRootFromFields
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryRootFromFields fps =
-  P.safeSelectionSet queryRoot Nothing fps
-    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+  P.safeSelectionSet queryRoot Nothing fps <&> fmap (fmap typenameToRawRF)
 
 emptyIntrospection
   :: forall m n
@@ -637,8 +633,7 @@ buildSubscriptionParser
 buildSubscriptionParser queryFields allActions = do
   actionSubscriptionFields <- concat <$> traverse buildActionSubscriptionFields allActions
   let subscriptionFields = queryFields <> actionSubscriptionFields
-  P.safeSelectionSet subscriptionRoot Nothing subscriptionFields
-         <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+  P.safeSelectionSet subscriptionRoot Nothing subscriptionFields <&> fmap (fmap typenameToRawRF)
 
 buildMutationParser
   :: forall m n r
@@ -662,7 +657,7 @@ buildMutationParser allRemotes allActions nonObjectCustomTypes mutationFields = 
   if null mutationFieldsParser
   then pure Nothing
   else P.safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFieldsParser
-            <&> Just . fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+            <&> Just . fmap (fmap typenameToRawRF)
 
 
 
@@ -713,3 +708,8 @@ buildBackendSource
   -> AB.AnyBackend SourceInfo
   -> r
 buildBackendSource f e = AB.dispatchAnyBackend @BackendSchema e f
+
+typenameToRawRF
+  :: P.ParsedSelection (RootField db remote action JO.Value)
+  -> RootField db remote action JO.Value
+typenameToRawRF = P.handleTypename $ RFRaw . JO.String . G.unName
