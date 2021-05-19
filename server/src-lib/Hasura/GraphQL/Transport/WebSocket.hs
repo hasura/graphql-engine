@@ -358,7 +358,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     "an operation already exists with this id: " <> unOperationId opId
 
   userInfoM <- liftIO $ STM.readTVarIO userInfoR
-  (userInfo, reqHdrs, ipAddress) <- case userInfoM of
+  (userInfo, origReqHdrs, ipAddress) <- case userInfoM of
     CSInitialised WsClientState{..} -> return (wscsUserInfo, wscsReqHeaders, wscsIpAddress)
     CSInitError initErr -> do
       let e = "cannot start as connection_init failed with : " <> initErr
@@ -367,7 +367,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       let e = "start received before the connection is initialised"
       withComplete $ sendStartErr e
 
-  requestId <- getRequestId reqHdrs
+  (requestId, reqHdrs) <- getRequestId origReqHdrs
   (sc, scVer) <- liftIO getSchemaCache
 
   reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q
