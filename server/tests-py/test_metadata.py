@@ -1,6 +1,7 @@
 import ruamel.yaml as yaml
 from validate import check_query_f
 import pytest
+import os
 
 usefixtures = pytest.mark.usefixtures
 
@@ -51,6 +52,11 @@ class TestMetadata:
     def test_pg_multisource_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_multisource_query.yaml')
 
+    @pytest.mark.skipif(
+        os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_1') == os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_2') or
+        os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_1') is None or
+        os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_2') is None,
+        reason="We need two different and valid instances of postgres for this test.")
     def test_pg_multisource_table_name_conflict(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_multisource_table_name_conflict.yaml')
 
