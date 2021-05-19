@@ -106,6 +106,7 @@ const defaultModifyState = {
     rSchema: null,
     rcol: [],
     isUnique: false,
+    isPrimary: false,
   },
   manualRelAdd: {
     relName: '',

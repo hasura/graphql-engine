@@ -295,10 +295,19 @@ const generateRelationshipsQuery = (relMeta, currentDataSource) => {
       lcol: column,
       rcol: relMeta.rcol[index],
     }));
-    if (columnMaps.length === 1 && !relMeta.isUnique) {
-      _upQuery.args.using = {
-        foreign_key_constraint_on: relMeta.lcol[0],
-      };
+
+    if (columnMaps.length === 1) {
+      _upQuery.args.using =
+        relMeta.isPrimary || relMeta.isUnique
+          ? {
+              foreign_key_constraint_on: {
+                table: { name: relMeta.rTable, schema: relMeta.rSchema },
+                column: relMeta.rcol[0],
+              },
+            }
+          : {
+              foreign_key_constraint_on: relMeta.lcol[0],
+            };
     } else {
       const columnReducer = (accumulator, val) => ({
         ...accumulator,
@@ -431,6 +440,7 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
       rTable: state.rTable,
       rSchema: state.rSchema,
       isUnique: state.isUnique,
+      isPrimary: state.isPrimary,
     },
     source
   );

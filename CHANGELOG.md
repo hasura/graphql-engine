@@ -23,6 +23,9 @@
 - console: read-only modify page for mssql
 - console: filter out partitions from track table list and display partition info
 - console: fixes an issue where no schemas are listed on an MSSQL source
+- console: allow editing sources configuration
+- console: show db version and source details in manage db page
+- console: add one-to-one relationships support
 - cli: add `-o`/`--output` flag for `metadata` `apply` & `export` subcommands
 ```
 # export metadata and write to stdout
@@ -44,7 +47,6 @@ $ hasura metadata export -o json
 - server: fix regression: `on_conflict` was missing in the schema for inserts in tables where the current user has no columns listed in their update permissions (fix #6804)
 - server: fix one-to-one relationship bug which prevented adding one-to-one relationships which didn't have the same column name for target and source
 - console: fix Postgres table creation when table has a non-lowercase name and a comment (#6760)
-- console: allow editing sources configuration
 - cli: fix regression - `metadata apply —dry-run` was overwriting local metadata files with metadata on server when it should just display the differences.
 - server: decrease polling interval for scheduled triggers from 60 to 10 seconds
 - server: Change `HASURA_GRAPHQL_SCHEMA_POLL_INTERVAL` env var to `HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL` and `schema-poll-interval` option to `--schema-sync-poll-interval`.
@@ -68,7 +70,6 @@ only when there are enough present in the items inventory.
 - server: support query multiplexing in MSSQL subscriptions
 - server: an inherited role's limit will be the max limit of all the roles (#6671)
 - console: add bigquery support (#1000)
-- console: show db version in manage db page and remove from about page (#1166)
 - cli: add support for bigquery in metadata operations
 
 ## v2.0.0-alpha.8
