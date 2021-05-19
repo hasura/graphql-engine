@@ -43,6 +43,7 @@ $ hasura metadata export -o json
 - server: fix regression: `on_conflict` was missing in the schema for inserts in tables where the current user has no columns listed in their update permissions (fix #6804)
 - server: fix one-to-one relationship bug which prevented adding one-to-one relationships which didn't have the same column name for target and source
 - console: fix Postgres table creation when table has a non-lowercase name and a comment (#6760)
+- console: allow editing sources configuration
 - cli: fix regression - `metadata apply —dry-run` was overwriting local metadata files with metadata on server when it should just display the differences.
 - server: decrease polling interval for scheduled triggers from 60 to 10 seconds
 - server: Change `HASURA_GRAPHQL_SCHEMA_POLL_INTERVAL` env var to `HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL` and `schema-poll-interval` option to `--schema-sync-poll-interval`.

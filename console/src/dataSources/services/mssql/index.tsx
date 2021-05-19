@@ -163,6 +163,8 @@ export const supportedFeatures: SupportedFeaturesType = {
     databaseURL: true,
     environmentVariable: true,
     read_replicas: false,
+    connectionSettings: true,
+    retries: false,
   },
 };
 

@@ -29,7 +29,7 @@ import CollapsibleToggle from './CollapsibleToggle';
 type DatabaseListItemProps = {
   dataSource: DataSource;
   inconsistentObjects: InjectedProps['inconsistentObjects'];
-  // onEdit: (dbName: string) => void;
+  onEdit: (dbName: string) => void;
   onReload: (name: string, driver: Driver, cb: () => void) => void;
   onRemove: (name: string, driver: Driver, cb: () => void) => void;
   pushRoute: (route: string) => void;
@@ -38,7 +38,7 @@ type DatabaseListItemProps = {
 };
 
 const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
-  // onEdit,
+  onEdit,
   pushRoute,
   onReload,
   onRemove,
@@ -102,7 +102,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
         <Button
           size="xs"
           color="white"
-          style={{ marginRight: '10px' }}
+          className={styles.add_mar_right_mid}
           onClick={viewDB}
           disabled={isInconsistentDataSource}
         >
@@ -119,6 +119,16 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
           }}
         >
           {reloading ? 'Reloading...' : 'Reload'}
+        </Button>
+        <Button
+          size="xs"
+          color="white"
+          onClick={() => {
+            onEdit(dataSource.name);
+          }}
+          className={styles.add_mar_left_mid}
+        >
+          Edit
         </Button>
         <Button
           className={`${styles.text_red}`}
@@ -249,9 +259,9 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
     if (route) dispatch(_push(route));
   };
 
-  // const onEdit = (dbName: string) => {
-  //   dispatch(_push(`/data/manage/edit/${dbName}`));
-  // };
+  const onEdit = (dbName: string) => {
+    dispatch(_push(`/data/manage/edit/${dbName}`));
+  };
 
   return (
     <RightContainer>
@@ -286,6 +296,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
                   dataSource={data}
                   inconsistentObjects={inconsistentObjects}
                   pushRoute={pushRoute}
+                  onEdit={onEdit}
                   onReload={onReload}
                   onRemove={onRemove}
                   dispatch={dispatch}

@@ -30,7 +30,7 @@ export type ConnectDBState = {
   connectionParamState: ConnectionParams;
   databaseURLState: {
     dbURL: string;
-    serviceAccountFile: string;
+    serviceAccount: string;
     projectId: string;
     datasets: string;
   };
@@ -52,7 +52,7 @@ export const defaultState: ConnectDBState = {
   },
   databaseURLState: {
     dbURL: '',
-    serviceAccountFile: '',
+    serviceAccount: '',
     projectId: '',
     datasets: '',
   },
@@ -93,11 +93,12 @@ export const connectDataSource = (
   typeConnection: string,
   currentState: ConnectDBState,
   cb: () => void,
-  replicas?: Omit<SourceConnectionInfo, 'connection_string'>[]
+  replicas?: Omit<SourceConnectionInfo, 'connection_string'>[],
+  isEditState = false
 ) => {
   let databaseURL: string | { from_env: string } =
     currentState.dbType === 'bigquery'
-      ? currentState.databaseURLState.serviceAccountFile.trim()
+      ? currentState.databaseURLState.serviceAccount.trim()
       : currentState.databaseURLState.dbURL.trim();
   if (
     typeConnection === connectionTypes.ENV_VAR &&
@@ -108,6 +109,7 @@ export const connectDataSource = (
     databaseURL = { from_env: currentState.envVarState.envVar.trim() };
   } else if (
     typeConnection === connectionTypes.CONNECTION_PARAMS &&
+    currentState.dbType !== 'bigquery' &&
     getSupportedDrivers('connectDbForm.connectionParameters').includes(
       currentState.dbType
     )
@@ -126,6 +128,7 @@ export const connectDataSource = (
           name: currentState.displayName.trim(),
           dbUrl: databaseURL,
           connection_pool_settings: currentState.connectionSettings,
+          replace_configuration: isEditState,
           bigQuery: {
             projectId: currentState.databaseURLState.projectId,
             datasets: currentState.databaseURLState.datasets,
@@ -148,9 +151,10 @@ export type ConnectDBActions =
         connectionSettings: ConnectionSettings;
       };
     }
+  | { type: 'UPDATE_PARAM_STATE'; data: ConnectionParams }
   | { type: 'UPDATE_DISPLAY_NAME'; data: string }
   | { type: 'UPDATE_DB_URL'; data: string }
-  | { type: 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT_FILE'; data: string }
+  | { type: 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT'; data: string }
   | { type: 'UPDATE_DB_BIGQUERY_PROJECT_ID'; data: string }
   | { type: 'UPDATE_DB_BIGQUERY_DATASETS'; data: string }
   | { type: 'UPDATE_DB_URL_ENV_VAR'; data: string }
@@ -181,6 +185,11 @@ export const connectDBReducer = (
           dbURL: action.data.databaseUrl,
         },
         connectionSettings: action.data.connectionSettings,
+      };
+    case 'UPDATE_PARAM_STATE':
+      return {
+        ...state,
+        connectionParamState: action.data,
       };
     case 'UPDATE_DISPLAY_NAME':
       return {
@@ -280,12 +289,12 @@ export const connectDBReducer = (
         ...state,
         connectionSettings: action.data,
       };
-    case 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT_FILE':
+    case 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT':
       return {
         ...state,
         databaseURLState: {
           ...state.databaseURLState,
-          serviceAccountFile: action.data,
+          serviceAccount: action.data,
         },
       };
     case 'UPDATE_DB_BIGQUERY_DATASETS':

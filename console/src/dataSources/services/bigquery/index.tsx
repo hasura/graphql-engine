@@ -153,10 +153,12 @@ export const supportedFeatures: SupportedFeaturesType = {
   },
   connectDbForm: {
     enabled: globals.consoleType !== 'cloud',
-    connectionParameters: false,
-    databaseURL: true,
+    connectionParameters: true,
+    databaseURL: false,
     environmentVariable: true,
     read_replicas: false,
+    connectionSettings: false,
+    retries: false,
   },
 };
 
