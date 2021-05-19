@@ -39,6 +39,6 @@ func (a *V3MetadataV2ConfigVersion) Export(_ yaml.MapSlice) (map[string][]byte, 
 		return nil, err
 	}
 	return map[string][]byte{
-		filepath.Join(a.MetadataDir, fileName): data,
+		filepath.ToSlash(filepath.Join(a.MetadataDir, fileName)): data,
 	}, nil
 }

@@ -11,6 +11,7 @@ export const addSource = (
       idle_timeout?: number;
       retries?: number;
     };
+    replace_configuration?: boolean;
     bigQuery: {
       projectId: string;
       datasets: string;
@@ -19,6 +20,7 @@ export const addSource = (
   // supported only for PG sources at the moment
   replicas?: Omit<SourceConnectionInfo, 'connection_string'>[]
 ) => {
+  const replace_configuration = payload.replace_configuration ?? false;
   if (driver === 'mssql') {
     return {
       type: 'mssql_add_source',
@@ -30,20 +32,26 @@ export const addSource = (
             pool_settings: payload.connection_pool_settings,
           },
         },
+        replace_configuration,
       },
     };
   }
 
   if (driver === 'bigquery') {
+    const service_account =
+      typeof payload.dbUrl === 'string'
+        ? JSON.parse(payload.dbUrl)
+        : payload.dbUrl;
     return {
       type: 'bigquery_add_source',
       args: {
         name: payload.name,
         configuration: {
-          service_account: payload.dbUrl,
+          service_account,
           project_id: payload.bigQuery.projectId,
           datasets: payload.bigQuery.datasets.split(',').map(d => d.trim()),
         },
+        replace_configuration,
       },
     };
   }
@@ -59,6 +67,7 @@ export const addSource = (
         },
         read_replicas: replicas?.length ? replicas : null,
       },
+      replace_configuration,
     },
   };
 };

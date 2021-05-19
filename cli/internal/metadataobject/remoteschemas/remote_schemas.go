@@ -80,7 +80,7 @@ func (r *RemoteSchemaConfig) Export(metadata yaml.MapSlice) (map[string][]byte, 
 		return nil, err
 	}
 	return map[string][]byte{
-		filepath.Join(r.MetadataDir, fileName): data,
+		filepath.ToSlash(filepath.Join(r.MetadataDir, fileName)): data,
 	}, nil
 }
 

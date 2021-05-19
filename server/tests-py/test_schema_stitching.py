@@ -223,7 +223,7 @@ class TestAddRemoteSchemaTbls:
         q = mk_add_remote_q('simple2', 'http://localhost:5000/hello-graphql')
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 400
-        assert resp['code'] == 'constraint-violation'
+        assert resp['code'] == 'invalid-configuration'
 
     @pytest.mark.allow_server_upgrade_test
     def test_add_second_remote_schema(self, hge_ctx):

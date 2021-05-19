@@ -123,6 +123,7 @@ export interface AddDataSourceRequest {
         idle_timeout?: number; // in seconds
         retries?: number;
       };
+      replace_configuration?: boolean;
       bigQuery: {
         projectId: string;
         datasets: string;
@@ -255,7 +256,7 @@ export const addDataSource = (
     headers: dataHeaders,
     body: JSON.stringify(query),
   };
-
+  const isEdit = data.payload.replace_configuration;
   return dispatch(requestAction(Endpoints.metadata, options))
     .then(() => {
       dispatch({
@@ -273,7 +274,9 @@ export const addDataSource = (
           dispatch(
             showNotification(
               {
-                title: 'Database added successfully!',
+                title: `Data source ${
+                  !isEdit ? 'added' : 'updated'
+                } successfully!`,
                 level: 'success',
                 autoDismiss: 0,
                 action: {
@@ -291,9 +294,17 @@ export const addDataSource = (
     })
     .catch(err => {
       console.error(err);
-      dispatch(_push('/data/manage/connect'));
+      if (!isEdit) {
+        dispatch(_push('/data/manage/connect'));
+      }
       if (!skipNotification) {
-        dispatch(showErrorNotification('Add data source failed', null, err));
+        dispatch(
+          showErrorNotification(
+            `${!isEdit ? 'Add' : 'Updating'} data source failed`,
+            null,
+            err
+          )
+        );
       }
       return err;
     });
@@ -337,55 +348,6 @@ export const removeDataSource = (
         dispatch(showErrorNotification('Remove data source failed', null, err));
       }
       return err;
-    });
-};
-
-export const editDataSource = (
-  oldName: string | undefined,
-  data: AddDataSourceRequest['data'],
-  onSuccessCb: () => void
-): Thunk<Promise<void | ReduxState>, MetadataActions> => dispatch => {
-  return dispatch(
-    removeDataSource(
-      { driver: data.driver, name: oldName ?? data.payload.name },
-      true
-    )
-  )
-    .then(() => {
-      // FIXME?: There might be a problem when or if the metadata is inconsistent,
-      // we should be providing a better error message for the same
-      dispatch(
-        addDataSource(
-          data,
-          () => {
-            dispatch(
-              showSuccessNotification(
-                'Successfully updated datasource details.'
-              )
-            );
-            onSuccessCb();
-          },
-          [],
-          true
-        )
-      ).catch(err => {
-        console.error(err);
-        dispatch(
-          showErrorNotification(
-            'Failed to edit data source',
-            'There was a problem in editing the details of the datasource'
-          )
-        );
-      });
-    })
-    .catch(err => {
-      console.error(err);
-      dispatch(
-        showErrorNotification(
-          'Failed to edit data source',
-          'There was a problem in editing the details of the datasource'
-        )
-      );
     });
 };
 

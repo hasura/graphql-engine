@@ -50,7 +50,8 @@ inconsistent_objects:
 - definition:
     schema: public
     name: article
-  reason: 'no such table/view exists in source: "article"'
+  name: table article in source default
+  reason: 'Inconsistent object: no such table/view exists in source: "article"'
   type: table
 - definition:
     using:
@@ -65,8 +66,9 @@ inconsistent_objects:
     table:
       schema: public
       name: author
+  name: array_relation articles in table author in source default
   reason: >-
-    in table "author": in relationship "articles": table "article" does not exist
+    Inconsistent object: in table "author": in relationship "articles": table "article" does not exist
   type: array_relation
 
 # Teardown

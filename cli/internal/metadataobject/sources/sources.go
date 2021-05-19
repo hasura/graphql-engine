@@ -211,7 +211,7 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 			}
 
 			tableFileName := fmt.Sprintf("%s_%s.yaml", tableNamespaceIdentifier, table.Table.Name)
-			tableIncludeTag := fmt.Sprintf(fmt.Sprintf("%s %s", "!include", tableFileName))
+			tableIncludeTag := fmt.Sprintf("%s %s", "!include", tableFileName)
 			tableTags = append(tableTags, tableIncludeTag)
 
 			// build <source>/tables/<table_primary_key>.yaml
@@ -219,16 +219,16 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 			if err != nil {
 				return nil, err
 			}
-			tableFilePath := filepath.Join(t.MetadataDir, sourcesDirectory, source.Name, tablesDirectory, tableFileName)
+			tableFilePath := filepath.ToSlash(filepath.Join(t.MetadataDir, sourcesDirectory, source.Name, tablesDirectory, tableFileName))
 			files[tableFilePath] = b
 		}
-		tableTagsFilePath := filepath.Join(t.MetadataDir, sourcesDirectory, source.Name, tablesDirectory, "tables.yaml")
+		tableTagsFilePath := filepath.ToSlash(filepath.Join(t.MetadataDir, sourcesDirectory, source.Name, tablesDirectory, "tables.yaml"))
 		tableTagsBytes, err := yaml.Marshal(tableTags)
 		if err != nil {
 			return nil, fmt.Errorf("building contents for %v: %w", tableTagsFilePath, err)
 		}
 		files[tableTagsFilePath] = tableTagsBytes
-		source.Tables = fmt.Sprintf("!include %s", filepath.Join(source.Name, tablesDirectory, "tables.yaml"))
+		source.Tables = fmt.Sprintf("!include %s", filepath.ToSlash(filepath.Join(source.Name, tablesDirectory, "tables.yaml")))
 
 		var functions []struct {
 			Function struct {
@@ -249,7 +249,7 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 		}
 		for idx, function := range functions {
 			functionFileName := fmt.Sprintf("%s_%s.yaml", function.Function.Schema, function.Function.Name)
-			includeTag := fmt.Sprintf(fmt.Sprintf("%s %s", "!include", functionFileName))
+			includeTag := fmt.Sprintf("%s %s", "!include", functionFileName)
 			functionTags = append(functionTags, includeTag)
 
 			// build <source>/functions/<function_primary_key>.yaml
@@ -257,17 +257,17 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 			if err != nil {
 				return nil, err
 			}
-			functionFilePath := filepath.Join(t.MetadataDir, sourcesDirectory, source.Name, functionsDirectory, functionFileName)
+			functionFilePath := filepath.ToSlash(filepath.Join(t.MetadataDir, sourcesDirectory, source.Name, functionsDirectory, functionFileName))
 			files[functionFilePath] = b
 		}
 		if len(functions) > 0 {
-			functionsTagsFilePath := filepath.Join(t.MetadataDir, sourcesDirectory, source.Name, functionsDirectory, "functions.yaml")
+			functionsTagsFilePath := filepath.ToSlash(filepath.Join(t.MetadataDir, sourcesDirectory, source.Name, functionsDirectory, "functions.yaml"))
 			functionTagsBytes, err := yaml.Marshal(functionTags)
 			if err != nil {
 				return nil, fmt.Errorf("building contents for %v: %w", functionsTagsFilePath, err)
 			}
 			files[functionsTagsFilePath] = functionTagsBytes
-			source.Functions = fmt.Sprintf("!include %s", filepath.Join(source.Name, functionsDirectory, "functions.yaml"))
+			source.Functions = filepath.ToSlash(fmt.Sprintf("!include %s", filepath.ToSlash(filepath.Join(source.Name, functionsDirectory, "functions.yaml"))))
 		}
 	}
 
@@ -275,7 +275,7 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 	if err != nil {
 		return nil, err
 	}
-	files[filepath.Join(t.MetadataDir, sourcesDirectory, fileName)] = sourcesYamlBytes
+	files[filepath.ToSlash(filepath.Join(t.MetadataDir, sourcesDirectory, fileName))] = sourcesYamlBytes
 	return files, nil
 }
 

@@ -314,11 +314,13 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
     req <- Spock.request
     -- Bytes are actually read from the socket here. Time this.
     (ioWaitTime, reqBody) <- withElapsedTime $ liftIO $ Wai.strictRequestBody req
-    let headers = Wai.requestHeaders req
+    let origHeaders = Wai.requestHeaders req
         authMode = scAuthMode serverCtx
         manager = scManager serverCtx
         ipAddress = Wai.getSourceFromFallback req
         pathInfo = Wai.rawPathInfo req
+
+    (requestId, headers) <- getRequestId origHeaders
 
     tracingCtx <- liftIO $ Tracing.extractHttpContext headers
 
@@ -333,8 +335,6 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
           tracingCtx
           (fromString (B8.unpack pathInfo))
 
-    requestId <- getRequestId headers
-
     mapActionT runTraceT $ do
       -- Add the request ID to the tracing metadata so that we
       -- can correlate requests and traces
@@ -342,7 +342,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
 
       let getInfo parsedRequest = do
             userInfoE <- fmap fst <$> lift (resolveUserInfo logger manager headers authMode parsedRequest)
-            userInfo  <- onLeft userInfoE (logErrorAndResp Nothing requestId req (reqBody, Nothing) False headers . qErrModifier)
+            userInfo  <- onLeft userInfoE (logErrorAndResp Nothing requestId req (reqBody, Nothing) False origHeaders . qErrModifier)
             let handlerState = HandlerCtx serverCtx userInfo headers requestId ipAddress
                 includeInternal = shouldIncludeInternal (_uiRole userInfo) $
                                   scResponseInternalErrorsConfig serverCtx
@@ -364,13 +364,13 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
         AHPost handler -> do
           (userInfo, handlerState, includeInternal) <- getInfo Nothing
           parsedReqE <- runExceptT $ parseBody reqBody
-          parsedReq  <- onLeft parsedReqE (logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal headers . qErrModifier)
+          parsedReq  <- onLeft parsedReqE (logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal origHeaders . qErrModifier)
           res <- lift $ runHandler handlerState $ handler parsedReq
           return (res, userInfo, includeInternal, Just parsedReq)
         -- in this case we parse the request _first_ and then send the request to the webhook for auth
         AHGraphQLRequest handler -> do
           parsedReqE <- runExceptT $ parseBody reqBody
-          parsedReq  <- onLeft parsedReqE (logErrorAndResp Nothing requestId req (reqBody, Nothing) False headers . qErrModifier)
+          parsedReq  <- onLeft parsedReqE (logErrorAndResp Nothing requestId req (reqBody, Nothing) False origHeaders . qErrModifier)
           (userInfo, handlerState, includeInternal) <- getInfo (Just parsedReq)
           res <- lift $ runHandler handlerState $ handler parsedReq
           return (res, userInfo, includeInternal, Just parsedReq)
@@ -382,7 +382,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
       case modResult of
         Left err  -> logErrorAndResp (Just userInfo) requestId req (reqBody, toJSON <$> query) includeInternal headers err
         Right (httpLoggingMetadata, res) ->
-          logSuccessAndResp (Just userInfo) requestId req (reqBody, toJSON <$> query) res (Just (ioWaitTime, serviceTime)) headers httpLoggingMetadata
+          logSuccessAndResp (Just userInfo) requestId req (reqBody, toJSON <$> query) res (Just (ioWaitTime, serviceTime)) origHeaders httpLoggingMetadata
 
     where
       logger = scLogger serverCtx
@@ -1076,7 +1076,7 @@ raiseGenericApiError
 raiseGenericApiError logger headers qErr = do
   req <- Spock.request
   reqBody <- liftIO $ Wai.strictRequestBody req
-  reqId <- getRequestId $ Wai.requestHeaders req
+  (reqId, _newHeaders) <- getRequestId $ Wai.requestHeaders req
   lift $ logHttpError logger Nothing reqId req (reqBody, Nothing) qErr headers
   setHeader jsonHeader
   Spock.setStatus $ qeStatus qErr

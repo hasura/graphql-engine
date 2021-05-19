@@ -884,7 +884,7 @@ export interface RestEndpointEntry {
 
 export interface SourceConnectionInfo {
   // used for SQL Server
-  connection_string: string;
+  connection_string: string | { from_env: string };
   // used for Postgres
   database_url: string | { from_env: string };
   pool_settings: {

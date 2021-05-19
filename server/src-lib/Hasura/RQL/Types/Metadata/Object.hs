@@ -178,12 +178,12 @@ imObjectIds = \case
 
 imReason :: InconsistentMetadata -> Text
 imReason = \case
-  InconsistentObject reason _ _   -> reason
-  ConflictingObjects reason _     -> reason
-  DuplicateObjects objectId _     -> "multiple definitions for " <> moiName objectId
-  DuplicateRestVariables reason _ -> reason
-  InvalidRestSegments reason _    -> reason
-  AmbiguousRestEndpoints reason _ -> reason
+  InconsistentObject reason _ _   -> "Inconsistent object: " <> reason
+  ConflictingObjects reason _     -> "Conflicting objects: " <> reason
+  DuplicateObjects objectId _     -> "Multiple definitions for: " <> moiName objectId
+  DuplicateRestVariables reason _ -> "Duplicate variables found in endpoint path: " <> reason
+  InvalidRestSegments reason _    -> "Empty segments or unnamed variables are not allowed: " <> reason
+  AmbiguousRestEndpoints reason _ -> "Ambiguous URL paths: " <> reason
 
 -- | Builds a map from each unique metadata object id to the inconsistencies associated with it.
 -- Note that a single inconsistency can involve multiple metadata objects, so the same inconsistency
@@ -197,7 +197,7 @@ instance ToJSON InconsistentMetadata where
   toJSON inconsistentMetadata = object (("reason" .= imReason inconsistentMetadata) : extraFields)
     where
       extraFields = case inconsistentMetadata of
-        InconsistentObject _ internal metadata -> metadataObjectFields internal metadata
+        InconsistentObject _ message metadata -> metadataObjectFields message metadata
         ConflictingObjects _ metadatas ->
           [ "objects" .= map (object . metadataObjectFields Nothing) metadatas ]
         DuplicateObjects objectId definitions ->
@@ -208,7 +208,8 @@ instance ToJSON InconsistentMetadata where
         InvalidRestSegments _ md     -> metadataObjectFields Nothing md
         AmbiguousRestEndpoints _ mds -> [ "conflicts" .= map _moDefinition mds ]
 
-      metadataObjectFields (maybeInternal :: Maybe Value) (MetadataObject objectId definition) =
+      metadataObjectFields (maybeMessage :: Maybe Value) (MetadataObject objectId definition) =
         [ "type" .= String (moiTypeName objectId)
+        , "name" .= String (moiName objectId)
         , "definition" .= definition ]
-        <> maybe [] (\internal -> ["internal" .= internal]) maybeInternal
+        <> maybe [] (\message -> ["message" .= message]) maybeMessage

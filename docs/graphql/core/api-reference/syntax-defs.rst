@@ -105,6 +105,50 @@ PGConfiguration
      - [PGSourceConnectionInfo_]
      - Optional list of read replica configuration *(supported only in cloud/enterprise versions)*
 
+.. _MsSQLConfiguration:
+
+MsSQLConfiguration
+^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - connection_info
+     - true
+     - MsSQLSourceConnectionInfo_
+     - Connection parameters for the source
+
+
+.. _BigQueryConfiguration:
+
+BigQueryConfiguration
+^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - service_account
+     - true
+     - ``JSON String`` | ``JSON`` | FromEnv_
+     - Service account for BigQuery database
+   * - project_id
+     - true
+     - ``String`` | FromEnv_
+     - Project Id for BigQuery database
+   * - datasets
+     - true
+     - ``[String]`` | FromEnv_
+     - List of BigQuery datasets
+
+
 .. _PGSourceConnectionInfo:
 
 PGSourceConnectionInfo
@@ -122,7 +166,7 @@ PGSourceConnectionInfo
      - ``String`` | FromEnv_
      - The database connection URL string, or as an environment variable
    * - pool_settings
-     - true
+     - false
      - PGPoolSettings_
      - Connection pool settings
    * - use_prepared_statements
@@ -134,6 +178,28 @@ PGSourceConnectionInfo
      - false
      - ``read-committed`` | ``repeatable-read`` | ``serializable``
      - The transaction isolation level in which the queries made to the source will be run with (default: ``read-committed``).
+
+
+.. _MsSQLSourceConnectionInfo:
+
+MsSQLSourceConnectionInfo
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - connection_string
+     - true
+     - ``String`` | FromEnv_
+     - The database connection string, or as an environment variable
+   * - pool_settings
+     - false
+     - MsSQLPoolSettings_
+     - Connection pool settings
 
 
 .. _FromEnv:
@@ -187,6 +253,28 @@ PGPoolSettings
      - Time from connection creation after which the connection should be destroyed and a new one
        created. A value of 0 indicates we should never destroy an active connection. If 0 is
        passed, memory from large query results may not be reclaimed. (default: 600 sec)
+
+
+.. _MsSQLPoolSettings:
+
+MsSQLPoolSettings
+^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - max_connections
+     - false
+     - ``Integer``
+     - Maximum number of connections to be kept in the pool (default: 50)
+   * - idle_timeout
+     - false
+     - ``Integer``
+     - The idle timeout (in seconds) per connection (default: 180)
 
 
 .. _PGColumnType:
