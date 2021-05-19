@@ -42,7 +42,7 @@ module Hasura.Eventing.EventTrigger
 
 import           Control.Concurrent.Extended          (sleep, Forever (..))
 import           Control.Concurrent.STM.TVar
-import           Control.Monad.Catch                  (MonadMask, bracket_)
+import           Control.Monad.Catch                  (MonadMask, finally, mask_)
 import           Control.Monad.STM
 import           Control.Monad.Trans.Control          (MonadBaseControl)
 import           Data.Aeson
@@ -178,7 +178,7 @@ processEventQueue
   -> EventEngineCtx
   -> LockedEventsCtx
   -> m (Forever m)
-processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx{..} LockedEventsCtx{leEvents} = do
+processEventQueue logger logenv httpMgr pool getSchemaCache EventEngineCtx{..} LockedEventsCtx{leEvents} = do
   events0 <- popEventsBatch
   return $ Forever (events0, 0, False) go
   where
@@ -203,6 +203,11 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
             saveLockedEvents (map eId events) leEvents
             return events
 
+    -- !!! CAREFUL !!!
+    --     The logic here in particular is subtle and has been fixed, broken,
+    --     and fixed again in several different ways, several times.
+    -- !!! CAREFUL !!!
+    --
     -- work on this batch of events while prefetching the next. Recurse after we've forked workers
     -- for each in the batch, minding the requested pool size.
     go :: FetchEventArguments -> m FetchEventArguments
@@ -215,21 +220,32 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       -- worth the effort for something more fine-tuned
       eventsNext <- LA.withAsync popEventsBatch $ \eventsNextA -> do
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
-        forM_ events $ \event -> do
-          tracingCtx <- liftIO (Tracing.extractEventContext (eEvent event))
-          let runTraceT = maybe
-                Tracing.runTraceT
-                Tracing.runTraceTInContext
-                tracingCtx
-          t <- processEvent event
-            & runTraceT "process event"
-            & withEventEngineCtx eeCtx
-            & flip runReaderT (logger, httpMgr)
-            & LA.async
-          -- removing an event from the _eeCtxLockedEvents after the event has
-          -- been processed
-          removeEventFromLockedEvents (eId event) leEvents
-          LA.link t
+        forM_ events $ \event ->
+          -- NOTE: we implement a logical bracket pattern here with the
+          -- increment and decrement of _eeCtxEventThreadsCapacity which
+          -- depends on not putting anything that can throw in the body here:
+          mask_ $ do
+            liftIO $ atomically $ do  -- block until < HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE threads:
+              capacity <- readTVar _eeCtxEventThreadsCapacity
+              check $ capacity > 0
+              writeTVar _eeCtxEventThreadsCapacity (capacity - 1)
+            -- since there is some capacity in our worker threads, we can launch another:
+            let restoreCapacity = liftIO $ atomically $
+                  modifyTVar' _eeCtxEventThreadsCapacity (+ 1)
+
+            tracingCtx <- liftIO (Tracing.extractEventContext (eEvent event))
+            let runTraceT = maybe
+                  Tracing.runTraceT
+                  Tracing.runTraceTInContext
+                  tracingCtx
+
+            t <- LA.async $ flip runReaderT (logger, httpMgr) $
+                    runTraceT "process event" (processEvent event) `finally`
+                      -- NOTE!: this needs to happen IN THE FORKED THREAD:
+                      restoreCapacity
+            LA.link t
+
+        -- return when next batch ready; some 'processEvent' threads may be running.
         LA.wait eventsNextA
 
       let lenEvents = length events
@@ -261,7 +277,8 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
          , Has (L.Logger L.Hasura) r
          , Tracing.MonadTrace io
          )
-      => Event -> io ()
+      => Event
+      -> io ()
     processEvent e = do
       cache <- liftIO getSchemaCache
       let meti = getEventTriggerInfoFromEvent cache e
@@ -295,23 +312,8 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
             (processError pool e retryConf decodedHeaders ep)
             (processSuccess pool e decodedHeaders ep) res
             >>= flip onLeft logQErr
-
-withEventEngineCtx ::
-    ( MonadIO m
-    , MonadMask m
-    )
-    => EventEngineCtx -> m () -> m ()
-withEventEngineCtx eeCtx = bracket_ (decrementThreadCount eeCtx) (incrementThreadCount eeCtx)
-
-incrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
-incrementThreadCount (EventEngineCtx c _) = liftIO $ atomically $ modifyTVar' c (+1)
-
-decrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
-decrementThreadCount (EventEngineCtx c _)  = liftIO $ atomically $ do
-  countThreads <- readTVar c
-  if countThreads > 0
-     then modifyTVar' c (\v -> v - 1)
-     else retry
+      -- removing an event from the _eeCtxLockedEvents after the event has been processed:
+      removeEventFromLockedEvents (eId e) leEvents
 
 createEventPayload :: RetryConf -> Event ->  EventPayload
 createEventPayload retryConf e = EventPayload

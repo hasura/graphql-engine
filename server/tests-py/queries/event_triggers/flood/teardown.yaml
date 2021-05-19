@@ -1,0 +1,10 @@
+type: bulk
+args:
+- type: delete_event_trigger
+  args:
+    name: flood_all
+- type: run_sql
+  args:
+    sql: |
+      truncate hdb_catalog.event_log cascade;
+      drop table hge_tests.test_flood;

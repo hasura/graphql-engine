@@ -3,6 +3,7 @@
 import pytest
 import queue
 import time
+import utils
 from validate import check_query_f, check_event
 
 usefixtures = pytest.mark.usefixtures
@@ -84,21 +85,64 @@ class TestCreateAndDelete:
     def dir(cls):
         return 'queries/event_triggers/create-delete'
 
-# Smoke test for handling a backlog of events
+# Generates a backlog of events, then:
+# - checks that we're processing with the concurrency and backpressure
+#   characteristics we expect
+# - ensures all events are successfully processed
+#
+# NOTE: this expects:
+#   HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE=8
+#   HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE=100  (the default)
 @usefixtures("per_method_tests_db_state")
 class TestEventFlood(object):
 
     @classmethod
     def dir(cls):
-        return 'queries/event_triggers/basic'
+        return 'queries/event_triggers/flood'
 
     def test_flood(self, hge_ctx, evts_webhook):
-        table = {"schema": "hge_tests", "name": "test_t1"}
+        table = {"schema": "hge_tests", "name": "test_flood"}
 
+        # Trigger a bunch of events; hasura will begin processing but block on /block
         payload = range(1,1001)
         rows = list(map(lambda x: {"c1": x, "c2": "hello"}, payload))
         st_code, resp = insert_many(hge_ctx, table, rows)
         assert st_code == 200, resp
+
+        def check_backpressure():
+            # Expect that HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE webhooks are pending:
+            assert evts_webhook.blocked_count == 8
+            # ...Great, so presumably:
+            # - event handlers are run concurrently
+            # - with concurrency limited by HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE
+
+            locked_counts = {
+                "type":"run_sql",
+                "args":{
+                    "sql":'''
+                    select
+                      (select count(*) from hdb_catalog.event_log where locked) as num_locked,
+                      count(*) as total
+                    from hdb_catalog.event_log
+                    where table_name = 'test_flood'
+                    '''
+                }
+            }
+            st, resp = hge_ctx.v1q(locked_counts)
+            assert st == 200, resp
+            # Make sure we have 2*HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE events checked out:
+            #  - 100 prefetched
+            #  - 100 being processed right now (but blocked on HTTP_POOL capacity)
+            assert resp['result'][1] == ['200', '1000']
+
+        # Rather than sleep arbitrarily, loop until assertions pass:
+        utils.until_asserts_pass(30, check_backpressure)
+        # ...then make sure we're truly stable:
+        time.sleep(3)
+        check_backpressure()
+
+        # unblock open and future requests to /block; check all events processed
+        evts_webhook.unblock()
 
         def get_evt():
             # TODO ThreadedHTTPServer helps locally (I only need a timeout of

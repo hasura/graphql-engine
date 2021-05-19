@@ -383,6 +383,21 @@ class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
             self.server.resp_queue.put({"path": req_path,
                                         "body": req_json,
                                         "headers": req_headers})
+        # This is like a sleep endpoint above, but allowing us to decide
+        # externally when the webhook can return, with unblock()
+        elif req_path == "/block":
+            if not self.server.unblocked:
+                self.server.blocked_count += 1
+                with self.server.unblocked_wait:
+                    # We expect this timeout never to be reached, but if
+                    # something goes wrong the main thread will block forever:
+                    self.server.unblocked_wait.wait(timeout=60)
+                self.server.blocked_count -= 1
+            self.server.resp_queue.put({"path": req_path,
+                                        "body": req_json,
+                                        "headers": req_headers})
+            self.send_response(HTTPStatus.NO_CONTENT)
+            self.end_headers()
         else:
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
@@ -399,9 +414,25 @@ class ThreadedHTTPServer(ThreadingMixIn, http.server.HTTPServer):
 
 class EvtsWebhookServer(ThreadedHTTPServer):
     def __init__(self, server_address):
-        self.resp_queue = queue.Queue(maxsize=1)
+        # Data received from hasura by our web hook, pushed after it returns to the client:
+        self.resp_queue = queue.Queue()
         self.error_queue = queue.Queue()
+        # We use these two vars to coordinate unblocking in the /block route
+        self.unblocked = False
+        self.unblocked_wait = threading.Condition()
+        # ...and this for bookkeeping open blocked requests; this becomes
+        # meaningless after the first call to unblock()
+        self.blocked_count = 0
+
         super().__init__(server_address, EvtsWebhookHandler)
+
+    # Unblock all webhook requests to /block. Idempotent.
+    def unblock(self):
+        self.unblocked = True
+        with self.unblocked_wait:
+            # NOTE: this only affects currently wait()-ing threads, future
+            # wait()s will block again (hence the simple self.unblocked flag)
+            self.unblocked_wait.notify_all()
 
     def server_bind(self):
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

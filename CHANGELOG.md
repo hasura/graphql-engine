@@ -71,6 +71,7 @@ If you do have such headers configured, then you must update the header configur
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: restore proper batching behavior in event trigger processing so that at most 200 events are checked out at a time
 - server: fix failing introspection query when an enum column is part of a primary key (fixes #5200)
 - server: disallow headers from env variables starting with `HASURA_GRAPHQL_` in actions, event triggers & remote schemas (#5519)
 **WARNING**: This might break certain deployments. See `Breaking change` section above.

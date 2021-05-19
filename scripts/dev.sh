@@ -389,7 +389,15 @@ elif [ "$MODE" = "test" ]; then
     echo_pretty "Running Haskell test suite"
     HASURA_GRAPHQL_DATABASE_URL="$CONTAINER_DB_URL" cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
   fi
-
+  
+  if [ "$RUN_HLINT" = true ]; then
+    if command -v hlint >/dev/null; then
+      (cd "$PROJECT_ROOT/server" && hlint src-*)
+    else
+      echo_warn "hlint is not installed: skipping"
+    fi
+  fi
+  
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
     GRAPHQL_ENGINE_TEST_LOG=/tmp/hasura-dev-test-engine.log
     echo_pretty "Starting graphql-engine, logging to $GRAPHQL_ENGINE_TEST_LOG"
