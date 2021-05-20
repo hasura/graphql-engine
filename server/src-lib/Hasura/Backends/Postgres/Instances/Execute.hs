@@ -66,12 +66,11 @@ pgDBQueryPlan
   -> HTTP.Manager
   -> [HTTP.Header]
   -> UserInfo
-  -> [G.Directive G.Name]
   -> SourceName
   -> SourceConfig ('Postgres pgKind)
   -> QueryDB ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
   -> m ExecutionStep
-pgDBQueryPlan env manager reqHeaders userInfo _directives sourceName sourceConfig qrf = do
+pgDBQueryPlan env manager reqHeaders userInfo sourceName sourceConfig qrf = do
   (preparedQuery, PlanningSt _ _ planVals expectedVariables) <- flip runStateT initPlanningSt $ traverseQueryDB @('Postgres pgKind) prepareWithPlan qrf
   validateSessionVariables expectedVariables $ _uiSession userInfo
   let (action, preparedSQL) = mkCurPlanTx env manager reqHeaders userInfo $ irToRootFieldPlan planVals preparedQuery

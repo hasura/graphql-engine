@@ -61,12 +61,11 @@ msDBQueryPlan
   -> HTTP.Manager
   -> [HTTP.Header]
   -> UserInfo
-  -> [G.Directive G.Name]
   -> SourceName
   -> SourceConfig 'MSSQL
   -> QueryDB 'MSSQL (UnpreparedValue 'MSSQL)
   -> m ExecutionStep
-msDBQueryPlan _env _manager _reqHeaders userInfo _directives sourceName sourceConfig qrf = do
+msDBQueryPlan _env _manager _reqHeaders userInfo sourceName sourceConfig qrf = do
   select <- fromSelect <$> planNoPlan userInfo qrf
   let queryString = ODBC.renderQuery $ toQueryPretty select
       pool  = _mscConnectionPool sourceConfig

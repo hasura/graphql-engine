@@ -53,12 +53,11 @@ bqDBQueryPlan
   -> HTTP.Manager
   -> [HTTP.Header]
   -> UserInfo
-  -> [G.Directive G.Name]
   -> SourceName
   -> SourceConfig 'BigQuery
   -> QueryDB 'BigQuery (UnpreparedValue 'BigQuery)
   -> m ExecutionStep
-bqDBQueryPlan _env _manager _reqHeaders userInfo _directives sourceName sourceConfig qrf = do
+bqDBQueryPlan _env _manager _reqHeaders userInfo sourceName sourceConfig qrf = do
   select <- planNoPlan userInfo qrf
   let (!headAndTail, !plannedActionsList) =
         DataLoader.runPlan

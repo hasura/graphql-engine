@@ -13,7 +13,6 @@ import qualified Data.Aeson                             as J
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Data.Sequence.NonEmpty                 as NESeq
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
@@ -31,6 +30,7 @@ import           Hasura.GraphQL.Execute.Instances       ()
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
+import           Hasura.GraphQL.Parser.Directives
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
@@ -41,22 +41,18 @@ parseGraphQLQuery
   => GQLContext
   -> [G.VariableDefinition]
   -> Maybe (HashMap G.Name J.Value)
+  -> [G.Directive G.Name]
   -> G.SelectionSet G.NoFragments G.Name
   -> m ( InsOrdHashMap G.Name (QueryRootField UnpreparedValue)
        , QueryReusability
+       , [G.Directive Variable]
        , G.SelectionSet G.NoFragments Variable
        )
-parseGraphQLQuery gqlContext varDefs varValsM fields = do
-  resolvedSelSet <- resolveVariables varDefs (fromMaybe Map.empty varValsM) fields
+parseGraphQLQuery gqlContext varDefs varValsM directives fields = do
+  (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe Map.empty varValsM) directives fields
   (parsedQuery, queryReusability) <- (gqlQueryParser gqlContext >>> (`onLeft` reportParseErrors)) resolvedSelSet
-  pure (parsedQuery, queryReusability, resolvedSelSet)
-  where
-    reportParseErrors errs = case NESeq.head errs of
-      -- TODO: Our error reporting machinery doesn’t currently support reporting
-      -- multiple errors at once, so we’re throwing away all but the first one
-      -- here. It would be nice to report all of them!
-      ParseError{ pePath, peMessage, peCode } ->
-        throwError (err400 peCode peMessage){ qePath = pePath }
+  pure (parsedQuery, queryReusability, resolvedDirectives, resolvedSelSet)
+
 
 convertQuerySelSet
   :: forall m .
@@ -79,15 +75,21 @@ convertQuerySelSet
 convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs varValsM
   introspectionDisabledRoles = do
   -- Parse the GraphQL query into the RQL AST
-  (unpreparedQueries, _reusability, normalizedSelectionSet) <- parseGraphQLQuery gqlContext varDefs varValsM fields
+  (unpreparedQueries, _reusability, normalizedDirectives, normalizedSelectionSet) <-
+    parseGraphQLQuery gqlContext varDefs varValsM directives fields
 
   -- Transform the query plans into an execution plan
   let usrVars = _uiSession userInfo
+
+  -- Process directives on the query
+  (_dirMap, _) <- (`onLeft` reportParseErrors) =<<
+    runParseT (parseDirectives customDirectives (G.DLExecutable G.EDLQUERY) normalizedDirectives)
+
   executionPlan <- for unpreparedQueries \case
     RFDB sourceName exists ->
       AB.dispatchAnyBackend @BackendExecute exists
         \(SourceConfigWith sourceConfig (QDBR db)) ->
-           mkDBQueryPlan env manager reqHeaders userInfo directives sourceName sourceConfig db
+           mkDBQueryPlan env manager reqHeaders userInfo sourceName sourceConfig db
     RFRemote rf -> do
       RemoteFieldG remoteSchemaInfo remoteField <- for rf $ resolveRemoteVariable userInfo
       pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeQuery [G.SelectionField remoteField]

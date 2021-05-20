@@ -10,31 +10,32 @@ module Hasura.GraphQL.Parser.Internal.Parser
   , ParserInput
   ) where
 
-import           Hasura.Prelude
+import                          Hasura.Prelude
 
-import qualified Data.Aeson                           as A
-import qualified Data.HashMap.Strict.Extended         as M
-import qualified Data.HashMap.Strict.InsOrd           as OMap
-import qualified Data.HashSet                         as S
-import qualified Data.List.Extended                   as LE
-import qualified Data.UUID                            as UUID
+import                qualified Data.Aeson                           as A
+import                qualified Data.HashMap.Strict.Extended         as M
+import                qualified Data.HashMap.Strict.InsOrd           as OMap
+import                qualified Data.HashSet                         as S
+import                qualified Data.List.Extended                   as LE
+import                qualified Data.UUID                            as UUID
 
-import           Control.Lens.Extended                hiding (enum, index)
-import           Data.Int                             (Int32, Int64)
-import           Data.Parser.JSONPath
-import           Data.Scientific                      (toBoundedInteger)
-import           Data.Text.Extended
-import           Data.Type.Equality
-import           Language.GraphQL.Draft.Syntax        hiding (Definition)
+import                          Control.Lens.Extended                hiding (enum, index)
+import                          Data.Int                             (Int32, Int64)
+import                          Data.Parser.JSONPath
+import                          Data.Scientific                      (toBoundedInteger)
+import                          Data.Text.Extended
+import                          Data.Type.Equality
+import                          Language.GraphQL.Draft.Syntax        hiding (Definition)
 
-import           Hasura.Backends.Postgres.SQL.Value
-import           Hasura.Base.Error
-import           Hasura.GraphQL.Parser.Class.Parse
-import           Hasura.GraphQL.Parser.Collect
-import           Hasura.GraphQL.Parser.Internal.Types
-import           Hasura.GraphQL.Parser.Schema
-import           Hasura.RQL.Types.CustomTypes
-import           Hasura.Server.Utils                  (englishList)
+import                          Hasura.Backends.Postgres.SQL.Value
+import                          Hasura.Base.Error
+import                          Hasura.GraphQL.Parser.Class.Parse
+import {-# SOURCE #-}           Hasura.GraphQL.Parser.Collect
+import {-# SOURCE #-}           Hasura.GraphQL.Parser.Directives
+import                          Hasura.GraphQL.Parser.Internal.Types
+import                          Hasura.GraphQL.Parser.Schema
+import                          Hasura.RQL.Types.CustomTypes
+import                          Hasura.Server.Utils                  (englishList)
 
 
 -- | The constraint @(''Input' '<:' k)@ entails @('ParserInput' k ~ 'Value')@,
@@ -624,16 +625,21 @@ selectionSetObject name description parsers implementsInterfaces = Parser
 
       -- TODO(PDV) This probably accepts invalid queries, namely queries that use
       -- type names that do not exist.
-      fields <- collectFields (name:parsedInterfaceNames) (runParser boolean) input
-      for fields \selectionField@Field{ _fName, _fAlias } -> if
-        | _fName == $$(litName "__typename") ->
-            pure $ SelectTypename name
-        | Just parser <- M.lookup _fName parserMap ->
-            withPath (++[Key (unName _fName)]) $
-              SelectField <$> parser selectionField
-        | otherwise ->
-            withPath (++[Key (unName _fName)]) $
-            parseError $ "field " <> _fName <<> " not found in type: " <> squote name
+      fields <- collectFields (name:parsedInterfaceNames) input
+      for fields \selectionField@Field{ _fName, _fAlias, _fDirectives } -> do
+        parsedValue <-
+          if | _fName == $$(litName "__typename") ->
+               pure $ SelectTypename name
+             | Just parser <- M.lookup _fName parserMap ->
+               withPath (++[Key (unName _fName)]) $
+               SelectField <$> parser selectionField
+             | otherwise ->
+               withPath (++[Key (unName _fName)]) $
+               parseError $ "field " <> _fName <<> " not found in type: " <> squote name
+        _dirMap <- parseDirectives customDirectives (DLExecutable EDLFIELD) _fDirectives
+        -- insert processing of custom directives here
+        pure parsedValue
+
   }
   where
     parserMap = parsers
@@ -763,8 +769,8 @@ subselection
    . MonadParse m
   => Name
   -> Maybe Description
-  -> InputFieldsParser m a -- ^ parser for the input arguments
-  -> Parser 'Output m b -- ^ parser for the subselection set
+  -> InputFieldsParser m a  -- ^ parser for the input arguments
+  -> Parser 'Output m b     -- ^ parser for the subselection set
   -> FieldParser m (a, b)
 subselection name description argumentsParser bodyParser =
   rawSubselection name description argumentsParser bodyParser
@@ -775,8 +781,8 @@ rawSubselection
    . MonadParse m
   => Name
   -> Maybe Description
-  -> InputFieldsParser m a -- ^ parser for the input arguments
-  -> Parser 'Output m b -- ^ parser for the subselection set
+  -> InputFieldsParser m a  -- ^ parser for the input arguments
+  -> Parser 'Output m b     -- ^ parser for the subselection set
   -> FieldParser m (Maybe Name, HashMap Name (Value Variable), a, b)
 rawSubselection name description argumentsParser bodyParser = FieldParser
   { fDefinition = mkDefinition name description $

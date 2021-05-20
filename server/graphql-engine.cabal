@@ -112,6 +112,7 @@ library
                      , containers
                      , deepseq
                      , dependent-map >=0.4 && <0.5
+                     , dependent-sum
                      , exceptions
                      , safe-exceptions
                      , fast-logger
@@ -538,6 +539,7 @@ library
                      , Hasura.GraphQL.Parser.Class.Parse
                      , Hasura.GraphQL.Parser.Collect
                      , Hasura.GraphQL.Parser.Column
+                     , Hasura.GraphQL.Parser.Directives
                      , Hasura.GraphQL.Parser.Internal.Parser
                      , Hasura.GraphQL.Parser.Internal.Types
                      , Hasura.GraphQL.Parser.Monad
@@ -610,17 +612,22 @@ test-suite graphql-engine-tests
     , bytestring
     , containers
     , cron
+    , dependent-map
+    , dependent-sum
     , graphql-engine
+    , graphql-parser
     , hspec >=2.6.1 && <3
     , hspec-core >=2.6.1 && <3
+    , hspec-expectations
     , hspec-expectations-lifted
     , http-client
-    , http-types
     , http-client-tls
+    , http-types
     , jose
+    , kan-extensions
     , lens
     , lifted-base
-    , kan-extensions
+    , mmorph
     , monad-control
     , mtl
     , natural-transformation >=0.4 && <0.5
@@ -628,14 +635,12 @@ test-suite graphql-engine-tests
     , pg-client
     , process
     , QuickCheck
-    , text
     , safe
     , split
+    , text
     , time
     , transformers-base
     , unordered-containers
-    , text
-    , mmorph
   hs-source-dirs: src-test
   main-is: Main.hs
   other-modules:
@@ -646,6 +651,8 @@ test-suite graphql-engine-tests
     Data.TimeSpec
     Hasura.CacheBoundedSpec
     Hasura.EventingSpec
+    Hasura.GraphQL.Parser.DirectivesTest
+    Hasura.GraphQL.Parser.TestUtils
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec
     Hasura.RQL.Types.EndpointSpec

@@ -28,6 +28,7 @@ import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Parser                 (Kind (..), Parser, Schema (..),
                                                         UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Class
+import           Hasura.GraphQL.Parser.Directives      (directivesInfo)
 import           Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.Common
@@ -551,7 +552,7 @@ buildQueryParser pgQueryFields remoteFields allActions nonObjectCustomTypes muta
   queryWithIntrospectionHelper allQueryFields mutationParser subscriptionParser
 
 queryWithIntrospectionHelper
-  :: (MonadSchema n m, MonadError QErr m)
+  :: forall n m. (MonadSchema n m, MonadError QErr m)
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
   -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
   -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
@@ -575,7 +576,7 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
         , sQueryType = P.parserType basicQueryP
         , sMutationType = P.parserType <$> mutationP
         , sSubscriptionType = Just $ P.parserType subscriptionP
-        , sDirectives = defaultDirectives
+        , sDirectives = directivesInfo @n
         }
   let partialQueryFields =
         basicQueryFP ++ (fmap RFRaw <$> [schema partialSchema, typeIntrospection partialSchema])

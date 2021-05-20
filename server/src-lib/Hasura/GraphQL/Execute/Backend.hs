@@ -57,7 +57,6 @@ class ( Backend b
     -> HTTP.Manager
     -> [HTTP.Header]
     -> UserInfo
-    -> [G.Directive G.Name]
     -> SourceName
     -> SourceConfig b
     -> QueryDB b (UnpreparedValue b)

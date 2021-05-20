@@ -127,6 +127,12 @@ class TestGraphQLQueryBasicCommon:
     def test_select_query_author_with_include_directive(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_include_directive.yaml', transport)
 
+    def test_select_query_author_with_skip_include_directive(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_skip_include_directives.yaml', transport)
+
+    def test_select_query_author_with_wrong_directive_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_wrong_directive_err.yaml', transport)
+
     def test_select_query_where(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_where.yaml', transport)
 
