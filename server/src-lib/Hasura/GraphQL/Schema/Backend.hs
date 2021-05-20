@@ -161,6 +161,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     :: MonadBuildSchema b r m n
     => SourceName
     -> ComputedFieldInfo b
+    -> TableName b
     -> SelPermInfo b
     -> m (Maybe (FieldParser n (AnnotatedField b)))
   -- | The 'node' root field of a Relay request.

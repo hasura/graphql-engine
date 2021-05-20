@@ -990,7 +990,7 @@ fieldSelection sourceName table maybePkeyColumns fieldInfo selectPermissions = d
       concat . maybeToList <$> relationshipField sourceName relationshipInfo
 
     FIComputedField computedFieldInfo ->
-      maybeToList <$> computedField sourceName computedFieldInfo selectPermissions
+      maybeToList <$> computedField sourceName computedFieldInfo table selectPermissions
 
     FIRemoteRelationship remoteFieldInfo  ->
       concat . maybeToList <$> remoteRelationshipField remoteFieldInfo
@@ -1054,9 +1054,10 @@ computedFieldPG
    . (MonadBuildSchema ('Postgres pgKind) r m n)
   => SourceName
   -> ComputedFieldInfo ('Postgres pgKind)
+  -> TableName ('Postgres pgKind)
   -> SelPermInfo ('Postgres pgKind)
   -> m (Maybe (FieldParser n (AnnotatedField ('Postgres pgKind))))
-computedFieldPG sourceName ComputedFieldInfo{..} selectPermissions = runMaybeT do
+computedFieldPG sourceName ComputedFieldInfo{..} parentTable selectPermissions = runMaybeT do
   stringifyNum <- asks $ qcStringifyNum . getter
   fieldName <- lift $ textToName $ computedFieldNameToText _cfiName
   functionArgsParser <- lift $ computedFieldFunctionArgs _cfiFunction
@@ -1102,9 +1103,10 @@ computedFieldPG sourceName ComputedFieldInfo{..} selectPermissions = runMaybeT d
       in mkDescriptionWith (_cffDescription _cfiFunction) defaultDescription
 
     computedFieldFunctionArgs
-      :: ComputedFieldFunction ('Postgres pgKind) -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
+      :: ComputedFieldFunction ('Postgres pgKind)
+      -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
     computedFieldFunctionArgs ComputedFieldFunction{..} =
-      functionArgs _cffName (IAUserProvided <$> _cffInputArgs) <&> fmap addTableAndSessionArgument
+      functionArgs (FTAComputedField _cfiName sourceName parentTable) (IAUserProvided <$> _cffInputArgs) <&> fmap addTableAndSessionArgument
       where
         tableRowArgument = IR.AETableRow Nothing
 
@@ -1191,7 +1193,7 @@ customSQLFunctionArgs
   :: (BackendSchema b, MonadSchema n m, MonadTableInfo r m)
   => FunctionInfo b
   -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow b (UnpreparedValue b)))
-customSQLFunctionArgs FunctionInfo{..} = functionArgs _fiName _fiInputArgs
+customSQLFunctionArgs FunctionInfo{..} = functionArgs (FTACustomFunction _fiName) _fiInputArgs
 
 -- | Parses the arguments to the underlying sql function of a computed field or
 --   a custom function. All arguments to the underlying sql function are parsed
@@ -1210,10 +1212,10 @@ functionArgs
     , MonadSchema n m
     , MonadTableInfo r m
     )
-  => FunctionName b
+  => FunctionTrackedAs b
   -> Seq.Seq (FunctionInputArgument b)
   -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow b (UnpreparedValue b)))
-functionArgs functionName (toList -> inputArgs) = do
+functionArgs functionTrackedAs (toList -> inputArgs) = do
   -- First, we iterate through the original sql arguments in order, to find the
   -- corresponding graphql names. At the same time, we create the input field
   -- parsers, in three groups: session argument, optional arguments, and
@@ -1233,9 +1235,24 @@ functionArgs functionName (toList -> inputArgs) = do
      | otherwise -> do
          -- There are user-provided arguments: we need to parse an args object.
          argumentParsers <- sequenceA $ optional <> mandatory
-         objectName <- fmap (<> $$(G.litName "_args")) $ functionGraphQLName @b functionName `onLeft` throwError
+         objectName <-
+           case functionTrackedAs of
+             FTAComputedField computedFieldName sourceName tableName -> do
+               tableInfo <- askTableInfo sourceName tableName
+               computedFieldGQLName <- textToName $ computedFieldNameToText computedFieldName
+               tableGQLName <- getTableGQLName @b tableInfo
+               pure $ computedFieldGQLName <> $$(G.litName "_") <> tableGQLName <> $$(G.litName "_args")
+             FTACustomFunction functionName ->
+               fmap (<> $$(G.litName "_args")) $ functionGraphQLName @b functionName `onLeft` throwError
          let fieldName    = $$(G.litName "args")
-             fieldDesc    = G.Description $ "input parameters for function " <>> functionName
+             fieldDesc    =
+               case functionTrackedAs of
+                 FTAComputedField computedFieldName _sourceName tableName ->
+                   G.Description $
+                     "input parameters for computed field "
+                     <> computedFieldName <<> " defined on table " <>> tableName
+                 FTACustomFunction functionName ->
+                   G.Description $ "input parameters for function " <>> functionName
              objectParser = P.object objectName Nothing (sequenceA argumentParsers) `P.bind` \arguments -> do
                -- After successfully parsing, we create a dictionary of the parsed fields
                -- and we re-iterate through the original list of sql arguments, now with

@@ -848,6 +848,9 @@ class TestGraphQLQueryComputedFields:
     def test_float_test(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/float_test.yaml', transport)
 
+    def test_tracked_function_as_computed_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/tracked_function_as_comp_field.yaml')
+
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryCaching:
