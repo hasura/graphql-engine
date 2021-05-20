@@ -48,6 +48,7 @@ $ hasura metadata export -o json
 - cli: fix applying migrations in a different environment after config v3 update (#6861)
 - cli: fix bug caused by usage of space character in database name (#6852)
 - cli: fix issues with generated filepaths in windows (#6813)
+- cli: add warning for incompatible pro plugin version
 
 ## v2.0.0-alpha.10
 

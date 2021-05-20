@@ -43,6 +43,7 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/internal/hasura"
 
+	"github.com/Masterminds/semver"
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
@@ -439,6 +440,10 @@ type ExecutionContext struct {
 	// already this configuration option will disable this step
 	// more details in: https://github.com/hasura/graphql-engine/issues/6861
 	DisableAutoStateMigration bool
+
+	// proPluginVersionValidated is used to avoid validating pro plugin multiple times
+	// while preparing the execution context
+	proPluginVersionValidated bool
 }
 
 type Source struct {
@@ -486,6 +491,11 @@ func (ec *ExecutionContext) Prepare() error {
 	err = ec.setupPlugins()
 	if err != nil {
 		return errors.Wrap(err, "setting up plugins path failed")
+	}
+
+	if !ec.proPluginVersionValidated {
+		ec.validateProPluginVersion()
+		ec.proPluginVersionValidated = true
 	}
 
 	err = ec.setupCodegenAssetsRepo()
@@ -537,6 +547,27 @@ func (ec *ExecutionContext) setupPlugins() error {
 		ec.PluginsConfig.Repo.DisableCloneOrUpdate = true
 	}
 	return ec.PluginsConfig.Prepare()
+}
+
+func (ec *ExecutionContext) validateProPluginVersion() {
+	installedPlugins, err := ec.PluginsConfig.ListInstalledPlugins()
+	if err != nil {
+		return
+	}
+
+	proPluginVersion := installedPlugins["pro"]
+	cliVersion := ec.Version.GetCLIVersion()
+
+	proPluginSemVer, _ := semver.NewVersion(proPluginVersion)
+	cliSemVer := ec.Version.CLISemver
+	if proPluginSemVer == nil || cliSemVer == nil {
+		return
+	}
+
+	if cliSemVer.Major() != proPluginSemVer.Major() {
+		ec.Logger.Warnf("[cli: %s] [pro plugin: %s] incompatible version of cli and pro plugin.", cliVersion, proPluginVersion)
+		ec.Logger.Warn("Try running `hasura plugins upgrade pro` or `hasura plugins install pro --version <version>`")
+	}
 }
 
 func (ec *ExecutionContext) setupCodegenAssetsRepo() error {
