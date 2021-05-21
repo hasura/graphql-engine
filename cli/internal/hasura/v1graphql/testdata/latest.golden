@@ -97,6 +97,16 @@
           "kind": "SCALAR",
           "possibleTypes": null,
           "interfaces": null,
+          "name": "Int",
+          "enumValues": null,
+          "description": null,
+          "fields": null
+        },
+        {
+          "inputFields": null,
+          "kind": "SCALAR",
+          "possibleTypes": null,
+          "interfaces": null,
           "name": "String",
           "enumValues": null,
           "description": null,

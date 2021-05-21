@@ -560,11 +560,13 @@ queryWithIntrospectionHelper
 queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
   basicQueryP <- queryRootFromFields basicQueryFP
   emptyIntro  <- emptyIntrospection
+  let directives = directivesInfo @n
   allBasicTypes <- collectTypes $
-    [ P.parserType basicQueryP
-    , P.parserType subscriptionP
+    [ P.TypeDefinitionsWrapper $ P.parserType basicQueryP
+    , P.TypeDefinitionsWrapper $ P.parserType subscriptionP
+    , P.TypeDefinitionsWrapper $ P.diArguments =<< directives
     ]
-    ++ maybeToList (P.parserType <$> mutationP)
+    ++ maybeToList (P.TypeDefinitionsWrapper . P.parserType <$> mutationP)
   allIntrospectionTypes <- collectTypes . P.parserType =<< queryRootFromFields emptyIntro
   let allTypes = Map.unions
         [ allBasicTypes
@@ -576,7 +578,7 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
         , sQueryType = P.parserType basicQueryP
         , sMutationType = P.parserType <$> mutationP
         , sSubscriptionType = Just $ P.parserType subscriptionP
-        , sDirectives = directivesInfo @n
+        , sDirectives = directives
         }
   let partialQueryFields =
         basicQueryFP ++ (fmap RFRaw <$> [schema partialSchema, typeIntrospection partialSchema])
