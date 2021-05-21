@@ -1,7 +1,6 @@
 module Hasura.Backends.Postgres.Translate.Mutation
   ( mkSelectExpFromColumnValues
-  )
-where
+  ) where
 
 import           Hasura.Prelude
 
@@ -26,7 +25,7 @@ import           Hasura.SQL.Types
 -- `SELECT ("row"::table).* VALUES (1, 'Robert', 23) AS "row"`.
 mkSelectExpFromColumnValues
   :: forall pgKind m
-   . (MonadError QErr m)
+   . MonadError QErr m
   => QualifiedTable
   -> [ColumnInfo ('Postgres pgKind)]
   -> [ColumnValues ('Postgres pgKind) TxtEncodedVal]

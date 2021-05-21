@@ -460,6 +460,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
         , _tciEnumValues = enumValues
         , _tciCustomConfig = config
         , _tciDescription = _ptmiDescription metadataTable
+        , _tciExtraTableMetadata = _ptmiExtraTableMetadata metadataTable
         }
 
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column

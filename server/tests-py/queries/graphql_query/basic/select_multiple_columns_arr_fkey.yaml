@@ -1,0 +1,34 @@
+
+description: Nested select on article
+url: /v1/graphql
+status: 200
+response:
+  data:
+    author_multi:
+    - id1: 1
+      id2: 1
+      name: Author 1
+      articles:
+      - id: 1
+        title: Article 1
+      - id: 2
+        title: Article 2
+    - id1: 2
+      id2: 2
+      name: Author 2
+      articles:
+      - id: 3
+        title: Article 3
+query:
+  query: |
+    query {
+      author_multi {
+          id1
+          id2
+          name
+          articles {
+            id
+            title
+            }
+        }
+    }

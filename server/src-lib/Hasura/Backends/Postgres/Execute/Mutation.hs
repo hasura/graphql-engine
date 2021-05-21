@@ -96,6 +96,7 @@ runMutation
   , MonadIO m
   , Tracing.MonadTrace m
   , Backend ('Postgres pgKind)
+  , PostgresAnnotatedFieldJSON pgKind
   )
   => Env.Environment
   -> Mutation ('Postgres pgKind)
@@ -111,6 +112,7 @@ mutateAndReturn
   , MonadIO m
   , Tracing.MonadTrace m
   , Backend ('Postgres pgKind)
+  , PostgresAnnotatedFieldJSON pgKind
   )
   => Env.Environment
   -> Mutation ('Postgres pgKind)
@@ -126,6 +128,7 @@ execUpdateQuery
   , MonadIO m
   , Tracing.MonadTrace m
   , Backend ('Postgres pgKind)
+  , PostgresAnnotatedFieldJSON pgKind
   )
   => Env.Environment
   -> Bool
@@ -145,6 +148,7 @@ execDeleteQuery
   , MonadIO m
   , Tracing.MonadTrace m
   , Backend ('Postgres pgKind)
+  , PostgresAnnotatedFieldJSON pgKind
   )
   => Env.Environment
   -> Bool
@@ -163,6 +167,7 @@ execInsertQuery
      , MonadIO m
      , Tracing.MonadTrace m
      , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
      )
   => Env.Environment
   -> Bool
@@ -199,6 +204,7 @@ mutateAndSel
      , MonadIO m
      , Tracing.MonadTrace m
      , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
      )
   => Env.Environment
   -> Mutation ('Postgres pgKind)
@@ -225,6 +231,7 @@ executeMutationOutputQuery
      , MonadIO m
      , Tracing.MonadTrace m
      , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
      )
   => Env.Environment
   -> QualifiedTable
@@ -255,7 +262,7 @@ executeMutationOutputQuery env qt allCols preCalAffRows cte mutOutput strfyNum p
 
 mutateAndFetchCols
   :: forall pgKind
-   . Backend ('Postgres pgKind)
+   . (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind)
   => QualifiedTable
   -> [ColumnInfo ('Postgres pgKind)]
   -> (MutationCTE, DS.Seq Q.PrepArg)

@@ -2,8 +2,6 @@ module Hasura.RQL.DDL.Schema.Diff
   ( TableMeta(..)
   , ComputedFieldMeta(..)
 
-  , fetchMeta
-
   , getDifference
 
   , TableDiff(..)
@@ -34,7 +32,6 @@ import qualified Hasura.SQL.AnyBackend              as AB
 
 import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import           Hasura.Base.Error
-import           Hasura.RQL.DDL.Schema.Common
 import           Hasura.RQL.Types                   hiding (ConstraintName, fmFunction,
                                                      tmComputedFields, tmTable)
 
@@ -60,35 +57,6 @@ data TableMeta (b :: BackendType)
   , tmInfo           :: !(DBTableMetadata b)
   , tmComputedFields :: ![ComputedFieldMeta]
   } deriving (Show, Eq)
-
-fetchMeta
-  :: (MonadTx m)
-  => TableCache ('Postgres 'Vanilla)
-  -> FunctionCache ('Postgres 'Vanilla)
-  -> m ([TableMeta ('Postgres 'Vanilla)], [FunctionMeta])
-fetchMeta tables functions = do
-  tableMetaInfos <- fetchTableMetadata
-  functionMetaInfos <- fetchFunctionMetadata
-
-  let getFunctionMetas function =
-        let mkFunctionMeta rawInfo =
-              FunctionMeta (rfiOid rawInfo) function (rfiFunctionType rawInfo)
-        in maybe [] (map mkFunctionMeta) $ M.lookup function functionMetaInfos
-
-      mkComputedFieldMeta computedField =
-        let function = _cffName $ _cfiFunction computedField
-        in map (ComputedFieldMeta (_cfiName computedField)) $ getFunctionMetas function
-
-      tableMetas = flip map (M.toList tableMetaInfos) $ \(table, tableMetaInfo) ->
-                   TableMeta table tableMetaInfo $ fromMaybe [] $
-                     M.lookup table tables <&> \tableInfo ->
-                     let tableCoreInfo  = _tiCoreInfo tableInfo
-                         computedFields = getComputedFieldInfos $ _tciFieldInfoMap tableCoreInfo
-                     in  concatMap mkComputedFieldMeta computedFields
-
-      functionMetas = concatMap getFunctionMetas $ M.keys functions
-
-  pure (tableMetas, functionMetas)
 
 getOverlap :: (Eq k, Hashable k) => (v -> k) -> [v] -> [v] -> [(v, v)]
 getOverlap getKey left right =

@@ -474,12 +474,17 @@ elif [ "$MODE" = "test" ]; then
     echo ""
     echo "Adding Postgres source"
     curl "$METADATA_URL" \
-    --data-raw '{"type":"pg_add_source","args":{"name":"default","configuration":{"connection_info":{"database_url":"'"$PG_DB_URL"'","pool_settings":{}}}}}'
+    --data-raw '{"type":"pg_add_source","args":{"name":"default","configuration":{"connection_info":{"database_url":"'"$PG_DB_URL"'"}}}}'
 
     echo ""
     echo "Adding SQL Server source"
     curl "$METADATA_URL" \
-    --data-raw '{"type":"mssql_add_source","args":{"name":"mssql","configuration":{"connection_info":{"connection_string":"'"$MSSQL_DB_URL"'","pool_settings":{}}}}}'
+    --data-raw '{"type":"mssql_add_source","args":{"name":"mssql","configuration":{"connection_info":{"connection_string":"'"$MSSQL_DB_URL"'"}}}}'
+
+    echo ""
+    echo "Adding Citus source"
+    curl "$METADATA_URL" \
+    --data-raw '{"type":"citus_add_source","args":{"name":"citus","configuration":{"connection_info":{"database_url":"'"$CITUS_DB_URL"'"}}}}'
 
     echo ""
     echo "Sources added:"

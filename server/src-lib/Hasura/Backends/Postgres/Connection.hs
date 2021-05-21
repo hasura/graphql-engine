@@ -67,6 +67,7 @@ import           Data.Semigroup                         (Max (..))
 import           Data.Text                              (unpack)
 import           Data.Time
 import           Network.HTTP.Client.Extended           (HasHttpManagerM (..))
+import           Test.QuickCheck.Instances.Semigroup    ()
 import           Test.QuickCheck.Instances.Time         ()
 
 import qualified Hasura.Backends.Postgres.SQL.DML       as S
@@ -510,9 +511,6 @@ instance FromJSON PostgresSourceConnInfo where
       <*> o .:? "ssl_configuration"
 
 instance Arbitrary PostgresSourceConnInfo where
-  arbitrary = genericArbitrary
-
-instance Arbitrary (NonEmpty PostgresSourceConnInfo) where
   arbitrary = genericArbitrary
 
 data PostgresConnConfiguration

@@ -15,7 +15,8 @@ SELECT
       'is_insertable', ((pg_catalog.pg_relation_is_updatable("table".oid, true) & 8) = 8),
       'is_deletable', ((pg_catalog.pg_relation_is_updatable("table".oid, true) & 16) = 16)
     ) END,
-    'description', description.description
+    'description', description.description,
+    'extra_table_metadata', '[]'::json
   )::json AS info
 
 -- table & schema

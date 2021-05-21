@@ -49,6 +49,8 @@ instance Backend 'BigQuery where
   type XNodesAgg               'BigQuery = XEnable
   type XDistinct               'BigQuery = Void
 
+  type ExtraTableMetadata      'BigQuery = ()
+
   functionArgScalarType :: FunctionArgType 'BigQuery -> ScalarType 'BigQuery
   functionArgScalarType = absurd
 

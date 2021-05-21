@@ -15,8 +15,9 @@ fi
 
 CITUS_PASSWORD=hasuraCITUS2
 CITUS_CONTAINER_NAME="hasura-dev-citus-single-$CITUS_PORT"
-CITUS_DB_URL="postgres://postgres:$CITUS_PASSWORD@127.0.0.1:5432/postgres"
-CITUS_DOCKER="docker exec -u postgres -it $CITUS_CONTAINER_NAME psql $CITUS_DB_URL"
+CITUS_DB_URL="postgres://postgres:$CITUS_PASSWORD@127.0.0.1:$CITUS_PORT/postgres"
+CITUS_DB_DOCKER_URL="postgres://postgres:$CITUS_PASSWORD@127.0.0.1:5432/postgres"
+CITUS_DOCKER="docker exec -u postgres -it $CITUS_CONTAINER_NAME psql $CITUS_DB_DOCKER_URL"
 
 
 ######################

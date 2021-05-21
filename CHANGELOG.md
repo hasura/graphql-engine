@@ -8,9 +8,9 @@
   `<computed_field_name>_<table_name>_args` as the function name is internal detail for a computed field.
   This change also enables adding a root-level tracked function as a computed field which previously would have thrown input type conflict error.
 
-
 ### Bug fixes and improvements
 
+- server: add support for adding multi-column foreign key relationships
 - server: fix a bug where `@skip` and `@include` were not allowed on the same field
 - server: properly reject queries containing unknown or misplaced directives
 - server: fix bigint overflow, incorrect geojson format in event trigger payload (fix #3697) (fix #2368)

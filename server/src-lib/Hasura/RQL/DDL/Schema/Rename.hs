@@ -464,11 +464,24 @@ updateColInArrRel fromQT toQT rnCol = \case
 type ColMap b = HashMap (Column b) (Column b)
 
 getNewCol
-  :: (Backend b) => RenameCol b -> TableName b -> Column b -> Column b
-getNewCol rnCol qt col =
-  if opQT == qt && col == oCol then nCol else col
+  :: forall b f
+   . Backend b
+  => Functor f
+  => RenameCol b
+  -> TableName b
+  -> f (Column b)
+  -> f (Column b)
+getNewCol rnCol qt cols =
+  if qt == opQT then
+    go <$> cols
+  else
+    cols
   where
     RenameItem opQT oCol nCol = rnCol
+    go :: Column b -> Column b
+    go col
+      | col == oCol = nCol
+      | otherwise   = col
 
 updateRelManualConfig
   :: forall b

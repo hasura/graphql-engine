@@ -120,7 +120,9 @@ mkCurPlanTx env manager reqHdrs userInfo ps@(PreparedSql q prepMap remoteJoinsM)
 
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan
-  :: Backend ('Postgres pgKind)
+  :: ( Backend ('Postgres pgKind)
+     , DS.PostgresAnnotatedFieldJSON pgKind
+     )
   => PrepArgMap
   -> QueryDB ('Postgres pgKind) S.SQLExp
   -> PreparedSql pgKind

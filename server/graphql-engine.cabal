@@ -361,6 +361,7 @@ library
                      , Hasura.Backends.Postgres.Types.BoolExp
                      , Hasura.Backends.Postgres.Types.Column
                      , Hasura.Backends.Postgres.Types.Table
+                     , Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
 
                      , Hasura.Backends.MSSQL.Connection
                      , Hasura.Backends.MSSQL.DDL
@@ -380,6 +381,7 @@ library
                      , Hasura.Backends.MSSQL.Types
                      , Hasura.Backends.MSSQL.Types.Instances
                      , Hasura.Backends.MSSQL.Types.Internal
+
 
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded

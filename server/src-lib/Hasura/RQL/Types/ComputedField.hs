@@ -40,7 +40,7 @@ data ComputedFieldDefinition b
   { _cfdFunction        :: !(FunctionName b)
   , _cfdTableArgument   :: !(Maybe FunctionArgName)
   , _cfdSessionArgument :: !(Maybe FunctionArgName)
-  } deriving (Generic)
+  } deriving stock (Generic)
 deriving instance (Backend b) => Show (ComputedFieldDefinition b)
 deriving instance (Backend b) => Eq (ComputedFieldDefinition b)
 instance (Backend b) => NFData (ComputedFieldDefinition b)
