@@ -475,6 +475,9 @@ class TestGraphQLQueryBoolExpBasicMSSQL:
     def test_uuid_test_in_uuid_col(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_uuid_test_in_uuid_col_mssql.yaml', transport)
 
+    def test_bools(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_bools_mssql.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/basic'

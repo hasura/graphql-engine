@@ -95,6 +95,7 @@ data OrderBy = OrderBy
   { orderByFieldName  :: FieldName
   , orderByOrder      :: Order
   , orderByNullsOrder :: NullsOrder
+  , orderByType       :: Maybe ScalarType
   }
 
 data Order
@@ -161,8 +162,6 @@ data Expression
   | IsNullExpression Expression
   | IsNotNullExpression Expression
   | ColumnExpression FieldName
-  | EqualExpression Expression Expression
-  | NotEqualExpression Expression Expression
   | JsonQueryExpression Expression
     -- ^ This one acts like a "cast to JSON" and makes SQL Server
     -- behave like it knows your field is JSON and not double-encode
@@ -176,6 +175,7 @@ data Expression
   | OpExpression Op Expression Expression
   | ListExpression [Expression]
   | STOpExpression SpatialOp Expression Expression
+  | CastExpression Expression Text
 
 data JsonPath
   = RootPath
@@ -243,6 +243,8 @@ data Op
   | LIKE
   | NLIKE
   | NIN
+  | EQ'
+  | NEQ'
 
 -- | Supported operations for spatial data types
 data SpatialOp
