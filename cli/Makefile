@@ -3,6 +3,7 @@ PARENT_DIR := $(shell dirname $(PWD))
 VERSION ?= $(shell ../scripts/get-version.sh)
 PLUGINS_BRANCH ?= master
 OS ?= linux darwin windows
+ARCH ?= amd64
 OUTPUT_DIR := _output
 
 HAS_GOX := $(shell command -v gox;)
@@ -39,7 +40,7 @@ endif
 	gox -ldflags '-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION) -X github.com/hasura/graphql-engine/cli/plugins.IndexBranchRef=$(PLUGINS_BRANCH) -s -w -extldflags "-static"' \
 	-rebuild \
 	-os="$(OS)" \
-	-arch="amd64" \
+	-arch="$(ARCH)" \
 	-output="$(OUTPUT_DIR)/$(VERSION)/cli-hasura-{{.OS}}-{{.Arch}}" \
 	./cmd/hasura/
 
