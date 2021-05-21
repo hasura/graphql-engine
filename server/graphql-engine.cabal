@@ -103,23 +103,24 @@ common common-exe
 library
   import: common-all
   hs-source-dirs:      src-lib
-  build-depends:       base
+  build-depends:       Spock-core
                      , aeson
                      , aeson-casing
                      , attoparsec
                      , attoparsec-iso8601 >= 1.0
+                     , base
                      , bytestring
                      , containers
                      , deepseq
                      , dependent-map >=0.4 && <0.5
                      , dependent-sum
                      , exceptions
-                     , safe-exceptions
                      , fast-logger
                      , hashable
+                     , hashable-time
                      , http-client-tls
-                     , http-types
                      , http-conduit
+                     , http-types
                      , kan-extensions
                      , lifted-base
                      , monad-control
@@ -132,20 +133,20 @@ library
                      , postgresql-libpq
                      , process
                      , profunctors
+                     , safe-exceptions
                      , scientific
                      , semialign
                      , some
                      , split
-                     , Spock-core
                      , template-haskell
                      , text
                      , text-builder >= 0.6
                      , these
                      , time >= 1.9
-                     , hashable-time
                      , transformers
                      , transformers-base
                      , unordered-containers >= 0.2.12
+                     , utf8-string
                      , validation
                      , vector
                      , vector-instances

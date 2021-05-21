@@ -18,7 +18,9 @@ import qualified Language.Haskell.TH.Syntax               as TH
 import qualified Network.WebSockets                       as WS
 import qualified Text.PrettyPrint.ANSI.Leijen             as PP
 
+import           Data.ByteString.Char8                    (pack, unpack)
 import           Data.FileEmbed                           (embedStringFile, makeRelativeToProject)
+import           Data.Text.Encoding                       (encodeUtf8)
 import           Data.Time                                (NominalDiffTime)
 import           Data.URL.Template
 import           Network.Wai.Handler.Warp                 (HostPreference)
@@ -40,8 +42,9 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
-import           Network.URI                              (parseURI)
-
+import           Network.HTTP.Types.URI                   (Query, QueryItem, parseQuery,
+                                                           renderQuery)
+import           Network.URI                              (URI (..), parseURI, uriQuery)
 
 getDbId :: Q.TxE QErr Text
 getDbId =
@@ -1137,6 +1140,21 @@ parseLogLevel = optional $
            help (snd logLevelEnv)
          )
 
+censorQueryItem :: Text -> QueryItem -> QueryItem
+censorQueryItem sensitive (key, Just _) | key == encodeUtf8 sensitive = (key, Just "...")
+censorQueryItem _ qi = qi
+
+censorQuery :: Text -> Query -> Query
+censorQuery sensitive = fmap (censorQueryItem sensitive)
+
+updateQuery :: (Query -> Query) -> URI -> URI
+updateQuery f uri =
+  let queries = parseQuery $ pack $ uriQuery uri
+  in uri { uriQuery = unpack (renderQuery True $ f queries) }
+
+censorURI :: Text -> URI -> URI
+censorURI sensitive uri = updateQuery (censorQuery sensitive) uri
+
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog
 connInfoToLog connInfo =
@@ -1154,7 +1172,7 @@ connInfoToLog connInfo =
                  ]
 
     mkDBUriLog uri =
-      case show <$> parseURI uri of
+      case show . censorURI "sslpassword" <$> parseURI uri of
         Nothing -> J.object
           [ "error" J..= ("parsing database url failed" :: String)]
         Just s  -> J.object
