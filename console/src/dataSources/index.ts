@@ -28,7 +28,7 @@ export type Driver = typeof drivers[number];
 export const driverToLabel: Record<Driver, string> = {
   mysql: 'MySQL',
   postgres: 'PostgreSQL',
-  mssql: 'MS Server',
+  mssql: 'MS SQL Server',
   bigquery: 'BigQuery',
 };
 

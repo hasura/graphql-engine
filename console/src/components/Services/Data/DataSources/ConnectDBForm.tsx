@@ -51,21 +51,22 @@ const defaultTitle = 'Connect Database Via';
 
 const driverToLabel: Record<
   Driver,
-  { label: string; defaultConnection: string; info?: string }
+  { label: string; defaultConnection: string; info?: string; beta?: boolean }
 > = {
   mysql: { label: 'MySQL', defaultConnection: 'DATABASE_URL' },
   postgres: { label: 'PostgreSQL', defaultConnection: 'DATABASE_URL' },
   mssql: {
-    label: 'MS Server',
+    label: 'MS SQL Server',
     defaultConnection: 'DATABASE_URL',
     info:
-      'Only Database URLs and Environment Variables are available using MSSQL',
+      'Only Database URLs and Environment Variables are available using MS SQL Server',
   },
   bigquery: {
     label: 'BigQuery',
     defaultConnection: 'CONNECTION_PARAMETERS',
     info:
       'Only Connection Parameters and Environment Variables are available using BigQuery',
+    beta: true,
   },
 };
 
@@ -190,6 +191,7 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
               {supportedDrivers.map(driver => (
                 <option key={driver} value={driver}>
                   {driverToLabel[driver].label}
+                  {driverToLabel[driver].beta && ' (beta)'}
                 </option>
               ))}
             </select>
