@@ -26,6 +26,7 @@ go get github.com/hasura/graphql-engine/cli/cmd/hasura
 git clone https://github.com/hasura/graphql-engine
 cd graphql-engine/cli
 make deps
+make build-cli-ext
 make build
 # binaries will be in _output directory
 ```
