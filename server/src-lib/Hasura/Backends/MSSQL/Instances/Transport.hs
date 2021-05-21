@@ -58,7 +58,7 @@ runQuery
   -> L.Logger L.Hasura
   -> SourceConfig 'MSSQL
   -> ExceptT QErr IO EncJSON
-  -> Maybe Text
+  -> Maybe (PreparedQuery 'MSSQL)
   -> m (DiffTime, EncJSON)
   -- ^ Also return the time spent in the PG query; for telemetry.
 runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql =  do
@@ -88,7 +88,7 @@ runMutation
   -> L.Logger L.Hasura
   -> SourceConfig 'MSSQL
   -> ExceptT QErr IO EncJSON
-  -> Maybe Text
+  -> Maybe (PreparedQuery 'MSSQL)
   -> m (DiffTime, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
@@ -131,10 +131,12 @@ run action = do
 mkQueryLog
   :: GQLReqUnparsed
   -> G.Name
-  -> Maybe Text
+  -> Maybe (PreparedQuery 'MSSQL)
   -> RequestId
   -> QueryLog
 mkQueryLog gqlQuery fieldName preparedSql requestId =
   QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId QueryLogKindDatabase
   where
-    generatedQuery = preparedSql <&> \qs -> GeneratedQuery qs J.Null
+    generatedQuery =
+      preparedSql <&> \PreparedQuery'{pqQueryString, pqGraphQlEnv, pqSession}
+        -> GeneratedQuery pqQueryString (J.toJSON $ queryEnvJson pqGraphQlEnv pqSession)

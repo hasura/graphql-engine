@@ -57,7 +57,6 @@ data UnifiedOn = UnifiedOn
   { table  :: !UnifiedTableName
   , column :: !Text
   }
-
 -------------------------------------------------------------------------------
 -- AST types
 
