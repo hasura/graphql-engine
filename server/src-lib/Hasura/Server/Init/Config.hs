@@ -106,6 +106,7 @@ data RawServeOptions impl
   , rsoSchemaPollInterval            :: !(Maybe Milliseconds)
   , rsoExperimentalFeatures          :: !(Maybe [ExperimentalFeature])
   , rsoEventsFetchBatchSize          :: !(Maybe NonNegativeInt)
+  , rsoGracefulShutdownTimeout       :: !(Maybe Seconds)
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -164,6 +165,7 @@ data ServeOptions impl
   , soExperimentalFeatures          :: !(Set.HashSet ExperimentalFeature)
   , soEventsFetchBatchSize          :: !NonNegativeInt
   , soInDevelopmentMode             :: !Bool
+  , soGracefulShutdownTimeout       :: !Seconds
   }
 
 data DowngradeOptions
@@ -356,6 +358,9 @@ instance FromEnv LQ.RefetchInterval where
 instance FromEnv Milliseconds where
   fromEnv = fmap fromInteger . readEither
 
+instance FromEnv Seconds where
+  fromEnv = fmap fromInteger . readEither
+
 instance FromEnv JWTConfig where
   fromEnv = readJson
 
@@ -382,18 +387,18 @@ runWithEnv env m = runIdentity $ runExceptT $ runReaderT m env
 -- | Collection of various server metrics
 data ServerMetrics
   = ServerMetrics
-  { smWarpThreads          :: !EKG.Gauge.Gauge
+  { smWarpThreads              :: !EKG.Gauge.Gauge
   -- ^ Current Number of active Warp threads
-  , smWebsocketConnections :: !EKG.Gauge.Gauge
+  , smWebsocketConnections     :: !EKG.Gauge.Gauge
   -- ^ Current number of active websocket connections
-  , smActiveSubscriptions  :: !EKG.Gauge.Gauge
+  , smActiveSubscriptions      :: !EKG.Gauge.Gauge
   -- ^ Current number of active subscriptions
-  , smNumEventsFetched     :: !EKG.Distribution.Distribution
+  , smNumEventsFetchedPerBatch :: !EKG.Distribution.Distribution
   -- ^ Total Number of events fetched from last 'Event Trigger Fetch'
-  , smNumEventHTTPWorkers  :: !EKG.Gauge.Gauge
+  , smNumEventHTTPWorkers      :: !EKG.Gauge.Gauge
   -- ^ Current number of Event trigger's HTTP workers in process
-  , smEventLockTime        :: !EKG.Distribution.Distribution
-  -- ^ Time between the 'Event Trigger Fetch' from DB and the processing of the event
+  , smEventQueueTime           :: !EKG.Distribution.Distribution
+  -- ^ Time (in seconds) between the 'Event Trigger Fetch' from DB and the processing of the event
   }
 
 createServerMetrics :: EKG.Store -> IO ServerMetrics
@@ -401,7 +406,7 @@ createServerMetrics store = do
   smWarpThreads <- EKG.createGauge "warp_threads" store
   smWebsocketConnections <- EKG.createGauge "websocket_connections" store
   smActiveSubscriptions <- EKG.createGauge "active_subscriptions" store
-  smNumEventsFetched <- EKG.createDistribution "num_events_fetched" store
+  smNumEventsFetchedPerBatch <- EKG.createDistribution "events_fetched_per_batch" store
   smNumEventHTTPWorkers <- EKG.createGauge "num_event_trigger_http_workers" store
-  smEventLockTime <- EKG.createDistribution "event_lock_time" store
+  smEventQueueTime <- EKG.createDistribution "event_queue_time" store
   pure ServerMetrics { .. }

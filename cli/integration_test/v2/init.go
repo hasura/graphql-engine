@@ -1,6 +1,7 @@
 package v2
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/commands"
 )
 
-func TestInitCmd(t *testing.T, ec *cli.ExecutionContext, initDir string) {
+func TestInitCmd(t *testing.T, ec *cli.ExecutionContext, initDir, hasuraPort string) {
 	tt := []struct {
 		name string
 		opts *commands.InitOptions
@@ -17,7 +18,7 @@ func TestInitCmd(t *testing.T, ec *cli.ExecutionContext, initDir string) {
 		{"only-init-dir", &commands.InitOptions{
 			EC:          ec,
 			Version:     cli.V2,
-			Endpoint:    os.Getenv("HASURA_GRAPHQL_TEST_ENDPOINT"),
+			Endpoint:    fmt.Sprintf("http://localhost:%s", hasuraPort),
 			AdminSecret: os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
 			InitDir:     initDir,
 		}, nil},

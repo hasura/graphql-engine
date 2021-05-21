@@ -56,6 +56,7 @@ class
   , Representable (SQLOperator b)
   , Representable (SessionVarType b)
   , Representable (SourceConnConfiguration b)
+  , Representable (ExtraTableMetadata b)
   , Representable (XRelay b)
   , Representable (XNodesAgg b)
   , Representable (XRemoteField b)
@@ -80,6 +81,7 @@ class
   , FromJSON (ScalarType b)
   , FromJSON (TableName b)
   , FromJSON (SourceConnConfiguration b)
+  , FromJSON (ExtraTableMetadata b)
   , FromJSONKey (Column b)
   , ToJSON (BasicOrderType b)
   , ToJSON (Column b)
@@ -92,6 +94,7 @@ class
   , ToJSON (SourceConfig b)
   , ToJSON (TableName b)
   , ToJSON (SourceConnConfiguration b)
+  , ToJSON (ExtraTableMetadata b)
   , ToJSONKey (Column b)
   , ToJSONKey (FunctionName b)
   , ToJSONKey (ScalarType b)
@@ -105,6 +108,7 @@ class
   , Arbitrary (TableName b)
   , Arbitrary (FunctionName b)
   , Arbitrary (SourceConnConfiguration b)
+  , Arbitrary (ExtraTableMetadata b)
   , Cacheable (SourceConfig b)
   , Typeable b
   , HasTag b
@@ -127,6 +131,8 @@ class
   type BooleanOperators        b :: Type -> Type
   type SQLExpression           b :: Type
   type SQLOperator             b :: Type
+
+  type ExtraTableMetadata      b :: Type
 
   -- extension types
   type XComputedField          b :: Type

@@ -8,7 +8,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gbytes"
 	. "github.com/onsi/gomega/gexec"
 )
 
@@ -43,9 +42,9 @@ var _ = Describe("metadata_inconsistency_list", func() {
 				Args:             []string{"metadata", "inconsistency", "list"},
 				WorkingDirectory: dirName,
 			})
-			want := `.*metadata is consistent*.`
-			Eventually(session, 60*40).Should(Say(want))
+			want := `metadata is consistent`
 			Eventually(session, 60*40).Should(Exit(0))
+			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring(want))
 		})
 	})
 })

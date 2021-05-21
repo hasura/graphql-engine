@@ -392,28 +392,31 @@ msTableDistinctOn
   -- :: forall m n. (BackendSchema 'MSSQL, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   :: Applicative m
   => Applicative n
-  => TableName 'MSSQL
+  => SourceName
+  -> TableInfo 'MSSQL
   -> SelPermInfo 'MSSQL
   -> m (InputFieldsParser n (Maybe (XDistinct 'MSSQL, NonEmpty (Column 'MSSQL))))
-msTableDistinctOn _table _selectPermissions = pure (pure Nothing)
+msTableDistinctOn _sourceName _tableInfo _selectPermissions = pure (pure Nothing)
 
 -- | Various update operators
 msUpdateOperators
   -- :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   :: Applicative m
-  => TableName 'MSSQL         -- ^ qualified name of the table
+  => TableInfo 'MSSQL         -- ^ table info
   -> UpdPermInfo 'MSSQL       -- ^ update permissions of the table
   -> m (Maybe (InputFieldsParser n [(Column 'MSSQL, IR.UpdOpExpG (UnpreparedValue 'MSSQL))]))
-msUpdateOperators _table _updatePermissions = pure Nothing
+msUpdateOperators _tableInfo _updatePermissions = pure Nothing
 
 -- | Computed field parser.
 -- Currently unsupported: returns Nothing for now.
 msComputedField
   :: MonadBuildSchema 'MSSQL r m n
-  => ComputedFieldInfo 'MSSQL
+  => SourceName
+  -> ComputedFieldInfo 'MSSQL
+  -> TableName 'MSSQL
   -> SelPermInfo 'MSSQL
   -> m (Maybe (FieldParser n (AnnotatedField 'MSSQL)))
-msComputedField _fieldInfo _selectPemissions = pure Nothing
+msComputedField _sourceName _fieldInfo _table _selectPemissions = pure Nothing
 
 -- | Remote join field parser.
 -- Currently unsupported: returns Nothing for now.

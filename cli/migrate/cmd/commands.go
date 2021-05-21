@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ghodss/yaml"
+	"github.com/goccy/go-yaml"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/pkg/errors"
 )

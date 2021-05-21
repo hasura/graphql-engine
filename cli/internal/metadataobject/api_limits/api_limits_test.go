@@ -1,11 +1,12 @@
 package apilimits
 
 import (
+	"io/ioutil"
+	"testing"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
-	"testing"
 
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -55,7 +56,7 @@ func TestMetadataObject_Build(t *testing.T) {
 			err := m.Build(tt.args.metadata)
 			if tt.wantErr {
 				require.Error(t, err)
-			}else {
+			} else {
 				b, err := yaml.Marshal(tt.args.metadata)
 				assert.NoError(t, err)
 				assert.Equal(t, tt.want, string(b))
@@ -115,7 +116,7 @@ rate_limit:
 			got, err := obj.Export(tt.args.metadata)
 			if tt.wantErr {
 				require.Error(t, err)
-			}else {
+			} else {
 				require.NoError(t, err)
 				var wantContent = map[string]string{}
 				var gotContent = map[string]string{}

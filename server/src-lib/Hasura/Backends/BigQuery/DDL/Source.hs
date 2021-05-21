@@ -1,5 +1,4 @@
-{-# LANGUAGE DisambiguateRecordFields #-}
-{-# LANGUAGE DuplicateRecordFields    #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 
 module Hasura.Backends.BigQuery.DDL.Source
   ( resolveSource
@@ -92,6 +91,7 @@ resolveSource sourceConfig _maintenanceMode =
                          , _ptmiForeignKeys = mempty
                          , _ptmiViewInfo = Just $ ViewInfo False False False
                          , _ptmiDescription = Nothing
+                         , _ptmiExtraTableMetadata = ()
                          })
                    | (index, RestTable {tableReference, schema}) <-
                        zip [0 ..] restTables

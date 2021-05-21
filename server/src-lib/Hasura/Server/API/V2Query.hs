@@ -1,4 +1,5 @@
 -- | The RQL query ('/v2/query')
+
 module Hasura.Server.API.V2Query where
 
 import           Hasura.Prelude
@@ -40,6 +41,7 @@ data RQLQuery
   | RQCount  !CountQuery
   | RQRunSql !RunSQL
   | RQMssqlRunSql !MSSQL.MSSQLRunSQL
+  | RQCitusRunSql !RunSQL
   | RQBigqueryRunSql !BigQuery.BigQueryRunSQL
   | RQBigqueryDatabaseInspection !BigQuery.BigQueryRunSQL
   | RQBulk ![RQLQuery]
@@ -83,7 +85,7 @@ runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuer
 
     withReload currentResourceVersion (result, updatedCache, invalidations, updatedMetadata) = do
       when (queryModifiesSchema rqlQuery) $ do
-        case (_sccMaintenanceMode serverConfigCtx) of
+        case _sccMaintenanceMode serverConfigCtx of
           MaintenanceModeDisabled -> do
             -- set modified metadata in storage
             newResourceVersion <- setMetadata currentResourceVersion updatedMetadata
@@ -117,8 +119,9 @@ runQueryM env = \case
   RQUpdate q                     -> runUpdate env q
   RQDelete q                     -> runDelete env q
   RQCount  q                     -> runCount q
-  RQRunSql q                     -> runRunSQL q
+  RQRunSql q                     -> runRunSQL @'Vanilla q
   RQMssqlRunSql q                -> MSSQL.runSQL q
+  RQCitusRunSql q                -> runRunSQL @'Citus q
   RQBigqueryRunSql q             -> BigQuery.runSQL q
   RQBigqueryDatabaseInspection q -> BigQuery.runDatabaseInspection q
   RQBulk   l                     -> encJFromList <$> indexedMapM (runQueryM env) l

@@ -2,7 +2,15 @@ const sameRelCols = (currCols, existingCols) => {
   return currCols.sort().join(',') === existingCols.sort().join(',');
 };
 
-const isExistingObjRel = (currentObjRels, relCols) => {
+const checkEqual = (arr1, arr2) => {
+  return (
+    arr1 &&
+    arr2 &&
+    JSON.stringify([...arr1].sort()) === JSON.stringify([...arr2].sort())
+  );
+};
+
+const isExistingObjRel = (currentObjRels, lcol, rcol = []) => {
   let _isExistingObjRel = false;
 
   for (let k = 0; k < currentObjRels.length; k++) {
@@ -12,8 +20,10 @@ const isExistingObjRel = (currentObjRels, relCols) => {
       // check if this is already an existing fk relationship
       if (
         // TODO: update when multiCol fkey rels are allowed
-        relCols.length === 1 &&
-        objRelDef.foreign_key_constraint_on === relCols[0]
+        (lcol.length === 1 &&
+          objRelDef.foreign_key_constraint_on === lcol[0]) ||
+        (rcol.length === 1 &&
+          objRelDef.foreign_key_constraint_on.column === rcol[0])
       ) {
         _isExistingObjRel = true;
         break;
@@ -23,7 +33,7 @@ const isExistingObjRel = (currentObjRels, relCols) => {
       const objRelCols = Object.keys(
         objRelDef.manual_configuration.column_mapping
       );
-      if (sameRelCols(objRelCols, relCols)) {
+      if (sameRelCols(objRelCols, lcol)) {
         _isExistingObjRel = true;
         break;
       }
@@ -89,13 +99,14 @@ const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
       objRels.push({
         lTable: fk_obj.table_name,
         lSchema: fk_obj.table_schema,
-        isObjRel: true,
         name: null,
         lcol: lcol,
         rcol: lcol.map(column => fk_obj.column_mapping[column]),
         rTable: fk_obj.ref_table,
         rSchema: fk_obj.ref_table_table_schema,
+        isObjRel: true,
         isUnique: false,
+        isPrimary: false,
       });
     }
   });
@@ -108,10 +119,26 @@ const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
     const rcol = Object.keys(o_fk_obj.column_mapping);
     const lcol = Object.values(o_fk_obj.column_mapping);
     const rTable = o_fk_obj.table_name;
+    const rTableSchema = o_fk_obj.table_schema;
+    const rTableObj = allSchemas.find(
+      t => t.table_name === rTable && t.table_schema === rTableSchema
+    );
+    const pk = rTableObj?.primary_key?.columns;
+    const is_primary_key = checkEqual(pk, rcol);
+    let is_unique_key = false;
 
-    if (o_fk_obj.is_unique) {
-      // if opp foreign key is also unique, make obj rel
-      if (!isExistingObjRel(currentObjRels, lcol)) {
+    if (
+      rTableObj.unique_constraints.some(
+        uk =>
+          uk.constraint_name.includes('_key') && checkEqual(uk.columns, rcol)
+      )
+    ) {
+      is_unique_key = true;
+    }
+
+    if (is_primary_key || is_unique_key) {
+      // if opp foreign key is also unique or primary key, make obj rel
+      if (!isExistingObjRel(currentObjRels, lcol, rcol)) {
         objRels.push({
           lTable: o_fk_obj.ref_table,
           lSchema: o_fk_obj.ref_table_table_schema,
@@ -121,7 +148,8 @@ const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
           rTable: rTable,
           rSchema: o_fk_obj.table_schema,
           isObjRel: true,
-          isUnique: true,
+          isUnique: is_unique_key,
+          isPrimary: is_primary_key,
         });
       }
     } else {
@@ -136,6 +164,7 @@ const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
           rSchema: o_fk_obj.table_schema,
           isObjRel: false,
           isUnique: false,
+          isPrimary: false,
         });
       }
     }

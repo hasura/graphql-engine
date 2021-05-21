@@ -457,7 +457,7 @@ fetchMetadataFromHdbTables = liftTx do
                           )
 
     fetchCronTriggers =
-      (oMapFromL ctName . map uncurryCronTrigger)
+      oMapFromL ctName . map uncurryCronTrigger
               <$> Q.listQE defaultTxErrorHandler
       [Q.sql|
        SELECT ct.name, ct.webhook_conf, ct.cron_schedule, ct.payload,
@@ -608,9 +608,9 @@ recreateSystemMetadata = do
         [ objectRel $$(nonEmptyText "trigger") $
           manualConfig "hdb_catalog" "event_triggers" [("trigger_name", "name")]
         , arrayRel $$(nonEmptyText "logs") $ RUFKeyOn $
-          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "event_invocation_logs") "event_id" ]
+          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "event_invocation_logs") (pure "event_id") ]
       , table "hdb_catalog" "event_invocation_logs"
-        [ objectRel $$(nonEmptyText "event") $ RUFKeyOn $ SameTable "event_id" ]
+        [ objectRel $$(nonEmptyText "event") $ RUFKeyOn $ SameTable (pure "event_id") ]
       , table "hdb_catalog" "hdb_function" []
       , table "hdb_catalog" "hdb_function_agg"
         [ objectRel $$(nonEmptyText "return_table_info") $ manualConfig "hdb_catalog" "hdb_table"
@@ -635,22 +635,22 @@ recreateSystemMetadata = do
         ]
       , table "hdb_catalog" "hdb_cron_triggers"
         [ arrayRel $$(nonEmptyText "cron_events") $ RUFKeyOn $
-          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_events") "trigger_name"
+          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_events") (pure "trigger_name")
         ]
       , table "hdb_catalog" "hdb_cron_events"
-        [ objectRel $$(nonEmptyText "cron_trigger") $ RUFKeyOn $ SameTable "trigger_name"
+        [ objectRel $$(nonEmptyText "cron_trigger") $ RUFKeyOn $ SameTable (pure "trigger_name")
         , arrayRel $$(nonEmptyText "cron_event_logs") $ RUFKeyOn $
-          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_event_invocation_logs") "event_id"
+          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_event_invocation_logs") (pure "event_id")
         ]
       , table "hdb_catalog" "hdb_cron_event_invocation_logs"
-        [ objectRel $$(nonEmptyText "cron_event") $ RUFKeyOn $ SameTable "event_id"
+        [ objectRel $$(nonEmptyText "cron_event") $ RUFKeyOn $ SameTable (pure "event_id")
         ]
       , table "hdb_catalog" "hdb_scheduled_events"
         [ arrayRel $$(nonEmptyText "scheduled_event_logs") $ RUFKeyOn $
-          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_scheduled_event_invocation_logs") "event_id"
+          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_scheduled_event_invocation_logs") (pure "event_id")
         ]
       , table "hdb_catalog" "hdb_scheduled_event_invocation_logs"
-        [ objectRel $$(nonEmptyText "scheduled_event") $ RUFKeyOn $ SameTable "event_id"
+        [ objectRel $$(nonEmptyText "scheduled_event") $ RUFKeyOn $ SameTable (pure "event_id")
         ]
       ]
 

@@ -421,8 +421,8 @@ func (a *ActionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error)
 		return nil, errors.Wrap(err, "error in marshaling common")
 	}
 	return map[string][]byte{
-		filepath.Join(a.MetadataDir, actionsFileName): commonByt,
-		filepath.Join(a.MetadataDir, graphqlFileName): []byte(sdlToResp.SDL.Complete),
+		filepath.ToSlash(filepath.Join(a.MetadataDir, actionsFileName)): commonByt,
+		filepath.ToSlash(filepath.Join(a.MetadataDir, graphqlFileName)): []byte(sdlToResp.SDL.Complete),
 	}, nil
 }
 

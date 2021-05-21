@@ -1,13 +1,13 @@
 package v2
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/hasura/graphql-engine/cli/internal/hasura"
 
-	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/commands"
 	"github.com/hasura/graphql-engine/cli/migrate"
@@ -179,7 +179,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 				t.Fatalf("%s: expected %v, got %v", tc.name, tc.err, err)
 			}
 
-			expectedStatusByt, err := yaml.Marshal(tc.status)
+			expectedStatusByt, err := json.Marshal(tc.status)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -191,7 +191,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 			if err != nil {
 				t.Fatalf("%s: unable to fetch migrate status, got %v", tc.name, err)
 			}
-			actualStatusByt, err := yaml.Marshal(actualStatus)
+			actualStatusByt, err := json.Marshal(actualStatus)
 			if err != nil {
 				t.Fatal(err)
 			}

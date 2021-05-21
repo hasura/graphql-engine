@@ -24,7 +24,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-type UpgradeToMuUpgradeProjectToMultipleSourcesOpts struct {
+type UpdateProjectV3Opts struct {
 	EC *cli.ExecutionContext
 	Fs afero.Fs
 	// Path to project directory
@@ -32,12 +32,15 @@ type UpgradeToMuUpgradeProjectToMultipleSourcesOpts struct {
 	// Directory in which migrations are stored
 	MigrationsAbsDirectoryPath string
 	SeedsAbsDirectoryPath      string
+	TargetDatabase             string
+	Force                      bool
+	MoveStateOnly              bool
 	Logger                     *logrus.Logger
 }
 
 // UpdateProjectV3 will help a project directory move from a single
 // The project is expected to be in Config V2
-func UpdateProjectV3(opts UpgradeToMuUpgradeProjectToMultipleSourcesOpts) error {
+func UpdateProjectV3(opts UpdateProjectV3Opts) error {
 	/* New flow
 		Config V2 -> Config V3
 		- Warn user about creating a backup
@@ -49,7 +52,7 @@ func UpdateProjectV3(opts UpgradeToMuUpgradeProjectToMultipleSourcesOpts) error 
 	*/
 
 	// pre checks
-	if opts.EC.Config.Version != cli.V2 {
+	if opts.EC.Config.Version != cli.V2 && !opts.MoveStateOnly {
 		return fmt.Errorf("project should be using config V2 to be able to update to V3")
 	}
 	if !opts.EC.HasMetadataV3 {
@@ -68,19 +71,26 @@ func UpdateProjectV3(opts UpgradeToMuUpgradeProjectToMultipleSourcesOpts) error 
 	opts.Logger.Warn(`During the update process CLI uses the server as the source of truth, so make sure your server is upto date`)
 	opts.Logger.Warn(`The update process replaces project metadata with metadata on the server`)
 
-	response, err := util.GetYesNoPrompt("continue?")
-	if err != nil {
-		return err
-	}
-	if response == "n" {
-		return nil
+	if !opts.Force {
+		response, err := util.GetYesNoPrompt("continue?")
+		if err != nil {
+			return err
+		}
+		if response == "n" {
+			return nil
+		}
 	}
 	// move migration child directories
 	// get directory names to move
-	targetDatabase, err := util.GetInputPrompt("what database does the current migrations / seeds belong to?")
-	if err != nil {
-		return err
+	targetDatabase := opts.TargetDatabase
+	if len(targetDatabase) == 0 {
+		var err error
+		targetDatabase, err = util.GetInputPrompt("what database does the current migrations / seeds belong to?")
+		if err != nil {
+			return err
+		}
 	}
+
 	opts.EC.Spinner.Start()
 	opts.EC.Spin("updating project... ")
 	// copy state
@@ -90,8 +100,12 @@ func UpdateProjectV3(opts UpgradeToMuUpgradeProjectToMultipleSourcesOpts) error 
 		return err
 	}
 	if len(sources) >= 1 {
-		if err := copyState(opts.EC, targetDatabase); err != nil {
+		if err := CopyState(opts.EC, targetDatabase); err != nil {
 			return err
+		}
+		if opts.MoveStateOnly {
+			opts.EC.Spinner.Stop()
+			return nil
 		}
 	}
 
@@ -248,9 +262,9 @@ func isHasuraCLIGeneratedMigration(dirPath string) (bool, error) {
 	return regexp.MatchString(regex, filepath.Base(dirPath))
 }
 
-func copyState(ec *cli.ExecutionContext, destdatabase string) error {
+func CopyState(ec *cli.ExecutionContext, destdatabase string) error {
 	// copy migrations state
-	src := cli.GetMigrationsStateStore(ec)
+	src := migrations.NewMigrationStateStoreHdbTable(ec.APIClient.V2Query, migrations.DefaultSchema, migrations.DefaultMigrationsTable)
 	if err := src.PrepareMigrationsStateStore(); err != nil {
 		return err
 	}
@@ -274,6 +288,14 @@ func copyState(ec *cli.ExecutionContext, destdatabase string) error {
 	err = statestore.CopySettingsState(srcSettingsStore, dstSettingsStore)
 	if err != nil {
 		return err
+	}
+	cliState, err := statestore.NewCLICatalogState(ec.APIClient.V1Metadata).Get()
+	if err != nil {
+		return fmt.Errorf("error while fetching catalog state: %v", err)
+	}
+	cliState.IsStateCopyCompleted = true
+	if _, err := statestore.NewCLICatalogState(ec.APIClient.V1Metadata).Set(*cliState); err != nil {
+		return fmt.Errorf("cannot set catalog state: %v", err)
 	}
 	return nil
 }

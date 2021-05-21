@@ -50,7 +50,7 @@ var _ = Describe("migrate_create", func() {
 			}
 
 			for _, keyword := range wantKeywordList {
-				Eventually(session, 60*60).Should(Say(keyword))
+				Eventually(session.Err, 60*60).Should(Say(keyword))
 			}
 			Eventually(session, 60*60).Should(Exit(0))
 		})

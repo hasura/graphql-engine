@@ -12,6 +12,16 @@ const getSQLValue = value => {
   return sqlValue.replace(/['"]+/g, '');
 };
 
+export const removeCommentsSQL = sql => {
+  const commentsSQLRegex = /(--[^\r\n]*)|(\/\*[\w\W]*?(?=\*\/)\*\/)/; // eslint-disable-line
+  const regExp = commentsSQLRegex;
+  const comments = sql.match(new RegExp(regExp, 'gmi'));
+
+  if (!comments || !comments.length) return sql;
+
+  return comments.reduce((acc, comment) => acc.replace(comment, ''), sql);
+};
+
 const getDefaultSchema = driver => {
   if (driver === 'postgres') return 'public';
   if (driver === 'mssql') return 'dbo';

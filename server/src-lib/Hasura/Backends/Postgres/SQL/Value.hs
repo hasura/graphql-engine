@@ -5,6 +5,7 @@ module Hasura.Backends.Postgres.SQL.Value
   , parsePGValue
   , scientificToInteger
   , scientificToFloat
+  , textToScalarValue
 
   , TxtEncodedVal(..)
   , txtEncodedVal
@@ -13,6 +14,7 @@ module Hasura.Backends.Postgres.SQL.Value
   , txtEncoder
   , toPrepParam
   ) where
+
 
 import           Hasura.Prelude
 
@@ -134,6 +136,9 @@ pgScalarValueToJson = \case
   PGValLquery t -> toJSON t
   PGValLtxtquery t -> toJSON t
   PGValUnknown t -> toJSON t
+
+textToScalarValue :: Maybe Text -> PGScalarValue
+textToScalarValue = maybe (PGNull PGText) PGValText
 
 withConstructorFn :: PGScalarType -> S.SQLExp -> S.SQLExp
 withConstructorFn ty v

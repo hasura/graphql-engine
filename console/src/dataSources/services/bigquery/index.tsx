@@ -153,10 +153,12 @@ export const supportedFeatures: SupportedFeaturesType = {
   },
   connectDbForm: {
     enabled: globals.consoleType !== 'cloud',
-    connectionParameters: false,
-    databaseURL: true,
+    connectionParameters: true,
+    databaseURL: false,
     environmentVariable: true,
     read_replicas: false,
+    connectionSettings: false,
+    retries: false,
   },
 };
 
@@ -385,7 +387,8 @@ export const bigquery: DataSourcesAPI = {
     return query;
   },
   supportedFeatures,
-  getDatabaseVersionSql: 'SELECT @@VERSION;',
+  // getDatabaseVersionSql: 'SELECT @@VERSION;',
+  getDatabaseVersionSql: '', // TODO fixme;
   permissionColumnDataTypes,
   viewsSupported: false,
   supportedColumnOperators,

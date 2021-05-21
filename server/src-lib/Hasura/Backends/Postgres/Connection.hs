@@ -26,6 +26,10 @@ module Hasura.Backends.Postgres.Connection
   , PostgresPoolSettings(..)
   , PostgresSourceConnInfo(..)
   , PostgresConnConfiguration(..)
+  , PGClientCerts(..)
+  , CertVar(..)
+  , CertData(..)
+  , SSLMode(..)
   , DefaultPostgresPoolSettings(..)
   , getDefaultPGPoolSettingIfNotExists
   , defaultPostgresPoolSettings
@@ -36,6 +40,7 @@ module Hasura.Backends.Postgres.Connection
   , psciPoolSettings
   , psciUsePreparedStatements
   , psciIsolationLevel
+  , psciSslConfiguration
   , module ET
   ) where
 
@@ -51,10 +56,18 @@ import           Control.Monad.Trans.Control            (MonadBaseControl (..))
 import           Control.Monad.Unique
 import           Control.Monad.Validate
 import           Data.Aeson
+import           Data.Aeson.Casing                      (aesonDrop)
 import           Data.Aeson.Extended
 import           Data.Aeson.TH
+import           Data.Bifoldable
+import           Data.Bifunctor
+import           Data.Bitraversable
+import           Data.Char                              (toLower)
+import           Data.Semigroup                         (Max (..))
+import           Data.Text                              (unpack)
 import           Data.Time
 import           Network.HTTP.Client.Extended           (HasHttpManagerM (..))
+import           Test.QuickCheck.Instances.Semigroup    ()
 import           Test.QuickCheck.Instances.Time         ()
 
 import qualified Hasura.Backends.Postgres.SQL.DML       as S
@@ -65,7 +78,7 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Incremental                     (Cacheable (..))
-import           Hasura.RQL.Types.Common                (UrlConf)
+import           Hasura.RQL.Types.Common                (UrlConf (..))
 import           Hasura.SQL.Types
 import           Hasura.Server.Utils                    (parseConnLifeTime, readIsoLevel)
 import           Hasura.Session
@@ -361,6 +374,102 @@ getDefaultPGPoolSettingIfNotExists connSettings defaultPgPoolSettings =
     idleTimeout = fromMaybe defIdleTimeout . _ppsIdleTimeout
     retries = fromMaybe defRetries . _ppsRetries
 
+data SSLMode =
+    Disable
+  | Allow
+  | Prefer
+  | Require
+  | VerifyCA
+  | VerifyFull
+  deriving (Eq, Ord, Generic, Enum, Bounded)
+instance Cacheable SSLMode
+instance Hashable SSLMode
+instance NFData SSLMode
+
+instance Arbitrary SSLMode where
+  arbitrary = genericArbitrary
+
+instance Show SSLMode where
+  show = \case
+   Disable    -> "disable"
+   Allow      -> "allow"
+   Prefer     -> "prefer"
+   Require    -> "require"
+   VerifyCA   -> "verify-ca"
+   VerifyFull -> "verify-full"
+
+deriving via (Max SSLMode) instance Semigroup SSLMode
+
+instance FromJSON SSLMode where
+    parseJSON = withText "SSLMode" $ \case
+      "disable"     -> pure Disable
+      "allow"       -> pure Allow
+      "prefer"      -> pure Prefer
+      "require"     -> pure Require
+      "verify-ca"   -> pure VerifyCA
+      "verify-full" -> pure VerifyFull
+      err           -> fail $ "Invalid SSL Mode " <> unpack err
+
+data CertVar
+  = CertVar     String
+  | CertLiteral String
+  deriving (Show, Eq, Generic)
+
+instance Cacheable CertVar
+instance Hashable CertVar
+instance NFData CertVar
+
+instance ToJSON CertVar where
+  toJSON (CertVar     var) = (object ["from_env" .= var])
+  toJSON (CertLiteral var) = String (T.pack var)
+
+instance FromJSON CertVar where
+  parseJSON (String s) = pure (CertLiteral (T.unpack s))
+  parseJSON x          = withObject "CertVar" (\o -> CertVar <$> o .: "from_env") x
+
+instance Arbitrary CertVar where
+  arbitrary = genericArbitrary
+
+newtype CertData = CertData { unCert :: Text }
+  deriving (Show, Eq, Generic)
+
+instance ToJSON CertData where
+  toJSON = String . unCert
+
+instance Arbitrary CertData where
+  arbitrary = genericArbitrary
+
+data PGClientCerts p a = PGClientCerts
+  { pgcSslCert     :: a
+  , pgcSslKey      :: a
+  , pgcSslRootCert :: a
+  , pgcSslMode     :: SSLMode
+  , pgcSslPassword :: Maybe p
+  } deriving (Show, Eq, Generic, Functor, Foldable, Traversable)
+$(deriveFromJSON (aesonDrop 3 (fmap toLower)) ''PGClientCerts)
+$(deriveToJSON (aesonDrop 3 (fmap toLower)) ''PGClientCerts)
+
+instance Bifunctor PGClientCerts where
+  bimap f g pgCerts = g <$> pgCerts { pgcSslPassword = f <$> (pgcSslPassword pgCerts)}
+
+instance Bifoldable PGClientCerts where
+  bifoldMap f g PGClientCerts{..} =
+    fold $ fmap g [pgcSslCert, pgcSslKey, pgcSslRootCert] <> maybe [] (pure . f) pgcSslPassword
+
+instance Bitraversable PGClientCerts where
+  bitraverse f g PGClientCerts{..} =
+    PGClientCerts <$> g pgcSslCert <*> g pgcSslKey <*> g pgcSslRootCert <*> pure pgcSslMode <*> traverse f pgcSslPassword
+
+instance (Cacheable p, Cacheable a) => Cacheable (PGClientCerts p a)
+instance (Hashable p, Hashable a) => Hashable (PGClientCerts p a)
+instance (NFData p, NFData a) => NFData (PGClientCerts p a)
+
+instance ToJSON SSLMode where
+  toJSON = String . tshow
+
+instance (Arbitrary p, Arbitrary a) => Arbitrary (PGClientCerts p a) where
+  arbitrary = genericArbitrary
+
 deriving instance Generic Q.TxIsolation
 instance Cacheable Q.TxIsolation
 instance NFData    Q.TxIsolation
@@ -384,6 +493,7 @@ data PostgresSourceConnInfo
   , _psciPoolSettings          :: !(Maybe PostgresPoolSettings)
   , _psciUsePreparedStatements :: !Bool
   , _psciIsolationLevel        :: !Q.TxIsolation
+  , _psciSslConfiguration      :: !(Maybe (PGClientCerts CertVar CertVar))
   } deriving (Show, Eq, Generic)
 instance Cacheable PostgresSourceConnInfo
 instance Hashable PostgresSourceConnInfo
@@ -398,11 +508,9 @@ instance FromJSON PostgresSourceConnInfo where
       <*> o .:? "pool_settings"
       <*> o .:? "use_prepared_statements" .!= False -- By default preparing statements is OFF for postgres source
       <*> o .:? "isolation_level" .!= Q.ReadCommitted
+      <*> o .:? "ssl_configuration"
 
 instance Arbitrary PostgresSourceConnInfo where
-  arbitrary = genericArbitrary
-
-instance Arbitrary (NonEmpty PostgresSourceConnInfo) where
   arbitrary = genericArbitrary
 
 data PostgresConnConfiguration

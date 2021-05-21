@@ -64,24 +64,27 @@ instance ToSQL Expression where
 fromExpression :: Expression -> Printer
 fromExpression =
   \case
+    CastExpression e t ->
+      "CAST(" <+> fromExpression e <+>
+      " AS " <+> fromString (T.unpack t) <+> ")"
     JsonQueryExpression e -> "JSON_QUERY(" <+> fromExpression e <+> ")"
     JsonValueExpression e path ->
       "JSON_VALUE(" <+> fromExpression e <+> fromPath path <+> ")"
     ValueExpression value -> QueryPrinter (toSql value)
     AndExpression xs ->
-      SepByPrinter
-        (NewlinePrinter <+> "AND ")
-        (toList
-           (fmap
-              (\x -> "(" <+> fromExpression x <+> ")")
-              (fromMaybe (pure trueExpression) (nonEmpty xs))))
+      case xs of
+        [] -> truePrinter
+        _ ->
+          SepByPrinter
+            (NewlinePrinter <+> "AND ")
+            (fmap (\x -> "(" <+> fromExpression x <+> ")") (toList xs))
     OrExpression xs ->
-      SepByPrinter
-        (NewlinePrinter <+> " OR ")
-        (toList
-           (fmap
-              (\x -> "(" <+> fromExpression x <+> ")")
-              (fromMaybe (pure falseExpression) (nonEmpty xs))))
+      case xs of
+        [] -> falsePrinter
+        _ ->
+          SepByPrinter
+            (NewlinePrinter <+> "OR ")
+            (fmap (\x -> "(" <+> fromExpression x <+> ")") (toList xs))
     NotExpression expression -> "NOT " <+> (fromExpression expression)
     ExistsExpression select -> "EXISTS (" <+> fromSelect select <+> ")"
     IsNullExpression expression ->
@@ -89,10 +92,6 @@ fromExpression =
     IsNotNullExpression expression ->
       "(" <+> fromExpression expression <+> ") IS NOT NULL"
     ColumnExpression fieldName -> fromFieldName fieldName
-    EqualExpression x y ->
-      "(" <+> fromExpression x <+> ") = (" <+> fromExpression y <+> ")"
-    NotEqualExpression x y ->
-      "(" <+> fromExpression x <+> ") != (" <+> fromExpression y <+> ")"
     ToStringExpression e -> "CONCAT(" <+> fromExpression e <+> ", '')"
     SelectExpression s -> "(" <+> IndentPrinter 1 (fromSelect s) <+> ")"
     MethodExpression field method args ->
@@ -120,6 +119,8 @@ fromOp =
     NIN   -> "NOT IN"
     LIKE  -> "LIKE"
     NLIKE -> "NOT LIKE"
+    EQ'   -> "="
+    NEQ'  -> "!="
 
 fromPath :: JsonPath -> Printer
 fromPath path =
@@ -210,7 +211,15 @@ fromOrderBys top moffset morderBys =
         (SepByPrinter
            NewlinePrinter
            [ case morderBys of
-               Nothing -> "1"
+               -- If you ORDER BY 1, a text field will signal an
+               -- error. What we want instead is to just order by
+               -- nothing, but also satisfy the syntactic
+               -- requirements. Thus ORDER BY (SELECT NULL).
+               --
+               -- This won't create consistent orderings, but that's
+               -- why you should specify an order_by in your GraphQL
+               -- query anyway, to define the ordering.
+               Nothing -> "(SELECT NULL) /* ORDER BY is required for OFFSET */"
                Just orderBys ->
                  SepByPrinter
                    ("," <+> NewlinePrinter)
@@ -221,11 +230,11 @@ fromOrderBys top moffset morderBys =
                  "OFFSET " <+> fromExpression offset <+> " ROWS"
                (Top n, Nothing) ->
                  "OFFSET 0 ROWS FETCH NEXT " <+>
-                 QueryPrinter (toSql n) <+> " ROWS ONLY"
+                 QueryPrinter (toSql (IntValue n)) <+> " ROWS ONLY"
                (Top n, Just offset) ->
                  "OFFSET " <+>
                  fromExpression offset <+>
-                 " ROWS FETCH NEXT " <+> QueryPrinter (toSql n) <+> " ROWS ONLY"
+                 " ROWS FETCH NEXT " <+> QueryPrinter (toSql (IntValue n)) <+> " ROWS ONLY"
            ])
     ]
 
@@ -233,8 +242,26 @@ fromOrderBys top moffset morderBys =
 fromOrderBy :: OrderBy -> [Printer]
 fromOrderBy OrderBy {..} =
   [ fromNullsOrder orderByFieldName orderByNullsOrder
-  , fromFieldName orderByFieldName <+> " " <+> fromOrder orderByOrder
+    -- Above: This doesn't do anything when using text, ntext or image
+    -- types. See below on CAST commentary.
+  , wrapNullHandling (fromFieldName orderByFieldName) <+>
+    " " <+> fromOrder orderByOrder
   ]
+  where
+    wrapNullHandling inner =
+      case orderByType of
+        Just TextType  -> castTextish inner
+        Just WtextType -> castTextish inner
+        -- Above: For some types, we have to do null handling manually
+        -- ourselves:
+        _              -> inner
+    -- Direct quote from SQL Server error response:
+    --
+    -- > The text, ntext, and image data types cannot be compared or
+    -- > sorted, except when using IS NULL or LIKE operator.
+    --
+    -- So we cast it to a varchar, maximum length.
+    castTextish inner = "CAST(" <+> inner <+> " AS VARCHAR(MAX))"
 
 fromOrder :: Order -> Printer
 fromOrder =
@@ -298,15 +325,8 @@ fromWhere :: Where -> Printer
 fromWhere =
   \case
     Where expressions ->
-      case (filter ((/= trueExpression) . collapse)) expressions of
-        [] -> ""
-        collapsedExpressions ->
-          "WHERE " <+>
-          IndentPrinter 6 (fromExpression (AndExpression collapsedExpressions))
-      where collapse (AndExpression [x]) = collapse x
-            collapse (AndExpression [])  = trueExpression
-            collapse (OrExpression [x])  = collapse x
-            collapse x                   = x
+      "WHERE " <+>
+      IndentPrinter 6 (fromExpression (AndExpression expressions))
 
 fromFrom :: From -> Printer
 fromFrom =
@@ -356,11 +376,11 @@ fromAliased Aliased {..} =
 fromNameText :: Text -> Printer
 fromNameText t = QueryPrinter (rawUnescapedText ("[" <> t <> "]"))
 
-trueExpression :: Expression
-trueExpression = ValueExpression (BoolValue True)
+truePrinter :: Printer
+truePrinter = "(1=1)"
 
-falseExpression :: Expression
-falseExpression = ValueExpression (BoolValue False)
+falsePrinter :: Printer
+falsePrinter = "(1<>1)"
 
 -- | Wrap a select with things needed when using FOR JSON.
 wrapFor :: For -> Printer -> Printer

@@ -43,6 +43,7 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/internal/hasura"
 
+	"github.com/Masterminds/semver"
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
@@ -433,6 +434,16 @@ type ExecutionContext struct {
 	// current database on which operation is being done
 	Source        Source
 	HasMetadataV3 bool
+
+	// after a `scripts update-config-v3` all migrate commands will try to automatically
+	// move cli state from hdb_catalog.* tables to catalog state if that hasn't happened
+	// already this configuration option will disable this step
+	// more details in: https://github.com/hasura/graphql-engine/issues/6861
+	DisableAutoStateMigration bool
+
+	// proPluginVersionValidated is used to avoid validating pro plugin multiple times
+	// while preparing the execution context
+	proPluginVersionValidated bool
 }
 
 type Source struct {
@@ -480,6 +491,11 @@ func (ec *ExecutionContext) Prepare() error {
 	err = ec.setupPlugins()
 	if err != nil {
 		return errors.Wrap(err, "setting up plugins path failed")
+	}
+
+	if !ec.proPluginVersionValidated {
+		ec.validateProPluginVersion()
+		ec.proPluginVersionValidated = true
 	}
 
 	err = ec.setupCodegenAssetsRepo()
@@ -531,6 +547,27 @@ func (ec *ExecutionContext) setupPlugins() error {
 		ec.PluginsConfig.Repo.DisableCloneOrUpdate = true
 	}
 	return ec.PluginsConfig.Prepare()
+}
+
+func (ec *ExecutionContext) validateProPluginVersion() {
+	installedPlugins, err := ec.PluginsConfig.ListInstalledPlugins()
+	if err != nil {
+		return
+	}
+
+	proPluginVersion := installedPlugins["pro"]
+	cliVersion := ec.Version.GetCLIVersion()
+
+	proPluginSemVer, _ := semver.NewVersion(proPluginVersion)
+	cliSemVer := ec.Version.CLISemver
+	if proPluginSemVer == nil || cliSemVer == nil {
+		return
+	}
+
+	if cliSemVer.Major() != proPluginSemVer.Major() {
+		ec.Logger.Warnf("[cli: %s] [pro plugin: %s] incompatible version of cli and pro plugin.", cliVersion, proPluginVersion)
+		ec.Logger.Warn("Try running `hasura plugins upgrade pro` or `hasura plugins install pro --version <version>`")
+	}
 }
 
 func (ec *ExecutionContext) setupCodegenAssetsRepo() error {
@@ -879,6 +916,7 @@ func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
 		logger := logrus.New()
 		ec.Logger = logger
+		ec.Logger.SetOutput(os.Stderr)
 	}
 
 	if ec.LogLevel != "" {
@@ -922,16 +960,11 @@ func GetCommonMetadataOps(ec *ExecutionContext) hasura.CommonMetadataOperations 
 }
 
 func GetMigrationsStateStore(ec *ExecutionContext) statestore.MigrationsStateStore {
-	const (
-		defaultMigrationsTable = "schema_migrations"
-		defaultSchema          = "hdb_catalog"
-	)
-
 	if ec.Config.Version <= V2 {
 		if !ec.HasMetadataV3 {
-			return migrations.NewMigrationStateStoreHdbTable(ec.APIClient.V1Query, defaultSchema, defaultMigrationsTable)
+			return migrations.NewMigrationStateStoreHdbTable(ec.APIClient.V1Query, migrations.DefaultSchema, migrations.DefaultMigrationsTable)
 		}
-		return migrations.NewMigrationStateStoreHdbTable(ec.APIClient.V2Query, defaultSchema, defaultMigrationsTable)
+		return migrations.NewMigrationStateStoreHdbTable(ec.APIClient.V2Query, migrations.DefaultSchema, migrations.DefaultMigrationsTable)
 	}
 	return migrations.NewCatalogStateStore(statestore.NewCLICatalogState(ec.APIClient.V1Metadata))
 }

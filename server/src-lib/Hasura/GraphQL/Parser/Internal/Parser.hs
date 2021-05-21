@@ -10,31 +10,32 @@ module Hasura.GraphQL.Parser.Internal.Parser
   , ParserInput
   ) where
 
-import           Hasura.Prelude
+import                          Hasura.Prelude
 
-import qualified Data.Aeson                           as A
-import qualified Data.HashMap.Strict.Extended         as M
-import qualified Data.HashMap.Strict.InsOrd           as OMap
-import qualified Data.HashSet                         as S
-import qualified Data.List.Extended                   as LE
-import qualified Data.UUID                            as UUID
+import                qualified Data.Aeson                           as A
+import                qualified Data.HashMap.Strict.Extended         as M
+import                qualified Data.HashMap.Strict.InsOrd           as OMap
+import                qualified Data.HashSet                         as S
+import                qualified Data.List.Extended                   as LE
+import                qualified Data.UUID                            as UUID
 
-import           Control.Lens.Extended                hiding (enum, index)
-import           Data.Int                             (Int32, Int64)
-import           Data.Parser.JSONPath
-import           Data.Scientific                      (toBoundedInteger)
-import           Data.Text.Extended
-import           Data.Type.Equality
-import           Language.GraphQL.Draft.Syntax        hiding (Definition)
+import                          Control.Lens.Extended                hiding (enum, index)
+import                          Data.Int                             (Int32, Int64)
+import                          Data.Parser.JSONPath
+import                          Data.Scientific                      (toBoundedInteger)
+import                          Data.Text.Extended
+import                          Data.Type.Equality
+import                          Language.GraphQL.Draft.Syntax        hiding (Definition)
 
-import           Hasura.Backends.Postgres.SQL.Value
-import           Hasura.Base.Error
-import           Hasura.GraphQL.Parser.Class.Parse
-import           Hasura.GraphQL.Parser.Collect
-import           Hasura.GraphQL.Parser.Internal.Types
-import           Hasura.GraphQL.Parser.Schema
-import           Hasura.RQL.Types.CustomTypes
-import           Hasura.Server.Utils                  (englishList)
+import                          Hasura.Backends.Postgres.SQL.Value
+import                          Hasura.Base.Error
+import                          Hasura.GraphQL.Parser.Class.Parse
+import {-# SOURCE #-}           Hasura.GraphQL.Parser.Collect
+import {-# SOURCE #-}           Hasura.GraphQL.Parser.Directives
+import                          Hasura.GraphQL.Parser.Internal.Types
+import                          Hasura.GraphQL.Parser.Schema
+import                          Hasura.RQL.Types.CustomTypes
+import                          Hasura.Server.Utils                  (englishList)
 
 
 -- | The constraint @(''Input' '<:' k)@ entails @('ParserInput' k ~ 'Value')@,
@@ -261,15 +262,11 @@ nonNullableField (FieldParser (Definition n u d (FieldInfo as t)) p) =
 nullableField :: forall m a . FieldParser m a -> FieldParser m a
 nullableField (FieldParser (Definition n u d (FieldInfo as t)) p) =
   FieldParser (Definition n u d (FieldInfo as (nullableType t))) p
-{-
-field = field
-  { fDefinition = (fDefinition field)
-    { dInfo = (dInfo (fDefinition field))
-      { fType = nonNullableType (fType (dInfo (fDefinition field)))
-      }
-    }
-  }
--}
+
+multipleField :: forall m a. FieldParser m a -> FieldParser m a
+multipleField (FieldParser (Definition n u d (FieldInfo as t)) p) =
+  FieldParser (Definition n u d (FieldInfo as (Nullable (TList t)))) p
+
 -- | Decorate a schema output type as NON_NULL
 nonNullableParser :: forall m a . Parser 'Output m a -> Parser 'Output m a
 nonNullableParser parser = parser { pType = nonNullableType (pType parser) }
@@ -278,8 +275,9 @@ nonNullableParser parser = parser { pType = nonNullableType (pType parser) }
 nullableParser :: forall m a . Parser 'Output m a -> Parser 'Output m a
 nullableParser parser = parser { pType = nullableType (pType parser) }
 
-multiple :: Parser 'Output m a -> Parser 'Output m a
+multiple :: forall m a . Parser 'Output m a -> Parser 'Output m a
 multiple parser = parser { pType = Nullable $ TList $ pType parser }
+
 
 list :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m [a]
 list parser = gcastWith (inputParserInput @k) Parser
@@ -585,9 +583,12 @@ safeSelectionSet
   -> n (Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a)))
 safeSelectionSet name desc fields
   | S.null duplicates = pure $ selectionSetObject name desc fields []
-  | otherwise         = throw500 $ "found duplicate fields in selection set: " <> commaSeparated (unName <$> toList duplicates)
+  | otherwise         = throw500 $ case desc of
+      Nothing -> "found duplicate fields in selection set: " <> duplicatesList
+      Just d  -> "found duplicate fields in selection set for " <> unDescription d <> ": " <> duplicatesList
   where
     duplicates = LE.duplicates $ getName . fDefinition <$> fields
+    duplicatesList = commaSeparated $ unName <$> toList duplicates
 
 -- Should this rather take a non-empty `FieldParser` list?
 -- See also Note [Selectability of tables].
@@ -624,16 +625,21 @@ selectionSetObject name description parsers implementsInterfaces = Parser
 
       -- TODO(PDV) This probably accepts invalid queries, namely queries that use
       -- type names that do not exist.
-      fields <- collectFields (name:parsedInterfaceNames) (runParser boolean) input
-      for fields \selectionField@Field{ _fName, _fAlias } -> if
-        | _fName == $$(litName "__typename") ->
-            pure $ SelectTypename name
-        | Just parser <- M.lookup _fName parserMap ->
-            withPath (++[Key (unName _fName)]) $
-              SelectField <$> parser selectionField
-        | otherwise ->
-            withPath (++[Key (unName _fName)]) $
-            parseError $ "field " <> _fName <<> " not found in type: " <> squote name
+      fields <- collectFields (name:parsedInterfaceNames) input
+      for fields \selectionField@Field{ _fName, _fAlias, _fDirectives } -> do
+        parsedValue <-
+          if | _fName == $$(litName "__typename") ->
+               pure $ SelectTypename name
+             | Just parser <- M.lookup _fName parserMap ->
+               withPath (++[Key (unName _fName)]) $
+               SelectField <$> parser selectionField
+             | otherwise ->
+               withPath (++[Key (unName _fName)]) $
+               parseError $ "field " <> _fName <<> " not found in type: " <> squote name
+        _dirMap <- parseDirectives customDirectives (DLExecutable EDLFIELD) _fDirectives
+        -- insert processing of custom directives here
+        pure parsedValue
+
   }
   where
     parserMap = parsers
@@ -763,8 +769,8 @@ subselection
    . MonadParse m
   => Name
   -> Maybe Description
-  -> InputFieldsParser m a -- ^ parser for the input arguments
-  -> Parser 'Output m b -- ^ parser for the subselection set
+  -> InputFieldsParser m a  -- ^ parser for the input arguments
+  -> Parser 'Output m b     -- ^ parser for the subselection set
   -> FieldParser m (a, b)
 subselection name description argumentsParser bodyParser =
   rawSubselection name description argumentsParser bodyParser
@@ -775,8 +781,8 @@ rawSubselection
    . MonadParse m
   => Name
   -> Maybe Description
-  -> InputFieldsParser m a -- ^ parser for the input arguments
-  -> Parser 'Output m b -- ^ parser for the subselection set
+  -> InputFieldsParser m a  -- ^ parser for the input arguments
+  -> Parser 'Output m b     -- ^ parser for the subselection set
   -> FieldParser m (Maybe Name, HashMap Name (Value Variable), a, b)
 rawSubselection name description argumentsParser bodyParser = FieldParser
   { fDefinition = mkDefinition name description $

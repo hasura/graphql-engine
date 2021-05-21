@@ -15,6 +15,7 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
+import           Hasura.RQL.Types.Relationship
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.Source
@@ -121,3 +122,19 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
     :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m)
     => SourceConfig b
     -> m ()
+
+  -- TODO: rename?
+  validateRelationship
+    :: MonadError QErr m
+    => TableCache b
+    -> TableName b
+    -> Either (ObjRelDef b) (ArrRelDef b)
+    -> m ()
+
+  default validateRelationship
+      :: MonadError QErr m
+      => TableCache b
+      -> TableName b
+      -> Either (ObjRelDef b) (ArrRelDef b)
+      -> m ()
+  validateRelationship = \_ _ _ -> pure ()

@@ -84,7 +84,10 @@ func (o *actionsCreateOptions) run() error {
 	if err != nil {
 		return errors.Wrap(err, "error in creating action")
 	}
-	err = executeMetadata("apply", o.EC)
+	opts := &MetadataApplyOptions{
+		EC: o.EC,
+	}
+	err = opts.Run()
 	if err != nil {
 		return errors.Wrap(err, "error in applying metadata")
 	}

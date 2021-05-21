@@ -36,6 +36,18 @@ args:
     table:
       name: person
 
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: article_multi
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: author_multi
+
 #Object relationship
 - type: mssql_create_object_relationship
   args:
@@ -76,3 +88,23 @@ args:
       foreign_key_constraint_on:
         table: article
         column: co_author_id
+
+#Object relationship
+- type: mssql_create_object_relationship
+  args:
+    source: mssql
+    table: article_multi
+    name: author
+    using:
+      foreign_key_constraint_on: ["author_id1", "author_id2"]
+
+#Array relationship
+- type: mssql_create_array_relationship
+  args:
+    source: mssql
+    table: author_multi
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article_multi
+        columns: ["author_id1", "author_id2"]

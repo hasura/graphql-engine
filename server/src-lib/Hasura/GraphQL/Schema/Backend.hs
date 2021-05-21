@@ -133,7 +133,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     -> m (Parser 'Input n [ComparisonExp b])
   updateOperators
     :: (MonadSchema n m, MonadTableInfo r m)
-    => TableName b
+    => TableInfo b
     -> UpdPermInfo b
     -> m (Maybe (InputFieldsParser n [(Column b, IR.UpdOpExpG (UnpreparedValue b))]))
   -- TODO: THIS IS A TEMPORARY FIX
@@ -152,13 +152,16 @@ class Backend b => BackendSchema (b :: BackendType) where
   -- > distinct_on: [table_select_column!]
   tableDistinctOn
     :: forall m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-    => TableName b
+    => SourceName
+    -> TableInfo b
     -> SelPermInfo b
     -> m (InputFieldsParser n (Maybe (XDistinct b, NonEmpty (Column b))))
   -- | Computed field parser
   computedField
     :: MonadBuildSchema b r m n
-    => ComputedFieldInfo b
+    => SourceName
+    -> ComputedFieldInfo b
+    -> TableName b
     -> SelPermInfo b
     -> m (Maybe (FieldParser n (AnnotatedField b)))
   -- | The 'node' root field of a Relay request.

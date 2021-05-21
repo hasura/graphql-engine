@@ -24,6 +24,7 @@ module Hasura.GraphQL.Context
 import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
+import qualified Data.Aeson.Ordered            as JO
 import qualified Data.Kind                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 
@@ -120,8 +121,8 @@ newtype QueryDBRoot    v b = QDBR (QueryDB    b (v b))
 newtype MutationDBRoot v b = MDBR (MutationDB b (v b))
 
 
-type QueryRootField        v = RootField (QueryDBRoot    v) RemoteField (ActionQuery    ('Postgres 'Vanilla) (v ('Postgres 'Vanilla))) J.Value
-type MutationRootField     v = RootField (MutationDBRoot v) RemoteField (ActionMutation ('Postgres 'Vanilla) (v ('Postgres 'Vanilla))) J.Value
+type QueryRootField        v = RootField (QueryDBRoot    v) RemoteField (ActionQuery    ('Postgres 'Vanilla) (v ('Postgres 'Vanilla))) JO.Value
+type MutationRootField     v = RootField (MutationDBRoot v) RemoteField (ActionMutation ('Postgres 'Vanilla) (v ('Postgres 'Vanilla))) JO.Value
 type SubscriptionRootField v = RootField (QueryDBRoot    v) Void        Void                                                           Void
 
 

@@ -117,6 +117,39 @@ data RQLMetadataV1
   | RMMssqlDropDeletePermission !(DropPerm 'MSSQL (DelPerm 'MSSQL))
   | RMMssqlSetPermissionComment !(SetPermComment 'MSSQL)
 
+  -- Citus functions
+  | RMCitusTrackFunction !(TrackFunctionV2 ('Postgres 'Citus))
+  | RMCitusUntrackFunction !(UnTrackFunction ('Postgres 'Citus))
+
+  -- Citus function permissions
+  | RMCitusCreateFunctionPermission !(CreateFunctionPermission ('Postgres 'Citus))
+  | RMCitusDropFunctionPermission !(DropFunctionPermission ('Postgres 'Citus))
+
+  -- Citus sources
+  | RMCitusAddSource !(AddSource ('Postgres 'Citus))
+  | RMCitusDropSource !DropSource
+  | RMCitusTrackTable !(TrackTableV2 ('Postgres 'Citus))
+  | RMCitusUntrackTable !(UntrackTable ('Postgres 'Citus))
+
+  -- Citus relationship
+  | RMCitusCreateObjectRelationship !(CreateObjRel ('Postgres 'Citus))
+  | RMCitusCreateArrayRelationship !(CreateArrRel ('Postgres 'Citus))
+  | RMCitusDropRelationship !(DropRel ('Postgres 'Citus))
+  | RMCitusSetRelationshipComment !(SetRelComment ('Postgres 'Citus))
+  | RMCitusRenameRelationship !(RenameRel ('Postgres 'Citus))
+
+  -- Citus permissions
+  | RMCitusCreateInsertPermission !(CreateInsPerm ('Postgres 'Citus))
+  | RMCitusCreateSelectPermission !(CreateSelPerm ('Postgres 'Citus))
+  | RMCitusCreateUpdatePermission !(CreateUpdPerm ('Postgres 'Citus))
+  | RMCitusCreateDeletePermission !(CreateDelPerm ('Postgres 'Citus))
+
+  | RMCitusDropInsertPermission !(DropPerm ('Postgres 'Citus) (InsPerm ('Postgres 'Citus)))
+  | RMCitusDropSelectPermission !(DropPerm ('Postgres 'Citus) (SelPerm ('Postgres 'Citus)))
+  | RMCitusDropUpdatePermission !(DropPerm ('Postgres 'Citus) (UpdPerm ('Postgres 'Citus)))
+  | RMCitusDropDeletePermission !(DropPerm ('Postgres 'Citus) (DelPerm ('Postgres 'Citus)))
+  | RMCitusSetPermissionComment !(SetPermComment ('Postgres 'Citus))
+
   -- BigQuery sources
   | RMBigqueryAddSource !(AddSource 'BigQuery)
   | RMBigqueryDropSource !DropSource
@@ -297,9 +330,9 @@ runMetadataQuery env instanceId userInfo httpManager serverConfigCtx schemaCache
     & runExceptT
     & liftEitherM
   -- set modified metadata in storage
-  if (queryModifiesMetadata _rqlMetadata)
+  if queryModifiesMetadata _rqlMetadata
     then
-      case (_sccMaintenanceMode serverConfigCtx) of
+      case _sccMaintenanceMode serverConfigCtx of
         MaintenanceModeDisabled -> do
           -- set modified metadata in storage
           newResourceVersion <- setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
@@ -464,6 +497,34 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMMssqlDropUpdatePermission q     -> runDropPerm q
   RMMssqlDropDeletePermission q     -> runDropPerm q
   RMMssqlSetPermissionComment q     -> runSetPermComment q
+
+  RMCitusAddSource q                -> runAddSource q
+  RMCitusDropSource q               -> runDropSource q
+  RMCitusTrackTable q               -> runTrackTableV2Q q
+  RMCitusUntrackTable q             -> runUntrackTableQ q
+
+  RMCitusTrackFunction q               -> runTrackFunctionV2 q
+  RMCitusUntrackFunction q             -> runUntrackFunc q
+
+  RMCitusCreateFunctionPermission q    -> runCreateFunctionPermission q
+  RMCitusDropFunctionPermission   q    -> runDropFunctionPermission q
+
+  RMCitusCreateObjectRelationship q -> runCreateRelationship ObjRel q
+  RMCitusCreateArrayRelationship  q -> runCreateRelationship ArrRel q
+  RMCitusDropRelationship q         -> runDropRel q
+  RMCitusSetRelationshipComment q   -> runSetRelComment q
+  RMCitusRenameRelationship q       -> runRenameRel q
+
+  RMCitusCreateInsertPermission q   -> runCreatePerm q
+  RMCitusCreateSelectPermission q   -> runCreatePerm q
+  RMCitusCreateUpdatePermission q   -> runCreatePerm q
+  RMCitusCreateDeletePermission q   -> runCreatePerm q
+
+  RMCitusDropInsertPermission q     -> runDropPerm q
+  RMCitusDropSelectPermission q     -> runDropPerm q
+  RMCitusDropUpdatePermission q     -> runDropPerm q
+  RMCitusDropDeletePermission q     -> runDropPerm q
+  RMCitusSetPermissionComment q     -> runSetPermComment q
 
   RMGetInconsistentMetadata q       -> runGetInconsistentMetadata q
   RMDropInconsistentMetadata q      -> runDropInconsistentMetadata q

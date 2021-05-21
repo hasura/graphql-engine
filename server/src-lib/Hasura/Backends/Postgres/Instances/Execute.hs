@@ -1,7 +1,9 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hasura.Backends.Postgres.Instances.Execute () where
+module Hasura.Backends.Postgres.Instances.Execute
+  (
+  ) where
 
 import           Hasura.Prelude
 
@@ -25,6 +27,7 @@ import qualified Hasura.SQL.AnyBackend                      as AB
 import qualified Hasura.Tracing                             as Tracing
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.Translate.Select  (PostgresAnnotatedFieldJSON)
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -41,7 +44,11 @@ import           Hasura.Server.Version                      (HasVersion)
 import           Hasura.Session
 
 
-instance Backend ('Postgres pgKind) => BackendExecute ('Postgres pgKind) where
+instance
+  ( Backend ('Postgres pgKind)
+  ,  PostgresAnnotatedFieldJSON pgKind
+  ) => BackendExecute ('Postgres pgKind) where
+
   type PreparedQuery    ('Postgres pgKind) = PreparedSql pgKind
   type MultiplexedQuery ('Postgres pgKind) = PGL.MultiplexedQuery
   type ExecutionMonad   ('Postgres pgKind) = Tracing.TraceT (LazyTxT QErr IO)
@@ -61,17 +68,17 @@ pgDBQueryPlan
    . ( MonadError QErr m
      , HasVersion
      , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
      )
   => Env.Environment
   -> HTTP.Manager
   -> [HTTP.Header]
   -> UserInfo
-  -> [G.Directive G.Name]
   -> SourceName
   -> SourceConfig ('Postgres pgKind)
   -> QueryDB ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
   -> m ExecutionStep
-pgDBQueryPlan env manager reqHeaders userInfo _directives sourceName sourceConfig qrf = do
+pgDBQueryPlan env manager reqHeaders userInfo sourceName sourceConfig qrf = do
   (preparedQuery, PlanningSt _ _ planVals expectedVariables) <- flip runStateT initPlanningSt $ traverseQueryDB @('Postgres pgKind) prepareWithPlan qrf
   validateSessionVariables expectedVariables $ _uiSession userInfo
   let (action, preparedSQL) = mkCurPlanTx env manager reqHeaders userInfo $ irToRootFieldPlan planVals preparedQuery
@@ -84,6 +91,7 @@ pgDBQueryExplain
   :: forall pgKind m
    . ( MonadError QErr m
      , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
      )
   => G.Name
   -> UserInfo
@@ -134,6 +142,7 @@ convertDelete
    . ( MonadError QErr m
      , HasVersion
      , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
      )
   => Env.Environment
   -> SessionVariables
@@ -152,6 +161,7 @@ convertUpdate
    . ( MonadError QErr m
      , HasVersion
      , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
      )
   => Env.Environment
   -> SessionVariables
@@ -172,6 +182,7 @@ convertInsert
    . ( MonadError QErr m
      , HasVersion
      , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
      )
   => Env.Environment
   -> SessionVariables
@@ -191,6 +202,7 @@ convertFunction
    . ( MonadError QErr m
      , HasVersion
      , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
      )
   => Env.Environment
   -> UserInfo
@@ -220,6 +232,7 @@ pgDBMutationPlan
    . ( MonadError QErr m
      , HasVersion
      , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
      )
   => Env.Environment
   -> HTTP.Manager
@@ -250,6 +263,7 @@ pgDBSubscriptionPlan
    . ( MonadError QErr m
      , MonadIO m
      , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
      )
   => UserInfo
   -> SourceName

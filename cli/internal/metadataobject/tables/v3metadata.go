@@ -11,7 +11,7 @@ import (
 /*
 V3MetadataTableConfig is responsible for exporting and applying "tables" metadata objects
 in config v2 format on a server with v3 metadata
- */
+*/
 type V3MetadataTableConfig struct {
 	*TableConfig
 }
@@ -50,6 +50,6 @@ func (t *V3MetadataTableConfig) Export(md yaml.MapSlice) (map[string][]byte, err
 		return nil, err
 	}
 	return map[string][]byte{
-		filepath.Join(t.MetadataDir, MetadataFilename): data,
+		filepath.ToSlash(filepath.Join(t.MetadataDir, MetadataFilename)): data,
 	}, nil
 }

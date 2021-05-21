@@ -18,7 +18,9 @@ import qualified Language.Haskell.TH.Syntax               as TH
 import qualified Network.WebSockets                       as WS
 import qualified Text.PrettyPrint.ANSI.Leijen             as PP
 
+import           Data.ByteString.Char8                    (pack, unpack)
 import           Data.FileEmbed                           (embedStringFile, makeRelativeToProject)
+import           Data.Text.Encoding                       (encodeUtf8)
 import           Data.Time                                (NominalDiffTime)
 import           Data.URL.Template
 import           Network.Wai.Handler.Warp                 (HostPreference)
@@ -40,8 +42,9 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
-import           Network.URI                              (parseURI)
-
+import           Network.HTTP.Types.URI                   (Query, QueryItem, parseQuery,
+                                                           renderQuery)
+import           Network.URI                              (URI (..), parseURI, uriQuery)
 
 getDbId :: Q.TxE QErr Text
 getDbId =
@@ -218,6 +221,9 @@ mkServeOptions rso = do
     fromMaybe defaultFetchBatchSize
     <$> withEnv (rsoEventsFetchBatchSize rso) (fst eventsFetchBatchSizeEnv)
 
+  gracefulShutdownTime <-
+    fromMaybe 60 <$> withEnv (rsoGracefulShutdownTimeout rso) (fst gracefulShutdownEnv)
+
   pure $ ServeOptions
            port
            host
@@ -253,6 +259,7 @@ mkServeOptions rso = do
            experimentalFeatures
            eventsFetchBatchSize
            devMode
+           gracefulShutdownTime
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -624,6 +631,13 @@ experimentalFeaturesEnv =
   , "Comma separated list of experimental features. (all: inherited_roles)"
   )
 
+gracefulShutdownEnv :: (String, String)
+gracefulShutdownEnv =
+  ( "HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT"
+  , "Timeout for graceful shutdown before which in-flight scheduled events, " <>
+     " cron events and async actions to complete (default: 60 seconds)"
+  )
+
 consoleAssetsDirEnv :: (String, String)
 consoleAssetsDirEnv =
   ( "HASURA_GRAPHQL_CONSOLE_ASSETS_DIR"
@@ -958,6 +972,14 @@ parseExperimentalFeatures = optional $
            help (snd experimentalFeaturesEnv)
          )
 
+parseGracefulShutdownTimeout :: Parser (Maybe Seconds)
+parseGracefulShutdownTimeout = optional $
+  option (eitherReader readEither)
+         ( long "graceful-shutdown-timeout" <>
+           metavar "<INTERVAL (seconds)>" <>
+           help (snd gracefulShutdownEnv)
+         )
+
 parseMxRefetchInt :: Parser (Maybe LQ.RefetchInterval)
 parseMxRefetchInt =
   optional $
@@ -1118,6 +1140,21 @@ parseLogLevel = optional $
            help (snd logLevelEnv)
          )
 
+censorQueryItem :: Text -> QueryItem -> QueryItem
+censorQueryItem sensitive (key, Just _) | key == encodeUtf8 sensitive = (key, Just "...")
+censorQueryItem _ qi = qi
+
+censorQuery :: Text -> Query -> Query
+censorQuery sensitive = fmap (censorQueryItem sensitive)
+
+updateQuery :: (Query -> Query) -> URI -> URI
+updateQuery f uri =
+  let queries = parseQuery $ pack $ uriQuery uri
+  in uri { uriQuery = unpack (renderQuery True $ f queries) }
+
+censorURI :: Text -> URI -> URI
+censorURI sensitive uri = updateQuery (censorQuery sensitive) uri
+
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog
 connInfoToLog connInfo =
@@ -1135,7 +1172,7 @@ connInfoToLog connInfo =
                  ]
 
     mkDBUriLog uri =
-      case show <$> parseURI uri of
+      case show . censorURI "sslpassword" <$> parseURI uri of
         Nothing -> J.object
           [ "error" J..= ("parsing database url failed" :: String)]
         Just s  -> J.object
@@ -1177,6 +1214,7 @@ serveOptsToLog so =
       , "enable_maintenance_mode" J..= soEnableMaintenanceMode so
       , "experimental_features" J..= soExperimentalFeatures so
       , "events_fetch_batch_size" J..= soEventsFetchBatchSize so
+      , "graceful_shutdown_timeout" J..= soGracefulShutdownTimeout so
       ]
 
 mkGenericStrLog :: L.LogLevel -> Text -> String -> StartupLog
@@ -1232,6 +1270,7 @@ serveOptionsParser =
   <*> parseSchemaPollInterval
   <*> parseExperimentalFeatures
   <*> parseEventsFetchBatchSize
+  <*> parseGracefulShutdownTimeout
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.

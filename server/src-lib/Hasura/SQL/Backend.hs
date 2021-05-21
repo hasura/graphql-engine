@@ -18,6 +18,7 @@ import           Hasura.Incremental
 -- Postgres. This value indicates which "flavour" of Postgres a backend is.
 data PostgresKind
   = Vanilla
+  | Citus
   deriving (Eq, Ord)
 
 -- | An enum that represents each backend we support.
@@ -32,6 +33,7 @@ data BackendType
 -- | The name of the backend, as we expect it to appear in our metadata and API.
 instance ToTxt BackendType where
   toTxt (Postgres Vanilla) = "postgres"
+  toTxt (Postgres Citus)   = "citus"
   toTxt MSSQL              = "mssql"
   toTxt BigQuery           = "bigquery"
 
@@ -51,6 +53,7 @@ instance Cacheable (Proxy (b :: BackendType))
 supportedBackends :: [BackendType]
 supportedBackends =
   [ Postgres Vanilla
+  , Postgres Citus
   , MSSQL
   , BigQuery
   ]

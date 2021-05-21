@@ -294,6 +294,7 @@ data RolePermInfo (b :: BackendType)
   , _permUpd :: !(Maybe (UpdPermInfo b))
   , _permDel :: !(Maybe (DelPermInfo b))
   } deriving (Generic)
+
 instance (Backend b, NFData (BooleanOperators b (PartialSQLExp b))) => NFData (RolePermInfo b)
 
 instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (RolePermInfo b) where
@@ -470,19 +471,21 @@ instance Backend b => FromJSON (ForeignKey b) where
 -- information is accumulated. See also 'TableCoreInfo'.
 data TableCoreInfoG (b :: BackendType) field primaryKeyColumn
   = TableCoreInfo
-  { _tciName              :: !(TableName b)
-  , _tciDescription       :: !(Maybe PG.PGDescription) -- TODO make into type family?
-  , _tciSystemDefined     :: !SystemDefined
-  , _tciFieldInfoMap      :: !(FieldInfoMap field)
-  , _tciPrimaryKey        :: !(Maybe (PrimaryKey b primaryKeyColumn))
-  , _tciUniqueConstraints :: !(HashSet (Constraint b))
+  { _tciName               :: !(TableName b)
+  , _tciDescription        :: !(Maybe PG.PGDescription) -- TODO make into type family?
+  , _tciSystemDefined      :: !SystemDefined
+  , _tciFieldInfoMap       :: !(FieldInfoMap field)
+  , _tciPrimaryKey         :: !(Maybe (PrimaryKey b primaryKeyColumn))
+  , _tciUniqueConstraints  :: !(HashSet (Constraint b))
   -- ^ Does /not/ include the primary key; use 'tciUniqueOrPrimaryKeyConstraints' if you need both.
-  , _tciForeignKeys       :: !(HashSet (ForeignKey b))
-  , _tciViewInfo          :: !(Maybe ViewInfo)
-  , _tciEnumValues        :: !(Maybe EnumValues)
-  , _tciCustomConfig      :: !(TableConfig b)
+  , _tciForeignKeys        :: !(HashSet (ForeignKey b))
+  , _tciViewInfo           :: !(Maybe ViewInfo)
+  , _tciEnumValues         :: !(Maybe EnumValues)
+  , _tciCustomConfig       :: !(TableConfig b)
+  , _tciExtraTableMetadata :: !(ExtraTableMetadata b)
   } deriving (Generic)
 deriving instance (Eq field, Eq pkCol, Backend b) => Eq (TableCoreInfoG b field pkCol)
+
 instance (Cacheable field, Cacheable pkCol, Backend b) => Cacheable (TableCoreInfoG b field pkCol)
 
 instance (Backend b, Generic pkCol, ToJSON field, ToJSON pkCol) => ToJSON (TableCoreInfoG b field pkCol) where
@@ -509,6 +512,12 @@ instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => T
   toJSON = genericToJSON hasuraJSON
 $(makeLenses ''TableInfo)
 
+tiName :: Lens' (TableInfo b) (TableName b)
+tiName = tiCoreInfo . tciName
+
+tableInfoName :: TableInfo b -> TableName b
+tableInfoName = view tiName
+
 type TableCoreCache b = M.HashMap (TableName b) (TableCoreInfo b)
 type TableCache b = M.HashMap (TableName b) (TableInfo b) -- info of all tables
 
@@ -526,7 +535,7 @@ instance Backend b => FromJSON (ForeignKeyMetadata b) where
 
     columns <- o .: "columns"
     foreignColumns <- o .: "foreign_columns"
-    if (length columns == length foreignColumns) then
+    if length columns == length foreignColumns then
       pure $ ForeignKeyMetadata ForeignKey
         { _fkConstraint = constraint
         , _fkForeignTable = foreignTable
@@ -539,14 +548,15 @@ instance Backend b => FromJSON (ForeignKeyMetadata b) where
 -- database via 'src-rsr/pg_table_metadata.sql'
 data DBTableMetadata (b :: BackendType)
   = DBTableMetadata
-  { _ptmiOid               :: !OID
-  , _ptmiColumns           :: ![RawColumnInfo b]
-  , _ptmiPrimaryKey        :: !(Maybe (PrimaryKey b (Column b)))
-  , _ptmiUniqueConstraints :: !(HashSet (Constraint b))
+  { _ptmiOid                :: !OID
+  , _ptmiColumns            :: ![RawColumnInfo b]
+  , _ptmiPrimaryKey         :: !(Maybe (PrimaryKey b (Column b)))
+  , _ptmiUniqueConstraints  :: !(HashSet (Constraint b))
   -- ^ Does /not/ include the primary key!
-  , _ptmiForeignKeys       :: !(HashSet (ForeignKeyMetadata b))
-  , _ptmiViewInfo          :: !(Maybe ViewInfo)
-  , _ptmiDescription       :: !(Maybe PG.PGDescription)
+  , _ptmiForeignKeys        :: !(HashSet (ForeignKeyMetadata b))
+  , _ptmiViewInfo           :: !(Maybe ViewInfo)
+  , _ptmiDescription        :: !(Maybe PG.PGDescription)
+  , _ptmiExtraTableMetadata :: !(ExtraTableMetadata b)
   } deriving (Generic)
 deriving instance Backend b => Eq (DBTableMetadata b)
 deriving instance Backend b => Show (DBTableMetadata b)

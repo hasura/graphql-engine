@@ -39,7 +39,7 @@ export const addsNewPostgresDatabaseWithUrl = () => {
   cy.getBySel('connect-database-btn').click();
   cy.get('.notification-success', { timeout: 10000 })
     .should('be.visible')
-    .and('contain', 'Database added successfully!');
+    .and('contain', 'Data source added successfully!');
   cy.url().should('eq', `${baseUrl}/data/manage`);
 };
 
@@ -59,7 +59,7 @@ export const addsNewPgDBWithConParams = () => {
   cy.getBySel('connect-database-btn').click();
   cy.get('.notification-success', { timeout: 10000 })
     .should('be.visible')
-    .and('contain', 'Database added successfully!');
+    .and('contain', 'Data source added successfully!');
   cy.url().should('eq', `${baseUrl}/data/manage`);
 };
 
@@ -73,7 +73,7 @@ export const addsNewPgDBWithEnvVar = () => {
   cy.getBySel('connect-database-btn').click();
   cy.get('.notification-success', { timeout: 10000 })
     .should('be.visible')
-    .and('contain', 'Database added successfully!');
+    .and('contain', 'Data source added successfully!');
   cy.url().should('eq', `${baseUrl}/data/manage`);
 };
 

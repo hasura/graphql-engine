@@ -69,7 +69,9 @@ mkDefaultMutFlds = MOutMultirowFields . \case
     mutFlds = [("affected_rows", MCount)]
 
 mkMutFldExp
-  :: Backend ('Postgres pgKind)
+  :: ( Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
   => Identifier
   -> Maybe Int
   -> Bool
@@ -117,7 +119,9 @@ WITH "<table-name>__mutation_result_alias" AS (
 -- | Generate mutation output expression with given mutation CTE statement.
 -- See Note [Mutation output expression].
 mkMutationOutputExp
-  :: Backend ('Postgres pgKind)
+  :: ( Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
   => QualifiedTable
   -> [ColumnInfo ('Postgres pgKind)]
   -> Maybe Int

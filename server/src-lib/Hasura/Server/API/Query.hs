@@ -451,7 +451,7 @@ runQueryM env rq = withPathK "args" $ case rq of
 
       RQDumpInternalState q           -> runDumpInternalState q
 
-      RQRunSql q                      -> runRunSQL q
+      RQRunSql q                      -> runRunSQL @'Vanilla q
 
       RQSetCustomTypes q              -> runSetCustomTypes q
 

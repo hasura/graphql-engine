@@ -57,7 +57,7 @@ import qualified PostgreSQL.Binary.Encoding             as PE
 import qualified System.Metrics.Distribution            as EKG.Distribution
 import qualified System.Metrics.Gauge                   as EKG.Gauge
 
-import           Control.Concurrent.Extended            (sleep)
+import           Control.Concurrent.Extended            (Forever (..), sleep)
 import           Control.Concurrent.STM.TVar
 import           Control.Monad.Catch                    (MonadMask, bracket_, finally, mask_)
 import           Control.Monad.STM
@@ -211,6 +211,8 @@ initEventEngineCtx maxT _eeCtxFetchInterval _eeCtxFetchSize = do
 -- Used to calculate Event Lock time
 type EventWithSource b = (Event, SourceConfig b, Time.UTCTime)
 
+type FetchEventArguments = ([EventWithSource ('Postgres 'Vanilla)], Int , Bool)
+
 -- | Service events from our in-DB queue.
 --
 -- There are a few competing concerns and constraints here; we want to...
@@ -221,7 +223,7 @@ type EventWithSource b = (Event, SourceConfig b, Time.UTCTime)
 --   - try not to cause webhook workers to stall waiting on DB fetch
 --   - limit webhook HTTP concurrency per HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE
 processEventQueue
-  :: forall m void
+  :: forall m
    . ( HasVersion
      , MonadIO m
      , Tracing.HasReporter m
@@ -238,12 +240,10 @@ processEventQueue
   -> ServerMetrics
   -> MaintenanceMode
   -> ResponseLogBehavior
-  -> m void
-processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} LockedEventsCtx{leEvents} serverMetrics maintenanceMode responseLogBehavior = do
+  -> m (Forever m)
+processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} LockedEventsCtx{leEvents} serverMetrics maintenanceMode responseLogBehaviour = do
   events0 <- popEventsBatch
-  -- Track number of events fetched in EKG
-  _ <- liftIO $ EKG.Distribution.add (smNumEventsFetched serverMetrics) (fromIntegral $ length events0)
-  go events0 0 False
+  return $ Forever (events0, 0, False) go
   where
     fetchBatchSize = getNonNegativeInt _eeCtxFetchSize
 
@@ -281,6 +281,8 @@ processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} Locked
                       liftIO $ L.unLogger logger $ EventInternalErr err
                       return []
                     Right events -> do
+                      -- Track number of events fetched in EKG
+                      _ <- liftIO $ EKG.Distribution.add (smNumEventsFetchedPerBatch serverMetrics) (fromIntegral $ length events)
                       -- The time when the events were fetched. This is used to calculate the average lock time of an event.
                       eventsFetchedTime <- liftIO getCurrentTime
                       saveLockedEvents (map eId events) leEvents
@@ -293,8 +295,8 @@ processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} Locked
     --
     -- work on this batch of events while prefetching the next. Recurse after we've forked workers
     -- for each in the batch, minding the requested pool size.
-    go :: [EventWithSource ('Postgres 'Vanilla)] -> Int -> Bool -> m void
-    go events !fullFetchCount !alreadyWarned = do
+    go :: FetchEventArguments -> m FetchEventArguments
+    go (events, !fullFetchCount, !alreadyWarned) = do
       -- process events ASAP until we've caught up; only then can we sleep
       when (null events) . liftIO $ sleep _eeCtxFetchInterval
 
@@ -335,13 +337,13 @@ processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} Locked
                    "Events processor may not be keeping up with events generated in postgres, " <>
                    "or we're working on a backlog of events. Consider increasing " <>
                    "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-             go eventsNext (fullFetchCount+1) (alreadyWarned || clearlyBehind)
+             return (eventsNext, (fullFetchCount+1), (alreadyWarned || clearlyBehind))
          | otherwise -> do
              when (lenEvents /= fetchBatchSize && alreadyWarned) $
                -- emit as warning in case users are only logging warning severity and saw above
                L.unLogger logger $ L.UnstructuredLog L.LevelWarn $ fromString $
                  "It looks like the events processor is keeping up again."
-             go eventsNext 0 False
+             return (eventsNext, 0, False)
 
     processEvent
       :: forall io r
@@ -356,11 +358,11 @@ processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} Locked
       => EventWithSource ('Postgres 'Vanilla)
       -> io ()
     processEvent (e, sourceConfig, eventFetchedTime) = do
-      -- Track Lock Time of Event
-      -- Lock Time = Time when the event was fetched from DB - Time when the event is being processed
+      -- Track Queue Time of Event (in seconds). See `smEventQueueTime`
+      -- Queue Time = Time when the event was fetched from DB - Time when the event is being processed
       eventProcessTime <- liftIO getCurrentTime
-      let eventLockTime = realToFrac $ diffUTCTime eventProcessTime eventFetchedTime
-      _ <- liftIO $ EKG.Distribution.add (smEventLockTime serverMetrics) eventLockTime
+      let eventQueueTime = realToFrac $ diffUTCTime eventProcessTime eventFetchedTime
+      _ <- liftIO $ EKG.Distribution.add (smEventQueueTime serverMetrics) eventQueueTime
 
       cache <- liftIO getSchemaCache
 
@@ -411,7 +413,7 @@ processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} Locked
                       (liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics)
                       (liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics)
                       (runExceptT $ tryWebhook headers responseTimeout payload webhook)
-              logHTTPForET res extraLogCtx requestDetails responseLogBehavior
+              logHTTPForET res extraLogCtx requestDetails responseLogBehaviour
               let decodedHeaders = map (decodeHeader logenv headerInfos) headers
               either
                 (processError sourceConfig e retryConf decodedHeaders ep maintenanceModeVersion)

@@ -65,7 +65,6 @@ const trackAllItems = (sql, isMigration, migrationName, source, driver) => (
       const tableDef = { name, schema };
       const { allSchemas } = getState().tables;
       const table = findTable(allSchemas, tableDef);
-      console.log({ table });
       req = getTrackTableQuery({
         tableDef,
         source,

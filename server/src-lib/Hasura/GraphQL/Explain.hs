@@ -89,21 +89,23 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       fragments = mapMaybe takeFragment $ GH.unGQLExecDoc $ GH._grQuery query
   (graphQLContext, queryParts) <- E.getExecPlanPartial userInfo sc queryType query
   case queryParts of
-    G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
+    G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives selSet -> do
       -- (Here the above fragment inlining is actually executed.)
       inlinedSelSet <- E.inlineSelectionSet fragments selSet
-      (unpreparedQueries, _, _) <-
-        E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) inlinedSelSet
+      (unpreparedQueries, _, _, _) <-
+        E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
+      -- TODO: validate directives here
       encJFromList <$>
         for (OMap.toList unpreparedQueries) (uncurry (explainQueryField userInfo))
 
     G.TypedOperationDefinition G.OperationTypeMutation _ _ _ _ ->
       throw400 InvalidParams "only queries can be explained"
 
-    G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs _ selSet -> do
+    G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives selSet -> do
       -- (Here the above fragment inlining is actually executed.)
       inlinedSelSet <- E.inlineSelectionSet fragments selSet
-      (unpreparedQueries, _, _) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) inlinedSelSet
+      (unpreparedQueries, _, _, _) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
+      -- TODO: validate directives here
       validSubscription <-  E.buildSubscriptionPlan userInfo unpreparedQueries
       case validSubscription of
         E.SEAsyncActionsWithNoRelationships _ -> throw400 NotSupported "async action query fields without relationships to table cannot be explained"

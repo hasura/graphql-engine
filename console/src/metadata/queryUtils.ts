@@ -688,7 +688,7 @@ export const getConsoleStateQuery = {
   args: {},
 };
 
-export type SupportedEvents = 'cron' | 'one_off';
+export type SupportedEvents = 'cron' | 'one_off' | 'data';
 
 export const getEventInvocationsLogByID = (
   type: SupportedEvents,

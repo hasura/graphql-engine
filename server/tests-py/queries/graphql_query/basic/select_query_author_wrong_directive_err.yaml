@@ -1,0 +1,53 @@
+- description: rejects unknown directives
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        author {
+          id @exclude(if: true)
+          name
+        }
+      }
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.author.selectionSet
+        code: validation-failed
+      message: directive "exclude" is not defined in the schema
+
+- description: rejects duplicate directives
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        author {
+          id @include(if: true) @include(if: true)
+          name
+        }
+      }
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.author.selectionSet
+        code: validation-failed
+      message: 'the following directives are used more than once: include'
+
+- description: rejects directives on wrong element
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query @include(if: true) {
+        author {
+          id
+          name
+        }
+      }
+  response:
+    errors:
+    - extensions:
+        path: $
+        code: validation-failed
+      message: directive "include" is not allowed on a query

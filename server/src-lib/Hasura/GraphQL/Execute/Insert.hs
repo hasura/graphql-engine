@@ -29,6 +29,7 @@ import qualified Hasura.Tracing                               as Tracing
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Backends.Postgres.Translate.Select    (PostgresAnnotatedFieldJSON)
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
@@ -75,7 +76,13 @@ traverseAnnInsert f (IR.AnnInsert fieldName isSingle (annIns, mutationOutput)) =
 
 
 convertToSQLTransaction
-  :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m, Backend ('Postgres pgKind))
+  :: ( HasVersion
+     , MonadTx m
+     , MonadIO m
+     , Tracing.MonadTrace m
+     , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
   => Env.Environment
   -> IR.AnnInsert ('Postgres pgKind) PG.SQLExp
   -> PGE.MutationRemoteJoinCtx
@@ -92,7 +99,13 @@ convertToSQLTransaction env (IR.AnnInsert fieldName isSingle (annIns, mutationOu
     suffix = bool "objects" "object" isSingle
 
 insertMultipleObjects
-  :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m, Backend ('Postgres pgKind))
+  :: ( HasVersion
+     , MonadTx m
+     , MonadIO m
+     , Tracing.MonadTrace m
+     , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
   => Env.Environment
   -> IR.MultiObjIns ('Postgres pgKind) PG.SQLExp
   -> [(PGCol, PG.SQLExp)]
@@ -140,7 +153,13 @@ insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutationOu
 
 insertObject
   :: forall pgKind m
-   . (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m, Backend ('Postgres pgKind))
+   . ( HasVersion
+     , MonadTx m
+     , MonadIO m
+     , Tracing.MonadTrace m
+     , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
   => Env.Environment
   -> IR.SingleObjIns ('Postgres pgKind) PG.SQLExp
   -> [(PGCol, PG.SQLExp)]
@@ -221,7 +240,13 @@ insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringify
       <> table <<> " affects zero rows"
 
 insertObjRel
-  :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m, Backend ('Postgres pgKind))
+  :: ( HasVersion
+     , MonadTx m
+     , MonadIO m
+     , Tracing.MonadTrace m
+     , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
   => Env.Environment
   -> Seq.Seq Q.PrepArg
   -> PGE.MutationRemoteJoinCtx
@@ -250,7 +275,13 @@ insertObjRel env planVars remoteJoinCtx stringifyNum objRelIns =
              <> table <<> " affects zero rows"
 
 insertArrRel
-  :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m, Backend ('Postgres pgKind))
+  :: ( HasVersion
+     , MonadTx m
+     , MonadIO m
+     , Tracing.MonadTrace m
+     , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
   => Env.Environment
   -> [(PGCol, PG.SQLExp)]
   -> PGE.MutationRemoteJoinCtx

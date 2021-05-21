@@ -95,7 +95,9 @@ instance ToTxt MultiplexedQuery where
 
 
 toSQLFromItem
-  :: Backend ('Postgres pgKind)
+  :: ( Backend ('Postgres pgKind)
+     , DS.PostgresAnnotatedFieldJSON pgKind
+     )
   => S.Alias
   -> QueryDB ('Postgres pgKind) S.SQLExp
   -> S.FromItem
@@ -106,7 +108,9 @@ toSQLFromItem = flip \case
   QDBConnection   s -> S.mkSelectWithFromItem $ DS.mkConnectionSelect s
 
 mkMultiplexedQuery
-  :: Backend ('Postgres pgKind)
+  :: ( Backend ('Postgres pgKind)
+     , DS.PostgresAnnotatedFieldJSON pgKind
+     )
   => OMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) S.SQLExp)
   -> MultiplexedQuery
 mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkSelect

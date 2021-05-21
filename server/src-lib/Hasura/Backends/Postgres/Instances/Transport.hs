@@ -22,6 +22,7 @@ import qualified Hasura.Logging                             as L
 import qualified Hasura.Tracing                             as Tracing
 
 import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Backends.Postgres.Translate.Select  (PostgresAnnotatedFieldJSON)
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Backend
@@ -35,9 +36,12 @@ import           Hasura.Session
 import           Hasura.Tracing
 
 
-instance Backend ('Postgres pgKind) => BackendTransport ('Postgres pgKind) where
-  runDBQuery = runPGQuery
-  runDBMutation = runPGMutation
+instance
+  ( Backend ('Postgres pgKind)
+  , PostgresAnnotatedFieldJSON pgKind
+  ) => BackendTransport ('Postgres pgKind) where
+  runDBQuery        = runPGQuery
+  runDBMutation     = runPGMutation
   runDBSubscription = runPGSubscription
   runDBQueryExplain = runPGQueryExplain
 

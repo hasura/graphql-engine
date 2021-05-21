@@ -2,7 +2,11 @@ module Hasura.Server.Utils where
 
 import           Hasura.Prelude
 
+import qualified Crypto.Hash                as Crypto
+import qualified Data.Aeson                 as J
 import qualified Data.ByteString            as B
+import qualified Data.ByteString.Base16     as Base16
+import qualified Data.ByteString.Lazy       as BL
 import qualified Data.CaseInsensitive       as CI
 import qualified Data.HashSet               as Set
 import qualified Data.List.NonEmpty         as NE
@@ -23,6 +27,7 @@ import qualified Text.Regex.TDFA.TDFA       as TDFA
 import           Control.Lens               ((^..))
 import           Data.Aeson
 import           Data.Aeson.Internal
+import           Data.ByteArray             (convert)
 import           Data.Char
 import           Data.Text.Extended
 import           Data.Time
@@ -246,6 +251,12 @@ executeJSONPath jsonPath = iparse (valueParser jsonPath)
                   Key k   -> withObject "Object" (.: k)
                   Index i -> withArray "Array" $
                              maybe (fail "Array index out of range") pure . (V.!? i)
+
+sha1 :: BL.ByteString -> B.ByteString
+sha1 = convert @_ @B.ByteString . Crypto.hashlazy @Crypto.SHA1
+
+cryptoHash :: J.ToJSON a => a -> B.ByteString
+cryptoHash = Base16.encode . sha1 . J.encode
 
 readIsoLevel :: String -> Either String Q.TxIsolation
 readIsoLevel isoS =

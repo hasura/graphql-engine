@@ -25,6 +25,13 @@ import { supportedFeatures as BigQuerySupportedFeatures } from './services/bigqu
 export const drivers = ['postgres', 'mysql', 'mssql', 'bigquery'] as const;
 export type Driver = typeof drivers[number];
 
+export const driverToLabel: Record<Driver, string> = {
+  mysql: 'MySQL',
+  postgres: 'PostgreSQL',
+  mssql: 'MS SQL Server',
+  bigquery: 'BigQuery',
+};
+
 export type ColumnsInfoResult = {
   [tableName: string]: {
     [columnName: string]: {

@@ -1,0 +1,88 @@
+- description: A distributed table can have foreign keys if it is referencing another colocated hash distributed table. Array relationship
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      disaster:
+      - name: cyclone_amphan
+        affected_states:
+        - state:
+            name: Andhra Pradesh
+        - state:
+            name: Orissa
+      - name: cyclone_nisarga
+        affected_states:
+        - state:
+            name: Andhra Pradesh
+        - state:
+            name: Orissa
+        - state:
+            name: Tamilnadu
+  query:
+    query: |
+      query distributed_to_distributed_array {
+        disaster {
+          name
+          affected_states {
+            state {
+              name
+            }
+          }
+        }
+      }
+
+- description: A distributed table can have foreign keys if it is referencing another colocated hash distributed table. Object relationship
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      disaster_affected_state:
+      - id: 1
+        disaster:
+          name: cyclone_amphan
+      - id: 2
+        disaster:
+          name: cyclone_amphan
+      - id: 3
+        disaster:
+          name: cyclone_nisarga
+      - id: 4
+        disaster:
+          name: cyclone_nisarga
+      - id: 5
+        disaster:
+          name: cyclone_nisarga
+  query:
+    query: |
+      query distributed_to_distributed_object {
+        disaster_affected_state {
+          id
+          disaster {
+            name
+          }
+        }
+      }
+
+
+- description: A distributed table can have foreign keys if it is referencing a reference table
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      disaster:
+      - name: cyclone_amphan
+        country:
+          name: India
+      - name: cyclone_nisarga
+        country:
+          name: India
+  query:
+    query: |
+      query distributed_to_reference_object {
+        disaster {
+          name
+          country {
+            name
+          }
+        }
+      }

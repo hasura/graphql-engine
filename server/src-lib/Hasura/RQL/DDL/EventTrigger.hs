@@ -194,7 +194,7 @@ runInvokeEventTrigger (InvokeEventTriggerQuery name source payload) = do
   ti  <- askTabInfoFromTrigger source name
   sourceConfig <- askSourceConfig @('Postgres pgKind) source
   eid <- liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $
-         insertManualEvent (_tciName $ _tiCoreInfo ti) name payload
+         insertManualEvent (tableInfoName ti) name payload
   return $ encJFromJValue $ object ["event_id" .= eid]
   where
     assertManual (TriggerOpsDef _ _ _ man) = case man of

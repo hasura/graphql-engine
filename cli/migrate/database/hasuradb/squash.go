@@ -11,7 +11,7 @@ import (
 
 	"github.com/ahmetb/go-linq"
 
-	yaml "github.com/ghodss/yaml"
+	"github.com/goccy/go-yaml"
 	"github.com/qor/transition"
 )
 

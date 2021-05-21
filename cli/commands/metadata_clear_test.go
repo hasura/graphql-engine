@@ -8,7 +8,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gbytes"
 	. "github.com/onsi/gomega/gexec"
 )
 
@@ -43,9 +42,8 @@ var _ = Describe("metadata_clear", func() {
 				Args:             []string{"metadata", "clear"},
 				WorkingDirectory: dirName,
 			})
-			want := `.*Metadata cleared*.`
-			Eventually(session, 60*40).Should(Say(want))
 			Eventually(session, 60*40).Should(Exit(0))
+			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring("Metadata cleared"))
 		})
 	})
 })

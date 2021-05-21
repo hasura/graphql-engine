@@ -1,7 +1,12 @@
 module Hasura.Backends.Postgres.DDL.Source
-  ( resolveSourceConfig
+  ( ToMetadataFetchQuery
+  , fetchFunctionMetadata
+  , fetchPgScalars
+  , fetchTableMetadata
+  , initSource
   , postDropSourceHook
   , resolveDatabaseMetadata
+  , resolveSourceConfig
   ) where
 
 import           Hasura.Prelude
@@ -27,6 +32,18 @@ import           Hasura.Server.Migrate.Internal
 import           Hasura.Server.Types                 (MaintenanceMode (..))
 
 
+-- | We differentiate the handling of metadata between Citus and Vanilla
+-- Postgres because Citus imposes limitations on the types of joins that it
+-- permits, which then limits the types of relations that we can track.
+class ToMetadataFetchQuery (pgKind :: PostgresKind) where
+    tableMetadata :: Q.Query
+
+instance ToMetadataFetchQuery 'Vanilla where
+    tableMetadata = $(makeRelativeToProject "src-rsr/pg_table_metadata.sql" >>= Q.sqlFromFile)
+
+instance ToMetadataFetchQuery 'Citus where
+    tableMetadata = $(makeRelativeToProject "src-rsr/citus_table_metadata.sql" >>= Q.sqlFromFile)
+
 resolveSourceConfig
   :: (MonadIO m, MonadResolveSource m)
   => SourceName -> PostgresConnConfiguration -> m (Either QErr (SourceConfig ('Postgres pgKind)))
@@ -36,7 +53,7 @@ resolveSourceConfig name config = runExceptT do
 
 resolveDatabaseMetadata
   :: forall pgKind m
-   . (Backend ('Postgres pgKind), MonadIO m, MonadBaseControl IO m)
+   . (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadIO m, MonadBaseControl IO m)
   => SourceConfig ('Postgres pgKind) -> MaintenanceMode -> m (Either QErr (ResolvedSource ('Postgres pgKind)))
 resolveDatabaseMetadata sourceConfig maintenanceMode = runExceptT do
   (tablesMeta, functionsMeta, pgScalars) <- runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $ do
@@ -136,11 +153,11 @@ getSourceCatalogVersion = liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTx
 -- | Fetch Postgres metadata of all user tables
 fetchTableMetadata
   :: forall pgKind m
-   . (Backend ('Postgres pgKind), MonadTx m)
+   . (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadTx m)
   => m (DBTablesMetadata ('Postgres pgKind))
 fetchTableMetadata = do
   results <- liftTx $ Q.withQE defaultTxErrorHandler
-             $(makeRelativeToProject "src-rsr/pg_table_metadata.sql" >>= Q.sqlFromFile) () True
+             (tableMetadata @pgKind) () True
   pure $ Map.fromList $ flip map results $
     \(schema, table, Q.AltJ info) -> (QualifiedObject schema table, info)
 
