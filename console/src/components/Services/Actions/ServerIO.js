@@ -80,20 +80,18 @@ export const createAction = () => (dispatch, getState) => {
     );
   }
 
-  const { types, error: typeDefError } = getTypesFromSdl(
-    rawState.typeDefinition.sdl
-  );
+  const typeInformation = getTypesFromSdl(rawState.typeDefinition.sdl);
 
-  if (typeDefError) {
+  if (typeInformation.error) {
     return dispatch(
-      showErrorNotification('Invalid Types Definition', typeDefError)
+      showErrorNotification('Invalid Types Definition', typeInformation.error)
     );
   }
 
   const state = {
     handler: rawState.handler.trim(),
     kind: rawState.kind,
-    types,
+    types: typeInformation.types,
     actionType,
     name: actionName,
     arguments: args,
