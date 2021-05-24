@@ -10,6 +10,7 @@
 
 ### Bug fixes and improvements
 
+- server: fix subscriptions with session argument in user-defined function (fix #6657)
 - server: MSSQL: Support ORDER BY for text/ntext types.
 - server: MSSQL: Support _lt, _eq, etc. for text/ntext types.
 - server: MSSQL: Fix offset when there's no order by.

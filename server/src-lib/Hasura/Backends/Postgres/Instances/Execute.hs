@@ -272,7 +272,7 @@ pgDBSubscriptionPlan
   -> m (LiveQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)))
 pgDBSubscriptionPlan userInfo _sourceName sourceConfig unpreparedAST = do
   (preparedAST, PGL.QueryParametersInfo{..}) <- flip runStateT mempty $
-    for unpreparedAST $ traverseQueryDB PGL.resolveMultiplexedValue
+    for unpreparedAST $ traverseQueryDB (PGL.resolveMultiplexedValue $ _uiSession userInfo)
   let multiplexedQuery = PGL.mkMultiplexedQuery preparedAST
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedLiveQueryPlan roleName multiplexedQuery
