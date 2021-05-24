@@ -601,7 +601,8 @@ export const getUntrackFunctionQuery = (
   name: string,
   schema: string,
   source: string
-) => getMetadataQuery('untrack_function', source, { name, schema });
+) =>
+  getMetadataQuery('untrack_function', source, { function: { name, schema } });
 
 export const getRenameRelationshipQuery = (
   table: QualifiedTable,
