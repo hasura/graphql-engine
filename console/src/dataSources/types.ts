@@ -294,6 +294,7 @@ export type SupportedFeaturesType = {
     databaseURL: boolean;
     environmentVariable: boolean;
     read_replicas: boolean;
+    prepared_statements: boolean;
     connectionSettings: boolean;
     retries: boolean;
   };

@@ -43,6 +43,7 @@
 - console: allow editing sources configuration
 - console: show db version and source details in manage db page
 - console: add one-to-one relationships support
+- console: rearrange connect database form and add prepared statements
 - cli: add `-o`/`--output` flag for `hasura metadata` `apply` & `export` subcommands
 ```
 # export metadata and write to stdout

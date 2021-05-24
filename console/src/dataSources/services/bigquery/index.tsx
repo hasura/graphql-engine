@@ -157,6 +157,7 @@ export const supportedFeatures: SupportedFeaturesType = {
     databaseURL: false,
     environmentVariable: true,
     read_replicas: false,
+    prepared_statements: false,
     connectionSettings: false,
     retries: false,
   },
