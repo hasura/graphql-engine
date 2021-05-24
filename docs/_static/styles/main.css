@@ -29,18 +29,22 @@ dl dt, dl dd, .graphiql .graphiql-container .CodeMirror {
 }
 
 [role="main"] h2 {
-  font-size: 24px;
+  font-size: 26px;
 }
 
 [role="main"] h3 {
-  font-size: 20px;
+  font-size: 22px;
 }
 
 [role="main"] h4 {
-  font-size: 18px;
+  font-size: 20px;
 }
 
 [role="main"] h5 {
+  font-size: 18px;
+}
+
+[role="main"] h6 {
   font-size: 16px;
 }
 
