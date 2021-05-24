@@ -208,18 +208,6 @@ json, jsonb :: MonadParse m => Parser 'Both m A.Value
 json  = namedJSON $$(litName "json") Nothing
 jsonb = namedJSON $$(litName "jsonb") Nothing
 
--- | Explicitly define any desired scalar type.  This is unsafe because it does
--- not mark queries as unreusable when they should be.
-unsafeRawScalar
-  :: MonadParse n
-  => Name
-  -> Maybe Description
-  -> Parser 'Both n (InputValue Variable)
-unsafeRawScalar name description = Parser
-  { pType = NonNullable $ TNamed $ mkDefinition name description TIScalar
-  , pParser = pure
-  }
-
 enum
   :: MonadParse m
   => Name

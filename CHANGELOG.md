@@ -10,6 +10,7 @@
 
 ### Bug fixes and improvements
 
+- server: fix a bug where remote schema permissions would fail when used in conjunction with query variables (fix #6656)
 - server: add `rename_source` metadata API (fix #6681)
 - server: fix subscriptions with session argument in user-defined function (fix #6657)
 - server: MSSQL: Support ORDER BY for text/ntext types.

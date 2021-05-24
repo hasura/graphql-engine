@@ -634,12 +634,14 @@ test-suite graphql-engine-tests
     , monad-control
     , mtl
     , natural-transformation >=0.4 && <0.5
+    , network-uri
     , optparse-applicative
     , pg-client
     , process
     , QuickCheck
     , safe
     , split
+    , template-haskell
     , text
     , time
     , transformers-base
@@ -651,11 +653,13 @@ test-suite graphql-engine-tests
     Data.Parser.CacheControlSpec
     Data.Parser.JSONPathSpec
     Data.Parser.URLTemplate
+    Data.Text.RawString
     Data.TimeSpec
     Hasura.CacheBoundedSpec
     Hasura.EventingSpec
     Hasura.GraphQL.Parser.DirectivesTest
     Hasura.GraphQL.Parser.TestUtils
+    Hasura.GraphQL.Schema.RemoteTest
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec
     Hasura.RQL.Types.EndpointSpec
