@@ -51,6 +51,7 @@ $ hasura metadata export -o json
 - cli: fix issues with generated filepaths in windows (#6813)
 - cli: add warning for incompatible pro plugin version
 - cli: add new sub command `delete` to `hasura migrate`
+- cli: fix bug in migrate squash due to empty down file (#3897)
 
 ## v2.0.0-alpha.10
 
