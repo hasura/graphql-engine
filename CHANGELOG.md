@@ -15,6 +15,7 @@
 - server: MSSQL: Support _lt, _eq, etc. for text/ntext types.
 - server: MSSQL: Fix offset when there's no order by.
 - server: MSSQL: Support booleans better.
+- server: Include permission filter in the exists clause (fix #6931)
 - server: add support for adding multi-column foreign key relationships
 - server: fix a bug where `@skip` and `@include` were not allowed on the same field
 - server: properly reject queries containing unknown or misplaced directives
