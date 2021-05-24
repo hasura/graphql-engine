@@ -402,7 +402,6 @@ func (h *HasuraDB) Drop() error {
 
 func (h *HasuraDB) sendSchemaDumpQuery(m interface{}) (resp *http.Response, body []byte, err error) {
 	request := h.config.Req.Clone()
-
 	request = request.Post(h.config.pgDumpURL.String()).Send(m)
 
 	for headerName, headerValue := range h.config.Headers {

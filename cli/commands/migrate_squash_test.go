@@ -62,6 +62,16 @@ var _ = Describe("migrate_squash", func() {
 				Eventually(session.Err, 60*40).Should(Say(keyword))
 			}
 			Eventually(session, 60*40).Should(Exit(0))
+			// verify files were deleted
+			v := strings.Split(matches[0], ":")[1]
+			Expect(filepath.Join(dirName, "migrations", "default", v)).ShouldNot(BeADirectory())
+			// verify squashed migrations are deleted in statestore
+			session = testutil.Hasura(testutil.CmdOpts{
+				Args:             []string{"migrate", "status", "--database-name", "default"},
+				WorkingDirectory: dirName,
+			})
+			Eventually(session, 60).Should(Exit(0))
+			Eventually(session.Out.Contents()).ShouldNot(ContainSubstring(v))
 		})
 	})
 })

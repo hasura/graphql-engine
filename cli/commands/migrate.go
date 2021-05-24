@@ -65,6 +65,7 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		newMigrateStatusCmd(ec),
 		newMigrateCreateCmd(ec),
 		newMigrateSquashCmd(ec),
+		newMigrateDeleteCmd(ec),
 	)
 
 	return migrateCmd

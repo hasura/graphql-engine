@@ -40,7 +40,7 @@
 - console: allow editing sources configuration
 - console: show db version and source details in manage db page
 - console: add one-to-one relationships support
-- cli: add `-o`/`--output` flag for `metadata` `apply` & `export` subcommands
+- cli: add `-o`/`--output` flag for `hasura metadata` `apply` & `export` subcommands
 ```
 # export metadata and write to stdout
 $ hasura metadata export -o json
@@ -50,6 +50,7 @@ $ hasura metadata export -o json
 - cli: fix bug caused by usage of space character in database name (#6852)
 - cli: fix issues with generated filepaths in windows (#6813)
 - cli: add warning for incompatible pro plugin version
+- cli: add new sub command `delete` to `hasura migrate`
 
 ## v2.0.0-alpha.10
 
