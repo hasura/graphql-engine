@@ -49,6 +49,9 @@ class TestMetadata:
     def test_pg_track_table_source(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_track_table_source.yaml')
 
+    def test_rename_source(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/rename_source.yaml')
+
     def test_pg_multisource_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_multisource_query.yaml')
 

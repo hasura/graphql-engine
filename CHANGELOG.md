@@ -10,6 +10,7 @@
 
 ### Bug fixes and improvements
 
+- server: add `rename_source` metadata API (fix #6681)
 - server: fix subscriptions with session argument in user-defined function (fix #6657)
 - server: MSSQL: Support ORDER BY for text/ntext types.
 - server: MSSQL: Support _lt, _eq, etc. for text/ntext types.

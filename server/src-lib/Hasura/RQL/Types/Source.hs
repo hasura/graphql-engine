@@ -121,6 +121,19 @@ instance (Backend b) => FromJSON (AddSource b) where
       <*> o .: "configuration"
       <*> o .:? "replace_configuration" .!= False
 
+data RenameSource
+  = RenameSource
+  { _rmName    :: !SourceName
+  , _rmNewName :: !SourceName
+  } deriving stock (Generic, Show, Eq)
+
+instance ToJSON RenameSource where
+  toJSON = genericToJSON hasuraJSON
+
+instance FromJSON RenameSource where
+  parseJSON = withObject "Object" $ \o ->
+    RenameSource <$> o .: "name" <*> o .: "new_name"
+
 data DropSource
   = DropSource
   { _dsName    :: !SourceName
