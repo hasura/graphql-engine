@@ -2,6 +2,12 @@
 
 ## Next release
 
+
+### Bug fixes and improvements
+(Add entries below in the order of server, console, cli, docs, others)
+
+## v2.0.0-alpha.11
+
 ### Breaking Changes
 
 - In this release, the name of the computed field argument has changed from `<function_name>_args` to
