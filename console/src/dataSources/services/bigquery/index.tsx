@@ -198,12 +198,8 @@ export const bigquery: DataSourcesAPI = {
   arrayToPostgresArray: () => {
     return '';
   },
-  schemaListSql: (schemaFilter: string[]) => {
-    if (schemaFilter.length)
-      return `select schema_name from INFORMATION_SCHEMA.SCHEMATA where schema_name in (${schemaFilter
-        .map(s => `'${s}'`)
-        .join(',')})`;
-    return `select schema_name from INFORMATION_SCHEMA.SCHEMATA`;
+  schemaListSql: () => {
+    return '';
   },
   parseColumnsInfoResult: () => {
     return {};
