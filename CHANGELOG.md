@@ -10,10 +10,16 @@
 
 ### Bug fixes and improvements
 
+- server: log warning for deprecated environment variables.
+- server: initialise `hdb_catalog` tables only when required, and only run the event loop for sources where it is required
+- server: fix a bug where remote schema permissions would fail when used in conjunction with query variables (fix #6656)
+- server: add `rename_source` metadata API (fix #6681)
+- server: fix subscriptions with session argument in user-defined function (fix #6657)
 - server: MSSQL: Support ORDER BY for text/ntext types.
 - server: MSSQL: Support _lt, _eq, etc. for text/ntext types.
 - server: MSSQL: Fix offset when there's no order by.
 - server: MSSQL: Support booleans better.
+- server: Include permission filter in the exists clause (fix #6931)
 - server: add support for adding multi-column foreign key relationships
 - server: fix a bug where `@skip` and `@include` were not allowed on the same field
 - server: properly reject queries containing unknown or misplaced directives
@@ -40,7 +46,8 @@
 - console: allow editing sources configuration
 - console: show db version and source details in manage db page
 - console: add one-to-one relationships support
-- cli: add `-o`/`--output` flag for `metadata` `apply` & `export` subcommands
+- console: rearrange connect database form and add prepared statements
+- cli: add `-o`/`--output` flag for `hasura metadata` `apply` & `export` subcommands
 ```
 # export metadata and write to stdout
 $ hasura metadata export -o json
@@ -50,6 +57,8 @@ $ hasura metadata export -o json
 - cli: fix bug caused by usage of space character in database name (#6852)
 - cli: fix issues with generated filepaths in windows (#6813)
 - cli: add warning for incompatible pro plugin version
+- cli: add new sub command `delete` to `hasura migrate`
+- cli: fix bug in migrate squash due to empty down file (#3897)
 
 ## v2.0.0-alpha.10
 

@@ -1,4 +1,4 @@
-import React, { ChangeEvent, Dispatch, useState } from 'react';
+import React, { ChangeEvent, Dispatch } from 'react';
 
 import { ConnectDBActions, ConnectDBState, connectionTypes } from './state';
 import { LabeledInput } from '../../../Common/LabeledInput';
@@ -9,6 +9,7 @@ import styles from './DataSources.scss';
 import JSONEditor from '../TablePermissions/JSONEditor';
 import { SupportedFeaturesType } from '../../../../dataSources/types';
 import { Path } from '../../../Common/utils/tsUtils';
+import ConnectionSettingsForm from './ConnectionSettingsForm';
 
 export interface ConnectDatabaseFormProps {
   // Connect DB State Props
@@ -26,16 +27,16 @@ export interface ConnectDatabaseFormProps {
 
 export const connectionRadios = [
   {
-    value: connectionTypes.CONNECTION_PARAMS,
-    title: 'Connection Parameters',
+    value: connectionTypes.ENV_VAR,
+    title: 'Environment Variable',
   },
   {
     value: connectionTypes.DATABASE_URL,
     title: 'Database URL',
   },
   {
-    value: connectionTypes.ENV_VAR,
-    title: 'Environment Variable',
+    value: connectionTypes.CONNECTION_PARAMS,
+    title: 'Connection Parameters',
   },
 ];
 
@@ -82,13 +83,6 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
   isEditState = false,
   title,
 }) => {
-  const [currentConnectionParamState, toggleConnectionParamState] = useState(
-    false
-  );
-  const toggleConnectionParams = (value: boolean) => () => {
-    toggleConnectionParamState(value);
-  };
-
   const isDBSupported = (driver: Driver, connectionType: string) => {
     let ts = 'databaseURL';
     if (connectionType === 'CONNECTION_PARAMETERS') {
@@ -116,50 +110,8 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
 
   return (
     <>
-      <h4 className={`${styles.remove_pad_bottom} ${styles.connect_db_header}`}>
-        {title ?? defaultTitle}
-      </h4>
-      <div
-        className={styles.connect_db_radios}
-        onChange={updateConnectionTypeRadio}
-      >
-        {connectionRadios.map(radioBtn => (
-          <label
-            key={`label-${radioBtn.title}`}
-            className={`${styles.connect_db_radio_label} ${
-              !isDBSupported(connectionDBState.dbType, radioBtn.value)
-                ? styles.label_disabled
-                : ''
-            }`}
-          >
-            <input
-              type="radio"
-              value={radioBtn.value}
-              name={
-                !isreadreplica
-                  ? 'connection-type'
-                  : 'connection-type-read-replica'
-              }
-              checked={connectionTypeState.includes(radioBtn.value)}
-              defaultChecked={
-                connectionTypeState === connectionTypes.DATABASE_URL
-              }
-              disabled={
-                !isDBSupported(connectionDBState.dbType, radioBtn.value)
-              }
-            />
-            {radioBtn.title}
-          </label>
-        ))}
-      </div>
-      {driverToLabel[connectionDBState.dbType].info && (
-        <div className={styles.info_label}>
-          <i className="fa fa-info-circle" aria-hidden="true" />
-          &nbsp; <span>{driverToLabel[connectionDBState.dbType].info}</span>
-        </div>
-      )}
       <div className={styles.connect_form_layout}>
-        {!isreadreplica && (
+        {!isreadreplica ? (
           <>
             <LabeledInput
               onChange={e =>
@@ -196,7 +148,77 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
               ))}
             </select>
           </>
-        )}
+        ) : null}
+        <p
+          className={`${styles.remove_pad_bottom} ${styles.connect_db_header}`}
+        >
+          {title ?? defaultTitle}
+          <Tooltip message="Environment variable recommended" />
+          <a
+            href="https://hasura.io/docs/latest/graphql/cloud/projects/create.html#existing-database"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span
+              className={`${styles.fontStyleItalic} ${styles.knowMoreLink}`}
+            >
+              (Know More)
+            </span>
+          </a>
+        </p>
+        <div
+          className={styles.connect_db_radios}
+          onChange={updateConnectionTypeRadio}
+        >
+          {connectionRadios.map(radioBtn => (
+            <label
+              key={`label-${radioBtn.title}`}
+              className={`${styles.connect_db_radio_label} ${
+                !isDBSupported(connectionDBState.dbType, radioBtn.value)
+                  ? styles.label_disabled
+                  : ''
+              }`}
+            >
+              <input
+                type="radio"
+                value={radioBtn.value}
+                name={
+                  !isreadreplica
+                    ? 'connection-type'
+                    : 'connection-type-read-replica'
+                }
+                checked={connectionTypeState.includes(radioBtn.value)}
+                defaultChecked={
+                  connectionTypeState === connectionTypes.DATABASE_URL
+                }
+                disabled={
+                  !isDBSupported(connectionDBState.dbType, radioBtn.value)
+                }
+              />
+              {radioBtn.title}
+            </label>
+          ))}
+        </div>
+        <div className={styles.add_mar_bottom_mid}>
+          {connectionTypeState.includes(connectionTypes.ENV_VAR) ? (
+            <div className={styles.add_mar_bottom_mid}>
+              <i
+                className={`fa fa-check-circle ${styles.color_green} ${styles.padd_small_right}`}
+              />
+              <span className={styles.text_muted}>
+                Environment variable recommended
+              </span>
+            </div>
+          ) : null}
+          {driverToLabel[connectionDBState.dbType].info ? (
+            <div>
+              <i className={`fa fa-info-circle ${styles.padd_small_right}`} />
+              <span className={styles.text_muted}>
+                {driverToLabel[connectionDBState.dbType].info}
+              </span>
+            </div>
+          ) : null}
+        </div>
         {connectionTypeState.includes(connectionTypes.DATABASE_URL) ||
         (connectionTypeState.includes(connectionTypes.CONNECTION_PARAMS) &&
           connectionDBState.dbType === 'mssql') ? (
@@ -362,99 +384,12 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
               />
             </>
           )}
-        {getSupportedDrivers('connectDbForm.connectionSettings').includes(
-          connectionDBState.dbType
-        ) && (
-          <div className={styles.connection_settings_layout}>
-            <div className={styles.connection_settings_header}>
-              <a
-                href="#"
-                style={{ textDecoration: 'none' }}
-                onClick={toggleConnectionParams(!currentConnectionParamState)}
-              >
-                {currentConnectionParamState ? (
-                  <i className="fa fa-caret-down" />
-                ) : (
-                  <i className="fa fa-caret-right" />
-                )}
-                {'  '}
-                Connection Settings
-              </a>
-            </div>
-            {currentConnectionParamState ? (
-              <div className={styles.connection_settings_form}>
-                <div className={styles.connection_settings_form_input_layout}>
-                  <LabeledInput
-                    label="Max Connections"
-                    type="number"
-                    className={`form-control ${styles.connnection_settings_form_input}`}
-                    placeholder="50"
-                    value={
-                      connectionDBState.connectionSettings?.max_connections ??
-                      undefined
-                    }
-                    onChange={e =>
-                      connectionDBStateDispatch({
-                        type: 'UPDATE_MAX_CONNECTIONS',
-                        data: e.target.value,
-                      })
-                    }
-                    min="0"
-                    boldlabel
-                    data-test="max-connections"
-                  />
-                </div>
-                <div className={styles.connection_settings_form_input_layout}>
-                  <LabeledInput
-                    label="Idle Timeout"
-                    type="number"
-                    className={`form-control ${styles.connnection_settings_form_input}`}
-                    placeholder="180"
-                    value={
-                      connectionDBState.connectionSettings?.idle_timeout ??
-                      undefined
-                    }
-                    onChange={e =>
-                      connectionDBStateDispatch({
-                        type: 'UPDATE_IDLE_TIMEOUT',
-                        data: e.target.value,
-                      })
-                    }
-                    min="0"
-                    boldlabel
-                    data-test="idle-timeout"
-                  />
-                </div>
-                {getSupportedDrivers('connectDbForm.retries').includes(
-                  connectionDBState.dbType
-                ) && (
-                  <div className={styles.connection_settings_form_input_layout}>
-                    <LabeledInput
-                      label="Retries"
-                      type="number"
-                      className={`form-control ${styles.connnection_settings_form_input}`}
-                      placeholder="1"
-                      value={
-                        connectionDBState.connectionSettings?.retries ??
-                        undefined
-                      }
-                      onChange={e =>
-                        connectionDBStateDispatch({
-                          type: 'UPDATE_RETRIES',
-                          data: e.target.value,
-                        })
-                      }
-                      min="0"
-                      boldlabel
-                      data-test="retries"
-                    />
-                  </div>
-                )}
-              </div>
-            ) : null}
-          </div>
-        )}
+        <ConnectionSettingsForm
+          connectionDBState={connectionDBState}
+          connectionDBStateDispatch={connectionDBStateDispatch}
+        />
       </div>
+      <hr className={styles.line_width} />
     </>
   );
 };

@@ -128,6 +128,7 @@ export interface AddDataSourceRequest {
         projectId: string;
         datasets: string;
       };
+      preparedStatements?: boolean;
     };
   };
 }
@@ -241,7 +242,10 @@ export const exportMetadata = (
 export const addDataSource = (
   data: AddDataSourceRequest['data'],
   successCb: () => void,
-  replicas?: Omit<SourceConnectionInfo, 'connection_string'>[],
+  replicas?: Omit<
+    SourceConnectionInfo,
+    'connection_string' | 'use_prepared_statements'
+  >[],
   skipNotification = false
 ): Thunk<Promise<void | ReduxState>, MetadataActions> => (
   dispatch,

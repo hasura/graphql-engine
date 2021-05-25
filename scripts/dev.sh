@@ -447,8 +447,6 @@ elif [ "$MODE" = "test" ]; then
 
     # Using --metadata-database-url flag to test multiple backends
     #       HASURA_GRAPHQL_PG_SOURCE_URL_* For a couple multi-source pytests:
-    HASURA_GRAPHQL_PG_SOURCE_URL_1="$PG_DB_URL" \
-    HASURA_GRAPHQL_PG_SOURCE_URL_2="$PG_DB_URL" \
     cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
       --metadata-database-url="$PG_DB_URL" serve \
       --stringify-numeric-types \

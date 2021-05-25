@@ -91,7 +91,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
         \(SourceConfigWith sourceConfig (QDBR db)) ->
            mkDBQueryPlan env manager reqHeaders userInfo sourceName sourceConfig db
     RFRemote rf -> do
-      RemoteFieldG remoteSchemaInfo remoteField <- for rf $ resolveRemoteVariable userInfo
+      RemoteFieldG remoteSchemaInfo remoteField <- runVariableCache $ for rf $ resolveRemoteVariable userInfo
       pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeQuery [G.SelectionField remoteField]
     RFAction a -> do
       (action, actionName, fch) <- pure $ case a of

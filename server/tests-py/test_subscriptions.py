@@ -314,3 +314,35 @@ class TestSubscriptionMultiplexing:
         sql = response['sql']
         assert isinstance(sql, str), response
         return sql
+
+
+@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests', 'ws_conn_init')
+class TestSubscriptionUDFWithSessionArg:
+    """
+    Test a user-defined function which uses the entire session variables as argument
+    """
+
+    query = """
+      subscription {
+        me {
+          id
+          name
+        }
+      }
+    """
+
+    @classmethod
+    def dir(cls):
+        return 'queries/subscriptions/udf_session_args'
+
+    def test_user_defined_function_with_session_argument(self, hge_ctx, ws_client):
+        ws_client.init_as_admin()
+        headers = {'x-hasura-role': 'user', 'x-hasura-user-id': '42'}
+        if hge_ctx.hge_key is not None:
+            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+        payload = {'query': self.query}
+        resp = ws_client.send_query(payload, headers=headers, timeout=15)
+        ev = next(resp)
+        assert ev['type'] == 'data', ev
+        assert ev['payload']['data'] == {'me': [{'id': '42', 'name': 'Charlie'}]}, ev['payload']['data']

@@ -423,6 +423,9 @@ class TestGraphQLQueryBoolExpBasicCommon:
     def test_author_article_where_nin(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin.yaml', transport)
 
+    def test_author_article_where_permissions(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_permissions.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/basic'

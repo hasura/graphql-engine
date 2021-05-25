@@ -260,33 +260,39 @@ processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} Locked
         (delivered=t or error=t or archived=t) after a fixed number of tries (assuming it begins with locked='f').
       -}
       pgSources <- scSources <$> liftIO getSchemaCache
-      liftIO $ fmap concat $ forM (M.toList pgSources) $ \(sourceName, sourceCache) ->
-        case unsafeSourceConfiguration @('Postgres 'Vanilla) sourceCache of
-          Nothing           -> pure []
-          Just sourceConfig -> do
-            fetchEventsTxE <-
-              case maintenanceMode of
-                MaintenanceModeEnabled -> do
-                  maintenanceModeVersion <- runPgSourceReadTx sourceConfig getMaintenanceModeVersion
-                  pure $ fmap (fetchEventsMaintenanceMode sourceName fetchBatchSize) maintenanceModeVersion
-                MaintenanceModeDisabled -> return $ Right $ fetchEvents sourceName fetchBatchSize
-            liftIO $ do
-              case fetchEventsTxE of
-                Left err -> do
-                  liftIO $ L.unLogger logger $ EventInternalErr err
-                  return []
-                Right fetchEventsTx ->
-                  runPgSourceWriteTx sourceConfig fetchEventsTx >>= \case
+      liftIO . fmap concat $
+        for (M.toList pgSources) \(sourceName, sourceCache) -> concat . toList <$>
+          for (unsafeSourceTables @('Postgres 'Vanilla) sourceCache) \tables -> liftIO do
+            -- count the number of event triggers on tables in this source
+            let eventTriggerCount = sum (M.size . _tiEventTriggerInfoMap <$> tables)
+
+            -- only process events for this source if at least one event trigger exists
+            if eventTriggerCount > 0 then fmap (concat . toList) $
+              for (unsafeSourceConfiguration @('Postgres 'Vanilla) sourceCache) \sourceConfig -> do
+                fetchEventsTxE <-
+                  case maintenanceMode of
+                    MaintenanceModeEnabled -> do
+                      maintenanceModeVersion <- runPgSourceReadTx sourceConfig getMaintenanceModeVersion
+                      pure $ fmap (fetchEventsMaintenanceMode sourceName fetchBatchSize) maintenanceModeVersion
+                    MaintenanceModeDisabled -> return $ Right $ fetchEvents sourceName fetchBatchSize
+                liftIO $ do
+                  case fetchEventsTxE of
                     Left err -> do
                       liftIO $ L.unLogger logger $ EventInternalErr err
                       return []
-                    Right events -> do
-                      -- Track number of events fetched in EKG
-                      _ <- liftIO $ EKG.Distribution.add (smNumEventsFetchedPerBatch serverMetrics) (fromIntegral $ length events)
-                      -- The time when the events were fetched. This is used to calculate the average lock time of an event.
-                      eventsFetchedTime <- liftIO getCurrentTime
-                      saveLockedEvents (map eId events) leEvents
-                      return $ map (, sourceConfig, eventsFetchedTime) events
+                    Right fetchEventsTx ->
+                      runPgSourceWriteTx sourceConfig fetchEventsTx >>= \case
+                        Left err -> do
+                          liftIO $ L.unLogger logger $ EventInternalErr err
+                          return []
+                        Right events -> do
+                          -- Track number of events fetched in EKG
+                          _ <- liftIO $ EKG.Distribution.add (smNumEventsFetchedPerBatch serverMetrics) (fromIntegral $ length events)
+                          -- The time when the events were fetched. This is used to calculate the average lock time of an event.
+                          eventsFetchedTime <- liftIO getCurrentTime
+                          saveLockedEvents (map eId events) leEvents
+                          return $ map (, sourceConfig, eventsFetchedTime) events
+              else pure []
 
     -- !!! CAREFUL !!!
     --     The logic here in particular is subtle and has been fixed, broken,

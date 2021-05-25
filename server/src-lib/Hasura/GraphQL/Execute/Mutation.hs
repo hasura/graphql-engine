@@ -96,7 +96,7 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
         \(SourceConfigWith sourceConfig (MDBR db)) ->
            mkDBMutationPlan env manager reqHeaders userInfo stringifyNum sourceName sourceConfig db
     RFRemote remoteField -> do
-      RemoteFieldG remoteSchemaInfo resolvedRemoteField <- resolveRemoteField userInfo remoteField
+      RemoteFieldG remoteSchemaInfo resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
       pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeMutation $ [G.SelectionField resolvedRemoteField]
     RFAction action -> do
       (actionName, _fch) <- pure $ case action of

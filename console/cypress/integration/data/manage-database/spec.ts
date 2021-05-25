@@ -46,7 +46,7 @@ export const addsNewPostgresDatabaseWithUrl = () => {
 export const addsNewPgDBWithConParams = () => {
   cy.getBySel('sidebar-manage-database').click();
   cy.get('button').contains('Connect Database').click();
-  cy.get("input[type='radio']").eq(0).click();
+  cy.get("input[type='radio']").eq(2).click();
   cy.getBySel('database-display-name').type('testDB2');
   cy.getBySel('database-type').select('postgres');
   cy.getBySel('host').type(config.host);
@@ -66,7 +66,7 @@ export const addsNewPgDBWithConParams = () => {
 export const addsNewPgDBWithEnvVar = () => {
   cy.getBySel('sidebar-manage-database').click();
   cy.get('button').contains('Connect Database').click();
-  cy.get("input[type='radio']").eq(2).click();
+  cy.get("input[type='radio']").eq(0).click();
   cy.getBySel('database-display-name').type('testDB3');
   cy.getBySel('database-type').select('postgres');
   cy.getBySel('database-url-env').type('HASURA_GRAPHQL_DATABASE_URL');

@@ -515,6 +515,10 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
                         soEnableMaintenanceMode
                         soExperimentalFeatures
 
+  -- Log Warning if deprecated environment variables are used
+  sources <- scSources <$> liftIO (getSCFromRef cacheRef)
+  liftIO $ logDeprecatedEnvVars logger env sources
+
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
   liftIO $ logInconsObjs logger inconsObjs

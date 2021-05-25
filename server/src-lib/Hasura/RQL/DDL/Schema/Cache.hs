@@ -27,6 +27,7 @@ import qualified Data.HashMap.Strict.InsOrd               as OMap
 import qualified Data.HashSet                             as HS
 import qualified Data.HashSet.InsOrd                      as HSIns
 import qualified Data.Set                                 as S
+import qualified Database.PG.Query                        as Q
 import qualified Language.GraphQL.Draft.Syntax            as G
 
 import           Control.Arrow.Extended
@@ -40,9 +41,11 @@ import           Network.HTTP.Client.Extended             hiding (Proxy)
 
 import qualified Hasura.Incremental                       as Inc
 import qualified Hasura.SQL.AnyBackend                    as AB
+import qualified Hasura.SQL.Tag                           as Tag
 import qualified Hasura.Tracing                           as Tracing
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.DDL.Source      (initCatalogForSource)
 import           Hasura.Base.Error
 import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Schema                    (buildGQLContext)
@@ -268,7 +271,6 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
          , MonadIO m, MonadBaseControl IO m
          , MonadResolveSource m
          , BackendMetadata b
-         , HasServerConfigCtx m
          )
       => ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey)
          , SourceMetadata b
@@ -276,14 +278,44 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     resolveSourceIfNeeded = Inc.cache proc (invalidationKeys, sourceMetadata) -> do
       let sourceName = _smName sourceMetadata
           metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
-      maintenanceMode <- bindA -< _sccMaintenanceMode <$> askServerConfigCtx
       maybeSourceConfig <- getSourceConfigIfNeeded @b -< (invalidationKeys, sourceName, _smConfiguration sourceMetadata)
       case maybeSourceConfig of
         Nothing -> returnA -< Nothing
         Just sourceConfig ->
           (| withRecordInconsistency (
-             liftEitherA <<< bindA -< resolveDatabaseMetadata sourceConfig maintenanceMode)
+             liftEitherA <<< bindA -< resolveDatabaseMetadata sourceConfig)
           |) metadataObj
+
+
+    -- impl notes (swann):
+    --
+    -- as our cache invalidation key (in a sense) we use the number of event triggers
+    -- present, rerunning catalog init when this changes. this is correct, because we
+    -- only care about the transition from zero event triggers to nonzero (not
+    -- necessarily one, as Anon has observed, because replace_metadata can add multiple
+    -- event triggers in one go)
+    --
+    -- a future optimisation would be to cache, on a per-source basis, whether or not
+    -- the event catalog itself exists, and to then trigger catalog init when an event
+    -- trigger is created _but only if_ this cached information says the event catalog
+    -- doesn't already exist.
+
+    initCatalogIfNeeded
+      :: forall b arr m.
+         ( ArrowChoice arr, Inc.ArrowCache m arr
+         , MonadIO m, MonadBaseControl IO m
+         , BackendMetadata b
+         , HasServerConfigCtx m
+         )
+      => (Int, SourceConfig b) `arr` ()
+    initCatalogIfNeeded = Inc.cache proc (numEventTriggers, sc) -> do
+      arrM id -< do
+        when (numEventTriggers > 0) do
+          case backendTag @b of
+            Tag.PostgresVanillaTag -> void do
+              maintenanceMode <- _sccMaintenanceMode <$> askServerConfigCtx
+              runExceptT do runLazyTx (_pscExecCtx sc) Q.ReadWrite (initCatalogForSource maintenanceMode)
+            _ -> pure ()
 
     buildSource
       :: forall b arr m
@@ -308,6 +340,9 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
           alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
           alignTableMap = M.intersectionWith (,)
           metadataInvalidationKey = Inc.selectD #_ikMetadata invalidationKeys
+          numEventTriggers = sum $ map (length . snd) eventTriggers
+
+      initCatalogIfNeeded @b -< (numEventTriggers, sourceConfig)
 
       -- tables
       tableRawInfos <- buildTableCache -< ( source, sourceConfig, dbTables

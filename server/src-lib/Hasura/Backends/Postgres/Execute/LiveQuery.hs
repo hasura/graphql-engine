@@ -151,8 +151,8 @@ mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkS
 -- about various parameters of the query along the way.
 resolveMultiplexedValue
   :: (MonadState (QueryParametersInfo ('Postgres pgKind)) m)
-  => UnpreparedValue ('Postgres pgKind) -> m S.SQLExp
-resolveMultiplexedValue = \case
+  => SessionVariables -> UnpreparedValue ('Postgres pgKind) -> m S.SQLExp
+resolveMultiplexedValue allSessionVars = \case
   UVParameter varM colVal -> do
     varJsonPath <- case fmap PS.getName varM of
       Just varName -> do
@@ -167,7 +167,10 @@ resolveMultiplexedValue = \case
     modifying qpiReferencedSessionVariables (Set.insert sessVar)
     pure $ fromResVars ty ["session", sessionVariableToText sessVar]
   UVLiteral sqlExp -> pure sqlExp
-  UVSession -> pure $ fromResVars (CollectableTypeScalar PGJSON) ["session"]
+  UVSession -> do
+    -- if the entire session is referenced, then add all session vars in referenced vars
+    modifying qpiReferencedSessionVariables (const $ getSessionVariablesSet allSessionVars)
+    pure $ fromResVars (CollectableTypeScalar PGJSON) ["session"]
   where
     fromResVars pgType jPath = addTypeAnnotation pgType $ S.SEOpApp (S.SQLOp "#>>")
       [ S.SEQIdentifier $ S.QIdentifier (S.QualifiedIdentifier (Identifier "_subs") Nothing) (Identifier "result_vars")

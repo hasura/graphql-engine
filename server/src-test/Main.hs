@@ -5,6 +5,11 @@ import           Hasura.Prelude
 import qualified Data.Aeson                           as A
 import qualified Data.ByteString.Lazy.Char8           as BL
 import qualified Data.Environment                     as Env
+import qualified Data.NonNegativeIntSpec              as NonNegetiveIntSpec
+import qualified Data.Parser.CacheControlSpec         as CacheControlParser
+import qualified Data.Parser.JSONPathSpec             as JsonPath
+import qualified Data.Parser.URLTemplate              as URLTemplate
+import qualified Data.TimeSpec                        as TimeSpec
 import qualified Database.PG.Query                    as Q
 import qualified Network.HTTP.Client                  as HTTP
 import qualified Network.HTTP.Client.TLS              as HTTP
@@ -19,14 +24,10 @@ import           System.Environment                   (getEnvironment)
 import           System.Exit                          (exitFailure)
 import           Test.Hspec
 
-import qualified Data.NonNegativeIntSpec              as NonNegetiveIntSpec
-import qualified Data.Parser.CacheControlSpec         as CacheControlParser
-import qualified Data.Parser.JSONPathSpec             as JsonPath
-import qualified Data.Parser.URLTemplate              as URLTemplate
-import qualified Data.TimeSpec                        as TimeSpec
 import qualified Hasura.CacheBoundedSpec              as CacheBoundedSpec
 import qualified Hasura.EventingSpec                  as EventingSpec
 import qualified Hasura.GraphQL.Parser.DirectivesTest as GraphQLDirectivesSpec
+import qualified Hasura.GraphQL.Schema.RemoteTest     as GraphRemoteSchemaSpec
 import qualified Hasura.IncrementalSpec               as IncrementalSpec
 import qualified Hasura.RQL.Types.EndpointSpec        as EndpointSpec
 import qualified Hasura.SQL.WKTSpec                   as WKTSpec
@@ -75,6 +76,7 @@ unitSpecs = do
   describe "Hasura.Cache.Bounded" CacheBoundedSpec.spec
   describe "Hasura.Eventing" EventingSpec.spec
   describe "Hasura.GraphQL.Parser.Directives" GraphQLDirectivesSpec.spec
+  describe "Hasura.GraphQL.Schema.Remote" GraphRemoteSchemaSpec.spec
   describe "Hasura.Incremental" IncrementalSpec.spec
   describe "Hasura.RQL.Types.Endpoint" EndpointSpec.spec
   describe "Hasura.SQL.WKT" WKTSpec.spec

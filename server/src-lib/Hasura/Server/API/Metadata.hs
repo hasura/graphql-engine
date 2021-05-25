@@ -172,6 +172,8 @@ data RQLMetadataV1
   | RMBigqueryDropDeletePermission !(DropPerm 'BigQuery (DelPerm 'BigQuery))
   | RMBigquerySetPermissionComment !(SetPermComment 'BigQuery)
 
+  | RMRenameSource !RenameSource
+
   -- Inconsistent metadata
   | RMGetInconsistentMetadata !GetInconsistentMetadata
   | RMDropInconsistentMetadata !DropInconsistentMetadata
@@ -412,6 +414,7 @@ runMetadataQueryV1M
   -> m EncJSON
 runMetadataQueryV1M env currentResourceVersion = \case
   RMPgAddSource q                   -> runAddSource q
+  RMRenameSource   q                -> runRenameSource q
   RMPgDropSource q                  -> runDropSource q
 
   RMPgTrackTable q                  -> runTrackTableV2Q q
