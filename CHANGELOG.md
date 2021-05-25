@@ -10,6 +10,7 @@
 
 ### Bug fixes and improvements
 
+- server: log warning for deprecated environment variables.
 - server: initialise `hdb_catalog` tables only when required, and only run the event loop for sources where it is required
 - server: fix a bug where remote schema permissions would fail when used in conjunction with query variables (fix #6656)
 - server: add `rename_source` metadata API (fix #6681)

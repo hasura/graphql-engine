@@ -271,3 +271,36 @@ parseConnLifeTime = \case
   Nothing -> Just 600  -- Not set by user; use the default timeout
   Just 0  -> Nothing   -- user wants to disable PG_CONN_LIFETIME
   Just n  -> Just n    -- user specified n seconds lifetime
+
+
+-- | The environment variables that were moved to metadata. These environment
+-- variables are available if a v1 hasura project is run an v2 hasura server.
+-- These environment variables are marked as deprecated only when the v1 hasura
+-- project is migrated to v2 project.
+newtype EnvVarsMovedToMetadata
+  = EnvVarsMovedToMetadata { unEnvVarsMovedToMetadata :: [String] }
+  deriving (Show)
+
+-- | These env vars are completely deprecated
+newtype DeprecatedEnvVars
+  = DeprecatedEnvVars { unDeprecatedEnvVars :: [String] }
+  deriving (Show)
+
+envVarsMovedToMetadata :: EnvVarsMovedToMetadata
+envVarsMovedToMetadata = EnvVarsMovedToMetadata
+  [ "HASURA_GRAPHQL_NO_OF_RETRIES"
+  , "HASURA_GRAPHQL_PG_CONNECTIONS"
+  , "HASURA_GRAPHQL_PG_TIMEOUT"
+  , "HASURA_GRAPHQL_PG_CONN_LIFETIME"
+  , "HASURA_GRAPHQL_PG_POOL_TIMEOUT"
+  , "HASURA_GRAPHQL_USE_PREPARED_STATEMENTS"
+  , "HASURA_GRAPHQL_TX_ISOLATION"
+  , "HASURA_GRAPHQL_CONNECTIONS_PER_READ_REPLICA"
+  ]
+
+deprecatedEnvVars :: DeprecatedEnvVars
+deprecatedEnvVars = DeprecatedEnvVars
+  [ "HASURA_GRAPHQL_PG_STRIPES"
+  , "HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE"
+  , "HASURA_GRAPHQL_STRIPES_PER_READ_REPLICA"
+  ]
