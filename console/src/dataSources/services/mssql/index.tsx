@@ -212,10 +212,13 @@ SELECT
   s.name AS schema_name
 FROM
   sys.schemas s
-  INNER JOIN sys.database_principals p ON (s.principal_id = p.principal_id)
 WHERE
-  p.type_desc = 'SQL_USER'
-  AND s.name NOT IN ('guest', 'INFORMATION_SCHEMA', 'sys')
+  s.name NOT IN (
+    'guest', 'INFORMATION_SCHEMA', 'sys',
+    'db_owner', 'db_securityadmin', 'db_accessadmin',
+    'db_backupoperator', 'db_ddladmin', 'db_datawriter',
+    'db_datareader', 'db_denydatawriter', 'db_denydatareader'
+  )
 ORDER BY
   s.name
 `,
