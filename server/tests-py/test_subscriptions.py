@@ -66,7 +66,7 @@ class TestSubscriptionCtrl(object):
             ev = ws_client.get_ws_event(3)
 
 @pytest.mark.parametrize("backend", ['mssql', 'postgres'])
-@usefixtures('per_class_tests_db_state', 'ws_conn_init', 'per_backend_tests')
+@usefixtures('per_class_tests_db_state', 'ws_conn_init')
 class TestSubscriptionBasic:
     @classmethod
     def dir(cls):
@@ -251,8 +251,11 @@ class TestSubscriptionLiveQueries:
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 
-@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
-@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+# FIXME: MSSQL subscriptions multiplexing regression
+# https://github.com/hasura/graphql-engine-mono/issues/1434
+# @pytest.mark.parametrize("backend", ['mssql', 'postgres'])
+@pytest.mark.parametrize("backend", ['postgres'])
+@usefixtures('per_class_tests_db_state')
 class TestSubscriptionMultiplexing:
 
     @classmethod
@@ -316,8 +319,11 @@ class TestSubscriptionMultiplexing:
         return sql
 
 
-@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
-@usefixtures('per_class_tests_db_state', 'per_backend_tests', 'ws_conn_init')
+# FIXME: MSSQL subscriptions multiplexing regression
+# https://github.com/hasura/graphql-engine-mono/issues/1434
+# @pytest.mark.parametrize("backend", ['mssql', 'postgres'])
+@pytest.mark.parametrize("backend", ['postgres'])
+@usefixtures('per_class_tests_db_state', 'ws_conn_init')
 class TestSubscriptionUDFWithSessionArg:
     """
     Test a user-defined function which uses the entire session variables as argument

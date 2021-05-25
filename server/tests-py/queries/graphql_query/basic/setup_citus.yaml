@@ -1,28 +1,25 @@
 type: bulk
 args:
 
-#Test types table
+# track tables
 - type: citus_track_table
   args:
     source: citus
     table:
       name: test_types
 
-#Author table
 - type: citus_track_table
   args:
     source: citus
     table:
       name: author
 
-#Article table
 - type: citus_track_table
   args:
     source: citus
     table:
       name: article
 
-#User table
 - type: citus_track_table
   args:
     source: citus
