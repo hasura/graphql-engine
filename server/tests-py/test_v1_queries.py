@@ -570,6 +570,9 @@ class TestRelationships:
     def test_array_relationship_manual(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/array_relationship_manual.yaml')
 
+    def test_object_relationship_one_to_one(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/object_relationship_one_to_one.yaml')
+
     @classmethod
     def dir(cls):
         return "queries/v1/relationships"
