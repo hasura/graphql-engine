@@ -164,8 +164,11 @@ export const supportedFeatures: SupportedFeaturesType = {
     environmentVariable: true,
     read_replicas: false,
     prepared_statements: false,
+    isolation_level: false,
     connectionSettings: true,
     retries: false,
+    pool_timeout: false,
+    connection_lifetime: false,
   },
 };
 

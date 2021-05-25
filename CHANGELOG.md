@@ -6,6 +6,8 @@
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
+- console: add `pool_timeout`, `connection_lifetime` and `isolation_level` connection params to connect database form
+
 ## v2.0.0-alpha.11
 
 ### Breaking Changes

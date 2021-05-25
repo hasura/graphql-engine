@@ -295,8 +295,11 @@ export type SupportedFeaturesType = {
     environmentVariable: boolean;
     read_replicas: boolean;
     prepared_statements: boolean;
+    isolation_level: boolean;
     connectionSettings: boolean;
     retries: boolean;
+    pool_timeout: boolean;
+    connection_lifetime: boolean;
   };
 };
 

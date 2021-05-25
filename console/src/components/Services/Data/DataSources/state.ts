@@ -2,18 +2,16 @@ import { Driver, getSupportedDrivers } from '../../../../dataSources';
 import { makeConnectionStringFromConnectionParams } from './ManageDBUtils';
 import { addDataSource } from '../../../../metadata/actions';
 import { Dispatch } from '../../../../types';
-import { SourceConnectionInfo } from '../../../../metadata/types';
+import {
+  ConnectionPoolSettings,
+  IsolationLevelOptions,
+  SourceConnectionInfo,
+} from '../../../../metadata/types';
 
 export const connectionTypes = {
   DATABASE_URL: 'DATABASE_URL',
   CONNECTION_PARAMS: 'CONNECTION_PARAMETERS',
   ENV_VAR: 'ENVIRONMENT_VARIABLES',
-};
-
-type ConnectionSettings = {
-  max_connections?: number;
-  idle_timeout?: number;
-  retries?: number;
 };
 
 type ConnectionParams = {
@@ -37,7 +35,8 @@ export type ConnectDBState = {
   envVarState: {
     envVar: string;
   };
-  connectionSettings: ConnectionSettings;
+  connectionSettings: ConnectionPoolSettings;
+  isolationLevel?: IsolationLevelOptions;
   preparedStatements?: boolean;
 };
 
@@ -62,6 +61,7 @@ export const defaultState: ConnectDBState = {
   },
   connectionSettings: {},
   preparedStatements: false,
+  isolationLevel: 'read-committed',
 };
 
 type DefaultStateProps = {
@@ -97,7 +97,7 @@ export const connectDataSource = (
   cb: () => void,
   replicas?: Omit<
     SourceConnectionInfo,
-    'connection_string' | 'use_prepared_statements'
+    'connection_string' | 'use_prepared_statements' | 'isolation_level'
   >[],
   isEditState = false
 ) => {
@@ -139,6 +139,7 @@ export const connectDataSource = (
             datasets: currentState.databaseURLState.datasets,
           },
           preparedStatements: currentState.preparedStatements,
+          isolationLevel: currentState.isolationLevel,
         },
       },
       cb,
@@ -154,8 +155,9 @@ export type ConnectDBActions =
         name: string;
         driver: Driver;
         databaseUrl: string;
-        connectionSettings: ConnectionSettings;
+        connectionSettings: ConnectionPoolSettings;
         preparedStatements: boolean;
+        isolationLevel: IsolationLevelOptions;
       };
     }
   | { type: 'UPDATE_PARAM_STATE'; data: ConnectionParams }
@@ -173,9 +175,12 @@ export type ConnectDBActions =
   | { type: 'UPDATE_MAX_CONNECTIONS'; data: string }
   | { type: 'UPDATE_RETRIES'; data: string }
   | { type: 'UPDATE_IDLE_TIMEOUT'; data: string }
+  | { type: 'UPDATE_POOL_TIMEOUT'; data: string }
+  | { type: 'UPDATE_CONNECTION_LIFETIME'; data: string }
   | { type: 'UPDATE_DB_DRIVER'; data: Driver }
-  | { type: 'UPDATE_CONNECTION_SETTINGS'; data: ConnectionSettings }
+  | { type: 'UPDATE_CONNECTION_SETTINGS'; data: ConnectionPoolSettings }
   | { type: 'UPDATE_PREPARED_STATEMENTS'; data: boolean }
+  | { type: 'UPDATE_ISOLATION_LEVEL'; data: IsolationLevelOptions }
   | { type: 'RESET_INPUT_STATE' };
 
 export const connectDBReducer = (
@@ -194,6 +199,7 @@ export const connectDBReducer = (
         },
         connectionSettings: action.data.connectionSettings,
         preparedStatements: action.data.preparedStatements,
+        isolationLevel: action.data.isolationLevel,
       };
     case 'UPDATE_PARAM_STATE':
       return {
@@ -293,10 +299,31 @@ export const connectDBReducer = (
           idle_timeout: setNumberFromString(action.data),
         },
       };
+    case 'UPDATE_POOL_TIMEOUT':
+      return {
+        ...state,
+        connectionSettings: {
+          ...state.connectionSettings,
+          pool_timeout: setNumberFromString(action.data),
+        },
+      };
+    case 'UPDATE_CONNECTION_LIFETIME':
+      return {
+        ...state,
+        connectionSettings: {
+          ...state.connectionSettings,
+          connection_lifetime: setNumberFromString(action.data),
+        },
+      };
     case 'UPDATE_CONNECTION_SETTINGS':
       return {
         ...state,
         connectionSettings: action.data,
+      };
+    case 'UPDATE_ISOLATION_LEVEL':
+      return {
+        ...state,
+        isolationLevel: action.data,
       };
     case 'UPDATE_PREPARED_STATEMENTS':
       return {

@@ -1,7 +1,9 @@
 import requestAction from '../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import {
+  ConnectionPoolSettings,
   HasuraMetadataV3,
+  IsolationLevelOptions,
   RestEndpointEntry,
   SourceConnectionInfo,
 } from './types';
@@ -118,17 +120,14 @@ export interface AddDataSourceRequest {
     payload: {
       name: string;
       dbUrl: string | { from_env: string };
-      connection_pool_settings: {
-        max_connections?: number;
-        idle_timeout?: number; // in seconds
-        retries?: number;
-      };
+      connection_pool_settings: ConnectionPoolSettings;
       replace_configuration?: boolean;
       bigQuery: {
         projectId: string;
         datasets: string;
       };
       preparedStatements?: boolean;
+      isolationLevel?: IsolationLevelOptions;
     };
   };
 }
@@ -244,7 +243,7 @@ export const addDataSource = (
   successCb: () => void,
   replicas?: Omit<
     SourceConnectionInfo,
-    'connection_string' | 'use_prepared_statements'
+    'connection_string' | 'use_prepared_statements' | 'isolation_level'
   >[],
   skipNotification = false
 ): Thunk<Promise<void | ReduxState>, MetadataActions> => (

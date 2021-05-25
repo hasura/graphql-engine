@@ -86,6 +86,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
           ),
           connectionSettings: connectionInfo?.pool_settings ?? {},
           preparedStatements: connectionInfo?.use_prepared_statements ?? false,
+          isolationLevel: connectionInfo?.isolation_level ?? 'read-committed',
         },
       });
 

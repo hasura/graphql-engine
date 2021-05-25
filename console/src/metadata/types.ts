@@ -5,11 +5,7 @@ export type DataSource = {
   name: string;
   url: string | { from_env: string };
   driver: Driver;
-  connection_pool_settings?: {
-    max_connections?: number;
-    idle_timeout?: number;
-    retries?: number;
-  };
+  connection_pool_settings?: ConnectionPoolSettings;
   read_replicas?: Omit<SourceConnectionInfo, 'connection_string'>[];
 };
 
@@ -882,17 +878,27 @@ export interface RestEndpointEntry {
  * Docs for type: https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgsourceconnectioninfo
  */
 
+export interface ConnectionPoolSettings {
+  max_connections?: number;
+  idle_timeout?: number;
+  retries?: number;
+  pool_timeout?: number;
+  connection_lifetime?: number;
+}
+
+export type IsolationLevelOptions =
+  | 'read-committed'
+  | 'repeatable-read'
+  | 'serializable';
+
 export interface SourceConnectionInfo {
   // used for SQL Server
   connection_string: string | { from_env: string };
   // used for Postgres
   database_url: string | { from_env: string };
-  pool_settings: {
-    max_connections: number;
-    idle_timeout: number;
-    retries: number;
-  };
+  pool_settings: ConnectionPoolSettings;
   use_prepared_statements: boolean;
+  isolation_level: IsolationLevelOptions;
 }
 
 /**
