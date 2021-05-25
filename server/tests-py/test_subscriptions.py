@@ -262,21 +262,6 @@ class TestSubscriptionMultiplexing:
     def dir(cls):
         return 'queries/subscriptions/multiplexing'
 
-    def test_query_parameterization(self, hge_ctx):
-        with open(self.dir() + '/query.yaml') as c:
-            config = yaml.safe_load(c)
-
-        query = config['query']
-        representative_sql = self.get_parameterized_sql(hge_ctx, query, config['variables_representative'])
-
-        for vars in config['variables_same']:
-            same_sql = self.get_parameterized_sql(hge_ctx, query, vars)
-            assert same_sql == representative_sql, (representative_sql, same_sql)
-
-        for vars in config['variables_different']:
-            different_sql = self.get_parameterized_sql(hge_ctx, query, vars)
-            assert different_sql != representative_sql, (representative_sql, different_sql)
-
     def test_extraneous_session_variables_are_discarded_from_query(self, hge_ctx):
         with open(self.dir() + '/articles_query.yaml') as c:
             config = yaml.safe_load(c)
@@ -311,12 +296,6 @@ class TestSubscriptionMultiplexing:
         status_code, response, _ = hge_ctx.anyq('/v1/graphql/explain', request, headers)
         assert status_code == 200, (request, status_code, response)
         return response
-
-    def get_parameterized_sql(self, hge_ctx, query, variables):
-        response = self.get_explain_graphql_query_response(hge_ctx, query, variables)
-        sql = response['sql']
-        assert isinstance(sql, str), response
-        return sql
 
 
 # FIXME: MSSQL subscriptions multiplexing regression

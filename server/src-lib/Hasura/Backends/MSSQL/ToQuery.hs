@@ -196,8 +196,8 @@ fromReselect Reselect {..} = wrapFor reselectFor result
             (SepByPrinter
                ("," <+> NewlinePrinter)
                (map fromProjection (toList reselectProjections)))
-        , fromFor reselectFor
         , fromWhere reselectWhere
+        , fromFor reselectFor
         ]
 
 fromOrderBys ::
