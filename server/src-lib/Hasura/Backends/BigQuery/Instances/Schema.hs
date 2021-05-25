@@ -348,9 +348,11 @@ msComputedField
   :: MonadBuildSchema 'BigQuery r m n
   => SourceName
   -> ComputedFieldInfo 'BigQuery
+  -> TableName 'BigQuery
   -> SelPermInfo 'BigQuery
   -> m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
-msComputedField _sourceName _fieldInfo _selectPemissions = pure Nothing
+msComputedField _sourceName _fieldInfo _table _selectPemissions = pure Nothing
+
 
 -- | Remote join field parser.
 -- Currently unsupported: returns Nothing for now.

@@ -98,3 +98,29 @@ args:
       foreign_key_constraint_on:
         table: message
         column: parent_id
+
+- type: mssql_create_select_permission
+  args:
+    source: mssql
+    table: article
+    role: user
+    permission:
+      columns:
+      - author_id
+      - content
+      - id
+      - title
+      filter:
+        is_published:
+          _eq: 1
+
+- type: mssql_create_select_permission
+  args:
+    source: mssql
+    table: author
+    role: user
+    permission:
+      columns:
+      - id
+      - name
+      filter: {}

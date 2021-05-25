@@ -131,6 +131,52 @@ Args syntax
      - Boolean
      - When set to ``true``, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions etc.) from other sources (default: ``false``)
 
+.. _rename_source:
+
+rename_source
+-------------
+
+``rename_source`` is used to rename an existing source.
+
+Given there already exists a database with name ``pg1``, we can rename it to ``pg2`` using:
+
+.. code-block:: http
+
+  POST /v1/metadata HTTP/1.1
+  Content-Type: application/json
+  X-Hasura-Role: admin
+
+  {
+    "type": "rename_source",
+    "args": {
+      "name": "pg1",
+      "new_name": "pg2"
+    }
+  }
+
+Note that all settings are kept, only the name is changed.
+
+.. _rename_source_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - name
+     - true
+     - :ref:`SourceName <SourceName>`
+     - Name of the database
+   * - new_name
+     - true
+     - :ref:`SourceName <SourceName>`
+     - Name of the database
+
 mssql_add_source
 ----------------
 

@@ -16,9 +16,13 @@ export const addSource = (
       projectId: string;
       datasets: string;
     };
+    preparedStatements?: boolean;
   },
   // supported only for PG sources at the moment
-  replicas?: Omit<SourceConnectionInfo, 'connection_string'>[]
+  replicas?: Omit<
+    SourceConnectionInfo,
+    'connection_string' | 'use_prepared_statements'
+  >[]
 ) => {
   const replace_configuration = payload.replace_configuration ?? false;
   if (driver === 'mssql') {
@@ -64,6 +68,7 @@ export const addSource = (
         connection_info: {
           database_url: payload.dbUrl,
           pool_settings: payload.connection_pool_settings,
+          use_prepared_statements: payload.preparedStatements,
         },
         read_replicas: replicas?.length ? replicas : null,
       },

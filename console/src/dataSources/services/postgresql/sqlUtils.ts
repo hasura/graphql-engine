@@ -65,11 +65,12 @@ export const getFetchTablesListQuery = (options: {
   SELECT
     COALESCE(Json_agg(Row_to_json(info)), '[]' :: json) AS tables
   FROM (
-    with partitions as (
-      select array(
+    WITH partitions AS (
+      SELECT array(
+        WITH partitioned_tables AS (SELECT array(SELECT oid FROM pg_class WHERE relkind = 'p') AS parent_tables)
         SELECT
         child.relname       AS partition
-    FROM pg_inherits
+    FROM partitioned_tables, pg_inherits
         JOIN pg_class child             ON pg_inherits.inhrelid   = child.oid
         JOIN pg_namespace nmsp_child    ON nmsp_child.oid   = child.relnamespace
     ${generateWhereClause(
@@ -78,18 +79,19 @@ export const getFetchTablesListQuery = (options: {
       'nmsp_child.nspname',
       'where'
     )}
-      ) as names
+    AND pg_inherits.inhparent = ANY (partitioned_tables.parent_tables)
+      ) AS names
     )
     SELECT
-      pgn.nspname as table_schema,
-      pgc.relname as table_name,
-      case
-        when pgc.relkind = 'r' then 'TABLE'
-        when pgc.relkind = 'f' then 'FOREIGN TABLE'
-        when pgc.relkind = 'v' then 'VIEW'
-        when pgc.relkind = 'm' then 'MATERIALIZED VIEW'
-        when pgc.relkind = 'p' then 'PARTITIONED TABLE'
-      end as table_type,
+      pgn.nspname AS table_schema,
+      pgc.relname AS table_name,
+      CASE
+        WHEN pgc.relkind = 'r' THEN 'TABLE'
+        WHEN pgc.relkind = 'f' THEN 'FOREIGN TABLE'
+        WHEN pgc.relkind = 'v' THEN 'VIEW'
+        WHEN pgc.relkind = 'm' THEN 'MATERIALIZED VIEW'
+        WHEN pgc.relkind = 'p' THEN 'PARTITIONED TABLE'
+      END AS table_type,
       obj_description(pgc.oid) AS comment,
       COALESCE(json_agg(DISTINCT row_to_json(isc) :: jsonb || jsonb_build_object('comment', col_description(pga.attrelid, pga.attnum))) filter (WHERE isc.column_name IS NOT NULL), '[]' :: json) AS columns,
       COALESCE(json_agg(DISTINCT row_to_json(ist) :: jsonb || jsonb_build_object('comment', obj_description(pgt.oid))) filter (WHERE ist.trigger_name IS NOT NULL), '[]' :: json) AS triggers,

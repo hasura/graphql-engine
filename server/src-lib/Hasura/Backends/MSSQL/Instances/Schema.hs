@@ -413,9 +413,10 @@ msComputedField
   :: MonadBuildSchema 'MSSQL r m n
   => SourceName
   -> ComputedFieldInfo 'MSSQL
+  -> TableName 'MSSQL
   -> SelPermInfo 'MSSQL
   -> m (Maybe (FieldParser n (AnnotatedField 'MSSQL)))
-msComputedField _sourceName _fieldInfo _selectPemissions = pure Nothing
+msComputedField _sourceName _fieldInfo _table _selectPemissions = pure Nothing
 
 -- | Remote join field parser.
 -- Currently unsupported: returns Nothing for now.

@@ -34,6 +34,7 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
   currentDriver,
+  driverToLabel,
   findTable,
   generateTableDef,
   getTableCustomColumnNames,
@@ -187,7 +188,7 @@ class ModifyTable extends React.Component {
                 <div className={styles.readOnly}>
                   <p className={styles.readOnlyText}>
                     <i className="fa fa-flask" aria-hidden="true" /> Coming soon
-                    for {currentDriver.toUpperCase()}
+                    for {driverToLabel[currentDriver]}
                   </p>
                   <p className={styles.noMargin}>
                     This page is currently read-only, but we're actively working

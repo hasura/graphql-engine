@@ -39,14 +39,6 @@ purgeDependentObject source sourceObjId = case sourceObjId of
       $ "unexpected dependent object: "
       <> reportSchemaObj (SOSourceObj source $ AB.mkAnyBackend sourceObjId)
 
--- | Fetch Postgres metadata of all user tables
-fetchTableMetadata :: (MonadTx m) => m (DBTablesMetadata ('Postgres 'Vanilla))
-fetchTableMetadata = do
-  results <- liftTx $ Q.withQE defaultTxErrorHandler
-             $(makeRelativeToProject "src-rsr/pg_table_metadata.sql" >>= Q.sqlFromFile) () True
-  pure $ HM.fromList $ flip map results $
-    \(schema, table, Q.AltJ info) -> (QualifiedObject schema table, info)
-
 -- | Fetch Postgres metadata for all user functions
 fetchFunctionMetadata :: (MonadTx m) => m (DBFunctionsMetadata ('Postgres 'Vanilla))
 fetchFunctionMetadata = do

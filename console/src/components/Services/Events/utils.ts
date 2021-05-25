@@ -95,3 +95,33 @@ export const getLogsTableDef = (kind: EventKind): QualifiedTable => {
   }
   return generateTableDef(tableName, 'hdb_catalog');
 };
+
+const sanitiseValue = (value?: string | number) => {
+  if (value === 'f') return false;
+  if (value === 't') return true;
+  return value;
+};
+
+export const parseEventsSQLResp = (
+  result: string[][] = []
+): Record<string, string | number | boolean>[] => {
+  const allKeys: string[] = result?.[0];
+  const resultsData: string[][] = result?.slice(1);
+  const formattedData: Record<string, any>[] = [];
+  resultsData.forEach((values: string[]) => {
+    const dataObj: Record<string, any> = {};
+    allKeys.forEach((key: string, idx: number) => {
+      if (!dataObj[key]) {
+        if (key === 'request' || key === 'response') {
+          try {
+            dataObj[key] = JSON.parse(values[idx]);
+          } catch {
+            dataObj[key] = values[idx];
+          }
+        } else dataObj[key] = sanitiseValue(values[idx]);
+      }
+    });
+    formattedData.push(dataObj);
+  });
+  return formattedData;
+};

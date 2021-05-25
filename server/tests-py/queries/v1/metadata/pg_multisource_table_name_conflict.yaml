@@ -33,7 +33,7 @@
         );
         INSERT INTO my_author_table (name)
           VALUES ('Author 1'), ('Author 2');
-    
+
 - description: track table 1
   url: /v1/metadata
   status: 200

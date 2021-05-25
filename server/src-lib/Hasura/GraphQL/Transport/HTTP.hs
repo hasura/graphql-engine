@@ -439,9 +439,9 @@ extractFieldFromResponse fieldName bs = do
     do400 = withExceptT Right . throw400 RemoteSchemaError
     doGQExecError = withExceptT Left . throwError . GQExecError
 
-buildRaw :: Applicative m => J.Value -> m ResultsFragment
+buildRaw :: Applicative m => JO.Value -> m ResultsFragment
 buildRaw json = do
-  let obj = encJFromJValue json
+  let obj = JO.toEncJSON json
       telemTimeIO_DT = 0
   pure $ ResultsFragment telemTimeIO_DT Telem.Local obj []
 

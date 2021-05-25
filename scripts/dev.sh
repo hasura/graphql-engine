@@ -447,8 +447,6 @@ elif [ "$MODE" = "test" ]; then
 
     # Using --metadata-database-url flag to test multiple backends
     #       HASURA_GRAPHQL_PG_SOURCE_URL_* For a couple multi-source pytests:
-    HASURA_GRAPHQL_PG_SOURCE_URL_1="$PG_DB_URL" \
-    HASURA_GRAPHQL_PG_SOURCE_URL_2="$PG_DB_URL" \
     cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
       --metadata-database-url="$PG_DB_URL" serve \
       --stringify-numeric-types \
@@ -474,12 +472,17 @@ elif [ "$MODE" = "test" ]; then
     echo ""
     echo "Adding Postgres source"
     curl "$METADATA_URL" \
-    --data-raw '{"type":"pg_add_source","args":{"name":"default","configuration":{"connection_info":{"database_url":"'"$PG_DB_URL"'","pool_settings":{}}}}}'
+    --data-raw '{"type":"pg_add_source","args":{"name":"default","configuration":{"connection_info":{"database_url":"'"$PG_DB_URL"'"}}}}'
 
     echo ""
     echo "Adding SQL Server source"
     curl "$METADATA_URL" \
-    --data-raw '{"type":"mssql_add_source","args":{"name":"mssql","configuration":{"connection_info":{"connection_string":"'"$MSSQL_DB_URL"'","pool_settings":{}}}}}'
+    --data-raw '{"type":"mssql_add_source","args":{"name":"mssql","configuration":{"connection_info":{"connection_string":"'"$MSSQL_DB_URL"'"}}}}'
+
+    echo ""
+    echo "Adding Citus source"
+    curl "$METADATA_URL" \
+    --data-raw '{"type":"citus_add_source","args":{"name":"citus","configuration":{"connection_info":{"database_url":"'"$CITUS_DB_URL"'"}}}}'
 
     echo ""
     echo "Sources added:"

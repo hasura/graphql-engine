@@ -44,6 +44,8 @@ The following are the most significant conceptual changes introduced in Hasura v
   A detailed changelog with all the new features introduced in Hasura v2 is available on the
   `releases page <https://github.com/hasura/graphql-engine/releases>`__.
 
+.. _hasura_v2_behaviour_changes:
+
 Breaking behaviour changes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -93,6 +95,28 @@ Breaking behaviour changes
   its own transaction block but all the migrations are not executed under one. i.e. if any migration throws an error, applying further migrations
   will be stopped but the other successfully executed migrations up till that point will not be rolled back.
 
+.. _hasura_v2_env_changes:
+
+- **Deprecation of data source specific env vars**
+
+  In v2.0, the values of the following env vars are used to define the connection parameters of the ``default`` database
+  while updating an existing instance or while starting a fresh instance. During metadata initialization, their values
+  are moved to the metadata of the ``default`` source as defined :ref:`here <PGConfiguration>`.
+
+  - ``HASURA_GRAPHQL_PG_CONNECTIONS``
+  - ``HASURA_GRAPHQL_PG_TIMEOUT``
+  - ``HASURA_GRAPHQL_NO_OF_RETRIES``
+  - ``HASURA_GRAPHQL_PG_CONN_LIFETIME``
+  - ``HASURA_GRAPHQL_PG_POOL_TIMEOUT``
+  - ``HASURA_GRAPHQL_USE_PREPARED_STATEMENTS``
+  - ``HASURA_GRAPHQL_TX_ISOLATION``
+  - ``HASURA_GRAPHQL_READ_REPLICA_URLS``
+  - ``HASURA_GRAPHQL_CONNECTIONS_PER_READ_REPLICA``
+
+  **Post the initial setup/update once the metadata is initialized, these env vars can be considered as Deprecated.**
+  i.e. Changing or setting values of these env vars will have no impact as the values in the Hasura metadata are
+  now used to define the connection parameters.
+
 .. _hasura_v2_config_changes:
 
 Hasura configuration
@@ -121,25 +145,8 @@ Hasura configuration
 
 - Custom env vars can now be used to connect databases dynamically at runtime.
 
-.. _hasura_v2_env_changes:
-
-- In v2.0, the values of the following env vars are used to define the connection parameters of the ``default`` database
-  while updating an existing instance or while starting a fresh instance. During metadata initialization, their values
-  are moved to the metadata of the ``default`` source as defined :ref:`here <PGConfiguration>`.
-
-  - ``HASURA_GRAPHQL_PG_CONNECTIONS``
-  - ``HASURA_GRAPHQL_PG_TIMEOUT``
-  - ``HASURA_GRAPHQL_NO_OF_RETRIES``
-  - ``HASURA_GRAPHQL_PG_CONN_LIFETIME``
-  - ``HASURA_GRAPHQL_PG_POOL_TIMEOUT``
-  - ``HASURA_GRAPHQL_USE_PREPARED_STATEMENTS``
-  - ``HASURA_GRAPHQL_TX_ISOLATION``
-  - ``HASURA_GRAPHQL_READ_REPLICA_URLS``
-  - ``HASURA_GRAPHQL_CONNECTIONS_PER_READ_REPLICA``
-
-  **Post the initial setup/update once the metadata is initialized, these env vars can be considered as Deprecated.**
-  i.e. Changing or setting values of these env vars will have no impact as the values in the Hasura metadata are
-  now used to define the connection parameters.
+- With support for multiple data sources, older data source specific env vars have been deprecated.
+  :ref:`See details <hasura_v2_env_changes>`
 
 Hasura Cloud
 ^^^^^^^^^^^^
@@ -153,6 +160,8 @@ By default Hasura Cloud projects are created without any databases connected to 
 
 See the below section on :ref:`hasura_v1_v2_compatibility` to use a Hasura v2 Cloud project like a Hasura v1
 Cloud project.
+
+.. _moving_from_hasura_v1_to_v2:
 
 Moving from Hasura v1 to Hasura v2
 ----------------------------------

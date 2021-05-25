@@ -1,0 +1,76 @@
+- description: Querying a tracked SQL function will succeed
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      search_disasters_sql:
+        - name: cyclone_nisarga
+  query:
+    query: |
+      query function {
+        search_disasters_sql(args: {search: "sarga"}) {
+          name
+        }
+      }
+
+- description: Querying a tracked PL/PGSQL function will succeed
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      search_disasters_plpgsql:
+        - name: cyclone_nisarga
+  query:
+    query: |
+      query function {
+        search_disasters_plpgsql(args: {search: "sarga"}) {
+          name
+        }
+      }
+
+- description: However, trying to use a relationship will result in an error
+  url: /v1/graphql
+  status: 200
+  response:
+    errors:
+      - extensions:
+          internal:
+            statement:
+              "SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\" FROM\
+              \  (SELECT  json_build_object('name', \"_1_root.base\".\"name\", 'affected_states',\
+              \ \"_4_root.ar.root.affected_states\".\"affected_states\" ) AS \"root\"\
+              \ FROM  (SELECT  *  FROM \"public\".\"search_disasters_plpgsql\"(($2)::text)\
+              \ AS \"_0_search_disasters_plpgsql\" WHERE ('true')     ) AS \"_1_root.base\"\
+              \ LEFT OUTER JOIN LATERAL (SELECT  coalesce(json_agg(\"affected_states\"\
+              \ ), '[]' ) AS \"affected_states\" FROM  (SELECT  json_build_object('state_id',\
+              \ \"_2_root.ar.root.affected_states.base\".\"state_id\" ) AS \"affected_states\"\
+              \ FROM  (SELECT  *  FROM \"public\".\"disaster_affected_state\"  WHERE (((\"\
+              _1_root.base\".\"country_id\") = (\"country_id\")) AND ((\"_1_root.base\"\
+              .\"id\") = (\"disaster_id\")))     ) AS \"_2_root.ar.root.affected_states.base\"\
+              \      ) AS \"_3_root.ar.root.affected_states\"      ) AS \"_4_root.ar.root.affected_states\"\
+              \ ON ('true')      ) AS \"_5_root\"      "
+            prepared: true
+            error:
+              exec_status: FatalError
+              hint:
+              message: cannot pushdown the subquery
+              status_code: 0A000
+              description:
+                Complex subqueries and CTEs cannot be in the outer part of
+                the outer join
+            arguments:
+              - (Oid 114,Just ("{\"x-hasura-role\":\"admin\"}",Binary))
+              - (Oid 25,Just ("sarga",Binary))
+          path: $
+          code: unexpected
+        message: database query error
+  query:
+    query: |
+      query function {
+        search_disasters_plpgsql(args: {search: "sarga"}) {
+          name
+          affected_states {
+            state_id
+          }
+        }
+      }

@@ -17,6 +17,32 @@ Introduction
 
 Please find the changelog (includes features, bug fixes, breaking change notifications, etc) of Hasura Cloud versions here.
 
+v2.0.0-cloud.11
+---------------
+
+- Server: Fix erroneous schema type for action output fields (fix #6631)
+- Server: Introduce ``HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT`` env var for server config. This configures the time (default: 60s) to wait for any in-flight scheduled events, event trigger events and async actions to complete before shutting down. After this time, any in-flight events will be marked as pending.
+- Server: Fix a regression from V1 and allow string values for most Postgres column types
+- Server: Sanitise event trigger and scheduled trigger logs to omit possibly sensitive request body and headers
+- Server: Fix parsing of values for Postgres char columns (fix #6814)
+- Server: Explaining/analyzing a query now works for mssql sources
+- Server: Fix MSSQL multiplexed subscriptions (fix #6887)
+- Server: Fix bug which prevented tables with the same name in different sources to be tracked after setting custom names
+- Server: Include more detail in inconsistent metadata error messages (fix #6684)
+- Server: Add node limits for GraphQL operations
+- Console: Add union types to remote schema permissions
+- CLI: Add ``-o``/``--output`` flag for metadata ``apply`` & ``export`` subcommands
+
+  .. code-block:: bash
+
+    # export metadata and write to stdout
+    $ hasura metadata export -o json
+
+- CLI: Add support for ``graphql_schema_introspection`` metadata object
+- CLI: Fix applying migrations in a different environment after config v3 update (#6861)
+- CLI: Fix bug caused by usage of space character in database name (#6852)
+- CLI: Fix issues with generated filepaths in windows (#6813)
+
 v2.0.0-cloud.10
 ---------------
 
@@ -39,11 +65,14 @@ The new Overview page gives a birds eye view of current load, historical API per
 - Server: Fix a bug in query validation that would cause some queries using default variable values to be rejected (fix #6867)
 - Server: Custom URI schemes are now supported in CORS config (fix #5818)
 - Server: REST endpoint bugfix for UUID url params
+- Server: Support disabling GraphQL introspection for specified roles
 - Console: Fix Postgres table creation when table has a non-lowercase name and a comment (#6760)
 - Console: Read-only modify page for mssql
 - Console: Filter out partitions from track table list and display partition info
 - Console: Fixes an issue where no schemas are listed on an MSSQL source
+- Console: Fix missing headers in event trigger invocations page which logged out Cloud console
 - CLI: Fix regression - ``metadata apply —dry-run`` was overwriting local metadata files with metadata on server when it should just display the differences.
+- CLI: Add support for `api_limits` metadata object
 - Dashboard: Add env var ``HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE`` (default: false)
 
 v2.0.0-cloud.9

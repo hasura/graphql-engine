@@ -14,3 +14,31 @@ args:
     source: mssql
     table: author
     relationship: articles
+
+#Object relationship
+- type: mssql_drop_relationship
+  args:
+    source: mssql
+    table: article
+    relationship: co_author
+
+#Array relationship
+- type: mssql_drop_relationship
+  args:
+    source: mssql
+    table: author
+    relationship: co_articles
+
+#Object relationship
+- type: mssql_drop_relationship
+  args:
+    source: mssql
+    table: article_multi
+    relationship: author
+
+#Array relationship
+- type: mssql_drop_relationship
+  args:
+    source: mssql
+    table: author_multi
+    relationship: articles

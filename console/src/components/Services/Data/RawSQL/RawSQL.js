@@ -10,7 +10,7 @@ import Tooltip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import Alert from '../../../Common/Alert';
 import StatementTimeout from './StatementTimeout';
-import { parseCreateSQL } from './utils';
+import { parseCreateSQL, removeCommentsSQL } from './utils';
 import styles from '../../../Common/TableCommon/Table.scss';
 import {
   executeSQL,
@@ -178,18 +178,19 @@ const RawSQL = ({
 
   const getSQLSection = () => {
     const handleSQLChange = val => {
+      const cleanSql = removeCommentsSQL(val);
       onChangeSQLText(val);
       dispatch({ type: SET_SQL, data: val });
 
       // set migration checkbox true
-      if (services[selectedDriver].checkSchemaModification(val)) {
+      if (services[selectedDriver].checkSchemaModification(cleanSql)) {
         dispatch({ type: SET_MIGRATION_CHECKED, data: true });
       } else {
         dispatch({ type: SET_MIGRATION_CHECKED, data: false });
       }
 
       // set track this checkbox true
-      const objects = parseCreateSQL(val, selectedDriver);
+      const objects = parseCreateSQL(cleanSql, selectedDriver);
       if (objects.length) {
         let allObjectsTrackable = true;
 

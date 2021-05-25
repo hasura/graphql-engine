@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"text/tabwriter"
 
@@ -98,15 +97,23 @@ func (o *migrateSquashOptions) run() error {
 		}
 	}
 
-	for _, v := range versions {
-		delOptions := mig.CreateOptions{
-			Version:   strconv.FormatInt(v, 10),
-			Directory: filepath.Join(o.EC.MigrationDir, o.Source.Name),
+	var uversions []uint64
+	for _, version := range versions {
+		if version < 0 {
+			return fmt.Errorf("operation failed foound version value should >= 0, which is not expected")
 		}
-		err = delOptions.Delete()
-		if err != nil {
-			return errors.Wrap(err, "unable to delete source file")
-		}
+		uversions = append(uversions, uint64(version))
+	}
+
+	// If the first argument is true then it deletes all the migration versions
+	err = DeleteVersions(o.EC, uversions, o.Source)
+	if err != nil {
+		return err
+	}
+
+	err = migrateDrv.RemoveVersions(uversions)
+	if err != nil {
+		return err
 	}
 	return nil
 }

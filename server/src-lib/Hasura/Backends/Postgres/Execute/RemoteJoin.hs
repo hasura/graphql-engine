@@ -324,7 +324,7 @@ fetchRemoteJoinFields
   -> m AO.Object
 fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
   results <- forM (Map.toList remoteSchemaBatch) $ \(rsi, batch) -> do
-    resolvedRemoteFields <- traverse (traverse (resolveRemoteVariable userInfo)) $ _rjfField <$> batch
+    resolvedRemoteFields <- runVariableCache $ traverse (traverse (resolveRemoteVariable userInfo)) $ _rjfField <$> batch
     let gqlReq = fieldsToRequest resolvedRemoteFields
     -- NOTE: discard remote headers (for now):
     (_, _, respBody) <- execRemoteGQ env manager userInfo reqHdrs rsi gqlReq
@@ -346,21 +346,8 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
     remoteSchemaBatch = Map.groupOnNE _rjfRemoteSchema remoteJoins
 
     fieldsToRequest :: NonEmpty (G.Field G.NoFragments Variable) -> GQLReqOutgoing
-    fieldsToRequest gFields@(headField :| _) =
-      let variableInfos =
-            -- only the `headField` is used for collecting the variables here because
-            -- the variable information of all the fields will be the same.
-            -- For example:
-            -- {
-            --   author {
-            --     name
-            --     remote_relationship (extra_arg: $extra_arg)
-            --   }
-            -- }
-            --
-            -- If there are 10 authors, then there are 10 fields that will be requested
-            -- each containing exactly the same variable info.
-            collectVariablesFromField headField
+    fieldsToRequest gFields =
+      let variableInfos = foldMap collectVariablesFromField gFields
       in GQLReq
            { _grOperationName = Nothing
            , _grVariables =
@@ -375,7 +362,7 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
               }
            }
 
--- | Replace 'RemoteJoinField' in composite JSON with it's json value from remote server response.
+-- | Replace 'RemoteJoinField' in composite JSON with its json value from remote server response.
 replaceRemoteFields
   :: MonadError QErr m
   => CompositeValue (Maybe RemoteJoinField)

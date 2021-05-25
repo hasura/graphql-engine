@@ -1338,6 +1338,10 @@ code {
   font-style: normal;
 }
 
+.fontStyleItalic {
+  font-style: italic;
+}
+
 .fontSizeSm {
   font-size: 13px !important;
 }
@@ -1500,8 +1504,7 @@ code {
 }
 
 .connect_db_header {
-  font-weight: bold;
-  font-size: medium;
+  font-weight: 700;
 }
 
 .connect_db_radios {
@@ -1509,7 +1512,6 @@ code {
   align-items: center;
   height: auto;
   justify-content: flex-start;
-  padding-top: 10px;
   padding-bottom: 10px;
   font-size: 14px;
   input[type='radio'] {
@@ -1564,25 +1566,8 @@ code {
 }
 
 .connection_settings_form {
-  display: flex;
-  flex-direction: row;
   margin-top: 12px;
-  align-items: center;
-  justify-content: flex-start;
-}
-
-.connection_settings_form_input_layout {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  label {
-    margin-bottom: 10px !important;
-  }
-}
-
-.connnection_settings_form_input {
-  width: 65%;
+  padding-left: 30px;
 }
 
 .float_right {

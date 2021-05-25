@@ -23,9 +23,12 @@ resolveVariables
    . (MonadError QErr m, Traversable fragments)
   => [G.VariableDefinition]
   -> GH.VariableValues
+  -> [G.Directive G.Name]
   -> G.SelectionSet fragments G.Name
-  -> m (G.SelectionSet fragments Variable)
-resolveVariables definitions jsonValues selSet = do
+  -> m ( [G.Directive Variable]
+       , G.SelectionSet fragments Variable
+       )
+resolveVariables definitions jsonValues directives selSet = do
   variablesByName <- Map.groupOnNE getName <$> traverse buildVariable definitions
   uniqueVariables <- flip Map.traverseWithKey variablesByName
     \variableName variableDefinitions ->
@@ -33,8 +36,10 @@ resolveVariables definitions jsonValues selSet = do
         a :| [] -> return a
         _      -> throw400 ParseFailed
                    $ "multiple definitions for variable " <>> variableName
-  (selSet', usedVariables) <- flip runStateT mempty $
-    traverse (traverse (resolveVariable uniqueVariables)) selSet
+  ((directives', selSet'), usedVariables) <- flip runStateT mempty $ do
+    d <- traverse (traverse (resolveVariable uniqueVariables)) directives
+    s <- traverse (traverse (resolveVariable uniqueVariables)) selSet
+    pure (d, s)
   let variablesByNameSet = HS.fromList . Map.keys $ variablesByName
       jsonVariableNames = HS.fromList $ Map.keys jsonValues
       -- At the time of writing, this check is disabled using
@@ -60,7 +65,8 @@ resolveVariables definitions jsonValues selSet = do
     <> T.concat (L.intersperse ", " $
                  map G.unName $ HS.toList $
                  HS.difference jsonVariableNames usedVariables)
-  return selSet'
+
+  return (directives', selSet')
   where
     buildVariable :: G.VariableDefinition -> m Variable
     buildVariable G.VariableDefinition{ G._vdName, G._vdType, G._vdDefaultValue } = do

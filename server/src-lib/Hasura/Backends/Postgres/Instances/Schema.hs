@@ -1,7 +1,9 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hasura.Backends.Postgres.Instances.Schema () where
+module Hasura.Backends.Postgres.Instances.Schema
+  (
+  ) where
 
 import           Hasura.Prelude
 
@@ -99,10 +101,19 @@ instance PostgresSchema 'Vanilla where
   pgkRelayExtension = const $ Just ()
   pgkNode = nodePG
 
+instance PostgresSchema 'Citus where
+  pgkBuildTableRelayQueryFields     _ _ _ _ _ _ _ = pure Nothing
+  pgkBuildFunctionRelayQueryFields  _ _ _ _ _ _ _ = pure Nothing
+  pgkRelayExtension = const Nothing
+  pgkNode = undefined
+
+
+-- postgres schema
 
 instance
   ( HasTag   ('Postgres pgKind)
   , Typeable ('Postgres pgKind)
+  , Backend  ('Postgres pgKind)
   , PostgresSchema pgKind
   ) => BackendSchema ('Postgres pgKind) where
   -- top level parsers

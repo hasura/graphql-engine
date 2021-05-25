@@ -1,0 +1,57 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE EXTENSION IF NOT EXISTS postgis;
+
+      create table hge_tests.test_bigint(
+          id bigint,
+          name text
+      );
+
+      create table hge_tests.test_geojson(
+        id SERIAL PRIMARY KEY,
+        location GEOGRAPHY(Point)
+      );
+
+      INSERT INTO hge_tests.test_geojson (location) VALUES ('POINT(-43.77 45.64)');
+
+- type: track_table
+  args:
+    schema: hge_tests
+    name: test_bigint
+
+- type: track_table
+  args:
+    schema: hge_tests
+    name: test_geojson
+
+- type: create_event_trigger
+  args:
+    name: bigint_all
+    table:
+      schema: hge_tests
+      name: test_bigint
+    insert:
+      columns: '*'
+    update:
+      columns: '*'
+    delete:
+      columns: '*'
+    webhook: http://127.0.0.1:5592
+
+- type: create_event_trigger
+  args:
+    name: geojson_all
+    table:
+      schema: hge_tests
+      name: test_geojson
+    insert:
+      columns: '*'
+    update:
+      columns: '*'
+    delete:
+      columns: '*'
+    webhook: http://127.0.0.1:5592

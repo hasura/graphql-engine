@@ -114,6 +114,8 @@ export const getColumnUpdateMigration = (
     originalData_type
   );
 
+  const quotedColName = `"${colName}"`;
+
   const migration = new Migration();
 
   if (originalColType !== colType) {
@@ -208,7 +210,7 @@ export const getColumnUpdateMigration = (
       tableName,
       currentSchema,
       `${tableName}_${colName}_key`,
-      [colName]
+      [quotedColName]
     );
     const uniqueDownQuery = dataSource.getDropConstraintSql(
       tableName,
@@ -227,7 +229,7 @@ export const getColumnUpdateMigration = (
       tableName,
       currentSchema,
       `${tableName}_${colName}_key`,
-      [colName]
+      [quotedColName]
     );
     const uniqueUpQuery = dataSource.getDropConstraintSql(
       tableName,

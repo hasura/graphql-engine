@@ -82,7 +82,7 @@ askSourceInfo
   -> m (SourceInfo b)
 askSourceInfo sourceName = do
   sources <- scSources <$> askSchemaCache
-  onNothing (unsafeSourceInfo =<< M.lookup sourceName sources) $ do
+  onNothing (unsafeSourceInfo @b =<< M.lookup sourceName sources) $ do
     -- FIXME: this error can also happen for a lookup with the wrong type
     metadata <- getMetadata
     case metadata ^. metaSources . at sourceName of
@@ -96,7 +96,7 @@ askSourceConfig
    . (CacheRM m, MonadError QErr m, Backend b, MetadataM m)
   => SourceName
   -> m (SourceConfig b)
-askSourceConfig = fmap (_siConfiguration @b) . askSourceInfo
+askSourceConfig = fmap _siConfiguration . askSourceInfo @b
 
 askSourceTables
   :: forall b m

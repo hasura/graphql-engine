@@ -38,6 +38,7 @@ export type ConnectDBState = {
     envVar: string;
   };
   connectionSettings: ConnectionSettings;
+  preparedStatements?: boolean;
 };
 
 export const defaultState: ConnectDBState = {
@@ -60,6 +61,7 @@ export const defaultState: ConnectDBState = {
     envVar: '',
   },
   connectionSettings: {},
+  preparedStatements: false,
 };
 
 type DefaultStateProps = {
@@ -93,7 +95,10 @@ export const connectDataSource = (
   typeConnection: string,
   currentState: ConnectDBState,
   cb: () => void,
-  replicas?: Omit<SourceConnectionInfo, 'connection_string'>[],
+  replicas?: Omit<
+    SourceConnectionInfo,
+    'connection_string' | 'use_prepared_statements'
+  >[],
   isEditState = false
 ) => {
   let databaseURL: string | { from_env: string } =
@@ -133,6 +138,7 @@ export const connectDataSource = (
             projectId: currentState.databaseURLState.projectId,
             datasets: currentState.databaseURLState.datasets,
           },
+          preparedStatements: currentState.preparedStatements,
         },
       },
       cb,
@@ -149,6 +155,7 @@ export type ConnectDBActions =
         driver: Driver;
         databaseUrl: string;
         connectionSettings: ConnectionSettings;
+        preparedStatements: boolean;
       };
     }
   | { type: 'UPDATE_PARAM_STATE'; data: ConnectionParams }
@@ -168,6 +175,7 @@ export type ConnectDBActions =
   | { type: 'UPDATE_IDLE_TIMEOUT'; data: string }
   | { type: 'UPDATE_DB_DRIVER'; data: Driver }
   | { type: 'UPDATE_CONNECTION_SETTINGS'; data: ConnectionSettings }
+  | { type: 'UPDATE_PREPARED_STATEMENTS'; data: boolean }
   | { type: 'RESET_INPUT_STATE' };
 
 export const connectDBReducer = (
@@ -185,6 +193,7 @@ export const connectDBReducer = (
           dbURL: action.data.databaseUrl,
         },
         connectionSettings: action.data.connectionSettings,
+        preparedStatements: action.data.preparedStatements,
       };
     case 'UPDATE_PARAM_STATE':
       return {
@@ -288,6 +297,11 @@ export const connectDBReducer = (
       return {
         ...state,
         connectionSettings: action.data,
+      };
+    case 'UPDATE_PREPARED_STATEMENTS':
+      return {
+        ...state,
+        preparedStatements: action.data,
       };
     case 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT':
       return {

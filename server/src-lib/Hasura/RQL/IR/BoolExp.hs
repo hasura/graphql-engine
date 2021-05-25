@@ -53,7 +53,7 @@ import           Data.Aeson.Internal
 import           Data.Aeson.TH
 import           Data.Monoid
 import           Data.Text.Extended
-import           Data.Typeable
+import           Data.Typeable                 (Typeable)
 
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.Types.Backend
@@ -434,8 +434,9 @@ $(deriveJSON hasuraJSON ''STIntersectsGeomminNband)
 -- this, and why it exists. It might be a relic of a needed differentiation, now lost?
 -- TODO: can this be removed?
 newtype AnnColumnCaseBoolExpField (b :: BackendType) a
-  = AnnColumnCaseBoolExpField { _accColCaseBoolExpField :: (AnnBoolExpFld b a)}
+  = AnnColumnCaseBoolExpField { _accColCaseBoolExpField :: AnnBoolExpFld b a }
   deriving (Functor, Foldable, Traversable, Generic)
+
 deriving instance (Backend b, Eq (BooleanOperators b a), Eq a) => Eq (AnnColumnCaseBoolExpField b a)
 instance (Backend b, NFData    (BooleanOperators b a), NFData    a) => NFData    (AnnColumnCaseBoolExpField b a)
 instance (Backend b, Cacheable (BooleanOperators b a), Cacheable a) => Cacheable (AnnColumnCaseBoolExpField b a)

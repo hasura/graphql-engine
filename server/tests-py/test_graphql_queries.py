@@ -105,18 +105,12 @@ class TestGraphQLQueryBasicBigquery:
         return 'queries/graphql_query/bigquery'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
+@pytest.mark.parametrize("backend", ['citus', 'mssql', 'postgres'])
 @usefixtures('per_class_tests_db_state', 'per_backend_tests')
 class TestGraphQLQueryBasicCommon:
     # This also exercises support for multiple operations in a document:
     def test_select_query_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml', transport)
-
-    # TODO: this test currently fails when run against MSSQL.
-    # Remove from TestGraphQLQueryBasicPostgres and uncomment here once
-    # https://github.com/hasura/graphql-engine-mono/issues/866 is fixed.
-    # def test_select_query_author_pk(self, hge_ctx, transport):
-    #     check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey.yaml', transport)
 
     def test_select_query_author_quoted_col(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_col_quoted.yaml', transport)
@@ -126,6 +120,12 @@ class TestGraphQLQueryBasicCommon:
 
     def test_select_query_author_with_include_directive(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_include_directive.yaml', transport)
+
+    def test_select_query_author_with_skip_include_directive(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_skip_include_directives.yaml', transport)
+
+    def test_select_query_author_with_wrong_directive_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_wrong_directive_err.yaml', transport)
 
     def test_select_query_where(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_where.yaml', transport)
@@ -147,6 +147,17 @@ class TestGraphQLQueryBasicCommon:
 
     def test_select_query_col_not_present_err(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_query_author_col_not_present_err.yaml", transport)
+
+    def test_select_query_multiple_columns_arr_fkey(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_multiple_columns_arr_fkey.yaml", transport)
+
+    def test_select_query_multiple_columns_obj_fkey(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_multiple_columns_obj_fkey.yaml", transport)
+
+    def test_create_invalid_fkey_relationship(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + '/setup_invalid_fkey_relationship.yaml')
+        assert st_code == 400, resp
+        assert resp['error'] == "Expecting object { table, columns }."
 
     @classmethod
     def dir(cls):
@@ -178,6 +189,9 @@ class TestGraphQLQueryBasicPostgres:
     def test_select_various_postgres_types(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_test_types_postgres.yaml', transport)
 
+    # TODO: https://github.com/hasura/graphql-engine-mono/issues/866
+    # This test currently fails on MSSQL.
+    # Move to TestGraphQLQueryBasicCommon once linked issue is fixed.
     def test_select_query_author_pk(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey.yaml', transport)
 
@@ -215,7 +229,41 @@ class TestGraphQLQueryBasicPostgres:
         return 'queries/graphql_query/basic'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('per_class_tests_db_state')
+@pytest.mark.parametrize("backend", ['citus'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBasicCitus:
+    def test_nested_select_with_foreign_key_alter(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/nested_select_with_foreign_key_alter_citus.yaml", transport)
+
+    @pytest.mark.skip(reason="TODO: https://github.com/hasura/graphql-engine-mono/issues/1224")
+    def test_select_query_user_col_change(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change_citus.yaml")
+
+    @pytest.mark.skip(reason="TODO: https://github.com/hasura/graphql-engine-mono/issues/1224")
+    def test_select_query_person_citext(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_person_citext.yaml", transport)
+
+    # relationships test cases described at
+    # https://github.com/hasura/graphql-engine-mono/blob/vamshi/rfc/citus-support/rfcs/citus-support.md
+    def test_select_relationships_distributed(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_disaster_relationships_distributed.yaml", transport)
+
+    def test_select_relationships_reference(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_disaster_relationships_reference.yaml", transport)
+
+    def test_select_functions(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_disaster_functions.yaml", transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/citus'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['citus', 'postgres'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
 class TestGraphQLQueryFragments:
 
     def test_select_query_top_level_fragment(self, hge_ctx, transport):
@@ -375,6 +423,9 @@ class TestGraphQLQueryBoolExpBasicCommon:
     def test_author_article_where_nin(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin.yaml', transport)
 
+    def test_author_article_where_permissions(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_permissions.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/basic'
@@ -426,6 +477,9 @@ class TestGraphQLQueryBoolExpBasicMSSQL:
 
     def test_uuid_test_in_uuid_col(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_uuid_test_in_uuid_col_mssql.yaml', transport)
+
+    def test_bools(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_bools_mssql.yaml', transport)
 
     @classmethod
     def dir(cls):
@@ -847,6 +901,9 @@ class TestGraphQLQueryComputedFields:
 
     def test_float_test(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/float_test.yaml', transport)
+
+    def test_tracked_function_as_computed_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/tracked_function_as_comp_field.yaml')
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')

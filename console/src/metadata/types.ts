@@ -892,6 +892,7 @@ export interface SourceConnectionInfo {
     idle_timeout: number;
     retries: number;
   };
+  use_prepared_statements: boolean;
 }
 
 /**

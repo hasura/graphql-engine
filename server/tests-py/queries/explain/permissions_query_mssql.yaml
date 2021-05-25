@@ -3,20 +3,17 @@ url: /v1/graphql/explain
 status: 200
 response:
   - field: user
-    plan:
-      - "SELECT ISNULL((SELECT [t_user1].[id] AS [id],\n       [t_user1].[name] AS [name],\n\
-        \       [t_user1].[age] AS [age]\nFROM [dbo].[user] AS [t_user1]\nWHERE ((((([t_user1].[id])\
-        \ = ((N'1')))\n       OR ((([t_user1].[id]) IS NULL)\n      AND (((N'1')) IS NULL)))))\n\
-        FOR JSON PATH), '[]')"
-      - "  |--Compute Scalar(DEFINE:([Expr1003]=isnull([Expr1001],CONVERT_IMPLICIT(nvarchar(max),'[]',0))))"
-      - "       |--UDX(([t_user1].[id], [t_user1].[name], [t_user1].[age]))"
-      - "            |--Clustered Index Seek(OBJECT:([master].[dbo].[user].[PK__user__3213E83F2F718733]
-        AS [t_user1]), SEEK:([t_user1].[id]=(1)) ORDERED FORWARD)"
     sql:
       "SELECT ISNULL((SELECT [t_user1].[id] AS [id],\n       [t_user1].[name] AS\
-      \ [name],\n       [t_user1].[age] AS [age]\nFROM [dbo].[user] AS [t_user1]\nWHERE\
-      \ ((((([t_user1].[id]) = ((N'1')))\n       OR ((([t_user1].[id]) IS NULL)\n  \
-      \    AND (((N'1')) IS NULL)))))\nFOR JSON PATH), '[]')"
+      \ [name],\n       [t_user1].[age] AS [age]\nFROM [dbo].[user] AS [t_user1]\nOUTER\
+      \ APPLY (SELECT *\n             FROM OPENJSON((N''+NCHAR(123)+''+NCHAR(34)+'positionalArguments'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(91)+''+NCHAR(93)+','+NCHAR(34)+'namedArguments'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(123)+''+NCHAR(125)+','+NCHAR(34)+'session'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(123)+''+NCHAR(34)+'x-hasura-user-id'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(34)+'1'+NCHAR(34)+''+NCHAR(125)+''+NCHAR(125)+''))\n\
+      \                  WITH ([session] NVARCHAR(MAX) AS JSON,\n                  \
+      \     [namedArguments] NVARCHAR(MAX) AS JSON,\n                       [positionalArguments]\
+      \ NVARCHAR(MAX) AS JSON) AS [row]\n             WHERE (1=1)) \nAS [row]\nWHERE\
+      \ ((((([t_user1].[id]) = (JSON_VALUE([row].[session], (N''+NCHAR(36)+'.'+NCHAR(34)+'x-hasura-user-id'+NCHAR(34)+''))))\n\
+      \      OR ((([t_user1].[id]) IS NULL)\n      AND ((JSON_VALUE([row].[session],\
+      \ (N''+NCHAR(36)+'.'+NCHAR(34)+'x-hasura-user-id'+NCHAR(34)+''))) IS NULL)))))\n\
+      FOR JSON PATH), '[]')"
 query:
   user:
     X-Hasura-Role: user

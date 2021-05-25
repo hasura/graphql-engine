@@ -283,11 +283,7 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
                            , _ppsPoolTimeout        = Q.cpTimeout soConnParams
                            , _ppsConnectionLifetime = Q.cpMbLifetime soConnParams
                            }
-            sourceConnInfo =
-              PostgresSourceConnInfo dbUrlConf
-                                     (Just connSettings)
-                                     (Q.cpAllowPrepare soConnParams)
-                                     soTxIso
+            sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings) (Q.cpAllowPrepare soConnParams) soTxIso Nothing
         in PostgresConnConfiguration sourceConnInfo Nothing
       sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse
 

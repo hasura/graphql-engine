@@ -73,7 +73,6 @@ $(makePrisms ''InputArgument)
 
 type FunctionInputArgument b = InputArgument (FunctionArg b)
 
-
 -- | Indicates whether the user requested the corresponding function to be
 -- tracked as a mutation or a query/subscription, in @track_function@.
 data FunctionExposedAs = FEAQuery | FEAMutation

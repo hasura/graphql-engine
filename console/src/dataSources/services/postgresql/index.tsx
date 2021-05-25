@@ -586,6 +586,7 @@ export const supportedFeatures: SupportedFeaturesType = {
     databaseURL: true,
     environmentVariable: true,
     read_replicas: true,
+    prepared_statements: true,
     connectionSettings: true,
     retries: true,
   },

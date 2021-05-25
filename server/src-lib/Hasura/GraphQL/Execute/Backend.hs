@@ -4,6 +4,7 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Casing                      as J
+import qualified Data.Aeson.Ordered                     as JO
 import qualified Data.Environment                       as Env
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
@@ -56,7 +57,6 @@ class ( Backend b
     -> HTTP.Manager
     -> [HTTP.Header]
     -> UserInfo
-    -> [G.Directive G.Name]
     -> SourceName
     -> SourceConfig b
     -> QueryDB b (UnpreparedValue b)
@@ -143,7 +143,7 @@ data ExecutionStep where
     -> ExecutionStep
   -- ^ A graphql query to execute against a remote schema
   ExecStepRaw
-    :: J.Value
+    :: JO.Value
     -> ExecutionStep
   -- ^ Output a plain JSON object
 

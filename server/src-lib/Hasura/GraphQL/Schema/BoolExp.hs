@@ -17,6 +17,7 @@ import           Hasura.GraphQL.Parser         (InputFieldsParser, Kind (..), Pa
                                                 UnpreparedValue)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Backend
+import           Hasura.GraphQL.Schema.Common  (partialSQLExpToUnpreparedValue)
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 
@@ -76,7 +77,10 @@ boolExp sourceName tableInfo selectPermissions = memoizeOn 'boolExp (sourceName,
         FIRelationship relationshipInfo -> do
           remoteTableInfo <- askTableInfo sourceName $ riRTable relationshipInfo
           remotePermissions <- lift $ tableSelectPermissions remoteTableInfo
-          lift $ fmap (AVRel relationshipInfo) <$> boolExp sourceName remoteTableInfo remotePermissions
+          let remoteTableFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $
+                                  maybe annBoolExpTrue spiFilter remotePermissions
+          remoteBoolExp <- lift $ boolExp sourceName remoteTableInfo remotePermissions
+          pure $ fmap (AVRel relationshipInfo . andAnnBoolExps remoteTableFilter) remoteBoolExp
 
         -- Using computed fields in boolean expressions is not currently supported.
         FIComputedField _ -> empty

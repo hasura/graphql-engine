@@ -28,7 +28,6 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = ({
           color="yellow"
           type="submit"
           style={{
-            width: '70%',
             ...(loading && { cursor: 'progress' }),
           }}
           disabled={loading}

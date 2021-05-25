@@ -60,35 +60,35 @@ response:
         fields:
         - name: actionName
           type:
-            kind: LIST
             name:
+            kind: LIST
+            fields:
             ofType:
-              kind: NON_NULL
               name:
+              kind: NON_NULL
               ofType:
-                kind: OBJECT
                 name: SampleOutput
+                kind: OBJECT
                 fields:
                 - name: id
                   type:
                     kind: LIST
                     ofType:
-                      kind: NON_NULL
                       name:
+                      kind: NON_NULL
                       ofType:
-                        kind: SCALAR
                         name: String
-            fields:
+                        kind: SCALAR
         - name: actionName2
           type:
-            kind: OBJECT
             name: SampleOutput2
-            ofType:
+            kind: OBJECT
             fields:
             - name: id
               type:
                 kind: NON_NULL
                 ofType:
-                  kind: SCALAR
                   name: String
+                  kind: SCALAR
                   ofType:
+            ofType:

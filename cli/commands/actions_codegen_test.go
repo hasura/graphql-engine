@@ -46,7 +46,7 @@ var _ = Describe("actions_codegen", func() {
 				Args:             []string{"actions", "codegen"},
 				WorkingDirectory: dirName,
 			})
-			Eventually(session, 60*40).Should(Exit(0))
+			Eventually(session, 60*60).Should(Exit(0))
 			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring("Codegen files generated at codegen"))
 		})
 	})

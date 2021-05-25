@@ -9,3 +9,5 @@ args:
       drop table article;
       drop table author;
       drop table [user];
+      drop table article_multi;
+      drop table author_multi;
