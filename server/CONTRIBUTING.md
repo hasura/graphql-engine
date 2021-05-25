@@ -7,17 +7,13 @@ own machine and how to contribute.
 
 - [GHC](https://www.haskell.org/ghc/) 8.10.2 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
   - There are various ways these can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
+- There are few system packages required like `libpq-dev`, `libssl-dev`, etc. The best place to get the entire list is from the packager [Dockerfile](https://github.com/hasura/graphql-engine/blob/master/.circleci/server-builder.dockerfile)
+
+For building console and running test suite:
+
 - [Node.js](https://nodejs.org/en/) (>= v8.9)
 - npm >= 5.7
-- [gsutil](https://cloud.google.com/storage/docs/gsutil)
-- libpq-dev
-- libkrb5-dev
-- openssl and libssl-dev
 - python >= 3.5 with pip3 and virtualenv
-
-The last few prerequisites can be installed on Debian or Ubuntu with:
-
-    $ sudo apt install libpq-dev libkrb5-dev python3 python3-pip python3-venv openssl libssl-dev
 
 Additionally, you will need a way to run a Postgres database server. The `dev.sh` script (described below) can set up a Postgres instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
 
