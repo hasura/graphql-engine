@@ -6,6 +6,7 @@ import {
   Table,
   BaseTableColumn,
   SupportedFeaturesType,
+  ViolationActions,
 } from '../../types';
 import globals from '../../../Globals';
 import { generateTableRowRequest } from './utils';
@@ -161,6 +162,7 @@ export const supportedFeatures: SupportedFeaturesType = {
   rawSQL: {
     enabled: true,
     tracking: false,
+    statementTimeout: false,
   },
   connectDbForm: {
     enabled: globals.consoleType !== 'cloud',
@@ -176,6 +178,14 @@ export const supportedFeatures: SupportedFeaturesType = {
     connection_lifetime: false,
   },
 };
+
+const violationActions: ViolationActions[] = [
+  'restrict',
+  'no action',
+  'cascade',
+  'set null',
+  'set default',
+];
 
 export const bigquery: DataSourcesAPI = {
   isTable,
@@ -404,4 +414,5 @@ export const bigquery: DataSourcesAPI = {
   viewsSupported: false,
   supportedColumnOperators,
   aggregationPermissionsAllowed: false,
+  violationActions,
 };

@@ -212,6 +212,9 @@ export type PermissionColumnCategories = Record<ColumnCategories, string[]>;
 export type SupportedFeaturesType = {
   driver: {
     name: string;
+    fetchVersion?: {
+      enabled: boolean;
+    };
   };
   schemas: {
     create: {
@@ -224,6 +227,8 @@ export type SupportedFeaturesType = {
   tables: {
     create: {
       enabled: boolean;
+      frequentlyUsedColumns?: boolean;
+      columnTypeSelector?: boolean;
     };
     browse: {
       enabled: boolean;
@@ -235,6 +240,7 @@ export type SupportedFeaturesType = {
     };
     modify: {
       enabled: boolean;
+      editableTableName?: boolean;
       readOnly?: boolean;
       comments?: {
         view: boolean;
@@ -300,6 +306,7 @@ export type SupportedFeaturesType = {
   };
   rawSQL: {
     enabled: boolean;
+    statementTimeout: boolean;
     tracking: boolean;
   };
   connectDbForm: {
@@ -348,3 +355,10 @@ export type generateTableRowRequestType = {
     }
   ) => { rows: T[]; estimatedCount: number };
 };
+
+export type ViolationActions =
+  | 'restrict'
+  | 'no action'
+  | 'cascade'
+  | 'set null'
+  | 'set default';

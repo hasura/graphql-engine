@@ -900,6 +900,17 @@ const fetchColumnTypeInfo = () => {
     };
     return dispatch(requestAction(url, options)).then(
       data => {
+        if (currentDriver === 'mssql') {
+          return dispatch({
+            type: FETCH_COLUMN_TYPE_INFO,
+            data: {
+              columnDataTypes: [],
+              columnTypeDefaultValues: {},
+              columnTypeCasts: {},
+            },
+          });
+        }
+
         const resultData = data[1].result.slice(1);
         const typeFuncsMap = {};
 

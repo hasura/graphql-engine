@@ -5,6 +5,7 @@ import {
   ComputedField,
   SupportedFeaturesType,
   BaseTableColumn,
+  ViolationActions,
 } from '../../types';
 import { QUERY_TYPES, Operations } from '../../common';
 import { PGFunction } from './types';
@@ -506,6 +507,9 @@ const permissionColumnDataTypes = {
 export const supportedFeatures: SupportedFeaturesType = {
   driver: {
     name: 'postgres',
+    fetchVersion: {
+      enabled: true,
+    },
   },
   schemas: {
     create: {
@@ -518,6 +522,8 @@ export const supportedFeatures: SupportedFeaturesType = {
   tables: {
     create: {
       enabled: true,
+      frequentlyUsedColumns: true,
+      columnTypeSelector: true,
     },
     browse: {
       enabled: true,
@@ -528,6 +534,7 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     modify: {
       enabled: true,
+      editableTableName: true,
       comments: {
         view: true,
         edit: true,
@@ -593,6 +600,7 @@ export const supportedFeatures: SupportedFeaturesType = {
   rawSQL: {
     enabled: true,
     tracking: true,
+    statementTimeout: true,
   },
   connectDbForm: {
     enabled: true,
@@ -608,6 +616,14 @@ export const supportedFeatures: SupportedFeaturesType = {
     connection_lifetime: true,
   },
 };
+
+const violationActions: ViolationActions[] = [
+  'restrict',
+  'no action',
+  'cascade',
+  'set null',
+  'set default',
+];
 
 const defaultRedirectSchema = 'public';
 
@@ -702,6 +718,7 @@ export const postgres: DataSourcesAPI = {
   supportedColumnOperators: null,
   aggregationPermissionsAllowed: true,
   supportedFeatures,
+  violationActions,
   defaultRedirectSchema,
   getPartitionDetailsSql,
 };

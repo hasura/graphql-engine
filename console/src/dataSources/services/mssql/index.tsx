@@ -6,6 +6,7 @@ import {
   Table,
   BaseTableColumn,
   SupportedFeaturesType,
+  ViolationActions,
 } from '../../types';
 import { generateTableRowRequest, operators } from './utils';
 
@@ -59,6 +60,9 @@ const isTable = (table: Table) => {
   return table.table_type === 'TABLE' || table.table_type === 'BASE TABLE';
 };
 
+export const isColTypeString = (colType: string) =>
+  ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
+
 const columnDataTypes = {
   INTEGER: 'integer',
   BIGINT: 'bigint',
@@ -80,6 +84,13 @@ export const displayTableName = (table: Table) => {
   return isTable(table) ? <span>{tableName}</span> : <i>{tableName}</i>;
 };
 
+const violationActions: ViolationActions[] = [
+  'no action',
+  'cascade',
+  'set null',
+  'set default',
+];
+
 export const supportedFeatures: SupportedFeaturesType = {
   driver: {
     name: 'mssql',
@@ -94,7 +105,8 @@ export const supportedFeatures: SupportedFeaturesType = {
   },
   tables: {
     create: {
-      enabled: false,
+      enabled: true,
+      frequentlyUsedColumns: false,
     },
     browse: {
       enabled: true,
@@ -170,6 +182,7 @@ export const supportedFeatures: SupportedFeaturesType = {
   },
   rawSQL: {
     enabled: true,
+    statementTimeout: false,
     tracking: true,
   },
   connectDbForm: {
@@ -331,11 +344,130 @@ FROM sys.objects as obj
     return '';
   },
   dependencyErrorCode: '',
-  getCreateTableQueries: () => {
-    return [];
+  getCreateTableQueries: (
+    currentSchema: string,
+    tableName: string,
+    columns: any[],
+    primaryKeys: (number | string)[],
+    foreignKeys: any[],
+    uniqueKeys: any[],
+    checkConstraints: any[],
+    tableComment?: string | undefined
+  ) => {
+    const currentCols = columns.filter(c => c.name !== '');
+    const flatUniqueKeys = uniqueKeys.reduce((acc, val) => acc.concat(val), []);
+
+    const pKeys = primaryKeys
+      .filter(p => p !== '')
+      .map(p => currentCols[p as number].name);
+
+    let tableDefSql = '';
+    for (let i = 0; i < currentCols.length; i++) {
+      tableDefSql += `${currentCols[i].name} ${currentCols[i].type}`;
+
+      // check if column is nullable
+      if (!currentCols[i].nullable) {
+        tableDefSql += ' NOT NULL';
+      }
+
+      // check if the column is unique
+      if (uniqueKeys.length && flatUniqueKeys.includes(i)) {
+        tableDefSql += ' UNIQUE';
+      }
+
+      // check if column has a default value
+      if (
+        currentCols[i].default !== undefined &&
+        currentCols[i].default?.value !== ''
+      ) {
+        if (isColTypeString(currentCols[i].type)) {
+          // if a column type is text and if it has a non-func default value, add a single quote
+          tableDefSql += ` DEFAULT '${currentCols[i]?.default?.value}'`;
+        } else {
+          tableDefSql += ` DEFAULT ${currentCols[i]?.default?.value}`;
+        }
+      }
+
+      tableDefSql += i === currentCols.length - 1 ? '' : ', ';
+    }
+
+    // add primary key
+    if (pKeys.length > 0) {
+      tableDefSql += ', PRIMARY KEY (';
+      tableDefSql += pKeys.map(col => `${col}`).join(',');
+      tableDefSql += ') ';
+    }
+
+    const numFks = foreignKeys.length;
+    let fkDupColumn = null;
+    if (numFks > 1) {
+      foreignKeys.forEach((fk, _i) => {
+        if (_i === numFks - 1) {
+          return;
+        }
+
+        const { colMappings, refTableName, onUpdate, onDelete } = fk;
+
+        const mappingObj: Record<string, string> = {};
+        const rCols: string[] = [];
+        const lCols: string[] = [];
+
+        colMappings
+          .slice(0, -1)
+          .forEach((cm: { column: string | number; refColumn: string }) => {
+            if (mappingObj[cm.column] !== undefined) {
+              fkDupColumn = columns[cm.column as number].name;
+            }
+
+            mappingObj[cm.column] = cm.refColumn;
+            lCols.push(`"${columns[cm.column as number].name}"`);
+            rCols.push(`"${cm.refColumn}"`);
+          });
+
+        if (lCols.length === 0) {
+          return;
+        }
+        tableDefSql += `, FOREIGN KEY (${lCols.join(', ')}) REFERENCES "${
+          fk.refSchemaName
+        }"."${refTableName}"(${rCols.join(
+          ', '
+        )}) ON UPDATE ${onUpdate} ON DELETE ${onDelete}`;
+      });
+    }
+
+    if (fkDupColumn) {
+      return {
+        error: `The column "${fkDupColumn}" seems to be referencing multiple foreign columns`,
+      };
+    }
+
+    // add check constraints
+    if (checkConstraints.length > 0) {
+      checkConstraints.forEach(constraint => {
+        if (!constraint.name || !constraint.check) {
+          return;
+        }
+
+        tableDefSql += `, CONSTRAINT "${constraint.name}" CHECK(${constraint.check})`;
+      });
+    }
+
+    let sqlCreateTable = `CREATE TABLE "${currentSchema}"."${tableName}" (${tableDefSql});`;
+
+    // add comment to the table using MS_Description property
+    if (tableComment && tableComment !== '') {
+      const commentSQL = `EXEC sys.sp_addextendedproperty   
+      @name = N'MS_Description',   
+      @value = N'${tableComment}',   
+      @level0type = N'SCHEMA', @level0name = '${currentSchema}',  
+      @level1type = N'TABLE',  @level1name = '${tableName}';`;
+      sqlCreateTable += `${commentSQL}`;
+    }
+
+    return [sqlCreateTable];
   },
-  getDropTableSql: () => {
-    return '';
+  getDropTableSql: (schema: string, table: string) => {
+    return `DROP TABLE "${schema}"."${table}"`;
   },
   createSQLRegex,
   getDropSchemaSql: (schema: string) => {
@@ -580,5 +712,6 @@ WHERE
   supportedColumnOperators,
   aggregationPermissionsAllowed: false,
   supportedFeatures,
+  violationActions,
   defaultRedirectSchema,
 };
