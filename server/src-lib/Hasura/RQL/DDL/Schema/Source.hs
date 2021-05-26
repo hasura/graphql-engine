@@ -37,7 +37,7 @@ mkPgSourceResolver pgLogger _ config = runExceptT do
                                       }
   pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
   let pgExecCtx = mkPGExecCtx isoLevel pgPool
-  pure $ PGSourceConfig pgExecCtx connInfo Nothing
+  pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty
 
 --- Metadata APIs related
 runAddSource

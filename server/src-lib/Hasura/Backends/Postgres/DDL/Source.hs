@@ -236,3 +236,6 @@ postDropSourceHook sourceConfig = do
 
   -- Destory postgres source connection
   liftIO $ _pecDestroyConn $ _pscExecCtx sourceConfig
+
+  -- Run other drop hooks configured at source creation time
+  liftIO $ _pscPostDropHook sourceConfig
