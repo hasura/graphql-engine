@@ -64,14 +64,17 @@ func (t *InheritedRolesConfig) Export(metadata yaml.MapSlice) (map[string][]byte
 		inheritedRoles = item.Value
 	}
 	if inheritedRoles == nil {
-		inheritedRoles = make([]interface{}, 0)
+		t.logger.WithFields(logrus.Fields{
+			"reason": "not found in metadata",
+		}).Debugf("skipped building %s", t.Name())
+		return nil, nil
 	}
 	data, err := yaml.Marshal(inheritedRoles)
 	if err != nil {
 		return nil, err
 	}
 	return map[string][]byte{
-		filepath.Join(t.MetadataDir, MetadataFilename): data,
+		filepath.ToSlash(filepath.Join(t.MetadataDir, MetadataFilename)): data,
 	}, nil
 }
 

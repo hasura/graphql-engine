@@ -13,9 +13,9 @@ import qualified Hasura.Backends.MSSQL.Connection as MSSQL
 import qualified Hasura.Backends.MSSQL.Types      as MSSQL
 
 import           Hasura.Backends.MSSQL.ToQuery    ()
+import           Hasura.Base.Error
 import           Hasura.RQL.DDL.Headers           ()
 import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 
 
@@ -38,10 +38,12 @@ instance Backend 'MSSQL where
   type SQLExpression           'MSSQL = MSSQL.Expression
   type SQLOperator             'MSSQL = MSSQL.Op
 
+  type ExtraTableMetadata      'MSSQL = ()
+
   type XComputedField          'MSSQL = XDisable
   type XRemoteField            'MSSQL = XDisable
   type XRelay                  'MSSQL = XDisable
-  type XNodesAgg               'MSSQL = XDisable
+  type XNodesAgg               'MSSQL = XEnable
   type XDistinct               'MSSQL = XDisable
 
   functionArgScalarType :: FunctionArgType 'MSSQL -> ScalarType 'MSSQL

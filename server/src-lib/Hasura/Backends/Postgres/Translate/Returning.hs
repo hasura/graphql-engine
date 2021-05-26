@@ -17,6 +17,7 @@ import qualified Hasura.Backends.Postgres.SQL.DML          as S
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.Select
+import           Hasura.Base.Error
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.Returning
 import           Hasura.RQL.IR.Select
@@ -46,21 +47,36 @@ checkPermissionRequired = \case
   MCDelete _          -> False
 
 
-pgColsToSelFlds :: [ColumnInfo 'Postgres] -> [(FieldName, AnnField 'Postgres)]
+pgColsToSelFlds
+  :: forall pgKind
+   . Backend ('Postgres pgKind)
+  => [ColumnInfo ('Postgres pgKind)]
+  -> [(FieldName, AnnField ('Postgres pgKind))]
 pgColsToSelFlds cols =
   flip map cols $
-  \pgColInfo -> (fromCol @'Postgres $ pgiColumn pgColInfo, mkAnnColumnField pgColInfo Nothing Nothing)
+  \pgColInfo -> (fromCol @('Postgres pgKind) $ pgiColumn pgColInfo, mkAnnColumnField pgColInfo Nothing Nothing)
   --                                                                         ^^ Nothing because mutations aren't supported
   --                                                                         with inherited role
 
-mkDefaultMutFlds :: Maybe [ColumnInfo 'Postgres] -> MutationOutput 'Postgres
+mkDefaultMutFlds
+  :: Backend ('Postgres pgKind)
+  => Maybe [ColumnInfo ('Postgres pgKind)]
+  -> MutationOutput ('Postgres pgKind)
 mkDefaultMutFlds = MOutMultirowFields . \case
   Nothing   -> mutFlds
   Just cols -> ("returning", MRet $ pgColsToSelFlds cols):mutFlds
   where
     mutFlds = [("affected_rows", MCount)]
 
-mkMutFldExp :: Identifier -> Maybe Int -> Bool -> MutFld 'Postgres -> S.SQLExp
+mkMutFldExp
+  :: ( Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
+  => Identifier
+  -> Maybe Int
+  -> Bool
+  -> MutFld ('Postgres pgKind)
+  -> S.SQLExp
 mkMutFldExp cteAlias preCalAffRows strfyNum = \case
   MCount ->
     let countExp = S.SESelect $
@@ -103,11 +119,14 @@ WITH "<table-name>__mutation_result_alias" AS (
 -- | Generate mutation output expression with given mutation CTE statement.
 -- See Note [Mutation output expression].
 mkMutationOutputExp
-  :: QualifiedTable
-  -> [ColumnInfo 'Postgres]
+  :: ( Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
+  => QualifiedTable
+  -> [ColumnInfo ('Postgres pgKind)]
   -> Maybe Int
   -> MutationCTE
-  -> MutationOutput 'Postgres
+  -> MutationOutput ('Postgres pgKind)
   -> Bool
   -> S.SelectWith
 mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
@@ -159,11 +178,11 @@ asCheckErrorExtractor s =
   S.Extractor s $ Just $ S.Alias checkConstraintIdentifier
 
 checkRetCols
-  :: (UserInfoM m, QErrM m)
-  => FieldInfoMap (FieldInfo 'Postgres)
-  -> SelPermInfo 'Postgres
+  :: (Backend ('Postgres pgKind), UserInfoM m, QErrM m)
+  => FieldInfoMap (FieldInfo ('Postgres pgKind))
+  -> SelPermInfo ('Postgres pgKind)
   -> [PGCol]
-  -> m [ColumnInfo 'Postgres]
+  -> m [ColumnInfo ('Postgres pgKind)]
 checkRetCols fieldInfoMap selPermInfo cols = do
   mapM_ (checkSelOnCol selPermInfo) cols
   forM cols $ \col -> askColInfo fieldInfoMap col relInRetErr

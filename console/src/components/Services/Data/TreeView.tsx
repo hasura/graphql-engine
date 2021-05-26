@@ -38,13 +38,10 @@ const LeafItemsView: React.FC<LeafItemsViewProps> = ({
   pathname,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const isActive =
-    pathname.includes(
-      `/data/${currentSource}/schema/${currentSchema}/tables/${item.name}/`
-    ) ||
-    pathname.includes(
-      `/data/${currentSource}/schema/${currentSchema}/views/${item.name}/`
-    );
+  const regex = new RegExp(
+    `\\/data\\/${currentSource}\\/schema\\/${currentSchema}\\/(tables|functions|views)\\/${item.name}\\/`
+  );
+  const isActive = regex.test(pathname);
 
   const isView = item.type === 'view';
 
@@ -116,6 +113,7 @@ const LeafItemsView: React.FC<LeafItemsViewProps> = ({
               <GqlCompatibilityWarning
                 identifier={item.name}
                 className={styles.add_mar_left_mid}
+                ifWarningCanBeFixed
               />
             </>
           )}

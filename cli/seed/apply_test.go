@@ -1,7 +1,6 @@
 package seed
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,7 +9,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/internal/testutil"
 
 	"github.com/hasura/graphql-engine/cli/internal/hasura/v1query"
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/internal/hasura"
@@ -45,17 +43,11 @@ func TestDriver_ApplySeedsToDatabase(t *testing.T) {
 			"can apply seeds in v1.3.3",
 			fields{
 				func() sendBulk {
-					c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", port13), nil)
-					if err != nil {
-						t.Fatal(err)
-					}
+					c := testutil.NewHttpcClient(t, port13, nil)
 					return v1query.New(c, "v1/query").Bulk
 				}(),
 				func() hasura.PGDump {
-					c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", port13), nil)
-					if err != nil {
-						t.Fatal(err)
-					}
+					c := testutil.NewHttpcClient(t, port13, nil)
 					return pgdump.New(c, "v1alpha1/pg_dump")
 				}(),
 			},
@@ -71,17 +63,11 @@ func TestDriver_ApplySeedsToDatabase(t *testing.T) {
 			"can apply seeds in latest",
 			fields{
 				func() sendBulk {
-					c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", portLatest), nil)
-					if err != nil {
-						t.Fatal(err)
-					}
+					c := testutil.NewHttpcClient(t, portLatest, nil)
 					return v1query.New(c, "v2/query").Bulk
 				}(),
 				func() hasura.PGDump {
-					c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", portLatest), nil)
-					if err != nil {
-						t.Fatal(err)
-					}
+					c := testutil.NewHttpcClient(t, portLatest, nil)
 					return pgdump.New(c, "v1alpha1/pg_dump")
 				}(),
 			},
@@ -97,17 +83,11 @@ func TestDriver_ApplySeedsToDatabase(t *testing.T) {
 			"can apply seeds from files",
 			fields{
 				func() sendBulk {
-					c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", portLatest), nil)
-					if err != nil {
-						t.Fatal(err)
-					}
+					c := testutil.NewHttpcClient(t, portLatest, nil)
 					return v1query.New(c, "v2/query").Bulk
 				}(),
 				func() hasura.PGDump {
-					c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", portLatest), nil)
-					if err != nil {
-						t.Fatal(err)
-					}
+					c := testutil.NewHttpcClient(t, portLatest, nil)
 					return pgdump.New(c, "v1alpha1/pg_dump")
 				}(),
 			},
@@ -120,12 +100,9 @@ func TestDriver_ApplySeedsToDatabase(t *testing.T) {
 			},
 			false,
 			func(t *testing.T) {
-				c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", portLatest), nil)
-				if err != nil {
-					t.Fatal(err)
-				}
+				c := testutil.NewHttpcClient(t, portLatest, nil)
 				v1QueryClient := v1query.New(c, "v2/query")
-				_, err = v1QueryClient.PGRunSQL(hasura.PGRunSQLInput{
+				_, err := v1QueryClient.PGRunSQL(hasura.PGRunSQLInput{
 					SQL:    "DROP TABLE articles",
 					Source: "default",
 				})

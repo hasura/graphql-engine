@@ -17,6 +17,7 @@ import { Driver, currentDriver } from '../dataSources';
 import { ConsoleState } from '../telemetry/state';
 import { TriggerOperation } from '../components/Common/FilterQuery/state';
 import { isEmpty } from '../components/Common/utils/jsUtils';
+import { Nullable } from '../components/Common/utils/tsUtils';
 
 export const metadataQueryTypes = [
   'add_source',
@@ -309,19 +310,29 @@ export const getTrackTableQuery = ({
   source,
   driver,
   customColumnNames,
+  customName,
 }: {
   tableDef: QualifiedTable | QualifiedTableBigQuery;
   source: string;
   driver: Driver;
+  customName: Nullable<string>;
   customColumnNames?: Record<string, string>;
 }) => {
-  const args = isEmpty(customColumnNames)
+  const configuration: Partial<{
+    custom_column_names: Record<string, string>;
+    custom_name: string;
+  }> = {};
+  if (!isEmpty(customColumnNames)) {
+    configuration.custom_column_names = customColumnNames;
+  }
+  if (customName) {
+    configuration.custom_name = customName;
+  }
+  const args = isEmpty(configuration)
     ? { table: tableDef }
     : {
         table: tableDef,
-        configuration: {
-          custom_column_names: customColumnNames,
-        },
+        configuration,
       };
 
   return getMetadataQuery('track_table', source, args, driver);
@@ -590,7 +601,8 @@ export const getUntrackFunctionQuery = (
   name: string,
   schema: string,
   source: string
-) => getMetadataQuery('untrack_function', source, { name, schema });
+) =>
+  getMetadataQuery('untrack_function', source, { function: { name, schema } });
 
 export const getRenameRelationshipQuery = (
   table: QualifiedTable,
@@ -677,7 +689,7 @@ export const getConsoleStateQuery = {
   args: {},
 };
 
-export type SupportedEvents = 'cron' | 'one_off';
+export type SupportedEvents = 'cron' | 'one_off' | 'data';
 
 export const getEventInvocationsLogByID = (
   type: SupportedEvents,

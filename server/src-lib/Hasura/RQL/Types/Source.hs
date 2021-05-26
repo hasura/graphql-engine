@@ -14,10 +14,10 @@ import qualified Hasura.SQL.AnyBackend               as AB
 import qualified Hasura.Tracing                      as Tracing
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Base.Error
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Instances          ()
 import           Hasura.RQL.Types.Table
@@ -84,7 +84,7 @@ data ResolvedSource b
 type SourceTables b = HashMap SourceName (TableCache b)
 
 type SourceResolver =
-  SourceName -> PostgresConnConfiguration -> IO (Either QErr (SourceConfig 'Postgres))
+  SourceName -> PostgresConnConfiguration -> IO (Either QErr (SourceConfig ('Postgres 'Vanilla)))
 
 class (Monad m) => MonadResolveSource m where
   getSourceResolver :: m SourceResolver
@@ -120,6 +120,19 @@ instance (Backend b) => FromJSON (AddSource b) where
       <$> o .: "name"
       <*> o .: "configuration"
       <*> o .:? "replace_configuration" .!= False
+
+data RenameSource
+  = RenameSource
+  { _rmName    :: !SourceName
+  , _rmNewName :: !SourceName
+  } deriving stock (Generic, Show, Eq)
+
+instance ToJSON RenameSource where
+  toJSON = genericToJSON hasuraJSON
+
+instance FromJSON RenameSource where
+  parseJSON = withObject "Object" $ \o ->
+    RenameSource <$> o .: "name" <*> o .: "new_name"
 
 data DropSource
   = DropSource

@@ -426,7 +426,7 @@ export const isColTypeString = (colType: string) =>
 
 const dependencyErrorCode = '2BP01'; // pg dependent error > https://www.postgresql.org/docs/current/errcodes-appendix.html
 
-const createSQLRegex = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/g; // eslint-disable-line
+const createSQLRegex = /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<tableWithSchema>\"?\w+\"?)|(?<table>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim; // eslint-disable-line
 
 const isTimeoutError = (error: {
   code: string;
@@ -528,6 +528,22 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     modify: {
       enabled: true,
+      comments: true,
+      columns: true,
+      columns_edit: true,
+      computedFields: true,
+      primaryKeys: true,
+      primaryKeys_edit: true,
+      foreginKeys: true,
+      foreginKeys_edit: true,
+      uniqueKeys: true,
+      uniqueKeys_edit: true,
+      triggers: true,
+      checkConstraints: true,
+      customGqlRoot: true,
+      setAsEnum: true,
+      untrack: true,
+      delete: true,
     },
     relationships: {
       enabled: true,
@@ -565,14 +581,38 @@ export const supportedFeatures: SupportedFeaturesType = {
     tracking: true,
   },
   connectDbForm: {
+    enabled: true,
     connectionParameters: true,
     databaseURL: true,
     environmentVariable: true,
     read_replicas: true,
+    prepared_statements: true,
+    isolation_level: true,
+    connectionSettings: true,
+    retries: true,
+    pool_timeout: true,
+    connection_lifetime: true,
   },
 };
 
 const defaultRedirectSchema = 'public';
+
+const getPartitionDetailsSql = (tableName: string, tableSchema: string) => {
+  return `SELECT
+  nmsp_parent.nspname AS parent_schema,
+  parent.relname      AS parent_table,
+  child.relname       AS partition_name,
+  nmsp_child.nspname  AS partition_schema,
+  pg_catalog.pg_get_expr(child.relpartbound, child.oid) AS partition_def,
+  pg_catalog.pg_get_partkeydef(parent.oid) AS partition_key
+FROM pg_inherits
+  JOIN pg_class parent            ON pg_inherits.inhparent = parent.oid
+  JOIN pg_class child             ON pg_inherits.inhrelid   = child.oid
+  JOIN pg_namespace nmsp_parent   ON nmsp_parent.oid  = parent.relnamespace
+  JOIN pg_namespace nmsp_child    ON nmsp_child.oid   = child.relnamespace
+WHERE nmsp_child.nspname = '${tableSchema}'
+AND   parent.relname = '${tableName}';`;
+};
 
 export const postgres: DataSourcesAPI = {
   isTable,
@@ -649,4 +689,5 @@ export const postgres: DataSourcesAPI = {
   aggregationPermissionsAllowed: true,
   supportedFeatures,
   defaultRedirectSchema,
+  getPartitionDetailsSql,
 };

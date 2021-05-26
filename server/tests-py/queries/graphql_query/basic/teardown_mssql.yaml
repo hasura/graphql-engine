@@ -1,16 +1,52 @@
 type: bulk
 args:
 
-#Object relationship
-- type: mssql_drop_relationship
+# untrack tables
+- type: mssql_untrack_table
   args:
     source: mssql
-    table: article
-    relationship: author
+    table:
+      name: test_types
+    cascade: true
 
-#Array relationship
-- type: mssql_drop_relationship
+- type: mssql_untrack_table
   args:
     source: mssql
-    table: author
-    relationship: articles
+    table:
+      name: author
+    cascade: true
+
+- type: mssql_untrack_table
+  args:
+    source: mssql
+    table:
+      name: article
+    cascade: true
+
+- type: mssql_untrack_table
+  args:
+    source: mssql
+    table:
+      name: user
+    cascade: true
+
+- type: mssql_untrack_table
+  args:
+    source: mssql
+    table:
+      name: person
+    cascade: true
+
+- type: mssql_untrack_table
+  args:
+    source: mssql
+    table:
+      name: article_multi
+    cascade: true
+
+- type: mssql_untrack_table
+  args:
+    source: mssql
+    table:
+      name: author_multi
+    cascade: true

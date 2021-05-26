@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Hasura.RQL.Types.Action
   ( ArgumentName(..)
   , ArgumentDefinition(..)
@@ -56,6 +58,8 @@ module Hasura.RQL.Types.Action
   , traverseAnnActionAsyncQuery
 
   , ActionId(..)
+  , LockedActionEventId
+  , LockedActionIdArray (..)
   , actionIdToText
   , ActionLogItem(..)
   , ActionLogResponse(..)
@@ -76,20 +80,25 @@ import qualified Data.HashMap.Strict           as Map
 import qualified Data.Time.Clock               as UTC
 import qualified Data.UUID                     as UUID
 import qualified Database.PG.Query             as Q
+import qualified Database.PG.Query.PTI         as PTI
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.HTTP.Types            as HTTP
+import qualified PostgreSQL.Binary.Encoding    as PE
+
 
 import           Control.Lens                  (makeLenses, makePrisms)
+import           Data.Aeson.Extended
 import           Data.Text.Extended
 
+import           Hasura.Base.Error
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.CustomTypes
-import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.EventTrigger (EventId (..))
 import           Hasura.SQL.Backend
 import           Hasura.Session
 
@@ -290,15 +299,18 @@ data ActionSourceInfo b
   = ASINoSource -- ^ No relationships defined on the action output object
   | ASISource !SourceName !(SourceConfig b) -- ^ All relationships refer to tables in one source
 
-getActionSourceInfo :: AnnotatedObjectType -> ActionSourceInfo 'Postgres
+getActionSourceInfo :: AnnotatedObjectType -> ActionSourceInfo ('Postgres 'Vanilla)
 getActionSourceInfo = maybe ASINoSource (uncurry ASISource) . _aotSource
 
 data AnnActionExecution (b :: BackendType) v
   = AnnActionExecution
   { _aaeName                 :: !ActionName
-  , _aaeOutputType           :: !GraphQLType -- ^ output type
-  , _aaeFields               :: !(AnnFieldsG b v) -- ^ output selection
-  , _aaePayload              :: !J.Value -- ^ jsonified input arguments
+  , _aaeOutputType           :: !GraphQLType
+  -- ^ output type
+  , _aaeFields               :: !(AnnFieldsG b v)
+  -- ^ output selection
+  , _aaePayload              :: !J.Value
+  -- ^ jsonified input arguments
   , _aaeOutputFields         :: !ActionOutputFields
   -- ^ to validate the response fields from webhook
   , _aaeDefinitionList       :: ![(Column b, ScalarType b)]
@@ -411,3 +423,15 @@ data ActionsInfo
   }
   deriving (Show, Eq, Generic)
 $(makeLenses ''ActionsInfo)
+
+type LockedActionEventId = EventId
+
+-- This type exists only to use the Postgres array encoding.
+newtype LockedActionIdArray = LockedActionIdArray { unCohortIdArray :: [LockedActionEventId] }
+  deriving (Show, Eq)
+
+instance Q.ToPrepArg LockedActionIdArray where
+  toPrepVal (LockedActionIdArray l) =
+    Q.toPrepValHelper PTI.unknown encoder $ mapMaybe (UUID.fromText . unEventId) l
+    where
+      encoder = PE.array 2950 . PE.dimensionArray foldl' (PE.encodingArray . PE.uuid)

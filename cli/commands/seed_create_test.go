@@ -8,7 +8,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gbytes"
 	. "github.com/onsi/gomega/gexec"
 )
 
@@ -38,17 +37,17 @@ var _ = Describe("seed_create", func() {
 	})
 
 	Context("seed create test", func() {
-		up_sql := `CREATE TABLE "public"."table1" ("id" serial NOT NULL, PRIMARY KEY ("id") );
+		upSql := `CREATE TABLE "public"."table1" ("id" serial NOT NULL, PRIMARY KEY ("id") );
 		INSERT INTO public.table1 (id) VALUES (1);
 		INSERT INTO public.table1 (id) VALUES (2);
 		INSERT INTO public.table1 (id) VALUES (3);
 		INSERT INTO public.table1 (id) VALUES (4);`
 
-		down_sql := `DROP TABLE "public"."table1";`
+		downSql := `DROP TABLE "public"."table1";`
 
 		It("should create a seed file inside seed/default ", func() {
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args:             []string{"migrate", "create", "table1", "--up-sql", up_sql, "--down-sql", down_sql, "--database-name", "default"},
+				Args:             []string{"migrate", "create", "table1", "--up-sql", upSql, "--down-sql", downSql, "--database-name", "default"},
 				WorkingDirectory: dirName,
 			})
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
@@ -59,14 +58,8 @@ var _ = Describe("seed_create", func() {
 				Args:             []string{"seed", "create", "table_seed", "--from-table", "table1", "--database-name", "default"},
 				WorkingDirectory: dirName,
 			})
-			wantKeywordList := []string{
-				".*created seed file successfully*.",
-			}
-
-			for _, keyword := range wantKeywordList {
-				Eventually(session, 60*60).Should(Say(keyword))
-			}
 			Eventually(session, 60*60).Should(Exit(0))
+			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring("created seed file successfully"))
 		})
 	})
 })

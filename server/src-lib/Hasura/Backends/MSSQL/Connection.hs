@@ -12,8 +12,8 @@ import           Data.Aeson.TH
 
 import qualified Data.Environment        as Env
 import           Data.Text               (pack, unpack)
+import           Hasura.Base.Error
 import           Hasura.Incremental      (Cacheable (..))
-import           Hasura.RQL.Types.Error
 
 -- | ODBC connection string for MSSQL server
 newtype MSSQLConnectionString

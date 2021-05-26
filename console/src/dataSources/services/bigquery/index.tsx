@@ -7,6 +7,7 @@ import {
   BaseTableColumn,
   SupportedFeaturesType,
 } from '../../types';
+import globals from '../../../Globals';
 import { generateTableRowRequest } from './utils';
 
 const permissionColumnDataTypes = {
@@ -62,7 +63,7 @@ const operators = [
 ];
 
 // eslint-disable-next-line no-useless-escape
-const createSQLRegex = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/g;
+const createSQLRegex = /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<tableWithSchema>\"?\w+\"?)|(?<table>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim;
 
 export const displayTableName = (table: Table) => {
   const tableName = table.table_name;
@@ -100,6 +101,21 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     modify: {
       enabled: false,
+      columns: false,
+      columns_edit: false,
+      computedFields: false,
+      primaryKeys: false,
+      primaryKeys_edit: false,
+      foreginKeys: false,
+      foreginKeys_edit: false,
+      uniqueKeys: false,
+      uniqueKeys_edit: false,
+      triggers: false,
+      checkConstraints: false,
+      customGqlRoot: false,
+      setAsEnum: false,
+      untrack: false,
+      delete: false,
     },
     relationships: {
       enabled: true,
@@ -136,10 +152,17 @@ export const supportedFeatures: SupportedFeaturesType = {
     tracking: false,
   },
   connectDbForm: {
-    connectionParameters: false,
-    databaseURL: true,
+    enabled: globals.consoleType !== 'cloud',
+    connectionParameters: true,
+    databaseURL: false,
     environmentVariable: true,
     read_replicas: false,
+    prepared_statements: false,
+    isolation_level: false,
+    connectionSettings: false,
+    retries: false,
+    pool_timeout: false,
+    connection_lifetime: false,
   },
 };
 
@@ -175,12 +198,8 @@ export const bigquery: DataSourcesAPI = {
   arrayToPostgresArray: () => {
     return '';
   },
-  schemaListSql: (schemaFilter: string[]) => {
-    if (schemaFilter.length)
-      return `select schema_name from INFORMATION_SCHEMA.SCHEMATA where schema_name in (${schemaFilter
-        .map(s => `'${s}'`)
-        .join(',')})`;
-    return `select schema_name from INFORMATION_SCHEMA.SCHEMATA`;
+  schemaListSql: () => {
+    return '';
   },
   parseColumnsInfoResult: () => {
     return {};
@@ -368,7 +387,8 @@ export const bigquery: DataSourcesAPI = {
     return query;
   },
   supportedFeatures,
-  getDatabaseVersionSql: 'SELECT @@VERSION;',
+  // getDatabaseVersionSql: 'SELECT @@VERSION;',
+  getDatabaseVersionSql: '', // TODO fixme;
   permissionColumnDataTypes,
   viewsSupported: false,
   supportedColumnOperators,

@@ -25,15 +25,7 @@ args:
 - type: run_sql
   args:
     sql: |
-      drop table author_detail cascade
-    cascade: true
-- type: run_sql
-  args:
-    sql: |
-      drop table article cascade
-    cascade: true
-- type: run_sql
-  args:
-    sql: |
-      drop table author
+      drop table author_detail cascade;
+      drop table article cascade;
+      drop table author;
     cascade: true

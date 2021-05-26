@@ -41,7 +41,9 @@ func TestRestEndpointsConfig_Build(t *testing.T) {
 				}
 				b, err := ioutil.ReadFile("testdata/metadata/rest_endpoints.yaml")
 				assert.NoError(t, err)
-				assert.NoError(t, yaml.Unmarshal(b, &v.Value))
+				var obj []yaml.MapSlice
+				assert.NoError(t, yaml.Unmarshal(b, &obj))
+				v.Value = obj
 				m := yaml.MapSlice{}
 				m = append(m, v)
 				return &m

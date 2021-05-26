@@ -307,6 +307,9 @@ data CronEvent
   { _ceId            :: !CronEventId
   , _ceTriggerName   :: !TriggerName
   , _ceScheduledTime :: !UTCTime
+  -- ^ We expect this to always be at second zero, since cron events have
+  -- minute resolution. Note that a OneOffScheduledEvent has full timestamp
+  -- precision.
   , _ceStatus        :: !Text
   , _ceTries         :: !Int
   , _ceCreatedAt     :: !UTCTime

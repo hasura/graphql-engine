@@ -56,6 +56,15 @@ type MSSqlFk = {
   column_mapping: Array<{ column: string; referenced_column: string }>;
 };
 
+type MSSqlConstraint = {
+  table_name: string;
+  table_schema: string;
+  constraints: {
+    constraint_name: string;
+    name: string;
+  }[];
+};
+
 export const mergeDataMssql = (
   data: Array<{ result: string[] }>,
   metadataTables: TableEntry[]
@@ -63,6 +72,8 @@ export const mergeDataMssql = (
   const result: Table[] = [];
   const tables: MSSqlTable[] = [];
   let fkRelations: MSSqlFk[] = [];
+  let primaryKeys: Table['primary_key'][] = [];
+  let uniqueKeys: Table['unique_constraints'] = [];
   data[0].result.slice(1).forEach(row => {
     try {
       tables.push({
@@ -78,9 +89,65 @@ export const mergeDataMssql = (
   });
 
   try {
-    fkRelations = JSON.parse(data[1].result.slice(1).join('')) as MSSqlFk[];
-    // eslint-disable-next-line no-empty
-  } catch {}
+    fkRelations = data[1].result
+      ? (JSON.parse(data[1].result?.slice(1).join('')) as MSSqlFk[])
+      : [];
+
+    // one row per table
+    const parsedPKs: MSSqlConstraint[] = data[2].result
+      ? JSON.parse(data[2].result?.slice(1).join(''))
+      : [];
+
+    primaryKeys = parsedPKs.reduce((acc: Table['primary_key'][], pk) => {
+      const { table_name, table_schema, constraints } = pk;
+
+      const columnsByConstraintName: { [name: string]: string[] } = {};
+      constraints.forEach(c => {
+        columnsByConstraintName[c.constraint_name] = [
+          ...(columnsByConstraintName[c.constraint_name] || []),
+          c.name,
+        ];
+      });
+
+      const constraintInfo = Object.keys(columnsByConstraintName).map(
+        pkName => ({
+          table_schema,
+          table_name,
+          constraint_name: pkName,
+          columns: columnsByConstraintName[pkName],
+        })
+      );
+      return [...acc, ...constraintInfo];
+    }, []);
+
+    const parsedUKs: MSSqlConstraint[] = data[3].result
+      ? JSON.parse(data[3].result?.slice(1).join(''))
+      : [];
+
+    uniqueKeys = parsedUKs.reduce((acc, uk) => {
+      const { table_name, table_schema, constraints } = uk;
+
+      const columnsByConstraintName: { [name: string]: string[] } = {};
+      constraints.forEach(c => {
+        columnsByConstraintName[c.constraint_name] = [
+          ...(columnsByConstraintName[c.constraint_name] || []),
+          c.name,
+        ];
+      });
+
+      const constraintInfo = Object.keys(columnsByConstraintName).map(
+        pkName => ({
+          table_schema,
+          table_name,
+          constraint_name: pkName,
+          columns: columnsByConstraintName[pkName],
+        })
+      );
+      return [...acc, ...constraintInfo];
+    }, [] as Exclude<Table['unique_constraints'], null>);
+  } catch (e) {
+    console.error(e);
+  }
 
   const trackedFkData = fkRelations
     .map(fk => ({
@@ -148,6 +215,19 @@ export const mergeDataMssql = (
       });
     });
 
+    const primaryKeysInfo =
+      primaryKeys?.find(
+        key =>
+          key?.table_name === table.table_name &&
+          key.table_schema === table.table_schema
+      ) || null;
+
+    const uniqueKeysInfo =
+      uniqueKeys?.filter(
+        key =>
+          key?.table_name === table.table_name &&
+          key.table_schema === table.table_schema
+      ) || null;
     const rolePermMap = permKeys.reduce((rpm: Record<string, any>, key) => {
       if (metadataTable) {
         metadataTable[key]?.forEach(
@@ -185,10 +265,10 @@ export const mergeDataMssql = (
       columns: table.columns,
       comment: '',
       triggers: [],
-      primary_key: null,
+      primary_key: primaryKeysInfo,
       relationships,
       permissions,
-      unique_constraints: [],
+      unique_constraints: uniqueKeysInfo,
       check_constraints: [],
       foreign_key_constraints: fkConstraints,
       opp_foreign_key_constraints: refFkConstraints,
@@ -214,6 +294,7 @@ export const mergeLoadSchemaDataPostgres = (
   >[];
   const primaryKeys = JSON.parse(data[2].result[1]) as Table['primary_key'][];
   const uniqueKeys = JSON.parse(data[3].result[1]) as any;
+
   const checkConstraints = dataSource?.checkConstraintsSql
     ? (JSON.parse(data[4].result[1]) as Table['check_constraints'])
     : ([] as Table['check_constraints']);

@@ -75,6 +75,7 @@ func TestSeedsCreateCmd(t *testing.T, ec *cli.ExecutionContext) {
 			// Do a regex match for filename returned
 			// check if it is in required format
 			var re = regexp.MustCompile(`^([a-z]+\/)([a-z]+\/)([0-9]+)\_(.+)(\.sql)$`)
+			*gotFilename = filepath.ToSlash(*gotFilename)
 			regexGroups := re.FindStringSubmatch(*gotFilename)
 
 			// Since filename has to be in form
@@ -86,7 +87,7 @@ func TestSeedsCreateCmd(t *testing.T, ec *cli.ExecutionContext) {
 			// element 3: filename
 			// element 4: extension
 			if len(regexGroups) != 6 {
-				t.Fatalf("CreateSeedFile() = %v, but want filepath of form"+` [a-z]+\/[0-9]+\_[a-zA-Z]+\.sql`, *gotFilename)
+				t.Fatalf("CreateSeedFile() = %v, but want filepath of form"+` [a-z]+\/[a-z]+\/[0-9]+\_[a-zA-Z]+\.sql`, *gotFilename)
 			}
 			gotDirectoryPath := regexGroups[1]
 			gotDatabaseDirectory := regexGroups[2]

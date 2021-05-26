@@ -321,6 +321,7 @@ data SQLExp
   | SERowIdentifier !Identifier
   | SEQIdentifier !QIdentifier
   | SEFnApp !Text ![SQLExp] !(Maybe OrderByExp)
+  -- ^ this is used to apply a sql function to an expression. The 'Text' is the function name
   | SEOpApp !SQLOp ![SQLExp]
   | SETyAnn !SQLExp !TypeAnn
   | SECond !BoolExp !SQLExp !SQLExp
@@ -343,6 +344,7 @@ withTyAnn colTy v = SETyAnn v . mkTypeAnn $ CollectableTypeScalar colTy
 instance J.ToJSON SQLExp where
   toJSON = J.toJSON . toSQLTxt
 
+-- Use the 'Extractor' data-type to Postgres alias tables/columns
 newtype Alias
   = Alias { getAlias :: Identifier }
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
@@ -409,6 +411,7 @@ instance ToSQL SQLExp where
 intToSQLExp :: Int -> SQLExp
 intToSQLExp = SEUnsafe . tshow
 
+-- | Extractor can be used to apply Postgres alias to a column
 data Extractor = Extractor !SQLExp !(Maybe Alias)
   deriving (Show, Eq, Generic, Data)
 instance NFData Extractor

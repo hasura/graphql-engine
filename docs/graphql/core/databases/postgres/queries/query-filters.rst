@@ -1943,3 +1943,6 @@ reduced to ``{}``, the :ref:`TRUE expression <true_expression>`.
 
 For example, the expression ``{ where: { id: {_eq: null }}}`` will be reduced to ``{ where: {id: {}} }`` which
 will return all objects for which an ``id`` is set, i.e. all objects will be returned.
+
+This behaviour can be preserved in versions v2.0.0 and above by setting the ``HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE``
+env var to ``true``.

@@ -63,8 +63,8 @@ import           Data.Aeson.TH
 import           Data.Aeson.Types              (toJSONKeyText)
 import           Data.Text.Extended
 
+import           Hasura.Base.Error
 import           Hasura.Incremental            (Cacheable)
-import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
 
 
@@ -285,6 +285,7 @@ data PGScalarType
   | PGLquery
   | PGLtxtquery
   | PGUnknown !Text
+  | PGCompositeScalar !Text
   deriving (Show, Eq, Ord, Generic, Data)
 instance NFData PGScalarType
 instance Hashable PGScalarType
@@ -292,34 +293,35 @@ instance Cacheable PGScalarType
 
 instance ToSQL PGScalarType where
   toSQL = \case
-    PGSmallInt    -> "smallint"
-    PGInteger     -> "integer"
-    PGBigInt      -> "bigint"
-    PGSerial      -> "serial"
-    PGBigSerial   -> "bigserial"
-    PGFloat       -> "real"
-    PGDouble      -> "float8"
-    PGNumeric     -> "numeric"
-    PGMoney       -> "money"
-    PGBoolean     -> "boolean"
-    PGChar        -> "bpchar"
-    PGVarchar     -> "varchar"
-    PGText        -> "text"
-    PGCitext      -> "citext"
-    PGDate        -> "date"
-    PGTimeStamp   -> "timestamp"
-    PGTimeStampTZ -> "timestamptz"
-    PGTimeTZ      -> "timetz"
-    PGJSON        -> "json"
-    PGJSONB       -> "jsonb"
-    PGGeometry    -> "geometry"
-    PGGeography   -> "geography"
-    PGRaster      -> "raster"
-    PGUUID        -> "uuid"
-    PGLtree       -> "ltree"
-    PGLquery      -> "lquery"
-    PGLtxtquery   -> "ltxtquery"
-    PGUnknown t   -> TB.text t
+    PGSmallInt          -> "smallint"
+    PGInteger           -> "integer"
+    PGBigInt            -> "bigint"
+    PGSerial            -> "serial"
+    PGBigSerial         -> "bigserial"
+    PGFloat             -> "real"
+    PGDouble            -> "float8"
+    PGNumeric           -> "numeric"
+    PGMoney             -> "money"
+    PGBoolean           -> "boolean"
+    PGChar              -> "bpchar"
+    PGVarchar           -> "varchar"
+    PGText              -> "text"
+    PGCitext            -> "citext"
+    PGDate              -> "date"
+    PGTimeStamp         -> "timestamp"
+    PGTimeStampTZ       -> "timestamptz"
+    PGTimeTZ            -> "timetz"
+    PGJSON              -> "json"
+    PGJSONB             -> "jsonb"
+    PGGeometry          -> "geometry"
+    PGGeography         -> "geography"
+    PGRaster            -> "raster"
+    PGUUID              -> "uuid"
+    PGLtree             -> "ltree"
+    PGLquery            -> "lquery"
+    PGLtxtquery         -> "ltxtquery"
+    PGUnknown t         -> TB.text t
+    PGCompositeScalar t -> TB.text t
 
 instance ToJSON PGScalarType where
   toJSON = String . toSQLTxt
@@ -509,12 +511,7 @@ typeToTable (QualifiedPGType sch n _) =
 mkFunctionArgScalarType :: QualifiedPGType -> PGScalarType
 mkFunctionArgScalarType (QualifiedPGType _schema name type') =
   case type' of
-    -- When the function argument is a row type argument
-    -- then it's possible that there can be an object type
-    -- with the table name depending upon whether the table
-    -- is tracked or not. As a result, we get a conflict between
-    -- both these types (scalar and object type with same name).
-    -- To avoid this, we suffix the table name with `_scalar`
-    -- and create a new scalar type
-    PGKindComposite -> PGUnknown $ toTxt name <> "_scalar"
+    -- The suffix `_scalar` is added in
+    -- the @mkScalarTypeName@ function.
+    PGKindComposite -> PGCompositeScalar $ toTxt name
     _               -> name

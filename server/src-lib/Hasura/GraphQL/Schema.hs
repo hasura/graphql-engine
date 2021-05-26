@@ -6,7 +6,7 @@ module Hasura.GraphQL.Schema
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                            as J
+import qualified Data.Aeson.Ordered                    as JO
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
 import qualified Data.HashSet                          as Set
@@ -17,16 +17,18 @@ import           Control.Lens.Extended
 import           Control.Monad.Unique
 import           Data.Has
 import           Data.List.Extended                    (duplicates)
+import           Data.Text.Extended
 
 import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.SQL.AnyBackend                 as AB
 
-import           Data.Text.Extended
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Parser                 (Kind (..), Parser, Schema (..),
                                                         UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Class
+import           Hasura.GraphQL.Parser.Directives      (directivesInfo)
 import           Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.Common
@@ -168,8 +170,8 @@ buildRoleContext (SQLGenCtx stringifyNum boolCollapse, queryType, functionPermsC
       buildSource (SourceInfo sourceName tables functions sourceConfig) = do
         let validFunctions = takeValidFunctions functions
             validTables    = takeValidTables tables
-            xNodesAgg      = nodesAggExtension sourceConfig
-            xRelay         = relayExtension    sourceConfig
+            xNodesAgg      = nodesAggExtension @b sourceConfig
+            xRelay         = relayExtension    @b sourceConfig
         runMonadSchema role roleQueryContext sources (BackendExtension @b xRelay xNodesAgg) $
           (,,)
             <$> buildQueryFields sourceName sourceConfig validTables validFunctions
@@ -184,7 +186,7 @@ buildRoleContext (SQLGenCtx stringifyNum boolCollapse, queryType, functionPermsC
   -- remotes, which are backend-agnostic.
   -- In the long term, all backend-specific processing should be moved to `buildSource`, and this
   -- block should be running in the schema for a `None` backend.
-  runMonadSchema role roleQueryContext sources (BackendExtension @'Postgres (Just ()) (Just ())) $ do
+  runMonadSchema role roleQueryContext sources (BackendExtension @('Postgres 'Vanilla) (Just ()) (Just ())) $ do
     mutationParserFrontend <-
       buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes mutationFrontendFields
 
@@ -239,8 +241,8 @@ buildRelayRoleContext (SQLGenCtx stringifyNum boolCollapse, queryType, functionP
       buildSource (SourceInfo sourceName tables functions sourceConfig) = do
         let validFunctions = takeValidFunctions functions
             validTables    = takeValidTables tables
-            xNodesAgg      = nodesAggExtension sourceConfig
-            xRelay         = relayExtension    sourceConfig
+            xNodesAgg      = nodesAggExtension @b sourceConfig
+            xRelay         = relayExtension    @b sourceConfig
         runMonadSchema role roleQueryContext sources (BackendExtension @b xRelay xNodesAgg) $
           (,,)
           <$> buildRelayQueryFields sourceName sourceConfig validTables validFunctions
@@ -254,7 +256,7 @@ buildRelayRoleContext (SQLGenCtx stringifyNum boolCollapse, queryType, functionP
   -- remotes, which are backend-agnostic.
   -- In the long term, all backend-specific processing should be moved to `buildSource`, and this
   -- block should be running in the schema for a `None` backend.
-  runMonadSchema role roleQueryContext sources (BackendExtension @'Postgres (Just ()) (Just ())) $ do
+  runMonadSchema role roleQueryContext sources (BackendExtension @('Postgres 'Vanilla) (Just ()) (Just ())) $ do
     -- Add node root field.
     -- FIXME: for now this is PG-only. This isn't a problem yet since for now only PG supports relay.
     -- To fix this, we'd need to first generalize `nodeField`.
@@ -270,8 +272,8 @@ buildRelayRoleContext (SQLGenCtx stringifyNum boolCollapse, queryType, functionP
     mutationParserBackend <-
       buildMutationParser mempty allActionInfos nonObjectCustomTypes mutationBackendFields
 
-    subscriptionParser <- P.safeSelectionSet subscriptionRoot Nothing queryPGFields
-                             <&> fmap (fmap (P.handleTypename (RFRaw . J.String. G.unName)))
+    subscriptionParser <-
+      P.safeSelectionSet subscriptionRoot Nothing queryPGFields <&> fmap (fmap typenameToRawRF)
     queryParserFrontend <- queryWithIntrospectionHelper queryPGFields
       mutationParserFrontend subscriptionParser
     queryParserBackend <- queryWithIntrospectionHelper queryPGFields
@@ -297,8 +299,8 @@ buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes = 
       buildSource (SourceInfo sourceName tables functions sourceConfig) = do
         let validFunctions = takeValidFunctions functions
             validTables    = takeValidTables tables
-            xNodesAgg      = nodesAggExtension sourceConfig
-            xRelay         = relayExtension    sourceConfig
+            xNodesAgg      = nodesAggExtension @b sourceConfig
+            xRelay         = relayExtension    @b sourceConfig
         runMonadSchema adminRoleName queryContext sources (BackendExtension @b xRelay xNodesAgg) $
           (,)
             <$> buildQueryFields sourceName sourceConfig validTables validFunctions
@@ -312,7 +314,7 @@ buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes = 
   -- remotes, which are backend-agnostic.
   -- In the long term, all backend-specific processing should be moved to `buildSource`, and this
   -- block should be running in the schema for a `None` backend.
-  runMonadSchema adminRoleName queryContext sources (BackendExtension @'Postgres (Just ()) (Just ())) $ do
+  runMonadSchema adminRoleName queryContext sources (BackendExtension @('Postgres 'Vanilla) (Just ()) (Just ())) $ do
     mutationParserFrontend <-
       -- NOTE: we omit remotes here on purpose since we're trying to check name
       -- clashes with remotes:
@@ -348,11 +350,9 @@ unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsC
   mutationParser <-
     if null adminMutationRemotes
     then pure Nothing
-    else P.safeSelectionSet mutationRoot Nothing mutationFields
-         <&> Just . fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+    else P.safeSelectionSet mutationRoot Nothing mutationFields <&> Just . fmap (fmap typenameToRawRF)
   subscriptionParser <-
-    P.safeSelectionSet subscriptionRoot Nothing []
-    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+    P.safeSelectionSet subscriptionRoot Nothing [] <&> fmap (fmap typenameToRawRF)
   queryParser <- queryWithIntrospectionHelper queryFields mutationParser subscriptionParser
   pure $ GQLContext (finalizeParser queryParser) (finalizeParser <$> mutationParser)
 
@@ -435,18 +435,19 @@ buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> funct
   roleName <- askRoleName
   functionPermsCtx <- asks $ qcFunctionPermsContext . getter
   tableSelectExpParsers <- for (Map.toList tables) \(tableName, tableInfo) -> do
-    tableGQLName <- getTableGQLName @b tableName
+    tableGQLName <- getTableGQLName @b tableInfo
     -- FIXME: retrieve permissions directly from tableInfo to avoid a sourceCache lookup
-    selectPerms  <- tableSelectPermissions tableName
+    selectPerms  <- tableSelectPermissions tableInfo
     for selectPerms $ buildTableQueryFields sourceName sourceConfig tableName tableInfo tableGQLName
   functionSelectExpParsers <- for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
     guard
       $ roleName == adminRoleName
       || roleName `elem` _fiPermissions functionInfo
       || functionPermsCtx == FunctionPermissionsInferred
-    let targetTable = _fiReturnType functionInfo
-    selectPerms <- MaybeT $ tableSelectPermissions targetTable
-    lift $ buildFunctionQueryFields sourceName sourceConfig functionName functionInfo targetTable selectPerms
+    let targetTableName = _fiReturnType functionInfo
+    targetTableInfo <- askTableInfo sourceName targetTableName
+    selectPerms <- MaybeT $ tableSelectPermissions targetTableInfo
+    lift $ buildFunctionQueryFields sourceName sourceConfig functionName functionInfo targetTableName selectPerms
   pure $ concat $ catMaybes $ tableSelectExpParsers <> functionSelectExpParsers
 
 buildRelayQueryFields
@@ -459,17 +460,18 @@ buildRelayQueryFields
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
 buildRelayQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> functions) = do
   tableConnectionFields <- for (Map.toList tables) \(tableName, tableInfo) -> runMaybeT do
-    tableGQLName <- getTableGQLName @b tableName
+    tableGQLName <- getTableGQLName @b tableInfo
     pkeyColumns  <- hoistMaybe $ tableInfo ^? tiCoreInfo.tciPrimaryKey._Just.pkColumns
     -- FIXME: retrieve permissions directly from tableInfo to avoid a sourceCache lookup
-    selectPerms  <- MaybeT $ tableSelectPermissions tableName
+    selectPerms  <- MaybeT $ tableSelectPermissions tableInfo
     MaybeT $ buildTableRelayQueryFields sourceName sourceConfig tableName tableInfo tableGQLName pkeyColumns selectPerms
   functionConnectionFields <- for (Map.toList functions) $ \(functionName, functionInfo) -> runMaybeT do
-    let returnTable = _fiReturnType functionInfo
+    let returnTableName = _fiReturnType functionInfo
     -- FIXME: only extract the TableInfo once to avoid redundant cache lookups
-    pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns) <$> askTableInfo returnTable
-    selectPerms <- MaybeT $ tableSelectPermissions returnTable
-    MaybeT $ buildFunctionRelayQueryFields sourceName sourceConfig functionName functionInfo returnTable pkeyColumns selectPerms
+    returnTableInfo <- lift $ askTableInfo sourceName returnTableName
+    pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns) <$> pure returnTableInfo
+    selectPerms <- MaybeT $ tableSelectPermissions returnTableInfo
+    MaybeT $ buildFunctionRelayQueryFields sourceName sourceConfig functionName functionInfo returnTableName pkeyColumns selectPerms
   pure $ catMaybes $ tableConnectionFields <> functionConnectionFields
 
 buildMutationFields
@@ -484,9 +486,9 @@ buildMutationFields
 buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMutation -> functions) = do
   roleName <- askRoleName
   tableMutations <- for (Map.toList tables) \(tableName, tableInfo) -> do
-    tableGQLName  <- getTableGQLName @b tableName
+    tableGQLName  <- getTableGQLName @b tableInfo
     -- FIXME: retrieve permissions directly from tableInfo to avoid a sourceCache lookup
-    tablePerms    <- tablePermissions tableName
+    tablePerms    <- tablePermissions tableInfo
     for tablePerms \RolePermInfo{..} -> do
       let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
       inserts <- runMaybeT $ do
@@ -510,15 +512,16 @@ buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMu
         lift $ buildTableDeleteMutationFields sourceName sourceConfig tableName tableInfo tableGQLName deletePerms _permSel
       pure $ concat $ catMaybes [inserts, updates, deletes]
   functionMutations <- for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
-    let targetTable = _fiReturnType functionInfo
-    selectPerms <- MaybeT $ tableSelectPermissions targetTable
+    let targetTableName = _fiReturnType functionInfo
+    targetTableInfo <- askTableInfo sourceName targetTableName
+    selectPerms <- MaybeT $ tableSelectPermissions targetTableInfo
     -- A function exposed as mutation must have a function permission
     -- configured for the role. See Note [Function Permissions]
     guard $
       -- when function permissions are inferred, we don't expose the
       -- mutation functions for non-admin roles. See Note [Function Permissions]
       roleName == adminRoleName || roleName `elem` (_fiPermissions functionInfo)
-    lift $ buildFunctionMutationFields sourceName sourceConfig functionName functionInfo targetTable selectPerms
+    lift $ buildFunctionMutationFields sourceName sourceConfig functionName functionInfo targetTableName selectPerms
   pure $ concat $ catMaybes $ tableMutations <> functionMutations
 
 
@@ -534,7 +537,7 @@ buildQueryParser
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
-     , Has (BackendExtension 'Postgres) r
+     , Has (BackendExtension ('Postgres 'Vanilla)) r
      )
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
   -> [P.FieldParser n RemoteField]
@@ -549,7 +552,7 @@ buildQueryParser pgQueryFields remoteFields allActions nonObjectCustomTypes muta
   queryWithIntrospectionHelper allQueryFields mutationParser subscriptionParser
 
 queryWithIntrospectionHelper
-  :: (MonadSchema n m, MonadError QErr m)
+  :: forall n m. (MonadSchema n m, MonadError QErr m)
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
   -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
   -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
@@ -557,11 +560,13 @@ queryWithIntrospectionHelper
 queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
   basicQueryP <- queryRootFromFields basicQueryFP
   emptyIntro  <- emptyIntrospection
+  let directives = directivesInfo @n
   allBasicTypes <- collectTypes $
-    [ P.parserType basicQueryP
-    , P.parserType subscriptionP
+    [ P.TypeDefinitionsWrapper $ P.parserType basicQueryP
+    , P.TypeDefinitionsWrapper $ P.parserType subscriptionP
+    , P.TypeDefinitionsWrapper $ P.diArguments =<< directives
     ]
-    ++ maybeToList (P.parserType <$> mutationP)
+    ++ maybeToList (P.TypeDefinitionsWrapper . P.parserType <$> mutationP)
   allIntrospectionTypes <- collectTypes . P.parserType =<< queryRootFromFields emptyIntro
   let allTypes = Map.unions
         [ allBasicTypes
@@ -573,12 +578,11 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
         , sQueryType = P.parserType basicQueryP
         , sMutationType = P.parserType <$> mutationP
         , sSubscriptionType = Just $ P.parserType subscriptionP
-        , sDirectives = defaultDirectives
+        , sDirectives = directives
         }
   let partialQueryFields =
         basicQueryFP ++ (fmap RFRaw <$> [schema partialSchema, typeIntrospection partialSchema])
-  P.safeSelectionSet queryRoot Nothing partialQueryFields
-    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+  P.safeSelectionSet queryRoot Nothing partialQueryFields <&> fmap (fmap typenameToRawRF)
 
 queryRootFromFields
   :: forall n m
@@ -586,8 +590,7 @@ queryRootFromFields
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryRootFromFields fps =
-  P.safeSelectionSet queryRoot Nothing fps
-    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+  P.safeSelectionSet queryRoot Nothing fps <&> fmap (fmap typenameToRawRF)
 
 emptyIntrospection
   :: forall m n
@@ -625,7 +628,7 @@ buildSubscriptionParser
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
-     , Has (BackendExtension 'Postgres) r
+     , Has (BackendExtension ('Postgres 'Vanilla)) r
      )
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
   -> [ActionInfo]
@@ -633,8 +636,7 @@ buildSubscriptionParser
 buildSubscriptionParser queryFields allActions = do
   actionSubscriptionFields <- concat <$> traverse buildActionSubscriptionFields allActions
   let subscriptionFields = queryFields <> actionSubscriptionFields
-  P.safeSelectionSet subscriptionRoot Nothing subscriptionFields
-         <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+  P.safeSelectionSet subscriptionRoot Nothing subscriptionFields <&> fmap (fmap typenameToRawRF)
 
 buildMutationParser
   :: forall m n r
@@ -642,7 +644,7 @@ buildMutationParser
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
-     , Has (BackendExtension 'Postgres) r
+     , Has (BackendExtension ('Postgres 'Vanilla)) r
      )
   => [P.FieldParser n RemoteField]
   -> [ActionInfo]
@@ -658,7 +660,7 @@ buildMutationParser allRemotes allActions nonObjectCustomTypes mutationFields = 
   if null mutationFieldsParser
   then pure Nothing
   else P.safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFieldsParser
-            <&> Just . fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+            <&> Just . fmap (fmap typenameToRawRF)
 
 
 
@@ -709,3 +711,8 @@ buildBackendSource
   -> AB.AnyBackend SourceInfo
   -> r
 buildBackendSource f e = AB.dispatchAnyBackend @BackendSchema e f
+
+typenameToRawRF
+  :: P.ParsedSelection (RootField db remote action JO.Value)
+  -> RootField db remote action JO.Value
+typenameToRawRF = P.handleTypename $ RFRaw . JO.String . G.unName

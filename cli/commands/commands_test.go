@@ -1,11 +1,11 @@
 package commands
 
 import (
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"testing"
+
+	"github.com/hasura/graphql-engine/cli"
+	"gopkg.in/yaml.v2"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -16,11 +16,6 @@ const (
 )
 
 func TestE2e(t *testing.T) {
-	BeforeSuite(func() {
-		if testutil.SkipDockerTests {
-			t.Skip()
-		}
-	})
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "e2e testsuite")
 }

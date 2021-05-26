@@ -1,56 +1,78 @@
 module Hasura.Backends.Postgres.DDL.Source
-  ( resolveSourceConfig
+  ( ToMetadataFetchQuery
+  , fetchFunctionMetadata
+  , fetchPgScalars
+  , fetchTableMetadata
+  , initCatalogForSource
   , postDropSourceHook
   , resolveDatabaseMetadata
+  , resolveSourceConfig
   ) where
+
+import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                 as Map
 import qualified Database.PG.Query                   as Q
 import qualified Language.Haskell.TH.Lib             as TH
 import qualified Language.Haskell.TH.Syntax          as TH
 
-import           Control.Lens                        hiding (from, index, op, to, (.=))
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Data.FileEmbed                      (makeRelativeToProject)
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Prelude
-import           Hasura.RQL.Types.Backend            (SourceConfig)
+import           Hasura.Base.Error
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 import           Hasura.Server.Migrate.Internal
+import           Hasura.Server.Types                 (MaintenanceMode (..))
+
+
+-- | We differentiate the handling of metadata between Citus and Vanilla
+-- Postgres because Citus imposes limitations on the types of joins that it
+-- permits, which then limits the types of relations that we can track.
+class ToMetadataFetchQuery (pgKind :: PostgresKind) where
+    tableMetadata :: Q.Query
+
+instance ToMetadataFetchQuery 'Vanilla where
+    tableMetadata = $(makeRelativeToProject "src-rsr/pg_table_metadata.sql" >>= Q.sqlFromFile)
+
+instance ToMetadataFetchQuery 'Citus where
+    tableMetadata = $(makeRelativeToProject "src-rsr/citus_table_metadata.sql" >>= Q.sqlFromFile)
 
 resolveSourceConfig
   :: (MonadIO m, MonadResolveSource m)
-  => SourceName -> PostgresConnConfiguration -> m (Either QErr (SourceConfig 'Postgres))
+  => SourceName -> PostgresConnConfiguration -> m (Either QErr (SourceConfig ('Postgres pgKind)))
 resolveSourceConfig name config = runExceptT do
   sourceResolver <- getSourceResolver
   liftEitherM $ liftIO $ sourceResolver name config
 
 resolveDatabaseMetadata
-  :: (MonadIO m, MonadBaseControl IO m)
-  => SourceConfig 'Postgres -> m (Either QErr (ResolvedSource 'Postgres))
+  :: forall pgKind m
+   . (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadIO m, MonadBaseControl IO m)
+  => SourceConfig ('Postgres pgKind) -> m (Either QErr (ResolvedSource ('Postgres pgKind)))
 resolveDatabaseMetadata sourceConfig = runExceptT do
-  (tablesMeta, functionsMeta, pgScalars) <- runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $ do
-    initSource
+  (tablesMeta, functionsMeta, pgScalars) <- runLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly $ do
     tablesMeta    <- fetchTableMetadata
     functionsMeta <- fetchFunctionMetadata
     pgScalars     <- fetchPgScalars
     pure (tablesMeta, functionsMeta, pgScalars)
   pure $ ResolvedSource sourceConfig tablesMeta functionsMeta pgScalars
 
-initSource :: MonadTx m => m ()
-initSource = do
+-- | Initialise catalog tables for a source, including those required by the event delivery subsystem.
+initCatalogForSource :: MonadTx m => MaintenanceMode -> m ()
+initCatalogForSource maintenanceMode = do
   hdbCatalogExist <- doesSchemaExist "hdb_catalog"
   eventLogTableExist <- doesTableExist "hdb_catalog" "event_log"
   sourceVersionTableExist <- doesTableExist "hdb_catalog" "hdb_source_catalog_version"
+     -- when maintenance mode is enabled, don't perform any migrations
+  if | maintenanceMode == MaintenanceModeEnabled -> pure ()
      -- Fresh database
-  if | not hdbCatalogExist -> liftTx do
+     | not hdbCatalogExist -> liftTx do
         Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
         enablePgcryptoExtension
         initPgSourceCatalog
@@ -61,7 +83,7 @@ initSource = do
      | not sourceVersionTableExist && eventLogTableExist -> do
        -- Update the Source Catalog to v43 to include the new migration
        -- changes. Skipping this step will result in errors.
-        currCatalogVersion <- getCatalogVersion
+        currCatalogVersion <- liftTx getCatalogVersion
         migrateTo43 currCatalogVersion
         liftTx createVersionTable
      | otherwise -> migrateSourceCatalog
@@ -129,15 +151,18 @@ getSourceCatalogVersion = liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTx
   [Q.sql| SELECT version FROM hdb_catalog.hdb_source_catalog_version |] () False
 
 -- | Fetch Postgres metadata of all user tables
-fetchTableMetadata :: (MonadTx m) => m (DBTablesMetadata 'Postgres)
+fetchTableMetadata
+  :: forall pgKind m
+   . (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadTx m)
+  => m (DBTablesMetadata ('Postgres pgKind))
 fetchTableMetadata = do
   results <- liftTx $ Q.withQE defaultTxErrorHandler
-             $(makeRelativeToProject "src-rsr/pg_table_metadata.sql" >>= Q.sqlFromFile) () True
+             (tableMetadata @pgKind) () True
   pure $ Map.fromList $ flip map results $
     \(schema, table, Q.AltJ info) -> (QualifiedObject schema table, info)
 
 -- | Fetch Postgres metadata for all user functions
-fetchFunctionMetadata :: (MonadTx m) => m (DBFunctionsMetadata 'Postgres)
+fetchFunctionMetadata :: (MonadTx m) => m (DBFunctionsMetadata ('Postgres pgKind))
 fetchFunctionMetadata = do
   results <- liftTx $ Q.withQE defaultTxErrorHandler
              $(makeRelativeToProject "src-rsr/pg_function_metadata.sql" >>= Q.sqlFromFile) () True
@@ -160,20 +185,57 @@ postDropSourceHook
   => PGSourceConfig -> m ()
 postDropSourceHook sourceConfig = do
   -- Clean traces of Hasura in source database
+  --
+  -- There are three type of database we have to consider here, which we
+  -- refer to as types 1, 2, and 3 below:
+  --   1. default postgres source (no separate metadata database)
+  --   In this case, we want to drop nothing.
+  --
+  --   2. dedicated metadata database
+  --   In this case, we want to only drop source-related tables ("event_log",
+  --   "hdb_source_catalog_version", etc), leaving the rest of the schema intact.
+  --
+  --   3. non-default postgres source (necessarily without metadata tables)
+  --   In this case, we want to drop the entire "hdb_catalog" schema.
   liftEitherM $ runPgSourceWriteTx sourceConfig $ do
     hdbMetadataTableExist <- doesTableExist "hdb_catalog" "hdb_metadata"
     eventLogTableExist <- doesTableExist "hdb_catalog" "event_log"
-        -- If "hdb_metadata" and "event_log" tables found in the "hdb_catalog" schema
-        -- then this infers the source is being used as default potgres source (--database-url option).
-        -- In this case don't drop any thing in the catalog schema.
-    if | hdbMetadataTableExist && eventLogTableExist -> pure ()
-       -- Otherwise, if only "hdb_metadata" table exist, then this infers the source is
-       -- being used as metadata storage (--metadata-database-url option). In this case
-       -- drop only source related tables and not "hdb_catalog" schema
-       | hdbMetadataTableExist ->
-         Q.multiQE defaultTxErrorHandler $(makeRelativeToProject "src-rsr/drop_pg_source.sql" >>= Q.sqlFromFile)
-       -- Otherwise, drop "hdb_catalog" schema.
+    if
+       -- If "hdb_metadata" and "event_log" tables are found in the "hdb_catalog" schema,
+       -- then this implies the source is being used as the default postgres source, i.e.
+       -- this is a default postgres source (type 1 above).
+       -- In this case we don't drop anything in the catalog schema.
+      | hdbMetadataTableExist && eventLogTableExist -> pure ()
+       -- However, it is possible that the above condition is not met for a default
+       -- postgres source. This will happen if no event triggers have been defined,
+       -- because we initialise event catalog tables only when required (i.e. when
+       -- a trigger is defined).
+       --
+       -- This could lead to a possible problem where "hdb_metadata" exists, "event_log"
+       -- does not exist, but the _other_ source-related tables exist. In that case, we
+       -- would end up dropping them here, which would go against our requirements above.
+       -- However, observe that these tables are always all created or destroyed together,
+       -- in single transactions where we run setup/teardown SQL files, so this condition
+       -- is guaranteed to not take place.
+       --
+       -- So if only "hdb_metadata" exists, we have one of two possible cases:
+       --   * this is a metadata database (type 2) and we can drop all source-related tables
+       --   * this is a default database (type 1) which has no source-related tables (because
+       --     it has no "event_log" table, it cannot have the others, because of the previous
+       --     argument)
+       --
+       -- It should be clear that we can now safely issue DROP IF EXISTS statements for
+       -- all source-related tables now according to the spec above. The IF EXISTS lets us
+       -- handle both cases uniformly, doing nothing in the second case, and for metadata
+       -- databases, we drop only source-related tables from the database's "hdb_catalog" schema.
+       | hdbMetadataTableExist -> Q.multiQE
+         defaultTxErrorHandler $(makeRelativeToProject "src-rsr/drop_pg_source.sql" >>= Q.sqlFromFile)
+       -- Otherwise, we have a non-default postgres source, which has no metadata tables.
+       -- We drop the entire "hdb_catalog" schema as discussed above.
        | otherwise -> dropHdbCatalogSchema
 
   -- Destory postgres source connection
   liftIO $ _pecDestroyConn $ _pscExecCtx sourceConfig
+
+  -- Run other drop hooks configured at source creation time
+  liftIO $ _pscPostDropHook sourceConfig

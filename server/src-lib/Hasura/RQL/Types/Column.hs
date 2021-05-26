@@ -37,11 +37,11 @@ import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Text.Extended
 
+import           Hasura.Base.Error
+import           Hasura.Base.Instances         ()
 import           Hasura.Incremental            (Cacheable)
-import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
@@ -133,14 +133,14 @@ parseScalarValueColumnType columnType value = case columnType of
           let enums = map getEnumValue $ M.keys enumValues
           unless (evn `elem` enums) $ throw400 UnexpectedPayload
             $ "expected one of the values " <> dquoteList enums
-            <> " for type " <> snakeCaseTableName tableName <<> ", given " <>> evn
+            <> " for type " <> snakeCaseTableName @b tableName <<> ", given " <>> evn
         pure $ textToScalarValue @b $ G.unName <$> enumValueName
 
 parseScalarValuesColumnType
   :: (MonadError QErr m, Backend b)
   => ColumnType b -> [Value] -> m [ScalarValue b]
-parseScalarValuesColumnType columnType values =
-  indexedMapM (parseScalarValueColumnType columnType) values
+parseScalarValuesColumnType columnType =
+  indexedMapM (parseScalarValueColumnType columnType)
 
 -- | “Raw” column info, as stored in the catalog (but not in the schema cache). Instead of
 -- containing a 'PGColumnType', it only contains a 'PGScalarType', which is combined with the
@@ -178,6 +178,7 @@ data ColumnInfo (b :: BackendType)
   , pgiDescription :: !(Maybe G.Description)
   } deriving (Generic)
 deriving instance Backend b => Eq (ColumnInfo b)
+deriving instance Backend b => Show (ColumnInfo b)
 instance Backend b => Cacheable (ColumnInfo b)
 instance Backend b => NFData (ColumnInfo b)
 instance Backend b => Hashable (ColumnInfo b)

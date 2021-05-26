@@ -103,6 +103,9 @@ class TestGraphqlInsertPermission:
     def test_user_role_on_conflict_update(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_user_role.yaml")
 
+    def test_restricted_role_on_conflict_update(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/article_on_conflict_restricted_role.yaml")
+
     def test_user_role_on_conflict_constraint_on_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_constraint_on_user_role_error.yaml")
 
@@ -204,6 +207,9 @@ class TestGraphqlInsertPermission:
 
     def test_check_set_headers_while_doing_upsert(self,hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/leads_upsert_check_with_headers.yaml")
+
+    def test_column_comparison_across_different_tables(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/column_comparison_across_tables.yaml")
 
     @classmethod
     def dir(cls):

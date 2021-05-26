@@ -83,7 +83,8 @@ args:
           c41_range_numeric numrange,
           c42_range_timestamp tsrange,
           c43_range_timestamptz tstzrange,
-          c44_xml xml
+          c44_xml xml,
+          c45_char char
       );
 
 - type: track_table
@@ -137,7 +138,8 @@ args:
     using:
       foreign_key_constraint_on:
         table: article
-        column: author_id
+        columns:
+          - author_id
 
 - type: track_table
   args:

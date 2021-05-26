@@ -55,6 +55,7 @@ import qualified Hasura.Server.API.V2Query                 as V2Q
 import qualified Hasura.Tracing                            as Tracing
 
 import           Hasura.Backends.Postgres.Execute.Types
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                    (MonadQueryLog)
 import           Hasura.HTTP
@@ -75,6 +76,7 @@ import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.Session
+
 
 data SchemaCacheRef
   = SchemaCacheRef
@@ -312,11 +314,13 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
     req <- Spock.request
     -- Bytes are actually read from the socket here. Time this.
     (ioWaitTime, reqBody) <- withElapsedTime $ liftIO $ Wai.strictRequestBody req
-    let headers = Wai.requestHeaders req
+    let origHeaders = Wai.requestHeaders req
         authMode = scAuthMode serverCtx
         manager = scManager serverCtx
         ipAddress = Wai.getSourceFromFallback req
         pathInfo = Wai.rawPathInfo req
+
+    (requestId, headers) <- getRequestId origHeaders
 
     tracingCtx <- liftIO $ Tracing.extractHttpContext headers
 
@@ -331,8 +335,6 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
           tracingCtx
           (fromString (B8.unpack pathInfo))
 
-    requestId <- getRequestId headers
-
     mapActionT runTraceT $ do
       -- Add the request ID to the tracing metadata so that we
       -- can correlate requests and traces
@@ -340,7 +342,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
 
       let getInfo parsedRequest = do
             userInfoE <- fmap fst <$> lift (resolveUserInfo logger manager headers authMode parsedRequest)
-            userInfo  <- onLeft userInfoE (logErrorAndResp Nothing requestId req (reqBody, Nothing) False headers . qErrModifier)
+            userInfo  <- onLeft userInfoE (logErrorAndResp Nothing requestId req (reqBody, Nothing) False origHeaders . qErrModifier)
             let handlerState = HandlerCtx serverCtx userInfo headers requestId ipAddress
                 includeInternal = shouldIncludeInternal (_uiRole userInfo) $
                                   scResponseInternalErrorsConfig serverCtx
@@ -362,13 +364,13 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
         AHPost handler -> do
           (userInfo, handlerState, includeInternal) <- getInfo Nothing
           parsedReqE <- runExceptT $ parseBody reqBody
-          parsedReq  <- onLeft parsedReqE (logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal headers . qErrModifier)
+          parsedReq  <- onLeft parsedReqE (logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal origHeaders . qErrModifier)
           res <- lift $ runHandler handlerState $ handler parsedReq
           return (res, userInfo, includeInternal, Just parsedReq)
         -- in this case we parse the request _first_ and then send the request to the webhook for auth
         AHGraphQLRequest handler -> do
           parsedReqE <- runExceptT $ parseBody reqBody
-          parsedReq  <- onLeft parsedReqE (logErrorAndResp Nothing requestId req (reqBody, Nothing) False headers . qErrModifier)
+          parsedReq  <- onLeft parsedReqE (logErrorAndResp Nothing requestId req (reqBody, Nothing) False origHeaders . qErrModifier)
           (userInfo, handlerState, includeInternal) <- getInfo (Just parsedReq)
           res <- lift $ runHandler handlerState $ handler parsedReq
           return (res, userInfo, includeInternal, Just parsedReq)
@@ -380,7 +382,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
       case modResult of
         Left err  -> logErrorAndResp (Just userInfo) requestId req (reqBody, toJSON <$> query) includeInternal headers err
         Right (httpLoggingMetadata, res) ->
-          logSuccessAndResp (Just userInfo) requestId req (reqBody, toJSON <$> query) res (Just (ioWaitTime, serviceTime)) headers httpLoggingMetadata
+          logSuccessAndResp (Just userInfo) requestId req (reqBody, toJSON <$> query) res (Just (ioWaitTime, serviceTime)) origHeaders httpLoggingMetadata
 
     where
       logger = scLogger serverCtx
@@ -628,7 +630,7 @@ v1Alpha1PGDumpHandler b = do
   sc    <- getSCFromRef scRef
   let sources      = scSources sc
       sourceName   = PGD.prbSource b
-      sourceConfig = unsafeSourceConfiguration @'Postgres =<< M.lookup sourceName sources
+      sourceConfig = unsafeSourceConfiguration @('Postgres 'Vanilla) =<< M.lookup sourceName sources
   ci <- fmap _pscConnInfo sourceConfig
         `onNothing` throw400 NotFound ("source " <> sourceName <<> " not found")
   output <- PGD.execPGDump b ci
@@ -783,6 +785,7 @@ mkWaiApp
   -> Maybe EL.LiveQueryPostPollHook
   -> SchemaCacheRef
   -> EKG.Store
+  -> ServerMetrics
   -> RemoteSchemaPermsCtx
   -> FunctionPermissionsCtx
   -> WS.ConnectionOptions
@@ -794,8 +797,8 @@ mkWaiApp
   -> m HasuraApp
 mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole consoleAssetsDir
          enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig
-         liveQueryHook schemaCacheRef ekgStore enableRSPermsCtx functionPermsCtx connectionOptions keepAliveDelay
-         maintenanceMode experimentalFeatures = do
+         liveQueryHook schemaCacheRef ekgStore serverMetrics enableRSPermsCtx functionPermsCtx
+         connectionOptions keepAliveDelay maintenanceMode experimentalFeatures = do
 
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
@@ -804,7 +807,7 @@ mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enable
 
     lqState <- liftIO $ EL.initLiveQueriesState lqOpts postPollHook
     wsServerEnv <- WS.createWSServerEnv logger lqState getSchemaCache httpManager
-                                        corsPolicy sqlGenCtx enableAL keepAliveDelay {- planCache -}
+                                        corsPolicy sqlGenCtx enableAL keepAliveDelay serverMetrics {- planCache -}
 
     let serverCtx = ServerCtx
                     { scLogger                       =  logger
@@ -971,7 +974,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
         mkSpockAction serverCtx encodeQErr id $
           mkPostHandler $
           fmap (mempty, )
-          <$> (mkAPIRespHandler $ legacyQueryHandler (PG.TableName tableName) queryType)
+          <$> mkAPIRespHandler (legacyQueryHandler (PG.TableName tableName) queryType)
 
     when enablePGDump $
       Spock.post "v1alpha1/pg_dump" $ spockAction encodeQErr id $
@@ -1073,7 +1076,7 @@ raiseGenericApiError
 raiseGenericApiError logger headers qErr = do
   req <- Spock.request
   reqBody <- liftIO $ Wai.strictRequestBody req
-  reqId <- getRequestId $ Wai.requestHeaders req
+  (reqId, _newHeaders) <- getRequestId $ Wai.requestHeaders req
   lift $ logHttpError logger Nothing reqId req (reqBody, Nothing) qErr headers
   setHeader jsonHeader
   Spock.setStatus $ qeStatus qErr

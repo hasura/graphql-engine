@@ -1,9 +1,5 @@
 type: bulk
 args:
-
-
-
-
 - type: run_sql
   args:
     sql: |
@@ -184,3 +180,8 @@ args:
     name: sum_float
     definition:
       function: get_sum
+
+- type: track_function
+  args:
+    name: fetch_articles
+    schema: public

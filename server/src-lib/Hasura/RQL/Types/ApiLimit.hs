@@ -17,6 +17,7 @@ data ApiLimit
   = ApiLimit
   { _alRateLimit  :: !(Maybe RateLimit)
   , _alDepthLimit :: !(Maybe DepthLimit)
+  , _alNodeLimit  :: !(Maybe NodeLimit)
   , _alDisabled   :: !Bool
   } deriving (Show, Eq, Generic)
 
@@ -25,6 +26,7 @@ instance FromJSON ApiLimit where
     ApiLimit
     <$> o .:? "rate_limit"
     <*> o .:? "depth_limit"
+    <*> o .:? "node_limit"
     <*> o .:? "disabled" .!= False
 
 instance ToJSON ApiLimit where
@@ -32,7 +34,7 @@ instance ToJSON ApiLimit where
     genericToJSON (Casing.aesonPrefix Casing.snakeCase) { omitNothingFields = True }
 
 emptyApiLimit :: ApiLimit
-emptyApiLimit = ApiLimit Nothing Nothing False
+emptyApiLimit = ApiLimit Nothing Nothing Nothing False
 
 data RateLimit
   = RateLimit
@@ -109,6 +111,28 @@ newtype MaxDepth
   deriving stock (Show, Eq, Ord, Generic)
   deriving newtype (ToJSON, FromJSON, Arbitrary)
 
+
+data NodeLimit
+  = NodeLimit
+  { _nlGlobal  :: !MaxNodes
+  , _nlPerRole :: !(InsOrdHashMap RoleName MaxNodes)
+  } deriving (Show, Eq, Generic)
+
+instance FromJSON NodeLimit where
+  parseJSON = withObject "NodeLimit" $ \o ->
+    NodeLimit <$> o .: "global" <*> o .:? "per_role" .!= mempty
+
+instance ToJSON NodeLimit where
+  toJSON =
+    genericToJSON (Casing.aesonPrefix Casing.snakeCase)
+
+newtype MaxNodes
+  = MaxNodes { unMaxNodes :: Int }
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving newtype (ToJSON, FromJSON, Arbitrary)
+
 $(makeLenses ''ApiLimit)
 $(makeLenses ''RateLimit)
 $(makeLenses ''DepthLimit)
+$(makeLenses ''NodeLimit)
+

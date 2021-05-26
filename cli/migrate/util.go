@@ -2,6 +2,9 @@ package migrate
 
 import (
 	"fmt"
+	"github.com/hasura/graphql-engine/cli/internal/scripts"
+	"github.com/hasura/graphql-engine/cli/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/internal/statestore/migrations"
 	nurl "net/url"
 	"os"
 	"path/filepath"
@@ -117,7 +120,7 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceK
 	if len(sourceKind) < 1 {
 		return nil, fmt.Errorf("invalid source kind")
 	}
-	// create a new directory for the database if it does'nt exists
+	// create a new directory for the database if it doesn't exists
 	if f, _ := os.Stat(filepath.Join(ec.MigrationDir, sourceName)); f == nil {
 		err := os.MkdirAll(filepath.Join(ec.MigrationDir, sourceName), 0755)
 		if err != nil {
@@ -164,6 +167,13 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceK
 	if ec.Config.Version >= cli.V2 {
 		t.databaseDrv.EnableCheckMetadataConsistency(true)
 	}
+	if ok, err := copyStateToCatalogStateAPIIfRequired(ec, sourceName); err != nil {
+		ec.Logger.Warn(err)
+	} else if ok {
+		if err := t.ReScan(); err != nil {
+			return nil, err
+		}
+	}
 	return t, nil
 }
 
@@ -201,4 +211,85 @@ func GetFilePath(dir string) *nurl.URL {
 		host.Path = "/" + host.Path
 	}
 	return host
+}
+
+func IsMigrationsSupported(kind hasura.SourceKind) bool {
+	switch kind {
+	case hasura.SourceKindMSSQL, hasura.SourceKindPG:
+		return true
+	}
+	return false
+}
+
+func copyStateToCatalogStateAPIIfRequired(ec *cli.ExecutionContext, sourceName string) (bool, error) {
+	// if
+	//		the project is in config v3
+	// 		source name is default
+	// 		isStateCopyCompleted is false in catalog state
+	//		hdb_catalog.schema_migrations is not empty
+	if !ec.DisableAutoStateMigration && ec.Config.Version >= cli.V3 && sourceName == "default" {
+		// get cli catalog and check isStateCopyCompleted is false
+		cs := statestore.NewCLICatalogState(ec.APIClient.V1Metadata)
+		state, err := cs.Get()
+		if err != nil {
+			return false, err
+		}
+		markStateMigrationCompleted := func() error {
+			state.IsStateCopyCompleted = true
+			if _, err := cs.Set(*state); err != nil {
+				return fmt.Errorf("error settting state: %w", err)
+			}
+			return nil
+		}
+		if !state.IsStateCopyCompleted {
+			// if control reaches this block we'll set IsStateCopyCompleted to true
+			// this makes sure we only attempt to automatically do the state migration once
+			// we'll leave it up to the user to correct the errors and use
+			// scripts update-project-v3 --move-state-only to move state
+			//
+			// this will also make sure new config v3 projects will not repeatedly reach this block
+			// for a example a user connecting a custom source named default
+			// with no read permissions to other schemas ie we cannot access `hdb_catalog.schema_migrations`
+			// in the first run it'll encounter an error but will also mark IsStateCopyCompleted to true
+			// thereby not running this block again
+
+			// check if hdb_catalog.schema_migrations exists
+			// check if migrations state table exists
+			query := hasura.PGRunSQLInput{
+				SQL: `SELECT COUNT(1) FROM information_schema.tables WHERE table_name = '` + migrations.DefaultMigrationsTable + `' AND table_schema = '` + migrations.DefaultSchema + `' LIMIT 1`,
+			}
+
+			runsqlResp, err := ec.APIClient.V2Query.PGRunSQL(query)
+			if err != nil {
+				ec.Logger.Warn("encountered error when trying to move migrations from hdb_catalog.schema_migrations to catalog state\n", err,
+					"\nnote: ignore this if you are not updating your project from config v2 -> config v3")
+				ec.Logger.Debug("marking IsStateCopyCompleted as true %w", markStateMigrationCompleted())
+				return false, nil
+			}
+
+			if runsqlResp.ResultType != hasura.TuplesOK {
+				ec.Logger.Warn("encountered error when trying to move migrations from hdb_catalog.schema_migrations to catalog state", fmt.Errorf("invalid result Type %s", runsqlResp.ResultType),
+					"\nnote: ignore this if you are not updating your project from config v2 -> config v3")
+				ec.Logger.Debug("marking IsStateCopyCompleted as true %w", markStateMigrationCompleted())
+				return false, nil
+			}
+			result := runsqlResp.Result
+			if result[1][0] == "0" {
+				// hdb_catalog.schema_migrations doesn't exist
+				ec.Logger.Debug("hdb_catalog.schema_migrations was not found, skipping state migration")
+				ec.Logger.Debug("marking IsStateCopyCompleted as true %w", markStateMigrationCompleted())
+				return false, nil
+			}
+			ec.Logger.Debug("copying cli state from hdb_catalog.schema_migrations to catalog state")
+			// COPY STATE
+			if err := scripts.CopyState(ec, sourceName); err != nil {
+				return false, err
+			}
+			ec.Logger.Debug("copying cli state from hdb_catalog.schema_migrations to catalog state success")
+			return true, nil
+		}
+		ec.Logger.Debugf("skipping state migration, found IsStateCopyCompleted: %v Migrations: %v", state.IsStateCopyCompleted, state.Migrations)
+		return false, nil
+	}
+	return false, nil
 }

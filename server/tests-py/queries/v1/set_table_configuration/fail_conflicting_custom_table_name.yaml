@@ -2,7 +2,7 @@ description: set custom table name which conflicts with other nodes
 status: 500
 url: /v1/query
 response:
-  error: "found duplicate fields in selection set: insert_article, insert_article_one, update_article, delete_article, update_article_by_pk, delete_article_by_pk"
+  error: "found duplicate fields in selection set for mutation root: insert_article, insert_article_one, update_article, delete_article, update_article_by_pk, delete_article_by_pk"
   code: unexpected
   path: $.args
 query:

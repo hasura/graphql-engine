@@ -16,7 +16,7 @@ export const generateTableDef = (
   tableName: string,
   tableSchema: Nullable<string> = 'public',
   tableNameWithSchema: Nullable<string> = null
-) => {
+): QualifiedTable => {
   if (tableNameWithSchema) {
     return {
       schema: tableNameWithSchema.split('.')[0],
@@ -83,13 +83,22 @@ export const getTableColumnNames = (table: Table) => {
 
 export function escapeTableColumns(table: Table) {
   if (!table) return {};
-  const pattern = /\W+/g;
+  const pattern = /\W+|^\d/;
   return getTableColumnNames(table)
     .filter(col => pattern.test(col))
     .reduce((acc: Record<string, string>, col) => {
-      acc[col] = col.replace(pattern, '_');
+      let newColName = col.replace(/\W+/, '_');
+      if (/^\d/.test(newColName)) newColName = `column_${newColName}`;
+      acc[col] = newColName;
       return acc;
     }, {});
+}
+
+export function escapeTableName(tableName: string): Nullable<string> {
+  const pattern = /\W+|^\d/;
+  if (!pattern.test(tableName)) return null;
+  if (/^\d/.test(tableName)) tableName = `table_${tableName}`;
+  return tableName.toLowerCase().replace(/\s+|_?\W+_?/, '_');
 }
 
 export const getTableColumn = (table: Table, columnName: string) => {
@@ -111,7 +120,7 @@ export function getTableRelationship(table: Table, relationshipName: string) {
 export function getRelationshipRefTable(
   table: Table,
   relationship: Relationship
-) {
+): QualifiedTable | null {
   let refTable = null;
 
   const relationshipDef = relationship.rel_def;
@@ -133,15 +142,20 @@ export function getRelationshipRefTable(
     if (relationshipType === 'object') {
       const fkCol = relationshipDef.foreign_key_constraint_on;
 
-      for (let i = 0; i < table.foreign_key_constraints.length; i++) {
-        const fkConstraint = table.foreign_key_constraints[i];
-        const fkConstraintCol = Object.keys(fkConstraint.column_mapping)[0];
-        if (fkCol === fkConstraintCol) {
-          refTable = generateTableDef(
-            fkConstraint.ref_table,
-            fkConstraint.ref_table_table_schema
-          );
-          break;
+      // if one-to-one relationship from remote table
+      if (fkCol.table) {
+        refTable = generateTableDef(fkCol.table.name, fkCol.table.schema);
+      } else {
+        for (let i = 0; i < table.foreign_key_constraints.length; i++) {
+          const fkConstraint = table.foreign_key_constraints[i];
+          const fkConstraintCol = Object.keys(fkConstraint.column_mapping)[0];
+          if (fkCol === fkConstraintCol) {
+            refTable = generateTableDef(
+              fkConstraint.ref_table,
+              fkConstraint.ref_table_table_schema
+            );
+            break;
+          }
         }
       }
     }
@@ -152,6 +166,22 @@ export function getRelationshipRefTable(
   }
 
   return refTable;
+}
+
+export function getTableFromRelationshipChain(
+  allTables: Table[],
+  startTable: Table,
+  chains: string
+): Table {
+  const rels = chains
+    .split(/\./g)
+    .filter(it => !it.startsWith('_') && Number.isNaN(parseInt(it, 10)))
+    .slice(0, -1);
+  return rels.reduce((acc, name) => {
+    const rship = getTableRelationship(acc, name)!;
+    const rShipDef = getRelationshipRefTable(acc, rship)!;
+    return findTable(allTables, rShipDef)!;
+  }, startTable);
 }
 
 export const getEnumColumnMappings = (
@@ -302,7 +332,10 @@ export const findTableFromRel = (
     }
 
     // for array relationship
-    if (rel.rel_type === 'array') {
+    if (
+      rel.rel_type === 'array' ||
+      (rel.rel_type === 'object' && rel.rel_def.foreign_key_constraint_on.table)
+    ) {
       rTable = rel.rel_def.foreign_key_constraint_on.table;
       if (rTable.schema) {
         rSchema = rTable.schema;
@@ -344,7 +377,10 @@ export const findAllFromRel = (curTable: Table, rel: Relationship) => {
   const foreignKeyConstraintOn = rel.rel_def.foreign_key_constraint_on;
   if (foreignKeyConstraintOn !== undefined) {
     // for object relationship
-    if (rel.rel_type === 'object') {
+    if (
+      rel.rel_type === 'object' &&
+      typeof foreignKeyConstraintOn === 'string'
+    ) {
       lcol = [foreignKeyConstraintOn];
       const fkc = findFKConstraint(curTable, lcol);
       if (fkc) {
@@ -354,8 +390,11 @@ export const findAllFromRel = (curTable: Table, rel: Relationship) => {
       }
     }
 
-    // for array relationship
-    if (rel.rel_type === 'array') {
+    // for array relationship or one-to-one relationship with remote table
+    if (
+      rel.rel_type === 'array' ||
+      (rel.rel_type === 'object' && foreignKeyConstraintOn.column)
+    ) {
       rcol = [foreignKeyConstraintOn.column];
       const rTableConfig = foreignKeyConstraintOn.table;
       if (rTableConfig.schema) {

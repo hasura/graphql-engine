@@ -14,20 +14,21 @@ import qualified Hasura.Backends.Postgres.SQL.DML         as S
 import           Hasura.Backends.Postgres.Instances.Types ()
 import           Hasura.Backends.Postgres.SQL.Types       hiding (TableName)
 import           Hasura.Backends.Postgres.Types.BoolExp
+import           Hasura.Base.Error
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null
-equalsBoolExpBuilder :: SQLExpression 'Postgres -> SQLExpression 'Postgres -> S.BoolExp
+equalsBoolExpBuilder :: SQLExpression ('Postgres pgKind) -> SQLExpression ('Postgres pgKind) -> S.BoolExp
 equalsBoolExpBuilder qualColExp rhsExp =
   S.BEBin S.OrOp (S.BECompare S.SEQ qualColExp rhsExp)
     (S.BEBin S.AndOp
       (S.BENull qualColExp)
       (S.BENull rhsExp))
 
-notEqualsBoolExpBuilder :: SQLExpression 'Postgres -> SQLExpression 'Postgres -> S.BoolExp
+notEqualsBoolExpBuilder :: SQLExpression ('Postgres pgKind) -> SQLExpression ('Postgres pgKind) -> S.BoolExp
 notEqualsBoolExpBuilder qualColExp rhsExp =
   S.BEBin S.OrOp (S.BECompare S.SNE qualColExp rhsExp)
     (S.BEBin S.AndOp
@@ -37,38 +38,40 @@ notEqualsBoolExpBuilder qualColExp rhsExp =
 annBoolExp
   :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b)
   => ValueParser b m v
+  -> TableName b
   -> FieldInfoMap (FieldInfo b)
   -> GBoolExp b ColExp
   -> m (AnnBoolExp b v)
-annBoolExp rhsParser fim boolExp =
+annBoolExp rhsParser rootTable fim boolExp =
   case boolExp of
     BoolAnd exps -> BoolAnd <$> procExps exps
     BoolOr exps  -> BoolOr <$> procExps exps
-    BoolNot e    -> BoolNot <$> annBoolExp rhsParser fim e
+    BoolNot e    -> BoolNot <$> annBoolExp rhsParser rootTable fim e
     BoolExists (GExists refqt whereExp) ->
       withPathK "_exists" $ do
         refFields <- withPathK "_table" $ askFieldInfoMapSource refqt
         annWhereExp <- withPathK "_where" $
-                       annBoolExp rhsParser refFields whereExp
+                       annBoolExp rhsParser rootTable refFields whereExp
         return $ BoolExists $ GExists refqt annWhereExp
-    BoolFld fld -> BoolFld <$> annColExp rhsParser fim fld
+    BoolFld fld -> BoolFld <$> annColExp rhsParser rootTable fim fld
   where
-    procExps = mapM (annBoolExp rhsParser fim)
+    procExps = mapM (annBoolExp rhsParser rootTable fim)
 
 annColExp
   :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b)
   => ValueParser b m v
+  -> TableName b
   -> FieldInfoMap (FieldInfo b)
   -> ColExp
   -> m (AnnBoolExpFld b v)
-annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
+annColExp rhsParser rootTable colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn pgi -> AVCol pgi <$> parseBoolExpOperations rhsParser colInfoMap pgi colVal
+    FIColumn pgi -> AVCol pgi <$> parseBoolExpOperations rhsParser rootTable colInfoMap pgi colVal
     FIRelationship relInfo -> do
       relBoolExp      <- decodeValue colVal
       relFieldInfoMap <- askFieldInfoMapSource $ riRTable relInfo
-      annRelBoolExp   <- annBoolExp rhsParser relFieldInfoMap $
+      annRelBoolExp   <- annBoolExp rhsParser rootTable relFieldInfoMap $
                          unBoolExp relBoolExp
       return $ AVRel relInfo annRelBoolExp
     FIComputedField _ ->
@@ -78,20 +81,32 @@ annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
       throw400 UnexpectedPayload "remote field unsupported"
 
 toSQLBoolExp
-  :: S.Qual -> AnnBoolExpSQL 'Postgres -> S.BoolExp
+  :: forall pgKind
+   . Backend ('Postgres pgKind)
+  => S.Qual
+  -> AnnBoolExpSQL ('Postgres pgKind)
+  -> S.BoolExp
 toSQLBoolExp tq e =
   evalState (convBoolRhs' tq e) 0
 
 convBoolRhs'
-  :: S.Qual -> AnnBoolExpSQL 'Postgres -> State Word64 S.BoolExp
+  :: forall pgKind
+   . Backend ('Postgres pgKind)
+  => S.Qual
+  -> AnnBoolExpSQL ('Postgres pgKind)
+  -> State Word64 S.BoolExp
 convBoolRhs' tq =
   foldBoolExp (convColRhs tq)
 
 convColRhs
-  :: S.Qual -> AnnBoolExpFldSQL 'Postgres -> State Word64 S.BoolExp
+  :: forall pgKind
+   . Backend ('Postgres pgKind)
+  => S.Qual
+  -> AnnBoolExpFldSQL ('Postgres pgKind)
+  -> State Word64 S.BoolExp
 convColRhs tableQual = \case
   AVCol colInfo opExps -> do
-    let colFld = fromCol @'Postgres $ pgiColumn colInfo
+    let colFld = fromCol @('Postgres pgKind) $ pgiColumn colInfo
         bExps = map (mkFieldCompExp tableQual colFld) opExps
     return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
@@ -113,14 +128,20 @@ convColRhs tableQual = \case
   where
     mkQCol q = S.SEQIdentifier . S.QIdentifier q . toIdentifier
 
-foldExists :: GExists 'Postgres (AnnBoolExpFldSQL 'Postgres) -> State Word64 S.BoolExp
+foldExists
+  :: forall pgKind
+   . Backend ('Postgres pgKind)
+  => GExists ('Postgres pgKind) (AnnBoolExpFldSQL ('Postgres pgKind))
+  -> State Word64 S.BoolExp
 foldExists (GExists qt wh) = do
   whereExp <- foldBoolExp (convColRhs (S.QualTable qt)) wh
   return $ S.mkExists (S.FISimple qt Nothing) whereExp
 
 foldBoolExp
-  :: (AnnBoolExpFldSQL 'Postgres -> State Word64 S.BoolExp)
-  -> AnnBoolExpSQL 'Postgres
+  :: forall pgKind
+   . Backend ('Postgres pgKind)
+  => (AnnBoolExpFldSQL ('Postgres pgKind) -> State Word64 S.BoolExp)
+  -> AnnBoolExpSQL ('Postgres pgKind)
   -> State Word64 S.BoolExp
 foldBoolExp f = \case
   BoolAnd bes           -> do
@@ -136,13 +157,14 @@ foldBoolExp f = \case
   BoolFld ce           -> f ce
 
 mkFieldCompExp
-  :: S.Qual -> FieldName -> OpExpG 'Postgres S.SQLExp -> S.BoolExp
+  :: S.Qual -> FieldName -> OpExpG ('Postgres pgKind) S.SQLExp -> S.BoolExp
 mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
   where
-    mkQCol = S.SEQIdentifier . S.QIdentifier qual . toIdentifier
+    mkQCol (col, Nothing)    = S.SEQIdentifier $ S.QIdentifier qual $ toIdentifier col
+    mkQCol (col, Just table) = S.SEQIdentifier $ S.mkQIdentifierTable table $ toIdentifier col
     mkQField = S.SEQIdentifier . S.QIdentifier qual . Identifier . getFieldNameTxt
 
-    mkCompExp :: SQLExpression 'Postgres -> OpExpG 'Postgres (SQLExpression 'Postgres) -> S.BoolExp
+    mkCompExp :: SQLExpression ('Postgres pgKind) -> OpExpG ('Postgres pgKind) (SQLExpression ('Postgres pgKind)) -> S.BoolExp
     mkCompExp lhs = \case
       ACast casts      -> mkCastsExp casts
       AEQ False val    -> equalsBoolExpBuilder lhs val

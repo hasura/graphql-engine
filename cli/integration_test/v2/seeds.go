@@ -73,6 +73,7 @@ func TestSeedsCreateCmd(t *testing.T, ec *cli.ExecutionContext) {
 			// Do a regex match for filename returned
 			// check if it is in required format
 			var re = regexp.MustCompile(`^([a-z]+\/)([0-9]+)\_(.+)(\.sql)$`)
+			*gotFilename = filepath.ToSlash(*gotFilename)
 			regexGroups := re.FindStringSubmatch(*gotFilename)
 
 			// Since filename has to be in form

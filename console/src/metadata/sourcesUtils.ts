@@ -1,24 +1,31 @@
 import { Driver } from '../dataSources';
-import { SourceConnectionInfo } from './types';
+import {
+  ConnectionPoolSettings,
+  IsolationLevelOptions,
+  SourceConnectionInfo,
+} from './types';
 
 export const addSource = (
   driver: Driver,
   payload: {
     name: string;
     dbUrl: string | { from_env: string };
-    connection_pool_settings?: {
-      max_connections?: number;
-      idle_timeout?: number;
-      retries?: number;
-    };
+    connection_pool_settings?: ConnectionPoolSettings;
+    replace_configuration?: boolean;
     bigQuery: {
       projectId: string;
       datasets: string;
     };
+    preparedStatements?: boolean;
+    isolationLevel?: IsolationLevelOptions;
   },
   // supported only for PG sources at the moment
-  replicas?: Omit<SourceConnectionInfo, 'connection_string'>[]
+  replicas?: Omit<
+    SourceConnectionInfo,
+    'connection_string' | 'use_prepared_statements' | 'isolation_level'
+  >[]
 ) => {
+  const replace_configuration = payload.replace_configuration ?? false;
   if (driver === 'mssql') {
     return {
       type: 'mssql_add_source',
@@ -30,20 +37,26 @@ export const addSource = (
             pool_settings: payload.connection_pool_settings,
           },
         },
+        replace_configuration,
       },
     };
   }
 
   if (driver === 'bigquery') {
+    const service_account =
+      typeof payload.dbUrl === 'string'
+        ? JSON.parse(payload.dbUrl)
+        : payload.dbUrl;
     return {
       type: 'bigquery_add_source',
       args: {
         name: payload.name,
         configuration: {
-          service_account: payload.dbUrl,
+          service_account,
           project_id: payload.bigQuery.projectId,
           datasets: payload.bigQuery.datasets.split(',').map(d => d.trim()),
         },
+        replace_configuration,
       },
     };
   }
@@ -56,9 +69,12 @@ export const addSource = (
         connection_info: {
           database_url: payload.dbUrl,
           pool_settings: payload.connection_pool_settings,
+          use_prepared_statements: payload.preparedStatements,
+          isolation_level: payload.isolationLevel,
         },
         read_replicas: replicas?.length ? replicas : null,
       },
+      replace_configuration,
     },
   };
 };

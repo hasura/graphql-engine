@@ -18,7 +18,7 @@ import qualified Database.PG.Query                            as Q
 import qualified Network.HTTP.Client                          as HTTP
 import qualified Network.HTTP.Types                           as N
 
-import           Data.Aeson.TH
+import           Data.Aeson
 
 import qualified Hasura.Backends.Postgres.SQL.DML             as S
 import qualified Hasura.Tracing                               as Tracing
@@ -33,6 +33,8 @@ import           Hasura.Backends.Postgres.Translate.Mutation
 import           Hasura.Backends.Postgres.Translate.Returning
 import           Hasura.Backends.Postgres.Translate.Select
 import           Hasura.Backends.Postgres.Translate.Update
+import           Hasura.Base.Error
+import           Hasura.Base.Instances                        ()
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.Delete
@@ -40,19 +42,26 @@ import           Hasura.RQL.IR.Insert
 import           Hasura.RQL.IR.Returning
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.IR.Update
-import           Hasura.RQL.Instances                         ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
 
 
-data MutateResp a
+data MutateResp (b :: BackendType) a
   = MutateResp
   { _mrAffectedRows     :: !Int
-  , _mrReturningColumns :: ![ColumnValues 'Postgres a]
-  } deriving (Show, Eq)
-$(deriveJSON hasuraJSON ''MutateResp)
+  , _mrReturningColumns :: ![ColumnValues b a]
+  } deriving (Generic)
+deriving instance (Backend b, Show a) => Show (MutateResp b a)
+deriving instance (Backend b, Eq   a) => Eq   (MutateResp b a)
+
+instance (Backend b, ToJSON a) => ToJSON (MutateResp b a) where
+  toJSON = genericToJSON hasuraJSON
+
+instance (Backend b, FromJSON a) => FromJSON (MutateResp b a) where
+  parseJSON = genericParseJSON hasuraJSON
+
 
 type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
 
@@ -67,13 +76,14 @@ data Mutation (b :: BackendType)
   }
 
 mkMutation
-  :: Maybe MutationRemoteJoinCtx
+  :: Backend ('Postgres pgKind)
+  => Maybe MutationRemoteJoinCtx
   -> QualifiedTable
   -> (MutationCTE, DS.Seq Q.PrepArg)
-  -> MutationOutput 'Postgres
-  -> [ColumnInfo 'Postgres]
+  -> MutationOutput ('Postgres pgKind)
+  -> [ColumnInfo ('Postgres pgKind)]
   -> Bool
-  -> Mutation 'Postgres
+  -> Mutation ('Postgres pgKind)
 mkMutation ctx table query output' allCols strfyNum =
   let (output, remoteJoins) = getRemoteJoinsMutationOutput output'
       remoteJoinsCtx = (,) <$> remoteJoins <*> ctx
@@ -85,9 +95,11 @@ runMutation
   , MonadTx m
   , MonadIO m
   , Tracing.MonadTrace m
+  , Backend ('Postgres pgKind)
+  , PostgresAnnotatedFieldJSON pgKind
   )
   => Env.Environment
-  -> Mutation 'Postgres
+  -> Mutation ('Postgres pgKind)
   -> m EncJSON
 runMutation env mut =
   bool (mutateAndReturn env mut) (mutateAndSel env mut) $
@@ -99,9 +111,11 @@ mutateAndReturn
   , MonadTx m
   , MonadIO m
   , Tracing.MonadTrace m
+  , Backend ('Postgres pgKind)
+  , PostgresAnnotatedFieldJSON pgKind
   )
   => Env.Environment
-  -> Mutation 'Postgres
+  -> Mutation ('Postgres pgKind)
   -> m EncJSON
 mutateAndReturn env (Mutation qt (cte, p) mutationOutput allCols remoteJoins strfyNum) =
   executeMutationOutputQuery env qt allCols Nothing cte mutationOutput strfyNum (toList p) remoteJoins
@@ -113,11 +127,13 @@ execUpdateQuery
   , MonadTx m
   , MonadIO m
   , Tracing.MonadTrace m
+  , Backend ('Postgres pgKind)
+  , PostgresAnnotatedFieldJSON pgKind
   )
   => Env.Environment
   -> Bool
   -> Maybe MutationRemoteJoinCtx
-  -> (AnnUpd 'Postgres, DS.Seq Q.PrepArg)
+  -> (AnnUpd ('Postgres pgKind), DS.Seq Q.PrepArg)
   -> m EncJSON
 execUpdateQuery env strfyNum remoteJoinCtx (u, p) =
   runMutation env $ mkMutation remoteJoinCtx (uqp1Table u) (MCCheckConstraint updateCTE, p)
@@ -131,11 +147,13 @@ execDeleteQuery
   , MonadTx m
   , MonadIO m
   , Tracing.MonadTrace m
+  , Backend ('Postgres pgKind)
+  , PostgresAnnotatedFieldJSON pgKind
   )
   => Env.Environment
   -> Bool
   -> Maybe MutationRemoteJoinCtx
-  -> (AnnDel 'Postgres, DS.Seq Q.PrepArg)
+  -> (AnnDel ('Postgres pgKind), DS.Seq Q.PrepArg)
   -> m EncJSON
 execDeleteQuery env strfyNum remoteJoinCtx (u, p) =
   runMutation env $ mkMutation remoteJoinCtx (dqp1Table u) (MCDelete delete, p)
@@ -148,11 +166,13 @@ execInsertQuery
      , MonadTx m
      , MonadIO m
      , Tracing.MonadTrace m
+     , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
      )
   => Env.Environment
   -> Bool
   -> Maybe MutationRemoteJoinCtx
-  -> (InsertQueryP1 'Postgres, DS.Seq Q.PrepArg)
+  -> (InsertQueryP1 ('Postgres pgKind), DS.Seq Q.PrepArg)
   -> m EncJSON
 execInsertQuery env strfyNum remoteJoinCtx (u, p) =
   runMutation env
@@ -178,14 +198,16 @@ conditions **might** see some degradation.
 -}
 
 mutateAndSel
-  ::
-  ( HasVersion
-  , MonadTx m
-  , MonadIO m
-  , Tracing.MonadTrace m
-  )
+  :: forall pgKind m
+   . ( HasVersion
+     , MonadTx m
+     , MonadIO m
+     , Tracing.MonadTrace m
+     , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
   => Env.Environment
-  -> Mutation 'Postgres
+  -> Mutation ('Postgres pgKind)
   -> m EncJSON
 mutateAndSel env (Mutation qt q mutationOutput allCols remoteJoins strfyNum) = do
   -- Perform mutation and fetch unique columns
@@ -203,21 +225,23 @@ withCheckPermission sqlTx = do
   pure rawResponse
 
 executeMutationOutputQuery
-  :: forall m.
-  ( HasVersion
-  , MonadTx m
-  , MonadIO m
-  , Tracing.MonadTrace m
-  )
+  :: forall pgKind m
+   . ( HasVersion
+     , MonadTx m
+     , MonadIO m
+     , Tracing.MonadTrace m
+     , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
   => Env.Environment
   -> QualifiedTable
-  -> [ColumnInfo 'Postgres]
+  -> [ColumnInfo ('Postgres pgKind)]
   -> Maybe Int
   -> MutationCTE
-  -> MutationOutput 'Postgres
+  -> MutationOutput ('Postgres pgKind)
   -> Bool
   -> [Q.PrepArg] -- ^ Prepared params
-  -> Maybe (RemoteJoins 'Postgres, MutationRemoteJoinCtx)  -- ^ Remote joins context
+  -> Maybe (RemoteJoins ('Postgres pgKind), MutationRemoteJoinCtx)  -- ^ Remote joins context
   -> m EncJSON
 executeMutationOutputQuery env qt allCols preCalAffRows cte mutOutput strfyNum prepArgs maybeRJ = do
   let queryTx :: Q.FromRes a => m a
@@ -237,11 +261,13 @@ executeMutationOutputQuery env qt allCols preCalAffRows cte mutOutput strfyNum p
       processRemoteJoins env httpManager reqHeaders userInfo rawResponse remoteJoins
 
 mutateAndFetchCols
-  :: QualifiedTable
-  -> [ColumnInfo 'Postgres]
+  :: forall pgKind
+   . (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind)
+  => QualifiedTable
+  -> [ColumnInfo ('Postgres pgKind)]
   -> (MutationCTE, DS.Seq Q.PrepArg)
   -> Bool
-  -> Q.TxE QErr (MutateResp TxtEncodedPGVal)
+  -> Q.TxE QErr (MutateResp ('Postgres pgKind) TxtEncodedVal)
 mutateAndFetchCols qt cols (cte, p) strfyNum = do
   let mutationTx :: Q.FromRes a => Q.TxE QErr a
       mutationTx =
@@ -256,7 +282,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum = do
     tabFrom = FromIdentifier aliasIdentifier
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
-              \ci -> (fromCol @'Postgres $ pgiColumn ci, mkAnnColumnFieldAsText ci)
+              \ci -> (fromCol @('Postgres pgKind) $ pgiColumn ci, mkAnnColumnFieldAsText ci)
 
     sqlText = Q.fromBuilder $ toSQL selectWith
     selectWith = S.SelectWith [(S.Alias aliasIdentifier, getMutationCTE cte)] select

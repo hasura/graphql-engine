@@ -3,17 +3,18 @@ module Hasura.Server.API.Metadata where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                   as Env
-import qualified Network.HTTP.Client.Extended       as HTTP
+import qualified Data.Environment                          as Env
+import qualified Network.HTTP.Client.Extended              as HTTP
 
-import           Control.Monad.Trans.Control        (MonadBaseControl)
+import           Control.Monad.Trans.Control               (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Hasura.Tracing                     as Tracing
+import qualified Hasura.Tracing                            as Tracing
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
@@ -22,6 +23,7 @@ import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Endpoint
 import           Hasura.RQL.DDL.EventTrigger
+import           Hasura.RQL.DDL.GraphqlSchemaIntrospection
 import           Hasura.RQL.DDL.InheritedRoles
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
@@ -35,62 +37,62 @@ import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Types                (InstanceId (..), MaintenanceMode (..))
-import           Hasura.Server.Utils                (APIVersion (..))
-import           Hasura.Server.Version              (HasVersion)
+import           Hasura.Server.Types                       (InstanceId (..), MaintenanceMode (..))
+import           Hasura.Server.Utils                       (APIVersion (..))
+import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
 
 
 data RQLMetadataV1
-  = RMPgAddSource !(AddSource 'Postgres)
+  = RMPgAddSource !(AddSource ('Postgres 'Vanilla))
   | RMPgDropSource !DropSource
 
-  | RMPgTrackTable !(TrackTableV2 'Postgres)
-  | RMPgUntrackTable !(UntrackTable 'Postgres)
+  | RMPgTrackTable !(TrackTableV2 ('Postgres 'Vanilla))
+  | RMPgUntrackTable !(UntrackTable ('Postgres 'Vanilla))
   | RMPgSetTableIsEnum !SetTableIsEnum
   | RMPgSetTableCustomization !SetTableCustomization
 
   -- Postgres functions
-  | RMPgTrackFunction !TrackFunctionV2
-  | RMPgUntrackFunction !(UnTrackFunction 'Postgres)
+  | RMPgTrackFunction !(TrackFunctionV2 ('Postgres 'Vanilla))
+  | RMPgUntrackFunction !(UnTrackFunction ('Postgres 'Vanilla))
 
   -- Postgres function permissions
-  | RMPgCreateFunctionPermission !(CreateFunctionPermission 'Postgres)
-  | RMPgDropFunctionPermission !(DropFunctionPermission 'Postgres)
+  | RMPgCreateFunctionPermission !(CreateFunctionPermission ('Postgres 'Vanilla))
+  | RMPgDropFunctionPermission !(DropFunctionPermission ('Postgres 'Vanilla))
 
   -- Postgres table relationships
-  | RMPgCreateObjectRelationship !(CreateObjRel 'Postgres)
-  | RMPgCreateArrayRelationship !(CreateArrRel 'Postgres)
-  | RMPgDropRelationship !(DropRel 'Postgres)
-  | RMPgSetRelationshipComment !(SetRelComment 'Postgres)
-  | RMPgRenameRelationship !(RenameRel 'Postgres)
+  | RMPgCreateObjectRelationship !(CreateObjRel ('Postgres 'Vanilla))
+  | RMPgCreateArrayRelationship !(CreateArrRel ('Postgres 'Vanilla))
+  | RMPgDropRelationship !(DropRel ('Postgres 'Vanilla))
+  | RMPgSetRelationshipComment !(SetRelComment ('Postgres 'Vanilla))
+  | RMPgRenameRelationship !(RenameRel ('Postgres 'Vanilla))
 
   -- Postgres computed fields
-  | RMPgAddComputedField !(AddComputedField 'Postgres)
-  | RMPgDropComputedField !(DropComputedField 'Postgres)
+  | RMPgAddComputedField !(AddComputedField ('Postgres 'Vanilla))
+  | RMPgDropComputedField !(DropComputedField ('Postgres 'Vanilla))
 
   -- Postgres tables remote relationships
-  | RMPgCreateRemoteRelationship !(RemoteRelationship 'Postgres)
-  | RMPgUpdateRemoteRelationship !(RemoteRelationship 'Postgres)
-  | RMPgDeleteRemoteRelationship !DeleteRemoteRelationship
+  | RMPgCreateRemoteRelationship !(RemoteRelationship ('Postgres 'Vanilla))
+  | RMPgUpdateRemoteRelationship !(RemoteRelationship ('Postgres 'Vanilla))
+  | RMPgDeleteRemoteRelationship !(DeleteRemoteRelationship ('Postgres 'Vanilla))
 
   -- Postgres tables permissions
-  | RMPgCreateInsertPermission !(CreateInsPerm 'Postgres)
-  | RMPgCreateSelectPermission !(CreateSelPerm 'Postgres)
-  | RMPgCreateUpdatePermission !(CreateUpdPerm 'Postgres)
-  | RMPgCreateDeletePermission !(CreateDelPerm 'Postgres)
+  | RMPgCreateInsertPermission !(CreateInsPerm ('Postgres 'Vanilla))
+  | RMPgCreateSelectPermission !(CreateSelPerm ('Postgres 'Vanilla))
+  | RMPgCreateUpdatePermission !(CreateUpdPerm ('Postgres 'Vanilla))
+  | RMPgCreateDeletePermission !(CreateDelPerm ('Postgres 'Vanilla))
 
-  | RMPgDropInsertPermission !(DropPerm 'Postgres (InsPerm 'Postgres))
-  | RMPgDropSelectPermission !(DropPerm 'Postgres (SelPerm 'Postgres))
-  | RMPgDropUpdatePermission !(DropPerm 'Postgres (UpdPerm 'Postgres))
-  | RMPgDropDeletePermission !(DropPerm 'Postgres (DelPerm 'Postgres))
-  | RMPgSetPermissionComment !(SetPermComment 'Postgres)
+  | RMPgDropInsertPermission !(DropPerm ('Postgres 'Vanilla) (InsPerm ('Postgres 'Vanilla)))
+  | RMPgDropSelectPermission !(DropPerm ('Postgres 'Vanilla) (SelPerm ('Postgres 'Vanilla)))
+  | RMPgDropUpdatePermission !(DropPerm ('Postgres 'Vanilla) (UpdPerm ('Postgres 'Vanilla)))
+  | RMPgDropDeletePermission !(DropPerm ('Postgres 'Vanilla) (DelPerm ('Postgres 'Vanilla)))
+  | RMPgSetPermissionComment !(SetPermComment ('Postgres 'Vanilla))
 
   -- Postgres tables event triggers
-  | RMPgCreateEventTrigger !CreateEventTriggerQuery
-  | RMPgDeleteEventTrigger !DeleteEventTriggerQuery
-  | RMPgRedeliverEvent     !RedeliverEventQuery
-  | RMPgInvokeEventTrigger !InvokeEventTriggerQuery
+  | RMPgCreateEventTrigger !(CreateEventTriggerQuery ('Postgres 'Vanilla))
+  | RMPgDeleteEventTrigger !(DeleteEventTriggerQuery ('Postgres 'Vanilla))
+  | RMPgRedeliverEvent     !(RedeliverEventQuery     ('Postgres 'Vanilla))
+  | RMPgInvokeEventTrigger !(InvokeEventTriggerQuery ('Postgres 'Vanilla))
 
   -- MSSQL sources
   | RMMssqlAddSource !(AddSource 'MSSQL)
@@ -115,6 +117,39 @@ data RQLMetadataV1
   | RMMssqlDropDeletePermission !(DropPerm 'MSSQL (DelPerm 'MSSQL))
   | RMMssqlSetPermissionComment !(SetPermComment 'MSSQL)
 
+  -- Citus functions
+  | RMCitusTrackFunction !(TrackFunctionV2 ('Postgres 'Citus))
+  | RMCitusUntrackFunction !(UnTrackFunction ('Postgres 'Citus))
+
+  -- Citus function permissions
+  | RMCitusCreateFunctionPermission !(CreateFunctionPermission ('Postgres 'Citus))
+  | RMCitusDropFunctionPermission !(DropFunctionPermission ('Postgres 'Citus))
+
+  -- Citus sources
+  | RMCitusAddSource !(AddSource ('Postgres 'Citus))
+  | RMCitusDropSource !DropSource
+  | RMCitusTrackTable !(TrackTableV2 ('Postgres 'Citus))
+  | RMCitusUntrackTable !(UntrackTable ('Postgres 'Citus))
+
+  -- Citus relationship
+  | RMCitusCreateObjectRelationship !(CreateObjRel ('Postgres 'Citus))
+  | RMCitusCreateArrayRelationship !(CreateArrRel ('Postgres 'Citus))
+  | RMCitusDropRelationship !(DropRel ('Postgres 'Citus))
+  | RMCitusSetRelationshipComment !(SetRelComment ('Postgres 'Citus))
+  | RMCitusRenameRelationship !(RenameRel ('Postgres 'Citus))
+
+  -- Citus permissions
+  | RMCitusCreateInsertPermission !(CreateInsPerm ('Postgres 'Citus))
+  | RMCitusCreateSelectPermission !(CreateSelPerm ('Postgres 'Citus))
+  | RMCitusCreateUpdatePermission !(CreateUpdPerm ('Postgres 'Citus))
+  | RMCitusCreateDeletePermission !(CreateDelPerm ('Postgres 'Citus))
+
+  | RMCitusDropInsertPermission !(DropPerm ('Postgres 'Citus) (InsPerm ('Postgres 'Citus)))
+  | RMCitusDropSelectPermission !(DropPerm ('Postgres 'Citus) (SelPerm ('Postgres 'Citus)))
+  | RMCitusDropUpdatePermission !(DropPerm ('Postgres 'Citus) (UpdPerm ('Postgres 'Citus)))
+  | RMCitusDropDeletePermission !(DropPerm ('Postgres 'Citus) (DelPerm ('Postgres 'Citus)))
+  | RMCitusSetPermissionComment !(SetPermComment ('Postgres 'Citus))
+
   -- BigQuery sources
   | RMBigqueryAddSource !(AddSource 'BigQuery)
   | RMBigqueryDropSource !DropSource
@@ -136,6 +171,8 @@ data RQLMetadataV1
   | RMBigqueryDropUpdatePermission !(DropPerm 'BigQuery (UpdPerm 'BigQuery))
   | RMBigqueryDropDeletePermission !(DropPerm 'BigQuery (DelPerm 'BigQuery))
   | RMBigquerySetPermissionComment !(SetPermComment 'BigQuery)
+
+  | RMRenameSource !RenameSource
 
   -- Inconsistent metadata
   | RMGetInconsistentMetadata !GetInconsistentMetadata
@@ -201,6 +238,8 @@ data RQLMetadataV1
   -- inherited roles
   | RMAddInheritedRole !AddInheritedRole
   | RMDropInheritedRole !DropInheritedRole
+
+  | RMSetGraphqlSchemaIntrospectionOptions !SetGraphqlIntrospectionOptions
 
   -- bulk metadata queries
   | RMBulk [RQLMetadataRequest]
@@ -293,9 +332,9 @@ runMetadataQuery env instanceId userInfo httpManager serverConfigCtx schemaCache
     & runExceptT
     & liftEitherM
   -- set modified metadata in storage
-  if (queryModifiesMetadata _rqlMetadata)
+  if queryModifiesMetadata _rqlMetadata
     then
-      case (_sccMaintenanceMode serverConfigCtx) of
+      case _sccMaintenanceMode serverConfigCtx of
         MaintenanceModeDisabled -> do
           -- set modified metadata in storage
           newResourceVersion <- setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
@@ -316,19 +355,24 @@ queryModifiesMetadata :: RQLMetadataRequest -> Bool
 queryModifiesMetadata = \case
   RMV1 q ->
     case q of
-      RMGetCatalogState _      -> False
-      RMExportMetadata _       -> False
-      RMGetEventInvocations _  -> False
-      RMGetScheduledEvents _   -> False
-
-      RMCreateScheduledEvent _ -> False
-      RMDeleteScheduledEvent _ -> False
-      RMBulk qs                -> any queryModifiesMetadata qs
-      _                        -> True
+      RMPgRedeliverEvent _        -> False
+      RMPgInvokeEventTrigger _    -> False
+      RMGetInconsistentMetadata _ -> False
+      RMIntrospectRemoteSchema _  -> False
+      RMDumpInternalState _       -> False
+      RMSetCatalogState _         -> False
+      RMGetCatalogState _         -> False
+      RMExportMetadata _          -> False
+      RMGetEventInvocations _     -> False
+      RMGetScheduledEvents _      -> False
+      RMCreateScheduledEvent _    -> False
+      RMDeleteScheduledEvent _    -> False
+      RMBulk qs                   -> any queryModifiesMetadata qs
+      _                           -> True
   RMV2 q ->
     case q of
-      RMV2ExportMetadata _  -> False
-      RMV2ReplaceMetadata _ -> True
+      RMV2ExportMetadata _ -> False
+      _                    -> True
 
 runMetadataQueryM
   :: ( HasVersion
@@ -370,6 +414,7 @@ runMetadataQueryV1M
   -> m EncJSON
 runMetadataQueryV1M env currentResourceVersion = \case
   RMPgAddSource q                   -> runAddSource q
+  RMRenameSource   q                -> runRenameSource q
   RMPgDropSource q                  -> runDropSource q
 
   RMPgTrackTable q                  -> runTrackTableV2Q q
@@ -456,6 +501,34 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMMssqlDropDeletePermission q     -> runDropPerm q
   RMMssqlSetPermissionComment q     -> runSetPermComment q
 
+  RMCitusAddSource q                -> runAddSource q
+  RMCitusDropSource q               -> runDropSource q
+  RMCitusTrackTable q               -> runTrackTableV2Q q
+  RMCitusUntrackTable q             -> runUntrackTableQ q
+
+  RMCitusTrackFunction q               -> runTrackFunctionV2 q
+  RMCitusUntrackFunction q             -> runUntrackFunc q
+
+  RMCitusCreateFunctionPermission q    -> runCreateFunctionPermission q
+  RMCitusDropFunctionPermission   q    -> runDropFunctionPermission q
+
+  RMCitusCreateObjectRelationship q -> runCreateRelationship ObjRel q
+  RMCitusCreateArrayRelationship  q -> runCreateRelationship ArrRel q
+  RMCitusDropRelationship q         -> runDropRel q
+  RMCitusSetRelationshipComment q   -> runSetRelComment q
+  RMCitusRenameRelationship q       -> runRenameRel q
+
+  RMCitusCreateInsertPermission q   -> runCreatePerm q
+  RMCitusCreateSelectPermission q   -> runCreatePerm q
+  RMCitusCreateUpdatePermission q   -> runCreatePerm q
+  RMCitusCreateDeletePermission q   -> runCreatePerm q
+
+  RMCitusDropInsertPermission q     -> runDropPerm q
+  RMCitusDropSelectPermission q     -> runDropPerm q
+  RMCitusDropUpdatePermission q     -> runDropPerm q
+  RMCitusDropDeletePermission q     -> runDropPerm q
+  RMCitusSetPermissionComment q     -> runSetPermComment q
+
   RMGetInconsistentMetadata q       -> runGetInconsistentMetadata q
   RMDropInconsistentMetadata q      -> runDropInconsistentMetadata q
 
@@ -511,7 +584,9 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMAddInheritedRole q              -> runAddInheritedRole q
   RMDropInheritedRole q             -> runDropInheritedRole q
 
-  RMBulk q                          -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
+  RMSetGraphqlSchemaIntrospectionOptions q -> runSetGraphqlSchemaIntrospectionOptions q
+
+  RMBulk q                                 -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
 
 runMetadataQueryV2M
   :: ( MonadIO m

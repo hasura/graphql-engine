@@ -8,6 +8,7 @@ module Hasura.GraphQL.Parser.Monad
   , ParseT
   , runParseT
   , ParseError(..)
+  , reportParseErrors
   ) where
 
 import           Hasura.Prelude
@@ -27,9 +28,10 @@ import           Data.Proxy                   (Proxy (..))
 import           System.IO.Unsafe             (unsafeInterleaveIO)
 import           Type.Reflection              (Typeable, typeRep, (:~:) (..))
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.RQL.Types.Error       (Code)
+
 
 -- -------------------------------------------------------------------------------------------------
 -- schema construction
@@ -189,3 +191,14 @@ data ParseError = ParseError
   , peMessage :: Text
   , peCode    :: Code
   }
+
+reportParseErrors
+  :: MonadError QErr m
+  => NESeq ParseError
+  -> m a
+reportParseErrors errs = case NE.head errs of
+  -- TODO: Our error reporting machinery doesn’t currently support reporting
+  -- multiple errors at once, so we’re throwing away all but the first one
+  -- here. It would be nice to report all of them!
+  ParseError{ pePath, peMessage, peCode } ->
+    throwError (err400 peCode peMessage){ qePath = pePath }

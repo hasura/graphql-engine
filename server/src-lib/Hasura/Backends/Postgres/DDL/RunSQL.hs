@@ -3,29 +3,32 @@ module Hasura.Backends.Postgres.DDL.RunSQL
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                as M
-import qualified Data.HashMap.Strict.InsOrd         as OMap
-import qualified Data.HashSet                       as HS
-import qualified Data.List.NonEmpty                 as NE
-import qualified Database.PG.Query                  as Q
+import qualified Data.HashMap.Strict                 as M
+import qualified Data.HashMap.Strict.InsOrd          as OMap
+import qualified Data.HashSet                        as HS
+import qualified Data.List.NonEmpty                  as NE
+import qualified Database.PG.Query                   as Q
 
-import           Control.Lens                       ((.~))
-import           Control.Monad.Trans.Control        (MonadBaseControl)
+import           Control.Lens                        ((.~))
+import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Data.Aeson.TH
-import           Data.List.Extended                 (duplicates)
+import           Data.List.Extended                  (duplicates)
 import           Data.Text.Extended
 
-import qualified Hasura.SQL.AnyBackend              as AB
+import qualified Hasura.SQL.AnyBackend               as AB
 
+import           Hasura.Backends.Postgres.DDL.Source (ToMetadataFetchQuery, fetchTableMetadata)
 import           Hasura.Backends.Postgres.DDL.Table
-import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
-import           Hasura.RQL.DDL.Deps                (reportDepsExt)
+import           Hasura.Backends.Postgres.SQL.Types  hiding (TableName)
+import           Hasura.Base.Error
+import           Hasura.RQL.DDL.Deps                 (reportDepsExt)
 import           Hasura.RQL.DDL.Schema.Common
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.Types                   hiding (ConstraintName, fmFunction,
-                                                     tmComputedFields, tmTable)
+import           Hasura.RQL.Types                    hiding (ConstraintName, fmFunction,
+                                                      tmComputedFields, tmTable)
+
 
 data FunctionMeta
   = FunctionMeta
@@ -50,10 +53,10 @@ data TableMeta (b :: BackendType)
   } deriving (Show, Eq)
 
 fetchMeta
-  :: (MonadTx m)
-  => TableCache 'Postgres
-  -> FunctionCache 'Postgres
-  -> m ([TableMeta 'Postgres], [FunctionMeta])
+  :: (ToMetadataFetchQuery pgKind, BackendMetadata ('Postgres pgKind), MonadTx m)
+  => TableCache ('Postgres pgKind)
+  -> FunctionCache ('Postgres pgKind)
+  -> m ([TableMeta ('Postgres pgKind)], [FunctionMeta])
 fetchMeta tables functions = do
   tableMetaInfos <- fetchTableMetadata
   functionMetaInfos <- fetchFunctionMetadata
@@ -112,7 +115,11 @@ data TableDiff (b :: BackendType)
   , _tdNewDescription  :: !(Maybe PGDescription)
   }
 
-getTableDiff :: TableMeta 'Postgres -> TableMeta 'Postgres -> TableDiff 'Postgres
+getTableDiff
+  :: (Backend ('Postgres pgKind), BackendMetadata ('Postgres pgKind))
+  => TableMeta ('Postgres pgKind)
+  -> TableMeta ('Postgres pgKind)
+  -> TableDiff ('Postgres pgKind)
 getTableDiff oldtm newtm =
   TableDiff mNewName droppedCols addedCols alteredCols
   droppedFKeyConstraints computedFieldDiff uniqueOrPrimaryCons mNewDesc
@@ -164,23 +171,23 @@ getTableDiff oldtm newtm =
                       overloadedComputedFieldFunctions
 
 getTableChangeDeps
-  :: (QErrM m, CacheRM m)
-  => SourceName -> QualifiedTable -> TableDiff 'Postgres -> m [SchemaObjId]
+  :: forall pgKind m. (Backend ('Postgres pgKind), QErrM m, CacheRM m)
+  => SourceName -> QualifiedTable -> TableDiff ('Postgres pgKind) -> m [SchemaObjId]
 getTableChangeDeps source tn tableDiff = do
   sc <- askSchemaCache
   -- for all the dropped columns
   droppedColDeps <- fmap concat $ forM droppedCols $ \droppedCol -> do
     let objId = SOSourceObj source
                   $ AB.mkAnyBackend
-                  $ SOITableObj tn
-                  $ TOCol droppedCol
+                  $ SOITableObj @('Postgres pgKind) tn
+                  $ TOCol @('Postgres pgKind) droppedCol
     return $ getDependentObjs sc objId
   -- for all dropped constraints
   droppedConsDeps <- fmap concat $ forM droppedFKeyConstraints $ \droppedCons -> do
     let objId = SOSourceObj source
                   $ AB.mkAnyBackend
-                  $ SOITableObj tn
-                  $ TOForeignKey droppedCons
+                  $ SOITableObj @('Postgres pgKind) tn
+                  $ TOForeignKey @('Postgres pgKind) droppedCons
     return $ getDependentObjs sc objId
   return $ droppedConsDeps <> droppedColDeps <> droppedComputedFieldDeps
   where
@@ -189,7 +196,7 @@ getTableChangeDeps source tn tableDiff = do
       map
         (SOSourceObj source
           . AB.mkAnyBackend
-          . SOITableObj tn
+          . SOITableObj @('Postgres pgKind) tn
           . TOComputedField)
         $ _cfdDropped computedFieldDiff
 
@@ -199,7 +206,11 @@ data SchemaDiff (b :: BackendType)
   , _sdAlteredTables :: ![(QualifiedTable, TableDiff b)]
   }
 
-getSchemaDiff :: [TableMeta 'Postgres] -> [TableMeta 'Postgres] -> SchemaDiff 'Postgres
+getSchemaDiff
+  :: BackendMetadata ('Postgres pgKind)
+  => [TableMeta ('Postgres pgKind)]
+  -> [TableMeta ('Postgres pgKind)]
+  -> SchemaDiff ('Postgres pgKind)
 getSchemaDiff oldMeta newMeta =
   SchemaDiff droppedTables survivingTables
   where
@@ -209,14 +220,14 @@ getSchemaDiff oldMeta newMeta =
       (tmTable oldtm, getTableDiff oldtm newtm)
 
 getSchemaChangeDeps
-  :: (QErrM m, CacheRM m)
-  => SourceName -> SchemaDiff 'Postgres -> m [SourceObjId 'Postgres]
+  :: forall pgKind m. (Backend ('Postgres pgKind), QErrM m, CacheRM m)
+  => SourceName -> SchemaDiff ('Postgres pgKind) -> m [SourceObjId ('Postgres pgKind)]
 getSchemaChangeDeps source schemaDiff = do
   -- Get schema cache
   sc <- askSchemaCache
   let tableIds =
         map
-          (SOSourceObj source . AB.mkAnyBackend . SOITable)
+          (SOSourceObj source . AB.mkAnyBackend . SOITable @('Postgres pgKind))
           droppedTables
   -- Get the dependent of the dropped tables
   let tableDropDeps = concatMap (getDependentObjs sc) tableIds
@@ -227,7 +238,7 @@ getSchemaChangeDeps source schemaDiff = do
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
 
-    getIndirectDep :: SchemaObjId -> Maybe (SourceObjId 'Postgres)
+    getIndirectDep :: SchemaObjId -> Maybe (SourceObjId ('Postgres pgKind))
     getIndirectDep (SOSourceObj s exists) =
       AB.unpackAnyBackend exists >>= \case
         srcObjId@(SOITableObj tn _) ->
@@ -267,10 +278,20 @@ getOverloadedFuncs trackedFuncs newFuncMeta =
 -- result. If it did, it checks to ensure the changes do not violate any integrity constraints, and
 -- if not, incorporates them into the schema cache.
 withMetadataCheck
-  :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m, CacheRWM m, HasServerConfigCtx m, MetadataM m)
+  :: forall (pgKind :: PostgresKind) a m
+   . ( Backend ('Postgres pgKind)
+     , BackendMetadata ('Postgres pgKind)
+     , ToMetadataFetchQuery pgKind
+     , CacheRWM m
+     , HasServerConfigCtx m
+     , MetadataM m
+     , MonadBaseControl IO m
+     , MonadError QErr m
+     , MonadIO m
+     )
   => SourceName -> Bool -> Q.TxAccess -> LazyTxT QErr m a -> m a
 withMetadataCheck source cascade txAccess action = do
-  SourceInfo _ preActionTables preActionFunctions sourceConfig <- askSourceInfo source
+  SourceInfo _ preActionTables preActionFunctions sourceConfig <- askSourceInfo @('Postgres pgKind) source
 
   (actionResult, metadataUpdater) <-
     liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx sourceConfig) txAccess $ do
@@ -315,7 +336,7 @@ withMetadataCheck source cascade txAccess action = do
               SOIFunction qf -> Just qf
               _              -> Nothing
 
-        forM_ (droppedFuncs \\ purgedFuncs) $ tell . dropFunctionInMetadata source
+        forM_ (droppedFuncs \\ purgedFuncs) $ tell . dropFunctionInMetadata @('Postgres pgKind) source
 
         -- Process altered functions
         forM_ alteredFuncs $ \(qf, newTy) -> do
@@ -335,7 +356,7 @@ withMetadataCheck source cascade txAccess action = do
   postActionSchemaCache <- askSchemaCache
 
   -- Recreate event triggers in hdb_catalog
-  let postActionTables = fromMaybe mempty $ unsafeTableCache source $ scSources postActionSchemaCache
+  let postActionTables = fromMaybe mempty $ unsafeTableCache @('Postgres pgKind) source $ scSources postActionSchemaCache
   serverConfigCtx <- askServerConfigCtx
   liftEitherM $ runPgSourceWriteTx sourceConfig $
     forM_ (M.elems postActionTables) $ \(TableInfo coreInfo _ eventTriggers) -> do
@@ -348,15 +369,15 @@ withMetadataCheck source cascade txAccess action = do
   pure actionResult
   where
     processSchemaChanges
-      :: ( MonadError QErr m
-         , CacheRM m
-         , MonadWriter MetadataModifier m
+      :: ( MonadError QErr m'
+         , CacheRM m'
+         , MonadWriter MetadataModifier m'
          )
-      => TableCache 'Postgres -> SchemaDiff 'Postgres -> m ()
+      => TableCache ('Postgres pgKind) -> SchemaDiff ('Postgres pgKind) -> m' ()
     processSchemaChanges preActionTables schemaDiff = do
       -- Purge the dropped tables
       forM_ droppedTables $
-        \tn -> tell $ MetadataModifier $ metaSources.ix source.toSourceMetadata.smTables %~ OMap.delete tn
+        \tn -> tell $ MetadataModifier $ metaSources.ix source.(toSourceMetadata @('Postgres pgKind)).smTables %~ OMap.delete tn
 
       for_ alteredTables $ \(oldQtn, tableDiff) -> do
         ti <- onNothing
@@ -367,11 +388,14 @@ withMetadataCheck source cascade txAccess action = do
         SchemaDiff droppedTables alteredTables = schemaDiff
 
 processTableChanges
-  :: ( MonadError QErr m
+  :: forall pgKind m
+   . ( Backend ('Postgres pgKind)
+     , BackendMetadata ('Postgres pgKind)
+     , MonadError QErr m
      , CacheRM m
      , MonadWriter MetadataModifier m
      )
-  => SourceName -> TableCoreInfo 'Postgres -> TableDiff 'Postgres -> m ()
+  => SourceName -> TableCoreInfo ('Postgres pgKind) -> TableDiff ('Postgres pgKind) -> m ()
 processTableChanges source ti tableDiff = do
   -- If table rename occurs then don't replace constraints and
   -- process dropped/added columns, because schema reload happens eventually
@@ -386,7 +410,7 @@ processTableChanges source ti tableDiff = do
         checkConflictingNode sc tnGQL
         procAlteredCols sc tn
         -- update new table in metadata
-        renameTableInMetadata source newTN tn
+        renameTableInMetadata @('Postgres pgKind) source newTN tn
 
   -- Process computed field diff
   processComputedFieldDiff tn
@@ -401,7 +425,7 @@ processTableChanges source ti tableDiff = do
           modifiedCustomColumnNames = foldl' (flip M.delete) customColumnNames droppedCols
       when (modifiedCustomColumnNames /= customColumnNames) $
         tell $ MetadataModifier $
-          tableMetadataSetter source tn.tmConfiguration .~ TableConfig customFields modifiedCustomColumnNames customName
+          tableMetadataSetter @('Postgres pgKind) source tn.tmConfiguration .~ TableConfig customFields modifiedCustomColumnNames customName
 
     procAlteredCols sc tn = for_ alteredCols $
       \( RawColumnInfo oldName _ oldType _ _
@@ -413,8 +437,8 @@ processTableChanges source ti tableDiff = do
               let colId =
                     SOSourceObj source
                       $ AB.mkAnyBackend
-                      $ SOITableObj tn
-                      $ TOCol oldName
+                      $ SOITableObj @('Postgres pgKind) tn
+                      $ TOCol @('Postgres pgKind) oldName
                   typeDepObjs = getDependentObjsWith (== DROnType) sc colId
 
               unless (null typeDepObjs) $ throw400 DependencyError $

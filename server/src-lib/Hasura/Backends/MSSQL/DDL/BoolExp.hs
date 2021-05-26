@@ -10,9 +10,9 @@ import           Data.Text.Extended                    (dquote, (<<>))
 
 import           Hasura.Backends.MSSQL.Instances.Types ()
 import           Hasura.Backends.MSSQL.Types           hiding (ColumnType)
+import           Hasura.Base.Error
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
@@ -21,11 +21,12 @@ parseBoolExpOperations
   :: forall m v
    . (MonadError QErr m) -- , TableCoreInfoRM 'MSSQL m)
   => ValueParser 'MSSQL m v
+  -> TableName
   -> FieldInfoMap (FieldInfo 'MSSQL)
   -> ColumnInfo 'MSSQL
   -> J.Value
   -> m [OpExpG 'MSSQL v]
-parseBoolExpOperations rhsParser _fields columnInfo value =
+parseBoolExpOperations rhsParser _table _fields columnInfo value =
   withPathK (columnNameText $ pgiColumn columnInfo) $
     parseOperations (pgiType columnInfo) value
   where

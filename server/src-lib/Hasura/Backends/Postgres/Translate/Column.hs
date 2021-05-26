@@ -11,7 +11,7 @@ import           Hasura.RQL.Types.Column
 import           Hasura.SQL.Backend
 
 
-toTxtValue :: ColumnValue 'Postgres -> SQLExp
+toTxtValue :: ColumnValue ('Postgres pgKind) -> SQLExp
 toTxtValue ColumnValue{..} =
   withTyAnn ty . withConstructorFn ty $ txtEncoder cvValue
   where

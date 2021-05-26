@@ -224,12 +224,20 @@ fromOrderBys top moffset morderBys =
             ]
     , case (top, moffset) of
         (NoTop, Nothing) -> ""
-        (NoTop, Just offset) -> "OFFSET " <+> fromExpression offset
+        (NoTop, Just offset) ->
+          "LIMIT 9223372036854775807 /* Maximum */"
+          -- Above: OFFSET is not supported without a LIMIT, therefore
+          -- we set LIMIT to the maximum integer value. Such a large
+          -- number of rows (9 quintillion) would not be possible to
+          -- service: 9223 petabytes. No machine has such capacity at
+          -- present.
+           <+>
+          " OFFSET " <+> fromExpression offset
         (Top n, Nothing) -> "LIMIT " <+> fromValue (IntegerValue (intToInt64 n))
         (Top n, Just offset) ->
-          "OFFSET " <+>
-          fromExpression offset <+>
-          " LIMIT " <+> fromValue (IntegerValue (intToInt64 n))
+          "LIMIT " <+>
+          fromValue (IntegerValue (intToInt64 n)) <+>
+          " OFFSET " <+> fromExpression offset
     ]
 
 fromOrderBy :: OrderBy -> Printer

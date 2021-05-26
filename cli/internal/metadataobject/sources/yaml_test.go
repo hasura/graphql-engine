@@ -107,6 +107,7 @@ actions: "!include actions.yaml"
     connection_info:
         database_url:
             from_env: HASURA_GRAPHQL_DATABASE_URL
+        isolation_level: read-committed
         pool_settings:
             idle_timeout: 180
             max_connections: 50
@@ -132,6 +133,85 @@ actions: "!include actions.yaml"
     connection_info:
         database_url:
             from_env: HASURA_GRAPHQL_DATABASE_URL
+        isolation_level: read-committed
+        pool_settings:
+            idle_timeout: 180
+            max_connections: 50
+            retries: 1
+        use_prepared_statements: true
+  tables:
+    - table:
+        name: t1
+        schema: public
+    - table:
+        name: t2
+        schema: public
+  functions:
+    - function:
+        name: get_t1
+        schema: public
+    - function:
+        name: get_t2
+        schema: public
+- name: s 3
+  kind: postgres
+  configuration:
+    connection_info:
+        database_url:
+            from_env: HASURA_GRAPHQL_DATABASE_URL
+        isolation_level: read-committed
+        pool_settings:
+            idle_timeout: 180
+            max_connections: 50
+            retries: 1
+        use_prepared_statements: true
+  tables:
+    - table:
+        name: t1
+        schema: public
+    - table:
+        name: t2
+        schema: public
+  functions:
+    - function:
+        name: get_t1
+        schema: public
+    - function:
+        name: get_t2
+        schema: public
+- name: s 4
+  kind: postgres
+  configuration:
+    connection_info:
+        database_url:
+            from_env: HASURA_GRAPHQL_DATABASE_URL
+        isolation_level: read-committed
+        pool_settings:
+            idle_timeout: 180
+            max_connections: 50
+            retries: 1
+        use_prepared_statements: true
+  tables:
+    - table:
+        name: t1
+        schema: public
+    - table:
+        name: t2
+        schema: public
+  functions:
+    - function:
+        name: get_t1
+        schema: public
+    - function:
+        name: get_t2
+        schema: public
+- name: s 5
+  kind: postgres
+  configuration:
+    connection_info:
+        database_url:
+            from_env: HASURA_GRAPHQL_DATABASE_URL
+        isolation_level: read-committed
         pool_settings:
             idle_timeout: 180
             max_connections: 50

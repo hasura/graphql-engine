@@ -32,54 +32,57 @@ module Hasura.RQL.Types
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                 as M
-import qualified Database.PG.Query                   as Q
+import qualified Data.HashMap.Strict                         as M
+import qualified Database.PG.Query                           as Q
 
-import           Control.Lens                        (at, (^.))
+import           Control.Lens                                (at, (^.))
 import           Control.Monad.Unique
 import           Data.Text.Extended
-import           Network.HTTP.Client.Extended        (HasHttpManagerM (..))
+import           Network.HTTP.Client.Extended                (HasHttpManagerM (..))
 
-import           Hasura.Backends.Postgres.Connection as R
-import           Hasura.RQL.IR.BoolExp               as R
-import           Hasura.RQL.Types.Action             as R
-import           Hasura.RQL.Types.ApiLimit           as R
-import           Hasura.RQL.Types.Backend            as R
-import           Hasura.RQL.Types.Column             as R
-import           Hasura.RQL.Types.Common             as R
-import           Hasura.RQL.Types.ComputedField      as R
-import           Hasura.RQL.Types.CustomTypes        as R
-import           Hasura.RQL.Types.Endpoint           as R
-import           Hasura.RQL.Types.Error              as R
-import           Hasura.RQL.Types.EventTrigger       as R
-import           Hasura.RQL.Types.Function           as R
-import           Hasura.RQL.Types.InheritedRoles     as R
-import           Hasura.RQL.Types.Metadata           as R
-import           Hasura.RQL.Types.Metadata.Backend   as R
-import           Hasura.RQL.Types.Metadata.Object    as R
-import           Hasura.RQL.Types.Permission         as R
-import           Hasura.RQL.Types.QueryCollection    as R
-import           Hasura.RQL.Types.Relationship       as R
-import           Hasura.RQL.Types.RemoteRelationship as R
-import           Hasura.RQL.Types.RemoteSchema       as R
-import           Hasura.RQL.Types.ScheduledTrigger   as R
-import           Hasura.RQL.Types.SchemaCache        as R
-import           Hasura.RQL.Types.SchemaCache.Build  as R
-import           Hasura.RQL.Types.SchemaCacheTypes   as R
-import           Hasura.RQL.Types.Source             as R
-import           Hasura.RQL.Types.Table              as R
-import           Hasura.SQL.Backend                  as R
+import           Hasura.Backends.Postgres.Connection         as R
+import           Hasura.Base.Error
+import           Hasura.RQL.IR.BoolExp                       as R
+import           Hasura.RQL.Types.Action                     as R
+import           Hasura.RQL.Types.ApiLimit                   as R
+import           Hasura.RQL.Types.Backend                    as R
+import           Hasura.RQL.Types.Column                     as R
+import           Hasura.RQL.Types.Common                     as R
+import           Hasura.RQL.Types.ComputedField              as R
+import           Hasura.RQL.Types.CustomTypes                as R
+import           Hasura.RQL.Types.Endpoint                   as R
+import           Hasura.RQL.Types.EventTrigger               as R
+import           Hasura.RQL.Types.Function                   as R
+import           Hasura.RQL.Types.GraphqlSchemaIntrospection as R
+import           Hasura.RQL.Types.InheritedRoles             as R
+import           Hasura.RQL.Types.Metadata                   as R
+import           Hasura.RQL.Types.Metadata.Backend           as R
+import           Hasura.RQL.Types.Metadata.Object            as R
+import           Hasura.RQL.Types.Permission                 as R
+import           Hasura.RQL.Types.QueryCollection            as R
+import           Hasura.RQL.Types.Relationship               as R
+import           Hasura.RQL.Types.RemoteRelationship         as R
+import           Hasura.RQL.Types.RemoteSchema               as R
+import           Hasura.RQL.Types.ScheduledTrigger           as R
+import           Hasura.RQL.Types.SchemaCache                as R
+import           Hasura.RQL.Types.SchemaCache.Build          as R
+import           Hasura.RQL.Types.SchemaCacheTypes           as R
+import           Hasura.RQL.Types.Source                     as R
+import           Hasura.RQL.Types.Table                      as R
+import           Hasura.SQL.Backend                          as R
 import           Hasura.Server.Types
 import           Hasura.Session
 import           Hasura.Tracing
 
 
 askSourceInfo
-  :: (CacheRM m, MonadError QErr m, Backend b, MetadataM m)
-  => SourceName -> m (SourceInfo b)
+  :: forall b m
+   . (CacheRM m, MonadError QErr m, Backend b, MetadataM m)
+  => SourceName
+  -> m (SourceInfo b)
 askSourceInfo sourceName = do
   sources <- scSources <$> askSchemaCache
-  onNothing (unsafeSourceInfo =<< M.lookup sourceName sources) $ do
+  onNothing (unsafeSourceInfo @b =<< M.lookup sourceName sources) $ do
     -- FIXME: this error can also happen for a lookup with the wrong type
     metadata <- getMetadata
     case metadata ^. metaSources . at sourceName of
@@ -89,19 +92,28 @@ askSourceInfo sourceName = do
         throw400 Unexpected $ "source with name " <> sourceName <<> " is inconsistent"
 
 askSourceConfig
-  :: (CacheRM m, MonadError QErr m, Backend b, MetadataM m)
-  => SourceName -> m (SourceConfig b)
-askSourceConfig = fmap _siConfiguration . askSourceInfo
+  :: forall b m
+   . (CacheRM m, MonadError QErr m, Backend b, MetadataM m)
+  => SourceName
+  -> m (SourceConfig b)
+askSourceConfig = fmap _siConfiguration . askSourceInfo @b
 
-askSourceTables :: (Backend b) => CacheRM m => SourceName -> m (TableCache b)
+askSourceTables
+  :: forall b m
+   . (Backend b, CacheRM m)
+  => SourceName
+  -> m (TableCache b)
 askSourceTables sourceName = do
   sources <- scSources <$> askSchemaCache
   pure $ fromMaybe mempty $ unsafeSourceTables =<< M.lookup sourceName sources
 
 
 askTabInfo
-  :: (QErrM m, CacheRM m, Backend b)
-  => SourceName -> TableName b -> m (TableInfo b)
+  :: forall b m
+   . (QErrM m, CacheRM m, Backend b)
+  => SourceName
+  -> TableName b
+  -> m (TableInfo b)
 askTabInfo sourceName tableName = do
   rawSchemaCache <- askSchemaCache
   unsafeTableInfo sourceName tableName (scSources rawSchemaCache)
@@ -110,10 +122,13 @@ askTabInfo sourceName tableName = do
     errMsg = "table " <> tableName <<> " does not exist in source: " <> sourceNameToText sourceName
 
 askTabInfoSource
-  :: (QErrM m, TableInfoRM b m, Backend b)
-  => TableName b -> m (TableInfo b)
+  :: forall b m
+   . (QErrM m, TableInfoRM b m, Backend b)
+  => TableName b
+  -> m (TableInfo b)
 askTabInfoSource tableName = do
-  lookupTableInfo tableName >>= (`onNothing` throwTableDoesNotExist tableName)
+  lookupTableInfo tableName >>= (`onNothing` (throwTableDoesNotExist @b) tableName)
+
 
 class (Monad m) => HasServerConfigCtx m where
   askServerConfigCtx :: m ServerConfigCtx
@@ -167,15 +182,18 @@ runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystem
 instance (Monad m) => HasSystemDefined (HasSystemDefinedT m) where
   askSystemDefined = HasSystemDefinedT ask
 
-throwTableDoesNotExist :: (QErrM m, Backend b) => TableName b -> m a
+throwTableDoesNotExist :: forall b m a. (QErrM m, Backend b) => TableName b -> m a
 throwTableDoesNotExist tableName = throw400 NotExists ("table " <> tableName <<> " does not exist")
 
-findTable :: (QErrM m, Backend b) => TableName b -> HashMap (TableName b) a -> m a
+findTable :: forall b m a. (QErrM m, Backend b) => TableName b -> HashMap (TableName b) a -> m a
 findTable tableName infoMap =
-  M.lookup tableName infoMap `onNothing` throwTableDoesNotExist tableName
+  M.lookup tableName infoMap `onNothing` throwTableDoesNotExist @b tableName
 
 askTableCache
-  :: (QErrM m, CacheRM m, Backend b) => SourceName -> m (TableCache b)
+  :: forall b m
+   . (QErrM m, CacheRM m, Backend b)
+  => SourceName
+  -> m (TableCache b)
 askTableCache sourceName = do
   schemaCache <- askSchemaCache
   sourceInfo  <- M.lookup sourceName (scSources schemaCache)
@@ -184,8 +202,11 @@ askTableCache sourceName = do
     `onNothing` throw400 NotExists ("source " <> sourceName <<> " is not a PG cache")
 
 askTableCoreInfo
-  :: (QErrM m, CacheRM m, Backend b)
-  => SourceName -> TableName b -> m (TableCoreInfo b)
+  :: forall b m
+   . (QErrM m, CacheRM m, Backend b)
+  => SourceName
+  -> TableName b
+  -> m (TableCoreInfo b)
 askTableCoreInfo sourceName tableName =
   _tiCoreInfo <$> askTabInfo sourceName tableName
 
@@ -193,13 +214,19 @@ askTableCoreInfo sourceName tableName =
 -- The source name is implicitly inferred from @'SourceM' via @'TableCoreInfoRM'.
 -- This is useful in RQL DML queries which are executed in a particular source database.
 askTableCoreInfoSource
-  :: (QErrM m, Backend b, TableCoreInfoRM b m) => TableName b -> m (TableCoreInfo b)
+  :: forall b m
+   . (QErrM m, Backend b, TableCoreInfoRM b m)
+  => TableName b
+  -> m (TableCoreInfo b)
 askTableCoreInfoSource tableName =
-  lookupTableCoreInfo tableName >>= (`onNothing` throwTableDoesNotExist tableName)
+  lookupTableCoreInfo tableName >>= (`onNothing` throwTableDoesNotExist @b tableName)
 
 askFieldInfoMap
-  :: (QErrM m, CacheRM m, Backend b)
-  => SourceName -> TableName b -> m (FieldInfoMap (FieldInfo b))
+  :: forall b m
+   . (QErrM m, CacheRM m, Backend b)
+  => SourceName
+  -> TableName b
+  -> m (FieldInfoMap (FieldInfo b))
 askFieldInfoMap sourceName tableName =
   _tciFieldInfoMap . _tiCoreInfo <$> askTabInfo sourceName tableName
 
@@ -268,4 +295,3 @@ askRemoteRel fieldInfoMap relName = do
     (FIRemoteRelationship remoteFieldInfo) -> return remoteFieldInfo
     _                                      ->
       throw400 UnexpectedPayload "expecting a remote relationship"
-

@@ -33,28 +33,30 @@ import qualified Hasura.SQL.AnyBackend               as AB
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.DML
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Base.Error
 import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
-import           Hasura.SQL.Backend                  (BackendType (Postgres))
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 import           Hasura.Server.Types
 import           Hasura.Server.Utils
+
 
 -- | Create the table event trigger in the database in a @'/v1/query' API
 -- transaction as soon as after @'runCreateEventTriggerQuery' is called and
 -- in building schema cache.
 createTableEventTrigger
-  :: (MonadIO m, MonadBaseControl IO m)
+  :: (Backend ('Postgres pgKind), MonadIO m, MonadBaseControl IO m)
   => ServerConfigCtx
   -> PGSourceConfig
   -> QualifiedTable
-  -> [ColumnInfo 'Postgres]
+  -> [ColumnInfo ('Postgres pgKind)]
   -> TriggerName
   -> TriggerOpsDef
   -> m (Either QErr ())
@@ -85,10 +87,11 @@ pgIdenTrigger op trn = pgFmtIdentifier . qualifyTriggerName op $ triggerNameToTx
     qualifyTriggerName op' trn' = "notify_hasura_" <> trn' <> "_" <> tshow op'
 
 mkAllTriggersQ
-  :: (MonadTx m, MonadReader ServerConfigCtx m)
+  :: forall pgKind m
+   . (Backend ('Postgres pgKind), MonadTx m, MonadReader ServerConfigCtx m)
   => TriggerName
   -> QualifiedTable
-  -> [ColumnInfo 'Postgres]
+  -> [ColumnInfo ('Postgres pgKind)]
   -> TriggerOpsDef
   -> m ()
 mkAllTriggersQ trn qt allCols fullspec = do
@@ -98,44 +101,49 @@ mkAllTriggersQ trn qt allCols fullspec = do
 
 data OpVar = OLD | NEW deriving (Show)
 
-toJSONableExp :: Bool -> ColumnType 'Postgres -> Bool -> SQLExp -> SQLExp
-toJSONableExp strfyNum colTy asText expn
+-- | Formats each columns to appropriate SQL expression
+toJSONableExp :: Bool -> ColumnType ('Postgres pgKind) -> Bool -> SQLExp -> SQLExp
+toJSONableExp strfyNum colTy  asText expn
+  -- If its a numeric column greater than a 32-bit integer, we have to stringify it as JSON spec doesn't support >32-bit integers
   | asText || (isScalarColumnWhere isBigNum colTy && strfyNum) =
     expn `SETyAnn` textTypeAnn
+  -- If the column is either a `Geometry` or `Geography` then apply the `ST_AsGeoJSON` function to convert it into GeoJSON format
   | isScalarColumnWhere isGeoType colTy =
       SEFnApp "ST_AsGeoJSON"
       [ expn
       , SEUnsafe "15" -- max decimal digits
       , SEUnsafe "4"  -- to print out crs
-      ] Nothing
-      `SETyAnn` jsonTypeAnn
+      ] Nothing `SETyAnn` jsonTypeAnn
   | otherwise = expn
 
+-- | Define the pgSQL trigger functions on database events.
 mkTriggerQ
-  :: (MonadTx m, MonadReader ServerConfigCtx m)
+  :: forall pgKind m
+   . (Backend ('Postgres pgKind), MonadTx m, MonadReader ServerConfigCtx m)
   => TriggerName
   -> QualifiedTable
-  -> [ColumnInfo 'Postgres]
+  -> [ColumnInfo ('Postgres pgKind)]
   -> Ops
   -> SubscribeOpSpec
   -> m ()
-mkTriggerQ trn qt@(QualifiedObject schema table) allCols op (SubscribeOpSpec columns payload) = do
+mkTriggerQ trn qt@(QualifiedObject schema table) allCols op (SubscribeOpSpec listenColumns deliveryColumns') = do
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> ask
   liftTx $ Q.multiQE defaultTxErrorHandler $ Q.fromText . TL.toStrict $
-    let payloadColumns = fromMaybe SubCStar payload
-        mkQId opVar colInfo = toJSONableExp strfyNum (pgiType colInfo) False $
-          SEQIdentifier $ QIdentifier (opToQual opVar) $ toIdentifier $ pgiColumn colInfo
-        getRowExpression opVar = case payloadColumns of
-          SubCStar -> applyRowToJson' $ SEUnsafe $ tshow opVar
-          SubCArray cols -> applyRowToJson' $
-            mkRowExp $ map (toExtr . mkQId opVar) $
-            getColInfos cols allCols
+    let
+        -- If there are no specific delivery columns selected by user then all the columns will be delivered
+        -- in payload hence 'SubCStar'.
+        deliveryColumns = fromMaybe SubCStar deliveryColumns'
+        getApplicableColumns = \case
+          SubCStar       -> allCols
+          SubCArray cols -> getColInfos cols allCols
 
-        renderRow opVar = case columns of
-          SubCStar -> applyRow $ SEUnsafe $ tshow opVar
-          SubCArray cols -> applyRow $
-            mkRowExp $ map (toExtr . mkQId opVar) $
-            getColInfos cols allCols
+        -- Columns that should be present in the payload. By default, all columns are present.
+        applicableDeliveryCols = getApplicableColumns deliveryColumns
+        getRowExpression opVar = applyRowToJson' $ mkRowExpression opVar strfyNum applicableDeliveryCols
+
+        -- Columns that user subscribed to listen for changes. By default, we listen on all columns.
+        applicableListenCols = getApplicableColumns listenColumns
+        renderRow opVar = applyRow $ mkRowExpression opVar strfyNum applicableListenCols
 
         oldDataExp = case op of
           INSERT -> SENull
@@ -164,11 +172,26 @@ mkTriggerQ trn qt@(QualifiedObject schema table) allCols op (SubscribeOpSpec col
   where
     applyRowToJson' e = SEFnApp "row_to_json" [e] Nothing
     applyRow e = SEFnApp "row" [e] Nothing
-    toExtr = flip Extractor Nothing
     opToQual = QualVar . tshow
 
+    mkRowExpression opVar strfyNum columns
+      = mkRowExp $ map (\col -> toExtractor (mkQId opVar strfyNum col) col) columns
+
+    mkQId opVar strfyNum colInfo  = toJSONableExp strfyNum (pgiType colInfo) False $
+          SEQIdentifier $ QIdentifier (opToQual opVar) $ toIdentifier $ pgiColumn colInfo
+
+    -- Generate the SQL expression
+    toExtractor sqlExp column
+      -- If the column type is either 'Geography' or 'Geometry', then after applying the 'ST_AsGeoJSON' function
+      -- to the column, alias the value of the expression with the column name else it uses `st_asgeojson` as
+      -- the column name.
+      | isScalarColumnWhere isGeoType (pgiType column) = Extractor sqlExp (Just $ getAlias column)
+      | otherwise  = Extractor sqlExp Nothing
+    getAlias col = toAlias $ Identifier $ getPGColTxt (pgiColumn col)
+
 buildEventTriggerInfo
-  :: QErrM m
+  :: forall (pgKind :: PostgresKind) m
+   . (Backend ('Postgres pgKind),  QErrM m)
   => Env.Environment
   -> SourceName
   -> QualifiedTable
@@ -186,11 +209,17 @@ buildEventTriggerInfo env source qt (EventTriggerConf name def webhook webhookFr
       tabDep = SchemaDependency
                  (SOSourceObj source
                    $ AB.mkAnyBackend
-                   $ SOITable qt)
+                   $ SOITable @('Postgres pgKind) qt)
                  DRParent
-  pure (eTrigInfo, tabDep:getTrigDefDeps source qt def)
+  pure (eTrigInfo, tabDep:getTrigDefDeps @pgKind source qt def)
 
-getTrigDefDeps :: SourceName -> QualifiedTable -> TriggerOpsDef -> [SchemaDependency]
+getTrigDefDeps
+  :: forall (pgKind :: PostgresKind)
+   . (Backend ('Postgres pgKind))
+  => SourceName
+  -> QualifiedTable
+  -> TriggerOpsDef
+  -> [SchemaDependency]
 getTrigDefDeps source qt (TriggerOpsDef mIns mUpd mDel _) =
   mconcat $ catMaybes [ subsOpSpecDeps <$> mIns
                       , subsOpSpecDeps <$> mUpd
@@ -204,14 +233,14 @@ getTrigDefDeps source qt (TriggerOpsDef mIns mUpd mDel _) =
             SchemaDependency
               (SOSourceObj source
                 $ AB.mkAnyBackend
-                $ SOITableObj qt (TOCol col))
+                $ SOITableObj @('Postgres pgKind) qt (TOCol @('Postgres pgKind) col))
               DRColumn
           payload = maybe [] getColsFromSub (sosPayload os)
           payloadDeps = flip map payload $ \col ->
             SchemaDependency
               (SOSourceObj source
                 $ AB.mkAnyBackend
-                $ SOITableObj qt (TOCol col))
+                $ SOITableObj qt (TOCol @('Postgres pgKind) col))
               DRPayload
         in colDeps <> payloadDeps
     getColsFromSub sc = case sc of
@@ -256,10 +285,10 @@ updateColumnInEventTrigger table oCol nCol refTable = rewriteEventTriggerConf
     rewriteSubsCols = \case
       SubCStar       -> SubCStar
       SubCArray cols -> SubCArray $ map getNewCol cols
-    rewriteOpSpec (SubscribeOpSpec cols payload) =
+    rewriteOpSpec (SubscribeOpSpec listenColumns deliveryColumns) =
       SubscribeOpSpec
-      (rewriteSubsCols cols)
-      (rewriteSubsCols <$> payload)
+      (rewriteSubsCols listenColumns)
+      (rewriteSubsCols <$> deliveryColumns)
     rewriteTrigOpsDef (TriggerOpsDef ins upd del man) =
       TriggerOpsDef
       (rewriteOpSpec <$> ins)
@@ -273,29 +302,30 @@ updateColumnInEventTrigger table oCol nCol refTable = rewriteEventTriggerConf
     getNewCol col =
       if table == refTable && oCol == col then nCol else col
 
-data EnumTableIntegrityError
+data EnumTableIntegrityError (b :: BackendType)
   = EnumTablePostgresError !Text
   | EnumTableMissingPrimaryKey
   | EnumTableMultiColumnPrimaryKey ![PGCol]
-  | EnumTableNonTextualPrimaryKey !(RawColumnInfo 'Postgres)
+  | EnumTableNonTextualPrimaryKey !(RawColumnInfo b)
   | EnumTableNoEnumValues
   | EnumTableInvalidEnumValueNames !(NE.NonEmpty Text)
-  | EnumTableNonTextualCommentColumn !(RawColumnInfo 'Postgres)
+  | EnumTableNonTextualCommentColumn !(RawColumnInfo b)
   | EnumTableTooManyColumns ![PGCol]
 
 fetchAndValidateEnumValues
-  :: (MonadIO m, MonadBaseControl IO m)
+  :: forall pgKind m
+   . (Backend ('Postgres pgKind), MonadIO m, MonadBaseControl IO m)
   => PGSourceConfig
   -> QualifiedTable
-  -> Maybe (PrimaryKey 'Postgres (RawColumnInfo 'Postgres))
-  -> [RawColumnInfo 'Postgres]
+  -> Maybe (PrimaryKey ('Postgres pgKind) (RawColumnInfo ('Postgres pgKind)))
+  -> [RawColumnInfo ('Postgres pgKind)]
   -> m (Either QErr EnumValues)
 fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos = runExceptT $
   either (throw400 ConstraintViolation . showErrors) pure =<< runValidateT fetchAndValidate
   where
     fetchAndValidate
-      :: (MonadIO m, MonadBaseControl IO m, MonadValidate [EnumTableIntegrityError] m)
-      => m EnumValues
+      :: (MonadIO n, MonadBaseControl IO n, MonadValidate [EnumTableIntegrityError ('Postgres pgKind)] n)
+      => n EnumValues
     fetchAndValidate = do
       maybePrimaryKeyColumn <- tolerate validatePrimaryKey
       maybeCommentColumn <- validateColumns maybePrimaryKeyColumn
@@ -326,13 +356,13 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
               _      -> dispute [EnumTableNonTextualCommentColumn column] $> Nothing
             columns -> dispute [EnumTableTooManyColumns $ map prciName columns] $> Nothing
 
-    showErrors :: [EnumTableIntegrityError] -> Text
+    showErrors :: [EnumTableIntegrityError ('Postgres pgKind)] -> Text
     showErrors allErrors =
       "the table " <> tableName <<> " cannot be used as an enum " <> reasonsMessage
       where
         reasonsMessage = makeReasonMessage allErrors showOne
 
-        showOne :: EnumTableIntegrityError -> Text
+        showOne :: EnumTableIntegrityError ('Postgres pgKind) -> Text
         showOne = \case
           EnumTablePostgresError err -> "postgres error: " <> err
           EnumTableMissingPrimaryKey -> "the table must have a primary key"
@@ -361,10 +391,11 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
                 <> expected <<> ", not type " <>> prciType colInfo
 
 fetchEnumValuesFromDb
-  :: (MonadTx m, MonadValidate [EnumTableIntegrityError] m)
+  :: forall pgKind m
+   . (MonadTx m, MonadValidate [EnumTableIntegrityError ('Postgres pgKind)] m)
   => QualifiedTable
-  -> RawColumnInfo 'Postgres
-  -> Maybe (RawColumnInfo 'Postgres)
+  -> RawColumnInfo ('Postgres pgKind)
+  -> Maybe (RawColumnInfo ('Postgres pgKind))
   -> m EnumValues
 fetchEnumValuesFromDb tableName primaryKeyColumn maybeCommentColumn = do
   let nullExtr = Extractor SENull Nothing

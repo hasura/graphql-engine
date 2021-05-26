@@ -103,25 +103,28 @@ common common-exe
 library
   import: common-all
   hs-source-dirs:      src-lib
-  build-depends:       base
+  build-depends:       Spock-core
                      , aeson
                      , aeson-casing
                      , attoparsec
                      , attoparsec-iso8601 >= 1.0
+                     , base
                      , bytestring
                      , containers
                      , deepseq
                      , dependent-map >=0.4 && <0.5
+                     , dependent-sum
                      , exceptions
-                     , safe-exceptions
                      , fast-logger
                      , hashable
+                     , hashable-time
                      , http-client-tls
-                     , http-types
                      , http-conduit
+                     , http-types
                      , kan-extensions
                      , lifted-base
                      , monad-control
+                     , monad-loops
                      , monad-validate
                      , mtl
                      , optparse-applicative
@@ -130,11 +133,11 @@ library
                      , postgresql-libpq
                      , process
                      , profunctors
+                     , safe-exceptions
                      , scientific
                      , semialign
                      , some
                      , split
-                     , Spock-core
                      , template-haskell
                      , text
                      , text-builder >= 0.6
@@ -143,10 +146,12 @@ library
                      , transformers
                      , transformers-base
                      , unordered-containers >= 0.2.12
+                     , utf8-string
                      , validation
                      , vector
                      , vector-instances
                      , wai
+                     , hashable-time
 
                      -- Encoder related
                      , uuid
@@ -300,6 +305,9 @@ library
                      , Hasura.App
                      , Hasura.Metadata.Class
 
+                     , Hasura.Base.Error
+                     , Hasura.Base.Instances
+
                      , Hasura.Backends.BigQuery.Connection
                      , Hasura.Backends.BigQuery.DataLoader.Execute
                      , Hasura.Backends.BigQuery.DataLoader.Plan
@@ -353,12 +361,13 @@ library
                      , Hasura.Backends.Postgres.Types.BoolExp
                      , Hasura.Backends.Postgres.Types.Column
                      , Hasura.Backends.Postgres.Types.Table
+                     , Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
 
                      , Hasura.Backends.MSSQL.Connection
                      , Hasura.Backends.MSSQL.DDL
+                     , Hasura.Backends.MSSQL.DDL.BoolExp
                      , Hasura.Backends.MSSQL.DDL.RunSQL
                      , Hasura.Backends.MSSQL.DDL.Source
-                     , Hasura.Backends.MSSQL.DDL.BoolExp
                      , Hasura.Backends.MSSQL.FromIr
                      , Hasura.Backends.MSSQL.Instances.Execute
                      , Hasura.Backends.MSSQL.Instances.Metadata
@@ -367,10 +376,12 @@ library
                      , Hasura.Backends.MSSQL.Instances.Types
                      , Hasura.Backends.MSSQL.Meta
                      , Hasura.Backends.MSSQL.Plan
+                     , Hasura.Backends.MSSQL.SQL.Value
                      , Hasura.Backends.MSSQL.ToQuery
                      , Hasura.Backends.MSSQL.Types
                      , Hasura.Backends.MSSQL.Types.Instances
                      , Hasura.Backends.MSSQL.Types.Internal
+
 
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
@@ -421,7 +432,6 @@ library
                      , Hasura.Server.Migrate.Internal
                      , Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
-                     , Hasura.RQL.Instances
                      , Hasura.RQL.Types
                      , Hasura.RQL.Types.Action
                      , Hasura.RQL.Types.ApiLimit
@@ -432,8 +442,8 @@ library
                      , Hasura.RQL.Types.CustomTypes
                      , Hasura.RQL.Types.Endpoint
                      , Hasura.RQL.Types.Endpoint.Trie
-                     , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.EventTrigger
+                     , Hasura.RQL.Types.GraphqlSchemaIntrospection
                      , Hasura.RQL.Types.Function
                      , Hasura.RQL.Types.Instances
                      , Hasura.RQL.Types.Metadata
@@ -458,6 +468,7 @@ library
                      , Hasura.RQL.DDL.CustomTypes
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Endpoint
+                     , Hasura.RQL.DDL.GraphqlSchemaIntrospection
                      , Hasura.RQL.DDL.InheritedRoles
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.Metadata
@@ -531,6 +542,7 @@ library
                      , Hasura.GraphQL.Parser.Class.Parse
                      , Hasura.GraphQL.Parser.Collect
                      , Hasura.GraphQL.Parser.Column
+                     , Hasura.GraphQL.Parser.Directives
                      , Hasura.GraphQL.Parser.Internal.Parser
                      , Hasura.GraphQL.Parser.Internal.Types
                      , Hasura.GraphQL.Parser.Monad
@@ -571,6 +583,7 @@ library
                      , Hasura.SQL.GeoJSON
                      , Hasura.SQL.Time
                      , Hasura.SQL.Types
+                     , Hasura.SQL.Value
                      , Hasura.SQL.WKT
                      , Hasura.Tracing
                      , Network.HTTP.Client.Extended
@@ -601,32 +614,38 @@ test-suite graphql-engine-tests
     , base
     , bytestring
     , containers
+    , cron
+    , dependent-map
+    , dependent-sum
     , graphql-engine
+    , graphql-parser
     , hspec >=2.6.1 && <3
     , hspec-core >=2.6.1 && <3
+    , hspec-expectations
     , hspec-expectations-lifted
     , http-client
-    , http-types
     , http-client-tls
+    , http-types
     , jose
+    , kan-extensions
     , lens
     , lifted-base
-    , kan-extensions
+    , mmorph
     , monad-control
     , mtl
     , natural-transformation >=0.4 && <0.5
+    , network-uri
     , optparse-applicative
     , pg-client
     , process
     , QuickCheck
-    , text
     , safe
     , split
+    , template-haskell
+    , text
     , time
     , transformers-base
     , unordered-containers
-    , text
-    , mmorph
   hs-source-dirs: src-test
   main-is: Main.hs
   other-modules:
@@ -634,8 +653,13 @@ test-suite graphql-engine-tests
     Data.Parser.CacheControlSpec
     Data.Parser.JSONPathSpec
     Data.Parser.URLTemplate
+    Data.Text.RawString
     Data.TimeSpec
     Hasura.CacheBoundedSpec
+    Hasura.EventingSpec
+    Hasura.GraphQL.Parser.DirectivesTest
+    Hasura.GraphQL.Parser.TestUtils
+    Hasura.GraphQL.Schema.RemoteTest
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec
     Hasura.RQL.Types.EndpointSpec

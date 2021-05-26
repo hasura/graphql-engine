@@ -43,8 +43,8 @@ import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
 
+import           Hasura.Base.Error
 import           Hasura.Incremental            (Cacheable)
-import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils
 import           Hasura.Tracing                (TraceT)
 

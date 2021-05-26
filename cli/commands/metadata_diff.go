@@ -100,7 +100,7 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 			return err
 		}
 		defer os.RemoveAll(tmpDir)
-		metadataobject.SetMetadataObjectsWithDir(o.EC, tmpDir)
+		metadataHandler.SetMetadataObjects(metadataobject.GetMetadataObjectsWithDir(o.EC, tmpDir))
 		var files map[string][]byte
 		files, err = metadataHandler.ExportMetadata()
 		if err != nil {
@@ -111,7 +111,7 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 			return err
 		}
 	} else {
-		metadataobject.SetMetadataObjectsWithDir(o.EC, o.Metadata[1])
+		metadataHandler.SetMetadataObjects(metadataobject.GetMetadataObjectsWithDir(o.EC, o.Metadata[1]))
 	}
 
 	// build server metadata
@@ -125,7 +125,7 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 	}
 
 	// build local metadata
-	metadataobject.SetMetadataObjectsWithDir(o.EC, o.Metadata[0])
+	metadataHandler.SetMetadataObjects(metadataobject.GetMetadataObjectsWithDir(o.EC, o.Metadata[0]))
 	localMeta, err := metadataHandler.BuildMetadata()
 	if err != nil {
 		return err

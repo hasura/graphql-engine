@@ -1,0 +1,8 @@
+type: bulk
+args:
+  - type: mssql_untrack_table
+    args:
+      source: mssql
+      table:
+        name: user
+      cascade: true

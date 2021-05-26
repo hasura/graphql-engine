@@ -16,7 +16,6 @@ module Hasura.GraphQL.Parser
   , json
   , jsonb
   , identifier
-  , unsafeRawScalar
 
   , enum
   , nullable

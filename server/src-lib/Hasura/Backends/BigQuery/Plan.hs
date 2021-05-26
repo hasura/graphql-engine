@@ -5,32 +5,33 @@ module Hasura.Backends.BigQuery.Plan
   , planToForest
   ) where
 
+import           Hasura.Prelude
+
+import qualified Data.Text.Lazy                           as LT
+
+import           Control.Monad.Validate
 import           Data.Aeson.Text
-import qualified Data.Text.Lazy as LT
+import           Data.Text.Extended
 import           Data.Tree
+
 import qualified Hasura.Backends.BigQuery.DataLoader.Plan as DataLoader
-import           Hasura.Prelude hiding (first)
+import qualified Hasura.Base.Error                        as E
+import qualified Hasura.GraphQL.Parser                    as GraphQL
+import qualified Hasura.RQL.Types.Column                  as RQL
+
+import           Hasura.Backends.BigQuery.FromIr          as BigQuery
+import           Hasura.Backends.BigQuery.Types           as BigQuery
+import           Hasura.GraphQL.Context
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 import           Hasura.Session
 
-
-import           Control.Monad.Validate
-import           Data.Text.Extended
-
-import qualified Hasura.GraphQL.Parser as GraphQL
-import qualified Hasura.RQL.Types.Column as RQL
-
-import           Hasura.Backends.BigQuery.FromIr as BigQuery
-import           Hasura.Backends.BigQuery.Types as BigQuery
-import           Hasura.GraphQL.Context
-import qualified Hasura.RQL.Types.Error as RQL
-import           Hasura.SQL.Backend
 
 -- --------------------------------------------------------------------------------
 -- -- Top-level planner
 
 planToForest ::
-     MonadError RQL.QErr m
+     MonadError E.QErr m
   => UserInfo
   -> QueryDB 'BigQuery (GraphQL.UnpreparedValue 'BigQuery)
   -> m (Forest DataLoader.PlannedAction)
@@ -43,7 +44,7 @@ planToForest userInfo qrf = do
   pure actionsForest
 
 planNoPlan ::
-     MonadError RQL.QErr m
+     MonadError E.QErr m
   => UserInfo
   -> QueryDB 'BigQuery (GraphQL.UnpreparedValue 'BigQuery)
   -> m Select
@@ -51,7 +52,7 @@ planNoPlan userInfo queryDB = do
   rootField <- traverseQueryDB (prepareValueNoPlan (_uiSession userInfo)) queryDB
   select <-
     runValidate (BigQuery.runFromIr (BigQuery.fromRootField rootField))
-    `onLeft` (RQL.throw400 RQL.NotSupported . (tshow :: NonEmpty Error -> Text))
+    `onLeft` (E.throw400 E.NotSupported . (tshow :: NonEmpty Error -> Text))
   pure
     select
       { selectFor =
@@ -66,7 +67,7 @@ planNoPlan userInfo queryDB = do
 -- | Prepare a value without any query planning; we just execute the
 -- query with the values embedded.
 prepareValueNoPlan ::
-     (MonadError RQL.QErr m)
+     (MonadError E.QErr m)
   => SessionVariables
   -> GraphQL.UnpreparedValue 'BigQuery
   -> m BigQuery.Expression
@@ -85,7 +86,7 @@ prepareValueNoPlan sessionVariables =
                   (FieldPath RootPath (toTxt text)))
                scalarType)
         CollectableTypeArray {} ->
-          throwError $ RQL.internalError "Cannot currently prepare array types in BigQuery."
+          throwError $ E.internalError "Cannot currently prepare array types in BigQuery."
     GraphQL.UVParameter _ RQL.ColumnValue {..} -> pure (ValueExpression cvValue)
   where
     globalSessionExpression =

@@ -10,12 +10,15 @@ module Hasura.GraphQL.Execute.Action
   , setActionStatusTx
   , fetchActionResponseTx
   , clearActionDataTx
+  , setProcessingActionLogsToPendingTx
+  , LockedActionIdArray (..)
   , module Types
   ) where
 
 import           Hasura.Prelude
 
 import qualified Control.Concurrent.Async.Lifted.Safe        as LA
+import qualified Control.Concurrent.STM                      as STM
 import qualified Data.Aeson                                  as J
 import qualified Data.Aeson.Ordered                          as AO
 import qualified Data.ByteString.Lazy                        as BL
@@ -26,17 +29,19 @@ import qualified Data.HashSet                                as Set
 import qualified Data.IntMap                                 as IntMap
 import qualified Data.Text                                   as T
 import qualified Database.PG.Query                           as Q
+
 import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified Network.HTTP.Client                         as HTTP
 import qualified Network.HTTP.Types                          as HTTP
 import qualified Network.Wreq                                as Wreq
 
-import           Control.Concurrent.Extended                 (sleep)
+import           Control.Concurrent.Extended                 (Forever (..), sleep)
 import           Control.Exception                           (try)
 import           Control.Lens
 import           Control.Monad.Trans.Control                 (MonadBaseControl)
 import           Data.Has
 import           Data.IORef
+import           Data.Set                                    (Set)
 import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RJ
@@ -51,7 +56,9 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value          (PGScalarValue (..))
 import           Hasura.Backends.Postgres.Translate.Column   (toTxtValue)
 import           Hasura.Backends.Postgres.Translate.Select   (asSingleRowJsonResp)
+import           Hasura.Base.Error
 import           Hasura.EncJSON
+import           Hasura.Eventing.Common
 import           Hasura.GraphQL.Execute.Action.Types         as Types
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Parser
@@ -65,6 +72,7 @@ import           Hasura.Server.Utils                         (mkClientHeadersFor
                                                               mkSetCookieHeaders)
 import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
+
 
 fetchActionLogResponses
   :: (MonadError QErr m, MonadMetadataStorage (MetadataStorageT m), Foldable t)
@@ -104,7 +112,7 @@ resolveActionExecution
   => Env.Environment
   -> L.Logger L.Hasura
   -> UserInfo
-  -> AnnActionExecution 'Postgres (UnpreparedValue 'Postgres)
+  -> AnnActionExecution ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla))
   -> ActionExecContext
   -> ActionExecution
 resolveActionExecution env logger userInfo annAction execContext =
@@ -130,7 +138,7 @@ resolveActionExecution env logger userInfo annAction execContext =
 
 
     executeActionInDb :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m, Tracing.MonadTrace m)
-                      => SourceConfig 'Postgres -> RS.AnnSimpleSel 'Postgres -> [Q.PrepArg] -> m EncJSON
+                      => SourceConfig ('Postgres 'Vanilla) -> RS.AnnSimpleSel ('Postgres 'Vanilla) -> [Q.PrepArg] -> m EncJSON
     executeActionInDb sourceConfig astResolved prepArgs = do
       let (astResolvedWithoutRemoteJoins, maybeRemoteJoins) = RJ.getRemoteJoinsSelect astResolved
           jsonAggType = mkJsonAggSelect outputType
@@ -215,8 +223,8 @@ Resolving async action query happens in two steps;
 -- | See Note: [Resolving async action query]
 resolveAsyncActionQuery
   :: UserInfo
-  -> AnnActionAsyncQuery 'Postgres (UnpreparedValue 'Postgres)
-  -> AsyncActionQueryExecution (UnpreparedValue 'Postgres)
+  -> AnnActionAsyncQuery ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla))
+  -> AsyncActionQueryExecution (UnpreparedValue ('Postgres 'Vanilla))
 resolveAsyncActionQuery userInfo annAction =
   case actionSource of
     ASINoSource -> AAQENoRelationships \actionLogResponse -> runExcept do
@@ -290,11 +298,10 @@ resolveAsyncActionQuery userInfo annAction =
       in if (adminRoleName == (_uiRole userInfo))  then actionIdColumnEq
          else BoolAnd [actionIdColumnEq, sessionVarsColumnEq]
 
-
 -- | Process async actions from hdb_catalog.hdb_action_log table. This functions is executed in a background thread.
 -- See Note [Async action architecture] above
 asyncActionsProcessor
-  :: forall m void
+  :: forall m
    . ( HasVersion
      , MonadIO m
      , MonadBaseControl IO m
@@ -305,21 +312,31 @@ asyncActionsProcessor
   => Env.Environment
   -> L.Logger L.Hasura
   -> IORef (RebuildableSchemaCache, SchemaCacheVer)
+  -> STM.TVar (Set LockedActionEventId)
   -> HTTP.Manager
   -> Milliseconds
-  -> m void
-asyncActionsProcessor env logger cacheRef httpManager sleepTime = forever $ do
-  actionCache <- scActions . lastBuiltSchemaCache . fst <$> liftIO (readIORef cacheRef)
-  let asyncActions = Map.filter ((== ActionMutation ActionAsynchronous) . (^. aiDefinition.adType)) actionCache
-  if (Map.null asyncActions)
-  then return ()
-  else do
-    -- fetch undelivered action events only when there's at least
-    -- one async action present in the schema cache
-    asyncInvocationsE <- runMetadataStorageT fetchUndeliveredActionEvents
-    asyncInvocations <- liftIO $ onLeft asyncInvocationsE mempty
-    LA.mapConcurrently_ (callHandler actionCache) asyncInvocations
-  liftIO $ sleep $ milliseconds sleepTime
+  -> m (Forever m)
+asyncActionsProcessor env logger cacheRef lockedActionEvents httpManager sleepTime =
+  return $ Forever () $ const $ do
+    actionCache <- scActions . lastBuiltSchemaCache . fst <$> liftIO (readIORef cacheRef)
+    let asyncActions =
+          Map.filter ((== ActionMutation ActionAsynchronous) . (^. aiDefinition.adType)) actionCache
+    unless (Map.null asyncActions) $ do
+      -- fetch undelivered action events only when there's at least
+      -- one async action present in the schema cache
+      asyncInvocationsE <- runMetadataStorageT fetchUndeliveredActionEvents
+      asyncInvocations <- liftIO $ onLeft asyncInvocationsE mempty
+      -- save the actions that are currently fetched from the DB to
+      -- be processed in a TVar (Set LockedActionEventId) and when
+      -- the action is processed we remove it from the set. This set
+      -- is maintained because on shutdown of the graphql-engine, we
+      -- would like to wait for a certain time (see `--graceful-shutdown-time`)
+      -- during which to complete all the in-flight actions. So, when this
+      -- locked action events set TVar is empty, it will mean that there are
+      -- no events that are in the 'processing' state
+      saveLockedEvents (map (EventId . actionIdToText . _aliId) asyncInvocations) lockedActionEvents
+      LA.mapConcurrently_ (callHandler actionCache) asyncInvocations
+    liftIO $ sleep $ milliseconds sleepTime
   where
     callHandler :: ActionCache -> ActionLogItem -> m ()
     callHandler actionCache actionLogItem = Tracing.runTraceT "async actions processor" do
@@ -344,7 +361,7 @@ asyncActionsProcessor env logger cacheRef httpManager sleepTime = forever $ do
           resE <- runMetadataStorageT $ setActionStatus actionId $ case eitherRes of
               Left e                     -> AASError e
               Right (responsePayload, _) -> AASCompleted $ J.toJSON responsePayload
-
+          removeEventFromLockedEvents (EventId (actionIdToText actionId)) lockedActionEvents
           liftIO $ onLeft resE mempty
 
 callWebhook
@@ -467,12 +484,12 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
                       "expecting not null value for field " <>> fieldName
 
 processOutputSelectionSet
-  :: RS.ArgumentExp 'Postgres v
+  :: RS.ArgumentExp ('Postgres 'Vanilla) v
   -> GraphQLType
   -> [(PGCol, PGScalarType)]
-  -> RS.AnnFieldsG 'Postgres v
+  -> RS.AnnFieldsG ('Postgres 'Vanilla) v
   -> Bool
-  -> RS.AnnSimpleSelG 'Postgres v
+  -> RS.AnnSimpleSelG ('Postgres 'Vanilla) v
 processOutputSelectionSet tableRowInput actionOutputType definitionList annotatedFields =
   RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs
   where
@@ -562,3 +579,11 @@ clearActionDataTx actionName =
       DELETE FROM hdb_catalog.hdb_action_log
         WHERE action_name = $1
       |] (Identity actionName) True
+
+setProcessingActionLogsToPendingTx :: LockedActionIdArray -> Q.TxE QErr ()
+setProcessingActionLogsToPendingTx lockedActions =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+    UPDATE hdb_catalog.hdb_action_log
+    SET status = 'created'
+    WHERE status = 'processing' AND id = ANY($1::uuid[])
+  |] (Identity lockedActions) False

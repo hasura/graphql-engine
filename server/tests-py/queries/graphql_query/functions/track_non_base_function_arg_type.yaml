@@ -38,3 +38,20 @@
           kind
         }
       }
+
+- description: Execute the tracked function with a composite row type argument
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        search_post_by_test (args: {t: "(1, hasura,311cf381-71e7-449b-bac5-86cd6deafd5b)"}) {
+          title
+          content
+        }
+      }
+  response:
+    data:
+      search_post_by_test:
+        - title: post by hasura
+          content: content for post

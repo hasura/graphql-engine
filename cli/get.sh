@@ -79,8 +79,12 @@ arch='unknown'
 archstr=`uname -m`
 if [[ "$archstr" == 'x86_64' ]]; then
     arch='amd64'
+elif [[ "$archstr" == 'arm64' ]] && [[ "$platform" == 'darwin' ]]; then
+    # use amd64 builds on M1 Macs
+    # TODO: use native builds once it is avialable as release artifacts
+    arch='amd64'
 else
-    arch='386'
+    die "prebuilt binaries for $(arch) architecture not avialable, please try building from source https://github.com/hasura/graphql-engine/blob/master/cli/README.md"
 fi
 
 # some variables

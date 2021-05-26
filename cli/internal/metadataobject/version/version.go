@@ -81,7 +81,7 @@ func (a *VersionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error
 		return nil, err
 	}
 	return map[string][]byte{
-		filepath.Join(a.MetadataDir, fileName): data,
+		filepath.ToSlash(filepath.Join(a.MetadataDir, fileName)): data,
 	}, nil
 }
 

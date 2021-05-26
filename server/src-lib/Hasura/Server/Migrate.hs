@@ -40,6 +40,7 @@ import           System.Directory                    (doesFileExist)
 import qualified Hasura.SQL.AnyBackend               as AB
 
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Base.Error
 import           Hasura.Logging                      (Hasura, LogLevel (..), ToEngineLog (..))
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DDL.Schema.LegacyCatalog
@@ -98,26 +99,30 @@ migrateCatalog
      , MonadIO m
      , MonadBaseControl IO m
      )
-  => Maybe (SourceConnConfiguration 'Postgres)
+  => Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
   -> MaintenanceMode
   -> UTCTime
   -> m (MigrationResult, Metadata)
 migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
   catalogSchemaExists <- doesSchemaExist (SchemaName "hdb_catalog")
   versionTableExists <- doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version")
+  metadataTableExists <- doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_metadata")
   migrationResult <-
     if | maintenanceMode == MaintenanceModeEnabled -> do
            if | not catalogSchemaExists ->
                   throw500 "unexpected: hdb_catalog schema not found in maintenance mode"
               | not versionTableExists ->
                   throw500 "unexpected: hdb_catalog.hdb_version table not found in maintenance mode"
-              -- TODO: should we also have a check for the catalog version?
+              | not metadataTableExists ->
+                  throw500 $
+                    "the \"hdb_catalog.hdb_metadata\" table is expected to exist and contain" <>
+                    " the metadata of the graphql-engine"
               | otherwise -> pure MRMaintanenceMode
        | otherwise -> case catalogSchemaExists of
            False -> initialize True
            True  -> case versionTableExists of
              False -> initialize False
-             True  -> migrateFrom =<< getCatalogVersion
+             True  -> migrateFrom =<< liftTx getCatalogVersion
   metadata <- liftTx fetchMetadataFromCatalog
   pure (migrationResult, metadata)
   where
@@ -135,7 +140,7 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
             Just defaultSourceConfig ->
               -- insert metadata with default source
               let defaultSourceMetadata = AB.mkAnyBackend $
-                    SourceMetadata defaultSource mempty mempty defaultSourceConfig
+                    SourceMetadata @('Postgres 'Vanilla) defaultSource mempty mempty defaultSourceConfig
                   sources = OMap.singleton defaultSource defaultSourceMetadata
               in emptyMetadata{_metaSources = sources}
 
@@ -163,10 +168,10 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
 
 downgradeCatalog
   :: forall m. (MonadIO m, MonadTx m)
-  => Maybe (SourceConnConfiguration 'Postgres)
+  => Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
   -> DowngradeOptions -> UTCTime -> m MigrationResult
 downgradeCatalog defaultSourceConfig opts time = do
-    downgradeFrom =<< getCatalogVersion
+    downgradeFrom =<< liftTx getCatalogVersion
   where
     -- downgrades an existing catalog to the specified version
     downgradeFrom :: Text -> m MigrationResult
@@ -228,7 +233,7 @@ setCatalogVersion ver time = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
 
 migrations
   :: forall m. (MonadIO m, MonadTx m)
-  => Maybe (SourceConnConfiguration 'Postgres) -> Bool -> MaintenanceMode -> [(Text, MigrationPair m)]
+  => Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) -> Bool -> MaintenanceMode -> [(Text, MigrationPair m)]
 migrations maybeDefaultSourceConfig dryRun maintenanceMode =
     -- We need to build the list of migrations at compile-time so that we can compile the SQL
     -- directly into the executable using `Q.sqlFromFile`. The GHC stage restriction makes
@@ -258,8 +263,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
         ++ [| ("3", MigrationPair from3To4 Nothing) |]
         :  migrationsFromFile [5..42]
         ++ [| ("42", MigrationPair from42To43 (Just from43To42)) |]
-        : migrationsFromFile [44]
-        ++  migrationsFromFile [45]
+        : migrationsFromFile [44..46]
      )
   where
     runTxOrPrint :: Q.Query -> m ()
@@ -284,7 +288,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
                     SourceMetadata defaultSource _mnsTables _mnsFunctions defaultSourceConfig
               in Metadata (OMap.singleton defaultSource defaultSourceMetadata)
                    _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist _mnsCustomTypes _mnsActions _mnsCronTriggers mempty
-                   emptyApiLimit emptyMetricsConfig mempty
+                   emptyApiLimit emptyMetricsConfig mempty mempty
         liftTx $ insertMetadataInCatalog metadataV3
 
     from43To42 = do

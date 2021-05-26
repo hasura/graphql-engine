@@ -19,13 +19,13 @@ import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.SQL.Types  as PG (PGDescription)
 
+import           Hasura.Base.Error
 import           Hasura.Incremental                  (Cacheable)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.Relationship
@@ -95,6 +95,7 @@ data FieldInfo (b :: BackendType)
   | FIComputedField !(ComputedFieldInfo b)
   | FIRemoteRelationship !(RemoteFieldInfo b)
   deriving (Generic)
+deriving instance Backend b => Show (FieldInfo b)
 deriving instance Backend b => Eq (FieldInfo b)
 instance Backend b => Cacheable (FieldInfo b)
 instance Backend b => ToJSON (FieldInfo b) where
@@ -293,7 +294,9 @@ data RolePermInfo (b :: BackendType)
   , _permUpd :: !(Maybe (UpdPermInfo b))
   , _permDel :: !(Maybe (DelPermInfo b))
   } deriving (Generic)
+
 instance (Backend b, NFData (BooleanOperators b (PartialSQLExp b))) => NFData (RolePermInfo b)
+
 instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (RolePermInfo b) where
   toJSON = genericToJSON hasuraJSON
 
@@ -401,6 +404,7 @@ deriving instance (Backend b) => Eq (TableConfig b)
 deriving instance (Backend b) => Show (TableConfig b)
 instance (Backend b) => NFData (TableConfig b)
 instance (Backend b) => Cacheable (TableConfig b)
+
 instance Backend b => ToJSON (TableConfig b) where
   toJSON = genericToJSON hasuraJSON{omitNothingFields = True}
 $(makeLenses ''TableConfig)
@@ -467,20 +471,23 @@ instance Backend b => FromJSON (ForeignKey b) where
 -- information is accumulated. See also 'TableCoreInfo'.
 data TableCoreInfoG (b :: BackendType) field primaryKeyColumn
   = TableCoreInfo
-  { _tciName              :: !(TableName b)
-  , _tciDescription       :: !(Maybe PG.PGDescription) -- TODO make into type family?
-  , _tciSystemDefined     :: !SystemDefined
-  , _tciFieldInfoMap      :: !(FieldInfoMap field)
-  , _tciPrimaryKey        :: !(Maybe (PrimaryKey b primaryKeyColumn))
-  , _tciUniqueConstraints :: !(HashSet (Constraint b))
+  { _tciName               :: !(TableName b)
+  , _tciDescription        :: !(Maybe PG.PGDescription) -- TODO make into type family?
+  , _tciSystemDefined      :: !SystemDefined
+  , _tciFieldInfoMap       :: !(FieldInfoMap field)
+  , _tciPrimaryKey         :: !(Maybe (PrimaryKey b primaryKeyColumn))
+  , _tciUniqueConstraints  :: !(HashSet (Constraint b))
   -- ^ Does /not/ include the primary key; use 'tciUniqueOrPrimaryKeyConstraints' if you need both.
-  , _tciForeignKeys       :: !(HashSet (ForeignKey b))
-  , _tciViewInfo          :: !(Maybe ViewInfo)
-  , _tciEnumValues        :: !(Maybe EnumValues)
-  , _tciCustomConfig      :: !(TableConfig b)
+  , _tciForeignKeys        :: !(HashSet (ForeignKey b))
+  , _tciViewInfo           :: !(Maybe ViewInfo)
+  , _tciEnumValues         :: !(Maybe EnumValues)
+  , _tciCustomConfig       :: !(TableConfig b)
+  , _tciExtraTableMetadata :: !(ExtraTableMetadata b)
   } deriving (Generic)
 deriving instance (Eq field, Eq pkCol, Backend b) => Eq (TableCoreInfoG b field pkCol)
+
 instance (Cacheable field, Cacheable pkCol, Backend b) => Cacheable (TableCoreInfoG b field pkCol)
+
 instance (Backend b, Generic pkCol, ToJSON field, ToJSON pkCol) => ToJSON (TableCoreInfoG b field pkCol) where
   toJSON = genericToJSON hasuraJSON
 $(makeLenses ''TableCoreInfoG)
@@ -500,9 +507,16 @@ data TableInfo (b :: BackendType)
   , _tiRolePermInfoMap     :: !(RolePermInfoMap b)
   , _tiEventTriggerInfoMap :: !EventTriggerInfoMap
   } deriving (Generic)
+
 instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (TableInfo b) where
   toJSON = genericToJSON hasuraJSON
 $(makeLenses ''TableInfo)
+
+tiName :: Lens' (TableInfo b) (TableName b)
+tiName = tiCoreInfo . tciName
+
+tableInfoName :: TableInfo b -> TableName b
+tableInfoName = view tiName
 
 type TableCoreCache b = M.HashMap (TableName b) (TableCoreInfo b)
 type TableCache b = M.HashMap (TableName b) (TableInfo b) -- info of all tables
@@ -521,7 +535,7 @@ instance Backend b => FromJSON (ForeignKeyMetadata b) where
 
     columns <- o .: "columns"
     foreignColumns <- o .: "foreign_columns"
-    if (length columns == length foreignColumns) then
+    if length columns == length foreignColumns then
       pure $ ForeignKeyMetadata ForeignKey
         { _fkConstraint = constraint
         , _fkForeignTable = foreignTable
@@ -534,14 +548,15 @@ instance Backend b => FromJSON (ForeignKeyMetadata b) where
 -- database via 'src-rsr/pg_table_metadata.sql'
 data DBTableMetadata (b :: BackendType)
   = DBTableMetadata
-  { _ptmiOid               :: !OID
-  , _ptmiColumns           :: ![RawColumnInfo b]
-  , _ptmiPrimaryKey        :: !(Maybe (PrimaryKey b (Column b)))
-  , _ptmiUniqueConstraints :: !(HashSet (Constraint b))
+  { _ptmiOid                :: !OID
+  , _ptmiColumns            :: ![RawColumnInfo b]
+  , _ptmiPrimaryKey         :: !(Maybe (PrimaryKey b (Column b)))
+  , _ptmiUniqueConstraints  :: !(HashSet (Constraint b))
   -- ^ Does /not/ include the primary key!
-  , _ptmiForeignKeys       :: !(HashSet (ForeignKeyMetadata b))
-  , _ptmiViewInfo          :: !(Maybe ViewInfo)
-  , _ptmiDescription       :: !(Maybe PG.PGDescription)
+  , _ptmiForeignKeys        :: !(HashSet (ForeignKeyMetadata b))
+  , _ptmiViewInfo           :: !(Maybe ViewInfo)
+  , _ptmiDescription        :: !(Maybe PG.PGDescription)
+  , _ptmiExtraTableMetadata :: !(ExtraTableMetadata b)
   } deriving (Generic)
 deriving instance Backend b => Eq (DBTableMetadata b)
 deriving instance Backend b => Show (DBTableMetadata b)

@@ -18,6 +18,7 @@ import           Test.Hspec.Core.Spec
 import           Test.Hspec.Expectations.Lifted
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Base.Error
 import           Hasura.RQL.DDL.Metadata             (ClearMetadata (..), runClearMetadata)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DDL.Schema.Cache.Common

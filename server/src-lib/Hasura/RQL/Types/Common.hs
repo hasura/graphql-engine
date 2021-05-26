@@ -66,6 +66,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Bifunctor                     (bimap)
+import           Data.Hashable.Time                 ()
 import           Data.Scientific                    (toBoundedInteger)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
@@ -74,11 +75,11 @@ import           Data.URL.Template
 
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Headers             ()
 import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend                 (BackendType)
 import           Hasura.SQL.Types
 
@@ -277,7 +278,7 @@ instance FromJSON NonNegativeInt where
       False -> fail "negative value not allowed"
 
 newtype NonNegativeDiffTime = NonNegativeDiffTime { unNonNegativeDiffTime :: DiffTime }
-  deriving (Show, Eq,ToJSON,Generic, NFData, Cacheable, Num)
+  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Num)
 
 unsafeNonNegativeDiffTime :: DiffTime -> NonNegativeDiffTime
 unsafeNonNegativeDiffTime = NonNegativeDiffTime
@@ -391,6 +392,17 @@ mkScalarTypeName PG.PGBoolean  = pure boolScalar
 mkScalarTypeName PG.PGFloat    = pure floatScalar
 mkScalarTypeName PG.PGText     = pure stringScalar
 mkScalarTypeName PG.PGVarchar  = pure stringScalar
+mkScalarTypeName (PG.PGCompositeScalar compositeScalarType) =
+  -- When the function argument is a row type argument
+  -- then it's possible that there can be an object type
+  -- with the table name depending upon whether the table
+  -- is tracked or not. As a result, we get a conflict between
+  -- both these types (scalar and object type with same name).
+  -- To avoid this, we suffix the table name with `_scalar`
+  -- and create a new scalar type
+  (<> $$(G.litName "_scalar")) <$> G.mkName compositeScalarType `onNothing` throw400 ValidationFailed
+  ("cannot use SQL type " <> compositeScalarType <<> " in the GraphQL schema because its name is not a "
+  <> "valid GraphQL identifier")
 mkScalarTypeName scalarType = G.mkName (toSQLTxt scalarType) `onNothing` throw400 ValidationFailed
   ("cannot use SQL type " <> scalarType <<> " in the GraphQL schema because its name is not a "
   <> "valid GraphQL identifier")

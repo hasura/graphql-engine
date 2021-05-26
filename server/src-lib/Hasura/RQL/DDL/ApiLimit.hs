@@ -4,9 +4,11 @@ module Hasura.RQL.DDL.ApiLimit where
 
 import           Hasura.Prelude
 
-import           Control.Lens     ((.~))
+import           Control.Lens      ((.~))
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
+
 
 runSetApiLimits
   :: (MonadError QErr m, MetadataM m, CacheRWM m)

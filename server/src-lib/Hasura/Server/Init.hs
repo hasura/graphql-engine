@@ -6,6 +6,8 @@ module Hasura.Server.Init
   , module Hasura.Server.Init.Config
   ) where
 
+import           Hasura.Prelude
+
 import qualified Data.Aeson                               as J
 import qualified Data.Aeson.TH                            as J
 import qualified Data.HashSet                             as Set
@@ -13,13 +15,15 @@ import qualified Data.String                              as DataString
 import qualified Data.Text                                as T
 import qualified Database.PG.Query                        as Q
 import qualified Language.Haskell.TH.Syntax               as TH
+import qualified Network.WebSockets                       as WS
 import qualified Text.PrettyPrint.ANSI.Leijen             as PP
 
+import           Data.ByteString.Char8                    (pack, unpack)
 import           Data.FileEmbed                           (embedStringFile, makeRelativeToProject)
+import           Data.Text.Encoding                       (encodeUtf8)
 import           Data.Time                                (NominalDiffTime)
 import           Data.URL.Template
 import           Network.Wai.Handler.Warp                 (HostPreference)
-import qualified Network.WebSockets                       as WS
 import           Options.Applicative
 
 import qualified Hasura.Cache.Bounded                     as Cache
@@ -28,7 +32,8 @@ import qualified Hasura.GraphQL.Execute.Plan              as E
 import qualified Hasura.Logging                           as L
 
 import           Hasura.Backends.Postgres.Connection
-import           Hasura.Prelude
+import           Hasura.Base.Error
+import           Hasura.Eventing.EventTrigger             (defaultFetchBatchSize)
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
@@ -37,7 +42,9 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
-import           Network.URI                              (parseURI)
+import           Network.HTTP.Types.URI                   (Query, QueryItem, parseQuery,
+                                                           renderQuery)
+import           Network.URI                              (URI (..), parseURI, uriQuery)
 
 getDbId :: Q.TxE QErr Text
 getDbId =
@@ -210,6 +217,13 @@ mkServeOptions rso = do
     bool MaintenanceModeDisabled MaintenanceModeEnabled
     <$> withEnvBool (rsoEnableMaintenanceMode rso) (fst maintenanceModeEnv)
 
+  eventsFetchBatchSize <-
+    fromMaybe defaultFetchBatchSize
+    <$> withEnv (rsoEventsFetchBatchSize rso) (fst eventsFetchBatchSizeEnv)
+
+  gracefulShutdownTime <-
+    fromMaybe 60 <$> withEnv (rsoGracefulShutdownTimeout rso) (fst gracefulShutdownEnv)
+
   pure $ ServeOptions
            port
            host
@@ -243,6 +257,9 @@ mkServeOptions rso = do
            maintenanceMode
            schemaPollInterval
            experimentalFeatures
+           eventsFetchBatchSize
+           devMode
+           gracefulShutdownTime
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -257,10 +274,7 @@ mkServeOptions rso = do
       -- hard throughput cap at 1000RPS when db queries take 50ms on average:
       conns <- fromMaybe 50 <$> withEnv c (fst pgConnsEnv)
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
-      connLifetime <- withEnv cl (fst pgConnLifetimeEnv) <&> \case
-        Nothing -> Just 600 -- Not set by user; use the default timeout
-        Just 0  -> Nothing  -- user wants to disable PG_CONN_LIFETIME
-        Just n  -> Just n   -- user specified n seconds lifetime
+      connLifetime <- withEnv cl (fst pgConnLifetimeEnv) <&> parseConnLifeTime
       allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
       poolTimeout <- withEnv pt (fst pgPoolTimeoutEnv)
       return $ Q.ConnParams
@@ -425,13 +439,19 @@ serveCmdFooter =
 eventsHttpPoolSizeEnv :: (String, String)
 eventsHttpPoolSizeEnv =
   ( "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-  , "Max event threads"
+  , "Max event processing threads (default: 100)"
   )
 
 eventsFetchIntervalEnv :: (String, String)
 eventsFetchIntervalEnv =
   ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
   , "Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres."
+  )
+
+eventsFetchBatchSizeEnv :: (String, String)
+eventsFetchBatchSizeEnv =
+  ( "HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE"
+  , "The maximum number of events to be fetched from the events table in a single batch. Default 100"
   )
 
 asyncActionsFetchIntervalEnv :: (String, String)
@@ -611,6 +631,13 @@ experimentalFeaturesEnv =
   , "Comma separated list of experimental features. (all: inherited_roles)"
   )
 
+gracefulShutdownEnv :: (String, String)
+gracefulShutdownEnv =
+  ( "HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT"
+  , "Timeout for graceful shutdown before which in-flight scheduled events, " <>
+     " cron events and async actions to complete (default: 60 seconds)"
+  )
+
 consoleAssetsDirEnv :: (String, String)
 consoleAssetsDirEnv =
   ( "HASURA_GRAPHQL_CONSOLE_ASSETS_DIR"
@@ -659,7 +686,7 @@ maintenanceModeEnv =
 
 schemaPollIntervalEnv :: (String, String)
 schemaPollIntervalEnv =
-  ( "HASURA_GRAPHQL_SCHEMA_POLL_INTERVAL"
+  ( "HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL"
   , "Interval to poll metadata storage for updates in milliseconds - Default 1000 (1s) - Set to 0 to disable"
   )
 
@@ -945,6 +972,14 @@ parseExperimentalFeatures = optional $
            help (snd experimentalFeaturesEnv)
          )
 
+parseGracefulShutdownTimeout :: Parser (Maybe Seconds)
+parseGracefulShutdownTimeout = optional $
+  option (eitherReader readEither)
+         ( long "graceful-shutdown-timeout" <>
+           metavar "<INTERVAL (seconds)>" <>
+           help (snd gracefulShutdownEnv)
+         )
+
 parseMxRefetchInt :: Parser (Maybe LQ.RefetchInterval)
 parseMxRefetchInt =
   optional $
@@ -998,6 +1033,14 @@ parseGraphqlEventsFetchInterval = optional $
     help (snd eventsFetchIntervalEnv)
   )
 
+parseEventsFetchBatchSize :: Parser (Maybe NonNegativeInt)
+parseEventsFetchBatchSize = optional $
+  option (eitherReader readNonNegativeInt)
+  ( long "events-fetch-batch-size" <>
+    metavar (fst eventsFetchBatchSizeEnv)  <>
+    help (snd eventsFetchBatchSizeEnv)
+  )
+
 parseGraphqlAsyncActionsFetchInterval :: Parser (Maybe Milliseconds)
 parseGraphqlAsyncActionsFetchInterval = optional $
   option (eitherReader readEither)
@@ -1033,7 +1076,7 @@ parseEnableMaintenanceMode =
 parseSchemaPollInterval :: Parser (Maybe Milliseconds)
 parseSchemaPollInterval = optional $
   option (eitherReader readEither)
-  ( long "schema-poll-interval" <>
+  ( long "schema-sync-poll-interval" <>
     metavar (fst schemaPollIntervalEnv)  <>
     help (snd schemaPollIntervalEnv)
   )
@@ -1097,6 +1140,21 @@ parseLogLevel = optional $
            help (snd logLevelEnv)
          )
 
+censorQueryItem :: Text -> QueryItem -> QueryItem
+censorQueryItem sensitive (key, Just _) | key == encodeUtf8 sensitive = (key, Just "...")
+censorQueryItem _ qi = qi
+
+censorQuery :: Text -> Query -> Query
+censorQuery sensitive = fmap (censorQueryItem sensitive)
+
+updateQuery :: (Query -> Query) -> URI -> URI
+updateQuery f uri =
+  let queries = parseQuery $ pack $ uriQuery uri
+  in uri { uriQuery = unpack (renderQuery True $ f queries) }
+
+censorURI :: Text -> URI -> URI
+censorURI sensitive uri = updateQuery (censorQuery sensitive) uri
+
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog
 connInfoToLog connInfo =
@@ -1114,7 +1172,7 @@ connInfoToLog connInfo =
                  ]
 
     mkDBUriLog uri =
-      case show <$> parseURI uri of
+      case show . censorURI "sslpassword" <$> parseURI uri of
         Nothing -> J.object
           [ "error" J..= ("parsing database url failed" :: String)]
         Just s  -> J.object
@@ -1155,6 +1213,8 @@ serveOptsToLog so =
       , "infer_function_permissions" J..= soInferFunctionPermissions so
       , "enable_maintenance_mode" J..= soEnableMaintenanceMode so
       , "experimental_features" J..= soExperimentalFeatures so
+      , "events_fetch_batch_size" J..= soEventsFetchBatchSize so
+      , "graceful_shutdown_timeout" J..= soGracefulShutdownTimeout so
       ]
 
 mkGenericStrLog :: L.LogLevel -> Text -> String -> StartupLog
@@ -1209,6 +1269,8 @@ serveOptionsParser =
   <*> parseEnableMaintenanceMode
   <*> parseSchemaPollInterval
   <*> parseExperimentalFeatures
+  <*> parseEventsFetchBatchSize
+  <*> parseGracefulShutdownTimeout
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.

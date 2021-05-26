@@ -2,25 +2,30 @@
 
 module Hasura.Backends.BigQuery.Instances.Schema () where
 
-import qualified Data.Aeson as J
-import qualified Data.HashMap.Strict as Map
-import qualified Data.List.NonEmpty as NE
-import qualified Data.Text as T
+import           Hasura.Prelude
+
+import qualified Data.Aeson                            as J
+import qualified Data.HashMap.Strict                   as Map
+import qualified Data.List.NonEmpty                    as NE
+import qualified Data.Text                             as T
+
 import           Data.Text.Extended
-import qualified Hasura.Backends.BigQuery.Types as BigQuery
+
+import qualified Hasura.Backends.BigQuery.Types        as BigQuery
+import qualified Hasura.GraphQL.Parser                 as P
+import qualified Hasura.GraphQL.Schema.Build           as GSB
+import qualified Hasura.RQL.IR.Select                  as IR
+import qualified Hasura.RQL.IR.Update                  as IR
+import qualified Language.GraphQL.Draft.Syntax         as G
+
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Context
-import qualified Hasura.GraphQL.Parser as P
-import           Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
+import           Hasura.GraphQL.Parser                 hiding (EnumValueInfo, field)
 import           Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import           Hasura.GraphQL.Schema.Backend
-import qualified Hasura.GraphQL.Schema.Build as GSB
 import           Hasura.GraphQL.Schema.Common
-import           Hasura.Prelude
-import qualified Hasura.RQL.IR.Select as IR
-import qualified Hasura.RQL.IR.Update as IR
 import           Hasura.RQL.Types
-import qualified Hasura.RQL.Types.Error as RQL
-import qualified Language.GraphQL.Draft.Syntax as G
+
 
 ----------------------------------------------------------------
 -- BackendSchema instance
@@ -53,6 +58,7 @@ instance BackendSchema 'BigQuery where
   remoteRelationshipField   = msRemoteRelationshipField
   -- SQL literals
   columnDefaultValue = error "TODO: Make impossible by the type system. BigQuery doesn't support insertions."
+
 
 ----------------------------------------------------------------
 -- Top level parsers
@@ -170,22 +176,30 @@ msColumnParser columnType (G.Nullability isNullable) =
       -- will in all likelihood error on the BigQuery side. Do we want to handle those
       -- properly here?
       BigQuery.FloatScalarType   -> pure $ possiblyNullable scalarType $  BigQuery.FloatValue . BigQuery.doubleToFloat64 <$> P.float
-      -- Int types; we cram everything into Double at the moment
-      -- TODO: Distinguish between ints and doubles
-      BigQuery.IntegerScalarType -> pure $ possiblyNullable scalarType $  BigQuery.IntegerValue . BigQuery.intToInt64 . round <$> P.float
+      BigQuery.IntegerScalarType -> pure $ possiblyNullable scalarType $  BigQuery.IntegerValue . BigQuery.intToInt64 . fromIntegral <$> P.int
       BigQuery.DecimalScalarType -> pure $ possiblyNullable scalarType $  BigQuery.DecimalValue . BigQuery.doubleToDecimal <$> P.float
       BigQuery.BigDecimalScalarType -> pure $ possiblyNullable scalarType $  BigQuery.BigDecimalValue . BigQuery.doubleToBigDecimal <$> P.float
       -- boolean type
       BigQuery.BoolScalarType -> pure $ possiblyNullable scalarType $  BigQuery.BoolValue <$> P.boolean
       BigQuery.DateScalarType -> pure $ possiblyNullable scalarType $  BigQuery.DateValue . BigQuery.Date <$> P.string
+      BigQuery.TimeScalarType -> pure $ possiblyNullable scalarType $  BigQuery.TimeValue . BigQuery.Time <$> P.string
       BigQuery.DatetimeScalarType -> pure $ possiblyNullable scalarType $  BigQuery.DatetimeValue . BigQuery.Datetime <$> P.string
       BigQuery.GeographyScalarType -> pure $ possiblyNullable scalarType $  BigQuery.GeographyValue . BigQuery.Geography <$> P.string
-      BigQuery.TimestampScalarType -> pure $ possiblyNullable scalarType $  BigQuery.TimestampValue . BigQuery.Timestamp <$> P.string
-      ty -> throwError $ RQL.internalError $ T.pack $ "Type currently unsupported for BigQuery: " ++ show ty
+      BigQuery.TimestampScalarType -> do
+        let schemaType =  P.Nullable . P.TNamed $ P.mkDefinition stringScalar Nothing P.TIScalar
+        pure $ possiblyNullable scalarType $ Parser
+          { pType = schemaType
+          , pParser =
+              valueToJSON (P.toGraphQLType schemaType)
+                >=> fmap (BigQuery.StringValue . BigQuery.utctimeToISO8601Text)
+                    . either (parseErrorWith ParseFailed . qeError) pure
+                    . runAesonParser (J.withText "TimestampColumn" BigQuery.textToUTCTime)
+          }
+      ty -> throwError $ internalError $ T.pack $ "Type currently unsupported for BigQuery: " ++ show ty
     ColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (Map.toList enumValues) of
         Just enumValuesList -> do
-          tableGQLName <- tableGraphQLName tableName `onLeft` throwError
+          tableGQLName <- tableGraphQLName @'BigQuery tableName `onLeft` throwError
           let enumName = tableGQLName <> $$(G.litName "_enum")
           pure $ possiblyNullable BigQuery.StringScalarType $ P.enum enumName Nothing (mkEnumValue <$> enumValuesList)
         Nothing -> throw400 ValidationFailed "empty enum values"
@@ -272,8 +286,8 @@ msComparisonExps
 msComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
   -- see Note [Columns in comparison expression are never nullable]
   typedParser        <- columnParser columnType (G.Nullability False)
-  nullableTextParser <- columnParser (ColumnScalar BigQuery.StringScalarType) (G.Nullability True)
-  textParser         <- columnParser (ColumnScalar BigQuery.StringScalarType) (G.Nullability False)
+  nullableTextParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability True)
+  textParser         <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability False)
   let name = P.getName typedParser <> $$(G.litName "_BigQuery_comparison_exp")
       desc = G.Description $ "Boolean expression to compare columns of type "
         <>  P.getName typedParser
@@ -313,28 +327,32 @@ msTableDistinctOn
   -- :: forall m n. (BackendSchema 'BigQuery, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   :: Applicative m
   => Applicative n
-  => TableName 'BigQuery
+  => SourceName
+  -> TableInfo 'BigQuery
   -> SelPermInfo 'BigQuery
   -> m (InputFieldsParser n (Maybe (XDistinct 'BigQuery, NonEmpty (Column 'BigQuery))))
-msTableDistinctOn _table _selectPermissions = pure (pure Nothing)
+msTableDistinctOn _sourceName _tableInfo _selectPermissions = pure (pure Nothing)
 
 -- | Various update operators
 msUpdateOperators
   -- :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   :: Applicative m
-  => TableName 'BigQuery         -- ^ qualified name of the table
+  => TableInfo 'BigQuery         -- ^ qualified name of the table
   -> UpdPermInfo 'BigQuery       -- ^ update permissions of the table
   -> m (Maybe (InputFieldsParser n [(Column 'BigQuery, IR.UpdOpExpG (UnpreparedValue 'BigQuery))]))
-msUpdateOperators _table _updatePermissions = pure Nothing
+msUpdateOperators _tableInfo _updatePermissions = pure Nothing
 
 -- | Computed field parser.
 -- Currently unsupported: returns Nothing for now.
 msComputedField
   :: MonadBuildSchema 'BigQuery r m n
-  => ComputedFieldInfo 'BigQuery
+  => SourceName
+  -> ComputedFieldInfo 'BigQuery
+  -> TableName 'BigQuery
   -> SelPermInfo 'BigQuery
   -> m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
-msComputedField _fieldInfo _selectPemissions = pure Nothing
+msComputedField _sourceName _fieldInfo _table _selectPemissions = pure Nothing
+
 
 -- | Remote join field parser.
 -- Currently unsupported: returns Nothing for now.

@@ -61,6 +61,11 @@ const typeDefs = gql`
     age: Int
   }
 
+  input Dimensions {
+    height: Int
+    width: Int
+  }
+
   type Photo {
     height: Int
     width: Int
@@ -84,6 +89,7 @@ const typeDefs = gql`
     users(user_ids: [Int]!): [User]
     message(id: Int!) : Message
     communications(id: Int): [Communication]
+    profilePicture(dimensions: Dimensions): Photo
   }
 `;
 
@@ -149,6 +155,9 @@ const resolvers = {
         errorMsg : () => {
             throw new ApolloError("intentional-error", "you asked for it");
         }
+    },
+
+    Photo: {
     },
 
     Query: {
@@ -217,6 +226,9 @@ const resolvers = {
                 result = allMessages.filter(m => m.id == id);
             }
             return result;
+        },
+        profilePicture: (_, { dimensions }) => {
+            return dimensions
         },
     },
     Communication: {

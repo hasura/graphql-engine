@@ -72,7 +72,7 @@ const columnDataTypes = {
 };
 
 // eslint-disable-next-line no-useless-escape
-const createSQLRegex = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/g;
+const createSQLRegex = /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<tableWithSchema>\"?\w+\"?)|(?<table>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim;
 
 export const displayTableName = (table: Table) => {
   const tableName = table.table_name;
@@ -105,7 +105,23 @@ export const supportedFeatures: SupportedFeaturesType = {
       enabled: false,
     },
     modify: {
-      enabled: false,
+      enabled: true,
+      columns: true,
+      readOnly: true,
+      columns_edit: false,
+      computedFields: false,
+      primaryKeys: true,
+      primaryKeys_edit: false,
+      foreginKeys: true,
+      foreginKeys_edit: false,
+      uniqueKeys: true,
+      uniqueKeys_edit: false,
+      triggers: false,
+      checkConstraints: false,
+      customGqlRoot: false,
+      setAsEnum: false,
+      untrack: true,
+      delete: false,
     },
     relationships: {
       enabled: true,
@@ -142,10 +158,17 @@ export const supportedFeatures: SupportedFeaturesType = {
     tracking: true,
   },
   connectDbForm: {
+    enabled: true,
     connectionParameters: false,
     databaseURL: true,
     environmentVariable: true,
     read_replicas: false,
+    prepared_statements: false,
+    isolation_level: false,
+    connectionSettings: true,
+    retries: false,
+    pool_timeout: false,
+    connection_lifetime: false,
   },
 };
 
@@ -187,14 +210,21 @@ export const mssql: DataSourcesAPI = {
   arrayToPostgresArray: () => {
     return '';
   },
-  schemaListSql: () => `SELECT
-	s.name AS schema_name
+  schemaListSql: () => `
+SELECT
+  s.name AS schema_name
 FROM
-	sys.schemas s
-	INNER JOIN sys.sysusers u ON u.uid = s.principal_id
+  sys.schemas s
 WHERE
-	u.issqluser = 1
-	AND u.name NOT in ('sys', 'guest', 'INFORMATION_SCHEMA')`,
+  s.name NOT IN (
+    'guest', 'INFORMATION_SCHEMA', 'sys',
+    'db_owner', 'db_securityadmin', 'db_accessadmin',
+    'db_backupoperator', 'db_ddladmin', 'db_datawriter',
+    'db_datareader', 'db_denydatawriter', 'db_denydatareader'
+  )
+ORDER BY
+  s.name
+`,
   parseColumnsInfoResult: () => {
     return {};
   },
@@ -366,14 +396,81 @@ FROM sys.objects as obj
     return '';
   },
   getFunctionDefinitionSql: null,
-  primaryKeysInfoSql: () => {
-    return '';
+  primaryKeysInfoSql: ({ schemas }) => {
+    let whereClause = '';
+
+    if (schemas) {
+      whereClause = `WHERE schema_name (schema_id) in (${schemas
+        .map(s => `'${s}'`)
+        .join(',')})`;
+    }
+    return `
+  SELECT
+    schema_name (tab.schema_id) AS table_schema,
+    tab.name AS table_name,
+    (
+      SELECT
+        col.name,
+        pk.name AS constraint_name
+      FROM
+        sys.indexes pk
+        INNER JOIN sys.index_columns ic ON ic.object_id = pk.object_id
+          AND ic.index_id = pk.index_id
+        INNER JOIN sys.columns col ON pk.object_id = col.object_id
+          AND col.column_id = ic.column_id
+      WHERE
+        tab.object_id = pk.object_id AND pk.is_primary_key = 1 FOR json path) AS constraints
+    FROM
+      sys.tables tab
+      INNER JOIN sys.indexes pk ON tab.object_id = pk.object_id
+        AND pk.is_primary_key = 1
+        ${whereClause}
+    GROUP BY
+      tab.name,
+      tab.schema_id,
+      tab.object_id
+    FOR JSON PATH;
+    `;
   },
   checkConstraintsSql: () => {
     return '';
   },
-  uniqueKeysSql: () => {
-    return '';
+  uniqueKeysSql: ({ schemas }) => {
+    let whereClause = '';
+
+    if (schemas) {
+      whereClause = `WHERE schema_name (schema_id) in (${schemas
+        .map(s => `'${s}'`)
+        .join(',')})`;
+    }
+    return `
+    SELECT
+    schema_name (tab.schema_id) AS table_schema,
+    tab.name AS table_name,
+    (
+      SELECT
+        col.name,
+        idx.name AS constraint_name
+      FROM
+        sys.indexes idx
+        INNER JOIN sys.index_columns ic ON ic.object_id = idx.object_id
+          AND ic.index_id = idx.index_id
+        INNER JOIN sys.columns col ON idx.object_id = col.object_id
+          AND col.column_id = ic.column_id
+      WHERE
+        tab.object_id = idx.object_id
+        AND idx.is_unique_constraint = 1 FOR json path) AS constraints
+    FROM
+      sys.tables tab
+      INNER JOIN sys.indexes idx ON tab.object_id = idx.object_id
+        AND idx.is_unique_constraint = 1
+      ${whereClause}
+    GROUP BY
+      tab.name,
+      tab.schema_id,
+      tab.object_id
+    FOR JSON PATH;
+    `;
   },
   frequentlyUsedColumns: [],
   getFKRelations: () => {
@@ -392,7 +489,7 @@ SELECT
         INNER JOIN sys.columns col1
             ON col1.column_id = fkc.parent_column_id AND col1.object_id = tab1.object_id
         INNER JOIN sys.columns col2
-            ON col2.column_id = fkc.referenced_column_id AND col2.object_id = tab2.object_id 
+            ON col2.column_id = fkc.referenced_column_id AND col2.object_id = tab2.object_id
         WHERE fk.object_id = fkc.constraint_object_id
         FOR JSON PATH
     ) AS column_mapping,

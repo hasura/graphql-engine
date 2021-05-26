@@ -80,7 +80,7 @@ func (a *AllowListConfig) Export(metadata yaml.MapSlice) (map[string][]byte, err
 		return nil, err
 	}
 	return map[string][]byte{
-		filepath.Join(a.MetadataDir, fileName): data,
+		filepath.ToSlash(filepath.Join(a.MetadataDir, fileName)): data,
 	}, nil
 }
 

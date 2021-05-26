@@ -2,8 +2,6 @@ module Hasura.RQL.DDL.Schema.Diff
   ( TableMeta(..)
   , ComputedFieldMeta(..)
 
-  , fetchMeta
-
   , getDifference
 
   , TableDiff(..)
@@ -33,9 +31,10 @@ import           Data.List.Extended                 (duplicates)
 import qualified Hasura.SQL.AnyBackend              as AB
 
 import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
-import           Hasura.RQL.DDL.Schema.Common
+import           Hasura.Base.Error
 import           Hasura.RQL.Types                   hiding (ConstraintName, fmFunction,
                                                      tmComputedFields, tmTable)
+
 
 data FunctionMeta
   = FunctionMeta
@@ -58,35 +57,6 @@ data TableMeta (b :: BackendType)
   , tmInfo           :: !(DBTableMetadata b)
   , tmComputedFields :: ![ComputedFieldMeta]
   } deriving (Show, Eq)
-
-fetchMeta
-  :: (MonadTx m)
-  => TableCache 'Postgres
-  -> FunctionCache 'Postgres
-  -> m ([TableMeta 'Postgres], [FunctionMeta])
-fetchMeta tables functions = do
-  tableMetaInfos <- fetchTableMetadata
-  functionMetaInfos <- fetchFunctionMetadata
-
-  let getFunctionMetas function =
-        let mkFunctionMeta rawInfo =
-              FunctionMeta (rfiOid rawInfo) function (rfiFunctionType rawInfo)
-        in maybe [] (map mkFunctionMeta) $ M.lookup function functionMetaInfos
-
-      mkComputedFieldMeta computedField =
-        let function = _cffName $ _cfiFunction computedField
-        in map (ComputedFieldMeta (_cfiName computedField)) $ getFunctionMetas function
-
-      tableMetas = flip map (M.toList tableMetaInfos) $ \(table, tableMetaInfo) ->
-                   TableMeta table tableMetaInfo $ fromMaybe [] $
-                     M.lookup table tables <&> \tableInfo ->
-                     let tableCoreInfo  = _tiCoreInfo tableInfo
-                         computedFields = getComputedFieldInfos $ _tciFieldInfoMap tableCoreInfo
-                     in  concatMap mkComputedFieldMeta computedFields
-
-      functionMetas = concatMap getFunctionMetas $ M.keys functions
-
-  pure (tableMetas, functionMetas)
 
 getOverlap :: (Eq k, Hashable k) => (v -> k) -> [v] -> [v] -> [(v, v)]
 getOverlap getKey left right =
@@ -122,7 +92,7 @@ data TableDiff (b :: BackendType)
   , _tdNewDescription  :: !(Maybe PGDescription)
   }
 
-getTableDiff :: TableMeta 'Postgres -> TableMeta 'Postgres -> TableDiff 'Postgres
+getTableDiff :: TableMeta ('Postgres 'Vanilla) -> TableMeta ('Postgres 'Vanilla) -> TableDiff ('Postgres 'Vanilla)
 getTableDiff oldtm newtm =
   TableDiff mNewName droppedCols addedCols alteredCols
   droppedFKeyConstraints computedFieldDiff uniqueOrPrimaryCons mNewDesc
@@ -175,22 +145,22 @@ getTableDiff oldtm newtm =
 
 getTableChangeDeps
   :: (QErrM m, CacheRM m)
-  => SourceName -> QualifiedTable -> TableDiff 'Postgres -> m [SchemaObjId]
+  => SourceName -> QualifiedTable -> TableDiff ('Postgres 'Vanilla) -> m [SchemaObjId]
 getTableChangeDeps source tn tableDiff = do
   sc <- askSchemaCache
   -- for all the dropped columns
   droppedColDeps <- fmap concat $ forM droppedCols $ \droppedCol -> do
     let objId = SOSourceObj source
                   $ AB.mkAnyBackend
-                  $ SOITableObj tn
-                  $ TOCol droppedCol
+                  $ SOITableObj @('Postgres 'Vanilla) tn
+                  $ TOCol @('Postgres 'Vanilla) droppedCol
     return $ getDependentObjs sc objId
   -- for all dropped constraints
   droppedConsDeps <- fmap concat $ forM droppedFKeyConstraints $ \droppedCons -> do
     let objId = SOSourceObj source
                   $ AB.mkAnyBackend
-                  $ SOITableObj tn
-                  $ TOForeignKey droppedCons
+                  $ SOITableObj @('Postgres 'Vanilla) tn
+                  $ TOForeignKey @('Postgres 'Vanilla) droppedCons
     return $ getDependentObjs sc objId
   return $ droppedConsDeps <> droppedColDeps <> droppedComputedFieldDeps
   where
@@ -199,7 +169,7 @@ getTableChangeDeps source tn tableDiff = do
       map
         (SOSourceObj source
           . AB.mkAnyBackend
-          . SOITableObj tn
+          . SOITableObj @('Postgres 'Vanilla) tn
           . TOComputedField)
         $ _cfdDropped computedFieldDiff
 
@@ -209,7 +179,7 @@ data SchemaDiff (b :: BackendType)
   , _sdAlteredTables :: ![(QualifiedTable, TableDiff b)]
   }
 
-getSchemaDiff :: [TableMeta 'Postgres] -> [TableMeta 'Postgres] -> SchemaDiff 'Postgres
+getSchemaDiff :: [TableMeta ('Postgres 'Vanilla)] -> [TableMeta ('Postgres 'Vanilla)] -> SchemaDiff ('Postgres 'Vanilla)
 getSchemaDiff oldMeta newMeta =
   SchemaDiff droppedTables survivingTables
   where
@@ -220,13 +190,13 @@ getSchemaDiff oldMeta newMeta =
 
 getSchemaChangeDeps
   :: (QErrM m, CacheRM m)
-  => SourceName -> SchemaDiff 'Postgres -> m [SchemaObjId]
+  => SourceName -> SchemaDiff ('Postgres 'Vanilla) -> m [SchemaObjId]
 getSchemaChangeDeps source schemaDiff = do
   -- Get schema cache
   sc <- askSchemaCache
   let tableIds =
         map
-          (SOSourceObj source . AB.mkAnyBackend . SOITable)
+          (SOSourceObj source . AB.mkAnyBackend . SOITable @('Postgres 'Vanilla))
           droppedTables
   -- Get the dependent of the dropped tables
   let tableDropDeps = concatMap (getDependentObjs sc) tableIds
@@ -237,7 +207,7 @@ getSchemaChangeDeps source schemaDiff = do
     SchemaDiff droppedTables alteredTables = schemaDiff
 
     isDirectDep (SOSourceObj s exists) =
-      case AB.unpackAnyBackend exists of
+      case AB.unpackAnyBackend @('Postgres 'Vanilla) exists of
         Just (SOITableObj pgTable _) ->
           s == source && pgTable `HS.member` HS.fromList droppedTables
         _ -> False

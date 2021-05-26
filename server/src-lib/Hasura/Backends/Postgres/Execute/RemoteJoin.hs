@@ -34,6 +34,7 @@ import           Data.Validation
 import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.RemoteJoin
@@ -54,6 +55,7 @@ executeQueryWithRemoteJoins
      , MonadTx m
      , MonadIO m
      , Tracing.MonadTrace m
+     , Backend ('Postgres pgKind)
      )
   => Env.Environment
   -> HTTP.Manager
@@ -61,7 +63,7 @@ executeQueryWithRemoteJoins
   -> UserInfo
   -> Q.Query
   -> [Q.PrepArg]
-  -> RemoteJoins 'Postgres
+  -> RemoteJoins ('Postgres pgKind)
   -> m EncJSON
 executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs rjs = do
   -- Perform the query on database and fetch the response
@@ -74,13 +76,14 @@ processRemoteJoins
      , MonadTx m
      , MonadIO m
      , Tracing.MonadTrace m
+     , Backend ('Postgres pgKind)
      )
   => Env.Environment
   -> HTTP.Manager
   -> [N.Header]
   -> UserInfo
   -> BL.ByteString
-  -> RemoteJoins 'Postgres
+  -> RemoteJoins ('Postgres pgKind)
   -> m EncJSON
 processRemoteJoins env manager reqHdrs userInfo pgRes rjs = do
   -- Step 1: Decode the given bytestring as a JSON value
@@ -157,27 +160,35 @@ data RemoteJoinField
 -- | Generate composite JSON ('CompositeValue') parameterised over 'RemoteJoinField'
 --   from remote join map and query response JSON from Postgres.
 traverseQueryResponseJSON
-  :: (MonadError QErr m)
-  => RemoteJoinMap 'Postgres -> AO.Value -> m (CompositeValue (Maybe RemoteJoinField))
+  :: forall pgKind m
+   . (MonadError QErr m, Backend ('Postgres pgKind))
+  => RemoteJoinMap ('Postgres pgKind)
+  -> AO.Value
+  -> m (CompositeValue (Maybe RemoteJoinField))
 traverseQueryResponseJSON rjm =
   flip runReaderT rjm . flip evalStateT (Counter 0) . traverseValue mempty
   where
-    askRemoteJoins :: MonadReader (RemoteJoinMap 'Postgres) m
-                   => FieldPath -> m (Maybe (NE.NonEmpty (RemoteJoin 'Postgres)))
+    askRemoteJoins
+      :: MonadReader (RemoteJoinMap ('Postgres pgKind)) n
+      => FieldPath
+      -> n (Maybe (NE.NonEmpty (RemoteJoin ('Postgres pgKind))))
     askRemoteJoins path = asks (Map.lookup path)
 
-    traverseValue :: (MonadError QErr m, MonadReader (RemoteJoinMap 'Postgres) m, MonadState Counter m)
-                  => FieldPath -> AO.Value -> m (CompositeValue (Maybe RemoteJoinField))
+    traverseValue
+      :: (MonadError QErr n, MonadReader (RemoteJoinMap ('Postgres pgKind)) n, MonadState Counter n)
+      => FieldPath
+      -> AO.Value
+      -> n (CompositeValue (Maybe RemoteJoinField))
     traverseValue path = \case
       AO.Object obj -> traverseObject obj
       AO.Array arr  -> CVObjectArray <$> mapM (traverseValue path) (toList arr)
       v             -> pure $ CVOrdValue v
       where
         mkRemoteSchemaField
-          :: (MonadError QErr m, MonadState Counter m)
+          :: (MonadError QErr n, MonadState Counter n)
           => AO.Object
-          -> RemoteJoin 'Postgres
-          -> m (Maybe RemoteJoinField)
+          -> RemoteJoin ('Postgres pgKind)
+          -> n (Maybe RemoteJoinField)
         mkRemoteSchemaField siblingFields remoteJoin = runMaybeT $ do
           counter <- getCounter
           let RemoteJoin fieldName inputArgs selSet hasuraFields fieldCall rsi _ = remoteJoin
@@ -238,7 +249,7 @@ traverseQueryResponseJSON rjm =
                                  queryField
                                  (map fcName $ toList $ NE.tail fieldCall)
           where
-            ordJSONValueToGValue :: (MonadError QErr m) => AO.Value -> m (G.Value Void)
+            ordJSONValueToGValue :: (MonadError QErr n) => AO.Value -> n (G.Value Void)
             ordJSONValueToGValue =
               either (throw400 ValidationFailed) pure . jsonToGraphQL . AO.fromOrdered
 
@@ -254,7 +265,7 @@ traverseQueryResponseJSON rjm =
                 Nothing -> Just <$> traverseValue fieldPath value
                 Just nonEmptyRemoteJoins -> do
                   let remoteJoins = toList nonEmptyRemoteJoins
-                      phantomColumnFields = map (fromCol @'Postgres . pgiColumn) $
+                      phantomColumnFields = map (fromCol @('Postgres pgKind) . pgiColumn) $
                                             concatMap _rjPhantomFields remoteJoins
                   if | fieldName `elem` phantomColumnFields -> pure Nothing
                      | otherwise -> do
@@ -313,7 +324,7 @@ fetchRemoteJoinFields
   -> m AO.Object
 fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
   results <- forM (Map.toList remoteSchemaBatch) $ \(rsi, batch) -> do
-    resolvedRemoteFields <- traverse (traverse (resolveRemoteVariable userInfo)) $ _rjfField <$> batch
+    resolvedRemoteFields <- runVariableCache $ traverse (traverse (resolveRemoteVariable userInfo)) $ _rjfField <$> batch
     let gqlReq = fieldsToRequest resolvedRemoteFields
     -- NOTE: discard remote headers (for now):
     (_, _, respBody) <- execRemoteGQ env manager userInfo reqHdrs rsi gqlReq
@@ -335,21 +346,8 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
     remoteSchemaBatch = Map.groupOnNE _rjfRemoteSchema remoteJoins
 
     fieldsToRequest :: NonEmpty (G.Field G.NoFragments Variable) -> GQLReqOutgoing
-    fieldsToRequest gFields@(headField :| _) =
-      let variableInfos =
-            -- only the `headField` is used for collecting the variables here because
-            -- the variable information of all the fields will be the same.
-            -- For example:
-            -- {
-            --   author {
-            --     name
-            --     remote_relationship (extra_arg: $extra_arg)
-            --   }
-            -- }
-            --
-            -- If there are 10 authors, then there are 10 fields that will be requested
-            -- each containing exactly the same variable info.
-            collectVariablesFromField headField
+    fieldsToRequest gFields =
+      let variableInfos = foldMap collectVariablesFromField gFields
       in GQLReq
            { _grOperationName = Nothing
            , _grVariables =
@@ -364,7 +362,7 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
               }
            }
 
--- | Replace 'RemoteJoinField' in composite JSON with it's json value from remote server response.
+-- | Replace 'RemoteJoinField' in composite JSON with its json value from remote server response.
 replaceRemoteFields
   :: MonadError QErr m
   => CompositeValue (Maybe RemoteJoinField)

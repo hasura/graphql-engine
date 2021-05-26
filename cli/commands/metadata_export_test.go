@@ -8,14 +8,12 @@ import (
 	"github.com/hasura/graphql-engine/cli/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gbytes"
 	. "github.com/onsi/gomega/gexec"
 )
 
 var _ = Describe("metadata_export", func() {
 
 	var dirName string
-	var session *Session
 	var teardown func()
 	BeforeEach(func() {
 		dirName = testutil.RandDirName()
@@ -27,7 +25,6 @@ var _ = Describe("metadata_export", func() {
 		editEndpointInConfig(filepath.Join(dirName, defaultConfigFilename), hgeEndpoint)
 
 		teardown = func() {
-			session.Kill()
 			os.RemoveAll(dirName)
 			teardownHGE()
 		}
@@ -39,13 +36,32 @@ var _ = Describe("metadata_export", func() {
 
 	Context("metadata export test", func() {
 		It("should export metadata from server", func() {
-			session = testutil.Hasura(testutil.CmdOpts{
+			session := testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"metadata", "export"},
 				WorkingDirectory: dirName,
 			})
-			want := `.*Metadata exported*.`
-			Eventually(session, 60*40).Should(Say(want))
 			Eventually(session, 60*40).Should(Exit(0))
+			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring("Metadata exported"))
+		})
+	})
+
+	Context("metadata export with output formats", func() {
+		It("should export metadata from server to stdout", func() {
+			session := testutil.Hasura(testutil.CmdOpts{
+				Args:             []string{"metadata", "export", "-o", "yaml"},
+				WorkingDirectory: dirName,
+			})
+			Eventually(session, 60*40).Should(Exit(0))
+			stdout := session.Wait().Out.Contents()
+			Eventually(isYAML(stdout)).Should(BeTrue())
+
+			session = testutil.Hasura(testutil.CmdOpts{
+				Args:             []string{"metadata", "export", "--output", "json"},
+				WorkingDirectory: dirName,
+			})
+			Eventually(session, 60*40).Should(Exit(0))
+			stdout = session.Wait().Out.Contents()
+			Eventually(isJSON(stdout)).Should(BeTrue())
 		})
 	})
 })

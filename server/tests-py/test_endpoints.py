@@ -73,5 +73,8 @@ class TestCustomEndpoints:
     def test_endpoint_empty_path_param(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_empty_path_param.yaml', transport)
 
+    def test_endpoint_uuid_arg(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/endpoint_with_uuid_arg.yaml', transport)
+
     def test_endpoint_subscription(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_subscription.yaml', transport)

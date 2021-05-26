@@ -3,7 +3,6 @@ import { connect, ConnectedProps } from 'react-redux';
 
 import {
   getFunctions,
-  // getCurrentTableInformation,
   getTableInformation,
   rolesSelector,
 } from '../../../../../../metadata/selector';
@@ -21,9 +20,9 @@ import {
   FunctionPermission,
   SelectPermissionEntry,
 } from '../../../../../../metadata/types';
+import Tooltip from '../../../../../Common/Tooltip/Tooltip';
 
 import styles from '../../../../../Common/Permissions/PermissionStyles.scss';
-import Tooltip from '../../../../../Common/Tooltip/Tooltip';
 
 const getFunctionPermissions = (
   allFunctions: InjectedProps['allFunctions'],
@@ -41,7 +40,7 @@ const findFunctionPermissions = (
   userRole: string
 ) => {
   if (!allPermissions) {
-    return false;
+    return undefined;
   }
   return allPermissions.find(permRole => permRole.role === userRole);
 };
@@ -49,24 +48,47 @@ const findFunctionPermissions = (
 const getRoleQueryPermissionSymbol = (
   allPermissions: FunctionPermission[] | undefined | null,
   permissionRole: string,
-  selectRoles: SelectPermissionEntry[] | null
+  selectPermissionsForTable: SelectPermissionEntry[] | null,
+  isEditable: boolean
 ) => {
   if (permissionRole === 'admin') {
     return permissionsSymbols.fullAccess;
   }
-  // selectRoles is populated only when the fn is a query otherwise, we pass an empty array
-  if (selectRoles) {
-    if (selectRoles.find(sel => sel.role === permissionRole)) {
-      return permissionsSymbols.fullAccess;
-    }
+
+  let isTableSelectPermissionsEnabled = false;
+  let isPermissionsEnabledOnMetadata = false;
+
+  // Checking if select permissions are there on the reference table
+  if (
+    selectPermissionsForTable &&
+    selectPermissionsForTable.find(
+      selectPermissionEntry => selectPermissionEntry.role === permissionRole
+    )
+  ) {
+    isTableSelectPermissionsEnabled = true;
+  }
+
+  // If permissions are inferred and not editable we only need to know if corresponding table has select permissions
+  if (!isEditable) {
+    return isTableSelectPermissionsEnabled
+      ? permissionsSymbols.fullAccess
+      : permissionsSymbols.noAccess;
+  }
+
+  // Checking if permissions are enabled and visible in the metadata
+  if (findFunctionPermissions(allPermissions, permissionRole)) {
+    isPermissionsEnabledOnMetadata = true;
+  }
+
+  if (!isPermissionsEnabledOnMetadata) {
     return permissionsSymbols.noAccess;
   }
 
-  const existingPerm = findFunctionPermissions(allPermissions, permissionRole);
-  if (existingPerm) {
-    return permissionsSymbols.fullAccess;
+  if (isPermissionsEnabledOnMetadata && !isTableSelectPermissionsEnabled) {
+    return permissionsSymbols.partialAccessWarning;
   }
-  return permissionsSymbols.noAccess;
+
+  return permissionsSymbols.fullAccess;
 };
 
 const initialState = {
@@ -107,8 +129,22 @@ const PermissionsLegend = () => (
     <span className={styles.permissionsLegendValue}>
       {permissionsSymbols.noAccess} : not allowed
     </span>
+    <span className={styles.permissionsLegendValue}>
+      {permissionsSymbols.partialAccessWarning} : partial (needs SELECT
+      permissions on table)
+    </span>
   </div>
 );
+
+const getPermissionAccessString = (permissionSymbol: JSX.Element) => {
+  if (permissionSymbol === permissionsSymbols.fullAccess) {
+    return 'full';
+  } else if (permissionSymbol === permissionsSymbols.noAccess) {
+    return 'no';
+  }
+
+  return 'partial';
+};
 
 const EditIcon = () => (
   <span className={styles.editPermsIcon}>
@@ -163,7 +199,12 @@ const PermissionsTableBody: React.FC<PermissionTableProps> = ({
         editIcon,
         onClick,
         dataTest: `${role}-${queryType}`,
-        access: getRoleQueryPermissionSymbol(allPermissions, role, selectRoles),
+        access: getRoleQueryPermissionSymbol(
+          allPermissions,
+          role,
+          selectRoles,
+          isEditable
+        ),
         tooltip,
       };
     });
@@ -216,12 +257,13 @@ const Permissions: React.FC<PermissionsProps> = ({
   readOnlyMode = false,
   tableSelectPermissions,
   isPermissionsEditable,
-  // functions,
+  currentTable,
 }) => {
   const [permissionsEditState, permissionsDispatch] = useReducer(
     functionsPermissionsReducer,
     initialState
   );
+
   const { isEditing, role: permEditRole } = permissionsEditState;
 
   const permCloseEdit = () => {
@@ -243,18 +285,19 @@ const Permissions: React.FC<PermissionsProps> = ({
     currentFunctionName
   );
 
-  const selectRoles = !isPermissionsEditable ? tableSelectPermissions : null;
+  const permissionAccessString = getPermissionAccessString(
+    getRoleQueryPermissionSymbol(
+      allPermissions,
+      permEditRole,
+      tableSelectPermissions,
+      isPermissionsEditable
+    )
+  );
 
-  const isPermSet =
-    getRoleQueryPermissionSymbol(allPermissions, permEditRole, selectRoles) ===
-    permissionsSymbols.fullAccess;
-
-  const saveFunc = () => {
+  const saveFunc = () =>
     dispatch(setFunctionPermission(permEditRole, permCloseEdit));
-  };
-  const removeFunc = () => {
+  const removeFunc = () =>
     dispatch(dropFunctionPermission(permEditRole, permCloseEdit));
-  };
 
   return (
     <>
@@ -266,9 +309,9 @@ const Permissions: React.FC<PermissionsProps> = ({
         readOnlyMode={readOnlyMode}
         allPermissions={allPermissions}
         isEditable={isPermissionsEditable}
-        selectRoles={selectRoles}
+        selectRoles={tableSelectPermissions}
       />
-      <div className={`${styles.add_mar_bottom}`}>
+      <div className={styles.add_mar_bottom}>
         {!readOnlyMode && (
           <PermissionEditor
             saveFn={saveFunc}
@@ -276,7 +319,8 @@ const Permissions: React.FC<PermissionsProps> = ({
             closeFn={permCloseEdit}
             role={permEditRole}
             isEditing={isEditing}
-            isPermSet={isPermSet}
+            permissionAccessInMetadata={permissionAccessString}
+            table={currentTable}
           />
         )}
       </div>
@@ -295,6 +339,7 @@ const mapStateToProps = (state: ReduxState) => {
       getTableInformation(state)(setOffTable, setOffTableSchema)(
         'select_permissions'
       ) ?? [],
+    currentTable: setOffTable,
   };
 };
 

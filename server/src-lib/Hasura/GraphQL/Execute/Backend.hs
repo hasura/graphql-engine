@@ -4,6 +4,7 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Casing                      as J
+import qualified Data.Aeson.Ordered                     as JO
 import qualified Data.Environment                       as Env
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
@@ -17,6 +18,7 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.RQL.IR.RemoteJoin               as IR
 import qualified Hasura.SQL.AnyBackend                  as AB
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action.Types    (ActionExecutionPlan)
@@ -26,7 +28,6 @@ import           Hasura.RQL.IR.RemoteJoin
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Backend
 import           Hasura.Server.Version                  (HasVersion)
@@ -56,7 +57,6 @@ class ( Backend b
     -> HTTP.Manager
     -> [HTTP.Header]
     -> UserInfo
-    -> [G.Directive G.Name]
     -> SourceName
     -> SourceConfig b
     -> QueryDB b (UnpreparedValue b)
@@ -143,7 +143,7 @@ data ExecutionStep where
     -> ExecutionStep
   -- ^ A graphql query to execute against a remote schema
   ExecStepRaw
-    :: J.Value
+    :: JO.Value
     -> ExecutionStep
   -- ^ Output a plain JSON object
 

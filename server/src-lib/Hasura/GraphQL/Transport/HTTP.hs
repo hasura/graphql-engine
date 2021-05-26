@@ -47,10 +47,11 @@ import qualified Hasura.Server.Telemetry.Counters             as Telem
 import qualified Hasura.Tracing                               as Tracing
 
 import           Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Logging                       (MonadQueryLog (logQueryLog),
-                                                               QueryLog (..), QueryLogKind (Cached))
+                                                               QueryLog (..), QueryLogKind (..))
 import           Hasura.GraphQL.Parser.Column                 (UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Schema                 (Variable)
 import           Hasura.GraphQL.Transport.Backend
@@ -63,7 +64,6 @@ import           Hasura.Server.Init.Config
 import           Hasura.Server.Logging
 import           Hasura.Server.Types                          (RequestId)
 import           Hasura.Server.Version                        (HasVersion)
-
 import           Hasura.Session
 import           Hasura.Tracing                               (MonadTrace, TraceT, trace)
 
@@ -233,7 +233,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup remoteJoins actionsInfo cacheKey
         case fmap decodeGQResp cachedValue of
           Just cachedResponseData -> do
-            logQueryLog logger $ QueryLog reqUnparsed Nothing reqId Cached
+            logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindCached
             pure (Telem.Query, 0, Telem.Local, HttpResponse cachedResponseData responseHeaders, normalizedSelectionSet)
 
           Nothing -> do
@@ -241,8 +241,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               E.ExecStepDB _headers exists -> doQErr $ do
                 (telemTimeIO_DT, resp) <-
                   AB.dispatchAnyBackend @BackendTransport exists
-                    \(EB.DBStepInfo _ sourceConfig genSql tx) ->
-                        runDBQuery
+                    \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
+                        runDBQuery @b
                           reqId
                           reqUnparsed
                           fieldName
@@ -252,12 +252,15 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                           tx
                           genSql
                 return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
-              E.ExecStepRemote rsi gqlReq ->
+              E.ExecStepRemote rsi gqlReq -> do
+                logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
                 runRemoteGQ httpManager fieldName rsi gqlReq
               E.ExecStepAction (aep, _) -> do
+                logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
                 (time, (r, _)) <- doQErr $ EA.runActionExecution aep
                 pure $ ResultsFragment time Telem.Empty r []
-              E.ExecStepRaw json ->
+              E.ExecStepRaw json -> do
+                logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection
                 buildRaw json
             out@(_, _, _, HttpResponse responseData _, _) <-
               buildResultFromFragments Telem.Query conclusion responseHeaders normalizedSelectionSet
@@ -295,8 +298,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               E.ExecStepDB responseHeaders exists -> doQErr $ do
                 (telemTimeIO_DT, resp) <-
                   AB.dispatchAnyBackend @BackendTransport exists
-                    \(EB.DBStepInfo _ sourceConfig genSql tx) ->
-                        runDBMutation
+                    \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
+                        runDBMutation @b
                           reqId
                           reqUnparsed
                           fieldName
@@ -306,12 +309,15 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                           tx
                           genSql
                 return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
-              E.ExecStepRemote rsi gqlReq ->
+              E.ExecStepRemote rsi gqlReq -> do
+                logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
                 runRemoteGQ httpManager fieldName rsi gqlReq
               E.ExecStepAction (aep, _) -> do
+                logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
                 (time, (r, hdrs)) <- doQErr $ EA.runActionExecution aep
                 pure $ ResultsFragment time Telem.Empty r $ fromMaybe [] hdrs
-              E.ExecStepRaw json ->
+              E.ExecStepRaw json -> do
+                logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection
                 buildRaw json
             buildResultFromFragments Telem.Mutation conclusion [] normalizedSelectionSet
 
@@ -394,13 +400,13 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 
 coalescePostgresMutations
   :: EB.ExecutionPlan
-  -> Maybe ( SourceConfig 'Postgres
-           , InsOrdHashMap G.Name (EB.DBStepInfo 'Postgres)
+  -> Maybe ( SourceConfig ('Postgres 'Vanilla)
+           , InsOrdHashMap G.Name (EB.DBStepInfo ('Postgres 'Vanilla))
            )
 coalescePostgresMutations plan = do
   -- we extract the name and config of the first mutation root, if any
   (oneSourceName, oneSourceConfig) <- case toList plan of
-    (E.ExecStepDB _ exists:_) -> AB.unpackAnyBackend @'Postgres exists <&> \dbsi ->
+    (E.ExecStepDB _ exists:_) -> AB.unpackAnyBackend @('Postgres 'Vanilla) exists <&> \dbsi ->
       ( EB.dbsiSourceName   dbsi
       , EB.dbsiSourceConfig dbsi
       )
@@ -409,7 +415,7 @@ coalescePostgresMutations plan = do
   -- and that it is Postgres
   mutations <- for plan \case
     E.ExecStepDB _ exists -> do
-      dbStepInfo <- AB.unpackAnyBackend @'Postgres exists
+      dbStepInfo <- AB.unpackAnyBackend @('Postgres 'Vanilla) exists
       guard $ oneSourceName == EB.dbsiSourceName dbStepInfo
       Just dbStepInfo
     _ -> Nothing
@@ -433,9 +439,9 @@ extractFieldFromResponse fieldName bs = do
     do400 = withExceptT Right . throw400 RemoteSchemaError
     doGQExecError = withExceptT Left . throwError . GQExecError
 
-buildRaw :: Applicative m => J.Value -> m ResultsFragment
+buildRaw :: Applicative m => JO.Value -> m ResultsFragment
 buildRaw json = do
-  let obj = encJFromJValue json
+  let obj = JO.toEncJSON json
       telemTimeIO_DT = 0
   pure $ ResultsFragment telemTimeIO_DT Telem.Local obj []
 

@@ -231,7 +231,6 @@ const ReadReplicaForm: React.FC<ReadReplicaProps> = ({
 
   return (
     <>
-      <hr className={styles.line_width} />
       <div className={styles.flexColumn}>
         <h5 className={styles.read_replicas_heading}>Read Replicas</h5>
         <p>

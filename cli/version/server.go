@@ -1,10 +1,10 @@
 package version
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 
-	yaml "github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 )
 
@@ -32,7 +32,7 @@ func FetchServerVersion(endpoint string, client *http.Client) (version string, e
 			return "", errors.Wrap(err, "cannot read version api response")
 		}
 		var v serverVersionResponse
-		err = yaml.Unmarshal(data, &v)
+		err = json.Unmarshal(data, &v)
 		if err != nil {
 			return "", errors.Wrap(err, "failed to parse version api response")
 		}

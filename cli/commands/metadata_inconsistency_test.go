@@ -8,7 +8,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gbytes"
 	. "github.com/onsi/gomega/gexec"
 )
 
@@ -37,15 +36,13 @@ var _ = Describe("metadata_inconsistency", func() {
 		teardown()
 	})
 
-	Context("metadata inconsistency test", func() {
-		It("Manage inconsistent objects in Hasura metadata", func() {
-			session = testutil.Hasura(testutil.CmdOpts{
-				Args:             []string{"metadata", "inconsistency"},
-				WorkingDirectory: dirName,
-			})
-			want := `.*Manage inconsistent objects in Hasura metadata*.`
-			Eventually(session, 60*40).Should(Say(want))
-			Eventually(session, 60*40).Should(Exit(0))
+	It("can run metadata ic root command", func() {
+		session = testutil.Hasura(testutil.CmdOpts{
+			Args:             []string{"metadata", "inconsistency"},
+			WorkingDirectory: dirName,
 		})
+		want := `Manage inconsistent objects in Hasura metadata`
+		Eventually(session, 60*40).Should(Exit(0))
+		Eventually(session.Wait().Out.Contents()).Should(ContainSubstring(want))
 	})
 })

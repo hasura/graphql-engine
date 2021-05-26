@@ -11,6 +11,7 @@ import           Data.Aeson.Types
 import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.Translate.BoolExp
+import           Hasura.Base.Error
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
@@ -34,7 +35,7 @@ assertPermDefined
 assertPermDefined role pa tableInfo =
   unless (permissionIsDefined rpi pa) $ throw400 PermissionDenied $ mconcat
   [ "'" <> tshow (permAccToType pa) <> "'"
-  , " permission on " <>> _tciName (_tiCoreInfo tableInfo)
+  , " permission on " <>> tableInfoName tableInfo
   , " for role " <>> role
   , " does not exist"
   ]
@@ -52,7 +53,7 @@ askPermInfo tabInfo roleName pa =
   `onNothing`
   throw400 PermissionDenied
   (mconcat
-    [ pt <> " permission on " <>> _tciName (_tiCoreInfo tabInfo)
+    [ pt <> " permission on " <>> tableInfoName tabInfo
     , " for role " <>> roleName
     , " does not exist"
     ])
@@ -76,7 +77,7 @@ procBoolExp
   -> BoolExp b
   -> m (AnnBoolExpPartialSQL b, [SchemaDependency])
 procBoolExp source tn fieldInfoMap be = do
-  abe <- annBoolExp parseCollectableType fieldInfoMap $ unBoolExp be
+  abe <- annBoolExp parseCollectableType tn fieldInfoMap $ unBoolExp be
   let deps = getBoolExpDeps source tn abe
   return (abe, deps)
 

@@ -80,7 +80,10 @@ CURRENT_SERVER_LOG=$SERVER_OUTPUT_DIR/upgrade-test-current-server.log
 HGE_ENDPOINT=http://localhost:$HASURA_GRAPHQL_SERVER_PORT
 PYTEST_DIR="${ROOT}/../../server/tests-py"
 
-pip3 -q install -r "${PYTEST_DIR}/requirements.txt"
+# This seems to flake out relatively often; try a mirror if so.
+# Might also need to disable ipv6 or use a longer --timeout
+pip3 -q install -r "${PYTEST_DIR}/requirements.txt" ||\
+pip3 -q install -i http://mirrors.digitalocean.com/pypi/web/simple --trusted-host mirrors.digitalocean.com  -r "${PYTEST_DIR}/requirements.txt"
 
 # export them so that GraphQL Engine can use it
 export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES="$HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES"

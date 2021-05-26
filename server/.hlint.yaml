@@ -128,3 +128,4 @@
     - package base
     rules:
     - warn: {lhs: "Data.Text.intercalate \", \" x", rhs: "commaSeparated x", note: "From Data.Text.Extended"}
+    - warn: {lhs: "Data.Text.Extended.intercalate \", \" x", rhs: "commaSeparated x"}

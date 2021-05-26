@@ -59,8 +59,14 @@ func (c *CLICatalogState) Set(state CLIState) (io.Reader, error) {
 type MigrationsState map[string]map[string]bool
 
 type CLIState struct {
-	Migrations MigrationsState   `json:"migrations" mapstructure:"migrations"`
-	Settings   map[string]string `json:"settings" mapstructure:"settings"`
+	Migrations           MigrationsState   `json:"migrations,omitempty" mapstructure:"migrations,omitempty"`
+	Settings             map[string]string `json:"settings" mapstructure:"settings"`
+	// IsStateCopyCompleted is a utility variable
+	// pre config v3 state was stored in users database connected to hasura in `hdb_catalog.*` tables
+	// this variable is set to true when state copy happens from hdb_catalog.* tables
+	// this process is carried out during a scripts update-project-v3 command or an implicit state copy
+	// introduced in https://github.com/hasura/graphql-engine-mono/pull/1298
+	IsStateCopyCompleted bool              `json:"isStateCopyCompleted" mapstructure:"isStateCopyCompleted"`
 }
 
 func (c *CLIState) Init() {

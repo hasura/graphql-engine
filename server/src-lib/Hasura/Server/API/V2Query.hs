@@ -1,18 +1,24 @@
 -- | The RQL query ('/v2/query')
+
 module Hasura.Server.API.V2Query where
 
-import           Control.Lens
+import           Hasura.Prelude
+
+import qualified Data.Environment                    as Env
+import qualified Network.HTTP.Client                 as HTTP
+
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Data.Environment                    as Env
-import qualified Network.HTTP.Client                 as HTTP
+import qualified Hasura.Backends.BigQuery.DDL.RunSQL as BigQuery
+import qualified Hasura.Backends.MSSQL.DDL.RunSQL    as MSSQL
+import qualified Hasura.Tracing                      as Tracing
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
@@ -26,9 +32,6 @@ import           Hasura.Server.Types
 import           Hasura.Server.Version               (HasVersion)
 import           Hasura.Session
 
-import qualified Hasura.Backends.BigQuery.DDL.RunSQL as BigQuery
-import qualified Hasura.Backends.MSSQL.DDL.RunSQL    as MSSQL
-import qualified Hasura.Tracing                      as Tracing
 
 data RQLQuery
   = RQInsert !InsertQuery
@@ -38,6 +41,7 @@ data RQLQuery
   | RQCount  !CountQuery
   | RQRunSql !RunSQL
   | RQMssqlRunSql !MSSQL.MSSQLRunSQL
+  | RQCitusRunSql !RunSQL
   | RQBigqueryRunSql !BigQuery.BigQueryRunSQL
   | RQBigqueryDatabaseInspection !BigQuery.BigQueryRunSQL
   | RQBulk ![RQLQuery]
@@ -81,7 +85,7 @@ runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuer
 
     withReload currentResourceVersion (result, updatedCache, invalidations, updatedMetadata) = do
       when (queryModifiesSchema rqlQuery) $ do
-        case (_sccMaintenanceMode serverConfigCtx) of
+        case _sccMaintenanceMode serverConfigCtx of
           MaintenanceModeDisabled -> do
             -- set modified metadata in storage
             newResourceVersion <- setMetadata currentResourceVersion updatedMetadata
@@ -115,8 +119,9 @@ runQueryM env = \case
   RQUpdate q                     -> runUpdate env q
   RQDelete q                     -> runDelete env q
   RQCount  q                     -> runCount q
-  RQRunSql q                     -> runRunSQL q
+  RQRunSql q                     -> runRunSQL @'Vanilla q
   RQMssqlRunSql q                -> MSSQL.runSQL q
+  RQCitusRunSql q                -> runRunSQL @'Citus q
   RQBigqueryRunSql q             -> BigQuery.runSQL q
   RQBigqueryDatabaseInspection q -> BigQuery.runDatabaseInspection q
   RQBulk   l                     -> encJFromList <$> indexedMapM (runQueryM env) l

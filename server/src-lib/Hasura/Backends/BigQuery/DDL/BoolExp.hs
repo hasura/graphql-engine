@@ -2,27 +2,29 @@ module Hasura.Backends.BigQuery.DDL.BoolExp where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                            as J
-import qualified Data.HashMap.Strict                   as Map
+import qualified Data.Aeson                               as J
+import qualified Data.HashMap.Strict                      as Map
 
 import           Hasura.Backends.BigQuery.Instances.Types ()
 import           Hasura.Backends.BigQuery.Types
+import           Hasura.Base.Error
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
+
 
 parseBoolExpOperations
   :: forall m v
    . (MonadError QErr m)
   => ValueParser 'BigQuery m v
+  -> TableName
   -> FieldInfoMap (FieldInfo 'BigQuery)
   -> ColumnInfo 'BigQuery
   -> J.Value
   -> m [OpExpG 'BigQuery v]
-parseBoolExpOperations rhsParser _fields columnInfo value =
+parseBoolExpOperations rhsParser _table _fields columnInfo value =
   withPathK (columnName $ pgiColumn columnInfo) $
     parseOperations (pgiType columnInfo) value
   where

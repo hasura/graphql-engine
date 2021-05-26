@@ -45,6 +45,10 @@ func TestGetConsoleAssetsVersion(t *testing.T) {
 		{"tagged beta release with .", "v1.0.0-beta.01", "channel/beta/v1.0"},
 		{"tagged rc release with .", "v2.3.1-rc.11", "channel/rc/v2.3"},
 		{"tagged rj release with .", "v1.2.0-rj.1", "channel/rj/v1.2"},
+		{"tagged cloud stable", "v2.0.0-cloud.9", "channel/stable/v2.0"},
+		{"tagged pro stable", "v2.0.0-pro.9", "channel/stable/v2.0"},
+		{"tagged pro alpha", "v2.0.0-alpha.pro.9", "channel/alpha/v2.0"},
+		{"tagged cloud alpha", "v2.0.0-alpha.cloud.9", "channel/alpha/v2.0"},
 	}
 
 	for _, tc := range tt {

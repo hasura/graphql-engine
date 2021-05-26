@@ -120,7 +120,7 @@ command to allow the Docker container to access the host's network:
 
   .. tab:: Docker for Windows
 
-     Use ``docker.for.win.localhost`` as hostname to access the host's Postgres service.
+     Use ``host.docker.internal`` as hostname to access the host's Postgres service.
 
      This is what your command should look like:
 
@@ -128,9 +128,13 @@ command to allow the Docker container to access the host's network:
         :emphasize-lines: 2
 
         docker run -d -p 8080:8080 \
-          -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@docker.for.win.localhost:<port>/<dbname> \
+          -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@host.docker.internal:<port>/<dbname> \
           -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
           hasura/graphql-engine:latest
+
+     .. note::
+
+       In earlier Docker for Windows versions the hostname used to be ``docker.for.win.localhost``
           
 
 Step 3: Run the Hasura Docker container

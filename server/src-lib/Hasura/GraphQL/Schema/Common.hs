@@ -16,8 +16,10 @@ import qualified Hasura.GraphQL.Execute.Types       as ET (GraphQLQueryType)
 import qualified Hasura.GraphQL.Parser              as P
 import qualified Hasura.RQL.IR.Select               as IR
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser              (UnpreparedValue)
 import           Hasura.RQL.Types
+
 
 type SelectExp           b = IR.AnnSimpleSelG       b (UnpreparedValue b)
 type AggSelectExp        b = IR.AnnAggregateSelectG b (UnpreparedValue b)
@@ -95,19 +97,6 @@ mkDescriptionWith :: Maybe PG.PGDescription -> Text -> G.Description
 mkDescriptionWith descM defaultTxt = G.Description $ case descM of
   Nothing                         -> defaultTxt
   Just (PG.PGDescription descTxt) -> T.unlines [descTxt, "\n", defaultTxt]
-
--- | The default @'skip' and @'include' directives
-defaultDirectives :: [P.DirectiveInfo]
-defaultDirectives =
-  [mkDirective $$(G.litName "skip"), mkDirective $$(G.litName "include")]
-  where
-    ifInputField =
-      P.mkDefinition $$(G.litName "if") Nothing $ P.IFRequired $ P.TNamed $
-      P.mkDefinition $$(G.litName "Boolean") Nothing P.TIScalar
-    dirLocs = map G.DLExecutable
-      [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
-    mkDirective name =
-      P.DirectiveInfo name Nothing [ifInputField] dirLocs
 
 -- TODO why do we do these validations at this point? What does it mean to track
 --      a function but not add it to the schema...?

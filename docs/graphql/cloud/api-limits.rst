@@ -26,6 +26,28 @@ Configuring an API limit
 **Depth limits**
   Restricts a GraphQL operation based on its depth, preventing deeply nested queries.
 
+**Node limits**
+  Restricts a GraphQL operation based on the number of nodes. This helps in limiting the number of different pieces of related data to be fetched.
+
+  A node is defined as a field with a selection set. 
+  
+  For example, in the below query the number of nodes is 3 and they are ``author``, ``articles`` and ``homepage_entries``.
+
+  .. code-block:: graphql
+
+    {
+      author {
+        name
+        articles {
+          id 
+          title
+        }
+      }
+      homepage_entries {
+        article_id
+      }
+    }
+
 API limits are defined by **role** (anonymous, user) and can restrict request rate, depth, or both. Unique request parameters can include IP address or session variables (*x-hasura-user-id*, *x-hasura-org-id*, etc.)
 
 Manage API limits

@@ -9,7 +9,7 @@ module Hasura.GraphQL.Execute
   , buildSubscriptionPlan
   , EQ.PreparedSql(..)
   , ExecutionCtx(..)
-  , MonadGQLExecutionCheck(..)
+  , EC.MonadGQLExecutionCheck(..)
   , checkQueryInAllowlist
   , MultiplexedLiveQueryPlan(..)
   , LiveQueryPlan (..)
@@ -33,6 +33,7 @@ import           Data.Text.Extended
 import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Execute.Action          as EA
 import qualified Hasura.GraphQL.Execute.Backend         as EB
+import qualified Hasura.GraphQL.Execute.Common          as EC
 import qualified Hasura.GraphQL.Execute.Inline          as EI
 import qualified Hasura.GraphQL.Execute.LiveQuery.Plan  as EL
 import qualified Hasura.GraphQL.Execute.Mutation        as EM
@@ -45,8 +46,11 @@ import qualified Hasura.SQL.AnyBackend                  as AB
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Hasura.Tracing                         as Tracing
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
+import           Hasura.GraphQL.Parser.Directives
+import           Hasura.GraphQL.Parser.Monad
 import           Hasura.GraphQL.Parser.Schema           (Variable)
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
@@ -239,7 +243,7 @@ buildSubscriptionPlan userInfo rootFields = do
 
     buildAction (C.RFDB sourceName exists) allFields = do
       lqp <- AB.dispatchAnyBackend @EB.BackendExecute exists
-        \(C.SourceConfigWith (sourceConfig :: SourceConfig b) _) -> do
+        \(C.SourceConfigWith sourceConfig _ :: C.SourceConfigWith db b) -> do
            qdbs <- traverse (checkField @b sourceName) allFields
            LQP . AB.mkAnyBackend . MultiplexedLiveQueryPlan
              <$> EB.mkDBSubscriptionPlan userInfo sourceName sourceConfig qdbs
@@ -283,6 +287,7 @@ getResolvedExecPlan
      , MonadMetadataStorage (MetadataStorageT m)
      , MonadIO m
      , Tracing.MonadTrace m
+     , EC.MonadGQLExecutionCheck m
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -297,7 +302,7 @@ getResolvedExecPlan
   -> (GQLReqUnparsed, GQLReqParsed)
   -> m (Telem.CacheHit, (G.SelectionSet G.NoFragments Variable, ResolvedExecutionPlan))
 getResolvedExecPlan env logger {- planCache-} userInfo sqlGenCtx
-  sc scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) = -- do
+  sc _scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) = -- do
 
   -- See Note [Temporarily disabling query plan caching]
   -- planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo) opNameM queryStr
@@ -313,7 +318,7 @@ getResolvedExecPlan env logger {- planCache-} userInfo sqlGenCtx
 --     Nothing -> (Telem.Miss,) <$> noExistingPlan
   (Telem.Miss,) <$> noExistingPlan
   where
-    GQLReq opNameM queryStr queryVars = reqUnparsed
+    -- GQLReq opNameM queryStr queryVars = reqUnparsed
     -- addPlanToCache plan =
     --   liftIO $ EP.addPlan scVer (userRole userInfo)
     --   opNameM queryStr plan planCache
@@ -329,20 +334,20 @@ getResolvedExecPlan env logger {- planCache-} userInfo sqlGenCtx
       (gCtx, queryParts) <- getExecPlanPartial userInfo sc queryType reqParsed
 
       case queryParts of
-        G.TypedOperationDefinition G.OperationTypeQuery _ varDefs dirs selSet -> do
+        G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           (executionPlan, queryRootFields, normalizedSelectionSet) <-
-            EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders dirs inlinedSelSet varDefs (_grVariables reqUnparsed)
+            EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders directives inlinedSelSet varDefs (_grVariables reqUnparsed) (scSetGraphqlIntrospectionOptions sc)
           pure $ (normalizedSelectionSet, QueryExecutionPlan executionPlan queryRootFields)
+
           -- See Note [Temporarily disabling query plan caching]
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
-        G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet -> do
+        G.TypedOperationDefinition G.OperationTypeMutation _ varDefs directives selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           (executionPlan, normalizedSelectionSet) <-
-            EM.convertMutationSelectionSet env logger gCtx sqlGenCtx userInfo httpManager reqHeaders
-            inlinedSelSet varDefs (_grVariables reqUnparsed)
+            EM.convertMutationSelectionSet env logger gCtx sqlGenCtx userInfo httpManager reqHeaders directives inlinedSelSet varDefs (_grVariables reqUnparsed) (scSetGraphqlIntrospectionOptions sc)
           pure $ (normalizedSelectionSet, MutationExecutionPlan executionPlan)
           -- See Note [Temporarily disabling query plan caching]
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
@@ -350,22 +355,20 @@ getResolvedExecPlan env logger {- planCache-} userInfo sqlGenCtx
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           -- Parse as query to check correctness
-          (unpreparedAST, _reusability, normalizedSelectionSet) <-
-            EQ.parseGraphQLQuery gCtx varDefs (_grVariables reqUnparsed) inlinedSelSet
-          -- A subscription should have exactly one root field
-          -- As an internal testing feature, we support subscribing to multiple
-          -- root fields in a subcription. First, we check if the corresponding directive
-          -- (@_multiple_top_level_fields) is set.
+          (unpreparedAST, _reusability, normalizedDirectives, normalizedSelectionSet) <-
+            EQ.parseGraphQLQuery gCtx varDefs (_grVariables reqUnparsed) directives inlinedSelSet
+          -- Process directives on the subscription
+          (dirMap, _) <-  (`onLeft` reportParseErrors) =<<
+            runParseT (parseDirectives customDirectives (G.DLExecutable G.EDLSUBSCRIPTION) normalizedDirectives)
+          -- A subscription should have exactly one root field.
+          -- However, for testing purposes, we may allow several root fields; we check for this by
+          -- looking for directive "_multiple_top_level_fields" on the subscription. THIS IS NOT A
+          -- SUPPORTED FEATURE. We might remove it in the future without warning. DO NOT USE THIS.
+          allowMultipleRootFields <- withDirective dirMap multipleRootFields $ pure . isJust
           case inlinedSelSet of
-            [] -> throw500 "empty selset for subscription"
             [_] -> pure ()
-            (_:rst) ->
-              let multipleAllowed =
-                    -- TODO!!!
-                    -- We support directives we don't expose in the schema?!
-                    G.Directive $$(G.litName "_multiple_top_level_fields") mempty `elem` directives
-              in
-              unless (multipleAllowed || null rst) $
-                throw400 ValidationFailed "subscriptions must select one top level field"
+            []  -> throw500 "empty selset for subscription"
+            _   -> unless allowMultipleRootFields $
+              throw400 ValidationFailed "subscriptions must select one top level field"
           subscriptionPlan <- buildSubscriptionPlan userInfo unpreparedAST
           pure (normalizedSelectionSet, SubscriptionExecutionPlan subscriptionPlan)

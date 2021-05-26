@@ -54,8 +54,9 @@ All the log-types that can be enabled/disabled are:
 
    * - ``query-log``
      - Logs: the entire GraphQL query with variables, generated SQL statements
-       (only for queries, not for mutations/subscriptions or remote schema
-       queries), the operation name (if provided in the GraphQL request)
+       (only for database queries, not for mutations/subscriptions or remote
+       schema and action queries), the operation name (if provided in the
+       GraphQL request)
      - ``info``
 
    * - ``http-log``
@@ -145,6 +146,7 @@ subscriptions).
       "level": "info",
       "type": "query-log",
       "detail": {
+        "kind": "database",
         "request_id": "840f952d-c489-4d21-a87a-cc23ad17926a",
         "query": {
           "variables": {
@@ -171,6 +173,9 @@ The ``type`` of in the log with be ``query-log``. All the details are nested
 under the ``detail`` key.
 
 This log contains 3 important fields:
+
+- ``kind``: indicates the type or kind of operation. ``kind`` can be
+  ``database``, ``action``, ``remote-schema``, ``cached`` or ``introspection``
 
 - ``request_id``: A unique ID for each request. If the client sends a
   ``x-request-id`` header then that is respected, otherwise a UUID is generated
@@ -206,7 +211,7 @@ This is how the HTTP access logs look like:
           },
           "error": null,
           "request_id": "072b3617-6653-4fd5-b5ee-580e9d098c3d",
-          "parameterized_query_hash": "7116865cef017c3b09e5c9271b0e182a6dcf4c01"
+          "parameterized_query_hash": "7116865cef017c3b09e5c9271b0e182a6dcf4c01",
           "response_size": 105,
           "query": null
         },

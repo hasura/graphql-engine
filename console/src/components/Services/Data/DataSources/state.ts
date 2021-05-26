@@ -2,18 +2,16 @@ import { Driver, getSupportedDrivers } from '../../../../dataSources';
 import { makeConnectionStringFromConnectionParams } from './ManageDBUtils';
 import { addDataSource } from '../../../../metadata/actions';
 import { Dispatch } from '../../../../types';
-import { SourceConnectionInfo } from '../../../../metadata/types';
+import {
+  ConnectionPoolSettings,
+  IsolationLevelOptions,
+  SourceConnectionInfo,
+} from '../../../../metadata/types';
 
 export const connectionTypes = {
   DATABASE_URL: 'DATABASE_URL',
   CONNECTION_PARAMS: 'CONNECTION_PARAMETERS',
   ENV_VAR: 'ENVIRONMENT_VARIABLES',
-};
-
-type ConnectionSettings = {
-  max_connections?: number;
-  idle_timeout?: number;
-  retries?: number;
 };
 
 type ConnectionParams = {
@@ -30,14 +28,16 @@ export type ConnectDBState = {
   connectionParamState: ConnectionParams;
   databaseURLState: {
     dbURL: string;
-    serviceAccountFile: string;
+    serviceAccount: string;
     projectId: string;
     datasets: string;
   };
   envVarState: {
     envVar: string;
   };
-  connectionSettings: ConnectionSettings;
+  connectionSettings: ConnectionPoolSettings;
+  isolationLevel?: IsolationLevelOptions;
+  preparedStatements?: boolean;
 };
 
 export const defaultState: ConnectDBState = {
@@ -52,7 +52,7 @@ export const defaultState: ConnectDBState = {
   },
   databaseURLState: {
     dbURL: '',
-    serviceAccountFile: '',
+    serviceAccount: '',
     projectId: '',
     datasets: '',
   },
@@ -60,6 +60,8 @@ export const defaultState: ConnectDBState = {
     envVar: '',
   },
   connectionSettings: {},
+  preparedStatements: false,
+  isolationLevel: 'read-committed',
 };
 
 type DefaultStateProps = {
@@ -93,11 +95,15 @@ export const connectDataSource = (
   typeConnection: string,
   currentState: ConnectDBState,
   cb: () => void,
-  replicas?: Omit<SourceConnectionInfo, 'connection_string'>[]
+  replicas?: Omit<
+    SourceConnectionInfo,
+    'connection_string' | 'use_prepared_statements' | 'isolation_level'
+  >[],
+  isEditState = false
 ) => {
   let databaseURL: string | { from_env: string } =
     currentState.dbType === 'bigquery'
-      ? currentState.databaseURLState.serviceAccountFile.trim()
+      ? currentState.databaseURLState.serviceAccount.trim()
       : currentState.databaseURLState.dbURL.trim();
   if (
     typeConnection === connectionTypes.ENV_VAR &&
@@ -108,6 +114,7 @@ export const connectDataSource = (
     databaseURL = { from_env: currentState.envVarState.envVar.trim() };
   } else if (
     typeConnection === connectionTypes.CONNECTION_PARAMS &&
+    currentState.dbType !== 'bigquery' &&
     getSupportedDrivers('connectDbForm.connectionParameters').includes(
       currentState.dbType
     )
@@ -126,10 +133,13 @@ export const connectDataSource = (
           name: currentState.displayName.trim(),
           dbUrl: databaseURL,
           connection_pool_settings: currentState.connectionSettings,
+          replace_configuration: isEditState,
           bigQuery: {
             projectId: currentState.databaseURLState.projectId,
             datasets: currentState.databaseURLState.datasets,
           },
+          preparedStatements: currentState.preparedStatements,
+          isolationLevel: currentState.isolationLevel,
         },
       },
       cb,
@@ -145,12 +155,15 @@ export type ConnectDBActions =
         name: string;
         driver: Driver;
         databaseUrl: string;
-        connectionSettings: ConnectionSettings;
+        connectionSettings: ConnectionPoolSettings;
+        preparedStatements: boolean;
+        isolationLevel: IsolationLevelOptions;
       };
     }
+  | { type: 'UPDATE_PARAM_STATE'; data: ConnectionParams }
   | { type: 'UPDATE_DISPLAY_NAME'; data: string }
   | { type: 'UPDATE_DB_URL'; data: string }
-  | { type: 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT_FILE'; data: string }
+  | { type: 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT'; data: string }
   | { type: 'UPDATE_DB_BIGQUERY_PROJECT_ID'; data: string }
   | { type: 'UPDATE_DB_BIGQUERY_DATASETS'; data: string }
   | { type: 'UPDATE_DB_URL_ENV_VAR'; data: string }
@@ -162,8 +175,12 @@ export type ConnectDBActions =
   | { type: 'UPDATE_MAX_CONNECTIONS'; data: string }
   | { type: 'UPDATE_RETRIES'; data: string }
   | { type: 'UPDATE_IDLE_TIMEOUT'; data: string }
+  | { type: 'UPDATE_POOL_TIMEOUT'; data: string }
+  | { type: 'UPDATE_CONNECTION_LIFETIME'; data: string }
   | { type: 'UPDATE_DB_DRIVER'; data: Driver }
-  | { type: 'UPDATE_CONNECTION_SETTINGS'; data: ConnectionSettings }
+  | { type: 'UPDATE_CONNECTION_SETTINGS'; data: ConnectionPoolSettings }
+  | { type: 'UPDATE_PREPARED_STATEMENTS'; data: boolean }
+  | { type: 'UPDATE_ISOLATION_LEVEL'; data: IsolationLevelOptions }
   | { type: 'RESET_INPUT_STATE' };
 
 export const connectDBReducer = (
@@ -181,6 +198,13 @@ export const connectDBReducer = (
           dbURL: action.data.databaseUrl,
         },
         connectionSettings: action.data.connectionSettings,
+        preparedStatements: action.data.preparedStatements,
+        isolationLevel: action.data.isolationLevel,
+      };
+    case 'UPDATE_PARAM_STATE':
+      return {
+        ...state,
+        connectionParamState: action.data,
       };
     case 'UPDATE_DISPLAY_NAME':
       return {
@@ -275,17 +299,43 @@ export const connectDBReducer = (
           idle_timeout: setNumberFromString(action.data),
         },
       };
+    case 'UPDATE_POOL_TIMEOUT':
+      return {
+        ...state,
+        connectionSettings: {
+          ...state.connectionSettings,
+          pool_timeout: setNumberFromString(action.data),
+        },
+      };
+    case 'UPDATE_CONNECTION_LIFETIME':
+      return {
+        ...state,
+        connectionSettings: {
+          ...state.connectionSettings,
+          connection_lifetime: setNumberFromString(action.data),
+        },
+      };
     case 'UPDATE_CONNECTION_SETTINGS':
       return {
         ...state,
         connectionSettings: action.data,
       };
-    case 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT_FILE':
+    case 'UPDATE_ISOLATION_LEVEL':
+      return {
+        ...state,
+        isolationLevel: action.data,
+      };
+    case 'UPDATE_PREPARED_STATEMENTS':
+      return {
+        ...state,
+        preparedStatements: action.data,
+      };
+    case 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT':
       return {
         ...state,
         databaseURLState: {
           ...state.databaseURLState,
-          serviceAccountFile: action.data,
+          serviceAccount: action.data,
         },
       };
     case 'UPDATE_DB_BIGQUERY_DATASETS':

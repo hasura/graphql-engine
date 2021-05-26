@@ -1,7 +1,6 @@
 package v2query
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -39,13 +38,7 @@ func TestClient_Send(t *testing.T) {
 		{
 			"can send a request",
 			fields{
-				Client: func() *httpc.Client {
-					c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", port), nil)
-					if err != nil {
-						t.Fatal(err)
-					}
-					return c
-				}(),
+				Client:                       testutil.NewHttpcClient(t, port, nil),
 				path:                         "v2/query",
 				HasuraDatabaseRequests:       nil,
 				HasuraCommonMetadataRequests: nil,
@@ -89,7 +82,7 @@ func TestClient_Send(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			assert.Equal(t, tt.wantJSONResponseBody, string(b))
+			assert.JSONEq(t, tt.wantJSONResponseBody, string(b))
 		})
 	}
 }
@@ -114,14 +107,8 @@ func TestClient_Bulk(t *testing.T) {
 		{
 			"can send a bulk request",
 			fields{
-				Client: func() *httpc.Client {
-					c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", port), nil)
-					if err != nil {
-						t.Fatal(err)
-					}
-					return c
-				}(),
-				path: "v2/query",
+				Client: testutil.NewHttpcClient(t, port, nil),
+				path:   "v2/query",
 			},
 			args{
 				args: []hasura.RequestBody{
@@ -152,14 +139,8 @@ func TestClient_Bulk(t *testing.T) {
 		{
 			"can throw error on a bad request",
 			fields{
-				Client: func() *httpc.Client {
-					c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", port), nil)
-					if err != nil {
-						t.Fatal(err)
-					}
-					return c
-				}(),
-				path: "v1/query",
+				Client: testutil.NewHttpcClient(t, port, nil),
+				path:   "v1/query",
 			},
 			args{
 				args: []hasura.RequestBody{
@@ -196,7 +177,7 @@ func TestClient_Bulk(t *testing.T) {
 				require.NoError(t, err)
 				gotb, err := ioutil.ReadAll(got)
 				require.NoError(t, err)
-				require.Equal(t, tt.want, string(gotb))
+				require.JSONEq(t, tt.want, string(gotb))
 			}
 		})
 	}

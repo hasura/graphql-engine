@@ -1,5 +1,4 @@
-{-# LANGUAGE DisambiguateRecordFields #-}
-{-# LANGUAGE DuplicateRecordFields    #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 
 module Hasura.Backends.BigQuery.DDL.Source
   ( resolveSource
@@ -8,11 +7,13 @@ module Hasura.Backends.BigQuery.DDL.Source
   )
 where
 
+import           Hasura.Prelude
 
-import           Control.Concurrent.MVar                  (newMVar)
 import qualified Data.Environment                         as Env
 import qualified Data.HashMap.Strict                      as HM
 import qualified Data.Text                                as T
+
+import           Control.Concurrent.MVar                  (newMVar)
 import           Data.Time.Clock.System
 
 import           Hasura.Backends.BigQuery.Connection
@@ -20,10 +21,9 @@ import           Hasura.Backends.BigQuery.Instances.Types ()
 import           Hasura.Backends.BigQuery.Meta
 import           Hasura.Backends.BigQuery.Source
 import           Hasura.Backends.BigQuery.Types
-import           Hasura.Prelude
+import           Hasura.Base.Error
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
@@ -89,6 +89,7 @@ resolveSource sourceConfig =
                          , _ptmiForeignKeys = mempty
                          , _ptmiViewInfo = Just $ ViewInfo False False False
                          , _ptmiDescription = Nothing
+                         , _ptmiExtraTableMetadata = ()
                          })
                    | (index, RestTable {tableReference, schema}) <-
                        zip [0 ..] restTables

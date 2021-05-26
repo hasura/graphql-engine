@@ -225,7 +225,10 @@ const ModifyView = props => {
     </Button>
   );
 
-  if (!isFeatureSupported('tables.modify.enabled')) {
+  if (
+    !isFeatureSupported('tables.modify.enabled') ||
+    isFeatureSupported('tables.modify.readOnly')
+  ) {
     return (
       <FeatureDisabled
         tab="modify"

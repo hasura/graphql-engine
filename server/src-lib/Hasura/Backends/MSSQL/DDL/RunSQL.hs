@@ -14,6 +14,7 @@ import           Data.Aeson.TH
 import           Data.String                      (fromString)
 
 import           Hasura.Backends.MSSQL.Connection
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Schema            (RunSQLRes (..))
 import           Hasura.RQL.Types
@@ -45,7 +46,7 @@ runSQL
   :: (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m)
   => MSSQLRunSQL -> m EncJSON
 runSQL (MSSQLRunSQL sqlText source) = do
-  pool <- _mscConnectionPool <$> askSourceConfig source
+  pool <- _mscConnectionPool <$> askSourceConfig @'MSSQL source
   results <- withMSSQLPool pool $ \conn -> ODBC.query conn $ fromString $ T.unpack sqlText
   pure $ encJFromJValue $ toResult results
 

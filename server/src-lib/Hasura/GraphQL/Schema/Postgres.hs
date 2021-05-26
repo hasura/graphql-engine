@@ -17,7 +17,7 @@ import           Hasura.RQL.Types
 
 
 buildActionQueryFields
-  :: MonadBuildSchema 'Postgres r m n
+  :: MonadBuildSchema ('Postgres 'Vanilla) r m n
   => NonObjectTypeMap
   -> ActionInfo
   -> m [FieldParser n (QueryRootField UnpreparedValue)]
@@ -30,7 +30,7 @@ buildActionQueryFields nonObjectCustomTypes actionInfo =
       fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery actionInfo
 
 buildActionMutationFields
-  :: MonadBuildSchema 'Postgres r m n
+  :: MonadBuildSchema ('Postgres 'Vanilla) r m n
   => NonObjectTypeMap
   -> ActionInfo
   -> m [FieldParser n (MutationRootField UnpreparedValue)]
@@ -43,7 +43,7 @@ buildActionMutationFields nonObjectCustomTypes actionInfo =
       fmap (fmap (RFAction . AMAsync)) <$> actionAsyncMutation nonObjectCustomTypes actionInfo
 
 buildActionSubscriptionFields
-  :: MonadBuildSchema 'Postgres r m n
+  :: MonadBuildSchema ('Postgres 'Vanilla) r m n
   => ActionInfo
   -> m [FieldParser n (QueryRootField UnpreparedValue)]
 buildActionSubscriptionFields actionInfo =

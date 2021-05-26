@@ -1,7 +1,6 @@
 module Hasura.Backends.Postgres.Translate.Mutation
   ( mkSelectExpFromColumnValues
-  )
-where
+  ) where
 
 import           Hasura.Prelude
 
@@ -14,7 +13,8 @@ import qualified Hasura.Backends.Postgres.SQL.DML      as S
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Types.Column
-import           Hasura.RQL.Instances                  ()
+import           Hasura.Base.Error
+import           Hasura.Base.Instances                 ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -24,8 +24,12 @@ import           Hasura.SQL.Types
 -- The generated values expression should be in order of columns;
 -- `SELECT ("row"::table).* VALUES (1, 'Robert', 23) AS "row"`.
 mkSelectExpFromColumnValues
-  :: (MonadError QErr m)
-  => QualifiedTable -> [ColumnInfo 'Postgres] -> [ColumnValues 'Postgres TxtEncodedPGVal] -> m S.Select
+  :: forall pgKind m
+   . MonadError QErr m
+  => QualifiedTable
+  -> [ColumnInfo ('Postgres pgKind)]
+  -> [ColumnValues ('Postgres pgKind) TxtEncodedVal]
+  -> m S.Select
 mkSelectExpFromColumnValues qt allCols = \case
   []       -> return selNoRows
   colVals  -> do

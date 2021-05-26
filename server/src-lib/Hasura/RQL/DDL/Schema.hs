@@ -22,18 +22,18 @@ load and modify the Hasura catalog and schema cache.
 -}
 
 module Hasura.RQL.DDL.Schema
- ( module Hasura.RQL.DDL.Schema.Cache
- , module Hasura.RQL.DDL.Schema.Catalog
- , module Hasura.RQL.DDL.Schema.Function
- , module Hasura.RQL.DDL.Schema.Rename
- , module Hasura.RQL.DDL.Schema.Table
+  ( module Hasura.RQL.DDL.Schema.Cache
+  , module Hasura.RQL.DDL.Schema.Catalog
+  , module Hasura.RQL.DDL.Schema.Function
+  , module Hasura.RQL.DDL.Schema.Rename
+  , module Hasura.RQL.DDL.Schema.Table
 
- , RunSQL(..)
- , runRunSQL
- , isSchemaCacheBuildRequiredRunSQL
+  , RunSQL(..)
+  , runRunSQL
+  , isSchemaCacheBuildRequiredRunSQL
 
- , RunSQLRes(..)
- ) where
+  , RunSQLRes(..)
+  ) where
 
 import           Hasura.Prelude
 
@@ -47,15 +47,18 @@ import           Data.Aeson
 import           Data.Aeson.TH
 
 import           Hasura.Backends.Postgres.DDL.RunSQL
+import           Hasura.Backends.Postgres.DDL.Source (ToMetadataFetchQuery)
+import           Hasura.Base.Error
+import           Hasura.Base.Instances               ()
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.Instances                ()
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                 (quoteRegex)
+
 
 data RunSQL
   = RunSQL
@@ -106,18 +109,29 @@ isSchemaCacheBuildRequiredRunSQL RunSQL {..} =
         { TDFA.captureGroups = False }
         "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b")
 
-runRunSQL :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m, CacheRWM m, HasServerConfigCtx m, MetadataM m)
-  => RunSQL -> m EncJSON
+runRunSQL
+  :: forall (pgKind :: PostgresKind) m
+   . ( BackendMetadata ('Postgres pgKind)
+     , ToMetadataFetchQuery pgKind
+     , CacheRWM m
+     , HasServerConfigCtx m
+     , MetadataM m
+     , MonadBaseControl IO m
+     , MonadError QErr m
+     , MonadIO m
+     )
+  => RunSQL
+  -> m EncJSON
 runRunSQL q@RunSQL {..}
   -- see Note [Checking metadata consistency in run_sql]
   | isSchemaCacheBuildRequiredRunSQL q
-  = withMetadataCheck rSource rCascade rTxAccessMode $ execRawSQL rSql
+  = withMetadataCheck @pgKind rSource rCascade rTxAccessMode $ execRawSQL rSql
   | otherwise
-  = askSourceConfig rSource >>= \sourceConfig ->
+  = askSourceConfig @('Postgres pgKind) rSource >>= \sourceConfig ->
       liftEitherM $ runExceptT $
       runLazyTx (_pscExecCtx sourceConfig) rTxAccessMode $ execRawSQL rSql
   where
-    execRawSQL :: (MonadTx m) => Text -> m EncJSON
+    execRawSQL :: (MonadTx n) => Text -> n EncJSON
     execRawSQL =
       fmap (encJFromJValue @RunSQLRes) . liftTx . Q.multiQE rawSqlErrHandler . Q.fromText
       where

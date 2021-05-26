@@ -10,7 +10,7 @@ import (
 
 	"github.com/hasura/graphql-engine/cli"
 
-	gyaml "github.com/ghodss/yaml"
+	gyaml "github.com/goccy/go-yaml"
 	"github.com/hasura/graphql-engine/cli/internal/hasura"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
@@ -33,11 +33,15 @@ func NewHandler(objects Objects, v1MetadataOps hasura.CommonMetadataOperations, 
 }
 
 func NewHandlerFromEC(ec *cli.ExecutionContext) *Handler {
-	metadataObjects := SetMetadataObjectsWithDir(ec)
+	metadataObjects := GetMetadataObjectsWithDir(ec)
 	return NewHandler(metadataObjects, cli.GetCommonMetadataOps(ec), ec.APIClient.V1Metadata, ec.Logger)
 }
 
-// WriteMetadaa writes the files in the metadata folder
+func (h *Handler) SetMetadataObjects(objects Objects) {
+	h.objects = objects
+}
+
+// WriteMetadata writes the files in the metadata folder
 func (h *Handler) WriteMetadata(files map[string][]byte) error {
 	for name, content := range files {
 		fs := afero.NewOsFs()
@@ -99,13 +103,13 @@ func (h *Handler) BuildMetadata() (yaml.MapSlice, error) {
 				h.logger.Debugf("metadata file for %s was not found, assuming an empty file", object.Name())
 				continue
 			}
-			return tmpMeta, errors.Wrap(err, fmt.Sprintf("cannot build %s from metadata", object.Name()))
+			return tmpMeta, errors.Wrap(err, fmt.Sprintf("cannot build %s from project", object.Name()))
 		}
 	}
 	return tmpMeta, nil
 }
 
-func (h *Handler) makeJSONMetadata() ([]byte, error) {
+func (h *Handler) MakeJSONMetadata() ([]byte, error) {
 	tmpMeta, err := h.BuildMetadata()
 	if err != nil {
 		return nil, err
@@ -120,8 +124,9 @@ func (h *Handler) makeJSONMetadata() ([]byte, error) {
 	}
 	return jbyt, nil
 }
+
 func (h *Handler) V1ApplyMetadata() error {
-	jbyt, err := h.makeJSONMetadata()
+	jbyt, err := h.MakeJSONMetadata()
 	if err != nil {
 		return err
 	}
@@ -132,23 +137,23 @@ func (h *Handler) V1ApplyMetadata() error {
 	return nil
 }
 
-func (h *Handler) V2ApplyMetadata() error {
-	jbyt, err := h.makeJSONMetadata()
+func (h *Handler) V2ApplyMetadata() (*hasura.V2ReplaceMetadataResponse, error) {
+	jbyt, err := h.MakeJSONMetadata()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	var metadata interface{}
 	if err := json.Unmarshal(jbyt, &metadata); err != nil {
-		return err
+		return nil, err
 	}
-	_, err = h.v2MetadataOps.V2ReplaceMetadata(hasura.V2ReplaceMetadataArgs{
+	r, err := h.v2MetadataOps.V2ReplaceMetadata(hasura.V2ReplaceMetadataArgs{
 		AllowInconsistentMetadata: true,
 		Metadata:                  metadata,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return r, nil
 }
 
 func (h *Handler) GetInconsistentMetadata() (bool, []InconsistentMetadataObject, error) {
@@ -209,6 +214,7 @@ type InconsistentMetadataObject struct {
     }
 ]
 */
+
 func (obj InconsistentMetadataObject) GetType() string {
 	if v, ok := obj.Type.(string); ok {
 		return v

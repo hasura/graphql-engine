@@ -22,6 +22,7 @@ module Hasura.Eventing.HTTP
   , Invocation(..)
   , InvocationVersion
   , Response(..)
+  , ResponseLogBehavior(..)
   , WebhookRequest(..)
   , WebhookResponse(..)
   , ClientError(..)
@@ -43,6 +44,7 @@ module Hasura.Eventing.HTTP
 import qualified Data.ByteString               as BS
 import qualified Data.ByteString.Lazy          as LBS
 import qualified Data.CaseInsensitive          as CI
+import qualified Data.HashMap.Lazy             as HML
 import qualified Data.TByteString              as TBS
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as TE
@@ -140,8 +142,6 @@ data ExtraLogContext
   , elEventId        :: EventId
   } deriving (Show, Eq)
 
-$(deriveJSON hasuraJSON{omitNothingFields=True} ''ExtraLogContext)
-
 data HTTPResp (a :: TriggerTypes)
    = HTTPResp
    { hrsStatus  :: !Int
@@ -204,26 +204,41 @@ newtype RequestDetails
   = RequestDetails { _rdSize :: Int64 }
 $(deriveToJSON hasuraJSON ''RequestDetails)
 
+-- TODO(swann): move elsewhere? it could be useful more generally
+data ResponseLogBehavior = LogSanitisedResponse | LogEntireResponse
+  deriving (Show, Eq)
+
 data HTTPRespExtra (a :: TriggerTypes)
   = HTTPRespExtra
-  { _hreResponse :: !(Either (HTTPErr a) (HTTPResp a))
-  , _hreContext  :: !ExtraLogContext
-  , _hreRequest  :: !RequestDetails
+  { _hreResponse    :: !(Either (HTTPErr a) (HTTPResp a))
+  , _hreContext     :: !ExtraLogContext
+  , _hreRequest     :: !RequestDetails
+  , _hreLogResponse :: !ResponseLogBehavior
+  -- ^ Whether to log the entire response, including the body and the headers,
+  -- which may contain sensitive information.
   }
 
 instance ToJSON (HTTPRespExtra a) where
-  toJSON (HTTPRespExtra resp ctxt req) =
+  toJSON (HTTPRespExtra resp ctxt req logResp) =
     case resp of
-      Left errResp ->
-        object [ "response" .= toJSON errResp
-               , "request" .= toJSON req
-               , "context" .= toJSON ctxt
-               ]
-      Right rsp ->
-        object [ "response" .= toJSON rsp
-               , "request" .= toJSON req
-               , "context" .= toJSON ctxt
-               ]
+      Left errResp -> object
+        [ "response" .= toJSON errResp
+        , "request" .= toJSON req
+        , "event_id" .= elEventId ctxt
+        ]
+      Right okResp -> object
+        [ "response" .= case logResp of
+            LogEntireResponse    -> toJSON okResp
+            LogSanitisedResponse -> sanitisedRespJSON okResp
+        , "request" .= toJSON req
+        , "event_id" .= elEventId ctxt
+        ]
+    where
+      sanitisedRespJSON v
+        = Object $ HML.fromList
+        [ "size" .= hrsSize v
+        , "status" .= hrsStatus v
+        ]
 
 instance ToEngineLog (HTTPRespExtra 'EventType) Hasura where
   toEngineLog resp = (LevelInfo, eventTriggerLogType, toJSON resp)
@@ -274,10 +289,11 @@ logHTTPForET
   => Either (HTTPErr 'EventType) (HTTPResp 'EventType)
   -> ExtraLogContext
   -> RequestDetails
+  -> ResponseLogBehavior
   -> m ()
-logHTTPForET eitherResp extraLogCtx reqDetails = do
+logHTTPForET eitherResp extraLogCtx reqDetails logResp = do
   logger :: Logger Hasura <- asks getter
-  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx reqDetails
+  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx reqDetails logResp
 
 logHTTPForST
   :: ( MonadReader r m
@@ -287,10 +303,11 @@ logHTTPForST
   => Either (HTTPErr 'ScheduledType) (HTTPResp 'ScheduledType)
   -> ExtraLogContext
   -> RequestDetails
+  -> ResponseLogBehavior
   -> m ()
-logHTTPForST eitherResp extraLogCtx reqDetails = do
+logHTTPForST eitherResp extraLogCtx reqDetails logResp = do
   logger :: Logger Hasura <- asks getter
-  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx reqDetails
+  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx reqDetails logResp
 
 runHTTP :: (MonadIO m) => HTTP.Manager -> HTTP.Request -> m (Either (HTTPErr a) (HTTPResp a))
 runHTTP manager req = do

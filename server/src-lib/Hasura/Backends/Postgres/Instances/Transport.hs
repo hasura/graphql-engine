@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Backends.Postgres.Instances.Transport
   ( runPGMutationTransaction
@@ -21,6 +22,8 @@ import qualified Hasura.Logging                             as L
 import qualified Hasura.Tracing                             as Tracing
 
 import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Backends.Postgres.Translate.Select  (PostgresAnnotatedFieldJSON)
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
@@ -33,11 +36,15 @@ import           Hasura.Session
 import           Hasura.Tracing
 
 
-instance BackendTransport 'Postgres where
-  runDBQuery = runPGQuery
-  runDBMutation = runPGMutation
+instance
+  ( Backend ('Postgres pgKind)
+  , PostgresAnnotatedFieldJSON pgKind
+  ) => BackendTransport ('Postgres pgKind) where
+  runDBQuery        = runPGQuery
+  runDBMutation     = runPGMutation
   runDBSubscription = runPGSubscription
   runDBQueryExplain = runPGQueryExplain
+
 
 runPGQuery
   :: ( MonadIO m
@@ -50,9 +57,9 @@ runPGQuery
   -> G.Name
   -> UserInfo
   -> L.Logger L.Hasura
-  -> SourceConfig 'Postgres
+  -> SourceConfig ('Postgres pgKind)
   -> Tracing.TraceT (LazyTxT QErr IO) EncJSON
-  -> Maybe EQ.PreparedSql
+  -> Maybe (EQ.PreparedSql pgKind)
   -> m (DiffTime, EncJSON)
   -- ^ Also return the time spent in the PG query; for telemetry.
 runPGQuery reqId query fieldName _userInfo logger sourceConfig tx genSql = do
@@ -72,9 +79,9 @@ runPGMutation
   -> G.Name
   -> UserInfo
   -> L.Logger L.Hasura
-  -> SourceConfig 'Postgres
+  -> SourceConfig ('Postgres pgKind)
   -> Tracing.TraceT (LazyTxT QErr IO) EncJSON
-  -> Maybe EQ.PreparedSql
+  -> Maybe (EQ.PreparedSql pgKind)
   -> m (DiffTime, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
@@ -93,8 +100,8 @@ runPGMutation reqId query fieldName userInfo logger sourceConfig tx _genSql =  d
 runPGSubscription
   :: ( MonadIO m
      )
-  => SourceConfig 'Postgres
-  -> MultiplexedQuery 'Postgres
+  => SourceConfig ('Postgres pgKind)
+  -> MultiplexedQuery ('Postgres pgKind)
   -> [(CohortId, CohortVariables)]
   -> m (DiffTime, Either QErr [(CohortId, B.ByteString)])
 runPGSubscription sourceConfig query variables = withElapsedTime
@@ -103,11 +110,11 @@ runPGSubscription sourceConfig query variables = withElapsedTime
   $ PGL.executeMultiplexedQuery query variables
 
 runPGQueryExplain
-  :: forall m
+  :: forall pgKind m
    . ( MonadIO m
      , MonadError QErr m
      )
-  => DBStepInfo 'Postgres
+  => DBStepInfo ('Postgres pgKind)
   -> m EncJSON
 runPGQueryExplain (DBStepInfo _ sourceConfig _ action) =
   -- All Postgres transport functions use the same monad stack: the ExecutionMonad defined in the
@@ -120,11 +127,11 @@ runPGQueryExplain (DBStepInfo _ sourceConfig _ action) =
 mkQueryLog
   :: GQLReqUnparsed
   -> G.Name
-  -> Maybe EQ.PreparedSql
+  -> Maybe (EQ.PreparedSql pgKind)
   -> RequestId
   -> QueryLog
 mkQueryLog gqlQuery fieldName preparedSql requestId =
-  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId Database
+  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId QueryLogKindDatabase
   where
     generatedQuery = preparedSql <&> \(EQ.PreparedSql query args _) ->
       GeneratedQuery (Q.getQueryText query) (J.toJSON $ pgScalarValueToJson . snd <$> args)
@@ -143,8 +150,8 @@ runPGMutationTransaction
   -> GQLReqUnparsed
   -> UserInfo
   -> L.Logger L.Hasura
-  -> SourceConfig 'Postgres
-  -> InsOrdHashMap G.Name (DBStepInfo 'Postgres)
+  -> SourceConfig ('Postgres pgKind)
+  -> InsOrdHashMap G.Name (DBStepInfo ('Postgres pgKind))
   -> m (DiffTime, InsOrdHashMap G.Name EncJSON)
 runPGMutationTransaction reqId query userInfo logger sourceConfig mutations = do
   logQueryLog logger $ mkQueryLog query $$(G.litName "transaction") Nothing reqId

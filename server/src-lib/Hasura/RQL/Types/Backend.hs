@@ -9,9 +9,9 @@ import           Data.Kind                     (Type)
 import           Data.Text.Extended
 import           Data.Typeable                 (Typeable)
 
+import           Hasura.Base.Error
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.DDL.Headers        ()
-import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Tag
 import           Hasura.SQL.Types
@@ -35,6 +35,13 @@ type XDisable = Void
 -- Additionally, grouping all those types under one typeclass rather than having
 -- dedicated type families allows to explicitly list all typeclass requirements,
 -- which simplifies the instance declarations of all IR types.
+--
+-- There are no injectivity requirements on those type families: it's
+-- okay for two different backends to use the same types. That means,
+-- however, that functions cannot identify to what backend b a given
+-- @TableName b@ refers to; most generic functions will need either a
+-- type application or a 'Proxy' parameter to disambiguate between
+-- different backends at the call site.
 class
   ( Representable (Identifier b)
   , Representable (TableName b)
@@ -49,6 +56,7 @@ class
   , Representable (SQLOperator b)
   , Representable (SessionVarType b)
   , Representable (SourceConnConfiguration b)
+  , Representable (ExtraTableMetadata b)
   , Representable (XRelay b)
   , Representable (XNodesAgg b)
   , Representable (XRemoteField b)
@@ -73,6 +81,7 @@ class
   , FromJSON (ScalarType b)
   , FromJSON (TableName b)
   , FromJSON (SourceConnConfiguration b)
+  , FromJSON (ExtraTableMetadata b)
   , FromJSONKey (Column b)
   , ToJSON (BasicOrderType b)
   , ToJSON (Column b)
@@ -85,6 +94,7 @@ class
   , ToJSON (SourceConfig b)
   , ToJSON (TableName b)
   , ToJSON (SourceConnConfiguration b)
+  , ToJSON (ExtraTableMetadata b)
   , ToJSONKey (Column b)
   , ToJSONKey (FunctionName b)
   , ToJSONKey (ScalarType b)
@@ -98,28 +108,31 @@ class
   , Arbitrary (TableName b)
   , Arbitrary (FunctionName b)
   , Arbitrary (SourceConnConfiguration b)
+  , Arbitrary (ExtraTableMetadata b)
   , Cacheable (SourceConfig b)
   , Typeable b
   , HasTag b
   ) => Backend (b :: BackendType) where
   -- types
-  type SourceConfig            b = sc | sc -> b
-  type SourceConnConfiguration b = scc | scc -> b
+  type SourceConfig            b :: Type
+  type SourceConnConfiguration b :: Type
   type Identifier              b :: Type
   type Alias                   b :: Type
-  type TableName               b = tn | tn -> b
-  type FunctionName            b = fn | fn -> b
+  type TableName               b :: Type
+  type FunctionName            b :: Type
   type FunctionArgType         b :: Type
   type ConstraintName          b :: Type
   type BasicOrderType          b :: Type
   type NullsOrderType          b :: Type
   type CountType               b :: Type
-  type Column                  b = c | c -> b
-  type ScalarValue             b = sv | sv -> b
-  type ScalarType              b = s | s -> b
+  type Column                  b :: Type
+  type ScalarValue             b :: Type
+  type ScalarType              b :: Type
   type BooleanOperators        b :: Type -> Type
   type SQLExpression           b :: Type
   type SQLOperator             b :: Type
+
+  type ExtraTableMetadata      b :: Type
 
   -- extension types
   type XComputedField          b :: Type

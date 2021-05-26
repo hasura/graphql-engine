@@ -7,10 +7,9 @@ import styles from '../../../Common/Common.scss';
 
 const appPrefix = '/data';
 
-const TabbedDSConnection: React.FC<{ tabName: 'create' | 'connect' }> = ({
-  children,
-  tabName,
-}) => {
+const TabbedDSConnection: React.FC<{
+  tabName: 'create' | 'connect';
+}> = ({ children, tabName }) => {
   const breadCrumbs = [
     {
       title: 'Data',

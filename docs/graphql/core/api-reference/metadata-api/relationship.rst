@@ -74,16 +74,22 @@ Create an ``object relationship`` ``author`` on ``article`` *table*,  *using* th
            "name": "author",
            "source": "default",
            "using": {
-               "foreign_key_constraint_on" : "author_id"
+               "foreign_key_constraint_on" : ["author_id"]
            }
        }
    }
+
+.. note::
+
+  In the case that the key uses only a single column it is permissible to give
+  just a string instead of a list, i.e.: ``"foreign_key_constraint_on" : "author_id"``.
+
 
 2. Using foreign key constraint on a remote table
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Create an ``object relationship`` ``details`` on ``author`` *table*, *using* the
-*foreign_key_constraint_on* the ``author`` *table*'s ``id`` *column*:
+*foreign_key_constraint_on* the ``author_details`` *table*'s ``author_id`` *column*:
 
 .. code-block:: http
 
@@ -100,11 +106,25 @@ Create an ``object relationship`` ``details`` on ``author`` *table*, *using* the
            "using": {
                "foreign_key_constraint_on" : {
                    "table": "author_details",
-                   "column": "id"
+                   "columns": ["author_id"]
                }
            }
        }
    }
+
+.. admonition:: Deprecation
+
+    For compatibility with previous versions we also support the form of
+    ``foreign_key_constraint_on`` with a ``column``-field, e.g.:
+
+    .. code-block:: json
+
+       "foreign_key_constraint_on" : {
+           "table": "author_details",
+           "column": "author_id"
+       }
+
+    This form is deprecated in favor of the more general ``columns`` field.
 
 .. admonition:: Supported from
 
@@ -222,11 +242,25 @@ Create an ``array relationship`` ``articles`` on ``author`` *table*,  *using* th
            "using": {
                "foreign_key_constraint_on" : {
                    "table" : "article",
-                   "column" : "author_id"
+                   "columns" : ["author_id"]
                }
            }
        }
    }
+
+.. admonition:: Deprecation
+
+    For compatibility with previous version we also support the form of
+    ``foreign_key_constraint_on`` with a ``column``-field, e.g.:
+
+    .. code-block:: json
+
+       "foreign_key_constraint_on" : {
+           "table": "author_details",
+           "column": "author_id"
+       }
+
+    This form is deprecated in favor of the more general ``columns`` field.
 
 
 2. Manual configuration

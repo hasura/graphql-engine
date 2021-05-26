@@ -2,29 +2,32 @@
 
 module Hasura.Server.AuthSpec (spec) where
 
-import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.Server.Version
+
+import qualified Crypto.JOSE.JWK             as Jose
+import qualified Crypto.JWT                  as JWT
+import qualified Data.Aeson                  as J
+import qualified Data.HashMap.Strict         as Map
+import qualified Network.HTTP.Types          as N
 
 import           Control.Lens                hiding ((.=))
 import           Control.Monad.Trans.Control
 import           Control.Monad.Trans.Managed (lowerManagedT)
-import qualified Crypto.JOSE.JWK             as Jose
-import qualified Crypto.JWT                  as JWT
 import           Data.Aeson                  ((.=))
-import qualified Data.Aeson                  as J
-import qualified Data.HashMap.Strict         as Map
 import           Data.Parser.JSONPath
-import qualified Network.HTTP.Types          as N
 
-import           Hasura.RQL.Types
+import qualified Hasura.Tracing              as Tracing
+
+import           Hasura.Base.Error
+import           Hasura.Logging
 import           Hasura.Server.Auth          hiding (getUserInfoWithExpTime, processJwt)
 import           Hasura.Server.Auth.JWT      hiding (processJwt)
 import           Hasura.Server.Auth.WebHook  (ReqsText)
 import           Hasura.Server.Utils
+import           Hasura.Server.Version
 import           Hasura.Session
-import qualified Hasura.Tracing              as Tracing
 import           Test.Hspec
+
 
 spec :: Spec
 spec = do

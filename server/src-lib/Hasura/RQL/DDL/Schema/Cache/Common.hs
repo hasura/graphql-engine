@@ -21,7 +21,9 @@ import           Data.Text.Extended
 
 import qualified Hasura.Incremental           as Inc
 
+import           Hasura.Base.Error
 import           Hasura.RQL.Types
+
 
 -- | 'InvalidationKeys' used to apply requested 'CacheInvalidations'.
 data InvalidationKeys = InvalidationKeys

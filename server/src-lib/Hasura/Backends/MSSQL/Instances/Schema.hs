@@ -20,6 +20,7 @@ import qualified Hasura.GraphQL.Schema.Build           as GSB
 import qualified Hasura.RQL.IR.Select                  as IR
 import qualified Hasura.RQL.IR.Update                  as IR
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser                 hiding (EnumValueInfo, field)
 import           Hasura.GraphQL.Parser.Internal.Parser hiding (field)
@@ -44,7 +45,7 @@ instance BackendSchema 'MSSQL where
   buildFunctionMutationFields    = msBuildFunctionMutationFields
   -- backend extensions
   relayExtension    = const Nothing
-  nodesAggExtension = const Nothing
+  nodesAggExtension = const $ Just ()
   -- indivdual components
   columnParser              = msColumnParser
   jsonPathArg               = msJsonPathArg
@@ -216,7 +217,7 @@ msColumnParser columnType (G.Nullability isNullable) =
     ColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (Map.toList enumValues) of
         Just enumValuesList -> do
-          tableGQLName <- tableGraphQLName tableName `onLeft` throwError
+          tableGQLName <- tableGraphQLName @'MSSQL tableName `onLeft` throwError
           let enumName = tableGQLName <> $$(G.litName "_enum")
           pure $ possiblyNullable MSSQL.VarcharType $ P.enum enumName Nothing (mkEnumValue <$> enumValuesList)
         Nothing -> throw400 ValidationFailed "empty enum values"
@@ -303,8 +304,8 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
 
   -- parsers used for individual values
   typedParser        <- columnParser columnType (G.Nullability False)
-  nullableTextParser <- columnParser (ColumnScalar MSSQL.VarcharType) (G.Nullability True)
-  textParser         <- columnParser (ColumnScalar MSSQL.VarcharType) (G.Nullability False)
+  nullableTextParser <- columnParser (ColumnScalar @'MSSQL MSSQL.VarcharType) (G.Nullability True)
+  textParser         <- columnParser (ColumnScalar @'MSSQL MSSQL.VarcharType) (G.Nullability False)
   let
     columnListParser = P.list typedParser `P.bind` traverse P.openOpaque
     textListParser   = P.list textParser  `P.bind` traverse P.openOpaque
@@ -391,28 +392,31 @@ msTableDistinctOn
   -- :: forall m n. (BackendSchema 'MSSQL, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   :: Applicative m
   => Applicative n
-  => TableName 'MSSQL
+  => SourceName
+  -> TableInfo 'MSSQL
   -> SelPermInfo 'MSSQL
   -> m (InputFieldsParser n (Maybe (XDistinct 'MSSQL, NonEmpty (Column 'MSSQL))))
-msTableDistinctOn _table _selectPermissions = pure (pure Nothing)
+msTableDistinctOn _sourceName _tableInfo _selectPermissions = pure (pure Nothing)
 
 -- | Various update operators
 msUpdateOperators
   -- :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   :: Applicative m
-  => TableName 'MSSQL         -- ^ qualified name of the table
+  => TableInfo 'MSSQL         -- ^ table info
   -> UpdPermInfo 'MSSQL       -- ^ update permissions of the table
   -> m (Maybe (InputFieldsParser n [(Column 'MSSQL, IR.UpdOpExpG (UnpreparedValue 'MSSQL))]))
-msUpdateOperators _table _updatePermissions = pure Nothing
+msUpdateOperators _tableInfo _updatePermissions = pure Nothing
 
 -- | Computed field parser.
 -- Currently unsupported: returns Nothing for now.
 msComputedField
   :: MonadBuildSchema 'MSSQL r m n
-  => ComputedFieldInfo 'MSSQL
+  => SourceName
+  -> ComputedFieldInfo 'MSSQL
+  -> TableName 'MSSQL
   -> SelPermInfo 'MSSQL
   -> m (Maybe (FieldParser n (AnnotatedField 'MSSQL)))
-msComputedField _fieldInfo _selectPemissions = pure Nothing
+msComputedField _sourceName _fieldInfo _table _selectPemissions = pure Nothing
 
 -- | Remote join field parser.
 -- Currently unsupported: returns Nothing for now.

@@ -158,8 +158,10 @@
         "no-unused-vars": "off",
         "camelcase": "off",
         "no-param-reassign": "off",
+        "no-use-before-define": "off",
         "consistent-return": "off",
         "@typescript-eslint/no-unused-vars": 2,
+        "@typescript-eslint/no-use-before-define": "warn",
         "@typescript-eslint/indent": 0,
         "@typescript-eslint/explicit-function-return-type": 0,
         "@typescript-eslint/prefer-interface": 0,
@@ -194,6 +196,7 @@
         "no-undef": "off",
         "no-dupe-class-members": "off",
         "no-redeclare": "off",
+        "no-restricted-globals": "warn",
         "no-useless-constructor": "off",
         "no-unused-expressions": "off",
         "no-console": "off",
@@ -210,7 +213,6 @@
         "react/no-array-index-key": "off",
         "no-case-declarations": 0,
         "react/jsx-indent": "off",
-        "no-use-before-define": "warn",
         "arrow-body-style": "off"
       }
     }

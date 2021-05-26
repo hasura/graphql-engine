@@ -11,6 +11,7 @@ import           Data.Text.Extended
 
 import qualified Data.HashMap.Strict.InsOrd as OMap
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.Server.Types        (ExperimentalFeature (..))

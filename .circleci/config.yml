@@ -1,7 +1,7 @@
 # anchor refs to be used elsewhere
 refs:
   constants:
-  - &server_builder_image hasura/graphql-engine-server-builder:252ba880c8ca6b189f9959962c7b8e2602539cbc4b18e259a76c90b74eb87353
+  - &server_builder_image hasura/graphql-engine-server-builder:cc743e58451e6b90d17c960fb6aae65256b8cb219e53e83eaa482e6a527bfa40
   skip_job_on_ciignore: &skip_job_on_ciignore
     run:
       name: checking if job should be terminated or not
@@ -107,19 +107,6 @@ refs:
     - *skip_server_tests
     - *wait_for_postgres
     - run:
-        name: Install deps
-        # if the man directories are missing, postgresql-client fails
-        # to install in debian
-        command: |
-          mkdir -p /usr/share/man/man{1,7}
-          apt-get update
-          apt install --yes curl apt-transport-https
-          curl -s https://packages.microsoft.com/config/debian/9/prod.list > /etc/apt/sources.list.d/mssql-release.list
-          curl -s https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-          apt-get update
-          apt install --yes pgbouncer jq postgresql-client-13 g++ gcc libc6-dev unixodbc-dev
-          ACCEPT_EULA=Y apt install --yes msodbcsql17
-    - run:
         name: Ensure databases are present
         environment:
           # sqlalchemy throws warnings with postgres://
@@ -195,11 +182,6 @@ jobs:
         - cabal-packages-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-
         - cabal-packages-v3-{{ checksum "server/cabal.project" }}-
         - cabal-packages-v3-
-    - run:
-        name: Install latest postgresql client tools
-        command: |
-          apt-get -y update
-          apt-get -y install postgresql-client-13
     - run:
         name: Build the binary
         working_directory: ./server
@@ -341,33 +323,34 @@ jobs:
         command: /build/_server_output/graphql-engine-tests unit
 
   test_cli_with_last_release:
-    docker:
-    - image: hasura/graphql-engine-cli-builder:20210310
-    - image: circleci/postgres:10-alpine
-      environment:
-        POSTGRES_USER: gql_test
-        POSTGRES_DB: gql_test
+    machine:
+      image: ubuntu-2004:202101-01
     working_directory: ~/graphql-engine
     steps:
+    - run:
+        name: create /build directory
+        command: |
+          sudo mkdir /build
+          sudo chmod 777 /build
     - attach_workspace:
         at: /build
     - *skip_job_on_ciignore
     - checkout
-    - restore_cache:
-        keys:
-        - cli-gopkg-{{ checksum "cli/go.mod" }}-{{ checksum "cli/go.sum" }}
+    - run:
+        name: install deps
+        command: |
+          sudo .circleci/install-cli-builder-deps.sh
     - run:
         name: get cli dependencies
         working_directory: cli
         command: make deps
-    - save_cache:
-        key: cli-gopkg-{{ checksum "cli/go.mod" }}-{{ checksum "cli/go.sum" }}
-        paths:
-        - /go/pkg
-    - *wait_for_postgres
     - run:
         name: test cli
-        command: .circleci/test-cli-with-last-release.sh
+        working_directory: cli
+        command: |
+          export HASURA_TEST_CLI_HGE_DOCKER_TAG=$(curl https://releases.hasura.io/graphql-engine | jq -r ".latest")
+          make integration_tests_config_v2
+          HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd" make integration_tests_config_v2
     - store_artifacts:
         path: /build/_cli_output
         destination: cli
@@ -410,14 +393,9 @@ jobs:
         paths:
           - _cli_ext_output
 
-  # test and build cli
-  test_and_build_cli:
+  build_cli:
     docker:
     - image: hasura/graphql-engine-cli-builder:20210310
-    - image: circleci/postgres:10-alpine
-      environment:
-        POSTGRES_USER: gql_test
-        POSTGRES_DB: gql_test
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -427,10 +405,6 @@ jobs:
     - restore_cache:
         keys:
         - cli-gopkg-{{ checksum "cli/go.mod" }}-{{ checksum "cli/go.sum" }}
-    - *wait_for_postgres
-    - run:
-        name: test cli
-        command: .circleci/test-cli.sh
     - run:
         name: build cli
         working_directory: cli
@@ -449,6 +423,38 @@ jobs:
         root: /build
         paths:
           - _cli_output
+
+  test_cli:
+    machine:
+      image: ubuntu-2004:202101-01
+    working_directory: ~/graphql-engine
+    steps:
+    - run:
+        name: create /build directory
+        command: |
+          sudo mkdir /build
+          sudo chmod 777 /build
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
+    - checkout
+    - run:
+        name: install deps
+        command: |
+          sudo .circleci/install-cli-builder-deps.sh
+    - run:
+        name: test cli
+        working_directory: cli
+        command: |
+          chmod +x /build/_cli_output/binaries/cli-hasura-linux-amd64
+          export SOURCE_IMAGE=$(docker load -i /build/_server_output/image.tar | grep "^Loaded image: " | sed "s/Loaded image: //g")
+          echo "SOURCE_IMAGE = $SOURCE_IMAGE"
+          export HASURA_TEST_CLI_HGE_DOCKER_TAG=$(echo "$SOURCE_IMAGE" | sed "s/.*:\(.*\)$/\1/")
+          echo "HASURA_TEST_CLI_HGE_DOCKER_TAG = $HASURA_TEST_CLI_HGE_DOCKER_TAG"
+          make test-all
+          export HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd"
+          export HASURA_GRAPHQL_ADMIN_SECRET="abcd"
+          make test-all
 
   test_and_build_cli_migrations:
     docker:
@@ -719,21 +725,26 @@ workflows:
         - test_server_pg_9.5
         - server_unit_tests
         - test_server_upgrade
-    - test_and_build_cli:
+    - build_cli:
         <<: *filter_only_vtags
         requires:
         - test_and_build_cli_ext
-        - build_server
+    - test_cli:
+        <<: *filter_only_vtags
+        requires:
+        - build_cli
+        - build_image
     - test_and_build_cli_migrations:
         <<: *filter_only_vtags
         requires:
         - build_image
-        - test_and_build_cli
+        - build_cli
     - test_console:
         <<: *filter_only_vtags
         requires:
         - build_console
-        - test_and_build_cli
+        - build_cli
+        - build_server
         - test_cli_with_last_release
     - deploy:
         <<: *filter_only_vtags_channel_branches

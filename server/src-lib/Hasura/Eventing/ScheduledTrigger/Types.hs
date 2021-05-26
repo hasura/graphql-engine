@@ -1,16 +1,21 @@
 module Hasura.Eventing.ScheduledTrigger.Types where
 
-import           Data.Time.Clock
-import           Hasura.Eventing.HTTP
 import           Hasura.Prelude
-import           Hasura.RQL.Types
 
 import qualified Data.Aeson                 as J
 import qualified Data.Aeson.TH              as J
 import qualified Database.PG.Query          as Q
 import qualified Database.PG.Query.PTI      as PTI
-import qualified Hasura.Logging             as L
 import qualified PostgreSQL.Binary.Encoding as PE
+
+import           Data.Time.Clock
+
+import qualified Hasura.Logging             as L
+
+import           Hasura.Base.Error
+import           Hasura.Eventing.HTTP
+import           Hasura.RQL.Types
+
 
 newtype ScheduledTriggerInternalErr
   = ScheduledTriggerInternalErr QErr
