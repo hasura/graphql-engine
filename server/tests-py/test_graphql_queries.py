@@ -388,10 +388,7 @@ class TestGraphQLQueryOffsets:
     def dir(cls):
         return 'queries/graphql_query/offset'
 
-# FIXME: MSSQL subscriptions multiplexing regression
-# https://github.com/hasura/graphql-engine-mono/issues/1434
-# @pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
 @pytest.mark.parametrize("backend", ['mssql', 'postgres'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpBasicCommon:
@@ -588,10 +585,7 @@ class TestGraphQLInheritedRoles:
         check_query_f(hge_ctx, self.dir() + '/inherited_role_with_some_roles_having_no_permissions.yaml')
 
 
-# FIXME: MSSQL subscriptions multiplexing regression
-# https://github.com/hasura/graphql-engine-mono/issues/1434
-# @pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
 @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpSearchCommon:
@@ -949,10 +943,7 @@ class TestUnauthorizedRolePermission:
     def test_unauth_role(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/unauthorized_role.yaml', transport, False)
 
-# FIXME: MSSQL subscriptions multiplexing regression
-# https://github.com/hasura/graphql-engine-mono/issues/1434
-# @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
-@pytest.mark.parametrize("backend", ['postgres'])
+@pytest.mark.parametrize("backend", ['postgres', 'mssql'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLExplain:
     @classmethod

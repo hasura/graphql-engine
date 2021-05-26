@@ -251,10 +251,7 @@ class TestSubscriptionLiveQueries:
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 
-# FIXME: MSSQL subscriptions multiplexing regression
-# https://github.com/hasura/graphql-engine-mono/issues/1434
-# @pytest.mark.parametrize("backend", ['mssql', 'postgres'])
-@pytest.mark.parametrize("backend", ['postgres'])
+@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
 @usefixtures('per_class_tests_db_state')
 class TestSubscriptionMultiplexing:
 
@@ -298,9 +295,6 @@ class TestSubscriptionMultiplexing:
         return response
 
 
-# FIXME: MSSQL subscriptions multiplexing regression
-# https://github.com/hasura/graphql-engine-mono/issues/1434
-# @pytest.mark.parametrize("backend", ['mssql', 'postgres'])
 @pytest.mark.parametrize("backend", ['postgres'])
 @usefixtures('per_class_tests_db_state', 'ws_conn_init')
 class TestSubscriptionUDFWithSessionArg:
