@@ -51,9 +51,7 @@ import qualified Data.TByteString                       as TBS
 import qualified Data.Text                              as T
 import qualified Data.Time.Clock                        as Time
 import qualified Database.PG.Query                      as Q
-import qualified Database.PG.Query.PTI                  as PTI
 import qualified Network.HTTP.Client                    as HTTP
-import qualified PostgreSQL.Binary.Encoding             as PE
 import qualified System.Metrics.Distribution            as EKG.Distribution
 import qualified System.Metrics.Gauge                   as EKG.Gauge
 
@@ -687,15 +685,6 @@ setRetry e time = \case
 toInt64 :: (Integral a) => a -> Int64
 toInt64 = fromIntegral
 
--- EventIdArray is only used for PG array encoding
-newtype EventIdArray = EventIdArray { unEventIdArray :: [EventId]} deriving (Show, Eq)
-
-instance Q.ToPrepArg EventIdArray where
-  toPrepVal (EventIdArray l) = Q.toPrepValHelper PTI.unknown encoder $ map unEventId l
-    where
-      -- 25 is the OID value of TEXT, https://jdbc.postgresql.org/development/privateapi/constant-values.html
-      encoder = PE.array 25 . PE.dimensionArray foldl' (PE.encodingArray . PE.text_strict)
-
 -- | unlockEvents takes an array of 'EventId' and unlocks them. This function is called
 --   when a graceful shutdown is initiated.
 unlockEvents :: [EventId] -> Q.TxE QErr Int
@@ -712,7 +701,7 @@ unlockEvents eventIds =
      AND locked IS NOT NULL
      RETURNING *)
      SELECT count(*) FROM "cte"
-   |] (Identity $ EventIdArray eventIds) True
+   |] (Identity $ PGTextArray $ map unEventId eventIds) True
 
 getMaintenanceModeVersion :: Q.TxE QErr MaintenanceModeVersion
 getMaintenanceModeVersion = liftTx $ do

@@ -1,3 +1,4 @@
+{-# LANGUAGE UndecidableInstances #-}
 module Main (main) where
 
 import           Hasura.Prelude
@@ -35,6 +36,8 @@ import qualified Hasura.Server.AuthSpec               as AuthSpec
 import qualified Hasura.Server.MigrateSpec            as MigrateSpec
 import qualified Hasura.Server.TelemetrySpec          as TelemetrySpec
 
+import           Hasura.App                           (PGMetadataStorageAppT (..))
+import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Source
@@ -111,17 +114,21 @@ buildPostgresSpecs maybeUrlTemplate = do
             serverConfigCtx =
               ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx maintenanceMode mempty
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) serverConfigCtx
+            pgLogger = print
 
-            run :: CacheBuild a -> IO a
+            run :: MetadataStorageT (PGMetadataStorageAppT CacheBuild) a -> IO a
             run =
-              runCacheBuild cacheBuildParams
+              runMetadataStorageT
+              >>> flip runPGMetadataStorageAppT (pgPool, pgLogger)
+              >>> runCacheBuild cacheBuildParams
               >>> runExceptT
+              >=> flip onLeft printErrJExit
               >=> flip onLeft printErrJExit
 
         (metadata, schemaCache) <- run do
           metadata <- snd <$> (liftEitherM . runExceptT . runLazyTx pgContext Q.ReadWrite)
                       (migrateCatalog (Just sourceConfig) maintenanceMode =<< liftIO getCurrentTime)
-          schemaCache <- buildRebuildableSchemaCache envMap metadata
+          schemaCache <- lift $ lift $ buildRebuildableSchemaCache envMap metadata
           pure (metadata, schemaCache)
 
         cacheRef <- newMVar schemaCache

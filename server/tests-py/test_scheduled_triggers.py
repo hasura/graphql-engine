@@ -168,7 +168,7 @@ class TestCronTrigger(object):
                     }
                 ],
                 "payload":{"foo":"baz"},
-                "include_in_metadata":False
+                "include_in_metadata":True
             }
         }
         cron_st_code,cron_st_resp = hge_ctx.v1q(cron_st_api_query)
@@ -225,7 +225,7 @@ class TestCronTrigger(object):
                     }
                 ],
                 "payload":{"foo":"baz"},
-                "include_in_metadata":False,
+                "include_in_metadata":True,
                 "replace":True
             }
         }
@@ -301,20 +301,100 @@ class TestCronTrigger(object):
         assert event['body']['payload'] == {"foo":"baz"}
         assert event['body']['name'] == 'test_cron_trigger'
 
-    def test_delete_cron_scheduled_trigger(self,hge_ctx):
+    def test_export_and_import_cron_triggers(self, hge_ctx):
         q = {
-            "type":"delete_cron_trigger",
-            "args":{
-                "name":self.cron_trigger_name
+            "type": "export_metadata",
+            "args": {}
+        }
+        st, resp = hge_ctx.v1q(q)
+        assert st == 200, resp
+        respDict = json.loads(json.dumps(resp))
+        # Only the cron triggers with `include_in_metadata` set to `True`
+        # should be exported
+        assert respDict['cron_triggers'] == [
+            {
+                "headers": [
+                    {
+                        "name": "header-name",
+                        "value": "header-value"
+                    }
+                ],
+                "include_in_metadata": True,
+                "name": self.cron_trigger_name,
+                "payload": {
+                    "foo": "baz"
+                },
+                "schedule": self.cron_schedule,
+                "webhook": "{{SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN}}/foo"
+            }
+        ]
+        q = {
+            "type": "replace_metadata",
+            "args": {
+                "metadata": resp
             }
         }
-        st,resp = hge_ctx.v1q(q)
-        assert st == 200,resp
-        q = {
-            "type":"delete_cron_trigger",
-            "args":{
-                "name":"test_cron_trigger"
+        st, resp = hge_ctx.v1q(q)
+        sql = '''
+        select count(1) as count
+        from hdb_catalog.hdb_cron_events
+        where trigger_name = '{}'
+        '''
+        run_sql_query = {
+            "type": "run_sql",
+            "args": {
+                "sql": sql.format(self.cron_trigger_name)
             }
+        }
+        st, resp = hge_ctx.v1q(run_sql_query)
+        assert st == 200, resp
+        count_resp = resp['result'][1][0]
+        # Check if the future cron events are created for
+        # for a cron trigger while imported from the metadata
+        assert int(count_resp) == 100
+
+    def test_attempt_to_create_duplicate_cron_trigger_fail(self, hge_ctx):
+        q = {
+            "type":"create_cron_trigger",
+            "args":{
+                "name":"test_cron_trigger",
+                "webhook":"{{SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN}}" + "/test",
+                "schedule":"* * * * *",
+                "headers":[
+                    {
+                        "name":"header-key",
+                        "value":"header-value"
+                    }
+                ],
+                "payload":{"foo":"baz"},
+                "include_in_metadata":False
+            }
+        }
+        st, resp = hge_ctx.v1q(q)
+        assert st == 400, dict(resp)
+        assert dict(resp) == {
+            "code": "already-exists",
+            "error": 'cron trigger with name: test_cron_trigger already exists',
+            "path": "$.args"
+        }
+
+    def test_delete_cron_scheduled_trigger(self,hge_ctx):
+        q = {
+            "type": "bulk",
+            "args": [
+                {
+                    "type":"delete_cron_trigger",
+                    "args":{
+                        "name":self.cron_trigger_name
+                    }
+                },
+                {
+                    "type":"delete_cron_trigger",
+                    "args":{
+                        "name":"test_cron_trigger"
+                    }
+                }
+            ]
         }
         st,resp = hge_ctx.v1q(q)
         assert st == 200,resp
