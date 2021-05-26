@@ -101,17 +101,28 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     modify: {
       enabled: false,
-      columns: false,
-      columns_edit: false,
+      columns: {
+        view: false,
+        edit: false,
+      },
       computedFields: false,
-      primaryKeys: false,
-      primaryKeys_edit: false,
-      foreginKeys: false,
-      foreginKeys_edit: false,
-      uniqueKeys: false,
-      uniqueKeys_edit: false,
+      primaryKeys: {
+        view: false,
+        edit: false,
+      },
+      foreignKeys: {
+        view: false,
+        edit: false,
+      },
+      uniqueKeys: {
+        view: false,
+        edit: false,
+      },
       triggers: false,
-      checkConstraints: false,
+      checkConstraints: {
+        view: false,
+        edit: false,
+      },
       customGqlRoot: false,
       setAsEnum: false,
       untrack: false,

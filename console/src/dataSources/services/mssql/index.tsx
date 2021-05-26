@@ -106,22 +106,37 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     modify: {
       enabled: true,
-      columns: true,
       readOnly: true,
-      columns_edit: false,
+      columns: {
+        view: true,
+        edit: false,
+      },
       computedFields: false,
-      primaryKeys: true,
-      primaryKeys_edit: false,
-      foreginKeys: true,
-      foreginKeys_edit: false,
-      uniqueKeys: true,
-      uniqueKeys_edit: false,
+      primaryKeys: {
+        view: true,
+        edit: false,
+      },
+      foreignKeys: {
+        view: true,
+        edit: false,
+      },
+      uniqueKeys: {
+        view: true,
+        edit: false,
+      },
       triggers: false,
-      checkConstraints: false,
+      checkConstraints: {
+        view: true,
+        edit: false,
+      },
       customGqlRoot: false,
       setAsEnum: false,
       untrack: true,
       delete: false,
+      comments: {
+        view: true,
+        edit: false,
+      },
     },
     relationships: {
       enabled: true,
@@ -241,7 +256,7 @@ ORDER BY
     }
 
     return `
-    SELECT sch.name as table_schema,
+  SELECT sch.name as table_schema,
     obj.name as table_name,
     case
         when obj.type = 'AF' then 'Aggregate function (CLR)'
@@ -266,10 +281,11 @@ ORDER BY
         when obj.type = 'EC' then 'Edge constraint'
         when obj.type = 'V' then 'VIEW'
     end as table_type,
-    obj.type_desc AS comment,
+    (SELECT e.[value] AS comment for json path),
     JSON_QUERY([isc].json) AS columns
 FROM sys.objects as obj
     INNER JOIN sys.schemas as sch ON obj.schema_id = sch.schema_id
+    LEFT JOIN sys.extended_properties AS e ON major_id = obj.object_id
     OUTER APPLY (
         SELECT
             a.name AS column_name,
@@ -432,8 +448,30 @@ FROM sys.objects as obj
     FOR JSON PATH;
     `;
   },
-  checkConstraintsSql: () => {
-    return '';
+  checkConstraintsSql: ({ schemas }) => {
+    let whereClause = '';
+
+    if (schemas) {
+      whereClause = `WHERE schema_name (t.schema_id) in (${schemas
+        .map(s => `'${s}'`)
+        .join(',')})`;
+    }
+    return `
+SELECT
+	con.name AS constraint_name,
+	schema_name (t.schema_id) AS table_schema,
+	t.name AS table_name,
+	col.name AS column_name,
+	con.definition AS check_definition
+FROM
+	sys.check_constraints con
+	LEFT OUTER JOIN sys.objects t ON con.parent_object_id = t.object_id
+	LEFT OUTER JOIN sys.all_columns col ON con.parent_column_id = col.column_id
+		AND con.parent_object_id = col.object_id
+${whereClause}
+ORDER BY con.name
+FOR JSON PATH;
+    `;
   },
   uniqueKeysSql: ({ schemas }) => {
     let whereClause = '';

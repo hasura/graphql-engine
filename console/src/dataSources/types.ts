@@ -236,18 +236,32 @@ export type SupportedFeaturesType = {
     modify: {
       enabled: boolean;
       readOnly?: boolean;
-      comments?: boolean;
-      columns?: boolean;
-      columns_edit?: boolean;
+      comments?: {
+        view: boolean;
+        edit: boolean;
+      };
+      columns?: {
+        view: boolean;
+        edit: boolean;
+      };
       computedFields?: boolean;
-      primaryKeys?: boolean;
-      primaryKeys_edit?: boolean;
-      foreginKeys?: boolean;
-      foreginKeys_edit?: boolean;
-      uniqueKeys?: boolean;
-      uniqueKeys_edit?: boolean;
+      primaryKeys?: {
+        view: boolean;
+        edit: boolean;
+      };
+      foreignKeys?: {
+        view: boolean;
+        edit: boolean;
+      };
+      uniqueKeys?: {
+        view: boolean;
+        edit: boolean;
+      };
       triggers?: boolean;
-      checkConstraints?: boolean;
+      checkConstraints?: {
+        view: boolean;
+        edit: boolean;
+      };
       customGqlRoot?: boolean;
       setAsEnum?: boolean;
       untrack?: boolean;

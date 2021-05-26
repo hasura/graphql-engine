@@ -528,18 +528,32 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     modify: {
       enabled: true,
-      comments: true,
-      columns: true,
-      columns_edit: true,
+      comments: {
+        view: true,
+        edit: true,
+      },
+      columns: {
+        view: true,
+        edit: true,
+      },
       computedFields: true,
-      primaryKeys: true,
-      primaryKeys_edit: true,
-      foreginKeys: true,
-      foreginKeys_edit: true,
-      uniqueKeys: true,
-      uniqueKeys_edit: true,
+      primaryKeys: {
+        view: true,
+        edit: true,
+      },
+      foreignKeys: {
+        view: true,
+        edit: true,
+      },
+      uniqueKeys: {
+        view: true,
+        edit: true,
+      },
       triggers: true,
-      checkConstraints: true,
+      checkConstraints: {
+        view: true,
+        edit: true,
+      },
       customGqlRoot: true,
       setAsEnum: true,
       untrack: true,
