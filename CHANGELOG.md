@@ -9,6 +9,7 @@
 - console: add check constraints and comments to MS SQL Server tables' read-only modify page
 - console: add create table functionality for MS SQL Server 
 - console: update connect database form with SSL certificates
+- console: add drop table functionality to MS SQL Server tables
 
 ## v2.0.0-alpha.11
 

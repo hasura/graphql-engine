@@ -144,7 +144,7 @@ export const supportedFeatures: SupportedFeaturesType = {
       customGqlRoot: false,
       setAsEnum: false,
       untrack: true,
-      delete: false,
+      delete: true,
       comments: {
         view: true,
         edit: false,
@@ -498,8 +498,8 @@ FROM sys.objects as obj
   getCreateTriggerSql: () => {
     return '';
   },
-  getDropSql: () => {
-    return '';
+  getDropSql: (tableName: string, schemaName: string, property = 'table') => {
+    return `DROP ${property} "${schemaName}"."${tableName}";`;
   },
   getViewDefinitionSql: () => {
     return '';
