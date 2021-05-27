@@ -1,8 +1,8 @@
 module Hasura.Backends.Postgres.DDL.Source
   ( ToMetadataFetchQuery
-  , fetchFunctionMetadata
   , fetchPgScalars
   , fetchTableMetadata
+  , fetchFunctionMetadata
   , initCatalogForSource
   , postDropSourceHook
   , resolveDatabaseMetadata

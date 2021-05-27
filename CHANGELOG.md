@@ -19,6 +19,7 @@
 
 ### Bug fixes and improvements
 
+- server: detect and apply metadata changes by `mssql_run_sql` API if required
 - server: fix bug with creation of new cron events when cron trigger is imported via metadata
 - server: log warning for deprecated environment variables.
 - server: initialise `hdb_catalog` tables only when required, and only run the event loop for sources where it is required
