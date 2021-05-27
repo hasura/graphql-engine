@@ -3,9 +3,11 @@ import { makeConnectionStringFromConnectionParams } from './ManageDBUtils';
 import { addDataSource } from '../../../../metadata/actions';
 import { Dispatch } from '../../../../types';
 import {
-  ConnectionPoolSettings,
-  IsolationLevelOptions,
   SourceConnectionInfo,
+  ConnectionPoolSettings,
+  SSLModeOptions,
+  SSLConfigOptions,
+  IsolationLevelOptions,
 } from '../../../../metadata/types';
 
 export const connectionTypes = {
@@ -35,7 +37,8 @@ export type ConnectDBState = {
   envVarState: {
     envVar: string;
   };
-  connectionSettings: ConnectionPoolSettings;
+  connectionSettings?: ConnectionPoolSettings;
+  sslConfiguration?: SSLConfigOptions;
   isolationLevel?: IsolationLevelOptions;
   preparedStatements?: boolean;
 };
@@ -59,7 +62,6 @@ export const defaultState: ConnectDBState = {
   envVarState: {
     envVar: '',
   },
-  connectionSettings: {},
   preparedStatements: false,
   isolationLevel: 'read-committed',
 };
@@ -87,8 +89,22 @@ export const getDefaultState = (props?: DefaultStateProps): ConnectDBState => {
 };
 
 const setNumberFromString = (str: string) => {
-  return parseInt(str.trim(), 10);
+  return str ? parseInt(str.trim(), 10) : undefined;
 };
+
+const setDataFromEnv = (str: string) => {
+  return str
+    ? {
+        from_env: str,
+      }
+    : undefined;
+};
+
+const checkUndef = (obj?: Record<string, any>) =>
+  obj && Object.values(obj).some(el => el !== undefined && el !== null);
+
+const checkEmpty = (obj?: Record<string, any>) =>
+  obj && Object.keys(obj).length !== 0 && checkUndef(obj);
 
 export const connectDataSource = (
   dispatch: Dispatch,
@@ -97,7 +113,10 @@ export const connectDataSource = (
   cb: () => void,
   replicas?: Omit<
     SourceConnectionInfo,
-    'connection_string' | 'use_prepared_statements' | 'isolation_level'
+    | 'connection_string'
+    | 'use_prepared_statements'
+    | 'ssl_configuration'
+    | 'isolation_level'
   >[],
   isEditState = false
 ) => {
@@ -132,12 +151,17 @@ export const connectDataSource = (
         payload: {
           name: currentState.displayName.trim(),
           dbUrl: databaseURL,
-          connection_pool_settings: currentState.connectionSettings,
           replace_configuration: isEditState,
           bigQuery: {
             projectId: currentState.databaseURLState.projectId,
             datasets: currentState.databaseURLState.datasets,
           },
+          ...(checkEmpty(currentState.connectionSettings) && {
+            connection_pool_settings: currentState.connectionSettings,
+          }),
+          ...(checkEmpty(currentState.sslConfiguration) && {
+            sslConfiguration: currentState.sslConfiguration,
+          }),
           preparedStatements: currentState.preparedStatements,
           isolationLevel: currentState.isolationLevel,
         },
@@ -155,9 +179,10 @@ export type ConnectDBActions =
         name: string;
         driver: Driver;
         databaseUrl: string;
-        connectionSettings: ConnectionPoolSettings;
+        connectionSettings?: ConnectionPoolSettings;
         preparedStatements: boolean;
         isolationLevel: IsolationLevelOptions;
+        sslConfiguration?: SSLConfigOptions;
       };
     }
   | { type: 'UPDATE_PARAM_STATE'; data: ConnectionParams }
@@ -179,6 +204,11 @@ export type ConnectDBActions =
   | { type: 'UPDATE_CONNECTION_LIFETIME'; data: string }
   | { type: 'UPDATE_DB_DRIVER'; data: Driver }
   | { type: 'UPDATE_CONNECTION_SETTINGS'; data: ConnectionPoolSettings }
+  | { type: 'UPDATE_SSL_MODE'; data: SSLModeOptions }
+  | { type: 'UPDATE_SSL_ROOT_CERT'; data: string }
+  | { type: 'UPDATE_SSL_CERT'; data: string }
+  | { type: 'UPDATE_SSL_KEY'; data: string }
+  | { type: 'UPDATE_SSL_PASSWORD'; data: string }
   | { type: 'UPDATE_PREPARED_STATEMENTS'; data: boolean }
   | { type: 'UPDATE_ISOLATION_LEVEL'; data: IsolationLevelOptions }
   | { type: 'RESET_INPUT_STATE' };
@@ -200,6 +230,7 @@ export const connectDBReducer = (
         connectionSettings: action.data.connectionSettings,
         preparedStatements: action.data.preparedStatements,
         isolationLevel: action.data.isolationLevel,
+        sslConfiguration: action.data.sslConfiguration,
       };
     case 'UPDATE_PARAM_STATE':
       return {
@@ -320,6 +351,46 @@ export const connectDBReducer = (
         ...state,
         connectionSettings: action.data,
       };
+    case 'UPDATE_SSL_MODE':
+      return {
+        ...state,
+        sslConfiguration: {
+          ...state.sslConfiguration,
+          sslmode: action.data,
+        },
+      };
+    case 'UPDATE_SSL_ROOT_CERT':
+      return {
+        ...state,
+        sslConfiguration: {
+          ...state.sslConfiguration,
+          sslrootcert: setDataFromEnv(action.data),
+        },
+      };
+    case 'UPDATE_SSL_CERT':
+      return {
+        ...state,
+        sslConfiguration: {
+          ...state.sslConfiguration,
+          sslcert: setDataFromEnv(action.data),
+        },
+      };
+    case 'UPDATE_SSL_KEY':
+      return {
+        ...state,
+        sslConfiguration: {
+          ...state.sslConfiguration,
+          sslkey: setDataFromEnv(action.data),
+        },
+      };
+    case 'UPDATE_SSL_PASSWORD':
+      return {
+        ...state,
+        sslConfiguration: {
+          ...state.sslConfiguration,
+          sslpassword: setDataFromEnv(action.data),
+        },
+      };
     case 'UPDATE_ISOLATION_LEVEL':
       return {
         ...state,
@@ -421,13 +492,13 @@ export const makeReadReplicaConnectionObject = (
   }
 
   const pool_settings: any = {};
-  if (stateVal.connectionSettings.max_connections) {
+  if (stateVal.connectionSettings?.max_connections) {
     pool_settings.max_connections = stateVal.connectionSettings.max_connections;
   }
-  if (stateVal.connectionSettings.idle_timeout) {
+  if (stateVal.connectionSettings?.idle_timeout) {
     pool_settings.idle_timeout = stateVal.connectionSettings.idle_timeout;
   }
-  if (stateVal.connectionSettings.retries) {
+  if (stateVal.connectionSettings?.retries) {
     pool_settings.retries = stateVal.connectionSettings.retries;
   }
 

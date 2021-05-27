@@ -878,6 +878,29 @@ export interface RestEndpointEntry {
  * Docs for type: https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgsourceconnectioninfo
  */
 
+export type SSLModeOptions = 'verify-ca' | 'verify-full' | 'disable';
+
+export type IsolationLevelOptions =
+  | 'read-committed'
+  | 'repeatable-read'
+  | 'serializable';
+
+export interface SSLConfigOptions {
+  sslmode?: SSLModeOptions;
+  sslrootcert?: {
+    from_env: string;
+  };
+  sslcert?: {
+    from_env: string;
+  };
+  sslkey?: {
+    from_env: string;
+  };
+  sslpassword?: {
+    from_env: string;
+  };
+}
+
 export interface ConnectionPoolSettings {
   max_connections?: number;
   idle_timeout?: number;
@@ -886,19 +909,15 @@ export interface ConnectionPoolSettings {
   connection_lifetime?: number;
 }
 
-export type IsolationLevelOptions =
-  | 'read-committed'
-  | 'repeatable-read'
-  | 'serializable';
-
 export interface SourceConnectionInfo {
   // used for SQL Server
   connection_string: string | { from_env: string };
   // used for Postgres
   database_url: string | { from_env: string };
-  pool_settings: ConnectionPoolSettings;
   use_prepared_statements: boolean;
   isolation_level: IsolationLevelOptions;
+  pool_settings?: ConnectionPoolSettings;
+  ssl_configuration?: SSLConfigOptions;
 }
 
 /**

@@ -6,7 +6,10 @@ import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { getSupportedDrivers } from '../../../../dataSources';
 
 import styles from './DataSources.scss';
-import { IsolationLevelOptions } from '../../../../metadata/types';
+import {
+  SSLModeOptions,
+  IsolationLevelOptions,
+} from '../../../../metadata/types';
 
 export interface ConnectionSettingsFormProps {
   // Connect DB State Props
@@ -18,12 +21,12 @@ const ConnectionSettingsForm: React.FC<ConnectionSettingsFormProps> = ({
   connectionDBState,
   connectionDBStateDispatch,
 }) => {
-  const [currentConnectionParamState, toggleConnectionParamState] = useState(
+  const [currentConnectionParamState, setConnectionParamState] = useState(
     false
   );
-  const toggleConnectionParams = (value: boolean) => () => {
-    toggleConnectionParamState(value);
-  };
+  const [certificateSettingsState, setCertificateSettingsState] = useState(
+    false
+  );
 
   return (
     <>
@@ -35,7 +38,9 @@ const ConnectionSettingsForm: React.FC<ConnectionSettingsFormProps> = ({
             <a
               href="#"
               style={{ textDecoration: 'none' }}
-              onClick={toggleConnectionParams(!currentConnectionParamState)}
+              onClick={() =>
+                setConnectionParamState(!currentConnectionParamState)
+              }
             >
               {currentConnectionParamState ? (
                 <i className="fa fa-caret-down" />
@@ -216,6 +221,121 @@ const ConnectionSettingsForm: React.FC<ConnectionSettingsFormProps> = ({
                   </label>
                 </div>
               ) : null}
+              {getSupportedDrivers('connectDbForm.ssl_certificates').includes(
+                connectionDBState.dbType
+              ) && (
+                <div className={styles.add_mar_top}>
+                  <a
+                    href="#"
+                    style={{ textDecoration: 'none' }}
+                    onClick={() =>
+                      setCertificateSettingsState(!certificateSettingsState)
+                    }
+                    className={styles.connection_settings_header}
+                  >
+                    {certificateSettingsState ? (
+                      <i className="fa fa-caret-down" />
+                    ) : (
+                      <i className="fa fa-caret-right" />
+                    )}
+                    {'  '}
+                    SSL Certificates Settings
+                  </a>
+                  <div className={styles.text_muted}>
+                    Certificates will be loaded from{' '}
+                    <a href="https://hasura.io/docs/latest/graphql/cloud/projects/create.html#existing-database">
+                      environment variables
+                    </a>
+                  </div>
+                  {certificateSettingsState ? (
+                    <div className={styles.connection_settings_form}>
+                      <div className={styles.connection_settings_input_layout}>
+                        <label>
+                          <b>SSL Mode</b>
+                          <Tooltip message="SSL certificate verification mode" />
+                        </label>
+                        <select
+                          className="form-control"
+                          onChange={e =>
+                            connectionDBStateDispatch({
+                              type: 'UPDATE_SSL_MODE',
+                              data:
+                                (e.target.value as SSLModeOptions) || undefined,
+                            })
+                          }
+                          value={connectionDBState.sslConfiguration?.sslmode}
+                        >
+                          <option value="">--</option>
+                          <option value="disable">disable</option>
+                          <option value="verify-ca">verify-ca</option>
+                          <option value="verify-full">verify-full</option>
+                        </select>
+                      </div>
+                      <LabeledInput
+                        label="SSL Root Certificate"
+                        type="text"
+                        placeholder="SSL_ROOT_CERT"
+                        value={
+                          connectionDBState.sslConfiguration?.sslrootcert
+                            ?.from_env ?? undefined
+                        }
+                        onChange={e =>
+                          connectionDBStateDispatch({
+                            type: 'UPDATE_SSL_ROOT_CERT',
+                            data: e.target.value,
+                          })
+                        }
+                      />
+                      <LabeledInput
+                        label="SSL Certificate"
+                        type="text"
+                        placeholder="SSL_CERT"
+                        value={
+                          connectionDBState.sslConfiguration?.sslcert
+                            ?.from_env ?? undefined
+                        }
+                        onChange={e =>
+                          connectionDBStateDispatch({
+                            type: 'UPDATE_SSL_CERT',
+                            data: e.target.value,
+                          })
+                        }
+                      />
+                      <LabeledInput
+                        label="SSL Key"
+                        type="text"
+                        placeholder="SSL_KEY"
+                        value={
+                          connectionDBState.sslConfiguration?.sslkey
+                            ?.from_env ?? undefined
+                        }
+                        onChange={e =>
+                          connectionDBStateDispatch({
+                            type: 'UPDATE_SSL_KEY',
+                            data: e.target.value,
+                          })
+                        }
+                      />
+                      <LabeledInput
+                        label="SSL Password"
+                        type="text"
+                        className="form-control"
+                        placeholder="SSL_PASSWORD"
+                        value={
+                          connectionDBState.sslConfiguration?.sslpassword
+                            ?.from_env ?? undefined
+                        }
+                        onChange={e =>
+                          connectionDBStateDispatch({
+                            type: 'UPDATE_SSL_PASSWORD',
+                            data: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              )}
             </div>
           ) : null}
         </div>

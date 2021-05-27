@@ -3,6 +3,7 @@ import {
   ConnectionPoolSettings,
   IsolationLevelOptions,
   SourceConnectionInfo,
+  SSLConfigOptions,
 } from './types';
 
 export const addSource = (
@@ -16,13 +17,17 @@ export const addSource = (
       projectId: string;
       datasets: string;
     };
+    sslConfiguration?: SSLConfigOptions;
     preparedStatements?: boolean;
     isolationLevel?: IsolationLevelOptions;
   },
   // supported only for PG sources at the moment
   replicas?: Omit<
     SourceConnectionInfo,
-    'connection_string' | 'use_prepared_statements' | 'isolation_level'
+    | 'connection_string'
+    | 'use_prepared_statements'
+    | 'ssl_configuration'
+    | 'isolation_level'
   >[]
 ) => {
   const replace_configuration = payload.replace_configuration ?? false;
@@ -68,9 +73,10 @@ export const addSource = (
       configuration: {
         connection_info: {
           database_url: payload.dbUrl,
-          pool_settings: payload.connection_pool_settings,
           use_prepared_statements: payload.preparedStatements,
           isolation_level: payload.isolationLevel,
+          pool_settings: payload.connection_pool_settings,
+          ssl_configuration: payload.sslConfiguration,
         },
         read_replicas: replicas?.length ? replicas : null,
       },

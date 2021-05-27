@@ -84,9 +84,10 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
           databaseUrl: getDatasourceURL(
             databaseUrl ?? connectionInfo?.connection_string
           ),
-          connectionSettings: connectionInfo?.pool_settings ?? {},
+          connectionSettings: connectionInfo?.pool_settings,
           preparedStatements: connectionInfo?.use_prepared_statements ?? false,
           isolationLevel: connectionInfo?.isolation_level ?? 'read-committed',
+          sslConfiguration: connectionInfo?.ssl_configuration,
         },
       });
 

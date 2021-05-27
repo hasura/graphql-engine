@@ -57,6 +57,7 @@ import {
   getTableInfo,
   getDatabaseVersionSql,
 } from './sqlUtils';
+import globals from '../../../Globals';
 
 export const isTable = (table: Table) => {
   return (
@@ -614,6 +615,8 @@ export const supportedFeatures: SupportedFeaturesType = {
     retries: true,
     pool_timeout: true,
     connection_lifetime: true,
+    ssl_certificates:
+      globals.consoleType === 'cloud' || globals.consoleType === 'pro',
   },
 };
 

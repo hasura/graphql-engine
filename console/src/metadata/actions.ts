@@ -6,6 +6,7 @@ import {
   IsolationLevelOptions,
   RestEndpointEntry,
   SourceConnectionInfo,
+  SSLConfigOptions,
 } from './types';
 import {
   showSuccessNotification,
@@ -120,12 +121,13 @@ export interface AddDataSourceRequest {
     payload: {
       name: string;
       dbUrl: string | { from_env: string };
-      connection_pool_settings: ConnectionPoolSettings;
+      connection_pool_settings?: ConnectionPoolSettings;
       replace_configuration?: boolean;
       bigQuery: {
         projectId: string;
         datasets: string;
       };
+      sslConfiguration?: SSLConfigOptions;
       preparedStatements?: boolean;
       isolationLevel?: IsolationLevelOptions;
     };
@@ -243,7 +245,10 @@ export const addDataSource = (
   successCb: () => void,
   replicas?: Omit<
     SourceConnectionInfo,
-    'connection_string' | 'use_prepared_statements' | 'isolation_level'
+    | 'connection_string'
+    | 'use_prepared_statements'
+    | 'ssl_configuration'
+    | 'isolation_level'
   >[],
   skipNotification = false
 ): Thunk<Promise<void | ReduxState>, MetadataActions> => (

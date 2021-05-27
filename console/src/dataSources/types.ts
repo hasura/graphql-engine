@@ -321,6 +321,7 @@ export type SupportedFeaturesType = {
     retries: boolean;
     pool_timeout: boolean;
     connection_lifetime: boolean;
+    ssl_certificates: boolean;
   };
 };
 

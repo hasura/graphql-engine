@@ -176,6 +176,7 @@ export const supportedFeatures: SupportedFeaturesType = {
     retries: false,
     pool_timeout: false,
     connection_lifetime: false,
+    ssl_certificates: false,
   },
 };
 
