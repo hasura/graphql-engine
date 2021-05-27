@@ -50,7 +50,6 @@ import           Data.List.Extended            (duplicates, getDifference)
 import           Data.Text.Extended
 
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Schema.Remote
 import           Hasura.RQL.Types              hiding (GraphQLType, defaultScalars)
 import           Hasura.Server.Utils           (englishList, isSessionVariable)
 import           Hasura.Session

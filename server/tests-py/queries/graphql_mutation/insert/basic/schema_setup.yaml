@@ -138,7 +138,8 @@ args:
     using:
       foreign_key_constraint_on:
         table: article
-        column: author_id
+        columns:
+          - author_id
 
 - type: track_table
   args:

@@ -6,6 +6,7 @@ args:
     source: mssql
     table:
       name: user
+
 - type: mssql_create_select_permission
   args:
     source: mssql

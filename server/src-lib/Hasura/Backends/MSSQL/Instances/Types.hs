@@ -38,6 +38,8 @@ instance Backend 'MSSQL where
   type SQLExpression           'MSSQL = MSSQL.Expression
   type SQLOperator             'MSSQL = MSSQL.Op
 
+  type ExtraTableMetadata      'MSSQL = ()
+
   type XComputedField          'MSSQL = XDisable
   type XRemoteField            'MSSQL = XDisable
   type XRelay                  'MSSQL = XDisable

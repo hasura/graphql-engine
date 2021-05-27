@@ -8,14 +8,14 @@
 # The builder image will then get rebuilt automatically, and used in the rest of the build pipeline.
 #
 # TODO we should combine this with  server/packaging/build/Dockerfile using a multi-stage build:
-#      https://docs.docker.com/develop/develop-images/multistage-build/ 
+#      https://docs.docker.com/develop/develop-images/multistage-build/
 #
 # NOTE: this is symlinked from mono .circleci to oss-.circleci so that it is
 #       visible to OSS users, since it's at least a good reference
 
-# FROM haskell:8.10.2-stretch
-FROM haskell:8.8-stretch
-# ^ Required to build 8.10.2 below; 
+# FROM haskell:8.10.2-buster
+FROM haskell:8.8.3-buster
+# ^ Required to build 8.10.2 below;
 
 ARG docker_ver="19.03.13"
 ARG postgres_ver="13"
@@ -24,7 +24,7 @@ ARG node_ver="12.x"
 # Install GNU make, curl, git and docker client. Required to build the server
 RUN apt-get -y update     \
     && apt-get -y install curl gnupg2 apt-transport-https     \
-    && echo "deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list     \
+    && echo "deb http://apt.postgresql.org/pub/repos/apt/ buster-pgdg main" > /etc/apt/sources.list.d/pgdg.list     \
     && curl -s https://packages.microsoft.com/config/debian/9/prod.list > /etc/apt/sources.list.d/mssql-release.list     \
     && curl -s https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -     \
     && curl -s https://packages.microsoft.com/keys/microsoft.asc | apt-key add -     \
@@ -54,7 +54,7 @@ ENV PATH="/root/.cabal/bin:${PATH}:/opt/ghc/bin"
 RUN echo "export PATH=${PATH}" >> /root/.bashrc
 
 # ###################################
-# Building Matt's GHC fork with: 
+# Building Matt's GHC fork with:
 #   https://gitlab.haskell.org/mpickering/ghc/-/commits/wip/fd-decay-factor
 #
 # To revert, remove everything below this line, and change back the base image above.

@@ -25,7 +25,6 @@ import           Hasura.RQL.Types.Common               (OID (..))
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 
-
 --------------------------------------------------------------------------------
 -- Loader
 
@@ -39,7 +38,6 @@ loadDBMetadata pool = do
     Left e          -> throw500 $ T.pack $ "error loading sql server database schema: " <> e
     Right sysTables -> pure $ HM.fromList $ map transformTable sysTables
 
-
 --------------------------------------------------------------------------------
 -- Local types
 
@@ -50,7 +48,7 @@ data SysTable = SysTable
   , staJoinedSysSchema :: SysSchema
   } deriving (Show, Generic)
 
-instance FromJSON (SysTable) where
+instance FromJSON SysTable where
   parseJSON = genericParseJSON hasuraJSON
 
 
@@ -59,7 +57,7 @@ data SysSchema = SysSchema
   , ssSchemaId :: Int
   } deriving (Show, Generic)
 
-instance FromJSON (SysSchema) where
+instance FromJSON SysSchema where
   parseJSON = genericParseJSON hasuraJSON
 
 
@@ -80,7 +78,7 @@ data SysType = SysType
   , styUserTypeId :: Int
   } deriving (Show, Generic)
 
-instance FromJSON (SysType) where
+instance FromJSON SysType where
   parseJSON = genericParseJSON hasuraJSON
 
 
@@ -96,7 +94,7 @@ data SysForeignKeyColumn = SysForeignKeyColumn
   , sfkcJoinedReferencedSysSchema  :: SysSchema
   } deriving (Show, Generic)
 
-instance FromJSON (SysForeignKeyColumn) where
+instance FromJSON SysForeignKeyColumn where
   parseJSON = genericParseJSON hasuraJSON
 
 
@@ -119,6 +117,7 @@ transformTable tableInfo =
        foreignKeysMetadata
        Nothing  -- no views, only tables
        Nothing  -- no description
+       ()
      )
 
 transformColumn

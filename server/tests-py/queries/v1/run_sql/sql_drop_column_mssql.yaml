@@ -1,0 +1,81 @@
+# Create a table
+- url: /v2/query
+  status: 200
+  query:
+    type: mssql_run_sql
+    args:
+      source: mssql
+      sql: |
+        CREATE TABLE test (
+          id INT NOT NULL IDENTITY PRIMARY KEY,
+          name TEXT
+        );
+
+        INSERT INTO test (name) VALUES ('Bob'), ('Alice');
+
+# Track table
+- url: /v1/metadata
+  status: 200
+  query:
+    type: mssql_track_table
+    args:
+      source: mssql
+      table:
+        name: test
+
+# GraphQL Query to fetch data from 'test' table
+- url: /v1/graphql
+  status: 200
+  response:
+    data:
+      test:
+      - id: 1
+        name: Bob
+      - id: 2
+        name: Alice
+  query:
+    query: |
+      query {
+        test{
+          id
+          name
+        }
+      }
+
+# Drop a column in SQL
+- url: /v2/query
+  status: 200
+  query:
+    type: mssql_run_sql
+    args:
+      source: mssql
+      sql: |
+        ALTER TABLE test DROP COLUMN name;
+
+# Try to fetch the column data via GraphQL
+- url: /v1/graphql
+  status: 200
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.test.selectionSet.name
+        code: validation-failed
+      message: "field \"name\" not found in type: 'test'"
+  query:
+    query: |
+      query {
+        test{
+          id
+          name
+        }
+      }
+
+# Now drop the 'test' table
+- url: /v2/query
+  status: 200
+  query:
+    type: mssql_run_sql
+    args:
+      source: mssql
+      sql: |
+        DROP TABLE test;

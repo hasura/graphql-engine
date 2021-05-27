@@ -2,14 +2,12 @@ package commands
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
-
 	"github.com/hasura/graphql-engine/cli/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gbytes"
 	. "github.com/onsi/gomega/gexec"
+	"os"
+	"path/filepath"
 )
 
 var _ = Describe("metadata_apply", func() {
@@ -36,15 +34,26 @@ var _ = Describe("metadata_apply", func() {
 		teardown()
 	})
 
-	Context("metadata apply test", func() {
-		It("should apply metadata to server", func() {
+	It("metadata apply", func() {
+		Context("should apply metadata to server", func() {
+			session = testutil.RunCommandAndSucceed(testutil.CmdOpts{
+				Args:             []string{"metadata", "export"},
+				WorkingDirectory: dirName,
+			})
 			session = testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"metadata", "apply"},
 				WorkingDirectory: dirName,
 			})
-			want := `.*Metadata applied*.`
-			Eventually(session, 60*40).Should(Say(want))
 			Eventually(session, 60*40).Should(Exit(0))
+			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring("Metadata applied"))
+		})
+		Context("apply metadata to server and it should output the metadata of project to stdout", func() {
+			session = testutil.Hasura(testutil.CmdOpts{
+				Args:             []string{"metadata", "apply", "--output", "json"},
+				WorkingDirectory: dirName,
+			})
+			Eventually(session, 60*40).Should(Exit(0))
+			Eventually(isJSON(session.Wait().Out.Contents())).Should(BeTrue())
 		})
 	})
 })

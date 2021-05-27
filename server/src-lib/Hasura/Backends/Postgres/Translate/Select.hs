@@ -6,6 +6,7 @@ module Hasura.Backends.Postgres.Translate.Select
   , mkSQLSelect
   , mkAggregateSelect
   , mkConnectionSelect
+  , PostgresAnnotatedFieldJSON
   ) where
 
 import           Hasura.Prelude
@@ -36,7 +37,7 @@ import           Hasura.SQL.Types
 
 selectQuerySQL
   :: forall pgKind
-   . (Backend ('Postgres pgKind))
+   . (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind)
   => JsonAggSelect
   -> AnnSimpleSel ('Postgres pgKind)
   -> Q.Query
@@ -45,7 +46,7 @@ selectQuerySQL jsonAggSelect sel =
 
 selectAggregateQuerySQL
   :: forall pgKind
-   . (Backend ('Postgres pgKind))
+   . (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind)
   => AnnAggregateSelect ('Postgres pgKind)
   -> Q.Query
 selectAggregateQuerySQL =
@@ -53,7 +54,9 @@ selectAggregateQuerySQL =
 
 connectionSelectQuerySQL
   :: forall pgKind
-   . (Backend ('Postgres pgKind))
+   . ( Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
   =>  ConnectionSelect ('Postgres pgKind) S.SQLExp
   -> Q.Query
 connectionSelectQuerySQL =
@@ -469,6 +472,7 @@ processAnnSimpleSelect
    . ( MonadReader Bool m
      , MonadWriter JoinTree m
      , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
      )
   => SourcePrefixes
   -> FieldName
@@ -494,6 +498,7 @@ processAnnAggregateSelect
    . ( MonadReader Bool m
      , MonadWriter JoinTree m
      , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
      )
   => SourcePrefixes
   -> FieldName
@@ -574,6 +579,7 @@ processArrayRelation
    . ( MonadReader Bool m
      , MonadWriter JoinTree m
      , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
      )
   => SourcePrefixes
   -> FieldName
@@ -806,11 +812,44 @@ the schema has been generated. The SQL generated will look like this:
 
 -}
 
+class PostgresAnnotatedFieldJSON (pgKind :: PostgresKind) where
+  annRowToJson :: FieldName -> [(FieldName, S.SQLExp)] -> (S.Alias, S.SQLExp)
+
+instance PostgresAnnotatedFieldJSON 'Vanilla where
+  annRowToJson fieldAlias fieldExps =
+    -- postgres ignores anything beyond 63 chars for an iden
+    -- in this case, we'll need to use json_build_object function
+    -- json_build_object is slower than row_to_json hence it is only
+    -- used when needed
+    if any ( (> 63) . T.length . getFieldNameTxt . fst ) fieldExps then
+      withJsonBuildObj fieldAlias $ concatMap toJsonBuildObjectExps fieldExps
+    else
+      withRowToJSON fieldAlias $ map toRowToJsonExtr fieldExps
+
+    where
+      toJsonBuildObjectExps (fieldName, fieldExp) =
+        [S.SELit $ getFieldNameTxt fieldName, fieldExp]
+
+      toRowToJsonExtr (fieldName, fieldExp) =
+        S.Extractor fieldExp $ Just $ S.toAlias fieldName
+
+instance PostgresAnnotatedFieldJSON 'Citus where
+  annRowToJson fieldAlias fieldExps =
+    -- Due to the restrictions Citus imposes on joins between tables of various
+    -- distribution types we cannot use row_to_json and have to only rely on
+    -- json_build_object.
+    withJsonBuildObj fieldAlias $ concatMap toJsonBuildObjectExps fieldExps
+
+    where
+      toJsonBuildObjectExps (fieldName, fieldExp) =
+        [S.SELit $ getFieldNameTxt fieldName, fieldExp]
+
 processAnnFields
   :: forall pgKind m
    . ( MonadReader Bool m
      , MonadWriter JoinTree m
      , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
      )
   => Identifier
   -> FieldName
@@ -877,21 +916,10 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
              , S.mkQIdenExp computedFieldSourcePrefix fieldName
              )
 
-  pure $
-    -- postgres ignores anything beyond 63 chars for an iden
-    -- in this case, we'll need to use json_build_object function
-    -- json_build_object is slower than row_to_json hence it is only
-    -- used when needed
-    if any ( (> 63) . T.length . getFieldNameTxt . fst ) fieldExps then
-      withJsonBuildObj fieldAlias $ concatMap toJsonBuildObjectExps fieldExps
-    else withRowToJSON fieldAlias $ map toRowToJsonExtr fieldExps
+  pure $ annRowToJson @pgKind fieldAlias fieldExps
+
   where
     mkSourcePrefixes newPrefix = SourcePrefixes newPrefix sourcePrefix
-    toJsonBuildObjectExps (fieldName, fieldExp) =
-      [S.SELit $ getFieldNameTxt fieldName, fieldExp]
-
-    toRowToJsonExtr (fieldName, fieldExp) =
-      S.Extractor fieldExp $ Just $ S.toAlias fieldName
 
     baseTableIdentifier = mkBaseTableAlias sourcePrefix
 
@@ -1048,7 +1076,9 @@ generateSQLSelectFromArrayNode selectSource arraySelectNode joinCondition =
 
 mkAggregateSelect
   :: forall pgKind
-   . Backend ('Postgres pgKind)
+   . ( Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
   => AnnAggregateSelect ('Postgres pgKind)
   -> S.Select
 mkAggregateSelect annAggSel =
@@ -1067,7 +1097,9 @@ mkAggregateSelect annAggSel =
 
 mkSQLSelect
   :: forall pgKind
-   . Backend ('Postgres pgKind)
+   . ( Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
   => JsonAggSelect
   -> AnnSimpleSel ('Postgres pgKind)
   -> S.Select
@@ -1091,7 +1123,9 @@ mkSQLSelect jsonAggSelect annSel =
 
 mkConnectionSelect
   :: forall pgKind
-   . Backend ('Postgres pgKind)
+   . ( Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
   => ConnectionSelect ('Postgres pgKind) S.SQLExp
   -> S.SelectWithG S.Select
 mkConnectionSelect connectionSelect =
@@ -1160,9 +1194,11 @@ encodeBase64 =
 
 
 processConnectionSelect
-  :: ( MonadReader Bool m
+  :: forall pgKind m
+   . ( MonadReader Bool m
      , MonadWriter JoinTree m
      , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
      )
   => SourcePrefixes
   -> FieldName
@@ -1257,11 +1293,12 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
       in S.SEFnApp "coalesce" [jsonAggExp, S.SELit "[]"] Nothing
 
     processFields
-      :: ( MonadReader Bool m
-         , MonadWriter JoinTree m
-         , MonadState [(S.Alias, S.SQLExp)] m
+      :: forall n
+       . ( MonadReader Bool n
+         , MonadWriter JoinTree n
+         , MonadState [(S.Alias, S.SQLExp)] n
          )
-      => Maybe S.OrderByExp -> m S.SQLExp
+      => Maybe S.OrderByExp -> n S.SQLExp
     processFields orderByExp =
       fmap (S.applyJsonBuildObj . concat) $
       forM fields $

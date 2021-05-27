@@ -383,12 +383,13 @@ updateColInRel source fromQT rn rnCol = do
   let maybeRelInfo =
         tables ^? ix fromQT.tiCoreInfo.tciFieldInfoMap.ix (fromRel rn)._FIRelationship
   forM_ maybeRelInfo $ \relInfo ->
-    tell $ MetadataModifier $ tableMetadataSetter source fromQT %~
-    case riType relInfo of
-      ObjRel -> tmObjectRelationships.ix rn.rdUsing %~
-                updateColInObjRel fromQT (riRTable relInfo) rnCol
-      ArrRel -> tmArrayRelationships.ix rn.rdUsing %~
-                updateColInArrRel fromQT (riRTable relInfo) rnCol
+    let relTableName = riRTable relInfo
+    in tell $ MetadataModifier $ tableMetadataSetter source fromQT %~
+      case riType relInfo of
+        ObjRel -> tmObjectRelationships.ix rn.rdUsing %~
+                  updateColInObjRel fromQT relTableName rnCol
+        ArrRel -> tmArrayRelationships.ix rn.rdUsing %~
+                  updateColInArrRel fromQT relTableName rnCol
 
 updateColInRemoteRelationship
   :: forall b m
@@ -463,11 +464,24 @@ updateColInArrRel fromQT toQT rnCol = \case
 type ColMap b = HashMap (Column b) (Column b)
 
 getNewCol
-  :: (Backend b) => RenameCol b -> TableName b -> Column b -> Column b
-getNewCol rnCol qt col =
-  if opQT == qt && col == oCol then nCol else col
+  :: forall b f
+   . Backend b
+  => Functor f
+  => RenameCol b
+  -> TableName b
+  -> f (Column b)
+  -> f (Column b)
+getNewCol rnCol qt cols =
+  if qt == opQT then
+    go <$> cols
+  else
+    cols
   where
     RenameItem opQT oCol nCol = rnCol
+    go :: Column b -> Column b
+    go col
+      | col == oCol = nCol
+      | otherwise   = col
 
 updateRelManualConfig
   :: forall b

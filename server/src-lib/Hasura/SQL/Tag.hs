@@ -62,8 +62,9 @@ $(concat <$> forEachBackend \b -> do
 -- is generated with Template Haskell for each 'Backend'. The case
 -- switch looks like this:
 --
---   PostgresTag -> Postgres
---   MSSQLTag    -> MSSQL
+--   PostgresVanillaTag -> Postgres Vanilla
+--   PostgresCitusTag   -> Postgres Citus
+--   MSSQLTag           -> MSSQL
 --   ...
 reify :: BackendTag b -> BackendType
 reify t = $(backendCase

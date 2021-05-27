@@ -57,11 +57,15 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	util.BindPFlag(v, "insecure_skip_tls_verify", f.Lookup("insecure-skip-tls-verify"))
 	util.BindPFlag(v, "certificate_authority", f.Lookup("certificate-authority"))
 
+	f.BoolVar(&ec.DisableAutoStateMigration, "disable-auto-state-migration", false, "after a config v3 update, disable automatically moving state from hdb_catalog.schema_migrations to catalog state")
+	f.MarkHidden("disable-auto-state-migration")
+
 	migrateCmd.AddCommand(
 		newMigrateApplyCmd(ec),
 		newMigrateStatusCmd(ec),
 		newMigrateCreateCmd(ec),
 		newMigrateSquashCmd(ec),
+		newMigrateDeleteCmd(ec),
 	)
 
 	return migrateCmd

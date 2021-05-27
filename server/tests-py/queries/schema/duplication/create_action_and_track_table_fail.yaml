@@ -33,7 +33,7 @@
   response:
     path: "$.args"
     code: unexpected
-    error: "found duplicate fields in selection set: insert_user"
+    error: "found duplicate fields in selection set for mutation root: insert_user"
   query:
     type: track_table
     args:

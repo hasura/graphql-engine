@@ -7,7 +7,7 @@ import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import DataSubSidebar from './DataSubSidebar';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import styles from '../../Common/TableCommon/Table.scss';
-import { currentDriver } from '../../../dataSources';
+import { isFeatureSupported } from '../../../dataSources';
 import { fetchPostgresVersion } from '../../Main/Actions';
 
 const DataPageContainer = ({
@@ -18,7 +18,10 @@ const DataPageContainer = ({
 }) => {
   useEffect(() => {
     // TODO: handle for different drivers
-    if (currentDataSource && currentDriver === 'postgres') {
+    if (
+      currentDataSource &&
+      isFeatureSupported('driver.fetchVersion.enabled')
+    ) {
       dispatch(fetchPostgresVersion);
     }
   }, [dispatch, currentDataSource]);

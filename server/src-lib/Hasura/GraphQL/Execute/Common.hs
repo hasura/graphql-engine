@@ -5,7 +5,7 @@ module Hasura.GraphQL.Execute.Common
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                                  as J
+import qualified Data.Aeson.Ordered                          as JO
 import qualified Data.Environment                            as Env
 import qualified Data.IntMap                                 as IntMap
 import qualified Database.PG.Query                           as Q
@@ -64,7 +64,7 @@ class Monad m => MonadGQLExecutionCheck m where
 
   executeIntrospection
     :: UserInfo
-    -> J.Value
+    -> JO.Value
     -> SetGraphqlIntrospectionOptions
     -> m (Either QErr ExecutionStep)
 
@@ -120,7 +120,9 @@ mkCurPlanTx env manager reqHdrs userInfo ps@(PreparedSql q prepMap remoteJoinsM)
 
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan
-  :: Backend ('Postgres pgKind)
+  :: ( Backend ('Postgres pgKind)
+     , DS.PostgresAnnotatedFieldJSON pgKind
+     )
   => PrepArgMap
   -> QueryDB ('Postgres pgKind) S.SQLExp
   -> PreparedSql pgKind

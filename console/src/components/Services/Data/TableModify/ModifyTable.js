@@ -34,6 +34,7 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
   currentDriver,
+  driverToLabel,
   findTable,
   generateTableDef,
   getTableCustomColumnNames,
@@ -187,7 +188,7 @@ class ModifyTable extends React.Component {
                 <div className={styles.readOnly}>
                   <p className={styles.readOnlyText}>
                     <i className="fa fa-flask" aria-hidden="true" /> Coming soon
-                    for {currentDriver.toUpperCase()}
+                    for {driverToLabel[currentDriver]}
                   </p>
                   <p className={styles.noMargin}>
                     This page is currently read-only, but we're actively working
@@ -196,19 +197,22 @@ class ModifyTable extends React.Component {
                 </div>
               )}
 
-              {isFeatureSupported('tables.modify.comments') && (
+              {isFeatureSupported('tables.modify.comments.view') && (
                 <>
                   <TableCommentEditor
                     tableComment={tableComment}
                     tableCommentEdit={tableCommentEdit}
                     tableType="TABLE"
                     dispatch={dispatch}
+                    readOnly={
+                      !isFeatureSupported('tables.modify.comments.edit')
+                    }
                   />
                   <EnumTableModifyWarning isEnum={table.is_enum} />
                 </>
               )}
 
-              {isFeatureSupported('tables.modify.columns') && (
+              {isFeatureSupported('tables.modify.columns.view') && (
                 <>
                   <h4 className={styles.subheading_text}>Columns</h4>
                   <ColumnEditorList
@@ -218,7 +222,7 @@ class ModifyTable extends React.Component {
                     columnEdit={columnEdit}
                     dispatch={dispatch}
                     readOnlyMode={
-                      !isFeatureSupported('tables.modify.columns_edit')
+                      !isFeatureSupported('tables.modify.columns.edit')
                     }
                     currentSchema={currentSchema}
                     columnDefaultFunctions={columnDefaultFunctions}
@@ -226,7 +230,7 @@ class ModifyTable extends React.Component {
                   />
                 </>
               )}
-              {isFeatureSupported('tables.modify.columns_edit') && (
+              {isFeatureSupported('tables.modify.columns.edit') && (
                 <>
                   <ColumnCreator
                     dispatch={dispatch}
@@ -247,7 +251,7 @@ class ModifyTable extends React.Component {
                 </>
               )}
 
-              {isFeatureSupported('tables.modify.primaryKeys') && (
+              {isFeatureSupported('tables.modify.primaryKeys.view') && (
                 <>
                   <h4 className={styles.subheading_text}>
                     Primary Key &nbsp; &nbsp;
@@ -256,7 +260,7 @@ class ModifyTable extends React.Component {
                   <PrimaryKeyEditor
                     tableSchema={table}
                     readOnlyMode={
-                      !isFeatureSupported('tables.modify.primaryKeys_edit')
+                      !isFeatureSupported('tables.modify.primaryKeys.edit')
                     }
                     pkModify={pkModify}
                     dispatch={dispatch}
@@ -266,7 +270,7 @@ class ModifyTable extends React.Component {
                 </>
               )}
 
-              {isFeatureSupported('tables.modify.foreginKeys') && (
+              {isFeatureSupported('tables.modify.foreignKeys.view') && (
                 <>
                   <h4 className={styles.subheading_text}>
                     Foreign Keys &nbsp; &nbsp;
@@ -280,14 +284,14 @@ class ModifyTable extends React.Component {
                     dispatch={dispatch}
                     fkModify={fkModify}
                     readOnlyMode={
-                      !isFeatureSupported('tables.modify.foreginKeys_edit')
+                      !isFeatureSupported('tables.modify.foreignKeys.edit')
                     }
                   />
                   <hr />
                 </>
               )}
 
-              {isFeatureSupported('tables.modify.uniqueKeys') && (
+              {isFeatureSupported('tables.modify.uniqueKeys.view') && (
                 <>
                   <h4 className={styles.subheading_text}>
                     Unique Keys &nbsp; &nbsp;
@@ -301,7 +305,7 @@ class ModifyTable extends React.Component {
                     uniqueKeys={uniqueKeyModify}
                     setUniqueKeys={setUniqueKeys}
                     readOnlyMode={
-                      !isFeatureSupported('tables.modify.uniqueKeys_edit')
+                      !isFeatureSupported('tables.modify.uniqueKeys.edit')
                     }
                   />
                   <hr />
@@ -318,7 +322,7 @@ class ModifyTable extends React.Component {
                   <hr />
                 </>
               )}
-              {isFeatureSupported('tables.modify.checkConstraints') && (
+              {isFeatureSupported('tables.modify.checkConstraints.view') && (
                 <>
                   <div className={styles.add_mar_bottom}>
                     <h4 className={styles.subheading_text_no_padd}>
@@ -331,6 +335,9 @@ class ModifyTable extends React.Component {
                     constraints={table.check_constraints}
                     checkConstraintsModify={checkConstraintsModify}
                     dispatch={dispatch}
+                    readOnlyMode={
+                      !isFeatureSupported('tables.modify.checkConstraints.edit')
+                    }
                   />
                   <hr />
                 </>

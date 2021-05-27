@@ -1,5 +1,4 @@
-{-# LANGUAGE DisambiguateRecordFields #-}
-{-# LANGUAGE DuplicateRecordFields    #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 
 module Hasura.Backends.BigQuery.DDL.Source
   ( resolveSource
@@ -28,7 +27,6 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
-import           Hasura.Server.Types                      (MaintenanceMode)
 
 
 resolveSourceConfig ::
@@ -54,9 +52,8 @@ resolveSourceConfig _name BigQueryConnSourceConfig{..} = runExceptT $ do
 resolveSource
   :: (MonadIO m)
   => BigQuerySourceConfig
-  -> MaintenanceMode
   -> m (Either QErr (ResolvedSource 'BigQuery))
-resolveSource sourceConfig _maintenanceMode =
+resolveSource sourceConfig =
   runExceptT $ do
     result <- getTables sourceConfig
     case result of
@@ -92,6 +89,7 @@ resolveSource sourceConfig _maintenanceMode =
                          , _ptmiForeignKeys = mempty
                          , _ptmiViewInfo = Just $ ViewInfo False False False
                          , _ptmiDescription = Nothing
+                         , _ptmiExtraTableMetadata = ()
                          })
                    | (index, RestTable {tableReference, schema}) <-
                        zip [0 ..] restTables

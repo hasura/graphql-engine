@@ -39,14 +39,14 @@ export const addsNewPostgresDatabaseWithUrl = () => {
   cy.getBySel('connect-database-btn').click();
   cy.get('.notification-success', { timeout: 10000 })
     .should('be.visible')
-    .and('contain', 'Database added successfully!');
+    .and('contain', 'Data source added successfully!');
   cy.url().should('eq', `${baseUrl}/data/manage`);
 };
 
 export const addsNewPgDBWithConParams = () => {
   cy.getBySel('sidebar-manage-database').click();
   cy.get('button').contains('Connect Database').click();
-  cy.get("input[type='radio']").eq(0).click();
+  cy.get("input[type='radio']").eq(2).click();
   cy.getBySel('database-display-name').type('testDB2');
   cy.getBySel('database-type').select('postgres');
   cy.getBySel('host').type(config.host);
@@ -59,21 +59,21 @@ export const addsNewPgDBWithConParams = () => {
   cy.getBySel('connect-database-btn').click();
   cy.get('.notification-success', { timeout: 10000 })
     .should('be.visible')
-    .and('contain', 'Database added successfully!');
+    .and('contain', 'Data source added successfully!');
   cy.url().should('eq', `${baseUrl}/data/manage`);
 };
 
 export const addsNewPgDBWithEnvVar = () => {
   cy.getBySel('sidebar-manage-database').click();
   cy.get('button').contains('Connect Database').click();
-  cy.get("input[type='radio']").eq(2).click();
+  cy.get("input[type='radio']").eq(0).click();
   cy.getBySel('database-display-name').type('testDB3');
   cy.getBySel('database-type').select('postgres');
   cy.getBySel('database-url-env').type('HASURA_GRAPHQL_DATABASE_URL');
   cy.getBySel('connect-database-btn').click();
   cy.get('.notification-success', { timeout: 10000 })
     .should('be.visible')
-    .and('contain', 'Database added successfully!');
+    .and('contain', 'Data source added successfully!');
   cy.url().should('eq', `${baseUrl}/data/manage`);
 };
 

@@ -5,6 +5,7 @@ module Data.Environment
     , emptyEnvironment
     , maybeEnvironment
     , lookupEnv
+    , redactEnv
     , Data.Environment.toList
     ) where
 
@@ -35,3 +36,6 @@ lookupEnv (Environment es) k = M.lookup k es
 
 toList :: Environment -> [(String, String)]
 toList (Environment e) = M.toList e
+
+redactEnv :: Environment -> Environment
+redactEnv (Environment e) = Environment $ fmap (const "******") e

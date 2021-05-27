@@ -158,9 +158,8 @@ fromSelectRows annSelectG = do
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
   selectProjections <-
-    case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
-      Nothing -> refute (pure NoProjectionFields)
-      Just ne -> pure ne
+    NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
+      `onNothing` refute (pure NoProjectionFields)
   pure
     Select
       {selectFinalWantedFields = pure (fieldTextNames fields),  selectGroupBy = mempty
@@ -183,9 +182,7 @@ fromSelectRows annSelectG = do
                   } = annSelectG
     Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
-      case mPermLimit of
-        Nothing    -> NoTop
-        Just limit -> Top limit
+      maybe NoTop Top mPermLimit
     stringifyNumbers =
       if num
         then StringifyNumbers
@@ -213,9 +210,8 @@ fromSelectAggregate annSelectG = do
 
 
   selectProjections <-
-    case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
-      Nothing -> refute (pure NoProjectionFields)
-      Just ne -> pure ne
+    NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
+      `onNothing` refute (pure NoProjectionFields)
   pure
     Select
       { selectFinalWantedFields = Nothing
@@ -239,9 +235,7 @@ fromSelectAggregate annSelectG = do
                   } = annSelectG
     Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
-      case mPermLimit of
-        Nothing    -> NoTop
-        Just limit -> Top limit
+      maybe NoTop Top mPermLimit
 
 --------------------------------------------------------------------------------
 -- GraphQL Args
@@ -308,10 +302,7 @@ fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
   let morderByOrder =
         obiType
   let orderByNullsOrder =
-        case obiNulls of
-          Nothing -> NullsAnyOrder
-          Just nullsOrder ->
-            nullsOrder
+        fromMaybe NullsAnyOrder obiNulls
   case morderByOrder of
     Just orderByOrder -> pure OrderBy {..}
     Nothing           -> refute (pure NoOrderSpecifiedInOrderBy)
@@ -324,10 +315,10 @@ unfurlAnnOrderByElement ::
 unfurlAnnOrderByElement =
   \case
     Ir.AOCColumn pgColumnInfo -> lift (fromPGColumnInfo pgColumnInfo)
-    Ir.AOCObjectRelation Rql.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
-      selectFrom <- lift (lift (fromQualifiedTable table))
+    Ir.AOCObjectRelation Rql.RelInfo {riMapping = mapping, riRTable = tableName} annBoolExp annOrderByElementG -> do
+      selectFrom <- lift (lift (fromQualifiedTable tableName))
       joinAliasEntity <-
-        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText table))))
+        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText tableName))))
       joinOn <- lift (fromMappingFieldNames joinAliasEntity mapping)
       whereExpression <-
         lift (local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp))
@@ -353,17 +344,17 @@ unfurlAnnOrderByElement =
                    , joinAlias = joinAliasEntity
                    , joinOn
                    , joinProvenance = OrderByJoinProvenance
-                   , joinFieldName = tableNameText table -- TODO: not needed.
+                   , joinFieldName = tableNameText tableName -- TODO: not needed.
                    , joinExtractPath = Nothing
                    }
-             , unfurledObjectTableAlias = Just (table, joinAliasEntity)
+             , unfurledObjectTableAlias = Just (tableName, joinAliasEntity)
              })
       local (const joinAliasEntity) (unfurlAnnOrderByElement annOrderByElementG)
-    Ir.AOCArrayAggregation Rql.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annAggregateOrderBy -> do
-      selectFrom <- lift (lift (fromQualifiedTable table))
+    Ir.AOCArrayAggregation Rql.RelInfo {riMapping = mapping, riRTable = tableName} annBoolExp annAggregateOrderBy -> do
+      selectFrom <- lift (lift (fromQualifiedTable tableName))
       let alias = aggFieldName
       joinAlias <-
-        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText table))))
+        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText tableName))))
       joinOn <- lift (fromMappingFieldNames joinAlias mapping)
       innerJoinFields <-
         lift (fromMappingFieldNames (fromAlias selectFrom) mapping)
@@ -409,16 +400,13 @@ unfurlAnnOrderByElement =
                             , selectOrderBy = Nothing
                             , selectOffset = Nothing
                             -- This group by corresponds to the field name projections above.
-                            , selectGroupBy =
-                                map
-                                  (\(fieldName', _) -> fieldName')
-                                  innerJoinFields
+                            , selectGroupBy = map fst innerJoinFields
                             }
                     , joinRightTable = fromAlias selectFrom
                     , joinProvenance = OrderByJoinProvenance
                     , joinAlias = joinAlias
                     , joinOn
-                    , joinFieldName = tableNameText table -- TODO: not needed.
+                    , joinFieldName = tableNameText tableName -- TODO: not needed.
                     , joinExtractPath = Nothing
                     }
               , unfurledObjectTableAlias = Nothing
@@ -610,10 +598,7 @@ fromAggregateField aggregateField =
       NonNullFieldCountable names -> NonNullFieldCountable <$> traverse fromPGCol names
       DistinctCountable     names -> DistinctCountable     <$> traverse fromPGCol names
     Ir.AFOp Ir.AggregateOp {_aoOp = op, _aoFields = fields} -> do
-      fs <-
-        case NE.nonEmpty fields of
-          Nothing -> refute (pure MalformedAgg)
-          Just fs -> pure fs
+      fs <- NE.nonEmpty fields `onNothing` refute (pure MalformedAgg)
       args <-
         traverse
           (\(Rql.FieldName fieldName, pgColFld) -> do
@@ -733,9 +718,8 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
       (const entityAlias)
       (traverse (fromAnnFieldsG mempty LeaveNumbersAlone) fields)
   selectProjections <-
-    case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
-      Nothing -> refute (pure NoProjectionFields)
-      Just ne -> pure ne
+    NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
+      `onNothing` refute (pure NoProjectionFields)
   joinFieldName <- lift (fromRelName aarRelationshipName)
   joinAlias <-
     lift (generateEntityAlias (ObjectRelationTemplate joinFieldName))
@@ -825,14 +809,13 @@ fromArrayAggregateSelectG annRelationSelectG = do
                  , aliasedAlias = fieldName fieldName'
                  })
           innerJoinFields
-  joinSelect <-
-    pure
-      select
-        { selectWhere = selectWhere select
-        , selectProjections =
-            selectProjections select <> NE.fromList joinFieldProjections
-        , selectGroupBy = map (\(fieldName', _) -> fieldName') innerJoinFields
-        }
+  let joinSelect =
+          select
+            { selectWhere = selectWhere select
+            , selectProjections =
+                selectProjections select <> NE.fromList joinFieldProjections
+            , selectGroupBy = map fst innerJoinFields
+            }
   pure
     Join
       { joinAlias = alias
@@ -868,33 +851,32 @@ fromArrayRelationSelectG annRelationSelectG = do
                  , aliasedAlias = fieldName fieldName'
                  })
           innerJoinFields
-  joinSelect <-
-    pure
-      Select
-        {selectFinalWantedFields = selectFinalWantedFields select,  selectTop = NoTop
-        , selectProjections =
-            NE.fromList joinFieldProjections <>
-            pure
-              (ArrayAggProjection
-                 Aliased
-                   { aliasedThing =
-                       ArrayAgg
-                         { arrayAggProjections = selectProjections select
-                         , arrayAggOrderBy = selectOrderBy select
-                         , arrayAggTop = selectTop select
-                         , arrayAggOffset = selectOffset select
-                         }
-                   , aliasedAlias = aggFieldName
-                   })
-        , selectFrom = selectFrom select
-        , selectJoins = selectJoins select
-        , selectWhere = selectWhere select
-        , selectFor = NoFor
-        , selectOrderBy = Nothing
-        , selectOffset = Nothing
-      -- This group by corresponds to the field name projections above.
-        , selectGroupBy = map (\(fieldName', _) -> fieldName') innerJoinFields
-        }
+  let joinSelect =
+          Select
+            {selectFinalWantedFields = selectFinalWantedFields select,  selectTop = NoTop
+            , selectProjections =
+                NE.fromList joinFieldProjections <>
+                pure
+                  (ArrayAggProjection
+                     Aliased
+                       { aliasedThing =
+                           ArrayAgg
+                             { arrayAggProjections = selectProjections select
+                             , arrayAggOrderBy = selectOrderBy select
+                             , arrayAggTop = selectTop select
+                             , arrayAggOffset = selectOffset select
+                             }
+                       , aliasedAlias = aggFieldName
+                       })
+            , selectFrom = selectFrom select
+            , selectJoins = selectJoins select
+            , selectWhere = selectWhere select
+            , selectFor = NoFor
+            , selectOrderBy = Nothing
+            , selectOffset = Nothing
+          -- This group by corresponds to the field name projections above.
+            , selectGroupBy = map (fst) innerJoinFields
+            }
   pure
     Join
       { joinAlias = alias
@@ -961,27 +943,27 @@ fromMappingFieldNames localFrom =
 fromOpExpG :: Expression -> Ir.OpExpG 'BigQuery Expression -> FromIr Expression
 fromOpExpG expression op =
   case op of
-    Ir.ANISNULL                  -> pure (IsNullExpression expression)
-    Ir.ANISNOTNULL               -> pure (IsNotNullExpression expression)
-    Ir.AEQ False val             -> pure (nullableBoolEquality expression val)
-    Ir.AEQ True val              -> pure (EqualExpression expression val)
-    Ir.ANE False val             -> pure (nullableBoolInequality expression val)
-    Ir.ANE True val              -> pure (NotEqualExpression expression val)
-    Ir.AGT val                   -> pure (OpExpression MoreOp expression val)
-    Ir.ALT val                   -> pure (OpExpression LessOp expression val)
-    Ir.AGTE val                  -> pure (OpExpression MoreOrEqualOp expression val)
-    Ir.ALTE val                  -> pure (OpExpression LessOrEqualOp expression val)
-    Ir.ACast _casts              -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
-    Ir.AIN _val                  -> refute (pure (UnsupportedOpExpG op)) -- S.BECompareAny S.SEQ lhs val
-    Ir.ANIN _val                 -> refute (pure (UnsupportedOpExpG op)) -- S.BENot $ S.BECompareAny S.SEQ lhs val
-    Ir.ALIKE _val                -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLIKE lhs val
-    Ir.ANLIKE _val               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNLIKE lhs val
-    Ir.CEQ _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol
-    Ir.CNE _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNE lhs $ mkQCol rhsCol
-    Ir.CGT _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGT lhs $ mkQCol rhsCol
-    Ir.CLT _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs $ mkQCol rhsCol
-    Ir.CGTE _rhsCol              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
-    Ir.CLTE _rhsCol              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
+    Ir.ANISNULL      -> pure (IsNullExpression expression)
+    Ir.ANISNOTNULL   -> pure (IsNotNullExpression expression)
+    Ir.AEQ False val -> pure (nullableBoolEquality expression val)
+    Ir.AEQ True val  -> pure (EqualExpression expression val)
+    Ir.ANE False val -> pure (nullableBoolInequality expression val)
+    Ir.ANE True val  -> pure (NotEqualExpression expression val)
+    Ir.AGT val       -> pure (OpExpression MoreOp expression val)
+    Ir.ALT val       -> pure (OpExpression LessOp expression val)
+    Ir.AGTE val      -> pure (OpExpression MoreOrEqualOp expression val)
+    Ir.ALTE val      -> pure (OpExpression LessOrEqualOp expression val)
+    Ir.ACast _casts  -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
+    Ir.AIN _val      -> refute (pure (UnsupportedOpExpG op)) -- S.BECompareAny S.SEQ lhs val
+    Ir.ANIN _val     -> refute (pure (UnsupportedOpExpG op)) -- S.BENot $ S.BECompareAny S.SEQ lhs val
+    Ir.ALIKE _val    -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLIKE lhs val
+    Ir.ANLIKE _val   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNLIKE lhs val
+    Ir.CEQ _rhsCol   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol
+    Ir.CNE _rhsCol   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNE lhs $ mkQCol rhsCol
+    Ir.CGT _rhsCol   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGT lhs $ mkQCol rhsCol
+    Ir.CLT _rhsCol   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs $ mkQCol rhsCol
+    Ir.CGTE _rhsCol  -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
+    Ir.CLTE _rhsCol  -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
     -- These are new as of 2021-02-18 to this API. Not sure what to do with them at present, marking as unsupported.
 
 nullableBoolEquality :: Expression -> Expression -> Expression

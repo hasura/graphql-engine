@@ -601,7 +601,8 @@ export const getUntrackFunctionQuery = (
   name: string,
   schema: string,
   source: string
-) => getMetadataQuery('untrack_function', source, { name, schema });
+) =>
+  getMetadataQuery('untrack_function', source, { function: { name, schema } });
 
 export const getRenameRelationshipQuery = (
   table: QualifiedTable,
@@ -688,7 +689,7 @@ export const getConsoleStateQuery = {
   args: {},
 };
 
-export type SupportedEvents = 'cron' | 'one_off';
+export type SupportedEvents = 'cron' | 'one_off' | 'data';
 
 export const getEventInvocationsLogByID = (
   type: SupportedEvents,

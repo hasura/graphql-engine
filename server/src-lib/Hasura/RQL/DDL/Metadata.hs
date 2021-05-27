@@ -27,6 +27,7 @@ import qualified Data.List                          as L
 
 import           Control.Lens                       ((.~), (^?))
 import           Data.Aeson
+import           Data.Text.Extended                 ((<<>))
 
 import qualified Hasura.SQL.AnyBackend              as AB
 
@@ -53,7 +54,12 @@ import           Hasura.Server.Types                (ExperimentalFeature (..))
 
 
 runClearMetadata
-  :: (MonadIO m, CacheRWM m, MetadataM m, MonadError QErr m, HasServerConfigCtx m)
+  :: ( MonadIO m
+     , CacheRWM m
+     , MetadataM m
+     , HasServerConfigCtx m
+     , MonadMetadataStorageQueryAPI m
+     )
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
   metadata <- getMetadata
@@ -88,10 +94,10 @@ explicitly in @'runReplaceMetadata' function.
 -}
 
 runReplaceMetadata
-  :: ( QErrM m
-     , CacheRWM m
+  :: ( CacheRWM m
      , MetadataM m
      , MonadIO m
+     , MonadMetadataStorageQueryAPI m
      , HasServerConfigCtx m
      )
   => ReplaceMetadata -> m EncJSON
@@ -104,6 +110,7 @@ runReplaceMetadataV1
      , CacheRWM m
      , MetadataM m
      , MonadIO m
+     , MonadMetadataStorageQueryAPI m
      , HasServerConfigCtx m
      )
   => ReplaceMetadataV1 -> m EncJSON
@@ -117,9 +124,12 @@ runReplaceMetadataV2
      , MetadataM m
      , MonadIO m
      , HasServerConfigCtx m
+     , MonadMetadataStorageQueryAPI m
      )
   => ReplaceMetadataV2 -> m EncJSON
 runReplaceMetadataV2 ReplaceMetadataV2{..} = do
+  -- we drop all the future cron trigger events before inserting the new metadata
+  -- and re-populating future cron events below
   experimentalFeatures <- _sccExperimentalFeatures <$> askServerConfigCtx
   let inheritedRoles =
         case _rmv2Metadata of
@@ -131,9 +141,30 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
           RMWithoutSources _ -> mempty
   when (inheritedRoles /= mempty && (EFInheritedRoles `notElem` experimentalFeatures)) $
     throw400 ConstraintViolation $ "inherited_roles can only be added when it's enabled in the experimental features"
+
   oldMetadata <- getMetadata
+  let (oldCronTriggersIncludedInMetadata, oldCronTriggersNotIncludedInMetadata) =
+        ((OMap.filter ctIncludeInMetadata (_metaCronTriggers  oldMetadata))
+        ,(OMap.filter (not . ctIncludeInMetadata) (_metaCronTriggers  oldMetadata)))
+      newCronTriggers =
+        case _rmv2Metadata of
+          RMWithoutSources m -> _mnsCronTriggers m
+          RMWithSources m    -> _metaCronTriggers m
+  dropFutureCronEvents $ MetadataCronTriggers $ OMap.keys oldCronTriggersIncludedInMetadata
+  cronTriggers <- do
+    -- traverse over the new cron triggers and check if any of them
+    -- already exists as a cron trigger with "included_in_metadata: false"
+    for_ newCronTriggers $ \ct ->
+      when (ctName ct `OMap.member` oldCronTriggersNotIncludedInMetadata) $
+        throw400 AlreadyExists $
+        "cron trigger with name "
+        <> ctName ct
+        <<> " already exists as a cron trigger with \"included_in_metadata\" as false"
+    -- we add the old cron triggers with included_in_metadata set to false with the
+    -- newly added cron triggers
+    pure $ newCronTriggers <> oldCronTriggersNotIncludedInMetadata
   metadata <- case _rmv2Metadata of
-    RMWithSources m -> pure m
+    RMWithSources m -> pure $ m { _metaCronTriggers = cronTriggers }
     RMWithoutSources MetadataNoSources{..} -> do
       let maybeDefaultSourceMetadata = oldMetadata ^? metaSources.ix defaultSource.toSourceMetadata
       defaultSourceMetadata <- onNothing maybeDefaultSourceMetadata $
@@ -144,7 +175,7 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
                                      }
       pure $ Metadata (OMap.singleton defaultSource newDefaultSourceMetadata)
                         _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist
-                        _mnsCustomTypes _mnsActions _mnsCronTriggers (_metaRestEndpoints oldMetadata)
+                        _mnsCustomTypes _mnsActions cronTriggers (_metaRestEndpoints oldMetadata)
                         emptyApiLimit emptyMetricsConfig mempty introspectionDisabledRoles
   putMetadata metadata
 
@@ -153,6 +184,10 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
       buildSchemaCache noMetadataModify
     NoAllowInconsistentMetadata ->
       buildSchemaCacheStrict
+
+  -- populate future cron events for all the new cron triggers that are imported
+  for_ newCronTriggers $ \(CronTriggerMetadata {..}) ->
+    populateInitialCronTriggerEvents ctSchedule ctName
 
   -- See Note [Clear postgres schema for dropped triggers]
   dropPostgresTriggers (getOnlyPGSources oldMetadata) (getOnlyPGSources metadata)
@@ -186,11 +221,21 @@ processExperimentalFeatures metadata = do
   -- export inherited roles only when inherited_roles is set in the experimental features
   pure $ bool (metadata { _metaInheritedRoles = mempty }) metadata isInheritedRolesSet
 
+-- | Only includes the cron triggers with `included_in_metadata` set to `True`
+processCronTriggersMetadata :: Metadata -> Metadata
+processCronTriggersMetadata metadata =
+  let cronTriggersIncludedInMetadata = OMap.filter ctIncludeInMetadata $ _metaCronTriggers metadata
+  in metadata { _metaCronTriggers = cronTriggersIncludedInMetadata }
+
+processMetadata :: HasServerConfigCtx m => Metadata -> m Metadata
+processMetadata metadata =
+  processCronTriggersMetadata <$> processExperimentalFeatures metadata
+
 runExportMetadata
   :: forall m . ( QErrM m, MetadataM m, HasServerConfigCtx m)
   => ExportMetadata -> m EncJSON
 runExportMetadata ExportMetadata{} = do
-  AO.toEncJSON . metadataToOrdJSON <$> (getMetadata >>= processExperimentalFeatures)
+  AO.toEncJSON . metadataToOrdJSON <$> (getMetadata >>= processMetadata)
 
 runExportMetadataV2
   :: forall m . ( QErrM m, MetadataM m, HasServerConfigCtx m)

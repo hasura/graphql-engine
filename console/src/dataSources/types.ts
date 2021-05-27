@@ -212,6 +212,9 @@ export type PermissionColumnCategories = Record<ColumnCategories, string[]>;
 export type SupportedFeaturesType = {
   driver: {
     name: string;
+    fetchVersion?: {
+      enabled: boolean;
+    };
   };
   schemas: {
     create: {
@@ -224,6 +227,8 @@ export type SupportedFeaturesType = {
   tables: {
     create: {
       enabled: boolean;
+      frequentlyUsedColumns?: boolean;
+      columnTypeSelector?: boolean;
     };
     browse: {
       enabled: boolean;
@@ -235,19 +240,34 @@ export type SupportedFeaturesType = {
     };
     modify: {
       enabled: boolean;
+      editableTableName?: boolean;
       readOnly?: boolean;
-      comments?: boolean;
-      columns?: boolean;
-      columns_edit?: boolean;
+      comments?: {
+        view: boolean;
+        edit: boolean;
+      };
+      columns?: {
+        view: boolean;
+        edit: boolean;
+      };
       computedFields?: boolean;
-      primaryKeys?: boolean;
-      primaryKeys_edit?: boolean;
-      foreginKeys?: boolean;
-      foreginKeys_edit?: boolean;
-      uniqueKeys?: boolean;
-      uniqueKeys_edit?: boolean;
+      primaryKeys?: {
+        view: boolean;
+        edit: boolean;
+      };
+      foreignKeys?: {
+        view: boolean;
+        edit: boolean;
+      };
+      uniqueKeys?: {
+        view: boolean;
+        edit: boolean;
+      };
       triggers?: boolean;
-      checkConstraints?: boolean;
+      checkConstraints?: {
+        view: boolean;
+        edit: boolean;
+      };
       customGqlRoot?: boolean;
       setAsEnum?: boolean;
       untrack?: boolean;
@@ -286,6 +306,7 @@ export type SupportedFeaturesType = {
   };
   rawSQL: {
     enabled: boolean;
+    statementTimeout: boolean;
     tracking: boolean;
   };
   connectDbForm: {
@@ -294,6 +315,13 @@ export type SupportedFeaturesType = {
     databaseURL: boolean;
     environmentVariable: boolean;
     read_replicas: boolean;
+    prepared_statements: boolean;
+    isolation_level: boolean;
+    connectionSettings: boolean;
+    retries: boolean;
+    pool_timeout: boolean;
+    connection_lifetime: boolean;
+    ssl_certificates: boolean;
   };
 };
 
@@ -328,3 +356,10 @@ export type generateTableRowRequestType = {
     }
   ) => { rows: T[]; estimatedCount: number };
 };
+
+export type ViolationActions =
+  | 'restrict'
+  | 'no action'
+  | 'cascade'
+  | 'set null'
+  | 'set default';

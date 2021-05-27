@@ -3,7 +3,7 @@ module Hasura.GraphQL.Schema.Introspect where
 import           Hasura.Prelude
 -- import qualified Hasura.RQL.Types
 
-import qualified Data.Aeson                     as J
+import qualified Data.Aeson.Ordered             as J
 import qualified Data.HashMap.Strict            as Map
 import qualified Data.HashMap.Strict.InsOrd     as OMap
 import qualified Data.List.NonEmpty             as NE
@@ -492,17 +492,17 @@ directiveSet =
   let
     name :: FieldParser n (P.DirectiveInfo -> J.Value)
     name = P.selection_ $$(G.litName "name") Nothing P.string $>
-      (J.toJSON . P.diName)
+      (J.toOrdered . P.diName)
     description :: FieldParser n (P.DirectiveInfo -> J.Value)
     description = P.selection_ $$(G.litName "description") Nothing P.string $>
-      (J.toJSON . P.diDescription)
+      (J.toOrdered . P.diDescription)
     locations :: FieldParser n (P.DirectiveInfo -> J.Value)
     locations = P.selection_ $$(G.litName "locations") Nothing P.string $>
-      (J.toJSON . map showDirLoc . P.diLocations)
+      (J.toOrdered . map showDirLoc . P.diLocations)
     args :: FieldParser n (P.DirectiveInfo -> J.Value)
     args = do
       printer <- P.subselection_ $$(G.litName "args") Nothing inputValue
-      pure $ J.toJSON . map printer . P.diArguments
+      pure $ J.array . map printer . P.diArguments
     isRepeatable :: FieldParser n (P.DirectiveInfo -> J.Value)
     isRepeatable = P.selection_ $$(G.litName "isRepeatable") Nothing P.string $>
       const J.Null
@@ -573,7 +573,7 @@ schemaSet fakeSchema =
     directives :: FieldParser n J.Value
     directives = do
       printer <- P.subselection_ $$(G.litName "directives") Nothing directiveSet
-      return $ J.toJSON $ map printer $ sDirectives fakeSchema
+      return $ J.array $ map printer $ sDirectives fakeSchema
   in
     selectionSetToJSON . fmap (P.handleTypename nameAsJSON) <$>
     P.selectionSet
@@ -590,7 +590,7 @@ schemaSet fakeSchema =
 selectionSetToJSON
   :: OMap.InsOrdHashMap G.Name J.Value
   -> J.Value
-selectionSetToJSON = J.Object . OMap.toHashMap . OMap.mapKeys G.unName
+selectionSetToJSON = J.object . map (first G.unName) . OMap.toList
 
 applyPrinter
   :: OMap.InsOrdHashMap G.Name (P.ParsedSelection (a -> J.Value))

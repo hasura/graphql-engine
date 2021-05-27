@@ -57,6 +57,7 @@ import {
   uniqueKeyDescription,
   checkConstraintsDescription,
 } from '../Common/TooltipMessages';
+import { isFeatureSupported } from '../../../../dataSources';
 
 /* AddTable is a wrapper which wraps
  *  1) Table Name input
@@ -517,14 +518,15 @@ class AddTable extends Component {
               onColUniqueChange={this.onColUniqueChange}
               setColDefaultValue={this.setColDefaultValue}
             />
-            <div>
+            {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
               <FrequentlyUsedColumnSelector
                 onSelect={setFreqUsedColumn}
                 action={'add'}
                 dispatch={dispatch}
                 postgresVersion={postgresVersion}
               />
-            </div>
+            ) : null}
+
             <hr />
             <h4 className={styles.subheading_text}>
               Primary Key &nbsp; &nbsp;

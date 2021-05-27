@@ -6,6 +6,7 @@ import {
   Table,
   BaseTableColumn,
   SupportedFeaturesType,
+  ViolationActions,
 } from '../../types';
 import { generateTableRowRequest, operators } from './utils';
 
@@ -59,6 +60,9 @@ const isTable = (table: Table) => {
   return table.table_type === 'TABLE' || table.table_type === 'BASE TABLE';
 };
 
+export const isColTypeString = (colType: string) =>
+  ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
+
 const columnDataTypes = {
   INTEGER: 'integer',
   BIGINT: 'bigint',
@@ -80,6 +84,13 @@ export const displayTableName = (table: Table) => {
   return isTable(table) ? <span>{tableName}</span> : <i>{tableName}</i>;
 };
 
+const violationActions: ViolationActions[] = [
+  'no action',
+  'cascade',
+  'set null',
+  'set default',
+];
+
 export const supportedFeatures: SupportedFeaturesType = {
   driver: {
     name: 'mssql',
@@ -94,7 +105,8 @@ export const supportedFeatures: SupportedFeaturesType = {
   },
   tables: {
     create: {
-      enabled: false,
+      enabled: true,
+      frequentlyUsedColumns: false,
     },
     browse: {
       enabled: true,
@@ -106,22 +118,37 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     modify: {
       enabled: true,
-      columns: true,
       readOnly: true,
-      columns_edit: false,
+      columns: {
+        view: true,
+        edit: false,
+      },
       computedFields: false,
-      primaryKeys: true,
-      primaryKeys_edit: false,
-      foreginKeys: true,
-      foreginKeys_edit: false,
-      uniqueKeys: true,
-      uniqueKeys_edit: false,
+      primaryKeys: {
+        view: true,
+        edit: false,
+      },
+      foreignKeys: {
+        view: true,
+        edit: false,
+      },
+      uniqueKeys: {
+        view: true,
+        edit: false,
+      },
       triggers: false,
-      checkConstraints: false,
+      checkConstraints: {
+        view: true,
+        edit: false,
+      },
       customGqlRoot: false,
       setAsEnum: false,
       untrack: true,
       delete: false,
+      comments: {
+        view: true,
+        edit: false,
+      },
     },
     relationships: {
       enabled: true,
@@ -155,6 +182,7 @@ export const supportedFeatures: SupportedFeaturesType = {
   },
   rawSQL: {
     enabled: true,
+    statementTimeout: false,
     tracking: true,
   },
   connectDbForm: {
@@ -163,6 +191,13 @@ export const supportedFeatures: SupportedFeaturesType = {
     databaseURL: true,
     environmentVariable: true,
     read_replicas: false,
+    prepared_statements: false,
+    isolation_level: false,
+    connectionSettings: true,
+    retries: false,
+    pool_timeout: false,
+    connection_lifetime: false,
+    ssl_certificates: false,
   },
 };
 
@@ -209,10 +244,13 @@ SELECT
   s.name AS schema_name
 FROM
   sys.schemas s
-  INNER JOIN sys.database_principals p ON (s.principal_id = p.principal_id)
 WHERE
-  p.type_desc = 'SQL_USER'
-  AND s.name NOT IN ('guest', 'INFORMATION_SCHEMA', 'sys')
+  s.name NOT IN (
+    'guest', 'INFORMATION_SCHEMA', 'sys',
+    'db_owner', 'db_securityadmin', 'db_accessadmin',
+    'db_backupoperator', 'db_ddladmin', 'db_datawriter',
+    'db_datareader', 'db_denydatawriter', 'db_denydatareader'
+  )
 ORDER BY
   s.name
 `,
@@ -232,7 +270,7 @@ ORDER BY
     }
 
     return `
-    SELECT sch.name as table_schema,
+  SELECT sch.name as table_schema,
     obj.name as table_name,
     case
         when obj.type = 'AF' then 'Aggregate function (CLR)'
@@ -257,10 +295,11 @@ ORDER BY
         when obj.type = 'EC' then 'Edge constraint'
         when obj.type = 'V' then 'VIEW'
     end as table_type,
-    obj.type_desc AS comment,
+    (SELECT e.[value] AS comment for json path),
     JSON_QUERY([isc].json) AS columns
 FROM sys.objects as obj
     INNER JOIN sys.schemas as sch ON obj.schema_id = sch.schema_id
+    LEFT JOIN sys.extended_properties AS e ON major_id = obj.object_id
     OUTER APPLY (
         SELECT
             a.name AS column_name,
@@ -306,11 +345,130 @@ FROM sys.objects as obj
     return '';
   },
   dependencyErrorCode: '',
-  getCreateTableQueries: () => {
-    return [];
+  getCreateTableQueries: (
+    currentSchema: string,
+    tableName: string,
+    columns: any[],
+    primaryKeys: (number | string)[],
+    foreignKeys: any[],
+    uniqueKeys: any[],
+    checkConstraints: any[],
+    tableComment?: string | undefined
+  ) => {
+    const currentCols = columns.filter(c => c.name !== '');
+    const flatUniqueKeys = uniqueKeys.reduce((acc, val) => acc.concat(val), []);
+
+    const pKeys = primaryKeys
+      .filter(p => p !== '')
+      .map(p => currentCols[p as number].name);
+
+    let tableDefSql = '';
+    for (let i = 0; i < currentCols.length; i++) {
+      tableDefSql += `${currentCols[i].name} ${currentCols[i].type}`;
+
+      // check if column is nullable
+      if (!currentCols[i].nullable) {
+        tableDefSql += ' NOT NULL';
+      }
+
+      // check if the column is unique
+      if (uniqueKeys.length && flatUniqueKeys.includes(i)) {
+        tableDefSql += ' UNIQUE';
+      }
+
+      // check if column has a default value
+      if (
+        currentCols[i].default !== undefined &&
+        currentCols[i].default?.value !== ''
+      ) {
+        if (isColTypeString(currentCols[i].type)) {
+          // if a column type is text and if it has a non-func default value, add a single quote
+          tableDefSql += ` DEFAULT '${currentCols[i]?.default?.value}'`;
+        } else {
+          tableDefSql += ` DEFAULT ${currentCols[i]?.default?.value}`;
+        }
+      }
+
+      tableDefSql += i === currentCols.length - 1 ? '' : ', ';
+    }
+
+    // add primary key
+    if (pKeys.length > 0) {
+      tableDefSql += ', PRIMARY KEY (';
+      tableDefSql += pKeys.map(col => `${col}`).join(',');
+      tableDefSql += ') ';
+    }
+
+    const numFks = foreignKeys.length;
+    let fkDupColumn = null;
+    if (numFks > 1) {
+      foreignKeys.forEach((fk, _i) => {
+        if (_i === numFks - 1) {
+          return;
+        }
+
+        const { colMappings, refTableName, onUpdate, onDelete } = fk;
+
+        const mappingObj: Record<string, string> = {};
+        const rCols: string[] = [];
+        const lCols: string[] = [];
+
+        colMappings
+          .slice(0, -1)
+          .forEach((cm: { column: string | number; refColumn: string }) => {
+            if (mappingObj[cm.column] !== undefined) {
+              fkDupColumn = columns[cm.column as number].name;
+            }
+
+            mappingObj[cm.column] = cm.refColumn;
+            lCols.push(`"${columns[cm.column as number].name}"`);
+            rCols.push(`"${cm.refColumn}"`);
+          });
+
+        if (lCols.length === 0) {
+          return;
+        }
+        tableDefSql += `, FOREIGN KEY (${lCols.join(', ')}) REFERENCES "${
+          fk.refSchemaName
+        }"."${refTableName}"(${rCols.join(
+          ', '
+        )}) ON UPDATE ${onUpdate} ON DELETE ${onDelete}`;
+      });
+    }
+
+    if (fkDupColumn) {
+      return {
+        error: `The column "${fkDupColumn}" seems to be referencing multiple foreign columns`,
+      };
+    }
+
+    // add check constraints
+    if (checkConstraints.length > 0) {
+      checkConstraints.forEach(constraint => {
+        if (!constraint.name || !constraint.check) {
+          return;
+        }
+
+        tableDefSql += `, CONSTRAINT "${constraint.name}" CHECK(${constraint.check})`;
+      });
+    }
+
+    let sqlCreateTable = `CREATE TABLE "${currentSchema}"."${tableName}" (${tableDefSql});`;
+
+    // add comment to the table using MS_Description property
+    if (tableComment && tableComment !== '') {
+      const commentSQL = `EXEC sys.sp_addextendedproperty   
+      @name = N'MS_Description',   
+      @value = N'${tableComment}',   
+      @level0type = N'SCHEMA', @level0name = '${currentSchema}',  
+      @level1type = N'TABLE',  @level1name = '${tableName}';`;
+      sqlCreateTable += `${commentSQL}`;
+    }
+
+    return [sqlCreateTable];
   },
-  getDropTableSql: () => {
-    return '';
+  getDropTableSql: (schema: string, table: string) => {
+    return `DROP TABLE "${schema}"."${table}"`;
   },
   createSQLRegex,
   getDropSchemaSql: (schema: string) => {
@@ -423,8 +581,30 @@ FROM sys.objects as obj
     FOR JSON PATH;
     `;
   },
-  checkConstraintsSql: () => {
-    return '';
+  checkConstraintsSql: ({ schemas }) => {
+    let whereClause = '';
+
+    if (schemas) {
+      whereClause = `WHERE schema_name (t.schema_id) in (${schemas
+        .map(s => `'${s}'`)
+        .join(',')})`;
+    }
+    return `
+SELECT
+	con.name AS constraint_name,
+	schema_name (t.schema_id) AS table_schema,
+	t.name AS table_name,
+	col.name AS column_name,
+	con.definition AS check_definition
+FROM
+	sys.check_constraints con
+	LEFT OUTER JOIN sys.objects t ON con.parent_object_id = t.object_id
+	LEFT OUTER JOIN sys.all_columns col ON con.parent_column_id = col.column_id
+		AND con.parent_object_id = col.object_id
+${whereClause}
+ORDER BY con.name
+FOR JSON PATH;
+    `;
   },
   uniqueKeysSql: ({ schemas }) => {
     let whereClause = '';
@@ -533,5 +713,6 @@ WHERE
   supportedColumnOperators,
   aggregationPermissionsAllowed: false,
   supportedFeatures,
+  violationActions,
   defaultRedirectSchema,
 };

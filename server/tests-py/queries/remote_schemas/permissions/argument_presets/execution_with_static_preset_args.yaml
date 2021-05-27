@@ -118,3 +118,23 @@
       __type:
       profilePicture:
         width: 101
+
+- description: "query in which a preset field is within a variable"
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  query:
+    query: |
+      query($i: IncludeInpObj) {
+        messages(includes: $i) {
+          id
+        }
+      }
+    variables:
+      i:
+        name: ["alice"]
+  response:
+    data:
+      messages:
+      - id: 1

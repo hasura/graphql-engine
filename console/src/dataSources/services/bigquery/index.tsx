@@ -6,6 +6,7 @@ import {
   Table,
   BaseTableColumn,
   SupportedFeaturesType,
+  ViolationActions,
 } from '../../types';
 import globals from '../../../Globals';
 import { generateTableRowRequest } from './utils';
@@ -101,17 +102,28 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     modify: {
       enabled: false,
-      columns: false,
-      columns_edit: false,
+      columns: {
+        view: false,
+        edit: false,
+      },
       computedFields: false,
-      primaryKeys: false,
-      primaryKeys_edit: false,
-      foreginKeys: false,
-      foreginKeys_edit: false,
-      uniqueKeys: false,
-      uniqueKeys_edit: false,
+      primaryKeys: {
+        view: false,
+        edit: false,
+      },
+      foreignKeys: {
+        view: false,
+        edit: false,
+      },
+      uniqueKeys: {
+        view: false,
+        edit: false,
+      },
       triggers: false,
-      checkConstraints: false,
+      checkConstraints: {
+        view: false,
+        edit: false,
+      },
       customGqlRoot: false,
       setAsEnum: false,
       untrack: false,
@@ -150,15 +162,31 @@ export const supportedFeatures: SupportedFeaturesType = {
   rawSQL: {
     enabled: true,
     tracking: false,
+    statementTimeout: false,
   },
   connectDbForm: {
     enabled: globals.consoleType !== 'cloud',
-    connectionParameters: false,
-    databaseURL: true,
+    connectionParameters: true,
+    databaseURL: false,
     environmentVariable: true,
     read_replicas: false,
+    prepared_statements: false,
+    isolation_level: false,
+    connectionSettings: false,
+    retries: false,
+    pool_timeout: false,
+    connection_lifetime: false,
+    ssl_certificates: false,
   },
 };
+
+const violationActions: ViolationActions[] = [
+  'restrict',
+  'no action',
+  'cascade',
+  'set null',
+  'set default',
+];
 
 export const bigquery: DataSourcesAPI = {
   isTable,
@@ -192,12 +220,8 @@ export const bigquery: DataSourcesAPI = {
   arrayToPostgresArray: () => {
     return '';
   },
-  schemaListSql: (schemaFilter: string[]) => {
-    if (schemaFilter.length)
-      return `select schema_name from INFORMATION_SCHEMA.SCHEMATA where schema_name in (${schemaFilter
-        .map(s => `'${s}'`)
-        .join(',')})`;
-    return `select schema_name from INFORMATION_SCHEMA.SCHEMATA`;
+  schemaListSql: () => {
+    return '';
   },
   parseColumnsInfoResult: () => {
     return {};
@@ -385,9 +409,11 @@ export const bigquery: DataSourcesAPI = {
     return query;
   },
   supportedFeatures,
-  getDatabaseVersionSql: 'SELECT @@VERSION;',
+  // getDatabaseVersionSql: 'SELECT @@VERSION;',
+  getDatabaseVersionSql: '', // TODO fixme;
   permissionColumnDataTypes,
   viewsSupported: false,
   supportedColumnOperators,
   aggregationPermissionsAllowed: false,
+  violationActions,
 };

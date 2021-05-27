@@ -311,9 +311,10 @@ def evts_webhook(request):
 
 @pytest.fixture(scope='module')
 def actions_fixture(hge_ctx):
-    pg_version = hge_ctx.pg_version
-    if pg_version < 100000: # version less than 10.0
-        pytest.skip('Actions are not supported on Postgres version < 10')
+    if hge_ctx.is_default_backend:
+        pg_version = hge_ctx.pg_version
+        if pg_version < 100000: # version less than 10.0
+            pytest.skip('Actions are not supported on Postgres version < 10')
 
     # Start actions' webhook server
     webhook_httpd = ActionsWebhookServer(hge_ctx, server_address=('127.0.0.1', 5593))
@@ -433,6 +434,11 @@ def per_method_db_data_for_mutation_tests(request, hge_ctx, per_class_db_schema_
     )
 
 @pytest.fixture(scope='function')
+def backend():
+    "This fixture provides a default `backend` value for the `per_backend_tests` fixture"
+    return 'postgres'
+
+@pytest.fixture(scope='function', autouse=True)
 def per_backend_tests(hge_ctx, backend):
     """
     This fixture ignores backend-specific tests unless the relevant --backend flag has been passed.
@@ -454,15 +460,19 @@ def db_state_context(request, hge_ctx):
         for filename in ['setup', 'teardown', 'schema_setup', 'schema_teardown']
     ]
 
-    if hge_ctx.backend == 'postgres':
+    # only lookup files relevant to the tests being run.
+    # defaults to postgres file lookup
+    check_file_exists = hge_ctx.backend == backend
+
+    if hge_ctx.is_default_backend:
         db_context = db_context_with_schema_common(
             request, hge_ctx, 'setup_files', 'setup.yaml', 'teardown_files',
-            'teardown.yaml', True
+            'teardown.yaml', check_file_exists
         )
     else:
         db_context = db_context_with_schema_common_new (
             request, hge_ctx, 'setup_files', setup, 'teardown_files',
-            teardown, schema_setup, schema_teardown, True
+            teardown, schema_setup, schema_teardown, check_file_exists
         )
     yield from db_context
 

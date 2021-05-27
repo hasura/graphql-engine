@@ -20,7 +20,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
-	yaml "github.com/ghodss/yaml"
+	"github.com/goccy/go-yaml"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/parnurzeal/gorequest"
 	log "github.com/sirupsen/logrus"
@@ -402,7 +402,6 @@ func (h *HasuraDB) Drop() error {
 
 func (h *HasuraDB) sendSchemaDumpQuery(m interface{}) (resp *http.Response, body []byte, err error) {
 	request := h.config.Req.Clone()
-
 	request = request.Post(h.config.pgDumpURL.String()).Send(m)
 
 	for headerName, headerValue := range h.config.Headers {

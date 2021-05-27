@@ -78,6 +78,23 @@ args:
         is_published BOOLEAN,
         published_on TIMESTAMP
       );
+      create table author_multi(
+          id1 serial,
+          id2 serial,
+          name text unique,
+          "createdAt" timestamp,
+          PRIMARY KEY (id1, id2)
+      );
+      CREATE TABLE article_multi (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        author_id1 INTEGER,
+        author_id2 INTEGER,
+        is_published BOOLEAN,
+        published_on TIMESTAMP,
+        FOREIGN KEY (author_id1, author_id2) REFERENCES author_multi(id1, id2)
+      );
       insert into test_types
       ( c1_smallint
       , c2_integer
@@ -192,6 +209,34 @@ args:
         2,
         true
       );
+      insert into author_multi (name, "createdAt")
+      values
+      ('Author 1', '2017-09-21T09:39:44'),
+      ('Author 2', '2017-09-21T09:50:44');
+      insert into article_multi (title,content,author_id1, author_id2,is_published)
+      values
+      (
+        'Article 1',
+        'Sample article content 1',
+        1,
+        1,
+        false
+      ),
+      (
+        'Article 2',
+        'Sample article content 2',
+        1,
+        1,
+        true
+      ),
+      (
+        'Article 3',
+        'Sample article content 3',
+        2,
+        2,
+        true
+      );
+
       CREATE TABLE "user" (
         id BIGSERIAL PRIMARY KEY,
         name TEXT NOT NULL,
@@ -221,8 +266,6 @@ args:
     schema: public
     name: article
 
-
-
 #Object relationship
 - type: create_object_relationship
   args:
@@ -239,7 +282,39 @@ args:
     using:
       foreign_key_constraint_on:
         table: article
-        column: author_id
+        columns: author_id
+
+#Author table
+- type: track_table
+  args:
+    schema: public
+    name: author_multi
+
+#Article table
+- type: track_table
+  args:
+    schema: public
+    name: article_multi
+
+
+
+#Object relationship
+- type: create_object_relationship
+  args:
+    table: article_multi
+    name: author
+    using:
+      foreign_key_constraint_on: ["author_id1", "author_id2"]
+
+#Array relationship
+- type: create_array_relationship
+  args:
+    table: author_multi
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article_multi
+        columns: ["author_id1", "author_id2"]
 
 #Insert values
 - type: track_table

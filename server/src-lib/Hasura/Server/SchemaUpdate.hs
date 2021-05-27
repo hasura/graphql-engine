@@ -139,7 +139,8 @@ startSchemaSyncListenerThread
   -> ManagedT m (Immortal.Thread)
 startSchemaSyncListenerThread logger pool instanceId interval metaVersionRef = do
   -- Start listener thread
-  listenerThread <- C.forkManagedT "SchemeUpdate.listener" logger $ listener logger pool metaVersionRef interval
+  listenerThread <- C.forkManagedT "SchemeUpdate.listener" logger $
+    listener logger pool metaVersionRef interval
   logThreadStarted logger instanceId TTListener listenerThread
   pure listenerThread
 
@@ -161,8 +162,7 @@ startSchemaSyncProcessorThread logger httpMgr
   schemaSyncEventRef cacheRef instanceId serverConfigCtx = do
   -- Start processor thread
   processorThread <- C.forkManagedT "SchemeUpdate.processor" logger $
-    processor logger httpMgr schemaSyncEventRef
-              cacheRef instanceId serverConfigCtx
+    processor logger httpMgr schemaSyncEventRef cacheRef instanceId serverConfigCtx
   logThreadStarted logger instanceId TTProcessor processorThread
   pure processorThread
 

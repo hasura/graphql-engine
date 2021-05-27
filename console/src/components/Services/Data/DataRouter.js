@@ -32,6 +32,7 @@ import ConnectedDataSourceContainer from './DataSourceContainer';
 import ConnectDatabase from './DataSources/ConnectDatabase';
 import { setDriver } from '../../../dataSources';
 import { UPDATE_CURRENT_DATA_SOURCE } from './DataActions';
+import { getSourcesFromMetadata } from '../../../metadata/selector';
 
 const makeDataRouter = (
   connect,
@@ -138,7 +139,7 @@ const makeDataRouter = (
 const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
   const requireSource = (nextState, replaceState, cb) => {
     store.dispatch(exportMetadata()).then(state => {
-      const sources = state?.metadata?.metadataObject?.sources || [];
+      const sources = getSourcesFromMetadata(state) || [];
       const currentSource = state?.tables?.currentDataSource || '';
 
       if (currentSource) {

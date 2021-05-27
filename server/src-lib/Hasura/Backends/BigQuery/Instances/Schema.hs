@@ -327,28 +327,32 @@ msTableDistinctOn
   -- :: forall m n. (BackendSchema 'BigQuery, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   :: Applicative m
   => Applicative n
-  => TableName 'BigQuery
+  => SourceName
+  -> TableInfo 'BigQuery
   -> SelPermInfo 'BigQuery
   -> m (InputFieldsParser n (Maybe (XDistinct 'BigQuery, NonEmpty (Column 'BigQuery))))
-msTableDistinctOn _table _selectPermissions = pure (pure Nothing)
+msTableDistinctOn _sourceName _tableInfo _selectPermissions = pure (pure Nothing)
 
 -- | Various update operators
 msUpdateOperators
   -- :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   :: Applicative m
-  => TableName 'BigQuery         -- ^ qualified name of the table
+  => TableInfo 'BigQuery         -- ^ qualified name of the table
   -> UpdPermInfo 'BigQuery       -- ^ update permissions of the table
   -> m (Maybe (InputFieldsParser n [(Column 'BigQuery, IR.UpdOpExpG (UnpreparedValue 'BigQuery))]))
-msUpdateOperators _table _updatePermissions = pure Nothing
+msUpdateOperators _tableInfo _updatePermissions = pure Nothing
 
 -- | Computed field parser.
 -- Currently unsupported: returns Nothing for now.
 msComputedField
   :: MonadBuildSchema 'BigQuery r m n
-  => ComputedFieldInfo 'BigQuery
+  => SourceName
+  -> ComputedFieldInfo 'BigQuery
+  -> TableName 'BigQuery
   -> SelPermInfo 'BigQuery
   -> m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
-msComputedField _fieldInfo _selectPemissions = pure Nothing
+msComputedField _sourceName _fieldInfo _table _selectPemissions = pure Nothing
+
 
 -- | Remote join field parser.
 -- Currently unsupported: returns Nothing for now.

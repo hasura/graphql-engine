@@ -1,7 +1,9 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hasura.Backends.Postgres.Instances.Schema () where
+module Hasura.Backends.Postgres.Instances.Schema
+  (
+  ) where
 
 import           Hasura.Prelude
 
@@ -99,10 +101,19 @@ instance PostgresSchema 'Vanilla where
   pgkRelayExtension = const $ Just ()
   pgkNode = nodePG
 
+instance PostgresSchema 'Citus where
+  pgkBuildTableRelayQueryFields     _ _ _ _ _ _ _ = pure Nothing
+  pgkBuildFunctionRelayQueryFields  _ _ _ _ _ _ _ = pure Nothing
+  pgkRelayExtension = const Nothing
+  pgkNode = undefined
+
+
+-- postgres schema
 
 instance
   ( HasTag   ('Postgres pgKind)
   , Typeable ('Postgres pgKind)
+  , Backend  ('Postgres pgKind)
   , PostgresSchema pgKind
   ) => BackendSchema ('Postgres pgKind) where
   -- top level parsers
@@ -156,7 +167,7 @@ buildTableRelayQueryFields sourceName sourceInfo tableName tableInfo gqlName pke
              . QDBR
     fieldName = gqlName <> $$(G.litName "_connection")
     fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
-  optionalFieldParser (mkRF . QDBConnection) $ selectTableConnection tableName fieldName fieldDesc pkeyColumns selPerms
+  optionalFieldParser (mkRF . QDBConnection) $ selectTableConnection sourceName tableInfo fieldName fieldDesc pkeyColumns selPerms
 
 buildFunctionRelayQueryFields
   :: forall pgKind m n r
@@ -178,7 +189,7 @@ buildFunctionRelayQueryFields sourceName sourceInfo functionName functionInfo ta
              . QDBR
     fieldName = funcName <> $$(G.litName "_connection")
     fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
-  optionalFieldParser (mkRF . QDBConnection) $ selectFunctionConnection functionInfo fieldName fieldDesc pkeyColumns selPerms
+  optionalFieldParser (mkRF . QDBConnection) $ selectFunctionConnection sourceName functionInfo fieldName fieldDesc pkeyColumns selPerms
 
 
 ----------------------------------------------------------------
@@ -576,11 +587,12 @@ mkCountType _           (Just cols) = PG.CTSimple cols
 tableDistinctOn
   :: forall pgKind m n r
    . (BackendSchema ('Postgres pgKind), MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => TableName ('Postgres pgKind)
+  => SourceName
+  -> TableInfo ('Postgres pgKind)
   -> SelPermInfo ('Postgres pgKind)
   -> m (InputFieldsParser n (Maybe (XDistinct ('Postgres pgKind), NonEmpty (Column ('Postgres pgKind)))))
-tableDistinctOn table selectPermissions = do
-  columnsEnum   <- tableSelectColumnsEnum table selectPermissions
+tableDistinctOn sourceName tableInfo selectPermissions = do
+  columnsEnum   <- tableSelectColumnsEnum sourceName tableInfo selectPermissions
   pure $ do
     maybeDistinctOnColumns <- join.join <$> for columnsEnum
       (P.fieldOptional distinctOnName distinctOnDesc . P.nullable . P.list)
@@ -593,24 +605,24 @@ tableDistinctOn table selectPermissions = do
 updateOperators
   :: forall pgKind m n r
    . (BackendSchema ('Postgres pgKind), MonadSchema n m, MonadTableInfo r m)
-  => QualifiedTable                  -- ^ qualified name of the table
+  => TableInfo ('Postgres pgKind)    -- ^ table info
   -> UpdPermInfo ('Postgres pgKind)  -- ^ update permissions of the table
   -> m (Maybe (InputFieldsParser n [(Column ('Postgres pgKind), IR.UpdOpExpG (UnpreparedValue ('Postgres pgKind)))]))
-updateOperators table updatePermissions = do
-  tableGQLName <- getTableGQLName @('Postgres pgKind) table
-  columns      <- tableUpdateColumns table updatePermissions
+updateOperators tableInfo updatePermissions = do
+  tableGQLName <- getTableGQLName tableInfo
+  columns      <- tableUpdateColumns tableInfo updatePermissions
   let numericCols = onlyNumCols   columns
       jsonCols    = onlyJSONBCols columns
   parsers <- catMaybes <$> sequenceA
     [ updateOperator tableGQLName $$(G.litName "_set")
         typedParser IR.UpdSet columns
         "sets the columns of the filtered rows to the given values"
-        (G.Description $ "input type for updating data in table " <>> table)
+        (G.Description $ "input type for updating data in table " <>> tableName)
 
     , updateOperator tableGQLName $$(G.litName "_inc")
         typedParser IR.UpdInc numericCols
         "increments the numeric columns with given value of the filtered values"
-        (G.Description $"input type for incrementing numeric columns in table " <>> table)
+        (G.Description $"input type for incrementing numeric columns in table " <>> tableName)
 
     , let desc = "prepend existing jsonb value of filtered columns with new jsonb value"
       in updateOperator tableGQLName $$(G.litName "_prepend")
@@ -653,6 +665,7 @@ updateOperators table updatePermissions = do
 
         pure $ presetColumns <> flattenedExps
   where
+    tableName = tableInfoName tableInfo
     typedParser columnInfo  = fmap P.mkParameter <$> columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
     nonNullableTextParser _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGText)    (G.Nullability False)
     nullableTextParser    _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGText)    (G.Nullability True)

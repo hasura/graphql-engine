@@ -85,7 +85,7 @@ func (o *MetadataObject) Export(metadata yaml.MapSlice) (map[string][]byte, erro
 		return nil, err
 	}
 	return map[string][]byte{
-		filepath.Join(o.MetadataDir, MetadataFilename): data,
+		filepath.ToSlash(filepath.Join(o.MetadataDir, MetadataFilename)): data,
 	}, nil
 }
 

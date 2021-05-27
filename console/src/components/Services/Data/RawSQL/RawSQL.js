@@ -10,7 +10,7 @@ import Tooltip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import Alert from '../../../Common/Alert';
 import StatementTimeout from './StatementTimeout';
-import { parseCreateSQL } from './utils';
+import { parseCreateSQL, removeCommentsSQL } from './utils';
 import styles from '../../../Common/TableCommon/Table.scss';
 import {
   executeSQL,
@@ -33,7 +33,6 @@ import { getSourceDriver } from '../utils';
 import { getDataSources } from '../../../../metadata/selector';
 import { services } from '../../../../dataSources/services';
 import { isFeatureSupported } from '../../../../dataSources';
-
 /**
  * # RawSQL React FC
  * ## renders raw SQL page on route `/data/sql`
@@ -86,7 +85,8 @@ const RawSQL = ({
   useEffect(() => {
     const driver = getSourceDriver(sources, selectedDatabase);
     setSelectedDriver(driver);
-    if (driver !== 'postgres') setStatementTimeout(null);
+    if (isFeatureSupported('rawSQL.statementTimeout'))
+      setStatementTimeout(null);
   }, [selectedDatabase, sources]);
 
   const dropDownSelectorValueChange = value => {
@@ -178,18 +178,19 @@ const RawSQL = ({
 
   const getSQLSection = () => {
     const handleSQLChange = val => {
+      const cleanSql = removeCommentsSQL(val);
       onChangeSQLText(val);
       dispatch({ type: SET_SQL, data: val });
 
       // set migration checkbox true
-      if (services[selectedDriver].checkSchemaModification(val)) {
+      if (services[selectedDriver].checkSchemaModification(cleanSql)) {
         dispatch({ type: SET_MIGRATION_CHECKED, data: true });
       } else {
         dispatch({ type: SET_MIGRATION_CHECKED, data: false });
       }
 
       // set track this checkbox true
-      const objects = parseCreateSQL(val, selectedDriver);
+      const objects = parseCreateSQL(cleanSql, selectedDriver);
       if (objects.length) {
         let allObjectsTrackable = true;
 
@@ -482,7 +483,7 @@ const RawSQL = ({
           {getMetadataCascadeSection()}
           {getMigrationSection()}
 
-          {selectedDriver === 'postgres' && (
+          {isFeatureSupported('rawSQL.statementTimeout') && (
             <StatementTimeout
               statementTimeout={statementTimeout}
               isMigrationChecked={

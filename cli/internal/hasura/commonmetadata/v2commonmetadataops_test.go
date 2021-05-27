@@ -86,8 +86,9 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
                 "schema": "default",
                 "name": "test"
             },
-            "reason": "no such table/view exists in source: \"default.test\"",
-            "type": "table"
+	        "name":"table default.test in source default",
+	        "reason":"Inconsistent object: no such table/view exists in source: \"default.test\"",
+	        "type":"table"
         }
     ]
 }`

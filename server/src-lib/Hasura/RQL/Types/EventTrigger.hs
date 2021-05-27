@@ -85,7 +85,10 @@ instance ToJSON SubscribeColumns where
 data SubscribeOpSpec
   = SubscribeOpSpec
   { sosColumns :: !SubscribeColumns
+  -- ^ Columns of the table that user can subscribe to listen for changes.
   , sosPayload :: !(Maybe SubscribeColumns)
+  -- ^ Columns that the event trigger payload should consists. If set, only those columns will be
+  -- visible in the payload. By default, the payload consists of all the columns of the table.
   } deriving (Show, Eq, Generic)
 instance NFData SubscribeOpSpec
 instance Cacheable SubscribeOpSpec

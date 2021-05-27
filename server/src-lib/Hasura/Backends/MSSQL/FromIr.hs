@@ -264,8 +264,8 @@ fromSelectArgsG selectArgsG = do
 -- needed on the side.
 fromAnnOrderByItemG ::
      IR.AnnOrderByItemG 'MSSQL Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
-fromAnnOrderByItemG IR.OrderByItemG {obiType, obiColumn, obiNulls} = do
-  orderByFieldName <- unfurlAnnOrderByElement obiColumn
+fromAnnOrderByItemG IR.OrderByItemG {obiType, obiColumn = obiColumn, obiNulls} = do
+  (orderByFieldName, orderByType) <- unfurlAnnOrderByElement obiColumn
   let orderByNullsOrder = fromMaybe NullsAnyOrder obiNulls
       orderByOrder      = fromMaybe AscOrder obiType
   pure OrderBy {..}
@@ -273,12 +273,20 @@ fromAnnOrderByItemG IR.OrderByItemG {obiType, obiColumn, obiNulls} = do
 -- | Unfurl the nested set of object relations (tell'd in the writer)
 -- that are terminated by field name (IR.AOCColumn and
 -- IR.AOCArrayAggregation).
-unfurlAnnOrderByElement ::
-     IR.AnnOrderByElement 'MSSQL Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
+unfurlAnnOrderByElement
+   :: IR.AnnOrderByElement 'MSSQL Expression
+   -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) (FieldName, Maybe TSQL.ScalarType)
 unfurlAnnOrderByElement =
   \case
-    IR.AOCColumn pgColumnInfo ->
-      lift (fromPGColumnInfo pgColumnInfo)
+    IR.AOCColumn pgColumnInfo -> do
+      fieldName <- lift (fromPGColumnInfo pgColumnInfo)
+      pure
+        ( fieldName
+        , case (IR.pgiType pgColumnInfo) of
+            IR.ColumnScalar t -> Just t
+            -- Above: It is of interest to us whether the type is
+            -- text/ntext/image. See ToQuery for more explanation.
+            _                 -> Nothing)
     IR.AOCObjectRelation IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
       selectFrom <- lift (lift (fromQualifiedTable table))
       joinAliasEntity <-
@@ -320,11 +328,11 @@ unfurlAnnOrderByElement =
       local
         (const (EntityAlias joinAliasEntity))
         (unfurlAnnOrderByElement annOrderByElementG)
-    IR.AOCArrayAggregation IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annAggregateOrderBy -> do
-      selectFrom <- lift (lift (fromQualifiedTable table))
+    IR.AOCArrayAggregation IR.RelInfo {riMapping = mapping, riRTable = tableName} annBoolExp annAggregateOrderBy -> do
+      selectFrom <- lift (lift (fromQualifiedTable tableName))
       let alias = aggFieldName
       joinAliasEntity <-
-        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText table))))
+        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText tableName))))
       foreignKeyConditions <- lift (fromMapping selectFrom mapping)
       whereExpression <-
         lift (local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp))
@@ -367,7 +375,9 @@ unfurlAnnOrderByElement =
                     }
               , unfurledObjectTableAlias = Nothing
               }))
-      pure FieldName {fieldNameEntity = joinAliasEntity, fieldName = alias}
+      pure
+        ( FieldName {fieldNameEntity = joinAliasEntity, fieldName = alias}
+        , Nothing)
 
 
 --------------------------------------------------------------------------------
@@ -412,7 +422,7 @@ fromAnnBoolExpFld ::
 fromAnnBoolExpFld =
   \case
     IR.AVCol pgColumnInfo opExpGs -> do
-      expression <- fmap ColumnExpression (fromPGColumnInfo pgColumnInfo)
+      expression <- fromColumnInfoForBoolExp pgColumnInfo
       expressions <- traverse (lift . fromOpExpG expression) opExpGs
       pure (AndExpression expressions)
     IR.AVRel IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
@@ -438,6 +448,24 @@ fromAnnBoolExpFld =
              , selectFor = NoFor
              , selectOffset = Nothing
              })
+
+-- | For boolean operators, various comparison operators used need
+-- special handling to ensure that SQL Server won't outright reject
+-- the comparison. See also 'shouldCastToVarcharMax'.
+fromColumnInfoForBoolExp :: IR.ColumnInfo 'MSSQL -> ReaderT EntityAlias FromIr Expression
+fromColumnInfoForBoolExp IR.ColumnInfo {pgiColumn = pgCol, pgiType} = do
+  fieldName <- columnNameToFieldName pgCol <$> ask
+  if shouldCastToVarcharMax pgiType -- See function commentary.
+     then pure (CastExpression (ColumnExpression fieldName) "VARCHAR(MAX)")
+     else pure (ColumnExpression fieldName)
+
+-- | There's a problem of comparing text fields with =, <, etc. that
+-- SQL Server completely refuses to do so. So one way to workaround
+-- this restriction is to automatically cast such text fields to
+-- varchar(max).
+shouldCastToVarcharMax :: IR.ColumnType 'MSSQL -> Bool
+shouldCastToVarcharMax typ =
+  typ == IR.ColumnScalar TextType || typ == IR.ColumnScalar WtextType
 
 fromPGColumnInfo :: IR.ColumnInfo 'MSSQL -> ReaderT EntityAlias FromIr FieldName
 fromPGColumnInfo IR.ColumnInfo {pgiColumn = pgCol} =
@@ -794,7 +822,7 @@ fromMapping localFrom =
        localFieldName <- local (const (fromAlias localFrom)) (fromPGCol localPgCol)
        remoteFieldName <- fromPGCol remotePgCol
        pure
-         (EqualExpression
+         (OpExpression TSQL.EQ'
             (ColumnExpression localFieldName)
             (ColumnExpression remoteFieldName))) .
   HM.toList
@@ -809,9 +837,9 @@ fromOpExpG expression op =
     IR.ANISNULL      -> pure $ TSQL.IsNullExpression    expression
     IR.ANISNOTNULL   -> pure $ TSQL.IsNotNullExpression expression
     IR.AEQ False val -> pure $ nullableBoolEquality    expression val
-    IR.AEQ True  val -> pure $ TSQL.EqualExpression    expression val
+    IR.AEQ True  val -> pure $ OpExpression TSQL.EQ'   expression val
     IR.ANE False val -> pure $ nullableBoolInequality  expression val
-    IR.ANE True  val -> pure $ TSQL.NotEqualExpression expression val
+    IR.ANE True  val -> pure $ OpExpression TSQL.NEQ'  expression val
     IR.AGT       val -> pure $ OpExpression TSQL.GT    expression val
     IR.ALT       val -> pure $ OpExpression TSQL.LT    expression val
     IR.AGTE      val -> pure $ OpExpression TSQL.GTE   expression val
@@ -844,14 +872,14 @@ fromOpExpG expression op =
 nullableBoolEquality :: Expression -> Expression -> Expression
 nullableBoolEquality x y =
   OrExpression
-    [ EqualExpression x y
+    [ OpExpression TSQL.EQ' x y
     , AndExpression [IsNullExpression x, IsNullExpression y]
     ]
 
 nullableBoolInequality :: Expression -> Expression -> Expression
 nullableBoolInequality x y =
   OrExpression
-    [ NotEqualExpression x y
+    [ OpExpression TSQL.NEQ' x y
     , AndExpression [IsNotNullExpression x, IsNullExpression y]
     ]
 

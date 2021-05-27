@@ -16,7 +16,6 @@ import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Data.Text.Extended
 
-import           Hasura.GraphQL.Schema.Remote
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common

@@ -6,6 +6,7 @@ import { ReduxState } from '../../../types';
 import TableHeader from './TableCommon/TableHeader';
 import { RightContainer } from '../../Common/Layout/RightContainer';
 import RawSqlButton from './Common/Components/RawSqlButton';
+import { driverToLabel } from '../../../dataSources';
 
 type OwnProps = {
   tableName: string;
@@ -54,11 +55,11 @@ function FeatureDisabled({
       >
         <p style={{ marginBottom: '5px' }}>
           <i className="fa fa-flask" aria-hidden="true" />{' '}
-          <b>Coming soon for MSSQL</b>
+          <b>Coming soon for {driverToLabel.mssql}</b>
         </p>
         <p style={{ marginBottom: '5px' }}>
-          This feature is currently unavailable for MSSQL, but we are actively
-          working on making it available for the Console.
+          This feature is currently unavailable for {driverToLabel.mssql}, but
+          we are actively working on making it available for the Console.
         </p>
         <p style={{ marginBottom: '5px' }}>
           For all row and column based operations our SQL runner is available.

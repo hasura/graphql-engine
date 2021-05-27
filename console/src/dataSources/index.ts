@@ -13,6 +13,7 @@ import {
   SupportedFeaturesType,
   generateTableRowRequestType,
   BaseTableColumn,
+  ViolationActions,
 } from './types';
 import { PGFunction, FunctionState } from './services/postgresql/types';
 import { Operations } from './common';
@@ -24,6 +25,13 @@ import { supportedFeatures as BigQuerySupportedFeatures } from './services/bigqu
 
 export const drivers = ['postgres', 'mysql', 'mssql', 'bigquery'] as const;
 export type Driver = typeof drivers[number];
+
+export const driverToLabel: Record<Driver, string> = {
+  mysql: 'MySQL',
+  postgres: 'PostgreSQL',
+  mssql: 'MS SQL Server',
+  bigquery: 'BigQuery',
+};
 
 export type ColumnsInfoResult = {
   [tableName: string]: {
@@ -314,6 +322,7 @@ export interface DataSourcesAPI {
   supportedColumnOperators: string[] | null;
   aggregationPermissionsAllowed: boolean;
   supportedFeatures?: SupportedFeaturesType;
+  violationActions: ViolationActions[];
   defaultRedirectSchema?: string;
   getPartitionDetailsSql?: (tableName: string, tableSchema: string) => string;
 }

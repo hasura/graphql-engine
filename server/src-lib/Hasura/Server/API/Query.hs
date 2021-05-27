@@ -4,20 +4,21 @@ module Hasura.Server.API.Query where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                   as Env
-import qualified Data.HashMap.Strict                as HM
-import qualified Database.PG.Query                  as Q
-import qualified Network.HTTP.Client                as HTTP
+import qualified Data.Environment                    as Env
+import qualified Data.HashMap.Strict                 as HM
+import qualified Database.PG.Query                   as Q
+import qualified Network.HTTP.Client                 as HTTP
 
-import           Control.Monad.Trans.Control        (MonadBaseControl)
+import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Network.HTTP.Client.Extended
 
-import qualified Hasura.Tracing                     as Tracing
+import qualified Hasura.Tracing                      as Tracing
 
+import           Hasura.Backends.Postgres.DDL.RunSQL
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
@@ -45,7 +46,7 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Types
 import           Hasura.Server.Utils
-import           Hasura.Server.Version              (HasVersion)
+import           Hasura.Server.Version               (HasVersion)
 import           Hasura.Session
 
 
@@ -451,7 +452,7 @@ runQueryM env rq = withPathK "args" $ case rq of
 
       RQDumpInternalState q           -> runDumpInternalState q
 
-      RQRunSql q                      -> runRunSQL q
+      RQRunSql q                      -> runRunSQL @'Vanilla q
 
       RQSetCustomTypes q              -> runSetCustomTypes q
 

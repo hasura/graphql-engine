@@ -7,17 +7,13 @@ own machine and how to contribute.
 
 - [GHC](https://www.haskell.org/ghc/) 8.10.2 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
   - There are various ways these can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
+- There are few system packages required like `libpq-dev`, `libssl-dev`, etc. The best place to get the entire list is from the packager [Dockerfile](https://github.com/hasura/graphql-engine/blob/master/.circleci/server-builder.dockerfile)
+
+For building console and running test suite:
+
 - [Node.js](https://nodejs.org/en/) (>= v8.9)
 - npm >= 5.7
-- [gsutil](https://cloud.google.com/storage/docs/gsutil)
-- libpq-dev
-- libkrb5-dev
-- openssl and libssl-dev
 - python >= 3.5 with pip3 and virtualenv
-
-The last few prerequisites can be installed on Debian or Ubuntu with:
-
-    $ sudo apt install libpq-dev libkrb5-dev python3 python3-pip python3-venv openssl libssl-dev
 
 Additionally, you will need a way to run a Postgres database server. The `dev.sh` script (described below) can set up a Postgres instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
 
@@ -101,7 +97,7 @@ Optionally, launch a new container for alternative (MSSQL) backend with:
 
 Tests can be run against a specific backend (defaulting to Postgres) with the `backend` flag, for example:
 
-    $ scripts/dev.sh test --integration -k TestGraphQLQueryBasicCommon --backend mssql
+    $ scripts/dev.sh test --integration -k TestGraphQLQueryBasicCommon --backend (bigquery|citus|mssql|postgres)
 
 ### Run and test manually
 
@@ -264,7 +260,7 @@ The current workflow for supporting a new backend in integration tests is as fol
     2. `schema_setup_<backend>`: for `v2/query` queries such as `<backend>_run_sql`. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-b34081ef8e1c34492fcf0cf72a8c1d64bcb66944f2ab2efb9ac0812cd7a003c7).
     3. `teardown_<backend>` and `cleardb_<backend>`
     4. important: filename suffixes should be the same as the value that’s being passed to `—backend`; that's how the files are looked up.
-4. Write test using [the `per_backend_tests` fixture](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-1034b560ce9984643a4aa4edab1d612aa512f1c3c28bbc93364700620681c962R420), parameterised by backend. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-40b7c6ad5362e70cafd29a3ac5d0a5387bd75befad92532ea4aaba99421ba3c8R12-R13).
+4. Specify a `backend` parameter for [the `per_backend_tests` fixture](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-1034b560ce9984643a4aa4edab1d612aa512f1c3c28bbc93364700620681c962R420), parameterised by backend. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-40b7c6ad5362e70cafd29a3ac5d0a5387bd75befad92532ea4aaba99421ba3c8R12-R13).
 5. Optional: Run the existing (Postgres) test suite against the new backend to identify and group common and backend-specific tests into their own classes.
 
 Tests against alternative backends aren't yet run/supported in CI, so please test locally.

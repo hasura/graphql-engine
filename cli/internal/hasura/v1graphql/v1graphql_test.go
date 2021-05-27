@@ -73,7 +73,7 @@ func TestClient_GetIntrospectionSchema(t *testing.T) {
 				require.NoError(t, err)
 				gotb, err := json.MarshalIndent(got, "", "  ")
 				require.NoError(t, err)
-				require.Equal(t, string(wantb), string(gotb))
+				require.JSONEq(t, string(wantb), string(gotb))
 			}
 		})
 	}

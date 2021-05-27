@@ -263,8 +263,8 @@ func Test_copyState(t *testing.T) {
 			dstMigrations := migrations.NewCatalogStateStore(statestore.NewCLICatalogState(tt.args.ec.APIClient.V1Metadata))
 			assert.NoError(t, srcSettings.UpdateSetting("test", "test"))
 			assert.NoError(t, srcMigrations.SetVersion("", 123, false))
-			if err := copyState(tt.args.ec, tt.args.destdatabase); (err != nil) != tt.wantErr {
-				t.Fatalf("copyState() error = %v, wantErr %v", err, tt.wantErr)
+			if err := CopyState(tt.args.ec, tt.args.destdatabase); (err != nil) != tt.wantErr {
+				t.Fatalf("CopyState() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			v, err := dstSettings.GetSetting("test")
 			assert.NoError(t, err)

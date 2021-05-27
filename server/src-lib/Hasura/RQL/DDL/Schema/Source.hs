@@ -24,7 +24,7 @@ import           Hasura.RQL.Types
 mkPgSourceResolver :: Q.PGLogger -> SourceResolver
 mkPgSourceResolver pgLogger _ config = runExceptT do
   env <- lift Env.getEnvironment
-  let PostgresSourceConnInfo urlConf poolSettings allowPrepare isoLevel = _pccConnectionInfo config
+  let PostgresSourceConnInfo urlConf poolSettings allowPrepare isoLevel _ = _pccConnectionInfo config
   -- If the user does not provide values for the pool settings, then use the default values
   let (maxConns, idleTimeout, retries) = getDefaultPGPoolSettingIfNotExists poolSettings defaultPostgresPoolSettings
   urlText <- resolveUrlConf env urlConf
@@ -37,7 +37,7 @@ mkPgSourceResolver pgLogger _ config = runExceptT do
                                       }
   pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
   let pgExecCtx = mkPGExecCtx isoLevel pgPool
-  pure $ PGSourceConfig pgExecCtx connInfo Nothing
+  pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty
 
 --- Metadata APIs related
 runAddSource
@@ -56,6 +56,45 @@ runAddSource (AddSource name sourceConfig replaceConfiguration) = do
 
   buildSchemaCacheFor (MOSource name) metadataModifier
   pure successMsg
+
+runRenameSource
+  :: forall m
+   . (MonadError QErr m, CacheRWM m, MetadataM m)
+  => RenameSource
+  -> m EncJSON
+runRenameSource RenameSource {..} = do
+  sources <- scSources <$> askSchemaCache
+
+  unless (HM.member _rmName sources) $
+    throw400 NotExists $ "Could not find source with name " <>> _rmName
+
+  when (HM.member _rmNewName sources) $
+    throw400 AlreadyExists $ "Source with name " <> _rmNewName <<> " already exists"
+
+  let metadataModifier =
+        MetadataModifier
+          $ metaSources %~ renameBackendSourceMetadata _rmName _rmNewName
+  buildSchemaCacheFor (MOSource _rmNewName) metadataModifier
+
+  pure successMsg
+  where
+    renameBackendSourceMetadata
+      :: SourceName
+      -> SourceName
+      -> OMap.InsOrdHashMap SourceName BackendSourceMetadata
+      -> OMap.InsOrdHashMap SourceName BackendSourceMetadata
+    renameBackendSourceMetadata oldKey newKey m =
+      case OMap.lookup oldKey m of
+        Just val ->
+          OMap.insert
+            newKey
+            (AB.mapBackend val (renameSource newKey))
+          . OMap.delete oldKey
+          $ m
+        Nothing -> m
+
+    renameSource :: forall b. SourceName -> SourceMetadata b -> SourceMetadata b
+    renameSource newName metadata = metadata { _smName = newName }
 
 runDropSource
   :: forall m. (MonadError QErr m, CacheRWM m, MonadIO m, MonadBaseControl IO m, MetadataM m)

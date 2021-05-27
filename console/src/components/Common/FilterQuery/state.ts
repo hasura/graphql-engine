@@ -20,7 +20,11 @@ import {
 } from '../../../metadata/queryUtils';
 import { EventKind } from '../../Services/Events/types';
 import { isNotDefined } from '../utils/jsUtils';
-import { getDataTriggerLogsQuery } from '../../../metadata/metadataTableUtils';
+import {
+  getDataTriggerLogsCountQuery,
+  getDataTriggerLogsQuery,
+} from '../../../metadata/metadataTableUtils';
+import { parseEventsSQLResp } from '../../Services/Events/utils';
 
 const defaultFilter = makeValueFilter('', null, '');
 const defaultSort = makeOrderBy('', 'asc');
@@ -94,13 +98,20 @@ export const useFilterQuery = (
     } else if (triggerType === 'data') {
       endpoint = endpoints.query;
       if (triggerName) {
-        query = getDataTriggerLogsQuery(
-          triggerOp,
-          currentSource || 'default',
-          triggerName,
-          limitValue,
-          offsetValue
-        );
+        query = {
+          args: [
+            getDataTriggerLogsCountQuery(triggerName, triggerOp, currentSource),
+            getDataTriggerLogsQuery(
+              triggerOp,
+              currentSource ?? 'default',
+              triggerName,
+              limitValue,
+              offsetValue
+            ),
+          ],
+          source: currentSource ?? 'default',
+          type: 'bulk',
+        };
       } else {
         return; // fixme: this should just be an error saying that there's no trigger name provided
       }
@@ -116,38 +127,12 @@ export const useFilterQuery = (
     ).then(
       (data: any) => {
         if (triggerType === 'data') {
+          setCount(Number(data?.[0].result?.[1]?.[0]));
           // formatting of the data
-          const allKeys = data.result[0];
-          const resultsData = data.result.slice(1);
-          const formattedData: Record<string, any>[] = [];
-          resultsData.forEach((values: string[]) => {
-            const dataObj: Record<string, any> = {};
-            allKeys.forEach((key: string, idx: number) => {
-              if (!dataObj[key]) {
-                // to avoid duplicate keys in the results
-                if (triggerOp !== 'invocation' && key === 'event_id') {
-                  dataObj.invocation_id = dataObj.id;
-                  dataObj.id = values[idx];
-                } else if (key === 'request' || key === 'response') {
-                  try {
-                    dataObj[key] = JSON.parse(values[idx]);
-                  } catch {
-                    dataObj[key] = values[idx];
-                  }
-                } else {
-                  dataObj[key] = values[idx];
-                }
-              }
-            });
-            formattedData.push(dataObj);
-          });
-
-          if (limitValue && offsetValue) {
-            setRows(formattedData.slice(offsetValue, offsetValue + limitValue));
-          } else {
-            setRows(formattedData);
-          }
-          setCount(formattedData.length);
+          const formattedData: Record<string, any>[] = parseEventsSQLResp(
+            data?.[1]?.result ?? []
+          );
+          setRows(formattedData);
         } else if (triggerOp !== 'invocation') {
           setRows(data?.events ?? []);
         } else {

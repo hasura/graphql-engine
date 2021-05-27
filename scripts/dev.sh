@@ -108,6 +108,7 @@ case "${1-}" in
       RUN_INTEGRATION_TESTS=true
       RUN_UNIT_TESTS=false
       RUN_HLINT=false
+      source scripts/parse-pytest-backend
       ;;
       --hlint)
       RUN_INTEGRATION_TESTS=false
@@ -199,22 +200,49 @@ function citus_start() {
   citus_wait
 }
 
-# This is just a faster version of
-#    mssql_start
-#    pg_start
-#    citus_start
-function all_dbs_start() {
-  # start all
-  mssql_launch_container
-  MSSQL_RUNNING=1
-  pg_launch_container
-  PG_RUNNING=1
-  citus_launch_container
-  CITUS_RUNNING=1
-  # wait for all
-  pg_wait
-  mssql_wait
-  citus_wait
+function start_dbs() {
+  # always launch the postgres container
+  pg_start
+
+  case "$BACKEND" in
+    citus)
+      citus_start
+    ;;
+    mssql)
+      mssql_start
+    ;;
+    # bigquery omitted as test setup is atypical. See:
+    # https://github.com/hasura/graphql-engine-mono/wiki/Testing-BigQuery
+  esac
+}
+
+function add_sources() {
+  METADATA_URL=http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/v1/metadata
+
+  # always add a postgres source
+  echo ""
+  echo_pretty "Adding Postgres source"
+  curl "$METADATA_URL" \
+  --data-raw '{"type":"pg_add_source","args":{"name":"default","configuration":{"connection_info":{"database_url":"'"$PG_DB_URL"'"}}}}'
+
+  case "$BACKEND" in
+    # bigquery omitted as test setup is atypical. See:
+    # https://github.com/hasura/graphql-engine-mono/wiki/Testing-BigQuery
+    citus)
+      echo ""
+      echo_pretty "Adding Citus source"
+      curl "$METADATA_URL" \
+      --data-raw '{"type":"citus_add_source","args":{"name":"citus","configuration":{"connection_info":{"database_url":"'"$CITUS_DB_URL"'"}}}}'
+    ;;
+    mssql)
+      echo ""
+      echo_pretty "Adding SQL Server source"
+      curl "$METADATA_URL" \
+      --data-raw '{"type":"mssql_add_source","args":{"name":"mssql","configuration":{"connection_info":{"connection_string":"'"$MSSQL_DB_URL"'"}}}}'
+    ;;
+  esac
+
+  echo ""
 }
 
 
@@ -416,7 +444,7 @@ elif [ "$MODE" = "test" ]; then
   # rebuilding twice... ugh
   cabal new-build --project-file=cabal.project.dev-sh exe:graphql-engine test:graphql-engine-tests
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
-    all_dbs_start
+    start_dbs
   else
     # unit tests just need access to a postgres instance:
     pg_start
@@ -447,8 +475,6 @@ elif [ "$MODE" = "test" ]; then
 
     # Using --metadata-database-url flag to test multiple backends
     #       HASURA_GRAPHQL_PG_SOURCE_URL_* For a couple multi-source pytests:
-    HASURA_GRAPHQL_PG_SOURCE_URL_1="$PG_DB_URL" \
-    HASURA_GRAPHQL_PG_SOURCE_URL_2="$PG_DB_URL" \
     cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
       --metadata-database-url="$PG_DB_URL" serve \
       --stringify-numeric-types \
@@ -469,21 +495,7 @@ elif [ "$MODE" = "test" ]; then
     echo ""
     echo " Ok"
 
-    METADATA_URL=http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/v1/metadata
-
-    echo ""
-    echo "Adding Postgres source"
-    curl "$METADATA_URL" \
-    --data-raw '{"type":"pg_add_source","args":{"name":"default","configuration":{"connection_info":{"database_url":"'"$PG_DB_URL"'","pool_settings":{}}}}}'
-
-    echo ""
-    echo "Adding SQL Server source"
-    curl "$METADATA_URL" \
-    --data-raw '{"type":"mssql_add_source","args":{"name":"mssql","configuration":{"connection_info":{"connection_string":"'"$MSSQL_DB_URL"'","pool_settings":{}}}}}'
-
-    echo ""
-    echo "Sources added:"
-    curl "$METADATA_URL" --data-raw '{"type":"export_metadata","args":{}}'
+    add_sources
 
     cd "$PROJECT_ROOT/server/tests-py"
 

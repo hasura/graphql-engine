@@ -65,6 +65,13 @@ type MSSqlConstraint = {
   }[];
 };
 
+type MSSqlCheckConstraint = {
+  table_name: string;
+  table_schema: string;
+  constraint_name: string;
+  check_definition: string;
+};
+
 export const mergeDataMssql = (
   data: Array<{ result: string[] }>,
   metadataTables: TableEntry[]
@@ -74,13 +81,14 @@ export const mergeDataMssql = (
   let fkRelations: MSSqlFk[] = [];
   let primaryKeys: Table['primary_key'][] = [];
   let uniqueKeys: Table['unique_constraints'] = [];
+  let checkConstraints: MSSqlCheckConstraint[] = [];
   data[0].result.slice(1).forEach(row => {
     try {
       tables.push({
         table_schema: row[0],
         table_name: row[1],
         table_type: row[2] as MSSqlTable['table_type'],
-        comment: row[3],
+        comment: JSON.parse(row[3])[0].comment,
         columns: JSON.parse(row[4]),
       });
     } catch (err) {
@@ -145,6 +153,10 @@ export const mergeDataMssql = (
       );
       return [...acc, ...constraintInfo];
     }, [] as Exclude<Table['unique_constraints'], null>);
+
+    checkConstraints = data[4].result
+      ? (JSON.parse(data[4].result[1]) as MSSqlCheckConstraint[])
+      : [];
   } catch (e) {
     console.error(e);
   }
@@ -193,6 +205,18 @@ export const mergeDataMssql = (
         fk.ref_table === table.table_name &&
         fk.is_ref_table_tracked
     );
+
+    const check =
+      checkConstraints
+        .filter(
+          key =>
+            key?.table_name === table.table_name &&
+            key.table_schema === table.table_schema
+        )
+        .map(c => ({
+          ...c,
+          check: c.check_definition,
+        })) || [];
 
     const relationships = [] as Table['relationships'];
     metadataTable?.array_relationships?.forEach(rel => {
@@ -263,13 +287,13 @@ export const mergeDataMssql = (
           t.table.schema === table.table_schema
       ),
       columns: table.columns,
-      comment: '',
+      comment: table.comment,
       triggers: [],
       primary_key: primaryKeysInfo,
       relationships,
       permissions,
       unique_constraints: uniqueKeysInfo,
-      check_constraints: [],
+      check_constraints: check,
       foreign_key_constraints: fkConstraints,
       opp_foreign_key_constraints: refFkConstraints,
       view_info: null,

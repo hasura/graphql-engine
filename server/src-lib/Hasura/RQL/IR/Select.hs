@@ -28,16 +28,16 @@ data AnnAggregateOrderBy (b :: BackendType)
   = AAOCount
   | AAOOp !Text !(ColumnInfo b)
   deriving (Generic)
-deriving instance (Backend b, Eq (ColumnInfo b)) => Eq (AnnAggregateOrderBy b)
-instance (Backend b, Hashable (ColumnInfo b)) => Hashable (AnnAggregateOrderBy b)
+deriving instance (Backend b) => Eq (AnnAggregateOrderBy b)
+instance (Backend b) => Hashable (AnnAggregateOrderBy b)
 
 data AnnOrderByElementG (b :: BackendType) v
   = AOCColumn !(ColumnInfo b)
   | AOCObjectRelation !(RelInfo b) !v !(AnnOrderByElementG b v)
   | AOCArrayAggregation !(RelInfo b) !v !(AnnAggregateOrderBy b)
   deriving (Generic, Functor)
-deriving instance (Backend b, Eq (ColumnInfo b), Eq v) => Eq (AnnOrderByElementG b v)
-instance (Backend b, Hashable (ColumnInfo b), Hashable v) => Hashable (AnnOrderByElementG b v)
+deriving instance (Backend b, Eq v) => Eq (AnnOrderByElementG b v)
+instance (Backend b, Hashable v) => Hashable (AnnOrderByElementG b v)
 
 type AnnOrderByElement b v = AnnOrderByElementG b (AnnBoolExp b v)
 
@@ -66,7 +66,7 @@ traverseAnnOrderByItem f =
 type AnnOrderByItem b = AnnOrderByItemG b (SQLExpression b)
 
 type OrderByItemExp b =
-  OrderByItemG b (AnnOrderByElement b (SQLExpression b), (Alias b, (SQLExpression b)))
+  OrderByItemG b (AnnOrderByElement b (SQLExpression b), (Alias b, SQLExpression b))
 
 data AnnRelationSelectG (b :: BackendType) a
   = AnnRelationSelectG
@@ -159,9 +159,10 @@ type ArraySelectFieldsG b v = Fields (ArraySelectG b v)
 
 data ColumnOp (b :: BackendType)
   = ColumnOp
-  { _colOp  :: (SQLOperator b)
-  , _colExp :: (SQLExpression b)
+  { _colOp  :: SQLOperator b
+  , _colExp :: SQLExpression b
   }
+
 deriving instance Backend b => Show (ColumnOp b)
 deriving instance Backend b => Eq   (ColumnOp b)
 
@@ -189,11 +190,8 @@ traverseAnnColumnField
   -> AnnColumnField backend a
   -> f (AnnColumnField backend b)
 traverseAnnColumnField f (AnnColumnField info asText op caseBoolExpMaybe) =
-  AnnColumnField
-  <$> pure info
-  <*> pure asText
-  <*> pure op
-  <*> (traverse (traverseAnnColumnCaseBoolExp f) caseBoolExpMaybe)
+  AnnColumnField info asText op
+  <$> traverse (traverseAnnColumnCaseBoolExp f) caseBoolExpMaybe
 
 data RemoteFieldArgument
   = RemoteFieldArgument
@@ -268,7 +266,6 @@ instance
   , Hashable v
   ) => Hashable (SelectArgsG b v)
 
-
 traverseSelectArgs
   :: (Applicative f, Backend backend)
   => (a -> f b) -> SelectArgsG backend a -> f (SelectArgsG backend b)
@@ -332,6 +329,7 @@ data EdgeField (b :: BackendType) v
   = EdgeTypename !Text
   | EdgeCursor
   | EdgeNode !(AnnFieldsG b v)
+
 type EdgeFields b v = Fields (EdgeField b v)
 
 traverseEdgeField
@@ -398,6 +396,7 @@ data TablePermG (b :: BackendType) v
   { _tpFilter :: !(AnnBoolExp b v)
   , _tpLimit  :: !(Maybe Int)
   } deriving (Generic)
+
 instance
   ( Backend b
   , Hashable (BooleanOperators b v)
