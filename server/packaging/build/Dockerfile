@@ -1,4 +1,4 @@
-FROM debian:stretch-20190228-slim
+FROM debian:buster-20210511-slim
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
 RUN apt-get update \

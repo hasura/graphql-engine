@@ -1,7 +1,7 @@
 # anchor refs to be used elsewhere
 refs:
   constants:
-  - &server_builder_image hasura/graphql-engine-server-builder:cc743e58451e6b90d17c960fb6aae65256b8cb219e53e83eaa482e6a527bfa40
+  - &server_builder_image hasura/graphql-engine-server-builder:485659267675dbd5539a1ba8ced6bff3e8824ec8d2f6d7480fd6d8201629794e
   skip_job_on_ciignore: &skip_job_on_ciignore
     run:
       name: checking if job should be terminated or not
@@ -489,7 +489,7 @@ jobs:
   # build console assets
   build_console:
     docker:
-    - image: hasura/graphql-engine-console-builder:20210224 
+    - image: hasura/graphql-engine-console-builder:e3e5decbd831134b615e611d831a6eda44f2ce45dc95a1cc32199d346bf1e906
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -539,7 +539,7 @@ jobs:
           - _console_output
   console_unit_tests:
     docker:
-    - image: hasura/graphql-engine-console-builder:20210224 
+    - image: hasura/graphql-engine-console-builder:e3e5decbd831134b615e611d831a6eda44f2ce45dc95a1cc32199d346bf1e906
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -568,7 +568,7 @@ jobs:
   # test console
   test_console:
     docker:
-    - image: hasura/graphql-engine-console-builder:20210224
+    - image: hasura/graphql-engine-console-builder:e3e5decbd831134b615e611d831a6eda44f2ce45dc95a1cc32199d346bf1e906
       environment:
         HASURA_GRAPHQL_DATABASE_URL: 'postgres://gql_test:@localhost:5432/gql_test'
         CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
