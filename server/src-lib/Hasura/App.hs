@@ -545,7 +545,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
     fetchI        = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
     logEnvHeaders = soLogHeadersFromEnv
     allPgSources  = mapMaybe (unsafeSourceConfiguration @('Postgres 'Vanilla)) $ HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
-    eventResponseLogBehaviour = if soInDevelopmentMode then LogEntireResponse else LogSanitisedResponse
+    eventResponseLogBehaviour = if soDevMode then LogEntireResponse else LogSanitisedResponse
 
   lockedEventsCtx <-
     liftIO $
