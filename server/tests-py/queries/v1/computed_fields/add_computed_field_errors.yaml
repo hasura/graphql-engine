@@ -66,13 +66,13 @@
             name: author
         reason:
           'Inconsistent object: in table "author": in computed field "full_name":
-          no such function exists in postgres : "random_function"'
+          no such function exists: "random_function"'
         name: computed_field full_name in table author in source default
         type: computed_field
     path: $.args
     error:
       'Inconsistent object: in table "author": in computed field "full_name": no
-      such function exists in postgres : "random_function"'
+      such function exists: "random_function"'
     code: invalid-configuration
 - description: Try adding computed field with invalid table argument name
   url: /v1/query
