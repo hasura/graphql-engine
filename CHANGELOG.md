@@ -52,6 +52,7 @@
 - server: fix MSSQL multiplexed subscriptions (fix #6887)
 - server: fix bug preventing tables with the same name in different sources
 - server: include more detail in inconsistent metadata error messages (fix #6684)
+- server: return useful error messages for missing env vars in metadata when `allow_inconsistent_metadata` is enabled (fix #6913)
 - console: add union types to remote schema permissions
 - console: read-only modify page for mssql
 - console: filter out partitions from track table list and display partition info

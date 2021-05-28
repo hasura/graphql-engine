@@ -208,9 +208,20 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
           let oldTriggersMap = getPGTriggersMap oldSourceCache
               newTriggersMap = getPGTriggersMap newSourceCache
               droppedTriggers = OMap.keys $ oldTriggersMap `OMap.difference` newTriggersMap
-          sourceConfig <- askSourceConfig @('Postgres 'Vanilla) source
-          for_ droppedTriggers $
-            \name -> liftIO $ runPgSourceWriteTx sourceConfig $ delTriggerQ name >> archiveEvents name
+              catcher e@QErr{ qeCode }
+                | qeCode == Unexpected = pure () -- NOTE: This information should be returned by the inconsistent_metadata response, so doesn't need additional logging.
+                | otherwise = throwError e -- rethrow other errors
+
+          -- This will swallow Unexpected exceptions for sources if allow_inconsistent_metadata is enabled
+          -- This should be ok since if the sources are already missing from the cache then they should
+          -- not need to be removed.
+          --
+          -- TODO: Determine if any errors should be thrown from askSourceConfig at all if the errors are just being discarded
+          flip catchError catcher do
+            sourceConfig <- askSourceConfig @('Postgres 'Vanilla) source
+            for_ droppedTriggers $
+              \name -> do
+                  liftIO $ runPgSourceWriteTx sourceConfig $ delTriggerQ name >> archiveEvents name
       where
         getPGTriggersMap = OMap.unions . map _tmEventTriggers . OMap.elems . _smTables
 
