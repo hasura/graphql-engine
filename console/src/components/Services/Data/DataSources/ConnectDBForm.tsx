@@ -60,13 +60,13 @@ const driverToLabel: Record<
     label: 'MS SQL Server',
     defaultConnection: 'DATABASE_URL',
     info:
-      'Only Database URLs and Environment Variables are available using MS SQL Server',
+      'Only Database URLs and Environment Variables are available for MS SQL Server',
   },
   bigquery: {
     label: 'BigQuery',
     defaultConnection: 'CONNECTION_PARAMETERS',
     info:
-      'Only Connection Parameters and Environment Variables are available using BigQuery',
+      'Only Connection Parameters and Environment Variables are available for BigQuery',
     beta: true,
   },
 };
