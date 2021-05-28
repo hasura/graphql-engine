@@ -306,15 +306,16 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
          , MonadIO m, MonadBaseControl IO m
          , BackendMetadata b
          , HasServerConfigCtx m
+         , MonadError QErr m
          )
       => (Int, SourceConfig b) `arr` ()
     initCatalogIfNeeded = Inc.cache proc (numEventTriggers, sc) -> do
       arrM id -< do
         when (numEventTriggers > 0) do
           case backendTag @b of
-            Tag.PostgresVanillaTag -> void do
+            Tag.PostgresVanillaTag -> do
               maintenanceMode <- _sccMaintenanceMode <$> askServerConfigCtx
-              runExceptT do runLazyTx (_pscExecCtx sc) Q.ReadWrite (initCatalogForSource maintenanceMode)
+              liftEither =<< runExceptT do runLazyTx (_pscExecCtx sc) Q.ReadWrite (initCatalogForSource maintenanceMode)
             _ -> pure ()
 
     buildSource
