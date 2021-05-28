@@ -1020,7 +1020,7 @@ relationshipField sourceName relationshipInfo = runMaybeT do
     ObjRel -> do
       let desc = Just $ G.Description "An object relationship"
       selectionSetParser <- lift $ tableSelectionSet sourceName otherTableInfo remotePerms
-      pure $ pure $ (if nullable then id else P.nonNullableField) $
+      pure $ pure $ case nullable of { Nullable -> id; NotNullable -> P.nonNullableField} $
         P.subselection_ relFieldName desc selectionSetParser
              <&> \fields -> IR.AFObjectRelation $ IR.AnnRelationSelectG relName colMapping $
                     IR.AnnObjectSelectG fields otherTableName $
