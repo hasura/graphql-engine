@@ -180,6 +180,9 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
       makeReadReplicaConnectionObject(replica)
     );
 
+    const isRenameSource =
+      isEditState && editSourceName !== connectDBInputState.displayName.trim();
+
     if (
       connectionType === connectionTypes.DATABASE_URL ||
       (connectionType === connectionTypes.CONNECTION_PARAMS &&
@@ -205,7 +208,9 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
         connectDBInputState,
         onSuccessConnectDBCb,
         read_replicas,
-        isEditState
+        isEditState,
+        isRenameSource,
+        editSourceName
       )
         .then(() => setLoading(false))
         .catch(() => setLoading(false));
@@ -233,7 +238,9 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
         connectDBInputState,
         onSuccessConnectDBCb,
         read_replicas,
-        isEditState
+        isEditState,
+        isRenameSource,
+        editSourceName
       )
         .then(() => setLoading(false))
         .catch(() => setLoading(false));
@@ -270,7 +277,9 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
       connectDBInputState,
       onSuccessConnectDBCb,
       read_replicas,
-      isEditState
+      isEditState,
+      isRenameSource,
+      editSourceName
     )
       .then(() => setLoading(false))
       .catch(() => setLoading(false));

@@ -1,6 +1,6 @@
 import { Driver, getSupportedDrivers } from '../../../../dataSources';
 import { makeConnectionStringFromConnectionParams } from './ManageDBUtils';
-import { addDataSource } from '../../../../metadata/actions';
+import { addDataSource, renameDataSource } from '../../../../metadata/actions';
 import { Dispatch } from '../../../../types';
 import {
   SourceConnectionInfo,
@@ -118,7 +118,9 @@ export const connectDataSource = (
     | 'ssl_configuration'
     | 'isolation_level'
   >[],
-  isEditState = false
+  isEditState = false,
+  isRenameSource = false,
+  currentName = ''
 ) => {
   let databaseURL: string | { from_env: string } =
     currentState.dbType === 'bigquery'
@@ -144,32 +146,38 @@ export const connectDataSource = (
     });
   }
 
-  return dispatch(
-    addDataSource(
-      {
-        driver: currentState.dbType,
-        payload: {
-          name: currentState.displayName.trim(),
-          dbUrl: databaseURL,
-          replace_configuration: isEditState,
-          bigQuery: {
-            projectId: currentState.databaseURLState.projectId,
-            datasets: currentState.databaseURLState.datasets,
-          },
-          ...(checkEmpty(currentState.connectionSettings) && {
-            connection_pool_settings: currentState.connectionSettings,
-          }),
-          ...(checkEmpty(currentState.sslConfiguration) && {
-            sslConfiguration: currentState.sslConfiguration,
-          }),
-          preparedStatements: currentState.preparedStatements,
-          isolationLevel: currentState.isolationLevel,
-        },
+  const data = {
+    driver: currentState.dbType,
+    payload: {
+      name: currentState.displayName.trim(),
+      dbUrl: databaseURL,
+      replace_configuration: isEditState,
+      bigQuery: {
+        projectId: currentState.databaseURLState.projectId,
+        datasets: currentState.databaseURLState.datasets,
       },
-      cb,
-      replicas
-    )
-  );
+      ...(checkEmpty(currentState.connectionSettings) && {
+        connection_pool_settings: currentState.connectionSettings,
+      }),
+      ...(checkEmpty(currentState.sslConfiguration) && {
+        sslConfiguration: currentState.sslConfiguration,
+      }),
+      preparedStatements: currentState.preparedStatements,
+      isolationLevel: currentState.isolationLevel,
+    },
+  };
+
+  if (isRenameSource) {
+    return dispatch(
+      renameDataSource(
+        data,
+        cb,
+        { name: currentName, isRenameSource },
+        replicas
+      )
+    );
+  }
+  return dispatch(addDataSource(data, cb, replicas));
 };
 
 export type ConnectDBActions =

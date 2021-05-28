@@ -911,11 +911,11 @@ export interface ConnectionPoolSettings {
 
 export interface SourceConnectionInfo {
   // used for SQL Server
-  connection_string: string | { from_env: string };
+  connection_string?: string | { from_env: string };
   // used for Postgres
-  database_url: string | { from_env: string };
-  use_prepared_statements: boolean;
-  isolation_level: IsolationLevelOptions;
+  database_url?: string | { from_env: string };
+  use_prepared_statements?: boolean;
+  isolation_level?: IsolationLevelOptions;
   pool_settings?: ConnectionPoolSettings;
   ssl_configuration?: SSLConfigOptions;
 }

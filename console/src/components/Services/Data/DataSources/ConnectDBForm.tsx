@@ -120,7 +120,6 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
                   data: e.target.value,
                 })
               }
-              disabled={isEditState}
               value={connectionDBState.displayName}
               label="Database Display Name"
               placeholder="database name"

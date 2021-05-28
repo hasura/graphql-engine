@@ -50,6 +50,7 @@ import { getDataSources } from './selector';
 import { FixMe, ReduxState, Thunk } from '../types';
 import { getConfirmation } from '../components/Common/utils/jsUtils';
 import _push from '../components/Services/Data/push';
+import { dataSourceIsEqual } from '../components/Services/Data/DataSources/utils';
 
 export interface ExportMetadataSuccess {
   type: 'Metadata/EXPORT_METADATA_SUCCESS';
@@ -316,6 +317,119 @@ export const addDataSource = (
       }
       return err;
     });
+};
+
+export const renameDataSource = (
+  data: AddDataSourceRequest['data'],
+  successCb: () => void,
+  renameData: {
+    isRenameSource: boolean;
+    name: string;
+  },
+  replicas?: Omit<
+    SourceConnectionInfo,
+    'connection_string' | 'use_prepared_statements' | 'isolation_level'
+  >[],
+  skipNotification = false
+): Thunk<Promise<void | ReduxState>, MetadataActions> => (
+  dispatch,
+  getState
+) => {
+  const { isRenameSource, name } = renameData;
+  const { tables, metadata } = getState();
+  const { sources } = metadata.metadataObject ?? {};
+  const currentSource = sources?.find(s => s.name === name);
+  const query = addSource(data.driver, data.payload, replicas);
+
+  let isOnlyRename = false;
+
+  if (
+    currentSource &&
+    dataSourceIsEqual(currentSource, query.args) &&
+    isRenameSource
+  ) {
+    isOnlyRename = true;
+  }
+  const { dataHeaders } = tables;
+
+  const editOptions = {
+    method: 'POST',
+    headers: dataHeaders,
+    body: JSON.stringify(query),
+  };
+
+  const renameQuery = {
+    type: 'rename_source',
+    args: {
+      name,
+      new_name: data.payload.name,
+    },
+  };
+
+  const renameOptions = {
+    method: 'POST',
+    headers: dataHeaders,
+    body: JSON.stringify(renameQuery),
+  };
+
+  const isEdit = data.payload.replace_configuration;
+
+  const handleSuccess = () => {
+    dispatch({
+      type: UPDATE_CURRENT_DATA_SOURCE,
+      source: data.payload.name,
+    });
+    setDriver(data.driver);
+    const onButtonClick = () => {
+      if (data.payload.name)
+        dispatch(_push(`/data/${data.payload.name}/schema`));
+    };
+    return dispatch(exportMetadata())
+      .then(() => {
+        dispatch(fetchDataInit(data.payload.name, data.driver));
+        if (!skipNotification) {
+          dispatch(
+            showNotification(
+              {
+                title: `Data source updated successfully!`,
+                level: 'success',
+                autoDismiss: 0,
+                action: {
+                  label: 'View Database',
+                  callback: onButtonClick,
+                },
+              },
+              'success'
+            )
+          );
+        }
+        successCb();
+        return getState();
+      })
+      .catch(console.error);
+  };
+
+  const handleError = (err: any) => {
+    console.error(err);
+    if (!isEdit) {
+      dispatch(_push('/data/manage/connect'));
+    }
+    if (!skipNotification) {
+      dispatch(showErrorNotification(`Updating data source failed`, null, err));
+    }
+    return err;
+  };
+
+  return dispatch(requestAction(Endpoints.metadata, renameOptions))
+    .then(() => {
+      if (isOnlyRename) {
+        return handleSuccess();
+      }
+      return dispatch(requestAction(Endpoints.metadata, editOptions))
+        .then(handleSuccess)
+        .catch(handleError);
+    })
+    .catch(handleError);
 };
 
 export const removeDataSource = (
