@@ -254,16 +254,16 @@ func Test_copyState(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srcSettings := cli.GetSettingsStateStore(tt.args.ec)
+			srcSettings := cli.GetSettingsStateStore(tt.args.ec, "default")
 			assert.NoError(t, srcSettings.PrepareSettingsDriver())
 			srcMigrations := cli.GetMigrationsStateStore(tt.args.ec)
-			assert.NoError(t, srcMigrations.PrepareMigrationsStateStore())
+			assert.NoError(t, srcMigrations.PrepareMigrationsStateStore("default"))
 
 			dstSettings := settings.NewStateStoreCatalog(statestore.NewCLICatalogState(tt.args.ec.APIClient.V1Metadata))
 			dstMigrations := migrations.NewCatalogStateStore(statestore.NewCLICatalogState(tt.args.ec.APIClient.V1Metadata))
 			assert.NoError(t, srcSettings.UpdateSetting("test", "test"))
 			assert.NoError(t, srcMigrations.SetVersion("", 123, false))
-			if err := CopyState(tt.args.ec, tt.args.destdatabase); (err != nil) != tt.wantErr {
+			if err := CopyState(tt.args.ec, "default", tt.args.destdatabase); (err != nil) != tt.wantErr {
 				t.Fatalf("CopyState() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			v, err := dstSettings.GetSetting("test")

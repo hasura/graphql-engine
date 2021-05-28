@@ -68,7 +68,7 @@ func (m *CatalogStateStore) RemoveVersion(database string, version int64) error 
 	return m.setCLIState(*state)
 }
 
-func (m *CatalogStateStore) PrepareMigrationsStateStore() error {
+func (m *CatalogStateStore) PrepareMigrationsStateStore(_ string) error {
 	return nil
 }
 

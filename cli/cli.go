@@ -969,7 +969,7 @@ func GetMigrationsStateStore(ec *ExecutionContext) statestore.MigrationsStateSto
 	return migrations.NewCatalogStateStore(statestore.NewCLICatalogState(ec.APIClient.V1Metadata))
 }
 
-func GetSettingsStateStore(ec *ExecutionContext) statestore.SettingsStateStore {
+func GetSettingsStateStore(ec *ExecutionContext, databaseName string) statestore.SettingsStateStore {
 	const (
 		defaultSettingsTable = "migration_settings"
 		defaultSchema        = "hdb_catalog"
@@ -977,9 +977,9 @@ func GetSettingsStateStore(ec *ExecutionContext) statestore.SettingsStateStore {
 
 	if ec.Config.Version <= V2 {
 		if !ec.HasMetadataV3 {
-			return settings.NewStateStoreHdbTable(ec.APIClient.V1Query, defaultSchema, defaultSettingsTable)
+			return settings.NewStateStoreHdbTable(ec.APIClient.V1Query, databaseName, defaultSchema, defaultSettingsTable)
 		}
-		return settings.NewStateStoreHdbTable(ec.APIClient.V2Query, defaultSchema, defaultSettingsTable)
+		return settings.NewStateStoreHdbTable(ec.APIClient.V2Query, databaseName, defaultSchema, defaultSettingsTable)
 	}
 	return settings.NewStateStoreCatalog(statestore.NewCLICatalogState(ec.APIClient.V1Metadata))
 }

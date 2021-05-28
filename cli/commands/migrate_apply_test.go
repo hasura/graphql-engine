@@ -92,7 +92,7 @@ var _ = Describe("automatic state migration should not affect new config v3 proj
 
 	It("should apply the migrations on server ", func() {
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
-			Args:             []string{"migrate",
+			Args: []string{"migrate",
 				"create",
 				"schema_creation",
 				"--up-sql",
