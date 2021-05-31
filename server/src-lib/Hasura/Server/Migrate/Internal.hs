@@ -2,9 +2,12 @@ module Hasura.Server.Migrate.Internal
   ( runTx
   , getCatalogVersion
   , from3To4
+  , setCatalogVersion
   ) where
 
 import           Hasura.Prelude
+
+import           Data.Time.Clock                     (UTCTime)
 
 import qualified Data.Aeson                          as A
 import qualified Database.PG.Query                   as Q
@@ -49,3 +52,10 @@ from3To4 = liftTx $ Q.catchE defaultTxErrorHandler $ do
                                             configuration = $1
                                             WHERE name = $2
                                             |] (Q.AltJ $ A.toJSON etc, name) True
+
+setCatalogVersion :: MonadTx m => Text -> UTCTime -> m ()
+setCatalogVersion ver time = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
+    INSERT INTO hdb_catalog.hdb_version (version, upgraded_on) VALUES ($1, $2)
+    ON CONFLICT ((version IS NOT NULL))
+    DO UPDATE SET version = $1, upgraded_on = $2
+  |] (ver, time) False

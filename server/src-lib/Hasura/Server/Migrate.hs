@@ -224,13 +224,6 @@ downgradeCatalog defaultSourceConfig opts time = do
             | x == upper = Right [y]
             | otherwise = (y:) <$> dropOlderDowngrades xs
 
-setCatalogVersion :: MonadTx m => Text -> UTCTime -> m ()
-setCatalogVersion ver time = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-    INSERT INTO hdb_catalog.hdb_version (version, upgraded_on) VALUES ($1, $2)
-    ON CONFLICT ((version IS NOT NULL))
-    DO UPDATE SET version = $1, upgraded_on = $2
-  |] (ver, time) False
-
 migrations
   :: forall m. (MonadIO m, MonadTx m)
   => Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) -> Bool -> MaintenanceMode -> [(Text, MigrationPair m)]

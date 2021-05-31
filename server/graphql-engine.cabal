@@ -133,6 +133,7 @@ library
                      , postgresql-libpq
                      , process
                      , profunctors
+                     , retry
                      , safe-exceptions
                      , scientific
                      , semialign

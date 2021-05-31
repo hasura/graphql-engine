@@ -20,6 +20,7 @@ module Hasura.RQL.DDL.Schema.Cache
 
 import           Hasura.Prelude
 
+import qualified Control.Retry                            as Retry
 import qualified Data.Dependent.Map                       as DMap
 import qualified Data.Environment                         as Env
 import qualified Data.HashMap.Strict.Extended             as M
@@ -35,8 +36,10 @@ import           Control.Lens                             hiding ((.=))
 import           Control.Monad.Trans.Control              (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson
+import           Data.Either                              (isLeft)
 import           Data.Proxy
 import           Data.Text.Extended
+import           Data.Time.Clock                          (getCurrentTime)
 import           Network.HTTP.Client.Extended             hiding (Proxy)
 
 import qualified Hasura.Incremental                       as Inc
@@ -314,8 +317,25 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         when (numEventTriggers > 0) do
           case backendTag @b of
             Tag.PostgresVanillaTag -> do
+              migrationTime <- liftIO getCurrentTime
               maintenanceMode <- _sccMaintenanceMode <$> askServerConfigCtx
-              liftEither =<< runExceptT do runLazyTx (_pscExecCtx sc) Q.ReadWrite (initCatalogForSource maintenanceMode)
+              let
+                  initCatalogAction =
+                    runExceptT $ runLazyTx (_pscExecCtx sc) Q.ReadWrite (initCatalogForSource maintenanceMode migrationTime)
+              -- The `initCatalogForSource` action is retried here because
+              -- in cloud there will be multiple workers (graphql-engine instances)
+              -- trying to migrate the source catalog, when needed. This introduces
+              -- a race condition as both the workers try to migrate the source catalog
+              -- concurrently and when one of them succeeds the other ones will fail
+              -- and be in an inconsistent state. To avoid the inconsistency, we retry
+              -- migrating the catalog on error and in the retry `initCatalogForSource`
+              -- will see that the catalog is already migrated, so it won't attempt the
+              -- migration again
+              liftEither =<< Retry.retrying
+                 (Retry.constantDelay (fromIntegral $ diffTimeToMicroSeconds $ seconds $ Seconds 10)
+                  <> Retry.limitRetries 3)
+                 (const $ return . isLeft)
+                 (const initCatalogAction)
             _ -> pure ()
 
     buildSource

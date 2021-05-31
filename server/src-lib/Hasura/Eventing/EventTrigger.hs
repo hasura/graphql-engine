@@ -86,6 +86,7 @@ import           Hasura.Server.Migrate.Version          (latestCatalogVersionStr
 import           Hasura.Server.Types
 import           Hasura.Server.Version                  (HasVersion)
 
+
 data TriggerMetadata
   = TriggerMetadata { tmName :: TriggerName }
   deriving (Show, Eq)
@@ -706,8 +707,14 @@ unlockEvents eventIds =
 getMaintenanceModeVersion :: Q.TxE QErr MaintenanceModeVersion
 getMaintenanceModeVersion = liftTx $ do
   catalogVersion <- getCatalogVersion -- From the user's DB
-  if | catalogVersion == "40" -> pure PreviousMMVersion
+  -- the previous version and the current version will change depending
+  -- upon between which versions we need to support maintenance mode
+  if | catalogVersion == "40"     -> pure PreviousMMVersion
+     -- The catalog is migrated to the 43rd version for a source
+     -- which was initialised by a v1 graphql-engine instance (See @initSource@).
+     | catalogVersion == "43"     -> pure CurrentMMVersion
      | catalogVersion == latestCatalogVersionString -> pure CurrentMMVersion
-     | otherwise              ->
+     | otherwise                  ->
        throw500 $
-         "Maintenance mode is only supported with catalog versions: 40 and " <> latestCatalogVersionString
+         "Maintenance mode is only supported with catalog versions: 40, 43 and "
+         <> tshow latestCatalogVersionString

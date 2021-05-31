@@ -18,6 +18,8 @@ import qualified Language.Haskell.TH.Syntax          as TH
 
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Data.FileEmbed                      (makeRelativeToProject)
+import           Data.Time.Clock                     (UTCTime)
+
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Types
@@ -64,8 +66,8 @@ resolveDatabaseMetadata sourceConfig = runExceptT do
   pure $ ResolvedSource sourceConfig tablesMeta functionsMeta pgScalars
 
 -- | Initialise catalog tables for a source, including those required by the event delivery subsystem.
-initCatalogForSource :: MonadTx m => MaintenanceMode -> m ()
-initCatalogForSource maintenanceMode = do
+initCatalogForSource :: forall m . MonadTx m => MaintenanceMode -> UTCTime -> m ()
+initCatalogForSource maintenanceMode migrationTime = do
   hdbCatalogExist <- doesSchemaExist "hdb_catalog"
   eventLogTableExist <- doesTableExist "hdb_catalog" "event_log"
   sourceVersionTableExist <- doesTableExist "hdb_catalog" "hdb_source_catalog_version"
@@ -84,7 +86,10 @@ initCatalogForSource maintenanceMode = do
        -- Update the Source Catalog to v43 to include the new migration
        -- changes. Skipping this step will result in errors.
         currCatalogVersion <- liftTx getCatalogVersion
+        -- we migrate to the 43 version, which is the migration where
+        -- metadata separation is introduced
         migrateTo43 currCatalogVersion
+        setCatalogVersion "43" migrationTime
         liftTx createVersionTable
      | otherwise -> migrateSourceCatalog
   where
