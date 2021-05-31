@@ -59,6 +59,6 @@ Select the card you want to delete and click the ``Remove Card`` option.
 
 .. note::
 
-  A card set as default can not be deleted.
+  A card set as default can not be deleted if the user has billable projects or pending dues. 
   
    
