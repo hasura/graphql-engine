@@ -11,6 +11,7 @@
 - console: update connect database form with SSL certificates
 - console: add drop table functionality to MS SQL Server tables
 - console: allow renaming data sources
+- cli: fix version command using stderr as output stream (#6998)
 
 ## v2.0.0-alpha.11
 
