@@ -3,9 +3,7 @@
 module Hasura.Backends.MSSQL.Instances.Execute
   (
     MultiplexedQuery'(..),
-    PreparedQuery'(..),
     multiplexRootReselect,
-    queryEnvJson
   )
   where
 
@@ -13,7 +11,6 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson.Extended                   as J
 import qualified Data.Environment                      as Env
-import qualified Data.HashSet                          as Set
 import qualified Data.List.NonEmpty                    as NE
 import qualified Data.Text.Extended                    as T
 import qualified Database.ODBC.SQLServer               as ODBC
@@ -40,7 +37,7 @@ import           Hasura.Session
 
 
 instance BackendExecute 'MSSQL where
-  type PreparedQuery    'MSSQL = PreparedQuery'
+  type PreparedQuery    'MSSQL = Text
   type MultiplexedQuery 'MSSQL = MultiplexedQuery'
   type ExecutionMonad   'MSSQL = ExceptT QErr IO
   getRemoteJoins = const []
@@ -52,33 +49,15 @@ instance BackendExecute 'MSSQL where
   mkLiveQueryExplain = msDBLiveQueryExplain
 
 
--- Prepared query
+-- Multiplexed query
 
-data PreparedQuery' = PreparedQuery'
-  { pqQueryString :: Text
-  , pqGraphQlEnv  :: PrepareState
-  , pqSession     :: SessionVariables
-  }
-
--- | Render as a JSON object the variables that have been collected from an RQL
--- expression.
-queryEnvJson :: PrepareState -> SessionVariables -> J.Value
-queryEnvJson (PrepareState posArgs namedArgs requiredSessionVars) sessionVars =
-  let sessionVarValues = filterSessionVariables (\k _ -> Set.member k requiredSessionVars) sessionVars
-  in J.object
-  [ "session" J..= sessionVarValues
-  , "namedArguments" J..= toTxtEncodedVal namedArgs
-  , "positionalArguments" J..= toTxtEncodedVal posArgs
-  ]
-
--- multiplexed query
 newtype MultiplexedQuery' = MultiplexedQuery' Reselect
 
 instance T.ToTxt MultiplexedQuery' where
   toTxt (MultiplexedQuery' reselect) = T.toTxt $ toQueryPretty $ fromReselect reselect
 
 
--- query
+-- Query
 
 msDBQueryPlan
   :: forall m.
@@ -94,67 +73,15 @@ msDBQueryPlan
   -> m ExecutionStep
 msDBQueryPlan _env _manager _reqHeaders userInfo sourceName sourceConfig qrf = do
   let sessionVariables = _uiSession userInfo
-  (statement, queryEnv) <- planQuery sessionVariables qrf
-  let selectWithEnv = joinEnv statement sessionVariables queryEnv
-      printer = fromSelect selectWithEnv
+  statement <- planQuery sessionVariables qrf
+  let printer = fromSelect statement
       queryString = ODBC.renderQuery $ toQueryPretty printer
       pool  = _mscConnectionPool sourceConfig
       odbcQuery = encJFromText <$> runJSONPathQuery pool (toQueryFlat printer)
   pure
     $ ExecStepDB []
     . AB.mkAnyBackend
-    $ DBStepInfo @'MSSQL sourceName sourceConfig (Just $ PreparedQuery' queryString queryEnv sessionVariables) odbcQuery
-
-joinEnv :: Select -> SessionVariables -> PrepareState -> Select
-joinEnv querySelect sessionVars prepState =
-  querySelect
-    -- We *prepend* the variables of 'prepState' to the list of joins to make
-    -- them available in the @where@ clause as well as subsequent queries nested
-    -- in @join@ clauses.
-    { selectJoins = [prepJoin] <> selectJoins querySelect }
-
-  where
-    prepJoin :: Join
-    prepJoin = Join
-      { joinSource = JoinSelect $ (select
-          (
-            FromOpenJson
-              Aliased
-                { aliasedThing =
-                    OpenJson
-                      { openJsonExpression =
-                          ValueExpression (ODBC.TextValue $ lbsToTxt $ J.encode $ queryEnvJson prepState sessionVars)
-                      , openJsonWith =
-                          NE.fromList
-                            [ JsonField "session" Nothing
-                            , JsonField "namedArguments" Nothing
-                            , JsonField "positionalArguments" Nothing
-                            ]
-                      }
-                , aliasedAlias = rowAlias
-                }
-          )) {selectProjections = [ StarProjection ]
-        }
-      ,joinJoinAlias =
-          JoinAlias
-            { joinAliasEntity = rowAlias
-            , joinAliasField = Nothing
-            }
-      }
-
-select :: From -> Select
-select from =
-  Select
-    { selectFrom        = from
-    , selectTop         = NoTop
-    , selectProjections = []
-    , selectJoins       = []
-    , selectWhere       = Where []
-    , selectOrderBy     = Nothing
-    , selectFor         = NoFor
-    , selectOffset      = Nothing
-    }
-
+    $ DBStepInfo @'MSSQL sourceName sourceConfig (Just $ queryString) odbcQuery
 
 
 runShowplan
@@ -177,9 +104,8 @@ msDBQueryExplain
   -> m (AB.AnyBackend DBStepInfo)
 msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
   let sessionVariables = _uiSession userInfo
-  (statement, queryEnv) <- planQuery sessionVariables qrf
-  let selectWithEnv = joinEnv statement sessionVariables queryEnv
-      query         = toQueryPretty (fromSelect selectWithEnv)
+  statement <- planQuery sessionVariables qrf
+  let query         = toQueryPretty (fromSelect statement)
       queryString   = ODBC.renderQuery $ query
       pool          = _mscConnectionPool sourceConfig
       odbcQuery     =
