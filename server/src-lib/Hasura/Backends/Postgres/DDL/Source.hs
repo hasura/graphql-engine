@@ -11,17 +11,17 @@ module Hasura.Backends.Postgres.DDL.Source
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                 as Map
-import qualified Database.PG.Query                   as Q
-import qualified Language.Haskell.TH.Lib             as TH
-import qualified Language.Haskell.TH.Syntax          as TH
+import qualified Data.HashMap.Strict                         as Map
+import qualified Database.PG.Query                           as Q
+import qualified Language.Haskell.TH.Lib                     as TH
+import qualified Language.Haskell.TH.Syntax                  as TH
 
-import           Control.Monad.Trans.Control         (MonadBaseControl)
-import           Data.FileEmbed                      (makeRelativeToProject)
-import           Data.Time.Clock                     (UTCTime)
-
+import           Control.Monad.Trans.Control                 (MonadBaseControl)
+import           Data.FileEmbed                              (makeRelativeToProject)
+import           Data.Time.Clock                             (UTCTime)
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.DDL.Source.Version
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Base.Error
 import           Hasura.RQL.Types.Backend
@@ -31,7 +31,7 @@ import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 import           Hasura.Server.Migrate.Internal
-import           Hasura.Server.Types                 (MaintenanceMode (..))
+import           Hasura.Server.Types                         (MaintenanceMode (..))
 
 
 -- | We differentiate the handling of metadata between Citus and Vanilla
@@ -85,12 +85,14 @@ initCatalogForSource maintenanceMode migrationTime = do
      | not sourceVersionTableExist && eventLogTableExist -> do
        -- Update the Source Catalog to v43 to include the new migration
        -- changes. Skipping this step will result in errors.
-        currCatalogVersion <- liftTx getCatalogVersion
+        currMetadataCatalogVersion <- liftTx getCatalogVersion
         -- we migrate to the 43 version, which is the migration where
         -- metadata separation is introduced
-        migrateTo43 currCatalogVersion
+        migrateTo43MetadataCatalog currMetadataCatalogVersion
         setCatalogVersion "43" migrationTime
         liftTx createVersionTable
+        -- Migrate the catalog from initial version i.e '1'
+        migrateSourceCatalogFrom "1"
      | otherwise -> migrateSourceCatalog
   where
     initPgSourceCatalog = do
@@ -108,19 +110,61 @@ initCatalogForSource maintenanceMode migrationTime = do
            CREATE UNIQUE INDEX hdb_source_catalog_version_one_row
            ON hdb_catalog.hdb_source_catalog_version((version IS NOT NULL));
         |]
-      setSourceCatalogVersion
+      pure ()
 
-    migrateSourceCatalog = do
-      version <- getSourceCatalogVersion
-      case version of
-        "1" -> pure ()
-        _   -> throw500 $ "unexpected source catalog version: " <> version
-
-    migrateTo43 prevVersion = do
+    migrateTo43MetadataCatalog prevVersion = do
       let neededMigrations = dropWhile ((/= prevVersion) . fst) upMigrationsUntil43
       traverse_ snd neededMigrations
 
--- Upgrade the hdb_catalog schema to v43
+-- NOTE (rakesh):
+-- Down migrations for postgres sources is not supported in this PR. We need an
+-- exhaustive discussion to make a call as I think, as of now, it is not
+-- trivial. For metadata catalog migrations, we have a separate downgrade
+-- command in the graphql-engine exe.
+--
+-- I can think of two ways:
+--
+--  - Just like downgrade, we need to have a new command path for downgrading
+--  pg sources (command design should support other backends too,
+--  graphql-engine source-downgrade postgres --to-catalog-version 1 --
+--  downgrade all available pg sources to 1)
+--  - Have an online documentation with necessary SQLs to help users to
+--  downgrade pg sources themselves. Improve error message by referring the URL
+--  to the documentation.
+
+migrateSourceCatalog :: MonadTx m => m ()
+migrateSourceCatalog =
+  getSourceCatalogVersion >>= migrateSourceCatalogFrom
+
+migrateSourceCatalogFrom :: (MonadTx m) => Text -> m ()
+migrateSourceCatalogFrom prevVersion
+  | prevVersion == latestSourceCatalogVersionText = pure ()
+  | [] <- neededMigrations =
+      throw400 NotSupported $
+        "Expected source catalog version <= "
+        <> latestSourceCatalogVersionText
+        <> ", but the current version is " <> prevVersion
+  | otherwise = do
+      traverse_ snd neededMigrations
+      setSourceCatalogVersion
+  where
+    neededMigrations =
+      dropWhile ((/= prevVersion) . fst) sourceMigrations
+
+sourceMigrations :: (MonadTx m) => [(Text, m ())]
+sourceMigrations =
+  $(let migrationFromFile from =
+          let to = from + 1
+              path = "src-rsr/pg_source_migrations/" <> show from <> "_to_" <> show to <> ".sql"
+          in [| runTx $(makeRelativeToProject path >>= Q.sqlFromFile) |]
+
+        migrationsFromFile = map $ \(from :: Integer) ->
+          [| ($(TH.lift $ tshow from), $(migrationFromFile from)) |]
+
+    in TH.listE $ migrationsFromFile [1..(latestSourceCatalogVersion - 1)]
+   )
+
+-- Upgrade the hdb_catalog schema to v43 (Metadata catalog)
 upMigrationsUntil43 :: MonadTx m => [(Text, m ())]
 upMigrationsUntil43 =
     $(let migrationFromFile from to =
@@ -139,21 +183,6 @@ upMigrationsUntil43 =
         ++ [| ("3", from3To4) |]
         :  migrationsFromFile [5..43]
      )
-
-currentSourceCatalogVersion :: Text
-currentSourceCatalogVersion = "1"
-
-setSourceCatalogVersion :: MonadTx m => m ()
-setSourceCatalogVersion = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-  INSERT INTO hdb_catalog.hdb_source_catalog_version(version, upgraded_on)
-    VALUES ($1, NOW())
-   ON CONFLICT ((version IS NOT NULL))
-   DO UPDATE SET version = $1, upgraded_on = NOW()
-  |] (Identity currentSourceCatalogVersion) False
-
-getSourceCatalogVersion :: MonadTx m => m Text
-getSourceCatalogVersion = liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
-  [Q.sql| SELECT version FROM hdb_catalog.hdb_source_catalog_version |] () False
 
 -- | Fetch Postgres metadata of all user tables
 fetchTableMetadata

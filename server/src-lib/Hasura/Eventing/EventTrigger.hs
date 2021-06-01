@@ -567,7 +567,9 @@ fetchEvents source limitI =
                           and (l.locked IS NULL or l.locked < (NOW() - interval '30 minute'))
                           and (l.next_retry_at is NULL or l.next_retry_at <= now())
                           and l.archived = 'f'
-                    ORDER BY created_at
+                    /* NB: this ordering is important for our index `event_log_fetch_events` */
+                    /* (see `init_pg_source.sql`) */
+                    ORDER BY locked NULLS FIRST, next_retry_at NULLS FIRST, created_at
                     LIMIT $1
                     FOR UPDATE SKIP LOCKED )
       RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at

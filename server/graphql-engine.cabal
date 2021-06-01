@@ -335,6 +335,7 @@ library
                      , Hasura.Backends.Postgres.DDL.Function
                      , Hasura.Backends.Postgres.DDL.RunSQL
                      , Hasura.Backends.Postgres.DDL.Source
+                     , Hasura.Backends.Postgres.DDL.Source.Version
                      , Hasura.Backends.Postgres.DDL.Table
                      , Hasura.Backends.Postgres.Execute.LiveQuery
                      , Hasura.Backends.Postgres.Execute.Mutation

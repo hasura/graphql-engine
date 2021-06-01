@@ -442,7 +442,12 @@ elif [ "$MODE" = "test" ]; then
   # It's better UX to build first (possibly failing) before trying to launch
   # PG, but make sure that new-run uses the exact same build plan, else we risk
   # rebuilding twice... ugh
-  cabal new-build --project-file=cabal.project.dev-sh exe:graphql-engine test:graphql-engine-tests
+  # Formerly this was a `cabal build` but mixing cabal build and cabal run
+  # seems to conflict now, causing re-linking, haddock runs, etc. Instead do a
+  # `graphql-engine version` to trigger build
+  cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
+      --metadata-database-url="$PG_DB_URL" version
+
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
     start_dbs
   else

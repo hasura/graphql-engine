@@ -5,6 +5,7 @@
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: fix asymptotic performance of fetching from the event_log table
 - console: add `pool_timeout`, `connection_lifetime` and `isolation_level` connection params to connect database form
 - console: add check constraints and comments to MS SQL Server tables' read-only modify page
 - console: add create table functionality for MS SQL Server 
