@@ -5,6 +5,12 @@
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
+
+## v2.0.0-beta.1
+
+### Bug fixes and improvements
+
+- server: fix regression with MSSQL execution (#6976)
 - server: fix asymptotic performance of fetching from the event_log table
 - console: add `pool_timeout`, `connection_lifetime` and `isolation_level` connection params to connect database form
 - console: add check constraints and comments to MS SQL Server tables' read-only modify page
