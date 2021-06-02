@@ -33,7 +33,11 @@ import {
 } from './mergeData';
 import _push from './push';
 import { convertArrayToJson } from './TableModify/utils';
-import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
+import {
+  CLI_CONSOLE_MODE,
+  SERVER_CONSOLE_MODE,
+  maxAllowedMigrationLength,
+} from '../../../constants';
 import { getDownQueryComments } from '../../../utils/migration/utils';
 import { isEmpty } from '../../Common/utils/jsUtils';
 import { currentDriver, dataSource } from '../../../dataSources';
@@ -750,8 +754,13 @@ const makeMigrationCall = (
     downQueries = getDownQueryComments(upQueries);
   }
 
+  const trimmedMigrationName = migrationName.substring(
+    0,
+    maxAllowedMigrationLength
+  );
+
   const migrationBody = {
-    name: sanitize(migrationName),
+    name: sanitize(trimmedMigrationName),
     up: upQuery.args,
     down: downQueries || [],
     datasource: source,

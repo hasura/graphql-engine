@@ -12,6 +12,7 @@
 - console: update connect database form with SSL certificates
 - console: add drop table functionality to MS SQL Server tables
 - console: allow renaming data sources
+- console: show error notification for table and cloumn names exceeding 63 characters and trim migration names exceeding 255 characters
 - cli: fix version command using stderr as output stream (#6998)
 
 ## v2.0.0-alpha.11
