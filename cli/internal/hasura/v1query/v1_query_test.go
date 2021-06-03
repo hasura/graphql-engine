@@ -19,7 +19,7 @@ import (
 )
 
 func TestClient_Send(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, "v1.3.3")
+	port, teardown := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown()
 	type fields struct {
 		Client                       *httpc.Client
@@ -83,7 +83,7 @@ func TestClient_Send(t *testing.T) {
 }
 
 func TestClient_Bulk(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, "v1.3.3")
+	port, teardown := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown()
 	type fields struct {
 		Client                  *httpc.Client

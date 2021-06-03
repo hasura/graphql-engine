@@ -11,14 +11,13 @@ import (
 	. "github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("metadata_diff", func() {
+var _ = Describe("hasura metadata diff", func() {
 
 	var dirName string
-	var session *Session
 	var teardown func()
 	BeforeEach(func() {
 		dirName = testutil.RandDirName()
-		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraVersion)
+		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: []string{"init", dirName},
@@ -26,7 +25,6 @@ var _ = Describe("metadata_diff", func() {
 		editEndpointInConfig(filepath.Join(dirName, defaultConfigFilename), hgeEndpoint)
 
 		teardown = func() {
-			session.Kill()
 			os.RemoveAll(dirName)
 			teardownHGE()
 		}
@@ -38,7 +36,7 @@ var _ = Describe("metadata_diff", func() {
 
 	Context("metadata diff test", func() {
 		It("should output diff between metadata on server and local project", func() {
-			session = testutil.Hasura(testutil.CmdOpts{
+			session := testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"metadata", "diff"},
 				WorkingDirectory: dirName,
 			})

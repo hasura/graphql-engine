@@ -5,120 +5,98 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Pallinder/go-randomdata"
+
 	"github.com/hasura/graphql-engine/cli/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gbytes"
 	. "github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("migrate_apply", func() {
-
-	var dirName string
-	var session *Session
-	var teardown func()
-	BeforeEach(func() {
-		dirName = testutil.RandDirName()
-		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraVersion)
-		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
+var testMigrateApply = func(projectDirectory string, globalFlags []string) {
+	Context("migrate apply", func() {
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
-			Args: []string{"init", dirName},
+			Args: append(
+				[]string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;"},
+				globalFlags...,
+			),
+			WorkingDirectory: projectDirectory,
 		})
-		editEndpointInConfig(filepath.Join(dirName, defaultConfigFilename), hgeEndpoint)
+		session := testutil.Hasura(testutil.CmdOpts{
+			Args: append(
+				[]string{"migrate", "apply"},
+				globalFlags...,
+			),
+			WorkingDirectory: projectDirectory,
+		})
+		wantKeywordList := []string{
+			"Applying migrations",
+			"applied",
+		}
 
-		teardown = func() {
-			session.Kill()
-			os.RemoveAll(dirName)
-			teardownHGE()
+		Eventually(session, 60*40).Should(Exit(0))
+		for _, keyword := range wantKeywordList {
+			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring(keyword))
 		}
 	})
+}
 
-	AfterEach(func() {
-		teardown()
-	})
-
-	Context("migrate apply test", func() {
-		It("should apply the migrations on server ", func() {
-			testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;", "--database-name", "default"},
-				WorkingDirectory: dirName,
-			})
-			session = testutil.Hasura(testutil.CmdOpts{
-				Args:             []string{"migrate", "apply", "--database-name", "default"},
-				WorkingDirectory: dirName,
-			})
-			wantKeywordList := []string{
-				".*Applying migrations...*.",
-				".*migrations*.",
-				".*applied*.",
-			}
-
-			for _, keyword := range wantKeywordList {
-				Eventually(session.Err, 60*40).Should(Say(keyword))
-			}
-			Eventually(session, 60*40).Should(Exit(0))
-		})
-	})
-
-})
-
-var _ = Describe("automatic state migration should not affect new config v3 projects", func() {
-	var dirName string
-	var session *Session
+var _ = Describe("hasura migrate apply", func() {
+	var hgeEndpoint string
 	var teardown func()
 	BeforeEach(func() {
-		dirName = testutil.RandDirName()
-		hgeEndPort, teardownHGE := testutil.StartHasuraWithMetadataDatabase(GinkgoT(), testutil.HasuraVersion)
-		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
-		port, teardownPG := testutil.StartPGContainer(GinkgoT(), "test", "test", "test")
-		// add a pg source named default
-		testutil.AddPGSourceToHasura(GinkgoT(), hgeEndpoint, fmt.Sprintf("postgres://test:test@%v:%v/test", testutil.DockerSwitchIP, port), "default")
-		testutil.RunCommandAndSucceed(testutil.CmdOpts{
-			Args: []string{"init", dirName},
-		})
-		editEndpointInConfig(filepath.Join(dirName, defaultConfigFilename), hgeEndpoint)
+		var hgeEndPort string
+		hgeEndPort, teardown = testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
+		hgeEndpoint = fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
+	})
 
+	AfterEach(func() { teardown() })
+
+	It("can apply the migrations on server (single database config v3)", func() {
+		projectDirectoryV3 := testutil.RandDirName()
+		defer os.RemoveAll(projectDirectoryV3)
+		testutil.RunCommandAndSucceed(testutil.CmdOpts{
+			Args: []string{"init", projectDirectoryV3},
+		})
+		editEndpointInConfig(filepath.Join(projectDirectoryV3, defaultConfigFilename), hgeEndpoint)
+		testMigrateApply(projectDirectoryV3, []string{"--database-name", "default"})
+	})
+	It("can apply the migrations on server (single database config v2)", func() {
+		projectDirectoryV2 := testutil.RandDirName()
+		defer os.RemoveAll(projectDirectoryV2)
+		testutil.RunCommandAndSucceed(testutil.CmdOpts{
+			Args: []string{"init", projectDirectoryV2, "--version", "2"},
+		})
+		editEndpointInConfig(filepath.Join(projectDirectoryV2, defaultConfigFilename), hgeEndpoint)
+		testMigrateApply(projectDirectoryV2, nil)
+	})
+})
+
+var _ = Describe("hasura migrate apply (config v3)", func() {
+	// automatic state migration should not affect new config v3 projects
+	var projectDirectory string
+	var teardown func()
+	var sourceName = randomdata.SillyName()
+	BeforeEach(func() {
+		projectDirectory = testutil.RandDirName()
+		hgeEndPort, teardownHGE := testutil.StartHasuraWithMetadataDatabase(GinkgoT(), testutil.HasuraDockerImage)
+		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
+		connectionString, teardownPG := testutil.StartPGContainer(GinkgoT())
+		// add a pg source named default
+		testutil.AddPGSourceToHasura(GinkgoT(), hgeEndpoint, connectionString, sourceName)
+		testutil.RunCommandAndSucceed(testutil.CmdOpts{
+			Args: []string{"init", projectDirectory},
+		})
+		editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
 		teardown = func() {
-			session.Kill()
-			os.RemoveAll(dirName)
+			os.RemoveAll(projectDirectory)
 			teardownHGE()
 			teardownPG()
 		}
 	})
-
-	AfterEach(func() {
-		teardown()
-	})
+	AfterEach(func() { teardown() })
 
 	It("should apply the migrations on server ", func() {
-		testutil.RunCommandAndSucceed(testutil.CmdOpts{
-			Args: []string{"migrate",
-				"create",
-				"schema_creation",
-				"--up-sql",
-				"create schema \"testing\";",
-				"--down-sql",
-				"drop schema \"testing\" cascade;",
-				"--database-name",
-				"default",
-				"--log-level",
-				"debug",
-			},
-			WorkingDirectory: dirName,
-		})
-		session = testutil.Hasura(testutil.CmdOpts{
-			Args:             []string{"migrate", "apply", "--database-name", "default", "--log-level", "debug"},
-			WorkingDirectory: dirName,
-		})
-		wantKeywordList := []string{
-			".*Applying migrations...*.",
-			".*migrations*.",
-			".*applied*.",
-		}
-
-		for _, keyword := range wantKeywordList {
-			Eventually(session.Err, 60*40).Should(Say(keyword))
-		}
-		Eventually(session, 60*40).Should(Exit(0))
+		testMigrateApply(projectDirectory, []string{"--database-name", sourceName})
 	})
 })

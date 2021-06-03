@@ -38,7 +38,7 @@ func TestCommands(t *testing.T) {
 		initDir := filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000)))
 		defer os.RemoveAll(initDir)
 
-		hasuraPort, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
+		hasuraPort, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
 		defer teardown()
 
 		// This will prepare the execution context, so no need to run ec.Prepare() on all the other tests
@@ -95,7 +95,7 @@ func TestCommands(t *testing.T) {
 		initDir := filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000)))
 		defer os.RemoveAll(initDir)
 
-		hasuraPort, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
+		hasuraPort, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
 		defer teardown()
 
 		// This will prepare the execution context, so no need to run ec.Prepare() on all the other tests

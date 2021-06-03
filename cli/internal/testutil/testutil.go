@@ -23,7 +23,18 @@ import (
 	"github.com/ory/dockertest/v3"
 )
 
-// As a workaround for using test helpers on Ginkgo tests
+// helper function to get image repo and tag separately
+func getDockerRepoAndTag(t TestingT, dockerImage string) (repo, version string) {
+	p := strings.Split(dockerImage, ":")
+	if len(p) == 2 {
+		return p[0], p[1]
+	} else {
+		t.Fatalf("expected to find a docker image with repo and version (repo:tag) found: %v", p)
+	}
+	return "", ""
+}
+
+// TestingT is a workaround for using test helpers on Ginkgo tests
 // and normal go tests this interfaces is introduced
 // ginkgo specs do not have a handle of *testing.T and therefore
 // cannot be used directly in test helpers
@@ -33,9 +44,9 @@ type TestingT interface {
 	Fatalf(format string, args ...interface{})
 }
 
-func StartHasura(t TestingT, version string) (port string, teardown func()) {
-	if len(version) == 0 {
-		t.Fatal("no hasura version provided, probably use testutil.HasuraVersion")
+func StartHasura(t TestingT, image string) (port string, teardown func()) {
+	if len(image) == 0 {
+		t.Fatal("no hasura image provided, probably use testutil.HasuraDockerImage")
 	}
 	var err error
 	pool, err := dockertest.NewPool("")
@@ -79,10 +90,11 @@ func StartHasura(t TestingT, version string) (port string, teardown func()) {
 	if len(adminSecret) > 0 {
 		envs = append(envs, fmt.Sprintf("HASURA_GRAPHQL_ADMIN_SECRET=%s", adminSecret))
 	}
+	repo, tag := getDockerRepoAndTag(t, image)
 	hasuraopts := &dockertest.RunOptions{
 		Name:         fmt.Sprintf("%s-%s", uniqueName, "hasura"),
-		Repository:   HasuraDockerRepo,
-		Tag:          version,
+		Repository:   repo,
+		Tag:          tag,
 		Env:          envs,
 		ExposedPorts: []string{"8080/tcp"},
 	}
@@ -115,9 +127,9 @@ func StartHasura(t TestingT, version string) (port string, teardown func()) {
 	return hasura.GetPort("8080/tcp"), teardown
 }
 
-func StartHasuraWithMetadataDatabase(t TestingT, version string) (port string, teardown func()) {
-	if len(version) == 0 {
-		t.Fatal("no hasura version provided, probably use testutil.HasuraVersion")
+func StartHasuraWithMetadataDatabase(t TestingT, image string) (port string, teardown func()) {
+	if len(image) == 0 {
+		t.Fatal("no hasura image provided, probably use testutil.HasuraDockerImage")
 	}
 	var err error
 	pool, err := dockertest.NewPool("")
@@ -159,10 +171,11 @@ func StartHasuraWithMetadataDatabase(t TestingT, version string) (port string, t
 	if len(adminSecret) > 0 {
 		envs = append(envs, fmt.Sprintf("HASURA_GRAPHQL_ADMIN_SECRET=%s", adminSecret))
 	}
+	repo, tag := getDockerRepoAndTag(t, image)
 	hasuraopts := &dockertest.RunOptions{
 		Name:         fmt.Sprintf("%s-%s", uniqueName, "hasura"),
-		Repository:   HasuraDockerRepo,
-		Tag:          version,
+		Repository:   repo,
+		Tag:          tag,
 		Env:          envs,
 		ExposedPorts: []string{"8080/tcp"},
 	}
@@ -257,8 +270,10 @@ func startMSSQLContainer(t *testing.T) (string, func()) {
 	return mssql.GetPort("1433/tcp"), teardown
 }
 
-// startsMSSQLContainer and creates a database and returns the port number
-func StartPGContainer(t TestingT, user, password, database string) (string, func()) {
+func StartPGContainer(t TestingT) (connectionString string, teardown func()) {
+	user := "test"
+	password := "test"
+	database := "test"
 	var err error
 	pool, err := dockertest.NewPool("")
 	if err != nil {
@@ -291,12 +306,13 @@ func StartPGContainer(t TestingT, user, password, database string) (string, func
 	}); err != nil {
 		t.Fatal(err)
 	}
-	teardown := func() {
+	teardown = func() {
 		if err = pool.Purge(pg); err != nil {
 			t.Fatalf("Could not purge resource: %s", err)
 		}
 	}
-	return pg.GetPort("5432/tcp"), teardown
+	connectionString = fmt.Sprintf("postgres://test:test@%s:%s/test", DockerSwitchIP, pg.GetPort("5432/tcp"))
+	return connectionString, teardown
 }
 
 func addMSSQLSourceToHasura(t *testing.T, hasuraEndpoint, connectionString, sourceName string) {

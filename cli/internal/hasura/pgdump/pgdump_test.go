@@ -15,9 +15,9 @@ import (
 )
 
 func TestClient_Send(t *testing.T) {
-	portHasuraV13, teardown13 := testutil.StartHasura(t, "v1.3.3")
+	portHasuraV13, teardown13 := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown13()
-	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraVersion)
+	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardownLatest()
 	type fields struct {
 		Client *httpc.Client
@@ -49,7 +49,7 @@ func TestClient_Send(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"can make a pg_dump v1.3.3",
+			"can make a pg_dump hasura/graphql-engine:v1.3.3",
 			fields{
 				Client: testutil.NewHttpcClient(t, portHasuraV13, nil),
 				path:   "/v1alpha1/pg_dump",

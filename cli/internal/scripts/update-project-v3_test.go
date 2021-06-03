@@ -221,7 +221,7 @@ func Test_removeDirectories(t *testing.T) {
 }
 
 func Test_copyState(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
+	port, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardown()
 	type args struct {
 		ec           *cli.ExecutionContext

@@ -11,14 +11,13 @@ import (
 	. "github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("actions_use_codegen", func() {
+var _ = Describe("hasura actions use-codegen", func() {
 
 	var dirName string
-	var session *Session
 	var teardown func()
 	BeforeEach(func() {
 		dirName = testutil.RandDirName()
-		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraVersion)
+		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: []string{"init", dirName},
@@ -26,19 +25,16 @@ var _ = Describe("actions_use_codegen", func() {
 		editEndpointInConfig(filepath.Join(dirName, defaultConfigFilename), hgeEndpoint)
 
 		teardown = func() {
-			session.Kill()
 			os.RemoveAll(dirName)
 			teardownHGE()
 		}
 	})
 
-	AfterEach(func() {
-		teardown()
-	})
+	AfterEach(func() { teardown() })
 
 	Context("actions use codegen tests", func() {
 		It("should change the config.yaml file and create the nodejs-express directory ", func() {
-			session = testutil.Hasura(testutil.CmdOpts{
+			session := testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"actions", "use-codegen", "--framework", "nodejs-express", "--output-dir", "codegen", "--with-starter-kit", "true"},
 				WorkingDirectory: dirName,
 			})

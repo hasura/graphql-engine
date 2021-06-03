@@ -13,7 +13,7 @@ import (
 )
 
 func TestCatalogStateStore_InsertVersion(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
+	port, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardown()
 	type fields struct {
 		c *statestore.CLICatalogState

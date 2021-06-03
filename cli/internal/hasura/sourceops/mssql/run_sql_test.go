@@ -12,7 +12,7 @@ import (
 )
 
 func TestHasuraDatabaseOperations_RunSQL(t *testing.T) {
-	port, mssqlSourceName, teardown := testutil.StartHasuraWithMSSQLSource(t, testutil.HasuraVersion)
+	port, mssqlSourceName, teardown := testutil.StartHasuraWithMSSQLSource(t, testutil.HasuraDockerImage)
 	defer teardown()
 	type fields struct {
 		httpClient *httpc.Client

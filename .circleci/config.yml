@@ -348,7 +348,8 @@ jobs:
         name: test cli
         working_directory: cli
         command: |
-          export HASURA_TEST_CLI_HGE_DOCKER_TAG=$(curl https://releases.hasura.io/graphql-engine | jq -r ".latest")
+          export HASURA_TEST_CLI_HGE_DOCKER_IMAGE="hasura/graphql-engine:$(curl https://releases.hasura.io/graphql-engine | jq -r '.latest')"
+          echo "HASURA_TEST_CLI_HGE_DOCKER_IMAGE = $HASURA_TEST_CLI_HGE_DOCKER_IMAGE"
           make integration_tests_config_v2
           HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd" make integration_tests_config_v2
     - store_artifacts:
@@ -449,8 +450,8 @@ jobs:
           chmod +x /build/_cli_output/binaries/cli-hasura-linux-amd64
           export SOURCE_IMAGE=$(docker load -i /build/_server_output/image.tar | grep "^Loaded image: " | sed "s/Loaded image: //g")
           echo "SOURCE_IMAGE = $SOURCE_IMAGE"
-          export HASURA_TEST_CLI_HGE_DOCKER_TAG=$(echo "$SOURCE_IMAGE" | sed "s/.*:\(.*\)$/\1/")
-          echo "HASURA_TEST_CLI_HGE_DOCKER_TAG = $HASURA_TEST_CLI_HGE_DOCKER_TAG"
+          export HASURA_TEST_CLI_HGE_DOCKER_IMAGE="$SOURCE_IMAGE"
+          echo "HASURA_TEST_CLI_HGE_DOCKER_IMAGE = $HASURA_TEST_CLI_HGE_DOCKER_IMAGE"
           make test-all
           export HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd"
           export HASURA_GRAPHQL_ADMIN_SECRET="abcd"
