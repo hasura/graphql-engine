@@ -130,7 +130,7 @@ export const supportedFeatures: SupportedFeaturesType = {
       },
       foreignKeys: {
         view: true,
-        edit: false,
+        edit: true,
       },
       uniqueKeys: {
         view: true,
@@ -480,14 +480,62 @@ FROM sys.objects as obj
   isTimeoutError: () => {
     return false;
   },
-  getAlterForeignKeySql: () => {
-    return '';
+  getAlterForeignKeySql: (
+    from: {
+      tableName: string;
+      schemaName: string;
+      columns: string[];
+    },
+    to: {
+      tableName: string;
+      schemaName: string;
+      columns: string[];
+    },
+    dropConstraint: string,
+    newConstraint: string,
+    onUpdate: string,
+    onDelete: string
+  ) => {
+    return `
+    BEGIN transaction;
+    ALTER TABLE "${from.schemaName}"."${from.tableName}"
+    DROP CONSTRAINT IF EXISTS "${dropConstraint}";
+    ALTER TABLE "${from.schemaName}"."${from.tableName}"
+    ADD CONSTRAINT "${newConstraint}"
+    FOREIGN KEY (${from.columns.join(', ')})
+    REFERENCES "${to.schemaName}"."${to.tableName}" (${to.columns.join(', ')}) 
+    ON UPDATE ${onUpdate} ON DELETE ${onDelete};
+    COMMIT transaction;
+    `;
   },
-  getCreateFKeySql: () => {
-    return '';
+  getCreateFKeySql: (
+    from: {
+      tableName: string;
+      schemaName: string;
+      columns: string[];
+    },
+    to: {
+      tableName: string;
+      schemaName: string;
+      columns: string[];
+    },
+    newConstraint: string,
+    onUpdate: string,
+    onDelete: string
+  ) => {
+    return `
+    ALTER TABLE "${from.schemaName}"."${from.tableName}"
+    ADD CONSTRAINT "${newConstraint}"
+    FOREIGN KEY (${from.columns.join(', ')})
+    REFERENCES "${to.schemaName}"."${to.tableName}" (${to.columns.join(', ')})
+    ON UPDATE ${onUpdate} ON DELETE ${onDelete}`;
   },
-  getDropConstraintSql: () => {
-    return '';
+  getDropConstraintSql: (
+    tableName: string,
+    schemaName: string,
+    constraintName: string
+  ) => {
+    return `ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT "${constraintName}"`;
   },
   getRenameTableSql: () => {
     return '';
@@ -679,8 +727,8 @@ INNER JOIN sys.schemas sch2
     ON tab2.schema_id = sch2.schema_id for json path;
     `;
   },
-  getReferenceOption: () => {
-    return '';
+  getReferenceOption: (opt: string) => {
+    return opt;
   },
   deleteFunctionSql: () => {
     return '';

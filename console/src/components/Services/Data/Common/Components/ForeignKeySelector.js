@@ -74,6 +74,7 @@ const ForeignKeySelector = ({
     // dispatch action for setting reference table
     const dispatchSetRefTable = event => {
       const newFks = JSON.parse(JSON.stringify(foreignKeys));
+      const violiationActions = dataSource?.violationActions;
       if (newFks[index].refTableName !== event.target.value) {
         newFks[index].colMappings = [{ column: '', refColumn: '' }];
       }
@@ -88,8 +89,8 @@ const ForeignKeySelector = ({
               refColumn: '',
             },
           ],
-          onUpdate: 'restrict',
-          onDelete: 'restrict',
+          onUpdate: violiationActions?.[0],
+          onDelete: violiationActions?.[0],
         });
       }
       dispatch(setForeignKeys(newFks));

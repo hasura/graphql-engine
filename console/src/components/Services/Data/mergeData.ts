@@ -72,6 +72,21 @@ type MSSqlCheckConstraint = {
   check_definition: string;
 };
 
+const modifyViolationType = (fkType: string) => {
+  switch (fkType) {
+    case 'NO_ACTION':
+      return 'no action';
+    case 'CASCADE':
+      return 'cascade';
+    case 'SET_NULL':
+      return 'set null';
+    case 'SET_DEFAULT':
+      return 'set default';
+    default:
+      return fkType;
+  }
+};
+
 export const mergeDataMssql = (
   data: Array<{ result: string[] }>,
   metadataTables: TableEntry[]
@@ -183,6 +198,8 @@ export const mergeDataMssql = (
         ...fk,
         column_mapping: mapping,
         ref_table_table_schema: fk.ref_table_schema,
+        on_delete: modifyViolationType(fk.on_delete),
+        on_update: modifyViolationType(fk.on_update),
       };
     });
 

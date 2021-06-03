@@ -655,7 +655,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     const requestMsg = 'Saving foreign key...';
     const successMsg = 'Foreign key saved';
     const errorMsg = 'Failed setting foreign key';
-
+    const violiationActions = dataSource?.violationActions;
     const customOnSuccess = () => {
       if (!constraintName) {
         const newFks = [...getState().tables.modify.fkModify];
@@ -666,8 +666,8 @@ const saveForeignKeys = (index, tableSchema, columns) => {
             {
               refTableName: '',
               colMappings: [{ column: '', refColumn: '' }],
-              onUpdate: 'restrict',
-              onDelete: 'restrict',
+              onUpdate: violiationActions?.[0],
+              onDelete: violiationActions?.[0],
             },
           ])
         );

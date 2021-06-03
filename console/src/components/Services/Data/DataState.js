@@ -1,3 +1,5 @@
+import { dataSource } from '../../../dataSources';
+
 const defaultCurFilter = {
   where: { $and: [{ '': { $eq: '' } }] },
   limit: 10,
@@ -89,8 +91,8 @@ const defaultModifyState = {
       refSchemaName: '',
       refTableName: '',
       colMappings: [{ '': '' }],
-      onDelete: 'restrict',
-      onUpdate: 'restrict',
+      onDelete: dataSource?.violationActions?.[0],
+      onUpdate: dataSource?.violationActions?.[0],
     },
   ],
   checkConstraintsModify: [],

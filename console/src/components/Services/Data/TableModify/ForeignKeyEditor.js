@@ -14,6 +14,7 @@ import ForeignKeySelector from '../Common/Components/ForeignKeySelector';
 import { updateSchemaInfo } from '../DataActions';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { dataSource } from '../../../../dataSources';
 
 const ForeignKeyEditor = ({
   tableSchema,
@@ -43,8 +44,8 @@ const ForeignKeyEditor = ({
   existingForeignKeys.push({
     refSchemaName: '',
     refTableName: '',
-    onUpdate: 'restrict',
-    onDelete: 'restrict',
+    onUpdate: dataSource?.violationActions?.[0],
+    onDelete: dataSource?.violationActions?.[0],
     colMappings: [{ column: '', refColumn: '' }],
   });
   useEffect(() => {
