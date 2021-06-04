@@ -34,7 +34,6 @@ require (
 	github.com/lib/pq v1.1.1
 	github.com/lunixbochs/vtclean v1.0.0 // indirect
 	github.com/manifoldco/promptui v0.8.0
-	github.com/markbates/pkger v0.15.1
 	github.com/mattn/go-colorable v0.1.8
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
 	github.com/microcosm-cc/bluemonday v1.0.2 // indirect

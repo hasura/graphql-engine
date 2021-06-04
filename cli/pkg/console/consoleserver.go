@@ -1,6 +1,7 @@
 package console
 
 import (
+	"embed"
 	"fmt"
 	"net/http"
 	"os"
@@ -14,6 +15,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/skratchdot/open-golang/open"
 )
+
+//go:embed templates/gohtml/*
+var ConsoleFS embed.FS
 
 type ConsoleServer struct {
 	Logger          *logrus.Logger

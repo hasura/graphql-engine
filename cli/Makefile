@@ -6,7 +6,6 @@ OS ?= linux darwin windows
 OUTPUT_DIR := _output
 
 HAS_GOX := $(shell command -v gox;)
-HAS_PKGER := $(shell command -v pkger;)
 HAS_GINKGO := $(shell command -v ginkgo;)
 
 ifeq (${CI}, true)
@@ -14,14 +13,6 @@ ifeq (${CI}, true)
 else
 	CLI_EXT_BIN_DIR := "../cli-ext/bin"
 endif
-
-# compile assets
-.PHONY: assets
-assets:
-ifndef HAS_PKGER
-	cd ~ && go get github.com/markbates/pkger/cmd/pkger  && cd -
-endif
-	pkger -o pkg/console/templates/packed -include /pkg/console/templates/gohtml/
 
 .PHONY: deps
 # get dependencies
@@ -90,7 +81,7 @@ clean:
 	rm -rf "$(OUTPUT_DIR)"
 
 .PHONY: all
-all: deps assets test build
+all: deps test build
 
 # build cli inside a docker container
 all-in-docker:
