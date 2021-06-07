@@ -26,6 +26,7 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Base.Error
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.EventTrigger               (RecreateEventTriggers (..))
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
@@ -66,21 +67,24 @@ resolveDatabaseMetadata sourceConfig = runExceptT do
   pure $ ResolvedSource sourceConfig tablesMeta functionsMeta pgScalars
 
 -- | Initialise catalog tables for a source, including those required by the event delivery subsystem.
-initCatalogForSource :: forall m . MonadTx m => MaintenanceMode -> UTCTime -> m ()
+initCatalogForSource
+  :: forall m . MonadTx m => MaintenanceMode -> UTCTime -> m RecreateEventTriggers
 initCatalogForSource maintenanceMode migrationTime = do
   hdbCatalogExist <- doesSchemaExist "hdb_catalog"
   eventLogTableExist <- doesTableExist "hdb_catalog" "event_log"
   sourceVersionTableExist <- doesTableExist "hdb_catalog" "hdb_source_catalog_version"
      -- when maintenance mode is enabled, don't perform any migrations
-  if | maintenanceMode == MaintenanceModeEnabled -> pure ()
+  if | maintenanceMode == MaintenanceModeEnabled -> pure RETDoNothing
      -- Fresh database
      | not hdbCatalogExist -> liftTx do
         Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
         enablePgcryptoExtension
         initPgSourceCatalog
+        return RETDoNothing
      -- Only 'hdb_catalog' schema defined
-     | not sourceVersionTableExist && not eventLogTableExist ->
+     | not sourceVersionTableExist && not eventLogTableExist -> do
         liftTx initPgSourceCatalog
+        return RETDoNothing
      -- Source is initialised by pre multisource support servers
      | not sourceVersionTableExist && eventLogTableExist -> do
        -- Update the Source Catalog to v43 to include the new migration
@@ -93,7 +97,8 @@ initCatalogForSource maintenanceMode migrationTime = do
         liftTx createVersionTable
         -- Migrate the catalog from initial version i.e '1'
         migrateSourceCatalogFrom "1"
-     | otherwise -> migrateSourceCatalog
+        return RETRecreate
+     | otherwise -> migrateSourceCatalog >> return RETRecreate
   where
     initPgSourceCatalog = do
       () <- Q.multiQE defaultTxErrorHandler $(makeRelativeToProject "src-rsr/init_pg_source.sql" >>= Q.sqlFromFile)

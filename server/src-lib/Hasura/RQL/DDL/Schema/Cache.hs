@@ -311,10 +311,10 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
          , HasServerConfigCtx m
          , MonadError QErr m
          )
-      => (Int, SourceConfig b) `arr` ()
+      => (Int, SourceConfig b) `arr` RecreateEventTriggers
     initCatalogIfNeeded = Inc.cache proc (numEventTriggers, sc) -> do
       arrM id -< do
-        when (numEventTriggers > 0) do
+        if (numEventTriggers > 0) then do
           case backendTag @b of
             Tag.PostgresVanillaTag -> do
               migrationTime <- liftIO getCurrentTime
@@ -331,12 +331,18 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
               -- migrating the catalog on error and in the retry `initCatalogForSource`
               -- will see that the catalog is already migrated, so it won't attempt the
               -- migration again
-              liftEither =<< Retry.retrying
+              liftEither =<<
+                Retry.retrying
                  (Retry.constantDelay (fromIntegral $ diffTimeToMicroSeconds $ seconds $ Seconds 10)
                   <> Retry.limitRetries 3)
                  (const $ return . isLeft)
                  (const initCatalogAction)
-            _ -> pure ()
+            -- TODO: When event triggers are supported on new databases,
+            -- the initialization of the source catalog should also return
+            -- if the event triggers are to be re-created or not, essentially
+            -- replacing the `RETDoNothing` below
+            _ -> pure RETDoNothing
+        else pure RETDoNothing
 
     buildSource
       :: forall b arr m
@@ -363,7 +369,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
           metadataInvalidationKey = Inc.selectD #_ikMetadata invalidationKeys
           numEventTriggers = sum $ map (length . snd) eventTriggers
 
-      initCatalogIfNeeded @b -< (numEventTriggers, sourceConfig)
+      recreateEventTriggers <- initCatalogIfNeeded @b -< (numEventTriggers, sourceConfig)
 
       -- tables
       tableRawInfos <- buildTableCache -< ( source, sourceConfig, dbTables
@@ -386,7 +392,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
              permissionInfos <-
                 buildTablePermissions
                 -< (Proxy :: Proxy b, source, tableCoreInfosDep, tableFields, permissionInputs, inheritedRoles)
-             eventTriggerInfos <- buildTableEventTriggers -< (source, sourceConfig, tableCoreInfo, eventTriggerConfs, metadataInvalidationKey)
+             eventTriggerInfos <- buildTableEventTriggers -< (source, sourceConfig, tableCoreInfo, eventTriggerConfs, metadataInvalidationKey, recreateEventTriggers)
              returnA -< TableInfo tableCoreInfo permissionInfos eventTriggerInfos
             )
          |) (tableCoreInfos `alignTableMap` mapFromL _tpiTable permissions `alignTableMap` mapFromL fst eventTriggers)
@@ -621,9 +627,9 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     mkEventTriggerMetadataObject
       :: forall b a c
        . Backend b
-      => (a, SourceName, c, TableName b, EventTriggerConf)
+      => (a, SourceName, c, TableName b, RecreateEventTriggers, EventTriggerConf)
       -> MetadataObject
-    mkEventTriggerMetadataObject (_, source, _, table, eventTriggerConf) =
+    mkEventTriggerMetadataObject (_, source, _, table, _, eventTriggerConf) =
       let objectId = MOSourceObjId source
                        $ AB.mkAnyBackend
                        $ SMOTableObj @b table
@@ -695,14 +701,15 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
          , MonadReader BuildReason m, HasServerConfigCtx m, BackendMetadata b)
       => ( SourceName, SourceConfig b, TableCoreInfo b
          , [EventTriggerConf], Inc.Dependency Inc.InvalidationKey
+         , RecreateEventTriggers
          ) `arr` EventTriggerInfoMap
-    buildTableEventTriggers = proc (source, sourceConfig, tableInfo, eventTriggerConfs, metadataInvalidationKey) ->
-      buildInfoMap (etcName . (^. _5)) (mkEventTriggerMetadataObject @b) buildEventTrigger
-        -< (tableInfo, map (metadataInvalidationKey, source, sourceConfig, _tciName tableInfo,) eventTriggerConfs)
+    buildTableEventTriggers = proc (source, sourceConfig, tableInfo, eventTriggerConfs, metadataInvalidationKey, recreateEventTriggers) ->
+      buildInfoMap (etcName . (^. _6)) (mkEventTriggerMetadataObject @b) buildEventTrigger
+        -< (tableInfo, map (metadataInvalidationKey, source, sourceConfig, _tciName tableInfo, recreateEventTriggers, ) eventTriggerConfs)
       where
-        buildEventTrigger = proc (tableInfo, (metadataInvalidationKey, source, sourceConfig, table, eventTriggerConf)) -> do
+        buildEventTrigger = proc (tableInfo, (metadataInvalidationKey, source, sourceConfig, table, recreateEventTriggers, eventTriggerConf)) -> do
           let triggerName = etcName eventTriggerConf
-              metadataObject = mkEventTriggerMetadataObject @b (metadataInvalidationKey, source, sourceConfig, table, eventTriggerConf)
+              metadataObject = mkEventTriggerMetadataObject @b (metadataInvalidationKey, source, sourceConfig, table, recreateEventTriggers, eventTriggerConf)
               schemaObjectId = SOSourceObj source
                                  $ AB.mkAnyBackend
                                  $ SOITableObj @b table
@@ -712,14 +719,14 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
              (| modifyErrA (do
                   (info, dependencies) <- bindErrorA -< buildEventTriggerInfo @b env source table eventTriggerConf
                   let tableColumns = M.mapMaybe (^? _FIColumn) (_tciFieldInfoMap tableInfo)
-                  recreateTriggerIfNeeded -< (metadataInvalidationKey, table, M.elems tableColumns, triggerName, etcDefinition eventTriggerConf, sourceConfig)
+                  recreateTriggerIfNeeded -< (metadataInvalidationKey, table, M.elems tableColumns, triggerName, etcDefinition eventTriggerConf, sourceConfig, recreateEventTriggers)
                   recordDependencies -< (metadataObject, schemaObjectId, dependencies)
                   returnA -< info)
              |) (addTableContext @b table . addTriggerContext))
            |) metadataObject
 
         recreateTriggerIfNeeded = Inc.cache proc (metadataInvalidationKey, tableName, tableColumns
-                                                 , triggerName, triggerDefinition, sourceConfig) -> do
+                                                 , triggerName, triggerDefinition, sourceConfig, recreateEventTriggers) -> do
           -- We want to make sure we re-create event triggers in postgres database on
           -- `reload_metadata` metadata query request
           Inc.dependOn -< metadataInvalidationKey
@@ -727,7 +734,8 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
             buildReason <- ask
             serverConfigCtx <- askServerConfigCtx
             -- we don't modify the existing event trigger definitions in the maintenance mode
-            when (buildReason == CatalogUpdate && _sccMaintenanceMode serverConfigCtx == MaintenanceModeDisabled)
+            when ((buildReason == CatalogUpdate || recreateEventTriggers == RETRecreate)
+                   && _sccMaintenanceMode serverConfigCtx == MaintenanceModeDisabled)
               $ liftEitherM
               $ createTableEventTrigger
                   serverConfigCtx

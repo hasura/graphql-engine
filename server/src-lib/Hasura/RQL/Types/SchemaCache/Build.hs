@@ -131,7 +131,7 @@ data BuildReason
   -- updated the catalog. Since that instance already updated table event triggers in @hdb_catalog@,
   -- this build should be read-only.
   | CatalogSync
-  deriving (Eq)
+  deriving (Eq, Show)
 
 data CacheInvalidations = CacheInvalidations
   { ciMetadata      :: !Bool
