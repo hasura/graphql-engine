@@ -51,6 +51,7 @@ import { FixMe, ReduxState, Thunk } from '../types';
 import { getConfirmation } from '../components/Common/utils/jsUtils';
 import _push from '../components/Services/Data/push';
 import { dataSourceIsEqual } from '../components/Services/Data/DataSources/utils';
+import { getSourceDriver } from '../components/Services/Data/utils';
 
 export interface ExportMetadataSuccess {
   type: 'Metadata/EXPORT_METADATA_SUCCESS';
@@ -461,7 +462,14 @@ export const removeDataSource = (
       if (!skipNotification) {
         dispatch(showSuccessNotification('Data source removed successfully!'));
       }
-      dispatch(exportMetadata());
+      dispatch(exportMetadata()).then(() => {
+        const newSourceName = sources.length ? sources[0].name : '';
+        if (newSourceName) {
+          const driver = getSourceDriver(sources, newSourceName);
+          setDriver(driver);
+          dispatch(fetchDataInit(newSourceName, driver));
+        }
+      });
       return getState();
     })
     .catch(err => {
