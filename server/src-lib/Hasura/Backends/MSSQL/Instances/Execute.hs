@@ -11,6 +11,8 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson.Extended                   as J
 import qualified Data.Environment                      as Env
+import qualified Data.HashMap.Strict                   as Map
+import qualified Data.HashSet                          as Set
 import qualified Data.List.NonEmpty                    as NE
 import qualified Data.Text.Extended                    as T
 import qualified Database.ODBC.SQLServer               as ODBC
@@ -23,7 +25,7 @@ import qualified Hasura.SQL.AnyBackend                 as AB
 import           Hasura.Backends.MSSQL.Connection
 import           Hasura.Backends.MSSQL.FromIr          as TSQL
 import           Hasura.Backends.MSSQL.Plan
-import           Hasura.Backends.MSSQL.SQL.Value       (toTxtEncodedVal)
+import           Hasura.Backends.MSSQL.SQL.Value       (txtEncodedColVal)
 import           Hasura.Backends.MSSQL.ToQuery
 import           Hasura.Backends.MSSQL.Types           as TSQL
 import           Hasura.Base.Error
@@ -33,6 +35,7 @@ import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Parser
 import           Hasura.RQL.Types
+import qualified Hasura.RQL.Types.Column               as RQL
 import           Hasura.Session
 
 
@@ -170,7 +173,7 @@ multiplexRootReselect variables rootReselect =
               }
         ]
     , selectFrom =
-        FromOpenJson
+        Just $ FromOpenJson
           Aliased
             { aliasedThing =
                 OpenJson
@@ -225,6 +228,7 @@ msDBMutationPlan _env _manager _reqHeaders _userInfo _stringifyNum _sourceName _
 msDBSubscriptionPlan
   :: forall m.
      ( MonadError QErr m
+     , MonadIO m
      )
   => UserInfo
   -> SourceName
@@ -234,22 +238,112 @@ msDBSubscriptionPlan
 msDBSubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig rootFields = do
   (reselect, prepareState) <- planSubscription rootFields _uiSession
 
-  let cohortVariables = prepareStateCohortVariables _uiSession prepareState
-      parameterizedPlan = ParameterizedLiveQueryPlan _uiRole $ MultiplexedQuery' reselect
+  cohortVariables <- prepareStateCohortVariables sourceConfig _uiSession prepareState
+  let parameterizedPlan = ParameterizedLiveQueryPlan _uiRole $ MultiplexedQuery' reselect
 
   pure
     $ LiveQueryPlan parameterizedPlan sourceConfig cohortVariables
 
-prepareStateCohortVariables :: SessionVariables -> PrepareState -> CohortVariables
-prepareStateCohortVariables session prepState =
-  let PrepareState{sessionVariables, namedArguments, positionalArguments} = prepState
-  -- TODO: call MSSQL validateVariables
-  -- (see https://github.com/hasura/graphql-engine-mono/issues/1210)
-  -- We need to ensure that the values provided for variables are correct according to MSSQL.
-  -- Without this check an invalid value for a variable for one instance of the subscription will
-  -- take down the entire multiplexed query.
-  in mkCohortVariables
+prepareStateCohortVariables :: (MonadError QErr m, MonadIO m) => SourceConfig 'MSSQL -> SessionVariables -> PrepareState -> m CohortVariables
+prepareStateCohortVariables sourceConfig session prepState = do
+  (namedVars, posVars) <- validateVariables sourceConfig session prepState
+  let PrepareState{sessionVariables} = prepState
+  pure $ mkCohortVariables
         sessionVariables
         session
-        (toTxtEncodedVal namedArguments)
-        (toTxtEncodedVal positionalArguments)
+        namedVars
+        posVars
+
+
+-- | Ensure that the set of variables (with value instantiations) that occur in
+-- a (RQL) query produce a well-formed and executable (SQL) query when
+-- considered in isolation.
+--
+-- This helps avoiding cascading failures in multiplexed queries.
+--
+-- c.f. https://github.com/hasura/graphql-engine-mono/issues/1210.
+validateVariables ::
+  (MonadError QErr m, MonadIO m) =>
+  SourceConfig 'MSSQL ->
+  SessionVariables ->
+  PrepareState ->
+  m (ValidatedQueryVariables, ValidatedSyntheticVariables)
+validateVariables sourceConfig sessionVariableValues prepState = do
+    let PrepareState{sessionVariables, namedArguments, positionalArguments} = prepState
+
+        -- We generate a single 'canary' query in the form:
+        --
+        -- SELECT ... [session].[x-hasura-foo] as [x-hasura-foo], ... as a, ... as b, ...
+        -- FROM OPENJSON('...')
+        -- WITH ([x-hasura-foo] NVARCHAR(MAX)) as [session]
+        --
+        -- where 'a', 'b', etc. are aliases given to positional arguments.
+        -- Named arguments and session variables are aliased to themselves.
+        --
+        -- The idea being that if the canary query succeeds we can be
+        -- reasonably confident that adding these variables to a query being
+        -- polled will not crash the poller.
+
+        occSessionVars = filterSessionVariables
+                            (\k _ -> Set.member k sessionVariables)
+                            sessionVariableValues
+
+        expSes, expNamed, expPos :: [Aliased Expression]
+        expSes = sessionReference <$> getSessionVariables occSessionVars
+        expNamed = map (
+                      \(n, v) -> Aliased (ValueExpression (RQL.cvValue v)) (G.unName n)
+                      )
+                   $ Map.toList $ namedArguments
+
+        -- For positional args we need to be a bit careful not to capture names
+        -- from expNamed and expSes (however unlikely)
+        expPos = zipWith (\n v -> Aliased (ValueExpression (RQL.cvValue v)) n)
+                           (freshVars (expNamed <> expSes)) positionalArguments
+
+        projAll :: [Projection]
+        projAll = map ExpressionProjection (expSes <> expNamed <> expPos)
+
+        canaryQuery = if null projAll
+                      then Nothing
+                      else Just $ renderQuery select {
+                                      selectProjections = projAll,
+                                      selectFrom = sessionOpenJson occSessionVars
+                                      }
+
+    onJust canaryQuery (\q -> do
+      _ :: [[ODBC.Value]] <- withMSSQLPool (_mscConnectionPool sourceConfig) (`ODBC.query` q)
+      pure ()
+     )
+
+    pure (ValidatedVariables $ txtEncodedColVal <$> namedArguments,
+          ValidatedVariables $ txtEncodedColVal <$> positionalArguments)
+
+    where
+      renderQuery :: Select -> ODBC.Query
+      renderQuery = toQueryFlat . fromSelect
+
+      freshVars :: [Aliased a] -> [Text]
+      freshVars boundNames = filter (not . (`elem` map aliasedAlias boundNames)) chars
+
+      -- Infinite list of expression aliases.
+      chars :: [Text]
+      chars = [ y T.<>> x | y <- [""] <|> chars, x <- ['a'..'z']]
+
+      sessionOpenJson :: SessionVariables -> Maybe From
+      sessionOpenJson occSessionVars =
+        nonEmpty (getSessionVariables occSessionVars)
+        <&> \fields -> FromOpenJson $
+              Aliased
+                (
+                  OpenJson
+                    (ValueExpression $ ODBC.TextValue $ lbsToTxt $ J.encode occSessionVars)
+                    (sessField <$> fields)
+                )
+                "session"
+
+      sessField :: Text -> JsonFieldSpec
+      sessField var = StringField  var Nothing
+
+      sessionReference :: Text -> Aliased Expression
+      sessionReference var = Aliased (ColumnExpression (TSQL.FieldName var "session")) var
+

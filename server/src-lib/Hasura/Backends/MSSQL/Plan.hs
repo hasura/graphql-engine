@@ -46,13 +46,13 @@ planQuery
   -> m Select
 planQuery sessionVariables queryDB = do
   rootField <- traverseQueryDB (prepareValueQuery sessionVariables) queryDB
-  select <-
+  sel <-
     runValidate (TSQL.runFromIr (TSQL.fromRootField rootField))
     `onLeft` (throw400 NotSupported . tshow)
   pure $
-    select
+    sel
       { selectFor =
-          case selectFor select of
+          case selectFor sel of
             NoFor           -> NoFor
             JsonFor forJson ->
               JsonFor forJson {jsonRoot =
@@ -136,10 +136,10 @@ collapseMap selects =
     }
   where
     projectSelect :: (G.Name, Select) -> Projection
-    projectSelect (name, select) =
+    projectSelect (name, sel) =
       ExpressionProjection
         (Aliased
-           { aliasedThing = SelectExpression select
+           { aliasedThing = SelectExpression sel
            , aliasedAlias = G.unName name
            })
 
