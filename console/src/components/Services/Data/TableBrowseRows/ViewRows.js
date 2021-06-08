@@ -762,7 +762,7 @@ const ViewRows = props => {
 
     const childViewRows = childQueries.map((cq, i) => {
       // Render child only if data is available
-      if (curRows[0][cq.name]) {
+      if (curRows[0] && curRows[0][cq.name]) {
         const rel = tableSchema.relationships.find(r => r.rel_name === cq.name);
 
         if (rel) {
