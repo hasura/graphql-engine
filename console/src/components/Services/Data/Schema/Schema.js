@@ -225,7 +225,6 @@ class Schema extends Component {
       trackedFunctions,
       currentDataSource,
     } = this.props;
-
     const getSectionHeading = (headingText, tooltip, actionElement = null) => {
       return (
         <div>
@@ -572,6 +571,7 @@ class Schema extends Component {
                   funcs={trackableFuncs}
                   readOnlyMode={readOnlyMode}
                   source={currentDataSource}
+                  allSchemas={schema}
                 />
               ) : (
                 `Currently unsupported for ${(

@@ -64,6 +64,8 @@ export const trackFunction = () => {
   cy.get(
     getElementFromAlias(`add-track-function-${getCustomFunctionName(1)}`)
   ).click();
+  cy.get(getElementFromAlias(`track-as-mutation`)).should('exist');
+  cy.get(getElementFromAlias(`track-as-mutation`)).click();
   cy.wait(5000);
   validateCFunc(getCustomFunctionName(1), getSchema(), ResultType.SUCCESS);
   cy.wait(5000);
@@ -148,7 +150,10 @@ export const deleteCustomFunction = () => {
 
 export const trackVolatileFunction = () => {
   const fN = 'customVolatileFunc'.toLowerCase();
-  dataRequest(dropTableIfExists({ name: 'text_result', schema: 'public'}), ResultType.SUCCESS);
+  dataRequest(
+    dropTableIfExists({ name: 'text_result', schema: 'public' }),
+    ResultType.SUCCESS
+  );
   cy.wait(5000);
   dataRequest(createSampleTable(), ResultType.SUCCESS);
   cy.wait(5000);
@@ -168,7 +173,10 @@ export const trackVolatileFunction = () => {
 
 export const trackVolatileFunctionAsQuery = () => {
   const fN = 'customVolatileFunc'.toLowerCase();
-  dataRequest(dropTableIfExists({ name: 'text_result', schema: 'public'}), ResultType.SUCCESS);
+  dataRequest(
+    dropTableIfExists({ name: 'text_result', schema: 'public' }),
+    ResultType.SUCCESS
+  );
   cy.wait(5000);
   dataRequest(createSampleTable(), ResultType.SUCCESS);
   cy.wait(5000);

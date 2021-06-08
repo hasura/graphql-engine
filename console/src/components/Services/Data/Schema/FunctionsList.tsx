@@ -1,47 +1,78 @@
 import React, { useReducer } from 'react';
 
 import { isEmpty } from '../../../Common/utils/jsUtils';
-import { Dispatch } from '../../../../types';
+import { Dispatch, ReduxState } from '../../../../types';
 import { addExistingFunction } from '../Add/AddExistingTableViewActions';
 import Button from '../../../Common/Button';
 import RawSqlButton from '../Common/Components/RawSqlButton';
 import { Note } from '../../../Common/Note';
 import styles from './styles.scss';
 import { PGFunction } from '../../../../dataSources/services/postgresql/types';
+import { isTrackableAndComputedField } from './utils';
+import _push from '../push';
+import { Table } from '../../../../dataSources/types';
 
-type VolatileFuncNoteProps = {
-  showQueryNote: boolean;
+type FuncNoteProps = {
+  showTrackVolatileNote?: boolean;
   onCancelClick: () => void;
-  onTrackAsMutationClick: () => void;
-  onTrackAsQueryClick: () => void;
-  onTrackAsQueryConfirmClick: () => void;
+  onClickMainAction: () => void;
+  onClickSecondaryAction: () => void;
+  showQueryNote?: boolean;
+  onTrackAsQueryConfirmClick?: () => void;
 };
-const VolatileFuncNote: React.FC<VolatileFuncNoteProps> = ({
-  showQueryNote,
+const FuncNote: React.FC<FuncNoteProps> = ({
+  showQueryNote = false,
+  showTrackVolatileNote = false,
   onCancelClick,
-  onTrackAsMutationClick,
-  onTrackAsQueryClick,
+  onClickMainAction,
+  onClickSecondaryAction,
   onTrackAsQueryConfirmClick,
 }) => {
+  const mainButtonText = showTrackVolatileNote
+    ? 'Track As Mutation'
+    : 'Add As Root Field';
+  const secondaryActionText = showTrackVolatileNote
+    ? 'Track As Query'
+    : 'Cancel';
+  const thirdActionText = showTrackVolatileNote
+    ? 'Cancel'
+    : 'Add As Computed Field';
   return (
     <Note type="warn">
-      This function will be tracked as a <b>Mutation</b> because the function is{' '}
-      <b>VOLATILE</b>
+      {showTrackVolatileNote ? (
+        <>
+          This function will be tracked as a <b>Mutation</b> because the
+          function is <b>VOLATILE</b>
+        </>
+      ) : (
+        <>
+          This function can be added as a <b>root field</b> or a{' '}
+          <b>computed field</b> inside a table.
+        </>
+      )}
       <div className={styles.buttonsSection}>
         <Button
           color="yellow"
-          onClick={onTrackAsMutationClick}
+          onClick={onClickMainAction}
           data-test="track-as-mutation"
         >
-          Track as Mutation
+          {mainButtonText}
         </Button>
-        <Button onClick={onCancelClick}>Cancel</Button>
+        <Button
+          onClick={
+            showTrackVolatileNote ? onCancelClick : onClickSecondaryAction
+          }
+        >
+          {thirdActionText}
+        </Button>
         <button
           className={`${styles.btnBlank} ${styles.queryButton}`}
-          onClick={onTrackAsQueryClick}
+          onClick={
+            showTrackVolatileNote ? onClickSecondaryAction : onCancelClick
+          }
           data-test="track-as-query"
         >
-          Track as Query
+          {secondaryActionText}
         </button>
       </div>
       {showQueryNote ? (
@@ -65,18 +96,21 @@ const VolatileFuncNote: React.FC<VolatileFuncNoteProps> = ({
 type State = {
   volatileNoteOpen: boolean;
   queryWarningOpen: boolean;
+  stableImmutableNoteOpen: boolean;
 };
 
 const defaultState: State = {
   volatileNoteOpen: false,
   queryWarningOpen: false,
+  stableImmutableNoteOpen: false,
 };
 
 type Action =
   | 'click-track-volatile-func'
   | 'click-track-volatile-func-as-query'
   | 'track-volatile-func'
-  | 'cancel';
+  | 'cancel'
+  | 'click-track-stable-immutable-func';
 
 const reducer = (state: State, action: Action): State => {
   switch (action) {
@@ -84,6 +118,11 @@ const reducer = (state: State, action: Action): State => {
       return {
         ...state,
         volatileNoteOpen: true,
+      };
+    case 'click-track-stable-immutable-func':
+      return {
+        ...state,
+        stableImmutableNoteOpen: true,
       };
     case 'click-track-volatile-func-as-query':
       return {
@@ -107,6 +146,7 @@ type TrackableEntryProps = {
   func: PGFunction;
   index: number;
   source: string;
+  allSchemas: Table[];
 };
 const TrackableEntry: React.FC<TrackableEntryProps> = ({
   readOnlyMode,
@@ -114,14 +154,18 @@ const TrackableEntry: React.FC<TrackableEntryProps> = ({
   func,
   index,
   source,
+  allSchemas,
 }) => {
   const [state, dispatchR] = useReducer(reducer, defaultState);
   const isVolatile = func.function_type.toLowerCase() === 'volatile';
+  const isTrackableAndUseInComputedField = isTrackableAndComputedField(func);
 
   const handleTrackFn = (e: React.MouseEvent) => {
     e.preventDefault();
     if (isVolatile) {
       dispatchR('click-track-volatile-func');
+    } else if (isTrackableAndUseInComputedField) {
+      dispatchR('click-track-stable-immutable-func');
     } else {
       dispatch(addExistingFunction(func.function_name));
     }
@@ -164,13 +208,47 @@ const TrackableEntry: React.FC<TrackableEntryProps> = ({
         <span>{func.function_name}</span>
       </div>
 
+      {isTrackableAndUseInComputedField && state.stableImmutableNoteOpen && (
+        <div className={styles.volatileNote}>
+          <FuncNote
+            onCancelClick={() => dispatchR('cancel')}
+            onClickMainAction={() =>
+              dispatch(addExistingFunction(func.function_name))
+            }
+            onClickSecondaryAction={() => {
+              const currentFuncInfo = func.input_arg_types?.find(
+                fn => fn.type === 'c'
+              );
+              if (!currentFuncInfo) {
+                return;
+              }
+              if (
+                !allSchemas?.find(
+                  schemaInfo =>
+                    schemaInfo?.table_name === currentFuncInfo.name &&
+                    schemaInfo?.table_schema === currentFuncInfo.schema
+                )
+              ) {
+                return;
+              }
+              dispatch(
+                _push(
+                  `/data/${source}/schema/${currentFuncInfo.schema}/tables/${currentFuncInfo.name}/modify`
+                )
+              );
+            }}
+          />
+        </div>
+      )}
+
       {isVolatile && state.volatileNoteOpen && (
         <div className={styles.volatileNote}>
-          <VolatileFuncNote
+          <FuncNote
+            showTrackVolatileNote
             showQueryNote={state.queryWarningOpen}
             onCancelClick={() => dispatchR('cancel')}
-            onTrackAsMutationClick={() => handleTrackFunction('mutation')}
-            onTrackAsQueryClick={() =>
+            onClickMainAction={() => handleTrackFunction('mutation')}
+            onClickSecondaryAction={() =>
               dispatchR('click-track-volatile-func-as-query')
             }
             onTrackAsQueryConfirmClick={() => handleTrackFunction('query')}
@@ -186,13 +264,13 @@ type FunctionsListProps = {
   readOnlyMode: boolean;
   dispatch: Dispatch;
   source: string;
+  allSchemas: ReduxState['tables']['allSchemas'];
 };
 export const TrackableFunctionsList: React.FC<FunctionsListProps> = ({
   funcs,
   ...props
 }) => {
   const noTrackableFunctions = isEmpty(funcs);
-
   if (noTrackableFunctions) {
     return (
       <div key="no-untracked-fns">

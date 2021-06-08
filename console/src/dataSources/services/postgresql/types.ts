@@ -17,6 +17,7 @@ export type PGFunction = {
   return_type_type: string;
   function_type: string;
   input_arg_types?: PGInputArgType[];
+  returns_set: boolean;
 };
 
 export interface PostgresTable {

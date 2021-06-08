@@ -97,7 +97,7 @@ export const getFetchTablesListQuery = (options: {
       COALESCE(json_agg(DISTINCT row_to_json(ist) :: jsonb || jsonb_build_object('comment', obj_description(pgt.oid))) filter (WHERE ist.trigger_name IS NOT NULL), '[]' :: json) AS triggers,
       row_to_json(isv) AS view_info
 
-    FROM partitions, pg_class as pgc
+    FROM pg_class as pgc
     INNER JOIN pg_namespace as pgn
       ON pgc.relnamespace = pgn.oid
 
@@ -179,7 +179,6 @@ export const getFetchTablesListQuery = (options: {
   
     WHERE
       pgc.relkind IN ('r', 'v', 'f', 'm', 'p')
-      and NOT (pgc.relname = ANY (partitions.names)) 
       ${whereQuery}
     GROUP BY pgc.oid, pgn.nspname, pgc.relname, table_type, isv.*
   ) AS info;
@@ -400,7 +399,7 @@ export const getCreateTableQueries = (
 
   // add comment
   if (tableComment && tableComment !== '') {
-    sqlCreateTable += `COMMENT ON TABLE "${currentSchema}"."${tableName}" IS ${sqlEscapeText(
+    sqlCreateTable += `COMMENT ON TABLE "${currentSchema}".${tableName} IS ${sqlEscapeText(
       tableComment
     )};`;
   }
@@ -796,8 +795,6 @@ export const getCreatePkSql = ({
     add constraint "${constraintName}"
     primary key (${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')});`;
 };
-
-export const getFunctionsWhereQuery = () => {};
 
 const trackableFunctionsWhere = `
 AND has_variadic = FALSE
