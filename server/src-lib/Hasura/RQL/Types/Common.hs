@@ -79,8 +79,6 @@ import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Headers             ()
-import           Hasura.RQL.Types.Backend
-import           Hasura.SQL.Backend                 (BackendType)
 import           Hasura.SQL.Types
 
 newtype RelName
@@ -153,26 +151,6 @@ instance ToJSON InsertOrder where
     BeforeParent -> String "before_parent"
     AfterParent  -> String "after_parent"
 
--- should this be parameterized by both the source and the destination backend?
-data RelInfo (b :: BackendType)
-  = RelInfo
-  { riName        :: !RelName
-  , riType        :: !RelType
-  , riMapping     :: !(HashMap (Column b) (Column b))
-  , riRTable      :: !(TableName b)
-  , riIsManual    :: !Bool
-  , riIsNullable  :: !Bool
-  , riInsertOrder :: !InsertOrder
-  } deriving (Generic)
-deriving instance Backend b => Show (RelInfo b)
-deriving instance Backend b => Eq   (RelInfo b)
-instance Backend b => NFData (RelInfo b)
-instance Backend b => Cacheable (RelInfo b)
-instance Backend b => Hashable (RelInfo b)
-instance Backend b => FromJSON (RelInfo b) where
-  parseJSON = genericParseJSON hasuraJSON
-instance Backend b => ToJSON (RelInfo b) where
-  toJSON = genericToJSON hasuraJSON
 
 -- | Postgres OIDs. <https://www.postgresql.org/docs/12/datatype-oid.html>
 newtype OID = OID { unOID :: Int }

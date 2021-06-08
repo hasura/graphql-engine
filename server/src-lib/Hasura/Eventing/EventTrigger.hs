@@ -51,9 +51,7 @@ import qualified Data.TByteString                       as TBS
 import qualified Data.Text                              as T
 import qualified Data.Time.Clock                        as Time
 import qualified Database.PG.Query                      as Q
-import qualified Database.PG.Query.PTI                  as PTI
 import qualified Network.HTTP.Client                    as HTTP
-import qualified PostgreSQL.Binary.Encoding             as PE
 import qualified System.Metrics.Distribution            as EKG.Distribution
 import qualified System.Metrics.Gauge                   as EKG.Gauge
 
@@ -87,6 +85,7 @@ import           Hasura.Server.Migrate.Internal         (getCatalogVersion)
 import           Hasura.Server.Migrate.Version          (latestCatalogVersionString)
 import           Hasura.Server.Types
 import           Hasura.Server.Version                  (HasVersion)
+
 
 data TriggerMetadata
   = TriggerMetadata { tmName :: TriggerName }
@@ -260,33 +259,39 @@ processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} Locked
         (delivered=t or error=t or archived=t) after a fixed number of tries (assuming it begins with locked='f').
       -}
       pgSources <- scSources <$> liftIO getSchemaCache
-      liftIO $ fmap concat $ forM (M.toList pgSources) $ \(sourceName, sourceCache) ->
-        case unsafeSourceConfiguration @('Postgres 'Vanilla) sourceCache of
-          Nothing           -> pure []
-          Just sourceConfig -> do
-            fetchEventsTxE <-
-              case maintenanceMode of
-                MaintenanceModeEnabled -> do
-                  maintenanceModeVersion <- runPgSourceReadTx sourceConfig getMaintenanceModeVersion
-                  pure $ fmap (fetchEventsMaintenanceMode sourceName fetchBatchSize) maintenanceModeVersion
-                MaintenanceModeDisabled -> return $ Right $ fetchEvents sourceName fetchBatchSize
-            liftIO $ do
-              case fetchEventsTxE of
-                Left err -> do
-                  liftIO $ L.unLogger logger $ EventInternalErr err
-                  return []
-                Right fetchEventsTx ->
-                  runPgSourceWriteTx sourceConfig fetchEventsTx >>= \case
+      liftIO . fmap concat $
+        for (M.toList pgSources) \(sourceName, sourceCache) -> concat . toList <$>
+          for (unsafeSourceTables @('Postgres 'Vanilla) sourceCache) \tables -> liftIO do
+            -- count the number of event triggers on tables in this source
+            let eventTriggerCount = sum (M.size . _tiEventTriggerInfoMap <$> tables)
+
+            -- only process events for this source if at least one event trigger exists
+            if eventTriggerCount > 0 then fmap (concat . toList) $
+              for (unsafeSourceConfiguration @('Postgres 'Vanilla) sourceCache) \sourceConfig -> do
+                fetchEventsTxE <-
+                  case maintenanceMode of
+                    MaintenanceModeEnabled -> do
+                      maintenanceModeVersion <- runPgSourceReadTx sourceConfig getMaintenanceModeVersion
+                      pure $ fmap (fetchEventsMaintenanceMode sourceName fetchBatchSize) maintenanceModeVersion
+                    MaintenanceModeDisabled -> return $ Right $ fetchEvents sourceName fetchBatchSize
+                liftIO $ do
+                  case fetchEventsTxE of
                     Left err -> do
                       liftIO $ L.unLogger logger $ EventInternalErr err
                       return []
-                    Right events -> do
-                      -- Track number of events fetched in EKG
-                      _ <- liftIO $ EKG.Distribution.add (smNumEventsFetchedPerBatch serverMetrics) (fromIntegral $ length events)
-                      -- The time when the events were fetched. This is used to calculate the average lock time of an event.
-                      eventsFetchedTime <- liftIO getCurrentTime
-                      saveLockedEvents (map eId events) leEvents
-                      return $ map (, sourceConfig, eventsFetchedTime) events
+                    Right fetchEventsTx ->
+                      runPgSourceWriteTx sourceConfig fetchEventsTx >>= \case
+                        Left err -> do
+                          liftIO $ L.unLogger logger $ EventInternalErr err
+                          return []
+                        Right events -> do
+                          -- Track number of events fetched in EKG
+                          _ <- liftIO $ EKG.Distribution.add (smNumEventsFetchedPerBatch serverMetrics) (fromIntegral $ length events)
+                          -- The time when the events were fetched. This is used to calculate the average lock time of an event.
+                          eventsFetchedTime <- liftIO getCurrentTime
+                          saveLockedEvents (map eId events) leEvents
+                          return $ map (, sourceConfig, eventsFetchedTime) events
+              else pure []
 
     -- !!! CAREFUL !!!
     --     The logic here in particular is subtle and has been fixed, broken,
@@ -562,7 +567,9 @@ fetchEvents source limitI =
                           and (l.locked IS NULL or l.locked < (NOW() - interval '30 minute'))
                           and (l.next_retry_at is NULL or l.next_retry_at <= now())
                           and l.archived = 'f'
-                    ORDER BY created_at
+                    /* NB: this ordering is important for our index `event_log_fetch_events` */
+                    /* (see `init_pg_source.sql`) */
+                    ORDER BY locked NULLS FIRST, next_retry_at NULLS FIRST, created_at
                     LIMIT $1
                     FOR UPDATE SKIP LOCKED )
       RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at
@@ -681,15 +688,6 @@ setRetry e time = \case
 toInt64 :: (Integral a) => a -> Int64
 toInt64 = fromIntegral
 
--- EventIdArray is only used for PG array encoding
-newtype EventIdArray = EventIdArray { unEventIdArray :: [EventId]} deriving (Show, Eq)
-
-instance Q.ToPrepArg EventIdArray where
-  toPrepVal (EventIdArray l) = Q.toPrepValHelper PTI.unknown encoder $ map unEventId l
-    where
-      -- 25 is the OID value of TEXT, https://jdbc.postgresql.org/development/privateapi/constant-values.html
-      encoder = PE.array 25 . PE.dimensionArray foldl' (PE.encodingArray . PE.text_strict)
-
 -- | unlockEvents takes an array of 'EventId' and unlocks them. This function is called
 --   when a graceful shutdown is initiated.
 unlockEvents :: [EventId] -> Q.TxE QErr Int
@@ -706,13 +704,19 @@ unlockEvents eventIds =
      AND locked IS NOT NULL
      RETURNING *)
      SELECT count(*) FROM "cte"
-   |] (Identity $ EventIdArray eventIds) True
+   |] (Identity $ PGTextArray $ map unEventId eventIds) True
 
 getMaintenanceModeVersion :: Q.TxE QErr MaintenanceModeVersion
 getMaintenanceModeVersion = liftTx $ do
   catalogVersion <- getCatalogVersion -- From the user's DB
-  if | catalogVersion == "40" -> pure PreviousMMVersion
+  -- the previous version and the current version will change depending
+  -- upon between which versions we need to support maintenance mode
+  if | catalogVersion == "40"     -> pure PreviousMMVersion
+     -- The catalog is migrated to the 43rd version for a source
+     -- which was initialised by a v1 graphql-engine instance (See @initSource@).
+     | catalogVersion == "43"     -> pure CurrentMMVersion
      | catalogVersion == latestCatalogVersionString -> pure CurrentMMVersion
-     | otherwise              ->
+     | otherwise                  ->
        throw500 $
-         "Maintenance mode is only supported with catalog versions: 40 and " <> latestCatalogVersionString
+         "Maintenance mode is only supported with catalog versions: 40, 43 and "
+         <> tshow latestCatalogVersionString

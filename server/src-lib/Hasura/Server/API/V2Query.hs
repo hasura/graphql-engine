@@ -14,6 +14,7 @@ import           Data.Aeson.TH
 
 import qualified Hasura.Backends.BigQuery.DDL.RunSQL as BigQuery
 import qualified Hasura.Backends.MSSQL.DDL.RunSQL    as MSSQL
+import qualified Hasura.Backends.Postgres.DDL.RunSQL as Postgres
 import qualified Hasura.Tracing                      as Tracing
 
 import           Hasura.Base.Error
@@ -39,9 +40,9 @@ data RQLQuery
   | RQUpdate !UpdateQuery
   | RQDelete !DeleteQuery
   | RQCount  !CountQuery
-  | RQRunSql !RunSQL
+  | RQRunSql !Postgres.RunSQL
   | RQMssqlRunSql !MSSQL.MSSQLRunSQL
-  | RQCitusRunSql !RunSQL
+  | RQCitusRunSql !Postgres.RunSQL
   | RQBigqueryRunSql !BigQuery.BigQueryRunSQL
   | RQBigqueryDatabaseInspection !BigQuery.BigQueryRunSQL
   | RQBulk ![RQLQuery]
@@ -97,9 +98,10 @@ runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuer
 
 queryModifiesSchema :: RQLQuery -> Bool
 queryModifiesSchema = \case
-  RQRunSql q -> isSchemaCacheBuildRequiredRunSQL q
-  RQBulk l   -> any queryModifiesSchema l
-  _          -> False
+  RQRunSql q      -> Postgres.isSchemaCacheBuildRequiredRunSQL q
+  RQMssqlRunSql q -> MSSQL.sqlContainsDDLKeyword $ MSSQL._mrsSql q
+  RQBulk l        -> any queryModifiesSchema l
+  _               -> False
 
 runQueryM
   :: ( HasVersion
@@ -119,9 +121,9 @@ runQueryM env = \case
   RQUpdate q                     -> runUpdate env q
   RQDelete q                     -> runDelete env q
   RQCount  q                     -> runCount q
-  RQRunSql q                     -> runRunSQL @'Vanilla q
+  RQRunSql q                     -> Postgres.runRunSQL @'Vanilla q
   RQMssqlRunSql q                -> MSSQL.runSQL q
-  RQCitusRunSql q                -> runRunSQL @'Citus q
+  RQCitusRunSql q                -> Postgres.runRunSQL @'Citus q
   RQBigqueryRunSql q             -> BigQuery.runSQL q
   RQBigqueryDatabaseInspection q -> BigQuery.runDatabaseInspection q
   RQBulk   l                     -> encJFromList <$> indexedMapM (runQueryM env) l

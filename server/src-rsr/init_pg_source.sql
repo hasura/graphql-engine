@@ -34,10 +34,16 @@ CREATE TABLE hdb_catalog.event_log
   archived BOOLEAN NOT NULL DEFAULT FALSE
 );
 
+/* This powers `archiveEvents` */
 CREATE INDEX ON hdb_catalog.event_log (trigger_name);
-CREATE INDEX ON hdb_catalog.event_log (locked);
-CREATE INDEX ON hdb_catalog.event_log (delivered);
-CREATE INDEX ON hdb_catalog.event_log (created_at);
+/* This index powers `fetchEvents` */
+CREATE INDEX event_log_fetch_events
+  ON hdb_catalog.event_log (locked NULLS FIRST, next_retry_at NULLS FIRST, created_at)
+  WHERE delivered = 'f' 
+    and error = 'f'
+    and archived = 'f'
+;
+
 
 CREATE TABLE hdb_catalog.event_invocation_logs
 (

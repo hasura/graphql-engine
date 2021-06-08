@@ -544,8 +544,7 @@ instance Backend b => FromJSON (ForeignKeyMetadata b) where
     else fail "columns and foreign_columns differ in length"
 
 
--- | Metadata of a Postgres table which is being extracted from
--- database via 'src-rsr/pg_table_metadata.sql'
+-- | Metadata of any Backend table which is being extracted from source database
 data DBTableMetadata (b :: BackendType)
   = DBTableMetadata
   { _ptmiOid                :: !OID

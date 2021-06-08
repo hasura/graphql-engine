@@ -13,23 +13,19 @@ import (
 	. "github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("migrate_delete", func() {
-	var session *Session
+var _ = Describe("hasura migrate delete", func() {
 	var teardown func()
 	var hgeEndpoint string
 	BeforeEach(func() {
-		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraVersion)
+		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint = fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 
 		teardown = func() {
-			session.Kill()
 			teardownHGE()
 		}
 	})
 
-	AfterEach(func() {
-		teardown()
-	})
+	AfterEach(func() { teardown() })
 
 	Context("migrate delete --all", func() {
 		It("should delete the migrations on server and on source ", func() {
@@ -39,7 +35,7 @@ var _ = Describe("migrate_delete", func() {
 			})
 			editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
 
-			session = testutil.RunCommandAndSucceed(testutil.CmdOpts{
+			session := testutil.RunCommandAndSucceed(testutil.CmdOpts{
 				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;", "--database-name", "default"},
 				WorkingDirectory: projectDirectory,
 			})
@@ -96,7 +92,7 @@ var _ = Describe("migrate_delete", func() {
 			})
 
 			editEndpointInConfig(filepath.Join(dirName, defaultConfigFilename), hgeEndpoint)
-			session = testutil.RunCommandAndSucceed(testutil.CmdOpts{
+			session := testutil.RunCommandAndSucceed(testutil.CmdOpts{
 				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;", "--database-name", "default"},
 				WorkingDirectory: dirName,
 			})
@@ -133,7 +129,6 @@ var _ = Describe("migrate_delete", func() {
 		})
 	})
 
-
 	Context("migrate delete --version <version> (config v2)", func() {
 		It("should delete the migrations on server and on source ", func() {
 			projectDirectory := testutil.RandDirName()
@@ -142,7 +137,7 @@ var _ = Describe("migrate_delete", func() {
 			})
 
 			editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
-			session = testutil.RunCommandAndSucceed(testutil.CmdOpts{
+			session := testutil.RunCommandAndSucceed(testutil.CmdOpts{
 				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;"},
 				WorkingDirectory: projectDirectory,
 			})
@@ -187,7 +182,7 @@ var _ = Describe("migrate_delete", func() {
 			})
 			editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
 
-			session = testutil.RunCommandAndSucceed(testutil.CmdOpts{
+			session := testutil.RunCommandAndSucceed(testutil.CmdOpts{
 				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;"},
 				WorkingDirectory: projectDirectory,
 			})

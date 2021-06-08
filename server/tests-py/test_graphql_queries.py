@@ -10,7 +10,7 @@ usefixtures = pytest.mark.usefixtures
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['bigquery'])
-@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicBigquery:
 
     # initialize the metadata
@@ -106,7 +106,7 @@ class TestGraphQLQueryBasicBigquery:
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['citus', 'mssql', 'postgres'])
-@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicCommon:
     # This also exercises support for multiple operations in a document:
     def test_select_query_author(self, hge_ctx, transport):
@@ -154,10 +154,6 @@ class TestGraphQLQueryBasicCommon:
     def test_select_query_multiple_columns_obj_fkey(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_multiple_columns_obj_fkey.yaml", transport)
 
-    def test_create_invalid_fkey_relationship(self, hge_ctx, transport):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + '/setup_invalid_fkey_relationship.yaml')
-        assert st_code == 400, resp
-        assert resp['error'] == "Expecting object { table, columns }."
 
     @classmethod
     def dir(cls):
@@ -165,7 +161,7 @@ class TestGraphQLQueryBasicCommon:
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['mssql'])
-@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicMSSQL:
     def test_select_various_mssql_types(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_test_types_mssql.yaml', transport)
@@ -182,7 +178,7 @@ class TestGraphQLQueryBasicMSSQL:
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['postgres'])
-@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicPostgres:
     # Can't run server upgrade tests, as this test has a schema change
     @pytest.mark.skip_server_upgrade_test
@@ -224,13 +220,18 @@ class TestGraphQLQueryBasicPostgres:
         transport = 'http'
         check_query_f(hge_ctx, self.dir() + "/select_query_batching_with_one_error.yaml", transport)
 
+    def test_create_invalid_fkey_relationship(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + '/setup_invalid_fkey_relationship.yaml')
+        assert st_code == 400, resp
+        assert resp['error'] == "Expecting object { table, columns }."
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['citus'])
-@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicCitus:
     def test_nested_select_with_foreign_key_alter(self, hge_ctx, transport):
         transport = 'http'
@@ -257,13 +258,18 @@ class TestGraphQLQueryBasicCitus:
         transport = 'http'
         check_query_f(hge_ctx, self.dir() + "/select_query_disaster_functions.yaml", transport)
 
+    def test_create_invalid_fkey_relationship(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/setup_invalid_fkey_relationship.yaml')
+        assert st_code == 400, resp
+        assert resp['error'] == "Expecting object { table, columns }."
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/citus'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['citus', 'postgres'])
-@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryFragments:
 
     def test_select_query_top_level_fragment(self, hge_ctx, transport):
@@ -382,10 +388,9 @@ class TestGraphQLQueryOffsets:
     def dir(cls):
         return 'queries/graphql_query/offset'
 
-
 @pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
 @pytest.mark.parametrize("backend", ['mssql', 'postgres'])
-@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpBasicCommon:
     def test_order_delivered_at_is_null(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_order_delivered_at_is_null.yaml', transport)
@@ -432,7 +437,7 @@ class TestGraphQLQueryBoolExpBasicCommon:
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['postgres'])
-@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpBasicPostgres:
     def test_author_article_operator_ne_not_found_err(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_operator_ne_not_found_err_postgres.yaml', transport)
@@ -467,7 +472,7 @@ class TestGraphQLQueryBoolExpBasicPostgres:
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['mssql'])
-@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpBasicMSSQL:
     def test_author_article_operator_ne_not_found_err(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_operator_ne_not_found_err_mssql.yaml', transport)
@@ -478,8 +483,14 @@ class TestGraphQLQueryBoolExpBasicMSSQL:
     def test_uuid_test_in_uuid_col(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_uuid_test_in_uuid_col_mssql.yaml', transport)
 
+    @pytest.mark.skip(reason="TODO: https://github.com/hasura/graphql-engine-mono/issues/1438")
     def test_bools(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_bools_mssql.yaml', transport)
+
+    def test_create_invalid_fkey_relationship(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/setup_invalid_fkey_relationship_mssql.yaml')
+        assert st_code == 400, resp
+        assert resp['error'] == "Expecting object { table, columns }."
 
     @classmethod
     def dir(cls):
@@ -576,7 +587,7 @@ class TestGraphQLInheritedRoles:
 
 @pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
 @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
-@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpSearchCommon:
 
     def test_city_where_like(self, hge_ctx, transport):
@@ -591,7 +602,7 @@ class TestGraphQLQueryBoolExpSearchCommon:
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['postgres'])
-@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpSearchPostgres:
 
     def test_city_where_ilike(self, hge_ctx, transport):
@@ -627,7 +638,7 @@ class TestGraphQLQueryBoolExpSearchPostgres:
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['mssql'])
-@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpSearchMSSQL:
 
     def test_city_where_like(self, hge_ctx, transport):
@@ -933,7 +944,7 @@ class TestUnauthorizedRolePermission:
         check_query_f(hge_ctx, self.dir() + '/unauthorized_role.yaml', transport, False)
 
 @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
-@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLExplain:
     @classmethod
     def dir(cls):
@@ -1113,7 +1124,7 @@ class TestGraphQLQueryBoolExpLtree:
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['mssql'])
-@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpSpatialMSSQL:
     @pytest.mark.skip_server_upgrade_test
     def test_select_spatial_mssql_types(self, hge_ctx, transport):

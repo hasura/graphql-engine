@@ -1,9 +1,9 @@
-module Hasura.Backends.MSSQL.SQL.Value where
+module Hasura.Backends.MSSQL.SQL.Value (txtEncodedColVal) where
 
 import           Hasura.Prelude
 
 import qualified Database.ODBC.SQLServer               as ODBC
-import qualified Hasura.GraphQL.Execute.LiveQuery.Plan as LQP
+import           Hasura.GraphQL.Execute.LiveQuery.Plan ()
 import qualified Hasura.RQL.Types.Column               as RQL
 
 import           Data.Text.Encoding                    (decodeUtf8)
@@ -19,5 +19,5 @@ txtEncodedVal (ODBC.ByteStringValue b) = TELit $ decodeUtf8 b
 txtEncodedVal (ODBC.TextValue t)       = TELit t
 txtEncodedVal val                      = TELit $ toSQLTxt $ ValueExpression val
 
-toTxtEncodedVal :: forall f. Functor f => f (RQL.ColumnValue 'MSSQL) -> LQP.ValidatedVariables f
-toTxtEncodedVal = LQP.ValidatedVariables . fmap (txtEncodedVal . RQL.cvValue)
+txtEncodedColVal :: RQL.ColumnValue 'MSSQL -> TxtEncodedVal
+txtEncodedColVal = txtEncodedVal . RQL.cvValue

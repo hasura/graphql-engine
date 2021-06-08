@@ -32,8 +32,8 @@ import DropDownSelector from './DropDownSelector';
 import { getSourceDriver } from '../utils';
 import { getDataSources } from '../../../../metadata/selector';
 import { services } from '../../../../dataSources/services';
-import { isFeatureSupported } from '../../../../dataSources';
-
+import { isFeatureSupported, setDriver } from '../../../../dataSources';
+import { fetchDataInit, UPDATE_CURRENT_DATA_SOURCE } from '../DataActions';
 /**
  * # RawSQL React FC
  * ## renders raw SQL page on route `/data/sql`
@@ -86,10 +86,19 @@ const RawSQL = ({
   useEffect(() => {
     const driver = getSourceDriver(sources, selectedDatabase);
     setSelectedDriver(driver);
-    if (driver !== 'postgres') setStatementTimeout(null);
+    if (!isFeatureSupported('rawSQL.statementTimeout'))
+      setStatementTimeout(null);
   }, [selectedDatabase, sources]);
 
   const dropDownSelectorValueChange = value => {
+    const driver = getSourceDriver(sources, value);
+    dispatch({
+      type: UPDATE_CURRENT_DATA_SOURCE,
+      source: value,
+    });
+    setDriver(driver);
+    dispatch(fetchDataInit(value, driver));
+
     setSelectedDatabase(value);
   };
 
@@ -483,7 +492,7 @@ const RawSQL = ({
           {getMetadataCascadeSection()}
           {getMigrationSection()}
 
-          {selectedDriver === 'postgres' && (
+          {isFeatureSupported('rawSQL.statementTimeout') && (
             <StatementTimeout
               statementTimeout={statementTimeout}
               isMigrationChecked={

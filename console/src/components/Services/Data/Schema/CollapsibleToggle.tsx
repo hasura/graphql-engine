@@ -69,9 +69,23 @@ const CollapsibleToggle: React.FC<CollapsibleToggleProps> = ({
             </div>
           ) : null}
           {dataSource.connection_pool_settings?.retries ? (
-            <div>
+            <div className={styles.add_mar_bottom_mid}>
               <span className={styles.dataSource_label}>Retries</span>
               {dataSource.connection_pool_settings?.retries}
+            </div>
+          ) : null}
+          {dataSource.connection_pool_settings?.pool_timeout ? (
+            <div className={styles.add_mar_bottom_mid}>
+              <span className={styles.dataSource_label}>Pool Timeout</span>
+              {dataSource.connection_pool_settings?.pool_timeout}
+            </div>
+          ) : null}
+          {dataSource.connection_pool_settings?.connection_lifetime ? (
+            <div>
+              <span className={styles.dataSource_label}>
+                Connection Lifetime
+              </span>
+              {dataSource.connection_pool_settings?.connection_lifetime}
             </div>
           ) : null}
         </>

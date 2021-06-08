@@ -43,16 +43,16 @@ planQuery
   :: MonadError QErr m
   => SessionVariables
   -> QueryDB 'MSSQL (GraphQL.UnpreparedValue 'MSSQL)
-  -> m (Select, PrepareState)
+  -> m Select
 planQuery sessionVariables queryDB = do
-  let (rootField, env) = flip runState emptyPrepareState $ traverseQueryDB (prepareValueQuery (getSessionVariablesSet $ sessionVariables)) queryDB
-  select <-
+  rootField <- traverseQueryDB (prepareValueQuery sessionVariables) queryDB
+  sel <-
     runValidate (TSQL.runFromIr (TSQL.fromRootField rootField))
     `onLeft` (throw400 NotSupported . tshow)
-  pure $ (,env)
-    select
+  pure $
+    sel
       { selectFor =
-          case selectFor select of
+          case selectFor sel of
             NoFor           -> NoFor
             JsonFor forJson ->
               JsonFor forJson {jsonRoot =
@@ -66,6 +66,28 @@ planQuery sessionVariables queryDB = do
                                    keep   -> keep
                               }
       }
+
+-- | Prepare a value without any query planning; we just execute the
+-- query with the values embedded.
+prepareValueQuery
+  :: MonadError QErr m
+  => SessionVariables
+  -> GraphQL.UnpreparedValue 'MSSQL
+  -> m TSQL.Expression
+prepareValueQuery sessionVariables =
+  {- History note:
+      This function used to be called 'planNoPlan', and was used for building sql
+      expressions for queries. That evolved differently, but this function is now
+      left as a *suggestion* for implementing support for mutations.
+      -}
+  \case
+    GraphQL.UVLiteral x -> pure x
+    GraphQL.UVSession -> pure $ ValueExpression $ ODBC.ByteStringValue $ toStrict $ J.encode sessionVariables
+    GraphQL.UVParameter _ RQL.ColumnValue{..} -> pure $ ValueExpression cvValue
+    GraphQL.UVSessionVar _typ sessionVariable -> do
+      value <- getSessionVariableValue sessionVariable sessionVariables
+        `onNothing` throw400 NotFound ("missing session variable: " <>> sessionVariable)
+      pure $ ValueExpression $ ODBC.TextValue value
 
 planSubscription
   :: MonadError QErr m
@@ -114,10 +136,10 @@ collapseMap selects =
     }
   where
     projectSelect :: (G.Name, Select) -> Projection
-    projectSelect (name, select) =
+    projectSelect (name, sel) =
       ExpressionProjection
         (Aliased
-           { aliasedThing = SelectExpression select
+           { aliasedThing = SelectExpression sel
            , aliasedAlias = G.unName name
            })
 
@@ -147,87 +169,6 @@ emptyPrepareState = PrepareState
   , namedArguments = mempty
   , sessionVariables = mempty
   }
-
--- | Prepare a value without any query planning; Similar to
--- 'prepareValueMultiplex' we replace occurrences of session variables and
--- parameters with references, but with a slightly simpler object.
-prepareValueQuery
-  :: Set.HashSet SessionVariable
-  -> GraphQL.UnpreparedValue 'MSSQL
-  -> State PrepareState TSQL.Expression
-prepareValueQuery globalVariables =
-  \case
-    GraphQL.UVLiteral x -> pure x
-
-    GraphQL.UVSession -> do
-      modify' (\s -> s {sessionVariables = sessionVariables s <> globalVariables})
-      pure $ sessionVariable RootPath
-
-    GraphQL.UVSessionVar _typ text -> do
-      modify' (\s -> s {sessionVariables = text `Set.insert` sessionVariables s})
-      pure $ sessionVariable (RootPath `FieldPath` toTxt text)
-
-    GraphQL.UVParameter mVariableInfo columnValue ->
-      case fmap GraphQL.getName mVariableInfo of
-        Nothing -> do
-          currentIndex <- (toInteger . length) <$> gets positionalArguments
-          modify' (\s -> s {
-            positionalArguments = positionalArguments s <> [columnValue] })
-          pure (positionalArgument (RootPath `IndexPath` currentIndex))
-        Just name -> do
-          modify
-            (\s ->
-               s
-                 { namedArguments =
-                     HM.insert name columnValue (namedArguments s)
-                 })
-          pure $ namedArgument (RootPath `FieldPath` G.unName name)
-
-    where
-      -- A reference to `row.<column>`
-      rowDot :: Text -> Expression
-      rowDot field =
-        ColumnExpression
-          FieldName
-            { fieldNameEntity = rowAlias
-            , fieldName = field
-            }
-
-      -- A reference to `row.session.<field>`
-      sessionVariable :: JsonPath -> Expression
-      sessionVariable = JsonValueExpression (rowDot "session")
-
-      -- A reference to `row.positionalArguments.[ix]`
-      positionalArgument :: JsonPath -> Expression
-      positionalArgument = JsonValueExpression (rowDot "positionalArguments")
-
-      -- A reference to `row.namedArguments.<field>`
-      namedArgument :: JsonPath -> Expression
-      namedArgument = JsonValueExpression (rowDot "namedArguments")
-
-
-
--- | Prepare a value without any query planning; we just execute the
--- query with the values embedded.
-_prepareValueMutation
-  :: MonadError QErr m
-  => SessionVariables
-  -> GraphQL.UnpreparedValue 'MSSQL
-  -> m TSQL.Expression
-_prepareValueMutation sessionVariables =
-  {- History note:
-      This function used to be called 'planNoPlan', and was used for building sql
-      expressions for queries. That evolved differently, but this function is now
-      left as a *suggestion* for implementing support for mutations.
-      -}
-  \case
-    GraphQL.UVLiteral x -> pure x
-    GraphQL.UVSession -> pure $ ValueExpression $ ODBC.ByteStringValue $ toStrict $ J.encode sessionVariables
-    GraphQL.UVParameter _ RQL.ColumnValue{..} -> pure $ ValueExpression cvValue
-    GraphQL.UVSessionVar _typ sessionVariable -> do
-      value <- getSessionVariableValue sessionVariable sessionVariables
-        `onNothing` throw400 NotFound ("missing session variable: " <>> sessionVariable)
-      pure $ ValueExpression $ ODBC.TextValue value
 
 
 -- | Prepare a value for multiplexed queries.

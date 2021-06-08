@@ -86,7 +86,7 @@ fromExpression =
             (NewlinePrinter <+> "OR ")
             (fmap (\x -> "(" <+> fromExpression x <+> ")") (toList xs))
     NotExpression expression -> "NOT " <+> (fromExpression expression)
-    ExistsExpression select -> "EXISTS (" <+> fromSelect select <+> ")"
+    ExistsExpression sel     -> "EXISTS (" <+> fromSelect sel <+> ")"
     IsNullExpression expression ->
       "(" <+> fromExpression expression <+> ") IS NULL"
     IsNotNullExpression expression ->
@@ -152,15 +152,16 @@ fromSelect Select {..} = wrapFor selectFor result
   where
     result =
       SepByPrinter
-      NewlinePrinter
+      NewlinePrinter $
       [ "SELECT " <+>
         IndentPrinter
           7
           (SepByPrinter
              ("," <+> NewlinePrinter)
              (map fromProjection (toList selectProjections)))
-      , "FROM " <+> IndentPrinter 5 (fromFrom selectFrom)
-      , SepByPrinter
+      ] <>
+      [ "FROM " <+> IndentPrinter 5 (fromFrom f) | Just f <- [selectFrom] ] <>
+      [ SepByPrinter
           NewlinePrinter
           (map
              (\Join {..} ->
@@ -181,7 +182,7 @@ fromSelect Select {..} = wrapFor selectFor result
 fromJoinSource :: JoinSource -> Printer
 fromJoinSource =
   \case
-    JoinSelect select     -> fromSelect select
+    JoinSelect sel        -> fromSelect sel
     JoinReselect reselect -> fromReselect reselect
 
 fromReselect :: Reselect -> Printer
@@ -196,8 +197,8 @@ fromReselect Reselect {..} = wrapFor reselectFor result
             (SepByPrinter
                ("," <+> NewlinePrinter)
                (map fromProjection (toList reselectProjections)))
-        , fromFor reselectFor
         , fromWhere reselectWhere
+        , fromFor reselectFor
         ]
 
 fromOrderBys ::

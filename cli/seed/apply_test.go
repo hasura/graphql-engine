@@ -16,9 +16,9 @@ import (
 )
 
 func TestDriver_ApplySeedsToDatabase(t *testing.T) {
-	port13, teardown := testutil.StartHasura(t, "v1.3.3")
+	port13, teardown := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown()
-	portLatest, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
+	portLatest, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardown()
 	type fields struct {
 		SendBulk     sendBulk
@@ -40,7 +40,7 @@ func TestDriver_ApplySeedsToDatabase(t *testing.T) {
 		before func(t *testing.T)
 	}{
 		{
-			"can apply seeds in v1.3.3",
+			"can apply seeds in hasura/graphql-engine:v1.3.3",
 			fields{
 				func() sendBulk {
 					c := testutil.NewHttpcClient(t, port13, nil)

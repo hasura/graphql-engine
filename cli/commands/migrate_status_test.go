@@ -12,14 +12,13 @@ import (
 	. "github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("migrate_status", func() {
-
+var _ = Describe("hasura migrate status", func() {
 	var dirName string
 	var session *Session
 	var teardown func()
 	BeforeEach(func() {
 		dirName = testutil.RandDirName()
-		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraVersion)
+		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: []string{"init", dirName},
@@ -33,9 +32,7 @@ var _ = Describe("migrate_status", func() {
 		}
 	})
 
-	AfterEach(func() {
-		teardown()
-	})
+	AfterEach(func() { teardown() })
 
 	Context("migrate status test", func() {
 		It("should show the status of migrations between local and server ", func() {

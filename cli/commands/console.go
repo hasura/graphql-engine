@@ -112,9 +112,9 @@ func (o *ConsoleOptions) Run() error {
 	}
 
 	// Setup console server
-	const basePath = "/pkg/console/templates/gohtml/"
+	const basePath = "templates/gohtml/"
 	const templateFilename = "console.gohtml"
-	templateProvider := console.NewDefaultTemplateProvider(basePath, templateFilename)
+	templateProvider := console.NewDefaultTemplateProvider(basePath, templateFilename, console.ConsoleFS)
 	consoleTemplateVersion := templateProvider.GetTemplateVersion(o.EC.Version)
 	consoleAssetsVersion := templateProvider.GetAssetsVersion(o.EC.Version)
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)

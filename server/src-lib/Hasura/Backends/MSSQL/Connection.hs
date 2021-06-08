@@ -150,7 +150,7 @@ odbcExceptionToJSONValue =
 runJSONPathQuery
   :: (MonadError QErr m, MonadIO m)
   => MSSQLPool -> ODBC.Query -> m Text
-runJSONPathQuery pool query = do
+runJSONPathQuery pool query =
   mconcat <$> withMSSQLPool pool (`ODBC.query` query)
 
 withMSSQLPool

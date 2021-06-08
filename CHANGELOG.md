@@ -2,6 +2,28 @@
 
 ## Next release
 
+### Bug fixes and improvements
+(Add entries below in the order of server, console, cli, docs, others)
+- console: add foreign key CRUD functionality to ms sql server tables
+
+
+## v2.0.0-beta.1
+
+### Bug fixes and improvements
+
+- server: fix regression with MSSQL execution (#6976)
+- server: fix asymptotic performance of fetching from the event_log table
+- console: add `pool_timeout`, `connection_lifetime` and `isolation_level` connection params to connect database form
+- console: add check constraints and comments to MS SQL Server tables' read-only modify page
+- console: add create table functionality for MS SQL Server 
+- console: update connect database form with SSL certificates
+- console: add drop table functionality to MS SQL Server tables
+- console: allow renaming data sources
+- console: show error notification for table and cloumn names exceeding 63 characters and trim migration names exceeding 255 characters
+- cli: fix version command using stderr as output stream (#6998)
+
+## v2.0.0-alpha.11
+
 ### Breaking Changes
 
 - In this release, the name of the computed field argument has changed from `<function_name>_args` to
@@ -10,6 +32,10 @@
 
 ### Bug fixes and improvements
 
+- server: detect and apply metadata changes by `mssql_run_sql` API if required
+- server: fix bug with creation of new cron events when cron trigger is imported via metadata
+- server: log warning for deprecated environment variables.
+- server: initialise `hdb_catalog` tables only when required, and only run the event loop for sources where it is required
 - server: fix a bug where remote schema permissions would fail when used in conjunction with query variables (fix #6656)
 - server: add `rename_source` metadata API (fix #6681)
 - server: fix subscriptions with session argument in user-defined function (fix #6657)
@@ -37,6 +63,7 @@
 - server: fix MSSQL multiplexed subscriptions (fix #6887)
 - server: fix bug preventing tables with the same name in different sources
 - server: include more detail in inconsistent metadata error messages (fix #6684)
+- server: return useful error messages for missing env vars in metadata when `allow_inconsistent_metadata` is enabled (fix #6913)
 - console: add union types to remote schema permissions
 - console: read-only modify page for mssql
 - console: filter out partitions from track table list and display partition info
@@ -57,6 +84,7 @@ $ hasura metadata export -o json
 - cli: add warning for incompatible pro plugin version
 - cli: add new sub command `delete` to `hasura migrate`
 - cli: fix bug in migrate squash due to empty down file (#3897)
+- cli: fix bug with metadata apply on some CI environments (#6987)
 
 ## v2.0.0-alpha.10
 

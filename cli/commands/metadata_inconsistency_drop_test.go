@@ -11,14 +11,13 @@ import (
 	. "github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("metadata_inconsistency_drop", func() {
+var _ = Describe("hasura metadata inconsistency drop", func() {
 
 	var dirName string
-	var session *Session
 	var teardown func()
 	BeforeEach(func() {
 		dirName = testutil.RandDirName()
-		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraVersion)
+		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: []string{"init", dirName},
@@ -26,19 +25,16 @@ var _ = Describe("metadata_inconsistency_drop", func() {
 		editEndpointInConfig(filepath.Join(dirName, defaultConfigFilename), hgeEndpoint)
 
 		teardown = func() {
-			session.Kill()
 			os.RemoveAll(dirName)
 			teardownHGE()
 		}
 	})
 
-	AfterEach(func() {
-		teardown()
-	})
+	AfterEach(func() { teardown() })
 
 	Context("metadata inconsistency drop test", func() {
 		It("Drops inconsistent objects from the metadata", func() {
-			session = testutil.Hasura(testutil.CmdOpts{
+			session := testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"metadata", "inconsistency", "drop"},
 				WorkingDirectory: dirName,
 			})

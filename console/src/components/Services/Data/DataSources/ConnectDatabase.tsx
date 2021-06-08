@@ -84,8 +84,10 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
           databaseUrl: getDatasourceURL(
             databaseUrl ?? connectionInfo?.connection_string
           ),
-          connectionSettings: connectionInfo?.pool_settings ?? {},
+          connectionSettings: connectionInfo?.pool_settings,
           preparedStatements: connectionInfo?.use_prepared_statements ?? false,
+          isolationLevel: connectionInfo?.isolation_level ?? 'read-committed',
+          sslConfiguration: connectionInfo?.ssl_configuration,
         },
       });
 
@@ -178,6 +180,9 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
       makeReadReplicaConnectionObject(replica)
     );
 
+    const isRenameSource =
+      isEditState && editSourceName !== connectDBInputState.displayName.trim();
+
     if (
       connectionType === connectionTypes.DATABASE_URL ||
       (connectionType === connectionTypes.CONNECTION_PARAMS &&
@@ -203,7 +208,9 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
         connectDBInputState,
         onSuccessConnectDBCb,
         read_replicas,
-        isEditState
+        isEditState,
+        isRenameSource,
+        editSourceName
       )
         .then(() => setLoading(false))
         .catch(() => setLoading(false));
@@ -231,7 +238,9 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
         connectDBInputState,
         onSuccessConnectDBCb,
         read_replicas,
-        isEditState
+        isEditState,
+        isRenameSource,
+        editSourceName
       )
         .then(() => setLoading(false))
         .catch(() => setLoading(false));
@@ -268,7 +277,9 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
       connectDBInputState,
       onSuccessConnectDBCb,
       read_replicas,
-      isEditState
+      isEditState,
+      isRenameSource,
+      editSourceName
     )
       .then(() => setLoading(false))
       .catch(() => setLoading(false));

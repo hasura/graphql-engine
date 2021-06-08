@@ -34,6 +34,7 @@ import {
 import _push from './push';
 import { convertArrayToJson } from './TableModify/utils';
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
+import { maxAllowedMigrationLength } from './constants';
 import { getDownQueryComments } from '../../../utils/migration/utils';
 import { isEmpty } from '../../Common/utils/jsUtils';
 import { currentDriver, dataSource } from '../../../dataSources';
@@ -316,15 +317,39 @@ const setConsistentSchema = data => ({
   data,
 });
 
+const updateSchemaList = (dispatch, getState, schemaList) => {
+  dispatch({
+    type: FETCH_SCHEMA_LIST,
+    schemaList,
+  });
+  let newSchema = '';
+  const { locationBeforeTransitions } = getState().routing;
+  if (schemaList.length) {
+    newSchema =
+      dataSource.defaultRedirectSchema &&
+      schemaList.includes(dataSource.defaultRedirectSchema)
+        ? dataSource.defaultRedirectSchema
+        : schemaList.sort(Intl.Collator().compare)[0];
+  }
+  if (
+    locationBeforeTransitions &&
+    !locationBeforeTransitions.pathname.includes('tables')
+  )
+    dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: newSchema });
+  return dispatch(updateSchemaInfo());
+};
+
 const fetchDataInit = (source, driver) => (dispatch, getState) => {
   const url = Endpoints.query;
 
-  let { schemaFilter } = getState().tables;
+  const { schemaFilter } = getState().tables;
 
-  if (driver === 'bigquery')
-    schemaFilter = getState().metadata.metadataObject.sources.find(
+  if (driver === 'bigquery') {
+    const schemaList = getState().metadata.metadataObject.sources.find(
       x => x.name === source
     ).configuration.datasets;
+    return updateSchemaList(dispatch, getState, schemaList);
+  }
 
   const currentSource = source || getState().tables.currentDataSource;
   const query = getRunSqlQuery(
@@ -352,25 +377,8 @@ const fetchDataInit = (source, driver) => (dispatch, getState) => {
         }
         return [schema[0], ...acc];
       }, []);
-      dispatch({
-        type: FETCH_SCHEMA_LIST,
-        schemaList,
-      });
-      let newSchema = '';
-      const { locationBeforeTransitions } = getState().routing;
-      if (schemaList.length) {
-        newSchema =
-          dataSource.defaultRedirectSchema &&
-          schemaList.includes(dataSource.defaultRedirectSchema)
-            ? dataSource.defaultRedirectSchema
-            : schemaList.sort(Intl.Collator().compare)[0];
-      }
-      if (
-        locationBeforeTransitions &&
-        !locationBeforeTransitions.pathname.includes('tables')
-      )
-        dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: newSchema });
-      return dispatch(updateSchemaInfo()); // TODO
+
+      return updateSchemaList(dispatch, getState, schemaList);
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
@@ -743,8 +751,13 @@ const makeMigrationCall = (
     downQueries = getDownQueryComments(upQueries);
   }
 
+  const trimmedMigrationName = migrationName.substring(
+    0,
+    maxAllowedMigrationLength
+  );
+
   const migrationBody = {
-    name: sanitize(migrationName),
+    name: sanitize(trimmedMigrationName),
     up: upQuery.args,
     down: downQueries || [],
     datasource: source,
@@ -893,6 +906,17 @@ const fetchColumnTypeInfo = () => {
     };
     return dispatch(requestAction(url, options)).then(
       data => {
+        if (currentDriver === 'mssql') {
+          return dispatch({
+            type: FETCH_COLUMN_TYPE_INFO,
+            data: {
+              columnDataTypes: [],
+              columnTypeDefaultValues: {},
+              columnTypeCasts: {},
+            },
+          });
+        }
+
         const resultData = data[1].result.slice(1);
         const typeFuncsMap = {};
 

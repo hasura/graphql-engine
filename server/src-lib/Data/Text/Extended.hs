@@ -30,6 +30,9 @@ instance ToTxt Text where
   toTxt = id
   {-# INLINE toTxt #-}
 
+instance ToTxt Char where
+  toTxt = DT.singleton
+
 instance ToTxt G.Name where
   toTxt = G.unName
 

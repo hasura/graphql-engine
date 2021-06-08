@@ -112,7 +112,7 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 		settingsStateStore:   hasuraOpts.SettingsStateStore,
 	}
 
-	if err := hx.migrationsStateStore.PrepareMigrationsStateStore(); err != nil {
+	if err := hx.migrationsStateStore.PrepareMigrationsStateStore(hasuraOpts.SourceName); err != nil {
 		logger.Debug(err)
 		return nil, err
 	}

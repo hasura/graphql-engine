@@ -5,7 +5,7 @@ import { getDataOptions, inferDefaultValues } from '../Common/utils';
 
 import TableColumnDefault from './TableColumnDefault';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
-import { dataSource } from '../../../../dataSources';
+import { dataSource, isFeatureSupported } from '../../../../dataSources';
 
 /* Custom style object for searchable select box */
 const customSelectBoxStyles = {
@@ -99,16 +99,29 @@ const TableColumn = props => {
         className={`${styles.inputDefault} ${styles.defaultWidth}`}
         data-test={`col-type-${i}`}
       >
-        <ColumnTypeSelector
-          options={columnDataTypes}
-          onChange={handleColTypeChange}
-          value={
-            (column.type && columnTypeValueMap[column.type]) || column.type
-          }
-          colIdentifier={i}
-          bsClass={`col-type-${i} add_table_column_selector`}
-          styleOverrides={customSelectBoxStyles}
-        />
+        {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
+          <ColumnTypeSelector
+            options={columnDataTypes}
+            onChange={handleColTypeChange}
+            value={
+              (column.type && columnTypeValueMap[column.type]) || column.type
+            }
+            colIdentifier={i}
+            bsClass={`col-type-${i} add_table_column_selector`}
+            styleOverrides={customSelectBoxStyles}
+          />
+        ) : (
+          <input
+            type="text"
+            style={{ maxWidth: '200px' }}
+            className={`${styles.input} form-control col-type-${i}`}
+            onChange={e => {
+              e.persist();
+              onColTypeChange(i, e.target.value);
+            }}
+            placeholder="column_type"
+          />
+        )}
       </span>
       <span className={`${styles.inputDefault} ${styles.defaultWidth}`}>
         <TableColumnDefault

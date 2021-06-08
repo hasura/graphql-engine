@@ -148,7 +148,7 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceK
 			}(),
 			MetadataOps:          cli.GetCommonMetadataOps(ec),
 			MigrationsStateStore: cli.GetMigrationsStateStore(ec),
-			SettingsStateStore:   cli.GetSettingsStateStore(ec),
+			SettingsStateStore:   cli.GetSettingsStateStore(ec, sourceName),
 		},
 	}
 	if ec.HasMetadataV3 {
@@ -224,10 +224,9 @@ func IsMigrationsSupported(kind hasura.SourceKind) bool {
 func copyStateToCatalogStateAPIIfRequired(ec *cli.ExecutionContext, sourceName string) (bool, error) {
 	// if
 	//		the project is in config v3
-	// 		source name is default
 	// 		isStateCopyCompleted is false in catalog state
 	//		hdb_catalog.schema_migrations is not empty
-	if !ec.DisableAutoStateMigration && ec.Config.Version >= cli.V3 && sourceName == "default" {
+	if !ec.DisableAutoStateMigration && ec.Config.Version >= cli.V3 {
 		// get cli catalog and check isStateCopyCompleted is false
 		cs := statestore.NewCLICatalogState(ec.APIClient.V1Metadata)
 		state, err := cs.Get()
@@ -256,6 +255,7 @@ func copyStateToCatalogStateAPIIfRequired(ec *cli.ExecutionContext, sourceName s
 			// check if hdb_catalog.schema_migrations exists
 			// check if migrations state table exists
 			query := hasura.PGRunSQLInput{
+			  	Source: sourceName,
 				SQL: `SELECT COUNT(1) FROM information_schema.tables WHERE table_name = '` + migrations.DefaultMigrationsTable + `' AND table_schema = '` + migrations.DefaultSchema + `' LIMIT 1`,
 			}
 
@@ -282,7 +282,7 @@ func copyStateToCatalogStateAPIIfRequired(ec *cli.ExecutionContext, sourceName s
 			}
 			ec.Logger.Debug("copying cli state from hdb_catalog.schema_migrations to catalog state")
 			// COPY STATE
-			if err := scripts.CopyState(ec, sourceName); err != nil {
+			if err := scripts.CopyState(ec, sourceName, sourceName); err != nil {
 				return false, err
 			}
 			ec.Logger.Debug("copying cli state from hdb_catalog.schema_migrations to catalog state success")

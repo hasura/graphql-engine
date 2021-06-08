@@ -13,6 +13,7 @@ import {
   SupportedFeaturesType,
   generateTableRowRequestType,
   BaseTableColumn,
+  ViolationActions,
 } from './types';
 import { PGFunction, FunctionState } from './services/postgresql/types';
 import { Operations } from './common';
@@ -321,6 +322,7 @@ export interface DataSourcesAPI {
   supportedColumnOperators: string[] | null;
   aggregationPermissionsAllowed: boolean;
   supportedFeatures?: SupportedFeaturesType;
+  violationActions: ViolationActions[];
   defaultRedirectSchema?: string;
   getPartitionDetailsSql?: (tableName: string, tableSchema: string) => string;
 }

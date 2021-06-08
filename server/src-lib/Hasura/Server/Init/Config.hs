@@ -164,7 +164,7 @@ data ServeOptions impl
   , soSchemaPollInterval            :: !OptionalInterval
   , soExperimentalFeatures          :: !(Set.HashSet ExperimentalFeature)
   , soEventsFetchBatchSize          :: !NonNegativeInt
-  , soInDevelopmentMode             :: !Bool
+  , soDevMode                       :: !Bool
   , soGracefulShutdownTimeout       :: !Seconds
   }
 

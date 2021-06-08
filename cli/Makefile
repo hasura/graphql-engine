@@ -6,7 +6,6 @@ OS ?= linux darwin windows
 OUTPUT_DIR := _output
 
 HAS_GOX := $(shell command -v gox;)
-HAS_PKGER := $(shell command -v pkger;)
 HAS_GINKGO := $(shell command -v ginkgo;)
 
 ifeq (${CI}, true)
@@ -14,14 +13,6 @@ ifeq (${CI}, true)
 else
 	CLI_EXT_BIN_DIR := "../cli-ext/bin"
 endif
-
-# compile assets
-.PHONY: assets
-assets:
-ifndef HAS_PKGER
-	cd ~ && go get github.com/markbates/pkger/cmd/pkger  && cd -
-endif
-	pkger -o pkg/console/templates/packed -include /pkg/console/templates/gohtml/
 
 .PHONY: deps
 # get dependencies
@@ -69,13 +60,13 @@ copy-cli-ext: clean-cli-ext
 # run tests
 .PHONY: test
 test: copy-cli-ext
-	if [ -z "${HASURA_TEST_CLI_HGE_DOCKER_TAG}" ]; then echo "Please set HASURA_TEST_CLI_HGE_DOCKER_TAG env for populating testutil.HasuraVersion and run test"; exit 1; fi
+	if [ -z "${HASURA_TEST_CLI_HGE_DOCKER_IMAGE}" ]; then echo "Please set HASURA_TEST_CLI_HGE_DOCKER_IMAGE env for populating testutil.HasuraDockerImage and run test"; exit 1; fi
 	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" `go list ./... | grep -v integration_test | grep -v commands`
 integration_tests_config_v3: copy-cli-ext
-	if [ -z "${HASURA_TEST_CLI_HGE_DOCKER_TAG}" ]; then echo "Please set HASURA_TEST_CLI_HGE_DOCKER_TAG env for populating testutil.HasuraVersion and run test"; exit 1; fi
+	if [ -z "${HASURA_TEST_CLI_HGE_DOCKER_IMAGE}" ]; then echo "Please set HASURA_TEST_CLI_HGE_DOCKER_IMAGE env for populating testutil.HasuraDockerImage and run test"; exit 1; fi
 	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v3 ./integration_test
 integration_tests_config_v2: copy-cli-ext
-	if [ -z "${HASURA_TEST_CLI_HGE_DOCKER_TAG}" ]; then echo "Please set HASURA_TEST_CLI_HGE_DOCKER_TAG env for populating testutil.HasuraVersion and run test"; exit 1; fi
+	if [ -z "${HASURA_TEST_CLI_HGE_DOCKER_IMAGE}" ]; then echo "Please set HASURA_TEST_CLI_HGE_DOCKER_IMAGE env for populating testutil.HasuraDockerImage and run test"; exit 1; fi
 	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v2 ./integration_test
 test-e2e:
 ifndef HAS_GINKGO
@@ -90,7 +81,7 @@ clean:
 	rm -rf "$(OUTPUT_DIR)"
 
 .PHONY: all
-all: deps assets test build
+all: deps test build
 
 # build cli inside a docker container
 all-in-docker:

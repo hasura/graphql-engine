@@ -14,7 +14,7 @@ import (
 )
 
 func TestClientCatalogState_GetCLIState(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
+	port, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardown()
 	type fields struct {
 		Client *httpc.Client
@@ -65,7 +65,7 @@ func TestClientCatalogState_GetCLIState(t *testing.T) {
 }
 
 func TestCLICatalogState_Set(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
+	port, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardown()
 	type fields struct {
 		client hasura.CatalogStateOperations

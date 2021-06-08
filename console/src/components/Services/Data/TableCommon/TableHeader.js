@@ -6,11 +6,7 @@ import { capitalize, exists } from '../../../Common/utils/jsUtils';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { tabNameMap } from '../utils';
-import {
-  currentDriver,
-  dataSource,
-  isFeatureSupported,
-} from '../../../../dataSources';
+import { dataSource, isFeatureSupported } from '../../../../dataSources';
 import {
   getSchemaBaseRoute,
   getTableBrowseRoute,
@@ -100,7 +96,10 @@ const TableHeader = ({
           currentValue={tableName}
           save={saveTableNameChange}
           loading={false}
-          editable={tabName === 'modify' && currentDriver === 'postgres'}
+          editable={
+            tabName === 'modify' &&
+            isFeatureSupported('tables.modify.editableTableName')
+          }
           dispatch={dispatch}
           property={isTableType ? 'table' : 'view'}
         />

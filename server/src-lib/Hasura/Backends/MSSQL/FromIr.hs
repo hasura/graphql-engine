@@ -90,10 +90,9 @@ mkSQLSelect ::
 mkSQLSelect jsonAggSelect annSimpleSel =
   case jsonAggSelect of
     IR.JASMultipleRows -> fromSelectRows annSimpleSel
-    IR.JASSingleObject -> do
-      select <- fromSelectRows annSimpleSel
-      pure
-        select
+    IR.JASSingleObject ->
+      fromSelectRows annSimpleSel <&> \sel ->
+        sel
           { selectFor =
               JsonFor
                 ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot}
@@ -138,7 +137,7 @@ fromSelectRows annSelectG = do
       { selectOrderBy = argsOrderBy
       , selectTop = permissionBasedTop <> argsTop
       , selectProjections
-      , selectFrom
+      , selectFrom = Just selectFrom
       , selectJoins = argsJoins <> mapMaybe fieldSourceJoin fieldSources
       , selectWhere = argsWhere <> Where [filterExpression]
       , selectFor =
@@ -185,7 +184,7 @@ fromSelectAggregate annSelectG = do
     Select
       { selectProjections
       , selectTop = permissionBasedTop <> argsTop
-      , selectFrom
+      , selectFrom = Just selectFrom
       , selectJoins = argsJoins <> mapMaybe fieldSourceJoin fieldSources
       , selectWhere = argsWhere <> Where [filterExpression]
       , selectFor =
@@ -312,7 +311,7 @@ unfurlAnnOrderByElement =
                          Select
                            { selectTop = NoTop
                            , selectProjections = [StarProjection]
-                           , selectFrom
+                           , selectFrom = Just selectFrom
                            , selectJoins = []
                            , selectWhere =
                                Where (foreignKeyConditions <> [whereExpression])
@@ -361,7 +360,7 @@ unfurlAnnOrderByElement =
                                     , aliasedAlias = alias
                                     }
                                 ]
-                            , selectFrom
+                            , selectFrom = Just selectFrom
                             , selectJoins = []
                             , selectWhere =
                                 Where
@@ -441,7 +440,7 @@ fromAnnBoolExpFld =
                         , aliasedAlias = existsFieldName
                         })
                  ]
-             , selectFrom
+             , selectFrom = Just selectFrom
              , selectJoins = mempty
              , selectWhere = Where (foreignKeyConditions <> [whereExpression])
              , selectTop = NoTop
@@ -491,7 +490,7 @@ fromGExists IR.GExists {_geTable, _geWhere} = do
                  , aliasedAlias = existsFieldName
                  })
           ]
-      , selectFrom
+      , selectFrom = Just selectFrom
       , selectJoins = mempty
       , selectWhere = Where [whereExpression]
       , selectTop = NoTop
@@ -705,7 +704,7 @@ fromObjectRelationSelectG existingJoins annRelationSelectG = do
                   { selectOrderBy = Nothing
                   , selectTop = NoTop
                   , selectProjections
-                  , selectFrom
+                  , selectFrom = Just selectFrom
                   , selectJoins = mapMaybe fieldSourceJoin fieldSources
                   , selectWhere =
                       Where (foreignKeyConditions <> [filterExpression])
@@ -757,11 +756,11 @@ fromArrayAggregateSelectG ::
   -> ReaderT EntityAlias FromIr Join
 fromArrayAggregateSelectG annRelationSelectG = do
   fieldName <- lift (fromRelName aarRelationshipName)
-  select <- lift (fromSelectAggregate annSelectG)
+  sel <- lift (fromSelectAggregate annSelectG)
   joinSelect <-
-    do foreignKeyConditions <- fromMapping (selectFrom select) mapping
+    do foreignKeyConditions <- selectFromMapping sel mapping
        pure
-         select {selectWhere = Where foreignKeyConditions <> selectWhere select}
+         sel {selectWhere = Where foreignKeyConditions <> selectWhere sel}
   alias <- lift (generateEntityAlias (ArrayAggregateTemplate fieldName))
   pure
     Join
@@ -779,11 +778,11 @@ fromArrayAggregateSelectG annRelationSelectG = do
 fromArrayRelationSelectG :: IR.ArrayRelationSelectG 'MSSQL Expression -> ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
   fieldName <- lift (fromRelName aarRelationshipName)
-  select <- lift (fromSelectRows annSelectG)
+  sel <- lift (fromSelectRows annSelectG)
   joinSelect <-
-    do foreignKeyConditions <- fromMapping (selectFrom select) mapping
+    do foreignKeyConditions <- selectFromMapping sel mapping
        pure
-         select {selectWhere = Where foreignKeyConditions <> selectWhere select}
+         sel {selectWhere = Where foreignKeyConditions <> selectWhere sel}
   alias <- lift (generateEntityAlias (ArrayRelationTemplate fieldName))
   pure
     Join
@@ -827,6 +826,11 @@ fromMapping localFrom =
             (ColumnExpression remoteFieldName))) .
   HM.toList
 
+selectFromMapping :: Select
+  -> HashMap ColumnName ColumnName
+  -> ReaderT EntityAlias FromIr [Expression]
+selectFromMapping Select {selectFrom = Nothing  } = const (pure [])
+selectFromMapping Select {selectFrom = Just from} = fromMapping from
 
 --------------------------------------------------------------------------------
 -- Basic SQL expression types

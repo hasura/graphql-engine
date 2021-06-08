@@ -72,13 +72,26 @@ data BooleanOperators a
 data Select = Select
   { selectTop         :: !Top
   , selectProjections :: ![Projection]
-  , selectFrom        :: !From
+  , selectFrom        :: !(Maybe From)
   , selectJoins       :: ![Join]
   , selectWhere       :: !Where
   , selectFor         :: !For
   , selectOrderBy     :: !(Maybe (NonEmpty OrderBy))
   , selectOffset      :: !(Maybe Expression)
   }
+
+select :: Select
+select =
+  Select
+    { selectFrom        = Nothing
+    , selectTop         = NoTop
+    , selectProjections = []
+    , selectJoins       = []
+    , selectWhere       = Where []
+    , selectOrderBy     = Nothing
+    , selectFor         = NoFor
+    , selectOffset      = Nothing
+    }
 
 data Delete = Delete
   { deleteTable :: !(Aliased TableName)

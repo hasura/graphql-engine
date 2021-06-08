@@ -17,6 +17,7 @@ import qualified Hasura.SQL.AnyBackend      as AB
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
+import           Hasura.SQL.Tag
 import           Hasura.Session
 
 
@@ -39,6 +40,8 @@ trackFunctionP1
   -> m ()
 trackFunctionP1 sourceName qf = do
   rawSchemaCache <- askSchemaCache
+  unless (isJust $ AB.unpackAnyBackend @b =<< Map.lookup sourceName (scSources rawSchemaCache)) $
+    throw400 NotExists $ sourceName <<> " is not a known " <> (reify $ backendTag @b) <<> " source"
   when (isJust $ unsafeFunctionInfo @b sourceName qf $ scSources rawSchemaCache) $
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
   let qt = functionToTable @b qf
@@ -64,12 +67,9 @@ handleMultipleFunctions
   -> [a]
   -> m a
 handleMultipleFunctions qf = \case
-  []      ->
-    throw400 NotExists $ "no such function exists in postgres : " <>> qf
   [fi] -> return fi
-  _       ->
-    throw400 NotSupported $
-    "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
+  []   -> throw400 NotExists $ "no such function exists: " <>> qf
+  _    -> throw400 NotSupported $ "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
 
 runTrackFunc
   :: forall b m

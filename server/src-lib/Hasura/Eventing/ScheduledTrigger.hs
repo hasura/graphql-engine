@@ -170,7 +170,7 @@ runCronEventsGenerator logger getSC = do
       -- get cron trigger stats from db
       -- When shutdown is initiated, we stop generating new cron events
       eitherRes <- runMetadataStorageT $ do
-        deprivedCronTriggerStats <- getDeprivedCronTriggerStats
+        deprivedCronTriggerStats <- getDeprivedCronTriggerStats $ Map.keys cronTriggersCache
         -- join stats with cron triggers and produce @[(CronTriggerInfo, CronTriggerStats)]@
         cronTriggersForHydrationWithStats <-
           catMaybes <$>
@@ -500,22 +500,25 @@ mkInvocation eventId status reqHeaders respBody respHeaders reqBodyJson
 -- The point here is to maintain a certain number of future events so the user
 -- can kind of see what's coming up, and obviously to give 'processCronEvents'
 -- something to do.
-getDeprivedCronTriggerStatsTx :: Q.TxE QErr [CronTriggerStats]
-getDeprivedCronTriggerStatsTx =
+getDeprivedCronTriggerStatsTx :: [TriggerName] -> Q.TxE QErr [CronTriggerStats]
+getDeprivedCronTriggerStatsTx cronTriggerNames =
   map (\(n, count, maxTx) -> CronTriggerStats n count maxTx) <$>
     Q.listQE defaultTxErrorHandler
     [Q.sql|
-     SELECT * FROM
+      SELECT t.trigger_name, coalesce(q.upcoming_events_count, 0), coalesce(q.max_scheduled_time, now())
+      FROM (SELECT UNNEST ($1::text[]) as trigger_name) as t
+      LEFT JOIN
       ( SELECT
          trigger_name,
-          count(*) as upcoming_events_count,
+          count(1) as upcoming_events_count,
           max(scheduled_time) as max_scheduled_time
          FROM hdb_catalog.hdb_cron_events
          WHERE tries = 0 and status = 'scheduled'
          GROUP BY trigger_name
       ) AS q
-      WHERE q.upcoming_events_count < 100
-     |] () True
+      ON t.trigger_name = q.trigger_name
+      WHERE coalesce(q.upcoming_events_count, 0) < 100
+     |] (Identity $ PGTextArray $ map triggerNameToTxt cronTriggerNames) True
 
 -- TODO
 --  - cron events have minute resolution, while one-off events have arbitrary
@@ -644,6 +647,8 @@ setScheduledEventOpTx eventId op type' = case op of
 
 unlockScheduledEventsTx :: ScheduledEventType -> [ScheduledEventId] -> Q.TxE QErr Int
 unlockScheduledEventsTx type' eventIds =
+  let eventIdsTextArray = map unEventId eventIds
+  in
   case type' of
     Cron ->
       (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
@@ -654,8 +659,7 @@ unlockScheduledEventsTx type' eventIds =
         WHERE id = ANY($1::text[]) and status = 'locked'
         RETURNING *)
         SELECT count(*) FROM "cte"
-      |] (Identity $ ScheduledEventIdArray eventIds) True
-
+      |] (Identity $ PGTextArray eventIdsTextArray) True
     OneOff ->
       (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
       [Q.sql|
@@ -665,7 +669,7 @@ unlockScheduledEventsTx type' eventIds =
         WHERE id = ANY($1::text[]) AND status = 'locked'
         RETURNING *)
         SELECT count(*) FROM "cte"
-      |] (Identity $ ScheduledEventIdArray eventIds) True
+      |] (Identity $ PGTextArray eventIdsTextArray) True
 
 unlockAllLockedScheduledEventsTx :: Q.TxE QErr ()
 unlockAllLockedScheduledEventsTx = do
@@ -714,14 +718,20 @@ insertScheduledEventTx = \case
           toArr (CronEventSeed n t) = [(triggerNameToTxt n), (formatTime' t)]
           toTupleExp = S.TupleExp . map S.SELit
 
-dropFutureCronEventsTx :: TriggerName -> Q.TxE QErr ()
-dropFutureCronEventsTx name =
-  Q.unitQE defaultTxErrorHandler
-   [Q.sql|
-    DELETE FROM hdb_catalog.hdb_cron_events
-    WHERE trigger_name = $1 AND scheduled_time > now() AND tries = 0
-   |] (Identity name) False
-
+dropFutureCronEventsTx :: ClearCronEvents -> Q.TxE QErr ()
+dropFutureCronEventsTx = \case
+  SingleCronTrigger triggerName ->
+    Q.unitQE defaultTxErrorHandler
+    [Q.sql|
+     DELETE FROM hdb_catalog.hdb_cron_events
+     WHERE trigger_name = $1 AND scheduled_time > now() AND tries = 0
+    |] (Identity triggerName) True
+  MetadataCronTriggers triggerNames ->
+    Q.unitQE defaultTxErrorHandler
+    [Q.sql|
+     DELETE FROM hdb_catalog.hdb_cron_events
+     WHERE scheduled_time > now() AND tries = 0 AND trigger_name = ANY($1::text[])
+    |] (Identity $ PGTextArray $ map triggerNameToTxt triggerNames) False
 
 cronEventsTable :: QualifiedTable
 cronEventsTable =

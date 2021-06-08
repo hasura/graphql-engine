@@ -5,6 +5,7 @@ import {
   ComputedField,
   SupportedFeaturesType,
   BaseTableColumn,
+  ViolationActions,
 } from '../../types';
 import { QUERY_TYPES, Operations } from '../../common';
 import { PGFunction } from './types';
@@ -56,6 +57,7 @@ import {
   getTableInfo,
   getDatabaseVersionSql,
 } from './sqlUtils';
+import globals from '../../../Globals';
 
 export const isTable = (table: Table) => {
   return (
@@ -506,6 +508,9 @@ const permissionColumnDataTypes = {
 export const supportedFeatures: SupportedFeaturesType = {
   driver: {
     name: 'postgres',
+    fetchVersion: {
+      enabled: true,
+    },
   },
   schemas: {
     create: {
@@ -518,6 +523,8 @@ export const supportedFeatures: SupportedFeaturesType = {
   tables: {
     create: {
       enabled: true,
+      frequentlyUsedColumns: true,
+      columnTypeSelector: true,
     },
     browse: {
       enabled: true,
@@ -528,18 +535,33 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     modify: {
       enabled: true,
-      comments: true,
-      columns: true,
-      columns_edit: true,
+      editableTableName: true,
+      comments: {
+        view: true,
+        edit: true,
+      },
+      columns: {
+        view: true,
+        edit: true,
+      },
       computedFields: true,
-      primaryKeys: true,
-      primaryKeys_edit: true,
-      foreginKeys: true,
-      foreginKeys_edit: true,
-      uniqueKeys: true,
-      uniqueKeys_edit: true,
+      primaryKeys: {
+        view: true,
+        edit: true,
+      },
+      foreignKeys: {
+        view: true,
+        edit: true,
+      },
+      uniqueKeys: {
+        view: true,
+        edit: true,
+      },
       triggers: true,
-      checkConstraints: true,
+      checkConstraints: {
+        view: true,
+        edit: true,
+      },
       customGqlRoot: true,
       setAsEnum: true,
       untrack: true,
@@ -579,6 +601,7 @@ export const supportedFeatures: SupportedFeaturesType = {
   rawSQL: {
     enabled: true,
     tracking: true,
+    statementTimeout: true,
   },
   connectDbForm: {
     enabled: true,
@@ -587,10 +610,23 @@ export const supportedFeatures: SupportedFeaturesType = {
     environmentVariable: true,
     read_replicas: true,
     prepared_statements: true,
+    isolation_level: true,
     connectionSettings: true,
     retries: true,
+    pool_timeout: true,
+    connection_lifetime: true,
+    ssl_certificates:
+      globals.consoleType === 'cloud' || globals.consoleType === 'pro',
   },
 };
+
+const violationActions: ViolationActions[] = [
+  'restrict',
+  'no action',
+  'cascade',
+  'set null',
+  'set default',
+];
 
 const defaultRedirectSchema = 'public';
 
@@ -685,6 +721,7 @@ export const postgres: DataSourcesAPI = {
   supportedColumnOperators: null,
   aggregationPermissionsAllowed: true,
   supportedFeatures,
+  violationActions,
   defaultRedirectSchema,
   getPartitionDetailsSql,
 };

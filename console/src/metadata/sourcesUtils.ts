@@ -1,27 +1,33 @@
 import { Driver } from '../dataSources';
-import { SourceConnectionInfo } from './types';
+import {
+  ConnectionPoolSettings,
+  IsolationLevelOptions,
+  SourceConnectionInfo,
+  SSLConfigOptions,
+} from './types';
 
 export const addSource = (
   driver: Driver,
   payload: {
     name: string;
     dbUrl: string | { from_env: string };
-    connection_pool_settings?: {
-      max_connections?: number;
-      idle_timeout?: number;
-      retries?: number;
-    };
+    connection_pool_settings?: ConnectionPoolSettings;
     replace_configuration?: boolean;
     bigQuery: {
       projectId: string;
       datasets: string;
     };
+    sslConfiguration?: SSLConfigOptions;
     preparedStatements?: boolean;
+    isolationLevel?: IsolationLevelOptions;
   },
   // supported only for PG sources at the moment
   replicas?: Omit<
     SourceConnectionInfo,
-    'connection_string' | 'use_prepared_statements'
+    | 'connection_string'
+    | 'use_prepared_statements'
+    | 'ssl_configuration'
+    | 'isolation_level'
   >[]
 ) => {
   const replace_configuration = payload.replace_configuration ?? false;
@@ -67,8 +73,10 @@ export const addSource = (
       configuration: {
         connection_info: {
           database_url: payload.dbUrl,
-          pool_settings: payload.connection_pool_settings,
           use_prepared_statements: payload.preparedStatements,
+          isolation_level: payload.isolationLevel,
+          pool_settings: payload.connection_pool_settings,
+          ssl_configuration: payload.sslConfiguration,
         },
         read_replicas: replicas?.length ? replicas : null,
       },

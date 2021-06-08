@@ -133,6 +133,7 @@ library
                      , postgresql-libpq
                      , process
                      , profunctors
+                     , retry
                      , safe-exceptions
                      , scientific
                      , semialign
@@ -334,6 +335,7 @@ library
                      , Hasura.Backends.Postgres.DDL.Function
                      , Hasura.Backends.Postgres.DDL.RunSQL
                      , Hasura.Backends.Postgres.DDL.Source
+                     , Hasura.Backends.Postgres.DDL.Source.Version
                      , Hasura.Backends.Postgres.DDL.Table
                      , Hasura.Backends.Postgres.Execute.LiveQuery
                      , Hasura.Backends.Postgres.Execute.Mutation
@@ -490,9 +492,9 @@ library
                      , Hasura.RQL.DDL.Schema.Cache.Fields
                      , Hasura.RQL.DDL.Schema.Cache.Permission
                      , Hasura.RQL.DDL.Schema.Catalog
+                     , Hasura.RQL.DDL.Schema.Diff
                      , Hasura.RQL.DDL.Schema.LegacyCatalog
                      , Hasura.RQL.DDL.Schema.Common
-                     , Hasura.RQL.DDL.Schema.Diff
                      , Hasura.RQL.DDL.Schema.Enum
                      , Hasura.RQL.DDL.Schema.Function
                      , Hasura.RQL.DDL.Schema.Rename
@@ -543,6 +545,7 @@ library
                      , Hasura.GraphQL.Parser.Collect
                      , Hasura.GraphQL.Parser.Column
                      , Hasura.GraphQL.Parser.Directives
+                     , Hasura.GraphQL.Parser.Internal.Input
                      , Hasura.GraphQL.Parser.Internal.Parser
                      , Hasura.GraphQL.Parser.Internal.Types
                      , Hasura.GraphQL.Parser.Monad

@@ -22,7 +22,7 @@ func TestGetConsoleTemplateVersion(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			v := &version.Version{}
 			v.SetServerVersion(tc.server)
-			templateProvider := NewDefaultTemplateProvider("test", "test")
+			templateProvider := NewDefaultTemplateProvider("test", "test", ConsoleFS)
 			tv := templateProvider.GetTemplateVersion(v)
 			if tv != tc.tv {
 				t.Fatalf("expected tv '%v', got '%v'", tc.tv, tv)
@@ -55,7 +55,7 @@ func TestGetConsoleAssetsVersion(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			v := &version.Version{}
 			v.SetServerVersion(tc.server)
-			templateProvider := NewDefaultTemplateProvider("test", "test")
+			templateProvider := NewDefaultTemplateProvider("test", "test", ConsoleFS)
 			tv := templateProvider.GetAssetsVersion(v)
 			if tv != tc.tv {
 				t.Fatalf("expected tv '%v', got '%v'", tc.tv, tv)

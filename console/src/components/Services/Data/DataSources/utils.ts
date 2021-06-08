@@ -1,3 +1,5 @@
+import { addSource } from './../../../../metadata/sourcesUtils';
+import { isObject, isEqual } from './../../../Common/utils/jsUtils';
 import { Table } from '../../../../dataSources/types';
 import { MetadataDataSource } from '../../../../metadata/types';
 
@@ -89,4 +91,27 @@ export const canReUseTableTypes = (
         allSources[sourceFromMetada.name][schema][name]
     )
   );
+};
+
+export type AddSourceArg = ReturnType<typeof addSource>['args'];
+
+export const dataSourceIsEqual = (
+  sourceFromMetaData: MetadataDataSource,
+  data: AddSourceArg
+) => {
+  const ignoreFields = ['tables', 'kind', 'name', 'replace_configuration'];
+
+  const filterFields = (obj: Record<string, any>) =>
+    Object.entries(obj).reduce((acc: Record<string, any>, [key, value]) => {
+      if (value !== null && !ignoreFields.includes(key)) {
+        if (isObject(value)) {
+          acc[key] = filterFields(value);
+        } else {
+          acc[key] = value;
+        }
+      }
+      return acc;
+    }, {});
+
+  return isEqual(filterFields(sourceFromMetaData), filterFields(data));
 };

@@ -130,7 +130,7 @@ objRelP2Setup source qt foreignKeys (RelDef rn ru _) fieldInfoMap = case ru of
                                               reason
         dependencies = map (mkDependency qt DRLeftColumn) lCols
                     <> map (mkDependency refqt DRRightColumn) rCols
-    pure (RelInfo rn ObjRel (rmColumns rm) refqt True True io, dependencies)
+    pure (RelInfo rn ObjRel (rmColumns rm) refqt True Nullable io, dependencies)
   RUFKeyOn (SameTable columns) -> do
     foreignTableForeignKeys <- findTable @b qt foreignKeys
     ForeignKey constraint foreignTable colMap <- getRequiredFkey columns (HS.toList foreignTableForeignKeys)
@@ -151,7 +151,7 @@ objRelP2Setup source qt foreignKeys (RelDef rn ru _) fieldInfoMap = case ru of
           ] <> fmap (drUsingColumnDep @b source qt) (toList columns)
     colInfo <- traverse ((`HM.lookup` fieldInfoMap) . fromCol @b) columns
                  `onNothing` throw500 "could not find column info in schema cache"
-    let nullable = all pgiIsNullable colInfo
+    let nullable = boolToNullable $ all pgiIsNullable colInfo
     pure (RelInfo rn ObjRel colMap foreignTable False nullable BeforeParent, dependencies)
   RUFKeyOn (RemoteTable remoteTable remoteCols) ->
     mkFkeyRel ObjRel AfterParent source rn qt remoteTable remoteCols foreignKeys
@@ -181,7 +181,7 @@ arrRelP2Setup foreignKeys source qt (RelDef rn ru _) = case ru of
                                     $ TOCol @b c)
                                   DRRightColumn)
                   rCols
-    pure (RelInfo rn ArrRel (rmColumns rm) refqt True True AfterParent, deps)
+    pure (RelInfo rn ArrRel (rmColumns rm) refqt True Nullable AfterParent, deps)
   RUFKeyOn (ArrRelUsingFKeyOn refqt refCols) ->
     mkFkeyRel ArrRel AfterParent source rn qt refqt refCols foreignKeys
 
@@ -215,7 +215,7 @@ mkFkeyRel relType io source rn sourceTable remoteTable remoteColumns foreignKeys
                 $ SOITable @b remoteTable)
               DRRemoteTable
           ] <> fmap (drUsingColumnDep @b source remoteTable) (toList remoteColumns)
-    pure (RelInfo rn relType (reverseHM colMap) remoteTable False False io, dependencies)
+    pure (RelInfo rn relType (reverseHM colMap) remoteTable False NotNullable io, dependencies)
   where
     reverseHM :: Eq y => Hashable y => HashMap x y -> HashMap y x
     reverseHM = HM.fromList . fmap swap . HM.toList

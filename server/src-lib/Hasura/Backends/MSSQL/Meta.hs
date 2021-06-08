@@ -25,7 +25,6 @@ import           Hasura.RQL.Types.Common               (OID (..))
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 
-
 --------------------------------------------------------------------------------
 -- Loader
 
@@ -38,7 +37,6 @@ loadDBMetadata pool = do
   case Aeson.eitherDecodeStrict (T.encodeUtf8 sysTablesText) of
     Left e          -> throw500 $ T.pack $ "error loading sql server database schema: " <> e
     Right sysTables -> pure $ HM.fromList $ map transformTable sysTables
-
 
 --------------------------------------------------------------------------------
 -- Local types

@@ -107,6 +107,7 @@ data PGSourceConfig
   { _pscExecCtx              :: !PGExecCtx
   , _pscConnInfo             :: !Q.ConnInfo
   , _pscReadReplicaConnInfos :: !(Maybe (NonEmpty Q.ConnInfo))
+  , _pscPostDropHook         :: !(IO ())
   } deriving (Generic)
 
 instance Eq PGSourceConfig where

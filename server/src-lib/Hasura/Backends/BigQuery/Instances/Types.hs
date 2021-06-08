@@ -85,4 +85,5 @@ instance Backend 'BigQuery where
   scalarTypeGraphQLName = error "scalarTypeGraphQLName"
 
   snakeCaseTableName :: TableName 'BigQuery -> Text
-  snakeCaseTableName = error "snakeCaseTableName"
+  snakeCaseTableName BigQuery.TableName { tableName, tableNameSchema } =
+    tableNameSchema <> "_" <> tableName

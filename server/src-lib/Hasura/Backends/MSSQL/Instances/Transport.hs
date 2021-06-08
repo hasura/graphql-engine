@@ -138,5 +138,5 @@ mkQueryLog gqlQuery fieldName preparedSql requestId =
   QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId QueryLogKindDatabase
   where
     generatedQuery =
-      preparedSql <&> \PreparedQuery'{pqQueryString, pqGraphQlEnv, pqSession}
-        -> GeneratedQuery pqQueryString (J.toJSON $ queryEnvJson pqGraphQlEnv pqSession)
+      preparedSql <&> \queryString
+        -> GeneratedQuery queryString J.Null

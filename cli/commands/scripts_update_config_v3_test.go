@@ -2,28 +2,29 @@ package commands
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/hasura/graphql-engine/cli/internal/testutil"
 	"github.com/hasura/graphql-engine/cli/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gbytes"
 	. "github.com/onsi/gomega/gexec"
-	"os"
-	"path/filepath"
 )
 
-var _ = Describe("scripts_update_project_v3", func() {
+var _ = Describe("hasura scripts update-project-v3", func() {
 	var projectDirectory string
 	var devEndpoint, stagingEndpoint, prodEndpoint string
 	var teardown func()
 	BeforeEach(func() {
 		projectDirectory = testutil.RandDirName()
 		// create three hasura instances to mimic a environment promotion scenario
-		devHasuraPort, teardownDev := testutil.StartHasura(GinkgoT(), testutil.HasuraVersion)
+		devHasuraPort, teardownDev := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		devEndpoint = fmt.Sprintf("http://0.0.0.0:%s", devHasuraPort)
-		stagingHasuraPort, teardownStaging := testutil.StartHasura(GinkgoT(), testutil.HasuraVersion)
+		stagingHasuraPort, teardownStaging := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		stagingEndpoint = fmt.Sprintf("http://0.0.0.0:%s", stagingHasuraPort)
-		prodHasuraPort, teardownProd := testutil.StartHasura(GinkgoT(), testutil.HasuraVersion)
+		prodHasuraPort, teardownProd := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		prodEndpoint = fmt.Sprintf("http://0.0.0.0:%s", prodHasuraPort)
 		teardown = func() {
 			os.RemoveAll(projectDirectory)
@@ -32,9 +33,8 @@ var _ = Describe("scripts_update_project_v3", func() {
 			teardownDev()
 		}
 	})
-	AfterEach(func() {
-		teardown()
-	})
+	AfterEach(func() { teardown() })
+
 	It("update a config v2 project to config v3", func() {
 		Context("sets up dev project", func() {
 			// copy template project directory migrations to test project directory

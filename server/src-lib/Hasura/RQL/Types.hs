@@ -137,6 +137,9 @@ instance (HasServerConfigCtx m)
          => HasServerConfigCtx (ReaderT r m) where
   askServerConfigCtx = lift askServerConfigCtx
 instance (HasServerConfigCtx m)
+         => HasServerConfigCtx (ExceptT e m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (HasServerConfigCtx m)
          => HasServerConfigCtx (StateT s m) where
   askServerConfigCtx = lift askServerConfigCtx
 instance (Monoid w, HasServerConfigCtx m)

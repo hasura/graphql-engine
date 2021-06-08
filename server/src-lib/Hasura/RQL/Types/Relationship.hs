@@ -265,7 +265,7 @@ data RelInfo (b :: BackendType)
   , riMapping     :: !(HashMap (Column b) (Column b))
   , riRTable      :: !(TableName b)
   , riIsManual    :: !Bool
-  , riIsNullable  :: !Bool
+  , riIsNullable  :: !Nullable
   , riInsertOrder :: !InsertOrder
   } deriving (Generic)
 deriving instance Backend b => Show (RelInfo b)
@@ -279,6 +279,25 @@ instance (Backend b) => FromJSON (RelInfo b) where
 
 instance (Backend b) => ToJSON (RelInfo b) where
   toJSON = genericToJSON hasuraJSON
+
+data Nullable = Nullable | NotNullable
+  deriving (Eq, Show, Generic)
+
+instance NFData Nullable
+instance Cacheable Nullable
+instance Hashable Nullable
+
+boolToNullable :: Bool -> Nullable
+boolToNullable True  = Nullable
+boolToNullable False = NotNullable
+
+instance FromJSON Nullable where
+  parseJSON = fmap boolToNullable . parseJSON
+
+instance ToJSON Nullable where
+  toJSON = toJSON . \case
+    Nullable    -> True
+    NotNullable -> False
 
 fromRel :: RelName -> FieldName
 fromRel = FieldName . relNameToTxt

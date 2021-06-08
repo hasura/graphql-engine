@@ -22,6 +22,8 @@ module Hasura.RQL.Types.EventTrigger
 
   , defaultRetryConf
   , defaultTimeoutSeconds
+
+  , RecreateEventTriggers (..)
   ) where
 
 import           Hasura.Prelude
@@ -289,3 +291,9 @@ instance Backend b => FromJSON (InvokeEventTriggerQuery b) where
 
 instance Backend b => ToJSON (InvokeEventTriggerQuery b) where
   toJSON = genericToJSON hasuraJSON{omitNothingFields=True}
+
+data RecreateEventTriggers
+  = RETRecreate
+  | RETDoNothing
+  deriving (Show, Eq, Generic)
+instance Cacheable RecreateEventTriggers

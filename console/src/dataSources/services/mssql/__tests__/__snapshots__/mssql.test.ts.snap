@@ -1,0 +1,49 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`mssql datasource tests getAlterFKSql should generate SQL query for altering foreign keys with multiple columns 1`] = `
+"
+    BEGIN transaction;
+    ALTER TABLE \\"dbo\\".\\"user\\"
+    DROP CONSTRAINT IF EXISTS \\"oldConstraint\\";
+    ALTER TABLE \\"dbo\\".\\"user\\"
+    ADD CONSTRAINT \\"newConstraint\\"
+    FOREIGN KEY (id, id2)
+    REFERENCES \\"dbo\\".\\"user1\\" (id, id2) 
+    ON UPDATE cascade ON DELETE cascade;
+    COMMIT transaction;
+    "
+`;
+
+exports[`mssql datasource tests getAlterFKSql should generate SQL query for altering foreign keys with one column 1`] = `
+"
+    BEGIN transaction;
+    ALTER TABLE \\"dbo\\".\\"user\\"
+    DROP CONSTRAINT IF EXISTS \\"oldConstraint\\";
+    ALTER TABLE \\"dbo\\".\\"user\\"
+    ADD CONSTRAINT \\"newConstraint\\"
+    FOREIGN KEY (id)
+    REFERENCES \\"dbo\\".\\"user1\\" (id) 
+    ON UPDATE no action ON DELETE cascade;
+    COMMIT transaction;
+    "
+`;
+
+exports[`mssql datasource tests getCreateFKeySql should generate query for create foreign keys with multiple columns 1`] = `
+"
+    ALTER TABLE \\"dbo\\".\\"user\\"
+    ADD CONSTRAINT \\"newConstraint\\"
+    FOREIGN KEY (id, id2)
+    REFERENCES \\"dbo\\".\\"user1\\" (id, id2)
+    ON UPDATE cascade ON DELETE cascade"
+`;
+
+exports[`mssql datasource tests getCreateFKeySql should generate query for create foreign keys with one columns 1`] = `
+"
+    ALTER TABLE \\"dbo\\".\\"user\\"
+    ADD CONSTRAINT \\"newConstraint\\"
+    FOREIGN KEY (id)
+    REFERENCES \\"dbo\\".\\"user1\\" (id)
+    ON UPDATE cascade ON DELETE cascade"
+`;
+
+exports[`mssql datasource tests getDropConstraintSql should generate query for droping foreign keys 1`] = `"ALTER TABLE \\"schemaName\\".\\"tableName1\\" DROP CONSTRAINT \\"constraintName\\""`;

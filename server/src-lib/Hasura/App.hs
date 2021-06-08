@@ -238,13 +238,25 @@ data Loggers
   }
 
 -- | An application with Postgres database as a metadata storage
-newtype PGMetadataStorageApp a
-  = PGMetadataStorageApp {runPGMetadataStorageApp :: (Q.PGPool, Q.PGLogger) -> IO a}
+newtype PGMetadataStorageAppT m a
+  = PGMetadataStorageAppT {runPGMetadataStorageAppT :: (Q.PGPool, Q.PGLogger) -> m a}
   deriving ( Functor, Applicative, Monad
-           , MonadIO, MonadBase IO, MonadBaseControl IO
-           , MonadCatch, MonadThrow, MonadMask
+           , MonadIO , MonadCatch, MonadThrow, MonadMask
+           , HasHttpManagerM, HasServerConfigCtx
            , MonadUnique, MonadReader (Q.PGPool, Q.PGLogger)
-           ) via (ReaderT (Q.PGPool, Q.PGLogger) IO)
+           ) via (ReaderT (Q.PGPool, Q.PGLogger) m)
+
+instance MonadTrans PGMetadataStorageAppT where
+  lift = PGMetadataStorageAppT . const
+
+instance (MonadBase IO m) => MonadBase IO (PGMetadataStorageAppT m) where
+  liftBase io = PGMetadataStorageAppT $ \_ -> liftBase io
+
+instance (MonadBaseControl IO m) => MonadBaseControl IO (PGMetadataStorageAppT m) where
+  type StM (PGMetadataStorageAppT m) a = StM m a
+  liftBaseWith f = PGMetadataStorageAppT $
+    \r -> liftBaseWith \run -> f (run . flip runPGMetadataStorageAppT r)
+  restoreM stma = PGMetadataStorageAppT $ \_ -> restoreM stma
 
 resolvePostgresConnInfo
   :: (MonadIO m) => Env.Environment -> UrlConf -> Maybe Int -> m Q.ConnInfo
@@ -515,6 +527,10 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
                         soEnableMaintenanceMode
                         soExperimentalFeatures
 
+  -- Log Warning if deprecated environment variables are used
+  sources <- scSources <$> liftIO (getSCFromRef cacheRef)
+  liftIO $ logDeprecatedEnvVars logger env sources
+
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
   liftIO $ logInconsObjs logger inconsObjs
@@ -529,7 +545,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
     fetchI        = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
     logEnvHeaders = soLogHeadersFromEnv
     allPgSources  = mapMaybe (unsafeSourceConfiguration @('Postgres 'Vanilla)) $ HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
-    eventResponseLogBehaviour = if soInDevelopmentMode then LogEntireResponse else LogSanitisedResponse
+    eventResponseLogBehaviour = if soDevMode then LogEntireResponse else LogSanitisedResponse
 
   lockedEventsCtx <-
     liftIO $
@@ -810,14 +826,14 @@ execQuery env queryBs = do
   buildSchemaCacheStrict
   encJToLBS <$> runQueryM env query
 
-instance Tracing.HasReporter PGMetadataStorageApp
+instance (Monad m) => Tracing.HasReporter (PGMetadataStorageAppT m)
 
-instance HasResourceLimits PGMetadataStorageApp where
+instance (Monad m) => HasResourceLimits (PGMetadataStorageAppT m) where
   askResourceLimits = pure (ResourceLimits id)
 
-instance HttpLog PGMetadataStorageApp where
+instance (MonadIO m) => HttpLog (PGMetadataStorageAppT m) where
 
-  type HTTPLoggingMetadata PGMetadataStorageApp = ()
+  type HTTPLoggingMetadata (PGMetadataStorageAppT m) = ()
 
   buildHTTPLoggingMetadata _ = ()
 
@@ -829,11 +845,11 @@ instance HttpLog PGMetadataStorageApp where
     unLogger logger $ mkHttpLog $
       mkHttpAccessLogContext userInfoM reqId waiReq compressedResponse qTime cType headers
 
-instance MonadExecuteQuery PGMetadataStorageApp where
+instance (Monad m) => MonadExecuteQuery (PGMetadataStorageAppT m) where
   cacheLookup _ _ _ = pure ([], Nothing)
   cacheStore  _ _ = pure ()
 
-instance UserAuthentication (Tracing.TraceT PGMetadataStorageApp) where
+instance (MonadIO m, MonadBaseControl IO m) => UserAuthentication (Tracing.TraceT (PGMetadataStorageAppT m)) where
   resolveUserInfo logger manager headers authMode reqs =
     runExceptT $ getUserInfoWithExpTime logger manager headers authMode reqs
 
@@ -841,7 +857,7 @@ accessDeniedErrMsg :: Text
 accessDeniedErrMsg =
   "restricted access : admin only"
 
-instance MonadMetadataApiAuthorization PGMetadataStorageApp where
+instance (Monad m) => MonadMetadataApiAuthorization (PGMetadataStorageAppT m) where
   authorizeV1QueryApi query handlerCtx = runExceptT do
     let currRole = _uiRole $ hcUser handlerCtx
     when (requiresAdmin query && currRole /= adminRoleName) $
@@ -857,11 +873,11 @@ instance MonadMetadataApiAuthorization PGMetadataStorageApp where
     when (currRole /= adminRoleName) $
       withPathK "args" $ throw400 AccessDenied accessDeniedErrMsg
 
-instance ConsoleRenderer PGMetadataStorageApp where
+instance (Monad m) => ConsoleRenderer (PGMetadataStorageAppT m) where
   renderConsole path authMode enableTelemetry consoleAssetsDir =
     return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir
 
-instance MonadGQLExecutionCheck PGMetadataStorageApp where
+instance (Monad m) => MonadGQLExecutionCheck (PGMetadataStorageAppT m) where
   checkGQLExecution userInfo _ enableAL sc query = runExceptT $ do
     req <- toParsed query
     checkQueryInAllowlist enableAL userInfo req sc
@@ -870,19 +886,21 @@ instance MonadGQLExecutionCheck PGMetadataStorageApp where
   executeIntrospection _ introspectionQuery _ =
     pure $ Right $ ExecStepRaw introspectionQuery
 
-instance MonadConfigApiHandler PGMetadataStorageApp where
+instance (MonadIO m, MonadBaseControl IO m) => MonadConfigApiHandler (PGMetadataStorageAppT m) where
   runConfigApiHandler = configApiGetHandler
 
-instance MonadQueryLog PGMetadataStorageApp where
+instance (MonadIO m) => MonadQueryLog (PGMetadataStorageAppT m) where
   logQueryLog = unLogger
 
-instance WS.MonadWSLog PGMetadataStorageApp where
+instance (MonadIO m) => WS.MonadWSLog (PGMetadataStorageAppT m) where
   logWSLog = unLogger
 
-instance MonadResolveSource PGMetadataStorageApp where
+instance (Monad m) => MonadResolveSource (PGMetadataStorageAppT m) where
   getSourceResolver = mkPgSourceResolver <$> asks snd
 
-runInSeparateTx :: Q.TxE QErr a -> MetadataStorageT PGMetadataStorageApp a
+runInSeparateTx
+  :: (MonadIO m)
+  => Q.TxE QErr a -> MetadataStorageT (PGMetadataStorageAppT m) a
 runInSeparateTx tx = do
   pool <- lift $ asks fst
   liftEitherM $ liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Nothing) tx
@@ -927,7 +945,7 @@ setCatalogStateTx stateTy stateValue =
 -- | Each of the function in the type class is executed in a totally separate transaction.
 --
 -- To learn more about why the instance is derived as following, see Note [Generic MetadataStorageT transformer]
-instance MonadMetadataStorage (MetadataStorageT PGMetadataStorageApp) where
+instance {-# OVERLAPPING #-} MonadIO m => MonadMetadataStorage (MetadataStorageT (PGMetadataStorageAppT m)) where
 
   fetchMetadataResourceVersion   = runInSeparateTx fetchMetadataResourceVersionFromCatalog
   fetchMetadata                  = runInSeparateTx fetchMetadataAndResourceVersionFromCatalog
@@ -940,7 +958,7 @@ instance MonadMetadataStorage (MetadataStorageT PGMetadataStorageApp) where
   getDatabaseUid      = runInSeparateTx getDbId
   checkMetadataStorageHealth = lift (asks fst) >>= checkDbConnection
 
-  getDeprivedCronTriggerStats        = runInSeparateTx getDeprivedCronTriggerStatsTx
+  getDeprivedCronTriggerStats        = runInSeparateTx . getDeprivedCronTriggerStatsTx
   getScheduledEventsForDelivery      = runInSeparateTx getScheduledEventsForDeliveryTx
   insertScheduledEvent               = runInSeparateTx . insertScheduledEventTx
   insertScheduledEventInvocation a b = runInSeparateTx $ insertInvocationTx a b
@@ -959,6 +977,8 @@ instance MonadMetadataStorage (MetadataStorageT PGMetadataStorageApp) where
   fetchActionResponse                 = runInSeparateTx . fetchActionResponseTx
   clearActionData                     = runInSeparateTx . clearActionDataTx
   setProcessingActionLogsToPending    = runInSeparateTx . setProcessingActionLogsToPendingTx
+
+instance MonadMetadataStorageQueryAPI (MetadataStorageT (PGMetadataStorageAppT CacheBuild))
 
 --- helper functions ---
 
