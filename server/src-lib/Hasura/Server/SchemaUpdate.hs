@@ -12,6 +12,7 @@ import           Hasura.Prelude
 import qualified Control.Concurrent.Extended   as C
 import qualified Control.Concurrent.STM        as STM
 import qualified Control.Immortal              as Immortal
+import qualified Control.Monad.Loops           as L
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.HashSet                  as HS
 import qualified Database.PG.Query             as Q
@@ -173,12 +174,35 @@ forcePut v a = STM.atomically $ STM.tryTakeTMVar v >> STM.putTMVar v a
 schemaVersionCheckHandler
   :: Q.PGPool -> STM.TMVar MetadataResourceVersion -> IO (Either QErr ())
 schemaVersionCheckHandler pool metaVersionRef =
-   (runExceptT $
-     Q.runTx pool (Q.RepeatableRead, Nothing) $
-       fetchMetadataResourceVersionFromCatalog) >>= \case
-    Right version ->
-      Right <$> forcePut metaVersionRef version
-    Left err -> pure $ Left err
+  runExceptT (Q.runTx pool (Q.RepeatableRead, Nothing)
+                $ fetchMetadataResourceVersionFromCatalog)
+              >>=
+                \case
+                  Right version -> Right <$> forcePut metaVersionRef version
+                  Left err      -> pure $ Left err
+
+data ErrorState = ErrorState { _unState :: (Maybe MetadataResourceVersion) }
+  deriving (Show, Eq)
+
+-- NOTE: The ErrorState type is to be used mainly for the `listener` method below.
+--       This will help prevent logging the same error with the same MetadataResourceVersion
+--       multiple times consecutively. When the `listener` is in ErrorState we don't log the
+--       next error until the resource version has changed/updated.
+
+emptyErrorState :: ErrorState
+emptyErrorState = ErrorState Nothing
+
+-- | NOTE: this can be updated to use lenses
+updateErrorInState :: ErrorState -> MetadataResourceVersion -> ErrorState
+updateErrorInState es mrv = es { _unState = (Just mrv) }
+
+isInErrorState :: ErrorState -> Bool
+isInErrorState = isJust . _unState
+
+toLogError :: ErrorState -> MetadataResourceVersion -> Bool
+toLogError es mrv = case _unState es of
+  Just mrv' -> mrv' /= mrv
+  Nothing   -> True
 
 -- | An IO action that listens to postgres for events and pushes them to a Queue, in a loop forever.
 listener
@@ -188,12 +212,27 @@ listener
   -> STM.TMVar MetadataResourceVersion
   -> Milliseconds
   -> m void
-listener logger pool metaVersionRef interval =
-  forever $ do
-    respErr <- liftIO $ schemaVersionCheckHandler pool metaVersionRef
-    liftIO $ do
-      onLeft respErr (logError logger TTListener . TEQueryError)
-      C.sleep (milliseconds interval)
+listener logger pool metaVersionRef interval = L.iterateM_ listenerLoop emptyErrorState
+  where
+  listenerLoop errorState = do
+    mrv  <- liftIO $ STM.atomically $ STM.tryTakeTMVar metaVersionRef
+    resp <- liftIO $ schemaVersionCheckHandler pool metaVersionRef
+    let metadataVersion = fromMaybe initialResourceVersion mrv
+    nextErr <- case resp of
+      Left respErr -> do
+        if (toLogError errorState metadataVersion)
+          then do
+            logError logger TTListener $ TEQueryError respErr
+            logInfo logger TTListener $ object [ "metadataResourceVersion" .= toJSON metadataVersion ]
+            pure $ updateErrorInState errorState metadataVersion
+          else do
+            pure errorState
+      Right _ -> do
+        when (isInErrorState errorState) $
+          logInfo logger TTListener $ object [ "message" .= ("SchemaSync Restored..." :: Text) ]
+        pure emptyErrorState
+    liftIO $ C.sleep $ milliseconds interval
+    pure nextErr
 
 -- | An IO action that processes events from Queue, in a loop forever.
 processor
