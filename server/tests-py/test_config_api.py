@@ -16,8 +16,10 @@ class TestConfigAPI():
             headers['x-hasura-admin-secret'] = admin_secret
 
         resp = hge_ctx.http.get(hge_ctx.hge_url + '/v1alpha1/config', headers=headers)
+        
+        assert resp.status_code == 200, resp
+        
         body = resp.json()
-
         # The tree may be dirty because we're developing tests locally while
         # graphql-engine was built previously when tree was clean. If we're
         # modifying graphql-engine too then both of these will be tagged dirty,

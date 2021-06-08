@@ -15,6 +15,8 @@ import qualified Data.HashMap.Strict                       as M
 import qualified Data.HashSet                              as S
 import qualified Data.Text                                 as T
 import qualified Data.Text.Encoding                        as T
+import qualified Data.Text.Lazy                            as LT
+import qualified Data.Text.Lazy.Encoding                   as TL
 import qualified GHC.Stats.Extended                        as RTS
 import qualified Network.HTTP.Client                       as HTTP
 import qualified Network.HTTP.Types                        as HTTP
@@ -33,6 +35,7 @@ import           Control.Monad.Trans.Control               (MonadBaseControl)
 import           Data.Aeson                                hiding (json)
 import           Data.IORef
 import           Data.String                               (fromString)
+import           Data.Text.Conversions                     (convertText)
 import           Data.Text.Extended
 import           Network.Mime                              (defaultMimeLookup)
 import           System.FilePath                           (joinPath, takeFileName)
@@ -171,9 +174,6 @@ withSCUpdate scr logger action =
     (!res, !newSC) <- action
     liftIO $ do
       -- update schemacache in IO reference
-
-
-
       modifyIORef' cacheRef $ \(_, prevVer) ->
         let !newVer = incSchemaCacheVer prevVer
           in (newSC, newVer)
@@ -890,18 +890,32 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
     -- API Console and Root Dir
     when (enableConsole && enableMetadata) serveApiConsole
 
-    -- Health check endpoint
-    Spock.get "healthz" $ do
-      sc <- getSCFromRef $ scCacheRef serverCtx
-      eitherHealth <- runMetadataStorageT checkMetadataStorageHealth
-      let dbOk = either (const False) id eitherHealth
-      if dbOk
-        then Spock.setStatus HTTP.status200 >> Spock.text (if null (scInconsistentObjs sc)
-                                               then "OK"
-                                               else "WARN: inconsistent objects in schema")
-        else Spock.setStatus HTTP.status500 >> Spock.text "ERROR"
+    -- Health check endpoint with logs
+    let healthzAction = do
+          sc <- getSCFromRef $ scCacheRef serverCtx
+          eitherHealth <- runMetadataStorageT checkMetadataStorageHealth
+          let dbOk = either (const False) id eitherHealth
+              okText = "OK"
+              warnText = "WARN: inconsistent objects in schema"
+              errorText = "ERROR"
+              responseText = if null (scInconsistentObjs sc)
+                          then okText
+                          else warnText
+          if dbOk
+            then do
+              logSuccess responseText
+              Spock.setStatus HTTP.status200 >> Spock.text (LT.toStrict responseText)
+            else do
+              logError errorText
+              Spock.setStatus HTTP.status500 >> Spock.text errorText
+
+    Spock.get "healthz" healthzAction
+
+    -- | This is an alternative to `healthz` (See issue #6958)
+    Spock.get "hasura/healthz" healthzAction
 
     Spock.get "v1/version" $ do
+      logSuccess $ "version: " <> convertText currentVersion
       setHeader jsonHeader
       Spock.lazyBytes $ encode $ object [ "version" .= currentVersion ]
 
@@ -947,7 +961,6 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
       let bodyParams = case J.decodeStrict body of
             Just (J.Object o) -> M.toList o
             _                 -> []
-
           allParams = fmap Left <$> queryParams <|> fmap Right <$> bodyParams
 
 
@@ -1033,6 +1046,23 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
   where
     logger = scLogger serverCtx
 
+    logSuccess msg = do
+      req <- Spock.request
+      reqBody <- liftIO $ Wai.strictRequestBody req
+      let headers = Wai.requestHeaders req
+          blMsg = TL.encodeUtf8 msg
+      (reqId, _newHeaders) <- getRequestId headers
+      lift $
+        logHttpSuccess logger Nothing reqId req (reqBody, Nothing) blMsg blMsg Nothing Nothing headers mempty
+
+    logError errmsg = do
+      req <- Spock.request
+      reqBody <- liftIO $ Wai.strictRequestBody req
+      let headers = Wai.requestHeaders req
+      (reqId, _newHeaders) <- getRequestId headers
+      lift $
+        logHttpError logger Nothing reqId req (reqBody, Nothing) (internalError errmsg) headers
+
     spockAction
       :: (FromJSON a, ToJSON a, MonadIO m, MonadBaseControl IO m, UserAuthentication (Tracing.TraceT m), HttpLog m, Tracing.HasReporter m, HasResourceLimits m)
       => (Bool -> QErr -> Value)
@@ -1065,7 +1095,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
         let headers = Wai.requestHeaders req
             authMode = scAuthMode serverCtx
         consoleHtml <- lift $ renderConsole path authMode enableTelemetry consoleAssetsDir
-        either (raiseGenericApiError logger headers . err500 Unexpected . T.pack) Spock.html consoleHtml
+        either (raiseGenericApiError logger headers . internalError . T.pack) Spock.html consoleHtml
 
 raiseGenericApiError
   :: (MonadIO m, HttpLog m)
