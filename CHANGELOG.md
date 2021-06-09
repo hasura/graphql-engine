@@ -8,7 +8,7 @@
 - console: allow tracking of custom SQL functions having composite type (rowtype) input arguments
 - console: allow input object presets in remote schema permissions
 - cli: add interactive prompt to get input when `--database-name` flag is missing
-
+- cli: fix metadata export to avoid unnecessary empty lines in actions.graphql (#5338)
 
 ## v2.0.0-beta.1
 
