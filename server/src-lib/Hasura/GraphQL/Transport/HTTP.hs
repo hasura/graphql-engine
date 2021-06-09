@@ -37,6 +37,7 @@ import qualified Network.Wai.Extended                         as Wai
 import           Control.Lens                                 (toListOf)
 import           Control.Monad.Morph                          (hoist)
 import           Control.Monad.Trans.Control                  (MonadBaseControl)
+import           Data.Semigroup                               (Endo (..))
 
 import qualified Hasura.GraphQL.Execute                       as E
 import qualified Hasura.GraphQL.Execute.Action                as EA
@@ -252,9 +253,9 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                           tx
                           genSql
                 return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
-              E.ExecStepRemote rsi gqlReq -> do
+              E.ExecStepRemote rsi typeNameCustomizer gqlReq -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
-                runRemoteGQ httpManager fieldName rsi gqlReq
+                runRemoteGQ httpManager fieldName rsi typeNameCustomizer gqlReq
               E.ExecStepAction (aep, _) -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
                 (time, (r, _)) <- doQErr $ EA.runActionExecution aep
@@ -309,9 +310,9 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                           tx
                           genSql
                 return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
-              E.ExecStepRemote rsi gqlReq -> do
+              E.ExecStepRemote rsi typeNameCustomizer gqlReq -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
-                runRemoteGQ httpManager fieldName rsi gqlReq
+                runRemoteGQ httpManager fieldName rsi typeNameCustomizer gqlReq
               E.ExecStepAction (aep, _) -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
                 (time, (r, hdrs)) <- doQErr $ EA.runActionExecution aep
@@ -338,10 +339,10 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 
     forWithKey = flip OMap.traverseWithKey
 
-    runRemoteGQ httpManager fieldName rsi gqlReq = do
+    runRemoteGQ httpManager fieldName rsi typeNameCustomizer gqlReq = do
       (telemTimeIO_DT, remoteResponseHeaders, resp) <-
         doQErr $ E.execRemoteGQ env httpManager userInfo reqHeaders rsi gqlReq
-      value <- extractFieldFromResponse (G.unName fieldName) resp
+      value <- extractFieldFromResponse fieldName rsi typeNameCustomizer gqlReq resp
       let filteredHeaders = filter ((== "Set-Cookie") . fst) remoteResponseHeaders
       pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) filteredHeaders
 
@@ -421,21 +422,91 @@ coalescePostgresMutations plan = do
     _ -> Nothing
   Just (oneSourceConfig, mutations)
 
+-- If there are type name customizations then modify the value of any `__typename` fields in the response from the remote server.
+-- We can't just look for __typename in the JSON response because the query might have aliased it to a different name.
+-- Therefore we need to traverse the outgoing query to build the mapping function.
+customizeTypeNameFields :: Maybe (G.Name -> G.Name) -> Maybe a -> G.Name -> GQLReqOutgoing -> JO.Value -> JO.Value
+customizeTypeNameFields Nothing _ _ _ = id
+customizeTypeNameFields (Just customizeTypeName) namespace rootFieldName GQLReq{..} =
+    maybe id appEndo $ foldMap go $ selectRoot $ G._todSelectionSet _grQuery
+    where
+      -- We could use just Endo JO.Value to build up the JSON traversal function, but by using
+      -- Maybe (Endo. JO.Value) we can potentially avoid traversing the JSON value
+      -- at all if no __typename fields are found in the query.
+      go :: G.Selection G.NoFragments G.Name -> Maybe (Endo JO.Value)
+      go = \case
+        G.SelectionField G.Field{..} ->
+          modifyFieldByName (fromMaybe _fName _fAlias) <$>
+            if _fName == $$(G.litName "__typename")
+              then Just $ Endo customizeTypeNameString -- We've found a __typename field so customize it
+              else foldMap go _fSelectionSet           -- Recurse on subfields
+        G.SelectionInlineFragment G.InlineFragment{..} ->
+          foldMap go _ifSelectionSet
+
+      -- Start from within the root field of the query. The response value has already been extracted from the
+      -- root field so we need to start traversing the selection set from the same place.
+      -- If a custom namespace is in use that that will have already been removed from the query
+      -- so no need to do anything.
+      selectRoot :: G.SelectionSet G.NoFragments G.Name -> G.SelectionSet G.NoFragments G.Name
+      selectRoot = maybe selectRoot' (const id) namespace
+        where
+          selectRoot' [] = []
+          selectRoot' (s:ss) = case s of
+            G.SelectionField G.Field{..} | fromMaybe _fName _fAlias == rootFieldName -> _fSelectionSet
+            _                                                                        -> selectRoot' ss
+
+      -- Apply a modifier to a specific field of an object.
+      -- If the value is an JSON array (signifying a GraphQL field with a list type)
+      -- then apply the modifier to all elements of the array.
+      modifyFieldByName :: G.Name -> Endo JO.Value -> Endo JO.Value
+      modifyFieldByName fieldName (Endo f) = Endo modifyFieldByName'
+        where
+          modifyFieldByName' = \case
+            JO.Object o -> JO.Object $ JO.adjust f (G.unName fieldName) o
+            JO.Array a  -> JO.Array $ modifyFieldByName' <$> a
+            v           -> v
+
+      customizeTypeNameString :: JO.Value -> JO.Value
+      customizeTypeNameString = \case
+        JO.String t -> JO.String $ G.unName $ customizeTypeName $ G.unsafeMkName t
+        v           -> v
+
 extractFieldFromResponse
-  :: Monad m => Text -> LBS.ByteString -> ExceptT (Either GQExecError QErr) m JO.Value
-extractFieldFromResponse fieldName bs = do
-  val <- onLeft (JO.eitherDecode bs) $ do400 . T.pack
-  valObj <- onLeft (JO.asObject val) do400
-  dataVal <- case JO.toList valObj of
-    [("data", v)] -> pure v
-    _ -> case JO.lookup "errors" valObj of
-      Just (JO.Array err) -> doGQExecError $ toList $ fmap JO.fromOrdered err
-      _                   -> do400 "Received invalid JSON value from remote"
-  dataObj <- onLeft (JO.asObject dataVal) do400
-  fieldVal <- onNothing (JO.lookup fieldName dataObj) $
-    do400 $ "expecting key " <> fieldName
-  return fieldVal
+  :: forall m. Monad m
+  => G.Name
+  -> RemoteSchemaInfo
+  -> Maybe (G.Name -> G.Name)
+  -> GQLReqOutgoing
+  -> LBS.ByteString
+  -> ExceptT (Either GQExecError QErr) m JO.Value
+extractFieldFromResponse fieldName rsi typeNameCustomizer gqlReq resp = do
+  let namespace = fmap G.unName $ _rscRootFieldsNamespace =<< rsCustomization rsi
+  value <- extractFieldFromResponse' (G.unName fieldName) namespace resp
+  pure $ customizeTypeNameFields typeNameCustomizer namespace fieldName gqlReq value
   where
+    extractFieldFromResponse'
+      :: Text -> Maybe Text -> LBS.ByteString -> ExceptT (Either GQExecError QErr) m JO.Value
+    extractFieldFromResponse' fieldName' namespace bs = do
+      val <- onLeft (JO.eitherDecode bs) $ do400 . T.pack
+      valObj <- onLeft (JO.asObject val) do400
+      dataVal <- case JO.toList valObj of
+        [("data", v)] -> pure v
+        _ -> case JO.lookup "errors" valObj of
+          Just (JO.Array err) -> doGQExecError $ toList $ fmap JO.fromOrdered err
+          _                   -> do400 "Received invalid JSON value from remote"
+      case namespace of
+        Just _ ->
+          -- If using a custom namespace field then the response from the remote server
+          -- will already be unwrapped so just return it.
+          return dataVal
+        _ ->  do
+          -- No custom namespace so we need to look up the field name in the data
+          -- object.
+          dataObj <- onLeft (JO.asObject dataVal) do400
+          fieldVal <- onNothing (JO.lookup fieldName' dataObj) $
+            do400 $ "expecting key " <> fieldName'
+          return fieldVal
+
     do400 = withExceptT Right . throw400 RemoteSchemaError
     doGQExecError = withExceptT Left . throwError . GQExecError
 

@@ -5,6 +5,7 @@
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 - server: fix add source API wiping out source's metadata when replace_configuration is true
+- server: add support for customization of field names and type names when adding a remote schema
 - console: add foreign key CRUD functionality to ms sql server tables
 - console: allow tracking of custom SQL functions having composite type (rowtype) input arguments
 - console: allow input object presets in remote schema permissions

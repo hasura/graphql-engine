@@ -415,6 +415,8 @@ library
                      , Hasura.RQL.Types.Run
                      , Hasura.Session
 
+                     , Test.QuickCheck.Arbitrary.Extended
+
                      -- exposed for Pro
                      , Hasura.Server.API.Config
                      , Hasura.Server.Telemetry
@@ -664,6 +666,8 @@ test-suite graphql-engine-tests
     Hasura.GraphQL.Parser.TestUtils
     Hasura.GraphQL.Schema.RemoteTest
     Hasura.IncrementalSpec
+    Hasura.SessionSpec
+    Hasura.GraphQL.RemoteServerSpec
     Hasura.RQL.MetadataSpec
     Hasura.RQL.Types.EndpointSpec
     Hasura.SQL.WKTSpec

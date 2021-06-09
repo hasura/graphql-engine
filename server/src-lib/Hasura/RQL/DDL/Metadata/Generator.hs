@@ -23,14 +23,17 @@ import qualified Language.Haskell.TH.Syntax                    as TH
 import qualified Network.URI                                   as N
 import qualified System.Cron.Parser                            as Cr
 
+import           Data.Containers.ListUtils                     (nubOrd)
 import           Data.List.Extended                            (duplicates)
 import           Data.Scientific
 import           System.Cron.Types
 import           Test.QuickCheck
+import           Test.QuickCheck.Arbitrary.Extended
 import           Test.QuickCheck.Instances.Semigroup           ()
 import           Test.QuickCheck.Instances.Time                ()
 import           Test.QuickCheck.Instances.UnorderedContainers ()
 
+import           Hasura.GraphQL.Parser.Schema                  (InputValue, Variable, VariableInfo)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
@@ -197,6 +200,15 @@ instance Backend b => Arbitrary (TrackFunctionV2 b) where
 instance Arbitrary N.URI where
   arbitrary = pure $ N.URI "http:" (Just $ N.URIAuth "" "localhost" ":8080" ) "/path" "" ""
 
+instance Arbitrary RemoteTypeCustomization where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RemoteFieldCustomization where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RemoteSchemaCustomization where
+  arbitrary = genericArbitrary
+
 instance Arbitrary RemoteSchemaDef where
   arbitrary = genericArbitrary
 
@@ -348,10 +360,10 @@ instance Arbitrary CronSchedule where
 instance Arbitrary (G.Directive Void) where
   arbitrary = elements sampleDirectives
 
-instance Arbitrary (G.Value Void) where
+instance {-# OVERLAPS #-} Arbitrary (G.Value Void) where
   arbitrary = elements sampleGraphQLValues
 
-instance Arbitrary (G.Value G.Name) where
+instance Arbitrary a => Arbitrary (G.Value a) where
   arbitrary = genericArbitrary
 
 instance (Arbitrary a) => Arbitrary (G.FieldDefinition a) where
@@ -407,6 +419,77 @@ instance Arbitrary RemoteSchemaPermissionMetadata where
 
 instance Arbitrary RemoteSchemaMetadata where
   arbitrary = genericArbitrary
+
+instance Arbitrary (InputValue Void) where
+  arbitrary = genericArbitrary
+
+instance Arbitrary VariableInfo where
+  arbitrary = genericArbitrary
+
+instance Arbitrary Variable where
+  arbitrary = genericArbitrary
+
+instance Arbitrary SessionArgumentPresetInfo  where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RemoteSchemaVariable where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RemoteSchemaInputValueDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RemoteSchemaIntrospection where
+  arbitrary = genericArbitrary
+
+instance Arbitrary IntrospectionResult where
+  arbitrary = do
+    scalarTypeNames <- nubOrd <$> arbitrary
+    objectTypeNames <- distinctExcluding1 scalarTypeNames
+    interfaceTypeNames <- distinctExcluding $ scalarTypeNames ++ objectTypeNames
+    unionTypeNames <- distinctExcluding $ scalarTypeNames ++ objectTypeNames ++ interfaceTypeNames
+    enumTypeNames <- distinctExcluding $ scalarTypeNames ++ objectTypeNames ++ interfaceTypeNames ++ unionTypeNames
+    let outputTypeNames = scalarTypeNames ++ objectTypeNames ++ interfaceTypeNames ++ unionTypeNames ++ enumTypeNames
+    inputObjectTypeNames <- distinctExcluding outputTypeNames
+    let inputTypeNames = scalarTypeNames ++ enumTypeNames ++ inputObjectTypeNames
+    let genType typeNames = oneof
+          [ G.TypeNamed <$> arbitrary <*> elements typeNames
+          , G.TypeList <$> arbitrary <*> genType typeNames]
+    let genInputValueDefinition =
+          G.InputValueDefinition <$> arbitrary <*> arbitrary <*> genType inputTypeNames <*> arbitrary <*> pure []
+    let genRemoteSchemaInputValueDefinition = RemoteSchemaInputValueDefinition <$> genInputValueDefinition <*> pure Nothing
+    let genRemoteSchemaInputValueDefinitions = case inputTypeNames of
+          [] -> pure []
+          _  -> listOf genRemoteSchemaInputValueDefinition
+    let genFieldDefinitions = do
+          fieldNames <- nubOrd <$> listOf1 arbitrary
+          for fieldNames $ \n ->
+            G.FieldDefinition <$> arbitrary <*> pure n <*> genRemoteSchemaInputValueDefinitions <*> genType outputTypeNames <*> pure []
+    let genEnumValueDefinition = G.EnumValueDefinition <$> arbitrary <*> arbitrary <*> pure []
+
+    scalarTypeDefinitions <- for scalarTypeNames $ \n ->
+      G.ScalarTypeDefinition <$> arbitrary <*> pure n <*> pure []
+    objectTypeDefinitions <- for objectTypeNames $ \n ->
+      G.ObjectTypeDefinition <$> arbitrary <*> pure n <*> sublistOf interfaceTypeNames <*> pure [] <*> genFieldDefinitions
+    interfaceTypeDefinitions <- for interfaceTypeNames $ \n ->
+      G.InterfaceTypeDefinition <$> arbitrary <*> pure n <*> pure [] <*> genFieldDefinitions <*> listOf1 arbitrary
+    unionTypeDefinitions <- for unionTypeNames $ \n ->
+      G.UnionTypeDefinition <$> arbitrary <*> pure n <*> pure [] <*> sublistOf1 objectTypeNames
+    enumTypeDefinitions <- for enumTypeNames $ \n ->
+      G.EnumTypeDefinition <$> arbitrary <*> pure n <*> pure [] <*> listOf1 genEnumValueDefinition
+    inputObjectTypeDefinitions <- for inputObjectTypeNames $ \n ->
+      G.InputObjectTypeDefinition <$> arbitrary <*> pure n <*> pure [] <*> genRemoteSchemaInputValueDefinitions
+    let irDoc = RemoteSchemaIntrospection $
+          map G.TypeDefinitionScalar scalarTypeDefinitions ++
+          map G.TypeDefinitionObject objectTypeDefinitions ++
+          map G.TypeDefinitionInterface interfaceTypeDefinitions ++
+          map G.TypeDefinitionUnion unionTypeDefinitions ++
+          map G.TypeDefinitionEnum enumTypeDefinitions ++
+          map G.TypeDefinitionInputObject inputObjectTypeDefinitions
+    irQueryRoot <- elements objectTypeNames
+    let maybeObjectTypeName = elements $ Nothing : (Just <$> objectTypeNames)
+    irMutationRoot <- maybeObjectTypeName
+    irSubscriptionRoot <- maybeObjectTypeName
+    pure $ IntrospectionResult {..}
 
 instance Arbitrary MetadataResourceVersion where
   arbitrary = MetadataResourceVersion <$> arbitrary

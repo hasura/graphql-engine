@@ -23,6 +23,7 @@ import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser.Monad
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.GraphQL.Parser.TestUtils
+import           Hasura.GraphQL.RemoteServer           (identityCustomizer)
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCache
@@ -95,10 +96,16 @@ buildQueryParsers introspection = do
   let introResult = IntrospectionResult introspection $$(G.litName "Query") Nothing Nothing
   (query, _, _) <- runError
     $ runSchemaT
-    $ buildRemoteParser introResult
-    $ RemoteSchemaInfo
-      N.nullURI [] False 60
-  pure $ head query <&> \(RemoteFieldG _ f) -> f
+    $ buildRemoteParser introResult identityCustomizer
+        (RemoteSchemaInfo N.nullURI [] False 60 Nothing)
+        Nothing
+  pure $ head query <&> \(RemoteFieldG _ _ abstractField) ->
+     case abstractField of
+       RRFRealField f -> f
+       RRFNamespaceField _ ->
+         error "buildQueryParsers: unexpected RRFNamespaceField"
+         -- Shouldn't happen if we're using identityCustomizer
+         -- TODO: add some tests for remote schema customization
 
 
 runQueryParser

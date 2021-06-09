@@ -23,6 +23,8 @@ import           Control.Monad.Unique
 import           Data.Text.Extended
 import           Network.HTTP.Client.Extended
 
+import qualified Hasura.Tracing                         as Tracing
+
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.RemoteServer
@@ -40,6 +42,7 @@ runAddRemoteSchema
      , MonadUnique m
      , HasHttpManagerM m
      , MetadataM m
+     , Tracing.MonadTrace m
      )
   => Env.Environment
   -> AddRemoteSchemaQuery
@@ -52,6 +55,8 @@ runAddRemoteSchema env q@(AddRemoteSchemaQuery name defn comment) = do
     MetadataModifier $ metaRemoteSchemas %~ OMap.insert name remoteSchemaMeta
   pure successMsg
   where
+    -- NOTE: permissions here are empty, manipulated via a separate API with
+    -- runAddRemoteSchemaPermissions below
     remoteSchemaMeta = RemoteSchemaMetadata name defn comment mempty
 
 runAddRemoteSchemaPermissions
@@ -95,7 +100,7 @@ runDropRemoteSchemaPermissions
   -> m EncJSON
 runDropRemoteSchemaPermissions (DropRemoteSchemaPermissions name roleName) = do
   remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
-  RemoteSchemaCtx _ _ _ _ _ perms <-
+  RemoteSchemaCtx _ _ _ _ _ _ _ perms <-
     onNothing (Map.lookup name remoteSchemaMap) $
       throw400 NotExists $ "remote schema " <> name <<> " doesn't exist"
   onNothing (Map.lookup roleName perms) $
@@ -115,7 +120,7 @@ addRemoteSchemaP1 name = do
     <> name <<> " already exists"
 
 addRemoteSchemaP2Setup
-  :: (HasVersion, QErrM m, MonadIO m, MonadUnique m, HasHttpManagerM m)
+  :: (HasVersion, QErrM m, MonadIO m, MonadUnique m, HasHttpManagerM m, Tracing.MonadTrace m)
   => Env.Environment
   -> AddRemoteSchemaQuery -> m RemoteSchemaCtx
 addRemoteSchemaP2Setup env (AddRemoteSchemaQuery name def _) = do
@@ -188,6 +193,6 @@ runIntrospectRemoteSchema
   :: (CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON
 runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
   sc <- askSchemaCache
-  RemoteSchemaCtx _ _ _ introspectionByteString _ _ <-
+  RemoteSchemaCtx _ _ _ introspectionByteString _ _ _ _ <-
     Map.lookup rsName (scRemoteSchemas sc) `onNothing` throw400 NotExists ("remote schema: " <> rsName <<> " not found")
   pure $ encJFromLBS introspectionByteString

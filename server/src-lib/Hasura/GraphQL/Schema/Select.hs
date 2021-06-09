@@ -55,7 +55,10 @@ import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser                      (FieldParser, InputFieldsParser,
                                                              Kind (..), Parser,
                                                              UnpreparedValue (..), mkParameter)
-import           Hasura.GraphQL.Parser.Class
+import           Hasura.GraphQL.Parser.Class                (MonadParse (parseErrorWith, withPath),
+                                                             MonadSchema (..), MonadTableInfo,
+                                                             askRoleName, askTableInfo, parseError)
+import           Hasura.GraphQL.RemoteServer                (identityCustomizer)
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
@@ -1111,7 +1114,7 @@ remoteRelationshipFieldPG remoteFieldInfo = runMaybeT do
       -- These are the arguments that are given by the user while executing a query
       let remoteFieldUserArguments = map snd $ Map.toList remoteFieldParamMap
       remoteFld <-
-        lift $ remoteField remoteRelationshipIntrospection fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
+        lift $ remoteField remoteRelationshipIntrospection identityCustomizer typeName fieldName Nothing remoteFieldUserArguments fieldTypeDefinition -- TODO pass in customizer and parent type name (if necessary)
       pure $ pure $ remoteFld
         `P.bindField` \G.Field{ G._fArguments = args, G._fSelectionSet = selSet } -> do
           let remoteArgs =

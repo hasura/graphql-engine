@@ -71,10 +71,11 @@ collectVariablesFromSelectionSet =
 
 buildExecStepRemote
   :: RemoteSchemaInfo
+  -> Maybe (G.Name -> G.Name)
   -> G.OperationType
   -> G.SelectionSet G.NoFragments Variable
   -> ExecutionStep
-buildExecStepRemote remoteSchemaInfo tp selSet =
+buildExecStepRemote remoteSchemaInfo typeNameCustomizer tp selSet =
   let unresolvedSelSet = unresolveVariables selSet
       allVars = map mkVariableDefinitionAndValue $ Set.toList $ collectVariables selSet
       varValues = Map.fromList $ map snd allVars
@@ -82,7 +83,7 @@ buildExecStepRemote remoteSchemaInfo tp selSet =
       varDefs = map fst allVars
       _grQuery = G.TypedOperationDefinition tp Nothing varDefs [] unresolvedSelSet
       _grVariables = varValsM
-  in ExecStepRemote remoteSchemaInfo GH.GQLReq{_grOperationName = Nothing, ..}
+  in ExecStepRemote remoteSchemaInfo typeNameCustomizer GH.GQLReq{_grOperationName = Nothing, ..}
 
 
 -- | resolveRemoteVariable resolves a `RemoteSchemaVariable` into a GraphQL `Variable`. A

@@ -224,7 +224,7 @@ buildRemoteFieldInfo remoteRelationship
                           pgColumns
                           remoteSchemaMap = do
   let remoteSchemaName = rtrRemoteSchema remoteRelationship
-  (RemoteSchemaCtx _name introspectionResult remoteSchemaInfo _ _ _permissions) <-
+  (RemoteSchemaCtx _name introspectionResult remoteSchemaInfo _ _ _ _ _permissions) <-
     onNothing (Map.lookup remoteSchemaName remoteSchemaMap)
       $ throw400 RemoteSchemaError $ "remote schema with name " <> remoteSchemaName <<> " not found"
   eitherRemoteField <- runExceptT $

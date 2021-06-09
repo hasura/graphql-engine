@@ -191,7 +191,6 @@ data JoinSource
   = JoinSelect Select
   -- We're not using existingJoins at the moment, which was used to
   -- avoid re-joining on the same table twice.
-  -- | JoinReselect Reselect
   deriving (Eq, Show, Generic, Data, Lift)
 instance FromJSON JoinSource
 instance Hashable JoinSource
@@ -354,7 +353,7 @@ instance ToJSONKey TableName
 instance NFData TableName
 instance Arbitrary TableName where arbitrary = genericArbitrary
 
-instance ToTxt TableName where toTxt = T.pack . show
+instance ToTxt TableName where toTxt = tshow
 
 data FieldName = FieldName
   { fieldName       :: Text
@@ -388,22 +387,22 @@ data Op
   | LessOrEqualOp
   | MoreOp
   | MoreOrEqualOp
-  -- | SIN
-  -- | SNE
-  -- | SLIKE
-  -- | SNLIKE
-  -- | SILIKE
-  -- | SNILIKE
-  -- | SSIMILAR
-  -- | SNSIMILAR
-  -- | SGTE
-  -- | SLTE
-  -- | SNIN
-  -- | SContains
-  -- | SContainedIn
-  -- | SHasKey
-  -- | SHasKeysAny
-  -- | SHasKeysAll
+  --  SIN
+  --  SNE
+  --  SLIKE
+  --  SNLIKE
+  --  SILIKE
+  --  SNILIKE
+  --  SSIMILAR
+  --  SNSIMILAR
+  --  SGTE
+  --  SLTE
+  --  SNIN
+  --  SContains
+  --  SContainedIn
+  --  SHasKey
+  --  SHasKeysAny
+  --  SHasKeysAll
   deriving (Eq, Show, Generic, Data, Lift)
 instance FromJSON Op
 instance Hashable Op
@@ -475,7 +474,7 @@ instance FromJSON Int64 where parseJSON = liberalInt64Parser Int64
 instance ToJSON Int64 where toJSON = liberalIntegralPrinter
 
 intToInt64 :: Int -> Int64
-intToInt64 = Int64 . T.pack . show
+intToInt64 = Int64 . tshow
 
 -- | BigQuery's conception of a fixed precision decimal.
 newtype Decimal = Decimal Text
@@ -542,7 +541,7 @@ instance ToJSON ScalarType
 instance ToJSONKey ScalarType
 instance NFData ScalarType
 instance Hashable ScalarType
-instance ToTxt ScalarType where toTxt = T.pack . show
+instance ToTxt ScalarType where toTxt = tshow
 
 --------------------------------------------------------------------------------
 -- Unified table metadata
@@ -675,7 +674,7 @@ liberalInt64Parser fromText json = viaText <|> viaNumber
         _ -> fail ("String containing integral number is invalid: " ++ show text)
     viaNumber = do
       int <- J.parseJSON json
-      pure (fromText (T.pack (show (int :: Int))))
+      pure (fromText (tshow (int :: Int)))
 
 -- | Parse either a JSON native double number, or a text string
 -- containing something vaguely in scientific notation. In either
@@ -688,11 +687,11 @@ liberalDecimalParser fromText json = viaText <|> viaNumber
       -- Parsing scientific is safe; it doesn't normalise until we ask
       -- it to.
       case readP_to_S scientificP (T.unpack text) of
-        [(_)] -> pure (fromText text)
-        _     -> fail ("String containing decimal places is invalid: " ++ show text)
+        [_] -> pure (fromText text)
+        _   -> fail ("String containing decimal places is invalid: " ++ show text)
     viaNumber = do
       d <- J.parseJSON json
       -- Converting a scientific to an unbounded number is unsafe, but
       -- to a double is bounded and therefore OK. JSON only supports
       -- doubles, so that's fine.
-      pure (fromText (T.pack (show (d :: Double))))
+      pure (fromText (tshow (d :: Double)))
