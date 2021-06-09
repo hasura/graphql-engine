@@ -119,6 +119,7 @@ case "${1-}" in
       RUN_INTEGRATION_TESTS=true
       RUN_UNIT_TESTS=true
       RUN_HLINT=true
+      BACKEND="postgres"
       ;;
       *)
       die_usage

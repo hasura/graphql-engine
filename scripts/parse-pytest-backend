@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 PARAMS=""
-BACKEND="postgres"
+BACKEND="${BACKEND:-postgres}"
 
 die_backends() {
 cat <<EOL
