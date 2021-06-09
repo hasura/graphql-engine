@@ -58,16 +58,7 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura migrate apply --down all`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			err := validateConfigV3Flags(cmd, ec)
-			// --database-name / --all-databases flag is required to be set
-			if _, ok := err.(errDatabaseNameNotSet); !ok {
-				return err
-			} else if ok {
-				if !cmd.Flags().Changed("all-databases") {
-					return fmt.Errorf("one of --database-name or --all-databases flag is required")
-				}
-			}
-			return nil
+			return validateConfigV3Flags(cmd, ec)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.Source = ec.Source

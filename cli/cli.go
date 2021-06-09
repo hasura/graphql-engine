@@ -331,6 +331,9 @@ type Config struct {
 	// Version of the config.
 	Version ConfigVersion `yaml:"version,omitempty"`
 
+	// DisableInteractive disables interactive prompt
+	DisableInteractive bool `yaml:"disable_interactive,omitempty"`
+
 	// ServerConfig to be used by CLI to contact server.
 	ServerConfig `yaml:",inline"`
 
@@ -820,7 +823,8 @@ func (ec *ExecutionContext) readConfig() error {
 	}
 
 	ec.Config = &Config{
-		Version: ConfigVersion(v.GetInt("version")),
+		Version:            ConfigVersion(v.GetInt("version")),
+		DisableInteractive: v.GetBool("disable_interactive"),
 		ServerConfig: ServerConfig{
 			Endpoint:    v.GetString("endpoint"),
 			AdminSecret: adminSecret,

@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+
 	"github.com/hasura/graphql-engine/cli/internal/scripts"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/spf13/afero"

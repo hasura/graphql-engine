@@ -6,6 +6,7 @@
 (Add entries below in the order of server, console, cli, docs, others)
 - console: add foreign key CRUD functionality to ms sql server tables
 - console: allow tracking of custom SQL functions having composite type (rowtype) input arguments
+- cli: add interactive prompt to get input when `--database-name` flag is missing
 
 
 ## v2.0.0-beta.1
