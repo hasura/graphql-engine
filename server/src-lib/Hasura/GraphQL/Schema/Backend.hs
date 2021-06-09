@@ -26,7 +26,6 @@ type MonadBuildSchema b r m n =
   , MonadTableInfo r m
   , MonadRole r m
   , Has QueryContext r
-  , Has (BackendExtension b) r
   )
 
 class Backend b => BackendSchema (b :: BackendType) where
@@ -111,8 +110,8 @@ class Backend b => BackendSchema (b :: BackendType) where
     -> m [FieldParser n (MutationRootField UnpreparedValue)]
 
   -- backend extensions
-  relayExtension    :: SourceConfig b -> Maybe (XRelay b)
-  nodesAggExtension :: SourceConfig b -> Maybe (XNodesAgg b)
+  relayExtension    :: Maybe (XRelay b)
+  nodesAggExtension :: Maybe (XNodesAgg b)
 
   -- individual components
   columnParser

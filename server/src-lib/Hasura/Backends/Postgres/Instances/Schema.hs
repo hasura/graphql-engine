@@ -78,8 +78,7 @@ class PostgresSchema (pgKind :: PostgresKind) where
     -> SelPermInfo ('Postgres pgKind)
     -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
   pgkRelayExtension
-    :: SourceConfig ('Postgres pgKind)
-    -> Maybe (XRelay ('Postgres pgKind))
+    :: Maybe (XRelay ('Postgres pgKind))
   pgkNode
     :: BS.MonadBuildSchema ('Postgres pgKind) r m n
     => m (Parser 'Output n
@@ -98,13 +97,13 @@ class PostgresSchema (pgKind :: PostgresKind) where
 instance PostgresSchema 'Vanilla where
   pgkBuildTableRelayQueryFields    = buildTableRelayQueryFields
   pgkBuildFunctionRelayQueryFields = buildFunctionRelayQueryFields
-  pgkRelayExtension = const $ Just ()
+  pgkRelayExtension = Just ()
   pgkNode = nodePG
 
 instance PostgresSchema 'Citus where
   pgkBuildTableRelayQueryFields     _ _ _ _ _ _ _ = pure Nothing
   pgkBuildFunctionRelayQueryFields  _ _ _ _ _ _ _ = pure Nothing
-  pgkRelayExtension = const Nothing
+  pgkRelayExtension = Nothing
   pgkNode = undefined
 
 
@@ -127,7 +126,7 @@ instance
   buildFunctionMutationFields    = GSB.buildFunctionMutationFields
   -- backend extensions
   relayExtension    = pgkRelayExtension @pgKind
-  nodesAggExtension = const $ Just ()
+  nodesAggExtension = Just ()
   -- indivdual components
   columnParser              = columnParser
   jsonPathArg               = jsonPathArg

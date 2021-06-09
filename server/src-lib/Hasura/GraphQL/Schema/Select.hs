@@ -81,14 +81,8 @@ import           Hasura.Session
 -- >   col2: col2_type
 -- > }: [table!]!
 selectTable
-  :: forall b m n r
-   . ( BackendSchema b
-     , MonadSchema n m
-     , MonadTableInfo r m
-     , MonadRole r m
-     , Has QueryContext r
-     , Has (BackendExtension b) r
-     )
+  :: forall b r m n
+   . MonadBuildSchema b r m n
   => SourceName
   -> TableInfo b          -- ^ table info
   -> G.Name               -- ^ field display name
@@ -130,14 +124,8 @@ selectTable sourceName tableInfo fieldName description selectPermissions = memoi
 -- >   }
 -- > }: table_nameConnection!
 selectTableConnection
-  :: forall m n r b
-   . ( BackendSchema b
-     , MonadSchema n m
-     , MonadTableInfo r m
-     , MonadRole r m
-     , Has QueryContext r
-     , Has (BackendExtension b) r
-     )
+  :: forall b r m n
+   . MonadBuildSchema b r m n
   => SourceName
   -> TableInfo b          -- ^ table info
   -> G.Name               -- ^ field display name
@@ -146,8 +134,7 @@ selectTableConnection
   -> SelPermInfo b        -- ^ select permissions of the table
   -> m (Maybe (FieldParser n (ConnectionSelectExp b)))
 selectTableConnection sourceName tableInfo fieldName description pkeyColumns selectPermissions = do
-  xRelay <- asks $ backendRelay @b . getter
-  for xRelay \xRelayInfo -> memoizeOn 'selectTableConnection (sourceName, tableName, fieldName) do
+  for (relayExtension @b) \xRelayInfo -> memoizeOn 'selectTableConnection (sourceName, tableName, fieldName) do
     stringifyNum       <- asks $ qcStringifyNum . getter
     selectArgsParser   <- tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions
     selectionSetParser <- P.nonNullableParser <$> tableConnectionSelectionSet sourceName tableInfo selectPermissions
@@ -179,14 +166,8 @@ selectTableConnection sourceName tableInfo fieldName description pkeyColumns sel
 -- current permissions or if there are primary keys the user
 -- doesn't have select permissions for.
 selectTableByPk
-  :: forall m n r b
-   . ( BackendSchema b
-     , MonadSchema n m
-     , MonadTableInfo r m
-     , MonadRole r m
-     , Has QueryContext r
-     , Has (BackendExtension b) r
-     )
+  :: forall b r m n
+   . MonadBuildSchema b r m n
   => SourceName
   -> TableInfo b          -- ^ table info
   -> G.Name               -- ^ field display name
@@ -230,14 +211,8 @@ selectTableByPk sourceName tableInfo fieldName description selectPermissions = r
 -- Returns Nothing if there's nothing that can be selected with
 -- current permissions.
 selectTableAggregate
-  :: forall m n r b
-   . ( BackendSchema b
-     , MonadSchema n m
-     , MonadTableInfo r m
-     , MonadRole r m
-     , Has QueryContext r
-     , Has (BackendExtension b) r
-     )
+  :: forall b r m n
+   . MonadBuildSchema b r m n
   => SourceName
   -> TableInfo b          -- ^ table info
   -> G.Name               -- ^ field display name
@@ -246,7 +221,7 @@ selectTableAggregate
   -> m (Maybe (FieldParser n (AggSelectExp b)))
 selectTableAggregate sourceName tableInfo fieldName description selectPermissions = runMaybeT $ do
   guard $ spiAllowAgg selectPermissions
-  xNodesAgg <- MaybeT $ asks $ backendNodesAgg @b . getter
+  xNodesAgg <- hoistMaybe $ nodesAggExtension @b
   lift $ memoizeOn 'selectTableAggregate (sourceName, tableName, fieldName) do
     stringifyNum    <- asks $ qcStringifyNum . getter
     tableGQLName    <- getTableGQLName tableInfo
@@ -334,21 +309,16 @@ cause errors on the client side, for the following reasons:
 -- >   remote_field: field_type
 -- > }
 tableSelectionSet
-  :: forall m n r b
-   . ( BackendSchema b
-     , MonadSchema n m
-     , MonadTableInfo r m
-     , MonadRole r m
-     , Has QueryContext r
-     , Has (BackendExtension b) r
-     )
+  :: forall b r m n
+   . MonadBuildSchema b r m n
   => SourceName
   -> TableInfo b
   -> SelPermInfo b
   -> m (Parser 'Output n (AnnotatedFields b))
 tableSelectionSet sourceName tableInfo selectPermissions = memoizeOn 'tableSelectionSet (sourceName, tableName) do
   tableGQLName <- getTableGQLName tableInfo
-  let tableFields      = Map.elems  $ _tciFieldInfoMap tableCoreInfo
+  let xRelay           = relayExtension @b
+      tableFields      = Map.elems  $ _tciFieldInfoMap tableCoreInfo
       tablePkeyColumns = _pkColumns <$> _tciPrimaryKey tableCoreInfo
       description      = Just $ mkDescriptionWith (_tciDescription tableCoreInfo) $
                          "columns and relationships of " <>> tableName
@@ -364,7 +334,6 @@ tableSelectionSet sourceName tableInfo selectPermissions = memoizeOn 'tableSelec
   -- for the construction of invalid queries.
 
   queryType <- asks $ qcQueryType . getter
-  xRelay    <- asks $ backendRelay @b . getter
   case (queryType, tablePkeyColumns, xRelay) of
     -- A relay table
     (ET.QueryRelay, Just pkeyColumns, Just xRelayInfo) -> do
@@ -386,13 +355,7 @@ tableSelectionSet sourceName tableInfo selectPermissions = memoizeOn 'tableSelec
 -- Just a @'nonNullableObjectList' wrapper over @'tableSelectionSet'.
 -- > table_name: [table!]!
 tableSelectionList
-  :: ( BackendSchema b
-     , MonadSchema n m
-     , MonadTableInfo r m
-     , MonadRole r m
-     , Has QueryContext r
-     , Has (BackendExtension b) r
-     )
+  :: MonadBuildSchema b r m n
   => SourceName
   -> TableInfo b
   -> SelPermInfo b
@@ -424,14 +387,8 @@ nonNullableObjectList =
 -- >   node: table!
 -- > }
 tableConnectionSelectionSet
-  :: forall m n r b
-   . ( BackendSchema b
-     , MonadSchema n m
-     , MonadTableInfo r m
-     , MonadRole r m
-     , Has QueryContext r
-     , Has (BackendExtension b) r
-     )
+  :: forall b r m n
+   . MonadBuildSchema b r m n
   => SourceName
   -> TableInfo b
   -> SelPermInfo b
@@ -482,14 +439,8 @@ tableConnectionSelectionSet sourceName tableInfo selectPermissions = memoizeOn '
 
 -- | User-defined function (AKA custom function)
 selectFunction
-  :: forall b m n r
-   . ( BackendSchema b
-     , MonadSchema n m
-     , MonadTableInfo r m
-     , MonadRole r m
-     , Has QueryContext r
-     , Has (BackendExtension b) r
-     )
+  :: forall b r m n
+   . MonadBuildSchema b r m n
   => SourceName           -- ^ source name
   -> FunctionInfo b       -- ^ SQL function info
   -> G.Name               -- ^ field display name
@@ -514,14 +465,8 @@ selectFunction sourceName function fieldName description selectPermissions = do
       }
 
 selectFunctionAggregate
-  :: forall b m n r
-   . ( BackendSchema b
-     , MonadSchema n m
-     , MonadTableInfo r m
-     , MonadRole r m
-     , Has QueryContext r
-     , Has (BackendExtension b) r
-     )
+  :: forall b r m n
+   . MonadBuildSchema b r m n
   => SourceName           -- ^ source name
   -> FunctionInfo b       -- ^ SQL function info
   -> G.Name               -- ^ field display name
@@ -531,9 +476,9 @@ selectFunctionAggregate
 selectFunctionAggregate sourceName function fieldName description selectPermissions = runMaybeT do
   let tableName = _fiReturnType function
   guard $ spiAllowAgg selectPermissions
+  xNodesAgg          <- hoistMaybe $ nodesAggExtension @b
   tableInfo          <- askTableInfo sourceName tableName
   stringifyNum       <- asks $ qcStringifyNum . getter
-  xNodesAgg          <- MaybeT $ asks $ backendNodesAgg @b . getter
   tableGQLName       <- getTableGQLName tableInfo
   tableArgsParser    <- lift $ tableArgs sourceName tableInfo selectPermissions
   functionArgsParser <- lift $ customSQLFunctionArgs function
@@ -567,8 +512,7 @@ selectFunctionConnection
   -> SelPermInfo ('Postgres pgKind)       -- ^ select permissions of the target table
   -> m (Maybe (FieldParser n (ConnectionSelectExp ('Postgres pgKind))))
 selectFunctionConnection sourceName function fieldName description pkeyColumns selectPermissions = do
-  xRelay <- asks $ backendRelay @('Postgres pgKind) . getter
-  for xRelay \xRelayInfo -> do
+  for (relayExtension @('Postgres pgKind)) \xRelayInfo -> do
     stringifyNum <- asks $ qcStringifyNum . getter
     let tableName = _fiReturnType function
     tableInfo <- askTableInfo sourceName tableName
@@ -599,7 +543,8 @@ selectFunctionConnection sourceName function fieldName description pkeyColumns s
 -- | Argument to filter rows returned from table selection
 -- > where: table_bool_exp
 tableWhere
-  :: forall b r m n. MonadBuildSchema b r m n
+  :: forall b r m n
+   . MonadBuildSchema b r m n
   => SourceName
   -> TableInfo b
   -> SelPermInfo b
@@ -615,7 +560,8 @@ tableWhere sourceName tableInfo selectPermissions = do
 -- | Argument to sort rows returned from table selection
 -- > order_by: [table_order_by!]
 tableOrderBy
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall b r m n
+   . MonadBuildSchema b r m n
   => SourceName
   -> TableInfo b
   -> SelPermInfo b
@@ -638,7 +584,8 @@ tableOrderBy sourceName tableInfo selectPermissions = do
 -- > order_by: [table_order_by!]
 -- > where: table_bool_exp
 tableArgs
-  :: forall b r m n. MonadBuildSchema b r m n
+  :: forall b r m n
+   . MonadBuildSchema b r m n
   => SourceName
   -> TableInfo b
   -> SelPermInfo b
@@ -703,7 +650,8 @@ positiveInt = P.int `P.bind` \value -> do
 -- > before: String
 -- > after: String
 tableConnectionArgs
-  :: forall b r m n. MonadBuildSchema b r m n
+  :: forall b r m n
+   . MonadBuildSchema b r m n
   => PrimaryKeyColumns b
   -> SourceName
   -> TableInfo b
@@ -830,7 +778,8 @@ tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions = do
 -- >   min: table_min_fields
 -- > }
 tableAggregationFields
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall b r m n
+   . MonadBuildSchema b r m n
   => SourceName
   -> TableInfo b
   -> SelPermInfo b
@@ -931,14 +880,8 @@ lookupRemoteField fieldInfos (fieldCall :| rest) =
 --
 -- > field_name(arg_name: arg_type, ...): field_type
 fieldSelection
-  :: forall b m n r
-   . ( BackendSchema b
-     , MonadSchema n m
-     , MonadTableInfo r m
-     , MonadRole r m
-     , Has QueryContext r
-     , Has (BackendExtension b) r
-     )
+  :: forall b r m n
+   . MonadBuildSchema b r m n
   => SourceName
   -> TableName b
   -> Maybe (PrimaryKeyColumns b)
@@ -952,7 +895,7 @@ fieldSelection sourceName table maybePkeyColumns fieldInfo selectPermissions = d
       let columnName = pgiColumn columnInfo
           fieldName = pgiName columnInfo
       if | fieldName == $$(G.litName "id") && queryType == ET.QueryRelay -> do
-             xRelayInfo  <- MaybeT $ asks $ backendRelay @b . getter
+             xRelayInfo  <- hoistMaybe $ relayExtension @b
              pkeyColumns <- hoistMaybe maybePkeyColumns
              pure $ P.selection_ fieldName Nothing P.identifier
                     $> IR.AFNodeId xRelayInfo table pkeyColumns
@@ -997,14 +940,8 @@ fieldSelection sourceName table maybePkeyColumns fieldInfo selectPermissions = d
 
 -- | Field parsers for a table relationship
 relationshipField
-  :: forall b m n r
-   . ( BackendSchema b
-     , MonadSchema n m
-     , MonadTableInfo r m
-     , MonadRole r m
-     , Has QueryContext r
-     , Has (BackendExtension b) r
-     )
+  :: forall b r m n
+   . MonadBuildSchema b r m n
   => SourceName
   -> RelInfo b
   -> m (Maybe [FieldParser n (AnnotatedField b)])
@@ -1037,7 +974,7 @@ relationshipField sourceName relationshipInfo = runMaybeT do
         -- Parse array connection field only for relay schema
         queryType <- asks $ qcQueryType . getter
         guard $ queryType == ET.QueryRelay
-        xRelayInfo  <- MaybeT $ asks $ backendRelay @b . getter
+        xRelayInfo  <- hoistMaybe $ relayExtension @b
         pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
                        <$> pure otherTableInfo
         let relConnectionName = relFieldName <> $$(G.litName "_connection")
@@ -1051,7 +988,7 @@ relationshipField sourceName relationshipInfo = runMaybeT do
 -- | Computed field parser
 computedFieldPG
   :: forall pgKind r m n
-   . (MonadBuildSchema ('Postgres pgKind) r m n)
+   . MonadBuildSchema ('Postgres pgKind) r m n
   => SourceName
   -> ComputedFieldInfo ('Postgres pgKind)
   -> TableName ('Postgres pgKind)
@@ -1399,13 +1336,7 @@ throwInvalidNodeId t = parseError $ "the node id is invalid: " <> t
 -- | The 'node' root field of a Relay request.
 nodePG
   :: forall m n r
-   . ( BackendSchema ('Postgres 'Vanilla)
-     , MonadSchema n m
-     , MonadTableInfo r m
-     , MonadRole r m
-     , Has QueryContext r
-     , Has (BackendExtension ('Postgres 'Vanilla)) r
-     )
+   . MonadBuildSchema ('Postgres 'Vanilla) r m n
   => m (P.Parser 'Output n
          ( HashMap (TableName ('Postgres 'Vanilla))
            ( SourceName
@@ -1439,13 +1370,7 @@ nodePG = memoizeOn 'nodePG () do
 
 nodeField
   :: forall m n r
-   . ( BackendSchema ('Postgres 'Vanilla)
-     , MonadSchema n m
-     , MonadTableInfo r m
-     , MonadRole r m
-     , Has QueryContext r
-     , Has (BackendExtension ('Postgres 'Vanilla)) r
-     )
+   . MonadBuildSchema ('Postgres 'Vanilla) r m n
   => m (P.FieldParser n (QueryRootField UnpreparedValue))
 nodeField = do
   let idDescription = G.Description "A globally unique id"

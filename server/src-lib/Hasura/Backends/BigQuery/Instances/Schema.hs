@@ -41,8 +41,8 @@ instance BackendSchema 'BigQuery where
   buildFunctionRelayQueryFields  = msBuildFunctionRelayQueryFields
   buildFunctionMutationFields    = msBuildFunctionMutationFields
   -- backend extensions
-  relayExtension    = const Nothing
-  nodesAggExtension = const $ Just ()
+  relayExtension    = Nothing
+  nodesAggExtension = Just ()
   -- indivdual components
   columnParser              = msColumnParser
   jsonPathArg               = msJsonPathArg
