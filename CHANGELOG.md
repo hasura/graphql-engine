@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
+- server: fix add source API wiping out source's metadata when replace_configuration is true
 - console: add foreign key CRUD functionality to ms sql server tables
 - console: allow tracking of custom SQL functions having composite type (rowtype) input arguments
 - console: allow input object presets in remote schema permissions
@@ -18,7 +19,7 @@
 - server: fix asymptotic performance of fetching from the event_log table
 - console: add `pool_timeout`, `connection_lifetime` and `isolation_level` connection params to connect database form
 - console: add check constraints and comments to MS SQL Server tables' read-only modify page
-- console: add create table functionality for MS SQL Server 
+- console: add create table functionality for MS SQL Server
 - console: update connect database form with SSL certificates
 - console: add drop table functionality to MS SQL Server tables
 - console: allow renaming data sources

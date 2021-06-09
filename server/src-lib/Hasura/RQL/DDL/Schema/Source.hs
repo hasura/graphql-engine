@@ -46,13 +46,14 @@ runAddSource
   => AddSource b -> m EncJSON
 runAddSource (AddSource name sourceConfig replaceConfiguration) = do
   sources <- scSources <$> askSchemaCache
-  let sourceMetadata = mkSourceMetadata @b name sourceConfig
 
   metadataModifier <- MetadataModifier <$>
     if HM.member name sources then
-      if replaceConfiguration then pure $ metaSources.ix name .~ sourceMetadata
+      if replaceConfiguration then pure $ metaSources.ix name.toSourceMetadata @b.smConfiguration .~ sourceConfig
       else throw400 AlreadyExists $ "source with name " <> name <<> " already exists"
-    else pure $ metaSources %~ OMap.insert name sourceMetadata
+    else do
+      let sourceMetadata = mkSourceMetadata @b name sourceConfig
+      pure $ metaSources %~ OMap.insert name sourceMetadata
 
   buildSchemaCacheFor (MOSource name) metadataModifier
   pure successMsg
