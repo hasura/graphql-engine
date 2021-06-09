@@ -630,6 +630,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "books",
+        "parentName": "type query_root",
         "resolve": undefined,
         "return": "[books!]!",
         "subscribe": undefined,
@@ -684,6 +685,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "books_aggregate",
+        "parentName": "type query_root",
         "resolve": undefined,
         "return": "books_aggregate!",
         "subscribe": undefined,
@@ -706,6 +708,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "books_by_pk",
+        "parentName": "type query_root",
         "resolve": undefined,
         "return": "books",
         "subscribe": undefined,
@@ -760,6 +763,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "users",
+        "parentName": "type query_root",
         "resolve": undefined,
         "return": "[users!]!",
         "subscribe": undefined,
@@ -814,6 +818,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "users_aggregate",
+        "parentName": "type query_root",
         "resolve": undefined,
         "return": "users_aggregate!",
         "subscribe": undefined,
@@ -836,6 +841,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "users_by_pk",
+        "parentName": "type query_root",
         "resolve": undefined,
         "return": "users",
         "subscribe": undefined,
@@ -864,6 +870,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "delete_books",
+        "parentName": "type mutation_root",
         "resolve": undefined,
         "return": "books_mutation_response",
         "subscribe": undefined,
@@ -886,6 +893,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "delete_books_by_pk",
+        "parentName": "type mutation_root",
         "resolve": undefined,
         "return": "books",
         "subscribe": undefined,
@@ -908,6 +916,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "delete_users",
+        "parentName": "type mutation_root",
         "resolve": undefined,
         "return": "users_mutation_response",
         "subscribe": undefined,
@@ -930,6 +939,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "delete_users_by_pk",
+        "parentName": "type mutation_root",
         "resolve": undefined,
         "return": "users",
         "subscribe": undefined,
@@ -960,6 +970,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "insert_books",
+        "parentName": "type mutation_root",
         "resolve": undefined,
         "return": "books_mutation_response",
         "subscribe": undefined,
@@ -990,6 +1001,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "insert_books_one",
+        "parentName": "type mutation_root",
         "resolve": undefined,
         "return": "books",
         "subscribe": undefined,
@@ -1020,6 +1032,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "insert_users",
+        "parentName": "type mutation_root",
         "resolve": undefined,
         "return": "users_mutation_response",
         "subscribe": undefined,
@@ -1050,6 +1063,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "insert_users_one",
+        "parentName": "type mutation_root",
         "resolve": undefined,
         "return": "users",
         "subscribe": undefined,
@@ -1088,6 +1102,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "update_books",
+        "parentName": "type mutation_root",
         "resolve": undefined,
         "return": "books_mutation_response",
         "subscribe": undefined,
@@ -1126,6 +1141,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "update_books_by_pk",
+        "parentName": "type mutation_root",
         "resolve": undefined,
         "return": "books",
         "subscribe": undefined,
@@ -1164,6 +1180,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "update_users",
+        "parentName": "type mutation_root",
         "resolve": undefined,
         "return": "users_mutation_response",
         "subscribe": undefined,
@@ -1202,6 +1219,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "update_users_by_pk",
+        "parentName": "type mutation_root",
         "resolve": undefined,
         "return": "users",
         "subscribe": undefined,
@@ -1741,23 +1759,71 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "book_name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "book_name",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "book_name",
+        "parentName": "input books_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "user": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "user",
+            "type": "users_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "user",
+        "parentName": "input books_order_by",
         "return": "users_order_by",
       },
     ],
@@ -1767,18 +1833,54 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "books_aggregate": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "books_aggregate",
+            "type": "books_aggregate_order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "books_aggregate",
+        "parentName": "input users_order_by",
         "return": "books_aggregate_order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "name",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "name",
+        "parentName": "input users_order_by",
         "return": "order_by",
       },
     ],
@@ -1788,58 +1890,190 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "avg": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "avg",
+            "type": "books_avg_order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "avg",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_avg_order_by",
       },
       Object {
+        "args": Object {
+          "count": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "count",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "count",
+        "parentName": "input books_aggregate_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "max": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "max",
+            "type": "books_max_order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "max",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_max_order_by",
       },
       Object {
+        "args": Object {
+          "min": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "min",
+            "type": "books_min_order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "min",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_min_order_by",
       },
       Object {
+        "args": Object {
+          "stddev": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "stddev",
+            "type": "books_stddev_order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "stddev",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_stddev_order_by",
       },
       Object {
+        "args": Object {
+          "stddev_pop": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "stddev_pop",
+            "type": "books_stddev_pop_order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "stddev_pop",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_stddev_pop_order_by",
       },
       Object {
+        "args": Object {
+          "stddev_samp": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "stddev_samp",
+            "type": "books_stddev_samp_order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "stddev_samp",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_stddev_samp_order_by",
       },
       Object {
+        "args": Object {
+          "sum": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "sum",
+            "type": "books_sum_order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "sum",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_sum_order_by",
       },
       Object {
+        "args": Object {
+          "var_pop": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "var_pop",
+            "type": "books_var_pop_order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "var_pop",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_var_pop_order_by",
       },
       Object {
+        "args": Object {
+          "var_samp": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "var_samp",
+            "type": "books_var_samp_order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "var_samp",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_var_samp_order_by",
       },
       Object {
+        "args": Object {
+          "variance": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "variance",
+            "type": "books_variance_order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "variance",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_variance_order_by",
       },
     ],
@@ -1849,13 +2083,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_avg_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_avg_order_by",
         "return": "order_by",
       },
     ],
@@ -1865,18 +2123,54 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_max_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "book_name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "book_name",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "book_name",
+        "parentName": "input books_max_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_max_order_by",
         "return": "order_by",
       },
     ],
@@ -1886,18 +2180,54 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_min_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "book_name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "book_name",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "book_name",
+        "parentName": "input books_min_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_min_order_by",
         "return": "order_by",
       },
     ],
@@ -1907,13 +2237,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_stddev_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_stddev_order_by",
         "return": "order_by",
       },
     ],
@@ -1923,13 +2277,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_stddev_pop_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_stddev_pop_order_by",
         "return": "order_by",
       },
     ],
@@ -1939,13 +2317,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_stddev_samp_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_stddev_samp_order_by",
         "return": "order_by",
       },
     ],
@@ -1955,13 +2357,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_sum_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_sum_order_by",
         "return": "order_by",
       },
     ],
@@ -1971,13 +2397,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_var_pop_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_var_pop_order_by",
         "return": "order_by",
       },
     ],
@@ -1987,13 +2437,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_var_samp_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_var_samp_order_by",
         "return": "order_by",
       },
     ],
@@ -2003,13 +2477,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_variance_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_variance_order_by",
         "return": "order_by",
       },
     ],
@@ -2019,38 +2517,122 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "_and": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_and",
+            "type": "[books_bool_exp]",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_and",
+        "parentName": "input books_bool_exp",
         "return": "[books_bool_exp]",
       },
       Object {
+        "args": Object {
+          "_not": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_not",
+            "type": "books_bool_exp",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_not",
+        "parentName": "input books_bool_exp",
         "return": "books_bool_exp",
       },
       Object {
+        "args": Object {
+          "_or": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_or",
+            "type": "[books_bool_exp]",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_or",
+        "parentName": "input books_bool_exp",
         "return": "[books_bool_exp]",
       },
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "Int_comparison_exp",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_bool_exp",
         "return": "Int_comparison_exp",
       },
       Object {
+        "args": Object {
+          "book_name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "book_name",
+            "type": "String_comparison_exp",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "book_name",
+        "parentName": "input books_bool_exp",
         "return": "String_comparison_exp",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int_comparison_exp",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_bool_exp",
         "return": "Int_comparison_exp",
       },
       Object {
+        "args": Object {
+          "user": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "user",
+            "type": "users_bool_exp",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "user",
+        "parentName": "input books_bool_exp",
         "return": "users_bool_exp",
       },
     ],
@@ -2060,48 +2642,156 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "_eq": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_eq",
+            "type": "Int",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_eq",
+        "parentName": "input Int_comparison_exp",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "_gt": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_gt",
+            "type": "Int",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_gt",
+        "parentName": "input Int_comparison_exp",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "_gte": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_gte",
+            "type": "Int",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_gte",
+        "parentName": "input Int_comparison_exp",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "_in": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_in",
+            "type": "[Int!]",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_in",
+        "parentName": "input Int_comparison_exp",
         "return": "[Int!]",
       },
       Object {
+        "args": Object {
+          "_is_null": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_is_null",
+            "type": "Boolean",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_is_null",
+        "parentName": "input Int_comparison_exp",
         "return": "Boolean",
       },
       Object {
+        "args": Object {
+          "_lt": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_lt",
+            "type": "Int",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_lt",
+        "parentName": "input Int_comparison_exp",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "_lte": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_lte",
+            "type": "Int",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_lte",
+        "parentName": "input Int_comparison_exp",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "_neq": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_neq",
+            "type": "Int",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_neq",
+        "parentName": "input Int_comparison_exp",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "_nin": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_nin",
+            "type": "[Int!]",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_nin",
+        "parentName": "input Int_comparison_exp",
         "return": "[Int!]",
       },
     ],
@@ -2111,78 +2801,258 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "_eq": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_eq",
+            "type": "String",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_eq",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_gt": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_gt",
+            "type": "String",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_gt",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_gte": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_gte",
+            "type": "String",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_gte",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_ilike": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_ilike",
+            "type": "String",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_ilike",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_in": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_in",
+            "type": "[String!]",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_in",
+        "parentName": "input String_comparison_exp",
         "return": "[String!]",
       },
       Object {
+        "args": Object {
+          "_is_null": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_is_null",
+            "type": "Boolean",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_is_null",
+        "parentName": "input String_comparison_exp",
         "return": "Boolean",
       },
       Object {
+        "args": Object {
+          "_like": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_like",
+            "type": "String",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_like",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_lt": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_lt",
+            "type": "String",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_lt",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_lte": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_lte",
+            "type": "String",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_lte",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_neq": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_neq",
+            "type": "String",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_neq",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_nilike": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_nilike",
+            "type": "String",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_nilike",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_nin": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_nin",
+            "type": "[String!]",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_nin",
+        "parentName": "input String_comparison_exp",
         "return": "[String!]",
       },
       Object {
+        "args": Object {
+          "_nlike": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_nlike",
+            "type": "String",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_nlike",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_nsimilar": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_nsimilar",
+            "type": "String",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_nsimilar",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_similar": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_similar",
+            "type": "String",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_similar",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
     ],
@@ -2192,33 +3062,105 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "_and": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_and",
+            "type": "[users_bool_exp]",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_and",
+        "parentName": "input users_bool_exp",
         "return": "[users_bool_exp]",
       },
       Object {
+        "args": Object {
+          "_not": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_not",
+            "type": "users_bool_exp",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_not",
+        "parentName": "input users_bool_exp",
         "return": "users_bool_exp",
       },
       Object {
+        "args": Object {
+          "_or": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_or",
+            "type": "[users_bool_exp]",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "_or",
+        "parentName": "input users_bool_exp",
         "return": "[users_bool_exp]",
       },
       Object {
+        "args": Object {
+          "books": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "books",
+            "type": "books_bool_exp",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "books",
+        "parentName": "input users_bool_exp",
         "return": "books_bool_exp",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int_comparison_exp",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_bool_exp",
         "return": "Int_comparison_exp",
       },
       Object {
+        "args": Object {
+          "name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "name",
+            "type": "String_comparison_exp",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "name",
+        "parentName": "input users_bool_exp",
         "return": "String_comparison_exp",
       },
     ],
@@ -2228,23 +3170,71 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_insert_input",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "book_name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "book_name",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "book_name",
+        "parentName": "input books_insert_input",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_insert_input",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "user": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "user",
+            "type": "users_obj_rel_insert_input",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "user",
+        "parentName": "input books_insert_input",
         "return": "users_obj_rel_insert_input",
       },
     ],
@@ -2254,13 +3244,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "data": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "data",
+            "type": "users_insert_input!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "data",
+        "parentName": "input users_obj_rel_insert_input",
         "return": "users_insert_input!",
       },
       Object {
+        "args": Object {
+          "on_conflict": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "on_conflict",
+            "type": "users_on_conflict",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "on_conflict",
+        "parentName": "input users_obj_rel_insert_input",
         "return": "users_on_conflict",
       },
     ],
@@ -2270,18 +3284,54 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "books": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "books",
+            "type": "books_arr_rel_insert_input",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "books",
+        "parentName": "input users_insert_input",
         "return": "books_arr_rel_insert_input",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_insert_input",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "name",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "name",
+        "parentName": "input users_insert_input",
         "return": "String",
       },
     ],
@@ -2291,13 +3341,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "data": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "data",
+            "type": "[books_insert_input!]!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "data",
+        "parentName": "input books_arr_rel_insert_input",
         "return": "[books_insert_input!]!",
       },
       Object {
+        "args": Object {
+          "on_conflict": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "on_conflict",
+            "type": "books_on_conflict",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "on_conflict",
+        "parentName": "input books_arr_rel_insert_input",
         "return": "books_on_conflict",
       },
     ],
@@ -2307,18 +3381,54 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "constraint": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "constraint",
+            "type": "books_constraint!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "constraint",
+        "parentName": "input books_on_conflict",
         "return": "books_constraint!",
       },
       Object {
+        "args": Object {
+          "update_columns": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "update_columns",
+            "type": "[books_update_column!]!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "update_columns",
+        "parentName": "input books_on_conflict",
         "return": "[books_update_column!]!",
       },
       Object {
+        "args": Object {
+          "where": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "where",
+            "type": "books_bool_exp",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "where",
+        "parentName": "input books_on_conflict",
         "return": "books_bool_exp",
       },
     ],
@@ -2328,18 +3438,54 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "constraint": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "constraint",
+            "type": "users_constraint!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "constraint",
+        "parentName": "input users_on_conflict",
         "return": "users_constraint!",
       },
       Object {
+        "args": Object {
+          "update_columns": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "update_columns",
+            "type": "[users_update_column!]!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "update_columns",
+        "parentName": "input users_on_conflict",
         "return": "[users_update_column!]!",
       },
       Object {
+        "args": Object {
+          "where": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "where",
+            "type": "users_bool_exp",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "where",
+        "parentName": "input users_on_conflict",
         "return": "users_bool_exp",
       },
     ],
@@ -2349,13 +3495,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_inc_input",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_inc_input",
         "return": "Int",
       },
     ],
@@ -2365,18 +3535,54 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_set_input",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "book_name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "book_name",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "book_name",
+        "parentName": "input books_set_input",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_set_input",
         "return": "Int",
       },
     ],
@@ -2386,8 +3592,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_pk_columns_input",
         "return": "Int!",
       },
     ],
@@ -2397,8 +3615,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_inc_input",
         "return": "Int",
       },
     ],
@@ -2408,13 +3638,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_set_input",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "name",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "name",
+        "parentName": "input users_set_input",
         "return": "String",
       },
     ],
@@ -2424,8 +3678,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_pk_columns_input",
         "return": "Int!",
       },
     ],
@@ -2435,13 +3701,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "data": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "data",
+            "type": "books_insert_input!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "data",
+        "parentName": "input books_obj_rel_insert_input",
         "return": "books_insert_input!",
       },
       Object {
+        "args": Object {
+          "on_conflict": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "on_conflict",
+            "type": "books_on_conflict",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "on_conflict",
+        "parentName": "input books_obj_rel_insert_input",
         "return": "books_on_conflict",
       },
     ],
@@ -2451,58 +3741,190 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "avg": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "avg",
+            "type": "users_avg_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "avg",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_avg_order_by",
       },
       Object {
+        "args": Object {
+          "count": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "count",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "count",
+        "parentName": "input users_aggregate_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "max": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "max",
+            "type": "users_max_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "max",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_max_order_by",
       },
       Object {
+        "args": Object {
+          "min": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "min",
+            "type": "users_min_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "min",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_min_order_by",
       },
       Object {
+        "args": Object {
+          "stddev": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "stddev",
+            "type": "users_stddev_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "stddev",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_stddev_order_by",
       },
       Object {
+        "args": Object {
+          "stddev_pop": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "stddev_pop",
+            "type": "users_stddev_pop_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "stddev_pop",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_stddev_pop_order_by",
       },
       Object {
+        "args": Object {
+          "stddev_samp": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "stddev_samp",
+            "type": "users_stddev_samp_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "stddev_samp",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_stddev_samp_order_by",
       },
       Object {
+        "args": Object {
+          "sum": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "sum",
+            "type": "users_sum_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "sum",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_sum_order_by",
       },
       Object {
+        "args": Object {
+          "var_pop": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "var_pop",
+            "type": "users_var_pop_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "var_pop",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_var_pop_order_by",
       },
       Object {
+        "args": Object {
+          "var_samp": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "var_samp",
+            "type": "users_var_samp_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "var_samp",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_var_samp_order_by",
       },
       Object {
+        "args": Object {
+          "variance": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "variance",
+            "type": "users_variance_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "variance",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_variance_order_by",
       },
     ],
@@ -2512,8 +3934,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_avg_order_by",
         "return": "order_by",
       },
     ],
@@ -2523,13 +3957,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_max_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "name",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "name",
+        "parentName": "input users_max_order_by",
         "return": "order_by",
       },
     ],
@@ -2539,13 +3997,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_min_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "name",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "name",
+        "parentName": "input users_min_order_by",
         "return": "order_by",
       },
     ],
@@ -2555,8 +4037,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_stddev_order_by",
         "return": "order_by",
       },
     ],
@@ -2566,8 +4060,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_stddev_pop_order_by",
         "return": "order_by",
       },
     ],
@@ -2577,8 +4083,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_stddev_samp_order_by",
         "return": "order_by",
       },
     ],
@@ -2588,8 +4106,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_sum_order_by",
         "return": "order_by",
       },
     ],
@@ -2599,8 +4129,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_var_pop_order_by",
         "return": "order_by",
       },
     ],
@@ -2610,8 +4152,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_var_samp_order_by",
         "return": "order_by",
       },
     ],
@@ -2621,8 +4175,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_variance_order_by",
         "return": "order_by",
       },
     ],
@@ -2632,13 +4198,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "data": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "data",
+            "type": "[users_insert_input!]!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "data",
+        "parentName": "input users_arr_rel_insert_input",
         "return": "[users_insert_input!]!",
       },
       Object {
+        "args": Object {
+          "on_conflict": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "on_conflict",
+            "type": "users_on_conflict",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "on_conflict",
+        "parentName": "input users_arr_rel_insert_input",
         "return": "users_on_conflict",
       },
     ],
@@ -2834,6 +4424,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "continents",
+        "parentName": "type Query",
         "resolve": undefined,
         "return": "[Continent!]!",
         "subscribe": undefined,
@@ -2856,6 +4447,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "continent",
+        "parentName": "type Query",
         "resolve": undefined,
         "return": "Continent",
         "subscribe": undefined,
@@ -2878,6 +4470,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "countries",
+        "parentName": "type Query",
         "resolve": undefined,
         "return": "[Country!]!",
         "subscribe": undefined,
@@ -2900,6 +4493,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "country",
+        "parentName": "type Query",
         "resolve": undefined,
         "return": "Country",
         "subscribe": undefined,
@@ -2922,6 +4516,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "languages",
+        "parentName": "type Query",
         "resolve": undefined,
         "return": "[Language!]!",
         "subscribe": undefined,
@@ -2944,6 +4539,7 @@ Array [
         "extensions": undefined,
         "isDeprecated": false,
         "name": "language",
+        "parentName": "type Query",
         "resolve": undefined,
         "return": "Language",
         "subscribe": undefined,
@@ -3084,8 +4680,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "code": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "code",
+            "type": "StringQueryOperatorInput",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "code",
+        "parentName": "input ContinentFilterInput",
         "return": "StringQueryOperatorInput",
       },
     ],
@@ -3095,33 +4703,105 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "eq": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "eq",
+            "type": "String",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "eq",
+        "parentName": "input StringQueryOperatorInput",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "ne": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "ne",
+            "type": "String",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "ne",
+        "parentName": "input StringQueryOperatorInput",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "in": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "in",
+            "type": "[String]",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "in",
+        "parentName": "input StringQueryOperatorInput",
         "return": "[String]",
       },
       Object {
+        "args": Object {
+          "nin": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "nin",
+            "type": "[String]",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "nin",
+        "parentName": "input StringQueryOperatorInput",
         "return": "[String]",
       },
       Object {
+        "args": Object {
+          "regex": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "regex",
+            "type": "String",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "regex",
+        "parentName": "input StringQueryOperatorInput",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "glob": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "glob",
+            "type": "String",
+          },
+        },
         "checked": true,
+        "isInputObjectType": true,
         "name": "glob",
+        "parentName": "input StringQueryOperatorInput",
         "return": "String",
       },
     ],
@@ -3131,18 +4811,54 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "code": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "code",
+            "type": "StringQueryOperatorInput",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "code",
+        "parentName": "input CountryFilterInput",
         "return": "StringQueryOperatorInput",
       },
       Object {
+        "args": Object {
+          "currency": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "currency",
+            "type": "StringQueryOperatorInput",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "currency",
+        "parentName": "input CountryFilterInput",
         "return": "StringQueryOperatorInput",
       },
       Object {
+        "args": Object {
+          "continent": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "continent",
+            "type": "StringQueryOperatorInput",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "continent",
+        "parentName": "input CountryFilterInput",
         "return": "StringQueryOperatorInput",
       },
     ],
@@ -3152,8 +4868,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "code": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "code",
+            "type": "StringQueryOperatorInput",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "code",
+        "parentName": "input LanguageFilterInput",
         "return": "StringQueryOperatorInput",
       },
     ],
@@ -3307,6 +5035,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "books",
+    "parentName": "type query_root",
     "resolve": undefined,
     "return": "[books!]!",
     "subscribe": undefined,
@@ -3361,6 +5090,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "books_aggregate",
+    "parentName": "type query_root",
     "resolve": undefined,
     "return": "books_aggregate!",
     "subscribe": undefined,
@@ -3383,6 +5113,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "books_by_pk",
+    "parentName": "type query_root",
     "resolve": undefined,
     "return": "books",
     "subscribe": undefined,
@@ -3437,6 +5168,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "users",
+    "parentName": "type query_root",
     "resolve": undefined,
     "return": "[users!]!",
     "subscribe": undefined,
@@ -3491,6 +5223,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "users_aggregate",
+    "parentName": "type query_root",
     "resolve": undefined,
     "return": "users_aggregate!",
     "subscribe": undefined,
@@ -3513,6 +5246,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "users_by_pk",
+    "parentName": "type query_root",
     "resolve": undefined,
     "return": "users",
     "subscribe": undefined,
@@ -3540,6 +5274,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "delete_books",
+    "parentName": "type mutation_root",
     "resolve": undefined,
     "return": "books_mutation_response",
     "subscribe": undefined,
@@ -3562,6 +5297,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "delete_books_by_pk",
+    "parentName": "type mutation_root",
     "resolve": undefined,
     "return": "books",
     "subscribe": undefined,
@@ -3584,6 +5320,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "delete_users",
+    "parentName": "type mutation_root",
     "resolve": undefined,
     "return": "users_mutation_response",
     "subscribe": undefined,
@@ -3606,6 +5343,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "delete_users_by_pk",
+    "parentName": "type mutation_root",
     "resolve": undefined,
     "return": "users",
     "subscribe": undefined,
@@ -3636,6 +5374,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "insert_books",
+    "parentName": "type mutation_root",
     "resolve": undefined,
     "return": "books_mutation_response",
     "subscribe": undefined,
@@ -3666,6 +5405,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "insert_books_one",
+    "parentName": "type mutation_root",
     "resolve": undefined,
     "return": "books",
     "subscribe": undefined,
@@ -3696,6 +5436,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "insert_users",
+    "parentName": "type mutation_root",
     "resolve": undefined,
     "return": "users_mutation_response",
     "subscribe": undefined,
@@ -3726,6 +5467,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "insert_users_one",
+    "parentName": "type mutation_root",
     "resolve": undefined,
     "return": "users",
     "subscribe": undefined,
@@ -3764,6 +5506,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "update_books",
+    "parentName": "type mutation_root",
     "resolve": undefined,
     "return": "books_mutation_response",
     "subscribe": undefined,
@@ -3802,6 +5545,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "update_books_by_pk",
+    "parentName": "type mutation_root",
     "resolve": undefined,
     "return": "books",
     "subscribe": undefined,
@@ -3840,6 +5584,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "update_users",
+    "parentName": "type mutation_root",
     "resolve": undefined,
     "return": "users_mutation_response",
     "subscribe": undefined,
@@ -3878,6 +5623,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "update_users_by_pk",
+    "parentName": "type mutation_root",
     "resolve": undefined,
     "return": "users",
     "subscribe": undefined,
@@ -3905,6 +5651,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "continents",
+    "parentName": "type Query",
     "resolve": undefined,
     "return": "[Continent!]!",
     "subscribe": undefined,
@@ -3927,6 +5674,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "continent",
+    "parentName": "type Query",
     "resolve": undefined,
     "return": "Continent",
     "subscribe": undefined,
@@ -3949,6 +5697,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "countries",
+    "parentName": "type Query",
     "resolve": undefined,
     "return": "[Country!]!",
     "subscribe": undefined,
@@ -3971,6 +5720,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "country",
+    "parentName": "type Query",
     "resolve": undefined,
     "return": "Country",
     "subscribe": undefined,
@@ -3993,6 +5743,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "languages",
+    "parentName": "type Query",
     "resolve": undefined,
     "return": "[Language!]!",
     "subscribe": undefined,
@@ -4015,6 +5766,7 @@ Array [
     "extensions": undefined,
     "isDeprecated": false,
     "name": "language",
+    "parentName": "type Query",
     "resolve": undefined,
     "return": "Language",
     "subscribe": undefined,
@@ -4557,23 +6309,71 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "book_name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "book_name",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "book_name",
+        "parentName": "input books_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "user": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "user",
+            "type": "users_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "user",
+        "parentName": "input books_order_by",
         "return": "users_order_by",
       },
     ],
@@ -4583,18 +6383,54 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "books_aggregate": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "books_aggregate",
+            "type": "books_aggregate_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "books_aggregate",
+        "parentName": "input users_order_by",
         "return": "books_aggregate_order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "name",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "name",
+        "parentName": "input users_order_by",
         "return": "order_by",
       },
     ],
@@ -4604,58 +6440,190 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "avg": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "avg",
+            "type": "books_avg_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "avg",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_avg_order_by",
       },
       Object {
+        "args": Object {
+          "count": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "count",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "count",
+        "parentName": "input books_aggregate_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "max": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "max",
+            "type": "books_max_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "max",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_max_order_by",
       },
       Object {
+        "args": Object {
+          "min": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "min",
+            "type": "books_min_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "min",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_min_order_by",
       },
       Object {
+        "args": Object {
+          "stddev": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "stddev",
+            "type": "books_stddev_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "stddev",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_stddev_order_by",
       },
       Object {
+        "args": Object {
+          "stddev_pop": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "stddev_pop",
+            "type": "books_stddev_pop_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "stddev_pop",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_stddev_pop_order_by",
       },
       Object {
+        "args": Object {
+          "stddev_samp": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "stddev_samp",
+            "type": "books_stddev_samp_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "stddev_samp",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_stddev_samp_order_by",
       },
       Object {
+        "args": Object {
+          "sum": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "sum",
+            "type": "books_sum_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "sum",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_sum_order_by",
       },
       Object {
+        "args": Object {
+          "var_pop": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "var_pop",
+            "type": "books_var_pop_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "var_pop",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_var_pop_order_by",
       },
       Object {
+        "args": Object {
+          "var_samp": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "var_samp",
+            "type": "books_var_samp_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "var_samp",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_var_samp_order_by",
       },
       Object {
+        "args": Object {
+          "variance": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "variance",
+            "type": "books_variance_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "variance",
+        "parentName": "input books_aggregate_order_by",
         "return": "books_variance_order_by",
       },
     ],
@@ -4665,13 +6633,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_avg_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_avg_order_by",
         "return": "order_by",
       },
     ],
@@ -4681,18 +6673,54 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_max_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "book_name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "book_name",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "book_name",
+        "parentName": "input books_max_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_max_order_by",
         "return": "order_by",
       },
     ],
@@ -4702,18 +6730,54 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_min_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "book_name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "book_name",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "book_name",
+        "parentName": "input books_min_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_min_order_by",
         "return": "order_by",
       },
     ],
@@ -4723,13 +6787,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_stddev_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_stddev_order_by",
         "return": "order_by",
       },
     ],
@@ -4739,13 +6827,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_stddev_pop_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_stddev_pop_order_by",
         "return": "order_by",
       },
     ],
@@ -4755,13 +6867,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_stddev_samp_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_stddev_samp_order_by",
         "return": "order_by",
       },
     ],
@@ -4771,13 +6907,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_sum_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_sum_order_by",
         "return": "order_by",
       },
     ],
@@ -4787,13 +6947,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_var_pop_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_var_pop_order_by",
         "return": "order_by",
       },
     ],
@@ -4803,13 +6987,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_var_samp_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_var_samp_order_by",
         "return": "order_by",
       },
     ],
@@ -4819,13 +7027,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_variance_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_variance_order_by",
         "return": "order_by",
       },
     ],
@@ -4835,38 +7067,122 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "_and": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_and",
+            "type": "[books_bool_exp]",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_and",
+        "parentName": "input books_bool_exp",
         "return": "[books_bool_exp]",
       },
       Object {
+        "args": Object {
+          "_not": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_not",
+            "type": "books_bool_exp",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_not",
+        "parentName": "input books_bool_exp",
         "return": "books_bool_exp",
       },
       Object {
+        "args": Object {
+          "_or": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_or",
+            "type": "[books_bool_exp]",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_or",
+        "parentName": "input books_bool_exp",
         "return": "[books_bool_exp]",
       },
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "Int_comparison_exp",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_bool_exp",
         "return": "Int_comparison_exp",
       },
       Object {
+        "args": Object {
+          "book_name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "book_name",
+            "type": "String_comparison_exp",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "book_name",
+        "parentName": "input books_bool_exp",
         "return": "String_comparison_exp",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int_comparison_exp",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_bool_exp",
         "return": "Int_comparison_exp",
       },
       Object {
+        "args": Object {
+          "user": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "user",
+            "type": "users_bool_exp",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "user",
+        "parentName": "input books_bool_exp",
         "return": "users_bool_exp",
       },
     ],
@@ -4876,48 +7192,156 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "_eq": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_eq",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_eq",
+        "parentName": "input Int_comparison_exp",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "_gt": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_gt",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_gt",
+        "parentName": "input Int_comparison_exp",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "_gte": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_gte",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_gte",
+        "parentName": "input Int_comparison_exp",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "_in": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_in",
+            "type": "[Int!]",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_in",
+        "parentName": "input Int_comparison_exp",
         "return": "[Int!]",
       },
       Object {
+        "args": Object {
+          "_is_null": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_is_null",
+            "type": "Boolean",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_is_null",
+        "parentName": "input Int_comparison_exp",
         "return": "Boolean",
       },
       Object {
+        "args": Object {
+          "_lt": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_lt",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_lt",
+        "parentName": "input Int_comparison_exp",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "_lte": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_lte",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_lte",
+        "parentName": "input Int_comparison_exp",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "_neq": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_neq",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_neq",
+        "parentName": "input Int_comparison_exp",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "_nin": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_nin",
+            "type": "[Int!]",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_nin",
+        "parentName": "input Int_comparison_exp",
         "return": "[Int!]",
       },
     ],
@@ -4927,78 +7351,258 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "_eq": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_eq",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_eq",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_gt": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_gt",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_gt",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_gte": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_gte",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_gte",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_ilike": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_ilike",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_ilike",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_in": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_in",
+            "type": "[String!]",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_in",
+        "parentName": "input String_comparison_exp",
         "return": "[String!]",
       },
       Object {
+        "args": Object {
+          "_is_null": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_is_null",
+            "type": "Boolean",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_is_null",
+        "parentName": "input String_comparison_exp",
         "return": "Boolean",
       },
       Object {
+        "args": Object {
+          "_like": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_like",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_like",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_lt": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_lt",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_lt",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_lte": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_lte",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_lte",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_neq": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_neq",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_neq",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_nilike": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_nilike",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_nilike",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_nin": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_nin",
+            "type": "[String!]",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_nin",
+        "parentName": "input String_comparison_exp",
         "return": "[String!]",
       },
       Object {
+        "args": Object {
+          "_nlike": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_nlike",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_nlike",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_nsimilar": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_nsimilar",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_nsimilar",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "_similar": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_similar",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_similar",
+        "parentName": "input String_comparison_exp",
         "return": "String",
       },
     ],
@@ -5008,33 +7612,105 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "_and": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_and",
+            "type": "[users_bool_exp]",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_and",
+        "parentName": "input users_bool_exp",
         "return": "[users_bool_exp]",
       },
       Object {
+        "args": Object {
+          "_not": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_not",
+            "type": "users_bool_exp",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_not",
+        "parentName": "input users_bool_exp",
         "return": "users_bool_exp",
       },
       Object {
+        "args": Object {
+          "_or": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "_or",
+            "type": "[users_bool_exp]",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "_or",
+        "parentName": "input users_bool_exp",
         "return": "[users_bool_exp]",
       },
       Object {
+        "args": Object {
+          "books": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "books",
+            "type": "books_bool_exp",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "books",
+        "parentName": "input users_bool_exp",
         "return": "books_bool_exp",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int_comparison_exp",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_bool_exp",
         "return": "Int_comparison_exp",
       },
       Object {
+        "args": Object {
+          "name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "name",
+            "type": "String_comparison_exp",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "name",
+        "parentName": "input users_bool_exp",
         "return": "String_comparison_exp",
       },
     ],
@@ -5044,23 +7720,71 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_insert_input",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "book_name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "book_name",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "book_name",
+        "parentName": "input books_insert_input",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_insert_input",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "user": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "user",
+            "type": "users_obj_rel_insert_input",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "user",
+        "parentName": "input books_insert_input",
         "return": "users_obj_rel_insert_input",
       },
     ],
@@ -5070,13 +7794,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "data": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "data",
+            "type": "users_insert_input!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "data",
+        "parentName": "input users_obj_rel_insert_input",
         "return": "users_insert_input!",
       },
       Object {
+        "args": Object {
+          "on_conflict": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "on_conflict",
+            "type": "users_on_conflict",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "on_conflict",
+        "parentName": "input users_obj_rel_insert_input",
         "return": "users_on_conflict",
       },
     ],
@@ -5086,18 +7834,54 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "books": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "books",
+            "type": "books_arr_rel_insert_input",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "books",
+        "parentName": "input users_insert_input",
         "return": "books_arr_rel_insert_input",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_insert_input",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "name",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "name",
+        "parentName": "input users_insert_input",
         "return": "String",
       },
     ],
@@ -5107,13 +7891,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "data": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "data",
+            "type": "[books_insert_input!]!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "data",
+        "parentName": "input books_arr_rel_insert_input",
         "return": "[books_insert_input!]!",
       },
       Object {
+        "args": Object {
+          "on_conflict": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "on_conflict",
+            "type": "books_on_conflict",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "on_conflict",
+        "parentName": "input books_arr_rel_insert_input",
         "return": "books_on_conflict",
       },
     ],
@@ -5123,18 +7931,54 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "constraint": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "constraint",
+            "type": "books_constraint!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "constraint",
+        "parentName": "input books_on_conflict",
         "return": "books_constraint!",
       },
       Object {
+        "args": Object {
+          "update_columns": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "update_columns",
+            "type": "[books_update_column!]!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "update_columns",
+        "parentName": "input books_on_conflict",
         "return": "[books_update_column!]!",
       },
       Object {
+        "args": Object {
+          "where": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "where",
+            "type": "books_bool_exp",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "where",
+        "parentName": "input books_on_conflict",
         "return": "books_bool_exp",
       },
     ],
@@ -5144,18 +7988,54 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "constraint": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "constraint",
+            "type": "users_constraint!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "constraint",
+        "parentName": "input users_on_conflict",
         "return": "users_constraint!",
       },
       Object {
+        "args": Object {
+          "update_columns": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "update_columns",
+            "type": "[users_update_column!]!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "update_columns",
+        "parentName": "input users_on_conflict",
         "return": "[users_update_column!]!",
       },
       Object {
+        "args": Object {
+          "where": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "where",
+            "type": "users_bool_exp",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "where",
+        "parentName": "input users_on_conflict",
         "return": "users_bool_exp",
       },
     ],
@@ -5165,13 +8045,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_inc_input",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_inc_input",
         "return": "Int",
       },
     ],
@@ -5181,18 +8085,54 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "author": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "author",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "author",
+        "parentName": "input books_set_input",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "book_name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "book_name",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "book_name",
+        "parentName": "input books_set_input",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_set_input",
         "return": "Int",
       },
     ],
@@ -5202,8 +8142,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input books_pk_columns_input",
         "return": "Int!",
       },
     ],
@@ -5213,8 +8165,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_inc_input",
         "return": "Int",
       },
     ],
@@ -5224,13 +8188,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_set_input",
         "return": "Int",
       },
       Object {
+        "args": Object {
+          "name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "name",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "name",
+        "parentName": "input users_set_input",
         "return": "String",
       },
     ],
@@ -5240,8 +8228,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "Int!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_pk_columns_input",
         "return": "Int!",
       },
     ],
@@ -5251,13 +8251,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "data": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "data",
+            "type": "books_insert_input!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "data",
+        "parentName": "input books_obj_rel_insert_input",
         "return": "books_insert_input!",
       },
       Object {
+        "args": Object {
+          "on_conflict": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "on_conflict",
+            "type": "books_on_conflict",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "on_conflict",
+        "parentName": "input books_obj_rel_insert_input",
         "return": "books_on_conflict",
       },
     ],
@@ -5267,58 +8291,190 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "avg": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "avg",
+            "type": "users_avg_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "avg",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_avg_order_by",
       },
       Object {
+        "args": Object {
+          "count": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "count",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "count",
+        "parentName": "input users_aggregate_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "max": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "max",
+            "type": "users_max_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "max",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_max_order_by",
       },
       Object {
+        "args": Object {
+          "min": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "min",
+            "type": "users_min_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "min",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_min_order_by",
       },
       Object {
+        "args": Object {
+          "stddev": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "stddev",
+            "type": "users_stddev_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "stddev",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_stddev_order_by",
       },
       Object {
+        "args": Object {
+          "stddev_pop": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "stddev_pop",
+            "type": "users_stddev_pop_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "stddev_pop",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_stddev_pop_order_by",
       },
       Object {
+        "args": Object {
+          "stddev_samp": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "stddev_samp",
+            "type": "users_stddev_samp_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "stddev_samp",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_stddev_samp_order_by",
       },
       Object {
+        "args": Object {
+          "sum": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "sum",
+            "type": "users_sum_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "sum",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_sum_order_by",
       },
       Object {
+        "args": Object {
+          "var_pop": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "var_pop",
+            "type": "users_var_pop_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "var_pop",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_var_pop_order_by",
       },
       Object {
+        "args": Object {
+          "var_samp": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "var_samp",
+            "type": "users_var_samp_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "var_samp",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_var_samp_order_by",
       },
       Object {
+        "args": Object {
+          "variance": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "variance",
+            "type": "users_variance_order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "variance",
+        "parentName": "input users_aggregate_order_by",
         "return": "users_variance_order_by",
       },
     ],
@@ -5328,8 +8484,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_avg_order_by",
         "return": "order_by",
       },
     ],
@@ -5339,13 +8507,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_max_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "name",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "name",
+        "parentName": "input users_max_order_by",
         "return": "order_by",
       },
     ],
@@ -5355,13 +8547,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_min_order_by",
         "return": "order_by",
       },
       Object {
+        "args": Object {
+          "name": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "name",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "name",
+        "parentName": "input users_min_order_by",
         "return": "order_by",
       },
     ],
@@ -5371,8 +8587,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_stddev_order_by",
         "return": "order_by",
       },
     ],
@@ -5382,8 +8610,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_stddev_pop_order_by",
         "return": "order_by",
       },
     ],
@@ -5393,8 +8633,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_stddev_samp_order_by",
         "return": "order_by",
       },
     ],
@@ -5404,8 +8656,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_sum_order_by",
         "return": "order_by",
       },
     ],
@@ -5415,8 +8679,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_var_pop_order_by",
         "return": "order_by",
       },
     ],
@@ -5426,8 +8702,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_var_samp_order_by",
         "return": "order_by",
       },
     ],
@@ -5437,8 +8725,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "id": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "id",
+            "type": "order_by",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "id",
+        "parentName": "input users_variance_order_by",
         "return": "order_by",
       },
     ],
@@ -5448,13 +8748,37 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "data": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "data",
+            "type": "[users_insert_input!]!",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "data",
+        "parentName": "input users_arr_rel_insert_input",
         "return": "[users_insert_input!]!",
       },
       Object {
+        "args": Object {
+          "on_conflict": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "on_conflict",
+            "type": "users_on_conflict",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "on_conflict",
+        "parentName": "input users_arr_rel_insert_input",
         "return": "users_on_conflict",
       },
     ],
@@ -5762,8 +9086,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "code": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "code",
+            "type": "StringQueryOperatorInput",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "code",
+        "parentName": "input ContinentFilterInput",
         "return": "StringQueryOperatorInput",
       },
     ],
@@ -5773,33 +9109,105 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "eq": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "eq",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "eq",
+        "parentName": "input StringQueryOperatorInput",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "ne": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "ne",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "ne",
+        "parentName": "input StringQueryOperatorInput",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "in": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "in",
+            "type": "[String]",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "in",
+        "parentName": "input StringQueryOperatorInput",
         "return": "[String]",
       },
       Object {
+        "args": Object {
+          "nin": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "nin",
+            "type": "[String]",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "nin",
+        "parentName": "input StringQueryOperatorInput",
         "return": "[String]",
       },
       Object {
+        "args": Object {
+          "regex": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "regex",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "regex",
+        "parentName": "input StringQueryOperatorInput",
         "return": "String",
       },
       Object {
+        "args": Object {
+          "glob": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "glob",
+            "type": "String",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "glob",
+        "parentName": "input StringQueryOperatorInput",
         "return": "String",
       },
     ],
@@ -5809,18 +9217,54 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "code": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "code",
+            "type": "StringQueryOperatorInput",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "code",
+        "parentName": "input CountryFilterInput",
         "return": "StringQueryOperatorInput",
       },
       Object {
+        "args": Object {
+          "currency": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "currency",
+            "type": "StringQueryOperatorInput",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "currency",
+        "parentName": "input CountryFilterInput",
         "return": "StringQueryOperatorInput",
       },
       Object {
+        "args": Object {
+          "continent": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "continent",
+            "type": "StringQueryOperatorInput",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "continent",
+        "parentName": "input CountryFilterInput",
         "return": "StringQueryOperatorInput",
       },
     ],
@@ -5830,8 +9274,20 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "code": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "",
+            "extensions": undefined,
+            "name": "code",
+            "type": "StringQueryOperatorInput",
+          },
+        },
         "checked": false,
+        "isInputObjectType": true,
         "name": "code",
+        "parentName": "input LanguageFilterInput",
         "return": "StringQueryOperatorInput",
       },
     ],
