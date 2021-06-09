@@ -5,22 +5,18 @@ module Hasura.RQL.DDL.Permission
 
     , InsPerm(..)
     , InsPermDef
-    , CreateInsPerm
     , buildInsPermInfo
 
     , SelPerm(..)
     , SelPermDef
-    , CreateSelPerm
     , buildSelPermInfo
 
     , UpdPerm(..)
     , UpdPermDef
-    , CreateUpdPerm
     , buildUpdPermInfo
 
     , DelPerm(..)
     , DelPermDef
-    , CreateDelPerm
     , buildDelPermInfo
 
     , IsPerm(..)
@@ -41,6 +37,7 @@ import qualified Data.HashSet                       as HS
 
 import           Control.Lens                       ((.~))
 import           Data.Aeson
+import           Data.Kind                          (Type)
 import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend              as AB
@@ -83,8 +80,6 @@ TRUE            TRUE (OR NOT-SET)         FALSE                                 
 TRUE            TRUE (OR NOT-SET)         TRUE                                   Mutation is shown
 -}
 
-type CreateInsPerm b = CreatePerm b (InsPerm b)
-
 procSetObj
   :: forall b m
    . (QErrM m, BackendMetadata b)
@@ -108,35 +103,44 @@ procSetObj source tn fieldInfoMap mObj = do
 
     getDepReason = bool DRSessionVariable DROnType . isStaticValue
 
-class (ToJSON a) => IsPerm b a where
+class IsPerm a where
+  type PermInfo a = (r :: BackendType -> Type) | r -> a
 
   permAccessor
-    :: PermAccessor b (PermInfo b a)
+    :: (ToJSON (a b), BackendMetadata b)
+    => PermAccessor b (PermInfo a b)
 
   buildPermInfo
-    :: (QErrM m, TableCoreInfoRM b m)
+    :: (ToJSON (a b), BackendMetadata b, QErrM m, TableCoreInfoRM b m)
     => SourceName
     -> TableName b
     -> FieldInfoMap (FieldInfo b)
-    -> PermDef a
-    -> m (WithDeps (PermInfo b a))
+    -> PermDef (a b)
+    -> m (WithDeps (PermInfo a b))
 
   getPermAcc1
-    :: PermDef a -> PermAccessor b (PermInfo b a)
+    :: (ToJSON (a b), BackendMetadata b)
+    => PermDef (a b)
+    -> PermAccessor b (PermInfo a b)
   getPermAcc1 _ = permAccessor
 
   getPermAcc2
-    :: DropPerm b a -> PermAccessor b (PermInfo b a)
+    :: (ToJSON (a b), BackendMetadata b)
+    => DropPerm a b
+    -> PermAccessor b (PermInfo a b)
   getPermAcc2 _ = permAccessor
 
   addPermToMetadata
-    :: PermDef a -> TableMetadata b -> TableMetadata b
+    :: (ToJSON (a b), BackendMetadata b)
+    => PermDef (a b)
+    -> TableMetadata b
+    -> TableMetadata b
 
 runCreatePerm
   :: forall m b a
-   . (UserInfoM m, CacheRWM m, IsPerm b a, MonadError QErr m, MetadataM m, BackendMetadata b)
-  => CreatePerm b a -> m EncJSON
-runCreatePerm (WithTable source tn pd) = do
+   . (ToJSON (a b), IsPerm a, UserInfoM m, CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b)
+  => CreatePerm a b -> m EncJSON
+runCreatePerm (CreatePerm (WithTable source tn pd)) = do
   tableInfo <- askTabInfo @b source tn
   let permAcc = getPermAcc1 pd
       pt = permAccToType permAcc
@@ -155,8 +159,8 @@ runCreatePerm (WithTable source tn pd) = do
 
 runDropPerm
   :: forall b a m
-   . (IsPerm b a, UserInfoM m, CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b)
-  => DropPerm b a
+   . (ToJSON (a b), IsPerm a, UserInfoM m, CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b)
+  => DropPerm a b
   -> m EncJSON
 runDropPerm dp@(DropPerm source table role) = do
   tabInfo <- askTabInfo source table
@@ -175,6 +179,7 @@ dropPermissionInMetadata rn = \case
   PTSelect -> tmSelectPermissions %~ OMap.delete rn
   PTDelete -> tmDeletePermissions %~ OMap.delete rn
   PTUpdate -> tmUpdatePermissions %~ OMap.delete rn
+
 
 buildInsPermInfo
   :: forall b m
@@ -201,14 +206,14 @@ buildInsPermInfo source tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCol
     allCols = map pgiColumn $ getCols fieldInfoMap
     insCols = maybe allCols (convColSpec fieldInfoMap) mCols
 
-type instance PermInfo b (InsPerm b) = InsPermInfo b
-
-instance (BackendMetadata b) => IsPerm b (InsPerm b) where
+instance IsPerm InsPerm where
+  type PermInfo InsPerm = InsPermInfo
   permAccessor = PAInsert
   buildPermInfo = buildInsPermInfo
 
   addPermToMetadata permDef =
     tmInsertPermissions %~ OMap.insert (_pdRole permDef) permDef
+
 
 buildSelPermInfo
   :: forall b m
@@ -258,11 +263,8 @@ buildSelPermInfo source tn fieldInfoMap sp = withPathK "permission" $ do
     computedFields = spComputedFields sp
     autoInferredErr = "permissions for relationships are automatically inferred"
 
-type CreateSelPerm b = CreatePerm b (SelPerm b)
-
-type instance PermInfo b (SelPerm b) = SelPermInfo b
-
-instance (BackendMetadata b) => IsPerm b (SelPerm b) where
+instance IsPerm SelPerm where
+  type PermInfo SelPerm = SelPermInfo
   permAccessor = PASelect
   buildPermInfo source tn fieldInfoMap (PermDef _ a _) =
     buildSelPermInfo source tn fieldInfoMap a
@@ -270,7 +272,6 @@ instance (BackendMetadata b) => IsPerm b (SelPerm b) where
   addPermToMetadata permDef =
     tmSelectPermissions %~ OMap.insert (_pdRole permDef) permDef
 
-type CreateUpdPerm b = CreatePerm b (UpdPerm b)
 
 buildUpdPermInfo
   :: forall b m
@@ -304,10 +305,8 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
     updCols     = convColSpec fieldInfoMap colSpec
     relInUpdErr = "relationships can't be used in update"
 
--- TODO see TODO for PermInfo above
-type instance PermInfo b (UpdPerm b) = UpdPermInfo b
-
-instance (BackendMetadata b) => IsPerm b (UpdPerm b) where
+instance IsPerm UpdPerm where
+  type PermInfo UpdPerm = UpdPermInfo
   permAccessor = PAUpdate
   buildPermInfo source tn fieldInfoMap (PermDef _ a _) =
     buildUpdPermInfo source tn fieldInfoMap a
@@ -315,7 +314,6 @@ instance (BackendMetadata b) => IsPerm b (UpdPerm b) where
   addPermToMetadata permDef =
     tmUpdatePermissions %~ OMap.insert (_pdRole permDef) permDef
 
-type CreateDelPerm b = CreatePerm b (DelPerm b)
 
 buildDelPermInfo
   :: forall b m
@@ -332,16 +330,15 @@ buildDelPermInfo source tn fieldInfoMap (DelPerm fltr) = do
       depHeaders = getDependentHeaders fltr
   return (DelPermInfo tn be depHeaders, deps)
 
--- TODO see TODO for PermInfo above
-type instance PermInfo b (DelPerm b) = DelPermInfo b
-
-instance (BackendMetadata b) => IsPerm b (DelPerm b) where
+instance IsPerm DelPerm where
+  type PermInfo DelPerm = DelPermInfo
   permAccessor = PADelete
   buildPermInfo source tn fieldInfoMap (PermDef _ a _) =
     buildDelPermInfo source tn fieldInfoMap a
 
   addPermToMetadata permDef =
     tmDeletePermissions %~ OMap.insert (_pdRole permDef) permDef
+
 
 data SetPermComment b
   = SetPermComment

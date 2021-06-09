@@ -8,6 +8,7 @@ import qualified Data.Text                                  as T
 import           Control.Lens                               hiding ((.=))
 import           Data.Aeson.TH
 import           Data.Aeson.Types
+import           Data.Kind                                  (Type)
 import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.Translate.BoolExp
@@ -61,7 +62,9 @@ askPermInfo tabInfo roleName pa =
     pt = permTypeToCode $ permAccToType pa
     rpim = _tiRolePermInfoMap tabInfo
 
-type CreatePerm b a = WithTable b (PermDef a)
+
+newtype CreatePerm a b = CreatePerm (WithTable b (PermDef (a b)))
+  deriving newtype (Show, Eq, FromJSON, ToJSON)
 
 data CreatePermP1Res a
   = CreatePermP1Res
@@ -99,22 +102,20 @@ getDependentHeaders :: BoolExp b -> [Text]
 getDependentHeaders (BoolExp boolExp) =
   flip foldMap boolExp $ \(ColExp _ v) -> getDepHeadersFromVal v
 
-data DropPerm b a
+data DropPerm (a :: BackendType -> Type) b
   = DropPerm
   { dipSource :: !SourceName
   , dipTable  :: !(TableName b)
   , dipRole   :: !RoleName
   } deriving (Generic)
-deriving instance (Backend b) => Show (DropPerm b a)
-deriving instance (Backend b) => Eq (DropPerm b a)
-instance (Backend b) => ToJSON (DropPerm b a) where
+deriving instance (Backend b) => Show (DropPerm a b)
+deriving instance (Backend b) => Eq   (DropPerm a b)
+instance (Backend b) => ToJSON (DropPerm a b) where
   toJSON = genericToJSON hasuraJSON{omitNothingFields=True}
 
-instance (Backend b) => FromJSON (DropPerm b a) where
+instance (Backend b) => FromJSON (DropPerm a b) where
   parseJSON = withObject "DropPerm" $ \o ->
     DropPerm
     <$> o .:? "source" .!= defaultSource
     <*> o .: "table"
     <*> o .: "role"
-
-type family PermInfo (b :: BackendType) a = r | r -> a

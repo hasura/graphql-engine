@@ -77,15 +77,15 @@ data RQLMetadataV1
   | RMPgDeleteRemoteRelationship !(DeleteRemoteRelationship ('Postgres 'Vanilla))
 
   -- Postgres tables permissions
-  | RMPgCreateInsertPermission !(CreateInsPerm ('Postgres 'Vanilla))
-  | RMPgCreateSelectPermission !(CreateSelPerm ('Postgres 'Vanilla))
-  | RMPgCreateUpdatePermission !(CreateUpdPerm ('Postgres 'Vanilla))
-  | RMPgCreateDeletePermission !(CreateDelPerm ('Postgres 'Vanilla))
+  | RMPgCreateInsertPermission !(CreatePerm InsPerm ('Postgres 'Vanilla))
+  | RMPgCreateSelectPermission !(CreatePerm SelPerm ('Postgres 'Vanilla))
+  | RMPgCreateUpdatePermission !(CreatePerm UpdPerm ('Postgres 'Vanilla))
+  | RMPgCreateDeletePermission !(CreatePerm DelPerm ('Postgres 'Vanilla))
 
-  | RMPgDropInsertPermission !(DropPerm ('Postgres 'Vanilla) (InsPerm ('Postgres 'Vanilla)))
-  | RMPgDropSelectPermission !(DropPerm ('Postgres 'Vanilla) (SelPerm ('Postgres 'Vanilla)))
-  | RMPgDropUpdatePermission !(DropPerm ('Postgres 'Vanilla) (UpdPerm ('Postgres 'Vanilla)))
-  | RMPgDropDeletePermission !(DropPerm ('Postgres 'Vanilla) (DelPerm ('Postgres 'Vanilla)))
+  | RMPgDropInsertPermission !(DropPerm InsPerm ('Postgres 'Vanilla))
+  | RMPgDropSelectPermission !(DropPerm SelPerm ('Postgres 'Vanilla))
+  | RMPgDropUpdatePermission !(DropPerm UpdPerm ('Postgres 'Vanilla))
+  | RMPgDropDeletePermission !(DropPerm DelPerm ('Postgres 'Vanilla))
   | RMPgSetPermissionComment !(SetPermComment ('Postgres 'Vanilla))
 
   -- Postgres tables event triggers
@@ -106,15 +106,15 @@ data RQLMetadataV1
   | RMMssqlSetRelationshipComment !(SetRelComment 'MSSQL)
   | RMMssqlRenameRelationship !(RenameRel 'MSSQL)
 
-  | RMMssqlCreateInsertPermission !(CreateInsPerm 'MSSQL)
-  | RMMssqlCreateSelectPermission !(CreateSelPerm 'MSSQL)
-  | RMMssqlCreateUpdatePermission !(CreateUpdPerm 'MSSQL)
-  | RMMssqlCreateDeletePermission !(CreateDelPerm 'MSSQL)
+  | RMMssqlCreateInsertPermission !(CreatePerm InsPerm 'MSSQL)
+  | RMMssqlCreateSelectPermission !(CreatePerm SelPerm 'MSSQL)
+  | RMMssqlCreateUpdatePermission !(CreatePerm UpdPerm 'MSSQL)
+  | RMMssqlCreateDeletePermission !(CreatePerm DelPerm 'MSSQL)
 
-  | RMMssqlDropInsertPermission !(DropPerm 'MSSQL (InsPerm 'MSSQL))
-  | RMMssqlDropSelectPermission !(DropPerm 'MSSQL (SelPerm 'MSSQL))
-  | RMMssqlDropUpdatePermission !(DropPerm 'MSSQL (UpdPerm 'MSSQL))
-  | RMMssqlDropDeletePermission !(DropPerm 'MSSQL (DelPerm 'MSSQL))
+  | RMMssqlDropInsertPermission !(DropPerm InsPerm 'MSSQL)
+  | RMMssqlDropSelectPermission !(DropPerm SelPerm 'MSSQL)
+  | RMMssqlDropUpdatePermission !(DropPerm UpdPerm 'MSSQL)
+  | RMMssqlDropDeletePermission !(DropPerm DelPerm 'MSSQL)
   | RMMssqlSetPermissionComment !(SetPermComment 'MSSQL)
 
   -- Citus functions
@@ -139,15 +139,15 @@ data RQLMetadataV1
   | RMCitusRenameRelationship !(RenameRel ('Postgres 'Citus))
 
   -- Citus permissions
-  | RMCitusCreateInsertPermission !(CreateInsPerm ('Postgres 'Citus))
-  | RMCitusCreateSelectPermission !(CreateSelPerm ('Postgres 'Citus))
-  | RMCitusCreateUpdatePermission !(CreateUpdPerm ('Postgres 'Citus))
-  | RMCitusCreateDeletePermission !(CreateDelPerm ('Postgres 'Citus))
+  | RMCitusCreateInsertPermission !(CreatePerm InsPerm ('Postgres 'Citus))
+  | RMCitusCreateSelectPermission !(CreatePerm SelPerm ('Postgres 'Citus))
+  | RMCitusCreateUpdatePermission !(CreatePerm UpdPerm ('Postgres 'Citus))
+  | RMCitusCreateDeletePermission !(CreatePerm DelPerm ('Postgres 'Citus))
 
-  | RMCitusDropInsertPermission !(DropPerm ('Postgres 'Citus) (InsPerm ('Postgres 'Citus)))
-  | RMCitusDropSelectPermission !(DropPerm ('Postgres 'Citus) (SelPerm ('Postgres 'Citus)))
-  | RMCitusDropUpdatePermission !(DropPerm ('Postgres 'Citus) (UpdPerm ('Postgres 'Citus)))
-  | RMCitusDropDeletePermission !(DropPerm ('Postgres 'Citus) (DelPerm ('Postgres 'Citus)))
+  | RMCitusDropInsertPermission !(DropPerm InsPerm ('Postgres 'Citus))
+  | RMCitusDropSelectPermission !(DropPerm SelPerm ('Postgres 'Citus))
+  | RMCitusDropUpdatePermission !(DropPerm UpdPerm ('Postgres 'Citus))
+  | RMCitusDropDeletePermission !(DropPerm DelPerm ('Postgres 'Citus))
   | RMCitusSetPermissionComment !(SetPermComment ('Postgres 'Citus))
 
   -- BigQuery sources
@@ -161,15 +161,15 @@ data RQLMetadataV1
   | RMBigquerySetRelationshipComment !(SetRelComment 'BigQuery)
   | RMBigqueryRenameRelationship !(RenameRel 'BigQuery)
 
-  | RMBigqueryCreateInsertPermission !(CreateInsPerm 'BigQuery)
-  | RMBigqueryCreateSelectPermission !(CreateSelPerm 'BigQuery)
-  | RMBigqueryCreateUpdatePermission !(CreateUpdPerm 'BigQuery)
-  | RMBigqueryCreateDeletePermission !(CreateDelPerm 'BigQuery)
+  | RMBigqueryCreateInsertPermission !(CreatePerm InsPerm 'BigQuery)
+  | RMBigqueryCreateSelectPermission !(CreatePerm SelPerm 'BigQuery)
+  | RMBigqueryCreateUpdatePermission !(CreatePerm UpdPerm 'BigQuery)
+  | RMBigqueryCreateDeletePermission !(CreatePerm DelPerm 'BigQuery)
 
-  | RMBigqueryDropInsertPermission !(DropPerm 'BigQuery (InsPerm 'BigQuery))
-  | RMBigqueryDropSelectPermission !(DropPerm 'BigQuery (SelPerm 'BigQuery))
-  | RMBigqueryDropUpdatePermission !(DropPerm 'BigQuery (UpdPerm 'BigQuery))
-  | RMBigqueryDropDeletePermission !(DropPerm 'BigQuery (DelPerm 'BigQuery))
+  | RMBigqueryDropInsertPermission !(DropPerm InsPerm 'BigQuery)
+  | RMBigqueryDropSelectPermission !(DropPerm SelPerm 'BigQuery)
+  | RMBigqueryDropUpdatePermission !(DropPerm UpdPerm 'BigQuery)
+  | RMBigqueryDropDeletePermission !(DropPerm DelPerm 'BigQuery)
   | RMBigquerySetPermissionComment !(SetPermComment 'BigQuery)
 
   | RMRenameSource !RenameSource

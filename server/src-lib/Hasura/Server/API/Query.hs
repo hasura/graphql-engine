@@ -74,15 +74,15 @@ data RQLQueryV1
   | RQUpdateRemoteRelationship !(RemoteRelationship ('Postgres 'Vanilla))
   | RQDeleteRemoteRelationship !(DeleteRemoteRelationship ('Postgres 'Vanilla))
 
-  | RQCreateInsertPermission !(CreateInsPerm ('Postgres 'Vanilla))
-  | RQCreateSelectPermission !(CreateSelPerm ('Postgres 'Vanilla))
-  | RQCreateUpdatePermission !(CreateUpdPerm ('Postgres 'Vanilla))
-  | RQCreateDeletePermission !(CreateDelPerm ('Postgres 'Vanilla))
+  | RQCreateInsertPermission !(CreatePerm InsPerm ('Postgres 'Vanilla))
+  | RQCreateSelectPermission !(CreatePerm SelPerm ('Postgres 'Vanilla))
+  | RQCreateUpdatePermission !(CreatePerm UpdPerm ('Postgres 'Vanilla))
+  | RQCreateDeletePermission !(CreatePerm DelPerm ('Postgres 'Vanilla))
 
-  | RQDropInsertPermission !(DropPerm ('Postgres 'Vanilla) (InsPerm ('Postgres 'Vanilla)))
-  | RQDropSelectPermission !(DropPerm ('Postgres 'Vanilla) (SelPerm ('Postgres 'Vanilla)))
-  | RQDropUpdatePermission !(DropPerm ('Postgres 'Vanilla) (UpdPerm ('Postgres 'Vanilla)))
-  | RQDropDeletePermission !(DropPerm ('Postgres 'Vanilla) (DelPerm ('Postgres 'Vanilla)))
+  | RQDropInsertPermission !(DropPerm InsPerm ('Postgres 'Vanilla))
+  | RQDropSelectPermission !(DropPerm SelPerm ('Postgres 'Vanilla))
+  | RQDropUpdatePermission !(DropPerm UpdPerm ('Postgres 'Vanilla))
+  | RQDropDeletePermission !(DropPerm DelPerm ('Postgres 'Vanilla))
   | RQSetPermissionComment !(SetPermComment ('Postgres 'Vanilla))
 
   | RQGetInconsistentMetadata !GetInconsistentMetadata

@@ -27,7 +27,6 @@ import qualified Hasura.SQL.AnyBackend                  as AB
 import           Hasura.Base.Error
 import           Hasura.Incremental.Internal.Dependency ()
 import           Hasura.RQL.DDL.Permission
-import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 import           Hasura.Server.Types
@@ -205,10 +204,14 @@ buildTablePermissions = Inc.cache proc (proxy, source, tableCache, tableFields, 
       in insertsMap `unionMap` selectsMap `unionMap` updatesMap `unionMap` deletesMap
 
 mkPermissionMetadataObject
-  :: forall b a. (Backend b, IsPerm b a)
-  => SourceName -> TableName b -> PermDef a -> MetadataObject
+  :: forall b a
+   . (ToJSON (a b), BackendMetadata b, IsPerm a)
+  => SourceName
+  -> TableName b
+  -> PermDef (a b)
+  -> MetadataObject
 mkPermissionMetadataObject source table permDef =
-  let permType = permAccToType (permAccessor :: PermAccessor b (PermInfo b a))
+  let permType = permAccToType (permAccessor :: PermAccessor b (PermInfo a b))
       objectId = MOSourceObjId source
                    $ AB.mkAnyBackend
                    $ SMOTableObj @b table
@@ -224,14 +227,15 @@ mkRemoteSchemaPermissionMetadataObject (AddRemoteSchemaPermissions rsName roleNa
   in MetadataObject objectId $ toJSON defn
 
 withPermission
-  :: forall bknd a b c s arr. (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr, IsPerm bknd c, Backend bknd)
+  :: forall bknd a b c s arr
+   . (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr, BackendMetadata bknd, ToJSON (c bknd), IsPerm c)
   => WriterA (Seq SchemaDependency) (ErrorA QErr arr) (a, s) b
   -> ( a
-     , ((SourceName, TableName bknd, PermDef c, Proxy bknd), s)
+     , ((SourceName, TableName bknd, PermDef (c bknd), Proxy bknd), s)
      ) `arr` (Maybe b)
 withPermission f = proc (e, ((source, table, permission, _proxy), s)) -> do
   let metadataObject = mkPermissionMetadataObject @bknd source table permission
-      permType = permAccToType (permAccessor :: PermAccessor bknd (PermInfo bknd c))
+      permType = permAccToType (permAccessor :: PermAccessor bknd (PermInfo c bknd))
       roleName = _pdRole permission
       schemaObject = SOSourceObj source
                        $ AB.mkAnyBackend
@@ -247,27 +251,30 @@ withPermission f = proc (e, ((source, table, permission, _proxy), s)) -> do
 
 buildPermission
   :: forall b a arr m
-   . ( ArrowChoice arr, Inc.ArrowCache m arr
+   . ( ArrowChoice arr
      , ArrowWriter (Seq CollectedInfo) arr
-     , MonadError QErr m, IsPerm b a
-     , Inc.Cacheable a
+     , Inc.ArrowCache m arr
+     , Inc.Cacheable (a b)
      , Inc.Cacheable (Proxy b)
+     , MonadError QErr m
      , BackendMetadata b
+     , ToJSON (a b)
+     , IsPerm a
      )
   => ( Proxy b
      , Inc.Dependency (TableCoreCache b)
      , SourceName
      , TableName b
      , FieldInfoMap (FieldInfo b)
-     , Maybe (PermDef a)
-     ) `arr` Maybe (PermInfo b a)
+     , Maybe (PermDef (a b))
+     ) `arr` Maybe (PermInfo a b)
 buildPermission = Inc.cache proc (proxy, tableCache, source, table, tableFields, maybePermission) -> do
   (| traverseA ( \permission ->
     (| withPermission (do
          bindErrorA -< when (_pdRole permission == adminRoleName) $
            throw400 ConstraintViolation "cannot define permission for admin role"
          (info, dependencies) <- liftEitherA <<< Inc.bindDepend -< runExceptT $
-           runTableCoreCacheRT (buildPermInfo @b source table tableFields permission) (source, tableCache)
+           runTableCoreCacheRT (buildPermInfo source table tableFields permission) (source, tableCache)
          tellA -< Seq.fromList dependencies
          returnA -< info)
      |) (source, table, permission, proxy))
