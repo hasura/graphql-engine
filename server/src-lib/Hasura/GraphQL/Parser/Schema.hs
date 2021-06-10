@@ -701,6 +701,7 @@ instance HasName VariableInfo where
   getName (VIRequired name)   = name
   getName (VIOptional name _) = name
 
+
 -- -----------------------------------------------------------------------------
 -- support for introspection queries
 

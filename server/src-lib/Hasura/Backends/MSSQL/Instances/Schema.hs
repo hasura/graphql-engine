@@ -4,26 +4,26 @@ module Hasura.Backends.MSSQL.Instances.Schema () where
 
 import           Hasura.Prelude
 
-
-import qualified Data.HashMap.Strict                   as Map
-import qualified Data.List.NonEmpty                    as NE
-import qualified Database.ODBC.SQLServer               as ODBC
-import qualified Language.GraphQL.Draft.Syntax         as G
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.List.NonEmpty                          as NE
+import qualified Database.ODBC.SQLServer                     as ODBC
+import qualified Language.GraphQL.Draft.Syntax               as G
 
 import           Data.Has
-import           Data.Text.Encoding                    (encodeUtf8)
+import           Data.Text.Encoding                          (encodeUtf8)
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.MSSQL.Types           as MSSQL
-import qualified Hasura.GraphQL.Parser                 as P
-import qualified Hasura.GraphQL.Schema.Build           as GSB
-import qualified Hasura.RQL.IR.Select                  as IR
-import qualified Hasura.RQL.IR.Update                  as IR
+import qualified Hasura.Backends.MSSQL.Types                 as MSSQL
+import qualified Hasura.GraphQL.Parser                       as P
+import qualified Hasura.GraphQL.Schema.Build                 as GSB
+import qualified Hasura.RQL.IR.Select                        as IR
+import qualified Hasura.RQL.IR.Update                        as IR
 
 import           Hasura.Base.Error
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Parser                 hiding (EnumValueInfo, field)
-import           Hasura.GraphQL.Parser.Internal.Parser hiding (field)
+import           Hasura.GraphQL.Parser                       hiding (EnumValueInfo, field)
+import           Hasura.GraphQL.Parser.Internal.Parser       hiding (field)
+import           Hasura.GraphQL.Parser.Internal.TypeChecking
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
@@ -52,7 +52,6 @@ instance BackendSchema 'MSSQL where
   orderByOperators          = msOrderByOperators
   comparisonExps            = msComparisonExps
   updateOperators           = msUpdateOperators
-  offsetParser              = msOffsetParser
   mkCountType               = msMkCountType
   aggregateOrderByCountType = MSSQL.IntegerType
   computedField             = msComputedField
@@ -371,9 +370,6 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
     mkListLiteral :: [ColumnValue 'MSSQL] -> UnpreparedValue 'MSSQL
     mkListLiteral =
       P.UVLiteral . MSSQL.ListExpression . fmap (MSSQL.ValueExpression . cvValue)
-
-msOffsetParser :: MonadParse n => Parser 'Both n (SQLExpression 'MSSQL)
-msOffsetParser = MSSQL.ValueExpression . ODBC.IntValue . fromIntegral <$> P.int
 
 msMkCountType
   :: Maybe Bool

@@ -224,11 +224,11 @@ data UnfurledJoin = UnfurledJoin
 
 fromSelectArgsG :: IR.SelectArgsG 'MSSQL Expression -> ReaderT EntityAlias FromIr Args
 fromSelectArgsG selectArgsG = do
+  let argsOffset = ValueExpression . ODBC.IntValue . fromIntegral <$> moffset
   argsWhere <-
     maybe (pure mempty) (fmap (Where . pure) . fromAnnBoolExp) mannBoolExp
-  argsTop <- maybe (pure mempty) (pure . Top) mlimit
-  argsOffset <-
-    maybe (pure Nothing) (fmap Just . lift . fromSQLExpAsInt) moffset
+  argsTop <-
+    maybe (pure mempty) (pure . Top) mlimit
   -- Not supported presently, per Vamshi:
   --
   -- > It is hardly used and we don't have to go to great lengths to support it.
@@ -886,9 +886,6 @@ nullableBoolInequality x y =
     [ OpExpression TSQL.NEQ' x y
     , AndExpression [IsNotNullExpression x, IsNullExpression y]
     ]
-
-fromSQLExpAsInt :: Expression -> FromIr Expression
-fromSQLExpAsInt = pure
 
 fromGBoolExp :: IR.GBoolExp 'MSSQL Expression -> ReaderT EntityAlias FromIr Expression
 fromGBoolExp =

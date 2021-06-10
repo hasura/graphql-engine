@@ -240,8 +240,7 @@ convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
 
   let tabFrom = FromTable table
       tabPerm = TablePerm resolvedSelFltr mPermLimit
-      tabArgs = SelectArgs wClause annOrdByM mQueryLimit
-                (S.intToSQLExp <$> mQueryOffset) Nothing
+      tabArgs = SelectArgs wClause annOrdByM mQueryLimit (fromIntegral <$> mQueryOffset) Nothing
 
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   return $ AnnSelectG annFlds tabFrom tabPerm tabArgs strfyNum

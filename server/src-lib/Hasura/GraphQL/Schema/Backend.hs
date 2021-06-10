@@ -135,16 +135,6 @@ class Backend b => BackendSchema (b :: BackendType) where
     => TableInfo b
     -> UpdPermInfo b
     -> m (Maybe (InputFieldsParser n [(Column b, IR.UpdOpExpG (UnpreparedValue b))]))
-  -- TODO: THIS IS A TEMPORARY FIX
-  -- while offset is exposed in the schema as a GraphQL Int, which
-  -- is a bounded Int32, previous versions of the code used to also
-  -- silently accept a string as an input for the offset as a way to
-  -- support int64 values (postgres bigint)
-  -- a much better way of supporting this would be to expose the
-  -- offset in the code as a postgres bigint, but for now, to avoid
-  -- a breaking change, we are defining a custom parser that also
-  -- accepts a string
-  offsetParser :: MonadParse n => Parser 'Both n (SQLExpression b)
   mkCountType :: Maybe Bool -> Maybe [Column b] -> CountType b
   aggregateOrderByCountType :: ScalarType b
   -- | Argument to distinct select on columns returned from table selection

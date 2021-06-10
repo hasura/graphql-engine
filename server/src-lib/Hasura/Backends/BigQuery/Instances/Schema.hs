@@ -4,24 +4,25 @@ module Hasura.Backends.BigQuery.Instances.Schema () where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                            as J
-import qualified Data.HashMap.Strict                   as Map
-import qualified Data.List.NonEmpty                    as NE
-import qualified Data.Text                             as T
+import qualified Data.Aeson                                  as J
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.List.NonEmpty                          as NE
+import qualified Data.Text                                   as T
 
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.BigQuery.Types        as BigQuery
-import qualified Hasura.GraphQL.Parser                 as P
-import qualified Hasura.GraphQL.Schema.Build           as GSB
-import qualified Hasura.RQL.IR.Select                  as IR
-import qualified Hasura.RQL.IR.Update                  as IR
-import qualified Language.GraphQL.Draft.Syntax         as G
+import qualified Hasura.Backends.BigQuery.Types              as BigQuery
+import qualified Hasura.GraphQL.Parser                       as P
+import qualified Hasura.GraphQL.Schema.Build                 as GSB
+import qualified Hasura.RQL.IR.Select                        as IR
+import qualified Hasura.RQL.IR.Update                        as IR
+import qualified Language.GraphQL.Draft.Syntax               as G
 
 import           Hasura.Base.Error
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Parser                 hiding (EnumValueInfo, field)
-import           Hasura.GraphQL.Parser.Internal.Parser hiding (field)
+import           Hasura.GraphQL.Parser                       hiding (EnumValueInfo, field)
+import           Hasura.GraphQL.Parser.Internal.Parser       hiding (field)
+import           Hasura.GraphQL.Parser.Internal.TypeChecking
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.RQL.Types
@@ -49,7 +50,6 @@ instance BackendSchema 'BigQuery where
   orderByOperators          = msOrderByOperators
   comparisonExps            = msComparisonExps
   updateOperators           = msUpdateOperators
-  offsetParser              = msOffsetParser
   mkCountType               = msMkCountType
   aggregateOrderByCountType = BigQuery.IntegerScalarType
   computedField             = msComputedField
@@ -303,12 +303,6 @@ msComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
     , P.fieldOptional $$(G.litName "_gte")     Nothing (AGTE . mkParameter <$> typedParser)
     , P.fieldOptional $$(G.litName "_lte")     Nothing (ALTE . mkParameter <$> typedParser)
     ]
-
-
-msOffsetParser :: MonadParse n => Parser 'Both n (SQLExpression 'BigQuery)
-msOffsetParser =
-  BigQuery.ValueExpression . BigQuery.IntegerValue . BigQuery.intToInt64 . fromIntegral <$>
-  P.int
 
 msMkCountType
   :: Maybe Bool

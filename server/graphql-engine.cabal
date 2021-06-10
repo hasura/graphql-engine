@@ -516,6 +516,7 @@ library
                      , Hasura.RQL.IR.Returning
                      , Hasura.RQL.IR.Select
                      , Hasura.RQL.IR.Update
+
                      , Hasura.GraphQL.Context
                      , Hasura.GraphQL.Execute
                      , Hasura.GraphQL.Execute.Action
@@ -545,8 +546,11 @@ library
                      , Hasura.GraphQL.Parser.Collect
                      , Hasura.GraphQL.Parser.Column
                      , Hasura.GraphQL.Parser.Directives
+                     , Hasura.GraphQL.Parser.Internal.Convert
                      , Hasura.GraphQL.Parser.Internal.Input
                      , Hasura.GraphQL.Parser.Internal.Parser
+                     , Hasura.GraphQL.Parser.Internal.Scalars
+                     , Hasura.GraphQL.Parser.Internal.TypeChecking
                      , Hasura.GraphQL.Parser.Internal.Types
                      , Hasura.GraphQL.Parser.Monad
                      , Hasura.GraphQL.Parser.Schema
@@ -572,6 +576,7 @@ library
                      , Hasura.GraphQL.Transport.WebSocket
                      , Hasura.GraphQL.Transport.WebSocket.Protocol
                      , Hasura.GraphQL.Transport.WebSocket.Server
+
                      , Hasura.Eventing.HTTP
                      , Hasura.Eventing.EventTrigger
                      , Hasura.Eventing.ScheduledTrigger

@@ -7,6 +7,7 @@ import qualified Data.Aeson.Casing                  as J
 import qualified Data.HashMap.Strict                as HM
 import qualified Text.Builder                       as TB
 
+import           Data.Int                           (Int64)
 import           Data.String                        (fromString)
 import           Data.Text.Extended
 
@@ -410,6 +411,9 @@ instance ToSQL SQLExp where
 
 intToSQLExp :: Int -> SQLExp
 intToSQLExp = SEUnsafe . tshow
+
+int64ToSQLExp :: Int64 -> SQLExp
+int64ToSQLExp = SEUnsafe . tshow
 
 -- | Extractor can be used to apply Postgres alias to a column
 data Extractor = Extractor !SQLExp !(Maybe Alias)

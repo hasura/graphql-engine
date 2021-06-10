@@ -988,7 +988,7 @@ generateSQLSelect joinCondition selectSource selectNode =
   , S.selFrom = Just $ S.FromExp [joinedFrom]
   , S.selOrderBy = maybeOrderby
   , S.selLimit = S.LimitExp . S.intToSQLExp <$> maybeLimit
-  , S.selOffset = S.OffsetExp <$> maybeOffset
+  , S.selOffset = S.OffsetExp . S.int64ToSQLExp <$> maybeOffset
   , S.selDistinct = maybeDistinct
   }
   where

@@ -7,37 +7,38 @@ module Hasura.Backends.Postgres.Instances.Schema
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                             as J
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashMap.Strict.Extended           as M
-import qualified Data.HashMap.Strict.InsOrd.Extended    as OMap
-import qualified Data.List.NonEmpty                     as NE
-import qualified Data.Text                              as T
-import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.Aeson                                  as J
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.HashMap.Strict.Extended                as M
+import qualified Data.HashMap.Strict.InsOrd.Extended         as OMap
+import qualified Data.List.NonEmpty                          as NE
+import qualified Data.Text                                   as T
+import qualified Language.GraphQL.Draft.Syntax               as G
 
 import           Data.Has
 import           Data.Parser.JSONPath
 import           Data.Text.Extended
 import           Data.Typeable
 
-import qualified Hasura.GraphQL.Parser                  as P
-import qualified Hasura.GraphQL.Schema.Backend          as BS
-import qualified Hasura.GraphQL.Schema.Build            as GSB
-import qualified Hasura.RQL.IR.Select                   as IR
-import qualified Hasura.RQL.IR.Update                   as IR
-import qualified Hasura.SQL.AnyBackend                  as AB
+import qualified Hasura.GraphQL.Parser                       as P
+import qualified Hasura.GraphQL.Schema.Backend               as BS
+import qualified Hasura.GraphQL.Schema.Build                 as GSB
+import qualified Hasura.RQL.IR.Select                        as IR
+import qualified Hasura.RQL.IR.Update                        as IR
+import qualified Hasura.SQL.AnyBackend                       as AB
 
-import           Hasura.Backends.Postgres.SQL.DML       as PG hiding (CountType)
-import           Hasura.Backends.Postgres.SQL.Types     as PG hiding (FunctionName, TableName)
-import           Hasura.Backends.Postgres.SQL.Value     as PG
+import           Hasura.Backends.Postgres.SQL.DML            as PG hiding (CountType)
+import           Hasura.Backends.Postgres.SQL.Types          as PG hiding (FunctionName, TableName)
+import           Hasura.Backends.Postgres.SQL.Value          as PG
 import           Hasura.Backends.Postgres.Types.BoolExp
 import           Hasura.Backends.Postgres.Types.Column
 import           Hasura.Base.Error
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Parser                  hiding (EnumValueInfo, field)
-import           Hasura.GraphQL.Parser.Internal.Parser  hiding (field)
-import           Hasura.GraphQL.Schema.Backend          (BackendSchema, ComparisonExp,
-                                                         MonadBuildSchema)
+import           Hasura.GraphQL.Parser                       hiding (EnumValueInfo, field)
+import           Hasura.GraphQL.Parser.Internal.Parser       hiding (field)
+import           Hasura.GraphQL.Parser.Internal.TypeChecking
+import           Hasura.GraphQL.Schema.Backend               (BackendSchema, ComparisonExp,
+                                                              MonadBuildSchema)
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Select
@@ -133,7 +134,6 @@ instance
   orderByOperators          = orderByOperators
   comparisonExps            = comparisonExps
   updateOperators           = updateOperators
-  offsetParser              = offsetParser
   mkCountType               = mkCountType
   aggregateOrderByCountType = PG.PGInteger
   computedField             = computedFieldPG
@@ -561,20 +561,6 @@ intersectsGeomNbandInput = do
   pure $ P.object $$(G.litName "st_intersects_geom_nband_input") Nothing $ STIntersectsGeomminNband
     <$> (     mkParameter <$> P.field         $$(G.litName "geommin") Nothing geometryParser)
     <*> (fmap mkParameter <$> P.fieldOptional $$(G.litName "nband")   Nothing integerParser)
-
-offsetParser :: MonadParse n => Parser 'Both n (SQLExpression ('Postgres pgKind))
-offsetParser = PG.txtEncoder <$> Parser
-  { pType = fakeBigIntSchemaType
-  , pParser = peelVariable (Just $ P.toGraphQLType fakeBigIntSchemaType) >=> \case
-      P.GraphQLValue (G.VInt    i) -> PG.PGValBigInt <$> convertWith PG.scientificToInteger (fromInteger i)
-      P.JSONValue    (J.Number  n) -> PG.PGValBigInt <$> convertWith PG.scientificToInteger n
-      P.GraphQLValue (G.VString s) -> pure $ PG.PGValUnknown s
-      P.JSONValue    (J.String  s) -> pure $ PG.PGValUnknown s
-      v ->  typeMismatch $$(G.litName "Int") "a 32-bit integer, or a 64-bit integer represented as a string" v
-  }
-  where
-    fakeBigIntSchemaType = P.NonNullable $ P.TNamed $ P.mkDefinition $$(G.litName "Int") Nothing P.TIScalar
-    convertWith f = either (parseErrorWith ParseFailed . qeError) pure . runAesonParser f
 
 mkCountType :: Maybe Bool -> Maybe [Column ('Postgres pgKind)] -> CountType ('Postgres pgKind)
 mkCountType _           Nothing     = PG.CTStar

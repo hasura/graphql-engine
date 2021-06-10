@@ -5,26 +5,22 @@ module Hasura.GraphQL.Parser.Internal.Input where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                           as A
-import qualified Data.HashMap.Strict.Extended         as M
-import qualified Data.HashSet                         as S
-import qualified Data.UUID                            as UUID
+import qualified Data.Aeson                                  as A
+import qualified Data.HashMap.Strict.Extended                as M
+import qualified Data.HashSet                                as S
 
-import           Control.Lens.Extended                hiding (enum, index)
-import           Data.Int                             (Int32, Int64)
+import           Control.Lens.Extended                       hiding (enum, index)
 import           Data.Parser.JSONPath
-import           Data.Scientific                      (toBoundedInteger)
 import           Data.Text.Extended
 import           Data.Type.Equality
-import           Language.GraphQL.Draft.Syntax        hiding (Definition)
+import           Language.GraphQL.Draft.Syntax               hiding (Definition)
 
-import           Hasura.Backends.Postgres.SQL.Value
-import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser.Class.Parse
+import           Hasura.GraphQL.Parser.Internal.TypeChecking
 import           Hasura.GraphQL.Parser.Internal.Types
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.RQL.Types.CustomTypes
-import           Hasura.Server.Utils                  (englishList)
+import           Hasura.Server.Utils                         (englishList)
+
 
 -- ure that out on its own, so we have to be explicit to give
 -- it a little help.
@@ -217,7 +213,7 @@ fieldOptional name description parser = InputFieldsParser
                traverse (pInputParser parser <=< peelVariable expectedType)
   }
   where
-    expectedType = Just $ toGraphQLType $ nullableType $ pType parser
+    expectedType = toGraphQLType $ nullableType $ pType parser
 
 -- | Creates a parser for an input field with the given default value. The
 -- resulting field will always be nullable, even if the underlying parser
@@ -237,7 +233,7 @@ fieldWithDefault name description defaultValue parser = InputFieldsParser
       Nothing    -> pInputParser parser $ GraphQLValue $ literal defaultValue
   }
   where
-    expectedType = Just $ toGraphQLType $ pType parser
+    expectedType = toGraphQLType $ pType parser
     parseValue _ value = pInputParser parser value
     {- See Note [Temporarily disabling query plan caching] in
     Hasura.GraphQL.Execute.Plan.
@@ -284,172 +280,8 @@ fieldWithDefault name description defaultValue parser = InputFieldsParser
      -}
 
 
-peelVariable :: MonadParse m => Maybe GType -> InputValue Variable -> m (InputValue Variable)
-peelVariable = peelVariableWith False
-
-peelVariableWith :: MonadParse m => Bool -> Maybe GType -> InputValue Variable -> m (InputValue Variable)
-peelVariableWith hasLocationDefaultValue expected = \case
-  GraphQLValue (VVariable var) -> do
-    onJust expected \locationType -> typeCheck hasLocationDefaultValue locationType var
-    markNotReusable
-    pure $ absurd <$> vValue var
-  value -> pure value
-
-typeCheck :: MonadParse m => Bool -> GType -> Variable -> m ()
-typeCheck hasLocationDefaultValue locationType variable@Variable { vInfo, vType } =
-  unless (isVariableUsageAllowed hasLocationDefaultValue locationType variable) $ parseError
-    $ "variable " <> dquote (getName vInfo) <> " is declared as "
-    <> showGT vType <> ", but used where "
-    <> showGT locationType <> " is expected"
-
--- | Checks whether the type of a variable is compatible with the type
---   at the location at which it is used. This is an implementation of
---   the function described in section 5.8.5 of the spec:
---   http://spec.graphql.org/June2018/#sec-All-Variable-Usages-are-Allowed
---   No input type coercion is allowed between variables: coercion
---   rules only allow when translating a value from a literal. It is
---   therefore not allowed to use an Int variable at a Float location,
---   despite the fact that it is legal to use an Int literal at a
---   Float location.
---   Furthermore, it's also worth noting that there's one tricky case
---   where we might allow a nullable variable at a non-nullable
---   location: when either side has a non-null default value. That's
---   because GraphQL conflates nullability and optinal fields (see
---   Note [Optional fields and nullability] for more details).
-isVariableUsageAllowed
-  :: Bool      -- ^ does the location have a default value
-  -> GType     -- ^ the location type
-  -> Variable  -- ^ the variable
-  -> Bool
-isVariableUsageAllowed hasLocationDefaultValue locationType variable
-  | isNullable locationType       = areTypesCompatible locationType variableType
-  | not $ isNullable variableType = areTypesCompatible locationType variableType
-  | hasLocationDefaultValue       = areTypesCompatible locationType variableType
-  | hasNonNullDefault variable    = areTypesCompatible locationType variableType
-  | otherwise                     = False
-  where
-    areTypesCompatible = compareTypes `on` \case
-      TypeNamed _ n -> TypeNamed (Nullability True) n
-      TypeList  _ n -> TypeList  (Nullability True) n
-    variableType = vType variable
-    hasNonNullDefault = vInfo >>> \case
-      VIRequired _       -> False
-      VIOptional _ value -> value /= VNull
-    compareTypes = curry \case
-      (TypeList lNull lType, TypeList vNull vType)
-        -> checkNull lNull vNull && areTypesCompatible lType vType
-      (TypeNamed lNull lType, TypeNamed vNull vType)
-        -> checkNull lNull vNull && lType == vType
-      _ -> False
-    checkNull (Nullability expectedNull) (Nullability actualNull) =
-      expectedNull || not actualNull
-
 -- -----------------------------------------------------------------------------
 -- combinators
-
-data ScalarRepresentation a where
-  SRBoolean :: ScalarRepresentation Bool
-  SRInt :: ScalarRepresentation Int32
-  SRFloat :: ScalarRepresentation Double
-  SRString :: ScalarRepresentation Text
-
-scalar
-  :: MonadParse m
-  => Name
-  -> Maybe Description
-  -> ScalarRepresentation a
-  -> Parser 'Both m a
-scalar name description representation = Parser
-  { pType = schemaType
-  , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \v -> case representation of
-      SRBoolean -> case v of
-        GraphQLValue (VBoolean b) -> pure b
-        JSONValue    (A.Bool   b) -> pure b
-        _                         -> typeMismatch name "a boolean" v
-      SRInt -> case v of
-        GraphQLValue (VInt i)  -> convertWith scientificToInteger $ fromInteger i
-        JSONValue (A.Number n) -> convertWith scientificToInteger n
-        _                      -> typeMismatch name "a 32-bit integer" v
-      SRFloat -> case v of
-        GraphQLValue (VFloat f)   -> convertWith scientificToFloat f
-        GraphQLValue (VInt   i)   -> convertWith scientificToFloat $ fromInteger i
-        JSONValue    (A.Number n) -> convertWith scientificToFloat n
-        _                         -> typeMismatch name "a float" v
-      SRString -> case v of
-        GraphQLValue (VString  s) -> pure s
-        JSONValue    (A.String s) -> pure s
-        _                         -> typeMismatch name "a string" v
-  }
-  where
-    schemaType = NonNullable $ TNamed $ mkDefinition name description TIScalar
-    convertWith f = either (parseErrorWith ParseFailed . qeError) pure . runAesonParser f
-
-{- WIP NOTE (FIXME: make into an actual note by expanding on it a bit)
-
-There's a delicate balance between GraphQL types and Postgres types.
-
-The mapping is done in the 'column' parser. But we want to only have
-one source of truth for parsing postgres values, which happens to be
-the JSON parsing code in Backends.Postgres.SQL.Value. So here we reuse
-some of that code despite not having a JSON value.
-
--}
-
-boolean :: MonadParse m => Parser 'Both m Bool
-boolean = scalar boolScalar Nothing SRBoolean
-
-int :: MonadParse m => Parser 'Both m Int32
-int = scalar intScalar Nothing SRInt
-
-float :: MonadParse m => Parser 'Both m Double
-float = scalar floatScalar Nothing SRFloat
-
-string :: MonadParse m => Parser 'Both m Text
-string = scalar stringScalar Nothing SRString
-
-uuid :: MonadParse m => Parser 'Both m UUID.UUID
-uuid = Parser
-  { pType = schemaType
-  , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
-      GraphQLValue (VString s) -> parseUUID $ A.String s
-      JSONValue    v           -> parseUUID v
-      v                        -> typeMismatch name "a UUID" v
-  }
-  where
-    name = $$(litName "uuid")
-    schemaType = NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
-    parseUUID = either (parseErrorWith ParseFailed . qeError) pure . runAesonParser A.parseJSON
-
-
--- | As an input type, any string or integer input value should be coerced to ID as Text
--- https://spec.graphql.org/June2018/#sec-ID
-identifier :: MonadParse m => Parser 'Both m Text
-identifier = Parser
-  { pType = schemaType
-  , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
-      GraphQLValue (VString  s) -> pure s
-      GraphQLValue (VInt     i) -> pure $ tshow i
-      JSONValue    (A.String s) -> pure s
-      JSONValue    (A.Number n) -> parseScientific n
-      v                         -> typeMismatch idName "a String or a 32-bit integer" v
-  }
-  where
-    idName = idScalar
-    schemaType = NonNullable $ TNamed $ mkDefinition idName Nothing TIScalar
-    parseScientific = either (parseErrorWith ParseFailed . qeError)
-      (pure . tshow @Int) . runAesonParser scientificToInteger
-
-namedJSON :: MonadParse m => Name -> Maybe Description -> Parser 'Both m A.Value
-namedJSON name description = Parser
-  { pType = schemaType
-  , pParser = valueToJSON $ toGraphQLType schemaType
-  }
-  where
-    schemaType = NonNullable $ TNamed $ mkDefinition name description TIScalar
-
-json, jsonb :: MonadParse m => Parser 'Both m A.Value
-json  = namedJSON $$(litName "json") Nothing
-jsonb = namedJSON $$(litName "jsonb") Nothing
 
 enum
   :: MonadParse m
@@ -459,7 +291,7 @@ enum
   -> Parser 'Both m a
 enum name description values = Parser
   { pType = schemaType
-  , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
+  , pParser = peelVariable (toGraphQLType schemaType) >=> \case
       JSONValue (A.String stringValue)
         | Just enumValue <- mkName stringValue -> validate enumValue
       GraphQLValue (VEnum (EnumValue enumValue)) -> validate enumValue
@@ -476,67 +308,6 @@ enum name description values = Parser
 -- -----------------------------------------------------------------------------
 -- helpers
 
-valueToJSON :: MonadParse m => GType -> InputValue Variable -> m A.Value
-valueToJSON expected = peelVariable (Just expected) >=> valueToJSON'
-  where
-    valueToJSON' = \case
-      JSONValue    j -> pure j
-      GraphQLValue g -> graphQLToJSON g
-    graphQLToJSON = \case
-      VNull               -> pure A.Null
-      VInt i              -> pure $ A.toJSON i
-      VFloat f            -> pure $ A.toJSON f
-      VString t           -> pure $ A.toJSON t
-      VBoolean b          -> pure $ A.toJSON b
-      VEnum (EnumValue n) -> pure $ A.toJSON n
-      VList values        -> A.toJSON <$> traverse graphQLToJSON values
-      VObject objects     -> A.toJSON <$> traverse graphQLToJSON objects
-      VVariable variable  -> valueToJSON' $ absurd <$> vValue variable
-
-jsonToGraphQL :: (MonadError Text m) => A.Value -> m (Value Void)
-jsonToGraphQL = \case
-  A.Null        -> pure VNull
-  A.Bool val    -> pure $ VBoolean val
-  A.String val  -> pure $ VString val
-  A.Number val  -> case toBoundedInteger val of
-    Just intVal -> pure $ VInt $ fromIntegral @Int64 intVal
-    Nothing     -> pure $ VFloat val
-  A.Array vals  -> VList <$> traverse jsonToGraphQL (toList vals)
-  A.Object vals -> VObject . M.fromList <$> for (M.toList vals) \(key, val) -> do
-    graphQLName <- onNothing (mkName key) $ throwError $
-      "variable value contains object with key " <> key <<> ", which is not a legal GraphQL name"
-    (graphQLName,) <$> jsonToGraphQL val
-
-typeMismatch :: MonadParse m => Name -> Text -> InputValue Variable -> m a
-typeMismatch name expected given = parseError $
-  "expected " <> expected <> " for type " <> name <<> ", but found " <> describeValue given
-
-describeValue :: InputValue Variable -> Text
-describeValue = describeValueWith (describeValueWith absurd . vValue)
-
-describeValueWith :: (var -> Text) -> InputValue var -> Text
-describeValueWith describeVariable = \case
-  JSONValue    jval -> describeJSON    jval
-  GraphQLValue gval -> describeGraphQL gval
-  where
-    describeJSON = \case
-      A.Null     -> "null"
-      A.Bool _   -> "a boolean"
-      A.String _ -> "a string"
-      A.Number _ -> "a number"
-      A.Array  _ -> "a list"
-      A.Object _ -> "an object"
-    describeGraphQL = \case
-      VVariable var -> describeVariable var
-      VInt _        -> "an integer"
-      VFloat _      -> "a float"
-      VString _     -> "a string"
-      VBoolean _    -> "a boolean"
-      VNull         -> "null"
-      VEnum _       -> "an enum value"
-      VList _       -> "a list"
-      VObject _     -> "an object"
-
 -- TODO: if we had an optional "strict" mode, we could (and should!) enforce
 -- that `fieldName` isn't empty, which sadly can't be done at the type level.
 -- This would prevent the creation of an object with no fields, which is against
@@ -549,7 +320,7 @@ object
   -> Parser 'Input m a
 object name description parser = Parser
   { pType = schemaType
-  , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
+  , pParser = peelVariable (toGraphQLType schemaType) >=> \case
       GraphQLValue (VObject fields) -> parseFields $ GraphQLValue <$> fields
       JSONValue (A.Object fields) -> do
         translatedFields <- M.fromList <$> for (M.toList fields) \(key, val) -> do
@@ -570,11 +341,11 @@ object name description parser = Parser
         unless (fieldName `S.member` fieldNames) $ withPath (++[Key (unName fieldName)]) $
           parseError $ "field " <> dquote fieldName <> " not found in type: " <> squote name
       ifParser parser fields
-list :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m [a]
 
+list :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m [a]
 list parser = gcastWith (inputParserInput @k) Parser
   { pType = schemaType
-  , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
+  , pParser = peelVariable (toGraphQLType schemaType) >=> \case
       GraphQLValue (VList values) -> for (zip [0..] values) \(index, value) ->
         withPath (++[Index index]) $ pParser parser $ GraphQLValue value
       JSONValue (A.Array values) -> for (zip [0..] $ toList values) \(index, value) ->
@@ -596,4 +367,3 @@ list parser = gcastWith (inputParserInput @k) Parser
   }
   where
     schemaType = NonNullable $ TList $ pType parser
-

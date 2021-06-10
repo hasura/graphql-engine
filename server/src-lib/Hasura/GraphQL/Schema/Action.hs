@@ -337,7 +337,7 @@ customScalarParser = \case
            | _stdName == floatScalar  -> J.toJSON <$> P.float
            | _stdName == stringScalar -> J.toJSON <$> P.string
            | _stdName == boolScalar   -> J.toJSON <$> P.boolean
-           | otherwise                -> P.namedJSON _stdName _stdDescription
+           | otherwise                -> P.jsonScalar _stdName _stdDescription
   ASTReusedScalar name pgScalarType ->
     let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
     in P.Parser

@@ -147,6 +147,8 @@ withConstructorFn ty v
   | otherwise = v
 
 
+-- TODO: those two functions are useful outside of Postgres, and
+-- should be moved to a common place of the code. Perhaps the Prelude?
 scientificToInteger :: (Integral i, Bounded i) => Scientific -> AT.Parser i
 scientificToInteger num =
   toBoundedInteger num
@@ -161,6 +163,7 @@ scientificToFloat num =
   `onLeft` \ _ ->
   fail ("The value " ++ show num ++ " lies outside the "
      ++ "bounds.  Is it overflowing the float bounds?")
+
 
 parsePGValue :: PGScalarType -> Value -> AT.Parser PGScalarValue
 parsePGValue ty val = case (ty, val) of

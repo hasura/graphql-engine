@@ -13,24 +13,26 @@ module Hasura.GraphQL.Parser.Internal.Parser
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                           as A
-import qualified Data.HashMap.Strict.Extended         as M
-import qualified Data.HashMap.Strict.InsOrd           as OMap
-import qualified Data.HashSet                         as S
-import qualified Data.List.Extended                   as LE
+import qualified Data.Aeson                                  as A
+import qualified Data.HashMap.Strict.Extended                as M
+import qualified Data.HashMap.Strict.InsOrd                  as OMap
+import qualified Data.HashSet                                as S
+import qualified Data.List.Extended                          as LE
 
 import           Data.Parser.JSONPath
 import           Data.Text.Extended
 import           Data.Type.Equality
-import           Language.GraphQL.Draft.Syntax        hiding (Definition)
+import           Language.GraphQL.Draft.Syntax               hiding (Definition)
 
 import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser.Class.Parse
 import           Hasura.GraphQL.Parser.Collect
 import           Hasura.GraphQL.Parser.Directives
 import           Hasura.GraphQL.Parser.Internal.Input
+import           Hasura.GraphQL.Parser.Internal.TypeChecking
 import           Hasura.GraphQL.Parser.Internal.Types
 import           Hasura.GraphQL.Parser.Schema
+
 
 infixl 1 `bind`
 bind :: Monad m => Parser k m a -> (a -> m b) -> Parser k m b
@@ -71,7 +73,7 @@ handleTypename f (SelectTypename name) = f name
 nullable :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m (Maybe a)
 nullable parser = gcastWith (inputParserInput @k) Parser
   { pType = schemaType
-  , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
+  , pParser = peelVariable (toGraphQLType schemaType) >=> \case
       JSONValue    A.Null -> pure Nothing
       GraphQLValue VNull  -> pure Nothing
       value               -> Just <$> pParser parser value
@@ -333,4 +335,3 @@ subselection_
   -> FieldParser m a
 subselection_ name description bodyParser =
   snd <$> subselection name description (pure ()) bodyParser
-

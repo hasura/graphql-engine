@@ -27,21 +27,22 @@ module Hasura.GraphQL.Parser.Directives
 
 import           Hasura.Prelude
 
-import qualified Data.Dependent.Map                   as DM
-import qualified Data.HashMap.Strict.Extended         as M
-import qualified Data.HashSet                         as S
-import qualified Language.GraphQL.Draft.Syntax        as G
+import qualified Data.Dependent.Map                     as DM
+import qualified Data.HashMap.Strict.Extended           as M
+import qualified Data.HashSet                           as S
+import qualified Language.GraphQL.Draft.Syntax          as G
 
-import           Data.Dependent.Sum                   (DSum (..))
+import           Data.Dependent.Sum                     (DSum (..))
 import           Data.GADT.Compare.Extended
-import           Data.List.Extended                   (duplicates)
+import           Data.List.Extended                     (duplicates)
 import           Data.Parser.JSONPath
 import           Data.Text.Extended
-import           Data.Typeable                        (eqT)
-import           Type.Reflection                      (Typeable, typeRep, (:~:) (..))
+import           Data.Typeable                          (eqT)
+import           Type.Reflection                        (Typeable, typeRep, (:~:) (..))
 
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Input
+import           Hasura.GraphQL.Parser.Internal.Scalars
 import           Hasura.GraphQL.Parser.Schema
 
 

@@ -7,21 +7,22 @@ module Hasura.GraphQL.Schema.Remote
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                   as Map
-import qualified Data.HashMap.Strict.InsOrd            as OMap
-import qualified Data.HashMap.Strict.InsOrd.Extended   as OMap
-import qualified Data.List.NonEmpty                    as NE
-import qualified Language.GraphQL.Draft.Syntax         as G
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.HashMap.Strict.InsOrd                  as OMap
+import qualified Data.HashMap.Strict.InsOrd.Extended         as OMap
+import qualified Data.List.NonEmpty                          as NE
+import qualified Language.GraphQL.Draft.Syntax               as G
 
-import           Data.Monoid                           (Any (..))
+import           Data.Monoid                                 (Any (..))
 import           Data.Text.Extended
 import           Data.Type.Equality
 
-import qualified Hasura.GraphQL.Parser.Internal.Parser as P
+import qualified Hasura.GraphQL.Parser.Internal.Parser       as P
+import qualified Hasura.GraphQL.Parser.Internal.TypeChecking as P
 
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Context                (RemoteField, RemoteFieldG (..))
-import           Hasura.GraphQL.Parser                 as P
+import           Hasura.GraphQL.Context                      (RemoteField, RemoteFieldG (..))
+import           Hasura.GraphQL.Parser                       as P
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCache
 

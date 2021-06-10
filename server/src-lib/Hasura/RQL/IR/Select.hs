@@ -10,6 +10,7 @@ import qualified Data.Sequence                       as Seq
 import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Control.Lens.TH                     (makeLenses, makePrisms)
+import           Data.Int                            (Int64)
 
 import           Hasura.GraphQL.Parser.Schema        (InputValue)
 import           Hasura.RQL.IR.BoolExp
@@ -250,7 +251,7 @@ data SelectArgsG (b :: BackendType) v
   { _saWhere    :: !(Maybe (AnnBoolExp b v))
   , _saOrderBy  :: !(Maybe (NE.NonEmpty (AnnOrderByItemG b v)))
   , _saLimit    :: !(Maybe Int)
-  , _saOffset   :: !(Maybe (SQLExpression b))
+  , _saOffset   :: !(Maybe Int64)
   , _saDistinct :: !(Maybe (XDistinct b, NE.NonEmpty (Column b)))
   } deriving (Generic)
 

@@ -36,7 +36,6 @@ import qualified Language.GraphQL.Draft.Syntax              as G
 
 import           Control.Lens                               hiding (index)
 import           Data.Has
-import           Data.Int                                   (Int32)
 import           Data.Parser.JSONPath
 import           Data.Text.Extended
 import           Data.Traversable                           (mapAccumL)
@@ -597,8 +596,8 @@ tableArgs sourceName tableInfo selectPermissions = do
   let selectArgs = do
         whereF   <- whereParser
         orderBy  <- orderByParser
-        limit    <- fmap join $ P.fieldOptional limitName   limitDesc   $ P.nullable positiveInt
-        offset   <- fmap join $ P.fieldOptional offsetName  offsetDesc  $ P.nullable (offsetParser @b)
+        limit    <- fmap join $ P.fieldOptional limitName  limitDesc  $ P.nullable $ P.nonNegativeInt
+        offset   <- fmap join $ P.fieldOptional offsetName offsetDesc $ P.nullable $ P.bigInt
         distinct <- distinctParser
         pure $ IR.SelectArgs
           { IR._saWhere    = whereF
@@ -632,13 +631,6 @@ tableArgs sourceName tableInfo selectPermissions = do
       unless isValid $ parseError
         "\"distinct_on\" columns must match initial \"order_by\" columns"
 
--- TODO:
--- this should either be moved to Common, or to Parser itself; even better,
--- we could think of exposing a "PositiveInt" custom scalar type in the schema
-positiveInt :: MonadParse n => Parser 'Both n Int32
-positiveInt = P.int `P.bind` \value -> do
-  when (value < 0) $ parseErrorWith NotSupported "unexpected negative value"
-  pure value
 
 -- | Arguments for a table connection selection
 --
@@ -663,37 +655,33 @@ tableConnectionArgs
          )
        )
 tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions = do
-  whereParser <- tableWhere sourceName tableInfo selectPermissions
-  orderByParser <- fmap (fmap appendPrimaryKeyOrderBy) <$> tableOrderBy sourceName tableInfo selectPermissions
+  whereParser    <- tableWhere sourceName tableInfo selectPermissions
+  orderByParser  <- fmap (fmap appendPrimaryKeyOrderBy) <$> tableOrderBy sourceName tableInfo selectPermissions
   distinctParser <- tableDistinctOn sourceName tableInfo selectPermissions
-  let maybeFirst = fmap join $ P.fieldOptional $$(G.litName "first")
-                   Nothing $ P.nullable positiveInt
-      maybeLast = fmap join $ P.fieldOptional $$(G.litName "last")
-                  Nothing $ P.nullable positiveInt
-      maybeAfter = fmap join $ P.fieldOptional $$(G.litName "after")
-                 Nothing $ P.nullable base64Text
-      maybeBefore = fmap join $ P.fieldOptional $$(G.litName "before")
-                  Nothing $ P.nullable base64Text
-      firstAndLast = (,) <$> maybeFirst <*> maybeLast
+  let maybeFirst  = fmap join $ P.fieldOptional $$(G.litName "first")  Nothing $ P.nullable P.nonNegativeInt
+      maybeLast   = fmap join $ P.fieldOptional $$(G.litName "last")   Nothing $ P.nullable P.nonNegativeInt
+      maybeAfter  = fmap join $ P.fieldOptional $$(G.litName "after")  Nothing $ P.nullable base64Text
+      maybeBefore = fmap join $ P.fieldOptional $$(G.litName "before") Nothing $ P.nullable base64Text
+      firstAndLast          = (,)  <$> maybeFirst <*> maybeLast
       afterBeforeAndOrderBy = (,,) <$> maybeAfter <*> maybeBefore <*> orderByParser
 
   pure $ do
-    whereF <- whereParser
-    orderBy <- orderByParser
+    whereF   <- whereParser
+    orderBy  <- orderByParser
     distinct <- distinctParser
-    split <- afterBeforeAndOrderBy `P.bindFields` \(after, before, orderBy') -> do
+    split    <- afterBeforeAndOrderBy `P.bindFields` \(after, before, orderBy') -> do
       rawSplit <- case (after, before) of
         (Nothing, Nothing) -> pure Nothing
-        (Just _, Just _)   -> parseError "\"after\" and \"before\" are not allowed at once"
-        (Just v, Nothing)  -> pure $ Just (IR.CSKAfter, v)
-        (Nothing, Just v)  -> pure $ Just (IR.CSKBefore, v)
+        (Just _,  Just _ ) -> parseError "\"after\" and \"before\" are not allowed at once"
+        (Just v,  Nothing) -> pure $ Just (IR.CSKAfter, v)
+        (Nothing, Just v ) -> pure $ Just (IR.CSKBefore, v)
       for rawSplit (uncurry (parseConnectionSplit orderBy'))
 
     slice <- firstAndLast `P.bindFields` \case
       (Nothing, Nothing) -> pure Nothing
-      (Just _, Just _)   -> parseError "\"first\" and \"last\" are not allowed at once"
-      (Just v, Nothing)  -> pure $ Just $ IR.SliceFirst $ fromIntegral v
-      (Nothing, Just v)  -> pure $ Just $ IR.SliceLast $ fromIntegral v
+      (Just _,  Just _ ) -> parseError "\"first\" and \"last\" are not allowed at once"
+      (Just v,  Nothing) -> pure $ Just $ IR.SliceFirst $ fromIntegral v
+      (Nothing, Just v ) -> pure $ Just $ IR.SliceLast $ fromIntegral v
 
     pure ( IR.SelectArgs whereF orderBy Nothing Nothing distinct
          , split
