@@ -21,7 +21,7 @@ for your project.
 
 .. note::
 
-  Currently, maintenance mode will only be activated for your project while you 
+  Currently, cloud maintenance mode will only be activated for your project while you
   are updating it to Hasura GraphQL Engine ``v2.0``. 
 
 .. note::

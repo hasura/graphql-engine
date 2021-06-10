@@ -312,6 +312,12 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
        *(Available for versions > v2.0.0)*
 
+   * - ``--enable-maintenance-mode``
+     - ``HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE``
+     - Disable updating of metadata on the server (default: ``false``)
+
+       *(Available for versions > v2.0.0)*
+
 .. note::
 
   When the equivalent flags for environment variables are used, the flags will take precedence.

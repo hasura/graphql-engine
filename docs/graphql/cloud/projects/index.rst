@@ -63,5 +63,5 @@ Dig deeper
    Heroku database URL Sync <heroku-url-sync>
    Maintenance mode <maintenance-mode>
    Deleting projects <delete>
-   Moving v1.3 projects to v2.0 <move-project-v2>
+   Updating v1.3 projects to v2.0 <move-project-v2>
    

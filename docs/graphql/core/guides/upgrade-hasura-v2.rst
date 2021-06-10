@@ -191,6 +191,11 @@ and restarting your Hasura instance should work seamlessly. The database connect
 env var will be added as a database with the name ``default`` automatically and all existing metadata and migrations will be
 assumed to belong to it.
 
+.. _hasura_v1_to_v2_post_update_steps:
+
+Post update steps
+-----------------
+
 Upgrade CLI project to enable multiple database support
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
