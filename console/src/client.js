@@ -4,63 +4,17 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { createLogger } from 'redux-logger';
-import thunk from 'redux-thunk';
 
 import { Provider } from 'react-redux';
 
 import { Router, browserHistory } from 'react-router';
-import { routerMiddleware, syncHistoryWithStore } from 'react-router-redux';
-import { compose, createStore, applyMiddleware } from 'redux';
+import { syncHistoryWithStore } from 'react-router-redux';
 import { useBasename } from 'history';
 
 import getRoutes from './routes';
 
-import reducer from './reducer';
 import globals from './Globals';
-import { trackReduxAction } from './telemetry';
-
-function analyticsLogger({ getState }) {
-  return next => action => {
-    // Call the next dispatch method in the middleware chain.
-    const returnValue = next(action);
-
-    // check if analytics tracking is enabled
-    if (globals.enableTelemetry) {
-      trackReduxAction(action, getState);
-    }
-    // This will likely be the action itself, unless
-    // a middleware further in chain changed it.
-    return returnValue;
-  };
-}
-
-/** telemetry: end **/
-
-// Create the store
-let _finalCreateStore;
-
-if (__DEVELOPMENT__) {
-  const tools = [
-    applyMiddleware(
-      thunk,
-      routerMiddleware(browserHistory),
-      createLogger({ diff: true, duration: true }),
-      analyticsLogger
-    ),
-    require('redux-devtools').persistState(
-      window.location.href.match(/[?&]debug_session=([^&]+)\b/)
-    ),
-  ];
-  if (typeof window === 'object' && window.__REDUX_DEVTOOLS_EXTENSION__) {
-    tools.push(window.__REDUX_DEVTOOLS_EXTENSION__());
-  }
-  _finalCreateStore = compose(...tools)(createStore);
-} else {
-  _finalCreateStore = compose(
-    applyMiddleware(thunk, routerMiddleware(browserHistory), analyticsLogger)
-  )(createStore);
-}
+import { store } from './store';
 
 const hashLinkScroll = () => {
   const { hash } = window.location;
@@ -86,7 +40,6 @@ const hashLinkScroll = () => {
   }
 };
 
-const store = _finalCreateStore(reducer);
 const history = syncHistoryWithStore(browserHistory, store);
 
 /* ****************************************************************** */

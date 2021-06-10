@@ -11,6 +11,9 @@ module.exports = {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   globals: {
+    'ts-jest': {
+      tsconfig: 'tsconfig.test.json'
+    },
     __DEV__: true,
     CONSOLE_ASSET_VERSION: Date.now().toString(),
     'process.hrtime': () => null,

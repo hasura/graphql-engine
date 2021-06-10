@@ -72,3 +72,8 @@ export type RunSqlType = {
     sql: string;
   };
 };
+
+declare global {
+  // eslint-disable-next-line no-underscore-dangle
+  const __DEVELOPMENT__: boolean;
+}
