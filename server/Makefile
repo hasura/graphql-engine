@@ -49,13 +49,11 @@ ci-build:
 
 # assumes this is built in circleci
 ci-image:
-	mkdir -p packaging/build/rootfs
-	docker create -v /root/ --name dummy alpine:3.4 /bin/true
-	docker cp '$(build_output)/graphql-engine' dummy:/root/
-	docker run --rm --volumes-from dummy '$(registry)/graphql-engine-packager:$(packager_ver)' /build.sh graphql-engine | tar -x -C packaging/build/rootfs
-	strip --strip-unneeded packaging/build/rootfs/bin/graphql-engine
-	cp '/usr/lib/postgresql/$(pg_dump_ver)/bin/pg_dump' packaging/build/rootfs/bin/pg_dump
-	upx packaging/build/rootfs/bin/graphql-engine
+	mkdir -p packaging/build/tmp
+	cp '$(build_output)/graphql-engine' packaging/build/tmp/
+	strip --strip-unneeded packaging/build/tmp/graphql-engine
+	upx packaging/build/tmp/graphql-engine
+	cp '/usr/lib/postgresql/$(pg_dump_ver)/bin/pg_dump' packaging/build/tmp/
 	docker build -t '$(registry)/graphql-engine:$(VERSION)' packaging/build/
 
 ci-save-image:
