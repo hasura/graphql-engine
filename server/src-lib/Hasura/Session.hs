@@ -81,9 +81,6 @@ instance ToJSONKey SessionVariable where
 instance ToTxt SessionVariable where
   toTxt = sessionVariableToText
 
-instance Arbitrary SessionVariable where
-  arbitrary = (mkSessionVariable . (sessionVariablePrefix <>)) <$> arbitrary
-
 -- | converts a `SessionVariable` value to a GraphQL name
 sessionVariableToGraphQLName :: SessionVariable -> G.Name
 sessionVariableToGraphQLName = G.unsafeMkName . T.replace "-" "_" . sessionVariableToText

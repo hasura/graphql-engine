@@ -160,11 +160,8 @@ commonResponseHeadersIgnored =
   , "Content-Type", "Content-Length"
   ]
 
-sessionVariablePrefix :: Text
-sessionVariablePrefix = "x-hasura-"
-
 isSessionVariable :: Text -> Bool
-isSessionVariable = T.isPrefixOf sessionVariablePrefix . T.toLower
+isSessionVariable = T.isPrefixOf "x-hasura-" . T.toLower
 
 isReqUserId :: Text -> Bool
 isReqUserId = (== "req_user_id") . T.toLower

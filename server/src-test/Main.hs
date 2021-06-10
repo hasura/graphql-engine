@@ -9,6 +9,7 @@ import qualified Data.Environment                     as Env
 import qualified Data.NonNegativeIntSpec              as NonNegetiveIntSpec
 import qualified Data.Parser.CacheControlSpec         as CacheControlParser
 import qualified Data.Parser.JSONPathSpec             as JsonPath
+import qualified Data.Parser.URLTemplate              as URLTemplate
 import qualified Data.TimeSpec                        as TimeSpec
 import qualified Database.PG.Query                    as Q
 import qualified Network.HTTP.Client                  as HTTP
@@ -27,7 +28,6 @@ import           Test.Hspec
 import qualified Hasura.CacheBoundedSpec              as CacheBoundedSpec
 import qualified Hasura.EventingSpec                  as EventingSpec
 import qualified Hasura.GraphQL.Parser.DirectivesTest as GraphQLDirectivesSpec
-import qualified Hasura.GraphQL.RemoteServerSpec      as RemoteServerSpec
 import qualified Hasura.GraphQL.Schema.RemoteTest     as GraphRemoteSchemaSpec
 import qualified Hasura.IncrementalSpec               as IncrementalSpec
 import qualified Hasura.RQL.Types.EndpointSpec        as EndpointSpec
@@ -74,6 +74,7 @@ unitSpecs = do
   describe "Data.NonNegativeInt" NonNegetiveIntSpec.spec
   describe "Data.Parser.CacheControl" CacheControlParser.spec
   describe "Data.Parser.JSONPath" JsonPath.spec
+  describe "Data.Parser.URLTemplate" URLTemplate.spec
   describe "Data.Time" TimeSpec.spec
   describe "Hasura.Cache.Bounded" CacheBoundedSpec.spec
   describe "Hasura.Eventing" EventingSpec.spec
@@ -81,7 +82,6 @@ unitSpecs = do
   describe "Hasura.GraphQL.Schema.Remote" GraphRemoteSchemaSpec.spec
   describe "Hasura.Incremental" IncrementalSpec.spec
   describe "Hasura.RQL.Types.Endpoint" EndpointSpec.spec
-  describe "Hasura.GraphQL.RemoteServer" RemoteServerSpec.spec
   describe "Hasura.SQL.WKT" WKTSpec.spec
   describe "Hasura.Server.Auth" AuthSpec.spec
   describe "Hasura.Server.Telemetry" TelemetrySpec.spec

@@ -47,15 +47,12 @@ module Hasura.RQL.Types.SchemaCache
 
   , IntrospectionResult(..)
   , ParsedIntrospection(..)
-  , RemoteSchemaCustomizer(..)
   , RemoteSchemaCtx(..)
   , rscName
   , rscInfo
   , rscIntro
   , rscParsed
   , rscRawIntrospectionResult
-  , rscCustomizer
-  , rscTypeNameCustomizer
   , rscPermissions
   , RemoteSchemaMap
 
@@ -222,10 +219,10 @@ type WithDeps a = (a, [SchemaDependency])
 
 data IntrospectionResult
   = IntrospectionResult
-  { irDoc              :: !RemoteSchemaIntrospection
-  , irQueryRoot        :: !G.Name
-  , irMutationRoot     :: !(Maybe G.Name)
-  , irSubscriptionRoot :: !(Maybe G.Name)
+  { irDoc              :: RemoteSchemaIntrospection
+  , irQueryRoot        :: G.Name
+  , irMutationRoot     :: Maybe G.Name
+  , irSubscriptionRoot :: Maybe G.Name
   } deriving (Show, Eq, Generic)
 instance Cacheable IntrospectionResult
 
@@ -234,13 +231,6 @@ data ParsedIntrospection
   { piQuery        :: [P.FieldParser (P.ParseT Identity) RemoteField]
   , piMutation     :: Maybe [P.FieldParser (P.ParseT Identity) RemoteField]
   , piSubscription :: Maybe [P.FieldParser (P.ParseT Identity) RemoteField]
-  }
-
-data RemoteSchemaCustomizer
-  = RemoteSchemaCustomizer
-  { _rscNamespaceFieldName :: Maybe G.Name
-  , _rscCustomizeTypeName  :: G.Name -> G.Name           -- ^ type name -> type name
-  , _rscCustomizeFieldName :: G.Name -> G.Name -> G.Name -- ^ type name -> field name -> field name
   }
 
 -- | See 'fetchRemoteSchema'.
@@ -253,14 +243,12 @@ data RemoteSchemaCtx
   -- ^ The raw response from the introspection query against the remote server.
   -- We store this so we can efficiently service 'introspect_remote_schema'.
   , _rscParsed                 ::  ParsedIntrospection
-  , _rscCustomizer             :: !RemoteSchemaCustomizer
-  , _rscTypeNameCustomizer     :: !(Maybe (G.Name -> G.Name))
   , _rscPermissions            :: !(M.HashMap RoleName IntrospectionResult)
   }
 $(makeLenses ''RemoteSchemaCtx)
 
 instance ToJSON RemoteSchemaCtx where
-  toJSON (RemoteSchemaCtx name _ info _ _ _ _ _) =
+  toJSON (RemoteSchemaCtx name _ info _ _ _) =
     object $
       [ "name" .= name
       , "info" .= toJSON info

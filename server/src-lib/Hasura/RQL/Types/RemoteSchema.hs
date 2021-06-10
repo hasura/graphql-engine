@@ -5,7 +5,6 @@ import           Hasura.Prelude
 import qualified Data.Aeson                     as J
 import qualified Data.Aeson.TH                  as J
 import qualified Data.Environment               as Env
-import qualified Data.HashMap.Strict            as Map
 import qualified Data.HashSet                   as Set
 import qualified Data.Text                      as T
 import qualified Database.PG.Query              as Q
@@ -40,57 +39,6 @@ newtype RemoteSchemaName
            , Generic, Cacheable, Arbitrary
            )
 
-  -- NOTE: Prefix and suffix use 'G.Name' so that we can '<>' to form a new valid
-  -- by-construction 'G.Name'.
-data RemoteTypeCustomization
-  = RemoteTypeCustomization
-  { _rtcPrefix  :: !(Maybe G.Name)
-  , _rtcSuffix  :: !(Maybe G.Name)
-  , _rtcMapping :: !(HashMap G.Name G.Name) -- TODO: validate that values are unique
-  } deriving (Show, Eq, Generic)
-instance NFData RemoteTypeCustomization
-instance Cacheable RemoteTypeCustomization
-instance Hashable RemoteTypeCustomization
-$(J.deriveToJSON hasuraJSON{J.omitNothingFields=True} ''RemoteTypeCustomization)
-
-instance J.FromJSON RemoteTypeCustomization where
-  parseJSON = J.withObject "RemoteTypeCustomization" $ \o ->
-    RemoteTypeCustomization
-    <$> o J..:? "prefix"
-    <*> o J..:? "suffix"
-    <*> o J..:? "mapping" J..!= mempty
-
-data RemoteFieldCustomization
-  = RemoteFieldCustomization
-  { _rfcParentType :: !G.Name
-  , _rfcPrefix     :: !(Maybe G.Name)
-  , _rfcSuffix     :: !(Maybe G.Name)
-  , _rfcMapping    :: !(HashMap G.Name G.Name) -- TODO: validate that values are unique
-  } deriving (Show, Eq, Generic)
-instance NFData RemoteFieldCustomization
-instance Cacheable RemoteFieldCustomization
-instance Hashable RemoteFieldCustomization
-$(J.deriveToJSON hasuraJSON{J.omitNothingFields=True} ''RemoteFieldCustomization)
-
-instance J.FromJSON RemoteFieldCustomization where
-  parseJSON = J.withObject "RemoteFieldCustomization" $ \o ->
-    RemoteFieldCustomization
-    <$> o J..: "parent_type"
-    <*> o J..:? "prefix"
-    <*> o J..:? "suffix"
-    <*> o J..:? "mapping" J..!= mempty
-
-data RemoteSchemaCustomization
-  = RemoteSchemaCustomization
-  { _rscRootFieldsNamespace :: !(Maybe G.Name)
-  , _rscTypeNames           :: !(Maybe RemoteTypeCustomization)
-  , _rscFieldNames          :: !(Maybe [RemoteFieldCustomization])
-  } deriving (Show, Eq, Generic)
-instance NFData RemoteSchemaCustomization
-instance Cacheable RemoteSchemaCustomization
-instance Hashable RemoteSchemaCustomization
-$(J.deriveJSON hasuraJSON{J.omitNothingFields=True} ''RemoteSchemaCustomization)
-
 -- | 'RemoteSchemaDef' after validation and baking-in of defaults in 'validateRemoteSchemaDef'.
 data RemoteSchemaInfo
   = RemoteSchemaInfo
@@ -98,8 +46,6 @@ data RemoteSchemaInfo
   , rsHeaders          :: ![HeaderConf]
   , rsFwdClientHeaders :: !Bool
   , rsTimeoutSeconds   :: !Int
-  , rsCustomization    :: !(Maybe RemoteSchemaCustomization)
-  -- ^ See '_rsdCustomization'.
   } deriving (Show, Eq, Generic)
 instance NFData RemoteSchemaInfo
 instance Cacheable RemoteSchemaInfo
@@ -107,7 +53,7 @@ instance Hashable RemoteSchemaInfo
 
 $(J.deriveJSON hasuraJSON ''RemoteSchemaInfo)
 
--- | Unvalidated remote schema config, from the user's API request
+-- | From the user's API request
 data RemoteSchemaDef
   = RemoteSchemaDef
   { _rsdUrl                  :: !(Maybe InputWebhook)
@@ -115,13 +61,6 @@ data RemoteSchemaDef
   , _rsdHeaders              :: !(Maybe [HeaderConf])
   , _rsdForwardClientHeaders :: !Bool
   , _rsdTimeoutSeconds       :: !(Maybe Int)
-  , _rsdCustomization        :: !(Maybe RemoteSchemaCustomization)
-  -- NOTE: In the future we might extend this API to support a small DSL of
-  -- name transformations; this might live at a different layer, and be part of
-  -- the schema customization story.
-  --
-  -- See: https://github.com/hasura/graphql-engine-mono/issues/144
-  -- TODO we probably want to move this into a sub-field "transformations"?
   } deriving (Show, Eq, Generic)
 instance NFData RemoteSchemaDef
 instance Cacheable RemoteSchemaDef
@@ -135,7 +74,6 @@ instance J.FromJSON RemoteSchemaDef where
       <*> o J..:? "headers"
       <*> o J..:? "forward_client_headers" J..!= False
       <*> o J..:? "timeout_seconds"
-      <*> o J..:? "customization"
 
 -- | The payload for 'add_remote_schema', and a component of 'Metadata'.
 data AddRemoteSchemaQuery
@@ -144,7 +82,6 @@ data AddRemoteSchemaQuery
   -- ^ An internal identifier for this remote schema.
   , _arsqDefinition :: !RemoteSchemaDef
   , _arsqComment    :: !(Maybe Text)
-  -- ^ An opaque description or comment. We might display this in the UI, for instance.
   } deriving (Show, Eq, Generic)
 instance NFData AddRemoteSchemaQuery
 instance Cacheable AddRemoteSchemaQuery
@@ -166,36 +103,21 @@ getUrlFromEnv env urlFromEnv = do
     invalidUri x = "not a valid URI: " <> T.pack x
     envNotFoundMsg e = "environment variable '" <> e <> "' not set"
 
-validateRemoteSchemaCustomization
-  :: (MonadError QErr m)
-  => Maybe RemoteSchemaCustomization
-  -> m ()
-validateRemoteSchemaCustomization Nothing = pure ()
-validateRemoteSchemaCustomization (Just RemoteSchemaCustomization{..}) =
-  for_ _rscFieldNames $ \fieldCustomizations ->
-    for_ fieldCustomizations $ \RemoteFieldCustomization{..} ->
-      for_ (Map.keys _rfcMapping) $ \fieldName ->
-        when (isReservedName fieldName) $
-          throw400 InvalidParams $ "attempt to customize reserved field name " <>> fieldName
-  where
-    isReservedName = ("__" `T.isPrefixOf`) . G.unName
-
 validateRemoteSchemaDef
   :: (MonadError QErr m, MonadIO m)
   => Env.Environment
   -> RemoteSchemaDef
   -> m RemoteSchemaInfo
-validateRemoteSchemaDef env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout customization) = do
-  validateRemoteSchemaCustomization customization
+validateRemoteSchemaDef env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout) =
   case (mUrl, mUrlEnv) of
     (Just url, Nothing)    -> do
       resolvedWebhookTxt <- unResolvedWebhook <$> resolveWebhook env url
       case N.parseURI $ T.unpack resolvedWebhookTxt of
         Nothing  -> throw400 InvalidParams $ "not a valid URI: " <> resolvedWebhookTxt
-        Just uri -> return $ RemoteSchemaInfo uri hdrs fwdHdrs timeout customization
+        Just uri -> return $ RemoteSchemaInfo uri hdrs fwdHdrs timeout
     (Nothing, Just urlEnv) -> do
       url <- getUrlFromEnv env urlEnv
-      return $ RemoteSchemaInfo url hdrs fwdHdrs timeout customization
+      return $ RemoteSchemaInfo url hdrs fwdHdrs timeout
     (Nothing, Nothing)     ->
         throw400 InvalidParams "both `url` and `url_from_env` can't be empty"
     (Just _, Just _)       ->

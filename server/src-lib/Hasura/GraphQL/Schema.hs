@@ -369,10 +369,10 @@ buildRoleBasedRemoteSchemaParser
 buildRoleBasedRemoteSchemaParser roleName remoteSchemaCache = do
   let remoteSchemaIntroInfos = map fst $ toList remoteSchemaCache
   remoteSchemaPerms <-
-    for remoteSchemaIntroInfos $ \(RemoteSchemaCtx remoteSchemaName _ remoteSchemaInfo _ _ remoteSchemaCustomizer typeNameCustomizer permissions) ->
+    for remoteSchemaIntroInfos $ \(RemoteSchemaCtx remoteSchemaName _ remoteSchemaInfo _ _ permissions) ->
       for (Map.lookup roleName permissions) $ \introspectRes -> do
         (queryParsers, mutationParsers, subscriptionParsers) <-
-             P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes remoteSchemaCustomizer remoteSchemaInfo typeNameCustomizer
+             P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes remoteSchemaInfo
         let parsedIntrospection = ParsedIntrospection queryParsers mutationParsers subscriptionParsers
         return (remoteSchemaName, (introspectRes, parsedIntrospection))
   return $ catMaybes remoteSchemaPerms

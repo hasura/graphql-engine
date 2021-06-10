@@ -14,7 +14,7 @@ import pytest
 from validate import check_query_f, check_query
 from graphql import GraphQLError
 
-def mk_add_remote_q(name, url, headers=None, client_hdrs=False, timeout=None, customization=None):
+def mk_add_remote_q(name, url, headers=None, client_hdrs=False, timeout=None):
     return {
         "type": "add_remote_schema",
         "args": {
@@ -24,14 +24,10 @@ def mk_add_remote_q(name, url, headers=None, client_hdrs=False, timeout=None, cu
                 "url": url,
                 "headers": headers,
                 "forward_client_headers": client_hdrs,
-                "timeout_seconds": timeout,
-                "customization": customization
+                "timeout_seconds": timeout
             }
         }
     }
-
-def type_prefix_customization(type_prefix, mapping={}):
-    return { "type_names": {"prefix": type_prefix, "mapping": mapping }}
 
 def mk_delete_remote_q(name):
     return {
@@ -622,145 +618,3 @@ class TestValidateRemoteSchemaQuery:
         """ test to check that the graphql-engine throws an validation error
             when an remote object is queried with an unknown field  """
         check_query_f(hge_ctx, self.dir() + '/field_validation.yaml')
-
-class TestRemoteSchemaTypePrefix:
-    """ basic => no hasura tables are tracked """
-
-    teardown = {"type": "clear_metadata", "args": {}}
-    dir = 'queries/remote_schemas'
-
-    @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        config = request.config
-        # This is needed for supporting server upgrade tests
-        # Some marked tests in this class will be run as server upgrade tests
-        if not config.getoption('--skip-schema-setup'):
-            q = mk_add_remote_q('simple 2', 'http://localhost:5000/user-graphql', customization=type_prefix_customization("Foo"))
-            st_code, resp = hge_ctx.v1q(q)
-            assert st_code == 200, resp
-        yield
-        if request.session.testsfailed > 0 or not config.getoption('--skip-schema-teardown'):
-            hge_ctx.v1q(self.teardown)
-
-    def test_add_schema(self, hge_ctx):
-        """ check if the remote schema is added in the metadata """
-        st_code, resp = hge_ctx.v1q(export_metadata_q)
-        assert st_code == 200, resp
-        assert resp['remote_schemas'][0]['name'] == "simple 2"
-        # assert resp['remote_schemas'][0]['definition']['type_prefix'] == "foo"
-
-    @pytest.mark.allow_server_upgrade_test
-    def test_introspection(self, hge_ctx):
-        #check_query_f(hge_ctx, 'queries/graphql_introspection/introspection.yaml')
-        with open('queries/graphql_introspection/introspection.yaml') as f:
-            query = yaml.safe_load(f)
-        resp, _ = check_query(hge_ctx, query)
-        assert check_introspection_result(resp, ['FooUser', 'FooCreateUser', 'FooCreateUserInputObject', 'FooUserDetailsInput'], ['user', 'allUsers'])
-
-class TestValidateRemoteSchemaTypePrefixQuery:
-
-    teardown = {"type": "clear_metadata", "args": {}}
-
-    @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        config = request.config
-        if not config.getoption('--skip-schema-setup'):
-            q = mk_add_remote_q('character-foo', 'http://localhost:5000/character-iface-graphql', customization=type_prefix_customization("Foo", {"Int": "MyInt"}))
-            st_code, resp = hge_ctx.v1q(q)
-            assert st_code == 200, resp
-        yield
-        if request.session.testsfailed > 0 or not config.getoption('--skip-schema-teardown'):
-            hge_ctx.v1q(self.teardown)
-
-    @classmethod
-    def dir(cls):
-        return "queries/remote_schemas/validation/"
-
-    def test_remote_schema_argument_validation(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/type_prefix_validation.yaml')
-
-class TestValidateRemoteSchemaFieldPrefixQuery:
-
-    teardown = {"type": "clear_metadata", "args": {}}
-
-    @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        config = request.config
-        if not config.getoption('--skip-schema-setup'):
-            customization = { "field_names": [{"parent_type": "Character", "prefix": "foo_"},{"parent_type": "Human", "prefix": "foo_"},{"parent_type": "Droid", "prefix": "foo_"}] }
-            q = mk_add_remote_q('character-foo', 'http://localhost:5000/character-iface-graphql', customization=customization)
-            st_code, resp = hge_ctx.v1q(q)
-            assert st_code == 200, resp
-        yield
-        if request.session.testsfailed > 0 or not config.getoption('--skip-schema-teardown'):
-            hge_ctx.v1q(self.teardown)
-
-    @classmethod
-    def dir(cls):
-        return "queries/remote_schemas/validation/"
-
-    def test_remote_schema_argument_validation(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/field_prefix_validation.yaml')
-
-class TestValidateRemoteSchemaCustomization:
-    @classmethod
-    def dir(cls):
-        return "queries/remote_schemas/validation/"
-
-    def test_remote_schema_interface_field_validation(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/interface_field_validation.yaml')
-
-class TestValidateRemoteSchemaNamespaceQuery:
-
-    teardown = {"type": "clear_metadata", "args": {}}
-
-    @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        config = request.config
-        if not config.getoption('--skip-schema-setup'):
-            customization = { "root_fields_namespace": "foo", "type_names": {"prefix": "Bar" }}
-            q = mk_add_remote_q('character-foo', 'http://localhost:5000/character-iface-graphql', customization=customization)
-            st_code, resp = hge_ctx.v1q(q)
-            assert st_code == 200, resp
-        yield
-        if request.session.testsfailed > 0 or not config.getoption('--skip-schema-teardown'):
-            hge_ctx.v1q(self.teardown)
-
-    @classmethod
-    def dir(cls):
-        return "queries/remote_schemas/validation/"
-
-    def test_remote_schema_argument_validation(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/namespace_validation.yaml')
-
-class TestValidateRemoteSchemaCustomizeAllTheThings:
-
-    teardown = {"type": "clear_metadata", "args": {}}
-
-    @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx):
-        config = request.config
-        if not config.getoption('--skip-schema-setup'):
-            customization = {
-                "root_fields_namespace": "star_wars",
-                "type_names": {"prefix": "Foo", "suffix": "_x", "mapping": { "Droid": "Android", "Int": "MyInt"}},
-                "field_names": [
-                        {"parent_type": "Character", "prefix": "foo_", "suffix": "_f", "mapping": {"id": "ident"}},
-                        {"parent_type": "Human", "mapping": {"id": "ident", "name": "foo_name_f", "droid": "android"}},
-                        {"parent_type": "Droid", "prefix": "foo_", "suffix": "_f", "mapping": {"id": "ident"}},
-                        {"parent_type": "CharacterIFaceQuery", "prefix": "super_" }
-                    ]
-                }
-            q = mk_add_remote_q('character-foo', 'http://localhost:5000/character-iface-graphql', customization=customization)
-            st_code, resp = hge_ctx.v1q(q)
-            assert st_code == 200, resp
-        yield
-        if request.session.testsfailed > 0 or not config.getoption('--skip-schema-teardown'):
-            hge_ctx.v1q(self.teardown)
-
-    @classmethod
-    def dir(cls):
-        return "queries/remote_schemas/validation/"
-
-    def test_remote_schema_argument_validation(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/customize_all_the_things.yaml')

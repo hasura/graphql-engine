@@ -10,8 +10,6 @@ module Hasura.GraphQL.Context
   , MutationDB(..)
   , ActionQuery(..)
   , ActionMutation(..)
-  , RemoteRootField(..)
-  , getRemoteFieldSelectionSet
   , RemoteFieldG (..)
   , RemoteField
   , QueryRootField
@@ -105,25 +103,10 @@ data ActionMutation (b :: BackendType) v
   = AMSync !(RQL.AnnActionExecution b v)
   | AMAsync !RQL.AnnActionMutationAsync
 
--- | An RemoteRootField could either be a real field on the remote server
--- or represent a virtual namespace that only exists in the Hasura schema.
-data RemoteRootField var
-  = RRFNamespaceField !(G.SelectionSet G.NoFragments var) -- ^ virtual namespace field
-  | RRFRealField !(G.Field G.NoFragments var) -- ^ a real field on the remote server
-  deriving (Functor, Foldable, Traversable)
-
--- | For a real remote field gives a SelectionSet for selecting the field itself.
---   For a virtual field gives the unwrapped SelectionSet for the field.
-getRemoteFieldSelectionSet :: RemoteRootField var -> G.SelectionSet G.NoFragments var
-getRemoteFieldSelectionSet = \case
-    RRFNamespaceField selSet -> selSet
-    RRFRealField fld         -> [G.SelectionField fld]
-
 data RemoteFieldG var
   = RemoteFieldG
-  { _rfRemoteSchemaInfo   :: !RQL.RemoteSchemaInfo
-  , _rfTypeNameCustomizer :: !(Maybe (G.Name -> G.Name))
-  , _rfField              :: !(RemoteRootField var)
+  { _rfRemoteSchemaInfo :: !RQL.RemoteSchemaInfo
+  , _rfField            :: !(G.Field G.NoFragments var)
   } deriving (Functor, Foldable, Traversable)
 
 type RemoteField = RemoteFieldG RQL.RemoteSchemaVariable

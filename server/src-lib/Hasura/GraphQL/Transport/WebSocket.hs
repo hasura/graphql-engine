@@ -415,9 +415,9 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
                        tx
                        genSql
               return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
-            E.ExecStepRemote rsi typeNameCustomizer gqlReq -> do
+            E.ExecStepRemote rsi gqlReq -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
-              runRemoteGQ fieldName userInfo reqHdrs rsi typeNameCustomizer gqlReq
+              runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
             E.ExecStepAction (actionExecPlan, _) -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
               (time, (r, _)) <- doQErr $ EA.runActionExecution actionExecPlan
@@ -473,9 +473,9 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
               (time, (r, hdrs)) <- doQErr $ EA.runActionExecution actionExecPlan
               pure $ ResultsFragment time Telem.Empty r $ fromMaybe [] hdrs
-            E.ExecStepRemote rsi typeNameCustomizer gqlReq -> do
+            E.ExecStepRemote rsi gqlReq -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
-              runRemoteGQ fieldName userInfo reqHdrs rsi typeNameCustomizer gqlReq
+              runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
             E.ExecStepRaw json -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
               buildRaw json
@@ -569,10 +569,10 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         -- Telemetry. NOTE: don't time network IO:
         Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
-    runRemoteGQ fieldName userInfo reqHdrs rsi typeNameCustomizer gqlReq = do
+    runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq = do
       (telemTimeIO_DT, _respHdrs, resp) <-
         doQErr $ E.execRemoteGQ env httpMgr userInfo reqHdrs rsi gqlReq
-      value <- mapExceptT lift $ extractFieldFromResponse fieldName rsi typeNameCustomizer gqlReq resp
+      value <- mapExceptT lift $ extractFieldFromResponse (G.unName fieldName) resp
       return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) []
 
     WSServerEnv logger lqMap getSchemaCache httpMgr _ sqlGenCtx {- planCache -}

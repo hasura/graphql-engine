@@ -128,25 +128,24 @@ instance J.ToJSON ExplainPlan where
 
 -- | One execution step to processing a GraphQL query (e.g. one root field).
 data ExecutionStep where
-  -- | A query to execute against the database
   ExecStepDB
     :: HTTP.ResponseHeaders
     -> AB.AnyBackend DBStepInfo
     -> ExecutionStep
-  -- | Execute an action
+  -- ^ A query to execute against the database
   ExecStepAction
     :: (ActionExecutionPlan, ActionsInfo)
     -> ExecutionStep
-  -- | A graphql query to execute against a remote schema
+  -- ^ Execute an action
   ExecStepRemote
     :: !RemoteSchemaInfo
-    -> !(Maybe (G.Name -> G.Name)) -- ^ type name customizer
     -> !GH.GQLReqOutgoing
     -> ExecutionStep
-  -- | Output a plain JSON object
+  -- ^ A graphql query to execute against a remote schema
   ExecStepRaw
     :: JO.Value
     -> ExecutionStep
+  -- ^ Output a plain JSON object
 
 
 -- | The series of steps that need to be executed for a given query. For now, those steps are all

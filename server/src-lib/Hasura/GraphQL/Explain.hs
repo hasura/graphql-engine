@@ -15,6 +15,7 @@ import           Control.Monad.Trans.Control            (MonadBaseControl)
 
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Action          as E
+import qualified Hasura.GraphQL.Execute.Inline          as E
 import qualified Hasura.GraphQL.Execute.Query           as E
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.SQL.AnyBackend                  as AB
@@ -83,20 +84,28 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
     mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent
                sessionVariables
   -- we don't need to check in allow list as we consider it an admin endpoint
+  let takeFragment =
+        \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing
+      fragments = mapMaybe takeFragment $ GH.unGQLExecDoc $ GH._grQuery query
   (graphQLContext, queryParts) <- E.getExecPlanPartial userInfo sc queryType query
   case queryParts of
-    G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives inlinedSelSet -> do
+    G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives selSet -> do
+      -- (Here the above fragment inlining is actually executed.)
+      inlinedSelSet <- E.inlineSelectionSet fragments selSet
       (unpreparedQueries, _, _, _) <-
         E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
-        -- TODO: validate directives here
+      -- TODO: validate directives here
       encJFromList <$>
         for (OMap.toList unpreparedQueries) (uncurry (explainQueryField userInfo))
 
     G.TypedOperationDefinition G.OperationTypeMutation _ _ _ _ ->
       throw400 InvalidParams "only queries can be explained"
 
-    G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> do
+    G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives selSet -> do
+      -- (Here the above fragment inlining is actually executed.)
+      inlinedSelSet <- E.inlineSelectionSet fragments selSet
       (unpreparedQueries, _, _, _) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
+      -- TODO: validate directives here
       validSubscription <-  E.buildSubscriptionPlan userInfo unpreparedQueries
       case validSubscription of
         E.SEAsyncActionsWithNoRelationships _ -> throw400 NotSupported "async action query fields without relationships to table cannot be explained"

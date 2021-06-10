@@ -113,7 +113,7 @@ instance ToJSON JsonAggSelect where
 data RelType
   = ObjRel
   | ArrRel
-  deriving (Show, Eq, Generic, Data)
+  deriving (Show, Eq, Generic)
 instance NFData RelType
 instance Hashable RelType
 instance Cacheable RelType
