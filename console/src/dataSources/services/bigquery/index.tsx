@@ -105,6 +105,7 @@ export const supportedFeatures: SupportedFeaturesType = {
       columns: {
         view: false,
         edit: false,
+        graphqlFieldName: false,
       },
       computedFields: false,
       primaryKeys: {

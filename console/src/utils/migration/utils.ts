@@ -86,7 +86,6 @@ export const getColumnUpdateMigration = (
 
   const tableDef = generateTableDef(tableName, currentSchema);
   const table = findTable(allSchemas, tableDef);
-
   if (!table || !currentSchema) {
     throw new Error(`Table "${tableDef.name} does not exist`);
   }
@@ -105,13 +104,15 @@ export const getColumnUpdateMigration = (
     tableName,
     currentSchema || '',
     colName,
-    colType
+    colType,
+    nullable
   );
   const columnChangesDownQuery = dataSource.getAlterColumnTypeSql(
     tableName,
     currentSchema || '',
     colName,
-    originalData_type
+    originalData_type,
+    originalColNullable === 'YES'
   );
 
   const quotedColName = `"${colName}"`;
@@ -132,13 +133,14 @@ export const getColumnUpdateMigration = (
       currentSchema,
       colName,
       quoteDefault(colDefault),
-      source
+      `default_${source}_${currentSchema}_${tableName}_${colName}`
     );
   } else {
     columnDefaultUpQuery = dataSource.getDropColumnDefaultSql(
       tableName,
       currentSchema,
-      colName
+      colName,
+      `default_${source}_${currentSchema}_${tableName}_${colName}`
     );
   }
 
@@ -149,13 +151,14 @@ export const getColumnUpdateMigration = (
       currentSchema,
       colName,
       quoteDefault(originalColDefault),
-      source
+      `${source}_${tableName}_${colName}_default`
     );
   } else {
     columnDefaultDownQuery = dataSource.getDropColumnDefaultSql(
       tableName,
       currentSchema,
-      colName
+      colName,
+      `${source}_${tableName}_${colName}_default`
     );
   }
 
@@ -172,12 +175,14 @@ export const getColumnUpdateMigration = (
     const nullableUpQuery = dataSource.getDropNotNullSql(
       tableName,
       currentSchema,
-      colName
+      colName,
+      colType
     );
     const nullableDownQuery = dataSource.getSetNotNullSql(
       tableName,
       currentSchema,
-      colName
+      colName,
+      colType
     );
     if (originalColNullable !== 'YES') {
       migration.add(
@@ -189,7 +194,8 @@ export const getColumnUpdateMigration = (
     const nullableUpQuery = dataSource.getSetNotNullSql(
       tableName,
       currentSchema,
-      colName
+      colName,
+      colType
     );
     const nullableDownQuery = dataSource.getDropNotNullSql(
       tableName,
@@ -282,8 +288,7 @@ export const getColumnUpdateMigration = (
           tableName,
           currentSchema,
           newName,
-          colName,
-          colType
+          colName
         ),
         source
       ),
@@ -292,8 +297,7 @@ export const getColumnUpdateMigration = (
           tableName,
           currentSchema,
           colName,
-          newName,
-          colType
+          newName
         ),
         source
       )

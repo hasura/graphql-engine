@@ -249,6 +249,8 @@ export type SupportedFeaturesType = {
       columns?: {
         view: boolean;
         edit: boolean;
+        graphqlFieldName: boolean;
+        frequentlyUsedColumns?: boolean;
       };
       computedFields?: boolean;
       primaryKeys?: {

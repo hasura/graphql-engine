@@ -198,10 +198,7 @@ export interface DataSourcesAPI {
   getDropColumnSql: (
     tableName: string,
     schemaName: string,
-    columnName: string,
-    options?: {
-      sqlGenerator?: FrequentlyUsedColumn['dependentSQLGenerator'];
-    }
+    columnName: string
   ) => string;
   getAddColumnSql: (
     tableName: string,
@@ -213,7 +210,8 @@ export interface DataSourcesAPI {
       unique: boolean;
       default: any;
       sqlGenerator?: FrequentlyUsedColumn['dependentSQLGenerator'];
-    }
+    },
+    constraintName?: string
   ) => string | string[];
   getDropNotNullSql: (
     tableName: string,
@@ -224,7 +222,8 @@ export interface DataSourcesAPI {
   getSetNotNullSql: (
     tableName: string,
     schemaName: string,
-    columnName: string
+    columnName: string,
+    columnType: string
   ) => string;
   getAddUniqueConstraintSql: (
     tableName: string,
@@ -237,7 +236,7 @@ export interface DataSourcesAPI {
     schemaName: string,
     columnName: string,
     defaultValue: any,
-    columnType: string
+    constraintName: string
   ) => string;
   getSetCommentSql: (
     on: 'table' | 'column' | string,
@@ -251,19 +250,21 @@ export interface DataSourcesAPI {
     tableName: string,
     schemaName: string,
     columnName: string,
-    columnType: string
+    columnType: string,
+    wasNullable?: boolean
   ) => string;
   getDropColumnDefaultSql: (
     tableName: string,
     schemaName: string,
-    columnName: string
+    columnName: string,
+    constraintName?: string,
+    defaultValue?: string
   ) => string;
   getRenameColumnQuery: (
     tableName: string,
     schemaName: string,
     newName: string,
-    oldName: string,
-    columnType?: string
+    oldName: string
   ) => string;
   fetchColumnCastsQuery: string;
   checkSchemaModification: (sql: string) => boolean;

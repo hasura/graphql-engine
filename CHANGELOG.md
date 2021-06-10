@@ -9,6 +9,7 @@
 - console: add foreign key CRUD functionality to ms sql server tables
 - console: allow tracking of custom SQL functions having composite type (rowtype) input arguments
 - console: allow input object presets in remote schema permissions
+- console: add modify functionality on columns, primary keys & unique keys to MS SQL Server tables
 - cli: add interactive prompt to get input when `--database-name` flag is missing
 - cli: fix metadata export to avoid unnecessary empty lines in actions.graphql (#5338)
 

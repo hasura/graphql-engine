@@ -704,9 +704,11 @@ export const getAlterColumnTypeSql = (
 export const getDropColumnDefaultSql = (
   tableName: string,
   schemaName: string,
-  columnName: string
+  columnName?: string
 ) => `
-  alter table "${schemaName}"."${tableName}" alter column "${columnName}" drop default
+ALTER TABLE "${schemaName}"."${tableName}" ALTER COLUMN "${
+  columnName ?? ''
+}" drop default
 `;
 
 export const getRenameColumnQuery = (

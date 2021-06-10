@@ -37,6 +37,7 @@ import {
   dataSource,
   escapeTableColumns,
   escapeTableName,
+  currentDriver,
 } from '../../../../dataSources';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import {
@@ -1103,13 +1104,14 @@ const deleteViewSql = (viewName, viewType) => {
 
 const deleteColumnSql = (column, tableSchema) => {
   return (dispatch, getState) => {
+    const commonDataObject = { ...column, ...tableSchema };
     const source = getState().tables.currentDataSource;
-    const name = column.column_name;
-    const tableName = column.table_name;
-    const currentSchema = column.table_schema;
-    const comment = column.comment;
-    const is_nullable = column.is_nullable;
-    const col_type = column.data_type_name;
+    const name = commonDataObject.column_name;
+    const tableName = commonDataObject.table_name;
+    const currentSchema = commonDataObject.table_schema;
+    const comment = commonDataObject.comment;
+    const is_nullable = commonDataObject.is_nullable;
+    const col_type = commonDataObject.data_type_name;
     const foreign_key_constraints = tableSchema.foreign_key_constraints.filter(
       fkc => {
         const columnKeys = Object.keys(fkc.column_mapping);
@@ -1203,7 +1205,7 @@ const deleteColumnSql = (column, tableSchema) => {
       });
     }
 
-    if (column.column_default !== null) {
+    if (commonDataObject.column_default !== null) {
       // add column default to down migration
       migration.UNSAFE_add(
         null,
@@ -1212,7 +1214,7 @@ const deleteColumnSql = (column, tableSchema) => {
             tableName,
             currentSchema,
             name,
-            column.column_default,
+            commonDataObject.column_default,
             col_type
           ),
           source
@@ -1288,6 +1290,7 @@ const addColSql = (
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     const source = getState().tables.currentDataSource;
+    const constraint_name = `default_${source}_${currentSchema}_${tableName}_${colName}`;
     const sqlUp = dataSource.getAddColumnSql(
       tableName,
       currentSchema,
@@ -1298,7 +1301,8 @@ const addColSql = (
         unique: colUnique,
         default: colDefault,
         sqlGenerator: colDependentSQLGenerator,
-      }
+      },
+      currentDriver === 'mssql' ? constraint_name : undefined
     );
 
     const runSqlQueryDown = dataSource.getDropColumnSql(

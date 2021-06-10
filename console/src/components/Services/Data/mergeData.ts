@@ -72,6 +72,25 @@ type MSSqlCheckConstraint = {
   check_definition: string;
 };
 
+const trimDefaultValue = (defaultValue?: string) => {
+  if (!defaultValue) {
+    return '';
+  }
+  // mssql returns default value in (''), hence this regex is used to extract the exact value.
+  const newDefaultValue = /(\(')([a-zA-Z0-9_\s{'}()":;\-+*\\]*)('\))/gm.exec(
+    defaultValue
+  );
+  if (!newDefaultValue) {
+    return '';
+  }
+  return (
+    (Array.isArray(newDefaultValue) &&
+      newDefaultValue?.length > 1 &&
+      newDefaultValue[2]) ??
+    ''
+  );
+};
+
 const modifyViolationType = (fkType: string) => {
   switch (fkType) {
     case 'NO_ACTION':
@@ -104,7 +123,16 @@ export const mergeDataMssql = (
         table_name: row[1],
         table_type: row[2] as MSSqlTable['table_type'],
         comment: JSON.parse(row[3])[0].comment,
-        columns: JSON.parse(row[4]),
+        columns:
+          JSON.parse(row[4])?.map((columnData: { column_default?: string }) => {
+            if (columnData?.column_default) {
+              return {
+                ...columnData,
+                column_default: trimDefaultValue(columnData.column_default),
+              };
+            }
+            return columnData;
+          }) ?? [],
       });
     } catch (err) {
       console.log(err);

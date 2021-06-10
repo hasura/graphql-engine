@@ -543,6 +543,7 @@ export const supportedFeatures: SupportedFeaturesType = {
       columns: {
         view: true,
         edit: true,
+        graphqlFieldName: true,
       },
       computedFields: true,
       primaryKeys: {

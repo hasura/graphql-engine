@@ -62,7 +62,6 @@ const ColumnEditorList = ({
   return columns.map((col, i) => {
     const colName = col.column_name;
     const isArrayDataType = col.data_type === dataSource.columnDataTypes.ARRAY;
-
     // todo -- create getColumnProperties utility
     const getDisplayName = () => {
       if (isArrayDataType) {
