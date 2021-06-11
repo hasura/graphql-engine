@@ -10,14 +10,7 @@ import {
 import { QUERY_TYPES, Operations } from '../../common';
 import { PGFunction } from './types';
 import { DataSourcesAPI, ColumnsInfoResult } from '../..';
-import {
-  generateTableRowRequest,
-  generateInsertRequest,
-  generateRowsCountRequest,
-  generateEditRowRequest,
-  generateDeleteRowRequest,
-  generateBulkDeleteRowRequest,
-} from './utils';
+import { generateTableRowRequest } from './utils';
 import {
   getFetchTablesListQuery,
   fetchColumnTypesQuery,
@@ -52,7 +45,6 @@ import {
   checkSchemaModification,
   getCreateCheckConstraintSql,
   getCreatePkSql,
-  getAlterPkSql,
   getFunctionDefinitionSql,
   primaryKeysInfoSql,
   checkConstraintsSql,
@@ -238,7 +230,7 @@ export const getGroupedTableComputedFields = (
 const schemaListSql = (
   schemas?: string[]
 ) => `SELECT schema_name FROM information_schema.schemata WHERE
-schema_name NOT IN ('information_schema', 'hdb_catalog', 'hdb_views') AND schema_name NOT LIKE 'pg_%'
+schema_name NOT IN ('information_schema', 'pg_catalog', 'hdb_catalog', 'hdb_views', 'pg_temp_1', 'pg_toast_temp_1', 'pg_toast')
 ${schemas?.length ? ` AND schema_name IN (${schemas.join(',')})` : ''}
 ORDER BY schema_name ASC;`;
 
@@ -436,7 +428,7 @@ export const isColTypeString = (colType: string) =>
 
 const dependencyErrorCode = '2BP01'; // pg dependent error > https://www.postgresql.org/docs/current/errcodes-appendix.html
 
-const createSQLRegex = /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<nameWithSchema>\"?\w+\"?)|(?<name>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim; // eslint-disable-line
+const createSQLRegex = /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<tableWithSchema>\"?\w+\"?)|(?<table>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim; // eslint-disable-line
 
 const isTimeoutError = (error: {
   code: string;
@@ -711,7 +703,6 @@ export const postgres: DataSourcesAPI = {
   checkSchemaModification,
   getCreateCheckConstraintSql,
   getCreatePkSql,
-  getAlterPkSql,
   getFunctionDefinitionSql,
   primaryKeysInfoSql,
   checkConstraintsSql,
@@ -733,10 +724,5 @@ export const postgres: DataSourcesAPI = {
   supportedFeatures,
   violationActions,
   defaultRedirectSchema,
-  generateInsertRequest,
-  generateRowsCountRequest,
   getPartitionDetailsSql,
-  generateEditRowRequest,
-  generateDeleteRowRequest,
-  generateBulkDeleteRowRequest,
 };

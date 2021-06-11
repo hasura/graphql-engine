@@ -1,8 +1,7 @@
 module Hasura.RQL.IR.Update where
 
-import           Hasura.Prelude
 
-import           Data.Kind                (Type)
+import           Hasura.Prelude
 
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.Returning
@@ -11,7 +10,7 @@ import           Hasura.RQL.Types.Column
 import           Hasura.SQL.Backend
 
 
-data AnnUpdG (b :: BackendType) (r :: BackendType -> Type) v
+data AnnUpdG (b :: BackendType) v
   = AnnUpd
   { uqp1Table   :: !(TableName b)
   , uqp1OpExps  :: ![(Column b, UpdOpExpG v)]
@@ -20,21 +19,20 @@ data AnnUpdG (b :: BackendType) (r :: BackendType -> Type) v
   -- we don't prepare the arguments for returning
   -- however the session variable can still be
   -- converted as desired
-  , uqp1Output  :: !(MutationOutputG b r v)
+  , uqp1Output  :: !(MutationOutputG b v)
   , uqp1AllCols :: ![ColumnInfo b]
   }
 
-type AnnUpd b = AnnUpdG b (Const Void) (SQLExpression b)
+type AnnUpd b = AnnUpdG b (SQLExpression b)
 
-data UpdOpExpG v
-  = UpdSet !v
-  | UpdInc !v
-  | UpdAppend !v
-  | UpdPrepend !v
-  | UpdDeleteKey !v
-  | UpdDeleteElem !v
-  | UpdDeleteAtPath ![v]
-  deriving (Functor, Foldable, Traversable, Generic, Data)
+data UpdOpExpG v = UpdSet !v
+                 | UpdInc !v
+                 | UpdAppend !v
+                 | UpdPrepend !v
+                 | UpdDeleteKey !v
+                 | UpdDeleteElem !v
+                 | UpdDeleteAtPath ![v]
+                 deriving (Functor, Foldable, Traversable, Generic, Data)
 
 
 -- NOTE: This function can be improved, because we use
@@ -54,8 +52,8 @@ updateOperatorText (UpdDeleteAtPath _) = "_delete_at_path"
 traverseAnnUpd
   :: (Applicative f, Backend backend)
   => (a -> f b)
-  -> AnnUpdG backend r a
-  -> f (AnnUpdG backend r b)
+  -> AnnUpdG backend a
+  -> f (AnnUpdG backend b)
 traverseAnnUpd f annUpd =
   AnnUpd tn
   <$> traverse (traverse $ traverse f) opExps

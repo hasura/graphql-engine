@@ -60,6 +60,7 @@ export const getFetchTablesListQuery = (options: {
     'pgn.nspname',
     'and'
   );
+
   return `
   SELECT
     COALESCE(Json_agg(Row_to_json(info)), '[]' :: json) AS tables
@@ -95,9 +96,11 @@ export const getFetchTablesListQuery = (options: {
       COALESCE(json_agg(DISTINCT row_to_json(isc) :: jsonb || jsonb_build_object('comment', col_description(pga.attrelid, pga.attnum))) filter (WHERE isc.column_name IS NOT NULL), '[]' :: json) AS columns,
       COALESCE(json_agg(DISTINCT row_to_json(ist) :: jsonb || jsonb_build_object('comment', obj_description(pgt.oid))) filter (WHERE ist.trigger_name IS NOT NULL), '[]' :: json) AS triggers,
       row_to_json(isv) AS view_info
-      FROM partitions, pg_class as pgc  
-      INNER JOIN pg_namespace as pgn
-        ON pgc.relnamespace = pgn.oid
+
+    FROM pg_class as pgc
+    INNER JOIN pg_namespace as pgn
+      ON pgc.relnamespace = pgn.oid
+
     /* columns */
     /* This is a simplified version of how information_schema.columns was
     ** implemented in postgres 9.5, but modified to support materialized
@@ -396,7 +399,7 @@ export const getCreateTableQueries = (
 
   // add comment
   if (tableComment && tableComment !== '') {
-    sqlCreateTable += `COMMENT ON TABLE "${currentSchema}"."${tableName}" IS ${sqlEscapeText(
+    sqlCreateTable += `COMMENT ON TABLE "${currentSchema}".${tableName} IS ${sqlEscapeText(
       tableComment
     )};`;
   }
@@ -794,26 +797,6 @@ export const getCreatePkSql = ({
     add constraint "${constraintName}"
     primary key (${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')});`;
 };
-export const getAlterPkSql = ({
-  schemaName,
-  tableName,
-  selectedPkColumns,
-  constraintName,
-}: {
-  schemaName: string;
-  tableName: string;
-  selectedPkColumns: string[];
-  constraintName: string; // compulsory for PG
-}) => {
-  return `BEGIN TRANSACTION;
-ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT "${constraintName}";
-
-ALTER TABLE "${schemaName}"."${tableName}"
-    ADD CONSTRAINT "${constraintName}" PRIMARY KEY (${selectedPkColumns
-    .map(pkc => `"${pkc}"`)
-    .join(', ')});
-COMMIT TRANSACTION;`;
-};
 
 const trackableFunctionsWhere = `
 AND has_variadic = FALSE
@@ -1206,6 +1189,25 @@ export const getEventInvocationInfoByIDSql = (
  *
  * `columns` is an array of column names.
  */
+// export const getDatabaseInfo = `
+// SELECT
+// 	COALESCE(json_agg(row_to_json(info)), '[]'::JSON)
+// FROM (
+// 	SELECT
+// 		table_name::text,
+// 		table_schema::text,
+// 		ARRAY_AGG("column_name"::text) as columns
+// 	FROM
+// 		information_schema.columns
+// 	WHERE
+// 		table_schema NOT in('information_schema', 'pg_catalog', 'hdb_catalog')
+// 		AND table_schema NOT LIKE 'pg_toast%'
+// 		AND table_schema NOT LIKE 'pg_temp_%'
+// 	GROUP BY
+// 		table_name,
+// 		table_schema) AS info;
+// `;
+
 export const getDatabaseInfo = `
 SELECT
 	COALESCE(json_agg(row_to_json(info)), '[]'::JSON)

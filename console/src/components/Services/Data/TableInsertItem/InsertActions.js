@@ -7,21 +7,16 @@ import {
   showNotification,
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
-import {
-  getEnumColumnMappings,
-  dataSource,
-  findTable,
-} from '../../../../dataSources';
+import { getEnumColumnMappings, dataSource } from '../../../../dataSources';
 import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
-import { isStringArray } from '../../../Common/utils/jsUtils';
 import {
   getInsertUpQuery,
   getInsertDownQuery,
 } from '../../../Common/utils/v1QueryUtils';
+import { isStringArray } from '../../../Common/utils/jsUtils';
 import { makeMigrationCall } from '../DataActions';
 import { removeAll } from 'react-notification-system-redux';
 import { getNotificationDetails } from '../../Common/Notification';
-import { getTableConfiguration } from '../TableBrowseRows/utils';
 
 const I_SET_CLONE = 'InsertItem/I_SET_CLONE';
 const I_RESET = 'InsertItem/I_RESET';
@@ -92,27 +87,26 @@ const insertItem = (tableName, colValues, isMigration = false) => {
     /* Type all the values correctly */
     dispatch({ type: I_ONGOING_REQ });
     const insertObject = {};
-    const { tables, metadata } = getState();
-    const { currentSchema, currentDataSource, allSchemas } = tables;
+    const state = getState();
+    const { currentSchema, currentDataSource } = state.tables;
     const tableDef = { name: tableName, schema: currentSchema };
-    const sources = metadata.metadataObject?.sources;
-    const tableConfiguration = getTableConfiguration(tables, sources);
-    const currentTableInfo = findTable(allSchemas, tableDef);
-    if (!currentTableInfo) return;
+
+    const currentTableInfo = state.tables.allSchemas.find(
+      t => t.table_name === tableName && t.table_schema === currentSchema
+    );
     const columns = currentTableInfo.columns;
     let error = false;
     let errorMessage = '';
     Object.keys(colValues).map(colName => {
       const colSchema = columns.find(x => x.column_name === colName);
       const colType = colSchema.data_type;
-      const colValue = colValues[colName];
-
       if (Reals.indexOf(colType) > 0) {
-        insertObject[colName] = parseFloat(colValue, 10) || colValue;
+        insertObject[colName] =
+          parseFloat(colValues[colName], 10) || colValues[colName];
       } else if (colType === dataSource.columnDataTypes.BOOLEAN) {
-        if (colValue === 'true') {
+        if (colValues[colName] === 'true') {
           insertObject[colName] = true;
-        } else if (colValue === 'false') {
+        } else if (colValues[colName] === 'false') {
           insertObject[colName] = false;
         } else {
           insertObject[colName] = null;
@@ -122,24 +116,32 @@ const insertItem = (tableName, colValues, isMigration = false) => {
         colType === dataSource.columnDataTypes.JSONB
       ) {
         try {
-          const val = JSON.parse(colValue);
+          const val = JSON.parse(colValues[colName]);
           insertObject[colName] = val;
         } catch (e) {
-          errorMessage = `${colName} :: could not read ${colValue} as a valid JSON object/array`;
+          errorMessage =
+            colName +
+            ' :: could not read ' +
+            colValues[colName] +
+            ' as a valid JSON object/array';
           error = true;
         }
       } else if (
         colType === dataSource.columnDataTypes.ARRAY &&
-        isStringArray(colValue)
+        isStringArray(colValues[colName])
       ) {
         try {
-          const arr = JSON.parse(colValue);
+          const arr = JSON.parse(colValues[colName]);
           insertObject[colName] = dataSource.arrayToPostgresArray(arr);
         } catch {
-          errorMessage = `${colName} :: could not read ${colValue} as a valid JSON object/array`;
+          errorMessage =
+            colName +
+            ' :: could not read ' +
+            colValues[colName] +
+            ' as a valid array';
         }
       } else {
-        insertObject[colName] = colValue;
+        insertObject[colName] = colValues[colName];
       }
     });
 
@@ -151,27 +153,22 @@ const insertItem = (tableName, colValues, isMigration = false) => {
       });
     }
     const returning = columns.map(col => col.column_name);
-    if (!dataSource.generateInsertRequest) return;
-    const {
-      getInsertRequestBody,
-      processInsertData,
-      endpoint: url,
-    } = dataSource.generateInsertRequest();
-
-    const reqBody = getInsertRequestBody({
-      source: currentDataSource,
-      tableDef,
-      tableConfiguration,
-      insertObject,
-      returning,
-    });
-
+    const reqBody = {
+      type: 'insert',
+      args: {
+        source: currentDataSource,
+        table: tableDef,
+        objects: [insertObject],
+        returning,
+      },
+    };
     const options = {
       method: 'POST',
       credentials: globalCookiePolicy,
       headers: dataHeaders(getState),
       body: JSON.stringify(reqBody),
     };
+    const url = Endpoints.query;
 
     const migrationSuccessCB = (affectedRows, returnedFields) => {
       const detailsAction = {
@@ -208,26 +205,19 @@ const insertItem = (tableName, colValues, isMigration = false) => {
       requestAction(url, options, I_REQUEST_SUCCESS, I_REQUEST_ERROR)
     ).then(
       data => {
-        const { affectedRows, returnedFields } = processInsertData(
-          data,
-          tableConfiguration,
-          {
-            currentSchema,
-            currentTable: tableName,
-          }
-        );
+        const affectedRows = data.affected_rows;
         if (isMigration) {
           dispatch(
             insertItemAsMigration(
               tableDef,
-              returnedFields,
+              data.returning[0],
               currentTableInfo.primary_key,
               columns,
-              () => migrationSuccessCB(affectedRows, returnedFields)
+              () => migrationSuccessCB(affectedRows, data.returning[0])
             )
           );
         } else {
-          migrationSuccessCB(affectedRows, returnedFields);
+          migrationSuccessCB(affectedRows, data.returning[0]);
         }
       },
 

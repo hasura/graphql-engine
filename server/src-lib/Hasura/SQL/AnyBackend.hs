@@ -5,7 +5,6 @@ module Hasura.SQL.AnyBackend
   ( AnyBackend
   , mkAnyBackend
   , mapBackend
-  , traverseBackend
   , dispatchAnyBackend
   , dispatchAnyBackend'
   , dispatchAnyBackendArrow
@@ -160,38 +159,6 @@ mapBackend e f =
       let matchPattern = ConP consName [VarP $ mkName "x"]
       -- the body of the match: `FooValue (f x)`
       matchBody <- [| $(pure $ ConE consName) (f x) |]
-      pure $ Match matchPattern (NormalB matchBody) []
-    -- the expression on which we do the case
-    caseExpr <- [| e |]
-    -- return the the expression of the case switch
-    pure $ CaseE caseExpr matches
-   )
-
--- | Traverse an `AnyBackend i` into an `f (AnyBackend j)`.
-traverseBackend
- :: forall
-     (c :: BackendType -> Constraint)
-     (i :: BackendType -> Type)
-     (j :: BackendType -> Type)
-     f
-  . (AllBackendsSatisfy c, Applicative f)
- => AnyBackend i
- -> (forall b. c b => i b -> f (j b))
- -> f (AnyBackend j)
-traverseBackend e f =
-  -- generates a case switch that, for each constructor, applies the provided function
-  --   case e of
-  --     FooValue x -> FooValue <$> f x
-  --     BarValue x -> BarValue <$> f x
-  $(do
-    -- we create a case match for each backend
-    matches <- forEachBackend \b -> do
-      -- the name of the constructor
-      let consName = getBackendValueName b
-      -- the patterrn we match: `FooValue x`
-      let matchPattern = ConP consName [VarP $ mkName "x"]
-      -- the body of the match: `FooValue <$> f x`
-      matchBody <- [| $(pure $ ConE consName) <$> f x |]
       pure $ Match matchPattern (NormalB matchBody) []
     -- the expression on which we do the case
     caseExpr <- [| e |]

@@ -67,7 +67,7 @@ class PostgresSchema (pgKind :: PostgresKind) where
     -> G.Name
     -> NESeq (ColumnInfo ('Postgres pgKind))
     -> SelPermInfo ('Postgres pgKind)
-    -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+    -> m [FieldParser n (QueryRootField UnpreparedValue)]
   pgkBuildFunctionRelayQueryFields
     :: BS.MonadBuildSchema ('Postgres pgKind) r m n
     => SourceName
@@ -77,7 +77,7 @@ class PostgresSchema (pgKind :: PostgresKind) where
     -> TableName ('Postgres pgKind)
     -> NESeq (ColumnInfo ('Postgres pgKind))
     -> SelPermInfo ('Postgres pgKind)
-    -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+    -> m [FieldParser n (QueryRootField UnpreparedValue)]
   pgkRelayExtension
     :: Maybe (XRelay ('Postgres pgKind))
   pgkNode
@@ -161,7 +161,7 @@ buildTableRelayQueryFields
   -> G.Name
   -> NESeq (ColumnInfo ('Postgres pgKind))
   -> SelPermInfo  ('Postgres pgKind)
-  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
 buildTableRelayQueryFields sourceName sourceInfo tableName tableInfo gqlName pkeyColumns selPerms = do
   let
     mkRF = RFDB sourceName
@@ -184,7 +184,7 @@ buildFunctionRelayQueryFields
   -> TableName    ('Postgres pgKind)
   -> NESeq (ColumnInfo ('Postgres pgKind))
   -> SelPermInfo  ('Postgres pgKind)
-  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
 buildFunctionRelayQueryFields sourceName sourceInfo functionName functionInfo tableName pkeyColumns selPerms = do
   funcName <- functionGraphQLName @('Postgres pgKind) functionName `onLeft` throwError
   let
@@ -369,135 +369,135 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
 
     -- Ops for Raster types
     , guard (isScalarColumnWhere (== PGRaster) columnType) *>
-      [ mkBoolOperator collapseIfNull $$(G.litName "_st_intersects_rast")
+      [ P.fieldOptional $$(G.litName "_st_intersects_rast")
         Nothing
         (ABackendSpecific . ASTIntersectsRast . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_st_intersects_nband_geom")
+      , P.fieldOptional $$(G.litName "_st_intersects_nband_geom")
         Nothing
         (ABackendSpecific . ASTIntersectsNbandGeom <$> ingInputParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_st_intersects_geom_nband")
+      , P.fieldOptional $$(G.litName "_st_intersects_geom_nband")
         Nothing
         (ABackendSpecific . ASTIntersectsGeomNband <$> ignInputParser)
       ]
 
     -- Ops for String like types
     , guard (isScalarColumnWhere isStringType columnType) *>
-      [ mkBoolOperator collapseIfNull $$(G.litName "_like")
+      [ P.fieldOptional $$(G.litName "_like")
         (Just "does the column match the given pattern")
         (ALIKE     . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_nlike")
+      , P.fieldOptional $$(G.litName "_nlike")
         (Just "does the column NOT match the given pattern")
         (ANLIKE    . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_ilike")
+      , P.fieldOptional $$(G.litName "_ilike")
         (Just "does the column match the given case-insensitive pattern")
         (ABackendSpecific . AILIKE . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_nilike")
+      , P.fieldOptional $$(G.litName "_nilike")
         (Just "does the column NOT match the given case-insensitive pattern")
         (ABackendSpecific . ANILIKE . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_similar")
+      , P.fieldOptional $$(G.litName "_similar")
         (Just "does the column match the given SQL regular expression")
         (ABackendSpecific . ASIMILAR  . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_nsimilar")
+      , P.fieldOptional $$(G.litName "_nsimilar")
         (Just "does the column NOT match the given SQL regular expression")
         (ABackendSpecific . ANSIMILAR . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_regex")
+      , P.fieldOptional $$(G.litName "_regex")
         (Just "does the column match the given POSIX regular expression, case sensitive")
         (ABackendSpecific . AREGEX  . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_iregex")
+      , P.fieldOptional $$(G.litName "_iregex")
         (Just "does the column match the given POSIX regular expression, case insensitive")
         (ABackendSpecific . AIREGEX . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_nregex")
+      , P.fieldOptional $$(G.litName "_nregex")
         (Just "does the column NOT match the given POSIX regular expression, case sensitive")
         (ABackendSpecific . ANREGEX  . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_niregex")
+      , P.fieldOptional $$(G.litName "_niregex")
         (Just "does the column NOT match the given POSIX regular expression, case insensitive")
         (ABackendSpecific . ANIREGEX . mkParameter <$> typedParser)
       ]
 
     -- Ops for JSONB type
     , guard (isScalarColumnWhere (== PGJSONB) columnType) *>
-      [ mkBoolOperator collapseIfNull $$(G.litName "_contains")
+      [ P.fieldOptional $$(G.litName "_contains")
         (Just "does the column contain the given json value at the top level")
         (ABackendSpecific . AContains    . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_contained_in")
+      , P.fieldOptional $$(G.litName "_contained_in")
         (Just "is the column contained in the given json value")
         (ABackendSpecific . AContainedIn . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_has_key")
+      , P.fieldOptional $$(G.litName "_has_key")
         (Just "does the string exist as a top-level key in the column")
         (ABackendSpecific . AHasKey      . mkParameter <$> nullableTextParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_has_keys_any")
+      , P.fieldOptional $$(G.litName "_has_keys_any")
         (Just "do any of these strings exist as top-level keys in the column")
         (ABackendSpecific . AHasKeysAny . mkListLiteral (ColumnScalar PGText) <$> textListParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_has_keys_all")
+      , P.fieldOptional $$(G.litName "_has_keys_all")
         (Just "do all of these strings exist as top-level keys in the column")
         (ABackendSpecific . AHasKeysAll . mkListLiteral (ColumnScalar PGText) <$> textListParser)
       ]
 
     -- Ops for Geography type
     , guard (isScalarColumnWhere (== PGGeography) columnType) *>
-      [ mkBoolOperator collapseIfNull $$(G.litName "_st_intersects")
+      [ P.fieldOptional $$(G.litName "_st_intersects")
         (Just "does the column spatially intersect the given geography value")
         (ABackendSpecific . ASTIntersects . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_st_d_within")
+      , P.fieldOptional $$(G.litName "_st_d_within")
         (Just "is the column within a given distance from the given geography value")
         (ABackendSpecific . ASTDWithinGeog <$> geogInputParser)
       ]
 
     -- Ops for Geometry type
     , guard (isScalarColumnWhere (== PGGeometry) columnType) *>
-      [ mkBoolOperator collapseIfNull $$(G.litName "_st_contains")
+      [ P.fieldOptional $$(G.litName "_st_contains")
         (Just "does the column contain the given geometry value")
         (ABackendSpecific . ASTContains   . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_st_crosses")
+      , P.fieldOptional $$(G.litName "_st_crosses")
         (Just "does the column cross the given geometry value")
         (ABackendSpecific . ASTCrosses    . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_st_equals")
+      , P.fieldOptional $$(G.litName "_st_equals")
         (Just "is the column equal to given geometry value (directionality is ignored)")
         (ABackendSpecific . ASTEquals     . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_st_overlaps")
+      , P.fieldOptional $$(G.litName "_st_overlaps")
         (Just "does the column 'spatially overlap' (intersect but not completely contain) the given geometry value")
         (ABackendSpecific . ASTOverlaps   . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_st_touches")
+      , P.fieldOptional $$(G.litName "_st_touches")
         (Just "does the column have atleast one point in common with the given geometry value")
         (ABackendSpecific . ASTTouches    . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_st_within")
+      , P.fieldOptional $$(G.litName "_st_within")
         (Just "is the column contained in the given geometry value")
         (ABackendSpecific . ASTWithin     . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_st_intersects")
+      , P.fieldOptional $$(G.litName "_st_intersects")
         (Just "does the column spatially intersect the given geometry value")
         (ABackendSpecific . ASTIntersects . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_st_3d_intersects")
+      , P.fieldOptional $$(G.litName "_st_3d_intersects")
         (Just "does the column spatially intersect the given geometry value in 3D")
         (ABackendSpecific . AST3DIntersects . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_st_d_within")
+      , P.fieldOptional $$(G.litName "_st_d_within")
         (Just "is the column within a given distance from the given geometry value")
         (ABackendSpecific . ASTDWithinGeom <$> geomInputParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_st_3d_d_within")
+      , P.fieldOptional $$(G.litName "_st_3d_d_within")
         (Just "is the column within a given 3D distance from the given geometry value")
         (ABackendSpecific . AST3DDWithinGeom <$> geomInputParser)
       ]
 
     -- Ops for Ltree type
     , guard (isScalarColumnWhere (== PGLtree) columnType) *>
-      [ mkBoolOperator collapseIfNull $$(G.litName "_ancestor")
+      [ P.fieldOptional $$(G.litName "_ancestor")
         (Just "is the left argument an ancestor of right (or equal)?")
         (ABackendSpecific . AAncestor        . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_ancestor_any")
+      , P.fieldOptional $$(G.litName "_ancestor_any")
         (Just "does array contain an ancestor of `ltree`?")
         (ABackendSpecific . AAncestorAny     . mkListLiteral columnType <$> columnListParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_descendant")
+      , P.fieldOptional $$(G.litName "_descendant")
         (Just "is the left argument a descendant of right (or equal)?")
         (ABackendSpecific . ADescendant      . mkParameter <$> typedParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_descendant_any")
+      , P.fieldOptional $$(G.litName "_descendant_any")
         (Just "does array contain a descendant of `ltree`?")
         (ABackendSpecific . ADescendantAny   . mkListLiteral columnType <$> columnListParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_matches")
+      , P.fieldOptional $$(G.litName "_matches")
         (Just "does `ltree` match `lquery`?")
         (ABackendSpecific . AMatches         . mkParameter <$> lqueryParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_matches_any")
+      , P.fieldOptional $$(G.litName "_matches_any")
         (Just "does `ltree` match any `lquery` in array?")
         (ABackendSpecific . AMatchesAny      . mkListLiteral (ColumnScalar PGLquery) <$> textListParser)
-      , mkBoolOperator collapseIfNull $$(G.litName "_matches_fulltext")
+      , P.fieldOptional $$(G.litName "_matches_fulltext")
         (Just "does `ltree` match `ltxtquery`?")
         (ABackendSpecific . AMatchesFulltext . mkParameter <$> ltxtqueryParser)
       ]

@@ -30,7 +30,6 @@ import {
   mergeDataMssql,
   mergeLoadSchemaDataPostgres,
   mergeDataBigQuery,
-  mergeDataCitus,
 } from './mergeData';
 import _push from './push';
 import { convertArrayToJson } from './TableModify/utils';
@@ -44,6 +43,10 @@ import {
   getTablesFromAllSources,
   getTablesInfoSelector,
 } from '../../../metadata/selector';
+import {
+  checkFeatureSupport,
+  READ_ONLY_RUN_SQL_QUERIES,
+} from '../../../helpers/versionUtils';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import { services } from '../../../dataSources/services';
 import insertReducer from './TableInsertItem/InsertActions';
@@ -188,13 +191,13 @@ const loadSchema = configOptions => {
           dataSource?.primaryKeysInfoSql(configOptions) || '',
           source,
           false,
-          true
+          checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
         ),
         getRunSqlQuery(
           dataSource?.uniqueKeysSql(configOptions) || '',
           source,
           false,
-          true
+          checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
         ),
       ],
     };
@@ -205,7 +208,7 @@ const loadSchema = configOptions => {
           dataSource?.checkConstraintsSql(configOptions) || '',
           source,
           false,
-          true
+          checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
         )
       );
     }
@@ -227,9 +230,6 @@ const loadSchema = configOptions => {
           switch (currentDriver) {
             case 'postgres':
               mergedData = mergeLoadSchemaDataPostgres(data, metadataTables);
-              break;
-            case 'citus':
-              mergedData = mergeDataCitus(data, metadataTables);
               break;
             case 'mssql':
               mergedData = mergeDataMssql(data, metadataTables);
@@ -277,7 +277,7 @@ const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
     return;
   }
   const sql = dataSource.getAdditionalColumnsInfoQuerySql(schemaName);
-  const query = getRunSqlQuery(sql, currentSource, false, true);
+  const query = getRunSqlQuery(sql, currentSource);
 
   const options = {
     credentials: globalCookiePolicy,
@@ -356,7 +356,7 @@ const fetchDataInit = (source, driver) => (dispatch, getState) => {
     dataSource.schemaListSql(schemaFilter),
     currentSource,
     false,
-    true,
+    false,
     driver
   );
 
@@ -404,15 +404,11 @@ const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
     args: [
       getRunSqlQuery(
         dataSource.getFunctionDefinitionSql(fnSchema, null, 'trackable'),
-        source,
-        false,
-        true
+        source
       ),
       getRunSqlQuery(
         dataSource.getFunctionDefinitionSql(fnSchema, null, 'non-trackable'),
-        source,
-        false,
-        true
+        source
       ),
     ],
   };
@@ -472,9 +468,7 @@ const fetchSchemaList = () => (dispatch, getState) => {
   const { schemaFilter } = getState().tables;
   const query = getRunSqlQuery(
     dataSource.schemaListSql(schemaFilter),
-    currentSource,
-    false,
-    true
+    currentSource
   );
 
   const options = {
@@ -510,7 +504,7 @@ export const getSchemaList = (sourceType, sourceName) => (
 ) => {
   const url = Endpoints.query;
   const sql = services[sourceType].schemaListSql();
-  const query = getRunSqlQuery(sql, sourceName, false, true);
+  const query = getRunSqlQuery(sql, sourceName);
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -589,7 +583,7 @@ export const getDatabaseTableTypeInfoForAllSources = schemaRequests => (
   schemaRequests.forEach(({ sourceType = 'postgres', sourceName, tables }) => {
     if (!tables.length) return;
     const sql = services[sourceType].getTableInfo(tables);
-    bulkQueries.push(getRunSqlQuery(sql, sourceName, false, true, sourceType));
+    bulkQueries.push(getRunSqlQuery(sql, sourceName, false, false, sourceType));
   });
   const query = { type: 'bulk', version: 1, args: bulkQueries };
   const options = {

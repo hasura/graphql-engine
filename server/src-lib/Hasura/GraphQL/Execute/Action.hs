@@ -71,6 +71,7 @@ import           Hasura.Server.Utils                       (mkClientHeadersForwa
 import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
 
+
 fetchActionLogResponses
   :: (MonadError QErr m, MonadMetadataStorage (MetadataStorageT m), Foldable t)
   => t ActionId -> m (ActionLogResponseMap, Bool)
@@ -109,7 +110,7 @@ resolveActionExecution
   => Env.Environment
   -> L.Logger L.Hasura
   -> UserInfo
-  -> AnnActionExecution ('Postgres 'Vanilla) (Const Void) (UnpreparedValue ('Postgres 'Vanilla))
+  -> AnnActionExecution ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla))
   -> ActionExecContext
   -> ActionExecution
 resolveActionExecution env logger userInfo annAction execContext =
@@ -148,18 +149,14 @@ resolveActionExecution env logger userInfo annAction execContext =
         forwardClientHeaders resolvedWebhook handlerPayload timeout
 
 -- | Build action response from the Webhook JSON response when there are no relationships defined
-makeActionResponseNoRelations :: RS.AnnFieldsG b r v -> ActionWebhookResponse -> AO.Value
+makeActionResponseNoRelations :: RS.AnnFieldsG b v -> ActionWebhookResponse -> AO.Value
 makeActionResponseNoRelations annFields webhookResponse =
   let mkResponseObject obj =
         AO.object $ flip mapMaybe annFields $ \(fieldName, annField) ->
           let fieldText = getFieldNameTxt fieldName
           in (fieldText,) <$> case annField of
             RS.AFExpression t -> Just $ AO.String t
-            RS.AFColumn     c -> AO.toOrdered <$> Map.lookup (pgiName $ RS._acfInfo c) obj
             _                 -> AO.toOrdered <$> Map.lookup fieldText (mapKeys G.unName obj)
-                                -- ^ NOTE (Sam): This case would still not allow for aliased fields to be
-                                --   a part of the response. Also, seeing that none of the other `annField`
-                                --   types would be caught in the example, I've chosen to leave it as it is.
   in case webhookResponse of
     AWRArray objs -> AO.array $ map mkResponseObject objs
     AWRObject obj -> mkResponseObject obj
@@ -217,7 +214,7 @@ Resolving async action query happens in two steps;
 -- | See Note: [Resolving async action query]
 resolveAsyncActionQuery
   :: UserInfo
-  -> AnnActionAsyncQuery ('Postgres 'Vanilla) (Const Void) (UnpreparedValue ('Postgres 'Vanilla))
+  -> AnnActionAsyncQuery ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla))
   -> AsyncActionQueryExecution (UnpreparedValue ('Postgres 'Vanilla))
 resolveAsyncActionQuery userInfo annAction =
   case actionSource of
@@ -243,9 +240,9 @@ resolveAsyncActionQuery userInfo annAction =
               AsyncTypename t -> RS.AFExpression t
               AsyncOutput annFields ->
                 let inputTableArgument = RS.AETableRow $ Just $ Identifier "response_payload"
-                in RS.AFComputedField ()
-                   $ RS.CFSTable jsonAggSelect
-                   $ processOutputSelectionSet inputTableArgument outputType definitionList annFields stringifyNumerics
+                in RS.AFComputedField () $ RS.CFSTable jsonAggSelect $
+                   processOutputSelectionSet inputTableArgument outputType
+                   definitionList annFields stringifyNumerics
 
               AsyncId        -> mkAnnFldFromPGCol idColumn
               AsyncCreatedAt -> mkAnnFldFromPGCol createdAtColumn
@@ -481,9 +478,9 @@ processOutputSelectionSet
   :: RS.ArgumentExp ('Postgres 'Vanilla) v
   -> GraphQLType
   -> [(PGCol, PGScalarType)]
-  -> RS.AnnFieldsG ('Postgres 'Vanilla) r v
+  -> RS.AnnFieldsG ('Postgres 'Vanilla) v
   -> Bool
-  -> RS.AnnSimpleSelG ('Postgres 'Vanilla) r v
+  -> RS.AnnSimpleSelG ('Postgres 'Vanilla) v
 processOutputSelectionSet tableRowInput actionOutputType definitionList annotatedFields =
   RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs
   where

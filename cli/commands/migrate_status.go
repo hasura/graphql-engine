@@ -6,8 +6,6 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
-
 	"github.com/hasura/graphql-engine/cli/v2/util"
 
 	"github.com/hasura/graphql-engine/cli/v2"
@@ -54,10 +52,6 @@ type MigrateStatusOptions struct {
 }
 
 func (o *MigrateStatusOptions) Run() (*migrate.Status, error) {
-	if o.EC.Config.Version <= cli.V2 {
-		o.Source.Name = ""
-		o.Source.Kind = hasura.SourceKindPG
-	}
 	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Source.Name, o.Source.Kind)
 	if err != nil {
 		return nil, err

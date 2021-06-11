@@ -243,9 +243,8 @@ The following statement sets an index on ``name`` in the ``authors`` table.
       X-Hasura-Role: admin
 
       {
-         "type": "run_sql",
+         "type": "schema_run_sql",
          "args": {
-            "source": "<db-name>",
             "sql": "<create index statement>"
          }
       }

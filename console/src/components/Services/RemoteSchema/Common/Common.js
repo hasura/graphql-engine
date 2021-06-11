@@ -42,7 +42,6 @@ class Common extends React.Component {
       envName,
       timeoutConf,
       forwardClientHeaders,
-      comment,
       isNew = false,
     } = this.props;
     const { isModify } = this.props.editState;
@@ -76,11 +75,6 @@ class Common extends React.Component {
         <Tooltip id="tooltip-cascade">
           Configure timeout for your remote GraphQL server. Defaults to 60
           seconds.
-        </Tooltip>
-      ),
-      comment: (
-        <Tooltip id="tooltip-cascade">
-          A statement to help describe the remote schema in brief
         </Tooltip>
       ),
     };
@@ -136,7 +130,7 @@ class Common extends React.Component {
             value={name}
             data-key="name"
             onChange={this.handleInputChange.bind(this)}
-            disabled={!isNew}
+            disabled={isDisabled}
             required
             data-test="remote-schema-schema-name"
             pattern="^[a-zA-Z0-9-_]*$"
@@ -231,27 +225,6 @@ class Common extends React.Component {
         />
         <hr />
         {getTimeoutSection()}
-        <hr />
-        <div className={styles.subheading_text}>
-          Comment
-          <OverlayTrigger placement="right" overlay={tooltips.comment}>
-            <i className="fa fa-question-circle" aria-hidden="true" />
-          </OverlayTrigger>
-        </div>
-        <label
-          className={`${styles.inputLabel} radio-inline ${styles.padd_left_remove}`}
-        >
-          <input
-            className="form-control"
-            type="text"
-            placeholder="Comment"
-            value={comment}
-            data-key="comment"
-            onChange={this.handleInputChange.bind(this)}
-            disabled={isDisabled}
-            data-test="remote-schema-comment"
-          />
-        </label>
       </div>
     );
   }

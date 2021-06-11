@@ -15,76 +15,75 @@ module Hasura.GraphQL.Transport.WebSocket
 
 import           Hasura.Prelude
 
-import qualified Control.Concurrent.Async.Lifted.Safe         as LA
-import qualified Control.Concurrent.STM                       as STM
-import qualified Control.Monad.Trans.Control                  as MC
-import qualified Data.Aeson                                   as J
-import qualified Data.Aeson.Casing                            as J
-import qualified Data.Aeson.Ordered                           as JO
-import qualified Data.Aeson.TH                                as J
-import qualified Data.ByteString.Lazy                         as LBS
-import qualified Data.CaseInsensitive                         as CI
-import qualified Data.Dependent.Map                           as DM
-import qualified Data.Environment                             as Env
-import qualified Data.HashMap.Strict                          as Map
-import qualified Data.HashMap.Strict.InsOrd                   as OMap
-import qualified Data.List.NonEmpty                           as NE
-import qualified Data.Text                                    as T
-import qualified Data.Text.Encoding                           as TE
-import qualified Data.Time.Clock                              as TC
-import qualified Language.GraphQL.Draft.Syntax                as G
+import qualified Control.Concurrent.Async.Lifted.Safe        as LA
+import qualified Control.Concurrent.STM                      as STM
+import qualified Control.Monad.Trans.Control                 as MC
+import qualified Data.Aeson                                  as J
+import qualified Data.Aeson.Casing                           as J
+import qualified Data.Aeson.Ordered                          as JO
+import qualified Data.Aeson.TH                               as J
+import qualified Data.ByteString.Lazy                        as LBS
+import qualified Data.CaseInsensitive                        as CI
+import qualified Data.Dependent.Map                          as DM
+import qualified Data.Environment                            as Env
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.HashMap.Strict.InsOrd                  as OMap
+import qualified Data.List.NonEmpty                          as NE
+import qualified Data.Text                                   as T
+import qualified Data.Text.Encoding                          as TE
+import qualified Data.Time.Clock                             as TC
+import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified ListT
-import qualified Network.HTTP.Client                          as H
-import qualified Network.HTTP.Types                           as H
-import qualified Network.Wai.Extended                         as Wai
-import qualified Network.WebSockets                           as WS
-import qualified StmContainers.Map                            as STMMap
-import qualified System.Metrics.Gauge                         as EKG.Gauge
+import qualified Network.HTTP.Client                         as H
+import qualified Network.HTTP.Types                          as H
+import qualified Network.Wai.Extended                        as Wai
+import qualified Network.WebSockets                          as WS
+import qualified StmContainers.Map                           as STMMap
+import qualified System.Metrics.Gauge                        as EKG.Gauge
 
-import           Control.Concurrent.Extended                  (sleep)
+import           Control.Concurrent.Extended                 (sleep)
 import           Control.Exception.Lifted
 import           Data.String
 #ifndef PROFILING
 import           GHC.AssertNF
 #endif
 
-import qualified Hasura.GraphQL.Execute                       as E
-import qualified Hasura.GraphQL.Execute.Action                as EA
-import qualified Hasura.GraphQL.Execute.Backend               as EB
-import qualified Hasura.GraphQL.Execute.LiveQuery.Poll        as LQ
-import qualified Hasura.GraphQL.Execute.LiveQuery.State       as LQ
-import qualified Hasura.GraphQL.Execute.RemoteJoin            as RJ
-import qualified Hasura.GraphQL.Transport.WebSocket.Server    as WS
-import qualified Hasura.Logging                               as L
-import qualified Hasura.SQL.AnyBackend                        as AB
-import qualified Hasura.Server.Telemetry.Counters             as Telem
-import qualified Hasura.Tracing                               as Tracing
+import qualified Hasura.GraphQL.Execute                      as E
+import qualified Hasura.GraphQL.Execute.Action               as EA
+import qualified Hasura.GraphQL.Execute.Backend              as EB
+import qualified Hasura.GraphQL.Execute.LiveQuery.Poll       as LQ
+import qualified Hasura.GraphQL.Execute.LiveQuery.State      as LQ
+import qualified Hasura.GraphQL.Execute.RemoteJoin           as RJ
+import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
+import qualified Hasura.Logging                              as L
+import qualified Hasura.SQL.AnyBackend                       as AB
+import qualified Hasura.Server.Telemetry.Counters            as Telem
+import qualified Hasura.Tracing                              as Tracing
 
-import           Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
+import           Hasura.Backends.Postgres.Instances.Execute  (runPGMutationTransaction)
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
-import           Hasura.GraphQL.Parser.Directives             (cached)
-import           Hasura.GraphQL.Transport.Backend
-import           Hasura.GraphQL.Transport.HTTP                (MonadExecuteQuery (..),
-                                                               QueryCacheKey (..),
-                                                               ResultsFragment (..), buildRaw,
-                                                               coalescePostgresMutations,
-                                                               extractFieldFromResponse,
-                                                               filterVariablesFromQuery,
-                                                               runSessVarPred)
+import           Hasura.GraphQL.Parser.Directives            (cached)
+import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery (..),
+                                                              QueryCacheKey (..),
+                                                              ResultsFragment (..), buildRaw,
+                                                              coalescePostgresMutations,
+                                                              extractFieldFromResponse,
+                                                              filterVariablesFromQuery,
+                                                              runSessVarPred)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.GraphQL.Transport.Instances           ()
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.Metadata.Class
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
-import           Hasura.Server.Auth                           (AuthMode, UserAuthentication,
-                                                               resolveUserInfo)
+import           Hasura.Server.Auth                          (AuthMode, UserAuthentication,
+                                                              resolveUserInfo)
 import           Hasura.Server.Cors
-import           Hasura.Server.Init.Config                    (KeepAliveDelay (..),
-                                                               ServerMetrics (..))
-import           Hasura.Server.Types                          (RequestId, getRequestId)
-import           Hasura.Server.Version                        (HasVersion)
+import           Hasura.Server.Init.Config                   (KeepAliveDelay (..),
+                                                              ServerMetrics (..))
+import           Hasura.Server.Types                         (RequestId, getRequestId)
+import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
 
 
@@ -406,19 +405,11 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           sendSuccResp cachedResponseData $ LQ.LiveQueryMetadata 0
         Nothing -> do
           conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
-            E.ExecStepDB _headers exists remoteJoins -> doQErr $ do
+            E.ExecStepDB sourceName exists remoteJoins -> doQErr $ do
               (telemTimeIO_DT, resp) <-
-                AB.dispatchAnyBackend @BackendTransport exists
-                  \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
-                     runDBQuery @b
-                       requestId
-                       q
-                       fieldName
-                       userInfo
-                       logger
-                       sourceConfig
-                       tx
-                       genSql
+                AB.dispatchAnyBackend @EB.BackendExecute exists
+                  \(SourceConfigWith sourceConfig (QDBR db)) -> withElapsedTime $
+                    EB.executeQueryField requestId logger userInfo sourceName sourceConfig db
               finalResponse <-
                 maybe
                 (pure resp)
@@ -455,8 +446,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       case coalescePostgresMutations mutationPlan of
         -- we are in the aforementioned case; we circumvent the normal process
         Just (sourceConfig, pgMutations) -> do
-          resp <- runExceptT $ doQErr $
-            runPGMutationTransaction requestId q userInfo logger sourceConfig pgMutations
+          resp <- runExceptT $ doQErr $ withElapsedTime $
+            runPGMutationTransaction requestId logger userInfo sourceConfig undefined pgMutations
           -- we do not construct result fragments since we have only one result
           buildResult requestId resp \(telemTimeIO_DT, results) -> do
             let telemQueryType = Telem.Query
@@ -472,19 +463,12 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         Nothing -> do
           conclusion <- runExceptT $ forWithKey mutationPlan $ \fieldName -> \case
             -- Ignoring response headers since we can't send them over WebSocket
-            E.ExecStepDB _responseHeaders exists remoteJoins -> doQErr $ do
+            E.ExecStepDB sourceName exists remoteJoins -> doQErr $ do
               (telemTimeIO_DT, resp) <-
-                AB.dispatchAnyBackend @BackendTransport exists
-                  \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
-                       runDBMutation @b
-                         requestId
-                         q
-                         fieldName
-                         userInfo
-                         logger
-                         sourceConfig
-                         tx
-                         genSql
+                AB.dispatchAnyBackend @EB.BackendExecute exists
+                  \(SourceConfigWith sourceConfig (MDBR db)) -> do
+                      withElapsedTime $ EB.executeMutationField
+                        requestId logger userInfo undefined sourceName sourceConfig db
               finalResponse <-
                 maybe
                 (pure resp)
@@ -674,7 +658,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             subscriberMetadata = LQ.mkSubscriberMetadata (WS.getWSId wsConn) opId opName requestId
         -- NOTE!: we mask async exceptions higher in the call stack, but it's
         -- crucial we don't lose lqId after addLiveQuery returns successfully.
-        !lqId <- liftIO $ AB.dispatchAnyBackend @BackendTransport exists
+        !lqId <- liftIO $ AB.dispatchAnyBackend @EB.BackendExecute exists
           \(E.MultiplexedLiveQueryPlan liveQueryPlan) ->
             LQ.addLiveQuery logger (_wseServerMetrics serverEnv) subscriberMetadata lqMap sourceName parameterizedQueryHash opName requestId liveQueryPlan liveQOnChange
 #ifndef PROFILING

@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
@@ -42,7 +40,7 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			err := opts.Run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
-				return fmt.Errorf("operation failed \n%w", err)
+				return err
 			}
 			opts.EC.Logger.Info("Seeds planted")
 			return nil

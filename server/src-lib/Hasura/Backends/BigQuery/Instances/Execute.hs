@@ -8,13 +8,13 @@ import qualified Data.Aeson                                  as Aeson
 import qualified Data.HashMap.Strict.InsOrd                  as OMap
 import qualified Data.Text                                   as T
 import qualified Data.Vector                                 as V
+import qualified Hasura.Logging                              as L
 import qualified Language.GraphQL.Draft.Syntax               as G
 
 import qualified Hasura.Backends.BigQuery.DataLoader.Execute as DataLoader
 import qualified Hasura.Backends.BigQuery.DataLoader.Plan    as DataLoader
 import qualified Hasura.Backends.BigQuery.Types              as BigQuery
 import qualified Hasura.Base.Error                           as E
-import qualified Hasura.SQL.AnyBackend                       as AB
 import qualified Hasura.Tracing                              as Tracing
 
 import           Hasura.Backends.BigQuery.Plan
@@ -24,35 +24,44 @@ import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Parser
 import           Hasura.RQL.IR
 import           Hasura.RQL.Types
+import           Hasura.Server.Types                         (RequestId)
 import           Hasura.Session
 
 
 instance BackendExecute 'BigQuery where
-  type PreparedQuery    'BigQuery = Text
   type MultiplexedQuery 'BigQuery = Void
-  type ExecutionMonad   'BigQuery = Tracing.TraceT (ExceptT QErr IO)
 
-  mkDBQueryPlan = bqDBQueryPlan
-  mkDBMutationPlan = bqDBMutationPlan
-  mkDBSubscriptionPlan _ _ _ _ =
+  executeQueryField = bqDBQueryPlan
+  executeMutationField = bqDBMutationPlan
+  makeLiveQueryPlan _ _ _ _ =
     throwError $ E.internalError "Cannot currently perform subscriptions on BigQuery sources."
-  mkDBQueryExplain = bqDBQueryExplain
-  mkLiveQueryExplain _ =
+  explainQueryField = bqDBQueryExplain
+  explainLiveQuery _ =
     throwError $ E.internalError "Cannot currently retrieve query execution plans on BigQuery sources."
+  executeMultiplexedQuery = error "Not supported."
 
 
 -- query
 
+run :: (MonadIO m, MonadError QErr m) => ExceptT QErr IO a -> m a
+run action = do
+  result <- liftIO $ runExceptT action
+  result `onLeft` throwError
+
 bqDBQueryPlan
   :: forall m.
      ( MonadError E.QErr m
+     , MonadIO m
+     , Tracing.MonadTrace m
      )
-  => UserInfo
+  => RequestId
+  -> L.Logger L.Hasura
+  -> UserInfo
   -> SourceName
   -> SourceConfig 'BigQuery
-  -> QueryDB 'BigQuery (Const Void) (UnpreparedValue 'BigQuery)
-  -> m (DBStepInfo 'BigQuery)
-bqDBQueryPlan userInfo sourceName sourceConfig qrf = do
+  -> QueryDB 'BigQuery (UnpreparedValue 'BigQuery)
+  -> m EncJSON
+bqDBQueryPlan requestId logger userInfo sourceName sourceConfig qrf = do
   select <- planNoPlan userInfo qrf
   let (!headAndTail, !plannedActionsList) =
         DataLoader.runPlan
@@ -67,7 +76,7 @@ bqDBQueryPlan userInfo sourceName sourceConfig qrf = do
         case result of
           Left err        -> throw500WithDetail "dataLoader error" $ Aeson.toJSON $ show err
           Right recordSet -> pure $! recordSetToEncJSON (BigQuery.selectCardinality select) recordSet
-  pure $ DBStepInfo @'BigQuery sourceName sourceConfig (Just (DataLoader.drawActionsForest actionsForest)) action
+  Tracing.interpTraceT run action
 
 -- | Convert the dataloader's 'RecordSet' type to JSON.
 recordSetToEncJSON :: BigQuery.Cardinality -> DataLoader.RecordSet -> EncJSON
@@ -109,13 +118,15 @@ bqDBMutationPlan
   :: forall m.
      ( MonadError E.QErr m
      )
-  => UserInfo
+  => RequestId
+  -> L.Logger L.Hasura
+  -> UserInfo
   -> Bool
   -> SourceName
   -> SourceConfig 'BigQuery
-  -> MutationDB 'BigQuery (Const Void) (UnpreparedValue 'BigQuery)
-  -> m (DBStepInfo 'BigQuery)
-bqDBMutationPlan _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
+  -> MutationDB 'BigQuery (UnpreparedValue 'BigQuery)
+  -> m EncJSON
+bqDBMutationPlan _requestId _logger _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
   throw500 "mutations are not supported in BigQuery; this should be unreachable"
 
 
@@ -127,16 +138,11 @@ bqDBQueryExplain
   -> UserInfo
   -> SourceName
   -> SourceConfig 'BigQuery
-  -> QueryDB 'BigQuery (Const Void) (UnpreparedValue 'BigQuery)
-  -> m (AB.AnyBackend DBStepInfo)
+  -> QueryDB 'BigQuery (UnpreparedValue 'BigQuery)
+  -> m EncJSON
 bqDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
   actionsForest <- planToForest userInfo qrf
-  pure
-    $ AB.mkAnyBackend
-    $ DBStepInfo @'BigQuery sourceName sourceConfig Nothing
-    $ pure
-    $ encJFromJValue
-    $ ExplainPlan
-        fieldName
-        (Just $ DataLoader.drawActionsForestSQL actionsForest)
-        (Just $ T.lines $ DataLoader.drawActionsForest actionsForest)
+  pure $ encJFromJValue $ ExplainPlan
+    fieldName
+    (Just $ DataLoader.drawActionsForestSQL actionsForest)
+    (Just $ T.lines $ DataLoader.drawActionsForest actionsForest)

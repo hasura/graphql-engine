@@ -9,11 +9,7 @@ import {
   FrequentlyUsedColumn,
   ViolationActions,
 } from '../../types';
-import {
-  generateTableRowRequest,
-  operators,
-  generateRowsCountRequest,
-} from './utils';
+import { generateTableRowRequest, operators } from './utils';
 
 const permissionColumnDataTypes = {
   character: [
@@ -81,7 +77,7 @@ const columnDataTypes = {
 };
 
 // eslint-disable-next-line no-useless-escape
-const createSQLRegex = /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<nameWithSchema>\"?\w+\"?)|(?<name>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim;
+const createSQLRegex = /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<tableWithSchema>\"?\w+\"?)|(?<table>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim;
 
 export const displayTableName = (table: Table) => {
   const tableName = table.table_name;
@@ -116,7 +112,7 @@ export const supportedFeatures: SupportedFeaturesType = {
     browse: {
       enabled: true,
       customPagination: true,
-      aggregation: true,
+      aggregation: false,
     },
     insert: {
       enabled: false,
@@ -712,26 +708,6 @@ FROM sys.objects as obj
     ADD CONSTRAINT "${constraintName}"
     PRIMARY KEY (${selectedPkColumns.map(pkc => `"${pkc}"`).join(',')})`;
   },
-  getAlterPkSql: ({
-    schemaName,
-    tableName,
-    selectedPkColumns,
-    constraintName,
-  }: {
-    schemaName: string;
-    tableName: string;
-    selectedPkColumns: string[];
-    constraintName: string; // compulsory for PG
-  }) => {
-    return `BEGIN TRANSACTION;
-    ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT "${constraintName}";
-    ALTER TABLE "${schemaName}"."${tableName}"
-      ADD CONSTRAINT "${constraintName}" PRIMARY KEY (${selectedPkColumns
-      .map(pkc => `"${pkc}"`)
-      .join(', ')});
-    
-    COMMIT TRANSACTION;`;
-  },
   getFunctionDefinitionSql: null,
   primaryKeysInfoSql: ({ schemas }) => {
     let whereClause = '';
@@ -903,5 +879,4 @@ WHERE
   supportedFeatures,
   violationActions,
   defaultRedirectSchema,
-  generateRowsCountRequest,
 };

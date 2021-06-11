@@ -25,51 +25,49 @@ module Hasura.GraphQL.Transport.HTTP
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                                   as J
-import qualified Data.Aeson.Ordered                           as JO
-import qualified Data.ByteString.Lazy                         as LBS
-import qualified Data.Dependent.Map                           as DM
-import qualified Data.Environment                             as Env
-import qualified Data.HashMap.Strict.InsOrd                   as OMap
-import qualified Data.Text                                    as T
-import qualified Language.GraphQL.Draft.Syntax                as G
-import qualified Network.HTTP.Types                           as HTTP
-import qualified Network.Wai.Extended                         as Wai
+import qualified Data.Aeson                                 as J
+import qualified Data.Aeson.Ordered                         as JO
+import qualified Data.ByteString.Lazy                       as LBS
+import qualified Data.Dependent.Map                         as DM
+import qualified Data.Environment                           as Env
+import qualified Data.HashMap.Strict.InsOrd                 as OMap
+import qualified Data.Text                                  as T
+import qualified Language.GraphQL.Draft.Syntax              as G
+import qualified Network.HTTP.Types                         as HTTP
+import qualified Network.Wai.Extended                       as Wai
 
-import           Control.Lens                                 (Traversal', toListOf)
-import           Control.Monad.Morph                          (hoist)
-import           Control.Monad.Trans.Control                  (MonadBaseControl)
+import           Control.Lens                               (toListOf)
+import           Control.Monad.Morph                        (hoist)
+import           Control.Monad.Trans.Control                (MonadBaseControl)
 
-import qualified Hasura.GraphQL.Execute                       as E
-import qualified Hasura.GraphQL.Execute.Action                as EA
-import qualified Hasura.GraphQL.Execute.Backend               as EB
-import qualified Hasura.GraphQL.Execute.RemoteJoin            as RJ
-import qualified Hasura.Logging                               as L
-import qualified Hasura.SQL.AnyBackend                        as AB
-import qualified Hasura.Server.Telemetry.Counters             as Telem
-import qualified Hasura.Tracing                               as Tracing
+import qualified Hasura.GraphQL.Execute                     as E
+import qualified Hasura.GraphQL.Execute.Action              as EA
+import qualified Hasura.GraphQL.Execute.Backend             as EB
+import qualified Hasura.GraphQL.Execute.RemoteJoin          as RJ
+import qualified Hasura.Logging                             as L
+import qualified Hasura.SQL.AnyBackend                      as AB
+import qualified Hasura.Server.Telemetry.Counters           as Telem
+import qualified Hasura.Tracing                             as Tracing
 
-import           Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
+import           Hasura.Backends.Postgres.Instances.Execute (runPGMutationTransaction)
 import           Hasura.Base.Error
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Logging                       (MonadQueryLog (logQueryLog),
-                                                               QueryLog (..), QueryLogKind (..))
+import           Hasura.GraphQL.Logging                     (MonadQueryLog (logQueryLog),
+                                                             QueryLog (..), QueryLogKind (..))
 import           Hasura.GraphQL.ParameterizedQueryHash
-import           Hasura.GraphQL.Parser.Column                 (UnpreparedValue (..))
-import           Hasura.GraphQL.Parser.Directives             (CachedDirective (..), cached)
-import           Hasura.GraphQL.Transport.Backend
+import           Hasura.GraphQL.Parser.Column               (UnpreparedValue (..))
+import           Hasura.GraphQL.Parser.Directives           (CachedDirective (..), cached)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.GraphQL.Transport.Instances           ()
 import           Hasura.HTTP
 import           Hasura.Metadata.Class
 import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 import           Hasura.Server.Init.Config
 import           Hasura.Server.Logging
-import           Hasura.Server.Types                          (RequestId)
-import           Hasura.Server.Version                        (HasVersion)
+import           Hasura.Server.Types                        (RequestId)
+import           Hasura.Server.Version                      (HasVersion)
 import           Hasura.Session
-import           Hasura.Tracing                               (MonadTrace, TraceT, trace)
+import           Hasura.Tracing                             (MonadTrace, TraceT, trace)
 
 
 data QueryCacheKey = QueryCacheKey
@@ -166,7 +164,7 @@ runSessVarPred = filterSessionVariables . unSessVarPred
 -- | Filter out only those session variables used by the query AST provided
 filterVariablesFromQuery
   :: Backend backend
-  => [RootField (QueryDBRoot UnpreparedValue UnpreparedValue) RemoteField (ActionQuery backend UnpreparedValue (UnpreparedValue backend)) d]
+  => [RootField (QueryDBRoot UnpreparedValue) c (ActionQuery backend (UnpreparedValue bet)) d]
   -> SessVarPred
 filterVariablesFromQuery query = fold $ rootToSessVarPreds =<< query
   where
@@ -174,25 +172,16 @@ filterVariablesFromQuery query = fold $ rootToSessVarPreds =<< query
       RFDB _ exists ->
         AB.dispatchAnyBackend @Backend exists \case
           SourceConfigWith _ (QDBR db) -> toPred <$> toListOf traverseQueryDB db
-      RFRemote remote -> match <$> toListOf (traverse . _SessionPresetVariable) remote
       RFAction actionQ -> toPred <$> toListOf traverseActionQuery actionQ
       _ -> []
-
-    _SessionPresetVariable :: Traversal' RemoteSchemaVariable SessionVariable
-    _SessionPresetVariable f (SessionPresetVariable a b c) =
-      (\a' -> SessionPresetVariable a' b c) <$> f a
-    _SessionPresetVariable _ x = pure x
 
     toPred :: UnpreparedValue bet -> SessVarPred
     -- if we see a reference to the whole session variables object,
     -- then we need to keep everything:
     toPred UVSession               = keepAllSessionVariables
     -- if we only see a specific session variable, we only need to keep that one:
-    toPred (UVSessionVar _type sv) = match sv
+    toPred (UVSessionVar _type sv) = SessVarPred $ \sv' _ -> sv == sv'
     toPred _                       = mempty
-
-    match :: SessionVariable -> SessVarPred
-    match sv = SessVarPred $ \sv' _ -> sv == sv'
 
 -- | Run (execute) a single GraphQL query
 runGQ
@@ -254,19 +243,11 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 
           Nothing -> do
             conclusion <- runExceptT $ forWithKey queryPlans $ \fieldName -> \case
-              E.ExecStepDB _headers exists remoteJoins -> doQErr $ do
+              E.ExecStepDB sourceName exists remoteJoins -> doQErr $ do
                 (telemTimeIO_DT, resp) <-
-                  AB.dispatchAnyBackend @BackendTransport exists
-                    \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
-                        runDBQuery @b
-                          reqId
-                          reqUnparsed
-                          fieldName
-                          userInfo
-                          logger
-                          sourceConfig
-                          tx
-                          genSql
+                  AB.dispatchAnyBackend @EB.BackendExecute exists
+                    \(SourceConfigWith sourceConfig (QDBR db)) -> withElapsedTime $
+                      EB.executeQueryField reqId logger userInfo sourceName sourceConfig db
                 finalResponse <-
                   maybe
                   (pure resp)
@@ -307,8 +288,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         case coalescePostgresMutations mutationPlans of
           -- we are in the aforementioned case; we circumvent the normal process
           Just (sourceConfig, pgMutations) -> do
-            resp <- runExceptT $ doQErr $
-              runPGMutationTransaction reqId reqUnparsed userInfo logger sourceConfig pgMutations
+            resp <- runExceptT $ doQErr $ withElapsedTime $
+              runPGMutationTransaction reqId logger userInfo sourceConfig undefined pgMutations
             -- we do not construct result fragments since we have only one result
             buildResult Telem.Mutation parameterizedQueryHash resp \(telemTimeIO_DT, results) ->
               let responseData = Right $ encJToLBS $ encJFromInsOrdHashMap $ OMap.mapKeys G.unName results
@@ -324,26 +305,19 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           -- we are not in the transaction case; proceeding normally
           Nothing -> do
             conclusion <- runExceptT $ forWithKey mutationPlans $ \fieldName -> \case
-              E.ExecStepDB responseHeaders exists remoteJoins -> doQErr $ do
+              E.ExecStepDB sourceName exists remoteJoins -> doQErr $ do
                 (telemTimeIO_DT, resp) <-
-                  AB.dispatchAnyBackend @BackendTransport exists
-                    \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
-                        runDBMutation @b
-                          reqId
-                          reqUnparsed
-                          fieldName
-                          userInfo
-                          logger
-                          sourceConfig
-                          tx
-                          genSql
+                  AB.dispatchAnyBackend @EB.BackendExecute exists
+                    \(SourceConfigWith sourceConfig (MDBR db)) -> do
+                        withElapsedTime $ EB.executeMutationField
+                          reqId logger userInfo undefined sourceName sourceConfig db
 
                 finalResponse <-
                   maybe
                   (pure resp)
                   (RJ.processRemoteJoins env httpManager reqHeaders userInfo $ encJToLBS resp)
                   remoteJoins
-                return $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse responseHeaders
+                return $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
               E.ExecStepRemote rsi gqlReq -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
                 runRemoteGQ httpManager fieldName rsi gqlReq
@@ -441,25 +415,24 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                                )
 
 coalescePostgresMutations
-  :: EB.ExecutionPlan
+  :: EB.ExecutionPlan MutationDBRoot
   -> Maybe ( SourceConfig ('Postgres 'Vanilla)
-           , InsOrdHashMap G.Name (EB.DBStepInfo ('Postgres 'Vanilla))
+           , InsOrdHashMap G.Name (MutationDBRoot UnpreparedValue ('Postgres 'Vanilla))
            )
 coalescePostgresMutations plan = do
   -- we extract the name and config of the first mutation root, if any
   (oneSourceName, oneSourceConfig) <- case toList plan of
-    (E.ExecStepDB _ exists _remoteJoins:_) -> AB.unpackAnyBackend @('Postgres 'Vanilla) exists <&> \dbsi ->
-      ( EB.dbsiSourceName   dbsi
-      , EB.dbsiSourceConfig dbsi
-      )
-    _                         -> Nothing
+    (E.ExecStepDB sourceName exists _remoteJoins:_) ->
+      AB.unpackAnyBackend @('Postgres 'Vanilla) exists <&>
+      \(SourceConfigWith sourceConfig (MDBR _db)) -> (sourceName, sourceConfig)
+    _                                             -> Nothing
   -- we then test whether all mutations are going to that same first source
   -- and that it is Postgres
   mutations <- for plan \case
-    E.ExecStepDB _ exists remoteJoins -> do
-      dbStepInfo <- AB.unpackAnyBackend @('Postgres 'Vanilla) exists
-      guard $ oneSourceName == EB.dbsiSourceName dbStepInfo && isNothing remoteJoins
-      Just dbStepInfo
+    E.ExecStepDB sourceName exists remoteJoins -> do
+      (SourceConfigWith _sourceConfig db) <- AB.unpackAnyBackend @('Postgres 'Vanilla) exists
+      guard $ oneSourceName == sourceName && isNothing remoteJoins
+      Just db
     _ -> Nothing
   Just (oneSourceConfig, mutations)
 

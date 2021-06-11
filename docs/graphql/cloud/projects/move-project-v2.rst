@@ -22,19 +22,12 @@ projects to ``v2.0`` by following this guide.
 
 (*You can find the older guide to do this process manually* :ref:`here <move_project_v2>`)
 
-What has changed?
------------------
+Pre-update steps
+----------------
 
-Check the :ref:`core updating to v2.0 guide <upgrade_hasura_v2>` and the
+Check the :ref:`core updating to v2.0 <upgrade_hasura_v2>` guide and the
 `release notes <https://github.com/hasura/graphql-engine/releases>`__ to see what new concepts,
 features and behaviour changes have been introduced in Hasura ``v2.0``.
-
-Note that Hasura v2 Cloud projects' metadata is now stored in metadata DBs managed by Hasura Cloud. Hence
-the new ``HASURA_GRAPHQL_METADATA_DATABASE_URL`` env var is not configurable on Hasura Cloud and is managed
-by Hasura Cloud itself.
-
-See the section on :ref:`hasura_v1_v2_compatibility` to use a Hasura v2 Cloud project like a Hasura v1
-Cloud project.
 
 Estimated time needed for update
 --------------------------------
@@ -46,7 +39,7 @@ Project availability during update
 
 During the update process Hasura Cloud will need to place your project in a "Maintenance mode" till the process is complete.
 
-When **Cloud maintenance mode** is enabled, all Hasura Cloud project actions such as updating env vars, transferring ownership, etc. will be disabled.
+When **Cloud maintenance mode** is enabled, all Hasura Cloud actions such as updating env vars, transferring ownership, etc. will be disabled.
 
 When **Server maintenance mode** is enabled, all actions updating the project metadata such as tracking tables, adding relationships, etc.
 will be disabled.
@@ -62,12 +55,17 @@ Post-update steps
   are working as expected post the update and the update did not cause any unexpected changes. Do get in touch
   with us in case you notice anything unexpected.
 
-- You can choose to unset the ``HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE`` env var that was added to your project
-  during the update to preserve a ``v1.3`` behaviour that was modified in ``v2.0``. :ref:`See details <hasura_v2_null_where_change>`.
-  We recommend moving to the new behaviour by unsetting the env var after verifying your project is not impacted by the change.
+- You can choose to remove the following env vars that were added to your project during the update
+  to preserve some ``v1.3`` behaviours that were modified in ``v2.0``. We recommend moving to the new behaviour
+  if your project is not impacted by the changes.
+
+  - ``HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE``
+
+  Check the :ref:`Behaviour changes <hasura_v2_behaviour_changes>` section of the core updating to v2.0 guide
+  for details regarding the behaviour changes.
 
 - Check the :ref:`Post update steps <hasura_v1_to_v2_post_update_steps>` section of the core updating to v2.0 guide
-  for other changes you should make post your project update.
+  for other changes you might wish to make post your project update.
 
 Update process
 --------------

@@ -281,9 +281,7 @@ export const fetchPostgresVersion = (dispatch, getState) => {
 
   const req = getRunSqlQuery(
     'SELECT version()',
-    getState().tables.currentDataSource,
-    false,
-    true
+    getState().tables.currentDataSource
   );
   const options = {
     method: 'POST',

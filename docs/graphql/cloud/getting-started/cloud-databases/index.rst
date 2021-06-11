@@ -19,11 +19,11 @@ new or existing database provided by specific cloud vendors.
    :maxdepth: 1
    :titlesonly:
 
-   Aiven Postgres <aiven>
-   AWS RDS Aurora Postgres <aws-aurora>
+   Aiven <aiven>
+   AWS RDS Aurora <aws-aurora>
    AWS RDS Postgres <aws-postgres>
-   Azure Postgres <azure>
-   Digital Ocean Postgres <digital-ocean>
-   GCP Postgres <gcp>
-   TimescaleDB Cloud <timescale-cloud>
-   YugabyteDB <yugabyte>
+   Azure <azure>
+   Digital Ocean <digital-ocean>
+   GCP <gcp>
+   Timescale Cloud <timescale-cloud>
+   YugaByte <yugabyte>

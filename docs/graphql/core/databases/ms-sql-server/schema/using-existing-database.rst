@@ -56,6 +56,7 @@ To track a table or a view
 
   .. tab:: API
 
+   .. TODO: BROKEN_LINK
 
    To track a table and expose it over the GraphQL API, use the :ref:`mssql_track_table metadata API <mssql_track_table>`:
 
@@ -108,6 +109,7 @@ To track all tables and views present in the database
 
   .. tab:: API 
 
+   .. TODO: BROKEN_LINK
 
    To track all tables and expose them over the GraphQL API, use the :ref:`mssql_track_table metadata API <mssql_track_table>`:
 
@@ -123,14 +125,14 @@ To track all tables and views present in the database
           {
              "type": "mssql_track_table",
              "args": {
-                "schema": "dbo",
+                "schema": "public",
                 "name": "<table-name-1>"
              }
           },
           {
              "type": "mssql_track_table",
              "args": {
-                "schema": "dbo",
+                "schema": "public",
                 "name": "<table-name-2>"
              }
           }
@@ -204,6 +206,7 @@ To track a foreign-key between two tables in the database
 
       **Object relationship**
 
+      .. TODO: BROKEN_LINK
 
       You can create an object relationship by using the :ref:`mssql_create_object_relationship metadata API <mssql_create_object_relationship>`:
 
@@ -306,6 +309,7 @@ To track all the foreign-keys of all tables in the database
 
    .. tab:: API
 
+      .. TODO: BROKEN_LINK
 
       You can create multiple relationships by using the :ref:`mssql_create_object_relationship metadata API <mssql_create_object_relationship>`
       and the :ref:`mssql_create_array_relationship metadata API <mssql_create_array_relationship>`:

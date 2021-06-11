@@ -2,8 +2,6 @@ module Hasura.RQL.IR.Delete where
 
 import           Hasura.Prelude
 
-import           Data.Kind                (Type)
-
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.Returning
 import           Hasura.RQL.Types.Backend
@@ -11,22 +9,22 @@ import           Hasura.RQL.Types.Column
 import           Hasura.SQL.Backend
 
 
-data AnnDelG (b :: BackendType) (r :: BackendType -> Type) v
+data AnnDelG (b :: BackendType) v
   = AnnDel
   { dqp1Table   :: !(TableName b)
   , dqp1Where   :: !(AnnBoolExp b v, AnnBoolExp b v)
-  , dqp1Output  :: !(MutationOutputG b r v)
+  , dqp1Output  :: !(MutationOutputG b v)
   , dqp1AllCols :: ![ColumnInfo b]
   }
 
-type AnnDel b = AnnDelG b (Const Void) (SQLExpression b)
+type AnnDel b = AnnDelG b (SQLExpression b)
 
 traverseAnnDel
-  :: forall backend r f a b
+  :: forall backend f a b
    . (Applicative f, Backend backend)
   => (a -> f b)
-  -> AnnDelG backend r a
-  -> f (AnnDelG backend r b)
+  -> AnnDelG backend a
+  -> f (AnnDelG backend b)
 traverseAnnDel f annUpd =
   AnnDel tn
   <$> ((,) <$> traverseAnnBoolExp f whr <*> traverseAnnBoolExp f fltr)

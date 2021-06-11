@@ -54,9 +54,7 @@ const fetchCustomFunction = (functionName, schema, source) => {
     if (!dataSource.getFunctionDefinitionSql) return;
     const fetchCustomFunctionDefinition = getRunSqlQuery(
       dataSource.getFunctionDefinitionSql(schema, functionName),
-      source,
-      false,
-      true
+      source
     );
 
     const options = {

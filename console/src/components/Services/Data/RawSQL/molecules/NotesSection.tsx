@@ -1,8 +1,6 @@
 import React from 'react';
 
-const NotesSection: React.FC<{
-  suggestLangChange: boolean;
-}> = ({ suggestLangChange }) => {
+const NotesSection = () => {
   return (
     <ul>
       <li>
@@ -17,19 +15,6 @@ const NotesSection: React.FC<{
         Multiple SQL statements will be run as a transaction. i.e. if any
         statement fails, none of the statements will be applied.
       </li>
-      {suggestLangChange && (
-        <li>
-          Consider changing custom function language to{' '}
-          <a
-            href="https://www.postgresql.org/docs/13/plpgsql-structure.html"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            plpgsql
-          </a>
-          , as citus doesn&apos;t support <code>sql</code>
-        </li>
-      )}
     </ul>
   );
 };

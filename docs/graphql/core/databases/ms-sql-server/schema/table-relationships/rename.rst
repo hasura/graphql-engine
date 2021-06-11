@@ -48,7 +48,7 @@ An existing relationship can be renamed as follows:
       hasura metadata apply
 
   .. tab:: API
-    
+    .. TODO: BROKEN_LINK
     You can rename a relationship by using the :ref:`mssql_rename_relationship metadata API <mssql_rename_relationship>`:
 
     .. code-block:: http

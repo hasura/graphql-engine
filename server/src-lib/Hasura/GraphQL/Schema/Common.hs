@@ -21,13 +21,13 @@ import           Hasura.GraphQL.Parser              (UnpreparedValue)
 import           Hasura.RQL.Types
 
 
-type SelectExp           b = IR.AnnSimpleSelG       b UnpreparedValue (UnpreparedValue b)
-type AggSelectExp        b = IR.AnnAggregateSelectG b UnpreparedValue (UnpreparedValue b)
-type ConnectionSelectExp b = IR.ConnectionSelect    b UnpreparedValue (UnpreparedValue b)
-type SelectArgs          b = IR.SelectArgsG         b                 (UnpreparedValue b)
-type TablePerms          b = IR.TablePermG          b                 (UnpreparedValue b)
-type AnnotatedFields     b = IR.AnnFieldsG          b UnpreparedValue (UnpreparedValue b)
-type AnnotatedField      b = IR.AnnFieldG           b UnpreparedValue (UnpreparedValue b)
+type SelectExp           b = IR.AnnSimpleSelG       b (UnpreparedValue b)
+type AggSelectExp        b = IR.AnnAggregateSelectG b (UnpreparedValue b)
+type ConnectionSelectExp b = IR.ConnectionSelect    b (UnpreparedValue b)
+type SelectArgs          b = IR.SelectArgsG         b (UnpreparedValue b)
+type TablePerms          b = IR.TablePermG          b (UnpreparedValue b)
+type AnnotatedFields     b = IR.AnnFieldsG          b (UnpreparedValue b)
+type AnnotatedField      b = IR.AnnFieldG           b (UnpreparedValue b)
 
 data QueryContext =
   QueryContext

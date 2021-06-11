@@ -84,65 +84,6 @@ var _ = Describe("hasura migrate delete", func() {
 		})
 	})
 
-	Context("migrate delete --all --server", func() {
-		It("should delete the migrations on server and on source ", func() {
-			projectDirectory := testutil.RandDirName()
-			testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args: []string{"init", projectDirectory},
-			})
-			editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
-
-			session := testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;", "--database-name", "default"},
-				WorkingDirectory: projectDirectory,
-			})
-
-			str := string(session.Err.Contents())
-			i := strings.Index(str, "\"version\"")
-			version := str[i+10 : i+23]
-			session = testutil.Hasura(testutil.CmdOpts{
-				Args:             []string{"migrate", "apply", "--database-name", "default"},
-				WorkingDirectory: projectDirectory,
-			})
-			wantKeywordList := []string{
-				".*Applying migrations...*.",
-				".*migrations*.",
-				".*applied*.",
-			}
-
-			for _, keyword := range wantKeywordList {
-				Eventually(session.Err, 60*40).Should(Say(keyword))
-			}
-
-			session = testutil.Hasura(testutil.CmdOpts{
-				Args:             []string{"migrate", "delete", "--all", "--server"},
-				WorkingDirectory: projectDirectory,
-			})
-
-			Eventually(session.Err, 60*40).Should(Say("--database-name flag is required"))
-
-			args := strings.Join([]string{"yes", "|", testutil.CLIBinaryPath, "migrate", "delete", "--all", "--server", "--database-name", "default"}, " ")
-			cmd := exec.Command("bash", "-c", args)
-			cmd.Dir = projectDirectory
-			session, err := Start(
-				cmd,
-				NewPrefixedWriter(testutil.DebugOutPrefix, GinkgoWriter),
-				NewPrefixedWriter(testutil.DebugErrPrefix, GinkgoWriter),
-			)
-			Expect(err).To(BeNil())
-			Eventually(session.Err, 60*40).Should(Say("Deleted migrations"))
-
-			session = testutil.Hasura(testutil.CmdOpts{
-				Args:             []string{"migrate", "status", "--database-name", "default"},
-				WorkingDirectory: projectDirectory,
-			})
-			Eventually(session.Out, 60*40).Should(Say(version))
-			Eventually(session.Out, 60*40).Should(Say("Present"))
-			Eventually(session.Out, 60*40).Should(Say("Not Present"))
-			Eventually(session, 60*50).Should(Exit(0))
-		})
-	})
-
 	Context("migrate delete --version <version>", func() {
 		It("should delete the migrations on server and on source ", func() {
 			dirName := testutil.RandDirName()
@@ -279,58 +220,6 @@ var _ = Describe("hasura migrate delete", func() {
 				WorkingDirectory: projectDirectory,
 			})
 			Eventually(session.Err, 60*40).ShouldNot(Say(version))
-			Eventually(session, 60*50).Should(Exit(0))
-		})
-	})
-
-	Context("migrate delete --all --server(config v2)", func() {
-		It("should delete the migrations on server and on source ", func() {
-			projectDirectory := testutil.RandDirName()
-			testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args: []string{"init", projectDirectory, "--version", "2"},
-			})
-			editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
-
-			session := testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;"},
-				WorkingDirectory: projectDirectory,
-			})
-
-			str := string(session.Err.Contents())
-			i := strings.Index(str, "\"version\"")
-			version := str[i+10 : i+23]
-			session = testutil.Hasura(testutil.CmdOpts{
-				Args:             []string{"migrate", "apply"},
-				WorkingDirectory: projectDirectory,
-			})
-			wantKeywordList := []string{
-				".*Applying migrations...*.",
-				".*migrations*.",
-				".*applied*.",
-			}
-
-			for _, keyword := range wantKeywordList {
-				Eventually(session.Err, 60*40).Should(Say(keyword))
-			}
-
-			args := []string{"migrate", "delete", "--all", "--server", "--force"}
-			cmd := exec.Command(testutil.CLIBinaryPath, args...)
-			cmd.Dir = projectDirectory
-			session, err := Start(
-				cmd,
-				NewPrefixedWriter(testutil.DebugOutPrefix, GinkgoWriter),
-				NewPrefixedWriter(testutil.DebugErrPrefix, GinkgoWriter),
-			)
-			Expect(err).To(BeNil())
-			Eventually(session.Err, 60*40).Should(Say("Deleted migrations"))
-
-			session = testutil.Hasura(testutil.CmdOpts{
-				Args:             []string{"migrate", "status"},
-				WorkingDirectory: projectDirectory,
-			})
-			Eventually(session.Out, 60*40).Should(Say(version))
-			Eventually(session.Out, 60*40).Should(Say("Present"))
-			Eventually(session.Out, 60*40).Should(Say("Not Present"))
 			Eventually(session, 60*50).Should(Exit(0))
 		})
 	})

@@ -4,10 +4,6 @@ import { Nullable } from './tsUtils';
 import { ConsoleScope } from '../../Main/ConsoleNotification';
 import { BaseTableColumn } from '../../../dataSources/types';
 import { FixMe } from '../../../types';
-import {
-  checkFeatureSupport,
-  READ_ONLY_RUN_SQL_QUERIES,
-} from '../../../helpers/versionUtils';
 
 export type OrderByType = 'asc' | 'desc';
 export type OrderByNulls = 'first' | 'last';
@@ -20,7 +16,7 @@ export const getRunSqlQuery = (
   driver = currentDriver
 ) => {
   let type = 'run_sql';
-  if (['mssql', 'bigquery', 'citus'].includes(driver)) {
+  if (driver === 'mssql' || driver === 'bigquery') {
     type = `${driver}_run_sql`;
   }
 
@@ -30,7 +26,7 @@ export const getRunSqlQuery = (
       source,
       sql: terminateSql(sql),
       cascade,
-      read_only: read_only && !!checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES),
+      read_only,
     },
   };
 };

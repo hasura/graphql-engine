@@ -2,12 +2,11 @@ package commands
 
 import (
 	"fmt"
-	"io"
+  "github.com/aryann/difflib"
+  "io"
 	"io/ioutil"
 	"os"
 	"strings"
-
-	"github.com/aryann/difflib"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
@@ -22,11 +21,10 @@ import (
 )
 
 type MetadataDiffOptions struct {
-	EC           *cli.ExecutionContext
-	Output       io.Writer
-	Args         []string
-	DiffType     string
-	DisableColor bool
+	EC       *cli.ExecutionContext
+	Output   io.Writer
+	Args     []string
+	DiffType string
 	// two Metadata to diff, 2nd is server if it's empty
 	Metadata [2]string
 }
@@ -148,9 +146,9 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 	}
 
 	if o.Metadata[1] != "" {
-		err = printDiff(string(oldYaml), string(newYaml), o.Metadata[0], o.Metadata[1], o.Output, o.DiffType, o.DisableColor)
+		err = printDiff(string(oldYaml), string(newYaml), o.Metadata[0], o.Metadata[1], o.Output, o.DiffType)
 	} else {
-		err = printDiff(string(oldYaml), string(newYaml), o.Metadata[0], "server", o.Output, o.DiffType, o.DisableColor)
+		err = printDiff(string(oldYaml), string(newYaml), o.Metadata[0], "server", o.Output, o.DiffType)
 	}
 
 	if err != nil {
@@ -166,42 +164,35 @@ func (o *MetadataDiffOptions) Run() error {
 		return fmt.Errorf("metadata diff for config %d not supported", o.EC.Config.Version)
 	}
 }
-
 type Difftype string
-
 const DifftypeUnifiedCommon Difftype = "unified-common"
 
-func printDiff(before, after, firstArg, SecondArg string, to io.Writer, difftype string, disableColor bool) error {
-	diffType := Difftype(difftype)
+func printDiff(before, after, firstArg, SecondArg string, to io.Writer, difftype string) error {
+  	diffType := Difftype(difftype)
 	switch diffType {
 	case DifftypeUnifiedCommon:
-		printDiffv1(before, after, to)
+	  printDiffv1(before, after, to)
 	default:
-		return printDiffv2(before, after, firstArg, SecondArg, to, disableColor)
+	  return printDiffv2(before, after, firstArg, SecondArg, to)
 	}
 	return nil
 }
 
-func printDiffv2(before, after, firstArg, SecondArg string, to io.Writer, disableColor bool) error {
+func printDiffv2(before, after, firstArg, SecondArg string, to io.Writer) error {
 	edits := myers.ComputeEdits(span.URIFromPath("a.txt"), before, after)
 	text := fmt.Sprint(gotextdiff.ToUnified(firstArg, SecondArg, before, edits))
-	makeDiffLine := func(line, color string) string {
-		if disableColor {
-			return line
-		}
-		return ansi.Color(line, color)
-	}
+
 	lines := strings.Split(text, "\n")
 	for _, line := range lines {
 		if line == "" {
 			break
 		}
 		if (string)(line[0]) == "-" {
-			fmt.Fprintf(to, "%s\n", makeDiffLine(line, "red"))
+			fmt.Fprintf(to, "%s\n", ansi.Color(line, "red"))
 		} else if (string)(line[0]) == "+" {
-			fmt.Fprintf(to, "%s\n", makeDiffLine(line, "yellow"))
+			fmt.Fprintf(to, "%s\n", ansi.Color(line, "yellow"))
 		} else if (string)(line[0]) == "@" {
-			fmt.Fprintf(to, "%s\n", makeDiffLine(line, "cyan"))
+			fmt.Fprintf(to, "%s\n", ansi.Color(line, "cyan"))
 		}
 	}
 
@@ -209,19 +200,19 @@ func printDiffv2(before, after, firstArg, SecondArg string, to io.Writer, disabl
 }
 
 func printDiffv1(before, after string, to io.Writer) {
-	diffs := difflib.Diff(strings.Split(before, "\n"), strings.Split(after, "\n"))
+  diffs := difflib.Diff(strings.Split(before, "\n"), strings.Split(after, "\n"))
 
-	for _, diff := range diffs {
-		text := diff.Payload
-		switch diff.Delta {
-		case difflib.RightOnly:
-			fmt.Fprintf(to, "%s\n", ansi.Color(text, "green"))
-		case difflib.LeftOnly:
-			fmt.Fprintf(to, "%s\n", ansi.Color(text, "red"))
-		case difflib.Common:
-			fmt.Fprintf(to, "%s\n", text)
-		}
+  for _, diff := range diffs {
+	text := diff.Payload
+	switch diff.Delta {
+	case difflib.RightOnly:
+	  fmt.Fprintf(to, "%s\n", ansi.Color(text, "green"))
+	case difflib.LeftOnly:
+	  fmt.Fprintf(to, "%s\n", ansi.Color(text, "red"))
+	case difflib.Common:
+	  fmt.Fprintf(to, "%s\n", text)
 	}
+  }
 }
 
 func checkDir(path string) error {

@@ -12,7 +12,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -355,8 +354,7 @@ type Config struct {
 type ExecutionContext struct {
 	// CMDName is the name of CMD (os.Args[0]). To be filled in later to
 	// correctly render example strings etc.
-	CMDName        string
-	Stderr, Stdout io.Writer
+	CMDName string
 
 	// ID is a unique ID for this Execution
 	ID string
@@ -446,12 +444,6 @@ type ExecutionContext struct {
 	// more details in: https://github.com/hasura/graphql-engine/issues/6861
 	DisableAutoStateMigration bool
 
-	// CliExtDir is the directory path that will be used to setup cli-ext
-	CliExtDir string
-
-	// cliExtBinPath is the full path of the cli-ext binary
-	CliExtBinPath string
-
 	// proPluginVersionValidated is used to avoid validating pro plugin multiple times
 	// while preparing the execution context
 	proPluginVersionValidated bool
@@ -464,10 +456,7 @@ type Source struct {
 
 // NewExecutionContext returns a new instance of execution context
 func NewExecutionContext() *ExecutionContext {
-	ec := &ExecutionContext{
-		Stderr: os.Stderr,
-		Stdout: os.Stdout,
-	}
+	ec := &ExecutionContext{}
 	ec.Telemetry = telemetry.BuildEvent()
 	ec.Telemetry.Version = version.BuildVersion
 	return ec
@@ -815,7 +804,7 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetDefault("api_paths.config", "v1alpha1/config")
 	v.SetDefault("api_paths.pg_dump", "v1alpha1/pg_dump")
 	v.SetDefault("api_paths.version", "v1/version")
-	v.SetDefault("metadata_directory", DefaultMetadataDirectory)
+	v.SetDefault("metadata_directory", "")
 	v.SetDefault("migrations_directory", DefaultMigrationsDirectory)
 	v.SetDefault("seeds_directory", DefaultSeedsDirectory)
 	v.SetDefault("actions.kind", "synchronous")
@@ -891,7 +880,7 @@ func (ec *ExecutionContext) readConfig() error {
 func (ec *ExecutionContext) setupSpinner() {
 	if ec.Spinner == nil {
 		spnr := spinner.New(spinner.CharSets[7], 100*time.Millisecond)
-		spnr.Writer = ec.Stderr
+		spnr.Writer = os.Stderr
 		ec.Spinner = spnr
 	}
 }
@@ -931,7 +920,7 @@ func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
 		logger := logrus.New()
 		ec.Logger = logger
-		ec.Logger.SetOutput(ec.Stderr)
+		ec.Logger.SetOutput(os.Stderr)
 	}
 
 	if ec.LogLevel != "" {

@@ -42,7 +42,6 @@ export const connectionRadios = [
 
 const dbTypePlaceholders: Record<Driver, string> = {
   postgres: 'postgresql://username:password@hostname:5432/database',
-  citus: 'postgresql://username:password@hostname:5432/database',
   mssql:
     'Driver={ODBC Driver 17 for SQL Server};Server=serveraddress;Database=dbname;Uid=username;Pwd=password;',
   mysql: 'MySQL connection string',
@@ -69,10 +68,6 @@ const driverToLabel: Record<
     info:
       'Only Connection Parameters and Environment Variables are available for BigQuery',
     beta: true,
-  },
-  citus: {
-    label: 'Citus',
-    defaultConnection: 'DATABASE_URL',
   },
 };
 

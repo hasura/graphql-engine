@@ -16,8 +16,6 @@ var (
 		return ""
 	}()
 
-	TestAdminSecret = os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET")
-
 	DockerSwitchIP = func() string {
 		switch runtime.GOOS {
 		case "darwin", "windows":

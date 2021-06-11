@@ -319,7 +319,6 @@ library
                      , Hasura.Backends.BigQuery.FromIr
                      , Hasura.Backends.BigQuery.Instances.Execute
                      , Hasura.Backends.BigQuery.Instances.Schema
-                     , Hasura.Backends.BigQuery.Instances.Transport
                      , Hasura.Backends.BigQuery.Instances.Types
                      , Hasura.Backends.BigQuery.Instances.Metadata
                      , Hasura.Backends.BigQuery.Meta
@@ -345,7 +344,6 @@ library
                      , Hasura.Backends.Postgres.Instances.Execute
                      , Hasura.Backends.Postgres.Instances.Metadata
                      , Hasura.Backends.Postgres.Instances.Schema
-                     , Hasura.Backends.Postgres.Instances.Transport
                      , Hasura.Backends.Postgres.Instances.Types
                      , Hasura.Backends.Postgres.SQL.DML
                      , Hasura.Backends.Postgres.SQL.Error
@@ -375,7 +373,6 @@ library
                      , Hasura.Backends.MSSQL.Instances.Execute
                      , Hasura.Backends.MSSQL.Instances.Metadata
                      , Hasura.Backends.MSSQL.Instances.Schema
-                     , Hasura.Backends.MSSQL.Instances.Transport
                      , Hasura.Backends.MSSQL.Instances.Types
                      , Hasura.Backends.MSSQL.Meta
                      , Hasura.Backends.MSSQL.Plan
@@ -572,10 +569,8 @@ library
                      , Hasura.GraphQL.Schema.Remote
                      , Hasura.GraphQL.Schema.Select
                      , Hasura.GraphQL.Schema.Table
-                     , Hasura.GraphQL.Transport.Backend
                      , Hasura.GraphQL.Transport.HTTP
                      , Hasura.GraphQL.Transport.HTTP.Protocol
-                     , Hasura.GraphQL.Transport.Instances
                      , Hasura.GraphQL.Transport.WebSocket
                      , Hasura.GraphQL.Transport.WebSocket.Protocol
                      , Hasura.GraphQL.Transport.WebSocket.Server

@@ -3,23 +3,9 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
-
-## v2.0.0
-
-NOTE: This only includes the diff between v2.0.0 and v2.0.0-beta.2
-
 - server: make improvements in the `livequery-poller-log`
 - server: Backends Citus, MSSQL, and BigQuery now all support the `set_table_customization` operation.
-- server: Adds caching support for queries using remote schema permissions
-- server: All Postgres boolean operators now support the null-collapsing behaviour described in [#704](https://github.com/hasura/graphql-engine/issues/704) and enabled via the `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` environment variable.
-- server: add `update_remote_schema` metadata query
-- console: add citus support
-- console: add support for `update_remote_schema` API while modifying remote schemas
-- console: hide postgres system schemas by default
 - cli: `metadata diff` will now only show the differences in metadata. old behaviour is avialble behind a flag (`--type unified-common`) (#5487)
-- cli: add citus support
-- cli: allow `--skip-execution` to be used with `up` and `down` flags in `migrate apply`
-- cli: allow deleting migration state from server using `--server` flag in `migrate delete` command
 
 ## v2.0.0-beta.2
 

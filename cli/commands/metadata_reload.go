@@ -47,7 +47,7 @@ func (o *metadataReloadOptions) run() error {
 
 	var err error
 	metadataHandler := metadataobject.NewHandlerFromEC(ec)
-	_, err = metadataHandler.ReloadMetadata()
+	err = metadataHandler.ReloadMetadata()
 	if err != nil {
 		return errors.Wrap(err, "Cannot reload metadata")
 	}

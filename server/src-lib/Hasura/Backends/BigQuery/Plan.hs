@@ -19,21 +19,21 @@ import qualified Hasura.Base.Error                        as E
 import qualified Hasura.GraphQL.Parser                    as GraphQL
 import qualified Hasura.RQL.Types.Column                  as RQL
 
-import           Hasura.Backends.BigQuery.FromIr
-import           Hasura.Backends.BigQuery.Types
+import           Hasura.Backends.BigQuery.FromIr          as BigQuery
+import           Hasura.Backends.BigQuery.Types           as BigQuery
 import           Hasura.RQL.IR
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 import           Hasura.Session
 
 
---------------------------------------------------------------------------------
--- Top-level planner
+-- --------------------------------------------------------------------------------
+-- -- Top-level planner
 
 planToForest ::
      MonadError E.QErr m
   => UserInfo
-  -> QueryDB 'BigQuery (Const Void) (GraphQL.UnpreparedValue 'BigQuery)
+  -> QueryDB 'BigQuery (GraphQL.UnpreparedValue 'BigQuery)
   -> m (Forest DataLoader.PlannedAction)
 planToForest userInfo qrf = do
   select <- planNoPlan userInfo qrf
@@ -46,13 +46,12 @@ planToForest userInfo qrf = do
 planNoPlan ::
      MonadError E.QErr m
   => UserInfo
-  -> QueryDB 'BigQuery (Const Void) (GraphQL.UnpreparedValue 'BigQuery)
+  -> QueryDB 'BigQuery (GraphQL.UnpreparedValue 'BigQuery)
   -> m Select
 planNoPlan userInfo queryDB = do
   rootField <- traverseQueryDB (prepareValueNoPlan (_uiSession userInfo)) queryDB
-  runValidate (runFromIr (fromRootField rootField))
+  runValidate (BigQuery.runFromIr (BigQuery.fromRootField rootField))
     `onLeft` (E.throw400 E.NotSupported . (tshow :: NonEmpty Error -> Text))
-
 
 --------------------------------------------------------------------------------
 -- Resolving values
@@ -63,7 +62,7 @@ prepareValueNoPlan ::
      (MonadError E.QErr m)
   => SessionVariables
   -> GraphQL.UnpreparedValue 'BigQuery
-  -> m Expression
+  -> m BigQuery.Expression
 prepareValueNoPlan sessionVariables =
   \case
     GraphQL.UVLiteral x -> pure x

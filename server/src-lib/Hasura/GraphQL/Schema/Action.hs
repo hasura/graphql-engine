@@ -47,7 +47,7 @@ actionExecute
    . MonadBuildSchema ('Postgres 'Vanilla) r m n
   => NonObjectTypeMap
   -> ActionInfo
-  -> m (Maybe (FieldParser n (AnnActionExecution ('Postgres 'Vanilla) UnpreparedValue (UnpreparedValue ('Postgres 'Vanilla)))))
+  -> m (Maybe (FieldParser n (AnnActionExecution ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla)))))
 actionExecute nonObjectTypeMap actionInfo = runMaybeT do
   roleName <- askRoleName
   guard (roleName == adminRoleName || roleName `Map.member` permissions)
@@ -113,7 +113,7 @@ actionAsyncQuery
   :: forall r m n
    . MonadBuildSchema ('Postgres 'Vanilla) r m n
   => ActionInfo
-  -> m (Maybe (FieldParser n (AnnActionAsyncQuery ('Postgres 'Vanilla) UnpreparedValue (UnpreparedValue ('Postgres 'Vanilla)))))
+  -> m (Maybe (FieldParser n (AnnActionAsyncQuery ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla)))))
 actionAsyncQuery actionInfo = runMaybeT do
   roleName <- askRoleName
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
@@ -172,7 +172,7 @@ actionOutputFields
    . MonadBuildSchema ('Postgres 'Vanilla) r m n
   => G.GType
   -> AnnotatedObjectType
-  -> m (Parser 'Output n (RQL.AnnFieldsG ('Postgres 'Vanilla) UnpreparedValue (UnpreparedValue ('Postgres 'Vanilla))))
+  -> m (Parser 'Output n (RQL.AnnFieldsG ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla))))
 actionOutputFields outputType annotatedObject = do
   let outputObject = _aotDefinition annotatedObject
       scalarOrEnumFields = map outputFieldParser $ toList $ _otdFields outputObject
@@ -194,7 +194,7 @@ actionOutputFields outputType annotatedObject = do
 
     outputFieldParser
       :: ObjectFieldDefinition (G.GType, AnnotatedObjectFieldType)
-      -> FieldParser n (RQL.AnnFieldG ('Postgres 'Vanilla) UnpreparedValue (UnpreparedValue ('Postgres 'Vanilla)))
+      -> FieldParser n (RQL.AnnFieldG ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla)))
     outputFieldParser (ObjectFieldDefinition name _ description (gType, objectFieldType)) =
       let fieldName   = unObjectFieldName name
           selection   = P.selection_ fieldName description $ case objectFieldType of
@@ -211,7 +211,7 @@ actionOutputFields outputType annotatedObject = do
 
     relationshipFieldParser
       :: TypeRelationship (TableInfo ('Postgres 'Vanilla)) (ColumnInfo ('Postgres 'Vanilla))
-      -> m (Maybe [FieldParser n (RQL.AnnFieldG ('Postgres 'Vanilla) UnpreparedValue (UnpreparedValue ('Postgres 'Vanilla)))])
+      -> m (Maybe [FieldParser n (RQL.AnnFieldG ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla)))])
     relationshipFieldParser (TypeRelationship relName relType sourceName tableInfo fieldMapping) = runMaybeT do
       let tableName     = _tciName $ _tiCoreInfo tableInfo
           fieldName     = unRelationshipName relName

@@ -183,7 +183,6 @@ data RQLMetadataV1
 
   -- Remote schemas
   | RMAddRemoteSchema !AddRemoteSchemaQuery
-  | RMUpdateRemoteSchema !AddRemoteSchemaQuery
   | RMRemoveRemoteSchema !RemoteSchemaNameQuery
   | RMReloadRemoteSchema !RemoteSchemaNameQuery
   | RMIntrospectRemoteSchema !RemoteSchemaNameQuery
@@ -540,7 +539,6 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDropInconsistentMetadata q      -> runDropInconsistentMetadata q
 
   RMAddRemoteSchema q               -> runAddRemoteSchema env q
-  RMUpdateRemoteSchema q            -> runUpdateRemoteSchema env q
   RMRemoveRemoteSchema q            -> runRemoveRemoteSchema q
   RMReloadRemoteSchema q            -> runReloadRemoteSchema q
   RMIntrospectRemoteSchema q        -> runIntrospectRemoteSchema q

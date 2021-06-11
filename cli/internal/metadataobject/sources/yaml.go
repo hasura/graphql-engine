@@ -62,10 +62,9 @@ func resolveTags(ctx map[string]string, node *yaml.Node) (*yaml.Node, error) {
 		if !ok {
 			return nil, fmt.Errorf("parser error: base directory for !include tag not specified")
 		}
-		fileLocation := filepath.Join(baseDir, node.Value)
-		file, err := ioutil.ReadFile(fileLocation)
+		file, err := ioutil.ReadFile(filepath.Join(baseDir, node.Value))
 		if err != nil {
-			return nil, fmt.Errorf("%s: %w", fileLocation, err)
+			return nil, err
 		}
 		newctx := map[string]string{}
 		for k, v := range ctx {
@@ -75,9 +74,9 @@ func resolveTags(ctx map[string]string, node *yaml.Node) (*yaml.Node, error) {
 		var f = newFragment(newctx)
 		err = yaml.Unmarshal(file, f)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %w", fileLocation, err)
+			return nil, err
 		}
-		return f.content, nil
+		return f.content, err
 	}
 	switch node.Tag {
 	case includeTag:

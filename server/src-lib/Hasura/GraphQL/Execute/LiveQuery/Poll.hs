@@ -75,7 +75,6 @@ import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.ParameterizedQueryHash       (ParameterizedQueryHash)
-import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol (OperationId)
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
@@ -447,7 +446,7 @@ defaultLiveQueryPostPollHook = L.unLogger
 -- active 'Poller'. This needs to be async exception safe.
 pollQuery
   :: forall b
-   . BackendTransport b
+   . BackendExecute b
   => PollerId
   -> LiveQueriesOptions
   -> (SourceName, SourceConfig b)
@@ -473,7 +472,7 @@ pollQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQuery
 
     -- concurrently process each batch
     batchesDetails <- A.forConcurrently cohortBatches $ \(batchId, cohorts) -> do
-      (queryExecutionTime, mxRes) <- runDBSubscription @b sourceConfig query $ over (each._2) _csVariables cohorts
+      (queryExecutionTime, mxRes) <- executeMultiplexedQuery @b sourceConfig query $ over (each._2) _csVariables cohorts
 
       let lqMeta = LiveQueryMetadata $ convertDuration queryExecutionTime
           operations = getCohortOperations cohorts mxRes

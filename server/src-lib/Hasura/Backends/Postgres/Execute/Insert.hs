@@ -1,5 +1,6 @@
 module Hasura.Backends.Postgres.Execute.Insert
-  ( convertToSQLTransaction
+  ( traverseAnnInsert
+  , convertToSQLTransaction
   ) where
 
 import           Hasura.Prelude
@@ -34,16 +35,52 @@ import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
 
 
+traverseAnnInsert
+  :: (Applicative f, Backend backend)
+  => (a -> f b)
+  -> IR.AnnInsert backend a
+  -> f (IR.AnnInsert backend b)
+traverseAnnInsert f (IR.AnnInsert fieldName isSingle annIns mutationOutput) =
+  IR.AnnInsert fieldName isSingle
+  <$> traverseMulti annIns
+  <*> IR.traverseMutationOutput f mutationOutput
+  where
+    traverseMulti (IR.AnnIns objs tableName conflictClause checkCond columns defaultValues) = IR.AnnIns
+      <$> traverse traverseObject objs
+      <*> pure tableName
+      <*> traverse (traverse f) conflictClause
+      <*> ( (,)
+            <$> traverseAnnBoolExp f (fst checkCond)
+            <*> traverse (traverseAnnBoolExp f) (snd checkCond)
+          )
+      <*> pure columns
+      <*> traverse f defaultValues
+    traverseSingle (IR.AnnIns obj tableName conflictClause checkCond columns defaultValues) = IR.AnnIns
+      <$> traverseObject obj
+      <*> pure tableName
+      <*> traverse (traverse f) conflictClause
+      <*> ( (,)
+            <$> traverseAnnBoolExp f (fst checkCond)
+            <*> traverse (traverseAnnBoolExp f) (snd checkCond)
+          )
+      <*> pure columns
+      <*> traverse f defaultValues
+    traverseObject (IR.AnnInsObj columns objRels arrRels) = IR.AnnInsObj
+      <$> traverse (traverse f) columns
+      <*> traverse (traverseRel traverseSingle) objRels
+      <*> traverse (traverseRel traverseMulti)  arrRels
+    traverseRel z (IR.RelIns object relInfo) = IR.RelIns <$> z object <*> pure relInfo
+
+
 convertToSQLTransaction
-  :: forall pgKind m
-   . ( HasVersion
+  :: ( HasVersion
      , MonadTx m
      , MonadIO m
      , Tracing.MonadTrace m
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
      )
-  => IR.AnnInsert ('Postgres pgKind) (Const Void) PG.SQLExp
+  => IR.AnnInsert ('Postgres pgKind) PG.SQLExp
   -> UserInfo
   -> Seq.Seq Q.PrepArg
   -> Bool
@@ -58,8 +95,7 @@ convertToSQLTransaction (IR.AnnInsert fieldName isSingle annIns mutationOutput) 
     suffix = bool "objects" "object" isSingle
 
 insertMultipleObjects
-  :: forall pgKind m
-   . ( HasVersion
+  :: ( HasVersion
      , MonadTx m
      , MonadIO m
      , Tracing.MonadTrace m
@@ -197,8 +233,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tra
       <> table <<> " affects zero rows"
 
 insertObjRel
-  :: forall pgKind m
-   . ( HasVersion
+  :: ( HasVersion
      , MonadTx m
      , MonadIO m
      , Tracing.MonadTrace m

@@ -41,7 +41,7 @@ parseGraphQLQuery
   -> Maybe (HashMap G.Name J.Value)
   -> [G.Directive G.Name]
   -> G.SelectionSet G.NoFragments G.Name
-  -> m ( InsOrdHashMap G.Name (QueryRootField UnpreparedValue UnpreparedValue)
+  -> m ( InsOrdHashMap G.Name (QueryRootField UnpreparedValue)
        , QueryReusability
        , [G.Directive Variable]
        , G.SelectionSet G.NoFragments Variable
@@ -69,7 +69,7 @@ convertQuerySelSet
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
   -> SetGraphqlIntrospectionOptions
-  -> m (ExecutionPlan, [QueryRootField UnpreparedValue UnpreparedValue], G.SelectionSet G.NoFragments Variable, DirectiveMap)
+  -> m (ExecutionPlan QueryDBRoot, [QueryRootField UnpreparedValue], G.SelectionSet G.NoFragments Variable, DirectiveMap)
 convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs varValsM
   introspectionDisabledRoles = do
   -- Parse the GraphQL query into the RQL AST
@@ -86,10 +86,11 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
   executionPlan <- for unpreparedQueries \case
     RFDB sourceName exists ->
       AB.dispatchAnyBackend @BackendExecute exists
-        \(SourceConfigWith sourceConfig (QDBR db :: QueryDBRoot UnpreparedValue UnpreparedValue b)) -> do
+        \(SourceConfigWith sourceConfig (QDBR db)) -> do
           let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoins db
-          dbStepInfo <- mkDBQueryPlan @b userInfo sourceName sourceConfig noRelsDBAST
-          pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
+          pure $ ExecStepDB sourceName
+                (AB.mkAnyBackend $ SourceConfigWith sourceConfig $ QDBR noRelsDBAST)
+                remoteJoins
     RFRemote rf -> do
       RemoteFieldG remoteSchemaInfo remoteField <- runVariableCache $ for rf $ resolveRemoteVariable userInfo
       pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeQuery [G.SelectionField remoteField]
@@ -99,7 +100,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
         AQQuery s -> (AEPSync $ resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders usrVars), _aaeName s, _aaeForwardClientHeaders s)
         AQAsync s -> (AEPAsyncQuery $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s, _aaaqName s, _aaaqForwardClientHeaders s)
       pure $ ExecStepAction actionExecution (ActionsInfo actionName fch) remoteJoins
-    RFRaw r -> flip onLeft throwError =<< executeIntrospection userInfo r introspectionDisabledRoles
+    RFRaw r -> either throwError (pure . ExecStepRaw) =<< executeIntrospection userInfo r introspectionDisabledRoles
 
   -- See Note [Temporarily disabling query plan caching]
   pure (executionPlan, OMap.elems unpreparedQueries, normalizedSelectionSet, dirMap)

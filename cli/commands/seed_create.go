@@ -87,7 +87,7 @@ func (o *SeedNewOptions) Run() error {
 		var body []byte
 		if len(o.FromTableNames) > 0 {
 			if o.Source.Kind != hasura.SourceKindPG && o.EC.Config.Version >= cli.V3 {
-				return fmt.Errorf("--from-table is supported only for postgres databases")
+				return fmt.Errorf("--from-table is supported only for postgres sources")
 			}
 			// Send the query
 			bodyReader, err := o.Driver.ExportDatadump(o.FromTableNames, o.Source.Name)

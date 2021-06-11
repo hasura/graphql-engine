@@ -3,15 +3,19 @@
 
 module Hasura.Backends.Postgres.Instances.Execute
   ( PreparedSql(..)
+  , runPGMutationTransaction
   ) where
 
 import           Hasura.Prelude
 
+import           Control.Monad.Morph                        (hoist)
 import qualified Control.Monad.Trans.Control                as MT
+import qualified Data.ByteString                            as B
 import qualified Data.HashSet                               as Set
 import qualified Data.IntMap                                as IntMap
 import qualified Data.Sequence                              as Seq
 import qualified Database.PG.Query                          as Q
+import qualified Hasura.Logging                             as L
 import qualified Language.GraphQL.Draft.Syntax              as G
 
 import qualified Hasura.Backends.Postgres.Execute.LiveQuery as PGL
@@ -23,7 +27,6 @@ import qualified Hasura.RQL.IR.Insert                       as IR
 import qualified Hasura.RQL.IR.Returning                    as IR
 import qualified Hasura.RQL.IR.Select                       as IR
 import qualified Hasura.RQL.IR.Update                       as IR
-import qualified Hasura.SQL.AnyBackend                      as AB
 import qualified Hasura.Tracing                             as Tracing
 
 import           Hasura.Backends.Postgres.Connection
@@ -38,9 +41,10 @@ import           Hasura.GraphQL.Parser
 import           Hasura.RQL.DML.Internal                    (dmlTxErrorHandler)
 import           Hasura.RQL.IR
 import           Hasura.RQL.Types
+import           Hasura.Server.Types                        (RequestId)
 import           Hasura.Server.Version                      (HasVersion)
 import           Hasura.Session
-
+import           Hasura.Tracing
 
 data PreparedSql
   = PreparedSql
@@ -48,20 +52,20 @@ data PreparedSql
   , _psPrepArgs :: !PrepArgMap
   }
 
+
 instance
   ( Backend ('Postgres pgKind)
   ,  PostgresAnnotatedFieldJSON pgKind
   ) => BackendExecute ('Postgres pgKind) where
 
-  type PreparedQuery    ('Postgres pgKind) = PreparedSql
   type MultiplexedQuery ('Postgres pgKind) = PGL.MultiplexedQuery
-  type ExecutionMonad   ('Postgres pgKind) = Tracing.TraceT (LazyTxT QErr IO)
 
-  mkDBQueryPlan = pgDBQueryPlan
-  mkDBMutationPlan = pgDBMutationPlan
-  mkDBSubscriptionPlan = pgDBSubscriptionPlan
-  mkDBQueryExplain = pgDBQueryExplain
-  mkLiveQueryExplain = pgDBLiveQueryExplain
+  executeQueryField = pgDBQueryPlan
+  executeMutationField = pgDBMutationPlan
+  makeLiveQueryPlan = pgDBSubscriptionPlan
+  explainQueryField = pgDBQueryExplain
+  explainLiveQuery = pgDBLiveQueryExplain
+  executeMultiplexedQuery = runPGSubscription
 
 
 -- query
@@ -71,31 +75,35 @@ pgDBQueryPlan
    . ( MonadError QErr m
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
+     , MonadTrace m
+     , MonadIO m
      )
-  => UserInfo
+  => RequestId
+  -> L.Logger L.Hasura
+  -> UserInfo
   -> SourceName
   -> SourceConfig ('Postgres pgKind)
-  -> QueryDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
-  -> m (DBStepInfo ('Postgres pgKind))
-pgDBQueryPlan userInfo sourceName sourceConfig qrf = do
-  (preparedQuery, PlanningSt _ _ planVals expectedVariables) <- flip runStateT initPlanningSt
-    $ traverseQueryDB @('Postgres pgKind) prepareWithPlan qrf
+  -> QueryDB ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+  -> m EncJSON
+pgDBQueryPlan requestId logger userInfo sourceName sourceConfig qrf = do
+  (preparedQuery, PlanningSt _ _ planVals expectedVariables) <- flip runStateT initPlanningSt $ traverseQueryDB @('Postgres pgKind) prepareWithPlan qrf
   validateSessionVariables expectedVariables $ _uiSession userInfo
   let (action, preparedSQL) = mkCurPlanTx userInfo $ irToRootFieldPlan planVals preparedQuery
-  pure $ DBStepInfo @('Postgres pgKind) sourceName sourceConfig preparedSQL action
+  Tracing.interpTraceT id $ hoist (runQueryTx $ _pscExecCtx sourceConfig) action
 
 pgDBQueryExplain
   :: forall pgKind m
    . ( MonadError QErr m
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
+     , MonadIO m
      )
   => G.Name
   -> UserInfo
   -> SourceName
   -> SourceConfig ('Postgres pgKind)
-  -> QueryDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
-  -> m (AB.AnyBackend DBStepInfo)
+  -> QueryDB ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+  -> m EncJSON
 pgDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
   preparedQuery <- traverseQueryDB (resolveUnpreparedValue userInfo) qrf
   let PreparedSql querySQL _ = irToRootFieldPlan mempty preparedQuery
@@ -106,16 +114,27 @@ pgDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
   let action = liftTx $
         Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True <&> \planList ->
           encJFromJValue $ ExplainPlan fieldName (Just textSQL) (Just $ map runIdentity planList)
-  pure
-    $ AB.mkAnyBackend
-    $ DBStepInfo @('Postgres pgKind) sourceName sourceConfig Nothing action
+  runQueryTx (_pscExecCtx sourceConfig) action
+
+runPGSubscription
+  :: ( MonadIO m
+     )
+  => SourceConfig ('Postgres pgKind)
+  -> MultiplexedQuery ('Postgres pgKind)
+  -> [(CohortId, CohortVariables)]
+  -> m (DiffTime, Either QErr [(CohortId, B.ByteString)])
+runPGSubscription sourceConfig query variables = withElapsedTime
+  $ runExceptT
+  $ runQueryTx (_pscExecCtx sourceConfig)
+  $ PGL.executeMultiplexedQuery query variables
 
 pgDBLiveQueryExplain
   :: ( MonadError QErr m
      , MonadIO m
      , MT.MonadBaseControl IO m
      )
-  => LiveQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)) -> m LiveQueryPlanExplanation
+  => LiveQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind))
+  -> m LiveQueryPlanExplanation
 pgDBLiveQueryExplain plan = do
   let parameterizedPlan = _lqpParameterizedPlan plan
       pgExecCtx = _pscExecCtx $ _lqpSourceConfig plan
@@ -138,7 +157,7 @@ convertDelete
      , PostgresAnnotatedFieldJSON pgKind
      )
   => UserInfo
-  -> IR.AnnDelG ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
+  -> IR.AnnDelG ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
   -> Bool
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
 convertDelete userInfo deleteOperation stringifyNum = do
@@ -154,7 +173,7 @@ convertUpdate
      , PostgresAnnotatedFieldJSON pgKind
      )
   => UserInfo
-  -> IR.AnnUpdG ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
+  -> IR.AnnUpdG ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
   -> Bool
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
 convertUpdate userInfo updateOperation stringifyNum = do
@@ -173,7 +192,7 @@ convertInsert
      , PostgresAnnotatedFieldJSON pgKind
      )
   => UserInfo
-  -> IR.AnnInsert ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
+  -> IR.AnnInsert ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
   -> Bool
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
 convertInsert userInfo insertOperation stringifyNum = do
@@ -191,7 +210,7 @@ convertFunction
      )
   => UserInfo
   -> JsonAggSelect
-  -> IR.AnnSimpleSelG ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
+  -> IR.AnnSimpleSelG ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
   -- ^ VOLATILE function as 'SelectExp'
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
 convertFunction userInfo jsonAggSelect unpreparedQuery = do
@@ -215,24 +234,50 @@ pgDBMutationPlan
      , HasVersion
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
+     , MonadTrace m
+     , MonadIO m
      )
-  => UserInfo
+  => RequestId
+  -> L.Logger L.Hasura
+  -> UserInfo
   -> Bool
   -> SourceName
   -> SourceConfig ('Postgres pgKind)
-  -> MutationDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
-  -> m (DBStepInfo ('Postgres pgKind))
-pgDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf =
-  go <$> case mrf of
-    MDBInsert s              -> convertInsert userInfo s stringifyNum
-    MDBUpdate s              -> convertUpdate userInfo s stringifyNum
-    MDBDelete s              -> convertDelete userInfo s stringifyNum
-    MDBFunction returnsSet s -> convertFunction userInfo returnsSet s
-  where
-    go v = DBStepInfo @('Postgres pgKind) sourceName sourceConfig Nothing v
+  -> MutationDB ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+  -> m EncJSON
+pgDBMutationPlan requestId logger userInfo stringifyNum sourceName sourceConfig mrf = do
+  tx <- pgMutationRootFieldTransaction userInfo stringifyNum mrf
+  runMutationTx userInfo sourceConfig tx
 
+runMutationTx
+  :: (MonadTrace m, MonadError QErr m, MonadIO m)
+  => UserInfo -> PGSourceConfig -> TraceT (LazyTxT QErr IO) b -> m b
+runMutationTx userInfo sourceConfig tx = do
+  ctx <- Tracing.currentContext
+  Tracing.interpTraceT (
+    liftEitherM . liftIO . runExceptT
+    . runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
+    . withTraceContext ctx
+    . withUserInfo userInfo
+    ) tx
 
--- subscription
+pgMutationRootFieldTransaction
+  :: forall pgKind m
+   . ( MonadError QErr m
+     , HasVersion
+     , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
+  => UserInfo
+  -> Bool
+  -> MutationDB ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+  -> m (TraceT (LazyTxT QErr IO) EncJSON)
+pgMutationRootFieldTransaction userInfo stringifyNum mrf = do
+    case mrf of
+      MDBInsert s              -> convertInsert userInfo s stringifyNum
+      MDBUpdate s              -> convertUpdate userInfo s stringifyNum
+      MDBDelete s              -> convertDelete userInfo s stringifyNum
+      MDBFunction returnsSet s -> convertFunction userInfo returnsSet s
 
 pgDBSubscriptionPlan
   :: forall pgKind m
@@ -244,7 +289,7 @@ pgDBSubscriptionPlan
   => UserInfo
   -> SourceName
   -> SourceConfig ('Postgres pgKind)
-  -> InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind)))
+  -> InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))
   -> m (LiveQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)))
 pgDBSubscriptionPlan userInfo _sourceName sourceConfig unpreparedAST = do
   (preparedAST, PGL.QueryParametersInfo{..}) <- flip runStateT mempty $
@@ -256,8 +301,8 @@ pgDBSubscriptionPlan userInfo _sourceName sourceConfig unpreparedAST = do
   -- We need to ensure that the values provided for variables are correct according to Postgres.
   -- Without this check an invalid value for a variable for one instance of the subscription will
   -- take down the entire multiplexed query.
-  validatedQueryVars     <- PGL.validateVariables (_pscExecCtx sourceConfig) _qpiReusableVariableValues
-  validatedSyntheticVars <- PGL.validateVariables (_pscExecCtx sourceConfig) $ toList _qpiSyntheticVariableValues
+  validatedQueryVars     <- PGL.validateVariables @pgKind (_pscExecCtx sourceConfig) _qpiReusableVariableValues
+  validatedSyntheticVars <- PGL.validateVariables @pgKind (_pscExecCtx sourceConfig) $ toList _qpiSyntheticVariableValues
 
   -- TODO validatedQueryVars validatedSyntheticVars
   let cohortVariables = mkCohortVariables
@@ -287,7 +332,7 @@ irToRootFieldPlan
      , DS.PostgresAnnotatedFieldJSON pgKind
      )
   => PrepArgMap
-  -> QueryDB ('Postgres pgKind) (Const Void) S.SQLExp
+  -> QueryDB ('Postgres pgKind) S.SQLExp
   -> PreparedSql
 irToRootFieldPlan prepped = \case
   QDBMultipleRows s -> mkPreparedSql (DS.selectQuerySQL JASMultipleRows) s
@@ -298,3 +343,27 @@ irToRootFieldPlan prepped = \case
     mkPreparedSql ::  (t -> Q.Query) -> t -> PreparedSql
     mkPreparedSql f simpleSel =
       PreparedSql (f simpleSel) prepped
+
+-- ad-hoc transaction optimisation
+-- see Note [Backwards-compatible transaction optimisation]
+
+runPGMutationTransaction
+  :: ( MonadIO m
+     , MonadError QErr m
+     , HasVersion
+     , MonadTrace m
+     )
+  => RequestId
+  -> L.Logger L.Hasura
+  -> UserInfo
+  -> SourceConfig ('Postgres pgKind)
+  -> Bool
+  -> InsOrdHashMap G.Name (MutationDBRoot UnpreparedValue ('Postgres 'Vanilla))
+  -> m (InsOrdHashMap G.Name EncJSON)
+runPGMutationTransaction reqId logger userInfo sourceConfig stringifyNum mutations = do
+  -- logQueryLog logger $ mkQueryLog query $$(G.litName "transaction") Nothing reqId
+  tx <- for mutations \(MDBR rf) ->
+            -- trace ("Postgres Mutation for root field " <>> fieldName) $
+    pgMutationRootFieldTransaction userInfo stringifyNum rf
+  runMutationTx userInfo sourceConfig $ sequence tx
+

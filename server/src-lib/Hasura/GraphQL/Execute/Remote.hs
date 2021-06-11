@@ -72,7 +72,7 @@ buildExecStepRemote
   :: RemoteSchemaInfo
   -> G.OperationType
   -> G.SelectionSet G.NoFragments Variable
-  -> ExecutionStep
+  -> ExecutionStep k
 buildExecStepRemote remoteSchemaInfo tp selSet =
   let unresolvedSelSet = unresolveVariables selSet
       allVars = map mkVariableDefinitionAndValue $ Set.toList $ collectVariables selSet

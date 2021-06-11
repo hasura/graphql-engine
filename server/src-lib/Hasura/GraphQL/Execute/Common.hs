@@ -10,7 +10,6 @@ import qualified Network.Wai.Extended                   as Wai
 import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
@@ -43,7 +42,7 @@ class Monad m => MonadGQLExecutionCheck m where
     :: UserInfo
     -> JO.Value
     -> SetGraphqlIntrospectionOptions
-    -> m (Either QErr ExecutionStep)
+    -> m (Either QErr JO.Value)
 
 instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ExceptT e m) where
   checkGQLExecution ui det enableAL sc req =

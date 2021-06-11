@@ -37,7 +37,7 @@ endif
 # compress
 .PHONY: compress
 compress:
-	ls $(OUTPUT_DIR)/$(VERSION)/cli-hasura-* | grep -v darwin | xargs upx
+	ls $(OUTPUT_DIR)/$(VERSION)/cli-hasura-* | xargs upx
 
 # to be executed in circle-ci only
 ci-copy-binary:
@@ -72,7 +72,7 @@ test-e2e:
 ifndef HAS_GINKGO
 	cd ~ && go get github.com/onsi/ginkgo/ginkgo && cd -
 endif
-	cd commands && ginkgo -p -v --failFast
+	cd commands && ginkgo -v --failFast
 
 test-all: test integration_tests_config_v2 integration_tests_config_v3 test-e2e
 # clean the output directory

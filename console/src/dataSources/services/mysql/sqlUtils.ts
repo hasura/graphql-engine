@@ -307,10 +307,6 @@ export const getCreatePkSql = ({
   )} add primary key (${selectedPkColumns.join(', ')});
 `;
 
-export const getAlterPkSql = () => {
-  return '';
-};
-
 export const getCreateTableQueries = (
   currentSchema: string,
   tableName: string,

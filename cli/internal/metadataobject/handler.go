@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -89,10 +88,10 @@ func (h *Handler) ResetMetadata() error {
 }
 
 // ReloadMetadata - Reload Hasura GraphQL Engine metadata on the database
-func (h *Handler) ReloadMetadata() (io.Reader, error) {
+func (h *Handler) ReloadMetadata() error {
 	var err error
-	r, err := h.v1MetadataOps.ReloadMetadata()
-	return r, err
+	_, err = h.v1MetadataOps.ReloadMetadata()
+	return err
 }
 
 func (h *Handler) BuildMetadata() (yaml.MapSlice, error) {
@@ -100,7 +99,7 @@ func (h *Handler) BuildMetadata() (yaml.MapSlice, error) {
 	for _, object := range h.objects {
 		err := object.Build(&tmpMeta)
 		if err != nil {
-			if errors.Is(err, fs.ErrNotExist) {
+			if os.IsNotExist(errors.Cause(err)) {
 				h.logger.Debugf("metadata file for %s was not found, assuming an empty file", object.Name())
 				continue
 			}
@@ -126,16 +125,16 @@ func (h *Handler) MakeJSONMetadata() ([]byte, error) {
 	return jbyt, nil
 }
 
-func (h *Handler) V1ApplyMetadata() (io.Reader, error) {
+func (h *Handler) V1ApplyMetadata() error {
 	jbyt, err := h.MakeJSONMetadata()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	r, err := h.v1MetadataOps.ReplaceMetadata(bytes.NewReader(jbyt))
+	_, err = h.v1MetadataOps.ReplaceMetadata(bytes.NewReader(jbyt))
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return r, nil
+	return nil
 }
 
 func (h *Handler) V2ApplyMetadata() (*hasura.V2ReplaceMetadataResponse, error) {

@@ -47,7 +47,6 @@ import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Execute.LiveQuery.Poll
 import           Hasura.GraphQL.ParameterizedQueryHash       (ParameterizedQueryHash)
-import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP.Protocol      (OperationName)
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.RQL.Types.Action
@@ -92,7 +91,7 @@ data LiveQueryId
 
 addLiveQuery
   :: forall b
-   . BackendTransport b
+   . BackendExecute b
   => L.Logger L.Hasura
   -> ServerMetrics
   -> SubscriberMetadata

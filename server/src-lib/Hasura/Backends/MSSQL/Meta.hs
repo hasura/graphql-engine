@@ -6,15 +6,14 @@ module Hasura.Backends.MSSQL.Meta
 
 import           Hasura.Prelude
 
-import qualified Data.ByteString.UTF8                  as BSUTF8
 import qualified Data.HashMap.Strict                   as HM
 import qualified Data.HashSet                          as HS
 import qualified Data.Text                             as T
 import qualified Data.Text.Encoding                    as T
-import qualified Database.ODBC.SQLServer               as ODBC
+import qualified Database.PG.Query                     as Q (sqlFromFile)
 
 import           Data.Aeson                            as Aeson
-import           Data.FileEmbed                        (embedFile, makeRelativeToProject)
+import           Data.FileEmbed                        (makeRelativeToProject)
 import           Data.String
 
 import           Hasura.Backends.MSSQL.Connection
@@ -34,10 +33,8 @@ loadDBMetadata
   :: (MonadError QErr m, MonadIO m)
   => MSSQLPool -> m (DBTablesMetadata 'MSSQL)
 loadDBMetadata pool = do
-  let
-    queryBytes = $(makeRelativeToProject "src-rsr/mssql_table_metadata.sql" >>= embedFile)
-    odbcQuery :: ODBC.Query = fromString . BSUTF8.toString $ queryBytes
-  sysTablesText <- runJSONPathQuery pool odbcQuery
+  let sql = $(makeRelativeToProject "src-rsr/mssql_table_metadata.sql" >>= Q.sqlFromFile)
+  sysTablesText <- runJSONPathQuery pool (fromString sql)
   case Aeson.eitherDecodeStrict (T.encodeUtf8 sysTablesText) of
     Left e          -> throw500 $ T.pack $ "error loading sql server database schema: " <> e
     Right sysTables -> pure $ HM.fromList $ map transformTable sysTables

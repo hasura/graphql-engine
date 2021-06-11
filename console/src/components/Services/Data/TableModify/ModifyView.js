@@ -267,21 +267,10 @@ const ModifyView = props => {
             <hr />
             {getViewColumnsSection()}
             <hr />
-
-            {isFeatureSupported('tables.modify.computedFields') && (
-              <>
-                <ComputedFields tableSchema={tableSchema} />
-                <hr />
-              </>
-            )}
-
-            {isFeatureSupported('tables.modify.customGqlRoot') && (
-              <>
-                <RootFields tableSchema={tableSchema} />
-                <hr />
-              </>
-            )}
-
+            <ComputedFields tableSchema={tableSchema} />
+            <hr />
+            <RootFields tableSchema={tableSchema} />
+            <hr />
             {untrackBtn}
             {deleteBtn}
             <br />

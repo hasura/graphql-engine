@@ -155,7 +155,6 @@ func (c *ClientCommonMetadataOps) GetInconsistentMetadataReader() (io.Reader, er
 	return responseBody, nil
 }
 
-// SendCommonMetadataOperation send any request to metadata endpoint on hasura server by default this should be v1/metadata
 func (c *ClientCommonMetadataOps) SendCommonMetadataOperation(body interface{}) (*httpc.Response, io.Reader, error) {
 	req, err := c.NewRequest(http.MethodPost, c.path, body)
 	if err != nil {

@@ -1,32 +1,30 @@
 package metadataobject
 
 import (
-  "github.com/hasura/graphql-engine/cli/v2"
-  "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions"
-  "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/allowlist"
-  apilimits "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/api_limits"
-  crontriggers "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/cron_triggers"
-  errors2 "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/errors"
-  "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/functions"
-  graphqlschemaintrospection "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/graphql_schema_introspection"
-  inheritedroles "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/inherited_roles"
-  "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/querycollections"
-  "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/remoteschemas"
-  restendpoints "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/rest_endpoints"
-  "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/sources"
-  "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/tables"
-  "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/version"
-  "gopkg.in/yaml.v2"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/allowlist"
+	apilimits "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/api_limits"
+	crontriggers "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/cron_triggers"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/functions"
+	graphqlschemaintrospection "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/graphql_schema_introspection"
+	inheritedroles "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/inherited_roles"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/querycollections"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/remoteschemas"
+	restendpoints "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/rest_endpoints"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/sources"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/tables"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/version"
+	"gopkg.in/yaml.v2"
 )
 
 type Objects []Object
 
 type Object interface {
-	Build(metadata *yaml.MapSlice) errors2.ErrParsingMetadataObject
-	Export(metadata yaml.MapSlice) (map[string][]byte, errors2.ErrParsingMetadataObject)
+	Build(metadata *yaml.MapSlice) error
+	Export(metadata yaml.MapSlice) (map[string][]byte, error)
 	CreateFiles() error
 	Name() string
-	Error(err error, errContext ...string) errors2.ErrParsingMetadataObject
 }
 
 func GetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) Objects {
@@ -38,7 +36,6 @@ func GetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) Objects 
 	}
 	ec.Version.GetServerFeatureFlags()
 	objects := make(Objects, 0)
-	ec.Logger.Debugf("using %s as metadata directory", ec.MetadataDir)
 	if ec.Config.Version >= cli.V2 && metadataDir != "" {
 		// hasura core metadata objects
 		if ec.HasMetadataV3 {

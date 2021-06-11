@@ -117,6 +117,7 @@ const permSetBulkSelect = (isChecked, selectedRole) => {
 };
 const permSetApplySamePerm = (index, key, value) => {
   const data = { index, key, value };
+
   return dispatch => {
     dispatch({ type: PERM_SET_APPLY_SAME_PERM, data: data });
   };
@@ -438,15 +439,12 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
 
     const permissionsUpQueries = [];
     const permissionsDownQueries = [];
+
     permApplyToList.map(applyTo => {
       const currTableSchema = findTable(
         allSchemas,
         generateTableDef(applyTo.table, currentSchema)
       );
-      const permTableSchema = {
-        name: currTableSchema.table_name,
-        schema: currTableSchema.table_schema,
-      };
 
       const currentPermPermission = currTableSchema.permissions.find(
         el => el.role_name === applyTo.role
@@ -491,14 +489,14 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
       // now add normal create and drop permissions
       const createQuery = getCreatePermissionQuery(
         applyTo.action,
-        permTableSchema,
+        tableDef,
         applyTo.role,
         sanitizedPermission,
         currentDataSource
       );
       const deleteQuery = getDropPermissionQuery(
         applyTo.action,
-        permTableSchema,
+        tableDef,
         applyTo.role,
         currentDataSource
       );

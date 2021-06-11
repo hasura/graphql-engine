@@ -1,14 +1,11 @@
 package seed
 
 import (
-	"io/ioutil"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/pgdump"
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v2query"
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1query"
@@ -22,8 +19,6 @@ func TestDriver_ApplySeedsToDatabase(t *testing.T) {
 	port13, teardown := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown()
 	portLatest, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
-	defer teardown()
-	portCitus, citusSource, teardown := testutil.StartHasuraWithCitusSource(t, testutil.HasuraDockerImage)
 	defer teardown()
 	type fields struct {
 		SendBulk     sendBulk
@@ -69,7 +64,7 @@ func TestDriver_ApplySeedsToDatabase(t *testing.T) {
 			fields{
 				func() sendBulk {
 					c := testutil.NewHttpcClient(t, portLatest, nil)
-					return v2query.New(c, "v2/query").Bulk
+					return v1query.New(c, "v2/query").Bulk
 				}(),
 				func() hasura.PGDump {
 					c := testutil.NewHttpcClient(t, portLatest, nil)
@@ -89,7 +84,7 @@ func TestDriver_ApplySeedsToDatabase(t *testing.T) {
 			fields{
 				func() sendBulk {
 					c := testutil.NewHttpcClient(t, portLatest, nil)
-					return v2query.New(c, "v2/query").Bulk
+					return v1query.New(c, "v2/query").Bulk
 				}(),
 				func() hasura.PGDump {
 					c := testutil.NewHttpcClient(t, portLatest, nil)
@@ -106,41 +101,13 @@ func TestDriver_ApplySeedsToDatabase(t *testing.T) {
 			false,
 			func(t *testing.T) {
 				c := testutil.NewHttpcClient(t, portLatest, nil)
-				v2QueryClient := v2query.New(c, "v2/query")
-				_, err := v2QueryClient.PGRunSQL(hasura.PGRunSQLInput{
+				v1QueryClient := v1query.New(c, "v2/query")
+				_, err := v1QueryClient.PGRunSQL(hasura.PGRunSQLInput{
 					SQL:    "DROP TABLE articles",
 					Source: "default",
 				})
 				require.NoError(t, err)
 			},
-		},
-		{
-			"can apply seeds in citus",
-			fields{
-				func() sendBulk {
-					c := testutil.NewHttpcClient(t, portCitus, nil)
-					return v2query.New(c, "v2/query").Bulk
-				}(),
-				func() hasura.PGDump {
-					c := testutil.NewHttpcClient(t, portCitus, nil)
-					return pgdump.New(c, "v1alpha1/pg_dump")
-				}(),
-			},
-			args{
-				fs: func() afero.Fs {
-					fs := afero.NewMemMapFs()
-					b, err := ioutil.ReadFile("testdata/seeds/articles.sql")
-					require.NoError(t, err)
-					err = afero.WriteFile(fs, filepath.Join("testdata/seeds/", citusSource, "articles.sql"), b, 0755)
-					require.NoError(t, err)
-					return fs
-				}(),
-				source:             cli.Source{Name: citusSource, Kind: hasura.SourceKindCitus},
-				rootSeedsDirectory: "testdata/seeds",
-				filenames:          []string{},
-			},
-			false,
-			nil,
 		},
 	}
 	for _, tt := range tests {

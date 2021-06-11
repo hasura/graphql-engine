@@ -42,9 +42,8 @@ var (
 	ErrDatabaseDirty  = fmt.Errorf("database is dirty")
 
 	queryTypes = []string{
-		"select", "insert", "update", "delete", "count", "run_sql", "bulk",
-		"mssql_select", "mssql_insert", "mssql_update", "mssql_delete", "mssql_count", "mssql_run_sql",
-		"citus_select", "citus_insert", "citus_update", "citus_delete", "citus_count", "citus_run_sql",
+		"select", "insert", "select", "update", "delete", "count", "run_sql", "bulk",
+		"mssql_select", "mssql_insert", "msssql_select", "mssql_update", "mssql_delete", "mssql_count", "mssql_run_sql",
 	}
 	queryTypesMap = func() map[string]bool {
 		var m = map[string]bool{}
@@ -82,7 +81,6 @@ type HasuraDB struct {
 	v2metadataops        hasura.V2CommonMetadataOperations
 	pgSourceOps          hasura.PGSourceOps
 	mssqlSourceOps       hasura.MSSQLSourceOps
-	citusSourceOps       hasura.CitusSourceOps
 	genericQueryRequest  hasura.GenericSend
 	hasuraClient         *hasura.Client
 	migrationsStateStore statestore.MigrationsStateStore
@@ -106,7 +104,6 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 		v2metadataops:       hasuraOpts.V2MetadataOps,
 		pgSourceOps:         hasuraOpts.PGSourceOps,
 		mssqlSourceOps:      hasuraOpts.MSSQLSourceOps,
-		citusSourceOps:      hasuraOpts.CitusSourceOps,
 		genericQueryRequest: hasuraOpts.GenericQueryRequest,
 
 		hasuraClient: hasuraOpts.Client,
@@ -258,12 +255,6 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 			if err != nil {
 				return err
 			}
-		case hasura.SourceKindCitus:
-			_, err := h.citusSourceOps.CitusRunSQL(hasura.CitusRunSQLInput(sqlInput))
-			if err != nil {
-				return err
-			}
-
 		default:
 			return fmt.Errorf("unsupported source kind, source name: %v kind: %v", h.hasuraOpts.SourceName, h.hasuraOpts.SourceKind)
 		}

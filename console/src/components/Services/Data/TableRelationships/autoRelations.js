@@ -1,5 +1,3 @@
-import { isRelationshipValid as isCitusRelValid } from '../../../../dataSources/services/citus/utils';
-
 const sameRelCols = (currCols, existingCols) => {
   return currCols.sort().join(',') === existingCols.sort().join(',');
 };
@@ -71,22 +69,6 @@ const isExistingArrRel = (currentArrRels, relCols, relTable) => {
   }
 
   return _isExistingArrRel;
-};
-
-const isRelationshipValid = (rel, allSchemas) => {
-  const lTable = allSchemas.find(
-    t => t.table_name === rel.lTable && t.table_schema === rel.lSchema
-  );
-  const rTable = allSchemas.find(
-    t => t.table_name === rel.rTable && t.table_schema === rel.rSchema
-  );
-
-  /* valid relationship rules for citus */
-  if (lTable?.citus_table_type && rTable?.citus_table_type) {
-    return isCitusRelValid(rel, lTable, rTable);
-  }
-
-  return true;
 };
 
 const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
@@ -195,10 +177,10 @@ const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
   for (let i = 0; i < length; i++) {
     const objRel = objRels[i] ? objRels[i] : null;
     const arrRel = arrRels[i] ? arrRels[i] : null;
-    if (objRel !== null && isRelationshipValid(objRel, allSchemas)) {
+    if (objRel !== null) {
       finalObjRel.push(objRel);
     }
-    if (arrRel !== null && isRelationshipValid(arrRel, allSchemas)) {
+    if (arrRel !== null) {
       finalArrayRel.push(arrRel);
     }
   }

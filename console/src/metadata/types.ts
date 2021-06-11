@@ -941,7 +941,7 @@ export interface HasuraMetadataV2 {
 
 export interface MetadataDataSource {
   name: string;
-  kind?: 'postgres' | 'mysql' | 'mssql' | 'bigquery' | 'citus';
+  kind?: 'postgres' | 'mysql' | 'mssql' | 'bigquery';
   configuration?: {
     connection_info?: SourceConnectionInfo;
     // pro-only feature

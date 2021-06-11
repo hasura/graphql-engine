@@ -1,4 +1,4 @@
-import { Driver, sourceNames } from '../dataSources';
+import { Driver } from '../dataSources';
 import {
   ConnectionPoolSettings,
   IsolationLevelOptions,
@@ -67,7 +67,7 @@ export const addSource = (
   }
 
   return {
-    type: `${driver === 'postgres' ? 'pg' : 'citus'}_add_source`,
+    type: 'pg_add_source',
     args: {
       name: payload.name,
       configuration: {
@@ -88,14 +88,14 @@ export const addSource = (
 export const removeSource = (driver: Driver, name: string) => {
   let prefix = '';
   switch (driver) {
-    case sourceNames.mssql:
+    case 'mssql':
       prefix = 'mssql_';
       break;
-    case sourceNames.bigquery:
-      prefix = 'bigquery_';
+    case 'mysql':
+      prefix = 'mysql_';
       break;
-    case sourceNames.citus:
-      prefix = 'citus_';
+    case 'bigquery':
+      prefix = 'bigquery_';
       break;
     default:
       prefix = 'pg_';

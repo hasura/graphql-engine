@@ -45,7 +45,7 @@ convertMutationAction
   -> UserInfo
   -> HTTP.Manager
   -> HTTP.RequestHeaders
-  -> ActionMutation ('Postgres 'Vanilla) (Const Void) (UnpreparedValue ('Postgres 'Vanilla))
+  -> ActionMutation ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla))
   -> m ActionExecutionPlan
 convertMutationAction env logger userInfo manager reqHeaders  = \case
   AMSync s  -> pure $ AEPSync $ resolveActionExecution env logger userInfo s actionExecContext
@@ -76,7 +76,7 @@ convertMutationSelectionSet
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
   -> SetGraphqlIntrospectionOptions
-  -> m (ExecutionPlan, G.SelectionSet G.NoFragments Variable)
+  -> m (ExecutionPlan MutationDBRoot, G.SelectionSet G.NoFragments Variable)
 convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userInfo manager reqHeaders directives fields varDefs varValsM introspectionDisabledRoles = do
   mutationParser <- onNothing (gqlMutationParser gqlContext) $
     throw400 ValidationFailed "no mutations exist"
@@ -84,7 +84,7 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
   (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe Map.empty varValsM) directives fields
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability)
-    :: (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue UnpreparedValue), QueryReusability)
+    :: (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue), QueryReusability)
     <-(mutationParser >>> (`onLeft` reportParseErrors)) resolvedSelSet
 
   -- Process directives on the mutation
@@ -95,10 +95,11 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
   txs <- for unpreparedQueries \case
     RFDB sourceName exists ->
       AB.dispatchAnyBackend @BackendExecute exists
-        \(SourceConfigWith sourceConfig (MDBR db :: MutationDBRoot UnpreparedValue UnpreparedValue b)) -> do
+        \(SourceConfigWith sourceConfig (MDBR db)) -> do
           let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsMutationDB db
-          dbStepInfo <- mkDBMutationPlan @b userInfo stringifyNum sourceName sourceConfig noRelsDBAST
-          pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
+          pure $ ExecStepDB sourceName
+                (AB.mkAnyBackend $ SourceConfigWith sourceConfig $ MDBR noRelsDBAST)
+                remoteJoins
     RFRemote remoteField -> do
       RemoteFieldG remoteSchemaInfo resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
       pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeMutation $ [G.SelectionField resolvedRemoteField]
@@ -110,5 +111,5 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
       plan <- convertMutationAction env logger userInfo manager reqHeaders noRelsDBAST
       pure $ ExecStepAction plan (ActionsInfo actionName _fch) remoteJoins -- `_fch` represents the `forward_client_headers` option from the action
                                                                 -- definition which is currently being ignored for actions that are mutations
-    RFRaw s -> flip onLeft throwError =<< executeIntrospection userInfo s introspectionDisabledRoles
+    RFRaw s -> either throwError (pure . ExecStepRaw) =<< executeIntrospection userInfo s introspectionDisabledRoles
   return (txs, resolvedSelSet)

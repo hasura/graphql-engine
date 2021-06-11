@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 
@@ -74,9 +73,6 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return migrateCmd
 }
 
-var errDatabaseNotFound = errors.New("database not found")
-var errDatabaseNameNotSet = errors.New("--database-name flag is required")
-
 // ExecuteMigration runs the actual migration
 func ExecuteMigration(cmd string, t *migrate.Migrate, stepOrVersion int64) error {
 	var err error
@@ -130,7 +126,7 @@ func validateConfigV3Flags(cmd *cobra.Command, ec *cli.ExecutionContext) error {
 	// for project using config equal to or greater than v3
 	// database-name flag is required when running in non-terminal mode
 	if (!ec.IsTerminal || ec.Config.DisableInteractive) && !cmd.Flags().Changed("database-name") {
-		return errDatabaseNameNotSet
+		return errDatabaseNameNotSet{"--database-name flag is required"}
 	}
 
 	// prompt UI for choosing database if source name is not set
@@ -149,7 +145,7 @@ func validateConfigV3Flags(cmd *cobra.Command, ec *cli.ExecutionContext) error {
 		return fmt.Errorf("determining database kind of %s: %w", ec.Source.Name, err)
 	}
 	if sourceKind == nil {
-		return fmt.Errorf("%w: error determining database kind for %s, check if database exists on hasura", errDatabaseNotFound, ec.Source.Name)
+		return fmt.Errorf("error determining database kind for %s, check if database exists on hasura", ec.Source.Name)
 	}
 	ec.Source.Kind = *sourceKind
 
@@ -158,4 +154,12 @@ func validateConfigV3Flags(cmd *cobra.Command, ec *cli.ExecutionContext) error {
 		return fmt.Errorf("migrations on source %s of kind %s is not supported", ec.Source.Name, *sourceKind)
 	}
 	return nil
+}
+
+type errDatabaseNameNotSet struct {
+	message string
+}
+
+func (e errDatabaseNameNotSet) Error() string {
+	return e.message
 }
