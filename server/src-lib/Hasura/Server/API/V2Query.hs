@@ -98,10 +98,17 @@ runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuer
 
 queryModifiesSchema :: RQLQuery -> Bool
 queryModifiesSchema = \case
-  RQRunSql q      -> Postgres.isSchemaCacheBuildRequiredRunSQL q
-  RQMssqlRunSql q -> MSSQL.sqlContainsDDLKeyword $ MSSQL._mrsSql q
-  RQBulk l        -> any queryModifiesSchema l
-  _               -> False
+  RQInsert _                     -> False
+  RQSelect _                     -> False
+  RQUpdate _                     -> False
+  RQDelete _                     -> False
+  RQCount  _                     -> False
+  RQRunSql q                     -> Postgres.isSchemaCacheBuildRequiredRunSQL q
+  RQCitusRunSql q                -> Postgres.isSchemaCacheBuildRequiredRunSQL q
+  RQMssqlRunSql q                -> MSSQL.sqlContainsDDLKeyword $ MSSQL._mrsSql q
+  RQBigqueryRunSql _             -> False
+  RQBigqueryDatabaseInspection _ -> False
+  RQBulk l                       -> any queryModifiesSchema l
 
 runQueryM
   :: ( HasVersion
