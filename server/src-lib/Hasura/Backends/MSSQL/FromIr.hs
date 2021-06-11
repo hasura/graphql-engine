@@ -25,11 +25,7 @@ import           Control.Monad.Validate
 import           Data.Map.Strict                       (Map)
 import           Data.Proxy
 
-import qualified Hasura.GraphQL.Context                as GraphQL
-import qualified Hasura.RQL.IR.BoolExp                 as IR
-import qualified Hasura.RQL.IR.Delete                  as IR
-import qualified Hasura.RQL.IR.OrderBy                 as IR
-import qualified Hasura.RQL.IR.Select                  as IR
+import qualified Hasura.RQL.IR                         as IR
 import qualified Hasura.RQL.Types.Column               as IR
 import qualified Hasura.RQL.Types.Common               as IR
 import qualified Hasura.RQL.Types.Relationship         as IR
@@ -47,6 +43,7 @@ data Error
   = UnsupportedOpExpG (IR.OpExpG 'MSSQL Expression)
   | FunctionNotSupported
   | NodesUnsupportedForNow
+  | ConnectionsNotSupported
   deriving (Show, Eq)
 
 -- | The base monad used throughout this module for all conversion
@@ -100,12 +97,13 @@ mkSQLSelect jsonAggSelect annSimpleSel =
           }
 
 -- | Convert from the IR database query into a select.
-fromRootField :: GraphQL.QueryDB 'MSSQL Expression -> FromIr Select
+fromRootField :: IR.QueryDB 'MSSQL Expression -> FromIr Select
 fromRootField =
   \case
-    (GraphQL.QDBSingleRow s)    -> mkSQLSelect IR.JASSingleObject s
-    (GraphQL.QDBMultipleRows s) -> mkSQLSelect IR.JASMultipleRows s
-    (GraphQL.QDBAggregation s)  -> fromSelectAggregate s
+    (IR.QDBSingleRow s)    -> mkSQLSelect IR.JASSingleObject s
+    (IR.QDBMultipleRows s) -> mkSQLSelect IR.JASMultipleRows s
+    (IR.QDBAggregation s)  -> fromSelectAggregate s
+    (IR.QDBConnection _)   -> refute $ pure ConnectionsNotSupported
 
 --------------------------------------------------------------------------------
 -- Top-level exported functions
@@ -596,6 +594,16 @@ fromAnnFieldsG existingJoins stringifyNumbers (IR.FieldName name, field) =
         (\aliasedThing ->
            JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
         (fromArraySelectG arraySelectG)
+    -- this will be gone once the code which collects remote joins from the IR
+    -- emits a modified IR where remote relationships can't be reached
+    IR.AFRemote _ ->
+      pure
+        (ExpressionFieldSource
+           Aliased
+             { aliasedThing = TSQL.ValueExpression
+                              (ODBC.TextValue "null: remote field selected")
+             , aliasedAlias = name
+             })
 
 -- | Here is where we project a field as a column expression. If
 -- number stringification is on, then we wrap it in a

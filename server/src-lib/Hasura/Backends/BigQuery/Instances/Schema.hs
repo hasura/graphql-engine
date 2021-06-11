@@ -19,12 +19,12 @@ import qualified Hasura.RQL.IR.Update                        as IR
 import qualified Language.GraphQL.Draft.Syntax               as G
 
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser                       hiding (EnumValueInfo, field)
 import           Hasura.GraphQL.Parser.Internal.Parser       hiding (field)
 import           Hasura.GraphQL.Parser.Internal.TypeChecking
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.Common
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 
 
@@ -55,7 +55,6 @@ instance BackendSchema 'BigQuery where
   computedField             = msComputedField
   node                      = msNode
   tableDistinctOn           = msTableDistinctOn
-  remoteRelationshipField   = msRemoteRelationshipField
   -- SQL literals
   columnDefaultValue = error "TODO: Make impossible by the type system. BigQuery doesn't support insertions."
 

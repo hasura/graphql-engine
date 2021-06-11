@@ -4,7 +4,6 @@ module Hasura.RQL.DML.Update
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                             as Env
 import qualified Data.HashMap.Strict                          as M
 import qualified Data.Sequence                                as DS
 import qualified Database.PG.Query                            as Q
@@ -30,7 +29,6 @@ import           Hasura.RQL.IR.Update
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
-import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
 
 
@@ -188,14 +186,15 @@ validateUpdateQuery query = do
     validateUpdateQueryWith sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query
 
 runUpdate
-  :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
+  :: ( QErrM m, UserInfoM m, CacheRM m
      , HasServerConfigCtx m, MonadBaseControl IO m
      , MonadIO m, Tracing.MonadTrace m, MetadataM m
      )
-  => Env.Environment -> UpdateQuery -> m EncJSON
-runUpdate env q = do
+  => UpdateQuery -> m EncJSON
+runUpdate q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (uqSource q)
+  userInfo <- askUserInfo
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   validateUpdateQuery q
     >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
-        . execUpdateQuery env strfyNum Nothing
+        . execUpdateQuery strfyNum userInfo

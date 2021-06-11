@@ -4,7 +4,6 @@ module Hasura.RQL.DML.Insert
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                             as Env
 import qualified Data.HashMap.Strict                          as HM
 import qualified Data.HashSet                                 as HS
 import qualified Data.Sequence                                as DS
@@ -29,7 +28,6 @@ import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.Insert
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
 
 
@@ -206,18 +204,19 @@ convInsQ query = do
     sessVarFromCurrentSetting binRHSBuilder query
 
 runInsert
-  :: ( HasVersion, QErrM m, UserInfoM m
+  :: ( QErrM m, UserInfoM m
      , CacheRM m, HasServerConfigCtx m
      , MonadIO m, Tracing.MonadTrace m
      , MonadBaseControl IO m, MetadataM m
      )
-  => Env.Environment -> InsertQuery -> m EncJSON
-runInsert env q = do
+  => InsertQuery -> m EncJSON
+runInsert q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (iqSource q)
+  userInfo <- askUserInfo
   res <- convInsQ q
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $
-    execInsertQuery env strfyNum Nothing res
+    execInsertQuery strfyNum userInfo res
 
 decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj ('Postgres 'Vanilla)]
 decodeInsObjs v = do

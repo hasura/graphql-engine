@@ -13,8 +13,9 @@ import           Hasura.SQL.Backend
 data AnnInsert (b :: BackendType) v
   = AnnInsert
   { _aiFieldName :: !Text
-  , _aiIsSingle  :: Bool
-  , _aiData      :: AnnMultiInsert b v
+  , _aiIsSingle  :: !Bool
+  , _aiData      :: !(MultiObjIns b v)
+  , _aiOutput    :: !(MutationOutputG b v)
   }
 
 data AnnIns (b :: BackendType) a v
@@ -46,8 +47,6 @@ data AnnInsObj (b :: BackendType) v
   , _aioArrRels :: ![ArrRelIns b v]
   }
 
-type AnnSingleInsert b v = (SingleObjIns b v, MutationOutputG b v)
-type AnnMultiInsert  b v = (MultiObjIns  b v, MutationOutputG b v)
 
 instance Semigroup (AnnInsObj backend v) where
   (AnnInsObj col1 obj1 rel1) <> (AnnInsObj col2 obj2 rel2) =

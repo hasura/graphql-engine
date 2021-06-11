@@ -20,13 +20,13 @@ import qualified Hasura.RQL.IR.Select                        as IR
 import qualified Hasura.RQL.IR.Update                        as IR
 
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser                       hiding (EnumValueInfo, field)
 import           Hasura.GraphQL.Parser.Internal.Parser       hiding (field)
 import           Hasura.GraphQL.Parser.Internal.TypeChecking
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 
 
@@ -57,7 +57,6 @@ instance BackendSchema 'MSSQL where
   computedField             = msComputedField
   node                      = msNode
   tableDistinctOn           = msTableDistinctOn
-  remoteRelationshipField   = msRemoteRelationshipField
   -- SQL literals
   columnDefaultValue = msColumnDefaultValue
 
@@ -155,20 +154,6 @@ msBuildFunctionMutationFields
 msBuildFunctionMutationFields _ _ _ _ _ _ =
   pure []
 
-mkMSSQLScalarTypeName :: MonadError QErr m => MSSQL.ScalarType -> m G.Name
-mkMSSQLScalarTypeName = \case
-  MSSQL.WcharType    -> pure stringScalar
-  MSSQL.WvarcharType -> pure stringScalar
-  MSSQL.WtextType    -> pure stringScalar
-  MSSQL.FloatType    -> pure floatScalar
-  -- integer types
-  MSSQL.IntegerType  -> pure intScalar
-  -- boolean type
-  MSSQL.BitType      -> pure boolScalar
-  scalarType -> G.mkName (MSSQL.scalarTypeDBName scalarType) `onNothing` throw400 ValidationFailed
-    ("cannot use SQL type " <> scalarType <<> " in the GraphQL schema because its name is not a "
-    <> "valid GraphQL identifier")
-
 ----------------------------------------------------------------
 -- Individual components
 
@@ -179,6 +164,9 @@ msColumnParser
   -> m (Parser 'Both n (Opaque (ColumnValue 'MSSQL)))
 msColumnParser columnType (G.Nullability isNullable) =
   opaque . fmap (ColumnValue columnType) <$> case columnType of
+    -- TODO: the mapping here is not consistent with mkMSSQLScalarTypeName. For
+    -- example, exposing all the float types as a GraphQL Float type is
+    -- incorrect, similarly exposing all the integer types as a GraphQL Int
     ColumnScalar scalarType -> possiblyNullable scalarType <$> case scalarType of
       -- bytestring
       MSSQL.CharType     -> pure $ ODBC.ByteStringValue . encodeUtf8 <$> P.string
@@ -205,7 +193,7 @@ msColumnParser columnType (G.Nullability isNullable) =
       -- boolean
       MSSQL.BitType      -> pure $ ODBC.BoolValue <$> P.boolean
       _                  -> do
-        name <- mkMSSQLScalarTypeName scalarType
+        name <- MSSQL.mkMSSQLScalarTypeName scalarType
         let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
         pure $ Parser
           { pType = schemaType

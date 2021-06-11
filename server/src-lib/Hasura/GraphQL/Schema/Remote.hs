@@ -21,7 +21,6 @@ import qualified Hasura.GraphQL.Parser.Internal.Parser       as P
 import qualified Hasura.GraphQL.Parser.Internal.TypeChecking as P
 
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Context                      (RemoteField, RemoteFieldG (..))
 import           Hasura.GraphQL.Parser                       as P
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCache

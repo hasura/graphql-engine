@@ -10,16 +10,14 @@ module Hasura.Backends.MSSQL.Instances.Execute
 import           Hasura.Prelude
 
 import qualified Data.Aeson.Extended                   as J
-import qualified Data.Environment                      as Env
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashSet                          as Set
 import qualified Data.List.NonEmpty                    as NE
 import qualified Data.Text.Extended                    as T
 import qualified Database.ODBC.SQLServer               as ODBC
 import qualified Language.GraphQL.Draft.Syntax         as G
-import qualified Network.HTTP.Client                   as HTTP
-import qualified Network.HTTP.Types                    as HTTP
 
+import qualified Hasura.RQL.Types.Column               as RQL
 import qualified Hasura.SQL.AnyBackend                 as AB
 
 import           Hasura.Backends.MSSQL.Connection
@@ -30,12 +28,11 @@ import           Hasura.Backends.MSSQL.ToQuery
 import           Hasura.Backends.MSSQL.Types           as TSQL
 import           Hasura.Base.Error
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Parser
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
-import qualified Hasura.RQL.Types.Column               as RQL
 import           Hasura.Session
 
 
@@ -43,7 +40,6 @@ instance BackendExecute 'MSSQL where
   type PreparedQuery    'MSSQL = Text
   type MultiplexedQuery 'MSSQL = MultiplexedQuery'
   type ExecutionMonad   'MSSQL = ExceptT QErr IO
-  getRemoteJoins = const []
 
   mkDBQueryPlan = msDBQueryPlan
   mkDBMutationPlan = msDBMutationPlan
@@ -66,26 +62,19 @@ msDBQueryPlan
   :: forall m.
      ( MonadError QErr m
      )
-  => Env.Environment
-  -> HTTP.Manager
-  -> [HTTP.Header]
-  -> UserInfo
+  => UserInfo
   -> SourceName
   -> SourceConfig 'MSSQL
   -> QueryDB 'MSSQL (UnpreparedValue 'MSSQL)
-  -> m ExecutionStep
-msDBQueryPlan _env _manager _reqHeaders userInfo sourceName sourceConfig qrf = do
+  -> m (DBStepInfo 'MSSQL)
+msDBQueryPlan userInfo sourceName sourceConfig qrf = do
   let sessionVariables = _uiSession userInfo
   statement <- planQuery sessionVariables qrf
   let printer = fromSelect statement
       queryString = ODBC.renderQuery $ toQueryPretty printer
       pool  = _mscConnectionPool sourceConfig
       odbcQuery = encJFromText <$> runJSONPathQuery pool (toQueryFlat printer)
-  pure
-    $ ExecStepDB []
-    . AB.mkAnyBackend
-    $ DBStepInfo @'MSSQL sourceName sourceConfig (Just $ queryString) odbcQuery
-
+  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just $ queryString) odbcQuery
 
 runShowplan
   :: ODBC.Query -> ODBC.Connection -> IO [Text]
@@ -211,16 +200,13 @@ msDBMutationPlan
   :: forall m.
      ( MonadError QErr m
      )
-  => Env.Environment
-  -> HTTP.Manager
-  -> [HTTP.Header]
-  -> UserInfo
+  => UserInfo
   -> Bool
   -> SourceName
   -> SourceConfig 'MSSQL
   -> MutationDB 'MSSQL (UnpreparedValue 'MSSQL)
-  -> m ExecutionStep
-msDBMutationPlan _env _manager _reqHeaders _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
+  -> m (DBStepInfo 'MSSQL)
+msDBMutationPlan _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
   throw500 "mutations are not supported in MSSQL; this should be unreachable"
 
 -- subscription

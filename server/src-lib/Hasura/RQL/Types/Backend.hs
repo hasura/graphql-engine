@@ -59,7 +59,6 @@ class
   , Representable (ExtraTableMetadata b)
   , Representable (XRelay b)
   , Representable (XNodesAgg b)
-  , Representable (XRemoteField b)
   , Representable (XComputedField b)
   , Representable (XDistinct b)
   , Generic (Column b)
@@ -136,7 +135,6 @@ class
 
   -- extension types
   type XComputedField          b :: Type
-  type XRemoteField            b :: Type
   type XRelay                  b :: Type
   type XNodesAgg               b :: Type
   type XDistinct               b :: Type
@@ -154,6 +152,10 @@ class
   -- functions on names
   tableGraphQLName    :: TableName b    -> Either QErr G.Name
   functionGraphQLName :: FunctionName b -> Either QErr G.Name
+
+  -- | This function is used in the validation of a remote relationship where
+  -- we check whether the columns that are mapped to arguments of a remote
+  -- field are compatible
   scalarTypeGraphQLName :: ScalarType b -> Either QErr G.Name
 
   -- TODO: metadata related functions

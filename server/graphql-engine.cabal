@@ -338,9 +338,10 @@ library
                      , Hasura.Backends.Postgres.DDL.Source.Version
                      , Hasura.Backends.Postgres.DDL.Table
                      , Hasura.Backends.Postgres.Execute.LiveQuery
+                     , Hasura.Backends.Postgres.Execute.Insert
                      , Hasura.Backends.Postgres.Execute.Mutation
-                     , Hasura.Backends.Postgres.Execute.RemoteJoin
                      , Hasura.Backends.Postgres.Execute.Types
+                     , Hasura.Backends.Postgres.Execute.Prepare
                      , Hasura.Backends.Postgres.Instances.Execute
                      , Hasura.Backends.Postgres.Instances.Metadata
                      , Hasura.Backends.Postgres.Instances.Schema
@@ -512,11 +513,11 @@ library
                      , Hasura.RQL.IR.Delete
                      , Hasura.RQL.IR.Insert
                      , Hasura.RQL.IR.OrderBy
-                     , Hasura.RQL.IR.RemoteJoin
                      , Hasura.RQL.IR.Returning
                      , Hasura.RQL.IR.Select
                      , Hasura.RQL.IR.Update
-
+                     , Hasura.RQL.IR.Root
+                     , Hasura.RQL.IR
                      , Hasura.GraphQL.Context
                      , Hasura.GraphQL.Execute
                      , Hasura.GraphQL.Execute.Action
@@ -525,7 +526,6 @@ library
                      , Hasura.GraphQL.Execute.Backend
                      , Hasura.GraphQL.Execute.Common
                      , Hasura.GraphQL.Execute.Inline
-                     , Hasura.GraphQL.Execute.Insert
                      , Hasura.GraphQL.Execute.Instances
                      , Hasura.GraphQL.Execute.LiveQuery.Options
                      , Hasura.GraphQL.Execute.LiveQuery.Plan
@@ -534,9 +534,11 @@ library
                      , Hasura.GraphQL.Execute.LiveQuery.TMap
                      , Hasura.GraphQL.Execute.Mutation
                      , Hasura.GraphQL.Execute.Plan
-                     , Hasura.GraphQL.Execute.Prepare
                      , Hasura.GraphQL.Execute.Remote
                      , Hasura.GraphQL.Execute.RemoteJoin
+                     , Hasura.GraphQL.Execute.RemoteJoin.Types
+                     , Hasura.GraphQL.Execute.RemoteJoin.Collect
+                     , Hasura.GraphQL.Execute.RemoteJoin.Join
                      , Hasura.GraphQL.Execute.Resolve
                      , Hasura.GraphQL.Execute.Types
                      , Hasura.GraphQL.Explain

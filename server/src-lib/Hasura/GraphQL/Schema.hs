@@ -39,6 +39,7 @@ import           Hasura.GraphQL.Schema.Remote          (buildRemoteParser)
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.DDL.Schema.Cache.Common
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 import           Hasura.Session
 

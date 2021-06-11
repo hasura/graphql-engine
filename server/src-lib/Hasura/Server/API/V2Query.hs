@@ -116,10 +116,10 @@ runQueryM
      )
   => Env.Environment -> RQLQuery -> m EncJSON
 runQueryM env = \case
-  RQInsert q                     -> runInsert env q
+  RQInsert q                     -> runInsert q
   RQSelect q                     -> runSelect q
-  RQUpdate q                     -> runUpdate env q
-  RQDelete q                     -> runDelete env q
+  RQUpdate q                     -> runUpdate q
+  RQDelete q                     -> runDelete q
   RQCount  q                     -> runCount q
   RQRunSql q                     -> Postgres.runRunSQL @'Vanilla q
   RQMssqlRunSql q                -> MSSQL.runSQL q

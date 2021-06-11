@@ -1,4 +1,4 @@
-module Hasura.GraphQL.Execute.Prepare
+module Hasura.Backends.Postgres.Execute.Prepare
   ( PlanVariables
   , PrepArgMap
   , PlanningSt(..)

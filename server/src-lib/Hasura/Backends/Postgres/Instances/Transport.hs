@@ -17,7 +17,7 @@ import           Control.Monad.Morph                        (hoist)
 import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.Execute.LiveQuery as PGL
-import qualified Hasura.GraphQL.Execute.Query               as EQ
+import qualified Hasura.Backends.Postgres.Instances.Execute as EQ
 import qualified Hasura.Logging                             as L
 import qualified Hasura.Tracing                             as Tracing
 
@@ -59,7 +59,7 @@ runPGQuery
   -> L.Logger L.Hasura
   -> SourceConfig ('Postgres pgKind)
   -> Tracing.TraceT (LazyTxT QErr IO) EncJSON
-  -> Maybe (EQ.PreparedSql pgKind)
+  -> Maybe EQ.PreparedSql
   -> m (DiffTime, EncJSON)
   -- ^ Also return the time spent in the PG query; for telemetry.
 runPGQuery reqId query fieldName _userInfo logger sourceConfig tx genSql = do
@@ -81,7 +81,7 @@ runPGMutation
   -> L.Logger L.Hasura
   -> SourceConfig ('Postgres pgKind)
   -> Tracing.TraceT (LazyTxT QErr IO) EncJSON
-  -> Maybe (EQ.PreparedSql pgKind)
+  -> Maybe EQ.PreparedSql
   -> m (DiffTime, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
@@ -127,13 +127,13 @@ runPGQueryExplain (DBStepInfo _ sourceConfig _ action) =
 mkQueryLog
   :: GQLReqUnparsed
   -> G.Name
-  -> Maybe (EQ.PreparedSql pgKind)
+  -> Maybe EQ.PreparedSql
   -> RequestId
   -> QueryLog
 mkQueryLog gqlQuery fieldName preparedSql requestId =
   QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId QueryLogKindDatabase
   where
-    generatedQuery = preparedSql <&> \(EQ.PreparedSql query args _) ->
+    generatedQuery = preparedSql <&> \(EQ.PreparedSql query args) ->
       GeneratedQuery (Q.getQueryText query) (J.toJSON $ pgScalarValueToJson . snd <$> args)
 
 

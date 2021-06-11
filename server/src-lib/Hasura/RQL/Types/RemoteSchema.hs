@@ -197,6 +197,14 @@ newtype RemoteSchemaIntrospection
   = RemoteSchemaIntrospection [(G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)]
   deriving (Show, Eq, Generic, Hashable, Cacheable, Ord)
 
+data RemoteFieldG var
+  = RemoteFieldG
+  { _rfRemoteSchemaInfo :: !RemoteSchemaInfo
+  , _rfField            :: !(G.Field G.NoFragments var)
+  } deriving (Functor, Foldable, Traversable)
+
+type RemoteField = RemoteFieldG RemoteSchemaVariable
+
 data RemoteSchemaPermsCtx
   = RemoteSchemaPermsEnabled
   | RemoteSchemaPermsDisabled

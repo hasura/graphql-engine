@@ -1,89 +1,52 @@
-module Hasura.Backends.Postgres.Execute.RemoteJoin
-  ( getRemoteJoins
-  , getRemoteJoinsAggregateSelect
-  , getRemoteJoinsMutationOutput
-  , getRemoteJoinsConnectionSelect
-  , RemoteJoins
-  -- * These are required in pro:
-  , FieldPath(..)
-  , RemoteJoin(..)
-  , executeQueryWithRemoteJoins
+module Hasura.GraphQL.Execute.RemoteJoin.Join
+  ( processRemoteJoins
   , graphQLValueToJSON
-  , processRemoteJoins
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                             as A
-import qualified Data.Aeson.Ordered                     as AO
-import qualified Data.ByteString.Lazy                   as BL
-import qualified Data.Environment                       as Env
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashMap.Strict.Extended           as Map
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Data.List.NonEmpty                     as NE
-import qualified Data.Text                              as T
-import qualified Database.PG.Query                      as Q
-import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Types                     as N
+import qualified Data.Aeson                              as A
+import qualified Data.Aeson.Ordered                      as AO
+import qualified Data.ByteString.Lazy                    as BL
+import qualified Data.Environment                        as Env
+import qualified Data.HashMap.Strict                     as Map
+import qualified Data.HashMap.Strict.Extended            as Map
+import qualified Data.HashMap.Strict.InsOrd              as OMap
+import qualified Data.List.NonEmpty                      as NE
+import qualified Data.Text                               as T
+import qualified Language.GraphQL.Draft.Syntax           as G
+import qualified Network.HTTP.Client                     as HTTP
+import qualified Network.HTTP.Types                      as N
 
-import           Data.Text.Extended                     (commaSeparated, (<<>))
+import           Data.Text.Extended                      (commaSeparated, (<<>))
 import           Data.Validation
 
-import qualified Hasura.Tracing                         as Tracing
+import qualified Hasura.Tracing                          as Tracing
 
-import           Hasura.Backends.Postgres.Connection
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Remote
-import           Hasura.GraphQL.Execute.RemoteJoin
-import           Hasura.GraphQL.Parser                  hiding (field)
-import           Hasura.GraphQL.RemoteServer            (execRemoteGQ)
+import           Hasura.GraphQL.Execute.RemoteJoin.Types
+import           Hasura.GraphQL.Parser                   hiding (field)
+import           Hasura.GraphQL.RemoteServer             (execRemoteGQ)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.IR.RemoteJoin
 import           Hasura.RQL.IR.Select
-import           Hasura.RQL.Types                       hiding (Alias)
-import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.RQL.Types                        hiding (Alias)
+import           Hasura.Server.Version                   (HasVersion)
 import           Hasura.Session
-
-
--- | Executes given query and fetch response JSON from Postgres. Substitutes remote relationship fields.
-executeQueryWithRemoteJoins
-  :: ( HasVersion
-     , MonadTx m
-     , MonadIO m
-     , Tracing.MonadTrace m
-     , Backend ('Postgres pgKind)
-     )
-  => Env.Environment
-  -> HTTP.Manager
-  -> [N.Header]
-  -> UserInfo
-  -> Q.Query
-  -> [Q.PrepArg]
-  -> RemoteJoins ('Postgres pgKind)
-  -> m EncJSON
-executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs rjs = do
-  -- Perform the query on database and fetch the response
-  pgRes <- runIdentity . Q.getRow <$> Tracing.trace "Postgres" (liftTx (Q.rawQE dmlTxErrorHandler q prepArgs True))
-  -- Process remote joins in the response
-  processRemoteJoins env manager reqHdrs userInfo pgRes rjs
 
 processRemoteJoins
   :: ( HasVersion
-     , MonadTx m
+     , MonadError QErr m
      , MonadIO m
      , Tracing.MonadTrace m
-     , Backend ('Postgres pgKind)
      )
   => Env.Environment
   -> HTTP.Manager
   -> [N.Header]
   -> UserInfo
   -> BL.ByteString
-  -> RemoteJoins ('Postgres pgKind)
+  -> RemoteJoins
   -> m EncJSON
 processRemoteJoins env manager reqHdrs userInfo pgRes rjs = do
   -- Step 1: Decode the given bytestring as a JSON value
@@ -160,22 +123,21 @@ data RemoteJoinField
 -- | Generate composite JSON ('CompositeValue') parameterised over 'RemoteJoinField'
 --   from remote join map and query response JSON from Postgres.
 traverseQueryResponseJSON
-  :: forall pgKind m
-   . (MonadError QErr m, Backend ('Postgres pgKind))
-  => RemoteJoinMap ('Postgres pgKind)
+  :: (MonadError QErr m)
+  => RemoteJoinMap
   -> AO.Value
   -> m (CompositeValue (Maybe RemoteJoinField))
 traverseQueryResponseJSON rjm =
   flip runReaderT rjm . flip evalStateT (Counter 0) . traverseValue mempty
   where
     askRemoteJoins
-      :: MonadReader (RemoteJoinMap ('Postgres pgKind)) n
+      :: MonadReader RemoteJoinMap n
       => FieldPath
-      -> n (Maybe (NE.NonEmpty (RemoteJoin ('Postgres pgKind))))
+      -> n (Maybe (NE.NonEmpty RemoteJoin))
     askRemoteJoins path = asks (Map.lookup path)
 
     traverseValue
-      :: (MonadError QErr n, MonadReader (RemoteJoinMap ('Postgres pgKind)) n, MonadState Counter n)
+      :: (MonadError QErr n, MonadReader RemoteJoinMap n, MonadState Counter n)
       => FieldPath
       -> AO.Value
       -> n (CompositeValue (Maybe RemoteJoinField))
@@ -187,7 +149,7 @@ traverseQueryResponseJSON rjm =
         mkRemoteSchemaField
           :: (MonadError QErr n, MonadState Counter n)
           => AO.Object
-          -> RemoteJoin ('Postgres pgKind)
+          -> RemoteJoin
           -> n (Maybe RemoteJoinField)
         mkRemoteSchemaField siblingFields remoteJoin = runMaybeT $ do
           counter <- getCounter
@@ -265,8 +227,7 @@ traverseQueryResponseJSON rjm =
                 Nothing -> Just <$> traverseValue fieldPath value
                 Just nonEmptyRemoteJoins -> do
                   let remoteJoins = toList nonEmptyRemoteJoins
-                      phantomColumnFields = map (fromCol @('Postgres pgKind) . pgiColumn) $
-                                            concatMap _rjPhantomFields remoteJoins
+                      phantomColumnFields = concatMap _rjPhantomFields remoteJoins
                   if | fieldName `elem` phantomColumnFields -> pure Nothing
                      | otherwise -> do
                          case find ((== fieldName) . _rjName) remoteJoins of

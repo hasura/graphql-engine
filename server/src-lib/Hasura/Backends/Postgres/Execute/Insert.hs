@@ -1,4 +1,4 @@
-module Hasura.GraphQL.Execute.Insert
+module Hasura.Backends.Postgres.Execute.Insert
   ( traverseAnnInsert
   , convertToSQLTransaction
   ) where
@@ -6,7 +6,6 @@ module Hasura.GraphQL.Execute.Insert
 import           Hasura.Prelude
 
 import qualified Data.Aeson                                   as J
-import qualified Data.Environment                             as Env
 import qualified Data.HashMap.Strict                          as Map
 import qualified Data.List                                    as L
 import qualified Data.Sequence                                as Seq
@@ -16,7 +15,6 @@ import qualified Database.PG.Query                            as Q
 import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.Execute.Mutation    as PGE
-import qualified Hasura.Backends.Postgres.Execute.RemoteJoin  as PGE
 import qualified Hasura.Backends.Postgres.SQL.DML             as PG
 import qualified Hasura.Backends.Postgres.Translate.BoolExp   as PGT
 import qualified Hasura.Backends.Postgres.Translate.Insert    as PGT
@@ -34,6 +32,7 @@ import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                        (HasVersion)
+import           Hasura.Session
 
 
 traverseAnnInsert
@@ -41,12 +40,10 @@ traverseAnnInsert
   => (a -> f b)
   -> IR.AnnInsert backend a
   -> f (IR.AnnInsert backend b)
-traverseAnnInsert f (IR.AnnInsert fieldName isSingle (annIns, mutationOutput)) =
+traverseAnnInsert f (IR.AnnInsert fieldName isSingle annIns mutationOutput) =
   IR.AnnInsert fieldName isSingle
-  <$> ( (,)
-        <$> traverseMulti annIns
-        <*> IR.traverseMutationOutput f mutationOutput
-      )
+  <$> traverseMulti annIns
+  <*> IR.traverseMutationOutput f mutationOutput
   where
     traverseMulti (IR.AnnIns objs tableName conflictClause checkCond columns defaultValues) = IR.AnnIns
       <$> traverse traverseObject objs
@@ -83,17 +80,16 @@ convertToSQLTransaction
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
      )
-  => Env.Environment
-  -> IR.AnnInsert ('Postgres pgKind) PG.SQLExp
-  -> PGE.MutationRemoteJoinCtx
+  => IR.AnnInsert ('Postgres pgKind) PG.SQLExp
+  -> UserInfo
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> m EncJSON
-convertToSQLTransaction env (IR.AnnInsert fieldName isSingle (annIns, mutationOutput)) remoteJoinCtx planVars stringifyNum =
+convertToSQLTransaction (IR.AnnInsert fieldName isSingle annIns mutationOutput) userInfo planVars stringifyNum =
   if null $ IR._aiInsObj annIns
   then pure $ IR.buildEmptyMutResp mutationOutput
   else withPaths ["selectionSet", fieldName, "args", suffix] $
-    insertMultipleObjects env annIns [] remoteJoinCtx mutationOutput planVars stringifyNum
+    insertMultipleObjects annIns [] userInfo mutationOutput planVars stringifyNum
   where
     withPaths p x = foldr ($) x $ withPathK <$> p
     suffix = bool "objects" "object" isSingle
@@ -106,15 +102,14 @@ insertMultipleObjects
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
      )
-  => Env.Environment
-  -> IR.MultiObjIns ('Postgres pgKind) PG.SQLExp
+  => IR.MultiObjIns ('Postgres pgKind) PG.SQLExp
   -> [(PGCol, PG.SQLExp)]
-  -> PGE.MutationRemoteJoinCtx
+  -> UserInfo
   -> IR.MutationOutput ('Postgres pgKind)
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> m EncJSON
-insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutationOutput planVars stringifyNum =
+insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput planVars stringifyNum =
     bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
     IR.AnnIns insObjs table conflictClause checkCondition columnInfos defVals = multiObjIns
@@ -138,18 +133,17 @@ insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutationOu
           rowCount = tshow . length $ IR._aiInsObj multiObjIns
       Tracing.trace ("Insert (" <> rowCount <> ") " <> qualifiedObjectToText table) do
         Tracing.attachMetadata [("count", rowCount)]
-        PGE.execInsertQuery env stringifyNum (Just remoteJoinCtx) (insertQuery, planVars)
+        PGE.execInsertQuery stringifyNum userInfo (insertQuery, planVars)
 
     withRelsInsert = do
       insertRequests <- indexedForM insObjs \obj -> do
         let singleObj = IR.AnnIns obj table conflictClause checkCondition columnInfos defVals
-        insertObject env singleObj additionalColumns remoteJoinCtx planVars stringifyNum
+        insertObject singleObj additionalColumns userInfo planVars stringifyNum
       let affectedRows = sum $ map fst insertRequests
           columnValues = mapMaybe snd insertRequests
       selectExpr <- PGT.mkSelectExpFromColumnValues table columnInfos columnValues
-      let (mutOutputRJ, remoteJoins) = PGE.getRemoteJoinsMutationOutput mutationOutput
-      PGE.executeMutationOutputQuery env table columnInfos (Just affectedRows) (PGT.MCSelectValues selectExpr)
-        mutOutputRJ stringifyNum [] $ (, remoteJoinCtx) <$> remoteJoins
+      PGE.executeMutationOutputQuery table columnInfos (Just affectedRows) (PGT.MCSelectValues selectExpr)
+        mutationOutput stringifyNum []
 
 insertObject
   :: forall pgKind m
@@ -160,18 +154,17 @@ insertObject
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
      )
-  => Env.Environment
-  -> IR.SingleObjIns ('Postgres pgKind) PG.SQLExp
+  => IR.SingleObjIns ('Postgres pgKind) PG.SQLExp
   -> [(PGCol, PG.SQLExp)]
-  -> PGE.MutationRemoteJoinCtx
+  -> UserInfo
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> m (Int, Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal))
-insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringifyNum = Tracing.trace ("Insert " <> qualifiedObjectToText table) do
+insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tracing.trace ("Insert " <> qualifiedObjectToText table) do
   validateInsert (map fst columns) (map IR._riRelInfo objectRels) (map fst additionalColumns)
 
   -- insert all object relations and fetch this insert dependent column values
-  objInsRes <- forM beforeInsert $ insertObjRel env planVars remoteJoinCtx stringifyNum
+  objInsRes <- forM beforeInsert $ insertObjRel planVars userInfo stringifyNum
 
   -- prepare final insert columns
   let objRelAffRows = sum $ map fst objInsRes
@@ -223,7 +216,7 @@ insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringify
       colVal <- onNothing colValM $ throw400 NotSupported cannotInsArrRelErr
       afterInsertDepColsWithVal <- fetchFromColVals colVal afterInsertDepCols
       arrInsARows <- forM allAfterInsertRels
-        $ insertArrRel env afterInsertDepColsWithVal remoteJoinCtx planVars stringifyNum
+        $ insertArrRel afterInsertDepColsWithVal userInfo planVars stringifyNum
       return $ sum arrInsARows
 
     asSingleObject
@@ -247,15 +240,14 @@ insertObjRel
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
      )
-  => Env.Environment
-  -> Seq.Seq Q.PrepArg
-  -> PGE.MutationRemoteJoinCtx
+  => Seq.Seq Q.PrepArg
+  -> UserInfo
   -> Bool
   -> IR.ObjRelIns ('Postgres pgKind) PG.SQLExp
   -> m (Int, [(PGCol, PG.SQLExp)])
-insertObjRel env planVars remoteJoinCtx stringifyNum objRelIns =
+insertObjRel planVars userInfo stringifyNum objRelIns =
   withPathK (relNameToTxt relName) $ do
-    (affRows, colValM) <- withPathK "data" $ insertObject env singleObjIns [] remoteJoinCtx planVars stringifyNum
+    (affRows, colValM) <- withPathK "data" $ insertObject singleObjIns [] userInfo planVars stringifyNum
     colVal <- onNothing colValM $ throw400 NotSupported errMsg
     retColsWithVals <- fetchFromColVals colVal rColInfos
     let columns = flip mapMaybe (Map.toList mapCols) \(column, target) -> do
@@ -282,20 +274,19 @@ insertArrRel
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
      )
-  => Env.Environment
-  -> [(PGCol, PG.SQLExp)]
-  -> PGE.MutationRemoteJoinCtx
+  => [(PGCol, PG.SQLExp)]
+  -> UserInfo
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> IR.ArrRelIns ('Postgres pgKind) PG.SQLExp
   -> m Int
-insertArrRel env resCols remoteJoinCtx planVars stringifyNum arrRelIns =
+insertArrRel resCols userInfo planVars stringifyNum arrRelIns =
   withPathK (relNameToTxt $ riName relInfo) $ do
     let additionalColumns = flip mapMaybe resCols \(column, value) -> do
           target <- Map.lookup column mapping
           Just (target, value)
     resBS <- withPathK "data" $
-      insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutOutput planVars stringifyNum
+      insertMultipleObjects multiObjIns additionalColumns userInfo mutOutput planVars stringifyNum
     resObj <- decodeEncJSON resBS
     onNothing (Map.lookup ("affected_rows" :: Text) resObj) $
       throw500 "affected_rows not returned in array rel insert"

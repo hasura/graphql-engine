@@ -11,9 +11,9 @@ import qualified Hasura.RQL.IR.Select          as IR
 import qualified Hasura.RQL.IR.Update          as IR
 
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Schema.Common
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types              hiding (EnumValueInfo)
 
 
@@ -157,10 +157,6 @@ class Backend b => BackendSchema (b :: BackendType) where
   node
     :: MonadBuildSchema b r m n
     => m (Parser 'Output n (HashMap (TableName b) (SourceName, SourceConfig b, SelPermInfo b, PrimaryKeyColumns b, AnnotatedFields b)))
-  remoteRelationshipField
-    :: MonadBuildSchema b r m n
-    => RemoteFieldInfo b
-    -> m (Maybe [FieldParser n (AnnotatedField b)])
 
   -- SQL literals
   columnDefaultValue :: Column b -> SQLExpression b

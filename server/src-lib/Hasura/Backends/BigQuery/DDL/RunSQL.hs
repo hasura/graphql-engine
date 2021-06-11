@@ -1,15 +1,17 @@
--- Working example:
---
--- $ curl -XPOST http://localhost:8080/v2/query -d @- <<EOF
--- {
---   "type":"bigquery_run_sql",
---   "args": {
---     "sql":"select 3 * 4 as foo, \"Hello, World!\" as bar",
---     "source":"chinook"
---   }
--- }
--- EOF
--- {"result_type":"TuplesOk","result":[["foo","bar"],["12","Hello, World!"]]}
+{- |
+Working example:
+
+$ curl -XPOST http://localhost:8080/v2/query -d @- <<EOF
+{
+  "type":"bigquery_run_sql",
+  "args": {
+    "sql":"select 3 * 4 as foo, \"Hello, World!\" as bar",
+    "source":"chinook"
+  }
+}
+EOF
+{"result_type":"TuplesOk","result":[["foo","bar"],["12","Hello, World!"]]}
+-}
 
 module Hasura.Backends.BigQuery.DDL.RunSQL
   ( runSQL

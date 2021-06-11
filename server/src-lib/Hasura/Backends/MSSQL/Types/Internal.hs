@@ -14,6 +14,8 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Data.Text.Encoding            (encodeUtf8)
 
+import qualified Hasura.RQL.Types.Common       as RQL
+
 import           Hasura.Base.Error
 import           Hasura.SQL.Backend
 
@@ -327,6 +329,24 @@ scalarTypeDBName = \case
   GeometryType  -> "geometry"
   -- the input form for types that aren't explicitly supported is a string
   UnknownType t -> t
+
+mkMSSQLScalarTypeName :: MonadError QErr m => ScalarType -> m G.Name
+mkMSSQLScalarTypeName = \case
+  CharType     -> pure RQL.stringScalar
+  WcharType    -> pure RQL.stringScalar
+  WvarcharType -> pure RQL.stringScalar
+  VarcharType  -> pure RQL.stringScalar
+  WtextType    -> pure RQL.stringScalar
+  TextType     -> pure RQL.stringScalar
+  FloatType    -> pure RQL.floatScalar
+  -- integer types
+  IntegerType  -> pure RQL.intScalar
+  -- boolean type
+  BitType      -> pure RQL.boolScalar
+  scalarType -> G.mkName (scalarTypeDBName scalarType) `onNothing` throw400 ValidationFailed
+    ("cannot use SQL type " <> scalarTypeDBName scalarType <> " in the GraphQL schema because its name is not a "
+    <> "valid GraphQL identifier")
+
 
 parseScalarValue :: ScalarType -> J.Value -> Either QErr Value
 parseScalarValue scalarType jValue = case scalarType of

@@ -214,7 +214,7 @@ data AnnFieldG (b :: BackendType) v
   | AFObjectRelation !(ObjectRelationSelectG b v)
   | AFArrayRelation !(ArraySelectG b v)
   | AFComputedField !(XComputedField b) !(ComputedFieldSelect b v)
-  | AFRemote !(XRemoteField b) !(RemoteSelect b)
+  | AFRemote !(RemoteSelect b)
   | AFNodeId !(XRelay b) !(TableName b) !(PrimaryKeyColumns b)
   | AFExpression !Text
 
@@ -240,7 +240,7 @@ traverseAnnField f = \case
   AFObjectRelation sel  -> AFObjectRelation  <$> traverse (traverseAnnObjectSelect f) sel
   AFArrayRelation sel   -> AFArrayRelation   <$> traverseArraySelect f sel
   AFComputedField x sel -> AFComputedField x <$> traverseComputedFieldSelect f sel
-  AFRemote x s          -> pure $ AFRemote x s
+  AFRemote s            -> pure $ AFRemote s
   AFNodeId x qt pKeys   -> pure $ AFNodeId x qt pKeys
   AFExpression t        -> pure $ AFExpression t
 

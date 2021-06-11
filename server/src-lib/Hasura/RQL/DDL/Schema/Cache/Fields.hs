@@ -22,6 +22,7 @@ import qualified Hasura.SQL.AnyBackend              as AB
 import           Hasura.Base.Error
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Relationship
+import           Hasura.RQL.DDL.RemoteRelationship
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types
@@ -263,7 +264,7 @@ buildRemoteRelationship = proc ( (pgColumns, remoteSchemaMap)
                     $ TORemoteRel _rrmName
       addRemoteRelationshipContext e = "in remote relationship" <> _rrmName <<> ": " <> e
       RemoteRelationshipDef{..} = _rrmDefinition
-      remoteRelationship = RemoteRelationship _rrmName source table _rrdHasuraFields
+      remoteRelationship = RemoteRelationship @b _rrmName source table _rrdHasuraFields
                            _rrdRemoteSchema _rrdRemoteField
   (| withRecordInconsistency (
        (| modifyErrA (do

@@ -22,13 +22,13 @@ import qualified Hasura.SQL.AnyBackend                  as AB
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.Instances       ()
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.Instances     ()
 import           Hasura.Metadata.Class
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 import           Hasura.Session
 
@@ -66,8 +66,6 @@ explainQueryField userInfo fieldName rootField = do
       AB.dispatchAnyBackend @BackendTransport step runDBQueryExplain
 
 
--- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
--- here. We should evaluate if we need it here.
 explainGQLQuery
   :: forall m
   . ( MonadError QErr m

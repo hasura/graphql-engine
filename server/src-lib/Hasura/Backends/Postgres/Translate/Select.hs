@@ -866,7 +866,9 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
 
       AFColumn c -> toSQLCol c
 
-      AFRemote _ _ -> pure $ S.SELit "null: remote field selected"
+      -- this will be gone once the code which collects remote joins from the IR
+      -- emits a modified IR where remote relationships can't be reached
+      AFRemote _ -> pure $ S.SELit "null: remote field selected"
 
       AFObjectRelation objSel -> withWriteObjectRelation $ do
         let AnnRelationSelectG relName relMapping annObjSel = objSel

@@ -17,50 +17,48 @@ module Hasura.GraphQL.Execute.Action
 
 import           Hasura.Prelude
 
-import qualified Control.Concurrent.Async.Lifted.Safe        as LA
-import qualified Control.Concurrent.STM                      as STM
-import qualified Data.Aeson                                  as J
-import qualified Data.Aeson.Ordered                          as AO
-import qualified Data.ByteString.Lazy                        as BL
-import qualified Data.CaseInsensitive                        as CI
-import qualified Data.Environment                            as Env
-import qualified Data.HashMap.Strict                         as Map
-import qualified Data.HashSet                                as Set
-import qualified Data.IntMap                                 as IntMap
-import qualified Data.Text                                   as T
-import qualified Database.PG.Query                           as Q
+import qualified Control.Concurrent.Async.Lifted.Safe      as LA
+import qualified Control.Concurrent.STM                    as STM
+import qualified Data.Aeson                                as J
+import qualified Data.Aeson.Ordered                        as AO
+import qualified Data.ByteString.Lazy                      as BL
+import qualified Data.CaseInsensitive                      as CI
+import qualified Data.Environment                          as Env
+import qualified Data.HashMap.Strict                       as Map
+import qualified Data.HashSet                              as Set
+import qualified Data.IntMap                               as IntMap
+import qualified Data.Text                                 as T
+import qualified Database.PG.Query                         as Q
 
-import qualified Language.GraphQL.Draft.Syntax               as G
-import qualified Network.HTTP.Client                         as HTTP
-import qualified Network.HTTP.Types                          as HTTP
-import qualified Network.Wreq                                as Wreq
+import qualified Language.GraphQL.Draft.Syntax             as G
+import qualified Network.HTTP.Client                       as HTTP
+import qualified Network.HTTP.Types                        as HTTP
+import qualified Network.Wreq                              as Wreq
 
-import           Control.Concurrent.Extended                 (Forever (..), sleep)
-import           Control.Exception                           (try)
+import           Control.Concurrent.Extended               (Forever (..), sleep)
+import           Control.Exception                         (try)
 import           Control.Lens
-import           Control.Monad.Trans.Control                 (MonadBaseControl)
+import           Control.Monad.Trans.Control               (MonadBaseControl)
 import           Data.Has
 import           Data.IORef
-import           Data.Set                                    (Set)
+import           Data.Set                                  (Set)
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RJ
-import qualified Hasura.Backends.Postgres.SQL.DML            as S
-import qualified Hasura.Backends.Postgres.Translate.Select   as RS
-import qualified Hasura.GraphQL.Execute.RemoteJoin           as RJ
-import qualified Hasura.Logging                              as L
-import qualified Hasura.RQL.IR.Select                        as RS
-import qualified Hasura.Tracing                              as Tracing
+import qualified Hasura.Backends.Postgres.SQL.DML          as S
+import qualified Hasura.Backends.Postgres.Translate.Select as RS
+import qualified Hasura.Logging                            as L
+import qualified Hasura.RQL.IR.Select                      as RS
+import qualified Hasura.Tracing                            as Tracing
 
+import           Hasura.Backends.Postgres.Execute.Prepare
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Backends.Postgres.SQL.Value          (PGScalarValue (..))
-import           Hasura.Backends.Postgres.Translate.Column   (toTxtValue)
-import           Hasura.Backends.Postgres.Translate.Select   (asSingleRowJsonResp)
+import           Hasura.Backends.Postgres.SQL.Value        (PGScalarValue (..))
+import           Hasura.Backends.Postgres.Translate.Column (toTxtValue)
+import           Hasura.Backends.Postgres.Translate.Select (asSingleRowJsonResp)
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Eventing.Common
-import           Hasura.GraphQL.Execute.Action.Types         as Types
-import           Hasura.GraphQL.Execute.Prepare
+import           Hasura.GraphQL.Execute.Action.Types       as Types
 import           Hasura.GraphQL.Parser
 import           Hasura.HTTP
 import           Hasura.Metadata.Class
@@ -68,9 +66,9 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.Server.Utils                         (mkClientHeadersForward,
-                                                              mkSetCookieHeaders)
-import           Hasura.Server.Version                       (HasVersion)
+import           Hasura.Server.Utils                       (mkClientHeadersForward,
+                                                            mkSetCookieHeaders)
+import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
 
 
@@ -137,19 +135,12 @@ resolveActionExecution env logger userInfo annAction execContext =
     handlerPayload = ActionWebhookPayload actionContext sessionVariables inputPayload
 
 
-    executeActionInDb :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m, Tracing.MonadTrace m)
+    executeActionInDb :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m)
                       => SourceConfig ('Postgres 'Vanilla) -> RS.AnnSimpleSel ('Postgres 'Vanilla) -> [Q.PrepArg] -> m EncJSON
     executeActionInDb sourceConfig astResolved prepArgs = do
-      let (astResolvedWithoutRemoteJoins, maybeRemoteJoins) = RJ.getRemoteJoinsSelect astResolved
-          jsonAggType = mkJsonAggSelect outputType
+      let jsonAggType = mkJsonAggSelect outputType
       liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly $
-        case maybeRemoteJoins of
-          Just remoteJoins ->
-            let query = Q.fromBuilder $ toSQL $
-                        RS.mkSQLSelect jsonAggType astResolvedWithoutRemoteJoins
-            in RJ.executeQueryWithRemoteJoins env manager reqHeaders userInfo query prepArgs remoteJoins
-          Nothing ->
-            liftTx $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) prepArgs
+        liftTx $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) prepArgs
 
     runWebhook :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
                => m (ActionWebhookResponse, HTTP.ResponseHeaders)

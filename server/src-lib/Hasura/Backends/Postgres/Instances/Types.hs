@@ -77,7 +77,6 @@ instance
   type ExtraTableMetadata      ('Postgres pgKind) = PgExtraTableMetadata pgKind
 
   type XComputedField          ('Postgres pgKind) = XEnable
-  type XRemoteField            ('Postgres pgKind) = XEnable
   type XRelay                  ('Postgres pgKind) = XEnable
   type XNodesAgg               ('Postgres pgKind) = XEnable
   type XDistinct               ('Postgres pgKind) = XEnable

@@ -5,12 +5,9 @@ module Hasura.Backends.BigQuery.Instances.Execute () where
 import           Hasura.Prelude
 
 import qualified Data.Aeson                                  as Aeson
-import qualified Data.Environment                            as Env
 import qualified Data.HashMap.Strict.InsOrd                  as OMap
 import qualified Data.Text                                   as T
 import qualified Language.GraphQL.Draft.Syntax               as G
-import qualified Network.HTTP.Client                         as HTTP
-import qualified Network.HTTP.Types                          as HTTP
 
 import qualified Hasura.Backends.BigQuery.DataLoader.Execute as DataLoader
 import qualified Hasura.Backends.BigQuery.DataLoader.Plan    as DataLoader
@@ -21,9 +18,9 @@ import qualified Hasura.Tracing                              as Tracing
 import           Hasura.Backends.BigQuery.Plan
 import           Hasura.Base.Error
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Parser
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 import           Hasura.Session
 
@@ -32,7 +29,6 @@ instance BackendExecute 'BigQuery where
   type PreparedQuery    'BigQuery = Text
   type MultiplexedQuery 'BigQuery = Void
   type ExecutionMonad   'BigQuery = Tracing.TraceT (ExceptT QErr IO)
-  getRemoteJoins = const []
 
   mkDBQueryPlan = bqDBQueryPlan
   mkDBMutationPlan = bqDBMutationPlan
@@ -49,15 +45,12 @@ bqDBQueryPlan
   :: forall m.
      ( MonadError E.QErr m
      )
-  => Env.Environment
-  -> HTTP.Manager
-  -> [HTTP.Header]
-  -> UserInfo
+  => UserInfo
   -> SourceName
   -> SourceConfig 'BigQuery
   -> QueryDB 'BigQuery (UnpreparedValue 'BigQuery)
-  -> m ExecutionStep
-bqDBQueryPlan _env _manager _reqHeaders userInfo sourceName sourceConfig qrf = do
+  -> m (DBStepInfo 'BigQuery)
+bqDBQueryPlan userInfo sourceName sourceConfig qrf = do
   select <- planNoPlan userInfo qrf
   let (!headAndTail, !plannedActionsList) =
         DataLoader.runPlan
@@ -72,10 +65,7 @@ bqDBQueryPlan _env _manager _reqHeaders userInfo sourceName sourceConfig qrf = d
         case result of
           Left err        -> throw500WithDetail "dataLoader error" $ Aeson.toJSON $ show err
           Right recordSet -> pure $! recordSetToEncJSON recordSet
-  pure
-    $ ExecStepDB []
-    . AB.mkAnyBackend
-    $ DBStepInfo @'BigQuery sourceName sourceConfig (Just (DataLoader.drawActionsForest actionsForest)) action
+  pure $ DBStepInfo @'BigQuery sourceName sourceConfig (Just (DataLoader.drawActionsForest actionsForest)) action
 
 -- | Convert the dataloader's 'RecordSet' type to JSON.
 recordSetToEncJSON :: DataLoader.RecordSet -> EncJSON
@@ -113,16 +103,13 @@ bqDBMutationPlan
   :: forall m.
      ( MonadError E.QErr m
      )
-  => Env.Environment
-  -> HTTP.Manager
-  -> [HTTP.Header]
-  -> UserInfo
+  => UserInfo
   -> Bool
   -> SourceName
   -> SourceConfig 'BigQuery
   -> MutationDB 'BigQuery (UnpreparedValue 'BigQuery)
-  -> m ExecutionStep
-bqDBMutationPlan _env _manager _reqHeaders _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
+  -> m (DBStepInfo 'BigQuery)
+bqDBMutationPlan _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
   throw500 "mutations are not supported in BigQuery; this should be unreachable"
 
 

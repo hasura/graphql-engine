@@ -52,6 +52,7 @@ import qualified Hasura.GraphQL.Execute.Action                as EA
 import qualified Hasura.GraphQL.Execute.Backend               as EB
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll        as LQ
 import qualified Hasura.GraphQL.Execute.LiveQuery.State       as LQ
+import qualified Hasura.GraphQL.Execute.RemoteJoin            as RJ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server    as WS
 import qualified Hasura.Logging                               as L
 import qualified Hasura.SQL.AnyBackend                        as AB
@@ -383,25 +384,26 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     E.QueryExecutionPlan queryPlan asts -> Tracing.trace "Query" $ do
       let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
           cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
-          remoteJoins = OMap.elems queryPlan >>= \case
-            E.ExecStepDB _remoteHeaders exists ->
-              AB.dispatchAnyBackend @BackendTransport exists EB.getRemoteSchemaInfo
+          remoteSchemas = OMap.elems queryPlan >>= \case
+            E.ExecStepDB _remoteHeaders _ remoteJoins ->
+              concatMap (map RJ._rjRemoteSchema . toList . snd) $
+                maybe [] toList remoteJoins
             _ -> []
           actionsInfo = foldl getExecStepActionWithActionInfo [] $ OMap.elems $ OMap.filter (\case
-              E.ExecStepAction (_, _) -> True
-              _                       -> False
+              E.ExecStepAction _ _ _remoteJoins -> True
+              _                                 -> False
               ) queryPlan
 
       -- We ignore the response headers (containing TTL information) because
       -- WebSockets don't support them.
-      (_responseHeaders, cachedValue) <- Tracing.interpTraceT (withExceptT mempty) $ cacheLookup remoteJoins actionsInfo cacheKey
+      (_responseHeaders, cachedValue) <- Tracing.interpTraceT (withExceptT mempty) $ cacheLookup remoteSchemas actionsInfo cacheKey
       case cachedValue of
         Just cachedResponseData -> do
           logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindCached
           sendSuccResp cachedResponseData $ LQ.LiveQueryMetadata 0
         Nothing -> do
           conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
-            E.ExecStepDB _headers exists -> doQErr $ do
+            E.ExecStepDB _headers exists remoteJoins -> doQErr $ do
               (telemTimeIO_DT, resp) <-
                 AB.dispatchAnyBackend @BackendTransport exists
                   \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
@@ -414,14 +416,26 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
                        sourceConfig
                        tx
                        genSql
-              return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
+              finalResponse <-
+                maybe
+                (pure resp)
+                (RJ.processRemoteJoins env httpMgr reqHdrs userInfo $ encJToLBS resp)
+                remoteJoins
+              return $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
             E.ExecStepRemote rsi gqlReq -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
               runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
-            E.ExecStepAction (actionExecPlan, _) -> do
+            E.ExecStepAction actionExecPlan _ remoteJoins -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
-              (time, (r, _)) <- doQErr $ EA.runActionExecution actionExecPlan
-              pure $ ResultsFragment time Telem.Empty r []
+              (time, (resp, _)) <- doQErr $ do
+                (time, (resp, hdrs)) <- EA.runActionExecution actionExecPlan
+                finalResponse <-
+                  maybe
+                  (pure resp)
+                  (RJ.processRemoteJoins env httpMgr reqHdrs userInfo $ encJToLBS resp)
+                  remoteJoins
+                pure (time, (finalResponse, hdrs))
+              pure $ ResultsFragment time Telem.Empty resp []
             E.ExecStepRaw json -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
               buildRaw json
@@ -455,7 +469,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         Nothing -> do
           conclusion <- runExceptT $ forWithKey mutationPlan $ \fieldName -> \case
             -- Ignoring response headers since we can't send them over WebSocket
-            E.ExecStepDB _responseHeaders exists -> doQErr $ do
+            E.ExecStepDB _responseHeaders exists remoteJoins -> doQErr $ do
               (telemTimeIO_DT, resp) <-
                 AB.dispatchAnyBackend @BackendTransport exists
                   \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
@@ -468,11 +482,23 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
                          sourceConfig
                          tx
                          genSql
-              return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
-            E.ExecStepAction (actionExecPlan, _) -> do
+              finalResponse <-
+                maybe
+                (pure resp)
+                (RJ.processRemoteJoins env httpMgr reqHdrs userInfo $ encJToLBS resp)
+                remoteJoins
+              return $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
+            E.ExecStepAction actionExecPlan _ remoteJoins -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
-              (time, (r, hdrs)) <- doQErr $ EA.runActionExecution actionExecPlan
-              pure $ ResultsFragment time Telem.Empty r $ fromMaybe [] hdrs
+              (time, (resp, hdrs)) <- doQErr $ do
+                (time, (resp, hdrs)) <- EA.runActionExecution actionExecPlan
+                finalResponse <-
+                  maybe
+                  (pure resp)
+                  (RJ.processRemoteJoins env httpMgr reqHdrs userInfo $ encJToLBS resp)
+                  remoteJoins
+                pure (time, (finalResponse, hdrs))
+              pure $ ResultsFragment time Telem.Empty resp $ fromMaybe [] hdrs
             E.ExecStepRemote rsi gqlReq -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
               runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
@@ -539,8 +565,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       liftIO $ logOpEv ODStarted (Just requestId)
   where
     getExecStepActionWithActionInfo acc execStep = case execStep of
-       E.ExecStepAction (_, actionInfo) -> (actionInfo:acc)
-       _                                -> acc
+       E.ExecStepAction _ actionInfo _remoteJoins -> (actionInfo:acc)
+       _                                          -> acc
 
     doQErr = withExceptT Right
 

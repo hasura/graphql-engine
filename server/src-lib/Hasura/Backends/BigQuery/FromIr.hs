@@ -22,10 +22,7 @@ import           Control.Monad.Validate
 import           Data.Map.Strict                          (Map)
 import           Data.Proxy
 
-import qualified Hasura.GraphQL.Context                   as GraphQL
-import qualified Hasura.RQL.IR.BoolExp                    as Ir
-import qualified Hasura.RQL.IR.OrderBy                    as Ir
-import qualified Hasura.RQL.IR.Select                     as Ir
+import qualified Hasura.RQL.IR                            as Ir
 import qualified Hasura.RQL.Types.Column                  as Rql
 import qualified Hasura.RQL.Types.Common                  as Rql
 import qualified Hasura.RQL.Types.Relationship            as Rql
@@ -127,12 +124,13 @@ mkSQLSelect jsonAggSelect annSimpleSel =
           }
 
 -- | Convert from the IR database query into a select.
-fromRootField :: GraphQL.QueryDB 'BigQuery Expression -> FromIr Select
+fromRootField :: Ir.QueryDB 'BigQuery Expression -> FromIr Select
 fromRootField =
   \case
-    (GraphQL.QDBSingleRow s)    -> mkSQLSelect Rql.JASSingleObject s
-    (GraphQL.QDBMultipleRows s) -> mkSQLSelect Rql.JASMultipleRows s
-    (GraphQL.QDBAggregation s)  -> fromSelectAggregate s
+    (Ir.QDBSingleRow s)    -> mkSQLSelect Rql.JASSingleObject s
+    (Ir.QDBMultipleRows s) -> mkSQLSelect Rql.JASMultipleRows s
+    (Ir.QDBAggregation s)  -> fromSelectAggregate s
+    (Ir.QDBConnection _)   -> refute $ pure ConnectionsNotSupported
 
 --------------------------------------------------------------------------------
 -- Top-level exported functions
@@ -639,6 +637,15 @@ fromAnnFieldsG existingJoins stringifyNumbers (Rql.FieldName name, field) =
         (\aliasedThing ->
            JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
         (fromArraySelectG arraySelectG)
+    -- this will be gone once the code which collects remote joins from the IR
+    -- emits a modified IR where remote relationships can't be reached
+    Ir.AFRemote _ ->
+      pure
+        (ExpressionFieldSource
+           Aliased
+             { aliasedThing = BigQuery.ValueExpression (StringValue "null: remote field selected")
+             , aliasedAlias = name
+             })
 
 -- | Here is where we project a field as a column expression. If
 -- number stringification is on, then we wrap it in a

@@ -12,7 +12,7 @@ module Hasura.GraphQL.Schema.Select
   , selectFunctionAggregate
   , selectFunctionConnection
   , computedFieldPG
-  , remoteRelationshipFieldPG
+  , remoteRelationshipField
   , tableArgs
   , tableSelectionSet
   , tableSelectionList
@@ -44,13 +44,10 @@ import qualified Hasura.Backends.Postgres.SQL.Types         as PG
 import qualified Hasura.GraphQL.Execute.Types               as ET
 import qualified Hasura.GraphQL.Parser                      as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser      as P
-import qualified Hasura.RQL.IR.BoolExp                      as IR
-import qualified Hasura.RQL.IR.OrderBy                      as IR
-import qualified Hasura.RQL.IR.Select                       as IR
+import qualified Hasura.RQL.IR                              as IR
 import qualified Hasura.SQL.AnyBackend                      as AB
 
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser                      (FieldParser, InputFieldsParser,
                                                              Kind (..), Parser,
                                                              UnpreparedValue (..), mkParameter)
@@ -1047,18 +1044,18 @@ computedFieldPG sourceName ComputedFieldInfo{..} parentTable selectPermissions =
                 IR.insertFunctionArg argName index sessionArgVal withTable
 
 -- | Remote relationship field parsers
-remoteRelationshipFieldPG
-  :: forall pgKind r m n
-   . MonadBuildSchema ('Postgres pgKind) r m n
-  => RemoteFieldInfo ('Postgres pgKind)
-  -> m (Maybe [FieldParser n (AnnotatedField ('Postgres pgKind))])
-remoteRelationshipFieldPG remoteFieldInfo = runMaybeT do
+remoteRelationshipField
+  :: forall b r m n
+   . MonadBuildSchema b r m n
+  => RemoteFieldInfo b
+  -> m (Maybe [FieldParser n (AnnotatedField b)])
+remoteRelationshipField remoteFieldInfo = runMaybeT do
   queryType                   <- asks $ qcQueryType . getter
   remoteRelationshipQueryCtx  <- asks $ qcRemoteRelationshipContext . getter
   -- https://github.com/hasura/graphql-engine/issues/5144
   -- The above issue is easily fixable by removing the following guard and 'MaybeT' monad transformation
   guard $ queryType == ET.QueryHasura
-  let RemoteFieldInfo () name _params hasuraFields remoteFields
+  let RemoteFieldInfo name _params hasuraFields remoteFields
         remoteSchemaInfo remoteSchemaInputValueDefns remoteSchemaName (table, source) = remoteFieldInfo
   (roleIntrospectionResult, parsedIntrospection) <-
     -- The remote relationship field should not be accessible
@@ -1066,7 +1063,7 @@ remoteRelationshipFieldPG remoteFieldInfo = runMaybeT do
     hoistMaybe $ Map.lookup remoteSchemaName remoteRelationshipQueryCtx
   let fieldDefns = map P.fDefinition (piQuery parsedIntrospection)
   role <- askRoleName
-  let hasuraFieldNames = Set.map (FieldName . PG.getPGColTxt . pgiColumn)  hasuraFields
+  let hasuraFieldNames = Set.map (FieldName . toTxt . pgiColumn)  hasuraFields
       remoteRelationship = RemoteRelationship name source table hasuraFieldNames remoteSchemaName remoteFields
   (newInpValDefns, remoteFieldParamMap) <-
     if | role == adminRoleName ->
@@ -1104,7 +1101,7 @@ remoteRelationshipFieldPG remoteFieldInfo = runMaybeT do
         `P.bindField` \G.Field{ G._fArguments = args, G._fSelectionSet = selSet } -> do
           let remoteArgs =
                 Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue $ argVal
-          pure $ IR.AFRemote () $ IR.RemoteSelect
+          pure $ IR.AFRemote $ IR.RemoteSelect
             { _rselArgs          = remoteArgs
             , _rselSelection     = selSet
             , _rselHasuraColumns = _rfiHasuraFields remoteFieldInfo
@@ -1359,7 +1356,7 @@ nodePG = memoizeOn 'nodePG () do
 nodeField
   :: forall m n r
    . MonadBuildSchema ('Postgres 'Vanilla) r m n
-  => m (P.FieldParser n (QueryRootField UnpreparedValue))
+  => m (P.FieldParser n (IR.QueryRootField UnpreparedValue))
 nodeField = do
   let idDescription = G.Description "A globally unique id"
       idArgument = P.field $$(G.litName "id") (Just idDescription) P.identifier
@@ -1373,11 +1370,11 @@ nodeField = do
         withArgsPath $  throwInvalidNodeId $ "the table " <>> ident
       whereExp <- buildNodeIdBoolExp columnValues pkeyColumns
       return
-        $ RFDB source
+        $ IR.RFDB source
         $ AB.mkAnyBackend
-        $ SourceConfigWith sourceConfig
-        $ QDBR
-        $ QDBSingleRow
+        $ IR.SourceConfigWith sourceConfig
+        $ IR.QDBR
+        $ IR.QDBSingleRow
         $ IR.AnnSelectG
           { IR._asnFields   = fields
           , IR._asnFrom     = IR.FromTable table

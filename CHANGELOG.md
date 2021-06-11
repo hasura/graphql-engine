@@ -2,6 +2,8 @@
 
 ## Next release
 
+- server: remote relationships (database to remote schema joins) are now supported on SQL Server and BigQuery
+
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 - server: fix add source API wiping out source's metadata when replace_configuration is true

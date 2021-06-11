@@ -2,35 +2,32 @@ module Hasura.GraphQL.Execute.Backend where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                             as J
-import qualified Data.Aeson.Casing                      as J
-import qualified Data.Aeson.Ordered                     as JO
-import qualified Data.Environment                       as Env
-import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Types                     as HTTP
+import qualified Data.Aeson                              as J
+import qualified Data.Aeson.Casing                       as J
+import qualified Data.Aeson.Ordered                      as JO
+import qualified Language.GraphQL.Draft.Syntax           as G
+import qualified Network.HTTP.Types                      as HTTP
 
-import           Control.Monad.Trans.Control            (MonadBaseControl)
-import           Data.Kind                              (Type)
+import           Control.Monad.Trans.Control             (MonadBaseControl)
+import           Data.Kind                               (Type)
 import           Data.Text.Extended
 
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import qualified Hasura.RQL.IR.RemoteJoin               as IR
-import qualified Hasura.SQL.AnyBackend                  as AB
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol  as GH
+import qualified Hasura.SQL.AnyBackend                   as AB
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Execute.Action.Types    (ActionExecutionPlan)
+import           Hasura.GraphQL.Execute.Action.Types     (ActionExecutionPlan)
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
-import           Hasura.GraphQL.Parser                  hiding (Type)
-import           Hasura.RQL.IR.RemoteJoin
+import           Hasura.GraphQL.Execute.RemoteJoin.Types
+import           Hasura.GraphQL.Parser                   hiding (Type)
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Backend
-import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Server.Version                   (HasVersion)
 import           Hasura.Session
 
 
@@ -45,36 +42,26 @@ class ( Backend b
   type PreparedQuery    b :: Type
   type MultiplexedQuery b :: Type
   type ExecutionMonad   b :: Type -> Type
-  getRemoteJoins :: PreparedQuery b -> [RemoteJoin b]
 
   -- execution plan generation
   mkDBQueryPlan
-    :: forall m
-     . ( MonadError QErr m
-       , HasVersion
-       )
-    => Env.Environment
-    -> HTTP.Manager
-    -> [HTTP.Header]
-    -> UserInfo
+    :: (MonadError QErr m)
+    => UserInfo
     -> SourceName
     -> SourceConfig b
     -> QueryDB b (UnpreparedValue b)
-    -> m ExecutionStep
+    -> m (DBStepInfo b)
   mkDBMutationPlan
     :: forall m
      . ( MonadError QErr m
        , HasVersion
        )
-    => Env.Environment
-    -> HTTP.Manager
-    -> [HTTP.Header]
-    -> UserInfo
+    => UserInfo
     -> Bool
     -> SourceName
     -> SourceConfig b
     -> MutationDB b (UnpreparedValue b)
-    -> m ExecutionStep
+    -> m (DBStepInfo b)
   mkDBSubscriptionPlan
     :: forall m
      . ( MonadError QErr m
@@ -128,35 +115,30 @@ instance J.ToJSON ExplainPlan where
 
 -- | One execution step to processing a GraphQL query (e.g. one root field).
 data ExecutionStep where
+  -- | A query to execute against the database
   ExecStepDB
     :: HTTP.ResponseHeaders
     -> AB.AnyBackend DBStepInfo
+    -> Maybe RemoteJoins
     -> ExecutionStep
-  -- ^ A query to execute against the database
+  -- | Execute an action
   ExecStepAction
-    :: (ActionExecutionPlan, ActionsInfo)
+    :: ActionExecutionPlan
+    -> ActionsInfo
+    -> Maybe RemoteJoins
     -> ExecutionStep
-  -- ^ Execute an action
+  -- | A graphql query to execute against a remote schema
   ExecStepRemote
     :: !RemoteSchemaInfo
     -> !GH.GQLReqOutgoing
     -> ExecutionStep
-  -- ^ A graphql query to execute against a remote schema
+  -- | Output a plain JSON object
   ExecStepRaw
     :: JO.Value
     -> ExecutionStep
-  -- ^ Output a plain JSON object
 
 
 -- | The series of steps that need to be executed for a given query. For now, those steps are all
 -- independent. In the future, when we implement a client-side dataloader and generalized joins,
 -- this will need to be changed into an annotated tree.
 type ExecutionPlan = InsOrdHashMap G.Name ExecutionStep
-
-getRemoteSchemaInfo
-    :: forall b
-     . BackendExecute b
-    => DBStepInfo b
-    -> [RemoteSchemaInfo]
-getRemoteSchemaInfo (DBStepInfo _ _ genSql _) =
-    IR._rjRemoteSchema <$> maybe [] (getRemoteJoins @b) genSql

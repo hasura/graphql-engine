@@ -17,7 +17,6 @@ import           Test.Hspec
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Inline
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser.Monad

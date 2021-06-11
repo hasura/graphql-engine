@@ -139,7 +139,7 @@ import qualified Hasura.GraphQL.Parser                       as P
 import qualified Hasura.SQL.AnyBackend                       as AB
 
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Context                      (GQLContext, RemoteField, RoleContext)
+import           Hasura.GraphQL.Context                      (GQLContext, RoleContext)
 import           Hasura.Incremental                          (Cacheable, Dependency,
                                                               MonadDepend (..), selectKeyD)
 import           Hasura.RQL.IR.BoolExp

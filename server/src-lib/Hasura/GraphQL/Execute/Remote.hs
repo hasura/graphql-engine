@@ -20,8 +20,7 @@ import           Data.Text.Extended
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Context                 (RemoteField, RemoteFieldG (..))
-import           Hasura.GraphQL.Execute.Prepare
+import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.Types

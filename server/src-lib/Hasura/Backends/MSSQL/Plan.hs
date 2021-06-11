@@ -26,7 +26,7 @@ import qualified Hasura.RQL.Types.Column       as RQL
 import           Hasura.Backends.MSSQL.FromIr  as TSQL
 import           Hasura.Backends.MSSQL.Types   as TSQL
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Context
+import           Hasura.RQL.IR
 import           Hasura.SQL.Backend
 import           Hasura.Session
 

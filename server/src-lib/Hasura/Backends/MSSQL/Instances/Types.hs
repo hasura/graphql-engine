@@ -41,7 +41,6 @@ instance Backend 'MSSQL where
   type ExtraTableMetadata      'MSSQL = ()
 
   type XComputedField          'MSSQL = XDisable
-  type XRemoteField            'MSSQL = XDisable
   type XRelay                  'MSSQL = XDisable
   type XNodesAgg               'MSSQL = XEnable
   type XDistinct               'MSSQL = XDisable
@@ -77,9 +76,8 @@ instance Backend 'MSSQL where
   functionGraphQLName :: FunctionName 'MSSQL -> Either QErr G.Name
   functionGraphQLName = error "Unexpected MSSQL error: calling functionGraphQLName. Please report this error at https://github.com/hasura/graphql-engine/issues/6590"
 
-  -- TODO: Is this Postgres specific? Should it be removed from the class?
   scalarTypeGraphQLName :: ScalarType 'MSSQL -> Either QErr G.Name
-  scalarTypeGraphQLName = error "Unexpected MSSQL error: calling scalarTypeGraphQLName. Please report this error at https://github.com/hasura/graphql-engine/issues/6590"
+  scalarTypeGraphQLName = runExcept . MSSQL.mkMSSQLScalarTypeName
 
   snakeCaseTableName :: TableName 'MSSQL -> Text
   snakeCaseTableName = MSSQL.snakeCaseTableName

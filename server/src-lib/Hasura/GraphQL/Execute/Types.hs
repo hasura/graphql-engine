@@ -1,4 +1,6 @@
-module Hasura.GraphQL.Execute.Types (GraphQLQueryType(..)) where
+module Hasura.GraphQL.Execute.Types
+  ( GraphQLQueryType(..)
+  ) where
 
 import           Hasura.Prelude
 

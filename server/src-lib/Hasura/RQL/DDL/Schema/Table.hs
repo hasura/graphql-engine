@@ -53,6 +53,7 @@ import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Common
 import           Hasura.RQL.DDL.Schema.Enum         (resolveEnumReferences)
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types                   hiding (fmFunction)
 import           Hasura.Server.Utils
 

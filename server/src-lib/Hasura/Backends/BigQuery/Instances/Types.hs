@@ -41,9 +41,8 @@ instance Backend 'BigQuery where
   type ScalarType              'BigQuery = BigQuery.ScalarType
   type SQLExpression           'BigQuery = BigQuery.Expression
   type SQLOperator             'BigQuery = BigQuery.Op
-  type BooleanOperators 'BigQuery = Const Void
+  type BooleanOperators        'BigQuery = Const Void
   type XComputedField          'BigQuery = Void
-  type XRemoteField            'BigQuery = Void
 
   type XRelay                  'BigQuery = Void
   type XNodesAgg               'BigQuery = XEnable
@@ -82,7 +81,7 @@ instance Backend 'BigQuery where
   functionGraphQLName = error "functionGraphQLName"
 
   scalarTypeGraphQLName :: ScalarType 'BigQuery -> Either QErr G.Name
-  scalarTypeGraphQLName = error "scalarTypeGraphQLName"
+  scalarTypeGraphQLName = BigQuery.scalarTypeGraphQLName
 
   snakeCaseTableName :: TableName 'BigQuery -> Text
   snakeCaseTableName BigQuery.TableName { tableName, tableNameSchema } =

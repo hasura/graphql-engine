@@ -28,6 +28,8 @@ import           Data.Vector.Instances                  ()
 import           Language.Haskell.TH.Syntax
 import           Text.ParserCombinators.ReadP           (readP_to_S)
 
+import qualified Hasura.RQL.Types.Common                as RQL
+
 import           Hasura.Base.Error
 import           Hasura.Incremental.Internal.Dependency
 
@@ -593,6 +595,23 @@ newtype FunctionName = FunctionName Text -- TODO: Improve this type when SQL fun
 
 --------------------------------------------------------------------------------
 -- Backend-related stuff
+--
+scalarTypeGraphQLName :: ScalarType -> Either QErr G.Name
+scalarTypeGraphQLName = \case
+  StringScalarType     -> pure RQL.stringScalar
+  BytesScalarType      -> pure RQL.stringScalar
+  IntegerScalarType    -> pure RQL.intScalar
+  FloatScalarType      -> pure RQL.floatScalar
+  BoolScalarType       -> pure RQL.boolScalar
+  DecimalScalarType    -> pure RQL.floatScalar
+  BigDecimalScalarType -> pure RQL.floatScalar
+  TimestampScalarType  -> pure RQL.stringScalar
+  DateScalarType       -> pure RQL.stringScalar
+  TimeScalarType       -> pure RQL.stringScalar
+  DatetimeScalarType   -> pure RQL.stringScalar
+  GeographyScalarType  -> pure RQL.stringScalar
+  scalarType           -> throw400 ValidationFailed $
+                          "unsupported bigquery scalar type: " <> tshow scalarType
 
 parseScalarValue :: ScalarType -> J.Value -> Either QErr Value
 parseScalarValue scalarType jValue = case scalarType of

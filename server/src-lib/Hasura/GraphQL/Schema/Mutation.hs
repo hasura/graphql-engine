@@ -62,9 +62,8 @@ insertIntoTable sourceName tableInfo fieldName description insertPerms selectPer
         pure (conflictClause, objects)
   pure $ P.subselection fieldName description argsParser selectionParser
     <&> \((conflictClause, objects), output) -> IR.AnnInsert (G.unName fieldName) False
-      ( mkInsertObject objects (tableInfoName tableInfo) columns conflictClause insertPerms updatePerms
-      , IR.MOutMultirowFields output
-      )
+      ( mkInsertObject objects (tableInfoName tableInfo) columns conflictClause insertPerms updatePerms )
+      ( IR.MOutMultirowFields output )
 
 mkConflictClause :: MonadParse n => Maybe (Parser 'Input n a) -> InputFieldsParser n (Maybe a)
 mkConflictClause conflictParser
@@ -101,9 +100,8 @@ insertOneIntoTable sourceName tableInfo fieldName description insertPerms select
         pure (conflictClause, object)
   pure $ P.subselection fieldName description argsParser selectionParser
     <&> \((conflictClause, object), output) -> IR.AnnInsert (G.unName fieldName) True
-       ( mkInsertObject [object] (tableInfoName tableInfo) columns conflictClause insertPerms updatePerms
-       , IR.MOutSinglerowObject output
-       )
+       ( mkInsertObject [object] (tableInfoName tableInfo) columns conflictClause insertPerms updatePerms )
+       ( IR.MOutSinglerowObject output )
 
 -- | We specify the data of an individual row to insert through this input parser.
 tableFieldsInput

@@ -3,16 +3,22 @@ module Hasura.RQL.DDL.RemoteRelationship
   , runDeleteRemoteRelationship
   , runUpdateRemoteRelationship
   , dropRemoteRelationshipInMetadata
+  , buildRemoteFieldInfo
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict.InsOrd as OMap
+import qualified Data.HashMap.Strict                        as Map
+import qualified Data.HashMap.Strict.InsOrd                 as OMap
+import qualified Data.HashSet                               as S
 
-import qualified Hasura.SQL.AnyBackend      as AB
+import           Data.Text.Extended
+
+import qualified Hasura.SQL.AnyBackend                      as AB
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
+import           Hasura.RQL.DDL.RemoteRelationship.Validate
 import           Hasura.RQL.Types
 
 
@@ -76,3 +82,43 @@ dropRemoteRelationshipInMetadata
   :: RemoteRelationshipName -> TableMetadata b -> TableMetadata b
 dropRemoteRelationshipInMetadata name =
   tmRemoteRelationships %~ OMap.delete name
+
+buildRemoteFieldInfo
+  :: forall m b
+   . (Backend b, QErrM m)
+  => RemoteRelationship b
+  -> [ColumnInfo b]
+  -> RemoteSchemaMap
+  -> m (RemoteFieldInfo b, [SchemaDependency])
+buildRemoteFieldInfo remoteRelationship
+                          pgColumns
+                          remoteSchemaMap = do
+  let remoteSchemaName = rtrRemoteSchema remoteRelationship
+  (RemoteSchemaCtx _name introspectionResult remoteSchemaInfo _ _ _permissions) <-
+    onNothing (Map.lookup remoteSchemaName remoteSchemaMap)
+      $ throw400 RemoteSchemaError $ "remote schema with name " <> remoteSchemaName <<> " not found"
+  eitherRemoteField <- runExceptT $
+    validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionResult) pgColumns
+  remoteField <- onLeft eitherRemoteField $ throw400 RemoteSchemaError . errorToText
+  let table = rtrTable remoteRelationship
+      source = rtrSource remoteRelationship
+      schemaDependencies =
+        let tableDep = SchemaDependency
+                         (SOSourceObj source
+                            $ AB.mkAnyBackend
+                            $ SOITable @b table)
+                         DRTable
+            columnsDep =
+              map
+                (flip SchemaDependency DRRemoteRelationship
+                   . SOSourceObj source
+                   . AB.mkAnyBackend
+                   . SOITableObj @b table
+                   . TOCol @b
+                   . pgiColumn)
+                $ S.toList $ _rfiHasuraFields remoteField
+            remoteSchemaDep =
+              SchemaDependency (SORemoteSchema remoteSchemaName) DRRemoteSchema
+         in (tableDep : remoteSchemaDep : columnsDep)
+
+  pure (remoteField, schemaDependencies)

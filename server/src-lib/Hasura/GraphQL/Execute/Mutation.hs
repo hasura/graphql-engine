@@ -4,31 +4,33 @@ module Hasura.GraphQL.Execute.Mutation
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                       as Env
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Types                     as HTTP
+import qualified Data.Environment                          as Env
+import qualified Data.HashMap.Strict                       as Map
+import qualified Data.HashMap.Strict.InsOrd                as OMap
+import qualified Language.GraphQL.Draft.Syntax             as G
+import qualified Network.HTTP.Client                       as HTTP
+import qualified Network.HTTP.Types                        as HTTP
 
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import qualified Hasura.Logging                         as L
-import qualified Hasura.SQL.AnyBackend                  as AB
-import qualified Hasura.Tracing                         as Tracing
+import qualified Hasura.GraphQL.Execute.RemoteJoin.Collect as RJ
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
+import qualified Hasura.Logging                            as L
+import qualified Hasura.SQL.AnyBackend                     as AB
+import qualified Hasura.Tracing                            as Tracing
 
 import           Hasura.Base.Error
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.Common
-import           Hasura.GraphQL.Execute.Instances       ()
+import           Hasura.GraphQL.Execute.Instances          ()
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Parser.Directives
 import           Hasura.Metadata.Class
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
 
 
@@ -93,17 +95,20 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
   txs <- for unpreparedQueries \case
     RFDB sourceName exists ->
       AB.dispatchAnyBackend @BackendExecute exists
-        \(SourceConfigWith sourceConfig (MDBR db)) ->
-           mkDBMutationPlan env manager reqHeaders userInfo stringifyNum sourceName sourceConfig db
+        \(SourceConfigWith sourceConfig (MDBR db)) -> do
+          let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsMutationDB db
+          dbStepInfo <- mkDBMutationPlan userInfo stringifyNum sourceName sourceConfig noRelsDBAST
+          pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
     RFRemote remoteField -> do
       RemoteFieldG remoteSchemaInfo resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
       pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeMutation $ [G.SelectionField resolvedRemoteField]
     RFAction action -> do
-      (actionName, _fch) <- pure $ case action of
+      let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionMutation action
+      (actionName, _fch) <- pure $ case noRelsDBAST of
         AMSync s  -> (_aaeName s, _aaeForwardClientHeaders s)
         AMAsync s -> (_aamaName s, _aamaForwardClientHeaders s)
-      plan <- convertMutationAction env logger userInfo manager reqHeaders action
-      pure $ ExecStepAction (plan, ActionsInfo actionName _fch) -- `_fch` represents the `forward_client_headers` option from the action
+      plan <- convertMutationAction env logger userInfo manager reqHeaders noRelsDBAST
+      pure $ ExecStepAction plan (ActionsInfo actionName _fch) remoteJoins -- `_fch` represents the `forward_client_headers` option from the action
                                                                 -- definition which is currently being ignored for actions that are mutations
     RFRaw s -> flip onLeft throwError =<< executeIntrospection userInfo s introspectionDisabledRoles
   return (txs, resolvedSelSet)

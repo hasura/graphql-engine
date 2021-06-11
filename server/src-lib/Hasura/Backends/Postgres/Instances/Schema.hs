@@ -33,7 +33,6 @@ import           Hasura.Backends.Postgres.SQL.Value          as PG
 import           Hasura.Backends.Postgres.Types.BoolExp
 import           Hasura.Backends.Postgres.Types.Column
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser                       hiding (EnumValueInfo, field)
 import           Hasura.GraphQL.Parser.Internal.Parser       hiding (field)
 import           Hasura.GraphQL.Parser.Internal.TypeChecking
@@ -43,6 +42,7 @@ import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 import           Hasura.SQL.Tag
 import           Hasura.SQL.Types
@@ -139,7 +139,6 @@ instance
   computedField             = computedFieldPG
   node                      = pgkNode
   tableDistinctOn           = tableDistinctOn
-  remoteRelationshipField   = remoteRelationshipFieldPG
   -- SQL literals
   columnDefaultValue = const PG.columnDefaultValue
 

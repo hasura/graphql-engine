@@ -17,20 +17,19 @@ module Hasura.RQL.Types.RemoteRelationship
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                as HM
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
-import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Data.HashMap.Strict           as HM
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
+import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Control.Lens                       (makeLenses)
+import           Control.Lens                  (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Scientific
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
-import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
-import           Hasura.Incremental                 (Cacheable)
+import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
@@ -54,8 +53,7 @@ fromRemoteRelationship = FieldName . remoteRelationshipNameToText
 -- | Resolved remote relationship
 data RemoteFieldInfo (b :: BackendType)
   = RemoteFieldInfo
-  { _rfiXRemoteFieldInfo      :: !(XRemoteField b)
-  , _rfiName                  :: !RemoteRelationshipName
+  { _rfiName                  :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
     -- of the hasura schema.
   , _rfiParamMap              :: !(HashMap G.Name RemoteSchemaInputValueDefinition)
@@ -71,7 +69,7 @@ data RemoteFieldInfo (b :: BackendType)
   -- ^ The new input value definitions created for this remote field
   , _rfiRemoteSchemaName      :: !RemoteSchemaName
   -- ^ Name of the remote schema, that's used for joining
-  , _rfiTable                 :: !(QualifiedTable, SourceName)
+  , _rfiTable                 :: !(TableName b, SourceName)
   -- ^ Name of the table and its source
   } deriving (Generic)
 deriving instance Backend b => Eq (RemoteFieldInfo b)

@@ -21,7 +21,7 @@ import qualified Hasura.RQL.Types.Column                  as RQL
 
 import           Hasura.Backends.BigQuery.FromIr          as BigQuery
 import           Hasura.Backends.BigQuery.Types           as BigQuery
-import           Hasura.GraphQL.Context
+import           Hasura.RQL.IR
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 import           Hasura.Session

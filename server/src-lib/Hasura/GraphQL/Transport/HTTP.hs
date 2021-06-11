@@ -41,6 +41,7 @@ import           Control.Monad.Trans.Control                  (MonadBaseControl)
 import qualified Hasura.GraphQL.Execute                       as E
 import qualified Hasura.GraphQL.Execute.Action                as EA
 import qualified Hasura.GraphQL.Execute.Backend               as EB
+import qualified Hasura.GraphQL.Execute.RemoteJoin            as RJ
 import qualified Hasura.Logging                               as L
 import qualified Hasura.SQL.AnyBackend                        as AB
 import qualified Hasura.Server.Telemetry.Counters             as Telem
@@ -49,7 +50,6 @@ import qualified Hasura.Tracing                               as Tracing
 import           Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
 import           Hasura.Base.Error
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Logging                       (MonadQueryLog (logQueryLog),
                                                                QueryLog (..), QueryLogKind (..))
 import           Hasura.GraphQL.Parser.Column                 (UnpreparedValue (..))
@@ -59,6 +59,7 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.Instances           ()
 import           Hasura.HTTP
 import           Hasura.Metadata.Class
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 import           Hasura.Server.Init.Config
 import           Hasura.Server.Logging
@@ -221,16 +222,17 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       E.QueryExecutionPlan queryPlans asts -> trace "Query" $ do
         let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
             cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
-            remoteJoins = OMap.elems queryPlans >>= \case
-              E.ExecStepDB _headers exists ->
-                AB.dispatchAnyBackend @BackendTransport exists EB.getRemoteSchemaInfo
+            remoteSchemas = OMap.elems queryPlans >>= \case
+              E.ExecStepDB _headers _dbAST remoteJoins -> do
+                concatMap (map RJ._rjRemoteSchema . toList . snd) $
+                  maybe [] toList remoteJoins
               _ -> []
             actionsInfo = foldl getExecStepActionWithActionInfo [] $ OMap.elems $ OMap.filter (\case
-              E.ExecStepAction (_, _) -> True
-              _                       -> False
+              E.ExecStepAction _ _ _remoteJoins -> True
+              _                                 -> False
               ) queryPlans
 
-        (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup remoteJoins actionsInfo cacheKey
+        (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup remoteSchemas actionsInfo cacheKey
         case fmap decodeGQResp cachedValue of
           Just cachedResponseData -> do
             logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindCached
@@ -238,7 +240,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 
           Nothing -> do
             conclusion <- runExceptT $ forWithKey queryPlans $ \fieldName -> \case
-              E.ExecStepDB _headers exists -> doQErr $ do
+              E.ExecStepDB _headers exists remoteJoins -> doQErr $ do
                 (telemTimeIO_DT, resp) <-
                   AB.dispatchAnyBackend @BackendTransport exists
                     \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
@@ -251,14 +253,27 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                           sourceConfig
                           tx
                           genSql
-                return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
+                finalResponse <-
+                  maybe
+                  (pure resp)
+                  (RJ.processRemoteJoins env httpManager reqHeaders userInfo $ encJToLBS resp)
+                  remoteJoins
+                return $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
               E.ExecStepRemote rsi gqlReq -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
                 runRemoteGQ httpManager fieldName rsi gqlReq
-              E.ExecStepAction (aep, _) -> do
+              E.ExecStepAction aep _ remoteJoins -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
-                (time, (r, _)) <- doQErr $ EA.runActionExecution aep
-                pure $ ResultsFragment time Telem.Empty r []
+
+                (time, (resp, _)) <- doQErr $ do
+                  (time, (resp, hdrs)) <- EA.runActionExecution aep
+                  finalResponse <-
+                    maybe
+                    (pure resp)
+                    (RJ.processRemoteJoins env httpManager reqHeaders userInfo $ encJToLBS resp)
+                    remoteJoins
+                  pure (time, (finalResponse, hdrs))
+                pure $ ResultsFragment time Telem.Empty resp []
               E.ExecStepRaw json -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection
                 buildRaw json
@@ -295,7 +310,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           -- we are not in the transaction case; proceeding normally
           Nothing -> do
             conclusion <- runExceptT $ forWithKey mutationPlans $ \fieldName -> \case
-              E.ExecStepDB responseHeaders exists -> doQErr $ do
+              E.ExecStepDB responseHeaders exists remoteJoins -> doQErr $ do
                 (telemTimeIO_DT, resp) <-
                   AB.dispatchAnyBackend @BackendTransport exists
                     \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
@@ -308,14 +323,27 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                           sourceConfig
                           tx
                           genSql
-                return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
+
+                finalResponse <-
+                  maybe
+                  (pure resp)
+                  (RJ.processRemoteJoins env httpManager reqHeaders userInfo $ encJToLBS resp)
+                  remoteJoins
+                return $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse responseHeaders
               E.ExecStepRemote rsi gqlReq -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
                 runRemoteGQ httpManager fieldName rsi gqlReq
-              E.ExecStepAction (aep, _) -> do
+              E.ExecStepAction aep _ remoteJoins -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
-                (time, (r, hdrs)) <- doQErr $ EA.runActionExecution aep
-                pure $ ResultsFragment time Telem.Empty r $ fromMaybe [] hdrs
+                (time, (resp, hdrs)) <- doQErr $ do
+                  (time, (resp, hdrs)) <- EA.runActionExecution aep
+                  finalResponse <-
+                    maybe
+                    (pure resp)
+                    (RJ.processRemoteJoins env httpManager reqHeaders userInfo $ encJToLBS resp)
+                    remoteJoins
+                  pure (time, (finalResponse, hdrs))
+                pure $ ResultsFragment time Telem.Empty resp $ fromMaybe [] hdrs
               E.ExecStepRaw json -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection
                 buildRaw json
@@ -331,8 +359,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   return (normalizedSelectionSet, resp)
   where
     getExecStepActionWithActionInfo acc execStep = case execStep of
-       EB.ExecStepAction (_, actionInfo) -> (actionInfo:acc)
-       _                                 -> acc
+       EB.ExecStepAction _ actionInfo _remoteJoins -> (actionInfo:acc)
+       _                                           -> acc
 
     doQErr = withExceptT Right
 
@@ -406,7 +434,7 @@ coalescePostgresMutations
 coalescePostgresMutations plan = do
   -- we extract the name and config of the first mutation root, if any
   (oneSourceName, oneSourceConfig) <- case toList plan of
-    (E.ExecStepDB _ exists:_) -> AB.unpackAnyBackend @('Postgres 'Vanilla) exists <&> \dbsi ->
+    (E.ExecStepDB _ exists _remoteJoins:_) -> AB.unpackAnyBackend @('Postgres 'Vanilla) exists <&> \dbsi ->
       ( EB.dbsiSourceName   dbsi
       , EB.dbsiSourceConfig dbsi
       )
@@ -414,9 +442,9 @@ coalescePostgresMutations plan = do
   -- we then test whether all mutations are going to that same first source
   -- and that it is Postgres
   mutations <- for plan \case
-    E.ExecStepDB _ exists -> do
+    E.ExecStepDB _ exists remoteJoins -> do
       dbStepInfo <- AB.unpackAnyBackend @('Postgres 'Vanilla) exists
-      guard $ oneSourceName == EB.dbsiSourceName dbStepInfo
+      guard $ oneSourceName == EB.dbsiSourceName dbStepInfo && isNothing remoteJoins
       Just dbStepInfo
     _ -> Nothing
   Just (oneSourceConfig, mutations)
