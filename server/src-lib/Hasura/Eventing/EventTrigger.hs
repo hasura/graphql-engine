@@ -260,7 +260,8 @@ processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} Locked
       -}
       pgSources <- scSources <$> liftIO getSchemaCache
       liftIO . fmap concat $
-        for (M.toList pgSources) \(sourceName, sourceCache) -> concat . toList <$>
+        -- fetch pending events across all the sources asynchronously
+        LA.forConcurrently (M.toList pgSources) \(sourceName, sourceCache) -> concat . toList <$>
           for (unsafeSourceTables @('Postgres 'Vanilla) sourceCache) \tables -> liftIO do
             -- count the number of event triggers on tables in this source
             let eventTriggerCount = sum (M.size . _tiEventTriggerInfoMap <$> tables)
