@@ -26,6 +26,13 @@ role has unrestricted access to all operations.
    values can come with the request and can be validated using webhook or can be
    sent with the JWT token.
 
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
 .. _create_insert_permission:
 
 create_insert_permission
@@ -128,43 +135,12 @@ Args syntax
      - Role
    * - permission
      - true
-     - InsertPermission_
+     - :ref:`InsertPermission`
      - The permission definition
    * - comment
      - false
      - text
      - Comment
-
-.. _InsertPermission:
-
-InsertPermission
-&&&&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - check
-     - true
-     - :ref:`BoolExp`
-     - This expression has to hold true for every new row that is inserted
-   * - set
-     - false
-     - :ref:`ColumnPresetExp`
-     - Preset values for columns that can be sourced from session variables or static values
-   * - columns
-     - false
-     - :ref:`PGColumn` array (or) ``'*'``
-     - Can insert into only these columns (or all when ``'*'`` is specified)
-   * - backend_only
-     - false
-     - Boolean
-     - When set to ``true`` the mutation is accessible only if ``x-hasura-use-backend-only-permissions``
-       session variable exists and is set to ``true`` and request is made with ``x-hasura-admin-secret``
-       set if any auth is configured
 
 .. _drop_insert_permission:
 
@@ -278,45 +254,12 @@ Args syntax
      - Role
    * - permission
      - true
-     - SelectPermission_
+     - :ref:`SelectPermission`
      - The permission definition
    * - comment
      - false
      - text
      - Comment
-
-.. _SelectPermission:
-
-SelectPermission
-&&&&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - columns
-     - true
-     - :ref:`PGColumn` array (or) ``'*'``
-     - Only these columns are selectable (or all when ``'*'`` is specified)
-   * - computed_fields
-     - false
-     - :ref:`ComputedFieldName` array
-     - Only these computed fields are selectable
-   * - filter
-     - true
-     - :ref:`BoolExp`
-     - Only the rows where this expression holds true are selectable
-   * - limit
-     - false
-     - ``Integer``
-     - The maximum number of rows that can be returned
-   * - allow_aggregations
-     - false
-     - ``Boolean``
-     - Toggle allowing aggregate queries
 
 .. _drop_select_permission:
 
@@ -440,42 +383,12 @@ Args syntax
      - Role
    * - permission
      - true
-     - UpdatePermission_
+     - :ref:`UpdatePermission`
      - The permission definition
    * - comment
      - false
      - text
      - Comment
-
-.. _UpdatePermission:
-
-UpdatePermission
-&&&&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - columns
-     - true
-     - :ref:`PGColumn` array (or) ``'*'``
-     - Only these columns are selectable (or all when ``'*'`` is specified)
-   * - filter
-     - true
-     - :ref:`BoolExp`
-     - Only the rows where this precondition holds true are updatable
-   * - check
-     - false
-     - :ref:`BoolExp`
-     - Postcondition which must be satisfied by rows which have been updated
-   * - set
-     - false
-     - :ref:`ColumnPresetExp`
-     - Preset values for columns that can be sourced from session variables or static values.
-
 
 .. _drop_update_permission:
 
@@ -576,29 +489,12 @@ Args syntax
      - Role
    * - permission
      - true
-     - DeletePermission_
+     - :ref:`DeletePermission`
      - The permission definition
    * - comment
      - false
      - text
      - Comment
-
-.. _DeletePermission:
-
-DeletePermission
-&&&&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - filter
-     - true
-     - :ref:`BoolExp`
-     - Only the rows where this expression holds true are deletable
 
 .. _drop_delete_permission:
 

@@ -1,0 +1,26 @@
+{
+  "args1": {
+    "continents": {
+      "filter": {
+        "code": { "eq": "AF" }
+      }
+    },
+    "country": { "code": "IN" }
+  },
+  "args2": {
+    "books": {
+      "where": {
+        "author": {
+          "_eq": "X-Hasura-User-Id"
+        }
+      }
+    },
+    "users": {
+      "where": {
+        "id": {
+          "_eq": "X-Hasura-User-Id"
+        }
+      }
+    }
+  }
+}

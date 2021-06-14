@@ -3,14 +3,7 @@ import styles from '../../../../Common/TableCommon/Table.scss';
 import { fkViolationOnUpdate, fkViolationOnDelete } from '../TooltipMessages';
 import { updateSchemaInfo } from '../../DataActions';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
-
-const violiationActions = [
-  'restrict',
-  'no action',
-  'cascade',
-  'set null',
-  'set default',
-];
+import { dataSource } from '../../../../../dataSources';
 
 const ForeignKeySelector = ({
   foreignKey,
@@ -81,6 +74,7 @@ const ForeignKeySelector = ({
     // dispatch action for setting reference table
     const dispatchSetRefTable = event => {
       const newFks = JSON.parse(JSON.stringify(foreignKeys));
+      const violiationActions = dataSource?.violationActions;
       if (newFks[index].refTableName !== event.target.value) {
         newFks[index].colMappings = [{ column: '', refColumn: '' }];
       }
@@ -95,8 +89,8 @@ const ForeignKeySelector = ({
               refColumn: '',
             },
           ],
-          onUpdate: 'restrict',
-          onDelete: 'restrict',
+          onUpdate: violiationActions?.[0],
+          onDelete: violiationActions?.[0],
         });
       }
       dispatch(setForeignKeys(newFks));
@@ -280,6 +274,7 @@ const ForeignKeySelector = ({
       ? 'Please select the reference table and the column configuration'
       : undefined;
     // Generate radios for violation actions
+    const violiationActions = dataSource.violationActions;
     const radios = action => {
       const selected = foreignKey[action];
       return (

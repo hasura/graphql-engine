@@ -48,15 +48,16 @@ a union of top-level nodes from each of the sub-schemas.
   app users to the GraphQL APIs that are auto-generated via Hasura, head to
   :ref:`auth`
 
-Remote schema relationships
----------------------------
-
-You can create remote relationships between your tables and tables from your remote schema. Read more about this in the :ref:`remote_schema_relationships` section.
-
-**See:**
+Learn more
+----------
 
 .. toctree::
    :maxdepth: 1
- 
+
    adding-schema
-   schema-auth
+   remote-schema-relationships
+   auth/index
+
+.. admonition:: Additional Resources
+
+  Data Federation with Hasura - `Watch Webinar <https://hasura.io/events/webinar/data-federation-hasura-graphql/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

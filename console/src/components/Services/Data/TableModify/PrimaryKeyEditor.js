@@ -18,6 +18,7 @@ const PrimaryKeyEditor = ({
   pkModify,
   dispatch,
   currentSchema,
+  readOnlyMode,
 }) => {
   const columns = tableSchema.columns;
   const tablePrimaryKeyColumns = tableSchema.primary_key
@@ -36,7 +37,6 @@ const PrimaryKeyEditor = ({
     return orderedCols.find(c => c.name === pk).index;
   });
 
-  // get PK constraint name
   const pkConstraintName = tableSchema.primary_key
     ? tableSchema.primary_key.constraint_name
     : '';
@@ -122,6 +122,7 @@ const PrimaryKeyEditor = ({
       collapsedLabel={pkEditorCollapsedLabel}
       expandedLabel={pkEditorExpandedLabel}
       editorExpanded={pkEditorExpanded}
+      readOnlyMode={readOnlyMode}
       property={'pks'}
       service="modify-table"
       saveFunc={onSave}

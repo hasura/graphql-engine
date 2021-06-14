@@ -6,12 +6,7 @@ import { capitalize, exists } from '../../../Common/utils/jsUtils';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { tabNameMap } from '../utils';
-import {
-  checkIfTable,
-  getTableName,
-  getTableSchema,
-  getTableType,
-} from '../../../Common/utils/pgUtils';
+import { dataSource, isFeatureSupported } from '../../../../dataSources';
 import {
   getSchemaBaseRoute,
   getTableBrowseRoute,
@@ -20,6 +15,7 @@ import {
   getTableModifyRoute,
   getTablePermissionsRoute,
   getTableRelationshipsRoute,
+  getDataSourceBaseRoute,
 } from '../../../Common/utils/routesUtils';
 import { getReadableNumber } from '../../../Common/utils/jsUtils';
 
@@ -30,25 +26,25 @@ const TableHeader = ({
   table,
   migrationMode,
   readOnlyMode,
+  source,
   dispatch,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
 
-  const tableName = getTableName(table);
-  const tableSchema = getTableSchema(table);
-  const isTable = checkIfTable(table);
+  const tableName = table.table_name;
+  const tableSchema = table.table_schema;
+  const isTableType = dataSource.isTable(table);
 
   let countDisplay = '';
-  // if (exists(count)) {
-  //   countDisplay = `(${isCountEstimated ? '~' : '' }${getReadableNumber(count)})`;
-  // }
   if (exists(count) && !isCountEstimated) {
     countDisplay = `(${getReadableNumber(count)})`;
   }
   const activeTab = tabNameMap[tabName];
 
   const saveTableNameChange = newName => {
-    dispatch(changeTableName(tableName, newName, isTable, getTableType(table)));
+    dispatch(
+      changeTableName(tableName, newName, isTableType, table.table_type)
+    );
   };
 
   const getBreadCrumbs = () => {
@@ -58,16 +54,19 @@ const TableHeader = ({
         url: '/data',
       },
       {
-        title: 'Schema',
-        url: '/data/schema/',
+        title: source,
+        url: getDataSourceBaseRoute(source),
+        prefix: <i className="fa fa-database" />,
       },
       {
         title: tableSchema,
-        url: getSchemaBaseRoute(tableSchema),
+        url: getSchemaBaseRoute(tableSchema, source),
+        prefix: <i className="fa fa-folder" />,
       },
       {
         title: tableName,
-        url: getTableBrowseRoute(tableSchema, tableName, isTable),
+        url: getTableBrowseRoute(tableSchema, source, tableName, isTableType),
+        prefix: <i className="fa fa-table" />,
       },
       {
         title: activeTab,
@@ -97,46 +96,80 @@ const TableHeader = ({
           currentValue={tableName}
           save={saveTableNameChange}
           loading={false}
-          editable={tabName === 'modify'}
+          editable={
+            tabName === 'modify' &&
+            isFeatureSupported('tables.modify.editableTableName')
+          }
           dispatch={dispatch}
-          property={isTable ? 'table' : 'view'}
+          property={isTableType ? 'table' : 'view'}
         />
         <div className={styles.nav}>
           <ul className="nav nav-pills">
             {getTab(
               'browse',
-              getTableBrowseRoute(tableSchema, tableName, isTable),
-              `Browse Rows ${countDisplay}`,
+              getTableBrowseRoute(tableSchema, source, tableName, isTableType),
+              `Browse Rows ${
+                isFeatureSupported('tables.browse.aggregation')
+                  ? countDisplay
+                  : ''
+              }`,
               'table-browse-rows'
             )}
-            {!readOnlyMode &&
-              isTable &&
+            {isFeatureSupported('tables.insert.enabled') &&
+              !readOnlyMode &&
+              isTableType &&
               getTab(
                 'insert',
-                getTableInsertRowRoute(tableSchema, tableName, isTable),
+                getTableInsertRowRoute(
+                  tableSchema,
+                  source,
+                  tableName,
+                  isTableType
+                ),
                 'Insert Row',
                 'table-insert-rows'
               )}
-            {migrationMode &&
+            {isFeatureSupported('tables.modify.enabled') &&
+              migrationMode &&
               getTab(
                 'modify',
-                getTableModifyRoute(tableSchema, tableName, isTable),
+                getTableModifyRoute(
+                  tableSchema,
+                  source,
+                  tableName,
+                  isTableType
+                ),
                 'Modify'
               )}
             {getTab(
               'relationships',
-              getTableRelationshipsRoute(tableSchema, tableName, isTable),
+              getTableRelationshipsRoute(
+                tableSchema,
+                source,
+                tableName,
+                isTableType
+              ),
               'Relationships'
             )}
             {getTab(
               'permissions',
-              getTablePermissionsRoute(tableSchema, tableName, isTable),
+              getTablePermissionsRoute(
+                tableSchema,
+                source,
+                tableName,
+                isTableType
+              ),
               'Permissions'
             )}
             {tabName === 'edit' &&
               getTab(
                 'edit',
-                getTableEditRowRoute(tableSchema, tableName, isTable),
+                getTableEditRowRoute(
+                  tableSchema,
+                  source,
+                  tableName,
+                  isTableType
+                ),
                 'Edit Row'
               )}
           </ul>

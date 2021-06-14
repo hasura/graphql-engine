@@ -1,11 +1,20 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+
+-- | This module generates a random 'Metadata' object, using a number of
+-- 'Arbitrary' instances.  This is used by the QuickCheck-based testing suite.
+-- This module is not used by the graphql-engine library itself, and we may wish
+-- to relocate it, for instance to Hasura.Generator.
+
 module Hasura.RQL.DDL.Metadata.Generator
-  (genReplaceMetadata)
+  (genMetadata)
 where
 
 import           Hasura.Prelude
 
 import qualified Data.Aeson                                    as J
+import qualified Data.HashMap.Strict                           as Map
+import qualified Data.HashMap.Strict.InsOrd                    as OM
+import qualified Data.HashSet.InsOrd                           as SetIns
 import qualified Data.Text                                     as T
 import qualified Data.Vector                                   as V
 import qualified Language.GraphQL.Draft.Parser                 as G
@@ -13,7 +22,6 @@ import qualified Language.GraphQL.Draft.Syntax                 as G
 import qualified Language.Haskell.TH.Syntax                    as TH
 import qualified Network.URI                                   as N
 import qualified System.Cron.Parser                            as Cr
-
 
 import           Data.List.Extended                            (duplicates)
 import           Data.Scientific
@@ -23,41 +31,46 @@ import           Test.QuickCheck.Instances.Semigroup           ()
 import           Test.QuickCheck.Instances.Time                ()
 import           Test.QuickCheck.Instances.UnorderedContainers ()
 
-import qualified Hasura.RQL.DDL.ComputedField                  as ComputedField
-import qualified Hasura.RQL.DDL.Permission                     as Permission
-import qualified Hasura.RQL.DDL.Permission.Internal            as Permission
-import qualified Hasura.RQL.DDL.QueryCollection                as Collection
-import qualified Hasura.RQL.DDL.Relationship                   as Relationship
-import qualified Hasura.RQL.DDL.Schema                         as Schema
-
-import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 
-genReplaceMetadata :: Gen ReplaceMetadata
-genReplaceMetadata = do
-  version <- arbitrary
-  ReplaceMetadata version
+
+genMetadata :: Gen Metadata
+genMetadata =
+  Metadata
     <$> arbitrary
-    <*> genFunctionsMetadata version
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
-  where
-    genFunctionsMetadata :: MetadataVersion -> Gen FunctionsMetadata
-    genFunctionsMetadata = \case
-      MVVersion1 -> FMVersion1 <$> arbitrary
-      MVVersion2 -> FMVersion2 <$> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+
+instance (Arbitrary k, Eq k, Hashable k, Arbitrary v) => Arbitrary (InsOrdHashMap k v) where
+  arbitrary = OM.fromList <$> arbitrary
+
+instance (Arbitrary a, Eq a, Hashable a) => Arbitrary (SetIns.InsOrdHashSet a) where
+  arbitrary = SetIns.fromList <$> arbitrary
 
 instance Arbitrary G.Name where
   arbitrary = G.unsafeMkName . T.pack <$> listOf1 (elements ['a'..'z'])
 
 instance Arbitrary MetadataVersion where
+  arbitrary = genericArbitrary
+
+instance (Backend b) => Arbitrary (FunctionMetadata b) where
+  arbitrary = genericArbitrary
+
+instance (Backend b) => Arbitrary (SourceMetadata b) where
+  arbitrary = genericArbitrary
+
+instance Arbitrary FunctionPermissionMetadata where
   arbitrary = genericArbitrary
 
 instance Arbitrary TableCustomRootFields where
@@ -69,28 +82,37 @@ instance Arbitrary TableCustomRootFields where
           pure $ TableCustomRootFields a b c d e f g h i
         else uniqueRootFields
 
-instance Arbitrary TableConfig where
+instance (Backend b) => Arbitrary (TableConfig b) where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (Relationship.RelUsing a) where
+instance (Arbitrary a, Backend b) => Arbitrary (RelUsing b a) where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (Relationship.RelDef a) where
+instance (Arbitrary a) => Arbitrary (RelDef a) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Relationship.RelManualConfig where
+instance Arbitrary InsertOrder where
   arbitrary = genericArbitrary
 
-instance Arbitrary Relationship.ArrRelUsingFKeyOn where
+instance (Backend b) => Arbitrary (RelManualConfig b) where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (Permission.PermDef a) where
+instance (Backend b) => Arbitrary (ObjRelUsingChoice b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary ComputedField.ComputedFieldDefinition where
+instance (Backend b) => Arbitrary (ArrRelUsingFKeyOn b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary ComputedFieldMeta where
+instance (Arbitrary a) => Arbitrary (PermDef a) where
+  arbitrary = genericArbitrary
+
+instance Arbitrary AddInheritedRole where
+  arbitrary = genericArbitrary
+
+instance (Backend b) => Arbitrary (ComputedFieldDefinition b) where
+  arbitrary = genericArbitrary
+
+instance (Backend b) => Arbitrary (ComputedFieldMetadata b) where
   arbitrary = genericArbitrary
 
 instance Arbitrary Scientific where
@@ -113,28 +135,28 @@ instance Arbitrary J.Value where
 instance Arbitrary ColExp where
   arbitrary = genericArbitrary
 
-instance Arbitrary (GExists ColExp) where
+instance (Backend b) => Arbitrary (GExists b ColExp) where
   arbitrary = genericArbitrary
 
-instance Arbitrary (GBoolExp ColExp) where
+instance (Backend b) => Arbitrary (GBoolExp b ColExp) where
   arbitrary = genericArbitrary
 
-instance Arbitrary BoolExp where
+instance (Backend b) => Arbitrary (BoolExp b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.PermColSpec where
+instance (Backend b) => Arbitrary (PermColSpec b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.InsPerm where
+instance (Backend b) => Arbitrary (InsPerm b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.SelPerm where
+instance (Backend b) => Arbitrary (SelPerm b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.UpdPerm where
+instance (Backend b) => Arbitrary (UpdPerm b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Permission.DelPerm where
+instance (Backend b) => Arbitrary (DelPerm b) where
   arbitrary = genericArbitrary
 
 instance Arbitrary SubscribeColumns where
@@ -158,19 +180,16 @@ instance Arbitrary HeaderConf where
 instance Arbitrary EventTriggerConf where
   arbitrary = genericArbitrary
 
-instance Arbitrary TableMeta where
+instance (Backend b) => Arbitrary (TableMetadata b) where
   arbitrary = genericArbitrary
 
-instance Arbitrary Schema.FunctionConfig where
+instance Arbitrary FunctionConfig where
   arbitrary = genericArbitrary
 
-instance Arbitrary Schema.TrackFunctionV2 where
+instance Arbitrary FunctionExposedAs where
   arbitrary = genericArbitrary
 
-instance Arbitrary QualifiedTable where
-  arbitrary = genericArbitrary
-
-instance Arbitrary QualifiedFunction where
+instance Backend b => Arbitrary (TrackFunctionV2 b) where
   arbitrary = genericArbitrary
 
 -- FIXME:- URI type do not have Arbitrary class implemented.
@@ -186,23 +205,32 @@ instance Arbitrary AddRemoteSchemaQuery where
 
 -- FIXME:- The GraphQL AST has 'Gen' by Hedgehog testing package which lacks the
 -- 'Arbitrary' class implementation. For time being, a single query is generated every time.
-instance Arbitrary Collection.GQLQueryWithText where
-  arbitrary = pure $ Collection.GQLQueryWithText ( simpleGraphQLQuery
-                                                 , Collection.GQLQuery simpleQuery
-                                                 )
+instance Arbitrary GQLQueryWithText where
+  arbitrary = pure $ GQLQueryWithText ( "query {author {id name}}"
+                                      , GQLQuery simpleQuery
+                                      )
     where
-      simpleQuery = $(either (fail . T.unpack) TH.lift $ G.parseExecutableDoc simpleGraphQLQuery)
+      simpleQuery = $(either (fail . T.unpack) TH.lift $ G.parseExecutableDoc "query {author {id name}}")
 
-instance Arbitrary Collection.ListedQuery where
+instance Arbitrary ListedQuery where
   arbitrary = genericArbitrary
 
-instance Arbitrary Collection.CollectionDef where
+instance Arbitrary CollectionDef where
   arbitrary = genericArbitrary
 
-instance Arbitrary Collection.CreateCollection where
+instance Arbitrary CreateCollection where
   arbitrary = genericArbitrary
 
-instance Arbitrary Collection.CollectionReq where
+instance Arbitrary CollectionReq where
+  arbitrary = genericArbitrary
+
+instance Arbitrary query => Arbitrary (EndpointMetadata query) where
+  arbitrary = genericArbitrary
+
+instance Arbitrary query => Arbitrary (EndpointDef query) where
+  arbitrary = genericArbitrary
+
+instance Arbitrary QueryReference where
   arbitrary = genericArbitrary
 
 instance Arbitrary G.Description where
@@ -286,9 +314,6 @@ instance (Arbitrary a, Arbitrary b) => Arbitrary (ActionDefinition a b) where
 instance Arbitrary ActionName where
   arbitrary = genericArbitrary
 
-instance Arbitrary InputWebhook where
-  arbitrary = genericArbitrary
-
 instance Arbitrary ActionPermissionMetadata where
   arbitrary = genericArbitrary
 
@@ -296,9 +321,6 @@ instance Arbitrary ActionMetadata where
   arbitrary = genericArbitrary
 
 deriving instance Arbitrary RemoteArguments
-
-instance Arbitrary a => Arbitrary (G.Value a) where
-  arbitrary = genericArbitrary
 
 instance Arbitrary FieldCall where
   arbitrary = genericArbitrary
@@ -308,13 +330,10 @@ deriving instance Arbitrary RemoteFields
 instance Arbitrary RemoteRelationshipDef where
   arbitrary = genericArbitrary
 
-instance Arbitrary RemoteRelationshipMeta where
+instance Arbitrary RemoteRelationshipMetadata where
   arbitrary = genericArbitrary
 
 instance Arbitrary CronTriggerMetadata where
-  arbitrary = genericArbitrary
-
-instance Arbitrary WebhookConf where
   arbitrary = genericArbitrary
 
 instance Arbitrary STRetryConf where
@@ -326,8 +345,74 @@ instance Arbitrary NonNegativeDiffTime where
 instance Arbitrary CronSchedule where
   arbitrary = elements sampleCronSchedules
 
+instance Arbitrary (G.Directive Void) where
+  arbitrary = elements sampleDirectives
+
+instance Arbitrary (G.Value Void) where
+  arbitrary = elements sampleGraphQLValues
+
+instance Arbitrary (G.Value G.Name) where
+  arbitrary = genericArbitrary
+
+instance (Arbitrary a) => Arbitrary (G.FieldDefinition a) where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.ScalarTypeDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.InputValueDefinition where
+  arbitrary = genericArbitrary
+
+instance (Arbitrary a) => Arbitrary (G.InputObjectTypeDefinition a) where
+  arbitrary = genericArbitrary
+
+instance (Arbitrary a) => Arbitrary (G.ObjectTypeDefinition a) where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.RootOperationTypeDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.OperationType where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.UnionTypeDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.EnumValueDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.EnumTypeDefinition where
+  arbitrary = genericArbitrary
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (G.InterfaceTypeDefinition a b) where
+  arbitrary = genericArbitrary
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (G.TypeDefinition a b) where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.TypeSystemDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.SchemaDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.SchemaDocument where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RemoteSchemaPermissionDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RemoteSchemaPermissionMetadata where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RemoteSchemaMetadata where
+  arbitrary = genericArbitrary
+
+instance Arbitrary MetadataResourceVersion where
+  arbitrary = MetadataResourceVersion <$> arbitrary
+
 sampleCronSchedules :: [CronSchedule]
-sampleCronSchedules = rights $ map Cr.parseCronSchedule $
+sampleCronSchedules = rights $ map Cr.parseCronSchedule
   [ "* * * * *"
   -- every minute
   , "5 * * * *"
@@ -345,3 +430,52 @@ sampleCronSchedules = rights $ map Cr.parseCronSchedule $
   , "0 0 * * 0"
   -- Every sunday at 00:00
   ]
+
+-- Hardcoding the values of `sampleDirectives` and `sampleGraphQLValues` because
+-- there's no `Arbitrary` instance of `Void`
+sampleDirectives :: [G.Directive Void]
+sampleDirectives = [ (G.Directive $$(G.litName "directive_1") mempty)
+                   , (G.Directive $$(G.litName "directive_2") $
+                        (Map.singleton $$(G.litName "value") (G.VInt 1)))
+                   , (G.Directive $$(G.litName "directive_3") $
+                        (Map.singleton $$(G.litName "value") (G.VBoolean True)))
+                   ]
+
+sampleGraphQLValues :: [G.Value Void]
+sampleGraphQLValues = [ G.VInt 1
+                      , G.VNull
+                      , G.VFloat 2.5
+                      , G.VString "article"
+                      , G.VBoolean True
+                      ]
+
+instance Arbitrary MetricsConfig where
+  arbitrary = genericArbitrary
+
+instance Arbitrary ApiLimit where
+  arbitrary = genericArbitrary
+
+instance Arbitrary DepthLimit where
+  arbitrary = genericArbitrary
+
+instance Arbitrary NodeLimit where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RateLimit where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RateLimitConfig where
+  arbitrary = genericArbitrary
+
+instance Arbitrary UniqueParamConfig where
+  arbitrary = elements sampleUniqueParamConfigs
+
+sampleUniqueParamConfigs :: [UniqueParamConfig]
+sampleUniqueParamConfigs = [ UPCIpAddress
+                           , UPCSessionVar ["x-hasura-user-id"]
+                           , UPCSessionVar ["x-hasura-user-id", "x-hasura-team-id"]
+                           , UPCSessionVar ["x-hasura-user-id", "x-hasura-team-id", "x-hasura-org-id"]
+                           ]
+
+instance Arbitrary SetGraphqlIntrospectionOptions where
+  arbitrary = genericArbitrary

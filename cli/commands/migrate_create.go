@@ -1,13 +1,11 @@
 package commands
 
 import (
-	"io/ioutil"
-	"os"
+	"fmt"
+	"path/filepath"
 	"time"
 
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata"
-	metadataTypes "github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -50,13 +48,23 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	migrateCreateCmd := &cobra.Command{
 		Use:          "create [migration-name]",
 		Short:        "Create files required for a migration",
-		Long:         "Create sql and yaml files required for a migration",
+		Long:         "Create ``sql`` and ``yaml`` files required for a migration",
 		Example:      migrateCreateCmdExamples,
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if cmd.Flags().Changed("metadata-from-server") {
+				return fmt.Errorf("metadata-from-server flag is depricated")
+			}
+			if cmd.Flags().Changed("metadata-from-file") {
+				return fmt.Errorf("metadata-from-file flag is depricated")
+			}
+			return validateConfigV3Flags(cmd, ec)
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.name = args[0]
 			opts.EC.Spin("Creating migration files...")
+			opts.Source = ec.Source
 			version, err := opts.run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
@@ -72,8 +80,8 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := migrateCreateCmd.Flags()
 	opts.flags = f
 	f.BoolVar(&opts.fromServer, "from-server", false, "take pg_dump of schema (default: public) and Hasura metadata from the server")
-	f.StringVar(&opts.sqlFile, "sql-from-file", "", "path to an sql file which contains the SQL statements")
-	f.BoolVar(&opts.sqlServer, "sql-from-server", false, "take pg_dump from server (default: public) and save it as a migration")
+	f.StringVar(&opts.sqlFile, "sql-from-file", "", "path to an SQL file which contains the SQL statements")
+	f.BoolVar(&opts.sqlServer, "sql-from-server", false, "take pg_dump from the server (default: public) and save it as a migration")
 	f.StringSliceVar(&opts.schemaNames, "schema", []string{"public"}, "name of Postgres schema to export as a migration. provide multiple schemas with a comma separated list e.g. --schema public,user")
 	f.StringVar(&opts.metaDataFile, "metadata-from-file", "", "path to a hasura metadata file to be used for up actions")
 	f.BoolVar(&opts.metaDataServer, "metadata-from-server", false, "take metadata from the server and write it as an up migration file")
@@ -105,11 +113,14 @@ type migrateCreateOptions struct {
 	downSQL        string
 	excludeSchema  []string
 	full           bool
+  
+	Source         cli.Source
+
 }
 
 func (o *migrateCreateOptions) run() (version int64, err error) {
 	timestamp := getTime()
-	createOptions := mig.New(timestamp, o.name, o.EC.MigrationDir)
+	createOptions := mig.New(timestamp, o.name, filepath.Join(o.EC.MigrationDir, o.Source.Name))
 
 	if o.fromServer {
 		o.sqlServer = true
@@ -152,7 +163,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 
 	var migrateDrv *migrate.Migrate
 	if o.sqlServer || o.metaDataServer || o.flags.Changed("up-sql") || o.flags.Changed("down-sql") {
-		migrateDrv, err = migrate.NewMigrate(o.EC, true)
+		migrateDrv, err = migrate.NewMigrate(o.EC, true, o.Source.Name, o.Source.Kind)
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot create migrate instance")
 		}
@@ -166,7 +177,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		}
 	}
 	if o.sqlServer {
-		data, err := migrateDrv.ExportSchemaDump(o.schemaNames, o.excludeSchema, o.full)
+		data, err := migrateDrv.ExportSchemaDump(o.schemaNames, o.Source.Name, o.Source.Kind, o.excludeSchema, o.full)
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot fetch schema dump")
 		}
@@ -178,35 +189,6 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		err := createOptions.SetMetaUpFromFile(o.metaDataFile)
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot set metadata file")
-		}
-	}
-
-	// Create metadata migrations only if config version is V1
-	if o.metaDataServer {
-		// To create metadata.yaml, set metadata plugin
-		tmpDirName, err := ioutil.TempDir("", "*")
-		if err != nil {
-			return 0, errors.Wrap(err, "cannot create temp directory to fetch metadata")
-		}
-		defer os.RemoveAll(tmpDirName)
-		plugins := make(metadataTypes.MetadataPlugins, 0)
-		plugins = append(plugins, metadata.New(o.EC, tmpDirName))
-		migrateDrv.SetMetadataPlugins(plugins)
-		// fetch metadata from server
-		files, err := migrateDrv.ExportMetadata()
-		if err != nil {
-			return 0, errors.Wrap(err, "cannot fetch metadata from server")
-		}
-		err = migrateDrv.WriteMetadata(files)
-		if err != nil {
-			return 0, errors.Wrap(err, "cannot write to tmp file")
-		}
-
-		for name := range files {
-			err = createOptions.SetMetaUpFromFile(name)
-			if err != nil {
-				return 0, errors.Wrap(err, "cannot parse metadata from the server")
-			}
 		}
 	}
 

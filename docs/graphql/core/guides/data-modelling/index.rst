@@ -12,14 +12,11 @@ Guides: Data modelling
   :depth: 1
   :local:
 
-- :ref:`soft_deletes`
-- :ref:`one_to_one_modelling`
-- :ref:`one_to_many_modelling`
-- :ref:`many_to_many_modelling`
-
 .. toctree::
   :maxdepth: 1
   :titlesonly:
-  :hidden:
 
+  One-to-one relationship <one-to-one>
+  One-to-many relationship <one-to-many>
+  Many-to-many relationship <many-to-many>
   soft-deletes

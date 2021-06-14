@@ -86,7 +86,7 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
     };
 
     return (
-      <div key={`trigger-${triggerName || i}`}>
+      <div key={`trigger-${i}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
           expandedLabel={expandedLabel}

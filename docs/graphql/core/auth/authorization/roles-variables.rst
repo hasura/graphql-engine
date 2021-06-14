@@ -104,7 +104,7 @@ General guidelines for modelling roles in Hasura.
 
 Roles are typically modelled in two ways:
 
-1. **Hierarchical roles**: Access scopes are nested depending on available roles. `Roles in Github for organisations <https://help.github.com/en/articles/managing-peoples-access-to-your-organization-with-roles>`_
+1. **Hierarchical roles**: Access scopes are nested depending on available roles. `Roles in GitHub for organisations <https://help.github.com/en/articles/managing-peoples-access-to-your-organization-with-roles>`_
    is a great example of such modelling where access scopes are inherited by deeper roles:
 
    .. thumbnail:: /img/graphql/core/auth/github-org-hierarchical-roles.png
@@ -221,10 +221,14 @@ The permission for ``org-member`` role changes to this:
     ]
   }
 
-.. admonition:: Arrays in permission rules
+.. admonition:: Array session variables in permission rules
 
    Support for using session variables for array operators like ``_in``, ``_nin``, ``_has_any_keys``,
-   ``_has_all_keys`` is only added in ``beta.3`` release.
+   ``_has_all_keys`` is available in versions ``v1.0.0-beta.3`` and above.
+
+   When you use array operators such as ``_in`` in the permissions builder in the Hasura console, it will automatically open an array for your values. 
+   If your session variable value is already an array, you can click the ``[X-Hasura-Allowed-Ids]`` suggestion to remove the brackets and set your 
+   session variable in its place.
 
 Format of session variables
 ---------------------------
@@ -258,3 +262,7 @@ if ``{hello,world}`` is a valid format of type ``text[]``, you can run:
 
    In future, we'll add support for passing session variables as JSON values where possible (i.e, auth
    webhook and JWT but not in headers).
+
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

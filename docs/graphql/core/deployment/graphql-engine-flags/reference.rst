@@ -1,11 +1,11 @@
 .. meta::
-   :description: Hasura GraphQL engine server flags reference
-   :keywords: hasura, docs, deployment, server, flags
+   :description: Hasura GraphQL engine server config reference
+   :keywords: hasura, docs, deployment, server, config, flags, env vars
 
 .. _server_flag_reference:
 
-GraphQL engine server flags reference
-=====================================
+GraphQL engine server config reference
+======================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -23,8 +23,8 @@ Every GraphQL engine command is structured as:
 
 The flags can be passed as ENV variables as well.
 
-Server flags
-------------
+Server config
+-------------
 
 For the ``graphql-engine`` command these are the available flags and ENV variables:
 
@@ -44,6 +44,17 @@ For the ``graphql-engine`` command these are the available flags and ENV variabl
        ``postgres://<user>:<password>@<host>:<port>/<db-name>``
 
        Example: ``postgres://admin:mypass@mydomain.com:5432/mydb``
+
+   * - ``--metadata-database-url <METADATA-DATABASE-URL>``
+     - ``HASURA_GRAPHQL_METADATA_DATABASE_URL``
+     - Postgres database URL that will be used to store the Hasura metadata. By default the database configured using ``HASURA_GRAPHQL_DATABASE_URL``
+       will be used to store the metadata.
+
+       ``postgres://<user>:<password>@<host>:<port>/<db-name>``
+
+       Example: ``postgres://admin:mypass@mydomain.com:5432/metadata_db``
+
+       *(Available for versions > v2.0.0)*
 
 Or you can specify the following options *(only via flags)*:
 
@@ -69,8 +80,8 @@ Or you can specify the following options *(only via flags)*:
 
 .. _command-flags:
 
-Command flags
--------------
+Command config
+--------------
 
 For the ``serve`` sub-command these are the available flags and ENV variables:
 
@@ -151,6 +162,20 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - Interval in milliseconds to sleep before trying to fetch events again after a fetch
        returned no events from postgres
 
+   * - ``--events-fetch-batch-size``
+     - ``HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE``
+     - Maximum number of events to be fetched from the DB in a single batch (default: 100)
+
+       *(Available for versions > v2.0.0)*
+
+   * - ``--async-actions-fetch-interval``
+     - ``HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL``
+     - Interval in milliseconds to sleep before trying to fetch async actions again after a fetch
+       returned no async actions from metadata storage. Value ``0`` implies completely disable fetching
+       async actions from the storage.
+
+       *(Available for versions > v2.0.0)*
+
    * - ``-s, --stripes <NO_OF_STRIPES>``
      - ``HASURA_GRAPHQL_PG_STRIPES``
      - Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1).
@@ -162,17 +187,39 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
        When the maximum is reached we will block until a new connection becomes available,
        even if there is capacity in other stripes.
 
+       (**Deprecated in versions > v2.0.0**. :ref:`See details <hasura_v2_env_changes>`)
+
    * - ``--timeout <SECONDS>``
      - ``HASURA_GRAPHQL_PG_TIMEOUT``
      - Each connection's idle time before it is closed (default: 180 sec)
+
+       (**Deprecated in versions > v2.0.0**. :ref:`See details <hasura_v2_env_changes>`)
 
    * - ``--use-prepared-statements <true|false>``
      - ``HASURA_GRAPHQL_USE_PREPARED_STATEMENTS``
      - Use prepared statements for queries (default: true)
 
+       (**Deprecated in versions > v2.0.0**. :ref:`See details <hasura_v2_env_changes>`)
+
    * - ``-i, --tx-iso <TXISO>``
      - ``HASURA_GRAPHQL_TX_ISOLATION``
      - Transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)
+
+       (**Deprecated in versions > v2.0.0**. :ref:`See details <hasura_v2_env_changes>`)
+
+   * - ``--retries <NO_OF_RETRIES>``
+     - ``HASURA_GRAPHQL_NO_OF_RETRIES``
+     - Number of retries if Postgres connection error occurs (default: 1)
+
+       (**Deprecated in versions > v2.0.0**. :ref:`See details <hasura_v2_env_changes>`)
+
+   * - ``--conn-lifetime <SECONDS>``
+     - ``HASURA_GRAPHQL_PG_CONN_LIFETIME``
+     - Time from connection creation after which the connection should be destroyed and a new one created.
+       A value of 0 indicates we should never destroy an active connection. If 0 is passed, memory from large query
+       results may not be reclaimed. (default: 600 sec)
+
+       (**Deprecated in versions > v2.0.0**. :ref:`See details <hasura_v2_env_changes>`)
 
    * - ``--stringify-numeric-types``
      - ``HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES``
@@ -197,12 +244,12 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
    * - ``--enable-allowlist``
      - ``HASURA_GRAPHQL_ENABLE_ALLOWLIST``
      - Restrict queries allowed to be executed by the GraphQL engine to those that are part of the configured
-       allow-list. Default: ``false`` *(Available for versions > v1.0.0-beta.1)*
+       allow-list. Default: ``false``
 
    * - ``--console-assets-dir``
      - ``HASURA_GRAPHQL_CONSOLE_ASSETS_DIR``
      - Set the value to ``/srv/console-assets`` for the console to load assets from the server itself
-       instead of CDN *(Available for versions > v1.0.0-beta.1)*
+       instead of CDN
 
    * - ``--enabled-log-types``
      - ``HASURA_GRAPHQL_ENABLED_LOG_TYPES``
@@ -219,9 +266,57 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - ``HASURA_GRAPHQL_DEV_MODE``
      - Set dev mode for GraphQL requests; include the ``internal`` key in the errors extensions of the response (if required).
 
+       *(Available for versions > v1.2.0)*
+
    * - ``--admin-internal-errors``
      - ``HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS``
      - Include the ``internal`` key in the errors extensions of the response for GraphQL requests with the admin role (if required).
+
+       *(Available for versions > v1.2.0)*
+
+   * - ``--enable-remote-schema-permissions``
+     - ``HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS``
+     - Enable remote schema permissions (default: ``false``)
+
+       *(Available for versions > v2.0.0)*
+
+   * - ``--infer-function-permissions``
+     - ``HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS``
+     - When the ``--infer-function-permissions`` flag is set to ``false``, a function ``f``, stable, immutable or volatile is
+       only exposed for a role ``r`` if there is a permission defined on the function ``f`` for the role ``r``, creating a
+       function permission will only be allowed if there is a select permission on the table type.
+
+       When the ``--infer-function-permissions`` flag is set to ``true`` or the flag is omitted (defaults to ``true``), the
+       permission of the function is inferred from the select permissions from the target table of the function, only for
+       stable/immutable functions. Volatile functions are not exposed to any of the roles in this case.
+
+       *(Available for versions > v2.0.0)*
+
+   * - ``--schema-sync-poll-interval``
+     - ``HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL``
+     - Interval to poll metadata storage for updates in milliseconds - Default 1000 (1s) - Set to 0 to disable.
+
+       *(Available for versions > v2.0.0)*
+
+   * - ``--experimental-features``
+     - ``HASURA_GRAPHQL_EXPERIMENTAL_FEATURES``
+     - List of experimental features to be enabled. A comma separated value is expected. Options: ``inherited_roles``.
+
+       *(Available for versions > v2.0.0)*
+
+   * - ``--graceful-shutdown-timeout``
+     - ``HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT``
+     - Timeout (in seconds) to wait for the in-flight events (event triggers and scheduled triggers) and async actions to complete before the
+       server shuts down completely (default: 60 seconds). If the in-flight events are not completed within the
+       timeout, those events are marked as pending.
+
+       *(Available for versions > v2.0.0)*
+
+   * - ``--enable-maintenance-mode``
+     - ``HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE``
+     - Disable updating of metadata on the server (default: ``false``)
+
+       *(Available for versions > v2.0.0)*
 
 .. note::
 

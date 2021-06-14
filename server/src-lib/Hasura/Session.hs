@@ -7,8 +7,10 @@ module Hasura.Session
   , SessionVariable
   , mkSessionVariable
   , SessionVariables
+  , filterSessionVariables
   , SessionVariableValue
   , sessionVariableToText
+  , sessionVariableToGraphQLName
   , mkSessionVariablesText
   , mkSessionVariablesHeaders
   , sessionVariablesToHeaders
@@ -17,63 +19,71 @@ module Hasura.Session
   , getSessionVariables
   , UserAdminSecret(..)
   , UserRoleBuild(..)
-  , UserInfo
-  , _uiRole
-  , _uiSession
-  , _uiBackendOnlyFieldAccess
+  , UserInfo(..)
+  , UserInfoM(..)
+  , askCurRole
   , mkUserInfo
   , adminUserInfo
   , BackendOnlyFieldAccess(..)
   ) where
 
-import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common    (NonEmptyText, adminText, mkNonEmptyText,
-                                             unNonEmptyText)
-import           Hasura.RQL.Types.Error
-import           Hasura.Server.Utils
-import           Hasura.SQL.Types
+
+import qualified Data.CaseInsensitive          as CI
+import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashSet                  as Set
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Network.HTTP.Types            as HTTP
 
 import           Data.Aeson
-import           Data.Aeson.Types           (Parser, toJSONKeyText)
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
+import           Data.Aeson.Types              (Parser, toJSONKeyText)
+import           Data.Text.Extended
+import           Data.Text.NonEmpty
 
-import qualified Data.CaseInsensitive       as CI
-import qualified Data.HashMap.Strict        as Map
-import qualified Data.HashSet               as Set
-import qualified Data.Text                  as T
-import qualified Database.PG.Query          as Q
-import qualified Network.HTTP.Types         as HTTP
+
+import           Hasura.Base.Error
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.Server.Utils
+import           Hasura.Tracing                (TraceT)
+
 
 newtype RoleName
   = RoleName {getRoleTxt :: NonEmptyText}
   deriving ( Show, Eq, Ord, Hashable, FromJSONKey, ToJSONKey, FromJSON
-           , ToJSON, Q.FromCol, Q.ToPrepArg, Lift, Generic, Arbitrary, NFData, Cacheable )
-
-instance DQuote RoleName where
-  dquoteTxt = roleNameToTxt
+           , ToJSON, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary, NFData, Cacheable )
 
 roleNameToTxt :: RoleName -> Text
 roleNameToTxt = unNonEmptyText . getRoleTxt
+
+instance ToTxt RoleName where
+  toTxt = roleNameToTxt
 
 mkRoleName :: Text -> Maybe RoleName
 mkRoleName = fmap RoleName . mkNonEmptyText
 
 adminRoleName :: RoleName
-adminRoleName = RoleName adminText
+adminRoleName = RoleName $ mkNonEmptyTextUnsafe "admin"
 
 isAdmin :: RoleName -> Bool
 isAdmin = (adminRoleName ==)
 
 newtype SessionVariable = SessionVariable {unSessionVariable :: CI.CI Text}
-  deriving (Show, Eq, Hashable, IsString, Cacheable, Data, NFData)
+  deriving (Show, Eq, Hashable, IsString, Cacheable, Data, NFData, Ord)
 
 instance ToJSON SessionVariable where
   toJSON = toJSON . CI.original . unSessionVariable
 
 instance ToJSONKey SessionVariable where
   toJSONKey = toJSONKeyText sessionVariableToText
+
+instance ToTxt SessionVariable where
+  toTxt = sessionVariableToText
+
+-- | converts a `SessionVariable` value to a GraphQL name
+sessionVariableToGraphQLName :: SessionVariable -> G.Name
+sessionVariableToGraphQLName = G.unsafeMkName . T.replace "-" "_" . sessionVariableToText
 
 parseSessionVariable :: Text -> Parser SessionVariable
 parseSessionVariable t =
@@ -98,16 +108,20 @@ newtype SessionVariables =
   SessionVariables { unSessionVariables :: Map.HashMap SessionVariable SessionVariableValue}
   deriving (Show, Eq, Hashable, Semigroup, Monoid)
 
+filterSessionVariables
+  :: (SessionVariable -> SessionVariableValue -> Bool)
+  -> SessionVariables -> SessionVariables
+filterSessionVariables f = SessionVariables . Map.filterWithKey f . unSessionVariables
+
 instance ToJSON SessionVariables where
   toJSON (SessionVariables varMap) =
-    toJSON $ Map.fromList $ map (first sessionVariableToText) $ Map.toList varMap
+    toJSON $ mapKeys sessionVariableToText varMap
 
 instance FromJSON SessionVariables where
-  parseJSON v = mkSessionVariablesText . Map.toList <$> parseJSON v
+  parseJSON v = mkSessionVariablesText <$> parseJSON v
 
-mkSessionVariablesText :: [(Text, Text)] -> SessionVariables
-mkSessionVariablesText =
-  SessionVariables . Map.fromList . map (first mkSessionVariable)
+mkSessionVariablesText :: Map.HashMap Text Text -> SessionVariables
+mkSessionVariablesText = SessionVariables . mapKeys mkSessionVariable
 
 mkSessionVariablesHeaders :: [HTTP.Header] -> SessionVariables
 mkSessionVariablesHeaders =
@@ -157,6 +171,22 @@ data UserInfo
   } deriving (Show, Eq, Generic)
 instance Hashable UserInfo
 
+class (Monad m) => UserInfoM m where
+  askUserInfo :: m UserInfo
+
+instance (UserInfoM m) => UserInfoM (ReaderT r m) where
+  askUserInfo = lift askUserInfo
+instance (UserInfoM m) => UserInfoM (ExceptT r m) where
+  askUserInfo = lift askUserInfo
+instance (UserInfoM m) => UserInfoM (StateT s m) where
+  askUserInfo = lift askUserInfo
+instance (UserInfoM m) => UserInfoM (TraceT m) where
+  askUserInfo = lift askUserInfo
+
+askCurRole :: (UserInfoM m) => m RoleName
+askCurRole = _uiRole <$> askUserInfo
+
+
 -- | Represents how to build a role from the session variables
 data UserRoleBuild
   = URBFromSessionVariables
@@ -175,14 +205,13 @@ mkUserInfo roleBuild userAdminSecret sessionVariables = do
   roleName <- case roleBuild of
     URBFromSessionVariables -> onNothing maybeSessionRole $
       throw400 InvalidParams $ userRoleHeader <> " not found in session variables"
-    URBFromSessionVariablesFallback role -> pure $ fromMaybe role maybeSessionRole
-    URBPreDetermined role -> pure role
+    URBFromSessionVariablesFallback roleName' -> pure $ fromMaybe roleName' maybeSessionRole
+    URBPreDetermined roleName' -> pure roleName'
   backendOnlyFieldAccess <- getBackendOnlyFieldAccess
   let modifiedSession = modifySessionVariables roleName sessionVariables
   pure $ UserInfo roleName modifiedSession backendOnlyFieldAccess
   where
     maybeSessionRole = maybeRoleFromSessionVariables sessionVariables
-
     -- | Add x-hasura-role header and remove admin secret headers
     modifySessionVariables :: RoleName -> SessionVariables -> SessionVariables
     modifySessionVariables roleName =

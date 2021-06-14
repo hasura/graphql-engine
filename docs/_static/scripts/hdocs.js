@@ -5,6 +5,8 @@ window.hdocs = (function () {
     setup: function () {
       Array.from(document.getElementsByClassName('menuLink')).forEach(function (el) { el.addEventListener('click', hdocs.toggleMenu) });
 
+      Array.from(document.getElementsByClassName('tracked')).forEach(function (el) { el.addEventListener('click', function () { hdocs.trackGA(el.getAttribute('data-label')) }) });
+
       document.getElementById('nav_tree_icon').addEventListener('click', hdocs.handleNavClick);
       document.getElementById('sidebar-close').addEventListener('click', hdocs.handleNavClick);
 
@@ -26,6 +28,30 @@ window.hdocs = (function () {
       hdocs.setExternalLinks();
       hdocs.setupIntercom();
       hdocs.setupGraphiQL();
+      hdocs.newsletterForm();
+    },
+    newsletterForm: function () {
+      const searchParams = new URLSearchParams(window.location.search);
+      const searchAliId = searchParams.get("aliId");
+      var marketoForm = document.getElementById("mktoForm_1011");
+      var marketoSuccess = document.getElementById("marketo-success");
+      if (searchAliId || searchAliId === '') {
+        marketoForm.classList.add('hide');
+        marketoSuccess.classList.remove('hide');
+        marketoSuccess.scrollIntoView({ behavior: "smooth", block: "start", inline: "start" });
+      } else {
+        marketoForm.classList.remove('hide');
+        marketoSuccess.classList.add('hide');
+      }
+    },
+    trackGA: function (label, action) {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: 'Click Events',
+        category: 'Docs Custom',
+        action: action || 'Link Click',
+        label: label
+      })
     },
     toggleMenu: function () {
       var x = document.getElementById("navbar")
@@ -96,7 +122,7 @@ window.hdocs = (function () {
       }
     },
     setExternalLinks: function () {
-      Array.from(document.getElementsByClassName('.external')).forEach(function (el) { el.setAttribute('target', '_blank') });
+      Array.from(document.getElementsByClassName('external')).forEach(function (el) { el.setAttribute('target', '_blank') });
     },
     setupIntercom: function () {
       window.intercomSettings = {

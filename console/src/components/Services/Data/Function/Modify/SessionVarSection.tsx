@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './ModifyCustomFunction.scss';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 import Button from '../../../../Common/Button';
@@ -29,6 +29,10 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const toggleIsEditting = () => setIsEditing(prev => !prev);
 
+  useEffect(() => {
+    setSessVar(prev => prev || configuration?.session_argument || '');
+  }, [configuration]);
+
   const onSessVarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSessVar(e.target.value);
   };
@@ -46,7 +50,7 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
       <h4 className={styles.subheading_text}>
         Session argument
         <ToolTip message="the function argument into which hasura session variables will be passed" />
-        <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/custom-functions.html#accessing-hasura-session-variables-in-custom-functions" />
+        <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html#accessing-hasura-session-variables-in-custom-functions" />
       </h4>
       <div
         className={isEditing ? styles.editorExpanded : styles.editorCollapsed}

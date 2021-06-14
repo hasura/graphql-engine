@@ -40,6 +40,7 @@ module Hasura.GraphQL.Parser.Schema (
   , Schema(..)
   , ConflictingDefinitions(..)
   , HasTypeDefinitions(..)
+  , TypeDefinitionsWrapper(..)
   , collectTypeDefinitions
 
   -- * Miscellany
@@ -50,20 +51,22 @@ module Hasura.GraphQL.Parser.Schema (
   , DirectiveInfo(..)
   ) where
 
+import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
 import qualified Data.HashMap.Strict.Extended  as Map
 import qualified Data.HashSet                  as Set
-import           Data.Hashable                 ( Hashable (..) )
+import qualified Data.List.NonEmpty            as NE
+import qualified Data.Text                     as T
 
 import           Control.Lens.Extended
 import           Control.Monad.Unique
 import           Data.Functor.Classes
-import           Language.GraphQL.Draft.Syntax ( Description (..), Name (..)
-                                               , Value (..), Nullability(..)
-                                               , GType (..), DirectiveLocation(..)
-                                               )
+import           Data.Hashable                 (Hashable (..))
+import           Data.Text.Extended
+import           Language.GraphQL.Draft.Syntax (Description (..), DirectiveLocation (..),
+                                                GType (..), Name (..), Nullability (..), Value (..))
 
 class HasName a where
   getName :: a -> Name
@@ -304,10 +307,13 @@ discardNullability (NonNullable t) = t
 discardNullability (Nullable t)    = t
 
 nullableType :: Type k -> Type k
-nullableType = Nullable . discardNullability
+nullableType (NonNullable t) = Nullable t
+-- Defined like this to preserve sharing
+nullableType t@(Nullable {}) = t
 
 nonNullableType :: Type k -> Type k
-nonNullableType = NonNullable . discardNullability
+nonNullableType (Nullable t)       = NonNullable t
+nonNullableType t@(NonNullable {}) = t
 
 data NonNullableType k
   = TNamed (Definition (TypeInfo k))
@@ -440,7 +446,7 @@ instance Eq InputObjectInfo where
     =  Set.fromList (fmap dName fields1)     == Set.fromList (fmap dName fields2)
 
 data ObjectInfo = ObjectInfo
-  { oiFields :: ~[Definition FieldInfo]
+  { oiFields     :: ~[Definition FieldInfo]
     -- ^ The fields that this object has.  This consists of the fields of the
     -- interfaces that it implements, as well as any additional fields.
   , oiImplements :: ~[Definition InterfaceInfo]
@@ -461,7 +467,7 @@ instance Eq ObjectInfo where
 -- 2018), interfaces may implement other interfaces, but we currently don't
 -- support this.
 data InterfaceInfo = InterfaceInfo
-  { iiFields :: ~[Definition FieldInfo]
+  { iiFields        :: ~[Definition FieldInfo]
     -- ^ Fields declared by this interface. Every object implementing this
     -- interface must include those fields.
   , iiPossibleTypes :: ~[Definition ObjectInfo]
@@ -512,14 +518,14 @@ getObjectInfo = traverse getTI . (^.definitionLens)
   where
     getTI :: TypeInfo k -> Maybe ObjectInfo
     getTI (TIObject oi) = Just oi
-    getTI _ = Nothing
+    getTI _             = Nothing
 
 getInterfaceInfo :: Type 'Output -> Maybe (Definition InterfaceInfo)
 getInterfaceInfo = traverse getTI . (^.definitionLens)
   where
     getTI :: TypeInfo 'Output -> Maybe InterfaceInfo
     getTI (TIInterface ii) = Just ii
-    getTI _ = Nothing
+    getTI _                = Nothing
 
 data SomeTypeInfo = forall k. SomeTypeInfo (TypeInfo k)
 
@@ -665,7 +671,9 @@ JSON values, but fortunately, the duplication of logic is minimal. -}
 data InputValue v
   = GraphQLValue (Value v)
   | JSONValue J.Value
-  deriving (Show, Eq, Functor)
+  deriving (Show, Eq, Functor, Generic, Ord)
+instance (Hashable v) => Hashable (InputValue v)
+instance (Cacheable v) => Cacheable (InputValue v)
 
 data Variable = Variable
   { vInfo  :: VariableInfo
@@ -673,8 +681,9 @@ data Variable = Variable
   , vValue :: InputValue Void
   -- ^ Note: if the variable was null or was not provided and the field has a
   -- non-null default value, this field contains the default value, not 'VNull'.
-  } deriving (Show,Eq)
-
+  } deriving (Show, Eq, Generic, Ord)
+instance Hashable Variable
+instance Cacheable Variable
 
 data VariableInfo
   = VIRequired Name
@@ -682,13 +691,16 @@ data VariableInfo
   -- value are indistinguishable from variables with a default value of null, so
   -- we don’t distinguish those cases here.
   | VIOptional Name (Value Void)
-  deriving (Show,Eq)
+  deriving (Show, Eq, Generic, Ord)
+instance Hashable VariableInfo
+instance Cacheable VariableInfo
 
 instance HasName Variable where
   getName = getName . vInfo
 instance HasName VariableInfo where
   getName (VIRequired name)   = name
   getName (VIOptional name _) = name
+
 
 -- -----------------------------------------------------------------------------
 -- support for introspection queries
@@ -713,14 +725,39 @@ data Schema = Schema
   , sDirectives       :: [DirectiveInfo]
   }
 
+data TypeDefinitionsWrapper where
+  TypeDefinitionsWrapper :: HasTypeDefinitions a => a -> TypeDefinitionsWrapper
+
 -- | Recursively collects all type definitions accessible from the given value.
 collectTypeDefinitions
   :: (HasTypeDefinitions a, MonadError ConflictingDefinitions m)
-  => a -> m (HashMap Name (Definition SomeTypeInfo))
-collectTypeDefinitions = flip execStateT Map.empty . accumulateTypeDefinitions
+  => a
+  -> m (HashMap Name (Definition SomeTypeInfo))
+collectTypeDefinitions x =
+  fmap (fmap fst) $
+  flip execStateT Map.empty $
+  flip runReaderT (TypeOriginStack []) $
+  accumulateTypeDefinitions x
+
+newtype TypeOriginStack = TypeOriginStack [Name]
+
+-- Add the current field name to the origin stack
+typeOriginRecurse :: Name -> TypeOriginStack -> TypeOriginStack
+typeOriginRecurse field (TypeOriginStack origins) = TypeOriginStack (field:origins)
+
+-- This is kind of a hack to make sure that the query root name is part of the origin stack
+typeRootRecurse :: Name -> TypeOriginStack -> TypeOriginStack
+typeRootRecurse rootName (TypeOriginStack []) = (TypeOriginStack [rootName])
+typeRootRecurse _ x                           = x
+
+instance ToTxt TypeOriginStack where
+  toTxt (TypeOriginStack fields) = T.intercalate "." $ toTxt <$> reverse fields
 
 data ConflictingDefinitions
-  = ConflictingDefinitions (Definition SomeTypeInfo) (Definition SomeTypeInfo)
+  = ConflictingDefinitions
+    (Definition SomeTypeInfo, TypeOriginStack)
+    (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
+  -- ^ Type collection has found at least two types with the same name.
 
 class HasTypeDefinitions a where
   -- | Recursively accumulates all type definitions accessible from the given
@@ -728,7 +765,9 @@ class HasTypeDefinitions a where
   -- recursive type definitions; see Note [Tying the knot] in Hasura.GraphQL.Parser.Class.
   accumulateTypeDefinitions
     :: ( MonadError ConflictingDefinitions m
-       , MonadState (HashMap Name (Definition SomeTypeInfo)) m )
+       , MonadReader TypeOriginStack m
+       , MonadState (HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack)) m
+       )
     => a -> m ()
 
 instance HasTypeDefinitions (Definition (TypeInfo k)) where
@@ -736,21 +775,25 @@ instance HasTypeDefinitions (Definition (TypeInfo k)) where
     -- This is the important case! We actually have a type definition, so we
     -- need to add it to the state.
     definitions <- get
+    stack <- ask
     let new = SomeTypeInfo <$> definition
     case Map.lookup (dName new) definitions of
       Nothing -> do
-        put $! Map.insert (dName new) new definitions
+        put $! Map.insert (dName new) (new, pure stack) definitions
         -- This type definition might reference other type definitions, so we
         -- still need to recur.
-        accumulateTypeDefinitions (dInfo definition)
-      Just old
+        local (typeRootRecurse (getName definition)) $ accumulateTypeDefinitions (dInfo definition)
+      Just (old, origins)
         -- It’s important we /don’t/ recur if we’ve already seen this definition
         -- before to avoid infinite loops; see Note [Tying the knot] in Hasura.GraphQL.Parser.Class.
-        | old == new -> pure ()
-        | otherwise  -> throwError $ ConflictingDefinitions old new
+        | old == new -> put $! Map.insert (dName new) (old, stack `NE.cons` origins) definitions
+        | otherwise  -> throwError $ ConflictingDefinitions (new, stack) (old, origins)
 
 instance HasTypeDefinitions a => HasTypeDefinitions [a] where
   accumulateTypeDefinitions = traverse_ accumulateTypeDefinitions
+
+instance HasTypeDefinitions TypeDefinitionsWrapper where
+  accumulateTypeDefinitions (TypeDefinitionsWrapper x) = accumulateTypeDefinitions x
 
 instance HasTypeDefinitions (Type k) where
   accumulateTypeDefinitions = \case
@@ -778,7 +821,8 @@ instance HasTypeDefinitions (Definition InputObjectInfo) where
   accumulateTypeDefinitions = accumulateTypeDefinitions . fmap TIInputObject
 
 instance HasTypeDefinitions (Definition InputFieldInfo) where
-  accumulateTypeDefinitions = accumulateTypeDefinitions . dInfo
+  accumulateTypeDefinitions Definition{..} =
+    local (typeOriginRecurse dName) $ accumulateTypeDefinitions dInfo
 
 instance HasTypeDefinitions InputFieldInfo where
   accumulateTypeDefinitions = \case
@@ -786,7 +830,8 @@ instance HasTypeDefinitions InputFieldInfo where
     IFOptional t _ -> accumulateTypeDefinitions t
 
 instance HasTypeDefinitions (Definition FieldInfo) where
-  accumulateTypeDefinitions = accumulateTypeDefinitions . dInfo
+  accumulateTypeDefinitions Definition{..} =
+    local (typeOriginRecurse dName) $ accumulateTypeDefinitions dInfo
 
 instance HasTypeDefinitions FieldInfo where
   accumulateTypeDefinitions (FieldInfo args t) = do
@@ -794,10 +839,13 @@ instance HasTypeDefinitions FieldInfo where
     accumulateTypeDefinitions t
 
 instance HasTypeDefinitions (Definition ObjectInfo) where
-  accumulateTypeDefinitions = accumulateTypeDefinitions . fmap TIObject
+  accumulateTypeDefinitions d@Definition{..} =
+    local (typeOriginRecurse dName) $ accumulateTypeDefinitions (fmap TIObject d)
 
 instance HasTypeDefinitions (Definition InterfaceInfo) where
-  accumulateTypeDefinitions = accumulateTypeDefinitions . fmap TIInterface
+  accumulateTypeDefinitions d@Definition{..} =
+    local (typeOriginRecurse dName) $ accumulateTypeDefinitions (fmap TIInterface d)
 
 instance HasTypeDefinitions (Definition UnionInfo) where
-  accumulateTypeDefinitions = accumulateTypeDefinitions . fmap TIUnion
+  accumulateTypeDefinitions d@Definition{..} =
+    local (typeOriginRecurse dName) $ accumulateTypeDefinitions (fmap TIUnion d)

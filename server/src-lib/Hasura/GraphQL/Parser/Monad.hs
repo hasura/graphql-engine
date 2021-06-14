@@ -8,29 +8,30 @@ module Hasura.GraphQL.Parser.Monad
   , ParseT
   , runParseT
   , ParseError(..)
+  , reportParseErrors
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Dependent.Map                    as DM
-import qualified Data.Kind                             as K
-import qualified Data.Sequence.NonEmpty                as NE
-import qualified Language.Haskell.TH                   as TH
+import qualified Data.Dependent.Map           as DM
+import qualified Data.Kind                    as K
+import qualified Data.Sequence.NonEmpty       as NE
+import qualified Language.Haskell.TH          as TH
 
 import           Control.Monad.Unique
 import           Control.Monad.Validate
-import           Data.Dependent.Map                    (DMap)
+import           Data.Dependent.Map           (DMap)
 import           Data.GADT.Compare.Extended
 import           Data.IORef
 import           Data.Parser.JSONPath
-import           Data.Proxy                            (Proxy (..))
-import           System.IO.Unsafe                      (unsafeInterleaveIO)
-import           Type.Reflection                       ((:~:) (..), Typeable, typeRep)
+import           Data.Proxy                   (Proxy (..))
+import           System.IO.Unsafe             (unsafeInterleaveIO)
+import           Type.Reflection              (Typeable, typeRep, (:~:) (..))
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.RQL.Types.Error                (Code)
+
 
 -- -------------------------------------------------------------------------------------------------
 -- schema construction
@@ -122,18 +123,18 @@ out, it should be able to support this more naturally, so we can fix it then. -}
 -- | A key used to distinguish calls to 'memoize'd functions. The 'TH.Name'
 -- distinguishes calls to completely different parsers, and the @a@ value
 -- records the arguments.
-data ParserId (t :: (Kind, K.Type)) where
-  ParserId :: (Ord a, Typeable a, Typeable b, Typeable k) => TH.Name -> a -> ParserId '(k, b)
+data ParserId (t :: ((K.Type -> K.Type) -> K.Type -> K.Type, K.Type)) where
+  ParserId :: (Ord a, Typeable p, Typeable a, Typeable b) => TH.Name -> a -> ParserId '(p, b)
 
 instance GEq ParserId where
   geq (ParserId name1 (arg1 :: a1) :: ParserId t1)
       (ParserId name2 (arg2 :: a2) :: ParserId t2)
-    | _ :: Proxy '(k1, b1) <- Proxy @t1
-    , _ :: Proxy '(k2, b2) <- Proxy @t2
+    | _ :: Proxy '(p1, b1) <- Proxy @t1
+    , _ :: Proxy '(p2, b2) <- Proxy @t2
     , name1 == name2
     , Just Refl <- typeRep @a1 `geq` typeRep @a2
     , arg1 == arg2
-    , Just Refl <- typeRep @k1 `geq` typeRep @k2
+    , Just Refl <- typeRep @p1 `geq` typeRep @p2
     , Just Refl <- typeRep @b1 `geq` typeRep @b2
     = Just Refl
     | otherwise = Nothing
@@ -141,12 +142,12 @@ instance GEq ParserId where
 instance GCompare ParserId where
   gcompare (ParserId name1 (arg1 :: a1) :: ParserId t1)
            (ParserId name2 (arg2 :: a2) :: ParserId t2)
-    | _ :: Proxy '(k1, b1) <- Proxy @t1
-    , _ :: Proxy '(k2, b2) <- Proxy @t2
+    | _ :: Proxy '(p1, b1) <- Proxy @t1
+    , _ :: Proxy '(p2, b2) <- Proxy @t2
     = strengthenOrdering (compare name1 name2)
       `extendGOrdering` gcompare (typeRep @a1) (typeRep @a2)
       `extendGOrdering` strengthenOrdering (compare arg1 arg2)
-      `extendGOrdering` gcompare (typeRep @k1) (typeRep @k2)
+      `extendGOrdering` gcompare (typeRep @p1) (typeRep @p2)
       `extendGOrdering` gcompare (typeRep @b1) (typeRep @b2)
       `extendGOrdering` GEQ
 
@@ -156,8 +157,8 @@ instance GCompare ParserId where
 -- This is really just a single newtype, but it’s implemented as a data family
 -- because GHC doesn’t allow ordinary datatype declarations to pattern-match on
 -- type parameters, and we want to match on the tuple.
-data family ParserById (m :: K.Type -> K.Type) (a :: (Kind, K.Type))
-newtype instance ParserById m '(k, a) = ParserById (Parser k m a)
+data family ParserById (m :: K.Type -> K.Type) (a :: ((K.Type -> K.Type) -> K.Type -> K.Type, K.Type))
+newtype instance ParserById m '(p, a) = ParserById (p m a)
 
 -- -------------------------------------------------------------------------------------------------
 -- query parsing
@@ -190,3 +191,14 @@ data ParseError = ParseError
   , peMessage :: Text
   , peCode    :: Code
   }
+
+reportParseErrors
+  :: MonadError QErr m
+  => NESeq ParseError
+  -> m a
+reportParseErrors errs = case NE.head errs of
+  -- TODO: Our error reporting machinery doesn’t currently support reporting
+  -- multiple errors at once, so we’re throwing away all but the first one
+  -- here. It would be nice to report all of them!
+  ParseError{ pePath, peMessage, peCode } ->
+    throwError (err400 peCode peMessage){ qePath = pePath }

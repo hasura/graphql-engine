@@ -18,8 +18,13 @@
     - type: run_sql
       args:
         sql: INSERT INTO colors (value, comment) VALUES ('illegal+graphql+identifier', '')
-    - type: reload_metadata
-      args: {}
+
+- description: Reload metadata
+  url: /v1/query
+  status: 200
+  query:
+    type: reload_metadata
+    args: {}
 
 - description: Query inconsistent objects
   url: /v1/query
@@ -30,18 +35,21 @@
     - definition:
         schema: public
         name: colors
-      reason: the table "colors" cannot be used as an enum because the value
-        "illegal+graphql+identifier" is not a valid GraphQL enum value name
+      reason: 'Inconsistent object: the table "colors" cannot be used as an enum because
+        the value "illegal+graphql+identifier" is not a valid GraphQL enum value name'
+      name: table colors in source default
       type: table
     - definition:
         using:
           foreign_key_constraint_on: favorite_color
         name: favorite_color_object
+        source: default
         comment:
         table:
           schema: public
           name: employees
-      reason: table "colors" is not tracked
+      reason: 'Inconsistent object: table "colors" is not tracked'
+      name: object_relation favorite_color_object in table employees in source default
       type: object_relation
   query:
     type: get_inconsistent_metadata

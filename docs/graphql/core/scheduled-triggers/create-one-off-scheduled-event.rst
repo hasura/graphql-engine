@@ -131,3 +131,9 @@ Once you've created your scheduled trigger, you can see ``Pending events``, ``Pr
 .. thumbnail:: /img/graphql/core/event-triggers/pending-one-off.png
    :alt: Schedule and logs for scheduled events
    :width: 1200px
+
+.. note::
+   A scheduled event will be delivered within ten seconds of when it's scheduled.
+   For example, if you schedule an event at ``09:24:10``, it will be delivered between ``09:24:10`` and ``09:24:20``.
+   
+   This is because Hasura currently checks for events to be delivered at 10 second intervals. This interval will be made configurable soon.

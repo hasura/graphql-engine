@@ -1,22 +1,33 @@
 -- | Classes for monads used during schema construction and query parsing.
-module Hasura.GraphQL.Parser.Class where
+module Hasura.GraphQL.Parser.Class
+  ( MonadParse(..)
+  , parseError
+  , QueryReusability(..)
+  , module Hasura.GraphQL.Parser.Class
+  ) where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                   as Map
-import qualified Language.Haskell.TH                   as TH
+import qualified Data.HashMap.Strict                  as Map
+import qualified Language.Haskell.TH                  as TH
 
 import           Data.Has
-import           Data.Parser.JSONPath
+import           Data.Text.Extended
 import           Data.Tuple.Extended
-import           GHC.Stack                             (HasCallStack)
-import           Type.Reflection                       (Typeable)
+import           GHC.Stack                            (HasCallStack)
+import           Type.Reflection                      (Typeable)
 
-import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser
-import           Hasura.RQL.Types.Error
-import           Hasura.RQL.Types.Table                (TableCache, TableInfo)
-import           Hasura.Session                        (RoleName)
-import           Hasura.SQL.Types
+import           Hasura.Base.Error
+import           Hasura.GraphQL.Parser.Class.Parse
+import           Hasura.GraphQL.Parser.Internal.Types
+import           Hasura.GraphQL.Parser.Schema         (HasDefinition)
+import           Hasura.RQL.Types.Backend
+import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Source
+import           Hasura.RQL.Types.Table
+-- import           Hasura.SQL.Backend
+import           Hasura.Session                       (RoleName)
+
 
 {- Note [Tying the knot]
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -87,8 +98,17 @@ class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
   -- | Memoizes a parser constructor function for the extent of a single schema
   -- construction process. This is mostly useful for recursive parsers;
   -- see Note [Tying the knot] for more details.
+  --
+  -- The generality of the type here allows us to use this with multiple concrete
+  -- parser types:
+  --
+  -- @
+  -- 'memoizeOn' :: 'MonadSchema' n m => 'TH.Name' -> a -> m (Parser n b) -> m (Parser n b)
+  -- 'memoizeOn' :: 'MonadSchema' n m => 'TH.Name' -> a -> m (FieldParser n b) -> m (FieldParser n b)
+  -- @
   memoizeOn
-    :: (HasCallStack, Ord a, Typeable a, Typeable b, Typeable k)
+    :: forall p d a b
+     . (HasCallStack, HasDefinition (p n b) d, Ord a, Typeable p, Typeable a, Typeable b)
     => TH.Name
     -- ^ A unique name used to identify the function being memoized. There isn’t
     -- really any metaprogramming going on here, we just use a Template Haskell
@@ -97,7 +117,7 @@ class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
     -- ^ The value to use as the memoization key. It’s the caller’s
     -- responsibility to ensure multiple calls to the same function don’t use
     -- the same key.
-    -> m (Parser k n b) -> m (Parser k n b)
+    -> m (p n b) -> m (p n b)
 
 type MonadRole r m = (MonadReader r m, Has RoleName r)
 
@@ -107,20 +127,24 @@ askRoleName
   => m RoleName
 askRoleName = asks getter
 
-type MonadTableInfo r m = (MonadReader r m, Has TableCache r, MonadError QErr m)
+type MonadTableInfo r m = (MonadReader r m, Has SourceCache r, MonadError QErr m)
 
 -- | Looks up table information for the given table name. This function
 -- should never fail, since the schema cache construction process is
 -- supposed to ensure all dependencies are resolved.
 askTableInfo
-  :: MonadTableInfo r m
-  => QualifiedTable
-  -> m TableInfo
-askTableInfo tableName = do
-  tableInfo <- asks $ Map.lookup tableName . getter
+  :: forall b r m. (Backend b, MonadTableInfo r m)
+  => SourceName
+  -> TableName b
+  -> m (TableInfo b)
+askTableInfo sourceName tableName = do
+  tableInfo <- asks $ getTableInfo . getter
   -- This should never fail, since the schema cache construction process is
   -- supposed to ensure that all dependencies are resolved.
-  tableInfo `onNothing` throw500 ("askTableInfo: no info for " <>> tableName)
+  tableInfo `onNothing` throw500 ("askTableInfo: no info for table " <> dquote tableName <> " in source " <> dquote sourceName)
+  where
+    getTableInfo :: SourceCache -> Maybe (TableInfo b)
+    getTableInfo = Map.lookup tableName <=< unsafeSourceTables <=< Map.lookup sourceName
 
 -- | A wrapper around 'memoizeOn' that memoizes a function by using its argument
 -- as the key.
@@ -153,41 +177,3 @@ memoize4
   -> (a -> b -> c -> d -> m (Parser k n e))
   -> (a -> b -> c -> d -> m (Parser k n e))
 memoize4 name = curry4 . memoize name . uncurry4
-
--- | A class that provides functionality for parsing GraphQL queries, i.e.
--- running a fully-constructed 'Parser'.
-class Monad m => MonadParse m where
-  withPath :: (JSONPath -> JSONPath) -> m a -> m a
-  -- | Not the full power of 'MonadError' because parse errors cannot be
-  -- caught.
-  parseErrorWith :: Code -> Text -> m a
-  -- | See 'QueryReusability'.
-  markNotReusable :: m ()
-
-parseError :: MonadParse m => Text -> m a
-parseError = parseErrorWith ValidationFailed
-
--- | Tracks whether or not a query is /reusable/. Reusable queries are nice,
--- since we can cache their resolved ASTs and avoid re-resolving them if we
--- receive an identical query. However, we can’t always safely reuse queries if
--- they have variables, since some variable values can affect the generated SQL.
--- For example, consider the following query:
---
--- > query users_where($condition: users_bool_exp!) {
--- >   users(where: $condition) {
--- >     id
--- >   }
--- > }
---
--- Different values for @$condition@ will produce completely different queries,
--- so we can’t reuse its plan (unless the variable values were also all
--- identical, of course, but we don’t bother caching those).
-data QueryReusability = Reusable | NotReusable
-
-instance Semigroup QueryReusability where
-  NotReusable <> _           = NotReusable
-  _           <> NotReusable = NotReusable
-  Reusable    <> Reusable    = Reusable
-
-instance Monoid QueryReusability where
-  mempty = Reusable

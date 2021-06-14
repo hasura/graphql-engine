@@ -1,0 +1,18 @@
+description: Explain query
+url: /v1/graphql/explain
+status: 200
+response:
+  - field: user
+    sql:
+      "SELECT ISNULL((SELECT [t_user1].[id] AS [id],\n       [t_user1].[name] AS\
+      \ [name],\n       [t_user1].[age] AS [age]\nFROM [dbo].[user] AS [t_user1]\nWHERE ((1=1))\nFOR JSON PATH), '[]')"
+query:
+  query:
+    query: |
+      query {
+        user{
+          id
+          name
+          age
+        }
+      }

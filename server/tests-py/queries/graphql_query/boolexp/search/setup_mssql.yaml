@@ -1,0 +1,42 @@
+type: bulk
+args:
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: author
+
+#Article table
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: article
+
+#Article table
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: city
+
+#Object relationship
+- type: mssql_create_object_relationship
+  args:
+    source: mssql
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship
+- type: mssql_create_array_relationship
+  args:
+    source: mssql
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id

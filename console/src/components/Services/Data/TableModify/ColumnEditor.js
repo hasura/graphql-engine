@@ -5,7 +5,7 @@ import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/Custo
 import { getValidAlterOptions, convertToArrayOptions } from './utils';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
-import { ARRAY } from '../utils';
+import { dataSource, isFeatureSupported } from '../../../../dataSources';
 
 const ColumnEditor = ({
   onSubmit,
@@ -31,8 +31,9 @@ const ColumnEditor = ({
       selectedProperties[colName].type
     );
   };
+  // todo — data-sources
   let columnTypePG = getColumnType();
-  if (columnProperties.display_type_name === ARRAY) {
+  if (columnProperties.display_type_name === dataSource.columnDataTypes.ARRAY) {
     columnTypePG = columnTypePG.replace('_', '') + '[]';
   }
 
@@ -57,6 +58,7 @@ const ColumnEditor = ({
     colName
   );
 
+  // todo — data-sources
   if (isArrayDataType) {
     alterOptions = convertToArrayOptions(alterOptions);
   }
@@ -143,14 +145,29 @@ const ColumnEditor = ({
         <div className={`${styles.display_flex} form-group`}>
           <label className={'col-xs-4'}>Type</label>
           <div className="col-xs-6">
-            <ColumnTypeSelector
-              options={alterOptions}
-              onChange={updateColumnType}
-              value={alterOptionsValueMap[columnTypePG] || columnTypePG}
-              colIdentifier={0}
-              bsClass={`col-type-${0} modify_select`}
-              styleOverrides={customSelectBoxStyles}
-            />
+            {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
+              <ColumnTypeSelector
+                options={alterOptions}
+                onChange={updateColumnType}
+                value={alterOptionsValueMap[columnTypePG] || columnTypePG}
+                colIdentifier={0}
+                bsClass={`col-type-${0} modify_select`}
+                styleOverrides={customSelectBoxStyles}
+              />
+            ) : (
+              <input
+                type="text"
+                className={`${styles.input} form-control col-type-${0}`}
+                value={
+                  alterOptionsValueMap?.[columnTypePG]?.value ?? columnTypePG
+                }
+                onChange={e => {
+                  e.persist();
+                  updateColumnType({ value: e.target.value });
+                }}
+                placeholder="column_type"
+              />
+            )}
           </div>
         </div>
         <div className={`${styles.display_flex} form-group`}>
@@ -204,7 +221,9 @@ const ColumnEditor = ({
             />
           </div>
         </div>
-        {getColumnCustomFieldInput()}
+        {isFeatureSupported('tables.modify.columns.graphqlFieldName')
+          ? getColumnCustomFieldInput()
+          : null}
       </form>
       <div className="row">
         <br />

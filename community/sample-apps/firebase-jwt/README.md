@@ -41,9 +41,9 @@ The client-side code is in `app/` folder.
 
 ## Configure Hasura to start in JWT mode
 
-Deploy Hasura GraphQL Engine on Heroku:
-
-[![Deploy HGE on heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
+- Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
+  
+  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
 
 After deploying, add the following environment variables to configure JWT mode:
 

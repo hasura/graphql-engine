@@ -19,6 +19,10 @@ args:
       - name: Author 2
       - name: Author 3
         payments_done: true
+      - name: Author 4
+        payments_done: true
+      - name: Author 5
+        payments_done: true
 
 #Insert aticle table data
 - type: insert
@@ -42,6 +46,8 @@ args:
       title: Article 5
 
 #Insert users and accounts
+
+
 - type: run_sql
   args:
     sql: |
@@ -49,3 +55,4 @@ args:
         values ('user_1', false), ('user_2', true)
       ;
       insert into account (account_no) values (1), (2) ;
+

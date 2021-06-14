@@ -1,0 +1,16 @@
+description: Simple GraphQL object query on author
+url: /v1/graphql
+status: 200
+response:
+  data:
+    hasura_author:
+    - id: '2'
+      name: Author 2
+query:
+  query: |
+    query {
+      hasura_author (order_by: {id: asc}, where: {name: {_eq: "Author 2"}}) {
+        id
+        name
+      }
+    }

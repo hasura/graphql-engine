@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 const MOUSEDOWN = 'mousedown';
 const TOUCHSTART = 'touchstart';
@@ -10,13 +10,23 @@ type PossibleEvent = {
 }[HandledEventsType];
 type Handler = (event: PossibleEvent) => void;
 
-export const useOnClickOutside = (
-  ref: React.RefObject<HTMLElement>,
+/**
+ * useOnClickOutside hook takes a list refs to track and runs the handler if the click occurs outside of the refs
+ * @param refs
+ * @param handler
+ */
+export default function useOnClickOutside(
+  refs: React.RefObject<HTMLElement>[],
   handler: Handler
-) => {
+) {
   useEffect(() => {
     const listener = (event: PossibleEvent) => {
-      if (!ref.current || ref.current.contains(event.target as Node)) {
+      // Do nothing if clicking ref's element or descendent elements
+      const refsClicked = refs.filter(
+        ref => !ref.current || ref.current.contains(event.target as Node)
+      );
+
+      if (refsClicked.length) {
         return;
       }
       handler(event);
@@ -27,5 +37,5 @@ export const useOnClickOutside = (
       document.removeEventListener('mousedown', listener);
       document.removeEventListener('touchstart', listener);
     };
-  }, [ref, handler]);
-};
+  }, [refs, handler]);
+}

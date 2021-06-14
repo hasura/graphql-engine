@@ -1,7 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE DerivingVia         #-}
-{-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE NumDecimals #-}
 
 {-| Types for time intervals of various units. Each newtype wraps 'DiffTime',
 but they have different 'Num' instances. The intent is to use the record
@@ -64,17 +61,22 @@ module Data.Time.Clock.Units
   --  - a 'DiffTime' or 'NominalDiffTime' may be negative
   --  - 'addUTCTime' and 'diffUTCTime' do not attempt to handle leap seconds
   , DiffTime
+  , diffTimeToMicroSeconds
   ) where
 
 import           Prelude
 
-import           Control.Arrow   (first)
+import           Control.Applicative ((<|>))
+import           Control.Arrow       (first)
 import           Data.Aeson
 import           Data.Hashable
 import           Data.Proxy
+import           Data.Text           (unpack)
 import           Data.Time.Clock
 import           GHC.TypeLits
-import           Numeric         (readFloat)
+import           Numeric             (readFloat)
+
+import qualified Text.Read           as TR
 
 newtype Seconds = Seconds { seconds :: DiffTime }
   -- NOTE: we want Show to give a pastable data structure string, even
@@ -100,6 +102,18 @@ newtype Minutes = Minutes { minutes :: DiffTime }
 newtype Milliseconds = Milliseconds { milliseconds :: DiffTime }
   deriving (Duration, Show, Eq, Ord)
   deriving (Read, Num, Fractional, Real, Hashable, RealFrac) via (TimeUnit 1000000000)
+
+-- TODO: Has an alternative string representation instead of a numberic one here
+-- in order to clarify what's going on.
+-- Rounding is also problematic, but should be ok for now...
+instance ToJSON Milliseconds where
+  toJSON = toJSON . flip div 1e9 . diffTimeToPicoseconds . milliseconds
+
+instance FromJSON Milliseconds where
+  parseJSON v
+    =   withScientific "Milliseconds Number" (pure . Milliseconds . picosecondsToDiffTime . (* 1e9) . ceiling) v
+    <|> withText       "Milliseconds String" (either (fail . show) pure . TR.readEither . unpack) v
+
 
 newtype Microseconds = Microseconds { microseconds :: DiffTime }
   deriving (Duration, Show, Eq, Ord)
@@ -169,3 +183,6 @@ instance Duration NominalDiffTime where
 -- | Safe conversion between duration units.
 convertDuration :: (Duration x, Duration y) => x -> y
 convertDuration = fromDiffTime . toDiffTime
+
+diffTimeToMicroSeconds :: DiffTime -> Integer
+diffTimeToMicroSeconds = (`div` 1000000) . diffTimeToPicoseconds

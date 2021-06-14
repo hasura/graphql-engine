@@ -2,20 +2,19 @@ package commands
 
 import (
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
 func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &metadataReloadOptions{
-		EC:         ec,
-		actionType: "reload",
+		EC: ec,
 	}
 
 	metadataReloadCmd := &cobra.Command{
 		Use:   "reload",
-		Short: "Reload Hasura GraphQL Engine metadata on the database",
+		Short: "Reload Hasura GraphQL engine metadata on the database",
 		Example: `  # Reload all the metadata information from database:
   hasura metadata reload
 
@@ -42,16 +41,13 @@ func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 type metadataReloadOptions struct {
 	EC *cli.ExecutionContext
-
-	actionType string
 }
 
 func (o *metadataReloadOptions) run() error {
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
-	if err != nil {
-		return err
-	}
-	err = executeMetadata(o.actionType, migrateDrv, o.EC)
+
+	var err error
+	metadataHandler := metadataobject.NewHandlerFromEC(ec)
+	err = metadataHandler.ReloadMetadata()
 	if err != nil {
 		return errors.Wrap(err, "Cannot reload metadata")
 	}

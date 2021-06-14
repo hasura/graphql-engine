@@ -12,6 +12,7 @@ const TableCommentEditor = ({
   tableCommentEdit,
   tableType,
   dispatch,
+  readOnly,
 }) => {
   const editCommentClicked = () => {
     dispatch(activateCommentEdit(true, tableComment));
@@ -29,7 +30,7 @@ const TableCommentEditor = ({
     dispatch(activateCommentEdit(false, ''));
   };
 
-  let commentHtml = (
+  let commentHtml = readOnly ? null : (
     <div className={styles.add_pad_bottom}>
       <div className={styles.commentText}>Add a comment</div>
       <div onClick={editCommentClicked} className={styles.commentEdit}>
@@ -44,9 +45,11 @@ const TableCommentEditor = ({
         <div className={styles.commentText + ' alert alert-warning'}>
           {tableComment}
         </div>
-        <div onClick={editCommentClicked} className={styles.commentEdit}>
-          <i className="fa fa-edit" />
-        </div>
+        {!readOnly && (
+          <div onClick={editCommentClicked} className={styles.commentEdit}>
+            <i className="fa fa-edit" />
+          </div>
+        )}
       </div>
     );
   } else if (tableCommentEdit.enabled) {

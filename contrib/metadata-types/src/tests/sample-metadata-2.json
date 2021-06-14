@@ -1,0 +1,439 @@
+{
+  "version": 2,
+  "tables": [
+    {
+      "table": {
+        "schema": "public",
+        "name": "actors"
+      }
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "albums"
+      },
+      "object_relationships": [
+        {
+          "name": "artist",
+          "using": {
+            "foreign_key_constraint_on": "artist_id"
+          }
+        }
+      ],
+      "array_relationships": [
+        {
+          "name": "tracks",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "album_id",
+              "table": {
+                "schema": "public",
+                "name": "tracks"
+              }
+            }
+          }
+        }
+      ],
+      "computed_fields": [
+        {
+          "name": "full_name",
+          "definition": {
+            "function": {
+              "schema": "public",
+              "name": "get_artist_name"
+            },
+            "table_argument": "album_row"
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "artists"
+      },
+      "array_relationships": [
+        {
+          "name": "albums",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "artist_id",
+              "table": {
+                "schema": "public",
+                "name": "albums"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "categories"
+      }
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "customers"
+      },
+      "object_relationships": [
+        {
+          "name": "employee",
+          "using": {
+            "foreign_key_constraint_on": "support_rep_id"
+          }
+        }
+      ],
+      "array_relationships": [
+        {
+          "name": "invoices",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "customer_id",
+              "table": {
+                "schema": "public",
+                "name": "invoices"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "employees"
+      },
+      "object_relationships": [
+        {
+          "name": "employee",
+          "using": {
+            "foreign_key_constraint_on": "reports_to"
+          }
+        }
+      ],
+      "array_relationships": [
+        {
+          "name": "customers",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "support_rep_id",
+              "table": {
+                "schema": "public",
+                "name": "customers"
+              }
+            }
+          }
+        },
+        {
+          "name": "employees",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "reports_to",
+              "table": {
+                "schema": "public",
+                "name": "employees"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "events"
+      }
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "film_actor"
+      }
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "film_category"
+      }
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "films"
+      }
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "genres"
+      },
+      "array_relationships": [
+        {
+          "name": "tracks",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "genre_id",
+              "table": {
+                "schema": "public",
+                "name": "tracks"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "invoice_lines"
+      },
+      "object_relationships": [
+        {
+          "name": "invoice",
+          "using": {
+            "foreign_key_constraint_on": "invoice_id"
+          }
+        },
+        {
+          "name": "track",
+          "using": {
+            "foreign_key_constraint_on": "track_id"
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "invoices"
+      },
+      "object_relationships": [
+        {
+          "name": "customer",
+          "using": {
+            "foreign_key_constraint_on": "customer_id"
+          }
+        }
+      ],
+      "array_relationships": [
+        {
+          "name": "invoice_lines",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "invoice_id",
+              "table": {
+                "schema": "public",
+                "name": "invoice_lines"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "media_types"
+      },
+      "array_relationships": [
+        {
+          "name": "tracks",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "media_type_id",
+              "table": {
+                "schema": "public",
+                "name": "tracks"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "my_table"
+      },
+      "configuration": {
+        "custom_root_fields": {
+          "insert": "insert_my_table_custom",
+          "select_aggregate": "my_table_aggregate_custom",
+          "insert_one": "insert_one_my_table_custom",
+          "select_by_pk": "my_table_by_pk_custom",
+          "select": "my_table_custom",
+          "delete": "delete_my_table_custom",
+          "update": "update_my_table_custom",
+          "delete_by_pk": "delete_by_pk_my_table_custom",
+          "update_by_pk": "update_by_pk_my_table_custom"
+        },
+        "custom_column_names": {}
+      },
+      "select_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "columns": ["my_array", "squares", "a_json_column"],
+            "filter": {}
+          }
+        }
+      ],
+      "delete_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "filter": {}
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "playlist_track"
+      },
+      "object_relationships": [
+        {
+          "name": "playlist",
+          "using": {
+            "foreign_key_constraint_on": "playlist_id"
+          }
+        },
+        {
+          "name": "track",
+          "using": {
+            "foreign_key_constraint_on": "track_id"
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "playlists"
+      },
+      "array_relationships": [
+        {
+          "name": "playlist_tracks",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "playlist_id",
+              "table": {
+                "schema": "public",
+                "name": "playlist_track"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "tracks"
+      },
+      "object_relationships": [
+        {
+          "name": "album",
+          "using": {
+            "foreign_key_constraint_on": "album_id"
+          }
+        },
+        {
+          "name": "genre",
+          "using": {
+            "foreign_key_constraint_on": "genre_id"
+          }
+        },
+        {
+          "name": "media_type",
+          "using": {
+            "foreign_key_constraint_on": "media_type_id"
+          }
+        }
+      ],
+      "array_relationships": [
+        {
+          "name": "invoice_lines",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "track_id",
+              "table": {
+                "schema": "public",
+                "name": "invoice_lines"
+              }
+            }
+          }
+        },
+        {
+          "name": "playlist_tracks",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "track_id",
+              "table": {
+                "schema": "public",
+                "name": "playlist_track"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "function": {
+        "schema": "public",
+        "name": "search_article_ids"
+      }
+    }
+  ],
+  "actions": [
+    {
+      "name": "actionName",
+      "definition": {
+        "handler": "http://localhost:3000",
+        "output_type": "SampleOutput",
+        "arguments": [
+          {
+            "name": "arg1",
+            "type": "SampleInput!"
+          }
+        ],
+        "type": "mutation",
+        "kind": "synchronous"
+      }
+    }
+  ],
+  "custom_types": {
+    "input_objects": [
+      {
+        "name": "SampleInput",
+        "fields": [
+          {
+            "name": "username",
+            "type": "String!"
+          },
+          {
+            "name": "password",
+            "type": "String!"
+          }
+        ]
+      }
+    ],
+    "objects": [
+      {
+        "name": "SampleOutput",
+        "fields": [
+          {
+            "name": "accessToken",
+            "type": "String!"
+          }
+        ]
+      }
+    ]
+  }
+}

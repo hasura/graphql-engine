@@ -10,17 +10,19 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ghodss/yaml"
+	"github.com/goccy/go-yaml"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/pkg/errors"
 )
 
+/*
 const (
 	sqlFile  = ".sql"
 	yamlFile = ".yaml"
 )
 
 var ext = []string{sqlFile, yamlFile}
+*/
 
 type CreateOptions struct {
 	Version   string

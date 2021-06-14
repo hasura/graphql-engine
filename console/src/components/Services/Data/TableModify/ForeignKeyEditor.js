@@ -14,6 +14,7 @@ import ForeignKeySelector from '../Common/Components/ForeignKeySelector';
 import { updateSchemaInfo } from '../DataActions';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { dataSource } from '../../../../dataSources';
 
 const ForeignKeyEditor = ({
   tableSchema,
@@ -21,6 +22,7 @@ const ForeignKeyEditor = ({
   dispatch,
   fkModify,
   schemaList,
+  readOnlyMode,
 }) => {
   const columns = tableSchema.columns.sort(ordinalColSort);
 
@@ -42,8 +44,8 @@ const ForeignKeyEditor = ({
   existingForeignKeys.push({
     refSchemaName: '',
     refTableName: '',
-    onUpdate: 'restrict',
-    onDelete: 'restrict',
+    onUpdate: dataSource?.violationActions?.[0],
+    onDelete: dataSource?.violationActions?.[0],
     colMappings: [{ column: '', refColumn: '' }],
   });
   useEffect(() => {
@@ -68,7 +70,7 @@ const ForeignKeyEditor = ({
       }
     });
 
-    const orderedSchemaList = schemaList.map(s => s.schema_name).sort();
+    const orderedSchemaList = schemaList.sort();
 
     const getFkConfigLabel = config => {
       let fkConfigLabel;
@@ -165,6 +167,7 @@ const ForeignKeyEditor = ({
           service="modify-table"
           removeFunc={removeFk}
           saveFunc={saveFk}
+          readOnlyMode={readOnlyMode}
           collapsedLabel={collapsedLabel}
           collapseCallback={resetFk}
           collapseButtonText={collapseButtonText}

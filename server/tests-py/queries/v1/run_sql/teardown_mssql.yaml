@@ -1,0 +1,2 @@
+type: bulk
+args: [] # Nothing to teardown as schema_teardown_mssql.yaml drops the table in metadata

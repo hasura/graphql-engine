@@ -62,3 +62,7 @@ Here's how a GraphQL query is processed in JWT mode:
   Using webhooks <webhook>
   Using JWT <jwt>
   Unauthenticated / Public access <unauthenticated-access>
+
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

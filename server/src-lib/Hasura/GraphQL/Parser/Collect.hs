@@ -14,17 +14,15 @@ module Hasura.GraphQL.Parser.Collect
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict.Extended          as Map
-import qualified Data.HashMap.Strict.InsOrd            as OMap
+import qualified Data.HashMap.Strict.InsOrd       as OMap
 
-import           Data.List.Extended                    (duplicates)
+import           Data.Text.Extended
 import           Language.GraphQL.Draft.Syntax
 
 import           Hasura.GraphQL.Parser.Class
-import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser (boolean, runParser)
+import           Hasura.GraphQL.Parser.Directives
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.GraphQL.Utils                  (showNames)
-import           Hasura.SQL.Types
+
 
 -- | Collects the effective set of fields queried by a selection set by
 -- flattening fragments and merging duplicate fields.
@@ -98,16 +96,15 @@ flattenSelectionSet objectTypeNames = fmap concat . traverse flattenSelection
   where
     -- The easy case: just a single field.
     flattenSelection (SelectionField field) = do
-      validateDirectives (_fDirectives field)
-      applyInclusionDirectives (_fDirectives field) $ pure [field]
+      applyInclusionDirectives EDLFIELD (_fDirectives field) $ pure [field]
 
     -- Note: The 'SelectionFragmentSpread' case has already been eliminated by
     -- the fragment inliner.
+    -- TODO: handle directives on fragment spread.
 
     -- The involved case: we have an inline fragment to process.
     flattenSelection (SelectionInlineFragment fragment) = do
-      validateDirectives (_ifDirectives fragment)
-      applyInclusionDirectives (_ifDirectives fragment) $
+      applyInclusionDirectives EDLINLINE_FRAGMENT (_ifDirectives fragment) $
         case _ifTypeCondition fragment of
           -- No type condition, so the fragment unconditionally applies.
           Nothing -> flattenInlineFragment fragment
@@ -128,29 +125,16 @@ flattenSelectionSet objectTypeNames = fmap concat . traverse flattenSelection
                 Text.intercalate ", " (fmap dquoteTxt (toList objectTypeNames))
               -}
 
-    flattenInlineFragment InlineFragment{ _ifDirectives, _ifSelectionSet  } = do
-      validateDirectives _ifDirectives
+    flattenInlineFragment InlineFragment{ _ifSelectionSet  } = do
       flattenSelectionSet objectTypeNames _ifSelectionSet
 
-    applyInclusionDirectives directives continue
-      | Just directive <- find ((== $$(litName "include")) . _dName) directives
-      = applyInclusionDirective id directive continue
-      | Just directive <- find ((== $$(litName "skip")) . _dName) directives
-      = applyInclusionDirective not directive continue
-      | otherwise = continue
-
-    applyInclusionDirective adjust Directive{ _dName, _dArguments } continue = do
-      ifArgument <- Map.lookup $$(litName "if") _dArguments `onNothing`
-        parseError ("missing \"if\" argument for " <> _dName <<> " directive")
-      value <- runParser boolean $ GraphQLValue ifArgument
-      if adjust value then continue else pure []
-
-    validateDirectives directives =
-      case nonEmpty $ toList $ duplicates $ map _dName directives of
-        Nothing -> pure ()
-        Just duplicatedDirectives -> parseError
-          $ "the following directives are used more than once: "
-          <> showNames duplicatedDirectives
+    applyInclusionDirectives location directives continue = do
+      dirMap        <- parseDirectives inclusionDirectives (DLExecutable location) directives
+      shouldSkip    <- withDirective dirMap skip    $ pure . fromMaybe False
+      shouldInclude <- withDirective dirMap include $ pure . fromMaybe True
+      if shouldInclude && not shouldSkip
+        then continue
+        else pure []
 
 -- | Merges fields according to the rules in the GraphQL specification, specifically
 -- <§ 5.3.2 Field Selection Merging http://spec.graphql.org/June2018/#sec-Field-Selection-Merging>.
@@ -182,36 +166,12 @@ mergeFields = foldM addField OMap.empty
         { _fAlias = Just alias
         , _fName = _fName oldField
         , _fArguments = _fArguments oldField
-        -- see Note [Drop directives from merged fields]
-        , _fDirectives = []
+        , _fDirectives = _fDirectives oldField <> _fDirectives newField
         -- see Note [Lazily merge selection sets]
         , _fSelectionSet = _fSelectionSet oldField ++ _fSelectionSet newField
         }
 
-{- Note [Drop directives from merged fields]
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-When we merge two fields, what do we do with directives? The GraphQL spec isn’t
-very clear here, but it does explicitly state that directives only need to be
-unique per unmerged field (§ 5.7.3 Directives Are Unique Per Location,
-http://spec.graphql.org/June2018/#sec-Directives-Are-Unique-Per-Location). For
-clarity, here is the example given by the spec:
-
-    query ($foo: Boolean = true, $bar: Boolean = false) {
-      field @skip(if: $foo) {
-        subfieldA
-      }
-      field @skip(if: $bar) {
-        subfieldB
-      }
-    }
-
-The spec says this is totally fine, since the @skip directives appear in
-different places. This forces our hand: we *must* process @include/@skip
-directives prior to merging fields. And conveniently, aside from @include/@skip,
-we don’t care about directives, so we don’t bother reconciling them during field
-merging---we just drop them.
-
-Note [Lazily merge selection sets]
+{- Note [Lazily merge selection sets]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Field merging is described in a recursive way in the GraphQL spec (§ 5.3.2 Field
 Selection Merging http://spec.graphql.org/June2018/#sec-Field-Selection-Merging).

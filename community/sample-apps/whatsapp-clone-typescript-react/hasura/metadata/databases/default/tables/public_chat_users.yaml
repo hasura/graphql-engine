@@ -1,0 +1,43 @@
+delete_permissions:
+- permission:
+    filter:
+      _or:
+      - user_id:
+          _eq: X-Hasura-User-Id
+      - chat:
+          users:
+            user_id:
+              _eq: X-Hasura-User-Id
+  role: user
+insert_permissions:
+- permission:
+    check: {}
+    columns:
+    - chat_id
+    - user_id
+  role: user
+object_relationships:
+- name: chat
+  using:
+    foreign_key_constraint_on: chat_id
+- name: user
+  using:
+    foreign_key_constraint_on: user_id
+select_permissions:
+- permission:
+    allow_aggregations: true
+    columns:
+    - chat_id
+    - user_id
+    filter:
+      _or:
+      - user_id:
+          _eq: X-Hasura-User-Id
+      - chat:
+          users:
+            user_id:
+              _eq: X-Hasura-User-Id
+  role: user
+table:
+  name: chat_users
+  schema: public

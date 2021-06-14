@@ -100,9 +100,6 @@ type Driver interface {
 	// ReadName returns an name that helps
 	// finding this migration in the source for a given version
 	ReadName(version uint64) (name string)
-
-	// WriteMetadaa writes the files in the metadata folder
-	WriteMetadata(files map[string][]byte) error
 }
 
 // Open returns a new driver instance.

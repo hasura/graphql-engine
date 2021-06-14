@@ -4,8 +4,10 @@ VERSION ?= $(shell ../scripts/get-version.sh)
 export VERSION
 
 registry := hasura
-packager_ver := 20190731
-pg_dump_ver := 12
+# This packager version is built using the packeger.df in the packaging folder:
+# docker build -t "hasura/graphql-engine-packager:20210218" -f packager.df .
+packager_ver := 20210218
+pg_dump_ver := 13
 build_output := /build/_server_output
 
 # Getting access to the built products with the `cabal v2-*` commands is really awkward; see
@@ -50,12 +52,10 @@ ci-build:
 # assumes this is built in circleci
 ci-image:
 	mkdir -p packaging/build/rootfs
-	docker create -v /root/ --name dummy alpine:3.4 /bin/true
-	docker cp '$(build_output)/graphql-engine' dummy:/root/
-	docker run --rm --volumes-from dummy '$(registry)/graphql-engine-packager:$(packager_ver)' /build.sh graphql-engine | tar -x -C packaging/build/rootfs
-	strip --strip-unneeded packaging/build/rootfs/bin/graphql-engine
-	cp '/usr/lib/postgresql/$(pg_dump_ver)/bin/pg_dump' packaging/build/rootfs/bin/pg_dump
-	upx packaging/build/rootfs/bin/graphql-engine
+	cp '$(build_output)/graphql-engine' packaging/build/rootfs
+	strip --strip-unneeded packaging/build/rootfs/graphql-engine
+	cp '/usr/lib/postgresql/$(pg_dump_ver)/bin/pg_dump' packaging/build/rootfs/pg_dump
+	upx packaging/build/rootfs/graphql-engine
 	docker build -t '$(registry)/graphql-engine:$(VERSION)' packaging/build/
 
 ci-save-image:
