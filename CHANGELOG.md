@@ -13,7 +13,6 @@
 - console: add modify functionality on columns, primary keys & unique keys to MS SQL Server tables
 - cli: add interactive prompt to get input when `--database-name` flag is missing
 - cli: fix metadata export to avoid unnecessary empty lines in actions.graphql (#5338)
-- cli: add exclude-schema & full flags to migrate create command (closes #4301) (#5713)
 
 ## v2.0.0-beta.1
 
