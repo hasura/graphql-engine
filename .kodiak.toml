@@ -97,8 +97,8 @@ include_pull_request_url = true # default: false
 # behavior of automatically adding the PR number to the title of merges created
 # through the UI. This option only applies when `merge.message.title` does not
 # equal `"github_default"`.
-#### NOTE: 'true' required for benchmarks in CI:
-include_pr_number = true # default: true
+### NOTE: if this is set to true github links to unrelated OSS issues, which is confusing
+include_pr_number = false # default: true
 
 # Control the text used in the merge commit. The GitHub default is markdown, but
 # `"plain_text"` or `"html"` can be used to render the pull request body as text
