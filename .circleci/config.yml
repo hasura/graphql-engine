@@ -45,6 +45,24 @@ refs:
           sleep 1
         done
         echo Failed waiting for Postgres && exit 1
+
+  ensure_postgres_db: &ensure_postgres_db
+    run:
+      name: ensure postgres databases are present
+      environment:
+        # sqlalchemy throws warnings with postgres://
+        DATABASE_URL: 'postgresql://gql_test:@localhost:5432/gql_test'
+      command: |
+        psql "$DATABASE_URL" -c \
+          "SELECT 1 FROM pg_database WHERE datname = 'gql_test2'" | grep -q -F '(1 row)' || \
+          psql "$DATABASE_URL" -c 'CREATE DATABASE gql_test2;'
+        psql "$DATABASE_URL" -c \
+          "SELECT 1 FROM pg_database WHERE datname = 'pg_source_1'" | grep -q -F '(1 row)' || \
+          psql "$DATABASE_URL" -c 'CREATE DATABASE pg_source_1;'
+        psql "$DATABASE_URL" -c \
+          "SELECT 1 FROM pg_database WHERE datname = 'pg_source_2'" | grep -q -F '(1 row)' || \
+          psql "$DATABASE_URL" -c 'CREATE DATABASE pg_source_2;'
+
   wait_for_hge: &wait_for_hge
     run:
       name: waiting for graphql-engine to be ready
@@ -56,6 +74,18 @@ refs:
           sleep 1
         done
         echo Failed waiting for graphql-engine && exit 1
+
+  wait_for_mssql: &wait_for_mssql
+    run:
+      name: wait for mssql container to be ready
+      command: |
+        for i in `seq 1 60`;
+        do
+          nc -z localhost 1433 && echo Success && exit 0
+          echo -n .
+          sleep 1
+        done
+        echo Failed waiting for SQL Server && exit 1
 
   filter_only_vtags: &filter_only_vtags
     filters:
@@ -106,15 +136,7 @@ refs:
     - checkout
     - *skip_server_tests
     - *wait_for_postgres
-    - run:
-        name: Ensure databases are present
-        environment:
-          # sqlalchemy throws warnings with postgres://
-          DATABASE_URL: 'postgresql://gql_test:@localhost:5432/gql_test'
-        command: |
-          psql "$DATABASE_URL" -c "SELECT 1 FROM pg_database WHERE datname = 'gql_test2'" | grep -q -F '(1 row)' || psql "$DATABASE_URL" -c 'CREATE DATABASE gql_test2;'
-          psql "$DATABASE_URL" -c "SELECT 1 FROM pg_database WHERE datname = 'pg_source_1'" | grep -q -F '(1 row)' || psql "$DATABASE_URL" -c 'CREATE DATABASE pg_source_1;'
-          psql "$DATABASE_URL" -c "SELECT 1 FROM pg_database WHERE datname = 'pg_source_2'" | grep -q -F '(1 row)' || psql "$DATABASE_URL" -c 'CREATE DATABASE pg_source_2;'
+    - *ensure_postgres_db
     - run:
         name: Run tests
         environment:
@@ -247,6 +269,46 @@ jobs:
     - run:
         name: All server tests passed
         command: echo 'all server tests passed!'
+
+  # pytest the server with SQL Server ODBC Driver 17
+  test_server_mssql:
+    docker:
+    - image: *server_builder_image
+    - image: sassela/mssql-2019-cu8-ubuntu-16.04:0.0.3
+    - image: hasura/postgres-13.0-alpine-postgis3:latest
+    environment:
+      # Setting default number of threads to 2
+      # since circleci allocates 2 cpus per test container
+      GHCRTS: -N2
+      # Until we can use a real webserver for TestEventFlood, limit concurrency:
+      HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE: 8
+      HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
+      HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:@localhost:5432/gql_test2
+      HASURA_GRAPHQL_PG_SOURCE_URL_1: postgresql://gql_test@localhost:5432/pg_source_1
+      HASURA_GRAPHQL_PG_SOURCE_URL_2: postgresql://gql_test@localhost:5432/pg_source_2
+      HASURA_GRAPHQL_MSSQL_SOURCE_URL: DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost,1433;Uid=sa;Pwd=hasuraMSSQL1;
+      GRAPHQL_ENGINE: /build/_server_output/graphql-engine
+      GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
+      MIX_FILES_FOLDER: /build/_server_output/mix
+    working_directory: ~/graphql-engine
+    steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
+    - checkout
+    - *wait_for_postgres
+    - *ensure_postgres_db
+    - *wait_for_mssql
+    - run:
+        name: Run tests
+        environment:
+          SERVER_TEST_TO_RUN: 'backend-mssql'
+          OUTPUT_FOLDER: '/build/_server_test_output/mssql'
+        command: |
+          oss-.circleci/test-server.sh
+    - store_artifacts:
+        path: /build/_server_test_output
+        destination: server_test
 
   # pytest the server with postgres versions >= 9.5
   test_server_pg_13:
@@ -683,6 +745,10 @@ workflows:
         requires:
         - build_server
         - build_console
+    - test_server_mssql_2019:
+        <<: *filter_only_vtags
+        requires:
+          - build_server
     - test_server_pg_13:
         <<: *filter_only_vtags
         requires:
