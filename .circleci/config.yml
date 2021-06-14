@@ -307,7 +307,7 @@ jobs:
           SERVER_TEST_TO_RUN: 'backend-mssql'
           OUTPUT_FOLDER: '/build/_server_test_output/mssql'
         command: |
-          oss-.circleci/test-server.sh
+          .circleci/test-server.sh
     - store_artifacts:
         path: /build/_server_test_output
         destination: server_test
