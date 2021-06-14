@@ -2,6 +2,7 @@
 refs:
   constants:
   - &server_builder_image hasura/graphql-engine-server-builder:485659267675dbd5539a1ba8ced6bff3e8824ec8d2f6d7480fd6d8201629794e
+  - &mssql_image hasura/mssql-server-2019-cu10-ubuntu-20.04:187352320456c39572656ce46cc292369cffa01ac0e90fcdf179c01d36fb3952
   skip_job_on_ciignore: &skip_job_on_ciignore
     run:
       name: checking if job should be terminated or not
@@ -271,11 +272,12 @@ jobs:
         command: echo 'all server tests passed!'
 
   # pytest the server with SQL Server ODBC Driver 17
-  test_server_mssql:
+  test_server_mssql_2019:
     docker:
     - image: *server_builder_image
-    - image: sassela/mssql-2019-cu8-ubuntu-16.04:0.0.3
+    - image: *mssql_image
     - image: hasura/postgres-13.0-alpine-postgis3:latest
+      <<: *test_pg_env
     environment:
       # Setting default number of threads to 2
       # since circleci allocates 2 cpus per test container
@@ -305,7 +307,7 @@ jobs:
           SERVER_TEST_TO_RUN: 'backend-mssql'
           OUTPUT_FOLDER: '/build/_server_test_output/mssql'
         command: |
-          oss-.circleci/test-server.sh
+          .circleci/test-server.sh
     - store_artifacts:
         path: /build/_server_test_output
         destination: server_test
