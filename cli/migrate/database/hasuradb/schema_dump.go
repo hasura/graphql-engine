@@ -7,12 +7,20 @@ import (
 	"github.com/hasura/graphql-engine/cli/internal/hasura"
 )
 
-func (h *HasuraDB) ExportSchemaDump(schemaNames []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {
+// ExportSchemaDump calls pg_dump to help initialize the first set of migrations
+func (h *HasuraDB) ExportSchemaDump(schemaNames []string, sourceName string, sourceKind hasura.SourceKind, excludeSchema []string, full bool) ([]byte, error) {
 	switch sourceKind {
 	case hasura.SourceKindPG:
 		opts := []string{"-O", "-x", "--schema-only"}
-		for _, s := range schemaNames {
-			opts = append(opts, "--schema", s)
+		if len(excludeSchema) != 0 {
+			for _, s := range excludeSchema {
+				opts = append(opts, "--exclude-schema", s)
+			}
+		}
+		if !full && len(excludeSchema) != 0 {
+			for _, s := range schemaNames {
+				opts = append(opts, "--schema", s)
+			}
 		}
 		query := SchemaDump{
 			Opts:        opts,

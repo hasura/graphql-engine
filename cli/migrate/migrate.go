@@ -330,8 +330,8 @@ func (m *Migrate) GetUnappliedMigrations(version uint64) []uint64 {
 	return m.sourceDrv.GetUnappliedMigrations(version)
 }
 
-func (m *Migrate) ExportSchemaDump(schemName []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {
-	return m.databaseDrv.ExportSchemaDump(schemName, sourceName, sourceKind)
+func (m *Migrate) ExportSchemaDump(schemName []string, sourceName string, sourceKind hasura.SourceKind, excludeSchema []string, full bool) ([]byte, error) {
+	return m.databaseDrv.ExportSchemaDump(schemName, sourceName, sourceKind, excludeSchema, full)
 }
 
 func (m *Migrate) RemoveVersions(versions []uint64) error {
