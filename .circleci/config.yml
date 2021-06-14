@@ -271,7 +271,7 @@ jobs:
         command: echo 'all server tests passed!'
 
   # pytest the server with SQL Server ODBC Driver 17
-  test_server_mssql:
+  test_server_mssql_2019:
     docker:
     - image: *server_builder_image
     - image: sassela/mssql-2019-cu8-ubuntu-16.04:0.0.3
