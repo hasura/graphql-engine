@@ -89,7 +89,21 @@
             </div>
             <div class="navBlueBG">
               <ul class="navBarUL">
-                <li>v1.x</li>
+                <li class="versionTxt">
+                  <!--v1.x-->
+                  <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
+                    {%- if version == '2.0' %}
+                    <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/2.0/graphql/core/index.html" selected="selected">v2.x</option>
+                    {%- else -%}
+                    <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/2.0/graphql/core/index.html">v2.x</option>
+                    {% endif %}
+                    {%- if version == '1.0' %}
+                    <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/core/index.html" selected="selected">v1.x</option>
+                    {%- else -%}
+                    <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/core/index.html">v1.x</option>
+                    {% endif %}
+                  </select>
+                </li>
                 <li class='navListActive'>
                   <a class="tracked" data-label="Nav: Docs" href="/docs/latest/graphql/core/index.html">Docs</a>
                 </li>
@@ -140,14 +154,19 @@
                   <li>
                     <a class="tracked menuLink" data-label="Mobile Nav: Docs" href="/docs/latest/graphql/core/index.html">Docs</a>
                     <span class="versionTxt">
-                      v1.x
-                      <!-- <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
-                        {%- if version == '1.0' %}
-                          <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html" selected="selected">v1.x</option>
+                      <!--v1.x-->
+                      <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
+                        {%- if version == '2.0' %}
+                          <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/2.0/graphql/core/index.html" selected="selected">v2.x</option>
                         {%- else -%}
-                          <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/manual/index.html">v1.x</option>
+                          <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/2.0/graphql/core/index.html">v2.x</option>
                         {% endif %}
-                      </select> -->
+                        {%- if version == '1.0' %}
+                          <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/core/index.html" selected="selected">v1.x</option>
+                        {%- else -%}
+                          <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/core/index.html">v1.x</option>
+                        {% endif %}
+                      </select>
                     </span>
                   </li>
                   <li>
