@@ -99,6 +99,7 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
       - `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__
       - `GraphQL & Hasura Courses <https://hasura.io/learn/>`__
       - :ref:`Guides & Resources <guides>`
+      - `Updating to Hasura v2 <https://hasura.io/docs/2.0/graphql/core/guides/upgrade-hasura-v2.html>`__
 
 
 .. toctree::
