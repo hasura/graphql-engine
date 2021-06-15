@@ -6,4 +6,4 @@ ENV SA_PASSWORD=${MSSQL_PASSWORD:-hasuraMSSQL1}
 USER root
 RUN apt-get update && \
     apt-get install -y mssql-tools && \
-    ln -sfn /opt/mssql-tools/bin/sqlcmd /usr/bin/sqlcmd
+    ln -sfn /opt/mssql-tools/bin/sqlcmd /usr/local/bin/sqlcmd
