@@ -13,6 +13,7 @@
 - console: add modify functionality on columns, primary keys & unique keys to MS SQL Server tables
 - cli: add interactive prompt to get input when `--database-name` flag is missing
 - cli: fix metadata export to avoid unnecessary empty lines in actions.graphql (#5338)
+- cli: generate migrations for mssql databases in hasura console mode  (#7011)
 
 ## v2.0.0-beta.1
 
