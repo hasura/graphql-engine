@@ -42,7 +42,6 @@ instance Backend 'MSSQL where
   type XComputedField          'MSSQL = XDisable
   type XRelay                  'MSSQL = XDisable
   type XNodesAgg               'MSSQL = XEnable
-  type XDistinct               'MSSQL = XDisable
 
   functionArgScalarType :: FunctionArgType 'MSSQL -> ScalarType 'MSSQL
   functionArgScalarType = absurd

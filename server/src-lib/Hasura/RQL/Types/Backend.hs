@@ -59,7 +59,6 @@ class
   , Representable (XRelay b)
   , Representable (XNodesAgg b)
   , Representable (XComputedField b)
-  , Representable (XDistinct b)
   , Generic (Column b)
   , Ord (TableName b)
   , Ord (FunctionName b)
@@ -136,7 +135,6 @@ class
   type XComputedField          b :: Type
   type XRelay                  b :: Type
   type XNodesAgg               b :: Type
-  type XDistinct               b :: Type
 
   -- functions on types
   functionArgScalarType :: FunctionArgType b -> ScalarType b

@@ -1,3 +1,37 @@
+{- | This module defines the BackendSchema class, that a backend must implement
+   for its schema to be generated. From the top level of the schema down to its
+   leaf values, every component has a matching function in the
+   schema. Combinators in other modules provide a default implementation at all
+   layers.
+
+   Consider, for example, the following query, for a given table "author":
+
+       query {
+         author(where: {id: {_eq: 2}}) {
+           name
+         }
+       }
+
+   The chain of functions leading to a parser for this RootField will be along
+   the lines of:
+
+       > buildTableQueryFields
+         > selectTable
+           > tableArgs
+             > tableWhere
+               > boolExp
+                 > comparisonExp
+                   > columnParser
+           > tableSelectionSet
+             > fieldSelection
+
+   Several of those steps are part of the class, meaning that a backend can
+   customize part of this tree without having to reimplement all of it. For
+   instance, a backend that supports a different set ot table arguments can
+   choose to reimplement @tableArgs@, but can still use @tableWhere@ in its
+   custom implementation.
+-}
+
 module Hasura.GraphQL.Schema.Backend where
 
 import           Hasura.Prelude
@@ -48,7 +82,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     -> G.Name
     -> NESeq (ColumnInfo b)
     -> SelPermInfo b
-    -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+    -> m [FieldParser n (QueryRootField UnpreparedValue)]
   buildTableInsertMutationFields
     :: MonadBuildSchema b r m n
     => SourceName
@@ -98,7 +132,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     -> TableName b
     -> NESeq (ColumnInfo b)
     -> SelPermInfo b
-    -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+    -> m [FieldParser n (QueryRootField UnpreparedValue)]
   buildFunctionMutationFields
     :: MonadBuildSchema b r m n
     => SourceName
@@ -108,6 +142,14 @@ class Backend b => BackendSchema (b :: BackendType) where
     -> TableName b
     -> SelPermInfo b
     -> m [FieldParser n (MutationRootField UnpreparedValue)]
+
+  -- table components
+  tableArguments
+    :: MonadBuildSchema b r m n
+    => SourceName
+    -> TableInfo b
+    -> SelPermInfo b
+    -> m (InputFieldsParser n (IR.SelectArgsG b (UnpreparedValue b)))
 
   -- backend extensions
   relayExtension    :: Maybe (XRelay b)
@@ -137,14 +179,6 @@ class Backend b => BackendSchema (b :: BackendType) where
     -> m (Maybe (InputFieldsParser n [(Column b, IR.UpdOpExpG (UnpreparedValue b))]))
   mkCountType :: Maybe Bool -> Maybe [Column b] -> CountType b
   aggregateOrderByCountType :: ScalarType b
-  -- | Argument to distinct select on columns returned from table selection
-  -- > distinct_on: [table_select_column!]
-  tableDistinctOn
-    :: forall m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-    => SourceName
-    -> TableInfo b
-    -> SelPermInfo b
-    -> m (InputFieldsParser n (Maybe (XDistinct b, NonEmpty (Column b))))
   -- | Computed field parser
   computedField
     :: MonadBuildSchema b r m n

@@ -36,11 +36,10 @@ instance Backend 'BigQuery where
   type SQLExpression           'BigQuery = BigQuery.Expression
   type SQLOperator             'BigQuery = BigQuery.Op
   type BooleanOperators        'BigQuery = Const Void
-  type XComputedField          'BigQuery = Void
 
-  type XRelay                  'BigQuery = Void
+  type XComputedField          'BigQuery = XDisable
+  type XRelay                  'BigQuery = XDisable
   type XNodesAgg               'BigQuery = XEnable
-  type XDistinct               'BigQuery = Void
 
   type ExtraTableMetadata      'BigQuery = ()
 

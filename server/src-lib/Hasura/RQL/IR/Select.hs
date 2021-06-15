@@ -252,7 +252,7 @@ data SelectArgsG (b :: BackendType) v
   , _saOrderBy  :: !(Maybe (NE.NonEmpty (AnnOrderByItemG b v)))
   , _saLimit    :: !(Maybe Int)
   , _saOffset   :: !(Maybe Int64)
-  , _saDistinct :: !(Maybe (XDistinct b, NE.NonEmpty (Column b)))
+  , _saDistinct :: !(Maybe (NE.NonEmpty (Column b)))
   } deriving (Generic)
 
 deriving instance
