@@ -66,12 +66,10 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Bifunctor                     (bimap)
-import           Data.Hashable.Time                 ()
 import           Data.Scientific                    (toBoundedInteger)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 import           Data.URL.Template
-
 
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
 
@@ -80,6 +78,7 @@ import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Headers             ()
 import           Hasura.SQL.Types
+
 
 newtype RelName
   = RelName { getRelTxt :: NonEmptyText }

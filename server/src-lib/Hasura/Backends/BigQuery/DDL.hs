@@ -14,15 +14,14 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                         as Env
+import qualified Data.Environment                     as Env
 
 import           Data.Aeson
 
-import qualified Hasura.Backends.BigQuery.Types           as BigQuery
+import qualified Hasura.Backends.BigQuery.Types       as BigQuery
 
 import           Hasura.Backends.BigQuery.DDL.BoolExp
-import           Hasura.Backends.BigQuery.DDL.Source      as M
-import           Hasura.Backends.BigQuery.Instances.Types ()
+import           Hasura.Backends.BigQuery.DDL.Source  as M
 import           Hasura.Base.Error
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Backend

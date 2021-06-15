@@ -18,7 +18,6 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import           Data.Aeson                             (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import           Data.ByteString                        (ByteString)
 import           Data.Coerce
-import           Data.Hashable.Time                     ()
 import           Data.Scientific
 import           Data.Text.Extended
 import           Data.Time
@@ -50,7 +49,6 @@ data Select = Select
 instance FromJSON Select
 instance Hashable Select
 instance Cacheable Select
-instance ToJSON Select
 instance NFData Select
 
 data ArrayAgg = ArrayAgg
@@ -61,7 +59,6 @@ data ArrayAgg = ArrayAgg
 instance FromJSON ArrayAgg
 instance Hashable ArrayAgg
 instance Cacheable ArrayAgg
-instance ToJSON ArrayAgg
 instance NFData ArrayAgg
 
 data Reselect = Reselect
@@ -71,7 +68,6 @@ data Reselect = Reselect
 instance FromJSON Reselect
 instance Hashable Reselect
 instance Cacheable Reselect
-instance ToJSON Reselect
 instance NFData Reselect
 
 data OrderBy = OrderBy
@@ -111,7 +107,6 @@ data FieldOrigin
   | AggregateOrigin [Aliased Aggregate]
   deriving (Eq, Ord, Show, Generic, Data, Lift)
 instance FromJSON FieldOrigin
-instance ToJSON FieldOrigin
 instance Hashable FieldOrigin
 instance Cacheable FieldOrigin
 instance NFData FieldOrigin
@@ -136,7 +131,6 @@ data Projection
 instance FromJSON Projection
 instance Hashable Projection
 instance Cacheable Projection
-instance ToJSON Projection
 instance NFData Projection
 
 data WindowFunction =
@@ -161,7 +155,6 @@ data Join = Join
 instance FromJSON Join
 instance Hashable Join
 instance Cacheable Join
-instance ToJSON Join
 instance NFData Join
 
 data JoinProvenance
@@ -174,7 +167,6 @@ data JoinProvenance
 instance FromJSON JoinProvenance
 instance Hashable JoinProvenance
 instance Cacheable JoinProvenance
-instance ToJSON JoinProvenance
 instance NFData JoinProvenance
 
 data JoinSource
@@ -186,12 +178,11 @@ data JoinSource
 instance FromJSON JoinSource
 instance Hashable JoinSource
 instance Cacheable JoinSource
-instance ToJSON JoinSource
 instance NFData JoinSource
 
 newtype Where =
   Where [Expression]
-  deriving (NFData, Eq, Ord, Show, Generic, Data, Lift, FromJSON, ToJSON, Hashable, Cacheable)
+  deriving (NFData, Eq, Ord, Show, Generic, Data, Lift, FromJSON, Hashable, Cacheable)
 
 instance Monoid Where where
   mempty = Where mempty
@@ -266,7 +257,6 @@ data Expression
 instance FromJSON Expression
 instance Hashable Expression
 instance Cacheable Expression
-instance ToJSON Expression
 instance NFData Expression
 
 data JsonPath
@@ -289,7 +279,6 @@ data Aggregate
 instance FromJSON Aggregate
 instance Hashable Aggregate
 instance Cacheable Aggregate
-instance ToJSON Aggregate
 instance NFData Aggregate
 
 data Countable fieldname
@@ -310,7 +299,6 @@ data From
 instance FromJSON From
 instance Hashable From
 instance Cacheable From
-instance ToJSON From
 instance NFData From
 
 data OpenJson = OpenJson
@@ -320,7 +308,6 @@ data OpenJson = OpenJson
 instance FromJSON OpenJson
 instance Hashable OpenJson
 instance Cacheable OpenJson
-instance ToJSON OpenJson
 instance NFData OpenJson
 
 data JsonFieldSpec
@@ -365,7 +352,7 @@ instance ToJSONKey TableName
 instance NFData TableName
 instance Arbitrary TableName where arbitrary = genericArbitrary
 
-instance ToTxt TableName where toTxt = T.pack . show
+instance ToTxt TableName where toTxt = tshow
 
 data FieldName = FieldName
   { fieldName       :: Text
@@ -486,7 +473,7 @@ instance FromJSON Int64 where parseJSON = liberalInt64Parser Int64
 instance ToJSON Int64 where toJSON = liberalIntegralPrinter
 
 intToInt64 :: Int -> Int64
-intToInt64 = Int64 . T.pack . show
+intToInt64 = Int64 . tshow
 
 -- | BigQuery's conception of a fixed precision decimal.
 newtype Decimal = Decimal Text
@@ -553,7 +540,7 @@ instance ToJSON ScalarType
 instance ToJSONKey ScalarType
 instance NFData ScalarType
 instance Hashable ScalarType
-instance ToTxt ScalarType where toTxt = T.pack . show
+instance ToTxt ScalarType where toTxt = tshow
 
 --------------------------------------------------------------------------------
 -- Unified table metadata
@@ -703,7 +690,7 @@ liberalInt64Parser fromText json = viaText <|> viaNumber
         _ -> fail ("String containing integral number is invalid: " ++ show text)
     viaNumber = do
       int <- J.parseJSON json
-      pure (fromText (T.pack (show (int :: Int))))
+      pure (fromText (tshow (int :: Int)))
 
 -- | Parse either a JSON native double number, or a text string
 -- containing something vaguely in scientific notation. In either
@@ -723,7 +710,7 @@ liberalDecimalParser fromText json = viaText <|> viaNumber
       -- Converting a scientific to an unbounded number is unsafe, but
       -- to a double is bounded and therefore OK. JSON only supports
       -- doubles, so that's fine.
-      pure (fromText (T.pack (show (d :: Double))))
+      pure (fromText (tshow (d :: Double)))
 
 projectionAlias :: Projection -> Maybe Text
 projectionAlias =

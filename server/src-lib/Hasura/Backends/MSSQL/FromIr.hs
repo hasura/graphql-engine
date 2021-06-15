@@ -20,7 +20,6 @@ import qualified Data.Map.Strict                       as M
 import qualified Data.Text                             as T
 import qualified Database.ODBC.SQLServer               as ODBC
 
---import           Control.Monad.Trans.State.Strict   as S
 import           Control.Monad.Validate
 import           Data.Map.Strict                       (Map)
 import           Data.Proxy

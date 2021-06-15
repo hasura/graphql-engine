@@ -19,8 +19,8 @@ import qualified Data.Text                   as T
 import qualified Data.Text.Extended          as T
 import qualified Data.Text.Lazy              as L
 import qualified Data.Text.Lazy.Builder      as L
-import qualified Text.Builder                as TB
 
+import           Data.Aeson                  (ToJSON (..))
 import           Data.List                   (intersperse)
 import           Data.String
 import           Database.ODBC.SQLServer
@@ -54,8 +54,10 @@ instance IsString Printer where
 --------------------------------------------------------------------------------
 -- Instances
 
-instance ToSQL Expression where
-  toSQL = TB.text . T.toTxt . toQueryFlat . fromExpression
+-- This is a debug instance, only here because it avoids a circular
+-- dependency between this module and Types/Instances.
+instance ToJSON Expression where
+  toJSON = toJSON . T.toTxt . toQueryFlat . fromExpression
 
 
 --------------------------------------------------------------------------------

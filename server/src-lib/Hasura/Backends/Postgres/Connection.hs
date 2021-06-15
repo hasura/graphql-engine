@@ -63,6 +63,7 @@ import           Data.Bifoldable
 import           Data.Bifunctor
 import           Data.Bitraversable
 import           Data.Char                              (toLower)
+import           Data.Hashable.Time                     ()
 import           Data.Semigroup                         (Max (..))
 import           Data.Text                              (unpack)
 import           Data.Time
@@ -76,12 +77,14 @@ import qualified Hasura.Tracing                         as Tracing
 import           Hasura.Backends.Postgres.Execute.Types as ET
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Base.Error
+import           Hasura.Base.Instances                  ()
 import           Hasura.EncJSON
 import           Hasura.Incremental                     (Cacheable (..))
 import           Hasura.RQL.Types.Common                (UrlConf (..))
 import           Hasura.SQL.Types
 import           Hasura.Server.Utils                    (parseConnLifeTime, readIsoLevel)
 import           Hasura.Session
+
 
 class (MonadError QErr m) => MonadTx m where
   liftTx :: Q.TxE QErr a -> m a

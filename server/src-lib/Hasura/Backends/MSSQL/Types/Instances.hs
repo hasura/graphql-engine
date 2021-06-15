@@ -155,9 +155,6 @@ instance Arbitrary ColumnName where
 instance Arbitrary TableName where
   arbitrary = genericArbitrary
 
-instance ToTxt () where
-  toTxt = tshow
-
 
 --------------------------------------------------------------------------------
 -- Manual instances

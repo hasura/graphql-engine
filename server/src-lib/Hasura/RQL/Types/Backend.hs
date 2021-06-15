@@ -11,7 +11,6 @@ import           Data.Typeable                 (Typeable)
 
 import           Hasura.Base.Error
 import           Hasura.Incremental            (Cacheable)
-import           Hasura.RQL.DDL.Headers        ()
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Tag
 import           Hasura.SQL.Types
@@ -71,7 +70,6 @@ class
   , Data (ScalarType b)
   , Traversable (BooleanOperators b)
   , Data (SQLExpression b)
-  , ToSQL (SQLExpression b)
   , FromJSON (BasicOrderType b)
   , FromJSON (Column b)
   , FromJSON (ConstraintName b)
@@ -94,6 +92,7 @@ class
   , ToJSON (TableName b)
   , ToJSON (SourceConnConfiguration b)
   , ToJSON (ExtraTableMetadata b)
+  , ToJSON (SQLExpression b)
   , ToJSONKey (Column b)
   , ToJSONKey (FunctionName b)
   , ToJSONKey (ScalarType b)

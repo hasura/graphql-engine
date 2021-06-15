@@ -2,10 +2,9 @@ module Hasura.Backends.BigQuery.DDL.BoolExp where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                               as J
-import qualified Data.HashMap.Strict                      as Map
+import qualified Data.Aeson                     as J
+import qualified Data.HashMap.Strict            as Map
 
-import           Hasura.Backends.BigQuery.Instances.Types ()
 import           Hasura.Backends.BigQuery.Types
 import           Hasura.Base.Error
 import           Hasura.RQL.IR.BoolExp
