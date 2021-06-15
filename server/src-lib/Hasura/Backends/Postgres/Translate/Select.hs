@@ -644,7 +644,7 @@ processSelectParams sourcePrefixes fieldAlias similarArrFields selectFrom
                   orderByM
   let fromItem = selectFromToFromItem (_pfBase sourcePrefixes) selectFrom
       (maybeDistinct, distinctExtrs) =
-        maybe (Nothing, []) (first Just) $ processDistinctOnColumns thisSourcePrefix . snd <$> distM
+        maybe (Nothing, []) (first Just) $ processDistinctOnColumns thisSourcePrefix <$> distM
       finalWhere = toSQLBoolExp (selectFromToQual selectFrom) $
                    maybe permFilter (andAnnBoolExps permFilter) whereM
       selectSource = SelectSource thisSourcePrefix fromItem maybeDistinct finalWhere

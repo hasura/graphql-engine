@@ -13,7 +13,12 @@ module Hasura.GraphQL.Schema.Select
   , selectFunctionConnection
   , computedFieldPG
   , remoteRelationshipField
-  , tableArgs
+  , defaultTableArgs
+  , tableWhereArg
+  , tableOrderByArg
+  , tableDistinctArg
+  , tableLimitArg
+  , tableOffsetArg
   , tableSelectionSet
   , tableSelectionList
   , nodePG
@@ -36,6 +41,7 @@ import qualified Language.GraphQL.Draft.Syntax              as G
 
 import           Control.Lens                               hiding (index)
 import           Data.Has
+import           Data.Int                                   (Int64)
 import           Data.Parser.JSONPath
 import           Data.Text.Extended
 import           Data.Traversable                           (mapAccumL)
@@ -64,8 +70,12 @@ import           Hasura.Server.Utils                        (executeJSONPath)
 import           Hasura.Session
 
 
--- 1. top level selection functions
--- write a blurb?
+--------------------------------------------------------------------------------
+-- Top-level functions.
+--
+-- Those functions implement parsers for top-level components of the schema,
+-- such as querying a table or a function. They are typically used to implement
+-- root fields.
 
 -- | Simple table selection.
 --
@@ -87,7 +97,7 @@ selectTable
   -> m (FieldParser n (SelectExp b))
 selectTable sourceName tableInfo fieldName description selectPermissions = memoizeOn 'selectTable (sourceName, tableName, fieldName) do
   stringifyNum       <- asks $ qcStringifyNum . getter
-  tableArgsParser    <- tableArgs sourceName tableInfo selectPermissions
+  tableArgsParser    <- tableArguments sourceName tableInfo selectPermissions
   selectionSetParser <- tableSelectionList sourceName tableInfo selectPermissions
   pure $ P.subselection fieldName description tableArgsParser selectionSetParser
     <&> \(args, fields) -> IR.AnnSelectG
@@ -221,7 +231,7 @@ selectTableAggregate sourceName tableInfo fieldName description selectPermission
   lift $ memoizeOn 'selectTableAggregate (sourceName, tableName, fieldName) do
     stringifyNum    <- asks $ qcStringifyNum . getter
     tableGQLName    <- getTableGQLName tableInfo
-    tableArgsParser <- tableArgs sourceName tableInfo selectPermissions
+    tableArgsParser <- tableArguments sourceName tableInfo selectPermissions
     aggregateParser <- tableAggregationFields sourceName tableInfo selectPermissions
     nodesParser     <- tableSelectionList sourceName tableInfo selectPermissions
     let selectionName = tableGQLName <> $$(G.litName "_aggregate")
@@ -447,7 +457,7 @@ selectFunction sourceName function fieldName description selectPermissions = do
   stringifyNum <- asks $ qcStringifyNum . getter
   let tableName = _fiReturnType function
   tableInfo          <- askTableInfo sourceName tableName
-  tableArgsParser    <- tableArgs sourceName tableInfo selectPermissions
+  tableArgsParser    <- tableArguments sourceName tableInfo selectPermissions
   functionArgsParser <- customSQLFunctionArgs function
   selectionSetParser <- tableSelectionList sourceName tableInfo selectPermissions
   let argsParser = liftA2 (,) functionArgsParser tableArgsParser
@@ -476,7 +486,7 @@ selectFunctionAggregate sourceName function fieldName description selectPermissi
   tableInfo          <- askTableInfo sourceName tableName
   stringifyNum       <- asks $ qcStringifyNum . getter
   tableGQLName       <- getTableGQLName tableInfo
-  tableArgsParser    <- lift $ tableArgs sourceName tableInfo selectPermissions
+  tableArgsParser    <- lift $ tableArguments sourceName tableInfo selectPermissions
   functionArgsParser <- lift $ customSQLFunctionArgs function
   aggregateParser    <- lift $ tableAggregationFields sourceName tableInfo selectPermissions
   selectionName      <- lift $ pure tableGQLName <&> (<> $$(G.litName "_aggregate"))
@@ -533,36 +543,89 @@ selectFunctionConnection sourceName function fieldName description pkeyColumns s
 
 
 
--- 2. local parsers
--- Parsers that are used but not exported: sub-components
+--------------------------------------------------------------------------------
+-- Components
+--
+-- Those parsers are sub-components of those top-level parsers.
+
+-- | Arguments for a table selection. Default implementation for BackendSchema.
+--
+-- > distinct_on: [table_select_column!]
+-- > limit: Int
+-- > offset: Int
+-- > order_by: [table_order_by!]
+-- > where: table_bool_exp
+defaultTableArgs
+  :: forall b r m n
+   . MonadBuildSchema b r m n
+  => SourceName
+  -> TableInfo b
+  -> SelPermInfo b
+  -> m (InputFieldsParser n (SelectArgs b))
+defaultTableArgs sourceName tableInfo selectPermissions = do
+  whereParser    <- tableWhereArg    sourceName tableInfo selectPermissions
+  orderByParser  <- tableOrderByArg  sourceName tableInfo selectPermissions
+  distinctParser <- tableDistinctArg sourceName tableInfo selectPermissions
+  let result = do
+        whereArg    <- whereParser
+        orderByArg  <- orderByParser
+        limitArg    <- tableLimitArg
+        offsetArg   <- tableOffsetArg
+        distinctArg <- distinctParser
+        pure $ IR.SelectArgs
+          { IR._saWhere    = whereArg
+          , IR._saOrderBy  = orderByArg
+          , IR._saLimit    = limitArg
+          , IR._saOffset   = offsetArg
+          , IR._saDistinct = distinctArg
+          }
+  pure $ result `P.bindFields` \args -> do
+    onJust (IR._saOrderBy args) \orderBy ->
+      onJust (IR._saDistinct args) \distinct ->
+        validateArgs orderBy distinct
+    pure args
+  where
+    validateArgs orderByCols distinctCols = do
+      let colsLen = length distinctCols
+          initOrderBys = take colsLen $ NE.toList orderByCols
+          initOrdByCols = flip mapMaybe initOrderBys $ \ob ->
+            case IR.obiColumn ob of
+              IR.AOCColumn pgCol -> Just $ pgiColumn pgCol
+              _                  -> Nothing
+          isValid = (colsLen == length initOrdByCols)
+                    && all (`elem` initOrdByCols) (toList distinctCols)
+      unless isValid $ parseError
+        "\"distinct_on\" columns must match initial \"order_by\" columns"
 
 -- | Argument to filter rows returned from table selection
 -- > where: table_bool_exp
-tableWhere
+tableWhereArg
   :: forall b r m n
    . MonadBuildSchema b r m n
   => SourceName
   -> TableInfo b
   -> SelPermInfo b
   -> m (InputFieldsParser n (Maybe (IR.AnnBoolExp b (UnpreparedValue b))))
-tableWhere sourceName tableInfo selectPermissions = do
+tableWhereArg sourceName tableInfo selectPermissions = do
   boolExpParser <- boolExp sourceName tableInfo (Just selectPermissions)
-  pure $ fmap join $
-    P.fieldOptional whereName whereDesc $ P.nullable boolExpParser
+  pure
+    $ fmap join
+    $ P.fieldOptional whereName whereDesc
+    $ P.nullable boolExpParser
   where
-    whereName      = $$(G.litName "where")
-    whereDesc      = Just $ G.Description "filter the rows returned"
+    whereName = $$(G.litName "where")
+    whereDesc = Just $ G.Description "filter the rows returned"
 
 -- | Argument to sort rows returned from table selection
 -- > order_by: [table_order_by!]
-tableOrderBy
+tableOrderByArg
   :: forall b r m n
    . MonadBuildSchema b r m n
   => SourceName
   -> TableInfo b
   -> SelPermInfo b
   -> m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnOrderByItemG b (UnpreparedValue b)))))
-tableOrderBy sourceName tableInfo selectPermissions = do
+tableOrderByArg sourceName tableInfo selectPermissions = do
   orderByParser <- orderByExp sourceName tableInfo selectPermissions
   pure $ do
     maybeOrderByExps <- fmap join $
@@ -572,61 +635,48 @@ tableOrderBy sourceName tableInfo selectPermissions = do
     orderByName = $$(G.litName "order_by")
     orderByDesc = Just $ G.Description "sort the rows by one or more columns"
 
--- | Arguments for a table selection
---
+-- | Argument to distinct select on columns returned from table selection
 -- > distinct_on: [table_select_column!]
--- > limit: Int
--- > offset: Int
--- > order_by: [table_order_by!]
--- > where: table_bool_exp
-tableArgs
+tableDistinctArg
   :: forall b r m n
    . MonadBuildSchema b r m n
   => SourceName
   -> TableInfo b
   -> SelPermInfo b
-  -> m (InputFieldsParser n (SelectArgs b))
-tableArgs sourceName tableInfo selectPermissions = do
-  whereParser    <- tableWhere sourceName tableInfo selectPermissions
-  orderByParser  <- tableOrderBy sourceName tableInfo selectPermissions
-  distinctParser <- tableDistinctOn sourceName tableInfo selectPermissions
-  let selectArgs = do
-        whereF   <- whereParser
-        orderBy  <- orderByParser
-        limit    <- fmap join $ P.fieldOptional limitName  limitDesc  $ P.nullable $ P.nonNegativeInt
-        offset   <- fmap join $ P.fieldOptional offsetName offsetDesc $ P.nullable $ P.bigInt
-        distinct <- distinctParser
-        pure $ IR.SelectArgs
-          { IR._saWhere    = whereF
-          , IR._saOrderBy  = orderBy
-          , IR._saLimit    = fromIntegral <$> limit
-          , IR._saOffset   = offset
-          , IR._saDistinct = distinct
-          }
-  pure $ selectArgs `P.bindFields`
-   \args -> do
-      traverse_ (validateDistinctOn $ IR._saOrderBy args) $ snd <$> IR._saDistinct args
-      pure args
+  -> m (InputFieldsParser n (Maybe (NonEmpty (Column b))))
+tableDistinctArg sourceName tableInfo selectPermissions = do
+  columnsEnum <- tableSelectColumnsEnum sourceName tableInfo selectPermissions
+  pure do
+    maybeDistinctOnColumns <- join . join <$> for columnsEnum
+      (P.fieldOptional distinctOnName distinctOnDesc . P.nullable . P.list)
+    pure $ maybeDistinctOnColumns >>= NE.nonEmpty
   where
-    -- TH splices mess up ApplicativeDo
-    -- see (FIXME: link to bug here)
-    limitName  = $$(G.litName "limit")
-    offsetName = $$(G.litName "offset")
-    limitDesc  = Just $ G.Description "limit the number of rows returned"
-    offsetDesc = Just $ G.Description "skip the first n rows. Use only with order_by"
+    distinctOnName = $$(G.litName "distinct_on")
+    distinctOnDesc = Just $ G.Description "distinct select on columns"
 
-    validateDistinctOn Nothing _ = return ()
-    validateDistinctOn (Just orderByCols) distinctOnCols = do
-      let colsLen = length distinctOnCols
-          initOrderBys = take colsLen $ NE.toList orderByCols
-          initOrdByCols = flip mapMaybe initOrderBys $ \ob ->
-            case IR.obiColumn ob of
-              IR.AOCColumn pgCol -> Just $ pgiColumn pgCol
-              _                  -> Nothing
-          isValid = (colsLen == length initOrdByCols)
-                    && all (`elem` initOrdByCols) (toList distinctOnCols)
-      unless isValid $ parseError
-        "\"distinct_on\" columns must match initial \"order_by\" columns"
+-- | Argument to limit rows returned from table selection
+-- > limit: NonNegativeInt
+tableLimitArg
+  :: forall n. MonadParse n
+  => InputFieldsParser n (Maybe Int)
+tableLimitArg = fmap (fmap fromIntegral . join)
+  $ P.fieldOptional limitName limitDesc
+  $ P.nullable P.nonNegativeInt
+  where
+    limitName = $$(G.litName "limit")
+    limitDesc = Just $ G.Description "limit the number of rows returned"
+
+-- | Argument to skip some rows, in conjunction with order_by
+-- > offset: BigInt
+tableOffsetArg
+  :: forall n. MonadParse n
+  => InputFieldsParser n (Maybe Int64)
+tableOffsetArg = fmap join
+  $ P.fieldOptional offsetName offsetDesc
+  $ P.nullable P.bigInt
+  where
+    offsetName = $$(G.litName "offset")
+    offsetDesc = Just $ G.Description "skip the first n rows. Use only with order_by"
 
 
 -- | Arguments for a table connection selection
@@ -652,9 +702,9 @@ tableConnectionArgs
          )
        )
 tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions = do
-  whereParser    <- tableWhere sourceName tableInfo selectPermissions
-  orderByParser  <- fmap (fmap appendPrimaryKeyOrderBy) <$> tableOrderBy sourceName tableInfo selectPermissions
-  distinctParser <- tableDistinctOn sourceName tableInfo selectPermissions
+  whereParser    <- tableWhereArg sourceName tableInfo selectPermissions
+  orderByParser  <- fmap (fmap appendPrimaryKeyOrderBy) <$> tableOrderByArg sourceName tableInfo selectPermissions
+  distinctParser <- tableDistinctArg sourceName tableInfo selectPermissions
   let maybeFirst  = fmap join $ P.fieldOptional $$(G.litName "first")  Nothing $ P.nullable P.nonNegativeInt
       maybeLast   = fmap join $ P.fieldOptional $$(G.litName "last")   Nothing $ P.nullable P.nonNegativeInt
       maybeAfter  = fmap join $ P.fieldOptional $$(G.litName "after")  Nothing $ P.nullable base64Text
@@ -1007,7 +1057,7 @@ computedFieldPG sourceName ComputedFieldInfo{..} parentTable selectPermissions =
     CFRSetofTable tableName -> do
       tableInfo          <- lift   $ askTableInfo sourceName tableName
       remotePerms        <- MaybeT $ tableSelectPermissions tableInfo
-      selectArgsParser   <- lift   $ tableArgs sourceName tableInfo remotePerms
+      selectArgsParser   <- lift   $ tableArguments sourceName tableInfo remotePerms
       selectionSetParser <- lift   $ P.multiple . P.nonNullableParser <$> tableSelectionSet sourceName tableInfo remotePerms
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
       pure $ P.subselection fieldName (Just fieldDescription) fieldArgsParser selectionSetParser <&>

@@ -67,7 +67,7 @@ class PostgresSchema (pgKind :: PostgresKind) where
     -> G.Name
     -> NESeq (ColumnInfo ('Postgres pgKind))
     -> SelPermInfo ('Postgres pgKind)
-    -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+    -> m [FieldParser n (QueryRootField UnpreparedValue)]
   pgkBuildFunctionRelayQueryFields
     :: BS.MonadBuildSchema ('Postgres pgKind) r m n
     => SourceName
@@ -77,7 +77,7 @@ class PostgresSchema (pgKind :: PostgresKind) where
     -> TableName ('Postgres pgKind)
     -> NESeq (ColumnInfo ('Postgres pgKind))
     -> SelPermInfo ('Postgres pgKind)
-    -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+    -> m [FieldParser n (QueryRootField UnpreparedValue)]
   pgkRelayExtension
     :: Maybe (XRelay ('Postgres pgKind))
   pgkNode
@@ -102,8 +102,8 @@ instance PostgresSchema 'Vanilla where
   pgkNode = nodePG
 
 instance PostgresSchema 'Citus where
-  pgkBuildTableRelayQueryFields     _ _ _ _ _ _ _ = pure Nothing
-  pgkBuildFunctionRelayQueryFields  _ _ _ _ _ _ _ = pure Nothing
+  pgkBuildTableRelayQueryFields     _ _ _ _ _ _ _ = pure []
+  pgkBuildFunctionRelayQueryFields  _ _ _ _ _ _ _ = pure []
   pgkRelayExtension = Nothing
   pgkNode = undefined
 
@@ -125,9 +125,14 @@ instance
   buildFunctionQueryFields       = GSB.buildFunctionQueryFields
   buildFunctionRelayQueryFields  = pgkBuildFunctionRelayQueryFields
   buildFunctionMutationFields    = GSB.buildFunctionMutationFields
+
+  -- table components
+  tableArguments = defaultTableArgs
+
   -- backend extensions
   relayExtension    = pgkRelayExtension @pgKind
   nodesAggExtension = Just ()
+
   -- indivdual components
   columnParser              = columnParser
   jsonPathArg               = jsonPathArg
@@ -138,7 +143,7 @@ instance
   aggregateOrderByCountType = PG.PGInteger
   computedField             = computedFieldPG
   node                      = pgkNode
-  tableDistinctOn           = tableDistinctOn
+
   -- SQL literals
   columnDefaultValue = const PG.columnDefaultValue
 
@@ -156,7 +161,7 @@ buildTableRelayQueryFields
   -> G.Name
   -> NESeq (ColumnInfo ('Postgres pgKind))
   -> SelPermInfo  ('Postgres pgKind)
-  -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
 buildTableRelayQueryFields sourceName sourceInfo tableName tableInfo gqlName pkeyColumns selPerms = do
   let
     mkRF = RFDB sourceName
@@ -165,7 +170,9 @@ buildTableRelayQueryFields sourceName sourceInfo tableName tableInfo gqlName pke
              . QDBR
     fieldName = gqlName <> $$(G.litName "_connection")
     fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
-  optionalFieldParser (mkRF . QDBConnection) $ selectTableConnection sourceName tableInfo fieldName fieldDesc pkeyColumns selPerms
+  fmap afold
+    $ optionalFieldParser (mkRF . QDBConnection)
+    $ selectTableConnection sourceName tableInfo fieldName fieldDesc pkeyColumns selPerms
 
 buildFunctionRelayQueryFields
   :: forall pgKind m n r
@@ -177,7 +184,7 @@ buildFunctionRelayQueryFields
   -> TableName    ('Postgres pgKind)
   -> NESeq (ColumnInfo ('Postgres pgKind))
   -> SelPermInfo  ('Postgres pgKind)
-  -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
 buildFunctionRelayQueryFields sourceName sourceInfo functionName functionInfo tableName pkeyColumns selPerms = do
   funcName <- functionGraphQLName @('Postgres pgKind) functionName `onLeft` throwError
   let
@@ -187,7 +194,9 @@ buildFunctionRelayQueryFields sourceName sourceInfo functionName functionInfo ta
              . QDBR
     fieldName = funcName <> $$(G.litName "_connection")
     fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
-  optionalFieldParser (mkRF . QDBConnection) $ selectFunctionConnection sourceName functionInfo fieldName fieldDesc pkeyColumns selPerms
+  fmap afold
+    $ optionalFieldParser (mkRF . QDBConnection)
+    $ selectFunctionConnection sourceName functionInfo fieldName fieldDesc pkeyColumns selPerms
 
 
 ----------------------------------------------------------------
@@ -565,25 +574,6 @@ mkCountType :: Maybe Bool -> Maybe [Column ('Postgres pgKind)] -> CountType ('Po
 mkCountType _           Nothing     = PG.CTStar
 mkCountType (Just True) (Just cols) = PG.CTDistinct cols
 mkCountType _           (Just cols) = PG.CTSimple cols
-
--- | Argument to distinct select on columns returned from table selection
--- > distinct_on: [table_select_column!]
-tableDistinctOn
-  :: forall pgKind m n r
-   . (BackendSchema ('Postgres pgKind), MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => SourceName
-  -> TableInfo ('Postgres pgKind)
-  -> SelPermInfo ('Postgres pgKind)
-  -> m (InputFieldsParser n (Maybe (XDistinct ('Postgres pgKind), NonEmpty (Column ('Postgres pgKind)))))
-tableDistinctOn sourceName tableInfo selectPermissions = do
-  columnsEnum   <- tableSelectColumnsEnum sourceName tableInfo selectPermissions
-  pure $ do
-    maybeDistinctOnColumns <- join.join <$> for columnsEnum
-      (P.fieldOptional distinctOnName distinctOnDesc . P.nullable . P.list)
-    pure $ maybeDistinctOnColumns >>= NE.nonEmpty <&> ((),)
-  where
-    distinctOnName = $$(G.litName "distinct_on")
-    distinctOnDesc = Just $ G.Description "distinct select on columns"
 
 -- | Various update operators
 updateOperators

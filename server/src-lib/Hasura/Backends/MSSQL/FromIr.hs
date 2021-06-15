@@ -232,10 +232,7 @@ fromSelectArgsG selectArgsG = do
   --
   -- But placeholdering the code so that when it's ready to be used,
   -- you can just drop the Proxy wrapper.
-  argsDistinct <-
-    case mdistinct of
-      Nothing     -> pure Proxy
-      Just (x, _) -> case x of {}
+  let argsDistinct = Proxy
   (argsOrderBy, joins) <-
     runWriterT (traverse fromAnnOrderByItemG (maybe [] toList orders))
   -- Any object-relation joins that we generated, we record their
@@ -252,7 +249,6 @@ fromSelectArgsG selectArgsG = do
     IR.SelectArgs { _saWhere = mannBoolExp
                   , _saLimit = mlimit
                   , _saOffset = moffset
-                  , _saDistinct = mdistinct
                   , _saOrderBy = orders
                   } = selectArgsG
 

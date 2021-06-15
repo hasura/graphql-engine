@@ -26,6 +26,7 @@ import           Hasura.GraphQL.Parser.Internal.TypeChecking
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
+import           Hasura.GraphQL.Schema.Select
 import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 
@@ -43,10 +44,15 @@ instance BackendSchema 'MSSQL where
   buildFunctionQueryFields       = msBuildFunctionQueryFields
   buildFunctionRelayQueryFields  = msBuildFunctionRelayQueryFields
   buildFunctionMutationFields    = msBuildFunctionMutationFields
+
   -- backend extensions
   relayExtension    = Nothing
   nodesAggExtension = Just ()
-  -- indivdual components
+
+  -- table arguments
+  tableArguments = msTableArgs
+
+  -- individual components
   columnParser              = msColumnParser
   jsonPathArg               = msJsonPathArg
   orderByOperators          = msOrderByOperators
@@ -56,7 +62,7 @@ instance BackendSchema 'MSSQL where
   aggregateOrderByCountType = MSSQL.IntegerType
   computedField             = msComputedField
   node                      = msNode
-  tableDistinctOn           = msTableDistinctOn
+
   -- SQL literals
   columnDefaultValue = msColumnDefaultValue
 
@@ -73,9 +79,9 @@ msBuildTableRelayQueryFields
   -> G.Name
   -> NESeq (ColumnInfo 'MSSQL)
   -> SelPermInfo  'MSSQL
-  -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
 msBuildTableRelayQueryFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
-  pure Nothing
+  pure []
 
 msBuildTableInsertMutationFields
   :: MonadBuildSchema 'MSSQL r m n
@@ -138,9 +144,9 @@ msBuildFunctionRelayQueryFields
   -> TableName    'MSSQL
   -> NESeq (ColumnInfo 'MSSQL)
   -> SelPermInfo  'MSSQL
-  -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
 msBuildFunctionRelayQueryFields _sourceName _sourceInfo _functionName _functionInfo _tableName _pkeyColumns _selPerms =
-  pure Nothing
+  pure []
 
 msBuildFunctionMutationFields
     :: MonadBuildSchema 'MSSQL r m n
@@ -153,6 +159,35 @@ msBuildFunctionMutationFields
     -> m [FieldParser n (MutationRootField UnpreparedValue)]
 msBuildFunctionMutationFields _ _ _ _ _ _ =
   pure []
+
+
+----------------------------------------------------------------
+-- Table arguments
+
+msTableArgs
+  :: forall r m n
+   . MonadBuildSchema 'MSSQL r m n
+  => SourceName
+  -> TableInfo 'MSSQL
+  -> SelPermInfo 'MSSQL
+  -> m (InputFieldsParser n (IR.SelectArgsG 'MSSQL (UnpreparedValue 'MSSQL)))
+msTableArgs sourceName tableInfo selectPermissions = do
+  whereParser   <- tableWhereArg   sourceName tableInfo selectPermissions
+  orderByParser <- tableOrderByArg sourceName tableInfo selectPermissions
+  pure do
+    whereArg   <- whereParser
+    orderByArg <- orderByParser
+    limitArg   <- tableLimitArg
+    offsetArg  <- tableOffsetArg
+    pure $ IR.SelectArgs
+      { IR._saWhere    = whereArg
+      , IR._saOrderBy  = orderByArg
+      , IR._saLimit    = limitArg
+      , IR._saOffset   = offsetArg
+      -- not supported on MSSQL for now
+      , IR._saDistinct = Nothing
+      }
+
 
 ----------------------------------------------------------------
 -- Individual components
@@ -370,21 +405,8 @@ msMkCountType (Just True) (Just cols) =
 msMkCountType _           (Just cols) =
   maybe MSSQL.StarCountable MSSQL.NonNullFieldCountable $ nonEmpty cols
 
--- | Argument to distinct select on columns returned from table selection
--- > distinct_on: [table_select_column!]
-msTableDistinctOn
-  -- :: forall m n. (BackendSchema 'MSSQL, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  :: Applicative m
-  => Applicative n
-  => SourceName
-  -> TableInfo 'MSSQL
-  -> SelPermInfo 'MSSQL
-  -> m (InputFieldsParser n (Maybe (XDistinct 'MSSQL, NonEmpty (Column 'MSSQL))))
-msTableDistinctOn _sourceName _tableInfo _selectPermissions = pure (pure Nothing)
-
 -- | Various update operators
 msUpdateOperators
-  -- :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   :: Applicative m
   => TableInfo 'MSSQL         -- ^ table info
   -> UpdPermInfo 'MSSQL       -- ^ update permissions of the table

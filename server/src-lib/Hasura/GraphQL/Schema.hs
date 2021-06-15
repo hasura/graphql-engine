@@ -1,5 +1,6 @@
 {-# LANGUAGE Arrows       #-}
 {-# LANGUAGE ViewPatterns #-}
+
 module Hasura.GraphQL.Schema
   ( buildGQLContext
   ) where
@@ -465,15 +466,15 @@ buildRelayQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> 
     pkeyColumns  <- hoistMaybe $ tableInfo ^? tiCoreInfo.tciPrimaryKey._Just.pkColumns
     -- FIXME: retrieve permissions directly from tableInfo to avoid a sourceCache lookup
     selectPerms  <- MaybeT $ tableSelectPermissions tableInfo
-    MaybeT $ buildTableRelayQueryFields sourceName sourceConfig tableName tableInfo tableGQLName pkeyColumns selectPerms
+    lift $ buildTableRelayQueryFields sourceName sourceConfig tableName tableInfo tableGQLName pkeyColumns selectPerms
   functionConnectionFields <- for (Map.toList functions) $ \(functionName, functionInfo) -> runMaybeT do
     let returnTableName = _fiReturnType functionInfo
     -- FIXME: only extract the TableInfo once to avoid redundant cache lookups
     returnTableInfo <- lift $ askTableInfo sourceName returnTableName
     pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns) <$> pure returnTableInfo
     selectPerms <- MaybeT $ tableSelectPermissions returnTableInfo
-    MaybeT $ buildFunctionRelayQueryFields sourceName sourceConfig functionName functionInfo returnTableName pkeyColumns selectPerms
-  pure $ catMaybes $ tableConnectionFields <> functionConnectionFields
+    lift $ buildFunctionRelayQueryFields sourceName sourceConfig functionName functionInfo returnTableName pkeyColumns selectPerms
+  pure $ concat $ catMaybes $ tableConnectionFields <> functionConnectionFields
 
 buildMutationFields
   :: forall b r m n
