@@ -1,0 +1,71 @@
+- description: test that aggregates with no results are returned as special structs with structure preserving nulls
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query MyQuery {
+        hasura_author {
+          id
+          articles_aggregate(offset: 10) {
+            aggregate {
+              count(distinct: true)
+              max {
+                is_published
+              }
+              min {
+                is_published
+              }
+              sum {
+                id
+                author_id
+              }
+            }
+          }
+        }
+      }
+  response:
+    data:
+      hasura_author:
+      - id: '1'
+        articles_aggregate:
+          aggregate:
+            count: '0'
+            max:
+              is_published: null
+            min:
+              is_published: null
+            sum:
+              id: null
+              author_id: null
+      - id: '2'
+        articles_aggregate:
+          aggregate:
+            count: '0'
+            max:
+              is_published: null
+            min:
+              is_published: null
+            sum:
+              id: null
+              author_id: null
+
+- description: test that null object joins result in expected structures
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query MyQuery {
+        hasura_article(offset: 10) {
+          id
+          author {
+            id
+            name
+            articles {
+              id
+            }
+          }
+        }
+      }
+  response:
+    data:
+      hasura_article: []

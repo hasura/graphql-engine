@@ -85,6 +85,8 @@ data Select = Select
   , selectHaskellJoins :: ![BigQuery.Join]
   , selectAggUnwrap    :: !(Maybe Text)
   , wantedFields       :: !(Maybe [Text])
+  -- , selectAsStruct     :: !BigQuery.AsStruct
+  , selectCardinality  :: !BigQuery.Cardinality
   } deriving (Show)
 
 data Relationship = Relationship
@@ -184,31 +186,8 @@ joinAliasName (BigQuery.EntityAlias {entityAliasText}) = entityAliasText
 selectFromName :: BigQuery.From -> Text
 selectFromName (BigQuery.FromQualifiedTable (BigQuery.Aliased {aliasedThing = BigQuery.TableName {tableName}})) =
   tableName
-
-fromSelect :: Maybe Relationship -> Maybe Text -> BigQuery.Select -> Select
-fromSelect selectRelationship selectAggUnwrap BigQuery.Select {..} =
-  Select
-    { selectSqlJoins =
-        mapMaybe
-          (\case
-             j@BigQuery.Join {joinProvenance = BigQuery.OrderByJoinProvenance} ->
-               pure j
-             j@BigQuery.Join {joinProvenance = BigQuery.ArrayAggregateJoinProvenance} ->
-               pure j
-             _ -> Nothing)
-          selectJoins
-    , selectHaskellJoins =
-        mapMaybe
-          (\case
-             BigQuery.Join {joinProvenance = BigQuery.OrderByJoinProvenance} ->
-               Nothing
-             BigQuery.Join {joinProvenance = BigQuery.ArrayAggregateJoinProvenance} ->
-               Nothing
-             j -> pure j)
-          selectJoins
-    , wantedFields = selectFinalWantedFields
-    , ..
-    }
+selectFromName (BigQuery.FromSelect{}) =
+  "[sub select]"
 
 tell :: PlannedAction -> Plan ()
 tell action = modify' (\s -> s {actions = actions s :|> action})
@@ -218,6 +197,38 @@ generate text = do
   idx <- gets counter
   modify' (\s -> s {counter = counter s + 1})
   pure (Ref {idx, text})
+
+--------------------------------------------------------------------------------
+-- Join choosing
+--
+-- IMPORTANT PIECE OF CODE:
+--
+-- Here is where the data loader determines which joins are SQL-native
+-- and which are Haskell-native. As of writing, order by and array
+-- aggregate are SQL-native, and the rest are Haskell-native.
+
+fromSelect :: Maybe Relationship -> Maybe Text -> BigQuery.Select -> Select
+fromSelect selectRelationship selectAggUnwrap BigQuery.Select {..} =
+  Select
+    { selectSqlJoins =
+        mapMaybe (\j -> j <$ guard (shouldBeSqlNative j)) selectJoins
+    , selectHaskellJoins =
+        mapMaybe (\j -> j <$ guard (shouldBeHaskellNative j)) selectJoins
+    , wantedFields = selectFinalWantedFields
+    , ..
+    }
+
+shouldBeHaskellNative :: BigQuery.Join -> Bool
+shouldBeHaskellNative = not . shouldBeSqlNative
+
+shouldBeSqlNative :: BigQuery.Join -> Bool
+shouldBeSqlNative =
+  \case
+    -- BigQuery.Join {joinProvenance = BigQuery.OrderByJoinProvenance} -> True
+    -- BigQuery.Join {joinProvenance = BigQuery.ObjectJoinProvenance{}} -> True
+    -- BigQuery.Join {joinProvenance = BigQuery.ArrayAggregateJoinProvenance{}} ->
+    --   True
+    _ -> True
 
 --------------------------------------------------------------------------------
 -- Plan pretty printer
@@ -293,6 +304,11 @@ prettyRef Ref {..} = "#" <> LT.fromText (text <> tshow idx)
 prettyFrom :: BigQuery.From -> LT.Builder
 prettyFrom =
   \case
+    BigQuery.FromSelect aliased ->
+      prettyAliased
+        (fmap
+           (\_select -> "[subselect]")
+           aliased)
     BigQuery.FromQualifiedTable aliased ->
       prettyAliased
         (fmap
@@ -306,11 +322,11 @@ prettyJoin BigQuery.Join {..} =
   where
     reason =
       case joinProvenance of
-        BigQuery.OrderByJoinProvenance        -> "order by"
-        BigQuery.ObjectJoinProvenance         -> "object relation"
-        BigQuery.ArrayAggregateJoinProvenance -> "array aggregate relation"
-        BigQuery.ArrayJoinProvenance          -> "array relation"
-        BigQuery.MultiplexProvenance          -> "multiplex"
+        BigQuery.OrderByJoinProvenance          -> "order by"
+        BigQuery.ObjectJoinProvenance{}         -> "object relation"
+        BigQuery.ArrayAggregateJoinProvenance{} -> "array aggregate relation"
+        BigQuery.ArrayJoinProvenance{}          -> "array relation"
+        BigQuery.MultiplexProvenance            -> "multiplex"
     src =
       case joinSource of
         BigQuery.JoinSelect select -> prettyFrom (BigQuery.selectFrom select)
@@ -354,10 +370,13 @@ prettyProjection =
       prettyAliased (fmap prettyFieldName' aliased)
     BigQuery.AggregateProjection aliased ->
       prettyAliased (fmap (const "<Aggregate>") aliased)
+    BigQuery.AggregateProjections aliased ->
+      prettyAliased (fmap (const "<Aggregates set>") aliased)
     BigQuery.StarProjection -> "*"
     BigQuery.ArrayAggProjection {} -> "<ArrayAgg>"
-    BigQuery.EntityProjection aliased ->
-      prettyAliased (fmap (LT.fromText . joinAliasName) aliased)
+    BigQuery.EntityProjection {} -> "<ArrayAggregateJoined>"
+    BigQuery.WindowProjection {} -> "<WindowProjection>"
+    BigQuery.ArrayEntityProjection {} -> "<ArrayEntity>"
 
 prettyAliased :: BigQuery.Aliased LT.Builder -> LT.Builder
 prettyAliased BigQuery.Aliased {aliasedThing, aliasedAlias} =
@@ -420,8 +439,7 @@ actionsForest transform actions =
 selectQuery :: Select -> BigQuery.Select
 selectQuery Select {..} =
   BigQuery.Select
-    { selectFor = BigQuery.NoFor
-    , selectJoins = selectSqlJoins
+    { selectJoins = selectSqlJoins
     , selectFinalWantedFields = wantedFields
     , ..
     }

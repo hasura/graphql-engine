@@ -113,6 +113,7 @@ data ExecuteProblem
   | UnacceptableJoinProvenanceBUG JoinProvenance
   | MissingRecordSetBUG Plan.Ref
   | ExecuteRunBigQueryProblem BigQueryProblem
+  | JoinsNoLongerGeneratedBUG
   deriving (Show)
 
 -- | Execute monad; as queries are performed, the record sets are
@@ -146,8 +147,9 @@ data BigQueryType
   deriving (Show, Eq)
 
 data BigQuery = BigQuery
-  { query      :: !LT.Text
-  , parameters :: !(InsOrdHashMap ParameterName Parameter)
+  { query       :: !LT.Text
+  , parameters  :: !(InsOrdHashMap ParameterName Parameter)
+  , cardinality :: BigQuery.Cardinality
   } deriving (Show)
 
 data Parameter = Parameter
@@ -242,23 +244,20 @@ executePlannedAction =
               unwrapAggs
               (Plan.selectAggUnwrap select)
               recordSet {wantedFields = Select.wantedFields select}
-          Plan.JoinAction Plan.Join {..} -> do
-            left <- getRecordSet leftRecordSet
-            right <- getRecordSet rightRecordSet
-            case joinProvenance of
-              ArrayJoinProvenance ->
-                case leftArrayJoin wantedFields joinFieldName joinOn left right of
-                  Left problem    -> throwError (JoinProblem problem)
-                  Right recordSet -> pure recordSet
-              ObjectJoinProvenance ->
-                case leftObjectJoin wantedFields joinFieldName joinOn left right of
-                  Left problem    -> throwError (JoinProblem problem)
-                  Right recordSet -> pure recordSet
-              ArrayAggregateJoinProvenance ->
-                case leftObjectJoin wantedFields joinFieldName joinOn left right of
-                  Left problem    -> throwError (JoinProblem problem)
-                  Right recordSet -> pure recordSet
-              p -> throwError (UnacceptableJoinProvenanceBUG p)
+          Plan.JoinAction {} -> do
+            throwError JoinsNoLongerGeneratedBUG
+            -- left <- getRecordSet leftRecordSet
+            -- right <- getRecordSet rightRecordSet
+            -- case joinProvenance of
+            --   {-ArrayJoinProvenance ->
+            --     case leftArrayJoin wantedFields joinFieldName joinOn left right of
+            --       Left problem    -> throwError (JoinProblem problem)
+            --       Right recordSet -> pure recordSet-}
+            --   {-ObjectJoinProvenance ->
+            --     case leftObjectJoin wantedFields joinFieldName joinOn left right of
+            --       Left problem    -> throwError (JoinProblem problem)
+            --       Right recordSet -> pure recordSet-}
+            --   p -> throwError (UnacceptableJoinProvenanceBUG p)
       saveRecordSet ref recordSet
 
 unwrapAggs :: Text -> RecordSet -> Execute RecordSet
@@ -358,14 +357,14 @@ getFinalRecordSet Plan.HeadAndTail {..} = do
 --------------------------------------------------------------------------------
 -- Array joins
 
-leftArrayJoin ::
+_leftArrayJoin ::
      Maybe [Text]
   -> Text
   -> [(Plan.FieldName, Plan.FieldName)]
   -> RecordSet
   -> RecordSet
   -> Either ExecuteProblem RecordSet
-leftArrayJoin = leftArrayJoinViaIndex
+_leftArrayJoin = leftArrayJoinViaIndex
 
 -- | A naive, exponential reference implementation of a left join. It
 -- serves as a trivial sample implementation for correctness checking
@@ -509,13 +508,13 @@ joinArrayRows wantedFields fieldName leftRow rightRow =
 --------------------------------------------------------------------------------
 -- Object joins
 
-leftObjectJoin ::
+_leftObjectJoin ::
      Maybe [Text] -> Text
   -> [(Plan.FieldName, Plan.FieldName)]
   -> RecordSet
   -> RecordSet
   -> Either ExecuteProblem RecordSet
-leftObjectJoin wantedFields joinAlias joinFields left right =
+_leftObjectJoin wantedFields joinAlias joinFields left right =
   pure
     RecordSet
       { origin = Nothing
@@ -586,6 +585,7 @@ selectToBigQuery select =
                 ( ParameterName (LT.toLazyText (ToQuery.paramName int))
                 , Parameter {typ = valueType value, value}))
              (OMap.toList params))
+    , cardinality = Plan.selectCardinality select
     }
   where
     (query, params) =
@@ -670,7 +670,9 @@ streamBigQuery ::
 streamBigQuery credentials bigquery = do
   jobResult <- createQueryJob credentials bigquery
   case jobResult of
-    Right job -> loop Nothing Nothing
+    Right job -> do records <- loop Nothing Nothing
+                    -- liftIO (print records)
+                    pure records
       where loop pageToken mrecordSet = do
               results <- getJobResults credentials job Fetch {pageToken}
               case results of
@@ -807,7 +809,8 @@ instance Aeson.FromJSON Job where
 -- | Create a job asynchronously.
 createQueryJob :: MonadIO m => BigQuerySourceConfig -> BigQuery -> m (Either ExecuteProblem Job)
 createQueryJob sc@BigQuerySourceConfig {..} BigQuery {..} =
-  liftIO (catchAny run (pure . Left . CreateQueryJobProblem))
+  liftIO (do -- putStrLn (LT.unpack query)
+             catchAny run (pure . Left . CreateQueryJobProblem))
   where
     run = do
       let url = "POST https://content-bigquery.googleapis.com/bigquery/v2/projects/" <>

@@ -33,6 +33,7 @@ import           Data.Aeson.Text                             (encodeToLazyText)
 
 import qualified Hasura.Backends.BigQuery.DataLoader.Execute as Execute
 import qualified Hasura.Backends.BigQuery.DataLoader.Plan    as Plan
+import qualified Hasura.Backends.BigQuery.Types              as BigQuery
 
 import           Hasura.Backends.BigQuery.Source             (BigQuerySourceConfig (..))
 import           Hasura.Base.Error
@@ -79,7 +80,7 @@ runSQL_ f (BigQueryRunSQL query source) = do
   result <-
     Execute.streamBigQuery
       sourceConfig
-      Execute.BigQuery {query = LT.fromStrict query, parameters = mempty}
+      Execute.BigQuery {query = LT.fromStrict query, parameters = mempty, cardinality = BigQuery.Many}
   case result of
     Left queryError -> throw400 BigQueryError (tshow queryError) -- TODO: Pretty print the error type.
     Right recordSet ->

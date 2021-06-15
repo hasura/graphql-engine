@@ -3,9 +3,12 @@
 ## Next release
 
 - server: remote relationships (database to remote schema joins) are now supported on SQL Server and BigQuery
+- server: BigQuery: switches to a single query generation from a dataloader approach. This should result in
+  faster query responses.
 
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
+- server: BigQuery: various bug fixes related to aggregations
 - server: fix add source API wiping out source's metadata when replace_configuration is true
 - console: add foreign key CRUD functionality to ms sql server tables
 - console: allow tracking of custom SQL functions having composite type (rowtype) input arguments

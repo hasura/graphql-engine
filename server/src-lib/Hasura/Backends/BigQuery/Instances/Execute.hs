@@ -7,10 +7,12 @@ import           Hasura.Prelude
 import qualified Data.Aeson                                  as Aeson
 import qualified Data.HashMap.Strict.InsOrd                  as OMap
 import qualified Data.Text                                   as T
+import qualified Data.Vector                                 as V
 import qualified Language.GraphQL.Draft.Syntax               as G
 
 import qualified Hasura.Backends.BigQuery.DataLoader.Execute as DataLoader
 import qualified Hasura.Backends.BigQuery.DataLoader.Plan    as DataLoader
+import qualified Hasura.Backends.BigQuery.Types              as BigQuery
 import qualified Hasura.Base.Error                           as E
 import qualified Hasura.SQL.AnyBackend                       as AB
 import qualified Hasura.Tracing                              as Tracing
@@ -64,13 +66,17 @@ bqDBQueryPlan userInfo sourceName sourceConfig qrf = do
             (DataLoader.execute actionsForest)
         case result of
           Left err        -> throw500WithDetail "dataLoader error" $ Aeson.toJSON $ show err
-          Right recordSet -> pure $! recordSetToEncJSON recordSet
+          Right recordSet -> pure $! recordSetToEncJSON (BigQuery.selectCardinality select) recordSet
   pure $ DBStepInfo @'BigQuery sourceName sourceConfig (Just (DataLoader.drawActionsForest actionsForest)) action
 
 -- | Convert the dataloader's 'RecordSet' type to JSON.
-recordSetToEncJSON :: DataLoader.RecordSet -> EncJSON
-recordSetToEncJSON DataLoader.RecordSet {rows} =
-  encJFromList (toList (fmap encJFromRecord rows))
+recordSetToEncJSON :: BigQuery.Cardinality -> DataLoader.RecordSet -> EncJSON
+recordSetToEncJSON cardinality DataLoader.RecordSet {rows} =
+  case cardinality of
+    BigQuery.One
+      | Just row <- rows V.!? 0 -> encJFromRecord row
+      | otherwise -> encJFromList (toList (fmap encJFromRecord rows))
+    BigQuery.Many -> encJFromList (toList (fmap encJFromRecord rows))
   where
     encJFromRecord =
       encJFromInsOrdHashMap . fmap encJFromOutputValue . OMap.mapKeys coerce
