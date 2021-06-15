@@ -26,7 +26,7 @@ One-click deployment options
 
 If you want to take Hasura for a spin and check out the features, the following one-click deployments will be useful for you:
 
-- :ref:`Deploy using Hasura Cloud <cloud_getting_started>` (**recommended**)
+- `Deploy using Hasura Cloud <https://hasura.io/docs/latest/graphql/cloud/getting-started/index.html>`__ (**recommended**)
 - :ref:`Deploy using Heroku <heroku_one_click>`
 - :ref:`Deploy using Render One-click Deploy with Managed PostgreSQL <deploy_render>`
 - :ref:`Deploy using Nhost One-click Deploy with Managed PostgreSQL, Storage, and Auth <deploy_nhost>`
@@ -38,7 +38,7 @@ Deployment guides
 
 Choose from the full list of deployment guides:
 
-- :ref:`Deploy using Hasura Cloud <cloud_getting_started>` (**recommended**)
+- `Deploy using Hasura Cloud <https://hasura.io/docs/latest/graphql/cloud/getting-started/index.html>`__ (**recommended**)
 - :ref:`Deploy using Docker <deployment_docker>`
 - :ref:`Deploy using Kubernetes <deploy_kubernetes>`
 - :ref:`Deploy using Heroku <deploy_heroku>`

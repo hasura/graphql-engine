@@ -18,7 +18,7 @@ configure an admin secret key.
 Depending on your deployment method, follow one of these guides to configure an admin secret key, and prevent public
 access to your GraphQL endpoint and the Hasura console:
 
-- :ref:`For Hasura Cloud <secure_project>`
+- `For Hasura Cloud <https://hasura.io/docs/latest/graphql/cloud/projects/secure.html>`__
 - :ref:`For Heroku <heroku_secure>`
 - :ref:`For Docker <docker_secure>`
 - :ref:`For Kubernetes <kubernetes_secure>`
