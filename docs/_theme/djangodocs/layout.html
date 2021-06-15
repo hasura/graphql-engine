@@ -6,11 +6,11 @@
 
 {%- if pagename.startswith('graphql/core') %}
   {% set is_core = true %}
-  {% set ALGOLIA_INDEX = 'graphql-docs-prod' %}
+  {% set ALGOLIA_INDEX = 'graphql-docs-prod-v1.0' %}
   {% set ALGOLIA_API_KEY = '298d448cd9d7ed93fbab395658da19e8' %}
 {%- elif pagename.startswith('graphql/cloud') %}
   {% set is_cloud = true %}
-  {% set ALGOLIA_INDEX = 'cloud-docs-prod' %}
+  {% set ALGOLIA_INDEX = 'cloud-docs-prod-v1.0' %}
   {% set ALGOLIA_API_KEY = 'cf84f05a225bedb72ce472dada63d29f' %}
 {%- endif %}
 
