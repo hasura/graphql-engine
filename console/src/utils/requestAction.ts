@@ -37,7 +37,20 @@ const requestAction = <T = any>(
       dispatch({ type: LOAD_REQUEST });
       fetch(url, requestOptions).then(
         response => {
+          const contentType = response.headers.get('Content-Type');
+          const isResponseJson = `${contentType}`.includes('application/json');
           if (response.ok) {
+            if (!isResponseJson) {
+              return response.text().then(responseBody => {
+                if (SUCCESS) {
+                  dispatch({ type: SUCCESS, data: responseBody });
+                }
+                dispatch({ type: DONE_REQUEST });
+                // TODO see how to improve here and remove the any
+                resolve(responseBody as any);
+              });
+            }
+
             return response.json().then(results => {
               if (SUCCESS) {
                 dispatch({ type: SUCCESS, data: results });
@@ -48,6 +61,22 @@ const requestAction = <T = any>(
           }
           dispatch({ type: FAILED_REQUEST });
           if (response.status >= 400 && response.status <= 500) {
+            if (!isResponseJson) {
+              return response.text().then(errorMessage => {
+                if (ERROR) {
+                  dispatch({ type: ERROR, data: errorMessage });
+                } else {
+                  dispatch({
+                    type: ERROR_REQUEST,
+                    data: errorMessage,
+                    url,
+                    params: options.body,
+                    statusCode: response.status,
+                  });
+                }
+                reject(errorMessage);
+              });
+            }
             return response.json().then(errorMsg => {
               const msg = errorMsg;
               if (ERROR) {
