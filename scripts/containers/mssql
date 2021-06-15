@@ -26,7 +26,7 @@ MSSQL_DOCKER="docker exec -it $MSSQL_CONTAINER_NAME sqlcmd -S localhost -U sa -P
 function mssql_launch_container(){
   echo_pretty "Launching MSSQL container: $MSSQL_CONTAINER_NAME"
   docker run --name $MSSQL_CONTAINER_NAME \
-    -p 127.0.0.1:"$MSSQL_PORT":1433 -d hasura/mssql-server-2019-cu10-ubuntu-20.04
+    -p 127.0.0.1:"$MSSQL_PORT":1433 -d hasura/mssql-server-2019-cu10-ubuntu-20.04:latest
 }
 
 function mssql_wait {
