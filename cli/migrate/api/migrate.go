@@ -151,11 +151,11 @@ func MigrateAPI(c *gin.Context) {
 			return
 		}
 		createOptions := cmd.New(timestamp, request.Name, filepath.Join(ec.MigrationDir, sourceName))
-		if version != int(cli.V1) {
+		if version != int(cli.V1) && migrate.IsMigrationsSupported(sourceKind) {
 			sqlUp := &bytes.Buffer{}
 			sqlDown := &bytes.Buffer{}
 			for _, arg := range request.Up {
-				if arg.Type == hasuradb.RunSQL {
+				if strings.Contains(arg.Type, "run_sql") {
 					argByt, err := json.Marshal(arg.Args)
 					if err != nil {
 						c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
@@ -173,7 +173,7 @@ func MigrateAPI(c *gin.Context) {
 			}
 
 			for _, arg := range request.Down {
-				if arg.Type == hasuradb.RunSQL {
+				if strings.Contains(arg.Type, "run_sql") {
 					argByt, err := json.Marshal(arg.Args)
 					if err != nil {
 						c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
