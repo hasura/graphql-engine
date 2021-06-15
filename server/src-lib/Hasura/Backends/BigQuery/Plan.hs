@@ -50,16 +50,8 @@ planNoPlan ::
   -> m Select
 planNoPlan userInfo queryDB = do
   rootField <- traverseQueryDB (prepareValueNoPlan (_uiSession userInfo)) queryDB
-  select <-
-    runValidate (BigQuery.runFromIr (BigQuery.fromRootField rootField))
+  runValidate (BigQuery.runFromIr (BigQuery.fromRootField rootField))
     `onLeft` (E.throw400 E.NotSupported . (tshow :: NonEmpty Error -> Text))
-  pure
-    select
-      { selectFor =
-          case selectFor select of
-            NoFor           -> NoFor
-            JsonFor forJson -> JsonFor forJson {jsonRoot = Root "root"}
-      }
 
 --------------------------------------------------------------------------------
 -- Resolving values

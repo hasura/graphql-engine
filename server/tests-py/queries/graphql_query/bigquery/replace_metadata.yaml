@@ -16,6 +16,30 @@ query:
         datasets: {from_env: HASURA_BIGQUERY_DATASETS}
       tables:
       - table:
+          name: Album
+          dataset: hasura
+        object_relationships:
+        - name: artist
+          using:
+            manual_configuration:
+              remote_table:
+                name: Artist
+                dataset: hasura
+              column_mapping:
+                artist_other_id: artist_self_id
+      - table:
+          name: Artist
+          dataset: hasura
+        array_relationships:
+        - name: albums
+          using:
+            manual_configuration:
+              remote_table:
+                name: Album
+                dataset: hasura
+              column_mapping:
+                artist_self_id: artist_other_id
+      - table:
           dataset: hasura
           name: author
         # is_enum: false

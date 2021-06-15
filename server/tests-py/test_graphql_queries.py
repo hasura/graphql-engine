@@ -100,6 +100,10 @@ class TestGraphQLQueryBasicBigquery:
     def test_select_query_invalid_escape_sequence(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_query_invalid_escape_sequence.yaml", transport)
 
+    # aggregates
+    def test_select_join_provenance_queries(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_join_provenance.yaml", transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/bigquery'
