@@ -9,23 +9,22 @@ module Hasura.RQL.DDL.Schema.Cache.Permission
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                    as M
-import qualified Data.HashMap.Strict.Extended           as M
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Data.HashSet                           as Set
-import qualified Data.List.NonEmpty                     as NE
-import qualified Data.Sequence                          as Seq
+import qualified Data.HashMap.Strict                as M
+import qualified Data.HashMap.Strict.Extended       as M
+import qualified Data.HashMap.Strict.InsOrd         as OMap
+import qualified Data.HashSet                       as Set
+import qualified Data.List.NonEmpty                 as NE
+import qualified Data.Sequence                      as Seq
 
 import           Control.Arrow.Extended
 import           Data.Aeson
 import           Data.Proxy
 import           Data.Text.Extended
 
-import qualified Hasura.Incremental                     as Inc
-import qualified Hasura.SQL.AnyBackend                  as AB
+import qualified Hasura.Incremental                 as Inc
+import qualified Hasura.SQL.AnyBackend              as AB
 
 import           Hasura.Base.Error
-import           Hasura.Incremental.Internal.Dependency ()
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types

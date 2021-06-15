@@ -38,6 +38,9 @@ instance ToTxt G.Name where
 
 deriving instance ToTxt G.EnumValue
 
+instance ToTxt () where
+  toTxt = tshow
+
 instance ToTxt Void where
   toTxt = absurd
 

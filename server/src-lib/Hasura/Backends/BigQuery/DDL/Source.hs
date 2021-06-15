@@ -9,15 +9,14 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                         as Env
-import qualified Data.HashMap.Strict                      as HM
-import qualified Data.Text                                as T
+import qualified Data.Environment                    as Env
+import qualified Data.HashMap.Strict                 as HM
+import qualified Data.Text                           as T
 
-import           Control.Concurrent.MVar                  (newMVar)
+import           Control.Concurrent.MVar             (newMVar)
 import           Data.Time.Clock.System
 
 import           Hasura.Backends.BigQuery.Connection
-import           Hasura.Backends.BigQuery.Instances.Types ()
 import           Hasura.Backends.BigQuery.Meta
 import           Hasura.Backends.BigQuery.Source
 import           Hasura.Backends.BigQuery.Types

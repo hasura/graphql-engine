@@ -35,7 +35,6 @@ import qualified Database.PostgreSQL.LibPQ      as PQ
 import           Data.Aeson
 import           Data.Aeson.TH
 
-import           Hasura.Base.Instances          ()
 import           Hasura.RQL.DDL.Schema.Cache    as M
 import           Hasura.RQL.DDL.Schema.Catalog  as M
 import           Hasura.RQL.DDL.Schema.Function as M

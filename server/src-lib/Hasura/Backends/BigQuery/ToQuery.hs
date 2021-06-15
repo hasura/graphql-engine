@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 -- | Convert the simple BigQuery AST to an SQL query, ready to be passed
 -- to the odbc package's query/exec functions.
 
@@ -15,23 +17,25 @@ module Hasura.Backends.BigQuery.ToQuery
   , paramName
   ) where
 
-import           Control.Monad.State.Strict
-import           Data.Bifunctor
-import           Data.Containers.ListUtils
-import           Data.Foldable
+import           Hasura.Prelude                 hiding (second)
+
 import qualified Data.HashMap.Strict.InsOrd     as OMap
-import           Data.List                      (intersperse)
 import qualified Data.List.NonEmpty             as NE
-import           Data.Maybe
-import           Data.String
 import qualified Data.Text                      as T
 import qualified Data.Text.Lazy                 as LT
-import           Data.Text.Lazy.Builder         (Builder)
 import qualified Data.Text.Lazy.Builder         as LT
-import           Data.Tuple
 import qualified Data.Vector                    as V
+
+import           Data.Aeson                     (ToJSON (..))
+import           Data.Bifunctor
+import           Data.Containers.ListUtils
+import           Data.List                      (intersperse)
+import           Data.String
+import           Data.Text.Lazy.Builder         (Builder)
+import           Data.Tuple
+
 import           Hasura.Backends.BigQuery.Types
-import           Hasura.Prelude                 hiding (second)
+
 
 --------------------------------------------------------------------------------
 -- Types
@@ -50,6 +54,16 @@ instance IsString Printer where
 
 (<+>) :: Printer -> Printer -> Printer
 (<+>) x y = SeqPrinter [x,y]
+
+
+--------------------------------------------------------------------------------
+-- Instances
+
+-- This is a debug instance, only here because it avoids a circular
+-- dependency between this module and Types.hs.
+instance ToJSON Expression where
+  toJSON = toJSON . toTextPretty . fromExpression
+
 
 --------------------------------------------------------------------------------
 -- Printer generators
@@ -460,6 +474,7 @@ fromValue = ValuePrinter
 parens :: Printer -> Printer
 parens x = "(" <+> IndentPrinter 1 x <+> ")"
 
+
 --------------------------------------------------------------------------------
 -- Quick and easy query printer
 
@@ -475,6 +490,7 @@ toTextPretty = LT.toStrict . LT.toLazyText . toBuilderPretty
 toTextFlat :: Printer -> Text
 toTextFlat = LT.toStrict . LT.toLazyText . toBuilderFlat
 
+
 --------------------------------------------------------------------------------
 -- Printer ready for consumption
 
@@ -489,6 +505,7 @@ renderBuilderPretty :: Printer -> (Builder, InsOrdHashMap Int Value)
 renderBuilderPretty =
   second (OMap.fromList . map swap . OMap.toList) . flip runState mempty .
   runBuilderPretty
+
 
 --------------------------------------------------------------------------------
 -- Real printer engines
@@ -511,11 +528,10 @@ runBuilderFlat = go 0
         ValuePrinter (ArrayValue x) | V.null x -> pure "[]"
         ValuePrinter v -> do
           themap <- get
-          next <- case OMap.lookup v themap of
-            Just next -> pure next
-            Nothing -> do next <- gets OMap.size
-                          modify (OMap.insert v next)
-                          pure next
+          next <- OMap.lookup v themap `onNothing` do
+            next <- gets OMap.size
+            modify (OMap.insert v next)
+            pure next
           pure ("@" <> paramName next)
     notEmpty = (/= mempty)
 
@@ -535,13 +551,10 @@ runBuilderPretty = go 0
           | V.null x -> pure "[]"
         ValuePrinter v -> do
           themap <- get
-          next <-
-            case OMap.lookup v themap of
-              Just next -> pure next
-              Nothing -> do
-                next <- gets OMap.size
-                modify (OMap.insert v next)
-                pure next
+          next <- OMap.lookup v themap `onNothing` do
+            next <- gets OMap.size
+            modify (OMap.insert v next)
+            pure next
           pure ("@" <> paramName next)
     indentation n = LT.fromText (T.replicate n " ")
     notEmpty = (/= mempty)

@@ -61,7 +61,6 @@ import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Relationship
 import           Hasura.SQL.Backend
-import           Hasura.SQL.Types
 import           Hasura.Session
 
 
@@ -199,7 +198,7 @@ instance (Backend b, Hashable  (BooleanOperators b (PartialSQLExp b))) => Cachea
 instance Backend b => ToJSON (PartialSQLExp b) where
   toJSON = \case
     PSESessVar colTy sessVar -> toJSON (colTy, sessVar)
-    PSESQLExp e              -> toJSON $ toSQLTxt e
+    PSESQLExp e              -> toJSON e
 
 isStaticValue :: PartialSQLExp backend -> Bool
 isStaticValue = \case

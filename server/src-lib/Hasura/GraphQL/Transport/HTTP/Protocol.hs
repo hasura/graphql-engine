@@ -35,8 +35,8 @@ import           Data.Either                    (isLeft)
 import           Language.Haskell.TH.Syntax     (Lift)
 
 import           Hasura.Base.Error
+import           Hasura.Base.Instances          ()
 import           Hasura.EncJSON
-import           Hasura.RQL.Types               ()
 
 
 -- TODO: why not just `G.ExecutableDocument G.Name`?

@@ -45,7 +45,6 @@ import qualified Hasura.Backends.Postgres.SQL.DML         as PG
 
 import           Hasura.Backends.Postgres.Instances.Types ()
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Base.Instances                    ()
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.Types.Column
