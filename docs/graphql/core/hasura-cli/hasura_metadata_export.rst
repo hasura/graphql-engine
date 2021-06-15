@@ -42,7 +42,8 @@ Options
 
 ::
 
-  -h, --help   help for export
+  -h, --help            help for export
+  -o, --output string   specify an output format for exported metadata (note: this won't modify project metadata) Allowed values: json, yaml")
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

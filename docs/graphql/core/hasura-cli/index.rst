@@ -53,6 +53,7 @@ Commands
 - :ref:`hasura migrate <hasura_migrate>`
 - :ref:`hasura migrate apply <hasura_migrate_apply>`
 - :ref:`hasura migrate create <hasura_migrate_create>`
+- :ref:`hasura migrate delete <hasura_migrate_delete>`
 - :ref:`hasura migrate squash <hasura_migrate_squash>`
 - :ref:`hasura migrate status <hasura_migrate_status>`
 - :ref:`hasura plugins <hasura_plugins>`
@@ -102,6 +103,7 @@ Refer to :ref:`uninstall_hasura_cli`.
    hasura migrate <hasura_migrate>
    hasura migrate apply <hasura_migrate_apply>
    hasura migrate create <hasura_migrate_create>
+   hasura migrate delete <hasura_migrate_delete>
    hasura migrate squash <hasura_migrate_squash>
    hasura migrate status <hasura_migrate_status>
    hasura plugins <hasura_plugins>
