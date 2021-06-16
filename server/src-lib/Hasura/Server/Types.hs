@@ -15,7 +15,7 @@ import           Hasura.Server.Utils
 
 newtype RequestId
   = RequestId { unRequestId :: Text }
-  deriving (Show, Eq, ToJSON, FromJSON)
+  deriving (Show, Eq, ToJSON, FromJSON, Hashable)
 
 getRequestId :: (MonadIO m) => [HTTP.Header] -> m (RequestId, [HTTP.Header])
 getRequestId headers = do

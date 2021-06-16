@@ -46,11 +46,14 @@ import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Execute.LiveQuery.Poll
+import           Hasura.GraphQL.ParameterizedQueryHash       (ParameterizedQueryHash)
 import           Hasura.GraphQL.Transport.Backend
+import           Hasura.GraphQL.Transport.HTTP.Protocol      (OperationName)
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common                     (SourceName, unNonNegativeDiffTime)
 import           Hasura.Server.Init                          (ServerMetrics (..))
+import           Hasura.Server.Types                         (RequestId)
 
 
 -- | The top-level datatype that holds the state for all active live queries.
@@ -95,18 +98,23 @@ addLiveQuery
   -> SubscriberMetadata
   -> LiveQueriesState
   -> SourceName
+  -> ParameterizedQueryHash
+  -> Maybe OperationName
+  -- ^ operation name of the query
+  -> RequestId
   -> LiveQueryPlan b (MultiplexedQuery b)
   -> OnChange
   -- ^ the action to be executed when result changes
   -> IO LiveQueryId
-addLiveQuery logger serverMetrics subscriberMetadata lqState source plan onResultAction = do
+addLiveQuery logger serverMetrics subscriberMetadata lqState
+             source parameterizedQueryHash operationName requestId plan onResultAction = do
   -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
   -- disposable UUIDs:
   cohortId <- newCohortId
   subscriberId <- newSubscriberId
 
-  let !subscriber = Subscriber subscriberId subscriberMetadata onResultAction
+  let !subscriber = Subscriber subscriberId subscriberMetadata requestId operationName onResultAction
 
 #ifndef PROFILING
   $assertNFHere subscriber  -- so we don't write thunks to mutable vars
@@ -131,7 +139,7 @@ addLiveQuery logger serverMetrics subscriberMetadata lqState source plan onResul
   onJust handlerM $ \handler -> do
     pollerId <- PollerId <$> UUID.nextRandom
     threadRef <- forkImmortal ("pollQuery." <> show pollerId) logger $ forever $ do
-      pollQuery @b pollerId lqOpts sourceConfig query (_pCohorts handler) postPollHook
+      pollQuery @b pollerId lqOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts handler) postPollHook
       sleep $ unNonNegativeDiffTime $ unRefetchInterval refetchInterval
     let !pState = PollerIOState threadRef pollerId
 #ifndef PROFILING
