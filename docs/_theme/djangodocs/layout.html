@@ -92,7 +92,13 @@
             </div>
             <div class="navBlueBG">
               <ul class="navBarUL">
-                <!-- <li>v1.x</li> -->
+                <li class="versionTxt">
+                  <!--v1.x-->
+                  <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
+                    <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/2.0/graphql/core/index.html" {%- if version == '2.0' %}selected="selected"{% endif %}>v2.x</option>
+                    <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/core/index.html" {%- if version == '1.0' %}selected="selected"{% endif %}>v1.x</option>
+                  </select>
+                </li>
                 <li class='navListActive'>
                   <a class="tracked" data-label="Nav: Docs" href="/docs/latest/graphql/core/index.html">Docs</a>
                 </li>
@@ -142,9 +148,13 @@
                 <ul class="navBarULMobile">
                   <li>
                     <a class="tracked menuLink" data-label="Mobile Nav: Docs" href="/docs/latest/graphql/core/index.html">Docs</a>
-                    <!--<span class="versionTxt">-->
+                    <span class="versionTxt">
                       <!--v1.x-->
-                    <!--</span>-->
+                      <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
+                        <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/2.0/graphql/core/index.html" {%- if version == '2.0' %}selected="selected"{% endif %}>v2.x</option>
+                        <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/core/index.html" {%- if version == '1.0' %}selected="selected"{% endif %}>v1.x</option>
+                      </select>
+                    </span>
                   </li>
                   <li>
                     <a class="tracked menuLink" data-label="Mobile Nav: Blog" href='https://hasura.io/blog/'>
