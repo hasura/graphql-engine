@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

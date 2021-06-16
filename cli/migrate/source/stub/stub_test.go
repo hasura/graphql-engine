@@ -3,8 +3,8 @@ package stub
 import (
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/migrate/source"
-	st "github.com/hasura/graphql-engine/cli/migrate/source/testing"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/source"
+	st "github.com/hasura/graphql-engine/cli/v2/migrate/source/testing"
 	"github.com/sirupsen/logrus/hooks/test"
 )
 

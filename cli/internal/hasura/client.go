@@ -3,7 +3,7 @@ package hasura
 import (
 	"io"
 
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
 type GenericSend func(requestBody interface{}) (httpcResponse *httpc.Response, responseBody io.Reader, error error)

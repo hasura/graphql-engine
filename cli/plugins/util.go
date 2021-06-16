@@ -17,7 +17,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/hasura/graphql-engine/cli/plugins/download"
+	"github.com/hasura/graphql-engine/cli/v2/plugins/download"
 	"github.com/pkg/errors"
 )
 

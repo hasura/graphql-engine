@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"gopkg.in/yaml.v2"
 )
 

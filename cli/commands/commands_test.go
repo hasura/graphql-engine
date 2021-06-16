@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"gopkg.in/yaml.v2"
 
 	. "github.com/onsi/ginkgo"

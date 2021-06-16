@@ -4,12 +4,12 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/catalogstate"
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/catalogstate"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 )
 
 func TestCatalogStateStore_InsertVersion(t *testing.T) {

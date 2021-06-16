@@ -4,17 +4,17 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/internal/statestore"
-	"github.com/hasura/graphql-engine/cli/internal/statestore/migrations"
-	"github.com/hasura/graphql-engine/cli/internal/statestore/settings"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/migrations"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/settings"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/v1metadata"
-	"github.com/hasura/graphql-engine/cli/internal/hasura/v1query"
-	"github.com/hasura/graphql-engine/cli/internal/hasura/v2query"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1metadata"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1query"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v2query"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"

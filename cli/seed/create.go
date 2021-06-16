@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
 	"github.com/spf13/afero"
 )

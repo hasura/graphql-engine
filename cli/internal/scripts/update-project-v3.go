@@ -4,21 +4,21 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
-	"github.com/hasura/graphql-engine/cli/internal/metadatautil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 
 	"github.com/fatih/color"
 
-	"github.com/hasura/graphql-engine/cli/internal/statestore"
-	"github.com/hasura/graphql-engine/cli/internal/statestore/migrations"
-	"github.com/hasura/graphql-engine/cli/internal/statestore/settings"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/migrations"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/settings"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 
 	"fmt"
 
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"

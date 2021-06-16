@@ -6,7 +6,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"

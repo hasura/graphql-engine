@@ -18,7 +18,7 @@ import (
 	"github.com/Pallinder/go-randomdata"
 
 	_ "github.com/denisenkom/go-mssqldb"
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 	_ "github.com/lib/pq"
 	"github.com/ory/dockertest/v3"
 )

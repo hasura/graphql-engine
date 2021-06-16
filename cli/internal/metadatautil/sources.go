@@ -8,8 +8,8 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/parser"
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 )
 
 func getMetadataAsYaml(exportMetadata func() (io.Reader, error)) ([]byte, error) {

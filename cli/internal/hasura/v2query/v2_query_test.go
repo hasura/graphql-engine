@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/stretchr/testify/require"
 
-	pg "github.com/hasura/graphql-engine/cli/internal/hasura/sourceops/postgres"
+	pg "github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/postgres"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/commonmetadata"
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/commonmetadata"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	"github.com/stretchr/testify/assert"
 )
 

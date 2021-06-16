@@ -2,20 +2,20 @@ package migrate
 
 import (
 	"fmt"
-	"github.com/hasura/graphql-engine/cli/internal/scripts"
-	"github.com/hasura/graphql-engine/cli/internal/statestore"
-	"github.com/hasura/graphql-engine/cli/internal/statestore/migrations"
+	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/migrations"
 	nurl "net/url"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
-	migratedb "github.com/hasura/graphql-engine/cli/migrate/database"
+	migratedb "github.com/hasura/graphql-engine/cli/v2/migrate/database"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/pkg/errors"
 )
 
@@ -255,8 +255,8 @@ func copyStateToCatalogStateAPIIfRequired(ec *cli.ExecutionContext, sourceName s
 			// check if hdb_catalog.schema_migrations exists
 			// check if migrations state table exists
 			query := hasura.PGRunSQLInput{
-			  	Source: sourceName,
-				SQL: `SELECT COUNT(1) FROM information_schema.tables WHERE table_name = '` + migrations.DefaultMigrationsTable + `' AND table_schema = '` + migrations.DefaultSchema + `' LIMIT 1`,
+				Source: sourceName,
+				SQL:    `SELECT COUNT(1) FROM information_schema.tables WHERE table_name = '` + migrations.DefaultMigrationsTable + `' AND table_schema = '` + migrations.DefaultSchema + `' LIMIT 1`,
 			}
 
 			runsqlResp, err := ec.APIClient.V2Query.PGRunSQL(query)

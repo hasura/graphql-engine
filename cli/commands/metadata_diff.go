@@ -7,10 +7,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
 	"github.com/aryann/difflib"
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/mgutz/ansi"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"

@@ -16,12 +16,12 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 
-	"github.com/hasura/graphql-engine/cli/migrate/database"
-	"github.com/hasura/graphql-engine/cli/migrate/source"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/source"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )

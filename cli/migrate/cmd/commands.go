@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/goccy/go-yaml"
-	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/v2/migrate"
 	"github.com/pkg/errors"
 )
 

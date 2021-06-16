@@ -23,34 +23,34 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/pgdump"
-	"github.com/hasura/graphql-engine/cli/internal/hasura/v1graphql"
-	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/pgdump"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1graphql"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/database/hasuradb"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/v1metadata"
-	"github.com/hasura/graphql-engine/cli/internal/hasura/v1query"
-	"github.com/hasura/graphql-engine/cli/internal/hasura/v2query"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1metadata"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1query"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v2query"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/commonmetadata"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/commonmetadata"
 
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 
-	"github.com/hasura/graphql-engine/cli/internal/statestore/settings"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/settings"
 
-	"github.com/hasura/graphql-engine/cli/internal/statestore/migrations"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/migrations"
 
-	"github.com/hasura/graphql-engine/cli/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
 	"github.com/Masterminds/semver"
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
-	"github.com/hasura/graphql-engine/cli/plugins"
-	"github.com/hasura/graphql-engine/cli/telemetry"
-	"github.com/hasura/graphql-engine/cli/util"
-	"github.com/hasura/graphql-engine/cli/version"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
+	"github.com/hasura/graphql-engine/cli/v2/plugins"
+	"github.com/hasura/graphql-engine/cli/v2/telemetry"
+	"github.com/hasura/graphql-engine/cli/v2/util"
+	"github.com/hasura/graphql-engine/cli/v2/version"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"

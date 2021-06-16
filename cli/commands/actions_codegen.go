@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

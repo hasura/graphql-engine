@@ -10,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/goccy/go-yaml"
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	goyaml "gopkg.in/yaml.v2"
 	v3yaml "gopkg.in/yaml.v3"
 )

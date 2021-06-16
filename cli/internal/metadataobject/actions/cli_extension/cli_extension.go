@@ -9,7 +9,7 @@ import (
 	"os/exec"
 
 	gyaml "github.com/goccy/go-yaml"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
