@@ -1408,19 +1408,19 @@ article ol ol {
   vertical-align: top;
 }
 .versionTxt select {
-  border-radius: 8px;
+  border-radius: 2px;
   background-color: rgba(255, 255, 255, .24);
   margin-right: 12px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: #ffffff;
   border: 1px solid #ddd;
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  width: 48px;
-  padding: 0 4px;
-  height: 22px;
+  width: 52px;
+  padding: 0 6px;
+  height: 24px;
   z-index: 1;
 }
 .versionTxt:after {
@@ -1430,13 +1430,16 @@ article ol ol {
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
   border-top: 4px solid #fff;
-  position: absolute;
-  right: 20px;
+  position: relative;
+  right: 24px;
   top: 10px;
   z-index: -1;
 }
 .versionTxt select:focus {
   outline: none;
+}
+.versionTxt select option {
+  color: black;
 }
 .versionTxt select::-moz-focus-inner, .versionTxt select option::-moz-focus-inner {
   border: 0;
