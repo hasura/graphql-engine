@@ -1444,6 +1444,7 @@ article ol ol {
   font-weight: 600;
   margin: 0 0;
   letter-spacing: -.48px;
+  position: relative;
 }
 .headerWrapper .navBlueBG .navBarUL li, .versionTxt {
   color: #1CD3C6;
@@ -1463,7 +1464,7 @@ article ol ol {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  width: 52px;
+  width: 58px;
   padding: 0 6px;
   height: 24px;
   z-index: 1;
@@ -1475,9 +1476,9 @@ article ol ol {
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
   border-top: 4px solid #fff;
-  position: relative;
-  right: 24px;
-  top: 10px;
+  position: absolute;
+  right: 22px;
+  top: 21px;
   z-index: -1;
 }
 .versionTxt select:focus {
