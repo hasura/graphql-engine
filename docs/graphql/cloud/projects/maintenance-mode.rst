@@ -48,11 +48,11 @@ Disabled actions when maintenance mode is activated
 All actions that update your project's configurations are not allowed when maintenance
 mode is activated. The following actions are disallowed: 
 
-- `Switching pricing plans <pricing>`_
-- `Adding, updating and deleting an environment variable <env-vars>`_
-- `Changing project region <regions>`_
-- `Enabling and disabling Heroku database URL sync <heroku-url-sync>`_
-- `Deleting project <delete>`_
+- :ref:`Switching pricing plans <pricing>`
+- :ref:`Adding, updating and deleting an environment variable <manage_project_env_vars>`
+- :ref:`Changing project region <project_regions>`
+- :ref:`Enabling and disabling Heroku database URL sync <heroku_database_url_sync>`
+- :ref:`Deleting project <delete_project>`
 
 
 If you are trying to apply these changes when maintenance mode is activated, you will encounter 
