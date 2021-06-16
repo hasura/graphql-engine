@@ -198,7 +198,9 @@ data RemoteFieldArgument
   = RemoteFieldArgument
   { _rfaArgument :: !G.Name
   , _rfaValue    :: !(InputValue RemoteSchemaVariable)
-  } deriving (Eq,Show)
+  } deriving (Eq, Show, Generic)
+
+instance Hashable RemoteFieldArgument
 
 data RemoteSelect (b :: BackendType)
   = RemoteSelect

@@ -1,9 +1,5 @@
 module Hasura.GraphQL.Execute.RemoteJoin.Collect
-  ( RemoteJoins
-  , RemoteJoinMap
-  , FieldPath(..)
-  , appendPath
-  , getRemoteJoins
+  ( getRemoteJoins
   , getRemoteJoinsSelect
   , getRemoteJoinsMutationDB
   , getRemoteJoinsActionQuery
@@ -13,10 +9,11 @@ module Hasura.GraphQL.Execute.RemoteJoin.Collect
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                     as Map
-import qualified Data.HashSet                            as HS
 import qualified Data.List.NonEmpty                      as NE
+import qualified Data.Text                               as T
 
 import           Control.Lens
+import           Data.Text.Extended
 
 import           Hasura.GraphQL.Execute.RemoteJoin.Types
 import           Hasura.RQL.IR
@@ -49,6 +46,46 @@ import           Hasura.RQL.Types
 +--------------------------+
 -}
 
+-- | Path to the remote join field in query response JSON from Postgres.
+newtype FieldPath = FieldPath {unFieldPath :: [FieldName]}
+  deriving (Show, Eq, Semigroup, Monoid, Hashable)
+
+appendPath :: FieldName -> FieldPath -> FieldPath
+appendPath fieldName = FieldPath . (<> [fieldName]) . unFieldPath
+
+type RemoteJoinMap = Map.HashMap FieldPath (NE.NonEmpty (FieldName, RemoteJoin))
+
+-- TODO: we should get rid of these following functions. They currently exist
+-- because Collect module does not output the jointree structure, it instead
+-- outputs RemoteJoinMap. The jointree structure is introduced to efficiently
+-- traverse a response object to add replacement tokens. Instead of modifying
+-- the Collect module, the `remoteJoinsToJoinTree` function is used to covert
+-- between these structures. These functions are a bit dodgy to my liking
+concatJoinTrees :: JoinTree a -> JoinTree a -> JoinTree a
+concatJoinTrees ((f1, n1) NE.:| t1) t2 =
+  let merged = Map.unionWith concatJoinNodes (Map.fromList t1) (Map.fromList $ toList t2)
+   in case Map.lookup f1 merged of
+        Nothing -> (f1, n1) NE.:| Map.toList merged
+        Just n2 -> (f1, concatJoinNodes n1 n2) NE.:| Map.toList (Map.delete f1 merged)
+
+concatJoinNodes :: JoinNode a -> JoinNode a -> JoinNode a
+concatJoinNodes n1 n2 =
+  case (n1, n2) of
+    (_, Leaf b) -> Leaf b
+    (Leaf _, Tree b) -> Tree b
+    (Tree a, Tree b) -> Tree $ concatJoinTrees a b
+
+remoteJoinsToJoinTree :: RemoteJoinMap -> Maybe RemoteJoins
+remoteJoinsToJoinTree joinMap =
+  case NE.nonEmpty (map (toJoinTree . first unFieldPath) $ Map.toList joinMap) of
+    Just (t1 NE.:| l) -> Just $ foldr concatJoinTrees t1 l
+    Nothing -> Nothing
+  where
+    toJoinTree (fieldPath, nonEmptyJoin) =
+      case fieldPath of
+        [] -> fmap (second Leaf) nonEmptyJoin
+        x:xs -> (x, Tree $ toJoinTree (xs, nonEmptyJoin)) NE.:| []
+
 -- | Collects remote joins from the AST and also adds the necessary join fields
 getRemoteJoins
   :: Backend b
@@ -66,7 +103,7 @@ getRemoteJoinsSelect
   => AnnSimpleSelG b u
   -> (AnnSimpleSelG b u, Maybe RemoteJoins)
 getRemoteJoinsSelect =
-  second mapToNonEmpty . flip runState mempty . transformSelect mempty
+  second remoteJoinsToJoinTree . flip runState mempty . transformSelect mempty
 
 -- | Traverse through @'AnnAggregateSelect' and collect remote join fields (if any).
 getRemoteJoinsAggregateSelect
@@ -74,7 +111,7 @@ getRemoteJoinsAggregateSelect
   => AnnAggregateSelectG b u
   -> (AnnAggregateSelectG b u, Maybe RemoteJoins)
 getRemoteJoinsAggregateSelect =
-  second mapToNonEmpty . flip runState mempty . transformAggregateSelect mempty
+  second remoteJoinsToJoinTree . flip runState mempty . transformAggregateSelect mempty
 
 -- | Traverse through @'ConnectionSelect' and collect remote join fields (if any).
 getRemoteJoinsConnectionSelect
@@ -82,7 +119,7 @@ getRemoteJoinsConnectionSelect
   => ConnectionSelect b u
   -> (ConnectionSelect b u, Maybe RemoteJoins)
 getRemoteJoinsConnectionSelect =
-  second mapToNonEmpty . flip runState mempty . transformConnectionSelect mempty
+  second remoteJoinsToJoinTree . flip runState mempty . transformConnectionSelect mempty
 
 -- | Traverse through 'MutationOutput' and collect remote join fields (if any)
 getRemoteJoinsMutationOutput
@@ -90,7 +127,7 @@ getRemoteJoinsMutationOutput
   => MutationOutputG b u
   -> (MutationOutputG b u, Maybe RemoteJoins)
 getRemoteJoinsMutationOutput =
-  second mapToNonEmpty . flip runState mempty . transformMutationOutput mempty
+  second remoteJoinsToJoinTree . flip runState mempty . transformMutationOutput mempty
   where
     transformMutationOutput path = \case
       MOutMultirowFields mutationFields ->
@@ -172,7 +209,7 @@ getRemoteJoinsAnnFields
   => AnnFieldsG b u
   -> (AnnFieldsG b u, Maybe RemoteJoins)
 getRemoteJoinsAnnFields =
-  second mapToNonEmpty . flip runState mempty . transformAnnFields mempty
+  second remoteJoinsToJoinTree . flip runState mempty . transformAnnFields mempty
 
 transformAnnFields
   :: forall b u
@@ -187,15 +224,36 @@ transformAnnFields path fields = do
   -- server, which is incorrect as they can be aliased. Similarly, the phantom
   -- columns are being added without checking for overlap with aliases
 
-  let pgColumnFields = HS.fromList $ map (pgiColumn . _acfInfo . snd) $
-                       getFields _AFColumn fields
+  let pgColumnFields_ = Map.fromList $
+        [ (pgiColumn . _acfInfo $ annColumn, alias)
+        | (alias, annColumn) <- getFields _AFColumn fields
+        ]
+
+      getJoinColumnAlias columnName =
+        maybe (makeUniqueAlias columnName) JCSelected $
+          Map.lookup columnName pgColumnFields_
+
+      longestAliasLength = maximum $ map (T.length . coerce . fst) fields
+      makeUniqueAlias columnName =
+        let columnNameTxt = toTxt columnName
+        in JCPhantom $ FieldName $ columnNameTxt <> "_join_column"
+           <> T.replicate (longestAliasLength - (T.length columnNameTxt) - 12) "_"
+
       remoteSelects = getFields (_AFRemote) fields
       remoteJoins = flip map remoteSelects $ \(fieldName, remoteSelect) ->
-        let RemoteSelect argsMap selSet hasuraColumns remoteFields rsi = remoteSelect
-            hasuraColumnFields = HS.map (fromCol @b . pgiColumn) hasuraColumns
-            phantomColumns = HS.filter ((`notElem` pgColumnFields) . pgiColumn) hasuraColumns
-        in (phantomColumns, RemoteJoin fieldName argsMap selSet hasuraColumnFields remoteFields rsi $
-           map (fromCol @b . pgiColumn) $ toList phantomColumns)
+        let RemoteSelect inputArgs selSet hasuraColumns remoteFields rsi = remoteSelect
+            annotatedJoinColumns =
+              Map.fromList $ flip map (toList hasuraColumns) $ \columnInfo ->
+                let columnName = pgiColumn columnInfo
+                in (fromCol @b $ columnName, (columnInfo, getJoinColumnAlias columnName))
+            phantomColumns =
+              flip Map.mapMaybe annotatedJoinColumns $ \(columnInfo, alias) ->
+                case alias of
+                  JCSelected _ -> Nothing
+                  JCPhantom a  -> Just (columnInfo, a)
+            joinColumnAliases = fmap snd annotatedJoinColumns
+            inputArgsToMap = Map.fromList . map (_rfaArgument &&& _rfaValue)
+        in (phantomColumns, (fieldName, RemoteJoin (inputArgsToMap inputArgs) selSet joinColumnAliases remoteFields rsi))
 
   transformedFields <- forM fields $ \(fieldName, field') -> do
     let fieldPath = appendPath fieldName path
@@ -220,10 +278,12 @@ transformAnnFields path fields = do
   case NE.nonEmpty remoteJoins of
     Nothing -> pure transformedFields
     Just nonEmptyRemoteJoins -> do
-      let phantomColumns = map (\ci -> (fromCol @b $ pgiColumn ci, AFColumn $ AnnColumnField ci False Nothing Nothing)) $ toList $ HS.unions $ map fst $ remoteJoins
+      let phantomColumns = map (\(ci, alias) -> (alias, AFColumn $ AnnColumnField ci False Nothing Nothing)) $ Map.elems $ Map.unions $ map fst $ remoteJoins
       modify (Map.insert path $ fmap snd nonEmptyRemoteJoins)
       pure $ transformedFields <> phantomColumns
+
     where
+
       getFields f = mapMaybe (sequence . second (^? f))
 
       transformAnnRelation annRel f = do
@@ -240,10 +300,6 @@ transformAnnFields path fields = do
         let connectionSelect = aarAnnSelect annRel
         transformedConnectionSelect <- transformConnectionSelect fieldPath connectionSelect
         pure annRel{aarAnnSelect = transformedConnectionSelect}
-
-mapToNonEmpty :: RemoteJoinMap -> Maybe RemoteJoins
-mapToNonEmpty = NE.nonEmpty . Map.toList
-
 
 getRemoteJoinsMutationDB
   :: Backend b
@@ -291,7 +347,7 @@ getRemoteJoinsActionQuery = \case
   where
     getRemoteJoinsAsyncQuery async =
       let (fields', remoteJoins) =
-            second mapToNonEmpty . flip runState mempty . transformAsyncFields mempty $
+            second remoteJoinsToJoinTree . flip runState mempty . transformAsyncFields mempty $
             _aaaqFields async
       in (async { _aaaqFields = fields' }, remoteJoins)
 

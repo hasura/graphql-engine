@@ -110,7 +110,9 @@ instance Backend b => ToJSON (RemoteFieldInfo b) where
 newtype RemoteArguments =
   RemoteArguments
     { getRemoteArguments :: HashMap G.Name (G.Value G.Name)
-    } deriving (Show, Eq, Cacheable, NFData)
+    } deriving (Show, Eq, Generic, Cacheable, NFData)
+
+instance Hashable RemoteArguments
 
 instance ToJSON RemoteArguments where
   toJSON (RemoteArguments fields) = fieldsToObject fields
@@ -175,13 +177,14 @@ instance FromJSON RemoteArguments where
 -- https://graphql.github.io/graphql-spec/June2018/#sec-Language.Arguments
 --
 -- TODO (from master) we don't seem to support empty RemoteArguments (like 'hello'), but this seems arbitrary:
-data FieldCall =
-  FieldCall
-    { fcName      :: !G.Name
-    , fcArguments :: !RemoteArguments
-    } deriving (Show, Eq, Generic)
+data FieldCall
+  = FieldCall
+  { fcName      :: !G.Name
+  , fcArguments :: !RemoteArguments
+  } deriving (Show, Eq, Generic)
 instance NFData FieldCall
 instance Cacheable FieldCall
+instance Hashable FieldCall
 
 newtype RemoteFields = RemoteFields {unRemoteFields :: NonEmpty FieldCall}
   deriving (Show, Eq, Generic)
