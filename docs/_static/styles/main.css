@@ -83,17 +83,62 @@ p {
   display: inline-block;
   vertical-align: middle;
 }
+/* Banner Stripe Strarts */
+.hasuraConBannerBg {
+	 /* background-image: url('./images/hasura-con-banner-stripe.png'); */
+   background-image: url('../../_images/layout/hasura-con-banner-stripe.png');
+	 background-repeat: no-repeat;
+	 background-size: cover;
+	 background-position: center center;
+}
+.containerWidth {
+    max-width: 1328px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+.commonBannerStripWrapper {
+	 z-index: 100;
+	 position: relative;
+	 height: 80px;
+	 max-height: 80px;
+	 display: flex;
+	 align-items: center;
+	 justify-content: center;
+	 overflow: hidden;
+}
+.commonBannerStripWrapper .articleDesc {
+	 flex: 1;
+	 text-align: center;
+	 color: #1b2738;
+	 font-size: 17px !important;
+	 line-height: 140% !important;
+	 padding-bottom: 0px;
+	 display: flex;
+	 align-items: center;
+	 justify-content: center;
+   font-weight: 600;
+   text-decoration: none;
 
+}
+.commonBannerStripWrapper .closeBanner {
+	 cursor: pointer;
+}
+.commonBannerStripWrapper .closeBanner img {
+	 width: 25px;
+}
+.commonBannerStripWrapper .closeBanner:focus {
+	 outline: none;
+}
 .document {
   margin: 0 auto;
 }
+/* Banner Stripe Ends */
 
 .main_container_wrapper {
   min-width: 90%;
   /* overflow-y: auto; */
   -webkit-overflow-scrolling: touch; /* for iOS momentum scroll */
 }
-
 .content_wrapper {
   display: flex;
   margin: auto;
@@ -1509,6 +1554,15 @@ article ol ol {
   }
 }
 @media (max-width: 767px) {
+  .commonBannerStripWrapper {
+    max-height: none;
+    height: auto;
+  }
+  .commonBannerStripWrapper .articleDesc{
+    text-align: left;
+    padding: 15px 0;
+    padding-right: 15px;
+  }
   .versionTxt select {
     margin-right: 0;
     margin-left: 8px;

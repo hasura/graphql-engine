@@ -60,6 +60,21 @@
 {% block document %}
     <div class="main_container_wrapper">
       {% include 'pages/loading.html' %}
+      <div id="banner-stripe" class="hasuraConBannerBg">
+        <div class="containerWidth">
+          <div class="commonBannerStripWrapper">
+            <a
+              href="https://hasura.io/events/hasura-con-2021/?pg=docs&plcmt=banner&cta=register-now&tech="
+              class="articleDesc"
+            >
+              HasuraCon'21, our annual user conference, is happening on June 23rd & 24th. Register Now
+            </a>
+            <div id="close-banner" class="closeBanner">
+              <img src="{{ pathto('_images/layout/close-banner.svg', 1) }}" alt="Close" />
+            </div>
+          </div>
+        </div>
+      </div>
       <header
         id="header"
         class='blueBgColor boderBottom'
