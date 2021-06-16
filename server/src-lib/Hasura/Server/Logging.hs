@@ -20,32 +20,32 @@ module Hasura.Server.Logging
 
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy          as BL
-import qualified Data.Environment              as Env
-import qualified Data.HashMap.Strict           as HM
-import qualified Data.TByteString              as TBS
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Network.HTTP.Types            as HTTP
-import qualified Network.Wai.Extended          as Wai
+import qualified Data.ByteString.Lazy                  as BL
+import qualified Data.Environment                      as Env
+import qualified Data.HashMap.Strict                   as HM
+import qualified Data.TByteString                      as TBS
+import qualified Data.Text                             as T
+import qualified Network.HTTP.Types                    as HTTP
+import qualified Network.Wai.Extended                  as Wai
 
 import           Data.Aeson
 import           Data.Aeson.TH
-import           Data.Int                      (Int64)
+import           Data.Int                              (Int64)
 import           Data.Text.Extended
 
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Parser.Schema  (Variable)
+import           Hasura.GraphQL.ParameterizedQueryHash
 import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Server.Compression
 import           Hasura.Server.Types
-import           Hasura.Server.Utils           (DeprecatedEnvVars (..), EnvVarsMovedToMetadata (..),
-                                                deprecatedEnvVars, envVarsMovedToMetadata)
+import           Hasura.Server.Utils                   (DeprecatedEnvVars (..),
+                                                        EnvVarsMovedToMetadata (..),
+                                                        deprecatedEnvVars, envVarsMovedToMetadata)
 import           Hasura.Session
-import           Hasura.Tracing                (TraceT)
+import           Hasura.Tracing                        (TraceT)
 
 
 data StartupLog
@@ -130,7 +130,7 @@ class (Monad m, Monoid (HTTPLoggingMetadata m)) => HttpLog m where
 
   type HTTPLoggingMetadata m
 
-  buildHTTPLoggingMetadata :: [(G.SelectionSet G.NoFragments Variable)] -> HTTPLoggingMetadata m
+  buildHTTPLoggingMetadata :: [ParameterizedQueryHash] -> HTTPLoggingMetadata m
 
   logHttpError
     :: Logger Hasura

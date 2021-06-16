@@ -378,7 +378,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     userInfo sqlGenCtx sc scVer queryType
     httpMgr reqHdrs (q, reqParsed)
 
-  (telemCacheHit, (_normalizeSelSet, execPlan)) <- onLeft execPlanE (withComplete . preExecErr requestId)
+  (telemCacheHit, (parameterizedQueryHash, execPlan)) <- onLeft execPlanE (withComplete . preExecErr requestId)
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts -> Tracing.trace "Query" $ do
@@ -539,7 +539,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         E.SEOnSourceDB actionIds liveQueryBuilder -> do
           actionLogMapE <- fmap fst <$> runExceptT (EA.fetchActionLogResponses actionIds)
           actionLogMap <- onLeft actionLogMapE (withComplete . preExecErr requestId)
-          lqIdE <- liftIO $ startLiveQuery liveQueryBuilder actionLogMap
+          lqIdE <- liftIO $ startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap
           lqId <- onLeft lqIdE (withComplete . preExecErr requestId)
 
           -- Update async action query subscription state
@@ -552,7 +552,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
               liftIO $ do
                 let asyncActionQueryLive = LQ.LAAQOnSourceDB $
-                      LQ.LiveAsyncActionQueryOnSource lqId actionLogMap $ restartLiveQuery liveQueryBuilder
+                      LQ.LiveAsyncActionQueryOnSource lqId actionLogMap $
+                      restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder
 
                     onUnexpectedException err = do
                       sendError requestId err
@@ -659,24 +660,20 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       liftIO $ sendCompleted Nothing
       throwError ()
 
-    restartLiveQuery liveQueryBuilder lqId actionLogMap = do
+    restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder lqId actionLogMap = do
       LQ.removeLiveQuery logger (_wseServerMetrics serverEnv) lqMap lqId
-      either (const Nothing) Just <$> startLiveQuery liveQueryBuilder actionLogMap
+      either (const Nothing) Just <$> startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap
 
-    startLiveQuery liveQueryBuilder actionLogMap = do
+    startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap = do
       liveQueryE <- runExceptT $ liveQueryBuilder actionLogMap
       for liveQueryE $ \(sourceName, E.LQP exists) -> do
-        let subscriberMetadata = LQ.mkSubscriberMetadata $ J.object
-                                 [ "websocket_id" J..= WS.getWSId wsConn
-                                 , "operation_id" J..= opId
-                                 ]
-
+        let !opName = _grOperationName q
+            subscriberMetadata = LQ.mkSubscriberMetadata (WS.getWSId wsConn) opId opName requestId
         -- NOTE!: we mask async exceptions higher in the call stack, but it's
         -- crucial we don't lose lqId after addLiveQuery returns successfully.
         !lqId <- liftIO $ AB.dispatchAnyBackend @BackendTransport exists
           \(E.MultiplexedLiveQueryPlan liveQueryPlan) ->
-            LQ.addLiveQuery logger (_wseServerMetrics serverEnv) subscriberMetadata lqMap sourceName liveQueryPlan liveQOnChange
-        let !opName = _grOperationName q
+            LQ.addLiveQuery logger (_wseServerMetrics serverEnv) subscriberMetadata lqMap sourceName parameterizedQueryHash opName requestId liveQueryPlan liveQOnChange
 #ifndef PROFILING
         liftIO $ $assertNFHere (lqId, opName)  -- so we don't write thunks to mutable vars
 #endif

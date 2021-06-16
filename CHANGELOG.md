@@ -3,6 +3,8 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: make improvements in the `livequery-poller-log`
+
 ## v2.0.0-beta.2
 
 ### Bug fixes and improvements
