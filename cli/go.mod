@@ -1,4 +1,4 @@
-module github.com/hasura/graphql-engine/cli
+module github.com/hasura/graphql-engine/cli/v2
 
 go 1.16
 

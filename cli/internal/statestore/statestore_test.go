@@ -4,12 +4,12 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/catalogstate"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/catalogstate"
 
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	"github.com/stretchr/testify/assert"
 )
 

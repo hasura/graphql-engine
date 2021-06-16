@@ -8,10 +8,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 
 	gyaml "github.com/goccy/go-yaml"
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"

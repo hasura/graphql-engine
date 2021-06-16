@@ -5,7 +5,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
 	"github.com/sirupsen/logrus"
 )

@@ -4,14 +4,14 @@ import (
 	"io/ioutil"
 	"testing"
 
-	pg "github.com/hasura/graphql-engine/cli/internal/hasura/sourceops/postgres"
+	pg "github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/postgres"
 
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
 func TestClient_Send(t *testing.T) {

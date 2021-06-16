@@ -7,7 +7,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
-	"github.com/hasura/graphql-engine/cli/migrate/database"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
 
 	"github.com/qor/transition"
 )

@@ -28,7 +28,7 @@ import (
 	"syscall"
 	"unicode"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

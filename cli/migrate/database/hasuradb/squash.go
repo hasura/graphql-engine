@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/hasura/graphql-engine/cli/migrate/database"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
 	"github.com/pkg/errors"
 
 	"github.com/ahmetb/go-linq"

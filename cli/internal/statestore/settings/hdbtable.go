@@ -3,7 +3,7 @@ package settings
 import (
 	"fmt"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 )
 
 type StateStoreHdbTable struct {

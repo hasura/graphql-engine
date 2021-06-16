@@ -4,12 +4,12 @@ import (
 	"os"
 	"sync"
 
-	"github.com/hasura/graphql-engine/cli/internal/scripts"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/pkg/console"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/console"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

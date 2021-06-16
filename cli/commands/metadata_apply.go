@@ -1,12 +1,12 @@
 package commands
 
 import (
-  "fmt"
-  "os"
+	"fmt"
+	"os"
 
-  "github.com/hasura/graphql-engine/cli"
-  "github.com/hasura/graphql-engine/cli/internal/metadataobject"
-  "github.com/spf13/cobra"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
+	"github.com/spf13/cobra"
 )
 
 func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {

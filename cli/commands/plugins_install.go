@@ -10,10 +10,10 @@ source: https://github.com/kubernetes-sigs/krew/blob/master/cmd/krew/cmd/install
 import (
 	"fmt"
 
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/plugins"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/plugins"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

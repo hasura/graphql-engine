@@ -10,18 +10,18 @@ import (
 	"path"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
 
-	"github.com/hasura/graphql-engine/cli/internal/statestore/settings"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/settings"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
 	"github.com/pkg/errors"
 
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/goccy/go-yaml"
-	"github.com/hasura/graphql-engine/cli/migrate/database"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
 	"github.com/parnurzeal/gorequest"
 	log "github.com/sirupsen/logrus"
 )

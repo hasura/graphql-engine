@@ -10,7 +10,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/gin-gonic/gin"
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skratchdot/open-golang/open"

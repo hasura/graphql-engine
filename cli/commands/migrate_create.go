@@ -5,13 +5,13 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/migrate"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
+	mig "github.com/hasura/graphql-engine/cli/v2/migrate/cmd"
 	log "github.com/sirupsen/logrus"
 )
 

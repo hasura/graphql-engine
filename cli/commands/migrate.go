@@ -3,21 +3,21 @@ package commands
 import (
 	"fmt"
 
-	"github.com/hasura/graphql-engine/cli/internal/metadatautil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/internal/scripts"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/migrate"
-	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/migrate"
+	mig "github.com/hasura/graphql-engine/cli/v2/migrate/cmd"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	// Initialize migration drivers
-	_ "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
-	_ "github.com/hasura/graphql-engine/cli/migrate/source/file"
+	_ "github.com/hasura/graphql-engine/cli/v2/migrate/database/hasuradb"
+	_ "github.com/hasura/graphql-engine/cli/v2/migrate/source/file"
 )
 
 // NewMigrateCmd returns the migrate command
