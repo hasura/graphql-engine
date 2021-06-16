@@ -82,6 +82,11 @@ Breaking behaviour changes
   as an object. To achieve the expected behaviour, the following query ``fetch_users(order_by: [{age: desc}, {name: asc}]) {id name age}`` should
   be used which uses an array to define the order of fields to generate the appropriate ``order by`` clause.
 
+- **Type name for computed fields' input argument has changed**
+
+  The name of the computed field input argument has changed from `<function_name>_args` to `<computed_field_name>_<table_name>_args`. This change
+  enables adding a root-level tracked function as a computed field which previously would have thrown an input type conflict error.
+
 - **Incompatibility with older Hasura version remote schemas**
 
   With v2.0, some of the auto-generated schema types have been extended. For example, ``String_comparison_exp`` has an additional ``regex`` input
