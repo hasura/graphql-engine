@@ -149,8 +149,7 @@ Set up :ref:`Hasura migrations <migrations_setup>` to track your database altera
 Secure your endpoint
 ^^^^^^^^^^^^^^^^^^^^
 
-:ref:`Add an admin secret <secure_project>`
-to make sure that your GraphQL endpoint and the Hasura console are not publicly accessible.
+:ref:`Add an admin secret <docker_secure>` to make sure that your GraphQL endpoint and the Hasura console are not publicly accessible.
 
 Advanced Docker setup
 ---------------------
