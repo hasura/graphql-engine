@@ -1,7 +1,6 @@
 module Hasura.GraphQL.RemoteServer
   ( fetchRemoteSchema
   , IntrospectionResult
-  , execRemoteGQ
   ) where
 
 import           Hasura.Prelude
@@ -9,14 +8,11 @@ import           Hasura.Prelude
 import qualified Data.Aeson                             as J
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.Environment                       as Env
-import qualified Data.HashMap.Strict                    as Map
 import qualified Data.Text                              as T
-import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Parser          as G
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Language.Haskell.TH.Syntax             as TH
 import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Types                     as N
 import qualified Network.Wreq                           as Wreq
 
 import           Control.Exception                      (try)
@@ -35,7 +31,6 @@ import           Hasura.RQL.DDL.Headers                 (makeHeadersFromConf)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.Server.Version                  (HasVersion)
-import           Hasura.Session
 
 
 introspectionQuery :: GQLReqParsed
@@ -317,53 +312,3 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
             queryRoot mutationRoot subsRoot
     return $ FromIntrospection r
 
-execRemoteGQ
-  :: ( HasVersion
-     , MonadIO m
-     , MonadError QErr m
-     , Tracing.MonadTrace m
-     )
-  => Env.Environment
-  -> HTTP.Manager
-  -> UserInfo
-  -> [N.Header]
-  -> RemoteSchemaInfo
-  -> GQLReqOutgoing
-  -> m (DiffTime, [N.Header], BL.ByteString)
-  -- ^ Returns the response body and headers, along with the time taken for the
-  -- HTTP request to complete
-execRemoteGQ env manager userInfo reqHdrs rsi gqlReq@GQLReq{..} =  do
-  let gqlReqUnparsed = renderGQLReqOutgoing gqlReq
-
-  when (G._todType _grQuery == G.OperationTypeSubscription) $
-    throw400 NotSupported "subscription to remote server is not supported"
-  confHdrs <- makeHeadersFromConf env hdrConf
-  let clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
-      -- filter out duplicate headers
-      -- priority: conf headers > resolved userinfo vars > client headers
-      hdrMaps    = [ Map.fromList confHdrs
-                   , Map.fromList userInfoToHdrs
-                   , Map.fromList clientHdrs
-                   ]
-      headers  = Map.toList $ foldr Map.union Map.empty hdrMaps
-      finalHeaders = addDefaultHeaders headers
-  initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
-  initReq <- onLeft initReqE httpThrow
-  let req = initReq
-           { HTTP.method = "POST"
-           , HTTP.requestHeaders = finalHeaders
-           , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode gqlReqUnparsed)
-           , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
-           }
-  Tracing.tracedHttpRequest req \req' -> do
-    (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req' manager
-    resp <- onLeft res httpThrow
-    pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
-  where
-    RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
-    httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
-    httpThrow = \case
-      HTTP.HttpExceptionRequest _req content -> throw500 $ tshow content
-      HTTP.InvalidUrlException _url reason   -> throw500 $ tshow reason
-
-    userInfoToHdrs = sessionVariablesToHeaders $ _uiSession userInfo

@@ -20,11 +20,9 @@ import qualified Control.Concurrent.STM                      as STM
 import qualified Control.Monad.Trans.Control                 as MC
 import qualified Data.Aeson                                  as J
 import qualified Data.Aeson.Casing                           as J
-import qualified Data.Aeson.Ordered                          as JO
 import qualified Data.Aeson.TH                               as J
 import qualified Data.ByteString.Lazy                        as LBS
 import qualified Data.CaseInsensitive                        as CI
-import qualified Data.Dependent.Map                          as DM
 import qualified Data.Environment                            as Env
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.HashMap.Strict.InsOrd                  as OMap
@@ -51,31 +49,21 @@ import           GHC.AssertNF
 import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Execute.Action               as EA
 import qualified Hasura.GraphQL.Execute.Backend              as EB
+import qualified Hasura.GraphQL.Execute.Query                as EQ
+import qualified Hasura.GraphQL.Execute.Mutation             as EM
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll       as LQ
 import qualified Hasura.GraphQL.Execute.LiveQuery.State      as LQ
-import qualified Hasura.GraphQL.Execute.RemoteJoin           as RJ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import qualified Hasura.Logging                              as L
 import qualified Hasura.SQL.AnyBackend                       as AB
-import qualified Hasura.Server.Telemetry.Counters            as Telem
 import qualified Hasura.Tracing                              as Tracing
 
-import           Hasura.Backends.Postgres.Instances.Execute  (runPGMutationTransaction)
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
-import           Hasura.GraphQL.Parser.Directives            (cached)
-import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery (..),
-                                                              QueryCacheKey (..),
-                                                              ResultsFragment (..), buildRaw,
-                                                              coalescePostgresMutations,
-                                                              extractFieldFromResponse,
-                                                              filterVariablesFromQuery,
-                                                              runSessVarPred)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.Metadata.Class
-import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                          (AuthMode, UserAuthentication,
                                                               resolveUserInfo)
@@ -341,7 +329,7 @@ onStart
      , E.MonadGQLExecutionCheck m
      , MonadQueryLog m
      , Tracing.MonadTrace m
-     , MonadExecuteQuery m
+     , EQ.MonadExecuteQuery m
      , MC.MonadBaseControl IO m
      , MonadMetadataStorage (MetadataStorageT m)
      )
@@ -351,7 +339,6 @@ onStart
   -> StartMsg
   -> m ()
 onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
-  timerTot <- startTimer
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
 
   -- NOTE: it should be safe to rely on this check later on in this function, since we expect that
@@ -369,133 +356,29 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       let e = "start received before the connection is initialised"
       withComplete $ sendStartErr e
 
-  (requestId, reqHdrs) <- getRequestId origReqHdrs
-  (sc, scVer) <- liftIO getSchemaCache
+  (requestId, reqHeaders) <- getRequestId origReqHdrs
+  (sc, _scVer) <- liftIO getSchemaCache
 
-  reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q
+  reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc q
   reqParsed <- onLeft reqParsedE (withComplete . preExecErr requestId)
-  execPlanE <- runExceptT $ E.getResolvedExecPlan
-    env logger {- planCache -}
-    userInfo sqlGenCtx sc scVer queryType
-    httpMgr reqHdrs (q, reqParsed)
+  execPlanE <- runExceptT $
+    E.getResolvedExecPlan userInfo sqlGenCtx sc queryType (q, reqParsed)
 
-  (telemCacheHit, (parameterizedQueryHash, execPlan)) <- onLeft execPlanE (withComplete . preExecErr requestId)
+  (parameterizedQueryHash, execPlan) <- onLeft execPlanE (withComplete . preExecErr requestId)
 
+  let introspectionOptions = scSetGraphqlIntrospectionOptions sc
+  let SQLGenCtx{stringifyNum} = sqlGenCtx
   case execPlan of
-    E.QueryExecutionPlan queryPlan asts dirMap -> Tracing.trace "Query" $ do
-      let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
-          cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
-          remoteSchemas = OMap.elems queryPlan >>= \case
-            E.ExecStepDB _remoteHeaders _ remoteJoins ->
-              concatMap (map RJ._rjRemoteSchema . toList . snd) $
-                maybe [] toList remoteJoins
-            _ -> []
-          actionsInfo = foldl getExecStepActionWithActionInfo [] $ OMap.elems $ OMap.filter (\case
-              E.ExecStepAction _ _ _remoteJoins -> True
-              _                                 -> False
-              ) queryPlan
-          cachedDirective = runIdentity <$> DM.lookup cached dirMap
+    E.ResolvedPlanQuery plan asts dirMap -> Tracing.trace "Query" $ do
+      queryOrMutationResponse requestId $
+        EQ.runExecutionPlan env logger userInfo httpManager
+        reqHeaders requestId introspectionOptions reqParsed plan asts dirMap
+    E.ResolvedPlanMutation plan -> do
+      queryOrMutationResponse requestId $
+        EM.runExecutionPlan env logger userInfo httpManager
+        reqHeaders requestId stringifyNum plan
 
-      -- We ignore the response headers (containing TTL information) because
-      -- WebSockets don't support them.
-      (_responseHeaders, cachedValue) <- Tracing.interpTraceT (withExceptT mempty) $ cacheLookup remoteSchemas actionsInfo cacheKey cachedDirective
-      case cachedValue of
-        Just cachedResponseData -> do
-          logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindCached
-          sendSuccResp cachedResponseData $ LQ.LiveQueryMetadata 0
-        Nothing -> do
-          conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
-            E.ExecStepDB sourceName exists remoteJoins -> doQErr $ do
-              (telemTimeIO_DT, resp) <-
-                AB.dispatchAnyBackend @EB.BackendExecute exists
-                  \(SourceConfigWith sourceConfig (QDBR db)) -> withElapsedTime $
-                    EB.executeQueryField requestId logger userInfo sourceName sourceConfig db
-              finalResponse <-
-                maybe
-                (pure resp)
-                (RJ.processRemoteJoins env httpMgr reqHdrs userInfo $ encJToLBS resp)
-                remoteJoins
-              return $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
-            E.ExecStepRemote rsi gqlReq -> do
-              logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
-              runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
-            E.ExecStepAction actionExecPlan _ remoteJoins -> do
-              logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
-              (time, (resp, _)) <- doQErr $ do
-                (time, (resp, hdrs)) <- EA.runActionExecution actionExecPlan
-                finalResponse <-
-                  maybe
-                  (pure resp)
-                  (RJ.processRemoteJoins env httpMgr reqHdrs userInfo $ encJToLBS resp)
-                  remoteJoins
-                pure (time, (finalResponse, hdrs))
-              pure $ ResultsFragment time Telem.Empty resp []
-            E.ExecStepRaw json -> do
-              logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
-              buildRaw json
-          buildResultFromFragments Telem.Query telemCacheHit timerTot requestId conclusion
-          case conclusion of
-            Left _        -> pure ()
-            Right results -> Tracing.interpTraceT (withExceptT mempty) $
-                             cacheStore cacheKey cachedDirective $ encJFromInsOrdHashMap $
-                             rfResponse <$> OMap.mapKeys G.unName results
-      liftIO $ sendCompleted (Just requestId)
-
-    E.MutationExecutionPlan mutationPlan -> do
-      -- See Note [Backwards-compatible transaction optimisation]
-      case coalescePostgresMutations mutationPlan of
-        -- we are in the aforementioned case; we circumvent the normal process
-        Just (sourceConfig, pgMutations) -> do
-          resp <- runExceptT $ doQErr $ withElapsedTime $
-            runPGMutationTransaction requestId logger userInfo sourceConfig undefined pgMutations
-          -- we do not construct result fragments since we have only one result
-          buildResult requestId resp \(telemTimeIO_DT, results) -> do
-            let telemQueryType = Telem.Query
-                telemLocality  = Telem.Local
-                telemTimeIO    = convertDuration telemTimeIO_DT
-            telemTimeTot <- Seconds <$> timerTot
-            sendSuccResp (encJFromInsOrdHashMap $ OMap.mapKeys G.unName results) $
-              LQ.LiveQueryMetadata telemTimeIO_DT
-            -- Telemetry. NOTE: don't time network IO:
-            Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
-
-        -- we are not in the transaction case; proceeding normally
-        Nothing -> do
-          conclusion <- runExceptT $ forWithKey mutationPlan $ \fieldName -> \case
-            -- Ignoring response headers since we can't send them over WebSocket
-            E.ExecStepDB sourceName exists remoteJoins -> doQErr $ do
-              (telemTimeIO_DT, resp) <-
-                AB.dispatchAnyBackend @EB.BackendExecute exists
-                  \(SourceConfigWith sourceConfig (MDBR db)) -> do
-                      withElapsedTime $ EB.executeMutationField
-                        requestId logger userInfo undefined sourceName sourceConfig db
-              finalResponse <-
-                maybe
-                (pure resp)
-                (RJ.processRemoteJoins env httpMgr reqHdrs userInfo $ encJToLBS resp)
-                remoteJoins
-              return $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
-            E.ExecStepAction actionExecPlan _ remoteJoins -> do
-              logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
-              (time, (resp, hdrs)) <- doQErr $ do
-                (time, (resp, hdrs)) <- EA.runActionExecution actionExecPlan
-                finalResponse <-
-                  maybe
-                  (pure resp)
-                  (RJ.processRemoteJoins env httpMgr reqHdrs userInfo $ encJToLBS resp)
-                  remoteJoins
-                pure (time, (finalResponse, hdrs))
-              pure $ ResultsFragment time Telem.Empty resp $ fromMaybe [] hdrs
-            E.ExecStepRemote rsi gqlReq -> do
-              logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
-              runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
-            E.ExecStepRaw json -> do
-              logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
-              buildRaw json
-          buildResultFromFragments Telem.Query telemCacheHit timerTot requestId conclusion
-      liftIO $ sendCompleted (Just requestId)
-
-    E.SubscriptionExecutionPlan subExec -> do
+    E.ResolvedPlanSubscription subExec -> do
       case subExec of
         E.SEAsyncActionsWithNoRelationships actions -> do
           logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
@@ -552,44 +435,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
       liftIO $ logOpEv ODStarted (Just requestId)
   where
-    getExecStepActionWithActionInfo acc execStep = case execStep of
-       E.ExecStepAction _ actionInfo _remoteJoins -> (actionInfo:acc)
-       _                                          -> acc
 
-    doQErr = withExceptT Right
-
-    forWithKey = flip OMap.traverseWithKey
-
-    telemTransport = Telem.WebSocket
-
-    buildResult
-      :: forall a
-       . RequestId
-      -> Either (Either GQExecError QErr) a
-      -> (a -> ExceptT () m ())
-      -> ExceptT () m ()
-    buildResult requestId r f = case r of
-      Left (Left  err) -> postExecErr' err
-      Left (Right err) -> postExecErr requestId err
-      Right results    -> f results
-
-    buildResultFromFragments telemQueryType telemCacheHit timerTot requestId r =
-      buildResult requestId r \results -> do
-        let telemLocality = foldMap rfLocality results
-            telemTimeIO   = convertDuration $ sum $ fmap rfTimeIO results
-        telemTimeTot <- Seconds <$> timerTot
-        sendSuccResp (encJFromInsOrdHashMap (fmap rfResponse (OMap.mapKeys G.unName results))) $
-          LQ.LiveQueryMetadata $ sum $ fmap rfTimeIO results
-        -- Telemetry. NOTE: don't time network IO:
-        Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
-
-    runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq = do
-      (telemTimeIO_DT, _respHdrs, resp) <-
-        doQErr $ E.execRemoteGQ env httpMgr userInfo reqHdrs rsi gqlReq
-      value <- mapExceptT lift $ extractFieldFromResponse (G.unName fieldName) resp
-      return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) []
-
-    WSServerEnv logger lqMap getSchemaCache httpMgr _ sqlGenCtx {- planCache -}
+    WSServerEnv logger lqMap getSchemaCache httpManager _ sqlGenCtx {- planCache -}
       _ enableAL _keepAliveDelay _ = serverEnv
 
     WSConnData userInfoR opMap errRespTy queryType = WS.getData wsConn
@@ -624,6 +471,14 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     postExecErr' qErr = do
       sendMsg wsConn $ SMData $
         DataMsg opId $ throwError qErr
+
+    queryOrMutationResponse requestId m = do
+      (runTime, conclusion) <- withElapsedTime $ runExceptT m
+      case conclusion of
+        Left err -> postExecErr requestId err
+        Right (response, _responseHeaders) ->
+          sendSuccResp response $ LQ.LiveQueryMetadata runTime
+      liftIO $ sendCompleted (Just requestId)
 
     -- why wouldn't pre exec error use graphql response?
     preExecErr reqId qErr = liftIO $ sendError reqId qErr
@@ -689,7 +544,7 @@ onMessage
      , E.MonadGQLExecutionCheck m
      , MonadQueryLog m
      , Tracing.HasReporter m
-     , MonadExecuteQuery m
+     , EQ.MonadExecuteQuery m
      , MC.MonadBaseControl IO m
      , MonadMetadataStorage (MetadataStorageT m)
      )
@@ -889,7 +744,7 @@ createWSServerApp
      , WS.MonadWSLog m
      , MonadQueryLog m
      , Tracing.HasReporter m
-     , MonadExecuteQuery m
+     , EQ.MonadExecuteQuery m
      , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment

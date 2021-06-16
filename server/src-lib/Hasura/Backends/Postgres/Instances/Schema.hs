@@ -164,10 +164,7 @@ buildTableRelayQueryFields
   -> m [FieldParser n (QueryRootField UnpreparedValue)]
 buildTableRelayQueryFields sourceName sourceInfo tableName tableInfo gqlName pkeyColumns selPerms = do
   let
-    mkRF = RFDB sourceName
-             . AB.mkAnyBackend
-             . SourceConfigWith sourceInfo
-             . QDBR
+    mkRF = RFDB . AB.mkAnyBackend . DBField sourceName sourceInfo . QDBR
     fieldName = gqlName <> $$(G.litName "_connection")
     fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
   fmap afold
@@ -188,10 +185,7 @@ buildFunctionRelayQueryFields
 buildFunctionRelayQueryFields sourceName sourceInfo functionName functionInfo tableName pkeyColumns selPerms = do
   funcName <- functionGraphQLName @('Postgres pgKind) functionName `onLeft` throwError
   let
-    mkRF = RFDB sourceName
-             . AB.mkAnyBackend
-             . SourceConfigWith sourceInfo
-             . QDBR
+    mkRF = RFDB . AB.mkAnyBackend . DBField sourceName sourceInfo . QDBR
     fieldName = funcName <> $$(G.litName "_connection")
     fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
   fmap afold

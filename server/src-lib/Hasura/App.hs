@@ -62,7 +62,7 @@ import           Hasura.GraphQL.Execute                     (MonadGQLExecutionCh
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Action.Subscription
 import           Hasura.GraphQL.Logging                     (MonadQueryLog (..))
-import           Hasura.GraphQL.Transport.HTTP              (MonadExecuteQuery (..))
+import           Hasura.GraphQL.Execute.Query               (MonadExecuteQuery (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol     (toParsed)
 import           Hasura.Logging
 import           Hasura.Metadata.Class

@@ -57,9 +57,9 @@ explainQueryField userInfo fieldName rootField = do
     RFRemote _ -> throw400 InvalidParams "only hasura queries can be explained"
     RFAction _ -> throw400 InvalidParams "query actions cannot be explained"
     RFRaw _    -> pure $ encJFromJValue $ EB.ExplainPlan fieldName Nothing Nothing
-    RFDB sourceName exists   -> do
+    RFDB exists -> do
       AB.dispatchAnyBackend @EB.BackendExecute exists
-        \(SourceConfigWith sourceConfig (QDBR db)) ->
+        \(DBField sourceName sourceConfig (QDBR db)) ->
            EB.explainQueryField fieldName userInfo sourceName sourceConfig db
 
 explainGQLQuery

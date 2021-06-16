@@ -5,27 +5,42 @@ module Hasura.GraphQL.Execute.Remote
   , resolveRemoteVariable
   , resolveRemoteField
   , runVariableCache
+  , execRemoteGQ
+  , extractFieldFromResponse
   ) where
 
 import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
+import qualified Data.Aeson.Ordered                     as JO
+import qualified Data.Aeson.Text                        as JT
+import qualified Data.ByteString.Lazy                   as BL
+import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
 import qualified Data.Text                              as T
+import qualified Data.Text.Lazy                         as TL
+import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.HTTP.Types                     as N
+import qualified Network.Wreq                           as Wreq
 
+import           Control.Lens                           ((^.))
 import           Data.Text.Extended
+import           Control.Exception                      (try)
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.HTTP
+import           Hasura.RQL.DDL.Headers                 (makeHeadersFromConf)
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils
+import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
-
 
 mkVariableDefinitionAndValue :: Variable -> (G.VariableDefinition, (G.Name, J.Value))
 mkVariableDefinitionAndValue var@(Variable varInfo gType varValue) =
@@ -67,12 +82,11 @@ collectVariablesFromSelectionSet
 collectVariablesFromSelectionSet =
   map mkVariableDefinitionAndValue . Set.toList . collectVariables
 
-
 buildExecStepRemote
   :: RemoteSchemaInfo
   -> G.OperationType
   -> G.SelectionSet G.NoFragments Variable
-  -> ExecutionStep k
+  -> (RemoteSchemaInfo, GH.GQLReqOutgoing)
 buildExecStepRemote remoteSchemaInfo tp selSet =
   let unresolvedSelSet = unresolveVariables selSet
       allVars = map mkVariableDefinitionAndValue $ Set.toList $ collectVariables selSet
@@ -81,7 +95,7 @@ buildExecStepRemote remoteSchemaInfo tp selSet =
       varDefs = map fst allVars
       _grQuery = G.TypedOperationDefinition tp Nothing varDefs [] unresolvedSelSet
       _grVariables = varValsM
-  in ExecStepRemote remoteSchemaInfo GH.GQLReq{_grOperationName = Nothing, ..}
+  in (remoteSchemaInfo, GH.GQLReq{_grOperationName = Nothing, ..})
 
 
 -- | resolveRemoteVariable resolves a `RemoteSchemaVariable` into a GraphQL `Variable`. A
@@ -204,3 +218,74 @@ runVariableCache
   => StateT (HashMap J.Value Int) m a
   -> m a
 runVariableCache = flip evalStateT mempty
+
+execRemoteGQ
+  :: ( HasVersion
+     , MonadIO m
+     , MonadError QErr m
+     , Tracing.MonadTrace m
+     )
+  => Env.Environment
+  -> HTTP.Manager
+  -> UserInfo
+  -> [N.Header]
+  -> RemoteSchemaInfo
+  -> GQLReqOutgoing
+  -> m (DiffTime, [N.Header], BL.ByteString)
+  -- ^ Returns the response body and headers, along with the time taken for the
+  -- HTTP request to complete
+execRemoteGQ env manager userInfo reqHdrs rsi gqlReq@GQLReq{..} =  do
+  let gqlReqUnparsed = renderGQLReqOutgoing gqlReq
+
+  when (G._todType _grQuery == G.OperationTypeSubscription) $
+    throw400 NotSupported "subscription to remote server is not supported"
+  confHdrs <- makeHeadersFromConf env hdrConf
+  let clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
+      -- filter out duplicate headers
+      -- priority: conf headers > resolved userinfo vars > client headers
+      hdrMaps    = [ Map.fromList confHdrs
+                   , Map.fromList userInfoToHdrs
+                   , Map.fromList clientHdrs
+                   ]
+      headers  = Map.toList $ foldr Map.union Map.empty hdrMaps
+      finalHeaders = addDefaultHeaders headers
+  initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
+  initReq <- onLeft initReqE httpThrow
+  let req = initReq
+           { HTTP.method = "POST"
+           , HTTP.requestHeaders = finalHeaders
+           , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode gqlReqUnparsed)
+           , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
+           }
+  Tracing.tracedHttpRequest req \req' -> do
+    (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req' manager
+    resp <- onLeft res httpThrow
+    pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
+  where
+    RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
+    httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
+    httpThrow = \case
+      HTTP.HttpExceptionRequest _req content -> throw500 $ tshow content
+      HTTP.InvalidUrlException _url reason   -> throw500 $ tshow reason
+
+    userInfoToHdrs = sessionVariablesToHeaders $ _uiSession userInfo
+
+
+-- TODO: we'll need to move away from using QErr in GraphQL path
+extractFieldFromResponse
+  :: MonadError QErr m => Text -> BL.ByteString -> m JO.Value
+extractFieldFromResponse fieldName bs = do
+  val <- onLeft (JO.eitherDecode bs) $ throw500 . T.pack
+  valObj <- onLeft (JO.asObject val) throw500
+  dataVal <- case JO.toList valObj of
+    [("data", v)] -> pure v
+    _ -> case JO.lookup "errors" valObj of
+      Just (JO.Array err) ->
+        throw400 RemoteSchemaError $
+        TL.toStrict $ JT.encodeToLazyText $ toList $ fmap JO.fromOrdered err
+      _                   -> throw500 "Received invalid JSON value from remote"
+  dataObj <- onLeft (JO.asObject dataVal) throw500
+  fieldVal <- onNothing (JO.lookup fieldName dataObj) $
+    throw500 $ "expecting key " <> fieldName
+  return fieldVal
+

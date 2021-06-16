@@ -47,6 +47,7 @@ import qualified Hasura.GraphQL.Execute.LiveQuery.Options  as EL
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
 import qualified Hasura.GraphQL.Execute.LiveQuery.State    as EL
 import qualified Hasura.GraphQL.Execute.Plan               as E
+import qualified Hasura.GraphQL.Execute.Query              as EQ
 import qualified Hasura.GraphQL.Explain                    as GE
 import qualified Hasura.GraphQL.Transport.HTTP             as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
@@ -520,7 +521,7 @@ v1Alpha1GQHandler
      , E.MonadGQLExecutionCheck m
      , MonadQueryLog m
      , Tracing.MonadTrace m
-     , GH.MonadExecuteQuery m
+     , EQ.MonadExecuteQuery m
      , MonadError QErr m
      , MonadReader HandlerCtx m
      , HttpLog m
@@ -570,7 +571,7 @@ v1GQHandler
      , E.MonadGQLExecutionCheck m
      , MonadQueryLog m
      , Tracing.MonadTrace m
-     , GH.MonadExecuteQuery m
+     , EQ.MonadExecuteQuery m
      , HttpLog m
      , MonadError QErr m
      , MonadReader HandlerCtx m
@@ -588,7 +589,7 @@ v1GQRelayHandler
      , MonadQueryLog m
      , Tracing.MonadTrace m
      , HttpLog m
-     , GH.MonadExecuteQuery m
+     , EQ.MonadExecuteQuery m
      , MonadError QErr m
      , MonadReader HandlerCtx m
      , MonadMetadataStorage (MetadataStorageT m)
@@ -750,7 +751,7 @@ mkWaiApp
      , MonadQueryLog m
      , WS.MonadWSLog m
      , Tracing.HasReporter m
-     , GH.MonadExecuteQuery m
+     , EQ.MonadExecuteQuery m
      , HasResourceLimits m
      , MonadMetadataStorage (MetadataStorageT m)
      , MonadResolveSource m
@@ -866,7 +867,7 @@ httpApp
      , MonadConfigApiHandler m
      , MonadQueryLog m
      , Tracing.HasReporter m
-     , GH.MonadExecuteQuery m
+     , EQ.MonadExecuteQuery m
      , MonadMetadataStorage (MetadataStorageT m)
      , HasResourceLimits m
      , MonadResolveSource m
@@ -927,7 +928,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
              , MonadBaseControl IO m
              , E.MonadGQLExecutionCheck m
              , MonadQueryLog m
-             , GH.MonadExecuteQuery m
+             , EQ.MonadExecuteQuery m
              , MonadMetadataStorage (MetadataStorageT m)
              , HttpLog m
              )

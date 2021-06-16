@@ -28,7 +28,6 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.RemoteJoin.Types
 import           Hasura.GraphQL.Parser                   hiding (field)
-import           Hasura.GraphQL.RemoteServer             (execRemoteGQ)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types                        hiding (Alias)

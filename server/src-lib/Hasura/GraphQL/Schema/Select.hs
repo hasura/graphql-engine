@@ -1420,9 +1420,9 @@ nodeField = do
         withArgsPath $  throwInvalidNodeId $ "the table " <>> ident
       whereExp <- buildNodeIdBoolExp columnValues pkeyColumns
       return
-        $ IR.RFDB source
+        $ IR.RFDB
         $ AB.mkAnyBackend
-        $ IR.SourceConfigWith sourceConfig
+        $ IR.DBField source sourceConfig
         $ IR.QDBR
         $ IR.QDBSingleRow
         $ IR.AnnSelectG

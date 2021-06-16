@@ -20,6 +20,7 @@ import           Data.Text.Extended
 
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
+import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Syntax          as G
 
@@ -113,7 +114,7 @@ runCustomEndpoint
        , MonadBaseControl IO m
        , E.MonadGQLExecutionCheck m
        , MonadQueryLog m
-       , GH.MonadExecuteQuery m
+       , EQ.MonadExecuteQuery m
        , MonadMetadataStorage (MetadataStorageT m)
        , HttpLog m
        )
@@ -158,8 +159,8 @@ runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestReques
           (httpLoggingMetadata, handlerResp) <- flip runReaderT execCtx $ do
               (parameterizedQueryHash, resp) <- GH.runGQ env (E._ecxLogger execCtx) requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables)
               let httpLoggingMetadata = buildHTTPLoggingMetadata @m [parameterizedQueryHash]
-              return (httpLoggingMetadata, fst <$> resp)
-          case sequence handlerResp of
+              return (httpLoggingMetadata, resp)
+          case sequence undefined of
             Just resp -> pure $ (httpLoggingMetadata, fmap encodeHTTPResp resp)
             -- a Nothing value here indicates a failure to parse the cached request from redis.
             -- TODO: Do we need an additional log message here?

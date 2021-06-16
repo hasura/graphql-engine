@@ -1,8 +1,7 @@
 module Hasura.GraphQL.Execute.Action
   ( fetchActionLogResponses
-  , runActionExecution
   , asyncActionsProcessor
-  , resolveActionExecution
+  , runQueryActionSync
   , resolveActionMutationAsync
   , resolveAsyncActionQuery
   , insertActionTx
@@ -11,6 +10,7 @@ module Hasura.GraphQL.Execute.Action
   , fetchActionResponseTx
   , clearActionDataTx
   , setProcessingActionLogsToPendingTx
+  , runQueryActionAsync
   , LockedActionIdArray (..)
   , module Types
   ) where
@@ -84,40 +84,42 @@ fetchActionLogResponses actionIds = do
         isJust _alrResponsePayload || isJust _alrErrors
   pure (Map.fromList responses, all (isActionComplete . snd) responses)
 
-runActionExecution
+runQueryActionAsync
   :: ( MonadIO m, MonadBaseControl IO m
-     , MonadError QErr m, Tracing.MonadTrace m
+     , MonadError QErr m
      , MonadMetadataStorage (MetadataStorageT m)
      )
-  => ActionExecutionPlan -> m (DiffTime, (EncJSON, Maybe HTTP.ResponseHeaders))
-runActionExecution aep =
-  withElapsedTime $ case aep of
-    AEPSync e -> second Just <$> unActionExecution e
-    AEPAsyncQuery (AsyncActionQueryExecutionPlan actionId execution) -> do
-      actionLogResponse <- liftEitherM $ runMetadataStorageT $ fetchActionResponse actionId
-      (,Nothing) <$> case execution of
-        AAQENoRelationships f -> liftEither $ f actionLogResponse
-        AAQEOnSourceDB srcConfig (AsyncActionQuerySourceExecution _ jsonAggSelect f) -> do
-          let selectAST = f actionLogResponse
-          (selectResolved, _) <- flip runStateT Set.empty $ RS.traverseAnnSimpleSelect prepareWithoutPlan selectAST
-          let querySQL = Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggSelect selectResolved
-          liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx srcConfig) Q.ReadOnly $ liftTx $ asSingleRowJsonResp querySQL []
-    AEPAsyncMutation actionId -> pure $ (,Nothing) $ encJFromJValue $ actionIdToText actionId
+  => AsyncActionQueryExecutionPlan
+  -> m (EncJSON, HTTP.ResponseHeaders)
+runQueryActionAsync (AsyncActionQueryExecutionPlan actionId execution) = do
+  actionLogResponse <- liftEitherM $ runMetadataStorageT $ fetchActionResponse actionId
+  (,mempty) <$> case execution of
+    AAQENoRelationships f -> liftEither $ f actionLogResponse
+    AAQEOnSourceDB srcConfig (AsyncActionQuerySourceExecution _ jsonAggSelect f) -> do
+      let selectAST = f actionLogResponse
+      (selectResolved, _) <- flip runStateT Set.empty $ RS.traverseAnnSimpleSelect prepareWithoutPlan selectAST
+      let querySQL = Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggSelect selectResolved
+      liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx srcConfig) Q.ReadOnly $ liftTx $ asSingleRowJsonResp querySQL []
 
 -- | Synchronously execute webhook handler and resolve response to action "output"
-resolveActionExecution
-  :: (HasVersion)
+runQueryActionSync
+  :: ( HasVersion
+     , MonadIO m
+     , MonadBaseControl IO m
+     , MonadError QErr m
+     , Tracing.MonadTrace m
+     )
   => Env.Environment
   -> L.Logger L.Hasura
   -> UserInfo
   -> AnnActionExecution ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla))
   -> ActionExecContext
-  -> ActionExecution
-resolveActionExecution env logger userInfo annAction execContext =
+  -> m (EncJSON, HTTP.ResponseHeaders)
+runQueryActionSync env logger userInfo annAction execContext =
   case actionSource of
     -- Build client response
-    ASINoSource -> ActionExecution $ first (AO.toEncJSON . makeActionResponseNoRelations annFields) <$> runWebhook
-    ASISource _ sourceConfig -> ActionExecution do
+    ASINoSource -> first (AO.toEncJSON . makeActionResponseNoRelations annFields) <$> runWebhook
+    ASISource _ sourceConfig -> do
       (webhookRes, respHeaders) <- runWebhook
       let webhookResponseExpression = RS.AEInput $ UVLiteral $
             toTxtValue $ ColumnValue (ColumnScalar PGJSONB) $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
@@ -131,12 +133,12 @@ resolveActionExecution env logger userInfo annAction execContext =
       outputFields definitionList resolvedWebhook confHeaders
       forwardClientHeaders stringifyNum timeout actionSource = annAction
     ActionExecContext manager reqHeaders sessionVariables = execContext
-    actionContext = ActionContext actionName
-    handlerPayload = ActionWebhookPayload actionContext sessionVariables inputPayload
+    handlerPayload = ActionWebhookPayload actionName sessionVariables inputPayload
 
-
-    executeActionInDb :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m)
-                      => SourceConfig ('Postgres 'Vanilla) -> RS.AnnSimpleSel ('Postgres 'Vanilla) -> [Q.PrepArg] -> m EncJSON
+    executeActionInDb
+      :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m)
+      => SourceConfig ('Postgres 'Vanilla)
+      -> RS.AnnSimpleSel ('Postgres 'Vanilla) -> [Q.PrepArg] -> m EncJSON
     executeActionInDb sourceConfig astResolved prepArgs = do
       let jsonAggType = mkJsonAggSelect outputType
       liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly $
@@ -163,15 +165,18 @@ makeActionResponseNoRelations annFields webhookResponse =
 
 {- Note: [Async action architecture]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-In async actions, acquiring the action result is deferred. The async action mutation is made to
-initiate the action which returns an UUID. The UUID is used to query/subsribe for actions response.
+In async actions, acquiring the action result is deferred. The async action
+mutation is made to initiate the action which returns an UUID. The UUID is used
+to query/subsribe for actions response.
 
-On mutation, the server makes an action log record in the metadata storage with request headers
-and input arguments. The `asyncActionsProcessor` background thread processes the async actions by executing
-the webhook handler and writing back the response payload or errors if any in the metadata storage.
+On mutation, the server makes an action log record in the metadata storage with
+request headers and input arguments. The `asyncActionsProcessor` background
+thread processes the async actions by executing the webhook handler and writing
+back the response payload or errors if any in the metadata storage.
 
-When an async action query/subscription is made, the server fetches the relavent data from the
-metadata storage. See Note [Resolving async action query] below.
+When an async action query/subscription is made, the server fetches the
+relavent data from the metadata storage. See Note [Resolving async action
+query] below.
 -}
 
 -- | Resolve asynchronous action mutation which returns only the action uuid
@@ -190,24 +195,26 @@ resolveActionMutationAsync annAction reqHeaders sessionVariables =
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Resolving async action query happens in two steps;
 
-1. Fetching webhook response from the metadata storage:
-  In this step, using @'fetchActionResponse' method of @'MonadMetadataStorage' type class, we fetch
-  the webhook response of any async action mutation (See Note [Async action architecture] for more)
+1. Fetching webhook response from the metadata storage: In this step, using
+   @'fetchActionResponse' method of @'MonadMetadataStorage' type class, we fetch
+   the webhook response of any async action mutation (See Note [Async action
+   architecture] for more)
 
-2. Generating client response:
-  Generation of appropriate client response happens in two ways based on the availibility of
-  relationships on action output object type.
+2. Generating client response: Generation of appropriate client response
+   happens in two ways based on the availibility of relationships on action output
+   object type.
 
-    a. With relationships:- If there are any relationships defined to tables in a source,
-       we need to join the rows from the tables. So, we'll generate a SELECT SQL statement from
-       a table built virtually from action webhook response fetched in the Step 1 and joining it
-       with appropriate tables. Then, we execute this SQL in the source database.
+    a. With relationships:- If there are any relationships defined to tables in
+       a source, we need to join the rows from the tables. So, we'll generate a
+       SELECT SQL statement from a table built virtually from action webhook
+       response fetched in the Step 1 and joining it with appropriate tables.
+       Then, we execute this SQL in the source database.
 
          SELECT .... FROM pg_catalog.jsonb_to_recordset('action webhook response')
          JOIN .... (SELECT ... FROM <source relationship table>)
 
-    b. Without relationships:- In this case, we'll build the response purely in Haskell code from
-       the action webhook response fetched in the Step 1.
+    b. Without relationships:- In this case, we'll build the response purely in
+       Haskell code from the action webhook response fetched in the Step 1.
 -}
 
 -- TODO: Add tracing here? Avoided now because currently the function is pure
@@ -343,11 +350,10 @@ asyncActionsProcessor env logger cacheRef lockedActionEvents httpManager sleepTi
               confHeaders = _adHeaders definition
               timeout = _adTimeout definition
               outputType = _adOutputType definition
-              actionContext = ActionContext actionName
           eitherRes <- runExceptT $ flip runReaderT logger $
                        callWebhook env httpManager outputType outputFields reqHeaders confHeaders
                          forwardClientHeaders webhookUrl
-                         (ActionWebhookPayload actionContext sessionVariables inputPayload)
+                         (ActionWebhookPayload actionName sessionVariables inputPayload)
                          timeout
           resE <- runMetadataStorageT $ setActionStatus actionId $ case eitherRes of
               Left e                     -> AASError e

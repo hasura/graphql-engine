@@ -14,17 +14,14 @@ import           Data.Text.Extended
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol  as GH
 import qualified Hasura.Logging                          as L
-import qualified Hasura.SQL.AnyBackend                   as AB
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Execute.Action.Types     (ActionExecutionPlan)
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Execute.RemoteJoin.Types
 import           Hasura.GraphQL.Logging                  (MonadQueryLog)
 import           Hasura.GraphQL.Parser                   hiding (Type)
 import           Hasura.RQL.IR
-import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.RemoteSchema
@@ -35,10 +32,8 @@ import           Hasura.Session
 import           Hasura.Tracing
 
 
--- | This typeclass enacapsulates how a given backend translates a root field
--- into an execution plan. For now, each root field maps to one execution step,
--- but in the future, when we have a client-side dataloader, each root field
--- might translate into a multi-step plan.
+-- | This typeclass enacapsulates how a given backend fetches the data for a
+-- root field
 class ( Backend b
       , ToTxt (MultiplexedQuery b)
       ) => BackendExecute (b :: BackendType) where
@@ -127,34 +122,20 @@ data ExplainPlan
 instance J.ToJSON ExplainPlan where
   toJSON = J.genericToJSON $ J.aesonPrefix J.camelCase
 
+type QueryFieldExecution
+  = RootField
+      (QueryDBRootField UnpreparedValue, Maybe RemoteJoins)
+      (RemoteSchemaInfo, GH.GQLReqOutgoing)
+      (QueryActionRootField UnpreparedValue, Maybe RemoteJoins)
+      JO.Value
 
--- | One execution step to processing a GraphQL query (e.g. one root field).
-data ExecutionStep dbRootField where
-  -- | A query to execute against the database
-  ExecStepDB
-    :: SourceName
-    -> AB.AnyBackend (SourceConfigWith (dbRootField UnpreparedValue))
-    -> Maybe RemoteJoins
-    -> ExecutionStep dbRootField
-  -- | Execute an action
-  ExecStepAction
-    :: ActionExecutionPlan
-    -> ActionsInfo
-    -> Maybe RemoteJoins
-    -> ExecutionStep dbRootField
-  -- | A graphql query to execute against a remote schema
-  ExecStepRemote
-    :: !RemoteSchemaInfo
-    -> !GH.GQLReqOutgoing
-    -> ExecutionStep dbRootField
-  -- | Output a plain JSON object
-  ExecStepRaw
-    :: JO.Value
-    -> ExecutionStep dbRootField
+type MutationFieldExecution
+  = RootField
+      (MutationDBRootField UnpreparedValue, Maybe RemoteJoins, SQLGenCtx)
+      (RemoteSchemaInfo, GH.GQLReqOutgoing)
+      (MutationActionRootField UnpreparedValue, Maybe RemoteJoins)
+      JO.Value
 
-
--- | The series of steps that need to be executed for a given query. For now,
--- those steps are all independent. In the future, when we implement a
--- client-side dataloader and generalized joins, this will need to be changed
--- into an annotated tree.
-type ExecutionPlan k = InsOrdHashMap G.Name (ExecutionStep k)
+type ExecutionPlan root = InsOrdHashMap G.Name root
+type QueryExecutionPlan = ExecutionPlan QueryFieldExecution
+type MutationExecutionPlan = ExecutionPlan MutationFieldExecution

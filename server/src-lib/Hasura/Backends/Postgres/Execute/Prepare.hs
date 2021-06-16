@@ -2,8 +2,6 @@ module Hasura.Backends.Postgres.Execute.Prepare
   ( PlanVariables
   , PrepArgMap
   , PlanningSt(..)
-  , ExecutionPlan
-  , ExecutionStep(..)
   , initPlanningSt
   , prepareWithPlan
   , prepareWithoutPlan
@@ -30,7 +28,6 @@ import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.Column
 import           Hasura.Backends.Postgres.Types.Column
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.DML.Internal                   (currentSession,

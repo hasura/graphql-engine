@@ -31,11 +31,6 @@ import           Hasura.SQL.Backend
 import           Hasura.Session
 
 
-newtype QDB v b = QDB (QueryDB b v)
-
-type SubscriptionRootFieldMSSQL v = RootField (QDB v) Void Void {-(RQL.AnnActionAsyncQuery 'MSSQL v)-} Void
-
-
 -- --------------------------------------------------------------------------------
 -- -- Top-level planner
 

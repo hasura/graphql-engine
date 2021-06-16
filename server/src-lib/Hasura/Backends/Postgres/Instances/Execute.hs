@@ -11,6 +11,7 @@ import           Hasura.Prelude
 import           Control.Monad.Morph                        (hoist)
 import qualified Control.Monad.Trans.Control                as MT
 import qualified Data.ByteString                            as B
+import qualified Data.HashMap.Strict.InsOrd                 as OMap
 import qualified Data.HashSet                               as Set
 import qualified Data.IntMap                                as IntMap
 import qualified Data.Sequence                              as Seq
@@ -359,11 +360,12 @@ runPGMutationTransaction
   -> SourceConfig ('Postgres pgKind)
   -> Bool
   -> InsOrdHashMap G.Name (MutationDBRoot UnpreparedValue ('Postgres 'Vanilla))
-  -> m (InsOrdHashMap G.Name EncJSON)
+  -> m EncJSON
 runPGMutationTransaction reqId logger userInfo sourceConfig stringifyNum mutations = do
   -- logQueryLog logger $ mkQueryLog query $$(G.litName "transaction") Nothing reqId
-  tx <- for mutations \(MDBR rf) ->
+  txs <- for mutations \(MDBR rf) ->
             -- trace ("Postgres Mutation for root field " <>> fieldName) $
     pgMutationRootFieldTransaction userInfo stringifyNum rf
-  runMutationTx userInfo sourceConfig $ sequence tx
 
+  encJFromInsOrdHashMap . OMap.mapKeys G.unName <$>
+    runMutationTx userInfo sourceConfig (sequence txs)
