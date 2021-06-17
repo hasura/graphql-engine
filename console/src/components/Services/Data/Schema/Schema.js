@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
-import { push } from 'react-router-redux';
 import { Link } from 'react-router';
 
+import _push from '../push';
 import Button from '../../../Common/Button/Button';
 import {
   setTableName,
@@ -255,7 +255,7 @@ class Schema extends Component {
           e.preventDefault();
 
           dispatch(
-            push(getSchemaAddTableRoute(currentSchema, currentDataSource))
+            _push(getSchemaAddTableRoute(currentSchema, currentDataSource))
           );
         };
 
