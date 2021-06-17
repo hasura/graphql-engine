@@ -70,6 +70,10 @@ args:
           SELECT q.* FROM (VALUES (hasura_session ->> session_var)) q
       $$ LANGUAGE sql STABLE;
 
+      CREATE TABLE table_to_customize (
+         column_to_customize SERIAL PRIMARY KEY
+         );
+
 - type: track_table
   args:
     schema: public
@@ -81,6 +85,10 @@ args:
     schema: public
     name: article
 
+- type: track_table
+  args:
+    schema: public
+    name: table_to_customize
 
 #Object relationship
 - type: create_object_relationship

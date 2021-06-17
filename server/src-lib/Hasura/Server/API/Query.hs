@@ -55,7 +55,7 @@ data RQLQueryV1
   | RQTrackTable !(TrackTable ('Postgres 'Vanilla))
   | RQUntrackTable !(UntrackTable ('Postgres 'Vanilla))
   | RQSetTableIsEnum !SetTableIsEnum
-  | RQSetTableCustomization !SetTableCustomization
+  | RQSetTableCustomization !(SetTableCustomization ('Postgres 'Vanilla))
 
   | RQTrackFunction !(TrackFunction ('Postgres 'Vanilla))
   | RQUntrackFunction !(UnTrackFunction ('Postgres 'Vanilla))

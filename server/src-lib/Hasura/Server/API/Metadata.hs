@@ -50,7 +50,7 @@ data RQLMetadataV1
   | RMPgTrackTable !(TrackTableV2 ('Postgres 'Vanilla))
   | RMPgUntrackTable !(UntrackTable ('Postgres 'Vanilla))
   | RMPgSetTableIsEnum !SetTableIsEnum
-  | RMPgSetTableCustomization !SetTableCustomization
+  | RMPgSetTableCustomization !(SetTableCustomization ('Postgres 'Vanilla))
 
   -- Postgres functions
   | RMPgTrackFunction !(TrackFunctionV2 ('Postgres 'Vanilla))
@@ -99,6 +99,7 @@ data RQLMetadataV1
   | RMMssqlDropSource !DropSource
   | RMMssqlTrackTable !(TrackTableV2 'MSSQL)
   | RMMssqlUntrackTable !(UntrackTable 'MSSQL)
+  | RMMssqlSetTableCustomization !(SetTableCustomization 'MSSQL)
 
   | RMMssqlCreateObjectRelationship !(CreateObjRel 'MSSQL)
   | RMMssqlCreateArrayRelationship !(CreateArrRel 'MSSQL)
@@ -130,6 +131,7 @@ data RQLMetadataV1
   | RMCitusDropSource !DropSource
   | RMCitusTrackTable !(TrackTableV2 ('Postgres 'Citus))
   | RMCitusUntrackTable !(UntrackTable ('Postgres 'Citus))
+  | RMCitusSetTableCustomization !(SetTableCustomization ('Postgres 'Citus))
 
   -- Citus relationship
   | RMCitusCreateObjectRelationship !(CreateObjRel ('Postgres 'Citus))
@@ -154,6 +156,7 @@ data RQLMetadataV1
   | RMBigqueryAddSource !(AddSource 'BigQuery)
   | RMBigqueryDropSource !DropSource
   | RMBigqueryTrackTable !(TrackTableV2 'BigQuery)
+  | RMBigquerySetTableCustomization !(SetTableCustomization 'BigQuery)
   | RMBigqueryUntrackTable !(UntrackTable 'BigQuery)
   | RMBigqueryCreateObjectRelationship !(CreateObjRel 'BigQuery)
   | RMBigqueryCreateArrayRelationship !(CreateArrRel 'BigQuery)
@@ -461,6 +464,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMBigqueryDropSource q            -> runDropSource q
   RMBigqueryTrackTable q            -> runTrackTableV2Q q
   RMBigqueryUntrackTable q          -> runUntrackTableQ q
+  RMBigquerySetTableCustomization q -> runSetTableCustomization q
 
   RMBigqueryCreateObjectRelationship q -> runCreateRelationship ObjRel q
   RMBigqueryCreateArrayRelationship q  -> runCreateRelationship ArrRel q
@@ -483,6 +487,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMMssqlDropSource q               -> runDropSource q
   RMMssqlTrackTable q               -> runTrackTableV2Q q
   RMMssqlUntrackTable q             -> runUntrackTableQ q
+  RMMssqlSetTableCustomization q    -> runSetTableCustomization q
 
   RMMssqlCreateObjectRelationship q -> runCreateRelationship ObjRel q
   RMMssqlCreateArrayRelationship q  -> runCreateRelationship ArrRel q
@@ -505,6 +510,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMCitusDropSource q               -> runDropSource q
   RMCitusTrackTable q               -> runTrackTableV2Q q
   RMCitusUntrackTable q             -> runUntrackTableQ q
+  RMCitusSetTableCustomization q    -> runSetTableCustomization q
 
   RMCitusTrackFunction q               -> runTrackFunctionV2 q
   RMCitusUntrackFunction q             -> runUntrackFunc q
