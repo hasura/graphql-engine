@@ -36,7 +36,7 @@ import qualified Language.GraphQL.Draft.Syntax                as G
 import qualified Network.HTTP.Types                           as HTTP
 import qualified Network.Wai.Extended                         as Wai
 
-import           Control.Lens                                 (toListOf)
+import           Control.Lens                                 (Traversal', toListOf)
 import           Control.Monad.Morph                          (hoist)
 import           Control.Monad.Trans.Control                  (MonadBaseControl)
 
@@ -166,7 +166,7 @@ runSessVarPred = filterSessionVariables . unSessVarPred
 -- | Filter out only those session variables used by the query AST provided
 filterVariablesFromQuery
   :: Backend backend
-  => [RootField (QueryDBRoot UnpreparedValue) c (ActionQuery backend (UnpreparedValue bet)) d]
+  => [RootField (QueryDBRoot UnpreparedValue) RemoteField (ActionQuery backend (UnpreparedValue bet)) d]
   -> SessVarPred
 filterVariablesFromQuery query = fold $ rootToSessVarPreds =<< query
   where
@@ -174,16 +174,25 @@ filterVariablesFromQuery query = fold $ rootToSessVarPreds =<< query
       RFDB _ exists ->
         AB.dispatchAnyBackend @Backend exists \case
           SourceConfigWith _ (QDBR db) -> toPred <$> toListOf traverseQueryDB db
+      RFRemote remote -> match <$> toListOf (traverse . _SessionPresetVariable) remote
       RFAction actionQ -> toPred <$> toListOf traverseActionQuery actionQ
       _ -> []
+
+    _SessionPresetVariable :: Traversal' RemoteSchemaVariable SessionVariable
+    _SessionPresetVariable f (SessionPresetVariable a b c) =
+      (\a' -> SessionPresetVariable a' b c) <$> f a
+    _SessionPresetVariable _ x = pure x
 
     toPred :: UnpreparedValue bet -> SessVarPred
     -- if we see a reference to the whole session variables object,
     -- then we need to keep everything:
     toPred UVSession               = keepAllSessionVariables
     -- if we only see a specific session variable, we only need to keep that one:
-    toPred (UVSessionVar _type sv) = SessVarPred $ \sv' _ -> sv == sv'
+    toPred (UVSessionVar _type sv) = match sv
     toPred _                       = mempty
+
+    match :: SessionVariable -> SessVarPred
+    match sv = SessVarPred $ \sv' _ -> sv == sv'
 
 -- | Run (execute) a single GraphQL query
 runGQ
