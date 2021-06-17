@@ -72,6 +72,8 @@ To use an existing database, choose ``Connect existing database`` and enter your
   recommended to use env vars for better security *(as connection details are part of Hasura metadata)* as well as
   to allow configuring different databases in different environments *(like staging/production)* easily.
 
+.. _cloud_projects_create_allow_nat_ip:
+
 Allowing connections from Hasura Cloud IP
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
