@@ -60,17 +60,18 @@ const routes = store => {
           cb();
         },
         r => {
-          if (r.code === 'data_api_error') {
+          if (r && r.code === 'data_api_error') {
             dispatch(showErrorNotification('Error', null, r));
           } else {
             dispatch(
               showErrorNotification(
                 'Connection error',
-                'Hasura console is not able to reach your Hasura GraphQL engine instance. Please ensure that your ' +
+                'Hasura console is not able to reach your Hasura CLI instance. Please ensure that your ' +
                   'instance is running and the endpoint is configured correctly.'
               )
             );
           }
+          cb();
         }
       );
     } else {
