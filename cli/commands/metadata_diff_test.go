@@ -41,7 +41,11 @@ var _ = Describe("hasura metadata diff", func() {
 				WorkingDirectory: dirName,
 			})
 			Eventually(session, 60*40).Should(Exit(0))
-			Eventually(session.Wait().Out.Contents()).Should(ContainSubstring("name: default"))
+			Eventually(session.Wait().Out.Contents()).Should(ContainSubstring("-sources: []"))
+			Eventually(session.Wait().Out.Contents()).Should(ContainSubstring("+sources:"))
+			Eventually(session.Wait().Out.Contents()).Should(ContainSubstring("+  kind: postgres"))
+			Eventually(session.Wait().Out.Contents()).Should(ContainSubstring("+  name: default"))
+			Eventually(session.Wait().Out.Contents()).Should(ContainSubstring("+  tables: []"))
 		})
 	})
 })
