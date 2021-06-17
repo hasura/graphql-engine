@@ -5,6 +5,7 @@
 
 - server: make improvements in the `livequery-poller-log`
 - server: Backends Citus, MSSQL, and BigQuery now all support the `set_table_customization` operation.
+- server: Adds caching support for queries using remote schema permissions
 - cli: `metadata diff` will now only show the differences in metadata. old behaviour is avialble behind a flag (`--type unified-common`) (#5487)
 
 ## v2.0.0-beta.2
