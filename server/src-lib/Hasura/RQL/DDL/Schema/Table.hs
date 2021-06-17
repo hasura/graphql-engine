@@ -251,15 +251,17 @@ runSetExistingTableIsEnumQ (SetTableIsEnum source tableName isEnum) = do
     $ tableMetadataSetter @('Postgres 'Vanilla) source tableName.tmIsEnum .~ isEnum
   return successMsg
 
-data SetTableCustomization
+data SetTableCustomization b
   = SetTableCustomization
   { _stcSource        :: !SourceName
-  , _stcTable         :: !QualifiedTable
-  , _stcConfiguration :: !(TableConfig ('Postgres 'Vanilla))
-  } deriving (Show, Eq)
-$(deriveToJSON hasuraJSON ''SetTableCustomization)
+  , _stcTable         :: !(TableName b)
+  , _stcConfiguration :: !(TableConfig b)
+  } deriving (Show, Eq, Generic)
 
-instance FromJSON SetTableCustomization where
+instance (Backend b) => ToJSON (SetTableCustomization b) where
+  toJSON = genericToJSON hasuraJSON
+
+instance (Backend b) => FromJSON (SetTableCustomization b) where
   parseJSON = withObject "Object" $ \o ->
     SetTableCustomization
       <$> o .:? "source" .!= defaultSource
@@ -295,11 +297,14 @@ runSetTableCustomFieldsQV2 (SetTableCustomFields source tableName rootFields col
   return successMsg
 
 runSetTableCustomization
-  :: (QErrM m, CacheRWM m, MetadataM m) => SetTableCustomization -> m EncJSON
+  :: forall b m
+  . (QErrM m, CacheRWM m, MetadataM m, Backend b, BackendMetadata b)
+  => SetTableCustomization b
+  -> m EncJSON
 runSetTableCustomization (SetTableCustomization source table config) = do
-  void $ askTabInfo @('Postgres 'Vanilla) source table
+  void $ askTabInfo @b source table
   buildSchemaCacheFor
-    (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable @('Postgres 'Vanilla) table)
+    (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable @b table)
     $ MetadataModifier
     $ tableMetadataSetter source table.tmConfiguration .~ config
   return successMsg
