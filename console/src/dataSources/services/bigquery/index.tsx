@@ -359,6 +359,9 @@ export const bigquery: DataSourcesAPI = {
   getCreatePkSql: () => {
     return '';
   },
+  getAlterPkSql: () => {
+    return '';
+  },
   getFunctionDefinitionSql: null,
   primaryKeysInfoSql: () => {
     return 'select []';

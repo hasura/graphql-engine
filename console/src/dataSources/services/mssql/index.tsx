@@ -708,6 +708,26 @@ FROM sys.objects as obj
     ADD CONSTRAINT "${constraintName}"
     PRIMARY KEY (${selectedPkColumns.map(pkc => `"${pkc}"`).join(',')})`;
   },
+  getAlterPkSql: ({
+    schemaName,
+    tableName,
+    selectedPkColumns,
+    constraintName,
+  }: {
+    schemaName: string;
+    tableName: string;
+    selectedPkColumns: string[];
+    constraintName: string; // compulsory for PG
+  }) => {
+    return `BEGIN TRANSACTION;
+    ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT "${constraintName}";
+    ALTER TABLE "${schemaName}"."${tableName}"
+      ADD CONSTRAINT "${constraintName}" PRIMARY KEY (${selectedPkColumns
+      .map(pkc => `"${pkc}"`)
+      .join(', ')});
+    
+    COMMIT TRANSACTION;`;
+  },
   getFunctionDefinitionSql: null,
   primaryKeysInfoSql: ({ schemas }) => {
     let whereClause = '';

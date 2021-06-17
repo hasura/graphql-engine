@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`postgresql datasource tests getAlterPkSql should generate alter operation as a single transaction  1`] = `
+"BEGIN TRANSACTION;
+ALTER TABLE \\"public\\".\\"users\\" DROP CONSTRAINT \\"PK__users__1234\\";
+
+ALTER TABLE \\"public\\".\\"users\\"
+    ADD CONSTRAINT \\"PK__users__1234\\" PRIMARY KEY (\\"id\\");
+COMMIT TRANSACTION;"
+`;
+
+exports[`postgresql datasource tests getAlterPkSql should work with multi-column PKs  1`] = `
+"BEGIN TRANSACTION;
+ALTER TABLE \\"public\\".\\"users\\" DROP CONSTRAINT \\"test_constraint\\";
+
+ALTER TABLE \\"public\\".\\"users\\"
+    ADD CONSTRAINT \\"test_constraint\\" PRIMARY KEY (\\"id\\", \\"account\\");
+COMMIT TRANSACTION;"
+`;

@@ -285,6 +285,17 @@ export interface DataSourcesAPI {
     selectedPkColumns: string[];
     constraintName?: string;
   }) => string;
+  getAlterPkSql: ({
+    schemaName,
+    tableName,
+    selectedPkColumns,
+    constraintName,
+  }: {
+    schemaName: string;
+    tableName: string;
+    selectedPkColumns: string[];
+    constraintName: string;
+  }) => string;
   getFunctionDefinitionSql:
     | null
     | ((

@@ -454,7 +454,8 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
       return dispatch(showSuccessNotification('No changes'));
     }
     const migrationUp = [];
-    if (constraintName) {
+    // droping PK
+    if (constraintName && !numSelectedPkColumns) {
       migrationUp.push(
         getRunSqlQuery(
           dataSource.getDropConstraintSql(
@@ -466,8 +467,22 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
         )
       );
     }
-    // skip creating a new config if no columns were selected
-    if (numSelectedPkColumns) {
+    // Altering PK
+    else if (constraintName && numSelectedPkColumns) {
+      migrationUp.push(
+        getRunSqlQuery(
+          dataSource.getAlterPkSql({
+            schemaName,
+            tableName,
+            selectedPkColumns,
+            constraintName,
+          }),
+          source
+        )
+      );
+    }
+    // Creating a new PK entry
+    else if (!constraintName && numSelectedPkColumns) {
       migrationUp.push(
         getRunSqlQuery(
           dataSource.getCreatePkSql({
