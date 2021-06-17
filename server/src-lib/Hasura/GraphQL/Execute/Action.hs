@@ -110,7 +110,7 @@ resolveActionExecution
   => Env.Environment
   -> L.Logger L.Hasura
   -> UserInfo
-  -> AnnActionExecution ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla))
+  -> AnnActionExecution ('Postgres 'Vanilla) (Const Void) (UnpreparedValue ('Postgres 'Vanilla))
   -> ActionExecContext
   -> ActionExecution
 resolveActionExecution env logger userInfo annAction execContext =
@@ -149,7 +149,7 @@ resolveActionExecution env logger userInfo annAction execContext =
         forwardClientHeaders resolvedWebhook handlerPayload timeout
 
 -- | Build action response from the Webhook JSON response when there are no relationships defined
-makeActionResponseNoRelations :: RS.AnnFieldsG b v -> ActionWebhookResponse -> AO.Value
+makeActionResponseNoRelations :: RS.AnnFieldsG b r v -> ActionWebhookResponse -> AO.Value
 makeActionResponseNoRelations annFields webhookResponse =
   let mkResponseObject obj =
         AO.object $ flip mapMaybe annFields $ \(fieldName, annField) ->
@@ -214,7 +214,7 @@ Resolving async action query happens in two steps;
 -- | See Note: [Resolving async action query]
 resolveAsyncActionQuery
   :: UserInfo
-  -> AnnActionAsyncQuery ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla))
+  -> AnnActionAsyncQuery ('Postgres 'Vanilla) (Const Void) (UnpreparedValue ('Postgres 'Vanilla))
   -> AsyncActionQueryExecution (UnpreparedValue ('Postgres 'Vanilla))
 resolveAsyncActionQuery userInfo annAction =
   case actionSource of
@@ -240,9 +240,9 @@ resolveAsyncActionQuery userInfo annAction =
               AsyncTypename t -> RS.AFExpression t
               AsyncOutput annFields ->
                 let inputTableArgument = RS.AETableRow $ Just $ Identifier "response_payload"
-                in RS.AFComputedField () $ RS.CFSTable jsonAggSelect $
-                   processOutputSelectionSet inputTableArgument outputType
-                   definitionList annFields stringifyNumerics
+                in RS.AFComputedField ()
+                   $ RS.CFSTable jsonAggSelect
+                   $ processOutputSelectionSet inputTableArgument outputType definitionList annFields stringifyNumerics
 
               AsyncId        -> mkAnnFldFromPGCol idColumn
               AsyncCreatedAt -> mkAnnFldFromPGCol createdAtColumn
@@ -478,9 +478,9 @@ processOutputSelectionSet
   :: RS.ArgumentExp ('Postgres 'Vanilla) v
   -> GraphQLType
   -> [(PGCol, PGScalarType)]
-  -> RS.AnnFieldsG ('Postgres 'Vanilla) v
+  -> RS.AnnFieldsG ('Postgres 'Vanilla) r v
   -> Bool
-  -> RS.AnnSimpleSelG ('Postgres 'Vanilla) v
+  -> RS.AnnSimpleSelG ('Postgres 'Vanilla) r v
 processOutputSelectionSet tableRowInput actionOutputType definitionList annotatedFields =
   RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs
   where

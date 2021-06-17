@@ -79,7 +79,7 @@ msBuildTableRelayQueryFields
   -> G.Name
   -> NESeq (ColumnInfo 'MSSQL)
   -> SelPermInfo  'MSSQL
-  -> m [FieldParser n (QueryRootField UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
 msBuildTableRelayQueryFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
   pure []
 
@@ -93,7 +93,7 @@ msBuildTableInsertMutationFields
   -> InsPermInfo 'MSSQL
   -> Maybe (SelPermInfo 'MSSQL)
   -> Maybe (UpdPermInfo 'MSSQL)
-  -> m [FieldParser n (MutationRootField UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
 msBuildTableInsertMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
   pure []
 
@@ -106,7 +106,7 @@ msBuildTableUpdateMutationFields
   -> G.Name
   -> UpdPermInfo 'MSSQL
   -> Maybe (SelPermInfo 'MSSQL)
-  -> m [FieldParser n (MutationRootField UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
 msBuildTableUpdateMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _updPerns _selPerms =
   pure []
 
@@ -119,7 +119,7 @@ msBuildTableDeleteMutationFields
   -> G.Name
   -> DelPermInfo 'MSSQL
   -> Maybe (SelPermInfo 'MSSQL)
-  -> m [FieldParser n (MutationRootField UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
 msBuildTableDeleteMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _delPerns _selPerms =
   pure []
 
@@ -131,7 +131,7 @@ msBuildFunctionQueryFields
     -> FunctionInfo 'MSSQL
     -> TableName 'MSSQL
     -> SelPermInfo 'MSSQL
-    -> m [FieldParser n (QueryRootField UnpreparedValue)]
+    -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
 msBuildFunctionQueryFields _ _ _ _ _ _ =
   pure []
 
@@ -144,7 +144,7 @@ msBuildFunctionRelayQueryFields
   -> TableName    'MSSQL
   -> NESeq (ColumnInfo 'MSSQL)
   -> SelPermInfo  'MSSQL
-  -> m [FieldParser n (QueryRootField UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
 msBuildFunctionRelayQueryFields _sourceName _sourceInfo _functionName _functionInfo _tableName _pkeyColumns _selPerms =
   pure []
 
@@ -156,7 +156,7 @@ msBuildFunctionMutationFields
     -> FunctionInfo 'MSSQL
     -> TableName 'MSSQL
     -> SelPermInfo 'MSSQL
-    -> m [FieldParser n (MutationRootField UnpreparedValue)]
+    -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
 msBuildFunctionMutationFields _ _ _ _ _ _ =
   pure []
 

@@ -49,7 +49,7 @@ class ( Backend b
     => UserInfo
     -> SourceName
     -> SourceConfig b
-    -> QueryDB b (UnpreparedValue b)
+    -> QueryDB b (Const Void) (UnpreparedValue b)
     -> m (DBStepInfo b)
   mkDBMutationPlan
     :: forall m
@@ -60,7 +60,7 @@ class ( Backend b
     -> Bool
     -> SourceName
     -> SourceConfig b
-    -> MutationDB b (UnpreparedValue b)
+    -> MutationDB b (Const Void) (UnpreparedValue b)
     -> m (DBStepInfo b)
   mkDBSubscriptionPlan
     :: forall m
@@ -70,7 +70,7 @@ class ( Backend b
     => UserInfo
     -> SourceName
     -> SourceConfig b
-    -> InsOrdHashMap G.Name (QueryDB b (UnpreparedValue b))
+    -> InsOrdHashMap G.Name (QueryDB b (Const Void) (UnpreparedValue b))
     -> m (LiveQueryPlan b (MultiplexedQuery b))
   mkDBQueryExplain
     :: forall m
@@ -80,7 +80,7 @@ class ( Backend b
     -> UserInfo
     -> SourceName
     -> SourceConfig b
-    -> QueryDB b (UnpreparedValue b)
+    -> QueryDB b (Const Void) (UnpreparedValue b)
     -> m (AB.AnyBackend DBStepInfo)
   mkLiveQueryExplain
     :: ( MonadError QErr m

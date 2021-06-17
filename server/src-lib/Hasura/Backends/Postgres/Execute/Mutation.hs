@@ -105,11 +105,11 @@ mutateAndReturn (Mutation qt (cte, p) mutationOutput allCols strfyNum) =
 
 
 execUpdateQuery
-  ::
-  ( MonadTx m
-  , Backend ('Postgres pgKind)
-  , PostgresAnnotatedFieldJSON pgKind
-  )
+  :: forall pgKind m
+   . ( MonadTx m
+     , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
   => Bool
   -> UserInfo
   -> (AnnUpd ('Postgres pgKind), DS.Seq Q.PrepArg)
@@ -121,11 +121,11 @@ execUpdateQuery strfyNum userInfo (u, p) =
     updateCTE = mkUpdateCTE u
 
 execDeleteQuery
-  ::
-  ( MonadTx m
-  , Backend ('Postgres pgKind)
-  , PostgresAnnotatedFieldJSON pgKind
-  )
+  :: forall pgKind m
+   . ( MonadTx m
+     , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
   => Bool
   -> UserInfo
   -> (AnnDel ('Postgres pgKind), DS.Seq Q.PrepArg)

@@ -7,7 +7,6 @@ import           Hasura.Prelude
 import qualified Language.GraphQL.Draft.Syntax    as G
 
 import           Data.Aeson
-import           Data.Functor.Const
 
 import qualified Hasura.Backends.BigQuery.Source  as BigQuery
 import qualified Hasura.Backends.BigQuery.Types   as BigQuery

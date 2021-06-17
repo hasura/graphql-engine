@@ -41,7 +41,7 @@ parseGraphQLQuery
   -> Maybe (HashMap G.Name J.Value)
   -> [G.Directive G.Name]
   -> G.SelectionSet G.NoFragments G.Name
-  -> m ( InsOrdHashMap G.Name (QueryRootField UnpreparedValue)
+  -> m ( InsOrdHashMap G.Name (QueryRootField UnpreparedValue UnpreparedValue)
        , QueryReusability
        , [G.Directive Variable]
        , G.SelectionSet G.NoFragments Variable
@@ -69,7 +69,7 @@ convertQuerySelSet
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
   -> SetGraphqlIntrospectionOptions
-  -> m (ExecutionPlan, [QueryRootField UnpreparedValue], G.SelectionSet G.NoFragments Variable, DirectiveMap)
+  -> m (ExecutionPlan, [QueryRootField UnpreparedValue UnpreparedValue], G.SelectionSet G.NoFragments Variable, DirectiveMap)
 convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs varValsM
   introspectionDisabledRoles = do
   -- Parse the GraphQL query into the RQL AST
@@ -86,9 +86,9 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
   executionPlan <- for unpreparedQueries \case
     RFDB sourceName exists ->
       AB.dispatchAnyBackend @BackendExecute exists
-        \(SourceConfigWith sourceConfig (QDBR db)) -> do
+        \(SourceConfigWith sourceConfig (QDBR db :: QueryDBRoot UnpreparedValue UnpreparedValue b)) -> do
           let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoins db
-          dbStepInfo <- mkDBQueryPlan userInfo sourceName sourceConfig noRelsDBAST
+          dbStepInfo <- mkDBQueryPlan @b userInfo sourceName sourceConfig noRelsDBAST
           pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
     RFRemote rf -> do
       RemoteFieldG remoteSchemaInfo remoteField <- runVariableCache $ for rf $ resolveRemoteVariable userInfo

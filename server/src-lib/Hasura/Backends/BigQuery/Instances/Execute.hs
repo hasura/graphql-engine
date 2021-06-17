@@ -50,7 +50,7 @@ bqDBQueryPlan
   => UserInfo
   -> SourceName
   -> SourceConfig 'BigQuery
-  -> QueryDB 'BigQuery (UnpreparedValue 'BigQuery)
+  -> QueryDB 'BigQuery (Const Void) (UnpreparedValue 'BigQuery)
   -> m (DBStepInfo 'BigQuery)
 bqDBQueryPlan userInfo sourceName sourceConfig qrf = do
   select <- planNoPlan userInfo qrf
@@ -113,7 +113,7 @@ bqDBMutationPlan
   -> Bool
   -> SourceName
   -> SourceConfig 'BigQuery
-  -> MutationDB 'BigQuery (UnpreparedValue 'BigQuery)
+  -> MutationDB 'BigQuery (Const Void) (UnpreparedValue 'BigQuery)
   -> m (DBStepInfo 'BigQuery)
 bqDBMutationPlan _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
   throw500 "mutations are not supported in BigQuery; this should be unreachable"
@@ -127,7 +127,7 @@ bqDBQueryExplain
   -> UserInfo
   -> SourceName
   -> SourceConfig 'BigQuery
-  -> QueryDB 'BigQuery (UnpreparedValue 'BigQuery)
+  -> QueryDB 'BigQuery (Const Void) (UnpreparedValue 'BigQuery)
   -> m (AB.AnyBackend DBStepInfo)
 bqDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
   actionsForest <- planToForest userInfo qrf
