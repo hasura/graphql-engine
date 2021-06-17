@@ -66,6 +66,20 @@
                 }
               },
               "description": "measured in seconds"
+            },
+            {
+              "name": "refresh",
+              "defaultValue": "false",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                }
+              },
+              "description": "refresh the cache entry"
             }
           ],
           "name": "cached",

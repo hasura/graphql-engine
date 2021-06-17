@@ -69,6 +69,22 @@ argument to the ``@cached`` query directive. The value is an integer number of s
 By default, a response will be cached with a maximum lifetime of 60 seconds.
 The maximum allowed value is 300 seconds (5 minutes).
 
+Forcing the cache to refresh
+----------------------------
+
+The cache entry can be forced to refresh, regardless of the maximum
+lifetime using the ``refresh`` argument to ``@cached``. The value is a
+boolean:
+
+.. code-block:: graphql
+
+   query MyCachedQuery @cached(refresh: true) {
+     users {
+       id
+       name
+     }
+   }
+
 Rate Limiting
 -------------
 

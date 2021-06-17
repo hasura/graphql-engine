@@ -6,6 +6,10 @@ module Hasura.GraphQL.Parser.Directives
   , inclusionDirectives
   , customDirectives
 
+  -- Custom Directive Types
+  , CachedDirective(..)
+  , DirectiveMap
+
     -- lookup keys for directives
   , include
   , skip
@@ -105,7 +109,7 @@ parseDirectives
   => [Directive m]
   -> G.DirectiveLocation
   -> [G.Directive Variable]
-  -> m (DM.DMap DirectiveKey Identity)
+  -> m DirectiveMap
 parseDirectives directiveParsers location givenDirectives = do
   result <- catMaybes <$> for givenDirectives \directive -> do
     let name = G._dName directive
@@ -150,7 +154,7 @@ parseDirectives directiveParsers location givenDirectives = do
       G.DLTypeSystem G.TSDLINPUT_FIELD_DEFINITION -> "an input field definition"
 
 withDirective
-  :: DM.DMap DirectiveKey Identity
+  :: DirectiveMap
   -> DirectiveKey a
   -> (Maybe a -> m b)
   -> m b
@@ -166,12 +170,19 @@ cachedDirective = mkDirective
   (Just "whether this query should be cached (Hasura Cloud only)")
   True
   [G.DLExecutable G.EDLQUERY]
-  ttlArgument
+  (CachedDirective <$> ttlArgument <*> forcedArgument)
   where
+    -- Optionally set the cache entry time to live
     ttlArgument :: InputFieldsParser m Int
     ttlArgument = fieldWithDefault $$(G.litName "ttl") (Just "measured in seconds") (G.VInt 60) $ fromIntegral <$> int
 
-cached :: DirectiveKey Int
+    -- Optionally Force a refresh of the cache entry
+    forcedArgument :: InputFieldsParser m Bool
+    forcedArgument = fieldWithDefault $$(G.litName "refresh") (Just "refresh the cache entry") (G.VBoolean False) boolean
+
+data CachedDirective = CachedDirective { cdTtl :: Int, cdRefresh :: Bool }
+
+cached :: DirectiveKey CachedDirective
 cached = DirectiveKey $$(G.litName "cached")
 
 
@@ -251,6 +262,7 @@ instance GCompare DirectiveKey where
       `extendGOrdering` gcompare (typeRep @a1) (typeRep @a2)
       `extendGOrdering` GEQ
 
+type DirectiveMap = DM.DMap DirectiveKey Identity
 
 mkDirective
   :: (MonadParse m, Typeable a)

@@ -131,7 +131,7 @@ getExecPlanPartial userInfo sc queryType req =
 
 -- The graphql query is resolved into a sequence of execution operations
 data ResolvedExecutionPlan
-  = QueryExecutionPlan EB.ExecutionPlan [IR.QueryRootField UnpreparedValue]
+  = QueryExecutionPlan EB.ExecutionPlan [IR.QueryRootField UnpreparedValue] DirectiveMap
   -- ^ query execution; remote schemas and introspection possible
   | MutationExecutionPlan EB.ExecutionPlan
   -- ^ mutation execution; only __typename introspection supported
@@ -301,9 +301,9 @@ getResolvedExecPlan env logger {- planCache-} userInfo sqlGenCtx
           G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives selSet -> do
             -- (Here the above fragment inlining is actually executed.)
             inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-            (executionPlan, queryRootFields, normalizedSelectionSet) <-
+            (executionPlan, queryRootFields, normalizedSelectionSet, dirMap) <-
               EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders directives inlinedSelSet varDefs (_grVariables reqUnparsed) (scSetGraphqlIntrospectionOptions sc)
-            pure $ (normalizedSelectionSet, QueryExecutionPlan executionPlan queryRootFields)
+            pure $ (normalizedSelectionSet, QueryExecutionPlan executionPlan queryRootFields dirMap)
 
             -- See Note [Temporarily disabling query plan caching]
             -- traverse_ (addPlanToCache . EP.RPQuery) plan
