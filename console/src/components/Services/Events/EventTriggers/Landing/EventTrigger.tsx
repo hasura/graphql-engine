@@ -4,7 +4,6 @@
 import React from 'react';
 import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
-import { push } from 'react-router-redux';
 import globals from '../../../../../Globals';
 import Button from '../../../../Common/Button/Button';
 import TopicDescription from '../../../Common/Landing/TopicDescription';
@@ -17,6 +16,7 @@ import {
 import TryItOut from '../../../Common/Landing/TryItOut';
 import styles from '../../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 import { EVENTS_SERVICE_HEADING, EVENT_TRIGGER } from '../../constants';
+import _push from '../../../Data/push';
 
 interface Props extends InjectedProps {}
 
@@ -46,7 +46,7 @@ insert_user(objects: [{name: "testuser"}] ){
   const getAddBtn = () => {
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
-      dispatch(push(getAddETRoute()));
+      dispatch(_push(getAddETRoute()));
     };
 
     return (

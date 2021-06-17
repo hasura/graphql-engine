@@ -59,6 +59,7 @@ import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import { QualifiedTable } from '../../../metadata/types';
 import { dataSource } from '../../../dataSources';
 import Migration from '../../../utils/migration/Migration';
+import _push from '../Data/push';
 
 export const addScheduledTrigger = (
   state: LocalScheduledTriggerState,
@@ -264,7 +265,7 @@ export const deleteScheduledTrigger = (
     if (successCb) {
       successCb();
     }
-    dispatch(push(getScheduledEventsLandingRoute('absolute')));
+    dispatch(_push(getScheduledEventsLandingRoute('absolute')));
     dispatch(exportMetadata());
   };
   const customOnError = () => {
@@ -319,7 +320,7 @@ export const createEventTrigger = (
         successCb();
       }
       dispatch(exportMetadata()).then(() => {
-        dispatch(push(getETModifyRoute({ name: state.name })));
+        dispatch(_push(getETModifyRoute({ name: state.name })));
       });
     };
     const customOnError = () => {
@@ -482,7 +483,7 @@ export const deleteEventTrigger = (
     if (successCb) {
       successCb();
     }
-    dispatch(push(getDataEventsLandingRoute()));
+    dispatch(_push(getDataEventsLandingRoute()));
     dispatch(exportMetadata());
   };
 
@@ -542,7 +543,7 @@ export const createScheduledEvent = (
         successCb();
       }
       dispatch(showSuccessNotification('Event scheduled successfully'));
-      dispatch(push(getAdhocPendingEventsRoute('absolute')));
+      dispatch(_push(getAdhocPendingEventsRoute('absolute')));
     },
     (error: any) => {
       dispatch(showErrorNotification(errorMessage, error.message || '', error));
