@@ -69,7 +69,7 @@ convertQuerySelSet
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
   -> SetGraphqlIntrospectionOptions
-  -> m (ExecutionPlan, [QueryRootField UnpreparedValue], G.SelectionSet G.NoFragments Variable)
+  -> m (ExecutionPlan, [QueryRootField UnpreparedValue], G.SelectionSet G.NoFragments Variable, DirectiveMap)
 convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs varValsM
   introspectionDisabledRoles = do
   -- Parse the GraphQL query into the RQL AST
@@ -80,7 +80,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
   let usrVars = _uiSession userInfo
 
   -- Process directives on the query
-  (_dirMap, _) <- (`onLeft` reportParseErrors) =<<
+  (dirMap, _) <- (`onLeft` reportParseErrors) =<<
     runParseT (parseDirectives customDirectives (G.DLExecutable G.EDLQUERY) normalizedDirectives)
 
   executionPlan <- for unpreparedQueries \case
@@ -102,4 +102,4 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
     RFRaw r -> flip onLeft throwError =<< executeIntrospection userInfo r introspectionDisabledRoles
 
   -- See Note [Temporarily disabling query plan caching]
-  pure (executionPlan, OMap.elems unpreparedQueries, normalizedSelectionSet)
+  pure (executionPlan, OMap.elems unpreparedQueries, normalizedSelectionSet, dirMap)

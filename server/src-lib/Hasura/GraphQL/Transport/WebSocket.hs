@@ -24,6 +24,7 @@ import qualified Data.Aeson.Ordered                           as JO
 import qualified Data.Aeson.TH                                as J
 import qualified Data.ByteString.Lazy                         as LBS
 import qualified Data.CaseInsensitive                         as CI
+import qualified Data.Dependent.Map                           as DM
 import qualified Data.Environment                             as Env
 import qualified Data.HashMap.Strict                          as Map
 import qualified Data.HashMap.Strict.InsOrd                   as OMap
@@ -63,6 +64,7 @@ import           Hasura.Backends.Postgres.Instances.Transport (runPGMutationTran
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
+import           Hasura.GraphQL.Parser.Directives             (cached)
 import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP                (MonadExecuteQuery (..),
                                                                QueryCacheKey (..),
@@ -381,7 +383,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   (telemCacheHit, (parameterizedQueryHash, execPlan)) <- onLeft execPlanE (withComplete . preExecErr requestId)
 
   case execPlan of
-    E.QueryExecutionPlan queryPlan asts -> Tracing.trace "Query" $ do
+    E.QueryExecutionPlan queryPlan asts dirMap -> Tracing.trace "Query" $ do
       let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
           cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
           remoteSchemas = OMap.elems queryPlan >>= \case
@@ -393,10 +395,11 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
               E.ExecStepAction _ _ _remoteJoins -> True
               _                                 -> False
               ) queryPlan
+          cachedDirective = runIdentity <$> DM.lookup cached dirMap
 
       -- We ignore the response headers (containing TTL information) because
       -- WebSockets don't support them.
-      (_responseHeaders, cachedValue) <- Tracing.interpTraceT (withExceptT mempty) $ cacheLookup remoteSchemas actionsInfo cacheKey
+      (_responseHeaders, cachedValue) <- Tracing.interpTraceT (withExceptT mempty) $ cacheLookup remoteSchemas actionsInfo cacheKey cachedDirective
       case cachedValue of
         Just cachedResponseData -> do
           logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindCached
@@ -443,7 +446,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           case conclusion of
             Left _        -> pure ()
             Right results -> Tracing.interpTraceT (withExceptT mempty) $
-                             cacheStore cacheKey $ encJFromInsOrdHashMap $
+                             cacheStore cacheKey cachedDirective $ encJFromInsOrdHashMap $
                              rfResponse <$> OMap.mapKeys G.unName results
       liftIO $ sendCompleted (Just requestId)
 

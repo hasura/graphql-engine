@@ -3,6 +3,7 @@
 module Hasura.GraphQL.Transport.HTTP
   ( QueryCacheKey(..)
   , MonadExecuteQuery(..)
+  , CachedDirective(..)
   , runGQ
   , runGQBatched
   , coalescePostgresMutations
@@ -27,6 +28,7 @@ import           Hasura.Prelude
 import qualified Data.Aeson                                   as J
 import qualified Data.Aeson.Ordered                           as JO
 import qualified Data.ByteString.Lazy                         as LBS
+import qualified Data.Dependent.Map                           as DM
 import qualified Data.Environment                             as Env
 import qualified Data.HashMap.Strict.InsOrd                   as OMap
 import qualified Data.Text                                    as T
@@ -54,6 +56,7 @@ import           Hasura.GraphQL.Logging                       (MonadQueryLog (lo
                                                                QueryLog (..), QueryLogKind (..))
 import           Hasura.GraphQL.ParameterizedQueryHash
 import           Hasura.GraphQL.Parser.Column                 (UnpreparedValue (..))
+import           Hasura.GraphQL.Parser.Directives             (CachedDirective (..), cached)
 import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.Instances           ()
@@ -79,7 +82,6 @@ instance J.ToJSON QueryCacheKey where
   toJSON (QueryCacheKey qs ur sess) =
     J.object ["query_string" J..= qs, "user_role" J..= ur, "session" J..= sess]
 
-
 class Monad m => MonadExecuteQuery m where
   -- | This method does two things: it looks up a query result in the
   -- server-side cache, if a cache is used, and it additionally returns HTTP
@@ -92,6 +94,8 @@ class Monad m => MonadExecuteQuery m where
     -- ^ Used to check if actions query supports caching (unsupported if `forward_client_headers` is set)
     -> QueryCacheKey
     -- ^ Key that uniquely identifies the result of a query execution
+    -> Maybe CachedDirective
+    -- ^ Cached Directive from GraphQL query AST
     -> TraceT (ExceptT QErr m) (HTTP.ResponseHeaders, Maybe EncJSON)
     -- ^ HTTP headers to be sent back to the caller for this GraphQL request,
     -- containing e.g. time-to-live information, and a cached value if found and
@@ -110,26 +114,26 @@ class Monad m => MonadExecuteQuery m where
   cacheStore
     :: QueryCacheKey
     -- ^ Key under which to store the result of a query execution
+    -> Maybe CachedDirective
+    -- ^ Cached Directive from GraphQL query AST
     -> EncJSON
     -- ^ Result of a query execution
     -> TraceT (ExceptT QErr m) ()
     -- ^ Always succeeds
 
-instance MonadExecuteQuery m => MonadExecuteQuery (ReaderT r m) where
-  cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
-  cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
+  default cacheLookup :: (m ~ t n, MonadTrans t, MonadExecuteQuery n) =>
+    [RemoteSchemaInfo] -> [ActionsInfo] -> QueryCacheKey -> Maybe CachedDirective -> TraceT (ExceptT QErr m) (HTTP.ResponseHeaders, Maybe EncJSON)
+  cacheLookup a b c d = hoist (hoist lift) $ cacheLookup a b c d
 
-instance MonadExecuteQuery m => MonadExecuteQuery (ExceptT r m) where
-  cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
-  cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
+  default cacheStore :: (m ~ t n, MonadTrans t, MonadExecuteQuery n) =>
+    QueryCacheKey -> Maybe CachedDirective -> EncJSON -> TraceT (ExceptT QErr m) ()
+  cacheStore a b c = hoist (hoist lift) $ cacheStore  a b c
 
-instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m) where
-  cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
-  cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
 
-instance MonadExecuteQuery m => MonadExecuteQuery (MetadataStorageT m) where
-  cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
-  cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
+instance MonadExecuteQuery m => MonadExecuteQuery (ReaderT r m)
+instance MonadExecuteQuery m => MonadExecuteQuery (ExceptT r m)
+instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m)
+instance MonadExecuteQuery m => MonadExecuteQuery (MetadataStorageT m)
 
 -- | A partial result, e.g. from a remote schema or postgres, which we'll
 -- assemble into the final result for the client.
@@ -219,7 +223,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         httpManager reqHeaders (reqUnparsed, reqParsed)
 
     (telemCacheHit,) <$> case execPlan of
-      E.QueryExecutionPlan queryPlans asts -> trace "Query" $ do
+      E.QueryExecutionPlan queryPlans asts dirMap -> trace "Query" $ do
         let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
             cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
             remoteSchemas = OMap.elems queryPlans >>= \case
@@ -231,8 +235,9 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               E.ExecStepAction _ _ _remoteJoins -> True
               _                                 -> False
               ) queryPlans
+            cachedDirective = runIdentity <$> DM.lookup cached dirMap
 
-        (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup remoteSchemas actionsInfo cacheKey
+        (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup remoteSchemas actionsInfo cacheKey cachedDirective
         case fmap decodeGQResp cachedValue of
           Just cachedResponseData -> do
             logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindCached
@@ -279,7 +284,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                 buildRaw json
             out@(_, _, _, HttpResponse responseData _, _) <-
               buildResultFromFragments Telem.Query conclusion responseHeaders parameterizedQueryHash
-            Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheStore cacheKey $ snd responseData
+            Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheStore cacheKey cachedDirective $ snd responseData
             pure out
 
       E.MutationExecutionPlan mutationPlans -> do
@@ -473,7 +478,7 @@ buildRaw json = do
       telemTimeIO_DT = 0
   pure $ ResultsFragment telemTimeIO_DT Telem.Local obj []
 
--- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs')
+-- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs').
 runGQBatched
   :: forall m
    . ( HasVersion

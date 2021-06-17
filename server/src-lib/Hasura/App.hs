@@ -846,8 +846,8 @@ instance (MonadIO m) => HttpLog (PGMetadataStorageAppT m) where
       mkHttpAccessLogContext userInfoM reqId waiReq compressedResponse qTime cType headers
 
 instance (Monad m) => MonadExecuteQuery (PGMetadataStorageAppT m) where
-  cacheLookup _ _ _ = pure ([], Nothing)
-  cacheStore  _ _ = pure ()
+  cacheLookup _ _ _ _ = pure ([], Nothing)
+  cacheStore  _ _ _ = pure ()
 
 instance (MonadIO m, MonadBaseControl IO m) => UserAuthentication (Tracing.TraceT (PGMetadataStorageAppT m)) where
   resolveUserInfo logger manager headers authMode reqs =
