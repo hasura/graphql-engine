@@ -16,7 +16,6 @@ import           Data.Aeson                    (Value)
 import           Data.ByteString               (ByteString)
 import           Data.CaseInsensitive          (CI)
 import           Data.Functor.Classes          (Eq1 (..), Eq2 (..))
-import           Data.Functor.Const
 import           Data.GADT.Compare
 import           Data.Int
 import           Data.Scientific               (Scientific)

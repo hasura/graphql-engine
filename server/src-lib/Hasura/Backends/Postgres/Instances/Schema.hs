@@ -67,7 +67,7 @@ class PostgresSchema (pgKind :: PostgresKind) where
     -> G.Name
     -> NESeq (ColumnInfo ('Postgres pgKind))
     -> SelPermInfo ('Postgres pgKind)
-    -> m [FieldParser n (QueryRootField UnpreparedValue)]
+    -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
   pgkBuildFunctionRelayQueryFields
     :: BS.MonadBuildSchema ('Postgres pgKind) r m n
     => SourceName
@@ -77,7 +77,7 @@ class PostgresSchema (pgKind :: PostgresKind) where
     -> TableName ('Postgres pgKind)
     -> NESeq (ColumnInfo ('Postgres pgKind))
     -> SelPermInfo ('Postgres pgKind)
-    -> m [FieldParser n (QueryRootField UnpreparedValue)]
+    -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
   pgkRelayExtension
     :: Maybe (XRelay ('Postgres pgKind))
   pgkNode
@@ -161,7 +161,7 @@ buildTableRelayQueryFields
   -> G.Name
   -> NESeq (ColumnInfo ('Postgres pgKind))
   -> SelPermInfo  ('Postgres pgKind)
-  -> m [FieldParser n (QueryRootField UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
 buildTableRelayQueryFields sourceName sourceInfo tableName tableInfo gqlName pkeyColumns selPerms = do
   let
     mkRF = RFDB sourceName
@@ -184,7 +184,7 @@ buildFunctionRelayQueryFields
   -> TableName    ('Postgres pgKind)
   -> NESeq (ColumnInfo ('Postgres pgKind))
   -> SelPermInfo  ('Postgres pgKind)
-  -> m [FieldParser n (QueryRootField UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
 buildFunctionRelayQueryFields sourceName sourceInfo functionName functionInfo tableName pkeyColumns selPerms = do
   funcName <- functionGraphQLName @('Postgres pgKind) functionName `onLeft` throwError
   let

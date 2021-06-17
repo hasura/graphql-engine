@@ -131,7 +131,7 @@ getExecPlanPartial userInfo sc queryType req =
 
 -- The graphql query is resolved into a sequence of execution operations
 data ResolvedExecutionPlan
-  = QueryExecutionPlan EB.ExecutionPlan [IR.QueryRootField UnpreparedValue] DirectiveMap
+  = QueryExecutionPlan EB.ExecutionPlan [IR.QueryRootField UnpreparedValue UnpreparedValue] DirectiveMap
   -- ^ query execution; remote schemas and introspection possible
   | MutationExecutionPlan EB.ExecutionPlan
   -- ^ mutation execution; only __typename introspection supported
@@ -157,52 +157,60 @@ data SubscriptionExecution
 buildSubscriptionPlan
   :: (MonadError QErr m)
   => UserInfo
-  -> InsOrdHashMap G.Name (IR.QueryRootField UnpreparedValue)
+  -> InsOrdHashMap G.Name (IR.QueryRootField UnpreparedValue UnpreparedValue)
   -> m SubscriptionExecution
 buildSubscriptionPlan userInfo rootFields = do
   (onSourceFields, noRelationActionFields) <- foldlM go (mempty, mempty) (OMap.toList rootFields)
 
-  if | null onSourceFields -> pure $ SEAsyncActionsWithNoRelationships noRelationActionFields
+  if | null onSourceFields -> do
+       pure $ SEAsyncActionsWithNoRelationships noRelationActionFields
 
-     | null noRelationActionFields ->
-         let allActionIds = HS.fromList $ map fst $ lefts $ toList onSourceFields
-         in pure $ SEOnSourceDB allActionIds $ \actionLogMap -> do
-           sourceSubFields <- for onSourceFields $ \case
-             Right x -> pure x
-             Left (actionId, (srcConfig, dbExecution)) -> do
-               let sourceName = EA._aaqseSource dbExecution
-               actionLogResponse <- Map.lookup actionId actionLogMap
-                 `onNothing` throw500 "unexpected: cannot lookup action_id in the map"
-               let selectAST = EA._aaqseSelectBuilder dbExecution $ actionLogResponse
-                   queryDB = case EA._aaqseJsonAggSelect dbExecution of
-                     JASMultipleRows -> IR.QDBMultipleRows selectAST
-                     JASSingleObject -> IR.QDBSingleRow selectAST
-               pure $ (sourceName, AB.mkAnyBackend $ IR.SourceConfigWith srcConfig $ IR.QDBR queryDB)
+     | null noRelationActionFields -> do
+       let allActionIds = HS.fromList $ map fst $ lefts $ toList onSourceFields
+       pure $ SEOnSourceDB allActionIds $ \actionLogMap -> do
+         sourceSubFields <- for onSourceFields $ \case
+           Right x -> pure x
+           Left (actionId, (srcConfig, dbExecution)) -> do
+             let sourceName = EA._aaqseSource dbExecution
+             actionLogResponse <- Map.lookup actionId actionLogMap
+               `onNothing` throw500 "unexpected: cannot lookup action_id in the map"
+             let selectAST = EA._aaqseSelectBuilder dbExecution $ actionLogResponse
+                 queryDB   = case EA._aaqseJsonAggSelect dbExecution of
+                   JASMultipleRows -> IR.QDBMultipleRows selectAST
+                   JASSingleObject -> IR.QDBSingleRow    selectAST
+             pure $ (sourceName, AB.mkAnyBackend $ IR.SourceConfigWith srcConfig $ IR.QDBR queryDB)
 
-           for_ sourceSubFields \(_, exists) -> do
-             AB.dispatchAnyBackend @EB.BackendExecute exists \(IR.SourceConfigWith _ (IR.QDBR qdb)) ->
-               unless (isNothing $ snd $ RJ.getRemoteJoins qdb) $
-                 throw400 NotSupported "Remote relationships are not allowed in subscriptions"
+         case toList sourceSubFields of
+           []      -> throw500 "empty selset for subscription"
+           (sub:_) -> buildAction sub sourceSubFields
 
-           case toList sourceSubFields of
-             []      -> throw500 "empty selset for subscription"
-             (sub:_) -> buildAction sub sourceSubFields
-
-     | otherwise -> throw400 NotSupported
-                    "async action queries with no relationships aren't expected to mix with normal source database queries"
+     | otherwise ->
+       throw400 NotSupported
+       "async action queries with no relationships aren't expected to mix with normal source database queries"
   where
     go accFields (gName, field) = case field of
-      IR.RFDB src e                 -> pure $ first (OMap.insert gName (Right (src, e))) accFields
-      IR.RFAction (IR.AQAsync q) -> do
-        let actionId = _aaaqActionId q
-        case EA.resolveAsyncActionQuery userInfo q of
-          EA.AAQENoRelationships respMaker ->
-            pure $ second (OMap.insert gName (actionId, respMaker)) accFields
-          EA.AAQEOnSourceDB srcConfig dbExecution ->
-            pure $ first (OMap.insert gName (Left (actionId, (srcConfig, dbExecution)))) accFields
-      IR.RFAction (IR.AQQuery _) -> throw400 NotSupported "query actions cannot be run as a subscription"
-      IR.RFRemote _             -> throw400 NotSupported "subscription to remote server is not supported"
-      IR.RFRaw _                -> throw400 NotSupported "Introspection not supported over subscriptions"
+      IR.RFRemote _      -> throw400 NotSupported "subscription to remote server is not supported"
+      IR.RFRaw _         -> throw400 NotSupported "Introspection not supported over subscriptions"
+      IR.RFDB src e      -> do
+        newQDB <- AB.traverseBackend @EB.BackendExecute e \(IR.SourceConfigWith sc (IR.QDBR qdb)) -> do
+          let (newQDB, remoteJoins) = RJ.getRemoteJoins qdb
+          unless (isNothing remoteJoins) $
+            throw400 NotSupported "Remote relationships are not allowed in subscriptions"
+          pure $ IR.SourceConfigWith sc (IR.QDBR newQDB)
+        pure $ first (OMap.insert gName (Right (src, newQDB))) accFields
+      IR.RFAction action -> do
+        let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
+        unless (isNothing remoteJoins) $
+          throw400 NotSupported "Remote relationships are not allowed in subscriptions"
+        case noRelsDBAST of
+          IR.AQAsync q -> do
+            let actionId = _aaaqActionId q
+            case EA.resolveAsyncActionQuery userInfo q of
+              EA.AAQENoRelationships respMaker ->
+                pure $ second (OMap.insert gName (actionId, respMaker)) accFields
+              EA.AAQEOnSourceDB srcConfig dbExecution ->
+                pure $ first (OMap.insert gName (Left (actionId, (srcConfig, dbExecution)))) accFields
+          IR.AQQuery _ -> throw400 NotSupported "query actions cannot be run as a subscription"
 
     buildAction (sourceName, exists) allFields = do
       lqp <- AB.dispatchAnyBackend @EB.BackendExecute exists
@@ -215,8 +223,8 @@ buildSubscriptionPlan userInfo rootFields = do
     checkField
       :: forall b m. (Backend b, MonadError QErr m)
       => SourceName
-      -> (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot UnpreparedValue)))
-      -> m (IR.QueryDB b (UnpreparedValue b))
+      -> (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)))
+      -> m (IR.QueryDB b (Const Void) (UnpreparedValue b))
     checkField sourceName (src, exists)
       | sourceName /= src = throw400 NotSupported "all fields of a subscription must be from the same source"
       | otherwise         = case AB.unpackAnyBackend exists of

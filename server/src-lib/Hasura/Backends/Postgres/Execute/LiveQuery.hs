@@ -99,7 +99,7 @@ toSQLFromItem
      , DS.PostgresAnnotatedFieldJSON pgKind
      )
   => S.Alias
-  -> QueryDB ('Postgres pgKind) S.SQLExp
+  -> QueryDB ('Postgres pgKind) (Const Void) S.SQLExp
   -> S.FromItem
 toSQLFromItem = flip \case
   QDBSingleRow    s -> S.mkSelFromItem $ DS.mkSQLSelect JASSingleObject s
@@ -111,7 +111,7 @@ mkMultiplexedQuery
   :: ( Backend ('Postgres pgKind)
      , DS.PostgresAnnotatedFieldJSON pgKind
      )
-  => OMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) S.SQLExp)
+  => OMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) (Const Void) S.SQLExp)
   -> MultiplexedQuery
 mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkSelect
   { S.selExtr =

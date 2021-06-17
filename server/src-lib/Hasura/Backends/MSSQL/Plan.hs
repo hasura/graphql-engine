@@ -23,31 +23,26 @@ import           Data.Text.Extended
 import qualified Hasura.GraphQL.Parser         as GraphQL
 import qualified Hasura.RQL.Types.Column       as RQL
 
-import           Hasura.Backends.MSSQL.FromIr  as TSQL
-import           Hasura.Backends.MSSQL.Types   as TSQL
+import           Hasura.Backends.MSSQL.FromIr
+import           Hasura.Backends.MSSQL.Types
 import           Hasura.Base.Error
 import           Hasura.RQL.IR
 import           Hasura.SQL.Backend
 import           Hasura.Session
 
 
-newtype QDB v b = QDB (QueryDB b v)
-
-type SubscriptionRootFieldMSSQL v = RootField (QDB v) Void Void {-(RQL.AnnActionAsyncQuery 'MSSQL v)-} Void
-
-
--- --------------------------------------------------------------------------------
--- -- Top-level planner
+--------------------------------------------------------------------------------
+-- Top-level planner
 
 planQuery
   :: MonadError QErr m
   => SessionVariables
-  -> QueryDB 'MSSQL (GraphQL.UnpreparedValue 'MSSQL)
+  -> QueryDB 'MSSQL (Const Void) (GraphQL.UnpreparedValue 'MSSQL)
   -> m Select
 planQuery sessionVariables queryDB = do
   rootField <- traverseQueryDB (prepareValueQuery sessionVariables) queryDB
   sel <-
-    runValidate (TSQL.runFromIr (TSQL.fromRootField rootField))
+    runValidate (runFromIr (fromRootField rootField))
     `onLeft` (throw400 NotSupported . tshow)
   pure $
     sel
@@ -73,7 +68,7 @@ prepareValueQuery
   :: MonadError QErr m
   => SessionVariables
   -> GraphQL.UnpreparedValue 'MSSQL
-  -> m TSQL.Expression
+  -> m Expression
 prepareValueQuery sessionVariables =
   {- History note:
       This function used to be called 'planNoPlan', and was used for building sql
@@ -91,7 +86,7 @@ prepareValueQuery sessionVariables =
 
 planSubscription
   :: MonadError QErr m
-  => OMap.InsOrdHashMap G.Name (QueryDB 'MSSQL (GraphQL.UnpreparedValue 'MSSQL))
+  => OMap.InsOrdHashMap G.Name (QueryDB 'MSSQL (Const Void) (GraphQL.UnpreparedValue 'MSSQL))
   -> SessionVariables
   -> m (Reselect, PrepareState)
 planSubscription unpreparedMap sessionVariables = do
@@ -102,7 +97,7 @@ planSubscription unpreparedMap sessionVariables = do
             unpreparedMap)
           emptyPrepareState
   selectMap <-
-    runValidate (TSQL.runFromIr (traverse TSQL.fromRootField rootFieldMap))
+    runValidate (runFromIr (traverse fromRootField rootFieldMap))
     `onLeft` (throw400 NotSupported . tshow)
   pure (collapseMap selectMap, prepareState)
 
@@ -116,7 +111,7 @@ planSubscription unpreparedMap sessionVariables = do
   -- selectMap <-
   --   first
   --     FromIrError
-  --     (runValidate (TSQL.runFromIr (traverse TSQL.fromRootField rootFieldMap)))
+  --     (runValidate (runFromIr (traverse fromRootField rootFieldMap)))
   -- pure (collapseMap selectMap)
 
 --------------------------------------------------------------------------------
@@ -146,7 +141,7 @@ collapseMap selects =
 --------------------------------------------------------------------------------
 -- Session variables
 
-globalSessionExpression :: TSQL.Expression
+globalSessionExpression :: Expression
 globalSessionExpression =
   ValueExpression (ODBC.TextValue "current_setting('hasura.user')::json")
 
@@ -155,7 +150,7 @@ globalSessionExpression =
 -- Resolving values
 
 data PrepareError
-  = FromIrError (NonEmpty TSQL.Error)
+  = FromIrError (NonEmpty Error)
 
 data PrepareState = PrepareState
   { positionalArguments :: ![RQL.ColumnValue 'MSSQL]
@@ -175,7 +170,7 @@ emptyPrepareState = PrepareState
 prepareValueSubscription
   :: Set.HashSet SessionVariable
   -> GraphQL.UnpreparedValue 'MSSQL
-  -> State PrepareState TSQL.Expression
+  -> State PrepareState Expression
 prepareValueSubscription globalVariables =
   \case
     GraphQL.UVLiteral x -> pure x

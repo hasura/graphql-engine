@@ -45,7 +45,7 @@ convertMutationAction
   -> UserInfo
   -> HTTP.Manager
   -> HTTP.RequestHeaders
-  -> ActionMutation ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla))
+  -> ActionMutation ('Postgres 'Vanilla) (Const Void) (UnpreparedValue ('Postgres 'Vanilla))
   -> m ActionExecutionPlan
 convertMutationAction env logger userInfo manager reqHeaders  = \case
   AMSync s  -> pure $ AEPSync $ resolveActionExecution env logger userInfo s actionExecContext
@@ -84,7 +84,7 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
   (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe Map.empty varValsM) directives fields
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability)
-    :: (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue), QueryReusability)
+    :: (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue UnpreparedValue), QueryReusability)
     <-(mutationParser >>> (`onLeft` reportParseErrors)) resolvedSelSet
 
   -- Process directives on the mutation
@@ -95,9 +95,9 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
   txs <- for unpreparedQueries \case
     RFDB sourceName exists ->
       AB.dispatchAnyBackend @BackendExecute exists
-        \(SourceConfigWith sourceConfig (MDBR db)) -> do
+        \(SourceConfigWith sourceConfig (MDBR db :: MutationDBRoot UnpreparedValue UnpreparedValue b)) -> do
           let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsMutationDB db
-          dbStepInfo <- mkDBMutationPlan userInfo stringifyNum sourceName sourceConfig noRelsDBAST
+          dbStepInfo <- mkDBMutationPlan @b userInfo stringifyNum sourceName sourceConfig noRelsDBAST
           pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
     RFRemote remoteField -> do
       RemoteFieldG remoteSchemaInfo resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
