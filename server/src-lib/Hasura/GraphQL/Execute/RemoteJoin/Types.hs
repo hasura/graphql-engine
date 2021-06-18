@@ -2,6 +2,7 @@
 module Hasura.GraphQL.Execute.RemoteJoin.Types
   ( RemoteJoin(..)
   , getPhantomFields
+  , getJoinColumnMapping
   , RemoteSchemaJoin(..)
   , RemoteSourceJoin(..)
   , RemoteSourceRelationship(..)
@@ -23,11 +24,13 @@ module Hasura.GraphQL.Execute.RemoteJoin.Types
 
 import           Hasura.Prelude
 
+import qualified Data.Aeson                    as A
+import qualified Data.Aeson.Ordered            as AO
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.List.NonEmpty            as NE
 import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Data.Aeson                    as A
-import qualified Data.Aeson.Ordered            as AO
+
+import           Data.Hashable                 (hashWithSalt)
 
 import qualified Hasura.GraphQL.Parser         as P
 import qualified Hasura.RQL.IR.Select          as IR
@@ -51,24 +54,40 @@ getLeaves joinTree =
         _      -> Nothing
 
 type RemoteJoins = JoinTree RemoteJoin
-type RemoteJoin = RemoteSchemaJoin
+-- type RemoteJoin = RemoteSchemaJoin
 
--- data RemoteJoin
---   = RemoteJoinSource !(AB.AnyBackend RemoteSourceJoin)
---   | RemoteJoinRemoteSchema !RemoteSchemaJoin
+data RemoteJoin
+  = RemoteJoinSource !(AB.AnyBackend RemoteSourceJoin)
+  | RemoteJoinRemoteSchema !RemoteSchemaJoin
+  deriving (Eq, Generic)
+-- TODO: show doesn't get automatically derived for some reason
 
-getPhantomFields :: RemoteSchemaJoin -> [FieldName]
-getPhantomFields remoteSchemaJoin =
-    mapMaybe getPhantomFieldName $ Map.elems $
-      _rsjJoinColumnAliases remoteSchemaJoin
---
--- getPhantomFields :: RemoteJoin -> [FieldName]
--- getPhantomFields = \case
---   RemoteJoinSource sourceJoin -> undefined
---   RemoteJoinRemoteSchema remoteSchemaJoin ->
+instance Hashable RemoteJoin where
+  hashWithSalt = undefined
+
+
+-- instance Show RemoteJoinX where
+--   show = \case
+    -- RemoteJoinSource j ->
+    --   AB.dispatchAnyBackend @Backend j (\x -> show x)
+    -- RemoteJoinRemoteSchema j -> show j
+
+-- getPhantomFields :: RemoteSchemaJoin -> [FieldName]
+-- getPhantomFields remoteSchemaJoin =
 --     mapMaybe getPhantomFieldName $ Map.elems $
 --       _rsjJoinColumnAliases remoteSchemaJoin
+--
+getPhantomFields :: RemoteJoin -> [FieldName]
+getPhantomFields =
+  mapMaybe getPhantomFieldName . Map.elems . getJoinColumnMapping
 
+getJoinColumnMapping :: RemoteJoin -> Map.HashMap FieldName JoinColumnAlias
+getJoinColumnMapping remoteJoin =
+  case remoteJoin of
+  RemoteJoinSource sourceJoin ->
+    AB.runBackend sourceJoin (fmap fst . _rdjJoinColumns)
+  RemoteJoinRemoteSchema remoteSchemaJoin ->
+    _rsjJoinColumnAliases remoteSchemaJoin
 -- instance Show RemoteJoin where
 --   show = \case
 --     -- TODO: we'll need to start deriving show and eq instances all the way
@@ -87,6 +106,11 @@ data RemoteSourceRelationship b
   = RemoteSourceObject !(IR.ObjectRelationSelectG b (P.UnpreparedValue b))
   | RemoteSourceArray !(IR.ArrayRelationSelectG b (P.UnpreparedValue b))
   | RemoteSourceArrayAggregate !(IR.ArrayAggregateSelectG b (P.UnpreparedValue b))
+  deriving (Generic)
+
+-- instance (Backend b) => Hashable (RemoteSourceRelationship b) where
+instance Hashable (RemoteSourceRelationship b) where
+  hashWithSalt = undefined
 
 deriving instance
   ( Backend b
@@ -104,11 +128,11 @@ deriving instance
 -- going to the same source.
 data RemoteSourceJoin b
   = RemoteSourceJoin
-  { _rsjSource       :: !SourceName
-  , _rsjSourceConfig :: !(SourceConfig b)
-  , _rsjRelationship :: !(RemoteSourceRelationship b)
-  , _rsjJoinColumns  :: !(Map.HashMap FieldName (JoinColumnAlias, ScalarType b))
-  }
+  { _rdjSource       :: !SourceName
+  , _rdjSourceConfig :: !(SourceConfig b)
+  , _rdjRelationship :: !(RemoteSourceRelationship b)
+  , _rdjJoinColumns  :: !(Map.HashMap FieldName (JoinColumnAlias, ScalarType b))
+  } deriving (Generic)
 
 deriving instance
   ( Backend b
@@ -122,6 +146,10 @@ deriving instance
   , Eq (ScalarValue b)
   , Eq (BooleanOperators b (P.UnpreparedValue b))
   ) => Eq (RemoteSourceJoin b)
+
+-- TODO: fix this instance
+instance (Backend b, Hashable (SourceConfig b)) => Hashable (RemoteSourceJoin b)
+  -- hashWithSalt x = undefined
 
 -- | A 'RemoteJoin' represents the context of remote relationship to be
 -- extracted from 'AnnFieldG's.

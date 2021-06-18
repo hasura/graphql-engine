@@ -22,11 +22,14 @@ import qualified Hasura.GraphQL.Execute.Backend                 as EB
 import qualified Hasura.GraphQL.Execute.RemoteJoin.RemoteSchema as RS
 import qualified Hasura.GraphQL.Parser                          as P
 import qualified Hasura.RQL.IR                                  as IR
+import qualified Hasura.SQL.AnyBackend                          as AB
 import qualified Hasura.Tracing                                 as Tracing
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Execute.Instances               ()
 import           Hasura.GraphQL.Execute.RemoteJoin.Types
+import           Hasura.GraphQL.Logging
 import           Hasura.RQL.Types                               hiding (Alias)
 import           Hasura.Server.Version                          (HasVersion)
 import           Hasura.Session
@@ -36,6 +39,7 @@ processRemoteJoins
      , MonadError QErr m
      , MonadIO m
      , Tracing.MonadTrace m
+     , MonadQueryLog m
      )
   => Env.Environment
   -> HTTP.Manager
@@ -48,25 +52,38 @@ processRemoteJoins env manager reqHdrs userInfo pgRes joinTree = do
   -- Step 1: Decode the given bytestring as a JSON value
   jsonRes <- onLeft (AO.eitherDecode pgRes) (throw500 . T.pack)
 
-  (compositeValue, joinArguments) <- collectJoinArguments joinTree jsonRes
+  (compositeValue, joins) <- collectJoinArguments joinTree jsonRes
 
   joinIndices <- fmap (Map.fromList . catMaybes) $
-    for (Map.toList joinArguments) $ \(remoteJoin, collectedArguments) -> do
+    for (Map.toList joins) $ \(remoteJoin, collectedArguments) -> do
 
-    -- construct a remote call for
-    remoteCall <- RS.buildRemoteSchemaCall userInfo remoteJoin $ Map.fromList $
-      map swap $ Map.toList $ _jalArguments collectedArguments
+    let joinArguments =
+          Map.fromList $ map swap $ Map.toList $ _jalArguments collectedArguments
 
-    -- A remote call could be Nothing if there are no join arguments
-    for remoteCall $ \(remoteSchema, request, extractionPaths) -> do
+    case remoteJoin of
+      RemoteJoinRemoteSchema remoteSchemaJoin -> do
+        -- construct a remote call for
+        remoteCall <- RS.buildRemoteSchemaCall userInfo remoteSchemaJoin joinArguments
 
-      remoteResponse <- RS.getRemoteSchemaResponse env manager reqHdrs userInfo
-        remoteSchema request
+        -- A remote call could be Nothing if there are no join arguments
+        for remoteCall $ \(remoteSchema, request, extractionPaths) -> do
 
-      -- extract the join values from the remote's response
-      joinIndex <- RS.buildJoinIndex remoteResponse extractionPaths
+          remoteResponse <- RS.getRemoteSchemaResponse env manager reqHdrs userInfo
+            remoteSchema request
 
-      pure (_jalJoinCallId collectedArguments, joinIndex)
+          -- extract the join values from the remote's response
+          joinIndex <- RS.buildJoinIndex remoteResponse extractionPaths
+
+          pure (_jalJoinCallId collectedArguments, joinIndex)
+
+      RemoteJoinSource sourceJoin -> do
+        AB.dispatchAnyBackend @EB.BackendExecute sourceJoin \RemoteSourceJoin{..} -> do
+          let sourceCall = constructSelect undefined undefined
+                _rdjRelationship joinArguments
+          for sourceCall $ \sourceQuery -> do
+            EB.executeQueryField undefined undefined userInfo _rdjSource
+              _rdjSourceConfig sourceQuery
+          undefined
 
   AO.toEncJSON <$> joinResults joinIndices compositeValue
 
@@ -91,18 +108,23 @@ data ArgumentsCollectionState
   = ArgumentsCollectionState
   { _acsCounter :: !Int
   , _acsJoins   :: !(Map.HashMap RemoteJoin JoinArguments)
-  } deriving (Show, Eq)
+  } deriving (Eq)
 
 constructSelect
   :: (EB.BackendExecute b)
-  => Map.HashMap JoinArgumentId JoinArgument
-  -> Map.HashMap FieldName (ScalarType b)
+  => Map.HashMap FieldName (ScalarType b)
   -> FieldName
   -> RemoteSourceRelationship b
-  -> IR.QueryDB b (P.UnpreparedValue b)
-constructSelect arguments fieldTypes fieldName relationship =
-  IR.QDBMultipleRows simpleSelect
+  -> Map.HashMap JoinArgumentId JoinArgument
+  -> Maybe (IR.QueryDB b (P.UnpreparedValue b))
+constructSelect fieldTypes fieldName relationship arguments =
+  IR.QDBMultipleRows . simpleSelect <$> selectFrom
   where
+    selectFrom =
+      case rows of
+       [] -> Nothing
+       _  -> Just $ EB.buildTemporaryTable rows fieldTypes
+
     rows = flip map (Map.toList arguments) $ \(argumentId, argument) ->
              Map.fromList $ map (\(f, v) -> (getFieldNameTxt f, AO.fromOrdered v)) $
                Map.toList $ unJoinArugment argument
@@ -112,9 +134,9 @@ constructSelect arguments fieldTypes fieldName relationship =
       RemoteSourceArray s          -> IR.AFArrayRelation $ IR.ASSimple s
       RemoteSourceArrayAggregate s -> IR.AFArrayRelation $ IR.ASAggregate s
 
-    simpleSelect =
+    simpleSelect from =
       IR.AnnSelectG { _asnFields = [(fieldName, field)]
-                    , _asnFrom = EB.buildTemporaryTable rows fieldTypes
+                    , _asnFrom = from
                     , _asnPerm = IR.TablePerm annBoolExpTrue Nothing
                     , _asnArgs = IR.noSelectArgs
                     , _asnStrfyNum = False
@@ -184,7 +206,7 @@ collectJoinArguments joinTree value =
       compositeObject <- for (AO.toList object) $ \(fieldName, value_) ->
         (fieldName,) <$> case Map.lookup fieldName joinTreeNodes of
           Just (Leaf remoteJoin) -> do
-            joinArgument <- forM (_rsjJoinColumnAliases remoteJoin) $ \alias -> do
+            joinArgument <- forM (getJoinColumnMapping remoteJoin) $ \alias -> do
               let aliasTxt = getFieldNameTxt $ getAliasFieldName alias
               onNothing (AO.lookup aliasTxt object) $
                 throw500 $ "a join column is missing from the response: " <> aliasTxt

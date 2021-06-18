@@ -109,6 +109,7 @@ class
   , Arbitrary (ExtraTableMetadata b)
   , Cacheable (SourceConfig b)
   , Typeable b
+  , Hashable (ScalarValue b)
   , HasTag b
   ) => Backend (b :: BackendType) where
   -- types
