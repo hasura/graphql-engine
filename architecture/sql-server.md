@@ -3,11 +3,10 @@
   - [Get started](#get-started)
   - [Features](#features)
   - [Use cases](#use-cases)
-  - [How Hasura works](#how-hasura-works)
+  - [How Hasura Works](#how-hasura-works)
     -  [Performance](#performance)
     -  [Data model evolution](#data-model-evolution)
     -  [Authorization](#authorization)
-  - [Get in touch](#get-in-touch)
   - [Roadmap](#coming-soon)
 
 ## Introduction
@@ -18,7 +17,7 @@
 
 In this post we summarize how Hasura works with [SQL Server](https://hasura.io/docs/latest/graphql/core/databases/ms-sql-server/index.html) as a data source.
 
-## Get started
+## Try it out
 Here are a few ways you can easily try Hasura with SQL Server in just a few minutes:
 
 - [Hasura Cloud](https://hasura.io/docs/latest/graphql/core/databases/ms-sql-server/getting-started/cloud.html)
@@ -190,19 +189,11 @@ Here are a few examples of types of authorization rules that can be implemented 
   # the user role can now safely be assigned to all logged-in users
   ```
 
-## Get in touch
+## Try it out and get in touch!
+
+Try Hasura out on SQL Server and let us know what you think via [GitHub](https://github.com/hasura/graphql-engine/discussions), [community Discord](https://discord.com/invite/hasura), or [Twitter](https://twitter.com/hasurahq). If you'd like to see how Hasura + SQL server can work for your team [contact us](https://hasura.io/contact-us/) via our website.
 
 Feedback and issues are very welcome!
-
-Reach out to the Hasura team via: 
-- [GitHub](https://github.com/hasura/graphql-engine), 
-- [Hasura Discord](https://discord.com/invite/hasura), 
-- [Twitter](https://twitter.com/hasurahq)
-
-If you'd like to see how Hasura + SQL server can work for your team [contact us](https://hasura.io/contact-us/) via our website.
-
-We'll also be diving deeper and talking about updates at [the upcoming HasuraCon](https://hasura.io/events/hasura-con-2021/) 🎉
-
 
 #### Can I use this in production?
 
