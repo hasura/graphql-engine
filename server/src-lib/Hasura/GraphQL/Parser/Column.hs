@@ -1,4 +1,5 @@
-{-# LANGUAGE StrictData #-}
+{-# LANGUAGE StrictData           #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.GraphQL.Parser.Column
   ( UnpreparedValue(..)
@@ -46,6 +47,10 @@ data UnpreparedValue (b :: BackendType)
   | UVSession
   -- | A single session variable.
   | UVSessionVar (SessionVarType b) SessionVariable
+
+deriving instance (Backend b, Show (ScalarValue b)) => Show (UnpreparedValue b)
+deriving instance (Backend b, Eq (ScalarValue b)) => Eq (UnpreparedValue b)
+
 
 -- FIXME exporting this method means doing away with the opaqueness of the
 -- 'Opaque' data type, since the constructors of 'UnpreparedValue' are exported

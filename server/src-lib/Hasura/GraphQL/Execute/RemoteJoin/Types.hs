@@ -1,5 +1,10 @@
+{-# LANGUAGE UndecidableInstances #-}
 module Hasura.GraphQL.Execute.RemoteJoin.Types
   ( RemoteJoin(..)
+  , getPhantomFields
+  , RemoteSchemaJoin(..)
+  , RemoteSourceJoin(..)
+  , RemoteSourceRelationship(..)
   , RemoteJoins
   , JoinColumnAlias(..)
   , getAliasFieldName
@@ -7,6 +12,13 @@ module Hasura.GraphQL.Execute.RemoteJoin.Types
   , JoinTree
   , JoinNode(..)
   , getLeaves
+
+  , JoinCallId(..)
+  , JoinArgumentId(..)
+  , JoinArgument(..)
+  , JoinArguments(..)
+  , ReplacementToken
+  , ResponsePath
   ) where
 
 import           Hasura.Prelude
@@ -14,24 +26,120 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.List.NonEmpty            as NE
 import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.Aeson                    as A
+import qualified Data.Aeson.Ordered            as AO
 
 import qualified Hasura.GraphQL.Parser         as P
+import qualified Hasura.RQL.IR.Select          as IR
+import qualified Hasura.SQL.AnyBackend         as AB
 
 import           Hasura.RQL.Types
 
+type JoinTree a = NE.NonEmpty (FieldName, (JoinNode a))
+
+data JoinNode a
+  = Leaf a
+  | Tree !(JoinTree a)
+  deriving (Show, Eq, Functor, Foldable, Traversable)
+
+getLeaves :: JoinTree a -> [(FieldName, a)]
+getLeaves joinTree =
+  flip mapMaybe (toList joinTree) $
+    \(fieldName, node) ->
+      case node of
+        Leaf a -> Just (fieldName, a)
+        _      -> Nothing
+
+type RemoteJoins = JoinTree RemoteJoin
+type RemoteJoin = RemoteSchemaJoin
+
+-- data RemoteJoin
+--   = RemoteJoinSource !(AB.AnyBackend RemoteSourceJoin)
+--   | RemoteJoinRemoteSchema !RemoteSchemaJoin
+
+getPhantomFields :: RemoteSchemaJoin -> [FieldName]
+getPhantomFields remoteSchemaJoin =
+    mapMaybe getPhantomFieldName $ Map.elems $
+      _rsjJoinColumnAliases remoteSchemaJoin
+--
+-- getPhantomFields :: RemoteJoin -> [FieldName]
+-- getPhantomFields = \case
+--   RemoteJoinSource sourceJoin -> undefined
+--   RemoteJoinRemoteSchema remoteSchemaJoin ->
+--     mapMaybe getPhantomFieldName $ Map.elems $
+--       _rsjJoinColumnAliases remoteSchemaJoin
+
+-- instance Show RemoteJoin where
+--   show = \case
+--     -- TODO: we'll need to start deriving show and eq instances all the way
+--     -- from select ir
+--     RemoteJoinSource j -> "remote join source"
+--     RemoteJoinRemoteSchema j -> show j
+
+-- -- TODO: fix this instance
+-- instance Eq RemoteJoin where
+--   j1 == j2 =
+--     case (j1, j2) of
+--       (RemoteJoinRemoteSchema j1, RemoteJoinRemoteSchema j2) -> j1 == j2
+--       _ -> False
+
+data RemoteSourceRelationship b
+  = RemoteSourceObject !(IR.ObjectRelationSelectG b (P.UnpreparedValue b))
+  | RemoteSourceArray !(IR.ArrayRelationSelectG b (P.UnpreparedValue b))
+  | RemoteSourceArrayAggregate !(IR.ArrayAggregateSelectG b (P.UnpreparedValue b))
+
+deriving instance
+  ( Backend b
+  , Eq (ScalarValue b)
+  , Eq (BooleanOperators b (P.UnpreparedValue b))
+  ) => Eq (RemoteSourceRelationship b)
+
+deriving instance
+  ( Backend b
+  , Show (ScalarValue b)
+  , Show (BooleanOperators b (P.UnpreparedValue b))
+  ) => Show (RemoteSourceRelationship b)
+
+-- | We need an Eq instance on RemoteSourceJoin b to group the values that are
+-- going to the same source.
+data RemoteSourceJoin b
+  = RemoteSourceJoin
+  { _rsjSource       :: !SourceName
+  , _rsjSourceConfig :: !(SourceConfig b)
+  , _rsjRelationship :: !(RemoteSourceRelationship b)
+  , _rsjJoinColumns  :: !(Map.HashMap FieldName (JoinColumnAlias, ScalarType b))
+  }
+
+deriving instance
+  ( Backend b
+  , Show (ScalarValue b)
+  , Show (SourceConfig b)
+  , Show (BooleanOperators b (P.UnpreparedValue b))
+  ) => Show (RemoteSourceJoin b)
+
+deriving instance
+  ( Backend b
+  , Eq (ScalarValue b)
+  , Eq (BooleanOperators b (P.UnpreparedValue b))
+  ) => Eq (RemoteSourceJoin b)
+
 -- | A 'RemoteJoin' represents the context of remote relationship to be
 -- extracted from 'AnnFieldG's.
-data RemoteJoin
-  = RemoteJoin
-  { _rjArgs              :: !(Map.HashMap G.Name (P.InputValue RemoteSchemaVariable)) -- ^ User-provided arguments with variables.
-  , _rjSelSet            :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)  -- ^ User-provided selection set of remote field.
-  , _rjJoinColumnAliases :: !(Map.HashMap FieldName JoinColumnAlias)
-  -- ^ A map of the join column to its alias in the response
-  , _rjFieldCall         :: !(NonEmpty FieldCall) -- ^ Remote server fields.
-  , _rjRemoteSchema      :: !RemoteSchemaInfo -- ^ The remote schema server info.
+data RemoteSchemaJoin
+  = RemoteSchemaJoin
+  { _rsjArgs              :: !(Map.HashMap G.Name (P.InputValue RemoteSchemaVariable))
+    -- ^ User-provided arguments with variables.
+  , _rsjSelSet            :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)
+    -- ^ User-provided selection set of remote field.
+  , _rsjJoinColumnAliases :: !(Map.HashMap FieldName JoinColumnAlias)
+    -- ^ A map of the join column to its alias in the response
+  , _rsjFieldCall         :: !(NonEmpty FieldCall)
+    -- ^ Remote server fields.
+  , _rsjRemoteSchema      :: !RemoteSchemaInfo
+    -- ^ The remote schema server info.
   } deriving (Show, Eq, Generic)
 
-instance Hashable RemoteJoin
+instance Hashable RemoteSchemaJoin
 
 data JoinColumnAlias
   = JCSelected !FieldName
@@ -53,19 +161,24 @@ getAliasFieldName = \case
   JCSelected f -> f
   JCPhantom f  -> f
 
-type JoinTree a = NE.NonEmpty (FieldName, (JoinNode a))
+newtype JoinCallId
+  = JoinCallId { unJoinCallId :: Int }
+  deriving (Show, Eq, Generic, Hashable, A.ToJSON)
 
-data JoinNode a
-  = Leaf a
-  | Tree !(JoinTree a)
-  deriving (Show, Eq, Functor, Foldable, Traversable)
+newtype JoinArgumentId
+  = JoinArgumentId { unArgumentId :: Int }
+  deriving (Show, Eq, Generic, Hashable, A.ToJSON)
 
-getLeaves :: JoinTree a -> [(FieldName, a)]
-getLeaves joinTree =
-  flip mapMaybe (toList joinTree) $
-    \(fieldName, node) ->
-      case node of
-        Leaf a -> Just (fieldName, a)
-        _      -> Nothing
+newtype JoinArgument
+  = JoinArgument { unJoinArugment :: (Map.HashMap FieldName AO.Value) }
+  deriving (Show, Eq, Generic, Hashable)
 
-type RemoteJoins = JoinTree RemoteJoin
+type ReplacementToken = (JoinCallId, JoinArgumentId)
+
+data JoinArguments
+  = JoinArguments
+  { _jalJoinCallId :: !JoinCallId
+  , _jalArguments  :: !(Map.HashMap JoinArgument JoinArgumentId)
+  } deriving (Show, Eq, Generic)
+
+type ResponsePath = NE.NonEmpty G.Name

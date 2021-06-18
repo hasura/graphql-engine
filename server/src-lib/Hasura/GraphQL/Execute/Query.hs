@@ -237,7 +237,7 @@ runExecutionPlan env logger userInfo httpManager reqHeaders requestId introspect
       cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
       remoteSchemas = OMap.elems queryPlans >>= \case
         RFDB (_dbAST, remoteJoins) -> do
-          concatMap (map RJ._rjRemoteSchema . toList . snd) $
+          concatMap (map RJ._rsjRemoteSchema . toList . snd) $
             maybe [] toList remoteJoins
         _ -> []
       actionsInfo = flip mapMaybe (OMap.elems queryPlans) $ \case

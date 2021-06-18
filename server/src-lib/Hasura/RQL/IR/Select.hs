@@ -28,7 +28,7 @@ import           Hasura.SQL.Backend
 data AnnAggregateOrderBy (b :: BackendType)
   = AAOCount
   | AAOOp !Text !(ColumnInfo b)
-  deriving (Generic)
+  deriving (Show, Generic)
 deriving instance (Backend b) => Eq (AnnAggregateOrderBy b)
 instance (Backend b) => Hashable (AnnAggregateOrderBy b)
 
@@ -36,7 +36,7 @@ data AnnOrderByElementG (b :: BackendType) v
   = AOCColumn !(ColumnInfo b)
   | AOCObjectRelation !(RelInfo b) !v !(AnnOrderByElementG b v)
   | AOCArrayAggregation !(RelInfo b) !v !(AnnAggregateOrderBy b)
-  deriving (Generic, Functor)
+  deriving (Show, Generic, Functor)
 deriving instance (Backend b, Eq v) => Eq (AnnOrderByElementG b v)
 instance (Backend b, Hashable v) => Hashable (AnnOrderByElementG b v)
 
@@ -76,6 +76,16 @@ data AnnRelationSelectG (b :: BackendType) a
   , aarAnnSelect        :: !a -- Current table. Almost ~ to SQL Select
   } deriving  (Functor, Foldable, Traversable)
 
+deriving instance
+  ( Backend b
+  , Show v
+  ) => Show (AnnRelationSelectG b v)
+
+deriving instance
+  ( Backend b
+  , Eq v
+  ) => Eq (AnnRelationSelectG b v)
+
 type ArrayRelationSelectG b v = AnnRelationSelectG b (AnnSimpleSelG b v)
 type ArrayAggregateSelectG b v = AnnRelationSelectG b (AnnAggregateSelectG b v)
 type ArrayConnectionSelect b v = AnnRelationSelectG b (ConnectionSelect b v)
@@ -88,6 +98,17 @@ data AnnObjectSelectG (b :: BackendType) v
   , _aosTableFilter :: !(AnnBoolExp b v)
   }
 
+deriving instance
+  ( Show (BooleanOperators b v)
+  , Backend b
+  , Show v
+  ) => Show (AnnObjectSelectG b v)
+
+deriving instance
+  ( Eq (BooleanOperators b v)
+  , Backend b
+  , Eq v
+  ) => Eq (AnnObjectSelectG b v)
 type AnnObjectSelect b = AnnObjectSelectG b (SQLExpression b)
 
 traverseAnnObjectSelect
@@ -125,6 +146,18 @@ data ComputedFieldSelect (b :: BackendType) v
       -- `c` evaluates to `true` and `null` when `c` evaluates to `false`
   | CFSTable !JsonAggSelect !(AnnSimpleSelG b v)
 
+deriving instance
+  ( Show (BooleanOperators b v)
+  , Backend b
+  , Show v
+  ) => Show (ComputedFieldSelect b v)
+
+deriving instance
+  ( Eq (BooleanOperators b v)
+  , Backend b
+  , Eq v
+  ) => Eq (ComputedFieldSelect b v)
+
 traverseComputedFieldSelect
   :: (Applicative f, Backend backend)
   => (v -> f w)
@@ -140,6 +173,18 @@ data ArraySelectG (b :: BackendType) v
   = ASSimple !(ArrayRelationSelectG b v)
   | ASAggregate !(ArrayAggregateSelectG b v)
   | ASConnection !(ArrayConnectionSelect b v)
+
+deriving instance
+  ( Show (BooleanOperators b v)
+  , Backend b
+  , Show v
+  ) => Show (ArraySelectG b v)
+
+deriving instance
+  ( Eq (BooleanOperators b v)
+  , Backend b
+  , Eq v
+  ) => Eq (ArraySelectG b v)
 
 traverseArraySelect
   :: (Applicative f, Backend backend)
@@ -185,6 +230,18 @@ data AnnColumnField (b :: BackendType) v
   -- when `c` evaluates to `false`.
   }
 
+deriving instance
+  ( Show (BooleanOperators b v)
+  , Backend b
+  , Show v
+  ) => Show (AnnColumnField b v)
+
+deriving instance
+  ( Eq (BooleanOperators b v)
+  , Backend b
+  , Eq v
+  ) => Eq (AnnColumnField b v)
+
 traverseAnnColumnField
   :: (Applicative f, Backend backend)
   => (a -> f b)
@@ -209,7 +266,7 @@ data RemoteSelect (b :: BackendType)
   , _rselHasuraColumns :: !(HashSet (ColumnInfo b))
   , _rselFieldCall     :: !(NonEmpty FieldCall)
   , _rselRemoteSchema  :: !RemoteSchemaInfo
-  }
+  } deriving (Show, Eq)
 
 data AnnFieldG (b :: BackendType) v
   = AFColumn !(AnnColumnField b v)
@@ -219,6 +276,18 @@ data AnnFieldG (b :: BackendType) v
   | AFRemote !(RemoteSelect b)
   | AFNodeId !(XRelay b) !(TableName b) !(PrimaryKeyColumns b)
   | AFExpression !Text
+
+deriving instance
+  ( Show (BooleanOperators b v)
+  , Backend b
+  , Show v
+  ) => Show (AnnFieldG b v)
+
+deriving instance
+  ( Eq (BooleanOperators b v)
+  , Backend b
+  , Eq v
+  ) => Eq (AnnFieldG b v)
 
 mkAnnColumnField
   :: ColumnInfo backend
@@ -263,6 +332,12 @@ deriving instance
   , Eq v
   ) => Eq (SelectArgsG b v)
 
+deriving instance
+  ( Show (BooleanOperators b v)
+  , Backend b
+  , Show v
+  ) => Show (SelectArgsG b v)
+
 instance
   ( Backend b
   , Hashable (BooleanOperators b v)
@@ -289,6 +364,7 @@ noSelectArgs = SelectArgs Nothing Nothing Nothing Nothing Nothing
 data ColFld (b :: BackendType)
   = CFCol !(Column b) !(ColumnType b)
   | CFExp !Text
+  deriving (Show, Eq)
 
 type ColumnFields b = Fields (ColFld b)
 
@@ -296,12 +372,14 @@ data AggregateOp (b :: BackendType)
   = AggregateOp
   { _aoOp     :: !Text
   , _aoFields :: !(ColumnFields b)
-  }
+  } deriving (Show, Eq)
 
 data AggregateField (b :: BackendType)
   = AFCount !(CountType b)
   | AFOp !(AggregateOp b)
   | AFExp !Text
+deriving instance (Backend b) => Show (AggregateField b)
+deriving instance (Backend b) => Eq (AggregateField b)
 
 type AggregateFields b = Fields (AggregateField b)
 type AnnFieldsG b v = Fields (AnnFieldG b v)
@@ -318,6 +396,18 @@ data TableAggregateFieldG (b :: BackendType) v
   | TAFNodes (XNodesAgg b) !(AnnFieldsG b v)
   | TAFExp !Text
 
+deriving instance
+  ( Show (BooleanOperators b v)
+  , Backend b
+  , Show v
+  ) => Show (TableAggregateFieldG b v)
+
+deriving instance
+  ( Eq (BooleanOperators b v)
+  , Backend b
+  , Eq v
+  ) => Eq (TableAggregateFieldG b v)
+
 data PageInfoField
   = PageInfoTypename !Text
   | PageInfoHasNextPage
@@ -333,6 +423,18 @@ data EdgeField (b :: BackendType) v
   | EdgeCursor
   | EdgeNode !(AnnFieldsG b v)
 
+deriving instance
+  ( Show (BooleanOperators b v)
+  , Backend b
+  , Show v
+  ) => Show (EdgeField b v)
+
+deriving instance
+  ( Eq (BooleanOperators b v)
+  , Backend b
+  , Eq v
+  ) => Eq (EdgeField b v)
+
 type EdgeFields b v = Fields (EdgeField b v)
 
 traverseEdgeField
@@ -347,6 +449,18 @@ data ConnectionField (b :: BackendType) v
   = ConnectionTypename !Text
   | ConnectionPageInfo !PageInfoFields
   | ConnectionEdges !(EdgeFields b v)
+
+deriving instance
+  ( Show (BooleanOperators b v)
+  , Backend b
+  , Show v
+  ) => Show (ConnectionField b v)
+
+deriving instance
+  ( Eq (BooleanOperators b v)
+  , Backend b
+  , Eq v
+  ) => Eq (ConnectionField b v)
 
 type ConnectionFields b v = Fields (ConnectionField b v)
 
@@ -392,6 +506,16 @@ data SelectFromG (b :: BackendType) v
   deriving (Functor, Foldable, Traversable, Generic)
 instance (Backend b, Hashable v) => Hashable (SelectFromG b v)
 
+deriving instance
+  ( Backend b
+  , Show v
+  ) => Show (SelectFromG b v)
+
+deriving instance
+  ( Backend b
+  , Eq v
+  ) => Eq (SelectFromG b v)
+
 type SelectFrom b = SelectFromG b (SQLExpression b)
 
 data TablePermG (b :: BackendType) v
@@ -399,6 +523,18 @@ data TablePermG (b :: BackendType) v
   { _tpFilter :: !(AnnBoolExp b v)
   , _tpLimit  :: !(Maybe Int)
   } deriving (Generic)
+
+deriving instance
+  ( Show (BooleanOperators b v)
+  , Backend b
+  , Show v
+  ) => Show (TablePermG b v)
+
+deriving instance
+  ( Eq (BooleanOperators b v)
+  , Backend b
+  , Eq v
+  ) => Eq (TablePermG b v)
 
 instance
   ( Backend b
@@ -431,6 +567,20 @@ data AnnSelectG (b :: BackendType) a v
   , _asnArgs     :: !(SelectArgsG b v)
   , _asnStrfyNum :: !Bool
   }
+
+deriving instance
+  ( Show (BooleanOperators b v)
+  , Backend b
+  , Show v
+  , Show a
+  ) => Show (AnnSelectG b a v)
+
+deriving instance
+  ( Eq (BooleanOperators b v)
+  , Backend b
+  , Eq v
+  , Eq a
+  ) => Eq (AnnSelectG b a v)
 
 traverseAnnSimpleSelect
   :: (Applicative f, Backend backend)
@@ -480,7 +630,7 @@ data ConnectionSplit (b :: BackendType) v
   { _csKind    :: !ConnectionSplitKind
   , _csValue   :: !v
   , _csOrderBy :: !(OrderByItemG b (AnnOrderByElementG b ()))
-  } deriving (Functor, Generic, Foldable, Traversable)
+  } deriving (Show, Eq, Functor, Generic, Foldable, Traversable)
 instance (Backend b, Hashable (ColumnInfo b), Hashable v) => Hashable (ConnectionSplit b v)
 
 traverseConnectionSplit
@@ -497,6 +647,18 @@ data ConnectionSelect (b :: BackendType) v
   , _csSlice             :: !(Maybe ConnectionSlice)
   , _csSelect            :: !(AnnSelectG b (ConnectionFields b v) v)
   }
+
+deriving instance
+  ( Show (BooleanOperators b v)
+  , Backend b
+  , Show v
+  ) => Show (ConnectionSelect b v)
+
+deriving instance
+  ( Eq (BooleanOperators b v)
+  , Backend b
+  , Eq v
+  ) => Eq (ConnectionSelect b v)
 
 traverseConnectionSelect
   :: (Applicative f, Backend backend)

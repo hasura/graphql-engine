@@ -6,6 +6,7 @@ import qualified Data.Aeson                              as J
 import qualified Data.Aeson.Casing                       as J
 import qualified Data.Aeson.Ordered                      as JO
 import qualified Data.ByteString                         as B
+import qualified Data.HashMap.Strict                     as Map
 import qualified Language.GraphQL.Draft.Syntax           as G
 
 import           Control.Monad.Trans.Control             (MonadBaseControl)
@@ -38,6 +39,15 @@ class ( Backend b
       , ToTxt (MultiplexedQuery b)
       ) => BackendExecute (b :: BackendType) where
   type MultiplexedQuery b :: Type
+
+  -- | This is used in remote joins, to construct a table expression for the
+  -- left hand side of a join
+  buildTemporaryTable
+    :: [J.Object]
+    -- ^ List of json objects, each of which becomes a row of the table
+    -> Map.HashMap FieldName (ScalarType b)
+    -- ^ The above objects have this schema
+    -> SelectFromG b (UnpreparedValue b)
 
   executeQueryField
     :: forall m

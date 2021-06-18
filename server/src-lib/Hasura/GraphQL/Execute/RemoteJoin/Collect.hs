@@ -253,7 +253,7 @@ transformAnnFields path fields = do
                   JCPhantom a  -> Just (columnInfo, a)
             joinColumnAliases = fmap snd annotatedJoinColumns
             inputArgsToMap = Map.fromList . map (_rfaArgument &&& _rfaValue)
-        in (phantomColumns, (fieldName, RemoteJoin (inputArgsToMap inputArgs) selSet joinColumnAliases remoteFields rsi))
+        in (phantomColumns, (fieldName, RemoteSchemaJoin (inputArgsToMap inputArgs) selSet joinColumnAliases remoteFields rsi))
 
   transformedFields <- forM fields $ \(fieldName, field') -> do
     let fieldPath = appendPath fieldName path

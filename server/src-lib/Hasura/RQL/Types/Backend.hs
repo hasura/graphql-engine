@@ -48,6 +48,7 @@ class
   , Representable (FunctionArgType b)
   , Representable (ConstraintName b)
   , Representable (BasicOrderType b)
+  , Representable (CountType b)
   , Representable (NullsOrderType b)
   , Representable (Column b)
   , Representable (ScalarType b)

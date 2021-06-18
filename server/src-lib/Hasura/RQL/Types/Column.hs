@@ -1,3 +1,4 @@
+{-# LANGUAGE UndecidableInstances #-}
 module Hasura.RQL.Types.Column
   ( ColumnType(..)
   , _ColumnScalar
@@ -109,6 +110,8 @@ data ColumnValue (b :: BackendType) = ColumnValue
   { cvType  :: ColumnType b
   , cvValue :: ScalarValue b
   }
+deriving instance (Backend b, Show (ScalarValue b)) => Show (ColumnValue b)
+deriving instance (Backend b, Eq (ScalarValue b)) => Eq (ColumnValue b)
 
 isScalarColumnWhere :: (ScalarType b -> Bool) -> ColumnType b -> Bool
 isScalarColumnWhere f = \case
