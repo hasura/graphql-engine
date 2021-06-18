@@ -28,6 +28,7 @@ type ActionConfig struct {
 	serverFeatureFlags *version.ServerFeatureFlags
 	cliExtensionConfig *cliextension.Config
 	ensureCliExt       func() error
+	cleanupCliExt      func()
 
 	logger *logrus.Logger
 }
@@ -38,9 +39,12 @@ func New(ec *cli.ExecutionContext, baseDir string) *ActionConfig {
 		ActionConfig:       ec.Config.ActionConfig,
 		serverFeatureFlags: ec.Version.ServerFeatureFlags,
 		logger:             ec.Logger,
-		cliExtensionConfig: cliextension.NewCLIExtensionConfig(cliext.BinPath(ec), ec.Logger),
+		cliExtensionConfig: cliextension.NewCLIExtensionConfig(&ec.CliExtBinPath, ec.Logger),
 		ensureCliExt: func() error {
 			return cliext.Setup(ec)
+		},
+		cleanupCliExt: func() {
+			cliext.Cleanup(ec)
 		},
 	}
 	return cfg
@@ -48,6 +52,7 @@ func New(ec *cli.ExecutionContext, baseDir string) *ActionConfig {
 
 func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFrom string) error {
 	err := a.ensureCliExt()
+	defer a.cleanupCliExt()
 	if err != nil {
 		return err
 	}
@@ -199,6 +204,7 @@ input SampleInput {
 
 func (a *ActionConfig) Codegen(name string, derivePld types.DerivePayload) error {
 	err := a.ensureCliExt()
+	defer a.cleanupCliExt()
 	if err != nil {
 		return err
 	}
@@ -266,6 +272,7 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 		return nil
 	}
 	err := a.ensureCliExt()
+	defer a.cleanupCliExt()
 	if err != nil {
 		return err
 	}
@@ -388,6 +395,7 @@ func (a *ActionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error)
 		return make(map[string][]byte), nil
 	}
 	err := a.ensureCliExt()
+	defer a.cleanupCliExt()
 	if err != nil {
 		return nil, err
 	}

@@ -446,6 +446,12 @@ type ExecutionContext struct {
 	// more details in: https://github.com/hasura/graphql-engine/issues/6861
 	DisableAutoStateMigration bool
 
+	// CliExtDir is the directory path that will be used to setup cli-ext
+	CliExtDir string
+
+	// cliExtBinPath is the full path of the cli-ext binary
+	CliExtBinPath string
+
 	// proPluginVersionValidated is used to avoid validating pro plugin multiple times
 	// while preparing the execution context
 	proPluginVersionValidated bool
