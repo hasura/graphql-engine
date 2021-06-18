@@ -12,6 +12,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -354,7 +355,8 @@ type Config struct {
 type ExecutionContext struct {
 	// CMDName is the name of CMD (os.Args[0]). To be filled in later to
 	// correctly render example strings etc.
-	CMDName string
+	CMDName        string
+	Stderr, Stdout io.Writer
 
 	// ID is a unique ID for this Execution
 	ID string
@@ -456,7 +458,10 @@ type Source struct {
 
 // NewExecutionContext returns a new instance of execution context
 func NewExecutionContext() *ExecutionContext {
-	ec := &ExecutionContext{}
+	ec := &ExecutionContext{
+		Stderr: os.Stderr,
+		Stdout: os.Stdout,
+	}
 	ec.Telemetry = telemetry.BuildEvent()
 	ec.Telemetry.Version = version.BuildVersion
 	return ec
@@ -880,7 +885,7 @@ func (ec *ExecutionContext) readConfig() error {
 func (ec *ExecutionContext) setupSpinner() {
 	if ec.Spinner == nil {
 		spnr := spinner.New(spinner.CharSets[7], 100*time.Millisecond)
-		spnr.Writer = os.Stderr
+		spnr.Writer = ec.Stderr
 		ec.Spinner = spnr
 	}
 }
@@ -920,7 +925,7 @@ func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
 		logger := logrus.New()
 		ec.Logger = logger
-		ec.Logger.SetOutput(os.Stderr)
+		ec.Logger.SetOutput(ec.Stderr)
 	}
 
 	if ec.LogLevel != "" {

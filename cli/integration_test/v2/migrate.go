@@ -27,7 +27,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 	if err != nil {
 		t.Fatalf("unable to copy migrations directory %v", err)
 	}
-
+	ec.Source.Kind = hasura.SourceKindPG
 	tt := []struct {
 		name   string
 		opts   migrateInterface
