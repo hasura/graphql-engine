@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	errors2 "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/errors"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/hasura/graphql-engine/cli/v2"
@@ -44,10 +46,10 @@ func (o *MetadataObject) CreateFiles() error {
 	return nil
 }
 
-func (o *MetadataObject) Build(metadata *yaml.MapSlice) error {
+func (o *MetadataObject) Build(metadata *yaml.MapSlice) errors2.ErrParsingMetadataObject {
 	data, err := ioutil.ReadFile(filepath.Join(o.MetadataDir, MetadataFilename))
 	if err != nil {
-		return err
+		return o.Error(err)
 	}
 	item := yaml.MapItem{
 		Key: o.Name(),
@@ -55,7 +57,7 @@ func (o *MetadataObject) Build(metadata *yaml.MapSlice) error {
 	var obj yaml.MapSlice
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
-		return err
+		return o.Error(err)
 	}
 	if len(obj) > 0 {
 		item.Value = obj
@@ -64,7 +66,7 @@ func (o *MetadataObject) Build(metadata *yaml.MapSlice) error {
 	return nil
 }
 
-func (o *MetadataObject) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
+func (o *MetadataObject) Export(metadata yaml.MapSlice) (map[string][]byte, errors2.ErrParsingMetadataObject) {
 	var apiLimits interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
@@ -82,7 +84,7 @@ func (o *MetadataObject) Export(metadata yaml.MapSlice) (map[string][]byte, erro
 	}
 	data, err := yaml.Marshal(apiLimits)
 	if err != nil {
-		return nil, err
+		return nil, o.Error(err)
 	}
 	return map[string][]byte{
 		filepath.ToSlash(filepath.Join(o.MetadataDir, MetadataFilename)): data,
@@ -91,4 +93,8 @@ func (o *MetadataObject) Export(metadata yaml.MapSlice) (map[string][]byte, erro
 
 func (o *MetadataObject) Name() string {
 	return "api_limits"
+}
+
+func (o *MetadataObject) Error(err error, additionalContext ...string) errors2.ErrParsingMetadataObject {
+	return errors2.NewErrParsingMetadataObject(o.Name(), MetadataFilename, additionalContext, err)
 }

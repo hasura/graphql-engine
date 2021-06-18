@@ -6,6 +6,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/allowlist"
 	apilimits "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/api_limits"
 	crontriggers "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/cron_triggers"
+	errors2 "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/functions"
 	graphqlschemaintrospection "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/graphql_schema_introspection"
 	inheritedroles "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/inherited_roles"
@@ -21,10 +22,11 @@ import (
 type Objects []Object
 
 type Object interface {
-	Build(metadata *yaml.MapSlice) error
-	Export(metadata yaml.MapSlice) (map[string][]byte, error)
+	Build(metadata *yaml.MapSlice) errors2.ErrParsingMetadataObject
+	Export(metadata yaml.MapSlice) (map[string][]byte, errors2.ErrParsingMetadataObject)
 	CreateFiles() error
 	Name() string
+	Error(err error, errContext ...string) errors2.ErrParsingMetadataObject
 }
 
 func GetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) Objects {

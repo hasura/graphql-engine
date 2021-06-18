@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -99,7 +100,7 @@ func (h *Handler) BuildMetadata() (yaml.MapSlice, error) {
 	for _, object := range h.objects {
 		err := object.Build(&tmpMeta)
 		if err != nil {
-			if os.IsNotExist(errors.Cause(err)) {
+			if errors.Is(err, fs.ErrNotExist) {
 				h.logger.Debugf("metadata file for %s was not found, assuming an empty file", object.Name())
 				continue
 			}
