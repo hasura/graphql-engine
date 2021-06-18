@@ -12,7 +12,7 @@ module.exports = {
   },
   globals: {
     'ts-jest': {
-      tsconfig: 'tsconfig.test.json'
+      tsconfig: 'tsconfig.test.json',
     },
     __DEV__: true,
     CONSOLE_ASSET_VERSION: Date.now().toString(),
