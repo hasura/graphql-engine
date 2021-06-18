@@ -88,10 +88,10 @@ func (h *Handler) ResetMetadata() error {
 }
 
 // ReloadMetadata - Reload Hasura GraphQL Engine metadata on the database
-func (h *Handler) ReloadMetadata() error {
+func (h *Handler) ReloadMetadata() (io.Reader, error) {
 	var err error
-	_, err = h.v1MetadataOps.ReloadMetadata()
-	return err
+	r, err := h.v1MetadataOps.ReloadMetadata()
+	return r, err
 }
 
 func (h *Handler) BuildMetadata() (yaml.MapSlice, error) {
@@ -125,16 +125,16 @@ func (h *Handler) MakeJSONMetadata() ([]byte, error) {
 	return jbyt, nil
 }
 
-func (h *Handler) V1ApplyMetadata() error {
+func (h *Handler) V1ApplyMetadata() (io.Reader, error) {
 	jbyt, err := h.MakeJSONMetadata()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_, err = h.v1MetadataOps.ReplaceMetadata(bytes.NewReader(jbyt))
+	r, err := h.v1MetadataOps.ReplaceMetadata(bytes.NewReader(jbyt))
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return r, nil
 }
 
 func (h *Handler) V2ApplyMetadata() (*hasura.V2ReplaceMetadataResponse, error) {
