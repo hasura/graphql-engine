@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	errors2 "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/errors"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/goccy/go-yaml"
@@ -67,16 +69,16 @@ func (t *SourceConfig) CreateFiles() error {
 	return nil
 }
 
-func (t *SourceConfig) Build(metadata *goyaml.MapSlice) error {
+func (t *SourceConfig) Build(metadata *goyaml.MapSlice) errors2.ErrParsingMetadataObject {
 	sourceFile := filepath.Join(t.MetadataDir, sourcesDirectory, fileName)
 	sourcesBytes, err := ioutil.ReadFile(sourceFile)
 	if err != nil {
-		return err
+		return t.Error(err)
 	}
 	// unmarshal everything else except tables and functions
 	var sourceNormalFields []SourceWithNormalFields
-	if err := yaml.Unmarshal(sourcesBytes, &sourceNormalFields); err != nil {
-		return err
+	if err := v3yaml.Unmarshal(sourcesBytes, &sourceNormalFields); err != nil {
+		return t.Error(fmt.Errorf("parsing error: %w", err))
 	}
 	var sources []Source
 	for idx, minisource := range sourceNormalFields {
@@ -87,13 +89,13 @@ func (t *SourceConfig) Build(metadata *goyaml.MapSlice) error {
 		// get tables node
 		tablepath, err := yaml.PathString(fmt.Sprintf("$[%d].tables", idx))
 		if err != nil {
-			return err
+			return t.Error(err)
 		}
 		tableNode, err := tablepath.ReadNode(bytes.NewReader(sourcesBytes))
 		if err == nil {
 			tableNodeBytes, err := ioutil.ReadAll(tableNode)
 			if err != nil {
-				return err
+				return t.Error(err)
 			}
 			var tablesKey interface{}
 			err = v3yaml.Unmarshal(tableNodeBytes, newSourcesYamlDecoder(
@@ -103,7 +105,7 @@ func (t *SourceConfig) Build(metadata *goyaml.MapSlice) error {
 				&tablesKey,
 			))
 			if err != nil {
-				return err
+				return t.Error(err)
 			}
 			source.Tables = tablesKey
 		} else {
@@ -113,13 +115,13 @@ func (t *SourceConfig) Build(metadata *goyaml.MapSlice) error {
 		// get functions node
 		functionsPath, err := yaml.PathString(fmt.Sprintf("$[%d].functions", idx))
 		if err != nil {
-			return err
+			return t.Error(err)
 		}
 		functionsNode, err := functionsPath.ReadNode(bytes.NewReader(sourcesBytes))
 		if err == nil {
 			functionsNodeBytes, err := ioutil.ReadAll(functionsNode)
 			if err != nil {
-				return err
+				return t.Error(err)
 			}
 			var functionsKey interface{}
 			err = v3yaml.Unmarshal(functionsNodeBytes, newSourcesYamlDecoder(
@@ -129,7 +131,7 @@ func (t *SourceConfig) Build(metadata *goyaml.MapSlice) error {
 				&functionsKey,
 			))
 			if err != nil {
-				return err
+				return t.Error(err)
 			}
 			source.Functions = functionsKey
 		} else {
@@ -141,23 +143,23 @@ func (t *SourceConfig) Build(metadata *goyaml.MapSlice) error {
 
 	sourcesStructBytes, err := goyaml.Marshal(sources)
 	if err != nil {
-		return err
+		return t.Error(err)
 	}
 	var item = goyaml.MapItem{
 		Key:   "sources",
 		Value: []yaml.MapSlice{},
 	}
-	if err := goyaml.Unmarshal(sourcesStructBytes, &item.Value); err != nil {
-		return err
+	if err := v3yaml.Unmarshal(sourcesStructBytes, &item.Value); err != nil {
+		return t.Error(fmt.Errorf("parsing error: %w \n%v\n", err, string(sourcesStructBytes)))
 	}
 	*metadata = append(*metadata, item)
 	return nil
 }
 
-func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, error) {
+func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, errors2.ErrParsingMetadataObject) {
 	metadataBytes, err := goyaml.Marshal(metadata)
 	if err != nil {
-		return nil, err
+		return nil, t.Error(err)
 	}
 	files := map[string][]byte{}
 	// Build sources.yaml
@@ -165,10 +167,10 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 	var sources []*Source
 	sourcePath, err := yaml.PathString("$.sources")
 	if err != nil {
-		return nil, err
+		return nil, t.Error(err)
 	}
 	if err := sourcePath.Read(bytes.NewReader(metadataBytes), &sources); err != nil {
-		return nil, err
+		return nil, t.Error(err)
 	}
 	for idx, source := range sources {
 		var tableTags []string
@@ -188,7 +190,7 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 		path := fmt.Sprintf("$.sources[%d].tables", idx)
 		tablesPath, err := yaml.PathString(path)
 		if err != nil {
-			return nil, err
+			return nil, t.Error(err)
 		}
 		if err := tablesPath.Read(bytes.NewReader(metadataBytes), &tablesKey); err != nil {
 			t.logger.Debug("reading functions node from metadata", err)
@@ -217,7 +219,7 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 			// build <source>/tables/<table_primary_key>.yaml
 			b, err := yaml.Marshal(rawTables[idx])
 			if err != nil {
-				return nil, err
+				return nil, t.Error(err)
 			}
 			tableFilePath := filepath.ToSlash(filepath.Join(t.MetadataDir, sourcesDirectory, source.Name, tablesDirectory, tableFileName))
 			files[tableFilePath] = b
@@ -225,7 +227,7 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 		tableTagsFilePath := filepath.ToSlash(filepath.Join(t.MetadataDir, sourcesDirectory, source.Name, tablesDirectory, "tables.yaml"))
 		tableTagsBytes, err := yaml.Marshal(tableTags)
 		if err != nil {
-			return nil, fmt.Errorf("building contents for %v: %w", tableTagsFilePath, err)
+			return nil, t.Error(fmt.Errorf("building contents for %v: %w", tableTagsFilePath, err))
 		}
 		files[tableTagsFilePath] = tableTagsBytes
 		source.Tables = fmt.Sprintf("!include %s", filepath.ToSlash(filepath.Join(source.Name, tablesDirectory, "tables.yaml")))
@@ -238,7 +240,7 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 		}
 		functionsPath, err := yaml.PathString(fmt.Sprintf("$.sources[%d].functions", idx))
 		if err != nil {
-			return nil, err
+			return nil, t.Error(err)
 		}
 		if err := functionsPath.Read(bytes.NewReader(metadataBytes), &functions); err != nil {
 			t.logger.Debug("reading functions node from metadata", err)
@@ -255,7 +257,7 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 			// build <source>/functions/<function_primary_key>.yaml
 			b, err := yaml.Marshal(rawFunctions[idx])
 			if err != nil {
-				return nil, err
+				return nil, t.Error(err)
 			}
 			functionFilePath := filepath.ToSlash(filepath.Join(t.MetadataDir, sourcesDirectory, source.Name, functionsDirectory, functionFileName))
 			files[functionFilePath] = b
@@ -264,7 +266,7 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 			functionsTagsFilePath := filepath.ToSlash(filepath.Join(t.MetadataDir, sourcesDirectory, source.Name, functionsDirectory, "functions.yaml"))
 			functionTagsBytes, err := yaml.Marshal(functionTags)
 			if err != nil {
-				return nil, fmt.Errorf("building contents for %v: %w", functionsTagsFilePath, err)
+				return nil, t.Error(fmt.Errorf("building contents for %v: %w", functionsTagsFilePath, err))
 			}
 			files[functionsTagsFilePath] = functionTagsBytes
 			source.Functions = filepath.ToSlash(fmt.Sprintf("!include %s", filepath.ToSlash(filepath.Join(source.Name, functionsDirectory, "functions.yaml"))))
@@ -273,7 +275,7 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 
 	sourcesYamlBytes, err := yaml.Marshal(sources)
 	if err != nil {
-		return nil, err
+		return nil, t.Error(err)
 	}
 	files[filepath.ToSlash(filepath.Join(t.MetadataDir, sourcesDirectory, fileName))] = sourcesYamlBytes
 	return files, nil
@@ -281,4 +283,8 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 
 func (t *SourceConfig) Name() string {
 	return "sources"
+}
+
+func (t *SourceConfig) Error(err error, additionalContext ...string) errors2.ErrParsingMetadataObject {
+	return errors2.NewErrParsingMetadataObject(t.Name(), fileName, additionalContext, err)
 }

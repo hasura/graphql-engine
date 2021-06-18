@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	errors2 "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/errors"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/hasura/graphql-engine/cli/v2"
@@ -44,10 +46,10 @@ func (t *TableConfig) CreateFiles() error {
 	return nil
 }
 
-func (t *TableConfig) Build(metadata *yaml.MapSlice) error {
+func (t *TableConfig) Build(metadata *yaml.MapSlice) errors2.ErrParsingMetadataObject {
 	data, err := ioutil.ReadFile(filepath.Join(t.MetadataDir, MetadataFilename))
 	if err != nil {
-		return err
+		return t.Error(err)
 	}
 	item := yaml.MapItem{
 		Key:   "tables",
@@ -55,13 +57,13 @@ func (t *TableConfig) Build(metadata *yaml.MapSlice) error {
 	}
 	err = yaml.Unmarshal(data, &item.Value)
 	if err != nil {
-		return err
+		return t.Error(err)
 	}
 	*metadata = append(*metadata, item)
 	return nil
 }
 
-func (t *TableConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
+func (t *TableConfig) Export(metadata yaml.MapSlice) (map[string][]byte, errors2.ErrParsingMetadataObject) {
 	var tables interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
@@ -75,7 +77,7 @@ func (t *TableConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) 
 	}
 	data, err := yaml.Marshal(tables)
 	if err != nil {
-		return nil, err
+		return nil, t.Error(err)
 	}
 	return map[string][]byte{
 		filepath.ToSlash(filepath.Join(t.MetadataDir, MetadataFilename)): data,
@@ -84,4 +86,8 @@ func (t *TableConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) 
 
 func (t *TableConfig) Name() string {
 	return "tables"
+}
+
+func (t *TableConfig) Error(err error, additionalContext ...string) errors2.ErrParsingMetadataObject {
+	return errors2.NewErrParsingMetadataObject(t.Name(), MetadataFilename, additionalContext, err)
 }
