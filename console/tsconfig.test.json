@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "types": ["react", "jest"],
+    "types": ["react", "jest"]
   },
   "extends": "./tsconfig.json",
   "include": ["src/**/*", "src/**/*.test.ts"],

@@ -57,7 +57,7 @@ import {
   uniqueKeyDescription,
   checkConstraintsDescription,
 } from '../Common/TooltipMessages';
-import { isFeatureSupported } from '../../../../dataSources';
+import { dataSource, isFeatureSupported } from '../../../../dataSources';
 import { maxAllowedColumnLength } from '../constants';
 
 /* AddTable is a wrapper which wraps
@@ -101,6 +101,22 @@ class AddTable extends Component {
 
   componentDidMount() {
     this.props.dispatch(fetchColumnTypeInfo());
+    this.props.dispatch(
+      setForeignKeys([
+        {
+          refSchemaName: '',
+          refTableName: '',
+          colMappings: [
+            {
+              column: '',
+              refColumn: '',
+            },
+          ],
+          onUpdate: dataSource.violationActions[0],
+          onDelete: dataSource.violationActions[0],
+        },
+      ])
+    );
   }
 
   componentWillUnmount() {
@@ -475,7 +491,6 @@ class AddTable extends Component {
       checkConstraints,
       postgresVersion,
     } = this.props;
-
     const getCreateBtnText = () => {
       let createBtnText = 'Add Table';
       if (ongoingRequest) {
