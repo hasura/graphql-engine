@@ -296,7 +296,7 @@ buildFullestDBSchema
   -> SourceCache
   -> [ActionInfo]
   -> NonObjectTypeMap
-  -> m (        Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField    UnpreparedValue))
+  -> m ( Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
        , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
        )
 buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes =

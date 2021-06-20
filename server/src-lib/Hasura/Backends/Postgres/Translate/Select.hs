@@ -57,7 +57,7 @@ connectionSelectQuerySQL
    . ( Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
      )
-  =>  ConnectionSelect ('Postgres pgKind) S.SQLExp
+  => ConnectionSelect ('Postgres pgKind) (Const Void) S.SQLExp
   -> Q.Query
 connectionSelectQuerySQL =
   Q.fromBuilder . toSQL . mkConnectionSelect
@@ -348,7 +348,7 @@ type SimilarArrayFields = HM.HashMap FieldName [FieldName]
 mkSimilarArrayFields
   :: forall pgKind v
    . (Backend ('Postgres pgKind), Eq v)
-  => AnnFieldsG ('Postgres pgKind) v
+  => AnnFieldsG ('Postgres pgKind) (Const Void) v
   -> Maybe (NE.NonEmpty (AnnOrderByItemG ('Postgres pgKind) v))
   -> SimilarArrayFields
 mkSimilarArrayFields annFields maybeOrderBys =
@@ -373,13 +373,17 @@ mkSimilarArrayFields annFields maybeOrderBys =
       Just (riName ri, mkOrderByFieldName $ riName ri)
     fetchAggOrderByRels _               = Nothing
 
-getArrayRelNameAndSelectArgs :: ArraySelectG ('Postgres pgKind) v -> (RelName, SelectArgsG ('Postgres pgKind) v)
+getArrayRelNameAndSelectArgs
+  :: ArraySelectG ('Postgres pgKind) r v
+  -> (RelName, SelectArgsG ('Postgres pgKind) v)
 getArrayRelNameAndSelectArgs = \case
   ASSimple r     -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
   ASAggregate r  -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
   ASConnection r -> (aarRelationshipName r, _asnArgs $ _csSelect $ aarAnnSelect r)
 
-getAnnArr :: (a, AnnFieldG ('Postgres pgKind) v) -> Maybe (a, ArraySelectG ('Postgres pgKind) v)
+getAnnArr
+  :: (a, AnnFieldG ('Postgres pgKind) r v)
+  -> Maybe (a, ArraySelectG ('Postgres pgKind) r v)
 getAnnArr (f, annFld) = case annFld of
   AFArrayRelation (ASConnection _) -> Nothing
   AFArrayRelation ar               -> Just (f, ar)
@@ -866,10 +870,6 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
 
       AFColumn c -> toSQLCol c
 
-      -- this will be gone once the code which collects remote joins from the IR
-      -- emits a modified IR where remote relationships can't be reached
-      AFRemote _ -> pure $ S.SELit "null: remote field selected"
-
       AFObjectRelation objSel -> withWriteObjectRelation $ do
         let AnnRelationSelectG relName relMapping annObjSel = objSel
             AnnObjectSelectG objAnnFields tableFrom tableFilter = annObjSel
@@ -917,6 +917,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
              , nodeExtractors
              , S.mkQIdenExp computedFieldSourcePrefix fieldName
              )
+
 
   pure $ annRowToJson @pgKind fieldAlias fieldExps
 
@@ -1128,7 +1129,7 @@ mkConnectionSelect
    . ( Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
      )
-  => ConnectionSelect ('Postgres pgKind) S.SQLExp
+  => ConnectionSelect ('Postgres pgKind) (Const Void) S.SQLExp
   -> S.SelectWithG S.Select
 mkConnectionSelect connectionSelect =
   let ((connectionSource, topExtractor, nodeExtractors), joinTree) =
@@ -1206,7 +1207,7 @@ processConnectionSelect
   -> FieldName
   -> S.Alias
   -> HM.HashMap PGCol PGCol
-  -> ConnectionSelect ('Postgres pgKind) S.SQLExp
+  -> ConnectionSelect ('Postgres pgKind) (Const Void) S.SQLExp
   -> m ( ArrayConnectionSource
        , S.Extractor
        , HM.HashMap S.Alias S.SQLExp

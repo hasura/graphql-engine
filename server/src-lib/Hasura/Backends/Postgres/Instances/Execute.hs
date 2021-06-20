@@ -47,12 +47,12 @@ import           Hasura.Server.Version                      (HasVersion)
 import           Hasura.Session
 import           Hasura.Tracing
 
+
 data PreparedSql
   = PreparedSql
   { _psQuery    :: !Q.Query
   , _psPrepArgs :: !PrepArgMap
   }
-
 
 instance
   ( Backend ('Postgres pgKind)
@@ -84,10 +84,11 @@ pgDBQueryPlan
   -> UserInfo
   -> SourceName
   -> SourceConfig ('Postgres pgKind)
-  -> QueryDB ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+  -> QueryDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> m EncJSON
 pgDBQueryPlan requestId logger userInfo sourceName sourceConfig qrf = do
-  (preparedQuery, PlanningSt _ _ planVals expectedVariables) <- flip runStateT initPlanningSt $ traverseQueryDB @('Postgres pgKind) prepareWithPlan qrf
+  (preparedQuery, PlanningSt _ _ planVals expectedVariables) <- flip runStateT initPlanningSt
+    $ traverseQueryDB @('Postgres pgKind) prepareWithPlan qrf
   validateSessionVariables expectedVariables $ _uiSession userInfo
   let (action, preparedSQL) = mkCurPlanTx userInfo $ irToRootFieldPlan planVals preparedQuery
   Tracing.interpTraceT id $ hoist (runQueryTx $ _pscExecCtx sourceConfig) action
@@ -103,7 +104,7 @@ pgDBQueryExplain
   -> UserInfo
   -> SourceName
   -> SourceConfig ('Postgres pgKind)
-  -> QueryDB ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+  -> QueryDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> m EncJSON
 pgDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
   preparedQuery <- traverseQueryDB (resolveUnpreparedValue userInfo) qrf
@@ -158,7 +159,7 @@ convertDelete
      , PostgresAnnotatedFieldJSON pgKind
      )
   => UserInfo
-  -> IR.AnnDelG ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+  -> IR.AnnDelG ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> Bool
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
 convertDelete userInfo deleteOperation stringifyNum = do
@@ -174,7 +175,7 @@ convertUpdate
      , PostgresAnnotatedFieldJSON pgKind
      )
   => UserInfo
-  -> IR.AnnUpdG ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+  -> IR.AnnUpdG ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> Bool
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
 convertUpdate userInfo updateOperation stringifyNum = do
@@ -193,7 +194,7 @@ convertInsert
      , PostgresAnnotatedFieldJSON pgKind
      )
   => UserInfo
-  -> IR.AnnInsert ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+  -> IR.AnnInsert ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> Bool
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
 convertInsert userInfo insertOperation stringifyNum = do
@@ -211,7 +212,7 @@ convertFunction
      )
   => UserInfo
   -> JsonAggSelect
-  -> IR.AnnSimpleSelG ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+  -> IR.AnnSimpleSelG ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -- ^ VOLATILE function as 'SelectExp'
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
 convertFunction userInfo jsonAggSelect unpreparedQuery = do
@@ -244,7 +245,7 @@ pgDBMutationPlan
   -> Bool
   -> SourceName
   -> SourceConfig ('Postgres pgKind)
-  -> MutationDB ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+  -> MutationDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> m EncJSON
 pgDBMutationPlan requestId logger userInfo stringifyNum sourceName sourceConfig mrf = do
   tx <- pgMutationRootFieldTransaction userInfo stringifyNum mrf
@@ -271,7 +272,7 @@ pgMutationRootFieldTransaction
      )
   => UserInfo
   -> Bool
-  -> MutationDB ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+  -> MutationDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> m (TraceT (LazyTxT QErr IO) EncJSON)
 pgMutationRootFieldTransaction userInfo stringifyNum mrf = do
     case mrf of
@@ -290,7 +291,7 @@ pgDBSubscriptionPlan
   => UserInfo
   -> SourceName
   -> SourceConfig ('Postgres pgKind)
-  -> InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))
+  -> InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind)))
   -> m (LiveQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)))
 pgDBSubscriptionPlan userInfo _sourceName sourceConfig unpreparedAST = do
   (preparedAST, PGL.QueryParametersInfo{..}) <- flip runStateT mempty $
@@ -302,8 +303,8 @@ pgDBSubscriptionPlan userInfo _sourceName sourceConfig unpreparedAST = do
   -- We need to ensure that the values provided for variables are correct according to Postgres.
   -- Without this check an invalid value for a variable for one instance of the subscription will
   -- take down the entire multiplexed query.
-  validatedQueryVars     <- PGL.validateVariables @pgKind (_pscExecCtx sourceConfig) _qpiReusableVariableValues
-  validatedSyntheticVars <- PGL.validateVariables @pgKind (_pscExecCtx sourceConfig) $ toList _qpiSyntheticVariableValues
+  validatedQueryVars     <- PGL.validateVariables (_pscExecCtx sourceConfig) _qpiReusableVariableValues
+  validatedSyntheticVars <- PGL.validateVariables (_pscExecCtx sourceConfig) $ toList _qpiSyntheticVariableValues
 
   -- TODO validatedQueryVars validatedSyntheticVars
   let cohortVariables = mkCohortVariables
@@ -333,7 +334,7 @@ irToRootFieldPlan
      , DS.PostgresAnnotatedFieldJSON pgKind
      )
   => PrepArgMap
-  -> QueryDB ('Postgres pgKind) S.SQLExp
+  -> QueryDB ('Postgres pgKind) (Const Void) S.SQLExp
   -> PreparedSql
 irToRootFieldPlan prepped = \case
   QDBMultipleRows s -> mkPreparedSql (DS.selectQuerySQL JASMultipleRows) s
@@ -359,7 +360,7 @@ runPGMutationTransaction
   -> UserInfo
   -> SourceConfig ('Postgres pgKind)
   -> Bool
-  -> InsOrdHashMap G.Name (MutationDBRoot UnpreparedValue ('Postgres 'Vanilla))
+  -> InsOrdHashMap G.Name (MutationDBRoot (Const Void) UnpreparedValue ('Postgres 'Vanilla))
   -> m EncJSON
 runPGMutationTransaction reqId logger userInfo sourceConfig stringifyNum mutations = do
   -- logQueryLog logger $ mkQueryLog query $$(G.litName "transaction") Nothing reqId

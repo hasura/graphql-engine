@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	errors2 "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/errors"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/hasura/graphql-engine/cli/v2"
@@ -44,10 +46,10 @@ func (q *QueryCollectionConfig) CreateFiles() error {
 	return nil
 }
 
-func (q *QueryCollectionConfig) Build(metadata *yaml.MapSlice) error {
+func (q *QueryCollectionConfig) Build(metadata *yaml.MapSlice) errors2.ErrParsingMetadataObject {
 	data, err := ioutil.ReadFile(filepath.Join(q.MetadataDir, fileName))
 	if err != nil {
-		return err
+		return q.Error(err)
 	}
 	item := yaml.MapItem{
 		Key: "query_collections",
@@ -55,7 +57,7 @@ func (q *QueryCollectionConfig) Build(metadata *yaml.MapSlice) error {
 	var obj []yaml.MapSlice
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
-		return err
+		return q.Error(err)
 	}
 	if len(obj) != 0 {
 		item.Value = obj
@@ -64,7 +66,7 @@ func (q *QueryCollectionConfig) Build(metadata *yaml.MapSlice) error {
 	return nil
 }
 
-func (q *QueryCollectionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
+func (q *QueryCollectionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, errors2.ErrParsingMetadataObject) {
 	var queryCollections interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
@@ -78,7 +80,7 @@ func (q *QueryCollectionConfig) Export(metadata yaml.MapSlice) (map[string][]byt
 	}
 	data, err := yaml.Marshal(queryCollections)
 	if err != nil {
-		return nil, err
+		return nil, q.Error(err)
 	}
 	return map[string][]byte{
 		filepath.ToSlash(filepath.Join(q.MetadataDir, fileName)): data,
@@ -87,4 +89,8 @@ func (q *QueryCollectionConfig) Export(metadata yaml.MapSlice) (map[string][]byt
 
 func (q *QueryCollectionConfig) Name() string {
 	return "query_collections"
+}
+
+func (q *QueryCollectionConfig) Error(err error, additionalContext ...string) errors2.ErrParsingMetadataObject {
+	return errors2.NewErrParsingMetadataObject(q.Name(), fileName, additionalContext, err)
 }

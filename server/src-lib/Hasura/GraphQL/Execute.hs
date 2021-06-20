@@ -153,7 +153,8 @@ buildSubscriptionPlan
 buildSubscriptionPlan userInfo rootFields = do
   (onSourceFields, noRelationActionFields) <- foldlM go (mempty, mempty) (OMap.toList rootFields)
 
-  if | null onSourceFields -> pure $ SEAsyncActionsWithNoRelationships noRelationActionFields
+  if | null onSourceFields ->
+       pure $ SEAsyncActionsWithNoRelationships noRelationActionFields
 
      | null noRelationActionFields ->
          let allActionIds = HS.fromList $ map fst $ lefts $ toList onSourceFields
@@ -170,11 +171,6 @@ buildSubscriptionPlan userInfo rootFields = do
                      JASSingleObject -> IR.QDBSingleRow selectAST
                pure $ AB.mkAnyBackend $ IR.DBField sourceName srcConfig $ IR.QDBR queryDB
 
-           for_ sourceSubFields \exists -> do
-             AB.dispatchAnyBackend @EB.BackendExecute exists \(IR.DBField _ _ (IR.QDBR qdb)) ->
-               unless (isNothing $ snd $ RJ.getRemoteJoins qdb) $
-                 throw400 NotSupported "Remote relationships are not allowed in subscriptions"
-
            case toList sourceSubFields of
              []      -> throw500 "empty selset for subscription"
              (sub:_) -> buildAction sub sourceSubFields
@@ -183,15 +179,30 @@ buildSubscriptionPlan userInfo rootFields = do
                     "async action queries with no relationships aren't expected to mix with normal source database queries"
   where
     go accFields (gName, field) = case field of
-      IR.RFDB db                 -> pure $ first (OMap.insert gName (Right db)) accFields
-      IR.RFAction (IR.AQAsync q) -> do
-        let actionId = _aaaqActionId q
-        case EA.resolveAsyncActionQuery userInfo q of
-          EA.AAQENoRelationships respMaker ->
-            pure $ second (OMap.insert gName (actionId, respMaker)) accFields
-          EA.AAQEOnSourceDB srcConfig dbExecution ->
-            pure $ first (OMap.insert gName (Left (actionId, (srcConfig, dbExecution)))) accFields
-      IR.RFAction (IR.AQQuery _) -> throw400 NotSupported "query actions cannot be run as a subscription"
+      IR.RFDB e -> do
+        db <- AB.traverseBackend @EB.BackendExecute e
+          \(IR.DBField sourceName sourceConfig (IR.QDBR qdb)) -> do
+          let (newQDB, remoteJoins) = RJ.getRemoteJoins qdb
+          unless (isNothing remoteJoins) $
+            throw400 NotSupported "Remote relationships are not allowed in subscriptions"
+          pure $ IR.DBField sourceName sourceConfig (IR.QDBR newQDB)
+        pure $ first (OMap.insert gName (Right db)) accFields
+        -- let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
+        -- unless (isNothing remoteJoins) $
+        --   throw400 NotSupported "Remote relationships are not allowed in subscriptions"
+      IR.RFAction action -> do
+        let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
+        unless (isNothing remoteJoins) $
+          throw400 NotSupported "Remote relationships are not allowed in subscriptions"
+        case noRelsDBAST of
+          IR.AQAsync q -> do
+            let actionId = _aaaqActionId q
+            case EA.resolveAsyncActionQuery userInfo q of
+              EA.AAQENoRelationships respMaker ->
+                pure $ second (OMap.insert gName (actionId, respMaker)) accFields
+              EA.AAQEOnSourceDB srcConfig dbExecution ->
+                pure $ first (OMap.insert gName (Left (actionId, (srcConfig, dbExecution)))) accFields
+          IR.AQQuery _ -> throw400 NotSupported "query actions cannot be run as a subscription"
       IR.RFRemote _             -> throw400 NotSupported "subscription to remote server is not supported"
       IR.RFRaw _                -> throw400 NotSupported "Introspection not supported over subscriptions"
 
@@ -205,8 +216,8 @@ buildSubscriptionPlan userInfo rootFields = do
     checkField
       :: forall b m. (Backend b, MonadError QErr m)
       => SourceName
-      -> AB.AnyBackend (IR.DBField (IR.QueryDBRoot UnpreparedValue))
-      -> m (IR.QueryDB b (UnpreparedValue b))
+      -> AB.AnyBackend (IR.DBField (IR.QueryDBRoot (Const Void) UnpreparedValue))
+      -> m (IR.QueryDB b (Const Void) (UnpreparedValue b))
     checkField sourceName exists = case AB.unpackAnyBackend exists of
       Nothing -> throw500 "internal error: two sources share the same name but are tied to different backends"
       Just (IR.DBField src _ (IR.QDBR qdb)) ->

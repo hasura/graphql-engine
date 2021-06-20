@@ -30,7 +30,7 @@ data RoleContext a
 $(deriveToJSON hasuraJSON ''RoleContext)
 
 data GQLContext = GQLContext
-  { gqlQueryParser    :: ParserFn (InsOrdHashMap G.Name (IR.QueryRootField UnpreparedValue))
+  { gqlQueryParser    ::        ParserFn (InsOrdHashMap G.Name (IR.QueryRootField    UnpreparedValue))
   , gqlMutationParser :: Maybe (ParserFn (InsOrdHashMap G.Name (IR.MutationRootField UnpreparedValue)))
   }
 
@@ -40,4 +40,3 @@ instance J.ToJSON GQLContext where
 type ParserFn a
   =  G.SelectionSet G.NoFragments Variable
   -> Either (NESeq ParseError) (a, QueryReusability)
-

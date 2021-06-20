@@ -5,13 +5,13 @@ module Hasura.GraphQL.Explain
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                             as J
-import qualified Data.Aeson.TH                          as J
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.Aeson                                as J
+import qualified Data.Aeson.TH                             as J
+import qualified Data.HashMap.Strict                       as Map
+import qualified Data.HashMap.Strict.InsOrd                as OMap
+import qualified Language.GraphQL.Draft.Syntax             as G
 
-import           Control.Monad.Trans.Control            (MonadBaseControl)
+import           Control.Monad.Trans.Control               (MonadBaseControl)
 
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Backend         as EB
@@ -20,6 +20,7 @@ import qualified Hasura.GraphQL.Execute.Inline          as E
 import qualified Hasura.GraphQL.Execute.Query           as E
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.SQL.AnyBackend                  as AB
+import qualified Hasura.GraphQL.Execute.RemoteJoin.Collect as RJ
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
@@ -59,8 +60,11 @@ explainQueryField userInfo fieldName rootField = do
     RFRaw _    -> pure $ encJFromJValue $ EB.ExplainPlan fieldName Nothing Nothing
     RFDB exists -> do
       AB.dispatchAnyBackend @EB.BackendExecute exists
-        \(DBField sourceName sourceConfig (QDBR db)) ->
-           EB.explainQueryField fieldName userInfo sourceName sourceConfig db
+        \(DBField sourceName sourceConfig (QDBR db)) -> do
+           let (newDB, remoteJoins) = RJ.getRemoteJoins db
+           unless (isNothing remoteJoins) $
+             throw400 InvalidParams "queries with remote relationships cannot be explained"
+           EB.explainQueryField fieldName userInfo sourceName sourceConfig newDB
 
 explainGQLQuery
   :: forall m

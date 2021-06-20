@@ -77,12 +77,12 @@ processRemoteJoins env manager reqHdrs userInfo pgRes joinTree = do
           pure (_jalJoinCallId collectedArguments, joinIndex)
 
       RemoteJoinSource sourceJoin -> do
-        AB.dispatchAnyBackend @EB.BackendExecute sourceJoin \RemoteSourceJoin{..} -> do
-          let sourceCall = constructSelect undefined undefined
-                _rdjRelationship joinArguments
-          for sourceCall $ \sourceQuery -> do
-            EB.executeQueryField undefined undefined userInfo _rdjSource
-              _rdjSourceConfig sourceQuery
+        -- AB.dispatchAnyBackend @EB.BackendExecute sourceJoin \RemoteSourceJoin{..} -> do
+        --   let sourceCall = constructSelect undefined undefined
+        --         _rdjRelationship joinArguments
+        --   for sourceCall $ \sourceQuery -> do
+        --     EB.executeQueryField undefined undefined userInfo _rdjSource
+        --       _rdjSourceConfig sourceQuery
           undefined
 
   AO.toEncJSON <$> joinResults joinIndices compositeValue
@@ -110,37 +110,37 @@ data ArgumentsCollectionState
   , _acsJoins   :: !(Map.HashMap RemoteJoin JoinArguments)
   } deriving (Eq)
 
-constructSelect
-  :: (EB.BackendExecute b)
-  => Map.HashMap FieldName (ScalarType b)
-  -> FieldName
-  -> RemoteSourceRelationship b
-  -> Map.HashMap JoinArgumentId JoinArgument
-  -> Maybe (IR.QueryDB b (P.UnpreparedValue b))
-constructSelect fieldTypes fieldName relationship arguments =
-  IR.QDBMultipleRows . simpleSelect <$> selectFrom
-  where
-    selectFrom =
-      case rows of
-       [] -> Nothing
-       _  -> Just $ EB.buildTemporaryTable rows fieldTypes
+-- constructSelect
+--   :: (EB.BackendExecute b)
+--   => Map.HashMap FieldName (ScalarType b)
+--   -> FieldName
+--   -> RemoteSourceRelationship b
+--   -> Map.HashMap JoinArgumentId JoinArgument
+--   -> Maybe (IR.QueryDB b (P.UnpreparedValue b))
+-- constructSelect fieldTypes fieldName relationship arguments =
+--   IR.QDBMultipleRows . simpleSelect <$> selectFrom
+--   where
+--     selectFrom =
+--       case rows of
+--        [] -> Nothing
+--        _  -> Just $ EB.buildTemporaryTable rows fieldTypes
 
-    rows = flip map (Map.toList arguments) $ \(argumentId, argument) ->
-             Map.fromList $ map (\(f, v) -> (getFieldNameTxt f, AO.fromOrdered v)) $
-               Map.toList $ unJoinArugment argument
+--     rows = flip map (Map.toList arguments) $ \(argumentId, argument) ->
+--              Map.fromList $ map (\(f, v) -> (getFieldNameTxt f, AO.fromOrdered v)) $
+--                Map.toList $ unJoinArugment argument
 
-    field = case relationship of
-      RemoteSourceObject s         -> IR.AFObjectRelation s
-      RemoteSourceArray s          -> IR.AFArrayRelation $ IR.ASSimple s
-      RemoteSourceArrayAggregate s -> IR.AFArrayRelation $ IR.ASAggregate s
+--     field = case relationship of
+--       RemoteSourceObject s         -> IR.AFObjectRelation s
+--       RemoteSourceArray s          -> IR.AFArrayRelation $ IR.ASSimple s
+--       RemoteSourceArrayAggregate s -> IR.AFArrayRelation $ IR.ASAggregate s
 
-    simpleSelect from =
-      IR.AnnSelectG { _asnFields = [(fieldName, field)]
-                    , _asnFrom = from
-                    , _asnPerm = IR.TablePerm annBoolExpTrue Nothing
-                    , _asnArgs = IR.noSelectArgs
-                    , _asnStrfyNum = False
-                    }
+--     simpleSelect from =
+--       IR.AnnSelectG { _asnFields = [(fieldName, field)]
+--                     , _asnFrom = from
+--                     , _asnPerm = IR.TablePerm annBoolExpTrue Nothing
+--                     , _asnArgs = IR.noSelectArgs
+--                     , _asnStrfyNum = False
+--                     }
 
 joinResults
   :: (MonadError QErr m)

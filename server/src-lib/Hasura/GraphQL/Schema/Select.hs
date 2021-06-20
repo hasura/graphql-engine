@@ -398,7 +398,7 @@ tableConnectionSelectionSet
   => SourceName
   -> TableInfo b
   -> SelPermInfo b
-  -> m (Parser 'Output n (IR.ConnectionFields b (UnpreparedValue b)))
+  -> m (Parser 'Output n (ConnectionFields b))
 tableConnectionSelectionSet sourceName tableInfo selectPermissions = memoizeOn 'tableConnectionSelectionSet (sourceName, tableName) do
   tableGQLName <- getTableGQLName tableInfo
   edgesParser  <- tableEdgesSelectionSet tableGQLName
@@ -432,7 +432,7 @@ tableConnectionSelectionSet sourceName tableInfo selectPermissions = memoizeOn '
          <&> parsedSelectionsToFields IR.PageInfoTypename
 
     tableEdgesSelectionSet
-      :: G.Name -> m (Parser 'Output n (IR.EdgeFields b (UnpreparedValue b)))
+      :: G.Name -> m (Parser 'Output n (EdgeFields b))
     tableEdgesSelectionSet tableGQLName = do
       edgeNodeParser      <- P.nonNullableParser <$> tableSelectionSet sourceName tableInfo selectPermissions
       let edgesType = tableGQLName <> $$(G.litName "Edge")
@@ -1151,7 +1151,7 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
         `P.bindField` \G.Field{ G._fArguments = args, G._fSelectionSet = selSet } -> do
           let remoteArgs =
                 Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue $ argVal
-          pure $ IR.AFRemote $ IR.RemoteSelect
+          pure $ IR.AFRemote $ IR.RemoteSelectRemoteSchema $ IR.RemoteSchemaSelect
             { _rselArgs          = remoteArgs
             , _rselSelection     = selSet
             , _rselHasuraColumns = _rfiHasuraFields remoteFieldInfo

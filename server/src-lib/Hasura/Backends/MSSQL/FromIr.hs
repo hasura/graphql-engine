@@ -81,7 +81,7 @@ runFromIr fromIr = evalStateT (unFromIr fromIr) mempty
 
 mkSQLSelect ::
      IR.JsonAggSelect
-  -> IR.AnnSelectG 'MSSQL (IR.AnnFieldsG 'MSSQL Expression) Expression
+  -> IR.AnnSelectG 'MSSQL (IR.AnnFieldsG 'MSSQL (Const Void) Expression) Expression
   -> FromIr TSQL.Select
 mkSQLSelect jsonAggSelect annSimpleSel =
   case jsonAggSelect of
@@ -96,7 +96,7 @@ mkSQLSelect jsonAggSelect annSimpleSel =
           }
 
 -- | Convert from the IR database query into a select.
-fromRootField :: IR.QueryDB 'MSSQL Expression -> FromIr Select
+fromRootField :: IR.QueryDB 'MSSQL (Const Void) Expression -> FromIr Select
 fromRootField =
   \case
     (IR.QDBSingleRow s)    -> mkSQLSelect IR.JASSingleObject s
@@ -107,7 +107,7 @@ fromRootField =
 --------------------------------------------------------------------------------
 -- Top-level exported functions
 
-fromSelectRows :: IR.AnnSelectG 'MSSQL (IR.AnnFieldsG 'MSSQL Expression) Expression -> FromIr TSQL.Select
+fromSelectRows :: IR.AnnSelectG 'MSSQL (IR.AnnFieldsG 'MSSQL (Const Void) Expression) Expression -> FromIr TSQL.Select
 fromSelectRows annSelectG = do
   selectFrom <-
     case from of
@@ -157,7 +157,7 @@ fromSelectRows annSelectG = do
         else LeaveNumbersAlone
 
 fromSelectAggregate ::
-     IR.AnnSelectG 'MSSQL [(IR.FieldName, IR.TableAggregateFieldG 'MSSQL Expression)] Expression
+     IR.AnnSelectG 'MSSQL [(IR.FieldName, IR.TableAggregateFieldG 'MSSQL (Const Void) Expression)] Expression
   -> FromIr TSQL.Select
 fromSelectAggregate annSelectG = do
   selectFrom <-
@@ -254,8 +254,9 @@ fromSelectArgsG selectArgsG = do
 
 -- | Produce a valid ORDER BY construct, telling about any joins
 -- needed on the side.
-fromAnnOrderByItemG ::
-     IR.AnnOrderByItemG 'MSSQL Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
+fromAnnOrderByItemG
+  :: IR.AnnOrderByItemG 'MSSQL Expression
+  -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
 fromAnnOrderByItemG IR.OrderByItemG {obiType, obiColumn = obiColumn, obiNulls} = do
   (orderByFieldName, orderByType) <- unfurlAnnOrderByElement obiColumn
   let orderByNullsOrder = fromMaybe NullsAnyOrder obiNulls
@@ -404,13 +405,14 @@ fromTableName TableName{tableName} = do
   alias <- generateEntityAlias (TableTemplate tableName)
   pure (EntityAlias alias)
 
-fromAnnBoolExp ::
-     IR.GBoolExp 'MSSQL (IR.AnnBoolExpFld 'MSSQL Expression)
+fromAnnBoolExp
+  :: IR.GBoolExp 'MSSQL (IR.AnnBoolExpFld 'MSSQL Expression)
   -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExp = traverse fromAnnBoolExpFld >=> fromGBoolExp
 
-fromAnnBoolExpFld ::
-     IR.AnnBoolExpFld 'MSSQL Expression -> ReaderT EntityAlias FromIr Expression
+fromAnnBoolExpFld
+  :: IR.AnnBoolExpFld 'MSSQL Expression
+  -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
     IR.AVCol pgColumnInfo opExpGs -> do
@@ -507,7 +509,7 @@ data FieldSource
   deriving (Eq, Show)
 
 fromTableAggregateFieldG ::
-     (IR.FieldName, IR.TableAggregateFieldG 'MSSQL Expression) -> ReaderT EntityAlias FromIr FieldSource
+     (IR.FieldName, IR.TableAggregateFieldG 'MSSQL (Const Void) Expression) -> ReaderT EntityAlias FromIr FieldSource
 fromTableAggregateFieldG (IR.FieldName name, field) =
   case field of
     IR.TAFAgg (aggregateFields :: [(IR.FieldName, IR.AggregateField 'MSSQL)]) -> do
@@ -563,7 +565,7 @@ fromAggregateField aggregateField =
 fromAnnFieldsG ::
      Map TableName EntityAlias
   -> StringifyNumbers
-  -> (IR.FieldName, IR.AnnFieldG 'MSSQL Expression)
+  -> (IR.FieldName, IR.AnnFieldG 'MSSQL (Const Void) Expression)
   -> ReaderT EntityAlias FromIr FieldSource
 fromAnnFieldsG existingJoins stringifyNumbers (IR.FieldName name, field) =
   case field of
@@ -589,22 +591,12 @@ fromAnnFieldsG existingJoins stringifyNumbers (IR.FieldName name, field) =
         (\aliasedThing ->
            JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
         (fromArraySelectG arraySelectG)
-    -- this will be gone once the code which collects remote joins from the IR
-    -- emits a modified IR where remote relationships can't be reached
-    IR.AFRemote _ ->
-      pure
-        (ExpressionFieldSource
-           Aliased
-             { aliasedThing = TSQL.ValueExpression
-                              (ODBC.TextValue "null: remote field selected")
-             , aliasedAlias = name
-             })
 
 -- | Here is where we project a field as a column expression. If
 -- number stringification is on, then we wrap it in a
 -- 'ToStringExpression' so that it's casted when being projected.
-fromAnnColumnField ::
-     StringifyNumbers
+fromAnnColumnField
+  :: StringifyNumbers
   -> IR.AnnColumnField 'MSSQL Expression
   -> ReaderT EntityAlias FromIr Expression
 fromAnnColumnField _stringifyNumbers annColumnField = do
@@ -675,7 +667,7 @@ fieldSourceJoin =
 
 fromObjectRelationSelectG ::
      Map TableName {-PG.QualifiedTable-} EntityAlias
-  -> IR.ObjectRelationSelectG 'MSSQL Expression
+  -> IR.ObjectRelationSelectG 'MSSQL (Const Void) Expression
   -> ReaderT EntityAlias FromIr Join
 fromObjectRelationSelectG existingJoins annRelationSelectG = do
   eitherAliasOrFrom <- lift (lookupTableFrom existingJoins tableFrom)
@@ -728,13 +720,13 @@ fromObjectRelationSelectG existingJoins annRelationSelectG = do
                   }
           }
   where
-    IR.AnnObjectSelectG { _aosFields = fields :: IR.AnnFieldsG 'MSSQL Expression
+    IR.AnnObjectSelectG { _aosFields = fields :: IR.AnnFieldsG 'MSSQL (Const Void) Expression
                         , _aosTableFrom = tableFrom :: TableName{-PG.QualifiedTable-}
                         , _aosTableFilter = tableFilter :: IR.AnnBoolExp 'MSSQL Expression
                         } = annObjectSelectG
     IR.AnnRelationSelectG { aarRelationshipName
                           , aarColumnMapping = mapping :: HashMap ColumnName ColumnName -- PG.PGCol PG.PGCol
-                          , aarAnnSelect = annObjectSelectG :: IR.AnnObjectSelectG 'MSSQL Expression
+                          , aarAnnSelect = annObjectSelectG :: IR.AnnObjectSelectG 'MSSQL (Const Void) Expression
                           } = annRelationSelectG
 
 lookupTableFrom ::
@@ -746,7 +738,7 @@ lookupTableFrom existingJoins tableFrom = do
     Just entityAlias -> pure (Left entityAlias)
     Nothing          -> fmap Right (fromQualifiedTable tableFrom)
 
-fromArraySelectG :: IR.ArraySelectG 'MSSQL Expression -> ReaderT EntityAlias FromIr Join
+fromArraySelectG :: IR.ArraySelectG 'MSSQL (Const Void) Expression -> ReaderT EntityAlias FromIr Join
 fromArraySelectG =
   \case
     IR.ASSimple arrayRelationSelectG ->
@@ -754,8 +746,8 @@ fromArraySelectG =
     IR.ASAggregate arrayAggregateSelectG ->
       fromArrayAggregateSelectG arrayAggregateSelectG
 
-fromArrayAggregateSelectG ::
-     IR.AnnRelationSelectG 'MSSQL (IR.AnnAggregateSelectG 'MSSQL Expression)
+fromArrayAggregateSelectG
+  :: IR.AnnRelationSelectG 'MSSQL (IR.AnnAggregateSelectG 'MSSQL (Const Void) Expression)
   -> ReaderT EntityAlias FromIr Join
 fromArrayAggregateSelectG annRelationSelectG = do
   fieldName <- lift (fromRelName aarRelationshipName)
@@ -778,7 +770,7 @@ fromArrayAggregateSelectG annRelationSelectG = do
                           , aarAnnSelect = annSelectG
                           } = annRelationSelectG
 
-fromArrayRelationSelectG :: IR.ArrayRelationSelectG 'MSSQL Expression -> ReaderT EntityAlias FromIr Join
+fromArrayRelationSelectG :: IR.ArrayRelationSelectG 'MSSQL (Const Void) Expression -> ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
   fieldName <- lift (fromRelName aarRelationshipName)
   sel <- lift (fromSelectRows annSelectG)

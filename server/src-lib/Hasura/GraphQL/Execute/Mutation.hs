@@ -92,7 +92,7 @@ convertMutationSelectionSet gqlContext sqlGenCtx userInfo directives fields varD
 coalescePostgresMutations
   :: EB.MutationExecutionPlan
   -> Maybe ( SourceConfig ('Postgres 'Vanilla)
-           , InsOrdHashMap G.Name (MutationDBRoot UnpreparedValue ('Postgres 'Vanilla))
+           , InsOrdHashMap G.Name (MutationDBRoot (Const Void) UnpreparedValue ('Postgres 'Vanilla))
            )
 coalescePostgresMutations plan = do
   -- we extract the name and config of the first mutation root, if any

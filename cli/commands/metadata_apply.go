@@ -62,7 +62,7 @@ func (o *MetadataApplyOptions) Run() error {
 	if !o.DryRun {
 		o.EC.Spin("Applying metadata...")
 		if o.EC.Config.Version == cli.V2 {
-			err := metadataHandler.V1ApplyMetadata()
+			_, err := metadataHandler.V1ApplyMetadata()
 			o.EC.Spinner.Stop()
 			if err != nil {
 				return errorApplyingMetadata(err)

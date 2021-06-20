@@ -39,12 +39,12 @@ data Error
   = FromTypeUnsupported (Ir.SelectFromG 'BigQuery Expression)
   | NoOrderSpecifiedInOrderBy
   | MalformedAgg
-  | FieldTypeUnsupportedForNow (Ir.AnnFieldG 'BigQuery Expression)
-  | AggTypeUnsupportedForNow (Ir.TableAggregateFieldG 'BigQuery Expression)
-  | NodesUnsupportedForNow (Ir.TableAggregateFieldG 'BigQuery Expression)
+  | FieldTypeUnsupportedForNow (Ir.AnnFieldG 'BigQuery (Const Void) Expression)
+  | AggTypeUnsupportedForNow (Ir.TableAggregateFieldG 'BigQuery (Const Void) Expression)
+  | NodesUnsupportedForNow (Ir.TableAggregateFieldG 'BigQuery (Const Void) Expression)
   | NoProjectionFields
   | NoAggregatesMustBeABug
-  | UnsupportedArraySelect (Ir.ArraySelectG 'BigQuery Expression)
+  | UnsupportedArraySelect (Ir.ArraySelectG 'BigQuery (Const Void) Expression)
   | UnsupportedOpExpG (Ir.OpExpG 'BigQuery Expression)
   | UnsupportedSQLExp Expression
   | UnsupportedDistinctOn
@@ -110,7 +110,7 @@ runFromIr fromIr = evalStateT (unFromIr fromIr) mempty
 -- single object or an array.
 mkSQLSelect ::
      Rql.JsonAggSelect
-  -> Ir.AnnSelectG 'BigQuery (Ir.AnnFieldsG 'BigQuery Expression) Expression
+  -> Ir.AnnSelectG 'BigQuery (Ir.AnnFieldsG 'BigQuery (Const Void) Expression) Expression
   -> FromIr BigQuery.Select
 mkSQLSelect jsonAggSelect annSimpleSel = do
   select <- fromSelectRows annSimpleSel
@@ -123,7 +123,7 @@ mkSQLSelect jsonAggSelect annSimpleSel = do
        })
 
 -- | Convert from the IR database query into a select.
-fromRootField :: Ir.QueryDB 'BigQuery Expression -> FromIr Select
+fromRootField :: Ir.QueryDB 'BigQuery (Const Void) Expression -> FromIr Select
 fromRootField =
   \case
     (Ir.QDBSingleRow s)    -> mkSQLSelect Rql.JASSingleObject s
@@ -134,7 +134,7 @@ fromRootField =
 --------------------------------------------------------------------------------
 -- Top-level exported functions
 
-fromSelectRows :: Ir.AnnSelectG 'BigQuery (Ir.AnnFieldsG 'BigQuery Expression) Expression -> FromIr BigQuery.Select
+fromSelectRows :: Ir.AnnSelectG 'BigQuery (Ir.AnnFieldsG 'BigQuery (Const Void) Expression) Expression -> FromIr BigQuery.Select
 fromSelectRows annSelectG = do
   selectFrom <-
     case from of
@@ -186,7 +186,7 @@ fromSelectRows annSelectG = do
         else LeaveNumbersAlone
 
 fromSelectAggregate ::
-     Ir.AnnSelectG 'BigQuery [(Rql.FieldName, Ir.TableAggregateFieldG 'BigQuery Expression)] Expression
+     Ir.AnnSelectG 'BigQuery [(Rql.FieldName, Ir.TableAggregateFieldG 'BigQuery (Const Void) Expression)] Expression
   -> FromIr BigQuery.Select
 fromSelectAggregate annSelectG = do
   selectFrom <-
@@ -592,7 +592,7 @@ fromTableAggregateFieldG ::
      Args
   -> Top
   -> StringifyNumbers
-  -> (Rql.FieldName, Ir.TableAggregateFieldG 'BigQuery Expression)
+  -> (Rql.FieldName, Ir.TableAggregateFieldG 'BigQuery (Const Void) Expression)
   -> ReaderT EntityAlias FromIr FieldSource
 fromTableAggregateFieldG args permissionBasedTop stringifyNumbers (Rql.FieldName name, field) =
   case field of
@@ -616,7 +616,7 @@ fromTableAggregateFieldG args permissionBasedTop stringifyNumbers (Rql.FieldName
              { aliasedThing = BigQuery.ValueExpression (StringValue text)
              , aliasedAlias = name
              })
-    Ir.TAFNodes _ (fields :: [(Rql.FieldName, Ir.AnnFieldG 'BigQuery Expression)]) -> do
+    Ir.TAFNodes _ (fields :: [(Rql.FieldName, Ir.AnnFieldG 'BigQuery (Const Void) Expression)]) -> do
       fieldSources <-
         traverse
           (fromAnnFieldsG (argsExistingJoins args) stringifyNumbers)
@@ -663,7 +663,7 @@ fromAggregateField aggregateField =
 fromAnnFieldsG ::
      Map TableName EntityAlias
   -> StringifyNumbers
-  -> (Rql.FieldName, Ir.AnnFieldG 'BigQuery Expression)
+  -> (Rql.FieldName, Ir.AnnFieldG 'BigQuery (Const Void) Expression)
   -> ReaderT EntityAlias FromIr FieldSource
 fromAnnFieldsG existingJoins stringifyNumbers (Rql.FieldName name, field) =
   case field of
@@ -689,15 +689,7 @@ fromAnnFieldsG existingJoins stringifyNumbers (Rql.FieldName name, field) =
         (\aliasedThing ->
            JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
         (fromArraySelectG arraySelectG)
-    -- this will be gone once the code which collects remote joins from the IR
-    -- emits a modified IR where remote relationships can't be reached
-    Ir.AFRemote _ ->
-      pure
-        (ExpressionFieldSource
-           Aliased
-             { aliasedThing = BigQuery.ValueExpression (StringValue "null: remote field selected")
-             , aliasedAlias = name
-             })
+
 
 -- | Here is where we project a field as a column expression. If
 -- number stringification is on, then we wrap it in a
@@ -840,7 +832,7 @@ fieldSourceJoin =
 -- See also 'fromArrayRelationSelectG' for similar example.
 fromObjectRelationSelectG ::
      Map TableName EntityAlias
-  -> Ir.ObjectRelationSelectG 'BigQuery Expression
+  -> Ir.ObjectRelationSelectG 'BigQuery (Const Void) Expression
   -> ReaderT EntityAlias FromIr Join
 -- We're not using existingJoins at the moment, which was used to
 -- avoid re-joining on the same table twice.
@@ -900,13 +892,13 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
       , joinExtractPath = Nothing
       }
   where
-    Ir.AnnObjectSelectG { _aosFields = fields :: Ir.AnnFieldsG 'BigQuery Expression
+    Ir.AnnObjectSelectG { _aosFields = fields :: Ir.AnnFieldsG 'BigQuery (Const Void) Expression
                         , _aosTableFrom = tableFrom :: TableName
                         , _aosTableFilter = tableFilter :: Ir.AnnBoolExp 'BigQuery Expression
                         } = annObjectSelectG
     Ir.AnnRelationSelectG { aarRelationshipName
                           , aarColumnMapping = mapping :: HashMap ColumnName ColumnName
-                          , aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG 'BigQuery Expression
+                          , aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG 'BigQuery (Const Void) Expression
                           } = annRelationSelectG
 
 -- We're not using existingJoins at the moment, which was used to
@@ -920,7 +912,7 @@ _lookupTableFrom existingJoins tableFrom = do
     Just entityAlias -> pure (Left entityAlias)
     Nothing          -> fmap Right (fromQualifiedTable tableFrom)
 
-fromArraySelectG :: Ir.ArraySelectG 'BigQuery Expression -> ReaderT EntityAlias FromIr Join
+fromArraySelectG :: Ir.ArraySelectG 'BigQuery (Const Void) Expression -> ReaderT EntityAlias FromIr Join
 fromArraySelectG =
   \case
     Ir.ASSimple arrayRelationSelectG ->
@@ -935,7 +927,7 @@ fromArraySelectG =
 --
 -- See also 'fromArrayRelationSelectG' for similar example.
 fromArrayAggregateSelectG ::
-     Ir.AnnRelationSelectG 'BigQuery (Ir.AnnAggregateSelectG 'BigQuery Expression)
+     Ir.AnnRelationSelectG 'BigQuery (Ir.AnnAggregateSelectG 'BigQuery (Const Void) Expression)
   -> ReaderT EntityAlias FromIr Join
 fromArrayAggregateSelectG annRelationSelectG = do
   joinFieldName <- lift (fromRelName aarRelationshipName)
@@ -1040,7 +1032,7 @@ fromArrayAggregateSelectG annRelationSelectG = do
 --     ^ Ordering for the artist table should appear here.
 
 fromArrayRelationSelectG ::
-     Ir.ArrayRelationSelectG 'BigQuery Expression
+     Ir.ArrayRelationSelectG 'BigQuery (Const Void) Expression
   -> ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
   select <- lift (fromSelectRows annSelectG) -- Take the original select.
@@ -1328,7 +1320,7 @@ fromAlias :: From -> EntityAlias
 fromAlias (FromQualifiedTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromSelect Aliased {aliasedAlias})         = EntityAlias aliasedAlias
 
-fieldTextNames :: Ir.AnnFieldsG 'BigQuery Expression -> [Text]
+fieldTextNames :: Ir.AnnFieldsG 'BigQuery (Const Void) Expression -> [Text]
 fieldTextNames = fmap (\(Rql.FieldName name, _) -> name)
 
 unEntityAlias :: EntityAlias -> Text

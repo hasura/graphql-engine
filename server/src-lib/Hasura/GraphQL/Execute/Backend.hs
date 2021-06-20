@@ -61,7 +61,7 @@ class ( Backend b
     -> UserInfo
     -> SourceName
     -> SourceConfig b
-    -> QueryDB b (UnpreparedValue b)
+    -> QueryDB b (Const Void) (UnpreparedValue b)
     -> m EncJSON
   executeMutationField
     :: forall m
@@ -77,7 +77,7 @@ class ( Backend b
     -> Bool
     -> SourceName
     -> SourceConfig b
-    -> MutationDB b (UnpreparedValue b)
+    -> MutationDB b (Const Void) (UnpreparedValue b)
     -> m EncJSON
   makeLiveQueryPlan
     :: forall m
@@ -87,7 +87,7 @@ class ( Backend b
     => UserInfo
     -> SourceName
     -> SourceConfig b
-    -> InsOrdHashMap G.Name (QueryDB b (UnpreparedValue b))
+    -> InsOrdHashMap G.Name (QueryDB b (Const Void) (UnpreparedValue b))
     -> m (LiveQueryPlan b (MultiplexedQuery b))
   executeMultiplexedQuery
     :: forall m
@@ -107,7 +107,7 @@ class ( Backend b
     -> UserInfo
     -> SourceName
     -> SourceConfig b
-    -> QueryDB b (UnpreparedValue b)
+    -> QueryDB b (Const Void) (UnpreparedValue b)
     -> m EncJSON
   explainLiveQuery
     :: ( MonadError QErr m
@@ -134,16 +134,16 @@ instance J.ToJSON ExplainPlan where
 
 type QueryFieldExecution
   = RootField
-      (QueryDBRootField UnpreparedValue, Maybe RemoteJoins)
+      (QueryDBOnlyField UnpreparedValue, Maybe RemoteJoins)
       (RemoteSchemaInfo, GH.GQLReqOutgoing)
-      (QueryActionRootField UnpreparedValue, Maybe RemoteJoins)
+      (QueryActionOnlyField UnpreparedValue, Maybe RemoteJoins)
       JO.Value
 
 type MutationFieldExecution
   = RootField
-      (MutationDBRootField UnpreparedValue, Maybe RemoteJoins, SQLGenCtx)
+      (MutationDBOnlyField UnpreparedValue, Maybe RemoteJoins, SQLGenCtx)
       (RemoteSchemaInfo, GH.GQLReqOutgoing)
-      (MutationActionRootField UnpreparedValue, Maybe RemoteJoins)
+      (MutationActionOnlyField UnpreparedValue, Maybe RemoteJoins)
       JO.Value
 
 type ExecutionPlan root = InsOrdHashMap G.Name root

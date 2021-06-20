@@ -3,9 +3,10 @@ module Hasura.GraphQL.Execute.RemoteJoin.Types
   ( RemoteJoin(..)
   , getPhantomFields
   , getJoinColumnMapping
+  -- , getRemoteSchemaJoin
+  , getRemoteSchemaJoins
   , RemoteSchemaJoin(..)
   , RemoteSourceJoin(..)
-  , RemoteSourceRelationship(..)
   , RemoteJoins
   , JoinColumnAlias(..)
   , getAliasFieldName
@@ -60,11 +61,20 @@ data RemoteJoin
   = RemoteJoinSource !(AB.AnyBackend RemoteSourceJoin)
   | RemoteJoinRemoteSchema !RemoteSchemaJoin
   deriving (Eq, Generic)
+
 -- TODO: show doesn't get automatically derived for some reason
 
 instance Hashable RemoteJoin where
   hashWithSalt = undefined
 
+getRemoteSchemaJoin :: RemoteJoin -> Maybe RemoteSchemaJoin
+getRemoteSchemaJoin = \case
+  RemoteJoinSource _ -> Nothing
+  RemoteJoinRemoteSchema s -> Just s
+
+getRemoteSchemaJoins :: RemoteJoins -> [RemoteSchemaJoin]
+getRemoteSchemaJoins =
+  concatMap (mapMaybe getRemoteSchemaJoin . toList . snd)
 
 -- instance Show RemoteJoinX where
 --   show = \case
@@ -102,27 +112,18 @@ getJoinColumnMapping remoteJoin =
 --       (RemoteJoinRemoteSchema j1, RemoteJoinRemoteSchema j2) -> j1 == j2
 --       _ -> False
 
-data RemoteSourceRelationship b
-  = RemoteSourceObject !(IR.ObjectRelationSelectG b (P.UnpreparedValue b))
-  | RemoteSourceArray !(IR.ArrayRelationSelectG b (P.UnpreparedValue b))
-  | RemoteSourceArrayAggregate !(IR.ArrayAggregateSelectG b (P.UnpreparedValue b))
-  deriving (Generic)
 
--- instance (Backend b) => Hashable (RemoteSourceRelationship b) where
-instance Hashable (RemoteSourceRelationship b) where
-  hashWithSalt = undefined
+-- deriving instance
+--   ( Backend b
+--   , Eq (ScalarValue b)
+--   , Eq (BooleanOperators b (P.UnpreparedValue b))
+--   ) => Eq (RemoteSourceRelationship b)
 
-deriving instance
-  ( Backend b
-  , Eq (ScalarValue b)
-  , Eq (BooleanOperators b (P.UnpreparedValue b))
-  ) => Eq (RemoteSourceRelationship b)
-
-deriving instance
-  ( Backend b
-  , Show (ScalarValue b)
-  , Show (BooleanOperators b (P.UnpreparedValue b))
-  ) => Show (RemoteSourceRelationship b)
+-- deriving instance
+--   ( Backend b
+--   , Show (ScalarValue b)
+--   , Show (BooleanOperators b (P.UnpreparedValue b))
+--   ) => Show (RemoteSourceRelationship b)
 
 -- | We need an Eq instance on RemoteSourceJoin b to group the values that are
 -- going to the same source.
@@ -130,7 +131,7 @@ data RemoteSourceJoin b
   = RemoteSourceJoin
   { _rdjSource       :: !SourceName
   , _rdjSourceConfig :: !(SourceConfig b)
-  , _rdjRelationship :: !(RemoteSourceRelationship b)
+  , _rdjRelationship :: !(IR.SourceRelationshipSelection b (Const Void) P.UnpreparedValue)
   , _rdjJoinColumns  :: !(Map.HashMap FieldName (JoinColumnAlias, ScalarType b))
   } deriving (Generic)
 
@@ -148,7 +149,7 @@ deriving instance
   ) => Eq (RemoteSourceJoin b)
 
 -- TODO: fix this instance
-instance (Backend b, Hashable (SourceConfig b)) => Hashable (RemoteSourceJoin b)
+-- instance (Backend b, Hashable (SourceConfig b)) => Hashable (RemoteSourceJoin b)
   -- hashWithSalt x = undefined
 
 -- | A 'RemoteJoin' represents the context of remote relationship to be

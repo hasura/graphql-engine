@@ -25,7 +25,7 @@ data AsyncActionQuerySourceExecution v
   = AsyncActionQuerySourceExecution
   { _aaqseSource        :: !SourceName
   , _aaqseJsonAggSelect :: !JsonAggSelect
-  , _aaqseSelectBuilder :: !(ActionLogResponse -> RS.AnnSimpleSelG ('Postgres 'Vanilla) v)
+  , _aaqseSelectBuilder :: !(ActionLogResponse -> RS.AnnSimpleSelG ('Postgres 'Vanilla) (Const Void) v)
   }
 
 data AsyncActionQueryExecution v

@@ -77,7 +77,7 @@ msDBQueryPlan
   -> UserInfo
   -> SourceName
   -> SourceConfig 'MSSQL
-  -> QueryDB 'MSSQL (UnpreparedValue 'MSSQL)
+  -> QueryDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL)
   -> m EncJSON
 msDBQueryPlan requestId logger userInfo sourceName sourceConfig qrf = do
   let sessionVariables = _uiSession userInfo
@@ -106,7 +106,7 @@ msDBQueryExplain
   -> UserInfo
   -> SourceName
   -> SourceConfig 'MSSQL
-  -> QueryDB 'MSSQL (UnpreparedValue 'MSSQL)
+  -> QueryDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL)
   -> m EncJSON
 msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
   let sessionVariables = _uiSession userInfo
@@ -135,6 +135,7 @@ msDBLiveQueryExplain (LiveQueryPlan plan sourceConfig variables) = do
       pool = _mscConnectionPool sourceConfig
   explainInfo <- withMSSQLPool pool (runShowplan query)
   pure $ LiveQueryPlanExplanation (T.toTxt query) explainInfo variables
+
 
 --------------------------------------------------------------------------------
 -- Producing the correct SQL-level list comprehension to multiplex a query
@@ -218,10 +219,11 @@ msDBMutationPlan
   -> Bool
   -> SourceName
   -> SourceConfig 'MSSQL
-  -> MutationDB 'MSSQL (UnpreparedValue 'MSSQL)
+  -> MutationDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL)
   -> m EncJSON
 msDBMutationPlan _requestId _logger _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
   throw500 "mutations are not supported in MSSQL; this should be unreachable"
+
 
 -- subscription
 
@@ -233,7 +235,7 @@ msDBSubscriptionPlan
   => UserInfo
   -> SourceName
   -> SourceConfig 'MSSQL
-  -> InsOrdHashMap G.Name (QueryDB 'MSSQL (UnpreparedValue 'MSSQL))
+  -> InsOrdHashMap G.Name (QueryDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL))
   -> m (LiveQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL))
 msDBSubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig rootFields = do
   (reselect, prepareState) <- planSubscription rootFields _uiSession
