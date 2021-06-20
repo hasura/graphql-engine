@@ -721,7 +721,7 @@ traverseArraySelect f = \case
     ASConnection <$> traverse (traverseConnectionSelect f) relConnection
 
 
--- Remote schema relationship
+-- Remote schema relationships
 
 data RemoteFieldArgument
   = RemoteFieldArgument
@@ -737,6 +737,8 @@ data RemoteSchemaSelect (b :: BackendType)
   , _rselFieldCall     :: !(NonEmpty FieldCall)
   , _rselRemoteSchema  :: !RemoteSchemaInfo
   }
+
+-- Remote source relationships
 
 data SourceRelationshipSelection
     (b :: BackendType)
@@ -760,22 +762,28 @@ deriving instance
   , Eq (r b)
   ) => Eq (SourceRelationshipSelection b r v)
 
-data SourceRelationshipSelect
+data RemoteSourceSelect
     (src :: BackendType)
     (vf :: BackendType -> Type)
     (tgt :: BackendType)
-  = SourceRelationshipSelect
-    { _srSourceName   :: !SourceName
-    , _srSourceConfig :: !(SourceConfig tgt)
-    , _srSelection    :: !(SourceRelationshipSelection tgt (RemoteSelect vf) vf)
-    , _srMapping      :: !(HM.HashMap FieldName (ScalarType src, Column tgt))
+  = RemoteSourceSelect
+    { _rssSourceName   :: !SourceName
+    , _rssSourceConfig :: !(SourceConfig tgt)
+    , _rssSelection    :: !(SourceRelationshipSelection tgt (RemoteSelect vf) vf)
+    , _rssJoinMapping  :: !(HM.HashMap FieldName (ColumnInfo src, ScalarType tgt, Column tgt))
+    -- ^ Additional information about the source's join columns:
+    -- (ColumnInfo src) so that we can add the join column to the AST
+    -- (ScalarType tgt) so that the remote can interpret the join values coming
+    -- from src
+    -- (Column tgt) so that an appropriate join condition / in clause can be built
+    -- by the remote
     }
 
 data RemoteSelect
     (vf :: BackendType -> Type)
     (src :: BackendType)
   = RemoteSelectRemoteSchema !(RemoteSchemaSelect src)
-  | RemoteSelectSource !(AB.AnyBackend (SourceRelationshipSelect src vf))
+  | RemoteSelectSource !(AB.AnyBackend (RemoteSourceSelect src vf))
 
 -- Permissions
 
