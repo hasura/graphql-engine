@@ -126,6 +126,9 @@ export const getMetadataQuery = (
     case 'bigquery':
       prefix = 'bigquery_';
       break;
+    case 'citus':
+      prefix = 'citus_';
+      break;
     case 'postgres':
     default:
       prefix = 'pg_';

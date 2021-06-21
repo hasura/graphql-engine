@@ -16,7 +16,7 @@ export const getRunSqlQuery = (
   driver = currentDriver
 ) => {
   let type = 'run_sql';
-  if (driver === 'mssql' || driver === 'bigquery') {
+  if (['mssql', 'bigquery', 'citus'].includes(driver)) {
     type = `${driver}_run_sql`;
   }
 

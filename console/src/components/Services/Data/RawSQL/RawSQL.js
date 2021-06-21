@@ -34,6 +34,13 @@ import { getDataSources } from '../../../../metadata/selector';
 import { services } from '../../../../dataSources/services';
 import { isFeatureSupported, setDriver } from '../../../../dataSources';
 import { fetchDataInit, UPDATE_CURRENT_DATA_SOURCE } from '../DataActions';
+
+const checkChangeLang = (sql, selectedDriver) => {
+  return (
+    !sql?.match(/(?:\$\$\s+)?language\s+plpgsql/i) && selectedDriver === 'citus'
+  );
+};
+
 /**
  * # RawSQL React FC
  * ## renders raw SQL page on route `/data/sql`
@@ -82,6 +89,7 @@ const RawSQL = ({
 
   const [selectedDatabase, setSelectedDatabase] = useState(currentDataSource);
   const [selectedDriver, setSelectedDriver] = useState('postgres');
+  const [suggestLangChange, setSuggestLangChange] = useState(false);
 
   useEffect(() => {
     const driver = getSourceDriver(sources, selectedDatabase);
@@ -114,6 +122,14 @@ const RawSQL = ({
       setLSItem(LS_KEYS.rawSQLKey, sqlText);
     };
   }, [dispatch, sql, sqlText]);
+
+  useEffect(() => {
+    if (checkChangeLang(sql, selectedDriver)) {
+      setSuggestLangChange(true);
+    } else {
+      setSuggestLangChange(false);
+    }
+  }, [sql, selectedDriver]);
 
   const submitSQL = () => {
     if (!sqlText) {
@@ -351,6 +367,7 @@ const RawSQL = ({
               className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
               id="track-checkbox"
               type="checkbox"
+              disabled={checkChangeLang()}
               onChange={dispatchTrackThis}
               data-test="raw-sql-track-check"
             />
@@ -469,7 +486,7 @@ const RawSQL = ({
       </div>
       <div className={styles.add_mar_top}>
         <div className={`${styles.padd_left_remove} col-xs-8`}>
-          <NotesSection />
+          <NotesSection suggestLangChange={suggestLangChange} />
         </div>
         <div className={`${styles.padd_left_remove} col-xs-8`}>
           <label>

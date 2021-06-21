@@ -13,6 +13,11 @@ import {
   SupportedFeaturesType,
   generateTableRowRequestType,
   BaseTableColumn,
+  generateInsertRequestType,
+  GenerateRowsCountRequestType,
+  GenerateEditRowRequest,
+  GenerateDeleteRowRequest,
+  GenerateBulkDeleteRowRequest,
   ViolationActions,
 } from './types';
 import { PGFunction, FunctionState } from './services/postgresql/types';
@@ -22,8 +27,15 @@ import { QualifiedTable } from '../metadata/types';
 import { supportedFeatures as PGSupportedFeatures } from './services/postgresql';
 import { supportedFeatures as MssqlSupportedFeatures } from './services/mssql';
 import { supportedFeatures as BigQuerySupportedFeatures } from './services/bigquery';
+import { supportedFeatures as CitusQuerySupportedFeatures } from './services/citus';
 
-export const drivers = ['postgres', 'mysql', 'mssql', 'bigquery'] as const;
+export const drivers = [
+  'postgres',
+  'mysql',
+  'mssql',
+  'bigquery',
+  'citus',
+] as const;
 export type Driver = typeof drivers[number];
 
 export const driverToLabel: Record<Driver, string> = {
@@ -31,6 +43,14 @@ export const driverToLabel: Record<Driver, string> = {
   postgres: 'PostgreSQL',
   mssql: 'MS SQL Server',
   bigquery: 'BigQuery',
+  citus: 'Citus',
+};
+
+export const sourceNames = {
+  postgres: PGSupportedFeatures?.driver?.name,
+  mssql: MssqlSupportedFeatures?.driver?.name,
+  bigquery: BigQuerySupportedFeatures?.driver?.name,
+  citus: CitusQuerySupportedFeatures?.driver?.name,
 };
 
 export type ColumnsInfoResult = {
@@ -336,7 +356,12 @@ export interface DataSourcesAPI {
   supportedFeatures?: SupportedFeaturesType;
   violationActions: ViolationActions[];
   defaultRedirectSchema?: string;
+  generateInsertRequest?: () => generateInsertRequestType;
+  generateRowsCountRequest?: () => GenerateRowsCountRequestType;
   getPartitionDetailsSql?: (tableName: string, tableSchema: string) => string;
+  generateEditRowRequest?: () => GenerateEditRowRequest;
+  generateDeleteRowRequest?: () => GenerateDeleteRowRequest;
+  generateBulkDeleteRowRequest?: () => GenerateBulkDeleteRowRequest;
 }
 
 export let currentDriver: Driver = 'postgres';
@@ -358,6 +383,7 @@ export const getSupportedDrivers = (
     PGSupportedFeatures,
     MssqlSupportedFeatures,
     BigQuerySupportedFeatures,
+    CitusQuerySupportedFeatures,
   ]
     .filter(d => isEnabled(d))
     .map(d => d.driver.name) as Driver[];
