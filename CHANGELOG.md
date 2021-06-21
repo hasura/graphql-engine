@@ -10,6 +10,7 @@
 - console: add citus support
 - cli: add citus support
 - cli: `metadata diff` will now only show the differences in metadata. old behaviour is avialble behind a flag (`--type unified-common`) (#5487)
+- cli: allow `--skip-execution` to be used with `up` and `down` flags in `migrate apply`
 
 ## v2.0.0-beta.2
 
