@@ -76,14 +76,17 @@ var _ = Describe("hasura migrate apply (config v3)", func() {
 	// automatic state migration should not affect new config v3 projects
 	var projectDirectory string
 	var teardown func()
-	var sourceName = randomdata.SillyName()
+	var pgSource = randomdata.SillyName()
+	var citusSource = randomdata.SillyName()
 	BeforeEach(func() {
 		projectDirectory = testutil.RandDirName()
 		hgeEndPort, teardownHGE := testutil.StartHasuraWithMetadataDatabase(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
-		connectionString, teardownPG := testutil.StartPGContainer(GinkgoT())
+		connectionStringPG, teardownPG := testutil.StartPGContainer(GinkgoT())
+		connectionStringCitus, teardownCitus := testutil.StartCitusContainer(GinkgoT())
 		// add a pg source named default
-		testutil.AddPGSourceToHasura(GinkgoT(), hgeEndpoint, connectionString, sourceName)
+		testutil.AddPGSourceToHasura(GinkgoT(), hgeEndpoint, connectionStringPG, pgSource)
+		testutil.AddCitusSourceToHasura(GinkgoT(), hgeEndpoint, connectionStringCitus, citusSource)
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: []string{"init", projectDirectory},
 		})
@@ -92,11 +95,13 @@ var _ = Describe("hasura migrate apply (config v3)", func() {
 			os.RemoveAll(projectDirectory)
 			teardownHGE()
 			teardownPG()
+			teardownCitus()
 		}
 	})
 	AfterEach(func() { teardown() })
 
 	It("should apply the migrations on server ", func() {
-		testMigrateApply(projectDirectory, []string{"--database-name", sourceName})
+		testMigrateApply(projectDirectory, []string{"--database-name", pgSource})
+		testMigrateApply(projectDirectory, []string{"--database-name", citusSource})
 	})
 })

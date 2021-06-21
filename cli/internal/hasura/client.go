@@ -39,12 +39,14 @@ type SourceKind string
 
 const (
 	SourceKindPG    SourceKind = "postgres"
-	SourceKindMSSQL            = "mssql"
+	SourceKindMSSQL SourceKind = "mssql"
+	SourceKindCitus SourceKind = "citus"
 )
 
 type V2Query interface {
 	PGSourceOps
 	MSSQLSourceOps
+	CitusSourceOps
 	Send(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
 	Bulk([]RequestBody) (io.Reader, error)
 }
