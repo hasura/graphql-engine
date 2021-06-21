@@ -287,7 +287,7 @@ runExecutionPlanNoCache env logger userInfo httpManager reqHeaders requestId int
       resp <- AB.dispatchAnyBackend @EB.BackendExecute exists
           \(DBField sourceName sourceConfig (QDBR db)) ->
           EB.executeQueryField requestId logger userInfo sourceName sourceConfig db
-      (,[]) <$> RJ.processRemoteJoins env httpManager
+      (,[]) <$> RJ.processRemoteJoins requestId logger env httpManager
                 reqHeaders userInfo resp remoteJoins
     RFRemote (rsi, gqlReq) ->
       runRemoteGQ fieldName rsi gqlReq
@@ -296,7 +296,7 @@ runExecutionPlanNoCache env logger userInfo httpManager reqHeaders requestId int
       (resp, headers) <- case noRelsAST of
         AQQuery s -> runQueryActionSync env logger userInfo s (ActionExecContext httpManager reqHeaders usrVars)
         AQAsync s -> runQueryActionAsync $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s
-      (,headers) <$> RJ.processRemoteJoins env httpManager
+      (,headers) <$> RJ.processRemoteJoins requestId logger env httpManager
                      reqHeaders userInfo resp remoteJoins
     RFRaw value -> do
       introspectionResult <- either throwError pure =<<

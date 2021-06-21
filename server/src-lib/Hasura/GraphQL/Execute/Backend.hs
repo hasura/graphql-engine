@@ -32,6 +32,7 @@ import           Hasura.Server.Types                     (RequestId)
 import           Hasura.Server.Version                   (HasVersion)
 import           Hasura.Session
 import           Hasura.Tracing
+import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
 
 
 -- | This typeclass enacapsulates how a given backend fetches the data for a
@@ -41,8 +42,7 @@ class ( Backend b
       ) => BackendExecute (b :: BackendType) where
   type MultiplexedQuery b :: Type
 
-  -- | This is used in remote joins, to construct a table expression for the
-  -- left hand side of a join
+  -- | Execute a remote relationship to this source
   executeRemoteRelationship
     :: forall m
      . ( MonadIO m
@@ -57,9 +57,9 @@ class ( Backend b
     -> SourceConfig b
     -> NE.NonEmpty J.Object
     -- ^ List of json objects, each of which becomes a row of the table
-    -> Map.HashMap FieldName (ScalarType b)
+    -> Map.HashMap FieldName (Column b, ScalarType b)
     -- ^ The above objects have this schema
-    -> SourceRelationshipSelection b (Const Void) UnpreparedValue
+    -> (FieldName, SourceRelationshipSelection b (Const Void) UnpreparedValue)
     -> m EncJSON
 
   executeQueryField
@@ -129,6 +129,37 @@ class ( Backend b
       )
     => LiveQueryPlan b (MultiplexedQuery b)
     -> m LiveQueryPlanExplanation
+
+-- | This is a helper function to convert a remote source's relationship to a
+-- normal relationship to a temporary table. This function can be used to
+-- implement executeRemoteRelationship function in databases which support
+-- constructing a temporary table for a list of json objects.
+convertRemoteSourceRelationship
+  :: Map.HashMap (Column b) (Column b)
+  -> SelectFromG b (UnpreparedValue b)
+  -> (FieldName, SourceRelationshipSelection b (Const Void) UnpreparedValue)
+  -> QueryDB b (Const Void) (UnpreparedValue b)
+convertRemoteSourceRelationship columnMapping selectFrom (relationshipName, relationship) =
+  QDBMultipleRows simpleSelect
+  where
+    -- TODO: FieldName should also be wrapper around NonEmptyText
+    relName = RelName $ mkNonEmptyTextUnsafe $ getFieldNameTxt relationshipName
+
+    relationshipField = case relationship of
+      SourceRelationshipObject s ->
+        AFObjectRelation $ AnnRelationSelectG relName columnMapping s
+      SourceRelationshipArray s ->
+        AFArrayRelation $ ASSimple $ AnnRelationSelectG relName columnMapping s
+      SourceRelationshipArrayAggregate s ->
+        AFArrayRelation $ ASAggregate $ AnnRelationSelectG relName columnMapping s
+
+    simpleSelect =
+      AnnSelectG { _asnFields = [(relationshipName, relationshipField)]
+                 , _asnFrom = selectFrom
+                 , _asnPerm = TablePerm annBoolExpTrue Nothing
+                 , _asnArgs = noSelectArgs
+                 , _asnStrfyNum = False
+                 }
 
 -- | The result of an explain query: for a given root field (denoted by its
 -- name): the generated SQL query, and the detailed explanation obtained from

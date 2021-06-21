@@ -10,10 +10,13 @@ import           Hasura.Prelude
 
 import           Control.Monad.Morph                        (hoist)
 import qualified Control.Monad.Trans.Control                as MT
+import qualified Data.Aeson                                 as J
 import qualified Data.ByteString                            as B
+import qualified Data.HashMap.Strict                        as Map
 import qualified Data.HashMap.Strict.InsOrd                 as OMap
 import qualified Data.HashSet                               as Set
 import qualified Data.IntMap                                as IntMap
+import qualified Data.List.NonEmpty                         as NE
 import qualified Data.Sequence                              as Seq
 import qualified Database.PG.Query                          as Q
 import qualified Hasura.Logging                             as L
@@ -22,6 +25,8 @@ import qualified Language.GraphQL.Draft.Syntax              as G
 import qualified Hasura.Backends.Postgres.Execute.LiveQuery as PGL
 import qualified Hasura.Backends.Postgres.Execute.Mutation  as PGE
 import qualified Hasura.Backends.Postgres.SQL.DML           as S
+import qualified Hasura.Backends.Postgres.SQL.Types         as PG
+import qualified Hasura.Backends.Postgres.SQL.Value         as PG
 import qualified Hasura.Backends.Postgres.Translate.Select  as DS
 import qualified Hasura.RQL.IR.Delete                       as IR
 import qualified Hasura.RQL.IR.Insert                       as IR
@@ -67,9 +72,52 @@ instance
   explainQueryField = pgDBQueryExplain
   explainLiveQuery = pgDBLiveQueryExplain
   executeMultiplexedQuery = runPGSubscription
+  executeRemoteRelationship = executeRemoteRelationshipPG
 
 
 -- query
+
+
+executeRemoteRelationshipPG
+  :: forall pgKind m
+   . ( MonadIO m
+     , MonadError QErr m
+     , MonadTrace m
+     , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
+  => RequestId
+  -> L.Logger L.Hasura
+  -> UserInfo
+  -> SourceName
+  -> SourceConfig ('Postgres pgKind)
+  -> NE.NonEmpty J.Object
+  -- ^ List of json objects, each of which becomes a row of the table
+  -> Map.HashMap FieldName (Column ('Postgres pgKind), ScalarType ('Postgres pgKind))
+  -- ^ The above objects have this schema
+  -> (FieldName, SourceRelationshipSelection ('Postgres pgKind) (Const Void) UnpreparedValue)
+  -> m EncJSON
+executeRemoteRelationshipPG requestId logger userInfo sourceName sourceConfig
+  lhs lhsSchema relationship =
+
+  pgDBQueryPlan requestId logger userInfo sourceName sourceConfig qrf
+
+  where
+
+    joinColumnMapping = mapKeys (PG.unsafePGCol . getFieldNameTxt) lhsSchema
+
+    rowsArgument :: UnpreparedValue ('Postgres pgKind)
+    rowsArgument =
+      UVParameter Nothing $ ColumnValue (ColumnScalar PG.PGJSONB) $
+        PG.PGValJSONB $ Q.JSONB $ J.toJSON lhs
+    jsonToRecordSet :: SelectFromG ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+    jsonToRecordSet =
+      IR.FromFunction
+        (PG.QualifiedObject "pg_catalog" $ PG.FunctionName "jsonb_to_recordset")
+        (IR.FunctionArgsExp [IR.AEInput rowsArgument] mempty)
+        (Just $ Map.toList $ fmap snd joinColumnMapping)
+
+    qrf = convertRemoteSourceRelationship (fst <$> joinColumnMapping) jsonToRecordSet relationship
 
 pgDBQueryPlan
   :: forall pgKind m

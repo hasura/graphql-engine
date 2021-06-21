@@ -4,8 +4,8 @@ module Hasura.GraphQL.Execute.RemoteJoin.Join
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Ordered                             as AO
 import qualified Data.Aeson                                     as J
+import qualified Data.Aeson.Ordered                             as AO
 import qualified Data.Environment                               as Env
 import qualified Data.HashMap.Strict                            as Map
 import qualified Data.HashMap.Strict.Extended                   as Map
@@ -18,11 +18,11 @@ import qualified Data.Text                                      as T
 import qualified Network.HTTP.Client                            as HTTP
 import qualified Network.HTTP.Types                             as N
 
-import qualified Control.Lens                                   as Lens
 import           Data.Tuple                                     (swap)
 
 import qualified Hasura.GraphQL.Execute.Backend                 as EB
 import qualified Hasura.GraphQL.Execute.RemoteJoin.RemoteSchema as RS
+import qualified Hasura.Logging                                 as L
 import qualified Hasura.SQL.AnyBackend                          as AB
 import qualified Hasura.Tracing                                 as Tracing
 
@@ -32,6 +32,7 @@ import           Hasura.GraphQL.Execute.Instances               ()
 import           Hasura.GraphQL.Execute.RemoteJoin.Types
 import           Hasura.GraphQL.Logging
 import           Hasura.RQL.Types                               hiding (Alias)
+import           Hasura.Server.Types                            (RequestId)
 import           Hasura.Server.Version                          (HasVersion)
 import           Hasura.Session
 
@@ -51,18 +52,21 @@ processRemoteJoins
      , Tracing.MonadTrace m
      , MonadQueryLog m
      )
-  => Env.Environment
+  => RequestId
+  -> L.Logger L.Hasura
+  -> Env.Environment
   -> HTTP.Manager
   -> [N.Header]
   -> UserInfo
   -> EncJSON
   -> Maybe RemoteJoins
   -> m EncJSON
-processRemoteJoins env manager reqHdrs userInfo lhs joinTree = do
+processRemoteJoins requestId logger env manager reqHdrs userInfo lhs joinTree = do
   forRemoteJoins joinTree lhs $ \remoteJoins -> do
     lhsParsed <- onLeft (AO.eitherDecode $ encJToLBS lhs) (throw500 . T.pack)
     AO.toEncJSON . runIdentity <$>
-      processRemoteJoins_ env manager reqHdrs userInfo (Identity lhsParsed) remoteJoins
+      processRemoteJoins_ requestId logger env manager
+      reqHdrs userInfo (Identity lhsParsed) remoteJoins
 
 processRemoteJoins_
   :: ( HasVersion
@@ -72,14 +76,16 @@ processRemoteJoins_
      , MonadQueryLog m
      , Traversable f
      )
-  => Env.Environment
+  => RequestId
+  -> L.Logger L.Hasura
+  -> Env.Environment
   -> HTTP.Manager
   -> [N.Header]
   -> UserInfo
   -> f AO.Value
   -> RemoteJoins
   -> m (f AO.Value)
-processRemoteJoins_ env manager reqHdrs userInfo lhs joinTree = do
+processRemoteJoins_ requestId logger env manager reqHdrs userInfo lhs joinTree = do
 
 
   (compositeValue, joins) <- collectJoinArguments (assignJoinIds joinTree) lhs
@@ -109,14 +115,15 @@ processRemoteJoins_ env manager reqHdrs userInfo lhs joinTree = do
                      Map.insert "__argument_id__" (J.toJSON argumentId) $
                      Map.fromList $ map (getFieldNameTxt *** AO.fromOrdered) $
                      Map.toList $ unJoinArugment argument
-              rowSchema = fmap (Lens.^. Lens._2) _rdjJoinColumns
+              rowSchema = fmap (\(_, rhsType, rhsColumn) -> (rhsColumn, rhsType)) _rdjJoinColumns
 
           for (NE.nonEmpty rows) $ \nonEmptyRows -> do
-            sourceResponse <- EB.executeRemoteRelationship undefined undefined
-              userInfo _rdjSource _rdjSourceConfig nonEmptyRows rowSchema _rdjRelationship
+            sourceResponse <- EB.executeRemoteRelationship requestId logger
+              userInfo _rdjSource _rdjSourceConfig nonEmptyRows rowSchema
+              (FieldName "f", _rdjRelationship)
             preRemoteJoinResults <- buildSourceDataJoinIndex sourceResponse
             forRemoteJoins childJoinTree preRemoteJoinResults $ \childRemoteJoins -> do
-              results <- processRemoteJoins_ env manager reqHdrs userInfo
+              results <- processRemoteJoins_ requestId logger env manager reqHdrs userInfo
                 (IntMap.elems preRemoteJoinResults) childRemoteJoins
               pure $ IntMap.fromAscList $ zip (IntMap.keys preRemoteJoinResults) results
 
