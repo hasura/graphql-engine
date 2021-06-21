@@ -144,7 +144,8 @@ runExecutionPlan env logger userInfo httpManager reqHeaders requestId stringifyN
               \(DBField sourceName sourceConfig (MDBR db)) ->
               EB.executeMutationField requestId logger userInfo
               stringifyNum sourceName sourceConfig db
-          (,[]) <$> withRemoteJoins remoteJoins resp
+          (,[]) <$> RJ.processRemoteJoins env httpManager
+                    reqHeaders userInfo resp remoteJoins
 
         RFRemote (rsi, gqlReq) -> runRemoteGQ fieldName rsi gqlReq
 
@@ -157,7 +158,8 @@ runExecutionPlan env logger userInfo httpManager reqHeaders requestId stringifyN
               actionId <- liftEitherM $ runMetadataStorageT $
                 resolveActionMutationAsync s reqHeaders usrVars
               pure $ (,mempty) $ encJFromJValue $ actionIdToText actionId
-          (,headers) <$> withRemoteJoins remoteJoins resp
+          (,headers) <$> RJ.processRemoteJoins env httpManager
+                         reqHeaders userInfo resp remoteJoins
         RFRaw value -> do
           -- introspection queries are not allowed in mutations, so we don't need
           -- to check whether or not introspection is allowed, like we do in case
@@ -170,10 +172,6 @@ runExecutionPlan env logger userInfo httpManager reqHeaders requestId stringifyN
 
       pure (selectionSetResponse, headers)
   where
-    withRemoteJoins remoteJoins rootResponse =
-      maybe (pure rootResponse)
-      (RJ.processRemoteJoins env httpManager reqHeaders userInfo $ encJToLBS rootResponse)
-      remoteJoins
 
     runRemoteGQ fieldName rsi gqlReq = do
       (_telemTimeIO_DT, remoteResponseHeaders, resp) <-

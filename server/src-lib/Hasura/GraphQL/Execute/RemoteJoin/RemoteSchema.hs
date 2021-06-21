@@ -10,6 +10,7 @@ import qualified Data.Aeson                              as A
 import qualified Data.Aeson.Ordered                      as AO
 import qualified Data.Environment                        as Env
 import qualified Data.HashMap.Strict                     as Map
+import qualified Data.IntMap.Strict                      as IntMap
 import qualified Data.List.NonEmpty                      as NE
 import qualified Data.Text                               as T
 import qualified Language.GraphQL.Draft.Syntax           as G
@@ -41,18 +42,18 @@ buildRemoteSchemaCall
   :: (MonadError QErr m)
   => UserInfo
   -> RemoteSchemaJoin
-  -> Map.HashMap JoinArgumentId JoinArgument
-  -> m (Maybe (RemoteSchemaInfo, GQLReqOutgoing, Map.HashMap JoinArgumentId ResponsePath))
+  -> IntMap.IntMap JoinArgument
+  -> m (Maybe (RemoteSchemaInfo, GQLReqOutgoing, IntMap.IntMap ResponsePath))
 buildRemoteSchemaCall userInfo RemoteSchemaJoin{..} arguments = do
-  fields <- flip Map.traverseWithKey arguments $ \argumentId (JoinArgument argument) -> do
+  fields <- flip IntMap.traverseWithKey arguments $ \argumentId (JoinArgument argument) -> do
     graphqlArgs <- fmap Map.fromList $ for (Map.toList argument) $
       \(FieldName columnName, value) ->
         (,) <$> parseGraphQLName columnName <*> ordJSONValueToGValue value
-    let alias = G.unsafeMkName $ T.pack $ "f" <> show (unArgumentId argumentId)
+    let alias = G.unsafeMkName $ T.pack $ "f" <> show argumentId
         responsePath = alias NE.:| map fcName (toList $ NE.tail _rsjFieldCall)
     gqlField <- fieldCallsToField _rsjArgs graphqlArgs _rsjSelSet alias _rsjFieldCall
     pure (gqlField, responsePath)
-  for (NE.nonEmpty $ Map.elems fields) $ \nonEmptyFields -> do
+  for (NE.nonEmpty $ IntMap.elems fields) $ \nonEmptyFields -> do
     gqlRequest <- fmap fieldsToRequest $ runVariableCache $
       traverse (traverse (resolveRemoteVariable userInfo) . fst) nonEmptyFields
     pure $ (_rsjRemoteSchema, gqlRequest, snd <$> fields)
@@ -60,8 +61,8 @@ buildRemoteSchemaCall userInfo RemoteSchemaJoin{..} arguments = do
 buildJoinIndex
   :: (Monad m, MonadError QErr m)
   => AO.Object
-  -> Map.HashMap JoinArgumentId ResponsePath
-  -> m (Map.HashMap JoinArgumentId AO.Value)
+  -> IntMap.IntMap ResponsePath
+  -> m JoinIndex
 buildJoinIndex response responsePaths =
   for responsePaths $ \path ->
   extractAtPath (AO.Object response) (map G.unName $ NE.toList path)

@@ -287,7 +287,8 @@ runExecutionPlanNoCache env logger userInfo httpManager reqHeaders requestId int
       resp <- AB.dispatchAnyBackend @EB.BackendExecute exists
           \(DBField sourceName sourceConfig (QDBR db)) ->
           EB.executeQueryField requestId logger userInfo sourceName sourceConfig db
-      (,[]) <$> withRemoteJoins remoteJoins resp
+      (,[]) <$> RJ.processRemoteJoins env httpManager
+                reqHeaders userInfo resp remoteJoins
     RFRemote (rsi, gqlReq) ->
       runRemoteGQ fieldName rsi gqlReq
     RFAction (noRelsAST, remoteJoins) -> do
@@ -295,7 +296,8 @@ runExecutionPlanNoCache env logger userInfo httpManager reqHeaders requestId int
       (resp, headers) <- case noRelsAST of
         AQQuery s -> runQueryActionSync env logger userInfo s (ActionExecContext httpManager reqHeaders usrVars)
         AQAsync s -> runQueryActionAsync $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s
-      (,headers) <$> withRemoteJoins remoteJoins resp
+      (,headers) <$> RJ.processRemoteJoins env httpManager
+                     reqHeaders userInfo resp remoteJoins
     RFRaw value -> do
       introspectionResult <- either throwError pure =<<
         executeIntrospection userInfo value introspectionOptions
@@ -307,10 +309,6 @@ runExecutionPlanNoCache env logger userInfo httpManager reqHeaders requestId int
 
   pure (selectionSetResponse, headers)
   where
-    withRemoteJoins remoteJoins rootResponse =
-      maybe (pure rootResponse)
-      (RJ.processRemoteJoins env httpManager reqHeaders userInfo $ encJToLBS rootResponse)
-      remoteJoins
     runRemoteGQ fieldName rsi gqlReq = do
       (_telemTimeIO_DT, remoteResponseHeaders, resp) <-
         ER.execRemoteGQ env httpManager userInfo reqHeaders rsi gqlReq

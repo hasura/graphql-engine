@@ -7,6 +7,7 @@ import qualified Data.Aeson.Casing                       as J
 import qualified Data.Aeson.Ordered                      as JO
 import qualified Data.ByteString                         as B
 import qualified Data.HashMap.Strict                     as Map
+import qualified Data.List.NonEmpty                      as NE
 import qualified Language.GraphQL.Draft.Syntax           as G
 
 import           Control.Monad.Trans.Control             (MonadBaseControl)
@@ -42,12 +43,24 @@ class ( Backend b
 
   -- | This is used in remote joins, to construct a table expression for the
   -- left hand side of a join
-  buildTemporaryTable
-    :: [J.Object]
+  executeRemoteRelationship
+    :: forall m
+     . ( MonadIO m
+       , MonadError QErr m
+       , MonadQueryLog m
+       , MonadTrace m
+       )
+    => RequestId
+    -> L.Logger L.Hasura
+    -> UserInfo
+    -> SourceName
+    -> SourceConfig b
+    -> NE.NonEmpty J.Object
     -- ^ List of json objects, each of which becomes a row of the table
     -> Map.HashMap FieldName (ScalarType b)
     -- ^ The above objects have this schema
-    -> SelectFromG b (UnpreparedValue b)
+    -> SourceRelationshipSelection b (Const Void) UnpreparedValue
+    -> m EncJSON
 
   executeQueryField
     :: forall m
