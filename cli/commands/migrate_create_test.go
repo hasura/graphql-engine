@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Pallinder/go-randomdata"
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -57,6 +58,40 @@ var _ = Describe("hasura migrate create (config v3)", func() {
 			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring(keyword))
 		}
 		dirs, err := os.ReadDir(filepath.Join(projectDirectory, "migrations", "default"))
+		Expect(err).To(BeNil())
+		for _, d := range dirs {
+			Expect(d.Name()).Should(ContainSubstring(migrationName))
+		}
+	})
+
+	It("can create migrations for database that is not connected to server", func() {
+		migrationName := "create_schema_testing"
+		sourceName := randomdata.SillyName()
+		session := testutil.Hasura(testutil.CmdOpts{
+			Args: []string{
+				"migrate",
+				"create",
+				migrationName,
+				"--up-sql",
+				"create schema \"testing\";",
+				"--down-sql",
+				"drop schema \"testing\" cascade;",
+				"--database-name", sourceName,
+			},
+			WorkingDirectory: projectDirectory,
+		})
+		wantKeywordList := []string{
+			fmt.Sprintf("database %s is not connected to hasura", sourceName),
+			"Migrations files created",
+			migrationName,
+			"version",
+		}
+
+		Eventually(session, 60*60).Should(Exit(0))
+		for _, keyword := range wantKeywordList {
+			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring(keyword))
+		}
+		dirs, err := os.ReadDir(filepath.Join(projectDirectory, "migrations", sourceName))
 		Expect(err).To(BeNil())
 		for _, d := range dirs {
 			Expect(d.Name()).Should(ContainSubstring(migrationName))
