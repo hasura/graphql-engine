@@ -10,7 +10,7 @@ const allMessages = [
 
 const typeDefs = gql`
   type User {
-    user_id: Int
+    user_id: Float
     userMessages(whered: MessageWhereInpObj, includes: IncludeInpObj): [Message]
     gimmeText(text: String): String
   }
@@ -83,8 +83,8 @@ const typeDefs = gql`
   type Query {
     hello: String
     messages(where: MessageWhereInpObj, includes: IncludeInpObj): [Message]
-    user(user_id: Int!): User
-    users(user_ids: [Int]!): [User]
+    user(user_id: Float!): User
+    users(user_ids: [Float]!): [User]
     message(id: Int!) : Message
     communications(id: Int): [Communication]
     profilePicture(dimensions: Dimensions): Photo
@@ -260,6 +260,6 @@ const schema = new ApolloServer(
           return err;
       } });
 
-schema.listen({ port: process.env.PORT || 4020 }).then(({ url }) => {
+schema.listen({ port: process.env.PORT || 4022 }).then(({ url }) => {
     console.log(`schema ready at ${url}`);
 });

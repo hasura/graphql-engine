@@ -97,6 +97,7 @@ data RQLQueryV1
 
   -- schema-stitching, custom resolver related
   | RQAddRemoteSchema !AddRemoteSchemaQuery
+  | RQUpdateRemoteSchema !AddRemoteSchemaQuery
   | RQRemoveRemoteSchema !RemoteSchemaNameQuery
   | RQReloadRemoteSchema !RemoteSchemaNameQuery
   | RQIntrospectRemoteSchema !RemoteSchemaNameQuery
@@ -271,6 +272,7 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQCount _                       -> False
 
   RQAddRemoteSchema _             -> True
+  RQUpdateRemoteSchema _          -> True
   RQRemoveRemoteSchema _          -> True
   RQReloadRemoteSchema _          -> True
   RQIntrospectRemoteSchema _      -> False
@@ -411,6 +413,7 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQCount  q                      -> runCount q
 
       RQAddRemoteSchema    q          -> runAddRemoteSchema env q
+      RQUpdateRemoteSchema q          -> runUpdateRemoteSchema env q
       RQRemoveRemoteSchema q          -> runRemoveRemoteSchema q
       RQReloadRemoteSchema q          -> runReloadRemoteSchema q
       RQIntrospectRemoteSchema q      -> runIntrospectRemoteSchema q
@@ -510,6 +513,7 @@ requiresAdmin = \case
     RQCount  _                      -> False
 
     RQAddRemoteSchema    _          -> True
+    RQUpdateRemoteSchema _          -> True
     RQRemoveRemoteSchema _          -> True
     RQReloadRemoteSchema _          -> True
     RQIntrospectRemoteSchema _      -> True

@@ -218,41 +218,12 @@ export const passWithRemoteSchemaHeader = () => {
   cy.wait(5000);
 };
 
-export const passWithEditRemoteSchema = () => {
-  cy.visit(
-    `${baseUrl}/remote-schemas/manage/${getRemoteSchemaName(
-      3,
-      testName
-    )}/modify`
-  );
-  cy.wait(3000);
-  cy.get(getElementFromAlias('remote-schema-edit-modify-btn'))
-    .should('exist')
-    .click();
-  cy.get(getElementFromAlias('remote-schema-schema-name'))
-    .clear()
-    .type(getRemoteSchemaName(5, testName));
-
-  cy.get(getElementFromAlias('remote-schema-edit-save-btn')).click();
-  cy.wait(10000);
-  validateRS(getRemoteSchemaName(5, testName), ResultType.SUCCESS);
-
-  cy.get(getElementFromAlias('remote-schemas-modify')).click();
-  cy.get(getElementFromAlias('remote-schema-schema-name')).should(
-    'have.attr',
-    'value',
-    getRemoteSchemaName(5, testName)
-  );
-  cy.get(getElementFromAlias('remote-schema-edit-modify-btn')).should('exist');
-  cy.wait(7000);
-};
-
 export const deleteRemoteSchema = () => {
-  cy.visit(`remote-schemas/manage/${getRemoteSchemaName(5, testName)}/details`);
+  cy.visit(`remote-schemas/manage/${getRemoteSchemaName(3, testName)}/details`);
 
   cy.get(getElementFromAlias('remote-schemas-modify')).click();
   cy.wait(5000);
-  setPromptValue(getRemoteSchemaName(5, testName));
+  setPromptValue(getRemoteSchemaName(3, testName));
   cy.get(getElementFromAlias('remote-schema-edit-delete-btn')).click();
   cy.window().its('prompt').should('be.called');
   cy.wait(5000);
@@ -298,8 +269,35 @@ export const createSimpleRemoteSchemaPermission = () => {
   cy.wait(5000);
 };
 
-// export const deleteRemoteSchemaPermission = () => {
-//   cy.get(getElementFromAlias('delete-remote-schema-permissions'))
-//     .click();
+export const passWithUpdateRemoteSchema = () => {
+  cy.visit(
+    `${baseUrl}/remote-schemas/manage/${getRemoteSchemaName(
+      3,
+      testName
+    )}/modify`
+  );
+  cy.wait(3000);
+  cy.get(getElementFromAlias('remote-schema-edit-modify-btn'))
+    .should('exist')
+    .click();
+  cy.get(getElementFromAlias('remote-schema-schema-name')).should(
+    'have.attr',
+    'disabled'
+  );
+  cy.get(getElementFromAlias('remote-schema-comment'))
+    .clear()
+    .type("This is a new remote schema comment");
 
-// }
+  cy.get(getElementFromAlias('remote-schema-edit-save-btn')).click();
+  cy.wait(5000);
+  validateRS(getRemoteSchemaName(3, testName), ResultType.SUCCESS);
+
+  cy.get(getElementFromAlias('remote-schemas-modify')).click();
+  cy.get(getElementFromAlias('remote-schema-schema-name')).should(
+    'have.attr',
+    'value',
+    getRemoteSchemaName(3, testName)
+  );
+  cy.get(getElementFromAlias('remote-schema-edit-modify-btn')).should('exist');
+  cy.wait(7000);
+};
