@@ -13,6 +13,7 @@ import qualified Language.GraphQL.Draft.Syntax           as G
 import           Control.Monad.Trans.Control             (MonadBaseControl)
 import           Data.Kind                               (Type)
 import           Data.Text.Extended
+import           Data.Text.NonEmpty                      (mkNonEmptyTextUnsafe)
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol  as GH
 import qualified Hasura.Logging                          as L
@@ -26,13 +27,13 @@ import           Hasura.GraphQL.Parser                   hiding (Type)
 import           Hasura.RQL.IR
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Backend
 import           Hasura.Server.Types                     (RequestId)
 import           Hasura.Server.Version                   (HasVersion)
 import           Hasura.Session
 import           Hasura.Tracing
-import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
 
 
 -- | This typeclass enacapsulates how a given backend fetches the data for a
@@ -41,26 +42,6 @@ class ( Backend b
       , ToTxt (MultiplexedQuery b)
       ) => BackendExecute (b :: BackendType) where
   type MultiplexedQuery b :: Type
-
-  -- | Execute a remote relationship to this source
-  executeRemoteRelationship
-    :: forall m
-     . ( MonadIO m
-       , MonadError QErr m
-       , MonadQueryLog m
-       , MonadTrace m
-       )
-    => RequestId
-    -> L.Logger L.Hasura
-    -> UserInfo
-    -> SourceName
-    -> SourceConfig b
-    -> NE.NonEmpty J.Object
-    -- ^ List of json objects, each of which becomes a row of the table
-    -> Map.HashMap FieldName (Column b, ScalarType b)
-    -- ^ The above objects have this schema
-    -> (FieldName, SourceRelationshipSelection b (Const Void) UnpreparedValue)
-    -> m EncJSON
 
   executeQueryField
     :: forall m
@@ -130,19 +111,52 @@ class ( Backend b
     => LiveQueryPlan b (MultiplexedQuery b)
     -> m LiveQueryPlanExplanation
 
+  -- | Execute a remote relationship to this source
+  executeRemoteRelationship
+    :: forall m
+     . ( MonadIO m
+       , MonadError QErr m
+       , MonadQueryLog m
+       , MonadTrace m
+       )
+    => RequestId
+    -> L.Logger L.Hasura
+    -> UserInfo
+    -> SourceName
+    -> SourceConfig b
+    -> NE.NonEmpty J.Object
+    -- ^ List of json objects, each of which becomes a row of the table
+    -> Map.HashMap FieldName (Column b, ScalarType b)
+    -- ^ The above objects have this schema
+    -> FieldName
+    -- ^ This is a field name from the lhs that *has* to be selected in the
+    -- response along with the relationship
+    -> (FieldName, SourceRelationshipSelection b (Const Void) UnpreparedValue)
+    -> m EncJSON
+
 -- | This is a helper function to convert a remote source's relationship to a
 -- normal relationship to a temporary table. This function can be used to
 -- implement executeRemoteRelationship function in databases which support
 -- constructing a temporary table for a list of json objects.
 convertRemoteSourceRelationship
   :: Map.HashMap (Column b) (Column b)
+  -- ^ Join columns for the relationship
   -> SelectFromG b (UnpreparedValue b)
+  -- ^ The LHS of the join, this is the expression which selects from json
+  -- objects
+  -> ColumnInfo b
+  -- ^ This is the __argument__ id column, that needs to be added to the response
+  -- This is used by by the remote joins processing logic to convert the
+  -- response from upstream to join indices
   -> (FieldName, SourceRelationshipSelection b (Const Void) UnpreparedValue)
+  -- ^ The relationship column and its name (how it should be selected in the
+  -- response)
   -> QueryDB b (Const Void) (UnpreparedValue b)
-convertRemoteSourceRelationship columnMapping selectFrom (relationshipName, relationship) =
+convertRemoteSourceRelationship columnMapping selectFrom argumentIdColumn
+  (relationshipName, relationship) =
   QDBMultipleRows simpleSelect
   where
-    -- TODO: FieldName should also be wrapper around NonEmptyText
+    -- TODO: FieldName should have also been a wrapper around NonEmptyText
     relName = RelName $ mkNonEmptyTextUnsafe $ getFieldNameTxt relationshipName
 
     relationshipField = case relationship of
@@ -153,8 +167,18 @@ convertRemoteSourceRelationship columnMapping selectFrom (relationshipName, rela
       SourceRelationshipArrayAggregate s ->
         AFArrayRelation $ ASAggregate $ AnnRelationSelectG relName columnMapping s
 
+    argumentIdField =
+      ( FieldName "__argument__id"
+      , AFColumn $
+        AnnColumnField { _acfInfo = argumentIdColumn
+                       , _acfAsText = False
+                       , _acfOp = Nothing
+                       , _acfCaseBoolExpression = Nothing
+                       }
+      )
+
     simpleSelect =
-      AnnSelectG { _asnFields = [(relationshipName, relationshipField)]
+      AnnSelectG { _asnFields = [argumentIdField, (relationshipName, relationshipField)]
                  , _asnFrom = selectFrom
                  , _asnPerm = TablePerm annBoolExpTrue Nothing
                  , _asnArgs = noSelectArgs

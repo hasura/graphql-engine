@@ -120,7 +120,7 @@ processRemoteJoins_ requestId logger env manager reqHdrs userInfo lhs joinTree =
           for (NE.nonEmpty rows) $ \nonEmptyRows -> do
             sourceResponse <- EB.executeRemoteRelationship requestId logger
               userInfo _rdjSource _rdjSourceConfig nonEmptyRows rowSchema
-              (FieldName "f", _rdjRelationship)
+              (FieldName "__argument_id__") (FieldName "f", _rdjRelationship)
             preRemoteJoinResults <- buildSourceDataJoinIndex sourceResponse
             forRemoteJoins childJoinTree preRemoteJoinResults $ \childRemoteJoins -> do
               results <- processRemoteJoins_ requestId logger env manager reqHdrs userInfo

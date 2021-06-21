@@ -582,6 +582,9 @@ traverseEdgeField f = \case
 
 data AnnColumnField (b :: BackendType) v
   = AnnColumnField
+  -- TODO: We don't ever need 'ColumnInfo b', so this should be changed to
+  -- (Column b, ScalarType b). Constructing and adding an AnnColumnField
+  -- manually currently is not very easy and uses a bunch of unsafe functions
   { _acfInfo               :: !(ColumnInfo b)
   , _acfAsText             :: !Bool
   -- ^ If this field is 'True', columns are explicitly casted to @text@ when fetched, which avoids

@@ -94,11 +94,12 @@ executeRemoteRelationshipPG
   -> NE.NonEmpty J.Object
   -- ^ List of json objects, each of which becomes a row of the table
   -> Map.HashMap FieldName (Column ('Postgres pgKind), ScalarType ('Postgres pgKind))
+  -> FieldName
   -- ^ The above objects have this schema
   -> (FieldName, SourceRelationshipSelection ('Postgres pgKind) (Const Void) UnpreparedValue)
   -> m EncJSON
 executeRemoteRelationshipPG requestId logger userInfo sourceName sourceConfig
-  lhs lhsSchema relationship =
+  lhs lhsSchema argumentId relationship =
 
   pgDBQueryPlan requestId logger userInfo sourceName sourceConfig qrf
 
@@ -117,7 +118,18 @@ executeRemoteRelationshipPG requestId logger userInfo sourceName sourceConfig
         (IR.FunctionArgsExp [IR.AEInput rowsArgument] mempty)
         (Just $ Map.toList $ fmap snd joinColumnMapping)
 
-    qrf = convertRemoteSourceRelationship (fst <$> joinColumnMapping) jsonToRecordSet relationship
+    argumentIdColumnInfo =
+      ColumnInfo { pgiColumn = PG.unsafePGCol $ getFieldNameTxt argumentId
+                 -- TODO: columninfo really shouldn't be used in the select AST
+                 , pgiName = G.unsafeMkName "ARGUMENT_ID_NAME"
+                 , pgiIsNullable = False
+                 , pgiPosition = 0
+                 , pgiType = ColumnScalar PG.PGBigInt
+                 , pgiDescription = Nothing
+                 }
+
+    qrf = convertRemoteSourceRelationship (fst <$> joinColumnMapping)
+          jsonToRecordSet argumentIdColumnInfo relationship
 
 pgDBQueryPlan
   :: forall pgKind m
