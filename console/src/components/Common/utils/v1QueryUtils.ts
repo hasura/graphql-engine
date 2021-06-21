@@ -4,6 +4,10 @@ import { Nullable } from './tsUtils';
 import { ConsoleScope } from '../../Main/ConsoleNotification';
 import { BaseTableColumn } from '../../../dataSources/types';
 import { FixMe } from '../../../types';
+import {
+  checkFeatureSupport,
+  READ_ONLY_RUN_SQL_QUERIES,
+} from '../../../helpers/versionUtils';
 
 export type OrderByType = 'asc' | 'desc';
 export type OrderByNulls = 'first' | 'last';
@@ -26,7 +30,7 @@ export const getRunSqlQuery = (
       source,
       sql: terminateSql(sql),
       cascade,
-      read_only,
+      read_only: read_only && !!checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES),
     },
   };
 };
