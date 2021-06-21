@@ -28,7 +28,10 @@ export const getFeaturesCompatibility = (serverVersion: string) => {
   Object.keys(featureLaunchVersions).forEach(_feature => {
     const feature = _feature as Feature;
     featuresCompatibility[feature] = isValidServerVersion
-      ? semver.satisfies(serverVersion, `>= ${featureLaunchVersions[feature]}`)
+      ? semver.satisfies(
+          semver.valid(semver.coerce(serverVersion)), // semver.valid(semver.coerce('42.6.7.9.3-alpha')) => '42.6.7'
+          `>= ${featureLaunchVersions[feature]}`
+        )
       : true;
   });
 

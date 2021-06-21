@@ -1,7 +1,3 @@
-import {
-  READ_ONLY_RUN_SQL_QUERIES,
-  checkFeatureSupport,
-} from '../../../helpers/versionUtils';
 import { isJsonString } from '../../Common/utils/jsUtils';
 import { ERROR_CODES } from './constants';
 import { dataSource } from '../../../dataSources';
@@ -81,23 +77,13 @@ export const getTableName = t => {
 export const fetchTrackedTableFkQuery = (options, source) => {
   const runSql = dataSource?.getFKRelations(options) || '';
 
-  return getRunSqlQuery(
-    runSql,
-    source,
-    false,
-    checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
-  );
+  return getRunSqlQuery(runSql, source, false, true);
 };
 
 export const fetchTableListQuery = (options, source) => {
   const runSql = dataSource?.getFetchTablesListQuery(options) || '';
 
-  return getRunSqlQuery(
-    runSql,
-    source,
-    false,
-    checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
-  );
+  return getRunSqlQuery(runSql, source, false, true);
 };
 
 // TODO: move to postgres service

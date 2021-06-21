@@ -96,7 +96,9 @@ const getTableRowRequestBody = ({
       ),
       getRunSqlQuery(
         dataSource.getEstimateCountQuery(currentSchema, originalTable),
-        currentDataSource
+        currentDataSource,
+        false,
+        true
       ),
     ],
   };
@@ -182,7 +184,7 @@ export const getRowsCountRequestBody = ({
   );
 
   const queries = [
-    getRunSqlQuery(getStatementTimeoutSql(2), currentDataSource),
+    getRunSqlQuery(getStatementTimeoutSql(2), currentDataSource, false, true),
     selectQuery,
   ];
 
