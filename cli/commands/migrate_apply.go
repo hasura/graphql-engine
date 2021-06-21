@@ -33,7 +33,13 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura migrate apply --endpoint "<endpoint>"
 
   # Mark migration as applied on the server and skip execution:
-  hasura migrate apply --skip-execution
+  hasura migrate apply --skip-execution --version "<version>"
+
+  # Mark migrations as applied on the server and skip execution:
+  hasura migrate apply --skip-execution --up all
+
+  # Mark migrations as rollbacked on the server and skip execution:
+  hasura migrate apply --skip-execution --down all
 
   # Apply a particular migration version only:
   hasura migrate apply --version "<version>"
@@ -272,11 +278,12 @@ func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migra
 	}
 
 	if flagCount > 1 {
-		return "", 0, errors.New("only one migration type can be applied at a time (--up, --down or --goto)")
+		return "", 0, errors.New("only one migration type can be applied at a time (--up, --down, --type or --goto)")
 	}
 
-	if migrationName != "version" && skipExecution {
-		return "", 0, errors.New("--skip-execution flag can be set only with --version flag")
+	skipExecutionValid := migrationName == "version" || migrationName == "up" || migrationName == "down"
+	if !skipExecutionValid && skipExecution {
+		return "", 0, errors.New("--skip-execution flag can be set only with --version, --up, --down flags")
 	}
 
 	if stepString == "all" && migrationName != "version" {
