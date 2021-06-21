@@ -1,0 +1,8 @@
+type: update_remote_schema
+args:
+  name: my-remote-schema
+  comment: this is from update query with error
+  definition:
+    url: http://localhost:4022
+    forward_client_headers: True
+    timeout_seconds: 120
