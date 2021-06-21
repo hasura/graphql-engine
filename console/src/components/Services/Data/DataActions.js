@@ -30,6 +30,7 @@ import {
   mergeDataMssql,
   mergeLoadSchemaDataPostgres,
   mergeDataBigQuery,
+  mergeDataCitus,
 } from './mergeData';
 import _push from './push';
 import { convertArrayToJson } from './TableModify/utils';
@@ -230,6 +231,9 @@ const loadSchema = configOptions => {
           switch (currentDriver) {
             case 'postgres':
               mergedData = mergeLoadSchemaDataPostgres(data, metadataTables);
+              break;
+            case 'citus':
+              mergedData = mergeDataCitus(data, metadataTables);
               break;
             case 'mssql':
               mergedData = mergeDataMssql(data, metadataTables);

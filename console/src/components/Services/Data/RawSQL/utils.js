@@ -6,7 +6,7 @@ const getSQLValue = value => {
 
   let sqlValue = value;
   if (!quotedStringRegex.test(value)) {
-    sqlValue = value.toLowerCase();
+    sqlValue = value?.toLowerCase() ?? '';
   }
 
   return sqlValue.replace(/['"]+/g, '');
@@ -23,7 +23,7 @@ export const removeCommentsSQL = sql => {
 };
 
 const getDefaultSchema = driver => {
-  if (driver === 'postgres') return 'public';
+  if (driver === 'postgres' || driver === 'citus') return 'public';
   if (driver === 'mssql') return 'dbo';
 };
 
@@ -37,13 +37,13 @@ export const parseCreateSQL = (sql, driver = currentDriver) => {
   const _objects = [];
   const regExp = services[driver].createSQLRegex;
   for (const result of sql.matchAll(regExp)) {
-    const { type, schema, table, tableWithSchema, partition } =
+    const { type, schema, name, nameWithSchema, partition } =
       result.groups ?? {};
-    if (!type || !(table || tableWithSchema)) continue;
+    if (!type || !(name || nameWithSchema)) continue;
     _objects.push({
       type: type.toLowerCase(),
       schema: getSQLValue(schema || getDefaultSchema(driver)),
-      name: getSQLValue(table || tableWithSchema),
+      name: getSQLValue(name || nameWithSchema),
       isPartition: !!partition,
     });
   }

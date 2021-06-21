@@ -1,5 +1,6 @@
 // type definition for all custom commands
 declare namespace Cypress {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface Chainable<Subject> {
     /**
      * Custom command to select DOM element by data-test attribute.

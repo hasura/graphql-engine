@@ -11,6 +11,7 @@ const rqlQueryTypes = [
   'update',
   'run_sql',
   'mssql_run_sql',
+  'citus_run_sql',
 ];
 
 type Query = {

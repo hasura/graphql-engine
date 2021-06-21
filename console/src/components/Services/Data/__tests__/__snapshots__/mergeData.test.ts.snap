@@ -1,0 +1,236 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`verify merge data for citus citus with no tables 1`] = `Array []`;
+
+exports[`verify merge data for citus citus with relationships and foreign key 1`] = `
+Array [
+  Object {
+    "check_constraints": Array [],
+    "citus_table_type": "local",
+    "columns": Array [
+      Object {
+        "column_default": "nextval('users_id_seq'::regclass)",
+        "column_name": "id",
+        "comment": null,
+        "data_type": "integer",
+        "data_type_name": "int4",
+        "is_nullable": "NO",
+        "ordinal_position": 1,
+        "table_name": "users",
+        "table_schema": "public",
+      },
+      Object {
+        "column_default": null,
+        "column_name": "name",
+        "comment": null,
+        "data_type": "text",
+        "data_type_name": "text",
+        "is_nullable": "NO",
+        "ordinal_position": 2,
+        "table_name": "users",
+        "table_schema": "public",
+      },
+    ],
+    "comment": null,
+    "computed_fields": Array [],
+    "configuration": Object {},
+    "foreign_key_constraints": Array [],
+    "is_enum": false,
+    "is_table_tracked": true,
+    "opp_foreign_key_constraints": Array [
+      Object {
+        "column_mapping": Object {
+          "user_id": "id",
+        },
+        "constraint_name": "posts_user_id_fkey",
+        "is_ref_table_tracked": true,
+        "is_table_tracked": true,
+        "on_delete": "r",
+        "on_update": "r",
+        "ref_table": "users",
+        "ref_table_table_schema": "public",
+        "table_name": "posts",
+        "table_schema": "public",
+      },
+    ],
+    "permissions": Array [],
+    "primary_key": Object {
+      "columns": Array [
+        "id",
+      ],
+      "constraint_name": "users_pkey",
+      "table_name": "users",
+      "table_schema": "public",
+    },
+    "relationships": Array [
+      Object {
+        "rel_def": Object {
+          "foreign_key_constraint_on": Object {
+            "column": "user_id",
+            "table": Object {
+              "name": "posts",
+              "schema": "public",
+            },
+          },
+        },
+        "rel_name": "posts",
+        "rel_type": "array",
+        "table_name": "users",
+        "table_schema": "public",
+      },
+    ],
+    "remote_relationships": Array [],
+    "table_name": "users",
+    "table_schema": "public",
+    "table_type": "TABLE",
+    "triggers": Array [],
+    "unique_constraints": Array [],
+    "view_info": null,
+  },
+  Object {
+    "check_constraints": Array [],
+    "citus_table_type": "local",
+    "columns": Array [
+      Object {
+        "column_default": "nextval('posts_id_seq'::regclass)",
+        "column_name": "id",
+        "comment": null,
+        "data_type": "integer",
+        "data_type_name": "int4",
+        "is_nullable": "NO",
+        "ordinal_position": 1,
+        "table_name": "posts",
+        "table_schema": "public",
+      },
+      Object {
+        "column_default": null,
+        "column_name": "user_id",
+        "comment": null,
+        "data_type": "integer",
+        "data_type_name": "int4",
+        "is_nullable": "NO",
+        "ordinal_position": 3,
+        "table_name": "posts",
+        "table_schema": "public",
+      },
+      Object {
+        "column_default": null,
+        "column_name": "post",
+        "comment": null,
+        "data_type": "text",
+        "data_type_name": "text",
+        "is_nullable": "NO",
+        "ordinal_position": 2,
+        "table_name": "posts",
+        "table_schema": "public",
+      },
+    ],
+    "comment": null,
+    "computed_fields": Array [],
+    "configuration": Object {},
+    "foreign_key_constraints": Array [
+      Object {
+        "column_mapping": Object {
+          "user_id": "id",
+        },
+        "constraint_name": "posts_user_id_fkey",
+        "is_ref_table_tracked": true,
+        "is_table_tracked": true,
+        "on_delete": "r",
+        "on_update": "r",
+        "ref_table": "users",
+        "ref_table_table_schema": "public",
+        "table_name": "posts",
+        "table_schema": "public",
+      },
+    ],
+    "is_enum": false,
+    "is_table_tracked": true,
+    "opp_foreign_key_constraints": Array [],
+    "permissions": Array [],
+    "primary_key": Object {
+      "columns": Array [
+        "id",
+      ],
+      "constraint_name": "posts_pkey",
+      "table_name": "posts",
+      "table_schema": "public",
+    },
+    "relationships": Array [
+      Object {
+        "rel_def": Object {
+          "foreign_key_constraint_on": "user_id",
+        },
+        "rel_name": "user",
+        "rel_type": "object",
+        "table_name": "posts",
+        "table_schema": "public",
+      },
+    ],
+    "remote_relationships": Array [],
+    "table_name": "posts",
+    "table_schema": "public",
+    "table_type": "TABLE",
+    "triggers": Array [],
+    "unique_constraints": Array [],
+    "view_info": null,
+  },
+]
+`;
+
+exports[`verify merge data for citus citus with table 1`] = `
+Array [
+  Object {
+    "check_constraints": Array [],
+    "citus_table_type": "local",
+    "columns": Array [
+      Object {
+        "column_default": "nextval('users_id_seq'::regclass)",
+        "column_name": "id",
+        "comment": null,
+        "data_type": "integer",
+        "data_type_name": "int4",
+        "is_nullable": "NO",
+        "ordinal_position": 1,
+        "table_name": "users",
+        "table_schema": "public",
+      },
+      Object {
+        "column_default": null,
+        "column_name": "name",
+        "comment": null,
+        "data_type": "text",
+        "data_type_name": "text",
+        "is_nullable": "NO",
+        "ordinal_position": 2,
+        "table_name": "users",
+        "table_schema": "public",
+      },
+    ],
+    "comment": null,
+    "computed_fields": Array [],
+    "configuration": Object {},
+    "foreign_key_constraints": Array [],
+    "is_enum": false,
+    "is_table_tracked": true,
+    "opp_foreign_key_constraints": Array [],
+    "permissions": Array [],
+    "primary_key": Object {
+      "columns": Array [
+        "id",
+      ],
+      "constraint_name": "users_pkey",
+      "table_name": "users",
+      "table_schema": "public",
+    },
+    "relationships": Array [],
+    "remote_relationships": Array [],
+    "table_name": "users",
+    "table_schema": "public",
+    "table_type": "TABLE",
+    "triggers": Array [],
+    "unique_constraints": Array [],
+    "view_info": null,
+  },
+]
+`;

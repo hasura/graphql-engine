@@ -54,7 +54,7 @@ export const makeConnectionStringFromConnectionParams = ({
   if (password) {
     tPassword = password.trim();
   }
-  if (dbType === 'postgres') {
+  if (dbType === 'postgres' || dbType === 'citus') {
     if (!password) {
       return `postgresql://${tUserName}@${tHost}:${tPort}/${tDatabase}`;
     }

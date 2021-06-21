@@ -15,6 +15,7 @@ import {
 import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
 import { isStringArray } from '../../../Common/utils/jsUtils';
 import { generateTableDef } from '../../../../dataSources';
+import { getTableConfiguration } from './utils';
 
 const E_SET_EDITITEM = 'EditItem/E_SET_EDITITEM';
 const E_ONGOING_REQ = 'EditItem/E_ONGOING_REQ';
@@ -31,10 +32,11 @@ const modalClose = () => ({ type: MODAL_CLOSE });
 /* ****************** edit action creators ************ */
 const editItem = (tableName, colValues) => {
   return (dispatch, getState) => {
-    const state = getState();
-
+    const { tables, metadata } = getState();
+    const sources = metadata.metadataObject?.sources;
+    const tableConfiguration = getTableConfiguration(tables, sources);
     /* Type all the values correctly */
-    const { currentSchema, allSchemas, currentDataSource } = state.tables;
+    const { currentSchema, allSchemas, currentDataSource } = tables;
 
     const tableDef = generateTableDef(tableName, currentSchema);
 
@@ -108,23 +110,29 @@ const editItem = (tableName, colValues) => {
       });
     }
 
-    const reqBody = {
-      type: 'update',
-      args: {
-        source: currentDataSource,
-        table: tableDef,
-        $set: _setObject,
-        $default: _defaultArray,
-        where: state.tables.update.pkClause,
-      },
-    };
+    if (!dataSource.generateEditRowRequest) return;
+
+    const {
+      getEditRowRequestBody,
+      processEditData,
+      endpoint: url,
+    } = dataSource.generateEditRowRequest();
+
+    const reqBody = getEditRowRequestBody({
+      source: currentDataSource,
+      tableDef,
+      tableConfiguration,
+      set: _setObject,
+      defaultArray: _defaultArray,
+      where: tables.update.pkClause,
+    });
+
     const options = {
       method: 'POST',
       credentials: globalCookiePolicy,
       headers: dataHeaders(getState),
       body: JSON.stringify(reqBody),
     };
-    const url = Endpoints.query;
 
     return dispatch(
       requestAction(url, options, E_REQUEST_SUCCESS, E_REQUEST_ERROR)
@@ -133,7 +141,8 @@ const editItem = (tableName, colValues) => {
         dispatch(
           showSuccessNotification(
             'Edited!',
-            'Affected rows: ' + data.affected_rows
+            'Affected rows: ' +
+              processEditData({ data, tableDef, tableConfiguration })
           )
         );
       },
