@@ -94,6 +94,17 @@ func (d *Driver) ApplySeedsToDatabase(fs afero.Fs, rootSeedsDirectory string, fi
 			}
 			args = append(args, request)
 		}
+	case hasura.SourceKindCitus:
+		for _, sql := range sqlAsBytes {
+			request := hasura.RequestBody{
+				Type: "citus_run_sql",
+				Args: hasura.CitusRunSQLInput{
+					SQL:    string(sql),
+					Source: source.Name,
+				},
+			}
+			args = append(args, request)
+		}
 	default:
 		return fmt.Errorf("database %s of kind %s is not supported", source.Name, source.Kind)
 	}
