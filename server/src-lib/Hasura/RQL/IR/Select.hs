@@ -81,7 +81,7 @@ data AnnSelectG (b :: BackendType) a v
   , _asnPerm     :: !(TablePermG b v)
   , _asnArgs     :: !(SelectArgsG b v)
   , _asnStrfyNum :: !Bool
-  }
+  } deriving (Generic)
 
 deriving instance
   ( Show (BooleanOperators b v)
@@ -96,6 +96,13 @@ deriving instance
   , Eq v
   , Eq a
   ) => Eq (AnnSelectG b a v)
+
+instance
+  ( Hashable (BooleanOperators b v)
+  , Backend b
+  , Hashable v
+  , Hashable a
+  ) => Hashable (AnnSelectG b a v)
 
 type AnnSimpleSelG       b r v = AnnSelectG b (AnnFieldsG            b r v) v
 type AnnAggregateSelectG b r v = AnnSelectG b (TableAggregateFieldsG b r v) v
@@ -138,7 +145,7 @@ data ConnectionSelect (b :: BackendType) (r :: BackendType -> Type) v
   , _csSplit             :: !(Maybe (NE.NonEmpty (ConnectionSplit b v)))
   , _csSlice             :: !(Maybe ConnectionSlice)
   , _csSelect            :: !(AnnSelectG b (ConnectionFields b r v) v)
-  }
+  } deriving (Generic)
 
 deriving instance
   ( Show (BooleanOperators b v)
@@ -153,6 +160,13 @@ deriving instance
   , Eq v
   , Eq (r b)
   ) => Eq (ConnectionSelect b r v)
+
+instance
+  ( Hashable (BooleanOperators b v)
+  , Backend b
+  , Hashable v
+  , Hashable (r b)
+  ) => Hashable (ConnectionSelect b r v)
 
 data ConnectionSplit (b :: BackendType) v
   = ConnectionSplit
@@ -330,6 +344,7 @@ data AnnFieldG (b :: BackendType) (r :: BackendType -> Type) v
   | AFRemote !(r b)
   | AFNodeId !(XRelay b) !(TableName b) !(PrimaryKeyColumns b)
   | AFExpression !Text
+  deriving (Generic)
 
 deriving instance
   ( Show (BooleanOperators b v)
@@ -344,6 +359,13 @@ deriving instance
   , Eq v
   , Eq (r b)
   ) => Eq (AnnFieldG b r v)
+
+instance
+  ( Hashable (BooleanOperators b v)
+  , Backend b
+  , Hashable v
+  , Hashable (r b)
+  ) => Hashable (AnnFieldG b r v)
 
 type AnnField  b = AnnFieldG  b (Const Void) (SQLExpression b)
 type AnnFields b = AnnFieldsG b (Const Void) (SQLExpression b)
@@ -388,6 +410,7 @@ data TableAggregateFieldG (b :: BackendType) (r :: BackendType -> Type) v
   = TAFAgg !(AggregateFields b)
   | TAFNodes (XNodesAgg b) !(AnnFieldsG b r v)
   | TAFExp !Text
+  deriving (Generic)
 
 deriving instance
   ( Show (BooleanOperators b v)
@@ -403,24 +426,36 @@ deriving instance
   , Eq (r b)
   ) => Eq (TableAggregateFieldG b r v)
 
+instance
+  ( Hashable (BooleanOperators b v)
+  , Backend b
+  , Hashable v
+  , Hashable (r b)
+  ) => Hashable (TableAggregateFieldG b r v)
+
 data AggregateField (b :: BackendType)
   = AFCount !(CountType b)
   | AFOp !(AggregateOp b)
   | AFExp !Text
+  deriving (Generic)
 deriving instance (Backend b) => Show (AggregateField b)
 deriving instance (Backend b) => Eq (AggregateField b)
+instance (Backend b) => Hashable (AggregateField b)
 
 data AggregateOp (b :: BackendType)
   = AggregateOp
   { _aoOp     :: !Text
   , _aoFields :: !(ColumnFields b)
-  } deriving (Show, Eq)
+  } deriving (Generic, Show, Eq)
+instance (Backend b) => Hashable (AggregateOp b)
 
 data ColFld (b :: BackendType)
   = CFCol !(Column b) !(ColumnType b)
   | CFExp !Text
+  deriving (Generic)
 deriving instance (Backend b) => Show (ColFld b)
 deriving instance (Backend b) => Eq (ColFld b)
+instance (Backend b) => Hashable (ColFld b)
 
 type TableAggregateField   b     = TableAggregateFieldG  b (Const Void) (SQLExpression b)
 type TableAggregateFields  b     = TableAggregateFieldsG b (Const Void) (SQLExpression b)
@@ -447,6 +482,7 @@ data ConnectionField (b :: BackendType) (r :: BackendType -> Type) v
   = ConnectionTypename !Text
   | ConnectionPageInfo !PageInfoFields
   | ConnectionEdges !(EdgeFields b r v)
+  deriving (Generic)
 
 deriving instance
   ( Show (BooleanOperators b v)
@@ -462,18 +498,28 @@ deriving instance
   , Eq (r b)
   ) => Eq (ConnectionField b r v)
 
+instance
+  ( Hashable (BooleanOperators b v)
+  , Backend b
+  , Hashable v
+  , Hashable (r b)
+  ) => Hashable (ConnectionField b r v)
+
 data PageInfoField
   = PageInfoTypename !Text
   | PageInfoHasNextPage
   | PageInfoHasPreviousPage
   | PageInfoStartCursor
   | PageInfoEndCursor
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+
+instance Hashable PageInfoField
 
 data EdgeField (b :: BackendType) (r :: BackendType -> Type) v
   = EdgeTypename !Text
   | EdgeCursor
   | EdgeNode !(AnnFieldsG b r v)
+  deriving (Generic)
 
 deriving instance
   ( Show (BooleanOperators b v)
@@ -488,6 +534,13 @@ deriving instance
   , Eq v
   , Eq (r b)
   ) => Eq (EdgeField b r v)
+
+instance
+  ( Hashable (BooleanOperators b v)
+  , Backend b
+  , Hashable v
+  , Hashable (r b)
+  ) => Hashable (EdgeField b r v)
 
 type ConnectionFields b r v = Fields (ConnectionField b r v)
 
@@ -541,7 +594,7 @@ data AnnColumnField (b :: BackendType) v
   -- will be outputted as computed and when the value is `Just c`, the
   -- column will be outputted when `c` evaluates to `true` and `null`
   -- when `c` evaluates to `false`.
-  }
+  } deriving (Generic)
 
 deriving instance
   ( Show (BooleanOperators b v)
@@ -555,14 +608,21 @@ deriving instance
   , Eq v
   ) => Eq (AnnColumnField b v)
 
+instance
+  ( Hashable (BooleanOperators b v)
+  , Backend b
+  , Hashable v
+  ) => Hashable (AnnColumnField b v)
+
 data ColumnOp (b :: BackendType)
   = ColumnOp
   { _colOp  :: SQLOperator b
   , _colExp :: SQLExpression b
-  }
+  } deriving (Generic)
 
 deriving instance Backend b => Show (ColumnOp b)
 deriving instance Backend b => Eq   (ColumnOp b)
+instance Backend b => Hashable (ColumnOp b)
 
 traverseAnnColumnField
   :: (Applicative f, Backend backend)
@@ -582,9 +642,10 @@ data ComputedFieldScalarSelect (b :: BackendType) v
   , _cfssArguments :: !(FunctionArgsExpTableRow b v)
   , _cfssType      :: !(ScalarType b)
   , _cfssColumnOp  :: !(Maybe (ColumnOp b))
-  } deriving (Functor, Foldable, Traversable)
+  } deriving (Functor, Foldable, Traversable, Generic)
 deriving instance (Backend b, Show v) => Show (ComputedFieldScalarSelect b v)
 deriving instance (Backend b, Eq   v) => Eq   (ComputedFieldScalarSelect b v)
+instance (Backend b, Hashable   v) => Hashable   (ComputedFieldScalarSelect b v)
 
 data ComputedFieldSelect (b :: BackendType) (r :: BackendType -> Type) v
   = CFSScalar
@@ -597,6 +658,7 @@ data ComputedFieldSelect (b :: BackendType) (r :: BackendType -> Type) v
       -- value is `Just c`, the scalar computed field will be outputted when
       -- `c` evaluates to `true` and `null` when `c` evaluates to `false`
   | CFSTable !JsonAggSelect !(AnnSimpleSelG b r v)
+  deriving (Generic)
 
 deriving instance
   ( Show (BooleanOperators b v)
@@ -611,6 +673,13 @@ deriving instance
   , Eq v
   , Eq (r b)
   ) => Eq (ComputedFieldSelect b r v)
+
+instance
+  ( Hashable (BooleanOperators b v)
+  , Backend b
+  , Hashable v
+  , Hashable (r b)
+  ) => Hashable (ComputedFieldSelect b r v)
 
 traverseComputedFieldSelect
   :: (Applicative f, Backend backend)
@@ -630,7 +699,7 @@ data AnnRelationSelectG (b :: BackendType) a
   { aarRelationshipName :: !RelName -- Relationship name
   , aarColumnMapping    :: !(HashMap (Column b) (Column b)) -- Column of left table to join with
   , aarAnnSelect        :: !a -- Current table. Almost ~ to SQL Select
-  } deriving  (Functor, Foldable, Traversable)
+  } deriving  (Functor, Foldable, Traversable, Generic)
 
 deriving instance
   ( Backend b
@@ -642,6 +711,11 @@ deriving instance
   , Eq v
   ) => Eq (AnnRelationSelectG b v)
 
+instance
+  ( Backend b
+  , Hashable v
+  ) => Hashable (AnnRelationSelectG b v)
+
 type ArrayRelationSelectG  b r v = AnnRelationSelectG b (AnnSimpleSelG       b r v)
 type ArrayAggregateSelectG b r v = AnnRelationSelectG b (AnnAggregateSelectG b r v)
 type ArrayConnectionSelect b r v = AnnRelationSelectG b (ConnectionSelect    b r v)
@@ -652,7 +726,7 @@ data AnnObjectSelectG (b :: BackendType) (r :: BackendType -> Type) v
   { _aosFields      :: !(AnnFieldsG b r v)
   , _aosTableFrom   :: !(TableName b)
   , _aosTableFilter :: !(AnnBoolExp b v)
-  }
+  } deriving (Generic)
 
 deriving instance
   ( Show (BooleanOperators b v)
@@ -667,6 +741,13 @@ deriving instance
   , Eq v
   , Eq (r b)
   ) => Eq (AnnObjectSelectG b r v)
+
+instance
+  ( Hashable (BooleanOperators b v)
+  , Backend b
+  , Hashable v
+  , Hashable (r b)
+  ) => Hashable (AnnObjectSelectG b r v)
 
 type AnnObjectSelect b r = AnnObjectSelectG b r (SQLExpression b)
 
@@ -689,6 +770,7 @@ data ArraySelectG (b :: BackendType) (r :: BackendType -> Type) v
   = ASSimple     !(ArrayRelationSelectG  b r v)
   | ASAggregate  !(ArrayAggregateSelectG b r v)
   | ASConnection !(ArrayConnectionSelect b r v)
+  deriving (Generic)
 
 deriving instance
   ( Show (BooleanOperators b v)
@@ -703,6 +785,13 @@ deriving instance
   , Eq v
   , Eq (r b)
   ) => Eq (ArraySelectG b r v)
+
+instance
+  ( Hashable (BooleanOperators b v)
+  , Backend b
+  , Hashable v
+  , Hashable (r b)
+  ) => Hashable (ArraySelectG b r v)
 
 type ArraySelect b = ArraySelectG b (Const Void) (SQLExpression b)
 type ArraySelectFieldsG b r v = Fields (ArraySelectG b r v)
@@ -747,6 +836,7 @@ data SourceRelationshipSelection
   = SourceRelationshipObject !(AnnObjectSelectG b r (vf b))
   | SourceRelationshipArray !(AnnSimpleSelG b r (vf b))
   | SourceRelationshipArrayAggregate !(AnnAggregateSelectG b r (vf b))
+  deriving (Generic)
 
 deriving instance
   ( Show (BooleanOperators b (v b))
@@ -761,6 +851,13 @@ deriving instance
   , Eq (v b)
   , Eq (r b)
   ) => Eq (SourceRelationshipSelection b r v)
+
+instance
+  ( Hashable (BooleanOperators b (v b))
+  , Backend b
+  , Hashable (v b)
+  , Hashable (r b)
+  ) => Hashable (SourceRelationshipSelection b r v)
 
 data RemoteSourceSelect
     (src :: BackendType)
