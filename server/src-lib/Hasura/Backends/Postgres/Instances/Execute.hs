@@ -105,18 +105,23 @@ executeRemoteRelationshipPG requestId logger userInfo sourceName sourceConfig
 
   where
 
-    joinColumnMapping = mapKeys (PG.unsafePGCol . getFieldNameTxt) lhsSchema
+    coerceToColumn = PG.unsafePGCol . getFieldNameTxt
+
+    joinColumnMapping = mapKeys coerceToColumn lhsSchema
 
     rowsArgument :: UnpreparedValue ('Postgres pgKind)
     rowsArgument =
       UVParameter Nothing $ ColumnValue (ColumnScalar PG.PGJSONB) $
         PG.PGValJSONB $ Q.JSONB $ J.toJSON lhs
     jsonToRecordSet :: SelectFromG ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+
+    recordSetDefinitionList =
+      ((coerceToColumn argumentId, PG.PGBigInt):Map.toList (fmap snd joinColumnMapping))
     jsonToRecordSet =
       IR.FromFunction
         (PG.QualifiedObject "pg_catalog" $ PG.FunctionName "jsonb_to_recordset")
         (IR.FunctionArgsExp [IR.AEInput rowsArgument] mempty)
-        (Just $ Map.toList $ fmap snd joinColumnMapping)
+        (Just recordSetDefinitionList)
 
     argumentIdColumnInfo =
       ColumnInfo { pgiColumn = PG.unsafePGCol $ getFieldNameTxt argumentId

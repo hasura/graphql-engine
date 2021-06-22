@@ -139,7 +139,8 @@ class ( Backend b
 -- implement executeRemoteRelationship function in databases which support
 -- constructing a temporary table for a list of json objects.
 convertRemoteSourceRelationship
-  :: Map.HashMap (Column b) (Column b)
+  :: forall b. (Backend b)
+  => Map.HashMap (Column b) (Column b)
   -- ^ Join columns for the relationship
   -> SelectFromG b (UnpreparedValue b)
   -- ^ The LHS of the join, this is the expression which selects from json
@@ -168,7 +169,7 @@ convertRemoteSourceRelationship columnMapping selectFrom argumentIdColumn
         AFArrayRelation $ ASAggregate $ AnnRelationSelectG relName columnMapping s
 
     argumentIdField =
-      ( FieldName "__argument__id"
+      ( fromCol @b $ pgiColumn argumentIdColumn
       , AFColumn $
         AnnColumnField { _acfInfo = argumentIdColumn
                        , _acfAsText = False

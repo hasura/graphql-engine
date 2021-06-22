@@ -142,8 +142,7 @@ processRemoteJoins_ requestId logger env manager reqHdrs userInfo lhs joinTree =
                 "failed to lookup relationship data "
                 <> "(aliased as 'f') from source's response"
             argumentIdValue <- onNothing (AO.lookup "__argument_id__" o) $ throw500 $
-                "failed to lookup relationship data "
-                <> "(aliased as 'f') from source's response"
+                "failed to lookup __argument_id__ from source's response"
             argumentId <- case argumentIdValue of
               AO.Number n ->
                 onNothing (Scientific.toBoundedInteger n) $
