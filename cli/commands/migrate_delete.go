@@ -9,7 +9,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/migrate"
 	mig "github.com/hasura/graphql-engine/cli/v2/migrate/cmd"
 	"github.com/hasura/graphql-engine/cli/v2/util"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -22,10 +21,10 @@ func newMigrateDeleteCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Short: "(PREVIEW) clear migrations from local project and server",
 		Example: `
   # Usage to delete a version:
-  hasura migrate delete --version <version_delete> --database-name default
+  hasura migrate delete --version <version_delete> --database-name <database-name>
   
   # Usage to delete all versions
-   hasura migrate delete --all`,
+   hasura migrate delete --all --database-name <database-name>`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Logger.Warn("[PREVIEW] this command is in preview. usage may change in future\n")
@@ -38,6 +37,11 @@ func newMigrateDeleteCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if cmd.Flags().Changed("all") && cmd.Flags().Changed("version") {
 				return fmt.Errorf("only one of [--all , --version] should be set")
 			}
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			// exit if user inputs n for clearing migrations
 			if cmd.Flags().Changed("all") && !opts.force {
 				confirmation, err := util.GetYesNoPrompt("clear all migrations of database and it's history on the server?")
 				if err != nil {
@@ -47,9 +51,7 @@ func newMigrateDeleteCmd(ec *cli.ExecutionContext) *cobra.Command {
 					return nil
 				}
 			}
-			return nil
-		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+
 			opts.Source = ec.Source
 			if ec.Config.Version >= cli.V3 {
 				var err error
@@ -75,15 +77,17 @@ func newMigrateDeleteCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.Uint64Var(&opts.version, "version", 0, "deletes the specified version in migrations")
 	f.BoolVar(&opts.all, "all", false, "clears all migrations for selected database")
 	f.BoolVar(&opts.force, "force", false, "when set executes operation without any confirmation")
+	f.BoolVar(&opts.onlyServer, "server", false, "to reset migrations only on server")
 
 	return migrateDeleteCmd
 }
 
 type MigrateDeleteOptions struct {
-	EC      *cli.ExecutionContext
-	version uint64
-	all     bool
-	force   bool
+	EC         *cli.ExecutionContext
+	version    uint64
+	all        bool
+	force      bool
+	onlyServer bool
 
 	Source cli.Source
 }
@@ -102,18 +106,17 @@ func (o *MigrateDeleteOptions) Run() error {
 		return fmt.Errorf("error while retrieving migration status %w", err)
 	}
 
+	// sourceVersions migration versions in source to be deleted similarly with serverVersions
+	var sourceVersions, serverVersions []uint64
+
 	if !o.all {
+		// if o.version isn't present on source and on server return error version isn't present.
 		if _, ok := status.Migrations[o.version]; !ok {
 			return fmt.Errorf("version %v not found", o.version)
 		}
-		err := DeleteVersions(o.EC, []uint64{o.version}, o.Source)
-		if err != nil {
-			o.EC.Logger.Warn(errors.Wrap(err, "error in deletion of migration in source"))
-		}
-		versions := []uint64{o.version}
-		err = migrateDrv.RemoveVersions(versions)
+		sourceVersions = []uint64{o.version}
+		serverVersions = []uint64{o.version}
 	} else if o.all {
-		var sourceVersions, serverVersions []uint64
 		for k, v := range status.Migrations {
 			if v.IsApplied {
 				serverVersions = append(serverVersions, k)
@@ -122,17 +125,22 @@ func (o *MigrateDeleteOptions) Run() error {
 				sourceVersions = append(sourceVersions, k)
 			}
 		}
-		// delete version history on server
-		err = migrateDrv.RemoveVersions(serverVersions)
-		if err != nil {
-			return fmt.Errorf("error removing migration from server: %w", err)
-		}
-		// delete migrations history in project
+	}
+
+	// resets the migrations on server
+	err = migrateDrv.RemoveVersions(serverVersions)
+	if err != nil {
+		return fmt.Errorf("error removing migration from server: %w", err)
+	}
+
+	// removes the migrations on source
+	if !o.onlyServer {
 		err = DeleteVersions(o.EC, sourceVersions, o.Source)
 		if err != nil {
-			return fmt.Errorf("error removing migration from project: %w", err)
+			return fmt.Errorf("error removing migrations from project: %w", err)
 		}
 	}
+
 	o.EC.Logger.Infof("Deleted migrations")
 	return nil
 }

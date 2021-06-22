@@ -34,7 +34,21 @@ You can use the following command:
 Step 2: Reset the migration history on the server
 -------------------------------------------------
 
-`coming soon`
+To reset the migrations status on the server only, use:
+
+.. code-block:: bash
+
+   # reset migrations on server only
+
+   hasura migrate delete --all --server --database-name <database-name>
+
+To reset the migrations status on server and clean up the local project migration files
+
+.. code-block:: bash
+
+   # reset migrations on server and on local project, use:
+
+   hasura migrate delete --all --database-name <database-name>
 
 Step 3: Pull the schema and metadata from the server
 ----------------------------------------------------
