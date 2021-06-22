@@ -79,7 +79,7 @@ An example request as follows:
 .. _update_remote_schema:
 
 update_remote_schema
------------------
+--------------------
 
 ``update_remote_schema`` is used to update the configuration of a remote schema. If the remote schema URL has changed 
 then it will perform a introspection as well. After introspection, if there are any inconsistencies detected with other 

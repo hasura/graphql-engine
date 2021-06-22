@@ -177,10 +177,12 @@ Args syntax
      - :ref:`SourceName <SourceName>`
      - Name of the database
 
+.. _mssql_add_source:
+
 mssql_add_source
 ----------------
 
-``mssql_add_source`` is used to connect a MS SQL Server database to Hasura.
+``mssql_add_source`` is used to connect an MS SQL Server database to Hasura.
 
 Add a database with name ``mssql1``:
 
@@ -239,7 +241,7 @@ Args syntax
 mssql_drop_source
 -----------------
 
-``mssql_drop_source`` is used to remove a MS SQL Server database from Hasura.
+``mssql_drop_source`` is used to remove an MS SQL Server database from Hasura.
 
 Remove a database with name ``mssql1``:
 

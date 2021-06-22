@@ -50,7 +50,7 @@ Creating views
           hasura migrate apply
 
   .. tab:: API
-    .. TODO: BROKEN_LINK
+    
     You can add a view by using the :ref:`schema_run_sql metadata API <schema_run_sql>`:
 
     .. code-block:: http
@@ -60,8 +60,9 @@ Creating views
       X-Hasura-Role: admin
 
       {
-        "type": "schema_run_sql",
+        "type": "run_sql",
         "args": {
+          "source": "<db-name>",
           "sql": "<create view statement>"
         }
       }
@@ -110,7 +111,7 @@ In order to expose a view over the GraphQL API, it needs to be **tracked**.
         hasura metadata apply
 
   .. tab:: API
-    .. TODO: BROKEN_LINK
+    
     To track the view and expose it over the GraphQL API, make the following API call to the :ref:`mssql_track_table metadata API <mssql_track_table>`:
 
     .. code-block:: http
@@ -125,21 +126,6 @@ In order to expose a view over the GraphQL API, it needs to be **tracked**.
           "table": "authors",
           "source": "default",
           "schema": "dbo",
-          "name": "<name of view>"
-        }
-      }
-
-    .. CODEBACKUP
-      .. code-block:: http
-
-      POST /v1/query HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "type": "track_table",
-        "args": {
-          "schema": "public",
           "name": "<name of view>"
         }
       }
