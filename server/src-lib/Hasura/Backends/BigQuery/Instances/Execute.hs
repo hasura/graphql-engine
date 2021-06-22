@@ -39,7 +39,7 @@ instance BackendExecute 'BigQuery where
   explainLiveQuery _ =
     throwError $ E.internalError "Cannot currently retrieve query execution plans on BigQuery sources."
   executeMultiplexedQuery = error "Not supported."
-
+  executeRemoteRelationship = undefined
 
 -- query
 
@@ -61,7 +61,7 @@ bqDBQueryPlan
   -> SourceConfig 'BigQuery
   -> QueryDB 'BigQuery (Const Void) (UnpreparedValue 'BigQuery)
   -> m EncJSON
-bqDBQueryPlan requestId logger userInfo sourceName sourceConfig qrf = do
+bqDBQueryPlan _requestId _logger userInfo _sourceName sourceConfig qrf = do
   select <- planNoPlan userInfo qrf
   let (!headAndTail, !plannedActionsList) =
         DataLoader.runPlan
@@ -140,7 +140,7 @@ bqDBQueryExplain
   -> SourceConfig 'BigQuery
   -> QueryDB 'BigQuery (Const Void) (UnpreparedValue 'BigQuery)
   -> m EncJSON
-bqDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
+bqDBQueryExplain fieldName userInfo _sourceName _sourceConfig qrf = do
   actionsForest <- planToForest userInfo qrf
   pure $ encJFromJValue $ ExplainPlan
     fieldName

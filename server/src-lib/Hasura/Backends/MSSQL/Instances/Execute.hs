@@ -23,7 +23,6 @@ import qualified Language.GraphQL.Draft.Syntax         as G
 import           Data.String                           (fromString)
 
 import qualified Hasura.RQL.Types                      as RQL
-import qualified Hasura.RQL.Types.Column               as RQL
 
 import           Hasura.Backends.MSSQL.Connection
 import           Hasura.Backends.MSSQL.FromIr          as TSQL
@@ -37,9 +36,9 @@ import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Parser
 import           Hasura.RQL.IR
+import           Hasura.SQL.Backend
 import           Hasura.Server.Types                   (RequestId)
 import           Hasura.Session
-import           Hasura.SQL.Backend
 
 
 instance BackendExecute 'MSSQL where
@@ -86,13 +85,12 @@ runInboundRelationship
   -- ^ The above objects have this schema
   -> (RQL.FieldName, SourceRelationshipSelection 'MSSQL (Const Void) UnpreparedValue)
   -> m EncJSON
-runInboundRelationship requestId logger userInfo sourceName sourceConfig
+runInboundRelationship _requestId _logger userInfo _sourceName sourceConfig
   lhs lhsSchema argumentId relationship = do
 
   let sessionVariables = _uiSession userInfo
   statement <- planSourceRelationship sessionVariables lhs lhsSchema argumentId relationship
   let printer = fromSelect statement
-      queryString = ODBC.renderQuery $ toQueryPretty printer
       pool  = _mscConnectionPool sourceConfig
       odbcQuery = encJFromText <$> runJSONPathQuery pool (toQueryFlat printer)
   run odbcQuery
@@ -109,11 +107,10 @@ msDBQueryPlan
   -> RQL.SourceConfig 'MSSQL
   -> QueryDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL)
   -> m EncJSON
-msDBQueryPlan requestId logger userInfo sourceName sourceConfig qrf = do
+msDBQueryPlan _requestId _logger userInfo _sourceName sourceConfig qrf = do
   let sessionVariables = _uiSession userInfo
   statement <- planQuery sessionVariables qrf
   let printer = fromSelect statement
-      queryString = ODBC.renderQuery $ toQueryPretty printer
       pool  = _mscConnectionPool sourceConfig
       odbcQuery = encJFromText <$> runJSONPathQuery pool (toQueryFlat printer)
   run odbcQuery
@@ -138,7 +135,7 @@ msDBQueryExplain
   -> RQL.SourceConfig 'MSSQL
   -> QueryDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL)
   -> m EncJSON
-msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
+msDBQueryExplain fieldName userInfo _sourceName sourceConfig qrf = do
   let sessionVariables = _uiSession userInfo
   statement <- planQuery sessionVariables qrf
   let query         = toQueryPretty (fromSelect statement)

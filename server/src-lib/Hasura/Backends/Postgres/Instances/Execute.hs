@@ -151,11 +151,11 @@ pgDBQueryPlan
   -> SourceConfig ('Postgres pgKind)
   -> QueryDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> m EncJSON
-pgDBQueryPlan requestId logger userInfo sourceName sourceConfig qrf = do
+pgDBQueryPlan _requestId _logger userInfo _sourceName sourceConfig qrf = do
   (preparedQuery, PlanningSt _ _ planVals expectedVariables) <- flip runStateT initPlanningSt
     $ traverseQueryDB @('Postgres pgKind) prepareWithPlan qrf
   validateSessionVariables expectedVariables $ _uiSession userInfo
-  let (action, preparedSQL) = mkCurPlanTx userInfo $ irToRootFieldPlan planVals preparedQuery
+  let (action, _preparedSQL) = mkCurPlanTx userInfo $ irToRootFieldPlan planVals preparedQuery
   Tracing.interpTraceT id $ hoist (runQueryTx $ _pscExecCtx sourceConfig) action
 
 pgDBQueryExplain
@@ -171,7 +171,7 @@ pgDBQueryExplain
   -> SourceConfig ('Postgres pgKind)
   -> QueryDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> m EncJSON
-pgDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
+pgDBQueryExplain fieldName userInfo _sourceName sourceConfig qrf = do
   preparedQuery <- traverseQueryDB (resolveUnpreparedValue userInfo) qrf
   let PreparedSql querySQL _ = irToRootFieldPlan mempty preparedQuery
       textSQL = Q.getQueryText querySQL
@@ -312,7 +312,7 @@ pgDBMutationPlan
   -> SourceConfig ('Postgres pgKind)
   -> MutationDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> m EncJSON
-pgDBMutationPlan requestId logger userInfo stringifyNum sourceName sourceConfig mrf = do
+pgDBMutationPlan _requestId _logger userInfo stringifyNum _sourceName sourceConfig mrf = do
   tx <- pgMutationRootFieldTransaction userInfo stringifyNum mrf
   runMutationTx userInfo sourceConfig tx
 
@@ -427,7 +427,7 @@ runPGMutationTransaction
   -> Bool
   -> InsOrdHashMap G.Name (MutationDBRoot (Const Void) UnpreparedValue ('Postgres 'Vanilla))
   -> m EncJSON
-runPGMutationTransaction reqId logger userInfo sourceConfig stringifyNum mutations = do
+runPGMutationTransaction _reqId _logger userInfo sourceConfig stringifyNum mutations = do
   -- logQueryLog logger $ mkQueryLog query $$(G.litName "transaction") Nothing reqId
   txs <- for mutations \(MDBR rf) ->
             -- trace ("Postgres Mutation for root field " <>> fieldName) $

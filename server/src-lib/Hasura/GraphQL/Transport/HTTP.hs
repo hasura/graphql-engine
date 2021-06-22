@@ -16,21 +16,20 @@ module Hasura.GraphQL.Transport.HTTP
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                           as Env
-import qualified Network.HTTP.Types                         as HTTP
-import qualified Network.Wai.Extended                       as Wai
+import qualified Data.Environment                       as Env
+import qualified Network.HTTP.Types                     as HTTP
+import qualified Network.Wai.Extended                   as Wai
 
-import           Control.Monad.Trans.Control                (MonadBaseControl)
+import           Control.Monad.Trans.Control            (MonadBaseControl)
 
-import qualified Hasura.GraphQL.Execute                     as E
-import qualified Hasura.GraphQL.Execute.Mutation            as EM
-import qualified Hasura.GraphQL.Execute.Query               as EQ
-import qualified Hasura.Logging                             as L
+import qualified Hasura.GraphQL.Execute                 as E
+import qualified Hasura.GraphQL.Execute.Mutation        as EM
+import qualified Hasura.GraphQL.Execute.Query           as EQ
+import qualified Hasura.Logging                         as L
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Logging                     (MonadQueryLog (logQueryLog),
-                                                             QueryLog (..), QueryLogKind (..))
+import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.ParameterizedQueryHash
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
@@ -38,10 +37,10 @@ import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Server.Init.Config
 import           Hasura.Server.Logging
-import           Hasura.Server.Types                        (RequestId)
-import           Hasura.Server.Version                      (HasVersion)
+import           Hasura.Server.Types                    (RequestId)
+import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
-import           Hasura.Tracing                             (MonadTrace, trace)
+import           Hasura.Tracing                         (MonadTrace, trace)
 
 -- | Run (execute) a single GraphQL query
 runGQ
