@@ -37,7 +37,7 @@ endif
 # compress
 .PHONY: compress
 compress:
-	ls $(OUTPUT_DIR)/$(VERSION)/cli-hasura-* | xargs upx
+	ls $(OUTPUT_DIR)/$(VERSION)/cli-hasura-* | grep -v darwin | xargs upx
 
 # to be executed in circle-ci only
 ci-copy-binary:

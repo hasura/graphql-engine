@@ -2,14 +2,15 @@ package migrate
 
 import (
 	"fmt"
-	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
-	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
-	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/migrations"
 	nurl "net/url"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/migrations"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
@@ -269,7 +270,7 @@ func copyStateToCatalogStateAPIIfRequired(ec *cli.ExecutionContext, sourceName s
 			}
 
 			if runsqlResp.ResultType != hasura.TuplesOK {
-				ec.Logger.Warn("encountered error when trying to move migrations from hdb_catalog.schema_migrations to catalog state", fmt.Errorf("invalid result Type %s", runsqlResp.ResultType),
+				ec.Logger.Debug("encountered error when trying to move migrations from hdb_catalog.schema_migrations to catalog state", fmt.Errorf("invalid result Type %s", runsqlResp.ResultType),
 					"\nnote: ignore this if you are not updating your project from config v2 -> config v3")
 				ec.Logger.Debug("marking IsStateCopyCompleted as true %w", markStateMigrationCompleted())
 				return false, nil
