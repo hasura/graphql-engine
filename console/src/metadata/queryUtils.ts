@@ -7,6 +7,7 @@ import {
   HasuraMetadataV3,
   QualifiedFunction,
   RestEndpointEntry,
+  RemoteSchemaDef,
 } from './types';
 import { transformHeaders } from '../components/Common/Headers/utils';
 import { LocalEventTriggerState } from '../components/Services/Events/EventTriggers/state';
@@ -54,6 +55,7 @@ export const metadataQueryTypes = [
   'get_inconsistent_metadata',
   'drop_inconsistent_metadata',
   'add_remote_schema',
+  'update_remote_schema',
   'remove_remote_schema',
   'reload_remote_schema',
   'introspect_remote_schema',
@@ -125,6 +127,9 @@ export const getMetadataQuery = (
       break;
     case 'bigquery':
       prefix = 'bigquery_';
+      break;
+    case 'citus':
+      prefix = 'citus_';
       break;
     case 'postgres':
     default:
@@ -824,5 +829,29 @@ export const createRESTEndpointQuery = (args: RestEndpointEntry) => ({
 
 export const dropRESTEndpointQuery = (name: string) => ({
   type: 'drop_rest_endpoint',
+  args: { name },
+});
+
+const getMetadataQueryForRemoteSchema = (queryName: 'add' | 'update') => (
+  name: string,
+  definition: RemoteSchemaDef,
+  comment?: string
+) => ({
+  type: `${queryName}_remote_schema` as MetadataQueryType,
+  args: {
+    name,
+    definition,
+    comment: comment ?? null,
+  },
+});
+
+export const addRemoteSchemaQuery = getMetadataQueryForRemoteSchema('add');
+
+export const updateRemoteSchemaQuery = getMetadataQueryForRemoteSchema(
+  'update'
+);
+
+export const removeRemoteSchemaQuery = (name: string) => ({
+  type: 'remove_remote_schema',
   args: { name },
 });

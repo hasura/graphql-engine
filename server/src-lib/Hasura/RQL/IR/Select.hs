@@ -558,15 +558,6 @@ traverseConnectionField f = \case
   ConnectionEdges fields ->
     ConnectionEdges <$> traverse (traverse (traverseEdgeField f)) fields
 
-data ArgumentExp (b :: BackendType) a
-  = AETableRow !(Maybe (Identifier b)) -- ^ table row accessor
-  | AESession !a -- ^ JSON/JSONB hasura session variable object
-  | AEInput !a
-  deriving (Functor, Foldable, Traversable, Generic)
-deriving instance (Backend b, Show a) => Show (ArgumentExp b a)
-deriving instance (Backend b, Eq   a) => Eq   (ArgumentExp b a)
-instance (Backend b, Hashable v) => Hashable (ArgumentExp b v)
-
 traverseEdgeField
   :: (Applicative f, Backend backend)
   => (a -> f b)
@@ -830,6 +821,7 @@ data RemoteSchemaSelect (b :: BackendType)
   , _rselRemoteSchema  :: !RemoteSchemaInfo
   }
 
+
 -- Remote source relationships
 
 data SourceRelationshipSelection
@@ -885,6 +877,7 @@ data RemoteSelect
   = RemoteSelectRemoteSchema !(RemoteSchemaSelect src)
   | RemoteSelectSource !(AB.AnyBackend (RemoteSourceSelect src vf))
 
+
 -- Permissions
 
 data TablePermG (b :: BackendType) v
@@ -930,6 +923,15 @@ traverseTablePerm f (TablePerm boolExp limit) =
 
 
 -- Function arguments
+
+data ArgumentExp (b :: BackendType) a
+  = AETableRow !(Maybe (Identifier b)) -- ^ table row accessor
+  | AESession !a -- ^ JSON/JSONB hasura session variable object
+  | AEInput !a
+  deriving (Functor, Foldable, Traversable, Generic)
+deriving instance (Backend b, Show a) => Show (ArgumentExp b a)
+deriving instance (Backend b, Eq   a) => Eq   (ArgumentExp b a)
+instance (Backend b, Hashable v) => Hashable (ArgumentExp b v)
 
 data FunctionArgsExpG a
   = FunctionArgsExp

@@ -1,8 +1,8 @@
-import { isEqual } from '../components/Common/utils/jsUtils';
-import { Nullable } from '../components/Common/utils/tsUtils';
-import { QualifiedTable } from '../metadata/types';
-import { FixMe } from '../types';
-import { BaseTable, CheckConstraint, Relationship, Table } from './types';
+import { isEqual } from '../../components/Common/utils/jsUtils';
+import { Nullable } from '../../components/Common/utils/tsUtils';
+import { QualifiedTable } from '../../metadata/types';
+import { FixMe } from '../../types';
+import { BaseTable, CheckConstraint, Relationship, Table } from '../types';
 
 export type Operations = 'insert' | 'select' | 'update' | 'delete';
 export const QUERY_TYPES: Operations[] = [
@@ -434,3 +434,5 @@ export const getCheckConstraintBoolExp = (check: string) => {
 
   return check;
 };
+
+export * from './graphqlUtil';

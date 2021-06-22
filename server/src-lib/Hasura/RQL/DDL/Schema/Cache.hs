@@ -55,6 +55,7 @@ import           Hasura.GraphQL.Schema                    (buildGQLContext)
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.CustomTypes
+import           Hasura.RQL.DDL.RemoteRelationship        (SourcePartialInfo (..))
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.RemoteSchema.Permission   (resolveRoleBasedRemoteSchema)
 import           Hasura.RQL.DDL.ScheduledTrigger
@@ -143,6 +144,8 @@ instance (MonadIO m, MonadError QErr m, HasHttpManagerM m
         , invalidations)
 
 
+-- FIXME: please rename me -_-
+newtype AnnotatedResolvedSource b = ARS (SourceMetadata b, ResolvedSource b, TableCoreInfoMap b)
 
 buildSchemaCacheRule
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
@@ -269,25 +272,43 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
     resolveSourceIfNeeded
       :: forall b arr m
-       . ( ArrowChoice arr, Inc.ArrowCache m arr
+       . ( ArrowChoice arr
+         , Inc.ArrowCache m arr
+         , Inc.ArrowDistribute arr
          , ArrowWriter (Seq CollectedInfo) arr
-         , MonadIO m, MonadBaseControl IO m
+         , MonadBaseControl IO m
+         , MonadIO m
          , MonadResolveSource m
          , BackendMetadata b
          )
-      => ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey)
+      => ( Inc.Dependency InvalidationKeys
+         , Inc.Dependency (HashMap SourceName Inc.InvalidationKey)
          , SourceMetadata b
-         ) `arr` Maybe (ResolvedSource b)
-    resolveSourceIfNeeded = Inc.cache proc (invalidationKeys, sourceMetadata) -> do
+         ) `arr` Maybe (AB.AnyBackend AnnotatedResolvedSource)
+    resolveSourceIfNeeded = Inc.cache proc (invalidationKeys, sourceInvalidationKeys, sourceMetadata) -> do
       let sourceName = _smName sourceMetadata
           metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
-      maybeSourceConfig <- getSourceConfigIfNeeded @b -< (invalidationKeys, sourceName, _smConfiguration sourceMetadata)
+          metadataInvalidationKey = Inc.selectD #_ikMetadata invalidationKeys
+      maybeSourceConfig <- getSourceConfigIfNeeded @b -< (sourceInvalidationKeys, sourceName, _smConfiguration sourceMetadata)
       case maybeSourceConfig of
         Nothing -> returnA -< Nothing
-        Just sourceConfig ->
-          (| withRecordInconsistency (
-             liftEitherA <<< bindA -< resolveDatabaseMetadata sourceConfig)
-          |) metadataObj
+        Just sourceConfig -> do
+          maybeSource <-
+            (| withRecordInconsistency (
+              liftEitherA <<< bindA -< resolveDatabaseMetadata sourceConfig)
+            |) metadataObj
+          case maybeSource of
+            Nothing -> returnA -< Nothing
+            Just source -> do
+              -- build table cache a bit earlier than before but that's ok
+              let (tableInputs, _, _) = unzip3 $ map mkTableInputs $ OMap.elems $ _smTables sourceMetadata
+              tablesCoreInfo <- buildTableCache -< ( sourceName
+                                                   , sourceConfig
+                                                   , _rsTables source
+                                                   , tableInputs
+                                                   , metadataInvalidationKey
+                                                   )
+              returnA -< Just $ AB.mkAnyBackend @b $ ARS (sourceMetadata, source, TCIM tablesCoreInfo)
 
 
     -- impl notes (swann):
@@ -346,23 +367,31 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
     buildSource
       :: forall b arr m
-       . ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
-         , ArrowWriter (Seq CollectedInfo) arr, MonadBaseControl IO m
-         , HasServerConfigCtx m, MonadIO m, MonadError QErr m, MonadReader BuildReason m
+       . ( ArrowChoice arr
+         , Inc.ArrowDistribute arr
+         , Inc.ArrowCache m arr
+         , ArrowWriter (Seq CollectedInfo) arr
+         , MonadBaseControl IO m
+         , HasServerConfigCtx m
+         , MonadIO m
+         , MonadError QErr m
+         , MonadReader BuildReason m
          , BackendMetadata b
          )
-      => ( SourceMetadata b
+      => ( HashMap SourceName (AB.AnyBackend SourcePartialInfo)
+         , SourceMetadata b
          , SourceConfig b
+         , TableCoreInfoMap b
          , DBTablesMetadata b
          , DBFunctionsMetadata b
          , RemoteSchemaMap
          , Inc.Dependency InvalidationKeys
          , InheritedRoles
          ) `arr` BackendSourceInfo
-    buildSource = proc (sourceMetadata, sourceConfig, dbTables, dbFunctions, remoteSchemaMap, invalidationKeys, inheritedRoles) -> do
+    buildSource = proc (allSources, sourceMetadata, sourceConfig, TCIM tableRawInfos, _dbTables, dbFunctions, remoteSchemaMap, invalidationKeys, inheritedRoles) -> do
       let SourceMetadata source tables functions _ = sourceMetadata
           tablesMetadata = OMap.elems tables
-          (tableInputs, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
+          (_ , nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
           eventTriggers = map (_tmTable &&& (OMap.elems . _tmEventTriggers)) tablesMetadata
           alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
           alignTableMap = M.intersectionWith (,)
@@ -371,20 +400,17 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
       recreateEventTriggers <- initCatalogIfNeeded @b -< (numEventTriggers, sourceConfig)
 
-      -- tables
-      tableRawInfos <- buildTableCache -< ( source, sourceConfig, dbTables
-                                          , tableInputs, metadataInvalidationKey
-                                          )
       -- relationships and computed fields
       let nonColumnsByTable = mapFromL _nctiTable nonColumnInputs
       tableCoreInfos :: HashMap (TableName b) (TableCoreInfo b) <-
         (| Inc.keyed (\_ (tableRawInfo, nonColumnInput) -> do
              let columns = _tciFieldInfoMap tableRawInfo
-             allFields :: FieldInfoMap (FieldInfo b) <- addNonColumnFields -< (source, tableRawInfos, columns, remoteSchemaMap, dbFunctions, nonColumnInput)
+             allFields :: FieldInfoMap (FieldInfo b) <- addNonColumnFields -< (allSources, source, tableRawInfos, columns, remoteSchemaMap, dbFunctions, nonColumnInput)
              returnA -< (tableRawInfo {_tciFieldInfoMap = allFields}))
          |) (tableRawInfos `alignTableMap` nonColumnsByTable)
 
       tableCoreInfosDep <- Inc.newDependency -< tableCoreInfos
+
       -- permissions and event triggers
       tableCache <-
         (| Inc.keyed (\_ ((tableCoreInfo, permissionInputs), (_, eventTriggerConfs)) -> do
@@ -426,29 +452,63 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
       returnA -< AB.mkAnyBackend $ SourceInfo source tableCache functionCache sourceConfig
 
-    buildSourceOutput
+    buildResolvedSource
       :: forall arr m (b :: BackendType)
-       . ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
-         , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadError QErr m
-         , MonadReader BuildReason m, MonadBaseControl IO m
-         , HasServerConfigCtx m, MonadResolveSource m
+       . ( ArrowChoice arr
+         , Inc.ArrowCache m arr
+         , Inc.ArrowDistribute arr
+         , ArrowWriter (Seq CollectedInfo) arr
+         , MonadBaseControl IO m
+         , MonadIO m
+         , MonadResolveSource m
          , BackendMetadata b
          )
-      => ( Inc.Dependency InvalidationKeys
-         , HashMap RemoteSchemaName RemoteSchemaCtx
-         , SourceMetadata b
-         , InheritedRoles
-         ) `arr` Maybe (BackendSourceInfo, DMap.DMap BackendTag ScalarSet)
-    buildSourceOutput = proc (invalidationKeys, remoteSchemaCtxMap, sourceMetadata, inheritedRoles) -> do
+      => ( SourceMetadata b
+         , Inc.Dependency InvalidationKeys
+         ) `arr` Maybe (AB.AnyBackend AnnotatedResolvedSource)
+    buildResolvedSource = proc (sourceMetadata, invalidationKeys) -> do
       let sourceInvalidationsKeys = Inc.selectD #_ikSources invalidationKeys
-      maybeResolvedSource <- resolveSourceIfNeeded -< (sourceInvalidationsKeys, sourceMetadata)
-      case maybeResolvedSource of
-        Nothing -> returnA -< Nothing
-        Just (ResolvedSource sourceConfig tablesMeta functionsMeta scalars) -> do
-          so <- buildSource -< ( sourceMetadata, sourceConfig, tablesMeta, functionsMeta
-                               , remoteSchemaCtxMap, invalidationKeys, inheritedRoles
-                               )
-          returnA -< Just (so, DMap.singleton (backendTag @b) $ ScalarSet scalars)
+      resolveSourceIfNeeded -< (invalidationKeys, sourceInvalidationsKeys, sourceMetadata)
+
+    extractResolvedSource
+      :: forall (b :: BackendType)
+       . AnnotatedResolvedSource b
+      -> SourcePartialInfo b
+    extractResolvedSource (ARS (_, resolvedSource, tablesInfo)) = SPI (resolvedSource, tablesInfo)
+
+    buildFullSource
+      :: forall arr m (b :: BackendType)
+       . ( ArrowChoice arr
+         , Inc.ArrowDistribute arr
+         , Inc.ArrowCache m arr
+         , ArrowWriter (Seq CollectedInfo) arr
+         , MonadIO m
+         , MonadError QErr m
+         , MonadReader BuildReason m
+         , MonadBaseControl IO m
+         , HasServerConfigCtx m
+         , BackendMetadata b
+         )
+      => ( AnnotatedResolvedSource b
+         , ( HashMap SourceName (AB.AnyBackend AnnotatedResolvedSource)
+           , Inc.Dependency InvalidationKeys
+           , HashMap RemoteSchemaName RemoteSchemaCtx
+           , InheritedRoles
+           )
+         ) `arr` (BackendSourceInfo, DMap.DMap BackendTag ScalarSet)
+    buildFullSource = proc (resolvedSource, (allResolvedSources, invalidationKeys, remoteSchemaCtxMap, inheritedRoles)) -> do
+      let ARS (sourceMetadata, ResolvedSource sourceConfig tablesMeta functionsMeta scalars, tablesInfo) = resolvedSource
+      so <- buildSource -< ( allResolvedSources <&> \b -> AB.mapBackend b extractResolvedSource
+                           , sourceMetadata
+                           , sourceConfig
+                           , tablesInfo
+                           , tablesMeta
+                           , functionsMeta
+                           , remoteSchemaCtxMap
+                           , invalidationKeys
+                           , inheritedRoles
+                           )
+      returnA -< (so, DMap.singleton (backendTag @b) $ ScalarSet scalars)
 
     buildAndCollectInfo
       :: forall arr m
@@ -517,13 +577,25 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
              |)
 
       let remoteSchemaCtxMap = M.map fst remoteSchemaMap
-      sourcesOutput <-
+
+      -- first: we resolve sources; we don't process cross-sources relationships at that point
+      resolvedSources <-
         (| Inc.keyed (\_ exists ->
-             AB.dispatchAnyBackendArrow @BackendMetadata (buildSourceOutput @arr @m)
-               -< (invalidationKeys, remoteSchemaCtxMap, exists, inheritedRoles)
+             AB.dispatchAnyBackendArrow @BackendMetadata (buildResolvedSource @arr @m)
+               -< (exists, invalidationKeys)
            )
         |) (M.fromList $ OMap.toList sources)
         >-> (\infos -> M.catMaybes infos >- returnA)
+
+      -- second: we build everything
+      sourcesOutput <-
+        (| Inc.keyed (\_ exists ->
+             AB.dispatchAnyBackendArrow @BackendMetadata (buildFullSource @arr @m)
+               -< ( exists
+                  , (resolvedSources, invalidationKeys, remoteSchemaCtxMap, inheritedRoles)
+                  )
+           )
+        |) resolvedSources
 
       -- allow list
       let allowList = allowlists

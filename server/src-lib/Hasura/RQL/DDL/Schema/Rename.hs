@@ -291,7 +291,7 @@ updateDelPermFlds refQT rename (DelPerm fltr) = do
 
 updatePreset
   :: (Backend b)
-  => TableName b -> RenameField b -> (ColumnValues b Value) -> (ColumnValues b Value)
+  => TableName b -> RenameField b -> ColumnValues b Value -> ColumnValues b Value
 updatePreset qt rf obj =
    case rf of
      RFCol (RenameItem opQT oCol nCol) ->
@@ -337,7 +337,7 @@ updateFieldInBoolExp qt rf be = BoolExp <$>
     BoolOr  exps -> BoolOr <$> procExps exps
     BoolNot e    -> BoolNot <$> updateBoolExp' e
     BoolExists (GExists refqt wh) ->
-      (BoolExists . GExists refqt . unBoolExp)
+      BoolExists . GExists refqt . unBoolExp
       <$> updateFieldInBoolExp refqt rf (BoolExp wh)
     BoolFld fld  -> BoolFld <$> updateColExp qt rf fld
   where
@@ -402,11 +402,12 @@ updateColInRemoteRelationship source remoteRelationshipName renameCol = do
   oldColName <- parseGraphQLName $ toTxt oldCol
   newColName <- parseGraphQLName $ toTxt newCol
   tell $ MetadataModifier $
-    tableMetadataSetter @b source qt.tmRemoteRelationships.ix remoteRelationshipName.rrmDefinition %~
+    tableMetadataSetter @b source qt.tmRemoteRelationships.ix remoteRelationshipName.rrmDefinition._RemoteSchemaRelDef %~
       (rrdHasuraFields %~ modifyHasuraFields) .
       (rrdRemoteField %~ modifyFieldCalls oldColName newColName)
   where
     (RenameItem qt oldCol newCol) = renameCol
+    modifyHasuraFields :: HashSet FieldName -> HashSet FieldName
     modifyHasuraFields = Set.insert (fromCol @b newCol) . Set.delete (fromCol @b oldCol)
     modifyFieldCalls oldColName newColName =
       RemoteFields

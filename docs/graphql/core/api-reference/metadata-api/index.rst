@@ -267,6 +267,11 @@ The various types of queries are listed in the following table:
      - 1
      - Add a remote GraphQL server as a remote schema
 
+   * - :ref:`metadata_update_remote_schema`
+     - :ref:`update_remote_schema_args <metadata_update_remote_schema_syntax>`
+     - 1
+     - Update the details for a remote schema
+
    * - :ref:`metadata_remove_remote_schema`
      - :ref:`remove_remote_schema_args <metadata_remove_remote_schema_syntax>`
      - 1

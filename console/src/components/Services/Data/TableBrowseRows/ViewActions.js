@@ -1,5 +1,5 @@
 import { defaultViewState } from '../DataState';
-import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
+import { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from 'utils/requestAction';
 import filterReducer from './FilterActions';
 import {
@@ -8,19 +8,14 @@ import {
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
-import {
-  getBulkDeleteQuery,
-  getSelectQuery,
-  getDeleteQuery,
-  getRunSqlQuery,
-} from '../../../Common/utils/v1QueryUtils';
+import { isEmpty } from '../../../Common/utils/jsUtils';
 import { COUNT_LIMIT } from '../constants';
 import {
-  generateTableDef,
   dataSource,
   findTableFromRel,
   isFeatureSupported,
 } from '../../../../dataSources';
+import { getTableConfiguration } from './utils';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
@@ -53,6 +48,9 @@ const vCollapseRow = () => ({
 
 const vSetDefaults = limit => ({ type: V_SET_DEFAULTS, limit });
 
+const showError = (err, msg, dispatch) =>
+  dispatch(showErrorNotification(msg, err.error, err));
+
 const getConfiguration = (tables, sources) => {
   const {
     currentSchema,
@@ -70,7 +68,7 @@ const vMakeRowsRequest = () => {
   return (dispatch, getState) => {
     const { tables, metadata } = getState();
     const sources = metadata.metadataObject?.sources;
-    const tableConfiguration = getConfiguration(tables, sources);
+    const tableConfiguration = getTableConfiguration(tables, sources);
     const headers = dataHeaders(getState);
     dispatch({ type: V_REQUEST_PROGRESS, data: true });
 
@@ -156,7 +154,7 @@ const vMakeExportRequest = () => {
 
 const vMakeCountRequest = () => {
   // For datasources that do not supported aggregation like count
-  if (!isFeatureSupported('tables.browse.aggregation'))
+  if (!isFeatureSupported('tables.browse.aggregation')) {
     return (dispatch, getState) => {
       const { estimatedCount } = getState().tables.view;
       dispatch({
@@ -164,40 +162,20 @@ const vMakeCountRequest = () => {
         count: estimatedCount,
       });
     };
+  }
   return (dispatch, getState) => {
+    if (!dataSource.generateRowsCountRequest) return;
+
+    const { tables, metadata } = getState();
+    const sources = metadata.metadataObject?.sources;
+    const tableConfiguration = getConfiguration(tables, sources);
+
     const {
-      currentTable: originalTable,
-      currentSchema,
-      view,
-      currentDataSource,
-    } = getState().tables;
-    const url = Endpoints.query;
-
-    const selectQuery = getSelectQuery(
-      'count',
-      generateTableDef(originalTable, currentSchema),
-      view.query.columns,
-      view.query.where,
-      view.query.offset,
-      view.query.limit,
-      view.query.order_by,
-      currentDataSource
-    );
-
-    let queries = [selectQuery];
-
-    if (dataSource.getStatementTimeoutSql) {
-      queries = [
-        getRunSqlQuery(dataSource.getStatementTimeoutSql(2), currentDataSource),
-        ...queries,
-      ];
-    }
-
-    const requestBody = {
-      type: 'bulk',
-      source: currentDataSource,
-      args: queries,
-    };
+      endpoint,
+      getRowsCountRequestBody,
+      processCount,
+    } = dataSource.generateRowsCountRequest();
+    const requestBody = getRowsCountRequestBody({ tables, tableConfiguration });
 
     const options = {
       method: 'POST',
@@ -206,16 +184,22 @@ const vMakeCountRequest = () => {
       credentials: globalCookiePolicy,
     };
 
-    return dispatch(requestAction(url, options)).then(
+    return dispatch(requestAction(endpoint, options)).then(
       data => {
-        if (data.length > 1) {
+        if (!isEmpty(data)) {
+          const { currentTable: originalTable, currentSchema } = tables;
+          const count = processCount({
+            data,
+            currentSchema,
+            originalTable,
+            tableConfiguration,
+          });
           const currentTable = getState().tables.currentTable;
-
           // in case table has changed before count load
           if (currentTable === originalTable) {
             dispatch({
               type: V_COUNT_REQUEST_SUCCESS,
-              count: data[1].count,
+              count,
             });
           }
         }
@@ -260,10 +244,34 @@ const deleteItem = (pkClause, tableName, tableSchema) => {
     }
 
     const source = getState().tables.currentDataSource;
+    const { tables, metadata } = getState();
+    const { currentTable: originalTable, allSchemas, currentSchema } = tables;
 
-    const url = Endpoints.query;
+    const currentTable = allSchemas.find(
+      t => t.table_name === originalTable && t.table_schema === currentSchema
+    );
+    const columnTypeInfo = currentTable?.columns || [];
 
-    const reqBody = getDeleteQuery(pkClause, tableName, tableSchema, source);
+    if (!columnTypeInfo) {
+      throw new Error('Error in finding column info for table');
+    }
+
+    const sources = metadata.metadataObject?.sources;
+    const tableConfiguration = getTableConfiguration(tables, sources);
+
+    const {
+      endpoint,
+      getDeleteRowRequestBody,
+      processDeleteRowData,
+    } = dataSource.generateDeleteRowRequest();
+    const reqBody = getDeleteRowRequestBody({
+      pkClause,
+      tableName,
+      schemaName: tableSchema,
+      source,
+      columnInfo: columnTypeInfo,
+      tableConfiguration,
+    });
 
     const options = {
       method: 'POST',
@@ -271,18 +279,27 @@ const deleteItem = (pkClause, tableName, tableSchema) => {
       headers: dataHeaders(getState),
       credentials: globalCookiePolicy,
     };
-    dispatch(requestAction(url, options)).then(
+    dispatch(requestAction(endpoint, options)).then(
       data => {
-        dispatch(vMakeTableRequests());
-        dispatch(
-          showSuccessNotification(
-            'Row deleted!',
-            'Affected rows: ' + data.affected_rows
-          )
-        );
+        try {
+          const affectedRows = processDeleteRowData(
+            data,
+            tableName,
+            tableSchema
+          );
+          dispatch(vMakeTableRequests());
+          dispatch(
+            showSuccessNotification(
+              'Row deleted!',
+              'Affected rows: ' + affectedRows
+            )
+          );
+        } catch (err) {
+          showError(err, 'Deleting row failed!', dispatch);
+        }
       },
       err => {
-        dispatch(showErrorNotification('Deleting row failed!', err.error, err));
+        showError(err, 'Deleting row failed!', dispatch);
       }
     );
   };
@@ -296,30 +313,64 @@ const deleteItems = (pkClauses, tableName, tableSchema) => {
       return;
     }
     const source = getState().tables.currentDataSource;
+    const {
+      endpoint,
+      getBulkDeleteRowRequestBody,
+      processBulkDeleteRowData,
+    } = dataSource.generateBulkDeleteRowRequest();
 
-    const reqBody = {
-      type: 'bulk',
+    const { tables, metadata } = getState();
+    const { currentTable: originalTable, allSchemas, currentSchema } = tables;
+
+    const currentTable = allSchemas.find(
+      t => t.table_name === originalTable && t.table_schema === currentSchema
+    );
+    const columnTypeInfo = currentTable?.columns || [];
+
+    if (!columnTypeInfo) {
+      throw new Error('Error in finding column info for table');
+    }
+
+    const sources = metadata.metadataObject?.sources;
+    const tableConfiguration = getTableConfiguration(tables, sources);
+
+    const reqBody = getBulkDeleteRowRequestBody({
+      pkClauses,
+      tableName,
+      schemaName: tableSchema,
       source,
-      args: getBulkDeleteQuery(pkClauses, tableName, tableSchema, source),
-    };
+      columnInfo: columnTypeInfo,
+      tableConfiguration,
+    });
+
     const options = {
       method: 'POST',
       body: JSON.stringify(reqBody),
       headers: dataHeaders(getState),
       credentials: globalCookiePolicy,
     };
-    dispatch(requestAction(Endpoints.query, options)).then(
+
+    dispatch(requestAction(endpoint, options)).then(
       data => {
-        const affected = data.reduce((acc, d) => acc + d.affected_rows, 0);
-        dispatch(vMakeTableRequests());
-        dispatch(
-          showSuccessNotification('Rows deleted!', 'Affected rows: ' + affected)
-        );
+        try {
+          const affected = processBulkDeleteRowData(
+            data,
+            tableName,
+            tableSchema
+          );
+          dispatch(vMakeTableRequests());
+          dispatch(
+            showSuccessNotification(
+              'Rows deleted!',
+              'Affected rows: ' + affected
+            )
+          );
+        } catch (err) {
+          showError(err, 'Deleting rows failed!', dispatch);
+        }
       },
       err => {
-        dispatch(
-          showErrorNotification('Deleting rows failed!', err.error, err)
-        );
+        showError(err, 'Deleting rows failed!', dispatch);
       }
     );
   };

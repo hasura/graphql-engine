@@ -18,7 +18,7 @@ func NewDriver(s sendBulk, pgDumpClient hasura.PGDump) *Driver {
 
 func IsSeedsSupported(kind hasura.SourceKind) bool {
 	switch kind {
-	case hasura.SourceKindMSSQL, hasura.SourceKindPG:
+	case hasura.SourceKindMSSQL, hasura.SourceKindPG, hasura.SourceKindCitus:
 		return true
 	}
 	return false

@@ -133,19 +133,19 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
   experimentalFeatures <- _sccExperimentalFeatures <$> askServerConfigCtx
   let inheritedRoles =
         case _rmv2Metadata of
-          RMWithSources (Metadata { _metaInheritedRoles }) -> _metaInheritedRoles
-          RMWithoutSources _                               -> mempty
+          RMWithSources Metadata { _metaInheritedRoles } -> _metaInheritedRoles
+          RMWithoutSources _                             -> mempty
       introspectionDisabledRoles =
         case _rmv2Metadata of
           RMWithSources m    -> _metaSetGraphqlIntrospectionOptions m
           RMWithoutSources _ -> mempty
-  when (inheritedRoles /= mempty && (EFInheritedRoles `notElem` experimentalFeatures)) $
-    throw400 ConstraintViolation $ "inherited_roles can only be added when it's enabled in the experimental features"
+  when (inheritedRoles /= mempty && EFInheritedRoles `notElem` experimentalFeatures) $
+    throw400 ConstraintViolation "inherited_roles can only be added when it's enabled in the experimental features"
 
   oldMetadata <- getMetadata
   let (oldCronTriggersIncludedInMetadata, oldCronTriggersNotIncludedInMetadata) =
-        ((OMap.filter ctIncludeInMetadata (_metaCronTriggers  oldMetadata))
-        ,(OMap.filter (not . ctIncludeInMetadata) (_metaCronTriggers  oldMetadata)))
+        (OMap.filter ctIncludeInMetadata (_metaCronTriggers  oldMetadata)
+        ,OMap.filter (not . ctIncludeInMetadata) (_metaCronTriggers  oldMetadata))
       newCronTriggers =
         case _rmv2Metadata of
           RMWithoutSources m -> _mnsCronTriggers m
@@ -186,14 +186,13 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
       buildSchemaCacheStrict
 
   -- populate future cron events for all the new cron triggers that are imported
-  for_ newCronTriggers $ \(CronTriggerMetadata {..}) ->
+  for_ newCronTriggers $ \CronTriggerMetadata {..} ->
     populateInitialCronTriggerEvents ctSchedule ctName
 
   -- See Note [Clear postgres schema for dropped triggers]
   dropPostgresTriggers (getOnlyPGSources oldMetadata) (getOnlyPGSources metadata)
 
-  sc <- askSchemaCache
-  pure $ encJFromJValue $ formatInconsistentObjs $ scInconsistentObjs sc
+  encJFromJValue . formatInconsistentObjs . scInconsistentObjs <$> askSchemaCache
   where
     getOnlyPGSources :: Metadata -> InsOrdHashMap SourceName (SourceMetadata ('Postgres 'Vanilla))
     getOnlyPGSources = OMap.mapMaybe AB.unpackAnyBackend . _metaSources
@@ -220,7 +219,7 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
           flip catchError catcher do
             sourceConfig <- askSourceConfig @('Postgres 'Vanilla) source
             for_ droppedTriggers $
-              \name -> do
+              \name ->
                   liftIO $ runPgSourceWriteTx sourceConfig $ delTriggerQ name >> archiveEvents name
       where
         getPGTriggersMap = OMap.unions . map _tmEventTriggers . OMap.elems . _smTables
@@ -245,7 +244,7 @@ processMetadata metadata =
 runExportMetadata
   :: forall m . ( QErrM m, MetadataM m, HasServerConfigCtx m)
   => ExportMetadata -> m EncJSON
-runExportMetadata ExportMetadata{} = do
+runExportMetadata ExportMetadata{} =
   AO.toEncJSON . metadataToOrdJSON <$> (getMetadata >>= processMetadata)
 
 runExportMetadataV2

@@ -23,51 +23,55 @@ module Hasura.GraphQL.Schema.Select
   , tableSelectionList
   , nodePG
   , nodeField
+  , tablePermissionsInfo
   ) where
 
-import           Hasura.Prelude
+import                          Hasura.Prelude
 
-import qualified Data.Aeson                                 as J
-import qualified Data.Aeson.Extended                        as J
-import qualified Data.Aeson.Internal                        as J
-import qualified Data.ByteString.Lazy                       as BL
-import qualified Data.HashMap.Strict                        as Map
-import qualified Data.HashSet                               as Set
-import qualified Data.List.NonEmpty                         as NE
-import qualified Data.Sequence                              as Seq
-import qualified Data.Sequence.NonEmpty                     as NESeq
-import qualified Data.Text                                  as T
-import qualified Language.GraphQL.Draft.Syntax              as G
+import                qualified Data.Aeson                                 as J
+import                qualified Data.Aeson.Extended                        as J
+import                qualified Data.Aeson.Internal                        as J
+import                qualified Data.ByteString.Lazy                       as BL
+import                qualified Data.HashMap.Strict                        as Map
+import                qualified Data.HashSet                               as Set
+import                qualified Data.List.NonEmpty                         as NE
+import                qualified Data.Sequence                              as Seq
+import                qualified Data.Sequence.NonEmpty                     as NESeq
+import                qualified Data.Text                                  as T
+import                qualified Language.GraphQL.Draft.Syntax              as G
 
-import           Control.Lens                               hiding (index)
-import           Data.Has
-import           Data.Int                                   (Int64)
-import           Data.Parser.JSONPath
-import           Data.Text.Extended
-import           Data.Traversable                           (mapAccumL)
+import                          Control.Lens                               hiding (index)
+import                          Data.Has
+import                          Data.Int                                   (Int64)
+import                          Data.Parser.JSONPath
+import                          Data.Text.Extended
+import                          Data.Traversable                           (mapAccumL)
 
-import qualified Hasura.Backends.Postgres.SQL.Types         as PG
-import qualified Hasura.GraphQL.Execute.Types               as ET
-import qualified Hasura.GraphQL.Parser                      as P
-import qualified Hasura.GraphQL.Parser.Internal.Parser      as P
-import qualified Hasura.RQL.IR                              as IR
-import qualified Hasura.SQL.AnyBackend                      as AB
+import                qualified Hasura.Backends.Postgres.SQL.Types         as PG
+import                qualified Hasura.GraphQL.Execute.Types               as ET
+import                qualified Hasura.GraphQL.Parser                      as P
+import                qualified Hasura.GraphQL.Parser.Internal.Parser      as P
+import                qualified Hasura.RQL.IR                              as IR
+import                qualified Hasura.SQL.AnyBackend                      as AB
 
-import           Hasura.Base.Error
-import           Hasura.GraphQL.Parser                      (FieldParser, InputFieldsParser,
-                                                             Kind (..), Parser,
-                                                             UnpreparedValue (..), mkParameter)
-import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Schema.Backend
-import           Hasura.GraphQL.Schema.BoolExp
-import           Hasura.GraphQL.Schema.Common
-import           Hasura.GraphQL.Schema.OrderBy
-import           Hasura.GraphQL.Schema.Remote
-import           Hasura.GraphQL.Schema.Table
-import           Hasura.RQL.DDL.RemoteRelationship.Validate
-import           Hasura.RQL.Types
-import           Hasura.Server.Utils                        (executeJSONPath)
-import           Hasura.Session
+import                          Hasura.Base.Error
+import                          Hasura.GraphQL.Parser                      (FieldParser,
+                                                                            InputFieldsParser,
+                                                                            Kind (..), Parser,
+                                                                            UnpreparedValue (..),
+                                                                            mkParameter)
+import                          Hasura.GraphQL.Parser.Class
+import                          Hasura.GraphQL.Schema.Backend
+import                          Hasura.GraphQL.Schema.BoolExp
+import                          Hasura.GraphQL.Schema.Common
+import                          Hasura.GraphQL.Schema.OrderBy
+import                          Hasura.GraphQL.Schema.Remote
+import {-# SOURCE #-}           Hasura.GraphQL.Schema.RemoteSource
+import                          Hasura.GraphQL.Schema.Table
+import                          Hasura.RQL.DDL.RemoteRelationship.Validate
+import                          Hasura.RQL.Types
+import                          Hasura.Server.Utils                        (executeJSONPath)
+import                          Hasura.Session
 
 
 --------------------------------------------------------------------------------
@@ -139,7 +143,7 @@ selectTableConnection
   -> PrimaryKeyColumns b  -- ^ primary key columns
   -> SelPermInfo b        -- ^ select permissions of the table
   -> m (Maybe (FieldParser n (ConnectionSelectExp b)))
-selectTableConnection sourceName tableInfo fieldName description pkeyColumns selectPermissions = do
+selectTableConnection sourceName tableInfo fieldName description pkeyColumns selectPermissions =
   for (relayExtension @b) \xRelayInfo -> memoizeOn 'selectTableConnection (sourceName, tableName, fieldName) do
     stringifyNum       <- asks $ qcStringifyNum . getter
     selectArgsParser   <- tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions
@@ -517,29 +521,29 @@ selectFunctionConnection
   -> PrimaryKeyColumns ('Postgres pgKind) -- ^ primary key columns of the target table
   -> SelPermInfo ('Postgres pgKind)       -- ^ select permissions of the target table
   -> m (Maybe (FieldParser n (ConnectionSelectExp ('Postgres pgKind))))
-selectFunctionConnection sourceName function fieldName description pkeyColumns selectPermissions = do
+selectFunctionConnection sourceName function fieldName description pkeyColumns selectPermissions =
   for (relayExtension @('Postgres pgKind)) \xRelayInfo -> do
-    stringifyNum <- asks $ qcStringifyNum . getter
-    let tableName = _fiReturnType function
-    tableInfo <- askTableInfo sourceName tableName
-    tableConnectionArgsParser <- tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions
-    functionArgsParser <- customSQLFunctionArgs function
-    selectionSetParser <- tableConnectionSelectionSet sourceName tableInfo selectPermissions
-    let argsParser = liftA2 (,) functionArgsParser tableConnectionArgsParser
-    pure $ P.subselection fieldName description argsParser selectionSetParser
-      <&> \((funcArgs, (args, split, slice)), fields) -> IR.ConnectionSelect
-        { IR._csXRelay = xRelayInfo
-        , IR._csPrimaryKeyColumns = pkeyColumns
-        , IR._csSplit  = split
-        , IR._csSlice  = slice
-        , IR._csSelect = IR.AnnSelectG
-          { IR._asnFields   = fields
-          , IR._asnFrom     = IR.FromFunction (_fiName function) funcArgs Nothing
-          , IR._asnPerm     = tablePermissionsInfo selectPermissions
-          , IR._asnArgs     = args
-          , IR._asnStrfyNum = stringifyNum
-          }
+  stringifyNum <- asks $ qcStringifyNum . getter
+  let tableName = _fiReturnType function
+  tableInfo <- askTableInfo sourceName tableName
+  tableConnectionArgsParser <- tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions
+  functionArgsParser <- customSQLFunctionArgs function
+  selectionSetParser <- tableConnectionSelectionSet sourceName tableInfo selectPermissions
+  let argsParser = liftA2 (,) functionArgsParser tableConnectionArgsParser
+  pure $ P.subselection fieldName description argsParser selectionSetParser
+    <&> \((funcArgs, (args, split, slice)), fields) -> IR.ConnectionSelect
+      { IR._csXRelay = xRelayInfo
+      , IR._csPrimaryKeyColumns = pkeyColumns
+      , IR._csSplit  = split
+      , IR._csSlice  = slice
+      , IR._csSelect = IR.AnnSelectG
+        { IR._asnFields   = fields
+        , IR._asnFrom     = IR.FromFunction (_fiName function) funcArgs Nothing
+        , IR._asnPerm     = tablePermissionsInfo selectPermissions
+        , IR._asnArgs     = args
+        , IR._asnStrfyNum = stringifyNum
         }
+      }
 
 
 
@@ -580,9 +584,9 @@ defaultTableArgs sourceName tableInfo selectPermissions = do
           , IR._saDistinct = distinctArg
           }
   pure $ result `P.bindFields` \args -> do
-    onJust (IR._saOrderBy args) \orderBy ->
-      onJust (IR._saDistinct args) \distinct ->
-        validateArgs orderBy distinct
+    onJust (IR._saOrderBy args)
+      $ onJust (IR._saDistinct args)
+      . validateArgs
     pure args
   where
     validateArgs orderByCols distinctCols = do
@@ -677,7 +681,6 @@ tableOffsetArg = fmap join
   where
     offsetName = $$(G.litName "offset")
     offsetDesc = Just $ G.Description "skip the first n rows. Use only with order_by"
-
 
 -- | Arguments for a table connection selection
 --
@@ -884,7 +887,7 @@ tableAggregationFields sourceName tableInfo selectPermissions = memoizeOn 'table
           subselectionParser = P.selectionSet setName setDesc columns
             <&> parsedSelectionsToFields IR.CFExp
       in P.subselection_ operator Nothing subselectionParser
-         <&> (IR.AFOp . IR.AggregateOp opText)
+         <&> IR.AFOp . IR.AggregateOp opText
 
 lookupRemoteField'
   :: (MonadSchema n m, MonadError QErr m)
@@ -923,46 +926,47 @@ fieldSelection
   -> FieldInfo b
   -> SelPermInfo b
   -> m [FieldParser n (AnnotatedField b)]
-fieldSelection sourceName table maybePkeyColumns fieldInfo selectPermissions = do
+fieldSelection sourceName table maybePkeyColumns fieldInfo selectPermissions =
   case fieldInfo of
     FIColumn columnInfo -> maybeToList <$> runMaybeT do
       queryType <- asks $ qcQueryType . getter
       let columnName = pgiColumn columnInfo
           fieldName = pgiName columnInfo
-      if | fieldName == $$(G.litName "id") && queryType == ET.QueryRelay -> do
-             xRelayInfo  <- hoistMaybe $ relayExtension @b
-             pkeyColumns <- hoistMaybe maybePkeyColumns
-             pure $ P.selection_ fieldName Nothing P.identifier
-                    $> IR.AFNodeId xRelayInfo table pkeyColumns
-         | otherwise -> do
-             guard $ columnName `Map.member` (spiCols selectPermissions)
-             let caseBoolExp = join $ Map.lookup columnName (spiCols selectPermissions)
-             let caseBoolExpUnpreparedValue =
-                   fmapAnnColumnCaseBoolExp partialSQLExpToUnpreparedValue <$> caseBoolExp
-             let pathArg = jsonPathArg $ pgiType columnInfo
-                 -- In an inherited role, when a column is part of all the select
-                 -- permissions which make up the inherited role then the nullability
-                 -- of the field is determined by the nullability of the DB column
-                 -- otherwise it is marked as nullable explicitly, ignoring the column's
-                 -- nullability. We do this because
-                 -- in multiple roles we execute an SQL query like:
-                 --
-                 --  select
-                 --    (case when (P1 or P2) then addr else null end) as addr,
-                 --    (case when P2 then phone else null end) as phone
-                 -- from employee
-                 -- where (P1 or P2)
-                 --
-                 -- In the above example, P(n) is a predicate configured for a role
-                 --
-                 -- NOTE: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/FGALanguageICDE07.pdf
-                 -- The above is the paper which talks about the idea of cell-level
-                 -- authorization and multiple roles. The paper says that we should only
-                 -- allow the case analysis only on nullable columns.
-                 nullability = pgiIsNullable columnInfo || isJust caseBoolExp
-             field <- lift $ columnParser (pgiType columnInfo) (G.Nullability nullability)
-             pure $ P.selection fieldName (pgiDescription columnInfo) pathArg field
-               <&> IR.mkAnnColumnField columnInfo caseBoolExpUnpreparedValue
+      if fieldName == $$(G.litName "id") && queryType == ET.QueryRelay
+        then do
+          xRelayInfo  <- hoistMaybe $ relayExtension @b
+          pkeyColumns <- hoistMaybe maybePkeyColumns
+          pure $ P.selection_ fieldName Nothing P.identifier
+                 $> IR.AFNodeId xRelayInfo table pkeyColumns
+         else do
+           guard $ columnName `Map.member` spiCols selectPermissions
+           let caseBoolExp = join $ Map.lookup columnName (spiCols selectPermissions)
+           let caseBoolExpUnpreparedValue =
+                 fmapAnnColumnCaseBoolExp partialSQLExpToUnpreparedValue <$> caseBoolExp
+           let pathArg = jsonPathArg $ pgiType columnInfo
+               -- In an inherited role, when a column is part of all the select
+               -- permissions which make up the inherited role then the nullability
+               -- of the field is determined by the nullability of the DB column
+               -- otherwise it is marked as nullable explicitly, ignoring the column's
+               -- nullability. We do this because
+               -- in multiple roles we execute an SQL query like:
+               --
+               --  select
+               --    (case when (P1 or P2) then addr else null end) as addr,
+               --    (case when P2 then phone else null end) as phone
+               -- from employee
+               -- where (P1 or P2)
+               --
+               -- In the above example, P(n) is a predicate configured for a role
+               --
+               -- NOTE: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/FGALanguageICDE07.pdf
+               -- The above is the paper which talks about the idea of cell-level
+               -- authorization and multiple roles. The paper says that we should only
+               -- allow the case analysis only on nullable columns.
+               nullability = pgiIsNullable columnInfo || isJust caseBoolExp
+           field <- lift $ columnParser (pgiType columnInfo) (G.Nullability nullability)
+           pure $ P.selection fieldName (pgiDescription columnInfo) pathArg field
+             <&> IR.mkAnnColumnField columnInfo caseBoolExpUnpreparedValue
 
     FIRelationship relationshipInfo ->
       concat . maybeToList <$> relationshipField sourceName relationshipInfo
@@ -1010,7 +1014,7 @@ relationshipField sourceName relationshipInfo = runMaybeT do
         queryType <- asks $ qcQueryType . getter
         guard $ queryType == ET.QueryRelay
         xRelayInfo  <- hoistMaybe $ relayExtension @b
-        pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
+        pkeyColumns <- MaybeT $ (^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns)
                        <$> pure otherTableInfo
         let relConnectionName = relFieldName <> $$(G.litName "_connection")
             relConnectionDesc = Just $ G.Description "An array relationship connection"
@@ -1105,59 +1109,63 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
   -- https://github.com/hasura/graphql-engine/issues/5144
   -- The above issue is easily fixable by removing the following guard and 'MaybeT' monad transformation
   guard $ queryType == ET.QueryHasura
-  let RemoteFieldInfo name _params hasuraFields remoteFields
-        remoteSchemaInfo remoteSchemaInputValueDefns remoteSchemaName (table, source) = remoteFieldInfo
-  (roleIntrospectionResult, parsedIntrospection) <-
-    -- The remote relationship field should not be accessible
-    -- if the remote schema is not accessible to the said role
-    hoistMaybe $ Map.lookup remoteSchemaName remoteRelationshipQueryCtx
-  let fieldDefns = map P.fDefinition (piQuery parsedIntrospection)
-  role <- askRoleName
-  let hasuraFieldNames = Set.map (FieldName . toTxt . pgiColumn)  hasuraFields
-      remoteRelationship = RemoteRelationship name source table hasuraFieldNames remoteSchemaName remoteFields
-  (newInpValDefns, remoteFieldParamMap) <-
-    if | role == adminRoleName ->
-         -- we don't validate the remote relationship when the role is admin
-         -- because it's already been validated, when the remote relationship
-         -- was created
-         pure (remoteSchemaInputValueDefns, _rfiParamMap remoteFieldInfo)
-       | otherwise -> do
-           roleRemoteField <-
-             afold @(Either _) $
-             validateRemoteRelationship remoteRelationship (remoteSchemaInfo, roleIntrospectionResult) $
-             Set.toList hasuraFields
-           pure $ (_rfiInputValueDefinitions roleRemoteField, _rfiParamMap roleRemoteField)
-  let RemoteSchemaIntrospection typeDefns = irDoc roleIntrospectionResult
-      -- add the new input value definitions created by the remote relationship
-      -- to the existing schema introspection of the role
-      remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> newInpValDefns
-  fieldName <- textToName $ remoteRelationshipNameToText $ _rfiName remoteFieldInfo
-  -- This selection set parser, should be of the remote node's selection set parser, which comes
-  -- from the fieldCall
-  nestedFieldInfo <- lift $ lookupRemoteField fieldDefns $ unRemoteFields $ _rfiRemoteFields remoteFieldInfo
-  case nestedFieldInfo of
-    P.FieldInfo{ P.fType = fieldType } -> do
-      let typeName = P.getName fieldType
-      fieldTypeDefinition <- onNothing (lookupType (irDoc roleIntrospectionResult) typeName)
-                             -- the below case will never happen because we get the type name
-                             -- from the schema document itself i.e. if a field exists for the
-                             -- given role, then it's return type also must exist
-                             $ throw500 $ "unexpected: " <> typeName <<> " not found "
-      -- These are the arguments that are given by the user while executing a query
-      let remoteFieldUserArguments = map snd $ Map.toList remoteFieldParamMap
-      remoteFld <-
-        lift $ remoteField remoteRelationshipIntrospection fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
-      pure $ pure $ remoteFld
-        `P.bindField` \G.Field{ G._fArguments = args, G._fSelectionSet = selSet } -> do
-          let remoteArgs =
-                Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue $ argVal
-          pure $ IR.AFRemote $ IR.RemoteSelectRemoteSchema $ IR.RemoteSchemaSelect
-            { _rselArgs          = remoteArgs
-            , _rselSelection     = selSet
-            , _rselHasuraColumns = _rfiHasuraFields remoteFieldInfo
-            , _rselFieldCall     = unRemoteFields $ _rfiRemoteFields remoteFieldInfo
-            , _rselRemoteSchema  = _rfiRemoteSchema remoteFieldInfo
-            }
+  case remoteFieldInfo of
+    RFISource remoteSource -> lift $ afold <$> remoteSourceField remoteSource
+    RFISchema remoteSchema -> do
+      let RemoteSchemaFieldInfo name _params hasuraFields remoteFields remoteSchemaInfo remoteSchemaInputValueDefns remoteSchemaName (table, source) = remoteSchema
+      (roleIntrospectionResult, parsedIntrospection) <-
+        -- The remote relationship field should not be accessible
+        -- if the remote schema is not accessible to the said role
+        hoistMaybe $ Map.lookup remoteSchemaName remoteRelationshipQueryCtx
+      let fieldDefns = map P.fDefinition (piQuery parsedIntrospection)
+      role <- askRoleName
+      let hasuraFieldNames = Set.map (FieldName . toTxt . pgiColumn)  hasuraFields
+          relationshipDef =
+            RemoteSchemaRelationshipDef remoteSchemaName hasuraFieldNames remoteFields
+      (newInpValDefns, remoteFieldParamMap) <-
+        if role == adminRoleName
+          then
+            -- we don't validate the remote relationship when the role is admin
+            -- because it's already been validated, when the remote relationship
+            -- was created
+            pure (remoteSchemaInputValueDefns, _rfiParamMap remoteSchema)
+        else do
+          roleSchemaRemoteField <-
+            afold @(Either _) $
+            validateRemoteSchemaRelationship relationshipDef table name source (remoteSchemaInfo, roleIntrospectionResult) $
+            Set.toList hasuraFields
+          pure (_rfiInputValueDefinitions roleSchemaRemoteField, _rfiParamMap roleSchemaRemoteField)
+      let RemoteSchemaIntrospection typeDefns = irDoc roleIntrospectionResult
+          -- add the new input value definitions created by the remote relationship
+          -- to the existing schema introspection of the role
+          remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> newInpValDefns
+      fieldName <- textToName $ remoteRelationshipNameToText $ _rfiName remoteSchema
+      -- This selection set parser, should be of the remote node's selection set parser, which comes
+      -- from the fieldCall
+      nestedFieldInfo <- lift $ lookupRemoteField fieldDefns $ unRemoteFields $ _rfiRemoteFields remoteSchema
+      case nestedFieldInfo of
+        P.FieldInfo{ P.fType = fieldType } -> do
+          let typeName = P.getName fieldType
+          fieldTypeDefinition <- onNothing (lookupType (irDoc roleIntrospectionResult) typeName)
+                                 -- the below case will never happen because we get the type name
+                                 -- from the schema document itself i.e. if a field exists for the
+                                 -- given role, then it's return type also must exist
+                                 $ throw500 $ "unexpected: " <> typeName <<> " not found "
+          -- These are the arguments that are given by the user while executing a query
+          let remoteFieldUserArguments = map snd $ Map.toList remoteFieldParamMap
+          remoteFld <-
+            lift $ remoteField remoteRelationshipIntrospection fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
+          pure $ pure $ remoteFld
+            `P.bindField` \G.Field{ G._fArguments = args, G._fSelectionSet = selSet } -> do
+              let remoteArgs =
+                    Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue argVal
+              pure $ IR.AFRemote $ IR.RemoteSelectRemoteSchema $ IR.RemoteSchemaSelect
+                { _rselArgs          = remoteArgs
+                , _rselSelection     = selSet
+                , _rselHasuraColumns = _rfiHasuraFields remoteSchema
+                , _rselFieldCall     = unRemoteFields $ _rfiRemoteFields remoteSchema
+                , _rselRemoteSchema  = _rfiRemoteSchema remoteSchema
+                }
 
 -- | The custom SQL functions' input "args" field parser
 -- > function_name(args: function_args)

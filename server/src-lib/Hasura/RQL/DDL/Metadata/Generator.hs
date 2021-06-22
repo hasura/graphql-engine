@@ -327,6 +327,15 @@ instance Arbitrary FieldCall where
 
 deriving instance Arbitrary RemoteFields
 
+instance Arbitrary RemoteSchemaRelationshipDef where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RemoteSourceRelationshipType where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RemoteSourceRelationshipDef where
+  arbitrary = genericArbitrary
+
 instance Arbitrary RemoteRelationshipDef where
   arbitrary = genericArbitrary
 
@@ -434,11 +443,11 @@ sampleCronSchedules = rights $ map Cr.parseCronSchedule
 -- Hardcoding the values of `sampleDirectives` and `sampleGraphQLValues` because
 -- there's no `Arbitrary` instance of `Void`
 sampleDirectives :: [G.Directive Void]
-sampleDirectives = [ (G.Directive $$(G.litName "directive_1") mempty)
-                   , (G.Directive $$(G.litName "directive_2") $
-                        (Map.singleton $$(G.litName "value") (G.VInt 1)))
-                   , (G.Directive $$(G.litName "directive_3") $
-                        (Map.singleton $$(G.litName "value") (G.VBoolean True)))
+sampleDirectives = [ G.Directive $$(G.litName "directive_1") mempty
+                   , G.Directive $$(G.litName "directive_2")
+                        (Map.singleton $$(G.litName "value") (G.VInt 1))
+                   , G.Directive $$(G.litName "directive_3")
+                        (Map.singleton $$(G.litName "value") (G.VBoolean True))
                    ]
 
 sampleGraphQLValues :: [G.Value Void]
