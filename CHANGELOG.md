@@ -13,6 +13,7 @@
 - cli: `metadata diff` will now only show the differences in metadata. old behaviour is avialble behind a flag (`--type unified-common`) (#5487)
 - cli: add citus support
 - cli: allow `--skip-execution` to be used with `up` and `down` flags in `migrate apply`
+- cli: allow deleting migration state from server using `--server` flag in `migrate delete` command
 
 ## v2.0.0-beta.2
 
