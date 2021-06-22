@@ -396,7 +396,7 @@ export const getCreateTableQueries = (
 
   // add comment
   if (tableComment && tableComment !== '') {
-    sqlCreateTable += `COMMENT ON TABLE "${currentSchema}".${tableName} IS ${sqlEscapeText(
+    sqlCreateTable += `COMMENT ON TABLE "${currentSchema}"."${tableName}" IS ${sqlEscapeText(
       tableComment
     )};`;
   }
