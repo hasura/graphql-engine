@@ -36,7 +36,7 @@ Request structure
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v2/query HTTP/1.1
 
    {
       "type": "<query-type>",

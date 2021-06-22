@@ -83,8 +83,9 @@ Let's say we want to create two simple tables for ``articles`` and ``authors`` s
       X-Hasura-Role: admin
 
       {
-        "type": "schema_run_sql",
+        "type": "run_sql",
         "args": {
+          "source": "<db-name>",
           "sql": "CREATE TABLE articles(id int NOT NULL, title text NOT NULL, content text NOT NULL, rating int NOT NULL, author_id int NOT NULL, PRIMARY KEY (id));"
         }
       }
@@ -128,7 +129,7 @@ In order to expose a table over the GraphQL API, it needs to be **tracked**.
          hasura metadata apply
 
   .. tab:: API
-    .. TODO: BROKEN_LINK
+    
     To track the table and expose it over the GraphQL API, make the following API call to the :ref:`mssql_track_table metadata API <mssql_track_table>`:
 
     .. code-block:: http
@@ -141,26 +142,9 @@ In order to expose a table over the GraphQL API, it needs to be **tracked**.
         "type": "mssql_track_table",
         "args": {
           "table": "authors",
-          "configuration": {
-          "custom_name": "authors_table"
-          }
         }
       }
 
-    .. MSSQLUPDATE
-      .. code-block:: http
-
-      POST /v1/query HTTP/1.1
-      Content-Type: application/json
-      X-Hasura-Role: admin
-
-      {
-        "type": "track_table",
-        "args": {
-          "schema": "public",
-          "name": "articles"
-        }
-      }
 
 Generated GraphQL schema types
 ------------------------------
@@ -200,7 +184,9 @@ table we just created and tracked:
     offset: Int
     order_by: [articles_order_by!]
   ): [articles!]!
-..
+
+.. TODO: MSSQL_UNSUPPORTED
+
   # insert/upsert mutation field
   insert_articles (
     objects: [articles_insert_input!]!
@@ -271,7 +257,8 @@ sample data into the tables first)*
         }
       }
 
-..      
+.. TODO: MSSQL_UNSUPPORTED
+
    Insert data in the ``author`` table:
 
     .. graphiql::
@@ -304,8 +291,3 @@ sample data into the tables first)*
             }
           }
         }
-
- .. MSSQLUPDATE
-  .. note::
-
-  author's ``id`` does not need to be passed as an input as it is of type ``serial`` (auto incrementing integer).
