@@ -1,7 +1,5 @@
 module Hasura.GraphQL.Schema.RemoteSource where
 
-import           Hasura.Prelude
-
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.Common
@@ -13,4 +11,4 @@ remoteSourceField
   :: forall b r m n
    . MonadBuildSchema b r m n
   => AnyBackend (RemoteSourceRelationshipInfo b)
-  -> m (Maybe (FieldParser n (AnnotatedField b)))
+  -> m [FieldParser n (AnnotatedField b)]

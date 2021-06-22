@@ -336,6 +336,9 @@ instance Arbitrary RemoteSourceRelationshipType where
 instance Arbitrary RemoteSourceRelationshipDef where
   arbitrary = genericArbitrary
 
+instance Arbitrary RRFormat where
+  arbitrary = genericArbitrary
+
 instance Arbitrary RemoteRelationshipDef where
   arbitrary = genericArbitrary
 

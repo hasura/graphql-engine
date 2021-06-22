@@ -2,6 +2,8 @@ module Hasura.GraphQL.Schema.RemoteSource where
 
 import           Hasura.Prelude
 
+import qualified Language.GraphQL.Draft.Syntax       as G
+
 import qualified Hasura.RQL.IR.Select                as IR
 
 import           Hasura.GraphQL.Parser
@@ -18,30 +20,38 @@ remoteSourceField
   :: forall b r m n
    . MonadBuildSchema b r m n
   => AnyBackend (RemoteSourceRelationshipInfo b)
-  -> m (Maybe (FieldParser n (AnnotatedField b)))
+  -> m [FieldParser n (AnnotatedField b)]
 remoteSourceField remoteDB = dispatchAnyBackend @BackendSchema remoteDB buildField
   where
     buildField
       :: forall src tgt
        . BackendSchema tgt
       => RemoteSourceRelationshipInfo src tgt
-      -> m (Maybe (FieldParser n (AnnotatedField src)))
-    buildField (RemoteSourceRelationshipInfo {..}) = runMaybeT do
-      tableInfo  <- lift $ askTableInfo @tgt _rsriSource _rsriTable
-      relFieldName <- lift $ textToName $ remoteRelationshipNameToText _rsriName
-      tablePerms <- MaybeT $ tableSelectPermissions @tgt tableInfo
-      parser     <- lift $ case _rsriType of
-        ArrayRelationship -> do
-          parser <- selectTable _rsriSource tableInfo relFieldName Nothing tablePerms
-          pure $ parser <&> IR.SourceRelationshipArray
-        ObjectRelationship -> do
-          selectionSetParser <- tableSelectionSet _rsriSource tableInfo tablePerms
-          pure $ subselection_ relFieldName Nothing selectionSetParser <&> \fields ->
-            IR.SourceRelationshipObject
-              $ IR.AnnObjectSelectG fields _rsriTable
-              $ IR._tpFilter
-              $ tablePermissionsInfo tablePerms
-      pure $ parser <&> \select -> IR.AFRemote
-        $ IR.RemoteSelectSource
-        $ mkAnyBackend @tgt
-        $ IR.RemoteSourceSelect _rsriSource _rsriSourceConfig select _rsriMapping
+      -> m [FieldParser n (AnnotatedField src)]
+    buildField (RemoteSourceRelationshipInfo {..}) = do
+      tableInfo  <- askTableInfo @tgt _rsriSource _rsriTable
+      fieldName  <- textToName $ remoteRelationshipNameToText _rsriName
+      maybePerms <- tableSelectPermissions @tgt tableInfo
+      case maybePerms of
+        Nothing -> pure []
+        Just tablePerms -> do
+          parsers <- case _rsriType of
+            ObjectRelationship -> do
+              selectionSetParser <- tableSelectionSet _rsriSource tableInfo tablePerms
+              pure $ pure $ subselection_ fieldName Nothing selectionSetParser <&> \fields ->
+                IR.SourceRelationshipObject
+                  $ IR.AnnObjectSelectG fields _rsriTable
+                  $ IR._tpFilter
+                  $ tablePermissionsInfo tablePerms
+            ArrayRelationship -> do
+              let aggFieldName = fieldName <> $$(G.litName "_aggregate")
+              selectionSetParser    <- selectTable          _rsriSource tableInfo    fieldName Nothing tablePerms
+              aggSelectionSetParser <- selectTableAggregate _rsriSource tableInfo aggFieldName Nothing tablePerms
+              pure $ catMaybes
+                [ Just $ selectionSetParser <&> IR.SourceRelationshipArray
+                , aggSelectionSetParser <&> fmap IR.SourceRelationshipArrayAggregate
+                ]
+          pure $ parsers <&> fmap \select -> IR.AFRemote
+            $ IR.RemoteSelectSource
+            $ mkAnyBackend @tgt
+            $ IR.RemoteSourceSelect _rsriSource _rsriSourceConfig select _rsriMapping

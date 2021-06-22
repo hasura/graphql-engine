@@ -402,7 +402,7 @@ updateColInRemoteRelationship source remoteRelationshipName renameCol = do
   oldColName <- parseGraphQLName $ toTxt oldCol
   newColName <- parseGraphQLName $ toTxt newCol
   tell $ MetadataModifier $
-    tableMetadataSetter @b source qt.tmRemoteRelationships.ix remoteRelationshipName.rrmDefinition._RemoteSchemaRelDef %~
+    tableMetadataSetter @b source qt.tmRemoteRelationships.ix remoteRelationshipName.rrmDefinition._RemoteSchemaRelDef._2 %~
       (rrdHasuraFields %~ modifyHasuraFields) .
       (rrdRemoteField %~ modifyFieldCalls oldColName newColName)
   where

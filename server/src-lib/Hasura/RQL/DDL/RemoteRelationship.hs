@@ -33,7 +33,7 @@ runCreateRemoteRelationship
 runCreateRemoteRelationship RemoteRelationship {..} =
   case _rtrDefinition of
     RemoteSourceRelDef _ -> error "TODO"
-    def@(RemoteSchemaRelDef _) -> do
+    def@(RemoteSchemaRelDef _ _) -> do
       void $ askTabInfo @b _rtrSource _rtrTable
       let metadataObj = MOSourceObjId _rtrSource
                         $ AB.mkAnyBackend
@@ -54,7 +54,7 @@ runUpdateRemoteRelationship
 runUpdateRemoteRelationship RemoteRelationship {..} =
   case _rtrDefinition of
     RemoteSourceRelDef _ -> error "TODO"
-    def@(RemoteSchemaRelDef _) -> do
+    def@(RemoteSchemaRelDef _ _) -> do
       fieldInfoMap <- askFieldInfoMap @b _rtrSource _rtrTable
       void $ askRemoteRel fieldInfoMap _rtrName
       let metadataObj = MOSourceObjId _rtrSource
@@ -121,7 +121,7 @@ buildRemoteFieldInfo allSources rr allColumns remoteSchemaMap =
         let sourceConfig = _rsConfig targetSourceInfo
             rsri = RemoteSourceRelationshipInfo (_rtrName rr) rsrRelationshipType rsrSource sourceConfig table $ Map.fromList mapping
         pure (RFISource $ mkAnyBackend @b' rsri, [])
-    RemoteSchemaRelDef remoteRelationship -> do
+    RemoteSchemaRelDef _ remoteRelationship -> do
       let remoteSchemaName = _rrdRemoteSchemaName remoteRelationship
       (RemoteSchemaCtx _name introspectionResult remoteSchemaInfo _ _ _permissions) <-
         onNothing (Map.lookup remoteSchemaName remoteSchemaMap)

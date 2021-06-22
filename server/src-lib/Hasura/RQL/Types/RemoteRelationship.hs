@@ -8,6 +8,7 @@ module Hasura.RQL.Types.RemoteRelationship
   , RemoteRelationship(..)
   , RemoteSchemaRelationshipDef(..)
   , RemoteSourceRelationshipType (..)
+  , RRFormat(..)
   , RemoteSourceRelationshipDef(..)
   , RemoteSourceRelationshipInfo(..)
   , RemoteRelationshipDef(..)
@@ -317,8 +318,13 @@ instance Cacheable RemoteSchemaRelationshipDef
 $(deriveJSON hasuraJSON ''RemoteSchemaRelationshipDef)
 $(makeLenses ''RemoteSchemaRelationshipDef)
 
+data RRFormat = RFRemoteSchemaOnly | RFSchemaAndSource
+  deriving stock (Show, Eq, Generic)
+instance NFData RRFormat
+instance Cacheable RRFormat
+
 data RemoteRelationshipDef
-  = RemoteSchemaRelDef !RemoteSchemaRelationshipDef
+  = RemoteSchemaRelDef !RRFormat !RemoteSchemaRelationshipDef
   | RemoteSourceRelDef !RemoteSourceRelationshipDef
   deriving stock (Show, Eq, Generic)
 instance NFData RemoteRelationshipDef
@@ -335,17 +341,26 @@ instance FromJSON RemoteRelationshipDef where
       (Just source, _)   -> RemoteSourceRelDef <$> parseJSON source
       (_, Just schema)   ->
         case schema of
-          Object _ -> RemoteSchemaRelDef <$> parseJSON schema
+          Object _ -> RemoteSchemaRelDef RFSchemaAndSource <$> parseJSON schema
           _        -> do -- old parser format
-            fmap RemoteSchemaRelDef $ RemoteSchemaRelationshipDef
+            fmap (RemoteSchemaRelDef RFRemoteSchemaOnly) $ RemoteSchemaRelationshipDef
               <$> o .: "remote_schema"
               <*> o .: "hasura_fields"
               <*> o .: "remote_field"
 
 instance ToJSON RemoteRelationshipDef where
   toJSON = \case
-    RemoteSourceRelDef source -> object [ "remote_source" .= toJSON source ]
-    RemoteSchemaRelDef schema -> object [ "remote_schema" .= toJSON schema ]
+    RemoteSourceRelDef source     -> object [ "remote_source" .= toJSON source ]
+    RemoteSchemaRelDef fmt schema@RemoteSchemaRelationshipDef {..} ->
+      case fmt of
+        RFRemoteSchemaOnly ->
+          object
+            [ "remote_schema" .= toJSON _rrdRemoteSchemaName
+            , "hasura_fields" .= toJSON _rrdHasuraFields
+            , "remote_field"  .= toJSON _rrdRemoteField
+            ]
+        RFSchemaAndSource ->
+          object [ "remote_schema" .= toJSON schema ]
 
 -- | Metadata type for remote relationship
 data RemoteRelationship b =
@@ -376,7 +391,7 @@ instance (Backend b) => FromJSON (RemoteRelationship b) where
       <$> o .: "name"
       <*> o .:? "source" .!= defaultSource
       <*> o .: "table"
-      <*> pure (RemoteSchemaRelDef $ RemoteSchemaRelationshipDef name hasuraFields remoteField)
+      <*> pure (RemoteSchemaRelDef RFRemoteSchemaOnly $ RemoteSchemaRelationshipDef  name hasuraFields remoteField)
 $(makeLenses ''RemoteRelationship)
 
 data DeleteRemoteRelationship (b :: BackendType)

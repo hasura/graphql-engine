@@ -1110,7 +1110,7 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
   -- The above issue is easily fixable by removing the following guard and 'MaybeT' monad transformation
   guard $ queryType == ET.QueryHasura
   case remoteFieldInfo of
-    RFISource remoteSource -> lift $ afold <$> remoteSourceField remoteSource
+    RFISource remoteSource -> lift $ remoteSourceField remoteSource
     RFISchema remoteSchema -> do
       let RemoteSchemaFieldInfo name _params hasuraFields remoteFields remoteSchemaInfo remoteSchemaInputValueDefns remoteSchemaName (table, source) = remoteSchema
       (roleIntrospectionResult, parsedIntrospection) <-
