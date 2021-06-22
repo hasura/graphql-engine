@@ -356,9 +356,10 @@ fromOpenJson OpenJson {openJsonExpression, openJsonWith} =
 fromJsonFieldSpec :: JsonFieldSpec -> Printer
 fromJsonFieldSpec =
   \case
-    IntField name mPath    -> fromNameText name <+> " INT" <+> quote mPath
+    ScalarField fieldType name mPath ->
+      fromNameText name <+> " " <+>
+        fromString (T.unpack $ scalarTypeDBName fieldType) <+> quote mPath
     StringField name mPath -> fromNameText name <+> " NVARCHAR(MAX)" <+> quote mPath
-    UuidField name mPath   -> fromNameText name <+> " UNIQUEIDENTIFIER" <+> quote mPath
     JsonField name mPath   -> fromJsonFieldSpec (StringField name mPath) <+> " AS JSON"
     where
       quote mPath = maybe "" ((\p -> " '" <+> p <+> "'"). go) mPath

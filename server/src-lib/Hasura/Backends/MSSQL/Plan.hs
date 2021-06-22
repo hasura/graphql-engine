@@ -13,6 +13,7 @@ import           Data.ByteString.Lazy          (toStrict)
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as Set
+import qualified Data.List.NonEmpty            as NE
 import qualified Data.Text                     as T
 import qualified Database.ODBC.SQLServer       as ODBC
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -22,6 +23,7 @@ import           Data.Text.Extended
 
 import qualified Hasura.GraphQL.Parser         as GraphQL
 import qualified Hasura.RQL.Types.Column       as RQL
+import qualified Hasura.RQL.Types.Common       as RQL
 
 import           Hasura.Backends.MSSQL.FromIr
 import           Hasura.Backends.MSSQL.Types
@@ -29,6 +31,7 @@ import           Hasura.Base.Error
 import           Hasura.RQL.IR
 import           Hasura.SQL.Backend
 import           Hasura.Session
+import Control.Applicative
 
 
 -- --------------------------------------------------------------------------------
@@ -41,8 +44,32 @@ planQuery
   -> m Select
 planQuery sessionVariables queryDB = do
   rootField <- traverseQueryDB (prepareValueQuery sessionVariables) queryDB
+  runIrWrappingRoot $ fromRootField rootField
+
+planSourceRelationship
+  :: MonadError QErr m
+  => SessionVariables
+  -> NE.NonEmpty J.Object
+  -- ^ List of json objects, each of which becomes a row of the table
+  -> HM.HashMap RQL.FieldName (ColumnName, ScalarType)
+  -- ^ The above objects have this schema
+  -> RQL.FieldName
+  -> (RQL.FieldName, SourceRelationshipSelection 'MSSQL (Const Void) GraphQL.UnpreparedValue)
+  -> m Select
+planSourceRelationship sessionVariables lhs
+  lhsSchema argumentId (relationshipName, sourceRelationshipRaw) = do
+  sourceRelationship <- traverseSourceRelationshipSelection
+    (fmap Const . prepareValueQuery sessionVariables) sourceRelationshipRaw
+  runIrWrappingRoot $ fromSourceRelationship lhs
+    lhsSchema argumentId (relationshipName, sourceRelationship)
+
+runIrWrappingRoot
+  :: MonadError QErr m
+  => FromIr Select
+  -> m Select
+runIrWrappingRoot selectAction = do
   sel <-
-    runValidate (runFromIr (fromRootField rootField))
+    runValidate (runFromIr selectAction)
     `onLeft` (throw400 NotSupported . tshow)
   pure $
     sel

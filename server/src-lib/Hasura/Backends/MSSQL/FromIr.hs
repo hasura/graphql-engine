@@ -2,6 +2,7 @@
 
 module Hasura.Backends.MSSQL.FromIr
   ( fromSelectRows
+  , fromSourceRelationship
   , mkSQLSelect
   , fromRootField
   , fromSelectAggregate
@@ -15,14 +16,18 @@ module Hasura.Backends.MSSQL.FromIr
 
 import           Hasura.Prelude
 
+import qualified Data.Aeson                            as J
 import qualified Data.HashMap.Strict                   as HM
+import qualified Data.List.NonEmpty                    as NE
 import qualified Data.Map.Strict                       as M
 import qualified Data.Text                             as T
 import qualified Database.ODBC.SQLServer               as ODBC
 
+import           Control.Applicative                   (getConst)
 import           Control.Monad.Validate
 import           Data.Map.Strict                       (Map)
 import           Data.Proxy
+import           Data.Text.NonEmpty                    (mkNonEmptyTextUnsafe)
 
 import qualified Hasura.RQL.IR                         as IR
 import qualified Hasura.RQL.Types.Column               as IR
@@ -155,6 +160,59 @@ fromSelectRows annSelectG = do
       if num
         then StringifyNumbers
         else LeaveNumbersAlone
+
+fromSourceRelationship
+  :: NE.NonEmpty J.Object
+  -- ^ List of json objects, each of which becomes a row of the table
+  -> HM.HashMap IR.FieldName (ColumnName, ScalarType)
+  -- ^ The above objects have this schema
+  -> IR.FieldName
+  -> (IR.FieldName, IR.SourceRelationshipSelection 'MSSQL (Const Void) (Const Expression))
+  -> FromIr TSQL.Select
+fromSourceRelationship lhs lhsSchema argumentId relationshipField = do
+  (argumentIdQualified, fieldSource) <-
+    flip runReaderT (fromAlias selectFrom) $ do
+      argumentIdQualified <- fromPGCol (coerceToColumn argumentId)
+      relationshipSource <- fromRemoteRelationFieldsG mempty
+                            (fst <$> joinColumns) relationshipField
+      pure (ColumnExpression argumentIdQualified, relationshipSource)
+  let selectProjections = projectArgumentId argumentIdQualified:fieldSourceProjections fieldSource
+  pure
+    Select
+      { selectOrderBy = Nothing
+      , selectTop = NoTop
+      , selectProjections
+      , selectFrom = Just selectFrom
+      , selectJoins = mapMaybe fieldSourceJoin $ pure fieldSource
+      , selectWhere = mempty
+      , selectFor =
+          JsonFor ForJson {jsonCardinality = JsonArray, jsonRoot = NoRoot}
+      , selectOffset = Nothing
+      }
+  where
+    projectArgumentId column =
+      ExpressionProjection $ Aliased { aliasedThing = column
+                                     , aliasedAlias = IR.getFieldNameTxt argumentId
+                                     }
+    selectFrom =
+      FromOpenJson Aliased
+      { aliasedThing =
+          OpenJson
+            { openJsonExpression =
+                ValueExpression (ODBC.TextValue $ lbsToTxt $ J.encode lhs)
+            , openJsonWith =
+                toJsonFieldSpec argumentId IntegerType NE.:|
+                  map (uncurry toJsonFieldSpec . second snd) (HM.toList lhsSchema)
+            }
+      , aliasedAlias = "lhs"
+      }
+
+    joinColumns = mapKeys coerceToColumn lhsSchema
+
+    coerceToColumn = ColumnName . IR.getFieldNameTxt
+
+    toJsonFieldSpec (IR.FieldName lhsFieldName) scalarType =
+      ScalarField scalarType lhsFieldName (Just $ FieldPath RootPath lhsFieldName)
 
 fromSelectAggregate ::
      IR.AnnSelectG 'MSSQL [(IR.FieldName, IR.TableAggregateFieldG 'MSSQL (Const Void) Expression)] Expression
@@ -560,6 +618,44 @@ fromAggregateField aggregateField =
           IR.CFCol pgCol _pgType -> fmap ColumnExpression (fromPGCol pgCol)
           IR.CFExp text          -> pure (ValueExpression (ODBC.TextValue text))
       pure (OpAggregate op args)
+
+-- | The main sources of fields, either constants, fields or via joins.
+fromRemoteRelationFieldsG ::
+     Map TableName EntityAlias
+  -> HM.HashMap ColumnName ColumnName
+  -> (IR.FieldName, IR.SourceRelationshipSelection 'MSSQL (Const Void) (Const Expression))
+  -> ReaderT EntityAlias FromIr FieldSource
+fromRemoteRelationFieldsG existingJoins joinColumns (IR.FieldName name, field) =
+  case field of
+    IR.SourceRelationshipObject selectionSet ->
+      fmap
+        (\aliasedThing ->
+           JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
+        (fromObjectRelationSelectG existingJoins
+          (withJoinColumns $ runIdentity $
+            IR.traverseAnnObjectSelect (Identity . getConst) selectionSet))
+    IR.SourceRelationshipArray selectionSet ->
+      fmap
+        (\aliasedThing ->
+           JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
+        (fromArraySelectG
+          (IR.ASSimple $ withJoinColumns $ runIdentity $
+            IR.traverseAnnSimpleSelect (Identity . getConst) selectionSet))
+    IR.SourceRelationshipArrayAggregate selectionSet ->
+      fmap
+        (\aliasedThing ->
+           JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
+        (fromArraySelectG
+          (IR.ASAggregate $ withJoinColumns $ runIdentity $
+            IR.traverseAnnAggregateSelect (Identity . getConst) selectionSet))
+  where
+    withJoinColumns
+      :: s -> IR.AnnRelationSelectG 'MSSQL s
+    withJoinColumns annotatedRelationship =
+      IR.AnnRelationSelectG
+        (IR.RelName $ mkNonEmptyTextUnsafe name)
+        joinColumns
+        annotatedRelationship
 
 -- | The main sources of fields, either constants, fields or via joins.
 fromAnnFieldsG ::

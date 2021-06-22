@@ -854,6 +854,19 @@ instance
   , Hashable (r b)
   ) => Hashable (SourceRelationshipSelection b r v)
 
+traverseSourceRelationshipSelection
+  :: (Applicative f, Backend backend)
+  => (vf backend -> f (vg backend))
+  -> SourceRelationshipSelection backend r vf
+  -> f (SourceRelationshipSelection backend r vg)
+traverseSourceRelationshipSelection f = \case
+  SourceRelationshipObject s ->
+    SourceRelationshipObject <$> traverseAnnObjectSelect f s
+  SourceRelationshipArray s ->
+    SourceRelationshipArray <$> traverseAnnSimpleSelect f s
+  SourceRelationshipArrayAggregate s ->
+    SourceRelationshipArrayAggregate <$> traverseAnnAggregateSelect f s
+
 data RemoteSourceSelect
     (src :: BackendType)
     (vf :: BackendType -> Type)
