@@ -10,6 +10,7 @@
 - server: add `update_remote_schema` metadata query
 - console: add citus support
 - console: add support for `update_remote_schema` API while modifying remote schemas
+- console: hide postgres system schemas by default
 - cli: `metadata diff` will now only show the differences in metadata. old behaviour is avialble behind a flag (`--type unified-common`) (#5487)
 - cli: add citus support
 - cli: allow `--skip-execution` to be used with `up` and `down` flags in `migrate apply`
