@@ -30,43 +30,37 @@ runCreateRemoteRelationship
    . (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
   => RemoteRelationship b
   -> m EncJSON
-runCreateRemoteRelationship RemoteRelationship {..} =
-  case _rtrDefinition of
-    RemoteSourceRelDef _ -> error "TODO"
-    def@(RemoteSchemaRelDef _ _) -> do
-      void $ askTabInfo @b _rtrSource _rtrTable
-      let metadataObj = MOSourceObjId _rtrSource
-                        $ AB.mkAnyBackend
-                        $ SMOTableObj @b _rtrTable
-                        $ MTORemoteRelationship _rtrName
-          metadata = RemoteRelationshipMetadata _rtrName def
-      buildSchemaCacheFor metadataObj
-        $ MetadataModifier
-        $ tableMetadataSetter @b _rtrSource _rtrTable.tmRemoteRelationships
-          %~ OMap.insert _rtrName metadata
-      pure successMsg
+runCreateRemoteRelationship RemoteRelationship {..} = do
+  void $ askTabInfo @b _rtrSource _rtrTable
+  let metadataObj = MOSourceObjId _rtrSource
+                    $ AB.mkAnyBackend
+                    $ SMOTableObj @b _rtrTable
+                    $ MTORemoteRelationship _rtrName
+      metadata = RemoteRelationshipMetadata _rtrName _rtrDefinition
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ tableMetadataSetter @b _rtrSource _rtrTable.tmRemoteRelationships
+      %~ OMap.insert _rtrName metadata
+  pure successMsg
 
 runUpdateRemoteRelationship
   :: forall b m
    . (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
   => RemoteRelationship b
   -> m EncJSON
-runUpdateRemoteRelationship RemoteRelationship {..} =
-  case _rtrDefinition of
-    RemoteSourceRelDef _ -> error "TODO"
-    def@(RemoteSchemaRelDef _ _) -> do
-      fieldInfoMap <- askFieldInfoMap @b _rtrSource _rtrTable
-      void $ askRemoteRel fieldInfoMap _rtrName
-      let metadataObj = MOSourceObjId _rtrSource
-                          $ AB.mkAnyBackend
-                          $ SMOTableObj @b _rtrTable
-                          $ MTORemoteRelationship _rtrName
-          metadata = RemoteRelationshipMetadata _rtrName def
-      buildSchemaCacheFor metadataObj
-        $ MetadataModifier
-        $ tableMetadataSetter @b _rtrSource _rtrTable.tmRemoteRelationships
-          %~ OMap.insert _rtrName metadata
-      pure successMsg
+runUpdateRemoteRelationship RemoteRelationship {..} = do
+  fieldInfoMap <- askFieldInfoMap @b _rtrSource _rtrTable
+  void $ askRemoteRel fieldInfoMap _rtrName
+  let metadataObj = MOSourceObjId _rtrSource
+                      $ AB.mkAnyBackend
+                      $ SMOTableObj @b _rtrTable
+                      $ MTORemoteRelationship _rtrName
+      metadata = RemoteRelationshipMetadata _rtrName _rtrDefinition
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ tableMetadataSetter @b _rtrSource _rtrTable.tmRemoteRelationships
+      %~ OMap.insert _rtrName metadata
+  pure successMsg
 
 runDeleteRemoteRelationship
   :: forall b m
