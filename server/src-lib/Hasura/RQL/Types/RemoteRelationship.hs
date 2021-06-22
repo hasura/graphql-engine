@@ -11,7 +11,7 @@ module Hasura.RQL.Types.RemoteRelationship
   , RemoteSourceRelationshipDef(..)
   , RemoteSourceRelationshipInfo(..)
   , RemoteRelationshipDef(..)
-  , rrdRemoteSchema
+  , rrdRemoteSchemaName
   , rrdHasuraFields
   , rrdRemoteField
   , rtrDefinition
@@ -308,9 +308,9 @@ instance FromJSON RemoteSourceRelationshipDef where
 -- | This is the relationship type we store in our metadata.
 data RemoteSchemaRelationshipDef
   = RemoteSchemaRelationshipDef
-  { _rrdRemoteSchema :: !RemoteSchemaName
-  , _rrdHasuraFields :: !(HashSet FieldName)
-  , _rrdRemoteField  :: !RemoteFields
+  { _rrdRemoteSchemaName :: !RemoteSchemaName
+  , _rrdHasuraFields     :: !(HashSet FieldName)
+  , _rrdRemoteField      :: !RemoteFields
   } deriving stock (Show, Eq, Generic)
 instance NFData RemoteSchemaRelationshipDef
 instance Cacheable RemoteSchemaRelationshipDef
@@ -338,7 +338,7 @@ instance FromJSON RemoteRelationshipDef where
           Object _ -> RemoteSchemaRelDef <$> parseJSON schema
           _        -> do -- old parser format
             fmap RemoteSchemaRelDef $ RemoteSchemaRelationshipDef
-              <$> o .: "schema_name"
+              <$> o .: "remote_schema"
               <*> o .: "hasura_fields"
               <*> o .: "remote_field"
 

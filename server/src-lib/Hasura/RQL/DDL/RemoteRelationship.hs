@@ -122,7 +122,7 @@ buildRemoteFieldInfo allSources rr allColumns remoteSchemaMap =
             rsri = RemoteSourceRelationshipInfo (_rtrName rr) rsrRelationshipType rsrSource sourceConfig table $ Map.fromList mapping
         pure (RFISource $ mkAnyBackend @b' rsri, [])
     RemoteSchemaRelDef remoteRelationship -> do
-      let remoteSchemaName = _rrdRemoteSchema remoteRelationship
+      let remoteSchemaName = _rrdRemoteSchemaName remoteRelationship
       (RemoteSchemaCtx _name introspectionResult remoteSchemaInfo _ _ _permissions) <-
         onNothing (Map.lookup remoteSchemaName remoteSchemaMap)
           $ throw400 RemoteSchemaError $ "remote schema with name " <> remoteSchemaName <<> " not found"

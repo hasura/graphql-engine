@@ -105,7 +105,7 @@ validateRemoteSchemaRelationship
   -> [ColumnInfo b]
   -> m (RemoteSchemaFieldInfo b)
 validateRemoteSchemaRelationship schema table name source (remoteSchemaInfo, introspectionResult) pgColumns = do
-  let remoteSchemaName = _rrdRemoteSchema schema
+  let remoteSchemaName = _rrdRemoteSchemaName schema
   hasuraFields <- forM (toList $ _rrdHasuraFields schema) $
     \fieldName -> onNothing (find ((==) fieldName . fromCol @b . pgiColumn) pgColumns) $
       throwError $ TableFieldNonexistent table fieldName
