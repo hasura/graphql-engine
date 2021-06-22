@@ -242,6 +242,16 @@ databases.yaml
     - "!include public_t1.yaml"
     functions: []
 
+.. note::
+  ``database_url`` can be set from an environment variable
+  by specifying it as:
+  
+  .. code-block:: yaml
+
+    database_url:
+      from_env: SOME_ENVIRONMENT_VARIABLE
+
+
 public_t1.yaml
 ^^^^^^^^^^^^^^
 
