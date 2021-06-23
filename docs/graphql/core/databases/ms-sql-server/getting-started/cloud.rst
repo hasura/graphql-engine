@@ -43,8 +43,8 @@ Here's an example of what your connection strings might look like with a SQL ser
 
 .. admonition:: Make sure your SQL server database is reachable by Hasura Cloud:
 
-   1. Allow public connections or :ref:`whitelist the Hasura Cloud IP<cloud_projects_create_allow_nat_ip>` on your SQL Server firewall: This is good for testing and will allow you to try Hasura out with your database quickly!
-   2. VPC peering: VPC peering and private network access is available on Hasura Cloud paid tiers: Reccommended for production. Get in touch with us if you'd like to try this out against your existing databases!
+   1. Allow public connections or :ref:`whitelist the Hasura Cloud IP <cloud_projects_create_allow_nat_ip>` on your SQL Server firewall: This is good for testing and will allow you to try Hasura out with your database quickly!
+   2. VPC peering: VPC peering and private network access is available on Hasura Cloud paid tiers: Recommended for production. Get in touch with us if you'd like to try this out against your existing databases!
 
 .. thumbnail:: /img/graphql/core/databases/ms-sql-server/1-manage-databases.png
    :alt: Manage databases

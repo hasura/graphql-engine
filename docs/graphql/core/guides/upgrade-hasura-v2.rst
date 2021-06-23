@@ -246,8 +246,8 @@ The following commands need to be executed in the specified order to apply metad
 Downgrading back to Hasura v1
 -----------------------------
 
-In case there are some issues with your API post updating to Hasura v2, you can downgrade back to Hasura v1 using the
-:ref:`downgrade command <downgrade_hge>`:
+In case there are some issues with your Hasura instance post updating to Hasura v2, you can downgrade back to Hasura v1 by reverting the Hasura
+docker image version and using the :ref:`downgrade command <downgrade_hge>` to revert the Hasura metadata catalogue changes:
 
 .. code-block:: bash
 
