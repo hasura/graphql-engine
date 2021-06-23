@@ -40,7 +40,7 @@ func New(ec *cli.ExecutionContext, baseDir string) *ActionConfig {
 		ActionConfig:       ec.Config.ActionConfig,
 		serverFeatureFlags: ec.Version.ServerFeatureFlags,
 		logger:             ec.Logger,
-		cliExtensionConfig: cliextension.NewCLIExtensionConfig(&ec.CliExtBinPath, ec.Logger),
+		cliExtensionConfig: cliextension.NewCLIExtensionConfig(&ec.CliExtDestinationBinPath, ec.Logger),
 		ensureCliExt: func() error {
 			return cliext.Setup(ec)
 		},

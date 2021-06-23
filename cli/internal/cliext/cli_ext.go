@@ -23,7 +23,7 @@ func Setup(ec *cli.ExecutionContext) error {
 	if err != nil {
 		return errors.Wrapf(err, "error creating directory while setting up cli-ext")
 	}
-	ec.CliExtDir = cliExtDirPath
+	ec.CliExtDestinationDir = cliExtDirPath
 
 	cliExtBinName := "cli-ext"
 	if runtime.GOOS == "windows" {
@@ -54,11 +54,11 @@ func Setup(ec *cli.ExecutionContext) error {
 	if err != nil {
 		return errors.Wrap(err, "error unpacking binary while setting up cli-ext")
 	}
-	ec.CliExtBinPath = cliExtBinPath
+	ec.CliExtDestinationBinPath = cliExtBinPath
 
 	return nil
 }
 
 func Cleanup(ec *cli.ExecutionContext) {
-	_ = os.RemoveAll(ec.CliExtDir)
+	_ = os.RemoveAll(ec.CliExtDestinationDir)
 }
