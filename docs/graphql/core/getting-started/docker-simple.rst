@@ -15,12 +15,9 @@ Quickstart with Docker
 Introduction
 ------------
 
-This guide will help you get the Hasura GraphQL engine and Postgres running as
-Docker containers using Docker Compose. This is the easiest way to set up
-Hasura GraphQL engine on your **local environment**. 
-
-In case you'd like to run Hasura on an existing Postgres database, follow :ref:`this guide <deployment_docker>`
-to deploy the Hasura GraphQL engine as a standalone docker container and connect it to your Postgres instance.
+This guide will help you get the Hasura GraphQL engine and a Postgres database to store its metadata
+running as Docker containers using Docker Compose. This is the easiest way to set up
+Hasura GraphQL engine on your **local environment**.
 
 Prerequisites
 -------------
@@ -82,7 +79,7 @@ Click ``Connect Database``.
 .. admonition:: Starting from scratch
 
   If you are looking to start setting up a backend from scratch, we recommend
-  using Postgres. If you do not have an existing Postgres database, you can choose
+  using Postgres as the database. If you do not have an existing Postgres database, you can choose
   to connect to the same Postgres database that is used to store the Hasura metadata.
 
   You can pick the database connection URL from the value assigned to the
@@ -166,12 +163,9 @@ Secure your endpoint
 
 :ref:`Add an admin secret <docker_secure>` to make sure that your GraphQL endpoint and the Hasura console are not publicly accessible.
 
-Advanced Docker setup
+Detailed Docker setup
 ---------------------
 
 This was a quickstart guide to get the Hasura GraphQL engine up and running
-quickly. For more detailed instructions on deploying using Docker with an
-external database, check out :ref:`deployment_docker`.
-
-- :ref:`Using Docker <deployment_docker>`: Run as a docker container and connect to an existing Postgres
-  database.
+quickly. For more detailed instructions on deploying using Docker, check out
+:ref:`deployment_docker`.

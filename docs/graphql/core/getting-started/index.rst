@@ -43,7 +43,7 @@ Supported databases
 Hasura GraphQL engine supports:
 
 - :ref:`Postgres <database_postgres>`
-- :ref:`MS SQL Server <database_ms_sql_server>` (in beta)
+- :ref:`MS SQL Server <database_ms_sql_server>`
 - **MySQL** (in preview) - See the :ref:`preview guide <mysql_preview>`
 
 .. toctree::
