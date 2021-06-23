@@ -3,6 +3,8 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: fix resetting metadata catalog version to 43 while initializing postgres source with v1.0 catalog
+
 
 ## v2.0.0
 

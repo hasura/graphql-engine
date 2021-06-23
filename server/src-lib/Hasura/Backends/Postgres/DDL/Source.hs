@@ -12,6 +12,7 @@ module Hasura.Backends.Postgres.DDL.Source
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                         as Map
+import qualified Data.List.NonEmpty                          as NE
 import qualified Database.PG.Query                           as Q
 import qualified Language.Haskell.TH.Lib                     as TH
 import qualified Language.Haskell.TH.Syntax                  as TH
@@ -93,7 +94,6 @@ initCatalogForSource maintenanceMode migrationTime = do
         -- we migrate to the 43 version, which is the migration where
         -- metadata separation is introduced
         migrateTo43MetadataCatalog currMetadataCatalogVersion
-        setCatalogVersion "43" migrationTime
         liftTx createVersionTable
         -- Migrate the catalog from initial version i.e '1'
         migrateSourceCatalogFrom "1"
@@ -119,7 +119,14 @@ initCatalogForSource maintenanceMode migrationTime = do
 
     migrateTo43MetadataCatalog prevVersion = do
       let neededMigrations = dropWhile ((/= prevVersion) . fst) upMigrationsUntil43
-      traverse_ snd neededMigrations
+      case NE.nonEmpty neededMigrations of
+        Just nonEmptyNeededMigrations -> do
+          -- Migrations aren't empty. We need to update the catalog version after migrations
+          traverse_ snd nonEmptyNeededMigrations
+          setCatalogVersion "43" migrationTime
+        Nothing ->
+          -- No migrations exists, implies the database is migrated to latest metadata catalog version
+          pure ()
 
 -- NOTE (rakesh):
 -- Down migrations for postgres sources is not supported in this PR. We need an
