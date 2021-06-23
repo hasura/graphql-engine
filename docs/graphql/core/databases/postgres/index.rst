@@ -12,7 +12,17 @@ Postgres
   :depth: 1
   :local:
 
+Introduction
+------------
+
 Hasura allows connecting to a Postgres database and build an GraphQL API based on the database schema.
+
+.. admonition:: Supported Postgres versions
+
+  Hasura GraphQL engine supports **Postgres 9.5 and above**
+
+Know more
+---------
 
 .. toctree::
   :maxdepth: 1
