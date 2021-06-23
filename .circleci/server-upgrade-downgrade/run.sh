@@ -125,17 +125,6 @@ trap rm_worktree ERR
 
 make_latest_release_worktree() {
 	git worktree add --detach "$WORKTREE_DIR" "$RELEASE_VERSION"
-        cd "$WORKTREE_DIR"
-        # FIX ME: Remove the patch below after the next stable release
-        # The --avoid-error-message-checks in pytest was implementated  as a rather relaxed check than
-        # what we intended to have. In versions <= v1.3.0,
-        # this check allows response to be success even if the expected response is a failure.
-        # The patch below fixes that issue.
-        # The `git apply` should give errors from next release onwards,
-        # since this change is going to be included in the next release version
-        git apply "${ROOT}/err_msg.patch" || \
-		(log "Remove the git apply in make_latest_release_worktree function"  && false)
-        cd - > /dev/null
 }
 
 cleanup_hasura_metadata_if_present() {
