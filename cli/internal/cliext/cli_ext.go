@@ -32,7 +32,7 @@ func Setup(ec *cli.ExecutionContext) error {
 
 	fetchFromCDN := false
 
-	cliExtFile, err := cliExtFS.ReadFile("cli-ext")
+	cliExtFile, err := cliExtFS.ReadFile(filepath.Join("static-bin", runtime.GOOS, runtime.GOARCH, "cli-ext"))
 	if err != nil {
 		ec.Logger.Warn("Unable to find an embedded cli-ext. So falling back to fetching from CDN")
 		fetchFromCDN = true
