@@ -452,6 +452,9 @@ type ExecutionContext struct {
 	// CliExtDestinationBinPath is the full path of the cli-ext binary
 	CliExtDestinationBinPath string
 
+	// CLIExtSourceBinPath is the full path to a copy of cli-ext binary in the local file system
+	CliExtSourceBinPath string
+
 	// proPluginVersionValidated is used to avoid validating pro plugin multiple times
 	// while preparing the execution context
 	proPluginVersionValidated bool
