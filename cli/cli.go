@@ -815,7 +815,7 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetDefault("api_paths.config", "v1alpha1/config")
 	v.SetDefault("api_paths.pg_dump", "v1alpha1/pg_dump")
 	v.SetDefault("api_paths.version", "v1/version")
-	v.SetDefault("metadata_directory", "")
+	v.SetDefault("metadata_directory", DefaultMetadataDirectory)
 	v.SetDefault("migrations_directory", DefaultMigrationsDirectory)
 	v.SetDefault("seeds_directory", DefaultSeedsDirectory)
 	v.SetDefault("actions.kind", "synchronous")
