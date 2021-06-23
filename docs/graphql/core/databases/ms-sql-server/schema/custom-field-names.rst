@@ -61,8 +61,6 @@ Expose columns with a different name in the GraphQL API
 
     A custom field name can be set for a column via the following 2 methods:
 
-    .. TODO: BROKEN_LINK
-
     1. Passing a :ref:`table_config` with the :ref:`CustomColumnNames` to the :ref:`mssql_set_table_customization` API while tracking a table:
 
        .. code-block:: http
@@ -83,7 +81,6 @@ Expose columns with a different name in the GraphQL API
            }
          }
 
-    .. TODO: BROKEN_LINK
 
     2. Customization can be done at the time of creation using :ref:`mssql_track_table` API also.
   
@@ -128,8 +125,6 @@ Expose table root fields with a different name in the GraphQL API
 
     A custom field name can be set for a table root field via the following 2 methods:
 
-    .. TODO: BROKEN_LINK
-
     1. Passing a :ref:`table_config` with the :ref:`custom_root_fields` to the :ref:`mssql_set_table_customization` API while tracking a table:
 
        .. code-block:: http
@@ -154,7 +149,6 @@ Expose table root fields with a different name in the GraphQL API
            }
          }
 
-    .. TODO: BROKEN_LINK
 
     2. Customization can be done at the time of creation using :ref:`mssql_track_table` API also.
     

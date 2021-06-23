@@ -396,7 +396,7 @@ export const getCreateTableQueries = (
 
   // add comment
   if (tableComment && tableComment !== '') {
-    sqlCreateTable += `COMMENT ON TABLE "${currentSchema}".${tableName} IS ${sqlEscapeText(
+    sqlCreateTable += `COMMENT ON TABLE "${currentSchema}"."${tableName}" IS ${sqlEscapeText(
       tableComment
     )};`;
   }
@@ -1206,25 +1206,6 @@ export const getEventInvocationInfoByIDSql = (
  *
  * `columns` is an array of column names.
  */
-// export const getDatabaseInfo = `
-// SELECT
-// 	COALESCE(json_agg(row_to_json(info)), '[]'::JSON)
-// FROM (
-// 	SELECT
-// 		table_name::text,
-// 		table_schema::text,
-// 		ARRAY_AGG("column_name"::text) as columns
-// 	FROM
-// 		information_schema.columns
-// 	WHERE
-// 		table_schema NOT in('information_schema', 'pg_catalog', 'hdb_catalog')
-// 		AND table_schema NOT LIKE 'pg_toast%'
-// 		AND table_schema NOT LIKE 'pg_temp_%'
-// 	GROUP BY
-// 		table_name,
-// 		table_schema) AS info;
-// `;
-
 export const getDatabaseInfo = `
 SELECT
 	COALESCE(json_agg(row_to_json(info)), '[]'::JSON)

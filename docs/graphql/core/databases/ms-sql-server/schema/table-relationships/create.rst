@@ -83,6 +83,7 @@ Let's add a foreign-key constraint to the ``author_id`` column in the ``articles
       {
         "type": "run_sql",
         "args": {
+          "source": "<db-name>",
           "sql": "ALTER TABLE articles ADD FOREIGN KEY (author_id) REFERENCES authors(id);"
         }
       }

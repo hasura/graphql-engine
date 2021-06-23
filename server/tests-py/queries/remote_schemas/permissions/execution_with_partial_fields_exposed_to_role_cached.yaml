@@ -1,0 +1,18 @@
+- description: query the remote schema with only fields that have been exposed to the role 'user'
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  query:
+    query: |
+       query @cached(ttl: 5) {
+         user (user_id: 1) {
+           user_id
+         }
+       }
+  resp_headers:
+    Cache-Control: max-age=5
+  response:
+    data:
+      user:
+        user_id: 1

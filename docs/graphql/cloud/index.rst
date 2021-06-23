@@ -12,7 +12,7 @@ Hasura Cloud Documentation
 `Hasura Cloud <https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=hasura-cloud&tech=default>`__ offers hosted `GraphQL Engine <https://github.com/hasura/graphql-engine>`__
 projects with extra features for reliability and security. It includes all the :ref:`core features <core_docs>`
 of GraphQL Engine, while taking care of infrastructure concerns, such as the number of instances, cores, memory, concurrent users, high-availability,
-realtime monitoring, caching, tracing, and rate-limiting. It supports both new and existing PostgreSQL databases.
+realtime monitoring, caching, tracing, and rate-limiting. It supports both new and existing databases.
 
 .. container:: toc-list
 

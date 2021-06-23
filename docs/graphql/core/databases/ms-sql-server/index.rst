@@ -48,6 +48,8 @@ If you'd like to stay informed about the status of SQL Server support, subscribe
 
   This Hands-on Demo walks you through Getting Started with Hasura on SQL Server & common use cases. - `View Recording here <https://hasura.io/events/webinar/hasura-sql-server/?pg=docs&plcmt=body&cta=view-recording&tech=>`__.
 
+Know more
+---------
 
 .. toctree::
   :maxdepth: 1
