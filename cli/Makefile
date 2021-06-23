@@ -55,7 +55,9 @@ clean-cli-ext:
 
 .PHONY: copy-cli-ext
 copy-cli-ext: clean-cli-ext
-	cp -r $(CLI_EXT_BIN_DIR) ./internal/cliext/bin
+	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-linux ./internal/cliext/static-bin/linux/amd64/cli-ext
+	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-macos ./internal/cliext/static-bin/darwin/amd64/cli-ext
+	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-win.exe ./internal/cliext/static-bin/windows/amd64/cli-ext
 
 # run tests
 .PHONY: test
