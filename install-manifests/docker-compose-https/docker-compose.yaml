@@ -13,8 +13,7 @@ services:
     - "postgres"
     restart: always
     environment:
-      # database url to connect
-      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
       ## enable the console served by server
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set "false" to disable console
       ## enable debugging mode. It is recommended to disable this in production
