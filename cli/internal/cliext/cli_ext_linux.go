@@ -1,8 +1,9 @@
 // +build linux
+// +build amd64
 
 package cliext
 
-import _ "embed"
+import "embed"
 
-//go:embed bin/cli-ext-hasura-linux
-var cliExtFile []byte
+//go:embed static-bin/linux/amd64/*
+var cliExtFS embed.FS
