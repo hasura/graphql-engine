@@ -4,7 +4,6 @@ import {
   CustomTypes,
   QualifiedTable,
   QualifiedTableBigQuery,
-  HasuraMetadataV3,
   QualifiedFunction,
   RestEndpointEntry,
   RemoteSchemaDef,
@@ -19,6 +18,7 @@ import { ConsoleState } from '../telemetry/state';
 import { TriggerOperation } from '../components/Common/FilterQuery/state';
 import { isEmpty } from '../components/Common/utils/jsUtils';
 import { Nullable } from '../components/Common/utils/tsUtils';
+import { ExportMetadataSuccess } from './actions';
 
 export const metadataQueryTypes = [
   'add_source',
@@ -409,10 +409,10 @@ export const exportMetadataQuery = {
 };
 
 export const generateReplaceMetadataQuery = (
-  metadataJson: HasuraMetadataV3
+  metadataJson: ExportMetadataSuccess['data']
 ) => ({
   type: 'replace_metadata',
-  args: metadataJson,
+  args: metadataJson.metadata,
 });
 
 export const resetMetadataQuery = {

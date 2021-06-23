@@ -4,6 +4,7 @@ import {
   ConnectionPoolSettings,
   HasuraMetadataV3,
   IsolationLevelOptions,
+  MetadataDataSource,
   RestEndpointEntry,
   SourceConnectionInfo,
   SSLConfigOptions,
@@ -55,12 +56,10 @@ import { getSourceDriver } from '../components/Services/Data/utils';
 
 export interface ExportMetadataSuccess {
   type: 'Metadata/EXPORT_METADATA_SUCCESS';
-  data:
-    | {
-        resource_version: number;
-        metadata: HasuraMetadataV3;
-      }
-    | HasuraMetadataV3;
+  data: {
+    resource_version: number;
+    metadata: HasuraMetadataV3;
+  };
 }
 export interface ExportMetadataError {
   type: 'Metadata/EXPORT_METADATA_ERROR';
@@ -212,7 +211,7 @@ export type MetadataActions =
   | { type: typeof UPDATE_CURRENT_DATA_SOURCE; source: string };
 
 export const exportMetadata = (
-  successCb?: (data: HasuraMetadataV3, resourceVersion?: number) => void,
+  successCb?: (data: ExportMetadataSuccess['data']) => void,
   errorCb?: (err: string) => void
 ): Thunk<Promise<ReduxState | void>, MetadataActions> => (
   dispatch,
@@ -482,11 +481,14 @@ export const removeDataSource = (
 };
 
 export const replaceMetadata = (
-  newMetadata: HasuraMetadataV3,
+  newMetadata: ExportMetadataSuccess['data'],
   successCb: () => void,
   errorCb: () => void
 ): Thunk<void, MetadataActions> => (dispatch, getState) => {
-  const exportSuccessCb = (oldMetadata: HasuraMetadataV3) => {
+  const exportSuccessCb = (oldMetadata: {
+    resource_version: number;
+    metadata: HasuraMetadataV3;
+  }) => {
     const upQuery = generateReplaceMetadataQuery(newMetadata);
     const downQuery = generateReplaceMetadataQuery(oldMetadata);
 
@@ -498,7 +500,37 @@ export const replaceMetadata = (
 
     const customOnSuccess = () => {
       if (successCb) successCb();
-      dispatch(exportMetadata());
+
+      const updateCurrentDataSource = (
+        newState: ExportMetadataSuccess['data']
+      ) => {
+        const currentSource = newState.metadata.sources.find(
+          (x: MetadataDataSource) =>
+            x.name === getState().tables.currentDataSource
+        );
+
+        if (!currentSource) {
+          dispatch({
+            type: UPDATE_CURRENT_DATA_SOURCE,
+            source: newState.metadata.sources[0].name,
+          });
+          setDriver(newState.metadata.sources[0].kind ?? 'postgres');
+          dispatch(
+            fetchDataInit(
+              newState.metadata.sources[0].name,
+              newState.metadata.sources[0].kind
+            )
+          );
+        }
+      };
+
+      const onError = (err: string) => {
+        dispatch(
+          showErrorNotification('Metadata reset failed', null, { error: err })
+        );
+      };
+
+      dispatch(exportMetadata(updateCurrentDataSource, onError));
     };
     const customOnError = () => {
       if (errorCb) errorCb();
@@ -514,7 +546,8 @@ export const replaceMetadata = (
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 
