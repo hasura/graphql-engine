@@ -15,7 +15,7 @@ Getting Started with Hasura Cloud
 Introduction
 ------------
 
-This guide talks about setting up Hasura Cloud with a new or existing Postgres database.
+This guide talks about setting up Hasura Cloud with a new or existing database.
 
 Step 1: Create an account
 -------------------------
@@ -40,12 +40,12 @@ Step 3: Connect new/existing database
 On the Hasura console, navigate to ``Data -> Manage -> Connect Database``:
 
 .. thumbnail:: /img/graphql/cloud/getting-started/connect-db-console.png
-   :alt: Enter URL for existing database
+   :alt: Connect database
    :width: 1000px
 
 - To use an existing database, choose ``Connect existing database``.
 
-- To try out with a new database, choose ``Create Heroku Database``.
+- To try out with a new Postgres database, choose ``Create Heroku Database``.
 
 .. thumbnail:: /img/graphql/cloud/getting-started/db-setup.png
    :alt: DB setup
@@ -66,14 +66,14 @@ If your database is hosted via any of the following managed cloud database servi
 check out their respective detailed guides to get the database connection URL and
 any other steps required to ensure connectivity from Hasura Cloud:
 
-- :ref:`Aiven <cloud_db_aiven>`
-- :ref:`AWS RDS Aurora <cloud_db_aws_rds_aurora>`
+- :ref:`Aiven Postgres <cloud_db_aiven>`
+- :ref:`AWS RDS Aurora Postgres <cloud_db_aws_rds_aurora>`
 - :ref:`AWS RDS Postgres <cloud_db_aws_rds_postgres>`
-- :ref:`Azure <cloud_db_azure>`
-- :ref:`Digital Ocean <cloud_db_digital_ocean>`
-- :ref:`GCP <cloud_db_gcp>`
-- :ref:`Timescale Cloud <cloud_db_timescale_cloud>`
-- :ref:`YugaByte <cloud_db_yugabyte>`
+- :ref:`Azure Postgres <cloud_db_azure>`
+- :ref:`Digital Ocean Postgres <cloud_db_digital_ocean>`
+- :ref:`GCP Postgres <cloud_db_gcp>`
+- :ref:`TimescaleDB Cloud <cloud_db_timescale_cloud>`
+- :ref:`YugabyteDB <cloud_db_yugabyte>`
 
 Step 4: Try out Hasura
 ----------------------
@@ -119,7 +119,8 @@ You'll see that you get all the inserted data!
 Check out monitoring
 ^^^^^^^^^^^^^^^^^^^^
 
-You can navigate to the ``Monitoring`` tab in the console to check out the Pro features that Hasura Cloud has set up for you.
+You can navigate to the ``Monitoring`` tab in the console to check out the extra features for reliability and security that Hasura Cloud has
+set up for you.
 
 .. thumbnail:: /img/graphql/cloud/metrics/monitoring-tab-overview.png
   :alt: Hasura Console: Monitoring tab
@@ -148,13 +149,6 @@ There are several options for the implementation of business logic, depending on
 - :ref:`Remote schemas <remote_schemas>`: If you have an existing GraphQL server or if you're comfortable with implementing one, you can use remote schemas.
 - :ref:`Event triggers <event_triggers>`: To trigger a serverless function based on a database event, use event triggers.
 - :ref:`Scheduled triggers <scheduled_triggers>`: Scheduled triggers are used to execute custom business logic at specific points in time.
-
-Secure your endpoint
-^^^^^^^^^^^^^^^^^^^^
-
-:ref:`Add an admin secret <secure_project>`
-to make sure that your GraphQL endpoint and the Hasura console are not publicly accessible.
-
 
 Manage Hasura Cloud project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
