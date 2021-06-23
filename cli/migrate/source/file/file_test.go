@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	st "github.com/hasura/graphql-engine/cli/migrate/source/testing"
+	st "github.com/hasura/graphql-engine/cli/v2/migrate/source/testing"
 	"github.com/sirupsen/logrus/hooks/test"
 )
 

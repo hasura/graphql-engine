@@ -5,13 +5,14 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/v2"
+  "github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/migrate"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
+	mig "github.com/hasura/graphql-engine/cli/v2/migrate/cmd"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -53,7 +54,19 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if cmd.Flags().Changed("metadata-from-file") {
 				return fmt.Errorf("metadata-from-file flag is depricated")
 			}
-			return validateConfigV3Flags(cmd, ec)
+			if err := validateConfigV3Flags(cmd, ec); err != nil {
+				if errors.Is(err, errDatabaseNotFound) {
+					// this means provided database is not yet connected to hasura
+					// this can be ignored for `migrate create`
+					// we can allow users to create migration files for databases
+					// which are not connected
+					ec.Logger.Warnf("database %s is not connected to hasura", ec.Source.Name)
+					ec.Source.Kind = hasura.SourceKindPG // the default kind is postgres
+					return nil
+				}
+				return err
+			}
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.name = args[0]
@@ -142,6 +155,8 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 	}
 
 	var migrateDrv *migrate.Migrate
+	// disabling auto state migrations for migrate create command
+	o.EC.DisableAutoStateMigration = true
 	if o.sqlServer || o.metaDataServer || o.flags.Changed("up-sql") || o.flags.Changed("down-sql") {
 		migrateDrv, err = migrate.NewMigrate(o.EC, true, o.Source.Name, o.Source.Kind)
 		if err != nil {

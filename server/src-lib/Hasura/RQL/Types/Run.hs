@@ -18,6 +18,7 @@ import           Hasura.Metadata.Class
 
 import qualified Hasura.Tracing               as Tracing
 
+import           Hasura.Base.Error
 import           Hasura.RQL.Types
 import           Hasura.Session
 

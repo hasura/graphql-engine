@@ -3,7 +3,7 @@ package hasura
 import (
 	"io"
 
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
 // general hasura metadata API requests

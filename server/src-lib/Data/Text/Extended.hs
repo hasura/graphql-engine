@@ -30,10 +30,16 @@ instance ToTxt Text where
   toTxt = id
   {-# INLINE toTxt #-}
 
+instance ToTxt Char where
+  toTxt = DT.singleton
+
 instance ToTxt G.Name where
   toTxt = G.unName
 
 deriving instance ToTxt G.EnumValue
+
+instance ToTxt () where
+  toTxt = tshow
 
 instance ToTxt Void where
   toTxt = absurd

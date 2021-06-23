@@ -1,6 +1,5 @@
 module Hasura.Backends.MSSQL.DDL
   ( buildComputedFieldInfo
-  , buildRemoteFieldInfo
   , fetchAndValidateEnumValues
   , createTableEventTrigger
   , buildEventTriggerInfo
@@ -15,17 +14,16 @@ import           Hasura.Prelude
 
 import           Data.Aeson
 
-import qualified Data.Environment                    as Env
+import qualified Data.Environment                  as Env
 
+import           Hasura.Base.Error
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
-import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
@@ -34,10 +32,10 @@ import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
 
-import qualified Hasura.Backends.MSSQL.Types         as MT
+import qualified Hasura.Backends.MSSQL.Types       as MT
 
-import           Hasura.Backends.MSSQL.DDL.BoolExp   as M
-import           Hasura.Backends.MSSQL.DDL.Source    as M
+import           Hasura.Backends.MSSQL.DDL.BoolExp as M
+import           Hasura.Backends.MSSQL.DDL.Source  as M
 
 
 buildComputedFieldInfo
@@ -51,15 +49,6 @@ buildComputedFieldInfo
   -> m (ComputedFieldInfo 'MSSQL)
 buildComputedFieldInfo _ _ _ _ _ _ =
   throw400 NotSupported "Computed fields aren't supported for MSSQL sources"
-
-buildRemoteFieldInfo
-  :: (MonadError QErr m)
-  => RemoteRelationship 'MSSQL
-  -> [ColumnInfo 'MSSQL]
-  -> RemoteSchemaMap
-  -> m (RemoteFieldInfo 'MSSQL, [SchemaDependency])
-buildRemoteFieldInfo _ _ _ =
-  throw400 NotSupported "Remote joins aren't supported for MSSQL sources"
 
 fetchAndValidateEnumValues
   :: (Monad m)

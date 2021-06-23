@@ -89,6 +89,7 @@ Additional details are provided by the documentation for individual bindings.
 -}
 module Hasura.GraphQL.Execute.LiveQuery.Plan
   ( CohortId
+  , dummyCohortId
   , newCohortId
   , CohortIdArray(..)
   , CohortVariablesArray(..)
@@ -108,6 +109,7 @@ import qualified Data.Aeson.Extended                as J
 import qualified Data.Aeson.TH                      as J
 import qualified Data.HashMap.Strict                as Map
 import qualified Data.HashSet                       as Set
+import qualified Data.UUID                          as UUID
 import qualified Data.UUID.V4                       as UUID
 import qualified Database.PG.Query                  as Q
 import qualified Database.PG.Query.PTI              as PTI
@@ -125,10 +127,13 @@ import           Hasura.Session
 -- Cohort
 
 newtype CohortId = CohortId { unCohortId :: UUID }
-  deriving (Show, Eq, Hashable, J.ToJSON, Q.FromCol)
+  deriving (Show, Eq, Hashable, J.ToJSON, J.FromJSON, Q.FromCol)
 
 newCohortId :: (MonadIO m) => m CohortId
 newCohortId = CohortId <$> liftIO UUID.nextRandom
+
+dummyCohortId :: CohortId
+dummyCohortId = CohortId UUID.nil
 
 data CohortVariables
   = CohortVariables
@@ -233,14 +238,14 @@ instance Q.ToPrepArg CohortVariablesArray where
 --
 -- so if any variable values are invalid, the error will be caught early.
 
-newtype ValidatedVariables f = ValidatedVariables (f TxtEncodedPGVal)
+newtype ValidatedVariables f = ValidatedVariables (f TxtEncodedVal)
 
-deriving instance (Show      (f TxtEncodedPGVal)) => Show      (ValidatedVariables f)
-deriving instance (Eq        (f TxtEncodedPGVal)) => Eq        (ValidatedVariables f)
-deriving instance (Hashable  (f TxtEncodedPGVal)) => Hashable  (ValidatedVariables f)
-deriving instance (J.ToJSON  (f TxtEncodedPGVal)) => J.ToJSON  (ValidatedVariables f)
-deriving instance (Semigroup (f TxtEncodedPGVal)) => Semigroup (ValidatedVariables f)
-deriving instance (Monoid    (f TxtEncodedPGVal)) => Monoid    (ValidatedVariables f)
+deriving instance (Show (f TxtEncodedVal)) => Show (ValidatedVariables f)
+deriving instance (Eq (f TxtEncodedVal)) => Eq (ValidatedVariables f)
+deriving instance (Hashable (f TxtEncodedVal)) => Hashable (ValidatedVariables f)
+deriving instance (J.ToJSON (f TxtEncodedVal)) => J.ToJSON (ValidatedVariables f)
+deriving instance (Semigroup (f TxtEncodedVal)) => Semigroup (ValidatedVariables f)
+deriving instance (Monoid (f TxtEncodedVal)) => Monoid (ValidatedVariables f)
 
 type ValidatedQueryVariables     = ValidatedVariables (Map.HashMap G.Name)
 type ValidatedSyntheticVariables = ValidatedVariables []

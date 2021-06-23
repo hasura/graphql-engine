@@ -5,21 +5,20 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gbytes"
 	. "github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("migrate_status", func() {
-
+var _ = Describe("hasura migrate status", func() {
 	var dirName string
 	var session *Session
 	var teardown func()
 	BeforeEach(func() {
 		dirName = testutil.RandDirName()
-		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraVersion)
+		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: []string{"init", dirName},
@@ -33,9 +32,7 @@ var _ = Describe("migrate_status", func() {
 		}
 	})
 
-	AfterEach(func() {
-		teardown()
-	})
+	AfterEach(func() { teardown() })
 
 	Context("migrate status test", func() {
 		It("should show the status of migrations between local and server ", func() {
@@ -56,7 +53,7 @@ var _ = Describe("migrate_status", func() {
 			}
 
 			for _, keyword := range wantKeywordList {
-				Eventually(session, 60*40).Should(Say(keyword))
+				Eventually(session.Out, 60*40).Should(Say(keyword))
 			}
 			Eventually(session, 60*40).Should(Exit(0))
 		})

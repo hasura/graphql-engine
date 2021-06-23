@@ -28,33 +28,7 @@ module Hasura.Server.Auth.JWT
   , JWTCustomClaimsMap(..)
   ) where
 
-import           Control.Exception.Lifted        (try)
-import           Control.Lens
-import           Control.Monad.Trans.Control     (MonadBaseControl)
-import           Control.Monad.Trans.Maybe
-import           Data.IORef                      (IORef, readIORef, writeIORef)
-import           Data.Parser.JSONPath            (parseJSONPath)
-import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
-                                                  getCurrentTime)
-#ifndef PROFILING
-import           GHC.AssertNF
-#endif
-import           Network.URI                     (URI)
-
-import           Data.Aeson.Internal             (JSONPath)
-import           Data.Parser.CacheControl
-import           Data.Parser.Expires
-import           Hasura.HTTP
-import           Hasura.Logging                  (Hasura, LogLevel (..), Logger (..))
 import           Hasura.Prelude
-import           Hasura.RQL.Types
-import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
-import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader,
-                                                  isSessionVariable, userRoleHeader)
-import           Hasura.Server.Version           (HasVersion)
-import           Hasura.Session
-import qualified Hasura.Tracing                  as Tracing
 
 import qualified Control.Concurrent.Extended     as C
 import qualified Crypto.JWT                      as Jose
@@ -71,6 +45,34 @@ import qualified Network.HTTP.Client             as HTTP
 import qualified Network.HTTP.Types              as HTTP
 import qualified Network.Wreq                    as Wreq
 import qualified Web.Spock.Internal.Cookies      as Spock
+
+import           Control.Exception.Lifted        (try)
+import           Control.Lens
+import           Control.Monad.Trans.Control     (MonadBaseControl)
+import           Data.Aeson.Internal             (JSONPath)
+import           Data.IORef                      (IORef, readIORef, writeIORef)
+import           Data.Parser.CacheControl
+import           Data.Parser.Expires
+import           Data.Parser.JSONPath            (parseJSONPath)
+import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
+                                                  getCurrentTime)
+#ifndef PROFILING
+import           GHC.AssertNF
+#endif
+import           Network.URI                     (URI)
+
+import qualified Hasura.Tracing                  as Tracing
+
+import           Hasura.Base.Error
+import           Hasura.HTTP
+import           Hasura.Logging                  (Hasura, LogLevel (..), Logger (..))
+import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
+import           Hasura.Server.Auth.JWT.Logging
+import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader,
+                                                  isSessionVariable, userRoleHeader)
+import           Hasura.Server.Version           (HasVersion)
+import           Hasura.Session
+
 
 newtype RawJWT = RawJWT BL.ByteString
 

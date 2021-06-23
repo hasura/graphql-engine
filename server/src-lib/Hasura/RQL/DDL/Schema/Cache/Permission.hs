@@ -16,20 +16,21 @@ import qualified Data.HashSet                       as Set
 import qualified Data.List.NonEmpty                 as NE
 import qualified Data.Sequence                      as Seq
 
-
 import           Control.Arrow.Extended
 import           Data.Aeson
+import           Data.Proxy
 import           Data.Text.Extended
 
 import qualified Hasura.Incremental                 as Inc
 import qualified Hasura.SQL.AnyBackend              as AB
 
+import           Hasura.Base.Error
 import           Hasura.RQL.DDL.Permission
-import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 import           Hasura.Server.Types
 import           Hasura.Session
+
 
 {- Note: [Inherited roles architecture for postgres read queries]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -84,7 +85,7 @@ data CombinedSelPermInfo (b :: BackendType)
 --      nullable to accomodate cell-value nullification.
 --   2. Scalar computed fields - Scalar computed fields work the same as Columns (#1)
 --   3. Filter / Boolean expression - The filters are combined using a `BoolOr`
---   4. Limit - Limits are combined by taking the minimum of the two limits
+--   4. Limit - Limits are combined by taking the maximum of the two limits
 --   5. Allow Aggregation - Aggregation is allowed, if any of the permissions allow it.
 --   6. Request Headers - Request headers are concatenated
 --
@@ -136,7 +137,7 @@ combineSelectPermInfos selPermInfos@(headSelPermInfo NE.:| restSelPermInfos) =
             (Nothing, Nothing) -> Nothing
             (Just l, Nothing)  -> Just l
             (Nothing, Just r)  -> Just r
-            (Just l , Just r)  -> Just $ min l r
+            (Just l , Just r)  -> Just $ max l r
       , cspiAllowAgg = cspiAllowAgg lSelPermInfo || cspiAllowAgg accSelPermInfo
       , cspiRequiredHeaders = (cspiRequiredHeaders lSelPermInfo) <> (cspiRequiredHeaders accSelPermInfo)
       }
@@ -149,26 +150,30 @@ combineSelectPermInfos selPermInfos@(headSelPermInfo NE.:| restSelPermInfos) =
         (Just caseBoolExpL, Just caseBoolExpR) -> Just $ BoolOr [caseBoolExpL, caseBoolExpR]
 
 buildTablePermissions
-  :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
+  :: forall b arr m
+   . ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , MonadError QErr m, ArrowWriter (Seq CollectedInfo) arr
      , HasServerConfigCtx m
-     , BackendMetadata b)
-  => ( SourceName
+     , BackendMetadata b
+     , Inc.Cacheable (Proxy b)
+     )
+  => ( Proxy b
+     , SourceName
      , Inc.Dependency (TableCoreCache b)
      , FieldInfoMap (FieldInfo b)
      , TablePermissionInputs b
      , InheritedRoles
      ) `arr` (RolePermInfoMap b)
-buildTablePermissions = Inc.cache proc (source, tableCache, tableFields, tablePermissions, inheritedRoles) -> do
+buildTablePermissions = Inc.cache proc (proxy, source, tableCache, tableFields, tablePermissions, inheritedRoles) -> do
   let alignedPermissions = alignPermissions tablePermissions
       table = _tpiTable tablePermissions
   experimentalFeatures <- bindA -< _sccExperimentalFeatures <$> askServerConfigCtx
   nonInheritedRolePermissions <-
     (| Inc.keyed (\_ (insertPermission, selectPermission, updatePermission, deletePermission) -> do
-       insert <- buildPermission -< (tableCache, source, table, tableFields, listToMaybe insertPermission)
-       select <- buildPermission -< (tableCache, source, table, tableFields, listToMaybe selectPermission)
-       update <- buildPermission -< (tableCache, source, table, tableFields, listToMaybe updatePermission)
-       delete <- buildPermission -< (tableCache, source, table, tableFields, listToMaybe deletePermission)
+       insert <- buildPermission -< (proxy, tableCache, source, table, tableFields, listToMaybe insertPermission)
+       select <- buildPermission -< (proxy, tableCache, source, table, tableFields, listToMaybe selectPermission)
+       update <- buildPermission -< (proxy, tableCache, source, table, tableFields, listToMaybe updatePermission)
+       delete <- buildPermission -< (proxy, tableCache, source, table, tableFields, listToMaybe deletePermission)
        returnA -< RolePermInfo insert select update delete)
    |) alignedPermissions
   -- build permissions for inherited roles only when inherited roles is enabled
@@ -198,15 +203,19 @@ buildTablePermissions = Inc.cache proc (source, tableCache, tableFields, tablePe
       in insertsMap `unionMap` selectsMap `unionMap` updatesMap `unionMap` deletesMap
 
 mkPermissionMetadataObject
-  :: forall a b. (Backend b, IsPerm b a)
-  => SourceName -> TableName b -> PermDef a -> MetadataObject
+  :: forall b a
+   . (ToJSON (a b), BackendMetadata b, IsPerm a)
+  => SourceName
+  -> TableName b
+  -> PermDef (a b)
+  -> MetadataObject
 mkPermissionMetadataObject source table permDef =
-  let permType = permAccToType (permAccessor :: PermAccessor b (PermInfo b a))
+  let permType = permAccToType (permAccessor :: PermAccessor b (PermInfo a b))
       objectId = MOSourceObjId source
                    $ AB.mkAnyBackend
-                   $ SMOTableObj table
+                   $ SMOTableObj @b table
                    $ MTOPerm (_pdRole permDef) permType
-      definition = toJSON $ WithTable source table permDef
+      definition = toJSON $ WithTable @b source table permDef
   in MetadataObject objectId definition
 
 mkRemoteSchemaPermissionMetadataObject
@@ -217,39 +226,48 @@ mkRemoteSchemaPermissionMetadataObject (AddRemoteSchemaPermissions rsName roleNa
   in MetadataObject objectId $ toJSON defn
 
 withPermission
-  :: forall a b c s arr bknd. (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr, IsPerm bknd c, Backend bknd)
+  :: forall bknd a b c s arr
+   . (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr, BackendMetadata bknd, ToJSON (c bknd), IsPerm c)
   => WriterA (Seq SchemaDependency) (ErrorA QErr arr) (a, s) b
-  -> arr (a, ((SourceName, TableName bknd, PermDef c), s)) (Maybe b)
-withPermission f = proc (e, ((source, table, permission), s)) -> do
-  let metadataObject = mkPermissionMetadataObject source table permission
-      permType = permAccToType (permAccessor :: PermAccessor bknd (PermInfo bknd c))
+  -> ( a
+     , ((SourceName, TableName bknd, PermDef (c bknd), Proxy bknd), s)
+     ) `arr` (Maybe b)
+withPermission f = proc (e, ((source, table, permission, _proxy), s)) -> do
+  let metadataObject = mkPermissionMetadataObject @bknd source table permission
+      permType = permAccToType (permAccessor :: PermAccessor bknd (PermInfo c bknd))
       roleName = _pdRole permission
       schemaObject = SOSourceObj source
                        $ AB.mkAnyBackend
-                       $ SOITableObj table
+                       $ SOITableObj @bknd table
                        $ TOPerm roleName permType
       addPermContext err = "in permission for role " <> roleName <<> ": " <> err
   (| withRecordInconsistency (
      (| withRecordDependencies (
         (| modifyErrA (f -< (e, s))
-        |) (addTableContext table . addPermContext))
+        |) (addTableContext @bknd table . addPermContext))
      |) metadataObject schemaObject)
    |) metadataObject
 
 buildPermission
-  :: ( ArrowChoice arr, Inc.ArrowCache m arr
+  :: forall b a arr m
+   . ( ArrowChoice arr
      , ArrowWriter (Seq CollectedInfo) arr
-     , MonadError QErr m, IsPerm b a
-     , Inc.Cacheable a
+     , Inc.ArrowCache m arr
+     , Inc.Cacheable (a b)
+     , Inc.Cacheable (Proxy b)
+     , MonadError QErr m
      , BackendMetadata b
+     , ToJSON (a b)
+     , IsPerm a
      )
-  => ( Inc.Dependency (TableCoreCache b)
+  => ( Proxy b
+     , Inc.Dependency (TableCoreCache b)
      , SourceName
      , TableName b
      , FieldInfoMap (FieldInfo b)
-     , Maybe (PermDef a)
-     ) `arr` Maybe (PermInfo b a)
-buildPermission = Inc.cache proc (tableCache, source, table, tableFields, maybePermission) -> do
+     , Maybe (PermDef (a b))
+     ) `arr` Maybe (PermInfo a b)
+buildPermission = Inc.cache proc (proxy, tableCache, source, table, tableFields, maybePermission) -> do
   (| traverseA ( \permission ->
     (| withPermission (do
          bindErrorA -< when (_pdRole permission == adminRoleName) $
@@ -258,6 +276,6 @@ buildPermission = Inc.cache proc (tableCache, source, table, tableFields, maybeP
            runTableCoreCacheRT (buildPermInfo source table tableFields permission) (source, tableCache)
          tellA -< Seq.fromList dependencies
          returnA -< info)
-     |) (source, table, permission))
+     |) (source, table, permission, proxy))
    |) maybePermission
   >-> (\info -> join info >- returnA)

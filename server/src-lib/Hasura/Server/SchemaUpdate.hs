@@ -7,9 +7,27 @@ module Hasura.Server.SchemaUpdate
   )
 where
 
+import           Hasura.Prelude
+
+import qualified Control.Concurrent.Extended   as C
+import qualified Control.Concurrent.STM        as STM
+import qualified Control.Immortal              as Immortal
+import qualified Control.Monad.Loops           as L
+import qualified Data.HashMap.Strict           as HM
+import qualified Data.HashSet                  as HS
+import qualified Database.PG.Query             as Q
+import qualified Network.HTTP.Client           as HTTP
+
+import           Control.Monad.Trans.Control   (MonadBaseControl)
+import           Control.Monad.Trans.Managed   (ManagedT)
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Data.IORef
+
+import           Hasura.Base.Error
 import           Hasura.Logging
 import           Hasura.Metadata.Class
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema         (runCacheRWT)
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.Types
@@ -19,20 +37,6 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Types           (InstanceId (..))
 import           Hasura.Session
 
-import           Control.Monad.Trans.Control   (MonadBaseControl)
-import           Control.Monad.Trans.Managed   (ManagedT)
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
-import           Data.IORef
-
-import qualified Control.Concurrent.Extended   as C
-import qualified Control.Concurrent.STM        as STM
-import qualified Control.Immortal              as Immortal
-import qualified Data.HashMap.Strict           as HM
-import qualified Data.HashSet                  as HS
-import qualified Database.PG.Query             as Q
-import qualified Network.HTTP.Client           as HTTP
 
 data ThreadType
   = TTListener
@@ -136,7 +140,8 @@ startSchemaSyncListenerThread
   -> ManagedT m (Immortal.Thread)
 startSchemaSyncListenerThread logger pool instanceId interval metaVersionRef = do
   -- Start listener thread
-  listenerThread <- C.forkManagedT "SchemeUpdate.listener" logger $ listener logger pool metaVersionRef interval
+  listenerThread <- C.forkManagedT "SchemeUpdate.listener" logger $
+    listener logger pool metaVersionRef interval
   logThreadStarted logger instanceId TTListener listenerThread
   pure listenerThread
 
@@ -158,8 +163,7 @@ startSchemaSyncProcessorThread logger httpMgr
   schemaSyncEventRef cacheRef instanceId serverConfigCtx = do
   -- Start processor thread
   processorThread <- C.forkManagedT "SchemeUpdate.processor" logger $
-    processor logger httpMgr schemaSyncEventRef
-              cacheRef instanceId serverConfigCtx
+    processor logger httpMgr schemaSyncEventRef cacheRef instanceId serverConfigCtx
   logThreadStarted logger instanceId TTProcessor processorThread
   pure processorThread
 
@@ -170,12 +174,35 @@ forcePut v a = STM.atomically $ STM.tryTakeTMVar v >> STM.putTMVar v a
 schemaVersionCheckHandler
   :: Q.PGPool -> STM.TMVar MetadataResourceVersion -> IO (Either QErr ())
 schemaVersionCheckHandler pool metaVersionRef =
-   (runExceptT $
-     Q.runTx pool (Q.RepeatableRead, Nothing) $
-       fetchMetadataResourceVersionFromCatalog) >>= \case
-    Right version ->
-      Right <$> forcePut metaVersionRef version
-    Left err -> pure $ Left err
+  runExceptT (Q.runTx pool (Q.RepeatableRead, Nothing)
+                $ fetchMetadataResourceVersionFromCatalog)
+              >>=
+                \case
+                  Right version -> Right <$> forcePut metaVersionRef version
+                  Left err      -> pure $ Left err
+
+data ErrorState = ErrorState { _unState :: (Maybe MetadataResourceVersion) }
+  deriving (Show, Eq)
+
+-- NOTE: The ErrorState type is to be used mainly for the `listener` method below.
+--       This will help prevent logging the same error with the same MetadataResourceVersion
+--       multiple times consecutively. When the `listener` is in ErrorState we don't log the
+--       next error until the resource version has changed/updated.
+
+emptyErrorState :: ErrorState
+emptyErrorState = ErrorState Nothing
+
+-- | NOTE: this can be updated to use lenses
+updateErrorInState :: ErrorState -> MetadataResourceVersion -> ErrorState
+updateErrorInState es mrv = es { _unState = (Just mrv) }
+
+isInErrorState :: ErrorState -> Bool
+isInErrorState = isJust . _unState
+
+toLogError :: ErrorState -> MetadataResourceVersion -> Bool
+toLogError es mrv = case _unState es of
+  Just mrv' -> mrv' /= mrv
+  Nothing   -> True
 
 -- | An IO action that listens to postgres for events and pushes them to a Queue, in a loop forever.
 listener
@@ -185,12 +212,27 @@ listener
   -> STM.TMVar MetadataResourceVersion
   -> Milliseconds
   -> m void
-listener logger pool metaVersionRef interval =
-  forever $ do
-    respErr <- liftIO $ schemaVersionCheckHandler pool metaVersionRef
-    liftIO $ do
-      onLeft respErr (logError logger TTListener . TEQueryError)
-      C.sleep (milliseconds interval)
+listener logger pool metaVersionRef interval = L.iterateM_ listenerLoop emptyErrorState
+  where
+  listenerLoop errorState = do
+    mrv  <- liftIO $ STM.atomically $ STM.tryTakeTMVar metaVersionRef
+    resp <- liftIO $ schemaVersionCheckHandler pool metaVersionRef
+    let metadataVersion = fromMaybe initialResourceVersion mrv
+    nextErr <- case resp of
+      Left respErr -> do
+        if (toLogError errorState metadataVersion)
+          then do
+            logError logger TTListener $ TEQueryError respErr
+            logInfo logger TTListener $ object [ "metadataResourceVersion" .= toJSON metadataVersion ]
+            pure $ updateErrorInState errorState metadataVersion
+          else do
+            pure errorState
+      Right _ -> do
+        when (isInErrorState errorState) $
+          logInfo logger TTListener $ object [ "message" .= ("SchemaSync Restored..." :: Text) ]
+        pure emptyErrorState
+    liftIO $ C.sleep $ milliseconds interval
+    pure nextErr
 
 -- | An IO action that processes events from Queue, in a loop forever.
 processor

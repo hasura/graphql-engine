@@ -1,4 +1,3 @@
-import { DataSource } from '../../../../metadata/types';
 import { Driver } from '../../../../dataSources';
 
 export const parseURI = (url: string) => {
@@ -31,14 +30,6 @@ export const parseURI = (url: string) => {
   }
 };
 
-export const getHostFromConnectionString = (datasource: DataSource) => {
-  if (typeof datasource.url === 'string' && datasource.driver === 'postgres') {
-    const { hostname = null } = parseURI(datasource.url);
-    return hostname;
-  }
-  // TODO: update this function with connection string for other databases
-  return null;
-};
 export const makeConnectionStringFromConnectionParams = ({
   dbType,
   host,
@@ -63,7 +54,7 @@ export const makeConnectionStringFromConnectionParams = ({
   if (password) {
     tPassword = password.trim();
   }
-  if (dbType === 'postgres') {
+  if (dbType === 'postgres' || dbType === 'citus') {
     if (!password) {
       return `postgresql://${tUserName}@${tHost}:${tPort}/${tDatabase}`;
     }

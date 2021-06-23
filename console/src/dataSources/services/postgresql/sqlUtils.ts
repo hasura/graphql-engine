@@ -60,30 +60,44 @@ export const getFetchTablesListQuery = (options: {
     'pgn.nspname',
     'and'
   );
-
   return `
   SELECT
     COALESCE(Json_agg(Row_to_json(info)), '[]' :: json) AS tables
   FROM (
+    WITH partitions AS (
+      SELECT array(
+        WITH partitioned_tables AS (SELECT array(SELECT oid FROM pg_class WHERE relkind = 'p') AS parent_tables)
+        SELECT
+        child.relname       AS partition
+    FROM partitioned_tables, pg_inherits
+        JOIN pg_class child             ON pg_inherits.inhrelid   = child.oid
+        JOIN pg_namespace nmsp_child    ON nmsp_child.oid   = child.relnamespace
+    ${generateWhereClause(
+      options,
+      'child.relname',
+      'nmsp_child.nspname',
+      'where'
+    )}
+    AND pg_inherits.inhparent = ANY (partitioned_tables.parent_tables)
+      ) AS names
+    )
     SELECT
-      pgn.nspname as table_schema,
-      pgc.relname as table_name,
-      case
-        when pgc.relkind = 'r' then 'TABLE'
-        when pgc.relkind = 'f' then 'FOREIGN TABLE'
-        when pgc.relkind = 'v' then 'VIEW'
-        when pgc.relkind = 'm' then 'MATERIALIZED VIEW'
-        when pgc.relkind = 'p' then 'PARTITIONED TABLE'
-      end as table_type,
+      pgn.nspname AS table_schema,
+      pgc.relname AS table_name,
+      CASE
+        WHEN pgc.relkind = 'r' THEN 'TABLE'
+        WHEN pgc.relkind = 'f' THEN 'FOREIGN TABLE'
+        WHEN pgc.relkind = 'v' THEN 'VIEW'
+        WHEN pgc.relkind = 'm' THEN 'MATERIALIZED VIEW'
+        WHEN pgc.relkind = 'p' THEN 'PARTITIONED TABLE'
+      END AS table_type,
       obj_description(pgc.oid) AS comment,
       COALESCE(json_agg(DISTINCT row_to_json(isc) :: jsonb || jsonb_build_object('comment', col_description(pga.attrelid, pga.attnum))) filter (WHERE isc.column_name IS NOT NULL), '[]' :: json) AS columns,
       COALESCE(json_agg(DISTINCT row_to_json(ist) :: jsonb || jsonb_build_object('comment', obj_description(pgt.oid))) filter (WHERE ist.trigger_name IS NOT NULL), '[]' :: json) AS triggers,
       row_to_json(isv) AS view_info
-
-    FROM pg_class as pgc
-    INNER JOIN pg_namespace as pgn
-      ON pgc.relnamespace = pgn.oid
-
+      FROM partitions, pg_class as pgc  
+      INNER JOIN pg_namespace as pgn
+        ON pgc.relnamespace = pgn.oid
     /* columns */
     /* This is a simplified version of how information_schema.columns was
     ** implemented in postgres 9.5, but modified to support materialized
@@ -382,7 +396,7 @@ export const getCreateTableQueries = (
 
   // add comment
   if (tableComment && tableComment !== '') {
-    sqlCreateTable += `COMMENT ON TABLE "${currentSchema}".${tableName} IS ${sqlEscapeText(
+    sqlCreateTable += `COMMENT ON TABLE "${currentSchema}"."${tableName}" IS ${sqlEscapeText(
       tableComment
     )};`;
   }
@@ -687,9 +701,11 @@ export const getAlterColumnTypeSql = (
 export const getDropColumnDefaultSql = (
   tableName: string,
   schemaName: string,
-  columnName: string
+  columnName?: string
 ) => `
-  alter table "${schemaName}"."${tableName}" alter column "${columnName}" drop default
+ALTER TABLE "${schemaName}"."${tableName}" ALTER COLUMN "${
+  columnName ?? ''
+}" drop default
 `;
 
 export const getRenameColumnQuery = (
@@ -778,8 +794,26 @@ export const getCreatePkSql = ({
     add constraint "${constraintName}"
     primary key (${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')});`;
 };
+export const getAlterPkSql = ({
+  schemaName,
+  tableName,
+  selectedPkColumns,
+  constraintName,
+}: {
+  schemaName: string;
+  tableName: string;
+  selectedPkColumns: string[];
+  constraintName: string; // compulsory for PG
+}) => {
+  return `BEGIN TRANSACTION;
+ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT "${constraintName}";
 
-export const getFunctionsWhereQuery = () => {};
+ALTER TABLE "${schemaName}"."${tableName}"
+    ADD CONSTRAINT "${constraintName}" PRIMARY KEY (${selectedPkColumns
+    .map(pkc => `"${pkc}"`)
+    .join(', ')});
+COMMIT TRANSACTION;`;
+};
 
 const trackableFunctionsWhere = `
 AND has_variadic = FALSE
@@ -1172,25 +1206,6 @@ export const getEventInvocationInfoByIDSql = (
  *
  * `columns` is an array of column names.
  */
-// export const getDatabaseInfo = `
-// SELECT
-// 	COALESCE(json_agg(row_to_json(info)), '[]'::JSON)
-// FROM (
-// 	SELECT
-// 		table_name::text,
-// 		table_schema::text,
-// 		ARRAY_AGG("column_name"::text) as columns
-// 	FROM
-// 		information_schema.columns
-// 	WHERE
-// 		table_schema NOT in('information_schema', 'pg_catalog', 'hdb_catalog')
-// 		AND table_schema NOT LIKE 'pg_toast%'
-// 		AND table_schema NOT LIKE 'pg_temp_%'
-// 	GROUP BY
-// 		table_name,
-// 		table_schema) AS info;
-// `;
-
 export const getDatabaseInfo = `
 SELECT
 	COALESCE(json_agg(row_to_json(info)), '[]'::JSON)
@@ -1210,7 +1225,7 @@ FROM (
 		table_schema) AS info;
 `;
 
-export const getTableInfo = (tables: string[]) => `
+export const getTableInfo = (tables: QualifiedTable[]) => `
 SELECT
 	COALESCE(json_agg(row_to_json(info)), '[]'::JSON)
 FROM (
@@ -1226,7 +1241,7 @@ FROM (
         join pg_catalog.pg_namespace n
         on n.oid = pgclass.relnamespace
         where
-        pgclass.relname in (${tables.join(',')})
+        pgclass.relname in (${tables.map(t => `'${t.name}'`).join(',')})
 ) AS info;
 `;
 

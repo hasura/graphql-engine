@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
 import { Link, RouteComponentProps } from 'react-router';
@@ -23,9 +23,10 @@ import {
 import { fetchCustomFunction } from '../customFunctionReducer';
 import tabInfo from '../Modify/tabInfo';
 import PermissionsEditor from './PermissionsEditor';
-import { getFunctionSelector } from '../../../../../metadata/selector';
 
 import styles from '../Modify/ModifyCustomFunction.scss';
+import { PGFunction } from '../../../../../dataSources/services/postgresql/types';
+import { getFunctionSelector } from '../../../../../metadata/selector';
 
 const PermissionServerFlagNote = ({ isEditable = false }) =>
   !isEditable ? (
@@ -50,22 +51,11 @@ const PermissionServerFlagNote = ({ isEditable = false }) =>
     <>
       <br />
       <p>
-        The function will be exposed to the role only if the SELECT Permission
-        are enabled for the role.
+        The function will be exposed to the role if SELECT permissions are
+        enabled and function permissions are enabled for the role.
       </p>
     </>
   );
-
-const checkPermissionEditState = (
-  functionPermsInferred: boolean,
-  funcExposedAsMutation: boolean
-) => {
-  if (!functionPermsInferred) {
-    // case when INFERRED_PERMISSIONS=false on server
-    return true;
-  }
-  return functionPermsInferred && funcExposedAsMutation;
-};
 
 interface PermissionsProps extends ReduxProps {}
 const Permissions: React.FC<PermissionsProps> = ({
@@ -76,18 +66,35 @@ const Permissions: React.FC<PermissionsProps> = ({
   dispatch,
   functions,
   serverConfig,
+  allFunctions,
 }) => {
-  const isFunctionPermissionsInferred =
-    serverConfig.is_function_permissions_inferred ?? true;
+  const isPermissionsEditable: boolean = useMemo(() => {
+    const databaseFunction: PGFunction | undefined = allFunctions.find(
+      (f: PGFunction) =>
+        f.function_name === currentFunction &&
+        f.function_schema === currentSchema
+    );
 
-  const isFunctionExposedAsMutation =
-    currentFunctionInfo(currentFunction, currentSchema)?.configuration
-      ?.exposed_as === 'mutation' ?? false;
+    const isFunctionExposedAsMutation =
+      currentFunctionInfo(currentFunction, currentSchema)?.configuration
+        ?.exposed_as === 'mutation' ?? false;
 
-  const isPermissionsEditable = checkPermissionEditState(
-    isFunctionPermissionsInferred,
-    isFunctionExposedAsMutation
-  );
+    if (
+      databaseFunction?.function_type === 'VOLATILE' &&
+      (isFunctionExposedAsMutation ||
+        !serverConfig.is_function_permissions_inferred)
+    ) {
+      return true;
+    }
+
+    return !serverConfig.is_function_permissions_inferred;
+  }, [
+    allFunctions,
+    currentFunction,
+    currentFunctionInfo,
+    currentSchema,
+    serverConfig.is_function_permissions_inferred,
+  ]);
 
   const [funcFetchCompleted, updateFunctionFetchState] = useState(false);
   const urlWithSource = `/data/${currentDataSource}`;
@@ -212,16 +219,15 @@ type OwnProps = RouteComponentProps<
   unknown
 >;
 
-const mapStateToProps = (state: ReduxState, ownProps: OwnProps) => {
-  return {
-    currentSchema: ownProps.params.schema,
-    currentFunction: ownProps.params.functionName,
-    currentFunctionInfo: getFunctionSelector(state),
-    currentDataSource: state.tables.currentDataSource,
-    functions: state.functions,
-    serverConfig: state.main?.serverConfig?.data ?? {},
-  };
-};
+const mapStateToProps = (state: ReduxState, ownProps: OwnProps) => ({
+  currentSchema: ownProps.params.schema,
+  currentFunction: ownProps.params.functionName,
+  currentDataSource: state.tables.currentDataSource,
+  functions: state.functions,
+  serverConfig: state.main?.serverConfig?.data ?? {},
+  allFunctions: state.tables.postgresFunctions,
+  currentFunctionInfo: getFunctionSelector(state),
+});
 const functionsPermissionsConnector = connect(
   mapStateToProps,
   mapDispatchToPropsEmpty

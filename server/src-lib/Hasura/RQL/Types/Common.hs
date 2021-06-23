@@ -1,5 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
 module Hasura.RQL.Types.Common
        ( RelName(..)
        , relNameToTxt
@@ -73,16 +71,14 @@ import           Data.Text.Extended
 import           Data.Text.NonEmpty
 import           Data.URL.Template
 
-
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Headers             ()
-import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Error
-import           Hasura.SQL.Backend                 (BackendType)
 import           Hasura.SQL.Types
+
 
 newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
@@ -154,26 +150,6 @@ instance ToJSON InsertOrder where
     BeforeParent -> String "before_parent"
     AfterParent  -> String "after_parent"
 
--- should this be parameterized by both the source and the destination backend?
-data RelInfo (b :: BackendType)
-  = RelInfo
-  { riName        :: !RelName
-  , riType        :: !RelType
-  , riMapping     :: !(HashMap (Column b) (Column b))
-  , riRTable      :: !(TableName b)
-  , riIsManual    :: !Bool
-  , riIsNullable  :: !Bool
-  , riInsertOrder :: !InsertOrder
-  } deriving (Generic)
-deriving instance Backend b => Show (RelInfo b)
-deriving instance Backend b => Eq   (RelInfo b)
-instance Backend b => NFData (RelInfo b)
-instance Backend b => Cacheable (RelInfo b)
-instance Backend b => Hashable (RelInfo b)
-instance Backend b => FromJSON (RelInfo b) where
-  parseJSON = genericParseJSON hasuraJSON
-instance Backend b => ToJSON (RelInfo b) where
-  toJSON = genericToJSON hasuraJSON
 
 -- | Postgres OIDs. <https://www.postgresql.org/docs/12/datatype-oid.html>
 newtype OID = OID { unOID :: Int }
@@ -279,7 +255,7 @@ instance FromJSON NonNegativeInt where
       False -> fail "negative value not allowed"
 
 newtype NonNegativeDiffTime = NonNegativeDiffTime { unNonNegativeDiffTime :: DiffTime }
-  deriving (Show, Eq,ToJSON,Generic, NFData, Cacheable, Num)
+  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Num)
 
 unsafeNonNegativeDiffTime :: DiffTime -> NonNegativeDiffTime
 unsafeNonNegativeDiffTime = NonNegativeDiffTime
@@ -393,6 +369,17 @@ mkScalarTypeName PG.PGBoolean  = pure boolScalar
 mkScalarTypeName PG.PGFloat    = pure floatScalar
 mkScalarTypeName PG.PGText     = pure stringScalar
 mkScalarTypeName PG.PGVarchar  = pure stringScalar
+mkScalarTypeName (PG.PGCompositeScalar compositeScalarType) =
+  -- When the function argument is a row type argument
+  -- then it's possible that there can be an object type
+  -- with the table name depending upon whether the table
+  -- is tracked or not. As a result, we get a conflict between
+  -- both these types (scalar and object type with same name).
+  -- To avoid this, we suffix the table name with `_scalar`
+  -- and create a new scalar type
+  (<> $$(G.litName "_scalar")) <$> G.mkName compositeScalarType `onNothing` throw400 ValidationFailed
+  ("cannot use SQL type " <> compositeScalarType <<> " in the GraphQL schema because its name is not a "
+  <> "valid GraphQL identifier")
 mkScalarTypeName scalarType = G.mkName (toSQLTxt scalarType) `onNothing` throw400 ValidationFailed
   ("cannot use SQL type " <> scalarType <<> " in the GraphQL schema because its name is not a "
   <> "valid GraphQL identifier")

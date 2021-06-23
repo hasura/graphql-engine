@@ -108,6 +108,7 @@ case "${1-}" in
       RUN_INTEGRATION_TESTS=true
       RUN_UNIT_TESTS=false
       RUN_HLINT=false
+      source scripts/parse-pytest-backend
       ;;
       --hlint)
       RUN_INTEGRATION_TESTS=false
@@ -118,6 +119,7 @@ case "${1-}" in
       RUN_INTEGRATION_TESTS=true
       RUN_UNIT_TESTS=true
       RUN_HLINT=true
+      BACKEND="postgres"
       ;;
       *)
       die_usage
@@ -199,6 +201,51 @@ function citus_start() {
   citus_wait
 }
 
+function start_dbs() {
+  # always launch the postgres container
+  pg_start
+
+  case "$BACKEND" in
+    citus)
+      citus_start
+    ;;
+    mssql)
+      mssql_start
+    ;;
+    # bigquery omitted as test setup is atypical. See:
+    # https://github.com/hasura/graphql-engine-mono/wiki/Testing-BigQuery
+  esac
+}
+
+function add_sources() {
+  METADATA_URL=http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/v1/metadata
+
+  # always add a postgres source
+  echo ""
+  echo_pretty "Adding Postgres source"
+  curl "$METADATA_URL" \
+  --data-raw '{"type":"pg_add_source","args":{"name":"default","configuration":{"connection_info":{"database_url":"'"$PG_DB_URL"'"}}}}'
+
+  case "$BACKEND" in
+    # bigquery omitted as test setup is atypical. See:
+    # https://github.com/hasura/graphql-engine-mono/wiki/Testing-BigQuery
+    citus)
+      echo ""
+      echo_pretty "Adding Citus source"
+      curl "$METADATA_URL" \
+      --data-raw '{"type":"citus_add_source","args":{"name":"citus","configuration":{"connection_info":{"database_url":"'"$CITUS_DB_URL"'"}}}}'
+    ;;
+    mssql)
+      echo ""
+      echo_pretty "Adding SQL Server source"
+      curl "$METADATA_URL" \
+      --data-raw '{"type":"mssql_add_source","args":{"name":"mssql","configuration":{"connection_info":{"connection_string":"'"$MSSQL_DB_URL"'"}}}}'
+    ;;
+  esac
+
+  echo ""
+}
+
 
 #################################
 ###     Graphql-engine        ###
@@ -218,7 +265,7 @@ if [ "$MODE" = "graphql-engine" ]; then
       # works when cabal.project.dev-sh.local is edited to turn on optimizations.
       # See also: https://hackage.haskell.org/package/cabal-plan
       distdir=$(cat dist-newstyle/cache/plan.json | jq -r '."install-plan"[] | select(."id" == "graphql-engine-1.0.0-inplace")? | ."dist-dir"')
-      hpcdir="$distdir/hpc/vanilla/mix/graphql-engine-1.0.0"
+      hpcdir="$distdir/hpc/dyn/mix/graphql-engine-1.0.0"
       echo_pretty "Generating code coverage report..."
       COVERAGE_DIR="dist-newstyle/dev.sh-coverage"
       hpc_invocation=(hpc markup
@@ -248,6 +295,11 @@ if [ "$MODE" = "graphql-engine" ]; then
 
   export HASURA_GRAPHQL_DATABASE_URL=${HASURA_GRAPHQL_DATABASE_URL-$PG_DB_URL}
   export HASURA_GRAPHQL_SERVER_PORT=${HASURA_GRAPHQL_SERVER_PORT-8181}
+
+  export HASURA_BIGQUERY_SERVICE_ACCOUNT="<<<SERVICE_ACCOUNT_FILE_CONTENTS>>>" # `cat ../SERVICE_ACCOUNT_FILE.json`
+  export HASURA_BIGQUERY_PROJECT_ID="<<<PROJECT_ID>>>"
+  export HASURA_BIGQUERY_DATASETS="<<<CSV_DATASETS>>>"
+
 
   echo_pretty "We will connect to postgres at '$HASURA_GRAPHQL_DATABASE_URL'"
   echo_pretty "If you haven't overridden HASURA_GRAPHQL_DATABASE_URL, you can"
@@ -391,32 +443,49 @@ elif [ "$MODE" = "test" ]; then
   # It's better UX to build first (possibly failing) before trying to launch
   # PG, but make sure that new-run uses the exact same build plan, else we risk
   # rebuilding twice... ugh
-  cabal new-build --project-file=cabal.project.dev-sh exe:graphql-engine test:graphql-engine-tests
-  pg_start
+  # Formerly this was a `cabal build` but mixing cabal build and cabal run
+  # seems to conflict now, causing re-linking, haddock runs, etc. Instead do a
+  # `graphql-engine version` to trigger build
+  cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
+      --metadata-database-url="$PG_DB_URL" version
 
-  # These also depend on a running DB:
+  if [ "$RUN_INTEGRATION_TESTS" = true ]; then
+    start_dbs
+  else
+    # unit tests just need access to a postgres instance:
+    pg_start
+  fi
+
   if [ "$RUN_UNIT_TESTS" = true ]; then
     echo_pretty "Running Haskell test suite"
     HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
   fi
 
   if [ "$RUN_HLINT" = true ]; then
-    cd "$PROJECT_ROOT/server"
-    hlint src-*
+    if command -v hlint >/dev/null; then
+      (cd "$PROJECT_ROOT/server" && hlint src-*)
+    else
+      echo_warn "hlint is not installed: skipping"
+    fi
   fi
 
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
-    mssql_start
-    citus_start
-
     GRAPHQL_ENGINE_TEST_LOG=/tmp/hasura-dev-test-engine.log
     echo_pretty "Starting graphql-engine, logging to $GRAPHQL_ENGINE_TEST_LOG"
     export HASURA_GRAPHQL_SERVER_PORT=8088
 
+    # Extra sources for multi-source tests. Uses the default postgres DB if no extra sources
+    # are defined.
+    export HASURA_GRAPHQL_PG_SOURCE_URL_1=${HASURA_GRAPHQL_PG_SOURCE_URL_1-$PG_DB_URL}
+    export HASURA_GRAPHQL_PG_SOURCE_URL_2=${HASURA_GRAPHQL_PG_SOURCE_URL_2-$PG_DB_URL}
+
     # Using --metadata-database-url flag to test multiple backends
+    #       HASURA_GRAPHQL_PG_SOURCE_URL_* For a couple multi-source pytests:
     cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
-      --metadata-database-url="$PG_DB_URL" serve --stringify-numeric-types \
-      --enable-console --console-assets-dir ../console/static/dist \
+      --metadata-database-url="$PG_DB_URL" serve \
+      --stringify-numeric-types \
+      --enable-console \
+      --console-assets-dir ../console/static/dist \
       &> "$GRAPHQL_ENGINE_TEST_LOG" & GRAPHQL_ENGINE_PID=$!
 
     echo -n "Waiting for graphql-engine"
@@ -432,21 +501,7 @@ elif [ "$MODE" = "test" ]; then
     echo ""
     echo " Ok"
 
-    METADATA_URL=http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/v1/metadata
-
-    echo ""
-    echo "Adding Postgres source"
-    curl "$METADATA_URL" \
-    --data-raw '{"type":"pg_add_source","args":{"name":"default","configuration":{"connection_info":{"database_url":"'"$PG_DB_URL"'","pool_settings":{}}}}}'
-
-    echo ""
-    echo "Adding SQL Server source"
-    curl "$METADATA_URL" \
-    --data-raw '{"type":"mssql_add_source","args":{"name":"mssql","configuration":{"connection_info":{"connection_string":"'"$MSSQL_DB_URL"'","pool_settings":{}}}}}'
-
-    echo ""
-    echo "Sources added:"
-    curl "$METADATA_URL" --data-raw '{"type":"export_metadata","args":{}}'
+    add_sources
 
     cd "$PROJECT_ROOT/server/tests-py"
 
@@ -494,7 +549,7 @@ elif [ "$MODE" = "test" ]; then
     fi
 
     # TODO MAYBE: fix deprecation warnings, make them an error
-    if ! pytest -W ignore::DeprecationWarning --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT --pg-urls "$PG_DB_URL" "${PYTEST_ARGS[@]}"; then
+    if ! pytest -W ignore::DeprecationWarning --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT --pg-urls "$PG_DB_URL" --durations=20 "${PYTEST_ARGS[@]}"; then
       echo_error "^^^ graphql-engine logs from failed test run can be inspected at: $GRAPHQL_ENGINE_TEST_LOG"
     fi
     deactivate  # python venv
@@ -526,15 +581,15 @@ elif [ "$MODE" = "test" ]; then
     COVERAGE_DIR="dist-newstyle/dev.sh-coverage"
     hpc markup \
       --exclude=Main \
-      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/noopt/hpc/vanilla/mix/graphql-engine-* \
-      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/t/graphql-engine-tests/noopt/hpc/vanilla/mix/graphql-engine-tests \
+      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/noopt/hpc/dyn/mix/graphql-engine-* \
+      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/t/graphql-engine-tests/noopt/hpc/dyn/mix/graphql-engine-tests \
       --reset-hpcdirs graphql-engine-combined.tix \
       --fun-entry-count \
       --destdir="$COVERAGE_DIR" >/dev/null
     hpc report \
       --exclude=Main \
-      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/noopt/hpc/vanilla/mix/graphql-engine-* \
-      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/t/graphql-engine-tests/noopt/hpc/vanilla/mix/graphql-engine-tests \
+      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/noopt/hpc/dyn/mix/graphql-engine-* \
+      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/t/graphql-engine-tests/noopt/hpc/dyn/mix/graphql-engine-tests \
       --reset-hpcdirs graphql-engine-combined.tix
     echo_pretty "To view full coverage report open:"
     echo_pretty "  file://$(pwd)/$COVERAGE_DIR/hpc_index.html"

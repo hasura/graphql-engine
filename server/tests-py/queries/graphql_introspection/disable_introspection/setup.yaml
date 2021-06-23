@@ -1,0 +1,29 @@
+type: bulk
+args:
+
+- type: pg_track_table
+  args:
+    table: authors
+
+- type: pg_create_select_permission
+  args:
+    table: authors
+    role: introspection_disabled
+    permission:
+      columns:
+        - name
+      filter: {}
+
+- type: pg_create_select_permission
+  args:
+    table: authors
+    role: introspection_not_diabled
+    permission:
+      columns:
+        - name
+      filter: {}
+
+- type: set_graphql_schema_introspection_options
+  args:
+    disabled_for_roles:
+      - introspection_disabled

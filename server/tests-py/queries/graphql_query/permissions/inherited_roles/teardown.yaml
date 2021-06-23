@@ -7,3 +7,7 @@ args:
   - type: drop_inherited_role
     args:
       role_name: author_editor_guest_inherited_role
+
+  - type: drop_inherited_role
+    args:
+      role_name: non_paying_user

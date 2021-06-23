@@ -60,6 +60,21 @@
 {% block document %}
     <div class="main_container_wrapper">
       {% include 'pages/loading.html' %}
+      <div id="banner-stripe" class="hasuraConBannerBg">
+        <div class="containerWidth">
+          <div class="commonBannerStripWrapper">
+            <a
+              href="https://hasura.io/events/hasura-con-2021/?pg=docs&plcmt=banner&cta=register-now&tech="
+              class="articleDesc"
+            >
+              HasuraCon'21, our annual user conference, is happening on June 23rd & 24th. Register Now
+            </a>
+            <div id="close-banner" class="closeBanner">
+              <img src="{{ pathto('_images/layout/close-banner.svg', 1) }}" alt="Close" />
+            </div>
+          </div>
+        </div>
+      </div>
       <header
         id="header"
         class='blueBgColor boderBottom'
@@ -72,7 +87,7 @@
                   <img src="{{ pathto('_images/layout/white-logo.svg', 1) }}" alt="Logo"/>
                 </a>
               </div>
-              <a class="tracked" data-label="Nav: Discord" href="https://discordapp.com/invite/hasura" target="_blank" rel="noopener noreferrer">
+              <a class="tracked" data-label="Nav: Discord" href="https://discord.com/invite/hasura" target="_blank" rel="noopener noreferrer">
                 <div class="socialBtn discordBtn">
                   <img src="{{ pathto('_images/layout/discord-brands-block.svg', 1) }}" alt="Discord"/>
                 </div>
@@ -92,7 +107,13 @@
             </div>
             <div class="navBlueBG">
               <ul class="navBarUL">
-                <!-- <li>v1.x</li> -->
+                <li class="versionTxt">
+                  <!--v1.x-->
+                  <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
+                    <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/2.0/graphql/core/index.html" {%- if version == '2.0' %}selected="selected"{% endif %}>v2.x</option>
+                    <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/core/index.html" {%- if version == '1.0' %}selected="selected"{% endif %}>v1.x</option>
+                  </select>
+                </li>
                 <li class='navListActive'>
                   <a class="tracked" data-label="Nav: Docs" href="/docs/latest/graphql/core/index.html">Docs</a>
                 </li>
@@ -142,9 +163,13 @@
                 <ul class="navBarULMobile">
                   <li>
                     <a class="tracked menuLink" data-label="Mobile Nav: Docs" href="/docs/latest/graphql/core/index.html">Docs</a>
-                    <!--<span class="versionTxt">-->
+                    <span class="versionTxt">
                       <!--v1.x-->
-                    <!--</span>-->
+                      <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
+                        <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/2.0/graphql/core/index.html" {%- if version == '2.0' %}selected="selected"{% endif %}>v2.x</option>
+                        <option class="option_val" value="https://{{ BASE_DOMAIN }}/docs/1.0/graphql/core/index.html" {%- if version == '1.0' %}selected="selected"{% endif %}>v1.x</option>
+                      </select>
+                    </span>
                   </li>
                   <li>
                     <a class="tracked menuLink" data-label="Mobile Nav: Blog" href='https://hasura.io/blog/'>

@@ -6,6 +6,8 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                as HM
 
+import           Data.Int                           (Int64)
+
 import qualified Hasura.Backends.Postgres.SQL.DML   as PG
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
 
@@ -31,7 +33,7 @@ data SelectSource
   , _ssWhere    :: !PG.BoolExp
   , _ssOrderBy  :: !(Maybe PG.OrderByExp)
   , _ssLimit    :: !(Maybe Int)
-  , _ssOffset   :: !(Maybe (PG.SQLExp))
+  , _ssOffset   :: !(Maybe Int64)
   } deriving (Generic)
 instance Hashable SelectSource
 deriving instance Show SelectSource

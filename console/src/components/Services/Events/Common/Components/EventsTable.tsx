@@ -149,12 +149,8 @@ const EventsTable: React.FC<Props> = props => {
     }
   });
 
-  const invocationColumns = ['status', 'invoid', 'created_at'];
-  const invocationDataTriggerColumns = [
-    'status',
-    'invocation_id',
-    'created_at',
-  ];
+  const invocationColumns = ['status', 'id', 'created_at'];
+  const invocationDataTriggerColumns = ['status', 'id', 'created_at'];
 
   const invocationGridHeadings: GridHeadingProps[] = [expanderActions];
   const addToGridHeadings = (headAccArr: string[]) => {

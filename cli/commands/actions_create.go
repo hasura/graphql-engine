@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -84,7 +84,10 @@ func (o *actionsCreateOptions) run() error {
 	if err != nil {
 		return errors.Wrap(err, "error in creating action")
 	}
-	err = executeMetadata("apply", o.EC)
+	opts := &MetadataApplyOptions{
+		EC: o.EC,
+	}
+	err = opts.Run()
 	if err != nil {
 		return errors.Wrap(err, "error in applying metadata")
 	}

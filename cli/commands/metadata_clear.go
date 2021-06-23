@@ -1,15 +1,15 @@
 package commands
 
 import (
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
 func newMetadataClearCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &MetadataClearOptions{
-		EC:         ec,
-		ActionType: "clear",
+		EC: ec,
 	}
 
 	metadataResetCmd := &cobra.Command{
@@ -45,14 +45,15 @@ func newMetadataClearCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 type MetadataClearOptions struct {
 	EC *cli.ExecutionContext
-
-	ActionType string
 }
 
 func (o *MetadataClearOptions) Run() error {
-	err := executeMetadata(o.ActionType, o.EC)
+
+	var err error
+	metadataHandler := metadataobject.NewHandlerFromEC(o.EC)
+	err = metadataHandler.ResetMetadata()
 	if err != nil {
-		return errors.Wrap(err, "Cannot clear metadata")
+		return errors.Wrap(err, "cannot clear Metadata")
 	}
 	return nil
 }

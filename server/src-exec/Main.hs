@@ -83,10 +83,9 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
         -- that serveCtx is not retained.
         _ <- case serveCtx of
                ServeCtx{_scShutdownLatch} ->
-                liftIO $ Signals.installHandler
-                  Signals.sigTERM
-                  (Signals.CatchOnce (shutdownGracefully _scShutdownLatch))
-                  Nothing
+                liftIO $ do
+                   void $ Signals.installHandler Signals.sigTERM (Signals.CatchOnce (shutdownGracefully _scShutdownLatch)) Nothing
+                   void $ Signals.installHandler Signals.sigINT  (Signals.CatchOnce (shutdownGracefully _scShutdownLatch)) Nothing
 
         let Loggers _ logger pgLogger = _scLoggers serveCtx
 
@@ -94,7 +93,7 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
           GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
         serverMetrics <- liftIO $ createServerMetrics ekgStore
-        flip runPGMetadataStorageApp (_scMetadataDbPool serveCtx, pgLogger) . lowerManagedT $ do
+        flip runPGMetadataStorageAppT (_scMetadataDbPool serveCtx, pgLogger) . lowerManagedT $ do
           runHGEServer (const $ pure ()) env serveOptions serveCtx initTime Nothing serverMetrics ekgStore
 
     HCExport -> do
@@ -119,7 +118,7 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
           cacheBuildParams =
             CacheBuildParams _gcHttpManager pgSourceResolver serverConfigCtx
       runManagedT (mkMinimalPool _gcMetadataDbConnInfo) $ \metadataDbPool -> do
-        res <- flip runPGMetadataStorageApp (metadataDbPool, pgLogger) $
+        res <- flip runPGMetadataStorageAppT (metadataDbPool, pgLogger) $
           runMetadataStorageT $ liftEitherM do
           (metadata, _) <- fetchMetadata
           runAsAdmin _gcHttpManager serverConfigCtx $ do
@@ -136,6 +135,9 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
       let defaultSourceConfig = maybeDefaultPgConnInfo <&> \(dbUrlConf, _) ->
             let pgSourceConnInfo = PostgresSourceConnInfo dbUrlConf
                                    (Just setPostgresPoolSettings{_ppsRetries = maybeRetries <|> Just 1})
+                                   False
+                                   Q.ReadCommitted
+                                   Nothing
             in PostgresConnConfiguration pgSourceConnInfo Nothing
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo $ downgradeCatalog defaultSourceConfig opts initTime
       either (printErrJExit DowngradeProcessError) (liftIO . print) res

@@ -4,7 +4,9 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli"
+	errors2 "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/errors"
+
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -43,10 +45,10 @@ func (a *AllowListConfig) CreateFiles() error {
 	return nil
 }
 
-func (a *AllowListConfig) Build(metadata *yaml.MapSlice) error {
+func (a *AllowListConfig) Build(metadata *yaml.MapSlice) errors2.ErrParsingMetadataObject {
 	data, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, fileName))
 	if err != nil {
-		return err
+		return a.Error(err)
 	}
 	item := yaml.MapItem{
 		Key: "allowlist",
@@ -54,7 +56,7 @@ func (a *AllowListConfig) Build(metadata *yaml.MapSlice) error {
 	var obj []yaml.MapSlice
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
-		return err
+		return a.Error(err)
 	}
 	if len(obj) != 0 {
 		item.Value = obj
@@ -63,7 +65,7 @@ func (a *AllowListConfig) Build(metadata *yaml.MapSlice) error {
 	return nil
 }
 
-func (a *AllowListConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
+func (a *AllowListConfig) Export(metadata yaml.MapSlice) (map[string][]byte, errors2.ErrParsingMetadataObject) {
 	var allowList interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
@@ -77,13 +79,17 @@ func (a *AllowListConfig) Export(metadata yaml.MapSlice) (map[string][]byte, err
 	}
 	data, err := yaml.Marshal(allowList)
 	if err != nil {
-		return nil, err
+		return nil, a.Error(err)
 	}
 	return map[string][]byte{
-		filepath.Join(a.MetadataDir, fileName): data,
+		filepath.ToSlash(filepath.Join(a.MetadataDir, fileName)): data,
 	}, nil
 }
 
 func (a *AllowListConfig) Name() string {
 	return "allowlist"
+}
+
+func (a *AllowListConfig) Error(err error, additionalContext ...string) errors2.ErrParsingMetadataObject {
+	return errors2.NewErrParsingMetadataObject(a.Name(), fileName, additionalContext, err)
 }

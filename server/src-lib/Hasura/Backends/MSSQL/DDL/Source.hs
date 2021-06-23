@@ -9,8 +9,8 @@ import           Hasura.Prelude
 
 import           Hasura.Backends.MSSQL.Connection
 import           Hasura.Backends.MSSQL.Meta
+import           Hasura.Base.Error
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Source
 import           Hasura.SQL.Backend
 

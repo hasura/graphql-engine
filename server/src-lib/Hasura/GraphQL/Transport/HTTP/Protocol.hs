@@ -20,12 +20,7 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , isExecError
   ) where
 
-import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.Types
-
-import           Data.Either                    (isLeft)
-import           Language.Haskell.TH.Syntax     (Lift)
 
 import qualified Data.Aeson                     as J
 import qualified Data.Aeson.Casing              as J
@@ -35,6 +30,14 @@ import qualified Data.HashMap.Strict            as Map
 import qualified Language.GraphQL.Draft.Parser  as G
 import qualified Language.GraphQL.Draft.Printer as G
 import qualified Language.GraphQL.Draft.Syntax  as G
+
+import           Data.Either                    (isLeft)
+import           Language.Haskell.TH.Syntax     (Lift)
+
+import           Hasura.Base.Error
+import           Hasura.Base.Instances          ()
+import           Hasura.EncJSON
+
 
 -- TODO: why not just `G.ExecutableDocument G.Name`?
 newtype GQLExecDoc

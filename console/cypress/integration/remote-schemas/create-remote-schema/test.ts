@@ -14,10 +14,10 @@ import {
   failWithRemoteSchemaEnvUrl,
   failWithRemoteSchemaEnvHeader,
   passWithRemoteSchemaHeader,
-  passWithEditRemoteSchema,
   deleteRemoteSchema,
   visitRemoteSchemaPermissionsTab,
   createSimpleRemoteSchemaPermission,
+  passWithUpdateRemoteSchema
 } from './spec';
 
 const setup = () => {
@@ -70,7 +70,7 @@ export const runCreateRemoteSchemaTableTests = () => {
       failWithRemoteSchemaEnvHeader
     );
     it('Create remote schema with headers', passWithRemoteSchemaHeader);
-    it('Edit remote schema with headers', passWithEditRemoteSchema);
+    it('Update remote schema on Modify page', passWithUpdateRemoteSchema);
     it('Delete remote schema with headers', deleteRemoteSchema);
   });
 };

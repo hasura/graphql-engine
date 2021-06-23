@@ -23,8 +23,8 @@ import           Data.FileEmbed             (makeRelativeToProject)
 import           Data.Text.Conversions      (FromText (..), ToText (..))
 import           Text.Regex.TDFA            ((=~~))
 
-import           Hasura.RQL.Instances       ()
 import           Hasura.Server.Utils        (getValFromEnvOrScript)
+
 
 data Version
   = VersionDev !Text

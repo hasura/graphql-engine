@@ -1,4 +1,5 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Hasura.RQL.Types.Action
   ( ArgumentName(..)
   , ArgumentDefinition(..)
@@ -57,6 +58,8 @@ module Hasura.RQL.Types.Action
   , traverseAnnActionAsyncQuery
 
   , ActionId(..)
+  , LockedActionEventId
+  , LockedActionIdArray (..)
   , actionIdToText
   , ActionLogItem(..)
   , ActionLogResponse(..)
@@ -77,20 +80,26 @@ import qualified Data.HashMap.Strict           as Map
 import qualified Data.Time.Clock               as UTC
 import qualified Data.UUID                     as UUID
 import qualified Database.PG.Query             as Q
+import qualified Database.PG.Query.PTI         as PTI
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.HTTP.Types            as HTTP
+import qualified PostgreSQL.Binary.Encoding    as PE
+
 
 import           Control.Lens                  (makeLenses, makePrisms)
+import           Data.Aeson.Extended
+import           Data.Kind                     (Type)
 import           Data.Text.Extended
 
+import           Hasura.Base.Error
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.CustomTypes
-import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.EventTrigger (EventId (..))
 import           Hasura.SQL.Backend
 import           Hasura.Session
 
@@ -291,15 +300,18 @@ data ActionSourceInfo b
   = ASINoSource -- ^ No relationships defined on the action output object
   | ASISource !SourceName !(SourceConfig b) -- ^ All relationships refer to tables in one source
 
-getActionSourceInfo :: AnnotatedObjectType -> ActionSourceInfo 'Postgres
+getActionSourceInfo :: AnnotatedObjectType -> ActionSourceInfo ('Postgres 'Vanilla)
 getActionSourceInfo = maybe ASINoSource (uncurry ASISource) . _aotSource
 
-data AnnActionExecution (b :: BackendType) v
+data AnnActionExecution (b :: BackendType) (r :: BackendType -> Type) v
   = AnnActionExecution
   { _aaeName                 :: !ActionName
-  , _aaeOutputType           :: !GraphQLType -- ^ output type
-  , _aaeFields               :: !(AnnFieldsG b v) -- ^ output selection
-  , _aaePayload              :: !J.Value -- ^ jsonified input arguments
+  , _aaeOutputType           :: !GraphQLType
+  -- ^ output type
+  , _aaeFields               :: !(AnnFieldsG b r v)
+  -- ^ output selection
+  , _aaePayload              :: !J.Value
+  -- ^ jsonified input arguments
   , _aaeOutputFields         :: !ActionOutputFields
   -- ^ to validate the response fields from webhook
   , _aaeDefinitionList       :: ![(Column b, ScalarType b)]
@@ -314,8 +326,8 @@ data AnnActionExecution (b :: BackendType) v
 traverseAnnActionExecution
   :: (Applicative f, Backend backend)
   => (a -> f b)
-  -> AnnActionExecution backend a
-  -> f (AnnActionExecution backend b)
+  -> AnnActionExecution backend r a
+  -> f (AnnActionExecution backend r b)
 traverseAnnActionExecution f (AnnActionExecution n ot fs p oF dl w h fch sn to s) =
   traverse (traverse $ traverseAnnField f) fs <&> \tfs -> AnnActionExecution n ot tfs p oF dl w h fch sn to s
 
@@ -326,9 +338,9 @@ data AnnActionMutationAsync
   , _aamaPayload              :: !J.Value -- ^ jsonified input arguments
   } deriving (Show, Eq)
 
-data AsyncActionQueryFieldG (b :: BackendType) v
+data AsyncActionQueryFieldG (b :: BackendType) (r :: BackendType -> Type) v
   = AsyncTypename !Text
-  | AsyncOutput !(AnnFieldsG b v)
+  | AsyncOutput !(AnnFieldsG b r v)
   | AsyncId
   | AsyncCreatedAt
   | AsyncErrors
@@ -336,8 +348,8 @@ data AsyncActionQueryFieldG (b :: BackendType) v
 traverseAsyncActionQueryField
   :: (Applicative f, Backend backend)
   => (a -> f b)
-  -> AsyncActionQueryFieldG backend a
-  -> f (AsyncActionQueryFieldG backend b)
+  -> AsyncActionQueryFieldG backend r a
+  -> f (AsyncActionQueryFieldG backend r b)
 traverseAsyncActionQueryField f = \case
   AsyncTypename t    -> pure $ AsyncTypename t
   AsyncOutput fields -> AsyncOutput <$> traverse (traverse $ traverseAnnField f) fields
@@ -345,14 +357,14 @@ traverseAsyncActionQueryField f = \case
   AsyncCreatedAt     -> pure AsyncCreatedAt
   AsyncErrors        -> pure AsyncErrors
 
-type AsyncActionQueryFieldsG b v = Fields (AsyncActionQueryFieldG b v)
+type AsyncActionQueryFieldsG b r v = Fields (AsyncActionQueryFieldG b r v)
 
-data AnnActionAsyncQuery (b :: BackendType) v
+data AnnActionAsyncQuery (b :: BackendType) (r :: BackendType -> Type) v
   = AnnActionAsyncQuery
   { _aaaqName                 :: !ActionName
   , _aaaqActionId             :: !ActionId
   , _aaaqOutputType           :: !GraphQLType
-  , _aaaqFields               :: !(AsyncActionQueryFieldsG b v)
+  , _aaaqFields               :: !(AsyncActionQueryFieldsG b r v)
   , _aaaqDefinitionList       :: ![(Column b, ScalarType b)]
   , _aaaqStringifyNum         :: !Bool
   , _aaaqForwardClientHeaders :: !Bool
@@ -362,8 +374,8 @@ data AnnActionAsyncQuery (b :: BackendType) v
 traverseAnnActionAsyncQuery
   :: (Applicative f, Backend backend)
   => (a -> f b)
-  -> AnnActionAsyncQuery backend a
-  -> f (AnnActionAsyncQuery backend b)
+  -> AnnActionAsyncQuery backend r a
+  -> f (AnnActionAsyncQuery backend r b)
 traverseAnnActionAsyncQuery f (AnnActionAsyncQuery n aid ot fs dl sn fch s) =
   traverse (traverse $ traverseAsyncActionQueryField f) fs <&> \tfs -> AnnActionAsyncQuery n aid ot tfs dl sn fch s
 
@@ -412,3 +424,15 @@ data ActionsInfo
   }
   deriving (Show, Eq, Generic)
 $(makeLenses ''ActionsInfo)
+
+type LockedActionEventId = EventId
+
+-- This type exists only to use the Postgres array encoding.
+newtype LockedActionIdArray = LockedActionIdArray { unCohortIdArray :: [LockedActionEventId] }
+  deriving (Show, Eq)
+
+instance Q.ToPrepArg LockedActionIdArray where
+  toPrepVal (LockedActionIdArray l) =
+    Q.toPrepValHelper PTI.unknown encoder $ mapMaybe (UUID.fromText . unEventId) l
+    where
+      encoder = PE.array 2950 . PE.dimensionArray foldl' (PE.encodingArray . PE.uuid)

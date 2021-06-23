@@ -2,27 +2,20 @@
 
 module Hasura.Backends.BigQuery.Instances.Types where
 
-import           Data.Coerce
-import           Data.Functor.Const
 import           Hasura.Prelude
-import           Hasura.SQL.Types
-import qualified Text.Builder as TB
 
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Language.GraphQL.Draft.Syntax    as G
 
 import           Data.Aeson
 
-import qualified Hasura.Backends.BigQuery.Types as BigQuery
-import qualified Hasura.Backends.BigQuery.Source as BigQuery
+import qualified Hasura.Backends.BigQuery.Source  as BigQuery
+import qualified Hasura.Backends.BigQuery.Types   as BigQuery
 
-import qualified Hasura.Backends.BigQuery.ToQuery as BigQuery (toTextPretty, fromExpression)
-import           Hasura.RQL.DDL.Headers ()
+import           Hasura.Backends.BigQuery.ToQuery ()
+import           Hasura.Base.Error
 import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 
-instance ToSQL BigQuery.Expression where
-  toSQL = TB.text . BigQuery.toTextPretty . BigQuery.fromExpression
 
 instance Backend 'BigQuery where
   type SourceConfig            'BigQuery = BigQuery.BigQuerySourceConfig
@@ -41,13 +34,13 @@ instance Backend 'BigQuery where
   type ScalarType              'BigQuery = BigQuery.ScalarType
   type SQLExpression           'BigQuery = BigQuery.Expression
   type SQLOperator             'BigQuery = BigQuery.Op
-  type BooleanOperators 'BigQuery = Const Void
-  type XComputedField          'BigQuery = Void
-  type XRemoteField            'BigQuery = Void
+  type BooleanOperators        'BigQuery = Const Void
 
-  type XRelay                  'BigQuery = Void
+  type XComputedField          'BigQuery = XDisable
+  type XRelay                  'BigQuery = XDisable
   type XNodesAgg               'BigQuery = XEnable
-  type XDistinct               'BigQuery = Void
+
+  type ExtraTableMetadata      'BigQuery = ()
 
   functionArgScalarType :: FunctionArgType 'BigQuery -> ScalarType 'BigQuery
   functionArgScalarType = absurd
@@ -80,7 +73,8 @@ instance Backend 'BigQuery where
   functionGraphQLName = error "functionGraphQLName"
 
   scalarTypeGraphQLName :: ScalarType 'BigQuery -> Either QErr G.Name
-  scalarTypeGraphQLName = error "scalarTypeGraphQLName"
+  scalarTypeGraphQLName = BigQuery.scalarTypeGraphQLName
 
   snakeCaseTableName :: TableName 'BigQuery -> Text
-  snakeCaseTableName = error "snakeCaseTableName"
+  snakeCaseTableName BigQuery.TableName { tableName, tableNameSchema } =
+    tableNameSchema <> "_" <> tableName

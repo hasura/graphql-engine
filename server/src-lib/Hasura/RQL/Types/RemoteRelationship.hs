@@ -1,6 +1,3 @@
-{-# LANGUAGE NamedFieldPuns  #-}
-{-# LANGUAGE RecordWildCards #-}
-
 module Hasura.RQL.Types.RemoteRelationship
   ( RemoteRelationshipName(..)
   , remoteRelationshipNameToText
@@ -20,20 +17,19 @@ module Hasura.RQL.Types.RemoteRelationship
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                as HM
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
-import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Data.HashMap.Strict           as HM
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
+import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Control.Lens                       (makeLenses)
+import           Control.Lens                  (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Scientific
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
-import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
-import           Hasura.Incremental                 (Cacheable)
+import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
@@ -57,8 +53,7 @@ fromRemoteRelationship = FieldName . remoteRelationshipNameToText
 -- | Resolved remote relationship
 data RemoteFieldInfo (b :: BackendType)
   = RemoteFieldInfo
-  { _rfiXRemoteFieldInfo      :: !(XRemoteField b)
-  , _rfiName                  :: !RemoteRelationshipName
+  { _rfiName                  :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
     -- of the hasura schema.
   , _rfiParamMap              :: !(HashMap G.Name RemoteSchemaInputValueDefinition)
@@ -74,10 +69,11 @@ data RemoteFieldInfo (b :: BackendType)
   -- ^ The new input value definitions created for this remote field
   , _rfiRemoteSchemaName      :: !RemoteSchemaName
   -- ^ Name of the remote schema, that's used for joining
-  , _rfiTable                 :: !(QualifiedTable, SourceName)
+  , _rfiTable                 :: !(TableName b, SourceName)
   -- ^ Name of the table and its source
   } deriving (Generic)
 deriving instance Backend b => Eq (RemoteFieldInfo b)
+deriving instance Backend b => Show (RemoteFieldInfo b)
 instance Backend b => Cacheable (RemoteFieldInfo b)
 
 graphQLValueToJSON :: G.Value Void -> Value
@@ -254,9 +250,10 @@ data RemoteRelationship b =
     , rtrRemoteField  :: !RemoteFields
     }  deriving (Generic)
 deriving instance (Backend b) => Show (RemoteRelationship b)
-deriving instance (Backend b) => Eq (RemoteRelationship b)
-instance (Backend b) => NFData (RemoteRelationship b)
+deriving instance (Backend b) => Eq   (RemoteRelationship b)
+instance (Backend b) => NFData    (RemoteRelationship b)
 instance (Backend b) => Cacheable (RemoteRelationship b)
+
 instance (Backend b) => ToJSON (RemoteRelationship b) where
   toJSON = genericToJSON hasuraJSON
 
@@ -280,17 +277,21 @@ instance Cacheable RemoteRelationshipDef
 $(deriveJSON hasuraJSON ''RemoteRelationshipDef)
 $(makeLenses ''RemoteRelationshipDef)
 
-data DeleteRemoteRelationship
+data DeleteRemoteRelationship (b :: BackendType)
   = DeleteRemoteRelationship
   { drrSource :: !SourceName
-  , drrTable  :: !QualifiedTable
+  , drrTable  :: !(TableName b)
   , drrName   :: !RemoteRelationshipName
-  } deriving (Show, Eq)
-instance FromJSON DeleteRemoteRelationship where
+  } deriving (Generic)
+deriving instance (Backend b) => Show (DeleteRemoteRelationship b)
+deriving instance (Backend b) => Eq   (DeleteRemoteRelationship b)
+
+instance Backend b => FromJSON (DeleteRemoteRelationship b) where
   parseJSON = withObject "Object" $ \o ->
     DeleteRemoteRelationship
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"
       <*> o .: "name"
 
-$(deriveToJSON hasuraJSON{omitNothingFields=True} ''DeleteRemoteRelationship)
+instance Backend b => ToJSON (DeleteRemoteRelationship b) where
+  toJSON = genericToJSON hasuraJSON{omitNothingFields=True}

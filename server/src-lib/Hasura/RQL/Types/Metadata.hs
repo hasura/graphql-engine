@@ -1,27 +1,27 @@
-{-# LANGUAGE AllowAmbiguousTypes  #-}
 {-# LANGUAGE UndecidableInstances #-}
+
 module Hasura.RQL.Types.Metadata where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Ordered                  as AO
-import qualified Data.HashMap.Strict.Extended        as M
-import qualified Data.HashMap.Strict.InsOrd.Extended as OM
-import qualified Data.HashSet                        as HS
-import qualified Data.HashSet.InsOrd                 as HSIns
-import qualified Data.List.Extended                  as L
-import qualified Data.Text                           as T
-import qualified Data.Text.Extended                  as T
-import qualified Language.GraphQL.Draft.Syntax       as G
+import qualified Data.Aeson.Ordered                          as AO
+import qualified Data.HashMap.Strict.Extended                as M
+import qualified Data.HashMap.Strict.InsOrd.Extended         as OM
+import qualified Data.HashSet                                as HS
+import qualified Data.HashSet.InsOrd                         as HSIns
+import qualified Data.List.Extended                          as L
+import qualified Data.Text                                   as T
+import qualified Data.Text.Extended                          as T
+import qualified Language.GraphQL.Draft.Syntax               as G
 
-import           Control.Lens                        hiding (set, (.=))
+import           Control.Lens                                hiding (set, (.=))
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 
-import qualified Hasura.SQL.AnyBackend               as AB
+import qualified Hasura.SQL.AnyBackend                       as AB
 
-import           Hasura.Incremental                  (Cacheable)
+import           Hasura.Incremental                          (Cacheable)
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.ApiLimit
 import           Hasura.RQL.Types.Backend
@@ -32,9 +32,10 @@ import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Endpoint
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
+import           Hasura.RQL.Types.GraphqlSchemaIntrospection
 import           Hasura.RQL.Types.InheritedRoles
 import           Hasura.RQL.Types.Metadata.Backend
-import           Hasura.RQL.Types.Metadata.Instances ()
+import           Hasura.RQL.Types.Metadata.Instances         ()
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.Relationship
@@ -265,7 +266,7 @@ mkSourceMetadata
   -> SourceConnConfiguration b
   -> BackendSourceMetadata
 mkSourceMetadata name config =
-  AB.mkAnyBackend $ SourceMetadata name mempty mempty config
+  AB.mkAnyBackend $ SourceMetadata @b name mempty mempty config
 
 type BackendSourceMetadata = AB.AnyBackend SourceMetadata
 
@@ -289,6 +290,7 @@ parseNonSourcesMetadata
      , ApiLimit
      , MetricsConfig
      , InheritedRoles
+     , SetGraphqlIntrospectionOptions
      )
 parseNonSourcesMetadata o = do
   remoteSchemas <- parseListAsMap "remote schemas" _rsmName $
@@ -305,45 +307,48 @@ parseNonSourcesMetadata o = do
   metricsConfig <- o .:? "metrics_config" .!= emptyMetricsConfig
   inheritedRoles <- parseListAsMap "inherited roles" _adrRoleName $
                   o .:? "inherited_roles" .!= []
-
+  introspectionDisabledForRoles <- o .:? "graphql_schema_introspection" .!= mempty
   pure ( remoteSchemas, queryCollections, allowlist, customTypes
        , actions, cronTriggers, apiLimits, metricsConfig, inheritedRoles
+       , introspectionDisabledForRoles
        )
 
 -- | A complete GraphQL Engine metadata representation to be stored,
 -- exported/replaced via metadata queries.
 data Metadata
   = Metadata
-  { _metaSources          :: !Sources
-  , _metaRemoteSchemas    :: !RemoteSchemas
-  , _metaQueryCollections :: !QueryCollections
-  , _metaAllowlist        :: !Allowlist
-  , _metaCustomTypes      :: !CustomTypes
-  , _metaActions          :: !Actions
-  , _metaCronTriggers     :: !CronTriggers
-  , _metaRestEndpoints    :: !Endpoints
-  , _metaApiLimits        :: !ApiLimit
-  , _metaMetricsConfig    :: !MetricsConfig
-  , _metaInheritedRoles   :: !InheritedRoles
+  { _metaSources                        :: !Sources
+  , _metaRemoteSchemas                  :: !RemoteSchemas
+  , _metaQueryCollections               :: !QueryCollections
+  , _metaAllowlist                      :: !Allowlist
+  , _metaCustomTypes                    :: !CustomTypes
+  , _metaActions                        :: !Actions
+  , _metaCronTriggers                   :: !CronTriggers
+  , _metaRestEndpoints                  :: !Endpoints
+  , _metaApiLimits                      :: !ApiLimit
+  , _metaMetricsConfig                  :: !MetricsConfig
+  , _metaInheritedRoles                 :: !InheritedRoles
+  , _metaSetGraphqlIntrospectionOptions :: !SetGraphqlIntrospectionOptions
   } deriving (Show, Eq)
 $(makeLenses ''Metadata)
 
 instance FromJSON Metadata where
-  parseJSON = withObject "Object" $ \o -> do
+  parseJSON = withObject "Metadata" $ \o -> do
     version <- o .:? "version" .!= MVVersion1
     when (version /= MVVersion3) $ fail $
       "unexpected metadata version from storage: " <> show version
     sources <- oMapFromL getSourceName <$> o .: "sources"
     endpoints <- oMapFromL _ceName <$> o .:? "rest_endpoints" .!= []
     (remoteSchemas, queryCollections, allowlist, customTypes,
-     actions, cronTriggers, apiLimits, metricsConfig, inheritedRoles) <- parseNonSourcesMetadata o
+     actions, cronTriggers, apiLimits, metricsConfig, inheritedRoles,
+     disabledSchemaIntrospectionRoles) <- parseNonSourcesMetadata o
     pure $ Metadata sources remoteSchemas queryCollections allowlist
-           customTypes actions cronTriggers endpoints apiLimits metricsConfig inheritedRoles
+           customTypes actions cronTriggers endpoints apiLimits metricsConfig inheritedRoles disabledSchemaIntrospectionRoles
 
 emptyMetadata :: Metadata
 emptyMetadata =
   Metadata mempty mempty mempty mempty emptyCustomTypes mempty mempty mempty
-    emptyApiLimit emptyMetricsConfig mempty
+    emptyApiLimit emptyMetricsConfig mempty mempty
 
 tableMetadataSetter
   :: (BackendMetadata b)
@@ -353,8 +358,8 @@ tableMetadataSetter source table =
 
 data MetadataNoSources
   = MetadataNoSources
-  { _mnsTables           :: !(Tables 'Postgres)
-  , _mnsFunctions        :: !(Functions 'Postgres)
+  { _mnsTables           :: !(Tables ('Postgres 'Vanilla))
+  , _mnsFunctions        :: !(Functions ('Postgres 'Vanilla))
   , _mnsRemoteSchemas    :: !RemoteSchemas
   , _mnsQueryCollections :: !QueryCollections
   , _mnsAllowlist        :: !Allowlist
@@ -381,7 +386,7 @@ instance FromJSON MetadataNoSources where
           pure (tables, functions)
         MVVersion3 -> fail "unexpected version for metadata without sources: 3"
     (remoteSchemas, queryCollections, allowlist, customTypes,
-     actions, cronTriggers, _, _, _) <- parseNonSourcesMetadata o
+     actions, cronTriggers, _, _, _, _) <- parseNonSourcesMetadata o
     pure $ MetadataNoSources tables functions remoteSchemas queryCollections
                              allowlist customTypes actions cronTriggers
 
@@ -423,6 +428,7 @@ metadataToOrdJSON ( Metadata
                     apiLimits
                     metricsConfig
                     inheritedRoles
+                    introspectionDisabledRoles
                   ) = AO.object $ [ versionPair , sourcesPair] <>
                       catMaybes [ remoteSchemasPair
                                 , queryCollectionsPair
@@ -434,6 +440,7 @@ metadataToOrdJSON ( Metadata
                                 , apiLimitsPair
                                 , metricsConfigPair
                                 , inheritedRolesPair
+                                , introspectionDisabledRolesPair
                                 ]
   where
     versionPair          = ("version", AO.toOrdered currentMetadataVersion)
@@ -454,6 +461,12 @@ metadataToOrdJSON ( Metadata
 
     metricsConfigPair    = if metricsConfig == emptyMetricsConfig then Nothing
                            else Just ("metrics_config", AO.toOrdered metricsConfig)
+
+    introspectionDisabledRolesPair =
+      bool
+        (Just ("graphql_schema_introspection", AO.toOrdered introspectionDisabledRoles))
+        Nothing
+        (introspectionDisabledRoles == mempty)
 
     sourceMetaToOrdJSON :: BackendSourceMetadata -> AO.Value
     sourceMetaToOrdJSON exists =

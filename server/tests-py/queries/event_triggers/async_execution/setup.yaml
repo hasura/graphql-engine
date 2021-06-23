@@ -25,4 +25,4 @@ args:
       columns: '*'
     delete:
       columns: '*'
-    webhook: http://127.0.0.1:5592/timeout_long
+    webhook: http://127.0.0.1:5592/sleep_2s

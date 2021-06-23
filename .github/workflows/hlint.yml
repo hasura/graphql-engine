@@ -33,7 +33,7 @@ jobs:
         run: |
           CHANGED_HS_FILES=$(git diff --name-only origin/${{github.base_ref}}...${{github.sha}} -- "${{env.working-directory}}/*.hs" | xargs -i -d '\n' sh -c 'ls -d {} 2>/dev/null || true')
           echo "$CHANGED_HS_FILES"
-          JQ_SCRIPT='.[] | "::" + (if (.severity=="Warning" or .severity=="Error") then "error" else "warning" end) + " file=\(.file),line=\(.startLine),col=\(.startColumn)::\(.severity):" + " \(.hint)%0AFound:%0A  \(.from | gsub("\n";"%0A  "))%0A" + try ("Perhaps:%0A  " + (.to | gsub("\n";"%0A  "))) catch ""'
+          JQ_SCRIPT='.[] | "::" + (if (.severity=="Warning" or .severity=="Error") then "error" else "warning" end) + " file=\(.file),line=\(.startLine),col=\(.startColumn)::\(.severity):" + " \(.hint)%0AFound:%0A  \(.from | gsub("\n";"%0A  "))%0A" + try ("Perhaps:%0A  " + (.to | gsub("\n";"%0A  ")) + "%0A") catch "" + try (if .note | length > 0 then "Note:%0A  " + (.note | join("\n") | gsub("\n";"%0A  ")) else "" end) catch ""'
           if [[ "$CHANGED_HS_FILES" ]]
           then
             OUT=$(mktemp)

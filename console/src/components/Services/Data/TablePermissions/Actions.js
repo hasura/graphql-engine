@@ -7,6 +7,7 @@ import {
   getTableDef,
   getTablePermissions,
   generateTableDef,
+  getQualifiedTableDef,
 } from '../../../../dataSources';
 import { capitalize } from '../../../Common/utils/jsUtils';
 import { exportMetadata } from '../../../../metadata/actions';
@@ -15,6 +16,7 @@ import {
   getDropPermissionQuery,
 } from '../../../../metadata/queryUtils';
 import Migration from '../../../../utils/migration/Migration';
+import { currentDriver } from '../../../../dataSources';
 
 export const PERM_OPEN_EDIT = 'ModifyTable/PERM_OPEN_EDIT';
 export const PERM_SET_FILTER_TYPE = 'ModifyTable/PERM_SET_FILTER_TYPE';
@@ -115,7 +117,6 @@ const permSetBulkSelect = (isChecked, selectedRole) => {
 };
 const permSetApplySamePerm = (index, key, value) => {
   const data = { index, key, value };
-
   return dispatch => {
     dispatch({ type: PERM_SET_APPLY_SAME_PERM, data: data });
   };
@@ -267,17 +268,25 @@ const permRemoveRole = (tableSchema, roleName) => {
     const permissionsUpQueries = [];
     const permissionsDownQueries = [];
 
+    const tableDef = getQualifiedTableDef(
+      {
+        name: table,
+        schema: currentSchema,
+      },
+      currentDriver
+    );
+
     if (currRolePermissions && currRolePermissions.permissions) {
       Object.keys(currRolePermissions.permissions).forEach(type => {
         const deleteQuery = getDropPermissionQuery(
           type,
-          { name: table, schema: currentSchema },
+          tableDef,
           role,
           currentDataSource
         );
         const createQuery = getCreatePermissionQuery(
           type,
-          { name: table, schema: currentSchema },
+          tableDef,
           role,
           currRolePermissions.permissions[type],
           currentDataSource
@@ -333,6 +342,14 @@ const permRemoveMultipleRoles = tableSchema => {
     const permissionsUpQueries = [];
     const permissionsDownQueries = [];
 
+    const tableDef = getQualifiedTableDef(
+      {
+        name: table,
+        schema: currentSchema,
+      },
+      currentDriver
+    );
+
     roles.map(role => {
       const currentRolePermission = currentPermissions.filter(el => {
         return el.role_name === role;
@@ -340,13 +357,13 @@ const permRemoveMultipleRoles = tableSchema => {
       Object.keys(currentRolePermission[0].permissions).forEach(type => {
         const deleteQuery = getDropPermissionQuery(
           type,
-          { name: table, schema: currentSchema },
+          tableDef,
           role,
           currentDataSource
         );
         const createQuery = getCreatePermissionQuery(
           type,
-          { name: table, schema: currentSchema },
+          tableDef,
           role,
           currentRolePermission[0].permissions[type],
           currentDataSource
@@ -401,6 +418,14 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
       applyTo => applyTo.table && applyTo.action && applyTo.role
     );
 
+    const tableDef = getQualifiedTableDef(
+      {
+        name: table,
+        schema: currentSchema,
+      },
+      currentDriver
+    );
+
     if (arePermissionsModified) {
       const mainApplyTo = {
         table: table,
@@ -413,12 +438,15 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
 
     const permissionsUpQueries = [];
     const permissionsDownQueries = [];
-
     permApplyToList.map(applyTo => {
       const currTableSchema = findTable(
         allSchemas,
         generateTableDef(applyTo.table, currentSchema)
       );
+      const permTableSchema = {
+        name: currTableSchema.table_name,
+        schema: currTableSchema.table_schema,
+      };
 
       const currentPermPermission = currTableSchema.permissions.find(
         el => el.role_name === applyTo.role
@@ -431,14 +459,14 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
         // existing permission is there. so drop and recreate for down migrations
         const deleteQuery = getDropPermissionQuery(
           applyTo.action,
-          { name: applyTo.table, schema: currentSchema },
+          tableDef,
           applyTo.role,
           currentDataSource
         );
 
         const createQuery = getCreatePermissionQuery(
           applyTo.action,
-          { name: applyTo.table, schema: currentSchema },
+          tableDef,
           applyTo.role,
           currentPermPermission.permissions[applyTo.action],
           currentDataSource
@@ -463,14 +491,14 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
       // now add normal create and drop permissions
       const createQuery = getCreatePermissionQuery(
         applyTo.action,
-        { name: applyTo.table, schema: currentSchema },
+        permTableSchema,
         applyTo.role,
         sanitizedPermission,
         currentDataSource
       );
       const deleteQuery = getDropPermissionQuery(
         applyTo.action,
-        { name: applyTo.table, schema: currentSchema },
+        permTableSchema,
         applyTo.role,
         currentDataSource
       );
@@ -726,19 +754,27 @@ const permChangePermissions = changeType => {
       delete permissionsState[query].limit;
     }
 
+    const tableDef = getQualifiedTableDef(
+      {
+        name: table,
+        schema: currentSchema,
+      },
+      currentDriver
+    );
+
     const permissionsUpQueries = [];
     const permissionsDownQueries = [];
 
     if (currRolePermissions && currRolePermissions.permissions[query]) {
       const deleteQuery = getDropPermissionQuery(
         query,
-        { name: table, schema: currentSchema },
+        tableDef,
         role,
         currentDataSource
       );
       const createQuery = getCreatePermissionQuery(
         query,
-        { name: table, schema: currentSchema },
+        tableDef,
         role,
         prevPermissionsState[query],
         currentDataSource
@@ -750,14 +786,14 @@ const permChangePermissions = changeType => {
     if (changeType === permChangeTypes.save) {
       const createQuery = getCreatePermissionQuery(
         query,
-        { name: table, schema: currentSchema },
+        tableDef,
         role,
         permissionsState[query],
         currentDataSource
       );
       const deleteQuery = getDropPermissionQuery(
         query,
-        { name: table, schema: currentSchema },
+        tableDef,
         role,
         currentDataSource
       );

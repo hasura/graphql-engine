@@ -16,8 +16,10 @@ import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend              as AB
 
+import           Hasura.Base.Error
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
+
 
 -- | Processes collected 'CIDependency' values into a 'DepMap', performing integrity checking to
 -- ensure the dependencies actually exist. If a dependency is missing, its transitive dependents are
@@ -81,7 +83,7 @@ pruneDanglingDependents
 pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
   partitionEithers . map \(metadataObject, dependency) -> case resolveDependency dependency of
     Right ()          -> Right (metadataObject, dependency)
-    Left errorMessage -> Left (InconsistentObject errorMessage metadataObject)
+    Left errorMessage -> Left (InconsistentObject errorMessage Nothing metadataObject)
   where
     resolveDependency :: SchemaDependency -> Either Text ()
     resolveDependency (SchemaDependency objectId _) = case objectId of
@@ -151,7 +153,7 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
       => TableInfo b -> FieldName -> Getting (First a) (FieldInfo b) a -> Text -> Either Text a
     resolveField tableInfo fieldName fieldType fieldTypeName = do
       let coreInfo = _tiCoreInfo tableInfo
-          tableName = _tciName coreInfo
+          tableName = tableInfoName tableInfo
       fieldInfo <- M.lookup fieldName (_tciFieldInfoMap coreInfo) `onNothing` Left
         ("table " <> tableName <<> " has no field named " <>> fieldName)
       (fieldInfo ^? fieldType) `onNothing` Left

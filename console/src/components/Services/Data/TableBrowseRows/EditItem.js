@@ -14,6 +14,7 @@ import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
 import { fetchEnumOptions } from './EditActions';
 import { TableRow } from '../Common/Components/TableRow';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
+import styles from '../../../Common/TableCommon/Table.scss';
 
 class EditItem extends Component {
   constructor() {
@@ -56,8 +57,6 @@ class EditItem extends Component {
       );
       return null;
     }
-
-    const styles = require('../../../Common/TableCommon/Table.scss');
 
     const currentTable = findTable(
       schemas,

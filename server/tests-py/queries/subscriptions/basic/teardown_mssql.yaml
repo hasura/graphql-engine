@@ -1,0 +1,9 @@
+type: bulk
+args:
+
+- type: mssql_untrack_table
+  args:
+    source: mssql
+    table:
+      schema: hge_tests
+      name: test_t1

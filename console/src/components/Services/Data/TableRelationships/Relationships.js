@@ -426,13 +426,15 @@ const Relationships = ({
     if (relAdd.isActive) {
       addRelSection = (
         <div className={styles.activeEdit}>
-          <AddRelationship
-            tableName={tableName}
-            currentSchema={currentSchema}
-            allSchemas={allSchemas}
-            cachedRelationshipData={relAdd}
-            dispatch={dispatch}
-          />
+          {isFeatureSupported('tables.relationships.track') && (
+            <AddRelationship
+              tableName={tableName}
+              currentSchema={currentSchema}
+              allSchemas={allSchemas}
+              cachedRelationshipData={relAdd}
+              dispatch={dispatch}
+            />
+          )}
           <AddManualRelationship
             tableSchema={tableSchema}
             allSchemas={allSchemas}

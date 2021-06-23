@@ -1,0 +1,22 @@
+description: select query on author with id = 1, passed through a fragment with variables
+url: /v1/graphql
+status: 200
+response:
+  data:
+    hasura_author:
+    - id: '2'
+      name: Author 2
+query:
+  variables:
+    authorId: 2
+  query: |
+    fragment MyFragment on query_root {
+      hasura_author (order_by: {id: asc}, where: {id: {_eq: $authorId}}){
+        id
+        name
+      }
+    }
+    query ($authorId : Int!) {
+      ...MyFragment
+    }
+

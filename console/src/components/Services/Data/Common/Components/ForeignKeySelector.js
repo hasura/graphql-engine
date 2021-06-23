@@ -3,14 +3,7 @@ import styles from '../../../../Common/TableCommon/Table.scss';
 import { fkViolationOnUpdate, fkViolationOnDelete } from '../TooltipMessages';
 import { updateSchemaInfo } from '../../DataActions';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
-
-const violiationActions = [
-  'restrict',
-  'no action',
-  'cascade',
-  'set null',
-  'set default',
-];
+import { dataSource } from '../../../../../dataSources';
 
 const ForeignKeySelector = ({
   foreignKey,
@@ -26,7 +19,6 @@ const ForeignKeySelector = ({
   const { refTableName, colMappings, refSchemaName } = foreignKey;
   const numOfFks = foreignKeys.length;
   const numColMappings = colMappings.length;
-
   const refSchemaSelect = () => {
     const dispatchSetRefSchema = event => {
       const newFks = JSON.parse(JSON.stringify(foreignKeys));
@@ -95,8 +87,8 @@ const ForeignKeySelector = ({
               refColumn: '',
             },
           ],
-          onUpdate: 'restrict',
-          onDelete: 'restrict',
+          onUpdate: dataSource.violationActions[0],
+          onDelete: dataSource.violationActions[0],
         });
       }
       dispatch(setForeignKeys(newFks));
@@ -280,6 +272,7 @@ const ForeignKeySelector = ({
       ? 'Please select the reference table and the column configuration'
       : undefined;
     // Generate radios for violation actions
+    const violiationActions = dataSource.violationActions;
     const radios = action => {
       const selected = foreignKey[action];
       return (

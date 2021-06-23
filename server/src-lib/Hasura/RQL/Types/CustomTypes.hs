@@ -33,8 +33,7 @@ module Hasura.RQL.Types.CustomTypes
   , emptyAnnotatedCustomTypes
   ) where
 
-import           Control.Lens.TH                          (makeLenses)
-import           Data.Text.Extended
+import           Hasura.Prelude
 
 import qualified Data.Aeson                               as J
 import qualified Data.Aeson.TH                            as J
@@ -46,10 +45,12 @@ import qualified Language.GraphQL.Draft.Printer           as GPrint
 import qualified Language.GraphQL.Draft.Syntax            as G
 import qualified Text.Builder                             as T
 
+import           Control.Lens.TH                          (makeLenses)
+import           Data.Text.Extended
+
 import           Hasura.Backends.Postgres.Instances.Types ()
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                       (Cacheable)
-import           Hasura.Prelude
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
@@ -236,7 +237,7 @@ emptyCustomTypes = CustomTypes Nothing Nothing Nothing Nothing
 
 data AnnotatedScalarType
   = ASTCustom !ScalarTypeDefinition
-  | ASTReusedScalar !G.Name !(ScalarType 'Postgres)
+  | ASTReusedScalar !G.Name !(ScalarType ('Postgres 'Vanilla))
 
 
 -- | A simple type-level function: `ScalarSet :: Backend b => b -> HashSet (ScalarType b)`
@@ -292,8 +293,8 @@ fieldTypeToScalarType = \case
 
 data AnnotatedObjectType
   = AnnotatedObjectType
-  { _aotDefinition :: !(ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) (TableInfo 'Postgres) (ColumnInfo 'Postgres))
-  , _aotSource     :: !(Maybe (SourceName, SourceConfig 'Postgres))
+  { _aotDefinition :: !(ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) (TableInfo ('Postgres 'Vanilla)) (ColumnInfo ('Postgres 'Vanilla)))
+  , _aotSource     :: !(Maybe (SourceName, SourceConfig ('Postgres 'Vanilla)))
   } deriving (Generic)
 instance J.ToJSON (AnnotatedObjectType) where
   toJSON = J.toJSON . _aotDefinition

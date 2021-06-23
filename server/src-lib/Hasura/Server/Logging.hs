@@ -1,5 +1,5 @@
 -- This is taken from wai-logger and customised for our use
-{-# LANGUAGE AllowAmbiguousTypes #-}
+
 module Hasura.Server.Logging
   ( StartupLog(..)
   , PGLog(..)
@@ -13,28 +13,39 @@ module Hasura.Server.Logging
   , WebHookLog(..)
   , HttpException
   , HttpLog (..)
+  , EnvVarsMovedToMetadata(..)
+  , DeprecatedEnvVars(..)
+  , logDeprecatedEnvVars
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy          as BL
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Network.HTTP.Types            as HTTP
-import qualified Network.Wai.Extended          as Wai
+import qualified Data.ByteString.Lazy                  as BL
+import qualified Data.Environment                      as Env
+import qualified Data.HashMap.Strict                   as HM
+import qualified Data.TByteString                      as TBS
+import qualified Data.Text                             as T
+import qualified Network.HTTP.Types                    as HTTP
+import qualified Network.Wai.Extended                  as Wai
 
 import           Data.Aeson
 import           Data.Aeson.TH
-import           Data.Int                      (Int64)
+import           Data.Int                              (Int64)
+import           Data.Text.Extended
 
-import           Hasura.GraphQL.Parser.Schema  (Variable)
+import           Hasura.Base.Error
+import           Hasura.GraphQL.ParameterizedQueryHash
 import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Server.Compression
 import           Hasura.Server.Types
+import           Hasura.Server.Utils                   (DeprecatedEnvVars (..),
+                                                        EnvVarsMovedToMetadata (..),
+                                                        deprecatedEnvVars, envVarsMovedToMetadata)
 import           Hasura.Session
-import           Hasura.Tracing                (TraceT)
+import           Hasura.Tracing                        (TraceT)
 
 
 data StartupLog
@@ -119,7 +130,7 @@ class (Monad m, Monoid (HTTPLoggingMetadata m)) => HttpLog m where
 
   type HTTPLoggingMetadata m
 
-  buildHTTPLoggingMetadata :: [(G.SelectionSet G.NoFragments Variable)] -> HTTPLoggingMetadata m
+  buildHTTPLoggingMetadata :: [ParameterizedQueryHash] -> HTTPLoggingMetadata m
 
   logHttpError
     :: Logger Hasura
@@ -324,3 +335,32 @@ mkHttpLog httpLogCtx =
   let isError = isJust $ olError $ hlcOperation httpLogCtx
       logLevel = bool LevelInfo LevelError isError
   in HttpLogLine logLevel httpLogCtx
+
+-- | Log warning messages for deprecated environment variables
+logDeprecatedEnvVars
+  :: Logger Hasura
+  -> Env.Environment
+  -> SourceCache
+  -> IO ()
+logDeprecatedEnvVars logger env sources = do
+  let toText envVars = commaSeparated envVars
+      -- The environment variables that have been initialized by user
+      envVarsInitialized = fmap fst (Env.toList env)
+      checkDeprecatedEnvVars envs = T.pack <$> envVarsInitialized `intersect` envs
+
+  -- When a source named 'default' is present, it means that it is a migrated v2
+  -- hasura project. In such cases log those environment variables that are moved
+  -- to the metadata
+  onJust (HM.lookup SNDefault sources) $ \_defSource -> do
+    let deprecated = checkDeprecatedEnvVars (unEnvVarsMovedToMetadata envVarsMovedToMetadata)
+    unless (null deprecated) $
+      unLogger logger $ UnstructuredLog LevelWarn $ TBS.fromText $
+        "The following environment variables are deprecated and moved to metadata: " <>
+        toText deprecated
+
+  -- Log when completely deprecated environment variables are present
+  let deprecated = checkDeprecatedEnvVars (unDeprecatedEnvVars deprecatedEnvVars)
+  unless (null deprecated) $
+    unLogger logger $ UnstructuredLog LevelWarn $ TBS.fromText $
+      "The following environment variables are deprecated: " <>
+      toText deprecated

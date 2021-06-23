@@ -2,7 +2,6 @@ const { ApolloServer, ApolloError } = require('apollo-server');
 const gql = require('graphql-tag');
 const { print } = require('graphql');
 
-
 const allMessages = [
     { id: 1, name: "alice", msg: "You win!"},
     { id: 2, name: "bob", msg: "You lose!"},
@@ -10,13 +9,12 @@ const allMessages = [
 ];
 
 const typeDefs = gql`
-
   type User {
     user_id: Int
     userMessages(whered: MessageWhereInpObj, includes: IncludeInpObj): [Message]
     gimmeText(text: String): String
   }
-
+  
   interface Communication {
     id: Int!
     msg: String!
@@ -61,6 +59,11 @@ const typeDefs = gql`
     age: Int
   }
 
+  input Dimensions {
+    height: Int
+    width: Int
+  }
+
   type Photo {
     height: Int
     width: Int
@@ -84,11 +87,11 @@ const typeDefs = gql`
     users(user_ids: [Int]!): [User]
     message(id: Int!) : Message
     communications(id: Int): [Communication]
+    profilePicture(dimensions: Dimensions): Photo
   }
 `;
 
 const resolvers = {
-
     User: {
         userMessages: (parent, { whered, includes }) => {
             var result = allMessages.filter(m => m.id == parent.user_id);
@@ -149,6 +152,9 @@ const resolvers = {
         errorMsg : () => {
             throw new ApolloError("intentional-error", "you asked for it");
         }
+    },
+
+    Photo: {
     },
 
     Query: {
@@ -217,6 +223,9 @@ const resolvers = {
                 result = allMessages.filter(m => m.id == id);
             }
             return result;
+        },
+        profilePicture: (_, { dimensions }) => {
+            return dimensions
         },
     },
     Communication: {

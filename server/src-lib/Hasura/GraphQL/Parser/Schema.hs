@@ -40,6 +40,7 @@ module Hasura.GraphQL.Parser.Schema (
   , Schema(..)
   , ConflictingDefinitions(..)
   , HasTypeDefinitions(..)
+  , TypeDefinitionsWrapper(..)
   , collectTypeDefinitions
 
   -- * Miscellany
@@ -700,6 +701,7 @@ instance HasName VariableInfo where
   getName (VIRequired name)   = name
   getName (VIOptional name _) = name
 
+
 -- -----------------------------------------------------------------------------
 -- support for introspection queries
 
@@ -722,6 +724,9 @@ data Schema = Schema
   , sSubscriptionType :: Maybe (Type 'Output)
   , sDirectives       :: [DirectiveInfo]
   }
+
+data TypeDefinitionsWrapper where
+  TypeDefinitionsWrapper :: HasTypeDefinitions a => a -> TypeDefinitionsWrapper
 
 -- | Recursively collects all type definitions accessible from the given value.
 collectTypeDefinitions
@@ -786,6 +791,9 @@ instance HasTypeDefinitions (Definition (TypeInfo k)) where
 
 instance HasTypeDefinitions a => HasTypeDefinitions [a] where
   accumulateTypeDefinitions = traverse_ accumulateTypeDefinitions
+
+instance HasTypeDefinitions TypeDefinitionsWrapper where
+  accumulateTypeDefinitions (TypeDefinitionsWrapper x) = accumulateTypeDefinitions x
 
 instance HasTypeDefinitions (Type k) where
   accumulateTypeDefinitions = \case

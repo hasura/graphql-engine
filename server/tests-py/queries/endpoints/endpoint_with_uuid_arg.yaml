@@ -1,0 +1,13 @@
+description: Successful call of an endpoint with uuid arg
+url: /api/rest/with_uuid/81F1BFEA-C169-44B5-B4C8-37E9A071ABD8
+method: GET
+status: 200
+query:
+response:
+  test_table:
+    - first_name: Foo
+      last_name: Bar
+    - first_name: Baz
+      last_name: Qux
+    - first_name: X%20Y
+      last_name: Test

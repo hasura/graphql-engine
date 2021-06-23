@@ -26,10 +26,16 @@ import {
   cascadeUpQueries,
   getDependencyError,
 } from './utils';
-import { mergeDataMssql, mergeLoadSchemaDataPostgres } from './mergeData';
+import {
+  mergeDataMssql,
+  mergeLoadSchemaDataPostgres,
+  mergeDataBigQuery,
+  mergeDataCitus,
+} from './mergeData';
 import _push from './push';
 import { convertArrayToJson } from './TableModify/utils';
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
+import { maxAllowedMigrationLength } from './constants';
 import { getDownQueryComments } from '../../../utils/migration/utils';
 import { isEmpty } from '../../Common/utils/jsUtils';
 import { currentDriver, dataSource } from '../../../dataSources';
@@ -38,10 +44,6 @@ import {
   getTablesFromAllSources,
   getTablesInfoSelector,
 } from '../../../metadata/selector';
-import {
-  checkFeatureSupport,
-  READ_ONLY_RUN_SQL_QUERIES,
-} from '../../../helpers/versionUtils';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import { services } from '../../../dataSources/services';
 import insertReducer from './TableInsertItem/InsertActions';
@@ -81,6 +83,8 @@ export const setAllRoles = roles => ({
 
 const SET_DB_CONNECTION_ENV_VAR = 'Data/SET_DB_CONNECTION_ENV_VAR';
 const RESET_DB_CONNECTION_ENV_VAR = 'Data/RESET_DB_CONNECTION_ENV_VAR';
+
+const SET_ALL_SOURCES_SCHEMAS = 'Data/SET_ALL_SOURCES_SCHEMAS';
 
 export const mergeRemoteRelationshipsWithSchema = (
   remoteRelationships,
@@ -146,7 +150,9 @@ const loadSchema = configOptions => {
         (!configOptions.tables || configOptions.tables.length === 0))
     ) {
       configOptions = {
-        schemas: [getState().tables.currentSchema],
+        schemas: [
+          getState().tables.currentSchema || getState().tables.schemaList[0],
+        ],
       };
     }
 
@@ -171,7 +177,6 @@ const loadSchema = configOptions => {
         );
       }
     }
-
     const body = {
       type: 'bulk',
       source,
@@ -183,23 +188,24 @@ const loadSchema = configOptions => {
           dataSource?.primaryKeysInfoSql(configOptions) || '',
           source,
           false,
-          checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
+          true
         ),
         getRunSqlQuery(
           dataSource?.uniqueKeysSql(configOptions) || '',
           source,
           false,
-          checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
+          true
         ),
       ],
     };
+
     if (dataSource?.checkConstraintsSql) {
       body.args.push(
         getRunSqlQuery(
           dataSource?.checkConstraintsSql(configOptions) || '',
           source,
           false,
-          checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
+          true
         )
       );
     }
@@ -222,8 +228,14 @@ const loadSchema = configOptions => {
             case 'postgres':
               mergedData = mergeLoadSchemaDataPostgres(data, metadataTables);
               break;
+            case 'citus':
+              mergedData = mergeDataCitus(data, metadataTables);
+              break;
             case 'mssql':
               mergedData = mergeDataMssql(data, metadataTables);
+              break;
+            case 'bigquery':
+              mergedData = mergeDataBigQuery(data, metadataTables);
               break;
             default:
           }
@@ -265,7 +277,7 @@ const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
     return;
   }
   const sql = dataSource.getAdditionalColumnsInfoQuerySql(schemaName);
-  const query = getRunSqlQuery(sql, currentSource);
+  const query = getRunSqlQuery(sql, currentSource, false, true);
 
   const options = {
     credentials: globalCookiePolicy,
@@ -305,17 +317,46 @@ const setConsistentSchema = data => ({
   data,
 });
 
+const updateSchemaList = (dispatch, getState, schemaList) => {
+  dispatch({
+    type: FETCH_SCHEMA_LIST,
+    schemaList,
+  });
+  let newSchema = '';
+  const { locationBeforeTransitions } = getState().routing;
+  if (schemaList.length) {
+    newSchema =
+      dataSource.defaultRedirectSchema &&
+      schemaList.includes(dataSource.defaultRedirectSchema)
+        ? dataSource.defaultRedirectSchema
+        : schemaList.sort(Intl.Collator().compare)[0];
+  }
+  if (
+    locationBeforeTransitions &&
+    !locationBeforeTransitions.pathname.includes('tables')
+  )
+    dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: newSchema });
+  return dispatch(updateSchemaInfo());
+};
+
 const fetchDataInit = (source, driver) => (dispatch, getState) => {
   const url = Endpoints.query;
 
   const { schemaFilter } = getState().tables;
-  const currentSource = source || getState().tables.currentDataSource;
 
+  if (driver === 'bigquery') {
+    const schemaList = getState().metadata.metadataObject.sources.find(
+      x => x.name === source
+    ).configuration.datasets;
+    return updateSchemaList(dispatch, getState, schemaList);
+  }
+
+  const currentSource = source || getState().tables.currentDataSource;
   const query = getRunSqlQuery(
     dataSource.schemaListSql(schemaFilter),
     currentSource,
     false,
-    false,
+    true,
     driver
   );
 
@@ -336,11 +377,8 @@ const fetchDataInit = (source, driver) => (dispatch, getState) => {
         }
         return [schema[0], ...acc];
       }, []);
-      dispatch({
-        type: FETCH_SCHEMA_LIST,
-        schemaList,
-      });
-      return dispatch(updateSchemaInfo()); // TODO
+
+      return updateSchemaList(dispatch, getState, schemaList);
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
@@ -366,11 +404,15 @@ const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
     args: [
       getRunSqlQuery(
         dataSource.getFunctionDefinitionSql(fnSchema, null, 'trackable'),
-        source
+        source,
+        false,
+        true
       ),
       getRunSqlQuery(
         dataSource.getFunctionDefinitionSql(fnSchema, null, 'non-trackable'),
-        source
+        source,
+        false,
+        true
       ),
     ],
   };
@@ -430,7 +472,9 @@ const fetchSchemaList = () => (dispatch, getState) => {
   const { schemaFilter } = getState().tables;
   const query = getRunSqlQuery(
     dataSource.schemaListSql(schemaFilter),
-    currentSource
+    currentSource,
+    false,
+    true
   );
 
   const options = {
@@ -466,7 +510,7 @@ export const getSchemaList = (sourceType, sourceName) => (
 ) => {
   const url = Endpoints.query;
   const sql = services[sourceType].schemaListSql();
-  const query = getRunSqlQuery(sql, sourceName);
+  const query = getRunSqlQuery(sql, sourceName, false, true);
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -530,27 +574,24 @@ export const getDatabaseSchemasInfo = (sourceType = 'postgres', sourceName) => (
   );
 };
 
-/**
- *
- * @param {'postgres' | 'mssql'} sourceType
- * @param {string} sourceName
- * @param {string[]} tables
- * @returns {{ [schema_name]: {[table_name]: string, [table_type]: string}}}
- */
-export const getDatabaseTableTypeInfo = (
-  sourceType = 'postgres',
-  sourceName,
-  tables
-) => (dispatch, getState) => {
-  if (!tables.length) {
+export const getDatabaseTableTypeInfoForAllSources = schemaRequests => (
+  dispatch,
+  getState
+) => {
+  if (!schemaRequests.length) {
     return new Promise(resolve => {
-      resolve({});
+      resolve([]);
     });
   }
-
   const url = Endpoints.query;
-  const sql = services[sourceType].getTableInfo(tables);
-  const query = getRunSqlQuery(sql, sourceName, false, false, sourceType);
+
+  const bulkQueries = [];
+  schemaRequests.forEach(({ sourceType = 'postgres', sourceName, tables }) => {
+    if (!tables.length) return;
+    const sql = services[sourceType].getTableInfo(tables);
+    bulkQueries.push(getRunSqlQuery(sql, sourceName, false, true, sourceType));
+  });
+  const query = { type: 'bulk', version: 1, args: bulkQueries };
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -558,41 +599,71 @@ export const getDatabaseTableTypeInfo = (
     body: JSON.stringify(query),
   };
   return dispatch(requestAction(url, options)).then(
-    ({ result }) => {
-      if (!result.length > 1) {
-        return {};
-      }
-      const trackedTables = getTablesFromAllSources(getState()).filter(
-        ({ source }) => source === sourceName
-      );
-      const schemasInfo = {};
-
-      let res;
-      try {
-        if (currentDriver === 'mssql') {
-          res = JSON.parse(result.slice(1).join());
-        } else {
-          res = JSON.parse(result[1]);
+    results => {
+      const schemas = results.map(({ result }, index) => {
+        if (!result.length > 1) {
+          return {};
         }
-      } catch {
-        res = [];
-      }
+        const trackedTables = getTablesFromAllSources(getState()).filter(
+          ({ source }) => source === bulkQueries[index]?.args?.source
+        );
+        const schemasInfo = {};
 
-      res.forEach(i => {
-        if (
-          !trackedTables.some(
-            t =>
-              t.table.name === i.table_name && t.table.schema === i.table_schema
-          )
-        ) {
-          return;
+        let res;
+        try {
+          if (currentDriver === 'mssql') {
+            res = JSON.parse(result.slice(1).join(''));
+          } else if (currentDriver === 'bigquery') {
+            res = result.slice(1).map(t => ({
+              table_name: t[0],
+              table_schema: t[1],
+              table_type: t[2],
+            }));
+          } else {
+            res = JSON.parse(result[1]);
+          }
+        } catch {
+          res = [];
         }
-        schemasInfo[i.table_schema] = {
-          ...schemasInfo[i.table_schema],
-          [i.table_name]: { table_type: i.table_type },
+
+        res.forEach(i => {
+          if (
+            !trackedTables.some(
+              t =>
+                t.table.name === i.table_name &&
+                t.table.schema === i.table_schema
+            )
+          ) {
+            return;
+          }
+          schemasInfo[i.table_schema] = {
+            ...schemasInfo[i.table_schema],
+            [i.table_name]: { table_type: i.table_type },
+          };
+        });
+        return {
+          source: bulkQueries[index]?.args?.source,
+          schemaInfo: schemasInfo,
         };
       });
-      return schemasInfo;
+      let allSourceSchemas = {};
+      if (schemas?.length > 0) {
+        schemas.forEach(item => {
+          allSourceSchemas[item.source] = item.schemaInfo;
+        });
+        const {
+          tables: { allSourcesSchemas: existingSourcesSchemas = {} } = {},
+        } = getState();
+        allSourceSchemas = {
+          ...existingSourcesSchemas,
+          ...allSourceSchemas,
+        };
+        dispatch({
+          type: SET_ALL_SOURCES_SCHEMAS,
+          data: allSourceSchemas,
+        });
+      }
+      return allSourceSchemas;
     },
     error => {
       console.error('Failed to fetch schemas info ' + JSON.stringify(error));
@@ -686,8 +757,13 @@ const makeMigrationCall = (
     downQueries = getDownQueryComments(upQueries);
   }
 
+  const trimmedMigrationName = migrationName.substring(
+    0,
+    maxAllowedMigrationLength
+  );
+
   const migrationBody = {
-    name: sanitize(migrationName),
+    name: sanitize(trimmedMigrationName),
     up: upQuery.args,
     down: downQueries || [],
     datasource: source,
@@ -836,6 +912,17 @@ const fetchColumnTypeInfo = () => {
     };
     return dispatch(requestAction(url, options)).then(
       data => {
+        if (currentDriver === 'mssql') {
+          return dispatch({
+            type: FETCH_COLUMN_TYPE_INFO,
+            data: {
+              columnDataTypes: [],
+              columnTypeDefaultValues: {},
+              columnTypeCasts: {},
+            },
+          });
+        }
+
         const resultData = data[1].result.slice(1);
         const typeFuncsMap = {};
 
@@ -860,6 +947,52 @@ const fetchColumnTypeInfo = () => {
           type: FETCH_COLUMN_TYPE_INFO_FAIL,
           data: error,
         });
+      }
+    );
+  };
+};
+
+const fetchPartitionDetails = table => {
+  return (dispatch, getState) => {
+    const url = Endpoints.query;
+    const currState = getState();
+    const { currentDataSource } = currState.tables;
+    const query = getRunSqlQuery(
+      dataSource.getPartitionDetailsSql(table.table_name, table.table_schema),
+      currentDataSource,
+      false,
+      true
+    );
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(query),
+    };
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        try {
+          const partitions = data.result.slice(1).map(row => ({
+            parent_schema: row[0],
+            parent_table: row[1],
+            partition_name: row[2],
+            partition_schema: row[3],
+            partition_def: row[4],
+            partition_key: row[5],
+          }));
+          return partitions;
+        } catch (err) {
+          console.log(err);
+        }
+      },
+      error => {
+        dispatch(
+          showErrorNotification(
+            'Error fetching partition information',
+            null,
+            error
+          )
+        );
       }
     );
   };
@@ -1017,6 +1150,11 @@ const dataReducer = (state = defaultState, action) => {
         ...state,
         dbConnection: action.data,
       };
+    case SET_ALL_SOURCES_SCHEMAS:
+      return {
+        ...state,
+        allSourcesSchemas: action.data,
+      };
     case RESET_DB_CONNECTION_ENV_VAR:
       return {
         ...state,
@@ -1058,4 +1196,5 @@ export {
   fetchAdditionalColumnsInfo,
   SET_FILTER_SCHEMA,
   SET_FILTER_TABLES,
+  fetchPartitionDetails,
 };

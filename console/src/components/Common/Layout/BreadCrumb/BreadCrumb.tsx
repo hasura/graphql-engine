@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { ReactElement } from 'react';
 import { Link } from 'react-router';
 import styles from '../../TableCommon/Table.scss';
 
 export type BreadCrumb = {
   url: string;
   title: string;
+  prefix?: ReactElement;
 };
 
 type Props = {
@@ -35,12 +36,16 @@ const BreadCrumb: React.FC<Props> = ({ breadCrumbs }) => {
       if (!isLastElem) {
         bCElem = [
           <Link key={`bc-title-${b.title}`} to={`${b.url}`}>
-            {b.title}
+            {b.prefix} {b.title}
           </Link>,
           addArrow(),
         ];
       } else {
-        bCElem = [b.title];
+        bCElem = (
+          <span>
+            {b.prefix} {b.title}
+          </span>
+        );
       }
 
       return <span key={i}>{bCElem}</span>;

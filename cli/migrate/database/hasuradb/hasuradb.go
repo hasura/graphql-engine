@@ -10,18 +10,18 @@ import (
 	"path"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
 
-	"github.com/hasura/graphql-engine/cli/internal/statestore/settings"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/settings"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
 	"github.com/pkg/errors"
 
 	"github.com/mitchellh/mapstructure"
 
-	yaml "github.com/ghodss/yaml"
-	"github.com/hasura/graphql-engine/cli/migrate/database"
+	"github.com/goccy/go-yaml"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
 	"github.com/parnurzeal/gorequest"
 	log "github.com/sirupsen/logrus"
 )
@@ -42,8 +42,9 @@ var (
 	ErrDatabaseDirty  = fmt.Errorf("database is dirty")
 
 	queryTypes = []string{
-		"select", "insert", "select", "update", "delete", "count", "run_sql", "bulk",
-		"mssql_select", "mssql_insert", "msssql_select", "mssql_update", "mssql_delete", "mssql_count", "mssql_run_sql",
+		"select", "insert", "update", "delete", "count", "run_sql", "bulk",
+		"mssql_select", "mssql_insert", "mssql_update", "mssql_delete", "mssql_count", "mssql_run_sql",
+		"citus_select", "citus_insert", "citus_update", "citus_delete", "citus_count", "citus_run_sql",
 	}
 	queryTypesMap = func() map[string]bool {
 		var m = map[string]bool{}
@@ -81,6 +82,7 @@ type HasuraDB struct {
 	v2metadataops        hasura.V2CommonMetadataOperations
 	pgSourceOps          hasura.PGSourceOps
 	mssqlSourceOps       hasura.MSSQLSourceOps
+	citusSourceOps       hasura.CitusSourceOps
 	genericQueryRequest  hasura.GenericSend
 	hasuraClient         *hasura.Client
 	migrationsStateStore statestore.MigrationsStateStore
@@ -104,6 +106,7 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 		v2metadataops:       hasuraOpts.V2MetadataOps,
 		pgSourceOps:         hasuraOpts.PGSourceOps,
 		mssqlSourceOps:      hasuraOpts.MSSQLSourceOps,
+		citusSourceOps:      hasuraOpts.CitusSourceOps,
 		genericQueryRequest: hasuraOpts.GenericQueryRequest,
 
 		hasuraClient: hasuraOpts.Client,
@@ -112,7 +115,7 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 		settingsStateStore:   hasuraOpts.SettingsStateStore,
 	}
 
-	if err := hx.migrationsStateStore.PrepareMigrationsStateStore(); err != nil {
+	if err := hx.migrationsStateStore.PrepareMigrationsStateStore(hasuraOpts.SourceName); err != nil {
 		logger.Debug(err)
 		return nil, err
 	}
@@ -255,6 +258,12 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 			if err != nil {
 				return err
 			}
+		case hasura.SourceKindCitus:
+			_, err := h.citusSourceOps.CitusRunSQL(hasura.CitusRunSQLInput(sqlInput))
+			if err != nil {
+				return err
+			}
+
 		default:
 			return fmt.Errorf("unsupported source kind, source name: %v kind: %v", h.hasuraOpts.SourceName, h.hasuraOpts.SourceKind)
 		}
@@ -402,7 +411,6 @@ func (h *HasuraDB) Drop() error {
 
 func (h *HasuraDB) sendSchemaDumpQuery(m interface{}) (resp *http.Response, body []byte, err error) {
 	request := h.config.Req.Clone()
-
 	request = request.Post(h.config.pgDumpURL.String()).Send(m)
 
 	for headerName, headerValue := range h.config.Headers {

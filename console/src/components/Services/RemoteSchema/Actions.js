@@ -76,10 +76,12 @@ const makeRequest = (
 ) => {
   return (dispatch, getState) => {
     const source = getState().tables.currentDataSource;
+    const { resourceVersion } = getState().metadata;
     const upQuery = {
       type: 'bulk',
       source,
       args: upQueries,
+      resource_version: resourceVersion,
     };
 
     const downQuery = {

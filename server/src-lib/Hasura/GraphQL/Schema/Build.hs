@@ -12,12 +12,12 @@ import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend          as AB
 
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser          hiding (EnumValueInfo, field)
 import           Hasura.GraphQL.Schema.Backend  (MonadBuildSchema)
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Mutation
 import           Hasura.GraphQL.Schema.Select
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 
 
@@ -30,7 +30,7 @@ buildTableQueryFields
   -> TableInfo b
   -> G.Name
   -> SelPermInfo b
-  -> m [FieldParser n (QueryRootField UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
 buildTableQueryFields sourceName sourceInfo tableName tableInfo gqlName selPerms = do
   let
     mkRF = RFDB sourceName
@@ -48,9 +48,9 @@ buildTableQueryFields sourceName sourceInfo tableName tableInfo gqlName selPerms
     selectAggName = fromMaybe (gqlName <> $$(G.litName "_aggregate")) $ _tcrfSelectAggregate customRootFields
     selectAggDesc = Just $ G.Description $ "fetch aggregated fields from the table: " <>> tableName
   catMaybes <$> sequenceA
-    [ requiredFieldParser (mkRF . QDBMultipleRows) $ selectTable          tableName selectName    selectDesc    selPerms
-    , optionalFieldParser (mkRF . QDBSingleRow)    $ selectTableByPk      tableName selectPKName  selectPKDesc  selPerms
-    , optionalFieldParser (mkRF . QDBAggregation)  $ selectTableAggregate tableName selectAggName selectAggDesc selPerms
+    [ requiredFieldParser (mkRF . QDBMultipleRows) $ selectTable          sourceName tableInfo selectName    selectDesc    selPerms
+    , optionalFieldParser (mkRF . QDBSingleRow)    $ selectTableByPk      sourceName tableInfo selectPKName  selectPKDesc  selPerms
+    , optionalFieldParser (mkRF . QDBAggregation)  $ selectTableAggregate sourceName tableInfo selectAggName selectAggDesc selPerms
     ]
 
 buildTableInsertMutationFields
@@ -64,7 +64,7 @@ buildTableInsertMutationFields
   -> InsPermInfo b
   -> Maybe (SelPermInfo b)
   -> Maybe (UpdPermInfo b)
-  -> m [FieldParser n (MutationRootField UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
 buildTableInsertMutationFields sourceName sourceInfo tableName tableInfo gqlName insPerms mSelPerms mUpdPerms = do
   let
     mkRF = RFDB sourceName
@@ -78,12 +78,12 @@ buildTableInsertMutationFields sourceName sourceInfo tableName tableInfo gqlName
     -- insert one into table
     insertOneName = fromMaybe ($$(G.litName "insert_") <> gqlName <> $$(G.litName "_one")) $ _tcrfInsertOne customRootFields
     insertOneDesc = Just $ G.Description $ "insert a single row into the table: " <>> tableName
-  insert <- insertIntoTable tableName insertName insertDesc insPerms mSelPerms mUpdPerms
+  insert <- insertIntoTable sourceName tableInfo insertName insertDesc insPerms mSelPerms mUpdPerms
   -- Select permissions are required for insertOne: the selection set is the
   -- same as a select on that table, and it therefore can't be populated if the
   -- user doesn't have select permissions.
   insertOne <- for mSelPerms \selPerms ->
-    insertOneIntoTable tableName insertOneName insertOneDesc insPerms selPerms mUpdPerms
+    insertOneIntoTable sourceName tableInfo insertOneName insertOneDesc insPerms selPerms mUpdPerms
   pure $ fmap (mkRF . MDBInsert) <$> insert : maybeToList insertOne
 
 buildTableUpdateMutationFields
@@ -96,7 +96,7 @@ buildTableUpdateMutationFields
   -> G.Name
   -> UpdPermInfo b
   -> Maybe (SelPermInfo b)
-  -> m [FieldParser n (MutationRootField UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
 buildTableUpdateMutationFields sourceName sourceInfo tableName tableInfo gqlName updPerms mSelPerms = do
   let
     mkRF = RFDB sourceName
@@ -110,11 +110,11 @@ buildTableUpdateMutationFields sourceName sourceInfo tableName tableInfo gqlName
     -- update table by pk
     updatePKName = fromMaybe ($$(G.litName "update_") <> gqlName <> $$(G.litName "_by_pk")) $ _tcrfUpdateByPk customRootFields
     updatePKDesc = Just $ G.Description $ "update single row of the table: " <>> tableName
-  update <- updateTable tableName updateName updateDesc updPerms mSelPerms
+  update <- updateTable sourceName tableInfo updateName updateDesc updPerms mSelPerms
   -- Primary keys can only be tested in the `where` clause if the user has
   -- select permissions for them, which at the very least requires select
   -- permissions.
-  updateByPk <- fmap join $ for mSelPerms $ updateTableByPk tableName updatePKName updatePKDesc updPerms
+  updateByPk <- fmap join $ for mSelPerms $ updateTableByPk sourceName tableInfo updatePKName updatePKDesc updPerms
   pure $ fmap (mkRF . MDBUpdate) <$> catMaybes [update, updateByPk]
 
 buildTableDeleteMutationFields
@@ -127,7 +127,7 @@ buildTableDeleteMutationFields
   -> G.Name
   -> DelPermInfo b
   -> Maybe (SelPermInfo b)
-  -> m [FieldParser n (MutationRootField UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
 buildTableDeleteMutationFields sourceName sourceInfo tableName tableInfo gqlName delPerms mSelPerms = do
   let
     mkRF = RFDB sourceName
@@ -141,11 +141,11 @@ buildTableDeleteMutationFields sourceName sourceInfo tableName tableInfo gqlName
     -- delete from table by pk
     deletePKName = fromMaybe ($$(G.litName "delete_") <> gqlName <> $$(G.litName "_by_pk")) $ _tcrfDeleteByPk customRootFields
     deletePKDesc = Just $ G.Description $ "delete single row from the table: " <>> tableName
-  delete <- deleteFromTable tableName deleteName deleteDesc delPerms mSelPerms
+  delete <- deleteFromTable sourceName tableInfo deleteName deleteDesc delPerms mSelPerms
   -- Primary keys can only be tested in the `where` clause if the user has
   -- select permissions for them, which at the very least requires select
   -- permissions.
-  deleteByPk <- fmap join $ for mSelPerms $ deleteFromTableByPk tableName deletePKName deletePKDesc delPerms
+  deleteByPk <- fmap join $ for mSelPerms $ deleteFromTableByPk sourceName tableInfo deletePKName deletePKDesc delPerms
   pure $ fmap (mkRF . MDBDelete) <$> delete : maybeToList deleteByPk
 
 buildFunctionQueryFields
@@ -157,7 +157,7 @@ buildFunctionQueryFields
   -> FunctionInfo b
   -> TableName b
   -> SelPermInfo b
-  -> m [FieldParser n (QueryRootField UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
 buildFunctionQueryFields sourceName sourceInfo functionName functionInfo tableName selPerms = do
   funcName <- functionGraphQLName @b functionName `onLeft` throwError
   let
@@ -175,8 +175,8 @@ buildFunctionQueryFields sourceName sourceInfo functionName functionInfo tableNa
         JASMultipleRows -> QDBMultipleRows
         JASSingleObject -> QDBSingleRow
   catMaybes <$> sequenceA
-    [ requiredFieldParser (mkRF . queryResultType) $ selectFunction          functionInfo funcName    funcDesc    selPerms
-    , optionalFieldParser (mkRF . QDBAggregation)  $ selectFunctionAggregate functionInfo funcAggName funcAggDesc selPerms
+    [ requiredFieldParser (mkRF . queryResultType) $ selectFunction          sourceName functionInfo funcName    funcDesc    selPerms
+    , optionalFieldParser (mkRF . QDBAggregation)  $ selectFunctionAggregate sourceName functionInfo funcAggName funcAggDesc selPerms
     ]
 
 buildFunctionMutationFields
@@ -188,7 +188,7 @@ buildFunctionMutationFields
   -> FunctionInfo b
   -> TableName b
   -> SelPermInfo b
-  -> m [FieldParser n (MutationRootField UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
 buildFunctionMutationFields sourceName sourceInfo functionName functionInfo tableName selPerms = do
   funcName <- functionGraphQLName @b functionName `onLeft` throwError
   let
@@ -199,6 +199,6 @@ buildFunctionMutationFields sourceName sourceInfo functionName functionInfo tabl
     funcDesc = Just $ G.Description $ "execute VOLATILE function " <> functionName <<> " which returns " <>> tableName
     jsonAggSelect = _fiJsonAggSelect functionInfo
   catMaybes <$> sequenceA
-    [ requiredFieldParser (mkRF . MDBFunction jsonAggSelect) $ selectFunction functionInfo funcName funcDesc selPerms
+    [ requiredFieldParser (mkRF . MDBFunction jsonAggSelect) $ selectFunction sourceName functionInfo funcName funcDesc selPerms
       -- TODO: do we want aggregate mutation functions?
     ]

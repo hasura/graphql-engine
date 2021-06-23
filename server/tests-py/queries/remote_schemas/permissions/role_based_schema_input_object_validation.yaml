@@ -31,7 +31,7 @@ response:
   path: $.args
   error:
     "validation for the given role-based schema failed for the following reasons:\n\
-    \ • expected type of \"eq\"(\"Input object argument\") to be Int but recieved\
+    \ • expected type of \"eq\"(\"Input object argument\") to be Int but received\
     \ Boolean\n • expected type of \"gt\"(\"Input object argument\") to be Int but\
-    \ recieved Boolean\n"
+    \ received Boolean\n"
   code: validation-failed

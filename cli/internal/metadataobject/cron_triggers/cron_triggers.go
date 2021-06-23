@@ -4,9 +4,11 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/version"
+	errors2 "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/errors"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2/version"
+
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -48,33 +50,28 @@ func (c *CronTriggers) CreateFiles() error {
 	return nil
 }
 
-func (c *CronTriggers) Build(metadata *yaml.MapSlice) error {
-	if !c.serverFeatureFlags.HasCronTriggers {
-		c.logger.WithField("metadata_plugin", "cron_triggers").Warnf("Skipping building %s", fileName)
-		return nil
-	}
+func (c *CronTriggers) Build(metadata *yaml.MapSlice) errors2.ErrParsingMetadataObject {
 	data, err := ioutil.ReadFile(filepath.Join(c.MetadataDir, fileName))
 	if err != nil {
-		return err
+		return c.Error(err)
 	}
 
-	item := yaml.MapItem{
-		Key:   metadataKey,
-		Value: []yaml.MapSlice{},
-	}
-	err = yaml.Unmarshal(data, &item.Value)
+	var obj []yaml.MapSlice
+	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
-		return err
+		return c.Error(err)
 	}
-	*metadata = append(*metadata, item)
+	if len(obj) > 0 {
+		item := yaml.MapItem{
+			Key:   metadataKey,
+			Value: obj,
+		}
+		*metadata = append(*metadata, item)
+	}
 	return nil
 }
 
-func (c *CronTriggers) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
-	if !c.serverFeatureFlags.HasCronTriggers {
-		c.logger.Debugf("Skipping creating %s", fileName)
-		return make(map[string][]byte), nil
-	}
+func (c *CronTriggers) Export(metadata yaml.MapSlice) (map[string][]byte, errors2.ErrParsingMetadataObject) {
 	var cronTriggers interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
@@ -88,13 +85,17 @@ func (c *CronTriggers) Export(metadata yaml.MapSlice) (map[string][]byte, error)
 	}
 	data, err := yaml.Marshal(cronTriggers)
 	if err != nil {
-		return nil, err
+		return nil, c.Error(err)
 	}
 	return map[string][]byte{
-		filepath.Join(c.MetadataDir, fileName): data,
+		filepath.ToSlash(filepath.Join(c.MetadataDir, fileName)): data,
 	}, nil
 }
 
 func (c *CronTriggers) Name() string {
 	return metadataKey
+}
+
+func (c *CronTriggers) Error(err error, additionalContext ...string) errors2.ErrParsingMetadataObject {
+	return errors2.NewErrParsingMetadataObject(c.Name(), fileName, additionalContext, err)
 }

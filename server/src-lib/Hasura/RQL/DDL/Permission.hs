@@ -5,22 +5,18 @@ module Hasura.RQL.DDL.Permission
 
     , InsPerm(..)
     , InsPermDef
-    , CreateInsPerm
     , buildInsPermInfo
 
     , SelPerm(..)
     , SelPermDef
-    , CreateSelPerm
     , buildSelPermInfo
 
     , UpdPerm(..)
     , UpdPermDef
-    , CreateUpdPerm
     , buildUpdPermInfo
 
     , DelPerm(..)
     , DelPermDef
-    , CreateDelPerm
     , buildDelPermInfo
 
     , IsPerm(..)
@@ -41,17 +37,18 @@ import qualified Data.HashSet                       as HS
 
 import           Control.Lens                       ((.~))
 import           Data.Aeson
+import           Data.Kind                          (Type)
 import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend              as AB
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Session
-
 
 
 {- Note [Backend only permissions]
@@ -83,10 +80,9 @@ TRUE            TRUE (OR NOT-SET)         FALSE                                 
 TRUE            TRUE (OR NOT-SET)         TRUE                                   Mutation is shown
 -}
 
-type CreateInsPerm b = CreatePerm b (InsPerm b)
-
 procSetObj
-  :: (QErrM m, BackendMetadata b)
+  :: forall b m
+   . (QErrM m, BackendMetadata b)
   => SourceName
   -> TableName b
   -> FieldInfoMap (FieldInfo b)
@@ -98,7 +94,7 @@ procSetObj source tn fieldInfoMap mObj = do
       ty <- askColumnType fieldInfoMap pgCol $
         "column " <> pgCol <<> " not found in table " <>> tn
       sqlExp <- parseCollectableType (CollectableTypeScalar ty) val
-      let dep = mkColDep (getDepReason sqlExp) source tn pgCol
+      let dep = mkColDep @b (getDepReason sqlExp) source tn pgCol
       return ((pgCol, sqlExp), dep)
   return (HM.fromList setColTups, depHeaders, deps)
   where
@@ -107,54 +103,65 @@ procSetObj source tn fieldInfoMap mObj = do
 
     getDepReason = bool DRSessionVariable DROnType . isStaticValue
 
-class (ToJSON a) => IsPerm b a where
+class IsPerm a where
+  type PermInfo a = (r :: BackendType -> Type) | r -> a
 
   permAccessor
-    :: PermAccessor b (PermInfo b a)
+    :: (ToJSON (a b), BackendMetadata b)
+    => PermAccessor b (PermInfo a b)
 
   buildPermInfo
-    :: (QErrM m, TableCoreInfoRM b m)
+    :: (ToJSON (a b), BackendMetadata b, QErrM m, TableCoreInfoRM b m)
     => SourceName
     -> TableName b
     -> FieldInfoMap (FieldInfo b)
-    -> PermDef a
-    -> m (WithDeps (PermInfo b a))
+    -> PermDef (a b)
+    -> m (WithDeps (PermInfo a b))
 
   getPermAcc1
-    :: PermDef a -> PermAccessor b (PermInfo b a)
+    :: (ToJSON (a b), BackendMetadata b)
+    => PermDef (a b)
+    -> PermAccessor b (PermInfo a b)
   getPermAcc1 _ = permAccessor
 
   getPermAcc2
-    :: DropPerm b a -> PermAccessor b (PermInfo b a)
+    :: (ToJSON (a b), BackendMetadata b)
+    => DropPerm a b
+    -> PermAccessor b (PermInfo a b)
   getPermAcc2 _ = permAccessor
 
   addPermToMetadata
-    :: PermDef a -> TableMetadata b -> TableMetadata b
+    :: (ToJSON (a b), BackendMetadata b)
+    => PermDef (a b)
+    -> TableMetadata b
+    -> TableMetadata b
 
 runCreatePerm
   :: forall m b a
-   . (UserInfoM m, CacheRWM m, IsPerm b a, MonadError QErr m, MetadataM m, BackendMetadata b)
-  => CreatePerm b a -> m EncJSON
-runCreatePerm (WithTable source tn pd) = do
-  tableInfo <- askTabInfo source tn
+   . (ToJSON (a b), IsPerm a, UserInfoM m, CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b)
+  => CreatePerm a b -> m EncJSON
+runCreatePerm (CreatePerm (WithTable source tn pd)) = do
+  tableInfo <- askTabInfo @b source tn
   let permAcc = getPermAcc1 pd
       pt = permAccToType permAcc
       ptText = permTypeToCode pt
       role = _pdRole pd
       metadataObject = MOSourceObjId source
                          $ AB.mkAnyBackend
-                         $ SMOTableObj tn
+                         $ SMOTableObj @b tn
                          $ MTOPerm role pt
   onJust (getPermInfoMaybe role permAcc tableInfo) $ const $ throw400 AlreadyExists $
     ptText <> " permission already defined on table " <> tn <<> " with role " <>> role
   buildSchemaCacheFor metadataObject
     $ MetadataModifier
-    $ tableMetadataSetter source tn %~ addPermToMetadata pd
+    $ tableMetadataSetter @b source tn %~ addPermToMetadata pd
   pure successMsg
 
 runDropPerm
-  :: (IsPerm b a, UserInfoM m, CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b)
-  => DropPerm b a -> m EncJSON
+  :: forall b a m
+   . (ToJSON (a b), IsPerm a, UserInfoM m, CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b)
+  => DropPerm a b
+  -> m EncJSON
 runDropPerm dp@(DropPerm source table role) = do
   tabInfo <- askTabInfo source table
   let permType = permAccToType $ getPermAcc2 dp
@@ -162,7 +169,7 @@ runDropPerm dp@(DropPerm source table role) = do
   withNewInconsistentObjsCheck
     $ buildSchemaCache
     $ MetadataModifier
-    $ tableMetadataSetter source table %~ dropPermissionInMetadata role permType
+    $ tableMetadataSetter @b source table %~ dropPermissionInMetadata role permType
   return successMsg
 
 dropPermissionInMetadata
@@ -173,8 +180,10 @@ dropPermissionInMetadata rn = \case
   PTDelete -> tmDeletePermissions %~ OMap.delete rn
   PTUpdate -> tmUpdatePermissions %~ OMap.delete rn
 
+
 buildInsPermInfo
-  :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b)
+  :: forall b m
+   . (QErrM m, TableCoreInfoRM b m, BackendMetadata b)
   => SourceName
   -> TableName b
   -> FieldInfoMap (FieldInfo b)
@@ -188,8 +197,8 @@ buildInsPermInfo source tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCol
            askColumnType fieldInfoMap col ""
     let fltrHeaders = getDependentHeaders checkCond
         reqHdrs = fltrHeaders `union` setHdrs
-        insColDeps = map (mkColDep DRUntyped source tn) insCols
-        deps = mkParentDep source tn : beDeps ++ setColDeps ++ insColDeps
+        insColDeps = map (mkColDep @b DRUntyped source tn) insCols
+        deps = mkParentDep @b source tn : beDeps ++ setColDeps ++ insColDeps
         insColsWithoutPresets = insCols \\ HM.keys setColsSQL
     return (InsPermInfo (HS.fromList insColsWithoutPresets) be setColsSQL backendOnly reqHdrs, deps)
   where
@@ -197,17 +206,18 @@ buildInsPermInfo source tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCol
     allCols = map pgiColumn $ getCols fieldInfoMap
     insCols = maybe allCols (convColSpec fieldInfoMap) mCols
 
-type instance PermInfo b (InsPerm b) = InsPermInfo b
-
-instance (BackendMetadata b) => IsPerm b (InsPerm b) where
+instance IsPerm InsPerm where
+  type PermInfo InsPerm = InsPermInfo
   permAccessor = PAInsert
   buildPermInfo = buildInsPermInfo
 
   addPermToMetadata permDef =
     tmInsertPermissions %~ OMap.insert (_pdRole permDef) permDef
 
+
 buildSelPermInfo
-  :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b)
+  :: forall b m
+   . (QErrM m, TableCoreInfoRM b m, BackendMetadata b)
   => SourceName
   -> TableName b
   -> FieldInfoMap (FieldInfo b)
@@ -234,8 +244,8 @@ buildSelPermInfo source tn fieldInfoMap sp = withPathK "permission" $ do
           <<> " are auto-derived from the permissions on its returning table "
           <> returnTable <<> " and cannot be specified manually"
 
-  let deps = mkParentDep source tn : boolExpDeps ++ map (mkColDep DRUntyped source tn) pgCols
-             ++ map (mkComputedFieldDep DRUntyped source tn) scalarComputedFields
+  let deps = mkParentDep @b source tn : boolExpDeps ++ map (mkColDep @b DRUntyped source tn) pgCols
+             ++ map (mkComputedFieldDep @b DRUntyped source tn) scalarComputedFields
       depHeaders = getDependentHeaders $ spFilter sp
       mLimit = spLimit sp
 
@@ -253,11 +263,8 @@ buildSelPermInfo source tn fieldInfoMap sp = withPathK "permission" $ do
     computedFields = spComputedFields sp
     autoInferredErr = "permissions for relationships are automatically inferred"
 
-type CreateSelPerm b = CreatePerm b (SelPerm b)
-
-type instance PermInfo b (SelPerm b) = SelPermInfo b
-
-instance (BackendMetadata b) => IsPerm b (SelPerm b) where
+instance IsPerm SelPerm where
+  type PermInfo SelPerm = SelPermInfo
   permAccessor = PASelect
   buildPermInfo source tn fieldInfoMap (PermDef _ a _) =
     buildSelPermInfo source tn fieldInfoMap a
@@ -265,10 +272,10 @@ instance (BackendMetadata b) => IsPerm b (SelPerm b) where
   addPermToMetadata permDef =
     tmSelectPermissions %~ OMap.insert (_pdRole permDef) permDef
 
-type CreateUpdPerm b = CreatePerm b (UpdPerm b)
 
 buildUpdPermInfo
-  :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b)
+  :: forall b m
+   . (QErrM m, TableCoreInfoRM b m, BackendMetadata b)
   => SourceName
   -> TableName b
   -> FieldInfoMap (FieldInfo b)
@@ -286,8 +293,8 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
   void $ withPathK "columns" $ indexedForM updCols $ \updCol ->
        askColumnType fieldInfoMap updCol relInUpdErr
 
-  let updColDeps = map (mkColDep DRUntyped source tn) updCols
-      deps = mkParentDep source tn : beDeps ++ maybe [] snd checkExpr ++ updColDeps ++ setColDeps
+  let updColDeps = map (mkColDep @b DRUntyped source tn) updCols
+      deps = mkParentDep @b source tn : beDeps ++ maybe [] snd checkExpr ++ updColDeps ++ setColDeps
       depHeaders = getDependentHeaders fltr
       reqHeaders = depHeaders `union` setHeaders
       updColsWithoutPreSets = updCols \\ HM.keys setColsSQL
@@ -298,10 +305,8 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
     updCols     = convColSpec fieldInfoMap colSpec
     relInUpdErr = "relationships can't be used in update"
 
--- TODO see TODO for PermInfo above
-type instance PermInfo b (UpdPerm b) = UpdPermInfo b
-
-instance (BackendMetadata b) => IsPerm b (UpdPerm b) where
+instance IsPerm UpdPerm where
+  type PermInfo UpdPerm = UpdPermInfo
   permAccessor = PAUpdate
   buildPermInfo source tn fieldInfoMap (PermDef _ a _) =
     buildUpdPermInfo source tn fieldInfoMap a
@@ -309,10 +314,10 @@ instance (BackendMetadata b) => IsPerm b (UpdPerm b) where
   addPermToMetadata permDef =
     tmUpdatePermissions %~ OMap.insert (_pdRole permDef) permDef
 
-type CreateDelPerm b = CreatePerm b (DelPerm b)
 
 buildDelPermInfo
-  :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b)
+  :: forall b m
+   . (QErrM m, TableCoreInfoRM b m, BackendMetadata b)
   => SourceName
   -> TableName b
   -> FieldInfoMap (FieldInfo b)
@@ -321,20 +326,19 @@ buildDelPermInfo
 buildDelPermInfo source tn fieldInfoMap (DelPerm fltr) = do
   (be, beDeps) <- withPathK "filter" $
     procBoolExp source tn fieldInfoMap  fltr
-  let deps = mkParentDep source tn : beDeps
+  let deps = mkParentDep @b source tn : beDeps
       depHeaders = getDependentHeaders fltr
   return (DelPermInfo tn be depHeaders, deps)
 
--- TODO see TODO for PermInfo above
-type instance PermInfo b (DelPerm b) = DelPermInfo b
-
-instance (BackendMetadata b) => IsPerm b (DelPerm b) where
+instance IsPerm DelPerm where
+  type PermInfo DelPerm = DelPermInfo
   permAccessor = PADelete
   buildPermInfo source tn fieldInfoMap (PermDef _ a _) =
     buildDelPermInfo source tn fieldInfoMap a
 
   addPermToMetadata permDef =
     tmDeletePermissions %~ OMap.insert (_pdRole permDef) permDef
+
 
 data SetPermComment b
   = SetPermComment
@@ -359,11 +363,12 @@ instance (Backend b) => FromJSON (SetPermComment b) where
       <*> o .:? "comment"
 
 runSetPermComment
-  :: forall m b
+  :: forall b m
    . (QErrM m, CacheRWM m, MetadataM m, BackendMetadata b)
-  => SetPermComment b -> m EncJSON
+  => SetPermComment b
+  -> m EncJSON
 runSetPermComment (SetPermComment source table roleName permType comment) =  do
-  tableInfo <- askTabInfo source table
+  tableInfo <- askTabInfo @b source table
 
   -- assert permission exists and return appropriate permission modifier
   permModifier <- case permType of
@@ -382,9 +387,9 @@ runSetPermComment (SetPermComment source table roleName permType comment) =  do
 
   let metadataObject = MOSourceObjId source
                          $ AB.mkAnyBackend
-                         $ SMOTableObj table
+                         $ SMOTableObj @b table
                          $ MTOPerm roleName permType
   buildSchemaCacheFor metadataObject
     $ MetadataModifier
-    $ tableMetadataSetter source table %~ permModifier
+    $ tableMetadataSetter @b source table %~ permModifier
   pure successMsg

@@ -16,12 +16,12 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 
-	"github.com/hasura/graphql-engine/cli/migrate/database"
-	"github.com/hasura/graphql-engine/cli/migrate/source"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/source"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -769,12 +769,6 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 			return
 		}
 
-		err = m.versionDownExists(from)
-		if err != nil {
-			ret <- err
-			return
-		}
-
 		prev, err := m.sourceDrv.Prev(from)
 		if os.IsNotExist(err) {
 			migr, err := m.metanewMigration(from, -1)
@@ -798,23 +792,29 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 			return
 		}
 
-		migr, err := m.metanewMigration(from, int64(prev))
-		if err != nil {
-			ret <- err
-			return
+		err = m.versionDownExists(from)
+		if err == nil {
+			migr, err := m.metanewMigration(from, int64(prev))
+			if err != nil {
+				ret <- err
+				return
+			}
+
+			ret <- migr
+			go migr.Buffer()
+
+			migr, err = m.newMigration(from, int64(prev))
+			if err != nil {
+				ret <- err
+				return
+			}
+
+			ret <- migr
+			go migr.Buffer()
+		} else {
+			m.Logger.Warnf("%v", err)
 		}
 
-		ret <- migr
-		go migr.Buffer()
-
-		migr, err = m.newMigration(from, int64(prev))
-		if err != nil {
-			ret <- err
-			return
-		}
-
-		ret <- migr
-		go migr.Buffer()
 		from = prev
 	}
 }

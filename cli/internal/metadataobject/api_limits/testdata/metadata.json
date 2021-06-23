@@ -1,0 +1,14 @@
+{
+  "version": 3,
+  "sources": [],
+  "api_limits": {
+    "disabled": false,
+    "rate_limit": {
+      "per_role": {},
+      "global": {
+        "unique_params": "IP",
+        "max_reqs_per_min": 1
+      }
+    }
+  }
+}

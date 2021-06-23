@@ -19,6 +19,7 @@ import           Data.List.Extended               (duplicates)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.QueryCollection

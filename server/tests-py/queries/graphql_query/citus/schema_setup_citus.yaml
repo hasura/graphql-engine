@@ -1,0 +1,99 @@
+type: bulk
+args:
+
+
+- type: citus_run_sql
+  args:
+    source: citus
+    sql: |
+      CREATE TABLE author (
+          id serial PRIMARY KEY,
+          name text UNIQUE,
+          "createdAt" timestamp
+      );
+
+      CREATE TABLE article (
+          id serial PRIMARY KEY,
+          title text,
+          content text,
+          author_id integer REFERENCES author (id),
+          is_published boolean,
+          published_on timestamp
+      );
+
+      INSERT INTO author (name, "createdAt")
+          VALUES ('Author 1', '2017-09-21T09:39:44'), ('Author 2', '2017-09-21T09:50:44');
+
+      INSERT INTO article (title, content, author_id, is_published)
+          VALUES ('Article 1', 'Sample article content 1', 1, FALSE), ('Article 2', 'Sample article content 2', 1, TRUE), ('Article 3', 'Sample article content 3', 2, TRUE);
+
+      create table country (
+        id serial primary key,
+        name text not null
+      );
+      select create_reference_table('country');
+      insert into country ("name") values ('India');
+
+      create table state (
+        id serial primary key,
+        country_id integer references country(id),
+        name text NOT NULL
+      );
+
+      select create_reference_table('state');
+      insert into state ("country_id", "name")
+      values (1, 'Karnataka'), (1, 'Andhra Pradesh'), (1, 'Orissa'), (1, 'Tamilnadu');
+
+      create table disaster (
+        id serial,
+        country_id integer references country(id),
+        name text not null,
+        primary key (id, country_id)
+      );
+      select create_distributed_table('disaster', 'country_id');
+      insert into disaster ("country_id", "name")
+      values (1, 'cyclone_amphan'),
+             (1, 'cyclone_nisarga');
+
+      create table disaster_affected_state (
+        id serial,
+        country_id integer references country(id),
+        disaster_id integer,
+        state_id integer references state(id),
+        primary key (id, country_id)
+      );
+      select create_distributed_table('disaster_affected_state', 'country_id');
+
+      create function search_disasters_sql(search text)
+      returns setof disaster as $$
+      begin
+          return query select *
+          from disaster
+          where
+            name ilike ('%' || search || '%');
+      end;
+      $$ language plpgsql stable;
+
+      create function search_disasters_plpgsql(search text)
+      returns setof disaster as $$
+      begin
+          return query select *
+          from disaster
+          where
+            name ilike ('%' || search || '%');
+      end;
+      $$ language plpgsql stable;
+
+# run separately to foreign key constraint to avoid 'multiple utility event' error
+- type: citus_run_sql
+  args:
+    source: citus
+    sql: |
+      alter table disaster_affected_state add constraint disaster_fkey foreign key (country_id,       disaster_id) references disaster(country_id, id);
+
+- type: citus_run_sql
+  args:
+    source: citus
+    sql: |
+      insert into disaster_affected_state ("country_id", "disaster_id", "state_id")
+        values (1, 1, 2), (1, 1, 3), (1, 2, 2), (1, 2, 3), (1, 2, 4);

@@ -2,25 +2,32 @@
 
 module Hasura.Backends.BigQuery.Instances.Schema () where
 
-import qualified Data.Aeson as J
-import qualified Data.HashMap.Strict as Map
-import qualified Data.List.NonEmpty as NE
-import qualified Data.Text as T
-import           Data.Text.Extended
-import qualified Hasura.Backends.BigQuery.Types as BigQuery
-import           Hasura.GraphQL.Context
-import qualified Hasura.GraphQL.Parser as P
-import           Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
-import           Hasura.GraphQL.Parser.Internal.Parser hiding (field)
-import           Hasura.GraphQL.Schema.Backend
-import qualified Hasura.GraphQL.Schema.Build as GSB
-import           Hasura.GraphQL.Schema.Common
 import           Hasura.Prelude
-import qualified Hasura.RQL.IR.Select as IR
-import qualified Hasura.RQL.IR.Update as IR
+
+import qualified Data.Aeson                                  as J
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.List.NonEmpty                          as NE
+import qualified Data.Text                                   as T
+
+import           Data.Text.Extended
+
+import qualified Hasura.Backends.BigQuery.Types              as BigQuery
+import qualified Hasura.GraphQL.Parser                       as P
+import qualified Hasura.GraphQL.Schema.Build                 as GSB
+import qualified Hasura.RQL.IR.Select                        as IR
+import qualified Hasura.RQL.IR.Update                        as IR
+import qualified Language.GraphQL.Draft.Syntax               as G
+
+import           Hasura.Base.Error
+import           Hasura.GraphQL.Parser                       hiding (EnumValueInfo, field)
+import           Hasura.GraphQL.Parser.Internal.Parser       hiding (field)
+import           Hasura.GraphQL.Parser.Internal.TypeChecking
+import           Hasura.GraphQL.Schema.Backend
+import           Hasura.GraphQL.Schema.Common
+import           Hasura.GraphQL.Schema.Select
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
-import qualified Hasura.RQL.Types.Error as RQL
-import qualified Language.GraphQL.Draft.Syntax as G
+
 
 ----------------------------------------------------------------
 -- BackendSchema instance
@@ -28,36 +35,40 @@ import qualified Language.GraphQL.Draft.Syntax as G
 instance BackendSchema 'BigQuery where
   -- top level parsers
   buildTableQueryFields          = GSB.buildTableQueryFields
-  buildTableRelayQueryFields     = msBuildTableRelayQueryFields
-  buildTableInsertMutationFields = msBuildTableInsertMutationFields
-  buildTableUpdateMutationFields = msBuildTableUpdateMutationFields
-  buildTableDeleteMutationFields = msBuildTableDeleteMutationFields
-  buildFunctionQueryFields       = msBuildFunctionQueryFields
-  buildFunctionRelayQueryFields  = msBuildFunctionRelayQueryFields
-  buildFunctionMutationFields    = msBuildFunctionMutationFields
+  buildTableRelayQueryFields     = bqBuildTableRelayQueryFields
+  buildTableInsertMutationFields = bqBuildTableInsertMutationFields
+  buildTableUpdateMutationFields = bqBuildTableUpdateMutationFields
+  buildTableDeleteMutationFields = bqBuildTableDeleteMutationFields
+  buildFunctionQueryFields       = bqBuildFunctionQueryFields
+  buildFunctionRelayQueryFields  = bqBuildFunctionRelayQueryFields
+  buildFunctionMutationFields    = bqBuildFunctionMutationFields
+
   -- backend extensions
-  relayExtension    = const Nothing
-  nodesAggExtension = const $ Just ()
+  relayExtension    = Nothing
+  nodesAggExtension = Just ()
+
+  -- table arguments
+  tableArguments = bqTableArgs
+
   -- indivdual components
-  columnParser              = msColumnParser
-  jsonPathArg               = msJsonPathArg
-  orderByOperators          = msOrderByOperators
-  comparisonExps            = msComparisonExps
-  updateOperators           = msUpdateOperators
-  offsetParser              = msOffsetParser
-  mkCountType               = msMkCountType
+  columnParser              = bqColumnParser
+  jsonPathArg               = bqJsonPathArg
+  orderByOperators          = bqOrderByOperators
+  comparisonExps            = bqComparisonExps
+  updateOperators           = bqUpdateOperators
+  mkCountType               = bqMkCountType
   aggregateOrderByCountType = BigQuery.IntegerScalarType
-  computedField             = msComputedField
-  node                      = msNode
-  tableDistinctOn           = msTableDistinctOn
-  remoteRelationshipField   = msRemoteRelationshipField
+  computedField             = bqComputedField
+  node                      = bqNode
+
   -- SQL literals
   columnDefaultValue = error "TODO: Make impossible by the type system. BigQuery doesn't support insertions."
+
 
 ----------------------------------------------------------------
 -- Top level parsers
 
-msBuildTableRelayQueryFields
+bqBuildTableRelayQueryFields
   :: MonadBuildSchema 'BigQuery r m n
   => SourceName
   -> SourceConfig 'BigQuery
@@ -66,11 +77,11 @@ msBuildTableRelayQueryFields
   -> G.Name
   -> NESeq (ColumnInfo 'BigQuery)
   -> SelPermInfo  'BigQuery
-  -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
-msBuildTableRelayQueryFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
-  pure Nothing
+  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+bqBuildTableRelayQueryFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
+  pure []
 
-msBuildTableInsertMutationFields
+bqBuildTableInsertMutationFields
   :: MonadBuildSchema 'BigQuery r m n
   => SourceName
   -> SourceConfig 'BigQuery
@@ -80,11 +91,11 @@ msBuildTableInsertMutationFields
   -> InsPermInfo 'BigQuery
   -> Maybe (SelPermInfo 'BigQuery)
   -> Maybe (UpdPermInfo 'BigQuery)
-  -> m [FieldParser n (MutationRootField UnpreparedValue)]
-msBuildTableInsertMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
+  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+bqBuildTableInsertMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
   pure []
 
-msBuildTableUpdateMutationFields
+bqBuildTableUpdateMutationFields
   :: MonadBuildSchema 'BigQuery r m n
   => SourceName
   -> SourceConfig 'BigQuery
@@ -93,11 +104,11 @@ msBuildTableUpdateMutationFields
   -> G.Name
   -> UpdPermInfo 'BigQuery
   -> Maybe (SelPermInfo 'BigQuery)
-  -> m [FieldParser n (MutationRootField UnpreparedValue)]
-msBuildTableUpdateMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _updPerns _selPerms =
+  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+bqBuildTableUpdateMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _updPerns _selPerms =
   pure []
 
-msBuildTableDeleteMutationFields
+bqBuildTableDeleteMutationFields
   :: MonadBuildSchema 'BigQuery r m n
   => SourceName
   -> SourceConfig 'BigQuery
@@ -106,11 +117,11 @@ msBuildTableDeleteMutationFields
   -> G.Name
   -> DelPermInfo 'BigQuery
   -> Maybe (SelPermInfo 'BigQuery)
-  -> m [FieldParser n (MutationRootField UnpreparedValue)]
-msBuildTableDeleteMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _delPerns _selPerms =
+  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+bqBuildTableDeleteMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _delPerns _selPerms =
   pure []
 
-msBuildFunctionQueryFields
+bqBuildFunctionQueryFields
     :: MonadBuildSchema 'BigQuery r m n
     => SourceName
     -> SourceConfig 'BigQuery
@@ -118,11 +129,11 @@ msBuildFunctionQueryFields
     -> FunctionInfo 'BigQuery
     -> TableName 'BigQuery
     -> SelPermInfo 'BigQuery
-    -> m [FieldParser n (QueryRootField UnpreparedValue)]
-msBuildFunctionQueryFields _ _ _ _ _ _ =
+    -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+bqBuildFunctionQueryFields _ _ _ _ _ _ =
   pure []
 
-msBuildFunctionRelayQueryFields
+bqBuildFunctionRelayQueryFields
   :: MonadBuildSchema 'BigQuery r m n
   => SourceName
   -> SourceConfig 'BigQuery
@@ -131,11 +142,11 @@ msBuildFunctionRelayQueryFields
   -> TableName    'BigQuery
   -> NESeq (ColumnInfo 'BigQuery)
   -> SelPermInfo  'BigQuery
-  -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
-msBuildFunctionRelayQueryFields _sourceName _sourceInfo _functionName _functionInfo _tableName _pkeyColumns _selPerms =
-  pure Nothing
+  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+bqBuildFunctionRelayQueryFields _sourceName _sourceInfo _functionName _functionInfo _tableName _pkeyColumns _selPerms =
+  pure []
 
-msBuildFunctionMutationFields
+bqBuildFunctionMutationFields
     :: MonadBuildSchema 'BigQuery r m n
     => SourceName
     -> SourceConfig 'BigQuery
@@ -143,20 +154,48 @@ msBuildFunctionMutationFields
     -> FunctionInfo 'BigQuery
     -> TableName 'BigQuery
     -> SelPermInfo 'BigQuery
-    -> m [FieldParser n (MutationRootField UnpreparedValue)]
-msBuildFunctionMutationFields _ _ _ _ _ _ =
+    -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+bqBuildFunctionMutationFields _ _ _ _ _ _ =
   pure []
+
+
+----------------------------------------------------------------
+-- Table arguments
+
+bqTableArgs
+  :: forall r m n
+   . MonadBuildSchema 'BigQuery r m n
+  => SourceName
+  -> TableInfo 'BigQuery
+  -> SelPermInfo 'BigQuery
+  -> m (InputFieldsParser n (IR.SelectArgsG 'BigQuery (UnpreparedValue 'BigQuery)))
+bqTableArgs sourceName tableInfo selectPermissions = do
+  whereParser   <- tableWhereArg   sourceName tableInfo selectPermissions
+  orderByParser <- tableOrderByArg sourceName tableInfo selectPermissions
+  pure do
+    whereArg   <- whereParser
+    orderByArg <- orderByParser
+    limitArg   <- tableLimitArg
+    offsetArg  <- tableOffsetArg
+    pure $ IR.SelectArgs
+      { IR._saWhere    = whereArg
+      , IR._saOrderBy  = orderByArg
+      , IR._saLimit    = limitArg
+      , IR._saOffset   = offsetArg
+      -- not supported on BigQuery for now
+      , IR._saDistinct = Nothing
+      }
 
 
 ----------------------------------------------------------------
 -- Individual components
 
-msColumnParser
+bqColumnParser
   :: (MonadSchema n m, MonadError QErr m)
   => ColumnType 'BigQuery
   -> G.Nullability
   -> m (Parser 'Both n (Opaque (ColumnValue 'BigQuery)))
-msColumnParser columnType (G.Nullability isNullable) =
+bqColumnParser columnType (G.Nullability isNullable) =
   opaque . fmap (ColumnValue columnType) <$> case columnType of
     ColumnScalar scalarType -> case scalarType of
       -- bytestrings
@@ -170,22 +209,30 @@ msColumnParser columnType (G.Nullability isNullable) =
       -- will in all likelihood error on the BigQuery side. Do we want to handle those
       -- properly here?
       BigQuery.FloatScalarType   -> pure $ possiblyNullable scalarType $  BigQuery.FloatValue . BigQuery.doubleToFloat64 <$> P.float
-      -- Int types; we cram everything into Double at the moment
-      -- TODO: Distinguish between ints and doubles
-      BigQuery.IntegerScalarType -> pure $ possiblyNullable scalarType $  BigQuery.IntegerValue . BigQuery.intToInt64 . round <$> P.float
+      BigQuery.IntegerScalarType -> pure $ possiblyNullable scalarType $  BigQuery.IntegerValue . BigQuery.intToInt64 . fromIntegral <$> P.int
       BigQuery.DecimalScalarType -> pure $ possiblyNullable scalarType $  BigQuery.DecimalValue . BigQuery.doubleToDecimal <$> P.float
       BigQuery.BigDecimalScalarType -> pure $ possiblyNullable scalarType $  BigQuery.BigDecimalValue . BigQuery.doubleToBigDecimal <$> P.float
       -- boolean type
       BigQuery.BoolScalarType -> pure $ possiblyNullable scalarType $  BigQuery.BoolValue <$> P.boolean
       BigQuery.DateScalarType -> pure $ possiblyNullable scalarType $  BigQuery.DateValue . BigQuery.Date <$> P.string
+      BigQuery.TimeScalarType -> pure $ possiblyNullable scalarType $  BigQuery.TimeValue . BigQuery.Time <$> P.string
       BigQuery.DatetimeScalarType -> pure $ possiblyNullable scalarType $  BigQuery.DatetimeValue . BigQuery.Datetime <$> P.string
       BigQuery.GeographyScalarType -> pure $ possiblyNullable scalarType $  BigQuery.GeographyValue . BigQuery.Geography <$> P.string
-      BigQuery.TimestampScalarType -> pure $ possiblyNullable scalarType $  BigQuery.TimestampValue . BigQuery.Timestamp <$> P.string
-      ty -> throwError $ RQL.internalError $ T.pack $ "Type currently unsupported for BigQuery: " ++ show ty
+      BigQuery.TimestampScalarType -> do
+        let schemaType =  P.Nullable . P.TNamed $ P.mkDefinition stringScalar Nothing P.TIScalar
+        pure $ possiblyNullable scalarType $ Parser
+          { pType = schemaType
+          , pParser =
+              valueToJSON (P.toGraphQLType schemaType)
+                >=> fmap (BigQuery.StringValue . BigQuery.utctimeToISO8601Text)
+                    . either (parseErrorWith ParseFailed . qeError) pure
+                    . runAesonParser (J.withText "TimestampColumn" BigQuery.textToUTCTime)
+          }
+      ty -> throwError $ internalError $ T.pack $ "Type currently unsupported for BigQuery: " ++ show ty
     ColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (Map.toList enumValues) of
         Just enumValuesList -> do
-          tableGQLName <- tableGraphQLName tableName `onLeft` throwError
+          tableGQLName <- tableGraphQLName @'BigQuery tableName `onLeft` throwError
           let enumName = tableGQLName <> $$(G.litName "_enum")
           pure $ possiblyNullable BigQuery.StringScalarType $ P.enum enumName Nothing (mkEnumValue <$> enumValuesList)
         Nothing -> throw400 ValidationFailed "empty enum values"
@@ -230,18 +277,18 @@ msColumnParser columnType (G.Nullability isNullable) =
             either (parseErrorWith ParseFailed . qeError) pure . runAesonParser J.parseJSON
           }
 
-msJsonPathArg
+bqJsonPathArg
   :: MonadParse n
   => ColumnType 'BigQuery
   -> InputFieldsParser n (Maybe (IR.ColumnOp 'BigQuery))
-msJsonPathArg _columnType = pure Nothing
+bqJsonPathArg _columnType = pure Nothing
 
-msOrderByOperators
+bqOrderByOperators
   :: NonEmpty
       ( Definition P.EnumValueInfo
       , (BasicOrderType 'BigQuery, NullsOrderType 'BigQuery)
       )
-msOrderByOperators = NE.fromList
+bqOrderByOperators = NE.fromList
   [ ( define $$(G.litName "asc") "in ascending order, nulls first"
     , (BigQuery.AscOrder, BigQuery.NullsFirst)
     )
@@ -264,16 +311,16 @@ msOrderByOperators = NE.fromList
   where
     define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
 
-msComparisonExps
+bqComparisonExps
   :: forall m n
   . (BackendSchema 'BigQuery, MonadSchema n m, MonadError QErr m)
   => ColumnType 'BigQuery
   -> m (Parser 'Input n [ComparisonExp 'BigQuery])
-msComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
+bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
   -- see Note [Columns in comparison expression are never nullable]
   typedParser        <- columnParser columnType (G.Nullability False)
-  nullableTextParser <- columnParser (ColumnScalar BigQuery.StringScalarType) (G.Nullability True)
-  textParser         <- columnParser (ColumnScalar BigQuery.StringScalarType) (G.Nullability False)
+  nullableTextParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability True)
+  textParser         <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability False)
   let name = P.getName typedParser <> $$(G.litName "_BigQuery_comparison_exp")
       desc = G.Description $ "Boolean expression to compare columns of type "
         <>  P.getName typedParser
@@ -290,64 +337,50 @@ msComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
     , P.fieldOptional $$(G.litName "_lte")     Nothing (ALTE . mkParameter <$> typedParser)
     ]
 
-
-msOffsetParser :: MonadParse n => Parser 'Both n (SQLExpression 'BigQuery)
-msOffsetParser =
-  BigQuery.ValueExpression . BigQuery.IntegerValue . BigQuery.intToInt64 . fromIntegral <$>
-  P.int
-
-msMkCountType
+bqMkCountType
   :: Maybe Bool
   -- ^ distinct values
   -> Maybe [Column 'BigQuery]
   -> CountType 'BigQuery
-msMkCountType _           Nothing     = BigQuery.StarCountable
-msMkCountType (Just True) (Just cols) =
+bqMkCountType _           Nothing     = BigQuery.StarCountable
+bqMkCountType (Just True) (Just cols) =
   maybe BigQuery.StarCountable BigQuery.DistinctCountable $ nonEmpty cols
-msMkCountType _           (Just cols) =
+bqMkCountType _           (Just cols) =
   maybe BigQuery.StarCountable BigQuery.NonNullFieldCountable $ nonEmpty cols
 
--- | Argument to distinct select on columns returned from table selection
--- > distinct_on: [table_select_column!]
-msTableDistinctOn
-  -- :: forall m n. (BackendSchema 'BigQuery, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  :: Applicative m
-  => Applicative n
-  => TableName 'BigQuery
-  -> SelPermInfo 'BigQuery
-  -> m (InputFieldsParser n (Maybe (XDistinct 'BigQuery, NonEmpty (Column 'BigQuery))))
-msTableDistinctOn _table _selectPermissions = pure (pure Nothing)
-
 -- | Various update operators
-msUpdateOperators
+bqUpdateOperators
   -- :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   :: Applicative m
-  => TableName 'BigQuery         -- ^ qualified name of the table
+  => TableInfo 'BigQuery         -- ^ qualified name of the table
   -> UpdPermInfo 'BigQuery       -- ^ update permissions of the table
   -> m (Maybe (InputFieldsParser n [(Column 'BigQuery, IR.UpdOpExpG (UnpreparedValue 'BigQuery))]))
-msUpdateOperators _table _updatePermissions = pure Nothing
+bqUpdateOperators _tableInfo _updatePermissions = pure Nothing
 
 -- | Computed field parser.
 -- Currently unsupported: returns Nothing for now.
-msComputedField
+bqComputedField
   :: MonadBuildSchema 'BigQuery r m n
-  => ComputedFieldInfo 'BigQuery
+  => SourceName
+  -> ComputedFieldInfo 'BigQuery
+  -> TableName 'BigQuery
   -> SelPermInfo 'BigQuery
   -> m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
-msComputedField _fieldInfo _selectPemissions = pure Nothing
+bqComputedField _sourceName _fieldInfo _table _selectPemissions = pure Nothing
+
 
 -- | Remote join field parser.
 -- Currently unsupported: returns Nothing for now.
-msRemoteRelationshipField
+bqRemoteRelationshipField
   :: MonadBuildSchema 'BigQuery r m n
   => RemoteFieldInfo 'BigQuery
   -> m (Maybe [FieldParser n (AnnotatedField 'BigQuery)])
-msRemoteRelationshipField _remoteFieldInfo = pure Nothing
+bqRemoteRelationshipField _remoteFieldInfo = pure Nothing
 
 -- | The 'node' root field of a Relay request. Relay is currently unsupported on BigQuery,
 -- meaning this parser will never be called: any attempt to create this parser should
 -- therefore fail.
-msNode
+bqNode
   :: MonadBuildSchema 'BigQuery r m n
   => m ( Parser 'Output n
          ( HashMap
@@ -359,4 +392,4 @@ msNode
            )
          )
        )
-msNode = throw500 "BigQuery does not support relay; `node` should never be exposed in the schema."
+bqNode = throw500 "BigQuery does not support relay; `node` should never be exposed in the schema."

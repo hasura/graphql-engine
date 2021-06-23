@@ -18,6 +18,14 @@ PG_CONTAINER_NAME="hasura-dev-postgres-$PG_PORT"
 PG_DB_URL="postgres://postgres:$PG_PASSWORD@127.0.0.1:$PG_PORT/postgres"
 PG_DOCKER="docker exec -u postgres -it $PG_CONTAINER_NAME psql $PG_DB_URL"
 
+# NOTE FWIW:
+#   Brandon tried these options to speed up integration tests, but to little effect:
+#       fsync=off
+#       synchronous_commit=off
+#       full_page_writes=off
+#   ...as well as ramdisk for pg data:
+#       --mount type=tmpfs,destination=/var/lib/postgresql/data \
+
 # Useful development defaults for postgres (no spaces here, please):
 #
 # setting 'port' in container is a workaround for the pg_dump endpoint (see tests)

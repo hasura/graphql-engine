@@ -14,9 +14,12 @@ import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend      as AB
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
+import           Hasura.SQL.Tag
 import           Hasura.Session
+
 
 newtype TrackFunction b
   = TrackFunction
@@ -30,14 +33,18 @@ deriving instance (Backend b) => ToJSON (TrackFunction b)
 -- Validate function tracking operation. Fails if function is already being
 -- tracked, or if a table with the same name is being tracked.
 trackFunctionP1
-  :: forall m b
+  :: forall b m
    . (CacheRM m, QErrM m, Backend b)
-  => SourceName -> FunctionName b -> m ()
+  => SourceName
+  -> FunctionName b
+  -> m ()
 trackFunctionP1 sourceName qf = do
   rawSchemaCache <- askSchemaCache
+  unless (isJust $ AB.unpackAnyBackend @b =<< Map.lookup sourceName (scSources rawSchemaCache)) $
+    throw400 NotExists $ sourceName <<> " is not a known " <> (reify $ backendTag @b) <<> " source"
   when (isJust $ unsafeFunctionInfo @b sourceName qf $ scSources rawSchemaCache) $
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
-  let qt = functionToTable qf
+  let qt = functionToTable @b qf
   when (isJust $ unsafeTableInfo @b sourceName qt $ scSources rawSchemaCache) $
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
@@ -47,35 +54,41 @@ trackFunctionP2
   => SourceName -> FunctionName b -> FunctionConfig -> m EncJSON
 trackFunctionP2 sourceName qf config = do
   buildSchemaCacheFor
-    (MOSourceObjId sourceName $ AB.mkAnyBackend $ SMOFunction qf)
+    (MOSourceObjId sourceName $ AB.mkAnyBackend $ SMOFunction @b qf)
     $ MetadataModifier
-    $ metaSources.ix sourceName.toSourceMetadata.smFunctions
+    $ metaSources.ix sourceName.toSourceMetadata.(smFunctions @b)
       %~ OMap.insert qf (FunctionMetadata qf config mempty)
   pure successMsg
 
-handleMultipleFunctions :: (QErrM m, Backend b) => FunctionName b -> [a] -> m a
+handleMultipleFunctions
+  :: forall b m a
+   . (QErrM m, Backend b)
+  => FunctionName b
+  -> [a]
+  -> m a
 handleMultipleFunctions qf = \case
-  []      ->
-    throw400 NotExists $ "no such function exists in postgres : " <>> qf
   [fi] -> return fi
-  _       ->
-    throw400 NotSupported $
-    "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
+  []   -> throw400 NotExists $ "no such function exists: " <>> qf
+  _    -> throw400 NotSupported $ "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
 
 runTrackFunc
-  :: (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
-  => TrackFunction b -> m EncJSON
-runTrackFunc (TrackFunction qf)= do
+  :: forall b m
+   . (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
+  => TrackFunction b
+  -> m EncJSON
+runTrackFunc (TrackFunction qf) = do
   -- v1 track_function lacks a means to take extra arguments
-  trackFunctionP1 defaultSource qf
-  trackFunctionP2 defaultSource qf emptyFunctionConfig
+  trackFunctionP1 @b defaultSource qf
+  trackFunctionP2 @b defaultSource qf emptyFunctionConfig
 
 runTrackFunctionV2
-  :: (QErrM m, CacheRWM m, MetadataM m)
-  => TrackFunctionV2 -> m EncJSON
+  :: forall b m
+   . (BackendMetadata b, QErrM m, CacheRWM m, MetadataM m)
+  => TrackFunctionV2 b
+  -> m EncJSON
 runTrackFunctionV2 (TrackFunctionV2 source qf config) = do
-  trackFunctionP1 source qf
-  trackFunctionP2 source qf config
+  trackFunctionP1 @b source qf
+  trackFunctionP2 @b source qf config
 
 -- | JSON API payload for 'untrack_function':
 --
@@ -91,15 +104,40 @@ instance (Backend b) => ToJSON (UnTrackFunction b) where
   toJSON = genericToJSON hasuraJSON
 
 instance (Backend b) => FromJSON (UnTrackFunction b) where
-  parseJSON v = withSource <|> withoutSource
-    where
-      withoutSource = UnTrackFunction <$> parseJSON v <*> pure defaultSource
-      withSource = flip (withObject "UnTrackFunction") v \o ->
-                   UnTrackFunction <$> o .: "function"
-                                   <*> o .:? "source" .!= defaultSource
+  -- Following was the previous implementation, which while seems to be correct,
+  -- has an unexpected behaviour. In the case when @source@ key is present but
+  -- @function@ key is absent, it would silently coerce it into a @default@
+  -- source. The culprint being the _alternative_ operator, which silently fails
+  -- the first parse. This note exists so that we don't try to simplify using
+  -- the _alternative_ pattern here.
+  -- Previous implementation :-
+  -- Consider the following JSON -
+  --  {
+  --    "source": "custom_source",
+  --    "schema": "public",
+  --    "name": "my_function"
+  --  }
+  -- it silently fails parsing the source here because @function@ key is not
+  -- present, and proceeds to parse using @withoutSource@ as default source. Now
+  -- this is surprising for the user, because they mention @source@ key
+  -- explicitly. A better behaviour is to explicitly look for @function@ key if
+  -- a @source@ key is present.
+  -- >>
+  -- parseJSON v = withSource <|> withoutSource
+  --   where
+  --     withoutSource = UnTrackFunction <$> parseJSON v <*> pure defaultSource
+  --     withSource = flip (withObject "UnTrackFunction") v \o -> do
+  --                  UnTrackFunction <$> o .: "function"
+  --                                  <*> o .:? "source" .!= defaultSource
+  parseJSON v = flip (withObject "UnTrackFunction") v $ \o -> do
+    source <- o .:? "source"
+    case source of
+      Just src -> flip UnTrackFunction src <$> o .: "function"
+      Nothing  -> UnTrackFunction <$> parseJSON v <*> pure defaultSource
+
 
 askFunctionInfo
-  :: forall m b
+  :: forall b m
    . (CacheRM m, MonadError QErr m, Backend b)
   => SourceName -> FunctionName b -> m (FunctionInfo b)
 askFunctionInfo source functionName = do
@@ -108,18 +146,25 @@ askFunctionInfo source functionName = do
     `onNothing` throw400 NotExists ("function " <> functionName <<> " not found in the cache")
 
 runUntrackFunc
-  :: (CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b)
-  => UnTrackFunction b -> m EncJSON
+  :: forall b m
+   . (CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b)
+  => UnTrackFunction b
+  -> m EncJSON
 runUntrackFunc (UnTrackFunction functionName sourceName) = do
-  void $ askFunctionInfo sourceName functionName
+  void $ askFunctionInfo @b sourceName functionName
   withNewInconsistentObjsCheck
     $ buildSchemaCache
-    $ dropFunctionInMetadata defaultSource functionName
+    $ dropFunctionInMetadata @b defaultSource functionName
   pure successMsg
 
-dropFunctionInMetadata :: (BackendMetadata b) => SourceName -> FunctionName b -> MetadataModifier
+dropFunctionInMetadata
+  :: forall b
+   . (BackendMetadata b)
+  => SourceName
+  -> FunctionName b
+  -> MetadataModifier
 dropFunctionInMetadata source function = MetadataModifier $
-  metaSources.ix source.toSourceMetadata.smFunctions %~ OMap.delete function
+  metaSources.ix source.toSourceMetadata.(smFunctions @b) %~ OMap.delete function
 
 {- Note [Function Permissions]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -161,7 +206,7 @@ instance (Backend b) => FromJSON (CreateFunctionPermission b) where
       <*> o .: "role"
 
 runCreateFunctionPermission
-  :: forall m b
+  :: forall b m
    . ( CacheRWM m
      , MonadError QErr m
      , MetadataM m
@@ -171,7 +216,7 @@ runCreateFunctionPermission
   -> m EncJSON
 runCreateFunctionPermission (CreateFunctionPermission functionName source role) = do
   sourceCache <- scSources <$> askSchemaCache
-  functionInfo <- askFunctionInfo source functionName
+  functionInfo <- askFunctionInfo @b source functionName
   when (role `elem` _fiPermissions functionInfo) $
     throw400 AlreadyExists $
     "permission of role "
@@ -185,19 +230,22 @@ runCreateFunctionPermission (CreateFunctionPermission functionName source role) 
     <> _fiReturnType functionInfo <<>  " has select permission configured for role: " <>> role
   buildSchemaCacheFor
     (MOSourceObjId source
-      $ AB.mkAnyBackend (SMOFunctionPermission functionName role))
+      $ AB.mkAnyBackend (SMOFunctionPermission @b functionName role))
     $ MetadataModifier
     $ metaSources.ix
-        source.toSourceMetadata.smFunctions.ix
-        functionName.fmPermissions
+        source.toSourceMetadata.(smFunctions @b).ix functionName.fmPermissions
     %~ (:) (FunctionPermissionMetadata role)
   pure successMsg
 
 dropFunctionPermissionInMetadata
-  :: (BackendMetadata b)
-  => SourceName -> FunctionName b -> RoleName -> MetadataModifier
+  :: forall b
+   . (BackendMetadata b)
+  => SourceName
+  -> FunctionName b
+  -> RoleName
+  -> MetadataModifier
 dropFunctionPermissionInMetadata source function role = MetadataModifier $
-  metaSources.ix source.toSourceMetadata.smFunctions.ix function.fmPermissions %~ filter ((/=) role . _fpmRole)
+  metaSources.ix source.toSourceMetadata.(smFunctions @b).ix function.fmPermissions %~ filter ((/=) role . _fpmRole)
 
 type DropFunctionPermission = CreateFunctionPermission
 
@@ -211,7 +259,7 @@ runDropFunctionPermission
   => DropFunctionPermission b
   -> m EncJSON
 runDropFunctionPermission (CreateFunctionPermission functionName source role) = do
-  functionInfo <- askFunctionInfo source functionName
+  functionInfo <- askFunctionInfo @b source functionName
   unless (role `elem` _fiPermissions functionInfo) $
     throw400 NotExists $
     "permission of role "
@@ -219,6 +267,6 @@ runDropFunctionPermission (CreateFunctionPermission functionName source role) = 
   buildSchemaCacheFor
     (MOSourceObjId source
       $ AB.mkAnyBackend
-      $ SMOFunctionPermission functionName role)
-    $ dropFunctionPermissionInMetadata source functionName role
+      $ SMOFunctionPermission @b functionName role)
+    $ dropFunctionPermissionInMetadata @b source functionName role
   pure successMsg

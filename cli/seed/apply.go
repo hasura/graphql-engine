@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 
 	"github.com/pkg/errors"
 
@@ -88,6 +88,17 @@ func (d *Driver) ApplySeedsToDatabase(fs afero.Fs, rootSeedsDirectory string, fi
 			request := hasura.RequestBody{
 				Type: "mssql_run_sql",
 				Args: hasura.MSSQLRunSQLInput{
+					SQL:    string(sql),
+					Source: source.Name,
+				},
+			}
+			args = append(args, request)
+		}
+	case hasura.SourceKindCitus:
+		for _, sql := range sqlAsBytes {
+			request := hasura.RequestBody{
+				Type: "citus_run_sql",
+				Args: hasura.CitusRunSQLInput{
 					SQL:    string(sql),
 					Source: source.Name,
 				},

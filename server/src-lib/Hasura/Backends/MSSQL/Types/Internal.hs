@@ -14,7 +14,9 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Data.Text.Encoding            (encodeUtf8)
 
-import           Hasura.RQL.Types.Error
+import qualified Hasura.RQL.Types.Common       as RQL
+
+import           Hasura.Base.Error
 import           Hasura.SQL.Backend
 
 
@@ -57,7 +59,6 @@ data UnifiedOn = UnifiedOn
   { table  :: !UnifiedTableName
   , column :: !Text
   }
-
 -------------------------------------------------------------------------------
 -- AST types
 
@@ -73,13 +74,26 @@ data BooleanOperators a
 data Select = Select
   { selectTop         :: !Top
   , selectProjections :: ![Projection]
-  , selectFrom        :: !From
+  , selectFrom        :: !(Maybe From)
   , selectJoins       :: ![Join]
   , selectWhere       :: !Where
   , selectFor         :: !For
   , selectOrderBy     :: !(Maybe (NonEmpty OrderBy))
   , selectOffset      :: !(Maybe Expression)
   }
+
+select :: Select
+select =
+  Select
+    { selectFrom        = Nothing
+    , selectTop         = NoTop
+    , selectProjections = []
+    , selectJoins       = []
+    , selectWhere       = Where []
+    , selectOrderBy     = Nothing
+    , selectFor         = NoFor
+    , selectOffset      = Nothing
+    }
 
 data Delete = Delete
   { deleteTable :: !(Aliased TableName)
@@ -96,6 +110,7 @@ data OrderBy = OrderBy
   { orderByFieldName  :: FieldName
   , orderByOrder      :: Order
   , orderByNullsOrder :: NullsOrder
+  , orderByType       :: Maybe ScalarType
   }
 
 data Order
@@ -162,8 +177,6 @@ data Expression
   | IsNullExpression Expression
   | IsNotNullExpression Expression
   | ColumnExpression FieldName
-  | EqualExpression Expression Expression
-  | NotEqualExpression Expression Expression
   | JsonQueryExpression Expression
     -- ^ This one acts like a "cast to JSON" and makes SQL Server
     -- behave like it knows your field is JSON and not double-encode
@@ -177,6 +190,7 @@ data Expression
   | OpExpression Op Expression Expression
   | ListExpression [Expression]
   | STOpExpression SpatialOp Expression Expression
+  | CastExpression Expression Text
 
 data JsonPath
   = RootPath
@@ -203,8 +217,10 @@ data OpenJson = OpenJson
   }
 
 data JsonFieldSpec
-  = IntField Text
-  | JsonField Text
+  = IntField Text (Maybe JsonPath)
+  | JsonField Text (Maybe JsonPath)
+  | StringField Text (Maybe JsonPath)
+  | UuidField Text (Maybe JsonPath)
 
 data Aliased a = Aliased
   { aliasedThing :: !a
@@ -242,6 +258,8 @@ data Op
   | LIKE
   | NLIKE
   | NIN
+  | EQ'
+  | NEQ'
 
 -- | Supported operations for spatial data types
 data SpatialOp
@@ -311,6 +329,24 @@ scalarTypeDBName = \case
   GeometryType  -> "geometry"
   -- the input form for types that aren't explicitly supported is a string
   UnknownType t -> t
+
+mkMSSQLScalarTypeName :: MonadError QErr m => ScalarType -> m G.Name
+mkMSSQLScalarTypeName = \case
+  CharType     -> pure RQL.stringScalar
+  WcharType    -> pure RQL.stringScalar
+  WvarcharType -> pure RQL.stringScalar
+  VarcharType  -> pure RQL.stringScalar
+  WtextType    -> pure RQL.stringScalar
+  TextType     -> pure RQL.stringScalar
+  FloatType    -> pure RQL.floatScalar
+  -- integer types
+  IntegerType  -> pure RQL.intScalar
+  -- boolean type
+  BitType      -> pure RQL.boolScalar
+  scalarType -> G.mkName (scalarTypeDBName scalarType) `onNothing` throw400 ValidationFailed
+    ("cannot use SQL type " <> scalarTypeDBName scalarType <> " in the GraphQL schema because its name is not a "
+    <> "valid GraphQL identifier")
+
 
 parseScalarValue :: ScalarType -> J.Value -> Either QErr Value
 parseScalarValue scalarType jValue = case scalarType of

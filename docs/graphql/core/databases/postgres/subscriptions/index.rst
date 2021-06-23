@@ -21,18 +21,14 @@ changes upstream.
 Subscriptions are supported for all kinds of queries. All the concepts of
 :ref:`queries <queries>` hold true for subscriptions as well.
 
-Execution
----------
+Implementation
+--------------
 
 The Hasura GraphQL engine subscriptions are actually **live queries**, i.e. a subscription will return the
 latest result of the query being made and not necessarily all the individual events leading up to the result.
+By default, updates are delivered to clients every **1 sec**.
 
-By default updates are delivered to clients every **1 sec**. This interval can be configured via the
-``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL`` env var or the
-``--live-queries-multiplexed-refetch-interval`` flag. See the
-:ref:`server config reference <server_flag_reference>` for info on setting the flag/env var.
-
-You can read more about the implementation of subscriptions in the `architecture doc <https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md>`__.
+See more details on :ref:`subscriptions execution and performance <subscriptions_execution_and_performance>`.
 
 Convert a query to a subscription
 ---------------------------------
@@ -114,3 +110,4 @@ It uses the provided CORS configuration (as per :ref:`configure-cors`).
   :hidden:
 
   Sample use cases <use-cases>
+  Execution and performance <execution-and-performance>

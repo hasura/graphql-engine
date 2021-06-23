@@ -7,20 +7,22 @@ import qualified Data.Aeson.TH                  as J
 import qualified Data.Environment               as Env
 import qualified Data.HashSet                   as Set
 import qualified Data.Text                      as T
-import           Data.Text.Extended
-import           Data.Text.NonEmpty
 import qualified Database.PG.Query              as Q
 import qualified Language.GraphQL.Draft.Printer as G
 import qualified Language.GraphQL.Draft.Syntax  as G
 import qualified Network.URI.Extended           as N
 import qualified Text.Builder                   as TB
 
+import           Data.Text.Extended
+import           Data.Text.NonEmpty
+
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser.Schema   (Variable)
 import           Hasura.Incremental             (Cacheable)
 import           Hasura.RQL.DDL.Headers         (HeaderConf (..))
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
 import           Hasura.Session
+
 
 type UrlFromEnv = Text
 
@@ -176,6 +178,7 @@ instance Cacheable SessionArgumentPresetInfo
 data RemoteSchemaVariable
   = SessionPresetVariable !SessionVariable !G.Name !SessionArgumentPresetInfo
   | QueryVariable !Variable
+  | RemoteJSONValue !G.GType !J.Value
   deriving (Show, Eq, Generic, Ord)
 instance Hashable RemoteSchemaVariable
 instance Cacheable RemoteSchemaVariable
@@ -194,6 +197,14 @@ newtype RemoteSchemaIntrospection
   = RemoteSchemaIntrospection [(G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)]
   deriving (Show, Eq, Generic, Hashable, Cacheable, Ord)
 
+data RemoteFieldG var
+  = RemoteFieldG
+  { _rfRemoteSchemaInfo :: !RemoteSchemaInfo
+  , _rfField            :: !(G.Field G.NoFragments var)
+  } deriving (Functor, Foldable, Traversable)
+
+type RemoteField = RemoteFieldG RemoteSchemaVariable
+
 data RemoteSchemaPermsCtx
   = RemoteSchemaPermsEnabled
   | RemoteSchemaPermsDisabled
@@ -207,3 +218,67 @@ instance J.ToJSON RemoteSchemaPermsCtx where
   toJSON = \case
     RemoteSchemaPermsEnabled  -> J.Bool True
     RemoteSchemaPermsDisabled -> J.Bool False
+
+
+lookupType
+  :: RemoteSchemaIntrospection
+  -> G.Name
+  -> Maybe (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)
+lookupType (RemoteSchemaIntrospection types) name = find (\tp -> getNamedTyp tp == name) types
+  where
+    getNamedTyp :: G.TypeDefinition possibleTypes RemoteSchemaInputValueDefinition -> G.Name
+    getNamedTyp ty = case ty of
+      G.TypeDefinitionScalar t      -> G._stdName t
+      G.TypeDefinitionObject t      -> G._otdName t
+      G.TypeDefinitionInterface t   -> G._itdName t
+      G.TypeDefinitionUnion t       -> G._utdName t
+      G.TypeDefinitionEnum t        -> G._etdName t
+      G.TypeDefinitionInputObject t -> G._iotdName t
+
+lookupObject
+  :: RemoteSchemaIntrospection
+  -> G.Name
+  -> Maybe (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)
+lookupObject (RemoteSchemaIntrospection types) name = choice $ types <&> \case
+  G.TypeDefinitionObject t | G._otdName t == name -> Just t
+  _                                               -> Nothing
+
+lookupInterface
+  :: RemoteSchemaIntrospection
+  -> G.Name
+  -> Maybe (G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition)
+lookupInterface (RemoteSchemaIntrospection types) name = choice $ types <&> \case
+  G.TypeDefinitionInterface t | G._itdName t == name -> Just t
+  _                                                  -> Nothing
+
+lookupScalar
+  :: RemoteSchemaIntrospection
+  -> G.Name
+  -> Maybe G.ScalarTypeDefinition
+lookupScalar (RemoteSchemaIntrospection types) name = choice $ types <&> \case
+  G.TypeDefinitionScalar t | G._stdName t == name -> Just t
+  _                                               -> Nothing
+
+lookupUnion
+  :: RemoteSchemaIntrospection
+  -> G.Name
+  -> Maybe G.UnionTypeDefinition
+lookupUnion (RemoteSchemaIntrospection types) name = choice $ types <&> \case
+  G.TypeDefinitionUnion t | G._utdName t == name -> Just t
+  _                                              -> Nothing
+
+lookupEnum
+  :: RemoteSchemaIntrospection
+  -> G.Name
+  -> Maybe G.EnumTypeDefinition
+lookupEnum (RemoteSchemaIntrospection types) name = choice $ types <&> \case
+  G.TypeDefinitionEnum t | G._etdName t == name -> Just t
+  _                                             -> Nothing
+
+lookupInputObject
+  :: RemoteSchemaIntrospection
+  -> G.Name
+  -> Maybe (G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition)
+lookupInputObject (RemoteSchemaIntrospection types) name = choice $ types <&> \case
+  G.TypeDefinitionInputObject t | G._iotdName t == name -> Just t
+  _                                                     -> Nothing

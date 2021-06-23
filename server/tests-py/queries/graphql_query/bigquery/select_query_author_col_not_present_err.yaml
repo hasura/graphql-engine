@@ -1,0 +1,18 @@
+description: Simple GraphQL object query on author querying a column which does not exist
+url: /v1/graphql
+status: 200
+response:
+  errors:
+  - extensions:
+      code: validation-failed
+      path: $.selectionSet.hasura_author.selectionSet.notPresentCol
+    message: "field \"notPresentCol\" not found in type: 'hasura_author'"
+query:
+  query: |
+    query {
+      hasura_author (order_by: {id: asc}) {
+        id
+        name
+        notPresentCol
+      }
+    }

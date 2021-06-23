@@ -4,7 +4,9 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli"
+	errors2 "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/errors"
+
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -43,10 +45,10 @@ func (r *RemoteSchemaConfig) CreateFiles() error {
 	return nil
 }
 
-func (r *RemoteSchemaConfig) Build(metadata *yaml.MapSlice) error {
+func (r *RemoteSchemaConfig) Build(metadata *yaml.MapSlice) errors2.ErrParsingMetadataObject {
 	data, err := ioutil.ReadFile(filepath.Join(r.MetadataDir, fileName))
 	if err != nil {
-		return err
+		return r.Error(err)
 	}
 	item := yaml.MapItem{
 		Key: "remote_schemas",
@@ -54,7 +56,7 @@ func (r *RemoteSchemaConfig) Build(metadata *yaml.MapSlice) error {
 	var obj []yaml.MapSlice
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
-		return err
+		return r.Error(err)
 	}
 	if len(obj) != 0 {
 		item.Value = obj
@@ -63,7 +65,7 @@ func (r *RemoteSchemaConfig) Build(metadata *yaml.MapSlice) error {
 	return nil
 }
 
-func (r *RemoteSchemaConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
+func (r *RemoteSchemaConfig) Export(metadata yaml.MapSlice) (map[string][]byte, errors2.ErrParsingMetadataObject) {
 	var remoteSchemas interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
@@ -77,13 +79,17 @@ func (r *RemoteSchemaConfig) Export(metadata yaml.MapSlice) (map[string][]byte, 
 	}
 	data, err := yaml.Marshal(remoteSchemas)
 	if err != nil {
-		return nil, err
+		return nil, r.Error(err)
 	}
 	return map[string][]byte{
-		filepath.Join(r.MetadataDir, fileName): data,
+		filepath.ToSlash(filepath.Join(r.MetadataDir, fileName)): data,
 	}, nil
 }
 
 func (r *RemoteSchemaConfig) Name() string {
 	return "remote_schemas"
+}
+
+func (r *RemoteSchemaConfig) Error(err error, additionalContext ...string) errors2.ErrParsingMetadataObject {
+	return errors2.NewErrParsingMetadataObject(r.Name(), fileName, additionalContext, err)
 }

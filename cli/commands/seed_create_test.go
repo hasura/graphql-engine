@@ -5,68 +5,89 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/Pallinder/go-randomdata"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gbytes"
 	. "github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("seed_create", func() {
-
-	var dirName string
-	var session *Session
-	var teardown func()
-	BeforeEach(func() {
-		dirName = testutil.RandDirName()
-		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraVersion)
-		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
-		testutil.RunCommandAndSucceed(testutil.CmdOpts{
-			Args: []string{"init", dirName},
-		})
-		editEndpointInConfig(filepath.Join(dirName, defaultConfigFilename), hgeEndpoint)
-
-		teardown = func() {
-			session.Kill()
-			os.RemoveAll(dirName)
-			teardownHGE()
-		}
-	})
-
-	AfterEach(func() {
-		teardown()
-	})
-
-	Context("seed create test", func() {
-		up_sql := `CREATE TABLE "public"."table1" ("id" serial NOT NULL, PRIMARY KEY ("id") );
+var testSeedCreate = func(projectDirectory string, globalFlags []string) {
+	upSql := `CREATE TABLE "public"."table1" ("id" serial NOT NULL, PRIMARY KEY ("id") );
 		INSERT INTO public.table1 (id) VALUES (1);
 		INSERT INTO public.table1 (id) VALUES (2);
 		INSERT INTO public.table1 (id) VALUES (3);
 		INSERT INTO public.table1 (id) VALUES (4);`
 
-		down_sql := `DROP TABLE "public"."table1";`
+	downSql := `DROP TABLE "public"."table1";`
 
-		It("should create a seed file inside seed/default ", func() {
-			testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args:             []string{"migrate", "create", "table1", "--up-sql", up_sql, "--down-sql", down_sql, "--database-name", "default"},
-				WorkingDirectory: dirName,
-			})
-			testutil.RunCommandAndSucceed(testutil.CmdOpts{
-				Args:             []string{"migrate", "apply", "--database-name", "default"},
-				WorkingDirectory: dirName,
-			})
-			session = testutil.Hasura(testutil.CmdOpts{
-				Args:             []string{"seed", "create", "table_seed", "--from-table", "table1", "--database-name", "default"},
-				WorkingDirectory: dirName,
-			})
-			wantKeywordList := []string{
-				".*created seed file successfully*.",
-			}
+	testutil.RunCommandAndSucceed(testutil.CmdOpts{
+		Args:             append([]string{"migrate", "create", "table1", "--up-sql", upSql, "--down-sql", downSql}, globalFlags...),
+		WorkingDirectory: projectDirectory,
+	})
+	testutil.RunCommandAndSucceed(testutil.CmdOpts{
+		Args:             append([]string{"migrate", "apply"}, globalFlags...),
+		WorkingDirectory: projectDirectory,
+	})
+	session := testutil.Hasura(testutil.CmdOpts{
+		Args:             append([]string{"seed", "create", "table_seed", "--from-table", "table1"}, globalFlags...),
+		WorkingDirectory: projectDirectory,
+	})
+	Eventually(session, 60*60).Should(Exit(0))
+	Eventually(session.Wait().Err.Contents()).Should(ContainSubstring("created seed file successfully"))
+}
 
-			for _, keyword := range wantKeywordList {
-				Eventually(session, 60*60).Should(Say(keyword))
+var _ = Describe("hasura seed create", func() {
+	Context("config v3", func() {
+		var teardown func()
+		var projectDirectory string
+		var sourceName string
+		BeforeEach(func() {
+			projectDirectory = testutil.RandDirName()
+			hgeEndPort, teardownHGE := testutil.StartHasuraWithMetadataDatabase(GinkgoT(), testutil.HasuraDockerImage)
+			hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
+
+			connectionUrl, teardownPG := testutil.StartPGContainer(GinkgoT())
+			sourceName = randomdata.SillyName()
+			testutil.AddPGSourceToHasura(GinkgoT(), hgeEndpoint, connectionUrl, sourceName)
+
+			testutil.RunCommandAndSucceed(testutil.CmdOpts{
+				Args: []string{"init", projectDirectory},
+			})
+			editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
+
+			teardown = func() {
+				teardownPG()
+				teardownHGE()
+				os.RemoveAll(projectDirectory)
 			}
-			Eventually(session, 60*60).Should(Exit(0))
+		})
+		AfterEach(func() { teardown() })
+		It("can create seeds in config v3", func() {
+			testSeedCreate(projectDirectory, []string{"--database-name", sourceName})
+		})
+	})
+	Context("config v2", func() {
+		var teardown func()
+		var projectDirectoryConfigV2 string
+		BeforeEach(func() {
+			projectDirectoryConfigV2 = testutil.RandDirName()
+			hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
+			hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
+			testutil.RunCommandAndSucceed(testutil.CmdOpts{
+				Args: []string{"init", projectDirectoryConfigV2, "--version", "2"},
+			})
+			editEndpointInConfig(filepath.Join(projectDirectoryConfigV2, defaultConfigFilename), hgeEndpoint)
+
+			teardown = func() {
+				teardownHGE()
+				os.RemoveAll(projectDirectoryConfigV2)
+			}
+		})
+		AfterEach(func() { teardown() })
+		It("can create seeds in config v2", func() {
+			testSeedCreate(projectDirectoryConfigV2, nil)
 		})
 	})
 })

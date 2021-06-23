@@ -54,3 +54,40 @@
   margin-right: 8px;
   color: rgb(214, 29, 29);
 }
+
+.color_green {
+  color: green;
+}
+
+.text_muted {
+  color: #999;
+}
+
+.certificates_message {
+  font-weight: 100 !important;
+}
+
+.connection_settings_input_layout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  input {
+    width: 20%;
+  }
+  select {
+    width: 20%;
+  }
+}
+
+.checkbox_margin_top {
+  input {
+    margin-top: 2px;
+  }
+}
+
+.knowMoreLink {
+  font-weight: 100;
+  padding-left: 5px;
+  font-size: small;
+}

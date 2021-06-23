@@ -124,7 +124,7 @@ The above GraphQL query will be translated to the following SQL query.
 
 The other parameters of the select permission will be combined in the following manner:
 
-1. Limit - Minimum of the limits will be the limit of the inherited role
+1. Limit - Maximum of the limits will be the limit of the inherited role
 2. Allow aggregations - If any of the role allows aggregation, then the inherited role will allow aggregation
 3. Scalar computed fields - same as table column fields, as in the above example
 
@@ -154,7 +154,7 @@ Let's take the example of an ``users`` table with the following columns:
 
 There are two roles defined namely ``employee`` and ``manager``.
 
-1. User role - The user role will be able to able to access all columns of their row  when the session variable ``X-Hasura-User-Id`` is equal to the ``id``.
+1. User role - The user role will be able to access all columns of their row  when the session variable ``X-Hasura-User-Id`` is equal to the ``id``.
 
 2. Anonymous role - The anonymous role will be able to access only the ``id`` and ``name`` columns of all the users.
 
@@ -280,7 +280,7 @@ with inherited roles when a column doesn't have permission in the particular row
 
 
 4. Suppose we have two tables ``users`` and ``authors`` and similarly two roles ``user`` and ``author`` are defined. The ``user``
-   role doesn't have permission to query the ``authors`` table and the ``user`` role doesn't have permission to query the ``authors`` table. With only the ``user`` and the ``author`` role, we won't be able to construct a query which fetches data from both the tables. This can be solved by creating an inherited role out of ``user`` and ``author`` which can query both the
+   role doesn't have permission to query the ``authors`` table and the ``author`` role doesn't have permission to query the ``users`` table. With only the ``user`` and the ``author`` role, we won't be able to construct a query which fetches data from both the tables. This can be solved by creating an inherited role out of ``user`` and ``author`` which can query both the
    tables in a single query.
 
 

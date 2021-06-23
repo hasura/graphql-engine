@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Backends.MSSQL.Instances.Metadata () where
 
@@ -10,7 +11,6 @@ import           Hasura.SQL.Backend
 
 instance BackendMetadata 'MSSQL where
   buildComputedFieldInfo     = MSSQL.buildComputedFieldInfo
-  buildRemoteFieldInfo       = MSSQL.buildRemoteFieldInfo
   fetchAndValidateEnumValues = MSSQL.fetchAndValidateEnumValues
   resolveSourceConfig        = MSSQL.resolveSourceConfig
   resolveDatabaseMetadata    = MSSQL.resolveDatabaseMetadata

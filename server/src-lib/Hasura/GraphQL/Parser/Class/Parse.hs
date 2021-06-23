@@ -5,7 +5,7 @@ import           Hasura.Prelude
 
 import           Data.Parser.JSONPath
 
-import           Hasura.RQL.Types.Error
+import           Hasura.Base.Error
 
 -- | A class that provides functionality for parsing GraphQL queries, i.e.
 -- running a fully-constructed 'Parser'.

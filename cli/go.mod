@@ -1,4 +1,4 @@
-module github.com/hasura/graphql-engine/cli
+module github.com/hasura/graphql-engine/cli/v2
 
 go 1.16
 
@@ -17,7 +17,6 @@ require (
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/elazarl/goproxy v0.0.0-20191011121108-aa519ddbe484 // indirect
 	github.com/fatih/color v1.10.0
-	github.com/ghodss/yaml v1.0.0
 	github.com/gin-contrib/cors v1.3.0
 	github.com/gin-contrib/static v0.0.0-20191128031702-f81c604d8ac2
 	github.com/gin-gonic/contrib v0.0.0-20191209060500-d6e26eeaa607
@@ -25,8 +24,10 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/goccy/go-yaml v1.8.8
 	github.com/gofrs/uuid v3.2.0+incompatible
+	github.com/google/go-cmp v0.5.5
 	github.com/gorilla/sessions v1.2.0 // indirect
 	github.com/gosimple/slug v1.9.0 // indirect
+	github.com/hexops/gotextdiff v1.0.3
 	github.com/jinzhu/gorm v1.9.11 // indirect
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
@@ -34,7 +35,6 @@ require (
 	github.com/lib/pq v1.1.1
 	github.com/lunixbochs/vtclean v1.0.0 // indirect
 	github.com/manifoldco/promptui v0.8.0
-	github.com/markbates/pkger v0.15.1
 	github.com/mattn/go-colorable v0.1.8
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
 	github.com/microcosm-cc/bluemonday v1.0.2 // indirect

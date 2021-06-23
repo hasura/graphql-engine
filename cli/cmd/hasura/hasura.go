@@ -2,7 +2,7 @@
 package main
 
 import (
-	"github.com/hasura/graphql-engine/cli/commands"
+	"github.com/hasura/graphql-engine/cli/v2/commands"
 	log "github.com/sirupsen/logrus"
 )
 

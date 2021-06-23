@@ -18,6 +18,8 @@ import           Test.Hspec.Core.Spec
 import           Test.Hspec.Expectations.Lifted
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Base.Error
+import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Metadata             (ClearMetadata (..), runClearMetadata)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DDL.Schema.Cache.Common
@@ -38,7 +40,7 @@ newtype CacheRefT m a
   = CacheRefT { runCacheRefT :: MVar RebuildableSchemaCache -> m a }
   deriving
     ( Functor, Applicative, Monad, MonadIO, MonadError e, MonadBase b, MonadBaseControl b
-    , MonadTx, MonadUnique, UserInfoM, HTTP.HasHttpManagerM, HasServerConfigCtx)
+    , MonadTx, MonadUnique, UserInfoM, HTTP.HasHttpManagerM, HasServerConfigCtx, MonadMetadataStorage, MonadMetadataStorageQueryAPI)
     via (ReaderT (MVar RebuildableSchemaCache) m)
 
 instance MonadTrans CacheRefT where
@@ -51,7 +53,7 @@ instance MFunctor CacheRefT where
 instance (MonadBase IO m) => CacheRM (CacheRefT m) where
   askSchemaCache = CacheRefT (fmap lastBuiltSchemaCache . readMVar)
 
-instance (MonadIO m, MonadBaseControl IO m, MonadTx m, HTTP.HasHttpManagerM m
+instance (MonadIO m, MonadBaseControl IO m, MonadError QErr m, HTTP.HasHttpManagerM m
          , MonadResolveSource m, HasServerConfigCtx m) => CacheRWM (CacheRefT m) where
   buildSchemaCacheWithOptions reason invalidations metadata =
     CacheRefT $ flip modifyMVar \schemaCache -> do
@@ -77,10 +79,10 @@ spec
    . ( HasVersion
      , MonadIO m
      , MonadBaseControl IO m
-     , MonadError QErr m
      , HTTP.HasHttpManagerM m
      , HasServerConfigCtx m
      , MonadResolveSource m
+     , MonadMetadataStorageQueryAPI m
      )
   => PostgresConnConfiguration -> PGExecCtx -> Q.ConnInfo -> SpecWithCache m
 spec srcConfig pgExecCtx pgConnInfo = do
@@ -155,7 +157,7 @@ spec srcConfig pgExecCtx pgConnInfo = do
       time <- getCurrentTime
       transact (dropAndInit env time) `shouldReturn` MRInitialized
       firstDump <- transact dumpMetadata
-      transact (hoist (hoist (runTx pgExecCtx)) $ runClearMetadata ClearMetadata) `shouldReturn` successMsg
+      transact (runClearMetadata ClearMetadata) `shouldReturn` successMsg
       secondDump <- transact dumpMetadata
       secondDump `shouldBe` firstDump
 

@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { push } from 'react-router-redux';
 import GraphiQL from 'graphiql';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -165,12 +164,18 @@ class GraphiQLWrapper extends Component {
       );
       dispatch(setTypeDefinition(typesSdl, null, null, sdlParse(typesSdl)));
       dispatch(setDerivedActionParentOperation(query.trim()));
-      dispatch(push(getActionsCreateRoute()));
+      dispatch(_push(getActionsCreateRoute()));
     };
 
     const routeToREST = gqlProps => () => {
       const { query, schema } = graphiqlContext.state;
       if (!query || !schema || !gqlProps.query || !isQueryValid(query)) {
+        dispatch(
+          showErrorNotification(
+            'Unable to create a REST endpoint',
+            'Please enter a valid named GraphQL query or mutation'
+          )
+        );
         return;
       }
       dispatch(_push('/api/rest/create'));

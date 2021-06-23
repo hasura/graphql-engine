@@ -139,13 +139,37 @@ run_hge_with_args() {
 	set +x
 }
 
+function add_sources() {
+  local server_port=$1
+  local metadata_url=http://127.0.0.1:$server_port/v1/metadata
+
+  local params=()
+  if [ -n "${HASURA_GRAPHQL_ADMIN_SECRET:-}" ] ; then
+    params+=(-H "X-Hasura-Admin-Secret: $HASURA_GRAPHQL_ADMIN_SECRET")
+  fi
+
+  echo ""
+  echo "Adding SQL Server source"
+  curl "$metadata_url" \
+  --data-raw '{"type":"mssql_add_source","args":{"name":"mssql","configuration":{"connection_info":{"connection_string":"'"$HASURA_GRAPHQL_MSSQL_SOURCE_URL"'"}}}}' \
+  "${params[@]}"
+
+  echo ""
+  echo "Sources added:"
+  curl "$metadata_url" \
+  --data-raw '{"type":"export_metadata","version":2,"args":{}}' \
+  "${params[@]}"
+
+  echo ""
+}
+
 start_multiple_hge_servers() {
-	run_hge_with_args --database-url "$HASURA_GRAPHQL_DATABASE_URL" serve "$@"
-	if [ -n ${HASURA_GRAPHQL_DATABASE_URL_2:-} ] ; then
-		run_hge_with_args --database-url "$HASURA_GRAPHQL_DATABASE_URL_2" serve --server-port 8081 "$@"
-		wait_for_port 8081
-	fi
-	wait_for_port 8080
+  run_hge_with_args --database-url "$HASURA_GRAPHQL_DATABASE_URL" serve
+  if [ -n "${HASURA_GRAPHQL_DATABASE_URL_2:-}" ] ; then
+    run_hge_with_args --database-url "$HASURA_GRAPHQL_DATABASE_URL_2" serve --server-port 8081
+    wait_for_port 8081
+  fi
+  wait_for_port 8080
 }
 
 
@@ -190,11 +214,11 @@ done
 echo -e "\nINFO: GraphQL Executable : $GRAPHQL_ENGINE"
 echo -e "INFO: Logs Folder        : $OUTPUT_FOLDER\n"
 
-pip3 install -r requirements.txt
+# This seems to flake out relatively often; try a mirror if so.
+# Might also need to disable ipv6 or use a longer --timeout
+pip3 install -r requirements.txt ||\
+pip3 install -i http://mirrors.digitalocean.com/pypi/web/simple --trusted-host mirrors.digitalocean.com   -r requirements.txt
 
-# node js deps
-curl -sL https://deb.nodesource.com/setup_8.x | bash -
-apt-get install -y nodejs
 (cd remote_schemas/nodejs && npm_config_loglevel=error npm ci)
 
 mkdir -p "$OUTPUT_FOLDER/hpc"
@@ -214,7 +238,6 @@ export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
 HGE_PIDS=""
 WH_PID=""
 WHC_PID=""
-HS_PID=""
 GQL_SERVER_PID=""
 
 trap stop_services ERR
@@ -222,7 +245,7 @@ trap stop_services INT
 
 run_pytest_parallel() {
 	trap stop_services ERR
-	if [ -n ${HASURA_GRAPHQL_DATABASE_URL_2:-} ] ; then
+	if [ -n "${HASURA_GRAPHQL_DATABASE_URL_2:-}" ] ; then
 		set -x
 		pytest -vv --hge-urls "$HGE_URL" "${HGE_URL_2:-}" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" "${HASURA_GRAPHQL_DATABASE_URL_2:-}" -n 2 --dist=loadfile "$@"
 		set +x
@@ -1088,6 +1111,21 @@ admin_users = postgres' > pgbouncer/pgbouncer.ini
     unset HASURA_HS_TEST_DB
 
     # end horizontal scale test
+    ;;
+    # backend-* tests are excluded from `server-test-names.txt`
+    # and are run via their respective `test_oss_server_*` circleci jobs
+    backend-mssql)
+    echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH SQL SERVER BACKEND ###########################################>\n"
+    TEST_TYPE="no-auth"
+
+    run_hge_with_args serve
+    wait_for_port 8080
+
+    add_sources 8080
+
+    pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend mssql
+
+    kill_hge_servers
     ;;
 esac
 

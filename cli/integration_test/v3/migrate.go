@@ -1,17 +1,17 @@
 package v3
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
-	"github.com/ghodss/yaml"
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/commands"
-	"github.com/hasura/graphql-engine/cli/migrate"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/commands"
+	"github.com/hasura/graphql-engine/cli/v2/migrate"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,7 +27,8 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 	if err != nil {
 		t.Fatalf("unable to copy migrations directory %v", err)
 	}
-
+	ec.Source.Name = "default"
+	ec.Source.Kind = hasura.SourceKindPG
 	tt := []struct {
 		name   string
 		opts   migrateInterface
@@ -179,7 +180,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 				t.Fatalf("%s: expected %v, got %v", tc.name, tc.err, err)
 			}
 
-			expectedStatusByt, err := yaml.Marshal(tc.status)
+			expectedStatusByt, err := json.Marshal(tc.status)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -191,7 +192,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 			if err != nil {
 				t.Fatalf("%s: unable to fetch migrate status, got %v", tc.name, err)
 			}
-			actualStatusByt, err := yaml.Marshal(actualStatus)
+			actualStatusByt, err := json.Marshal(actualStatus)
 			if err != nil {
 				t.Fatal(err)
 			}

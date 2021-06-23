@@ -366,29 +366,30 @@ class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
         if req_path == "/fail":
             self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
             self.end_headers()
-            self.server.error_queue.put({"path": req_path,
-                                         "body": req_json,
-                                         "headers": req_headers})
-        elif req_path == "/timeout_short":
-            time.sleep(5)
+        # This endpoint just sleeps for 2 seconds:
+        elif req_path == "/sleep_2s":
+            time.sleep(2)
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
-            self.server.error_queue.put({"path": req_path,
-                                         "body": req_json,
-                                         "headers": req_headers})
-        elif req_path == "/timeout_long":
-            time.sleep(5)
+        # This is like a sleep endpoint above, but allowing us to decide
+        # externally when the webhook can return, with unblock()
+        elif req_path == "/block":
+            if not self.server.unblocked:
+                self.server.blocked_count += 1
+                with self.server.unblocked_wait:
+                    # We expect this timeout never to be reached, but if
+                    # something goes wrong the main thread will block forever:
+                    self.server.unblocked_wait.wait(timeout=60)
+                self.server.blocked_count -= 1
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
-            self.server.resp_queue.put({"path": req_path,
-                                        "body": req_json,
-                                        "headers": req_headers})
         else:
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
-            self.server.resp_queue.put({"path": req_path,
-                                        "body": req_json,
-                                        "headers": req_headers})
+
+        self.server.resp_queue.put({"path": req_path,
+                                    "body": req_json,
+                                    "headers": req_headers})
 
 # A very slightly more sane/performant http server.
 # See: https://stackoverflow.com/a/14089457/176841
@@ -399,9 +400,24 @@ class ThreadedHTTPServer(ThreadingMixIn, http.server.HTTPServer):
 
 class EvtsWebhookServer(ThreadedHTTPServer):
     def __init__(self, server_address):
-        self.resp_queue = queue.Queue(maxsize=1)
-        self.error_queue = queue.Queue()
+        # Data received from hasura by our web hook, pushed after it returns to the client:
+        self.resp_queue = queue.Queue()
+        # We use these two vars to coordinate unblocking in the /block route
+        self.unblocked = False
+        self.unblocked_wait = threading.Condition()
+        # ...and this for bookkeeping open blocked requests; this becomes
+        # meaningless after the first call to unblock()
+        self.blocked_count = 0
+
         super().__init__(server_address, EvtsWebhookHandler)
+
+    # Unblock all webhook requests to /block. Idempotent.
+    def unblock(self):
+        self.unblocked = True
+        with self.unblocked_wait:
+            # NOTE: this only affects currently wait()-ing threads, future
+            # wait()s will block again (hence the simple self.unblocked flag)
+            self.unblocked_wait.notify_all()
 
     def server_bind(self):
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -409,13 +425,6 @@ class EvtsWebhookServer(ThreadedHTTPServer):
 
     def get_event(self, timeout):
         return self.resp_queue.get(timeout=timeout)
-
-    def get_error_queue_size(self):
-        sz = 0
-        while not self.error_queue.empty():
-            self.error_queue.get()
-            sz = sz + 1
-        return sz
 
     def is_queue_empty(self):
         return self.resp_queue.empty
@@ -475,6 +484,7 @@ class HGECtx:
         self.may_skip_test_teardown = False
         self.function_permissions = config.getoption('--test-function-permissions')
 
+        # This will be GC'd, but we also explicitly dispose() in teardown()
         self.engine = create_engine(self.pg_url)
         self.meta = MetaData()
 
@@ -483,16 +493,21 @@ class HGECtx:
         self.hge_scale_url = config.getoption('--test-hge-scale-url')
         self.avoid_err_msg_checks = config.getoption('--avoid-error-message-checks')
         self.inherited_roles_tests = config.getoption('--test-inherited-roles')
+        self.pro_tests = config.getoption('--pro-tests')
 
         self.ws_client = GQLWsClient(self, '/v1/graphql')
+        self.ws_client_v1alpha1 = GQLWsClient(self, '/v1alpha1/graphql')
+        self.ws_client_relay = GQLWsClient(self, '/v1beta1/relay')
 
         self.backend = config.getoption('--backend')
+        self.default_backend = 'postgres'
+        self.is_default_backend = self.backend == self.default_backend
 
         # HGE version
         result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
         env_version = os.getenv('VERSION')
         self.version = env_version if env_version else result.stdout.decode('utf-8').strip()
-        if not self.metadata_disabled and not config.getoption('--skip-schema-setup'):
+        if self.is_default_backend and not self.metadata_disabled and not config.getoption('--skip-schema-setup'):
           try:
               st_code, resp = self.v2q_f("queries/" + self.backend_suffix("clear_db")+ ".yaml")
           except requests.exceptions.RequestException as e:
@@ -501,7 +516,7 @@ class HGECtx:
           assert st_code == 200, resp
 
         # Postgres version
-        if self.backend == 'postgres':
+        if self.is_default_backend:
             pg_version_text = self.sql('show server_version_num').fetchone()['server_version_num']
             self.pg_version = int(pg_version_text)
 
@@ -589,7 +604,7 @@ class HGECtx:
             return self.v2q(yml.load(f))
 
     def backend_suffix(self, filename):
-        if self.backend == 'postgres':
+        if self.is_default_backend:
             return filename
         else:
             return filename + "_" + self.backend
@@ -606,3 +621,7 @@ class HGECtx:
     def teardown(self):
         self.http.close()
         self.engine.dispose()
+        # Close websockets:
+        self.ws_client.teardown()
+        self.ws_client_v1alpha1.teardown()
+        self.ws_client_relay.teardown()

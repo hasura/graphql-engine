@@ -5,11 +5,7 @@ export type DataSource = {
   name: string;
   url: string | { from_env: string };
   driver: Driver;
-  connection_pool_settings?: {
-    max_connections?: number;
-    idle_timeout?: number;
-    retries?: number;
-  };
+  connection_pool_settings?: ConnectionPoolSettings;
   read_replicas?: Omit<SourceConnectionInfo, 'connection_string'>[];
 };
 
@@ -42,6 +38,11 @@ export type TableName = string | QualifiedTable;
 export interface QualifiedTable {
   name: string;
   schema: string;
+}
+
+export interface QualifiedTableBigQuery {
+  name: string;
+  dataset: string;
 }
 
 /**
@@ -854,6 +855,13 @@ export interface RestEndpointDefinition {
   };
 }
 
+export interface BigQueryServiceAccount {
+  project_id?: string;
+  client_email?: string;
+  private_key?: string;
+  from_env?: string;
+}
+
 export interface RestEndpointEntry {
   name: string;
   url: string;
@@ -870,16 +878,46 @@ export interface RestEndpointEntry {
  * Docs for type: https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgsourceconnectioninfo
  */
 
+export type SSLModeOptions = 'verify-ca' | 'verify-full' | 'disable';
+
+export type IsolationLevelOptions =
+  | 'read-committed'
+  | 'repeatable-read'
+  | 'serializable';
+
+export interface SSLConfigOptions {
+  sslmode?: SSLModeOptions;
+  sslrootcert?: {
+    from_env: string;
+  };
+  sslcert?: {
+    from_env: string;
+  };
+  sslkey?: {
+    from_env: string;
+  };
+  sslpassword?: {
+    from_env: string;
+  };
+}
+
+export interface ConnectionPoolSettings {
+  max_connections?: number;
+  idle_timeout?: number;
+  retries?: number;
+  pool_timeout?: number;
+  connection_lifetime?: number;
+}
+
 export interface SourceConnectionInfo {
   // used for SQL Server
-  connection_string: string;
+  connection_string?: string | { from_env: string };
   // used for Postgres
-  database_url: string | { from_env: string };
-  pool_settings: {
-    max_connections: number;
-    idle_timeout: number;
-    retries: number;
-  };
+  database_url?: string | { from_env: string };
+  use_prepared_statements?: boolean;
+  isolation_level?: IsolationLevelOptions;
+  pool_settings?: ConnectionPoolSettings;
+  ssl_configuration?: SSLConfigOptions;
 }
 
 /**
@@ -903,11 +941,14 @@ export interface HasuraMetadataV2 {
 
 export interface MetadataDataSource {
   name: string;
-  kind?: 'postgres' | 'mysql' | 'mssql';
+  kind?: 'postgres' | 'mysql' | 'mssql' | 'bigquery' | 'citus';
   configuration?: {
     connection_info?: SourceConnectionInfo;
     // pro-only feature
     read_replicas?: SourceConnectionInfo[];
+    service_account?: BigQueryServiceAccount;
+    project_id?: string;
+    datasets?: string[];
   };
   tables: TableEntry[];
   functions?: Array<{

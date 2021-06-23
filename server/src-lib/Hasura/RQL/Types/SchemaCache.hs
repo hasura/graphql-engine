@@ -1,7 +1,6 @@
 -- As of GHC 8.6, a use of DefaultSignatures in this module triggers a false positive for this
 -- warning, so don’t treat it as an error even if -Werror is enabled.
 {-# OPTIONS_GHC -Wwarn=redundant-constraints #-}
-
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.SchemaCache
@@ -123,25 +122,26 @@ module Hasura.RQL.Types.SchemaCache
 
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy                as BL
-import qualified Data.HashMap.Strict                 as M
-import qualified Data.HashSet                        as HS
-import qualified Language.GraphQL.Draft.Syntax       as G
+import qualified Data.ByteString.Lazy                        as BL
+import qualified Data.HashMap.Strict                         as M
+import qualified Data.HashSet                                as HS
+import qualified Language.GraphQL.Draft.Syntax               as G
 
-import           Control.Lens                        (makeLenses)
+import           Control.Lens                                (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.TH
-import           Data.Int                            (Int64)
+import           Data.Int                                    (Int64)
 import           Data.Text.Extended
 import           System.Cron.Types
 
-import qualified Hasura.Backends.Postgres.Connection as PG
-import qualified Hasura.GraphQL.Parser               as P
-import qualified Hasura.SQL.AnyBackend               as AB
+import qualified Hasura.Backends.Postgres.Connection         as PG
+import qualified Hasura.GraphQL.Parser                       as P
+import qualified Hasura.SQL.AnyBackend                       as AB
 
-import           Hasura.GraphQL.Context              (GQLContext, RemoteField, RoleContext)
-import           Hasura.Incremental                  (Cacheable, Dependency, MonadDepend (..),
-                                                      selectKeyD)
+import           Hasura.Base.Error
+import           Hasura.GraphQL.Context                      (GQLContext, RoleContext)
+import           Hasura.Incremental                          (Cacheable, Dependency,
+                                                              MonadDepend (..), selectKeyD)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.ApiLimit
@@ -151,9 +151,9 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Endpoint
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
+import           Hasura.RQL.Types.GraphqlSchemaIntrospection
 import           Hasura.RQL.Types.Metadata.Object
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.Relationship
@@ -163,7 +163,7 @@ import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.Session
-import           Hasura.Tracing                      (TraceT)
+import           Hasura.Tracing                              (TraceT)
 
 
 newtype MetadataResourceVersion
@@ -184,7 +184,7 @@ mkParentDep
   -> TableName b
   -> SchemaDependency
 mkParentDep s tn =
-  SchemaDependency (SOSourceObj s $ AB.mkAnyBackend (SOITable tn)) DRTable
+  SchemaDependency (SOSourceObj s $ AB.mkAnyBackend @b (SOITable tn)) DRTable
 
 mkColDep
   :: forall b
@@ -198,8 +198,8 @@ mkColDep reason source tn col =
   flip SchemaDependency reason
     . SOSourceObj source
     . AB.mkAnyBackend
-    . SOITableObj tn
-    $ TOCol col
+    . SOITableObj @b tn
+    $ TOCol @b col
 
 mkComputedFieldDep
   :: forall b. (Backend b)
@@ -212,7 +212,7 @@ mkComputedFieldDep reason s tn computedField =
   flip SchemaDependency reason
     . SOSourceObj s
     . AB.mkAnyBackend
-    . SOITableObj tn
+    . SOITableObj @b tn
     $ TOComputedField computedField
 
 type WithDeps a = (a, [SchemaDependency])
@@ -308,21 +308,22 @@ unsafeTableInfo sourceName tableName cache =
 
 data SchemaCache
   = SchemaCache
-  { scSources                     :: !SourceCache
-  , scActions                     :: !ActionCache
-  , scRemoteSchemas               :: !RemoteSchemaMap
-  , scAllowlist                   :: !(HS.HashSet GQLQuery)
-  , scGQLContext                  :: !(HashMap RoleName (RoleContext GQLContext))
-  , scUnauthenticatedGQLContext   :: !GQLContext
-  , scRelayContext                :: !(HashMap RoleName (RoleContext GQLContext))
-  , scUnauthenticatedRelayContext :: !GQLContext
-  , scDepMap                      :: !DepMap
-  , scInconsistentObjs            :: ![InconsistentMetadata]
-  , scCronTriggers                :: !(M.HashMap TriggerName CronTriggerInfo)
-  , scEndpoints                   :: !(EndpointTrie GQLQueryWithText)
-  , scApiLimits                   :: !ApiLimit
-  , scMetricsConfig               :: !MetricsConfig
-  , scMetadataResourceVersion     :: !(Maybe MetadataResourceVersion)
+  { scSources                        :: !SourceCache
+  , scActions                        :: !ActionCache
+  , scRemoteSchemas                  :: !RemoteSchemaMap
+  , scAllowlist                      :: !(HS.HashSet GQLQuery)
+  , scGQLContext                     :: !(HashMap RoleName (RoleContext GQLContext))
+  , scUnauthenticatedGQLContext      :: !GQLContext
+  , scRelayContext                   :: !(HashMap RoleName (RoleContext GQLContext))
+  , scUnauthenticatedRelayContext    :: !GQLContext
+  , scDepMap                         :: !DepMap
+  , scInconsistentObjs               :: ![InconsistentMetadata]
+  , scCronTriggers                   :: !(M.HashMap TriggerName CronTriggerInfo)
+  , scEndpoints                      :: !(EndpointTrie GQLQueryWithText)
+  , scApiLimits                      :: !ApiLimit
+  , scMetricsConfig                  :: !MetricsConfig
+  , scMetadataResourceVersion        :: !(Maybe MetadataResourceVersion)
+  , scSetGraphqlIntrospectionOptions :: !SetGraphqlIntrospectionOptions
   }
 $(deriveToJSON hasuraJSON ''SchemaCache)
 
@@ -458,7 +459,7 @@ getDependentObjsWith f sc objId =
 
 -- | Build dependencies from an AnnBoolExpPartialSQL.
 getBoolExpDeps
-  :: Backend b
+  :: forall b. Backend b
   => SourceName
   -> TableName b
   -> AnnBoolExpPartialSQL b
@@ -472,32 +473,35 @@ getBoolExpDeps source tn = \case
     let tableDep = SchemaDependency
                      (SOSourceObj source
                        $ AB.mkAnyBackend
-                       $ SOITable refqt)
+                       $ SOITable @b refqt)
                      DRRemoteTable
     in tableDep : getBoolExpDeps source refqt whereExp
   where
     procExps = concatMap (getBoolExpDeps source tn)
 
 getColExpDeps
-  :: Backend b
+  :: forall b. Backend b
   => SourceName
   -> TableName b
   -> AnnBoolExpFld b (PartialSQLExp b)
   -> [SchemaDependency]
-getColExpDeps source tn = \case
+getColExpDeps source tableName = \case
   AVCol colInfo opExps ->
-    let cn = pgiColumn colInfo
+    let columnName = pgiColumn colInfo
         colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
-        colDep = mkColDep colDepReason source tn cn
+        colDep = mkColDep @b colDepReason source tableName columnName
         depColsInOpExp = mapMaybe opExpDepCol opExps
-        colDepsInOpExp = map (mkColDep DROnType source tn) depColsInOpExp
+        colDepsInOpExp = do
+          (col, rootTable) <- depColsInOpExp
+          pure $ mkColDep @b DROnType source (fromMaybe tableName rootTable) col
     in colDep:colDepsInOpExp
   AVRel relInfo relBoolExp ->
-    let rn = riName relInfo
-        relTN = riRTable relInfo
-        pd = SchemaDependency
-               (SOSourceObj source
-                 $ AB.mkAnyBackend
-                 $ SOITableObj tn (TORel rn))
-               DROnType
-    in pd : getBoolExpDeps source relTN relBoolExp
+    let relationshipName = riName relInfo
+        relationshipTable = riRTable relInfo
+        schemaDependency =
+          SchemaDependency
+            (SOSourceObj source
+              $ AB.mkAnyBackend
+              $ SOITableObj @b tableName (TORel relationshipName))
+            DROnType
+    in schemaDependency : getBoolExpDeps source relationshipTable relBoolExp

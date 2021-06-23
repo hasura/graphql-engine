@@ -6,37 +6,39 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/pkg/errors"
 )
 
-// dirPath returns the directory path in which cli-ext binary will be present
-func dirPath(ec *cli.ExecutionContext) string {
-	return filepath.Join(ec.GlobalConfigDir, "cli-ext", ec.Version.GetCLIVersion())
-}
+// Setup sets up cli-ext binary for using it in various cli commands
+func Setup(ec *cli.ExecutionContext) error {
+	parentDirPath := filepath.Join(ec.GlobalConfigDir, "cli-ext", ec.Version.GetCLIVersion())
+	err := os.MkdirAll(parentDirPath, 0755)
+	if err != nil {
+		return errors.Wrapf(err, "error creating base directory while setting up cli-ext")
+	}
 
-// BinPath returns the full path of the cli-ext binary
-func BinPath(ec *cli.ExecutionContext) string {
+	cliExtDirPath, err := ioutil.TempDir(parentDirPath, "cli-ext-*")
+	if err != nil {
+		return errors.Wrapf(err, "error creating directory while setting up cli-ext")
+	}
+	ec.CliExtDir = cliExtDirPath
+
 	cliExtBinName := "cli-ext"
 	if runtime.GOOS == "windows" {
 		cliExtBinName = "cli-ext.exe"
 	}
-	return filepath.Join(dirPath(ec), cliExtBinName)
-}
 
-// Setup sets up cli-ext binary for using it in various cli commands
-func Setup(ec *cli.ExecutionContext) error {
-	cliExtDirPath := dirPath(ec)
-
-	err := os.MkdirAll(cliExtDirPath, 0755)
-	if err != nil {
-		return errors.Wrapf(err, "error creating directory while setting up cli-ext")
-	}
-
-	err = ioutil.WriteFile(BinPath(ec), cliExtFile, 0755)
+	cliExtBinPath := filepath.Join(cliExtDirPath, cliExtBinName)
+	err = ioutil.WriteFile(cliExtBinPath, cliExtFile, 0755)
 	if err != nil {
 		return errors.Wrap(err, "error unpacking binary while setting up cli-ext")
 	}
+	ec.CliExtBinPath = cliExtBinPath
 
 	return nil
+}
+
+func Cleanup(ec *cli.ExecutionContext) {
+	_ = os.RemoveAll(ec.CliExtDir)
 }

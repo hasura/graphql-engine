@@ -6,11 +6,7 @@ import { capitalize, exists } from '../../../Common/utils/jsUtils';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { tabNameMap } from '../utils';
-import {
-  currentDriver,
-  dataSource,
-  isFeatureSupported,
-} from '../../../../dataSources';
+import { dataSource, isFeatureSupported } from '../../../../dataSources';
 import {
   getSchemaBaseRoute,
   getTableBrowseRoute,
@@ -19,6 +15,7 @@ import {
   getTableModifyRoute,
   getTablePermissionsRoute,
   getTableRelationshipsRoute,
+  getDataSourceBaseRoute,
 } from '../../../Common/utils/routesUtils';
 import { getReadableNumber } from '../../../Common/utils/jsUtils';
 
@@ -54,19 +51,22 @@ const TableHeader = ({
     return [
       {
         title: 'Data',
-        url: getSchemaBaseRoute(tableSchema, source),
+        url: '/data',
       },
       {
-        title: 'Schema',
-        url: getSchemaBaseRoute(tableSchema, source),
+        title: source,
+        url: getDataSourceBaseRoute(source),
+        prefix: <i className="fa fa-database" />,
       },
       {
         title: tableSchema,
         url: getSchemaBaseRoute(tableSchema, source),
+        prefix: <i className="fa fa-folder" />,
       },
       {
         title: tableName,
         url: getTableBrowseRoute(tableSchema, source, tableName, isTableType),
+        prefix: <i className="fa fa-table" />,
       },
       {
         title: activeTab,
@@ -96,7 +96,10 @@ const TableHeader = ({
           currentValue={tableName}
           save={saveTableNameChange}
           loading={false}
-          editable={tabName === 'modify' && currentDriver === 'postgres'}
+          editable={
+            tabName === 'modify' &&
+            isFeatureSupported('tables.modify.editableTableName')
+          }
           dispatch={dispatch}
           property={isTableType ? 'table' : 'view'}
         />
@@ -112,7 +115,8 @@ const TableHeader = ({
               }`,
               'table-browse-rows'
             )}
-            {!readOnlyMode &&
+            {isFeatureSupported('tables.insert.enabled') &&
+              !readOnlyMode &&
               isTableType &&
               getTab(
                 'insert',
@@ -125,7 +129,8 @@ const TableHeader = ({
                 'Insert Row',
                 'table-insert-rows'
               )}
-            {migrationMode &&
+            {isFeatureSupported('tables.modify.enabled') &&
+              migrationMode &&
               getTab(
                 'modify',
                 getTableModifyRoute(

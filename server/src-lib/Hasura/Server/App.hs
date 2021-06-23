@@ -15,6 +15,8 @@ import qualified Data.HashMap.Strict                       as M
 import qualified Data.HashSet                              as S
 import qualified Data.Text                                 as T
 import qualified Data.Text.Encoding                        as T
+import qualified Data.Text.Lazy                            as LT
+import qualified Data.Text.Lazy.Encoding                   as TL
 import qualified GHC.Stats.Extended                        as RTS
 import qualified Network.HTTP.Client                       as HTTP
 import qualified Network.HTTP.Types                        as HTTP
@@ -33,6 +35,7 @@ import           Control.Monad.Trans.Control               (MonadBaseControl)
 import           Data.Aeson                                hiding (json)
 import           Data.IORef
 import           Data.String                               (fromString)
+import           Data.Text.Conversions                     (convertText)
 import           Data.Text.Extended
 import           Network.Mime                              (defaultMimeLookup)
 import           System.FilePath                           (joinPath, takeFileName)
@@ -55,6 +58,7 @@ import qualified Hasura.Server.API.V2Query                 as V2Q
 import qualified Hasura.Tracing                            as Tracing
 
 import           Hasura.Backends.Postgres.Execute.Types
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                    (MonadQueryLog)
 import           Hasura.HTTP
@@ -75,6 +79,7 @@ import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.Session
+
 
 data SchemaCacheRef
   = SchemaCacheRef
@@ -169,9 +174,6 @@ withSCUpdate scr logger action =
     (!res, !newSC) <- action
     liftIO $ do
       -- update schemacache in IO reference
-
-
-
       modifyIORef' cacheRef $ \(_, prevVer) ->
         let !newVer = incSchemaCacheVer prevVer
           in (newSC, newVer)
@@ -312,11 +314,13 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
     req <- Spock.request
     -- Bytes are actually read from the socket here. Time this.
     (ioWaitTime, reqBody) <- withElapsedTime $ liftIO $ Wai.strictRequestBody req
-    let headers = Wai.requestHeaders req
+    let origHeaders = Wai.requestHeaders req
         authMode = scAuthMode serverCtx
         manager = scManager serverCtx
         ipAddress = Wai.getSourceFromFallback req
         pathInfo = Wai.rawPathInfo req
+
+    (requestId, headers) <- getRequestId origHeaders
 
     tracingCtx <- liftIO $ Tracing.extractHttpContext headers
 
@@ -331,8 +335,6 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
           tracingCtx
           (fromString (B8.unpack pathInfo))
 
-    requestId <- getRequestId headers
-
     mapActionT runTraceT $ do
       -- Add the request ID to the tracing metadata so that we
       -- can correlate requests and traces
@@ -340,7 +342,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
 
       let getInfo parsedRequest = do
             userInfoE <- fmap fst <$> lift (resolveUserInfo logger manager headers authMode parsedRequest)
-            userInfo  <- onLeft userInfoE (logErrorAndResp Nothing requestId req (reqBody, Nothing) False headers . qErrModifier)
+            userInfo  <- onLeft userInfoE (logErrorAndResp Nothing requestId req (reqBody, Nothing) False origHeaders . qErrModifier)
             let handlerState = HandlerCtx serverCtx userInfo headers requestId ipAddress
                 includeInternal = shouldIncludeInternal (_uiRole userInfo) $
                                   scResponseInternalErrorsConfig serverCtx
@@ -362,13 +364,13 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
         AHPost handler -> do
           (userInfo, handlerState, includeInternal) <- getInfo Nothing
           parsedReqE <- runExceptT $ parseBody reqBody
-          parsedReq  <- onLeft parsedReqE (logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal headers . qErrModifier)
+          parsedReq  <- onLeft parsedReqE (logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal origHeaders . qErrModifier)
           res <- lift $ runHandler handlerState $ handler parsedReq
           return (res, userInfo, includeInternal, Just parsedReq)
         -- in this case we parse the request _first_ and then send the request to the webhook for auth
         AHGraphQLRequest handler -> do
           parsedReqE <- runExceptT $ parseBody reqBody
-          parsedReq  <- onLeft parsedReqE (logErrorAndResp Nothing requestId req (reqBody, Nothing) False headers . qErrModifier)
+          parsedReq  <- onLeft parsedReqE (logErrorAndResp Nothing requestId req (reqBody, Nothing) False origHeaders . qErrModifier)
           (userInfo, handlerState, includeInternal) <- getInfo (Just parsedReq)
           res <- lift $ runHandler handlerState $ handler parsedReq
           return (res, userInfo, includeInternal, Just parsedReq)
@@ -380,7 +382,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
       case modResult of
         Left err  -> logErrorAndResp (Just userInfo) requestId req (reqBody, toJSON <$> query) includeInternal headers err
         Right (httpLoggingMetadata, res) ->
-          logSuccessAndResp (Just userInfo) requestId req (reqBody, toJSON <$> query) res (Just (ioWaitTime, serviceTime)) headers httpLoggingMetadata
+          logSuccessAndResp (Just userInfo) requestId req (reqBody, toJSON <$> query) res (Just (ioWaitTime, serviceTime)) origHeaders httpLoggingMetadata
 
     where
       logger = scLogger serverCtx
@@ -628,7 +630,7 @@ v1Alpha1PGDumpHandler b = do
   sc    <- getSCFromRef scRef
   let sources      = scSources sc
       sourceName   = PGD.prbSource b
-      sourceConfig = unsafeSourceConfiguration @'Postgres =<< M.lookup sourceName sources
+      sourceConfig = unsafeSourceConfiguration @('Postgres 'Vanilla) =<< M.lookup sourceName sources
   ci <- fmap _pscConnInfo sourceConfig
         `onNothing` throw400 NotFound ("source " <> sourceName <<> " not found")
   output <- PGD.execPGDump b ci
@@ -783,6 +785,7 @@ mkWaiApp
   -> Maybe EL.LiveQueryPostPollHook
   -> SchemaCacheRef
   -> EKG.Store
+  -> ServerMetrics
   -> RemoteSchemaPermsCtx
   -> FunctionPermissionsCtx
   -> WS.ConnectionOptions
@@ -794,8 +797,8 @@ mkWaiApp
   -> m HasuraApp
 mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole consoleAssetsDir
          enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig
-         liveQueryHook schemaCacheRef ekgStore enableRSPermsCtx functionPermsCtx connectionOptions keepAliveDelay
-         maintenanceMode experimentalFeatures = do
+         liveQueryHook schemaCacheRef ekgStore serverMetrics enableRSPermsCtx functionPermsCtx
+         connectionOptions keepAliveDelay maintenanceMode experimentalFeatures = do
 
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
@@ -804,7 +807,7 @@ mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enable
 
     lqState <- liftIO $ EL.initLiveQueriesState lqOpts postPollHook
     wsServerEnv <- WS.createWSServerEnv logger lqState getSchemaCache httpManager
-                                        corsPolicy sqlGenCtx enableAL keepAliveDelay {- planCache -}
+                                        corsPolicy sqlGenCtx enableAL keepAliveDelay serverMetrics {- planCache -}
 
     let serverCtx = ServerCtx
                     { scLogger                       =  logger
@@ -887,18 +890,32 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
     -- API Console and Root Dir
     when (enableConsole && enableMetadata) serveApiConsole
 
-    -- Health check endpoint
-    Spock.get "healthz" $ do
-      sc <- getSCFromRef $ scCacheRef serverCtx
-      eitherHealth <- runMetadataStorageT checkMetadataStorageHealth
-      let dbOk = either (const False) id eitherHealth
-      if dbOk
-        then Spock.setStatus HTTP.status200 >> Spock.text (if null (scInconsistentObjs sc)
-                                               then "OK"
-                                               else "WARN: inconsistent objects in schema")
-        else Spock.setStatus HTTP.status500 >> Spock.text "ERROR"
+    -- Health check endpoint with logs
+    let healthzAction = do
+          sc <- getSCFromRef $ scCacheRef serverCtx
+          eitherHealth <- runMetadataStorageT checkMetadataStorageHealth
+          let dbOk = either (const False) id eitherHealth
+              okText = "OK"
+              warnText = "WARN: inconsistent objects in schema"
+              errorText = "ERROR"
+              responseText = if null (scInconsistentObjs sc)
+                          then okText
+                          else warnText
+          if dbOk
+            then do
+              logSuccess responseText
+              Spock.setStatus HTTP.status200 >> Spock.text (LT.toStrict responseText)
+            else do
+              logError errorText
+              Spock.setStatus HTTP.status500 >> Spock.text errorText
+
+    Spock.get "healthz" healthzAction
+
+    -- | This is an alternative to `healthz` (See issue #6958)
+    Spock.get "hasura/healthz" healthzAction
 
     Spock.get "v1/version" $ do
+      logSuccess $ "version: " <> convertText currentVersion
       setHeader jsonHeader
       Spock.lazyBytes $ encode $ object [ "version" .= currentVersion ]
 
@@ -944,7 +961,6 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
       let bodyParams = case J.decodeStrict body of
             Just (J.Object o) -> M.toList o
             _                 -> []
-
           allParams = fmap Left <$> queryParams <|> fmap Right <$> bodyParams
 
 
@@ -971,7 +987,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
         mkSpockAction serverCtx encodeQErr id $
           mkPostHandler $
           fmap (mempty, )
-          <$> (mkAPIRespHandler $ legacyQueryHandler (PG.TableName tableName) queryType)
+          <$> mkAPIRespHandler (legacyQueryHandler (PG.TableName tableName) queryType)
 
     when enablePGDump $
       Spock.post "v1alpha1/pg_dump" $ spockAction encodeQErr id $
@@ -995,8 +1011,9 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
     -- See: https://hackage.haskell.org/package/base/docs/GHC-Stats.html
     exposeRtsStats <- liftIO RTS.getRTSStatsEnabled
     when exposeRtsStats $ do
-      stats <- liftIO RTS.getRTSStats
-      Spock.get "dev/rts_stats" $ Spock.json stats
+      Spock.get "dev/rts_stats" $ do
+        stats <- liftIO RTS.getRTSStats
+        Spock.json stats
 
     when (isDeveloperAPIEnabled serverCtx) $ do
       Spock.get "dev/ekg" $ spockAction encodeQErr id $
@@ -1028,6 +1045,23 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
 
   where
     logger = scLogger serverCtx
+
+    logSuccess msg = do
+      req <- Spock.request
+      reqBody <- liftIO $ Wai.strictRequestBody req
+      let headers = Wai.requestHeaders req
+          blMsg = TL.encodeUtf8 msg
+      (reqId, _newHeaders) <- getRequestId headers
+      lift $
+        logHttpSuccess logger Nothing reqId req (reqBody, Nothing) blMsg blMsg Nothing Nothing headers mempty
+
+    logError errmsg = do
+      req <- Spock.request
+      reqBody <- liftIO $ Wai.strictRequestBody req
+      let headers = Wai.requestHeaders req
+      (reqId, _newHeaders) <- getRequestId headers
+      lift $
+        logHttpError logger Nothing reqId req (reqBody, Nothing) (internalError errmsg) headers
 
     spockAction
       :: (FromJSON a, ToJSON a, MonadIO m, MonadBaseControl IO m, UserAuthentication (Tracing.TraceT m), HttpLog m, Tracing.HasReporter m, HasResourceLimits m)
@@ -1061,7 +1095,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
         let headers = Wai.requestHeaders req
             authMode = scAuthMode serverCtx
         consoleHtml <- lift $ renderConsole path authMode enableTelemetry consoleAssetsDir
-        either (raiseGenericApiError logger headers . err500 Unexpected . T.pack) Spock.html consoleHtml
+        either (raiseGenericApiError logger headers . internalError . T.pack) Spock.html consoleHtml
 
 raiseGenericApiError
   :: (MonadIO m, HttpLog m)
@@ -1072,7 +1106,7 @@ raiseGenericApiError
 raiseGenericApiError logger headers qErr = do
   req <- Spock.request
   reqBody <- liftIO $ Wai.strictRequestBody req
-  reqId <- getRequestId $ Wai.requestHeaders req
+  (reqId, _newHeaders) <- getRequestId $ Wai.requestHeaders req
   lift $ logHttpError logger Nothing reqId req (reqBody, Nothing) qErr headers
   setHeader jsonHeader
   Spock.setStatus $ qeStatus qErr

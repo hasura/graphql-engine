@@ -8,8 +8,8 @@ import (
 	"os"
 	"os/exec"
 
-	gyaml "github.com/ghodss/yaml"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
+	gyaml "github.com/goccy/go-yaml"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -17,12 +17,12 @@ import (
 
 // Config represents the object to interact with cli-ext
 type Config struct {
-	binPath string
+	binPath *string
 	logger  *logrus.Logger
 }
 
 // NewCLIExtensionConfig creates CLIExtensionConfig to interact with cli-extension
-func NewCLIExtensionConfig(binPath string, logger *logrus.Logger) *Config {
+func NewCLIExtensionConfig(binPath *string, logger *logrus.Logger) *Config {
 	return &Config{
 		binPath: binPath,
 		logger:  logger,
@@ -50,7 +50,7 @@ func (c *Config) ConvertMetadataToSDL(toPayload types.SDLToRequest) (toResponse 
 	if err != nil {
 		return
 	}
-	sdlToCmd := exec.Command(c.binPath)
+	sdlToCmd := exec.Command(*c.binPath)
 	args := []string{"sdl", "to", "--input-file", inputFileName, "--output-file", outputFileName}
 	sdlToCmd.Args = append(sdlToCmd.Args, args...)
 	var stdout bytes.Buffer
@@ -90,7 +90,7 @@ func (c *Config) ConvertSDLToMetadata(fromPayload types.SDLFromRequest) (fromRes
 	if err != nil {
 		return
 	}
-	sdlFromCmd := exec.Command(c.binPath)
+	sdlFromCmd := exec.Command(*c.binPath)
 	args := []string{"sdl", "from", "--input-file", inputFileName, "--output-file", outputFileName}
 	sdlFromCmd.Args = append(sdlFromCmd.Args, args...)
 	var stdout bytes.Buffer
@@ -131,7 +131,7 @@ func (c *Config) GetActionsCodegen(codegenReq types.ActionsCodegenRequest) (code
 	if err != nil {
 		return
 	}
-	actionsCodegenCmd := exec.Command(c.binPath)
+	actionsCodegenCmd := exec.Command(*c.binPath)
 	args := []string{"actions-codegen", "--input-file", inputFileName, "--output-file", outputFileName}
 	actionsCodegenCmd.Args = append(actionsCodegenCmd.Args, args...)
 	var stdout bytes.Buffer

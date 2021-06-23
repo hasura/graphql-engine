@@ -2,7 +2,6 @@ const { ApolloServer, ApolloError } = require('apollo-server');
 const gql = require('graphql-tag');
 const { print } = require('graphql');
 
-
 const allMessages = [
     { id: 1, name: "alice", msg: "You win!"},
     { id: 2, name: "bob", msg: "You lose!"},

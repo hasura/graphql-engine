@@ -1,10 +1,11 @@
-{-# LANGUAGE AllowAmbiguousTypes  #-}
 {-# LANGUAGE Arrows               #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.SQL.AnyBackend
   ( AnyBackend
   , mkAnyBackend
+  , mapBackend
+  , traverseBackend
   , dispatchAnyBackend
   , dispatchAnyBackend'
   , dispatchAnyBackendArrow
@@ -64,7 +65,7 @@ $(do
       (getBackendValueName b)
       -- one argument: `i 'Foo`
       -- (we Apply a type Variable to a Promoted name)
-      [normalType $ AppT (VarT typeVarName) (PromotedT b)]
+      [normalType $ AppT (VarT typeVarName) (getBackendTypeValue b)]
     )
  )
 
@@ -85,7 +86,7 @@ type AllBackendsSatisfy (c :: BackendType -> Constraint) =
     -- the constraint for each backend: `c 'Foo`
     -- (we Apply a type Variable to a Promoted name)
     constraints <- forEachBackend \b ->
-      pure $ AppT (VarT $ mkName "c") (PromotedT b)
+      pure $ AppT (VarT $ mkName "c") (getBackendTypeValue b)
     -- transforms a list of constraints into a tuple of constraints
     -- by folding the "type application" constructor:
     --
@@ -118,7 +119,7 @@ type SatisfiesForAllBackends
   = $(do
   -- the constraint for each backend: `c (i 'Foo)`
   constraints <- forEachBackend \b ->
-    pure $ AppT (VarT $ mkName "c") $ AppT (VarT $ mkName "i") (PromotedT b)
+    pure $ AppT (VarT $ mkName "c") $ AppT (VarT $ mkName "i") (getBackendTypeValue b)
   -- transforms a list of constraints into a tuple of constraints
   -- by folding the type application constructor
   -- by folding the "type application" constructor:
@@ -159,6 +160,38 @@ mapBackend e f =
       let matchPattern = ConP consName [VarP $ mkName "x"]
       -- the body of the match: `FooValue (f x)`
       matchBody <- [| $(pure $ ConE consName) (f x) |]
+      pure $ Match matchPattern (NormalB matchBody) []
+    -- the expression on which we do the case
+    caseExpr <- [| e |]
+    -- return the the expression of the case switch
+    pure $ CaseE caseExpr matches
+   )
+
+-- | Traverse an `AnyBackend i` into an `f (AnyBackend j)`.
+traverseBackend
+ :: forall
+     (c :: BackendType -> Constraint)
+     (i :: BackendType -> Type)
+     (j :: BackendType -> Type)
+     f
+  . (AllBackendsSatisfy c, Applicative f)
+ => AnyBackend i
+ -> (forall b. c b => i b -> f (j b))
+ -> f (AnyBackend j)
+traverseBackend e f =
+  -- generates a case switch that, for each constructor, applies the provided function
+  --   case e of
+  --     FooValue x -> FooValue <$> f x
+  --     BarValue x -> BarValue <$> f x
+  $(do
+    -- we create a case match for each backend
+    matches <- forEachBackend \b -> do
+      -- the name of the constructor
+      let consName = getBackendValueName b
+      -- the patterrn we match: `FooValue x`
+      let matchPattern = ConP consName [VarP $ mkName "x"]
+      -- the body of the match: `FooValue <$> f x`
+      matchBody <- [| $(pure $ ConE consName) <$> f x |]
       pure $ Match matchPattern (NormalB matchBody) []
     -- the expression on which we do the case
     caseExpr <- [| e |]
@@ -334,7 +367,7 @@ type BackendChoice (i :: BackendType -> Type) =
   $(do
     -- creates the type (i b) for each backend b
     types <- forEachBackend \b ->
-      pure $ AppT (VarT $ mkName "i") (PromotedT b)
+      pure $ AppT (VarT $ mkName "i") (getBackendTypeValue b)
     -- generate the either type by folding over that list
     let appEither l r = [t| Either $(pure l) $(pure r) |]
     foldrM appEither (ConT ''Void) types
@@ -510,14 +543,17 @@ instance i `SatisfiesForAllBackends` ToJSON => ToJSON (AnyBackend i) where
 
 instance i `SatisfiesForAllBackends` FromJSON => FromJSON (AnyBackend i) where
   parseJSON = withObject "AnyBackend" $ \o -> do
-    backendKind <- fromMaybe Postgres <$> o .:? "kind"
+    backendKind <- fromMaybe (Postgres Vanilla) <$> o .:? "kind"
     -- generates the following case for all backends:
     --   Foo -> FooValue <$> parseJSON (Object o)
     --   Bar -> BarValue <$> parseJSON (Object o)
     --   ...
     $(backendCase [| backendKind |]
        -- the pattern for a given backend
-       ( \b -> pure $ ConP b [] )
+       ( \b -> do
+           (con:args) <- pure b
+           pure $ ConP con [ConP arg [] | arg <- args]
+       )
        -- the body for each backend
        ( \b -> do
            let valueCon = pure $ ConE $ getBackendValueName b

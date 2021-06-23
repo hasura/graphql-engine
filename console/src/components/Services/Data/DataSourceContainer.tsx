@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import { ThunkDispatch } from 'redux-thunk';
 import { RouteComponentProps } from 'react-router';
-import { push } from 'react-router-redux';
 import { AnyAction } from 'redux';
 
+import _push from './push';
 import { ReduxState } from '../../../types';
 import { getDataSources } from '../../../metadata/selector';
 import { showErrorNotification } from '../Common/Notification';
@@ -37,28 +37,28 @@ const DataSourceContainer = ({
   location,
   inconsistentObjects,
 }: DataSourceContainerProps) => {
-  const { setDriver } = useDataSource();
+  const { setDriver, dataSource } = useDataSource();
   const [dataLoaded, setDataLoaded] = useState(false);
   const { source, schema } = params;
 
   useEffect(() => {
     // if the source is inconsistent, do not show the source route
     if (isInconsistentSource(currentSource, inconsistentObjects)) {
-      dispatch(push('/data/manage'));
+      dispatch(_push('/data/manage'));
     }
   }, [inconsistentObjects, currentSource, dispatch, location]);
 
   useEffect(() => {
     if (!source || source === 'undefined') {
       if (currentSource) {
-        dispatch(push(`/data/${currentSource}`));
+        dispatch(_push(`/data/${currentSource}`));
         return;
       }
 
       const newSource = dataSources.length ? dataSources[0].name : '';
       setDriver(getSourceDriver(dataSources, newSource));
       dispatch({ type: UPDATE_CURRENT_DATA_SOURCE, source: newSource });
-      dispatch(push(`/data/${newSource}`));
+      dispatch(_push(`/data/${newSource}`));
       return;
     }
 
@@ -69,7 +69,7 @@ const DataSourceContainer = ({
     }
 
     if (!dataSources.find(s => s.name === source)) {
-      dispatch(push('/data/manage'));
+      dispatch(_push('/data/manage'));
       dispatch(
         showErrorNotification(`Data source "${source}" doesn't exist`, null)
       );
@@ -83,21 +83,28 @@ const DataSourceContainer = ({
       dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: schema });
       return;
     }
+    // eslint-disable-next-line no-useless-return
     if (!dataLoaded) return;
 
     let newSchema = '';
+
     if (schemaList.length) {
-      newSchema = schemaList.includes('public') ? 'public' : schemaList[0];
+      newSchema =
+        dataSource.defaultRedirectSchema &&
+        schemaList.includes(dataSource.defaultRedirectSchema)
+          ? dataSource.defaultRedirectSchema
+          : schemaList.sort(Intl.Collator().compare)[0];
     }
-    dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: newSchema });
     if (location.pathname.includes('schema')) {
-      dispatch(push(`/data/${source}/schema/${newSchema}`));
+      dispatch(_push(`/data/${source}/schema/${newSchema}`));
     }
-  }, [dispatch, schema, schemaList, source, location, dataLoaded]);
+  }, [dispatch, schema, schemaList, location, source, dataLoaded]);
 
   useEffect(() => {
     const driver = getSourceDriver(dataSources, currentSource);
     if (driver !== currentDriver) return;
+    if (schemaList?.length > 0) return setDataLoaded(true);
+
     if (currentSource) {
       dispatch(fetchDataInit(currentSource, currentDriver)).then(() => {
         dispatch(fetchFunctionInit()); // todo

@@ -1,0 +1,25 @@
+description: Simple GraphQL object query on author, excercising multiple operations
+url: /v1/graphql
+status: 200
+response:
+  data:
+    hasura_author:
+    - id: '1'
+      name: Author 1
+    - id: '2'
+      name: Author 2
+query:
+  # https://graphql.org/learn/serving-over-http/#post-request
+  operationName: chooseThisOne
+  query: |
+    query ignoreThisOne {
+      hasura_author (order_by: {id: asc}) {
+        name
+      }
+    }
+    query chooseThisOne {
+      hasura_author (order_by: {id: asc}) {
+        id
+        name
+      }
+    }

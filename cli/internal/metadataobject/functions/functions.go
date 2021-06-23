@@ -4,7 +4,9 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli"
+	errors2 "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/errors"
+
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -43,10 +45,10 @@ func (f *FunctionConfig) CreateFiles() error {
 	return nil
 }
 
-func (f *FunctionConfig) Build(metadata *yaml.MapSlice) error {
+func (f *FunctionConfig) Build(metadata *yaml.MapSlice) errors2.ErrParsingMetadataObject {
 	data, err := ioutil.ReadFile(filepath.Join(f.MetadataDir, MetadataFilename))
 	if err != nil {
-		return err
+		return f.Error(err)
 	}
 	item := yaml.MapItem{
 		Key: "functions",
@@ -54,7 +56,7 @@ func (f *FunctionConfig) Build(metadata *yaml.MapSlice) error {
 	var obj []yaml.MapSlice
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
-		return err
+		return f.Error(err)
 	}
 	if len(obj) != 0 {
 		item.Value = obj
@@ -63,7 +65,7 @@ func (f *FunctionConfig) Build(metadata *yaml.MapSlice) error {
 	return nil
 }
 
-func (f *FunctionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
+func (f *FunctionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, errors2.ErrParsingMetadataObject) {
 	var functions interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
@@ -77,13 +79,17 @@ func (f *FunctionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, erro
 	}
 	data, err := yaml.Marshal(functions)
 	if err != nil {
-		return nil, err
+		return nil, f.Error(err)
 	}
 	return map[string][]byte{
-		filepath.Join(f.MetadataDir, MetadataFilename): data,
+		filepath.ToSlash(filepath.Join(f.MetadataDir, MetadataFilename)): data,
 	}, nil
 }
 
 func (f *FunctionConfig) Name() string {
 	return "functions"
+}
+
+func (f *FunctionConfig) Error(err error, additionalContext ...string) errors2.ErrParsingMetadataObject {
+	return errors2.NewErrParsingMetadataObject(f.Name(), MetadataFilename, additionalContext, err)
 }

@@ -7,22 +7,23 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
 func TestClient_ExportMetadata(t *testing.T) {
-	portHasuraV13, teardown13 := testutil.StartHasura(t, "v1.3.3")
+	portHasuraV13, teardown13 := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown13()
-	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraVersion)
+	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardownLatest()
 	type fields struct {
 		Client *httpc.Client
@@ -45,7 +46,7 @@ func TestClient_ExportMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraV13, nil),
 				path:   "v1/query",
 			},
-			hasuraVersion: "v1.3.3",
+			hasuraVersion: "hasura/graphql-engine:v1.3.3",
 			wantErr:       false,
 		},
 		{
@@ -59,10 +60,13 @@ func TestClient_ExportMetadata(t *testing.T) {
       "tables": [],
       "configuration": {
         "connection_info": {
+          "use_prepared_statements": true,
           "database_url": {
             "from_env": "HASURA_GRAPHQL_DATABASE_URL"
           },
+          "isolation_level": "read-committed",
           "pool_settings": {
+			"connection_lifetime": 600,
             "retries": 1,
             "idle_timeout": 180,
             "max_connections": 50
@@ -76,7 +80,7 @@ func TestClient_ExportMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",
 			},
-			hasuraVersion: testutil.HasuraVersion,
+			hasuraVersion: testutil.HasuraDockerImage,
 			wantErr:       false,
 		},
 	}
@@ -94,16 +98,16 @@ func TestClient_ExportMetadata(t *testing.T) {
 			}
 			b, err := ioutil.ReadAll(gotMetadata)
 			assert.NoError(t, err)
-			assert.Equal(t, tt.wantMetadata, string(b))
+			assert.JSONEq(t, tt.wantMetadata, string(b))
 
 		})
 	}
 }
 
 func TestClient_ReloadMetadata(t *testing.T) {
-	portHasuraV13, teardown13 := testutil.StartHasura(t, "v1.3.3")
+	portHasuraV13, teardown13 := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown13()
-	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraVersion)
+	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardownLatest()
 	type fields struct {
 		Client *httpc.Client
@@ -125,7 +129,7 @@ func TestClient_ReloadMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraV13, nil),
 				path:   "v1/query",
 			},
-			hasuraVersion: "v1.3.3",
+			hasuraVersion: "hasura/graphql-engine:v1.3.3",
 			wantErr:       false,
 		},
 		{
@@ -137,7 +141,7 @@ func TestClient_ReloadMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",
 			},
-			hasuraVersion: testutil.HasuraVersion,
+			hasuraVersion: testutil.HasuraDockerImage,
 			wantErr:       false,
 		},
 	}
@@ -154,15 +158,15 @@ func TestClient_ReloadMetadata(t *testing.T) {
 			}
 			b, err := ioutil.ReadAll(gotMetadata)
 			assert.NoError(t, err)
-			assert.Equal(t, tt.want, string(b))
+			assert.JSONEq(t, tt.want, string(b))
 		})
 	}
 }
 
 func TestClient_DropInconsistentMetadata(t *testing.T) {
-	portHasuraV13, teardown13 := testutil.StartHasura(t, "v1.3.3")
+	portHasuraV13, teardown13 := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown13()
-	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraVersion)
+	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardownLatest()
 	type fields struct {
 		Client *httpc.Client
@@ -184,7 +188,7 @@ func TestClient_DropInconsistentMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraV13, nil),
 				path:   "v1/query",
 			},
-			hasuraVersion: "v1.3.3",
+			hasuraVersion: "hasura/graphql-engine:v1.3.3",
 			wantErr:       false,
 		},
 		{
@@ -196,7 +200,7 @@ func TestClient_DropInconsistentMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",
 			},
-			hasuraVersion: testutil.HasuraVersion,
+			hasuraVersion: testutil.HasuraDockerImage,
 			wantErr:       false,
 		},
 	}
@@ -213,15 +217,15 @@ func TestClient_DropInconsistentMetadata(t *testing.T) {
 			}
 			b, err := ioutil.ReadAll(gotMetadata)
 			assert.NoError(t, err)
-			assert.Equal(t, tt.want, string(b))
+			assert.JSONEq(t, tt.want, string(b))
 		})
 	}
 }
 
 func TestClient_ResetMetadata(t *testing.T) {
-	portHasuraV13, teardown13 := testutil.StartHasura(t, "v1.3.3")
+	portHasuraV13, teardown13 := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown13()
-	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraVersion)
+	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardownLatest()
 	type fields struct {
 		Client *httpc.Client
@@ -243,7 +247,7 @@ func TestClient_ResetMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraV13, nil),
 				path:   "v1/query",
 			},
-			hasuraVersion: "v1.3.3",
+			hasuraVersion: "hasura/graphql-engine:v1.3.3",
 			wantErr:       false,
 		},
 		{
@@ -255,7 +259,7 @@ func TestClient_ResetMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",
 			},
-			hasuraVersion: testutil.HasuraVersion,
+			hasuraVersion: testutil.HasuraDockerImage,
 			wantErr:       false,
 		},
 	}
@@ -273,18 +277,27 @@ func TestClient_ResetMetadata(t *testing.T) {
 				}
 				b, err := ioutil.ReadAll(got)
 				assert.NoError(t, err)
-				assert.Equal(t, tt.want, string(b))
+				assert.JSONEq(t, tt.want, string(b))
 			})
 		})
 	}
 }
 
 func TestClient_GetInconsistentMetadata(t *testing.T) {
-	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraVersion)
+	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardownLatest()
 	// create a table track it and delete it
 	sendReq := func(body io.Reader, url string) {
-		resp, err := http.Post(fmt.Sprintf("http://%s:%s/%s", "0.0.0.0", portHasuraLatest, url), "application/json", body)
+		req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:%s/%s", "0.0.0.0", portHasuraLatest, url), body)
+		assert.NoError(t, err)
+
+		req.Header.Set("Content-Type", "application/json")
+		adminSecret := os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET")
+		if adminSecret != "" {
+			req.Header.Set("x-hasura-admin-secret", adminSecret)
+		}
+
+		resp, err := http.DefaultClient.Do(req)
 		assert.NoError(t, err)
 		defer resp.Body.Close()
 		if err != nil {
@@ -300,19 +313,19 @@ func TestClient_GetInconsistentMetadata(t *testing.T) {
 	}
 	createTable := strings.NewReader(`
 {
-	"type": "run_sql",
-	"args": {
-		"sql": "CREATE TABLE test();"
-	}
+    "type": "run_sql",
+    "args": {
+        "sql": "CREATE TABLE test();"
+    }
 }
 `)
 	dropTable := strings.NewReader(`
 {
-	"type": "run_sql",
-	"args": {
-		"sql": "DROP TABLE test;",
-		"check_metadata_consistency": false
-	}
+    "type": "run_sql",
+    "args": {
+        "sql": "DROP TABLE test;",
+        "check_metadata_consistency": false
+    }
 }
 `)
 	trackTable := strings.NewReader(`
@@ -353,12 +366,12 @@ func TestClient_GetInconsistentMetadata(t *testing.T) {
 	}{
 		{
 			name: "can get inconsistent metadata",
-			want: bytes.NewReader([]byte(`{"is_consistent":false,"inconsistent_objects":[{"definition":{"schema":"public","name":"test"},"reason":"no such table/view exists in source: \"test\"","type":"table"}]}`)),
+			want: bytes.NewReader([]byte(`{"is_consistent":false,"inconsistent_objects":[{"definition":{"name":"test", "schema":"public"}, "name":"table test in source default", "reason":"Inconsistent object: no such table/view exists in source: \"test\"", "type":"table"}]}`)),
 			fields: fields{
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",
 			},
-			hasuraVersion: testutil.HasuraVersion,
+			hasuraVersion: testutil.HasuraDockerImage,
 			wantErr:       false,
 		},
 	}
@@ -383,9 +396,9 @@ func TestClient_GetInconsistentMetadata(t *testing.T) {
 }
 
 func TestClient_ReplaceMetadata(t *testing.T) {
-	portHasuraV13, teardown13 := testutil.StartHasura(t, "v1.3.3")
+	portHasuraV13, teardown13 := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown13()
-	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraVersion)
+	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardownLatest()
 	type fields struct {
 		Client *httpc.Client
@@ -414,7 +427,7 @@ func TestClient_ReplaceMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraV13, nil),
 				path:   "v1/query",
 			},
-			hasuraVersion: "v1.3.3",
+			hasuraVersion: "hasura/graphql-engine:v1.3.3",
 			wantErr:       false,
 		},
 		{
@@ -429,7 +442,7 @@ func TestClient_ReplaceMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",
 			},
-			hasuraVersion: testutil.HasuraVersion,
+			hasuraVersion: testutil.HasuraDockerImage,
 			wantErr:       false,
 		},
 	}
@@ -447,7 +460,7 @@ func TestClient_ReplaceMetadata(t *testing.T) {
 				}
 				b, err := ioutil.ReadAll(got)
 				assert.NoError(t, err)
-				assert.Equal(t, tt.want, string(b))
+				assert.JSONEq(t, tt.want, string(b))
 			})
 		})
 	}

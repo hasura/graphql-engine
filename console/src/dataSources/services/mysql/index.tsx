@@ -1,6 +1,6 @@
 import React from 'react';
 import { DataSourcesAPI } from '../..';
-import { Table, TableColumn } from '../../types';
+import { Table, TableColumn, ViolationActions } from '../../types';
 import {
   getAlterForeignKeySql,
   getCreateFKeySql,
@@ -20,6 +20,7 @@ import {
   checkSchemaModification,
   getCreateCheckConstraintSql,
   getCreatePkSql,
+  getAlterPkSql,
   getCreateTriggerSql,
   getDropSql,
   getDropSchemaSql,
@@ -131,6 +132,14 @@ const operators = [
 
 const createSQLRegex = /create\s*((?:|or\s*replace)\s*view|\s*(table|function|view))\s*(?:\s*if*\s*not\s*exists\s*)?(((\`?\w+\`?)\.(\`?\w+\`?))|(\`?\w+\`?))/g; // eslint-disable-line
 
+const violationActions: ViolationActions[] = [
+  'restrict',
+  'no action',
+  'cascade',
+  'set null',
+  'set default',
+];
+
 export const mysql: DataSourcesAPI = {
   getFunctionSchema: () => {
     return '';
@@ -224,6 +233,7 @@ WHERE
   checkSchemaModification,
   getCreateCheckConstraintSql,
   getCreatePkSql,
+  getAlterPkSql,
   frequentlyUsedColumns: [],
   primaryKeysInfoSql,
   uniqueKeysSql,
@@ -236,4 +246,5 @@ WHERE
   viewsSupported: false,
   supportedColumnOperators: null,
   aggregationPermissionsAllowed: false,
+  violationActions,
 };

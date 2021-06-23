@@ -19,6 +19,7 @@ import {
   getAddRelationshipQuery,
 } from '../../../../metadata/queryUtils';
 import Migration from '../../../../utils/migration/Migration';
+import { currentDriver, getQualifiedTableDef } from '../../../../dataSources';
 
 export const SET_MANUAL_REL_ADD = 'ModifyTable/SET_MANUAL_REL_ADD';
 export const MANUAL_REL_SET_TYPE = 'ModifyTable/MANUAL_REL_SET_TYPE';
@@ -234,27 +235,20 @@ const saveRenameRelationship = (oldName, newName, tableName, callback) => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     const currentSource = getState().tables.currentDataSource;
+
+    const tableDef = getQualifiedTableDef(
+      {
+        name: tableName,
+        schema: currentSchema,
+      },
+      currentDriver
+    );
+
     const migrateUp = [
-      getRenameRelationshipQuery(
-        {
-          name: tableName,
-          schema: currentSchema,
-        },
-        oldName,
-        newName,
-        currentSource
-      ),
+      getRenameRelationshipQuery(tableDef, oldName, newName, currentSource),
     ];
     const migrateDown = [
-      getRenameRelationshipQuery(
-        {
-          name: tableName,
-          schema: currentSchema,
-        },
-        newName,
-        oldName,
-        currentSource
-      ),
+      getRenameRelationshipQuery(tableDef, newName, oldName, currentSource),
     ];
     // Apply migrations
     const migrationName = `rename_relationship_${oldName}_to_${newName}_schema_${currentSchema}_table_${tableName}`;
@@ -301,10 +295,19 @@ const generateRelationshipsQuery = (relMeta, currentDataSource) => {
       lcol: column,
       rcol: relMeta.rcol[index],
     }));
-    if (columnMaps.length === 1 && !relMeta.isUnique) {
-      _upQuery.args.using = {
-        foreign_key_constraint_on: relMeta.lcol[0],
-      };
+
+    if (columnMaps.length === 1) {
+      _upQuery.args.using =
+        relMeta.isPrimary || relMeta.isUnique
+          ? {
+              foreign_key_constraint_on: {
+                table: { name: relMeta.rTable, schema: relMeta.rSchema },
+                column: relMeta.rcol[0],
+              },
+            }
+          : {
+              foreign_key_constraint_on: relMeta.lcol[0],
+            };
     } else {
       const columnReducer = (accumulator, val) => ({
         ...accumulator,
@@ -323,7 +326,13 @@ const generateRelationshipsQuery = (relMeta, currentDataSource) => {
     }
 
     _downQuery = getDropRelationshipQuery(
-      { name: relMeta.lTable, schema: relMeta.lSchema },
+      getQualifiedTableDef(
+        {
+          name: relMeta.lTable,
+          schema: relMeta.lSchema,
+        },
+        currentDriver
+      ),
       relMeta.relName,
       currentDataSource
     );
@@ -368,7 +377,13 @@ const generateRelationshipsQuery = (relMeta, currentDataSource) => {
     }
 
     _downQuery = getDropRelationshipQuery(
-      { name: relMeta.lTable, schema: relMeta.lSchema },
+      getQualifiedTableDef(
+        {
+          name: relMeta.lTable,
+          schema: relMeta.lSchema,
+        },
+        currentDriver
+      ),
       relMeta.relName,
       currentDataSource
     );
@@ -425,6 +440,7 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
       rTable: state.rTable,
       rSchema: state.rSchema,
       isUnique: state.isUnique,
+      isPrimary: state.isPrimary,
     },
     source
   );
@@ -495,8 +511,22 @@ const addRelViewMigrate = (tableSchema, toggleEditor) => (
     }
     columnMapping[colMap.column] = colMap.refColumn;
   });
-  const tableInfo = { name: currentTableName, schema: currentTableSchema };
-  const remoteTableInfo = { name: rTable, schema: rSchema };
+
+  const tableInfo = getQualifiedTableDef(
+    {
+      name: currentTableName,
+      schema: currentTableSchema,
+    },
+    currentDriver
+  );
+
+  const remoteTableInfo = getQualifiedTableDef(
+    {
+      name: rTable,
+      schema: rSchema,
+    },
+    currentDriver
+  );
 
   const relChangesUp = [
     getAddRelationshipQuery(

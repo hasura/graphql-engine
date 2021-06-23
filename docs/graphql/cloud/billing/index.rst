@@ -29,3 +29,4 @@ Details
 
   payment-methods
   credits
+  receipts

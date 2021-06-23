@@ -3,11 +3,17 @@ package tables
 import (
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli"
+	errors2 "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/errors"
+
+	"github.com/hasura/graphql-engine/cli/v2"
 
 	"gopkg.in/yaml.v2"
 )
 
+/*
+V3MetadataTableConfig is responsible for exporting and applying "tables" metadata objects
+in config v2 format on a server with v3 metadata
+*/
 type V3MetadataTableConfig struct {
 	*TableConfig
 }
@@ -20,10 +26,10 @@ func NewV3MetadataTableConfig(ec *cli.ExecutionContext, baseDir string) *V3Metad
 		},
 	}
 }
-func (t *V3MetadataTableConfig) Export(md yaml.MapSlice) (map[string][]byte, error) {
+func (t *V3MetadataTableConfig) Export(md yaml.MapSlice) (map[string][]byte, errors2.ErrParsingMetadataObject) {
 	metadataBytes, err := yaml.Marshal(md)
 	if err != nil {
-		return nil, err
+		return nil, t.Error(err)
 	}
 	var metadata struct {
 		Sources []struct {
@@ -33,7 +39,7 @@ func (t *V3MetadataTableConfig) Export(md yaml.MapSlice) (map[string][]byte, err
 	}
 	var tables interface{}
 	if err := yaml.Unmarshal(metadataBytes, &metadata); err != nil {
-		return nil, err
+		return nil, t.Error(err)
 	}
 	if len(metadata.Sources) > 0 {
 		tables = metadata.Sources[0].Tables
@@ -43,9 +49,9 @@ func (t *V3MetadataTableConfig) Export(md yaml.MapSlice) (map[string][]byte, err
 	}
 	data, err := yaml.Marshal(tables)
 	if err != nil {
-		return nil, err
+		return nil, t.Error(err)
 	}
 	return map[string][]byte{
-		filepath.Join(t.MetadataDir, MetadataFilename): data,
+		filepath.ToSlash(filepath.Join(t.MetadataDir, MetadataFilename)): data,
 	}, nil
 }

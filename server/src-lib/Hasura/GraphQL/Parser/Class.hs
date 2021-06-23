@@ -17,11 +17,12 @@ import           Data.Tuple.Extended
 import           GHC.Stack                            (HasCallStack)
 import           Type.Reflection                      (Typeable)
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser.Class.Parse
 import           Hasura.GraphQL.Parser.Internal.Types
 import           Hasura.GraphQL.Parser.Schema         (HasDefinition)
 import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 -- import           Hasura.SQL.Backend
@@ -133,16 +134,17 @@ type MonadTableInfo r m = (MonadReader r m, Has SourceCache r, MonadError QErr m
 -- supposed to ensure all dependencies are resolved.
 askTableInfo
   :: forall b r m. (Backend b, MonadTableInfo r m)
-  => TableName b
+  => SourceName
+  -> TableName b
   -> m (TableInfo b)
-askTableInfo tableName = do
+askTableInfo sourceName tableName = do
   tableInfo <- asks $ getTableInfo . getter
   -- This should never fail, since the schema cache construction process is
   -- supposed to ensure that all dependencies are resolved.
-  tableInfo `onNothing` throw500 ("askTableInfo: no info for " <>> tableName)
+  tableInfo `onNothing` throw500 ("askTableInfo: no info for table " <> dquote tableName <> " in source " <> dquote sourceName)
   where
     getTableInfo :: SourceCache -> Maybe (TableInfo b)
-    getTableInfo sc = Map.lookup tableName $ Map.unions $ mapMaybe unsafeSourceTables $ Map.elems sc
+    getTableInfo = Map.lookup tableName <=< unsafeSourceTables <=< Map.lookup sourceName
 
 -- | A wrapper around 'memoizeOn' that memoizes a function by using its argument
 -- as the key.

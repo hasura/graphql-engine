@@ -17,6 +17,7 @@ import           Hasura.GraphQL.Parser         (InputFieldsParser, Kind (..), Pa
                                                 UnpreparedValue)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Backend
+import           Hasura.GraphQL.Schema.Common  (partialSQLExpToUnpreparedValue)
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 
@@ -31,21 +32,22 @@ import           Hasura.RQL.Types
 -- > }
 boolExp
   :: forall b r m n. MonadBuildSchema b r m n
-  => TableName b
+  => SourceName
+  -> TableInfo b
   -> Maybe (SelPermInfo b)
   -> m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
-boolExp table selectPermissions = memoizeOn 'boolExp table $ do
-  tableGQLName <- getTableGQLName @b table
+boolExp sourceName tableInfo selectPermissions = memoizeOn 'boolExp (sourceName, tableName) $ do
+  tableGQLName <- getTableGQLName tableInfo
   let name = tableGQLName <> $$(G.litName "_bool_exp")
   let description = G.Description $
-        "Boolean expression to filter rows from the table " <> table <<>
+        "Boolean expression to filter rows from the table " <> tableName <<>
         ". All fields are combined with a logical 'AND'."
 
   tableFieldParsers <- catMaybes <$> maybe
     (pure [])
-    (traverse mkField <=< tableSelectFields table)
+    (traverse mkField <=< tableSelectFields sourceName tableInfo)
     selectPermissions
-  recur <- boolExp table selectPermissions
+  recur <- boolExp sourceName tableInfo selectPermissions
   -- Bafflingly, ApplicativeDo doesn’t work if we inline this definition (I
   -- think the TH splices throw it off), so we have to define it separately.
   let specialFieldParsers =
@@ -59,6 +61,8 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
     specialFields <- catMaybes <$> sequenceA specialFieldParsers
     pure (tableFields ++ specialFields)
   where
+    tableName = tableInfoName tableInfo
+
     mkField
       :: FieldInfo b
       -> m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld b (UnpreparedValue b)))))
@@ -71,9 +75,12 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
 
         -- field_name: field_type_bool_exp
         FIRelationship relationshipInfo -> do
-          let remoteTable = riRTable relationshipInfo
-          remotePermissions <- lift $ tableSelectPermissions remoteTable
-          lift $ fmap (AVRel relationshipInfo) <$> boolExp remoteTable remotePermissions
+          remoteTableInfo <- askTableInfo sourceName $ riRTable relationshipInfo
+          remotePermissions <- lift $ tableSelectPermissions remoteTableInfo
+          let remoteTableFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $
+                                  maybe annBoolExpTrue spiFilter remotePermissions
+          remoteBoolExp <- lift $ boolExp sourceName remoteTableInfo remotePermissions
+          pure $ fmap (AVRel relationshipInfo . andAnnBoolExps remoteTableFilter) remoteBoolExp
 
         -- Using computed fields in boolean expressions is not currently supported.
         FIComputedField _ -> empty

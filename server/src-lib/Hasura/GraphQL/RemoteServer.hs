@@ -27,6 +27,7 @@ import           Data.FileEmbed                         (makeRelativeToProject)
 
 import qualified Hasura.GraphQL.Parser.Monad            as P
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
@@ -35,6 +36,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
+
 
 introspectionQuery :: GQLReqParsed
 introspectionQuery =

@@ -180,6 +180,15 @@ This option may result in test failures if the schema has to change between the 
         default="postgres"
     )
 
+    parser.addoption(
+        "--pro-tests",
+        action="store_true",
+        default=False,
+        help="Flag to specify if the pro tests are to be run"
+    )
+
+
+
 #By default,
 #1) Set default parallelism to one
 #2) Set test grouping to by filename (--dist=loadfile)
@@ -287,6 +296,7 @@ def hge_ctx(request):
     yield hge_ctx  # provide the fixture value
     print("teardown hge_ctx")
     hge_ctx.teardown()
+    # TODO why do we sleep here?
     time.sleep(1)
 
 @pytest.fixture(scope='class')
@@ -301,9 +311,10 @@ def evts_webhook(request):
 
 @pytest.fixture(scope='module')
 def actions_fixture(hge_ctx):
-    pg_version = hge_ctx.pg_version
-    if pg_version < 100000: # version less than 10.0
-        pytest.skip('Actions are not supported on Postgres version < 10')
+    if hge_ctx.is_default_backend:
+        pg_version = hge_ctx.pg_version
+        if pg_version < 100000: # version less than 10.0
+            pytest.skip('Actions are not supported on Postgres version < 10')
 
     # Start actions' webhook server
     webhook_httpd = ActionsWebhookServer(hge_ctx, server_address=('127.0.0.1', 5593))
@@ -324,6 +335,12 @@ def functions_permissions_fixtures(hge_ctx):
 def inherited_role_fixtures(hge_ctx):
     if not hge_ctx.inherited_roles_tests:
         pytest.skip('These tests are meant to be run with --test-inherited-roles set')
+        return
+
+@pytest.fixture(scope='class')
+def pro_tests_fixtures(hge_ctx):
+    if not hge_ctx.pro_tests:
+        pytest.skip('These tests are meant to be run with --pro-tests set')
         return
 
 @pytest.fixture(scope='class')
@@ -417,6 +434,11 @@ def per_method_db_data_for_mutation_tests(request, hge_ctx, per_class_db_schema_
     )
 
 @pytest.fixture(scope='function')
+def backend():
+    "This fixture provides a default `backend` value for the `per_backend_tests` fixture"
+    return 'postgres'
+
+@pytest.fixture(scope='function', autouse=True)
 def per_backend_tests(hge_ctx, backend):
     """
     This fixture ignores backend-specific tests unless the relevant --backend flag has been passed.
@@ -438,15 +460,19 @@ def db_state_context(request, hge_ctx):
         for filename in ['setup', 'teardown', 'schema_setup', 'schema_teardown']
     ]
 
-    if hge_ctx.backend == 'postgres':
+    # only lookup files relevant to the tests being run.
+    # defaults to postgres file lookup
+    check_file_exists = hge_ctx.backend == backend
+
+    if hge_ctx.is_default_backend:
         db_context = db_context_with_schema_common(
             request, hge_ctx, 'setup_files', 'setup.yaml', 'teardown_files',
-            'teardown.yaml', True
+            'teardown.yaml', check_file_exists
         )
     else:
         db_context = db_context_with_schema_common_new (
             request, hge_ctx, 'setup_files', setup, 'teardown_files',
-            teardown, schema_setup, schema_teardown, True
+            teardown, schema_setup, schema_teardown, check_file_exists
         )
     yield from db_context
 

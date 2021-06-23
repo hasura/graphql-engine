@@ -3,18 +3,19 @@ url: /v1/query
 status: 400
 response:
   internal:
-  - definition:
-      definition:
-        query:
-          collection_name: test_collection
-          query_name: simple_query
-      url: foo/
-      methods:
-      - GET
-      name: trailing
-      comment:
-    reason: 'Empty segments or unnamed variables are not allowed: foo/'
-    type: endpoint
+    - definition:
+        definition:
+          query:
+            collection_name: test_collection
+            query_name: simple_query
+        url: foo/
+        methods:
+          - GET
+        name: trailing
+        comment:
+      reason: "Empty segments or unnamed variables are not allowed: foo/"
+      name: endpoint trailing
+      type: endpoint
   path: $.args
   error: cannot continue due to new inconsistent metadata
   code: unexpected

@@ -1,23 +1,25 @@
 -- | The RQL query ('/v1/query')
-{-# LANGUAGE NamedFieldPuns #-}
+
 module Hasura.Server.API.Query where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                   as Env
-import qualified Data.HashMap.Strict                as HM
-import qualified Database.PG.Query                  as Q
-import qualified Network.HTTP.Client                as HTTP
+import qualified Data.Environment                    as Env
+import qualified Data.HashMap.Strict                 as HM
+import qualified Database.PG.Query                   as Q
+import qualified Network.HTTP.Client                 as HTTP
 
-import           Control.Monad.Trans.Control        (MonadBaseControl)
+import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Network.HTTP.Client.Extended
 
-import qualified Hasura.Tracing                     as Tracing
+import qualified Hasura.Tracing                      as Tracing
 
+import           Hasura.Backends.Postgres.DDL.RunSQL
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
@@ -44,43 +46,44 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Types
 import           Hasura.Server.Utils
-import           Hasura.Server.Version              (HasVersion)
+import           Hasura.Server.Version               (HasVersion)
 import           Hasura.Session
 
+
 data RQLQueryV1
-  = RQAddExistingTableOrView !(TrackTable 'Postgres)
-  | RQTrackTable !(TrackTable 'Postgres)
-  | RQUntrackTable !(UntrackTable 'Postgres)
+  = RQAddExistingTableOrView !(TrackTable ('Postgres 'Vanilla))
+  | RQTrackTable !(TrackTable ('Postgres 'Vanilla))
+  | RQUntrackTable !(UntrackTable ('Postgres 'Vanilla))
   | RQSetTableIsEnum !SetTableIsEnum
-  | RQSetTableCustomization !SetTableCustomization
+  | RQSetTableCustomization !(SetTableCustomization ('Postgres 'Vanilla))
 
-  | RQTrackFunction !(TrackFunction 'Postgres)
-  | RQUntrackFunction !(UnTrackFunction 'Postgres)
+  | RQTrackFunction !(TrackFunction ('Postgres 'Vanilla))
+  | RQUntrackFunction !(UnTrackFunction ('Postgres 'Vanilla))
 
-  | RQCreateObjectRelationship !(CreateObjRel 'Postgres)
-  | RQCreateArrayRelationship !(CreateArrRel 'Postgres)
-  | RQDropRelationship !(DropRel 'Postgres)
-  | RQSetRelationshipComment !(SetRelComment 'Postgres)
-  | RQRenameRelationship !(RenameRel 'Postgres)
+  | RQCreateObjectRelationship !(CreateObjRel ('Postgres 'Vanilla))
+  | RQCreateArrayRelationship !(CreateArrRel ('Postgres 'Vanilla))
+  | RQDropRelationship !(DropRel ('Postgres 'Vanilla))
+  | RQSetRelationshipComment !(SetRelComment ('Postgres 'Vanilla))
+  | RQRenameRelationship !(RenameRel ('Postgres 'Vanilla))
 
   -- computed fields related
-  | RQAddComputedField !(AddComputedField 'Postgres)
-  | RQDropComputedField !(DropComputedField 'Postgres)
+  | RQAddComputedField !(AddComputedField ('Postgres 'Vanilla))
+  | RQDropComputedField !(DropComputedField ('Postgres 'Vanilla))
 
-  | RQCreateRemoteRelationship !(RemoteRelationship 'Postgres)
-  | RQUpdateRemoteRelationship !(RemoteRelationship 'Postgres)
-  | RQDeleteRemoteRelationship !DeleteRemoteRelationship
+  | RQCreateRemoteRelationship !(RemoteRelationship ('Postgres 'Vanilla))
+  | RQUpdateRemoteRelationship !(RemoteRelationship ('Postgres 'Vanilla))
+  | RQDeleteRemoteRelationship !(DeleteRemoteRelationship ('Postgres 'Vanilla))
 
-  | RQCreateInsertPermission !(CreateInsPerm 'Postgres)
-  | RQCreateSelectPermission !(CreateSelPerm 'Postgres)
-  | RQCreateUpdatePermission !(CreateUpdPerm 'Postgres)
-  | RQCreateDeletePermission !(CreateDelPerm 'Postgres)
+  | RQCreateInsertPermission !(CreatePerm InsPerm ('Postgres 'Vanilla))
+  | RQCreateSelectPermission !(CreatePerm SelPerm ('Postgres 'Vanilla))
+  | RQCreateUpdatePermission !(CreatePerm UpdPerm ('Postgres 'Vanilla))
+  | RQCreateDeletePermission !(CreatePerm DelPerm ('Postgres 'Vanilla))
 
-  | RQDropInsertPermission !(DropPerm 'Postgres (InsPerm 'Postgres))
-  | RQDropSelectPermission !(DropPerm 'Postgres (SelPerm 'Postgres))
-  | RQDropUpdatePermission !(DropPerm 'Postgres (UpdPerm 'Postgres))
-  | RQDropDeletePermission !(DropPerm 'Postgres (DelPerm 'Postgres))
-  | RQSetPermissionComment !(SetPermComment 'Postgres)
+  | RQDropInsertPermission !(DropPerm InsPerm ('Postgres 'Vanilla))
+  | RQDropSelectPermission !(DropPerm SelPerm ('Postgres 'Vanilla))
+  | RQDropUpdatePermission !(DropPerm UpdPerm ('Postgres 'Vanilla))
+  | RQDropDeletePermission !(DropPerm DelPerm ('Postgres 'Vanilla))
+  | RQSetPermissionComment !(SetPermComment ('Postgres 'Vanilla))
 
   | RQGetInconsistentMetadata !GetInconsistentMetadata
   | RQDropInconsistentMetadata !DropInconsistentMetadata
@@ -94,14 +97,15 @@ data RQLQueryV1
 
   -- schema-stitching, custom resolver related
   | RQAddRemoteSchema !AddRemoteSchemaQuery
+  | RQUpdateRemoteSchema !AddRemoteSchemaQuery
   | RQRemoveRemoteSchema !RemoteSchemaNameQuery
   | RQReloadRemoteSchema !RemoteSchemaNameQuery
   | RQIntrospectRemoteSchema !RemoteSchemaNameQuery
 
-  | RQCreateEventTrigger !CreateEventTriggerQuery
-  | RQDeleteEventTrigger !DeleteEventTriggerQuery
-  | RQRedeliverEvent     !RedeliverEventQuery
-  | RQInvokeEventTrigger !InvokeEventTriggerQuery
+  | RQCreateEventTrigger !(CreateEventTriggerQuery ('Postgres 'Vanilla))
+  | RQDeleteEventTrigger !(DeleteEventTriggerQuery ('Postgres 'Vanilla))
+  | RQRedeliverEvent     !(RedeliverEventQuery     ('Postgres 'Vanilla))
+  | RQInvokeEventTrigger !(InvokeEventTriggerQuery ('Postgres 'Vanilla))
 
   -- scheduled triggers
   | RQCreateCronTrigger !CreateCronTrigger
@@ -139,9 +143,9 @@ data RQLQueryV1
   deriving (Eq)
 
 data RQLQueryV2
-  = RQV2TrackTable !(TrackTableV2 'Postgres)
+  = RQV2TrackTable !(TrackTableV2 ('Postgres 'Vanilla))
   | RQV2SetTableCustomFields !SetTableCustomFields -- deprecated
-  | RQV2TrackFunction !TrackFunctionV2
+  | RQV2TrackFunction !(TrackFunctionV2 ('Postgres 'Vanilla))
   | RQV2ReplaceMetadata !ReplaceMetadataV2
   deriving (Eq)
 
@@ -268,6 +272,7 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQCount _                       -> False
 
   RQAddRemoteSchema _             -> True
+  RQUpdateRemoteSchema _          -> True
   RQRemoveRemoteSchema _          -> True
   RQReloadRemoteSchema _          -> True
   RQIntrospectRemoteSchema _      -> False
@@ -401,13 +406,14 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQGetInconsistentMetadata q     -> runGetInconsistentMetadata q
       RQDropInconsistentMetadata q    -> runDropInconsistentMetadata q
 
-      RQInsert q                      -> runInsert env q
+      RQInsert q                      -> runInsert q
       RQSelect q                      -> runSelect q
-      RQUpdate q                      -> runUpdate env q
-      RQDelete q                      -> runDelete env q
+      RQUpdate q                      -> runUpdate q
+      RQDelete q                      -> runDelete q
       RQCount  q                      -> runCount q
 
       RQAddRemoteSchema    q          -> runAddRemoteSchema env q
+      RQUpdateRemoteSchema q          -> runUpdateRemoteSchema env q
       RQRemoveRemoteSchema q          -> runRemoveRemoteSchema q
       RQReloadRemoteSchema q          -> runReloadRemoteSchema q
       RQIntrospectRemoteSchema q      -> runIntrospectRemoteSchema q
@@ -449,7 +455,7 @@ runQueryM env rq = withPathK "args" $ case rq of
 
       RQDumpInternalState q           -> runDumpInternalState q
 
-      RQRunSql q                      -> runRunSQL q
+      RQRunSql q                      -> runRunSQL @'Vanilla q
 
       RQSetCustomTypes q              -> runSetCustomTypes q
 
@@ -507,6 +513,7 @@ requiresAdmin = \case
     RQCount  _                      -> False
 
     RQAddRemoteSchema    _          -> True
+    RQUpdateRemoteSchema _          -> True
     RQRemoveRemoteSchema _          -> True
     RQReloadRemoteSchema _          -> True
     RQIntrospectRemoteSchema _      -> True

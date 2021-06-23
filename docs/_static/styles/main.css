@@ -29,18 +29,22 @@ dl dt, dl dd, .graphiql .graphiql-container .CodeMirror {
 }
 
 [role="main"] h2 {
-  font-size: 24px;
+  font-size: 26px;
 }
 
 [role="main"] h3 {
-  font-size: 20px;
+  font-size: 22px;
 }
 
 [role="main"] h4 {
-  font-size: 18px;
+  font-size: 20px;
 }
 
 [role="main"] h5 {
+  font-size: 18px;
+}
+
+[role="main"] h6 {
   font-size: 16px;
 }
 
@@ -79,17 +83,62 @@ p {
   display: inline-block;
   vertical-align: middle;
 }
+/* Banner Stripe Strarts */
+.hasuraConBannerBg {
+	 /* background-image: url('./images/hasura-con-banner-stripe.png'); */
+   background-image: url('../../_images/layout/hasura-con-banner-stripe.png');
+	 background-repeat: no-repeat;
+	 background-size: cover;
+	 background-position: center center;
+}
+.containerWidth {
+    max-width: 1328px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+.commonBannerStripWrapper {
+	 z-index: 100;
+	 position: relative;
+	 height: 80px;
+	 max-height: 80px;
+	 display: flex;
+	 align-items: center;
+	 justify-content: center;
+	 overflow: hidden;
+}
+.commonBannerStripWrapper .articleDesc {
+	 flex: 1;
+	 text-align: center;
+	 color: #1b2738;
+	 font-size: 17px !important;
+	 line-height: 140% !important;
+	 padding-bottom: 0px;
+	 display: flex;
+	 align-items: center;
+	 justify-content: center;
+   font-weight: 600;
+   text-decoration: none;
 
+}
+.commonBannerStripWrapper .closeBanner {
+	 cursor: pointer;
+}
+.commonBannerStripWrapper .closeBanner img {
+	 width: 25px;
+}
+.commonBannerStripWrapper .closeBanner:focus {
+	 outline: none;
+}
 .document {
   margin: 0 auto;
 }
+/* Banner Stripe Ends */
 
 .main_container_wrapper {
   min-width: 90%;
   /* overflow-y: auto; */
   -webkit-overflow-scrolling: touch; /* for iOS momentum scroll */
 }
-
 .content_wrapper {
   display: flex;
   margin: auto;
@@ -1395,6 +1444,7 @@ article ol ol {
   font-weight: 600;
   margin: 0 0;
   letter-spacing: -.48px;
+  position: relative;
 }
 .headerWrapper .navBlueBG .navBarUL li, .versionTxt {
   color: #1CD3C6;
@@ -1404,19 +1454,19 @@ article ol ol {
   vertical-align: top;
 }
 .versionTxt select {
-  border-radius: 8px;
+  border-radius: 2px;
   background-color: rgba(255, 255, 255, .24);
   margin-right: 12px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: #ffffff;
   border: 1px solid #ddd;
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  width: 48px;
-  padding: 0 4px;
-  height: 22px;
+  width: 58px;
+  padding: 0 6px;
+  height: 24px;
   z-index: 1;
 }
 .versionTxt:after {
@@ -1427,12 +1477,15 @@ article ol ol {
   border-right: 4px solid transparent;
   border-top: 4px solid #fff;
   position: absolute;
-  right: 20px;
-  top: 10px;
+  right: 22px;
+  top: 21px;
   z-index: -1;
 }
 .versionTxt select:focus {
   outline: none;
+}
+.versionTxt select option {
+  color: black;
 }
 .versionTxt select::-moz-focus-inner, .versionTxt select option::-moz-focus-inner {
   border: 0;
@@ -1502,6 +1555,15 @@ article ol ol {
   }
 }
 @media (max-width: 767px) {
+  .commonBannerStripWrapper {
+    max-height: none;
+    height: auto;
+  }
+  .commonBannerStripWrapper .articleDesc{
+    text-align: left;
+    padding: 15px 0;
+    padding-right: 15px;
+  }
   .versionTxt select {
     margin-right: 0;
     margin-left: 8px;

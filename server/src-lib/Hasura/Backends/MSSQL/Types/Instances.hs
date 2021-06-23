@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | Instances that're slow to compile.
@@ -155,9 +154,6 @@ instance Arbitrary ColumnName where
 
 instance Arbitrary TableName where
   arbitrary = genericArbitrary
-
-instance ToTxt () where
-  toTxt = tshow
 
 
 --------------------------------------------------------------------------------

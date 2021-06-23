@@ -5,7 +5,7 @@ import           Hasura.Prelude
 import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.RQL.Types.Error
+import           Hasura.Base.Error
 import           Hasura.RQL.Types.Table
 
 

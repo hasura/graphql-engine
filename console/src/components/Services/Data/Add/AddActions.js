@@ -7,7 +7,11 @@ import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
 import { getTableModifyRoute } from '../../../Common/utils/routesUtils';
 import { dataSource } from '../../../../dataSources';
-import { findTable, escapeTableColumns } from '../../../../dataSources/common';
+import {
+  findTable,
+  escapeTableColumns,
+  escapeTableName,
+} from '../../../../dataSources/common';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import {
   getTrackTableQuery,
@@ -156,6 +160,7 @@ export const trackTable = payload => (dispatch, getState) => {
     tableDef: payload,
     source: currentDataSource,
     customColumnNames: escapeTableColumns(table),
+    customName: escapeTableName(payload.name),
   });
   const requestBodyDown = getUntrackTableQuery(payload, currentDataSource);
 

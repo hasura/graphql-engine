@@ -5,16 +5,20 @@ module Hasura.Backends.Postgres.SQL.Value
   , parsePGValue
   , scientificToInteger
   , scientificToFloat
+  , textToScalarValue
 
-  , TxtEncodedPGVal(..)
-  , txtEncodedPGVal
+  , TxtEncodedVal(..)
+  , txtEncodedVal
 
   , binEncoder
   , txtEncoder
   , toPrepParam
   ) where
 
+
 import           Hasura.Prelude
+
+import           Hasura.SQL.Value                   (TxtEncodedVal (..))
 
 import qualified Data.Aeson.Text                    as AE
 import qualified Data.Aeson.Types                   as AT
@@ -133,6 +137,9 @@ pgScalarValueToJson = \case
   PGValLtxtquery t -> toJSON t
   PGValUnknown t -> toJSON t
 
+textToScalarValue :: Maybe Text -> PGScalarValue
+textToScalarValue = maybe (PGNull PGText) PGValText
+
 withConstructorFn :: PGScalarType -> S.SQLExp -> S.SQLExp
 withConstructorFn ty v
   | isGeoType ty = S.SEFnApp "ST_GeomFromGeoJSON" [v] Nothing
@@ -140,6 +147,8 @@ withConstructorFn ty v
   | otherwise = v
 
 
+-- TODO: those two functions are useful outside of Postgres, and
+-- should be moved to a common place of the code. Perhaps the Prelude?
 scientificToInteger :: (Integral i, Bounded i) => Scientific -> AT.Parser i
 scientificToInteger num =
   toBoundedInteger num
@@ -154,6 +163,7 @@ scientificToFloat num =
   `onLeft` \ _ ->
   fail ("The value " ++ show num ++ " lies outside the "
      ++ "bounds.  Is it overflowing the float bounds?")
+
 
 parsePGValue :: PGScalarType -> Value -> AT.Parser PGScalarValue
 parsePGValue ty val = case (ty, val) of
@@ -200,26 +210,11 @@ parsePGValue ty val = case (ty, val) of
       PGLtxtquery -> PGValLtxtquery <$> parseJSON val
       PGUnknown tyName ->
         fail $ "A string is expected for type: " ++ T.unpack tyName
+      PGCompositeScalar tyName ->
+        fail $ "A string is expected for type: " ++ T.unpack tyName
 
-data TxtEncodedPGVal
-  = TENull
-  | TELit !Text
-  deriving (Show, Eq, Generic)
-
-instance Hashable TxtEncodedPGVal
-
-instance ToJSON TxtEncodedPGVal where
-  toJSON = \case
-    TENull  -> Null
-    TELit t -> String t
-
-instance FromJSON TxtEncodedPGVal where
-  parseJSON Null       = pure TENull
-  parseJSON (String t) = pure $ TELit t
-  parseJSON v          = AT.typeMismatch "String" v
-
-txtEncodedPGVal :: PGScalarValue -> TxtEncodedPGVal
-txtEncodedPGVal = \case
+txtEncodedVal :: PGScalarValue -> TxtEncodedVal
+txtEncodedVal = \case
   PGValInteger i  -> TELit $ tshow i
   PGValSmallInt i -> TELit $ tshow i
   PGValBigInt i   -> TELit $ tshow i
@@ -230,7 +225,7 @@ txtEncodedPGVal = \case
   -- with 2 decimal places.
   PGValMoney m    -> TELit $ T.pack $ formatScientific Fixed (Just 2) m
   PGValBoolean b  -> TELit $ bool "false" "true" b
-  PGValChar t     -> TELit $ tshow t
+  PGValChar t     -> TELit $ T.singleton t
   PGValVarchar t  -> TELit t
   PGValText t     -> TELit t
   PGValCitext t   -> TELit t
@@ -258,34 +253,35 @@ txtEncodedPGVal = \case
 
 pgTypeOid :: PGScalarType -> PQ.Oid
 pgTypeOid = \case
-  PGSmallInt    -> PTI.int2
-  PGInteger     -> PTI.int4
-  PGBigInt      -> PTI.int8
-  PGSerial      -> PTI.int4
-  PGBigSerial   -> PTI.int8
-  PGFloat       -> PTI.float4
-  PGDouble      -> PTI.float8
-  PGNumeric     -> PTI.numeric
-  PGMoney       -> PTI.numeric
-  PGBoolean     -> PTI.bool
-  PGChar        -> PTI.char
-  PGVarchar     -> PTI.varchar
-  PGText        -> PTI.text
-  PGCitext      -> PTI.text -- Explict type cast to citext needed, See also Note [Type casting prepared params]
-  PGDate        -> PTI.date
-  PGTimeStamp   -> PTI.timestamp
-  PGTimeStampTZ -> PTI.timestamptz
-  PGTimeTZ      -> PTI.timetz
-  PGJSON        -> PTI.json
-  PGJSONB       -> PTI.jsonb
-  PGGeometry    -> PTI.text -- we are using the ST_GeomFromGeoJSON($i) instead of $i
-  PGGeography   -> PTI.text
-  PGRaster      -> PTI.text -- we are using the ST_RastFromHexWKB($i) instead of $i
-  PGUUID        -> PTI.uuid
-  PGLtree       -> PTI.text
-  PGLquery      -> PTI.text
-  PGLtxtquery   -> PTI.text
-  (PGUnknown _) -> PTI.auto
+  PGSmallInt          -> PTI.int2
+  PGInteger           -> PTI.int4
+  PGBigInt            -> PTI.int8
+  PGSerial            -> PTI.int4
+  PGBigSerial         -> PTI.int8
+  PGFloat             -> PTI.float4
+  PGDouble            -> PTI.float8
+  PGNumeric           -> PTI.numeric
+  PGMoney             -> PTI.numeric
+  PGBoolean           -> PTI.bool
+  PGChar              -> PTI.char
+  PGVarchar           -> PTI.varchar
+  PGText              -> PTI.text
+  PGCitext            -> PTI.text -- Explict type cast to citext needed, See also Note [Type casting prepared params]
+  PGDate              -> PTI.date
+  PGTimeStamp         -> PTI.timestamp
+  PGTimeStampTZ       -> PTI.timestamptz
+  PGTimeTZ            -> PTI.timetz
+  PGJSON              -> PTI.json
+  PGJSONB             -> PTI.jsonb
+  PGGeometry          -> PTI.text -- we are using the ST_GeomFromGeoJSON($i) instead of $i
+  PGGeography         -> PTI.text
+  PGRaster            -> PTI.text -- we are using the ST_RastFromHexWKB($i) instead of $i
+  PGUUID              -> PTI.uuid
+  PGLtree             -> PTI.text
+  PGLquery            -> PTI.text
+  PGLtxtquery         -> PTI.text
+  (PGUnknown _)       -> PTI.auto
+  PGCompositeScalar _ -> PTI.auto
 
 binEncoder :: PGScalarValue -> Q.PrepArg
 binEncoder = \case
@@ -317,7 +313,7 @@ binEncoder = \case
   PGValUnknown t                   -> (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
 
 txtEncoder :: PGScalarValue -> S.SQLExp
-txtEncoder colVal = case txtEncodedPGVal colVal of
+txtEncoder colVal = case txtEncodedVal colVal of
   TENull  -> S.SENull
   TELit t -> S.SELit t
 

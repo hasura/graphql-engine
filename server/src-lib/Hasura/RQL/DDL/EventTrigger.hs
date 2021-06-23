@@ -28,9 +28,11 @@ import qualified Hasura.SQL.AnyBackend                  as AB
 import           Hasura.Backends.Postgres.DDL.Table
 import           Hasura.Backends.Postgres.Execute.Types
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.Session
+
 
 archiveEvents :: TriggerName -> Q.TxE QErr ()
 archiveEvents trn =
@@ -68,7 +70,11 @@ markForDelivery eid =
           WHERE id = $1
           |] (Identity eid) True
 
-resolveEventTriggerQuery :: (UserInfoM m, QErrM m, CacheRM m) => CreateEventTriggerQuery -> m (TableCoreInfo 'Postgres, Bool, EventTriggerConf)
+resolveEventTriggerQuery
+  :: forall pgKind m
+   . (Backend ('Postgres pgKind), UserInfoM m, QErrM m, CacheRM m)
+  => CreateEventTriggerQuery ('Postgres pgKind)
+  -> m (TableCoreInfo ('Postgres pgKind), Bool, EventTriggerConf)
 resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace) = do
   ti <- askTableCoreInfo source qt
   -- can only replace for same table
@@ -88,8 +94,10 @@ resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update d
       SubCArray pgcols -> forM_ pgcols (assertPGCol (_tciFieldInfoMap ti) "")
 
 createEventTriggerQueryMetadata
-  :: (QErrM m, UserInfoM m, CacheRWM m, MetadataM m)
-  => CreateEventTriggerQuery -> m (TableCoreInfo 'Postgres, EventTriggerConf)
+  :: forall pgKind m
+   . (BackendMetadata ('Postgres pgKind), QErrM m, UserInfoM m, CacheRWM m, MetadataM m)
+  => CreateEventTriggerQuery ('Postgres pgKind)
+  -> m (TableCoreInfo ('Postgres pgKind), EventTriggerConf)
 createEventTriggerQueryMetadata q = do
   (tableCoreInfo, replace, triggerConf) <- resolveEventTriggerQuery q
   let table = cetqTable q
@@ -98,30 +106,34 @@ createEventTriggerQueryMetadata q = do
       metadataObj =
         MOSourceObjId source
           $ AB.mkAnyBackend
-          $ SMOTableObj table
+          $ SMOTableObj @('Postgres pgKind) table
           $ MTOTrigger triggerName
   buildSchemaCacheFor metadataObj
     $ MetadataModifier
-    $ tableMetadataSetter source table.tmEventTriggers %~
+    $ tableMetadataSetter @('Postgres pgKind) source table.tmEventTriggers %~
       if replace then ix triggerName .~ triggerConf
       else OMap.insert triggerName triggerConf
   pure (tableCoreInfo, triggerConf)
 
 runCreateEventTriggerQuery
-  :: (QErrM m, UserInfoM m, CacheRWM m, MetadataM m)
-  => CreateEventTriggerQuery -> m EncJSON
+  :: forall pgKind m
+   . (BackendMetadata ('Postgres pgKind), QErrM m, UserInfoM m, CacheRWM m, MetadataM m)
+  => CreateEventTriggerQuery ('Postgres pgKind)
+  -> m EncJSON
 runCreateEventTriggerQuery q = do
-  void $ createEventTriggerQueryMetadata q
+  void $ createEventTriggerQueryMetadata @pgKind q
   pure successMsg
 
 runDeleteEventTriggerQuery
-  :: (MonadError QErr m, CacheRWM m, MonadIO m, MetadataM m)
-  => DeleteEventTriggerQuery -> m EncJSON
+  :: forall pgKind m
+   . (BackendMetadata ('Postgres pgKind), MonadError QErr m, CacheRWM m, MonadIO m, MetadataM m)
+  => DeleteEventTriggerQuery ('Postgres pgKind)
+  -> m EncJSON
 runDeleteEventTriggerQuery (DeleteEventTriggerQuery source name) = do
   -- liftTx $ delEventTriggerFromCatalog name
   sourceInfo <- askSourceInfo source
   let maybeTable = HM.lookup name $ HM.unions $
-        flip map (HM.toList $ _siTables sourceInfo) $ \(table, tableInfo) ->
+        flip map (HM.toList $ _siTables @('Postgres pgKind) sourceInfo) $ \(table, tableInfo) ->
         HM.map (const table) $ _tiEventTriggerInfoMap tableInfo
   table <- onNothing maybeTable $ throw400 NotExists $
            "event trigger with name " <> name <<> " not exists"
@@ -129,7 +141,7 @@ runDeleteEventTriggerQuery (DeleteEventTriggerQuery source name) = do
   withNewInconsistentObjsCheck
     $ buildSchemaCache
     $ MetadataModifier
-    $ tableMetadataSetter source table %~ dropEventTriggerInMetadata name
+    $ tableMetadataSetter @('Postgres pgKind) source table %~ dropEventTriggerInMetadata name
 
   liftEitherM $ liftIO $ runPgSourceWriteTx (_siConfiguration sourceInfo) $ do
     delTriggerQ name
@@ -140,16 +152,18 @@ dropEventTriggerInMetadata :: TriggerName -> TableMetadata b -> TableMetadata b
 dropEventTriggerInMetadata name =
   tmEventTriggers %~ OMap.delete name
 
-deliverEvent ::EventId -> Q.TxE QErr ()
+deliverEvent :: EventId -> Q.TxE QErr ()
 deliverEvent eventId = do
   checkEvent eventId
   markForDelivery eventId
 
 runRedeliverEvent
-  :: (MonadIO m, CacheRM m, QErrM m, MetadataM m)
-  => RedeliverEventQuery -> m EncJSON
+  :: forall pgKind m
+   . (BackendMetadata ('Postgres pgKind), MonadIO m, CacheRM m, QErrM m, MetadataM m)
+  => RedeliverEventQuery ('Postgres pgKind)
+  -> m EncJSON
 runRedeliverEvent (RedeliverEventQuery eventId source) = do
-  sourceConfig <- askSourceConfig source
+  sourceConfig <- askSourceConfig @('Postgres pgKind) source
   liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ deliverEvent eventId
   pure successMsg
 
@@ -170,15 +184,17 @@ insertManualEvent qt trn rowData = do
     getEid (x:_) = return x
 
 runInvokeEventTrigger
-  :: (MonadIO m, QErrM m, CacheRM m, MetadataM m)
-  => InvokeEventTriggerQuery -> m EncJSON
+  :: forall pgKind m
+   . (BackendMetadata ('Postgres pgKind), MonadIO m, QErrM m, CacheRM m, MetadataM m)
+  => InvokeEventTriggerQuery ('Postgres pgKind)
+  -> m EncJSON
 runInvokeEventTrigger (InvokeEventTriggerQuery name source payload) = do
   trigInfo <- askEventTriggerInfo source name
   assertManual $ etiOpsDef trigInfo
   ti  <- askTabInfoFromTrigger source name
-  sourceConfig <- askSourceConfig source
+  sourceConfig <- askSourceConfig @('Postgres pgKind) source
   eid <- liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $
-         insertManualEvent (_tciName $ _tiCoreInfo ti) name payload
+         insertManualEvent (tableInfoName ti) name payload
   return $ encJFromJValue $ object ["event_id" .= eid]
   where
     assertManual (TriggerOpsDef _ _ _ man) = case man of
@@ -198,7 +214,7 @@ getEventTriggerDef triggerName = do
 
 askTabInfoFromTrigger
   :: (QErrM m, CacheRM m)
-  => SourceName -> TriggerName -> m (TableInfo 'Postgres)
+  => SourceName -> TriggerName -> m (TableInfo ('Postgres 'Vanilla))
 askTabInfoFromTrigger sourceName trn = do
   sc <- askSchemaCache
   let tabInfos = HM.elems $ fromMaybe mempty $ unsafeTableCache sourceName $ scSources sc

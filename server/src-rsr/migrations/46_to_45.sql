@@ -1,0 +1,1 @@
+DROP INDEX hdb_catalog.hdb_cron_events_unique_scheduled;

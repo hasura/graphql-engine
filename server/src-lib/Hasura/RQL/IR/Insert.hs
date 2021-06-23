@@ -2,6 +2,8 @@ module Hasura.RQL.IR.Insert where
 
 import           Hasura.Prelude
 
+import           Data.Kind                     (Type)
+
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.Returning
 import           Hasura.RQL.Types.Backend
@@ -10,11 +12,12 @@ import           Hasura.RQL.Types.Relationship
 import           Hasura.SQL.Backend
 
 
-data AnnInsert (b :: BackendType) v
+data AnnInsert (b :: BackendType) (r :: BackendType -> Type) v
   = AnnInsert
   { _aiFieldName :: !Text
-  , _aiIsSingle  :: Bool
-  , _aiData      :: AnnMultiInsert b v
+  , _aiIsSingle  :: !Bool
+  , _aiData      :: !(MultiObjIns b v)
+  , _aiOutput    :: !(MutationOutputG b r v)
   }
 
 data AnnIns (b :: BackendType) a v
@@ -46,8 +49,6 @@ data AnnInsObj (b :: BackendType) v
   , _aioArrRels :: ![ArrRelIns b v]
   }
 
-type AnnSingleInsert b v = (SingleObjIns b v, MutationOutputG b v)
-type AnnMultiInsert  b v = (MultiObjIns  b v, MutationOutputG b v)
 
 instance Semigroup (AnnInsObj backend v) where
   (AnnInsObj col1 obj1 rel1) <> (AnnInsObj col2 obj2 rel2) =
@@ -55,7 +56,6 @@ instance Semigroup (AnnInsObj backend v) where
 
 instance Monoid (AnnInsObj backend v) where
   mempty = AnnInsObj [] [] []
-
 
 
 data ConflictTarget (b :: BackendType)
@@ -70,7 +70,6 @@ data ConflictClauseP1 (b :: BackendType) v
   deriving (Functor, Foldable, Traversable)
 
 
-
 data InsertQueryP1 (b :: BackendType)
   = InsertQueryP1
   { iqp1Table     :: !(TableName b)
@@ -81,3 +80,40 @@ data InsertQueryP1 (b :: BackendType)
   , iqp1Output    :: !(MutationOutput b)
   , iqp1AllCols   :: ![ColumnInfo b]
   }
+
+
+traverseAnnInsert
+  :: (Applicative f, Backend backend)
+  => (a -> f b)
+  -> AnnInsert backend r a
+  -> f (AnnInsert backend r b)
+traverseAnnInsert f (AnnInsert fieldName isSingle annIns mutationOutput) =
+  AnnInsert fieldName isSingle
+  <$> traverseMulti annIns
+  <*> traverseMutationOutput f mutationOutput
+  where
+    traverseMulti (AnnIns objs tableName conflictClause checkCond columns defaultValues) = AnnIns
+      <$> traverse traverseObject objs
+      <*> pure tableName
+      <*> traverse (traverse f) conflictClause
+      <*> ( (,)
+            <$> traverseAnnBoolExp f (fst checkCond)
+            <*> traverse (traverseAnnBoolExp f) (snd checkCond)
+          )
+      <*> pure columns
+      <*> traverse f defaultValues
+    traverseSingle (AnnIns obj tableName conflictClause checkCond columns defaultValues) = AnnIns
+      <$> traverseObject obj
+      <*> pure tableName
+      <*> traverse (traverse f) conflictClause
+      <*> ( (,)
+            <$> traverseAnnBoolExp f (fst checkCond)
+            <*> traverse (traverseAnnBoolExp f) (snd checkCond)
+          )
+      <*> pure columns
+      <*> traverse f defaultValues
+    traverseObject (AnnInsObj columns objRels arrRels) = AnnInsObj
+      <$> traverse (traverse f) columns
+      <*> traverse (traverseRel traverseSingle) objRels
+      <*> traverse (traverseRel traverseMulti)  arrRels
+    traverseRel z (RelIns object relInfo) = RelIns <$> z object <*> pure relInfo

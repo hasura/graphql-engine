@@ -9,18 +9,18 @@ module Hasura.GraphQL.Schema.Postgres
 
 import           Hasura.Prelude
 
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser         hiding (EnumValueInfo, field)
 import           Hasura.GraphQL.Schema.Action
 import           Hasura.GraphQL.Schema.Backend (MonadBuildSchema)
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 
 
 buildActionQueryFields
-  :: MonadBuildSchema 'Postgres r m n
+  :: MonadBuildSchema ('Postgres 'Vanilla) r m n
   => NonObjectTypeMap
   -> ActionInfo
-  -> m [FieldParser n (QueryRootField UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
 buildActionQueryFields nonObjectCustomTypes actionInfo =
   maybeToList <$> case _adType (_aiDefinition actionInfo) of
     ActionQuery                       ->
@@ -30,10 +30,10 @@ buildActionQueryFields nonObjectCustomTypes actionInfo =
       fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery actionInfo
 
 buildActionMutationFields
-  :: MonadBuildSchema 'Postgres r m n
+  :: MonadBuildSchema ('Postgres 'Vanilla) r m n
   => NonObjectTypeMap
   -> ActionInfo
-  -> m [FieldParser n (MutationRootField UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
 buildActionMutationFields nonObjectCustomTypes actionInfo =
   maybeToList <$> case _adType (_aiDefinition actionInfo) of
     ActionQuery -> pure Nothing
@@ -43,9 +43,10 @@ buildActionMutationFields nonObjectCustomTypes actionInfo =
       fmap (fmap (RFAction . AMAsync)) <$> actionAsyncMutation nonObjectCustomTypes actionInfo
 
 buildActionSubscriptionFields
-  :: MonadBuildSchema 'Postgres r m n
+  :: MonadBuildSchema ('Postgres 'Vanilla) r m n
   => ActionInfo
-  -> m [FieldParser n (QueryRootField UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue
+                       UnpreparedValue)]
 buildActionSubscriptionFields actionInfo =
   maybeToList <$> case _adType (_aiDefinition actionInfo) of
     ActionQuery                       -> pure Nothing

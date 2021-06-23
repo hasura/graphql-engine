@@ -53,7 +53,7 @@ import           Data.Aeson.Internal
 import           Data.Aeson.TH
 import           Data.Monoid
 import           Data.Text.Extended
-import           Data.Typeable
+import           Data.Typeable                 (Typeable)
 
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.Types.Backend
@@ -61,7 +61,6 @@ import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Relationship
 import           Hasura.SQL.Backend
-import           Hasura.SQL.Types
 import           Hasura.Session
 
 
@@ -199,7 +198,7 @@ instance (Backend b, Hashable  (BooleanOperators b (PartialSQLExp b))) => Cachea
 instance Backend b => ToJSON (PartialSQLExp b) where
   toJSON = \case
     PSESessVar colTy sessVar -> toJSON (colTy, sessVar)
-    PSESQLExp e              -> toJSON $ toSQLTxt e
+    PSESQLExp e              -> toJSON e
 
 isStaticValue :: PartialSQLExp backend -> Bool
 isStaticValue = \case
@@ -235,12 +234,17 @@ data OpExpG (b :: BackendType) a
   | ALIKE  !a -- LIKE
   | ANLIKE !a -- NOT LIKE
 
-  | CEQ  !(Column b)
-  | CNE  !(Column b)
-  | CGT  !(Column b)
-  | CLT  !(Column b)
-  | CGTE !(Column b)
-  | CLTE !(Column b)
+  -- column comparison operators, the (Maybe (TableName b))
+  -- is for setting the root table if there's a comparison
+  -- of a relationship column with a column of the root table
+  -- it will be set, otherwise it will be Nothing
+
+  | CEQ  !(Column b, Maybe (TableName b))
+  | CNE  !(Column b, Maybe (TableName b))
+  | CGT  !(Column b, Maybe (TableName b))
+  | CLT  !(Column b, Maybe (TableName b))
+  | CGTE !(Column b, Maybe (TableName b))
+  | CLTE !(Column b, Maybe (TableName b))
 
   | ANISNULL    -- IS NULL
   | ANISNOTNULL -- IS NOT NULL
@@ -284,7 +288,7 @@ instance (Backend b, ToJSONKeyValue (BooleanOperators b a), ToJSON a) => ToJSONK
 
     ABackendSpecific b -> toJSONKeyValue b
 
-opExpDepCol :: OpExpG backend a -> Maybe (Column backend)
+opExpDepCol :: OpExpG backend a -> Maybe (Column backend, Maybe (TableName backend))
 opExpDepCol = \case
   CEQ c  -> Just c
   CNE c  -> Just c
@@ -429,8 +433,9 @@ $(deriveJSON hasuraJSON ''STIntersectsGeomminNband)
 -- this, and why it exists. It might be a relic of a needed differentiation, now lost?
 -- TODO: can this be removed?
 newtype AnnColumnCaseBoolExpField (b :: BackendType) a
-  = AnnColumnCaseBoolExpField { _accColCaseBoolExpField :: (AnnBoolExpFld b a)}
+  = AnnColumnCaseBoolExpField { _accColCaseBoolExpField :: AnnBoolExpFld b a }
   deriving (Functor, Foldable, Traversable, Generic)
+
 deriving instance (Backend b, Eq (BooleanOperators b a), Eq a) => Eq (AnnColumnCaseBoolExpField b a)
 instance (Backend b, NFData    (BooleanOperators b a), NFData    a) => NFData    (AnnColumnCaseBoolExpField b a)
 instance (Backend b, Cacheable (BooleanOperators b a), Cacheable a) => Cacheable (AnnColumnCaseBoolExpField b a)

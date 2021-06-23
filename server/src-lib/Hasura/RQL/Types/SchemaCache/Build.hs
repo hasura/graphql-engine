@@ -35,7 +35,7 @@ import           Control.Lens
 import           Control.Monad.Morph
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Control.Monad.Unique
-import           Data.Aeson                          (toJSON)
+import           Data.Aeson                          (Value, toJSON)
 import           Data.Aeson.TH
 import           Data.List                           (nub)
 import           Data.Text.Extended
@@ -44,8 +44,8 @@ import           Network.HTTP.Client.Extended
 import qualified Hasura.Tracing                      as Tracing
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Base.Error
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.Metadata.Object
 import           Hasura.RQL.Types.RemoteSchema       (RemoteSchemaName)
@@ -83,13 +83,17 @@ partitionCollectedInfo =
       in (inconsistencies, dependency:dependencies)
 
 recordInconsistency
-  :: (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => (MetadataObject, Text) `arr` ()
-recordInconsistency = first (arr (:[])) >>> recordInconsistencies
+  :: (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ((Maybe Value, MetadataObject), Text) `arr` ()
+recordInconsistency = first (arr (:[])) >>> recordInconsistencies'
 
 recordInconsistencies
   :: (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ([MetadataObject], Text) `arr` ()
-recordInconsistencies = proc (metadataObjects, reason) ->
-  tellA -< Seq.fromList $ map (review _InconsistentMetadata . InconsistentObject reason) metadataObjects
+recordInconsistencies = first (arr (map (Nothing,))) >>> recordInconsistencies'
+
+recordInconsistencies'
+  :: (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ([(Maybe Value, MetadataObject)], Text) `arr` ()
+recordInconsistencies' = proc (metadataObjects, reason) ->
+  tellA -< Seq.fromList $ map (review _InconsistentMetadata . uncurry (InconsistentObject reason)) metadataObjects
 
 recordDependencies
   :: (ArrowWriter (Seq CollectedInfo) arr)
@@ -105,7 +109,7 @@ withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
   result <- runErrorA f -< (e, s)
   case result of
     Left err -> do
-      recordInconsistency -< (metadataObject, qeError err)
+      recordInconsistency -< ((qeInternal err, metadataObject), qeError err)
       returnA -< Nothing
     Right v -> returnA -< Just v
 {-# INLINABLE withRecordInconsistency #-}
@@ -127,7 +131,7 @@ data BuildReason
   -- updated the catalog. Since that instance already updated table event triggers in @hdb_catalog@,
   -- this build should be read-only.
   | CatalogSync
-  deriving (Eq)
+  deriving (Eq, Show)
 
 data CacheInvalidations = CacheInvalidations
   { ciMetadata      :: !Bool
@@ -230,7 +234,7 @@ buildSchemaCacheFor objectId metadataModifier = do
 
   for_ (M.lookup objectId newInconsistentObjects) $ \matchingObjects -> do
     let reasons = commaSeparated $ imReason <$> matchingObjects
-    throwError (err400 ConstraintViolation reasons) { qeInternal = Just $ toJSON matchingObjects }
+    throwError (err400 InvalidConfiguration reasons) { qeInternal = Just $ toJSON matchingObjects }
 
   unless (null newInconsistentObjects) $
     throwError (err400 Unexpected "cannot continue due to new inconsistent metadata")

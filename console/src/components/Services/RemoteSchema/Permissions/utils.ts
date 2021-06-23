@@ -19,6 +19,8 @@ import {
   ValueNode,
   GraphQLInputType,
   buildSchema,
+  GraphQLUnionType,
+  InputObjectTypeDefinitionNode,
 } from 'graphql';
 import {
   isJsonString,
@@ -168,6 +170,10 @@ export const getTree = (
     return Object.values(introspectionSchemaFields).map(
       ({ name, args: argArray, type, ...rest }: any) => {
         let checked = false;
+        const parentName =
+          typeS === 'QUERY'
+            ? `type ${introspectionSchema?.getQueryType()?.name}`
+            : `type ${introspectionSchema?.getMutationType()?.name}`;
         const args = argArray.reduce((p: ArgTreeType, c: FieldType) => {
           return { ...p, [c.name]: { ...c } };
         }, {});
@@ -178,7 +184,14 @@ export const getTree = (
         ) {
           checked = true;
         }
-        return { name, checked, args, return: type.toString(), ...rest };
+        return {
+          name,
+          checked,
+          args,
+          return: type.toString(),
+          parentName,
+          ...rest,
+        };
       }
     );
   }
@@ -215,6 +228,7 @@ export const getType = (
   const scalarTypes: RemoteSchemaFields[] = [];
   const inputObjectTypes: RemoteSchemaFields[] = [];
   const objectTypes: RemoteSchemaFields[] = [];
+  const unionTypes: RemoteSchemaFields[] = [];
 
   Object.entries(introspectionSchemaFields).forEach(([key, value]: any) => {
     if (
@@ -222,7 +236,8 @@ export const getType = (
         value instanceof GraphQLObjectType ||
         value instanceof GraphQLInputObjectType ||
         value instanceof GraphQLEnumType ||
-        value instanceof GraphQLScalarType
+        value instanceof GraphQLScalarType ||
+        value instanceof GraphQLUnionType
       )
     )
       return;
@@ -316,6 +331,11 @@ export const getType = (
         if (v.defaultValue !== undefined) {
           field.defaultValue = v.defaultValue;
         }
+        if (value instanceof GraphQLInputObjectType) {
+          field.args = { [k]: v };
+          field.isInputObjectType = true;
+          field.parentName = type.name;
+        }
         childArray.push(field);
       });
 
@@ -323,8 +343,51 @@ export const getType = (
       if (value instanceof GraphQLObjectType) objectTypes.push(type);
       if (value instanceof GraphQLInputObjectType) inputObjectTypes.push(type);
     }
+
+    if (value instanceof GraphQLUnionType) {
+      let isFieldPresent = true;
+      let permissionsTypesVal: any;
+
+      // Check if the type is present in the permission schema coming from user.
+      if (permissionsSchema !== null && permissionsSchemaFields !== null) {
+        if (key in permissionsSchemaFields) {
+          permissionsTypesVal = permissionsSchemaFields[key].getTypes();
+        } else {
+          isFieldPresent = false;
+        }
+      }
+
+      type.name = `union ${name}`;
+      const childArray: CustomFieldType[] = [];
+      const typesVal = value.getTypes();
+      Object.entries(typesVal).forEach(([k, v]) => {
+        let checked = false;
+        if (
+          permissionsSchema !== null &&
+          isFieldPresent &&
+          k in permissionsTypesVal
+        ) {
+          checked = true;
+        }
+        const field: CustomFieldType = {
+          name: v.name,
+          checked,
+          return: v.name,
+        };
+        childArray.push(field);
+      });
+
+      type.children = childArray;
+      unionTypes.push(type);
+    }
   });
-  return [...objectTypes, ...inputObjectTypes, ...enumTypes, ...scalarTypes];
+  return [
+    ...objectTypes,
+    ...inputObjectTypes,
+    ...unionTypes,
+    ...enumTypes,
+    ...scalarTypes,
+  ];
 };
 
 export const getRemoteSchemaFields = (
@@ -483,6 +546,18 @@ const getSDLField = (
     return `${result}\n`;
   }
 
+  // add union fields to SDL
+  if (typeName.startsWith('union') && type.children) {
+    result = `${typeName} =`;
+    type.children.forEach(t => {
+      if (t.checked) {
+        result = `${result} ${t.name} |`;
+      }
+    });
+    result = result.substring(0, result.length - 1);
+    return `${result}\n`;
+  }
+
   // add other fields to SDL
   result = `${typeName}{`;
 
@@ -491,16 +566,17 @@ const getSDLField = (
       if (!f.checked) return null;
 
       let fieldStr = f.name;
+      let valueStr = '';
 
       // enum types don't have args
       if (!typeName.startsWith('enum')) {
         if (f.args && !isEmpty(f.args)) {
           fieldStr = `${fieldStr}(`;
           Object.values(f.args).forEach((arg: GraphQLInputField) => {
-            let valueStr = `${arg.name} : ${arg.type.inspect()}`;
+            valueStr = `${arg.name} : ${arg.type.inspect()}`;
 
-            if (argTree && argTree[f.name] && argTree[f.name][arg.name]) {
-              const argName = argTree[f.name][arg.name];
+            if (argTree?.[type?.name]?.[f?.name]?.[arg?.name]) {
+              const argName = argTree[type.name][f.name][arg.name];
               let unquoted;
               const isEnum =
                 typeof argName === 'string' &&
@@ -534,9 +610,14 @@ const getSDLField = (
               : `${fieldStr} : ${f.return} = ${f.defaultValue}`;
         }
       }
-
-      result = `${result}
+      // only need the arg string for input object types
+      if (typeName.startsWith('input')) {
+        result = `${result}
+      ${valueStr}`;
+      } else {
+        result = `${result}
       ${fieldStr}`;
+      }
     });
   return `${result}\n}`;
 };
@@ -674,13 +755,18 @@ const getPresets = (field: FieldDefinitionNode) => {
   return res;
 };
 
-const getFieldsMap = (fields: FieldDefinitionNode[]) => {
-  const res: Record<string, any> = {};
+const getFieldsMap = (fields: FieldDefinitionNode[], parentName: string) => {
+  const type = `type ${parentName}`;
+  const res: Record<string, any> = { [type]: {} };
   fields.forEach(field => {
-    res[field?.name?.value] = getPresets(field);
+    res[type][field?.name?.value] = getPresets(field);
   });
   return res;
 };
+
+type ArgTypesDefinition =
+  | ObjectTypeDefinitionNode
+  | InputObjectTypeDefinitionNode;
 
 export const getArgTreeFromPermissionSDL = (
   definition: string,
@@ -689,12 +775,28 @@ export const getArgTreeFromPermissionSDL = (
   const roots = getSchemaRoots(introspectionSchema);
   try {
     const schema: DocumentNode = parse(definition);
-    const defs = schema.definitions as ObjectTypeDefinitionNode[];
+    const defs = schema.definitions as ArgTypesDefinition[];
     const argTree =
       defs &&
       defs.reduce((acc = [], i) => {
         if (i.name && i.fields && roots.includes(i?.name?.value)) {
-          const res = getFieldsMap(i.fields as FieldDefinitionNode[]);
+          const res = getFieldsMap(
+            i.fields as FieldDefinitionNode[],
+            i.name.value
+          );
+          return { ...acc, ...res };
+        }
+        if (i.name && i.fields && i.kind === 'InputObjectTypeDefinition') {
+          const type = `input ${i.name.value}`;
+          const res: Record<string, any> = { [type]: {} };
+          i.fields.forEach(field => {
+            if (field.directives && field.directives.length > 0) {
+              res[type][field.name?.value] = {};
+              res[type][field.name?.value][field.name?.value] = getDirectives(
+                field
+              );
+            }
+          });
           return { ...acc, ...res };
         }
         return acc;

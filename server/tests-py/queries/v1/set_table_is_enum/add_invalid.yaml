@@ -6,17 +6,20 @@ response:
   - definition:
       schema: public
       name: employees
-    reason: "the table \"employees\" cannot be used as an enum for the following reasons:\n\
-      \  • the table’s primary key (\"id\") must have type \"text\", not type \"integer\"\
-      \n  • the table must have exactly one primary key and optionally one comment\
-      \ column, not 4 columns (favorite_color, gets_paid_on, id, name)\n"
+    reason: "Inconsistent object: the table \"employees\" cannot be used as an enum\
+      \ for the following reasons:\n  • the table’s primary key (\"id\") must have\
+      \ type \"text\", not type \"integer\"\n  • the table must have exactly one primary\
+      \ key and optionally one comment column, not 4 columns (favorite_color, gets_paid_on,\
+      \ id, name)\n"
+    name: table employees in source default
     type: table
   path: $.args
-  error: "the table \"employees\" cannot be used as an enum for the following reasons:\n\
-    \  • the table’s primary key (\"id\") must have type \"text\", not type \"integer\"\
-    \n  • the table must have exactly one primary key and optionally one comment column,\
-    \ not 4 columns (favorite_color, gets_paid_on, id, name)\n"
-  code: constraint-violation
+  error: "Inconsistent object: the table \"employees\" cannot be used as an enum for\
+    \ the following reasons:\n  • the table’s primary key (\"id\") must have type\
+    \ \"text\", not type \"integer\"\n  • the table must have exactly one primary\
+    \ key and optionally one comment column, not 4 columns (favorite_color, gets_paid_on,\
+    \ id, name)\n"
+  code: invalid-configuration
 query:
   type: set_table_is_enum
   args:

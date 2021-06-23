@@ -44,7 +44,7 @@ Get started using an existing database
 
 .. admonition:: MS SQL Server support (alpha)
 
-  Hasura GraphQL engine supports **SQL server 2016 and above**. Head to :ref:`this guide <database_ms-sql-server>`
+  Hasura GraphQL engine supports **SQL server 2016 and above**. Head to :ref:`this guide <database_ms_sql_server>`
   to get started with SQL Server.
 
 .. admonition:: MySQL support (alpha)

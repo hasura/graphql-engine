@@ -1,76 +1,149 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE UndecidableInstances #-}
 
-module Hasura.Backends.Postgres.Instances.Schema () where
+module Hasura.Backends.Postgres.Instances.Schema
+  (
+  ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                             as J
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashMap.Strict.Extended           as M
-import qualified Data.HashMap.Strict.InsOrd.Extended    as OMap
-import qualified Data.List.NonEmpty                     as NE
-import qualified Data.Text                              as T
-import qualified Database.PG.Query                      as Q
-import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.Aeson                                  as J
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.HashMap.Strict.Extended                as M
+import qualified Data.HashMap.Strict.InsOrd.Extended         as OMap
+import qualified Data.List.NonEmpty                          as NE
+import qualified Data.Text                                   as T
+import qualified Language.GraphQL.Draft.Syntax               as G
 
 import           Data.Has
 import           Data.Parser.JSONPath
 import           Data.Text.Extended
+import           Data.Typeable
 
-import qualified Hasura.GraphQL.Parser                  as P
-import qualified Hasura.GraphQL.Schema.Backend          as BS
-import qualified Hasura.GraphQL.Schema.Build            as GSB
-import qualified Hasura.RQL.IR.Select                   as IR
-import qualified Hasura.RQL.IR.Update                   as IR
-import qualified Hasura.SQL.AnyBackend                  as AB
+import qualified Hasura.GraphQL.Parser                       as P
+import qualified Hasura.GraphQL.Schema.Backend               as BS
+import qualified Hasura.GraphQL.Schema.Build                 as GSB
+import qualified Hasura.RQL.IR.Select                        as IR
+import qualified Hasura.RQL.IR.Update                        as IR
+import qualified Hasura.SQL.AnyBackend                       as AB
 
-import           Hasura.Backends.Postgres.SQL.DML       as PG hiding (CountType)
-import           Hasura.Backends.Postgres.SQL.Types     as PG hiding (FunctionName, TableName)
-import           Hasura.Backends.Postgres.SQL.Value     as PG
+import           Hasura.Backends.Postgres.SQL.DML            as PG hiding (CountType)
+import           Hasura.Backends.Postgres.SQL.Types          as PG hiding (FunctionName, TableName)
+import           Hasura.Backends.Postgres.SQL.Value          as PG
 import           Hasura.Backends.Postgres.Types.BoolExp
 import           Hasura.Backends.Postgres.Types.Column
-import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Parser                  hiding (EnumValueInfo, field)
-import           Hasura.GraphQL.Parser.Internal.Parser  hiding (field)
-import           Hasura.GraphQL.Schema.Backend          (BackendSchema, ComparisonExp,
-                                                         MonadBuildSchema)
+import           Hasura.Base.Error
+import           Hasura.GraphQL.Parser                       hiding (EnumValueInfo, field)
+import           Hasura.GraphQL.Parser.Internal.Parser       hiding (field)
+import           Hasura.GraphQL.Parser.Internal.TypeChecking
+import           Hasura.GraphQL.Schema.Backend               (BackendSchema, ComparisonExp,
+                                                              MonadBuildSchema)
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
+import           Hasura.SQL.Tag
 import           Hasura.SQL.Types
 
 
 ----------------------------------------------------------------
 -- BackendSchema instance
 
-instance BackendSchema 'Postgres where
+-- | This class is an implementation detail of 'BackendSchema'.
+-- Some functions of 'BackendSchema' differ across different Postgres "kinds",
+-- or call to functions (such as those related to Relay) that have not been
+-- generalized to all kinds of Postgres and still explicitly work on Vanilla
+-- Postgres. This class alllows each "kind" to specify its own specific
+-- implementation. All common code is directly part of `BackendSchema`.
+class PostgresSchema (pgKind :: PostgresKind) where
+  pgkBuildTableRelayQueryFields
+    :: BS.MonadBuildSchema ('Postgres pgKind) r m n
+    => SourceName
+    -> SourceConfig ('Postgres pgKind)
+    -> TableName ('Postgres pgKind)
+    -> TableInfo ('Postgres pgKind)
+    -> G.Name
+    -> NESeq (ColumnInfo ('Postgres pgKind))
+    -> SelPermInfo ('Postgres pgKind)
+    -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  pgkBuildFunctionRelayQueryFields
+    :: BS.MonadBuildSchema ('Postgres pgKind) r m n
+    => SourceName
+    -> SourceConfig ('Postgres pgKind)
+    -> FunctionName ('Postgres pgKind)
+    -> FunctionInfo ('Postgres pgKind)
+    -> TableName ('Postgres pgKind)
+    -> NESeq (ColumnInfo ('Postgres pgKind))
+    -> SelPermInfo ('Postgres pgKind)
+    -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  pgkRelayExtension
+    :: Maybe (XRelay ('Postgres pgKind))
+  pgkNode
+    :: BS.MonadBuildSchema ('Postgres pgKind) r m n
+    => m (Parser 'Output n
+          (HashMap
+            ( TableName ('Postgres pgKind)
+            )
+            ( SourceName
+            , SourceConfig ('Postgres pgKind)
+            , SelPermInfo  ('Postgres pgKind)
+            , PrimaryKeyColumns ('Postgres pgKind)
+            , AnnotatedFields ('Postgres pgKind)
+            )
+          )
+         )
+
+instance PostgresSchema 'Vanilla where
+  pgkBuildTableRelayQueryFields    = buildTableRelayQueryFields
+  pgkBuildFunctionRelayQueryFields = buildFunctionRelayQueryFields
+  pgkRelayExtension = Just ()
+  pgkNode = nodePG
+
+instance PostgresSchema 'Citus where
+  pgkBuildTableRelayQueryFields     _ _ _ _ _ _ _ = pure []
+  pgkBuildFunctionRelayQueryFields  _ _ _ _ _ _ _ = pure []
+  pgkRelayExtension = Nothing
+  pgkNode = undefined
+
+
+-- postgres schema
+
+instance
+  ( HasTag   ('Postgres pgKind)
+  , Typeable ('Postgres pgKind)
+  , Backend  ('Postgres pgKind)
+  , PostgresSchema pgKind
+  ) => BackendSchema ('Postgres pgKind) where
   -- top level parsers
   buildTableQueryFields          = GSB.buildTableQueryFields
-  buildTableRelayQueryFields     = buildTableRelayQueryFields
+  buildTableRelayQueryFields     = pgkBuildTableRelayQueryFields
   buildTableInsertMutationFields = GSB.buildTableInsertMutationFields
   buildTableUpdateMutationFields = GSB.buildTableUpdateMutationFields
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
   buildFunctionQueryFields       = GSB.buildFunctionQueryFields
-  buildFunctionRelayQueryFields  = buildFunctionRelayQueryFields
+  buildFunctionRelayQueryFields  = pgkBuildFunctionRelayQueryFields
   buildFunctionMutationFields    = GSB.buildFunctionMutationFields
+
+  -- table components
+  tableArguments = defaultTableArgs
+
   -- backend extensions
-  relayExtension    = const $ Just ()
-  nodesAggExtension = const $ Just ()
+  relayExtension    = pgkRelayExtension @pgKind
+  nodesAggExtension = Just ()
+
   -- indivdual components
   columnParser              = columnParser
   jsonPathArg               = jsonPathArg
   orderByOperators          = orderByOperators
   comparisonExps            = comparisonExps
   updateOperators           = updateOperators
-  offsetParser              = offsetParser
   mkCountType               = mkCountType
   aggregateOrderByCountType = PG.PGInteger
   computedField             = computedFieldPG
-  node                      = nodePG
-  tableDistinctOn           = tableDistinctOn
-  remoteRelationshipField   = remoteRelationshipFieldPG
+  node                      = pgkNode
+
   -- SQL literals
   columnDefaultValue = const PG.columnDefaultValue
 
@@ -79,15 +152,16 @@ instance BackendSchema 'Postgres where
 -- Top level parsers
 
 buildTableRelayQueryFields
-  :: MonadBuildSchema 'Postgres r m n
+  :: forall pgKind m n r
+   . MonadBuildSchema ('Postgres pgKind) r m n
   => SourceName
-  -> SourceConfig 'Postgres
-  -> TableName    'Postgres
-  -> TableInfo    'Postgres
+  -> SourceConfig ('Postgres pgKind)
+  -> TableName    ('Postgres pgKind)
+  -> TableInfo    ('Postgres pgKind)
   -> G.Name
-  -> NESeq (ColumnInfo 'Postgres)
-  -> SelPermInfo  'Postgres
-  -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+  -> NESeq (ColumnInfo ('Postgres pgKind))
+  -> SelPermInfo  ('Postgres pgKind)
+  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
 buildTableRelayQueryFields sourceName sourceInfo tableName tableInfo gqlName pkeyColumns selPerms = do
   let
     mkRF = RFDB sourceName
@@ -96,20 +170,23 @@ buildTableRelayQueryFields sourceName sourceInfo tableName tableInfo gqlName pke
              . QDBR
     fieldName = gqlName <> $$(G.litName "_connection")
     fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
-  optionalFieldParser (mkRF . QDBConnection) $ selectTableConnection tableName fieldName fieldDesc pkeyColumns selPerms
+  fmap afold
+    $ optionalFieldParser (mkRF . QDBConnection)
+    $ selectTableConnection sourceName tableInfo fieldName fieldDesc pkeyColumns selPerms
 
 buildFunctionRelayQueryFields
-  :: MonadBuildSchema 'Postgres r m n
+  :: forall pgKind m n r
+   . MonadBuildSchema ('Postgres pgKind) r m n
   => SourceName
-  -> SourceConfig 'Postgres
-  -> FunctionName 'Postgres
-  -> FunctionInfo 'Postgres
-  -> TableName    'Postgres
-  -> NESeq (ColumnInfo 'Postgres)
-  -> SelPermInfo  'Postgres
-  -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+  -> SourceConfig ('Postgres pgKind)
+  -> FunctionName ('Postgres pgKind)
+  -> FunctionInfo ('Postgres pgKind)
+  -> TableName    ('Postgres pgKind)
+  -> NESeq (ColumnInfo ('Postgres pgKind))
+  -> SelPermInfo  ('Postgres pgKind)
+  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
 buildFunctionRelayQueryFields sourceName sourceInfo functionName functionInfo tableName pkeyColumns selPerms = do
-  funcName <- functionGraphQLName @'Postgres functionName `onLeft` throwError
+  funcName <- functionGraphQLName @('Postgres pgKind) functionName `onLeft` throwError
   let
     mkRF = RFDB sourceName
              . AB.mkAnyBackend
@@ -117,7 +194,9 @@ buildFunctionRelayQueryFields sourceName sourceInfo functionName functionInfo ta
              . QDBR
     fieldName = funcName <> $$(G.litName "_connection")
     fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
-  optionalFieldParser (mkRF . QDBConnection) $ selectFunctionConnection functionInfo fieldName fieldDesc pkeyColumns selPerms
+  fmap afold
+    $ optionalFieldParser (mkRF . QDBConnection)
+    $ selectFunctionConnection sourceName functionInfo fieldName fieldDesc pkeyColumns selPerms
 
 
 ----------------------------------------------------------------
@@ -125,36 +204,37 @@ buildFunctionRelayQueryFields sourceName sourceInfo functionName functionInfo ta
 
 columnParser
   :: (MonadSchema n m, MonadError QErr m)
-  => ColumnType 'Postgres
+  => ColumnType ('Postgres pgKind)
   -> G.Nullability
-  -> m (Parser 'Both n (Opaque (ColumnValue 'Postgres)))
+  -> m (Parser 'Both n (Opaque (ColumnValue ('Postgres pgKind))))
 columnParser columnType (G.Nullability isNullable) =
   -- TODO(PDV): It might be worth memoizing this function even though it isn’t
   -- recursive simply for performance reasons, since it’s likely to be hammered
   -- during schema generation. Need to profile to see whether or not it’s a win.
   opaque . fmap (ColumnValue columnType) <$> case columnType of
-    ColumnScalar scalarType -> possiblyNullable scalarType <$> case scalarType of
-      PGInteger -> pure (PGValInteger <$> P.int)
-      PGBoolean -> pure (PGValBoolean <$> P.boolean)
-      PGFloat   -> pure (PGValDouble  <$> P.float)
-      PGText    -> pure (PGValText    <$> P.string)
-      PGVarchar -> pure (PGValVarchar <$> P.string)
-      PGJSON    -> pure (PGValJSON  . Q.JSON  <$> P.json)
-      PGJSONB   -> pure (PGValJSONB . Q.JSONB <$> P.jsonb)
-      -- For all other scalars, we convert the value to JSON and use the
-      -- FromJSON instance. The major upside is that this avoids having to write
-      -- new parsers for each custom type: if the JSON parser is sound, so will
-      -- this one, and it avoids the risk of having two separate ways of parsing
-      -- a value in the codebase, which could lead to inconsistencies.
-      _  -> do
-        name <- mkScalarTypeName scalarType
-        let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
-        pure $ Parser
-          { pType = schemaType
-          , pParser =
-              valueToJSON (P.toGraphQLType schemaType) >=>
-              either (parseErrorWith ParseFailed . qeError) pure . runAesonParser (parsePGValue scalarType)
-          }
+    ColumnScalar scalarType -> possiblyNullable scalarType <$> do
+      -- We convert the value to JSON and use the FromJSON instance. This avoids
+      -- having two separate ways of parsing a value in the codebase, which
+      -- could lead to inconsistencies.
+      --
+      -- The mapping from postgres type to GraphQL scalar name is done by
+      -- 'mkScalarTypeName'. This is confusing, and we might want to fix it
+      -- later, as we will parse values differently here than how they'd be
+      -- parsed in other places using the same scalar name; for instance, we
+      -- will accept strings for postgres columns of type "Integer", despite the
+      -- fact that they will be represented as GraphQL ints, which otherwise do
+      -- not accept strings.
+      --
+      -- TODO: introduce new dedicated scalars for Postgres column types.
+      name <- mkScalarTypeName scalarType
+      let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
+      pure $ Parser
+        { pType = schemaType
+        , pParser = valueToJSON (P.toGraphQLType schemaType) >=> \case
+            J.Null -> parseError $ "unexpected null value for type " <>> name
+            value  -> runAesonParser (parsePGValue scalarType) value
+                      `onLeft` (parseErrorWith ParseFailed . qeError)
+        }
     ColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (Map.toList enumValues) of
         Just enumValuesList -> do
@@ -196,8 +276,8 @@ columnParser columnType (G.Nullability isNullable) =
 
 jsonPathArg
   :: MonadParse n
-  => ColumnType 'Postgres
-  -> InputFieldsParser n (Maybe (IR.ColumnOp 'Postgres))
+  => ColumnType ('Postgres pgKind)
+  -> InputFieldsParser n (Maybe (IR.ColumnOp ('Postgres pgKind)))
 jsonPathArg columnType
   | isScalarColumnWhere PG.isJSONType columnType =
       P.fieldOptional fieldName description P.string `P.bindFields` fmap join . traverse toColExp
@@ -213,7 +293,7 @@ jsonPathArg columnType
     elToColExp (Index i) = PG.SELit $ tshow i
 
 orderByOperators
-  :: NonEmpty (Definition P.EnumValueInfo, (BasicOrderType 'Postgres, NullsOrderType 'Postgres))
+  :: NonEmpty (Definition P.EnumValueInfo, (BasicOrderType ('Postgres pgKind), NullsOrderType ('Postgres pgKind)))
 orderByOperators = NE.fromList
   [ ( define $$(G.litName "asc") "in ascending order, nulls last"
     , (PG.OTAsc, PG.NLast)
@@ -238,14 +318,14 @@ orderByOperators = NE.fromList
     define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
 
 comparisonExps
-  :: forall m n r
-   . (BackendSchema 'Postgres
+  :: forall pgKind m n r
+   . ( BackendSchema ('Postgres pgKind)
      , MonadSchema n m
      , MonadError QErr m
      , MonadReader r m
      , Has QueryContext r
      )
-  => ColumnType 'Postgres -> m (Parser 'Input n [ComparisonExp 'Postgres])
+  => ColumnType ('Postgres pgKind) -> m (Parser 'Input n [ComparisonExp ('Postgres pgKind)])
 comparisonExps = P.memoize 'comparisonExps \columnType -> do
   -- see Note [Columns in comparison expression are never nullable]
   collapseIfNull <- asks $ qcDangerousBooleanCollapse . getter
@@ -289,140 +369,146 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
 
     -- Ops for Raster types
     , guard (isScalarColumnWhere (== PGRaster) columnType) *>
-      [ P.fieldOptional $$(G.litName "_st_intersects_rast")
+      [ mkBoolOperator collapseIfNull $$(G.litName "_st_intersects_rast")
         Nothing
         (ABackendSpecific . ASTIntersectsRast . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_st_intersects_nband_geom")
+      , mkBoolOperator collapseIfNull $$(G.litName "_st_intersects_nband_geom")
         Nothing
         (ABackendSpecific . ASTIntersectsNbandGeom <$> ingInputParser)
-      , P.fieldOptional $$(G.litName "_st_intersects_geom_nband")
+      , mkBoolOperator collapseIfNull $$(G.litName "_st_intersects_geom_nband")
         Nothing
         (ABackendSpecific . ASTIntersectsGeomNband <$> ignInputParser)
       ]
 
     -- Ops for String like types
     , guard (isScalarColumnWhere isStringType columnType) *>
-      [ P.fieldOptional $$(G.litName "_like")
+      [ mkBoolOperator collapseIfNull $$(G.litName "_like")
         (Just "does the column match the given pattern")
         (ALIKE     . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_nlike")
+      , mkBoolOperator collapseIfNull $$(G.litName "_nlike")
         (Just "does the column NOT match the given pattern")
         (ANLIKE    . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_ilike")
+      , mkBoolOperator collapseIfNull $$(G.litName "_ilike")
         (Just "does the column match the given case-insensitive pattern")
         (ABackendSpecific . AILIKE . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_nilike")
+      , mkBoolOperator collapseIfNull $$(G.litName "_nilike")
         (Just "does the column NOT match the given case-insensitive pattern")
         (ABackendSpecific . ANILIKE . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_similar")
+      , mkBoolOperator collapseIfNull $$(G.litName "_similar")
         (Just "does the column match the given SQL regular expression")
         (ABackendSpecific . ASIMILAR  . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_nsimilar")
+      , mkBoolOperator collapseIfNull $$(G.litName "_nsimilar")
         (Just "does the column NOT match the given SQL regular expression")
         (ABackendSpecific . ANSIMILAR . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_regex")
+      , mkBoolOperator collapseIfNull $$(G.litName "_regex")
         (Just "does the column match the given POSIX regular expression, case sensitive")
         (ABackendSpecific . AREGEX  . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_iregex")
+      , mkBoolOperator collapseIfNull $$(G.litName "_iregex")
         (Just "does the column match the given POSIX regular expression, case insensitive")
         (ABackendSpecific . AIREGEX . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_nregex")
+      , mkBoolOperator collapseIfNull $$(G.litName "_nregex")
         (Just "does the column NOT match the given POSIX regular expression, case sensitive")
         (ABackendSpecific . ANREGEX  . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_niregex")
+      , mkBoolOperator collapseIfNull $$(G.litName "_niregex")
         (Just "does the column NOT match the given POSIX regular expression, case insensitive")
         (ABackendSpecific . ANIREGEX . mkParameter <$> typedParser)
       ]
 
     -- Ops for JSONB type
     , guard (isScalarColumnWhere (== PGJSONB) columnType) *>
-      [ P.fieldOptional $$(G.litName "_contains")
+      [ mkBoolOperator collapseIfNull $$(G.litName "_contains")
         (Just "does the column contain the given json value at the top level")
         (ABackendSpecific . AContains    . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_contained_in")
+      , mkBoolOperator collapseIfNull $$(G.litName "_contained_in")
         (Just "is the column contained in the given json value")
         (ABackendSpecific . AContainedIn . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_has_key")
+      , mkBoolOperator collapseIfNull $$(G.litName "_has_key")
         (Just "does the string exist as a top-level key in the column")
         (ABackendSpecific . AHasKey      . mkParameter <$> nullableTextParser)
-      , P.fieldOptional $$(G.litName "_has_keys_any")
+      , mkBoolOperator collapseIfNull $$(G.litName "_has_keys_any")
         (Just "do any of these strings exist as top-level keys in the column")
         (ABackendSpecific . AHasKeysAny . mkListLiteral (ColumnScalar PGText) <$> textListParser)
-      , P.fieldOptional $$(G.litName "_has_keys_all")
+      , mkBoolOperator collapseIfNull $$(G.litName "_has_keys_all")
         (Just "do all of these strings exist as top-level keys in the column")
         (ABackendSpecific . AHasKeysAll . mkListLiteral (ColumnScalar PGText) <$> textListParser)
       ]
 
     -- Ops for Geography type
     , guard (isScalarColumnWhere (== PGGeography) columnType) *>
-      [ P.fieldOptional $$(G.litName "_st_intersects")
+      [ mkBoolOperator collapseIfNull $$(G.litName "_st_intersects")
         (Just "does the column spatially intersect the given geography value")
         (ABackendSpecific . ASTIntersects . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_st_d_within")
+      , mkBoolOperator collapseIfNull $$(G.litName "_st_d_within")
         (Just "is the column within a given distance from the given geography value")
         (ABackendSpecific . ASTDWithinGeog <$> geogInputParser)
       ]
 
     -- Ops for Geometry type
     , guard (isScalarColumnWhere (== PGGeometry) columnType) *>
-      [ P.fieldOptional $$(G.litName "_st_contains")
+      [ mkBoolOperator collapseIfNull $$(G.litName "_st_contains")
         (Just "does the column contain the given geometry value")
         (ABackendSpecific . ASTContains   . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_st_crosses")
+      , mkBoolOperator collapseIfNull $$(G.litName "_st_crosses")
         (Just "does the column cross the given geometry value")
         (ABackendSpecific . ASTCrosses    . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_st_equals")
+      , mkBoolOperator collapseIfNull $$(G.litName "_st_equals")
         (Just "is the column equal to given geometry value (directionality is ignored)")
         (ABackendSpecific . ASTEquals     . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_st_overlaps")
+      , mkBoolOperator collapseIfNull $$(G.litName "_st_overlaps")
         (Just "does the column 'spatially overlap' (intersect but not completely contain) the given geometry value")
         (ABackendSpecific . ASTOverlaps   . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_st_touches")
+      , mkBoolOperator collapseIfNull $$(G.litName "_st_touches")
         (Just "does the column have atleast one point in common with the given geometry value")
         (ABackendSpecific . ASTTouches    . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_st_within")
+      , mkBoolOperator collapseIfNull $$(G.litName "_st_within")
         (Just "is the column contained in the given geometry value")
         (ABackendSpecific . ASTWithin     . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_st_intersects")
+      , mkBoolOperator collapseIfNull $$(G.litName "_st_intersects")
         (Just "does the column spatially intersect the given geometry value")
         (ABackendSpecific . ASTIntersects . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_st_d_within")
+      , mkBoolOperator collapseIfNull $$(G.litName "_st_3d_intersects")
+        (Just "does the column spatially intersect the given geometry value in 3D")
+        (ABackendSpecific . AST3DIntersects . mkParameter <$> typedParser)
+      , mkBoolOperator collapseIfNull $$(G.litName "_st_d_within")
         (Just "is the column within a given distance from the given geometry value")
         (ABackendSpecific . ASTDWithinGeom <$> geomInputParser)
+      , mkBoolOperator collapseIfNull $$(G.litName "_st_3d_d_within")
+        (Just "is the column within a given 3D distance from the given geometry value")
+        (ABackendSpecific . AST3DDWithinGeom <$> geomInputParser)
       ]
 
     -- Ops for Ltree type
     , guard (isScalarColumnWhere (== PGLtree) columnType) *>
-      [ P.fieldOptional $$(G.litName "_ancestor")
+      [ mkBoolOperator collapseIfNull $$(G.litName "_ancestor")
         (Just "is the left argument an ancestor of right (or equal)?")
         (ABackendSpecific . AAncestor        . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_ancestor_any")
+      , mkBoolOperator collapseIfNull $$(G.litName "_ancestor_any")
         (Just "does array contain an ancestor of `ltree`?")
         (ABackendSpecific . AAncestorAny     . mkListLiteral columnType <$> columnListParser)
-      , P.fieldOptional $$(G.litName "_descendant")
+      , mkBoolOperator collapseIfNull $$(G.litName "_descendant")
         (Just "is the left argument a descendant of right (or equal)?")
         (ABackendSpecific . ADescendant      . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_descendant_any")
+      , mkBoolOperator collapseIfNull $$(G.litName "_descendant_any")
         (Just "does array contain a descendant of `ltree`?")
         (ABackendSpecific . ADescendantAny   . mkListLiteral columnType <$> columnListParser)
-      , P.fieldOptional $$(G.litName "_matches")
+      , mkBoolOperator collapseIfNull $$(G.litName "_matches")
         (Just "does `ltree` match `lquery`?")
         (ABackendSpecific . AMatches         . mkParameter <$> lqueryParser)
-      , P.fieldOptional $$(G.litName "_matches_any")
+      , mkBoolOperator collapseIfNull $$(G.litName "_matches_any")
         (Just "does `ltree` match any `lquery` in array?")
         (ABackendSpecific . AMatchesAny      . mkListLiteral (ColumnScalar PGLquery) <$> textListParser)
-      , P.fieldOptional $$(G.litName "_matches_fulltext")
+      , mkBoolOperator collapseIfNull $$(G.litName "_matches_fulltext")
         (Just "does `ltree` match `ltxtquery`?")
         (ABackendSpecific . AMatchesFulltext . mkParameter <$> ltxtqueryParser)
       ]
     ]
   where
-    mkListLiteral :: ColumnType 'Postgres -> [ColumnValue 'Postgres] -> UnpreparedValue 'Postgres
+    mkListLiteral :: ColumnType ('Postgres pgKind) -> [ColumnValue ('Postgres pgKind)] -> UnpreparedValue ('Postgres pgKind)
     mkListLiteral columnType columnValues = P.UVLiteral $ SETyAnn
       (SEArray $ txtEncoder . cvValue <$> columnValues)
       (mkTypeAnn $ CollectableTypeArray $ unsafePGColumnToBackend columnType)
 
-    castExp :: ColumnType 'Postgres -> m (Maybe (Parser 'Input n (CastExp 'Postgres (UnpreparedValue 'Postgres))))
+    castExp :: ColumnType ('Postgres pgKind) -> m (Maybe (Parser 'Input n (CastExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))))
     castExp sourceType = do
       let maybeScalars = case sourceType of
             ColumnScalar PGGeography -> Just (PGGeography, PGGeometry)
@@ -437,8 +523,8 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
         pure $ P.object sourceName Nothing $ M.fromList . maybeToList <$> field
 
 geographyWithinDistanceInput
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => m (Parser 'Input n (DWithinGeogOp (UnpreparedValue 'Postgres)))
+  :: forall pgKind m n. (MonadSchema n m, MonadError QErr m)
+  => m (Parser 'Input n (DWithinGeogOp (UnpreparedValue ('Postgres pgKind))))
 geographyWithinDistanceInput = do
   geographyParser <- columnParser (ColumnScalar PGGeography) (G.Nullability False)
   -- FIXME
@@ -455,8 +541,8 @@ geographyWithinDistanceInput = do
                   <*> (mkParameter <$> P.fieldWithDefault $$(G.litName "use_spheroid") Nothing (G.VBoolean True) booleanParser)
 
 geometryWithinDistanceInput
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => m (Parser 'Input n (DWithinGeomOp (UnpreparedValue 'Postgres)))
+  :: forall pgKind m n. (MonadSchema n m, MonadError QErr m)
+  => m (Parser 'Input n (DWithinGeomOp (UnpreparedValue ('Postgres pgKind))))
 geometryWithinDistanceInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
   floatParser    <- columnParser (ColumnScalar PGFloat)    (G.Nullability False)
@@ -465,8 +551,8 @@ geometryWithinDistanceInput = do
                   <*> (mkParameter <$> P.field $$(G.litName "from")     Nothing geometryParser)
 
 intersectsNbandGeomInput
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => m (Parser 'Input n (STIntersectsNbandGeommin (UnpreparedValue 'Postgres)))
+  :: forall pgKind m n. (MonadSchema n m, MonadError QErr m)
+  => m (Parser 'Input n (STIntersectsNbandGeommin (UnpreparedValue ('Postgres pgKind))))
 intersectsNbandGeomInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
   integerParser  <- columnParser (ColumnScalar PGInteger)  (G.Nullability False)
@@ -475,8 +561,8 @@ intersectsNbandGeomInput = do
                              <*> (mkParameter <$> P.field $$(G.litName "geommin") Nothing geometryParser)
 
 intersectsGeomNbandInput
-  :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => m (Parser 'Input n (STIntersectsGeomminNband (UnpreparedValue 'Postgres)))
+  :: forall pgKind m n. (MonadSchema n m, MonadError QErr m)
+  => m (Parser 'Input n (STIntersectsGeomminNband (UnpreparedValue ('Postgres pgKind))))
 intersectsGeomNbandInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
   integerParser  <- columnParser (ColumnScalar PGInteger)  (G.Nullability False)
@@ -484,63 +570,33 @@ intersectsGeomNbandInput = do
     <$> (     mkParameter <$> P.field         $$(G.litName "geommin") Nothing geometryParser)
     <*> (fmap mkParameter <$> P.fieldOptional $$(G.litName "nband")   Nothing integerParser)
 
-offsetParser :: MonadParse n => Parser 'Both n (SQLExpression 'Postgres)
-offsetParser = PG.txtEncoder <$> Parser
-  { pType = fakeBigIntSchemaType
-  , pParser = peelVariable (Just $ P.toGraphQLType fakeBigIntSchemaType) >=> \case
-      P.GraphQLValue (G.VInt    i) -> PG.PGValBigInt <$> convertWith PG.scientificToInteger (fromInteger i)
-      P.JSONValue    (J.Number  n) -> PG.PGValBigInt <$> convertWith PG.scientificToInteger n
-      P.GraphQLValue (G.VString s) -> pure $ PG.PGValUnknown s
-      P.JSONValue    (J.String  s) -> pure $ PG.PGValUnknown s
-      v ->  typeMismatch $$(G.litName "Int") "a 32-bit integer, or a 64-bit integer represented as a string" v
-  }
-  where
-    fakeBigIntSchemaType = P.NonNullable $ P.TNamed $ P.mkDefinition $$(G.litName "Int") Nothing P.TIScalar
-    convertWith f = either (parseErrorWith ParseFailed . qeError) pure . runAesonParser f
-
-mkCountType :: Maybe Bool -> Maybe [Column 'Postgres] -> CountType 'Postgres
+mkCountType :: Maybe Bool -> Maybe [Column ('Postgres pgKind)] -> CountType ('Postgres pgKind)
 mkCountType _           Nothing     = PG.CTStar
 mkCountType (Just True) (Just cols) = PG.CTDistinct cols
 mkCountType _           (Just cols) = PG.CTSimple cols
 
--- | Argument to distinct select on columns returned from table selection
--- > distinct_on: [table_select_column!]
-tableDistinctOn
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => TableName 'Postgres
-  -> SelPermInfo 'Postgres
-  -> m (InputFieldsParser n (Maybe (XDistinct 'Postgres, NonEmpty (Column 'Postgres))))
-tableDistinctOn table selectPermissions = do
-  columnsEnum   <- tableSelectColumnsEnum table selectPermissions
-  pure $ do
-    maybeDistinctOnColumns <- join.join <$> for columnsEnum
-      (P.fieldOptional distinctOnName distinctOnDesc . P.nullable . P.list)
-    pure $ maybeDistinctOnColumns >>= NE.nonEmpty <&> ((),)
-  where
-    distinctOnName = $$(G.litName "distinct_on")
-    distinctOnDesc = Just $ G.Description "distinct select on columns"
-
 -- | Various update operators
 updateOperators
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
-  => QualifiedTable         -- ^ qualified name of the table
-  -> UpdPermInfo 'Postgres  -- ^ update permissions of the table
-  -> m (Maybe (InputFieldsParser n [(Column 'Postgres, IR.UpdOpExpG (UnpreparedValue 'Postgres))]))
-updateOperators table updatePermissions = do
-  tableGQLName <- getTableGQLName @'Postgres table
-  columns      <- tableUpdateColumns table updatePermissions
+  :: forall pgKind m n r
+   . (BackendSchema ('Postgres pgKind), MonadSchema n m, MonadTableInfo r m)
+  => TableInfo ('Postgres pgKind)    -- ^ table info
+  -> UpdPermInfo ('Postgres pgKind)  -- ^ update permissions of the table
+  -> m (Maybe (InputFieldsParser n [(Column ('Postgres pgKind), IR.UpdOpExpG (UnpreparedValue ('Postgres pgKind)))]))
+updateOperators tableInfo updatePermissions = do
+  tableGQLName <- getTableGQLName tableInfo
+  columns      <- tableUpdateColumns tableInfo updatePermissions
   let numericCols = onlyNumCols   columns
       jsonCols    = onlyJSONBCols columns
   parsers <- catMaybes <$> sequenceA
     [ updateOperator tableGQLName $$(G.litName "_set")
         typedParser IR.UpdSet columns
         "sets the columns of the filtered rows to the given values"
-        (G.Description $ "input type for updating data in table " <>> table)
+        (G.Description $ "input type for updating data in table " <>> tableName)
 
     , updateOperator tableGQLName $$(G.litName "_inc")
         typedParser IR.UpdInc numericCols
         "increments the numeric columns with given value of the filtered values"
-        (G.Description $"input type for incrementing numeric columns in table " <>> table)
+        (G.Description $"input type for incrementing numeric columns in table " <>> tableName)
 
     , let desc = "prepend existing jsonb value of filtered columns with new jsonb value"
       in updateOperator tableGQLName $$(G.litName "_prepend")
@@ -583,6 +639,7 @@ updateOperators table updatePermissions = do
 
         pure $ presetColumns <> flattenedExps
   where
+    tableName = tableInfoName tableInfo
     typedParser columnInfo  = fmap P.mkParameter <$> columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
     nonNullableTextParser _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGText)    (G.Nullability False)
     nullableTextParser    _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGText)    (G.Nullability True)

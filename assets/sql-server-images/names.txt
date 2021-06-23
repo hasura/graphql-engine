@@ -1,0 +1,7 @@
+allow-list
+extend-graphql-api
+geo-query
+graphql-rest
+p99-benchmarks
+sql-server-auth
+sql-server-explain

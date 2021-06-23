@@ -18,8 +18,24 @@ def graphql_service():
     yield svc
     svc.stop()
 
+@pytest.fixture(scope="module")
+def graphql_service_2():
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/secondary_remote_schema_perms.js"])
+    svc.start()
+    yield svc
+    svc.stop()
+
+@pytest.fixture(scope="module")
+def graphql_service_3():
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/secondary_remote_schema_perms_error.js"])
+    svc.start()
+    yield svc
+    svc.stop()
+
 use_test_fixtures = pytest.mark.usefixtures (
     "graphql_service",
+    "graphql_service_2",
+    "graphql_service_3",
     "per_method_tests_db_state"
 )
 
@@ -33,6 +49,31 @@ class TestAddRemoteSchemaPermissions:
     def test_add_permission_with_valid_subset_of_fields(self, hge_ctx):
         st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
         assert st_code == 200, resp
+
+    """ Here the schemas are compatible """
+    def test_update_remote_schema_details_with_permissions_set(self, hge_ctx):
+        """ Permissions check """
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
+        assert st_code == 200, resp
+
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'update_remote_schema/update_schema.yaml')
+        assert st_code == 200, resp
+        """ check the details of remote schema in metadata """
+        st_code, resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
+        assert st_code == 200, resp
+        assert resp['remote_schemas'][0]['definition']['url'] == "http://localhost:4021"
+        assert resp['remote_schemas'][0]['comment'] == 'this is from update query', resp
+        assert resp['remote_schemas'][0]['definition']['timeout_seconds'] == 120, resp
+        """ reset the changes to the original config """
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'update_remote_schema/revert_to_original_config.yaml')
+        assert st_code == 200, resp
+    
+    def test_update_remote_schema_details_with_permissions_set_with_error(self, hge_ctx):
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
+        assert st_code == 200, resp
+
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'update_remote_schema/update_schema_error.yaml')
+        assert st_code == 400, resp
 
     def test_add_permission_with_valid_subset_of_arguments(self, hge_ctx):
         st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_arguments.yaml')
@@ -70,6 +111,12 @@ class TestRemoteSchemaPermissionsExecution:
         st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'execution_with_partial_fields_exposed_to_role.yaml')
+
+    @pytest.mark.skipif(not PytestConf.config.getoption('--redis-url'), reason="Must enable redis")
+    def test_execution_with_subset_of_fields_exposed_to_role_with_caching(self, hge_ctx):
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'execution_with_partial_fields_exposed_to_role_cached.yaml')
 
     def test_execution_with_subset_of_arguments_exposed_to_role(self, hge_ctx):
         st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_arguments.yaml')

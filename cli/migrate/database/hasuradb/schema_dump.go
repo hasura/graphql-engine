@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 )
 
 func (h *HasuraDB) ExportSchemaDump(schemaNames []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {

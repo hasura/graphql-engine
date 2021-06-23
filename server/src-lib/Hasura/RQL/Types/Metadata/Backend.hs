@@ -2,20 +2,20 @@ module Hasura.RQL.Types.Metadata.Backend where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                    as Env
+import qualified Data.Environment               as Env
 
-import           Control.Monad.Trans.Control         (MonadBaseControl)
+import           Control.Monad.Trans.Control    (MonadBaseControl)
 import           Data.Aeson
 
+import           Hasura.Base.Error
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
-import           Hasura.RQL.Types.RemoteRelationship
+import           Hasura.RQL.Types.Relationship
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
@@ -35,13 +35,6 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
     -> RawFunctionInfo -- TODO: Parameterize this too
     -> Maybe Text
     -> m (ComputedFieldInfo b)
-
-  buildRemoteFieldInfo
-    :: (MonadError QErr m)
-    => RemoteRelationship b
-    -> [ColumnInfo b]
-    -> RemoteSchemaMap
-    -> m (RemoteFieldInfo b, [SchemaDependency])
 
   fetchAndValidateEnumValues
     :: (MonadIO m, MonadBaseControl IO m)
@@ -86,6 +79,7 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
   parseBoolExpOperations
     :: (MonadError QErr m, TableCoreInfoRM b m)
     => ValueParser b m v
+    -> TableName b
     -> FieldInfoMap (FieldInfo b)
     -> ColumnInfo b
     -> Value
@@ -119,3 +113,19 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
     :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m)
     => SourceConfig b
     -> m ()
+
+  -- TODO: rename?
+  validateRelationship
+    :: MonadError QErr m
+    => TableCache b
+    -> TableName b
+    -> Either (ObjRelDef b) (ArrRelDef b)
+    -> m ()
+
+  default validateRelationship
+      :: MonadError QErr m
+      => TableCache b
+      -> TableName b
+      -> Either (ObjRelDef b) (ArrRelDef b)
+      -> m ()
+  validateRelationship = \_ _ _ -> pure ()

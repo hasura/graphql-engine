@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 )
 
 // Abstraction for the storage layer for migration state
@@ -14,7 +14,7 @@ type MigrationsStateStore interface {
 	SetVersion(database string, version int64, dirty bool) error
 	GetVersions(database string) (map[uint64]bool, error)
 
-	PrepareMigrationsStateStore() error
+	PrepareMigrationsStateStore(database string) error
 }
 
 // Abstraction for storage layer of CLI settings
@@ -59,8 +59,14 @@ func (c *CLICatalogState) Set(state CLIState) (io.Reader, error) {
 type MigrationsState map[string]map[string]bool
 
 type CLIState struct {
-	Migrations MigrationsState   `json:"migrations" mapstructure:"migrations"`
+	Migrations MigrationsState   `json:"migrations,omitempty" mapstructure:"migrations,omitempty"`
 	Settings   map[string]string `json:"settings" mapstructure:"settings"`
+	// IsStateCopyCompleted is a utility variable
+	// pre config v3 state was stored in users database connected to hasura in `hdb_catalog.*` tables
+	// this variable is set to true when state copy happens from hdb_catalog.* tables
+	// this process is carried out during a scripts update-project-v3 command or an implicit state copy
+	// introduced in https://github.com/hasura/graphql-engine-mono/pull/1298
+	IsStateCopyCompleted bool `json:"isStateCopyCompleted" mapstructure:"isStateCopyCompleted"`
 }
 
 func (c *CLIState) Init() {

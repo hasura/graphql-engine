@@ -48,7 +48,7 @@ import           Control.Lens
 import           Data.Text.Extended
 import           Language.GraphQL.Draft.Syntax
 
-import           Hasura.RQL.Types.Error
+import           Hasura.Base.Error
 import           Hasura.Server.Utils
 
 -- | Internal bookkeeping used during inlining.

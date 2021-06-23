@@ -33,6 +33,8 @@ import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
+  currentDriver,
+  driverToLabel,
   findTable,
   generateTableDef,
   getTableCustomColumnNames,
@@ -49,6 +51,7 @@ import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { NotSupportedNote } from '../../../Common/NotSupportedNote';
 import ConnectedComputedFields from './ComputedFields';
 import FeatureDisabled from '../FeatureDisabled';
+import PartitionInfo from './PartitionInfo';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
@@ -56,7 +59,8 @@ class ModifyTable extends React.Component {
     const { dispatch } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
-    dispatch(fetchColumnTypeInfo());
+    if (!isFeatureSupported('tables.modify.readOnly'))
+      dispatch(fetchColumnTypeInfo());
     dispatch(fetchFunctionInit());
   }
 
@@ -178,102 +182,179 @@ class ModifyTable extends React.Component {
           <br />
           <div className={`container-fluid ${styles.padd_left_remove}`}>
             <div
-              className={
-                `col-xs-10 ${styles.padd_left_remove}` +
-                ' ' +
-                styles.modifyMinWidth
-              }
+              className={`col-xs-10 ${styles.padd_left_remove} ${styles.modifyMinWidth}`}
             >
-              <TableCommentEditor
-                tableComment={tableComment}
-                tableCommentEdit={tableCommentEdit}
-                tableType="TABLE"
-                dispatch={dispatch}
-              />
-              <EnumTableModifyWarning isEnum={table.is_enum} />
-              <h4 className={styles.subheading_text}>Columns</h4>
-              <ColumnEditorList
-                validTypeCasts={validTypeCasts}
-                dataTypeIndexMap={dataTypeIndexMap}
-                tableSchema={table}
-                columnEdit={columnEdit}
-                dispatch={dispatch}
-                currentSchema={currentSchema}
-                columnDefaultFunctions={columnDefaultFunctions}
-                customColumnNames={getTableCustomColumnNames(table)}
-              />
-              <ColumnCreator
-                dispatch={dispatch}
-                tableName={tableName}
-                dataTypes={dataTypes}
-                validTypeCasts={validTypeCasts}
-                columnDefaultFunctions={columnDefaultFunctions}
-                postgresVersion={postgresVersion}
-              />
-              <hr />
-              <ConnectedComputedFields tableSchema={table} />
-              <hr />
-              <h4 className={styles.subheading_text}>
-                Primary Key &nbsp; &nbsp;
-                <Tooltip message={primaryKeyDescription} />
-              </h4>
-              <PrimaryKeyEditor
-                tableSchema={table}
-                pkModify={pkModify}
-                dispatch={dispatch}
-                currentSchema={currentSchema}
-              />
-              <hr />
-              <h4 className={styles.subheading_text}>
-                Foreign Keys &nbsp; &nbsp;
-                <Tooltip message={foreignKeyDescription} />
-              </h4>
-              <ForeignKeyEditor
-                tableSchema={table}
-                currentSchema={currentSchema}
-                allSchemas={allTables}
-                schemaList={schemaList}
-                dispatch={dispatch}
-                fkModify={fkModify}
-              />
-              <hr />
-              <h4 className={styles.subheading_text}>
-                Unique Keys &nbsp; &nbsp;
-                <Tooltip message={uniqueKeyDescription} />
-              </h4>
-              <UniqueKeyEditor
-                tableSchema={table}
-                currentSchema={currentSchema}
-                allSchemas={allTables}
-                dispatch={dispatch}
-                uniqueKeys={uniqueKeyModify}
-                setUniqueKeys={setUniqueKeys}
-              />
-              <hr />
-              <div className={styles.add_mar_bottom}>
-                <h4 className={styles.subheading_text_no_padd}>Triggers</h4>
-                <NotSupportedNote unsupported={['mysql']} />
-              </div>
-              <TriggerEditorList tableSchema={table} dispatch={dispatch} />
-              <hr />
-              <div className={styles.add_mar_bottom}>
-                <h4 className={styles.subheading_text_no_padd}>
-                  Check Constraints &nbsp; &nbsp;
-                  <Tooltip message={checkConstraintsDescription} />
-                </h4>
-                <NotSupportedNote unsupported={['mysql']} />
-              </div>
-              <CheckConstraints
-                constraints={table.check_constraints}
-                checkConstraintsModify={checkConstraintsModify}
-                dispatch={dispatch}
-              />
-              <hr />
-              <RootFields tableSchema={table} />
-              <hr />
-              {getEnumsSection()}
-              {untrackBtn}
-              {deleteBtn}
+              {isFeatureSupported('tables.modify.readOnly') && (
+                <div className={styles.readOnly}>
+                  <p className={styles.readOnlyText}>
+                    <i className="fa fa-flask" aria-hidden="true" /> Coming soon
+                    for {driverToLabel[currentDriver]}
+                  </p>
+                  <p className={styles.noMargin}>
+                    This page is currently read-only, but we're actively working
+                    on making it available for the Console.
+                  </p>
+                </div>
+              )}
+
+              {isFeatureSupported('tables.modify.comments.view') && (
+                <>
+                  <TableCommentEditor
+                    tableComment={tableComment}
+                    tableCommentEdit={tableCommentEdit}
+                    tableType="TABLE"
+                    dispatch={dispatch}
+                    readOnly={
+                      !isFeatureSupported('tables.modify.comments.edit')
+                    }
+                  />
+                  <EnumTableModifyWarning isEnum={table.is_enum} />
+                </>
+              )}
+
+              {isFeatureSupported('tables.modify.columns.view') && (
+                <>
+                  <h4 className={styles.subheading_text}>Columns</h4>
+                  <ColumnEditorList
+                    validTypeCasts={validTypeCasts}
+                    dataTypeIndexMap={dataTypeIndexMap}
+                    tableSchema={table}
+                    columnEdit={columnEdit}
+                    dispatch={dispatch}
+                    readOnlyMode={
+                      !isFeatureSupported('tables.modify.columns.edit')
+                    }
+                    currentSchema={currentSchema}
+                    columnDefaultFunctions={columnDefaultFunctions}
+                    customColumnNames={getTableCustomColumnNames(table)}
+                  />
+                </>
+              )}
+              {isFeatureSupported('tables.modify.columns.edit') && (
+                <>
+                  <ColumnCreator
+                    dispatch={dispatch}
+                    tableName={tableName}
+                    dataTypes={dataTypes}
+                    validTypeCasts={validTypeCasts}
+                    columnDefaultFunctions={columnDefaultFunctions}
+                    postgresVersion={postgresVersion}
+                  />
+                  <hr />
+                </>
+              )}
+
+              {isFeatureSupported('tables.modify.computedFields') && (
+                <>
+                  <ConnectedComputedFields tableSchema={table} />
+                  <hr />
+                </>
+              )}
+
+              {isFeatureSupported('tables.modify.primaryKeys.view') && (
+                <>
+                  <h4 className={styles.subheading_text}>
+                    Primary Key &nbsp; &nbsp;
+                    <Tooltip message={primaryKeyDescription} />
+                  </h4>
+                  <PrimaryKeyEditor
+                    tableSchema={table}
+                    readOnlyMode={
+                      !isFeatureSupported('tables.modify.primaryKeys.edit')
+                    }
+                    pkModify={pkModify}
+                    dispatch={dispatch}
+                    currentSchema={currentSchema}
+                  />
+                  <hr />
+                </>
+              )}
+
+              {isFeatureSupported('tables.modify.foreignKeys.view') && (
+                <>
+                  <h4 className={styles.subheading_text}>
+                    Foreign Keys &nbsp; &nbsp;
+                    <Tooltip message={foreignKeyDescription} />
+                  </h4>
+                  <ForeignKeyEditor
+                    tableSchema={table}
+                    currentSchema={currentSchema}
+                    allSchemas={allTables}
+                    schemaList={schemaList}
+                    dispatch={dispatch}
+                    fkModify={fkModify}
+                    readOnlyMode={
+                      !isFeatureSupported('tables.modify.foreignKeys.edit')
+                    }
+                  />
+                  <hr />
+                </>
+              )}
+
+              {isFeatureSupported('tables.modify.uniqueKeys.view') && (
+                <>
+                  <h4 className={styles.subheading_text}>
+                    Unique Keys &nbsp; &nbsp;
+                    <Tooltip message={uniqueKeyDescription} />
+                  </h4>
+                  <UniqueKeyEditor
+                    tableSchema={table}
+                    currentSchema={currentSchema}
+                    allSchemas={allTables}
+                    dispatch={dispatch}
+                    uniqueKeys={uniqueKeyModify}
+                    setUniqueKeys={setUniqueKeys}
+                    readOnlyMode={
+                      !isFeatureSupported('tables.modify.uniqueKeys.edit')
+                    }
+                  />
+                  <hr />
+                </>
+              )}
+
+              {isFeatureSupported('tables.modify.triggers') && (
+                <>
+                  <div className={styles.add_mar_bottom}>
+                    <h4 className={styles.subheading_text_no_padd}>Triggers</h4>
+                    <NotSupportedNote unsupported={['mysql']} />
+                  </div>
+                  <TriggerEditorList tableSchema={table} dispatch={dispatch} />
+                  <hr />
+                </>
+              )}
+              {isFeatureSupported('tables.modify.checkConstraints.view') && (
+                <>
+                  <div className={styles.add_mar_bottom}>
+                    <h4 className={styles.subheading_text_no_padd}>
+                      Check Constraints &nbsp; &nbsp;
+                      <Tooltip message={checkConstraintsDescription} />
+                    </h4>
+                    <NotSupportedNote unsupported={['mysql']} />
+                  </div>
+                  <CheckConstraints
+                    constraints={table.check_constraints}
+                    checkConstraintsModify={checkConstraintsModify}
+                    dispatch={dispatch}
+                    readOnlyMode={
+                      !isFeatureSupported('tables.modify.checkConstraints.edit')
+                    }
+                  />
+                  <hr />
+                </>
+              )}
+              {table.table_type === 'PARTITIONED TABLE' && (
+                <PartitionInfo table={table} dispatch={dispatch} />
+              )}
+              {isFeatureSupported('tables.modify.customGqlRoot') && (
+                <>
+                  <RootFields tableSchema={table} />
+                  <hr />
+                </>
+              )}
+              {isFeatureSupported('tables.modify.setAsEnum') &&
+                getEnumsSection()}
+              {isFeatureSupported('tables.modify.untrack') && untrackBtn}
+              {isFeatureSupported('tables.modify.delete') && deleteBtn}
               <br />
               <br />
             </div>

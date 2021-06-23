@@ -4,28 +4,30 @@ module Hasura.Backends.MSSQL.Instances.Schema () where
 
 import           Hasura.Prelude
 
-
-import qualified Data.HashMap.Strict                   as Map
-import qualified Data.List.NonEmpty                    as NE
-import qualified Database.ODBC.SQLServer               as ODBC
-import qualified Language.GraphQL.Draft.Syntax         as G
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.List.NonEmpty                          as NE
+import qualified Database.ODBC.SQLServer                     as ODBC
+import qualified Language.GraphQL.Draft.Syntax               as G
 
 import           Data.Has
-import           Data.Text.Encoding                    (encodeUtf8)
+import           Data.Text.Encoding                          (encodeUtf8)
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.MSSQL.Types           as MSSQL
-import qualified Hasura.GraphQL.Parser                 as P
-import qualified Hasura.GraphQL.Schema.Build           as GSB
-import qualified Hasura.RQL.IR.Select                  as IR
-import qualified Hasura.RQL.IR.Update                  as IR
+import qualified Hasura.Backends.MSSQL.Types                 as MSSQL
+import qualified Hasura.GraphQL.Parser                       as P
+import qualified Hasura.GraphQL.Schema.Build                 as GSB
+import qualified Hasura.RQL.IR.Select                        as IR
+import qualified Hasura.RQL.IR.Update                        as IR
 
-import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Parser                 hiding (EnumValueInfo, field)
-import           Hasura.GraphQL.Parser.Internal.Parser hiding (field)
+import           Hasura.Base.Error
+import           Hasura.GraphQL.Parser                       hiding (EnumValueInfo, field)
+import           Hasura.GraphQL.Parser.Internal.Parser       hiding (field)
+import           Hasura.GraphQL.Parser.Internal.TypeChecking
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
+import           Hasura.GraphQL.Schema.Select
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 
 
@@ -42,22 +44,25 @@ instance BackendSchema 'MSSQL where
   buildFunctionQueryFields       = msBuildFunctionQueryFields
   buildFunctionRelayQueryFields  = msBuildFunctionRelayQueryFields
   buildFunctionMutationFields    = msBuildFunctionMutationFields
+
   -- backend extensions
-  relayExtension    = const Nothing
-  nodesAggExtension = const Nothing
-  -- indivdual components
+  relayExtension    = Nothing
+  nodesAggExtension = Just ()
+
+  -- table arguments
+  tableArguments = msTableArgs
+
+  -- individual components
   columnParser              = msColumnParser
   jsonPathArg               = msJsonPathArg
   orderByOperators          = msOrderByOperators
   comparisonExps            = msComparisonExps
   updateOperators           = msUpdateOperators
-  offsetParser              = msOffsetParser
   mkCountType               = msMkCountType
   aggregateOrderByCountType = MSSQL.IntegerType
   computedField             = msComputedField
   node                      = msNode
-  tableDistinctOn           = msTableDistinctOn
-  remoteRelationshipField   = msRemoteRelationshipField
+
   -- SQL literals
   columnDefaultValue = msColumnDefaultValue
 
@@ -74,9 +79,9 @@ msBuildTableRelayQueryFields
   -> G.Name
   -> NESeq (ColumnInfo 'MSSQL)
   -> SelPermInfo  'MSSQL
-  -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
 msBuildTableRelayQueryFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
-  pure Nothing
+  pure []
 
 msBuildTableInsertMutationFields
   :: MonadBuildSchema 'MSSQL r m n
@@ -88,7 +93,7 @@ msBuildTableInsertMutationFields
   -> InsPermInfo 'MSSQL
   -> Maybe (SelPermInfo 'MSSQL)
   -> Maybe (UpdPermInfo 'MSSQL)
-  -> m [FieldParser n (MutationRootField UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
 msBuildTableInsertMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
   pure []
 
@@ -101,7 +106,7 @@ msBuildTableUpdateMutationFields
   -> G.Name
   -> UpdPermInfo 'MSSQL
   -> Maybe (SelPermInfo 'MSSQL)
-  -> m [FieldParser n (MutationRootField UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
 msBuildTableUpdateMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _updPerns _selPerms =
   pure []
 
@@ -114,7 +119,7 @@ msBuildTableDeleteMutationFields
   -> G.Name
   -> DelPermInfo 'MSSQL
   -> Maybe (SelPermInfo 'MSSQL)
-  -> m [FieldParser n (MutationRootField UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
 msBuildTableDeleteMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _delPerns _selPerms =
   pure []
 
@@ -126,7 +131,7 @@ msBuildFunctionQueryFields
     -> FunctionInfo 'MSSQL
     -> TableName 'MSSQL
     -> SelPermInfo 'MSSQL
-    -> m [FieldParser n (QueryRootField UnpreparedValue)]
+    -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
 msBuildFunctionQueryFields _ _ _ _ _ _ =
   pure []
 
@@ -139,9 +144,9 @@ msBuildFunctionRelayQueryFields
   -> TableName    'MSSQL
   -> NESeq (ColumnInfo 'MSSQL)
   -> SelPermInfo  'MSSQL
-  -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
 msBuildFunctionRelayQueryFields _sourceName _sourceInfo _functionName _functionInfo _tableName _pkeyColumns _selPerms =
-  pure Nothing
+  pure []
 
 msBuildFunctionMutationFields
     :: MonadBuildSchema 'MSSQL r m n
@@ -151,23 +156,38 @@ msBuildFunctionMutationFields
     -> FunctionInfo 'MSSQL
     -> TableName 'MSSQL
     -> SelPermInfo 'MSSQL
-    -> m [FieldParser n (MutationRootField UnpreparedValue)]
+    -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
 msBuildFunctionMutationFields _ _ _ _ _ _ =
   pure []
 
-mkMSSQLScalarTypeName :: MonadError QErr m => MSSQL.ScalarType -> m G.Name
-mkMSSQLScalarTypeName = \case
-  MSSQL.WcharType    -> pure stringScalar
-  MSSQL.WvarcharType -> pure stringScalar
-  MSSQL.WtextType    -> pure stringScalar
-  MSSQL.FloatType    -> pure floatScalar
-  -- integer types
-  MSSQL.IntegerType  -> pure intScalar
-  -- boolean type
-  MSSQL.BitType      -> pure boolScalar
-  scalarType -> G.mkName (MSSQL.scalarTypeDBName scalarType) `onNothing` throw400 ValidationFailed
-    ("cannot use SQL type " <> scalarType <<> " in the GraphQL schema because its name is not a "
-    <> "valid GraphQL identifier")
+
+----------------------------------------------------------------
+-- Table arguments
+
+msTableArgs
+  :: forall r m n
+   . MonadBuildSchema 'MSSQL r m n
+  => SourceName
+  -> TableInfo 'MSSQL
+  -> SelPermInfo 'MSSQL
+  -> m (InputFieldsParser n (IR.SelectArgsG 'MSSQL (UnpreparedValue 'MSSQL)))
+msTableArgs sourceName tableInfo selectPermissions = do
+  whereParser   <- tableWhereArg   sourceName tableInfo selectPermissions
+  orderByParser <- tableOrderByArg sourceName tableInfo selectPermissions
+  pure do
+    whereArg   <- whereParser
+    orderByArg <- orderByParser
+    limitArg   <- tableLimitArg
+    offsetArg  <- tableOffsetArg
+    pure $ IR.SelectArgs
+      { IR._saWhere    = whereArg
+      , IR._saOrderBy  = orderByArg
+      , IR._saLimit    = limitArg
+      , IR._saOffset   = offsetArg
+      -- not supported on MSSQL for now
+      , IR._saDistinct = Nothing
+      }
+
 
 ----------------------------------------------------------------
 -- Individual components
@@ -179,6 +199,9 @@ msColumnParser
   -> m (Parser 'Both n (Opaque (ColumnValue 'MSSQL)))
 msColumnParser columnType (G.Nullability isNullable) =
   opaque . fmap (ColumnValue columnType) <$> case columnType of
+    -- TODO: the mapping here is not consistent with mkMSSQLScalarTypeName. For
+    -- example, exposing all the float types as a GraphQL Float type is
+    -- incorrect, similarly exposing all the integer types as a GraphQL Int
     ColumnScalar scalarType -> possiblyNullable scalarType <$> case scalarType of
       -- bytestring
       MSSQL.CharType     -> pure $ ODBC.ByteStringValue . encodeUtf8 <$> P.string
@@ -205,7 +228,7 @@ msColumnParser columnType (G.Nullability isNullable) =
       -- boolean
       MSSQL.BitType      -> pure $ ODBC.BoolValue <$> P.boolean
       _                  -> do
-        name <- mkMSSQLScalarTypeName scalarType
+        name <- MSSQL.mkMSSQLScalarTypeName scalarType
         let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
         pure $ Parser
           { pType = schemaType
@@ -216,7 +239,7 @@ msColumnParser columnType (G.Nullability isNullable) =
     ColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (Map.toList enumValues) of
         Just enumValuesList -> do
-          tableGQLName <- tableGraphQLName tableName `onLeft` throwError
+          tableGQLName <- tableGraphQLName @'MSSQL tableName `onLeft` throwError
           let enumName = tableGQLName <> $$(G.litName "_enum")
           pure $ possiblyNullable MSSQL.VarcharType $ P.enum enumName Nothing (mkEnumValue <$> enumValuesList)
         Nothing -> throw400 ValidationFailed "empty enum values"
@@ -303,8 +326,8 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
 
   -- parsers used for individual values
   typedParser        <- columnParser columnType (G.Nullability False)
-  nullableTextParser <- columnParser (ColumnScalar MSSQL.VarcharType) (G.Nullability True)
-  textParser         <- columnParser (ColumnScalar MSSQL.VarcharType) (G.Nullability False)
+  nullableTextParser <- columnParser (ColumnScalar @'MSSQL MSSQL.VarcharType) (G.Nullability True)
+  textParser         <- columnParser (ColumnScalar @'MSSQL MSSQL.VarcharType) (G.Nullability False)
   let
     columnListParser = P.list typedParser `P.bind` traverse P.openOpaque
     textListParser   = P.list textParser  `P.bind` traverse P.openOpaque
@@ -371,9 +394,6 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
     mkListLiteral =
       P.UVLiteral . MSSQL.ListExpression . fmap (MSSQL.ValueExpression . cvValue)
 
-msOffsetParser :: MonadParse n => Parser 'Both n (SQLExpression 'MSSQL)
-msOffsetParser = MSSQL.ValueExpression . ODBC.IntValue . fromIntegral <$> P.int
-
 msMkCountType
   :: Maybe Bool
   -- ^ distinct values
@@ -385,34 +405,24 @@ msMkCountType (Just True) (Just cols) =
 msMkCountType _           (Just cols) =
   maybe MSSQL.StarCountable MSSQL.NonNullFieldCountable $ nonEmpty cols
 
--- | Argument to distinct select on columns returned from table selection
--- > distinct_on: [table_select_column!]
-msTableDistinctOn
-  -- :: forall m n. (BackendSchema 'MSSQL, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  :: Applicative m
-  => Applicative n
-  => TableName 'MSSQL
-  -> SelPermInfo 'MSSQL
-  -> m (InputFieldsParser n (Maybe (XDistinct 'MSSQL, NonEmpty (Column 'MSSQL))))
-msTableDistinctOn _table _selectPermissions = pure (pure Nothing)
-
 -- | Various update operators
 msUpdateOperators
-  -- :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   :: Applicative m
-  => TableName 'MSSQL         -- ^ qualified name of the table
+  => TableInfo 'MSSQL         -- ^ table info
   -> UpdPermInfo 'MSSQL       -- ^ update permissions of the table
   -> m (Maybe (InputFieldsParser n [(Column 'MSSQL, IR.UpdOpExpG (UnpreparedValue 'MSSQL))]))
-msUpdateOperators _table _updatePermissions = pure Nothing
+msUpdateOperators _tableInfo _updatePermissions = pure Nothing
 
 -- | Computed field parser.
 -- Currently unsupported: returns Nothing for now.
 msComputedField
   :: MonadBuildSchema 'MSSQL r m n
-  => ComputedFieldInfo 'MSSQL
+  => SourceName
+  -> ComputedFieldInfo 'MSSQL
+  -> TableName 'MSSQL
   -> SelPermInfo 'MSSQL
   -> m (Maybe (FieldParser n (AnnotatedField 'MSSQL)))
-msComputedField _fieldInfo _selectPemissions = pure Nothing
+msComputedField _sourceName _fieldInfo _table _selectPemissions = pure Nothing
 
 -- | Remote join field parser.
 -- Currently unsupported: returns Nothing for now.

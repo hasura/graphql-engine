@@ -9,7 +9,7 @@ API Reference
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 Available APIs
@@ -120,7 +120,8 @@ See details at :ref:`version_api_reference`.
 Health check API
 ^^^^^^^^^^^^^^^^
 
-The ``/healthz`` is a public endpoint that returns the server health status.
+The ``/healthz`` is a public endpoint that returns the server health status. There's also ``/hasura/healthz`` 
+available as an alternative, which mirrors ``/healthz`` completely.
 
 See details at :ref:`health_api_reference`.
 

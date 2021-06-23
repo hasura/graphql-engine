@@ -1,5 +1,4 @@
 {-# OPTIONS_HADDOCK not-home #-}
-{-# LANGUAGE GADTs #-}
 
 -- | Supporting functionality for fine-grained dependency tracking.
 module Hasura.Incremental.Internal.Dependency where
@@ -17,7 +16,6 @@ import           Data.Aeson                    (Value)
 import           Data.ByteString               (ByteString)
 import           Data.CaseInsensitive          (CI)
 import           Data.Functor.Classes          (Eq1 (..), Eq2 (..))
-import           Data.Functor.Const
 import           Data.GADT.Compare
 import           Data.Int
 import           Data.Scientific               (Scientific)
@@ -219,6 +217,8 @@ instance (Cacheable a, Cacheable b, Cacheable c) => Cacheable (a, b, c)
 instance (Cacheable a, Cacheable b, Cacheable c, Cacheable d) => Cacheable (a, b, c, d)
 instance (Cacheable a, Cacheable b, Cacheable c, Cacheable d, Cacheable e) => Cacheable (a, b, c, d, e)
 instance (Cacheable a, Cacheable b, Cacheable c, Cacheable d, Cacheable e, Cacheable f) => Cacheable (a, b, c, d, e, f)
+instance (Cacheable a, Cacheable b, Cacheable c, Cacheable d, Cacheable e, Cacheable f, Cacheable g) => Cacheable (a, b, c, d, e, f, g)
+
 
 instance Cacheable Bool
 instance Cacheable Void

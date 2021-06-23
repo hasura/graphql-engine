@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"text/tabwriter"
 
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 )
 
 func newMetadataInconsistencyListCmd(ec *cli.ExecutionContext) *cobra.Command {

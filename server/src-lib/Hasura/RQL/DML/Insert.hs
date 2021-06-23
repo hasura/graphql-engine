@@ -4,7 +4,6 @@ module Hasura.RQL.DML.Insert
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                             as Env
 import qualified Data.HashMap.Strict                          as HM
 import qualified Data.HashSet                                 as HS
 import qualified Data.Sequence                                as DS
@@ -22,23 +21,23 @@ import           Hasura.Backends.Postgres.Execute.Mutation
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.Returning
 import           Hasura.Backends.Postgres.Types.Table
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.Insert
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
 
 
 convObj
   :: (UserInfoM m, QErrM m)
-  => (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  => (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp)
   -> HM.HashMap PGCol S.SQLExp
   -> HM.HashMap PGCol S.SQLExp
-  -> FieldInfoMap (FieldInfo 'Postgres)
-  -> InsObj 'Postgres
+  -> FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
+  -> InsObj ('Postgres 'Vanilla)
   -> m ([PGCol], [S.SQLExp])
 convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
   inpInsVals <- flip HM.traverseWithKey insObj $ \c val -> do
@@ -69,11 +68,11 @@ validateInpCols inpCols updColsPerm = forM_ inpCols $ \inpCol ->
 
 buildConflictClause
   :: (UserInfoM m, QErrM m)
-  => SessVarBldr 'Postgres m
-  -> TableInfo 'Postgres
+  => SessVarBldr ('Postgres 'Vanilla) m
+  -> TableInfo ('Postgres 'Vanilla)
   -> [PGCol]
   -> OnConflict
-  -> m (ConflictClauseP1 'Postgres S.SQLExp)
+  -> m (ConflictClauseP1 ('Postgres 'Vanilla) S.SQLExp)
 buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) =
   case (mTCol, mTCons, act) of
     (Nothing, Nothing, CAIgnore)    -> return $ CP1DoNothing Nothing
@@ -128,12 +127,12 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
 
 
 convInsertQuery
-  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
-  => (Value -> m [InsObj 'Postgres])
-  -> SessVarBldr 'Postgres m
-  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  :: (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m)
+  => (Value -> m [InsObj ('Postgres 'Vanilla)])
+  -> SessVarBldr ('Postgres 'Vanilla) m
+  -> (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp)
   -> InsertQuery
-  -> m (InsertQueryP1 'Postgres)
+  -> m (InsertQueryP1 ('Postgres 'Vanilla))
 convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName _ val oC mRetCols) = do
 
   insObjs <- objsParser val
@@ -196,29 +195,30 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName _ val oC mR
 convInsQ
   :: (QErrM m, UserInfoM m, CacheRM m)
   => InsertQuery
-  -> m (InsertQueryP1 'Postgres, DS.Seq Q.PrepArg)
+  -> m (InsertQueryP1 ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
 convInsQ query = do
   let source = iqSource query
-  tableCache :: TableCache 'Postgres <- askTableCache source
+  tableCache :: TableCache ('Postgres 'Vanilla) <- askTableCache source
   flip runTableCacheRT (source, tableCache) $ runDMLP1T $
     convInsertQuery (withPathK "objects" . decodeInsObjs)
     sessVarFromCurrentSetting binRHSBuilder query
 
 runInsert
-  :: ( HasVersion, QErrM m, UserInfoM m
+  :: ( QErrM m, UserInfoM m
      , CacheRM m, HasServerConfigCtx m
      , MonadIO m, Tracing.MonadTrace m
      , MonadBaseControl IO m, MetadataM m
      )
-  => Env.Environment -> InsertQuery -> m EncJSON
-runInsert env q = do
-  sourceConfig <- askSourceConfig (iqSource q)
+  => InsertQuery -> m EncJSON
+runInsert q = do
+  sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (iqSource q)
+  userInfo <- askUserInfo
   res <- convInsQ q
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $
-    execInsertQuery env strfyNum Nothing res
+    execInsertQuery strfyNum userInfo res
 
-decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj 'Postgres]
+decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj ('Postgres 'Vanilla)]
 decodeInsObjs v = do
   objs <- decodeValue v
   when (null objs) $ throw400 UnexpectedPayload "objects should not be empty"

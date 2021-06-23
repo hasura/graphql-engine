@@ -1,8 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE DerivingVia         #-}
-{-# LANGUAGE NumDecimals         #-}
-{-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE NumDecimals #-}
 
 {-| Types for time intervals of various units. Each newtype wraps 'DiffTime',
 but they have different 'Num' instances. The intent is to use the record
@@ -65,6 +61,7 @@ module Data.Time.Clock.Units
   --  - a 'DiffTime' or 'NominalDiffTime' may be negative
   --  - 'addUTCTime' and 'diffUTCTime' do not attempt to handle leap seconds
   , DiffTime
+  , diffTimeToMicroSeconds
   ) where
 
 import           Prelude
@@ -186,3 +183,6 @@ instance Duration NominalDiffTime where
 -- | Safe conversion between duration units.
 convertDuration :: (Duration x, Duration y) => x -> y
 convertDuration = fromDiffTime . toDiffTime
+
+diffTimeToMicroSeconds :: DiffTime -> Integer
+diffTimeToMicroSeconds = (`div` 1000000) . diffTimeToPicoseconds

@@ -1,7 +1,8 @@
 # anchor refs to be used elsewhere
 refs:
   constants:
-  - &server_builder_image hasura/graphql-engine-server-builder:252ba880c8ca6b189f9959962c7b8e2602539cbc4b18e259a76c90b74eb87353
+  - &server_builder_image hasura/graphql-engine-server-builder:485659267675dbd5539a1ba8ced6bff3e8824ec8d2f6d7480fd6d8201629794e
+  - &mssql_image hasura/mssql-server-2019-cu10-ubuntu-20.04:beac532b07e0064536b6a7c6f53f1051726162858350710edd3bf86f81441a7b
   skip_job_on_ciignore: &skip_job_on_ciignore
     run:
       name: checking if job should be terminated or not
@@ -45,6 +46,24 @@ refs:
           sleep 1
         done
         echo Failed waiting for Postgres && exit 1
+
+  ensure_postgres_db: &ensure_postgres_db
+    run:
+      name: ensure postgres databases are present
+      environment:
+        # sqlalchemy throws warnings with postgres://
+        DATABASE_URL: 'postgresql://gql_test:@localhost:5432/gql_test'
+      command: |
+        psql "$DATABASE_URL" -c \
+          "SELECT 1 FROM pg_database WHERE datname = 'gql_test2'" | grep -q -F '(1 row)' || \
+          psql "$DATABASE_URL" -c 'CREATE DATABASE gql_test2;'
+        psql "$DATABASE_URL" -c \
+          "SELECT 1 FROM pg_database WHERE datname = 'pg_source_1'" | grep -q -F '(1 row)' || \
+          psql "$DATABASE_URL" -c 'CREATE DATABASE pg_source_1;'
+        psql "$DATABASE_URL" -c \
+          "SELECT 1 FROM pg_database WHERE datname = 'pg_source_2'" | grep -q -F '(1 row)' || \
+          psql "$DATABASE_URL" -c 'CREATE DATABASE pg_source_2;'
+
   wait_for_hge: &wait_for_hge
     run:
       name: waiting for graphql-engine to be ready
@@ -56,6 +75,18 @@ refs:
           sleep 1
         done
         echo Failed waiting for graphql-engine && exit 1
+
+  wait_for_mssql: &wait_for_mssql
+    run:
+      name: wait for mssql container to be ready
+      command: |
+        for i in `seq 1 60`;
+        do
+          nc -z localhost 1433 && echo Success && exit 0
+          echo -n .
+          sleep 1
+        done
+        echo Failed waiting for SQL Server && exit 1
 
   filter_only_vtags: &filter_only_vtags
     filters:
@@ -106,28 +137,7 @@ refs:
     - checkout
     - *skip_server_tests
     - *wait_for_postgres
-    - run:
-        name: Install deps
-        # if the man directories are missing, postgresql-client fails
-        # to install in debian
-        command: |
-          mkdir -p /usr/share/man/man{1,7}
-          apt-get update
-          apt install --yes curl apt-transport-https
-          curl -s https://packages.microsoft.com/config/debian/9/prod.list > /etc/apt/sources.list.d/mssql-release.list
-          curl -s https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-          apt-get update
-          apt install --yes pgbouncer jq postgresql-client-13 g++ gcc libc6-dev unixodbc-dev
-          ACCEPT_EULA=Y apt install --yes msodbcsql17
-    - run:
-        name: Ensure databases are present
-        environment:
-          # sqlalchemy throws warnings with postgres://
-          DATABASE_URL: 'postgresql://gql_test:@localhost:5432/gql_test'
-        command: |
-          psql "$DATABASE_URL" -c "SELECT 1 FROM pg_database WHERE datname = 'gql_test2'" | grep -q -F '(1 row)' || psql "$DATABASE_URL" -c 'CREATE DATABASE gql_test2;'
-          psql "$DATABASE_URL" -c "SELECT 1 FROM pg_database WHERE datname = 'pg_source_1'" | grep -q -F '(1 row)' || psql "$DATABASE_URL" -c 'CREATE DATABASE pg_source_1;'
-          psql "$DATABASE_URL" -c "SELECT 1 FROM pg_database WHERE datname = 'pg_source_2'" | grep -q -F '(1 row)' || psql "$DATABASE_URL" -c 'CREATE DATABASE pg_source_2;'
+    - *ensure_postgres_db
     - run:
         name: Run tests
         environment:
@@ -196,11 +206,6 @@ jobs:
         - cabal-packages-v3-{{ checksum "server/cabal.project" }}-
         - cabal-packages-v3-
     - run:
-        name: Install latest postgresql client tools
-        command: |
-          apt-get -y update
-          apt-get -y install postgresql-client-13
-    - run:
         name: Build the binary
         working_directory: ./server
         command: |
@@ -265,6 +270,47 @@ jobs:
     - run:
         name: All server tests passed
         command: echo 'all server tests passed!'
+
+  # pytest the server with SQL Server ODBC Driver 17
+  test_server_mssql_2019:
+    docker:
+    - image: *server_builder_image
+    - image: *mssql_image
+    - image: hasura/postgres-13.0-alpine-postgis3:latest
+      <<: *test_pg_env
+    environment:
+      # Setting default number of threads to 2
+      # since circleci allocates 2 cpus per test container
+      GHCRTS: -N2
+      # Until we can use a real webserver for TestEventFlood, limit concurrency:
+      HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE: 8
+      HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
+      HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:@localhost:5432/gql_test2
+      HASURA_GRAPHQL_PG_SOURCE_URL_1: postgresql://gql_test@localhost:5432/pg_source_1
+      HASURA_GRAPHQL_PG_SOURCE_URL_2: postgresql://gql_test@localhost:5432/pg_source_2
+      HASURA_GRAPHQL_MSSQL_SOURCE_URL: DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost,1433;Uid=sa;Pwd=hasuraMSSQL1;
+      GRAPHQL_ENGINE: /build/_server_output/graphql-engine
+      GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
+      MIX_FILES_FOLDER: /build/_server_output/mix
+    working_directory: ~/graphql-engine
+    steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
+    - checkout
+    - *wait_for_postgres
+    - *ensure_postgres_db
+    - *wait_for_mssql
+    - run:
+        name: Run tests
+        environment:
+          SERVER_TEST_TO_RUN: 'backend-mssql'
+          OUTPUT_FOLDER: '/build/_server_test_output/mssql'
+        command: |
+          .circleci/test-server.sh
+    - store_artifacts:
+        path: /build/_server_test_output
+        destination: server_test
 
   # pytest the server with postgres versions >= 9.5
   test_server_pg_13:
@@ -341,33 +387,35 @@ jobs:
         command: /build/_server_output/graphql-engine-tests unit
 
   test_cli_with_last_release:
-    docker:
-    - image: hasura/graphql-engine-cli-builder:20210310
-    - image: circleci/postgres:10-alpine
-      environment:
-        POSTGRES_USER: gql_test
-        POSTGRES_DB: gql_test
+    machine:
+      image: ubuntu-2004:202101-01
     working_directory: ~/graphql-engine
     steps:
+    - run:
+        name: create /build directory
+        command: |
+          sudo mkdir /build
+          sudo chmod 777 /build
     - attach_workspace:
         at: /build
     - *skip_job_on_ciignore
     - checkout
-    - restore_cache:
-        keys:
-        - cli-gopkg-{{ checksum "cli/go.mod" }}-{{ checksum "cli/go.sum" }}
+    - run:
+        name: install deps
+        command: |
+          sudo .circleci/install-cli-builder-deps.sh
     - run:
         name: get cli dependencies
         working_directory: cli
         command: make deps
-    - save_cache:
-        key: cli-gopkg-{{ checksum "cli/go.mod" }}-{{ checksum "cli/go.sum" }}
-        paths:
-        - /go/pkg
-    - *wait_for_postgres
     - run:
         name: test cli
-        command: .circleci/test-cli-with-last-release.sh
+        working_directory: cli
+        command: |
+          export HASURA_TEST_CLI_HGE_DOCKER_IMAGE="hasura/graphql-engine:$(curl https://releases.hasura.io/graphql-engine | jq -r '.latest')"
+          echo "HASURA_TEST_CLI_HGE_DOCKER_IMAGE = $HASURA_TEST_CLI_HGE_DOCKER_IMAGE"
+          make integration_tests_config_v2
+          HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd" make integration_tests_config_v2
     - store_artifacts:
         path: /build/_cli_output
         destination: cli
@@ -410,14 +458,9 @@ jobs:
         paths:
           - _cli_ext_output
 
-  # test and build cli
-  test_and_build_cli:
+  build_cli:
     docker:
     - image: hasura/graphql-engine-cli-builder:20210310
-    - image: circleci/postgres:10-alpine
-      environment:
-        POSTGRES_USER: gql_test
-        POSTGRES_DB: gql_test
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -427,10 +470,6 @@ jobs:
     - restore_cache:
         keys:
         - cli-gopkg-{{ checksum "cli/go.mod" }}-{{ checksum "cli/go.sum" }}
-    - *wait_for_postgres
-    - run:
-        name: test cli
-        command: .circleci/test-cli.sh
     - run:
         name: build cli
         working_directory: cli
@@ -449,6 +488,38 @@ jobs:
         root: /build
         paths:
           - _cli_output
+
+  test_cli:
+    machine:
+      image: ubuntu-2004:202101-01
+    working_directory: ~/graphql-engine
+    steps:
+    - run:
+        name: create /build directory
+        command: |
+          sudo mkdir /build
+          sudo chmod 777 /build
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
+    - checkout
+    - run:
+        name: install deps
+        command: |
+          sudo .circleci/install-cli-builder-deps.sh
+    - run:
+        name: test cli
+        working_directory: cli
+        command: |
+          chmod +x /build/_cli_output/binaries/cli-hasura-linux-amd64
+          export SOURCE_IMAGE=$(docker load -i /build/_server_output/image.tar | grep "^Loaded image: " | sed "s/Loaded image: //g")
+          echo "SOURCE_IMAGE = $SOURCE_IMAGE"
+          export HASURA_TEST_CLI_HGE_DOCKER_IMAGE="$SOURCE_IMAGE"
+          echo "HASURA_TEST_CLI_HGE_DOCKER_IMAGE = $HASURA_TEST_CLI_HGE_DOCKER_IMAGE"
+          make test-all
+          export HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd"
+          export HASURA_GRAPHQL_ADMIN_SECRET="abcd"
+          make test-all
 
   test_and_build_cli_migrations:
     docker:
@@ -483,7 +554,7 @@ jobs:
   # build console assets
   build_console:
     docker:
-    - image: hasura/graphql-engine-console-builder:20210224 
+    - image: hasura/graphql-engine-console-builder:e3e5decbd831134b615e611d831a6eda44f2ce45dc95a1cc32199d346bf1e906
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -533,7 +604,7 @@ jobs:
           - _console_output
   console_unit_tests:
     docker:
-    - image: hasura/graphql-engine-console-builder:20210224 
+    - image: hasura/graphql-engine-console-builder:e3e5decbd831134b615e611d831a6eda44f2ce45dc95a1cc32199d346bf1e906
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -562,7 +633,7 @@ jobs:
   # test console
   test_console:
     docker:
-    - image: hasura/graphql-engine-console-builder:20210224
+    - image: hasura/graphql-engine-console-builder:e3e5decbd831134b615e611d831a6eda44f2ce45dc95a1cc32199d346bf1e906
       environment:
         HASURA_GRAPHQL_DATABASE_URL: 'postgres://gql_test:@localhost:5432/gql_test'
         CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
@@ -676,6 +747,10 @@ workflows:
         requires:
         - build_server
         - build_console
+    - test_server_mssql_2019:
+        <<: *filter_only_vtags
+        requires:
+          - build_server
     - test_server_pg_13:
         <<: *filter_only_vtags
         requires:
@@ -719,21 +794,26 @@ workflows:
         - test_server_pg_9.5
         - server_unit_tests
         - test_server_upgrade
-    - test_and_build_cli:
+    - build_cli:
         <<: *filter_only_vtags
         requires:
         - test_and_build_cli_ext
-        - build_server
+    - test_cli:
+        <<: *filter_only_vtags
+        requires:
+        - build_cli
+        - build_image
     - test_and_build_cli_migrations:
         <<: *filter_only_vtags
         requires:
         - build_image
-        - test_and_build_cli
+        - build_cli
     - test_console:
         <<: *filter_only_vtags
         requires:
         - build_console
-        - test_and_build_cli
+        - build_cli
+        - build_server
         - test_cli_with_last_release
     - deploy:
         <<: *filter_only_vtags_channel_branches

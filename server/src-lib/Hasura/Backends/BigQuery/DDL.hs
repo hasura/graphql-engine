@@ -12,19 +12,22 @@ module Hasura.Backends.BigQuery.DDL
   )
 where
 
-import           Hasura.Backends.BigQuery.DDL.BoolExp
 import           Hasura.Prelude
+
+import qualified Data.Environment                     as Env
 
 import           Data.Aeson
 
-import qualified Data.Environment                         as Env
+import qualified Hasura.Backends.BigQuery.Types       as BigQuery
 
+import           Hasura.Backends.BigQuery.DDL.BoolExp
+import           Hasura.Backends.BigQuery.DDL.Source  as M
+import           Hasura.Base.Error
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.RemoteRelationship
@@ -33,12 +36,9 @@ import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 import           Hasura.Server.Types
-import           Hasura.Backends.BigQuery.Instances.Types ()
 import           Hasura.Server.Utils
 import           Hasura.Session
 
-import qualified Hasura.Backends.BigQuery.Types           as BigQuery
-import           Hasura.Backends.BigQuery.DDL.Source      as M
 
 buildComputedFieldInfo
   :: (MonadError QErr m)

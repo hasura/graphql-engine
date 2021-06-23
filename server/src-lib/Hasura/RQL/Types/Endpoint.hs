@@ -25,20 +25,20 @@ module Hasura.RQL.Types.Endpoint
 
 import           Hasura.Prelude
 
+import qualified Data.Text                        as T
 import qualified Database.PG.Query                as Q
 
 import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import qualified Data.Text                        as T
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
+import           Web.HttpApiData                  (FromHttpApiData (..))
 
-import           Hasura.RQL.Instances             ()
 import           Hasura.RQL.Types.Endpoint.Trie   as Trie
 import           Hasura.RQL.Types.QueryCollection (CollectionName, QueryName)
-import           Web.HttpApiData                  (FromHttpApiData (..))
+
 
 newtype EndpointMethod = EndpointMethod { unEndpointMethod :: Text }
   deriving

@@ -13,6 +13,7 @@ window.hdocs = (function () {
       document.getElementById('thumb_up_button').addEventListener('click', function () { hdocs.sendFeedback('positive', 'Great to hear that! If you have any other feedback, please share here:') });
       document.getElementById('thumb_down_button').addEventListener('click', function () { hdocs.sendFeedback('negative', 'Sorry to hear that. Please tell us what you were looking for:') });
       document.getElementById('feedback_btn').addEventListener('click', hdocs.handleSubmitFeedback);
+      document.getElementById('close-banner').addEventListener('click', hdocs.closeBanner)
 
       docsearch({
         appId: 'WCBB1VVLRC',
@@ -60,6 +61,10 @@ window.hdocs = (function () {
       } else {
         x.className = "topnav"
       }
+    },
+    closeBanner: function() {
+      var banner = document.getElementById("banner-stripe");
+      banner.className += " hide";
     },
     request: function (url, data, type) {
       return new Promise(function (resolve, reject) {
@@ -122,7 +127,7 @@ window.hdocs = (function () {
       }
     },
     setExternalLinks: function () {
-      Array.from(document.getElementsByClassName('.external')).forEach(function (el) { el.setAttribute('target', '_blank') });
+      Array.from(document.getElementsByClassName('external')).forEach(function (el) { el.setAttribute('target', '_blank') });
     },
     setupIntercom: function () {
       window.intercomSettings = {

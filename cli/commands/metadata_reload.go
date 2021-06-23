@@ -1,15 +1,15 @@
 package commands
 
 import (
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
 func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &metadataReloadOptions{
-		EC:         ec,
-		actionType: "reload",
+		EC: ec,
 	}
 
 	metadataReloadCmd := &cobra.Command{
@@ -41,12 +41,13 @@ func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 type metadataReloadOptions struct {
 	EC *cli.ExecutionContext
-
-	actionType string
 }
 
 func (o *metadataReloadOptions) run() error {
-	err := executeMetadata(o.actionType, o.EC)
+
+	var err error
+	metadataHandler := metadataobject.NewHandlerFromEC(ec)
+	_, err = metadataHandler.ReloadMetadata()
 	if err != nil {
 		return errors.Wrap(err, "Cannot reload metadata")
 	}

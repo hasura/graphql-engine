@@ -1,5 +1,4 @@
 import React from 'react';
-import { push } from 'react-router-redux';
 import { connect, ConnectedProps } from 'react-redux';
 import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
@@ -8,6 +7,7 @@ import { getAddSTRoute } from '../../../Common/utils/routesUtils';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 import { CRON_TRIGGER } from '../constants';
 import TopicDescription from '../../Common/Landing/TopicDescription';
+import _push from '../../Data/push';
 
 interface Props extends InjectedProps {}
 
@@ -41,7 +41,7 @@ const Landing: React.FC<Props> = props => {
           <Button
             color="yellow"
             size="sm"
-            onClick={() => dispatch(push(getAddSTRoute()))}
+            onClick={() => dispatch(_push(getAddSTRoute()))}
           >
             Create
           </Button>

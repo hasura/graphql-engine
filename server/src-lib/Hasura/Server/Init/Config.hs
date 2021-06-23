@@ -30,6 +30,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Types
+import           Hasura.Server.Utils
 import           Hasura.Session
 
 data RawConnParams
@@ -104,6 +105,8 @@ data RawServeOptions impl
   , rsoEnableMaintenanceMode         :: !Bool
   , rsoSchemaPollInterval            :: !(Maybe Milliseconds)
   , rsoExperimentalFeatures          :: !(Maybe [ExperimentalFeature])
+  , rsoEventsFetchBatchSize          :: !(Maybe NonNegativeInt)
+  , rsoGracefulShutdownTimeout       :: !(Maybe Seconds)
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -160,6 +163,9 @@ data ServeOptions impl
   , soEnableMaintenanceMode         :: !MaintenanceMode
   , soSchemaPollInterval            :: !OptionalInterval
   , soExperimentalFeatures          :: !(Set.HashSet ExperimentalFeature)
+  , soEventsFetchBatchSize          :: !NonNegativeInt
+  , soDevMode                       :: !Bool
+  , soGracefulShutdownTimeout       :: !Seconds
   }
 
 data DowngradeOptions
@@ -262,13 +268,9 @@ parseStrAsBool t
              ++ show truthVals ++ " and  False values are " ++ show falseVals
              ++ ". All values are case insensitive"
 
-readIsoLevel :: String -> Either String Q.TxIsolation
-readIsoLevel isoS =
-  case isoS of
-    "read-committed"  -> return Q.ReadCommitted
-    "repeatable-read" -> return Q.RepeatableRead
-    "serializable"    -> return Q.Serializable
-    _                 -> Left "Only expecting read-committed / repeatable-read / serializable"
+readNonNegativeInt :: String -> Either String NonNegativeInt
+readNonNegativeInt s =
+  onNothing (mkNonNegativeInt =<< readMaybe s) $ Left "Only expecting a non negative integer"
 
 readAPIs :: String -> Either String [API]
 readAPIs = mapM readAPI . T.splitOn "," . T.pack
@@ -356,6 +358,9 @@ instance FromEnv LQ.RefetchInterval where
 instance FromEnv Milliseconds where
   fromEnv = fmap fromInteger . readEither
 
+instance FromEnv Seconds where
+  fromEnv = fmap fromInteger . readEither
+
 instance FromEnv JWTConfig where
   fromEnv = readJson
 
@@ -371,6 +376,9 @@ instance FromEnv Cache.CacheSize where
 instance FromEnv URLTemplate where
   fromEnv = parseURLTemplate . T.pack
 
+instance FromEnv NonNegativeInt where
+  fromEnv = readNonNegativeInt
+
 type WithEnv a = ReaderT Env (ExceptT String Identity) a
 
 runWithEnv :: Env -> WithEnv a -> Either String a
@@ -379,20 +387,26 @@ runWithEnv env m = runIdentity $ runExceptT $ runReaderT m env
 -- | Collection of various server metrics
 data ServerMetrics
   = ServerMetrics
-  { smWarpThreads         :: !EKG.Gauge.Gauge
-  -- ^ Current Number of warp threads
-  , smNumEventsFetched    :: !EKG.Distribution.Distribution
+  { smWarpThreads              :: !EKG.Gauge.Gauge
+  -- ^ Current Number of active Warp threads
+  , smWebsocketConnections     :: !EKG.Gauge.Gauge
+  -- ^ Current number of active websocket connections
+  , smActiveSubscriptions      :: !EKG.Gauge.Gauge
+  -- ^ Current number of active subscriptions
+  , smNumEventsFetchedPerBatch :: !EKG.Distribution.Distribution
   -- ^ Total Number of events fetched from last 'Event Trigger Fetch'
-  , smNumEventHTTPWorkers :: !EKG.Gauge.Gauge
+  , smNumEventHTTPWorkers      :: !EKG.Gauge.Gauge
   -- ^ Current number of Event trigger's HTTP workers in process
-  , smEventLockTime       :: !EKG.Distribution.Distribution
-  -- ^ Time between the 'Event Trigger Fetch' from DB and the processing of the event
+  , smEventQueueTime           :: !EKG.Distribution.Distribution
+  -- ^ Time (in seconds) between the 'Event Trigger Fetch' from DB and the processing of the event
   }
 
 createServerMetrics :: EKG.Store -> IO ServerMetrics
 createServerMetrics store = do
   smWarpThreads <- EKG.createGauge "warp_threads" store
-  smNumEventsFetched <- EKG.createDistribution "num_events_fetched" store
+  smWebsocketConnections <- EKG.createGauge "websocket_connections" store
+  smActiveSubscriptions <- EKG.createGauge "active_subscriptions" store
+  smNumEventsFetchedPerBatch <- EKG.createDistribution "events_fetched_per_batch" store
   smNumEventHTTPWorkers <- EKG.createGauge "num_event_trigger_http_workers" store
-  smEventLockTime <- EKG.createDistribution "event_lock_time" store
+  smEventQueueTime <- EKG.createDistribution "event_queue_time" store
   pure ServerMetrics { .. }

@@ -53,8 +53,8 @@ class QueryEchoWebhookHandler(http.server.BaseHTTPRequestHandler):
 
 class QueryEchoWebhookServer(http.server.HTTPServer):
     def __init__(self, server_address):
+        # TODO why maxsize=1
         self.resp_queue = queue.Queue(maxsize=1)
-        self.error_queue = queue.Queue()
         super().__init__(server_address, QueryEchoWebhookHandler)
 
     def server_bind(self):

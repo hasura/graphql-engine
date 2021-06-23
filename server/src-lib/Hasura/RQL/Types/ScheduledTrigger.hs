@@ -26,6 +26,7 @@ module Hasura.RQL.Types.ScheduledTrigger
   , DeleteScheduledEvent(..)
   , GetInvocationsBy(..)
   , GetEventInvocations(..)
+  , ClearCronEvents (..)
   ) where
 
 import           Data.Aeson
@@ -307,6 +308,9 @@ data CronEvent
   { _ceId            :: !CronEventId
   , _ceTriggerName   :: !TriggerName
   , _ceScheduledTime :: !UTCTime
+  -- ^ We expect this to always be at second zero, since cron events have
+  -- minute resolution. Note that a OneOffScheduledEvent has full timestamp
+  -- precision.
   , _ceStatus        :: !Text
   , _ceTries         :: !Int
   , _ceCreatedAt     :: !UTCTime
@@ -391,3 +395,11 @@ instance ToJSON GetEventInvocations where
              GIBEventId eventId eventType -> ["event_id" .= eventId, "type" .= eventType]
              GIBEvent event               -> scheduledEventToPairs event
           <> scheduledEventPaginationToPairs _geiPagination
+
+data ClearCronEvents
+  = SingleCronTrigger !TriggerName
+  -- ^ Used to delete the cron events only of the specified cron trigger
+  | MetadataCronTriggers ![TriggerName]
+  -- ^ Used to delete all the cron events of the cron triggers with `include_in_metadata: true`
+  -- It is used in the case of the `replace_metadata` API
+  deriving (Show, Eq)
