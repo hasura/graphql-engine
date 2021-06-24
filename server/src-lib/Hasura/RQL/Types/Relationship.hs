@@ -191,11 +191,13 @@ instance (Backend b) => FromJSON (ArrRelUsingFKeyOn b) where
 
 type ArrRelUsing b = RelUsing b (ArrRelUsingFKeyOn b)
 type ArrRelDef b = RelDef (ArrRelUsing b)
-type CreateArrRel b = WithTable b (ArrRelDef b)
+newtype CreateArrRel b = CreateArrRel { unCreateArrRel :: WithTable b (ArrRelDef b) }
+  deriving newtype (Eq, ToJSON, FromJSON)
 
 type ObjRelUsing b = RelUsing b (ObjRelUsingChoice b)
 type ObjRelDef b = RelDef (ObjRelUsing b)
-type CreateObjRel b = WithTable b (ObjRelDef b)
+newtype CreateObjRel b = CreateObjRel { unCreateObjRel :: WithTable b (ObjRelDef b) }
+  deriving newtype (Eq, ToJSON, FromJSON)
 
 data DropRel b
   = DropRel
