@@ -12,16 +12,19 @@ import           Hasura.Incremental     (Cacheable (..))
 newtype SLFilePath = SLFilePath String
   deriving newtype (Show, Eq, Hashable, Cacheable, NFData, ToJSON, FromJSON, Arbitrary)
 
-data SLSourceConfig = SLSourceConfig -- TODO
+data SLSourceConfig = SLSourceConfig
+  { slPath :: SLFilePath
+  , slConn :: L.Connection
+  } deriving Generic
 
 instance Show SLSourceConfig where
-  show = undefined -- TODO
+  show = show . slPath
 
 instance Eq SLSourceConfig where
-  (==) = undefined -- TODO
+  (==) = (==) `on` slPath
 
 instance Cacheable SLSourceConfig where
-  unchanged _ = undefined -- TODO
+  unchanged _ = (==)
 
 instance ToJSON SLSourceConfig where
-  toJSON = undefined -- TODO
+  toJSON = toJSON . slPath

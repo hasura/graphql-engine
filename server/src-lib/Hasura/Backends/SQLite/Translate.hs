@@ -78,9 +78,9 @@ fromBoolExp
   -> m Text
 fromBoolExp = \case
   IR.BoolExists _ -> throw500 "not implemented yet"
-  IR.BoolAnd e    -> undefined -- TODO
-  IR.BoolOr  e    -> undefined -- TODO
-  IR.BoolNot e    -> undefined -- TODO
+  IR.BoolAnd e    -> traverse fromBoolExp e <&> joinWith " AND " "TRUE"
+  IR.BoolOr  e    -> traverse fromBoolExp e <&> joinWith " OR " "FALSE"
+  IR.BoolNot e    -> fromBoolExp e <&> \q -> "NOT (" <> q <> ")"
   IR.BoolFld f    -> case f of
     IR.AVRel _ _    -> throw500 "not implemented yet"
     IR.AVCol RQL.ColumnInfo{ pgiColumn = col} ops -> do

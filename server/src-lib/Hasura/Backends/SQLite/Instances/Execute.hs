@@ -43,7 +43,10 @@ slDBQueryPlan
   -> SourceConfig 'SQLite
   -> QueryDB 'SQLite (Const Void) (UnpreparedValue 'SQLite)
   -> m (DBStepInfo 'SQLite)
-slDBQueryPlan userInfo sourceName sourceConfig qrf = undefined -- TODO
+slDBQueryPlan userInfo sourceName sourceConfig qrf = do
+  query <- planInline (_uiSession userInfo) qrf
+  pure $ DBStepInfo @'SQLite sourceName sourceConfig Nothing
+       $ toEncJSON <$> L.query_ (slConn sourceConfig) query
 
 toEncJSON :: [L.Only Text] -> EncJSON
 toEncJSON = encJFromList . mapMaybe (fmap encJFromText . rejectEmpty . L.fromOnly)
@@ -60,4 +63,10 @@ slDBQueryExplain
   -> SourceConfig 'SQLite
   -> QueryDB 'SQLite (Const Void) (UnpreparedValue 'SQLite)
   -> m (AB.AnyBackend DBStepInfo)
-slDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = undefined -- TODO
+slDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
+  query <- planInline (_uiSession userInfo) qrf
+  pure
+    $ AB.mkAnyBackend
+    $ DBStepInfo @'SQLite sourceName sourceConfig Nothing
+    $ pure $ encJFromJValue
+    $ ExplainPlan fieldName (Just $ L.fromQuery query) (Just ["not available"])

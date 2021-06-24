@@ -52,10 +52,44 @@ slResolveSourceConfig
 slResolveSourceConfig _ p@(SLFilePath path) =
   liftIO $ createConfig  `catch` \(e :: SomeException) -> pure $ throw400 NotFound $ tshow e
   where
-    createConfig = undefined -- TODO
+    createConfig = do
+      c <- L.open path
+      pure $ Right $ SLSourceConfig p c
 
 slResolveDatabaseMetadata
   :: (MonadIO m)
   => SLSourceConfig
   -> m (Either QErr (ResolvedSource 'SQLite))
-slResolveDatabaseMetadata config = undefined -- TODO
+slResolveDatabaseMetadata config@(SLSourceConfig _ connection) = runExceptT do
+  let queryBytes  = $(makeRelativeToProject "src-rsr/sqlite_table_metadata.sql" >>= embedFile)
+      sqliteQuery = fromString . BS.toString $ queryBytes
+  rows <- liftIO $ groupOn _slTableName <$> L.query_ connection sqliteQuery
+  let tables = flip evalState 0 $ for rows \columns -> do
+        i <- get
+        put $ succ i
+        pure $  DBTableMetadata @'SQLite
+          (OID i) -- SQLite doesn't have table OIDs
+          [ RawColumnInfo name position kind (not nonNullable) Nothing
+          | SLMetaRow _ name position kind nonNullable <- columns
+          ]
+          Nothing -- no PK information
+          mempty  -- no unique constraints
+          mempty  -- no foreign keys
+          Nothing -- no views
+          Nothing -- no description
+          ()
+  pure $ ResolvedSource config tables mempty mempty
+
+
+-- helpers
+
+data SLMetaRow = SLMetaRow
+  { _slTableName     :: Text
+  , _slColumnName    :: Text
+  , _slColumnIndex   :: Int
+  , _slColumnType    :: Text
+  , _slColumnNotNull :: Bool
+  }
+
+instance L.FromRow SLMetaRow where
+  fromRow = SLMetaRow <$> L.field <*> L.field <*> L.field <*> L.field <*> L.field

@@ -11,7 +11,7 @@ import           Hasura.RQL.Types
 
 
 instance BackendTransport 'SQLite  where
-  runDBQuery        = \_ _ _ _ _ _ a _ -> undefined -- TODO
-  runDBQueryExplain = \a               -> undefined -- TODO
+  runDBQuery        = \_ _ _ _ _ _ a _ -> withElapsedTime $ liftIO a
+  runDBQueryExplain = \a               -> liftIO $ dbsiAction a
   runDBMutation     = error "not implemented"
   runDBSubscription = error "not implemented"
