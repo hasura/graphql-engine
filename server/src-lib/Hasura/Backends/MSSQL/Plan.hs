@@ -9,7 +9,6 @@ module Hasura.Backends.MSSQL.Plan where
 import           Hasura.Prelude                hiding (first)
 
 import qualified Data.Aeson                    as J
-import           Data.ByteString.Lazy          (toStrict)
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as Set
@@ -18,6 +17,7 @@ import qualified Database.ODBC.SQLServer       as ODBC
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Control.Monad.Validate
+import           Data.ByteString.Lazy          (toStrict)
 import           Data.Text.Extended
 
 import qualified Hasura.GraphQL.Parser         as GraphQL

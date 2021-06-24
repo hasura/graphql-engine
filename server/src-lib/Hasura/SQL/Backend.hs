@@ -1,12 +1,14 @@
 module Hasura.SQL.Backend
   ( PostgresKind(..)
   , BackendType(..)
+  , backendPrefix
   , supportedBackends
   ) where
 
 import           Hasura.Prelude
 
 import           Data.Aeson
+import           Data.List.Extended (uniques)
 import           Data.Proxy
 import           Data.Text          (unpack)
 import           Data.Text.Extended
@@ -27,6 +29,7 @@ data BackendType
   = Postgres PostgresKind
   | MSSQL
   | BigQuery
+  | SQLite
   deriving (Eq, Ord)
 
 
@@ -36,13 +39,28 @@ instance ToTxt BackendType where
   toTxt (Postgres Citus)   = "citus"
   toTxt MSSQL              = "mssql"
   toTxt BigQuery           = "bigquery"
+  toTxt SQLite             = "sqlite"
 
--- | The FromJSON instance uses this lookup mechanism to avoid having
--- to duplicate and hardcode the backend string.
+-- | Some other generated APIs use a prefix of the backend's name. By default it's the same as the
+-- output of `toTxt`, but a backend can override this default.
+backendPrefix :: BackendType -> Text
+backendPrefix = \case
+  Postgres Vanilla -> "pg"
+  b                -> toTxt b
+
+
+-- | The FromJSON instance uses this lookup mechanism to avoid having to duplicate and hardcode the
+-- backend string. We parse both the prefixed form and the long form.
 instance FromJSON BackendType where
-  parseJSON = withText "backend type" \name ->
-    lookup name [(toTxt b, b) | b <- supportedBackends]
-    `onNothing` fail ("got: " <> unpack name <> ", expected one of: " <> unpack (commaSeparated supportedBackends))
+  parseJSON = withText "backend type" \name -> do
+    let knownBackends = supportedBackends >>= \b ->
+          [ (toTxt         b, b) -- long form
+          , (backendPrefix b, b) -- prefix form
+          ]
+    lookup name knownBackends
+      `onNothing` fail ("got: " <> unpack name <> ", expected one of: " <>
+                        unpack (commaSeparated $ fst <$> uniques knownBackends))
+
 
 instance ToJSON BackendType where
   toJSON = String . toTxt
@@ -56,4 +74,5 @@ supportedBackends =
   , Postgres Citus
   , MSSQL
   , BigQuery
+  , SQLite
   ]

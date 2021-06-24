@@ -59,7 +59,6 @@ class
   , Representable (XRelay b)
   , Representable (XNodesAgg b)
   , Representable (XComputedField b)
-  , Generic (Column b)
   , Ord (TableName b)
   , Ord (FunctionName b)
   , Ord (ScalarType b)
