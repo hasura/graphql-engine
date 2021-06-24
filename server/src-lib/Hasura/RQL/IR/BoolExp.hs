@@ -310,6 +310,7 @@ data AnnBoolExpFld (b :: BackendType) a
   | AVRel !(RelInfo b) !(AnnBoolExp b a)
   deriving (Functor, Foldable, Traversable, Generic)
 deriving instance (Backend b, Eq (BooleanOperators b a), Eq a) => Eq (AnnBoolExpFld b a)
+deriving instance (Backend b, Show (BooleanOperators b a), Show a) => Show (AnnBoolExpFld b a)
 instance (Backend b, NFData    (BooleanOperators b a), NFData    a) => NFData    (AnnBoolExpFld b a)
 instance (Backend b, Cacheable (BooleanOperators b a), Cacheable a) => Cacheable (AnnBoolExpFld b a)
 instance (Backend b, Hashable  (BooleanOperators b a), Hashable  a) => Hashable  (AnnBoolExpFld b a)
@@ -437,6 +438,7 @@ newtype AnnColumnCaseBoolExpField (b :: BackendType) a
   deriving (Functor, Foldable, Traversable, Generic)
 
 deriving instance (Backend b, Eq (BooleanOperators b a), Eq a) => Eq (AnnColumnCaseBoolExpField b a)
+deriving instance (Backend b, Show (BooleanOperators b a), Show a) => Show (AnnColumnCaseBoolExpField b a)
 instance (Backend b, NFData    (BooleanOperators b a), NFData    a) => NFData    (AnnColumnCaseBoolExpField b a)
 instance (Backend b, Cacheable (BooleanOperators b a), Cacheable a) => Cacheable (AnnColumnCaseBoolExpField b a)
 instance (Backend b, Hashable  (BooleanOperators b a), Hashable  a) => Hashable  (AnnColumnCaseBoolExpField b a)

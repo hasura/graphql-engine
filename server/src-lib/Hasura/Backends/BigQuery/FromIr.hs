@@ -110,7 +110,7 @@ runFromIr fromIr = evalStateT (unFromIr fromIr) mempty
 -- single object or an array.
 mkSQLSelect ::
      Rql.JsonAggSelect
-  -> Ir.AnnSelectG 'BigQuery (Const Void) (Ir.AnnFieldsG 'BigQuery (Const Void) Expression) Expression
+  -> Ir.AnnSelectG 'BigQuery (Ir.AnnFieldsG 'BigQuery (Const Void) Expression) Expression
   -> FromIr BigQuery.Select
 mkSQLSelect jsonAggSelect annSimpleSel = do
   select <- fromSelectRows annSimpleSel
@@ -134,7 +134,7 @@ fromRootField =
 --------------------------------------------------------------------------------
 -- Top-level exported functions
 
-fromSelectRows :: Ir.AnnSelectG 'BigQuery (Const Void) (Ir.AnnFieldsG 'BigQuery (Const Void) Expression) Expression -> FromIr BigQuery.Select
+fromSelectRows :: Ir.AnnSelectG 'BigQuery (Ir.AnnFieldsG 'BigQuery (Const Void) Expression) Expression -> FromIr BigQuery.Select
 fromSelectRows annSelectG = do
   selectFrom <-
     case from of
@@ -186,7 +186,7 @@ fromSelectRows annSelectG = do
         else LeaveNumbersAlone
 
 fromSelectAggregate ::
-     Ir.AnnSelectG 'BigQuery (Const Void) [(Rql.FieldName, Ir.TableAggregateFieldG 'BigQuery (Const Void) Expression)] Expression
+     Ir.AnnSelectG 'BigQuery [(Rql.FieldName, Ir.TableAggregateFieldG 'BigQuery (Const Void) Expression)] Expression
   -> FromIr BigQuery.Select
 fromSelectAggregate annSelectG = do
   selectFrom <-
@@ -689,17 +689,6 @@ fromAnnFieldsG existingJoins stringifyNumbers (Rql.FieldName name, field) =
         (\aliasedThing ->
            JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
         (fromArraySelectG arraySelectG)
-    -- this will be gone once the code which collects remote joins from the IR
-    -- emits a modified IR where remote relationships can't be reached
-    Ir.AFRemote _ ->
-      pure
-        (ExpressionFieldSource
-           Aliased
-             { aliasedThing = BigQuery.ValueExpression (StringValue "null: remote field selected")
-             , aliasedAlias = name
-             })
-    -- TODO: implement this
-    Ir.AFDBRemote _ -> error "FIXME"
 
 
 -- | Here is where we project a field as a column expression. If

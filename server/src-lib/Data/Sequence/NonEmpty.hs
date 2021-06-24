@@ -20,6 +20,7 @@ import qualified Data.Sequence      as Seq
 import           Control.DeepSeq    (NFData)
 import           Data.Aeson
 import           Data.Foldable
+import           Data.Hashable
 import           GHC.Generics       (Generic)
 
 data NESeq a = NESeq
@@ -27,6 +28,11 @@ data NESeq a = NESeq
   , tail :: Seq.Seq a
   } deriving (Show, Eq, Functor, Traversable, Generic)
 instance (NFData a) => NFData (NESeq a)
+
+-- There is no Hashable instance defined for Seq
+instance (Hashable a) => Hashable (NESeq a) where
+  hashWithSalt salt (NESeq h t)
+    = hashWithSalt salt (h:toList t)
 
 instance Semigroup (NESeq a) where
   NESeq x xs <> NESeq y ys = NESeq x (xs Seq.>< y Seq.<| ys)

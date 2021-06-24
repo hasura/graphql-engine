@@ -57,13 +57,12 @@ import           Hasura.EncJSON
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.EventTrigger
 import           Hasura.Eventing.ScheduledTrigger
-import           Hasura.GraphQL.Execute                     (ExecutionStep (..),
-                                                             MonadGQLExecutionCheck (..),
+import           Hasura.GraphQL.Execute                     (MonadGQLExecutionCheck (..),
                                                              checkQueryInAllowlist)
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Action.Subscription
 import           Hasura.GraphQL.Logging                     (MonadQueryLog (..))
-import           Hasura.GraphQL.Transport.HTTP              (MonadExecuteQuery (..))
+import           Hasura.GraphQL.Execute.Query               (MonadExecuteQuery (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol     (toParsed)
 import           Hasura.Logging
 import           Hasura.Metadata.Class
@@ -884,7 +883,7 @@ instance (Monad m) => MonadGQLExecutionCheck (PGMetadataStorageAppT m) where
     return req
 
   executeIntrospection _ introspectionQuery _ =
-    pure $ Right $ ExecStepRaw introspectionQuery
+    pure $ Right introspectionQuery
 
 instance (MonadIO m, MonadBaseControl IO m) => MonadConfigApiHandler (PGMetadataStorageAppT m) where
   runConfigApiHandler = configApiGetHandler

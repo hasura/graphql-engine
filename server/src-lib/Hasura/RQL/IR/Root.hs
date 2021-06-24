@@ -1,11 +1,20 @@
 module Hasura.RQL.IR.Root
-  ( SourceConfigWith(..)
-  , RootField(..)
+  ( RootField(..)
+  , QueryDB(..)
   , MutationDB(..)
   , ActionQuery(..)
   , ActionMutation(..)
+  , DBField(..)
   , QueryRootField
+  , QueryDBRootField
+  , QueryDBOnlyField
+  , QueryActionRootField
+  , QueryActionOnlyField
   , MutationRootField
+  , MutationDBRootField
+  , MutationDBOnlyField
+  , MutationActionRootField
+  , MutationActionOnlyField
   , SubscriptionRootField
   , QueryDBRoot(..)
   , MutationDBRoot(..)
@@ -30,15 +39,15 @@ import           Hasura.RQL.IR.Select
 import           Hasura.RQL.IR.Update
 import           Hasura.SQL.Backend
 
+data DBField (field :: BackendType -> Type) (b :: BackendType)
+  = DBField
+  { _dfSourceName   :: !RQL.SourceName
+  , _dfSourceConfig :: !(RQL.SourceConfig b)
+  , _dfField        :: !(field b)
+  }
 
-data SourceConfigWith (db :: BackendType -> Type) (b :: BackendType) =
-  SourceConfigWith (RQL.SourceConfig b) (db b)
-
-data RootField (db :: BackendType -> Type) remote action raw where
-  RFDB
-    :: RQL.SourceName
-    -> AB.AnyBackend (SourceConfigWith db)
-    -> RootField db remote action raw
+data RootField db remote action raw where
+  RFDB     :: db -> RootField db remote action raw
   RFRemote :: remote -> RootField db remote action raw
   RFAction :: action -> RootField db remote action raw
   RFRaw    :: raw    -> RootField db remote action raw
@@ -61,21 +70,36 @@ data ActionMutation (b :: BackendType) (r :: BackendType -> Type) v
   = AMSync !(RQL.AnnActionExecution b r v)
   | AMAsync !RQL.AnnActionMutationAsync
 
--- The `db` type argument of @RootField@ expects only one type argument, the backend `b`, as not all
--- types stored in a RootField will have a second parameter like @QueryDB@ does: they all only have
--- in common the fact that they're parametric over the backend. To define @QueryRootField@ in terms
--- of @QueryDB@ (and likewise for mutations), we need a type-level function `b -> QueryDB b (v
--- b)`. Sadly, neither type synonyms nor type families may be partially applied. Hence the need for
--- @QueryDBRoot@ and @MutationDBRoot@.
+-- The `db` type argument of @RootField@ expects only one type argument, the
+-- backend `b`, as not all types stored in a RootField will have a second
+-- parameter like @QueryDB@ does: they all only have in common the fact that
+-- they're parametric over the backend. To define @QueryRootField@ in terms of
+-- @QueryDB@ (and likewise for mutations), we need a type-level function `b ->
+-- QueryDB b (v b)`. Sadly, neither type synonyms nor type families may be
+-- partially applied. Hence the need for @QueryDBRoot@ and @MutationDBRoot@.
 newtype QueryDBRoot    r v b = QDBR (QueryDB    b r (v b))
 newtype MutationDBRoot r v b = MDBR (MutationDB b r (v b))
 
+type QueryDBRootField v = AB.AnyBackend (DBField (QueryDBRoot (RemoteSelect v) v))
+type QueryDBOnlyField v = AB.AnyBackend (DBField (QueryDBRoot (Const Void) v))
+type MutationDBRootField v = AB.AnyBackend (DBField (MutationDBRoot (RemoteSelect v) v))
+type MutationDBOnlyField v = AB.AnyBackend (DBField (MutationDBRoot (Const Void) v))
 
-type QueryRootField        r v = RootField (QueryDBRoot    r v) RQL.RemoteField (ActionQuery    ('Postgres 'Vanilla) r (v ('Postgres 'Vanilla))) JO.Value
-type MutationRootField     r v = RootField (MutationDBRoot r v) RQL.RemoteField (ActionMutation ('Postgres 'Vanilla) r (v ('Postgres 'Vanilla))) JO.Value
-type SubscriptionRootField r v = RootField (QueryDBRoot    r v) Void            Void                                                             Void
+type QueryActionRootField v =
+  ActionQuery ('Postgres 'Vanilla) (RemoteSelect v) (v ('Postgres 'Vanilla))
+type QueryActionOnlyField v =
+  ActionQuery ('Postgres 'Vanilla) (Const Void) (v ('Postgres 'Vanilla))
+type MutationActionRootField v =
+  ActionMutation ('Postgres 'Vanilla) (RemoteSelect v) (v ('Postgres 'Vanilla))
+type MutationActionOnlyField v =
+  ActionMutation ('Postgres 'Vanilla) (Const Void) (v ('Postgres 'Vanilla))
 
-
+type QueryRootField v =
+  RootField (QueryDBRootField v) RQL.RemoteField (QueryActionRootField v) JO.Value
+type MutationRootField v =
+  RootField (MutationDBRootField v) RQL.RemoteField (MutationActionRootField v) JO.Value
+type SubscriptionRootField v =
+  RootField (QueryDBRootField v) Void Void Void
 
 traverseActionQuery
   :: forall backend r f a b

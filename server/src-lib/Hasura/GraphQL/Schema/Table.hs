@@ -119,7 +119,7 @@ tablePermissions tableInfo = do
   pure $ getRolePermInfo roleName tableInfo
 
 tableSelectPermissions
-  :: forall m n r b. (Backend b, MonadSchema n m, MonadRole r m)
+  :: forall b r m n. (Backend b, MonadSchema n m, MonadRole r m)
   => TableInfo b
   -> m (Maybe (SelPermInfo b))
 tableSelectPermissions tableInfo = (_permSel =<<) <$> tablePermissions tableInfo
@@ -138,14 +138,14 @@ tableSelectFields sourceName tableInfo permissions = do
       pure $ Map.member (pgiColumn columnInfo) (spiCols permissions)
     canBeSelected (FIRelationship relationshipInfo) = do
       tableInfo' <- askTableInfo sourceName $ riRTable relationshipInfo
-      isJust <$> tableSelectPermissions @_ @_ @_ @b tableInfo'
+      isJust <$> tableSelectPermissions @b tableInfo'
     canBeSelected (FIComputedField computedFieldInfo) =
       case _cfiReturnType computedFieldInfo of
         CFRScalar _ ->
           pure $ Map.member (_cfiName computedFieldInfo) $ spiScalarComputedFields permissions
         CFRSetofTable tableName -> do
           tableInfo' <- askTableInfo sourceName tableName
-          isJust <$> tableSelectPermissions @_ @_ @_ @b tableInfo'
+          isJust <$> tableSelectPermissions @b tableInfo'
     canBeSelected (FIRemoteRelationship _) = pure True
 
 tableColumns

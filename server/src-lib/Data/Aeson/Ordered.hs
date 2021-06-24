@@ -46,6 +46,7 @@ import qualified Data.Text                        as T
 import           Data.Vector                      (Vector)
 import qualified Data.Vector                      as V
 import           GHC.Generics
+import           Data.Hashable
 import           Hasura.EncJSON
 import           Hasura.Prelude                   hiding (empty, first, second)
 
@@ -89,6 +90,8 @@ toEncJSON =
 -- differs to the 'aeson' package.
 newtype Object = Object_ { unObject_ :: InsOrdHashMap Text Value}
   deriving (Eq, Read, Show, Typeable, Data, Generic)
+
+instance Hashable Object
 
 -- | Union the keys, ordered, in two maps, erroring on duplicates.
 safeUnion :: Object -> Object -> Either String Object
@@ -148,6 +151,19 @@ data Value
   | Bool !Bool
   | Null
   deriving (Eq, Read, Show, Typeable, Data, Generic)
+
+-- This is from aeson's implementation for Value
+hashValue :: Int -> Value -> Int
+hashValue s = \case
+  (Object o)   ->   s `hashWithSalt` (0::Int) `hashWithSalt` o
+  (Array a)    ->   foldl' hashWithSalt (s `hashWithSalt` (1::Int)) a
+  (String str) ->   s `hashWithSalt` (2::Int) `hashWithSalt` str
+  (Number n)   ->   s `hashWithSalt` (3::Int) `hashWithSalt` n
+  (Bool b)     ->   s `hashWithSalt` (4::Int) `hashWithSalt` b
+  Null         ->   s `hashWithSalt` (5::Int)
+
+instance Hashable Value where
+  hashWithSalt = hashValue
 
 -- | Value pairs to Value
 object :: [(Text, Value)] -> Value

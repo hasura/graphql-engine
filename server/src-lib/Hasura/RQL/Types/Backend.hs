@@ -48,6 +48,7 @@ class
   , Representable (FunctionArgType b)
   , Representable (ConstraintName b)
   , Representable (BasicOrderType b)
+  , Representable (CountType b)
   , Representable (NullsOrderType b)
   , Representable (Column b)
   , Representable (ScalarType b)
@@ -108,6 +109,7 @@ class
   , Arbitrary (ExtraTableMetadata b)
   , Cacheable (SourceConfig b)
   , Typeable b
+  , Hashable (ScalarValue b)
   , HasTag b
   ) => Backend (b :: BackendType) where
   -- types

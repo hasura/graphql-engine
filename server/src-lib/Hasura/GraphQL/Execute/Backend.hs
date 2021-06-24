@@ -5,64 +5,75 @@ import           Hasura.Prelude
 import qualified Data.Aeson                              as J
 import qualified Data.Aeson.Casing                       as J
 import qualified Data.Aeson.Ordered                      as JO
+import qualified Data.ByteString                         as B
+import qualified Data.HashMap.Strict                     as Map
+import qualified Data.List.NonEmpty                      as NE
 import qualified Language.GraphQL.Draft.Syntax           as G
-import qualified Network.HTTP.Types                      as HTTP
 
 import           Control.Monad.Trans.Control             (MonadBaseControl)
 import           Data.Kind                               (Type)
 import           Data.Text.Extended
+import           Data.Text.NonEmpty                      (mkNonEmptyTextUnsafe)
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol  as GH
-import qualified Hasura.SQL.AnyBackend                   as AB
+import qualified Hasura.Logging                          as L
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Execute.Action.Types     (ActionExecutionPlan)
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Execute.RemoteJoin.Types
+import           Hasura.GraphQL.Logging                  (MonadQueryLog)
 import           Hasura.GraphQL.Parser                   hiding (Type)
 import           Hasura.RQL.IR
-import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Backend
+import           Hasura.Server.Types                     (RequestId)
 import           Hasura.Server.Version                   (HasVersion)
 import           Hasura.Session
+import           Hasura.Tracing
 
 
--- | This typeclass enacapsulates how a given backend translates a root field into an execution
--- plan. For now, each root field maps to one execution step, but in the future, when we have
--- a client-side dataloader, each root field might translate into a multi-step plan.
+-- | This typeclass enacapsulates how a given backend fetches the data for a
+-- root field
 class ( Backend b
       , ToTxt (MultiplexedQuery b)
-      , Monad (ExecutionMonad b)
       ) => BackendExecute (b :: BackendType) where
-  -- generated query information
-  type PreparedQuery    b :: Type
   type MultiplexedQuery b :: Type
-  type ExecutionMonad   b :: Type -> Type
 
-  -- execution plan generation
-  mkDBQueryPlan
-    :: (MonadError QErr m)
-    => UserInfo
+  executeQueryField
+    :: forall m
+     . ( MonadIO m
+       , MonadError QErr m
+       , MonadQueryLog m
+       , MonadTrace m
+       )
+    => RequestId
+    -> L.Logger L.Hasura
+    -> UserInfo
     -> SourceName
     -> SourceConfig b
     -> QueryDB b (Const Void) (UnpreparedValue b)
-    -> m (DBStepInfo b)
-  mkDBMutationPlan
+    -> m EncJSON
+  executeMutationField
     :: forall m
-     . ( MonadError QErr m
+     . ( MonadIO m
+       , MonadError QErr m
        , HasVersion
+       , MonadQueryLog m
+       , MonadTrace m
        )
-    => UserInfo
+    => RequestId
+    -> L.Logger L.Hasura
+    -> UserInfo
     -> Bool
     -> SourceName
     -> SourceConfig b
     -> MutationDB b (Const Void) (UnpreparedValue b)
-    -> m (DBStepInfo b)
-  mkDBSubscriptionPlan
+    -> m EncJSON
+  makeLiveQueryPlan
     :: forall m
      . ( MonadError QErr m
        , MonadIO m
@@ -72,17 +83,27 @@ class ( Backend b
     -> SourceConfig b
     -> InsOrdHashMap G.Name (QueryDB b (Const Void) (UnpreparedValue b))
     -> m (LiveQueryPlan b (MultiplexedQuery b))
-  mkDBQueryExplain
+  executeMultiplexedQuery
+    :: forall m
+     . ( MonadIO m
+       )
+    => SourceConfig b
+    -> MultiplexedQuery b
+    -> [(CohortId, CohortVariables)]
+    -- ^ WARNING: Postgres-specific, ignored by other backends
+    -> m (DiffTime, Either QErr [(CohortId, B.ByteString)])
+  explainQueryField
     :: forall m
      . ( MonadError QErr m
+       , MonadIO m
        )
     => G.Name
     -> UserInfo
     -> SourceName
     -> SourceConfig b
     -> QueryDB b (Const Void) (UnpreparedValue b)
-    -> m (AB.AnyBackend DBStepInfo)
-  mkLiveQueryExplain
+    -> m EncJSON
+  explainLiveQuery
     :: ( MonadError QErr m
       , MonadIO m
       , MonadBaseControl IO m
@@ -90,17 +111,85 @@ class ( Backend b
     => LiveQueryPlan b (MultiplexedQuery b)
     -> m LiveQueryPlanExplanation
 
-data DBStepInfo b = DBStepInfo
-  { dbsiSourceName    :: SourceName
-  , dbsiSourceConfig  :: SourceConfig b
-  , dbsiPreparedQuery :: Maybe (PreparedQuery b)
-  , dbsiAction        :: ExecutionMonad b EncJSON
-  }
+  -- | Execute a remote relationship to this source
+  executeRemoteRelationship
+    :: forall m
+     . ( MonadIO m
+       , MonadError QErr m
+       , MonadQueryLog m
+       , MonadTrace m
+       )
+    => RequestId
+    -> L.Logger L.Hasura
+    -> UserInfo
+    -> SourceName
+    -> SourceConfig b
+    -> NE.NonEmpty J.Object
+    -- ^ List of json objects, each of which becomes a row of the table
+    -> Map.HashMap FieldName (Column b, ScalarType b)
+    -- ^ The above objects have this schema
+    -> FieldName
+    -- ^ This is a field name from the lhs that *has* to be selected in the
+    -- response along with the relationship
+    -> (FieldName, SourceRelationshipSelection b (Const Void) UnpreparedValue)
+    -> m EncJSON
 
+-- | This is a helper function to convert a remote source's relationship to a
+-- normal relationship to a temporary table. This function can be used to
+-- implement executeRemoteRelationship function in databases which support
+-- constructing a temporary table for a list of json objects.
+convertRemoteSourceRelationship
+  :: forall b. (Backend b)
+  => Map.HashMap (Column b) (Column b)
+  -- ^ Join columns for the relationship
+  -> SelectFromG b (UnpreparedValue b)
+  -- ^ The LHS of the join, this is the expression which selects from json
+  -- objects
+  -> ColumnInfo b
+  -- ^ This is the __argument__ id column, that needs to be added to the response
+  -- This is used by by the remote joins processing logic to convert the
+  -- response from upstream to join indices
+  -> (FieldName, SourceRelationshipSelection b (Const Void) UnpreparedValue)
+  -- ^ The relationship column and its name (how it should be selected in the
+  -- response)
+  -> QueryDB b (Const Void) (UnpreparedValue b)
+convertRemoteSourceRelationship columnMapping selectFrom argumentIdColumn
+  (relationshipName, relationship) =
+  QDBMultipleRows simpleSelect
+  where
+    -- TODO: FieldName should have also been a wrapper around NonEmptyText
+    relName = RelName $ mkNonEmptyTextUnsafe $ getFieldNameTxt relationshipName
 
--- | The result of an explain query: for a given root field (denoted by its name): the generated SQL
--- query, and the detailed explanation obtained from the database (if any). We mostly use this type
--- as an intermediary step, and immediately tranform any value we obtain into an equivalent JSON
+    relationshipField = case relationship of
+      SourceRelationshipObject s ->
+        AFObjectRelation $ AnnRelationSelectG relName columnMapping s
+      SourceRelationshipArray s ->
+        AFArrayRelation $ ASSimple $ AnnRelationSelectG relName columnMapping s
+      SourceRelationshipArrayAggregate s ->
+        AFArrayRelation $ ASAggregate $ AnnRelationSelectG relName columnMapping s
+
+    argumentIdField =
+      ( fromCol @b $ pgiColumn argumentIdColumn
+      , AFColumn $
+        AnnColumnField { _acfInfo = argumentIdColumn
+                       , _acfAsText = False
+                       , _acfOp = Nothing
+                       , _acfCaseBoolExpression = Nothing
+                       }
+      )
+
+    simpleSelect =
+      AnnSelectG { _asnFields = [argumentIdField, (relationshipName, relationshipField)]
+                 , _asnFrom = selectFrom
+                 , _asnPerm = TablePerm annBoolExpTrue Nothing
+                 , _asnArgs = noSelectArgs
+                 , _asnStrfyNum = False
+                 }
+
+-- | The result of an explain query: for a given root field (denoted by its
+-- name): the generated SQL query, and the detailed explanation obtained from
+-- the database (if any). We mostly use this type as an intermediary step, and
+-- immediately tranform any value we obtain into an equivalent JSON
 -- representation.
 data ExplainPlan
   = ExplainPlan
@@ -112,33 +201,20 @@ data ExplainPlan
 instance J.ToJSON ExplainPlan where
   toJSON = J.genericToJSON $ J.aesonPrefix J.camelCase
 
+type QueryFieldExecution
+  = RootField
+      (QueryDBOnlyField UnpreparedValue, Maybe RemoteJoins)
+      (RemoteSchemaInfo, GH.GQLReqOutgoing)
+      (QueryActionOnlyField UnpreparedValue, Maybe RemoteJoins)
+      JO.Value
 
--- | One execution step to processing a GraphQL query (e.g. one root field).
-data ExecutionStep where
-  -- | A query to execute against the database
-  ExecStepDB
-    :: HTTP.ResponseHeaders
-    -> AB.AnyBackend DBStepInfo
-    -> Maybe RemoteJoins
-    -> ExecutionStep
-  -- | Execute an action
-  ExecStepAction
-    :: ActionExecutionPlan
-    -> ActionsInfo
-    -> Maybe RemoteJoins
-    -> ExecutionStep
-  -- | A graphql query to execute against a remote schema
-  ExecStepRemote
-    :: !RemoteSchemaInfo
-    -> !GH.GQLReqOutgoing
-    -> ExecutionStep
-  -- | Output a plain JSON object
-  ExecStepRaw
-    :: JO.Value
-    -> ExecutionStep
+type MutationFieldExecution
+  = RootField
+      (MutationDBOnlyField UnpreparedValue, Maybe RemoteJoins, SQLGenCtx)
+      (RemoteSchemaInfo, GH.GQLReqOutgoing)
+      (MutationActionOnlyField UnpreparedValue, Maybe RemoteJoins)
+      JO.Value
 
-
--- | The series of steps that need to be executed for a given query. For now, those steps are all
--- independent. In the future, when we implement a client-side dataloader and generalized joins,
--- this will need to be changed into an annotated tree.
-type ExecutionPlan = InsOrdHashMap G.Name ExecutionStep
+type ExecutionPlan root = InsOrdHashMap G.Name root
+type QueryExecutionPlan = ExecutionPlan QueryFieldExecution
+type MutationExecutionPlan = ExecutionPlan MutationFieldExecution

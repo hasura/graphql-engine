@@ -27,6 +27,7 @@ module Hasura.RQL.Types
   , askComputedFieldInfo
   , askRemoteRel
   , findTable
+  , throwTableDoesNotExist
   , module R
   ) where
 

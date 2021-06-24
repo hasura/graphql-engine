@@ -34,6 +34,7 @@ import qualified Database.PostgreSQL.LibPQ          as PQ
 import qualified PostgreSQL.Binary.Encoding         as PE
 
 import           Data.Aeson
+import           Data.Hashable                      (hashWithSalt)
 import           Data.Int
 import           Data.Scientific
 import           Data.Time
@@ -103,7 +104,10 @@ data PGScalarValue
   | PGValLquery !Text
   | PGValLtxtquery !Text
   | PGValUnknown !Text
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+
+instance Hashable PGScalarValue where
+  hashWithSalt salt = hashWithSalt salt . pgScalarValueToJson
 
 pgScalarValueToJson :: PGScalarValue -> Value
 pgScalarValueToJson = \case

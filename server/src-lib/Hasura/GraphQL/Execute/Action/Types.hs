@@ -7,14 +7,11 @@ import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.HashMap.Strict           as Map
 import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Network.HTTP.Types            as HTTP
 
-import           Control.Monad.Trans.Control   (MonadBaseControl)
 import           Data.Int                      (Int64)
 
 import qualified Hasura.Logging                as L
 import qualified Hasura.RQL.IR.Select          as RS
-import qualified Hasura.Tracing                as Tracing
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
@@ -23,13 +20,6 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Session
 
-
-newtype ActionExecution =
-  ActionExecution {
-    unActionExecution
-      :: forall m
-       . (MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m) => m (EncJSON, HTTP.ResponseHeaders)
-  }
 
 data AsyncActionQuerySourceExecution v
   = AsyncActionQuerySourceExecution
@@ -52,20 +42,9 @@ data AsyncActionQueryExecutionPlan
   , _aaqepExecution :: !(AsyncActionQueryExecution (UnpreparedValue ('Postgres 'Vanilla)))
   }
 
--- A plan to execute any action
-data ActionExecutionPlan
-  = AEPSync !ActionExecution
-  | AEPAsyncQuery !AsyncActionQueryExecutionPlan
-  | AEPAsyncMutation !ActionId
-
-newtype ActionContext
-  = ActionContext {_acName :: ActionName}
-  deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ActionContext)
-
 data ActionWebhookPayload
   = ActionWebhookPayload
-  { _awpAction           :: !ActionContext
+  { _awpAction           :: !ActionName
   , _awpSessionVariables :: !SessionVariables
   , _awpInput            :: !J.Value
   } deriving (Show, Eq)

@@ -56,9 +56,8 @@ saveMetadataToHdbTables (MetadataNoSources tables functions schemas collections
       withPathK "remote_relationships" $
         indexedForM_ _tmRemoteRelationships $
           \(RemoteRelationshipMetadata name def) -> do
-             let RemoteRelationshipDef rs hf rf = def
-             addRemoteRelationshipToCatalog $
-               RemoteRelationship name defaultSource _tmTable hf rs rf
+                addRemoteRelationshipToCatalog $
+                  RemoteRelationship name defaultSource _tmTable def
 
       -- Permissions
       withPathK "insert_permissions" $ processPerms _tmTable _tmInsertPermissions
@@ -179,12 +178,10 @@ addRemoteRelationshipToCatalog remoteRelationship = liftTx $
        INSERT INTO hdb_catalog.hdb_remote_relationship
        (remote_relationship_name, table_schema, table_name, definition)
        VALUES ($1, $2, $3, $4::jsonb)
-  |] (rtrName remoteRelationship, schemaName, tableName, Q.AltJ definition) True
+  |] (_rtrName remoteRelationship, schemaName, tableName, Q.AltJ definition) True
   where
-    QualifiedObject schemaName tableName = rtrTable remoteRelationship
-    definition = mkRemoteRelationshipDef remoteRelationship
-    mkRemoteRelationshipDef RemoteRelationship {..} =
-      RemoteRelationshipDef rtrRemoteSchema rtrHasuraFields rtrRemoteField
+    QualifiedObject schemaName tableName = _rtrTable remoteRelationship
+    definition = _rtrDefinition remoteRelationship
 
 addFunctionToCatalog
   :: (MonadTx m, HasSystemDefined m)

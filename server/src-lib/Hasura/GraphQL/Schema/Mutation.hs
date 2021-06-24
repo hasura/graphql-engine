@@ -22,6 +22,7 @@ import qualified Hasura.GraphQL.Parser         as P
 import qualified Hasura.RQL.IR.Delete          as IR
 import qualified Hasura.RQL.IR.Insert          as IR
 import qualified Hasura.RQL.IR.Returning       as IR
+import qualified Hasura.RQL.IR.Select          as IR
 import qualified Hasura.RQL.IR.Update          as IR
 
 import           Hasura.GraphQL.Parser         (FieldParser, InputFieldsParser, Kind (..), Parser,
@@ -48,7 +49,7 @@ insertIntoTable
   -> InsPermInfo b          -- ^ insert permissions of the table
   -> Maybe (SelPermInfo b)  -- ^ select permissions of the table (if any)
   -> Maybe (UpdPermInfo b)  -- ^ update permissions of the table (if any)
-  -> m (FieldParser n (IR.AnnInsert b UnpreparedValue (UnpreparedValue b)))
+  -> m (FieldParser n (IR.AnnInsert b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)))
 insertIntoTable sourceName tableInfo fieldName description insertPerms selectPerms updatePerms = do
   let columns = tableColumns tableInfo
   selectionParser <- mutationSelectionSet sourceName tableInfo selectPerms
@@ -86,7 +87,7 @@ insertOneIntoTable
   -> InsPermInfo b          -- ^ insert permissions of the table
   -> SelPermInfo b          -- ^ select permissions of the table
   -> Maybe (UpdPermInfo b)  -- ^ update permissions of the table (if any)
-  -> m (FieldParser n (IR.AnnInsert b UnpreparedValue (UnpreparedValue b)))
+  -> m (FieldParser n (IR.AnnInsert b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)))
 insertOneIntoTable sourceName tableInfo fieldName description insertPerms selectPerms updatePerms = do
   let columns = tableColumns tableInfo
   selectionParser <- tableSelectionSet sourceName tableInfo selectPerms
@@ -298,7 +299,7 @@ updateTable
   -> Maybe G.Description      -- ^ field description, if any
   -> UpdPermInfo b            -- ^ update permissions of the table
   -> Maybe (SelPermInfo b)    -- ^ select permissions of the table (if any)
-  -> m (Maybe (FieldParser n (IR.AnnUpdG b UnpreparedValue (UnpreparedValue b))))
+  -> m (Maybe (FieldParser n (IR.AnnUpdG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b))))
 updateTable sourceName tableInfo fieldName description updatePerms selectPerms = runMaybeT $ do
   let whereName = $$(G.litName "where")
       whereDesc = "filter the rows which have to be updated"
@@ -324,7 +325,7 @@ updateTableByPk
   -> Maybe G.Description  -- ^ field description, if any
   -> UpdPermInfo b        -- ^ update permissions of the table
   -> SelPermInfo b        -- ^ select permissions of the table
-  -> m (Maybe (FieldParser n (IR.AnnUpdG b UnpreparedValue (UnpreparedValue b))))
+  -> m (Maybe (FieldParser n (IR.AnnUpdG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b))))
 updateTableByPk sourceName tableInfo fieldName description updatePerms selectPerms = runMaybeT $ do
   tableGQLName <- getTableGQLName tableInfo
   let columns = tableColumns tableInfo
@@ -350,9 +351,9 @@ mkUpdateObject
   -> ( ( [(Column b, IR.UpdOpExpG (UnpreparedValue b))]
        , AnnBoolExp b (UnpreparedValue b)
        )
-     , IR.MutationOutputG b UnpreparedValue (UnpreparedValue b)
+     , IR.MutationOutputG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
      )
-  -> IR.AnnUpdG b UnpreparedValue (UnpreparedValue b)
+  -> IR.AnnUpdG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
 mkUpdateObject table columns updatePerms ((opExps, whereExp), mutationOutput) =
   IR.AnnUpd { IR.uqp1Table   = table
             , IR.uqp1OpExps  = opExps
@@ -379,7 +380,7 @@ deleteFromTable
   -> Maybe G.Description    -- ^ field description, if any
   -> DelPermInfo b          -- ^ delete permissions of the table
   -> Maybe (SelPermInfo b)  -- ^ select permissions of the table (if any)
-  -> m (FieldParser n (IR.AnnDelG b UnpreparedValue (UnpreparedValue b)))
+  -> m (FieldParser n (IR.AnnDelG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)))
 deleteFromTable sourceName tableInfo fieldName description deletePerms selectPerms = do
   let whereName = $$(G.litName "where")
       whereDesc = "filter the rows which have to be deleted"
@@ -401,7 +402,7 @@ deleteFromTableByPk
   -> Maybe G.Description  -- ^ field description, if any
   -> DelPermInfo b        -- ^ delete permissions of the table
   -> SelPermInfo b        -- ^ select permissions of the table
-  -> m (Maybe (FieldParser n (IR.AnnDelG b UnpreparedValue (UnpreparedValue b))))
+  -> m (Maybe (FieldParser n (IR.AnnDelG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b))))
 deleteFromTableByPk sourceName tableInfo fieldName description deletePerms selectPerms = runMaybeT $ do
   let columns = tableColumns tableInfo
   pkArgs    <- MaybeT $ primaryKeysArguments tableInfo selectPerms
@@ -414,8 +415,8 @@ mkDeleteObject
   => TableName b
   -> [ColumnInfo b]
   -> DelPermInfo b
-  -> (AnnBoolExp b (UnpreparedValue b), IR.MutationOutputG b UnpreparedValue (UnpreparedValue b))
-  -> IR.AnnDelG b UnpreparedValue (UnpreparedValue b)
+  -> (AnnBoolExp b (UnpreparedValue b), IR.MutationOutputG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b))
+  -> IR.AnnDelG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
 mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
   IR.AnnDel { IR.dqp1Table   = table
             , IR.dqp1Where   = (permissionFilter, whereExp)
@@ -436,7 +437,7 @@ mutationSelectionSet
   => SourceName
   -> TableInfo b
   -> Maybe (SelPermInfo b)
-  -> m (Parser 'Output n (IR.MutFldsG b UnpreparedValue (UnpreparedValue b)))
+  -> m (Parser 'Output n (IR.MutFldsG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)))
 mutationSelectionSet sourceName tableInfo selectPerms =
   memoizeOn 'mutationSelectionSet (sourceName, tableName) do
   tableGQLName <- getTableGQLName tableInfo

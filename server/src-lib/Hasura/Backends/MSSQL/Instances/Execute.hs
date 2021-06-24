@@ -10,15 +10,19 @@ module Hasura.Backends.MSSQL.Instances.Execute
 import           Hasura.Prelude
 
 import qualified Data.Aeson.Extended                   as J
+import qualified Data.ByteString                       as B
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashSet                          as Set
 import qualified Data.List.NonEmpty                    as NE
+import qualified Data.Text.Encoding                    as TE
 import qualified Data.Text.Extended                    as T
 import qualified Database.ODBC.SQLServer               as ODBC
+import qualified Hasura.Logging                        as L
 import qualified Language.GraphQL.Draft.Syntax         as G
 
-import qualified Hasura.RQL.Types.Column               as RQL
-import qualified Hasura.SQL.AnyBackend                 as AB
+import           Data.String                           (fromString)
+
+import qualified Hasura.RQL.Types                      as RQL
 
 import           Hasura.Backends.MSSQL.Connection
 import           Hasura.Backends.MSSQL.FromIr          as TSQL
@@ -32,20 +36,21 @@ import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Parser
 import           Hasura.RQL.IR
-import           Hasura.RQL.Types
+import           Hasura.SQL.Backend
+import           Hasura.Server.Types                   (RequestId)
 import           Hasura.Session
 
 
 instance BackendExecute 'MSSQL where
-  type PreparedQuery    'MSSQL = Text
   type MultiplexedQuery 'MSSQL = MultiplexedQuery'
-  type ExecutionMonad   'MSSQL = ExceptT QErr IO
 
-  mkDBQueryPlan = msDBQueryPlan
-  mkDBMutationPlan = msDBMutationPlan
-  mkDBSubscriptionPlan = msDBSubscriptionPlan
-  mkDBQueryExplain = msDBQueryExplain
-  mkLiveQueryExplain = msDBLiveQueryExplain
+  executeQueryField = msDBQueryPlan
+  executeMutationField = msDBMutationPlan
+  makeLiveQueryPlan = msDBSubscriptionPlan
+  explainQueryField = msDBQueryExplain
+  explainLiveQuery = msDBLiveQueryExplain
+  executeMultiplexedQuery = runSubscription
+  executeRemoteRelationship = runInboundRelationship
 
 
 -- Multiplexed query
@@ -58,23 +63,57 @@ instance T.ToTxt MultiplexedQuery' where
 
 -- Query
 
+run :: (MonadIO m, MonadError QErr m) => ExceptT QErr IO a -> m a
+run action = do
+  result <- liftIO $ runExceptT action
+  result `onLeft` throwError
+
+runInboundRelationship
+  :: forall m.
+     ( MonadError QErr m
+     , MonadIO m
+     )
+  => RequestId
+  -> L.Logger L.Hasura
+  -> UserInfo
+  -> RQL.SourceName
+  -> RQL.SourceConfig 'MSSQL
+  -> NE.NonEmpty J.Object
+  -- ^ List of json objects, each of which becomes a row of the table
+  -> Map.HashMap RQL.FieldName (Column 'MSSQL, RQL.ScalarType 'MSSQL)
+  -> RQL.FieldName
+  -- ^ The above objects have this schema
+  -> (RQL.FieldName, SourceRelationshipSelection 'MSSQL (Const Void) UnpreparedValue)
+  -> m EncJSON
+runInboundRelationship _requestId _logger userInfo _sourceName sourceConfig
+  lhs lhsSchema argumentId relationship = do
+
+  let sessionVariables = _uiSession userInfo
+  statement <- planSourceRelationship sessionVariables lhs lhsSchema argumentId relationship
+  let printer = fromSelect statement
+      pool  = _mscConnectionPool sourceConfig
+      odbcQuery = encJFromText <$> runJSONPathQuery pool (toQueryFlat printer)
+  run odbcQuery
+
 msDBQueryPlan
   :: forall m.
      ( MonadError QErr m
+     , MonadIO m
      )
-  => UserInfo
-  -> SourceName
-  -> SourceConfig 'MSSQL
+  => RequestId
+  -> L.Logger L.Hasura
+  -> UserInfo
+  -> RQL.SourceName
+  -> RQL.SourceConfig 'MSSQL
   -> QueryDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL)
-  -> m (DBStepInfo 'MSSQL)
-msDBQueryPlan userInfo sourceName sourceConfig qrf = do
+  -> m EncJSON
+msDBQueryPlan _requestId _logger userInfo _sourceName sourceConfig qrf = do
   let sessionVariables = _uiSession userInfo
   statement <- planQuery sessionVariables qrf
   let printer = fromSelect statement
-      queryString = ODBC.renderQuery $ toQueryPretty printer
       pool  = _mscConnectionPool sourceConfig
       odbcQuery = encJFromText <$> runJSONPathQuery pool (toQueryFlat printer)
-  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just $ queryString) odbcQuery
+  run odbcQuery
 
 runShowplan
   :: ODBC.Query -> ODBC.Connection -> IO [Text]
@@ -87,14 +126,16 @@ runShowplan query conn = do
   pure texts
 
 msDBQueryExplain
-  :: MonadError QErr m
+  :: ( MonadError QErr m
+     , MonadIO m
+     )
   => G.Name
   -> UserInfo
-  -> SourceName
-  -> SourceConfig 'MSSQL
+  -> RQL.SourceName
+  -> RQL.SourceConfig 'MSSQL
   -> QueryDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL)
-  -> m (AB.AnyBackend DBStepInfo)
-msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
+  -> m EncJSON
+msDBQueryExplain fieldName userInfo _sourceName sourceConfig qrf = do
   let sessionVariables = _uiSession userInfo
   statement <- planQuery sessionVariables qrf
   let query         = toQueryPretty (fromSelect statement)
@@ -110,9 +151,7 @@ msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
                     fieldName
                     (Just queryString)
                     (Just showplan)))
-  pure
-    $ AB.mkAnyBackend
-    $ DBStepInfo @'MSSQL sourceName sourceConfig Nothing odbcQuery
+  run odbcQuery
 
 msDBLiveQueryExplain
   :: (MonadIO m, MonadError QErr m)
@@ -171,7 +210,7 @@ multiplexRootReselect variables rootReselect =
                       ValueExpression (ODBC.TextValue $ lbsToTxt $ J.encode variables)
                   , openJsonWith =
                       NE.fromList
-                        [ UuidField resultIdAlias (Just $ IndexPath RootPath 0)
+                        [ ScalarField GuidType resultIdAlias (Just $ IndexPath RootPath 0)
                         , JsonField resultVarsAlias (Just $ IndexPath RootPath 1)
                         ]
                   }
@@ -201,13 +240,15 @@ msDBMutationPlan
   :: forall m.
      ( MonadError QErr m
      )
-  => UserInfo
+  => RequestId
+  -> L.Logger L.Hasura
+  -> UserInfo
   -> Bool
-  -> SourceName
-  -> SourceConfig 'MSSQL
+  -> RQL.SourceName
+  -> RQL.SourceConfig 'MSSQL
   -> MutationDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL)
-  -> m (DBStepInfo 'MSSQL)
-msDBMutationPlan _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
+  -> m EncJSON
+msDBMutationPlan _requestId _logger _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
   throw500 "mutations are not supported in MSSQL; this should be unreachable"
 
 
@@ -219,8 +260,8 @@ msDBSubscriptionPlan
      , MonadIO m
      )
   => UserInfo
-  -> SourceName
-  -> SourceConfig 'MSSQL
+  -> RQL.SourceName
+  -> RQL.SourceConfig 'MSSQL
   -> InsOrdHashMap G.Name (QueryDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL))
   -> m (LiveQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL))
 msDBSubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig rootFields = do
@@ -232,7 +273,9 @@ msDBSubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig roo
   pure
     $ LiveQueryPlan parameterizedPlan sourceConfig cohortVariables
 
-prepareStateCohortVariables :: (MonadError QErr m, MonadIO m) => SourceConfig 'MSSQL -> SessionVariables -> PrepareState -> m CohortVariables
+prepareStateCohortVariables
+  :: (MonadError QErr m, MonadIO m)
+  => RQL.SourceConfig 'MSSQL -> SessionVariables -> PrepareState -> m CohortVariables
 prepareStateCohortVariables sourceConfig session prepState = do
   (namedVars, posVars) <- validateVariables sourceConfig session prepState
   let PrepareState{sessionVariables} = prepState
@@ -241,6 +284,39 @@ prepareStateCohortVariables sourceConfig session prepState = do
         session
         namedVars
         posVars
+
+newtype CohortResult = CohortResult (CohortId, Text)
+
+instance J.FromJSON CohortResult where
+  parseJSON = J.withObject "CohortResult" \o -> do
+    cohortId   <- o J..: "result_id"
+    cohortData <- o J..: "result"
+    pure $ CohortResult (cohortId, cohortData)
+
+executeMultiplexedQuery_
+  :: MonadIO m
+  => MSSQLPool
+  -> ODBC.Query
+  -> ExceptT QErr m [(CohortId, B.ByteString)]
+executeMultiplexedQuery_ pool query = do
+  let parseResult r = J.eitherDecodeStrict (TE.encodeUtf8 r) `onLeft` \s -> throw400 ParseFailed (fromString s)
+      convertFromJSON :: [CohortResult] -> [(CohortId, B.ByteString)]
+      convertFromJSON = map \(CohortResult (cid, cresult)) -> (cid, TE.encodeUtf8 cresult)
+  textResult   <- run $ runJSONPathQuery pool query
+  parsedResult <- parseResult textResult
+  pure $ convertFromJSON parsedResult
+
+runSubscription
+  :: MonadIO m
+  => RQL.SourceConfig 'MSSQL
+  -> MultiplexedQuery 'MSSQL
+  -> [(CohortId, CohortVariables)]
+  -> m (DiffTime, Either QErr [(CohortId, B.ByteString)])
+runSubscription sourceConfig (MultiplexedQuery' reselect) variables = do
+  let pool = _mscConnectionPool sourceConfig
+      multiplexed = multiplexRootReselect variables reselect
+      query = toQueryFlat $ fromSelect multiplexed
+  withElapsedTime $ runExceptT $ executeMultiplexedQuery_ pool query
 
 
 -- | Ensure that the set of variables (with value instantiations) that occur in
@@ -252,7 +328,7 @@ prepareStateCohortVariables sourceConfig session prepState = do
 -- c.f. https://github.com/hasura/graphql-engine-mono/issues/1210.
 validateVariables ::
   (MonadError QErr m, MonadIO m) =>
-  SourceConfig 'MSSQL ->
+  RQL.SourceConfig 'MSSQL ->
   SessionVariables ->
   PrepareState ->
   m (ValidatedQueryVariables, ValidatedSyntheticVariables)

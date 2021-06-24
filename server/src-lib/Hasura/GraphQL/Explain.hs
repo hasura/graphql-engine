@@ -13,21 +13,19 @@ import qualified Language.GraphQL.Draft.Syntax             as G
 
 import           Control.Monad.Trans.Control               (MonadBaseControl)
 
-import qualified Hasura.GraphQL.Execute                    as E
-import qualified Hasura.GraphQL.Execute.Action             as E
-import qualified Hasura.GraphQL.Execute.Inline             as E
-import qualified Hasura.GraphQL.Execute.Query              as E
+import qualified Hasura.GraphQL.Execute                 as E
+import qualified Hasura.GraphQL.Execute.Backend         as EB
+import qualified Hasura.GraphQL.Execute.Action          as E
+import qualified Hasura.GraphQL.Execute.Inline          as E
+import qualified Hasura.GraphQL.Execute.Query           as E
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.SQL.AnyBackend                  as AB
 import qualified Hasura.GraphQL.Execute.RemoteJoin.Collect as RJ
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
-import qualified Hasura.SQL.AnyBackend                     as AB
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Execute.Backend
-import           Hasura.GraphQL.Execute.Instances          ()
+import           Hasura.GraphQL.Execute.Instances       ()
 import           Hasura.GraphQL.Parser
-import           Hasura.GraphQL.Transport.Backend
-import           Hasura.GraphQL.Transport.Instances        ()
 import           Hasura.Metadata.Class
 import           Hasura.RQL.IR
 import           Hasura.RQL.Types
@@ -53,22 +51,20 @@ explainQueryField
      )
   => UserInfo
   -> G.Name
-  -> QueryRootField UnpreparedValue UnpreparedValue
+  -> QueryRootField UnpreparedValue
   -> m EncJSON
 explainQueryField userInfo fieldName rootField = do
   case rootField of
     RFRemote _ -> throw400 InvalidParams "only hasura queries can be explained"
     RFAction _ -> throw400 InvalidParams "query actions cannot be explained"
-    RFRaw _    -> pure $ encJFromJValue $ ExplainPlan fieldName Nothing Nothing
-    RFDB sourceName exists   -> do
-      step <- AB.dispatchAnyBackend @BackendExecute exists
-        \(SourceConfigWith sourceConfig (QDBR db)) -> do
+    RFRaw _    -> pure $ encJFromJValue $ EB.ExplainPlan fieldName Nothing Nothing
+    RFDB exists -> do
+      AB.dispatchAnyBackend @EB.BackendExecute exists
+        \(DBField sourceName sourceConfig (QDBR db)) -> do
            let (newDB, remoteJoins) = RJ.getRemoteJoins db
            unless (isNothing remoteJoins) $
              throw400 InvalidParams "queries with remote relationships cannot be explained"
-           mkDBQueryExplain fieldName userInfo sourceName sourceConfig newDB
-      AB.dispatchAnyBackend @BackendTransport step runDBQueryExplain
-
+           EB.explainQueryField fieldName userInfo sourceName sourceConfig newDB
 
 explainGQLQuery
   :: forall m
@@ -114,8 +110,8 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
         E.SEOnSourceDB actionIds liveQueryBuilder -> do
           actionLogResponseMap <- fst <$> E.fetchActionLogResponses actionIds
           (_, E.LQP exists) <- liftEitherM $ liftIO $ runExceptT $ liveQueryBuilder actionLogResponseMap
-          AB.dispatchAnyBackend @BackendExecute exists \(E.MultiplexedLiveQueryPlan execPlan) ->
-            encJFromJValue <$> mkLiveQueryExplain execPlan
+          AB.dispatchAnyBackend @EB.BackendExecute exists \(E.MultiplexedLiveQueryPlan execPlan) ->
+            encJFromJValue <$> EB.explainLiveQuery execPlan
   where
     queryType = bool E.QueryHasura E.QueryRelay $ Just True == maybeIsRelay
     sessionVariables = mkSessionVariablesText $ fromMaybe mempty userVarsRaw
