@@ -820,7 +820,8 @@ workflows:
     - deploy:
         <<: *filter_only_vtags_channel_branches
         requires:
-        - build_image
+        - console_unit_tests
         - test_console
+        - test_cli
         - test_and_build_cli_migrations
         - all_server_tests_pass
