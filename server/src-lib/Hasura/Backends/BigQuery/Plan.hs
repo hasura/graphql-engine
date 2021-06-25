@@ -19,7 +19,7 @@ import qualified Hasura.Base.Error                        as E
 import qualified Hasura.GraphQL.Parser                    as GraphQL
 import qualified Hasura.RQL.Types.Column                  as RQL
 
-import           Hasura.Backends.BigQuery.FromIr
+import           Hasura.Backends.BigQuery.FromIr          as BigQuery
 import           Hasura.Backends.BigQuery.Types
 import           Hasura.RQL.IR
 import           Hasura.SQL.Backend
@@ -32,11 +32,12 @@ import           Hasura.Session
 
 planToForest ::
      MonadError E.QErr m
-  => UserInfo
+  => FromIrConfig
+  -> UserInfo
   -> QueryDB 'BigQuery (Const Void) (GraphQL.UnpreparedValue 'BigQuery)
   -> m (Forest DataLoader.PlannedAction)
-planToForest userInfo qrf = do
-  select <- planNoPlan userInfo qrf
+planToForest fromIrConfig userInfo qrf = do
+  select <- planNoPlan fromIrConfig userInfo qrf
   let (!_headAndTail, !plannedActionsList) =
         DataLoader.runPlan
           (DataLoader.planSelectHeadAndTail Nothing Nothing select)
@@ -45,12 +46,13 @@ planToForest userInfo qrf = do
 
 planNoPlan ::
      MonadError E.QErr m
-  => UserInfo
+  => FromIrConfig
+  -> UserInfo
   -> QueryDB 'BigQuery (Const Void) (GraphQL.UnpreparedValue 'BigQuery)
   -> m Select
-planNoPlan userInfo queryDB = do
+planNoPlan fromIrConfig userInfo queryDB = do
   rootField <- traverseQueryDB (prepareValueNoPlan (_uiSession userInfo)) queryDB
-  runValidate (runFromIr (fromRootField rootField))
+  runValidate (BigQuery.runFromIr fromIrConfig (BigQuery.fromRootField rootField))
     `onLeft` (E.throw400 E.NotSupported . (tshow :: NonEmpty Error -> Text))
 
 

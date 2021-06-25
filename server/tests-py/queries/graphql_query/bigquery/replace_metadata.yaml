@@ -8,12 +8,45 @@ query:
   args:
     version: 3
     sources:
+    - name: hasura_global_limited
+      kind: bigquery
+      configuration:
+        service_account: {from_env: HASURA_BIGQUERY_SERVICE_ACCOUNT}
+        project_id: {from_env: HASURA_BIGQUERY_PROJECT_ID}
+        datasets: {from_env: HASURA_BIGQUERY_DATASETS}
+        global_select_limit: 1
+      tables:
+      - table:
+          name: LimitedAlbum
+          dataset: hasura
+        object_relationships:
+        - name: artist
+          using:
+            manual_configuration:
+              remote_table:
+                name: LimitedArtist
+                dataset: hasura
+              column_mapping:
+                artist_other_id: artist_self_id
+      - table:
+          name: LimitedArtist
+          dataset: hasura
+        array_relationships:
+        - name: albums
+          using:
+            manual_configuration:
+              remote_table:
+                name: LimitedAlbum
+                dataset: hasura
+              column_mapping:
+                artist_self_id: artist_other_id
     - name: hasura
       kind: bigquery
       configuration:
         service_account: {from_env: HASURA_BIGQUERY_SERVICE_ACCOUNT}
         project_id: {from_env: HASURA_BIGQUERY_PROJECT_ID}
         datasets: {from_env: HASURA_BIGQUERY_DATASETS}
+        global_select_limit: 1000000
       tables:
       - table:
           name: Album

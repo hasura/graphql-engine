@@ -99,3 +99,45 @@ VALUES      ( 2002,
             ( 2004,
               "fear innoculum",
               1002 );
+
+-- These are for testing global limits.
+
+CREATE TABLE hasura.LimitedArtist (
+ artist_self_id int64,
+ name string);
+
+CREATE TABLE hasura.LimitedAlbum (
+  album_self_id int64,
+  artist_other_id int64,
+  title string);
+
+INSERT INTO hasura.LimitedArtist
+VALUES      (1002,
+             "tool" ),
+            (1000,
+             "alice in chains" ),
+            (1001,
+             "nirvana" );
+
+INSERT INTO hasura.LimitedAlbum
+            (album_self_id,
+             title,
+             artist_other_id)
+VALUES      ( 2002,
+              "dirt",
+              1000 ),
+            ( 2005,
+              "facelift",
+              1000 ),
+            ( 2001,
+              "in utero",
+              1001 ),
+            ( 2000,
+              "nevermind",
+              1001 ),
+            ( 2003,
+              "lateralus",
+              1002 ),
+            ( 2004,
+              "fear innoculum",
+              1002 );

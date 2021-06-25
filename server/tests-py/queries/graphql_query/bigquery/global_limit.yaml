@@ -1,0 +1,28 @@
+- description: Check that global limits apply
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      hasura_LimitedAlbum:
+        - album_self_id: '2000'
+  query:
+    query: |
+      query MyQuery {hasura_LimitedAlbum(limit: 5, order_by: {album_self_id: asc}) {album_self_id}}
+
+- description: Check that global limits apply for nodes
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      hasura_LimitedAlbum_aggregate:
+        nodes:
+          - album_self_id: '2000'
+  query:
+    query: |
+      query MyQuery {
+        hasura_LimitedAlbum_aggregate(order_by: {album_self_id: asc}) {
+          nodes {
+            album_self_id
+          }
+        }
+      }
