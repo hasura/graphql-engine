@@ -1,0 +1,111 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`MetadatTable_Utils_getDataTriggerInvocations() should generate SQL to fetch invocations for an event 1`] = `
+Object {
+  "args": Object {
+    "cascade": false,
+    "read_only": false,
+    "source": "db2",
+    "sql": "SELECT
+      *
+    FROM 
+      \\"hdb_catalog\\".\\"event_invocation_logs\\"
+    WHERE
+      event_id = '298f6a71-f503-46f1-814c-45daef0afe4d'
+    ORDER BY
+      created_at DESC NULLS LAST;",
+  },
+  "type": "run_sql",
+}
+`;
+
+exports[`MetadatTable_Utils_getDataTriggerLogsCountQuery() should generate SQL query for invocation event count 1`] = `
+Object {
+  "args": Object {
+    "cascade": false,
+    "read_only": false,
+    "source": "default",
+    "sql": "SELECT
+        COUNT(*)
+        FROM \\"hdb_catalog\\".\\"event_invocation_logs\\" original_table JOIN \\"hdb_catalog\\".\\"event_log\\" data_table
+        ON original_table.event_id = data_table.id
+        WHERE data_table.trigger_name = 'test_event';",
+  },
+  "type": "run_sql",
+}
+`;
+
+exports[`MetadatTable_Utils_getDataTriggerLogsCountQuery() should generate SQL query for pending event count  1`] = `
+Object {
+  "args": Object {
+    "cascade": false,
+    "read_only": false,
+    "source": "default",
+    "sql": "SELECT
+	COUNT(*)
+  FROM \\"hdb_catalog\\".\\"event_log\\" data_table
+  WHERE data_table.trigger_name = 'new_user' AND delivered=false AND error=false AND archived=false;",
+  },
+  "type": "run_sql",
+}
+`;
+
+exports[`MetadatTable_Utils_getDataTriggerLogsCountQuery() should generate SQL query for processed event count 1`] = `
+Object {
+  "args": Object {
+    "cascade": false,
+    "read_only": false,
+    "source": "db2",
+    "sql": "SELECT
+	COUNT(*)
+  FROM \\"hdb_catalog\\".\\"event_log\\" data_table
+  WHERE data_table.trigger_name = 'new_user' AND (delivered=true OR error=true) AND archived=false;",
+  },
+  "type": "run_sql",
+}
+`;
+
+exports[`MetadatTable_Utils_getDataTriggerLogsQuery() should generate SQL query for event invocation logs 1`] = `
+Object {
+  "args": Object {
+    "cascade": false,
+    "read_only": false,
+    "source": "db2",
+    "sql": "SELECT *
+      FROM \\"hdb_catalog\\".\\"event_log\\" data_table 
+      WHERE data_table.trigger_name = 'test_event' 
+      AND (delivered=true OR error=true) AND archived=false ORDER BY created_at DESC  LIMIT 100 OFFSET 0;",
+  },
+  "type": "run_sql",
+}
+`;
+
+exports[`MetadatTable_Utils_getDataTriggerLogsQuery() should generate SQL query for pending event logs 1`] = `
+Object {
+  "args": Object {
+    "cascade": false,
+    "read_only": false,
+    "source": "default",
+    "sql": "SELECT *
+      FROM \\"hdb_catalog\\".\\"event_log\\" data_table
+      WHERE data_table.trigger_name = 'new_user'  
+      AND delivered=false AND error=false AND archived=false ORDER BY created_at DESC  LIMIT 10 OFFSET 10;",
+  },
+  "type": "run_sql",
+}
+`;
+
+exports[`MetadatTable_Utils_getDataTriggerLogsQuery() should generate SQL query for processed event logs 1`] = `
+Object {
+  "args": Object {
+    "cascade": false,
+    "read_only": false,
+    "source": "db2",
+    "sql": "SELECT *
+      FROM \\"hdb_catalog\\".\\"event_log\\" data_table 
+      WHERE data_table.trigger_name = 'test_event' 
+      AND (delivered=true OR error=true) AND archived=false ORDER BY created_at DESC  LIMIT 100 OFFSET 0;",
+  },
+  "type": "run_sql",
+}
+`;

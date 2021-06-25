@@ -1,0 +1,49 @@
+  #Create object relationship
+- description: Create object relationship using foreign key
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: create_object_relationship
+    args:
+      table: author
+      name: details
+      using:
+        foreign_key_constraint_on:
+          table: author_details
+          column: author_id
+
+- description: Nested select
+  url: /v1/query
+  status: 200
+  response:
+    - id: 1
+      name: Author 1
+      details:
+        email: "author1@authors.com"
+    - id: 2
+      name: Author 2
+      details:
+        email: "author2@authors.com"
+  query:
+    type: select
+    args:
+      table: author
+      columns:
+        - id
+        - name
+        - name: details
+          columns:
+          - email
+
+- description: Drop object relationship
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: drop_relationship
+    args:
+      table: author
+      relationship: details

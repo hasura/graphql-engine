@@ -1,11 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { commonDataTypes } from '../utils';
 import { getDataOptions, inferDefaultValues } from '../Common/utils';
 
 import TableColumnDefault from './TableColumnDefault';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
+import { dataSource, isFeatureSupported } from '../../../../dataSources';
 
 /* Custom style object for searchable select box */
 const customSelectBoxStyles = {
@@ -55,7 +55,7 @@ const TableColumn = props => {
     onColTypeChange(selectedOption.colIdentifier, selectedOption.value);
   };
   const { columnDataTypes, columnTypeValueMap } = getDataOptions(
-    commonDataTypes,
+    dataSource.commonDataTypes,
     restTypes,
     i
   );
@@ -99,16 +99,29 @@ const TableColumn = props => {
         className={`${styles.inputDefault} ${styles.defaultWidth}`}
         data-test={`col-type-${i}`}
       >
-        <ColumnTypeSelector
-          options={columnDataTypes}
-          onChange={handleColTypeChange}
-          value={
-            (column.type && columnTypeValueMap[column.type]) || column.type
-          }
-          colIdentifier={i}
-          bsClass={`col-type-${i} add_table_column_selector`}
-          styleOverrides={customSelectBoxStyles}
-        />
+        {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
+          <ColumnTypeSelector
+            options={columnDataTypes}
+            onChange={handleColTypeChange}
+            value={
+              (column.type && columnTypeValueMap[column.type]) || column.type
+            }
+            colIdentifier={i}
+            bsClass={`col-type-${i} add_table_column_selector`}
+            styleOverrides={customSelectBoxStyles}
+          />
+        ) : (
+          <input
+            type="text"
+            style={{ maxWidth: '200px' }}
+            className={`${styles.input} form-control col-type-${i}`}
+            onChange={e => {
+              e.persist();
+              onColTypeChange(i, e.target.value);
+            }}
+            placeholder="column_type"
+          />
+        )}
       </span>
       <span className={`${styles.inputDefault} ${styles.defaultWidth}`}>
         <TableColumnDefault
@@ -119,22 +132,6 @@ const TableColumn = props => {
           colDefaultFunctions={defaultFunctions}
         />
       </span>
-      {/*
-      <input
-        placeholder={getPlaceholder(column)}
-        type="text"
-        value={getDefaultValue(column)}
-        className={`${styles.inputDefault} ${
-          styles.defaultWidth
-        } form-control ${styles.add_pad_left}`}
-        onChange={setColDefaultValue.bind(
-          undefined,
-          i,
-          column.nullable || false
-        )}
-        data-test={`col-default-${i}`}
-      />
-      */}{' '}
       <label>
         <input
           className={styles.inputCheckbox}

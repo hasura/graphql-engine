@@ -1,0 +1,21 @@
+description: GraphQL query with invalid escape sequence
+url: /v1/graphql
+status: 200
+response:
+  data:
+    hasura_author: []
+  # # Other backends will respond with the following
+  # errors:
+  # - extensions:
+  #     code: bad-request
+  #     path: $
+  #   message: |-
+  #     LIKE pattern must not end with escape character
+query:
+  query: |
+    query {
+      hasura_author  (order_by: {id: asc}, where: {name: {_eq: "John\\"}}) {
+        id
+        name
+      }
+    }

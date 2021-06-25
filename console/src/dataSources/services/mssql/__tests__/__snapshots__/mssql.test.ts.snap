@@ -1,0 +1,113 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`mssql datasource tests getAddUniqueConstraintSql should generate SQL query for adding a unique constraint to multiple column 1`] = `
+"ALTER TABLE \\"schemaName\\".\\"tableName\\"
+    ADD CONSTRAINT \\"constraintName\\"
+    UNIQUE (column1,column2)"
+`;
+
+exports[`mssql datasource tests getAddUniqueConstraintSql should generate SQL query for adding a unique constraint to single column 1`] = `
+"ALTER TABLE \\"schemaName\\".\\"tableName\\"
+    ADD CONSTRAINT \\"constraintName\\"
+    UNIQUE (column1)"
+`;
+
+exports[`mssql datasource tests getAlterColumnTypeSql should generate SQL query for renaming a column with nullable as false 1`] = `"ALTER TABLE \\"schemaName\\".\\"tableName\\" ALTER COLUMN \\"columnName\\" columnType NOT NULL"`;
+
+exports[`mssql datasource tests getAlterFKSql should generate SQL query for altering foreign keys with multiple columns 1`] = `
+"
+    BEGIN transaction;
+    ALTER TABLE \\"dbo\\".\\"user\\"
+    DROP CONSTRAINT IF EXISTS \\"oldConstraint\\";
+    ALTER TABLE \\"dbo\\".\\"user\\"
+    ADD CONSTRAINT \\"newConstraint\\"
+    FOREIGN KEY (id, id2)
+    REFERENCES \\"dbo\\".\\"user1\\" (id, id2) 
+    ON UPDATE cascade ON DELETE cascade;
+    COMMIT transaction;
+    "
+`;
+
+exports[`mssql datasource tests getAlterFKSql should generate SQL query for altering foreign keys with one column 1`] = `
+"
+    BEGIN transaction;
+    ALTER TABLE \\"dbo\\".\\"user\\"
+    DROP CONSTRAINT IF EXISTS \\"oldConstraint\\";
+    ALTER TABLE \\"dbo\\".\\"user\\"
+    ADD CONSTRAINT \\"newConstraint\\"
+    FOREIGN KEY (id)
+    REFERENCES \\"dbo\\".\\"user1\\" (id) 
+    ON UPDATE no action ON DELETE cascade;
+    COMMIT transaction;
+    "
+`;
+
+exports[`mssql datasource tests getAlterPkSql should generate alter operation as a single transaction  1`] = `
+"BEGIN TRANSACTION;
+    ALTER TABLE \\"public\\".\\"users\\" DROP CONSTRAINT \\"PK__users__1234\\";
+    ALTER TABLE \\"public\\".\\"users\\"
+      ADD CONSTRAINT \\"PK__users__1234\\" PRIMARY KEY (\\"id\\");
+    
+    COMMIT TRANSACTION;"
+`;
+
+exports[`mssql datasource tests getAlterPkSql should work with multi-column PKs  1`] = `
+"BEGIN TRANSACTION;
+    ALTER TABLE \\"public\\".\\"users\\" DROP CONSTRAINT \\"test_constraint\\";
+    ALTER TABLE \\"public\\".\\"users\\"
+      ADD CONSTRAINT \\"test_constraint\\" PRIMARY KEY (\\"id\\", \\"account\\");
+    
+    COMMIT TRANSACTION;"
+`;
+
+exports[`mssql datasource tests getCreateFKeySql should generate query for create foreign keys with multiple columns 1`] = `
+"
+    ALTER TABLE \\"dbo\\".\\"user\\"
+    ADD CONSTRAINT \\"newConstraint\\"
+    FOREIGN KEY (id, id2)
+    REFERENCES \\"dbo\\".\\"user1\\" (id, id2)
+    ON UPDATE cascade ON DELETE cascade"
+`;
+
+exports[`mssql datasource tests getCreateFKeySql should generate query for create foreign keys with one columns 1`] = `
+"
+    ALTER TABLE \\"dbo\\".\\"user\\"
+    ADD CONSTRAINT \\"newConstraint\\"
+    FOREIGN KEY (id)
+    REFERENCES \\"dbo\\".\\"user1\\" (id)
+    ON UPDATE cascade ON DELETE cascade"
+`;
+
+exports[`mssql datasource tests getCreatePkSql should generate SQL query for adding a pk constraint to multiple column 1`] = `
+"ALTER TABLE \\"schemaName\\".\\"tableName\\"
+    ADD CONSTRAINT \\"constraintName\\"
+    PRIMARY KEY (\\"column1\\",\\"column2\\")"
+`;
+
+exports[`mssql datasource tests getCreatePkSql should generate SQL query for adding a pk constraint to single column 1`] = `
+"ALTER TABLE \\"schemaName\\".\\"tableName\\"
+    ADD CONSTRAINT \\"constraintName\\"
+    PRIMARY KEY (\\"column1\\")"
+`;
+
+exports[`mssql datasource tests getDropColumnDefaultSql should generate SQL query to drop the default value to a column 1`] = `"ALTER TABLE \\"schemaName\\".\\"tableName\\" DROP CONSTRAINT \\"constraintName\\""`;
+
+exports[`mssql datasource tests getDropColumnSql should generate SQL query for droping a column 1`] = `
+"ALTER TABLE \\"schemaName\\".\\"tableName\\"
+    DROP COLUMN \\"columnName\\""
+`;
+
+exports[`mssql datasource tests getDropConstraintSql should generate SQL query to drop the constraint to a column 1`] = `"ALTER TABLE \\"schemaName\\".\\"tableName\\" DROP CONSTRAINT \\"constraintName\\""`;
+
+exports[`mssql datasource tests getDropConstraintSql should generate query for droping foreign keys 1`] = `"ALTER TABLE \\"schemaName\\".\\"tableName1\\" DROP CONSTRAINT \\"constraintName\\""`;
+
+exports[`mssql datasource tests getDropNotNullSql should generate SQL query to set a column to drop not null 1`] = `"ALTER TABLE \\"schemaName\\".\\"tableName\\" ALTER COLUMN \\"columnName\\"  columnType NULL"`;
+
+exports[`mssql datasource tests getRenameColumnQuery should generate SQL query for renaming a column 1`] = `"sp_rename '[schemaName].[tableName].[oldColumnName]', 'newColumnName', 'COLUMN'"`;
+
+exports[`mssql datasource tests getSetColumnDefaultSql should generate SQL query to set or alter the default value to a column 1`] = `
+"ALTER TABLE \\"schemaName\\".\\"tableName\\" DROP CONSTRAINT IF EXISTS \\"constraintName\\";
+    ALTER TABLE \\"schemaName\\".\\"tableName\\" ADD CONSTRAINT \\"constraintName\\" DEFAULT defaultValue FOR \\"columnName\\""
+`;
+
+exports[`mssql datasource tests getSetNotNullSql should generate SQL query to set a column to not null 1`] = `"ALTER TABLE \\"schemaName\\".\\"tableName\\" ALTER COLUMN \\"columnName\\"  columnType NOT NULL"`;

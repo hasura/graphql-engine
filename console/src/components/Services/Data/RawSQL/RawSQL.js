@@ -9,16 +9,9 @@ import Button from '../../../Common/Button/Button';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import Alert from '../../../Common/Alert';
-import {
-  getLocalStorageItem,
-  LS_RAW_SQL_STATEMENT_TIMEOUT,
-  setLocalStorageItem,
-} from '../../../Common/utils/localStorageUtils';
-
 import StatementTimeout from './StatementTimeout';
-import { parseCreateSQL } from './utils';
-import { checkSchemaModification } from '../../../Common/utils/sqlUtils';
-
+import { parseCreateSQL, removeCommentsSQL } from './utils';
+import styles from '../../../Common/TableCommon/Table.scss';
 import {
   executeSQL,
   SET_SQL,
@@ -36,6 +29,20 @@ import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
 import styles from '../../../Common/TableCommon/Table.scss';
 import ResultTable from './ResultTable';
+import { getLSItem, setLSItem, LS_KEYS } from '../../../../utils/localStorage';
+import DropDownSelector from './DropDownSelector';
+import { getSourceDriver } from '../utils';
+import { getDataSources } from '../../../../metadata/selector';
+import { services } from '../../../../dataSources/services';
+import { isFeatureSupported, setDriver } from '../../../../dataSources';
+import { fetchDataInit, UPDATE_CURRENT_DATA_SOURCE } from '../DataActions';
+
+const checkChangeLang = (sql, selectedDriver) => {
+  return (
+    !sql?.match(/(?:\$\$\s+)?language\s+plpgsql/i) && selectedDriver === 'citus'
+  );
+};
+
 /**
  * # RawSQL React FC
  * ## renders raw SQL page on route `/data/sql`
@@ -73,36 +80,66 @@ const RawSQL = ({
   isTableTrackChecked,
   migrationMode,
   allSchemas,
+  sources,
+  currentDataSource,
 }) => {
-  // local storage key for SQL
-  const LS_RAW_SQL_SQL = 'rawSql:sql';
-
   const [statementTimeout, setStatementTimeout] = useState(
-    Number(getLocalStorageItem(LS_RAW_SQL_STATEMENT_TIMEOUT)) || 10
+    Number(getLSItem(LS_KEYS.rawSqlStatementTimeout)) || 10
   );
 
   const [sqlText, onChangeSQLText] = useState(sql);
 
+  const [selectedDatabase, setSelectedDatabase] = useState(currentDataSource);
+  const [selectedDriver, setSelectedDriver] = useState('postgres');
+  const [suggestLangChange, setSuggestLangChange] = useState(false);
+
+  useEffect(() => {
+    const driver = getSourceDriver(sources, selectedDatabase);
+    setSelectedDriver(driver);
+    if (!isFeatureSupported('rawSQL.statementTimeout'))
+      setStatementTimeout(null);
+  }, [selectedDatabase, sources]);
+
+  const dropDownSelectorValueChange = value => {
+    const driver = getSourceDriver(sources, value);
+    dispatch({
+      type: UPDATE_CURRENT_DATA_SOURCE,
+      source: value,
+    });
+    setDriver(driver);
+    dispatch(fetchDataInit(value, driver));
+
+    setSelectedDatabase(value);
+  };
+
   useEffect(() => {
     if (!sql) {
-      const sqlFromLocalStorage = localStorage.getItem(LS_RAW_SQL_SQL);
+      const sqlFromLocalStorage = getLSItem(LS_KEYS.rawSQLKey);
       if (sqlFromLocalStorage) {
         dispatch({ type: SET_SQL, data: sqlFromLocalStorage });
         onChangeSQLText(sqlFromLocalStorage);
       }
     }
     return () => {
-      localStorage.setItem(LS_RAW_SQL_SQL, sqlText);
+      setLSItem(LS_KEYS.rawSQLKey, sqlText);
     };
   }, [dispatch, sql, sqlText]);
 
+  useEffect(() => {
+    if (checkChangeLang(sql, selectedDriver)) {
+      setSuggestLangChange(true);
+    } else {
+      setSuggestLangChange(false);
+    }
+  }, [sql, selectedDriver]);
+
   const submitSQL = () => {
     if (!sqlText) {
-      localStorage.setItem(LS_RAW_SQL_SQL, '');
+      setLSItem(LS_KEYS.rawSQLKey, '');
       return;
     }
     // set SQL to LS
-    localStorage.setItem(LS_RAW_SQL_SQL, sqlText);
+    setLSItem(LS_KEYS.rawSQLKey, sqlText);
 
     // check migration mode global
     if (migrationMode) {
@@ -115,15 +152,23 @@ const RawSQL = ({
       }
       if (!isMigration && globals.consoleMode === CLI_CONSOLE_MODE) {
         // if migration is not checked, check if is schema modification
-        if (checkSchemaModification(sqlText)) {
+        if (services[selectedDriver].checkSchemaModification(sqlText)) {
           dispatch(modalOpen());
           return;
         }
       }
-      dispatch(executeSQL(isMigration, migrationName, statementTimeout));
+      dispatch(
+        executeSQL(
+          isMigration,
+          migrationName,
+          statementTimeout,
+          selectedDatabase,
+          selectedDriver
+        )
+      );
       return;
     }
-    dispatch(executeSQL(false, '', statementTimeout));
+    dispatch(executeSQL(false, '', statementTimeout, selectedDatabase));
   };
 
   const getMigrationWarningModal = () => {
@@ -160,18 +205,19 @@ const RawSQL = ({
 
   const getSQLSection = () => {
     const handleSQLChange = val => {
+      const cleanSql = removeCommentsSQL(val);
       onChangeSQLText(val);
       dispatch({ type: SET_SQL, data: val });
 
       // set migration checkbox true
-      if (checkSchemaModification(val)) {
+      if (services[selectedDriver].checkSchemaModification(cleanSql)) {
         dispatch({ type: SET_MIGRATION_CHECKED, data: true });
       } else {
         dispatch({ type: SET_MIGRATION_CHECKED, data: false });
       }
 
       // set track this checkbox true
-      const objects = parseCreateSQL(val);
+      const objects = parseCreateSQL(cleanSql, selectedDriver);
       if (objects.length) {
         let allObjectsTrackable = true;
 
@@ -272,17 +318,20 @@ const RawSQL = ({
 
     return (
       <div className={styles.add_mar_top}>
-        <label>
-          <input
-            checked={isTableTrackChecked}
-            className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
-            id="track-checkbox"
-            type="checkbox"
-            onChange={dispatchTrackThis}
-            data-test="raw-sql-track-check"
-          />
-          Track this
-        </label>
+        {isFeatureSupported('rawSQL.tracking') && (
+          <label>
+            <input
+              checked={isTableTrackChecked}
+              className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+              id="track-checkbox"
+              type="checkbox"
+              disabled={checkChangeLang()}
+              onChange={dispatchTrackThis}
+              data-test="raw-sql-track-check"
+            />
+            Track this
+          </label>
+        )}
         <Tooltip
           message={
             'If you are creating tables, views or functions, checking this will also expose them over the GraphQL API as top level fields'
@@ -292,7 +341,7 @@ const RawSQL = ({
         <KnowMoreLink
           text={'See supported functions requirements'}
           href={
-            'https://hasura.io/docs/1.0/graphql/manual/schema/custom-functions.html#supported-sql-functions'
+            'https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html#supported-sql-functions'
           }
         />
       </div>
@@ -378,7 +427,7 @@ const RawSQL = ({
   const updateStatementTimeout = value => {
     const timeoutInSeconds = Number(value.trim());
     const isValidTimeout = timeoutInSeconds > 0 && !isNaN(timeoutInSeconds);
-    setLocalStorageItem(LS_RAW_SQL_STATEMENT_TIMEOUT, timeoutInSeconds);
+    setLSItem(LS_KEYS.rawSqlStatementTimeout, timeoutInSeconds);
     setStatementTimeout(isValidTimeout ? timeoutInSeconds : 0);
   };
 
@@ -395,9 +444,18 @@ const RawSQL = ({
       </div>
       <div className={styles.add_mar_top}>
         <div className={`${styles.padd_left_remove} col-xs-8`}>
-          <NotesSection />
+          <NotesSection suggestLangChange={suggestLangChange} />
         </div>
-
+        <div className={`${styles.padd_left_remove} col-xs-8`}>
+          <label>
+            <b>Database</b>
+          </label>{' '}
+          <DropDownSelector
+            options={sources.map(source => source.name)}
+            defaultValue={currentDataSource}
+            onChange={dropDownSelectorValueChange}
+          />
+        </div>
         <div className={`${styles.padd_left_remove} col-xs-10`}>
           {getSQLSection()}
         </div>
@@ -409,11 +467,15 @@ const RawSQL = ({
           {getMetadataCascadeSection()}
           {getMigrationSection()}
 
-          <StatementTimeout
-            statementTimeout={statementTimeout}
-            isMigrationChecked={isMigrationChecked}
-            updateStatementTimeout={updateStatementTimeout}
-          />
+          {isFeatureSupported('rawSQL.statementTimeout') && (
+            <StatementTimeout
+              statementTimeout={statementTimeout}
+              isMigrationChecked={
+                globals.consoleMode === CLI_CONSOLE_MODE && isMigrationChecked
+              }
+              updateStatementTimeout={updateStatementTimeout}
+            />
+          )}
           <Button
             type="submit"
             className={styles.add_mar_top}
@@ -476,6 +538,8 @@ const mapStateToProps = state => ({
   currentSchema: state.tables.currentSchema,
   allSchemas: state.tables.allSchemas,
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+  sources: getDataSources(state),
+  currentDataSource: state.tables.currentDataSource,
 });
 
 const rawSQLConnector = connect => connect(mapStateToProps)(RawSQL);

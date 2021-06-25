@@ -5,7 +5,7 @@ response:
   - extensions:
       path: $
       code: permission-error
-    message: Check constraint violation. update check constraint failed
+    message: check constraint of an insert/update permission has failed
 headers:
   X-Hasura-Role: user
   X-Hasura-User-Id: '1'

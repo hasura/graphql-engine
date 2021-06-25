@@ -12,3 +12,6 @@ coverage
 .idea/*
 test
 **/.tern-port
+packages/console-oss/build/
+lib/
+hasura-console-oss-1.0.0.tgz

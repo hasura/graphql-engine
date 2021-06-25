@@ -1,10 +1,29 @@
 {
-  "version": 2,
-  "tables": [
+  "version": 3,
+  "sources": [
     {
-      "table": {
-        "schema": "public",
-        "name": "test"
+      "name": "default",
+      "kind": "postgres",
+      "tables": [
+        {
+          "table": {
+            "schema": "public",
+            "name": "test"
+          }
+        }
+      ],
+      "configuration": {
+        "connection_info": {
+          "use_prepared_statements": true,
+          "database_url": "postgres://postgres:postgrespassword@postgres:5432/postgres",
+          "isolation_level": "read-committed",
+          "pool_settings": {
+            "connection_lifetime": 600,
+            "retries": 1,
+            "idle_timeout": 180,
+            "max_connections": 50
+          }
+        }
       }
     }
   ]

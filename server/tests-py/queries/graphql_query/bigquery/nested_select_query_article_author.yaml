@@ -1,0 +1,37 @@
+description: Nested select on article
+url: /v1/graphql
+status: 200
+response:
+  data:
+    hasura_article:
+    - id: '1'
+      title: Title 1
+      content: Content 1
+      author:
+        id: '1'
+        name: Author 1
+    - id: '2'
+      title: Title 2
+      content: Content 2
+      author:
+        id: '1'
+        name: Author 1
+    - id: '3'
+      title: Title 3
+      content: Content 3
+      author:
+        id: '2'
+        name: Author 2
+query:
+  query: |
+    query {
+      hasura_article (order_by: {id: asc}) {
+        id
+        title
+        content
+        author {
+          id
+          name
+        }
+      }
+    }

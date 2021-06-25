@@ -1,0 +1,79 @@
+- description: call the simple endpoint to write to the cache
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query @cached(ttl: 300) {
+        test_table {
+          first_name
+          last_name
+        }
+      }
+  resp_headers:
+    Cache-Control: max-age=300
+    X-Hasura-Query-Cache-Key: 29c20d58ac50d0934e6708b4752ca5b122c09e3a
+    X-Hasura-Query-Family-Cache-Key: 05e354afeca0828bbe6c1e77c25e4ae948f45f80
+  response:
+    data:
+      test_table:
+        - first_name: Foo
+          last_name: Bar
+        - first_name: Baz
+          last_name: Qux
+        - first_name: X%20Y
+          last_name: Test
+
+- description: call the simple endpoint to write to the cache
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query @cached(ttl: 300) {
+        test_table {
+          first_name
+          last_name
+        }
+      }
+  resp_headers:
+    Cache-Control: max-age=300
+    X-Hasura-Query-Cache-Key: 29c20d58ac50d0934e6708b4752ca5b122c09e3a
+    X-Hasura-Query-Family-Cache-Key: 05e354afeca0828bbe6c1e77c25e4ae948f45f80
+  response:
+    data:
+      test_table:
+        - first_name: Foo
+          last_name: Bar
+        - first_name: Baz
+          last_name: Qux
+        - first_name: X%20Y
+          last_name: Test
+
+- description: call the simple endpoint to write to the cache
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query @cached(ttl: 300) {
+        test_table(where: {first_name: {_eq: "Foo"}}) {
+          first_name
+          last_name
+        }
+      }
+  resp_headers:
+    Cache-Control: max-age=300
+    X-Hasura-Query-Cache-Key: 582474f0dac03945ece4cc2dc8e27d0cde6fb9c2
+    X-Hasura-Query-Family-Cache-Key: 03f5229cdb87de891d1556e6bcca6b2389e14472
+  response:
+    data:
+      test_table:
+        - first_name: Foo
+          last_name: Bar
+
+- description: call the cache clear endpoint
+  url: /pro/cache/clear
+  method: POST
+  status: 200
+  query:
+  response:
+    message: success
+    clearedItemCount: '2'

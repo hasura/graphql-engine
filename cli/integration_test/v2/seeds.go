@@ -9,14 +9,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/commands"
+	"github.com/hasura/graphql-engine/cli/v2/commands"
 
 	"github.com/spf13/afero"
 
-	"github.com/hasura/graphql-engine/cli/seed"
+	"github.com/hasura/graphql-engine/cli/v2/seed"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -73,6 +73,7 @@ func TestSeedsCreateCmd(t *testing.T, ec *cli.ExecutionContext) {
 			// Do a regex match for filename returned
 			// check if it is in required format
 			var re = regexp.MustCompile(`^([a-z]+\/)([0-9]+)\_(.+)(\.sql)$`)
+			*gotFilename = filepath.ToSlash(*gotFilename)
 			regexGroups := re.FindStringSubmatch(*gotFilename)
 
 			// Since filename has to be in form
@@ -104,7 +105,7 @@ func TestSeedsCreateCmd(t *testing.T, ec *cli.ExecutionContext) {
 			// check if the contents match
 			gotBytes, err := afero.ReadFile(tc.args.fs, *gotFilename)
 			assert.NoError(t, err)
-			assert.Equal(t, string(gotBytes), string(inData.Bytes()))
+			assert.Equal(t, string(gotBytes), inData.String())
 		})
 	}
 }
@@ -124,7 +125,8 @@ func TestSeedsApplyCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"can apply all seeds",
 			&commands.SeedApplyOptions{
-				EC: ec,
+				EC:     ec,
+				Driver: seed.NewDriver(ec.APIClient.V1Query.Bulk, ec.APIClient.PGDump),
 			},
 			false,
 		},
@@ -133,6 +135,7 @@ func TestSeedsApplyCmd(t *testing.T, ec *cli.ExecutionContext) {
 			&commands.SeedApplyOptions{
 				EC:        ec,
 				FileNames: []string{"1591867862409_test.sql"},
+				Driver:    seed.NewDriver(ec.APIClient.V1Query.Bulk, ec.APIClient.PGDump),
 			},
 			false,
 		},
@@ -141,6 +144,7 @@ func TestSeedsApplyCmd(t *testing.T, ec *cli.ExecutionContext) {
 			&commands.SeedApplyOptions{
 				EC:        ec,
 				FileNames: []string{"1591867862419_test2.sql"},
+				Driver:    seed.NewDriver(ec.APIClient.V1Query.Bulk, ec.APIClient.PGDump),
 			},
 			true,
 		},
@@ -149,7 +153,7 @@ func TestSeedsApplyCmd(t *testing.T, ec *cli.ExecutionContext) {
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.opts.Run()
-			if (err != nil) && (tc.wantErr == false) {
+			if (err != nil) && (!tc.wantErr) {
 				t.Fatalf("%s: expected no error got %v", tc.name, err)
 			}
 		})

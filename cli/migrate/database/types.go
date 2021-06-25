@@ -31,3 +31,8 @@ func (c *CustomList) Iterate() linq.Iterator {
 		return prevElem, true
 	}
 }
+
+type Database struct {
+	Name string
+	Type string
+}

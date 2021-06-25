@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
-import { commonDataTypes } from '../utils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 
@@ -16,6 +15,7 @@ import { addColSql } from '../TableModify/ModifyActions';
 import styles from './ModifyTable.scss';
 import FrequentlyUsedColumnSelector from '../Common/Components/FrequentlyUsedColumnSelector';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
+import { dataSource, isFeatureSupported } from '../../../../dataSources';
 
 const useColumnEditor = (dispatch, tableName) => {
   const initialState = {
@@ -152,7 +152,7 @@ const ColumnCreator = ({
 
   const getColumnTypeInput = () => {
     const { columnDataTypes, columnTypeValueMap } = getDataOptions(
-      commonDataTypes,
+      dataSource.commonDataTypes,
       restTypes,
       0
     );
@@ -177,14 +177,28 @@ const ColumnCreator = ({
 
     return (
       <span className={styles.select} data-test="col-type-0">
-        <ColumnTypeSelector
-          options={columnDataTypes}
-          onChange={colType.onChange}
-          value={columnTypeValueMap[colType.value] || colType.value}
-          colIdentifier={0}
-          bsClass={`col-type-${0} modify_select`}
-          styleOverrides={customSelectBoxStyles}
-        />
+        {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
+          <ColumnTypeSelector
+            options={columnDataTypes}
+            onChange={colType.onChange}
+            value={columnTypeValueMap[colType.value] || colType.value}
+            colIdentifier={0}
+            bsClass={`col-type-${0} modify_select`}
+            styleOverrides={customSelectBoxStyles}
+          />
+        ) : (
+          <input
+            type="text"
+            className={`${styles.input} form-control col-type-${0} ${
+              styles.max_width
+            }`}
+            onChange={e => {
+              e.persist();
+              colType.onChange({ value: e.target.value });
+            }}
+            placeholder="column_type"
+          />
+        )}
       </span>
     );
   };
@@ -272,7 +286,9 @@ const ColumnCreator = ({
         {getColumnDefaultInput()}
       </form>
       <div className={styles.add_mar_top_small}>
-        {getFrequentlyUsedColumnSelector()}
+        {isFeatureSupported('tables.modify.columns.frequentlyUsedColumns')
+          ? getFrequentlyUsedColumnSelector()
+          : null}
       </div>
     </div>
   );

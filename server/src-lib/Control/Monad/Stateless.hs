@@ -1,4 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes  #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Control.Monad.Stateless

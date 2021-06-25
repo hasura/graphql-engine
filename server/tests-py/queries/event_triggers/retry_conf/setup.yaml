@@ -1,5 +1,6 @@
 type: bulk
 args:
+
 - type: run_sql
   args:
     sql: |
@@ -15,6 +16,7 @@ args:
           c1 int,
           c2 text
       );
+
 - type: track_table
   args:
     schema: hge_tests
@@ -34,15 +36,15 @@ args:
       schema: hge_tests
       name: test_t1
     insert:
-      columns: "*"
+      columns: '*'
     update:
-      columns: "*"
+      columns: '*'
     delete:
-      columns: "*"
+      columns: '*'
     webhook: http://127.0.0.1:5592/fail
     retry_conf:
       num_retries: 4
-      interval_sec: 2
+      interval_sec: 1
 - type: create_event_trigger
   args:
     name: t2_timeout_short
@@ -50,16 +52,16 @@ args:
       schema: hge_tests
       name: test_t2
     insert:
-      columns: "*"
+      columns: '*'
     update:
-      columns: "*"
+      columns: '*'
     delete:
-      columns: "*"
-    webhook: http://127.0.0.1:5592/timeout_short
+      columns: '*'
+    webhook: http://127.0.0.1:5592/sleep_2s
     retry_conf:
       num_retries: 2
-      interval_sec: 2
-      timeout_sec: 2
+      interval_sec: 1
+      timeout_sec: 1
 - type: create_event_trigger
   args:
     name: t3_timeout_long
@@ -67,12 +69,12 @@ args:
       schema: hge_tests
       name: test_t3
     insert:
-      columns: "*"
+      columns: '*'
     update:
-      columns: "*"
+      columns: '*'
     delete:
-      columns: "*"
-    webhook: http://127.0.0.1:5592/timeout_long
+      columns: '*'
+    webhook: http://127.0.0.1:5592/sleep_2s
     retry_conf:
       num_retries: 0
       interval_sec: 2

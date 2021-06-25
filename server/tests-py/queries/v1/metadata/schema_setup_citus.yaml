@@ -1,0 +1,10 @@
+type: bulk
+args:
+
+- type: citus_run_sql
+  args:
+    source: citus
+    sql: |
+      CREATE TABLE table_to_customize (
+         column_to_customize SERIAL PRIMARY KEY
+         );

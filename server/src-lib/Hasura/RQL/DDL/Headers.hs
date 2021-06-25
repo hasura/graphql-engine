@@ -1,28 +1,29 @@
 module Hasura.RQL.DDL.Headers where
 
-import           Data.Aeson
-import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.Instances       ()
-import           Hasura.RQL.Types.Error
-import           Language.Haskell.TH.Syntax (Lift)
 
-import qualified Data.CaseInsensitive       as CI
-import qualified Data.Environment           as Env
-import qualified Data.Text                  as T
-import qualified Network.HTTP.Types         as HTTP
+import qualified Data.CaseInsensitive  as CI
+import qualified Data.Environment      as Env
+import qualified Data.Text             as T
+import qualified Network.HTTP.Types    as HTTP
+
+import           Data.Aeson
+
+import           Hasura.Base.Error
+import           Hasura.Base.Instances ()
+import           Hasura.Incremental    (Cacheable)
 
 
 data HeaderConf = HeaderConf HeaderName HeaderValue
-   deriving (Show, Eq, Lift, Generic)
+   deriving (Show, Eq, Generic)
 instance NFData HeaderConf
 instance Hashable HeaderConf
 instance Cacheable HeaderConf
 
-type HeaderName  = T.Text
+type HeaderName  = Text
 
-data HeaderValue = HVValue T.Text | HVEnv T.Text
-   deriving (Show, Eq, Lift, Generic)
+data HeaderValue = HVValue Text | HVEnv Text
+   deriving (Show, Eq, Generic)
 instance NFData HeaderValue
 instance Hashable HeaderValue
 instance Cacheable HeaderValue

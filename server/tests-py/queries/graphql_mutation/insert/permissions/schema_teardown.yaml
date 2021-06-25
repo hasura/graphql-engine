@@ -21,4 +21,7 @@ args:
       drop table computer;
       drop table "user";
       drop table account;
+      drop table leads;
+      drop table order_cart;
+      drop table items;
     cascade: true

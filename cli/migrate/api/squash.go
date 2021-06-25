@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hasura/graphql-engine/cli/migrate"
-	"github.com/hasura/graphql-engine/cli/migrate/cmd"
-	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
+	"github.com/hasura/graphql-engine/cli/v2/migrate"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/cmd"
+	mig "github.com/hasura/graphql-engine/cli/v2/migrate/cmd"
 )
 
 type squashCreateRequest struct {

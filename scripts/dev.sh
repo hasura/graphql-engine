@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 shopt -s globstar
 
@@ -12,7 +12,9 @@ shopt -s globstar
 #
 # This makes use of 'cabal.project.dev-sh*' files when building. See
 # 'cabal.project.dev-sh.local'.
-
+#
+# The configuration for the containers of each backend is stored in
+# separate files, see files in 'scripts/containers'
 
 echo_pretty() {
     echo ">>> $(tput setaf 2)$1$(tput sgr0)"
@@ -33,19 +35,29 @@ Usage:   $0 <COMMAND>
 Available COMMANDs:
 
   graphql-engine
-    Launch graphql-engine, connecting to a database launched with '$0 postgres'.
+    Launch graphql-engine, connecting to a database launched with
+    '$0 postgres'.
 
   postgres
-    Launch a postgres container suitable for use with graphql-engine, watch its logs,
-    clean up nicely after
+    Launch a postgres container suitable for use with graphql-engine, watch its
+    logs, clean up nicely after
 
-  test [--integration [pytest_args...] | --unit]
+  mssql
+    Launch a MSSQL container suitable for use with graphql-engine, watch its
+    logs, clean up nicely after
+
+  citus
+    Launch a Citus single-node container suitable for use with graphql-engine,
+    watch its logs, clean up nicely after
+
+  test [--integration [pytest_args...] | --unit | --hlint]
     Run the unit and integration tests, handling spinning up all dependencies.
     This will force a recompile. A combined code coverage report will be
     generated for all test suites.
-        Either integration or unit tests can be run individually with their
+    Either integration or unit tests can be run individually with their
     respective flags. With '--integration' any arguments that follow will be
-    passed to the pytest invocation
+    passed to the pytest invocation. Run the hlint code linter individually
+    using '--hlint'.
 
 EOL
 exit 1
@@ -62,7 +74,7 @@ try_jq() {
 
 # Bump this to:
 #  - force a reinstall of python dependencies, etc.
-DEVSH_VERSION=1.3
+DEVSH_VERSION=1.4
 
 case "${1-}" in
   graphql-engine)
@@ -80,20 +92,34 @@ case "${1-}" in
   ;;
   postgres)
   ;;
+  mssql)
+  ;;
+  citus)
+  ;;
   test)
     case "${2-}" in
       --unit)
       RUN_INTEGRATION_TESTS=false
       RUN_UNIT_TESTS=true
+      RUN_HLINT=false
       ;;
       --integration)
-      PYTEST_ARGS="${@:3}"
+      PYTEST_ARGS=( "${@:3}" )
       RUN_INTEGRATION_TESTS=true
       RUN_UNIT_TESTS=false
+      RUN_HLINT=false
+      source scripts/parse-pytest-backend
+      ;;
+      --hlint)
+      RUN_INTEGRATION_TESTS=false
+      RUN_UNIT_TESTS=false
+      RUN_HLINT=true
       ;;
       "")
       RUN_INTEGRATION_TESTS=true
       RUN_UNIT_TESTS=true
+      RUN_HLINT=true
+      BACKEND="postgres"
       ;;
       *)
       die_usage
@@ -127,42 +153,104 @@ else
   echo_warn "Pyenv not installed. Proceeding with system python version: $(python3 --version)"
 fi
 
+
 ####################################
-###   Shared environment stuff   ###
+###       Containers setup       ###
 ####################################
 
-# Hopefully these don't clash with anything. We could try to be smarter:
-if [ "$MODE" = "test" ]; then
-  # Choose a different port so PG is totally disposable:
-  PG_PORT=35432
-else
-  PG_PORT=25432
-fi
+source scripts/containers/postgres
+source scripts/containers/mssql
+source scripts/containers/citus
 
-# export for psql, etc.
-export PGPASSWORD=postgres
+PG_RUNNING=0
+MSSQL_RUNNING=0
+CITUS_RUNNING=0
 
-# The URL for the postgres server we might launch
-CONTAINER_DB_URL="postgres://postgres:$PGPASSWORD@127.0.0.1:$PG_PORT/postgres"
-# ... but we might like to use a different PG instance when just launching graphql-engine:
-HASURA_GRAPHQL_DATABASE_URL=${HASURA_GRAPHQL_DATABASE_URL-$CONTAINER_DB_URL}
+function cleanup {
+  echo
 
-PG_CONTAINER_NAME="hasura-dev-postgres-$PG_PORT"
+  if [ -n "${GRAPHQL_ENGINE_PID-}" ]; then
+    # Kill the cabal new-run and its children. This may already have been killed:
+    pkill -P "$GRAPHQL_ENGINE_PID" &>/dev/null || true
+  fi
 
-# We can remove psql as a dependency by using it from the (running) PG container:
-DOCKER_PSQL="docker exec -u postgres -it $PG_CONTAINER_NAME psql $HASURA_GRAPHQL_DATABASE_URL"
+  if [    $PG_RUNNING -eq 1 ]; then    pg_cleanup; fi
+  if [ $MSSQL_RUNNING -eq 1 ]; then mssql_cleanup; fi
+  if [ $CITUS_RUNNING -eq 1 ]; then citus_cleanup; fi
 
-function wait_postgres {
-  echo -n "Waiting for postgres to come up"
-  until ( $DOCKER_PSQL -c '\l' || psql $HASURA_GRAPHQL_DATABASE_URL -c '\l') &>/dev/null; do
-    echo -n '.' && sleep 0.2
-  done
-  echo " Ok"
+  echo_pretty "Done"
 }
+
+trap cleanup EXIT
+
+function pg_start() {
+  pg_launch_container
+  PG_RUNNING=1
+  pg_wait
+}
+
+function mssql_start() {
+  mssql_launch_container
+  MSSQL_RUNNING=1
+  mssql_wait
+}
+
+function citus_start() {
+  citus_launch_container
+  CITUS_RUNNING=1
+  citus_wait
+}
+
+function start_dbs() {
+  # always launch the postgres container
+  pg_start
+
+  case "$BACKEND" in
+    citus)
+      citus_start
+    ;;
+    mssql)
+      mssql_start
+    ;;
+    # bigquery omitted as test setup is atypical. See:
+    # https://github.com/hasura/graphql-engine-mono/wiki/Testing-BigQuery
+  esac
+}
+
+function add_sources() {
+  METADATA_URL=http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/v1/metadata
+
+  # always add a postgres source
+  echo ""
+  echo_pretty "Adding Postgres source"
+  curl "$METADATA_URL" \
+  --data-raw '{"type":"pg_add_source","args":{"name":"default","configuration":{"connection_info":{"database_url":"'"$PG_DB_URL"'"}}}}'
+
+  case "$BACKEND" in
+    # bigquery omitted as test setup is atypical. See:
+    # https://github.com/hasura/graphql-engine-mono/wiki/Testing-BigQuery
+    citus)
+      echo ""
+      echo_pretty "Adding Citus source"
+      curl "$METADATA_URL" \
+      --data-raw '{"type":"citus_add_source","args":{"name":"citus","configuration":{"connection_info":{"database_url":"'"$CITUS_DB_URL"'"}}}}'
+    ;;
+    mssql)
+      echo ""
+      echo_pretty "Adding SQL Server source"
+      curl "$METADATA_URL" \
+      --data-raw '{"type":"mssql_add_source","args":{"name":"mssql","configuration":{"connection_info":{"connection_string":"'"$MSSQL_DB_URL"'"}}}}'
+    ;;
+  esac
+
+  echo ""
+}
+
 
 #################################
 ###     Graphql-engine        ###
 #################################
+
 if [ "$MODE" = "graphql-engine" ]; then
   cd "$PROJECT_ROOT/server"
   # Existing tix files for a different hge binary will cause issues:
@@ -177,7 +265,7 @@ if [ "$MODE" = "graphql-engine" ]; then
       # works when cabal.project.dev-sh.local is edited to turn on optimizations.
       # See also: https://hackage.haskell.org/package/cabal-plan
       distdir=$(cat dist-newstyle/cache/plan.json | jq -r '."install-plan"[] | select(."id" == "graphql-engine-1.0.0-inplace")? | ."dist-dir"')
-      hpcdir="$distdir/hpc/vanilla/mix/graphql-engine-1.0.0"
+      hpcdir="$distdir/hpc/dyn/mix/graphql-engine-1.0.0"
       echo_pretty "Generating code coverage report..."
       COVERAGE_DIR="dist-newstyle/dev.sh-coverage"
       hpc_invocation=(hpc markup
@@ -186,7 +274,7 @@ if [ "$MODE" = "graphql-engine" ]; then
         --reset-hpcdirs graphql-engine.tix
         --fun-entry-count
         --destdir="$COVERAGE_DIR")
-      ${hpc_invocation[@]} >/dev/null
+      "${hpc_invocation[@]}" >/dev/null
 
       echo_pretty "To view full coverage report open:"
       echo_pretty "  file://$(pwd)/$COVERAGE_DIR/hpc_index.html"
@@ -205,8 +293,13 @@ if [ "$MODE" = "graphql-engine" ]; then
   }
   trap cleanup EXIT
 
-  export HASURA_GRAPHQL_DATABASE_URL  # Defined above
+  export HASURA_GRAPHQL_DATABASE_URL=${HASURA_GRAPHQL_DATABASE_URL-$PG_DB_URL}
   export HASURA_GRAPHQL_SERVER_PORT=${HASURA_GRAPHQL_SERVER_PORT-8181}
+
+  export HASURA_BIGQUERY_SERVICE_ACCOUNT="<<<SERVICE_ACCOUNT_FILE_CONTENTS>>>" # `cat ../SERVICE_ACCOUNT_FILE.json`
+  export HASURA_BIGQUERY_PROJECT_ID="<<<PROJECT_ID>>>"
+  export HASURA_BIGQUERY_DATASETS="<<<CSV_DATASETS>>>"
+
 
   echo_pretty "We will connect to postgres at '$HASURA_GRAPHQL_DATABASE_URL'"
   echo_pretty "If you haven't overridden HASURA_GRAPHQL_DATABASE_URL, you can"
@@ -215,7 +308,7 @@ if [ "$MODE" = "graphql-engine" ]; then
   echo_pretty "    $ $0 postgres"
   echo_pretty ""
 
-  RUN_INVOCATION=(cabal new-run --project-file=cabal.project.dev-sh --RTS -- 
+  RUN_INVOCATION=(cabal new-run --project-file=cabal.project.dev-sh --RTS --
     exe:graphql-engine +RTS -N -T -s -RTS serve
     --enable-console --console-assets-dir "$PROJECT_ROOT/console/static/dist"
     )
@@ -226,7 +319,10 @@ if [ "$MODE" = "graphql-engine" ]; then
   echo_pretty ''
 
   cabal new-build --project-file=cabal.project.dev-sh exe:graphql-engine
-  wait_postgres
+
+  # We assume a PG is *already running*, and therefore bypass the
+  # cleanup mechanism previously set.
+  pg_wait
 
   # Print helpful info after startup logs so it's visible:
   {
@@ -246,7 +342,7 @@ if [ "$MODE" = "graphql-engine" ]; then
     echo_pretty ""
     echo_pretty "  If the console was modified since your last build (re)build assets with:"
     echo_pretty "      $ cd \"$PROJECT_ROOT/console\""
-    echo_pretty "      $ npm ci && npm run server-build "
+    echo_pretty "      $ npm ci && make server-build "
     echo_pretty ""
     echo_pretty "Useful endpoints when compiling with 'graphql-engine:developer' and running with '+RTS -T'"
     echo_pretty "   http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/dev/subscriptions"
@@ -259,105 +355,72 @@ if [ "$MODE" = "graphql-engine" ]; then
   } &
 
   # Logs printed until CTRL-C:
-  ${RUN_INVOCATION[@]} | try_jq
+  "${RUN_INVOCATION[@]}" | try_jq
   exit 0
   ### END SCRIPT ###
-fi
+
+
 
 #################################
-###     Postgres Container    ###
+###    Postgres container     ###
 #################################
 
-# Useful development defaults for postgres (no spaces here, please):
-#
-# setting 'port' in container is a workaround for the pg_dump endpoint (see tests)
-# log_hostname=off to avoid timeout failures when running offline due to:
-#   https://forums.aws.amazon.com/thread.jspa?threadID=291285
-CONF=$(cat <<-EOF
-log_statement=all
-log_connections=on
-log_disconnections=on
-log_hostname=off
-log_duration=on
-port=$PG_PORT
-EOF
-)
-
-# log lines above as -c flag arguments we pass to postgres
-CONF_FLAGS=$(echo "$CONF" | sed  -e 's/^/-c /'  | tr '\n' ' ')
-
-function launch_postgres_container(){
-  echo_pretty "Launching postgres container: $PG_CONTAINER_NAME"
-  docker run --name "$PG_CONTAINER_NAME" -p 127.0.0.1:"$PG_PORT":$PG_PORT --expose="$PG_PORT" \
-    -e POSTGRES_PASSWORD="$PGPASSWORD"  -d circleci/postgres:11.5-alpine-postgis \
-    $CONF_FLAGS
-
-  # graphql-engine calls the pg_dump executable. To avoid a version mismatch (and
-  # the dependency entirely) we create a shim that executes the pg_dump in the
-  # postgres container. Note output to file won't work.
-  DEV_SHIM_PATH="/tmp/hasura-dev-shims-$PG_PORT"
-  mkdir -p "$DEV_SHIM_PATH"
-  cat >"$DEV_SHIM_PATH/pg_dump" <<EOL
-#!/bin/bash
-# Generated from: $0
-if [[ \$@ == *" -f"* ]]; then
-  echo "It looks like we're trying to pg_dump to a file, but that won't work with this shim. See $0" >&2
-  exit 1
-fi
-docker exec -u postgres $PG_CONTAINER_NAME pg_dump "\$@"
-EOL
-  chmod a+x "$DEV_SHIM_PATH/pg_dump"
-  export PATH="$DEV_SHIM_PATH":$PATH
-
-
-  # Since launching the postgres container worked we can set up cleanup routines. This will catch CTRL-C
-  function cleanup {
-    echo
-
-    if [ ! -z "${GRAPHQL_ENGINE_PID-}" ]; then
-      # Kill the cabal new-run and its children. This may already have been killed:
-      pkill -P "$GRAPHQL_ENGINE_PID" &>/dev/null || true
-    fi
-
-    case "$MODE" in
-      test|postgres)
-        # Since scripts here are tailored to the env we've just launched:
-        rm -r "$DEV_SHIM_PATH"
-
-        echo_pretty "Removing $PG_CONTAINER_NAME and its volumes in 5 seconds!"
-        echo_pretty "  PRESS CTRL-C TO ABORT removal, or ENTER to clean up right away"
-        read -t5 || true
-        docker stop "$PG_CONTAINER_NAME"
-        docker rm -v "$PG_CONTAINER_NAME"
-      ;;
-      graphql-engine)
-      ;;
-    esac
-
-    echo_pretty "Done"
-  }
-  trap cleanup EXIT
-}
-
-
-if [ "$MODE" = "postgres" ]; then
-  launch_postgres_container
-  wait_postgres
+elif [ "$MODE" = "postgres" ]; then
+  pg_start
   echo_pretty "Postgres logs will start to show up in realtime here. Press CTRL-C to exit and "
   echo_pretty "shutdown this container."
   echo_pretty ""
   echo_pretty "You can use the following to connect to the running instance:"
-  echo_pretty "    $ $DOCKER_PSQL"
+  echo_pretty "    $ $PG_DOCKER"
   echo_pretty "        or..."
-  echo_pretty "    $ PGPASSWORD="$PGPASSWORD" psql -h 127.0.0.1 -p "$PG_PORT" postgres -U postgres"
+  echo_pretty "    $ PGPASSWORD=$PG_PASSWORD psql -h 127.0.0.1 -p $PG_PORT postgres -U postgres"
   echo_pretty ""
   echo_pretty "Here is the database URL:"
-  echo_pretty "    $CONTAINER_DB_URL"
+  echo_pretty "    $PG_DB_URL"
   echo_pretty ""
   echo_pretty "If you want to launch a 'graphql-engine' that works with this database:"
   echo_pretty "    $ $0 graphql-engine"
-  # Runs continuously until CTRL-C, jumping to cleanup() above:
   docker logs -f --tail=0 "$PG_CONTAINER_NAME"
+
+
+#################################
+###      MSSQL Container      ###
+#################################
+
+elif [ "$MODE" = "mssql" ]; then
+  mssql_start
+  echo_pretty "MSSQL logs will start to show up in realtime here. Press CTRL-C to exit and "
+  echo_pretty "shutdown this container."
+  echo_pretty ""
+  echo_pretty "You can use the following to connect to the running instance:"
+  echo_pretty "    $ $MSSQL_DOCKER"
+  echo_pretty ""
+  echo_pretty "If you want to import a SQL file into MSSQL:"
+  echo_pretty "    $ $MSSQL_DOCKER -i <import_file>"
+  echo_pretty ""
+  echo_pretty "Here is the database URL:"
+  echo_pretty "    $MSSQL_DB_URL"
+  echo_pretty ""
+  docker logs -f --tail=0 "$MSSQL_CONTAINER_NAME"
+
+
+#################################
+###      Citus Container      ###
+#################################
+
+elif [ "$MODE" = "citus" ]; then
+  citus_start
+  echo_pretty "CITUS logs will start to show up in realtime here. Press CTRL-C to exit and "
+  echo_pretty "shutdown this container."
+  echo_pretty ""
+  echo_pretty "You can use the following to connect to the running instance:"
+  echo_pretty "    $ $CITUS_DOCKER"
+  echo_pretty ""
+  echo_pretty "Here is the database URL:"
+  echo_pretty "    $CITUS_DB_URL"
+  echo_pretty ""
+  docker logs -f --tail=0 "$CITUS_CONTAINER_NAME"
+
 
 elif [ "$MODE" = "test" ]; then
   ########################################
@@ -371,29 +434,58 @@ elif [ "$MODE" = "test" ]; then
   # We'll get an hpc error if these exist; they will be deleted below too:
   rm -f graphql-engine-tests.tix graphql-engine.tix graphql-engine-combined.tix
 
+  # Various tests take some configuration from the environment; set these up here:
   export EVENT_WEBHOOK_HEADER="MyEnvValue"
   export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
   export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
+  export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
 
   # It's better UX to build first (possibly failing) before trying to launch
   # PG, but make sure that new-run uses the exact same build plan, else we risk
   # rebuilding twice... ugh
-  cabal new-build --project-file=cabal.project.dev-sh exe:graphql-engine test:graphql-engine-tests
-  launch_postgres_container
-  wait_postgres
+  # Formerly this was a `cabal build` but mixing cabal build and cabal run
+  # seems to conflict now, causing re-linking, haddock runs, etc. Instead do a
+  # `graphql-engine version` to trigger build
+  cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
+      --metadata-database-url="$PG_DB_URL" version
 
-  # These also depend on a running DB:
+  if [ "$RUN_INTEGRATION_TESTS" = true ]; then
+    start_dbs
+  else
+    # unit tests just need access to a postgres instance:
+    pg_start
+  fi
+
   if [ "$RUN_UNIT_TESTS" = true ]; then
     echo_pretty "Running Haskell test suite"
-    HASURA_GRAPHQL_DATABASE_URL="$CONTAINER_DB_URL" cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
+    HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
+  fi
+
+  if [ "$RUN_HLINT" = true ]; then
+    if command -v hlint >/dev/null; then
+      (cd "$PROJECT_ROOT/server" && hlint src-*)
+    else
+      echo_warn "hlint is not installed: skipping"
+    fi
   fi
 
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
     GRAPHQL_ENGINE_TEST_LOG=/tmp/hasura-dev-test-engine.log
     echo_pretty "Starting graphql-engine, logging to $GRAPHQL_ENGINE_TEST_LOG"
     export HASURA_GRAPHQL_SERVER_PORT=8088
-    cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine --database-url="$CONTAINER_DB_URL" serve --stringify-numeric-types \
-      --enable-console --console-assets-dir ../console/static/dist \
+
+    # Extra sources for multi-source tests. Uses the default postgres DB if no extra sources
+    # are defined.
+    export HASURA_GRAPHQL_PG_SOURCE_URL_1=${HASURA_GRAPHQL_PG_SOURCE_URL_1-$PG_DB_URL}
+    export HASURA_GRAPHQL_PG_SOURCE_URL_2=${HASURA_GRAPHQL_PG_SOURCE_URL_2-$PG_DB_URL}
+
+    # Using --metadata-database-url flag to test multiple backends
+    #       HASURA_GRAPHQL_PG_SOURCE_URL_* For a couple multi-source pytests:
+    cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
+      --metadata-database-url="$PG_DB_URL" serve \
+      --stringify-numeric-types \
+      --enable-console \
+      --console-assets-dir ../console/static/dist \
       &> "$GRAPHQL_ENGINE_TEST_LOG" & GRAPHQL_ENGINE_PID=$!
 
     echo -n "Waiting for graphql-engine"
@@ -402,10 +494,14 @@ elif [ "$MODE" = "test" ]; then
       # If the server stopped abort immediately
       if ! kill -0 $GRAPHQL_ENGINE_PID ; then
         echo_error "The server crashed or failed to start!!"
-        exit 666
+        exit 42
       fi
     done
+
+    echo ""
     echo " Ok"
+
+    add_sources
 
     cd "$PROJECT_ROOT/server/tests-py"
 
@@ -452,12 +548,8 @@ elif [ "$MODE" = "test" ]; then
       source "$PY_VENV/bin/activate"
     fi
 
-
     # TODO MAYBE: fix deprecation warnings, make them an error
-    if pytest -W ignore::DeprecationWarning --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT --pg-urls "$CONTAINER_DB_URL" $PYTEST_ARGS; then
-      PASSED=true
-    else
-      PASSED=false
+    if ! pytest -W ignore::DeprecationWarning --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT --pg-urls "$PG_DB_URL" --durations=20 "${PYTEST_ARGS[@]}"; then
       echo_error "^^^ graphql-engine logs from failed test run can be inspected at: $GRAPHQL_ENGINE_TEST_LOG"
     fi
     deactivate  # python venv
@@ -489,15 +581,15 @@ elif [ "$MODE" = "test" ]; then
     COVERAGE_DIR="dist-newstyle/dev.sh-coverage"
     hpc markup \
       --exclude=Main \
-      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/noopt/hpc/vanilla/mix/graphql-engine-* \
-      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/t/graphql-engine-tests/noopt/hpc/vanilla/mix/graphql-engine-tests \
+      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/noopt/hpc/dyn/mix/graphql-engine-* \
+      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/t/graphql-engine-tests/noopt/hpc/dyn/mix/graphql-engine-tests \
       --reset-hpcdirs graphql-engine-combined.tix \
       --fun-entry-count \
       --destdir="$COVERAGE_DIR" >/dev/null
     hpc report \
       --exclude=Main \
-      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/noopt/hpc/vanilla/mix/graphql-engine-* \
-      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/t/graphql-engine-tests/noopt/hpc/vanilla/mix/graphql-engine-tests \
+      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/noopt/hpc/dyn/mix/graphql-engine-* \
+      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/t/graphql-engine-tests/noopt/hpc/dyn/mix/graphql-engine-tests \
       --reset-hpcdirs graphql-engine-combined.tix
     echo_pretty "To view full coverage report open:"
     echo_pretty "  file://$(pwd)/$COVERAGE_DIR/hpc_index.html"

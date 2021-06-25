@@ -1,0 +1,28 @@
+type: bulk
+args:
+- type: drop_rest_endpoint
+  args:
+    name: simple
+- type: drop_rest_endpoint
+  args:
+    name: simple_cached
+- type: drop_rest_endpoint
+  args:
+    name: with_arg
+- type: drop_rest_endpoint
+  args:
+    name: with_args
+- type: drop_rest_endpoint
+  args:
+    name: with_uuid
+- type: drop_rest_endpoint
+  args:
+    name: with_template
+- type: drop_query_collection
+  args:
+    collection: test_collection
+    cascade: false
+- type: run_sql
+  args:
+    sql: |
+      drop table test_table

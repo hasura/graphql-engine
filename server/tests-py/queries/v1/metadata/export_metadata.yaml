@@ -1,5 +1,5 @@
 description: Export metadata
-url: /v1/query
+url: /v1/metadata
 status: 200
 response:
   version: 2

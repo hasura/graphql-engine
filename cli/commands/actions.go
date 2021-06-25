@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -17,7 +17,7 @@ func NewActionsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	actionsCmd := &cobra.Command{
 		Use:          "actions",
-		Short:        "Manage actions on hasura",
+		Short:        "Manage Hasura actions",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Root().PersistentPreRun(cmd, args)
@@ -48,9 +48,9 @@ func NewActionsCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f := actionsCmd.PersistentFlags()
 
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
+	f.String("access-key", "", "access key for Hasura GraphQL engine")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
 	f.String("certificate-authority", "", "path to a cert file for the certificate authority")

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import styles from './Styles.scss';
+import actionStyles from '../Actions.scss';
+import styles from '../../../Common/Common.scss';
 import Helmet from 'react-helmet';
 import HandlerEditor from '../Common/components/HandlerEditor';
 import KindEditor from '../Common/components/KindEditor';
@@ -14,6 +15,7 @@ import {
   setHeaders as dispatchNewHeaders,
   toggleForwardClientHeaders as toggleFCH,
   resetDerivedActionParentOperation,
+  setActionComment,
 } from './reducer';
 import { createAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
@@ -39,6 +41,7 @@ const AddAction = ({
   forwardClientHeaders,
   derive,
   readOnlyMode,
+  comment,
 }) => {
   useEffect(() => {
     if (readOnlyMode)
@@ -59,6 +62,7 @@ const AddAction = ({
 
   const handlerOnChange = e => dispatch(setActionHandler(e.target.value));
   const kindOnChange = k => dispatch(setActionKind(k));
+  const commentOnChange = e => dispatch(setActionComment(e.target.value));
 
   const {
     sdl: typesDefinitionSdl,
@@ -113,8 +117,12 @@ const AddAction = ({
 
   return (
     <div>
-      <Helmet title={'Add Action - Actions | Hasura'} />
-      <div className={styles.heading_text}>Add a new action</div>
+      <Helmet title="Add Action - Actions | Hasura" />
+      <h2
+        className={`${styles.headerText} ${styles.display_inline} ${styles.add_mar_bottom_mid}`}
+      >
+        Add a new action
+      </h2>
       <GraphQLEditor
         value={actionDefinitionSdl}
         error={actionDefinitionError}
@@ -135,6 +143,22 @@ const AddAction = ({
         tooltip={typeDefinitionInfo.tooltip}
         allowEmpty
       />
+      <hr />
+      <div className={actionStyles.comment_container_styles}>
+        <h2
+          className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
+        >
+          Comment
+        </h2>
+        <input
+          disabled={readOnlyMode}
+          type="text"
+          value={comment}
+          onChange={commentOnChange}
+          placeholder="comment"
+          className={`form-control ${styles.inputWidthLarge}`}
+        />
+      </div>
       <hr />
       <HandlerEditor
         value={handler}
@@ -170,6 +194,7 @@ const AddAction = ({
         type="submit"
         disabled={!allowSave}
         onClick={onSubmit}
+        data-test="create-action-btn"
       >
         Create
       </Button>

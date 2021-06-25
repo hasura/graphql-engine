@@ -1,0 +1,19 @@
+type: bulk
+args:
+- type: add_remote_schema
+  args:
+    name: user
+    definition:
+      url: http://localhost:5000/user-graphql
+
+- type: add_remote_schema
+  args:
+    name: character-iface
+    definition:
+      url: http://localhost:5000/character-iface-graphql
+
+- type: add_remote_schema
+  args:
+    name: union
+    definition:
+      url: http://localhost:5000/union-graphql

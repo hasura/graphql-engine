@@ -4,7 +4,6 @@
 import React from 'react';
 import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
-import { push } from 'react-router-redux';
 import globals from '../../../../../Globals';
 import Button from '../../../../Common/Button/Button';
 import TopicDescription from '../../../Common/Landing/TopicDescription';
@@ -17,6 +16,7 @@ import {
 import TryItOut from '../../../Common/Landing/TryItOut';
 import styles from '../../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 import { EVENTS_SERVICE_HEADING, EVENT_TRIGGER } from '../../constants';
+import _push from '../../../Data/push';
 
 interface Props extends InjectedProps {}
 
@@ -36,7 +36,7 @@ insert_user(objects: [{name: "testuser"}] ){
           imgUrl={`${globals.assetsPath}/common/img/event-trigger.png`}
           imgAlt={`${EVENT_TRIGGER}s`}
           description={`An ${EVENT_TRIGGER} atomically captures events (insert, update, delete) on a specified table and then reliably calls a HTTP webhook to run some custom business logic.`}
-          knowMoreHref="https://hasura.io/docs/1.0/graphql/manual/event-triggers/index.html"
+          knowMoreHref="https://hasura.io/docs/latest/graphql/core/event-triggers/index.html"
         />
         <hr className={styles.clear_fix} />
       </div>
@@ -46,7 +46,7 @@ insert_user(objects: [{name: "testuser"}] ){
   const getAddBtn = () => {
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
-      dispatch(push(getAddETRoute()));
+      dispatch(_push(getAddETRoute()));
     };
 
     return (

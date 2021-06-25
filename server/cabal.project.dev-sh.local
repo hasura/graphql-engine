@@ -3,9 +3,7 @@
 -- which in turn consults this file.
 --
 -- You can temporarily override values here rather than modifying 'dev.sh'
--- during development (although that might break certain things)values here 
--- rather than modifying 'dev.sh' during development (although that might
--- break certain things).
+-- during development (although that might break certain things).
 
 package *
   documentation: true
@@ -26,3 +24,15 @@ package graphql-engine
   -- which is not what we originally wanted. But building the test modules
   -- themselves with coverage is actually nice for validation.
   coverage: true
+  -- to match CI:
+  ghc-options: -Werror
+  -- By default GHC is dynamically linked, so to run TemplateHaskell you need dynamic versions of
+  -- libraries. But, also by default, cabal links executables statically, which requires static
+  -- versions of the libraries. Therefore, by default, cabal builds with -dynamic-too to generate
+  -- static and dynamic versions of all object files.
+  -- Setting executable-dynamic: True forces cabal to build a dynamic executable; but it's not
+  -- enough on its own: since library-vanilla defaults to True, cabal would still build a static
+  -- library. With those two flags together, we can finally only build one version of the library,
+  -- which substentially improves compilation time.
+  executable-dynamic: True
+  library-vanilla: False

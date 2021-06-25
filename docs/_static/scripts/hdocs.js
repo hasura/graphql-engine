@@ -5,17 +5,20 @@ window.hdocs = (function () {
     setup: function () {
       Array.from(document.getElementsByClassName('menuLink')).forEach(function (el) { el.addEventListener('click', hdocs.toggleMenu) });
 
+      Array.from(document.getElementsByClassName('tracked')).forEach(function (el) { el.addEventListener('click', function () { hdocs.trackGA(el.getAttribute('data-label')) }) });
+
       document.getElementById('nav_tree_icon').addEventListener('click', hdocs.handleNavClick);
       document.getElementById('sidebar-close').addEventListener('click', hdocs.handleNavClick);
 
       document.getElementById('thumb_up_button').addEventListener('click', function () { hdocs.sendFeedback('positive', 'Great to hear that! If you have any other feedback, please share here:') });
       document.getElementById('thumb_down_button').addEventListener('click', function () { hdocs.sendFeedback('negative', 'Sorry to hear that. Please tell us what you were looking for:') });
       document.getElementById('feedback_btn').addEventListener('click', hdocs.handleSubmitFeedback);
+      document.getElementById('close-banner').addEventListener('click', hdocs.closeBanner)
 
       docsearch({
         appId: 'WCBB1VVLRC',
-        apiKey: '298d448cd9d7ed93fbab395658da19e8',
-        indexName: 'graphql-docs-prod',
+        apiKey: HDOCS_ALGOLIA_API_KEY,
+        indexName: HDOCS_ALGOLIA_INDEX,
         inputSelector: '#search_element',
         transformData: hdocs.transformSearchData,
         debug: false
@@ -26,6 +29,30 @@ window.hdocs = (function () {
       hdocs.setExternalLinks();
       hdocs.setupIntercom();
       hdocs.setupGraphiQL();
+      hdocs.newsletterForm();
+    },
+    newsletterForm: function () {
+      const searchParams = new URLSearchParams(window.location.search);
+      const searchAliId = searchParams.get("aliId");
+      var marketoForm = document.getElementById("mktoForm_1011");
+      var marketoSuccess = document.getElementById("marketo-success");
+      if (searchAliId || searchAliId === '') {
+        marketoForm.classList.add('hide');
+        marketoSuccess.classList.remove('hide');
+        marketoSuccess.scrollIntoView({ behavior: "smooth", block: "start", inline: "start" });
+      } else {
+        marketoForm.classList.remove('hide');
+        marketoSuccess.classList.add('hide');
+      }
+    },
+    trackGA: function (label, action) {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: 'Click Events',
+        category: 'Docs Custom',
+        action: action || 'Link Click',
+        label: label
+      })
     },
     toggleMenu: function () {
       var x = document.getElementById("navbar")
@@ -34,6 +61,10 @@ window.hdocs = (function () {
       } else {
         x.className = "topnav"
       }
+    },
+    closeBanner: function() {
+      var banner = document.getElementById("banner-stripe");
+      banner.className += " hide";
     },
     request: function (url, data, type) {
       return new Promise(function (resolve, reject) {
@@ -96,7 +127,7 @@ window.hdocs = (function () {
       }
     },
     setExternalLinks: function () {
-      Array.from(document.getElementsByClassName('.external')).forEach(function (el) { el.setAttribute('target', '_blank') });
+      Array.from(document.getElementsByClassName('external')).forEach(function (el) { el.setAttribute('target', '_blank') });
     },
     setupIntercom: function () {
       window.intercomSettings = {

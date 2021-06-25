@@ -18,7 +18,7 @@ const {
   isScalarType,
 } = require('graphql');
 const { camelize } = require('inflection');
-import { getPersistedDerivedAction } from '../lsUtils';
+import { getPersistedDerivedAction } from '../utils';
 import requestAction from '../../../../utils/requestAction';
 import requestActionPlain from '../../../../utils/requestActionPlain';
 

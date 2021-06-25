@@ -1,90 +1,123 @@
 package database
 
-import "sort"
+import (
+	"sort"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+)
 
 // Migrations wraps Migration and has an internal index
 // to keep track of Migration order in database.
 type Migrations struct {
-	index uint64Slice
+	index migrationVersions
 }
 
 func NewMigrations() *Migrations {
 	return &Migrations{
-		index: make(uint64Slice, 0),
+		index: make(migrationVersions, 0),
 	}
 }
 
-func (i *Migrations) Append(version uint64) {
-	if i.findPos(version) > 0 {
+func (m *Migrations) Append(migrationVersion MigrationVersion) {
+	if m.findPos(migrationVersion.Version) > 0 {
 		return
 	}
-	i.index = append(i.index, version)
-	sort.Sort(i.index)
+	m.index = append(m.index, migrationVersion)
+
+	sort.Slice(m.index, func(i, j int) bool {
+		return m.index[i].Version < m.index[j].Version
+	})
+
 }
 
-func (i *Migrations) First() (version uint64, ok bool) {
-	if len(i.index) == 0 {
-		return 0, false
+func (m *Migrations) First() (migrationVersion *MigrationVersion, ok bool) {
+	if len(m.index) == 0 {
+		return nil, false
 	}
-	return i.index[0], true
+	return &m.index[0], true
 }
 
-func (i *Migrations) Last() (uint64, bool) {
-	if len(i.index) == 0 {
-		return 0, false
+func (m *Migrations) Last() (*MigrationVersion, bool) {
+	if len(m.index) == 0 {
+		return nil, false
 	}
 
-	return i.index[len(i.index)-1], true
+	return &m.index[len(m.index)-1], true
 }
 
-func (i *Migrations) Prev(version uint64) (prevVersion uint64, ok bool) {
-	pos := i.findPos(version)
-	if pos >= 1 && len(i.index) > pos-1 {
-		return i.index[pos-1], true
+func (m *Migrations) Prev(version uint64) (prevVersion *MigrationVersion, ok bool) {
+	pos := m.findPos(version)
+	if pos >= 1 && len(m.index) > pos-1 {
+		return &m.index[pos-1], true
 	}
-	return 0, false
+	return nil, false
 }
 
-func (i *Migrations) Next(version uint64) (nextVersion uint64, ok bool) {
-	pos := i.findPos(version)
-	if pos >= 0 && len(i.index) > pos+1 {
-		return i.index[pos+1], true
+func (m *Migrations) Next(version uint64) (migrationVersion *MigrationVersion, ok bool) {
+	pos := m.findPos(version)
+	if pos >= 0 && len(m.index) > pos+1 {
+		return &m.index[pos+1], true
 	}
-	return 0, false
+	return nil, false
 }
 
-func (i *Migrations) Read(version uint64) (ok bool) {
-	pos := i.findPos(version)
+func (m *Migrations) Read(version uint64) (ok bool) {
+	pos := m.findPos(version)
 	if pos >= 0 {
 		return true
 	}
 	return false
 }
 
-func (i *Migrations) findPos(version uint64) int {
-	if len(i.index) > 0 {
-		ix := i.index.Search(version)
-		if ix < len(i.index) && i.index[ix] == version {
+func (m *Migrations) findPos(version uint64) int {
+	if len(m.index) > 0 {
+		ix := m.index.Search(version)
+		if ix < len(m.index) && m.index[ix].Version == version {
 			return ix
 		}
 	}
 	return -1
 }
 
-type uint64Slice []uint64
+type MigrationVersion struct {
+	Version uint64
+	Dirty   bool
+}
 
-func (s uint64Slice) Len() int {
+type migrationVersions []MigrationVersion
+
+func (s migrationVersions) Len() int {
 	return len(s)
 }
 
-func (s uint64Slice) Swap(i, j int) {
+func (s migrationVersions) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
-func (s uint64Slice) Less(i, j int) bool {
-	return s[i] < s[j]
+func (s migrationVersions) Less(i, j int) bool {
+	return s[i].Version < s[j].Version
 }
 
-func (s uint64Slice) Search(x uint64) int {
-	return sort.Search(len(s), func(i int) bool { return s[i] >= x })
+func (s migrationVersions) Search(x uint64) int {
+	return sort.Search(len(s), func(i int) bool { return s[i].Version >= x })
+}
+
+type HasuraOpts struct {
+	HasMetadataV3 bool
+	SourceName    string
+	SourceKind    hasura.SourceKind
+
+	Client *hasura.Client
+
+	PGSourceOps         hasura.PGSourceOps
+	MSSQLSourceOps      hasura.MSSQLSourceOps
+	CitusSourceOps      hasura.CitusSourceOps
+	MetadataOps         hasura.CommonMetadataOperations
+	V2MetadataOps       hasura.V2CommonMetadataOperations
+	GenericQueryRequest hasura.GenericSend
+
+	MigrationsStateStore statestore.MigrationsStateStore
+	SettingsStateStore   statestore.SettingsStateStore
 }

@@ -28,7 +28,7 @@ import (
 	"syscall"
 	"unicode"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -40,7 +40,7 @@ func NewPluginsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	pluginsCmd := &cobra.Command{
 		Use:     "plugins",
 		Aliases: []string{"plugin"},
-		Short:   "Manage plugins for the cli",
+		Short:   "Manage plugins for the CLI",
 		Long: `Plugins can be installed to extend the functionality of Hasura CLI
 An index for all available plugins can be found at 
 https://github.com/hasura/cli-plugins-index

@@ -1,0 +1,12 @@
+type: bulk
+args:
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      create schema hge_tests
+        create table hge_tests.test_t1(
+            c1 int,
+            c2 text
+        );

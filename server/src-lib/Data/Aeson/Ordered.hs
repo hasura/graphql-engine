@@ -1,5 +1,4 @@
-{-# LANGUAGE CPP                #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE CPP #-}
 
 -- | A version of aeson that parses with key order preserved.
 --
@@ -16,8 +15,8 @@ module Data.Aeson.Ordered
   , decode
   , Data.Aeson.Ordered.toList
   , fromList
-  , object
   , asObject
+  , object
   , array
   , insert
   , delete
@@ -41,7 +40,6 @@ import qualified Data.ByteString.Lazy             as L
 import           Data.Data
 import           Data.Functor
 import qualified Data.HashMap.Strict              as Map
-import           Data.HashMap.Strict.InsOrd       (InsOrdHashMap)
 import qualified Data.HashMap.Strict.InsOrd       as OMap
 import           Data.Scientific
 import qualified Data.Text                        as T
@@ -180,7 +178,7 @@ fromOrdered v = case v of
   Bool boolean  -> J.Bool boolean
   Null          -> J.Null
 
-asObject :: Value -> Either Text Object
+asObject :: IsString s => Value -> Either s Object
 asObject = \case
   Object o -> Right o
   _        -> Left "expecting ordered object"

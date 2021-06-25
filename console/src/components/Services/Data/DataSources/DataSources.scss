@@ -1,0 +1,93 @@
+@import '../../../Common/Common.scss';
+
+.free_badge {
+  display: flex;
+  align-items: center;
+  background-color: #666666;
+  width: auto;
+  border-radius: 10px;
+  height: 20px;
+  padding: 8px;
+  font-size: 12px;
+  color: white;
+}
+
+.read_replicas_heading {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+// hr doesn't work well within flexbox and it's a known issue
+// See https://dev.to/alvaromontoro/the-disappearing-line-a-css-mystery-3e35
+.line_width {
+  width: 100%;
+}
+
+.add_button_styles {
+  width: 140px;
+}
+
+.read_replica_add_form {
+  width: 100%;
+  padding: 18px 12px;
+  background-color: white;
+  border: 1px solid rgba(207, 205, 205, 0.6);
+}
+
+.read_replica_action_bar {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.read_replica_list_item {
+  width: 125%;
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.remove_replica_btn {
+  margin-right: 8px;
+  color: rgb(214, 29, 29);
+}
+
+.color_green {
+  color: green;
+}
+
+.text_muted {
+  color: #999;
+}
+
+.certificates_message {
+  font-weight: 100 !important;
+}
+
+.connection_settings_input_layout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  input {
+    width: 20%;
+  }
+  select {
+    width: 20%;
+  }
+}
+
+.checkbox_margin_top {
+  input {
+    margin-top: 2px;
+  }
+}
+
+.knowMoreLink {
+  font-weight: 100;
+  padding-left: 5px;
+  font-size: small;
+}

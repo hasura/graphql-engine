@@ -9,7 +9,7 @@ const RawSqlButton = props => {
   const handleClick = e => {
     e.preventDefault();
 
-    dispatch(_push('/data/sql'));
+    dispatch(_push(`/data/sql`));
 
     dispatch({
       type: SET_SQL,
