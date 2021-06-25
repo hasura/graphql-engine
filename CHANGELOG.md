@@ -4,6 +4,7 @@
 (Add entries below in the order of server, console, cli, docs, others)
 
 - server: fix resetting metadata catalog version to 43 while initializing postgres source with v1.0 catalog
+- console: add pagination on rawsql results page (close #5002) (#5629)
 
 
 ## v2.0.1
