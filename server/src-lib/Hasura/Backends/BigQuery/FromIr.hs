@@ -8,8 +8,13 @@ module Hasura.Backends.BigQuery.FromIr
   , Error(..)
   , runFromIr
   , FromIr
+  , FromIrConfig(..)
+  , defaultFromIrConfig
+  , bigQuerySourceConfigToFromIrConfig
+  , Top(..) -- Re-export for FromIrConfig.
   ) where
 
+import           Hasura.Backends.BigQuery.Source (BigQuerySourceConfig(..))
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                      as HM
@@ -88,8 +93,27 @@ instance Show Error where
 -- setting the current entity that a given field name refers to. See
 -- @fromPGCol@.
 newtype FromIr a = FromIr
-  { unFromIr :: StateT (Map Text Int) (Validate (NonEmpty Error)) a
+  { unFromIr :: ReaderT FromIrReader (StateT FromIrState (Validate (NonEmpty Error))) a
   } deriving (Functor, Applicative, Monad, MonadValidate (NonEmpty Error))
+
+data FromIrState = FromIrState
+  { indices :: !(Map Text Int)
+  }
+
+data FromIrReader = FromIrReader
+  { config :: !FromIrConfig
+  }
+
+-- | Config values for the from-IR translator.
+data FromIrConfig = FromIrConfig
+  { globalSelectLimit :: !Top
+    -- ^ Applies globally to all selects, and may be reduced to
+    -- something even smaller by permission/user args.
+  }
+
+-- | A default config.
+defaultFromIrConfig :: FromIrConfig
+defaultFromIrConfig = FromIrConfig {globalSelectLimit = NoTop}
 
 data StringifyNumbers
   = StringifyNumbers
@@ -99,8 +123,15 @@ data StringifyNumbers
 --------------------------------------------------------------------------------
 -- Runners
 
-runFromIr :: FromIr a -> Validate (NonEmpty Error) a
-runFromIr fromIr = evalStateT (unFromIr fromIr) mempty
+runFromIr :: FromIrConfig -> FromIr a -> Validate (NonEmpty Error) a
+runFromIr config fromIr =
+  evalStateT
+    (runReaderT (unFromIr fromIr) (FromIrReader {config}))
+    (FromIrState {indices = mempty})
+
+bigQuerySourceConfigToFromIrConfig :: BigQuerySourceConfig -> FromIrConfig
+bigQuerySourceConfigToFromIrConfig BigQuerySourceConfig {_scGlobalSelectLimit} =
+  FromIrConfig {globalSelectLimit = Top _scGlobalSelectLimit}
 
 --------------------------------------------------------------------------------
 -- Similar rendition of old API
@@ -158,11 +189,13 @@ fromSelectRows annSelectG = do
     case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
       Nothing -> refute (pure NoProjectionFields)
       Just ne -> pure ne
+  globalTop <- getGlobalTop
   pure
     Select
       {selectCardinality = Many, selectFinalWantedFields = pure (fieldTextNames fields),  selectGroupBy = mempty
       , selectOrderBy = argsOrderBy
-      , selectTop = permissionBasedTop <> argsTop
+      -- We DO APPLY the global top here, because this pulls down all rows.
+      , selectTop = globalTop <> permissionBasedTop <> argsTop
       , selectProjections
       , selectFrom
       , selectJoins = argsJoins <> mapMaybe fieldSourceJoin fieldSources
@@ -626,6 +659,7 @@ fromTableAggregateFieldG args permissionBasedTop stringifyNumbers (Rql.FieldName
                (concatMap (toList . fieldSourceProjections) fieldSources) of
           Nothing -> refute (pure NoProjectionFields)
           Just ne -> pure ne
+      globalTop <- lift getGlobalTop
       pure
         (ArrayAggFieldSource
            Aliased
@@ -633,7 +667,7 @@ fromTableAggregateFieldG args permissionBasedTop stringifyNumbers (Rql.FieldName
                  ArrayAgg
                    { arrayAggProjections
                    , arrayAggOrderBy = argsOrderBy args
-                   , arrayAggTop = argsTop args <> permissionBasedTop
+                   , arrayAggTop = globalTop <> argsTop args <> permissionBasedTop
                    }
              , aliasedAlias = name
              })
@@ -1081,6 +1115,8 @@ fromArrayRelationSelectG annRelationSelectG = do
                                (selectProjections select)
                          , arrayAggOrderBy = Nothing
                          , arrayAggTop = selectTop select
+                           -- The sub-select takes care of caring about global top.
+                           --
                            -- This handles the LIMIT need.
                          }
                    , aliasedAlias = aggFieldName
@@ -1312,8 +1348,11 @@ data NameTemplate
 
 generateEntityAlias :: NameTemplate -> FromIr EntityAlias
 generateEntityAlias template = do
-  FromIr (modify' (M.insertWith (+) prefix start))
-  i <- FromIr get
+  FromIr
+    (modify'
+       (\FromIrState {..} ->
+          FromIrState {indices = M.insertWith (+) prefix start indices, ..}))
+  i <- FromIr (gets indices)
   pure (EntityAlias (prefix <> tshow (fromMaybe start (M.lookup prefix i))))
   where
     start = 1
@@ -1336,3 +1375,13 @@ fieldTextNames = fmap (\(Rql.FieldName name, _) -> name)
 
 unEntityAlias :: EntityAlias -> Text
 unEntityAlias (EntityAlias t) = t
+
+--------------------------------------------------------------------------------
+-- Global limit support
+
+getGlobalTop :: FromIr Top
+getGlobalTop =
+  FromIr
+    (asks
+       (\FromIrReader {config = FromIrConfig {globalSelectLimit}} ->
+          globalSelectLimit))

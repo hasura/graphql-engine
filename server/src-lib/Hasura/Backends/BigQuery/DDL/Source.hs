@@ -9,9 +9,12 @@ where
 
 import           Hasura.Prelude
 
+import qualified Data.ByteString.Lazy                as L
 import qualified Data.Environment                    as Env
 import qualified Data.HashMap.Strict                 as HM
 import qualified Data.Text                           as T
+import qualified Data.Aeson                          as J
+import qualified Data.Text.Encoding                  as T
 
 import           Control.Concurrent.MVar             (newMVar)
 import           Data.Time.Clock.System
@@ -41,6 +44,14 @@ resolveSourceConfig _name BigQueryConnSourceConfig{..} = runExceptT $ do
     Right _scServiceAccount -> do
       _scDatasets <- resolveConfigurationInputs env _cscDatasets
       _scProjectId <- resolveConfigurationInput env _cscProjectId
+      _scGlobalSelectLimit <- do
+        str <- resolveConfigurationInput env _cscGlobalSelectLimit
+        -- This works around the inconsistency between JSON and
+        -- environment variables. The config handling module should be
+        -- reworked to handle non-text values better.
+        case readMaybe (T.unpack str) <|> J.decode (L.fromStrict (T.encodeUtf8 str)) of
+          Nothing -> throw400 Unexpected $ "Need integer global limit"
+          Just i -> pure i
       trMVar <- liftIO $ newMVar Nothing -- `runBigQuery` initializes the token
       pure BigQuerySourceConfig
              { _scAccessTokenMVar = trMVar

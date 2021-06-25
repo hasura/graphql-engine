@@ -13,6 +13,7 @@ import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified Hasura.Backends.BigQuery.DataLoader.Execute as DataLoader
 import qualified Hasura.Backends.BigQuery.DataLoader.Plan    as DataLoader
 import qualified Hasura.Backends.BigQuery.Types              as BigQuery
+import qualified Hasura.Backends.BigQuery.FromIr             as BigQuery
 import qualified Hasura.Base.Error                           as E
 import qualified Hasura.SQL.AnyBackend                       as AB
 import qualified Hasura.Tracing                              as Tracing
@@ -53,7 +54,7 @@ bqDBQueryPlan
   -> QueryDB 'BigQuery (Const Void) (UnpreparedValue 'BigQuery)
   -> m (DBStepInfo 'BigQuery)
 bqDBQueryPlan userInfo sourceName sourceConfig qrf = do
-  select <- planNoPlan userInfo qrf
+  select <- planNoPlan (BigQuery.bigQuerySourceConfigToFromIrConfig sourceConfig) userInfo qrf
   let (!headAndTail, !plannedActionsList) =
         DataLoader.runPlan
           (DataLoader.planSelectHeadAndTail Nothing Nothing select)
@@ -130,7 +131,7 @@ bqDBQueryExplain
   -> QueryDB 'BigQuery (Const Void) (UnpreparedValue 'BigQuery)
   -> m (AB.AnyBackend DBStepInfo)
 bqDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
-  actionsForest <- planToForest userInfo qrf
+  actionsForest <- planToForest (BigQuery.bigQuerySourceConfigToFromIrConfig sourceConfig) userInfo qrf
   pure
     $ AB.mkAnyBackend
     $ DBStepInfo @'BigQuery sourceName sourceConfig Nothing

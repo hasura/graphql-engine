@@ -9,19 +9,17 @@ import           Control.Concurrent.MVar
 import           Control.DeepSeq
 import qualified Crypto.PubKey.RSA.Types as Cry
 import qualified Data.Aeson as J
+import qualified Data.Text as T
 import qualified Data.Aeson.Casing as J
 import qualified Data.Aeson.TH as J
 import qualified Data.ByteString.Lazy as BL
 import           Data.Hashable (hashWithSalt)
 import qualified Data.HashMap.Strict as HM
-import           Data.Text (pack)
 import qualified Data.Text.Encoding as TE
 import qualified Data.X509 as X509
 import qualified Data.X509.Memory as X509
 import           Hasura.Incremental (Cacheable (..))
 import           Hasura.Prelude
-import qualified System.Environment as SE (getEnv)
-import           System.FilePath (isRelative)
 import           System.IO.Unsafe (unsafePerformIO)
 
 
@@ -143,7 +141,8 @@ instance J.FromJSON ConfigurationInput where
   parseJSON = \case
     J.Object o -> FromEnv <$> o J..: "from_env"
     s@(J.String _) -> FromYaml <$> J.parseJSON s
-    _ -> fail "one of string or object must be provided"
+    (J.Number n) -> FromYaml <$> J.parseJSON (J.String (T.pack (show n)))
+    _ -> fail "one of string or number or object must be provided"
 
 
 data BigQueryConnSourceConfig
@@ -151,6 +150,7 @@ data BigQueryConnSourceConfig
   { _cscServiceAccount :: !(ConfigurationJSON ServiceAccount)
   , _cscDatasets :: !ConfigurationInputs
   , _cscProjectId :: !ConfigurationInput -- this is part of service-account.json, but we put it here on purpose
+  , _cscGlobalSelectLimit :: !ConfigurationInput
   } deriving (Eq, Generic, NFData)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''BigQueryConnSourceConfig)
 deriving instance Show BigQueryConnSourceConfig
@@ -167,6 +167,7 @@ data BigQuerySourceConfig
   , _scDatasets :: ![Text]
   , _scProjectId :: !Text -- this is part of service-account.json, but we put it here on purpose
   , _scAccessTokenMVar :: !(MVar (Maybe TokenResp))
+  , _scGlobalSelectLimit :: !Int
   } deriving (Eq, Generic, NFData)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase){J.omitNothingFields=True} ''BigQuerySourceConfig)
 deriving instance Show BigQuerySourceConfig
@@ -187,20 +188,3 @@ instance Hashable (MVar (Maybe TokenResp)) where
   hashWithSalt i r = hashWithSalt i (unsafePerformIO $ readMVar r)
 instance Arbitrary (MVar (Maybe TokenResp)) where
   arbitrary = genericArbitrary @(Maybe TokenResp) <&> (unsafePerformIO . newMVar)
-
-
--- | for testing
-getBigQuerySourceConfigEnv :: IO BigQuerySourceConfig
-getBigQuerySourceConfigEnv = do
-  _scServiceAccountFilePath <- getEnvUnline _safpEnvKey
-  if isRelative _scServiceAccountFilePath
-    then error $ _safpEnvKey <> " needs to be an absolute file-path"
-    else do
-      _scDatasets <- pure . pack <$> getEnvUnline "HASURA_BIGQUERY_DATASET"
-      _scProjectId <- pack <$> getEnvUnline "HASURA_BIGQUERY_PROJECT_ID"
-      _scServiceAccount :: ServiceAccount <- either error id . J.eitherDecode' <$> BL.readFile _scServiceAccountFilePath
-      _scAccessTokenMVar <- newMVar Nothing
-      pure BigQuerySourceConfig {..}
-  where
-    _safpEnvKey = "HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE_PATH"
-    getEnvUnline key = fmap (concat . take 1 . lines) (SE.getEnv key)
