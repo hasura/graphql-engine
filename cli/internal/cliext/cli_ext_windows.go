@@ -1,8 +1,9 @@
 // +build windows
+// +build amd64
 
 package cliext
 
-import _ "embed"
+import "embed"
 
-//go:embed bin/cli-ext-hasura-win.exe
-var cliExtFile []byte
+//go:embed static-bin/windows/amd64/*
+var cliExtFS embed.FS

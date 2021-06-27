@@ -79,6 +79,8 @@ func init() {
 	f.BoolVar(&ec.SkipUpdateCheck, "skip-update-check", false, "skip automatic update check on command execution")
 	f.BoolVar(&ec.NoColor, "no-color", false, "do not colorize output (default: false)")
 	f.StringVar(&ec.Envfile, "envfile", ".env", ".env filename to load ENV vars from")
+	f.StringVar(&ec.CliExtSourceBinPath, "cli-ext-path", "", "path to cli-ext binary")
+	f.MarkHidden("cli-ext-path")
 }
 
 // NewDefaultHasuraCommand creates the `hasura` command with default arguments
