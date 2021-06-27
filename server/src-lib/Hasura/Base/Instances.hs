@@ -88,7 +88,8 @@ instance J.FromJSON C.CronSchedule where
 instance J.ToJSON C.CronSchedule where
   toJSON = J.String . C.serializeCronSchedule
 
-instance J.ToJSONKey Void
+instance J.ToJSONKey   Void
+instance J.FromJSONKey Void
 
 
 --------------------------------------------------------------------------------

@@ -32,7 +32,7 @@ import           Language.Haskell.TH
 import           Hasura.SQL.Backend
 
 
-type BackendConstructor = [Name]
+type BackendConstructor = NonEmpty Name
 
 -- | Inspects the 'BackendType' to produce a list of its constructors in the 'Q' monad. Each
 -- constructor is represented as a list of names, to include the arguments, if any.
@@ -47,7 +47,7 @@ backendConstructors = do
       ConT argName <- pure arg
       TyConI (DataD _ _ _ _ argCons _) <- reify argName
       pure [argCon | NormalC argCon _ <- argCons]
-    pure $ map (name :) $ sequenceA argsConstructors
+    pure $ map (name :|) $ sequenceA argsConstructors
 
 -- | Associates a value in the 'Q' monad to each backend @Name@.
 forEachBackend :: (BackendConstructor -> Q a) -> Q [a]

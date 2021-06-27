@@ -266,8 +266,6 @@ traverseAnnOrderByItem f =
 
 -- Fields
 
-type Fields a = [(FieldName, a)]
-
 data AnnFieldG (b :: BackendType) (r :: BackendType -> Type) v
   = AFColumn !(AnnColumnField b v)
   | AFObjectRelation !(ObjectRelationSelectG b r v)
@@ -277,6 +275,9 @@ data AnnFieldG (b :: BackendType) (r :: BackendType -> Type) v
   | AFDBRemote !(AB.AnyBackend (DBRemoteSelect b r))
   | AFNodeId !(XRelay b) !(TableName b) !(PrimaryKeyColumns b)
   | AFExpression !Text
+
+type Fields a = [(FieldName, a)]
+type AnnFieldsG b r v = Fields (AnnFieldG b r v)
 
 type AnnField  b = AnnFieldG  b (Const Void) (SQLExpression b)
 type AnnFields b = AnnFieldsG b (Const Void) (SQLExpression b)
@@ -344,7 +345,6 @@ type TableAggregateFieldsG b r v = Fields (TableAggregateFieldG b r v)
 
 type ColumnFields b    = Fields (ColFld b)
 type AggregateFields b = Fields (AggregateField b)
-type AnnFieldsG b r v  = Fields (AnnFieldG b r v)
 
 traverseTableAggregateField
   :: (Applicative f, Backend backend)
@@ -388,18 +388,9 @@ traverseConnectionField
   -> ConnectionField backend r a
   -> f (ConnectionField backend r b)
 traverseConnectionField f = \case
-  ConnectionTypename t -> pure $ ConnectionTypename t
+  ConnectionTypename t      -> pure $ ConnectionTypename t
   ConnectionPageInfo fields -> pure $ ConnectionPageInfo fields
-  ConnectionEdges fields ->
-    ConnectionEdges <$> traverse (traverse (traverseEdgeField f)) fields
-data ArgumentExp (b :: BackendType) a
-  = AETableRow !(Maybe (Identifier b)) -- ^ table row accessor
-  | AESession !a -- ^ JSON/JSONB hasura session variable object
-  | AEInput !a
-  deriving (Functor, Foldable, Traversable, Generic)
-deriving instance (Backend b, Show a) => Show (ArgumentExp b a)
-deriving instance (Backend b, Eq   a) => Eq   (ArgumentExp b a)
-instance (Backend b, Hashable v) => Hashable (ArgumentExp b v)
+  ConnectionEdges fields    -> ConnectionEdges <$> traverse (traverse (traverseEdgeField f)) fields
 
 traverseEdgeField
   :: (Applicative f, Backend backend)
@@ -612,6 +603,15 @@ data FunctionArgsExpG a
   , _faeNamed      :: !(HM.HashMap Text a)
   } deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 instance (Hashable a) => Hashable (FunctionArgsExpG a)
+
+data ArgumentExp (b :: BackendType) a
+  = AETableRow !(Maybe (Identifier b)) -- ^ table row accessor
+  | AESession !a -- ^ JSON/JSONB hasura session variable object
+  | AEInput !a
+  deriving (Functor, Foldable, Traversable, Generic)
+deriving instance (Backend b, Show a) => Show (ArgumentExp b a)
+deriving instance (Backend b, Eq   a) => Eq   (ArgumentExp b a)
+instance (Backend b, Hashable v) => Hashable (ArgumentExp b v)
 
 type FunctionArgsExpTableRow b v = FunctionArgsExpG (ArgumentExp b v)
 type FunctionArgExp          b   = FunctionArgsExpG (SQLExpression b)

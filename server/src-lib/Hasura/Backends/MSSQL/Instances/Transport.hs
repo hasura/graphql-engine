@@ -61,7 +61,7 @@ runQuery
   -> Maybe (PreparedQuery 'MSSQL)
   -> m (DiffTime, EncJSON)
   -- ^ Also return the time spent in the PG query; for telemetry.
-runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql =  do
+runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql = do
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
   withElapsedTime
     $ trace ("MSSQL Query for root field " <>> fieldName)

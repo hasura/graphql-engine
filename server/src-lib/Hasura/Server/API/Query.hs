@@ -383,8 +383,8 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQTrackFunction q               -> runTrackFunc q
       RQUntrackFunction q             -> runUntrackFunc q
 
-      RQCreateObjectRelationship q    -> runCreateRelationship ObjRel q
-      RQCreateArrayRelationship  q    -> runCreateRelationship ArrRel q
+      RQCreateObjectRelationship q    -> runCreateRelationship ObjRel $ unCreateObjRel q
+      RQCreateArrayRelationship  q    -> runCreateRelationship ArrRel $ unCreateArrRel q
       RQDropRelationship  q           -> runDropRel q
       RQSetRelationshipComment  q     -> runSetRelComment q
       RQRenameRelationship q          -> runRenameRel q

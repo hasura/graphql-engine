@@ -58,6 +58,7 @@ $(concat <$> forEachBackend \b -> do
   [d| instance HasTag $promotedName where backendTag = $tagName |]
  )
 
+
 -- | How to convert back from a tag to a runtime value. This function
 -- is generated with Template Haskell for each 'Backend'. The case
 -- switch looks like this:
