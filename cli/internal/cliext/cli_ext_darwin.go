@@ -1,8 +1,9 @@
 // +build darwin
+// +build amd64
 
 package cliext
 
-import _ "embed"
+import "embed"
 
-//go:embed bin/cli-ext-hasura-macos
-var cliExtFile []byte
+//go:embed static-bin/darwin/amd64/*
+var cliExtFS embed.FS

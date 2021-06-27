@@ -87,6 +87,12 @@ func WithEndpoint(endpoint string) ProjectMetadataOption {
 	}
 }
 
+func WithCliExtPath(path string) ProjectMetadataOption {
+	return func(m *ProjectMetadata) {
+		m.ec.CliExtSourceBinPath = path
+	}
+}
+
 func NewProjectMetadata(projectDirectory string, opts ...ProjectMetadataOption) (*ProjectMetadata, error) {
 	ec := cli.NewExecutionContext()
 	ec.ExecutionDirectory = projectDirectory
