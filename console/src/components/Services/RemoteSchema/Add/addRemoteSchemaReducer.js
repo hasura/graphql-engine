@@ -2,7 +2,6 @@ import { addState } from '../state';
 import { generateHeaderSyms } from '../../../Common/Layout/ReusableHeader/HeaderReducer';
 import { makeRequest } from '../Actions';
 import { appPrefix } from '../constants';
-import globals from '../../../../Globals';
 import { clearIntrospectionSchemaCache } from '../graphqlUtils';
 import { exportMetadata } from '../../../../metadata/actions';
 import { getRemoteSchemaSelector } from '../../../../metadata/selector';
@@ -15,7 +14,7 @@ import {
 } from '../../../../metadata/queryUtils';
 import _push from '../../Data/push';
 
-const prefixUrl = globals.urlPrefix + appPrefix;
+const prefixUrl = appPrefix;
 
 const MANUAL_URL_CHANGED = '@addRemoteSchema/MANUAL_URL_CHANGED';
 const ENV_URL_CHANGED = '@addRemoteSchema/ENV_URL_CHANGED';
