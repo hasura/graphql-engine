@@ -22,25 +22,23 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                                  as J
-import qualified Data.HashMap.Strict.InsOrd                  as OMap
-import qualified Data.Text                                   as T
-import qualified Data.Text.Lazy                              as LT
-import qualified Data.Vector                                 as V
+import qualified Data.Aeson                       as J
+import qualified Data.HashMap.Strict.InsOrd       as OMap
+import qualified Data.Text                        as T
+import qualified Data.Text.Lazy                   as LT
+import qualified Data.Vector                      as V
 
-import           Data.Aeson.TH                               (deriveJSON)
-import           Data.Aeson.Text                             (encodeToLazyText)
+import           Data.Aeson.TH                    (deriveJSON)
+import           Data.Aeson.Text                  (encodeToLazyText)
 
-import qualified Hasura.Backends.BigQuery.DataLoader.Execute as Execute
-import qualified Hasura.Backends.BigQuery.DataLoader.Plan    as Plan
-import qualified Hasura.Backends.BigQuery.Types              as BigQuery
+import qualified Hasura.Backends.BigQuery.Execute as Execute
+import qualified Hasura.Backends.BigQuery.Types   as BigQuery
 
-import           Hasura.Backends.BigQuery.Source             (BigQuerySourceConfig (..))
+import           Hasura.Backends.BigQuery.Source  (BigQuerySourceConfig (..))
 import           Hasura.Base.Error
 import           Hasura.EncJSON
-import           Hasura.RQL.DDL.Schema                       (RunSQLRes (..))
-import           Hasura.RQL.Types                            (CacheRWM, MetadataM, SourceName,
-                                                              askSourceConfig)
+import           Hasura.RQL.DDL.Schema            (RunSQLRes (..))
+import           Hasura.RQL.Types                 (CacheRWM, MetadataM, SourceName, askSourceConfig)
 import           Hasura.SQL.Backend
 
 
@@ -95,7 +93,7 @@ recordSetAsHeaderAndRows Execute.RecordSet {rows} = J.toJSON (thead : tbody)
       case rows V.!? 0 of
         Nothing -> []
         Just row ->
-          map (J.toJSON . (coerce :: Plan.FieldName -> Text)) (OMap.keys row)
+          map (J.toJSON . (coerce :: Execute.FieldNameText -> Text)) (OMap.keys row)
     tbody :: [[J.Value]]
     tbody = map (\row -> map J.toJSON (OMap.elems row)) (toList rows)
 
@@ -104,4 +102,4 @@ recordSetAsSchema rs@(Execute.RecordSet {rows}) =
   recordSetAsHeaderAndRows $
     rs { Execute.rows = OMap.adjust
                   (Execute.TextOutputValue . LT.toStrict . encodeToLazyText . J.toJSON)
-                  (Plan.FieldName "columns") <$> rows }
+                  (Execute.FieldNameText "columns") <$> rows }

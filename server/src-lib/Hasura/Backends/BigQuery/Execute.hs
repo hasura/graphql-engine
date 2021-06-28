@@ -2,10 +2,10 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE ExtendedDefaultRules  #-}
 
--- | Execute the plan given from .Plan.
+-- | Execute a Select query against the BigQuery REST API.
 
-module Hasura.Backends.BigQuery.DataLoader.Execute
-  ( execute
+module Hasura.Backends.BigQuery.Execute
+  ( executeSelect
   , runExecute
   , streamBigQuery
   , BigQuery(..)
@@ -13,6 +13,7 @@ module Hasura.Backends.BigQuery.DataLoader.Execute
   , RecordSet(..)
   , Execute
   , Value(..)
+  , FieldNameText(..)
   ) where
 
 import           Control.Applicative
@@ -20,30 +21,24 @@ import           Control.Concurrent
 import           Control.Exception.Safe
 import           Control.Monad.Except
 import           Control.Monad.Reader
-import           Data.Aeson                               ((.:), (.:?), (.=))
-import qualified Data.Aeson                               as Aeson
-import qualified Data.Aeson.Types                         as Aeson
-import qualified Data.ByteString.Lazy                     as L
+import           Data.Aeson                          ((.:), (.:?), (.=))
+import qualified Data.Aeson                          as Aeson
+import qualified Data.Aeson.Types                    as Aeson
+import qualified Data.ByteString.Lazy                as L
 import           Data.Foldable
-import qualified Data.HashMap.Strict                      as HM
-import qualified Data.HashMap.Strict.InsOrd               as OMap
-import           Data.IORef
+import qualified Data.HashMap.Strict.InsOrd          as OMap
 import           Data.Maybe
-import qualified Data.Text                                as T
-import qualified Data.Text.Lazy                           as LT
-import qualified Data.Text.Lazy.Builder                   as LT
-import           Data.Tree
-import           Data.Tuple
-import           Data.Vector                              (Vector)
-import qualified Data.Vector                              as V
+import qualified Data.Text                           as T
+import qualified Data.Text.Lazy                      as LT
+import qualified Data.Text.Lazy.Builder              as LT
+import           Data.Vector                         (Vector)
+import qualified Data.Vector                         as V
 import           GHC.Generics
 import           Hasura.Backends.BigQuery.Connection
-import qualified Hasura.Backends.BigQuery.DataLoader.Plan as Plan
-import qualified Hasura.Backends.BigQuery.DataLoader.Plan as Select (Select (..))
 import           Hasura.Backends.BigQuery.Source
-import qualified Hasura.Backends.BigQuery.ToQuery         as ToQuery
-import           Hasura.Backends.BigQuery.Types           as BigQuery
-import           Hasura.Prelude                           hiding (head, state, tail)
+import qualified Hasura.Backends.BigQuery.ToQuery    as ToQuery
+import           Hasura.Backends.BigQuery.Types      as BigQuery
+import           Hasura.Prelude                      hiding (head, state, tail)
 import           Network.HTTP.Simple
 import           Network.HTTP.Types
 
@@ -56,10 +51,15 @@ import           Network.HTTP.Types
 -- we choose a naive implementation in the interest of getting other
 -- work done.
 data RecordSet = RecordSet
-  { origin       :: !(Maybe Plan.PlannedAction)
-  , rows         :: !(Vector (InsOrdHashMap Plan.FieldName OutputValue))
+  { rows         :: !(Vector (InsOrdHashMap FieldNameText OutputValue))
   , wantedFields :: !(Maybe [Text])
   } deriving (Show)
+
+-- | As opposed to BigQuery.FieldName which is a qualified name, this
+-- is just the unqualified text name itself.
+newtype FieldNameText =
+  FieldNameText Text
+  deriving (Show, Ord, Eq, Hashable, Aeson.FromJSON, Aeson.ToJSONKey, IsString)
 
 data OutputValue
   = DecimalOutputValue !Decimal
@@ -75,7 +75,7 @@ data OutputValue
   | BytesOutputValue !Base64
   | BoolOutputValue !Bool
   | ArrayOutputValue !(Vector OutputValue)
-  | RecordOutputValue !(InsOrdHashMap Plan.FieldName OutputValue)
+  | RecordOutputValue !(InsOrdHashMap FieldNameText OutputValue)
   | NullOutputValue -- TODO: Consider implications.
   deriving (Show, Eq, Generic)
 instance Hashable OutputValue
@@ -98,8 +98,7 @@ instance Aeson.ToJSON OutputValue where
     RecordOutputValue !record -> Aeson.toJSON record
 
 data ExecuteReader = ExecuteReader
-  { recordSets  :: IORef (InsOrdHashMap Plan.Ref RecordSet)
-  , credentials :: !BigQuerySourceConfig
+  { credentials :: !BigQuerySourceConfig
   }
 
 data ExecuteProblem
@@ -109,11 +108,7 @@ data ExecuteProblem
   | GetJobResultsProblem SomeException
   | RESTRequestNonOK Status Text
   | CreateQueryJobProblem SomeException
-  | JoinProblem ExecuteProblem
-  | UnacceptableJoinProvenanceBUG JoinProvenance
-  | MissingRecordSetBUG Plan.Ref
   | ExecuteRunBigQueryProblem BigQueryProblem
-  | JoinsNoLongerGeneratedBUG
   deriving (Show)
 
 -- | Execute monad; as queries are performed, the record sets are
@@ -161,7 +156,7 @@ newtype ParameterName =
   ParameterName LT.Text deriving (Show, Aeson.ToJSON, Ord, Eq, Hashable)
 
 data BigQueryField = BigQueryField
-  { name :: !Plan.FieldName
+  { name :: !FieldNameText
   , typ  :: !BigQueryFieldType
   , mode :: !Mode
   } deriving (Show)
@@ -205,376 +200,46 @@ streamDelaySeconds = 1
 runExecute ::
      MonadIO m
   => BigQuerySourceConfig
-  -> Plan.HeadAndTail
-  -> Execute a
+  -> Execute RecordSet
   -> m (Either ExecuteProblem RecordSet)
-runExecute credentials headAndTail m = do
-  recordSets <- liftIO (newIORef mempty)
+runExecute credentials m =
   liftIO
-    (runExceptT (runReaderT
-        (unExecute (m >> getFinalRecordSet headAndTail))
-        (ExecuteReader {credentials, recordSets})))
+    (runExceptT
+       (runReaderT
+          (unExecute (m >>= getFinalRecordSet))
+          (ExecuteReader {credentials})))
 
-execute :: Forest Plan.PlannedAction -> Execute ()
-execute = traverse_ (traverse_ executePlannedAction)
+executeSelect :: Select -> Execute RecordSet
+executeSelect select = do
+  credentials <- asks credentials
+  recordSet <-
+    streamBigQuery credentials (selectToBigQuery select) >>= liftEither
+  pure recordSet {wantedFields = selectFinalWantedFields select}
 
-executePlannedAction :: Plan.PlannedAction -> Execute ()
-executePlannedAction =
-  \case
-    Plan.PlannedAction {ref, action} -> do
-      recordSet <-
-        case action of
-          Plan.SelectAction select -> do
-            credentials <- asks credentials
-            relationshipIn <-
-              maybe
-                (pure [])
-                makeRelationshipIn
-                (Plan.selectRelationship select)
-            recordSet <-
-              streamBigQuery
-                credentials
-                (selectToBigQuery
-                   select
-                     { Plan.selectWhere =
-                         Plan.selectWhere select <> Where relationshipIn
-                     }) >>= liftEither
-            maybe
-              pure
-              unwrapAggs
-              (Plan.selectAggUnwrap select)
-              recordSet {wantedFields = Select.wantedFields select}
-          Plan.JoinAction {} -> do
-            throwError JoinsNoLongerGeneratedBUG
-            -- left <- getRecordSet leftRecordSet
-            -- right <- getRecordSet rightRecordSet
-            -- case joinProvenance of
-            --   {-ArrayJoinProvenance ->
-            --     case leftArrayJoin wantedFields joinFieldName joinOn left right of
-            --       Left problem    -> throwError (JoinProblem problem)
-            --       Right recordSet -> pure recordSet-}
-            --   {-ObjectJoinProvenance ->
-            --     case leftObjectJoin wantedFields joinFieldName joinOn left right of
-            --       Left problem    -> throwError (JoinProblem problem)
-            --       Right recordSet -> pure recordSet-}
-            --   p -> throwError (UnacceptableJoinProvenanceBUG p)
-      saveRecordSet ref recordSet
-
-unwrapAggs :: Text -> RecordSet -> Execute RecordSet
-unwrapAggs aggField recordSet =
+-- | This is needed to strip out unneeded fields (join keys) in the
+-- final query.  This is a relic of the data loader approach. A later
+-- improvement would be to update the FromIr code to explicitly
+-- reselect the query. But the purpose of this commit is to drop the
+-- dataloader code and not modify the from IR code which is more
+-- delicate.
+getFinalRecordSet :: RecordSet -> Execute RecordSet
+getFinalRecordSet recordSet =
   pure
-    (recordSet
-       { rows =
-           V.concatMap
-             (\row ->
-                let field = (Plan.FieldName aggField)
-                 in case OMap.lookup field row of
-                      Just (ArrayOutputValue subrows) -> do
-                        let row' = OMap.delete field row
-                        -- TODO: Be careful of using vector monad.
-                        RecordOutputValue subrow <- subrows
-                        pure (row' <> subrow)
-                      _ -> pure row)
-             (rows recordSet)
-       })
-
-makeRelationshipIn :: Plan.Relationship -> Execute [Expression]
-makeRelationshipIn Plan.Relationship {leftRecordSet, onFields, rightTable} = do
-  RecordSet {rows} <- getRecordSet leftRecordSet
-  let inExpressions =
-        map
-          (\(rightField, leftField) ->
-             InExpression
-               (ColumnExpression
-                  (planFieldNameToQueryFieldName rightTable rightField))
-               (ArrayValue
-                  (V.mapMaybe
-                     (lookupField' leftField >=> outputValueToValue)
-                     rows)))
-          onFields
-  pure inExpressions
-  where
-    lookupField' k row =
-      case OMap.lookup k row of
-        Nothing -> Nothing
-        Just x  -> Just x
-
-planFieldNameToQueryFieldName :: EntityAlias -> Plan.FieldName -> FieldName
-planFieldNameToQueryFieldName (EntityAlias fieldNameEntity) (Plan.FieldName fieldName) =
-  FieldName {fieldNameEntity, fieldName}
-
-outputValueToValue  :: OutputValue -> Maybe Value
-outputValueToValue =
-  \case
-    DecimalOutputValue i    -> pure (DecimalValue i)
-    BigDecimalOutputValue i -> pure (BigDecimalValue i)
-    IntegerOutputValue i    -> pure (IntegerValue i)
-    DateOutputValue i       -> pure (DateValue i)
-    TimeOutputValue i       -> pure (TimeValue i)
-    DatetimeOutputValue i   -> pure (DatetimeValue i)
-    TimestampOutputValue i  -> pure (TimestampValue i)
-    FloatOutputValue i      -> pure (FloatValue i)
-    GeographyOutputValue i  -> pure (GeographyValue i)
-    TextOutputValue i       -> pure (StringValue i)
-    BytesOutputValue i      -> pure (BytesValue i)
-    BoolOutputValue i       -> pure (BoolValue i)
-    ArrayOutputValue v      -> fmap ArrayValue (mapM outputValueToValue v)
-    RecordOutputValue {}    -> Nothing
-    NullOutputValue         -> Nothing
-
-saveRecordSet :: Plan.Ref -> RecordSet -> Execute ()
-saveRecordSet ref recordSet = do
-  recordSetsRef <- asks recordSets
-  liftIO (modifyIORef' recordSetsRef (OMap.insert ref recordSet))
-
-getRecordSet :: Plan.Ref -> Execute RecordSet
-getRecordSet ref = do
-  recordSetsRef <- asks recordSets
-  hash <- liftIO (readIORef recordSetsRef)
-  case OMap.lookup ref hash of
-    Nothing -> throwError (MissingRecordSetBUG ref)
-    Just re -> pure re
-
-getFinalRecordSet :: Plan.HeadAndTail -> Execute RecordSet
-getFinalRecordSet Plan.HeadAndTail {..} = do
-  headSet <- getRecordSet head
-  tailSet <-
-    if tail /= head
-      then getRecordSet tail
-      else pure headSet
-  pure
-    tailSet
+    recordSet
       { rows =
           fmap
             (\row ->
                OMap.filterWithKey
-                 (\(Plan.FieldName k) _ ->
-                    maybe True (elem k) (wantedFields headSet))
+                 (\(FieldNameText k) _ ->
+                    maybe True (elem k) (wantedFields recordSet))
                  row)
-            (rows tailSet)
+            (rows recordSet)
       }
-
---------------------------------------------------------------------------------
--- Array joins
-
-_leftArrayJoin ::
-     Maybe [Text]
-  -> Text
-  -> [(Plan.FieldName, Plan.FieldName)]
-  -> RecordSet
-  -> RecordSet
-  -> Either ExecuteProblem RecordSet
-_leftArrayJoin = leftArrayJoinViaIndex
-
--- | A naive, exponential reference implementation of a left join. It
--- serves as a trivial sample implementation for correctness checking
--- of more efficient ones.
-_leftArrayJoinReferenceImpl ::
-     Maybe [Text]
-  -> Text
-  -> [(Plan.FieldName, Plan.FieldName)]
-  -> RecordSet
-  -> RecordSet
-  -> Either ExecuteProblem RecordSet
-_leftArrayJoinReferenceImpl wantedFields joinAlias joinFields left right =
-  pure
-    RecordSet
-      { origin = Nothing
-      , wantedFields = Nothing
-      , rows =
-          V.fromList
-            [ joinArrayRows wantedFields joinAlias leftRow rightRows
-            | leftRow <- toList (rows left)
-            , let rightRows =
-                    V.fromList
-                      [ rightRow
-                      | rightRow <- toList (rows right)
-                      , not (null joinFields)
-                      , all
-                          (\(rightField, leftField) ->
-                             fromMaybe
-                               False
-                               (do leftValue <-
-                                     lookupField leftField leftRow
-                                   rightValue <-
-                                     lookupField rightField rightRow
-                                   pure (leftValue == rightValue)))
-                          joinFields
-                      ]
-            ]
-      }
-
--- | A more efficient left join implementation by indexing the
--- right-hand-side record set first.
-leftArrayJoinViaIndex ::
-     Maybe [Text]
-  -> Text
-  -> [(Plan.FieldName, Plan.FieldName)]
-  -> RecordSet
-  -> RecordSet
-  -> Either ExecuteProblem RecordSet
-leftArrayJoinViaIndex wantedFields joinAlias joinFields0 left right =
-  pure
-    RecordSet
-      { origin = Nothing
-      , wantedFields = Nothing
-      , rows =
-          V.mapMaybe
-            (\leftRow ->
-               let !key = makeLookupKey (map fst joinFields) leftRow
-                   !mrightRows = HM.lookup key rightIndex
-                in pure $!
-                   joinArrayRows
-                     wantedFields
-                     joinAlias
-                     leftRow
-                     (maybe mempty (V.fromList . toList) mrightRows))
-            (rows left)
-      }
-  where
-    !rightIndex = makeIndex joinFields (rows right)
-    -- Presently when querying artist { albums { .. } } the join fields come in this order:
-    -- [(FieldName "artist_other_id",FieldName "artist_self_id")]
-    -- Which is remote/local. We swap it to local/remote.
-    joinFields = fmap swap joinFields0
-
--- | Do a single pass over the right-hand-side set of rows of a left
--- join. For each set of key/value pairs used in the join, produce a
--- sequence of rows corresponding to it.
---
--- Also, the field names in the @HashMap Plan.FieldName OutputValue@
--- are the left-hand side. Meaning to do a lookup we just produce a
--- value with the left-hand-side's fields, then we have an O(log n)
--- index lookup.
---
--- We build up the sequence because concatenation is
--- O(log(min(n1,n2))) for a sequence.
-makeIndex ::
-     [(Plan.FieldName, Plan.FieldName)]
-  -> Vector (InsOrdHashMap Plan.FieldName OutputValue)
-  -> HashMap (HashMap Plan.FieldName OutputValue) (Seq (InsOrdHashMap Plan.FieldName OutputValue))
-makeIndex joinFields =
-  V.foldl'
-    (\hash row ->
-       let !key = makeIndexKey joinFields row
-        in HM.insertWith (flip (<>)) key (pure row) hash)
-    mempty
-
--- | Make a key for looking up a left-hand-side value from an index.
-makeLookupKey ::
-     [Plan.FieldName]
-  -> InsOrdHashMap Plan.FieldName OutputValue
-  -> HashMap Plan.FieldName OutputValue
-makeLookupKey joinFields row =
-  HM.fromList
-    (mapMaybe
-       (\key -> do
-          value <- lookupField key row
-          pure (key, value))
-       joinFields)
-
--- | Make a key for building an index of a right-hand result set. So
--- for every value in the right, here is the left side's key and the
--- right side's value.
-makeIndexKey ::
-     [(Plan.FieldName, Plan.FieldName)]
-  -> InsOrdHashMap Plan.FieldName OutputValue
-  -> HashMap Plan.FieldName OutputValue
-makeIndexKey joinFields row =
-  HM.fromList
-    (mapMaybe
-       (\(left, right) -> do
-          value <- lookupField right row
-          pure (left, value))
-       joinFields)
-
--- | Join a row with another as an array join.
-joinArrayRows ::
-     Maybe [Text] -> Text
-  -> InsOrdHashMap Plan.FieldName OutputValue
-  -> Vector (InsOrdHashMap Plan.FieldName OutputValue)
-  -> InsOrdHashMap Plan.FieldName OutputValue
-joinArrayRows wantedFields fieldName leftRow rightRow =
-  OMap.insert
-    (Plan.FieldName fieldName)
-    (ArrayOutputValue
-       (fmap
-          (RecordOutputValue .
-           OMap.filterWithKey
-             (\(Plan.FieldName k) _ -> maybe True (elem k) wantedFields))
-          rightRow))
-    leftRow
-
---------------------------------------------------------------------------------
--- Object joins
-
-_leftObjectJoin ::
-     Maybe [Text] -> Text
-  -> [(Plan.FieldName, Plan.FieldName)]
-  -> RecordSet
-  -> RecordSet
-  -> Either ExecuteProblem RecordSet
-_leftObjectJoin wantedFields joinAlias joinFields left right =
-  pure
-    RecordSet
-      { origin = Nothing
-      , wantedFields = Nothing
-      , rows =
-          V.fromList
-            [ joinObjectRows wantedFields joinAlias leftRow rightRows
-            | leftRow <- toList (rows left)
-            , let rightRows =
-                    V.fromList
-                      [ rightRow
-                      | rightRow <- toList (rows right)
-                      , not (null joinFields)
-                      , all
-                          (\(rightField, leftField) ->
-                             fromMaybe
-                               False
-                               (do leftValue <-
-                                     lookupField leftField leftRow
-                                   rightValue <-
-                                     lookupField rightField rightRow
-                                   pure (leftValue == rightValue)))
-                          joinFields
-                      ]
-            ]
-      }
-
--- | Handy way to insert logging while debugging.
-lookupField ::
-     Plan.FieldName
-  -> InsOrdHashMap Plan.FieldName OutputValue
-  -> Maybe OutputValue
-lookupField name hash = OMap.lookup name hash
-
--- | Join a row with another as an object join.
---
--- We expect rightRow to consist of a single row, but don't complain
--- if this is violated. TODO: Change?
-joinObjectRows ::
-     Maybe [Text] -> Text
-  -> InsOrdHashMap Plan.FieldName OutputValue
-  -> Vector (InsOrdHashMap Plan.FieldName OutputValue)
-  -> InsOrdHashMap Plan.FieldName OutputValue
-joinObjectRows wantedFields fieldName leftRow rightRows =
-  foldl'
-    (\left row ->
-       OMap.insert
-         (Plan.FieldName fieldName)
-         (RecordOutputValue
-            (OMap.filterWithKey
-               (\(Plan.FieldName k) _ -> maybe True (elem k) wantedFields)
-               row))
-         left)
-    leftRow
-    rightRows
 
 --------------------------------------------------------------------------------
 -- Make a big query from a select
 
-selectToBigQuery :: Plan.Select -> BigQuery
+selectToBigQuery :: Select -> BigQuery
 selectToBigQuery select =
   BigQuery
     { query = LT.toLazyText query
@@ -585,11 +250,11 @@ selectToBigQuery select =
                 ( ParameterName (LT.toLazyText (ToQuery.paramName int))
                 , Parameter {typ = valueType value, value}))
              (OMap.toList params))
-    , cardinality = Plan.selectCardinality select
+    , cardinality = selectCardinality select
     }
   where
     (query, params) =
-      ToQuery.renderBuilderPretty (ToQuery.fromSelect (Plan.selectQuery select))
+      ToQuery.renderBuilderPretty (ToQuery.fromSelect select)
 
 --------------------------------------------------------------------------------
 -- Type system
@@ -707,7 +372,7 @@ instance Aeson.FromJSON JobResults where
     Aeson.withObject
       "JobResults"
       (\o -> do
-         recordSet <- parseRecordSetPayload Nothing o
+         recordSet <- parseRecordSetPayload o
          pageToken <-
            fmap
              (\mtoken -> do
@@ -859,8 +524,8 @@ createQueryJob sc@BigQuerySourceConfig {..} BigQuery {..} =
 --------------------------------------------------------------------------------
 -- Consuming recordset from big query
 
-parseRecordSetPayload :: Maybe Plan.PlannedAction -> Aeson.Object -> Aeson.Parser RecordSet
-parseRecordSetPayload origin resp = do
+parseRecordSetPayload :: Aeson.Object -> Aeson.Parser RecordSet
+parseRecordSetPayload resp = do
   schema <- resp .: "schema"
   columns <- schema .: "fields" :: Aeson.Parser (Vector BigQueryField)
   rowsJSON <- fmap (fromMaybe mempty) (resp .:? "rows" :: Aeson.Parser (Maybe (Vector Aeson.Value)))
@@ -868,12 +533,12 @@ parseRecordSetPayload origin resp = do
     V.imapM
       (\i row -> parseRow columns row Aeson.<?> Aeson.Index i)
       rowsJSON Aeson.<?> Aeson.Key "rows"
-  pure RecordSet {origin, wantedFields = Nothing, rows}
+  pure RecordSet {wantedFields = Nothing, rows}
 
 --------------------------------------------------------------------------------
 -- Schema-driven JSON deserialization
 
-parseRow :: Vector BigQueryField -> Aeson.Value -> Aeson.Parser (InsOrdHashMap Plan.FieldName OutputValue)
+parseRow :: Vector BigQueryField -> Aeson.Value -> Aeson.Parser (InsOrdHashMap FieldNameText OutputValue)
 parseRow columnTypes value = do
   result <- parseBigQueryRow columnTypes value
   case result of
@@ -941,7 +606,7 @@ parseBigQueryValue isNullable fieldType object =
       has_v isNullable (fmap BytesOutputValue . Aeson.parseJSON) object Aeson.<?>
       Aeson.Key "BYTES"
 
-parseBigQueryField :: BigQueryField -> Aeson.Value -> Aeson.Parser (Plan.FieldName, OutputValue)
+parseBigQueryField :: BigQueryField -> Aeson.Value -> Aeson.Parser (FieldNameText, OutputValue)
 parseBigQueryField BigQueryField {name, typ, mode} value1 =
   case mode of
     Repeated ->

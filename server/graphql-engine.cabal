@@ -310,8 +310,7 @@ library
                      , Hasura.Base.Instances
 
                      , Hasura.Backends.BigQuery.Connection
-                     , Hasura.Backends.BigQuery.DataLoader.Execute
-                     , Hasura.Backends.BigQuery.DataLoader.Plan
+                     , Hasura.Backends.BigQuery.Execute
                      , Hasura.Backends.BigQuery.DDL
                      , Hasura.Backends.BigQuery.DDL.BoolExp
                      , Hasura.Backends.BigQuery.DDL.RunSQL
