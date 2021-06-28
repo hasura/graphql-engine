@@ -337,13 +337,20 @@ instance FromJSON Metadata where
     version <- o .:? "version" .!= MVVersion1
     when (version /= MVVersion3) $ fail $
       "unexpected metadata version from storage: " <> show version
-    sources <- oMapFromL getSourceName <$> o .: "sources"
+    unprocessedSources <- o .: "sources"
+    sources <- oMapFromL getSourceName <$> traverse parseSourceMetadata unprocessedSources
     endpoints <- oMapFromL _ceName <$> o .:? "rest_endpoints" .!= []
     (remoteSchemas, queryCollections, allowlist, customTypes,
      actions, cronTriggers, apiLimits, metricsConfig, inheritedRoles,
      disabledSchemaIntrospectionRoles) <- parseNonSourcesMetadata o
     pure $ Metadata sources remoteSchemas queryCollections allowlist
            customTypes actions cronTriggers endpoints apiLimits metricsConfig inheritedRoles disabledSchemaIntrospectionRoles
+    where
+      parseSourceMetadata :: Value -> Parser (AB.AnyBackend SourceMetadata)
+      parseSourceMetadata = withObject "SourceMetadata" \o -> do
+        backendKind <- o .:? "kind" .!= Postgres Vanilla
+        AB.parseAnyBackendFromJSON backendKind (Object o)
+
 
 emptyMetadata :: Metadata
 emptyMetadata =

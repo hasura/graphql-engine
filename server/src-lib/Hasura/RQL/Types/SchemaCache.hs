@@ -325,7 +325,28 @@ data SchemaCache
   , scMetadataResourceVersion        :: !(Maybe MetadataResourceVersion)
   , scSetGraphqlIntrospectionOptions :: !SetGraphqlIntrospectionOptions
   }
-$(deriveToJSON hasuraJSON ''SchemaCache)
+
+-- WARNING: this can only be used for debug purposes, as it loses all
+-- backend-specific information in the process!
+instance ToJSON SchemaCache where
+  toJSON SchemaCache{..} = object
+    [ "sources"                           .= toJSON (AB.debugAnyBackendToJSON <$> scSources)
+    , "actions"                           .= toJSON scActions
+    , "remote_schemas"                    .= toJSON scRemoteSchemas
+    , "allowlist"                         .= toJSON scAllowlist
+    , "g_q_l_context"                     .= toJSON scGQLContext
+    , "unauthenticated_g_q_l_context"     .= toJSON scUnauthenticatedGQLContext
+    , "relay_context"                     .= toJSON scRelayContext
+    , "unauthenticated_relay_context"     .= toJSON scUnauthenticatedRelayContext
+    , "dep_map"                           .= toJSON scDepMap
+    , "inconsistent_objs"                 .= toJSON scInconsistentObjs
+    , "cron_triggers"                     .= toJSON scCronTriggers
+    , "endpoints"                         .= toJSON scEndpoints
+    , "api_limits"                        .= toJSON scApiLimits
+    , "metrics_config"                    .= toJSON scMetricsConfig
+    , "metadata_resource_version"         .= toJSON scMetadataResourceVersion
+    , "set_graphql_introspection_options" .= toJSON scSetGraphqlIntrospectionOptions
+    ]
 
 getAllRemoteSchemas :: SchemaCache -> [RemoteSchemaName]
 getAllRemoteSchemas sc =
