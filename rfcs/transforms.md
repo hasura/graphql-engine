@@ -80,7 +80,7 @@ TODO: Explore Haskell templating packages which resemble this.
 
 ## Examples
 
-Transform the request body:
+1. Transform the request body:
 
 ```
 transforms:
@@ -92,7 +92,7 @@ transforms:
      }
 ```
 
-Tranform the URL based on data in the request body:
+2. Tranform the URL based on data in the request body:
 
 ```
 transforms:
@@ -100,7 +100,7 @@ transforms:
 ```
 
 
-All webhook integrations (actions, event triggers, scheduled triggers) are POST method based but we can transform the method to `GET` as shown below. Note that, for `GET` methods we should be able to map the payload to the query params and they should be URL encoded.
+3. Transform the method. All webhook integrations (actions, event triggers, scheduled triggers) are POST method based but we can transform the method to `GET` as shown below. Note that, for `GET` methods we should be able to map the payload to the query params and they should be URL encoded.
 
 ```
 transforms:
@@ -110,7 +110,7 @@ transforms:
      param2: "$.value2"
 ```
 
-We should also be able to transform the request headers. For example, below we add a custom header from the event payload and modify the `User-Agent`.
+4. Transform the request headers. For example, below we add a custom header from the event payload and modify the `User-Agent`. As noted in the spec, we first remove headers and then add headers. 
 
 ```
 transforms:
@@ -119,7 +119,7 @@ transforms:
      remove_headers: [User-Agent]
 ```
 
-The following example changes the content type to `x-www-form-urlencoded`. Note that we still supply the request_body as a JSON. Every top-level field/value is converted into a form parameter (and value is url encoded).
+5. Change the request content type. The following example changes the content type to `x-www-form-urlencoded`. Note that we still supply the request_body as a JSON. Every top-level field/value is converted into a form parameter (and value is url encoded).
 
 ```
 transforms:
