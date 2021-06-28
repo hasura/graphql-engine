@@ -19,14 +19,27 @@ data Transforms
  -- ^ Change the request URL to one provided here. Nothing means original URL.
   , request_body  ::  Maybe TemplateText                  # Raw templating
  -- ^ Change the request_body to one provided here. Nothing means original payload. Only applicable for POST, PUT, PATCH methods
+ -- The encoding of the content is defined by the 'request_content_type' field defined below.
+  , request_content_type :: AllowedContentTypes
+ -- ^ Only the following Content-Types are allowed:
+ -- 1) application/json
+ -- 2) application/x-www-form-urlencoded
+ -- 3) text/plain
   , query_params  ::  Maybe (HashMap Text TemplateText)   # Key-value based templating
- -- ^ Add query params provided here to URI. Only applicable for GET and DELETE methods
+ -- ^ Add query params provided here to URL
+ -- Each param is URL encoded
   , request_headers :: Maybe TransformHeaders
  -- ^ Tranform headers as defined here.
+ -- Certain headers cannot be transformed (e.g. `Content-Type` and should return a warning)
   }
 
+-- | The order of evaluation is removeHeaders and then addHeaders
 data TransformHeaders
-  = TransformHeaders { replaceHeaders :: [(HeaderName, HeaderValue}] }
+  = TransformHeaders
+  { addHeaders :: [(HeaderName, TemplateText}]
+  , removeHeaders :: [HeaderName]
+  }
+
 
 data TemplateText # TO BE DECIDED (see next section)
 
@@ -36,7 +49,7 @@ data TemplateText # TO BE DECIDED (see next section)
 
 This is largely undecided at the moment.
 
-We want to be able to use a templating language which can use `JSONPath` expressions to construct the final value. We should also be able to loop through array items. An example is the following where `$` represents root of the original JSON payload.
+We want to be able to use a templating language which can construct JSON payloads (for POST body) as well as raw strings (for URL transform)
 
 ```
 {
@@ -55,7 +68,7 @@ We want to be able to use a templating language which can use `JSONPath` express
 }
 ```
 
-Simple string templating is also required (for example for requestURI transform):
+Simple string templating is also required (for example for requestURL or headers transform):
 
 ```
 # $url has the original URL
@@ -71,7 +84,7 @@ Transform the request body:
 
 ```
 transforms:
-   request_body: |
+   request_body:
      {
        "key1": "$.value1",
        "key2": "$.value2",
@@ -87,7 +100,7 @@ transforms:
 ```
 
 
-All webhook integrations (actions, event triggers, scheduled triggers) are POST method based but we can transform the method to `GET` as shown below. Note that, for `GET` methods we should be able to map the payload to the query params.
+All webhook integrations (actions, event triggers, scheduled triggers) are POST method based but we can transform the method to `GET` as shown below. Note that, for `GET` methods we should be able to map the payload to the query params and they should be URL encoded.
 
 ```
 transforms:
@@ -97,14 +110,26 @@ transforms:
      param2: "$.value2"
 ```
 
-We should also be able to transform the request headers. Hasura already has a way to add headers hence what will be useful is a way to replace few of the system added headers. The following example changes the body type to `x-www-form-urlencoded` and allows a custom `User-Agent`.
+We should also be able to transform the request headers. For example, below we add a custom header from the event payload and modify the `User-Agent`.
 
 ```
 transforms:
-   request_body: |
-     key1=$.value1&key2=$.value2&key3=$.session['x-hasura-user-id']
    request_headers:
-     replace_headers:
-       Content-Type: application/x-www-form-urlencoded
-       User-Agent: myapp-server
+     add_headers: [{"x-cutom-id": "$.event.user_id"}, { "User-Agent": myapp-server}]
+     remove_headers: [User-Agent]
 ```
+
+The following example changes the content type to `x-www-form-urlencoded`. Note that we still supply the request_body as a JSON. Every top-level field/value is converted into a form parameter (and value is url encoded).
+
+```
+transforms:
+   request_body:
+     {
+       "key1": "$.value1",
+       "key2": "$.value2",
+       "key3": "$.session['x-hasura-user-id']"
+     }
+   request_content_type: x-www-form-urlencoded
+```
+
+This transforms the body to `key1=$.value1&key2=$.value2&key3=$.session['x-hasura-user-id']`. The console can show the output for a given tranformation hence making it clear what is finally going in the body.
