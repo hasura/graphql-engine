@@ -97,17 +97,18 @@ backendCase caseExp toPat toBody defaultCase = do
       pure $ matches ++ [Match WildP defaultBody []]
   pure $ CaseE cexp allMatches
 
--- | Creates a data type in which there's one constructor per backend.  While
+-- | Creates a data type in which there's one constructor per backend. While
 -- this only returns one declaration, it nonetheless returns a @[Dec]@ as it's
 -- what the $() splice interpolation syntax expects.
 backendData
   :: Name                          -- ^ the name of the type
   -> [TyVarBndr]                   -- ^ type variables of the type if any
   -> (BackendConstructor -> Q Con) -- ^ the constructor for a given backend
+  -> [Name]                        -- ^ classes to derive using the stock strategy
   -> Q [Dec]
-backendData name tVars mkCon = do
+backendData name tVars mkCon derivs = do
   constructors <- forEachBackend mkCon
-  pure [DataD [] name tVars Nothing constructors []]
+  pure [DataD [] name tVars Nothing constructors [DerivClause (Just StockStrategy) $ map ConT derivs]]
 
 -- | Generates a case expression that applies a function @f@ to each possible value
 -- of an 'AnyBackend' @e@:

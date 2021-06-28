@@ -39,6 +39,8 @@ $(let name = mkName "BackendTag" in
     -- the resulting type (BackendTag 'Foo)
     (AppT (ConT name) (getBackendTypeValue b))
   )
+  -- deriving clauses
+  []
  )
 
 
