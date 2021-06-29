@@ -46,6 +46,7 @@ import           Hasura.Server.Init
 import           Hasura.Server.Migrate
 import           Hasura.Server.Types
 import           Hasura.Server.Version
+import           Hasura.Server.Version.TH
 
 
 data TestSuites
