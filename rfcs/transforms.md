@@ -24,7 +24,6 @@ data Transforms
  -- ^ Only the following Content-Types are allowed:
  -- 1) application/json
  -- 2) application/x-www-form-urlencoded
- -- 3) text/plain
   , query_params  ::  Maybe (HashMap Text TemplateText)   # Key-value based templating
  -- ^ Add query params provided here to URL
  -- Each param is URL encoded
