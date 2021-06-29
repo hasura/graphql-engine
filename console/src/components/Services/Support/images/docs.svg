@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+    <defs>
+        <style>
+            .prefix__cls-1{fill:none;stroke:#505050;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.5px}
+        </style>
+    </defs>
+    <g id="prefix__streamline-icon-paginate-filter-text_24x24" data-name="streamline-icon-paginate-filter-text@24x24" transform="translate(0 .004)">
+        <path id="prefix__Path_5887" d="M3.75.746h19.5v19.5H3.75z" class="prefix__cls-1" data-name="Path 5887"/>
+        <path id="prefix__Path_5888" d="M20.25 23.246h-18a1.5 1.5 0 0 1-1.5-1.5v-18" class="prefix__cls-1" data-name="Path 5888"/>
+        <path id="prefix__Path_5889" d="M8.25 6.746h10.5" class="prefix__cls-1" data-name="Path 5889"/>
+        <path id="prefix__Path_5890" d="M8.25 9.746h10.5" class="prefix__cls-1" data-name="Path 5890"/>
+        <path id="prefix__Path_5891" d="M8.25 12.746h7.5" class="prefix__cls-1" data-name="Path 5891"/>
+    </g>
+</svg>

@@ -19,6 +19,7 @@ query:
     query {
       article (
         where: { is_published : {_eq : false}}
+        order_by: {author: {name: desc}}
       ) {
         id
         title

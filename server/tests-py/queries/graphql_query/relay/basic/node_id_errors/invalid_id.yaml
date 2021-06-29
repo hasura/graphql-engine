@@ -1,0 +1,22 @@
+description: Query node interface with an invalid node id
+url: /v1beta1/relay
+status: 200
+query:
+  query: |
+    query {
+      node(id: "random"){
+        ... on user{
+          first_name
+          last_name
+          age
+          address
+        }
+      }
+    }
+response:
+  errors:
+  - extensions:
+      path: "$.selectionSet.node.args.id"
+      code: validation-failed
+    message: 'the node id is invalid: Error in $: Failed reading: not a valid json value
+      at ''­©Ý¢'''

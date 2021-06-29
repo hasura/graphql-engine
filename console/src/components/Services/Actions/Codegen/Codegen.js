@@ -7,21 +7,21 @@ import {
   getStarterKitDownloadPath,
   getGlitchProjectURL,
 } from './utils';
-import { getPersistedDerivedAction } from '../lsUtils';
 import Spinner from '../../../Common/Spinner/Spinner';
 import styles from '../Common/components/Styles.scss';
 import { Icon } from '../../../UIKit/atoms';
 import CodeTabs from './CodeTabs';
 import DerivedFrom from './DerivedFrom';
+import { getPersistedDerivedAction } from '../utils';
 
-const Codegen = ({ allActions, allTypes, currentAction }) => {
+const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
   const [allFrameworks, setAllFrameworks] = React.useState([]);
   const [selectedFramework, selectFramework] = React.useState('');
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
 
   const [parentMutation] = React.useState(
-    getPersistedDerivedAction(currentAction.action_name)
+    getPersistedDerivedAction(currentAction.name)
   );
   const [shouldDerive, setShouldDerive] = React.useState(true);
 
@@ -33,7 +33,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
   const init = () => {
     setLoading(true);
     setError(null);
-    getAllCodegenFrameworks()
+    getAllCodegenFrameworks(dispatch)
       .then(frameworks => {
         setAllFrameworks(frameworks);
         selectFramework(frameworks[0].name);
@@ -177,9 +177,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
 
   return (
     <div style={{ width: '600px' }}>
-      <Helmet
-        title={`Codegen - ${currentAction.action_name} - Actions | Hasura`}
-      />
+      <Helmet title={`Codegen - ${currentAction.name} - Actions | Hasura`} />
       {getFrameworkActions()}
       <div className={`${styles.add_mar_bottom}`}>
         <CodeTabs
@@ -188,6 +186,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
           currentAction={currentAction}
           shouldDerive={shouldDerive}
           parentMutation={parentMutation}
+          dispatch={dispatch}
         />
       </div>
       <hr />

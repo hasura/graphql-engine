@@ -6,13 +6,13 @@ import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
 import TopicDescription from '../../Common/Landing/TopicDescription';
-// import TryItOut from '../../Common/Landing/TryItOut';
+import styles from '../Actions.scss';
 
-const actionsArchDiagram = `${globals.assetsPath}/common/img/actions.png`;
+// import TryItOut from '../../Common/Landing/TryItOut';
 
 class Landing extends React.Component {
   render() {
-    const styles = require('../Actions.scss');
+    const { readOnlyMode } = this.props;
 
     const { dispatch } = this.props;
     const getIntroSection = () => {
@@ -20,10 +20,10 @@ class Landing extends React.Component {
         <div>
           <TopicDescription
             title="What are Actions?"
-            // imgUrl={`${globals.assetsPath}/common/img/remote_schema.png`} // TODO: update image & description
-            imgUrl={actionsArchDiagram}
+            imgUrl={`${globals.assetsPath}/common/img/actions.png`}
             imgAlt="Actions"
             description="Actions are custom queries or mutations that are resolved via HTTP handlers. Actions can be used to carry out complex data validations, data enrichment from external sources or execute just about any custom business logic."
+            knowMoreHref="https://hasura.io/docs/latest/graphql/core/actions/index.html"
           />
           <hr className={styles.clear_fix} />
         </div>
@@ -36,7 +36,7 @@ class Landing extends React.Component {
         dispatch(push(`${globals.urlPrefix}${appPrefix}/manage/add`));
       };
 
-      const addBtn = (
+      const addBtn = !readOnlyMode && (
         <Button
           data-test="data-create-actions"
           color="yellow"

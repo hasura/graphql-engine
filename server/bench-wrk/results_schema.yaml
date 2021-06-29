@@ -1,0 +1,167 @@
+- type: run_sql
+  args:
+    sql: |
+      create schema if not exists hge_bench;
+      
+      create table if not exists hge_bench.gql_query (
+        name text primary key not null,
+        query text not null unique
+      );
+
+      create table if not exists hge_bench.cpu_info (
+        key text primary key not null,
+        info jsonb not null unique
+      );
+
+      create table if not exists hge_bench.query_max_rps(
+        id serial primary key,
+        cpu_key text references hge_bench.cpu_info (key),
+        query_name text references hge_bench.gql_query (name) not null,
+        docker_image text,
+        version text,
+        scenario_name text,
+        postgres_version text,
+        server_shasum text,
+        time timestamptz not null default now(),
+        max_rps integer not null,
+        wrk_parameters jsonb,
+        hge_conf jsonb
+        constraint should_have_tag CHECK (docker_image is not null or version is not null)
+      );
+
+      create table if not exists hge_bench.results(
+        id serial primary key,
+        cpu_key text references hge_bench.cpu_info (key),
+        query_name text references hge_bench.gql_query (name) not null,
+        docker_image text,
+        version text,
+        scenario_name text,
+        postgres_version text,
+        server_shasum text,
+        time timestamptz not null default now(),
+        requests_per_sec integer not null,
+        summary jsonb,
+        latencies_uri text,
+        wrk2_parameters jsonb,
+        hge_conf jsonb
+        constraint should_have_tag CHECK (docker_image is not null or version is not null)
+      );
+
+      create or replace view hge_bench.latest_results as
+        select
+          distinct on (cpu_key, docker_image, version, query_name, requests_per_sec)
+          id, cpu_key, query_name, docker_image, version,
+          postgres_version, server_shasum, time, requests_per_sec, summary,
+          latencies_uri, wrk2_parameters
+        from hge_bench.results
+        order by cpu_key, docker_image, version, query_name, requests_per_sec, time desc;
+
+      create table if not exists hge_bench.latency_histogram (
+        id integer references hge_bench.results(id),
+        percentile double precision not null,
+        latency double precision not null,
+        total_count integer not null
+      );
+
+      create or replace view hge_bench.avg_query_max_rps as
+      select cpu_key, query_name, docker_image, version, avg(max_rps) as max_rps
+      from hge_bench.query_max_rps
+      group by cpu_key, query_name, docker_image, version;
+
+- type: track_table
+  args:
+     schema: hge_bench
+     name: gql_query
+
+- type: track_table
+  args:
+     schema: hge_bench
+     name: results
+
+- type: track_table
+  args:
+     schema: hge_bench
+     name: query_max_rps
+
+- type: track_table
+  args:
+     schema: hge_bench
+     name: cpu_info
+
+- type: track_table
+  args:
+     schema: hge_bench
+     name: latency_histogram
+
+- type: track_table
+  args:
+     schema: hge_bench
+     name: latest_results
+
+- type: track_table
+  args:
+     schema: hge_bench
+     name: avg_query_max_rps
+
+- type: create_object_relationship
+  args:
+    table:
+      schema: hge_bench
+      name: results
+    name: query
+    using:
+      foreign_key_constraint_on: query_name
+
+- type: create_object_relationship
+  args:
+    table:
+      schema: hge_bench
+      name: results
+    name: cpu
+    using:
+      foreign_key_constraint_on: cpu_key
+
+- type: create_object_relationship
+  args:
+    table:
+      schema: hge_bench
+      name: query_max_rps
+    name: query
+    using:
+      foreign_key_constraint_on: query_name
+
+- type: create_object_relationship
+  args:
+    table:
+      schema: hge_bench
+      name: query_max_rps
+    name: cpu
+    using:
+      foreign_key_constraint_on: cpu_key
+
+- type: create_array_relationship
+  args:
+    table:
+      schema: hge_bench
+      name: results
+    name: latency_histogram
+    using:
+      foreign_key_constraint_on:
+        table:
+          schema: hge_bench
+          name: latency_histogram
+        column: id
+
+- type: create_array_relationship
+  args:
+    table:
+      schema: hge_bench
+      name: latest_results
+    name: latency_histogram
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hge_bench
+          name: latency_histogram
+        column_mapping:
+          id: id

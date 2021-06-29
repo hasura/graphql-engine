@@ -1,0 +1,94 @@
+- description: Reference tables and local tables can only have foreign keys to reference tables and local tables. Array relationship
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      country:
+        - name: India
+          states:
+            - name: Karnataka
+            - name: Andhra Pradesh
+            - name: Orissa
+            - name: Tamilnadu
+  query:
+    query: |
+      query reference_to_reference_array {
+        country {
+          name
+          states {
+            name
+          }
+        }
+      }
+
+- description: Reference tables and local tables can only have foreign keys to reference tables and local tables. Object relationship
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      state:
+        - name: Karnataka
+          country:
+            name: India
+        - name: Andhra Pradesh
+          country:
+            name: India
+        - name: Orissa
+          country:
+            name: India
+        - name: Tamilnadu
+          country:
+            name: India
+  query:
+    query: |
+      query reference_to_reference_object {
+        state {
+          name
+          country {
+            name
+          }
+        }
+      }
+
+- description: Reference tables and local tables cannot have foreign keys references to distributed tables
+  url: /v1/graphql
+  status: 200
+  response:
+    errors:
+      - extensions:
+          internal:
+            statement:
+              "SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\" FROM\
+              \  (SELECT  json_build_object('name', \"_0_root.base\".\"name\", 'disasters',\
+              \ \"_3_root.ar.root.disasters\".\"disasters\" ) AS \"root\" FROM  (SELECT\
+              \  *  FROM \"public\".\"country\"  WHERE ('true')     ) AS \"_0_root.base\"\
+              \ LEFT OUTER JOIN LATERAL (SELECT  coalesce(json_agg(\"disasters\" ), '[]'\
+              \ ) AS \"disasters\" FROM  (SELECT  json_build_object('name', \"_1_root.ar.root.disasters.base\"\
+              .\"name\" ) AS \"disasters\" FROM  (SELECT  *  FROM \"public\".\"disaster\"\
+              \  WHERE ((\"_0_root.base\".\"id\") = (\"country_id\"))     ) AS \"_1_root.ar.root.disasters.base\"\
+              \      ) AS \"_2_root.ar.root.disasters\"      ) AS \"_3_root.ar.root.disasters\"\
+              \ ON ('true')      ) AS \"_4_root\"      "
+            prepared: true
+            error:
+              exec_status: FatalError
+              hint:
+              message: cannot pushdown the subquery
+              status_code: 0A000
+              description:
+                There exist a reference table in the outer part of the outer
+                join
+            arguments:
+              - (Oid 114,Just ("{\"x-hasura-role\":\"admin\"}",Binary))
+          path: $
+          code: unexpected
+        message: database query error
+  query:
+    query: |
+      query reference_to_distributed_array {
+        country {
+          name
+          disasters {
+            name
+          }
+        }
+      }

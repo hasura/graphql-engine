@@ -1,276 +1,105 @@
 module Hasura.GraphQL.Execute.Query
   ( convertQuerySelSet
-  , queryOpFromPlan
-  , ReusableQueryPlan
-  , GeneratedSqlMap
-  , PreparedSql(..)
+  , parseGraphQLQuery
   ) where
 
-import qualified Data.Aeson                             as J
-import qualified Data.ByteString                        as B
-import qualified Data.ByteString.Lazy                   as LBS
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.IntMap                            as IntMap
-import qualified Data.TByteString                       as TBS
-import qualified Database.PG.Query                      as Q
-import qualified Language.GraphQL.Draft.Syntax          as G
-
-import           Control.Lens                           ((^?))
-import           Data.Has
-
-import qualified Hasura.GraphQL.Resolve                 as R
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import qualified Hasura.GraphQL.Validate                as GV
-import qualified Hasura.GraphQL.Validate.Field          as V
-import qualified Hasura.SQL.DML                         as S
-
-import           Hasura.EncJSON
-import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Resolve.Action
-import           Hasura.GraphQL.Resolve.Types
-import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
-import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
+
+import qualified Data.Aeson                                as J
+import qualified Data.Environment                          as Env
+import qualified Data.HashMap.Strict                       as Map
+import qualified Data.HashMap.Strict.InsOrd                as OMap
+import qualified Language.GraphQL.Draft.Syntax             as G
+import qualified Network.HTTP.Client                       as HTTP
+import qualified Network.HTTP.Types                        as HTTP
+
+import qualified Hasura.GraphQL.Execute.RemoteJoin.Collect as RJ
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
+import qualified Hasura.Logging                            as L
+import qualified Hasura.SQL.AnyBackend                     as AB
+
+import           Hasura.Base.Error
+import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Execute.Action
+import           Hasura.GraphQL.Execute.Backend
+import           Hasura.GraphQL.Execute.Common
+import           Hasura.GraphQL.Execute.Instances          ()
+import           Hasura.GraphQL.Execute.Remote
+import           Hasura.GraphQL.Execute.Resolve
+import           Hasura.GraphQL.Parser
+import           Hasura.GraphQL.Parser.Directives
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 
-type PlanVariables = Map.HashMap G.Variable Int
 
--- | The value is (Q.PrepArg, PGScalarValue) because we want to log the human-readable value of the
--- prepared argument and not the binary encoding in PG format
-type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
+parseGraphQLQuery
+  :: MonadError QErr m
+  => GQLContext
+  -> [G.VariableDefinition]
+  -> Maybe (HashMap G.Name J.Value)
+  -> [G.Directive G.Name]
+  -> G.SelectionSet G.NoFragments G.Name
+  -> m ( InsOrdHashMap G.Name (QueryRootField UnpreparedValue UnpreparedValue)
+       , QueryReusability
+       , [G.Directive Variable]
+       , G.SelectionSet G.NoFragments Variable
+       )
+parseGraphQLQuery gqlContext varDefs varValsM directives fields = do
+  (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe Map.empty varValsM) directives fields
+  (parsedQuery, queryReusability) <- (gqlQueryParser gqlContext >>> (`onLeft` reportParseErrors)) resolvedSelSet
+  pure (parsedQuery, queryReusability, resolvedDirectives, resolvedSelSet)
 
-data PGPlan
-  = PGPlan
-  { _ppQuery     :: !Q.Query
-  , _ppVariables :: !PlanVariables
-  , _ppPrepared  :: !PrepArgMap
-  }
-
-instance J.ToJSON PGPlan where
-  toJSON (PGPlan q vars prepared) =
-    J.object [ "query"     J..= Q.getQueryText q
-             , "variables" J..= vars
-             , "prepared"  J..= fmap show prepared
-             ]
-
-data RootFieldPlan
-  = RFPRaw !B.ByteString
-  | RFPPostgres !PGPlan
-
-fldPlanFromJ :: (J.ToJSON a) => a -> RootFieldPlan
-fldPlanFromJ = RFPRaw . LBS.toStrict . J.encode
-
-instance J.ToJSON RootFieldPlan where
-  toJSON = \case
-    RFPRaw encJson     -> J.toJSON $ TBS.fromBS encJson
-    RFPPostgres pgPlan -> J.toJSON pgPlan
-
-type FieldPlans = [(G.Alias, RootFieldPlan)]
-
-data ReusableQueryPlan
-  = ReusableQueryPlan
-  { _rqpVariableTypes :: !ReusableVariableTypes
-  , _rqpFldPlans      :: !FieldPlans
-  }
-
-instance J.ToJSON ReusableQueryPlan where
-  toJSON (ReusableQueryPlan varTypes fldPlans) =
-    J.object [ "variables"       J..= varTypes
-             , "field_plans"     J..= fldPlans
-             ]
-
-withPlan
-  :: (MonadError QErr m)
-  => SessionVariables -> PGPlan -> ReusableVariableValues -> m PreparedSql
-withPlan usrVars (PGPlan q reqVars prepMap) annVars = do
-  prepMap' <- foldM getVar prepMap (Map.toList reqVars)
-  let args = withSessionVariables usrVars $ IntMap.elems prepMap'
-  return $ PreparedSql q args
-  where
-    getVar accum (var, prepNo) = do
-      let varName = G.unName $ G.unVariable var
-      colVal <- onNothing (Map.lookup var annVars) $
-        throw500 $ "missing variable in annVars : " <> varName
-      let prepVal = (toBinaryValue colVal, pstValue colVal)
-      return $ IntMap.insert prepNo prepVal accum
-
--- turn the current plan into a transaction
-mkCurPlanTx
-  :: (MonadError QErr m)
-  => SessionVariables
-  -> FieldPlans
-  -> m (LazyRespTx, GeneratedSqlMap)
-mkCurPlanTx usrVars fldPlans = do
-  -- generate the SQL and prepared vars or the bytestring
-  resolved <- forM fldPlans $ \(alias, fldPlan) -> do
-    fldResp <- case fldPlan of
-      RFPRaw resp                      -> return $ RRRaw resp
-      RFPPostgres (PGPlan q _ prepMap) -> do
-        let args = withSessionVariables usrVars $ IntMap.elems prepMap
-        return $ RRSql $ PreparedSql q args
-    return (alias, fldResp)
-
-  return (mkLazyRespTx resolved, mkGeneratedSqlMap resolved)
-
-withSessionVariables :: SessionVariables -> [(Q.PrepArg, PGScalarValue)] -> [(Q.PrepArg, PGScalarValue)]
-withSessionVariables usrVars list =
-  let usrVarsAsPgScalar = PGValJSON $ Q.JSON $ J.toJSON usrVars
-      prepArg = Q.toPrepVal (Q.AltJ usrVars)
-  in (prepArg, usrVarsAsPgScalar):list
-
-data PlanningSt
-  = PlanningSt
-  { _psArgNumber :: !Int
-  , _psVariables :: !PlanVariables
-  , _psPrepped   :: !PrepArgMap
-  }
-
-initPlanningSt :: PlanningSt
-initPlanningSt =
-  PlanningSt 2 Map.empty IntMap.empty
-
-getVarArgNum :: (MonadState PlanningSt m) => G.Variable -> m Int
-getVarArgNum var = do
-  PlanningSt curArgNum vars prepped <- get
-  case Map.lookup var vars of
-    Just argNum -> pure argNum
-    Nothing     -> do
-      put $ PlanningSt (curArgNum + 1) (Map.insert var curArgNum vars) prepped
-      pure curArgNum
-
-addPrepArg
-  :: (MonadState PlanningSt m)
-  => Int -> (Q.PrepArg, PGScalarValue) -> m ()
-addPrepArg argNum arg = do
-  PlanningSt curArgNum vars prepped <- get
-  put $ PlanningSt curArgNum vars $ IntMap.insert argNum arg prepped
-
-getNextArgNum :: (MonadState PlanningSt m) => m Int
-getNextArgNum = do
-  PlanningSt curArgNum vars prepped <- get
-  put $ PlanningSt (curArgNum + 1) vars prepped
-  return curArgNum
-
-prepareWithPlan :: (MonadState PlanningSt m) => UnresolvedVal -> m S.SQLExp
-prepareWithPlan = \case
-  R.UVPG annPGVal -> do
-    let AnnPGVal varM _ colVal = annPGVal
-    argNum <- case varM of
-      Just var -> getVarArgNum var
-      Nothing  -> getNextArgNum
-    addPrepArg argNum (toBinaryValue colVal, pstValue colVal)
-    return $ toPrepParam argNum (pstType colVal)
-
-  R.UVSessVar ty sessVar -> do
-    let sessVarVal =
-          S.SEOpApp (S.SQLOp "->>")
-          [currentSession, S.SELit $ sessionVariableToText sessVar]
-    return $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
-      PGTypeScalar colTy -> withConstructorFn colTy sessVarVal
-      PGTypeArray _      -> sessVarVal
-
-  R.UVSQL sqlExp -> pure sqlExp
-  R.UVSession    -> pure currentSession
-  where
-    currentSession = S.SEPrep 1
 
 convertQuerySelSet
-  :: ( MonadError QErr m
-     , MonadReader r m
-     , Has TypeMap r
-     , Has QueryCtxMap r
-     , Has FieldMap r
-     , Has OrdByCtx r
-     , Has SQLGenCtx r
-     , Has UserInfo r
+  :: forall m .
+     ( MonadError QErr m
      , HasVersion
-     , MonadIO m
+     , MonadGQLExecutionCheck m
      )
-  => QueryReusability
-  -> V.SelSet
-  -> QueryActionExecuter
-  -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSqlMap)
-convertQuerySelSet initialReusability fields actionRunner = do
-  usrVars <- asks (_uiSession . getter)
-  (fldPlans, finalReusability) <- runReusabilityTWith initialReusability $
-    forM (toList fields) $ \fld -> do
-      fldPlan <- case V._fName fld of
-        "__type"     -> fldPlanFromJ <$> R.typeR fld
-        "__schema"   -> fldPlanFromJ <$> R.schemaR fld
-        "__typename" -> pure $ fldPlanFromJ queryRootNamedType
-        _            -> do
-          unresolvedAst <- R.queryFldToPGAST fld actionRunner
-          (q, PlanningSt _ vars prepped) <- flip runStateT initPlanningSt $
-            R.traverseQueryRootFldAST prepareWithPlan unresolvedAst
-          pure . RFPPostgres $ PGPlan (R.toPGQuery q) vars prepped
-      pure (V._fAlias fld, fldPlan)
-  let varTypes = finalReusability ^? _Reusable
-      reusablePlan = ReusableQueryPlan <$> varTypes <*> pure fldPlans
-  (tx, sql) <- mkCurPlanTx usrVars fldPlans
-  pure (tx, reusablePlan, sql)
-
--- use the existing plan and new variables to create a pg query
-queryOpFromPlan
-  :: (MonadError QErr m)
-  => SessionVariables
+  => Env.Environment
+  -> L.Logger L.Hasura
+  -> GQLContext
+  -> UserInfo
+  -> HTTP.Manager
+  -> HTTP.RequestHeaders
+  -> [G.Directive G.Name]
+  -> G.SelectionSet G.NoFragments G.Name
+  -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> ReusableQueryPlan
-  -> m (LazyRespTx, GeneratedSqlMap)
-queryOpFromPlan usrVars varValsM (ReusableQueryPlan varTypes fldPlans) = do
-  validatedVars <- GV.validateVariablesForReuse varTypes varValsM
-  -- generate the SQL and prepared vars or the bytestring
-  resolved <- forM fldPlans $ \(alias, fldPlan) ->
-    (alias,) <$> case fldPlan of
-      RFPRaw resp        -> return $ RRRaw resp
-      RFPPostgres pgPlan -> RRSql <$> withPlan usrVars pgPlan validatedVars
+  -> SetGraphqlIntrospectionOptions
+  -> m (ExecutionPlan, [QueryRootField UnpreparedValue UnpreparedValue], G.SelectionSet G.NoFragments Variable, DirectiveMap)
+convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs varValsM
+  introspectionDisabledRoles = do
+  -- Parse the GraphQL query into the RQL AST
+  (unpreparedQueries, _reusability, normalizedDirectives, normalizedSelectionSet) <-
+    parseGraphQLQuery gqlContext varDefs varValsM directives fields
 
-  return (mkLazyRespTx resolved, mkGeneratedSqlMap resolved)
+  -- Transform the query plans into an execution plan
+  let usrVars = _uiSession userInfo
 
+  -- Process directives on the query
+  (dirMap, _) <- (`onLeft` reportParseErrors) =<<
+    runParseT (parseDirectives customDirectives (G.DLExecutable G.EDLQUERY) normalizedDirectives)
 
-data PreparedSql
-  = PreparedSql
-  { _psQuery    :: !Q.Query
-  , _psPrepArgs :: ![(Q.PrepArg, PGScalarValue)]
-    -- ^ The value is (Q.PrepArg, PGScalarValue) because we want to log the human-readable value of the
-    -- prepared argument (PGScalarValue) and not the binary encoding in PG format (Q.PrepArg)
-  }
+  executionPlan <- for unpreparedQueries \case
+    RFDB sourceName exists ->
+      AB.dispatchAnyBackend @BackendExecute exists
+        \(SourceConfigWith sourceConfig (QDBR db :: QueryDBRoot UnpreparedValue UnpreparedValue b)) -> do
+          let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoins db
+          dbStepInfo <- mkDBQueryPlan @b userInfo sourceName sourceConfig noRelsDBAST
+          pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
+    RFRemote rf -> do
+      RemoteFieldG remoteSchemaInfo remoteField <- runVariableCache $ for rf $ resolveRemoteVariable userInfo
+      pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeQuery [G.SelectionField remoteField]
+    RFAction action -> do
+      let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
+      (actionExecution, actionName, fch) <- pure $ case noRelsDBAST of
+        AQQuery s -> (AEPSync $ resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders usrVars), _aaeName s, _aaeForwardClientHeaders s)
+        AQAsync s -> (AEPAsyncQuery $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s, _aaaqName s, _aaaqForwardClientHeaders s)
+      pure $ ExecStepAction actionExecution (ActionsInfo actionName fch) remoteJoins
+    RFRaw r -> flip onLeft throwError =<< executeIntrospection userInfo r introspectionDisabledRoles
 
--- | Required to log in `query-log`
-instance J.ToJSON PreparedSql where
-  toJSON (PreparedSql q prepArgs) =
-    J.object [ "query" J..= Q.getQueryText q
-             , "prepared_arguments" J..= map (txtEncodedPGVal . snd) prepArgs
-             ]
-
--- | Intermediate reperesentation of a computed SQL statement and prepared
--- arguments, or a raw bytestring (mostly, for introspection responses)
--- From this intermediate representation, a `LazyTx` can be generated, or the
--- SQL can be logged etc.
-data ResolvedQuery
-  = RRRaw !B.ByteString
-  | RRSql !PreparedSql
-
--- | The computed SQL with alias which can be logged. Nothing here represents no
--- SQL for cases like introspection responses. Tuple of alias to a (maybe)
--- prepared statement
-type GeneratedSqlMap = [(G.Alias, Maybe PreparedSql)]
-
-mkLazyRespTx :: [(G.Alias, ResolvedQuery)] -> LazyRespTx
-mkLazyRespTx resolved =
-  fmap encJFromAssocList $ forM resolved $ \(alias, node) -> do
-    resp <- case node of
-      RRRaw bs                   -> return $ encJFromBS bs
-      RRSql (PreparedSql q args) -> liftTx $ asSingleRowJsonResp q (map fst args)
-    return (G.unName $ G.unAlias alias, resp)
-
-mkGeneratedSqlMap :: [(G.Alias, ResolvedQuery)] -> GeneratedSqlMap
-mkGeneratedSqlMap resolved =
-  flip map resolved $ \(alias, node) ->
-    let res = case node of
-                RRRaw _  -> Nothing
-                RRSql ps -> Just ps
-    in (alias, res)
+  -- See Note [Temporarily disabling query plan caching]
+  pure (executionPlan, OMap.elems unpreparedQueries, normalizedSelectionSet, dirMap)

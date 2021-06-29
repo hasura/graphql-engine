@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -12,7 +12,7 @@ import (
 const completionCmdExample = `# Bash
     # Linux
       # Add Bash completion file using:
-      $ sudo hasura completion bash --file=/etc/bash.completion.d/hasura
+      $ sudo hasura completion bash --file=/etc/bash_completion.d/hasura
     # Mac
       # Install bash-completion using homebrew:
       $ brew install bash-completion

@@ -7,12 +7,13 @@ import Tooltip from './Tooltip';
 import styles from './Styles.scss';
 import { useIntrospectionSchema } from '../../../../Common/utils/graphqlUtils';
 
-const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
+const CloneType = ({ headers, toggleModal, handleClonedTypes, dispatch }) => {
   const [prefix, setPrefix] = React.useState('_');
   const prefixOnChange = e => setPrefix(e.target.value);
 
   const { schema, loading, error, introspect } = useIntrospectionSchema(
-    headers
+    headers,
+    dispatch
   );
 
   if (loading) return <Spinner />;

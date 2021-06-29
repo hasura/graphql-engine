@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"text/tabwriter"
 
-	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/migrate/database"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 )
 
 func newMetadataInconsistencyListCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -45,15 +44,12 @@ type metadataInconsistencyListOptions struct {
 	EC *cli.ExecutionContext
 
 	isConsistent        bool
-	inconsistentObjects []database.InconsistentMetadataInterface
+	inconsistentObjects []metadataobject.InconsistentMetadataObject
 }
 
-func (o *metadataInconsistencyListOptions) read() error {
-	d, err := migrate.NewMigrate(o.EC, true)
-	if err != nil {
-		return err
-	}
-	o.isConsistent, o.inconsistentObjects, err = d.GetInconsistentMetadata()
+func (o *metadataInconsistencyListOptions) read(handler *metadataobject.Handler) error {
+	var err error
+	o.isConsistent, o.inconsistentObjects, err = handler.GetInconsistentMetadata()
 	if err != nil {
 		return err
 	}
@@ -63,7 +59,7 @@ func (o *metadataInconsistencyListOptions) read() error {
 func (o *metadataInconsistencyListOptions) run() error {
 	o.EC.Spin("Getting inconsistent metadata...")
 
-	err := o.read()
+	err := o.read(metadataobject.NewHandlerFromEC(o.EC))
 	if err != nil {
 		return err
 	}

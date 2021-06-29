@@ -22,12 +22,14 @@ import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/Gql
 
 import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { dataSource } from '../../../../dataSources';
 
 const ColumnEditorList = ({
   tableSchema,
   currentSchema,
   columnEdit,
   dispatch,
+  readOnlyMode,
   validTypeCasts,
   dataTypeIndexMap,
   columnDefaultFunctions,
@@ -55,23 +57,34 @@ const ColumnEditorList = ({
   const columns = tableSchema.columns.sort(ordinalColSort);
 
   /*
-   * col.udt_name contains internal representation of the data type
+   * col.data_type_name contains internal representation of the data type
    * */
   return columns.map((col, i) => {
     const colName = col.column_name;
+    const isArrayDataType = col.data_type === dataSource.columnDataTypes.ARRAY;
+    // todo -- create getColumnProperties utility
+    const getDisplayName = () => {
+      if (isArrayDataType) {
+        return col.data_type_name.replace('_', '') + '[]';
+      }
+      return dataSource.getColumnType(col);
+    };
+    const getType = () =>
+      isArrayDataType
+        ? col.data_type_name.replace('_', '') + '[]'
+        : col.data_type_name;
 
     const columnProperties = {
       name: colName,
       tableName: col.table_name,
       schemaName: col.table_schema,
-      display_type_name:
-        col.data_type !== 'USER-DEFINED' ? col.data_type : col.udt_name,
-      type: col.udt_name,
+      display_type_name: getDisplayName(),
+      type: getType(),
+      isArrayDataType,
       isNullable: col.is_nullable === 'YES',
-      isIdentity: col.is_identity === 'YES',
+      isIdentity: col.is_identity,
       pkConstraint: columnPKConstraints[colName],
       isUnique: isColumnUnique(tableSchema, colName),
-      // uniqueConstraint: columnUniqueConstraints[colName],
       default: col.column_default || '',
       comment: col.comment || '',
       customFieldName: customColumnNames[colName] || '',
@@ -93,12 +106,12 @@ const ColumnEditorList = ({
         dispatch(deleteColumnSql(col, tableSchema));
       }
     };
-
     const gqlCompatibilityWarning = () => {
       return (
         <GqlCompatibilityWarning
           identifier={colName}
           className={styles.add_mar_left_small}
+          ifWarningCanBeFixed
         />
       );
     };
@@ -107,7 +120,6 @@ const ColumnEditorList = ({
       const propertiesDisplay = [];
 
       const propertiesList = [];
-
       propertiesList.push(columnProperties.display_type_name);
 
       if (columnProperties.pkConstraint) {
@@ -172,6 +184,9 @@ const ColumnEditorList = ({
      * */
 
     const getValidTypeCasts = udtName => {
+      if (isArrayDataType) {
+        udtName = udtName.replace('_', '');
+      }
       const lowerUdtName = udtName.toLowerCase();
       if (lowerUdtName in validTypeCasts) {
         return validTypeCasts[lowerUdtName];
@@ -215,8 +230,11 @@ const ColumnEditorList = ({
     const colEditorExpanded = () => {
       return (
         <ColumnEditor
-          alterTypeOptions={getValidTypeCasts(col.udt_name)}
-          defaultOptions={getValidDefaultTypes(col.udt_name)}
+          alterTypeOptions={getValidTypeCasts(
+            col.data_type_name,
+            isArrayDataType
+          )}
+          defaultOptions={getValidDefaultTypes(col.data_type_name)}
           column={col}
           onSubmit={onSubmit}
           tableName={tableName}
@@ -244,6 +262,7 @@ const ColumnEditorList = ({
           property={`column-${i}`}
           service="modify-table"
           saveFunc={onSubmit}
+          readOnlyMode={readOnlyMode}
           removeFunc={columnProperties.pkConstraint ? null : onDelete}
           collapsedClass={styles.display_flex}
           expandedLabel={expandedLabel}

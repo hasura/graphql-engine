@@ -1,0 +1,212 @@
+- description: column not accessible to any of the roles should not be accessible to the inherited role
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: manager_employee
+    X-Hasura-User-Id: '1'
+    X-Hasura-Manager-Id: '2'
+  response:
+    errors:
+    - extensions:
+        path: "$.selectionSet.employee.selectionSet.hr_remarks"
+        code: validation-failed
+      message: "field \"hr_remarks\" not found in type: 'employee'"
+  query:
+    query: |
+      query {
+        employee {
+          name
+          title
+          manager_remarks
+          hr_remarks
+        }
+      }
+
+- description: check when a role doesn't have access to a certain column in a row, it should be `null`
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: manager_employee
+    X-Hasura-User-Id: '1'
+    X-Hasura-Manager-Id: '1'
+  response:
+    data:
+      employee:
+        # All the roles have access all the columns that
+        # are queried, hence no null values
+        - id: 1
+          name: employee 1
+          title: Sales representative
+          salary: 10000
+          manager_remarks: good
+        # Only the manager role has access to this row
+        # and the manager can only access the name, title
+        # and the manager_remarks fields
+        - id: null
+          name: employee 2
+          title: Sales representative
+          salary: null
+          manager_remarks: good
+  query:
+    query: |
+      query {
+        employee {
+          id
+          name
+          title
+          salary
+          manager_remarks
+        }
+      }
+
+- description: Check if appropriate permissions are applied to the relationship field as well
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: manager_employee
+    X-Hasura-User-Id: '1'
+    X-Hasura-Manager-Id: '2'
+  response:
+    data:
+      employee:
+        - name: employee 1
+          title: Sales representative
+          salary: 10000
+          manager_remarks: null
+          manager: null
+        - name: employee 4
+          title: Sales representative
+          salary: null
+          manager_remarks: hard working
+          manager:
+            id: 2
+            name: sales manager 2
+            phone: '9977223344'
+            address: buena vista
+  query:
+    # `address` field in the `manager` relationship,is not accessible to the employee's role
+    # but is accessible to the manager's role and the "employee 4"'s manager
+    # happens to be the manager with id = 2 (x-hasura-manager-id), hence
+    # the `address` column is accessible to the inherited role
+    query: |
+      query {
+        employee {
+          name
+          title
+          salary
+          manager_remarks
+          manager {
+            id
+            name
+            phone
+            address
+          }
+        }
+      }
+
+- description: Allow aggregation to the inherited role even if one of the parent role allows aggregation
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: manager_employee
+    X-Hasura-Manager-Id: '2'
+    X-Hasura-User-Id: '1'
+  response:
+    data:
+      employee_aggregate:
+        aggregate:
+          count: 2
+          sum:
+            salary: 25430
+  query:
+    query: |
+      query {
+        employee_aggregate {
+          aggregate {
+            count
+            sum {
+              salary
+            }
+          }
+        }
+      }
+
+- description: computed fields should only be accessible to the inherited role to the rows it has access to
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: manager_employee
+    X-Hasura-Manager-Id: '2'
+    X-Hasura-User-Id: '1'
+  response:
+    data:
+      employee:
+        - salary: 10000
+          yearly_salary: 120000
+        # The manager role doesn't have access to the yearly_salary
+        # computed field, so we return a null here
+        - salary: null
+          yearly_salary: null
+  query:
+    query: |
+      query {
+        employee {
+          salary
+          yearly_salary
+        }
+      }
+
+- description:
+    query multiple tables using an inherited role, even when one of the role doesn't have select permission
+    to one of the table
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: manager_employee
+    X-Hasura-Manager-Id: '2'
+    X-Hasura-User-Id: '1'
+  response:
+    data:
+      employee:
+        - name: employee 1
+          salary: 10000
+        - name: employee 4
+          salary: null
+      manager:
+        - team_id: 1
+          name: sales manager 2
+  query:
+    query: |
+      query {
+        employee {
+          name
+          salary
+        }
+        manager {
+          team_id
+          name
+        }
+      }
+
+- description: "The limits of the role should be combined to be the max of the limits of the rows. The
+  'non_paying_user' inherited role is created out of the 'free_user' role which has limit set to 2
+  and the 'premium_user_free_trial' role which has limit set to 4. So 4 rows are expected to be returned
+  for the inherited role."
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: non_paying_user
+  response:
+    data:
+      articles:
+        - title: title 2
+        - title: title 3
+        - title: title 4
+        - title: title 5
+  query:
+    query: |
+      query {
+        articles {
+          title
+        }
+      }

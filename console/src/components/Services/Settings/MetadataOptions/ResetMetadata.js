@@ -5,7 +5,7 @@ import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Common.scss';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
-import { resetMetadata } from '../Actions';
+import { resetMetadata } from '../../../../metadata/actions';
 
 class ResetMetadata extends Component {
   constructor() {

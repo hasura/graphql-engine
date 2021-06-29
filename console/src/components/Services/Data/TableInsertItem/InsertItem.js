@@ -8,23 +8,26 @@ import { ordinalColSort } from '../utils';
 import { insertItem, I_RESET, fetchEnumOptions } from './InsertActions';
 import { setTable } from '../DataActions';
 import { NotFoundError } from '../../../Error/PageNotFound';
-import {
-  findTable,
-  generateTableDef,
-  isColumnAutoIncrement,
-} from '../../../Common/utils/pgUtils';
-import { TypedInput } from '../Common/Components/TypedInput';
+import { findTable, isFeatureSupported } from '../../../../dataSources';
 import styles from '../../../Common/TableCommon/Table.scss';
+import { TableRow } from '../Common/Components/TableRow';
+import { generateTableDef } from '../../../../dataSources';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
+import MigrationCheckbox from './MigrationCheckbox';
+import globals from '../../../../Globals';
+import { CLI_CONSOLE_MODE } from '../../../../constants';
+import FeatureDisabled from '../FeatureDisabled';
 
 class InsertItem extends Component {
   constructor() {
     super();
-    this.state = { insertedRows: 0 };
+    this.state = { insertedRows: 0, isMigration: false };
   }
 
   componentDidMount() {
-    this.props.dispatch(setTable(this.props.tableName));
-    this.props.dispatch(fetchEnumOptions());
+    const { tableName, dispatch } = this.props;
+    dispatch(setTable(tableName));
+    dispatch(fetchEnumOptions());
   }
 
   componentWillUnmount() {
@@ -40,6 +43,10 @@ class InsertItem extends Component {
     }));
   }
 
+  toggleMigrationCheckBox = () => {
+    this.setState(prev => ({ isMigration: !prev.isMigration }));
+  };
+
   render() {
     const {
       tableName,
@@ -54,6 +61,7 @@ class InsertItem extends Component {
       count,
       dispatch,
       enumOptions,
+      currentSource,
     } = this.props;
 
     const currentTable = findTable(
@@ -61,29 +69,44 @@ class InsertItem extends Component {
       generateTableDef(tableName, currentSchema)
     );
 
+    if (!isFeatureSupported('tables.insert.enabled')) {
+      return (
+        <FeatureDisabled
+          tab="insert"
+          tableName={tableName}
+          schemaName={currentSchema}
+        />
+      );
+    }
+
     // check if table exists
-    if (!currentTable) {
+    if (!currentTable && isFeatureSupported('tables.insert.enabled')) {
       // throw a 404 exception
       throw new NotFoundError();
     }
+
+    const isCLIMode = globals.consoleMode === CLI_CONSOLE_MODE;
 
     const columns = currentTable.columns.sort(ordinalColSort);
 
     const refs = {};
 
     const elements = columns.map((col, i) => {
-      const colName = col.column_name;
-      const hasDefault = col.column_default && col.column_default.trim() !== '';
-      const isNullable = col.is_nullable && col.is_nullable !== 'NO';
-      const isIdentity = col.is_identity && col.is_identity !== 'NO';
-      const isAutoIncrement = isColumnAutoIncrement(col);
+      const {
+        column_name: colName,
+        is_identity: isIdentity,
+        column_default,
+      } = col;
+      const hasDefault = column_default && column_default.trim() !== '';
 
-      refs[colName] = { valueNode: null, nullNode: null, defaultNode: null };
+      refs[colName] = {
+        valueNode: null,
+        nullNode: null,
+        defaultNode: null,
+        insertRadioNode: null,
+      };
 
       const onChange = (e, val) => {
-        if (isAutoIncrement) return;
-        if (!isNullable && !hasDefault) return;
-
         const textValue = typeof val === 'string' ? val : e.target.value;
 
         const radioToSelectWhenEmpty =
@@ -95,8 +118,6 @@ class InsertItem extends Component {
         radioToSelectWhenEmpty.checked = !textValue.length;
       };
       const onFocus = e => {
-        if (isAutoIncrement) return;
-        if (!isNullable && !hasDefault) return;
         const textValue = e.target.value;
         if (
           textValue === undefined ||
@@ -113,65 +134,16 @@ class InsertItem extends Component {
       };
 
       return (
-        <div key={i} className="form-group">
-          <label
-            className={'col-sm-3 control-label ' + styles.insertBoxLabel}
-            title={colName}
-          >
-            {colName}
-          </label>
-          <label className={styles.radioLabel + ' radio-inline'}>
-            <input
-              disabled={isAutoIncrement}
-              type="radio"
-              ref={node => {
-                refs[colName].insertRadioNode = node;
-              }}
-              name={colName + '-value'}
-              value="option1"
-              defaultChecked={!hasDefault & !isNullable}
-            />
-            <TypedInput
-              inputRef={node => {
-                refs[colName].valueNode = node;
-              }}
-              enumOptions={enumOptions}
-              col={col}
-              clone={clone}
-              onChange={onChange}
-              onFocus={onFocus}
-              index={i}
-            />
-          </label>
-          <label className={styles.radioLabel + ' radio-inline'}>
-            <input
-              type="radio"
-              ref={node => {
-                refs[colName].nullNode = node;
-              }}
-              disabled={!isNullable}
-              defaultChecked={isNullable}
-              name={colName + '-value'}
-              value="NULL"
-              data-test={`nullable-radio-${i}`}
-            />
-            <span className={styles.radioSpan}>NULL</span>
-          </label>
-          <label className={styles.radioLabel + ' radio-inline'}>
-            <input
-              type="radio"
-              ref={node => {
-                refs[colName].defaultNode = node;
-              }}
-              name={colName + '-value'}
-              value="option3"
-              disabled={!hasDefault && !isIdentity}
-              defaultChecked={hasDefault || isIdentity}
-              data-test={`typed-input-default-${i}`}
-            />
-            <span className={styles.radioSpan}>Default</span>
-          </label>
-        </div>
+        <TableRow
+          key={i}
+          column={col}
+          setRef={(key, node) => (refs[colName][key] = node)}
+          enumOptions={enumOptions}
+          index={i}
+          clone={clone}
+          onChange={onChange}
+          onFocus={onFocus}
+        />
       );
     });
 
@@ -198,87 +170,100 @@ class InsertItem extends Component {
       );
     }
 
+    const onClickClear = () => {
+      const form = document.getElementById('insertForm');
+      const inputs = form.getElementsByTagName('input');
+      Array.from(inputs).forEach(input => {
+        switch (input.type) {
+          case 'text':
+            input.value = '';
+            break;
+          case 'radio':
+          case 'checkbox':
+            break;
+          default:
+        }
+      });
+    };
+
+    const onClickSave = e => {
+      e.preventDefault();
+      const inputValues = {};
+      Object.keys(refs).map(colName => {
+        if (refs[colName].nullNode.checked) {
+          // null
+          inputValues[colName] = null;
+        } else if (refs[colName].defaultNode.checked) {
+          // default
+          return;
+        } else {
+          inputValues[colName] =
+            refs[colName].valueNode.props !== undefined
+              ? refs[colName].valueNode.props.value
+              : refs[colName].valueNode.value;
+        }
+      });
+      dispatch(insertItem(tableName, inputValues, this.state.isMigration)).then(
+        () => {
+          this.nextInsert();
+        }
+      );
+    };
+
     return (
-      <div className={styles.container + ' container-fluid'}>
-        <TableHeader
-          count={count}
-          dispatch={dispatch}
-          table={currentTable}
-          tabName="insert"
-          migrationMode={migrationMode}
-          readOnlyMode={readOnlyMode}
-        />
-        <br />
-        <div className={styles.insertContainer + ' container-fluid'}>
-          <div className="col-xs-9">
-            <form id="insertForm" className="form-horizontal">
-              {elements}
-              <Button
-                type="submit"
-                color="yellow"
-                size="sm"
-                onClick={e => {
-                  e.preventDefault();
-                  const inputValues = {};
-                  Object.keys(refs).map(colName => {
-                    if (refs[colName].nullNode.checked) {
-                      // null
-                      inputValues[colName] = null;
-                    } else if (refs[colName].defaultNode.checked) {
-                      // default
-                      return;
-                    } else {
-                      inputValues[colName] =
-                        refs[colName].valueNode.props !== undefined
-                          ? refs[colName].valueNode.props.value
-                          : refs[colName].valueNode.value;
-                    }
-                  });
-                  dispatch(insertItem(tableName, inputValues)).then(() => {
-                    this.nextInsert();
-                  });
-                }}
-                data-test="insert-save-button"
-              >
-                {buttonText}
-              </Button>
-              <Button
-                color="white"
-                size="sm"
-                onClick={e => {
-                  e.preventDefault();
-                  const form = document.getElementById('insertForm');
-                  const inputs = form.getElementsByTagName('input');
-                  for (let i = 0; i < inputs.length; i++) {
-                    switch (inputs[i].type) {
-                      // case 'hidden':
-                      case 'text':
-                        inputs[i].value = '';
-                        break;
-                      case 'radio':
-                      case 'checkbox':
-                        // inputs[i].checked = false;
-                        break;
-                      default:
-                      // pass
-                    }
-                  }
-                }}
-                data-test="clear-button"
-              >
-                Clear
-              </Button>
-              <ReloadEnumValuesButton
-                dispatch={dispatch}
-                isEnum={currentTable.is_enum}
-              />
-            </form>
+      <RightContainer>
+        <div className={styles.container + ' container-fluid'}>
+          <TableHeader
+            count={count}
+            dispatch={dispatch}
+            table={currentTable}
+            source={currentSource}
+            tabName="insert"
+            migrationMode={migrationMode}
+            readOnlyMode={readOnlyMode}
+          />
+          <br />
+          <div className={styles.insertContainer + ' container-fluid'}>
+            <div className="col-xs-9">
+              <form id="insertForm" className="form-horizontal">
+                <div className={styles.form_flex}>
+                  {elements}
+                  <MigrationCheckbox
+                    onChange={this.toggleMigrationCheckBox}
+                    isChecked={this.state.isMigration}
+                    isCLIMode={isCLIMode}
+                  />
+                </div>
+                <div className={styles.display_flex}>
+                  <Button
+                    type="submit"
+                    color="yellow"
+                    size="sm"
+                    onClick={onClickSave}
+                    data-test="insert-save-button"
+                  >
+                    {buttonText}
+                  </Button>
+                  <Button
+                    color="white"
+                    size="sm"
+                    onClick={onClickClear}
+                    data-test="clear-button"
+                  >
+                    Clear
+                  </Button>
+                  {currentTable.is_enum ? (
+                    <ReloadEnumValuesButton dispatch={dispatch} />
+                  ) : null}
+                </div>
+              </form>
+            </div>
+            <div className="col-xs-3">{alert}</div>
           </div>
-          <div className="col-xs-3">{alert}</div>
+          <br />
+          <br />
         </div>
-        <br />
-        <br />
-      </div>
+      </RightContainer>
     );
   }
 }
@@ -307,6 +292,7 @@ const mapStateToProps = (state, ownProps) => {
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     currentSchema: state.tables.currentSchema,
+    currentSource: state.tables.currentDataSource,
   };
 };
 

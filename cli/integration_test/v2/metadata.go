@@ -7,9 +7,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/commands"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/commands"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,8 +31,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"metadata-export",
 			&commands.MetadataExportOptions{
-				EC:         ec,
-				ActionType: "export",
+				EC: ec,
 			},
 			nil,
 			"",
@@ -39,8 +40,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"metadata-apply",
 			&commands.MetadataApplyOptions{
-				EC:         ec,
-				ActionType: "apply",
+				EC: ec,
 			},
 			nil,
 			filepath.Join(currDir, getMetadataDir(ec.Version.ServerSemver), "2_metadata"),
@@ -49,8 +49,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"metadata-export",
 			&commands.MetadataExportOptions{
-				EC:         ec,
-				ActionType: "export",
+				EC: ec,
 			},
 			nil,
 			"",
@@ -59,8 +58,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"metadata-clear",
 			&commands.MetadataClearOptions{
-				EC:         ec,
-				ActionType: "clear",
+				EC: ec,
 			},
 			nil,
 			"",
@@ -69,8 +67,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"metadata-export",
 			&commands.MetadataExportOptions{
-				EC:         ec,
-				ActionType: "export",
+				EC: ec,
 			},
 			nil,
 			"",
@@ -92,6 +89,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 			&commands.MigrateApplyOptions{
 				EC:            ec,
 				DownMigration: "all",
+				Source:        cli.Source{"", hasura.SourceKindPG},
 			},
 			nil,
 			"",
@@ -111,7 +109,9 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 					t.Fatalf("%s: unable to copy metadata file, got %v", tc.name, err)
 				}
 			}
+
 			err := tc.opts.Run()
+
 			if err != tc.err {
 				t.Fatalf("%s: expected %v, got %v", tc.name, tc.err, err)
 			}
@@ -132,7 +132,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 					if err != nil {
 						t.Fatalf("%s: unable to read actual metadata file %s, got %v", tc.name, name, err)
 					}
-					assert.Equal(t, string(expectedByt), string(actualByt))
+					assert.Equalf(t, string(expectedByt), string(actualByt), "file: %s", filepath.Join(tc.expectedMetadataFolder, name))
 				}
 			}
 		})

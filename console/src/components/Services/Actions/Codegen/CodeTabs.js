@@ -13,6 +13,7 @@ const CodeTabs = ({
   currentAction,
   parentMutation,
   shouldDerive,
+  dispatch,
 }) => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
@@ -23,9 +24,10 @@ const CodeTabs = ({
     setError(null);
     getFrameworkCodegen(
       framework,
-      currentAction.action_name,
+      currentAction.name,
       actionsSdl,
-      shouldDerive ? parentMutation : null
+      shouldDerive ? parentMutation : null,
+      dispatch
     )
       .then(codeFiles => {
         setCodegenFiles(codeFiles);

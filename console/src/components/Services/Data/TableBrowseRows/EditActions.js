@@ -8,12 +8,14 @@ import {
 import dataHeaders from '../Common/Headers';
 import {
   findTable,
-  generateTableDef,
-  getColumnType,
   getTableColumn,
   getEnumColumnMappings,
-} from '../../../Common/utils/pgUtils';
+  dataSource,
+} from '../../../../dataSources';
 import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
+import { isStringArray } from '../../../Common/utils/jsUtils';
+import { generateTableDef } from '../../../../dataSources';
+import { getTableConfiguration } from './utils';
 
 const E_SET_EDITITEM = 'EditItem/E_SET_EDITITEM';
 const E_ONGOING_REQ = 'EditItem/E_ONGOING_REQ';
@@ -30,10 +32,11 @@ const modalClose = () => ({ type: MODAL_CLOSE });
 /* ****************** edit action creators ************ */
 const editItem = (tableName, colValues) => {
   return (dispatch, getState) => {
-    const state = getState();
-
+    const { tables, metadata } = getState();
+    const sources = metadata.metadataObject?.sources;
+    const tableConfiguration = getTableConfiguration(tables, sources);
     /* Type all the values correctly */
-    const { currentSchema, allSchemas } = state.tables;
+    const { currentSchema, allSchemas, currentDataSource } = tables;
 
     const tableDef = generateTableDef(tableName, currentSchema);
 
@@ -52,7 +55,7 @@ const editItem = (tableName, colValues) => {
       const colValue = colValues[colName];
 
       const column = getTableColumn(table, colName);
-      const colType = getColumnType(column);
+      const colType = dataSource.getColumnType(column);
 
       if (colValue && colValue.default === true) {
         _defaultArray.push(colName);
@@ -69,7 +72,10 @@ const editItem = (tableName, colValues) => {
           } else {
             _setObject[colName] = null;
           }
-        } else if (colType === 'json' || colType === 'jsonb') {
+        } else if (
+          colType === dataSource.columnDataTypes.JSONB ||
+          colType === dataSource.columnDataTypes.JSONDTYPE
+        ) {
           try {
             _setObject[colName] = JSON.parse(colValue);
           } catch (e) {
@@ -78,6 +84,17 @@ const editItem = (tableName, colValues) => {
               ' :: could not read ' +
               colValue +
               ' as a valid JSON object/array';
+          }
+        } else if (
+          colType === dataSource.columnDataTypes.ARRAY &&
+          isStringArray(colValue)
+        ) {
+          try {
+            const arr = JSON.parse(colValue);
+            _setObject[colName] = dataSource.arrayToPostgresArray(arr);
+          } catch {
+            errorMessage =
+              colName + ' :: could not read ' + colValue + ' as a valid array';
           }
         } else {
           _setObject[colName] = colValue;
@@ -93,22 +110,29 @@ const editItem = (tableName, colValues) => {
       });
     }
 
-    const reqBody = {
-      type: 'update',
-      args: {
-        table: tableDef,
-        $set: _setObject,
-        $default: _defaultArray,
-        where: state.tables.update.pkClause,
-      },
-    };
+    if (!dataSource.generateEditRowRequest) return;
+
+    const {
+      getEditRowRequestBody,
+      processEditData,
+      endpoint: url,
+    } = dataSource.generateEditRowRequest();
+
+    const reqBody = getEditRowRequestBody({
+      source: currentDataSource,
+      tableDef,
+      tableConfiguration,
+      set: _setObject,
+      defaultArray: _defaultArray,
+      where: tables.update.pkClause,
+    });
+
     const options = {
       method: 'POST',
       credentials: globalCookiePolicy,
       headers: dataHeaders(getState),
       body: JSON.stringify(reqBody),
     };
-    const url = Endpoints.query;
 
     return dispatch(
       requestAction(url, options, E_REQUEST_SUCCESS, E_REQUEST_ERROR)
@@ -117,7 +141,8 @@ const editItem = (tableName, colValues) => {
         dispatch(
           showSuccessNotification(
             'Edited!',
-            'Affected rows: ' + data.affected_rows
+            'Affected rows: ' +
+              processEditData({ data, tableDef, tableConfiguration })
           )
         );
       },
@@ -131,7 +156,7 @@ const editItem = (tableName, colValues) => {
 const fetchEnumOptions = () => {
   return (dispatch, getState) => {
     const {
-      tables: { allSchemas, currentTable, currentSchema },
+      tables: { allSchemas, currentTable, currentSchema, currentDataSource },
     } = getState();
 
     const requests = getEnumColumnMappings(
@@ -150,7 +175,11 @@ const fetchEnumOptions = () => {
     const url = Endpoints.query;
 
     requests.forEach(request => {
-      const req = getEnumOptionsQuery(request, currentSchema);
+      const req = getEnumOptionsQuery(
+        request,
+        currentSchema,
+        currentDataSource
+      );
 
       return dispatch(
         requestAction(url, {

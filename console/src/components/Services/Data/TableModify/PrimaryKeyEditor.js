@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   DELETE_PK_WARNING,
   setPrimaryKeys,
@@ -18,6 +18,7 @@ const PrimaryKeyEditor = ({
   pkModify,
   dispatch,
   currentSchema,
+  readOnlyMode,
 }) => {
   const columns = tableSchema.columns;
   const tablePrimaryKeyColumns = tableSchema.primary_key
@@ -36,7 +37,6 @@ const PrimaryKeyEditor = ({
     return orderedCols.find(c => c.name === pk).index;
   });
 
-  // get PK constraint name
   const pkConstraintName = tableSchema.primary_key
     ? tableSchema.primary_key.constraint_name
     : '';
@@ -55,7 +55,9 @@ const PrimaryKeyEditor = ({
   );
 
   // label next to the button when the editor is expanded
-  const pkEditorExpandedLabel = () => <div>{pkConfigText}</div>;
+  const pkEditorExpandedLabel = () => (
+    <div data-test="pk-config-text">{pkConfigText}</div>
+  );
 
   // expanded editor content
   const pkEditorExpanded = () => (
@@ -95,6 +97,10 @@ const PrimaryKeyEditor = ({
     );
   };
 
+  useEffect(() => {
+    setPkEditState();
+  }, [columns.length]);
+
   // remove
   const onRemove = () => {
     if (pkConstraintName) {
@@ -116,6 +122,7 @@ const PrimaryKeyEditor = ({
       collapsedLabel={pkEditorCollapsedLabel}
       expandedLabel={pkEditorExpandedLabel}
       editorExpanded={pkEditorExpanded}
+      readOnlyMode={readOnlyMode}
       property={'pks'}
       service="modify-table"
       saveFunc={onSave}

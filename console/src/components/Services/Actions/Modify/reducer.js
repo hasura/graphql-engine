@@ -18,6 +18,12 @@ export const setActionKind = kind => ({
   kind,
 });
 
+const SET_ACTION_COMMENT = 'Actions/Modify/SET_ACTION_COMMENT';
+export const setActionComment = comment => ({
+  type: SET_ACTION_COMMENT,
+  comment,
+});
+
 const SET_ACTION_DEFINITION = 'Actions/Modify/SET_ACTION_DEFINITION';
 export const setActionDefinition = (sdl, error, timer, ast) => ({
   type: SET_ACTION_DEFINITION,
@@ -62,6 +68,11 @@ const reducer = (state = defaultState, action) => {
       return {
         ...state,
         kind: action.kind,
+      };
+    case SET_ACTION_COMMENT:
+      return {
+        ...state,
+        comment: action.comment,
       };
     case SET_FETCHING:
       return {

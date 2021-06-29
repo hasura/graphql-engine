@@ -9,10 +9,12 @@ import { ordinalColSort } from '../utils';
 import { replace } from 'react-router-redux';
 import globals from '../../../../Globals';
 import { E_ONGOING_REQ, editItem } from './EditActions';
-import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
+import { findTable, generateTableDef } from '../../../../dataSources';
 import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
-import { TypedInput } from '../Common/Components/TypedInput';
 import { fetchEnumOptions } from './EditActions';
+import { TableRow } from '../Common/Components/TableRow';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
+import styles from '../../../Common/TableCommon/Table.scss';
 
 class EditItem extends Component {
   constructor() {
@@ -38,6 +40,7 @@ class EditItem extends Component {
       count,
       dispatch,
       enumOptions,
+      currentSource,
     } = this.props;
 
     // check if item exists
@@ -46,6 +49,7 @@ class EditItem extends Component {
         replace(
           `${globals.urlPrefix || ''}${getTableBrowseRoute(
             currentSchema,
+            currentSource,
             tableName,
             true
           )}`
@@ -53,8 +57,6 @@ class EditItem extends Component {
       );
       return null;
     }
-
-    const styles = require('../../../Common/TableCommon/Table.scss');
 
     const currentTable = findTable(
       schemas,
@@ -66,75 +68,26 @@ class EditItem extends Component {
     const refs = {};
 
     const elements = columns.map((col, i) => {
-      const colName = col.column_name;
-      const hasDefault = col.column_default && col.column_default.trim() !== '';
-      const isNullable = col.is_nullable && col.is_nullable !== 'NO';
-      const isIdentity = col.is_identity && col.is_identity !== 'NO';
+      const { column_name: colName } = col;
 
       const prevValue = oldItem[colName];
 
       refs[colName] = {
+        insertRadioNode: null,
         valueNode: null,
-        valueInput: null,
         nullNode: null,
         defaultNode: null,
       };
 
       return (
-        <div key={i} className="form-group">
-          <label
-            className={'col-sm-3 control-label ' + styles.insertBoxLabel}
-            title={colName}
-          >
-            {colName}
-          </label>
-          <label className={styles.radioLabel + ' radio-inline'}>
-            <input
-              type="radio"
-              ref={node => {
-                refs[colName].valueNode = node;
-              }}
-              name={colName + '-value'}
-              value="option1"
-            />
-            <TypedInput
-              inputRef={node => {
-                refs[colName].valueInput = node;
-              }}
-              prevValue={prevValue}
-              enumOptions={enumOptions}
-              col={col}
-              index={i}
-              hasDefault={hasDefault}
-            />
-          </label>
-          <label className={styles.radioLabel + ' radio-inline'}>
-            <input
-              type="radio"
-              ref={node => {
-                refs[colName].nullNode = node;
-              }}
-              disabled={!isNullable}
-              name={colName + '-value'}
-              value="NULL"
-              defaultChecked={prevValue === null}
-            />
-            <span className={styles.radioSpan}>NULL</span>
-          </label>
-          <label className={styles.radioLabel + ' radio-inline'}>
-            <input
-              type="radio"
-              ref={node => {
-                refs[colName].defaultNode = node;
-              }}
-              name={colName + '-value'}
-              value="option3"
-              disabled={!hasDefault && !isIdentity}
-              defaultChecked={isIdentity}
-            />
-            <span className={styles.radioSpan}>Default</span>
-          </label>
-        </div>
+        <TableRow
+          key={i}
+          column={col}
+          setRef={(key, node) => (refs[colName][key] = node)}
+          enumOptions={enumOptions}
+          index={i}
+          prevValue={prevValue}
+        />
       );
     });
 
@@ -172,11 +125,11 @@ class EditItem extends Component {
         } else if (refs[colName].defaultNode.checked) {
           // default
           inputValues[colName] = { default: true };
-        } else if (refs[colName].valueNode.checked) {
+        } else if (refs[colName].insertRadioNode.checked) {
           inputValues[colName] =
-            refs[colName].valueInput.props !== undefined
-              ? refs[colName].valueInput.props.value
-              : refs[colName].valueInput.value;
+            refs[colName].valueNode.props !== undefined
+              ? refs[colName].valueNode.props.value
+              : refs[colName].valueNode.value;
         }
       });
 
@@ -186,40 +139,42 @@ class EditItem extends Component {
     };
 
     return (
-      <div className={styles.container + ' container-fluid'}>
-        <TableHeader
-          count={count}
-          dispatch={dispatch}
-          table={currentTable}
-          tabName="edit"
-          migrationMode={migrationMode}
-          readOnlyMode={readOnlyMode}
-        />
-        <br />
-        <div className={styles.insertContainer + ' container-fluid'}>
-          <div className="col-xs-9">
-            <form id="updateForm" className="form-horizontal">
-              {elements}
-              <Button
-                type="submit"
-                color="yellow"
-                size="sm"
-                onClick={handleSaveClick}
-                data-test="edit-save-button"
-              >
-                {buttonText}
-              </Button>
-              <ReloadEnumValuesButton
-                dispatch={dispatch}
-                isEnum={currentTable.is_enum}
-              />
-            </form>
+      <RightContainer>
+        <div className={styles.container + ' container-fluid'}>
+          <TableHeader
+            count={count}
+            dispatch={dispatch}
+            table={currentTable}
+            source={currentSource}
+            tabName="edit"
+            migrationMode={migrationMode}
+            readOnlyMode={readOnlyMode}
+          />
+          <br />
+          <div className={styles.insertContainer + ' container-fluid'}>
+            <div className="col-xs-9">
+              <form id="updateForm" className="form-horizontal">
+                {elements}
+                <Button
+                  type="submit"
+                  color="yellow"
+                  size="sm"
+                  onClick={handleSaveClick}
+                  data-test="edit-save-button"
+                >
+                  {buttonText}
+                </Button>
+                {currentTable.is_enum ? (
+                  <ReloadEnumValuesButton dispatch={dispatch} />
+                ) : null}
+              </form>
+            </div>
+            <div className="col-xs-3">{alert}</div>
           </div>
-          <div className="col-xs-3">{alert}</div>
+          <br />
+          <br />
         </div>
-        <br />
-        <br />
-      </div>
+      </RightContainer>
     );
   }
 }
@@ -247,6 +202,7 @@ const mapStateToProps = (state, ownProps) => {
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     currentSchema: state.tables.currentSchema,
+    currentSource: state.tables.currentDataSource,
   };
 };
 

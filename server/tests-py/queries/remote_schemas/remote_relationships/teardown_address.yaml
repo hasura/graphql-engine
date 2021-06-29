@@ -1,0 +1,8 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      drop table address
+    cascade: true
+# also drops remote relationship as direct dep

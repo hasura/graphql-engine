@@ -5,8 +5,18 @@ import {
 } from 'graphql';
 import React from 'react';
 import endpoints from '../../../Endpoints';
+import { Dispatch } from '../../../types';
+import requestAction from '../../../utils/requestAction';
 
-export const useIntrospectionSchema = (headers = {}) => {
+export const getGraphQLQueryPayload = (
+  query: string,
+  variables: Record<string, any>
+) => ({
+  query,
+  variables,
+});
+
+export const useIntrospectionSchema = (headers = {}, dispatch: Dispatch) => {
   const [schema, setSchema] = React.useState<GraphQLSchema | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
@@ -14,12 +24,22 @@ export const useIntrospectionSchema = (headers = {}) => {
   const introspect = () => {
     setLoading(true);
 
-    fetch(endpoints.graphQLUrl, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ query: getIntrospectionQuery() }),
-    })
-      .then(r => r.json())
+    dispatch(
+      requestAction(
+        endpoints.graphQLUrl,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(
+            getGraphQLQueryPayload(getIntrospectionQuery(), {})
+          ),
+        },
+        undefined,
+        undefined,
+        true,
+        true
+      )
+    )
       .then(response => {
         if (response.data) {
           setSchema(buildClientSchema(response.data));
@@ -37,7 +57,7 @@ export const useIntrospectionSchema = (headers = {}) => {
     return () => setSchema(null);
   };
 
-  React.useEffect(introspect, []);
+  React.useEffect(introspect, [dispatch, headers]);
 
   return {
     schema,

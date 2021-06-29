@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Button from '../../../Common/Button/Button';
-import { dropInconsistentObjects } from '../Actions';
 import { permissionTypes, getTableNameFromDef } from '../utils';
 import metaDataStyles from '../Settings.scss';
 import styles from '../../../Common/TableCommon/Table.scss';
@@ -8,6 +7,7 @@ import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ReloadMetadata from '../MetadataOptions/ReloadMetadata';
+import { dropInconsistentObjects } from '../../../../metadata/actions';
 
 const MetadataStatus = ({ dispatch, metadata }) => {
   const [shouldShowErrorBanner, toggleErrorBanner] = useState(true);
@@ -33,6 +33,9 @@ const MetadataStatus = ({ dispatch, metadata }) => {
           {metadata.inconsistentObjects.map((ico, _i) => {
             let name;
             let definition;
+            if (ico.type === 'source') {
+              name = ico.definition;
+            }
             if (
               ico.type === 'object_relation' ||
               ico.type === 'array_relation'
@@ -41,6 +44,11 @@ const MetadataStatus = ({ dispatch, metadata }) => {
               definition = `relationship of table "${getTableNameFromDef(
                 ico.definition.table
               )}"`;
+            } else if (ico.type === 'remote_relationship') {
+              name = ico.definition.name;
+              definition = `relationship between table "${getTableNameFromDef(
+                ico.definition.table
+              )}" and remote schema "${ico.definition.remote_schema}"`;
             } else if (permissionTypes.includes(ico.type)) {
               name = `${ico.definition.role}-permission`;
               definition = `${ico.type} on table "${getTableNameFromDef(
@@ -59,8 +67,10 @@ const MetadataStatus = ({ dispatch, metadata }) => {
               )}"`;
             } else if (ico.type === 'remote_schema') {
               name = ico.definition.name;
-              let url = `"${ico.definition.definition.url ||
-                ico.definition.definition.url_from_env}"`;
+              let url = `"${
+                ico.definition.definition.url ||
+                ico.definition.definition.url_from_env
+              }"`;
               if (ico.definition.definition.url_from_env) {
                 url = `the url from the value of env var ${url}`;
               }
@@ -126,7 +136,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
               of the metadata
             </div>
             <div className={styles.add_mar_top_small}>
-              The console will also not be able to display these inconsistent
+              The console might also not be able to display these inconsistent
               objects
             </div>
           </div>
@@ -206,9 +216,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
       <div
         className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${metaDataStyles.metadata_wrapper} container-fluid`}
       >
-        <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
-          Hasura Metadata Status
-        </h2>
+        <h2 className={styles.headerText}>Hasura Metadata Status</h2>
         {content()}
       </div>
     </div>

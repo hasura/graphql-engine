@@ -1,8 +1,8 @@
 package commands
 
 import (
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -35,9 +35,5 @@ type metadataInconsistencyDropOptions struct {
 }
 
 func (o *metadataInconsistencyDropOptions) run() error {
-	d, err := migrate.NewMigrate(o.EC, true)
-	if err != nil {
-		return err
-	}
-	return d.DropInconsistentMetadata()
+	return metadataobject.NewHandlerFromEC(o.EC).DropInconsistentMetadata()
 }

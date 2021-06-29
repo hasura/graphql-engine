@@ -1,0 +1,35 @@
+description: Query data from spatial_types_geo* tables
+url: /v1/graphql
+status: 200
+response:
+  data:
+    spatial_types_geom:
+      - point: POINT (3 4)
+    spatial_types_geog:
+      - multipoint: MULTIPOINT ((2 3), (7 8))
+query:
+  query: |
+    query {
+      spatial_types_geom(
+        where: {
+          point: {
+            _st_within: {type: "Polygon", coordinates: [[ [2, 2], [2, 5], [5, 5], [5, 2], [2, 2] ]]}
+          }
+        }
+      ) {
+        point
+      }
+
+      spatial_types_geog(
+        where: {
+          multipoint: {
+            _st_within: {
+              type: "Polygon",
+              coordinates: [[ [0, 0], [10, 10], [10, 10], [10, 0], [0, 0] ]]
+            }
+          }
+        }
+      ) {
+        multipoint
+      }
+    }

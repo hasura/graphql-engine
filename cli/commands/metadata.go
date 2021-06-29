@@ -1,13 +1,23 @@
 package commands
 
 import (
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/migrate"
-	"github.com/hasura/graphql-engine/cli/util"
-	"github.com/pkg/errors"
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+
+	"github.com/goccy/go-yaml"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
+
+type rawOutputFormat string
+
+const rawOutputFormatJSON rawOutputFormat = "json"
+const rawOutputFormatYAML rawOutputFormat = "yaml"
 
 // NewMetadataCmd returns the metadata command
 func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -15,7 +25,7 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	metadataCmd := &cobra.Command{
 		Use:     "metadata",
 		Aliases: []string{"md"},
-		Short:   "Manage Hasura GraphQL Engine metadata saved in the database",
+		Short:   "Manage Hasura GraphQL engine metadata saved in the database",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Root().PersistentPreRun(cmd, args)
 			ec.Viper = v
@@ -23,7 +33,11 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return ec.Validate()
+			err = ec.Validate()
+			if err != nil {
+				return err
+			}
+			return scripts.CheckIfUpdateToConfigV3IsRequired(ec)
 		},
 		SilenceUsage: true,
 	}
@@ -38,9 +52,9 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f := metadataCmd.PersistentFlags()
 
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
+	f.String("access-key", "", "access key for Hasura GraphQL engine")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
 	f.String("certificate-authority", "", "path to a cert file for the certificate authority")
@@ -54,33 +68,33 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return metadataCmd
 }
 
-func executeMetadata(cmd string, t *migrate.Migrate, ec *cli.ExecutionContext) error {
-	switch cmd {
-	case "export":
-		files, err := t.ExportMetadata()
+func writeByOutputFormat(w io.Writer, b []byte, format rawOutputFormat) error {
+	switch format {
+	case rawOutputFormatJSON:
+		out := new(bytes.Buffer)
+		err := json.Indent(out, b, "", "  ")
 		if err != nil {
-			return errors.Wrap(err, "cannot export metadata from server")
+			return err
 		}
-		err = t.WriteMetadata(files)
+		io.Copy(w, out)
+	case rawOutputFormatYAML:
+		o, err := yaml.JSONToYAML(b)
 		if err != nil {
-			return errors.Wrap(err, "cannot write metadata")
+			return err
 		}
-	case "clear":
-		err := t.ResetMetadata()
-		if err != nil {
-			return errors.Wrap(err, "cannot clear Metadata")
-		}
-	case "reload":
-		err := t.ReloadMetadata()
-		if err != nil {
-			return errors.Wrap(err, "cannot reload Metadata")
-		}
-	case "apply":
-		err := t.ApplyMetadata()
-		if err != nil {
-			return errors.Wrap(err, "cannot apply metadata on the database")
-		}
-		return nil
+		io.Copy(w, bytes.NewReader(o))
+	default:
+		return fmt.Errorf("output format '%v' is not supported. supported formats: %v, %v", format, rawOutputFormatJSON, rawOutputFormatYAML)
 	}
 	return nil
+}
+
+func isJSON(str []byte) bool {
+	var js json.RawMessage
+	return json.Unmarshal(str, &js) == nil
+}
+
+func isYAML(str []byte) bool {
+	var y yaml.MapSlice
+	return yaml.Unmarshal(str, &y) == nil
 }

@@ -12,40 +12,46 @@ module Hasura.Server.Logging
   , HttpLogContext(..)
   , WebHookLog(..)
   , HttpException
-  , getSourceFromFallback
-  , getSource
   , HttpLog (..)
+  , EnvVarsMovedToMetadata(..)
+  , DeprecatedEnvVars(..)
+  , logDeprecatedEnvVars
   ) where
 
+import           Hasura.Prelude
+
+import qualified Data.ByteString.Lazy                  as BL
+import qualified Data.Environment                      as Env
+import qualified Data.HashMap.Strict                   as HM
+import qualified Data.TByteString                      as TBS
+import qualified Data.Text                             as T
+import qualified Network.HTTP.Types                    as HTTP
+import qualified Network.Wai.Extended                  as Wai
+
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Bits                 (shift, (.&.))
-import           Data.ByteString.Char8     (ByteString)
-import           Data.Int                  (Int64)
-import           Data.Word                 (Word32)
-import           Network.Socket            (SockAddr (..))
-import           System.ByteOrder          (ByteOrder (..), byteOrder)
-import           Text.Printf               (printf)
+import           Data.Int                              (Int64)
+import           Data.Text.Extended
 
-import qualified Data.ByteString.Char8     as BS
-import qualified Data.ByteString.Lazy      as BL
-import qualified Data.Text                 as T
-import qualified Network.HTTP.Types        as HTTP
-import qualified Network.Wai               as Wai
-
+import           Hasura.Base.Error
+import           Hasura.GraphQL.ParameterizedQueryHash
 import           Hasura.HTTP
 import           Hasura.Logging
-import           Hasura.Prelude
+import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Server.Compression
-import           Hasura.Server.Utils
+import           Hasura.Server.Types
+import           Hasura.Server.Utils                   (DeprecatedEnvVars (..),
+                                                        EnvVarsMovedToMetadata (..),
+                                                        deprecatedEnvVars, envVarsMovedToMetadata)
 import           Hasura.Session
+import           Hasura.Tracing                        (TraceT)
+
 
 data StartupLog
   = StartupLog
   { slLogLevel :: !LogLevel
-  , slKind     :: !T.Text
+  , slKind     :: !Text
   , slInfo     :: !Value
   } deriving (Show, Eq)
 
@@ -62,7 +68,7 @@ instance ToEngineLog StartupLog Hasura where
 data PGLog
   = PGLog
   { plLogLevel :: !LogLevel
-  , plMessage  :: !T.Text
+  , plMessage  :: !Text
   } deriving (Show, Eq)
 
 instance ToJSON PGLog where
@@ -76,7 +82,7 @@ instance ToEngineLog PGLog Hasura where
 data MetadataLog
   = MetadataLog
   { mlLogLevel :: !LogLevel
-  , mlMessage  :: !T.Text
+  , mlMessage  :: !Text
   , mlInfo     :: !Value
   } deriving (Show, Eq)
 
@@ -99,11 +105,11 @@ data WebHookLog
   = WebHookLog
   { whlLogLevel   :: !LogLevel
   , whlStatusCode :: !(Maybe HTTP.Status)
-  , whlUrl        :: !T.Text
+  , whlUrl        :: !Text
   , whlMethod     :: !HTTP.StdMethod
   , whlError      :: !(Maybe HttpException)
-  , whlResponse   :: !(Maybe T.Text)
-  , whlMessage    :: !(Maybe T.Text)
+  , whlResponse   :: !(Maybe Text)
+  , whlMessage    :: !(Maybe Text)
   } deriving (Show)
 
 instance ToEngineLog WebHookLog Hasura where
@@ -120,8 +126,12 @@ instance ToJSON WebHookLog where
            , "message" .= whlMessage whl
            ]
 
+class (Monad m, Monoid (HTTPLoggingMetadata m)) => HttpLog m where
 
-class (Monad m) => HttpLog m where
+  type HTTPLoggingMetadata m
+
+  buildHTTPLoggingMetadata :: [ParameterizedQueryHash] -> HTTPLoggingMetadata m
+
   logHttpError
     :: Logger Hasura
     -- ^ the logger
@@ -131,8 +141,8 @@ class (Monad m) => HttpLog m where
     -- ^ request id of the request
     -> Wai.Request
     -- ^ the Wai.Request object
-    -> Either BL.ByteString Value
-    -- ^ the actual request body (bytestring if unparsed, Aeson value if parsed)
+    -> (BL.ByteString, Maybe Value)
+    -- ^ the request body and parsed request
     -> QErr
     -- ^ the error
     -> [HTTP.Header]
@@ -148,29 +158,59 @@ class (Monad m) => HttpLog m where
     -- ^ request id of the request
     -> Wai.Request
     -- ^ the Wai.Request object
-    -> Maybe Value
-    -- ^ the actual request body, if present
+    -> (BL.ByteString, Maybe Value)
+    -- ^ the request body and parsed request
     -> BL.ByteString
     -- ^ the response bytes
     -> BL.ByteString
     -- ^ the compressed response bytes
-    -- ^ TODO: make the above two type represented
+    -- ^ TODO (from master): make the above two type represented
     -> Maybe (DiffTime, DiffTime)
     -- ^ IO/network wait time and service time (respectively) for this request, if available.
     -> Maybe CompressionType
     -- ^ possible compression type
     -> [HTTP.Header]
     -- ^ list of request headers
+    -> HTTPLoggingMetadata m
     -> m ()
 
+instance HttpLog m => HttpLog (TraceT m) where
+
+  type HTTPLoggingMetadata (TraceT m) = HTTPLoggingMetadata m
+
+  buildHTTPLoggingMetadata a = buildHTTPLoggingMetadata @m a
+
+  logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
+
+  logHttpSuccess a b c d e f g h i j k = lift $ logHttpSuccess a b c d e f g h i j k
+
+instance HttpLog m => HttpLog (ReaderT r m) where
+
+  type HTTPLoggingMetadata (ReaderT r m) = HTTPLoggingMetadata m
+
+  buildHTTPLoggingMetadata a = buildHTTPLoggingMetadata @m a
+
+  logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
+
+  logHttpSuccess a b c d e f g h i j k = lift $ logHttpSuccess a b c d e f g h i j k
+
+instance HttpLog m => HttpLog (MetadataStorageT m) where
+
+  type HTTPLoggingMetadata (MetadataStorageT m) = HTTPLoggingMetadata m
+
+  buildHTTPLoggingMetadata a = buildHTTPLoggingMetadata @m a
+
+  logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
+
+  logHttpSuccess a b c d e f g h i j k = lift $ logHttpSuccess a b c d e f g h i j k
 
 -- | Log information about the HTTP request
 data HttpInfoLog
   = HttpInfoLog
   { hlStatus      :: !HTTP.Status
-  , hlMethod      :: !T.Text
-  , hlSource      :: !T.Text
-  , hlPath        :: !T.Text
+  , hlMethod      :: !Text
+  , hlSource      :: !Wai.IpAddress
+  , hlPath        :: !Text
   , hlHttpVersion :: !HTTP.HttpVersion
   , hlCompression :: !(Maybe CompressionType)
   , hlHeaders     :: ![HTTP.Header]
@@ -181,7 +221,7 @@ instance ToJSON HttpInfoLog where
   toJSON (HttpInfoLog st met src path hv compressTypeM _) =
     object [ "status" .= HTTP.statusCode st
            , "method" .= met
-           , "ip" .= src
+           , "ip" .= Wai.showIPAddress src
            , "url" .= path
            , "http_version" .= show hv
            , "content_encoding" .= (compressionTypeToTxt <$> compressTypeM)
@@ -202,16 +242,15 @@ data OperationLog
   , olError              :: !(Maybe QErr)
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase)
-  { omitNothingFields = True
-  } ''OperationLog)
+$(deriveToJSON hasuraJSON{omitNothingFields = True} ''OperationLog)
 
 data HttpLogContext
   = HttpLogContext
   { hlcHttpInfo  :: !HttpInfoLog
   , hlcOperation :: !OperationLog
+  , hlcRequestId :: !RequestId
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 3 snakeCase) ''HttpLogContext)
+$(deriveToJSON hasuraJSON ''HttpLogContext)
 
 mkHttpAccessLogContext
   :: Maybe UserInfo
@@ -227,7 +266,7 @@ mkHttpAccessLogContext userInfoM reqId req res mTiming compressTypeM headers =
   let http = HttpInfoLog
              { hlStatus      = status
              , hlMethod      = bsToTxt $ Wai.requestMethod req
-             , hlSource      = bsToTxt $ getSourceFromFallback req
+             , hlSource      = Wai.getSourceFromFallback req
              , hlPath        = bsToTxt $ Wai.rawPathInfo req
              , hlHttpVersion = Wai.httpVersion req
              , hlCompression  = compressTypeM
@@ -243,7 +282,7 @@ mkHttpAccessLogContext userInfoM reqId req res mTiming compressTypeM headers =
            , olRawQuery = Nothing
            , olError = Nothing
            }
-  in HttpLogContext http op
+  in HttpLogContext http op reqId
   where
     status = HTTP.status200
     respSize = Just $ BL.length res
@@ -253,20 +292,20 @@ mkHttpErrorLogContext
   -- ^ Maybe because it may not have been resolved
   -> RequestId
   -> Wai.Request
+  -> (BL.ByteString, Maybe Value)
   -> QErr
-  -> Either BL.ByteString Value
   -> Maybe (DiffTime, DiffTime)
   -> Maybe CompressionType
   -> [HTTP.Header]
   -> HttpLogContext
-mkHttpErrorLogContext userInfoM reqId req err query mTiming compressTypeM headers =
+mkHttpErrorLogContext userInfoM reqId waiReq (reqBody, parsedReq) err mTiming compressTypeM headers =
   let http = HttpInfoLog
              { hlStatus      = qeStatus err
-             , hlMethod      = bsToTxt $ Wai.requestMethod req
-             , hlSource      = bsToTxt $ getSourceFromFallback req
-             , hlPath        = bsToTxt $ Wai.rawPathInfo req
-             , hlHttpVersion = Wai.httpVersion req
-             , hlCompression  = compressTypeM
+             , hlMethod      = bsToTxt $ Wai.requestMethod waiReq
+             , hlSource      = Wai.getSourceFromFallback waiReq
+             , hlPath        = bsToTxt $ Wai.rawPathInfo waiReq
+             , hlHttpVersion = Wai.httpVersion waiReq
+             , hlCompression = compressTypeM
              , hlHeaders     = headers
              }
       op = OperationLog
@@ -275,11 +314,11 @@ mkHttpErrorLogContext userInfoM reqId req err query mTiming compressTypeM header
            , olResponseSize       = Just $ BL.length $ encode err
            , olRequestReadTime    = Seconds . fst <$> mTiming
            , olQueryExecutionTime = Seconds . snd <$> mTiming
-           , olQuery              = either (const Nothing) Just query
-           , olRawQuery           = either (Just . bsToTxt . BL.toStrict) (const Nothing) query
+           , olQuery              = parsedReq
+           , olRawQuery           = maybe (Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq
            , olError              = Just err
            }
-  in HttpLogContext http op
+  in HttpLogContext http op reqId
 
 data HttpLogLine
   = HttpLogLine
@@ -297,56 +336,31 @@ mkHttpLog httpLogCtx =
       logLevel = bool LevelInfo LevelError isError
   in HttpLogLine logLevel httpLogCtx
 
-getSourceFromSocket :: Wai.Request -> ByteString
-getSourceFromSocket = BS.pack . showSockAddr . Wai.remoteHost
+-- | Log warning messages for deprecated environment variables
+logDeprecatedEnvVars
+  :: Logger Hasura
+  -> Env.Environment
+  -> SourceCache
+  -> IO ()
+logDeprecatedEnvVars logger env sources = do
+  let toText envVars = commaSeparated envVars
+      -- The environment variables that have been initialized by user
+      envVarsInitialized = fmap fst (Env.toList env)
+      checkDeprecatedEnvVars envs = T.pack <$> envVarsInitialized `intersect` envs
 
-getSourceFromFallback :: Wai.Request -> ByteString
-getSourceFromFallback req = fromMaybe (getSourceFromSocket req) $ getSource req
+  -- When a source named 'default' is present, it means that it is a migrated v2
+  -- hasura project. In such cases log those environment variables that are moved
+  -- to the metadata
+  onJust (HM.lookup SNDefault sources) $ \_defSource -> do
+    let deprecated = checkDeprecatedEnvVars (unEnvVarsMovedToMetadata envVarsMovedToMetadata)
+    unless (null deprecated) $
+      unLogger logger $ UnstructuredLog LevelWarn $ TBS.fromText $
+        "The following environment variables are deprecated and moved to metadata: " <>
+        toText deprecated
 
-getSource :: Wai.Request -> Maybe ByteString
-getSource req = addr
-  where
-    maddr = find (\x -> fst x `elem` ["x-real-ip", "x-forwarded-for"]) hdrs
-    addr = fmap snd maddr
-    hdrs = Wai.requestHeaders req
-
--- |  A type for IP address in numeric string representation.
-type NumericAddress = String
-
-showIPv4 :: Word32 -> Bool -> NumericAddress
-showIPv4 w32 little
-    | little    = show b1 ++ "." ++ show b2 ++ "." ++ show b3 ++ "." ++ show b4
-    | otherwise = show b4 ++ "." ++ show b3 ++ "." ++ show b2 ++ "." ++ show b1
-  where
-    t1 = w32
-    t2 = shift t1 (-8)
-    t3 = shift t2 (-8)
-    t4 = shift t3 (-8)
-    b1 = t1 .&. 0x000000ff
-    b2 = t2 .&. 0x000000ff
-    b3 = t3 .&. 0x000000ff
-    b4 = t4 .&. 0x000000ff
-
-showIPv6 :: (Word32,Word32,Word32,Word32) -> String
-showIPv6 (w1,w2,w3,w4) =
-    printf "%x:%x:%x:%x:%x:%x:%x:%x" s1 s2 s3 s4 s5 s6 s7 s8
-  where
-    (s1,s2) = split16 w1
-    (s3,s4) = split16 w2
-    (s5,s6) = split16 w3
-    (s7,s8) = split16 w4
-    split16 w = (h1,h2)
-      where
-        h1 = shift w (-16) .&. 0x0000ffff
-        h2 = w .&. 0x0000ffff
-
--- | Convert 'SockAddr' to 'NumericAddress'. If the address is
---   IPv4-embedded IPv6 address, the IPv4 is extracted.
-showSockAddr :: SockAddr -> NumericAddress
--- HostAddr is network byte order.
-showSockAddr (SockAddrInet _ addr4)                       = showIPv4 addr4 (byteOrder == LittleEndian)
--- HostAddr6 is host byte order.
-showSockAddr (SockAddrInet6 _ _ (0,0,0x0000ffff,addr4) _) = showIPv4 addr4 False
-showSockAddr (SockAddrInet6 _ _ (0,0,0,1) _)              = "::1"
-showSockAddr (SockAddrInet6 _ _ addr6 _)                  = showIPv6 addr6
-showSockAddr _                                            = "unknownSocket"
+  -- Log when completely deprecated environment variables are present
+  let deprecated = checkDeprecatedEnvVars (unDeprecatedEnvVars deprecatedEnvVars)
+  unless (null deprecated) $
+    unLogger logger $ UnstructuredLog LevelWarn $ TBS.fromText $
+      "The following environment variables are deprecated: " <>
+      toText deprecated

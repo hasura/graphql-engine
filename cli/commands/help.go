@@ -5,7 +5,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/spf13/cobra"
 )
 
@@ -49,6 +49,7 @@ func (o *helpOptions) run() {
 				NewMetadataCmd(o.EC),
 				NewConsoleCmd(o.EC),
 				NewActionsCmd(o.EC),
+				NewSeedCmd(o.EC),
 			},
 		},
 		{

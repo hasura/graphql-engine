@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import AceEditor from 'react-ace';
+import JSONEditor from './JSONEditor';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import InputGroup from 'react-bootstrap/lib/InputGroup';
 import OverlayTrigger from 'react-bootstrap/es/OverlayTrigger';
@@ -9,7 +9,6 @@ import 'brace/theme/github';
 
 import { RESET } from '../TableModify/ModifyActions';
 import {
-  permChangeTypes,
   permOpenEdit,
   permSetFilter,
   permSetFilterSameAs,
@@ -18,7 +17,6 @@ import {
   permAllowAll,
   permCloseEdit,
   permSetRoleName,
-  permChangePermissions,
   // permToggleAllowUpsert,
   permToggleAllowAggregation,
   permToggleModifyLimit,
@@ -46,12 +44,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import Toggle from '../../../Common/Toggle/Toggle';
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
-import {
-  fetchFunctionInit,
-  setTable,
-  updateSchemaInfo,
-  fetchRoleList,
-} from '../DataActions';
+import { fetchFunctionInit, setTable, updateSchemaInfo } from '../DataActions';
 import { getIngForm, getEdForm } from '../utils';
 import {
   getPermissionFilterString,
@@ -74,24 +67,24 @@ import {
 import {
   findTable,
   generateTableDef,
-  getColumnName,
-  getComputedFieldName,
-  getTableColumns,
-  getGroupedTableComputedFields,
-  getColumnType,
-  getTableSupportedQueries,
   QUERY_TYPES,
-} from '../../../Common/utils/pgUtils';
-import { showErrorNotification } from '../../Common/Notification';
+  dataSource,
+  isFeatureSupported,
+} from '../../../../dataSources';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import {
   getFilterQueries,
   replaceLegacyOperators,
-  getAllowedFilterKeys,
   updateFilterTypeLabel,
   getDefaultFilterType,
   getUpdateTooltip,
+  getQuerySingleRowMutation,
+  getPermissionsIcon,
 } from './utils';
+import PermButtonSection from './PermButtonsSection';
+import { rolesSelector } from '../../../../metadata/selector';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
+import FeatureDisabled from '../FeatureDisabled';
 
 class Permissions extends Component {
   constructor() {
@@ -118,9 +111,10 @@ class Permissions extends Component {
   componentDidMount() {
     const { dispatch } = this.props;
 
+    if (!isFeatureSupported('tables.permissions.enabled')) return;
+
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
-    dispatch(fetchRoleList());
     dispatch(fetchFunctionInit());
   }
 
@@ -199,6 +193,7 @@ class Permissions extends Component {
       allRoles,
       nonTrackableFunctions,
       trackableFunctions,
+      currentSource,
     } = this.props;
 
     const { localFilterString, presetsOrdered } = this.state;
@@ -208,13 +203,26 @@ class Permissions extends Component {
       generateTableDef(tableName, currentSchema)
     );
 
-    if (!currentTableSchema) {
+    if (!isFeatureSupported('tables.permissions.enabled')) {
+      return (
+        <FeatureDisabled
+          tab="permissions"
+          tableName={tableName}
+          schemaName={currentSchema}
+        />
+      );
+    }
+
+    if (
+      !currentTableSchema &&
+      isFeatureSupported('tables.permissions.enabled')
+    ) {
       // throw a 404 exception
       throw new NotFoundError();
     }
 
     const allFunctions = nonTrackableFunctions.concat(trackableFunctions);
-    const groupedComputedFields = getGroupedTableComputedFields(
+    const groupedComputedFields = dataSource.getGroupedTableComputedFields(
       currentTableSchema,
       allFunctions
     );
@@ -266,6 +274,7 @@ class Permissions extends Component {
         <TableHeader
           dispatch={dispatch}
           table={tableSchema}
+          source={currentSource}
           tabName="permissions"
           migrationMode={migrationMode}
           readOnlyMode={readOnlyMode}
@@ -295,6 +304,10 @@ class Permissions extends Component {
       );
 
       const getViewPermissionNote = () => {
+        if (!dataSource.viewsSupported) {
+          return null;
+        }
+
         let note;
 
         const unsupportedQueryTypes = arrayDiff(
@@ -374,66 +387,16 @@ class Permissions extends Component {
             );
           };
 
-          const getRoleQueryPermission = queryType => {
-            let _permission;
-
-            if (role === 'admin') {
-              _permission = permissionsSymbols.fullAccess;
-            } else if (!Object.keys(rolePermissions).includes(role)) {
-              _permission = permissionsSymbols.noAccess;
-            } else {
-              const permissions = rolePermissions[role][queryType];
-
-              if (permissions) {
-                let checkColumns;
-                let checkComputedFields;
-                let filterKey;
-
-                if (queryType === 'select') {
-                  checkColumns = true;
-                  checkComputedFields = true;
-                  filterKey = 'filter';
-                } else if (queryType === 'update') {
-                  checkColumns = true;
-                  checkComputedFields = false;
-                  filterKey = 'filter';
-                } else if (queryType === 'insert') {
-                  checkColumns = true;
-                  checkComputedFields = false;
-                  filterKey = 'check';
-                } else if (queryType === 'delete') {
-                  checkColumns = false;
-                  checkComputedFields = false;
-                  filterKey = 'filter';
-                }
-
-                if (JSON.stringify(permissions[filterKey]) === '{}') {
-                  if (
-                    (checkColumns &&
-                      (!permissions.columns ||
-                        (!permissions.columns.includes('*') &&
-                          permissions.columns.length !==
-                            tableSchema.columns.length))) ||
-                    (checkComputedFields &&
-                      (!permissions.computed_fields ||
-                        (!permissions.computed_fields.includes('*') &&
-                          permissions.computed_fields.length !==
-                            groupedComputedFields.scalar.length)))
-                  ) {
-                    _permission = permissionsSymbols.partialAccess;
-                  } else {
-                    _permission = permissionsSymbols.fullAccess;
-                  }
-                } else {
-                  _permission = permissionsSymbols.partialAccess;
-                }
-              } else {
-                _permission = permissionsSymbols.noAccess;
-              }
-            }
-
-            return _permission;
-          };
+          const getRoleQueryPermission = queryType =>
+            permissionsSymbols[
+              getPermissionsIcon(
+                role,
+                rolePermissions,
+                queryType,
+                tableSchema.columns,
+                groupedComputedFields
+              )
+            ];
           return supportedQueryTypes.map(queryType => {
             const isEditAllowed = role !== 'admin';
             const isCurrEdit =
@@ -484,8 +447,12 @@ class Permissions extends Component {
         });
 
         const dispatchRoleNameChange = e => {
-          const newRole = e.target.value.trim();
-
+          const newRole = e.target.value;
+          if (permissionsState.query) {
+            dispatch(
+              permOpenEdit(tableSchema, newRole, permissionsState.query)
+            );
+          }
           dispatch(permSetRoleName(newRole));
         };
 
@@ -659,8 +626,8 @@ class Permissions extends Component {
 
           const dispatchFuncSetFilter = filter => {
             this.setState(prev => ({
-              filterString: {
-                ...prev,
+              localFilterString: {
+                ...prev.localFilterString,
                 [filterType]: filter,
               },
             }));
@@ -687,15 +654,9 @@ class Permissions extends Component {
           );
 
           const selectedValue = (
-            <AceEditor
-              mode="json"
-              value={currentFilterString || filterString[filterType]}
+            <JSONEditor
+              data={filterString[filterType] || currentFilterString}
               onChange={dispatchFuncSetFilter}
-              theme="github"
-              height="5em"
-              maxLines={15}
-              width="100%"
-              showPrintMargin={false}
               key={-3}
             />
           );
@@ -918,6 +879,7 @@ class Permissions extends Component {
         };
 
         const rowSectionTitle = 'Row ' + query + ' permissions';
+        const singleRowMutation = getQuerySingleRowMutation(query);
 
         return (
           <CollapsibleToggle
@@ -946,6 +908,17 @@ class Permissions extends Component {
                 )}
               </div>
               <div className={styles.add_mar_top}>{getLimitSection()}</div>
+              <div className={styles.add_mar_top}>
+                {singleRowMutation && (
+                  <span>
+                    The single row mutation <b>{singleRowMutation}</b> shares
+                    the returning type with the query field. Hence if no{' '}
+                    <b>select</b> permissions are defined, the{' '}
+                    <b>{singleRowMutation}</b> field will also be omitted from
+                    the GraphQL schema.
+                  </span>
+                )}
+              </div>
             </div>
           </CollapsibleToggle>
         );
@@ -999,9 +972,7 @@ class Permissions extends Component {
 
           if (query === 'select') {
             groupedComputedFields.scalar.forEach(scalarComputedField => {
-              const computedFieldName = getComputedFieldName(
-                scalarComputedField
-              );
+              const computedFieldName = scalarComputedField.computed_field_name;
 
               _columnList.push(
                 getFieldCheckbox('computed_fields', computedFieldName)
@@ -1044,13 +1015,13 @@ class Permissions extends Component {
           const dispatchToggleAllColumns = () => {
             const allFields = {};
 
-            allFields.columns = getTableColumns(tableSchema).map(c =>
-              getColumnName(c)
+            allFields.columns = (tableSchema.columns || []).map(
+              c => c.column_name
             );
 
             if (query === 'select') {
-              allFields.computed_fields = groupedComputedFields.scalar.map(cf =>
-                getComputedFieldName(cf)
+              allFields.computed_fields = groupedComputedFields.scalar.map(
+                cf => cf.computed_field_name
               );
             }
 
@@ -1096,7 +1067,7 @@ class Permissions extends Component {
           const colSectionTitle = 'Column ' + query + ' permissions';
 
           const tableFields = {};
-          tableFields.columns = getTableColumns(tableSchema);
+          tableFields.columns = tableSchema.columns || [];
           if (query === 'select') {
             tableFields.computed_fields = groupedComputedFields.scalar;
           }
@@ -1315,7 +1286,7 @@ class Permissions extends Component {
 
               if (columns && columns.length > 0) {
                 columns.forEach((c, i) => {
-                  const columnName = getColumnName(c);
+                  const columnName = c.column_name;
                   if (
                     columnName === preset.column ||
                     !presetColumns.includes(columnName)
@@ -1380,9 +1351,11 @@ class Permissions extends Component {
             const presetInputDisabled = !preset.column;
 
             const columnInfo = columns.find(
-              c => getColumnName(c) === preset.column
+              c => c.column_name === preset.column
             );
-            const columnType = columnInfo ? getColumnType(columnInfo) : '';
+            const columnType = columnInfo
+              ? dataSource.getColumnType(columnInfo)
+              : '';
 
             if (presetType === 'session') {
               _presetInput = (
@@ -1524,6 +1497,10 @@ class Permissions extends Component {
       };
 
       const getAggregationSection = () => {
+        if (!dataSource.aggregationPermissionsAllowed) {
+          return null;
+        }
+
         if (query !== 'select') {
           return;
         }
@@ -1605,7 +1582,12 @@ class Permissions extends Component {
           const _applyToListHtml = [];
 
           const tableOptions = allSchemas.map(schema => schema.table_name);
-          const actionsList = ['insert', 'select', 'update', 'delete'];
+          const actionsList = supportedQueryTypes || [
+            'insert',
+            'select',
+            'update',
+            'delete',
+          ];
 
           const getApplyToRow = (applyTo, index) => {
             const getSelect = (type, options, value = '') => {
@@ -1741,93 +1723,6 @@ class Permissions extends Component {
         return clonePermissionsHtml;
       };
 
-      const getButtonsSection = () => {
-        if (readOnlyMode) {
-          return null;
-        }
-
-        const dispatchSavePermissions = () => {
-          const filterKeys = getAllowedFilterKeys(query);
-          const isInvalid = filterKeys.some(key => {
-            if (
-              localFilterString[key] &&
-              !isJsonString(localFilterString[key])
-            ) {
-              return true;
-            }
-            return false;
-          });
-
-          if (isInvalid) {
-            dispatch(
-              showErrorNotification(
-                'Saving permissions failed',
-                'Row permission is not a valid JSON'
-              )
-            );
-            return;
-          }
-
-          dispatch(permChangePermissions(permChangeTypes.save));
-        };
-
-        const dispatchRemoveAccess = () => {
-          const confirmMessage =
-            'This will permanently delete the currently set permissions';
-          const isOk = getConfirmation(confirmMessage);
-          if (isOk) {
-            dispatch(permChangePermissions(permChangeTypes.delete));
-          }
-        };
-
-        const getPermActionButton = (
-          value,
-          color,
-          onClickFn,
-          disabled,
-          title
-        ) => (
-          <Button
-            className={styles.add_mar_right}
-            color={color}
-            size="sm"
-            onClick={onClickFn}
-            disabled={disabled}
-            title={title}
-            data-test={`${value.split(' ').join('-')}-button`}
-          >
-            {value}
-          </Button>
-        );
-        const applySameSelected = permissionsState.applySamePermissions.length;
-
-        const disableSave = applySameSelected || !permsChanged;
-        const disableRemoveAccess = !currQueryPermissions;
-
-        const saveButton = getPermActionButton(
-          'Save Permissions',
-          'yellow',
-          dispatchSavePermissions,
-          disableSave,
-          !permsChanged ? 'No changes made' : ''
-        );
-
-        const removeAccessButton = getPermActionButton(
-          'Delete Permissions',
-          'red',
-          dispatchRemoveAccess,
-          disableRemoveAccess,
-          disableRemoveAccess ? 'No permissions set' : ''
-        );
-
-        return (
-          <div className={styles.add_mar_top + ' ' + styles.add_pad_left}>
-            {saveButton}
-            {removeAccessButton}
-          </div>
-        );
-      };
-
       const getBackendOnlySection = () => {
         if (!isQueryTypeBackendOnlyCompatible(permissionsState.query)) {
           return null;
@@ -1849,7 +1744,7 @@ class Permissions extends Component {
               'Backend only',
               tooltip,
               backendStatus,
-              'https://docs.hasura.io/1.0/graphql/manual/auth/authorization/permission-rules.html#backend-only-inserts'
+              'https://hasura.io/docs/latest/graphql/core/auth/authorization/permission-rules.html#backend-only'
             )}
             useDefaultTitleStyle
             testId={'toggle-backend-only'}
@@ -1897,11 +1792,18 @@ class Permissions extends Component {
             {getRowSection()}
             {getColumnSection()}
             {getAggregationSection()}
-            {/*{getUpsertSection()}*/}
             {getPresetsSection('insert')}
             {getPresetsSection('update')}
             {getBackendOnlySection()}
-            {getButtonsSection()}
+            <PermButtonSection
+              readOnlyMode={readOnlyMode}
+              query={query}
+              localFilterString={localFilterString}
+              dispatch={dispatch}
+              permissionsState={permissionsState}
+              permsChanged={permsChanged}
+              currQueryPermissions={currQueryPermissions}
+            />
             {getClonePermsSection()}
           </div>
         </div>
@@ -1910,28 +1812,41 @@ class Permissions extends Component {
 
     /********************/
 
-    const supportedQueryTypes = getTableSupportedQueries(currentTableSchema);
+    const supportedQueryTypes = dataSource.getTableSupportedQueries(
+      currentTableSchema
+    );
 
     return (
-      <div className={styles.container}>
-        {getHeader(currentTableSchema)}
-        <br />
-        <div className={styles.padd_left_remove}>
-          <div className={`${styles.padd_remove} col-xs-12`}>
-            <h4 className={styles.subheading_text}>Permissions</h4>
-            {getPermissionsTable(
-              currentTableSchema,
-              supportedQueryTypes,
-              allRoles
+      <RightContainer>
+        <div className={styles.container}>
+          {getHeader(currentTableSchema)}
+          <br />
+          <div className={styles.padd_left_remove}>
+            <div className={`${styles.padd_remove} col-xs-12`}>
+              <h4 className={styles.subheading_text}>Permissions</h4>
+              {getPermissionsTable(
+                currentTableSchema,
+                supportedQueryTypes,
+                allRoles
+              )}
+              {getBulkSection(currentTableSchema)}
+              {getEditSection(
+                currentTableSchema,
+                supportedQueryTypes,
+                allRoles
+              )}
+            </div>
+          </div>
+          <div className={`${styles.fixed} hidden`}>
+            {getAlertHtml(
+              ongoingRequest,
+              lastError,
+              lastSuccess,
+              lastFormError
             )}
-            {getBulkSection(currentTableSchema)}
-            {getEditSection(currentTableSchema, supportedQueryTypes, allRoles)}
           </div>
         </div>
-        <div className={`${styles.fixed} hidden`}>
-          {getAlertHtml(ongoingRequest, lastError, lastSuccess, lastFormError)}
-        </div>
-      </div>
+      </RightContainer>
     );
   }
 }
@@ -1957,7 +1872,7 @@ const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   tableType: ownProps.route.tableType,
   allSchemas: state.tables.allSchemas,
-  allRoles: state.tables.allRoles,
+  allRoles: rolesSelector(state),
   schemaList: state.tables.schemaList,
   migrationMode: state.main.migrationMode,
   nonTrackableFunctions: state.tables.nonTrackablePostgresFunctions || [],
@@ -1965,6 +1880,7 @@ const mapStateToProps = (state, ownProps) => ({
   readOnlyMode: state.main.readOnlyMode,
   currentSchema: state.tables.currentSchema,
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+  currentSource: state.tables.currentDataSource,
   ...state.tables.modify,
 });
 

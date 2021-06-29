@@ -70,7 +70,7 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
                 -- select --
               </option>
             ) : (
-              <option value={pk}>{columns[pk].name}</option>
+              <option value={pk}>{columns[pk]?.name}</option>
             )}
             {nonPkColumns.map(({ name, index }, j) => (
               <option key={j} value={index}>

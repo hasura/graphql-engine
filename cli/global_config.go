@@ -162,7 +162,7 @@ func (ec *ExecutionContext) setupGlobalConfig() error {
 	} else if os.IsExist(err) || err == nil {
 
 		// file exists, verify contents
-		ec.Logger.Debug("global config file exisits, verifying contents")
+		ec.Logger.Debug("global config file exists, verifying contents")
 
 		// initialize the config object
 		gc := rawGlobalConfig{}

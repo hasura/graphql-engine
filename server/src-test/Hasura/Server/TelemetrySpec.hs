@@ -23,24 +23,27 @@ telemetryCountersTests = do
     let expected =
           -- NOTE: ordering is arbitrary here (and hence fragile)
           [ServiceTimingMetric {
+              dimensions = RequestDimensions Miss Mutation Local HTTP
+            , bucket = RunningTimeBucket {bucketGreaterThan      = 0.050}
+            , metrics = RequestTimingsCount {telemTimeIO = 2, telemTimeTot = 1.050, telemCount = 2}},
+          ServiceTimingMetric {
               dimensions = RequestDimensions Hit Mutation Local HTTP
             , bucket = RunningTimeBucket {bucketGreaterThan =        0}
-            , metrics = RequestTimingsCount {telemTimeIO = 2, telemTimeTot = 200, telemCount = 2}},
-          ServiceTimingMetric {
-              dimensions = RequestDimensions Miss Mutation Local HTTP
-            , bucket = RunningTimeBucket {bucketGreaterThan      = 1000}
-            , metrics = RequestTimingsCount {telemTimeIO = 2, telemTimeTot = 2002, telemCount = 2}},
+            , metrics = RequestTimingsCount {telemTimeIO = 2, telemTimeTot = 0.001, telemCount = 2}},
           ServiceTimingMetric {
               dimensions = RequestDimensions Hit Query Remote WebSocket
-            , bucket = RunningTimeBucket {bucketGreaterThan      = 100000}
-            , metrics = RequestTimingsCount {telemTimeIO = 1, telemTimeTot = 100001, telemCount = 1}}]
+            , bucket = RunningTimeBucket {bucketGreaterThan      = 1.000}
+            , metrics = RequestTimingsCount {telemTimeIO = 1, telemTimeTot = 5.000, telemCount = 1}}]
 
     it "accumulates as expected" $ do
-      recordTimingMetric (RequestDimensions Hit  Mutation Local  HTTP) (RequestTimings 1 100)
-      recordTimingMetric (RequestDimensions Hit  Mutation Local  HTTP) (RequestTimings 1 100)
-      recordTimingMetric (RequestDimensions Miss Mutation Local  HTTP) (RequestTimings 1 1001)
-      recordTimingMetric (RequestDimensions Miss Mutation Local  HTTP) (RequestTimings 1 1001)
-      recordTimingMetric (RequestDimensions Hit  Query    Remote WebSocket) (RequestTimings 1 100001)
+      -- bucket 0sec - 1ms:
+      recordTimingMetric (RequestDimensions Hit  Mutation Local  HTTP)      (RequestTimings 1 0.0001)
+      recordTimingMetric (RequestDimensions Hit  Mutation Local  HTTP)      (RequestTimings 1 0.0009)
+      -- bucket 50ms - 1 sec:
+      recordTimingMetric (RequestDimensions Miss Mutation Local  HTTP)      (RequestTimings 1 0.0510)
+      recordTimingMetric (RequestDimensions Miss Mutation Local  HTTP)      (RequestTimings 1 0.9990)
+      -- bucket 1 sec - 1 hour:
+      recordTimingMetric (RequestDimensions Hit  Query    Remote WebSocket) (RequestTimings 1 5.0000)
       fmap serviceTimingMetrics dumpServiceTimingMetrics `shouldReturn` expected
 
     it "serializes and deserializes properly" $ do

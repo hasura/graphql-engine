@@ -1,0 +1,39 @@
+description: Remote relationship GraphQL query with errors
+url: /v1/graphql
+status: 200
+response:
+  data:
+    address:
+      - address_line: "address-1"
+        myProfile:
+          id: 1
+          messagesNestedArgs:
+            - name: alice
+      - address_line: "address-2"
+        myProfile:
+          id: 2
+          messagesNestedArgs:
+            - name: bob
+      - address_line: "address-3"
+        myProfile:
+          id: 3
+          messagesNestedArgs:
+            - name: alice
+      - address_line: "address-1b"
+        myProfile:
+          id: 1
+          messagesNestedArgs:
+            - name: alice
+query:
+  query: |
+    query {
+      address {
+        address_line
+        myProfile {
+          id
+          messagesNestedArgs {
+            name
+          }   
+        }
+      }
+    }

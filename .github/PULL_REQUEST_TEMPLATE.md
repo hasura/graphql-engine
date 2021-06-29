@@ -7,7 +7,7 @@
 
 ### Changelog
 
-- [ ] `CHANGELOG.md` is updated with user-facing content relevant to this PR.
+- [ ] `CHANGELOG.md` is updated with user-facing content relevant to this PR. If no changelog is required, then add the `no-changelog-required` label.
 
 ### Affected components
 <!-- Remove non-affected components from the list -->
@@ -46,7 +46,7 @@
 Does this PR change Hasura Catalog version?
 - [ ] No
 - [ ] Yes
-  - [ ] Updated docs with SQL for downgrading the catalog <!-- https://hasura.io/docs/1.0/graphql/manual/deployment/downgrading.html#downgrading-across-catalogue-versions -->
+  - [ ] Updated docs with SQL for downgrading the catalog <!-- https://hasura.io/docs/latest/graphql/core/deployment/downgrading.html#downgrading-across-catalogue-versions -->
 
 #### Metadata
 <!-- Hasura metadata changes -->

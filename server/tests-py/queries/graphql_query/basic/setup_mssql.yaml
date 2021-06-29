@@ -1,0 +1,101 @@
+type: bulk
+args:
+
+# track tables
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: test_types
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: author
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: article
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: user
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: person
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: article_multi
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: author_multi
+
+# create relationships
+- type: mssql_create_object_relationship
+  args:
+    source: mssql
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+- type: mssql_create_object_relationship
+  args:
+    source: mssql
+    table: article
+    name: co_author
+    using:
+      foreign_key_constraint_on: co_author_id
+
+- type: mssql_create_array_relationship
+  args:
+    source: mssql
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+
+- type: mssql_create_array_relationship
+  args:
+    source: mssql
+    table: author
+    name: co_articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: co_author_id
+
+- type: mssql_create_object_relationship
+  args:
+    source: mssql
+    table: article_multi
+    name: author
+    using:
+      foreign_key_constraint_on: ["author_id1", "author_id2"]
+
+- type: mssql_create_array_relationship
+  args:
+    source: mssql
+    table: author_multi
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article_multi
+        columns: ["author_id1", "author_id2"]

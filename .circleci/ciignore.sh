@@ -25,6 +25,12 @@ if [[ "$CIRCLE_BRANCH" = "release-"* ]]; then
     exit
 fi
 
+# always build commits tagged [force ci]
+if git log --format=%B -n 1 $CIRCLE_SHA | grep -q "\[force ci\]"; then
+  echo "Forcing CI run as requested"
+  exit
+fi
+
 # get the diff
 if [[ ! -z "$CIRCLE_COMPARE_URL" ]]; then
     # CIRCLE_COMPARE_URL is not empty, use it to get the diff

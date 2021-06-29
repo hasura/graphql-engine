@@ -30,57 +30,59 @@ class TestInconsistentObjects():
         st_code, resp = hge_ctx.v1q(json.loads(json.dumps(test['setup'])))
         assert st_code == 200, resp
 
-        # exec sql to cause inconsistentancy
-        sql_res = hge_ctx.sql(test['sql'])
+        try:
+            # exec sql to cause inconsistentancy
+            sql_res = hge_ctx.sql(test['sql'])
 
-        # reload metadata
-        st_code, resp = hge_ctx.v1q(q=self.reload_metadata)
-        assert st_code == 200, resp
+            # reload metadata
+            st_code, resp = hge_ctx.v1q(q=self.reload_metadata)
+            assert st_code == 200, resp
 
-        # fetch inconsistent objects
-        st_code, resp = hge_ctx.v1q(q=self.get_inconsistent_metadata)
-        assert st_code == 200, resp
-        incons_objs_test = test['inconsistent_objects']
-        incons_objs_resp = resp['inconsistent_objects']
+            # fetch inconsistent objects
+            st_code, resp = hge_ctx.v1q(q=self.get_inconsistent_metadata)
+            assert st_code == 200, resp
+            incons_objs_test = test['inconsistent_objects']
+            incons_objs_resp = resp['inconsistent_objects']
 
-        assert resp['is_consistent'] == False, resp
-        assert incons_objs_resp == incons_objs_test, yaml.dump({
-            'response': resp,
-            'expected': incons_objs_test,
-            'diff': jsondiff.diff(incons_objs_test, resp)
-        })
+            assert resp['is_consistent'] == False, resp
+            assert incons_objs_resp == incons_objs_test, yaml.dump({
+                'response': incons_objs_resp,
+                'expected': incons_objs_test,
+                'diff': jsondiff.diff(incons_objs_test, incons_objs_resp)
+            })
 
-        # export metadata
-        st_code, export = hge_ctx.v1q(q=self.export_metadata)
-        assert st_code == 200, export
+            # export metadata
+            st_code, export = hge_ctx.v1q(q=self.export_metadata)
+            assert st_code == 200, export
 
-        # apply metadata
-        st_code, resp = hge_ctx.v1q(
-            q={
-                "type": "replace_metadata",
-                "args": export
-            }
-        )
-        assert st_code == 400, resp
+            # apply metadata
+            st_code, resp = hge_ctx.v1q(
+                q={
+                    "type": "replace_metadata",
+                    "args": export
+                }
+            )
+            assert st_code == 400, resp
 
-        # drop inconsistent objects
-        st_code, resp = hge_ctx.v1q(q=self.drop_inconsistent_metadata)
-        assert st_code == 200, resp
+        finally:
+            # drop inconsistent objects
+            st_code, resp = hge_ctx.v1q(q=self.drop_inconsistent_metadata)
+            assert st_code == 200, resp
 
-        # reload metadata
-        st_code, resp = hge_ctx.v1q(q=self.reload_metadata)
-        assert st_code == 200, resp
+            # reload metadata
+            st_code, resp = hge_ctx.v1q(q=self.reload_metadata)
+            assert st_code == 200, resp
 
-        # fetch inconsistent objects
-        st_code, resp = hge_ctx.v1q(q=self.get_inconsistent_metadata)
-        assert st_code == 200, resp
+            # fetch inconsistent objects
+            st_code, resp = hge_ctx.v1q(q=self.get_inconsistent_metadata)
+            assert st_code == 200, resp
 
-        assert resp['is_consistent'] == True, resp
-        assert len(resp['inconsistent_objects']) == 0, resp
+            assert resp['is_consistent'] == True, resp
+            assert len(resp['inconsistent_objects']) == 0, resp
 
-        # teardown
-        st_code, resp = hge_ctx.v1q(json.loads(json.dumps(test['teardown'])))
-        assert st_code == 200, resp
+            # teardown
+            st_code, resp = hge_ctx.v1q(json.loads(json.dumps(test['teardown'])))
+            assert st_code == 200, resp
 
     @classmethod
     def dir(cls):

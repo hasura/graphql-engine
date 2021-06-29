@@ -1,0 +1,34 @@
+name: server format
+on:
+  label:
+  pull_request:
+    paths:
+      - 'server/**'
+
+jobs:
+  stylish-haskell:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.pull_request.labels.*.name, 'ignore-server-format-checks') && github.event.label.name != 'ignore-server-format-checks'"
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Run stylish-haskell
+        shell: bash
+        run: |
+          if git show -q --pretty=format:"%s" | grep -q "\[no-format\]"; then
+            echo "Found [no-format], skipping."
+          else
+            CHANGED_HS_FILES=$(git diff --name-only origin/${{github.base_ref}}...${{github.sha}} -- "./server/*.hs" | xargs -i -d '\n' sh -c 'ls -d {} 2>/dev/null || true' | sed 's%^server/%%')
+            echo "Changed Haskell files are:"
+            echo "$CHANGED_HS_FILES"
+            cd server
+            curl -sL https://raw.github.com/jaspervdj/stylish-haskell/master/scripts/latest.sh | sh -s $(echo $CHANGED_HS_FILES) -i
+            if [ -n "$(git status --porcelain)" ] ; then
+              echo "Files that needed formatting:"
+              git diff --name-only --diff-filter=M
+              for hfile in $(git status --porcelain | sed -n 's/^ M //p'); do
+                echo "::warning file=server/$hfile::This file needs to be formatted using stylish-haskell.\nRun `cd server && stylish-haskell $hfile` to do so."
+              done
+            fi
+          fi

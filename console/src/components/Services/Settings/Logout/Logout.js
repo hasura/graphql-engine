@@ -9,9 +9,7 @@ const Logout = props => {
       className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
     >
       <div className={styles.subHeader}>
-        <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
-          Logout (clear admin-secret)
-        </h2>
+        <h2 className={styles.headerText}>Logout (clear admin-secret)</h2>
       </div>
 
       <div>

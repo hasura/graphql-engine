@@ -1,10 +1,10 @@
 import React from 'react';
 
-import { JSONB, JSONDTYPE, TEXT, BOOLEAN, getPlaceholder } from '../../utils';
+import { getPlaceholder } from '../../utils';
 import JsonInput from '../../../../Common/CustomInputTypes/JsonInput';
 import TextInput from '../../../../Common/CustomInputTypes/TextInput';
 import styles from '../../../../Common/TableCommon/Table.scss';
-import { isColumnAutoIncrement } from '../../../../Common/utils/pgUtils';
+import { dataSource } from '../../../../../dataSources';
 
 export const TypedInput = ({
   enumOptions,
@@ -14,8 +14,9 @@ export const TypedInput = ({
   inputRef,
   onChange,
   onFocus,
-  prevValue,
-  hasDefault,
+  prevValue = null,
+  hasDefault = false,
+  disabled,
 }) => {
   const {
     column_name: colName,
@@ -23,11 +24,12 @@ export const TypedInput = ({
     column_default: colDefault,
   } = col;
 
-  const isAutoIncrement = isColumnAutoIncrement(col);
   const placeHolder = hasDefault ? colDefault : getPlaceholder(colType);
   const getDefaultValue = () => {
-    if (prevValue !== undefined) return prevValue;
     if (clone && colName in clone) return clone[colName];
+    if (prevValue !== undefined) {
+      return prevValue === null ? '' : prevValue;
+    }
     return '';
   };
 
@@ -42,6 +44,7 @@ export const TypedInput = ({
     onChange,
     onFocus,
     onClick,
+    disabled,
     ref: inputRef,
     'data-test': `typed-input-${index}`,
     className: `form-control ${styles.insertBox}`,
@@ -49,6 +52,11 @@ export const TypedInput = ({
     type: 'text',
     placeholder: 'text',
   };
+
+  if (disabled) {
+    return <input {...standardInputProps} readOnly placeholder={placeHolder} />;
+  }
+
   if (enumOptions && enumOptions[colName]) {
     return (
       <select
@@ -68,10 +76,6 @@ export const TypedInput = ({
     );
   }
 
-  if (isAutoIncrement) {
-    return <input {...standardInputProps} readOnly placeholder={placeHolder} />;
-  }
-
   if (prevValue && typeof prevValue === 'object') {
     return (
       <JsonInput
@@ -85,8 +89,8 @@ export const TypedInput = ({
   }
 
   switch (colType) {
-    case JSONB:
-    case JSONDTYPE:
+    case dataSource.columnDataTypes.JSONB:
+    case dataSource.columnDataTypes.JSONDTYPE:
       return (
         <JsonInput
           standardProps={{
@@ -99,7 +103,7 @@ export const TypedInput = ({
         />
       );
 
-    case TEXT:
+    case dataSource.columnDataTypes.TEXT:
       return (
         <TextInput
           standardProps={standardInputProps}
@@ -107,7 +111,7 @@ export const TypedInput = ({
         />
       );
 
-    case BOOLEAN:
+    case dataSource.columnDataTypes.BOOLEAN:
       return (
         <select {...standardInputProps}>
           <option value="" disabled>

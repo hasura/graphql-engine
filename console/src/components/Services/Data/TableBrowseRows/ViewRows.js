@@ -7,7 +7,7 @@ import DragFoldTable, {
 
 import Dropdown from '../../../Common/Dropdown/Dropdown';
 
-import InvokeManualTrigger from '../../EventTrigger/Common/InvokeManualTrigger/InvokeManualTrigger';
+import InvokeManualTrigger from '../../Events/EventTriggers/InvokeManualTrigger/InvokeManualTrigger';
 
 import {
   vExpandRel,
@@ -44,9 +44,8 @@ import {
 import {
   findTable,
   getRelationshipRefTable,
-  getTableName,
-  getTableSchema,
-} from '../../../Common/utils/pgUtils';
+  dataSource,
+} from '../../../../dataSources';
 import { updateSchemaInfo } from '../DataActions';
 import {
   persistColumnCollapseChange,
@@ -54,37 +53,39 @@ import {
   persistColumnOrderChange,
   getPersistedColumnsOrder,
   persistPageSizeChange,
-} from './localStorageUtils';
+} from './tableUtils';
 import { compareRows, isTableWithPK } from './utils';
 import styles from '../../../Common/TableCommon/Table.scss';
 
-const ViewRows = ({
-  curTableName,
-  currentSchema,
-  curQuery,
-  curFilter,
-  curRows,
-  curPath,
-  parentTableName,
-  curDepth,
-  activePath,
-  schemas,
-  dispatch,
-  ongoingRequest,
-  isProgressing,
-  lastError,
-  lastSuccess,
-  isView,
-  count,
-  expandedRow,
-  manualTriggers = [],
-  updateInvocationRow,
-  updateInvocationFunction,
-  triggeredRow,
-  triggeredFunction,
-  location,
-  readOnlyMode,
-}) => {
+const ViewRows = props => {
+  const {
+    curTableName,
+    currentSchema,
+    curQuery,
+    curFilter,
+    curRows,
+    curPath = [],
+    parentTableName,
+    curDepth,
+    activePath,
+    schemas,
+    dispatch,
+    ongoingRequest,
+    isProgressing,
+    lastError,
+    lastSuccess,
+    isView,
+    count,
+    expandedRow,
+    manualTriggers = [],
+    location,
+    readOnlyMode,
+    shouldHidePagination,
+    currentSource,
+    useCustomPagination,
+  } = props;
+  const [invokedRow, setInvokedRow] = useState(null);
+  const [invocationFunc, setInvocationFunc] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
   useEffect(() => {
     setSelectedRows([]);
@@ -94,13 +95,13 @@ const ViewRows = ({
 
   // Invoke manual trigger status
   const invokeTrigger = (trigger, row) => {
-    updateInvocationRow(row);
-    updateInvocationFunction(trigger);
+    setInvokedRow(row);
+    setInvocationFunc(trigger);
   };
 
   const onCloseInvokeTrigger = () => {
-    updateInvocationRow(-1);
-    updateInvocationFunction(null);
+    setInvokedRow(null);
+    setInvokedRow(null);
   };
 
   const handleAllCheckboxChange = e => {
@@ -226,14 +227,26 @@ const ViewRows = ({
     const pkClause = {};
 
     if (!isView && hasPrimaryKey) {
-      tableSchema.primary_key.columns.map(pk => {
-        pkClause[pk] = row[pk];
+      tableSchema.primary_key.columns.forEach(key => {
+        pkClause[key] = row[key];
+      });
+    } else if (tableSchema.unique_constraints?.length) {
+      tableSchema.unique_constraints[0].columns.forEach(key => {
+        pkClause[key] = row[key];
       });
     } else {
-      tableSchema.columns.map(k => {
-        pkClause[k.column_name] = row[k.column_name];
-      });
+      tableSchema.columns
+        .filter(c => !dataSource.isJsonColumn(c))
+        .forEach(key => {
+          pkClause[key.column_name] = row[key.column_name];
+        });
     }
+
+    Object.keys(pkClause).forEach(key => {
+      if (Array.isArray(pkClause[key])) {
+        pkClause[key] = dataSource.arrayToPostgresArray(pkClause[key]);
+      }
+    });
 
     return pkClause;
   };
@@ -257,7 +270,6 @@ const ViewRows = ({
         let cloneButton;
         let deleteButton;
         let expandButton;
-        let manualTriggersButton;
 
         const getActionButton = (
           type,
@@ -321,7 +333,14 @@ const ViewRows = ({
           const handleEditClick = () => {
             dispatch({ type: E_SET_EDITITEM, oldItem: row, pkClause });
             dispatch(
-              _push(getTableEditRowRoute(currentSchema, curTableName, true))
+              _push(
+                getTableEditRowRoute(
+                  currentSchema,
+                  currentSource,
+                  curTableName,
+                  true
+                )
+              )
             );
           };
 
@@ -363,7 +382,14 @@ const ViewRows = ({
           const handleCloneClick = () => {
             dispatch({ type: I_SET_CLONE, clone: row });
             dispatch(
-              _push(getTableInsertRowRoute(currentSchema, curTableName, true))
+              _push(
+                getTableInsertRowRoute(
+                  currentSchema,
+                  currentSource,
+                  curTableName,
+                  true
+                )
+              )
             );
           };
 
@@ -391,13 +417,11 @@ const ViewRows = ({
                     color="white"
                     size="xs"
                     data-test={`run_manual_trigger_${m.name}`}
-                    onClick={() =>
-                      invokeTrigger.apply(undefined, [m.name, rowIndex])
-                    }
+                    onClick={() => invokeTrigger(m.name, rowIndex)}
                   >
                     Invoke
                   </Button>
-                  {`${m.name}`}
+                  {m.name}
                 </div>
               ),
             };
@@ -413,29 +437,25 @@ const ViewRows = ({
             () => {}
           );
 
-          const invokeManualTrigger = r =>
-            triggeredRow === rowIndex && (
-              <InvokeManualTrigger
-                args={r}
-                name={`${triggeredFunction}`}
-                onClose={onCloseInvokeTrigger}
-                key={`invoke_function_${triggeredFunction}`}
-                identifier={`invoke_function_${triggeredFunction}`}
-              />
-            );
-
           return (
             <div className={styles.display_inline}>
               <Dropdown
                 testId={`data_browse_rows_trigger_${rowIndex}`}
                 options={triggerOptions}
                 position="right"
-                key={`invoke_data_dropdown_${rowIndex}`}
                 keyPrefix={`invoke_data_dropdown_${rowIndex}`}
               >
                 {triggerBtn}
               </Dropdown>
-              {invokeManualTrigger(row)}
+              {invokedRow === rowIndex && (
+                <InvokeManualTrigger
+                  source={currentSource}
+                  args={row}
+                  name={`${invocationFunc}`}
+                  onClose={onCloseInvokeTrigger}
+                  identifier={`invoke_function_${invocationFunc}`}
+                />
+              )}
             </div>
           );
         };
@@ -452,16 +472,17 @@ const ViewRows = ({
 
         // eslint-disable-next-line prefer-const
         expandButton = getExpandButton();
-        // eslint-disable-next-line prefer-const
-        manualTriggersButton = getManualTriggersButton();
 
         return (
-          <div key={rowIndex} className={styles.tableCellCenterAligned}>
+          <div
+            key={rowIndex}
+            className={`${styles.tableCenterContent} ${styles.overflowUnset}`}
+          >
             {cloneButton}
             {editButton}
             {deleteButton}
             {expandButton}
-            {manualTriggersButton}
+            {getManualTriggersButton()}
           </div>
         );
       };
@@ -741,7 +762,7 @@ const ViewRows = ({
 
     const childViewRows = childQueries.map((cq, i) => {
       // Render child only if data is available
-      if (curRows[0][cq.name]) {
+      if (curRows[0] && curRows[0][cq.name]) {
         const rel = tableSchema.relationships.find(r => r.rel_name === cq.name);
 
         if (rel) {
@@ -751,15 +772,15 @@ const ViewRows = ({
           if (isObjectRel) {
             childRows = [childRows];
           }
-
           const childTableDef = getRelationshipRefTable(tableSchema, rel);
+
           const childTable = findTable(schemas, childTableDef);
 
           return (
             <ViewRows
               key={i}
-              curTableName={getTableName(childTable)}
-              currentSchema={getTableSchema(childTable)}
+              curTableName={childTable.table_name}
+              currentSchema={childTable.table_schema}
               curQuery={cq}
               curFilter={curFilter}
               curPath={[...curPath, rel.rel_name]}
@@ -774,6 +795,7 @@ const ViewRows = ({
               dispatch={dispatch}
               expandedRow={expandedRow}
               readOnlyMode={readOnlyMode}
+              currentSource={currentSource}
             />
           );
         }
@@ -913,9 +935,60 @@ const ViewRows = ({
       }
     };
 
+    const PaginationWithOnlyNav = () => {
+      const newPage = curFilter.offset / curFilter.limit;
+      return (
+        <div className={`row`} style={{ maxWidth: '500px' }}>
+          <div className="col-xs-2">
+            <button
+              className="btn"
+              onClick={() => handlePageChange(newPage - 1)}
+              disabled={curFilter.offset === 0}
+            >
+              prev
+            </button>
+          </div>
+          <div className="col-xs-4">
+            <select
+              value={curFilter.limit}
+              onChange={e => {
+                e.persist();
+                handlePageSizeChange(parseInt(e.target.value, 10) || 10);
+              }}
+              className="form-control"
+            >
+              <option disabled value="">
+                --
+              </option>
+              <option value={5}>5 rows</option>
+              <option value={10}>10 rows</option>
+              <option value={20}>20 rows</option>
+              <option value={25}>25 rows</option>
+              <option value={50}>50 rows</option>
+              <option value={100}>100 rows</option>
+            </select>
+          </div>
+          <div className="col-xs-2">
+            <button
+              className="btn"
+              onClick={() => handlePageChange(newPage + 1)}
+              disabled={curRows.length === 0}
+            >
+              next
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    const paginationProps = {};
+    if (useCustomPagination) {
+      paginationProps.PaginationComponent = PaginationWithOnlyNav;
+    }
+
     return (
       <DragFoldTable
-        className="-highlight -fit-content"
+        className="dataTable -highlight -fit-content"
         data={_gridRows}
         columns={_gridHeadings}
         headerTitle={'Click to sort / Drag to rearrange'}
@@ -943,6 +1016,8 @@ const ViewRows = ({
           persistColumnOrderChange(curTableName, currentSchema, reorderData)
         }
         defaultReorders={columnsOrder}
+        showPagination={!shouldHidePagination}
+        {...paginationProps}
       />
     );
   };

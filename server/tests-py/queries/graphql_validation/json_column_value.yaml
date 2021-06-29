@@ -1,0 +1,38 @@
+- description: JSON variables should not be interpreted as graphql input values
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      insert_article_one:
+        body:
+          1: 2
+          2: 3
+  query:
+    query: |
+      mutation insert_article($body: jsonb) {
+        insert_article_one(object: {body: $body}) {
+          body
+        }
+      }
+    variables:
+      body:
+        1: 2
+        2: 3
+
+- description: variables within JSON values should be properly interpolated
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      insert_article_one:
+        body:
+          - header: "X-HEADER-THINGY"
+  query:
+    query: |
+      mutation insert_article($header: jsonb) {
+        insert_article_one(object: {body: [{header: $header}]}) {
+          body
+        }
+      }
+    variables:
+      header: "X-HEADER-THINGY"

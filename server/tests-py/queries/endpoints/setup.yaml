@@ -1,0 +1,124 @@
+type: bulk
+args:
+- type: create_query_collection
+  args:
+    name: test_collection
+    definition:
+      queries:
+      - name: simple_query
+        query: "query { test_table { first_name last_name } }"
+      - name: simple_query_cached
+        query: "query @cached(ttl: 5) { test_table { first_name last_name } }"
+      - name: query_with_arg
+        query: "query ($first_name:String!) { test_table(where: {first_name: { _eq: $first_name } }) { first_name last_name } }"
+      - name: query_with_args
+        query: "query ($first_name: String!, $last_name:String!) { test_table(where: {first_name: { _eq: $first_name } last_name: { _eq: $last_name }}) { first_name last_name } }"
+      - name: query_with_uuid_arg
+        query: "query ($id: uuid!) { test_table(where: {id: { _neq: $id }}) { first_name last_name } }"
+      - name: simple_subscription
+        query: "subscription { test_table { first_name last_name } }"
+
+- type: create_rest_endpoint
+  args:
+    url: simple
+    name: simple
+    methods:
+      - GET
+    definition:
+      query:
+        collection_name: test_collection
+        query_name: simple_query
+
+- type: create_rest_endpoint
+  args:
+    url: simple_cached
+    name: simple_cached
+    methods:
+      - GET
+    definition:
+      query:
+        collection_name: test_collection
+        query_name: simple_query_cached
+
+- type: create_rest_endpoint
+  args:
+    url: with_arg
+    name: with_arg
+    methods:
+      - GET
+      - POST
+    definition:
+      query:
+        collection_name: test_collection
+        query_name: query_with_arg
+
+- type: create_rest_endpoint
+  args:
+    url: with_args
+    name: with_args
+    methods:
+      - GET
+    definition:
+      query:
+        collection_name: test_collection
+        query_name: query_with_args
+
+- type: create_rest_endpoint
+  args:
+    url: with_template/:first_name
+    name: with_template
+    methods:
+      - GET
+    definition:
+      query:
+        collection_name: test_collection
+        query_name: query_with_arg
+
+- type: create_rest_endpoint
+  args:
+    url: with_uuid/:id
+    name: with_uuid
+    methods:
+      - GET
+    definition:
+      query:
+        collection_name: test_collection
+        query_name: query_with_uuid_arg
+
+- type: create_rest_endpoint
+  args:
+    url: to_be_dropped
+    name: to_be_dropped
+    methods:
+      - GET
+    definition:
+      query:
+        collection_name: test_collection
+        query_name: simple_query
+
+- type: drop_rest_endpoint
+  args:
+    name: to_be_dropped
+
+- type: run_sql
+  args:
+    sql: |
+      create table test_table(
+          first_name text,
+          last_name text,
+          id UUID NOT NULL DEFAULT gen_random_uuid()
+      );
+
+- type: track_table
+  args:
+    schema: public
+    name: test_table
+
+- type: run_sql
+  args:
+    sql: |
+      insert into test_table (first_name, last_name)
+      values
+      ('Foo', 'Bar'),
+      ('Baz', 'Qux'),
+      ('X%20Y', 'Test');

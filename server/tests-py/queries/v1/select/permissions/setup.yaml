@@ -2,6 +2,7 @@ type: bulk
 args:
 
 #Author table
+
 - type: run_sql
   args:
     sql: |
@@ -11,15 +12,6 @@ args:
           is_registered boolean not null default false,
           remarks_internal text
       );
-- type: track_table
-  args:
-    schema: public
-    name: author
-
-#Article table
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -27,7 +19,62 @@ args:
         author_id INTEGER NOT NULL REFERENCES author(id),
         is_published BOOLEAN NOT NULL default FALSE,
         published_on TIMESTAMP
-      )
+      );
+      CREATE EXTENSION IF NOT EXISTS postgis;
+      DO $$
+      BEGIN
+        IF PostGIS_lib_version() ~ '^3.*' THEN
+          CREATE EXTENSION IF NOT EXISTS postgis_raster;
+        END IF;
+      END$$;
+      CREATE EXTENSION IF NOT EXISTS postgis_topology;
+      CREATE TABLE geom_table(
+        id SERIAL PRIMARY KEY,
+        type TEXT NOT NULL,
+        geom_col geometry NOT NULL
+      );
+      INSERT INTO geom_table (type, geom_col)
+      VALUES
+      ('point', ST_GeomFromEWKT('SRID=4326;POINT(1 2)')),
+      ('linestring', ST_GeomFromEWKT('SRID=4326;LINESTRING(0 0, 0.5 1, 1 2, 1.5 3)')),
+      ('linestring', ST_GeomFromEWKT('SRID=4326;LINESTRING(1 0, 0.5 0.5, 0 1)')),
+      ('polygon', ST_GeomFromEWKT('SRID=4326;POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')),
+      ('polygon', ST_GeomFromEWKT('SRID=4326;POLYGON((2 0, 2 1, 3 1, 3 0, 2 0))'))
+      ;
+      CREATE TABLE geog_table(
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        geog_col geography NOT NULL
+      );
+      INSERT INTO geog_table (name, geog_col)
+      VALUES
+      ('London', ST_GeographyFromText('SRID=4326;POINT(0.1278 51.5074)') ),
+      ('Paris',  ST_GeographyFromText('SRID=4326;POINT(2.3522 48.8566)') ),
+      ('Moscow', ST_GeographyFromText('SRID=4326;POINT(37.6173 55.7558)') ),
+      ('New York', ST_GeographyFromText('SRID=4326;POINT(-74.0060 40.7128)') ),
+      ('Linestring', ST_GeographyFromText('SRID=4326;LINESTRING(0.0 0.0,0.0 1.0)')),
+      ('Point', ST_GeographyFromText('SRID=4326;POINT(0.0 0.5)'));
+      CREATE TABLE jsonb_table(
+        id SERIAL PRIMARY KEY,
+        jsonb_col jsonb NOT NULL
+      );
+      CREATE TABLE auction (
+      id serial primary key,
+      price integer not null DEFAULT 250,
+      bid_price integer
+      );
+      INSERT INTO auction
+      (bid_price)
+      VALUES
+      (100), (120), (300), (260)
+      ;
+
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
 - type: track_table
   args:
     schema: public
@@ -169,36 +216,6 @@ args:
       is_published: false
 
 #Permission based on PostGIS operators
-- type: run_sql
-  args:
-    sql: |
-      CREATE EXTENSION IF NOT EXISTS postgis;
-      
-- type: run_sql
-  args:
-    sql: |
-      DO $$
-      BEGIN
-        IF PostGIS_lib_version() ~ '^3.*' THEN
-          CREATE EXTENSION IF NOT EXISTS postgis_raster;
-        END IF;
-      END$$;
-
-- type: run_sql
-  args:
-    sql: |
-     CREATE EXTENSION IF NOT EXISTS postgis_topology;
-
-#Create table
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE geom_table(
-        id SERIAL PRIMARY KEY,
-        type TEXT NOT NULL,
-        geom_col geometry NOT NULL
-      );
-
 - type: track_table
   args:
     name: geom_table
@@ -251,28 +268,6 @@ args:
             distance: X-Hasura-Geom-Dist
             from: X-Hasura-Geom-Val
 #Insert data
-- type: run_sql
-  args:
-    sql: |
-      INSERT INTO geom_table (type, geom_col)
-      VALUES
-      ('point', ST_GeomFromEWKT('SRID=4326;POINT(1 2)')),
-      ('linestring', ST_GeomFromEWKT('SRID=4326;LINESTRING(0 0, 0.5 1, 1 2, 1.5 3)')),
-      ('linestring', ST_GeomFromEWKT('SRID=4326;LINESTRING(1 0, 0.5 0.5, 0 1)')),
-      ('polygon', ST_GeomFromEWKT('SRID=4326;POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')),
-      ('polygon', ST_GeomFromEWKT('SRID=4326;POLYGON((2 0, 2 1, 3 1, 3 0, 2 0))'))
-      ;
-
-#Permission based on Geography columns
-
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE geog_table(
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        geog_col geography NOT NULL
-      );
 - type: track_table
   args:
     name: geog_table
@@ -315,26 +310,6 @@ args:
             from: X-Hasura-Geog-From
             use_spheroid: X-Hasura-Geog-Sph
 
-- type: run_sql
-  args:
-    sql: |
-      INSERT INTO geog_table (name, geog_col)
-      VALUES
-      ('London', ST_GeographyFromText('SRID=4326;POINT(0.1278 51.5074)') ),
-      ('Paris',  ST_GeographyFromText('SRID=4326;POINT(2.3522 48.8566)') ),
-      ('Moscow', ST_GeographyFromText('SRID=4326;POINT(37.6173 55.7558)') ),
-      ('New York', ST_GeographyFromText('SRID=4326;POINT(-74.0060 40.7128)') ),
-      ('Linestring', ST_GeographyFromText('SRID=4326;LINESTRING(0.0 0.0,0.0 1.0)')),
-      ('Point', ST_GeographyFromText('SRID=4326;POINT(0.0 0.5)'));
-
-#Permission based on JSONB operators
-- type: run_sql
-  args:
-    sql: |
-       CREATE TABLE jsonb_table(
-         id SERIAL PRIMARY KEY,
-         jsonb_col jsonb NOT NULL
-       );
 - type: track_table
   args:
     name: jsonb_table
@@ -377,19 +352,6 @@ args:
         name: Cross
 
 #Auction table
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE auction (
-      id serial primary key,
-      price integer not null DEFAULT 250,
-      bid_price integer
-      );
-      INSERT INTO auction
-      (bid_price)
-      VALUES
-      (100), (120), (300), (260)
-      ;
 - type: track_table
   args:
     name: auction

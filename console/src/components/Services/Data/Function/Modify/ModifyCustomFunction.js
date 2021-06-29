@@ -4,77 +4,75 @@ import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 import CommonTabLayout from '../../../../Common/Layout/CommonTabLayout/CommonTabLayout';
-
-import _push from '../../push';
-import { pageTitle, appPrefix } from './constants';
-
 import tabInfo from './tabInfo';
 import globals from '../../../../../Globals';
 import Button from '../../../../Common/Button/Button';
-
-const prefixUrl = globals.urlPrefix + appPrefix;
-
+import styles from './ModifyCustomFunction.scss';
 import TextAreaWithCopy from '../../../../Common/TextAreaWithCopy/TextAreaWithCopy';
-
 import {
   fetchCustomFunction,
-  deleteFunctionSql,
   unTrackCustomFunction,
+  updateSessVar,
+  deleteFunction,
 } from '../customFunctionReducer';
-
-import { SET_SQL } from '../../RawSQL/Actions';
 import { NotFoundError } from '../../../../Error/PageNotFound';
 import { getConfirmation } from '../../../../Common/utils/jsUtils';
 import {
   getFunctionBaseRoute,
   getSchemaBaseRoute,
 } from '../../../../Common/utils/routesUtils';
+import SessionVarSection from './SessionVarSection';
+import RawSqlButton from '../../Common/Components/RawSqlButton';
+import { connect } from 'react-redux';
+
+export const pageTitle = 'Custom Function';
 
 class ModifyCustomFunction extends React.Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
 
     this.state = {
       deleteConfirmationError: null,
       funcFetchCompleted: false,
     };
 
-    this.loadRunSQLAndLoadPage = this.loadRunSQLAndLoadPage.bind(this);
     this.handleUntrackCustomFunction = this.handleUntrackCustomFunction.bind(
       this
     );
     this.handleDeleteCustomFunction = this.handleDeleteCustomFunction.bind(
       this
     );
+    this.urlWithSource = `/data/${props.currentSource}`;
+    this.prefixUrl = globals.urlPrefix + this.urlWithSource;
+    this.urlWithSchema = `/data/${props.currentSource}/schema/${props.currentSchema}`;
   }
 
   componentDidMount() {
     const { functionName, schema } = this.props.params;
     if (!functionName || !schema) {
-      this.props.dispatch(push(prefixUrl));
+      this.props.dispatch(push(this.prefixUrl));
     }
     Promise.all([
       this.props
-        .dispatch(fetchCustomFunction(functionName, schema))
+        .dispatch(
+          fetchCustomFunction(functionName, schema, this.props.currentSource)
+        )
         .then(() => {
           this.setState({ funcFetchCompleted: true });
         }),
     ]);
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     const { functionName, schema } = this.props.params;
     if (
-      functionName !== nextProps.params.functionName ||
-      schema !== nextProps.params.schema
+      functionName !== prevProps.params.functionName ||
+      schema !== prevProps.params.schema
     ) {
       Promise.all([
         this.props
           .dispatch(
-            fetchCustomFunction(
-              nextProps.params.functionName,
-              nextProps.params.schema
-            )
+            fetchCustomFunction(functionName, schema, this.props.currentSource)
           )
           .then(() => {
             this.setState({ funcFetchCompleted: true });
@@ -83,13 +81,7 @@ class ModifyCustomFunction extends React.Component {
     }
   }
 
-  loadRunSQLAndLoadPage() {
-    const { functionDefinition } = this.props.functions;
-    Promise.all([
-      this.props.dispatch({ type: SET_SQL, data: functionDefinition }),
-      this.props.dispatch(_push('/data/sql')),
-    ]);
-  }
+  onSessVarUpdate = sessVar => this.props.dispatch(updateSessVar(sessVar));
 
   updateDeleteConfirmationError(data) {
     this.setState({ deleteConfirmationError: data });
@@ -118,7 +110,7 @@ class ModifyCustomFunction extends React.Component {
     if (isOk) {
       try {
         this.updateDeleteConfirmationError(null);
-        this.props.dispatch(deleteFunctionSql());
+        this.props.dispatch(deleteFunction());
       } catch (err) {
         console.error('Delete custom function error: ', err);
       }
@@ -126,7 +118,6 @@ class ModifyCustomFunction extends React.Component {
   }
 
   render() {
-    const styles = require('./ModifyCustomFunction.scss');
     const {
       functionSchema: schema,
       functionName,
@@ -135,44 +126,47 @@ class ModifyCustomFunction extends React.Component {
       isDeleting,
       isUntracking,
       isFetching,
+      configuration,
     } = this.props.functions;
 
     if (this.state.funcFetchCompleted && !functionName) {
       // throw a 404 exception
       throw new NotFoundError();
     }
+    const loading =
+      isRequesting || isDeleting || isUntracking || isFetching
+        ? { isRequesting, isDeleting, isUntracking, isFetching }
+        : null;
 
-    const { migrationMode } = this.props;
+    const { migrationMode, dispatch, currentSource } = this.props;
 
-    const functionBaseUrl = getFunctionBaseRoute(schema, functionName);
+    const functionBaseUrl = getFunctionBaseRoute(
+      schema,
+      currentSource,
+      functionName
+    );
 
     const generateMigrateBtns = () => {
       return (
         <div className={styles.commonBtn}>
           <Button
-            color="yellow"
-            className={styles.add_mar_right}
-            data-test={'custom-function-edit-modify-btn'}
-            onClick={this.loadRunSQLAndLoadPage}
-          >
-            Modify
-          </Button>
-          <Button
             color="white"
             className={styles.add_mar_right}
             onClick={this.handleUntrackCustomFunction}
-            disabled={isRequesting || isDeleting || isUntracking}
+            disabled={loading}
             data-test={'custom-function-edit-untrack-btn'}
           >
-            {isUntracking ? 'Untracking Function...' : 'Untrack Function'}
+            {loading?.isUntracking
+              ? 'Untracking Function...'
+              : 'Untrack Function'}
           </Button>
           <Button
             color="red"
             onClick={this.handleDeleteCustomFunction}
             data-test={'custom-function-edit-delete-btn'}
-            disabled={isRequesting || isDeleting || isUntracking}
+            disabled={loading}
           >
-            {isDeleting ? 'Deleting Function...' : 'Delete Function'}
+            {loading?.isDeleting ? 'Deleting Function...' : 'Delete Function'}
           </Button>
           {this.state.deleteConfirmationError ? (
             <span
@@ -188,11 +182,11 @@ class ModifyCustomFunction extends React.Component {
     const breadCrumbs = [
       {
         title: 'Data',
-        url: appPrefix,
+        url: this.urlWithSource,
       },
       {
         title: 'Schema',
-        url: appPrefix + '/schema',
+        url: this.urlWithSchema,
       },
       {
         title: schema,
@@ -217,7 +211,7 @@ class ModifyCustomFunction extends React.Component {
           title={`Edit ${pageTitle} - ${functionName} - ${pageTitle}s | Hasura`}
         />
         <CommonTabLayout
-          appPrefix={appPrefix}
+          appPrefix={this.urlWithSource}
           currentTab="modify"
           heading={functionName}
           tabsInfo={tabInfo}
@@ -227,16 +221,37 @@ class ModifyCustomFunction extends React.Component {
           testPrefix={'functions'}
         />
         <br />
-        {/*
-        <h4>Function Definition:</h4>
-        */}
+        <div className={`${styles.display_flex}`}>
+          <h4 className={styles.subheading_text}>
+            Function Definition:
+            <span className={styles.add_mar_left}>
+              <RawSqlButton
+                className={styles.add_mar_right}
+                sql={functionDefinition}
+                dispatch={dispatch}
+                data-test="modify-view"
+                source={currentSource}
+              >
+                Modify
+              </RawSqlButton>
+            </span>
+          </h4>
+        </div>
+
         <div className={styles.sqlBlock}>
           <TextAreaWithCopy
             copyText={functionDefinition}
             textLanguage={'sql'}
-            id={'copyCustomFunctionSQL'}
+            id="copyCustomFunctionSQL"
           />
         </div>
+        <SessionVarSection
+          key={functionName}
+          functionName={functionName}
+          configuration={configuration}
+          loading={loading}
+          onSessVarUpdate={this.onSessVarUpdate}
+        />
         {migrationMode
           ? [<hr key="modify-custom-function-divider" />, generateMigrateBtns()]
           : null}
@@ -249,4 +264,14 @@ ModifyCustomFunction.propTypes = {
   functions: PropTypes.array.isRequired,
 };
 
-export default ModifyCustomFunction;
+const mapStateToProps = state => ({
+  currentSource: state.tables.currentDataSource,
+  currentSchema: state.tables.currentSchema,
+});
+
+const modifyCustomFnConnector = connect(mapStateToProps);
+const ConnectedModifyCustomFunction = modifyCustomFnConnector(
+  ModifyCustomFunction
+);
+
+export default ConnectedModifyCustomFunction;

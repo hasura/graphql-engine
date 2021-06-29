@@ -6,7 +6,9 @@ module Hasura.GraphQL.Transport.WebSocket.Protocol
   , StopMsg(..)
   , ClientMsg(..)
   , ServerMsg(..)
+  , ServerMsgType(..)
   , encodeServerMsg
+  , serverMsgType
   , DataMsg(..)
   , ErrorMsg(..)
   , ConnErrMsg(..)
@@ -14,7 +16,6 @@ module Hasura.GraphQL.Transport.WebSocket.Protocol
   ) where
 
 import qualified Data.Aeson                             as J
-import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as Map
@@ -33,13 +34,13 @@ data StartMsg
   { _smId      :: !OperationId
   , _smPayload :: !GQLReqUnparsed
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''StartMsg)
+$(J.deriveJSON hasuraJSON ''StartMsg)
 
 data StopMsg
   = StopMsg
   { _stId :: OperationId
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''StopMsg)
+$(J.deriveJSON hasuraJSON ''StopMsg)
 
 data ClientMsg
   = CMConnInit !(Maybe ConnParams)
@@ -52,7 +53,7 @@ data ConnParams
   = ConnParams
   { _cpHeaders :: Maybe (Map.HashMap Text Text)
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ConnParams)
+$(J.deriveJSON hasuraJSON ''ConnParams)
 
 instance J.FromJSON ClientMsg where
   parseJSON = J.withObject "ClientMessage" $ \obj -> do
@@ -68,7 +69,7 @@ instance J.FromJSON ClientMsg where
 data DataMsg
   = DataMsg
   { _dmId      :: !OperationId
-  , _dmPayload :: !GraphqlResponse
+  , _dmPayload :: !GQResponse
   }
 
 data ErrorMsg
@@ -114,6 +115,14 @@ instance Show ServerMsgType where
 instance J.ToJSON ServerMsgType where
   toJSON = J.toJSON . show
 
+serverMsgType :: ServerMsg -> ServerMsgType
+serverMsgType SMConnAck       = SMT_GQL_CONNECTION_ACK
+serverMsgType SMConnKeepAlive = SMT_GQL_CONNECTION_KEEP_ALIVE
+serverMsgType (SMConnErr _)   = SMT_GQL_CONNECTION_ERROR
+serverMsgType (SMData _)      = SMT_GQL_DATA
+serverMsgType (SMErr _)       = SMT_GQL_ERROR
+serverMsgType (SMComplete _)  = SMT_GQL_COMPLETE
+
 encodeServerMsg :: ServerMsg -> BL.ByteString
 encodeServerMsg msg =
   encJToLBS $ encJFromAssocList $ case msg of
@@ -132,7 +141,7 @@ encodeServerMsg msg =
   SMData (DataMsg opId payload) ->
     [ encTy SMT_GQL_DATA
     , ("id", encJFromJValue opId)
-    , ("payload", encodeGraphqlResponse payload)
+    , ("payload", encodeGQResp payload)
     ]
 
   SMErr (ErrorMsg opId payload) ->

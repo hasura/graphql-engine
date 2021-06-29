@@ -11,7 +11,29 @@ manière de contribuer au projet, continuez à lire. Ce document va traiter de c
 En répondant à tous les critères que nous recherchons, les chance que
 nous puissions intégrer ou traiter vos contributions augmenteront.
 
-## Vue d'ensemble
+## Sommaire
+
+[1. Code de conduite](#code-of-conduct)
+
+[2. Vue d'ensemble](#overview)
+
+[3. Bienvenue aux contributeurs débutants!](#first-timers)
+
+[4. Domaines de contributions](#areas)
+
+[5. Manières de contribuer](#ways)
+
+[6. Messages de commit](#commit-messages)
+
+[7. Traductions](#translations)
+
+<a name="code-of-conduct"></a>
+## 1. Code de conduite
+
+Veuillez suivre le [Code de conduite](./code-of-conduct.french.md) pour toute contribution à Hasura.
+
+<a name="overview"></a>
+## 2. Vue d'ensemble
 
 [hasura/graphql-engine](https://github.com/hasura/graphql-engine) est un mono-repo
 divisé en 3 composants, chacun ayant son propre guide de contribution:
@@ -25,13 +47,15 @@ combinaison du nom de la branche et du SHA de commit git.
 
 Pour toutes les contributions, un CLC (Contat de Licence de Contributeur) doit être signé [ici](https://cla-assistant.io/hasura/graphql-engine) avant (ou après) que la pull request ait été soumise. Un bot demandera si nécessaire aux contributeurs de signer le CLC au moyen d'un commentaire de pull request.
 
-## Bienvenue aux contributeurs débutants!
+<a name="first-timers"></a>
+## 3. Bienvenue aux contributeurs débutants!
 
 Nous accueillons les nouveaux contributeurs avec joie et serions heureux de vous aider dans vos débuts! Si vous avez des questions, n'hésitez pas!
 
 Vous trouverez toutes les issues adaptées aux débutants [ici](https://github.com/hasura/graphql-engine/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
 
-## Domaines de contribution
+<a name="areas"></a>
+## 4. Domaines de contribution
 
 Nous apprécions bien sûr toute contribution pour Hasura, peu importe le composant. Cependant, nous avons déterminé trois domaines particulièrement adaptés à des contributions en open source.
 
@@ -62,7 +86,8 @@ Nous avons identifié :
 
 N'hésitez pas à soumettre une pull request si vous avez quelque chose à ajouter, même ce qui n'est pas en rapport avec les trois sections mentionnées.
 
-## Manières de contribuer
+<a name="ways"></a>
+## 5. Manières de contribuer
 
 ### Signaler un Problème
 
@@ -76,7 +101,7 @@ N'hésitez pas à soumettre une pull request si vous avez quelque chose à ajout
 - Veuillez inclure les logs du server, si nécessaire.
 
 
-## Directives communes
+### Travailer sur une issue
 
 - Soyez certain qu'il y a une issue associée avec le travail que vous êtes en train de réaliser.
 
@@ -89,7 +114,8 @@ N'hésitez pas à soumettre une pull request si vous avez quelque chose à ajout
 
 - Rebasez master avec votre branche avant de soumettre une pull request.
 
-## Messages de commit
+<a name="commit-messages"></a>
+## 6. Messages de commit
 
 - La première ligne doit être un résumé des changements, ne dépassant pas 50 caractères, suivi
   par une section optionnelle contenant plus de détails au sujet des modifications.
@@ -102,5 +128,12 @@ N'hésitez pas à soumettre une pull request si vous avez quelque chose à ajout
 
 - N'ajoutez pas de point (.) à la fin de la ligne de résumé.
 
+<a name="translations"></a>
+## 7. Traductions
+
+Ce document est disponible dans les langues suivantes :
+ - [Anglais](../CONTRIBUTING.md)
+ - [Français](./CONTRIBUTING.french.md)
+ 
 (Credits: Certaines sections sont adaptées de https://github.com/PostgREST/postgrest/blob/master/.github/CONTRIBUTING.md)
 

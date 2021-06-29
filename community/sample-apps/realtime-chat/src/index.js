@@ -13,7 +13,7 @@ import { getMainDefinition } from 'apollo-utilities';
 const scheme = (proto) => {
   return window.location.protocol === 'https:' ? `${proto}s` : proto;
 }
-const HASURA_GRAPHQL_ENGINE_HOSTNAME = 'realtime-chat.demo.hasura.app';
+const HASURA_GRAPHQL_ENGINE_HOSTNAME = 'realtime-chat.hasura.app';
 export const GRAPHQL_ENDPOINT = `${scheme('http')}://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/v1/graphql`;
 export const WEBSOCKET_ENDPOINT = `${scheme('ws')}://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/v1/graphql`;
 

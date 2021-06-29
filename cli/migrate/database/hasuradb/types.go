@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/migrate/database"
+	"github.com/mitchellh/mapstructure"
+
+	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
 
 	"github.com/qor/transition"
 )
@@ -27,6 +29,7 @@ func (h *HasuraInterfaceBulk) ResetArgs() {
 type HasuraInterfaceQuery struct {
 	Type    requestTypes    `json:"type" yaml:"type"`
 	Version metadataVersion `json:"version,omitempty" yaml:"version,omitempty"`
+	Source  string          `json:"source,omitempty" yaml:"source,omitempty"`
 	Args    interface{}     `json:"args" yaml:"args"`
 }
 
@@ -35,12 +38,93 @@ type metadataVersion int
 const (
 	v1 metadataVersion = 1
 	v2                 = 2
+	v3                 = 3
 )
 
 type newHasuraIntefaceQuery struct {
 	Type    requestTypes    `json:"type" yaml:"type"`
 	Version metadataVersion `json:"version,omitempty" yaml:"version,omitempty"`
 	Args    interface{}     `json:"args" yaml:"args"`
+}
+
+type deleteRemoteRelationshipInput struct {
+	Name  string      `json:"name" yaml:"name"`
+	Table tableSchema `json:"table" yaml:"table"`
+}
+
+type remoteRelationshipDefinition struct {
+	HasuraFields []string               `yaml:"hasura_fields" json:"hasura_fields"`
+	Name         string                 `yaml:"name" json:"name"`
+	RemoteField  map[string]interface{} `yaml:"remote_field" json:"remote_field"`
+	RemoteSchema string                 `yaml:"remote_schema" json:"remote_schema"`
+}
+type createRemoteRelationshipInput struct {
+	remoteRelationshipDefinition
+	Table tableSchema `yaml:"table" json:"table"`
+}
+type updateRemoteRelationshipInput struct {
+	*createRemoteRelationshipInput
+}
+
+type createCronTriggerInput struct {
+	Name              string      `json:"name" yaml:"name"`
+	Webhook           string      `json:"webhook" yaml:"webhook"`
+	Schedule          string      `json:"schedule" yaml:"schedule"`
+	Payload           interface{} `json:"payload,omitempty" yaml:"payload,omitempty"`
+	Headers           interface{} `json:"headers,omitempty" yaml:"headers,omitempty"`
+	RetryConf         interface{} `json:"retry_conf,omitempty" yaml:"retry_conf,omitempty"`
+	IncludeInMetadata *bool       `json:"include_in_metadata,omitempty" yaml:"include_in_metadata,omitempty"`
+	Comment           string      `json:"comment,omitempty" yaml:"comment,omitempty"`
+	Replace           *bool       `json:"replace,omitempty" yaml:"replace,omitempty"`
+}
+
+type deleteCronTriggerInput struct {
+	Name string `json:"name" yaml:"name"`
+}
+
+type actionDefinition struct {
+	Name       interface{} `json:"name,omitempty" yaml:"name,omitempty"`
+	Definition interface{} `json:"definition,omitempty" yaml:"definition,omitempty"`
+}
+
+type createActionInput struct {
+	actionDefinition
+	Comment string `json:"comment,omitempty" yaml:"comment,omitempty"`
+}
+
+type actionAndPermission struct {
+	actionDefinition
+	Permissions []PermissionDefinition `json:"permissions" yaml:"permissions"`
+}
+
+type dropActionInput struct {
+	Name      interface{} `json:"name,omitempty" yaml:"name,omitempty"`
+	ClearData bool        `json:"clear_data,omitempty" yaml:"clear_data,omitempty"`
+}
+
+type updateActionInput struct {
+	actionDefinition
+}
+
+type PermissionDefinition struct {
+	Role    interface{} `json:"role,omitempty" yaml:"role,omitempty"`
+	Comment string      `json:"comment,omitempty" yaml:"comment,omitempty"`
+}
+type createActionPermissionInput struct {
+	Action interface{} `json:"action,omitempty" yaml:"action,omitempty"`
+	PermissionDefinition
+}
+
+type dropActionPermissionInput struct {
+	Action interface{} `json:"action,omitempty" yaml:"action,omitempty"`
+	PermissionDefinition
+}
+
+type setCustomTypesInput struct {
+	InputObjects interface{} `json:"input_objects,omitempty" yaml:"input_objects,omitempty"`
+	Objects      interface{} `json:"objects,omitempty" yaml:"objects,omitempty"`
+	Scalars      interface{} `json:"scalars,omitempty" yaml:"scalars,omitempty"`
+	Enums        interface{} `json:"enums,omitempty" yaml:"enums,omitempty"`
 }
 
 func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
@@ -66,6 +150,8 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		}
 	case setTableCustomFields:
 		q.Args = &setTableCustomFieldsV2Input{}
+	case setTableCustomization:
+		q.Args = &setTableCustomizationInput{}
 	case setTableIsEnum:
 		q.Args = &setTableIsEnumInput{}
 	case untrackTable:
@@ -128,6 +214,28 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		q.Args = &addComputedFieldInput{}
 	case dropComputedField:
 		q.Args = &dropComputedFieldInput{}
+	case deleteRemoteRelationship:
+		q.Args = &deleteRemoteRelationshipInput{}
+	case createRemoteRelationship:
+		q.Args = &createRemoteRelationshipInput{}
+	case updateRemoteRelationship:
+		q.Args = &createRemoteRelationshipInput{}
+	case createCronTrigger:
+		q.Args = &createCronTriggerInput{}
+	case deleteCronTrigger:
+		q.Args = &deleteCronTriggerInput{}
+	case createAction:
+		q.Args = &createActionInput{}
+	case dropAction:
+		q.Args = &dropActionInput{}
+	case updateAction:
+		q.Args = &updateActionInput{}
+	case createActionPermission:
+		q.Args = &createActionPermissionInput{}
+	case dropActionPermission:
+		q.Args = &dropActionPermissionInput{}
+	case setCustomTypes:
+		q.Args = &setCustomTypesInput{}
 	default:
 		return fmt.Errorf("cannot squash type %s", q.Type)
 	}
@@ -178,30 +286,55 @@ type HasuraError struct {
 	// MigrationFile is used internally for hasuractl
 	migrationFile  string
 	migrationQuery string
-	Path           string            `json:"path"`
-	ErrorMessage   string            `json:"error"`
-	Internal       *SQLInternalError `json:"internal,omitempty"`
-	Message        string            `json:"message,omitempty"`
-	Code           string            `json:"code"`
+	Path           string      `json:"path"`
+	ErrorMessage   string      `json:"error"`
+	Internal       interface{} `json:"internal,omitempty"`
+	Message        string      `json:"message,omitempty"`
+	Code           string      `json:"code"`
+}
+
+type InconsistentMetadataError struct {
+	Definition interface{} `json:"definition,omitempty" mapstructure:"definition,omitempty"`
+	Reason     string      `json:"reason,omitempty" mapstructure:"reason,omitempty"`
+	Type       string      `json:"type,omitempty" mapstructure:"type,omitempty"`
+}
+
+func (mderror *InconsistentMetadataError) String() string {
+	var out string
+	if mderror.Reason != "" {
+		out = fmt.Sprintf("\nreason: %v\n", mderror.Reason)
+	}
+	if mderror.Type != "" {
+		out = fmt.Sprintf("%stype: %v\n", out, mderror.Type)
+	}
+	if mderror.Definition != nil {
+		m, err := json.MarshalIndent(mderror.Definition, "", "  ")
+		if err == nil {
+			out = fmt.Sprintf("%sdefinition: \n%s", out, string(m))
+		}
+	}
+	return out
 }
 
 type SQLInternalError struct {
-	Arguments []string      `json:"arguments"`
-	Error     PostgresError `json:"error"`
-	Prepared  bool          `json:"prepared"`
-	Statement string        `json:"statement"`
+	Arguments                 []string       `json:"arguments" mapstructure:"arguments,omitempty"`
+	Error                     *PostgresError `json:"error" mapstructure:"error,omitempty"`
+	Prepared                  bool           `json:"prepared" mapstructure:"prepared,omitempty"`
+	Statement                 string         `json:"statement" mapstructure:"statement,omitempty"`
+	InconsistentMetadataError `mapstructure:",squash"`
 }
 type PostgresError struct {
-	StatusCode  string `json:"status_code"`
-	ExecStatus  string `json:"exec_status"`
-	Message     string `json:"message"`
-	Description string `json:"description"`
-	Hint        string `json:"hint"`
+	StatusCode  string `json:"status_code" mapstructure:"status_code,omitempty"`
+	ExecStatus  string `json:"exec_status" mapstructure:"exec_status,omitempty"`
+	Message     string `json:"message" mapstructure:"message,omitempty"`
+	Description string `json:"description" mapstructure:"description,omitempty"`
+	Hint        string `json:"hint" mapstructure:"hint,omitempty"`
 }
 
 type SchemaDump struct {
 	Opts        []string `json:"opts"`
 	CleanOutput bool     `json:"clean_output"`
+	Database    string   `json:"source,omitempty"`
 }
 
 func (h HasuraError) Error() string {
@@ -213,15 +346,49 @@ func (h HasuraError) Error() string {
 	if h.migrationQuery != "" {
 		errorStrings = append(errorStrings, fmt.Sprintf("%s", h.migrationQuery))
 	}
-	if h.Internal != nil {
-		// postgres error
-		errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s: %s", h.Internal.Error.StatusCode, h.Internal.Error.ExecStatus, h.Internal.Error.Message))
-		if len(h.Internal.Error.Description) > 0 {
-			errorStrings = append(errorStrings, fmt.Sprintf("Description: %s", h.Internal.Error.Description))
+	var internalError SQLInternalError
+	var internalErrors []SQLInternalError
+	if v, ok := h.Internal.(map[string]interface{}); ok {
+		err := mapstructure.Decode(v, &internalError)
+		if err == nil {
+			// postgres error
+			if internalError.Error != nil {
+				errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s: %s", internalError.Error.StatusCode, internalError.Error.ExecStatus, internalError.Error.Message))
+				if len(internalError.Error.Description) > 0 {
+					errorStrings = append(errorStrings, fmt.Sprintf("Description: %s", internalError.Error.Description))
+				}
+				if len(internalError.Error.Hint) > 0 {
+					errorStrings = append(errorStrings, fmt.Sprintf("Hint: %s", internalError.Error.Hint))
+				}
+			}
+			if e := internalError.InconsistentMetadataError.String(); e != "" {
+				errorStrings = append(errorStrings, e)
+			}
 		}
-		if len(h.Internal.Error.Hint) > 0 {
-			errorStrings = append(errorStrings, fmt.Sprintf("Hint: %s", h.Internal.Error.Hint))
+	}
+	if v, ok := h.Internal.([]interface{}); ok {
+		err := mapstructure.Decode(v, &internalErrors)
+		if err == nil {
+			for _, internalError := range internalErrors {
+				// postgres error
+				if internalError.Error != nil {
+					errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s: %s", internalError.Error.StatusCode, internalError.Error.ExecStatus, internalError.Error.Message))
+					if len(internalError.Error.Description) > 0 {
+						errorStrings = append(errorStrings, fmt.Sprintf("Description: %s", internalError.Error.Description))
+					}
+					if len(internalError.Error.Hint) > 0 {
+						errorStrings = append(errorStrings, fmt.Sprintf("Hint: %s", internalError.Error.Hint))
+					}
+				}
+
+				if e := internalError.InconsistentMetadataError.String(); e != "" {
+					errorStrings = append(errorStrings, e)
+				}
+			}
 		}
+	}
+	if len(errorStrings) == 0 {
+		return ""
 	}
 	return strings.Join(errorStrings, "\r\n")
 }
@@ -252,6 +419,7 @@ const (
 	trackTable                  requestTypes = "track_table"
 	addExistingTableOrView                   = "add_existing_table_or_view"
 	setTableCustomFields                     = "set_table_custom_fields"
+	setTableCustomization                    = "set_table_customization"
 	setTableIsEnum                           = "set_table_is_enum"
 	untrackTable                             = "untrack_table"
 	trackFunction                            = "track_function"
@@ -285,6 +453,17 @@ const (
 	bulkQuery                                = "bulk"
 	addComputedField                         = "add_computed_field"
 	dropComputedField                        = "drop_computed_field"
+	createRemoteRelationship                 = "create_remote_relationship"
+	updateRemoteRelationship                 = "update_remote_relationship"
+	deleteRemoteRelationship                 = "delete_remote_relationship"
+	createCronTrigger                        = "create_cron_trigger"
+	deleteCronTrigger                        = "delete_cron_trigger"
+	createAction                             = "create_action"
+	dropAction                               = "drop_action"
+	updateAction                             = "update_action"
+	createActionPermission                   = "create_action_permission"
+	dropActionPermission                     = "drop_action_permission"
+	setCustomTypes                           = "set_custom_types"
 )
 
 type tableMap struct {
@@ -305,6 +484,10 @@ type computedFieldMap struct {
 
 type queryInCollectionMap struct {
 	collectionName, queryName string
+}
+
+type remoteRelationshipMap struct {
+	tableName, schemaName, name string
 }
 
 type tableSchema struct {
@@ -350,8 +533,9 @@ func (t *trackTableInput) UnmarshalJSON(b []byte) error {
 }
 
 type tableConfiguration struct {
-	CustomRootFields  map[string]string `json:"custom_root_fields" yaml:"custom_root_fields"`
-	CustomColumnNames map[string]string `json:"custom_column_names" yaml:"custom_column_names"`
+	CustomName        string            `json:"custom_name,omitempty" yaml:"custom_name,omitempty"`
+	CustomRootFields  map[string]string `json:"custom_root_fields,omitempty" yaml:"custom_root_fields,omitempty"`
+	CustomColumnNames map[string]string `json:"custom_column_names,omitempty" yaml:"custom_column_names,omitempty"`
 }
 
 type trackTableV2Input struct {
@@ -362,6 +546,11 @@ type trackTableV2Input struct {
 type setTableCustomFieldsV2Input struct {
 	Table tableSchema `json:"table" yaml:"table"`
 	tableConfiguration
+}
+
+type setTableCustomizationInput struct {
+	Table              tableSchema `json:"table" yaml:"table"`
+	tableConfiguration `json:"configuration,omitempty" yaml:"configuration,omitempty"`
 }
 
 type setTableIsEnumInput struct {
@@ -482,8 +671,9 @@ type createEventTriggerInput struct {
 	WebhookFromEnv string                            `json:"webhook_from_env,omitempty" yaml:"webhook_from_env,omitempty"`
 	Definition     *createEventTriggerOperationInput `json:"definition,omitempty" yaml:"definition,omitempty"`
 	Headers        interface{}                       `json:"headers" yaml:"headers"`
-	Replace        bool                              `json:"replace" yaml:"replace"`
+	Replace        *bool                             `json:"replace,omitempty" yaml:"replace,omitempty"`
 	RetryConf      *createEventTriggerRetryConfInput `json:"retry_conf" yaml:"retry_conf"`
+	EnableManual   *bool                             `json:"enable_manual,omitempty" yaml:"enable_manual,omitempty"`
 
 	createEventTriggerOperationInput
 }
@@ -513,11 +703,12 @@ func (c *createEventTriggerInput) MarshalJSON() ([]byte, error) {
 		Webhook        string                            `json:"webhook,omitempty" yaml:"webhook,omitempty"`
 		WebhookFromEnv string                            `json:"webhook_from_env,omitempty" yaml:"webhook_from_env,omitempty"`
 		Headers        interface{}                       `json:"headers" yaml:"headers"`
-		Replace        bool                              `json:"replace" yaml:"replace"`
+		Replace        *bool                             `json:"replace,omitempty" yaml:"replace,omitempty"`
 		RetryConf      *createEventTriggerRetryConfInput `json:"retry_conf" yaml:"retry_conf"`
 		Insert         interface{}                       `json:"insert,omitempty" yaml:"insert,omitempty"`
 		Update         interface{}                       `json:"update,omitempty" yaml:"update,omitempty"`
 		Delete         interface{}                       `json:"delete,omitempty" yaml:"delete,omitempty"`
+		EnableManual   *bool                             `json:"enable_manual,omitempty" yaml:"enable_manual,omitempty"`
 	}{
 		Name:           c.Name,
 		Table:          c.Table,
@@ -529,6 +720,7 @@ func (c *createEventTriggerInput) MarshalJSON() ([]byte, error) {
 		Insert:         c.Insert,
 		Update:         c.Update,
 		Delete:         c.Delete,
+		EnableManual:   c.EnableManual,
 	})
 }
 
@@ -599,6 +791,9 @@ type dropComputedFieldInput struct {
 type clearMetadataInput struct {
 }
 
+type remoteRelationships []struct {
+	Definiton remoteRelationshipDefinition `json:"definiton" yaml:"definiton"`
+}
 type replaceMetadataInput struct {
 	Tables []struct {
 		Table               tableSchema                      `json:"table" yaml:"table"`
@@ -610,12 +805,16 @@ type replaceMetadataInput struct {
 		DeletePermissions   []*createDeletePermissionInput   `json:"delete_permissions" yaml:"delete_permissions"`
 		EventTriggers       []*createEventTriggerInput       `json:"event_triggers" yaml:"event_triggers"`
 		ComputedFields      []*addComputedFieldInput         `json:"computed_fields" yaml:"computed_fields"`
+		RemoteRelationships *remoteRelationships             `json:"remote_relationships" yaml:"remote_relationships"`
 		Configuration       *tableConfiguration              `json:"configuration" yaml:"configuration"`
 	} `json:"tables" yaml:"tables"`
 	Functions        []*trackFunctionInput            `json:"functions" yaml:"functions"`
 	QueryCollections []*createQueryCollectionInput    `json:"query_collections" yaml:"query_collections"`
 	AllowList        []*addCollectionToAllowListInput `json:"allowlist" yaml:"allowlist"`
 	RemoteSchemas    []*addRemoteSchemaInput          `json:"remote_schemas" yaml:"remote_schemas"`
+	CronTriggers     []*createCronTriggerInput        `json:"cron_triggers" yaml:"cron_triggers"`
+	Actions          []*actionAndPermission           `json:"actions" yaml:"actions"`
+	CustomTypes      *setCustomTypesInput             `json:"custom_types" yaml:"custom_types"`
 }
 
 func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList) {
@@ -720,6 +919,22 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 			l.PushBack(cf)
 		}
 	}
+
+	for _, table := range rmi.Tables {
+		if table.RemoteRelationships != nil {
+			for _, remoteRelationship := range *table.RemoteRelationships {
+				r := createRemoteRelationshipInput{
+					remoteRelationshipDefinition: remoteRelationship.Definiton,
+					Table: tableSchema{
+						Name:   table.Table.Name,
+						Schema: table.Table.Schema,
+					},
+				}
+				l.PushBack(r)
+			}
+		}
+	}
+
 	// track functions
 	for _, function := range rmi.Functions {
 		l.PushBack(function)
@@ -739,125 +954,36 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 	for _, rs := range rmi.RemoteSchemas {
 		l.PushBack(rs)
 	}
-}
 
-type InconsistentMetadata struct {
-	IsConsistent        bool                          `json:"is_consistent"`
-	InConsistentObjects []InconsistentMeatadataObject `json:"inconsistent_objects"`
-}
-
-type InconsistentMeatadataObject struct {
-	Type       string      `json:"type"`
-	Reason     string      `json:"reason"`
-	Definition interface{} `json:"definition"`
-}
-
-func (i *InconsistentMeatadataObject) UnmarshalJSON(b []byte) error {
-	type t InconsistentMeatadataObject
-	var q t
-	if err := json.Unmarshal(b, &q); err != nil {
-		return err
+	// track cron triggers
+	for _, ct := range rmi.CronTriggers {
+		l.PushBack(ct)
 	}
-	defBody, err := json.Marshal(q.Definition)
-	if err != nil {
-		return err
-	}
-	switch q.Type {
-	case "object_relation":
-		q.Definition = &createObjectRelationshipInput{}
-	case "array_relation":
-		q.Definition = &createArrayRelationshipInput{}
-	case "select_permission":
-		q.Definition = &createSelectPermissionInput{}
-	case "update_permission":
-		q.Definition = &createUpdatePermissionInput{}
-	case "insert_permission":
-		q.Definition = &createInsertPermissionInput{}
-	case "delete_permission":
-		q.Definition = &createDeletePermissionInput{}
-	case "table":
-		q.Definition = &trackTableInput{}
-	case "function":
-		q.Definition = &trackFunctionInput{}
-	case "event_trigger":
-		q.Definition = &createEventTriggerInput{}
-	case "remote_schema":
-		q.Definition = &addRemoteSchemaInput{}
-	}
-	if err := json.Unmarshal(defBody, &q.Definition); err != nil {
-		return err
-	}
-	*i = InconsistentMeatadataObject(q)
-	return nil
-}
 
-func (i InconsistentMeatadataObject) GetType() string {
-	return i.Type
-}
-
-func (i InconsistentMeatadataObject) GetName() string {
-	switch defType := i.Definition.(type) {
-	case *createObjectRelationshipInput:
-		return defType.Name
-	case *createArrayRelationshipInput:
-		return defType.Name
-	case *createSelectPermissionInput:
-		return fmt.Sprintf("%s-permission", defType.Role)
-	case *createUpdatePermissionInput:
-		return fmt.Sprintf("%s-permission", defType.Role)
-	case *createInsertPermissionInput:
-		return fmt.Sprintf("%s-permission", defType.Role)
-	case *createDeletePermissionInput:
-		return fmt.Sprintf("%s-permission", defType.Role)
-	case *trackTableInput:
-		return defType.Name
-	case *trackFunctionInput:
-		return defType.Name
-	case *createEventTriggerInput:
-		return defType.Name
-	case *addRemoteSchemaInput:
-		return defType.Name
-	}
-	return "N/A"
-}
-
-func (i InconsistentMeatadataObject) GetDescription() string {
-	switch defType := i.Definition.(type) {
-	case *createObjectRelationshipInput:
-		return fmt.Sprintf("relationship of table %s in %s schema", defType.Table.Name, defType.Table.Schema)
-	case *createArrayRelationshipInput:
-		return fmt.Sprintf("relationship of table %s in %s schema", defType.Table.Name, defType.Table.Schema)
-	case *createSelectPermissionInput:
-		return fmt.Sprintf("%s on table %s in %s schema", i.Type, defType.Table.Name, defType.Table.Schema)
-	case *createUpdatePermissionInput:
-		return fmt.Sprintf("%s on table %s in %s schema", i.Type, defType.Table.Name, defType.Table.Schema)
-	case *createInsertPermissionInput:
-		return fmt.Sprintf("%s on table %s in %s schema", i.Type, defType.Table.Name, defType.Table.Schema)
-	case *createDeletePermissionInput:
-		return fmt.Sprintf("%s on table %s in %s schema", i.Type, defType.Table.Name, defType.Table.Schema)
-	case *trackTableInput:
-		return fmt.Sprintf("table %s in %s schema", defType.tableSchema.Name, defType.tableSchema.Schema)
-	case *trackFunctionInput:
-		return fmt.Sprintf("function %s in %s schema", defType.Name, defType.Schema)
-	case *createEventTriggerInput:
-		return fmt.Sprintf("event trigger %s on table %s in %s schema", defType.Name, defType.Table.Name, defType.Table.Schema)
-	case *addRemoteSchemaInput:
-		url := defType.Definition["url"]
-		urlFromEnv, ok := defType.Definition["url_from_env"]
-		if ok {
-			url = fmt.Sprintf("the url from the value of env var %s", urlFromEnv)
+	// track actions
+	for _, action := range rmi.Actions {
+		// action definition
+		a := &createActionInput{
+			actionDefinition: action.actionDefinition,
 		}
-		return fmt.Sprintf("remote schema %s at %s", defType.Name, url)
+		l.PushBack(a)
+		// permission
+		for _, permission := range action.Permissions {
+			p := &createActionPermissionInput{
+				Action:               action.Name,
+				PermissionDefinition: permission,
+			}
+			l.PushBack(p)
+		}
 	}
-	return "N/A"
-}
-
-func (i InconsistentMeatadataObject) GetReason() string {
-	return i.Reason
+	if rmi.CustomTypes != nil {
+		l.PushBack(rmi.CustomTypes)
+	}
 }
 
 type RunSQLInput struct {
 	SQL                      string `json:"sql" yaml:"sql"`
+	Source                   string `json:"source,omitempty" yaml:"source,omitempty"`
 	Cascade                  bool   `json:"cascade,omitempty" yaml:"cascade,omitempty"`
 	ReadOnly                 bool   `json:"read_only,omitempty" yaml:"read_only,omitempty"`
 	CheckMetadataConsistency *bool  `json:"check_metadata_consistency,omitempty" yaml:"check_metadata_consistency,omitempty"`
@@ -912,5 +1038,24 @@ type queryInCollectionConfig struct {
 
 type allowListConfig struct {
 	collection string
+	transition.Transition
+}
+
+type remoteRelationshipConfig struct {
+	tableName, schemaName, name string
+	transition.Transition
+}
+
+type cronTriggerConfig struct {
+	name string
+	transition.Transition
+}
+
+type actionConfig struct {
+	name string
+	transition.Transition
+}
+type actionPermissionConfig struct {
+	action string
 	transition.Transition
 }

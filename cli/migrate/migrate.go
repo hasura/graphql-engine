@@ -13,14 +13,17 @@ import (
 	"io"
 	"os"
 	"sync"
+	"text/tabwriter"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/metadata/types"
-	"github.com/hasura/graphql-engine/cli/migrate/database"
-	"github.com/hasura/graphql-engine/cli/migrate/source"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+
+	"github.com/hasura/graphql-engine/cli/v2/util"
+
+	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/source"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
 )
 
 // DefaultPrefetchMigrations sets the number of migrations to pre-read
@@ -99,45 +102,54 @@ type Migrate struct {
 	status *Status
 
 	SkipExecution bool
+	DryRun        bool
+}
+
+type NewMigrateOpts struct {
+	sourceUrl, databaseUrl string
+	cmd                    bool
+	configVersion          int
+	tlsConfig              *tls.Config
+	logger                 *log.Logger
+	hasuraOpts             *database.HasuraOpts
 }
 
 // New returns a new Migrate instance from a source URL and a database URL.
 // The URL scheme is defined by each driver.
-func New(sourceUrl string, databaseUrl string, cmd bool, configVersion int, tlsConfig *tls.Config, logger *log.Logger) (*Migrate, error) {
-	m := newCommon(cmd)
-
-	sourceName, err := schemeFromUrl(sourceUrl)
+func New(opts NewMigrateOpts) (*Migrate, error) {
+	m := newCommon(opts.cmd)
+	sourceName, err := schemeFromUrl(opts.sourceUrl)
 	if err != nil {
 		log.Debug(err)
 		return nil, err
 	}
 	m.sourceName = sourceName
-	m.sourceURL = sourceUrl
+	m.sourceURL = opts.sourceUrl
 
-	databaseName, err := schemeFromUrl(databaseUrl)
+	databaseName, err := schemeFromUrl(opts.databaseUrl)
 	if err != nil {
 		log.Debug(err)
 		return nil, err
 	}
 	m.databaseName = databaseName
-	m.databaseURL = databaseUrl
+	m.databaseURL = opts.databaseUrl
 
-	if logger == nil {
-		logger = log.New()
+	if opts.logger == nil {
+		opts.logger = log.New()
 	}
-	m.Logger = logger
+	m.Logger = opts.logger
 
-	sourceDrv, err := source.Open(sourceUrl, logger)
+	sourceDrv, err := source.Open(opts.sourceUrl, opts.logger)
 	if err != nil {
 		log.Debug(err)
 		return nil, err
 	}
 	m.sourceDrv = sourceDrv
-	if configVersion >= 2 {
+	if opts.configVersion >= 2 {
 		m.sourceDrv.DefaultParser(source.DefaultParsev2)
 	}
 
-	databaseDrv, err := database.Open(databaseUrl, cmd, tlsConfig, logger)
+	databaseDrv, err := database.Open(opts.databaseUrl, opts.cmd, opts.tlsConfig, opts.logger, opts.hasuraOpts)
 	if err != nil {
 		log.Debug(err)
 		return nil, err
@@ -210,14 +222,14 @@ func (m *Migrate) readStatusFromSource() (err error) {
 		}
 		return err
 	}
-	m.status.Append(m.newMigrationStatus(firstVersion, "source"))
+	m.status.Append(m.newMigrationStatus(firstVersion, "source", false))
 	from := int64(firstVersion)
 
 	lastVersion, err := m.sourceDrv.GetLocalVersion()
 	if err != nil {
 		return err
 	}
-	m.status.Append(m.newMigrationStatus(lastVersion, "source"))
+	m.status.Append(m.newMigrationStatus(lastVersion, "source", false))
 	to := int64(lastVersion)
 
 	for from < to {
@@ -225,7 +237,7 @@ func (m *Migrate) readStatusFromSource() (err error) {
 		if err != nil {
 			return err
 		}
-		m.status.Append(m.newMigrationStatus(next, "source"))
+		m.status.Append(m.newMigrationStatus(next, "source", false))
 		from = int64(next)
 	}
 
@@ -237,34 +249,35 @@ func (m *Migrate) readStatusFromDatabase() (err error) {
 	if !ok {
 		return nil
 	}
-	m.status.Append(m.newMigrationStatus(firstVersion, "database"))
-	from := int64(firstVersion)
+	m.status.Append(m.newMigrationStatus(firstVersion.Version, "database", firstVersion.Dirty))
+	from := int64(firstVersion.Version)
 
 	lastVersion, ok := m.databaseDrv.Last()
 	if !ok {
 		return nil
 	}
-	m.status.Append(m.newMigrationStatus(lastVersion, "database"))
-	to := int64(lastVersion)
+	m.status.Append(m.newMigrationStatus(lastVersion.Version, "database", lastVersion.Dirty))
+	to := int64(lastVersion.Version)
 
 	for from < to {
 		next, ok := m.databaseDrv.Next(suint64(from))
 		if !ok {
 			return nil
 		}
-		m.status.Append(m.newMigrationStatus(next, "database"))
-		from = int64(next)
+		m.status.Append(m.newMigrationStatus(next.Version, "database", next.Dirty))
+		from = int64(next.Version)
 	}
 	return err
 }
 
-func (m *Migrate) newMigrationStatus(version uint64, driverType string) *MigrationStatus {
+func (m *Migrate) newMigrationStatus(version uint64, driverType string, dirty bool) *MigrationStatus {
 	var migrStatus *MigrationStatus
 	migrStatus, ok := m.status.Read(version)
 	if !ok {
 		migrStatus = &MigrationStatus{
 			Version: version,
 			Name:    m.sourceDrv.ReadName(version),
+			IsDirty: dirty,
 		}
 	}
 
@@ -273,6 +286,7 @@ func (m *Migrate) newMigrationStatus(version uint64, driverType string) *Migrati
 		migrStatus.IsPresent = true
 	case "database":
 		migrStatus.IsApplied = true
+		migrStatus.IsDirty = dirty
 	default:
 		return nil
 	}
@@ -316,53 +330,8 @@ func (m *Migrate) GetUnappliedMigrations(version uint64) []uint64 {
 	return m.sourceDrv.GetUnappliedMigrations(version)
 }
 
-func (m *Migrate) GetIntroSpectionSchema() (interface{}, error) {
-	return m.databaseDrv.GetIntroSpectionSchema()
-}
-
-func (m *Migrate) SetMetadataPlugins(plugins types.MetadataPlugins) {
-	m.databaseDrv.SetMetadataPlugins(plugins)
-}
-
-func (m *Migrate) EnableCheckMetadataConsistency(enabled bool) {
-	m.databaseDrv.EnableCheckMetadataConsistency(enabled)
-}
-
-func (m *Migrate) ExportMetadata() (map[string][]byte, error) {
-	return m.databaseDrv.ExportMetadata()
-}
-
-func (m *Migrate) WriteMetadata(files map[string][]byte) error {
-	return m.sourceDrv.WriteMetadata(files)
-}
-
-func (m *Migrate) ResetMetadata() error {
-	return m.databaseDrv.ResetMetadata()
-}
-
-// ReloadMetadata - Reload metadata on the database
-func (m *Migrate) ReloadMetadata() error {
-	return m.databaseDrv.ReloadMetadata()
-}
-
-func (m *Migrate) GetInconsistentMetadata() (bool, []database.InconsistentMetadataInterface, error) {
-	return m.databaseDrv.GetInconsistentMetadata()
-}
-
-func (m *Migrate) DropInconsistentMetadata() error {
-	return m.databaseDrv.DropInconsistentMetadata()
-}
-
-func (m *Migrate) BuildMetadata() (yaml.MapSlice, error) {
-	return m.databaseDrv.BuildMetadata()
-}
-
-func (m *Migrate) ApplyMetadata() error {
-	return m.databaseDrv.ApplyMetadata()
-}
-
-func (m *Migrate) ExportSchemaDump(schemName []string) ([]byte, error) {
-	return m.databaseDrv.ExportSchemaDump(schemName)
+func (m *Migrate) ExportSchemaDump(schemName []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {
+	return m.databaseDrv.ExportSchemaDump(schemName, sourceName, sourceKind)
 }
 
 func (m *Migrate) RemoveVersions(versions []uint64) error {
@@ -417,10 +386,14 @@ func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm 
 	}
 
 	// concurrently squash all the up migrations
+	// read all up migrations from source and send each migration
+	// to the returned channel
 	retUp := make(chan interface{}, m.PrefetchMigrations)
 	go m.squashUp(v, retUp)
 
 	// concurrently squash all down migrations
+	// read all down migrations from source and send each migration
+	// to the returned channel
 	retDown := make(chan interface{}, m.PrefetchMigrations)
 	go m.squashDown(v, retDown)
 
@@ -538,11 +511,14 @@ func (m *Migrate) Migrate(version uint64, direction string) error {
 
 	ret := make(chan interface{}, m.PrefetchMigrations)
 	go m.read(version, direction, ret)
-
-	return m.unlockErr(m.runMigrations(ret))
+	if m.DryRun {
+		return m.unlockErr(m.runDryRun(ret))
+	} else {
+		return m.unlockErr(m.runMigrations(ret))
+	}
 }
 
-func (m *Migrate) QueryWithVersion(version uint64, data io.ReadCloser) error {
+func (m *Migrate) QueryWithVersion(version uint64, data io.ReadCloser, skipExecution bool) error {
 	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {
 		return err
@@ -556,13 +532,15 @@ func (m *Migrate) QueryWithVersion(version uint64, data io.ReadCloser) error {
 		return err
 	}
 
-	if err := m.databaseDrv.Run(data, "meta", ""); err != nil {
-		m.databaseDrv.ResetQuery()
-		return m.unlockErr(err)
+	if !skipExecution {
+		if err := m.databaseDrv.Run(data, "meta", ""); err != nil {
+			m.databaseDrv.ResetQuery()
+			return m.unlockErr(err)
+		}
 	}
 
 	if version != 0 {
-		if err := m.databaseDrv.InsertVersion(int64(version)); err != nil {
+		if err := m.databaseDrv.SetVersion(int64(version), false); err != nil {
 			m.databaseDrv.ResetQuery()
 			return m.unlockErr(err)
 		}
@@ -598,7 +576,11 @@ func (m *Migrate) Steps(n int64) error {
 		go m.readDown(-n, ret)
 	}
 
-	return m.unlockErr(m.runMigrations(ret))
+	if m.DryRun {
+		return m.unlockErr(m.runDryRun(ret))
+	} else {
+		return m.unlockErr(m.runMigrations(ret))
+	}
 }
 
 // Up looks at the currently active migration version
@@ -630,7 +612,11 @@ func (m *Migrate) Up() error {
 
 	go m.readUp(-1, ret)
 
-	return m.unlockErr(m.runMigrations(ret))
+	if m.DryRun {
+		return m.unlockErr(m.runDryRun(ret))
+	} else {
+		return m.unlockErr(m.runMigrations(ret))
+	}
 }
 
 // Down looks at the currently active migration version
@@ -661,7 +647,11 @@ func (m *Migrate) Down() error {
 	ret := make(chan interface{}, m.PrefetchMigrations)
 	go m.readDown(-1, ret)
 
-	return m.unlockErr(m.runMigrations(ret))
+	if m.DryRun {
+		return m.unlockErr(m.runDryRun(ret))
+	} else {
+		return m.unlockErr(m.runMigrations(ret))
+	}
 }
 
 func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
@@ -675,19 +665,32 @@ func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
 
 	for limit == -1 {
 		if currentVersion == version {
+			// during the first iteration of the loop
+			// check if a next version exists for "--from" version
 			if err := m.versionUpExists(version); err != nil {
 				ret <- err
 				return
 			}
 
+			// If next version exists this function will return an instance of
+			// migration.go.Migrate struct
+			// this reads the SQL up migration
+			// even if a migration file does'nt exist in the source
+			// a empty migration will be returned
 			migr, err := m.newMigration(version, int64(version))
 			if err != nil {
 				ret <- err
 				return
 			}
 			ret <- migr
+			// write the body of the migration to reader
+			// the migr instance sent via the channel will then start reading
+			// from it
 			go migr.Buffer()
 
+			// read next version of meta up migration
+			// even if a migration file does'nt exist in the source
+			// a empty migration will be returned
 			migr, err = m.metanewMigration(version, int64(version))
 			if err != nil {
 				ret <- err
@@ -698,7 +701,9 @@ func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
 			count++
 		}
 
-		// apply next migration
+		// get the next version using source driver
+		// earlier in the first iteration we knew what version to operate on
+		// but here we have to find the next version
 		next, err := m.sourceDrv.Next(currentVersion)
 		if os.IsNotExist(err) {
 			// no limit, but no migrations applied?
@@ -706,7 +711,7 @@ func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
 				ret <- ErrNoChange
 				return
 			}
-
+			// when there is no more migrations return
 			if limit == -1 {
 				return
 			}
@@ -748,6 +753,7 @@ func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
 func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 	defer close(ret)
 
+	// get the last version from the source driver
 	from, err := m.sourceDrv.GetLocalVersion()
 	if err != nil {
 		ret <- err
@@ -760,12 +766,6 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 		}
 
 		if from < version {
-			return
-		}
-
-		err = m.versionDownExists(from)
-		if err != nil {
-			ret <- err
 			return
 		}
 
@@ -792,23 +792,29 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 			return
 		}
 
-		migr, err := m.metanewMigration(from, int64(prev))
-		if err != nil {
-			ret <- err
-			return
+		err = m.versionDownExists(from)
+		if err == nil {
+			migr, err := m.metanewMigration(from, int64(prev))
+			if err != nil {
+				ret <- err
+				return
+			}
+
+			ret <- migr
+			go migr.Buffer()
+
+			migr, err = m.newMigration(from, int64(prev))
+			if err != nil {
+				ret <- err
+				return
+			}
+
+			ret <- migr
+			go migr.Buffer()
+		} else {
+			m.Logger.Warnf("%v", err)
 		}
 
-		ret <- migr
-		go migr.Buffer()
-
-		migr, err = m.newMigration(from, int64(prev))
-		if err != nil {
-			ret <- err
-			return
-		}
-
-		ret <- migr
-		go migr.Buffer()
 		from = prev
 	}
 }
@@ -1116,7 +1122,7 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}) {
 			return
 		}
 
-		migr, err := m.metanewMigration(suint64(from), int64(prev))
+		migr, err := m.metanewMigration(suint64(from), int64(prev.Version))
 		if err != nil {
 			ret <- err
 			return
@@ -1125,7 +1131,7 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}) {
 		ret <- migr
 		go migr.Buffer()
 
-		migr, err = m.newMigration(suint64(from), int64(prev))
+		migr, err = m.newMigration(suint64(from), int64(prev.Version))
 		if err != nil {
 			ret <- err
 			return
@@ -1133,7 +1139,7 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}) {
 
 		ret <- migr
 		go migr.Buffer()
-		from = int64(prev)
+		from = int64(prev.Version)
 		count++
 	}
 }
@@ -1145,7 +1151,6 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}) {
 // to stop execution because it might have received a stop signal on the
 // GracefulStop channel.
 func (m *Migrate) runMigrations(ret <-chan interface{}) error {
-	var lastInsertVersion int64
 	for r := range ret {
 		if m.stop() {
 			return nil
@@ -1160,21 +1165,17 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 			migr := r.(*Migration)
 			if migr.Body != nil {
 				if !m.SkipExecution {
+					m.Logger.Debugf("applying migration: %s", migr.FileName)
 					if err := m.databaseDrv.Run(migr.BufferedBody, migr.FileType, migr.FileName); err != nil {
 						return err
 					}
 				}
-
 				version := int64(migr.Version)
-				if version == migr.TargetVersion {
-					if version != lastInsertVersion {
-						// Insert Version number into the table
-						if err := m.databaseDrv.InsertVersion(version); err != nil {
-							return err
-						}
-						lastInsertVersion = version
-					}
-				} else {
+				// Insert Version number into the table
+				if err := m.databaseDrv.SetVersion(version, false); err != nil {
+					return err
+				}
+				if version != migr.TargetVersion {
 					// Delete Version number from the table
 					if err := m.databaseDrv.RemoveVersion(version); err != nil {
 						return err
@@ -1183,6 +1184,32 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 			}
 		}
 	}
+	return nil
+}
+
+func (m *Migrate) runDryRun(ret <-chan interface{}) error {
+	migrations := make([]*Migration, 0)
+	var lastInsertVersion int64
+	for r := range ret {
+		if m.stop() {
+			return nil
+		}
+
+		switch r.(type) {
+		case error:
+			return r.(error)
+		case *Migration:
+			migr := r.(*Migration)
+			if migr.Body != nil {
+				version := int64(migr.Version)
+				if version != lastInsertVersion {
+					migrations = append(migrations, migr)
+					lastInsertVersion = version
+				}
+			}
+		}
+	}
+	fmt.Fprintf(os.Stdout, "%s", printDryRunStatus(migrations))
 	return nil
 }
 
@@ -1214,6 +1241,7 @@ func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan inte
 			case *Migration:
 				migr := r.(*Migration)
 				if migr.Body != nil {
+					// read migration body and push it to squash list
 					if err = m.databaseDrv.PushToList(migr.BufferedBody, migr.FileType, &squashList); err != nil {
 						dataUp <- err
 						return
@@ -1342,6 +1370,7 @@ func (m *Migrate) versionDownExists(version uint64) error {
 
 // newMigration is a helper func that returns a *Migration for the
 // specified version and targetVersion (sql).
+// will return the down migration
 func (m *Migrate) newMigration(version uint64, targetVersion int64) (*Migration, error) {
 	var migr *Migration
 
@@ -1529,11 +1558,7 @@ func (m *Migrate) unlock() error {
 	defer func() {
 		m.isLocked = false
 	}()
-
-	if err := m.databaseDrv.UnLock(); err != nil {
-		return err
-	}
-	return nil
+	return m.databaseDrv.UnLock()
 }
 
 // unlockErr calls unlock and returns a combined error
@@ -1580,8 +1605,11 @@ func (m *Migrate) GotoVersion(gotoVersion int64) error {
 		go m.readDownFromVersion(currVersion, gotoVersion, ret)
 	}
 
-	return m.unlockErr(m.runMigrations(ret))
-
+	if m.DryRun {
+		return m.unlockErr(m.runDryRun(ret))
+	} else {
+		return m.unlockErr(m.runMigrations(ret))
+	}
 }
 
 // readUpFromVersion reads up migrations from `from` limitted by `limit`. (is a modified version of readUp)
@@ -1715,8 +1743,9 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 
 		prev, ok := m.databaseDrv.Prev(suint64(from))
 		if !ok {
+			prev := new(database.MigrationVersion)
 			// Check if any prev version available in source
-			prev, err = m.sourceDrv.Prev(suint64(from))
+			prev.Version, err = m.sourceDrv.Prev(suint64(from))
 			if os.IsNotExist(err) && to == -1 {
 				// apply nil migration
 				migr, err := m.metanewMigration(suint64(from), -1)
@@ -1748,7 +1777,7 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 			return
 		}
 
-		migr, err := m.metanewMigration(suint64(from), int64(prev))
+		migr, err := m.metanewMigration(suint64(from), int64(prev.Version))
 		if err != nil {
 			ret <- err
 			return
@@ -1757,7 +1786,7 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 		ret <- migr
 		go migr.Buffer()
 
-		migr, err = m.newMigration(suint64(from), int64(prev))
+		migr, err = m.newMigration(suint64(from), int64(prev.Version))
 		if err != nil {
 			ret <- err
 			return
@@ -1765,7 +1794,30 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 
 		ret <- migr
 		go migr.Buffer()
-		from = int64(prev)
+		from = int64(prev.Version)
 		noOfAppliedMigrations++
 	}
+}
+
+func printDryRunStatus(migrations []*Migration) *bytes.Buffer {
+	out := new(tabwriter.Writer)
+	buf := &bytes.Buffer{}
+	out.Init(buf, 0, 8, 2, ' ', 0)
+	w := util.NewPrefixWriter(out)
+	w.Write(util.LEVEL_0, "VERSION\tTYPE\tNAME\n")
+	for _, migration := range migrations {
+		var direction string
+		if int64(migration.Version) == migration.TargetVersion {
+			direction = "up"
+		} else {
+			direction = "down"
+		}
+		w.Write(util.LEVEL_0, "%d\t%s\t%s\n",
+			migration.Version,
+			direction,
+			migration.Identifier,
+		)
+	}
+	out.Flush()
+	return buf
 }

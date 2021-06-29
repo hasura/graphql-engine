@@ -11,6 +11,7 @@ args:
 #       );
 
 #Author table
+
 - type: run_sql
   args:
     sql: |
@@ -19,15 +20,6 @@ args:
           name text unique,
           "createdAt" timestamptz
       );
-- type: track_table
-  args:
-    schema: public
-    name: author
-
-#Article table
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -35,7 +27,44 @@ args:
         author_id INTEGER REFERENCES author(id),
         is_published BOOLEAN,
         published_on TIMESTAMP
-      )
+      );
+      insert into author (name, "createdAt")
+      values
+      ('Author 1', '2017-09-21T09:39:44Z'),
+      ('Author 2', '2017-09-21T09:50:44Z');
+      insert into article (title,content,author_id,is_published)
+      values
+      (
+        'Article 1',
+        'Sample article content 1',
+        1,
+        false
+      ),
+      (
+        'Article 2',
+        'Sample article content 2',
+        1,
+        true
+      ),
+      (
+        'Article 3',
+        'Sample article content 3',
+        2,
+        true
+      );
+      CREATE TABLE "user" (
+        id BIGSERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        number BIGINT
+      );
+      SET TIME ZONE 'UTC';
+
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
 - type: track_table
   args:
     schema: public
@@ -62,47 +91,6 @@ args:
         column: author_id
 
 #Insert values
-- type: run_sql
-  args:
-    sql: |
-      insert into author (name, "createdAt")
-      values
-      ('Author 1', '2017-09-21T09:39:44Z'),
-      ('Author 2', '2017-09-21T09:50:44Z')
-
-- type: run_sql
-  args:
-    sql: |
-      insert into article (title,content,author_id,is_published)
-      values
-      (
-        'Article 1',
-        'Sample article content 1',
-        1,
-        false
-      ),
-      (
-        'Article 2',
-        'Sample article content 2',
-        1,
-        true
-      ),
-      (
-        'Article 3',
-        'Sample article content 3',
-        2,
-        true
-      )
-
-#User table with bigserial and bigint columns
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE "user" (
-        id BIGSERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        number BIGINT
-      );
 - type: track_table
   args:
     schema: public
@@ -117,7 +105,3 @@ args:
       number: '123456780'
 
 #Set timezone
-- type: run_sql
-  args:
-    sql: |
-      SET TIME ZONE 'UTC';

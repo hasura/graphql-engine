@@ -5,10 +5,10 @@ import PropTypes from 'prop-types';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import RemoteSchemaSubSidebar from './RemoteSchemaSubSidebar';
+import styles from '../../Common/TableCommon/Table.scss';
 
 class RemoteSchemaPageContainer extends React.Component {
   render() {
-    const styles = require('../../Common/TableCommon/Table.scss');
     const { appPrefix, children } = this.props;
 
     const currentLocation = location.pathname;

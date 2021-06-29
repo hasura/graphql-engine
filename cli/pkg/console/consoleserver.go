@@ -1,6 +1,7 @@
 package console
 
 import (
+	"embed"
 	"fmt"
 	"net/http"
 	"os"
@@ -9,16 +10,14 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/gin-gonic/gin"
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skratchdot/open-golang/open"
 )
 
-const (
-	XHasuraAdminSecret = "X-Hasura-Admin-Secret"
-	XHasuraAccessKey   = "X-Hasura-Access-Key"
-)
+//go:embed templates/gohtml/*
+var ConsoleFS embed.FS
 
 type ConsoleServer struct {
 	Logger          *logrus.Logger

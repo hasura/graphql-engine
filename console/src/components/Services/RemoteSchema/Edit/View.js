@@ -1,27 +1,56 @@
 import React from 'react';
-
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import tabInfo from './tabInfo';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { push } from 'react-router-redux';
-
 import {
   fetchRemoteSchema,
   RESET,
   getHeaderEvents,
 } from '../Add/addRemoteSchemaReducer';
-
 import { VIEW_REMOTE_SCHEMA } from '../Actions';
 import ReloadRemoteSchema from '../../Settings/MetadataOptions/ReloadRemoteSchema';
-
 import { appPrefix } from '../constants';
-
-import { NotFoundError } from '../../../Error/PageNotFound';
-
 import globals from '../../../../Globals';
+import styles from '../RemoteSchema.scss';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
+import WarningSymbol from '../../../Common/WarningSymbol/WarningSymbol';
+import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
+
+const RSHeadersDisplay = ({ data }) =>
+  data.length > 0 ? (
+    <tr>
+      <td>Headers</td>
+      <td>
+        {data &&
+          data
+            .filter(header => !!header.name)
+            .map((header, index) => [
+              <tr key={header}>
+                <td>
+                  {`${header.name}: `}
+                  {header.type === 'static'
+                    ? header.value
+                    : '<' + header.value + '>'}
+                </td>
+              </tr>,
+              index !== data.length - 1 ? <hr /> : null,
+            ])}
+      </td>
+    </tr>
+  ) : null;
+
+const RSReloadSchema = ({ readOnlyMode, remoteSchemaName, ...props }) =>
+  !readOnlyMode && remoteSchemaName && remoteSchemaName.length > 0 ? (
+    <div className={`${styles.commonBtn} ${styles.detailsRefreshButton}`}>
+      <ReloadRemoteSchema {...props} remoteSchemaName={remoteSchemaName} />
+      <ToolTip
+        placement="right"
+        message="If your remote schema has changed, you need to refresh the GraphQL Engine metadata to query the modified schema"
+      />
+    </div>
+  ) : null;
 
 class ViewStitchedSchema extends React.Component {
   componentDidMount() {
@@ -35,17 +64,17 @@ class ViewStitchedSchema extends React.Component {
     ]);
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     if (
-      nextProps.params.remoteSchemaName !== this.props.params.remoteSchemaName
+      prevProps.params.remoteSchemaName !== this.props.params.remoteSchemaName
     ) {
       Promise.all([
         this.props.dispatch(
-          fetchRemoteSchema(nextProps.params.remoteSchemaName)
+          fetchRemoteSchema(this.props.params.remoteSchemaName)
         ),
         this.props.dispatch({
           type: VIEW_REMOTE_SCHEMA,
-          data: nextProps.params.remoteSchemaName,
+          data: this.props.params.remoteSchemaName,
         }),
       ]);
     }
@@ -69,19 +98,14 @@ class ViewStitchedSchema extends React.Component {
   }
 
   render() {
-    const currentRemoteSchema = this.props.allRemoteSchemas.find(
-      r => r.name === this.props.params.remoteSchemaName
-    );
-
-    if (!currentRemoteSchema) {
-      // throw a 404 exception
-      throw new NotFoundError();
-    }
-
-    const styles = require('../RemoteSchema.scss');
-
     const { remoteSchemaName } = this.props.params;
-    const { manualUrl, envName, headers, readOnlyMode } = this.props;
+    const {
+      manualUrl,
+      envName,
+      headers,
+      readOnlyMode,
+      inconsistentObjects,
+    } = this.props;
 
     const filterHeaders = headers.filter(h => !!h.name);
 
@@ -92,21 +116,14 @@ class ViewStitchedSchema extends React.Component {
       },
       {
         title: 'Manage',
-        url: appPrefix + '/' + 'manage',
+        url: `${appPrefix}/manage`,
       },
     ];
 
     if (remoteSchemaName) {
       breadCrumbs.push({
         title: remoteSchemaName.trim(),
-        url:
-          appPrefix +
-          '/' +
-          'manage' +
-          '/' +
-          remoteSchemaName.trim() +
-          '/' +
-          'details',
+        url: `${appPrefix}/manage/${remoteSchemaName.trim()}/details`,
       });
       breadCrumbs.push({
         title: 'details',
@@ -114,33 +131,18 @@ class ViewStitchedSchema extends React.Component {
       });
     }
 
-    const refresh = (
-      <Tooltip id="tooltip-cascade">
-        If your remote schema has changed, you need to refresh the GraphQL
-        Engine metadata to query the modified schema
-      </Tooltip>
-    );
+    let tabInfoCopy = tabInfo;
 
     if (readOnlyMode) {
-      delete tabInfo.modify;
+      const { modify, ...rest } = tabInfoCopy;
+      tabInfoCopy = rest;
     }
 
-    const showReloadRemoteSchema =
-      !readOnlyMode && remoteSchemaName && remoteSchemaName.length > 0 ? (
-        <div className={styles.commonBtn + ' ' + styles.detailsRefreshButton}>
-          <span>
-            <ReloadRemoteSchema
-              {...this.props}
-              remoteSchemaName={remoteSchemaName}
-            />
-          </span>
-          <span>
-            <OverlayTrigger placement="right" overlay={refresh}>
-              <i className="fa fa-question-circle" aria-hidden="true" />
-            </OverlayTrigger>
-          </span>
-        </div>
-      ) : null;
+    const inconsistencyDetails = inconsistentObjects.find(
+      inconObj =>
+        inconObj.type === 'remote_schema' &&
+        inconObj?.definition?.name === remoteSchemaName
+    );
 
     return (
       <div
@@ -150,7 +152,7 @@ class ViewStitchedSchema extends React.Component {
           appPrefix={appPrefix}
           currentTab="details"
           heading={remoteSchemaName}
-          tabsInfo={tabInfo}
+          tabsInfo={tabInfoCopy}
           breadCrumbs={breadCrumbs}
           baseUrl={`${appPrefix}/manage/${remoteSchemaName}`}
         />
@@ -164,37 +166,35 @@ class ViewStitchedSchema extends React.Component {
                   <td>GraphQL Server URL</td>
                   <td>{manualUrl || `<${envName}>`}</td>
                 </tr>
-                {filterHeaders.length > 0 ? (
-                  <tr>
-                    <td>Headers</td>
-                    <td>
-                      {filterHeaders &&
-                        filterHeaders
-                          .filter(k => !!k.name)
-                          .map((h, i) => [
-                            <tr key={i}>
-                              <td>
-                                {h.name} :{' '}
-                                {h.type === 'static'
-                                  ? h.value
-                                  : '<' + h.value + '>'}
-                              </td>
-                            </tr>,
-                            i !== filterHeaders.length - 1 ? <hr /> : null,
-                          ])}
-                    </td>
-                  </tr>
-                ) : null}
-                {/*
-                <tr>
-                  <td>Webhook</td>
-                  <td>in-use/bypassed</td>
-                </tr>
-                */}
+                <RSHeadersDisplay data={filterHeaders} />
               </tbody>
             </table>
           </div>
-          {showReloadRemoteSchema}
+          {inconsistencyDetails && (
+            <div className={styles.add_mar_bottom}>
+              <div className={styles.subheading_text}>
+                <WarningSymbol tooltipText={'Inconsistent schema'} />
+                <span className={styles.add_mar_left_mid}>
+                  This remote schema is in an inconsistent state.
+                </span>
+              </div>
+              <div>
+                <b>Reason:</b> {inconsistencyDetails.reason}
+              </div>
+              <div>
+                <i>
+                  (Please resolve the inconsistencies and reload the remote
+                  schema. Fields from this remote schema are currently not
+                  exposed over the GraphQL API)
+                </i>
+              </div>
+            </div>
+          )}
+          <RSReloadSchema
+            readOnlyMode={readOnlyMode}
+            remoteSchemaName={remoteSchemaName}
+            {...this.props}
+          />
         </div>
         <br />
         <br />
@@ -207,9 +207,10 @@ const mapStateToProps = state => {
   return {
     ...state.remoteSchemas.addData,
     ...state.remoteSchemas.headerData,
-    allRemoteSchemas: state.remoteSchemas.listData.remoteSchemas,
-    dataHeaders: { ...state.tables.dataHeaders },
+    allRemoteSchemas: getRemoteSchemasSelector(state),
+    dataHeaders: state.tables.dataHeaders,
     readOnlyMode: state.main.readOnlyMode,
+    inconsistentObjects: state.metadata.inconsistentObjects,
   };
 };
 

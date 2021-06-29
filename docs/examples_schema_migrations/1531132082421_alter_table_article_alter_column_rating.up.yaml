@@ -1,3 +1,0 @@
-- args:
-    sql: ALTER TABLE "article" ALTER COLUMN "rating" DROP NOT NULL;
-  type: run_sql

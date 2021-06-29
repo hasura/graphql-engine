@@ -1,0 +1,39 @@
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query myQuery {
+      hasura_author (order_by: {id: asc}) {
+        ...authorFragment
+        ... on hasura_author {
+          name
+        }
+      }
+    }
+
+    fragment authorFragment on hasura_author {
+      id
+      articles (order_by: {id: asc}) {
+        ...articleFragment
+      }
+    }
+
+    fragment articleFragment on hasura_article {
+      title
+      id
+    }
+response:
+  data:
+    hasura_author:
+    - id: '1'
+      name: Author 1
+      articles:
+      - title: Title 1
+        id: '1'
+      - title: Title 2
+        id: '2'
+    - id: '2'
+      name: Author 2
+      articles:
+      - title: Title 3
+        id: '3'

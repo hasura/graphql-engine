@@ -1,0 +1,13 @@
+type: update_remote_relationship
+args:
+  name: messageBasic
+  table: profiles
+  hasura_fields:
+    - id
+  remote_schema: my-remote-schema
+  remote_field:
+    messages:
+      arguments:
+        where:
+          id:
+            eq: "$id"

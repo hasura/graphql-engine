@@ -1,18 +1,12 @@
-{-# LANGUAGE TypeApplications #-}
 module Hasura.Server.Utils where
 
 import           Hasura.Prelude
 
-import           Control.Lens               ((^..))
-import           Data.Aeson
-import           Data.Char
-import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
-import           System.Environment
-import           System.Exit
-import           System.Process
-import           Data.Aeson.Internal
-
+import qualified Crypto.Hash                as Crypto
+import qualified Data.Aeson                 as J
 import qualified Data.ByteString            as B
+import qualified Data.ByteString.Base16     as Base16
+import qualified Data.ByteString.Lazy       as BL
 import qualified Data.CaseInsensitive       as CI
 import qualified Data.HashSet               as Set
 import qualified Data.List.NonEmpty         as NE
@@ -20,6 +14,8 @@ import qualified Data.Text                  as T
 import qualified Data.Text.IO               as TI
 import qualified Data.UUID                  as UUID
 import qualified Data.UUID.V4               as UUID
+import qualified Data.Vector                as V
+import qualified Database.PG.Query          as Q
 import qualified Language.Haskell.TH.Syntax as TH
 import qualified Network.HTTP.Client        as HC
 import qualified Network.HTTP.Types         as HTTP
@@ -27,13 +23,21 @@ import qualified Network.Wreq               as Wreq
 import qualified Text.Regex.TDFA            as TDFA
 import qualified Text.Regex.TDFA.ReadRegex  as TDFA
 import qualified Text.Regex.TDFA.TDFA       as TDFA
-import qualified Data.Vector                as V
 
-import           Hasura.RQL.Instances       ()
+import           Control.Lens               ((^..))
+import           Data.Aeson
+import           Data.Aeson.Internal
+import           Data.ByteArray             (convert)
+import           Data.Char
+import           Data.Text.Extended
+import           Data.Time
+import           Language.Haskell.TH.Syntax (Q, TExp)
+import           System.Environment
+import           System.Exit
+import           System.Process
 
-newtype RequestId
-  = RequestId { unRequestId :: Text }
-  deriving (Show, Eq, ToJSON, FromJSON)
+import           Hasura.Base.Instances      ()
+
 
 jsonHeader :: HTTP.Header
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")
@@ -83,13 +87,6 @@ parseStringAsBool t
              ++ show truthVals ++ " and  False values are " ++ show falseVals
              ++ ". All values are case insensitive"
 
-getRequestId :: (MonadIO m) => [HTTP.Header] -> m RequestId
-getRequestId headers =
-  -- generate a request id for every request if the client has not sent it
-  case getRequestHeader requestIdHeader headers  of
-    Nothing    -> RequestId <$> liftIO generateFingerprint
-    Just reqId -> return $ RequestId $ bsToTxt reqId
-
 -- Get an env var during compile time
 getValFromEnvOrScript :: String -> String -> Q (TExp String)
 getValFromEnvOrScript n s = do
@@ -109,12 +106,6 @@ runScript fp = do
     "Running shell script " ++ fp ++ " failed with exit code : "
     ++ show exitCode ++ " and with error : " ++ stdErr
   [|| stdOut ||]
-
--- find duplicates
-duplicates :: Ord a => [a] -> [a]
-duplicates = mapMaybe greaterThanOne . group . sort
-  where
-    greaterThanOne l = bool Nothing (Just $ head l) $ length l > 1
 
 -- | Quotes a regex using Template Haskell so syntax errors can be reported at compile-time.
 quoteRegex :: TDFA.CompOption -> TDFA.ExecOption -> String -> Q (TExp TDFA.Regex)
@@ -149,7 +140,7 @@ httpExceptToJSON e = case e of
   _        -> toJSON $ show e
   where
     showProxy (HC.Proxy h p) =
-      "host: " <> bsToTxt h <> " port: " <> T.pack (show p)
+      "host: " <> bsToTxt h <> " port: " <> tshow p
 
 -- ignore the following request headers from the client
 commonClientHeadersIgnored :: (IsString a) => [a]
@@ -171,6 +162,9 @@ commonResponseHeadersIgnored =
 
 isSessionVariable :: Text -> Bool
 isSessionVariable = T.isPrefixOf "x-hasura-" . T.toLower
+
+isReqUserId :: Text -> Bool
+isReqUserId = (== "req_user_id") . T.toLower
 
 mkClientHeadersForward :: [HTTP.Header] -> [HTTP.Header]
 mkClientHeadersForward reqHeaders =
@@ -216,7 +210,7 @@ applyFirst f (x:xs) = f x: xs
 data APIVersion
   = VIVersion1
   | VIVersion2
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 
 instance ToJSON APIVersion where
   toJSON VIVersion1 = toJSON @Int 1
@@ -230,13 +224,13 @@ instance FromJSON APIVersion where
       2 -> return VIVersion2
       i -> fail $ "expected 1 or 2, encountered " ++ show i
 
-englishList :: NonEmpty Text -> Text
-englishList = \case
+englishList :: Text -> NonEmpty Text -> Text
+englishList joiner = \case
   one :| []    -> one
-  one :| [two] -> one <> " and " <> two
+  one :| [two] -> one <> " " <> joiner <> " " <> two
   several      ->
     let final :| initials = NE.reverse several
-    in T.intercalate ", " (reverse initials) <> ", and " <> final
+    in commaSeparated (reverse initials) <> ", " <> joiner <> " " <> final
 
 makeReasonMessage :: [a] -> (a -> Text) -> Text
 makeReasonMessage errors showError =
@@ -257,3 +251,56 @@ executeJSONPath jsonPath = iparse (valueParser jsonPath)
                   Key k   -> withObject "Object" (.: k)
                   Index i -> withArray "Array" $
                              maybe (fail "Array index out of range") pure . (V.!? i)
+
+sha1 :: BL.ByteString -> B.ByteString
+sha1 = convert @_ @B.ByteString . Crypto.hashlazy @Crypto.SHA1
+
+cryptoHash :: J.ToJSON a => a -> B.ByteString
+cryptoHash = Base16.encode . sha1 . J.encode
+
+readIsoLevel :: String -> Either String Q.TxIsolation
+readIsoLevel isoS =
+  case isoS of
+    "read-committed"  -> return Q.ReadCommitted
+    "repeatable-read" -> return Q.RepeatableRead
+    "serializable"    -> return Q.Serializable
+    _                 -> Left "Only expecting read-committed / repeatable-read / serializable"
+
+parseConnLifeTime :: Maybe NominalDiffTime -> Maybe NominalDiffTime
+parseConnLifeTime = \case
+  Nothing -> Just 600  -- Not set by user; use the default timeout
+  Just 0  -> Nothing   -- user wants to disable PG_CONN_LIFETIME
+  Just n  -> Just n    -- user specified n seconds lifetime
+
+
+-- | The environment variables that were moved to metadata. These environment
+-- variables are available if a v1 hasura project is run an v2 hasura server.
+-- These environment variables are marked as deprecated only when the v1 hasura
+-- project is migrated to v2 project.
+newtype EnvVarsMovedToMetadata
+  = EnvVarsMovedToMetadata { unEnvVarsMovedToMetadata :: [String] }
+  deriving (Show)
+
+-- | These env vars are completely deprecated
+newtype DeprecatedEnvVars
+  = DeprecatedEnvVars { unDeprecatedEnvVars :: [String] }
+  deriving (Show)
+
+envVarsMovedToMetadata :: EnvVarsMovedToMetadata
+envVarsMovedToMetadata = EnvVarsMovedToMetadata
+  [ "HASURA_GRAPHQL_NO_OF_RETRIES"
+  , "HASURA_GRAPHQL_PG_CONNECTIONS"
+  , "HASURA_GRAPHQL_PG_TIMEOUT"
+  , "HASURA_GRAPHQL_PG_CONN_LIFETIME"
+  , "HASURA_GRAPHQL_PG_POOL_TIMEOUT"
+  , "HASURA_GRAPHQL_USE_PREPARED_STATEMENTS"
+  , "HASURA_GRAPHQL_TX_ISOLATION"
+  , "HASURA_GRAPHQL_CONNECTIONS_PER_READ_REPLICA"
+  ]
+
+deprecatedEnvVars :: DeprecatedEnvVars
+deprecatedEnvVars = DeprecatedEnvVars
+  [ "HASURA_GRAPHQL_PG_STRIPES"
+  , "HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE"
+  , "HASURA_GRAPHQL_STRIPES_PER_READ_REPLICA"
+  ]

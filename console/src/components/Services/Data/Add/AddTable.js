@@ -36,7 +36,7 @@ import { resetValidation } from './AddActions';
 import gqlPattern, {
   gqlTableErrorNotif,
   gqlColumnErrorNotif,
-} from '../Common/GraphQLValidation'; // TODO add the others
+} from '../Common/GraphQLValidation';
 
 import {
   tableNameNullNotif,
@@ -45,6 +45,8 @@ import {
   tableColumnTypesNotif,
   tableColumnDefaultsNotif,
   tableMinPrimaryKeyNotif,
+  tableNameMaxLengthNotif,
+  tableColumnMaxLengthNotif,
 } from './AddWarning';
 
 import styles from '../../../Common/TableCommon/Table.scss';
@@ -55,6 +57,8 @@ import {
   uniqueKeyDescription,
   checkConstraintsDescription,
 } from '../Common/TooltipMessages';
+import { dataSource, isFeatureSupported } from '../../../../dataSources';
+import { maxAllowedColumnLength } from '../constants';
 
 /* AddTable is a wrapper which wraps
  *  1) Table Name input
@@ -97,6 +101,22 @@ class AddTable extends Component {
 
   componentDidMount() {
     this.props.dispatch(fetchColumnTypeInfo());
+    this.props.dispatch(
+      setForeignKeys([
+        {
+          refSchemaName: '',
+          refTableName: '',
+          colMappings: [
+            {
+              column: '',
+              refColumn: '',
+            },
+          ],
+          onUpdate: dataSource.violationActions[0],
+          onDelete: dataSource.violationActions[0],
+        },
+      ])
+    );
   }
 
   componentWillUnmount() {
@@ -204,6 +224,14 @@ class AddTable extends Component {
     }
   }
 
+  isValidLength(s) {
+    return s.length < maxAllowedColumnLength;
+  }
+
+  validateTableNameLength(name) {
+    return this.isValidLength(name);
+  }
+
   tableNameEmptyCheck(name) {
     return name !== null;
   }
@@ -290,6 +318,16 @@ class AddTable extends Component {
           cols[i].name.toString() +
           ')'
         );
+      }
+    }
+    return '';
+  }
+
+  validateColumnNameLengths(cols) {
+    const l = cols.length;
+    for (let i = 0; i < l; i++) {
+      if (!this.isValidLength(cols[i].name)) {
+        return false;
       }
     }
     return '';
@@ -397,12 +435,20 @@ class AddTable extends Component {
         gqlTableErrorNotif
       ) &&
       this.checkAndNotify(
+        this.validateTableNameLength(tableNameTrimmed),
+        tableNameMaxLengthNotif
+      ) &&
+      this.checkAndNotify(
         this.validateEnoughColumns(trimmedColumns),
         tableEnufColumnsNotif
       ) &&
       this.checkAndNotify(
         this.validateColumnNames(trimmedColumns),
         gqlColumnErrorNotif
+      ) &&
+      this.checkAndNotify(
+        this.validateColumnNameLengths(trimmedColumns),
+        tableColumnMaxLengthNotif
       ) &&
       this.checkAndNotify(
         this.validateNoDupNames(trimmedColumns),
@@ -443,8 +489,8 @@ class AddTable extends Component {
       columnDefaultFunctions,
       columnTypeCasts,
       checkConstraints,
+      postgresVersion,
     } = this.props;
-
     const getCreateBtnText = () => {
       let createBtnText = 'Add Table';
       if (ongoingRequest) {
@@ -463,7 +509,7 @@ class AddTable extends Component {
       <div
         className={`${styles.addTablesBody} ${styles.clear_fix} ${styles.padd_left}`}
       >
-        <Helmet title="Add Table - Data | Hasura" />
+        <Helmet title={`Add Table - Data | Hasura`} />
         <div className={styles.subHeader}>
           <h2 className={styles.heading_text}>Add a new table</h2>
           <div className="clearfix" />
@@ -488,13 +534,15 @@ class AddTable extends Component {
               onColUniqueChange={this.onColUniqueChange}
               setColDefaultValue={this.setColDefaultValue}
             />
-            <div>
+            {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
               <FrequentlyUsedColumnSelector
                 onSelect={setFreqUsedColumn}
                 action={'add'}
                 dispatch={dispatch}
+                postgresVersion={postgresVersion}
               />
-            </div>
+            ) : null}
+
             <hr />
             <h4 className={styles.subheading_text}>
               Primary Key &nbsp; &nbsp;
@@ -586,6 +634,7 @@ const mapStateToProps = state => ({
   columnTypeCasts: state.tables.columnTypeCasts,
   columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
   schemaList: state.tables.schemaList,
+  postgresVersion: state.main.postgresVersion,
 });
 
 const addTableConnector = connect => connect(mapStateToProps)(AddTable);

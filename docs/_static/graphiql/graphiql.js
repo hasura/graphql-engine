@@ -1993,7 +1993,7 @@ var GraphiQL = exports.GraphiQL = function (_React$Component) {
                     className: 'variable-editor-title',
                     style: { cursor: variableOpen ? 'row-resize' : 'n-resize' },
                     onMouseDown: this.handleVariableResizeStart },
-                  'Query Variables'
+                  'Variables'
                 ),
                 _react2.default.createElement(_VariableEditor.VariableEditor, {
                   ref: function ref(n) {
