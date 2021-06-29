@@ -1,9 +1,7 @@
 import React from 'react';
-
 import styles from './QueryBuilderJson.scss';
 
 type ObjectType = Record<string, unknown>;
-
 type ElementProp = ObjectType | ObjectType[];
 type UnselectedElementProp = (string | number)[];
 type QueryBuilderJsonProps = {
