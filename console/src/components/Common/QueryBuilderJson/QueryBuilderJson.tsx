@@ -1,11 +1,10 @@
-/* eslint-disable no-use-before-define */
-/* eslint no-underscore-dangle: 0 */
-/* eslint no-shadow: 0 */
 import React from 'react';
 
-const styles = require('./QueryBuilderJson.scss');
+import styles from './QueryBuilderJson.scss';
 
-type ElementProp = object | object[];
+type ObjectType = Record<string, unknown>;
+
+type ElementProp = ObjectType | ObjectType[];
 type UnselectedElementProp = (string | number)[];
 type QueryBuilderJsonProps = {
   element: ElementProp;
@@ -19,7 +18,7 @@ const QueryBuilderJson = ({
   const oBrace = '{ ';
   const cBrace = '}';
 
-  const wrapBraces = (value: object[]) => {
+  const wrapBraces = (value: React.ReactNode[]) => {
     return (
       <span>
         {oBrace}
@@ -29,7 +28,7 @@ const QueryBuilderJson = ({
     );
   };
 
-  const wrapSquareBrackets = (value: object[]) => {
+  const wrapSquareBrackets = (value: React.ReactNode[]) => {
     return (
       <span>
         [<div className={styles.qb_nested}>{value}</div>]
@@ -41,7 +40,7 @@ const QueryBuilderJson = ({
     return show ? ' ,' : '';
   };
 
-  const isCustomJsonObject = (object: object[] | object) => {
+  const isCustomJsonObject = (object: ObjectType[] | ObjectType) => {
     // check if it is an array
     if (object instanceof Array) {
       // check if is an empty array
@@ -78,7 +77,7 @@ const QueryBuilderJson = ({
     return object instanceof Object && !React.isValidElement(object);
   };
 
-  const isCustomJsonArray = (array: object | object[]) => {
+  const isCustomJsonArray = (array: ObjectType | ObjectType[]) => {
     return array instanceof Array && !isCustomJsonObject(array);
   };
 
@@ -90,8 +89,9 @@ const QueryBuilderJson = ({
     return (
       <span className={styles.qb_row}>
         <span
-          className={`${styles.qb_key} ${unselected &&
-            styles.qb_unselected_key}`}
+          className={`${styles.qb_key} ${
+            unselected && styles.qb_unselected_key
+          }`}
         >
           {`" ${key} "`} :
         </span>
@@ -104,9 +104,9 @@ const QueryBuilderJson = ({
   // object: object
   const displayJsonObject = (
     object: ElementProp,
-    unselectedElements: UnselectedElementProp
+    unselectedElmnts: UnselectedElementProp
   ) => {
-    const _jsonObject: object[] = [];
+    const jsonObject: React.ReactNode[] = [];
 
     // if object convert into customJsonObjectArray
     let objectArray: { key: string; value: any }[];
@@ -117,20 +117,21 @@ const QueryBuilderJson = ({
       Object.keys(object).forEach((key, i) => {
         objectArray.push({ key, value: (object as any)[key] });
         // replace unselected key with array position
-        if (unselectedElements.includes(key)) {
+        if (unselectedElmnts.includes(key)) {
           /* eslint no-param-reassign: ["error", { "props": false }] */
-          unselectedElements[unselectedElements.indexOf(key)] = i;
+          unselectedElmnts[unselectedElmnts.indexOf(key)] = i;
         }
       });
     }
 
     objectArray.forEach((_object, i) => {
-      const unselected = unselectedElements.includes(i);
-      _jsonObject.push(
+      const unselected = unselectedElmnts.includes(i);
+      jsonObject.push(
         <div
           key={i}
-          className={`${styles.qb_row} ${unselected &&
-            styles.qb_unselected_row}`}
+          className={`${styles.qb_row} ${
+            unselected && styles.qb_unselected_row
+          }`}
         >
           {displayJsonKeyValue(_object.key, _object.value, unselected)}{' '}
           {comma(i < objectArray.length - 1)}
@@ -138,30 +139,31 @@ const QueryBuilderJson = ({
       );
     });
 
-    return wrapBraces(_jsonObject);
+    return wrapBraces(jsonObject);
   };
 
   const displayJsonArray = (
-    elements: object[],
-    unselectedElements: number[]
+    elements: ObjectType[],
+    unselectedElmnts: number[]
   ) => {
-    const _jsonArray: object[] = [];
+    const jsonArray: React.ReactNode[] = [];
 
-    elements.forEach((element, i: number) => {
-      const unselected = unselectedElements.includes(i);
-      _jsonArray.push(
+    elements.forEach((elmnt, i: number) => {
+      const unselected = unselectedElmnts.includes(i);
+      jsonArray.push(
         <div
           key={i}
-          className={`${styles.qb_row} ${unselected &&
-            styles.qb_unselected_row}`}
+          className={`${styles.qb_row} ${
+            unselected && styles.qb_unselected_row
+          }`}
         >
-          {displayJsonElement(element)}
+          {displayJsonElement(elmnt)}
           {comma(i < elements.length - 1)}
         </div>
       );
     });
 
-    return wrapSquareBrackets(_jsonArray);
+    return wrapSquareBrackets(jsonArray);
   };
 
   const displayJsonValue = (value: ElementProp) => {
@@ -169,23 +171,23 @@ const QueryBuilderJson = ({
   };
 
   const displayJsonElement = (
-    element: ElementProp,
-    unselectedElements: UnselectedElementProp = []
+    elmnt: ElementProp,
+    unselectedElmnts: UnselectedElementProp = []
   ) => {
-    let _jsonElement = null;
+    let jsonElement: React.ReactNode = null;
 
-    if (isCustomJsonArray(element)) {
-      _jsonElement = displayJsonArray(
-        element as object[],
-        unselectedElements as number[]
+    if (isCustomJsonArray(elmnt)) {
+      jsonElement = displayJsonArray(
+        elmnt as ObjectType[],
+        unselectedElmnts as number[]
       );
-    } else if (isCustomJsonObject(element)) {
-      _jsonElement = displayJsonObject(element, unselectedElements);
+    } else if (isCustomJsonObject(elmnt)) {
+      jsonElement = displayJsonObject(elmnt, unselectedElmnts);
     } else {
-      _jsonElement = displayJsonValue(element);
+      jsonElement = displayJsonValue(elmnt);
     }
 
-    return _jsonElement;
+    return jsonElement;
   };
 
   const displayCustomJson = () => {
