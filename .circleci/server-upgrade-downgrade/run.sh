@@ -1,5 +1,17 @@
 #! /usr/bin/env bash
 
+# This script tests the migration path both *from* the latest release *to* the
+# version in this PR, and the downgrade path *back* to that release. It makes
+# use of the functionality already excercised in our integration tests, and
+# does something like:
+#
+#    for a subset of tests in tests that are okay to run here:
+#       run setup and test using OLD_VERSION, don't run teardown
+#       start THIS_VERSION, running migration code on anything set up above
+#         run the same pytests, don't run setup or teardown
+#       start OLD_VERSION again, running down migrations
+#         run the same pytests, don't run setup
+#
 # If no arguments are provided to this script, all the server upgrade tests will be run
 # With arguments, you can specify which server upgrade pytests should be run
 # Any options provided to this script will be applied to the
@@ -150,6 +162,11 @@ get_current_catalog_version() {
 }
 
 args=("$@")
+# Return the list of tests over which we will perform a
+# test-upgrade-test-downgrade-test sequence in run_server_upgrade_pytest().
+#
+# See pytest_report_collectionfinish() for the logic that determines what is an
+# "upgrade test", namely presence of particular markers.
 get_server_upgrade_tests() {
 	cd $RELEASE_PYTEST_DIR
 	tmpfile="$(mktemp --dry-run)"
@@ -186,6 +203,8 @@ get_server_upgrade_tests() {
 	rm "$tmpfile"
 }
 
+# The test-upgrade-test-downgrade-test sequence, run for each of many sets of
+# tests passed as the argument.
 run_server_upgrade_pytest() {
 	HGE_PID=""
 	cleanup_hge(){
@@ -322,6 +341,18 @@ make_latest_release_worktree
 
 cleanup_hasura_metadata_if_present
 
+# We run_server_upgrade_pytest over each test individually to minimize the
+# chance of breakage (e.g. where two different tests have conflicting
+# setup.yaml which create the same table)
+#
+# TODO this is really slow (~1hr). There seems to be no good way to do many
+# tests in a batch because very few tests use unique table names, for instance.
+# We could:
+#  - try to give each setup.yaml unique names (very arduous), or
+#  - hand select a few tests that we think matter for the upgrade-downgrade case
+#    and make them compatible, or small enough in number we can run them
+#    sequentially
+#  - ???
 for pytest in $(get_server_upgrade_tests) ; do
 	log "Running pytest $pytest"
 	run_server_upgrade_pytest "$pytest"
