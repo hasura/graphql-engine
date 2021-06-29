@@ -24,6 +24,7 @@ import           Hasura.Server.Init
 import           Hasura.Server.Migrate              (downgradeCatalog)
 import           Hasura.Server.Types                (MaintenanceMode (..))
 import           Hasura.Server.Version
+import           Hasura.Server.Version.TH
 
 import qualified Control.Concurrent.Extended        as C
 import qualified Data.ByteString.Char8              as BC
