@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import React from 'react';
 import styles from './QueryBuilderJson.scss';
 
@@ -16,7 +17,7 @@ const QueryBuilderJson = ({
   const oBrace = '{ ';
   const cBrace = '}';
 
-  const wrapBraces = (value: React.ReactNode[]) => {
+  const wrapBraces = (value: React.ReactNode) => {
     return (
       <span>
         {oBrace}
@@ -26,7 +27,7 @@ const QueryBuilderJson = ({
     );
   };
 
-  const wrapSquareBrackets = (value: React.ReactNode[]) => {
+  const wrapSquareBrackets = (value: React.ReactNode) => {
     return (
       <span>
         [<div className={styles.qb_nested}>{value}</div>]
@@ -38,7 +39,7 @@ const QueryBuilderJson = ({
     return show ? ' ,' : '';
   };
 
-  const isCustomJsonObject = (object: ObjectType[] | ObjectType) => {
+  const isCustomJsonObject = (object: ObjectType | ObjectType[]) => {
     // check if it is an array
     if (object instanceof Array) {
       // check if is an empty array
@@ -46,7 +47,7 @@ const QueryBuilderJson = ({
         return false;
       }
       // check each element of array
-      for (let i = 0; i < object.length; i + 1) {
+      for (let i = 0; i < object.length; i++) {
         const objectElement = object[i];
 
         if (!(objectElement instanceof Object)) {
@@ -61,7 +62,7 @@ const QueryBuilderJson = ({
 
         const customJsonKeys = ['key', 'value'].sort();
         // check if element keys are key and value
-        for (let j = 0; j < objectKeys.length; j + 1) {
+        for (let j = 0; j < objectKeys.length; j++) {
           if (objectKeys[j] !== customJsonKeys[j]) {
             return false;
           }
@@ -91,7 +92,7 @@ const QueryBuilderJson = ({
             unselected && styles.qb_unselected_key
           }`}
         >
-          {`" ${key} "`} :
+          &quot; {key} &quot; :
         </span>
         {displayJsonElement(value)}
       </span>
