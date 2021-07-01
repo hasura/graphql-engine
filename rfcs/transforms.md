@@ -20,8 +20,8 @@ data Transforms
   , request_body  ::  Maybe TemplateText                  # Raw templating
  -- ^ Change the request_body to one provided here. Nothing means original payload. Only applicable for POST, PUT, PATCH methods
  -- The encoding of the content is defined by the 'request_content_type' field defined below.
-  , request_content_type :: AllowedContentTypes
- -- ^ Only the following Content-Types are allowed:
+  , request_content_type :: Maybe AllowedContentTypes
+ -- ^ Only the following Content-Types are allowed (default: application/json):
  -- 1) application/json
  -- 2) application/x-www-form-urlencoded
   , query_params  ::  Maybe (HashMap Text TemplateText)   # Key-value based templating
@@ -132,3 +132,42 @@ transforms:
 ```
 
 This transforms the body to `key1=$.value1&key2=$.value2&key3=$.session['x-hasura-user-id']`. The console can show the output for a given tranformation hence making it clear what is finally going in the body.
+
+## Real-world example
+
+1. Integrating notion.so API via Hasura Action
+
+Action definition:
+
+```
+type Mutation {
+  addNotionItem (
+    databaseId: String!
+    properties: jsonb!
+    children: jsonb
+  ): ItemOutput
+}
+
+type ItemOutput {
+  id : String!
+  object : String!
+  created_time : timestamptz!
+  last_edited_time : timestamptz!
+}
+```
+
+The transform is given by:
+
+```
+   request_body:
+     {
+       "parent": {
+          "database_id": action.input.databaseId,
+       }.
+       "properties": action.input.properties,
+       {{ if action.input.children }} "children": action.input.children
+     }
+
+```
+
+Source: https://glitch.com/edit/#!/butternut-grizzly-fluorine?path=src%2Fserver.js%3A1%3A0
