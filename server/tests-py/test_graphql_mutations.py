@@ -656,6 +656,8 @@ class TestGraphQLInheritedRoles:
     def dir(cls):
         return 'queries/graphql_mutation/insert/permissions/inherited_roles'
 
+    setup_metadata_api_version = "v2"
+
     # This test exists here as a sanity check to check if mutations aren't exposed
     # to an inherited role. When mutations are supported for everything, this test
     # should be removed/modified.
