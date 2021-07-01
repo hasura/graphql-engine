@@ -88,6 +88,27 @@ refs:
         done
         echo Failed waiting for SQL Server && exit 1
 
+  wait_for_citus: &wait_for_citus
+    run:
+      name: wait for citus to be ready
+      command: |
+        for i in `seq 1 60`;
+        do
+          nc -z localhost 5430 && echo Success && exit 0
+          echo -n .
+          sleep 1
+        done
+        echo Failed waiting for citus && exit 1
+
+  ensure_citus_db: &ensure_citus_db
+    run:
+      name: ensure citus databases are present
+      environment:
+        DATABASE_URL: 'postgres://postgres:hasuraCITUS2@127.0.0.1:5430/postgres'
+      command: |
+        psql "$DATABASE_URL" -c "SELECT * FROM citus_version();" | grep -q -F '(1 row)' \
+          || (echo "Failed checking Citus DB presence" && exit 1)
+
   filter_only_vtags: &filter_only_vtags
     filters:
       tags:
@@ -125,6 +146,15 @@ refs:
     environment:
       POSTGRES_USER: gql_test
       POSTGRES_DB: gql_test
+      PGPORT: 5432
+
+  # citus environment variables
+  test_citus_env: &test_citus_env
+    environment:
+      POSTGRES_PASSWORD: hasuraCITUS2
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      PGPORT: 5430
 
   # ref test server job
   test_server: &test_server
@@ -154,7 +184,6 @@ refs:
           GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
           MIX_FILES_FOLDER: /build/_server_output/mix
         command: |
-          # TODO(swann): not oss-.circleci right
           cat .circleci/server-test-names.txt | circleci tests split | while read -r server_test; do
             export SERVER_TEST_TO_RUN=$server_test
             OUTPUT_FOLDER="/build/_server_test_output/$PG_VERSION" .circleci/test-server.sh
@@ -286,8 +315,6 @@ jobs:
       HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE: 8
       HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
       HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:@localhost:5432/gql_test2
-      HASURA_GRAPHQL_PG_SOURCE_URL_1: postgresql://gql_test@localhost:5432/pg_source_1
-      HASURA_GRAPHQL_PG_SOURCE_URL_2: postgresql://gql_test@localhost:5432/pg_source_2
       HASURA_GRAPHQL_MSSQL_SOURCE_URL: DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost,1433;Uid=sa;Pwd=hasuraMSSQL1;
       GRAPHQL_ENGINE: /build/_server_output/graphql-engine
       GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
@@ -306,6 +333,47 @@ jobs:
         environment:
           SERVER_TEST_TO_RUN: 'backend-mssql'
           OUTPUT_FOLDER: '/build/_server_test_output/mssql'
+        command: |
+          .circleci/test-server.sh
+    - store_artifacts:
+        path: /build/_server_test_output
+        destination: server_test
+
+  # pytest the server with Citus
+  test_server_citus:
+    docker:
+    - image: *server_builder_image
+    - image: hasura/postgres-13.0-alpine-postgis3:latest
+      <<: *test_pg_env
+    - image: citusdata/citus
+      <<: *test_citus_env
+    environment:
+      # Setting default number of threads to 2
+      # since circleci allocates 2 cpus per test container
+      GHCRTS: -N2
+      # NOTE: pytests depend on this being set to 8
+      HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE: 8
+      HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
+      HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:@localhost:5432/gql_test2
+      HASURA_GRAPHQL_CITUS_SOURCE_URL: postgres://postgres:hasuraCITUS2@127.0.0.1:5430/postgres
+      GRAPHQL_ENGINE: /build/_server_output/graphql-engine
+      GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
+      MIX_FILES_FOLDER: /build/_server_output/mix
+    working_directory: ~/graphql-engine
+    steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
+    - checkout
+    - *wait_for_postgres
+    - *ensure_postgres_db
+    - *wait_for_citus
+    - *ensure_citus_db
+    - run:
+        name: Run tests
+        environment:
+          SERVER_TEST_TO_RUN: 'backend-citus'
+          OUTPUT_FOLDER: '/build/_server_test_output/citus'
         command: |
           .circleci/test-server.sh
     - store_artifacts:
@@ -753,6 +821,10 @@ workflows:
         <<: *filter_only_vtags
         requires:
           - build_server
+    - test_server_citus:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
     - test_server_pg_13:
         <<: *filter_only_vtags
         requires:
