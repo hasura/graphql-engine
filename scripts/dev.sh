@@ -161,6 +161,7 @@ fi
 source scripts/containers/postgres
 source scripts/containers/mssql
 source scripts/containers/citus
+source scripts/data-sources-util.sh
 
 PG_RUNNING=0
 MSSQL_RUNNING=0
@@ -215,35 +216,6 @@ function start_dbs() {
     # bigquery omitted as test setup is atypical. See:
     # https://github.com/hasura/graphql-engine-mono/wiki/Testing-BigQuery
   esac
-}
-
-function add_sources() {
-  METADATA_URL=http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/v1/metadata
-
-  # always add a postgres source
-  echo ""
-  echo_pretty "Adding Postgres source"
-  curl "$METADATA_URL" \
-  --data-raw '{"type":"pg_add_source","args":{"name":"default","configuration":{"connection_info":{"database_url":"'"$PG_DB_URL"'"}}}}'
-
-  case "$BACKEND" in
-    # bigquery omitted as test setup is atypical. See:
-    # https://github.com/hasura/graphql-engine-mono/wiki/Testing-BigQuery
-    citus)
-      echo ""
-      echo_pretty "Adding Citus source"
-      curl "$METADATA_URL" \
-      --data-raw '{"type":"citus_add_source","args":{"name":"citus","configuration":{"connection_info":{"database_url":"'"$CITUS_DB_URL"'"}}}}'
-    ;;
-    mssql)
-      echo ""
-      echo_pretty "Adding SQL Server source"
-      curl "$METADATA_URL" \
-      --data-raw '{"type":"mssql_add_source","args":{"name":"mssql","configuration":{"connection_info":{"connection_string":"'"$MSSQL_DB_URL"'"}}}}'
-    ;;
-  esac
-
-  echo ""
 }
 
 
@@ -501,7 +473,7 @@ elif [ "$MODE" = "test" ]; then
     echo ""
     echo " Ok"
 
-    add_sources
+    add_sources $HASURA_GRAPHQL_SERVER_PORT
 
     cd "$PROJECT_ROOT/server/tests-py"
 
