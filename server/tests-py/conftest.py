@@ -289,7 +289,7 @@ def hge_ctx(request):
     try:
         hge_ctx = HGECtx(hge_url, pg_url, config)
     except HGECtxError as e:
-        assert False, "Error from hge_cxt: " + str(e)
+        assert False, "Error from hge_ctx: " + str(e)
         # TODO this breaks things (https://github.com/pytest-dev/pytest-xdist/issues/86)
         #      so at least make sure the real error gets printed (above)
         pytest.exit(str(e))
@@ -378,22 +378,12 @@ def per_class_tests_db_state(request, hge_ctx):
     Expects either `dir()` method which provides the directory
     with `setup.yaml` and `teardown.yaml` files
     Or class variables `setup_files` and `teardown_files` that provides
-    the list of setup and teardown files respectively
+    the list of setup and teardown files respectively.
+    By default, for a postgres backend the setup and teardown is done via
+    the `/v1/query` endpoint, to setup using the `/v1/metadata` (metadata setup)
+    and `/v2/query` (DB setup), set the `setup_metadata_api_version` to "v2"
     """
     yield from db_state_context(request, hge_ctx)
-
-@pytest.fixture(scope='class')
-def per_class_tests_db_state_new(request, hge_ctx):
-    """
-    Set up the database state for select queries.
-    Has a class level scope, since select queries does not change database state
-    Expects either `dir()` method which provides the directory
-    with `setup.yaml` and `teardown.yaml` files
-    Or class variables `setup_files` and `teardown_files` that provides
-    the list of setup and teardown files respectively
-    """
-    print ("per_class_tests_db_state_new")
-    yield from db_state_context_new(request, hge_ctx)
 
 @pytest.fixture(scope='function')
 def per_method_tests_db_state(request, hge_ctx):
@@ -464,12 +454,23 @@ def db_state_context(request, hge_ctx):
     # defaults to postgres file lookup
     check_file_exists = hge_ctx.backend == backend
 
+    # setting the default metadata API version to v1
+    setup_metadata_api_version = getattr(request.cls, 'setup_metadata_api_version',"v1")
+
     if hge_ctx.is_default_backend:
-        db_context = db_context_with_schema_common(
-            request, hge_ctx, 'setup_files', 'setup.yaml', 'teardown_files',
-            'teardown.yaml', check_file_exists
-        )
+        if setup_metadata_api_version == "v1":
+            # setup the metadata and DB schema using the `/v1/query` endpoint
+            db_context = db_context_with_schema_common(
+                request, hge_ctx, 'setup_files', 'setup.yaml', 'teardown_files',
+                'teardown.yaml', check_file_exists        )
+        elif setup_metadata_api_version == "v2":
+            # setup the metadata using the "/v1/metadata" and the DB schema using the `/v2/query` endpoints
+            db_context = db_context_with_schema_common_new (
+                request, hge_ctx, 'setup_files', setup, 'teardown_files',
+                teardown, schema_setup, schema_teardown, check_file_exists
+            )
     else:
+        # setup the metadata using the "/v1/metadata" and the DB schema using the `/v2/query` endpoints
         db_context = db_context_with_schema_common_new (
             request, hge_ctx, 'setup_files', setup, 'teardown_files',
             teardown, schema_setup, schema_teardown, check_file_exists
@@ -605,5 +606,5 @@ def is_master(config):
 
 use_inherited_roles_fixtures = pytest.mark.usefixtures(
     "inherited_role_fixtures",
-    "per_class_tests_db_state_new"
+    "per_class_tests_db_state"
 )

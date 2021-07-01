@@ -585,6 +585,8 @@ class TestGraphQLInheritedRoles:
     def dir(cls):
         return 'queries/graphql_query/permissions/inherited_roles'
 
+    setup_metadata_api_version = "v2"
+
     def test_basic_inherited_role(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/basic_inherited_roles.yaml')
 

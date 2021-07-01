@@ -122,12 +122,14 @@ class TestGraphqlIntrospectionWithCustomTableName:
     def dir(cls):
         return "queries/graphql_introspection/custom_table_name"
 
-@pytest.mark.usefixtures('per_class_tests_db_state_new', 'pro_tests_fixtures')
+@pytest.mark.usefixtures('per_class_tests_db_state', 'pro_tests_fixtures')
 class TestDisableGraphQLIntrospection:
 
     @classmethod
     def dir(cls):
         return "queries/graphql_introspection/disable_introspection"
+
+    setup_metadata_api_version = "v2"
 
     def test_disable_introspection(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/disable_introspection.yaml")
