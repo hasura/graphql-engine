@@ -1,4 +1,9 @@
-module Hasura.Eventing.Common where
+module Hasura.Eventing.Common
+    ( PGTextArray(..)
+    , LockedEventsCtx(..)
+    , saveLockedEvents
+    , removeEventFromLockedEvents
+    ) where
 
 import           Control.Concurrent.STM.TVar
 import           Control.Monad.STM

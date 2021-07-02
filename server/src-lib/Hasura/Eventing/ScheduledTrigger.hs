@@ -141,7 +141,6 @@ import           Hasura.Base.Error
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.Eventing.ScheduledTrigger.Types
-import           Hasura.HTTP
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
@@ -223,14 +222,13 @@ processCronEvents
      , MonadMetadataStorage (MetadataStorageT m)
      )
   => L.Logger L.Hasura
-  -> LogEnvHeaders
+  -> LogBehavior
   -> HTTP.Manager
   -> [CronEvent]
   -> IO SchemaCache
   -> TVar (Set.Set CronEventId)
-  -> ResponseLogBehavior
   -> m ()
-processCronEvents logger logEnv httpMgr cronEvents getSC lockedCronEvents responseLogBehavior = do
+processCronEvents logger logBehavior httpMgr cronEvents getSC lockedCronEvents = do
   cronTriggersInfo <- scCronTriggers <$> liftIO getSC
   -- save the locked cron events that have been fetched from the
   -- database, the events stored here will be unlocked in case a
@@ -248,8 +246,8 @@ processCronEvents logger logEnv httpMgr cronEvents getSC lockedCronEvents respon
                       Nothing
             retryCtx = RetryContext tries ctiRetryConf
         finally <- runMetadataStorageT $ flip runReaderT (logger, httpMgr) $
-                   processScheduledEvent logEnv id' ctiHeaders retryCtx
-                                         payload webhookUrl Cron responseLogBehavior
+                   processScheduledEvent logBehavior id' ctiHeaders retryCtx
+                                         payload webhookUrl Cron
         removeEventFromLockedEvents id' lockedCronEvents
         onLeft finally logInternalError
   where
@@ -263,14 +261,13 @@ processOneOffScheduledEvents
      )
   => Env.Environment
   -> L.Logger L.Hasura
-  -> LogEnvHeaders
+  -> LogBehavior
   -> HTTP.Manager
   -> [OneOffScheduledEvent]
   -> TVar (Set.Set OneOffScheduledEventId)
-  -> ResponseLogBehavior
   -> m ()
-processOneOffScheduledEvents env logger logEnv httpMgr
-                             oneOffEvents lockedOneOffScheduledEvents responseLogBehavior = do
+processOneOffScheduledEvents env logger logBehavior httpMgr
+                             oneOffEvents lockedOneOffScheduledEvents = do
   -- save the locked one-off events that have been fetched from the
   -- database, the events stored here will be unlocked in case a
   -- graceful shutdown is initiated in midst of processing these events
@@ -286,7 +283,7 @@ processOneOffScheduledEvents env logger logEnv httpMgr
           retryCtx = RetryContext _ooseTries _ooseRetryConf
 
       flip runReaderT (logger, httpMgr) $
-        processScheduledEvent logEnv _ooseId headerInfo retryCtx payload webhookUrl OneOff responseLogBehavior
+        processScheduledEvent logBehavior _ooseId headerInfo retryCtx payload webhookUrl OneOff
       removeEventFromLockedEvents _ooseId lockedOneOffScheduledEvents
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
@@ -299,20 +296,19 @@ processScheduledTriggers
      )
   => Env.Environment
   -> L.Logger L.Hasura
-  -> LogEnvHeaders
+  -> LogBehavior
   -> HTTP.Manager
   -> IO SchemaCache
   -> LockedEventsCtx
-  -> ResponseLogBehavior
   -> m (Forever m)
-processScheduledTriggers env logger logEnv httpMgr getSC LockedEventsCtx {..} responseLogBehavior = do
+processScheduledTriggers env logger logBehavior httpMgr getSC LockedEventsCtx {..} = do
   return $ Forever () $ const $ do
     result <- runMetadataStorageT getScheduledEventsForDelivery
     case result of
       Left e -> logInternalError e
       Right (cronEvents, oneOffEvents) -> do
-        processCronEvents logger logEnv httpMgr cronEvents getSC leCronEvents responseLogBehavior
-        processOneOffScheduledEvents env logger logEnv httpMgr oneOffEvents leOneOffEvents responseLogBehavior
+        processCronEvents logger logBehavior httpMgr cronEvents getSC leCronEvents
+        processOneOffScheduledEvents env logger logBehavior httpMgr oneOffEvents leOneOffEvents
         -- NOTE: cron events are scheduled at times with minute resolution (as on
         -- unix), while one-off events can be set for arbitrary times. The sleep
         -- time here determines how overdue a scheduled event (cron or one-off)
@@ -330,16 +326,15 @@ processScheduledEvent
      , Tracing.HasReporter m
      , MonadMetadataStorage m
      )
-  => LogEnvHeaders
+  => LogBehavior
   -> ScheduledEventId
   -> [EventHeaderInfo]
   -> RetryContext
   -> ScheduledEventWebhookPayload
   -> Text
   -> ScheduledEventType
-  -> ResponseLogBehavior
   -> m ()
-processScheduledEvent logEnv eventId eventHeaders retryCtx payload webhookUrl type' responseLogBehavior
+processScheduledEvent logBehavior eventId eventHeaders retryCtx payload webhookUrl type'
                       = Tracing.runTraceT traceNote do
   currentTime <- liftIO getCurrentTime
   let retryConf = _rctxConf retryCtx
@@ -351,14 +346,13 @@ processScheduledEvent logEnv eventId eventHeaders retryCtx payload webhookUrl ty
       let timeoutSeconds = round $ unNonNegativeDiffTime
                              $ strcTimeoutSeconds retryConf
           httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
-          headers = addDefaultHeaders $ map encodeHeader eventHeaders
+          (headers, decodedHeaders) = prepareHeaders logBehavior eventHeaders
           extraLogCtx = ExtraLogContext (Just currentTime) eventId
           webhookReqBodyJson = J.toJSON payload
           webhookReqBody = J.encode webhookReqBodyJson
           requestDetails = RequestDetails $ BL.length webhookReqBody
       eitherRes <- runExceptT $ tryWebhook headers httpTimeout webhookReqBody (T.unpack webhookUrl)
-      logHTTPForST eitherRes extraLogCtx requestDetails responseLogBehavior
-      let decodedHeaders = map (decodeHeader logEnv eventHeaders) headers
+      logHTTPForST eitherRes extraLogCtx requestDetails logBehavior
       case eitherRes of
         Left e  -> processError eventId retryCtx decodedHeaders type' webhookReqBodyJson e
         Right r -> processSuccess eventId decodedHeaders type' webhookReqBodyJson r

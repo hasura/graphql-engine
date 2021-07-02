@@ -541,11 +541,13 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
                                serverConfigCtx
 
   let
-    maxEvThrds    = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
-    fetchI        = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
-    logEnvHeaders = soLogHeadersFromEnv
-    allPgSources  = mapMaybe (unsafeSourceConfiguration @('Postgres 'Vanilla)) $ HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
-    eventResponseLogBehaviour = if soDevMode then LogEntireResponse else LogSanitisedResponse
+    maxEvThrds       = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
+    fetchI           = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
+    allPgSources     = mapMaybe (unsafeSourceConfiguration @('Postgres 'Vanilla)) $ HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
+    eventLogBehavior = LogBehavior
+      { _lbHeader = if soLogHeadersFromEnv then LogEnvValue else LogEnvVarname
+      , _lbResponse = if soDevMode then LogEntireResponse else LogSanitisedResponse
+      }
 
   lockedEventsCtx <-
     liftIO $
@@ -572,14 +574,13 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
                       logger
                      (C.ThreadShutdown (liftIO eventsGracefulShutdownAction)) $
          processEventQueue logger
-                           logEnvHeaders
+                           eventLogBehavior
                            _scHttpManager
                            (getSCFromRef cacheRef)
                            eventEngineCtx
                            lockedEventsCtx
                            serverMetrics
                            soEnableMaintenanceMode
-                           eventResponseLogBehaviour
 
 
   -- start a background thread to handle async actions
@@ -626,9 +627,8 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
     C.forkManagedTWithGracefulShutdown "processScheduledTriggers"
                                        logger
                                        (C.ThreadShutdown scheduledEventsGracefulShutdownAction) $
-       processScheduledTriggers env logger logEnvHeaders _scHttpManager
+       processScheduledTriggers env logger eventLogBehavior _scHttpManager
                                    (getSCFromRef cacheRef) lockedEventsCtx
-                                    eventResponseLogBehaviour
 
 
   -- start a background thread to check for updates

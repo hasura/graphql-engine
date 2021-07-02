@@ -22,7 +22,6 @@ module Hasura.Eventing.HTTP
   , Invocation(..)
   , InvocationVersion
   , Response(..)
-  , ResponseLogBehavior(..)
   , WebhookRequest(..)
   , WebhookResponse(..)
   , ClientError(..)
@@ -30,9 +29,10 @@ module Hasura.Eventing.HTTP
   , mkClientErr
   , mkWebhookReq
   , mkResp
-  , LogEnvHeaders
-  , encodeHeader
-  , decodeHeader
+  , LogBehavior(..)
+  , ResponseLogBehavior(..)
+  , HeaderLogBehavior(..)
+  , prepareHeaders
   , getRetryAfterHeaderFromHTTPErr
   , getRetryAfterHeaderFromResp
   , parseRetryHeaderValue
@@ -59,13 +59,25 @@ import           Data.Aeson.TH
 import           Data.Either
 import           Data.Has
 import           Data.Int                      (Int64)
+import           Hasura.HTTP                   (addDefaultHeaders)
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.EventTrigger
+import           Hasura.Server.Version         (HasVersion)
 import           Hasura.Tracing
 
-type LogEnvHeaders = Bool
+data LogBehavior =
+  LogBehavior
+  { _lbHeader   :: !HeaderLogBehavior
+  , _lbResponse :: !ResponseLogBehavior
+  }
+
+data HeaderLogBehavior = LogEnvValue | LogEnvVarname
+  deriving (Show, Eq)
+
+data ResponseLogBehavior = LogSanitisedResponse | LogEntireResponse
+  deriving (Show, Eq)
 
 retryAfterHeader :: CI.CI Text
 retryAfterHeader = "Retry-After"
@@ -204,10 +216,6 @@ newtype RequestDetails
   = RequestDetails { _rdSize :: Int64 }
 $(deriveToJSON hasuraJSON ''RequestDetails)
 
--- TODO(swann): move elsewhere? it could be useful more generally
-data ResponseLogBehavior = LogSanitisedResponse | LogEntireResponse
-  deriving (Show, Eq)
-
 data HTTPRespExtra (a :: TriggerTypes)
   = HTTPRespExtra
   { _hreResponse    :: !(Either (HTTPErr a) (HTTPResp a))
@@ -289,11 +297,11 @@ logHTTPForET
   => Either (HTTPErr 'EventType) (HTTPResp 'EventType)
   -> ExtraLogContext
   -> RequestDetails
-  -> ResponseLogBehavior
+  -> LogBehavior
   -> m ()
-logHTTPForET eitherResp extraLogCtx reqDetails logResp = do
+logHTTPForET eitherResp extraLogCtx reqDetails logBehavior = do
   logger :: Logger Hasura <- asks getter
-  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx reqDetails logResp
+  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx reqDetails (_lbResponse logBehavior)
 
 logHTTPForST
   :: ( MonadReader r m
@@ -303,11 +311,11 @@ logHTTPForST
   => Either (HTTPErr 'ScheduledType) (HTTPResp 'ScheduledType)
   -> ExtraLogContext
   -> RequestDetails
-  -> ResponseLogBehavior
+  -> LogBehavior
   -> m ()
-logHTTPForST eitherResp extraLogCtx reqDetails logResp = do
+logHTTPForST eitherResp extraLogCtx reqDetails logBehavior = do
   logger :: Logger Hasura <- asks getter
-  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx reqDetails logResp
+  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx reqDetails (_lbResponse logBehavior)
 
 runHTTP :: (MonadIO m) => HTTP.Manager -> HTTP.Request -> m (Either (HTTPErr a) (HTTPResp a))
 runHTTP manager req = do
@@ -370,20 +378,33 @@ encodeHeader (EventHeaderInfo hconf cache) =
    in (ciname, value)
 
 decodeHeader
-  :: LogEnvHeaders -> [EventHeaderInfo] -> (HTTP.HeaderName, BS.ByteString)
+  :: LogBehavior -> [EventHeaderInfo] -> (HTTP.HeaderName, BS.ByteString)
   -> HeaderConf
-decodeHeader logenv headerInfos (hdrName, hdrVal)
+decodeHeader logBehavior headerInfos (hdrName, hdrVal)
   = let name = decodeBS $ CI.original hdrName
         getName ehi = let (HeaderConf name' _) = ehiHeaderConf ehi
                       in name'
         mehi = find (\hi -> getName hi == name) headerInfos
     in case mehi of
          Nothing -> HeaderConf name (HVValue (decodeBS hdrVal))
-         Just ehi -> if logenv
-                     then HeaderConf name (HVValue (ehiCachedValue ehi))
-                     else ehiHeaderConf ehi
+         Just ehi -> case _lbHeader logBehavior of
+                       LogEnvValue   -> HeaderConf name (HVValue (ehiCachedValue ehi))
+                       LogEnvVarname -> ehiHeaderConf ehi
    where
      decodeBS = TE.decodeUtf8With TE.lenientDecode
+
+-- | Encodes given request headers along with our 'defaultHeaders' and returns
+-- them along with the re-decoded set of headers (for logging purposes).
+prepareHeaders
+  :: HasVersion
+  => LogBehavior
+  -> [EventHeaderInfo]
+  -> ([HTTP.Header], [HeaderConf])
+prepareHeaders logBehavior headerInfos = (headers, logHeaders)
+  where
+    encodedHeaders = map encodeHeader headerInfos
+    headers = addDefaultHeaders encodedHeaders
+    logHeaders = map (decodeHeader logBehavior headerInfos) headers
 
 getRetryAfterHeaderFromHTTPErr :: HTTPErr a -> Maybe Text
 getRetryAfterHeaderFromHTTPErr (HStatus resp) = getRetryAfterHeaderFromResp resp
