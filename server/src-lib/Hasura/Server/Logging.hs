@@ -257,12 +257,13 @@ mkHttpAccessLogContext
   -- ^ Maybe because it may not have been resolved
   -> RequestId
   -> Wai.Request
+  -> (BL.ByteString, Maybe Value)
   -> BL.ByteString
   -> Maybe (DiffTime, DiffTime)
   -> Maybe CompressionType
   -> [HTTP.Header]
   -> HttpLogContext
-mkHttpAccessLogContext userInfoM reqId req res mTiming compressTypeM headers =
+mkHttpAccessLogContext userInfoM reqId req (_, parsedReq) res mTiming compressTypeM headers =
   let http = HttpInfoLog
              { hlStatus      = status
              , hlMethod      = bsToTxt $ Wai.requestMethod req
@@ -278,7 +279,7 @@ mkHttpAccessLogContext userInfoM reqId req res mTiming compressTypeM headers =
            , olResponseSize = respSize
            , olRequestReadTime    = Seconds . fst <$> mTiming
            , olQueryExecutionTime = Seconds . snd <$> mTiming
-           , olQuery = Nothing
+           , olQuery = parsedReq
            , olRawQuery = Nothing
            , olError = Nothing
            }
@@ -315,6 +316,7 @@ mkHttpErrorLogContext userInfoM reqId waiReq (reqBody, parsedReq) err mTiming co
            , olRequestReadTime    = Seconds . fst <$> mTiming
            , olQueryExecutionTime = Seconds . snd <$> mTiming
            , olQuery              = parsedReq
+           -- if parsedReq is Nothing, add the raw query
            , olRawQuery           = maybe (Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq
            , olError              = Just err
            }

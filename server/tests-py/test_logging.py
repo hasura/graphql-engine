@@ -12,6 +12,7 @@ if not PytestConf.config.getoption("--test-logging"):
 
 class TestLogging():
     dir = 'queries/logging'
+    success_query = {'query': 'query { hello {code name} }'}
 
     def _teardown(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
@@ -25,7 +26,7 @@ class TestLogging():
 
         try:
             # make a successful query
-            q = {'query': 'query { hello {code name} }'}
+            q = self.success_query
             headers = {'x-request-id': 'successful-query-log-test'}
             if hge_ctx.hge_key:
                 headers['x-hasura-admin-secret'] = hge_ctx.hge_key
@@ -147,6 +148,11 @@ class TestLogging():
             if operation['request_id'] == 'successful-query-log-test':
                 assert 'query_execution_time' in operation
                 assert 'user_vars' in operation
+                # we should see the `query` field in successful operations
+                assert 'query' in operation
+                assert operation['query'] == self.success_query
+                # there shouldn't be any raw_query in success
+                assert operation.get('raw_query') is None
 
     def test_query_log(self, hge_ctx):
         def _get_query_logs(x):

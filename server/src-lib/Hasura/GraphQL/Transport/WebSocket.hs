@@ -611,11 +611,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     WSConnData userInfoR opMap errRespTy queryType = WS.getData wsConn
 
     logOpEv opTy reqId = logWSEvent logger wsConn $ EOperation $
-      OperationDetails opId reqId (_grOperationName q) opTy $
-      -- log the query only in errors
-      case opTy of
-        ODQueryErr _ -> Just q
-        _            -> Nothing
+      OperationDetails opId reqId (_grOperationName q) opTy (Just q)
 
     getErrFn ERTLegacy           = encodeQErr
     getErrFn ERTGraphqlCompliant = encodeGQLErr

@@ -3,6 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: add `query` field to `http-log` and `websocket-log` in non-error cases
 - server: Add global limit to BigQuery via the `global_select_limit`
   field in the connection configuration
 
