@@ -552,6 +552,7 @@ export const supportedFeatures: SupportedFeaturesType = {
         view: true,
         edit: true,
         graphqlFieldName: true,
+        frequentlyUsedColumns: true,
       },
       computedFields: true,
       primaryKeys: {
