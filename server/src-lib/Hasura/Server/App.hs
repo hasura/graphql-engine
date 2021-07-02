@@ -360,7 +360,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
         AHGet handler -> do
           (userInfo, handlerState, includeInternal) <- getInfo Nothing
           res <- lift $ runHandler handlerState handler
-          return (res , userInfo, includeInternal, Nothing)
+          return (res, userInfo, includeInternal, Nothing)
         AHPost handler -> do
           (userInfo, handlerState, includeInternal) <- getInfo Nothing
           parsedReqE <- runExceptT $ parseBody reqBody
@@ -418,7 +418,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
             allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders
         lift $ logHttpSuccess logger userInfo reqId waiReq
                req respBytes compressedResp qTime mCompressionType reqHeaders httpLoggingMetadata
-        mapM_ setHeader allRespHeaders
+        traverse_ setHeader allRespHeaders
         Spock.lazyBytes compressedResp
 
 v1QueryHandler
