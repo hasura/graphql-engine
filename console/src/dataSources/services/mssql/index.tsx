@@ -275,6 +275,22 @@ ORDER BY
         .map(t => `'${t.table_name}'`)
         .join(',')})`;
     }
+    // ## Note on fetching MSSQL table comments
+    // LEFT JOIN (select * from sys.extended_properties where "minor_id"= 0) AS e ON e.major_id = obj.object_id
+    // this would filter out column comments, but if there are multiple extended properties with same major id and minor_id=0;
+    // ie, multiple properties on the table name (as shown below) can cause confusion and then it would pick only the first result.
+    // * case 1
+    // EXEC sys.sp_addextendedproperty
+    // @name=N'TableDescription',
+    // @value=N'Album Table is used for listing albums' ,
+    // @level0type=N'SCHEMA', @level0name=N'dbo',
+    // @level1type=N'TABLE', @level1name=N'Album';
+    // * case 2
+    // EXEC sys.sp_addextendedproperty
+    // @name=N'TableDescription2', -- ==> this is possible with mssql
+    // @value=N'some other property description' ,
+    // @level0type=N'SCHEMA', @level0name=N'dbo',
+    // @level1type=N'TABLE', @level1name=N'Album';
 
     return `
   SELECT sch.name as table_schema,
@@ -306,7 +322,7 @@ ORDER BY
     JSON_QUERY([isc].json) AS columns
 FROM sys.objects as obj
     INNER JOIN sys.schemas as sch ON obj.schema_id = sch.schema_id
-    LEFT JOIN sys.extended_properties AS e ON major_id = obj.object_id
+		LEFT JOIN (select * from sys.extended_properties where minor_id = 0) AS e ON e.major_id = obj.object_id
     OUTER APPLY (
         SELECT
             a.name AS column_name,
