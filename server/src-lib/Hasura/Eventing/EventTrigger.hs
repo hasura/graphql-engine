@@ -39,6 +39,8 @@ module Hasura.Eventing.EventTrigger
   , Event(..)
   , unlockEvents
   , EventEngineCtx(..)
+  , LogBehavior(..)
+  , HeaderLogBehavior(..)
   , ResponseLogBehavior(..)
   ) where
 
@@ -77,7 +79,6 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Base.Error
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
-import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Init.Config
@@ -231,16 +232,15 @@ processEventQueue
      , MonadMask m
      )
   => L.Logger L.Hasura
-  -> LogEnvHeaders
+  -> LogBehavior
   -> HTTP.Manager
   -> IO SchemaCache
   -> EventEngineCtx
   -> LockedEventsCtx
   -> ServerMetrics
   -> MaintenanceMode
-  -> ResponseLogBehavior
   -> m (Forever m)
-processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} LockedEventsCtx{leEvents} serverMetrics maintenanceMode responseLogBehaviour = do
+processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx{..} LockedEventsCtx{leEvents} serverMetrics maintenanceMode = do
   events0 <- popEventsBatch
   return $ Forever (events0, 0, False) go
   where
@@ -406,9 +406,7 @@ processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} Locked
                   retryConf = etiRetryConf eti
                   timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
                   responseTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
-                  headerInfos = etiHeaders eti
-                  etHeaders = map encodeHeader headerInfos
-                  headers = addDefaultHeaders etHeaders
+                  (headers, logHeaders) = prepareHeaders logBehavior (etiHeaders eti)
                   ep = createEventPayload retryConf e
                   payload = encode $ toJSON ep
                   extraLogCtx = ExtraLogContext Nothing (epId ep) -- avoiding getting current time here to avoid another IO call with each event call
@@ -419,11 +417,10 @@ processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} Locked
                       (liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics)
                       (liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics)
                       (runExceptT $ tryWebhook headers responseTimeout payload webhook)
-              logHTTPForET res extraLogCtx requestDetails responseLogBehaviour
-              let decodedHeaders = map (decodeHeader logenv headerInfos) headers
+              logHTTPForET res extraLogCtx requestDetails logBehavior
               either
-                (processError sourceConfig e retryConf decodedHeaders ep maintenanceModeVersion)
-                (processSuccess sourceConfig e decodedHeaders ep maintenanceModeVersion) res
+                (processError sourceConfig e retryConf logHeaders ep maintenanceModeVersion)
+                (processSuccess sourceConfig e logHeaders ep maintenanceModeVersion) res
                 >>= flip onLeft logQErr
       -- removing an event from the _eeCtxLockedEvents after the event has been processed:
       removeEventFromLockedEvents (eId e) leEvents
@@ -450,11 +447,11 @@ processSuccess
   -> Maybe MaintenanceModeVersion
   -> HTTPResp a
   -> m (Either QErr ())
-processSuccess sourceConfig e decodedHeaders ep maintenanceModeVersion resp = do
+processSuccess sourceConfig e reqHeaders ep maintenanceModeVersion resp = do
   let respBody = hrsBody resp
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
-      invocation = mkInvocation ep respStatus decodedHeaders respBody respHeaders
+      invocation = mkInvocation ep respStatus reqHeaders respBody respHeaders
   liftIO $ runPgSourceWriteTx sourceConfig $ do
     insertInvocation invocation
     setSuccess e maintenanceModeVersion
@@ -469,22 +466,22 @@ processError
   -> Maybe MaintenanceModeVersion
   -> HTTPErr a
   -> m (Either QErr ())
-processError sourceConfig e retryConf decodedHeaders ep maintenanceModeVersion err = do
+processError sourceConfig e retryConf reqHeaders ep maintenanceModeVersion err = do
   let invocation = case err of
         HClient excp -> do
           let errMsg = TBS.fromLBS $ encode $ show excp
-          mkInvocation ep 1000 decodedHeaders errMsg []
+          mkInvocation ep 1000 reqHeaders errMsg []
         HParse _ detail -> do
           let errMsg = TBS.fromLBS $ encode detail
-          mkInvocation ep 1001 decodedHeaders errMsg []
+          mkInvocation ep 1001 reqHeaders errMsg []
         HStatus errResp -> do
           let respPayload = hrsBody errResp
               respHeaders = hrsHeaders errResp
               respStatus = hrsStatus errResp
-          mkInvocation ep respStatus decodedHeaders respPayload respHeaders
+          mkInvocation ep respStatus reqHeaders respPayload respHeaders
         HOther detail -> do
           let errMsg = TBS.fromLBS $ encode detail
-          mkInvocation ep 500 decodedHeaders errMsg []
+          mkInvocation ep 500 reqHeaders errMsg []
   liftIO $ runPgSourceWriteTx sourceConfig $ do
     insertInvocation invocation
     retryOrSetError e retryConf maintenanceModeVersion err
