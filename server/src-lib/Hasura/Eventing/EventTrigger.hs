@@ -409,7 +409,7 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx{..} L
                   (headers, logHeaders) = prepareHeaders logBehavior (etiHeaders eti)
                   ep = createEventPayload retryConf e
                   payload = encode $ toJSON ep
-                  extraLogCtx = ExtraLogContext Nothing (epId ep) -- avoiding getting current time here to avoid another IO call with each event call
+                  extraLogCtx = ExtraLogContext (epId ep) (Just $ etiName eti)
                   requestDetails = RequestDetails $ LBS.length payload
 
               -- Track the number of active HTTP workers using EKG.

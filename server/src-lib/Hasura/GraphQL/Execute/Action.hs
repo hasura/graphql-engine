@@ -410,6 +410,7 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
     Right responseWreq -> do
       let responseBody = responseWreq ^. Wreq.responseBody
           responseBodySize = BL.length responseBody
+          actionName = _acName $ _awpAction actionWebhookPayload
           responseStatus = responseWreq ^. Wreq.responseStatus
           mkResponseInfo respBody =
             ActionResponseInfo (HTTP.statusCode responseStatus) respBody $
@@ -417,7 +418,7 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
 
       -- log the request and response to/from the action handler
       logger :: (L.Logger L.Hasura) <- asks getter
-      L.unLogger logger $ ActionHandlerLog requestBodySize responseBodySize
+      L.unLogger logger $ ActionHandlerLog requestBodySize responseBodySize actionName
 
       case J.eitherDecode responseBody of
         Left e -> do
