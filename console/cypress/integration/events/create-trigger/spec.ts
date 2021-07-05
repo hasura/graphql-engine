@@ -149,6 +149,7 @@ export const failCTDuplicateTrigger = () => {
     .clear()
     .type(getTriggerName(0, testName));
   cy.get(getElementFromAlias('select-source')).select('default');
+  cy.get(getElementFromAlias('select-schema')).select('public');
   cy.get(getElementFromAlias('select-table')).select(getTableName(0, testName));
 
   // operations
