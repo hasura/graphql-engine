@@ -265,6 +265,7 @@ const Add: React.FC<Props> = props => {
               className={`${styles.selectTrigger} form-control`}
               value={table.schema}
             >
+              <option value="">Select schema</option>
               {Object.keys(databaseInfo).map(s => (
                 <option value={s} key={s}>
                   {s}
