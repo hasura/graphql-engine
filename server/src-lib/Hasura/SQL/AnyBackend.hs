@@ -18,11 +18,12 @@ module Hasura.SQL.AnyBackend
 
 import           Hasura.Prelude
 
-import           Control.Arrow.Extended (ArrowChoice, arr, (|||))
-import           Data.Aeson             (FromJSON (..), ToJSON (..), Value)
-import           Data.Aeson.Types       (Parser)
-import           Data.Kind              (Constraint, Type)
-import           Language.Haskell.TH    hiding (Type)
+import           Control.Arrow.Extended            (ArrowChoice, arr, (|||))
+import           Data.Aeson
+import           Data.Aeson.Types                  (Parser)
+import           Data.Kind                         (Constraint, Type)
+import           Language.Haskell.TH               hiding (Type)
+import           Test.QuickCheck.Arbitrary.Partial
 
 import           Hasura.SQL.Backend
 import           Hasura.SQL.TH
@@ -565,6 +566,6 @@ deriving instance i `SatisfiesForAllBackends` Show => Show (AnyBackend i)
 deriving instance i `SatisfiesForAllBackends` Eq => Eq (AnyBackend i)
 
 instance i `SatisfiesForAllBackends` Hashable => Hashable (AnyBackend i)
-
+instance i `SatisfiesForAllBackends` PartialArbitrary => PartialArbitrary (AnyBackend i)
 instance i `SatisfiesForAllBackends` Arbitrary => Arbitrary (AnyBackend i) where
   arbitrary = genericArbitrary
