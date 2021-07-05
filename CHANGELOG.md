@@ -6,6 +6,7 @@
 - server: add `query` field to `http-log` and `websocket-log` in non-error cases
 - server: Add global limit to BigQuery via the `global_select_limit`
   field in the connection configuration
+- server: include action and event names in log output
 
 ## v2.0.1
 

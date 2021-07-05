@@ -49,7 +49,6 @@ import qualified Data.TByteString              as TBS
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as TE
 import qualified Data.Text.Encoding.Error      as TE
-import qualified Data.Time.Clock               as Time
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.HTTP.Types            as HTTP
 
@@ -150,8 +149,8 @@ data Invocation (a :: TriggerTypes)
 
 data ExtraLogContext
   = ExtraLogContext
-  { elEventCreatedAt :: Maybe Time.UTCTime
-  , elEventId        :: EventId
+  { elEventId   :: !EventId
+  , elEventName :: !(Maybe TriggerName)
   } deriving (Show, Eq)
 
 data HTTPResp (a :: TriggerTypes)
@@ -229,19 +228,22 @@ data HTTPRespExtra (a :: TriggerTypes)
 instance ToJSON (HTTPRespExtra a) where
   toJSON (HTTPRespExtra resp ctxt req logResp) =
     case resp of
-      Left errResp -> object
+      Left errResp -> object $
         [ "response" .= toJSON errResp
         , "request" .= toJSON req
         , "event_id" .= elEventId ctxt
-        ]
-      Right okResp -> object
+        ] ++ eventName
+      Right okResp -> object $
         [ "response" .= case logResp of
             LogEntireResponse    -> toJSON okResp
             LogSanitisedResponse -> sanitisedRespJSON okResp
         , "request" .= toJSON req
         , "event_id" .= elEventId ctxt
-        ]
+        ] ++ eventName
     where
+      eventName = case elEventName ctxt of
+        Just name -> [ "event_name" .= name ]
+        Nothing   -> []
       sanitisedRespJSON v
         = Object $ HML.fromList
         [ "size" .= hrsSize v

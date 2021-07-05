@@ -122,6 +122,7 @@ data ActionHandlerLog
   = ActionHandlerLog
   { _ahlRequestSize  :: !Int64
   , _ahlResponseSize :: !Int64
+  , _ahlActionName   :: !ActionName
   } deriving (Show)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''ActionHandlerLog)
 

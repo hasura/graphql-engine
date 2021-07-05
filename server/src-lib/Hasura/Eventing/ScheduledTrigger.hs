@@ -347,7 +347,7 @@ processScheduledEvent logBehavior eventId eventHeaders retryCtx payload webhookU
                              $ strcTimeoutSeconds retryConf
           httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
           (headers, decodedHeaders) = prepareHeaders logBehavior eventHeaders
-          extraLogCtx = ExtraLogContext (Just currentTime) eventId
+          extraLogCtx = ExtraLogContext eventId (sewpName payload)
           webhookReqBodyJson = J.toJSON payload
           webhookReqBody = J.encode webhookReqBodyJson
           requestDetails = RequestDetails $ BL.length webhookReqBody
