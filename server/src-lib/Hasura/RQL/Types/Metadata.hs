@@ -329,16 +329,16 @@ data Metadata
   , _metaMetricsConfig                  :: !MetricsConfig
   , _metaInheritedRoles                 :: !InheritedRoles
   , _metaSetGraphqlIntrospectionOptions :: !SetGraphqlIntrospectionOptions
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
 $(makeLenses ''Metadata)
 
 instance FromJSON Metadata where
   parseJSON = withObject "Metadata" $ \o -> do
     version <- o .:? "version" .!= MVVersion1
-    when (version /= MVVersion3) $ fail $
-      "unexpected metadata version from storage: " <> show version
-    unprocessedSources <- o .: "sources"
-    sources <- oMapFromL getSourceName <$> traverse parseSourceMetadata unprocessedSources
+    when (version /= MVVersion3) $
+      fail $ "unexpected metadata version from storage: " <> show version
+    rawSources <- o .: "sources"
+    sources <- oMapFromL getSourceName <$> traverse parseSourceMetadata rawSources
     endpoints <- oMapFromL _ceName <$> o .:? "rest_endpoints" .!= []
     (remoteSchemas, queryCollections, allowlist, customTypes,
      actions, cronTriggers, apiLimits, metricsConfig, inheritedRoles,

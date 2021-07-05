@@ -101,11 +101,6 @@ class
   , ToTxt (ScalarType b)
   , ToTxt (TableName b)
   , ToTxt (ConstraintName b)
-  , Arbitrary (Column b)
-  , Arbitrary (TableName b)
-  , Arbitrary (FunctionName b)
-  , Arbitrary (SourceConnConfiguration b)
-  , Arbitrary (ExtraTableMetadata b)
   , Cacheable (SourceConfig b)
   , Typeable b
   , HasTag b

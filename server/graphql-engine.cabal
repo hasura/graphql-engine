@@ -303,6 +303,7 @@ library
                      , Data.Time.Clock.Units
                      , Data.URL.Template
                      , GHC.Stats.Extended
+                     , Test.QuickCheck.Arbitrary.Partial
                      , Hasura.App
                      , Hasura.Metadata.Class
 
