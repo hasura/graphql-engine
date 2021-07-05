@@ -46,6 +46,7 @@ import qualified Hasura.GraphQL.Execute.Backend               as EB
 import qualified Hasura.GraphQL.Execute.RemoteJoin            as RJ
 import qualified Hasura.Logging                               as L
 import qualified Hasura.SQL.AnyBackend                        as AB
+import qualified Hasura.Server.Logging                        as L
 import qualified Hasura.Server.Telemetry.Counters             as Telem
 import qualified Hasura.Tracing                               as Tracing
 
@@ -512,12 +513,12 @@ runGQBatched
   -> E.GraphQLQueryType
   -> GQLBatchedReqs GQLQueryText
   -- ^ the batched request with unparsed GraphQL query
-  -> m (HTTPLoggingMetadata m, HttpResponse EncJSON)
+  -> m (HttpLogMetadata m, HttpResponse EncJSON)
 runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query =
   case query of
     GQLSingleRequest req -> do
       (parameterizedQueryHash, httpResp) <- runGQ env logger reqId userInfo ipAddress reqHdrs queryType req
-      let httpLoggingMetadata = buildHTTPLoggingMetadata @m [parameterizedQueryHash]
+      let httpLoggingMetadata = buildHttpLogMetadata @m [parameterizedQueryHash] $ Just L.RequestSingle
       pure (httpLoggingMetadata, snd <$> httpResp)
     GQLBatchedReqs reqs -> do
       -- It's unclear what we should do if we receive multiple
@@ -529,7 +530,7 @@ runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs qu
             . encJFromList
             . map (either (encJFromJValue . encodeGQErr includeInternal) _hrBody)
       responses <- traverse (try . (fmap . fmap . fmap) snd . runGQ env logger reqId userInfo ipAddress reqHdrs queryType) reqs
-      let httpLoggingMetadata = buildHTTPLoggingMetadata @m $ rights $ map (fmap fst) responses
+      let httpLoggingMetadata = buildHttpLogMetadata @m (rights $ map (fmap fst) responses) $ Just L.RequestBatched
       pure (httpLoggingMetadata, removeHeaders (map (fmap snd) responses))
   where
     try = flip catchError (pure . Left) . fmap Right

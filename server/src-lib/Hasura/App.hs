@@ -833,17 +833,19 @@ instance (Monad m) => HasResourceLimits (PGMetadataStorageAppT m) where
 
 instance (MonadIO m) => HttpLog (PGMetadataStorageAppT m) where
 
-  type HTTPLoggingMetadata (PGMetadataStorageAppT m) = ()
+  type ExtraHttpLogMetadata (PGMetadataStorageAppT m) = ()
 
-  buildHTTPLoggingMetadata _ = ()
+  emptyExtraHttpLogMetadata = ()
+
+  buildExtraHttpLogMetadata _ = ()
 
   logHttpError logger userInfoM reqId waiReq req qErr headers =
     unLogger logger $ mkHttpLog $
       mkHttpErrorLogContext userInfoM reqId waiReq req qErr Nothing Nothing headers
 
-  logHttpSuccess logger userInfoM reqId waiReq reqBody _response compressedResponse qTime cType headers () =
+  logHttpSuccess logger userInfoM reqId waiReq reqBody _response compressedResponse qTime cType headers (CommonHttpLogMetadata rb, ()) =
     unLogger logger $ mkHttpLog $
-      mkHttpAccessLogContext userInfoM reqId waiReq reqBody compressedResponse qTime cType headers
+      mkHttpAccessLogContext userInfoM reqId waiReq reqBody compressedResponse qTime cType headers rb
 
 instance (Monad m) => MonadExecuteQuery (PGMetadataStorageAppT m) where
   cacheLookup _ _ _ _ = pure ([], Nothing)
