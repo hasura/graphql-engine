@@ -30,7 +30,7 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
 import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
-import           Hasura.Server.Logging                  (HttpLog (..))
+import           Hasura.Server.Logging
 import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
@@ -125,7 +125,7 @@ runCustomEndpoint
     -> Wai.IpAddress
     -> RestRequest EndpointMethod
     -> EndpointTrie GQLQueryWithText
-    -> m (HTTPLoggingMetadata m, HttpResponse EncJSON)
+    -> m (HttpLogMetadata m, HttpResponse EncJSON)
 runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestRequest{..} endpoints = do
   -- First match the path to an endpoint.
   case matchPath reqMethod (T.split (== '/') reqPath) endpoints of
@@ -157,8 +157,8 @@ runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestReques
           -- through to the /v1/graphql endpoint.
           (httpLoggingMetadata, handlerResp) <- flip runReaderT execCtx $ do
               (parameterizedQueryHash, resp) <- GH.runGQ env (E._ecxLogger execCtx) requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables)
-              let httpLoggingMetadata = buildHTTPLoggingMetadata @m [parameterizedQueryHash]
-              return (httpLoggingMetadata, fst <$> resp)
+              let httpLogMetadata = buildHttpLogMetadata @m [parameterizedQueryHash] Nothing
+              return (httpLogMetadata, fst <$> resp)
           case sequence handlerResp of
             Just resp -> pure $ (httpLoggingMetadata, fmap encodeHTTPResp resp)
             -- a Nothing value here indicates a failure to parse the cached request from redis.

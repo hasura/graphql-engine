@@ -3,6 +3,7 @@
 module Hasura.Server.Logging
   ( StartupLog(..)
   , PGLog(..)
+  , RequestBatching(..)
   , mkInconsMetadataLog
   , mkHttpAccessLogContext
   , mkHttpErrorLogContext
@@ -16,6 +17,10 @@ module Hasura.Server.Logging
   , EnvVarsMovedToMetadata(..)
   , DeprecatedEnvVars(..)
   , logDeprecatedEnvVars
+  , CommonHttpLogMetadata(..)
+  , HttpLogMetadata
+  , buildHttpLogMetadata
+  , emptyHttpLogMetadata
   ) where
 
 import           Hasura.Prelude
@@ -126,11 +131,45 @@ instance ToJSON WebHookLog where
            , "message" .= whlMessage whl
            ]
 
-class (Monad m, Monoid (HTTPLoggingMetadata m)) => HttpLog m where
+data RequestBatching = RequestBatched | RequestSingle
+  deriving (Show, Eq)
 
-  type HTTPLoggingMetadata m
+instance ToJSON RequestBatching where
+  toJSON = \case
+    RequestBatched -> "batched"
+    RequestSingle  -> "single"
 
-  buildHTTPLoggingMetadata :: [ParameterizedQueryHash] -> HTTPLoggingMetadata m
+newtype CommonHttpLogMetadata = CommonHttpLogMetadata {_chlmRequestType :: Maybe RequestBatching}
+  deriving (Show, Eq)
+
+-- | The http-log metadata attached to HTTP requests running in the monad 'm', split into a
+-- common portion that is present regardless of 'm', and a monad-specific one defined in the
+-- 'HttpLog' instance.
+--
+-- This allows us to not have to duplicate the code that generates the common part of the metadata
+-- across OSS and Pro, so that instances only have to implement the part of it unique to them.
+type HttpLogMetadata m = (CommonHttpLogMetadata, ExtraHttpLogMetadata m)
+
+buildHttpLogMetadata
+  :: forall m
+   . HttpLog m
+  => [ParameterizedQueryHash]
+  -> Maybe RequestBatching
+  -> HttpLogMetadata m
+buildHttpLogMetadata xs rb = (CommonHttpLogMetadata rb, buildExtraHttpLogMetadata @m xs)
+
+-- | synonym for clarity, writing `emptyHttpLogMetadata @m` instead of `def @(HttpLogMetadata m)`
+emptyHttpLogMetadata :: forall m. HttpLog m => HttpLogMetadata m
+emptyHttpLogMetadata = (CommonHttpLogMetadata Nothing, emptyExtraHttpLogMetadata @m)
+
+class Monad m => HttpLog m where
+
+  -- | Extra http-log metadata that we attach when operating in 'm'.
+  type ExtraHttpLogMetadata m
+
+  emptyExtraHttpLogMetadata :: ExtraHttpLogMetadata m
+
+  buildExtraHttpLogMetadata :: [ParameterizedQueryHash] -> ExtraHttpLogMetadata m
 
   logHttpError
     :: Logger Hasura
@@ -171,14 +210,15 @@ class (Monad m, Monoid (HTTPLoggingMetadata m)) => HttpLog m where
     -- ^ possible compression type
     -> [HTTP.Header]
     -- ^ list of request headers
-    -> HTTPLoggingMetadata m
+    -> HttpLogMetadata m
     -> m ()
 
 instance HttpLog m => HttpLog (TraceT m) where
 
-  type HTTPLoggingMetadata (TraceT m) = HTTPLoggingMetadata m
+  type ExtraHttpLogMetadata (TraceT m) = ExtraHttpLogMetadata m
 
-  buildHTTPLoggingMetadata a = buildHTTPLoggingMetadata @m a
+  buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
+  emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
   logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
 
@@ -186,9 +226,10 @@ instance HttpLog m => HttpLog (TraceT m) where
 
 instance HttpLog m => HttpLog (ReaderT r m) where
 
-  type HTTPLoggingMetadata (ReaderT r m) = HTTPLoggingMetadata m
+  type ExtraHttpLogMetadata (ReaderT r m) = ExtraHttpLogMetadata m
 
-  buildHTTPLoggingMetadata a = buildHTTPLoggingMetadata @m a
+  buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
+  emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
   logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
 
@@ -196,9 +237,10 @@ instance HttpLog m => HttpLog (ReaderT r m) where
 
 instance HttpLog m => HttpLog (MetadataStorageT m) where
 
-  type HTTPLoggingMetadata (MetadataStorageT m) = HTTPLoggingMetadata m
+  type ExtraHttpLogMetadata (MetadataStorageT m) = ExtraHttpLogMetadata m
 
-  buildHTTPLoggingMetadata a = buildHTTPLoggingMetadata @m a
+  buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
+  emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
   logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
 
@@ -240,6 +282,7 @@ data OperationLog
   , olQuery              :: !(Maybe Value)
   , olRawQuery           :: !(Maybe Text)
   , olError              :: !(Maybe QErr)
+  , olRequestMode        :: !(Maybe RequestBatching)
   } deriving (Show, Eq)
 
 $(deriveToJSON hasuraJSON{omitNothingFields = True} ''OperationLog)
@@ -262,15 +305,16 @@ mkHttpAccessLogContext
   -> Maybe (DiffTime, DiffTime)
   -> Maybe CompressionType
   -> [HTTP.Header]
+  -> Maybe RequestBatching
   -> HttpLogContext
-mkHttpAccessLogContext userInfoM reqId req (_, parsedReq) res mTiming compressTypeM headers =
+mkHttpAccessLogContext userInfoM reqId req (_, parsedReq) res mTiming compressTypeM headers batching =
   let http = HttpInfoLog
              { hlStatus      = status
              , hlMethod      = bsToTxt $ Wai.requestMethod req
              , hlSource      = Wai.getSourceFromFallback req
              , hlPath        = bsToTxt $ Wai.rawPathInfo req
              , hlHttpVersion = Wai.httpVersion req
-             , hlCompression  = compressTypeM
+             , hlCompression = compressTypeM
              , hlHeaders     = headers
              }
       op = OperationLog
@@ -279,6 +323,7 @@ mkHttpAccessLogContext userInfoM reqId req (_, parsedReq) res mTiming compressTy
            , olResponseSize = respSize
            , olRequestReadTime    = Seconds . fst <$> mTiming
            , olQueryExecutionTime = Seconds . snd <$> mTiming
+           , olRequestMode = batching
            , olQuery = parsedReq
            , olRawQuery = Nothing
            , olError = Nothing
@@ -319,6 +364,7 @@ mkHttpErrorLogContext userInfoM reqId waiReq (reqBody, parsedReq) err mTiming co
            -- if parsedReq is Nothing, add the raw query
            , olRawQuery           = maybe (Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq
            , olError              = Just err
+           , olRequestMode        = Nothing
            }
   in HttpLogContext http op reqId
 
