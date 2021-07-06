@@ -13,8 +13,8 @@ function add_sources() {
         mssql)
             add_mssql_source "$hasura_graphql_server_port" "$MSSQL_DB_URL"
         ;;
-        # bigquery currently omitted as test setup is atypical. See:
-        # https://github.com/hasura/graphql-engine-mono/wiki/Testing-BigQuery
+        # bigquery deliberately omitted as its test setup is atypical. See:
+        # https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#running-the-python-test-suite-on-bigquery
     esac
 
     echo ""

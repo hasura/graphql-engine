@@ -13,7 +13,8 @@ query:
       configuration:
         service_account: {from_env: HASURA_BIGQUERY_SERVICE_ACCOUNT}
         project_id: {from_env: HASURA_BIGQUERY_PROJECT_ID}
-        datasets: {from_env: HASURA_BIGQUERY_DATASETS}
+        datasets:
+        - hasura
         global_select_limit: 1
       tables:
       - table:
@@ -45,7 +46,8 @@ query:
       configuration:
         service_account: {from_env: HASURA_BIGQUERY_SERVICE_ACCOUNT}
         project_id: {from_env: HASURA_BIGQUERY_PROJECT_ID}
-        datasets: {from_env: HASURA_BIGQUERY_DATASETS}
+        datasets:
+        - hasura
         global_select_limit: 1000000
       tables:
       - table:

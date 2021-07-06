@@ -216,6 +216,23 @@ Some other useful points of note:
              --backend mssql -k TestGraphQLQueryBasicCommon
     ```
 
+##### Running the Python test suite on BigQuery
+Running integration tests against a BigQuery data source is a little more involved due to the necessary service account requirements. Before running the test suite either [manually](https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#run-and-test-manually) or [via `dev.sh`](https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#run-and-test-via-devsh):
+1. Ensure you have access to a [Google Cloud Console service account](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating).
+2. [Create and download a new service account key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys).
+3. [Activate the service account](https://cloud.google.com/sdk/gcloud/reference/auth/activate-service-account), if it is not already activated.
+4. Verify the service account is accessible via the [BigQuery API](https://cloud.google.com/bigquery/docs/reference/rest):
+     1. Update the environment variables in `scripts/verify-bigquery-creds.sh` with the credentials for your service account.
+     2. Run `source scripts/verify-bigquery-creds.sh`.
+     3. If the query succeeds, the service account is setup correctly to run tests against BigQuery locally.
+5. Create a new `hasura` data source, and run the contents of [this `schema_setup_bigquery.sql` file](https://github.com/hasura/graphql-engine/blob/master/server/tests-py/queries/graphql_query/bigquery/schema_setup_bigquery.sql) against it.
+6. Finally, run the BigQuery test suite with `HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE` and `HASURA_BIGQUERY_PROJECT_ID` environment variables set. For example:
+  ```
+  export HASURA_BIGQUERY_PROJECT_ID=# the project ID of the service account from step 1
+  export HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE=# the filepath to the downloaded service account key from step 2
+  scripts/dev.sh test --integration --backend bigquery -k TestGraphQLQueryBasicBigquery
+  ```
+
 ##### Guide on writing python tests
 
 1. Check whether the test you intend to write already exists in the test suite, so that there will be no
