@@ -120,26 +120,20 @@ func (c *ClientCommonMetadataOps) ReplaceMetadata(metadata io.Reader) (io.Reader
 }
 
 func (c *ClientCommonMetadataOps) GetInconsistentMetadata() (*hasura.GetInconsistentMetadataResponse, error) {
-	request := hasura.RequestBody{
-		Type: "get_inconsistent_metadata",
-		Args: map[string]string{},
-	}
-	responseBody := new(bytes.Buffer)
-	response, err := c.send(request, responseBody)
+	inconsistentMetadata := new(hasura.GetInconsistentMetadataResponse)
+	responseBody, err := c.GetInconsistentMetadataRaw()
 	if err != nil {
 		return nil, err
 	}
-	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%s", responseBody.String())
-	}
-	inconsistentMetadata := new(hasura.GetInconsistentMetadataResponse)
 	if err := json.NewDecoder(responseBody).Decode(inconsistentMetadata); err != nil {
 		return nil, fmt.Errorf("decoding response: %w", err)
 	}
 	return inconsistentMetadata, nil
 }
 
-func (c *ClientCommonMetadataOps) GetInconsistentMetadataReader() (io.Reader, error) {
+// GetInconsistentMetadataRaw
+// https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/manage-metadata.html#metadata-get-inconsistent-metadata
+func (c *ClientCommonMetadataOps) GetInconsistentMetadataRaw() (io.Reader, error) {
 	request := hasura.RequestBody{
 		Type: "get_inconsistent_metadata",
 		Args: map[string]string{},

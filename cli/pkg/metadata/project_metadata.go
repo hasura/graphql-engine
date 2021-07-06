@@ -59,6 +59,11 @@ func (p *ProjectMetadata) Reload() (io.Reader, error) {
 	return metadataHandler.ReloadMetadata()
 }
 
+// GetInconsistentMetadata objects from hge server
+func (p *ProjectMetadata) GetInconsistentMetadata() (io.Reader, error) {
+	return cli.GetCommonMetadataOps(p.ec).GetInconsistentMetadataRaw()
+}
+
 // Diff will return the differences between metadata in the project (in JSON) and on the server
 func (p *ProjectMetadata) Diff() (io.Reader, error) {
 	w := new(bytes.Buffer)
