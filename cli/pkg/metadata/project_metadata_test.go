@@ -1,9 +1,17 @@
 package metadata
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"path/filepath"
+	"strings"
 	"testing"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+
+	"github.com/hasura/graphql-engine/cli/v2/pkg/migrate"
 
 	"github.com/stretchr/testify/require"
 
@@ -201,6 +209,116 @@ func TestProjectMetadata_Reload(t *testing.T) {
 			gotb, err := ioutil.ReadAll(got)
 			require.NoError(t, err)
 			require.JSONEq(t, tt.want, string(gotb))
+		})
+	}
+}
+
+func TestProjectMetadata_GetInconsistentMetadata(t *testing.T) {
+	type before func(t *testing.T, p *ProjectMetadata, m *migrate.ProjectMigrate, hgePort, queryEndpoint string)
+	configV2Before := func(t *testing.T, metadata *ProjectMetadata, migrations *migrate.ProjectMigrate, hgePort, queryEndpoint string) {
+		// - apply all migrations
+		// - apply metadata
+		// - drop a table via run_sql API
+		// - reload metadata
+		err := migrations.Apply(migrate.ApplyOnAllDatabases())
+		require.NoError(t, err)
+		_, err = metadata.Apply()
+		require.NoError(t, err)
+
+		// remove a table from database
+		c := testutil.NewHttpcClient(t, hgePort, nil)
+		r, err := c.NewRequest(
+			http.MethodPost,
+			queryEndpoint,
+			hasura.RequestBody{
+				Type: "run_sql",
+				Args: hasura.PGRunSQLInput{
+					SQL:                      "DROP table t1;",
+					CheckMetadataConsistency: func() *bool { var v = false; return &v }(),
+				},
+			},
+		)
+		require.NoError(t, err)
+		resp, err := c.Do(context.Background(), r, nil)
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+		require.NoError(t, err)
+
+		_, err = metadata.Reload()
+		require.NoError(t, err)
+	}
+	type fields struct {
+		projectDirectory string
+	}
+	tests := []struct {
+		name          string
+		fields        fields
+		before        before
+		hasuraImage   string
+		queryEndpoint string
+		wantErr       bool
+	}{
+		{
+			"can list inconsistent metadata config v3",
+			fields{
+				projectDirectory: "testdata/projectv3",
+			},
+			func(t *testing.T, metadata *ProjectMetadata, _ *migrate.ProjectMigrate, _ string, _ string) {
+				_, err := metadata.Apply()
+				require.NoError(t, err)
+			},
+			testutil.HasuraDockerImage,
+			"v2/query",
+			false,
+		},
+		{
+			"can list inconsistent metadata config v2",
+			fields{
+				projectDirectory: "testdata/projectv2",
+			},
+			configV2Before,
+			testutil.HasuraDockerImage,
+			"v2/query",
+			false,
+		},
+		{
+			"can list inconsistent metadata config v2 v1.3.3",
+			fields{
+				projectDirectory: "testdata/projectv2",
+			},
+			configV2Before,
+			"hasura/graphql-engine:v1.3.3",
+			"v1/query",
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			port, teardown := testutil.StartHasura(t, tt.hasuraImage)
+			hgeEndpoint := fmt.Sprintf("%s:%s", testutil.BaseURL, port)
+			defer teardown()
+
+			migrations, err := migrate.NewProjectMigrate(tt.fields.projectDirectory, migrate.WithEndpoint(hgeEndpoint), migrate.WithAdminSecret(testutil.TestAdminSecret))
+			require.NoError(t, err)
+			metadata, err := NewProjectMetadata(tt.fields.projectDirectory, WithEndpoint(hgeEndpoint), WithAdminSecret(testutil.TestAdminSecret))
+			require.NoError(t, err)
+			if tt.before != nil {
+				tt.before(t, metadata, migrations, port, tt.queryEndpoint)
+			}
+			got, err := metadata.GetInconsistentMetadata()
+			if tt.wantErr {
+				require.Error(t, err)
+			}
+			require.NoError(t, err)
+			gotb, err := ioutil.ReadAll(got)
+			require.NoError(t, err)
+			goldenFile := filepath.Join("testdata/get_inconsistent_metadata_test", strings.Join(strings.Split(tt.name, " "), "_")+".golden.json")
+
+			// uncomment the following line to update test golden file
+			// require.NoError(t, ioutil.WriteFile(goldenFile, gotb, 0655))
+
+			wantb, err := ioutil.ReadFile(goldenFile)
+			require.NoError(t, err)
+			require.JSONEq(t, string(wantb), string(gotb))
 		})
 	}
 }
