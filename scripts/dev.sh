@@ -213,8 +213,8 @@ function start_dbs() {
     mssql)
       mssql_start
     ;;
-    # bigquery omitted as test setup is atypical. See:
-    # https://github.com/hasura/graphql-engine-mono/wiki/Testing-BigQuery
+    # bigquery deliberately omitted as its test setup is atypical. See:
+    # https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#running-the-python-test-suite-on-bigquery
   esac
 }
 
@@ -267,11 +267,6 @@ if [ "$MODE" = "graphql-engine" ]; then
 
   export HASURA_GRAPHQL_DATABASE_URL=${HASURA_GRAPHQL_DATABASE_URL-$PG_DB_URL}
   export HASURA_GRAPHQL_SERVER_PORT=${HASURA_GRAPHQL_SERVER_PORT-8181}
-
-  export HASURA_BIGQUERY_SERVICE_ACCOUNT="<<<SERVICE_ACCOUNT_FILE_CONTENTS>>>" # `cat ../SERVICE_ACCOUNT_FILE.json`
-  export HASURA_BIGQUERY_PROJECT_ID="<<<PROJECT_ID>>>"
-  export HASURA_BIGQUERY_DATASETS="<<<CSV_DATASETS>>>"
-
 
   echo_pretty "We will connect to postgres at '$HASURA_GRAPHQL_DATABASE_URL'"
   echo_pretty "If you haven't overridden HASURA_GRAPHQL_DATABASE_URL, you can"
