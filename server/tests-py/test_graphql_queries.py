@@ -21,6 +21,9 @@ class TestGraphQLQueryBasicBigquery:
     def test_global_limit(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/global_limit.yaml", transport)
 
+    def test_offset_regression(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/offset_regression.yaml", transport)
+
     def test_user_perms(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/user_perms.yaml", transport)
 

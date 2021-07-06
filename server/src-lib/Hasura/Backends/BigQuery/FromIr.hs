@@ -14,7 +14,7 @@ module Hasura.Backends.BigQuery.FromIr
   , Top(..) -- Re-export for FromIrConfig.
   ) where
 
-import           Hasura.Backends.BigQuery.Source (BigQuerySourceConfig(..))
+import           Hasura.Backends.BigQuery.Source          (BigQuerySourceConfig (..))
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                      as HM
@@ -159,7 +159,7 @@ fromRootField =
   \case
     (Ir.QDBSingleRow s)    -> mkSQLSelect Rql.JASSingleObject s
     (Ir.QDBMultipleRows s) -> mkSQLSelect Rql.JASMultipleRows s
-    (Ir.QDBAggregation s)  -> fromSelectAggregate s
+    (Ir.QDBAggregation s)  -> fromSelectAggregate Nothing s
     (Ir.QDBConnection _)   -> refute $ pure ConnectionsNotSupported
 
 --------------------------------------------------------------------------------
@@ -219,9 +219,10 @@ fromSelectRows annSelectG = do
         else LeaveNumbersAlone
 
 fromSelectAggregate ::
-     Ir.AnnSelectG 'BigQuery (Const Void) [(Rql.FieldName, Ir.TableAggregateFieldG 'BigQuery (Const Void) Expression)] Expression
+     Maybe (EntityAlias, HashMap ColumnName ColumnName)
+  -> Ir.AnnSelectG 'BigQuery (Const Void) [( Rql.FieldName , Ir.TableAggregateFieldG 'BigQuery (Const Void) Expression)] Expression
   -> FromIr BigQuery.Select
-fromSelectAggregate annSelectG = do
+fromSelectAggregate minnerJoinFields annSelectG = do
   selectFrom <-
     case from of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
@@ -230,6 +231,11 @@ fromSelectAggregate annSelectG = do
     runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
+  mforeignKeyConditions <-
+    for minnerJoinFields $ \(entityAlias, mapping) ->
+      runReaderT
+        (fromMappingFieldNames (fromAlias selectFrom) mapping)
+        entityAlias
   fieldSources <-
     runReaderT
       (traverse
@@ -244,6 +250,7 @@ fromSelectAggregate annSelectG = do
     case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
       Nothing -> refute (pure NoProjectionFields)
       Just ne -> pure ne
+  indexAlias <- generateEntityAlias IndexTemplate
   pure
     Select
       { selectCardinality = One
@@ -256,7 +263,36 @@ fromSelectAggregate annSelectG = do
             (Aliased
                { aliasedThing =
                    Select
-                     { selectProjections = pure StarProjection
+                     { selectProjections =
+                         case mforeignKeyConditions of
+                           Nothing -> pure StarProjection
+                           Just innerJoinFields ->
+                             pure StarProjection <>
+                             -- We setup an index over every row in
+                             -- the sub select.  Then if you look at
+                             -- the outer Select, you can see we apply
+                             -- a WHERE that uses this index for
+                             -- LIMIT/OFFSET.
+                             pure
+                               (WindowProjection
+                                  (Aliased
+                                     { aliasedAlias = unEntityAlias indexAlias
+                                     , aliasedThing =
+                                         RowNumberOverPartitionBy
+                                           -- The row numbers start from 1.
+                                           (NE.fromList
+                                              (map
+                                                 (\(fieldName', _) -> fieldName')
+                                                 (innerJoinFields)))
+                                           argsOrderBy
+                                           -- Above: Having the order by
+                                           -- in here ensures that the
+                                           -- row numbers are ordered by
+                                           -- this ordering. Below, we
+                                           -- order again for the
+                                           -- general row order. Both
+                                           -- are needed!
+                                     }))
                      , selectFrom
                      , selectJoins =
                          argsJoins <> mapMaybe fieldSourceJoin fieldSources
@@ -269,14 +305,53 @@ fromSelectAggregate annSelectG = do
                      -- putting this elsewhere.
                      , selectFinalWantedFields = Nothing
                      , selectCardinality = Many
-                     , selectTop = argsTop
-                     , selectOffset = argsOffset
+                     , selectTop = maybe argsTop (const NoTop) mforeignKeyConditions
+                     , selectOffset = maybe argsOffset (const Nothing) mforeignKeyConditions
                      , selectGroupBy = mempty
                      }
                , aliasedAlias = entityAliasText (fromAlias selectFrom)
                })
       , selectJoins = mempty
-      , selectWhere = mempty
+      , selectWhere =
+          case mforeignKeyConditions of
+            Nothing -> mempty
+            Just {} ->
+              let offset =
+                    case argsOffset of
+                      Nothing -> mempty
+                      Just offset' ->
+                        Where
+                          -- Apply an offset using the row_number from above.
+                          [ OpExpression
+                              MoreOp
+                              (ColumnExpression
+                                 FieldName
+                                   { fieldNameEntity =
+                                       coerce (fromAlias selectFrom)
+                                   , fieldName = unEntityAlias indexAlias
+                                   })
+                              offset'
+                          ]
+                  limit =
+                    case argsTop of
+                      NoTop -> mempty
+                      Top limit' ->
+                        Where
+                          -- Apply a limit using the row_number from above.
+                          [ OpExpression
+                              LessOp
+                              (ColumnExpression
+                                 FieldName
+                                   { fieldNameEntity =
+                                       coerce (fromAlias selectFrom)
+                                   , fieldName = unEntityAlias indexAlias
+                                   })
+                              (ValueExpression . IntegerValue . Int64 . tshow $
+                               limit' + 1 -- Because the row_number() indexing starts at 1.
+                               -- So idx<l+1  means idx<2 where l = 1 i.e. "limit to 1 row".
+                               )
+                          ]
+               in offset <> limit
       , selectOrderBy = Nothing
       , selectOffset = Nothing
       }
@@ -976,7 +1051,9 @@ fromArrayAggregateSelectG ::
   -> ReaderT EntityAlias FromIr Join
 fromArrayAggregateSelectG annRelationSelectG = do
   joinFieldName <- lift (fromRelName aarRelationshipName)
-  select <- lift (fromSelectAggregate annSelectG)
+  select <- do
+    lhsEntityAlias <- ask
+    lift (fromSelectAggregate (pure (lhsEntityAlias, mapping)) annSelectG)
   alias <- lift (generateEntityAlias (ArrayAggregateTemplate joinFieldName))
   joinOn <- fromMappingFieldNames alias mapping
   innerJoinFields <-
