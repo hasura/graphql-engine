@@ -52,7 +52,7 @@ Examples
     hasura migrate apply --goto 125
     
     # Apply all down migrations upto version 125, last applied is 150
-    hasura migrate apply --goto 125
+    hasura migrate apply --type-down --goto 125
 
     # Rollback a particular version:
     hasura migrate apply --type down --version "<version>"
