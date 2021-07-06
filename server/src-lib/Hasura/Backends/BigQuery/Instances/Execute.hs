@@ -20,6 +20,7 @@ import qualified Hasura.Base.Error                as E
 import qualified Hasura.SQL.AnyBackend            as AB
 import qualified Hasura.Tracing                   as Tracing
 
+
 import           Hasura.Backends.BigQuery.Plan
 import           Hasura.Base.Error
 import           Hasura.EncJSON
