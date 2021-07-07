@@ -3,6 +3,7 @@
 
 module Hasura.SQL.AnyBackend
   ( AnyBackend
+  , liftTag
   , mkAnyBackend
   , mapBackend
   , traverseBackend
@@ -142,6 +143,25 @@ type SatisfiesForAllBackends
 --------------------------------------------------------------------------------
 -- Functions on AnyBackend
 
+-- | How to obtain a tag from a runtime value. This function is generated with
+-- Template Haskell for each 'Backend'. The case switch looks like this:
+--
+--   Postgres -> PostgresValue PostgresTag
+--   MSSQL    -> MSSQLValue    MSSQLTag
+--   ...
+liftTag :: BackendType -> AnyBackend BackendTag
+liftTag t = $(backendCase
+  -- the expression on which we do the case switch
+  [| t |]
+  -- the pattern for a given backend: the backend type itself
+  (\(con :| args) -> pure $ ConP con [ConP a [] | a <- args])
+  -- the body for a given backend: creating and wrapping the tag
+  (\b -> [| $(pure $ ConE $ getBackendValueName b) $(pure $ ConE $ getBackendTagName b) |])
+  -- no default case: every constructor should be handled
+  Nothing
+  )
+
+
 -- | Transforms an `AnyBackend i` into an `AnyBackend j`.
 mapBackend
   :: forall
@@ -215,7 +235,7 @@ mkAnyBackend
 mkAnyBackend =
   -- generates a case switch that associates a tag constructor to a value constructor
   --   case backendTag @b of
-  --     FooTag-> FooValue
+  --     FooTag -> FooValue
   --     BarTag -> BarValue
   $(backendCase [| backendTag @b |]
     -- the pattern for a backend
@@ -535,10 +555,7 @@ parseAnyBackendFromJSON backendKind value = do
   --   ...
   $(backendCase [| backendKind |]
      -- the pattern for a given backend
-     ( \b -> do
-         (con:args) <- pure b
-         pure $ ConP con [ConP arg [] | arg <- args]
-     )
+     ( \(con :| args) -> pure $ ConP con [ConP arg [] | arg <- args] )
      -- the body for each backend
      ( \b -> do
          let valueCon = pure $ ConE $ getBackendValueName b

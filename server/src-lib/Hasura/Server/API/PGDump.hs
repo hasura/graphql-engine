@@ -6,7 +6,6 @@ module Hasura.Server.API.PGDump
 
 import           Control.Exception     (IOException, try)
 import           Data.Aeson
-import           Data.Aeson.TH
 import           Data.Char             (isSpace)
 import           Data.Text.Conversions
 import           Hasura.Prelude
@@ -29,14 +28,13 @@ data PGDumpReqBody =
   , prbCleanOutput :: !Bool
   } deriving (Show, Eq)
 
-$(deriveToJSON hasuraJSON ''PGDumpReqBody)
-
 instance FromJSON PGDumpReqBody where
   parseJSON = withObject "Object" $ \o ->
     PGDumpReqBody
       <$> o .:? "source" .!= defaultSource
       <*> o .: "opts"
       <*> o .:? "clean_output" .!= False
+
 
 execPGDump
   :: (MonadError RTE.QErr m, MonadIO m)

@@ -317,6 +317,7 @@ library
                      , Hasura.Backends.BigQuery.DDL.RunSQL
                      , Hasura.Backends.BigQuery.DDL.Source
                      , Hasura.Backends.BigQuery.FromIr
+                     , Hasura.Backends.BigQuery.Instances.API
                      , Hasura.Backends.BigQuery.Instances.Execute
                      , Hasura.Backends.BigQuery.Instances.Schema
                      , Hasura.Backends.BigQuery.Instances.Transport
@@ -327,6 +328,26 @@ library
                      , Hasura.Backends.BigQuery.Source
                      , Hasura.Backends.BigQuery.ToQuery
                      , Hasura.Backends.BigQuery.Types
+
+                     , Hasura.Backends.MSSQL.Connection
+                     , Hasura.Backends.MSSQL.DDL
+                     , Hasura.Backends.MSSQL.DDL.BoolExp
+                     , Hasura.Backends.MSSQL.DDL.RunSQL
+                     , Hasura.Backends.MSSQL.DDL.Source
+                     , Hasura.Backends.MSSQL.FromIr
+                     , Hasura.Backends.MSSQL.Instances.API
+                     , Hasura.Backends.MSSQL.Instances.Execute
+                     , Hasura.Backends.MSSQL.Instances.Metadata
+                     , Hasura.Backends.MSSQL.Instances.Schema
+                     , Hasura.Backends.MSSQL.Instances.Transport
+                     , Hasura.Backends.MSSQL.Instances.Types
+                     , Hasura.Backends.MSSQL.Meta
+                     , Hasura.Backends.MSSQL.Plan
+                     , Hasura.Backends.MSSQL.SQL.Value
+                     , Hasura.Backends.MSSQL.ToQuery
+                     , Hasura.Backends.MSSQL.Types
+                     , Hasura.Backends.MSSQL.Types.Instances
+                     , Hasura.Backends.MSSQL.Types.Internal
 
                      , Hasura.Backends.Postgres.Connection
                      , Hasura.Backends.Postgres.DDL
@@ -340,8 +361,9 @@ library
                      , Hasura.Backends.Postgres.Execute.LiveQuery
                      , Hasura.Backends.Postgres.Execute.Insert
                      , Hasura.Backends.Postgres.Execute.Mutation
-                     , Hasura.Backends.Postgres.Execute.Types
                      , Hasura.Backends.Postgres.Execute.Prepare
+                     , Hasura.Backends.Postgres.Execute.Types
+                     , Hasura.Backends.Postgres.Instances.API
                      , Hasura.Backends.Postgres.Instances.Execute
                      , Hasura.Backends.Postgres.Instances.Metadata
                      , Hasura.Backends.Postgres.Instances.Schema
@@ -366,26 +388,6 @@ library
                      , Hasura.Backends.Postgres.Types.Table
                      , Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
 
-                     , Hasura.Backends.MSSQL.Connection
-                     , Hasura.Backends.MSSQL.DDL
-                     , Hasura.Backends.MSSQL.DDL.BoolExp
-                     , Hasura.Backends.MSSQL.DDL.RunSQL
-                     , Hasura.Backends.MSSQL.DDL.Source
-                     , Hasura.Backends.MSSQL.FromIr
-                     , Hasura.Backends.MSSQL.Instances.Execute
-                     , Hasura.Backends.MSSQL.Instances.Metadata
-                     , Hasura.Backends.MSSQL.Instances.Schema
-                     , Hasura.Backends.MSSQL.Instances.Transport
-                     , Hasura.Backends.MSSQL.Instances.Types
-                     , Hasura.Backends.MSSQL.Meta
-                     , Hasura.Backends.MSSQL.Plan
-                     , Hasura.Backends.MSSQL.SQL.Value
-                     , Hasura.Backends.MSSQL.ToQuery
-                     , Hasura.Backends.MSSQL.Types
-                     , Hasura.Backends.MSSQL.Types.Instances
-                     , Hasura.Backends.MSSQL.Types.Internal
-
-
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
                      , Hasura.Logging
@@ -395,9 +397,11 @@ library
                      , Hasura.Server.Auth
                      , Hasura.Server.Init
                      , Hasura.Server.Init.Config
+                     , Hasura.Server.API.Backend
+                     , Hasura.Server.API.Instances
+                     , Hasura.Server.API.Metadata
                      , Hasura.Server.API.Query
                      , Hasura.Server.API.V2Query
-                     , Hasura.Server.API.Metadata
                      , Hasura.Server.Utils
                      , Hasura.Server.Version
                      , Hasura.Server.Version.TH
