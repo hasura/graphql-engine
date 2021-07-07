@@ -24,6 +24,7 @@ import           Control.Lens                           ((^.))
 import           Control.Monad.Unique
 import           Data.Aeson                             ((.:), (.:?))
 import           Data.FileEmbed                         (makeRelativeToProject)
+import           Network.URI                            (URI)
 
 import qualified Hasura.GraphQL.Parser.Monad            as P
 
@@ -62,7 +63,7 @@ fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url header
   let hdrsWithDefaults = addDefaultHeaders headers
 
   initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
-  initReq <- onLeft initReqE throwHttpErr
+  initReq <- onLeft initReqE (throwRemoteSchemaHttp url)
   let req = initReq
            { HTTP.method = "POST"
            , HTTP.requestHeaders = hdrsWithDefaults
@@ -70,7 +71,7 @@ fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url header
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
   res  <- liftIO $ try $ HTTP.httpLbs req manager
-  resp <- onLeft res throwHttpErr
+  resp <- onLeft res (throwRemoteSchemaHttp url)
 
   let respData = resp ^. Wreq.responseBody
       statusCode = resp ^. Wreq.responseStatus . Wreq.statusCode
@@ -78,7 +79,7 @@ fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url header
 
   -- Parse the JSON into flat GraphQL type AST
   (FromIntrospection introspectRes) :: (FromIntrospection IntrospectionResult) <-
-    onLeft (J.eitherDecode respData) (remoteSchemaErr . T.pack)
+    onLeft (J.eitherDecode respData) (throwRemoteSchema . T.pack)
 
   -- Check that the parsed GraphQL type info is valid by running the schema generation
   (queryParsers, mutationParsers, subscriptionParsers) <-
@@ -92,24 +93,9 @@ fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url header
   -- is called by simple encoding the result to JSON.
   return $ RemoteSchemaCtx schemaName introspectRes schemaInfo respData parsedIntrospection mempty
   where
-    remoteSchemaErr :: Text -> m a
-    remoteSchemaErr = throw400 RemoteSchemaError
-
-    throwHttpErr :: HTTP.HttpException -> m a
-    throwHttpErr = throwWithInternal httpExceptMsg . httpExceptToJSON
-
-    throwNon200 st = throwWithInternal (non200Msg st) . decodeNon200Resp
-
-    throwWithInternal msg v =
-      let err = err400 RemoteSchemaError $ T.pack msg
-      in throwError err{qeInternal = Just $ J.toJSON v}
-
-    httpExceptMsg =
-      "HTTP exception occurred while sending the request to " <> show url
-
-    non200Msg st = "introspection query to " <> show url
-                   <> " has responded with " <> show st <> " status code"
-
+    throwNon200 st = throwRemoteSchemaWithInternal (non200Msg st) . decodeNon200Resp
+    non200Msg st = T.pack $ "introspection query to " <> show url
+                            <> " has responded with " <> show st <> " status code"
     decodeNon200Resp bs = case J.eitherDecode bs of
       Right a -> J.object ["response" J..= (a :: J.Value)]
       Left _  -> J.object ["raw_body" J..= bsToTxt (BL.toStrict bs)]
@@ -348,7 +334,7 @@ execRemoteGQ env manager userInfo reqHdrs rsi gqlReq@GQLReq{..} =  do
       headers  = Map.toList $ foldr Map.union Map.empty hdrMaps
       finalHeaders = addDefaultHeaders headers
   initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
-  initReq <- onLeft initReqE httpThrow
+  initReq <- onLeft initReqE (throwRemoteSchemaHttp url)
   let req = initReq
            { HTTP.method = "POST"
            , HTTP.requestHeaders = finalHeaders
@@ -357,13 +343,30 @@ execRemoteGQ env manager userInfo reqHdrs rsi gqlReq@GQLReq{..} =  do
            }
   Tracing.tracedHttpRequest req \req' -> do
     (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req' manager
-    resp <- onLeft res httpThrow
+    resp <- onLeft res (throwRemoteSchemaHttp url)
     pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
   where
     RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
-    httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
-    httpThrow = \case
-      HTTP.HttpExceptionRequest _req content -> throw500 $ tshow content
-      HTTP.InvalidUrlException _url reason   -> throw500 $ tshow reason
 
     userInfoToHdrs = sessionVariablesToHeaders $ _uiSession userInfo
+
+throwRemoteSchema
+  :: QErrM m
+  => Text -> m a
+throwRemoteSchema = throw400 RemoteSchemaError
+
+throwRemoteSchemaWithInternal
+  :: (QErrM m, J.ToJSON a)
+  => Text -> a -> m b
+throwRemoteSchemaWithInternal msg v =
+  let err = err400 RemoteSchemaError msg
+  in throwError err{qeInternal = Just $ J.toJSON v}
+
+throwRemoteSchemaHttp
+  :: QErrM m
+  => URI -> HTTP.HttpException -> m a
+throwRemoteSchemaHttp url =
+  throwRemoteSchemaWithInternal (T.pack httpExceptMsg) . httpExceptToJSON
+  where
+    httpExceptMsg =
+      "HTTP exception occurred while sending the request to " <> show url

@@ -8,6 +8,7 @@
 - server: Add global limit to BigQuery via the `global_select_limit`
   field in the connection configuration
 - server: include action and event names in log output
+- server: log all HTTP errors in remote schema calls as `remote-schema-error` with details
 
 ## v2.0.1
 

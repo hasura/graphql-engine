@@ -3,8 +3,22 @@ url: /v1/graphql
 status: 200
 response:
   errors:
-    - message: ResponseTimeout
-      extensions: {'path': '$', 'code': 'unexpected'}
+    - message: HTTP exception occurred while sending the request to http://localhost:5000/hello-graphql
+      extensions:
+        code: remote-schema-error
+        path: $
+        internal:
+          message: ResponseTimeout
+          request:
+            proxy:
+            secure: false
+            path: /hello-graphql
+            responseTimeout: ResponseTimeoutMicro 5000000
+            method: POST
+            host: localhost
+            requestVersion: HTTP/1.1
+            redirectCount: '10'
+            port: '5000'
 query:
   query: |
     query {
