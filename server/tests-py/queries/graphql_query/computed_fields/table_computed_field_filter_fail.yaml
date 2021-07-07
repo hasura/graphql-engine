@@ -1,0 +1,20 @@
+description: Query author by using a table computed field with input arguments in
+  filter (Testing limitation)
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query {
+      author(where: {get_articles: {title: {_ilike: "%random%"}}}){
+        id
+        first_name
+        last_name
+        full_name
+      }
+    }
+response:
+  errors:
+  - extensions:
+      path: $.selectionSet.author.args.where.get_articles
+      code: validation-failed
+    message: "field \"get_articles\" not found in type: 'author_bool_exp'"

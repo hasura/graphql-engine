@@ -44,6 +44,7 @@ data ComputedFieldDefinition b
 deriving instance (Backend b) => Show (ComputedFieldDefinition b)
 deriving instance (Backend b) => Eq (ComputedFieldDefinition b)
 instance (Backend b) => NFData (ComputedFieldDefinition b)
+instance (Backend b) => Hashable (ComputedFieldDefinition b)
 instance (Backend b) => Cacheable (ComputedFieldDefinition b)
 instance (Backend b) => ToJSON (ComputedFieldDefinition b) where
   toJSON = genericToJSON hasuraJSON{omitNothingFields = True}
@@ -59,6 +60,8 @@ data FunctionTableArgument
     !Int -- ^ argument index
   deriving (Show, Eq, Generic)
 instance Cacheable FunctionTableArgument
+instance NFData FunctionTableArgument
+instance Hashable FunctionTableArgument
 
 instance ToJSON FunctionTableArgument where
   toJSON FTAFirst             = String "first_argument"
@@ -72,6 +75,8 @@ data FunctionSessionArgument
     !Int -- ^ The ordinal position in the function input parameters
   deriving (Show, Eq, Generic)
 instance Cacheable FunctionSessionArgument
+instance NFData FunctionSessionArgument
+instance Hashable FunctionSessionArgument
 
 instance ToJSON FunctionSessionArgument where
   toJSON (FunctionSessionArgument argName _) = toJSON argName
@@ -90,6 +95,8 @@ data ComputedFieldReturn (b :: BackendType)
 deriving instance Backend b => Show (ComputedFieldReturn b)
 deriving instance Backend b => Eq (ComputedFieldReturn b)
 instance Backend b => Cacheable (ComputedFieldReturn b)
+instance Backend b => NFData (ComputedFieldReturn b)
+instance Backend b => Hashable (ComputedFieldReturn b)
 
 instance Backend b => ToJSON (ComputedFieldReturn b) where
   toJSON = genericToJSON $
@@ -100,13 +107,15 @@ $(makePrisms ''ComputedFieldReturn)
 
 data ComputedFieldFunction (b :: BackendType)
   = ComputedFieldFunction
-  { _cffName            :: !QualifiedFunction
+  { _cffName            :: !(FunctionName b)
   , _cffInputArgs       :: !(Seq.Seq (FunctionArg b))
   , _cffTableArgument   :: !FunctionTableArgument
   , _cffSessionArgument :: !(Maybe FunctionSessionArgument)
   , _cffDescription     :: !(Maybe PGDescription)
   } deriving (Show, Eq, Generic)
 instance (Backend b) => Cacheable (ComputedFieldFunction b)
+instance (Backend b) => NFData (ComputedFieldFunction b)
+instance (Backend b) => Hashable (ComputedFieldFunction b)
 
 instance (Backend b) => ToJSON (ComputedFieldFunction b) where
   toJSON = genericToJSON hasuraJSON
@@ -121,7 +130,9 @@ data ComputedFieldInfo (b :: BackendType)
   } deriving (Generic)
 deriving instance (Backend b) => Eq (ComputedFieldInfo b)
 deriving instance (Backend b) => Show (ComputedFieldInfo b)
+instance (Backend b) => NFData (ComputedFieldInfo b)
 instance (Backend b) => Cacheable (ComputedFieldInfo b)
+instance (Backend b) => Hashable (ComputedFieldInfo b)
 instance (Backend b) => ToJSON (ComputedFieldInfo b) where
   -- spelling out the JSON instance in order to skip the Trees That Grow field
   toJSON (ComputedFieldInfo _ name func tp comment) =

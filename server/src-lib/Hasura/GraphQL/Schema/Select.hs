@@ -187,7 +187,7 @@ selectTableByPk sourceName tableInfo fieldName description selectPermissions = r
     stringifyNum <- asks $ qcStringifyNum . getter
     argsParser <- sequenceA <$> for primaryKeys \columnInfo -> do
       field <- columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
-      pure $ BoolFld . AVCol columnInfo . pure . AEQ True . mkParameter <$>
+      pure $ BoolFld . AVColumn columnInfo . pure . AEQ True . mkParameter <$>
         P.field (pgiName columnInfo) (pgiDescription columnInfo) field
     selectionSetParser <- tableSelectionSet sourceName tableInfo selectPermissions
     pure $ P.subselection fieldName description argsParser selectionSetParser
@@ -581,8 +581,7 @@ defaultTableArgs sourceName tableInfo selectPermissions = do
           }
   pure $ result `P.bindFields` \args -> do
     onJust (IR._saOrderBy args) \orderBy ->
-      onJust (IR._saDistinct args) \distinct ->
-        validateArgs orderBy distinct
+      onJust (IR._saDistinct args) (validateArgs orderBy)
     pure args
   where
     validateArgs orderByCols distinctCols = do
@@ -1469,4 +1468,4 @@ nodeField = do
                 pgColumnType = pgiType columnInfo
             pgValue <- modifyErr modifyErrFn $ parseScalarValueColumnType pgColumnType columnValue
             let unpreparedValue = UVParameter Nothing $ ColumnValue pgColumnType pgValue
-            pure $ IR.BoolFld $ IR.AVCol columnInfo [IR.AEQ True unpreparedValue]
+            pure $ IR.BoolFld $ IR.AVColumn columnInfo [IR.AEQ True unpreparedValue]

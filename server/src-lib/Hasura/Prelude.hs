@@ -91,6 +91,7 @@ import qualified Data.ByteString.Base64.Lazy       as Base64
 import qualified Data.ByteString.Lazy              as BL
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
+import qualified Data.Hashable                     as H
 import qualified Data.Text                         as T
 import qualified Data.Text.Encoding                as TE
 import qualified Data.Text.Encoding.Error          as TE
@@ -214,3 +215,6 @@ tshow = T.pack . show
 
 hasuraJSON :: J.Options
 hasuraJSON = J.aesonPrefix J.snakeCase
+
+instance (Hashable a) => Hashable (Seq a) where
+  hashWithSalt i = H.hashWithSalt i . toList

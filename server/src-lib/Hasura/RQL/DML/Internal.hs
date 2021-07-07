@@ -154,6 +154,22 @@ checkPermOnCol pt allowedCols col = do
         , permTypeToCode pt <> " column " <>> col
         ]
 
+checkSelectPermOnScalarComputedField
+  :: forall b m
+   . (UserInfoM m, QErrM m)
+  => SelPermInfo b
+  -> ComputedFieldName
+  -> m ()
+checkSelectPermOnScalarComputedField selPermInfo computedField = do
+  role <- askCurRole
+  unless (M.member computedField $ spiScalarComputedFields selPermInfo) $
+    throw400 PermissionDenied $ permErrMsg role
+  where
+    permErrMsg role
+      | role == adminRoleName = "no such computed field exists : " <>> computedField
+      | otherwise =
+        "role " <> role <<> " does not have permission to select computed field" <>> computedField
+
 valueParserWithCollectableType
   :: forall pgKind m
    . (Backend ('Postgres pgKind), MonadError QErr m)
@@ -222,15 +238,32 @@ checkOnColExp
   -> AnnBoolExpFldSQL b
   -> m (AnnBoolExpFldSQL b)
 checkOnColExp spi sessVarBldr annFld = case annFld of
-  AVCol colInfo _ -> do
+  AVColumn colInfo _ -> do
     let cn = pgiColumn colInfo
     checkSelOnCol spi cn
     return annFld
-  AVRel relInfo nesAnn -> do
+  AVRelationship relInfo nesAnn -> do
     relSPI <- snd <$> fetchRelDet (riName relInfo) (riRTable relInfo)
     modAnn <- checkSelPerm relSPI sessVarBldr nesAnn
     resolvedFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter relSPI
-    return $ AVRel relInfo $ andAnnBoolExps modAnn resolvedFltr
+    return $ AVRelationship relInfo $ andAnnBoolExps modAnn resolvedFltr
+  AVComputedField cfBoolExp -> do
+    roleName <- askCurRole
+    let fieldName = _acfbName cfBoolExp
+    case _acfbBoolExp cfBoolExp of
+      CFBEScalar _ -> do
+        checkSelectPermOnScalarComputedField spi fieldName
+        pure annFld
+      CFBETable table nesBoolExp -> do
+        tableInfo <- modifyErrAndSet500 ("function " <>) $ askTabInfoSource table
+        let errMsg _ = "role " <> roleName <<> " does not have permission to read "
+                     <> " computed field " <> fieldName <<> "; no permission on table " <>> table
+        tableSPI <- modifyErr errMsg $  askSelPermInfo tableInfo
+        modBoolExp <- checkSelPerm tableSPI sessVarBldr nesBoolExp
+        resolvedFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter tableSPI
+      -- Including table permission filter; "input condition" AND "permission filter condition"
+        let finalBoolExp = andAnnBoolExps modBoolExp resolvedFltr
+        pure $ AVComputedField cfBoolExp{_acfbBoolExp = CFBETable table finalBoolExp}
 
 convAnnBoolExpPartialSQL
   :: (Applicative f, Backend backend)

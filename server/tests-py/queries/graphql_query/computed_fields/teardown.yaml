@@ -4,6 +4,7 @@ args:
   args:
     sql: |
       DROP FUNCTION fetch_articles(text, author);
+      DROP FUNCTION fetch_articles_plain(author);
       DROP FUNCTION full_name(author);
       DROP TABLE article;
       DROP TABLE author;

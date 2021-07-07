@@ -93,7 +93,7 @@ selectFromToFromItem pfx = \case
 -- possible currently
 selectFromToQual :: SelectFrom ('Postgres pgKind) -> S.Qual
 selectFromToQual = \case
-  FromTable tn        -> S.QualTable tn
+  FromTable table     -> S.QualTable table
   FromIdentifier i    -> S.QualifiedIdentifier i Nothing
   FromFunction qf _ _ -> S.QualifiedIdentifier (functionToIdentifier qf) Nothing
 

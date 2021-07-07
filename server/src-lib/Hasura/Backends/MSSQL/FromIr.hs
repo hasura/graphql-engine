@@ -415,11 +415,11 @@ fromAnnBoolExpFld
   -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
-    IR.AVCol pgColumnInfo opExpGs -> do
+    IR.AVColumn pgColumnInfo opExpGs -> do
       expression <- fromColumnInfoForBoolExp pgColumnInfo
       expressions <- traverse (lift . fromOpExpG expression) opExpGs
       pure (AndExpression expressions)
-    IR.AVRel IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
+    IR.AVRelationship IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
       selectFrom <- lift (fromQualifiedTable table)
       foreignKeyConditions <- fromMapping selectFrom mapping
       whereExpression <-
