@@ -5,7 +5,6 @@ module Hasura.Server.API.Query where
 import           Hasura.Prelude
 
 import qualified Data.Environment                    as Env
-import qualified Data.HashMap.Strict                 as HM
 import qualified Database.PG.Query                   as Q
 import qualified Network.HTTP.Client                 as HTTP
 
@@ -163,23 +162,13 @@ instance FromJSON RQLQuery where
       VIVersion1 -> RQV1 <$> parseJSON val
       VIVersion2 -> RQV2 <$> parseJSON val
 
-instance ToJSON RQLQuery where
-  toJSON = \case
-    RQV1 q -> embedVersion VIVersion1 $ toJSON q
-    RQV2 q -> embedVersion VIVersion2 $ toJSON q
-    where
-      embedVersion version (Object o) =
-        Object $ HM.insert "version" (toJSON version) o
-      -- never happens since JSON value of RQL queries are always objects
-      embedVersion _ _ = error "Unexpected: toJSON of RQL queries are not objects"
-
-$(deriveJSON
+$(deriveFromJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
                  , sumEncoding = TaggedObject "type" "args"
                  }
   ''RQLQueryV1)
 
-$(deriveJSON
+$(deriveFromJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 4
                  , sumEncoding = TaggedObject "type" "args"
                  , tagSingleConstructors = True
@@ -383,8 +372,8 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQTrackFunction q               -> runTrackFunc q
       RQUntrackFunction q             -> runUntrackFunc q
 
-      RQCreateObjectRelationship q    -> runCreateRelationship ObjRel q
-      RQCreateArrayRelationship  q    -> runCreateRelationship ArrRel q
+      RQCreateObjectRelationship q    -> runCreateRelationship ObjRel $ unCreateObjRel q
+      RQCreateArrayRelationship  q    -> runCreateRelationship ArrRel $ unCreateArrRel q
       RQDropRelationship  q           -> runDropRel q
       RQSetRelationshipComment  q     -> runSetRelComment q
       RQRenameRelationship q          -> runRenameRel q

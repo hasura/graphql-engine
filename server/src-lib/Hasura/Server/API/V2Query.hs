@@ -48,11 +48,12 @@ data RQLQuery
   | RQBulk ![RQLQuery]
   deriving (Show)
 
-$(deriveJSON
+$(deriveFromJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
                  , sumEncoding = TaggedObject "type" "args"
                  }
   ''RQLQuery)
+
 
 runQuery
   :: ( HasVersion
