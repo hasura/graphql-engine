@@ -507,16 +507,13 @@ getColExpDeps
   -> AnnBoolExpFld b (PartialSQLExp b)
   -> [SchemaDependency]
 getColExpDeps source tableName = \case
-  AVCol colInfo opExps ->
+  AVColumn colInfo opExps ->
     let columnName = pgiColumn colInfo
         colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
         colDep = mkColDep @b colDepReason source tableName columnName
-        depColsInOpExp = mapMaybe opExpDepCol opExps
-        colDepsInOpExp = do
-          (col, rootTable) <- depColsInOpExp
-          pure $ mkColDep @b DROnType source (fromMaybe tableName rootTable) col
+        colDepsInOpExp = mkOpExpDeps opExps
     in colDep:colDepsInOpExp
-  AVRel relInfo relBoolExp ->
+  AVRelationship relInfo relBoolExp ->
     let relationshipName = riName relInfo
         relationshipTable = riRTable relInfo
         schemaDependency =
@@ -526,3 +523,18 @@ getColExpDeps source tableName = \case
               $ SOITableObj @b tableName (TORel relationshipName))
             DROnType
     in schemaDependency : getBoolExpDeps source relationshipTable relBoolExp
+
+  AVComputedField computedFieldBoolExp ->
+    let mkComputedFieldDep' r =
+          mkComputedFieldDep @b r source tableName $ _acfbName computedFieldBoolExp
+    in case _acfbBoolExp computedFieldBoolExp of
+      CFBEScalar opExps ->
+        let computedFieldDep = mkComputedFieldDep' $
+                               bool DRSessionVariable DROnType $ any hasStaticExp opExps
+        in computedFieldDep : mkOpExpDeps opExps
+      CFBETable cfTable cfTableBoolExp ->
+        mkComputedFieldDep' DROnType : getBoolExpDeps source cfTable cfTableBoolExp
+  where
+    mkOpExpDeps opExps = do
+      (col, rootTable) <- mapMaybe opExpDepCol opExps
+      pure $ mkColDep @b DROnType source (fromMaybe tableName rootTable) col

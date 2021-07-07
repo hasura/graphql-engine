@@ -186,9 +186,10 @@ fromSelectRows annSelectG = do
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
   selectProjections <-
-    case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
-      Nothing -> refute (pure NoProjectionFields)
-      Just ne -> pure ne
+    onNothing
+    (NE.nonEmpty
+       (concatMap (toList . fieldSourceProjections) fieldSources))
+    (refute (pure NoProjectionFields))
   globalTop <- getGlobalTop
   pure
     Select
@@ -247,9 +248,10 @@ fromSelectAggregate minnerJoinFields annSelectG = do
          fields)
       (fromAlias selectFrom)
   selectProjections <-
-    case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
-      Nothing -> refute (pure NoProjectionFields)
-      Just ne -> pure ne
+    onNothing
+    (NE.nonEmpty
+       (concatMap (toList . fieldSourceProjections) fieldSources))
+    (refute (pure NoProjectionFields))
   indexAlias <- generateEntityAlias IndexTemplate
   pure
     Select
@@ -280,10 +282,7 @@ fromSelectAggregate minnerJoinFields annSelectG = do
                                      , aliasedThing =
                                          RowNumberOverPartitionBy
                                            -- The row numbers start from 1.
-                                           (NE.fromList
-                                              (map
-                                                 (\(fieldName', _) -> fieldName')
-                                                 (innerJoinFields)))
+                                           (NE.fromList (map fst innerJoinFields))
                                            argsOrderBy
                                            -- Above: Having the order by
                                            -- in here ensures that the
@@ -364,9 +363,7 @@ fromSelectAggregate minnerJoinFields annSelectG = do
                   } = annSelectG
     Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
-      case mPermLimit of
-        Nothing    -> NoTop
-        Just limit -> Top limit
+      maybe NoTop Top mPermLimit
     stringifyNumbers =
       if num
         then StringifyNumbers
@@ -575,11 +572,11 @@ fromAnnBoolExpFld ::
      Ir.AnnBoolExpFld 'BigQuery Expression -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
-    Ir.AVCol pgColumnInfo opExpGs -> do
+    Ir.AVColumn pgColumnInfo opExpGs -> do
       expression <- fmap ColumnExpression (fromPGColumnInfo pgColumnInfo)
       expressions <- traverse (lift . fromOpExpG expression) opExpGs
       pure (AndExpression expressions)
-    Ir.AVRel Rql.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
+    Ir.AVRelationship Rql.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
       selectFrom <- lift (fromQualifiedTable table)
       foreignKeyConditions <- fromMapping selectFrom mapping
       whereExpression <-
@@ -730,10 +727,10 @@ fromTableAggregateFieldG args permissionBasedTop stringifyNumbers (Rql.FieldName
           (fromAnnFieldsG (argsExistingJoins args) stringifyNumbers)
           fields
       arrayAggProjections <-
-        case NE.nonEmpty
-               (concatMap (toList . fieldSourceProjections) fieldSources) of
-          Nothing -> refute (pure NoProjectionFields)
-          Just ne -> pure ne
+        onNothing
+        (NE.nonEmpty
+           (concatMap (toList . fieldSourceProjections) fieldSources))
+        (refute (pure NoProjectionFields))
       globalTop <- lift getGlobalTop
       pure
         (ArrayAggFieldSource
@@ -1069,7 +1066,7 @@ fromArrayAggregateSelectG annRelationSelectG = do
           innerJoinFields
   let projections =
           (selectProjections select <> NE.fromList joinFieldProjections)
-  let joinSelect =
+      joinSelect =
           select
             { selectWhere = selectWhere select
             , selectGroupBy = map fst innerJoinFields
@@ -1173,92 +1170,89 @@ fromArrayRelationSelectG annRelationSelectG = do
                  , aliasedAlias = fieldName fieldName'
                  })
           innerJoinFields
-  joinSelect <-
-    pure
-      Select
-        { selectCardinality = One
-        , selectFinalWantedFields = selectFinalWantedFields select
-        , selectTop = NoTop
-        , selectProjections =
-            NE.fromList joinFieldProjections <>
-            pure
-              (ArrayAggProjection
-                 Aliased
-                   { aliasedThing =
-                       ArrayAgg
-                         { arrayAggProjections =
-                             fmap
-                               aliasToFieldProjection
-                               (selectProjections select)
-                         , arrayAggOrderBy = Nothing
-                         , arrayAggTop = selectTop select
-                           -- The sub-select takes care of caring about global top.
-                           --
-                           -- This handles the LIMIT need.
-                         }
-                   , aliasedAlias = aggFieldName
-                   })
-        , selectFrom =
-            FromSelect
-              (Aliased
-                 { aliasedAlias = coerce (fromAlias (selectFrom select))
-                 , aliasedThing =
-                     Select
-                       { selectProjections =
-                           selectProjections select <>
-                           NE.fromList joinFieldProjections <>
-                           pure
-                             (WindowProjection
-                                (Aliased
-                                   { aliasedAlias = unEntityAlias indexAlias
-                                   , aliasedThing =
-                                       RowNumberOverPartitionBy
-                                         -- The row numbers start from 1.
-                                         (NE.fromList
-                                            (map
-                                               (\(fieldName', _) -> fieldName')
-                                               innerJoinFields))
-                                         (selectOrderBy select)
-                                         -- Above: Having the order by
-                                         -- in here ensures that the
-                                         -- row numbers are ordered by
-                                         -- this ordering. Below, we
-                                         -- order again for the
-                                         -- general row order. Both
-                                         -- are needed!
-                                   }))
-                       , selectFrom = selectFrom select
-                       , selectJoins = selectJoins select
-                       , selectWhere = selectWhere select
-                       , selectOrderBy = selectOrderBy select
-                         -- Above: This orders the rows themselves. In
-                         -- the RowNumberOverPartitionBy, we also set
-                         -- a row order for the calculation of the
-                         -- indices. Both are needed!
-                       , selectOffset = Nothing
-                       , selectFinalWantedFields =
-                           selectFinalWantedFields select
-                       , selectCardinality = Many
-                       , selectTop = NoTop
-                       , selectGroupBy = mempty
-                       }
-                 })
-        , selectWhere =
-            case selectOffset select of
-              Nothing -> mempty
-              Just offset ->
-                Where
-                  [ OpExpression
-                      MoreOp
-                      (ColumnExpression FieldName {fieldNameEntity = coerce (fromAlias (selectFrom select)), fieldName = unEntityAlias indexAlias})
-                      offset
-                  ]
-        , selectOrderBy = Nothing -- Not needed.
-        , selectJoins = mempty
-        , selectOffset = Nothing
-      -- This group by corresponds to the field name projections above. E.g. artist_other_id
-        , selectGroupBy = map (\(fieldName', _) -> fieldName') innerJoinFields
-        }
+  let joinSelect =
+          Select
+            { selectCardinality = One
+            , selectFinalWantedFields = selectFinalWantedFields select
+            , selectTop = NoTop
+            , selectProjections =
+                NE.fromList joinFieldProjections <>
+                pure
+                  (ArrayAggProjection
+                     Aliased
+                       { aliasedThing =
+                           ArrayAgg
+                             { arrayAggProjections =
+                                 fmap
+                                   aliasToFieldProjection
+                                   (selectProjections select)
+                             , arrayAggOrderBy = Nothing
+                             , arrayAggTop = selectTop select
+                               -- The sub-select takes care of caring about global top.
+                               --
+                               -- This handles the LIMIT need.
+                             }
+                       , aliasedAlias = aggFieldName
+                       })
+            , selectFrom =
+                FromSelect
+                  (Aliased
+                     { aliasedAlias = coerce (fromAlias (selectFrom select))
+                     , aliasedThing =
+                         Select
+                           { selectProjections =
+                               selectProjections select <>
+                               NE.fromList joinFieldProjections <>
+                               pure
+                                 (WindowProjection
+                                    (Aliased
+                                       { aliasedAlias = unEntityAlias indexAlias
+                                       , aliasedThing =
+                                           RowNumberOverPartitionBy
+                                             -- The row numbers start from 1.
+                                             (NE.fromList
+                                                (map fst innerJoinFields))
+                                             (selectOrderBy select)
+                                             -- Above: Having the order by
+                                             -- in here ensures that the
+                                             -- row numbers are ordered by
+                                             -- this ordering. Below, we
+                                             -- order again for the
+                                             -- general row order. Both
+                                             -- are needed!
+                                       }))
+                           , selectFrom = selectFrom select
+                           , selectJoins = selectJoins select
+                           , selectWhere = selectWhere select
+                           , selectOrderBy = selectOrderBy select
+                             -- Above: This orders the rows themselves. In
+                             -- the RowNumberOverPartitionBy, we also set
+                             -- a row order for the calculation of the
+                             -- indices. Both are needed!
+                           , selectOffset = Nothing
+                           , selectFinalWantedFields =
+                               selectFinalWantedFields select
+                           , selectCardinality = Many
+                           , selectTop = NoTop
+                           , selectGroupBy = mempty
+                           }
+                     })
+            , selectWhere =
+                case selectOffset select of
+                  Nothing -> mempty
+                  Just offset ->
+                    Where
+                      [ OpExpression
+                          MoreOp
+                          (ColumnExpression FieldName {fieldNameEntity = coerce (fromAlias (selectFrom select)), fieldName = unEntityAlias indexAlias})
+                          offset
+                      ]
+            , selectOrderBy = Nothing -- Not needed.
+            , selectJoins = mempty
+            , selectOffset = Nothing
+          -- This group by corresponds to the field name projections above. E.g. artist_other_id
+            , selectGroupBy = map (fst) innerJoinFields
+            }
   pure
     Join
       { joinAlias = alias

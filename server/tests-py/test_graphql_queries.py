@@ -928,6 +928,15 @@ class TestGraphQLQueryComputedFields:
     def test_tracked_function_as_computed_field(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/tracked_function_as_comp_field.yaml')
 
+    def test_scalar_computed_field_filter(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/scalar_computed_field_filter.yaml')
+
+    def test_table_computed_field_filter(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/table_computed_field_filter.yaml')
+
+    def test_table_computed_field_filter_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/table_computed_field_filter_fail.yaml')
+
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryCaching:

@@ -42,10 +42,10 @@ instance Show FunctionVolatility where
 
 newtype FunctionArgName =
   FunctionArgName { getFuncArgNameTxt :: Text}
-  deriving (Show, Eq, NFData, ToJSON, FromJSON, ToTxt, IsString, Generic, Arbitrary, Cacheable)
+  deriving (Show, Eq, NFData, ToJSON, FromJSON, ToTxt, IsString, Generic, Arbitrary, Cacheable, Hashable)
 
 newtype HasDefault = HasDefault { unHasDefault :: Bool }
-  deriving (Show, Eq, ToJSON, Cacheable)
+  deriving (Show, Eq, ToJSON, Cacheable, NFData, Hashable)
 
 data FunctionArg (b :: BackendType)
   = FunctionArg
@@ -56,6 +56,8 @@ data FunctionArg (b :: BackendType)
 deriving instance Backend b => Show (FunctionArg b)
 deriving instance Backend b => Eq   (FunctionArg b)
 instance Backend b => Cacheable (FunctionArg b)
+instance Backend b => NFData (FunctionArg b)
+instance Backend b => Hashable (FunctionArg b)
 instance (Backend b) => ToJSON (FunctionArg b) where
   toJSON = genericToJSON hasuraJSON
 

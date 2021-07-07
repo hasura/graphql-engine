@@ -211,9 +211,10 @@ mkQual :: QualifiedTable -> Qual
 mkQual = QualTable
 
 instance ToSQL Qual where
-  toSQL (QualifiedIdentifier i tyM) = toSQL i <> toSQL tyM
-  toSQL (QualTable qt)              = toSQL qt
-  toSQL (QualVar v)                 = TB.text v
+  toSQL (QualifiedIdentifier i Nothing)   = toSQL i
+  toSQL (QualifiedIdentifier i (Just ty)) = parenB (toSQL i <> toSQL ty)
+  toSQL (QualTable qt)                    = toSQL qt
+  toSQL (QualVar v)                       = TB.text v
 
 mkQIdentifier :: (IsIdentifier a, IsIdentifier b) => a -> b -> QIdentifier
 mkQIdentifier q t = QIdentifier (QualifiedIdentifier (toIdentifier q) Nothing) (toIdentifier t)
@@ -376,7 +377,7 @@ instance ToSQL SQLExp where
   toSQL (SEStar Nothing) =
     TB.char '*'
   toSQL (SEStar (Just qual)) =
-    mconcat [parenB (toSQL qual), TB.char '.', TB.char '*']
+    mconcat [toSQL qual, TB.char '.', TB.char '*']
   toSQL (SEIdentifier iden) =
     toSQL iden
   toSQL (SERowIdentifier iden) =

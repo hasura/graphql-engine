@@ -3,6 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: Support computed fields in query filter (`where` argument) (close #7100)
 - server: add a `$.detail.operation.request_mode` field to `http-log` which takes the values `"single"` or `"batched"` to log whether a GraphQL request was executed on its own or as part of a batch
 - server: add `query` field to `http-log` and `websocket-log` in non-error cases
 - server: Add global limit to BigQuery via the `global_select_limit`

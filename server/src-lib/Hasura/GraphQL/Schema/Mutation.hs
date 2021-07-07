@@ -474,5 +474,5 @@ primaryKeysArguments tableInfo selectPerms = runMaybeT $ do
   guard $ all (\c -> pgiColumn c `Map.member` spiCols selectPerms) columns
   lift $ fmap (BoolAnd . toList) . sequenceA <$> for columns \columnInfo -> do
     field <- columnParser (pgiType columnInfo) (G.Nullability False)
-    pure $ BoolFld . AVCol columnInfo . pure . AEQ True . mkParameter <$>
+    pure $ BoolFld . AVColumn columnInfo . pure . AEQ True . mkParameter <$>
       P.field (pgiName columnInfo) (pgiDescription columnInfo) field
