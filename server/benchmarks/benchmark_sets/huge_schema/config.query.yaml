@@ -1,0 +1,166 @@
+# This tells graphql-bench that it's testing a hasura instance and should
+# collect some additional metrics:
+extended_hasura_checks: true
+# headers:
+#   X-Hasura-Admin-Secret: my-secret
+
+# Anchors to help us DRY below; settings here may be overridden selectively
+constants:
+  scalars:
+    - &low_load 20
+    - &high_load 500
+
+  k6_custom: &k6_custom
+    tools: [k6]
+    execution_strategy: CUSTOM
+
+  settings: &settings
+    # This is equivalent to wrk2's approach:
+    executor: 'constant-arrival-rate'
+    timeUnit: '1s'
+    maxVUs: 500 # NOTE: required, else defaults to `preAllocatedVUs`
+    duration: '60s'
+
+queries:
+  ############################################################################
+  # A very simple query returning no rows. A baseline for the benchmark below.
+  - name: small_query_low_load
+    <<: *k6_custom
+    options:
+      k6:
+        scenarios:
+          main:
+            <<: *settings
+            rate: *low_load
+            # tune this so it's just high enough that we can expect to not need
+            # to allocate during the test:
+            preAllocatedVUs: 10
+    query: |
+        query MyQuery {
+          aouulefavluzmkd {
+            afqqxqkiyibuccz
+          }
+        }
+
+  ############################################################################
+  # A large query returning no rows. How does this compare to above? How does
+  # it compare to a query from chinook that returns little data?
+  - name: huge_query_low_load
+    <<: *k6_custom
+    options:
+      k6:
+        scenarios:
+          main:
+            <<: *settings
+            rate: *low_load
+            preAllocatedVUs: 20
+    query: |
+        query MyQuery {
+          avnnjybkglhndgc {
+            bhdvbvtikfpzzzi {
+              amwqazmmnrmnpep
+              avnnjybkglhndgc(limit: 2) {
+                bhdvbvtikfpzzzi {
+                  amwqazmmnrmnpep
+                  aelitqplyjbudtg
+                  avnnjybkglhndgc_aggregate {
+                    aggregate {
+                      count
+                    }
+                  }
+                  avnnjybkglhndgc {
+                    bhdvbvtikfpzzzi {
+                      avnnjybkglhndgc {
+                        ypyynrnicfelhoa
+                        mozxpgxfqyoflfy
+                        ftbuftsifulkfef
+                        gcgxpbzitewgjfq(where: {_and: {avnnjybkglhndgc: {bhdvbvtikfpzzzi: {avnnjybkglhndgc: {ypyynrnicfelhoa: {_eq: ""}}}}}}) {
+                          bgssgjcrnyvdhgj
+                          bzvpaxbebukffqa
+                          felhxylqzathmzg
+                          jiwnvptjddwkpub
+                          kwuvazmzrckjiwd
+                          lfbdaknrdgrdyob
+                          lsdbuqrfcmzuoiq
+                          ppqfbdpbvygbjqe
+                          pyrmluepmvbkauy
+                          rjzfajqvaxfjnfv
+                          tkxykgrteozwppc
+                          yppheggqiyclbmg
+                        }
+                        ytbguypxmteukch {
+                          eioyhdrhnxvnjgq
+                          chavxisgckppceo
+                          emojtgbykwcsasf_aggregate(limit: 1) {
+                            nodes {
+                              atujakdwuavibfs
+                              mozxpgxfqyoflfy
+                              ytbguypxmteukch {
+                                azyplftmeorxhbg {
+                                  uclgdxfykcsupfy(where: {zchccmznhdwcyyk: {_gt: 10}}) {
+                                    fbrjqdhyhfrufka
+                                    fdaufkdgffxhwjt
+                                    eresulfxruxgauy
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                  rgajytdbzlrqtjc
+                  qwfxccufmuuhdkh
+                  qiirajrbqfhtepv {
+                    byuwtzavnnfphdb
+                    cfceikbyshpbgzb_aggregate(offset: 10) {
+                      nodes {
+                        eydctogzeddjeje
+                        dtxtdmrvbiqdnhw
+                        fzbriqaymwtbbcv(limit: 2) {
+                          atujakdwuavibfs
+                          mozxpgxfqyoflfy
+                          mwcitdymkwgnljf
+                          ypyynrnicfelhoa
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          rvkwxbcbykpolag(order_by: {cuyspsadpcpwfgn: asc}) {
+            cuyspsadpcpwfgn
+            gwkbipliejeqvck
+            ivxowxfitlpzwma
+            hjyfezsxxymocek {
+              ajmryhdgplutcfv
+              ankyuplezhaxmwh
+            }
+          }
+          ylfijjhnpbqnxdg {
+            qqhruyfclqsgkoi
+            rghujqiztetxqvr
+            rmiwettrtghoqrg {
+              brtgvqwxpxxpjsn(distinct_on: qqhruyfclqsgkoi) {
+                qqhruyfclqsgkoi
+              }
+              dhbepsvydbaowdg(where: {hhzbfpqbvtemdxn: {awzuxwwdvulkzsp: {_gt: 10}}}) {
+                qqhruyfclqsgkoi
+                rghujqiztetxqvr
+              }
+            }
+          }
+          znxjapvcubkzhtv_aggregate {
+            aggregate {
+              count(distinct: false)
+            }
+            nodes {
+              dodppghpbvtdrzt
+              dovdwfgspicingr
+              dczgjksdfomxthp
+            }
+          }
+        }
