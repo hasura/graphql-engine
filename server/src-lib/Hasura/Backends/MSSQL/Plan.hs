@@ -44,23 +44,7 @@ planQuery sessionVariables queryDB = do
   sel <-
     runValidate (runFromIr (fromRootField rootField))
     `onLeft` (throw400 NotSupported . tshow)
-  pure $
-    sel
-      { selectFor =
-          case selectFor sel of
-            NoFor           -> NoFor
-            JsonFor forJson ->
-              JsonFor forJson {jsonRoot =
-                                 case jsonRoot forJson of
-                                   NoRoot -> Root "root"
-                                   -- Keep whatever's there if already
-                                   -- specified. In the case of an
-                                   -- aggregate query, the root will
-                                   -- be specified "aggregate", for
-                                   -- example.
-                                   keep   -> keep
-                              }
-      }
+  pure sel
 
 -- | Prepare a value without any query planning; we just execute the
 -- query with the values embedded.

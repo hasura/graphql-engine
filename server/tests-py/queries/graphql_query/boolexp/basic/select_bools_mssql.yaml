@@ -4,10 +4,7 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    author:
-    - name: Author 1
-    - name: Author 2
-    - name: Author 3
+    author: []
 
 query:
   query: |

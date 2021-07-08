@@ -37,6 +37,7 @@ NOTE: This only includes the diff between v2.0.0 and v2.0.0-beta.2
 
 ### Bug fixes and improvements
 
+- server: nodes aggregates and inherited roles support for SQL Server
 - server: remote relationships (database to remote schema joins) are now supported on SQL Server and BigQuery
 - server: BigQuery: switches to a single query generation from a dataloader approach. This should result in
   faster query responses.

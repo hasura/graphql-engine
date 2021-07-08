@@ -1,0 +1,201 @@
+- description: test that when a role doesn't have access to a certain column in a row, it should throw an error
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: editor
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.author.selectionSet.followers
+        code: validation-failed
+      message: "field \"followers\" not found in type: 'author'"
+  query:
+    query: |
+      query {
+        author {
+          id
+          name
+          followers
+        }
+      }
+
+
+- description: test that only data and related data pertaining to the allowed rows is retrieved per role
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: author
+    x-hasura-author-id: '1'
+  response:
+    data:
+      author:
+      - id: 1
+        name: J.K.Rowling
+        articles:
+        - content: content 1
+          title: title 1
+        - content: content 3
+          title: title 3
+  query:
+    query: |
+      query {
+        author {
+          id
+          name
+          articles {
+            content
+            title
+          }
+        }
+      }
+
+
+- description: test that role with no permissions on a table cannot access the table
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: guest
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.author
+        code: validation-failed
+      message: "field \"author\" not found in type: 'query_root'"
+  query:
+    query: |
+      query {
+        author {
+          id
+          articles {
+            content
+            title
+          }
+        }
+      }
+
+
+- description: test that role with specific permissions on a table cannot access the nonpermitted columns
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: guest
+  response:
+   errors:
+   - extensions:
+       path: $.selectionSet.article.selectionSet.content
+       code: validation-failed
+     message: "field \"content\" not found in type: 'article'"
+  query:
+    query: |
+      query {
+        article {
+          content
+          title
+        }
+      }
+
+
+- description: test that a role with specific permissions cannot use nonpermitted columns for `where` conditions
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: guest
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.article.args.where.id
+        code: validation-failed
+      message: "field \"id\" not found in type: 'article_bool_exp'"
+  query:
+    query: |
+      query {
+        article (where: {id: {_lt: 3}}) {
+          title
+        }
+      }
+
+
+- description: test that role with filtered permissions is able to retrieve only allowed rows even across relationships
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: author
+    X-Hasura-Author-Id: '1'
+  response:
+    data:
+      article:
+      - id: 1
+        title: title 1
+        author:
+          id: 1
+          name: J.K.Rowling
+      - id: 3
+        title: title 3
+        author:
+          id: 1
+          name: J.K.Rowling
+  query:
+    query: |
+      query {
+        article {
+          id
+          title
+          author {
+            id
+            name
+          }
+        }
+      }
+
+
+- description: test that nulls are obtained for columns that inherited role is not permitted to access
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: author_and_editor
+    X-Hasura-Author-Id: '1'
+  response:
+    data:
+      author:
+      - id: 1
+        name: J.K.Rowling
+        followers: 1234
+      - id: 2
+        name: Paulo Coelho
+        followers: null
+      - id: 3
+        name: Murakami
+        followers: null
+  query:
+    query: |
+      query {
+        author {
+          id
+          name
+          followers
+        }
+      }
+
+
+- description: test that inherited roles work with limit-based select permissions for nodes
+  url: /v1/graphql
+  status: 200
+  headers:
+    x-hasura-role: limited_retrieval
+  query:
+    query: |
+      query {
+        article_aggregate {
+          nodes {
+            title
+          }
+        }
+      }
+  response:
+    data:
+      article_aggregate:
+        nodes:
+          - title: title 1
+          - title: title 2
+
+

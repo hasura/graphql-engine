@@ -1,0 +1,38 @@
+description: Simple GraphQL object query on author, excercising multiple operations
+url: /v1/graphql
+status: 200
+response:
+  data:
+    person_aggregate:
+      welp:
+        count: 4
+        sum: 10
+        min: 1
+      blah:
+      - id: 1
+        name: John\
+      - id: 2
+        name: ' Clarke '
+      - id: 3
+        name: ' clarke '
+      - id: 4
+        name: null
+query:
+  query: |
+    query {
+      person_aggregate {
+        welp: aggregate {
+          count
+          sum {
+            id
+          }
+          min {
+            id
+          }
+        }
+        blah: nodes {
+          id
+          name
+        }
+      }
+    }

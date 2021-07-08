@@ -715,7 +715,7 @@ case "$SERVER_TEST_TO_RUN" in
       run_hge_with_args serve
       wait_for_port 8080
 
-      pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test-inherited-roles test_graphql_queries.py::TestGraphQLInheritedRoles
+      pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test-inherited-roles -k TestGraphQLInheritedRolesPostgres
       pytest --hge-urls="$HGE_URL" --pg-urls="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-inherited-roles test_graphql_mutations.py::TestGraphQLInheritedRoles
 
       unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
@@ -1101,6 +1101,7 @@ admin_users = postgres' > pgbouncer/pgbouncer.ini
     backend-mssql)
     echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH SQL SERVER BACKEND ###########################################>\n"
     TEST_TYPE="no-auth"
+    export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES="inherited_roles"
 
     run_hge_with_args serve
     wait_for_port 8080
@@ -1109,6 +1110,14 @@ admin_users = postgres' > pgbouncer/pgbouncer.ini
     add_mssql_source 8080 "$HASURA_GRAPHQL_MSSQL_SOURCE_URL"
 
     pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend mssql
+
+    # start inherited roles test
+    echo -e "\n$(time_elapsed): <########## TEST INHERITED-ROLES WITH SQL SERVER BACKEND ###########################################>\n"
+
+    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --test-inherited-roles -k TestGraphQLInheritedRolesMSSQL --backend mssql
+
+    unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
+    # end inherited roles test
 
     kill_hge_servers
     ;;

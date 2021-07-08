@@ -82,8 +82,8 @@ data Select = Select
   , selectOffset      :: !(Maybe Expression)
   }
 
-select :: Select
-select =
+emptySelect :: Select
+emptySelect =
   Select
     { selectFrom        = Nothing
     , selectTop         = NoTop
@@ -191,6 +191,7 @@ data Expression
   | ListExpression [Expression]
   | STOpExpression SpatialOp Expression Expression
   | CastExpression Expression Text
+  | ConditionalProjection Expression FieldName
 
 data JsonPath
   = RootPath
@@ -206,14 +207,16 @@ data Countable name
   = StarCountable
   | NonNullFieldCountable (NonEmpty name)
   | DistinctCountable (NonEmpty name)
+deriving instance Functor Countable
 
 data From
   = FromQualifiedTable (Aliased TableName)
   | FromOpenJson (Aliased OpenJson)
+  | FromSelect (Aliased Select)
 
 data OpenJson = OpenJson
   { openJsonExpression :: Expression
-  , openJsonWith       :: NonEmpty JsonFieldSpec
+  , openJsonWith       :: Maybe (NonEmpty JsonFieldSpec)
   }
 
 data JsonFieldSpec

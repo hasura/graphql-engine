@@ -1,0 +1,61 @@
+- description: Simple GraphQL object query on author, excercising multiple operations
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      person_aggregate:
+        bar:
+        - id: 3
+          name: ' clarke '
+        - id: 2
+          name: ' Clarke '
+        foo:
+          count: 2
+          sum: 7
+  query:
+    query: |
+      query {
+        person_aggregate(offset: 1, order_by: {id: desc}, where: {id: {_gte: 2}}) {
+          bar:nodes {
+            id
+            name
+          }
+          foo:aggregate {
+            count
+            sum {
+              id
+            }
+          }
+        }
+      }
+
+
+- description: test that count aggregate works as expected
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      author:
+      - articles_aggregate:
+          aggregate:
+            count: 2
+            max: 2
+      - articles_aggregate:
+          aggregate:
+            count: 1
+            max: 3
+  query:
+    query: |
+      query {
+        author {
+          articles_aggregate {
+            aggregate {
+              count(columns: author_id)
+              max {
+                id
+              }
+            }
+          }
+        }
+      }
+

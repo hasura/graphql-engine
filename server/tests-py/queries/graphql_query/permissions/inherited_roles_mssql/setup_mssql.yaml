@@ -1,0 +1,123 @@
+type: bulk
+args:
+
+# Tables
+- type: mssql_track_table
+  args:
+    source: mssql
+    table: author
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table: article
+
+# Relationships
+- type: mssql_create_object_relationship
+  args:
+    source: mssql
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+- type: mssql_create_array_relationship
+  args:
+    source: mssql
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+# Permissions
+- type: mssql_create_select_permission
+  args:
+    role: author
+    source: mssql
+    table: author
+    permission:
+      columns:
+        - id
+        - name
+        - followers
+      allow_aggregations: false
+      filter:
+        id: X-Hasura-Author-Id
+
+- type: mssql_create_select_permission
+  args:
+    role: author
+    table: article
+    source: mssql
+    permission:
+      columns: "*"
+      allow_aggregations: true
+      filter:
+        author_id: X-Hasura-Author-Id
+
+- type: mssql_create_select_permission
+  args:
+    role: editor
+    table: author
+    source: mssql
+    permission:
+      columns:
+        - id
+        - name
+      allow_aggregations: true
+      filter: {}
+
+- type: mssql_create_select_permission
+  args:
+    role: editor
+    table: article
+    source: mssql
+    permission:
+      columns: "*"
+      filter: {}
+
+- type: mssql_create_select_permission
+  args:
+    role: guest
+    table: article
+    source: mssql
+    permission:
+      columns:
+        - title
+      allow_aggregations: true
+      filter: {}
+
+- type: mssql_create_select_permission
+  args:
+    role: limited_retrieval
+    table: article
+    source: mssql
+    permission:
+      columns:
+        - id
+        - title
+        - content
+      allow_aggregations: true
+      limit: 2
+      filter: {}
+
+# Roles
+- type: add_inherited_role
+  args:
+    role_name: author_editor_guest_inherited_role
+    source: mssql
+    role_set:
+      - author
+      - editor
+      - guest
+
+- type: add_inherited_role
+  args:
+    role_name: author_and_editor
+    source: mssql
+    role_set:
+      - author
+      - editor
+

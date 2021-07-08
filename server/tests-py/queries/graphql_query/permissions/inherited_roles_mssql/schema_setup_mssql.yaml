@@ -1,0 +1,34 @@
+type: bulk
+args:
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+
+      DROP TABLE IF EXISTS article; -- article first because of foreign key constraint
+      DROP TABLE IF EXISTS author;
+
+      CREATE TABLE author (
+        id int identity(1,1) primary key,
+        name nvarchar(255),
+        followers int
+      );
+
+      CREATE TABLE article (
+        id int identity(1,1)  primary key,
+        title nvarchar(255),
+        content nvarchar(255),
+        author_id int foreign key references author(id)
+      );
+
+      insert into author (name, followers) values
+      ('J.K.Rowling', 1234),
+      ('Paulo Coelho', 123),
+      ('Murakami', 12);
+
+      insert into article (title, content, author_id) values
+      ('title 1', 'content 1', 1),
+      ('title 2', 'content 2', 2),
+      ('title 3', 'content 3', 1),
+      ('title 4', 'content 4', 3),
+      ('title 5', 'content 5', 2);

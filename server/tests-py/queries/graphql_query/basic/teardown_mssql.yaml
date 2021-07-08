@@ -13,14 +13,14 @@ args:
   args:
     source: mssql
     table:
-      name: author
+      name: article
     cascade: true
 
 - type: mssql_untrack_table
   args:
     source: mssql
     table:
-      name: article
+      name: author
     cascade: true
 
 - type: mssql_untrack_table
@@ -40,13 +40,9 @@ args:
 - type: mssql_untrack_table
   args:
     source: mssql
-    table:
-      name: article_multi
+    table: author_multi
+    relationship: articles
     cascade: true
 
-- type: mssql_untrack_table
-  args:
-    source: mssql
-    table:
-      name: author_multi
-    cascade: true
+
+

@@ -5,6 +5,15 @@ args:
   args:
     source: mssql
     sql: |
+
+        DROP TABLE IF EXISTS test_types;
+        DROP TABLE IF EXISTS article;
+        DROP TABLE IF EXISTS author;
+        DROP TABLE IF EXISTS person;
+        DROP TABLE IF EXISTS [user];
+        DROP TABLE IF EXISTS article_multi;
+        DROP TABLE IF EXISTS author_multi;
+
         CREATE TABLE test_types
         (
             c1_smallint smallint,
@@ -175,7 +184,8 @@ args:
         VALUES
             ('John\'),
             (' Clarke '),
-            (' clarke ');
+            (' clarke '),
+            (NULL);
 
         CREATE TABLE author_multi
         (
