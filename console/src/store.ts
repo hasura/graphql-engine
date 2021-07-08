@@ -14,10 +14,9 @@ export const store = configureStore({
   middleware: getDefaultMiddleware => {
     // Middleware by default : https://redux-toolkit.js.org/api/getDefaultMiddleware#included-default-middleware
     let middlewares = getDefaultMiddleware({
-      serializableCheck: {
-        ignoredPaths: ['routing.locationBeforeTransitions.query'],
-        ignoredActions: ['@@router/LOCATION_CHANGE'],
-      },
+      // Removed because we use callbacks in some places and they are not serializable.
+      // see https://redux.js.org/style-guide/style-guide#do-not-put-non-serializable-values-in-state-or-actions
+      serializableCheck: false,
       // Remove this line when you want to
       // See https://redux.js.org/style-guide/style-guide#do-not-mutate-state
       immutableCheck: false,
@@ -42,3 +41,7 @@ export type AppDispatch = typeof store.dispatch;
 
 export const useAppDispatch = () => useDispatch<AppDispatch>();
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+export type AsyncThunkConfig = {
+  dispatch: AppDispatch;
+  state: RootState;
+};

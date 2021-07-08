@@ -219,7 +219,12 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
   databaseLoading,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const showActiveStyle = pathname === `/data/${item.name}/`;
+  const showActiveStyle = [
+    `/data/${item.name}/`,
+    `/data/${item.name}`,
+    `/data/${item.name}/display`,
+    `/data/${item.name}/gallery`,
+  ].includes(pathname);
 
   useEffect(() => {
     setIsOpen(isActive);

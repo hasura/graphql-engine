@@ -15,7 +15,7 @@ build:
 	npm run build
 
 jest:
-	npm run jest
+	npm run jest -- --runInBand
 
 test:
 	npm run dev & npm run test

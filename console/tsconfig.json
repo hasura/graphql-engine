@@ -11,8 +11,9 @@
     "noEmit": true,
     "types": ["react"],
     "typeRoots": ["./src/types", "node_modules/@types"],
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "target": "es5"
   },
-  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "cypress"],
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.spec.tsx", "**/*.test.ts", "**/*.test.tsx", "cypress"],
   "include": ["src/**/*"]
 }
