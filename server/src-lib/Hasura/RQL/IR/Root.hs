@@ -9,7 +9,6 @@ module Hasura.RQL.IR.Root
   , SubscriptionRootField
   , QueryDBRoot(..)
   , MutationDBRoot(..)
-  , traverseActionQuery
   ) where
 
 import           Hasura.Prelude
@@ -48,18 +47,21 @@ data MutationDB (b :: BackendType) (r :: BackendType -> Type) v
   = MDBInsert (AnnInsert b r v)
   | MDBUpdate (AnnUpdG   b r v)
   | MDBDelete (AnnDelG   b r v)
-  | MDBFunction RQL.JsonAggSelect (AnnSimpleSelG b r v)
+  | MDBFunction RQL.JsonAggSelect (AnnSimpleSelectG b r v)
   -- ^ This represents a VOLATILE function, and is AnnSimpleSelG for easy
   -- re-use of non-VOLATILE function tracking code.
-  deriving stock (Generic)
+  deriving stock (Generic, Functor, Foldable, Traversable)
 
 data ActionQuery (b :: BackendType) (r :: BackendType -> Type) v
   = AQQuery !(RQL.AnnActionExecution  b r v)
   | AQAsync !(RQL.AnnActionAsyncQuery b r v)
+  deriving (Functor, Foldable, Traversable)
 
 data ActionMutation (b :: BackendType) (r :: BackendType -> Type) v
   = AMSync !(RQL.AnnActionExecution b r v)
   | AMAsync !RQL.AnnActionMutationAsync
+  deriving (Functor, Foldable, Traversable)
+
 
 -- The `db` type argument of @RootField@ expects only one type argument, the backend `b`, as not all
 -- types stored in a RootField will have a second parameter like @QueryDB@ does: they all only have
@@ -74,15 +76,3 @@ newtype MutationDBRoot r v b = MDBR (MutationDB b r (v b))
 type QueryRootField        r v = RootField (QueryDBRoot    r v) RQL.RemoteField (ActionQuery    ('Postgres 'Vanilla) r (v ('Postgres 'Vanilla))) JO.Value
 type MutationRootField     r v = RootField (MutationDBRoot r v) RQL.RemoteField (ActionMutation ('Postgres 'Vanilla) r (v ('Postgres 'Vanilla))) JO.Value
 type SubscriptionRootField r v = RootField (QueryDBRoot    r v) Void            Void                                                             Void
-
-
-
-traverseActionQuery
-  :: forall backend r f a b
-   . (Applicative f, RQL.Backend backend)
-  => (a -> f b)
-  -> ActionQuery backend r a
-  -> f (ActionQuery backend r b)
-traverseActionQuery f = \case
-  AQQuery actionExecution -> AQQuery <$> RQL.traverseAnnActionExecution  f actionExecution
-  AQAsync actionAsyncQ    -> AQAsync <$> RQL.traverseAnnActionAsyncQuery f actionAsyncQ

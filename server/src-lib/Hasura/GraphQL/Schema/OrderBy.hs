@@ -59,7 +59,7 @@ orderByExp sourceName tableInfo selectPermissions = memoizeOn 'orderByExp (sourc
           remoteTableInfo <- askTableInfo @b sourceName $ riRTable relationshipInfo
           fieldName <- hoistMaybe $ G.mkName $ relNameToTxt $ riName relationshipInfo
           perms <- MaybeT $ tableSelectPermissions remoteTableInfo
-          let newPerms = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter perms
+          let newPerms = (fmap . fmap) partialSQLExpToUnpreparedValue $ spiFilter perms
           case riType relationshipInfo of
             ObjRel -> do
               otherTableParser <- lift $ orderByExp sourceName remoteTableInfo perms

@@ -174,9 +174,9 @@ filterVariablesFromQuery query = fold $ rootToSessVarPreds =<< query
     rootToSessVarPreds = \case
       RFDB _ exists ->
         AB.dispatchAnyBackend @Backend exists \case
-          SourceConfigWith _ (QDBR db) -> toPred <$> toListOf traverseQueryDB db
+          SourceConfigWith _ (QDBR db) -> toPred <$> toListOf traverse db
       RFRemote remote -> match <$> toListOf (traverse . _SessionPresetVariable) remote
-      RFAction actionQ -> toPred <$> toListOf traverseActionQuery actionQ
+      RFAction actionQ -> toPred <$> toListOf traverse actionQ
       _ -> []
 
     _SessionPresetVariable :: Traversal' RemoteSchemaVariable SessionVariable

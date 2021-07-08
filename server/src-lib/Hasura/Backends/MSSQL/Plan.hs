@@ -40,7 +40,7 @@ planQuery
   -> QueryDB 'MSSQL (Const Void) (GraphQL.UnpreparedValue 'MSSQL)
   -> m Select
 planQuery sessionVariables queryDB = do
-  rootField <- traverseQueryDB (prepareValueQuery sessionVariables) queryDB
+  rootField <- traverse (prepareValueQuery sessionVariables) queryDB
   sel <-
     runValidate (runFromIr (fromRootField rootField))
     `onLeft` (throw400 NotSupported . tshow)
@@ -93,7 +93,7 @@ planSubscription unpreparedMap sessionVariables = do
   let (rootFieldMap, prepareState) =
         runState
           (traverse
-            (traverseQueryDB (prepareValueSubscription (getSessionVariablesSet sessionVariables)))
+            (traverse (prepareValueSubscription (getSessionVariablesSet sessionVariables)))
             unpreparedMap)
           emptyPrepareState
   selectMap <-

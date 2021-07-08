@@ -27,10 +27,6 @@ module Hasura.RQL.IR.BoolExp
   , AnnColumnCaseBoolExpPartialSQL
   , AnnColumnCaseBoolExp
   , AnnColumnCaseBoolExpField(..)
-  , traverseAnnBoolExp
-  , fmapAnnBoolExp
-  , traverseAnnColumnCaseBoolExp
-  , fmapAnnColumnCaseBoolExp
   , annBoolExpTrue
   , andAnnBoolExps
 
@@ -401,38 +397,9 @@ annBoolExpTrue :: AnnBoolExp backend a
 annBoolExpTrue = gBoolExpTrue
 
 andAnnBoolExps :: AnnBoolExp backend a -> AnnBoolExp backend a -> AnnBoolExp backend a
-andAnnBoolExps l r =
-  BoolAnd [l, r]
+andAnnBoolExps l r = BoolAnd [l, r]
 
 
--- Traversal functions
-fmapAnnBoolExp
-  :: Backend backend
-  => (a -> b)
-  -> AnnBoolExp backend a
-  -> AnnBoolExp backend b
-fmapAnnBoolExp f =
-  runIdentity . traverseAnnBoolExp (pure . f)
-
-traverseAnnBoolExpFld
-  :: (Applicative f, Backend backend)
-  => (a -> f b)
-  -> AnnBoolExpFld backend a
-  -> f (AnnBoolExpFld backend b)
-traverseAnnBoolExpFld f = \case
-  AVColumn pgColInfo opExps ->
-    AVColumn pgColInfo <$> traverse (traverse f) opExps
-  AVRelationship relInfo annBoolExp ->
-    AVRelationship relInfo <$> traverseAnnBoolExp f annBoolExp
-  AVComputedField cfBoolExp ->
-    AVComputedField <$> traverse f cfBoolExp
-
-traverseAnnBoolExp
-  :: (Applicative f, Backend backend)
-  => (a -> f b)
-  -> AnnBoolExp backend a
-  -> f (AnnBoolExp backend b)
-traverseAnnBoolExp f = traverse (traverseAnnBoolExpFld f)
 
 ----------------------------------------------------------------------------------------------------
 -- Operands for specific operators
@@ -509,26 +476,6 @@ instance (Backend b, ToJSONKeyValue (BooleanOperators b a), ToJSON a) => ToJSONK
 -- | Similar to AnnBoolExp, this type alias ties together
 -- 'GBoolExp', 'OpExpG', and 'AnnColumnCaseBoolExpFld'.
 type AnnColumnCaseBoolExp b a = GBoolExp b (AnnColumnCaseBoolExpField b a)
-
-
--- traversal functions
-fmapAnnColumnCaseBoolExp
-  :: Backend backend
-  => (a -> b)
-  -> AnnColumnCaseBoolExp backend a
-  -> AnnColumnCaseBoolExp backend b
-fmapAnnColumnCaseBoolExp f =
-  runIdentity . traverseAnnColumnCaseBoolExp (pure . f)
-
-traverseAnnColumnCaseBoolExp
-  :: (Applicative f, Backend backend)
-  => (a -> f b)
-  -> AnnColumnCaseBoolExp backend a
-  -> f (AnnColumnCaseBoolExp backend b)
-traverseAnnColumnCaseBoolExp f = traverse traverseColCaseBoolExp
-  where
-    traverseColCaseBoolExp (AnnColumnCaseBoolExpField annBoolExpField) =
-      AnnColumnCaseBoolExpField <$> traverseAnnBoolExpFld f annBoolExpField
 
 
 -- misc type aliases

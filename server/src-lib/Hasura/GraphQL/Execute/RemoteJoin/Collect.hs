@@ -63,8 +63,8 @@ getRemoteJoins = \case
 -- | Traverse through 'AnnSimpleSel' and collect remote join fields (if any).
 getRemoteJoinsSelect
   :: Backend b
-  => AnnSimpleSelG b r u
-  -> (AnnSimpleSelG b (Const Void) u, Maybe RemoteJoins)
+  => AnnSimpleSelectG b r u
+  -> (AnnSimpleSelectG b (Const Void) u, Maybe RemoteJoins)
 getRemoteJoinsSelect =
   second mapToNonEmpty . flip runState mempty . transformSelect mempty
 
@@ -190,8 +190,8 @@ getRemoteJoinsActionMutation = \case
 transformSelect
   :: Backend b
   => FieldPath
-  -> AnnSimpleSelG b r u
-  -> State RemoteJoinMap (AnnSimpleSelG b (Const Void) u)
+  -> AnnSimpleSelectG b r u
+  -> State RemoteJoinMap (AnnSimpleSelectG b (Const Void) u)
 transformSelect path sel = do
   let fields = _asnFields sel
   -- Transform selects in array, object and computed fields

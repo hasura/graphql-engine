@@ -139,9 +139,9 @@ bigQuerySourceConfigToFromIrConfig BigQuerySourceConfig {_scGlobalSelectLimit} =
 -- | Here is where we apply a top-level annotation to the select to
 -- indicate to the data loader that this select ought to produce a
 -- single object or an array.
-mkSQLSelect ::
-     Rql.JsonAggSelect
-  -> Ir.AnnSelectG 'BigQuery (Const Void) (Ir.AnnFieldsG 'BigQuery (Const Void) Expression) Expression
+mkSQLSelect
+  :: Rql.JsonAggSelect
+  -> Ir.AnnSelectG 'BigQuery (Const Void) (Ir.AnnFieldG 'BigQuery (Const Void)) Expression
   -> FromIr BigQuery.Select
 mkSQLSelect jsonAggSelect annSimpleSel = do
   select <- fromSelectRows annSimpleSel
@@ -165,7 +165,7 @@ fromRootField =
 --------------------------------------------------------------------------------
 -- Top-level exported functions
 
-fromSelectRows :: Ir.AnnSelectG 'BigQuery (Const Void) (Ir.AnnFieldsG 'BigQuery (Const Void) Expression) Expression -> FromIr BigQuery.Select
+fromSelectRows :: Ir.AnnSelectG 'BigQuery (Const Void) (Ir.AnnFieldG 'BigQuery (Const Void)) Expression -> FromIr BigQuery.Select
 fromSelectRows annSelectG = do
   selectFrom <-
     case from of
@@ -186,10 +186,8 @@ fromSelectRows annSelectG = do
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
   selectProjections <-
-    onNothing
-    (NE.nonEmpty
-       (concatMap (toList . fieldSourceProjections) fieldSources))
-    (refute (pure NoProjectionFields))
+    NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
+      `onNothing` refute (pure NoProjectionFields)
   globalTop <- getGlobalTop
   pure
     Select
@@ -219,9 +217,9 @@ fromSelectRows annSelectG = do
         then StringifyNumbers
         else LeaveNumbersAlone
 
-fromSelectAggregate ::
-     Maybe (EntityAlias, HashMap ColumnName ColumnName)
-  -> Ir.AnnSelectG 'BigQuery (Const Void) [( Rql.FieldName , Ir.TableAggregateFieldG 'BigQuery (Const Void) Expression)] Expression
+fromSelectAggregate
+  :: Maybe (EntityAlias, HashMap ColumnName ColumnName)
+  -> Ir.AnnSelectG 'BigQuery (Const Void) (Ir.TableAggregateFieldG 'BigQuery (Const Void)) Expression
   -> FromIr BigQuery.Select
 fromSelectAggregate minnerJoinFields annSelectG = do
   selectFrom <-
@@ -727,10 +725,8 @@ fromTableAggregateFieldG args permissionBasedTop stringifyNumbers (Rql.FieldName
           (fromAnnFieldsG (argsExistingJoins args) stringifyNumbers)
           fields
       arrayAggProjections <-
-        onNothing
-        (NE.nonEmpty
-           (concatMap (toList . fieldSourceProjections) fieldSources))
-        (refute (pure NoProjectionFields))
+        NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
+          `onNothing` refute (pure NoProjectionFields)
       globalTop <- lift getGlobalTop
       pure
         (ArrayAggFieldSource
@@ -1170,7 +1166,7 @@ fromArrayRelationSelectG annRelationSelectG = do
                  , aliasedAlias = fieldName fieldName'
                  })
           innerJoinFields
-  let joinSelect =
+      joinSelect =
           Select
             { selectCardinality = One
             , selectFinalWantedFields = selectFinalWantedFields select

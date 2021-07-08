@@ -34,7 +34,7 @@ planNoPlan ::
   -> QueryDB 'BigQuery (Const Void) (GraphQL.UnpreparedValue 'BigQuery)
   -> m Select
 planNoPlan fromIrConfig userInfo queryDB = do
-  rootField <- traverseQueryDB (prepareValueNoPlan (_uiSession userInfo)) queryDB
+  rootField <- traverse (prepareValueNoPlan (_uiSession userInfo)) queryDB
   runValidate (BigQuery.runFromIr fromIrConfig (BigQuery.fromRootField rootField))
     `onLeft` (E.throw400 E.NotSupported . (tshow :: NonEmpty Error -> Text))
 

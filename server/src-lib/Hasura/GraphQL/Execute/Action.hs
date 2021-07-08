@@ -98,7 +98,7 @@ runActionExecution aep =
         AAQENoRelationships f -> liftEither $ f actionLogResponse
         AAQEOnSourceDB srcConfig (AsyncActionQuerySourceExecution _ jsonAggSelect f) -> do
           let selectAST = f actionLogResponse
-          (selectResolved, _) <- flip runStateT Set.empty $ RS.traverseAnnSimpleSelect prepareWithoutPlan selectAST
+          (selectResolved, _) <- flip runStateT Set.empty $ traverse prepareWithoutPlan selectAST
           let querySQL = Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggSelect selectResolved
           liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx srcConfig) Q.ReadOnly $ liftTx $ asSingleRowJsonResp querySQL []
     AEPAsyncMutation actionId -> pure $ (,Nothing) $ encJFromJValue $ actionIdToText actionId
@@ -122,7 +122,7 @@ resolveActionExecution env logger userInfo annAction execContext =
             toTxtValue $ ColumnValue (ColumnScalar PGJSONB) $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
           selectAstUnresolved = processOutputSelectionSet webhookResponseExpression
                                 outputType definitionList annFields stringifyNum
-      (astResolved, finalPlanningSt) <- flip runStateT initPlanningSt $ RS.traverseAnnSimpleSelect prepareWithPlan selectAstUnresolved
+      (astResolved, finalPlanningSt) <- flip runStateT initPlanningSt $ traverse prepareWithPlan selectAstUnresolved
       let prepArgs = fmap fst $ IntMap.elems $ withUserVars (_uiSession userInfo) $ _psPrepped finalPlanningSt
       (,respHeaders) <$> executeActionInDb sourceConfig astResolved prepArgs
   where
@@ -135,7 +135,7 @@ resolveActionExecution env logger userInfo annAction execContext =
 
 
     executeActionInDb :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m)
-                      => SourceConfig ('Postgres 'Vanilla) -> RS.AnnSimpleSel ('Postgres 'Vanilla) -> [Q.PrepArg] -> m EncJSON
+                      => SourceConfig ('Postgres 'Vanilla) -> RS.AnnSimpleSelect ('Postgres 'Vanilla) -> [Q.PrepArg] -> m EncJSON
     executeActionInDb sourceConfig astResolved prepArgs = do
       let jsonAggType = mkJsonAggSelect outputType
       liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly $
@@ -484,7 +484,7 @@ processOutputSelectionSet
   -> [(PGCol, PGScalarType)]
   -> RS.AnnFieldsG ('Postgres 'Vanilla) r v
   -> Bool
-  -> RS.AnnSimpleSelG ('Postgres 'Vanilla) r v
+  -> RS.AnnSimpleSelectG ('Postgres 'Vanilla) r v
 processOutputSelectionSet tableRowInput actionOutputType definitionList annotatedFields =
   RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs
   where

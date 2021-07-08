@@ -17,20 +17,6 @@ data AnnDelG (b :: BackendType) (r :: BackendType -> Type) v
   , dqp1Where   :: !(AnnBoolExp b v, AnnBoolExp b v)
   , dqp1Output  :: !(MutationOutputG b r v)
   , dqp1AllCols :: ![ColumnInfo b]
-  }
+  } deriving (Functor, Foldable, Traversable)
 
 type AnnDel b = AnnDelG b (Const Void) (SQLExpression b)
-
-traverseAnnDel
-  :: forall backend r f a b
-   . (Applicative f, Backend backend)
-  => (a -> f b)
-  -> AnnDelG backend r a
-  -> f (AnnDelG backend r b)
-traverseAnnDel f annUpd =
-  AnnDel tn
-  <$> ((,) <$> traverseAnnBoolExp f whr <*> traverseAnnBoolExp f fltr)
-  <*> traverseMutationOutput f mutOutput
-  <*> pure allCols
-  where
-    AnnDel tn (whr, fltr) mutOutput allCols = annUpd
