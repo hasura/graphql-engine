@@ -10,6 +10,7 @@
   field in the connection configuration
 - server: include action and event names in log output
 - server: log all HTTP errors in remote schema calls as `remote-schema-error` with details
+- console: add schema sharing
 
 ## v2.0.1
 

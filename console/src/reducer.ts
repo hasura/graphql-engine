@@ -2,7 +2,7 @@ import { combineReducers } from 'redux';
 import { reducer as notifications } from 'react-notification-system-redux';
 import { routerReducer } from 'react-router-redux';
 
-import { dataReducer } from './components/Services/Data';
+import dataReducer from './components/Services/Data/DataReducer';
 import { remoteSchemaReducer } from './components/Services/RemoteSchema';
 import { actionsReducer } from './components/Services/Actions';
 import { typesReducer } from './components/Services/Types';

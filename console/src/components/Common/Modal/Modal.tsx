@@ -3,18 +3,21 @@ import {
   Modal as BootstrapModal,
   Button as BootstrapModalButton,
 } from 'react-bootstrap';
+import styles from './Modal.scss';
 
 export interface ModalProps {
   show?: boolean;
   title: React.ReactElement;
+  children: React.ReactElement;
   onClose?(): void;
   onSubmit?(): void;
   onCancel?(): void;
   customClass?: string;
-  submitText?: string;
+  submitText?: React.ReactElement | string;
+  leftActions?: React.ReactElement;
   submitTestId?: string;
 }
-const Modal: React.FC<ModalProps> = ({
+const Modal = ({
   show = true,
   title,
   onClose,
@@ -22,9 +25,10 @@ const Modal: React.FC<ModalProps> = ({
   onSubmit,
   onCancel,
   submitText = '',
+  leftActions,
   submitTestId = '',
   children,
-}) => {
+}: ModalProps) => {
   const getHeader = () => {
     return (
       <BootstrapModal.Header closeButton>
@@ -52,16 +56,22 @@ const Modal: React.FC<ModalProps> = ({
 
     return (
       <BootstrapModal.Footer>
-        <BootstrapModalButton onClick={triggerOnClose}>
-          Cancel
-        </BootstrapModalButton>
-        <BootstrapModalButton
-          onClick={onSubmit}
-          bsStyle="primary"
-          data-test={submitTestId}
-        >
-          {submitText || 'Submit'}
-        </BootstrapModalButton>
+        <div className={styles.modal_footer}>
+          <div>{leftActions ?? null}</div>
+
+          <div>
+            <BootstrapModalButton onClick={triggerOnClose}>
+              Cancel
+            </BootstrapModalButton>
+            <BootstrapModalButton
+              onClick={onSubmit}
+              bsStyle="primary"
+              data-test={submitTestId}
+            >
+              {submitText || 'Submit'}
+            </BootstrapModalButton>
+          </div>
+        </div>
       </BootstrapModal.Footer>
     );
   };
@@ -84,5 +94,7 @@ const Modal: React.FC<ModalProps> = ({
     </BootstrapModal>
   );
 };
+
+Modal.Button = BootstrapModalButton;
 
 export default Modal;

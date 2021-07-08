@@ -107,7 +107,8 @@
     "react",
     "import",
     "@typescript-eslint/eslint-plugin",
-    "react-hooks"
+    "react-hooks",
+    "testing-library"
   ],
   "settings": {
     "import/resolve": {
@@ -215,6 +216,11 @@
         "react/jsx-indent": "off",
         "arrow-body-style": "off"
       }
+    },
+    {
+      // 3) Now we enable eslint-plugin-testing-library rules or preset only for matching files!
+      "files": ["src/**/__tests__/**/*.[jt]s?(x)", "src/**/?(*.)+(spec|test).[jt]s?(x)"],
+      "extends": ["plugin:testing-library/react", "plugin:jest-dom/recommended"]
     }
   ]
 }
