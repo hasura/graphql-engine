@@ -1,0 +1,161 @@
+# This tells graphql-bench that it's testing a hasura instance and should
+# collect some additional metrics:
+extended_hasura_checks: true
+headers:
+  X-Hasura-Admin-Secret: my-secret
+  X-Hasura-Role: employee
+  X-Hasura-User-Id: 4
+
+# Anchors to help us DRY below; settings here may be overridden selectively
+constants:
+  scalars:
+    # We'll measure at just two consistent load levels, which makes comparing
+    # benchmarks within the same run useful.
+    #
+    # NOTE: a load of 500 may cause hasura to fall over on a laptop. On our
+    # beefy CI benchmark runner we cannot sustain 1,000 RPS for the
+    # "large_result" queries.
+    - &low_load 20
+    - &high_load 500
+
+  k6_custom: &k6_custom
+    tools: [k6]
+    execution_strategy: CUSTOM
+
+  settings: &settings
+    # This is equivalent to wrk2's approach:
+    executor: 'constant-arrival-rate'
+    timeUnit: '1s'
+    maxVUs: 500 # NOTE: required, else defaults to `preAllocatedVUs`
+    # NOTE: ideally we'd test all of the queries with the same *number of requests*
+    # but that would mean running the "low_load" queries for much longer than
+    # is acceptable.
+    duration: '60s'
+
+queries:
+  ############################################################################
+  # single-table query, small result size; makes use of permissions for
+  # filtering; low RPS
+  - name: simple_query_low_load
+    <<: *k6_custom
+    options:
+      k6:
+        # NOTE: setting this to true will ignore graphql-layer errors, which
+        # still return a 200 HTTP status code.
+        # This doesn't seem to really affect measurements AFAICT so leave off
+        # discardResponseBodies: true
+        scenarios:
+          main:
+            <<: *settings
+            rate: *low_load
+            # tune this so it's just high enough that we can expect to not need
+            # to allocate during the test:
+            preAllocatedVUs: 10
+    query: &simple_query |
+      query MyQuery {
+        Customer {
+          Email
+        }
+      }
+  # ...above, but at high RPS
+  - name: simple_query_high_load
+    <<: *k6_custom
+    options:
+      k6:
+        scenarios:
+          main:
+            <<: *settings
+            # NOTE: 500 RPS is easy-peasy for this query, but we want to be
+            # able to compare to e.g. complex_query_high_load_large_result at
+            # the same RPS
+            rate: *high_load
+            preAllocatedVUs: 50
+    query: *simple_query
+
+  ############################################################################
+  # A more complex query, with some conditions and joins (excercising
+  # bread-and-butter SQL query generation), with variables. We test the same
+  # query on both low and high load, and with a small and large response size.
+
+
+  ######## Small result size
+  - name: complex_query_low_load_small_result
+    <<: *k6_custom
+    options:
+      k6:
+        scenarios:
+          main:
+            <<: *settings
+            rate: *low_load
+            preAllocatedVUs: 10
+    variables:
+      # Two playlists with comedy tracks; return one row each
+      genre: Comedy
+      track_lim: 1
+    query: &complex_query |
+      query MyQuery($genre: String!, $track_lim: Int = 1000) {
+        playlist_containing_genre: Playlist(order_by: {Name: asc}, where: {PlaylistTracks: {Track: {Genre: {Name: {_eq: $genre}}}}}) {
+          Name
+          tracks_of_genre: PlaylistTracks(where: {Track: {Genre: {Name: {_eq: $genre}}}}, limit: $track_lim) {
+            Track {
+              Name
+              Album {
+                Title
+                Artist {
+                  Name
+                }
+              }
+              MediaType {
+                Name
+              }
+            }
+          }
+        }
+      }
+
+  - name: complex_query_high_load_small_result
+    <<: *k6_custom
+    options:
+      k6:
+        scenarios:
+          main:
+            <<: *settings
+            rate: *high_load
+            preAllocatedVUs: 100
+    variables:
+      # Two playlists with comedy tracks; return one row each
+      genre: Comedy
+      track_lim: 1
+    query: *complex_query
+
+
+  ######## Large result size
+  - name: complex_query_low_load_large_result
+    <<: *k6_custom
+    options:
+      k6:
+        scenarios:
+          main:
+            <<: *settings
+            rate: *low_load
+            preAllocatedVUs: 10
+    variables:
+      # This yields ~30Kb response body; ~100x the size of simple_query
+      #  (FYI "Rock" is around 300Kb) 
+      genre: Jazz
+    query: *complex_query 
+
+  - name: complex_query_high_load_large_result
+    <<: *k6_custom
+    options:
+      k6:
+        scenarios:
+          main:
+            <<: *settings
+            # NOTE: this will fall start to fall over on a laptop
+            rate: *high_load
+            preAllocatedVUs: 100
+    variables:
+      # This yields ~30Kb response body; ~100x the size of simple_query
+      genre: Jazz
+    query: *complex_query 
