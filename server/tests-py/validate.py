@@ -14,6 +14,7 @@ import queue
 import random
 import warnings
 import pytest
+import textwrap
 
 from context import GQLWsClient, PytestConf
 
@@ -271,12 +272,24 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
 
     return assert_graphql_resp_expected(resp['payload'], exp_http_response, query, skip_if_err_msg=hge_ctx.avoid_err_msg_checks)
 
+def assert_response_code(url, query, code, exp_code, resp):
+    assert code == exp_code, \
+        f"""
+When querying {url},
+Got response code {code}, expected {exp_code}.
+
+Request body:
+{textwrap.indent(json.dumps(query, indent=2), '  ')}
+
+Response body:
+{textwrap.indent(json.dumps(resp, indent=2), '  ')}
+        """
 
 def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response, exp_resp_hdrs, body = None, method = None):
     code, resp, resp_hdrs = hge_ctx.anyq(url, query, headers, body, method)
     print(headers)
-    assert code == exp_code, (code, exp_code, resp)
-    print('http resp: ', resp)
+    assert_response_code(url, query, code, exp_code, resp)
+
     if exp_response:
         return assert_graphql_resp_expected(resp, exp_response, query, resp_hdrs, hge_ctx.avoid_err_msg_checks, exp_resp_hdrs=exp_resp_hdrs)
     else:
@@ -285,8 +298,8 @@ def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response, exp
 def validate_http_anyq_with_allowed_responses(hge_ctx, url, query, headers, exp_code, allowed_responses, body = None, method = None):
     code, resp, resp_hdrs = hge_ctx.anyq(url, query, headers, body, method)
     print(headers)
-    assert code == exp_code, resp
-    print('http resp: ', resp)
+    assert_response_code(url, query, code, exp_code, resp)
+
     if isinstance(allowed_responses, list) and len(allowed_responses) > 0:
         resp_res = {}
         test_passed = False
