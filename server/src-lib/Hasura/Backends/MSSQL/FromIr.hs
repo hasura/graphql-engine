@@ -1,3 +1,4 @@
+{-# LANGUAGE ViewPatterns #-}
 -- | Translate from the DML to the TSql dialect.
 
 module Hasura.Backends.MSSQL.FromIr
@@ -101,7 +102,7 @@ fromRootField =
   \case
     (IR.QDBSingleRow s)    -> mkSQLSelect IR.JASSingleObject s
     (IR.QDBMultipleRows s) -> mkSQLSelect IR.JASMultipleRows s
-    (IR.QDBAggregation s)  -> fromSelectAggregate s
+    (IR.QDBAggregation s)  -> fromSelectAggregate Nothing s
     (IR.QDBConnection _)   -> refute $ pure ConnectionsNotSupported
 
 --------------------------------------------------------------------------------
@@ -156,48 +157,171 @@ fromSelectRows annSelectG = do
         then StringifyNumbers
         else LeaveNumbersAlone
 
+
+mkNodesSelect :: Args -> Where -> Expression -> Top -> From -> [(Int, (IR.FieldName, [Projection]))] -> [(Int, [Projection])]
+mkNodesSelect Args{..} foreignKeyConditions filterExpression permissionBasedTop selectFrom nodes =
+  [ (index,
+      [ ExpressionProjection $ Aliased
+          { aliasedThing = SelectExpression $ Select
+              { selectProjections = projections
+              , selectTop = permissionBasedTop <> argsTop
+              , selectFrom = pure selectFrom
+              , selectJoins = argsJoins
+              , selectWhere = argsWhere <> Where [filterExpression] <> foreignKeyConditions
+              , selectFor =
+                  JsonFor ForJson {jsonCardinality = JsonArray, jsonRoot = NoRoot}
+              , selectOrderBy = argsOrderBy
+              , selectOffset = argsOffset
+              }
+          , aliasedAlias = IR.getFieldNameTxt fieldName
+          }
+      ] -- singleton
+    )
+  | (index, (fieldName, projections)) <- nodes ]
+
+
+--
+-- The idea here is that LIMIT/OFFSET and aggregates don't mix
+-- well. Therefore we have a nested query:
+--
+-- select sum(*), .. FROM (select * from x offset o limit l) p
+--
+-- That's why @projections@ appears on the outer, and is a
+-- @StarProjection@ for the inner. But the joins, conditions, top,
+-- offset are on the inner.
+--
+mkAggregateSelect :: Args -> Where -> From -> [(Int, (IR.FieldName, [Projection]))] -> [(Int, [Projection])]
+mkAggregateSelect Args {..} foreignKeyConditions selectFrom aggregates =
+  [ ( index
+    , [ ExpressionProjection $
+        Aliased
+          { aliasedThing =
+              JsonQueryExpression $
+              SelectExpression $
+              Select
+                { selectProjections = reproject aggSubselectName <$> projections
+                , selectTop = NoTop
+                , selectFrom = pure $
+                    FromSelect
+                      Aliased
+                        { aliasedAlias = aggSubselectName
+                        , aliasedThing =
+                            Select
+                              { selectProjections = pure StarProjection
+                              , selectTop = argsTop
+                              , selectFrom = pure selectFrom
+                              , selectJoins = argsJoins
+                              , selectWhere = argsWhere <> foreignKeyConditions
+                              , selectFor = NoFor
+                              , selectOrderBy = mempty
+                              , selectOffset = argsOffset
+                              }
+                        }
+                , selectJoins = mempty
+                , selectWhere = mempty
+                , selectFor =
+                    JsonFor
+                      ForJson
+                        {jsonCardinality = JsonSingleton, jsonRoot = NoRoot}
+                , selectOrderBy = mempty
+                , selectOffset = Nothing
+                }
+          , aliasedAlias = IR.getFieldNameTxt fieldName
+          }
+      ] -- singleton
+     )
+  | (index, (fieldName, projections)) <- aggregates
+  ]
+
+
+-- | Re-project projections in the aggSubselectName scope
+--
+-- For example,
+--
+-- [ AggregateProjection
+--     (Aliased {aliasedThing = CountAggregate StarCountable, aliasedAlias = "count"})
+-- , AggregateProjection
+--     (Aliased
+--       { aliasedThing = OpAggregate "sum"
+--           [ ColumnExpression
+--               (FieldName
+--                 { fieldName = "id"
+--                 , fieldNameEntity = "t_person1" -- <<<<< This needs to be `aggSubselectName`
+--                 })
+--           ]
+--       , aliasedAlias = "sum"
+--       })
+--
+reproject :: Text -> Projection -> Projection
+reproject label = \case
+  AggregateProjection (Aliased {aliasedThing = OpAggregate aggName expressions, ..}) ->
+    AggregateProjection (Aliased {aliasedThing = OpAggregate aggName (fixColumnEntity label <$> expressions), ..})
+  AggregateProjection (Aliased {aliasedThing = CountAggregate countableFieldnames, ..}) ->
+    AggregateProjection (Aliased {aliasedThing = CountAggregate $ fixEntity label <$> countableFieldnames, ..})
+  x -> x
+  where
+    fixColumnEntity entity = \case
+      ColumnExpression fName ->
+        ColumnExpression $ fixEntity entity fName
+      x -> x
+    fixEntity entity FieldName{..} = FieldName {fieldNameEntity = entity, ..}
+
+
 fromSelectAggregate
-  :: IR.AnnSelectG 'MSSQL (Const Void) (IR.TableAggregateFieldG 'MSSQL (Const Void)) Expression
+  :: Maybe (EntityAlias, HashMap ColumnName ColumnName)
+  -> IR.AnnSelectG 'MSSQL (Const Void) (IR.TableAggregateFieldG 'MSSQL (Const Void)) Expression
   -> FromIr TSQL.Select
-fromSelectAggregate annSelectG = do
-  selectFrom <-
-    case from of
-      IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      IR.FromFunction {}           -> refute $ pure FunctionNotSupported
-  fieldSources <-
-    runReaderT (traverse fromTableAggregateFieldG fields) (fromAlias selectFrom)
-  filterExpression <-
-    runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
-  Args { argsOrderBy
-       , argsWhere
-       , argsJoins
-       , argsTop
-       , argsDistinct = Proxy
-       , argsOffset
-       } <- runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
-  let selectProjections =
-        concatMap (toList . fieldSourceProjections) fieldSources
+fromSelectAggregate
+  mparentRelationship
+  IR.AnnSelectG
+    { _asnFields = (zip [0..] -> fields)
+    , _asnFrom = from
+    , _asnPerm = IR.TablePerm {_tpLimit = (maybe NoTop Top -> permissionBasedTop), _tpFilter = permFilter}
+    , _asnArgs = args
+    , _asnStrfyNum = (bool LeaveNumbersAlone StringifyNumbers -> stringifyNumbers)
+    }
+  = do
+  selectFrom <- case from of
+    IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
+    IR.FromFunction {}           -> refute $ pure FunctionNotSupported
+  -- Below: When we're actually a RHS of a query (of CROSS APPLY),
+  -- then we'll have a LHS table that we're joining on. So we get the
+  -- conditions expressions from the field mappings. The LHS table is
+  -- the entityAlias, and the RHS table is selectFrom.
+  mforeignKeyConditions <- fmap (Where . fromMaybe []) $ for mparentRelationship $
+    \(entityAlias, mapping) ->
+      runReaderT (fromMapping selectFrom mapping) entityAlias
+  filterExpression <- runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
+  args'@Args{argsExistingJoins} <-
+    runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
+  -- Although aggregates, exps and nodes could be handled in one list,
+  -- we need to separately treat the subselect expressions
+  expss :: [(Int, [Projection])] <- flip runReaderT (fromAlias selectFrom) $ sequence $ mapMaybe fromTableExpFieldG fields
+  nodes :: [(Int, (IR.FieldName, [Projection]))] <-
+    flip runReaderT (fromAlias selectFrom) $ sequence $ mapMaybe (fromTableNodesFieldG argsExistingJoins stringifyNumbers) fields
+  aggregates :: [(Int, (IR.FieldName, [Projection]))] <-
+    flip runReaderT (fromAlias selectFrom) $ sequence $ mapMaybe fromTableAggFieldG fields
   pure
     Select
-      { selectProjections
-      , selectTop = permissionBasedTop <> argsTop
-      , selectFrom = Just selectFrom
-      , selectJoins = argsJoins <> mapMaybe fieldSourceJoin fieldSources
-      , selectWhere = argsWhere <> Where [filterExpression]
-      , selectFor =
-          JsonFor ForJson {jsonCardinality = JsonSingleton, jsonRoot = Root "aggregate"}
-      , selectOrderBy = argsOrderBy
-      , selectOffset = argsOffset
+      { selectProjections =
+          concatMap snd $ sortBy (comparing fst) $
+            expss
+            <> mkNodesSelect     args' mforeignKeyConditions filterExpression permissionBasedTop selectFrom nodes
+            <> mkAggregateSelect args' mforeignKeyConditions selectFrom aggregates
+      , selectTop = NoTop
+      , selectFrom = pure $ FromOpenJson $ Aliased
+          { aliasedThing = OpenJson
+              { openJsonExpression = ValueExpression $ ODBC.TextValue "[0]"
+              , openJsonWith = Nothing
+              }
+          , aliasedAlias = existsFieldName
+          }
+      , selectJoins = mempty -- JOINs and WHEREs are only relevant in subselects
+      , selectWhere = mempty
+      , selectFor = JsonFor ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot}
+      , selectOrderBy = Nothing
+      , selectOffset = Nothing
       }
-  where
-    IR.AnnSelectG { _asnFields = fields
-                  , _asnFrom = from
-                  , _asnPerm = perm
-                  , _asnArgs = args
-                  , _asnStrfyNum = _num -- TODO: Do we ignore this for aggregates?
-                  } = annSelectG
-    IR.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
-    permissionBasedTop = maybe NoTop Top mPermLimit
 
 
 --------------------------------------------------------------------------------
@@ -376,11 +500,8 @@ unfurlAnnOrderByElement =
 --------------------------------------------------------------------------------
 -- Conversion functions
 
-tableNameText :: {-PG.QualifiedObject-} TableName -> Text
+tableNameText :: TableName -> Text
 tableNameText (TableName {tableName}) = tableName
--- tableNameText qualifiedObject = qname
---   where
---     PG.QualifiedObject {qName = PG.TableName qname} = qualifiedObject
 
 -- | This is really the start where you query the base table,
 -- everything else is joins attached to it.
@@ -390,15 +511,9 @@ fromQualifiedTable schemadTableName@(TableName{tableName}) = do
   pure
     (FromQualifiedTable
        (Aliased
-          { aliasedThing =
-             schemadTableName {-TableName {tableName = qname, tableNameSchema = schemaName}-}
+          { aliasedThing = schemadTableName
           , aliasedAlias = alias
           }))
-  -- where
-  --   PG.QualifiedObject { qSchema = PG.SchemaName schemaName
-  --                        -- TODO: Consider many x.y.z. in schema name.
-  --                       , qName = PG.TableName qname
-  --                       } = qualifiedObject
 
 fromTableName :: TableName -> FromIr EntityAlias
 fromTableName TableName{tableName} = do
@@ -508,25 +623,46 @@ data FieldSource
   | AggregateFieldSource [Aliased Aggregate]
   deriving (Eq, Show)
 
-fromTableAggregateFieldG ::
-     (IR.FieldName, IR.TableAggregateFieldG 'MSSQL (Const Void) Expression) -> ReaderT EntityAlias FromIr FieldSource
-fromTableAggregateFieldG (IR.FieldName name, field) =
-  case field of
-    IR.TAFAgg (aggregateFields :: [(IR.FieldName, IR.AggregateField 'MSSQL)]) -> do
-      aggregates <-
-        for aggregateFields \(fieldName, aggregateField) ->
-          fromAggregateField aggregateField <&> \aliasedThing ->
-            Aliased {aliasedAlias = IR.getFieldNameTxt fieldName, ..}
-      pure (AggregateFieldSource aggregates)
-    IR.TAFExp text ->
-      pure
-        (ExpressionFieldSource
-           Aliased
-             { aliasedThing = TSQL.ValueExpression (ODBC.TextValue text)
-             , aliasedAlias = name
-             })
-    IR.TAFNodes {} ->
-      refute (pure NodesUnsupportedForNow)
+-- | Get FieldSource from a TAFExp type table aggregate field
+fromTableExpFieldG :: -- TODO: Convert function to be similar to Nodes function
+  (Int, (IR.FieldName, IR.TableAggregateFieldG 'MSSQL (Const Void) Expression)) ->
+  Maybe (ReaderT EntityAlias FromIr (Int, [Projection]))
+fromTableExpFieldG = \case
+  (index, (IR.FieldName name, IR.TAFExp text)) -> Just $
+    pure $
+      (index, fieldSourceProjections $
+        ExpressionFieldSource
+          Aliased
+            { aliasedThing = TSQL.ValueExpression (ODBC.TextValue text)
+            , aliasedAlias = name
+            })
+  _ -> Nothing
+
+fromTableAggFieldG ::
+  (Int, (IR.FieldName, IR.TableAggregateFieldG 'MSSQL (Const Void) Expression)) ->
+  Maybe (ReaderT EntityAlias FromIr (Int, (IR.FieldName, [Projection])))
+fromTableAggFieldG = \case
+  (index, (fieldName, IR.TAFAgg (aggregateFields :: [(IR.FieldName, IR.AggregateField 'MSSQL)]))) -> Just do
+    aggregates <-
+      for aggregateFields \(fieldName', aggregateField) ->
+        fromAggregateField aggregateField <&> \aliasedThing ->
+          Aliased {aliasedAlias = IR.getFieldNameTxt fieldName', ..}
+    pure (index, (fieldName, fieldSourceProjections $ AggregateFieldSource aggregates))
+  _ -> Nothing
+
+
+fromTableNodesFieldG ::
+  Map TableName EntityAlias ->
+  StringifyNumbers ->
+  (Int, (IR.FieldName, IR.TableAggregateFieldG 'MSSQL (Const Void) Expression)) ->
+  Maybe (ReaderT EntityAlias FromIr (Int, (IR.FieldName, [Projection])))
+fromTableNodesFieldG argsExistingJoins stringifyNumbers = \case
+  (index, (fieldName, IR.TAFNodes () (annFieldsG :: [(IR.FieldName, IR.AnnFieldG 'MSSQL (Const Void) Expression)]))) -> Just do
+    fieldSources' <- fromAnnFieldsG argsExistingJoins stringifyNumbers `traverse` annFieldsG
+    let nodesProjections' :: [Projection] = concatMap fieldSourceProjections fieldSources'
+    pure (index, (fieldName, nodesProjections'))
+  _ -> Nothing
+
 
 fromAggregateField :: IR.AggregateField 'MSSQL -> ReaderT EntityAlias FromIr Aggregate
 fromAggregateField aggregateField =
@@ -623,11 +759,16 @@ fromAnnColumnField _stringifyNumbers annColumnField = do
   -- WKT format
   if typ == (IR.ColumnScalar GeometryType) || typ == (IR.ColumnScalar GeographyType)
      then pure $ MethodExpression (ColumnExpression fieldName) "STAsText" []
-     else pure (ColumnExpression fieldName)
+     else case caseBoolExpMaybe of
+            Nothing -> pure (ColumnExpression fieldName)
+            Just ex -> do
+                ex' <- (traverse fromAnnBoolExpFld >=> fromGBoolExp) (coerce ex)
+                pure (ConditionalProjection ex' fieldName)
   where
     IR.AnnColumnField { _acfInfo = IR.ColumnInfo{pgiColumn=pgCol,pgiType=typ}
                       , _acfAsText = _asText :: Bool
                       , _acfOp = _ :: Maybe (IR.ColumnOp 'MSSQL) -- TODO: What's this?
+                      , _acfCaseBoolExpression = caseBoolExpMaybe
                       } = annColumnField
 
 -- | This is where a field name "foo" is resolved to a fully qualified
@@ -763,11 +904,11 @@ fromArrayAggregateSelectG
   -> ReaderT EntityAlias FromIr Join
 fromArrayAggregateSelectG annRelationSelectG = do
   fieldName <- lift (fromRelName aarRelationshipName)
-  sel <- lift (fromSelectAggregate annSelectG)
-  joinSelect <-
-    do foreignKeyConditions <- selectFromMapping sel mapping
-       pure
-         sel {selectWhere = Where foreignKeyConditions <> selectWhere sel}
+  joinSelect <- do
+    lhsEntityAlias <- ask
+    -- With this, the foreign key relations are injected automatically
+    -- at the right place by fromSelectAggregate.
+    lift (fromSelectAggregate (pure (lhsEntityAlias, mapping)) annSelectG)
   alias <- lift (generateEntityAlias (ArrayAggregateTemplate fieldName))
   pure
     Join
@@ -778,7 +919,7 @@ fromArrayAggregateSelectG annRelationSelectG = do
       }
   where
     IR.AnnRelationSelectG { aarRelationshipName
-                          , aarColumnMapping = mapping :: HashMap ColumnName ColumnName-- PG.PGCol PG.PGCol
+                          , aarColumnMapping = mapping :: HashMap ColumnName ColumnName
                           , aarAnnSelect = annSelectG
                           } = annRelationSelectG
 
@@ -943,6 +1084,9 @@ jsonFieldName = "json"
 aggFieldName :: Text
 aggFieldName = "agg"
 
+aggSubselectName :: Text
+aggSubselectName = "agg_sub"
+
 existsFieldName :: Text
 existsFieldName = "exists_placeholder"
 
@@ -976,6 +1120,7 @@ generateEntityAlias template = do
 fromAlias :: From -> EntityAlias
 fromAlias (FromQualifiedTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromOpenJson Aliased {aliasedAlias})       = EntityAlias aliasedAlias
+fromAlias (FromSelect Aliased {aliasedAlias})         = EntityAlias aliasedAlias
 
 columnNameToFieldName :: ColumnName -> EntityAlias -> FieldName
 columnNameToFieldName (ColumnName fieldName) EntityAlias {entityAliasText = fieldNameEntity} =

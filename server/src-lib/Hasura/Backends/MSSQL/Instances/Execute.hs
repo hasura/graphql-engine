@@ -169,7 +169,7 @@ multiplexRootReselect variables rootReselect =
                 OpenJson
                   { openJsonExpression =
                       ValueExpression (ODBC.TextValue $ lbsToTxt $ J.encode variables)
-                  , openJsonWith =
+                  , openJsonWith = Just $
                       NE.fromList
                         [ UuidField resultIdAlias (Just $ IndexPath RootPath 0)
                         , JsonField resultVarsAlias (Just $ IndexPath RootPath 1)
@@ -293,7 +293,7 @@ validateVariables sourceConfig sessionVariableValues prepState = do
 
         canaryQuery = if null projAll
                       then Nothing
-                      else Just $ renderQuery select {
+                      else Just $ renderQuery emptySelect {
                                       selectProjections = projAll,
                                       selectFrom = sessionOpenJson occSessionVars
                                       }
@@ -325,7 +325,7 @@ validateVariables sourceConfig sessionVariableValues prepState = do
                 (
                   OpenJson
                     (ValueExpression $ ODBC.TextValue $ lbsToTxt $ J.encode occSessionVars)
-                    (sessField <$> fields)
+                    (pure (sessField <$> fields))
                 )
                 "session"
 
@@ -334,4 +334,3 @@ validateVariables sourceConfig sessionVariableValues prepState = do
 
       sessionReference :: Text -> Aliased Expression
       sessionReference var = Aliased (ColumnExpression (TSQL.FieldName var "session")) var
-

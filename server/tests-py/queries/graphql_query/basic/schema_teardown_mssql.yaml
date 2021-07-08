@@ -9,6 +9,6 @@ args:
       drop table article;
       drop table author;
       drop table [user];
-      --  TODO: https://github.com/hasura/graphql-engine-mono/issues/1435
-      -- drop table article_multi;
-      -- drop table author_multi;
+      drop table person;
+      drop table article_multi;
+      drop table author_multi;

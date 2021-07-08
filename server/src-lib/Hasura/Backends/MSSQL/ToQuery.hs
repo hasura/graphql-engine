@@ -59,7 +59,6 @@ instance IsString Printer where
 instance ToJSON Expression where
   toJSON = toJSON . T.toTxt . toQueryFlat . fromExpression
 
-
 --------------------------------------------------------------------------------
 -- Printer generators
 
@@ -109,6 +108,10 @@ fromExpression =
       "(" <+> fromExpression e <+> ")." <+>
       fromString (show op) <+>
       "(" <+> fromExpression str <+> ") = 1"
+    ConditionalProjection expression fieldName ->
+      "(CASE WHEN(" <+>
+      fromExpression expression <+>
+      ") THEN " <+> fromFieldName fieldName <+> " ELSE NULL END)"
 
 fromOp :: Op -> Printer
 fromOp =
@@ -289,7 +292,7 @@ fromFor =
   \case
     NoFor -> ""
     JsonFor ForJson {jsonCardinality} ->
-      "FOR JSON PATH" <+>
+      "FOR JSON PATH, INCLUDE_NULL_VALUES" <+>
       case jsonCardinality of
         JsonArray     -> ""
         JsonSingleton -> ", WITHOUT_ARRAY_WRAPPER"
@@ -327,9 +330,33 @@ fromCountable =
 fromWhere :: Where -> Printer
 fromWhere =
   \case
-    Where expressions ->
-      "WHERE " <+>
-      IndentPrinter 6 (fromExpression (AndExpression expressions))
+    Where expressions
+      | Just whereExp <- collapseWhere (AndExpression expressions) ->
+        "WHERE " <+> IndentPrinter 6 (fromExpression whereExp)
+      | otherwise -> ""
+
+-- Drop useless examples like this from the output:
+--
+-- WHERE (((1<>1))
+--       AND ((1=1)))
+--       AND ((1=1))
+--
+-- And
+--
+-- WHERE ((1<>1))
+--
+-- They're redundant, but make the output less readable.
+collapseWhere :: Expression -> Maybe Expression
+collapseWhere = go
+  where
+    go =
+      \case
+        ValueExpression (BoolValue True) -> Nothing
+        AndExpression xs ->
+          case mapMaybe go xs of
+            [] -> Nothing
+            ys -> pure (AndExpression ys)
+        e -> pure e
 
 fromFrom :: From -> Printer
 fromFrom =
@@ -337,6 +364,7 @@ fromFrom =
     FromQualifiedTable aliasedQualifiedTableName ->
       fromAliased (fmap fromTableName aliasedQualifiedTableName)
     FromOpenJson openJson -> fromAliased (fmap fromOpenJson openJson)
+    FromSelect select -> fromAliased (fmap (parens . fromSelect) select)
 
 fromOpenJson :: OpenJson -> Printer
 fromOpenJson OpenJson {openJsonExpression, openJsonWith} =
@@ -344,13 +372,14 @@ fromOpenJson OpenJson {openJsonExpression, openJsonWith} =
     NewlinePrinter
     [ "OPENJSON(" <+>
       IndentPrinter 9 (fromExpression openJsonExpression) <+> ")"
-    , "WITH (" <+>
-      IndentPrinter
-        5
-        (SepByPrinter
-           ("," <+> NewlinePrinter)
-           (toList (fmap fromJsonFieldSpec openJsonWith))) <+>
-      ")"
+    , case openJsonWith of
+        Nothing -> ""
+        Just openJsonWith' -> "WITH (" <+>
+          IndentPrinter
+            5
+            (SepByPrinter
+               ("," <+> NewlinePrinter)
+               (fmap fromJsonFieldSpec $ toList openJsonWith')) <+> ")"
     ]
 
 fromJsonFieldSpec :: JsonFieldSpec -> Printer
@@ -384,6 +413,9 @@ truePrinter = "(1=1)"
 
 falsePrinter :: Printer
 falsePrinter = "(1<>1)"
+
+parens :: Printer -> Printer
+parens p = "(" <+> IndentPrinter 1 p <+> ")"
 
 -- | Wrap a select with things needed when using FOR JSON.
 wrapFor :: For -> Printer -> Printer

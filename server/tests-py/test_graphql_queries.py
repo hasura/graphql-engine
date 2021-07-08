@@ -173,6 +173,7 @@ class TestGraphQLQueryBasicCommon:
 @pytest.mark.parametrize("backend", ['mssql'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicMSSQL:
+
     def test_select_various_mssql_types(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_test_types_mssql.yaml', transport)
 
@@ -181,6 +182,12 @@ class TestGraphQLQueryBasicMSSQL:
 
     def test_select_query_user_col_change(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change_mssql.yaml")
+
+    def test_nodes_aggregates_mssql(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/nodes_aggregates_mssql.yaml", transport)
+
+    def test_nodes_aggregates_conditions_mssql(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/nodes_aggregates_conditions_mssql.yaml", transport)
 
     @classmethod
     def dir(cls):
@@ -493,7 +500,6 @@ class TestGraphQLQueryBoolExpBasicMSSQL:
     def test_uuid_test_in_uuid_col(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_uuid_test_in_uuid_col_mssql.yaml', transport)
 
-    @pytest.mark.skip(reason="TODO: https://github.com/hasura/graphql-engine-mono/issues/1438")
     def test_bools(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_bools_mssql.yaml', transport)
 
@@ -582,13 +588,28 @@ class TestGraphqlQueryPermissions:
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @use_inherited_roles_fixtures
-class TestGraphQLInheritedRoles:
+class TestGraphQLInheritedRolesPostgres:
 
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/permissions/inherited_roles'
 
     setup_metadata_api_version = "v2"
+
+    def test_basic_inherited_role(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/basic_inherited_roles.yaml')
+
+    def test_inherited_role_when_some_roles_may_not_have_permission_configured(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/inherited_role_with_some_roles_having_no_permissions.yaml')
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@pytest.mark.parametrize('backend', ['mssql'])
+@usefixtures('per_backend_tests', 'inherited_role_fixtures', 'per_class_tests_db_state')
+class TestGraphQLInheritedRolesMSSQL:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/permissions/inherited_roles_mssql'
 
     def test_basic_inherited_role(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/basic_inherited_roles.yaml')
