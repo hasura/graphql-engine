@@ -229,7 +229,7 @@ actionOutputFields outputType annotatedObject = do
             P.subselection_ fieldName desc selectionSetParser
               <&> \fields -> RQL.AFObjectRelation $ RQL.AnnRelationSelectG tableRelName columnMapping $
                              RQL.AnnObjectSelectG fields tableName $
-                             fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter tablePerms
+                             (fmap . fmap) partialSQLExpToUnpreparedValue $ spiFilter tablePerms
         ArrRel -> do
           let desc = Just $ G.Description "An array relationship"
           otherTableParser <- lift $ selectTable sourceName tableInfo fieldName desc tablePerms

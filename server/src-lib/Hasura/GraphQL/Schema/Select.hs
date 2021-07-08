@@ -937,7 +937,7 @@ fieldSelection sourceName table maybePkeyColumns fieldInfo selectPermissions = d
              guard $ columnName `Map.member` (spiCols selectPermissions)
              let caseBoolExp = join $ Map.lookup columnName (spiCols selectPermissions)
              let caseBoolExpUnpreparedValue =
-                   fmapAnnColumnCaseBoolExp partialSQLExpToUnpreparedValue <$> caseBoolExp
+                   (fmap . fmap) partialSQLExpToUnpreparedValue <$> caseBoolExp
              let pathArg = jsonPathArg $ pgiType columnInfo
                  -- In an inherited role, when a column is part of all the select
                  -- permissions which make up the inherited role then the nullability
@@ -1039,7 +1039,7 @@ computedFieldPG sourceName ComputedFieldInfo{..} parentTable selectPermissions =
           (Map.lookup _cfiName (spiScalarComputedFields selectPermissions))
           (hoistMaybe Nothing)
       let caseBoolExpUnpreparedValue =
-            fmapAnnColumnCaseBoolExp partialSQLExpToUnpreparedValue <$> caseBoolExpMaybe
+            (fmap . fmap) partialSQLExpToUnpreparedValue <$> caseBoolExpMaybe
           fieldArgsParser = do
             args  <- functionArgsParser
             colOp <- jsonPathArg $ ColumnScalar scalarReturnType
@@ -1306,7 +1306,7 @@ functionArgs functionTrackedAs (toList -> inputArgs) = do
 
 tablePermissionsInfo :: Backend b => SelPermInfo b -> TablePerms b
 tablePermissionsInfo selectPermissions = IR.TablePerm
-  { IR._tpFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter selectPermissions
+  { IR._tpFilter = (fmap . fmap) partialSQLExpToUnpreparedValue $ spiFilter selectPermissions
   , IR._tpLimit  = spiLimit selectPermissions
   }
 

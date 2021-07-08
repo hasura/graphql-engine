@@ -271,7 +271,7 @@ convAnnBoolExpPartialSQL
   -> AnnBoolExpPartialSQL backend
   -> f (AnnBoolExpSQL backend)
 convAnnBoolExpPartialSQL f =
-  traverseAnnBoolExp (convPartialSQLExp f)
+  (traverse . traverse) (convPartialSQLExp f)
 
 convAnnColumnCaseBoolExpPartialSQL
   :: (Applicative f, Backend backend)
@@ -279,7 +279,7 @@ convAnnColumnCaseBoolExpPartialSQL
   -> AnnColumnCaseBoolExpPartialSQL backend
   -> f (AnnColumnCaseBoolExp backend (SQLExpression backend))
 convAnnColumnCaseBoolExpPartialSQL f =
-  traverseAnnColumnCaseBoolExp (convPartialSQLExp f)
+  (traverse . traverse) (convPartialSQLExp f)
 
 convPartialSQLExp
   :: (Applicative f)

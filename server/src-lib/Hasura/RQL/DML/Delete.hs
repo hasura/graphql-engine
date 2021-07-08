@@ -2,7 +2,6 @@ module Hasura.RQL.DML.Delete
   ( validateDeleteQWith
   , validateDeleteQ
   , AnnDelG(..)
-  , traverseAnnDel
   , AnnDel
   , execDeleteQuery
   , runDelete

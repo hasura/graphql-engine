@@ -78,8 +78,8 @@ pgDBQueryPlan
   -> QueryDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> m (DBStepInfo ('Postgres pgKind))
 pgDBQueryPlan userInfo sourceName sourceConfig qrf = do
-  (preparedQuery, PlanningSt _ _ planVals expectedVariables) <- flip runStateT initPlanningSt
-    $ traverseQueryDB @('Postgres pgKind) prepareWithPlan qrf
+  (preparedQuery, PlanningSt _ _ planVals expectedVariables) <-
+    flip runStateT initPlanningSt $ traverse prepareWithPlan qrf
   validateSessionVariables expectedVariables $ _uiSession userInfo
   let (action, preparedSQL) = mkCurPlanTx userInfo $ irToRootFieldPlan planVals preparedQuery
   pure $ DBStepInfo @('Postgres pgKind) sourceName sourceConfig preparedSQL action
@@ -97,7 +97,7 @@ pgDBQueryExplain
   -> QueryDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> m (AB.AnyBackend DBStepInfo)
 pgDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
-  preparedQuery <- traverseQueryDB (resolveUnpreparedValue userInfo) qrf
+  preparedQuery <- traverse (resolveUnpreparedValue userInfo) qrf
   let PreparedSql querySQL _ = irToRootFieldPlan mempty preparedQuery
       textSQL = Q.getQueryText querySQL
       -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
@@ -143,7 +143,7 @@ convertDelete
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
 convertDelete userInfo deleteOperation stringifyNum = do
   let (preparedDelete, expectedVariables) =
-        flip runState Set.empty $ IR.traverseAnnDel @('Postgres pgKind) prepareWithoutPlan deleteOperation
+        flip runState Set.empty $ traverse prepareWithoutPlan deleteOperation
   validateSessionVariables expectedVariables $ _uiSession userInfo
   pure $ PGE.execDeleteQuery stringifyNum userInfo (preparedDelete, Seq.empty)
 
@@ -158,7 +158,7 @@ convertUpdate
   -> Bool
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
 convertUpdate userInfo updateOperation stringifyNum = do
-  let (preparedUpdate, expectedVariables) = flip runState Set.empty $ IR.traverseAnnUpd prepareWithoutPlan updateOperation
+  let (preparedUpdate, expectedVariables) = flip runState Set.empty $ traverse prepareWithoutPlan updateOperation
   if null $ IR.uqp1OpExps updateOperation
   then pure $ pure $ IR.buildEmptyMutResp $ IR.uqp1Output preparedUpdate
   else do
@@ -177,7 +177,7 @@ convertInsert
   -> Bool
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
 convertInsert userInfo insertOperation stringifyNum = do
-  let (preparedInsert, expectedVariables) = flip runState Set.empty $ traverseAnnInsert prepareWithoutPlan insertOperation
+  let (preparedInsert, expectedVariables) = flip runState Set.empty $ traverse prepareWithoutPlan insertOperation
   validateSessionVariables expectedVariables $ _uiSession userInfo
   pure $ convertToSQLTransaction preparedInsert userInfo Seq.empty stringifyNum
 
@@ -191,14 +191,14 @@ convertFunction
      )
   => UserInfo
   -> JsonAggSelect
-  -> IR.AnnSimpleSelG ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
+  -> IR.AnnSimpleSelectG ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -- ^ VOLATILE function as 'SelectExp'
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
 convertFunction userInfo jsonAggSelect unpreparedQuery = do
   -- Transform the RQL AST into a prepared SQL query
   (preparedQuery, PlanningSt _ _ planVals expectedVariables)
     <- flip runStateT initPlanningSt
-       $ IR.traverseAnnSimpleSelect prepareWithPlan unpreparedQuery
+       $ traverse prepareWithPlan unpreparedQuery
   validateSessionVariables expectedVariables $ _uiSession userInfo
   let queryResultFn =
         case jsonAggSelect of
@@ -248,7 +248,7 @@ pgDBSubscriptionPlan
   -> m (LiveQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)))
 pgDBSubscriptionPlan userInfo _sourceName sourceConfig unpreparedAST = do
   (preparedAST, PGL.QueryParametersInfo{..}) <- flip runStateT mempty $
-    for unpreparedAST $ traverseQueryDB (PGL.resolveMultiplexedValue $ _uiSession userInfo)
+    for unpreparedAST $ traverse (PGL.resolveMultiplexedValue $ _uiSession userInfo)
   let multiplexedQuery = PGL.mkMultiplexedQuery preparedAST
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedLiveQueryPlan roleName multiplexedQuery

@@ -79,9 +79,9 @@ runFromIr fromIr = evalStateT (unFromIr fromIr) mempty
 --------------------------------------------------------------------------------
 -- Similar rendition of old API
 
-mkSQLSelect ::
-     IR.JsonAggSelect
-  -> IR.AnnSelectG 'MSSQL (Const Void) (IR.AnnFieldsG 'MSSQL (Const Void) Expression) Expression
+mkSQLSelect
+  :: IR.JsonAggSelect
+  -> IR.AnnSelectG 'MSSQL (Const Void) (IR.AnnFieldG 'MSSQL (Const Void)) Expression
   -> FromIr TSQL.Select
 mkSQLSelect jsonAggSelect annSimpleSel =
   case jsonAggSelect of
@@ -107,7 +107,7 @@ fromRootField =
 --------------------------------------------------------------------------------
 -- Top-level exported functions
 
-fromSelectRows :: IR.AnnSelectG 'MSSQL (Const Void) (IR.AnnFieldsG 'MSSQL (Const Void) Expression) Expression -> FromIr TSQL.Select
+fromSelectRows :: IR.AnnSelectG 'MSSQL (Const Void) (IR.AnnFieldG 'MSSQL (Const Void)) Expression -> FromIr TSQL.Select
 fromSelectRows annSelectG = do
   selectFrom <-
     case from of
@@ -156,8 +156,8 @@ fromSelectRows annSelectG = do
         then StringifyNumbers
         else LeaveNumbersAlone
 
-fromSelectAggregate ::
-     IR.AnnSelectG 'MSSQL (Const Void) [(IR.FieldName, IR.TableAggregateFieldG 'MSSQL (Const Void) Expression)] Expression
+fromSelectAggregate
+  :: IR.AnnSelectG 'MSSQL (Const Void) (IR.TableAggregateFieldG 'MSSQL (Const Void)) Expression
   -> FromIr TSQL.Select
 fromSelectAggregate annSelectG = do
   selectFrom <-

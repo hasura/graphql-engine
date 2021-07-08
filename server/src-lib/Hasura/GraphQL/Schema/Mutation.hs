@@ -173,7 +173,7 @@ objectRelationshipInput sourceName tableInfo insertPerms selectPerms updatePerms
       inputParser = do
         conflictClause <- mkConflictClause conflictParser
         object <- P.field objectName Nothing objectParser
-        pure $ mkInsertObject object tableName columns conflictClause insertPerms updatePerms
+        pure $ mkInsertObject (IR.Single object) tableName columns conflictClause insertPerms updatePerms
   pure $ P.object inputName (Just inputDesc) inputParser
   where tableName = tableInfoName tableInfo
 
@@ -204,15 +204,15 @@ arrayRelationshipInput sourceName tableInfo insertPerms selectPerms updatePerms 
   where tableName = tableInfoName tableInfo
 
 mkInsertObject
-  :: forall b a
+  :: forall b f
    . BackendSchema b
-  => a
+  => f (IR.AnnInsObj b (UnpreparedValue b))
   -> TableName b
   -> [ColumnInfo b]
   -> Maybe (IR.ConflictClauseP1 b (UnpreparedValue b))
   -> InsPermInfo b
   -> Maybe (UpdPermInfo b)
-  -> IR.AnnIns b a (UnpreparedValue b)
+  -> IR.AnnIns b f (UnpreparedValue b)
 mkInsertObject objects table columns conflictClause insertPerms updatePerms =
   IR.AnnIns { _aiInsObj         = objects
             , _aiTableName      = table
@@ -221,8 +221,8 @@ mkInsertObject objects table columns conflictClause insertPerms updatePerms =
             , _aiTableCols      = columns
             , _aiDefVals        = defaultValues
             }
-  where insertCheck = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ ipiCheck insertPerms
-        updateCheck = fmapAnnBoolExp partialSQLExpToUnpreparedValue <$> (upiCheck =<< updatePerms)
+  where insertCheck = (fmap . fmap) partialSQLExpToUnpreparedValue $ ipiCheck insertPerms
+        updateCheck = (fmap . fmap) partialSQLExpToUnpreparedValue <$> (upiCheck =<< updatePerms)
         defaultValues = Map.union (partialSQLExpToUnpreparedValue <$> ipiSet insertPerms)
           $ Map.fromList [(column, UVLiteral $ columnDefaultValue @b column) | column <- pgiColumn <$> columns]
 
@@ -259,7 +259,7 @@ conflictObject sourceName tableInfo selectPerms updatePerms = runMaybeT $ do
         pure $ case columns of
           [] -> IR.CP1DoNothing $ Just constraint
           _  -> IR.CP1Update constraint columns preSetColumns $
-            BoolAnd $ catMaybes [whereExp, Just $ fmapAnnBoolExp partialSQLExpToUnpreparedValue $ upiFilter updatePerms]
+            BoolAnd $ catMaybes [whereExp, Just $ (fmap . fmap) partialSQLExpToUnpreparedValue $ upiFilter updatePerms]
   pure $ P.object objectName (Just objectDesc) fieldsParser
   where preSetColumns = partialSQLExpToUnpreparedValue <$> upiSet updatePerms
 
@@ -362,8 +362,8 @@ mkUpdateObject table columns updatePerms ((opExps, whereExp), mutationOutput) =
             , IR.uqp1AllCols = columns
             }
   where
-    permissionFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ upiFilter updatePerms
-    checkExp = maybe annBoolExpTrue (fmapAnnBoolExp partialSQLExpToUnpreparedValue) $ upiCheck updatePerms
+    permissionFilter = (fmap . fmap) partialSQLExpToUnpreparedValue $ upiFilter updatePerms
+    checkExp = maybe annBoolExpTrue ((fmap . fmap) partialSQLExpToUnpreparedValue) $ upiCheck updatePerms
 
 
 -- delete
@@ -423,7 +423,7 @@ mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
             , IR.dqp1AllCols = columns
             }
   where
-    permissionFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ dpiFilter deletePerms
+    permissionFilter = (fmap . fmap) partialSQLExpToUnpreparedValue $ dpiFilter deletePerms
 
 
 -- common

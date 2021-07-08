@@ -101,7 +101,7 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
 
     withRelsInsert = do
       insertRequests <- indexedForM insObjs \obj -> do
-        let singleObj = IR.AnnIns obj table conflictClause checkCondition columnInfos defVals
+        let singleObj = IR.AnnIns (IR.Single obj) table conflictClause checkCondition columnInfos defVals
         insertObject singleObj additionalColumns userInfo planVars stringifyNum
       let affectedRows = sum $ map fst insertRequests
           columnValues = mapMaybe snd insertRequests
@@ -146,7 +146,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tra
 
   return (totAffRows, colValM)
   where
-    IR.AnnIns annObj table onConflict checkCond allColumns defaultValues = singleObjIns
+    IR.AnnIns (IR.Single annObj) table onConflict checkCond allColumns defaultValues = singleObjIns
     IR.AnnInsObj columns objectRels arrayRels = annObj
 
     afterInsert, beforeInsert :: [IR.ObjRelIns ('Postgres pgKind) PG.SQLExp]
@@ -166,7 +166,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tra
     singleToMulti :: forall a b. IR.SingleObjIns b a -> IR.MultiObjIns b a
     singleToMulti IR.AnnIns {..} =
       IR.AnnIns
-        [_aiInsObj]
+        [IR.unSingle _aiInsObj]
         _aiTableName
         _aiConflictClause
         _aiCheckCond

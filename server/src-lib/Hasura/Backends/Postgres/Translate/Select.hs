@@ -39,7 +39,7 @@ selectQuerySQL
   :: forall pgKind
    . (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind)
   => JsonAggSelect
-  -> AnnSimpleSel ('Postgres pgKind)
+  -> AnnSimpleSelect ('Postgres pgKind)
   -> Q.Query
 selectQuerySQL jsonAggSelect sel =
   Q.fromBuilder $ toSQL $ mkSQLSelect jsonAggSelect sel
@@ -481,7 +481,7 @@ processAnnSimpleSelect
   => SourcePrefixes
   -> FieldName
   -> PermissionLimitSubQuery
-  -> AnnSimpleSel ('Postgres pgKind)
+  -> AnnSimpleSelect ('Postgres pgKind)
   -> m ( SelectSource
        , HM.HashMap S.Alias S.SQLExp
        )
@@ -1111,7 +1111,7 @@ mkSQLSelect
      , PostgresAnnotatedFieldJSON pgKind
      )
   => JsonAggSelect
-  -> AnnSimpleSel ('Postgres pgKind)
+  -> AnnSimpleSelect ('Postgres pgKind)
   -> S.Select
 mkSQLSelect jsonAggSelect annSel =
   let permLimitSubQuery = PLSQNotRequired

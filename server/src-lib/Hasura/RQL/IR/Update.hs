@@ -22,7 +22,7 @@ data AnnUpdG (b :: BackendType) (r :: BackendType -> Type) v
   -- converted as desired
   , uqp1Output  :: !(MutationOutputG b r v)
   , uqp1AllCols :: ![ColumnInfo b]
-  }
+  } deriving (Functor, Foldable, Traversable)
 
 type AnnUpd b = AnnUpdG b (Const Void) (SQLExpression b)
 
@@ -50,18 +50,3 @@ updateOperatorText (UpdPrepend      _) = "_prepend"
 updateOperatorText (UpdDeleteKey    _) = "_delete_key"
 updateOperatorText (UpdDeleteElem   _) = "_delete_elem"
 updateOperatorText (UpdDeleteAtPath _) = "_delete_at_path"
-
-traverseAnnUpd
-  :: (Applicative f, Backend backend)
-  => (a -> f b)
-  -> AnnUpdG backend r a
-  -> f (AnnUpdG backend r b)
-traverseAnnUpd f annUpd =
-  AnnUpd tn
-  <$> traverse (traverse $ traverse f) opExps
-  <*> ((,) <$> traverseAnnBoolExp f whr <*> traverseAnnBoolExp f fltr)
-  <*> traverseAnnBoolExp f chk
-  <*> traverseMutationOutput f mutOutput
-  <*> pure allCols
-  where
-    AnnUpd tn opExps (whr, fltr) chk mutOutput allCols = annUpd
