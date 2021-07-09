@@ -59,7 +59,6 @@ instance
   type SourceConfig            ('Postgres pgKind) = PG.PGSourceConfig
   type SourceConnConfiguration ('Postgres pgKind) = PG.PostgresConnConfiguration
   type Identifier              ('Postgres pgKind) = PG.Identifier
-  type Alias                   ('Postgres pgKind) = PG.Alias
   type TableName               ('Postgres pgKind) = PG.QualifiedTable
   type FunctionName            ('Postgres pgKind) = PG.QualifiedFunction
   type FunctionArgType         ('Postgres pgKind) = PG.QualifiedPGType

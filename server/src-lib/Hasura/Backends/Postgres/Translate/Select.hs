@@ -697,7 +697,9 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
       cursor = mkCursorExp $ toList orderByItemExps
   pure (orderByExtractors, orderByExp, cursor)
   where
-    processAnnOrderByItem :: AnnOrderByItem ('Postgres pgKind) -> m (OrderByItemExp ('Postgres pgKind))
+    processAnnOrderByItem
+      :: AnnOrderByItem ('Postgres pgKind)
+      -> m (OrderByItemG ('Postgres pgKind) (AnnOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.Alias, SQLExpression ('Postgres pgKind))))
     processAnnOrderByItem orderByItem =
       forM orderByItem $ \ordByCol -> (ordByCol,) <$>
       processAnnOrderByElement sourcePrefix' fieldAlias' ordByCol
@@ -743,12 +745,16 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
                , S.mkQIdenExp relSourcePrefix (mkAggregateOrderByAlias aggOrderBy)
                )
 
-    toOrderByExp :: OrderByItemExp ('Postgres pgKind) -> S.OrderByItem
+    toOrderByExp
+      :: OrderByItemG ('Postgres pgKind) (AnnOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.Alias, SQLExpression ('Postgres pgKind)))
+      -> S.OrderByItem
     toOrderByExp orderByItemExp =
       let OrderByItemG obTyM expAlias obNullsM = fst . snd <$> orderByItemExp
       in S.OrderByItem (S.SEIdentifier $ toIdentifier expAlias) obTyM obNullsM
 
-    mkCursorExp :: [OrderByItemExp ('Postgres pgKind)] -> S.SQLExp
+    mkCursorExp
+      :: [OrderByItemG ('Postgres pgKind) (AnnOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.Alias, SQLExpression ('Postgres pgKind)))]
+      -> S.SQLExp
     mkCursorExp orderByItemExps =
       S.applyJsonBuildObj $ flip concatMap orderByItemExps $
       \orderByItemExp ->

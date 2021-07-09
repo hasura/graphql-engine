@@ -31,7 +31,7 @@ import           Hasura.GraphQL.Parser                   hiding (field)
 import           Hasura.GraphQL.RemoteServer             (execRemoteGQ)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.IR.Select
-import           Hasura.RQL.Types                        hiding (Alias)
+import           Hasura.RQL.Types
 import           Hasura.Server.Version                   (HasVersion)
 import           Hasura.Session
 

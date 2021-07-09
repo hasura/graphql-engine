@@ -22,7 +22,6 @@ instance Backend 'MSSQL where
   type SourceConfig            'MSSQL = MSSQL.MSSQLSourceConfig
   type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
   type Identifier              'MSSQL = Void
-  type Alias                   'MSSQL = MSSQL.EntityAlias
   type TableName               'MSSQL = MSSQL.TableName
   type FunctionName            'MSSQL = MSSQL.FunctionName
   type FunctionArgType         'MSSQL = Void
