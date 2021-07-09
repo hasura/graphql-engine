@@ -109,7 +109,6 @@ class
   type SourceConfig            b :: Type
   type SourceConnConfiguration b :: Type
   type Identifier              b :: Type
-  type Alias                   b :: Type
   type TableName               b :: Type
   type FunctionName            b :: Type
   type FunctionArgType         b :: Type

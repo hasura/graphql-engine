@@ -21,7 +21,6 @@ instance Backend 'BigQuery where
   type SourceConfig            'BigQuery = BigQuery.BigQuerySourceConfig
   type SourceConnConfiguration 'BigQuery = BigQuery.BigQueryConnSourceConfig
   type Identifier              'BigQuery = Void
-  type Alias                   'BigQuery = BigQuery.EntityAlias
   type TableName               'BigQuery = BigQuery.TableName
   type FunctionName            'BigQuery = BigQuery.FunctionName
   type FunctionArgType         'BigQuery = Void

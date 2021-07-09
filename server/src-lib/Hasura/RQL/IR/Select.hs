@@ -176,7 +176,6 @@ instance (Backend b) => Hashable (AnnAggregateOrderBy b)
 type AnnOrderByElement b v = AnnOrderByElementG b (AnnBoolExp b v)
 type AnnOrderByItemG b v = OrderByItemG b (AnnOrderByElement b v)
 type AnnOrderByItem b = AnnOrderByItemG b (SQLExpression b)
-type OrderByItemExp b = OrderByItemG b (AnnOrderByElement b (SQLExpression b), (Alias b, SQLExpression b))
 
 
 -- Fields
