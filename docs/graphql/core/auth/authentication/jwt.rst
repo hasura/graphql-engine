@@ -135,7 +135,7 @@ JSON object:
      "audience": <optional-string-or-list-of-strings-to-verify-audience>,
      "issuer": "<optional-string-to-verify-issuer>",
      "claims_map": "<optional-object-of-session-variable-to-claim-jsonpath-or-literal-value>",
-     "allowed_skew": "<optional-number-of-seconds-in-integer>",
+     "allowed_skew": <optional-number-of-seconds-in-integer>,
      "header": "<optional-key-to-indicate-cookie-or-authorization-header>"
    }
 
