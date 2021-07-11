@@ -220,5 +220,6 @@ Dieses Readme ist under anderem in den folgenden Sprachen verfügbar:
 - [Japanese :jp:](README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
 - [French :fr:](README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
 - [Greek 🇬🇷](README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
+- [Marathi :india:](translations/README.marathi.md) (:pray: [@vieee](https://github.com/vieee))
 
 Übersetzungen von anderen Dateien kannst du [hier](../translations) finden.

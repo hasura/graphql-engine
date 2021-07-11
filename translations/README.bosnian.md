@@ -207,6 +207,7 @@ Ova stranica je dostupna u sljedećim jezicima:
 - [Japanski :jp:](../translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
 - [Francuski :fr:](../translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
 - [Grčki 🇬🇷](../translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
+- [Marathi :india:](../translations/README.marathi.md) (:pray: [@vieee](https://github.com/vieee))
 - [Engleski :uk:](../translations/README.md)
 
 Prijevodi za ostale fajlove mogu biti pronađeni [ovdje](../translations).
