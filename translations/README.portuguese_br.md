@@ -28,8 +28,8 @@ Leia mais em [hasura.io](https://hasura.io) e na [documentação](https://hasura
 - **Faça consultas poderosas**: Filtragem embutida, paginação, pesquisa de padrões, inserção em massa, atualização, exclusão de mutações.
 - **Em tempo real**: Converta qualquer consulta GraphQL em uma consulta ativa usando subscriptions.
 - **Mesclar esquemas remotos**: Acesse esquemas GraphQL personalizados para lógica de negócios por meio de um único GraphQL Engine endpoint. [Leia mais](/remote-schemas.md).
-- **Acionar webhooks ou funções sem servidor**: No Postgres insira/atualize/exclua eventos ([leia mais](/event-triggers.md))
-- **Funciona com bando de dados existentes**: Aponte para um banco de dados Postgres existente para obter uma GraphQL API pronto para uso.
+- **Acionar webhooks ou funções sem servidor**: No Postgres insira/atualize/exclua eventos. ([Leia mais](/event-triggers.md))
+- **Funciona com banco de dados existentes**: Aponte para um banco de dados Postgres existente para obter uma GraphQL API pronto para uso.
 - **Controle de acesso refinado**: Controle de acesso dinâmico que se integra ao seu sistema de autenticação(ex: auth0, firebase-auth)
 - **Alta performance & low-footprint**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multicore aware
 - **Interface de Admin & Migração**: Interface de Admin & esquemas de migração inspirada em Rails
