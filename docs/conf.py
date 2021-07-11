@@ -27,8 +27,10 @@ sys.setrecursionlimit(2000)
 
 from sphinx.builders.html import StandaloneHTMLBuilder
 from docutils.parsers.rst.directives.admonitions import BaseAdmonition
+from docutils.parsers.rst import directives, Directive
 from sphinx.util import compat
 compat.make_admonition = BaseAdmonition
+compat.Directive = Directive
 
 # from sphinx.util.osutil import relative_uri
 StandaloneHTMLBuilder.script_files = ["_static/scripts/vendor.js"]
@@ -83,6 +85,7 @@ extensions = [
     "sphinxcontrib.swaggerdoc",
     "sphinxcontrib.httpdomain",
     "sphinxcontrib.images",
+    "sphinx_copybutton",
     "sphinx.ext.todo",
     "sphinx_tabs.tabs",
     "graphiql",
@@ -174,6 +177,16 @@ pygments_style = 'sphinx'
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
 
+# Define the prompt text that you’d like removed from copied text in your code blocks.
+# When this variable is set, sphinx-copybutton will remove the prompt from the beginning of 
+# any lines that start with the text you specify. In addition, only the lines that contain 
+# prompts will be copied if any are discovered. If no lines with prompts are found, 
+# then the full contents of the cell will be copied.
+# The copybutton prompt text is regular expression, solved in JavaScript.
+
+copybutton_prompt_text = r"\$ "
+copybutton_prompt_is_regexp = True
+
 # If true, keep warnings as "system message" paragraphs in the built documents.
 # keep_warnings = False
 
@@ -191,7 +204,8 @@ html_theme = "djangodocs"
 #
 # html_theme = 'alabaster'
 
-# Theme options are theme-specific and customize the look and feel of a theme
+# Theme options are theme-specific and customize the look and feelcopybutton_prompt_text = r"\$ "
+# copybutton_prompt_is_regexp = True of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
@@ -401,3 +415,4 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #
 # texinfo_no_detailmenu = False
+
