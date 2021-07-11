@@ -1166,6 +1166,8 @@ class TableConfig:
     """
     """Customise the column names"""
     custom_column_names: Optional[Dict[str, str]] = None
+    """Customise the table name"""
+    custom_name: Optional[str] = None
     """Customise the root fields"""
     custom_root_fields: Optional[CustomRootFields] = None
 
@@ -1173,12 +1175,14 @@ class TableConfig:
     def from_dict(obj: Any) -> 'TableConfig':
         assert isinstance(obj, dict)
         custom_column_names = from_union([lambda x: from_dict(from_str, x), from_none], obj.get("custom_column_names"))
+        custom_name = from_union([from_str, from_none], obj.get("custom_name"))
         custom_root_fields = from_union([CustomRootFields.from_dict, from_none], obj.get("custom_root_fields"))
-        return TableConfig(custom_column_names, custom_root_fields)
+        return TableConfig(custom_column_names, custom_name, custom_root_fields)
 
     def to_dict(self) -> dict:
         result: dict = {}
         result["custom_column_names"] = from_union([lambda x: from_dict(from_str, x), from_none], self.custom_column_names)
+        result["custom_name"] = from_union([from_str, from_none], self.custom_name)
         result["custom_root_fields"] = from_union([lambda x: to_class(CustomRootFields, x), from_none], self.custom_root_fields)
         return result
 
@@ -1191,17 +1195,17 @@ class DeletePermission:
     https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#deletepermission
     """
     """Only the rows where this precondition holds true are updatable"""
-    filter: Optional[Dict[str, Union[float, Dict[str, Any], str]]] = None
+    filter: Optional[Dict[str, Any]] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'DeletePermission':
         assert isinstance(obj, dict)
-        filter = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), from_float, from_str], x), x), from_none], obj.get("filter"))
+        filter = from_union([lambda x: from_dict(lambda x: x, x), from_none], obj.get("filter"))
         return DeletePermission(filter)
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["filter"] = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), to_float, from_str], x), x), from_none], self.filter)
+        result["filter"] = from_union([lambda x: from_dict(lambda x: x, x), from_none], self.filter)
         return result
 
 
@@ -1392,7 +1396,7 @@ class InsertPermission:
     """
     backend_only: Optional[bool] = None
     """This expression has to hold true for every new row that is inserted"""
-    check: Optional[Dict[str, Union[float, Dict[str, Any], str]]] = None
+    check: Optional[Dict[str, Any]] = None
     """Preset values for columns that can be sourced from session variables or static values"""
     set: Optional[Dict[str, str]] = None
 
@@ -1401,7 +1405,7 @@ class InsertPermission:
         assert isinstance(obj, dict)
         columns = from_union([lambda x: from_list(from_str, x), EventTriggerColumnsEnum], obj.get("columns"))
         backend_only = from_union([from_bool, from_none], obj.get("backend_only"))
-        check = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), from_float, from_str], x), x), from_none], obj.get("check"))
+        check = from_union([lambda x: from_dict(lambda x: x, x), from_none], obj.get("check"))
         set = from_union([lambda x: from_dict(from_str, x), from_none], obj.get("set"))
         return InsertPermission(columns, backend_only, check, set)
 
@@ -1409,7 +1413,7 @@ class InsertPermission:
         result: dict = {}
         result["columns"] = from_union([lambda x: from_list(from_str, x), lambda x: to_enum(EventTriggerColumnsEnum, x)], self.columns)
         result["backend_only"] = from_union([from_bool, from_none], self.backend_only)
-        result["check"] = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), to_float, from_str], x), x), from_none], self.check)
+        result["check"] = from_union([lambda x: from_dict(lambda x: x, x), from_none], self.check)
         result["set"] = from_union([lambda x: from_dict(from_str, x), from_none], self.set)
         return result
 
@@ -1615,7 +1619,7 @@ class SelectPermission:
     """Only these computed fields are selectable"""
     computed_fields: Optional[List[str]] = None
     """Only the rows where this precondition holds true are selectable"""
-    filter: Optional[Dict[str, Union[float, Dict[str, Any], str]]] = None
+    filter: Optional[Dict[str, Any]] = None
     """The maximum number of rows that can be returned"""
     limit: Optional[int] = None
 
@@ -1625,7 +1629,7 @@ class SelectPermission:
         columns = from_union([lambda x: from_list(from_str, x), EventTriggerColumnsEnum], obj.get("columns"))
         allow_aggregations = from_union([from_bool, from_none], obj.get("allow_aggregations"))
         computed_fields = from_union([lambda x: from_list(from_str, x), from_none], obj.get("computed_fields"))
-        filter = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), from_float, from_str], x), x), from_none], obj.get("filter"))
+        filter = from_union([lambda x: from_dict(lambda x: x, x), from_none], obj.get("filter"))
         limit = from_union([from_int, from_none], obj.get("limit"))
         return SelectPermission(columns, allow_aggregations, computed_fields, filter, limit)
 
@@ -1634,7 +1638,7 @@ class SelectPermission:
         result["columns"] = from_union([lambda x: from_list(from_str, x), lambda x: to_enum(EventTriggerColumnsEnum, x)], self.columns)
         result["allow_aggregations"] = from_union([from_bool, from_none], self.allow_aggregations)
         result["computed_fields"] = from_union([lambda x: from_list(from_str, x), from_none], self.computed_fields)
-        result["filter"] = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), to_float, from_str], x), x), from_none], self.filter)
+        result["filter"] = from_union([lambda x: from_dict(lambda x: x, x), from_none], self.filter)
         result["limit"] = from_union([from_int, from_none], self.limit)
         return result
 
@@ -1677,9 +1681,9 @@ class UpdatePermission:
     """Only these columns are selectable (or all when '*' is specified)"""
     columns: Union[List[str], EventTriggerColumnsEnum]
     """Postcondition which must be satisfied by rows which have been updated"""
-    check: Optional[Dict[str, Union[float, Dict[str, Any], str]]] = None
+    check: Optional[Dict[str, Any]] = None
     """Only the rows where this precondition holds true are updatable"""
-    filter: Optional[Dict[str, Union[float, Dict[str, Any], str]]] = None
+    filter: Optional[Dict[str, Any]] = None
     """Preset values for columns that can be sourced from session variables or static values"""
     set: Optional[Dict[str, str]] = None
 
@@ -1687,16 +1691,16 @@ class UpdatePermission:
     def from_dict(obj: Any) -> 'UpdatePermission':
         assert isinstance(obj, dict)
         columns = from_union([lambda x: from_list(from_str, x), EventTriggerColumnsEnum], obj.get("columns"))
-        check = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), from_float, from_str], x), x), from_none], obj.get("check"))
-        filter = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), from_float, from_str], x), x), from_none], obj.get("filter"))
+        check = from_union([lambda x: from_dict(lambda x: x, x), from_none], obj.get("check"))
+        filter = from_union([lambda x: from_dict(lambda x: x, x), from_none], obj.get("filter"))
         set = from_union([lambda x: from_dict(from_str, x), from_none], obj.get("set"))
         return UpdatePermission(columns, check, filter, set)
 
     def to_dict(self) -> dict:
         result: dict = {}
         result["columns"] = from_union([lambda x: from_list(from_str, x), lambda x: to_enum(EventTriggerColumnsEnum, x)], self.columns)
-        result["check"] = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), to_float, from_str], x), x), from_none], self.check)
-        result["filter"] = from_union([lambda x: from_dict(lambda x: from_union([lambda x: from_dict(lambda x: x, x), to_float, from_str], x), x), from_none], self.filter)
+        result["check"] = from_union([lambda x: from_dict(lambda x: x, x), from_none], self.check)
+        result["filter"] = from_union([lambda x: from_dict(lambda x: x, x), from_none], self.filter)
         result["set"] = from_union([lambda x: from_dict(from_str, x), from_none], self.set)
         return result
 

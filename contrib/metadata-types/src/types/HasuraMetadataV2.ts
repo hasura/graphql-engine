@@ -248,7 +248,7 @@ export interface InsertPermissionEntry {
  */
 export interface InsertPermission {
   /** This expression has to hold true for every new row that is inserted */
-  check?: { [key: string]: object | string | number }
+  check?: object
   /** Preset values for columns that can be sourced from session variables or static values */
   set?: ColumnPresetsExpression
   /** Can insert into only these columns (or all when '*' is specified) */
@@ -288,7 +288,7 @@ export interface SelectPermission {
   /** Toggle allowing aggregate queries */
   allow_aggregations?: boolean
   /** Only the rows where this precondition holds true are selectable */
-  filter?: { [key: string]: object | string | number }
+  filter?: object
 }
 
 /**
@@ -308,13 +308,13 @@ export interface UpdatePermissionEntry {
  */
 export interface UpdatePermission {
   /** Postcondition which must be satisfied by rows which have been updated */
-  check?: { [key: string]: object | string | number }
+  check?: object
   /** Preset values for columns that can be sourced from session variables or static values */
   set?: ColumnPresetsExpression
   /** Only these columns are selectable (or all when '*' is specified) */
   columns: PGColumn[] | "*"
   /** Only the rows where this precondition holds true are updatable */
-  filter?: { [key: string]: object | string | number }
+  filter?: object
 }
 
 /**
@@ -334,7 +334,7 @@ export interface DeletePermissionEntry {
  */
 export interface DeletePermission {
   /** Only the rows where this precondition holds true are updatable */
-  filter?: { [key: string]: object | string | number }
+  filter?: object
 }
 
 ////////////////////////////////

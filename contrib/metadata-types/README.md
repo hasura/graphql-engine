@@ -397,7 +397,7 @@ _Note: In the future, this may be refactored to point to hosted schema links on 
     "./ActionsYAML.schema.json": "**/actions.yaml",
     "./AllowListYAML.schema.json": "**/allow_list.yaml",
     "./CronTriggerYAML.schema.json": "**/cron_triggers.yaml",
-    "./FunctionsYAML.schema.json": "**/functions.yaml",
+    "./CustomFunctionsYAML.schema.json": "**/functions.yaml",
     "./QueryCollectionsYAML.schema.json": "**/query_collections.yaml",
     "./RemoteSchemasYAML.schema.json": "**/remote_schemas.yaml",
     "./TablesYAML.schema.json": "**/tables.yaml"
@@ -456,13 +456,13 @@ _Note: In the future, this may be refactored to point to hosted schema links on 
 }
 ```
 
-`./FunctionsYAML.schema.json`:
+`./CustomFunctionsYAML.schema.json`:
 
 ```json
 {
   "type": "array",
   "items": {
-    "$ref": "./HasuraMetadataV2.schema.json#definitions/Function"
+    "$ref": "./HasuraMetadataV2.schema.json#definitions/CustomFunction"
   }
 }
 ```

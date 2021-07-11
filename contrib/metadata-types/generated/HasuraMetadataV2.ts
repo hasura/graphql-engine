@@ -715,13 +715,13 @@ export interface ComputedFieldDefinition {
  */
 export interface TableConfig {
     /**
-     * Customise the table name / query root name
-     */
-    custom_name: string;
-    /**
      * Customise the column names
      */
     custom_column_names?: { [key: string]: string };
+    /**
+     * Customise the table name
+     */
+    custom_name?: string;
     /**
      * Customise the root fields
      */
@@ -803,7 +803,7 @@ export interface DeletePermission {
     /**
      * Only the rows where this precondition holds true are updatable
      */
-    filter?: { [key: string]: number | { [key: string]: any } | string };
+    filter?: { [key: string]: any };
 }
 
 /**
@@ -938,7 +938,7 @@ export interface InsertPermission {
     /**
      * This expression has to hold true for every new row that is inserted
      */
-    check?: { [key: string]: number | { [key: string]: any } | string };
+    check?: { [key: string]: any };
     /**
      * Can insert into only these columns (or all when '*' is specified)
      */
@@ -1091,7 +1091,7 @@ export interface SelectPermission {
     /**
      * Only the rows where this precondition holds true are selectable
      */
-    filter?: { [key: string]: number | { [key: string]: any } | string };
+    filter?: { [key: string]: any };
     /**
      * The maximum number of rows that can be returned
      */
@@ -1127,7 +1127,7 @@ export interface UpdatePermission {
     /**
      * Postcondition which must be satisfied by rows which have been updated
      */
-    check?: { [key: string]: number | { [key: string]: any } | string };
+    check?: { [key: string]: any };
     /**
      * Only these columns are selectable (or all when '*' is specified)
      */
@@ -1135,7 +1135,7 @@ export interface UpdatePermission {
     /**
      * Only the rows where this precondition holds true are updatable
      */
-    filter?: { [key: string]: number | { [key: string]: any } | string };
+    filter?: { [key: string]: any };
     /**
      * Preset values for columns that can be sourced from session variables or static values
      */
@@ -1714,8 +1714,11 @@ export class Convert {
     }
 }
 
-function invalidValue(typ: any, val: any): never {
-    throw Error(`Invalid value ${JSON.stringify(val)} for type ${JSON.stringify(typ)}`);
+function invalidValue(typ: any, val: any, key: any = ''): never {
+    if (key) {
+        throw Error(`Invalid value for key "${key}". Expected type ${JSON.stringify(typ)} but got ${JSON.stringify(val)}`);
+    }
+    throw Error(`Invalid value ${JSON.stringify(val)} for type ${JSON.stringify(typ)}`, );
 }
 
 function jsonToJSProps(typ: any): any {
@@ -1736,10 +1739,10 @@ function jsToJSONProps(typ: any): any {
     return typ.jsToJSON;
 }
 
-function transform(val: any, typ: any, getProps: any): any {
+function transform(val: any, typ: any, getProps: any, key: any = ''): any {
     function transformPrimitive(typ: string, val: any): any {
         if (typeof typ === typeof val) return val;
-        return invalidValue(typ, val);
+        return invalidValue(typ, val, key);
     }
 
     function transformUnion(typs: any[], val: any): any {
@@ -1784,11 +1787,11 @@ function transform(val: any, typ: any, getProps: any): any {
         Object.getOwnPropertyNames(props).forEach(key => {
             const prop = props[key];
             const v = Object.prototype.hasOwnProperty.call(val, key) ? val[key] : undefined;
-            result[prop.key] = transform(v, prop.typ, getProps);
+            result[prop.key] = transform(v, prop.typ, getProps, prop.key);
         });
         Object.getOwnPropertyNames(val).forEach(key => {
             if (!Object.prototype.hasOwnProperty.call(props, key)) {
-                result[key] = transform(val[key], additional, getProps);
+                result[key] = transform(val[key], additional, getProps, key);
             }
         });
         return result;
@@ -2038,6 +2041,7 @@ const typeMap: any = {
     ], "any"),
     "TableConfig": o([
         { json: "custom_column_names", js: "custom_column_names", typ: u(undefined, m("")) },
+        { json: "custom_name", js: "custom_name", typ: u(undefined, "") },
         { json: "custom_root_fields", js: "custom_root_fields", typ: u(undefined, r("CustomRootFields")) },
     ], "any"),
     "CustomRootFields": o([
@@ -2057,7 +2061,7 @@ const typeMap: any = {
         { json: "role", js: "role", typ: "" },
     ], "any"),
     "DeletePermission": o([
-        { json: "filter", js: "filter", typ: u(undefined, m(u(3.14, m("any"), ""))) },
+        { json: "filter", js: "filter", typ: u(undefined, m("any")) },
     ], "any"),
     "EventTrigger": o([
         { json: "definition", js: "definition", typ: r("EventTriggerDefinition") },
@@ -2089,7 +2093,7 @@ const typeMap: any = {
     ], "any"),
     "InsertPermission": o([
         { json: "backend_only", js: "backend_only", typ: u(undefined, true) },
-        { json: "check", js: "check", typ: u(undefined, m(u(3.14, m("any"), ""))) },
+        { json: "check", js: "check", typ: u(undefined, m("any")) },
         { json: "columns", js: "columns", typ: u(a(""), r("Columns")) },
         { json: "set", js: "set", typ: u(undefined, m("")) },
     ], "any"),
@@ -2128,7 +2132,7 @@ const typeMap: any = {
         { json: "allow_aggregations", js: "allow_aggregations", typ: u(undefined, true) },
         { json: "columns", js: "columns", typ: u(a(""), r("Columns")) },
         { json: "computed_fields", js: "computed_fields", typ: u(undefined, a("")) },
-        { json: "filter", js: "filter", typ: u(undefined, m(u(3.14, m("any"), ""))) },
+        { json: "filter", js: "filter", typ: u(undefined, m("any")) },
         { json: "limit", js: "limit", typ: u(undefined, 0) },
     ], "any"),
     "UpdatePermissionEntry": o([
@@ -2137,9 +2141,9 @@ const typeMap: any = {
         { json: "role", js: "role", typ: "" },
     ], "any"),
     "UpdatePermission": o([
-        { json: "check", js: "check", typ: u(undefined, m(u(3.14, m("any"), ""))) },
+        { json: "check", js: "check", typ: u(undefined, m("any")) },
         { json: "columns", js: "columns", typ: u(a(""), r("Columns")) },
-        { json: "filter", js: "filter", typ: u(undefined, m(u(3.14, m("any"), ""))) },
+        { json: "filter", js: "filter", typ: u(undefined, m("any")) },
         { json: "set", js: "set", typ: u(undefined, m("")) },
     ], "any"),
     "ActionDefinitionType": [

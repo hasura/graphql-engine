@@ -1,6 +1,0 @@
-{
-  "type": "array",
-  "items": {
-    "$ref": "./HasuraMetadataV2.schema.json#definitions/Function"
-  }
-}
