@@ -1,13 +1,26 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
 import Autosuggest from 'react-autosuggest';
 
-const CustomInputAutoSuggest = props => {
-  const [suggestions, setSuggestions] = useState([]);
+type Option = {
+  title: string
+  suggestions: never[]
+}
 
+type Suggestion = {
+  value: string
+}
+
+interface CustomInputAutoSuggestProps extends Autosuggest.InputProps<HTMLInputElement> {
+  options: Option[],
+  theme?: Autosuggest.Theme,
+}
+
+const CustomInputAutoSuggest: React.FC<CustomInputAutoSuggestProps> = props => {
+  const [suggestions, setSuggestions] = useState<Option[]>([]);
+  // eslint-disable-next-line global-require
   const { options, theme = require('./Theme.scss') } = props;
 
-  const getSuggestions = value => {
+  const getSuggestions = (value: string): Option[] => {
     const inputValue = value.trim().toLowerCase();
     const inputLength = inputValue.length;
     const filterResults = () => {
@@ -15,29 +28,29 @@ const CustomInputAutoSuggest = props => {
         return {
           title: option.title,
           suggestions: option.suggestions.filter(
-            op => op.value.toLowerCase().slice(0, inputLength) === inputValue
+            (op: Suggestion) => op.value.toLowerCase().slice(0, inputLength) === inputValue
           ),
         };
       });
     };
     return inputLength === 0 ? [...options] : filterResults();
   };
-  const onSuggestionsFetchRequested = ob => {
+  const onSuggestionsFetchRequested = (ob: Suggestion) => {
     const { value } = ob;
     setSuggestions(getSuggestions(value));
   };
-  const getSuggestionValue = suggestion => suggestion.value;
+  const getSuggestionValue = (suggestion: Suggestion) => suggestion.value;
   const onSuggestionsClearRequested = () => {
     setSuggestions([]);
   };
-  const renderSuggestion = suggestion => <div>{suggestion.value}</div>;
+  const renderSuggestion = (suggestion: Suggestion) => <div>{suggestion.value}</div>;
 
   /* Don't render the section when there are no suggestions in it */
-  const renderSectionTitle = section => {
+  const renderSectionTitle = (section: Option) => {
     return section.suggestions.length > 0 ? section.title : null;
   };
 
-  const getSectionSuggestions = section => {
+  const getSectionSuggestions = (section: Option) => {
     return section.suggestions;
   };
 
@@ -56,10 +69,6 @@ const CustomInputAutoSuggest = props => {
       getSectionSuggestions={getSectionSuggestions}
     />
   );
-};
-
-CustomInputAutoSuggest.propTypes = {
-  options: PropTypes.array.isRequired,
 };
 
 export default CustomInputAutoSuggest;
