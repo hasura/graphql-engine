@@ -134,6 +134,7 @@ N'hésitez pas à soumettre une pull request si vous avez quelque chose à ajout
 Ce document est disponible dans les langues suivantes :
  - [Anglais](../CONTRIBUTING.md)
  - [Français](./CONTRIBUTING.french.md)
+ - [Russe](./CONTRIBUTING.french.md)
  
 (Credits: Certaines sections sont adaptées de https://github.com/PostgREST/postgrest/blob/master/.github/CONTRIBUTING.md)
 
