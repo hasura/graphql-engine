@@ -11,7 +11,7 @@ yarn add @hasura/metadata # npm i @hasura/metadata
 ## Usage
 
 ```ts
-import { HasuraMetadataV2, Action, ComputedField } from "@hasura/metadata-types"
+import { HasuraMetadataV2, Action, ComputedField } from "@hasura/metadata"
 ```
 
 # Metadata SDK
