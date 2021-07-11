@@ -49,8 +49,10 @@ Examples
         # restart git bash
 
     # Zsh (using oh-my-zsh)
-      $ mkdir -p $HOME/.oh-my-zsh/completions
-      $ hasura completion zsh --file=$HOME/.oh-my-zsh/completions/_hasura
+      $ mkdir -p $HOME/.oh-my-zsh/plugins/hasura
+      $ hasura completion zsh --file=$HOME/.oh-my-zsh/plugins/hasura/_hasura
+      # Add hasura to zsh plugins list e.g: 
+      plugins=(git yarn hasura)
 
     # Reload the shell for the changes to take effect!
 
