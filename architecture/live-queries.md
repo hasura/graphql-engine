@@ -14,6 +14,7 @@ This document describes Hasura's architecture which lets you scale to handle a m
   - [Hasura approach](#hasura-approach)  
 - [Testing](#testing)  
 - [Benefits of this approach](#benefits-of-this-approach)  
+- [Translations](#translations)
 
 
 ## TL;DR:
@@ -161,3 +162,9 @@ Hasura makes live-queries easy and accessible. The notion of queries is easily e
 Reduce load on Postgres by:
 1. Mapping events to active live queries
 1. Incremental computation of result set
+
+## Translations
+
+This document is available in the following translations:
+
+- [Chinese :cn:](../translations/live-queries.chinese.md) (:pray: [@BerlinChan](https://github.com/BerlinChan))
