@@ -659,11 +659,24 @@ Auth0 publishes their JWK under:
 
 ``https://<your-auth0-domain>.auth0.com/.well-known/jwks.json``
 
-But they have a `bug where the certificate thumbprint does not match
-<https://community.auth0.com/t/certificate-thumbprint-is-longer-than-20-bytes/7794/3>`__.
-Hence, currently this URL does not work with Hasura.
+If you are using Auth0 and Hasura, use this config:
 
-Current workaround is - download the X590 certificate from:
+.. code-block:: json
+
+   {
+     "jwk_url": "https://<your-auth0-domain>.auth0.com/.well-known/jwks.json",
+     "audience": "<identifier-of-the-api>",
+     "issuer": "https://<your-auth0-domain>.auth0.com/"
+   }
+
+They had a `bug where the certificate thumbprint does not match
+<https://community.auth0.com/t/certificate-thumbprint-is-longer-than-20-bytes/7794/3>`__. This
+was fixed `by auth0 <https://community.auth0.com/t/jwk-certificate-thumbprint-is-invalid/16070/22>`__.
+
+If your signing key was created before the fix, you have to rotate and revoke the old
+signing key, but be aware that if you revoke the key, existing tokens will not be valid anymore.
+
+If you can't revoke the key yet a workaround is - download the X590 certificate from:
 
 ``https://<your-auth0-domain>.auth0.com/pem``
 
