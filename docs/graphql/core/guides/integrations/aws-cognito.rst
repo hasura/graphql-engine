@@ -157,27 +157,59 @@ The parameters available for this trigger are described `here <https://docs.aws.
 
 .. code-block:: javascript
 
-   function (event, context, callback) {
-     const userId = event.userName;
-     const hasuraAdminSecret = "xxxx";
-     const url = "https://my-hasura-app.hasura.app/v1/graphql";
-     const upsertUserQuery = `
-       mutation($userId: String!){
-         insert_users(objects: [{ id: $userId }], on_conflict: { constraint: users_pkey, update_columns: [] }) {
-           affected_rows
-         }
-       }`
-     const graphqlReq = { "query": upsertUserQuery, "variables": { "userId": userId } }
+   const https = require('https'); // can use http for non https calls
 
-     request.post({
-         headers: {'content-type' : 'application/json', 'x-hasura-admin-secret': hasuraAdminSecret},
-         url:   url,
-         body:  JSON.stringify(graphqlReq)
-     }, function(error, response, body){
-          console.log(body);
-          callback(null, user, context);
+   const syncUser = (userId) => {
+     const hasuraAdminSecret = 'xxxx';
+     const userTableName = 'users'; // case sensitive
+     const userIdParam = 'user_id'; // case sensitive
+     const graphqlHost = 'my-hasura-app.hasura.app'; // don't add url protocol 
+     const graphqlPath = '/v1/graphql';
+     const query = `mutation($${userIdParam}: String!){
+       insert_${userTableName}(
+         objects: [{ ${userIdParam}: $${userIdParam} }],
+         on_conflict: { constraint: ${userTableName}_pkey, update_columns: [] }
+       ) {
+         affected_rows
+       }
+     }`;
+
+     return new Promise((resolve, reject) => {
+       const options = {
+         host: graphqlHost,
+         path: graphqlPath,
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+           'x-hasura-admin-secret': hasuraAdminSecret,
+         },
+       };
+       const req = https.request(options, (res) => {
+         resolve(JSON.stringify(res.statusCode));
+       });
+
+       req.on('error', (e) => {
+         reject(e.message);
+       });
+       req.write(
+         JSON.stringify({
+           query,
+           variables: { [userIdParam]: userId }
+         })
+       );
+       req.end();
      });
-   }
+   };
+
+   exports.handler = async (event, _, callback) => {
+     try {
+       await syncUser(event.userName);
+     } catch (error) {
+       console.log(error);
+     } finally {
+       callback(null, event);
+     }
+   };
 
 That’s it! This lambda function will be triggered on every successful sign up/log in and sync your Cognito user into your Postgres database.
 
