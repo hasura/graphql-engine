@@ -53,7 +53,6 @@
 
 {% block extrahead %}
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.css" />
 {% endblock %}
 
@@ -256,7 +255,7 @@
                     <a id="search_help" class="hide" onClick="if (Intercom) Intercom('show');" href="javascript:undefined">
                       Can't find what you're looking for?
                     </a>
-                    <span class="fa fa-search search_icon"></span>
+                    <img class="search-icon" src="{{ pathto('_images/layout/search.svg', 1) }}" alt="" />
                     <input type="text" id="search_element" placeholder="Search docs..." />
                   </div>
                   <div class="edit-github-btn-wrap inline-block mobile-hide">

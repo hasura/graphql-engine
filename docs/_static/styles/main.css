@@ -452,8 +452,9 @@ p {
 
 #docs-content .note,
 #docs-content .admonition {
-  background: #f1f9ff;
+  background: #f1f9ff url("/_images/layout/note.svg") 8px 16px no-repeat;
   border: 1px solid #c9e0f0;
+  padding-left: 50px;
 }
 
 #docs-content .docutils {
@@ -614,10 +615,10 @@ article ol ol {
   width: 64%;
 }
 
-#input_search_box .search_icon {
+#input_search_box .search-icon {
   position: absolute;
-  top: 13px;
-  left: 10px;
+  top: 10px;
+  left: 5px;
   color: #1CD3C6;
   cursor: pointer;
   z-index: 1;
