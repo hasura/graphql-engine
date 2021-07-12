@@ -67,7 +67,7 @@ mkdir -p "$OUTPUT_FOLDER"
 
 
 ########## Test that we didn't compile with +developer by accident
-echoInfo "Test we didn't compile in the deveoper-only APIs"
+echoInfo "Test we didn't compile in the developer-only APIs"
 
 run_hge_with_flags
 
