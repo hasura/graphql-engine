@@ -622,7 +622,7 @@ jobs:
   # build console assets
   build_console:
     docker:
-    - image: hasura/graphql-engine-console-builder:e3e5decbd831134b615e611d831a6eda44f2ce45dc95a1cc32199d346bf1e906
+    - image: hasura/graphql-engine-console-builder:80c71f5dd8f1e33b92d3ec2da7abc1ff8d7936a88d3ee0004fd7ad37aacf3b3a
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -672,7 +672,7 @@ jobs:
           - _console_output
   console_unit_tests:
     docker:
-    - image: hasura/graphql-engine-console-builder:e3e5decbd831134b615e611d831a6eda44f2ce45dc95a1cc32199d346bf1e906
+    - image: hasura/graphql-engine-console-builder:80c71f5dd8f1e33b92d3ec2da7abc1ff8d7936a88d3ee0004fd7ad37aacf3b3a
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -701,7 +701,7 @@ jobs:
   # test console
   test_console:
     docker:
-    - image: hasura/graphql-engine-console-builder:e3e5decbd831134b615e611d831a6eda44f2ce45dc95a1cc32199d346bf1e906
+    - image: hasura/graphql-engine-console-builder:80c71f5dd8f1e33b92d3ec2da7abc1ff8d7936a88d3ee0004fd7ad37aacf3b3a
       environment:
         HASURA_GRAPHQL_DATABASE_URL: 'postgres://gql_test:@localhost:5432/gql_test'
         CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1

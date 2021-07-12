@@ -11,6 +11,5 @@
   "chromeWebSecurity": false,
   "video": false,
   "projectId": "5yiuic",
-  "retries": 1,
-  "numTestsKeptInMemory": 10
+  "retries": 1
 }
