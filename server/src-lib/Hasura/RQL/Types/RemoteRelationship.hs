@@ -3,6 +3,9 @@ module Hasura.RQL.Types.RemoteRelationship
   , remoteRelationshipNameToText
   , fromRemoteRelationship
   , RemoteFields(..)
+  , ScalarComputedField(..)
+  , DBJoinField(..)
+  , dbJoinFieldToName
   , RemoteFieldInfo(..)
   , RemoteRelationship(..)
   , RemoteRelationshipDef(..)
@@ -17,22 +20,23 @@ module Hasura.RQL.Types.RemoteRelationship
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as HM
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict            as HM
+import qualified Data.Text                      as T
+import qualified Database.PG.Query              as Q
+import qualified Language.GraphQL.Draft.Syntax  as G
 
-import           Control.Lens                  (makeLenses)
+import           Control.Lens                   (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Scientific
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
-import           Hasura.Incremental            (Cacheable)
+import           Hasura.Incremental             (Cacheable)
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Backend
 
@@ -50,6 +54,48 @@ remoteRelationshipNameToText = unNonEmptyText . unRemoteRelationshipName
 fromRemoteRelationship :: RemoteRelationshipName -> FieldName
 fromRemoteRelationship = FieldName . remoteRelationshipNameToText
 
+data ScalarComputedField (b :: BackendType)
+  = ScalarComputedField
+  { _scfXField          :: !(XComputedField b)
+  , _scfName            :: !ComputedFieldName
+  , _scfFunction        :: !(FunctionName b)
+  , _scfTableArgument   :: !FunctionTableArgument
+  , _scfSessionArgument :: !(Maybe FunctionSessionArgument)
+  , _scfType            :: !(ScalarType b)
+  } deriving (Generic)
+deriving instance Backend b => Eq (ScalarComputedField b)
+deriving instance Backend b => Show (ScalarComputedField b)
+instance Backend b => Cacheable (ScalarComputedField b)
+instance Backend b => Hashable (ScalarComputedField b)
+
+instance Backend b => ToJSON (ScalarComputedField b) where
+  toJSON ScalarComputedField{..} =
+    object [ "name" .= _scfName
+           , "function" .= _scfFunction
+           , "table_argument" .= _scfTableArgument
+           , "session_argument" .= _scfSessionArgument
+           , "type" .= _scfType
+           ]
+
+data DBJoinField (b :: BackendType)
+  = JoinColumn !(ColumnInfo b)
+  | JoinComputedField !(ScalarComputedField b)
+  deriving (Generic)
+deriving instance Backend b => Eq (DBJoinField b)
+deriving instance Backend b => Show (DBJoinField b)
+instance Backend b => Cacheable (DBJoinField b)
+instance Backend b => Hashable (DBJoinField b)
+
+instance (Backend b) => ToJSON (DBJoinField b) where
+  toJSON = \case
+    JoinColumn columnInfo           -> toJSON columnInfo
+    JoinComputedField computedField -> toJSON computedField
+
+dbJoinFieldToName :: forall b. (Backend b) => DBJoinField b -> FieldName
+dbJoinFieldToName = \case
+  JoinColumn columnInfo               -> fromCol @b $ pgiColumn $ columnInfo
+  JoinComputedField computedFieldInfo -> fromComputedField $ _scfName computedFieldInfo
+
 -- | Resolved remote relationship
 data RemoteFieldInfo (b :: BackendType)
   = RemoteFieldInfo
@@ -61,7 +107,7 @@ data RemoteFieldInfo (b :: BackendType)
   --   include the arguments to the remote field that is being joined. The
   --   names of the arguments here are modified, it will be in the format of
   --   <Original Field Name>_remote_rel_<hasura table schema>_<hasura table name><remote relationship name>
-  , _rfiHasuraFields          :: !(HashSet (ColumnInfo b))
+  , _rfiHasuraFields          :: !(HashSet (DBJoinField b))
   -- ^ Hasura fields used to join the remote schema node
   , _rfiRemoteFields          :: !RemoteFields
   , _rfiRemoteSchema          :: !RemoteSchemaInfo
@@ -242,9 +288,9 @@ data RemoteRelationship b =
     , rtrTable        :: !(TableName b)
     -- ^ (SourceName, QualifiedTable) determines the table on which the relationship
     -- is defined
-    , rtrHasuraFields :: !(HashSet FieldName) -- TODO change to PGCol
+    , rtrHasuraFields :: !(HashSet FieldName)
     -- ^ The hasura fields from 'rtrTable' that will be in scope when resolving
-    -- the remote objects in 'rtrRemoteField'.
+    -- the remote objects in 'rtrRemoteField'. Supports columns and computed fields.
     , rtrRemoteSchema :: !RemoteSchemaName
     -- ^ Identifier for this mapping.
     , rtrRemoteField  :: !RemoteFields

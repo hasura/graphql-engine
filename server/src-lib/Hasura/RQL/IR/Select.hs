@@ -45,6 +45,7 @@ import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Instances          ()
 import           Hasura.RQL.Types.Relationship
@@ -186,7 +187,7 @@ data AnnFieldG (b :: BackendType) (r :: BackendType -> Type) v
   = AFColumn !(AnnColumnField b v)
   | AFObjectRelation !(ObjectRelationSelectG b r v)
   | AFArrayRelation !(ArraySelectG b r v)
-  | AFComputedField !(XComputedField b) !(ComputedFieldSelect b r v)
+  | AFComputedField !(XComputedField b) !ComputedFieldName !(ComputedFieldSelect b r v)
   | AFRemote !(RemoteSelect b)
   | AFDBRemote !(AB.AnyBackend (DBRemoteSelect b r))
   | AFNodeId !(XRelay b) !(TableName b) !(PrimaryKeyColumns b)
@@ -209,7 +210,6 @@ mkAnnColumnFieldAsText
   -> AnnFieldG backend r v
 mkAnnColumnFieldAsText ci =
   AFColumn (AnnColumnField ci True Nothing Nothing)
-
 
 -- Aggregation fields
 
@@ -269,7 +269,6 @@ type ConnectionFields b r v = Fields (ConnectionField b r v)
 
 type PageInfoFields   = Fields PageInfoField
 type EdgeFields b r v = Fields (EdgeField b r v)
-
 
 -- Column
 
@@ -372,11 +371,11 @@ data RemoteFieldArgument
 
 data RemoteSelect (b :: BackendType)
   = RemoteSelect
-  { _rselArgs          :: ![RemoteFieldArgument]
-  , _rselSelection     :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)
-  , _rselHasuraColumns :: !(HashSet (ColumnInfo b))
-  , _rselFieldCall     :: !(NonEmpty FieldCall)
-  , _rselRemoteSchema  :: !RemoteSchemaInfo
+  { _rselArgs         :: ![RemoteFieldArgument]
+  , _rselSelection    :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)
+  , _rselHasuraFields :: !(HashSet (DBJoinField b))
+  , _rselFieldCall    :: !(NonEmpty FieldCall)
+  , _rselRemoteSchema :: !RemoteSchemaInfo
   }
 
 

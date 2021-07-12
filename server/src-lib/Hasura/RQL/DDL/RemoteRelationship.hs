@@ -87,18 +87,18 @@ buildRemoteFieldInfo
   :: forall m b
    . (Backend b, QErrM m)
   => RemoteRelationship b
-  -> [ColumnInfo b]
+  -> FieldInfoMap (FieldInfo b)
   -> RemoteSchemaMap
   -> m (RemoteFieldInfo b, [SchemaDependency])
 buildRemoteFieldInfo remoteRelationship
-                          pgColumns
+                          fields
                           remoteSchemaMap = do
   let remoteSchemaName = rtrRemoteSchema remoteRelationship
   (RemoteSchemaCtx _name introspectionResult remoteSchemaInfo _ _ _permissions) <-
     onNothing (Map.lookup remoteSchemaName remoteSchemaMap)
       $ throw400 RemoteSchemaError $ "remote schema with name " <> remoteSchemaName <<> " not found"
   eitherRemoteField <- runExceptT $
-    validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionResult) pgColumns
+    validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionResult) fields
   remoteField <- onLeft eitherRemoteField $ throw400 RemoteSchemaError . errorToText
   let table = rtrTable remoteRelationship
       source = rtrSource remoteRelationship
@@ -108,17 +108,13 @@ buildRemoteFieldInfo remoteRelationship
                             $ AB.mkAnyBackend
                             $ SOITable @b table)
                          DRTable
-            columnsDep =
-              map
-                (flip SchemaDependency DRRemoteRelationship
-                   . SOSourceObj source
-                   . AB.mkAnyBackend
-                   . SOITableObj @b table
-                   . TOCol @b
-                   . pgiColumn)
-                $ S.toList $ _rfiHasuraFields remoteField
+            fieldsDep = S.toList (_rfiHasuraFields remoteField) <&> \case
+              JoinColumn columnInfo ->
+                mkColDep @b DRRemoteRelationship source table $ pgiColumn columnInfo
+              JoinComputedField computedFieldInfo ->
+                mkComputedFieldDep @b DRRemoteRelationship source table $ _scfName computedFieldInfo
             remoteSchemaDep =
               SchemaDependency (SORemoteSchema remoteSchemaName) DRRemoteSchema
-         in (tableDep : remoteSchemaDep : columnsDep)
+         in (tableDep : remoteSchemaDep : fieldsDep)
 
   pure (remoteField, schemaDependencies)

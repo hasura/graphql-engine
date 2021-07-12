@@ -47,7 +47,7 @@ import qualified Hasura.Tracing                         as Tracing
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.ParameterizedQueryHash
-import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
+import           Hasura.GraphQL.Parser.Column           (UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Directives
 import           Hasura.GraphQL.Parser.Monad
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ)

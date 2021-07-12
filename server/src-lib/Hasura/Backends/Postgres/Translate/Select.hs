@@ -901,7 +901,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
         processArrayRelation (mkSourcePrefixes arrRelSourcePrefix) fieldName arrRelAlias arrSel
         pure $ S.mkQIdenExp arrRelSourcePrefix fieldName
 
-      AFComputedField _ (CFSScalar scalar caseBoolExpMaybe) -> do
+      AFComputedField _ _ (CFSScalar scalar caseBoolExpMaybe) -> do
         computedFieldSQLExp <- fromScalarComputedField scalar
         -- The computed field is conditionally outputed depending
         -- on the presence of `caseBoolExpMaybe` and the value it
@@ -915,7 +915,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
                           $ _accColCaseBoolExpField <$> caseBoolExp
             in pure $ S.SECond boolExp computedFieldSQLExp S.SENull
 
-      AFComputedField _ (CFSTable selectTy sel) -> withWriteComputedFieldTableSet $ do
+      AFComputedField _ _ (CFSTable selectTy sel) -> withWriteComputedFieldTableSet $ do
         let computedFieldSourcePrefix =
               mkComputedFieldTableAlias sourcePrefix fieldName
         (selectSource, nodeExtractors) <-

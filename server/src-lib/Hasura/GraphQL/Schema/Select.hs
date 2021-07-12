@@ -1043,7 +1043,7 @@ computedFieldPG sourceName ComputedFieldInfo{..} parentTable selectPermissions =
           fieldArgsParser = do
             args  <- functionArgsParser
             colOp <- jsonPathArg $ ColumnScalar scalarReturnType
-            pure $ IR.AFComputedField _cfiXComputedFieldInfo
+            pure $ IR.AFComputedField _cfiXComputedFieldInfo _cfiName
                       (IR.CFSScalar (IR.ComputedFieldScalarSelect
                        { IR._cfssFunction  = _cffName _cfiFunction
                        , IR._cfssType      = scalarReturnType
@@ -1061,7 +1061,7 @@ computedFieldPG sourceName ComputedFieldInfo{..} parentTable selectPermissions =
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
       pure $ P.subselection fieldName (Just fieldDescription) fieldArgsParser selectionSetParser <&>
         \((functionArgs', args), fields) ->
-          IR.AFComputedField _cfiXComputedFieldInfo $ IR.CFSTable JASMultipleRows $ IR.AnnSelectG
+          IR.AFComputedField _cfiXComputedFieldInfo _cfiName $ IR.CFSTable JASMultipleRows $ IR.AnnSelectG
             { IR._asnFields   = fields
             , IR._asnFrom     = IR.FromFunction (_cffName _cfiFunction) functionArgs' Nothing
             , IR._asnPerm     = tablePermissionsInfo remotePerms
@@ -1112,7 +1112,7 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
     hoistMaybe $ Map.lookup remoteSchemaName remoteRelationshipQueryCtx
   let fieldDefns = map P.fDefinition (piQuery parsedIntrospection)
   role <- askRoleName
-  let hasuraFieldNames = Set.map (FieldName . toTxt . pgiColumn)  hasuraFields
+  let hasuraFieldNames = Set.map dbJoinFieldToName hasuraFields
       remoteRelationship = RemoteRelationship name source table hasuraFieldNames remoteSchemaName remoteFields
   (newInpValDefns, remoteFieldParamMap) <-
     if | role == adminRoleName ->
@@ -1121,10 +1121,10 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
          -- was created
          pure (remoteSchemaInputValueDefns, _rfiParamMap remoteFieldInfo)
        | otherwise -> do
+           fieldInfoMap <- (_tciFieldInfoMap . _tiCoreInfo) <$> askTableInfo @b source table
            roleRemoteField <-
              afold @(Either _) $
-             validateRemoteRelationship remoteRelationship (remoteSchemaInfo, roleIntrospectionResult) $
-             Set.toList hasuraFields
+             validateRemoteRelationship remoteRelationship (remoteSchemaInfo, roleIntrospectionResult) fieldInfoMap
            pure $ (_rfiInputValueDefinitions roleRemoteField, _rfiParamMap roleRemoteField)
   let RemoteSchemaIntrospection typeDefns = irDoc roleIntrospectionResult
       -- add the new input value definitions created by the remote relationship
@@ -1153,7 +1153,7 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
           pure $ IR.AFRemote $ IR.RemoteSelect
             { _rselArgs          = remoteArgs
             , _rselSelection     = selSet
-            , _rselHasuraColumns = _rfiHasuraFields remoteFieldInfo
+            , _rselHasuraFields  = _rfiHasuraFields remoteFieldInfo
             , _rselFieldCall     = unRemoteFields $ _rfiRemoteFields remoteFieldInfo
             , _rselRemoteSchema  = _rfiRemoteSchema remoteFieldInfo
             }
