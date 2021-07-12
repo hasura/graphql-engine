@@ -1,8 +1,8 @@
 # anchor refs to be used elsewhere
 refs:
   constants:
-  - &server_builder_image hasura/graphql-engine-server-builder:485659267675dbd5539a1ba8ced6bff3e8824ec8d2f6d7480fd6d8201629794e
-  - &mssql_image hasura/mssql-server-2019-cu10-ubuntu-20.04:beac532b07e0064536b6a7c6f53f1051726162858350710edd3bf86f81441a7b
+  - &server_builder_image hasura/graphql-engine-server-builder:663fa44db31a4d0d6f44741caeb97f42efa414f13b9cee8a27cfa674811d5303
+  - &mssql_image hasura/mssql-server-2019-cu10-ubuntu-20.04:187352320456c39572656ce46cc292369cffa01ac0e90fcdf179c01d36fb3952
   skip_job_on_ciignore: &skip_job_on_ciignore
     run:
       name: checking if job should be terminated or not

@@ -274,6 +274,11 @@ library
                      , memory
                      , x509-store
 
+                     -- mysql
+                     , mysql
+                     , mysql-simple
+
+
   if !flag(profiling)
     build-depends:
       -- 0.6.1 is supposedly not okay for ghc 8.6:

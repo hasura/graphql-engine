@@ -34,6 +34,7 @@ RUN apt-get -y update     \
         libpq-dev libssl-dev make netcat postgresql-client-${postgres_ver}          \
         postgresql-client-common python3 python3-pip upx xz-utils zlib1g-dev          \
         unixodbc-dev freetds-dev     \
+        default-libmysqlclient-dev libghc-pcre-light-dev libkrb5-dev \
     && ACCEPT_EULA=Y apt-get -y install msodbcsql17     \
     && curl -sL https://deb.nodesource.com/setup_${node_ver} | bash -     \
     && apt-get install -y nodejs     \
@@ -82,4 +83,4 @@ RUN apt -y update \
 RUN mkdir -p /usr/share/man/man{1,7} && apt-get -y update
 
 RUN apt-get -y update \
-    && apt-get -y install pgbouncer jq postgresql-client-13
+    && apt-get -y install pgbouncer jq postgresql-client-13 default-mysql-client
