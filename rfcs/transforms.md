@@ -171,3 +171,36 @@ The transform is given by:
 ```
 
 Source: https://glitch.com/edit/#!/butternut-grizzly-fluorine?path=src%2Fserver.js%3A1%3A0
+
+## Debugging
+
+The server also provides a `v1/metadata` type called `test_http_transformer` which takes the transformer spec and a payload and returns the transformed request.
+
+```
+type: test_http_transformer
+args:
+  payload:
+    webhook_url: {{WEBHOOK_URL}} -- note that payload can reference env vars
+    event:
+      user_id: 1
+      username: bob
+      password: cat
+  transformer:
+    request_method: GET
+    request_url: {{webhook_url}}/{{event.user_id}}
+    query_params:
+      param1: "event.username"
+      param2: "event.password"
+```
+
+Output:
+
+```
+request_method: GET
+request_url: http://httbin.org/1?param1=bob&param2=cat
+```
+
+
+## Console 
+
+The console DX is crucial for making the feature successful. We need a way to test a template with sample data. For this, the console needs to generate sample data (payload) for a given webhook. After this, the console takes the provided template and passes it to debugging endpoint described in the previous section.
