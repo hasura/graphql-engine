@@ -79,6 +79,7 @@ const typeDefs = gql`
     communications(id: Int): [Communication]
     search(id: Int!): SearchResult
     getOccupation(name: ID!): Occupation!
+    getGrade(marks: Int!): String
   }
 `;
 
@@ -223,6 +224,17 @@ const resolvers = {
                 return 'ARTIST'
             default:
                 throw new ApolloError("invalid argument - " + name, "invalid ");
+            }
+        },
+        getGrade: (_, { marks }) => {
+            if(marks > 90) {
+                return 'S'
+            }
+            else if (marks > 80) {
+                return 'A'
+            }
+            else {
+                return 'B'
             }
         }
     },

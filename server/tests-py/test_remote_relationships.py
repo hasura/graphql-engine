@@ -66,6 +66,9 @@ class TestCreateRemoteRelationship:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_with_enum.yaml')
         assert st_code == 200, resp
 
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_computed_fields.yaml')
+        assert st_code == 200, resp
+
     def test_create_invalid(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_hasura_field.yaml')
         assert st_code == 400, resp
@@ -92,6 +95,9 @@ class TestCreateRemoteRelationship:
         assert st_code == 400, resp
 
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_array.yaml')
+        assert st_code == 400, resp
+
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_computed_field.yaml')
         assert st_code == 400, resp
 
     def test_generation(self, hge_ctx):
@@ -361,3 +367,26 @@ class TestWithRelay:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + "with_relay.yaml")
+
+class TestComputedFieldsInRemoteRelationship:
+
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/remote_relationships/"
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx, graphql_service):
+        print("In setup method")
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup.yaml')
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_computed_fields.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
+        assert st_code == 200, resp
+
+    def test_remote_join_with_computed_field(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + 'remote_join_with_computed_field.yaml')
+
+    def test_remote_join_with_computed_field_session(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + 'remote_join_with_computed_field_session.yaml')

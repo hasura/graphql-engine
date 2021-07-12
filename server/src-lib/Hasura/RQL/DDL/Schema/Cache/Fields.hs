@@ -69,12 +69,18 @@ addNonColumnFields = proc ( source
          buildComputedField
     -< (HS.fromList $ M.keys rawTableInfo, map (source, pgFunctions, _nctiTable,) _nctiComputedFields)
 
+  let columnsAndComputedFields =
+        let columnFields = columns <&> FIColumn
+            computedFields = M.fromList $ flip map (M.toList computedFieldInfos) $
+              \(cfName, (cfInfo, _)) -> (fromComputedField cfName, FIComputedField cfInfo)
+        in M.union columnFields computedFields
+
   rawRemoteRelationshipInfos
     <- buildInfoMapPreservingMetadata
          (_rrmName . (^. _3))
          (mkRemoteRelationshipMetadataObject @b)
          buildRemoteRelationship
-    -< ((M.elems columns, remoteSchemaMap), map (source, _nctiTable,) _nctiRemoteRelationships)
+    -< ((columnsAndComputedFields, remoteSchemaMap), map (source, _nctiTable,) _nctiRemoteRelationships)
 
   let relationshipFields = mapKeys fromRel relationshipInfos
       computedFieldFields = mapKeys fromComputedField computedFieldInfos
@@ -251,7 +257,7 @@ buildRemoteRelationship
   :: forall b arr m
    . ( ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m, BackendMetadata b)
-  => ( ([ColumnInfo b], RemoteSchemaMap)
+  => ( (FieldInfoMap (FieldInfo b), RemoteSchemaMap)
      , (SourceName, TableName b, RemoteRelationshipMetadata)
      ) `arr` Maybe (RemoteFieldInfo b)
 buildRemoteRelationship = proc ( (pgColumns, remoteSchemaMap)

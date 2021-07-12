@@ -43,6 +43,7 @@ import           Data.Has
 import           Data.IORef
 import           Data.Set                                  (Set)
 import           Data.Text.Extended
+import           Data.Text.NonEmpty
 
 import qualified Hasura.Backends.Postgres.SQL.DML          as S
 import qualified Hasura.Backends.Postgres.Translate.Select as RS
@@ -243,7 +244,7 @@ resolveAsyncActionQuery userInfo annAction =
               AsyncTypename t -> RS.AFExpression t
               AsyncOutput annFields ->
                 let inputTableArgument = RS.AETableRow $ Just $ Identifier "response_payload"
-                in RS.AFComputedField ()
+                in RS.AFComputedField () (ComputedFieldName $$(nonEmptyText "__action_computed_field"))
                    $ RS.CFSTable jsonAggSelect
                    $ processOutputSelectionSet inputTableArgument outputType definitionList annFields stringifyNumerics
 

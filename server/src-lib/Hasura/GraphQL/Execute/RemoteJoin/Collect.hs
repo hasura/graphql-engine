@@ -19,6 +19,7 @@ import qualified Data.List.NonEmpty                      as NE
 import           Control.Lens
 
 import           Hasura.GraphQL.Execute.RemoteJoin.Types
+import           Hasura.GraphQL.Parser.Column            (UnpreparedValue (..))
 import           Hasura.RQL.IR
 import           Hasura.RQL.IR.Returning
 import           Hasura.RQL.Types
@@ -51,9 +52,9 @@ import           Hasura.RQL.Types
 
 -- | Collects remote joins from the AST and also adds the necessary join fields
 getRemoteJoins
-  :: Backend b
-  => QueryDB b r u
-  -> (QueryDB b (Const Void) u, Maybe RemoteJoins)
+  :: (Backend b)
+  => QueryDB b r (UnpreparedValue b)
+  -> (QueryDB b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoins = \case
   QDBMultipleRows s -> first QDBMultipleRows $ getRemoteJoinsSelect s
   QDBSingleRow    s -> first QDBSingleRow    $ getRemoteJoinsSelect s
@@ -62,33 +63,33 @@ getRemoteJoins = \case
 
 -- | Traverse through 'AnnSimpleSel' and collect remote join fields (if any).
 getRemoteJoinsSelect
-  :: Backend b
-  => AnnSimpleSelectG b r u
-  -> (AnnSimpleSelectG b (Const Void) u, Maybe RemoteJoins)
+  :: (Backend b)
+  => AnnSimpleSelectG b r (UnpreparedValue b)
+  -> (AnnSimpleSelectG b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsSelect =
   second mapToNonEmpty . flip runState mempty . transformSelect mempty
 
 -- | Traverse through @'AnnAggregateSelect' and collect remote join fields (if any).
 getRemoteJoinsAggregateSelect
-  :: Backend b
-  => AnnAggregateSelectG b r u
-  -> (AnnAggregateSelectG b (Const Void) u, Maybe RemoteJoins)
+  :: (Backend b)
+  => AnnAggregateSelectG b r (UnpreparedValue b)
+  -> (AnnAggregateSelectG b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsAggregateSelect =
   second mapToNonEmpty . flip runState mempty . transformAggregateSelect mempty
 
 -- | Traverse through @'ConnectionSelect' and collect remote join fields (if any).
 getRemoteJoinsConnectionSelect
-  :: Backend b
-  => ConnectionSelect b r u
-  -> (ConnectionSelect b (Const Void) u, Maybe RemoteJoins)
+  :: (Backend b)
+  => ConnectionSelect b r (UnpreparedValue b)
+  -> (ConnectionSelect b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsConnectionSelect =
   second mapToNonEmpty . flip runState mempty . transformConnectionSelect mempty
 
 -- | Traverse through 'MutationOutput' and collect remote join fields (if any)
 getRemoteJoinsMutationOutput
-  :: Backend b
-  => MutationOutputG b r u
-  -> (MutationOutputG b (Const Void) u, Maybe RemoteJoins)
+  :: (Backend b)
+  => MutationOutputG b r (UnpreparedValue b)
+  -> (MutationOutputG b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsMutationOutput =
   second mapToNonEmpty . flip runState mempty . transformMutationOutput mempty
   where
@@ -110,16 +111,16 @@ getRemoteJoinsMutationOutput =
 -- local helpers
 
 getRemoteJoinsAnnFields
-  :: Backend b
-  => AnnFieldsG b r u
-  -> (AnnFieldsG b (Const Void) u, Maybe RemoteJoins)
+  :: (Backend b)
+  => AnnFieldsG b r (UnpreparedValue b)
+  -> (AnnFieldsG b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsAnnFields =
   second mapToNonEmpty . flip runState mempty . transformAnnFields mempty
 
 getRemoteJoinsMutationDB
-  :: Backend b
-  => MutationDB b r u
-  -> (MutationDB b (Const Void) u, Maybe RemoteJoins)
+  :: (Backend b)
+  => MutationDB b r (UnpreparedValue b)
+  -> (MutationDB b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsMutationDB = \case
   MDBInsert insert ->
     first MDBInsert $ getRemoteJoinsInsert insert
@@ -144,16 +145,16 @@ getRemoteJoinsMutationDB = \case
 
 getRemoteJoinsSyncAction
   :: (Backend b)
-  => AnnActionExecution b r v
-  -> (AnnActionExecution b (Const Void) v, Maybe RemoteJoins)
+  => AnnActionExecution b r (UnpreparedValue b)
+  -> (AnnActionExecution b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsSyncAction actionExecution =
   let (fields', remoteJoins) = getRemoteJoinsAnnFields $ _aaeFields actionExecution
   in (actionExecution { _aaeFields = fields' }, remoteJoins)
 
 getRemoteJoinsActionQuery
   :: (Backend b)
-  => ActionQuery b r v
-  -> (ActionQuery b (Const Void) v, Maybe RemoteJoins)
+  => ActionQuery b r (UnpreparedValue b)
+  -> (ActionQuery b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsActionQuery = \case
   AQQuery sync ->
     first AQQuery $ getRemoteJoinsSyncAction sync
@@ -179,19 +180,18 @@ getRemoteJoinsActionQuery = \case
 
 getRemoteJoinsActionMutation
   :: (Backend b)
-  => ActionMutation b r v
-  -> (ActionMutation b (Const Void) v, Maybe RemoteJoins)
+  => ActionMutation b r (UnpreparedValue b)
+  -> (ActionMutation b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsActionMutation = \case
-  AMSync sync ->
-    first AMSync $ getRemoteJoinsSyncAction sync
+  AMSync sync   -> first AMSync $ getRemoteJoinsSyncAction sync
   AMAsync async -> (AMAsync async, Nothing)
 
 
 transformSelect
-  :: Backend b
+  :: (Backend b)
   => FieldPath
-  -> AnnSimpleSelectG b r u
-  -> State RemoteJoinMap (AnnSimpleSelectG b (Const Void) u)
+  -> AnnSimpleSelectG b r (UnpreparedValue b)
+  -> State RemoteJoinMap (AnnSimpleSelectG b (Const Void) (UnpreparedValue b))
 transformSelect path sel = do
   let fields = _asnFields sel
   -- Transform selects in array, object and computed fields
@@ -199,10 +199,10 @@ transformSelect path sel = do
   pure sel{_asnFields = transformedFields}
 
 transformAggregateSelect
-  :: Backend b
+  :: (Backend b)
   => FieldPath
-  -> AnnAggregateSelectG b r u
-  -> State RemoteJoinMap (AnnAggregateSelectG b (Const Void) u)
+  -> AnnAggregateSelectG b r (UnpreparedValue b)
+  -> State RemoteJoinMap (AnnAggregateSelectG b (Const Void) (UnpreparedValue b))
 transformAggregateSelect path sel = do
   let aggFields = _asnFields sel
   transformedFields <- forM aggFields $ \(fieldName, aggField) ->
@@ -213,10 +213,10 @@ transformAggregateSelect path sel = do
   pure sel{_asnFields = transformedFields}
 
 transformConnectionSelect
-  :: Backend b
+  :: (Backend b)
   => FieldPath
-  -> ConnectionSelect b r u
-  -> State RemoteJoinMap (ConnectionSelect b (Const Void) u)
+  -> ConnectionSelect b r (UnpreparedValue b)
+  -> State RemoteJoinMap (ConnectionSelect b (Const Void) (UnpreparedValue b))
 transformConnectionSelect path ConnectionSelect{..} = do
   let connectionFields = _asnFields _csSelect
   transformedFields <- forM connectionFields $ \(fieldName, field) ->
@@ -236,21 +236,21 @@ transformConnectionSelect path ConnectionSelect{..} = do
           EdgeNode <$> transformAnnFields (appendPath fieldName edgePath) annFields
 
 transformObjectSelect
-  :: Backend b
+  :: (Backend b)
   => FieldPath
-  -> AnnObjectSelectG b r u
-  -> State RemoteJoinMap (AnnObjectSelectG b (Const Void) u)
+  -> AnnObjectSelectG b r (UnpreparedValue b)
+  -> State RemoteJoinMap (AnnObjectSelectG b (Const Void) (UnpreparedValue b))
 transformObjectSelect path sel = do
   let fields = _aosFields sel
   transformedFields <- transformAnnFields path fields
   pure sel{_aosFields = transformedFields}
 
 transformAnnFields
-  :: forall b r u
-   . Backend b
+  :: forall b r
+   . (Backend b)
   => FieldPath
-  -> AnnFieldsG b r u
-  -> State RemoteJoinMap (AnnFieldsG b (Const Void) u)
+  -> AnnFieldsG b r (UnpreparedValue b)
+  -> State RemoteJoinMap (AnnFieldsG b (Const Void) (UnpreparedValue b))
 transformAnnFields path fields = do
 
   -- TODO: Check for correctness. I think this entire function seems to be
@@ -258,15 +258,21 @@ transformAnnFields path fields = do
   -- server, which is incorrect as they can be aliased. Similarly, the phantom
   -- columns are being added without checking for overlap with aliases
 
-  let pgColumnFields = HS.fromList $ map (pgiColumn . _acfInfo . snd) $
-                       getFields _AFColumn fields
+  let columnsInSelSet = HS.fromList $ map (pgiColumn . _acfInfo . snd) $ getFields _AFColumn fields
+      scalarComputedFieldsInSelSet = HS.fromList $ map ((^. _2) . snd) $ getFields _AFComputedField fields
       remoteSelects = getFields (_AFRemote) fields
       remoteJoins = remoteSelects <&> \(fieldName, remoteSelect) ->
-        let RemoteSelect argsMap selSet hasuraColumns remoteFields rsi = remoteSelect
-            hasuraColumnFields = HS.map (fromCol @b . pgiColumn) hasuraColumns
-            phantomColumns = HS.filter ((`notElem` pgColumnFields) . pgiColumn) hasuraColumns
-        in (phantomColumns, RemoteJoin fieldName argsMap selSet hasuraColumnFields remoteFields rsi $
-           map (fromCol @b . pgiColumn) $ toList phantomColumns)
+        let RemoteSelect argsMap selSet hasuraFields remoteFields rsi = remoteSelect
+            hasuraFieldNames = HS.map dbJoinFieldToName hasuraFields
+
+            -- See Note [Phantom fields in Remote Joins]
+            fieldPresentInSelection = \case
+              JoinColumn columnInfo -> HS.member (pgiColumn columnInfo) columnsInSelSet
+              JoinComputedField computedFieldInfo -> HS.member (_scfName computedFieldInfo) scalarComputedFieldsInSelSet
+
+            phantomFields = HS.filter (not . fieldPresentInSelection) hasuraFields
+            phantomFieldNames = toList $ HS.map dbJoinFieldToName phantomFields
+        in (phantomFields, RemoteJoin fieldName argsMap selSet hasuraFieldNames remoteFields rsi phantomFieldNames)
 
   transformedFields <- forM fields $ \(fieldName, field') -> do
     let fieldPath = appendPath fieldName path
@@ -281,8 +287,8 @@ transformAnnFields path fields = do
         AFArrayRelation . ASAggregate <$> transformAnnRelation (transformAggregateSelect fieldPath) aggRel
       AFArrayRelation (ASConnection annRel) ->
         AFArrayRelation . ASConnection <$> transformAnnRelation (transformConnectionSelect fieldPath) annRel
-      AFComputedField x computedField ->
-        AFComputedField x <$> case computedField of
+      AFComputedField x n computedField ->
+        AFComputedField x n <$> case computedField of
           CFSScalar cfss cbe  -> pure $ CFSScalar cfss cbe
           CFSTable jas annSel -> CFSTable jas <$> transformSelect fieldPath annSel
       AFRemote rs -> pure $ AFRemote rs
@@ -293,9 +299,13 @@ transformAnnFields path fields = do
   case NE.nonEmpty remoteJoins of
     Nothing -> pure transformedFields
     Just nonEmptyRemoteJoins -> do
-      let phantomColumns = map (\ci -> (fromCol @b $ pgiColumn ci, AFColumn $ AnnColumnField ci False Nothing Nothing)) $ toList $ HS.unions $ map fst $ remoteJoins
+      let annotatedPhantomFields = (toList $ HS.unions $ map fst remoteJoins) <&> \phantomField ->
+            (dbJoinFieldToName phantomField,) $ case phantomField of
+              JoinColumn columnInfo               -> AFColumn $ AnnColumnField columnInfo False Nothing Nothing
+              JoinComputedField computedFieldInfo -> mkScalarComputedFieldSelect computedFieldInfo
+
       modify (Map.insert path $ fmap snd nonEmptyRemoteJoins)
-      pure $ transformedFields <> phantomColumns
+      pure $ transformedFields <> annotatedPhantomFields
 
   where
     getFields f = mapMaybe (sequence . second (^? f))
@@ -303,6 +313,23 @@ transformAnnFields path fields = do
     transformAnnRelation f (AnnRelationSelectG name maps select) = do
       transformedSelect <- f select
       pure $ AnnRelationSelectG name maps transformedSelect
+
+    mkScalarComputedFieldSelect :: ScalarComputedField b -> (AnnFieldG b (Const Void) (UnpreparedValue b))
+    mkScalarComputedFieldSelect ScalarComputedField{..} =
+      let functionArgs = flip FunctionArgsExp mempty
+            $ functionArgsWithTableRowAndSession _scfTableArgument _scfSessionArgument
+          fieldSelect = flip CFSScalar Nothing
+            $ ComputedFieldScalarSelect _scfFunction functionArgs _scfType Nothing
+      in AFComputedField _scfXField _scfName fieldSelect
+      where
+        functionArgsWithTableRowAndSession
+          :: FunctionTableArgument
+          -> Maybe FunctionSessionArgument
+          -> [ArgumentExp b (UnpreparedValue b)]
+        functionArgsWithTableRowAndSession  _              Nothing = [AETableRow Nothing] -- No session argument
+        functionArgsWithTableRowAndSession  (FTAFirst)     _       = [AETableRow Nothing, AESession UVSession]
+        functionArgsWithTableRowAndSession  (FTANamed _ 0) _       = [AETableRow Nothing, AESession UVSession] -- Index is 0 implies table argument is first
+        functionArgsWithTableRowAndSession  _              _       = [AESession UVSession, AETableRow Nothing]
 
 
 mapToNonEmpty :: RemoteJoinMap -> Maybe RemoteJoins
