@@ -1,10 +1,7 @@
 import { rest } from 'msw';
-import {
-  BASE_URL_TEMPLATE,
-  ROOT_CONFIG_PATH,
-  ServerJsonRootConfig,
-} from '../../Actions';
+import { ServerJsonRootConfig } from '../../Actions';
 import { HasuraMetadataV3 } from '../../../../../../../metadata/types';
+import { BASE_URL_TEMPLATE, ROOT_CONFIG_PATH } from '../../schemaSharingConfig';
 
 export const CATEGORY_1 = 'AAAAAAAA';
 export const CATEGORY_2 = 'BBBBBBBB';

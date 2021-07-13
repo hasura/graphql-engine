@@ -13,9 +13,9 @@
   field in the connection configuration
 - server: include action and event names in log output
 - server: log all HTTP errors in remote schema calls as `remote-schema-error` with details
-- console: add schema sharing
 - server: For BigQuery, make `global_select_limit` configuration optional with a default value of
 `1000`
+
 
 ## v2.0.1
 
