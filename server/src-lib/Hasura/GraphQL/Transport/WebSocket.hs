@@ -28,6 +28,7 @@ import qualified Data.Dependent.Map                           as DM
 import qualified Data.Environment                             as Env
 import qualified Data.HashMap.Strict                          as Map
 import qualified Data.HashMap.Strict.InsOrd                   as OMap
+import qualified Data.HashSet                                 as Set
 import qualified Data.List.NonEmpty                           as NE
 import qualified Data.Text                                    as T
 import qualified Data.Text.Encoding                           as TE
@@ -347,11 +348,12 @@ onStart
      , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
+  -> HashSet (L.EngineLogType L.Hasura)
   -> WSServerEnv
   -> WSConn
   -> StartMsg
   -> m ()
-onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
+onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   timerTot <- startTimer
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
 
@@ -610,8 +612,11 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     WSConnData userInfoR opMap errRespTy queryType = WS.getData wsConn
 
-    logOpEv opTy reqId = logWSEvent logger wsConn $ EOperation $
-      OperationDetails opId reqId (_grOperationName q) opTy (Just q)
+    logOpEv opTy reqId =
+      -- See Note [Disable query printing when query-log is disabled]
+      let queryToLog = bool Nothing (Just q) (Set.member L.ELTQueryLog enabledLogTypes)
+      in logWSEvent logger wsConn $ EOperation $
+           OperationDetails opId reqId (_grOperationName q) opTy queryToLog
 
     getErrFn ERTLegacy           = encodeQErr
     getErrFn ERTGraphqlCompliant = encodeGQLErr
@@ -706,10 +711,11 @@ onMessage
      , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
+  -> HashSet (L.EngineLogType L.Hasura)
   -> AuthMode
   -> WSServerEnv
   -> WSConn -> LBS.ByteString -> m ()
-onMessage env authMode serverEnv wsConn msgRaw = Tracing.runTraceT "websocket" do
+onMessage env enabledLogTypes authMode serverEnv wsConn msgRaw = Tracing.runTraceT "websocket" do
   case J.eitherDecode msgRaw of
     Left e    -> do
       let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
@@ -720,7 +726,7 @@ onMessage env authMode serverEnv wsConn msgRaw = Tracing.runTraceT "websocket" d
       CMConnInit params -> onConnInit (_wseLogger serverEnv)
                            (_wseHManager serverEnv)
                            wsConn authMode params
-      CMStart startMsg  -> onStart env serverEnv wsConn startMsg
+      CMStart startMsg  -> onStart env enabledLogTypes serverEnv wsConn startMsg
       CMStop stopMsg    -> liftIO $ onStop serverEnv wsConn stopMsg
       -- The idea is cleanup will be handled by 'onClose', but...
       -- NOTE: we need to close the websocket connection when we receive the
@@ -905,11 +911,12 @@ createWSServerApp
      , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
+  -> HashSet (L.EngineLogType L.Hasura)
   -> AuthMode
   -> WSServerEnv
   -> WS.HasuraServerApp m
 --   -- ^ aka generalized 'WS.ServerApp'
-createWSServerApp env authMode serverEnv = \ !ipAddress !pendingConn ->
+createWSServerApp env enabledLogTypes authMode serverEnv = \ !ipAddress !pendingConn ->
   WS.createServerApp (_wseServer serverEnv) handlers ipAddress pendingConn
   where
     handlers = WS.WSHandlers onConnHandler onMessageHandler onCloseHandler
@@ -918,7 +925,7 @@ createWSServerApp env authMode serverEnv = \ !ipAddress !pendingConn ->
     onConnHandler rid rh ip = mask_ do
       liftIO $ EKG.Gauge.inc $ smWebsocketConnections serverMetrics
       flip runReaderT serverEnv $ onConn rid rh ip
-    onMessageHandler conn bs = mask_ $ onMessage env authMode serverEnv conn bs
+    onMessageHandler conn bs = mask_ $ onMessage env enabledLogTypes authMode serverEnv conn bs
     onCloseHandler conn = mask_ do
       liftIO $ EKG.Gauge.dec $ smWebsocketConnections serverMetrics
       onClose (_wseLogger serverEnv) serverMetrics (_wseLiveQMap serverEnv) conn

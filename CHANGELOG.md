@@ -3,6 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: only if `query-log` is enabled the graphql query string is printed in `http-log` and `websocket-log`
 - server: fix reloading inconsistent sources or remote schemas via `reload_metadata` API
 - server: support scalar computed fields in remote joins (close #7101)
 - server: Support computed fields in query filter (`where` argument) (close #7100)
