@@ -15,14 +15,15 @@ import {
   setHeaders as dispatchNewHeaders,
   toggleForwardClientHeaders as toggleFCH,
   resetDerivedActionParentOperation,
+  setActionTimeout,
   setActionComment,
 } from './reducer';
 import { createAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
-import ToolTip from '../../../Common/Tooltip/Tooltip';
 import { showWarningNotification } from '../../Common/Notification';
 import GraphQLEditor from '../Common/components/GraphQLEditor';
 import { actionDefinitionInfo } from '../Modify/ActionEditor';
+import { Tooltip, OverlayTrigger } from 'react-bootstrap';
 
 export const typeDefinitionInfo = {
   label: 'New types definition',
@@ -41,6 +42,7 @@ const AddAction = ({
   forwardClientHeaders,
   derive,
   readOnlyMode,
+  timeoutConf,
   comment,
 }) => {
   useEffect(() => {
@@ -62,8 +64,8 @@ const AddAction = ({
 
   const handlerOnChange = e => dispatch(setActionHandler(e.target.value));
   const kindOnChange = k => dispatch(setActionKind(k));
+  const timeoutOnChange = t => dispatch(setActionTimeout(t));
   const commentOnChange = e => dispatch(setActionComment(e.target.value));
-
   const {
     sdl: typesDefinitionSdl,
     error: typesDefinitionError,
@@ -94,6 +96,14 @@ const AddAction = ({
 
   const typeDefinitionOnChange = (value, error, timer, ast) => {
     dispatch(setTypeDefinition(value, error, timer, ast));
+  };
+
+  const tooltips = {
+    timeoutConf: (
+      <Tooltip id="tooltip-cascade">
+        Configure timeout for Action. Defaults to 30 seconds.
+      </Tooltip>
+    ),
   };
 
   const allowSave =
@@ -188,6 +198,31 @@ const AddAction = ({
         disabled={readOnlyMode}
       />
       <hr />
+      <div className={styles.subheading_text}>
+        Action custom timeout
+        <OverlayTrigger placement="right" overlay={tooltips.timeoutConf}>
+          <i className="fa fa-question-circle" aria-hidden="true" />
+        </OverlayTrigger>
+      </div>
+      <label
+        className={
+          styles.inputLabel + ' radio-inline ' + styles.padd_left_remove
+        }
+      >
+        <input
+          className={'form-control'}
+          type="text"
+          placeholder="Timeout in seconds"
+          value={timeoutConf}
+          data-key="timeoutConf"
+          onChange={timeoutOnChange}
+          disabled={readOnlyMode}
+          data-test="remote-schema-timeout-conf"
+          pattern="^\d+$"
+          title="Only non negative integers are allowed"
+        />
+      </label>
+      <hr/>
       <Button
         color="yellow"
         size="sm"

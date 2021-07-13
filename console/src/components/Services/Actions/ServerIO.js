@@ -99,7 +99,7 @@ export const createAction = () => (dispatch, getState) => {
     arguments: args,
     outputType,
     headers: rawState.headers,
-    forwardClientHeaders: rawState.forwardClientHeaders,
+    comment: actionDescription,
     comment: actionComment,
   };
 
@@ -223,6 +223,8 @@ export const saveAction = currentAction => (dispatch, getState) => {
     outputType,
     headers: rawState.headers,
     forwardClientHeaders: rawState.forwardClientHeaders,
+    comment: actionDescription,
+    timeout: parseInt(rawState.timeout, 10)
     comment: actionComment,
   };
 

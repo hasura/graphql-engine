@@ -16,11 +16,13 @@ import {
   setActionComment,
   setHeaders as dispatchNewHeaders,
   toggleForwardClientHeaders as toggleFCH,
+  setActionTimeout
 } from './reducer';
 import { saveAction, deleteAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
 import GraphQLEditor from '../Common/components/GraphQLEditor';
 import { typeDefinitionInfo } from '../Add/Add';
+import { Tooltip, OverlayTrigger } from 'react-bootstrap';
 
 export const actionDefinitionInfo = {
   label: 'Action definition',
@@ -37,6 +39,7 @@ const ActionEditor = ({
   headers,
   forwardClientHeaders,
   readOnlyMode,
+  timeoutConf,
   ...modifyProps
 }) => {
   const {
@@ -68,6 +71,7 @@ const ActionEditor = ({
 
   const handlerOnChange = e => dispatch(setActionHandler(e.target.value));
   const kindOnChange = k => dispatch(setActionKind(k));
+  const timeoutOnChange = t => dispatch(setActionTimeout(t));
 
   const actionDefinitionOnChange = (value, error, timer, ast) => {
     dispatch(setActionDefinition(value, error, timer, ast));
@@ -91,6 +95,14 @@ const ActionEditor = ({
 
   const toggleForwardClientHeaders = () => {
     dispatch(toggleFCH());
+  };
+
+  const tooltips = {
+    timeoutConf: (
+      <Tooltip id="tooltip-cascade">
+        Configure timeout for Action. Defaults to 30 seconds.
+      </Tooltip>
+    ),
   };
 
   const allowSave =
@@ -177,6 +189,31 @@ const ActionEditor = ({
         setHeaders={setHeaders}
         disabled={readOnlyMode}
       />
+      <hr/>
+      <div className={styles.subheading_text}>
+        Action custom timeout
+        <OverlayTrigger placement="right" overlay={tooltips.timeoutConf}>
+          <i className="fa fa-question-circle" aria-hidden="true" />
+        </OverlayTrigger>
+      </div>
+      <label
+        className={
+          styles.inputLabel + ' radio-inline ' + styles.padd_left_remove
+        }
+      >
+        <input
+          className={'form-control'}
+          type="text"
+          placeholder="Timeout in seconds"
+          value={timeoutConf}
+          data-key="timeoutConf"
+          onChange={timeoutOnChange}
+          disabled={readOnlyMode}
+          data-test="remote-schema-timeout-conf"
+          pattern="^\d+$"
+          title="Only non negative integers are allowed"
+        />
+      </label>
       <hr />
       <div className={styles.display_flex}>
         {!readOnlyMode && (
