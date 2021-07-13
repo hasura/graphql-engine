@@ -122,6 +122,8 @@ data ServerCtx
   , scFunctionPermsCtx             :: !FunctionPermissionsCtx
   , scEnableMaintenanceMode        :: !MaintenanceMode
   , scExperimentalFeatures         :: !(S.HashSet ExperimentalFeature)
+  , scEnabledLogTypes              :: !(S.HashSet (L.EngineLogType L.Hasura))
+  -- ^ this is only required for the short-term fix in https://github.com/hasura/graphql-engine-mono/issues/1770
   }
 
 data HandlerCtx
@@ -396,7 +398,7 @@ mkSpockAction serverCtx@ServerCtx{..} qErrEncoder qErrModifier apiHandler = do
       -> QErr
       -> Spock.ActionCtxT ctx m a
     logErrorAndResp userInfo reqId waiReq req includeInternal headers qErr = do
-      lift $ logHttpError scLogger userInfo reqId waiReq req qErr headers
+      lift $ logHttpError scLogger scEnabledLogTypes userInfo reqId waiReq req qErr headers
       Spock.setStatus $ qeStatus qErr
       Spock.json $ qErrEncoder includeInternal qErr
 
@@ -408,7 +410,7 @@ mkSpockAction serverCtx@ServerCtx{..} qErrEncoder qErrModifier apiHandler = do
           encodingHeader = onNothing mEncodingHeader []
           reqIdHeader = (requestIdHeader, txtToBs $ unRequestId reqId)
           allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders
-      lift $ logHttpSuccess scLogger userInfo reqId waiReq req respBytes compressedResp qTime mCompressionType reqHeaders httpLoggingMetadata
+      lift $ logHttpSuccess scLogger scEnabledLogTypes userInfo reqId waiReq req respBytes compressedResp qTime mCompressionType reqHeaders httpLoggingMetadata
       mapM_ setHeader allRespHeaders
       Spock.lazyBytes compressedResp
 
@@ -631,10 +633,11 @@ v1Alpha1PGDumpHandler b = do
 consoleAssetsHandler
   :: (MonadIO m, HttpLog m)
   => L.Logger L.Hasura
+  -> HashSet (L.EngineLogType L.Hasura)
   -> Text
   -> FilePath
   -> Spock.ActionT m ()
-consoleAssetsHandler logger dir path = do
+consoleAssetsHandler logger enabledLogTypes dir path = do
   req <- Spock.request
   let reqHeaders = Wai.requestHeaders req
   -- '..' in paths need not be handed as it is resolved in the url by
@@ -647,7 +650,7 @@ consoleAssetsHandler logger dir path = do
       mapM_ setHeader headers
       Spock.lazyBytes c
     onError :: (MonadIO m, HttpLog m) => [HTTP.Header] -> IOException -> Spock.ActionT m ()
-    onError hdrs = raiseGenericApiError logger hdrs . err404 NotFound . tshow
+    onError hdrs = raiseGenericApiError logger enabledLogTypes hdrs . err404 NotFound . tshow
     fn = T.pack $ takeFileName path
     -- set gzip header if the filename ends with .gz
     (fileName, encHeader) = case T.stripSuffix ".gz" fn of
@@ -786,11 +789,12 @@ mkWaiApp
   -> MaintenanceMode
   -> S.HashSet ExperimentalFeature
   -- ^ Set of the enabled experimental features
+  -> S.HashSet (L.EngineLogType L.Hasura)
   -> m HasuraApp
 mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole consoleAssetsDir
          enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig
          liveQueryHook schemaCacheRef ekgStore serverMetrics enableRSPermsCtx functionPermsCtx
-         connectionOptions keepAliveDelay maintenanceMode experimentalFeatures = do
+         connectionOptions keepAliveDelay maintenanceMode experimentalFeatures enabledLogTypes = do
 
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
@@ -819,13 +823,14 @@ mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enable
                     , scFunctionPermsCtx             = functionPermsCtx
                     , scEnableMaintenanceMode        = maintenanceMode
                     , scExperimentalFeatures         = experimentalFeatures
+                    , scEnabledLogTypes              = enabledLogTypes
                     }
 
     spockApp <- liftWithStateless $ \lowerIO ->
       Spock.spockAsApp $ Spock.spockT lowerIO $
         httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
 
-    let wsServerApp  = WS.createWSServerApp env mode wsServerEnv -- TODO: Lyndon: Can we pass environment through wsServerEnv?
+    let wsServerApp  = WS.createWSServerApp env enabledLogTypes mode wsServerEnv -- TODO: Lyndon: Can we pass environment through wsServerEnv?
         stopWSServer = WS.stopWSServerApp wsServerEnv
 
     waiApp <- liftWithStateless $ \lowerIO ->
@@ -1034,27 +1039,29 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
       req <- Spock.request
       let headers = Wai.requestHeaders req
           qErr = err404 NotFound "resource does not exist"
-      raiseGenericApiError logger headers qErr
+      raiseGenericApiError logger (scEnabledLogTypes serverCtx) headers qErr
 
   where
     logger = scLogger serverCtx
 
     logSuccess msg = do
+      let enabledLogTypes = scEnabledLogTypes serverCtx
       req <- Spock.request
       reqBody <- liftIO $ Wai.strictRequestBody req
       let headers = Wai.requestHeaders req
           blMsg = TL.encodeUtf8 msg
       (reqId, _newHeaders) <- getRequestId headers
       lift $
-        logHttpSuccess logger Nothing reqId req (reqBody, Nothing) blMsg blMsg Nothing Nothing headers (emptyHttpLogMetadata @m)
+        logHttpSuccess logger enabledLogTypes Nothing reqId req (reqBody, Nothing) blMsg blMsg Nothing Nothing headers (emptyHttpLogMetadata @m)
 
     logError errmsg = do
+      let enabledLogTypes = scEnabledLogTypes serverCtx
       req <- Spock.request
       reqBody <- liftIO $ Wai.strictRequestBody req
       let headers = Wai.requestHeaders req
       (reqId, _newHeaders) <- getRequestId headers
       lift $
-        logHttpError logger Nothing reqId req (reqBody, Nothing) (internalError errmsg) headers
+        logHttpError logger enabledLogTypes Nothing reqId req (reqBody, Nothing) (internalError errmsg) headers
 
     spockAction
       :: forall a n
@@ -1081,27 +1088,29 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
       -- serve static files if consoleAssetsDir is set
       onJust consoleAssetsDir $ \dir ->
         Spock.get ("console/assets" <//> Spock.wildcard) $ \path -> do
-          consoleAssetsHandler logger dir (T.unpack path)
+          consoleAssetsHandler logger (scEnabledLogTypes serverCtx) dir (T.unpack path)
 
       -- serve console html
       Spock.get ("console" <//> Spock.wildcard) $ \path -> do
         req <- Spock.request
         let headers = Wai.requestHeaders req
             authMode = scAuthMode serverCtx
+            enabledLogTypes = scEnabledLogTypes serverCtx
         consoleHtml <- lift $ renderConsole path authMode enableTelemetry consoleAssetsDir
-        either (raiseGenericApiError logger headers . internalError . T.pack) Spock.html consoleHtml
+        either (raiseGenericApiError logger enabledLogTypes headers . internalError . T.pack) Spock.html consoleHtml
 
 raiseGenericApiError
   :: (MonadIO m, HttpLog m)
   => L.Logger L.Hasura
+  -> HashSet (L.EngineLogType L.Hasura)
   -> [HTTP.Header]
   -> QErr
   -> Spock.ActionT m ()
-raiseGenericApiError logger headers qErr = do
+raiseGenericApiError logger enabledLogTypes headers qErr = do
   req <- Spock.request
   reqBody <- liftIO $ Wai.strictRequestBody req
   (reqId, _newHeaders) <- getRequestId $ Wai.requestHeaders req
-  lift $ logHttpError logger Nothing reqId req (reqBody, Nothing) qErr headers
+  lift $ logHttpError logger enabledLogTypes Nothing reqId req (reqBody, Nothing) qErr headers
   setHeader jsonHeader
   Spock.setStatus $ qeStatus qErr
   Spock.lazyBytes $ encode qErr

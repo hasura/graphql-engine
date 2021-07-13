@@ -28,6 +28,7 @@ import           Hasura.Prelude
 import qualified Data.ByteString.Lazy                  as BL
 import qualified Data.Environment                      as Env
 import qualified Data.HashMap.Strict                   as HM
+import qualified Data.HashSet                          as Set
 import qualified Data.TByteString                      as TBS
 import qualified Data.Text                             as T
 import qualified Network.HTTP.Types                    as HTTP
@@ -162,6 +163,14 @@ buildHttpLogMetadata xs rb = (CommonHttpLogMetadata rb, buildExtraHttpLogMetadat
 emptyHttpLogMetadata :: forall m. HttpLog m => HttpLogMetadata m
 emptyHttpLogMetadata = (CommonHttpLogMetadata Nothing, emptyExtraHttpLogMetadata @m)
 
+
+{- Note [Disable query printing when query-log is disabled]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+As a temporary hack (as per https://github.com/hasura/graphql-engine-mono/issues/1770),
+we want to print the graphql query string in `http-log` or `websocket-log` only
+when `query-log` is enabled.
+-}
+
 class Monad m => HttpLog m where
 
   -- | Extra http-log metadata that we attach when operating in 'm'.
@@ -174,6 +183,8 @@ class Monad m => HttpLog m where
   logHttpError
     :: Logger Hasura
     -- ^ the logger
+    -> HashSet (EngineLogType Hasura)
+    -- ^ this is only required for the short-term fix in https://github.com/hasura/graphql-engine-mono/issues/1770
     -> Maybe UserInfo
     -- ^ user info may or may not be present (error can happen during user resolution)
     -> RequestId
@@ -191,6 +202,8 @@ class Monad m => HttpLog m where
   logHttpSuccess
     :: Logger Hasura
     -- ^ the logger
+    -> HashSet (EngineLogType Hasura)
+    -- ^ this is only required for the short-term fix in https://github.com/hasura/graphql-engine-mono/issues/1770
     -> Maybe UserInfo
     -- ^ user info may or may not be present (error can happen during user resolution)
     -> RequestId
@@ -220,9 +233,9 @@ instance HttpLog m => HttpLog (TraceT m) where
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
+  logHttpError a b c d e f g h = lift $ logHttpError a b c d e f g h
 
-  logHttpSuccess a b c d e f g h i j k = lift $ logHttpSuccess a b c d e f g h i j k
+  logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
 
 instance HttpLog m => HttpLog (ReaderT r m) where
 
@@ -231,9 +244,9 @@ instance HttpLog m => HttpLog (ReaderT r m) where
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
+  logHttpError a b c d e f g h = lift $ logHttpError a b c d e f g h
 
-  logHttpSuccess a b c d e f g h i j k = lift $ logHttpSuccess a b c d e f g h i j k
+  logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
 
 instance HttpLog m => HttpLog (MetadataStorageT m) where
 
@@ -242,9 +255,9 @@ instance HttpLog m => HttpLog (MetadataStorageT m) where
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
+  logHttpError a b c d e f g h = lift $ logHttpError a b c d e f g h
 
-  logHttpSuccess a b c d e f g h i j k = lift $ logHttpSuccess a b c d e f g h i j k
+  logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
 
 -- | Log information about the HTTP request
 data HttpInfoLog
@@ -298,6 +311,7 @@ $(deriveToJSON hasuraJSON ''HttpLogContext)
 mkHttpAccessLogContext
   :: Maybe UserInfo
   -- ^ Maybe because it may not have been resolved
+  -> HashSet (EngineLogType Hasura)
   -> RequestId
   -> Wai.Request
   -> (BL.ByteString, Maybe Value)
@@ -307,7 +321,7 @@ mkHttpAccessLogContext
   -> [HTTP.Header]
   -> Maybe RequestBatching
   -> HttpLogContext
-mkHttpAccessLogContext userInfoM reqId req (_, parsedReq) res mTiming compressTypeM headers batching =
+mkHttpAccessLogContext userInfoM enabledLogTypes reqId req (_, parsedReq) res mTiming compressTypeM headers batching =
   let http = HttpInfoLog
              { hlStatus      = status
              , hlMethod      = bsToTxt $ Wai.requestMethod req
@@ -324,7 +338,8 @@ mkHttpAccessLogContext userInfoM reqId req (_, parsedReq) res mTiming compressTy
            , olRequestReadTime    = Seconds . fst <$> mTiming
            , olQueryExecutionTime = Seconds . snd <$> mTiming
            , olRequestMode = batching
-           , olQuery = parsedReq
+           -- See Note [Disable query printing when query-log is disabled]
+           , olQuery = bool Nothing parsedReq $ Set.member ELTQueryLog enabledLogTypes
            , olRawQuery = Nothing
            , olError = Nothing
            }
@@ -336,6 +351,7 @@ mkHttpAccessLogContext userInfoM reqId req (_, parsedReq) res mTiming compressTy
 mkHttpErrorLogContext
   :: Maybe UserInfo
   -- ^ Maybe because it may not have been resolved
+  -> HashSet (EngineLogType Hasura)
   -> RequestId
   -> Wai.Request
   -> (BL.ByteString, Maybe Value)
@@ -344,7 +360,7 @@ mkHttpErrorLogContext
   -> Maybe CompressionType
   -> [HTTP.Header]
   -> HttpLogContext
-mkHttpErrorLogContext userInfoM reqId waiReq (reqBody, parsedReq) err mTiming compressTypeM headers =
+mkHttpErrorLogContext userInfoM enabledLogTypes reqId waiReq (reqBody, parsedReq) err mTiming compressTypeM headers =
   let http = HttpInfoLog
              { hlStatus      = qeStatus err
              , hlMethod      = bsToTxt $ Wai.requestMethod waiReq
@@ -360,12 +376,16 @@ mkHttpErrorLogContext userInfoM reqId waiReq (reqBody, parsedReq) err mTiming co
            , olResponseSize       = Just $ BL.length $ encode err
            , olRequestReadTime    = Seconds . fst <$> mTiming
            , olQueryExecutionTime = Seconds . snd <$> mTiming
-           , olQuery              = parsedReq
+           , olQuery              = reqToLog parsedReq
            -- if parsedReq is Nothing, add the raw query
-           , olRawQuery           = maybe (Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq
+           , olRawQuery           = maybe (reqToLog $ Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq
            , olError              = Just err
            , olRequestMode        = Nothing
            }
+
+      -- See Note [Disable query printing when query-log is disabled]
+      reqToLog :: Maybe a -> Maybe a
+      reqToLog req = bool Nothing req $ Set.member ELTQueryLog enabledLogTypes
   in HttpLogContext http op reqId
 
 data HttpLogLine

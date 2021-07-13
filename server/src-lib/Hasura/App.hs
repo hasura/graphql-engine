@@ -218,14 +218,15 @@ initGlobalCtx env metadataDbUrl defaultPgConnInfo = do
 -- | Context required for the 'serve' CLI command.
 data ServeCtx
   = ServeCtx
-  { _scHttpManager    :: !HTTP.Manager
-  , _scInstanceId     :: !InstanceId
-  , _scLoggers        :: !Loggers
-  , _scMetadataDbPool :: !Q.PGPool
-  , _scShutdownLatch  :: !ShutdownLatch
-  , _scSchemaCache    :: !RebuildableSchemaCache
-  , _scSchemaCacheRef :: !SchemaCacheRef
-  , _scMetaVersionRef :: !(STM.TMVar MetadataResourceVersion)
+  { _scHttpManager     :: !HTTP.Manager
+  , _scInstanceId      :: !InstanceId
+  , _scLoggers         :: !Loggers
+  , _scEnabledLogTypes :: !(HashSet (EngineLogType Hasura))
+  , _scMetadataDbPool  :: !Q.PGPool
+  , _scShutdownLatch   :: !ShutdownLatch
+  , _scSchemaCache     :: !RebuildableSchemaCache
+  , _scSchemaCacheRef  :: !SchemaCacheRef
+  , _scMetaVersionRef  :: !(STM.TMVar MetadataResourceVersion)
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -323,7 +324,7 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
   -- (planCache, schemaCacheRef) <- initialiseCache
   schemaCacheRef <- initialiseCache rebuildableSchemaCache
 
-  pure $ ServeCtx _gcHttpManager instanceId loggers metadataDbPool latch
+  pure $ ServeCtx _gcHttpManager instanceId loggers soEnabledLogTypes metadataDbPool latch
                   rebuildableSchemaCache schemaCacheRef metaVersionRef
 
 mkLoggers
@@ -519,6 +520,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
              soWebsocketKeepAlive
              soEnableMaintenanceMode
              soExperimentalFeatures
+             _scEnabledLogTypes
 
   let serverConfigCtx =
         ServerConfigCtx soInferFunctionPermissions
@@ -839,13 +841,13 @@ instance (MonadIO m) => HttpLog (PGMetadataStorageAppT m) where
 
   buildExtraHttpLogMetadata _ = ()
 
-  logHttpError logger userInfoM reqId waiReq req qErr headers =
+  logHttpError logger enabledLogTypes userInfoM reqId waiReq req qErr headers =
     unLogger logger $ mkHttpLog $
-      mkHttpErrorLogContext userInfoM reqId waiReq req qErr Nothing Nothing headers
+      mkHttpErrorLogContext userInfoM enabledLogTypes reqId waiReq req qErr Nothing Nothing headers
 
-  logHttpSuccess logger userInfoM reqId waiReq reqBody _response compressedResponse qTime cType headers (CommonHttpLogMetadata rb, ()) =
+  logHttpSuccess logger enabledLogTypes userInfoM reqId waiReq reqBody _response compressedResponse qTime cType headers (CommonHttpLogMetadata rb, ()) =
     unLogger logger $ mkHttpLog $
-      mkHttpAccessLogContext userInfoM reqId waiReq reqBody compressedResponse qTime cType headers rb
+      mkHttpAccessLogContext userInfoM enabledLogTypes reqId waiReq reqBody compressedResponse qTime cType headers rb
 
 instance (Monad m) => MonadExecuteQuery (PGMetadataStorageAppT m) where
   cacheLookup _ _ _ _ = pure ([], Nothing)
