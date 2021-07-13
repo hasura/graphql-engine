@@ -49,13 +49,13 @@ This ``many-to-many`` relationship can be established in the database by:
    .. code-block:: sql
 
       article_tag (
+        id SERIAL PRIMARY KEY
         article_id INT
         tag_id INT
-        PRIMARY KEY (article_id, tag_id)
         ...
       )
 
-2. Adding **foreign key constraints** from the ``article_tag`` table to:
+2. Adding **foreign key constraints** in the ``article_tag`` table for:
 
    - the ``articles`` table using the ``article_id`` and ``id`` columns of the tables respectively
    - the ``tags`` table using the ``tag_id`` and ``id`` columns of the tables respectively
