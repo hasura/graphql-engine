@@ -393,6 +393,9 @@ library
                      , Hasura.Backends.Postgres.Types.Table
                      , Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
 
+                     , Hasura.Backends.MySQL.Types
+                     , Hasura.Backends.MySQL.Connection
+
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
                      , Hasura.Logging
