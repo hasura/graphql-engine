@@ -20,7 +20,6 @@ module Hasura.RQL.DDL.Metadata
 import           Hasura.Prelude
 
 import qualified Data.Aeson.Ordered                 as AO
-import qualified Data.HashMap.Strict                as HM
 import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.HashSet                       as HS
 import qualified Data.List                          as L
@@ -260,19 +259,31 @@ runExportMetadataV2 currentResourceVersion ExportMetadata{} = do
 
 runReloadMetadata :: (QErrM m, CacheRWM m, MetadataM m) => ReloadMetadata -> m EncJSON
 runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources) = do
-  sc <- askSchemaCache
-  let remoteSchemaInvalidations = case reloadRemoteSchemas of
-        RSReloadAll    -> HS.fromList $ getAllRemoteSchemas sc
-        RSReloadList l -> l
-      pgSourcesInvalidations = case reloadSources of
-        RSReloadAll    -> HS.fromList $ HM.keys $ scSources sc
-        RSReloadList l -> l
-      cacheInvalidations = CacheInvalidations
+  metadata <- getMetadata
+  let allSources = HS.fromList $ OMap.keys $ _metaSources metadata
+      allRemoteSchemas = HS.fromList $ OMap.keys $ _metaRemoteSchemas metadata
+      checkRemoteSchema name =
+        unless (HS.member name allRemoteSchemas)
+        $ throw400 NotExists
+        $ "Remote schema with name " <> name <<> " not found in metadata"
+      checkSource name =
+        unless (HS.member name allSources)
+        $ throw400 NotExists
+        $ "Source with name " <> name <<> " not found in metadata"
+
+  remoteSchemaInvalidations <- case reloadRemoteSchemas of
+    RSReloadAll    -> pure allRemoteSchemas
+    RSReloadList l -> mapM_ checkRemoteSchema l *> pure l
+  pgSourcesInvalidations <- case reloadSources of
+    RSReloadAll    -> pure allSources
+    RSReloadList l -> mapM_ checkSource l *> pure l
+
+  let cacheInvalidations = CacheInvalidations
                            { ciMetadata = True
                            , ciRemoteSchemas = remoteSchemaInvalidations
                            , ciSources = pgSourcesInvalidations
                            }
-  metadata <- getMetadata
+
   buildSchemaCacheWithOptions CatalogUpdate cacheInvalidations metadata
   pure successMsg
 

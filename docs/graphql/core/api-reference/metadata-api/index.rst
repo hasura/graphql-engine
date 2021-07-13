@@ -296,52 +296,52 @@ The various types of queries are listed in the following table:
      - :ref:`mssql_set_table_customization_args <mssql_set_table_customization_syntax>`
      - 1
      - Set table customization of an already tracked MS SQL Server table
- 
+
    * - :ref:`mssql_create_insert_permission`
      - :ref:`mssql_create_insert_permission_args <mssql_create_insert_permission_syntax>`
      - 1
      - Specify insert permission for an MS SQL Server table/view
- 
+
    * - :ref:`mssql_drop_insert_permission`
      - :ref:`mssql_drop_insert_permission_args <mssql_drop_insert_permission_syntax>`
      - 1
      - Remove existing insert permission for an MS SQL Server table/view
- 
+
    * - :ref:`mssql_create_select_permission`
      - :ref:`mssql_create_select_permission_args <mssql_create_select_permission_syntax>`
      - 1
      - Specify select permission for an MS SQL Server table/view
-   
+
    * - :ref:`mssql_drop_select_permission`
      - :ref:`mssql_drop_select_permission_args <mssql_drop_select_permission_syntax>`
      - 1
      - Remove existing select permission for an MS SQL Server table/view
- 
+
    * - :ref:`mssql_create_update_permission`
      - :ref:`mssql_create_update_permission_args <mssql_create_update_permission_syntax>`
      - 1
      - Specify update permission for an MS SQL Server table/view
- 
+
    * - :ref:`mssql_drop_update_permission`
      - :ref:`mssql_drop_update_permission_args <mssql_drop_update_permission_syntax>`
      - 1
      - Remove existing update permission for an MS SQL Server table/view
- 
+
    * - :ref:`mssql_create_delete_permission`
      - :ref:`mssql_create_delete_permission_args <mssql_create_delete_permission_syntax>`
      - 1
      - Specify delete permission for an MS SQL Server table/view
- 
+
    * - :ref:`mssql_drop_delete_permission`
      - :ref:`mssql_drop_delete_permission_args <mssql_drop_delete_permission_syntax>`
      - 1
      - Remove existing delete permission for an MS SQL Server table/view
-   
+
    * - :ref:`mssql_set_permission_comment`
      - :ref:`mssql_set_permission_comment_args <mssql_set_permission_comment_syntax>`
      - 1
      - Set comment on an existing permission for an MS SQL Server table/view
-     
+
    * - :ref:`metadata_create_cron_trigger`
      - :ref:`create_cron_trigger_args <metadata_create_cron_trigger_syntax>`
      - 1
@@ -424,7 +424,7 @@ The various types of queries are listed in the following table:
      - Replace existing metadata with check against current resource_version.
 
    * - :ref:`metadata_reload_metadata`
-     - :ref:`Empty Object`
+     - :ref:`reload_metadata_args <metadata_reload_metadata_syntax>`
      - 1
      - Reload changes to the underlying Postgres DB
 

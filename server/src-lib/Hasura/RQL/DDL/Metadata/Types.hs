@@ -56,8 +56,8 @@ instance (FromJSON a, Eq a, Hashable a) => FromJSON (ReloadSpec a) where
 type ReloadRemoteSchemas = ReloadSpec RemoteSchemaName
 type ReloadSources       = ReloadSpec SourceName
 
-noReloadRemoteSchemas :: ReloadRemoteSchemas
-noReloadRemoteSchemas = RSReloadList mempty
+reloadAllRemoteSchemas :: ReloadRemoteSchemas
+reloadAllRemoteSchemas = RSReloadAll
 
 reloadAllSources :: ReloadSources
 reloadAllSources = RSReloadAll
@@ -72,12 +72,9 @@ $(deriveToJSON hasuraJSON ''ReloadMetadata)
 instance FromJSON ReloadMetadata where
   parseJSON = \case
     Object o -> ReloadMetadata
-                -- To maintain backwards compatibility of the API behaviour,
-                -- we choose not to reload any remote schema in absence of
-                -- 'reload_remote_schemas' field.
-                <$> o .:? "reload_remote_schemas" .!= noReloadRemoteSchemas
+                <$> o .:? "reload_remote_schemas" .!= reloadAllRemoteSchemas
                 <*> o .:? "reload_sources" .!= reloadAllSources
-    _        -> pure $ ReloadMetadata noReloadRemoteSchemas reloadAllSources
+    _        -> pure $ ReloadMetadata reloadAllRemoteSchemas reloadAllSources
 
 data DumpInternalState
   = DumpInternalState
