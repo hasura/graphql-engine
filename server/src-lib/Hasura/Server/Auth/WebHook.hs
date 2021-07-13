@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveAnyClass #-}
+
 module Hasura.Server.Auth.WebHook
   ( AuthHookType(..)
   , AuthHookG (..)
@@ -40,17 +42,19 @@ data AuthHookType
   = AHTGet
   | AHTPost
   deriving (Eq)
+  deriving Generic
 
 instance Show AuthHookType where
   show AHTGet  = "GET"
   show AHTPost = "POST"
 
-
 data AuthHookG a b
   = AuthHookG
   { ahUrl  :: !a
   , ahType :: !b
-  } deriving (Show, Eq)
+  }
+  deriving (Show, Eq)
+  deriving Generic
 
 type AuthHook = AuthHookG Text AuthHookType
 

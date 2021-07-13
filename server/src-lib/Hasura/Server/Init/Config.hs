@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Types and classes related to configuration when the server is initialised
 module Hasura.Server.Init.Config where
 
@@ -45,6 +47,7 @@ data RawConnParams
   , rcpPoolTimeout  :: !(Maybe NominalDiffTime)
   -- ^ See @HASURA_GRAPHQL_PG_POOL_TIMEOUT@
   } deriving (Show, Eq)
+  deriving Generic
 
 type RawAuthHook = AuthHookG (Maybe Text) (Maybe AuthHookType)
 
@@ -108,6 +111,7 @@ data RawServeOptions impl
   , rsoEventsFetchBatchSize          :: !(Maybe NonNegativeInt)
   , rsoGracefulShutdownTimeout       :: !(Maybe Seconds)
   }
+  deriving Generic
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
 -- errors in the response to the client.
