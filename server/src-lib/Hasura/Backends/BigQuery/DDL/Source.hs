@@ -9,11 +9,11 @@ where
 
 import           Hasura.Prelude
 
+import qualified Data.Aeson                          as J
 import qualified Data.ByteString.Lazy                as L
 import qualified Data.Environment                    as Env
 import qualified Data.HashMap.Strict                 as HM
 import qualified Data.Text                           as T
-import qualified Data.Aeson                          as J
 import qualified Data.Text.Encoding                  as T
 
 import           Control.Concurrent.MVar             (newMVar)
@@ -50,8 +50,8 @@ resolveSourceConfig _name BigQueryConnSourceConfig{..} = runExceptT $ do
         -- environment variables. The config handling module should be
         -- reworked to handle non-text values better.
         case readMaybe (T.unpack str) <|> J.decode (L.fromStrict (T.encodeUtf8 str)) of
-          Nothing -> throw400 Unexpected $ "Need integer global limit"
-          Just i -> pure i
+          Nothing -> throw400 Unexpected $ "Need integer global select limit"
+          Just i  -> pure i
       trMVar <- liftIO $ newMVar Nothing -- `runBigQuery` initializes the token
       pure BigQuerySourceConfig
              { _scAccessTokenMVar = trMVar
