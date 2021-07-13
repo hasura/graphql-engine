@@ -13,7 +13,7 @@ const setup = () => {
 };
 
 export const runSchemaSharingTests = () => {
-  describe('schema sharing', () => {
+  describe.skip('schema sharing', () => {
     it('display content', () => {
       cy.contains('default').click();
       cy.get('[data-test=schema-container-tabs-data-gallery]').click();

@@ -10,6 +10,7 @@ import { getSchemaPermissionsRoute } from '../../Common/utils/routesUtils';
 import _push from './push';
 import { isFeatureSupported } from '../../../dataSources';
 import Tabbed from './TabbedSchema';
+import { isSchemaSharingEnabled } from './Schema/SchemaSharing/schemaSharingConfig';
 
 interface Props {
   dispatch: Dispatch;
@@ -49,9 +50,16 @@ const SourceView: React.FC<Props> = props => {
 
   return (
     <Tabbed tabName="display" currentDataSource={currentDataSource}>
-      <div>
+      <div className={styles.display_flex}>
+        {isSchemaSharingEnabled ? null : (
+          <h2
+            className={`${styles.headerText} ${styles.display_inline} ${styles.add_mar_right_mid}`}
+          >
+            {currentDataSource}
+          </h2>
+        )}
         {isFeatureSupported('schemas.create.enabled') ? (
-          <span>
+          <>
             {!isCreateActive ? (
               <Button
                 data-test="data-create-schema"
@@ -101,7 +109,7 @@ const SourceView: React.FC<Props> = props => {
                 </Button>
               </div>
             )}
-          </span>
+          </>
         ) : null}
       </div>
       <div>
