@@ -120,6 +120,9 @@ data StringifyNumbers
   | LeaveNumbersAlone
   deriving (Eq)
 
+defaultGlobalSelectLimit :: Int
+defaultGlobalSelectLimit = 1000
+
 --------------------------------------------------------------------------------
 -- Runners
 
@@ -131,7 +134,7 @@ runFromIr config fromIr =
 
 bigQuerySourceConfigToFromIrConfig :: BigQuerySourceConfig -> FromIrConfig
 bigQuerySourceConfigToFromIrConfig BigQuerySourceConfig {_scGlobalSelectLimit} =
-  FromIrConfig {globalSelectLimit = Top _scGlobalSelectLimit}
+  FromIrConfig {globalSelectLimit = Top $ fromMaybe defaultGlobalSelectLimit _scGlobalSelectLimit}
 
 --------------------------------------------------------------------------------
 -- Similar rendition of old API
