@@ -968,6 +968,16 @@ export interface InheritedRole {
   role_set: string[];
 }
 
+export interface APILimits {
+  per_role?: Record<string, number>;
+  global?: number;
+}
+
+type APILimit<T> = {
+  global: T;
+  per_role?: Record<string, T>;
+};
+
 export interface HasuraMetadataV3 {
   version: 3;
   sources: MetadataDataSource[];
@@ -979,4 +989,16 @@ export interface HasuraMetadataV3 {
   allowlist?: AllowList[];
   inherited_roles: InheritedRole[];
   rest_endpoints?: RestEndpointEntry[];
+  api_limits?: {
+    disabled?: boolean;
+    depth_limit?: APILimit<number>;
+    node_limit?: APILimit<number>;
+    rate_limit?: APILimit<{
+      unique_params: 'IP' | string[];
+      max_reqs_per_min: number;
+    }>;
+  };
+  graphql_schema_introspection?: {
+    disabled_for_roles: string[];
+  };
 }

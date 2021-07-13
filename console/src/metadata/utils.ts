@@ -162,6 +162,121 @@ export const deleteInheritedRole = (roleName: string) => ({
   },
 });
 
+export type APILimitInputType<T> = {
+  global: T;
+  per_role?: Record<string, T>;
+  state: 'disabled' | 'enabled' | 'global';
+};
+
+export const updateAPILimitsQuery = ({
+  existingAPILimits,
+  newAPILimits,
+}: {
+  existingAPILimits: HasuraMetadataV3['api_limits'];
+  newAPILimits: {
+    disabled: boolean;
+    depth_limit?: APILimitInputType<number>;
+    node_limit?: APILimitInputType<number>;
+    rate_limit?: APILimitInputType<{
+      unique_params: 'IP' | string[];
+      max_reqs_per_min: number;
+    }>;
+  };
+}) => {
+  const reqBody: HasuraMetadataV3['api_limits'] = {
+    ...existingAPILimits,
+    disabled: newAPILimits.disabled,
+  };
+
+  const api_limits = ['depth_limit', 'node_limit', 'rate_limit'] as const;
+
+  api_limits.forEach(key => {
+    const role = newAPILimits[key]?.per_role
+      ? Object.keys(newAPILimits[key]?.per_role ?? {})[0]
+      : 'global';
+    switch (
+      `${newAPILimits[key]?.state ?? 'default'}-${
+        role === 'global' ? 'global' : 'per_role'
+      }`
+    ) {
+      case 'disabled-global': {
+        delete reqBody[key];
+        break;
+      }
+      case 'enabled-global': {
+        Object.assign(reqBody, {
+          [key]: {
+            ...existingAPILimits?.[key],
+            global: newAPILimits[key]?.global,
+          },
+        });
+        break;
+      }
+      case 'disabled-per_role': {
+        if (reqBody[key]?.per_role) {
+          delete reqBody[key]?.per_role?.[role];
+        }
+        break;
+      }
+      case 'enabled-per_role': {
+        if (
+          newAPILimits[key]?.per_role &&
+          newAPILimits?.[key]?.per_role?.[role]
+        ) {
+          Object.assign(reqBody, {
+            [key]: {
+              global: newAPILimits[key]?.global,
+              per_role: {
+                ...existingAPILimits?.[key]?.per_role,
+                [role]: newAPILimits?.[key]?.per_role?.[role],
+              },
+            },
+          });
+        }
+        break;
+      }
+      case 'global-per_role': {
+        if (reqBody[key]?.per_role) {
+          delete reqBody[key]?.per_role?.[role];
+        }
+        break;
+      }
+      default:
+    }
+  });
+
+  return {
+    type: 'set_api_limits',
+    args: reqBody,
+  };
+};
+
+export const removeAPILimitsQuery = ({
+  existingAPILimits,
+  role,
+}: {
+  existingAPILimits: HasuraMetadataV3['api_limits'];
+  role: string;
+}) => {
+  if (role === 'global') {
+    return {
+      type: 'remove_api_limits',
+      args: existingAPILimits,
+    };
+  }
+
+  const api_limits = ['depth_limit', 'node_limit', 'rate_limit'] as const;
+
+  api_limits.forEach(key => {
+    delete existingAPILimits?.[key]?.per_role?.[role];
+  });
+
+  return {
+    type: 'set_api_limits',
+    args: existingAPILimits,
+  };
+};
+
 export const updateInheritedRole = (roleName: string, roleSet: string[]) => ({
   type: 'bulk',
   args: [deleteInheritedRole(roleName), addInheritedRole(roleName, roleSet)],

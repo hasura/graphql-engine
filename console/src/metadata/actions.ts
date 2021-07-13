@@ -184,6 +184,21 @@ export interface UpdateInheritedRole {
   };
 }
 
+export interface UpdateAPILimits {
+  type: 'Metadata/UPDATE_API_LIMITS';
+  data: {
+    disabled: boolean;
+    node_limit?: {
+      global?: number;
+      per_role?: Record<string, number>;
+    };
+    depth_limit?: {
+      global?: number;
+      per_role?: Record<string, number>;
+    };
+  };
+}
+
 export type MetadataActions =
   | ExportMetadataSuccess
   | ExportMetadataError
@@ -208,6 +223,7 @@ export type MetadataActions =
   | AddInheritedRole
   | DeleteInheritedRole
   | UpdateInheritedRole
+  | UpdateAPILimits
   | { type: typeof UPDATE_CURRENT_DATA_SOURCE; source: string };
 
 export const exportMetadata = (
