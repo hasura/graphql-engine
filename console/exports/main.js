@@ -33,6 +33,7 @@ export {
 } from '../src/metadata/actions';
 import { isMetadataStatusPage } from '../src/components/Error/ErrorBoundary.tsx';
 import { redirectToMetadataStatus } from '../src/components/Common/utils/routesUtils.ts';
+import { ApiLimits } from '../src/components/Services/ApiExplorer/Security';
 
 export { default as globals } from '../src/Globals';
 export { default as endpoints } from '../src/Endpoints';
@@ -60,6 +61,6 @@ export { default as RestListView } from '../src/components/Services/ApiExplorer/
 export { default as DetailsView } from '../src/components/Services/ApiExplorer/Rest/Details';
 export { default as ApiContainer } from '../src/components/Services/ApiExplorer/Container';
 
-export { redirectToMetadataStatus, isMetadataStatusPage };
+export { redirectToMetadataStatus, isMetadataStatusPage, ApiLimits };
 
 export * from './table';

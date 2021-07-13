@@ -23,6 +23,16 @@ const TopNav: React.FC<TopNavProps> = ({ location }) => {
     },
   ];
 
+  // eslint-disable-next-line no-underscore-dangle
+  if (window.__env.consoleId || window.__env.projectID) {
+    sectionsData.push({
+      key: 'security',
+      link: '/api/security/api_limits',
+      dataTestVal: 'security-explorer-link',
+      title: 'Security',
+    });
+  }
+
   const isActive = (link: string) => {
     if (location.pathname === '' || location.pathname === '/') {
       return link.includes('api-explorer');
