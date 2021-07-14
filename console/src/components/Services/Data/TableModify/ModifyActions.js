@@ -1560,7 +1560,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
 
     const customOnSuccess = () => {
       if (metadataMigration.migration.hasValue()) {
-        makeMetadataMigrationCall();
+        dispatch(exportMetadata(makeMetadataMigrationCall));
       } else {
         successCallback();
       }

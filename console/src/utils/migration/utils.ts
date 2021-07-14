@@ -314,7 +314,7 @@ export const getColumnUpdateMigration = (
   if (customFieldName) {
     if (customFieldName !== existingCustomColumnNames[colName]) {
       isCustomFieldNameChanged = true;
-      newCustomColumnNames[colName] = customFieldName.trim();
+      newCustomColumnNames[newName || colName] = customFieldName.trim();
     }
   } else if (existingCustomColumnNames[colName]) {
     isCustomFieldNameChanged = true;
