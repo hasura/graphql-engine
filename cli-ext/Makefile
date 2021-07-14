@@ -1,5 +1,5 @@
 BUILDDIR   := bin
-BINARY_ASSETS := $(BUILDDIR)/cli-ext-hasura-linux $(BUILDDIR)/cli-ext-hasura-macos $(BUILDDIR)/cli-ext-hasura-win.exe
+BINARY_ASSETS := $(BUILDDIR)/cli-ext-hasura-node12-linux-x64 $(BUILDDIR)/cli-ext-hasura-node12-macos-x64 $(BUILDDIR)/cli-ext-hasura-node12-win-x64.exe $(BUILDDIR)/cli-ext-hasura-node12-linux-arm64 $(BUILDDIR)/cli-ext-hasura-node16-macos-arm64
 BINARY_ASSET_CHECKSUMS := $(patsubst %,%.sha256,$(BINARY_ASSETS))
 
 COMPRESS := gzip --best -k -c

@@ -2,7 +2,6 @@ PWD := $(shell pwd)
 PARENT_DIR := $(shell dirname $(PWD))
 VERSION ?= $(shell ../scripts/get-version.sh)
 PLUGINS_BRANCH ?= master
-OS ?= linux darwin windows
 OUTPUT_DIR := _output
 
 HAS_GOX := $(shell command -v gox;)
@@ -29,8 +28,7 @@ ifndef HAS_GOX
 endif
 	gox -ldflags '-X github.com/hasura/graphql-engine/cli/v2/version.BuildVersion=$(VERSION) -X github.com/hasura/graphql-engine/cli/v2/plugins.IndexBranchRef=$(PLUGINS_BRANCH) -s -w -extldflags "-static"' \
 	-rebuild \
-	-os="$(OS)" \
-	-arch="amd64" \
+	-osarch="linux/amd64 darwin/amd64 windows/amd64 linux/arm64 darwin/arm64" \
 	-output="$(OUTPUT_DIR)/$(VERSION)/cli-hasura-{{.OS}}-{{.Arch}}" \
 	./cmd/hasura/
 
@@ -55,9 +53,11 @@ clean-cli-ext:
 
 .PHONY: copy-cli-ext
 copy-cli-ext: clean-cli-ext
-	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-linux ./internal/cliext/static-bin/linux/amd64/cli-ext
-	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-macos ./internal/cliext/static-bin/darwin/amd64/cli-ext
-	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-win.exe ./internal/cliext/static-bin/windows/amd64/cli-ext
+	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node12-linux-x64 ./internal/cliext/static-bin/linux/amd64/cli-ext
+	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node12-linux-arm64 ./internal/cliext/static-bin/linux/arm64/cli-ext
+	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node12-macos-x64 ./internal/cliext/static-bin/darwin/amd64/cli-ext
+	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node16-macos-arm64 ./internal/cliext/static-bin/darwin/arm64/cli-ext
+	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node12-win-x64.exe ./internal/cliext/static-bin/windows/amd64/cli-ext
 
 # run tests
 .PHONY: test
