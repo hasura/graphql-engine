@@ -17,6 +17,7 @@
 `1000`
 - console: add `reload all databases` checkbox to the metadata settings page
 - console: add schema sharing
+- console: fix issue with changing table's column name and graphQL field name simultaneously
 - cli: add linux and darwin arm64 support
 
 ## v2.0.1
