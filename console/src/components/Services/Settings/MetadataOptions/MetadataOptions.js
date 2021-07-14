@@ -34,8 +34,8 @@ const MetadataOptions = props => {
         <div key="meta_data_1" className={styles.intro_note}>
           <h4>Reload metadata</h4>
           <div className={styles.content_width}>
-            Refresh Hasura metadata, typically required if you have changed the
-            underlying database or if you have updated your remote schemas.
+            Refresh Hasura metadata, typically required if you have changes in
+            the underlying databases or if you have updated your remote schemas.
           </div>
         </div>
 

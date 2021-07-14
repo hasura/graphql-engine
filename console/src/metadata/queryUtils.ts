@@ -386,10 +386,14 @@ export const dropInconsistentObjectsQuery = {
   args: {},
 };
 
-export const getReloadMetadataQuery = (shouldReloadRemoteSchemas: boolean) => ({
+export const getReloadMetadataQuery = (
+  shouldReloadRemoteSchemas: boolean | string[],
+  shouldReloadSources?: boolean | string[]
+) => ({
   type: 'reload_metadata',
   args: {
-    reload_remote_schemas: shouldReloadRemoteSchemas,
+    reload_sources: shouldReloadSources ?? [],
+    reload_remote_schemas: shouldReloadRemoteSchemas ?? [],
   },
 });
 

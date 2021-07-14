@@ -1,6 +1,115 @@
 import { HasuraMetadataV3 } from '../../types';
 import { APILimitInputType } from '../../utils';
 
+export const inconsistentSourceObjects = [
+  {
+    definition: 'TestDB',
+    reason: 'Inconsistent object: sql server exception',
+    name: 'source TestDB',
+    type: 'source',
+  },
+];
+
+export const inconsistentTableObject = [
+  {
+    definition: {
+      name: 'Table2',
+      schema: 'TestSchema',
+    },
+    name: 'table TestSchema.Table2 in source default',
+    reason: 'Inconsistent object: no such table/view exists in source',
+    type: 'table',
+  },
+];
+
+export const inconsistentRelationshipObject = [
+  {
+    definition: {
+      name: 'relationshipName',
+      source: 'default',
+      Comment: null,
+    },
+    name:
+      'object_relation relationshipName in table TestSchema.Table1 in source default',
+    reason: 'Inconsistent object: table "TestSchema.Table2" is not tracked',
+    type: 'object_relation',
+  },
+];
+
+export const inconsistentObject = [
+  {
+    definition: 'TestDB',
+    reason: 'Inconsistent object: sql server exception',
+    name: 'source TestDB',
+    type: 'source',
+  },
+  {
+    definition: {
+      name: 'Table2',
+      schema: 'TestSchema',
+    },
+    name: 'table TestSchema.Table2 in source default',
+    reason: 'Inconsistent object: no such table/view exists in source',
+    type: 'table',
+  },
+  {
+    definition: {
+      name: 'relationshipName',
+      source: 'default',
+      Comment: null,
+    },
+    name:
+      'object_relation relationshipName in table TestSchema.Table1 in source default',
+    reason: 'Inconsistent object: table "TestSchema.Table2" is not tracked',
+    type: 'object_relation',
+  },
+];
+
+export const inconsistentRemoteSchema = [
+  {
+    name: `remote_schema_permission role permission in remote schema Test1`,
+    reason: `Inconsistent object: remote schema  "Test1" does not exis`,
+    type: 'remote_schema_permission',
+  },
+  {
+    name: `remote_schema Test2`,
+    reason: `Inconsistent object: Error in $: key "data" not found`,
+    type: `remote_schema`,
+  },
+];
+
+export const inconsistentRemoteRelation = [
+  {
+    definition: {
+      name: 'relation_name',
+      remote_schema: 'Test',
+      source: 'default',
+    },
+    type: 'remote_relationship',
+  },
+];
+
+export const multipleInconsistencyRemoteSchema = [
+  {
+    name: `remote_schema_permission role permission in remote schema Test`,
+    reason: `Inconsistent object: remote schema  "Test" does not exis`,
+    type: 'remote_schema_permission',
+  },
+  {
+    name: `remote_schema Test`,
+    reason: `Inconsistent object: Error in $: key "data" not found`,
+    type: `remote_schema`,
+  },
+  {
+    definition: {
+      name: 'relation_name',
+      remote_schema: 'Test',
+      source: 'default',
+    },
+    type: 'remote_relationship',
+  },
+];
+
 type apiLimitsType = {
   old_state: HasuraMetadataV3['api_limits'];
   new_state: {

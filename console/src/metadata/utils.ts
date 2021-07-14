@@ -136,13 +136,14 @@ export const reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery = (
 };
 
 export const getReloadCacheAndGetInconsistentObjectsQuery = (
-  shouldReloadRemoteSchemas: boolean,
-  source: string
+  shouldReloadRemoteSchemas: boolean | string[],
+  source: string,
+  shouldReloadSources?: boolean | string[]
 ) => ({
   type: 'bulk',
   source,
   args: [
-    getReloadMetadataQuery(shouldReloadRemoteSchemas),
+    getReloadMetadataQuery(shouldReloadRemoteSchemas, shouldReloadSources),
     inconsistentObjectsQuery,
   ],
 });
@@ -293,3 +294,52 @@ export const isMetadataEmpty = (metadataObject: HasuraMetadataV3) => {
 export const hasSources = (metadataObject: HasuraMetadataV3) => {
   return metadataObject?.sources?.length > 0;
 };
+
+// NOTE: for a inconsistent object of type "source" the inconsistentObject.definition is the name of the source
+//       for every other inconsistent object if "source" is relevent it will be in inconsistentObject.definition.source
+
+// getSourceFromInconistentObjects should be used to extract the source from any inconsistent object
+export const getSourceFromInconistentObjects = (inconsistentObjects: any[]) =>
+  inconsistentObjects
+    .map(
+      inconsistentObject =>
+        (inconsistentObject?.type === 'source' &&
+          inconsistentObject?.definition) ||
+        inconsistentObject?.definition?.source
+    )
+    .filter(sourceName => typeof sourceName === 'string')
+    .filter(
+      (sourceName, index, sourceNameList) =>
+        sourceNameList?.indexOf(sourceName) === index
+    ); // to remove duplicate source names
+
+// NOTE: It can be seen that the `name` field within the object that contains the
+//       information about the inconsistent object for `remote_schema` and `remote_schema_permission`
+//       contains a sentence with complete details of the remote schema(like name, role .etc). In here,
+//       the name of the remote schema always comes at the very end. Since this "HACK" is being
+//       used to fetch the remote schema name, it can become a source of bugs.
+export const getRemoteSchemaNameFromInconsistentObjects = (
+  inconsistentObjects: any[]
+) =>
+  inconsistentObjects.reduce((rsNameList, inconsistentObject) => {
+    const inconsistantObjectSplited = inconsistentObject?.name?.split(' ');
+    if (
+      inconsistentObject?.type === 'remote_schema' ||
+      inconsistentObject?.type === 'remote_schema_permission'
+    ) {
+      const rsName =
+        inconsistantObjectSplited?.[inconsistantObjectSplited?.length - 1];
+      if (!rsNameList.includes(rsName)) {
+        // to avoid duplicate remote schema name
+        return [...rsNameList, rsName];
+      }
+    } else if (
+      inconsistentObject?.type === 'remote_relationship' &&
+      inconsistentObject?.definition?.remote_schema
+    ) {
+      if (!rsNameList.includes(inconsistentObject?.definition?.remote_schema)) {
+        return [...rsNameList, inconsistentObject?.definition?.remote_schema];
+      }
+    }
+    return rsNameList;
+  }, []);
