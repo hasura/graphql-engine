@@ -27,6 +27,8 @@ import {
   updateAllowedQueryQuery,
   allowedQueriesCollection,
   addAllowedQuery,
+  getSourceFromInconistentObjects,
+  getRemoteSchemaNameFromInconsistentObjects,
 } from './utils';
 import {
   makeMigrationCall,
@@ -671,19 +673,49 @@ export const loadInconsistentObjects = (
   reloadConfig: {
     shouldReloadMetadata?: boolean;
     shouldReloadRemoteSchemas?: boolean;
+    shouldReloadAllSources?: boolean;
   },
   successCb?: () => void,
   failureCb?: (error: string) => void
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
+    const inconsistentObjectsInMetadata = getState().metadata
+      .inconsistentObjects;
+
+    const inconsistentSources = getSourceFromInconistentObjects(
+      inconsistentObjectsInMetadata
+    );
+    const inconsistentRemoteSchemas = getRemoteSchemaNameFromInconsistentObjects(
+      inconsistentObjectsInMetadata
+    );
+
     const headers = getState().tables.dataHeaders;
     const source = getState().tables.currentDataSource;
-    const { shouldReloadMetadata, shouldReloadRemoteSchemas } = reloadConfig;
+    const {
+      shouldReloadMetadata,
+      shouldReloadRemoteSchemas,
+      shouldReloadAllSources,
+    } = reloadConfig;
+
+    let reloadSources: string[] | boolean = [];
+    if (shouldReloadAllSources) {
+      reloadSources = true;
+    } else if (inconsistentSources.length) {
+      reloadSources = inconsistentSources;
+    }
+
+    let reloadRemoteSchemas: string[] | boolean = [];
+    if (shouldReloadRemoteSchemas) {
+      reloadRemoteSchemas = true;
+    } else if (inconsistentRemoteSchemas.length) {
+      reloadRemoteSchemas = inconsistentRemoteSchemas;
+    }
 
     const loadQuery = shouldReloadMetadata
       ? getReloadCacheAndGetInconsistentObjectsQuery(
-          !!shouldReloadRemoteSchemas,
-          source
+          reloadRemoteSchemas,
+          source,
+          reloadSources
         )
       : inconsistentObjectsQuery;
 
@@ -799,6 +831,7 @@ export const reloadRemoteSchema = (
 
 export const reloadMetadata = (
   shouldReloadRemoteSchemas: boolean,
+  shouldReloadAllSources: boolean,
   successCb: () => void,
   failureCb: () => void
 ): Thunk<void, MetadataActions> => {
@@ -808,6 +841,7 @@ export const reloadMetadata = (
         {
           shouldReloadMetadata: true,
           shouldReloadRemoteSchemas,
+          shouldReloadAllSources,
         },
         successCb,
         failureCb
