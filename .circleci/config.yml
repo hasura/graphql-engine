@@ -7,12 +7,22 @@ refs:
     run:
       name: checking if job should be terminated or not
       command: |
-        if [ -f /build/ciignore/skip_job.txt ]; then
-          echo "halting job due to /build/ciignore/skip_job.txt"
-          circleci-agent step halt
-        else
-          echo "no skip_job file present, full steam ahead"
-        fi
+        check_to_skip_job() {
+          SKIP_JOB_FILE="$1"
+          if [ -f $SKIP_JOB_FILE ]; then
+            echo "halting job due to $SKIP_JOB_FILE"
+            circleci-agent step halt
+          else
+            echo "no skip_job file present, full steam ahead"
+          fi
+        }
+
+        # file for figuring out the skipping logic might be
+        # present either at `/build` (in case of linux) or `~/build` (in case of macos)
+
+        check_to_skip_job /build/ciignore/skip_job.txt
+        check_to_skip_job ~/build/ciignore/skip_job.txt
+
   skip_server_tests: &skip_server_tests
     run:
       name: checking if server tests can be skipped
@@ -490,39 +500,63 @@ jobs:
 
   # test and build cli extension
   test_and_build_cli_ext:
-    docker:
-    - image: hasura/graphql-engine-extension-cli-builder:20200225
+    machine:
+      image: ubuntu-2004:202101-01
     working_directory: ~/graphql-engine
     steps:
+    - run:
+        name: create /build and /root directory
+        command: |
+          sudo mkdir /build
+          sudo chmod 777 /build
     - attach_workspace:
         at: /build
     - *skip_job_on_ciignore
     - checkout
-    - restore_cache:
-        key:
-          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
     - run:
         name: install dependencies
         working_directory: cli-ext
         command: make ci-deps
-    - save_cache:
-        key:
-          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
-        paths:
-        - cli-ext/node_modules
-        - ~/.npm
-        - ~/.cache
+    - run:
+        name: setup cross-compilation tools
+        command: |
+          sudo apt update
+          sudo apt install -y qemu binfmt-support qemu-user-static
+          update-binfmts --display
     - run:
         name: build extension cli
-        working_directory: cli-ext
+        working_directory: ~/graphql-engine
         command: |
-          make build
-          make ci-copy-assets
+          docker run -it --rm -v $(pwd):/graphql-engine -v /build:/build --workdir="/graphql-engine/cli-ext" hasura/graphql-engine-extension-cli-builder:20200225 /bin/bash -c "make build && make ci-copy-assets"
     - store_artifacts:
         path: /build/_cli_ext_output
         destination: cli_ext
     - persist_to_workspace:
         root: /build
+        paths:
+          - _cli_ext_output
+
+  sign_macos_cli_ext:
+    macos:
+      xcode: 11.3.0
+    working_directory: ~/graphql-engine
+    steps:
+    - run:
+        name: create ~/build directory
+        command: |
+          mkdir ~/build
+    - attach_workspace:
+        at: ~/build
+    - *skip_job_on_ciignore
+    - run:
+        name: sign macos (arm64) cli-ext
+        command: |
+          codesign --sign - ~/build/_cli_ext_output/cli-ext-hasura-node16-macos-arm64
+    - store_artifacts:
+        path: ~/build/_cli_ext_output
+        destination: cli_ext
+    - persist_to_workspace:
+        root: ~/build
         paths:
           - _cli_ext_output
 
@@ -807,10 +841,14 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - check_build_worthiness
-    - test_cli_with_last_release:
+    - sign_macos_cli_ext:
         <<: *filter_only_vtags
         requires:
         - test_and_build_cli_ext
+    - test_cli_with_last_release:
+        <<: *filter_only_vtags
+        requires:
+        - sign_macos_cli_ext
         - check_build_worthiness
     - build_image:
         <<: *filter_only_vtags
@@ -871,7 +909,7 @@ workflows:
     - build_cli:
         <<: *filter_only_vtags
         requires:
-        - test_and_build_cli_ext
+        - sign_macos_cli_ext
     - test_cli:
         <<: *filter_only_vtags
         requires:
