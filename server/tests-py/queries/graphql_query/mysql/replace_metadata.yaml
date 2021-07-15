@@ -1,0 +1,27 @@
+description: Replace schema cache (metadata)
+url: /v1/metadata
+status: 200
+response:
+  message: success
+query:
+  type: replace_metadata
+  args:
+    version: 3
+    sources:
+    - name: mysql
+      kind: mysql
+      configuration:
+        host: '127.0.0.1'
+        port: 3306
+        user: hasura
+        password: password
+        database: hasura
+        pool_settings: {}
+      tables: []
+      # - table:
+      #     name: author
+      #     schema: hasura
+      # - table:
+      #     name: article
+      #     schema: hasura
+
