@@ -28,8 +28,8 @@ data BackendType
   = Postgres PostgresKind
   | MSSQL
   | BigQuery
+  | MySQL
   deriving (Show, Eq, Ord)
-
 
 -- | The name of the backend, as we expect it to appear in our metadata and API.
 instance ToTxt BackendType where
@@ -37,6 +37,7 @@ instance ToTxt BackendType where
   toTxt (Postgres Citus)   = "citus"
   toTxt MSSQL              = "mssql"
   toTxt BigQuery           = "bigquery"
+  toTxt MySQL              = "mysql"
 
 -- | The FromJSON instance uses this lookup mechanism to avoid having to duplicate and hardcode the
 -- backend string. We accept both the short form and the long form of the backend's name.
@@ -69,4 +70,5 @@ supportedBackends =
   , Postgres Citus
   , MSSQL
   , BigQuery
+  , MySQL
   ]

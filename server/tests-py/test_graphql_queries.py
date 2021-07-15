@@ -8,6 +8,22 @@ pytestmark = pytest.mark.allow_server_upgrade_test
 
 usefixtures = pytest.mark.usefixtures
 
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['mysql'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryBasicMySQL:
+
+    # initialize the metadata
+    def test_replace_metadata(self, hge_ctx, transport):
+        if transport == 'http':
+            check_query_f(hge_ctx, self.dir() + '/replace_metadata.yaml')
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/mysql'
+
+
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['bigquery'])
 @usefixtures('per_class_tests_db_state')

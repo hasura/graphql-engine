@@ -395,6 +395,13 @@ library
 
                      , Hasura.Backends.MySQL.Types
                      , Hasura.Backends.MySQL.Connection
+                     , Hasura.Backends.MySQL.Meta
+                     , Hasura.Backends.MySQL.Instances.Types
+                     , Hasura.Backends.MySQL.Instances.Metadata
+                     , Hasura.Backends.MySQL.Instances.Schema
+                     , Hasura.Backends.MySQL.Instances.Execute
+                     , Hasura.Backends.MySQL.Instances.Transport
+                     , Hasura.Backends.MySQL.Instances.API
 
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
