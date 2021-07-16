@@ -484,7 +484,7 @@ library
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.Source
                      , Hasura.RQL.Types.Table
-                     , Hasura.RQL.Types.InheritedRoles
+                     , Hasura.RQL.Types.Roles
                      , Hasura.RQL.DDL.Action
                      , Hasura.RQL.DDL.ApiLimit
                      , Hasura.RQL.DDL.ComputedField

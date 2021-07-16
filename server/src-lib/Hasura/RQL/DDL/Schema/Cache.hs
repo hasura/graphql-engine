@@ -55,6 +55,7 @@ import           Hasura.GraphQL.Schema                    (buildGQLContext)
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.CustomTypes
+import           Hasura.RQL.DDL.InheritedRoles            (resolveInheritedRole)
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.RemoteSchema.Permission   (resolveRoleBasedRemoteSchema)
 import           Hasura.RQL.DDL.ScheduledTrigger
@@ -357,9 +358,9 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
          , DBFunctionsMetadata b
          , RemoteSchemaMap
          , Inc.Dependency InvalidationKeys
-         , InheritedRoles
+         , [Role]
          ) `arr` BackendSourceInfo
-    buildSource = proc (sourceMetadata, sourceConfig, dbTables, dbFunctions, remoteSchemaMap, invalidationKeys, inheritedRoles) -> do
+    buildSource = proc (sourceMetadata, sourceConfig, dbTables, dbFunctions, remoteSchemaMap, invalidationKeys, orderedRoles) -> do
       let SourceMetadata source tables functions _ = sourceMetadata
           tablesMetadata = OMap.elems tables
           (tableInputs, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
@@ -391,7 +392,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
              let tableFields = _tciFieldInfoMap tableCoreInfo
              permissionInfos <-
                 buildTablePermissions
-                -< (Proxy :: Proxy b, source, tableCoreInfosDep, tableFields, permissionInputs, inheritedRoles)
+                -< (Proxy :: Proxy b, source, tableCoreInfosDep, tableFields, permissionInputs, orderedRoles)
              eventTriggerInfos <- buildTableEventTriggers -< (source, sourceConfig, tableCoreInfo, eventTriggerConfs, metadataInvalidationKey, recreateEventTriggers)
              returnA -< TableInfo tableCoreInfo permissionInfos eventTriggerInfos
             )
@@ -437,16 +438,16 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       => ( Inc.Dependency InvalidationKeys
          , HashMap RemoteSchemaName RemoteSchemaCtx
          , SourceMetadata b
-         , InheritedRoles
+         , [Role]
          ) `arr` Maybe (BackendSourceInfo, DMap.DMap BackendTag ScalarSet)
-    buildSourceOutput = proc (invalidationKeys, remoteSchemaCtxMap, sourceMetadata, inheritedRoles) -> do
+    buildSourceOutput = proc (invalidationKeys, remoteSchemaCtxMap, sourceMetadata, orderedRoles) -> do
       let sourceInvalidationsKeys = Inc.selectD #_ikSources invalidationKeys
       maybeResolvedSource <- resolveSourceIfNeeded -< (sourceInvalidationsKeys, sourceMetadata)
       case maybeResolvedSource of
         Nothing -> returnA -< Nothing
         Just (ResolvedSource sourceConfig tablesMeta functionsMeta scalars) -> do
           so <- buildSource -< ( sourceMetadata, sourceConfig, tablesMeta, functionsMeta
-                               , remoteSchemaCtxMap, invalidationKeys, inheritedRoles
+                               , remoteSchemaCtxMap, invalidationKeys, orderedRoles
                                )
           returnA -< Just (so, DMap.singleton (backendTag @b) $ ScalarSet scalars)
 
@@ -473,6 +474,8 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                         OMap.keys (_tmSelectPermissions table) <>
                         OMap.keys (_tmUpdatePermissions table) <>
                         OMap.keys (_tmDeletePermissions table)
+          inheritedRoleNames = OMap.keys inheritedRoles
+          allRoleNames = sourceRoles <> HS.fromList (remoteSchemaRoles <> actionRoles <> inheritedRoleNames)
 
           remoteSchemaPermissions =
             let remoteSchemaPermsList = OMap.toList $ _rsmPermissions <$> remoteSchemas
@@ -481,22 +484,15 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                     flip map remoteSchemaPerms $ \(RemoteSchemaPermissionMetadata role defn comment) ->
                      AddRemoteSchemaPermissions remoteSchemaName role defn comment
                  )
-          nonInheritedRoles = sourceRoles <> HS.fromList (actionRoles <> remoteSchemaRoles)
 
+      -- roles which have some kind of permission (action/remote schema/table/function) set in the metadata
+      let metadataRoles = mapFromL _rRoleName $ (`Role` (ParentRoles mempty)) <$> toList allRoleNames
 
-      let commonInheritedRoles = HS.intersection (HS.fromList (OMap.keys inheritedRoles)) nonInheritedRoles
+      resolvedInheritedRoles <- buildInheritedRoles -< (allRoleNames, OMap.elems inheritedRoles)
 
+      let allRoles = resolvedInheritedRoles `M.union` metadataRoles
 
-      bindA -< do
-        unless (HS.null commonInheritedRoles) $ do
-          throw400 AlreadyExists $
-            "role " <> commaSeparated (map toTxt $ toList commonInheritedRoles) <> " already exists"
-        for_ (toList inheritedRoles) $ \(AddInheritedRole _ roleSet) ->
-          for_ roleSet $ \role -> do
-            unless (role `elem` nonInheritedRoles) $
-              throw400 NotFound $ role <<> " not found. An inherited role can only be created out of existing roles"
-            when (role `OMap.member` inheritedRoles) $
-              throw400 ConstraintError $  role <<> " is an inherited role. An inherited role can only be created out of non-inherited roles"
+      orderedRoles <- bindA -< orderRoles $ M.elems allRoles
 
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
@@ -512,15 +508,14 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                    returnA -< (remoteSchemaCtx
                                { _rscPermissions = permissionInfo
                                }
-                              , metadataObj)
-                   )
+                              , metadataObj))
              |)
 
       let remoteSchemaCtxMap = M.map fst remoteSchemaMap
       sourcesOutput <-
         (| Inc.keyed (\_ exists ->
              AB.dispatchAnyBackendArrow @BackendMetadata (buildSourceOutput @arr @m)
-               -< (invalidationKeys, remoteSchemaCtxMap, exists, inheritedRoles)
+               -< (invalidationKeys, remoteSchemaCtxMap, exists, orderedRoles)
            )
         |) (M.fromList $ OMap.toList sources)
         >-> (\infos -> M.catMaybes infos >- returnA)
@@ -561,19 +556,17 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
       cronTriggersMap <- buildCronTriggers -< ((), OMap.elems cronTriggers)
 
-      let inheritedRolesCache = OMap.toHashMap $ fmap _adrRoleSet inheritedRoles
-
       returnA -< BuildOutputs
-        { _boSources = M.map fst sourcesOutput
-        , _boActions = actionCache
+        { _boSources       = M.map fst sourcesOutput
+        , _boActions       = actionCache
         , _boRemoteSchemas = remoteSchemaCache
-        , _boAllowlist = allowList
-        , _boCustomTypes = annotatedCustomTypes
-        , _boCronTriggers = cronTriggersMap
-        , _boInheritedRoles = inheritedRolesCache
-        , _boEndpoints = resolvedEndpoints
-        , _boApiLimits = apiLimits
+        , _boAllowlist     = allowList
+        , _boCustomTypes   = annotatedCustomTypes
+        , _boCronTriggers  = cronTriggersMap
+        , _boEndpoints     = resolvedEndpoints
+        , _boApiLimits     = apiLimits
         , _boMetricsConfig = metricsConfig
+        , _boRoles         = mapFromL _rRoleName orderedRoles
         }
 
     mkEndpointMetadataObject (name, createEndpoint) =
@@ -648,6 +641,9 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
     mkRemoteSchemaMetadataObject remoteSchema =
       MetadataObject (MORemoteSchema (_rsmName remoteSchema)) (toJSON remoteSchema)
+
+    mkInheritedRoleMetadataObject inheritedRole@(Role roleName _) =
+      MetadataObject (MOInheritedRole roleName) (toJSON inheritedRole)
 
     alignExtraRemoteSchemaInfo
       :: forall a b arr
@@ -762,6 +758,29 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
             (| modifyErrA (bindErrorA -< resolveCronTrigger env cronTrigger)
              |) addCronTriggerContext)
            |) (mkCronTriggerMetadataObject cronTrigger)
+
+    buildInheritedRoles
+      :: ( ArrowChoice arr
+         , Inc.ArrowDistribute arr
+         , ArrowWriter (Seq CollectedInfo) arr
+         , Inc.ArrowCache m arr
+         , MonadError QErr m)
+      => (HashSet RoleName, [InheritedRole])
+         `arr` HashMap RoleName Role
+    buildInheritedRoles = buildInfoMap _rRoleName mkInheritedRoleMetadataObject buildInheritedRole
+      where
+        buildInheritedRole = proc (allRoles, inheritedRole) -> do
+          let addInheritedRoleContext e = "in inherited role " <> roleNameToTxt (_rRoleName inheritedRole)  <> ": " <> e
+              metadataObject = mkInheritedRoleMetadataObject inheritedRole
+              schemaObject = SORole $ _rRoleName inheritedRole
+          (| withRecordInconsistency (
+            (| modifyErrA (do
+                (resolvedInheritedRole, dependencies) <- bindA -< resolveInheritedRole allRoles inheritedRole
+                recordDependencies -< (metadataObject, schemaObject, dependencies)
+                returnA -< resolvedInheritedRole
+               )
+             |) addInheritedRoleContext)
+           |) metadataObject
 
     buildActions
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr

@@ -33,7 +33,6 @@ import           Hasura.RQL.Types.Endpoint
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.GraphqlSchemaIntrospection
-import           Hasura.RQL.Types.InheritedRoles
 import           Hasura.RQL.Types.Metadata.Backend
 import           Hasura.RQL.Types.Metadata.Instances         ()
 import           Hasura.RQL.Types.Permission
@@ -41,6 +40,7 @@ import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.Relationship
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.RQL.Types.Roles
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
@@ -238,7 +238,7 @@ type Allowlist = HSIns.InsOrdHashSet CollectionReq
 type Endpoints = InsOrdHashMap EndpointName CreateEndpoint
 type Actions = InsOrdHashMap ActionName ActionMetadata
 type CronTriggers = InsOrdHashMap TriggerName CronTriggerMetadata
-type InheritedRoles = InsOrdHashMap RoleName AddInheritedRole
+type InheritedRoles = InsOrdHashMap RoleName InheritedRole
 
 data SourceMetadata b
   = SourceMetadata
@@ -305,7 +305,7 @@ parseNonSourcesMetadata o = do
 
   apiLimits     <- o .:? "api_limits" .!= emptyApiLimit
   metricsConfig <- o .:? "metrics_config" .!= emptyMetricsConfig
-  inheritedRoles <- parseListAsMap "inherited roles" _adrRoleName $
+  inheritedRoles <- parseListAsMap "inherited roles" _rRoleName $
                   o .:? "inherited_roles" .!= []
   introspectionDisabledForRoles <- o .:? "graphql_schema_introspection" .!= mempty
   pure ( remoteSchemas, queryCollections, allowlist, customTypes
@@ -460,7 +460,7 @@ metadataToOrdJSON ( Metadata
                            else Just ("custom_types", customTypesToOrdJSON customTypes)
     actionsPair          = listToMaybeOrdPairSort "actions" actionMetadataToOrdJSON _amName actions
     cronTriggersPair     = listToMaybeOrdPairSort "cron_triggers" crontriggerQToOrdJSON ctName cronTriggers
-    inheritedRolesPair   = listToMaybeOrdPairSort "inherited_roles" inheritedRolesQToOrdJSON _adrRoleName inheritedRoles
+    inheritedRolesPair   = listToMaybeOrdPairSort "inherited_roles" inheritedRolesQToOrdJSON _rRoleName inheritedRoles
     endpointsPair        = listToMaybeOrdPairSort "rest_endpoints" AO.toOrdered _ceUrl endpoints
 
     apiLimitsPair        = if apiLimits == emptyApiLimit then Nothing
@@ -616,10 +616,10 @@ metadataToOrdJSON ( Metadata
             else pure ("permissions", AO.toOrdered _fmPermissions)
       in AO.object $ [("function", AO.toOrdered _fmFunction)] <> confKeyPair <> permissionsKeyPair
 
-    inheritedRolesQToOrdJSON :: AddInheritedRole -> AO.Value
-    inheritedRolesQToOrdJSON AddInheritedRole{..} =
-      AO.object [ ("role_name", AO.toOrdered _adrRoleName)
-                , ("role_set", AO.toOrdered _adrRoleSet)
+    inheritedRolesQToOrdJSON :: InheritedRole -> AO.Value
+    inheritedRolesQToOrdJSON (Role roleName roleSet)  =
+      AO.object [ ("role_name", AO.toOrdered roleName)
+                , ("role_set", AO.toOrdered roleSet)
                 ]
 
     remoteSchemaQToOrdJSON :: RemoteSchemaMetadata -> AO.Value

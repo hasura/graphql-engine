@@ -116,7 +116,7 @@ data RQLMetadataV1
   | RMRemoveMetricsConfig
 
   -- Inherited roles
-  | RMAddInheritedRole  !AddInheritedRole
+  | RMAddInheritedRole  !InheritedRole
   | RMDropInheritedRole !DropInheritedRole
 
   -- Metadata management

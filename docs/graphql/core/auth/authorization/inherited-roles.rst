@@ -15,9 +15,33 @@ Inherited roles
 Introduction
 ------------
 
-An inherited role is a way to create a new role which infers permissions from two or more non-inherited roles. Once an inherited role is created, it can be treated as any other role i.e. can be given in ``X-Hasura-Role`` session variable.
+An inherited role is a way to create a new role which inherits permissions from two or more roles.
+
+Once an inherited role is created, it can be treated as any other role i.e. can be given in ``X-Hasura-Role`` session variable.
 
 Inherited roles are useful when you need to define multiple permission rules (may be overlapping) on schema objects and also for greater modularity in role management.
+
+.. note::
+
+   By default, inherited roles will try to inherit the permissions from its parent roles.
+   If you'd rather like to have a different permission than the inherited one for a particular entity and role pair,
+   then it can be done by creating a permission for the entity and role pair. After creating this permission,
+   it will override the inherited permission, if any.
+
+.. note::
+
+   Inherited roles cannot form cycles. For example:
+
+   Suppose there are three inherited roles: ``inherited_role1``, ``inherited_role2`` and ``inherited_role3`` and
+   three non-inherited roles: ``role1``, ``role2`` and ``role3`` and
+
+   ``inherited_role1`` inherits from ``inherited_role3`` and ``role1``
+
+   ``inherited_role2`` inherits from ``role2`` and ``role3``
+
+   ``inherited_role3`` inherits from ``inherited_role1`` and ``inherited_role2``.
+
+   The above setup won't work because ``inherited_role3`` and ``inherited_role2`` form a cycle.
 
 .. note::
 

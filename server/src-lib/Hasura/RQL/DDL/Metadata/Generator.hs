@@ -136,7 +136,7 @@ instance Arbitrary FunctionPermissionMetadata where
 instance Arbitrary InsertOrder where
   arbitrary = genericArbitrary
 
-instance Arbitrary AddInheritedRole where
+instance Arbitrary InheritedRole where
   arbitrary = genericArbitrary
 
 instance Arbitrary ColExp where
@@ -457,3 +457,6 @@ instance Arbitrary CronSchedule where
     , "0 0 * * 0"
     -- Every sunday at 00:00
     ]
+
+instance Arbitrary ParentRoles where
+  arbitrary = genericArbitrary

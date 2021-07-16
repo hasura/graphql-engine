@@ -17,6 +17,7 @@ module Hasura.RQL.Types
   , askSourceTables
   , askTableCache
   , askTabInfo
+  , askTableMetadata
   , askTabInfoSource
   , askTableCoreInfo
   , askTableCoreInfoSource
@@ -35,7 +36,7 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict                         as M
 import qualified Database.PG.Query                           as Q
 
-import           Control.Lens                                (at, (^.))
+import           Control.Lens                                (Traversal', at, preview, (^.))
 import           Control.Monad.Unique
 import           Data.Text.Extended
 import           Network.HTTP.Client.Extended                (HasHttpManagerM (..))
@@ -54,7 +55,6 @@ import           Hasura.RQL.Types.Endpoint                   as R
 import           Hasura.RQL.Types.EventTrigger               as R
 import           Hasura.RQL.Types.Function                   as R
 import           Hasura.RQL.Types.GraphqlSchemaIntrospection as R
-import           Hasura.RQL.Types.InheritedRoles             as R
 import           Hasura.RQL.Types.Metadata                   as R
 import           Hasura.RQL.Types.Metadata.Backend           as R
 import           Hasura.RQL.Types.Metadata.Object            as R
@@ -63,6 +63,7 @@ import           Hasura.RQL.Types.QueryCollection            as R
 import           Hasura.RQL.Types.Relationship               as R
 import           Hasura.RQL.Types.RemoteRelationship         as R
 import           Hasura.RQL.Types.RemoteSchema               as R
+import           Hasura.RQL.Types.Roles                      as R
 import           Hasura.RQL.Types.ScheduledTrigger           as R
 import           Hasura.RQL.Types.SchemaCache                as R
 import           Hasura.RQL.Types.SchemaCache.Build          as R
@@ -129,6 +130,28 @@ askTabInfoSource
 askTabInfoSource tableName = do
   lookupTableInfo tableName >>= (`onNothing` (throwTableDoesNotExist @b) tableName)
 
+-- | Retrieve 'TableMetadata' from the stateful 'MetadataM' environment that is
+-- associated with the given 'SourceName' and 'TableName' for a particular 'Backend'.
+askTableMetadata
+  :: forall b m
+   . (QErrM m, MetadataM m, Backend b, BackendMetadata b)
+  => SourceName
+  -> TableName b
+  -> m (TableMetadata b)
+askTableMetadata sourceName tableName = do
+  tableMetadataMaybe <- getMetadata <&> preview focusTableMetadata
+  tableMetadataMaybe `onNothing`
+    throwTableDoesNotExist @b tableName
+  where
+    -- | Focus on all 'TableMetadata' elements associated with the given 'Backend'
+    -- for the provided @sourceName@ and @tableName@.
+    focusTableMetadata :: Traversal' Metadata (TableMetadata b)
+    focusTableMetadata =
+      metaSources
+      . ix sourceName
+      . toSourceMetadata @b
+      . smTables
+      . ix tableName
 
 class (Monad m) => HasServerConfigCtx m where
   askServerConfigCtx :: m ServerConfigCtx

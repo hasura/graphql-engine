@@ -15,7 +15,7 @@ Metadata API Reference: Inherited Roles
 Introduction
 ------------
 
-Inherited roles allow you to create a role which inherits permissions from other non-inherited roles.
+Inherited roles allow you to create a role which inherits permissions from other existing roles.
 
 .. admonition:: Supported from
 
@@ -27,7 +27,7 @@ Inherited roles allow you to create a role which inherits permissions from other
 add_inherited_role
 ------------------
 
-``add_inherited_role`` is used to create a new inherited role with existing non-inherited roles.
+``add_inherited_role`` is used to create a new inherited role with other existing roles.
 
 .. code-block:: http
 
@@ -38,7 +38,7 @@ add_inherited_role
    {
       "type":"add_inherited_role",
       "args":{
-         "role": "sample_inherited_role",
+         "role_name": "sample_inherited_role",
          "role_set": [
             "role1",
             "role2"
@@ -58,7 +58,7 @@ Args syntax
      - Required
      - Schema
      - Description
-   * - role
+   * - role_name
      - true
      - :ref:`RoleName`
      - Name of the inherited role

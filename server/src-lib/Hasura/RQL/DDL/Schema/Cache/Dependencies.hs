@@ -131,6 +131,8 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
                 TOTrigger triggerName ->
                   unless (M.member triggerName (_tiEventTriggerInfoMap tableInfo)) $ Left $
                     "no event trigger named " <> triggerName <<> " is defined for table " <>> tableName
+      SORole roleName -> void $ (M.lookup roleName (_boRoles cache))
+        `onNothing` Left ("parent role " <> roleName <<> " does not exist")
 
     castSourceInfo
       :: (Backend b) => SourceName -> SourceObjId b -> Either Text (SourceInfo b)
@@ -171,7 +173,7 @@ deleteMetadataObject = \case
   MOAction name                       -> boActions %~ M.delete name
   MOEndpoint name                     -> boEndpoints %~ M.delete name
   MOActionPermission name role        -> boActions.ix name.aiPermissions %~ M.delete role
-  MOInheritedRole name                -> boInheritedRoles %~ M.delete name
+  MOInheritedRole name                -> boRoles %~ M.delete name
   where
     deleteObjId :: forall b. (Backend b) => SourceMetadataObjId b -> BackendSourceInfo -> BackendSourceInfo
     deleteObjId sourceObjId sourceInfo =

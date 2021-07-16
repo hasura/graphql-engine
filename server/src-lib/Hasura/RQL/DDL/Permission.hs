@@ -35,7 +35,7 @@ import qualified Data.HashMap.Strict                as HM
 import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.HashSet                       as HS
 
-import           Control.Lens                       ((.~))
+import           Control.Lens                       ((.~), (^?))
 import           Data.Aeson
 import           Data.Kind                          (Type)
 import           Data.Text.Extended
@@ -49,7 +49,6 @@ import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Session
-
 
 {- Note [Backend only permissions]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -136,25 +135,45 @@ class IsPerm a where
     -> TableMetadata b
     -> TableMetadata b
 
+doesPermissionExistInMetadata
+  :: TableMetadata b
+  -> RoleName
+  -> PermType
+  -> Bool
+doesPermissionExistInMetadata tableMetadata roleName = \case
+  -- TODO: lot of repetition below, any way to simplify this?
+  PTInsert -> isJust $ tableMetadata ^? tmInsertPermissions.ix roleName
+  PTSelect -> isJust $ tableMetadata ^? tmSelectPermissions.ix roleName
+  PTUpdate -> isJust $ tableMetadata ^? tmUpdatePermissions.ix roleName
+  PTDelete -> isJust $ tableMetadata ^? tmDeletePermissions.ix roleName
+
 runCreatePerm
   :: forall m b a
    . (ToJSON (a b), IsPerm a, UserInfoM m, CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b)
   => CreatePerm a b -> m EncJSON
-runCreatePerm (CreatePerm (WithTable source tn pd)) = do
-  tableInfo <- askTabInfo @b source tn
-  let permAcc = getPermAcc1 pd
-      pt = permAccToType permAcc
-      ptText = permTypeToCode pt
-      role = _pdRole pd
+runCreatePerm (CreatePerm (WithTable source tableName permissionDefn)) = do
+  tableMetadata <- askTableMetadata @b source tableName
+  let permAcc = getPermAcc1 permissionDefn
+      permissionType = permAccToType permAcc
+      ptText = permTypeToCode permissionType
+      role = _pdRole permissionDefn
       metadataObject = MOSourceObjId source
                          $ AB.mkAnyBackend
-                         $ SMOTableObj @b tn
-                         $ MTOPerm role pt
-  onJust (getPermInfoMaybe role permAcc tableInfo) $ const $ throw400 AlreadyExists $
-    ptText <> " permission already defined on table " <> tn <<> " with role " <>> role
+                         $ SMOTableObj @b tableName
+                         $ MTOPerm role permissionType
+
+    -- NOTE: we check if a permission exists for a `(table, role)` entity in the metadata
+  -- and not in the `RolePermInfoMap b` because there may exist a permission for the `role`
+  -- which is an inherited one, so we check it in the metadata directly
+
+  -- The metadata will not contain the permissions for the admin role,
+  -- because the graphql-engine automatically creates the role and it's
+  -- assumed that the admin role is an implicit role of the graphql-engine.
+  when (doesPermissionExistInMetadata tableMetadata role permissionType || role == adminRoleName) $ throw400 AlreadyExists $
+    ptText <> " permission already defined on table " <> tableName <<> " with role " <>> role
   buildSchemaCacheFor metadataObject
     $ MetadataModifier
-    $ tableMetadataSetter @b source tn %~ addPermToMetadata pd
+    $ tableMetadataSetter @b source tableName %~ addPermToMetadata permissionDefn
   pure successMsg
 
 runDropPerm
@@ -163,9 +182,15 @@ runDropPerm
   => DropPerm a b
   -> m EncJSON
 runDropPerm dp@(DropPerm source table role) = do
-  tabInfo <- askTabInfo source table
+  tableMetadata <- askTableMetadata @b source table
   let permType = permAccToType $ getPermAcc2 dp
-  void $ askPermInfo tabInfo role $ getPermAcc2 dp
+  unless (doesPermissionExistInMetadata tableMetadata role permType) $ do
+    let errMsg = mconcat
+                 [ permTypeToCode permType <> " permission on " <>> table
+                 , " for role " <>> role
+                 , " does not exist"
+                 ]
+    throw400 PermissionDenied errMsg
   withNewInconsistentObjsCheck
     $ buildSchemaCache
     $ MetadataModifier

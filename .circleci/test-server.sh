@@ -733,6 +733,8 @@ case "$SERVER_TEST_TO_RUN" in
       run_hge_with_args serve
       wait_for_port 8080
 
+
+      pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test-inherited-roles -k TestGraphQLInheritedRolesSchema
       pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test-inherited-roles -k TestGraphQLInheritedRolesPostgres
       pytest --hge-urls="$HGE_URL" --pg-urls="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-inherited-roles test_graphql_mutations.py::TestGraphQLInheritedRoles
 
