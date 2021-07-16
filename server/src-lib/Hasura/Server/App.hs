@@ -41,7 +41,6 @@ import           Network.Mime                              (defaultMimeLookup)
 import           System.FilePath                           (joinPath, takeFileName)
 import           Web.Spock.Core                            ((<//>))
 
-import qualified Hasura.Backends.Postgres.SQL.Types        as PG
 import qualified Hasura.GraphQL.Execute                    as E
 import qualified Hasura.GraphQL.Execute.LiveQuery.Options  as EL
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
@@ -672,41 +671,6 @@ renderHtmlTemplate template jVal =
     errMsg = "template rendering failed: " ++ show errs
     (errs, res) = M.checkedSubstitute template jVal
 
-newtype LegacyQueryParser m
-  = LegacyQueryParser
-  { getLegacyQueryParser :: PG.QualifiedTable -> Object -> m RQLQueryV1 }
-
-queryParsers :: (MonadError QErr m) => M.HashMap Text (LegacyQueryParser m)
-queryParsers =
-  M.fromList
-  [ ("select", mkLegacyQueryParser RQSelect)
-  , ("insert", mkLegacyQueryParser RQInsert)
-  , ("update", mkLegacyQueryParser RQUpdate)
-  , ("delete", mkLegacyQueryParser RQDelete)
-  , ("count", mkLegacyQueryParser RQCount)
-  ]
-  where
-    mkLegacyQueryParser f =
-      LegacyQueryParser $ \qt obj -> do
-      let val = Object $ M.insert "table" (toJSON qt) obj
-      q <- decodeValue val
-      return $ f q
-
-legacyQueryHandler
-  :: ( HasVersion, MonadIO m, MonadBaseControl IO m, MonadMetadataApiAuthorization m, Tracing.MonadTrace m
-     , MonadReader HandlerCtx m
-     , MonadMetadataStorage m
-     , MonadResolveSource m
-     )
-  => PG.TableName -> Text -> Object
-  -> m (HttpResponse EncJSON)
-legacyQueryHandler tn queryType req =
-  case M.lookup queryType queryParsers of
-    Just queryParser -> getLegacyQueryParser queryParser qt req >>= v1QueryHandler . RQV1
-    Nothing          -> throw404 "No such resource exists"
-  where
-    qt = PG.QualifiedObject PG.publicSchema tn
-
 -- | Default implementation of the 'MonadConfigApiHandler'
 configApiGetHandler
   :: forall m. (HasVersion, MonadIO m, MonadBaseControl IO m, UserAuthentication (Tracing.TraceT m), HttpLog m, Tracing.HasReporter m, HasResourceLimits m)
@@ -981,12 +945,6 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
       Spock.post "v2/query" $ spockAction encodeQErr id $
         mkPostHandler $ fmap (emptyHttpLogMetadata @m, ) <$> mkAPIRespHandler v2QueryHandler
 
-      Spock.post ("api/1/table" <//> Spock.var <//> Spock.var) $ \tableName queryType ->
-        mkSpockAction serverCtx encodeQErr id $
-          mkPostHandler $
-          fmap (emptyHttpLogMetadata @m, )
-          <$> mkAPIRespHandler (legacyQueryHandler (PG.TableName tableName) queryType)
-
     when enablePGDump $
       Spock.post "v1alpha1/pg_dump" $ spockAction encodeQErr id $
         mkPostHandler $ fmap (emptyHttpLogMetadata @m,) <$> v1Alpha1PGDumpHandler
@@ -1022,7 +980,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
       Spock.get "dev/plan_cache" $ spockAction encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
-          respJ <- liftIO $ E.dumpPlanCache {- scPlanCache serverCtx -}
+          respJ <- liftIO E.dumpPlanCache {- scPlanCache serverCtx -}
           return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue respJ) [])
       Spock.get "dev/subscriptions" $ spockAction encodeQErr id $
         mkGetHandler $ do

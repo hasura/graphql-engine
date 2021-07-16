@@ -1,5 +1,7 @@
 - description: Clear metadata
   url: /v1/metadata
+  headers:
+    X-Hasura-Role: admin
   status: 200
   response:
     message: success
@@ -9,6 +11,8 @@
 
 - description: Check if metadata is cleared
   url: /v1/query
+  headers:
+    X-Hasura-Role: admin
   status: 200
   # FIXME:- Using export_metadata will dump
   # the source configuration dependent on --database-url

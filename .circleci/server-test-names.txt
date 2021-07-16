@@ -33,3 +33,4 @@ insecure-webhook-with-admin-secret
 allowlist-queries
 jwk-url
 horizontal-scaling
+developer-api-tests

@@ -34,8 +34,15 @@ class TestV1General:
 @usefixtures('per_class_tests_db_state')
 class TestV1SelectBasic:
 
-    def test_select_query_author(self, hge_ctx):
+    def test_select_query_author_with_admin_role(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_article.yaml')
+
+    # TODO: fix these tests for JWT tests
+    # def test_select_query_author_with_user_role_success(self, hge_ctx):
+    #     check_query_f(hge_ctx, self.dir() + '/select_article_role_success.yaml')
+
+    # def test_select_query_author_with_user_role_failure(self, hge_ctx):
+    #     check_query_f(hge_ctx, self.dir() + '/select_article_role_error.yaml')
 
     def test_nested_select_article_author(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/nested_select_query_article_author.yaml')
@@ -498,6 +505,11 @@ class TestRunSQL:
         check_query_f(hge_ctx, self.dir() + '/sql_select_query.yaml')
         hge_ctx.may_skip_test_teardown = True
 
+    # TODO: create a v2 query tests module
+    def test_select_query_v2(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_select_query_v2.yaml')
+        hge_ctx.may_skip_test_teardown = True
+
     def test_select_query_read_only(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_select_query_read_only.yaml')
         hge_ctx.may_skip_test_teardown = True
@@ -511,6 +523,10 @@ class TestRunSQL:
 
     def test_sql_query_as_user_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_query_as_user_error.yaml')
+
+    # TODO: create a v2 query tests module
+    def test_sql_query_as_user_error_v2(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_query_as_user_error_v2.yaml')
 
     def test_sql_rename_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_rename_table.yaml')

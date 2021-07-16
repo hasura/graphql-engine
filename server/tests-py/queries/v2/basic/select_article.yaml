@@ -1,11 +1,10 @@
-description: foo
-url: /v1/query
+url: /v2/query
 status: 200
 response:
-  - id: 1
-    name: Author 1
-  - id: 2
-    name: Author 2
+- id: 1
+  name: Author 1
+- id: 2
+  name: Author 2
 query:
   type: select
   args:

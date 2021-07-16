@@ -138,6 +138,9 @@ class TestGraphQLQueryBasicCommon:
     def test_select_query_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml', transport)
 
+    def test_select_query_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_v1alpha1.yaml', transport)
+
     def test_select_query_author_quoted_col(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_col_quoted.yaml', transport)
 
@@ -543,6 +546,9 @@ class TestGraphqlQueryPermissions:
 
     def test_anonymous_only_published_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/anonymous_can_only_get_published_articles.yaml', transport)
+
+    def test_anonymous_only_published_articles_v1alpha1(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/anonymous_can_only_get_published_articles_v1alpha1.yaml', transport)
 
     def test_user_cannot_access_remarks_col(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_cannot_access_remarks_col.yaml', transport)
@@ -1008,20 +1014,40 @@ class TestGraphQLExplain:
     def dir(cls):
         return 'queries/explain'
 
+    def test_simple_query_as_admin(self, hge_ctx, backend):
+        q = {"query": {"query": "query abc { __typename }", "operationName": "abc"}}
+        st_code, resp = hge_ctx.v1GraphqlExplain(q)
+        assert st_code == 200, resp
+
+    def test_simple_query_as_user(self, hge_ctx, backend):
+        q = {"query": {"query": "query abc { __typename }", "operationName": "abc"}}
+        st_code, resp = hge_ctx.v1GraphqlExplain(q, {"x-hasura-role": "random_user"})
+        assert st_code == 400, resp
+
+    def test_simple_query_as_admin_with_user_role(self, hge_ctx, backend):
+        self.with_admin_secret(hge_ctx, self.dir() + hge_ctx.backend_suffix('/permissions_query') + ".yaml")
+
     def test_simple_query(self, hge_ctx, backend):
         self.with_admin_secret(hge_ctx, self.dir() + hge_ctx.backend_suffix('/simple_query') + ".yaml")
 
     def test_permissions_query(self, hge_ctx, backend):
         self.with_admin_secret(hge_ctx, self.dir() + hge_ctx.backend_suffix('/permissions_query') + ".yaml")
 
-    def with_admin_secret(self, hge_ctx, f):
+    def with_admin_secret(self, hge_ctx, f, hdrs=None, req_st=200):
         conf = get_conf_f(f)
         admin_secret = hge_ctx.hge_key
         headers = {}
-        if admin_secret:
-            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+        if hdrs != None:
+            headers = hdrs
+        elif admin_secret and hdrs == None:
+            headers['X-Hasura-Admin-Secret'] = admin_secret
         status_code, resp_json, _ = hge_ctx.anyq(conf['url'], conf['query'], headers)
-        assert status_code == 200, resp_json
+        assert status_code == req_st, resp_json
+
+        if req_st != 200:
+            # return early in case we're testing for failures
+            return
+        
         # Comparing only with generated 'sql' since the 'plan' may differ
         resp_sql = resp_json[0]['sql']
         exp_sql = conf['response'][0]['sql']

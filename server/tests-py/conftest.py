@@ -187,6 +187,12 @@ This option may result in test failures if the schema has to change between the 
         help="Flag to specify if the pro tests are to be run"
     )
 
+    parser.addoption(
+        "--test-developer-api-enabled", action="store_true",
+        help="Run Test cases with the Developer API Enabled",
+        default=False
+    )
+
 
 
 #By default,

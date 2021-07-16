@@ -25,6 +25,9 @@ class TestMetadata:
     def test_clear_metadata(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/clear_metadata.yaml')
 
+    def test_clear_metadata_as_user(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/metadata_as_user_err.yaml')
+
     def test_replace_metadata(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/replace_metadata.yaml')
 
