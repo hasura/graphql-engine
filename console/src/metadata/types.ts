@@ -947,6 +947,7 @@ export interface MetadataDataSource {
     // pro-only feature
     read_replicas?: SourceConnectionInfo[];
     service_account?: BigQueryServiceAccount;
+    global_select_limit?: number;
     project_id?: string;
     datasets?: string[];
   };

@@ -56,6 +56,7 @@ describe('dataSourceIsEqual works', () => {
         },
         project_id: 'project_id',
         datasets: ['dataset1'],
+        global_select_limit: 1000,
       },
     };
     const request = {
@@ -67,6 +68,7 @@ describe('dataSourceIsEqual works', () => {
           client_email: 'email@bigquery_account.com',
         },
         project_id: 'project_id',
+        global_select_limit: 1000,
         datasets: ['dataset1'],
       },
       replace_configuration: false,

@@ -129,6 +129,7 @@ export interface AddDataSourceRequest {
       bigQuery: {
         projectId: string;
         datasets: string;
+        global_select_limit: number;
       };
       sslConfiguration?: SSLConfigOptions;
       preparedStatements?: boolean;

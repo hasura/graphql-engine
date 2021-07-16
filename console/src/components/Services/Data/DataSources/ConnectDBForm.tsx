@@ -315,6 +315,24 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
               placeholder="dataset1, dataset2"
               data-test="datasets"
             />
+            <LabeledInput
+              label="Global Select Limit"
+              onChange={e => {
+                let data = Number.parseInt(e.target.value, 10);
+                if (Number.isNaN(data) || data <= 0) {
+                  data = 0;
+                }
+                connectionDBStateDispatch({
+                  type: 'UPDATE_DB_BIGQUERY_GLOBAL_LIMIT',
+                  data,
+                });
+              }}
+              type="number"
+              min="0"
+              value={connectionDBState.databaseURLState.global_select_limit}
+              placeholder="1000"
+              data-test="global_select_limit"
+            />
           </>
         ) : null}
         {connectionTypeState.includes(connectionTypes.CONNECTION_PARAMS) &&

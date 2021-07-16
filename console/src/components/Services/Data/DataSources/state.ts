@@ -31,6 +31,7 @@ export type ConnectDBState = {
   databaseURLState: {
     dbURL: string;
     serviceAccount: string;
+    global_select_limit: number;
     projectId: string;
     datasets: string;
   };
@@ -56,6 +57,7 @@ export const defaultState: ConnectDBState = {
   databaseURLState: {
     dbURL: '',
     serviceAccount: '',
+    global_select_limit: 1000,
     projectId: '',
     datasets: '',
   },
@@ -155,6 +157,7 @@ export const connectDataSource = (
       bigQuery: {
         projectId: currentState.databaseURLState.projectId,
         datasets: currentState.databaseURLState.datasets,
+        global_select_limit: currentState.databaseURLState.global_select_limit,
       },
       ...(checkEmpty(currentState.connectionSettings) && {
         connection_pool_settings: currentState.connectionSettings,
@@ -197,6 +200,7 @@ export type ConnectDBActions =
   | { type: 'UPDATE_DISPLAY_NAME'; data: string }
   | { type: 'UPDATE_DB_URL'; data: string }
   | { type: 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT'; data: string }
+  | { type: 'UPDATE_DB_BIGQUERY_GLOBAL_LIMIT'; data: number }
   | { type: 'UPDATE_DB_BIGQUERY_PROJECT_ID'; data: string }
   | { type: 'UPDATE_DB_BIGQUERY_DATASETS'; data: string }
   | { type: 'UPDATE_DB_URL_ENV_VAR'; data: string }
@@ -415,6 +419,14 @@ export const connectDBReducer = (
         databaseURLState: {
           ...state.databaseURLState,
           serviceAccount: action.data,
+        },
+      };
+    case 'UPDATE_DB_BIGQUERY_GLOBAL_LIMIT':
+      return {
+        ...state,
+        databaseURLState: {
+          ...state.databaseURLState,
+          global_select_limit: action.data,
         },
       };
     case 'UPDATE_DB_BIGQUERY_DATASETS':
