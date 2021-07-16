@@ -79,10 +79,12 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 	messageFormat := "Showing diff between %s and %s..."
 	message := ""
 	metadataHandler := metadataobject.NewHandlerFromEC(o.EC)
+	from := "project"
+	to := "server"
 	switch len(args) {
 	case 0:
 		o.Metadata[0] = o.EC.MetadataDir
-		message = fmt.Sprintf(messageFormat, o.Metadata[0], "the server")
+		from = "project"
 	case 1:
 		// 1 arg, diff given directory and the metadata on server
 		err := checkDir(args[0])
@@ -90,20 +92,23 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 			return err
 		}
 		o.Metadata[0] = args[0]
-		message = fmt.Sprintf(messageFormat, o.Metadata[0], "the server")
+		from = o.Metadata[0]
 	case 2:
 		err := checkDir(args[0])
 		if err != nil {
 			return err
 		}
 		o.Metadata[0] = args[0]
+		from = o.Metadata[0]
+
 		err = checkDir(args[1])
 		if err != nil {
 			return err
 		}
 		o.Metadata[1] = args[1]
-		message = fmt.Sprintf(messageFormat, o.Metadata[0], o.Metadata[1])
+		to = o.Metadata[1]
 	}
+	message = fmt.Sprintf(messageFormat, from, to)
 	o.EC.Logger.Info(message)
 	var oldYaml, newYaml []byte
 	if o.Metadata[1] == "" {
@@ -147,12 +152,7 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 		return errors.Wrap(err, "cannot unmarshal local metadata")
 	}
 
-	if o.Metadata[1] != "" {
-		err = printDiff(string(oldYaml), string(newYaml), o.Metadata[0], o.Metadata[1], o.Output, o.DiffType, o.DisableColor)
-	} else {
-		err = printDiff(string(oldYaml), string(newYaml), o.Metadata[0], "server", o.Output, o.DiffType, o.DisableColor)
-	}
-
+	err = printDiff(string(oldYaml), string(newYaml), from, to, o.Output, o.DiffType, o.DisableColor)
 	if err != nil {
 		return err
 	}
@@ -171,20 +171,20 @@ type Difftype string
 
 const DifftypeUnifiedCommon Difftype = "unified-common"
 
-func printDiff(before, after, firstArg, SecondArg string, to io.Writer, difftype string, disableColor bool) error {
+func printDiff(before, after, from, to string, writer io.Writer, difftype string, disableColor bool) error {
 	diffType := Difftype(difftype)
 	switch diffType {
 	case DifftypeUnifiedCommon:
-		printDiffv1(before, after, to)
+		printDiffv1(before, after, writer)
 	default:
-		return printDiffv2(before, after, firstArg, SecondArg, to, disableColor)
+		return printDiffv2(before, after, from, to, writer, disableColor)
 	}
 	return nil
 }
 
-func printDiffv2(before, after, firstArg, SecondArg string, to io.Writer, disableColor bool) error {
+func printDiffv2(before, after, from, to string, writer io.Writer, disableColor bool) error {
 	edits := myers.ComputeEdits(span.URIFromPath("a.txt"), before, after)
-	text := fmt.Sprint(gotextdiff.ToUnified(firstArg, SecondArg, before, edits))
+	text := fmt.Sprint(gotextdiff.ToUnified(from, to, before, edits))
 	makeDiffLine := func(line, color string) string {
 		if disableColor {
 			return line
@@ -197,11 +197,11 @@ func printDiffv2(before, after, firstArg, SecondArg string, to io.Writer, disabl
 			break
 		}
 		if (string)(line[0]) == "-" {
-			fmt.Fprintf(to, "%s\n", makeDiffLine(line, "red"))
+			fmt.Fprintf(writer, "%s\n", makeDiffLine(line, "red"))
 		} else if (string)(line[0]) == "+" {
-			fmt.Fprintf(to, "%s\n", makeDiffLine(line, "yellow"))
+			fmt.Fprintf(writer, "%s\n", makeDiffLine(line, "yellow"))
 		} else if (string)(line[0]) == "@" {
-			fmt.Fprintf(to, "%s\n", makeDiffLine(line, "cyan"))
+			fmt.Fprintf(writer, "%s\n", makeDiffLine(line, "cyan"))
 		}
 	}
 
