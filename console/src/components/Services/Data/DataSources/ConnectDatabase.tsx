@@ -130,6 +130,12 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
           type: 'UPDATE_DB_BIGQUERY_PROJECT_ID',
           data: conf?.project_id ?? '',
         });
+        if (conf?.global_select_limit) {
+          connectDBDispatch({
+            type: 'UPDATE_DB_BIGQUERY_GLOBAL_LIMIT',
+            data: +conf?.global_select_limit,
+          });
+        }
         if (conf?.service_account?.from_env) {
           changeConnectionType(connectionTypes.ENV_VAR);
           connectDBDispatch({

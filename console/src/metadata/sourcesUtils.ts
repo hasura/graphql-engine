@@ -16,6 +16,7 @@ export const addSource = (
     bigQuery: {
       projectId: string;
       datasets: string;
+      global_select_limit: number;
     };
     sslConfiguration?: SSLConfigOptions;
     preparedStatements?: boolean;
@@ -58,6 +59,7 @@ export const addSource = (
         name: payload.name,
         configuration: {
           service_account,
+          global_select_limit: payload.bigQuery.global_select_limit,
           project_id: payload.bigQuery.projectId,
           datasets: payload.bigQuery.datasets.split(',').map(d => d.trim()),
         },

@@ -3,6 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- console: support `global_select_limit` for bigquery sources
 - cli: add `-o`/`--output` flag for `hasura metadata inconsistency list` command
 
 ## v2.0.2
