@@ -65,7 +65,7 @@ func TestClient_Send(t *testing.T) {
     id1 numeric NOT NULL,
     id2 numeric NOT NULL
 );
-ALTER TABLE public.test OWNER TO postgres;
+ALTER TABLE public.test OWNER TO test;
 `,
 			false,
 		},
@@ -87,7 +87,7 @@ CREATE TABLE public.test (
     id1 numeric NOT NULL,
     id2 numeric NOT NULL
 );
-ALTER TABLE public.test OWNER TO postgres;
+ALTER TABLE public.test OWNER TO test;
 `,
 			false,
 		},

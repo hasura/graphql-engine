@@ -1,26 +1,27 @@
 package testutil
 
 import (
-	"context"
-	"database/sql"
-	"errors"
-	"fmt"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"strings"
-	"testing"
-	"time"
+  "context"
+  "database/sql"
+  "errors"
+  "fmt"
+  "github.com/ory/dockertest/v3/docker"
+  "io/ioutil"
+  "net/http"
+  "os"
+  "strings"
+  "testing"
+  "time"
 
-	"github.com/gofrs/uuid"
-	"github.com/stretchr/testify/require"
+  "github.com/gofrs/uuid"
+  "github.com/stretchr/testify/require"
 
-	"github.com/Pallinder/go-randomdata"
+  "github.com/Pallinder/go-randomdata"
 
-	_ "github.com/denisenkom/go-mssqldb"
-	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
-	_ "github.com/lib/pq"
-	"github.com/ory/dockertest/v3"
+  _ "github.com/denisenkom/go-mssqldb"
+  "github.com/hasura/graphql-engine/cli/v2/internal/httpc"
+  _ "github.com/lib/pq"
+  "github.com/ory/dockertest/v3"
 )
 
 // helper function to get image repo and tag separately
@@ -45,6 +46,25 @@ type TestingT interface {
 }
 
 func StartHasura(t TestingT, image string) (port string, teardown func()) {
+	connectionUrl, teardownPG := StartPGContainer(t)
+	port, teardownHasura := StartHasuraWithPG(t, image, connectionUrl)
+	return port, func() {teardownHasura(); teardownPG()}
+}
+
+func StartHasuraCLIMigrations(t TestingT, image string, pgConnectionUrl string, metadataDir, migrationsDir string) (port string, teardown func()) {
+  port, teardownHasura := StartHasuraWithPG(t, image, pgConnectionUrl, func(o *docker.HostConfig) {
+	o.Binds = []string{}
+	if len(metadataDir) > 0 {
+	  o.Binds = append(o.Binds, fmt.Sprintf("%s:%s", metadataDir, "/hasura-metadata"))
+	}
+	if len(migrationsDir) > 0 {
+	  o.Binds = append(o.Binds, fmt.Sprintf("%s:%s", migrationsDir, "/hasura-migrations"))
+	}
+  })
+  return port, func() {teardownHasura()}
+}
+
+func StartHasuraWithPG(t TestingT, image string, pgConnectionUrl string, dockerOpts ...func(*docker.HostConfig)) (port string, teardown func()) {
 	if len(image) == 0 {
 		t.Fatal("no hasura image provided, probably use testutil.HasuraDockerImage")
 	}
@@ -53,35 +73,8 @@ func StartHasura(t TestingT, image string) (port string, teardown func()) {
 	if err != nil {
 		t.Fatalf("Could not connect to docker: %s", err)
 	}
-	uniqueName := getUniqueName(t)
-	pgopts := &dockertest.RunOptions{
-		Name:       fmt.Sprintf("%s-%s", uniqueName, "pg"),
-		Repository: "postgres",
-		Tag:        "11",
-		Env: []string{
-			"POSTGRES_PASSWORD=postgrespassword",
-			"POSTGRES_DB=postgres",
-		},
-		ExposedPorts: []string{"5432/tcp"},
-	}
-	pg, err := pool.RunWithOptions(pgopts)
-	if err != nil {
-		t.Fatalf("Could not start resource: %s", err)
-	}
-	var db *sql.DB
-	if err = pool.Retry(func() error {
-		var err error
-		db, err = sql.Open("postgres", fmt.Sprintf("postgres://postgres:postgrespassword@%s:%s/%s?sslmode=disable", "0.0.0.0", pg.GetPort("5432/tcp"), "postgres"))
-		if err != nil {
-			return err
-		}
-		return db.Ping()
-	}); err != nil {
-		t.Fatal(err)
-	}
-
 	envs := []string{
-		fmt.Sprintf("HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:postgrespassword@%s:%s/postgres", DockerSwitchIP, pg.GetPort("5432/tcp")),
+		fmt.Sprintf("HASURA_GRAPHQL_DATABASE_URL=%s", pgConnectionUrl),
 		`HASURA_GRAPHQL_ENABLE_CONSOLE=true`,
 		"HASURA_GRAPHQL_DEV_MODE=true",
 		"HASURA_GRAPHQL_ENABLED_LOG_TYPES=startup, http-log, webhook-log, websocket-log, query-log",
@@ -92,13 +85,13 @@ func StartHasura(t TestingT, image string) (port string, teardown func()) {
 	}
 	repo, tag := getDockerRepoAndTag(t, image)
 	hasuraopts := &dockertest.RunOptions{
-		Name:         fmt.Sprintf("%s-%s", uniqueName, "hasura"),
+		Name:         fmt.Sprintf("%s-%s", randomdata.SillyName(), "hasura"),
 		Repository:   repo,
 		Tag:          tag,
 		Env:          envs,
 		ExposedPorts: []string{"8080/tcp"},
 	}
-	hasura, err := pool.RunWithOptions(hasuraopts)
+	hasura, err := pool.RunWithOptions(hasuraopts, dockerOpts...)
 	if err != nil {
 		t.Fatalf("Could not start resource: %s", err)
 	}
@@ -118,9 +111,6 @@ func StartHasura(t TestingT, image string) (port string, teardown func()) {
 
 	teardown = func() {
 		if err = pool.Purge(hasura); err != nil {
-			t.Fatalf("Could not purge resource: %s", err)
-		}
-		if err = pool.Purge(pg); err != nil {
 			t.Fatalf("Could not purge resource: %s", err)
 		}
 	}

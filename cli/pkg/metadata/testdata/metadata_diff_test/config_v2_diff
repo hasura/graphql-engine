@@ -1,4 +1,4 @@
---- testdata/projectv2/metadata
+--- project
 +++ server
 @@ -1,14 +1,2 @@
 -tables:

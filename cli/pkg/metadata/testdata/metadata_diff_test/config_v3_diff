@@ -1,4 +1,4 @@
---- testdata/projectv3/metadata
+--- project
 +++ server
 @@ -13,16 +13,4 @@
 -  tables:
