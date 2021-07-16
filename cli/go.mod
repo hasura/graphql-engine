@@ -40,8 +40,9 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.2 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.1.2
-	github.com/onsi/ginkgo v1.15.2
-	github.com/onsi/gomega v1.11.0
+	github.com/olekukonko/tablewriter v0.0.5
+	github.com/onsi/ginkgo v1.16.4
+	github.com/onsi/gomega v1.14.0
 	github.com/opencontainers/runc v1.0.0-rc93 // indirect
 	github.com/ory/dockertest/v3 v3.6.3
 	github.com/parnurzeal/gorequest v0.2.16
@@ -72,8 +73,6 @@ require (
 	github.com/theplant/testingutils v0.0.0-20190603093022-26d8b4d95c61 // indirect
 	github.com/yosssi/gohtml v0.0.0-20190915184251-7ff6f235ecaf // indirect
 	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670
-	golang.org/x/text v0.3.4 // indirect
-	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.4.0

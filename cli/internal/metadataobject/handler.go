@@ -236,7 +236,7 @@ func (obj InconsistentMetadataObject) GetName() string {
 func (obj InconsistentMetadataObject) GetDescription() string {
 	b, err := json.Marshal(obj.Definition)
 	if err == nil {
-		return fmt.Sprintf("%s", string(b))
+		return fmt.Sprintf("%.50s...", string(b))
 	}
 	return "N/A"
 }
@@ -247,7 +247,7 @@ func (obj InconsistentMetadataObject) GetReason() string {
 	}
 	b, err := json.Marshal(obj.Reason)
 	if err == nil {
-		return fmt.Sprintf("%s", string(b))
+		return fmt.Sprintf("%.80s...", string(b))
 	}
 	return "N/A"
 }

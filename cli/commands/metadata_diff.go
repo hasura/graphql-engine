@@ -34,7 +34,7 @@ type MetadataDiffOptions struct {
 func newMetadataDiffCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &MetadataDiffOptions{
 		EC:     ec,
-		Output: os.Stdout,
+		Output: ec.Stdout,
 	}
 
 	metadataDiffCmd := &cobra.Command{

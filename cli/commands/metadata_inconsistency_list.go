@@ -1,9 +1,8 @@
 package commands
 
 import (
-	"bytes"
+	"encoding/json"
 	"fmt"
-	"text/tabwriter"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
@@ -36,6 +35,8 @@ func newMetadataInconsistencyListCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return nil
 		},
 	}
+	f := metadataInconsistencyListCmd.Flags()
+	f.StringVarP(&opts.outputFormat, "output", "o", "", "select output format for inconsistent metadata objects(Allowed values: json)")
 
 	return metadataInconsistencyListCmd
 }
@@ -43,6 +44,7 @@ func newMetadataInconsistencyListCmd(ec *cli.ExecutionContext) *cobra.Command {
 type metadataInconsistencyListOptions struct {
 	EC *cli.ExecutionContext
 
+	outputFormat        string
 	isConsistent        bool
 	inconsistentObjects []metadataobject.InconsistentMetadataObject
 }
@@ -66,21 +68,26 @@ func (o *metadataInconsistencyListOptions) run() error {
 	if o.isConsistent {
 		return nil
 	}
-	out := new(tabwriter.Writer)
-	buf := &bytes.Buffer{}
-	out.Init(buf, 0, 8, 2, ' ', 0)
-	w := util.NewPrefixWriter(out)
-	w.Write(util.LEVEL_0, "NAME\tTYPE\tDESCRIPTION\tREASON\n")
+	if o.outputFormat == "json" {
+		jsonBytes, err := json.MarshalIndent(o.inconsistentObjects, "", "  ")
+		if err != nil {
+			return err
+		}
+		o.EC.Spinner.Stop()
+		fmt.Fprintln(o.EC.Stdout, string(jsonBytes))
+		return nil
+	}
+	table := util.NewTableWriter(o.EC.Stdout)
+	table.SetHeader([]string{"NAME", "TYPE", "DESCRIPTION", "REASON"})
 	for _, obj := range o.inconsistentObjects {
-		w.Write(util.LEVEL_0, "%s\t%s\t%s\t%s\n",
+		table.Append([]string{
 			obj.GetName(),
 			obj.GetType(),
 			obj.GetDescription(),
 			obj.GetReason(),
-		)
+		})
 	}
-	out.Flush()
 	o.EC.Spinner.Stop()
-	fmt.Println(buf.String())
+	table.Render()
 	return nil
 }

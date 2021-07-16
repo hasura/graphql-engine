@@ -3,6 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- cli: add `-o`/`--output` flag for `hasura metadata inconsistency list` command
 
 ## v2.0.2
 

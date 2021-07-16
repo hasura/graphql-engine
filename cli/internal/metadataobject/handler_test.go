@@ -136,7 +136,7 @@ func Test_inconsistentObject_GetDescription(t *testing.T) {
 				}
 				return field
 			}(),
-			`{"comment":null,"name":"author","table":"article","using":{"foreign_key_constraint_on":"author_id"}}`,
+			`{"comment":null,"name":"author","table":"article",...`,
 		},
 	}
 	for _, tt := range tests {
