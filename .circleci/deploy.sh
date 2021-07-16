@@ -58,6 +58,8 @@ draft_github_release() {
         --draft \
         -a /build/_cli_output/binaries/cli-hasura-darwin-amd64 \
         -a /build/_cli_output/binaries/cli-hasura-linux-amd64 \
+        -a /build/_cli_output/binaries/cli-hasura-darwin-arm64 \
+        -a /build/_cli_output/binaries/cli-hasura-linux-arm64 \
         -a /build/_cli_output/binaries/cli-hasura-windows-amd64.exe \
         -m "$CIRCLE_TAG" \
         -m "${RELEASE_BODY}" \
