@@ -50,6 +50,7 @@ data SchemaObjId
   | SOSourceObj !SourceName !(AB.AnyBackend SourceObjId)
   | SORemoteSchema !RemoteSchemaName
   | SORemoteSchemaPermission !RemoteSchemaName !RoleName
+  | SORole !RoleName
 
 instance Hashable SchemaObjId where
   hashWithSalt salt = \case
@@ -58,12 +59,14 @@ instance Hashable SchemaObjId where
       AB.dispatchAnyBackend' @Hashable exists (hashWithSalt salt . (sourceName,))
     SORemoteSchema remoteSchemaName -> hashWithSalt salt remoteSchemaName
     SORemoteSchemaPermission remoteSchemaName roleName -> hashWithSalt salt (remoteSchemaName, roleName)
+    SORole roleName -> hashWithSalt salt roleName
 
 instance Eq SchemaObjId where
   (SOSource s1) == (SOSource s2)                                       = s1 == s2
   (SORemoteSchema s1) == (SORemoteSchema s2)                           = s1 == s2
   (SOSourceObj s1 id1) == (SOSourceObj s2 id2)                         = (s1 == s2) && id1 == id2
   (SORemoteSchemaPermission s1 r1) == (SORemoteSchemaPermission s2 r2) = (s1, r1) == (s2, r2)
+  (SORole r1) == (SORole r2)                                           = r1 == r2
   _ == _                                                               = False
 
 reportSchemaObj :: SchemaObjId -> T.Text
@@ -94,6 +97,7 @@ reportSchemaObj = \case
     "remote schema permission "
     <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
     <> "." <>> roleName
+  SORole roleName -> "role " <> roleNameToTxt roleName
   where
     inSource s t = t <> " in source " <>> s
 
@@ -122,6 +126,7 @@ data DependencyReason
   | DRParent
   | DRRemoteSchema
   | DRRemoteRelationship
+  | DRParentRole
   deriving (Show, Eq, Generic)
 
 instance Hashable DependencyReason
@@ -143,6 +148,7 @@ reasonToTxt = \case
   DRParent             -> "parent"
   DRRemoteSchema       -> "remote_schema"
   DRRemoteRelationship -> "remote_relationship"
+  DRParentRole         -> "parent_role"
 
 instance ToJSON DependencyReason where
   toJSON = String . reasonToTxt

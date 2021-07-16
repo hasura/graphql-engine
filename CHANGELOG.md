@@ -3,6 +3,9 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: inherited role improvements for select queries
+    - an inherited role can now inherit from other inherited roles as well
+    - explicit permissions for inherited roles can now be set which will override the inherited permission (if any)
 - console: support `global_select_limit` for bigquery sources
 - cli: add `-o`/`--output` flag for `hasura metadata inconsistency list` command
 

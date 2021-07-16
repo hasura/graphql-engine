@@ -608,6 +608,73 @@ class TestGraphqlQueryPermissions:
     def dir(cls):
         return 'queries/graphql_query/permissions'
 
+# These tests only test the schema specific stuff which will
+# be common across all the backends, to add DB specific tests
+# look for the  TestGraphQLInheritedRoles<backend> test classes
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@use_inherited_roles_fixtures
+class TestGraphQLInheritedRolesSchema:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/permissions/inherited_roles'
+
+    setup_metadata_api_version = "v2"
+
+    def test_basic_inherited_role(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/basic_inherited_roles.yaml')
+
+    def test_inherited_role_when_some_roles_may_not_have_permission_configured(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/inherited_role_with_some_roles_having_no_permissions.yaml')
+
+    def test_throw_error_when_roles_form_a_cycle(self, hge_ctx, transport):
+        export_metadata_query = {
+            "type": "export_metadata",
+            "args": {}
+        }
+        st_code, resp = hge_ctx.v1q(export_metadata_query)
+        assert st_code == 200, resp
+        circular_roles_metadata = [
+            {
+                "role_name": "intermediate_circular_role_1",
+                "role_set": [
+                    "manager_employee",
+                    "circular_role"
+                ]
+            },
+            {
+                "role_name": "intermediate_circular_role_2",
+                "role_set": [
+                    "intermediate_circular_role_1",
+                    "employee"
+                ]
+            },
+            {
+                "role_name": "circular_role",
+                "role_set": [
+                    "intermediate_circular_role_2",
+                    "author"
+                ]
+            }
+
+        ]
+        resp["inherited_roles"] = resp["inherited_roles"] + circular_roles_metadata
+        import_metadata_query = {
+            "type": "replace_metadata",
+            "args": {
+                "metadata": resp
+            }
+        }
+        st_code, resp = hge_ctx.v1q(import_metadata_query)
+        assert st_code == 400, resp
+        assert resp['error'] == '''found cycle(s) in roles: ["circular_role","intermediate_circular_role_2","intermediate_circular_role_1","circular_role"]'''
+
+    def test_explicit_metadata_permission_should_override_role_inheritance(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/override_inherited_permission.yaml')
+
+    def test_inherited_role_inherits_from_inherited_role(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/inherited_role_parent_is_another_inherited_role.yaml')
+
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @use_inherited_roles_fixtures
 class TestGraphQLInheritedRolesPostgres:

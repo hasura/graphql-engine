@@ -5,13 +5,14 @@ module Hasura.RQL.DDL.Schema.Cache.Permission
   ( buildTablePermissions
   , mkPermissionMetadataObject
   , mkRemoteSchemaPermissionMetadataObject
+  , orderRoles
   ) where
 
 import           Hasura.Prelude
 
+import qualified Data.Graph                         as G
 import qualified Data.HashMap.Strict                as M
 import qualified Data.HashMap.Strict.Extended       as M
-import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.HashSet                       as Set
 import qualified Data.List.NonEmpty                 as NE
 import qualified Data.Sequence                      as Seq
@@ -69,6 +70,7 @@ data CombinedSelPermInfo (b :: BackendType)
   , cspiAllowAgg             :: !Bool
   , cspiRequiredHeaders      :: !(Set.HashSet Text)
   }
+
 
 -- | combineSelectPermInfos combines multiple `SelPermInfo`s
 --   into one `SelPermInfo`. Two `SelPermInfo` will
@@ -149,6 +151,45 @@ combineSelectPermInfos selPermInfos@(headSelPermInfo NE.:| restSelPermInfos) =
         (Nothing, Just caseBoolExp)            -> Just caseBoolExp
         (Just caseBoolExpL, Just caseBoolExpR) -> Just $ BoolOr [caseBoolExpL, caseBoolExpR]
 
+-- | 'orderRoles' is used to order the roles, in such a way that given
+--   a role R with n parent roles - PR1, PR2 .. PRn, then the 'orderRoles'
+--   function will order the roles in such a way that all the parent roles
+--   precede the role R. Note that the order of the parent roles itself doesn't
+--   matter as long as they precede the roles on which they are dependent on.
+--
+--   For example, the orderRoles may return `[PR1, PR3, PR2, ... PRn, R]`
+--   or `[PR5, PR3, PR1 ... R]`, both of them are correct because all
+--   the parent roles precede the inherited role R, assuming the parent roles
+--   themselves don't have any parents for the sake of this example.
+orderRoles
+  :: MonadError QErr m
+  => [Role]
+  -> m [Role]
+orderRoles allRoles = do
+  -- inherited roles can be created from other inherited and non-inherited roles
+  -- So, roles can be thought of as a graph where non-inherited roles don't have
+  -- any outgoing edges and inherited roles as nodes with edges to its parent roles
+  -- However, we can't allow cyclic roles since permissions built by a role is used
+  -- by the dependent roles to build their permissions and if cyclic roles were to be
+  -- allowed, the permissions building will be stuck in an infinite loop
+  let graphNodesList = [(role, _rRoleName role, toList (_unParentRoles .  _rParentRoles $ role)) | role <- allRoles]
+  let orderedGraphNodes = G.stronglyConnComp graphNodesList -- topologically sort the nodes of the graph
+      cyclicRoles = filter checkCycle orderedGraphNodes
+  unless (null cyclicRoles) $ do
+    -- we're appending the first element of the list at the end, so that the error message will
+    -- contain the complete cycle of the roles
+    let roleCycles = map (tshow . map (roleNameToTxt . _rRoleName) . appendFirstElementAtEnd .  G.flattenSCC) cyclicRoles
+    throw400 CyclicDependency $ "found cycle(s) in roles: " <> commaSeparated roleCycles
+  let allOrderedRoles = G.flattenSCCs orderedGraphNodes
+  pure allOrderedRoles
+  where
+    checkCycle = \case
+      G.AcyclicSCC _ -> False
+      G.CyclicSCC  _ -> True
+
+    appendFirstElementAtEnd []     = []
+    appendFirstElementAtEnd (x:xs) = (x:xs) ++ [x]
+
 buildTablePermissions
   :: forall b arr m
    . ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
@@ -162,13 +203,13 @@ buildTablePermissions
      , Inc.Dependency (TableCoreCache b)
      , FieldInfoMap (FieldInfo b)
      , TablePermissionInputs b
-     , InheritedRoles
+     , [Role]
      ) `arr` (RolePermInfoMap b)
-buildTablePermissions = Inc.cache proc (proxy, source, tableCache, tableFields, tablePermissions, inheritedRoles) -> do
+buildTablePermissions = Inc.cache proc (proxy, source, tableCache, tableFields, tablePermissions, orderedRoles) -> do
   let alignedPermissions = alignPermissions tablePermissions
       table = _tpiTable tablePermissions
   experimentalFeatures <- bindA -< _sccExperimentalFeatures <$> askServerConfigCtx
-  nonInheritedRolePermissions <-
+  metadataRolePermissions <-
     (| Inc.keyed (\_ (insertPermission, selectPermission, updatePermission, deletePermission) -> do
        insert <- buildPermission -< (proxy, tableCache, source, table, tableFields, listToMaybe insertPermission)
        select <- buildPermission -< (proxy, tableCache, source, table, tableFields, listToMaybe selectPermission)
@@ -176,20 +217,29 @@ buildTablePermissions = Inc.cache proc (proxy, source, tableCache, tableFields, 
        delete <- buildPermission -< (proxy, tableCache, source, table, tableFields, listToMaybe deletePermission)
        returnA -< RolePermInfo insert select update delete)
    |) alignedPermissions
-  -- build permissions for inherited roles only when inherited roles is enabled
-  let inheritedRolesMap =
-        bool mempty (OMap.toHashMap inheritedRoles) $ EFInheritedRoles `elem` experimentalFeatures
   -- see [Inherited roles architecture for postgres read queries]
-  inheritedRolePermissions <-
-    (| Inc.keyed (\_ (AddInheritedRole _ roleSet) -> do
-       let singleRoleSelectPerms =
-             map ((_permSel =<<) . (`M.lookup` nonInheritedRolePermissions)) $
-                  toList roleSet
-           nonEmptySelPerms = NE.nonEmpty $ catMaybes singleRoleSelectPerms
-           combinedSelPermInfo = combineSelectPermInfos <$> nonEmptySelPerms
-       returnA -< RolePermInfo Nothing combinedSelPermInfo Nothing Nothing)
-    |) inheritedRolesMap
-  returnA -< nonInheritedRolePermissions <> inheritedRolePermissions
+  (| foldlA' (\accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) -> do
+       let metadataRoleSelectPermission = _permSel =<< M.lookup roleName accumulatedRolePermMap
+       roleSelectPermission <-
+         bindA -<
+         case metadataRoleSelectPermission of
+           -- There's an permission set for the role in the metadata, so we use that
+           Just metadataRoleSelectPermission' -> pure $ Just metadataRoleSelectPermission'
+           -- no permission found in the metadata, so we inherit permissions from the parent
+           -- roles
+           Nothing                            -> do
+             parentRoleTablePerms <-
+               for (toList parentRoles) $ \role ->
+                 onNothing (M.lookup role accumulatedRolePermMap) $ throw500 $
+                  -- this error will ideally never be thrown, but if it's thrown then
+                  -- it's possible that the permissions for the role do exist, but it's
+                  -- not yet built due to wrong ordering of the roles, check `orderRoles`
+                  "buildTablePermissions: table role permissions for role: " <> role <<> " not found"
+             pure $ combineSelectPermInfos <$> NE.nonEmpty (catMaybes $ _permSel <$> parentRoleTablePerms)
+       let rolePermInfo = RolePermInfo Nothing roleSelectPermission Nothing Nothing
+       returnA -< M.insert roleName rolePermInfo accumulatedRolePermMap)
+   |) metadataRolePermissions (bool mempty orderedRoles $ EFInheritedRoles `elem` experimentalFeatures)
+  -- build permissions for inherited roles only when inherited roles is enabled
   where
     mkMap :: [PermDef a] -> HashMap RoleName (PermDef a)
     mkMap = mapFromL _pdRole

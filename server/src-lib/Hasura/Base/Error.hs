@@ -112,6 +112,7 @@ data Code
   | InvalidCustomTypes
   -- Actions Webhook code
   | ActionWebhookCode !Text
+  | CyclicDependency
   -- Custom code for extending this sum-type easily
   | CustomCode !Text
   deriving (Eq)
@@ -162,6 +163,7 @@ instance Show Code where
     Conflict                    -> "conflict"
     BigQueryError               -> "bigquery-error"
     InvalidConfiguration        -> "invalid-configuration"
+    CyclicDependency            -> "cyclic-dependency"
     ActionWebhookCode t         -> T.unpack t
     CustomCode t                -> T.unpack t
 
