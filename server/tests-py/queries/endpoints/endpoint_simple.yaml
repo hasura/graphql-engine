@@ -1,5 +1,7 @@
 - description: call the new custom endpoint
   url: /api/rest/simple
+  headers:
+    X-Hasura-Role: admin
   method: GET
   status: 200
   query:

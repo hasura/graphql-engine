@@ -1,6 +1,8 @@
 # Test output of pg_dump clean output.
 # Including "SET check_function_bodies = false;" avoids https://github.com/hasura/graphql-engine-mono/issues/1007
 descriptions: Execute pg_dump on public schema
+headers:
+  X-Hasura-Role: admin
 url: /v1alpha1/pg_dump
 status: 200
 query:

@@ -625,3 +625,14 @@ class HGECtx:
         self.ws_client.teardown()
         self.ws_client_v1alpha1.teardown()
         self.ws_client_relay.teardown()
+
+    def v1GraphqlExplain(self, q, hdrs=None):
+        headers = {}
+
+        if hdrs != None:
+            headers = hdrs
+        if self.hge_key != None:
+            headers['X-Hasura-Admin-Secret'] = self.hge_key
+
+        resp = self.http.post(self.hge_url + '/v1/graphql/explain', json=q, headers=headers)
+        return resp.status_code, resp.json()
