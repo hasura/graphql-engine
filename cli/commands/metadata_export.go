@@ -2,7 +2,6 @@ package commands
 
 import (
 	"io/ioutil"
-	"os"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
@@ -84,5 +83,5 @@ func getMetadataFromServerAndWriteToStdoutByFormat(ec *cli.ExecutionContext, for
 	if err != nil {
 		return errors.Wrap(err, "reading metadata failed")
 	}
-	return writeByOutputFormat(os.Stdout, jsonMetadata, format)
+	return writeByOutputFormat(ec.Stdout, jsonMetadata, format)
 }

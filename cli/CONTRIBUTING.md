@@ -52,7 +52,7 @@ Compose](https://github.com/hasura/graphql-engine/tree/stable/install-manifests)
 Once the server is running, you can run the tests by executing the make command:  
 
 ```bash
-HASURA_GRAPHQL_TEST_ENDPOINT=http://localhost:8080 VERSION=dev make test
+HASURA_TEST_CLI_HGE_DOCKER_IMAGE="hasura/graphql-engine:v2.0.1" HASURA_GRAPHQL_TEST_ENDPOINT=http://localhost:8080 VERSION=dev make test
 ```
 
 ## Builds

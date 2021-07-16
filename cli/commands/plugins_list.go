@@ -10,7 +10,6 @@ source: https://github.com/kubernetes-sigs/krew/blob/master/cmd/krew/cmd/list.go
 import (
 	"fmt"
 	"io"
-	"os"
 	"runtime"
 	"sort"
 	"strings"
@@ -112,8 +111,9 @@ func (p *pluginListOptions) run() error {
 	}
 	rows = sortByFirstColumn(rows)
 	ec.Spinner.Stop()
-	return printTable(os.Stdout, cols, rows)
+	return printTable(p.EC.Stdout, cols, rows)
 }
+
 
 func printTable(out io.Writer, columns []string, rows [][]string) error {
 	w := tabwriter.NewWriter(out, 0, 0, 2, ' ', 0)

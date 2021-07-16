@@ -5,7 +5,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"os"
 )
 
 // NewVersionCmd returns the version command
@@ -20,7 +19,7 @@ func NewVersionCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			logger := logrus.New()
-			logger.SetOutput(os.Stdout)
+			logger.SetOutput(ec.Stdout)
 			logger.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true, DisableColors: ec.NoColor})
 			if !ec.IsTerminal {
 				logger.SetFormatter(&logrus.JSONFormatter{PrettyPrint: false})

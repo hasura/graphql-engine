@@ -3,7 +3,6 @@ package commands
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"text/tabwriter"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
@@ -41,7 +40,7 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 				return err
 			}
 			buf := printStatus(status)
-			fmt.Fprintf(os.Stdout, "%s", buf)
+			fmt.Fprintf(ec.Stdout, "%s", buf)
 			return nil
 		},
 	}

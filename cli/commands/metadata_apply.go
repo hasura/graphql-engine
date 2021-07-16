@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
@@ -105,7 +104,7 @@ func (o *MetadataApplyOptions) Run() error {
 			o.EC.Logger.Warn("the old behaviour can be achieved using `hasura metadata diff` command")
 		}
 
-		if err := writeByOutputFormat(os.Stdout, projectMetadataJSON, rawOutputFormat(o.rawOutput)); err != nil {
+		if err := writeByOutputFormat(o.EC.Stdout, projectMetadataJSON, rawOutputFormat(o.rawOutput)); err != nil {
 			return fmt.Errorf("displaying metadata failed: %w", err)
 		}
 	}
