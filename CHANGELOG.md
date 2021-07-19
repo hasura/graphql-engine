@@ -6,6 +6,8 @@
 - server: inherited role improvements for select queries
     - an inherited role can now inherit from other inherited roles as well
     - explicit permissions for inherited roles can now be set which will override the inherited permission (if any)
+- server: fix optional global_select_limit config for BigQuery
+- server: fix MySQL dependencies in Pro Dockerfile
 - console: support `global_select_limit` for bigquery sources
 - cli: add `-o`/`--output` flag for `hasura metadata inconsistency list` command
 
@@ -23,7 +25,6 @@
 - server: log all HTTP errors in remote schema calls as `remote-schema-error` with details
 - server: For BigQuery, make `global_select_limit` configuration optional with a default value of
 `1000`
-- server: fix MySQL dependencies in Pro Dockerfile
 - console: add `reload all databases` checkbox to the metadata settings page
 - console: add schema sharing
 - console: fix issue with changing table's column name and graphQL field name simultaneously
