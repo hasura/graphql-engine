@@ -23,6 +23,7 @@ instance Backend 'MSSQL where
   type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
   type Identifier              'MSSQL = Void
   type TableName               'MSSQL = MSSQL.TableName
+  type RawFunctionInfo         'MSSQL = Void
   type FunctionName            'MSSQL = MSSQL.FunctionName
   type FunctionArgType         'MSSQL = Void
   type ConstraintName          'MSSQL = ()

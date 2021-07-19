@@ -63,14 +63,14 @@ buildFunctionInfo
   -> SystemDefined
   -> FunctionConfig
   -> [FunctionPermissionMetadata]
-  -> RawFunctionInfo
+  -> RawFunctionInfo ('Postgres pgKind)
   -> m (FunctionInfo ('Postgres pgKind), SchemaDependency)
 buildFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFuncInfo =
   either (throw400 NotSupported . showErrors) pure
     =<< MV.runValidateT validateFunction
   where
     functionArgs = mkFunctionArgs defArgsNo inpArgTyps inpArgNames
-    RawFunctionInfo _ hasVariadic funVol retSn retN retTyTyp retSet
+    PGRawFunctionInfo _ hasVariadic funVol retSn retN retTyTyp retSet
                 inpArgTyps inpArgNames defArgsNo returnsTab descM
                 = rawFuncInfo
     returnType = QualifiedPGType retSn retN retTyTyp
@@ -109,7 +109,7 @@ buildFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFunc
           retJsonAggSelect = bool JASSingleObject JASMultipleRows retSet
           functionInfo =
             FunctionInfo qf systemDefined funVol exposeAs inputArguments
-                         retTable descM (S.fromList $ _fpmRole <$> permissions)
+                         retTable (getPGDescription <$> descM) (S.fromList $ _fpmRole <$> permissions)
                          retJsonAggSelect
 
       pure ( functionInfo

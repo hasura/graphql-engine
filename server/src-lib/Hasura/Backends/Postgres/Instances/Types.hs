@@ -21,7 +21,6 @@ import qualified Hasura.Backends.Postgres.Types.CitusExtraTableMetadata as Citus
 
 import           Hasura.Base.Error
 import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Tag
 
@@ -62,6 +61,7 @@ instance
   type TableName               ('Postgres pgKind) = PG.QualifiedTable
   type FunctionName            ('Postgres pgKind) = PG.QualifiedFunction
   type FunctionArgType         ('Postgres pgKind) = PG.QualifiedPGType
+  type RawFunctionInfo         ('Postgres pgKind) = PG.PGRawFunctionInfo
   type ConstraintName          ('Postgres pgKind) = PG.ConstraintName
   type BasicOrderType          ('Postgres pgKind) = PG.OrderType
   type NullsOrderType          ('Postgres pgKind) = PG.NullsOrder
@@ -90,6 +90,6 @@ instance
 
   tableGraphQLName        = PG.qualifiedObjectToName
   functionGraphQLName     = PG.qualifiedObjectToName
-  scalarTypeGraphQLName   = runExcept . mkScalarTypeName
+  scalarTypeGraphQLName   = runExcept . PG.mkScalarTypeName
 
   snakeCaseTableName      = PG.snakeCaseQualifiedObject

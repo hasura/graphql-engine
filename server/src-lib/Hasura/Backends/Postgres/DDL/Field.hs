@@ -82,7 +82,7 @@ buildComputedFieldInfo
   -> QualifiedTable
   -> ComputedFieldName
   -> ComputedFieldDefinition ('Postgres pgKind)
-  -> RawFunctionInfo
+  -> PGRawFunctionInfo
   -> Maybe Text
   -> m (ComputedFieldInfo ('Postgres pgKind))
 buildComputedFieldInfo trackedTables table computedField definition rawFunctionInfo comment =

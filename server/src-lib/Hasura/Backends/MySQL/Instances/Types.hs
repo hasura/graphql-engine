@@ -24,6 +24,7 @@ instance Backend 'MySQL where
   type SourceConnConfiguration 'MySQL = MySQL.ConnSourceConfig
   type Identifier              'MySQL = Void
   type TableName               'MySQL = MySQL.TableName
+  type RawFunctionInfo         'MySQL = Void -- MySQL.FunctionName
   type FunctionName            'MySQL = Void -- MySQL.FunctionName
   type FunctionArgType         'MySQL = Void
   type ConstraintName          'MySQL = MySQL.ConstraintName
