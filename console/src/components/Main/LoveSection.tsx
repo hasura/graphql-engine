@@ -13,13 +13,13 @@ const LoveSection: React.FC<LoveSectionProps> = ({
   closeLoveSection,
 }) => (
   <>
-    <div
+    {/* <div
       className={`${styles.pixelLoveSection} dropdown-toggle`}
       aria-expanded="false"
       onClick={toggleLoveSection}
     >
       <PixelHeart width={23} />
-    </div>
+    </div> */}
     <ul key="main_love_2" className={`dropdown-menu ${styles.dropdown_menu}`}>
       <div className={styles.dropdown_menu_container}>
         <div className={styles.closeDropDown}>

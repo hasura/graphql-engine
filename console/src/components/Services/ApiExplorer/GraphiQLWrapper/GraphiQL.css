@@ -773,7 +773,7 @@ div.CodeMirror-lint-tooltip > * + * {
   z-index: 100;
 }
 .modalHeader {
-  background-color: #43495a;
+  background-color: #2F49D1;
   border-bottom: 1px solid #ccc;
   padding: 10px 20px;
   position: relative;

@@ -30,7 +30,7 @@ import {
 } from './Actions';
 import { Help, ProPopup } from './components/';
 import { UpdateVersion } from './components/UpdateVersion';
-import logo from './images/white-logo.svg';
+import logo from './images/logo.svg';
 import LoveSection from './LoveSection';
 import styles from './Main.scss';
 import NotificationSection from './NotificationSection';
@@ -363,16 +363,14 @@ class Main extends React.Component {
           <div className={styles.sidebar}>
             <div className={styles.header_logo_wrapper}>
               <div className={styles.logoParent}>
-            
-                {/* <div className={styles.logo}>
+                <div className={styles.logo}>
                   <Link to="/">
                     <img className="img img-responsive" src={logo} />
                   </Link>
                 </div>
-                <Link to="/">
+                {/* <Link to="/">
                   <div className={styles.project_version}>{serverVersion}</div>
-                </Link>
-               */}
+                </Link> */}
               </div>
             </div>
             <div className={styles.header_items}>
@@ -427,7 +425,6 @@ class Main extends React.Component {
               >
                 <span
                   className={`
-                    ${isProClicked ? styles.proNameClicked : styles.proName}
                     ${isPopUpOpen ? styles.navActive : ''}`}
                 >
                   CLOUD

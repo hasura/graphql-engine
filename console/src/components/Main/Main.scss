@@ -25,7 +25,7 @@
   z-index: 10;
   text-align: center;
   background-color: #ffc627;
-  color: #43495a;
+  color: #2F49D1;
   padding: 14.5px 10px;
 
   .updateBanner {
@@ -34,7 +34,7 @@
     justify-content: center;
 
     a {
-      color: #43495a;
+      color: #2F49D1;
       text-decoration: underline;
       font-weight: bold;
     }
@@ -142,11 +142,11 @@
 .toggleSidebar {
   position: absolute;
   color: #fff;
-  background-color: #43495a;
+  background-color: #2F49D1;
   right: -25px;
   padding: 10px;
   cursor: pointer;
-  border: 1px solid #43495a;
+  border: 1px solid #2F49D1;
   z-index: 1;
 }
 
@@ -422,7 +422,7 @@
 
 .sidebar {
   color: #dedede;
-  background-color: #43495a;
+  background-color: #2F49D1;
   font-family: 'Gudea';
   font-weight: 700;
   text-transform: uppercase;
@@ -1017,7 +1017,7 @@
   .help_dropdown_menu_container {
     width: 300px;
     float: right;
-    background-color: #43495a;
+    background-color: #2F49D1;
     padding: 15px;
     position: relative;
   }
@@ -1066,7 +1066,7 @@
 
     // background-color: #0038d5;
     background-color: #fff;
-    border: #43495a 2px dashed;
+    border: #2F49D1 2px dashed;
     border-top: 0;
     border-right: 0;
     color: #f24444;
@@ -1075,7 +1075,7 @@
     position: relative;
 
     .closeDropDown {
-      color: #43495a;
+      color: #2F49D1;
       cursor: pointer;
       position: absolute;
       top: 10px;
@@ -1092,7 +1092,7 @@
     height: 0;
     border-left: 10px solid transparent;
     border-right: 10px solid transparent;
-    border-bottom: 10px solid #43495a;
+    border-bottom: 10px solid #2F49D1;
     position: absolute;
     top: -5px;
     right: 10px;
