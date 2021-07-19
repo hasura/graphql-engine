@@ -23,6 +23,7 @@
 - server: log all HTTP errors in remote schema calls as `remote-schema-error` with details
 - server: For BigQuery, make `global_select_limit` configuration optional with a default value of
 `1000`
+- server: fix MySQL dependencies in Pro Dockerfile
 - console: add `reload all databases` checkbox to the metadata settings page
 - console: add schema sharing
 - console: fix issue with changing table's column name and graphQL field name simultaneously
