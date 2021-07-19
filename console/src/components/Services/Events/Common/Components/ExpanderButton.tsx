@@ -14,6 +14,7 @@ const ExpanderButton: React.FC<Props> = ({ isExpanded }) => (
     onMouseDown={e => {
       e.preventDefault();
     }}
+    data-test={isExpanded ? 'collapse-event' : 'expand-event'}
   >
     {isExpanded ? (
       <i className="fa fa-compress" />

@@ -55,6 +55,7 @@ const Add: React.FC<Props> = ({ dispatch }) => {
         <input
           type="text"
           placeholder="http://httpbin.org/post"
+          data-test="one-off-webhook"
           className={`form-control ${styles.inputWidthLarge}`}
           value={webhook}
           onChange={setWebhookValue}
@@ -122,7 +123,13 @@ const Add: React.FC<Props> = ({ dispatch }) => {
           />
         </FormSection>
       </CollapsibleToggle>
-      <Button size="s" color="yellow" onClick={save} disabled={loading}>
+      <Button
+        size="s"
+        color="yellow"
+        onClick={save}
+        disabled={loading}
+        data-test="create-schedule-event"
+      >
         {loading ? 'Creating...' : 'Create scheduled event'}
       </Button>
     </div>

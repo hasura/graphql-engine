@@ -105,6 +105,7 @@ const Container: React.FC<Props> = props => {
       >
         <Link
           className={styles.linkBorder}
+          data-test="one-off-trigger"
           to={getAdhocEventsRoute('absolute', '')}
         >
           {ADHOC_EVENTS_HEADING}

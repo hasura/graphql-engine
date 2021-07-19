@@ -14,7 +14,7 @@ import { Dispatch, ReduxState } from '../../../../../types';
 import requestAction from '../../../../../utils/requestAction';
 import Endpoints from '../../../../../Endpoints';
 import { getDataTriggerInvocations } from '../../../../../metadata/metadataTableUtils';
-import { Spinner } from '../../../../UIKit/atoms';
+import Spinner from '../../../../Common/Spinner/Spinner';
 
 interface Props extends InjectedReduxProps {
   rows: any[];
@@ -171,7 +171,7 @@ const EventsSubTable: React.FC<Props> = ({
         <div className={styles.add_mar_bottom_mid}>
           <b>Recent Invocations:</b>
         </div>
-        <Spinner size="small" />
+        <Spinner />
       </div>
     );
   }
@@ -218,7 +218,7 @@ const EventsSubTable: React.FC<Props> = ({
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   getEventInvocationData: (url: string, options: RequestInit) =>
-    dispatch(requestAction(url, options)),
+    dispatch(requestAction(url, options, undefined, undefined, true, true)),
 });
 
 const mapStateToProps = (state: ReduxState) => ({
