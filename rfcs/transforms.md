@@ -15,21 +15,29 @@ data Transforms
   = Transforms
   { requestMethod ::  Maybe RequestMethod
  -- ^ Change the request method to one provided here. Nothing means POST.
+  
   , requestURL    ::  Maybe TemplateText
  -- ^ Change the request URL to one provided here. Nothing means original URL.
-  , request_body  ::  Maybe TemplateText                  # Raw templating
+  
+  , request_body  ::  Maybe TemplateText
  -- ^ Change the request_body to one provided here. Nothing means original payload. Only applicable for POST, PUT, PATCH methods
  -- The encoding of the content is defined by the 'request_content_type' field defined below.
+  
   , request_content_type :: Maybe AllowedContentTypes
  -- ^ Only the following Content-Types are allowed (default: application/json):
  -- 1) application/json
  -- 2) application/x-www-form-urlencoded
+  
   , query_params  ::  Maybe (HashMap Text TemplateText)   # Key-value based templating
  -- ^ Add query params provided here to URL
  -- Each param is URL encoded
+  
   , request_headers :: Maybe TransformHeaders
  -- ^ Tranform headers as defined here.
  -- Certain headers cannot be transformed (e.g. `Content-Type` and should return a warning)
+ 
+   , templating_engine :: Maybe TemplatingEngine
+ -- ^ The template engine to use for transformations. Default: go-basic  
   }
 
 -- | The order of evaluation is removeHeaders and then addHeaders
@@ -38,30 +46,29 @@ data TransformHeaders
   { addHeaders :: [(HeaderName, TemplateText}]
   , removeHeaders :: [HeaderName]
   }
+  
+data TemplatingEngine = GoBasic
 
-
-data TemplateText # TO BE DECIDED (see next section)
-
+data TemplateText 
 ```
 
 ## Templating Language
-
-This is largely undecided at the moment.
 
 We want to be able to use a templating language which can construct JSON payloads (for POST body) as well as raw strings (for URL transform)
 
 ```
 {
   "author": {
-    "name": "$.event.name",
-    "age": "$.event.age",
+    "name": "{{.event.name}}",
+    "age": "{{.event.age}}",
     "articles": [
-#foreach($article in $.event.author.articles)
-      {
-        "id": "$article.id",
-        "title": $article.title
-      }
-#end
+      {{range $index, $article := .event.author.articles}}
+        {{if $index}}
+        , "{{$article}}"
+        {{else}}
+          "{{$article}}"
+        {{end}}
+      {{end}}
     ]
   }
 }
@@ -71,11 +78,14 @@ Simple string templating is also required (for example for requestURL or headers
 
 ```
 # $url has the original URL
-$url/$.event.author_id
+$url/{{.event.author_id}}
 ```
 
-TODO: Explore Haskell templating packages which resemble this.
+We are going to go with a custom templating language which is a subset of `Go` templating language. We will call this `go-basic`.
 
+TODO: Spec of templating language
+
+An alternative templating language is `jsonnet`. The main reason for choosing `go-basic` is the ease of the syntax
 
 ## Examples
 
@@ -85,9 +95,9 @@ TODO: Explore Haskell templating packages which resemble this.
 transforms:
    request_body:
      {
-       "key1": "$.value1",
-       "key2": "$.value2",
-       "key3": "$.session['x-hasura-user-id']"
+       "key1": "{{.value1}}",
+       "key2": "{{.value2}}",
+       "key3": "{{.session['x-hasura-user-id']}}"
      }
 ```
 
@@ -95,7 +105,7 @@ transforms:
 
 ```
 transforms:
-   request_url: "$url/$.input['country']"
+   request_url: "$url/{{.input['country']}}"
 ```
 
 
@@ -105,8 +115,8 @@ transforms:
 transforms:
    request_method: GET
    query_params:
-     param1: "$.value1"
-     param2: "$.value2"
+     param1: {{.value1}}
+     param2: {{.value2}}
 ```
 
 4. Transform the request headers. For example, below we add a custom header from the event payload and modify the `User-Agent`. As noted in the spec, we first remove headers and then add headers. 
@@ -114,7 +124,7 @@ transforms:
 ```
 transforms:
    request_headers:
-     add_headers: [{"x-cutom-id": "$.event.user_id"}, { "User-Agent": myapp-server}]
+     add_headers: [{"x-cutom-id": "{{.event.user_id}}"}, { "User-Agent": myapp-server}]
      remove_headers: [User-Agent]
 ```
 
@@ -124,14 +134,14 @@ transforms:
 transforms:
    request_body:
      {
-       "key1": "$.value1",
-       "key2": "$.value2",
-       "key3": "$.session['x-hasura-user-id']"
+       "key1": "{{.value1}}",
+       "key2": "{{.value2}}",
+       "key3": "{{.session['x-hasura-user-id']}}"
      }
    request_content_type: x-www-form-urlencoded
 ```
 
-This transforms the body to `key1=$.value1&key2=$.value2&key3=$.session['x-hasura-user-id']`. The console can show the output for a given tranformation hence making it clear what is finally going in the body.
+This transforms the body to `key1={{.value1}}&key2={{.value2}}&key3={{.session['x-hasura-user-id']}}`. The console can show the output for a given tranformation hence making it clear what is finally going in the body.
 
 ## Real-world example
 
@@ -162,10 +172,10 @@ The transform is given by:
    request_body:
      {
        "parent": {
-          "database_id": action.input.databaseId,
+          "database_id": "{{.action.input.databaseId}}",
        }.
-       "properties": action.input.properties,
-       {{ if action.input.children }} "children": action.input.children
+       "properties": "{{ .action.input.properties}}",
+       {{ if .action.input.children }} "children": {{.action.input.children}}
      }
 
 ```
