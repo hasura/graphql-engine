@@ -32,7 +32,7 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
     -> TableName b
     -> ComputedFieldName
     -> ComputedFieldDefinition b
-    -> RawFunctionInfo -- TODO: Parameterize this too
+    -> RawFunctionInfo b
     -> Maybe Text
     -> m (ComputedFieldInfo b)
 
@@ -92,7 +92,7 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
     -> SystemDefined
     -> FunctionConfig
     -> [FunctionPermissionMetadata]
-    -> RawFunctionInfo
+    -> RawFunctionInfo b
     -> m (FunctionInfo b, SchemaDependency)
 
   updateColumnInEventTrigger

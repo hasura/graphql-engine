@@ -2,20 +2,18 @@ module Hasura.RQL.Types.Function where
 
 import           Hasura.Prelude
 
-import qualified Data.HashSet                       as Set
-import qualified Data.Sequence                      as Seq
-import qualified Data.Text                          as T
+import qualified Data.HashSet             as Set
+import qualified Data.Sequence            as Seq
+import qualified Data.Text                as T
 
 import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Char                          (toLower)
+import           Data.Char                (toLower)
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.Types as PG
-
-import           Hasura.Incremental                 (Cacheable)
+import           Hasura.Incremental       (Cacheable)
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
@@ -102,7 +100,7 @@ data FunctionInfo (b :: BackendType)
   -- ^ NOTE: when a table is created, a new composite type of the same name is
   -- automatically created; so strictly speaking this field means "the function
   -- returns the composite type corresponding to this table".
-  , _fiDescription   :: !(Maybe PG.PGDescription) -- FIXME: make generic
+  , _fiDescription   :: !(Maybe Text)
   , _fiPermissions   :: !(Set.HashSet RoleName)
   , _fiJsonAggSelect :: !JsonAggSelect
   -- ^ Roles to which the function is accessible
@@ -164,27 +162,8 @@ instance Backend b => FromJSON (TrackFunctionV2 b) where
     <*> o .: "function"
     <*> o .:? "configuration" .!= emptyFunctionConfig
 
--- | Raw SQL function metadata from postgres
-data RawFunctionInfo
-  = RawFunctionInfo
-  { rfiOid              :: !OID
-  , rfiHasVariadic      :: !Bool
-  , rfiFunctionType     :: !FunctionVolatility
-  , rfiReturnTypeSchema :: !PG.SchemaName
-  , rfiReturnTypeName   :: !PG.PGScalarType
-  , rfiReturnTypeType   :: !PG.PGTypeKind
-  , rfiReturnsSet       :: !Bool
-  , rfiInputArgTypes    :: ![PG.QualifiedPGType]
-  , rfiInputArgNames    :: ![FunctionArgName]
-  , rfiDefaultArgs      :: !Int
-  , rfiReturnsTable     :: !Bool
-  , rfiDescription      :: !(Maybe PG.PGDescription)
-  } deriving (Show, Eq, Generic)
-instance NFData RawFunctionInfo
-instance Cacheable RawFunctionInfo
-$(deriveJSON hasuraJSON ''RawFunctionInfo)
-
-type DBFunctionsMetadata b = HashMap (FunctionName b) [RawFunctionInfo] -- TODO: Generalize RawFunctionInfo
+-- Lists are used to model overloaded functions.
+type DBFunctionsMetadata b = HashMap (FunctionName b) [RawFunctionInfo b]
 
 data FunctionPermissionsCtx
   = FunctionPermissionsInferred

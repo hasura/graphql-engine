@@ -20,6 +20,7 @@ import qualified Hasura.SQL.AnyBackend               as AB
 import           Hasura.Backends.Postgres.DDL.Source (ToMetadataFetchQuery, fetchFunctionMetadata,
                                                       fetchTableMetadata)
 import           Hasura.Backends.Postgres.DDL.Table
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Deps                 (reportDepsExt)

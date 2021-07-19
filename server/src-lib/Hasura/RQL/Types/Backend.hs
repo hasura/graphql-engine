@@ -60,6 +60,7 @@ class
   , Representable (XNodesAgg b)
   , Representable (XComputedField b)
   , Generic (Column b)
+  , Eq (RawFunctionInfo b)
   , Ord (TableName b)
   , Ord (FunctionName b)
   , Ord (ScalarType b)
@@ -110,6 +111,7 @@ class
   type SourceConnConfiguration b :: Type
   type Identifier              b :: Type
   type TableName               b :: Type
+  type RawFunctionInfo         b :: Type
   type FunctionName            b :: Type
   type FunctionArgType         b :: Type
   type ConstraintName          b :: Type

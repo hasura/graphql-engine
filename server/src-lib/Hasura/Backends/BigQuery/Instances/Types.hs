@@ -23,6 +23,7 @@ instance Backend 'BigQuery where
   type Identifier              'BigQuery = Void
   type TableName               'BigQuery = BigQuery.TableName
   type FunctionName            'BigQuery = BigQuery.FunctionName
+  type RawFunctionInfo         'BigQuery = Void
   type FunctionArgType         'BigQuery = Void
   type ConstraintName          'BigQuery = Void
   type BasicOrderType          'BigQuery = BigQuery.Order

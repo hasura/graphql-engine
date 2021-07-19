@@ -44,7 +44,7 @@ buildComputedFieldInfo
   -> TableName 'MSSQL
   -> ComputedFieldName
   -> ComputedFieldDefinition 'MSSQL
-  -> RawFunctionInfo
+  -> RawFunctionInfo 'MSSQL
   -> Maybe Text
   -> m (ComputedFieldInfo 'MSSQL)
 buildComputedFieldInfo _ _ _ _ _ _ =
@@ -89,7 +89,7 @@ buildFunctionInfo
   -> SystemDefined
   -> FunctionConfig
   -> [FunctionPermissionMetadata]
-  -> RawFunctionInfo
+  -> RawFunctionInfo 'MSSQL
   -> m (FunctionInfo 'MSSQL, SchemaDependency)
 buildFunctionInfo _ _ _ _ _ _ =
   throw400 NotSupported "SQL Functions are not supported for MSSQL source"

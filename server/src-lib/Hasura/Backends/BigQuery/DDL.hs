@@ -46,7 +46,7 @@ buildComputedFieldInfo
   -> TableName 'BigQuery
   -> ComputedFieldName
   -> ComputedFieldDefinition 'BigQuery
-  -> RawFunctionInfo
+  -> RawFunctionInfo 'BigQuery
   -> Maybe Text
   -> m (ComputedFieldInfo 'BigQuery)
 buildComputedFieldInfo _ _ _ _ _ _ =
@@ -100,7 +100,7 @@ buildFunctionInfo
   -> SystemDefined
   -> FunctionConfig
   -> [FunctionPermissionMetadata]
-  -> RawFunctionInfo
+  -> RawFunctionInfo 'BigQuery
   -> m (FunctionInfo 'BigQuery, SchemaDependency)
 buildFunctionInfo _ _ _ _ _ _ =
   throw400 NotSupported "SQL Functions are not supported for BigQuery source"
