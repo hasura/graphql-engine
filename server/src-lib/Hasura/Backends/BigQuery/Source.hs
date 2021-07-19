@@ -150,7 +150,7 @@ data BigQueryConnSourceConfig
   { _cscServiceAccount    :: !(ConfigurationJSON ServiceAccount)
   , _cscDatasets          :: !ConfigurationInputs
   , _cscProjectId         :: !ConfigurationInput -- this is part of service-account.json, but we put it here on purpose
-  , _cscGlobalSelectLimit :: !ConfigurationInput
+  , _cscGlobalSelectLimit :: !(Maybe ConfigurationInput)
   } deriving (Eq, Generic, NFData)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''BigQueryConnSourceConfig)
 deriving instance Show BigQueryConnSourceConfig
@@ -167,7 +167,7 @@ data BigQuerySourceConfig
   , _scDatasets          :: ![Text]
   , _scProjectId         :: !Text -- this is part of service-account.json, but we put it here on purpose
   , _scAccessTokenMVar   :: !(MVar (Maybe TokenResp))
-  , _scGlobalSelectLimit :: !(Maybe Int)
+  , _scGlobalSelectLimit :: !Int
   } deriving (Eq, Generic, NFData)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase){J.omitNothingFields=True} ''BigQuerySourceConfig)
 deriving instance Show BigQuerySourceConfig

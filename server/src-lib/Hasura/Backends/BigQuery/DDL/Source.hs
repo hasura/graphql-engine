@@ -31,6 +31,10 @@ import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 
 
+defaultGlobalSelectLimit :: Int
+defaultGlobalSelectLimit = 1000
+
+
 resolveSourceConfig ::
   MonadIO m =>
   SourceName ->
@@ -44,14 +48,17 @@ resolveSourceConfig _name BigQueryConnSourceConfig{..} = runExceptT $ do
     Right _scServiceAccount -> do
       _scDatasets <- resolveConfigurationInputs env _cscDatasets
       _scProjectId <- resolveConfigurationInput env _cscProjectId
-      _scGlobalSelectLimit <- do
-        str <- resolveConfigurationInput env _cscGlobalSelectLimit
-        -- This works around the inconsistency between JSON and
-        -- environment variables. The config handling module should be
-        -- reworked to handle non-text values better.
-        case readMaybe (T.unpack str) <|> J.decode (L.fromStrict (T.encodeUtf8 str)) of
-          Nothing -> throw400 Unexpected $ "Need integer global select limit"
-          Just i  -> pure i
+      _scGlobalSelectLimit <- resolveConfigurationInput env `mapM` _cscGlobalSelectLimit >>= \case
+         Nothing -> pure defaultGlobalSelectLimit
+         Just i ->
+           -- This works around the inconsistency between JSON and
+           -- environment variables. The config handling module should be
+           -- reworked to handle non-text values better.
+           case readMaybe (T.unpack i) <|> J.decode (L.fromStrict (T.encodeUtf8 i)) of
+             Nothing -> throw400 Unexpected $ "Need a non-negative integer for global select limit"
+             Just i' -> do
+               when (i' < 0) $ throw400 Unexpected "Need the integer for the global select limit to be non-negative"
+               pure i'
       trMVar <- liftIO $ newMVar Nothing -- `runBigQuery` initializes the token
       pure BigQuerySourceConfig
              { _scAccessTokenMVar = trMVar
