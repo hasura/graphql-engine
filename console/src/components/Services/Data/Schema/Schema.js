@@ -627,7 +627,7 @@ class Schema extends Component {
 
       const heading = getSectionHeading(
         'Non trackable functions',
-        'Functions that do not conform to Hasura requirements to be exposed over the GraphQL API'
+        'Functions that do not conform to Massbit requirements to be exposed over the GraphQL API'
       );
 
       return (
@@ -649,7 +649,7 @@ class Schema extends Component {
       <RightContainer>
         <div className={`container-fluid ${styles.padd_left_remove}`}>
           <div className={styles.padd_left}>
-            <Helmet title="Schema - Data | Hasura" />
+            <Helmet title="Schema - Data | Massbit" />
             <BreadCrumb
               breadCrumbs={[
                 { url: `/data`, title: 'Data' },

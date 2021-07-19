@@ -5,7 +5,7 @@ import Headers from '../../../../Common/Headers/Headers';
 
 const editorLabel = 'Headers';
 const editorTooltip =
-  'Headers Hasura will send to the webhook with the POST request';
+  'Headers Massbit will send to the webhook with the POST request';
 
 const HeaderConfEditor = ({
   className,

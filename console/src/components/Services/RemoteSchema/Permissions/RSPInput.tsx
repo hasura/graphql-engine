@@ -84,11 +84,11 @@ const RSPInputComponent: React.FC<RSPInputProps> = ({
           />
           {isSessionvar() && (
             <button
-              value="X-Hasura-User-Id"
+              value="X-Massbit-User-Id"
               onClick={toggleSessionVariable}
               className={styles.sessionVarButton}
             >
-              [X-Hasura-User-Id]
+              [X-Massbit-User-Id]
             </button>
           )}
         </>

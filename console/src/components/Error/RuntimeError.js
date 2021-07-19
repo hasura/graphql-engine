@@ -15,7 +15,7 @@ class RuntimeError extends Component {
 
     return (
       <div className={styles.viewContainer}>
-        <Helmet title="Error | Hasura" />
+        <Helmet title="Error | Massbit" />
         <div className={'container ' + styles.centerContent}>
           <div className={'row ' + styles.message}>
             <div className="col-xs-8">

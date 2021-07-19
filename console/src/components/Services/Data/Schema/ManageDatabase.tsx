@@ -265,7 +265,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
 
   return (
     <RightContainer>
-      <Helmet title="Manage - Data | Hasura" />
+      <Helmet title="Manage - Data | Massbit" />
       <div className={`container-fluid ${styles.manage_dbs_page}`}>
         <BreadCrumb breadCrumbs={crumbs} />
         <div className={styles.padd_top}>

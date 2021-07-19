@@ -51,7 +51,7 @@ class About extends Component<ConnectInjectedProps & StateProps> {
         className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
       >
         <div className={styles.subHeader}>
-          <Helmet title="About | Hasura" />
+          <Helmet title="About | Massbit" />
           <h2 className={styles.headerText}>About</h2>
           <div className={styles.add_mar_top}>{getServerVersionSection()}</div>
           <div className={styles.add_mar_top}>

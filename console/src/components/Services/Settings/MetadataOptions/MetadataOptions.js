@@ -13,7 +13,7 @@ const MetadataOptions = props => {
         <div className={styles.intro_note}>
           <h4>Import/Export metadata</h4>
           <div className={styles.content_width}>
-            Get Hasura metadata as JSON.
+            Get Massbit metadata as JSON.
           </div>
         </div>
 
@@ -34,7 +34,7 @@ const MetadataOptions = props => {
         <div key="meta_data_1" className={styles.intro_note}>
           <h4>Reload metadata</h4>
           <div className={styles.content_width}>
-            Refresh Hasura metadata, typically required if you have changes in
+            Refresh Massbit metadata, typically required if you have changes in
             the underlying databases or if you have updated your remote schemas.
           </div>
         </div>
@@ -64,11 +64,11 @@ const MetadataOptions = props => {
       className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
     >
       <div className={styles.subHeader}>
-        <h2 className={styles.headerText}>Hasura Metadata Actions</h2>
+        <h2 className={styles.headerText}>Massbit Metadata Actions</h2>
       </div>
       <div className={styles.add_mar_top}>
         <div className={styles.content_width}>
-          Hasura metadata stores information about your tables, relationships,
+          Massbit metadata stores information about your tables, relationships,
           permissions, etc. that is used to generate the GraphQL schema and
           API.&nbsp;
           <a

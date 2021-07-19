@@ -552,13 +552,13 @@ class ApiRequest extends Component {
                   {getHeaderRemoveBtn()}
                   {isClientName && (
                     <ActionIcon
-                      message="Hasura client name is a header that indicates where the request is being made from. This is used by GraphQL Engine for providing detailed metrics."
+                      message="Massbit client name is a header that indicates where the request is being made from. This is used by GraphQL Engine for providing detailed metrics."
                       dataHeaderID={i}
                     />
                   )}
                   {isCollaboratorToken && (
                     <ActionIcon
-                      message="Hasura collaborator token is an admin-secret alternative when you login using Hasura. This is used by GraphQL Engine to authorise your requests."
+                      message="Massbit collaborator token is an admin-secret alternative when you login using Massbit. This is used by GraphQL Engine to authorise your requests."
                       dataHeaderID={i}
                     />
                   )}
@@ -748,7 +748,7 @@ class ApiRequest extends Component {
           return [
             <br key="hasura_claim_element_break" />,
             <span key="hasura_claim_label" className={styles.analyzerLabel}>
-              Hasura Claims:
+              Massbit Claims:
               <span>hasura headers</span>
             </span>,
             <TextAreaWithCopy

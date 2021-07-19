@@ -363,7 +363,8 @@ class Main extends React.Component {
           <div className={styles.sidebar}>
             <div className={styles.header_logo_wrapper}>
               <div className={styles.logoParent}>
-                <div className={styles.logo}>
+            
+                {/* <div className={styles.logo}>
                   <Link to="/">
                     <img className="img img-responsive" src={logo} />
                   </Link>
@@ -371,6 +372,7 @@ class Main extends React.Component {
                 <Link to="/">
                   <div className={styles.project_version}>{serverVersion}</div>
                 </Link>
+               */}
               </div>
             </div>
             <div className={styles.header_items}>

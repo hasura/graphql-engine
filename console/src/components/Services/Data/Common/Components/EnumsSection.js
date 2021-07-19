@@ -15,7 +15,7 @@ export const EnumTableModifyWarning = ({ isEnum }) => {
   return (
     <div className={styles.add_mar_bottom}>
       <i>
-        * This table is set as an enum. Modifying it may cause your Hasura
+        * This table is set as an enum. Modifying it may cause your Massbit
         metadata to become inconsistent.
         <br />
         <a

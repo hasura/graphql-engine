@@ -109,7 +109,7 @@ const InheritedRoles: React.FC<Props> = props => {
       ) : (
         <div>
           Inherited roles is currently an experimental feature. To enable
-          inherited roles, start the Hasura server with environment variable
+          inherited roles, start the Massbit server with environment variable
           <code>
             HASURA_GRAPHQL_EXPERIMENTAL_FEATURES: &quot;inherited_roles&quot;
           </code>

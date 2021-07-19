@@ -1,7 +1,7 @@
 import { Dispatch } from '../../../types';
 
 export const getReactHelmetTitle = (feature: string, service: string) => {
-  return `${feature} - ${service} | Hasura`;
+  return `${feature} - ${service} | Massbit`;
 };
 
 /*

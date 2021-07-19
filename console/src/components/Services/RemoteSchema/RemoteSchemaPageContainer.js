@@ -31,7 +31,7 @@ class RemoteSchemaPageContainer extends React.Component {
       </ul>
     );
 
-    const helmet = 'Remote Schemas | Hasura';
+    const helmet = 'Remote Schemas | Massbit';
 
     const leftContainer = <LeftContainer>{sidebarContent}</LeftContainer>;
 

@@ -123,7 +123,7 @@ const DBCreation: React.FC<Props> = ({
     statusText = 'Setting database URL in env vars';
   }
   if (isConnectingDataSource) {
-    statusText = 'Connecting to Hasura';
+    statusText = 'Connecting to Massbit';
   }
 
   return (

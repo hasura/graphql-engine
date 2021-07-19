@@ -88,7 +88,7 @@ const TableHeader = ({
   return (
     <div>
       <Helmet
-        title={capitalize(tabName) + ' - ' + tableName + ' - Data | Hasura'}
+        title={capitalize(tabName) + ' - ' + tableName + ' - Data | Massbit'}
       />
       <div className={styles.subHeader}>
         <BreadCrumb breadCrumbs={getBreadCrumbs()} />

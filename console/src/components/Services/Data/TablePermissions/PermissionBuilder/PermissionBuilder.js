@@ -550,7 +550,7 @@ class PermissionBuilder extends React.Component {
       };
 
       const sessionVariableSuggestion = () => {
-        return renderSuggestion(dispatchInput, 'X-Hasura-User-Id');
+        return renderSuggestion(dispatchInput, 'X-Massbit-User-Id');
       };
 
       const jsonSuggestion = () => {
@@ -676,7 +676,7 @@ class PermissionBuilder extends React.Component {
       };
 
       const sessionVariableSuggestion = () => {
-        return renderSuggestion(dispatchInput, 'X-Hasura-Allowed-Ids');
+        return renderSuggestion(dispatchInput, 'X-Massbit-Allowed-Ids');
       };
 
       const inputArray = [];

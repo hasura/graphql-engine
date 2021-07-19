@@ -192,7 +192,7 @@ const Add: React.FC<Props> = props => {
       className={`${styles.addTablesBody} ${styles.clear_fix} ${styles.padd_left}`}
     >
       <Helmet
-        title={`Add Event Trigger | ${EVENTS_SERVICE_HEADING} - Hasura`}
+        title={`Add Event Trigger | ${EVENTS_SERVICE_HEADING} - Massbit`}
       />
       <div className={styles.subHeader}>
         <h2 className={styles.heading_text}>Create a new event trigger</h2>

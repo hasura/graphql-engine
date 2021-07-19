@@ -19,7 +19,7 @@ class Add extends React.Component {
 
     return (
       <div className={styles.addWrapper}>
-        <Helmet title={`Add ${pageTitle} - ${pageTitle}s | Hasura`} />
+        <Helmet title={`Add ${pageTitle} - ${pageTitle}s | Massbit`} />
         <div className={styles.heading_text}>Add a new remote schema</div>
         <form
           onSubmit={e => {

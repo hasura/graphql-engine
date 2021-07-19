@@ -30,7 +30,7 @@ const Relationships = ({
   return (
     <div>
       <Helmet
-        title={`Relationships - ${currentAction.name} - Actions | Hasura`}
+        title={`Relationships - ${currentAction.name} - Actions | Massbit`}
       />
       {existingRelationships}
       <TypeRelationship

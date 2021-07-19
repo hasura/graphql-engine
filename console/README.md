@@ -1,17 +1,17 @@
 <!-- prettier-ignore-start -->
 
-# Hasura Console
+# Massbit Console
 
-The Hasura console is an admin dashboard to manage the connected database and to try out GraphQL APIs. It is a React application bundled with webpack and the state is managed using Redux.
+The Massbit console is an admin dashboard to manage the connected database and to try out GraphQL APIs. It is a React application bundled with webpack and the state is managed using Redux.
 
 Served by:
-1. Hasura GraphQL Engine:
-   The console is served by GraphQL Engine at `/console` endpoint (when `--enable-console` flag is used). Typically runs in **No Migration Mode** which means that actions on the console are not spitting out migration “yaml” files automatically. Most users will be using the Hasura console in this mode.
+1. Massbit GraphQL Engine:
+   The console is served by GraphQL Engine at `/console` endpoint (when `--enable-console` flag is used). Typically runs in **No Migration Mode** which means that actions on the console are not spitting out migration “yaml” files automatically. Most users will be using the Massbit console in this mode.
 
-2. Hasura CLI:
-   Served by the Hasura CLI using `hasura console` command, typically runs with migration mode **enabled**. All the changes to schema/hasura metadata will be tracked and spit out on the filesystem as migration yaml files and a metadata yaml file. This allows for easy version controlling of the schema/hasura metadata.
+2. Massbit CLI:
+   Served by the Massbit CLI using `hasura console` command, typically runs with migration mode **enabled**. All the changes to schema/hasura metadata will be tracked and spit out on the filesystem as migration yaml files and a metadata yaml file. This allows for easy version controlling of the schema/hasura metadata.
 
-## Contributing to Hasura console
+## Contributing to Massbit console
 
 This guide is for setting-up the console for development on your own machine, and how to contribute.
 
@@ -25,8 +25,8 @@ Feel free to open pull requests to address these issues or to add/fix  console f
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/en/) (v8.9+)
-- [Hasura GraphQL Engine](https://hasura.io/docs/latest/graphql/core/getting-started/index.html)
-- [Hasura CLI](https://hasura.io/docs/latest/graphql/core/hasura-cli/install-hasura-cli.html) (for working with migrations)
+- [Massbit GraphQL Engine](https://hasura.io/docs/latest/graphql/core/getting-started/index.html)
+- [Massbit CLI](https://hasura.io/docs/latest/graphql/core/hasura-cli/install-hasura-cli.html) (for working with migrations)
 
 ### Set up and install dependencies
 
@@ -42,13 +42,13 @@ npm ci
 
 ### Run console development server
 
-Hasura console can be developed in two modes, `server` or `cli` mode. If you are looking to add/tweak functionality related to migrations, check out [Develop with Hasura CLI](#develop-with-hasura-cli-cli-mode), otherwise check out [Develop with Hasura GraphQL engine](#develop-with-hasura-graphql-engine-server-mode).
+Massbit console can be developed in two modes, `server` or `cli` mode. If you are looking to add/tweak functionality related to migrations, check out [Develop with Massbit CLI](#develop-with-hasura-cli-cli-mode), otherwise check out [Develop with Massbit GraphQL engine](#develop-with-hasura-graphql-engine-server-mode).
 
-Both modes require a running instance of GraphQL Engine. The easiest way to get Hasura GraphQL engine instance is by Heroku. You can get it by following the steps given in [this](https://hasura.io/docs/latest/graphql/core/getting-started/heroku-simple.html) link. Other methods to install Hasura GraphQL engine are documented [here](https://hasura.io/docs/latest/graphql/core/getting-started/index.html).
+Both modes require a running instance of GraphQL Engine. The easiest way to get Massbit GraphQL engine instance is by Heroku. You can get it by following the steps given in [this](https://hasura.io/docs/latest/graphql/core/getting-started/heroku-simple.html) link. Other methods to install Massbit GraphQL engine are documented [here](https://hasura.io/docs/latest/graphql/core/getting-started/index.html).
 
 [Dotenv](https://github.com/motdotla/dotenv) is used for setting environment variables for development. In production, these environment variables are templated by the server or CLI.
 
-#### Develop with Hasura GraphQL engine (`server` mode)
+#### Develop with Massbit GraphQL engine (`server` mode)
 
 In server mode, **migrations** will be disabled and the corresponding functionality on the console will be hidden.
 
@@ -56,14 +56,14 @@ In server mode, **migrations** will be disabled and the corresponding functional
 Environment variables accepted in `server` mode:
 
 - `NODE_ENV`: Console build environment (`development`/`production`) 
-- `PORT`: The port where Hasura console will run locally
+- `PORT`: The port where Massbit console will run locally
 - `CDN_ASSETS`: Should assets be loaded from CDN (`true`/`false`)
 - `ASSETS_PATH`: Path to console assets
 - `ASSETS_VERSION`: Version of console assets being served 
 - `ENABLE_TELEMETRY`: Whether to enable telemetry (`true`/`false`)
 - `URL_PREFIX`: Path at which the console is running
-- `DATA_API_URL`: The Hasura GraphQL engine url. (If you are running it on Heroku, it will look like https://<app-name\>.herokuapp.com, if you are running locally, it will look like http://localhost:<port\>)
-- `SERVER_VERSION`: Hasura GraphQL Engine server version
+- `DATA_API_URL`: The Massbit GraphQL engine url. (If you are running it on Heroku, it will look like https://<app-name\>.herokuapp.com, if you are running locally, it will look like http://localhost:<port\>)
+- `SERVER_VERSION`: Massbit GraphQL Engine server version
 - `CONSOLE_MODE`: In server mode, it should be `server`
 - `IS_ADMIN_SECRET_SET`: Is GraphQl engine configured with an admin secret (`true`/`false`)
 
@@ -91,23 +91,23 @@ IS_ADMIN_SECRET_SET=true
  npm run dev
 ```
 
-#### Develop with Hasura CLI (`cli` mode)
+#### Develop with Massbit CLI (`cli` mode)
 
 ##### Set up `.env` file
 
 Environment variables accepted in `cli` mode:
 
 - `NODE_ENV`: Console build environment (`development`/`production`) 
-- `PORT`: The port where Hasura console will run locally
-- `API_HOST`: Hasura CLI host. Hasura CLI runs on `http://localhost` by default.
-- `API_PORT`: Hasura CLI port. Hasura CLI exposes the API at `9693` by default
+- `PORT`: The port where Massbit console will run locally
+- `API_HOST`: Massbit CLI host. Massbit CLI runs on `http://localhost` by default.
+- `API_PORT`: Massbit CLI port. Massbit CLI exposes the API at `9693` by default
 - `CDN_ASSETS`: Should assets be loaded from CDN (`true`/`false`)
 - `ASSETS_PATH`: Path to console assets
 - `ASSETS_VERSION`: Version of console assets being served 
 - `ENABLE_TELEMETRY`: Whether to enable telemetry (`true`/`false`)
 - `URL_PREFIX`: Path at which the console is running
-- `DATA_API_URL`: The Hasura GraphQL engine url. (If you are running it on Heroku, it will look like <app-name\>.herokuapp.com, if you are running locally, it will look like http://localhost:<port\>)
-- `SERVER_VERSION`: Hasura GraphQL Engine server version
+- `DATA_API_URL`: The Massbit GraphQL engine url. (If you are running it on Heroku, it will look like <app-name\>.herokuapp.com, if you are running locally, it will look like http://localhost:<port\>)
+- `SERVER_VERSION`: Massbit GraphQL Engine server version
 - `CONSOLE_MODE`: In cli mode, it should be `cli`
 - `ADMIN_SECRET`: the admin secret passed via the CLI
 
@@ -131,11 +131,11 @@ ADMIN_SECRET=my-admin-secret
 
 ##### Run console development server:
 
-This setup requires a Hasura CLI console server to be running.
+This setup requires a Massbit CLI console server to be running.
 
-###### Start Hasura CLI console server
+###### Start Massbit CLI console server
 
-Start Hasura CLI console with the same Hasura GraphQL engine url as configured for `DATA_API_URL`.
+Start Massbit CLI console with the same Massbit GraphQL engine url as configured for `DATA_API_URL`.
 
 ```bash
 hasura console --endpoint <DATA_API_URL> --admin-secret <your-admin-secret> (optional)

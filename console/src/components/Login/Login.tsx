@@ -116,7 +116,7 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
 
     const missingAdminSecretMessage = (
       <span>
-        Seems like your Hasura GraphQL engine instance has an admin-secret
+        Seems like your Massbit GraphQL engine instance has an admin-secret
         configured.
         <br />
         Run console with the admin-secret using:
@@ -141,9 +141,9 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
     <div className={`${styles.mainWrapper} container-fluid`}>
       <div className={`${styles.container} container`} id="login">
         <div className={styles.loginCenter}>
-          <Helmet title="Login | Hasura" />
+          <Helmet title="Login | Massbit" />
           <div className={styles.hasuraLogo}>
-            <img src={hasuraLogo} alt="Hasura" />
+            <img src={hasuraLogo} alt="Massbit" />
           </div>
           <div className={styles.loginWrapper}>
             {globals.consoleMode !== CLI_CONSOLE_MODE

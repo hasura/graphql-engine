@@ -55,7 +55,7 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes, dispatch }) => {
   const dropdownTitle = prefix ? null : 'Please provide a prefix first.';
 
   const prefixTooltipText =
-    'Prefix is required so that the type you are cloning does not collide with the existing type in Hasura.';
+    'Prefix is required so that the type you are cloning does not collide with the existing type in Massbit.';
 
   return (
     <div>

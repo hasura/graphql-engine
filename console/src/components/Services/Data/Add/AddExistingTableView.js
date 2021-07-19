@@ -50,7 +50,7 @@ class AddExistingTableView extends Component {
           'container-fluid ' + styles.clear_fix + ' ' + styles.padd_top
         }
       >
-        <Helmet title="Add Existing Table/View - Data | Hasura" />
+        <Helmet title="Add Existing Table/View - Data | Massbit" />
         <div className={styles.subHeader}>
           <h2 className={styles.heading_text}>Add an existing table or view</h2>
           <div className="clearfix" />

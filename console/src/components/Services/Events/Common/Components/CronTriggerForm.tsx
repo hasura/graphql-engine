@@ -133,7 +133,7 @@ const Form: React.FC<Props> = props => {
               className={styles.add_mar_right_mid}
               icons={false}
             />
-            <span>Include this trigger in Hasura Metadata</span>
+            <span>Include this trigger in Massbit Metadata</span>
           </div>
         </FormSection>
         <FormSection

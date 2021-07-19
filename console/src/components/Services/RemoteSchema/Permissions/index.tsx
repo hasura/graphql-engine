@@ -41,7 +41,7 @@ const RSP: React.FC<Props> = props => {
         ) : (
           <div>
             Remote schema permissions are not enabled. To enable remote schema
-            permissions, start the Hasura server with environment variable
+            permissions, start the Massbit server with environment variable
             <code>
               HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS: &quot;true&quot;
             </code>

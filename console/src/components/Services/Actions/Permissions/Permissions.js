@@ -164,7 +164,7 @@ const Permissions = ({
   return (
     <div>
       <Helmet
-        title={`Permissions - ${currentAction.name} - Actions | Hasura`}
+        title={`Permissions - ${currentAction.name} - Actions | Massbit`}
       />
       {getPermissionsTable()}
       <div className={`${styles.add_mar_bottom}`}>

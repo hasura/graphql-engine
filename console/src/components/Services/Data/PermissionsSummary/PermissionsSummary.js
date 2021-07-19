@@ -988,7 +988,7 @@ class PermissionsSummary extends Component {
         <div
           className={`${styles.clear_fix} ${styles.padd_left} ${styles.fit_content}`}
         >
-          <Helmet title="Permissions Summary | Hasura" />
+          <Helmet title="Permissions Summary | Massbit" />
           <div className={styles.add_mar_bottom}>
             <h2 className={styles.heading_text}>
               Permissions summary - {currentSchema}

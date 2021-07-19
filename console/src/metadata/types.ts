@@ -394,7 +394,7 @@ export interface ComputedFieldDefinition {
   function: FunctionName;
   /** Name of the argument which accepts a table row type. If omitted, the first argument is considered a table argument */
   table_argument?: string;
-  /** Name of the argument which accepts the Hasura session object as a JSON/JSONB value. If omitted, the Hasura session object is not passed to the function */
+  /** Name of the argument which accepts the Massbit session object as a JSON/JSONB value. If omitted, the Massbit session object is not passed to the function */
   session_argument?: string;
 }
 

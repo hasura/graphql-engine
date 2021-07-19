@@ -11,14 +11,14 @@
     "books": {
       "where": {
         "author": {
-          "_eq": "X-Hasura-User-Id"
+          "_eq": "X-Massbit-User-Id"
         }
       }
     },
     "users": {
       "where": {
         "id": {
-          "_eq": "X-Hasura-User-Id"
+          "_eq": "X-Massbit-User-Id"
         }
       }
     }

@@ -34,7 +34,7 @@ export const SecurityTabs: React.FC<{ tabName: keyof typeof tabs }> = ({
   ];
   return (
     <RightContainer>
-      <Helmet title={`${tabs[tabName].display_text} - Hasura`} />
+      <Helmet title={`${tabs[tabName].display_text} - Massbit`} />
       <div
         className={`${styles.view_stitch_schema_wrapper} ${styles.addWrapper}`}
       >

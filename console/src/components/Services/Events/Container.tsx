@@ -113,7 +113,7 @@ const Container: React.FC<Props> = props => {
     </ul>
   );
 
-  const helmetTitle = 'Triggers | Hasura';
+  const helmetTitle = 'Triggers | Massbit';
 
   const leftContainer = <LeftContainer>{sidebarContent}</LeftContainer>;
 

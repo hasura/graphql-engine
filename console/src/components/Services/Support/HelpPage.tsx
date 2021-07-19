@@ -7,10 +7,10 @@ import stackOverflow from './images/stack-overflow.svg';
 import github from './images/github.svg';
 
 const CHECK_FORUMS = `
-If you need any help with developing on Hasura, you can check out
-these various Hasura forums. Our community members include some very
+If you need any help with developing on Massbit, you can check out
+these various Massbit forums. Our community members include some very
 experienced engineers from some of the world’s most exciting
-companies, and many of them have been using Hasura in production for a
+companies, and many of them have been using Massbit in production for a
 long time.`;
 
 const supportListState = [
@@ -30,7 +30,7 @@ const supportListState = [
   {
     brand: stackOverflow,
     title: 'StackOverflow',
-    description: 'Ask your Hasura questions here and tag as ‘hasura’',
+    description: 'Ask your Massbit questions here and tag as ‘hasura’',
     link: 'https://stackoverflow.com/questions/tagged/hasura',
   },
   {

@@ -163,7 +163,7 @@ const Onboarding: React.FC<OnboardingProps> = ({
 
   return (
     <>
-      {!visible && (
+      {/* {!visible && (
         <div className={styles.hi_icon} onClick={togglePopup}>
           <span aria-label="Wave" role="img">
             {' '}
@@ -174,8 +174,8 @@ const Onboarding: React.FC<OnboardingProps> = ({
       {visible && (
         <div className={styles.onboarding_popup}>
           <div className={styles.popup_header}>
-            <img src={hasuraDarkIcon} alt="Hasura Logo" />
-            <strong>Hi there, let&apos;s get started with Hasura!</strong>
+            <img src={hasuraDarkIcon} alt="Massbit Logo" />
+            <strong>Hi there, let&apos;s get started with Massbit!</strong>
           </div>
           <div className={styles.popup_body}>
             <ul>
@@ -199,7 +199,7 @@ const Onboarding: React.FC<OnboardingProps> = ({
             </button>
           </div>
         </div>
-      )}
+      )} */}
     </>
   );
 };

@@ -117,7 +117,7 @@ const AddAction = ({
 
   return (
     <div>
-      <Helmet title="Add Action - Actions | Hasura" />
+      <Helmet title="Add Action - Actions | Massbit" />
       <h2
         className={`${styles.headerText} ${styles.display_inline} ${styles.add_mar_bottom_mid}`}
       >

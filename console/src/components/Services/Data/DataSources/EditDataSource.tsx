@@ -23,7 +23,7 @@ const breadCrumbs = [
 const EditDataSource: React.FC = ({ children }) => {
   return (
     <RightContainer>
-      <Helmet title="Edit Data Source - Hasura" />
+      <Helmet title="Edit Data Source - Massbit" />
       <div className={styles.add_pad_left_mid}>
         <BreadCrumb breadCrumbs={breadCrumbs} />
       </div>

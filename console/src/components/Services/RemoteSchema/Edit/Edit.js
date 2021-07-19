@@ -238,7 +238,7 @@ class Edit extends React.Component {
     return (
       <div className={styles.addWrapper}>
         <Helmet
-          title={`Edit ${pageTitle} - ${remoteSchemaName} - ${pageTitle}s | Hasura`}
+          title={`Edit ${pageTitle} - ${remoteSchemaName} - ${pageTitle}s | Massbit`}
         />
         <CommonTabLayout
           appPrefix={appPrefix}

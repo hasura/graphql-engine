@@ -20,7 +20,7 @@ class ResetMetadata extends Component {
     const handleReset = e => {
       e.preventDefault();
       const confirmMessage =
-        'This will permanently reset the Hasura metadata related to your tables, remote schemas, actions and triggers';
+        'This will permanently reset the Massbit metadata related to your tables, remote schemas, actions and triggers';
       const isOk = getConfirmation(confirmMessage, true);
       if (!isOk) {
         return;

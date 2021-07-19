@@ -208,7 +208,7 @@ class ModifyCustomFunction extends React.Component {
     return (
       <div className={'col-xs-8' + ' ' + styles.modifyWrapper}>
         <Helmet
-          title={`Edit ${pageTitle} - ${functionName} - ${pageTitle}s | Hasura`}
+          title={`Edit ${pageTitle} - ${functionName} - ${pageTitle}s | Massbit`}
         />
         <CommonTabLayout
           appPrefix={this.urlWithSource}

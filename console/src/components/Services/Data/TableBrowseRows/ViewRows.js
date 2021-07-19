@@ -520,7 +520,7 @@ const ViewRows = props => {
          *  `row`:
          *    {
          *      id: 1,
-         *      name: "Hasura",
+         *      name: "Massbit",
          *      address: {Hello: "World", Foo: "Bar"}
          *    }
          * */

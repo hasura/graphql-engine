@@ -1360,7 +1360,7 @@ class Permissions extends Component {
             if (presetType === 'session') {
               _presetInput = (
                 <InputGroup>
-                  <InputGroup.Addon>X-Hasura-</InputGroup.Addon>
+                  <InputGroup.Addon>X-Massbit-</InputGroup.Addon>
                   <input
                     className={'input-sm form-control '}
                     placeholder="column_value"
@@ -1396,7 +1396,7 @@ class Permissions extends Component {
             const presetType = getPresetValueType(preset);
 
             if (presetType === 'session') {
-              _presetExample = 'e.g. X-Hasura-User-Id';
+              _presetExample = 'e.g. X-Massbit-User-Id';
             } else {
               _presetExample = 'e.g. false, 1, some-text';
             }

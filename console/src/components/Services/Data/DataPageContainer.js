@@ -80,7 +80,7 @@ const DataPageContainer = ({
     </ul>
   );
 
-  const helmet = 'Data | Hasura';
+  const helmet = 'Data | Massbit';
 
   const leftContainer = <LeftContainer>{sidebarContent}</LeftContainer>;
 

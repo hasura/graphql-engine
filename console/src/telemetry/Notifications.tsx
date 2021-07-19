@@ -21,8 +21,8 @@ const showTelemetryNotification = () => {
         title: 'Telemetry',
         children: (
           <div>
-            Help us improve Hasura! The console collects anonymized usage stats
-            which allows us to keep improving Hasura at warp speed.
+            Help us improve Massbit! The console collects anonymized usage stats
+            which allows us to keep improving Massbit at warp speed.
             <a
               href="https://hasura.io/docs/latest/graphql/core/guides/telemetry.html"
               target="_blank"

@@ -55,7 +55,7 @@ const App = ({
         className={`${styles.alertDanger} ${styles.remove_margin_bottom} alert alert-danger `}
       >
         <strong>
-          Hasura console is not able to reach your Hasura GraphQL engine
+          Massbit console is not able to reach your Massbit GraphQL engine
           instance. Please ensure that your instance is running and the endpoint
           is configured correctly.
         </strong>

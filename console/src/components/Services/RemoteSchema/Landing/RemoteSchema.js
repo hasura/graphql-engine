@@ -42,7 +42,7 @@ class RemoteSchema extends React.Component {
         className={`${styles.padd_left_remove} ${styles.remoteSchemaWrapper} container-fluid ${styles.padd_top}`}
       >
         <div className={styles.padd_left}>
-          <Helmet title={`${pageTitle}s | Hasura`} />
+          <Helmet title={`${pageTitle}s | Massbit`} />
           <div>
             <div className={styles.display_flex}>
               <h2 className={`${styles.headerText} ${styles.inline_block}`}>
@@ -56,7 +56,7 @@ class RemoteSchema extends React.Component {
               title="What are Remote Schemas?"
               imgUrl={`${globals.assetsPath}/common/img/remote_schema.png`}
               imgAlt="Remote Schema"
-              description="Remote schemas are external GraphQL services which can be merged with Hasura to provide a unified GraphQL API. Think of it like automated schema stitching. All you need to do is build a GraphQL service and then provide its HTTP endpoint to Hasura. Your GraphQL service can be written in any language or framework."
+              description="Remote schemas are external GraphQL services which can be merged with Massbit to provide a unified GraphQL API. Think of it like automated schema stitching. All you need to do is build a GraphQL service and then provide its HTTP endpoint to Massbit. Your GraphQL service can be written in any language or framework."
               knowMoreHref="https://hasura.io/docs/latest/graphql/core/remote-schemas/index.html"
             />
             <hr className={styles.clear_fix} />

@@ -114,7 +114,7 @@ const ActionEditor = ({
 
   return (
     <div>
-      <Helmet title={`Modify Action - ${actionName} - Actions | Hasura`} />
+      <Helmet title={`Modify Action - ${actionName} - Actions | Massbit`} />
       <GraphQLEditor
         value={actionDefinitionSdl}
         error={actionDefinitionError}

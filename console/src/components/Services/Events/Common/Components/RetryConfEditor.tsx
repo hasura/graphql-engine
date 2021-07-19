@@ -28,7 +28,7 @@ const RetryConfEditor: React.FC<Props> = props => {
             Number of retries
             <Tooltip
               id="retry-conf-num-retries"
-              message="Number of retries that Hasura makes to the webhook in case of failure"
+              message="Number of retries that Massbit makes to the webhook in case of failure"
             />
           </label>
         </div>

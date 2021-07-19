@@ -16,7 +16,7 @@ const Container: React.FC<ContainerProps> = props => {
   const { location, children } = props;
   return (
     <>
-      <Helmet title="API Explorer | Hasura" />
+      <Helmet title="API Explorer | Massbit" />
       <div id="left-bar">
         <TopBar location={location} />
       </div>

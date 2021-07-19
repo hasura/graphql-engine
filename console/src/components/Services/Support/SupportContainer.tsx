@@ -6,7 +6,7 @@ import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 
 import styles from '../../Common/TableCommon/Table.scss';
 
-const helmetTitle = 'Support Forums | Hasura';
+const helmetTitle = 'Support Forums | Massbit';
 
 const LeftBar = () => (
   <LeftContainer>

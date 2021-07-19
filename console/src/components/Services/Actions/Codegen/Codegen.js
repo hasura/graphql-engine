@@ -177,7 +177,7 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
 
   return (
     <div style={{ width: '600px' }}>
-      <Helmet title={`Codegen - ${currentAction.name} - Actions | Hasura`} />
+      <Helmet title={`Codegen - ${currentAction.name} - Actions | Massbit`} />
       {getFrameworkActions()}
       <div className={`${styles.add_mar_bottom}`}>
         <CodeTabs

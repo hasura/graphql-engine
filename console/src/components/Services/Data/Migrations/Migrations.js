@@ -24,13 +24,13 @@ const Migrations = ({ dispatch, migrationMode }) => {
           that you disable making schema changes via the console.
         </li>
         <li>
-          Read more about managing migrations with Hasura at the{' '}
+          Read more about managing migrations with Massbit at the{' '}
           <a
             href="https://hasura.io/docs/latest/graphql/core/migrations/index.html"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Hasura migrations guide
+            Massbit migrations guide
           </a>
         </li>
       </ul>
@@ -41,7 +41,7 @@ const Migrations = ({ dispatch, migrationMode }) => {
     <div
       className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
     >
-      <Helmet title="Migrations - Data | Hasura" />
+      <Helmet title="Migrations - Data | Massbit" />
       <div className={styles.subHeader}>
         <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
           Database Migrations

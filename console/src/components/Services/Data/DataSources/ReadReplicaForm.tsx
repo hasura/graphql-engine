@@ -234,7 +234,7 @@ const ReadReplicaForm: React.FC<ReadReplicaProps> = ({
       <div className={styles.flexColumn}>
         <h5 className={styles.read_replicas_heading}>Read Replicas</h5>
         <p>
-          Hasura Cloud can load balance queries and subscriptions across read
+          Massbit Cloud can load balance queries and subscriptions across read
           replicas while sending all mutations and metadata API calls to the
           master.&nbsp;
           <a

@@ -1,8 +1,8 @@
 {
   "package-name": "@hasura/console-oss",
   "name": "@hasura/console-oss",
-  "description": "Console for Hasura GraphQL Engine",
-  "author": "Hasura (https://github.com/hasura/graphql-engine)",
+  "description": "Console for Massbit GraphQL Engine",
+  "author": "Massbit (https://github.com/hasura/graphql-engine)",
   "license": "Apache 2.0",
   "version": "1.0.0",
   "repository": {

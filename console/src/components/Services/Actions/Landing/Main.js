@@ -56,7 +56,7 @@ class Landing extends React.Component {
         className={`${styles.padd_left_remove} ${styles.actionsWrapper} container-fluid ${styles.padd_top}`}
       >
         <div className={styles.padd_left}>
-          <Helmet title={`${pageTitle} | Hasura`} />
+          <Helmet title={`${pageTitle} | Massbit`} />
           <div>
             <div className={styles.display_flex}>
               <h2 className={`${styles.headerText} ${styles.inline_block}`}>

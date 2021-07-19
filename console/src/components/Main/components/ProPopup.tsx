@@ -17,7 +17,7 @@ type ProPopupProps = {
 export const ProPopup: React.FC<ProPopupProps> = ({ toggleOpen }) => (
   <div className={styles.proPopUpWrapper}>
     <div className={styles.popUpHeader}>
-      Hasura <span>CLOUD</span>
+      Massbit <span>CLOUD</span>
       <img
         onClick={toggleOpen}
         className={styles.popUpClose}
@@ -27,7 +27,7 @@ export const ProPopup: React.FC<ProPopupProps> = ({ toggleOpen }) => (
     </div>
     <div className={styles.popUpBodyWrapper}>
       <div className={styles.featuresDescription}>
-        Hasura Cloud gives you a scalable, highly available, globally
+        Massbit Cloud gives you a scalable, highly available, globally
         distributed, fully managed, secure GraphQL API as a service!
       </div>
       <div className={styles.proFeaturesList}>
@@ -71,7 +71,7 @@ export const ProPopup: React.FC<ProPopupProps> = ({ toggleOpen }) => (
         <div className={styles.featuresList}>
           <div className={styles.featuresTitle}>Team Management</div>
           <div className={styles.featuresDescription}>
-            Login to Hasura project with granular privileges.
+            Login to Massbit project with granular privileges.
           </div>
         </div>
       </div>

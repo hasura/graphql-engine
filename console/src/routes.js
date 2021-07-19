@@ -66,7 +66,7 @@ const routes = store => {
             dispatch(
               showErrorNotification(
                 'Connection error',
-                'Hasura console is not able to reach your Hasura CLI instance. Please ensure that your ' +
+                'Massbit console is not able to reach your Massbit CLI instance. Please ensure that your ' +
                   'instance is running and the endpoint is configured correctly.'
               )
             );

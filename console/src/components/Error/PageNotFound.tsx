@@ -19,7 +19,7 @@ const PageNotFound = (props: PageNotFoundProps) => {
 
   return (
     <div className={styles.viewContainer}>
-      <Helmet title="404 - Page Not Found | Hasura" />
+      <Helmet title="404 - Page Not Found | Massbit" />
       <div className={`container  ${styles.centerContent}`}>
         <div className={`row ${styles.message}`}>
           <div className="col-xs-8">

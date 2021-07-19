@@ -477,7 +477,7 @@ const RawSQL = ({
     <div
       className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
     >
-      <Helmet title="Run SQL - Data | Hasura" />
+      <Helmet title="Run SQL - Data | Massbit" />
       <div className={styles.subHeader}>
         <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
           Raw SQL
