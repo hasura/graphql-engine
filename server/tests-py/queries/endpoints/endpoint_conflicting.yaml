@@ -45,8 +45,8 @@ response:
       name: with_args
       comment:
   path: $.args
-  error: cannot continue due to new inconsistent metadata
-  code: unexpected
+  error: 'Ambiguous URL paths: :conflicting, simple, simple_cached, with_arg, with_args'
+  code: invalid-configuration
 query:
   type: create_rest_endpoint
   args:

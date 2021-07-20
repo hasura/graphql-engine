@@ -17,8 +17,8 @@ response:
       name: endpoint duplicate
       type: endpoint
   path: $.args
-  error: cannot continue due to new inconsistent metadata
-  code: unexpected
+  error: 'Duplicate variables found in endpoint path: foo/:id/bar/:id'
+  code: invalid-configuration
 query:
   type: create_rest_endpoint
   args:

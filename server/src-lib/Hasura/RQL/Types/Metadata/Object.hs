@@ -6,7 +6,6 @@ import qualified Data.HashMap.Strict.Extended        as M
 
 import           Control.Lens                        hiding (set, (.=))
 import           Data.Aeson.Types
-import           Data.Hashable
 import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend               as AB
@@ -56,31 +55,10 @@ data MetadataObjId
   | MOCronTrigger !TriggerName
   | MOInheritedRole !RoleName
   | MOEndpoint !EndpointName
+  deriving (Generic)
 $(makePrisms ''MetadataObjId)
-
-instance Hashable MetadataObjId where
-  hashWithSalt salt = \case
-    MOSource sourceName                    -> hashWithSalt salt sourceName
-    MOSourceObjId sourceName sourceObjId   -> hashWithSalt salt (sourceName, sourceObjId)
-    MORemoteSchema remoteSchemaName        -> hashWithSalt salt remoteSchemaName
-    MORemoteSchemaPermissions remoteSchemaName roleName -> hashWithSalt salt (remoteSchemaName, roleName)
-    MOCustomTypes                          -> hashWithSalt salt ()
-    MOAction actionName                    -> hashWithSalt salt actionName
-    MOActionPermission actionName roleName -> hashWithSalt salt (actionName, roleName)
-    MOCronTrigger triggerName              -> hashWithSalt salt triggerName
-    MOInheritedRole roleName               -> hashWithSalt salt roleName
-    MOEndpoint endpoint                    -> hashWithSalt salt endpoint
-
-instance Eq MetadataObjId where
-  (MOSource s1) == (MOSource s2)                                         = s1 == s2
-  (MOSourceObjId s1 id1) == (MOSourceObjId s2 id2)                       = s1 == s2 && id1 == id2
-  (MORemoteSchema n1) == (MORemoteSchema n2)                             = n1 == n2
-  (MORemoteSchemaPermissions n1 r1) == (MORemoteSchemaPermissions n2 r2) = n1 == n2 && r1 == r2
-  MOCustomTypes == MOCustomTypes                                         = True
-  (MOActionPermission an1 r1) == (MOActionPermission an2 r2)             = an1 == an2 && r1 == r2
-  (MOCronTrigger trn1) == (MOCronTrigger trn2)                           = trn1 == trn2
-  (MOInheritedRole rn1) == (MOInheritedRole rn2)                         = rn1 == rn2
-  _ == _                                                                 = False
+deriving instance Eq MetadataObjId
+instance Hashable MetadataObjId
 
 moiTypeName :: MetadataObjId -> Text
 moiTypeName = \case
