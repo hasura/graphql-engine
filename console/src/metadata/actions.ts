@@ -262,80 +262,79 @@ export const exportMetadata = (
 
 export const addDataSource = (
   data: AddDataSourceRequest['data'],
-  successCb: () => void,
+  successCb?: () => void,
   replicas?: Omit<
     SourceConnectionInfo,
     | 'connection_string'
     | 'use_prepared_statements'
     | 'ssl_configuration'
     | 'isolation_level'
-  >[],
-  skipNotification = false
+  >[]
 ): Thunk<Promise<void | ReduxState>, MetadataActions> => (
   dispatch,
   getState
 ) => {
-  const { dataHeaders } = getState().tables;
-
-  const query = addSource(data.driver, data.payload, replicas);
-
-  const options = {
-    method: 'POST',
-    headers: dataHeaders,
-    body: JSON.stringify(query),
-  };
+  const upQuery = addSource(data.driver, data.payload, replicas);
   const isEdit = data.payload.replace_configuration;
-  return dispatch(requestAction(Endpoints.metadata, options))
-    .then(() => {
-      dispatch({
-        type: UPDATE_CURRENT_DATA_SOURCE,
-        source: data.payload.name,
-      });
-      setDriver(data.driver);
-      const onButtonClick = () => {
-        if (data.payload.name)
-          dispatch(_push(`/data/${data.payload.name}/schema`));
-      };
-      return dispatch(exportMetadata()).then(() => {
-        dispatch(fetchDataInit(data.payload.name, data.driver));
-        if (!skipNotification) {
-          dispatch(
-            showNotification(
-              {
-                title: `Data source ${
-                  !isEdit ? 'added' : 'updated'
-                } successfully!`,
-                level: 'success',
-                autoDismiss: 0,
-                action: {
-                  label: 'View Database',
-                  callback: onButtonClick,
-                },
-              },
-              'success'
-            )
-          );
-        }
-        successCb();
-        return getState();
-      });
-    })
-    .catch(err => {
-      console.error(err);
-      if (!isEdit) {
-        dispatch(_push('/data/manage/connect'));
-      }
-      if (!skipNotification) {
-        dispatch(
-          showErrorNotification(
-            `${!isEdit ? 'Add' : 'Updating'} data source failed`,
-            null,
-            err
-          )
-        );
-      }
-      return err;
+  const migrationName = isEdit ? `update_data_source` : `add_data_source`;
+  const requestMsg = isEdit
+    ? 'Updating data source...'
+    : 'Adding data source...';
+  const errorMsg = isEdit
+    ? 'Updating data source failed'
+    : 'Adding data source failed';
+
+  const onSuccess = () => {
+    dispatch({
+      type: UPDATE_CURRENT_DATA_SOURCE,
+      source: data.payload.name,
     });
+    setDriver(data.driver);
+    const onButtonClick = () => {
+      if (data.payload.name)
+        dispatch(_push(`/data/${data.payload.name}/schema`));
+    };
+    return dispatch(exportMetadata()).then(() => {
+      dispatch(fetchDataInit(data.payload.name, data.driver));
+      dispatch(
+        showNotification(
+          {
+            title: `Data source ${!isEdit ? 'added' : 'updated'} successfully!`,
+            level: 'success',
+            autoDismiss: 0,
+            action: {
+              label: 'View Database',
+              callback: onButtonClick,
+            },
+          },
+          'success'
+        )
+      );
+      if (successCb) successCb();
+      return getState();
+    });
+  };
+
+  const onError = (err: Record<string, any>) => {
+    console.error(err);
+    if (!isEdit) {
+      dispatch(_push('/data/manage/connect'));
+    }
+    return err;
+  };
+
+  return makeMigrationCall(
+    dispatch,
+    getState,
+    [upQuery],
+    undefined,
+    migrationName,
+    onSuccess,
+    onError,
+    requestMsg,
+    undefined,
+    errorMsg
+  );
 };
 
 export const renameDataSource = (
@@ -348,35 +347,17 @@ export const renameDataSource = (
   replicas?: Omit<
     SourceConnectionInfo,
     'connection_string' | 'use_prepared_statements' | 'isolation_level'
-  >[],
-  skipNotification = false
+  >[]
 ): Thunk<Promise<void | ReduxState>, MetadataActions> => (
   dispatch,
   getState
 ) => {
   const { isRenameSource, name } = renameData;
-  const { tables, metadata } = getState();
+  const { metadata } = getState();
   const { sources } = metadata.metadataObject ?? {};
   const currentSource = sources?.find(s => s.name === name);
-  const query = addSource(data.driver, data.payload, replicas);
-
-  let isOnlyRename = false;
-
-  if (
-    currentSource &&
-    dataSourceIsEqual(currentSource, query.args) &&
-    isRenameSource
-  ) {
-    isOnlyRename = true;
-  }
-  const { dataHeaders } = tables;
-
-  const editOptions = {
-    method: 'POST',
-    headers: dataHeaders,
-    body: JSON.stringify(query),
-  };
-
+  const isEdit = data.payload.replace_configuration;
+  const addQuery = addSource(data.driver, data.payload, replicas);
   const renameQuery = {
     type: 'rename_source',
     args: {
@@ -385,15 +366,21 @@ export const renameDataSource = (
     },
   };
 
-  const renameOptions = {
-    method: 'POST',
-    headers: dataHeaders,
-    body: JSON.stringify(renameQuery),
-  };
+  const isOnlyRename = !!(
+    currentSource &&
+    dataSourceIsEqual(currentSource, addQuery.args) &&
+    isRenameSource
+  );
 
-  const isEdit = data.payload.replace_configuration;
+  const upQueries = [];
+  upQueries.push(renameQuery);
+  if (!isOnlyRename) upQueries.push(addQuery);
 
-  const handleSuccess = () => {
+  const migrationName = `update_data_source`;
+  const requestMsg = 'Updating data source...';
+  const errorMsg = 'Updating data source failed';
+
+  const onSuccess = () => {
     dispatch({
       type: UPDATE_CURRENT_DATA_SOURCE,
       source: data.payload.name,
@@ -406,97 +393,100 @@ export const renameDataSource = (
     return dispatch(exportMetadata())
       .then(() => {
         dispatch(fetchDataInit(data.payload.name, data.driver));
-        if (!skipNotification) {
-          dispatch(
-            showNotification(
-              {
-                title: `Data source updated successfully!`,
-                level: 'success',
-                autoDismiss: 0,
-                action: {
-                  label: 'View Database',
-                  callback: onButtonClick,
-                },
+        dispatch(
+          showNotification(
+            {
+              title: `Data source updated successfully!`,
+              level: 'success',
+              autoDismiss: 0,
+              action: {
+                label: 'View Database',
+                callback: onButtonClick,
               },
-              'success'
-            )
-          );
-        }
+            },
+            'success'
+          )
+        );
         successCb();
         return getState();
       })
       .catch(console.error);
   };
 
-  const handleError = (err: any) => {
+  const onError = (err: Record<string, any>) => {
     console.error(err);
     if (!isEdit) {
       dispatch(_push('/data/manage/connect'));
     }
-    if (!skipNotification) {
-      dispatch(showErrorNotification(`Updating data source failed`, null, err));
-    }
     return err;
   };
 
-  return dispatch(requestAction(Endpoints.metadata, renameOptions))
-    .then(() => {
-      if (isOnlyRename) {
-        return handleSuccess();
-      }
-      return dispatch(requestAction(Endpoints.metadata, editOptions))
-        .then(handleSuccess)
-        .catch(handleError);
-    })
-    .catch(handleError);
+  return makeMigrationCall(
+    dispatch,
+    getState,
+    upQueries,
+    undefined,
+    migrationName,
+    onSuccess,
+    onError,
+    requestMsg,
+    undefined,
+    errorMsg,
+    true
+  );
 };
 
 export const removeDataSource = (
-  data: RemoveDataSourceRequest['data'],
-  skipNotification = false
+  data: RemoveDataSourceRequest['data']
 ): Thunk<Promise<void | ReduxState>, MetadataActions> => (
   dispatch,
   getState
 ) => {
-  const { dataHeaders, currentDataSource } = getState().tables;
+  const { currentDataSource } = getState().tables;
   const sources = getDataSources(getState()).filter(s => s.name !== data.name);
+  const upQuery = removeSource(data.driver, data.name);
 
-  const query = removeSource(data.driver, data.name);
+  const migrationName = `remove_data_source`;
+  const requestMsg = 'Removing data source...';
+  const successMsg = 'Data source removed successfully';
+  const errorMsg = 'Removing data source failed';
 
-  const options = {
-    method: 'POST',
-    headers: dataHeaders,
-    body: JSON.stringify(query),
+  const onSuccess = () => {
+    if (currentDataSource === data.name) {
+      dispatch({
+        type: UPDATE_CURRENT_DATA_SOURCE,
+        source: sources.length ? sources[0].name : '',
+      });
+    }
+    dispatch(exportMetadata()).then(() => {
+      const newSourceName = sources.length ? sources[0].name : '';
+      if (newSourceName) {
+        const driver = getSourceDriver(sources, newSourceName);
+        setDriver(driver);
+        dispatch(fetchDataInit(newSourceName, driver));
+      }
+    });
+    return getState();
   };
 
-  return dispatch(requestAction(Endpoints.metadata, options))
-    .then(() => {
-      if (currentDataSource === data.name) {
-        dispatch({
-          type: UPDATE_CURRENT_DATA_SOURCE,
-          source: sources.length ? sources[0].name : '',
-        });
-      }
-      if (!skipNotification) {
-        dispatch(showSuccessNotification('Data source removed successfully!'));
-      }
-      dispatch(exportMetadata()).then(() => {
-        const newSourceName = sources.length ? sources[0].name : '';
-        if (newSourceName) {
-          const driver = getSourceDriver(sources, newSourceName);
-          setDriver(driver);
-          dispatch(fetchDataInit(newSourceName, driver));
-        }
-      });
-      return getState();
-    })
-    .catch(err => {
-      console.error(err);
-      if (!skipNotification) {
-        dispatch(showErrorNotification('Remove data source failed', null, err));
-      }
-      return err;
-    });
+  const onError = (err: Record<string, any>) => {
+    console.error(err);
+    return err;
+  };
+
+  return makeMigrationCall(
+    dispatch,
+    getState,
+    [upQuery],
+    undefined,
+    migrationName,
+    onSuccess,
+    onError,
+    requestMsg,
+    successMsg,
+    errorMsg,
+    true
+  );
 };
 
 export const replaceMetadata = (
