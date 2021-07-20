@@ -14,6 +14,13 @@
     "resolveJsonModule": true,
     "target": "es5"
   },
-  "exclude": ["node_modules", "**/*.spec.ts", "**/*.spec.tsx", "**/*.test.ts", "**/*.test.tsx", "cypress"],
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "cypress"
+  ],
   "include": ["src/**/*"]
 }

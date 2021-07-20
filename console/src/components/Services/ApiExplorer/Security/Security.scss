@@ -29,6 +29,9 @@
 }
 
 .form_group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
   .form_container {
     display: flex;
@@ -87,6 +90,7 @@
   gap: 10px;
   margin: 0;
   padding: 8px;
+  padding-left: 0px;
 }
 
 .special_input {
@@ -116,4 +120,8 @@
 
 .form_footer {
   display: flex;
+}
+
+.justify_center {
+  justify-content: center;
 }

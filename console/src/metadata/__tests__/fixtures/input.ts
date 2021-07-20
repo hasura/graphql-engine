@@ -210,4 +210,27 @@ const api_limits: Record<string, apiLimitsType> = {
   },
 };
 
-export { api_limits };
+const introspection_options = {
+  enable_for_role: {
+    old_state: [],
+    role: 'test_role',
+    introspection_is_disabled: false,
+  },
+  state_is_present_and_enable_for_role: {
+    old_state: ['existing_role'],
+    role: 'test_role_1',
+    introspection_is_disabled: false,
+  },
+  disable_for_role: {
+    old_state: [],
+    role: 'test_role',
+    introspection_is_disabled: true,
+  },
+  state_is_present_and_disable_for_role: {
+    old_state: ['existing_role'],
+    role: 'test_role_1',
+    introspection_is_disabled: true,
+  },
+};
+
+export { api_limits, introspection_options };

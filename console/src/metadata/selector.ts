@@ -127,6 +127,9 @@ export const rolesSelector = createSelector(
         }
       }
     );
+    securitySettings.graphql_schema_introspection?.disabled_for_roles.forEach(
+      role => roleNames.push(role)
+    );
     return Array.from(new Set(roleNames));
   }
 );

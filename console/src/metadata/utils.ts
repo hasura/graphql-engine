@@ -278,6 +278,32 @@ export const removeAPILimitsQuery = ({
   };
 };
 
+export const updateIntrospectionOptionsQuery = ({
+  existingOptions,
+  roleName,
+  introspectionIsDisabled,
+}: {
+  existingOptions: string[];
+  roleName: string;
+  introspectionIsDisabled: boolean;
+}) => {
+  const updatedRoleList = existingOptions;
+  if (introspectionIsDisabled && !updatedRoleList.includes(roleName)) {
+    updatedRoleList.push(roleName);
+  }
+
+  if (!introspectionIsDisabled && updatedRoleList.includes(roleName)) {
+    updatedRoleList.splice(updatedRoleList.indexOf(roleName), 1);
+  }
+
+  return {
+    type: 'set_graphql_schema_introspection_options',
+    args: {
+      disabled_for_roles: updatedRoleList,
+    },
+  };
+};
+
 export const updateInheritedRole = (roleName: string, roleSet: string[]) => ({
   type: 'bulk',
   args: [deleteInheritedRole(roleName), addInheritedRole(roleName, roleSet)],
