@@ -753,7 +753,12 @@ const makeMigrationCall = (
     args: upQueries,
   };
 
-  if (downQueries && downQueries.length === 0) {
+  const isRunSqlType =
+    Array.isArray(upQueries) &&
+    upQueries.length >= 0 &&
+    upQueries.some(query => query?.type?.includes('run_sql') ?? false);
+
+  if (downQueries && downQueries.length === 0 && isRunSqlType) {
     downQueries = getDownQueryComments(upQueries);
   }
 

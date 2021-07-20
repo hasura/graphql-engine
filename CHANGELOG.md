@@ -30,6 +30,8 @@
 - console: add `reload all databases` checkbox to the metadata settings page
 - console: add schema sharing
 - console: fix issue with changing table's column name and graphQL field name simultaneously
+- console: fix adding/removing/updating database not getting added to `metadata/databases.yaml` in CLI mode
+- console: fix migrations being generated for allowed queries and inherited roles and in CLI mode
 - cli: add linux and darwin arm64 support
 
 ## v2.0.1

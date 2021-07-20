@@ -85,8 +85,7 @@ export const failDuplicateNameDb = () => {
   cy.getBySel('connect-database-btn').click();
   cy.get('.notification-error')
     .should('be.visible')
-    .and('contain', 'Add data source failed')
-    .and('contain', 'source with name "testDB1" already exists');
+    .and('contain', 'Adding data source failed');
 };
 
 export const deleteTestDBWithUrl = () => {
@@ -95,7 +94,7 @@ export const deleteTestDBWithUrl = () => {
     cy.getBySel('testDB1').find('button').contains('Remove').click();
     cy.get('.notification-success')
       .should('be.visible')
-      .and('contain', 'Data source removed successfully!');
+      .and('contain', 'Data source removed successfully');
     cy.window().its('prompt').should('be.called');
   });
 };
@@ -104,7 +103,7 @@ export const deleteTestDBWithConParams = () => {
     cy.getBySel('testDB2').find('button').contains('Remove').click();
     cy.get('.notification-success')
       .should('be.visible')
-      .and('contain', 'Data source removed successfully!');
+      .and('contain', 'Data source removed successfully');
     cy.window().its('prompt').should('be.called');
   });
 };
@@ -113,7 +112,7 @@ export const deleteTestDDWithEnvVar = () => {
     cy.getBySel('testDB3').find('button').contains('Remove').click();
     cy.get('.notification-success')
       .should('be.visible')
-      .and('contain', 'Data source removed successfully!');
+      .and('contain', 'Data source removed successfully');
     cy.window().its('prompt').should('be.called');
   });
 };
