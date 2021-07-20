@@ -113,7 +113,7 @@ const LimitsTable: React.FC<Props> = ({
                   typeof global !== 'number' ? global?.unique_params : null;
                 return (
                   <div>
-                    <span className={styles.margin_right}>
+                    <span>
                       {state === RoleState.enabled ? (
                         <Legends.Enabled />
                       ) : (
@@ -152,7 +152,7 @@ const LimitsTable: React.FC<Props> = ({
                       : null;
                   return (
                     <div>
-                      <span className={styles.margin_right}>
+                      <span>
                         {state === RoleState.global ? (
                           <Legends.Global />
                         ) : state === RoleState.enabled ? (

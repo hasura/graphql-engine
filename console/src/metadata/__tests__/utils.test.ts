@@ -1,5 +1,9 @@
-import { api_limits } from './fixtures/input';
-import { updateAPILimitsQuery, removeAPILimitsQuery } from '../utils';
+import { api_limits, introspection_options } from './fixtures/input';
+import {
+  updateAPILimitsQuery,
+  removeAPILimitsQuery,
+  updateIntrospectionOptionsQuery,
+} from '../utils';
 
 describe('Testing API limits', () => {
   it('only depth limit', () => {
@@ -57,5 +61,87 @@ describe('Testing Remove API Settings', () => {
       role: 'role1',
     });
     expect(res).toMatchSnapshot();
+  });
+});
+
+describe('Testing Introspection Utils', () => {
+  it('enabling for a user role', () => {
+    const res = updateIntrospectionOptionsQuery({
+      existingOptions: introspection_options.enable_for_role.old_state,
+      roleName: introspection_options.enable_for_role.role,
+      introspectionIsDisabled:
+        introspection_options.enable_for_role.introspection_is_disabled,
+    });
+    expect(res).toMatchInlineSnapshot(`
+      Object {
+        "args": Object {
+          "disabled_for_roles": Array [],
+        },
+        "type": "set_graphql_schema_introspection_options",
+      }
+    `);
+  });
+
+  it('enabling for a user role when there are roles already disabled', () => {
+    const res = updateIntrospectionOptionsQuery({
+      existingOptions:
+        introspection_options.state_is_present_and_enable_for_role.old_state,
+      roleName: introspection_options.state_is_present_and_enable_for_role.role,
+      introspectionIsDisabled:
+        introspection_options.state_is_present_and_enable_for_role
+          .introspection_is_disabled,
+    });
+    expect(res).toMatchInlineSnapshot(`
+      Object {
+        "args": Object {
+          "disabled_for_roles": Array [
+            "existing_role",
+          ],
+        },
+        "type": "set_graphql_schema_introspection_options",
+      }
+    `);
+  });
+
+  it('disabling for a user role', () => {
+    const res = updateIntrospectionOptionsQuery({
+      existingOptions: introspection_options.disable_for_role.old_state,
+      roleName: introspection_options.disable_for_role.role,
+      introspectionIsDisabled:
+        introspection_options.disable_for_role.introspection_is_disabled,
+    });
+    expect(res).toMatchInlineSnapshot(`
+      Object {
+        "args": Object {
+          "disabled_for_roles": Array [
+            "test_role",
+          ],
+        },
+        "type": "set_graphql_schema_introspection_options",
+      }
+    `);
+  });
+
+  it('disabling for a user role when there are roles already disabled', () => {
+    const res = updateIntrospectionOptionsQuery({
+      existingOptions:
+        introspection_options.state_is_present_and_disable_for_role.old_state,
+      roleName:
+        introspection_options.state_is_present_and_disable_for_role.role,
+      introspectionIsDisabled:
+        introspection_options.state_is_present_and_disable_for_role
+          .introspection_is_disabled,
+    });
+    expect(res).toMatchInlineSnapshot(`
+      Object {
+        "args": Object {
+          "disabled_for_roles": Array [
+            "existing_role",
+            "test_role_1",
+          ],
+        },
+        "type": "set_graphql_schema_introspection_options",
+      }
+    `);
   });
 });

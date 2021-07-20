@@ -10,12 +10,9 @@ const tabs = {
   api_limits: {
     display_text: 'API Limits',
   },
-  // introspection: {
-  //   display_text: 'Introspection',
-  // },
-  //   allow_list: {
-  //     display_text: 'Allow List',
-  //   },
+  introspection: {
+    display_text: 'Schema Introspection',
+  },
 };
 
 export const SecurityTabs: React.FC<{ tabName: keyof typeof tabs }> = ({

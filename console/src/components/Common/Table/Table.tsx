@@ -192,8 +192,10 @@ export function TableRow<T>({
         return (
           <div
             className={`${
-              currentRow === index ? styles.table_form_active : ''
-            } ${singleColumn ? styles.single_column : ''}`}
+              currentRow === index
+                ? styles.table_form_active
+                : styles.justify_center
+            } ${singleColumn ? styles.single_column : styles.justify_center}`}
             onClick={onClick(i)}
             key={i}
           >
