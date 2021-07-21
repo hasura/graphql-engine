@@ -17,11 +17,32 @@ query:
         password: password
         database: hasura
         pool_settings: {}
-      tables: []
-      # - table:
-      #     name: author
-      #     schema: hasura
-      # - table:
-      #     name: article
-      #     schema: hasura
-
+      tables:
+      - table:
+          name: author
+          schema: hasura
+        array_relationships:
+        - name: articles
+          using:
+            foreign_key_constraint_on:
+              table:
+                name: article
+                schema: hasura
+              column: author_id
+        - name: co_articles
+          using:
+            foreign_key_constraint_on:
+              table:
+                name: article
+                schema: hasura
+              column: co_author_id
+      - table:
+          name: article
+          schema: hasura
+        object_relationships:
+        - name: author
+          using:
+            foreign_key_constraint_on: author_id
+        - name: co_author
+          using:
+            foreign_key_constraint_on: co_author_id

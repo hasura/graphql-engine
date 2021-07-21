@@ -1,3 +1,15 @@
+# We are using single-statement requests for the same reason as stated in schema_setup_mysql.yaml
 type: bulk
-args: []
+args:
 
+- type: mysql_run_sql
+  args:
+    source: mysql
+    sql: |
+      drop table article;
+
+- type: mysql_run_sql
+  args:
+    source: mysql
+    sql: |
+      drop table author;

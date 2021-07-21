@@ -101,6 +101,9 @@ instance ToTxt TableName where
   toTxt TableName{..} = name
 
 
+type FunctionName = Text
+
+
 data FieldName
   = FieldName
     { fName       :: !Text
