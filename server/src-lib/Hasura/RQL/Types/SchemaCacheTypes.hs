@@ -7,7 +7,6 @@ import qualified Data.Text                           as T
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Aeson.Types
-import           Data.Hashable
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
@@ -34,15 +33,14 @@ data TableObjId (b :: BackendType)
   | TOPerm !RoleName !PermType
   | TOTrigger !TriggerName
   deriving (Generic)
-instance (Backend b) => Hashable (TableObjId b)
 deriving instance Backend b => Eq (TableObjId b)
-deriving instance Backend b => Show (TableObjId b)
+instance (Backend b) => Hashable (TableObjId b)
 
 data SourceObjId (b :: BackendType)
   = SOITable !(TableName b)
   | SOITableObj !(TableName b) !(TableObjId b)
   | SOIFunction !(FunctionName b)
-  deriving (Show, Eq, Generic)
+  deriving (Eq, Generic)
 instance (Backend b) => Hashable (SourceObjId b)
 
 data SchemaObjId
@@ -51,23 +49,9 @@ data SchemaObjId
   | SORemoteSchema !RemoteSchemaName
   | SORemoteSchemaPermission !RemoteSchemaName !RoleName
   | SORole !RoleName
+  deriving (Eq, Generic)
+instance Hashable SchemaObjId
 
-instance Hashable SchemaObjId where
-  hashWithSalt salt = \case
-    SOSource sourceName -> hashWithSalt salt sourceName
-    SOSourceObj sourceName exists ->
-      AB.dispatchAnyBackend' @Hashable exists (hashWithSalt salt . (sourceName,))
-    SORemoteSchema remoteSchemaName -> hashWithSalt salt remoteSchemaName
-    SORemoteSchemaPermission remoteSchemaName roleName -> hashWithSalt salt (remoteSchemaName, roleName)
-    SORole roleName -> hashWithSalt salt roleName
-
-instance Eq SchemaObjId where
-  (SOSource s1) == (SOSource s2)                                       = s1 == s2
-  (SORemoteSchema s1) == (SORemoteSchema s2)                           = s1 == s2
-  (SOSourceObj s1 id1) == (SOSourceObj s2 id2)                         = (s1 == s2) && id1 == id2
-  (SORemoteSchemaPermission s1 r1) == (SORemoteSchemaPermission s2 r2) = (s1, r1) == (s2, r2)
-  (SORole r1) == (SORole r2)                                           = r1 == r2
-  _ == _                                                               = False
 
 reportSchemaObj :: SchemaObjId -> T.Text
 reportSchemaObj = \case
