@@ -3,6 +3,8 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: Fixing bug in ReplaceMetadata parser - Moving from Alternative to committed-choice.
+
 ## v2.0.3
 (Add entries below in the order of server, console, cli, docs, others)
 

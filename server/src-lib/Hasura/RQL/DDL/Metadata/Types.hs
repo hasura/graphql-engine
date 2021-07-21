@@ -20,6 +20,7 @@ import           Hasura.Prelude
 
 import           Data.Aeson
 import           Data.Aeson.TH
+import qualified Data.HashMap.Strict as H
 
 import           Hasura.RQL.Types
 
@@ -150,13 +151,18 @@ instance ToJSON ReplaceMetadataV2 where
     , "metadata" .= _rmv2Metadata
     ]
 
+-- TODO: If additional API versions are supported in future it would be ideal to include a version field
+--       Rather than differentiating on the "metadata" field.
 data ReplaceMetadata
   = RMReplaceMetadataV1 !ReplaceMetadataV1
   | RMReplaceMetadataV2 !ReplaceMetadataV2
   deriving (Eq)
 
 instance FromJSON ReplaceMetadata where
-  parseJSON v = RMReplaceMetadataV2 <$> parseJSON v <|> RMReplaceMetadataV1 <$> parseJSON v
+  parseJSON = withObject "ReplaceMetadata" $ \o -> do
+    if (H.member "metadata" o)
+      then RMReplaceMetadataV2 <$> parseJSON (Object o)
+      else RMReplaceMetadataV1 <$> parseJSON (Object o)
 
 instance ToJSON ReplaceMetadata where
   toJSON = \case
