@@ -56,8 +56,8 @@
               message: cannot pushdown the subquery
               status_code: 0A000
               description:
-                Complex subqueries and CTEs cannot be in the outer part of
-                the outer join
+                Complex subqueries, CTEs and local tables cannot be in the
+                outer part of an outer join with a distributed table
             arguments:
               - (Oid 114,Just ("{\"x-hasura-role\":\"admin\"}",Binary))
               - (Oid 25,Just ("sarga",Binary))
