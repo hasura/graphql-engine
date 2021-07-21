@@ -12,9 +12,9 @@ query:
       kind: mysql
       configuration:
         host: '127.0.0.1'
-        port: 3306
-        user: hasura
-        password: password
+        port: 33306
+        user: root
+        password: hasuraMySQL1
         database: hasura
         pool_settings: {}
       tables:

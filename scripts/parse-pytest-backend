@@ -9,6 +9,7 @@ Invalid --backend argument. Available backends:
   bigquery
   citus
   mssql
+  mysql
 
 EOL
 exit 1
@@ -46,6 +47,8 @@ case "$BACKEND" in
   citus)
   ;;
   mssql)
+  ;;
+  mysql)
   ;;
   *)
     die_backends
