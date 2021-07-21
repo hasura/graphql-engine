@@ -1,3 +1,20 @@
 type: bulk
-args: []
+args:
 
+# untrack tables
+
+- type: mysql_untrack_table
+  args:
+    source: mysql
+    table:
+      name: article
+      schema: hasura
+    cascade: true
+
+- type: mysql_untrack_table
+  args:
+    source: mysql
+    table:
+      name: author
+      schema: hasura
+    cascade: true

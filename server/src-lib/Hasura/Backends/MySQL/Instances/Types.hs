@@ -24,8 +24,8 @@ instance Backend 'MySQL where
   type SourceConnConfiguration 'MySQL = MySQL.ConnSourceConfig
   type Identifier              'MySQL = Void
   type TableName               'MySQL = MySQL.TableName
+  type FunctionName            'MySQL = MySQL.FunctionName
   type RawFunctionInfo         'MySQL = Void -- MySQL.FunctionName
-  type FunctionName            'MySQL = Void -- MySQL.FunctionName
   type FunctionArgType         'MySQL = Void
   type ConstraintName          'MySQL = MySQL.ConstraintName
   type BasicOrderType          'MySQL = MySQL.Order
@@ -92,7 +92,7 @@ instance Backend 'MySQL where
   functionToTable = error "MySQL backend does not support this operation yet."
 
   tableToFunction :: TableName 'MySQL -> FunctionName 'MySQL
-  tableToFunction = error "MySQL backend does not support this operation yet."
+  tableToFunction = MySQL.name
 
   tableGraphQLName :: TableName 'MySQL -> Either QErr G.Name
   tableGraphQLName MySQL.TableName{..} =
@@ -108,4 +108,4 @@ instance Backend 'MySQL where
   scalarTypeGraphQLName = error "MySQL backend does not support this operation yet."
 
   snakeCaseTableName :: TableName 'MySQL -> Text
-  snakeCaseTableName = error "MySQL backend does not support this operation yet."
+  snakeCaseTableName MySQL.TableName { name, schema } = schema <> "_" <> name

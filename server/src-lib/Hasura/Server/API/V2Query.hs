@@ -14,6 +14,7 @@ import           Data.Aeson.TH
 
 import qualified Hasura.Backends.BigQuery.DDL.RunSQL as BigQuery
 import qualified Hasura.Backends.MSSQL.DDL.RunSQL    as MSSQL
+import qualified Hasura.Backends.MySQL.SQL           as MySQL
 import qualified Hasura.Backends.Postgres.DDL.RunSQL as Postgres
 import qualified Hasura.Tracing                      as Tracing
 
@@ -43,6 +44,7 @@ data RQLQuery
   | RQRunSql !Postgres.RunSQL
   | RQMssqlRunSql !MSSQL.MSSQLRunSQL
   | RQCitusRunSql !Postgres.RunSQL
+  | RQMysqlRunSql !MySQL.RunSQL
   | RQBigqueryRunSql !BigQuery.BigQueryRunSQL
   | RQBigqueryDatabaseInspection !BigQuery.BigQueryRunSQL
   | RQBulk ![RQLQuery]
@@ -107,6 +109,7 @@ queryModifiesSchema = \case
   RQRunSql q                     -> Postgres.isSchemaCacheBuildRequiredRunSQL q
   RQCitusRunSql q                -> Postgres.isSchemaCacheBuildRequiredRunSQL q
   RQMssqlRunSql q                -> MSSQL.sqlContainsDDLKeyword $ MSSQL._mrsSql q
+  RQMysqlRunSql _                -> False
   RQBigqueryRunSql _             -> False
   RQBigqueryDatabaseInspection _ -> False
   RQBulk l                       -> any queryModifiesSchema l
@@ -131,6 +134,7 @@ runQueryM env = \case
   RQCount  q                     -> runCount q
   RQRunSql q                     -> Postgres.runRunSQL @'Vanilla q
   RQMssqlRunSql q                -> MSSQL.runSQL q
+  RQMysqlRunSql q                -> MySQL.runSQL q
   RQCitusRunSql q                -> Postgres.runRunSQL @'Citus q
   RQBigqueryRunSql q             -> BigQuery.runSQL q
   RQBigqueryDatabaseInspection q -> BigQuery.runDatabaseInspection q
