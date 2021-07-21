@@ -9,15 +9,13 @@ pytestmark = pytest.mark.allow_server_upgrade_test
 usefixtures = pytest.mark.usefixtures
 
 
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['mysql'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicMySQL:
 
-    # initialize the metadata
-    def test_replace_metadata(self, hge_ctx, transport):
-        if transport == 'http':
-            check_query_f(hge_ctx, self.dir() + '/replace_metadata.yaml')
+    # initialize the metadata with default 'http' transport fixture
+    def test_replace_metadata(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata.yaml')
 
     @classmethod
     def dir(cls):
@@ -1114,7 +1112,7 @@ class TestGraphQLExplain:
         if req_st != 200:
             # return early in case we're testing for failures
             return
-        
+
         # Comparing only with generated 'sql' since the 'plan' may differ
         resp_sql = resp_json[0]['sql']
         exp_sql = conf['response'][0]['sql']
