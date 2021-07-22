@@ -169,3 +169,9 @@ Detailed Docker setup
 This was a quickstart guide to get the Hasura GraphQL engine up and running
 quickly. For more detailed instructions on deploying using Docker, check out
 :ref:`deployment_docker`.
+
+.. admonition:: Additional Resources
+
+  Get Started with Hasura today - `Watch video guide <https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=>`__.
+
+  Have additional questions? - `Contact us <https://hasura.io/contact-us/?pg=docs&plcmt=body&cta=getting-started&tech=>`__.
