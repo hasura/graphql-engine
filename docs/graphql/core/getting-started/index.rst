@@ -46,6 +46,12 @@ Hasura GraphQL engine supports:
 - :ref:`MS SQL Server <database_ms_sql_server>`
 - **MySQL** (in preview) - See the :ref:`preview guide <mysql_preview>`
 
+.. admonition:: Additional Resources
+
+  Get Started with Hasura today - `Watch video guide <https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=>`__.
+
+  Have additional questions? - `Contact us <https://hasura.io/contact-us/?pg=docs&plcmt=body&cta=getting-started&tech=>`__.
+
 .. toctree::
    :maxdepth: 2
    :titlesonly:
