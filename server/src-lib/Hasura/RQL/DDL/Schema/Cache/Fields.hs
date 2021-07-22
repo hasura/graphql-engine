@@ -32,14 +32,16 @@ addNonColumnFields
   :: forall b arr m
    . ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m, BackendMetadata b)
-  => ( SourceName
+  => ( HashMap SourceName (AB.AnyBackend PartiallyResolvedSource)
+     , SourceName
      , HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
      , FieldInfoMap (ColumnInfo b)
      , RemoteSchemaMap
      , DBFunctionsMetadata b
      , NonColumnTableInputs b
      ) `arr` FieldInfoMap (FieldInfo b)
-addNonColumnFields = proc ( source
+addNonColumnFields = proc ( allSources
+                          , source
                           , rawTableInfo
                           , columns
                           , remoteSchemaMap
@@ -80,7 +82,7 @@ addNonColumnFields = proc ( source
          (_rrmName . (^. _3))
          (mkRemoteRelationshipMetadataObject @b)
          buildRemoteRelationship
-    -< ((columnsAndComputedFields, remoteSchemaMap), map (source, _nctiTable,) _nctiRemoteRelationships)
+    -< ((allSources, columnsAndComputedFields, remoteSchemaMap), map (source, _nctiTable,) _nctiRemoteRelationships)
 
   let relationshipFields = mapKeys fromRel relationshipInfos
       computedFieldFields = mapKeys fromComputedField computedFieldInfos
@@ -96,7 +98,7 @@ addNonColumnFields = proc ( source
     -- Next, check for conflicts with custom field names. This is easiest to do before merging with
     -- the column info itself because we have access to the information separately, and custom field
     -- names are not currently stored as a separate map (but maybe should be!).
-    >-> (\fields -> (columns, M.catMaybes fields) >- (noCustomFieldConflicts))
+    >-> (\fields -> (columns, M.catMaybes fields) >- noCustomFieldConflicts)
     -- Finally, check for conflicts with the columns themselves.
     >-> (\fields -> align columns (M.catMaybes fields) >- returnA)
     >-> (| Inc.keyed (\_ fields -> fields >- noColumnConflicts) |)
@@ -249,18 +251,18 @@ mkRemoteRelationshipMetadataObject (source, table, RemoteRelationshipMetadata{..
                    $ AB.mkAnyBackend
                    $ SMOTableObj @b table
                    $ MTORemoteRelationship _rrmName
-      RemoteRelationshipDef{..} = _rrmDefinition
-  in MetadataObject objectId $ toJSON $
-     RemoteRelationship @b _rrmName source table _rrdHasuraFields _rrdRemoteSchema _rrdRemoteField
+  in MetadataObject objectId
+       $ toJSON
+       $ RemoteRelationship @b _rrmName source table _rrmDefinition
 
 buildRemoteRelationship
   :: forall b arr m
    . ( ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m, BackendMetadata b)
-  => ( (FieldInfoMap (FieldInfo b), RemoteSchemaMap)
+  => ( (HashMap SourceName (AB.AnyBackend PartiallyResolvedSource), FieldInfoMap (FieldInfo b), RemoteSchemaMap)
      , (SourceName, TableName b, RemoteRelationshipMetadata)
      ) `arr` Maybe (RemoteFieldInfo b)
-buildRemoteRelationship = proc ( (pgColumns, remoteSchemaMap)
+buildRemoteRelationship = proc ( (allSources, allColumns, remoteSchemaMap)
                                , (source, table, rrm@RemoteRelationshipMetadata{..})
                                ) -> do
   let metadataObject = mkRemoteRelationshipMetadataObject @b (source, table, rrm)
@@ -269,12 +271,17 @@ buildRemoteRelationship = proc ( (pgColumns, remoteSchemaMap)
                     $ SOITableObj @b table
                     $ TORemoteRel _rrmName
       addRemoteRelationshipContext e = "in remote relationship" <> _rrmName <<> ": " <> e
-      RemoteRelationshipDef{..} = _rrmDefinition
-      remoteRelationship = RemoteRelationship @b _rrmName source table _rrdHasuraFields
-                           _rrdRemoteSchema _rrdRemoteField
+      def = _rrmDefinition
+      remoteRelationship =
+        RemoteRelationship
+          @b
+          _rrmName
+          source
+          table
+          def
   (| withRecordInconsistency (
        (| modifyErrA (do
-          (remoteField, dependencies) <- bindErrorA -< buildRemoteFieldInfo remoteRelationship pgColumns remoteSchemaMap
+          (remoteField, dependencies) <- bindErrorA -< buildRemoteFieldInfo source table allColumns remoteRelationship allSources remoteSchemaMap
           recordDependencies -< (metadataObject, schemaObj, dependencies)
           returnA -< remoteField)
         |)(addTableContext @b table . addRemoteRelationshipContext))

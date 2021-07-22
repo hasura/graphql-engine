@@ -162,6 +162,7 @@ runRunSQL q@RunSQL {..}
 -- | @'withMetadataCheck' cascade action@ runs @action@ and checks if the schema changed as a
 -- result. If it did, it checks to ensure the changes do not violate any integrity constraints, and
 -- if not, incorporates them into the schema cache.
+-- TODO(antoine): shouldn't this be generalized?
 withMetadataCheck
   :: forall (pgKind :: PostgresKind) a m
    . ( BackendMetadata ('Postgres pgKind)
@@ -189,6 +190,7 @@ withMetadataCheck source cascade txAccess action = do
 
       -- Run the action
       actionResult <- action
+
       -- Get the metadata after the sql query
       (postActionTableMeta, postActionFunctionMeta) <- fetchMeta preActionTables preActionFunctions
 
@@ -202,25 +204,26 @@ withMetadataCheck source cascade txAccess action = do
         throw400 NotSupported $ "the following tracked function(s) cannot be overloaded: "
         <> commaSeparated overloadedFuncs
 
-      indirectSourceDeps <- getSchemaChangeDeps source schemaDiff
-
-      let indirectDeps =
-            map
-              (SOSourceObj source . AB.mkAnyBackend)
-              indirectSourceDeps
       -- Report back with an error if cascade is not set
+      indirectDeps <- getSchemaChangeDeps source schemaDiff
       when (indirectDeps /= [] && not cascade) $ reportDepsExt indirectDeps []
 
       metadataUpdater <- execWriterT $ do
         -- Purge all the indirect dependents from state
-        mapM_ (purgeDependentObject source >=> tell) indirectSourceDeps
+        for_ indirectDeps \case
+          SOSourceObj sourceName objectID -> do
+            AB.dispatchAnyBackend @BackendMetadata objectID $ purgeDependentObject sourceName >=> tell
+          _ ->
+            pure ()
 
         -- Purge all dropped functions
-        let purgedFuncs = flip mapMaybe indirectSourceDeps $ \case
-              SOIFunction qf -> Just qf
-              _              -> Nothing
-
-        forM_ (droppedFuncs \\ purgedFuncs) $ tell . dropFunctionInMetadata @('Postgres pgKind) source
+        let purgedFuncs = flip mapMaybe indirectDeps \case
+              SOSourceObj _ objectID
+                | Just (SOIFunction qf) <- AB.unpackAnyBackend @('Postgres pgKind) objectID
+                -> Just qf
+              _ -> Nothing
+        for_ (droppedFuncs \\ purgedFuncs) $
+          tell . dropFunctionInMetadata @('Postgres pgKind) source
 
         -- Process altered functions
         forM_ alteredFuncs $ \(qf, newTy) -> do

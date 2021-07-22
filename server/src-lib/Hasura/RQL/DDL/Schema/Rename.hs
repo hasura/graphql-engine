@@ -13,7 +13,6 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict           as M
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as Set
-import qualified Data.List.NonEmpty            as NE
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Control.Lens.Combinators
@@ -50,9 +49,20 @@ data Rename b
 
 otherDeps :: QErrM m => Text -> SchemaObjId -> m ()
 otherDeps errMsg d =
-  throw500 $ "unexpected dependancy "
+  throw500 $ "unexpected dependency "
     <> reportSchemaObj d <> "; " <> errMsg
 
+-- | Replace all references to a given table name by its new name across the entire metadata.
+--
+-- This function will make use of the metadata dependency graph (see 'getDependentObjs') to identify
+-- all places that refer to the old table name, and replace it accordingly. Most operations will
+-- occur within the same source, such as table references in relationships and permissions.
+-- Dependencies across sources can happen in the case of cross-source relationships.
+--
+-- This function will fail if it encounters a nonsensical dependency; for instance, if there's a
+-- dependency from that table to a source.
+--
+-- For more information about the dependency graph, see 'SchemaObjId'.
 renameTableInMetadata
   :: forall b m
    . ( MonadError QErr m
@@ -73,17 +83,29 @@ renameTableInMetadata source newQT oldQT = do
 
   -- update all dependant schema objects
   forM_ allDeps $ \case
-    sobj@(SOSourceObj _ exists) -> case AB.unpackAnyBackend @b exists of
-      Just (SOITableObj refQT (TORel rn)) ->
-        updateRelDefs @b source refQT rn (oldQT, newQT)
-      Just (SOITableObj refQT (TOPerm rn pt)) ->
-        updatePermFlds @b source refQT rn pt $ RTable (oldQT, newQT)
-      -- A trigger's definition is not dependent on the table directly
-      Just (SOITableObj _ (TOTrigger _)) -> pure ()
-      -- A remote relationship's definition is not dependent on the table directly
-      Just (SOITableObj _ (TORemoteRel _)) -> pure ()
-      _ -> otherDeps errMsg sobj
-
+    -- the dependend object is a source object in the same source
+    sobj@(SOSourceObj depSourceName exists)
+      | depSourceName == source
+      , Just sourceObjId <- AB.unpackAnyBackend @b exists
+      -> case sourceObjId of
+           SOITableObj refQT (TORel rn) ->
+             updateRelDefs @b source refQT rn (oldQT, newQT)
+           SOITableObj refQT (TOPerm rn pt) ->
+             updatePermFlds @b source refQT rn pt $ RTable (oldQT, newQT)
+           -- A trigger's definition is not dependent on the table directly
+           SOITableObj _ (TOTrigger _) -> pure ()
+           -- A remote relationship's definition is not dependent on the table directly
+           SOITableObj _ (TORemoteRel _) -> pure ()
+           _ -> otherDeps errMsg sobj
+    -- the dependend object is a source object in a different source
+    sobj@(SOSourceObj depSourceName exists) ->
+      AB.dispatchAnyBackend @BackendMetadata exists \(sourceObjId :: SourceObjId b') ->
+        case sourceObjId of
+          SOITableObj tableName (TORemoteRel remoteRelationshipName) -> do
+            updateTableInRemoteRelationshipRHS @b' @b depSourceName tableName remoteRelationshipName (oldQT, newQT)
+          -- only remote relationships might create dependencies across sources
+          _ -> otherDeps errMsg sobj
+    -- any other kind of dependent object (erroneous)
     d -> otherDeps errMsg d
   -- Update table name in metadata
   tell $ MetadataModifier $ metaSources.ix source.(toSourceMetadata @b).smTables %~ \tables ->
@@ -92,6 +114,17 @@ renameTableInMetadata source newQT oldQT = do
   where
     errMsg = "cannot rename table " <> oldQT <<> " to " <>> newQT
 
+-- | Replace all references to a given column name by its new name across the entire metadata.
+--
+-- This function will make use of the metadata dependency graph (see 'getDependentObjs') to identify
+-- all places that refer to the old column name, and replace it accordingly. Most operations will
+-- occur within the same source, such as column references in relationships and permissions.
+-- Dependencies across sources can happen in the case of cross-source relationships.
+--
+-- This function will fail if it encounters a nonsensical dependency; for instance, if there's a
+-- dependency from that table to a source.
+--
+-- For more information about the dependency graph, see 'SchemaObjId'.
 renameColumnInMetadata
   :: forall b m
    . ( MonadError QErr m
@@ -110,23 +143,36 @@ renameColumnInMetadata oCol nCol source qt fieldInfo = do
                   $ AB.mkAnyBackend
                   $ SOITableObj @b qt
                   $ TOCol @b oCol
-      renameFld = RFCol @b $ RenameItem qt oCol nCol
+      renameItem = RenameItem @b qt oCol nCol
+      renameFld  = RFCol renameItem
   -- Update dependent objects
   forM_ depObjs $ \case
-    sobj@(SOSourceObj _ exists) -> case AB.unpackAnyBackend @b exists of
-      Just (SOITableObj refQT (TOPerm role pt)) ->
-        updatePermFlds @b source refQT role pt $ RField renameFld
-      Just (SOITableObj refQT (TORel rn)) ->
-        updateColInRel @b source refQT rn $ RenameItem qt oCol nCol
-      Just (SOITableObj refQT (TOTrigger triggerName)) ->
-        tell
-          $ MetadataModifier
-          $ tableMetadataSetter @b source refQT.tmEventTriggers.ix triggerName
-          %~ updateColumnInEventTrigger @b refQT oCol nCol qt
-      Just (SOITableObj _ (TORemoteRel remoteRelName)) ->
-        updateColInRemoteRelationship source remoteRelName
-          $ RenameItem @b qt oCol nCol
-      _ -> otherDeps errMsg sobj
+    -- the dependend object is a source object in the same source
+    sobj@(SOSourceObj depSourceName exists)
+      | depSourceName == source
+      , Just sourceObjId <- AB.unpackAnyBackend @b exists
+      -> case sourceObjId of
+           SOITableObj refQT (TOPerm role pt) ->
+             updatePermFlds @b source refQT role pt $ RField renameFld
+           SOITableObj refQT (TORel rn) ->
+             updateColInRel @b source refQT rn renameItem
+           SOITableObj refQT (TOTrigger triggerName) ->
+             tell
+               $ MetadataModifier
+               $ tableMetadataSetter @b source refQT.tmEventTriggers.ix triggerName
+               %~ updateColumnInEventTrigger @b refQT oCol nCol qt
+           SOITableObj _ (TORemoteRel remoteRelName) ->
+             updateColInRemoteRelationshipLHS source remoteRelName renameItem
+           _ -> otherDeps errMsg sobj
+    -- the dependend object is a source object in a different source
+    sobj@(SOSourceObj depSourceName exists) ->
+      AB.dispatchAnyBackend @BackendMetadata exists \(sourceObjId :: SourceObjId b') ->
+        case sourceObjId of
+          SOITableObj tableName (TORemoteRel remoteRelationshipName) -> do
+            updateColInRemoteRelationshipRHS @b' @b depSourceName tableName remoteRelationshipName renameItem
+          -- only remote relationships might create dependencies across sources
+          _ -> otherDeps errMsg sobj
+    -- any other kind of dependent object (erroneous)
     d -> otherDeps errMsg d
   -- Update custom column names
   possiblyUpdateCustomColumnNames @b source qt oCol nCol
@@ -291,7 +337,7 @@ updateDelPermFlds refQT rename (DelPerm fltr) = do
 
 updatePreset
   :: (Backend b)
-  => TableName b -> RenameField b -> (ColumnValues b Value) -> (ColumnValues b Value)
+  => TableName b -> RenameField b -> ColumnValues b Value -> ColumnValues b Value
 updatePreset qt rf obj =
    case rf of
      RFCol (RenameItem opQT oCol nCol) ->
@@ -337,7 +383,7 @@ updateFieldInBoolExp qt rf be = BoolExp <$>
     BoolOr  exps -> BoolOr <$> procExps exps
     BoolNot e    -> BoolNot <$> updateBoolExp' e
     BoolExists (GExists refqt wh) ->
-      (BoolExists . GExists refqt . unBoolExp)
+      BoolExists . GExists refqt . unBoolExp
       <$> updateFieldInBoolExp refqt rf (BoolExp wh)
     BoolFld fld  -> BoolFld <$> updateColExp qt rf fld
   where
@@ -391,45 +437,120 @@ updateColInRel source fromQT rn rnCol = do
         ArrRel -> tmArrayRelationships.ix rn.rdUsing %~
                   updateColInArrRel fromQT relTableName rnCol
 
-updateColInRemoteRelationship
+-- | Local helper: update a column's name in the left-hand side of a remote relationship.
+--
+-- There are two kinds or remote relationships: remote source relationships, across sources, and
+-- remote schema relationships, on remote schemas. In both cases, we maintain a mapping from the
+-- source table's colunns to what they should be joined against in the target; when a column is
+-- renamed, those references must be renamed as well. This function handles both cases.
+--
+-- See 'renameColumnInMetadata'.
+updateColInRemoteRelationshipLHS
   :: forall b m
    . ( MonadError QErr m
      , MonadWriter MetadataModifier m
      , BackendMetadata b
      )
   => SourceName -> RemoteRelationshipName -> RenameCol b -> m ()
-updateColInRemoteRelationship source remoteRelationshipName renameCol = do
+updateColInRemoteRelationshipLHS source remoteRelationshipName (RenameItem qt oldCol newCol) = do
   oldColName <- parseGraphQLName $ toTxt oldCol
   newColName <- parseGraphQLName $ toTxt newCol
-  tell $ MetadataModifier $
-    tableMetadataSetter @b source qt.tmRemoteRelationships.ix remoteRelationshipName.rrmDefinition %~
-      (rrdHasuraFields %~ modifyHasuraFields) .
-      (rrdRemoteField %~ modifyFieldCalls oldColName newColName)
+  let
+    oldFieldName = fromCol @b oldCol
+    newFieldName = fromCol @b newCol
+
+    updateSet =
+      Set.insert newFieldName . Set.delete oldFieldName
+
+    updateMapKey =
+      -- mapKeys is not available in 0.2.13.0
+      M.fromList . map (\(key, value) -> (if key == oldFieldName then newFieldName else key, value)) . M.toList
+
+    updateFieldCalls (RemoteFields fields) =
+      RemoteFields $ fields <&> \(FieldCall name (RemoteArguments args)) ->
+        FieldCall name $ RemoteArguments $ updateVariableName <$> args
+
+    updateVariableName =
+      fmap \v -> if v == oldColName then newColName else v
+
+    remoteRelationshipLens =
+      tableMetadataSetter @b source qt.tmRemoteRelationships.ix remoteRelationshipName.rrmDefinition
+
+    remoteSchemaLHSModifier =
+      remoteRelationshipLens._RemoteSchemaRelDef._2 %~
+      (rrdHasuraFields %~ updateSet) .
+      (rrdRemoteField  %~ updateFieldCalls)
+
+    remoteSourceLHSModifier =
+      remoteRelationshipLens._RemoteSourceRelDef.rsrFieldMapping %~ updateMapKey
+
+  tell $ MetadataModifier $ remoteSchemaLHSModifier . remoteSourceLHSModifier
+
   where
-    (RenameItem qt oldCol newCol) = renameCol
-    modifyHasuraFields = Set.insert (fromCol @b newCol) . Set.delete (fromCol @b oldCol)
-    modifyFieldCalls oldColName newColName =
-      RemoteFields
-      . NE.map (\(FieldCall name args) ->
-                   let remoteArgs = getRemoteArguments args
-                   in FieldCall name $ RemoteArguments $
+    parseGraphQLName txt = G.mkName txt
+      `onNothing` throw400 ParseFailed (txt <> " is not a valid GraphQL name")
 
-                                      fmap (replaceVariableName oldColName newColName) remoteArgs
-               )
-      . unRemoteFields
+-- | Local helper: update a column's name in the right-hand side of a remote relationship.
+--
+-- In the case of remote _source_ relationships, the mapping from column to column needs to be
+-- updated if one of the rhs columns has been renamed. A dependency is tracked from the rhs source's
+-- column to the lhs source's relationship: when a rhs source's column has been renamed, this
+-- function performs the corresponding update in the lhs source's relationship definition.
+--
+-- See 'renameColumnInMetadata'.
+updateColInRemoteRelationshipRHS
+  :: forall source target m
+   . ( MonadWriter MetadataModifier m
+     , BackendMetadata source
+     , BackendMetadata target
+     )
+  => SourceName
+  -> TableName source
+  -> RemoteRelationshipName
+  -> RenameCol target
+  -> m ()
+updateColInRemoteRelationshipRHS source tableName remoteRelationshipName (RenameItem _ oldCol newCol) =
+  tell $ MetadataModifier $
+    tableMetadataSetter @source source tableName.
+    tmRemoteRelationships.
+    ix remoteRelationshipName.
+    rrmDefinition.
+    _RemoteSourceRelDef.
+    rsrFieldMapping %~ updateMapValue
+  where
+    oldFieldName = fromCol @target oldCol
+    newFieldName = fromCol @target newCol
+    updateMapValue =
+      fmap \value -> if value == oldFieldName then newFieldName else value
 
-    parseGraphQLName txt = onNothing (G.mkName txt) $ throw400 ParseFailed errMsg
-      where
-        errMsg = txt <> " is not a valid GraphQL name"
-
-    replaceVariableName :: G.Name -> G.Name -> G.Value G.Name -> G.Value G.Name
-    replaceVariableName oldColName newColName = \case
-      G.VVariable oldColName' ->
-        G.VVariable $ bool oldColName newColName $ oldColName == oldColName'
-      G.VList values -> G.VList $ map (replaceVariableName oldColName newColName) values
-      G.VObject values ->
-        G.VObject $ fmap (replaceVariableName oldColName newColName) values
-      v -> v
+-- | Local helper: update a table's name in the right-hand side of a remote relationship.
+--
+-- In the case of remote _source_ relationships, the relationship definition targets a specific
+-- table in the rhs source, and that reference needs to be updated if the targeted table has been
+-- renamed. A dependency is tracked from the rhs source's table to the lhs source's relationship:
+-- when a rhs table has been renamed, this function performs the corresponding update in the lhs
+-- source's relationship definition.
+--
+-- See 'renameTableInMetadata'.
+updateTableInRemoteRelationshipRHS
+  :: forall source target m
+   . ( MonadWriter MetadataModifier m
+     , BackendMetadata source
+     , BackendMetadata target
+     )
+  => SourceName
+  -> TableName source
+  -> RemoteRelationshipName
+  -> RenameTable target
+  -> m ()
+updateTableInRemoteRelationshipRHS source tableName remoteRelationshipName (_, newTableName) =
+  tell $ MetadataModifier $
+    tableMetadataSetter @source source tableName.
+    tmRemoteRelationships.
+    ix remoteRelationshipName.
+    rrmDefinition.
+    _RemoteSourceRelDef.
+    rsrTable .~ toJSON newTableName
 
 updateColInObjRel
   :: (Backend b)

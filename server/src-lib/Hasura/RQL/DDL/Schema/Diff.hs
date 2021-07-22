@@ -182,34 +182,34 @@ getSchemaDiff oldMeta newMeta =
       (tmTable oldtm, getTableDiff oldtm newtm)
 
 getSchemaChangeDeps
-  :: forall b m. (QErrM m, CacheRM m, Backend b)
-  => SourceName -> SchemaDiff b -> m [SourceObjId b]
+  :: forall b m
+   . (QErrM m, CacheRM m, Backend b)
+  => SourceName
+  -> SchemaDiff b
+  -> m [SchemaObjId]
 getSchemaChangeDeps source schemaDiff = do
-  -- Get schema cache
   sc <- askSchemaCache
-  let tableIds =
-        map
-          (SOSourceObj source . AB.mkAnyBackend . SOITable @b)
-          droppedTables
-  -- Get the dependent of the dropped tables
-  let tableDropDeps = concatMap (getDependentObjs sc) tableIds
+  let tableIds = SOSourceObj source . AB.mkAnyBackend . SOITable @b <$> droppedTables
+      tableDropDeps = concatMap (getDependentObjs sc) tableIds
   tableModDeps <- concat <$> traverse (uncurry (getTableChangeDeps source)) alteredTables
-  -- return $ filter (not . isDirectDep) $
-  return $ mapMaybe getIndirectDep $
-    HS.toList $ HS.fromList $ tableDropDeps <> tableModDeps
+  pure $ filter isIndirectDep $ HS.toList $ HS.fromList $ tableDropDeps <> tableModDeps
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
-
-    getIndirectDep :: SchemaObjId -> Maybe (SourceObjId b)
-    getIndirectDep (SOSourceObj s exists) =
-      AB.unpackAnyBackend exists >>= \case
-        srcObjId@(SOITableObj tn _) ->
-          -- Indirect dependancy shouldn't be of same source and not among dropped tables
-          if not (s == source && tn `HS.member` HS.fromList droppedTables)
-            then Just srcObjId
-            else Nothing
-        srcObjId -> Just srcObjId
-    getIndirectDep _ = Nothing
+    -- we keep all table objects that are not tied to a deleted table
+    isIndirectDep :: SchemaObjId -> Bool
+    isIndirectDep = \case
+      -- table objects in the same source
+      SOSourceObj s obj
+        | s == source
+        , Just (SOITableObj tn _) <- AB.unpackAnyBackend @b obj
+        ->  not $ tn `HS.member` HS.fromList droppedTables
+      -- table objects in any other source
+      SOSourceObj _ obj
+        -> AB.runBackend obj \case
+           SOITableObj {} -> True
+           _              -> False
+      -- any other kind of schema object
+      _ -> False
 
 data FunctionDiff b
   = FunctionDiff
