@@ -5,6 +5,7 @@
 
 - server: Fixing bug in ReplaceMetadata parser - Moving from Alternative to committed-choice.
 - server: Relax the unique operation name constraint when adding a query to a query collection
+- console: add pagination on the Raw SQL results page
 
 ## v2.0.3
 (Add entries below in the order of server, console, cli, docs, others)
