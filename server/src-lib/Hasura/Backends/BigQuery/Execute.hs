@@ -413,16 +413,17 @@ getJobResults ::
   -> Job
   -> Fetch
   -> m (Either ExecuteProblem JobResultsResponse)
-getJobResults sc@BigQuerySourceConfig {..} Job {jobId} Fetch {pageToken} =
+getJobResults sc@BigQuerySourceConfig {..} Job {jobId, location} Fetch {pageToken} =
   liftIO (catchAny run (pure . Left . GetJobResultsProblem))
   where
+    -- https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/get#query-parameters
     url =
       "GET https://bigquery.googleapis.com/bigquery/v2/projects/" <>
        T.unpack _scProjectId <>
        "/queries/" <>
        T.unpack jobId <>
-       "?alt=json&key=" <>
-       -- T.unpack apiToken <>
+       "?alt=json" <>
+       "&location=" <> T.unpack location <>
        "&" <>
        T.unpack (encodeParams extraParameters)
     run = do
@@ -450,8 +451,9 @@ getJobResults sc@BigQuerySourceConfig {..} Job {jobId} Fetch {pageToken} =
 -- Creating jobs
 
 data Job = Job
-  { state :: Text
-  , jobId :: Text
+  { state    :: !Text
+  , jobId    :: !Text
+  , location :: !Text
   } deriving (Show)
 
 instance Aeson.FromJSON Job where
@@ -462,13 +464,15 @@ instance Aeson.FromJSON Job where
          kind <- o .: "kind"
          if kind == ("bigquery#job" :: Text)
            then do
-             state <-
-               do status <- o .: "status"
-                  status .: "state"
-             jobId <-
-               do ref <- o .: "jobReference"
-                  ref .: "jobId"
-             pure Job {state, jobId}
+             state <- do
+               status <- o .: "status"
+               status .: "state"
+             (jobId, location) <- do
+               ref <- o .: "jobReference"
+               -- 'location' is needed in addition to 'jobId' to query a job's
+               -- status
+               (,) <$> ref .: "jobId" <*> ref .: "location"
+             pure Job {state, jobId, location}
            else fail ("Invalid kind: " <> show kind))
 
 -- | Create a job asynchronously.
@@ -480,8 +484,7 @@ createQueryJob sc@BigQuerySourceConfig {..} BigQuery {..} =
     run = do
       let url = "POST https://content-bigquery.googleapis.com/bigquery/v2/projects/" <>
                 T.unpack _scProjectId <>
-                "/jobs?alt=json&key="
-                -- <> T.unpack apiToken
+                "/jobs?alt=json"
       let req = setRequestHeader "Content-Type" ["application/json"]
                   $ setRequestBodyLBS body
                   $ parseRequest_ url
