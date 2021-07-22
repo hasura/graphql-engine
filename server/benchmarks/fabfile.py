@@ -443,24 +443,23 @@ def pretty_print_regression_report_github_comment(results, merge_base_pr, output
     f = open(output_filename, "w")
     def out(s): f.write(s+"\n")
 
-    out(f"# Benchmark Results")
+    out(f"## Benchmark Results")
     out(f"")
-    out(f"The regression report below shows, for each benchmark, the **percent change** for")
-    out(f"different metrics, between the merge base (the changes from #{merge_base_pr})")
-    out(f"and this PR.")
+    out((f"The regression report below shows, for each benchmark, the **percent change** for "
+         f"different metrics, between the merge base (the changes from #{merge_base_pr}) and "
+         f"this PR. For advice on interpreting benchmarks, please see [benchmarks/README.md]"
+         f"(https://github.com/hasura/graphql-engine-mono/blob/main/server/benchmarks/README.md)."))
     out(f"")
     out(f"More significant regressions or improvements will be colored with `#b31d28` or `#22863a`, respectively.")
     out(f"")
-    out(f"For advice on interpreting benchmarks, please see "+
-         "[benchmarks/README.md](https://github.com/hasura/graphql-engine-mono/blob/main/server/benchmarks/README.md)")
-    out(f"")
     out(f"You can view the raw reports here:")
-    out(f"")
     for benchmark_set_name, _ in results.items():
-      out(f"- **{benchmark_set_name}**: [these changes]({s3_url(benchmark_set_name)}) vs. "+
-                                  f"[merge base]({s3_url(benchmark_set_name, 'mono-pr-'+merge_base_pr)})")
+      out(f"- **{benchmark_set_name}**: [these changes]({s3_url(benchmark_set_name)}) vs. "
+          f"[merge base]({s3_url(benchmark_set_name, 'mono-pr-'+merge_base_pr)})")
     out(f"")
-    out(f"These can be visualized with `graphql-bench`, [hosted here](https://hasura.github.io/graphql-bench/app/web-app/)")
+    out(f"These can be visualized with `graphql-bench`, [hosted here](https://hasura.github.io/graphql-bench/app/web-app/).")
+    out(f"")
+    out(f"<details open><summary>Click here for a detailed report.</summary>")
     out(f"")
 
     # Return what should be the first few chars of the line, which will detemine its styling:
@@ -494,6 +493,7 @@ def pretty_print_regression_report_github_comment(results, merge_base_pr, output
                 out(f"{col(d)}        {metric_name:<25}:  {d:>6.1f}")
         out(        f"{col( )}                                       ")
     out(            f"```                                            ")  # END DIFF SYNTAX
+    out(f"</details>")
 
     say(f"Wrote github comment to {REGRESSION_REPORT_COMMENT_FILENAME}")
     f.close()
