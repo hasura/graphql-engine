@@ -86,6 +86,13 @@ Run the Docker container with an admin-secret env var
   give the client full admin rights to your Hasura instance. See :ref:`auth` for information on
   setting up authentication.
 
+.. hiding this as it mixes auth for the data plane with auth for the control plane and might be confusing
+
+  .. admonition:: Using collaborators as an alternative to Hasura Admin Secret sharing with Hasura Cloud
+    :class: dhc
+
+    Hasura Cloud offers console collaborators which avoids sharing the `HASURA-ADMIN-SECRET` with those that shouldn't have unrestricted access to your project. For more information about collaborator management, see :ref:`Collaborators in Hasura Cloud <manage_project_collaborators>`.
+
 .. _docker_logs:
 
 Hasura GraphQL engine server logs

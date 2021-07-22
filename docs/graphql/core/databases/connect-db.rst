@@ -103,3 +103,8 @@ engine instance via the console / metadata APIs / CLI:
 
   - A Postgres database can be connected using the ``HASURA_GRAPHQL_DATABASE_URL`` env var as well in which case it gets
     added automatically as a database named ``default``
+
+.. admonition:: Create a new Postgres DB inside Hasura Cloud
+  :class: dhc
+
+  For a quick start with Hasura, you can also create a Postgres database with Heroku from inside of Hasura Cloud. For more information, see :ref:`Connect new/existing database on Hasura Cloud <create_new_db_with_cloud>`.

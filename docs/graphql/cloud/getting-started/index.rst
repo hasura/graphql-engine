@@ -34,6 +34,9 @@ Hasura Cloud creates an initial project. Click ``Launch Console`` to open the Ha
    :alt: Connect new or existing database
    :width: 556px
 
+
+.. _create_new_db_with_cloud:
+
 Step 3: Connect new/existing database
 -------------------------------------
 

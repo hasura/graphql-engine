@@ -24,6 +24,11 @@ Based on your deployment method, follow the appropriate guide to update the Grap
 - :ref:`Updating on Kubernetes <kubernetes_update>`
 - :ref:`Updating on Digital Ocean <do_updating>`
 
+.. admonition:: No-touch Engine Update in Hasura Cloud
+  :class: dhc
+  
+  Hasura Cloud offers no-touch update paths in a managed environment. For more information, read more about :ref:`Hasura Cloud <cloud_docs>`.
+
 Latest available versions
 -------------------------
 
@@ -48,4 +53,3 @@ The current latest pre-release version is:
 .. note::
 
   Full stability with pre-release builds is not guaranteed. They are not recommended for production use.
-

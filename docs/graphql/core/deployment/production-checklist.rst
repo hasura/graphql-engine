@@ -18,6 +18,12 @@ Introduction
 This guide is a checklist for configuring and securing GraphQL engine for a
 production deployment.
 
+.. admonition:: Hasura Cloud the fastest way to production
+  :class: dhc
+  
+  Many of the following steps are pre-configured in a Hasura Cloud instance with integrated logging, API limits,
+  caching and more. For more information about our hosted Hasura product, see :ref:`Hasura Cloud docs <cloud_docs>`.
+
 Set an admin secret
 -------------------
 
