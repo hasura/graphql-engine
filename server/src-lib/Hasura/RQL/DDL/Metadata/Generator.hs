@@ -269,6 +269,15 @@ instance Arbitrary FieldCall where
 
 deriving instance Arbitrary RemoteFields
 
+instance Arbitrary RemoteSchemaRelationshipDef where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RemoteSourceRelationshipDef where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RRFormat where
+  arbitrary = genericArbitrary
+
 instance Arbitrary RemoteRelationshipDef where
   arbitrary = genericArbitrary
 

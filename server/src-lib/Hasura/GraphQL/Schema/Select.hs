@@ -139,7 +139,7 @@ selectTableConnection
   -> PrimaryKeyColumns b  -- ^ primary key columns
   -> SelPermInfo b        -- ^ select permissions of the table
   -> m (Maybe (FieldParser n (ConnectionSelectExp b)))
-selectTableConnection sourceName tableInfo fieldName description pkeyColumns selectPermissions = do
+selectTableConnection sourceName tableInfo fieldName description pkeyColumns selectPermissions =
   for (relayExtension @b) \xRelayInfo -> memoizeOn 'selectTableConnection (sourceName, tableName, fieldName) do
     stringifyNum       <- asks $ qcStringifyNum . getter
     selectArgsParser   <- tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions
@@ -517,7 +517,7 @@ selectFunctionConnection
   -> PrimaryKeyColumns ('Postgres pgKind) -- ^ primary key columns of the target table
   -> SelPermInfo ('Postgres pgKind)       -- ^ select permissions of the target table
   -> m (Maybe (FieldParser n (ConnectionSelectExp ('Postgres pgKind))))
-selectFunctionConnection sourceName function fieldName description pkeyColumns selectPermissions = do
+selectFunctionConnection sourceName function fieldName description pkeyColumns selectPermissions =
   for (relayExtension @('Postgres pgKind)) \xRelayInfo -> do
     stringifyNum <- asks $ qcStringifyNum . getter
     let tableName = _fiReturnType function
@@ -580,8 +580,10 @@ defaultTableArgs sourceName tableInfo selectPermissions = do
           , IR._saDistinct = distinctArg
           }
   pure $ result `P.bindFields` \args -> do
-    onJust (IR._saOrderBy args) \orderBy ->
-      onJust (IR._saDistinct args) (validateArgs orderBy)
+    sequence_ do
+      orderBy  <- IR._saOrderBy  args
+      distinct <- IR._saDistinct args
+      Just $ validateArgs orderBy distinct
     pure args
   where
     validateArgs orderByCols distinctCols = do
@@ -883,7 +885,7 @@ tableAggregationFields sourceName tableInfo selectPermissions = memoizeOn 'table
           subselectionParser = P.selectionSet setName setDesc columns
             <&> parsedSelectionsToFields IR.CFExp
       in P.subselection_ operator Nothing subselectionParser
-         <&> (IR.AFOp . IR.AggregateOp opText)
+         <&> IR.AFOp . IR.AggregateOp opText
 
 lookupRemoteField'
   :: (MonadSchema n m, MonadError QErr m)
@@ -1104,59 +1106,62 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
   -- https://github.com/hasura/graphql-engine/issues/5144
   -- The above issue is easily fixable by removing the following guard and 'MaybeT' monad transformation
   guard $ queryType == ET.QueryHasura
-  let RemoteFieldInfo name _params hasuraFields remoteFields
-        remoteSchemaInfo remoteSchemaInputValueDefns remoteSchemaName (table, source) = remoteFieldInfo
-  (roleIntrospectionResult, parsedIntrospection) <-
-    -- The remote relationship field should not be accessible
-    -- if the remote schema is not accessible to the said role
-    hoistMaybe $ Map.lookup remoteSchemaName remoteRelationshipQueryCtx
-  let fieldDefns = map P.fDefinition (piQuery parsedIntrospection)
-  role <- askRoleName
-  let hasuraFieldNames = Set.map dbJoinFieldToName hasuraFields
-      remoteRelationship = RemoteRelationship name source table hasuraFieldNames remoteSchemaName remoteFields
-  (newInpValDefns, remoteFieldParamMap) <-
-    if | role == adminRoleName ->
-         -- we don't validate the remote relationship when the role is admin
-         -- because it's already been validated, when the remote relationship
-         -- was created
-         pure (remoteSchemaInputValueDefns, _rfiParamMap remoteFieldInfo)
-       | otherwise -> do
-           fieldInfoMap <- (_tciFieldInfoMap . _tiCoreInfo) <$> askTableInfo @b source table
-           roleRemoteField <-
-             afold @(Either _) $
-             validateRemoteRelationship remoteRelationship (remoteSchemaInfo, roleIntrospectionResult) fieldInfoMap
-           pure $ (_rfiInputValueDefinitions roleRemoteField, _rfiParamMap roleRemoteField)
-  let RemoteSchemaIntrospection typeDefns = irDoc roleIntrospectionResult
-      -- add the new input value definitions created by the remote relationship
-      -- to the existing schema introspection of the role
-      remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> newInpValDefns
-  fieldName <- textToName $ remoteRelationshipNameToText $ _rfiName remoteFieldInfo
-  -- This selection set parser, should be of the remote node's selection set parser, which comes
-  -- from the fieldCall
-  nestedFieldInfo <- lift $ lookupRemoteField fieldDefns $ unRemoteFields $ _rfiRemoteFields remoteFieldInfo
-  case nestedFieldInfo of
-    P.FieldInfo{ P.fType = fieldType } -> do
-      let typeName = P.getName fieldType
-      fieldTypeDefinition <- onNothing (lookupType (irDoc roleIntrospectionResult) typeName)
-                             -- the below case will never happen because we get the type name
-                             -- from the schema document itself i.e. if a field exists for the
-                             -- given role, then it's return type also must exist
-                             $ throw500 $ "unexpected: " <> typeName <<> " not found "
-      -- These are the arguments that are given by the user while executing a query
-      let remoteFieldUserArguments = map snd $ Map.toList remoteFieldParamMap
-      remoteFld <-
-        lift $ remoteField remoteRelationshipIntrospection fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
-      pure $ pure $ remoteFld
-        `P.bindField` \G.Field{ G._fArguments = args, G._fSelectionSet = selSet } -> do
-          let remoteArgs =
-                Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue $ argVal
-          pure $ IR.AFRemote $ IR.RemoteSelect
-            { _rselArgs          = remoteArgs
-            , _rselSelection     = selSet
-            , _rselHasuraFields  = _rfiHasuraFields remoteFieldInfo
-            , _rselFieldCall     = unRemoteFields $ _rfiRemoteFields remoteFieldInfo
-            , _rselRemoteSchema  = _rfiRemoteSchema remoteFieldInfo
-            }
+  case remoteFieldInfo of
+    RFISource _remoteSource -> throw500 "not supported yet"
+    RFISchema remoteSchema -> do
+      let RemoteSchemaFieldInfo name _params hasuraFields remoteFields remoteSchemaInfo remoteSchemaInputValueDefns remoteSchemaName (table, source) = remoteSchema
+      (roleIntrospectionResult, parsedIntrospection) <-
+        -- The remote relationship field should not be accessible
+        -- if the remote schema is not accessible to the said role
+        hoistMaybe $ Map.lookup remoteSchemaName remoteRelationshipQueryCtx
+      let fieldDefns = map P.fDefinition (piQuery parsedIntrospection)
+      role <- askRoleName
+      let hasuraFieldNames = Set.map dbJoinFieldToName hasuraFields
+          relationshipDef = RemoteSchemaRelationshipDef remoteSchemaName hasuraFieldNames remoteFields
+      (newInpValDefns :: [(G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)], remoteFieldParamMap) <-
+        if role == adminRoleName
+        then do
+          -- we don't validate the remote relationship when the role is admin
+          -- because it's already been validated, when the remote relationship
+          -- was created
+          pure (remoteSchemaInputValueDefns, _rfiParamMap remoteSchema)
+        else do
+          fieldInfoMap <- (_tciFieldInfoMap . _tiCoreInfo) <$> askTableInfo @b source table
+          roleRemoteField <-
+            afold @(Either _) $
+            validateRemoteSchemaRelationship relationshipDef table name source (remoteSchemaInfo, roleIntrospectionResult) fieldInfoMap
+          pure $ (_rfiInputValueDefinitions roleRemoteField, _rfiParamMap roleRemoteField)
+      let RemoteSchemaIntrospection typeDefns = irDoc roleIntrospectionResult
+          -- add the new input value definitions created by the remote relationship
+          -- to the existing schema introspection of the role
+          remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> newInpValDefns
+      fieldName <- textToName $ remoteRelationshipNameToText $ _rfiName remoteSchema
+      -- This selection set parser, should be of the remote node's selection set parser, which comes
+      -- from the fieldCall
+      nestedFieldInfo <- lift $ lookupRemoteField fieldDefns $ unRemoteFields $ _rfiRemoteFields remoteSchema
+      case nestedFieldInfo of
+        P.FieldInfo{ P.fType = fieldType } -> do
+          let typeName = P.getName fieldType
+          fieldTypeDefinition <- onNothing (lookupType (irDoc roleIntrospectionResult) typeName)
+                                 -- the below case will never happen because we get the type name
+                                 -- from the schema document itself i.e. if a field exists for the
+                                 -- given role, then it's return type also must exist
+                                 $ throw500 $ "unexpected: " <> typeName <<> " not found "
+          -- These are the arguments that are given by the user while executing a query
+          let remoteFieldUserArguments = map snd $ Map.toList remoteFieldParamMap
+          remoteFld <-
+            lift $ remoteField remoteRelationshipIntrospection fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
+          pure $ pure $ remoteFld
+            `P.bindField` \G.Field{ G._fArguments = args, G._fSelectionSet = selSet } -> do
+              let remoteArgs =
+                    Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue $ argVal
+              pure $ IR.AFRemote $ IR.RemoteSelect
+                { _rselArgs          = remoteArgs
+                , _rselSelection     = selSet
+                , _rselHasuraFields  = _rfiHasuraFields remoteSchema
+                , _rselFieldCall     = unRemoteFields $ _rfiRemoteFields remoteSchema
+                , _rselRemoteSchema  = _rfiRemoteSchema remoteSchema
+                }
 
 -- | The custom SQL functions' input "args" field parser
 -- > function_name(args: function_args)
