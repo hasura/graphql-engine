@@ -22,6 +22,11 @@ Logs
 
 In order to find out about the origins of an error, it can be helpful to check the logs.
 
+.. admonition:: Metrics and distributed tracing in Hasura Cloud
+  :class: dhc
+
+  Hasura Cloud includes metrics and distributed tracing which makes troubleshooting faster. For more information, see :ref:`Metrics <metrics>` and :ref:`Tracing <tracing>` in Hasura Cloud.
+
 Server logs
 ^^^^^^^^^^^
 

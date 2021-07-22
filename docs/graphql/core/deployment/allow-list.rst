@@ -97,4 +97,10 @@ The following are the recommended best practices for enabling/disabling allow-li
 
 * **In CI/CD instances**: Enable the allow-list for testing.
 
-* **In production instances**: Enabling the allow-list is highly recommended when running the GraphQL engine in production.
+* **In production instances**: Enabling the allow-list is highly recommended when running the GraphQL engine in production. 
+
+
+.. admonition:: Allow Lists in Hasura Cloud
+  :class: dhc
+  
+  Hasura Cloud lets you generate allowed queries from real usage in your application. For more, information, see :ref:`Allow Lists in Hasura Cloud <allow_lists>`.

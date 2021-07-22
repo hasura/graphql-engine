@@ -57,7 +57,7 @@ Hasura GraphQL engine supports:
    :titlesonly:
    :hidden:
 
-   Hasura Cloud quickstart <https://hasura.io/docs/latest/graphql/cloud/getting-started/index.html>
-   Docker quickstart <docker-simple>
+   Quickstart with Hasura Cloud <https://hasura.io/docs/latest/graphql/cloud/getting-started/index.html>
+   Quickstart with Hasura using Docker <docker-simple>
    Making your first GraphQL query <first-graphql-query>
 
