@@ -5,6 +5,7 @@ import {
   passCreateView,
   passInsertValues,
   passAlterTable,
+  readQuery,
 } from './spec';
 import { testMode } from '../../../helpers/common';
 import { setMetaData } from '../../validators/validators';
@@ -28,6 +29,7 @@ export const runRawSQLTests = () => {
     it('Pass create table', passCreateTable);
     it('Pass insert values', passInsertValues);
     it('Pass alter table', passAlterTable);
+    it('Read from table', readQuery);
     it('Pass create view', passCreateView);
     it('Delete test table', delTestTables);
   });
