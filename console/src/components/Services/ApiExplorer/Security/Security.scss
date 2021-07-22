@@ -29,9 +29,6 @@
 }
 
 .form_group {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 20px;
   .form_container {
     width: 95%;
@@ -125,4 +122,10 @@
 
 .justify_center {
   justify-content: center;
+}
+
+.form_justify {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }

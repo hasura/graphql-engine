@@ -57,7 +57,10 @@ const IntrospectionForm: React.FC<
         </h5>
       </div>
       <form onSubmit={submit}>
-        <div key={currentRowKey} className={styles.form_group}>
+        <div
+          key={currentRowKey}
+          className={`${styles.form_group} ${styles.form_justify}`}
+        >
           <div className={styles.left}>
             <h5>Introspection</h5>
             <p>Enable GraphQL schema introspection requests.</p>
