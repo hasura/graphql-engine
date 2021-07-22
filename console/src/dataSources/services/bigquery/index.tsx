@@ -8,7 +8,6 @@ import {
   SupportedFeaturesType,
   ViolationActions,
 } from '../../types';
-import globals from '../../../Globals';
 import { generateTableRowRequest } from './utils';
 
 const permissionColumnDataTypes = {
@@ -169,7 +168,7 @@ export const supportedFeatures: SupportedFeaturesType = {
     statementTimeout: false,
   },
   connectDbForm: {
-    enabled: globals.consoleType !== 'cloud',
+    enabled: true,
     connectionParameters: true,
     databaseURL: false,
     environmentVariable: true,
