@@ -255,7 +255,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       :: forall b arr m
        . ( ArrowChoice arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr
-         , MonadIO m, MonadBaseControl IO m
+         , MonadIO m
          , MonadResolveSource m
          , BackendMetadata b
          )
@@ -266,7 +266,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       let metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
       Inc.dependOn -< Inc.selectKeyD sourceName invalidationKeys
       (| withRecordInconsistency (
-           liftEitherA <<< bindA -< resolveSourceConfig @b sourceName sourceConfig)
+           liftEitherA <<< bindA -< resolveSourceConfig @b sourceName sourceConfig env)
        |) metadataObj
 
     resolveSourceIfNeeded

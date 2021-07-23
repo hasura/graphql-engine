@@ -7,6 +7,8 @@ where
 
 import           Hasura.Prelude
 
+import qualified Data.Environment                 as Env
+
 import           Hasura.Backends.MSSQL.Connection
 import           Hasura.Backends.MSSQL.Meta
 import           Hasura.Base.Error
@@ -14,13 +16,15 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Source
 import           Hasura.SQL.Backend
 
+
 resolveSourceConfig
   :: (MonadIO m)
   => SourceName
   -> MSSQLConnConfiguration
+  -> Env.Environment
   -> m (Either QErr MSSQLSourceConfig)
-resolveSourceConfig _name (MSSQLConnConfiguration connInfo) = runExceptT do
-  (connString, mssqlPool) <- createMSSQLPool connInfo
+resolveSourceConfig _name (MSSQLConnConfiguration connInfo) env = runExceptT do
+  (connString, mssqlPool) <- createMSSQLPool connInfo env
   pure $ MSSQLSourceConfig connString mssqlPool
 
 resolveDatabaseMetadata

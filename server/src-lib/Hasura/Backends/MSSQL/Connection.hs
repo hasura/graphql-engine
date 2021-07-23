@@ -2,6 +2,7 @@ module Hasura.Backends.MSSQL.Connection where
 
 import           Hasura.Prelude
 
+import qualified Data.Environment        as Env
 import qualified Data.Pool               as Pool
 import qualified Database.ODBC.SQLServer as ODBC
 
@@ -10,10 +11,10 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Data.Environment        as Env
 import           Data.Text               (pack, unpack)
 import           Hasura.Base.Error
 import           Hasura.Incremental      (Cacheable (..))
+
 
 -- | ODBC connection string for MSSQL server
 newtype MSSQLConnectionString
@@ -109,9 +110,9 @@ createMSSQLPool
   :: MonadIO m
   => QErrM m
   => MSSQLConnectionInfo
+  -> Env.Environment
   -> m (MSSQLConnectionString, MSSQLPool)
-createMSSQLPool (MSSQLConnectionInfo iConnString MSSQLPoolSettings{..}) = do
-  env        <- liftIO Env.getEnvironment
+createMSSQLPool (MSSQLConnectionInfo iConnString MSSQLPoolSettings{..}) env = do
   connString <- resolveInputConnectionString env iConnString
   pool       <- liftIO
                   $ MSSQLPool

@@ -11,6 +11,7 @@ module Hasura.Backends.Postgres.DDL.Source
 
 import           Hasura.Prelude
 
+import qualified Data.Environment                            as Env
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.List.NonEmpty                          as NE
 import qualified Database.PG.Query                           as Q
@@ -50,8 +51,11 @@ instance ToMetadataFetchQuery 'Citus where
 
 resolveSourceConfig
   :: (MonadIO m, MonadResolveSource m)
-  => SourceName -> PostgresConnConfiguration -> m (Either QErr (SourceConfig ('Postgres pgKind)))
-resolveSourceConfig name config = runExceptT do
+  => SourceName
+  -> PostgresConnConfiguration
+  -> Env.Environment
+  -> m (Either QErr (SourceConfig ('Postgres pgKind)))
+resolveSourceConfig name config _env = runExceptT do
   sourceResolver <- getSourceResolver
   liftEitherM $ liftIO $ sourceResolver name config
 

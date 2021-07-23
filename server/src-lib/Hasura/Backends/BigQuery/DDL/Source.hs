@@ -39,9 +39,9 @@ resolveSourceConfig ::
   MonadIO m =>
   SourceName ->
   BigQueryConnSourceConfig ->
+  Env.Environment ->
   m (Either QErr BigQuerySourceConfig)
-resolveSourceConfig _name BigQueryConnSourceConfig{..} = runExceptT $ do
-  env <- liftIO Env.getEnvironment
+resolveSourceConfig _name BigQueryConnSourceConfig{..} env = runExceptT $ do
   eSA <- resolveConfigurationJson env _cscServiceAccount
   case eSA of
     Left e -> throw400 Unexpected $ T.pack e
