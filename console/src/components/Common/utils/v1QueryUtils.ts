@@ -3,6 +3,7 @@ import { QualifiedTable } from '../../../metadata/types';
 import { Nullable } from './tsUtils';
 import { ConsoleScope } from '../../Main/ConsoleNotification';
 import { BaseTableColumn } from '../../../dataSources/types';
+import { sqlEscapeText } from '../../../dataSources/services/postgresql/sqlUtils';
 import { FixMe } from '../../../types';
 import {
   checkFeatureSupport,
@@ -50,7 +51,7 @@ export const convertPGValue = (
   }
 
   if (typeof value === 'string') {
-    return `'${value}'`;
+    return sqlEscapeText(value);
   }
 
   if (
