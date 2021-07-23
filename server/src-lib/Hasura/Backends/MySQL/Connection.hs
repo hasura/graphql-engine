@@ -1,21 +1,28 @@
 module Hasura.Backends.MySQL.Connection where
 
+import           Hasura.Prelude
+
+import qualified Data.Environment            as Env
+import qualified Data.Text                   as T
 
 import           Data.Pool                   (createPool, withResource)
-import qualified Data.Text                   as T
 import           Database.MySQL.Base
+
 import           Hasura.Backends.MySQL.Meta  (getMetadata)
 import           Hasura.Backends.MySQL.Types
 import           Hasura.Base.Error
-import           Hasura.Prelude
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Source
 import           Hasura.SQL.Backend
 
 
-resolveSourceConfig :: (MonadIO m) =>
-  SourceName -> ConnSourceConfig -> m (Either QErr SourceConfig)
-resolveSourceConfig _name csc@ConnSourceConfig{_cscPoolSettings = ConnPoolSettings{..}, ..} =
+resolveSourceConfig
+  :: (MonadIO m)
+  => SourceName
+  -> ConnSourceConfig
+  -> Env.Environment
+  -> m (Either QErr SourceConfig)
+resolveSourceConfig _name csc@ConnSourceConfig{_cscPoolSettings = ConnPoolSettings{..}, ..} _env = do
   let connectInfo =
         defaultConnectInfo
           { connectHost = T.unpack _cscHost
@@ -24,15 +31,15 @@ resolveSourceConfig _name csc@ConnSourceConfig{_cscPoolSettings = ConnPoolSettin
           , connectPassword = T.unpack _cscPassword
           , connectDatabase = T.unpack  _cscDatabase
           }
-   in runExceptT $
-        SourceConfig csc <$>
-          liftIO
-            (createPool
-              (connect connectInfo)
-              close
-              1
-              (fromIntegral _cscIdleTimeout)
-              (fromIntegral _cscMaxConnections))
+  runExceptT $
+    SourceConfig csc <$>
+      liftIO
+        (createPool
+          (connect connectInfo)
+          close
+          1
+          (fromIntegral _cscIdleTimeout)
+          (fromIntegral _cscMaxConnections))
 
 
 resolveDatabaseMetadata :: (MonadIO m) =>

@@ -47,9 +47,10 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
   -- | Function that resolves the connection related source configuration, and
   -- creates a connection pool (and other related parameters) in the process
   resolveSourceConfig
-    :: (MonadIO m, MonadBaseControl IO m, MonadResolveSource m)
+    :: (MonadIO m, MonadResolveSource m)
     => SourceName
     -> SourceConnConfiguration b
+    -> Env.Environment
     -> m (Either QErr (SourceConfig b))
 
   -- | Function that introspects a database for tables, columns, functions etc.
