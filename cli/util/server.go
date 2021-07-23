@@ -2,6 +2,7 @@ package util
 
 import (
 	"crypto/tls"
+
 	"github.com/parnurzeal/gorequest"
 	"github.com/sirupsen/logrus"
 )

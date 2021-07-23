@@ -2,7 +2,8 @@ package commands
 
 import (
 	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -46,7 +47,7 @@ type metadataReloadOptions struct {
 func (o *metadataReloadOptions) run() error {
 
 	var err error
-	metadataHandler := metadataobject.NewHandlerFromEC(ec)
+	metadataHandler := projectmetadata.NewHandlerFromEC(ec)
 	_, err = metadataHandler.ReloadMetadata()
 	if err != nil {
 		return errors.Wrap(err, "Cannot reload metadata")

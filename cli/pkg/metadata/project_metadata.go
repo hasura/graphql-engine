@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+
 	"io"
 
 	"github.com/hasura/graphql-engine/cli/v2/commands"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
 	"github.com/spf13/viper"
 
@@ -21,7 +21,7 @@ type ProjectMetadata struct {
 
 // Parse metadata in project as JSON
 func (p *ProjectMetadata) Parse() (io.Reader, error) {
-	metadataHandler := metadataobject.NewHandlerFromEC(p.ec)
+	metadataHandler := projectmetadata.NewHandlerFromEC(p.ec)
 	jsonMetadata, err := metadataHandler.MakeJSONMetadata()
 	if err != nil {
 		return nil, fmt.Errorf("parsing project metadata to json failed: %w", err)
@@ -31,7 +31,7 @@ func (p *ProjectMetadata) Parse() (io.Reader, error) {
 
 // Apply metadata from in the project and provide raw response from hge server
 func (p *ProjectMetadata) Apply() (io.Reader, error) {
-	metadataHandler := metadataobject.NewHandlerFromEC(p.ec)
+	metadataHandler := projectmetadata.NewHandlerFromEC(p.ec)
 	if p.ec.Config.Version == cli.V2 {
 		r, err := metadataHandler.V1ApplyMetadata()
 		if err != nil {
@@ -55,7 +55,7 @@ func (p *ProjectMetadata) Apply() (io.Reader, error) {
 
 // Reload metadata on hge server and provides raw response from hge server
 func (p *ProjectMetadata) Reload() (io.Reader, error) {
-	metadataHandler := metadataobject.NewHandlerFromEC(p.ec)
+	metadataHandler := projectmetadata.NewHandlerFromEC(p.ec)
 	return metadataHandler.ReloadMetadata()
 }
 

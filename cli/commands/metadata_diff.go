@@ -1,24 +1,23 @@
 package commands
 
 import (
-	"fmt"
-	"io"
-	"io/ioutil"
-	"os"
-	"strings"
+  "fmt"
+  "github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
+  "io"
+  "io/ioutil"
+  "os"
+  "strings"
 
-	"github.com/aryann/difflib"
+  "github.com/aryann/difflib"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
-
-	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/hexops/gotextdiff"
-	"github.com/hexops/gotextdiff/myers"
-	"github.com/hexops/gotextdiff/span"
-	"github.com/mgutz/ansi"
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
+  "github.com/hasura/graphql-engine/cli/v2"
+  "github.com/hexops/gotextdiff"
+  "github.com/hexops/gotextdiff/myers"
+  "github.com/hexops/gotextdiff/span"
+  "github.com/mgutz/ansi"
+  "github.com/pkg/errors"
+  "github.com/spf13/cobra"
+  "gopkg.in/yaml.v2"
 )
 
 type MetadataDiffOptions struct {
@@ -78,7 +77,7 @@ By default, it shows changes between the exported metadata file and server metad
 func (o *MetadataDiffOptions) runv2(args []string) error {
 	messageFormat := "Showing diff between %s and %s..."
 	message := ""
-	metadataHandler := metadataobject.NewHandlerFromEC(o.EC)
+	metadataHandler := projectmetadata.NewHandlerFromEC(o.EC)
 	from := "project"
 	to := "server"
 	switch len(args) {
@@ -117,7 +116,7 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 			return err
 		}
 		defer os.RemoveAll(tmpDir)
-		metadataHandler.SetMetadataObjects(metadataobject.GetMetadataObjectsWithDir(o.EC, tmpDir))
+		metadataHandler.SetMetadataObjects(projectmetadata.GetMetadataObjectsWithDir(o.EC, tmpDir))
 		var files map[string][]byte
 		files, err = metadataHandler.ExportMetadata()
 		if err != nil {
@@ -128,7 +127,7 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 			return err
 		}
 	} else {
-		metadataHandler.SetMetadataObjects(metadataobject.GetMetadataObjectsWithDir(o.EC, o.Metadata[1]))
+		metadataHandler.SetMetadataObjects(projectmetadata.GetMetadataObjectsWithDir(o.EC, o.Metadata[1]))
 	}
 
 	// build server metadata
@@ -142,7 +141,7 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 	}
 
 	// build local metadata
-	metadataHandler.SetMetadataObjects(metadataobject.GetMetadataObjectsWithDir(o.EC, o.Metadata[0]))
+	metadataHandler.SetMetadataObjects(projectmetadata.GetMetadataObjectsWithDir(o.EC, o.Metadata[0]))
 	localMeta, err := metadataHandler.BuildMetadata()
 	if err != nil {
 		return err

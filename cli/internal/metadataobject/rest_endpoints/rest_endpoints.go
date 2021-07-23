@@ -4,16 +4,12 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	errors2 "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/errors"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
 	"github.com/sirupsen/logrus"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"gopkg.in/yaml.v2"
-)
-
-const (
-	MetadataFilename string = "rest_endpoints.yaml"
 )
 
 type RestEndpointsConfig struct {
@@ -39,22 +35,22 @@ func (re *RestEndpointsConfig) CreateFiles() error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(re.MetadataDir, MetadataFilename), data, 0644)
+	err = ioutil.WriteFile(filepath.Join(re.MetadataDir, re.Filename()), data, 0644)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (re *RestEndpointsConfig) Build(metadata *yaml.MapSlice) errors2.ErrParsingMetadataObject {
-	data, err := ioutil.ReadFile(filepath.Join(re.MetadataDir, MetadataFilename))
+func (re *RestEndpointsConfig) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingMetadataObject {
+	data, err := ioutil.ReadFile(filepath.Join(re.MetadataDir, re.Filename()))
 	if err != nil {
-		return re.Error(err)
+		return re.error(err)
 	}
 	var obj []yaml.MapSlice
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
-		return re.Error(err)
+		return re.error(err)
 	}
 	if len(obj) > 0 {
 		item := yaml.MapItem{
@@ -67,7 +63,7 @@ func (re *RestEndpointsConfig) Build(metadata *yaml.MapSlice) errors2.ErrParsing
 	return nil
 }
 
-func (re *RestEndpointsConfig) Export(metadata yaml.MapSlice) (map[string][]byte, errors2.ErrParsingMetadataObject) {
+func (re *RestEndpointsConfig) Export(metadata yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
 	var restEndpoints interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
@@ -81,17 +77,20 @@ func (re *RestEndpointsConfig) Export(metadata yaml.MapSlice) (map[string][]byte
 	}
 	data, err := yaml.Marshal(restEndpoints)
 	if err != nil {
-		return nil, re.Error(err)
+		return nil, re.error(err)
 	}
 	return map[string][]byte{
-		filepath.ToSlash(filepath.Join(re.MetadataDir, MetadataFilename)): data,
+		filepath.ToSlash(filepath.Join(re.MetadataDir, re.Filename())): data,
 	}, nil
 }
 
-func (re *RestEndpointsConfig) Name() string {
+func (re *RestEndpointsConfig) Key() string {
 	return "rest_endpoints"
 }
 
-func (re *RestEndpointsConfig) Error(err error, additionalContext ...string) errors2.ErrParsingMetadataObject {
-	return errors2.NewErrParsingMetadataObject(re.Name(), MetadataFilename, additionalContext, err)
+func (re *RestEndpointsConfig) Filename() string {
+	return "rest_endpoints.yaml"
+}
+func (re *RestEndpointsConfig) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
+	return metadataobject.NewErrParsingMetadataObject(re, err, additionalContext...)
 }

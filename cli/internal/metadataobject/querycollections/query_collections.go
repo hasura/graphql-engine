@@ -4,16 +4,12 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	errors2 "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/errors"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
 	"github.com/sirupsen/logrus"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"gopkg.in/yaml.v2"
-)
-
-const (
-	fileName string = "query_collections.yaml"
 )
 
 type QueryCollectionConfig struct {
@@ -39,17 +35,17 @@ func (q *QueryCollectionConfig) CreateFiles() error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(q.MetadataDir, fileName), data, 0644)
+	err = ioutil.WriteFile(filepath.Join(q.MetadataDir, q.Filename()), data, 0644)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (q *QueryCollectionConfig) Build(metadata *yaml.MapSlice) errors2.ErrParsingMetadataObject {
-	data, err := ioutil.ReadFile(filepath.Join(q.MetadataDir, fileName))
+func (q *QueryCollectionConfig) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingMetadataObject {
+	data, err := ioutil.ReadFile(filepath.Join(q.MetadataDir, q.Filename()))
 	if err != nil {
-		return q.Error(err)
+		return q.error(err)
 	}
 	item := yaml.MapItem{
 		Key: "query_collections",
@@ -57,7 +53,7 @@ func (q *QueryCollectionConfig) Build(metadata *yaml.MapSlice) errors2.ErrParsin
 	var obj []yaml.MapSlice
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
-		return q.Error(err)
+		return q.error(err)
 	}
 	if len(obj) != 0 {
 		item.Value = obj
@@ -66,7 +62,7 @@ func (q *QueryCollectionConfig) Build(metadata *yaml.MapSlice) errors2.ErrParsin
 	return nil
 }
 
-func (q *QueryCollectionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, errors2.ErrParsingMetadataObject) {
+func (q *QueryCollectionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
 	var queryCollections interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
@@ -80,17 +76,21 @@ func (q *QueryCollectionConfig) Export(metadata yaml.MapSlice) (map[string][]byt
 	}
 	data, err := yaml.Marshal(queryCollections)
 	if err != nil {
-		return nil, q.Error(err)
+		return nil, q.error(err)
 	}
 	return map[string][]byte{
-		filepath.ToSlash(filepath.Join(q.MetadataDir, fileName)): data,
+		filepath.ToSlash(filepath.Join(q.MetadataDir, q.Filename())): data,
 	}, nil
 }
 
-func (q *QueryCollectionConfig) Name() string {
+func (q *QueryCollectionConfig) Key() string {
 	return "query_collections"
 }
 
-func (q *QueryCollectionConfig) Error(err error, additionalContext ...string) errors2.ErrParsingMetadataObject {
-	return errors2.NewErrParsingMetadataObject(q.Name(), fileName, additionalContext, err)
+func (q *QueryCollectionConfig) Filename() string {
+	return "query_collections.yaml"
+}
+
+func (q *QueryCollectionConfig) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
+	return metadataobject.NewErrParsingMetadataObject(q, err, additionalContext...)
 }

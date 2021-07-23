@@ -3,8 +3,9 @@ package commands
 import (
 	"fmt"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
+
 	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 	"github.com/spf13/cobra"
 )
 
@@ -57,7 +58,7 @@ type MetadataApplyOptions struct {
 }
 
 func (o *MetadataApplyOptions) Run() error {
-	metadataHandler := metadataobject.NewHandlerFromEC(o.EC)
+	metadataHandler := projectmetadata.NewHandlerFromEC(o.EC)
 	if !o.DryRun {
 		o.EC.Spin("Applying metadata...")
 		if o.EC.Config.Version == cli.V2 {

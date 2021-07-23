@@ -3,14 +3,14 @@ package commands
 import (
 	"bytes"
 	"fmt"
+
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/cliext"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 	"github.com/hasura/graphql-engine/cli/v2/migrate"
 
 	"gopkg.in/yaml.v2"
@@ -310,7 +310,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 				return errors.Wrap(err, "unable to initialize migrations driver")
 			}
 			var files map[string][]byte
-			mdHandler := metadataobject.NewHandlerFromEC(ec)
+			mdHandler := projectmetadata.NewHandlerFromEC(ec)
 			files, err = mdHandler.ExportMetadata()
 			if err != nil {
 				return errors.Wrap(err, "cannot export metadata from server")

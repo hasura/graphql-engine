@@ -4,16 +4,12 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	errors2 "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/errors"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
 	"github.com/sirupsen/logrus"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"gopkg.in/yaml.v2"
-)
-
-const (
-	MetadataFilename string = "tables.yaml"
 )
 
 type TableConfig struct {
@@ -39,17 +35,17 @@ func (t *TableConfig) CreateFiles() error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(t.MetadataDir, MetadataFilename), data, 0644)
+	err = ioutil.WriteFile(filepath.Join(t.MetadataDir, t.Filename()), data, 0644)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (t *TableConfig) Build(metadata *yaml.MapSlice) errors2.ErrParsingMetadataObject {
-	data, err := ioutil.ReadFile(filepath.Join(t.MetadataDir, MetadataFilename))
+func (t *TableConfig) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingMetadataObject {
+	data, err := ioutil.ReadFile(filepath.Join(t.MetadataDir, t.Filename()))
 	if err != nil {
-		return t.Error(err)
+		return t.error(err)
 	}
 	item := yaml.MapItem{
 		Key:   "tables",
@@ -57,13 +53,13 @@ func (t *TableConfig) Build(metadata *yaml.MapSlice) errors2.ErrParsingMetadataO
 	}
 	err = yaml.Unmarshal(data, &item.Value)
 	if err != nil {
-		return t.Error(err)
+		return t.error(err)
 	}
 	*metadata = append(*metadata, item)
 	return nil
 }
 
-func (t *TableConfig) Export(metadata yaml.MapSlice) (map[string][]byte, errors2.ErrParsingMetadataObject) {
+func (t *TableConfig) Export(metadata yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
 	var tables interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
@@ -77,17 +73,21 @@ func (t *TableConfig) Export(metadata yaml.MapSlice) (map[string][]byte, errors2
 	}
 	data, err := yaml.Marshal(tables)
 	if err != nil {
-		return nil, t.Error(err)
+		return nil, t.error(err)
 	}
 	return map[string][]byte{
-		filepath.ToSlash(filepath.Join(t.MetadataDir, MetadataFilename)): data,
+		filepath.ToSlash(filepath.Join(t.MetadataDir, t.Filename())): data,
 	}, nil
 }
 
-func (t *TableConfig) Name() string {
+func (t *TableConfig) Filename() string {
+	return "tables.yaml"
+}
+
+func (t *TableConfig) Key() string {
 	return "tables"
 }
 
-func (t *TableConfig) Error(err error, additionalContext ...string) errors2.ErrParsingMetadataObject {
-	return errors2.NewErrParsingMetadataObject(t.Name(), MetadataFilename, additionalContext, err)
+func (t *TableConfig) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
+	return metadataobject.NewErrParsingMetadataObject(t, err, additionalContext...)
 }

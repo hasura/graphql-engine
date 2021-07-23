@@ -4,16 +4,12 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	errors2 "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/errors"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
 	"github.com/sirupsen/logrus"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"gopkg.in/yaml.v2"
-)
-
-const (
-	MetadataFilename string = "inherited_roles.yaml"
 )
 
 type InheritedRolesConfig struct {
@@ -39,10 +35,10 @@ func (ir *InheritedRolesConfig) CreateFiles() error {
 	return nil
 }
 
-func (ir *InheritedRolesConfig) Build(metadata *yaml.MapSlice) errors2.ErrParsingMetadataObject {
-	data, err := ioutil.ReadFile(filepath.Join(ir.MetadataDir, MetadataFilename))
+func (ir *InheritedRolesConfig) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingMetadataObject {
+	data, err := ioutil.ReadFile(filepath.Join(ir.MetadataDir, ir.Filename()))
 	if err != nil {
-		return ir.Error(err)
+		return ir.error(err)
 	}
 	item := yaml.MapItem{
 		Key:   "inherited_roles",
@@ -50,13 +46,13 @@ func (ir *InheritedRolesConfig) Build(metadata *yaml.MapSlice) errors2.ErrParsin
 	}
 	err = yaml.Unmarshal(data, &item.Value)
 	if err != nil {
-		return ir.Error(err)
+		return ir.error(err)
 	}
 	*metadata = append(*metadata, item)
 	return nil
 }
 
-func (ir *InheritedRolesConfig) Export(metadata yaml.MapSlice) (map[string][]byte, errors2.ErrParsingMetadataObject) {
+func (ir *InheritedRolesConfig) Export(metadata yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
 	var inheritedRoles interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
@@ -68,22 +64,26 @@ func (ir *InheritedRolesConfig) Export(metadata yaml.MapSlice) (map[string][]byt
 	if inheritedRoles == nil {
 		ir.logger.WithFields(logrus.Fields{
 			"reason": "not found in metadata",
-		}).Debugf("skipped building %s", ir.Name())
+		}).Debugf("skipped building %s", ir.Key())
 		return nil, nil
 	}
 	data, err := yaml.Marshal(inheritedRoles)
 	if err != nil {
-		return nil, ir.Error(err)
+		return nil, ir.error(err)
 	}
 	return map[string][]byte{
-		filepath.ToSlash(filepath.Join(ir.MetadataDir, MetadataFilename)): data,
+		filepath.ToSlash(filepath.Join(ir.MetadataDir, ir.Filename())): data,
 	}, nil
 }
 
-func (ir *InheritedRolesConfig) Name() string {
+func (ir *InheritedRolesConfig) Key() string {
 	return "inherited_roles"
 }
 
-func (ir *InheritedRolesConfig) Error(err error, additionalContext ...string) errors2.ErrParsingMetadataObject {
-	return errors2.NewErrParsingMetadataObject(ir.Name(), MetadataFilename, additionalContext, err)
+func (ir *InheritedRolesConfig) Filename() string {
+	return "inherited_roles.yaml"
+}
+
+func (ir *InheritedRolesConfig) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
+	return metadataobject.NewErrParsingMetadataObject(ir, err, additionalContext...)
 }

@@ -2,7 +2,7 @@ package commands
 
 import (
 	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -50,7 +50,7 @@ type MetadataClearOptions struct {
 func (o *MetadataClearOptions) Run() error {
 
 	var err error
-	metadataHandler := metadataobject.NewHandlerFromEC(o.EC)
+	metadataHandler := projectmetadata.NewHandlerFromEC(o.EC)
 	err = metadataHandler.ResetMetadata()
 	if err != nil {
 		return errors.Wrap(err, "cannot clear Metadata")

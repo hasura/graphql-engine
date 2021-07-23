@@ -4,15 +4,11 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	errors2 "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/errors"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
-)
-
-const (
-	MetadataFilename string = "functions.yaml"
 )
 
 type FunctionConfig struct {
@@ -38,17 +34,17 @@ func (f *FunctionConfig) CreateFiles() error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(f.MetadataDir, MetadataFilename), data, 0644)
+	err = ioutil.WriteFile(filepath.Join(f.MetadataDir, f.Filename()), data, 0644)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (f *FunctionConfig) Build(metadata *yaml.MapSlice) errors2.ErrParsingMetadataObject {
-	data, err := ioutil.ReadFile(filepath.Join(f.MetadataDir, MetadataFilename))
+func (f *FunctionConfig) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingMetadataObject {
+	data, err := ioutil.ReadFile(filepath.Join(f.MetadataDir, f.Filename()))
 	if err != nil {
-		return f.Error(err)
+		return f.error(err)
 	}
 	item := yaml.MapItem{
 		Key: "functions",
@@ -56,7 +52,7 @@ func (f *FunctionConfig) Build(metadata *yaml.MapSlice) errors2.ErrParsingMetada
 	var obj []yaml.MapSlice
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
-		return f.Error(err)
+		return f.error(err)
 	}
 	if len(obj) != 0 {
 		item.Value = obj
@@ -65,7 +61,7 @@ func (f *FunctionConfig) Build(metadata *yaml.MapSlice) errors2.ErrParsingMetada
 	return nil
 }
 
-func (f *FunctionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, errors2.ErrParsingMetadataObject) {
+func (f *FunctionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
 	var functions interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
@@ -79,17 +75,21 @@ func (f *FunctionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, erro
 	}
 	data, err := yaml.Marshal(functions)
 	if err != nil {
-		return nil, f.Error(err)
+		return nil, f.error(err)
 	}
 	return map[string][]byte{
-		filepath.ToSlash(filepath.Join(f.MetadataDir, MetadataFilename)): data,
+		filepath.ToSlash(filepath.Join(f.MetadataDir, f.Filename())): data,
 	}, nil
 }
 
-func (f *FunctionConfig) Name() string {
+func (f *FunctionConfig) Key() string {
 	return "functions"
 }
 
-func (f *FunctionConfig) Error(err error, additionalContext ...string) errors2.ErrParsingMetadataObject {
-	return errors2.NewErrParsingMetadataObject(f.Name(), MetadataFilename, additionalContext, err)
+func (f *FunctionConfig) Filename() string {
+	return "functions.yaml"
+}
+
+func (f *FunctionConfig) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
+	return metadataobject.NewErrParsingMetadataObject(f, err, additionalContext...)
 }

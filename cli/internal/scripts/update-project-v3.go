@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 
@@ -186,7 +186,7 @@ func UpdateProjectV3(opts UpdateProjectV3Opts) error {
 	opts.EC.Logger.Debug("start: export metadata from server")
 	opts.EC.Spin("Exporting metadata from server ")
 	var files map[string][]byte
-	mdHandler := metadataobject.NewHandlerFromEC(opts.EC)
+	mdHandler := projectmetadata.NewHandlerFromEC(opts.EC)
 	files, err = mdHandler.ExportMetadata()
 	if err != nil {
 		return err

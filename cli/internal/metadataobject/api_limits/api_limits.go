@@ -4,16 +4,12 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	errors2 "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/errors"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
 	"github.com/sirupsen/logrus"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"gopkg.in/yaml.v2"
-)
-
-const (
-	MetadataFilename string = "api_limits.yaml"
 )
 
 type MetadataObject struct {
@@ -39,25 +35,25 @@ func (o *MetadataObject) CreateFiles() error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(o.MetadataDir, MetadataFilename), data, 0644)
+	err = ioutil.WriteFile(filepath.Join(o.MetadataDir, o.Filename()), data, 0644)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (o *MetadataObject) Build(metadata *yaml.MapSlice) errors2.ErrParsingMetadataObject {
-	data, err := ioutil.ReadFile(filepath.Join(o.MetadataDir, MetadataFilename))
+func (o *MetadataObject) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingMetadataObject {
+	data, err := ioutil.ReadFile(filepath.Join(o.MetadataDir, o.Filename()))
 	if err != nil {
-		return o.Error(err)
+		return o.error(err)
 	}
 	item := yaml.MapItem{
-		Key: o.Name(),
+		Key: o.Key(),
 	}
 	var obj yaml.MapSlice
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
-		return o.Error(err)
+		return o.error(err)
 	}
 	if len(obj) > 0 {
 		item.Value = obj
@@ -66,35 +62,38 @@ func (o *MetadataObject) Build(metadata *yaml.MapSlice) errors2.ErrParsingMetada
 	return nil
 }
 
-func (o *MetadataObject) Export(metadata yaml.MapSlice) (map[string][]byte, errors2.ErrParsingMetadataObject) {
+func (o *MetadataObject) Export(metadata yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
 	var apiLimits interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
-		if !ok || k != o.Name() {
+		if !ok || k != o.Key() {
 			continue
 		}
 		apiLimits = item.Value
 	}
 	if apiLimits == nil {
 		o.logger.WithFields(logrus.Fields{
-			"object": o.Name(),
+			"object": o.Key(),
 			"reason": "not found in metadata",
-		}).Debugf("skipped building %s", o.Name())
+		}).Debugf("skipped building %s", o.Key())
 		return nil, nil
 	}
 	data, err := yaml.Marshal(apiLimits)
 	if err != nil {
-		return nil, o.Error(err)
+		return nil, o.error(err)
 	}
 	return map[string][]byte{
-		filepath.ToSlash(filepath.Join(o.MetadataDir, MetadataFilename)): data,
+		filepath.ToSlash(filepath.Join(o.MetadataDir, o.Filename())): data,
 	}, nil
 }
 
-func (o *MetadataObject) Name() string {
+func (o *MetadataObject) Key() string {
 	return "api_limits"
 }
 
-func (o *MetadataObject) Error(err error, additionalContext ...string) errors2.ErrParsingMetadataObject {
-	return errors2.NewErrParsingMetadataObject(o.Name(), MetadataFilename, additionalContext, err)
+func (o *MetadataObject) Filename() string {
+	return "api_limits.yaml"
+}
+func (o *MetadataObject) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
+	return metadataobject.NewErrParsingMetadataObject(o, err, additionalContext...)
 }
