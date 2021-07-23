@@ -1,4 +1,4 @@
-package metadataobject
+package projectmetadata
 
 import (
 	"encoding/json"

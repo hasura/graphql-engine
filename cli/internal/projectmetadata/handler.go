@@ -1,4 +1,4 @@
-package metadataobject
+package projectmetadata
 
 import (
 	"bytes"
@@ -8,6 +8,8 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 
@@ -22,14 +24,14 @@ import (
 
 // Handler will be responsible for interaction between a hasura instance and Objects
 type Handler struct {
-	objects       Objects
+	objects       metadataobject.Objects
 	v1MetadataOps hasura.CommonMetadataOperations
 	v2MetadataOps hasura.V2CommonMetadataOperations
 
 	logger *logrus.Logger
 }
 
-func NewHandler(objects Objects, v1MetadataOps hasura.CommonMetadataOperations, v2MetadataOps hasura.V2CommonMetadataOperations, logger *logrus.Logger) *Handler {
+func NewHandler(objects metadataobject.Objects, v1MetadataOps hasura.CommonMetadataOperations, v2MetadataOps hasura.V2CommonMetadataOperations, logger *logrus.Logger) *Handler {
 	return &Handler{objects, v1MetadataOps, v2MetadataOps, logger}
 }
 
@@ -38,7 +40,7 @@ func NewHandlerFromEC(ec *cli.ExecutionContext) *Handler {
 	return NewHandler(metadataObjects, cli.GetCommonMetadataOps(ec), ec.APIClient.V1Metadata, ec.Logger)
 }
 
-func (h *Handler) SetMetadataObjects(objects Objects) {
+func (h *Handler) SetMetadataObjects(objects metadataobject.Objects) {
 	h.objects = objects
 }
 
@@ -73,7 +75,7 @@ func (h *Handler) ExportMetadata() (map[string][]byte, error) {
 	for _, object := range h.objects {
 		files, err := object.Export(c)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("cannot export %s from metadata", object.Name()))
+			return nil, errors.Wrap(err, fmt.Sprintf("cannot export %s from metadata", object.Key()))
 		}
 		for fileName, content := range files {
 			metadataFiles[fileName] = content
@@ -101,10 +103,10 @@ func (h *Handler) BuildMetadata() (yaml.MapSlice, error) {
 		err := object.Build(&tmpMeta)
 		if err != nil {
 			if errors.Is(err, fs.ErrNotExist) {
-				h.logger.Debugf("metadata file for %s was not found, assuming an empty file", object.Name())
+				h.logger.Debugf("metadata file for %s was not found, assuming an empty file", object.Key())
 				continue
 			}
-			return tmpMeta, errors.Wrap(err, fmt.Sprintf("cannot build %s from project", object.Name()))
+			return tmpMeta, errors.Wrap(err, fmt.Sprintf("cannot build %s from project", object.Key()))
 		}
 	}
 	return tmpMeta, nil
