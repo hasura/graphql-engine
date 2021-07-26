@@ -11,72 +11,23 @@ import {
   generateReplaceMetadataQuery,
 } from '../../../../../metadata/queryUtils';
 import { HasuraMetadataV3 } from '../../../../../metadata/types';
-import { SchemaSharingFetchingStatus } from './types';
+import {
+  SchemaSharingSection,
+  SchemaSharingStore,
+  SchemaSharingTemplateDetailFull,
+  SchemaSharingTemplateItem,
+  ServerJsonRootConfig,
+  ServerJsonSchemaDefinition,
+} from './types';
 import {
   BASE_URL_PUBLIC,
   BASE_URL_TEMPLATE,
   ROOT_CONFIG_PATH,
 } from './schemaSharingConfig';
 
-type SchemaSharingTemplateDetailFull = {
-  sql: string;
-  longDescription?: string;
-  imageUrl?: string;
-  publicUrl: string;
-  blogPostLink?: string;
-  metadataObject?: {
-    resource_version: number;
-    metadata: HasuraMetadataV3;
-  };
-  affectedMetadata?: string[]; // TODO defines the possible values
-};
-
-export type SchemaSharingTemplateItem = {
-  key: string;
-  type: 'database';
-  title: string;
-  description: string;
-  relativeFolderPath: string;
-  dialect: Driver;
-  fetchingStatus: SchemaSharingFetchingStatus;
-  isPartialData: boolean;
-  details?: SchemaSharingTemplateDetailFull;
-};
-
-interface SchemaSharingSection {
-  name: string;
-  templates: SchemaSharingTemplateItem[];
-}
-
-export interface SchemaSharingStore {
-  globalConfigState: SchemaSharingFetchingStatus;
-  schemas?: {
-    sections: SchemaSharingSection[];
-  };
-}
-
-export interface ServerJsonRootConfig {
-  [key: string]: {
-    type: 'database';
-    dialect: Driver;
-    title: string;
-    description: string;
-    relativeFolderPath: string;
-    category: string;
-  };
-}
-
-export interface ServerJsonSchemaDefinition {
-  longDescription?: string;
-  imageUrl?: string;
-  blogPostLink?: string;
-  sqlFiles: string[];
-  metadataUrl?: string;
-  affectedMetadata?: string[]; // TODO defines the possible values
-}
-
 const mapRootJsonFromServerToState = (
-  data: ServerJsonRootConfig
+  data: ServerJsonRootConfig,
+  metadataVersion: number
 ): Required<SchemaSharingStore['schemas']> => {
   const sectionsGroups: Record<
     string,
@@ -86,6 +37,11 @@ const mapRootJsonFromServerToState = (
       ...value,
       key,
     }))
+    .filter(
+      value =>
+        value.metadata_version === `${metadataVersion}` &&
+        value.template_version === '1'
+    )
     .reduce<Record<string, SchemaSharingTemplateItem[]>>(
       (previousValue, currentValue) => {
         const item: SchemaSharingTemplateItem = {
@@ -97,6 +53,8 @@ const mapRootJsonFromServerToState = (
           dialect: currentValue.dialect,
           title: currentValue.title,
           relativeFolderPath: currentValue.relativeFolderPath,
+          metadataVersion: +currentValue.metadata_version,
+          templateVersion: +currentValue.template_version,
         };
         return {
           ...previousValue,
@@ -162,13 +120,18 @@ export const schemaSharingSelectors = {
 };
 
 export const fetchGlobalSchemaSharingConfiguration = createAsyncThunk<
-  ServerJsonRootConfig,
+  Required<SchemaSharingStore['schemas']>,
   undefined,
   AsyncThunkConfig
->('SchemaSharing/GET_REPOSITORY_ROOT_CONFIG', async (params, { dispatch }) => {
-  const rawData = await dispatch(requestAction(ROOT_CONFIG_PATH));
-  return JSON.parse(rawData);
-});
+>(
+  'SchemaSharing/GET_REPOSITORY_ROOT_CONFIG',
+  async (params, { dispatch, getState }) => {
+    const rawData = await dispatch(requestAction(ROOT_CONFIG_PATH));
+    const payload = JSON.parse(rawData);
+    const metadataVersion = getState()?.metadata?.metadataObject?.version ?? 0;
+    return mapRootJsonFromServerToState(payload, metadataVersion);
+  }
+);
 
 export const fetchSchemaConfigurationByName = createAsyncThunk<
   SchemaSharingTemplateDetailFull,
@@ -207,7 +170,6 @@ export const fetchSchemaConfigurationByName = createAsyncThunk<
 
     const fullObject: SchemaSharingTemplateDetailFull = {
       sql: sqlFiles.join('\n'),
-      affectedMetadata: itemConfig.affectedMetadata,
       blogPostLink: itemConfig.blogPostLink,
       imageUrl: `${baseTemplatePath}/${itemConfig.imageUrl}`,
       longDescription: itemConfig.longDescription,
@@ -343,7 +305,7 @@ const schemaSharingSlice = createSlice({
         fetchGlobalSchemaSharingConfiguration.fulfilled,
         (state, { payload }) => {
           state.globalConfigState = 'success';
-          state.schemas = mapRootJsonFromServerToState(payload);
+          state.schemas = payload;
         }
       )
       .addCase(

@@ -99,20 +99,6 @@ export const SchemaGalleryModalBody: React.VFC<{
         setOptions={{ showLineNumbers: false }}
         maxLines={150}
       />
-      {details.affectedMetadata ? (
-        <>
-          <p className={`${styles.mb_xs} ${styles.strong} ${styles.muted}`}>
-            Metadata:
-          </p>
-          <p>
-            {details.affectedMetadata.map(affected => (
-              <span key={affected} className={styles.badge_metadata}>
-                {affected}
-              </span>
-            ))}
-          </p>
-        </>
-      ) : null}
     </div>
   );
 };

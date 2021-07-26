@@ -23,6 +23,7 @@ const renderSchemaGallery = () => {
     reducer: {
       schemaSharing: schemaSharingReducer,
       tables: () => ({ currentDataSource: 'postgres' }),
+      metadata: () => ({ metadataObject: { version: 3 } }),
     },
   });
   render(
