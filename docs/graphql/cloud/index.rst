@@ -39,12 +39,21 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
     .. container:: toc-list-content
 
       - :ref:`metrics`
-      - :ref:`api_limits`
-      - :ref:`allow_lists`
       - :ref:`regression_tests`
       - :ref:`read_replicas`
       - :ref:`response_caching`
       - :ref:`tracing`
+
+  .. container:: toc-list-section
+
+    .. container:: toc-list-head
+
+       API Security
+
+    .. container:: toc-list-content
+
+       - :ref:`api_limits`
+       - :ref:`allow_lists`
 
   .. container:: toc-list-section
 
@@ -67,8 +76,7 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
   Getting Started <getting-started/index>
   projects/index
   metrics/index
-  api-limits
-  allow-lists
+  API Security <security/index>
   regression-tests
   read-replicas
   response-caching
