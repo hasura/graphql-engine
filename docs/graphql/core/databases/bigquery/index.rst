@@ -28,7 +28,7 @@ To try Hasura with BigQuery, you'll need your own new or existing BigQuery datab
 
 Here is how you can get started with Hasura:
 
-:ref:`Getting Started with BigQuery<database_bigquery_getting_started>`
+:ref:`Getting Started with BigQuery <database_bigquery_getting_started>`
 
 .. TODO: DB COMPATIBILITY
 

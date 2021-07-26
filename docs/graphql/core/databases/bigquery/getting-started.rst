@@ -12,8 +12,61 @@ Getting started with BigQuery
   :depth: 2
   :local:
 
+Run Hasura GraphQL engine
+-------------------------
+
+Using Hasura Cloud
+^^^^^^^^^^^^^^^^^^
+
+Navigate to `cloud.hasura.io
+<https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default>`__, and
+create a new Hasura Cloud account.
+
+Once you create a project on Hasura Cloud, hit the "Launch Console" button
+to open the Hasura Console for your project.
+
+.. thumbnail:: /img/graphql/cloud/getting-started/create-project.png
+  :alt: Connect new or existing database
+  :width: 556px
+
+Using docker
+^^^^^^^^^^^^
+Get the Hasura docker-compose file:
+
+.. code-block:: bash
+
+   # in a new directory run
+   wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml
+   # or run
+   curl https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml -o docker-compose.yaml
+
+The following command will run Hasura along with a Postgres database required
+for its functioning.
+
+.. code-block::  bash
+
+   $ docker-compose up -d
+
+Check if the containers are running:
+
+.. code-block:: bash
+
+  $ docker ps
+
+  CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
+  097f58433a2b hasura/graphql-engine ... 1m ago  Up 1m  8080->8080/tcp ...
+  b0b1aac0508d postgres              ... 1m ago  Up 1m  5432/tcp       ...
+
+  Please do note that you will see a Postgres database running, which is used by Hasura to store its configuration (Hasura metadata).
+
+Head to ``http://localhost:8080/console`` to open the Hasura console.
+
+
+Connecting to a BigQuery project
+--------------------------------
+
 Pre-requisites
---------------
+^^^^^^^^^^^^^^
 
 Hasura GraphQL engine requires the following to connect to a BigQuery project:
 
@@ -22,7 +75,7 @@ Hasura GraphQL engine requires the following to connect to a BigQuery project:
 - A `Service Account <https://cloud.google.com/iam/docs/service-accounts>`__ to query the project.
 
 Creating a Service Account
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - In Google Cloud's console, head to your BigQuery project.
 
@@ -41,10 +94,13 @@ Creating a Service Account
 
 - Click on the created service account, ``Keys > ADD KEY > Create New Key > JSON > Create``. This will download a service account file on your computer.
 
-Connecting to a BigQuery project
---------------------------------
+Connect BigQuery to Hasura
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- Run Graphql engine with an environment variable set to the contents of the service account. This maybe done as follows if you are using docker:
+- Update Graphql engine with an environment variable set to the contents of the service account.
+
+
+For example, this maybe done as follows if you are using docker:
 
 .. code-block:: bash
 
