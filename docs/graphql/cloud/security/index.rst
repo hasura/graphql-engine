@@ -5,7 +5,7 @@
 .. _api_security:
 
 API Security
-====================
+============
 
 .. contents:: Table of contents
   :backlinks: none
@@ -21,7 +21,7 @@ All API security related features can be found under the ``Security`` tab in the
    :alt: Security
 
 Features
--------
+--------
 
 .. toctree::
   :maxdepth: 1

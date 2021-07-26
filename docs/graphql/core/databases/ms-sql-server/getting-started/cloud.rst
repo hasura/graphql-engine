@@ -18,6 +18,10 @@ Try it out
 Step 1: Create an account on Hasura Cloud and create a new Hasura Project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Navigate to `cloud.hasura.io
+<https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default>`__, and
+create a new Hasura Cloud account.
+
 Once you create a project on Hasura Cloud, hit the "Launch Console" button
 to open the Hasura Console for your project.
 
