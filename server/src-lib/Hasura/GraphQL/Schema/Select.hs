@@ -398,7 +398,7 @@ tableConnectionSelectionSet
   => SourceName
   -> TableInfo b
   -> SelPermInfo b
-  -> m (Parser 'Output n (IR.ConnectionFields b UnpreparedValue (UnpreparedValue b)))
+  -> m (Parser 'Output n (ConnectionFields b))
 tableConnectionSelectionSet sourceName tableInfo selectPermissions = memoizeOn 'tableConnectionSelectionSet (sourceName, tableName) do
   tableGQLName <- getTableGQLName tableInfo
   edgesParser  <- tableEdgesSelectionSet tableGQLName
@@ -432,7 +432,7 @@ tableConnectionSelectionSet sourceName tableInfo selectPermissions = memoizeOn '
          <&> parsedSelectionsToFields IR.PageInfoTypename
 
     tableEdgesSelectionSet
-      :: G.Name -> m (Parser 'Output n (IR.EdgeFields b UnpreparedValue (UnpreparedValue b)))
+      :: G.Name -> m (Parser 'Output n (EdgeFields b))
     tableEdgesSelectionSet tableGQLName = do
       edgeNodeParser      <- P.nonNullableParser <$> tableSelectionSet sourceName tableInfo selectPermissions
       let edgesType = tableGQLName <> $$(G.litName "Edge")
@@ -1155,7 +1155,7 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
             `P.bindField` \G.Field{ G._fArguments = args, G._fSelectionSet = selSet } -> do
               let remoteArgs =
                     Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue $ argVal
-              pure $ IR.AFRemote $ IR.RemoteSelect
+              pure $ IR.AFRemote $ IR.RemoteSelectRemoteSchema $ IR.RemoteSchemaSelect
                 { _rselArgs          = remoteArgs
                 , _rselSelection     = selSet
                 , _rselHasuraFields  = _rfiHasuraFields remoteSchema
@@ -1410,7 +1410,7 @@ nodePG = memoizeOn 'nodePG () do
 nodeField
   :: forall m n r
    . MonadBuildSchema ('Postgres 'Vanilla) r m n
-  => m (P.FieldParser n (IR.QueryRootField UnpreparedValue UnpreparedValue))
+  => m (P.FieldParser n (IR.QueryRootField UnpreparedValue))
 nodeField = do
   let idDescription = G.Description "A globally unique id"
       idArgument = P.field $$(G.litName "id") (Just idDescription) P.identifier

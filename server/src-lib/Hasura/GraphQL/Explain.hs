@@ -53,7 +53,7 @@ explainQueryField
      )
   => UserInfo
   -> G.Name
-  -> QueryRootField UnpreparedValue UnpreparedValue
+  -> QueryRootField UnpreparedValue
   -> m EncJSON
 explainQueryField userInfo fieldName rootField = do
   case rootField of

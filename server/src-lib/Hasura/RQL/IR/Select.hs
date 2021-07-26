@@ -188,8 +188,11 @@ data AnnFieldG (b :: BackendType) (r :: BackendType -> Type) v
   | AFObjectRelation !(ObjectRelationSelectG b r v)
   | AFArrayRelation !(ArraySelectG b r v)
   | AFComputedField !(XComputedField b) !ComputedFieldName !(ComputedFieldSelect b r v)
-  | AFRemote !(RemoteSelect b)
-  | AFDBRemote !(AB.AnyBackend (DBRemoteSelect b r))
+  -- | A relationship to a remote source/remote schema. Its kind is
+  -- (r :: BackendType -> Type) so that AFRemote can capture something
+  -- that is specific to the backend AnnFieldG. See RemoteSelect. When
+  -- remote joins are extracted from the structure, 'r' becomes 'Const Void'
+  | AFRemote !(r b)
   | AFNodeId !(XRelay b) !(TableName b) !(PrimaryKeyColumns b)
   | AFExpression !Text
   deriving (Functor, Foldable, Traversable)
@@ -361,7 +364,7 @@ type ArraySelect b = ArraySelectG b (Const Void) (SQLExpression b)
 type ArraySelectFieldsG b r v = Fields (ArraySelectG b r v)
 
 
--- Remote schema relationship
+-- Remote schema relationships
 
 data RemoteFieldArgument
   = RemoteFieldArgument
@@ -369,8 +372,8 @@ data RemoteFieldArgument
   , _rfaValue    :: !(InputValue RemoteSchemaVariable)
   } deriving (Eq,Show)
 
-data RemoteSelect (b :: BackendType)
-  = RemoteSelect
+data RemoteSchemaSelect (b :: BackendType)
+  = RemoteSchemaSelect
   { _rselArgs         :: ![RemoteFieldArgument]
   , _rselSelection    :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)
   , _rselHasuraFields :: !(HashSet (DBJoinField b))
@@ -378,16 +381,45 @@ data RemoteSelect (b :: BackendType)
   , _rselRemoteSchema :: !RemoteSchemaInfo
   }
 
+-- | Captures the selection set of a remote source relationship.
+data SourceRelationshipSelection
+    (b :: BackendType)
+    (r :: BackendType -> Type)
+    (vf :: BackendType -> Type)
+  = SourceRelationshipObject !(AnnObjectSelectG b r (vf b))
+  | SourceRelationshipArray !(AnnSimpleSelectG b r (vf b))
+  | SourceRelationshipArrayAggregate !(AnnAggregateSelectG b r (vf b))
 
--- Remote db relationship
+-- | A relationship to a remote source. 'vf' (could use a better name) is
+-- analogous to 'v' in other IR types such as 'AnnFieldG'. vf's kind is
+-- (BackendType -> Type) instead of v's 'Type' so that 'v' of 'AnnFieldG' can
+-- be specific to the backend that it captures ('b' of an AnnFieldG changes as
+-- we walk down the IR branches which capture relationships to other databases)
+data RemoteSourceSelect
+    (src :: BackendType)
+    (vf :: BackendType -> Type)
+    (tgt :: BackendType)
+  = RemoteSourceSelect
+    { _rssSourceName   :: !SourceName
+    , _rssSourceConfig :: !(SourceConfig tgt)
+    , _rssSelection    :: !(SourceRelationshipSelection tgt (RemoteSelect vf) vf)
+    , _rssJoinMapping  :: !(HM.HashMap FieldName (ColumnInfo src, ScalarType tgt, Column tgt))
+    -- ^ Additional information about the source's join columns:
+    -- (ColumnInfo src) so that we can add the join column to the AST
+    -- (ScalarType tgt) so that the remote can interpret the join values coming
+    -- from src
+    -- (Column tgt) so that an appropriate join condition / IN clause can be built
+    -- by the remote
+    }
 
-data DBRemoteSelect (src :: BackendType) (r :: BackendType -> Type) (tgt :: BackendType)
-  = DBRemoteSelect
-  { _dbrselHasuraColumns :: ![(ColumnInfo src, ColumnInfo tgt)]
-  , _dbrselTargetQuery   :: !(QueryDB tgt r (r tgt))
-  , _dbrselTargetConfig  :: !(SourceConfig tgt)
-  }
-
+-- | A remote relationship to either a remote schema or a remote source.
+-- See RemoteSourceSelect for explanation on 'vf'.
+data RemoteSelect
+    (vf :: BackendType -> Type)
+    (src :: BackendType)
+  = RemoteSelectRemoteSchema !(RemoteSchemaSelect src)
+  -- ^ AnyBackend is used here to capture a relationship to an arbitrary target
+  | RemoteSelectSource !(AB.AnyBackend (RemoteSourceSelect src vf))
 
 -- Permissions
 

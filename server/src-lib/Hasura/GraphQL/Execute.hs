@@ -131,7 +131,7 @@ getExecPlanPartial userInfo sc queryType req =
 
 -- The graphql query is resolved into a sequence of execution operations
 data ResolvedExecutionPlan
-  = QueryExecutionPlan EB.ExecutionPlan [IR.QueryRootField UnpreparedValue UnpreparedValue] DirectiveMap
+  = QueryExecutionPlan EB.ExecutionPlan [IR.QueryRootField UnpreparedValue] DirectiveMap
   -- ^ query execution; remote schemas and introspection possible
   | MutationExecutionPlan EB.ExecutionPlan
   -- ^ mutation execution; only __typename introspection supported
@@ -157,7 +157,7 @@ data SubscriptionExecution
 buildSubscriptionPlan
   :: (MonadError QErr m)
   => UserInfo
-  -> InsOrdHashMap G.Name (IR.QueryRootField UnpreparedValue UnpreparedValue)
+  -> InsOrdHashMap G.Name (IR.QueryRootField UnpreparedValue)
   -> m SubscriptionExecution
 buildSubscriptionPlan userInfo rootFields = do
   (onSourceFields, noRelationActionFields) <- foldlM go (mempty, mempty) (OMap.toList rootFields)

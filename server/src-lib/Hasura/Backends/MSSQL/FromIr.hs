@@ -727,18 +727,6 @@ fromAnnFieldsG existingJoins stringifyNumbers (IR.FieldName name, field) =
         (\aliasedThing ->
            JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
         (fromArraySelectG arraySelectG)
-    -- this will be gone once the code which collects remote joins from the IR
-    -- emits a modified IR where remote relationships can't be reached
-    IR.AFRemote _ ->
-      pure
-        (ExpressionFieldSource
-           Aliased
-             { aliasedThing = TSQL.ValueExpression
-                              (ODBC.TextValue "null: remote field selected")
-             , aliasedAlias = name
-             })
-    -- TODO: implement this
-    IR.AFDBRemote _ -> error "FIXME"
 
 -- | Here is where we project a field as a column expression. If
 -- number stringification is on, then we wrap it in a

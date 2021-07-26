@@ -167,7 +167,7 @@ runSessVarPred = filterSessionVariables . unSessVarPred
 -- | Filter out only those session variables used by the query AST provided
 filterVariablesFromQuery
   :: Backend backend
-  => [RootField (QueryDBRoot UnpreparedValue UnpreparedValue) RemoteField (ActionQuery backend UnpreparedValue (UnpreparedValue backend)) d]
+  => [RootField (QueryDBRoot (RemoteSelect UnpreparedValue) UnpreparedValue) RemoteField (ActionQuery backend (RemoteSelect UnpreparedValue) (UnpreparedValue backend)) d]
   -> SessVarPred
 filterVariablesFromQuery query = fold $ rootToSessVarPreds =<< query
   where
