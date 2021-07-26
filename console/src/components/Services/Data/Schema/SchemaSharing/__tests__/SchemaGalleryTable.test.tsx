@@ -8,14 +8,17 @@ import {
 import { setupServer } from 'msw/node';
 import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
-import { schemaSharingReducer, SchemaSharingTemplateItem } from '../Actions';
+import { schemaSharingReducer } from '../Actions';
 import {
   SchemaGalleryBody,
   SchemaGalleryContentRow,
 } from '../SchemaGalleryTable';
 import { networkStubs } from './stubs/schemaSharingNetworkStubs';
+import { SchemaSharingTemplateItem } from '../types';
 
 const templateItem: SchemaSharingTemplateItem = {
+  templateVersion: 1,
+  metadataVersion: 3,
   key: 'template-1',
   description: 'Some description of the schema',
   fetchingStatus: 'success',
@@ -64,6 +67,7 @@ const renderSchemaGalleryBody = () => {
   const store = configureStore<any>({
     reducer: {
       schemaSharing: schemaSharingReducer,
+      metadata: () => ({ metadataObject: { version: 3 } }),
     },
   });
   render(

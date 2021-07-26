@@ -1,13 +1,15 @@
 import { rest } from 'msw';
-import { ServerJsonRootConfig } from '../../Actions';
 import { HasuraMetadataV3 } from '../../../../../../../metadata/types';
 import { BASE_URL_TEMPLATE, ROOT_CONFIG_PATH } from '../../schemaSharingConfig';
+import { ServerJsonRootConfig } from '../../types';
 
 export const CATEGORY_1 = 'AAAAAAAA';
 export const CATEGORY_2 = 'BBBBBBBB';
 
 export const MOCK_ROOT_CONFIG: ServerJsonRootConfig = {
   'template-1': {
+    template_version: '1',
+    metadata_version: '3',
     title: 'template-1',
     relativeFolderPath: './postgres-template-1',
     dialect: 'postgres',
@@ -16,6 +18,8 @@ export const MOCK_ROOT_CONFIG: ServerJsonRootConfig = {
     category: CATEGORY_1,
   },
   'template-2': {
+    template_version: '1',
+    metadata_version: '3',
     title: 'template-2',
     relativeFolderPath: '/home',
     dialect: 'postgres',
@@ -24,7 +28,29 @@ export const MOCK_ROOT_CONFIG: ServerJsonRootConfig = {
     category: CATEGORY_2,
   },
   'template-3': {
+    template_version: '1',
+    metadata_version: '3',
     title: 'template-3',
+    relativeFolderPath: '/home',
+    dialect: 'mysql',
+    description: 'This is the description of template 3',
+    type: 'database',
+    category: CATEGORY_2,
+  },
+  'template-3-ignore-template-version': {
+    template_version: '2',
+    metadata_version: '3',
+    title: 'template-3-ignore',
+    relativeFolderPath: '/home',
+    dialect: 'mysql',
+    description: 'This is the description of template 3',
+    type: 'database',
+    category: CATEGORY_2,
+  },
+  'template-3-ignore-metadata': {
+    template_version: '1',
+    metadata_version: '5',
+    title: 'template-3-ignore',
     relativeFolderPath: '/home',
     dialect: 'mysql',
     description: 'This is the description of template 3',

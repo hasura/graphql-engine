@@ -26,6 +26,7 @@ const schemaGalleryModalBodyRender = async (...handlers: RequestHandler[]) => {
   const store = configureStore<any>({
     reducer: {
       schemaSharing: schemaSharingReducer,
+      metadata: () => ({ metadataObject: { version: 3 } }),
     },
   });
 

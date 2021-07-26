@@ -3,11 +3,10 @@ import { useAppDispatch, useAppSelector } from '../../../../../store';
 import {
   fetchGlobalSchemaSharingConfiguration,
   schemaSharingSelectors,
-  SchemaSharingTemplateItem,
 } from './Actions';
 import { currentDriver } from '../../../../../dataSources';
 import styles from './SchemaGallery.scss';
-import { modalOpenFn } from './types';
+import { modalOpenFn, SchemaSharingTemplateItem } from './types';
 
 export const SchemaGalleryContentRow: React.VFC<{
   template: SchemaSharingTemplateItem;

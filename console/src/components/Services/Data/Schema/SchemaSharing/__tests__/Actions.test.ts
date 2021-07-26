@@ -5,9 +5,9 @@ import {
   fetchGlobalSchemaSharingConfiguration,
   fetchSchemaConfigurationByName,
   schemaSharingReducer,
-  SchemaSharingStore,
 } from '../Actions';
 import { CATEGORY_1, networkStubs } from './stubs/schemaSharingNetworkStubs';
+import { SchemaSharingStore } from '../types';
 
 const server = setupServer();
 
@@ -15,17 +15,22 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
+const getStore = () => {
+  return configureStore<any>({
+    reducer: {
+      schemaSharing: schemaSharingReducer,
+      metadata: () => ({ metadataObject: { version: 3 } }),
+    },
+  });
+};
+
 describe('SchemaSharing state', () => {
   describe('global config get flow', () => {
     it('should dispatch the root config success when the api works', async () => {
       server.use(networkStubs.rootJson);
 
       // any to not add the whole store
-      const store = configureStore<any>({
-        reducer: {
-          schemaSharing: schemaSharingReducer,
-        },
-      });
+      const store = getStore();
 
       await store.dispatch(fetchGlobalSchemaSharingConfiguration());
       expect(store.getState().schemaSharing).toMatchSnapshot();
@@ -38,17 +43,11 @@ describe('SchemaSharing state', () => {
         schemas: undefined,
       };
       // any to not add the whole store
-      const store = configureStore<any>({
-        reducer: {
-          schemaSharing: schemaSharingReducer,
-        },
-      });
+      const store = getStore();
 
       await store.dispatch(fetchGlobalSchemaSharingConfiguration());
 
-      expect(store.getState()).toEqual({
-        schemaSharing: expected,
-      });
+      expect(store.getState().schemaSharing).toEqual(expected);
     });
   });
   describe('fetch single config file', () => {
@@ -62,11 +61,8 @@ describe('SchemaSharing state', () => {
         networkStubs.template1.metadata
       );
 
-      const store = configureStore<any>({
-        reducer: {
-          schemaSharing: schemaSharingReducer,
-        },
-      });
+      const store = getStore();
+
       await store.dispatch(fetchGlobalSchemaSharingConfiguration());
       // Act
       await store.dispatch(
@@ -92,11 +88,8 @@ describe('SchemaSharing state', () => {
         networkStubs.template1.metadata
       );
 
-      const store = configureStore<any>({
-        reducer: {
-          schemaSharing: schemaSharingReducer,
-        },
-      });
+      const store = getStore();
+
       await store.dispatch(fetchGlobalSchemaSharingConfiguration());
       await store.dispatch(
         fetchSchemaConfigurationByName({
