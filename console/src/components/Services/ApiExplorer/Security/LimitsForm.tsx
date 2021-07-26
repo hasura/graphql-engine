@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { RoleLimits, RoleState } from './utils';
 import styles from './Security.scss';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import { isEmpty } from '../../../Common/utils/jsUtils';
+import { Nullable } from '../../../Common/utils/tsUtils';
 
 type Limit =
   | number
   | {
-      unique_params: 'IP' | string[];
+      unique_params: Nullable<'IP' | string[]>;
       max_reqs_per_min: number;
     };
 
@@ -20,8 +21,8 @@ interface LimitFormProps {
   state: RoleState;
   roleLimit: Limit;
   globalLimit: Limit;
-  unique_params_global: 'IP' | string[];
-  unique_params_role: 'IP' | string[];
+  unique_params_global: Nullable<'IP' | string[]>;
+  unique_params_role: Nullable<'IP' | string[]>;
   max_reqs_global: number;
   max_reqs_role: number;
   role: string;
@@ -50,8 +51,18 @@ export const LimitsForm: React.FC<LimitFormProps> = ({
 }) => {
   const isRateLimit = limit === 'rate_limit';
   const isGlobal = role === 'global';
+  const [addUniqueParams, setAddUniqueParams] = useState(false);
+
+  useEffect(() => {
+    setAddUniqueParams(
+      isGlobal ? !isEmpty(unique_params_global) : !isEmpty(unique_params_role)
+    );
+  }, [isGlobal, role, unique_params_global, unique_params_role]);
+
   const isdisabledGlobally =
     (isEmpty(globalLimit) || globalLimit < 0) && !isGlobal;
+
+  const isDisabled = state === RoleState.global || state === RoleState.disabled;
 
   const renderValue = () => {
     const rateValue = isGlobal ? max_reqs_global : max_reqs_role;
@@ -117,15 +128,24 @@ export const LimitsForm: React.FC<LimitFormProps> = ({
               value={renderValue()}
               onChange={e => onInputChange(limit, role)(e.target.value)}
               placeholder={isRateLimit ? 'Request Per Minute' : 'Limit'}
-              disabled={
-                state === RoleState.global || state === RoleState.disabled
-              }
+              disabled={isDisabled}
             />
 
             {isRateLimit && (
               <div className={styles.unique_params}>
                 <div className={styles.radio_group}>
-                  <b>Unique Parameter</b>
+                  <div className={`${styles.checkbox_group} radio_input`}>
+                    <input
+                      type="checkbox"
+                      id="additional_unique_param"
+                      checked={addUniqueParams}
+                      disabled={isDisabled}
+                      onChange={() => setAddUniqueParams(pre => !pre)}
+                    />
+                    <label htmlFor="additional_unique_param">
+                      <b>Additional Unique Parameters</b>
+                    </label>
+                  </div>
                   <div className="radio_input">
                     <input
                       type="radio"
@@ -135,10 +155,7 @@ export const LimitsForm: React.FC<LimitFormProps> = ({
                           ? unique_params_global === 'IP'
                           : unique_params_role === 'IP'
                       }
-                      disabled={
-                        state === RoleState.global ||
-                        state === RoleState.disabled
-                      }
+                      disabled={!addUniqueParams || isDisabled}
                       onChange={() => onUniqueParamsChange(role)('IP')}
                     />
                     <label htmlFor="ip_address">IP Address</label>
@@ -149,13 +166,12 @@ export const LimitsForm: React.FC<LimitFormProps> = ({
                       id="session_variable"
                       checked={
                         isGlobal
-                          ? unique_params_global !== 'IP'
-                          : unique_params_role !== 'IP'
+                          ? unique_params_global !== 'IP' &&
+                            !isEmpty(unique_params_global)
+                          : unique_params_role !== 'IP' &&
+                            !isEmpty(unique_params_role)
                       }
-                      disabled={
-                        state === RoleState.global ||
-                        state === RoleState.disabled
-                      }
+                      disabled={!addUniqueParams || isDisabled}
                       onChange={() => onUniqueParamsChange(role)('')}
                     />
                     <label htmlFor="session_variable">
@@ -170,9 +186,7 @@ export const LimitsForm: React.FC<LimitFormProps> = ({
                     type="text"
                     className={`form-control ${styles.special_input}`}
                     value={renderUniqueParamValue()}
-                    disabled={
-                      state === RoleState.global || state === RoleState.disabled
-                    }
+                    disabled={!addUniqueParams || isDisabled}
                     placeholder="x-hasura-user-id, x-hasura-org"
                     onChange={e => onUniqueParamsChange(role)(e.target.value)}
                   />

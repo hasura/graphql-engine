@@ -5,6 +5,9 @@
 .max_width_80 {
   max-width: 80%;
 }
+.max_width_90 {
+  max-width: 90%;
+}
 
 .top {
   display: flex;
@@ -128,4 +131,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.checkbox_group {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 10px;
+  align-items: center;
+
+  input[type='checkbox'] {
+    margin: 0;
+  }
 }

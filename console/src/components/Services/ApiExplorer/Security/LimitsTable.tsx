@@ -82,7 +82,7 @@ const LimitsTable: React.FC<Props> = ({
             </div>
           </div>
         </div>
-        <div className={styles.max_width_80}>
+        <div className={styles.max_width_90}>
           <Table columnCount={keys.length} rowCount={roles.length + 3}>
             <TableHeader headers={headers} keys={keys} />
             <TableSideBar
