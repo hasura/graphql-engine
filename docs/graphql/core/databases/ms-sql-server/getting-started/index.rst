@@ -1,5 +1,5 @@
 .. meta::
-  :description: Getting Stated with Hasura & MS SQL Server
+  :description: Getting Started with Hasura & MS SQL Server
   :keywords: hasura, docs, databases, ms sql, sql server,
 
 Getting started with MS SQL Server
