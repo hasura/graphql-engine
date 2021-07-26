@@ -1,3 +1,4 @@
+import { Nullable } from './../../../Common/utils/tsUtils';
 import { exportMetadata, MetadataActions } from '../../../../metadata/actions';
 import {
   APILimitInputType,
@@ -14,7 +15,7 @@ export type updateSecurityFeaturesActionType = {
     depth_limit?: APILimitInputType<number>;
     node_limit?: APILimitInputType<number>;
     rate_limit?: APILimitInputType<{
-      unique_params: 'IP' | string[];
+      unique_params: Nullable<'IP' | string[]>;
       max_reqs_per_min: number;
     }>;
   };

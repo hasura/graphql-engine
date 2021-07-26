@@ -16,7 +16,7 @@ export enum RoleState {
 
 export type RoleLimits = Omit<ApiLimitsFormSate, 'disabled'>;
 
-export const prepareApiLimits = (
+const prepareApiLimits = (
   apiLimits: HasuraMetadataV3['api_limits']
 ): Omit<ApiLimitsFormSate, 'disabled'> => {
   const res = {} as Omit<ApiLimitsFormSate, 'disabled'>;

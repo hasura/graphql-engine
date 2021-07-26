@@ -1,3 +1,4 @@
+import { Nullable } from './../components/Common/utils/tsUtils';
 import { Driver } from '../dataSources';
 import { PermissionsType } from '../components/Services/RemoteSchema/Permissions/types';
 
@@ -995,7 +996,7 @@ export interface HasuraMetadataV3 {
     depth_limit?: APILimit<number>;
     node_limit?: APILimit<number>;
     rate_limit?: APILimit<{
-      unique_params: 'IP' | string[];
+      unique_params: Nullable<'IP' | string[]>;
       max_reqs_per_min: number;
     }>;
   };

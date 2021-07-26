@@ -25,7 +25,8 @@ export const labels: Record<
   },
   rate_limit: {
     title: 'Request Rate Limit (Requests Per Minute)',
-    info: 'Set a request rate limit by an IP address or session variable.',
+    info:
+      'Set a request rate limit for this role. You can also combine additional unique parameters for more granularity.',
   },
 };
 
