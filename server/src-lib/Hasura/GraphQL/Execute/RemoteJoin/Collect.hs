@@ -52,8 +52,8 @@ import           Hasura.RQL.Types
 
 -- | Collects remote joins from the AST and also adds the necessary join fields
 getRemoteJoins
-  :: (Backend b)
-  => QueryDB b r (UnpreparedValue b)
+  :: Backend b
+  => QueryDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b)
   -> (QueryDB b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoins = \case
   QDBMultipleRows s -> first QDBMultipleRows $ getRemoteJoinsSelect s
@@ -63,32 +63,32 @@ getRemoteJoins = \case
 
 -- | Traverse through 'AnnSimpleSel' and collect remote join fields (if any).
 getRemoteJoinsSelect
-  :: (Backend b)
-  => AnnSimpleSelectG b r (UnpreparedValue b)
+  :: Backend b
+  => AnnSimpleSelectG b (RemoteSelect UnpreparedValue) (UnpreparedValue b)
   -> (AnnSimpleSelectG b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsSelect =
   second mapToNonEmpty . flip runState mempty . transformSelect mempty
 
 -- | Traverse through @'AnnAggregateSelect' and collect remote join fields (if any).
 getRemoteJoinsAggregateSelect
-  :: (Backend b)
-  => AnnAggregateSelectG b r (UnpreparedValue b)
+  :: Backend b
+  => AnnAggregateSelectG b (RemoteSelect UnpreparedValue) (UnpreparedValue b)
   -> (AnnAggregateSelectG b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsAggregateSelect =
   second mapToNonEmpty . flip runState mempty . transformAggregateSelect mempty
 
 -- | Traverse through @'ConnectionSelect' and collect remote join fields (if any).
 getRemoteJoinsConnectionSelect
-  :: (Backend b)
-  => ConnectionSelect b r (UnpreparedValue b)
+  :: Backend b
+  => ConnectionSelect b (RemoteSelect UnpreparedValue) (UnpreparedValue b)
   -> (ConnectionSelect b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsConnectionSelect =
   second mapToNonEmpty . flip runState mempty . transformConnectionSelect mempty
 
 -- | Traverse through 'MutationOutput' and collect remote join fields (if any)
 getRemoteJoinsMutationOutput
-  :: (Backend b)
-  => MutationOutputG b r (UnpreparedValue b)
+  :: Backend b
+  => MutationOutputG b (RemoteSelect UnpreparedValue) (UnpreparedValue b)
   -> (MutationOutputG b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsMutationOutput =
   second mapToNonEmpty . flip runState mempty . transformMutationOutput mempty
@@ -111,15 +111,15 @@ getRemoteJoinsMutationOutput =
 -- local helpers
 
 getRemoteJoinsAnnFields
-  :: (Backend b)
-  => AnnFieldsG b r (UnpreparedValue b)
+  :: Backend b
+  => AnnFieldsG b (RemoteSelect UnpreparedValue) (UnpreparedValue b)
   -> (AnnFieldsG b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsAnnFields =
   second mapToNonEmpty . flip runState mempty . transformAnnFields mempty
 
 getRemoteJoinsMutationDB
-  :: (Backend b)
-  => MutationDB b r (UnpreparedValue b)
+  :: Backend b
+  => MutationDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b)
   -> (MutationDB b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsMutationDB = \case
   MDBInsert insert ->
@@ -145,7 +145,7 @@ getRemoteJoinsMutationDB = \case
 
 getRemoteJoinsSyncAction
   :: (Backend b)
-  => AnnActionExecution b r (UnpreparedValue b)
+  => AnnActionExecution b (RemoteSelect UnpreparedValue) (UnpreparedValue b)
   -> (AnnActionExecution b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsSyncAction actionExecution =
   let (fields', remoteJoins) = getRemoteJoinsAnnFields $ _aaeFields actionExecution
@@ -153,7 +153,7 @@ getRemoteJoinsSyncAction actionExecution =
 
 getRemoteJoinsActionQuery
   :: (Backend b)
-  => ActionQuery b r (UnpreparedValue b)
+  => ActionQuery b (RemoteSelect UnpreparedValue) (UnpreparedValue b)
   -> (ActionQuery b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsActionQuery = \case
   AQQuery sync ->
@@ -180,7 +180,7 @@ getRemoteJoinsActionQuery = \case
 
 getRemoteJoinsActionMutation
   :: (Backend b)
-  => ActionMutation b r (UnpreparedValue b)
+  => ActionMutation b (RemoteSelect UnpreparedValue) (UnpreparedValue b)
   -> (ActionMutation b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsActionMutation = \case
   AMSync sync   -> first AMSync $ getRemoteJoinsSyncAction sync
@@ -190,7 +190,7 @@ getRemoteJoinsActionMutation = \case
 transformSelect
   :: (Backend b)
   => FieldPath
-  -> AnnSimpleSelectG b r (UnpreparedValue b)
+  -> AnnSimpleSelectG b (RemoteSelect UnpreparedValue) (UnpreparedValue b)
   -> State RemoteJoinMap (AnnSimpleSelectG b (Const Void) (UnpreparedValue b))
 transformSelect path sel = do
   let fields = _asnFields sel
@@ -201,7 +201,7 @@ transformSelect path sel = do
 transformAggregateSelect
   :: (Backend b)
   => FieldPath
-  -> AnnAggregateSelectG b r (UnpreparedValue b)
+  -> AnnAggregateSelectG b (RemoteSelect UnpreparedValue) (UnpreparedValue b)
   -> State RemoteJoinMap (AnnAggregateSelectG b (Const Void) (UnpreparedValue b))
 transformAggregateSelect path sel = do
   let aggFields = _asnFields sel
@@ -215,7 +215,7 @@ transformAggregateSelect path sel = do
 transformConnectionSelect
   :: (Backend b)
   => FieldPath
-  -> ConnectionSelect b r (UnpreparedValue b)
+  -> ConnectionSelect b (RemoteSelect UnpreparedValue) (UnpreparedValue b)
   -> State RemoteJoinMap (ConnectionSelect b (Const Void) (UnpreparedValue b))
 transformConnectionSelect path ConnectionSelect{..} = do
   let connectionFields = _asnFields _csSelect
@@ -238,7 +238,7 @@ transformConnectionSelect path ConnectionSelect{..} = do
 transformObjectSelect
   :: (Backend b)
   => FieldPath
-  -> AnnObjectSelectG b r (UnpreparedValue b)
+  -> AnnObjectSelectG b (RemoteSelect UnpreparedValue) (UnpreparedValue b)
   -> State RemoteJoinMap (AnnObjectSelectG b (Const Void) (UnpreparedValue b))
 transformObjectSelect path sel = do
   let fields = _aosFields sel
@@ -246,10 +246,9 @@ transformObjectSelect path sel = do
   pure sel{_aosFields = transformedFields}
 
 transformAnnFields
-  :: forall b r
-   . (Backend b)
+  :: forall b . Backend b
   => FieldPath
-  -> AnnFieldsG b r (UnpreparedValue b)
+  -> AnnFieldsG b (RemoteSelect UnpreparedValue) (UnpreparedValue b)
   -> State RemoteJoinMap (AnnFieldsG b (Const Void) (UnpreparedValue b))
 transformAnnFields path fields = do
 
@@ -260,9 +259,14 @@ transformAnnFields path fields = do
 
   let columnsInSelSet = HS.fromList $ map (pgiColumn . _acfInfo . snd) $ getFields _AFColumn fields
       scalarComputedFieldsInSelSet = HS.fromList $ map ((^. _2) . snd) $ getFields _AFComputedField fields
-      remoteSelects = getFields (_AFRemote) fields
+
+      remoteSelects = getFields (_AFRemote.to getRemoteSchemaSelect) fields
+      getRemoteSchemaSelect = \case
+        RemoteSelectRemoteSchema s -> s
+        RemoteSelectSource _s      -> error "remote source relationshsip found"
+
       remoteJoins = remoteSelects <&> \(fieldName, remoteSelect) ->
-        let RemoteSelect argsMap selSet hasuraFields remoteFields rsi = remoteSelect
+        let RemoteSchemaSelect argsMap selSet hasuraFields remoteFields rsi = remoteSelect
             hasuraFieldNames = HS.map dbJoinFieldToName hasuraFields
 
             -- See Note [Phantom fields in Remote Joins]
@@ -291,10 +295,11 @@ transformAnnFields path fields = do
         AFComputedField x n <$> case computedField of
           CFSScalar cfss cbe  -> pure $ CFSScalar cfss cbe
           CFSTable jas annSel -> CFSTable jas <$> transformSelect fieldPath annSel
-      AFRemote rs -> pure $ AFRemote rs
+      -- we generate this so that the response has a key with the relationship,
+      -- without which preserving the order of fields in the final response
+      -- would require a lot of bookkeeping
+      AFRemote _rs -> pure $ AFExpression "remote relationship placeholder"
       AFExpression t -> pure $ AFExpression t
-      -- TODO: implement this
-      AFDBRemote _ -> error "FIXME"
 
   case NE.nonEmpty remoteJoins of
     Nothing -> pure transformedFields

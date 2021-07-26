@@ -79,7 +79,7 @@ buildTableRelayQueryFields' ::
   G.Name ->
   NESeq (ColumnInfo 'MySQL) ->
   SelPermInfo 'MySQL ->
-  m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  m [FieldParser n (QueryRootField UnpreparedValue)]
 buildTableRelayQueryFields' _sourceName _sourceInfo _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
   pure []
 
@@ -94,7 +94,7 @@ buildTableInsertMutationFields' ::
   InsPermInfo 'MySQL ->
   Maybe (SelPermInfo 'MySQL) ->
   Maybe (UpdPermInfo 'MySQL) ->
-  m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  m [FieldParser n (MutationRootField UnpreparedValue)]
 buildTableInsertMutationFields' _sourceName _sourceInfo _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
   pure []
 
@@ -108,7 +108,7 @@ buildTableUpdateMutationFields' ::
   G.Name ->
   UpdPermInfo 'MySQL ->
   Maybe (SelPermInfo 'MySQL) ->
-  m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  m [FieldParser n (MutationRootField UnpreparedValue)]
 buildTableUpdateMutationFields' _sourceName _sourceInfo _tableName _tableInfo _gqlName _updPerns _selPerms =
   pure []
 
@@ -122,7 +122,7 @@ buildTableDeleteMutationFields' ::
   G.Name ->
   DelPermInfo 'MySQL ->
   Maybe (SelPermInfo 'MySQL) ->
-  m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  m [FieldParser n (MutationRootField UnpreparedValue)]
 buildTableDeleteMutationFields' _sourceName _sourceInfo _tableName _tableInfo _gqlName _delPerns _selPerms =
   pure []
 
@@ -135,7 +135,7 @@ buildFunctionQueryFields' ::
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
   SelPermInfo 'MySQL ->
-  m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  m [FieldParser n (QueryRootField UnpreparedValue)]
 buildFunctionQueryFields' _ _ _ _ _ _ =
   pure []
 
@@ -149,7 +149,7 @@ buildFunctionRelayQueryFields' ::
   RQL.TableName 'MySQL ->
   NESeq (ColumnInfo 'MySQL) ->
   SelPermInfo 'MySQL ->
-  m [(FieldParser n (QueryRootField UnpreparedValue UnpreparedValue))]
+  m [FieldParser n (QueryRootField UnpreparedValue)]
 buildFunctionRelayQueryFields' _sourceName _sourceInfo _functionName _functionInfo _tableName _pkeyColumns _selPerms =
   pure []
 
@@ -162,7 +162,7 @@ buildFunctionMutationFields' ::
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
   SelPermInfo 'MySQL ->
-  m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  m [FieldParser n (MutationRootField UnpreparedValue)]
 buildFunctionMutationFields' _ _ _ _ _ _ =
   pure []
 

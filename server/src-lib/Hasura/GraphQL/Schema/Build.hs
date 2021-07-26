@@ -30,7 +30,7 @@ buildTableQueryFields
   -> TableInfo b
   -> G.Name
   -> SelPermInfo b
-  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
 buildTableQueryFields sourceName sourceInfo tableName tableInfo gqlName selPerms = do
   let
     mkRF = RFDB sourceName
@@ -64,7 +64,7 @@ buildTableInsertMutationFields
   -> InsPermInfo b
   -> Maybe (SelPermInfo b)
   -> Maybe (UpdPermInfo b)
-  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
 buildTableInsertMutationFields sourceName sourceInfo tableName tableInfo gqlName insPerms mSelPerms mUpdPerms = do
   let
     mkRF = RFDB sourceName
@@ -96,7 +96,7 @@ buildTableUpdateMutationFields
   -> G.Name
   -> UpdPermInfo b
   -> Maybe (SelPermInfo b)
-  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
 buildTableUpdateMutationFields sourceName sourceInfo tableName tableInfo gqlName updPerms mSelPerms = do
   let
     mkRF = RFDB sourceName
@@ -127,7 +127,7 @@ buildTableDeleteMutationFields
   -> G.Name
   -> DelPermInfo b
   -> Maybe (SelPermInfo b)
-  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
 buildTableDeleteMutationFields sourceName sourceInfo tableName tableInfo gqlName delPerms mSelPerms = do
   let
     mkRF = RFDB sourceName
@@ -157,7 +157,7 @@ buildFunctionQueryFields
   -> FunctionInfo b
   -> TableName b
   -> SelPermInfo b
-  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
 buildFunctionQueryFields sourceName sourceInfo functionName functionInfo tableName selPerms = do
   funcName <- functionGraphQLName @b functionName `onLeft` throwError
   let
@@ -188,7 +188,7 @@ buildFunctionMutationFields
   -> FunctionInfo b
   -> TableName b
   -> SelPermInfo b
-  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
 buildFunctionMutationFields sourceName sourceInfo functionName functionInfo tableName selPerms = do
   funcName <- functionGraphQLName @b functionName `onLeft` throwError
   let

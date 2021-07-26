@@ -30,8 +30,8 @@ data RoleContext a
 $(deriveToJSON hasuraJSON ''RoleContext)
 
 data GQLContext = GQLContext
-  { gqlQueryParser    ::        ParserFn (InsOrdHashMap G.Name (IR.QueryRootField    UnpreparedValue UnpreparedValue))
-  , gqlMutationParser :: Maybe (ParserFn (InsOrdHashMap G.Name (IR.MutationRootField UnpreparedValue UnpreparedValue)))
+  { gqlQueryParser    ::        ParserFn (InsOrdHashMap G.Name (IR.QueryRootField    UnpreparedValue))
+  , gqlMutationParser :: Maybe (ParserFn (InsOrdHashMap G.Name (IR.MutationRootField UnpreparedValue)))
   }
 
 instance J.ToJSON GQLContext where

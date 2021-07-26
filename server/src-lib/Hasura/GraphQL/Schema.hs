@@ -207,9 +207,9 @@ buildRoleContext
     getMutationRemotes = concatMap (concat . piMutation)
 
     buildSource :: forall b. BackendSchema b => SourceInfo b ->
-      ConcreteSchemaT m ( [FieldParser (P.ParseT Identity) (QueryRootField    UnpreparedValue UnpreparedValue)]
-                        , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue UnpreparedValue)]
-                        , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue UnpreparedValue)]
+      ConcreteSchemaT m ( [FieldParser (P.ParseT Identity) (QueryRootField    UnpreparedValue)]
+                        , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
+                        , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
                         )
     buildSource (SourceInfo sourceName tables functions sourceConfig) = do
       let validFunctions = takeValidFunctions functions
@@ -276,9 +276,9 @@ buildRelayRoleContext
 
   where
     buildSource :: forall b. BackendSchema b => SourceInfo b ->
-        ConcreteSchemaT m ( [FieldParser (P.ParseT Identity) (QueryRootField    UnpreparedValue UnpreparedValue)]
-                          , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue UnpreparedValue)]
-                          , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue UnpreparedValue)]
+        ConcreteSchemaT m ( [FieldParser (P.ParseT Identity) (QueryRootField    UnpreparedValue)]
+                          , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
+                          , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
                           )
     buildSource (SourceInfo sourceName tables functions sourceConfig) = do
       let validFunctions = takeValidFunctions functions
@@ -296,8 +296,8 @@ buildFullestDBSchema
   -> SourceCache
   -> [ActionInfo]
   -> NonObjectTypeMap
-  -> m (        Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField    UnpreparedValue UnpreparedValue))
-       , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue UnpreparedValue)))
+  -> m ( Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
+       , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
        )
 buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes =
   runMonadSchema adminRoleName queryContext sources do
@@ -317,8 +317,8 @@ buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes =
 
   where
     buildSource :: forall b. BackendSchema b => SourceInfo b ->
-        ConcreteSchemaT m ( [FieldParser (P.ParseT Identity) (QueryRootField    UnpreparedValue UnpreparedValue)]
-                          , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue UnpreparedValue)]
+        ConcreteSchemaT m ( [FieldParser (P.ParseT Identity) (QueryRootField    UnpreparedValue)]
+                          , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
                           )
     buildSource (SourceInfo sourceName tables functions sourceConfig) = do
       let validFunctions = takeValidFunctions functions
@@ -432,7 +432,7 @@ buildQueryFields
   -> SourceConfig b
   -> TableCache b
   -> FunctionCache b
-  -> m [P.FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
 buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> functions) = do
   roleName <- askRoleName
   functionPermsCtx <- asks $ qcFunctionPermsContext . getter
@@ -459,7 +459,7 @@ buildRelayQueryFields
   -> SourceConfig b
   -> TableCache b
   -> FunctionCache b
-  -> m [P.FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
 buildRelayQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> functions) = do
   tableConnectionFields <- for (Map.toList tables) \(tableName, tableInfo) -> runMaybeT do
     tableGQLName <- getTableGQLName @b tableInfo
@@ -484,7 +484,7 @@ buildMutationFields
   -> SourceConfig b
   -> TableCache b
   -> FunctionCache b
-  -> m [P.FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  -> m [P.FieldParser n (MutationRootField UnpreparedValue)]
 buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMutation -> functions) = do
   roleName <- askRoleName
   tableMutations <- for (Map.toList tables) \(tableName, tableInfo) -> do
@@ -540,13 +540,13 @@ buildQueryParser
      , MonadRole r m
      , Has QueryContext r
      )
-  => [P.FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  => [P.FieldParser n (QueryRootField UnpreparedValue)]
   -> [P.FieldParser n RemoteField]
   -> [ActionInfo]
   -> NonObjectTypeMap
-  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue UnpreparedValue)))
-  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue UnpreparedValue))
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue UnpreparedValue)))
+  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
+  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 buildQueryParser pgQueryFields remoteFields allActions nonObjectCustomTypes mutationParser subscriptionParser = do
   actionQueryFields <- concat <$> traverse (buildActionQueryFields nonObjectCustomTypes) allActions
   let allQueryFields = pgQueryFields <> actionQueryFields <> map (fmap RFRemote) remoteFields
@@ -554,10 +554,10 @@ buildQueryParser pgQueryFields remoteFields allActions nonObjectCustomTypes muta
 
 queryWithIntrospectionHelper
   :: forall n m. (MonadSchema n m, MonadError QErr m)
-  => [P.FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
-  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue UnpreparedValue)))
-  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue UnpreparedValue))
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue UnpreparedValue)))
+  => [P.FieldParser n (QueryRootField UnpreparedValue)]
+  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
+  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
   basicQueryP <- queryRootFromFields basicQueryFP
   emptyIntro  <- emptyIntrospection
@@ -588,15 +588,15 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
 queryRootFromFields
   :: forall n m
    . (MonadError QErr m, MonadParse n)
-  => [P.FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue UnpreparedValue)))
+  => [P.FieldParser n (QueryRootField UnpreparedValue)]
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryRootFromFields fps =
   P.safeSelectionSet queryRoot Nothing fps <&> fmap (fmap typenameToRawRF)
 
 emptyIntrospection
   :: forall m n
    . (MonadSchema n m, MonadError QErr m)
-  => m [P.FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  => m [P.FieldParser n (QueryRootField UnpreparedValue)]
 emptyIntrospection = do
   emptyQueryP <- queryRootFromFields @n []
   introspectionTypes <- collectTypes (P.parserType emptyQueryP)
@@ -630,9 +630,9 @@ buildSubscriptionParser
      , MonadRole r m
      , Has QueryContext r
      )
-  => [P.FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  => [P.FieldParser n (QueryRootField UnpreparedValue)]
   -> [ActionInfo]
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue UnpreparedValue)))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 buildSubscriptionParser queryFields allActions = do
   actionSubscriptionFields <- concat <$> traverse buildActionSubscriptionFields allActions
   let subscriptionFields = queryFields <> actionSubscriptionFields
@@ -648,8 +648,8 @@ buildMutationParser
   => [P.FieldParser n RemoteField]
   -> [ActionInfo]
   -> NonObjectTypeMap
-  -> [P.FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
-  -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue UnpreparedValue))))
+  -> [P.FieldParser n (MutationRootField UnpreparedValue)]
+  -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
 buildMutationParser allRemotes allActions nonObjectCustomTypes mutationFields = do
   actionParsers <- concat <$> traverse (buildActionMutationFields nonObjectCustomTypes) allActions
   let mutationFieldsParser =

@@ -77,7 +77,7 @@ bqBuildTableRelayQueryFields
   -> G.Name
   -> NESeq (ColumnInfo 'BigQuery)
   -> SelPermInfo  'BigQuery
-  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
 bqBuildTableRelayQueryFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
   pure []
 
@@ -91,7 +91,7 @@ bqBuildTableInsertMutationFields
   -> InsPermInfo 'BigQuery
   -> Maybe (SelPermInfo 'BigQuery)
   -> Maybe (UpdPermInfo 'BigQuery)
-  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
 bqBuildTableInsertMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
   pure []
 
@@ -104,7 +104,7 @@ bqBuildTableUpdateMutationFields
   -> G.Name
   -> UpdPermInfo 'BigQuery
   -> Maybe (SelPermInfo 'BigQuery)
-  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
 bqBuildTableUpdateMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _updPerns _selPerms =
   pure []
 
@@ -117,7 +117,7 @@ bqBuildTableDeleteMutationFields
   -> G.Name
   -> DelPermInfo 'BigQuery
   -> Maybe (SelPermInfo 'BigQuery)
-  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
 bqBuildTableDeleteMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _delPerns _selPerms =
   pure []
 
@@ -129,7 +129,7 @@ bqBuildFunctionQueryFields
     -> FunctionInfo 'BigQuery
     -> TableName 'BigQuery
     -> SelPermInfo 'BigQuery
-    -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+    -> m [FieldParser n (QueryRootField UnpreparedValue)]
 bqBuildFunctionQueryFields _ _ _ _ _ _ =
   pure []
 
@@ -142,7 +142,7 @@ bqBuildFunctionRelayQueryFields
   -> TableName    'BigQuery
   -> NESeq (ColumnInfo 'BigQuery)
   -> SelPermInfo  'BigQuery
-  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
 bqBuildFunctionRelayQueryFields _sourceName _sourceInfo _functionName _functionInfo _tableName _pkeyColumns _selPerms =
   pure []
 
@@ -154,7 +154,7 @@ bqBuildFunctionMutationFields
     -> FunctionInfo 'BigQuery
     -> TableName 'BigQuery
     -> SelPermInfo 'BigQuery
-    -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+    -> m [FieldParser n (MutationRootField UnpreparedValue)]
 bqBuildFunctionMutationFields _ _ _ _ _ _ =
   pure []
 

@@ -876,10 +876,6 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
 
       AFColumn c -> toSQLCol c
 
-      -- this will be gone once the code which collects remote joins from the IR
-      -- emits a modified IR where remote relationships can't be reached
-      AFRemote _ -> pure $ S.SELit "null: remote field selected"
-
       AFObjectRelation objSel -> withWriteObjectRelation $ do
         let AnnRelationSelectG relName relMapping annObjSel = objSel
             AnnObjectSelectG objAnnFields tableFrom tableFilter = annObjSel
@@ -927,9 +923,6 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
              , nodeExtractors
              , S.mkQIdenExp computedFieldSourcePrefix fieldName
              )
-
-      -- TODO: implement this
-      AFDBRemote _ -> error "FIXME"
 
 
   pure $ annRowToJson @pgKind fieldAlias fieldExps

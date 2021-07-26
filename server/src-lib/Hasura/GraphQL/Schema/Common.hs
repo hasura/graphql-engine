@@ -21,13 +21,15 @@ import           Hasura.GraphQL.Parser              (UnpreparedValue)
 import           Hasura.RQL.Types
 
 
-type SelectExp           b = IR.AnnSimpleSelectG    b UnpreparedValue (UnpreparedValue b)
-type AggSelectExp        b = IR.AnnAggregateSelectG b UnpreparedValue (UnpreparedValue b)
-type ConnectionSelectExp b = IR.ConnectionSelect    b UnpreparedValue (UnpreparedValue b)
-type SelectArgs          b = IR.SelectArgsG         b                 (UnpreparedValue b)
-type TablePerms          b = IR.TablePermG          b                 (UnpreparedValue b)
-type AnnotatedFields     b = IR.AnnFieldsG          b UnpreparedValue (UnpreparedValue b)
-type AnnotatedField      b = IR.AnnFieldG           b UnpreparedValue (UnpreparedValue b)
+type SelectExp           b = IR.AnnSimpleSelectG    b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+type AggSelectExp        b = IR.AnnAggregateSelectG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+type ConnectionSelectExp b = IR.ConnectionSelect    b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+type SelectArgs          b = IR.SelectArgsG         b                                   (UnpreparedValue b)
+type TablePerms          b = IR.TablePermG          b                                   (UnpreparedValue b)
+type AnnotatedFields     b = IR.AnnFieldsG          b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+type AnnotatedField      b = IR.AnnFieldG           b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+type ConnectionFields    b = IR.ConnectionFields    b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+type EdgeFields          b = IR.EdgeFields          b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
 
 data QueryContext =
   QueryContext
