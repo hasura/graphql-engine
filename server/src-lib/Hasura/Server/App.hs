@@ -5,6 +5,7 @@ module Hasura.Server.App where
 import           Hasura.Prelude                            hiding (get, put)
 
 import qualified Control.Concurrent.Async.Lifted.Safe      as LA
+import qualified Control.Concurrent.STM                    as STM
 import qualified Control.Monad.Trans.Control               as MTC
 import qualified Data.Aeson                                as J
 import qualified Data.ByteString.Char8                     as B8
@@ -33,6 +34,7 @@ import           Control.Exception                         (IOException, try)
 import           Control.Monad.Stateless
 import           Control.Monad.Trans.Control               (MonadBaseControl)
 import           Data.Aeson                                hiding (json)
+import           Data.Either                               (fromRight)
 import           Data.IORef
 import           Data.String                               (fromString)
 import           Data.Text.Conversions                     (convertText)
@@ -78,7 +80,6 @@ import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.Session
-
 
 data SchemaCacheRef
   = SchemaCacheRef
@@ -165,12 +166,17 @@ getSCFromRef scRef = lastBuiltSchemaCache . fst <$> liftIO (readIORef $ _scrCach
 
 logInconsObjs :: L.Logger L.Hasura -> [InconsistentMetadata] -> IO ()
 logInconsObjs logger objs =
-  unless (null objs) $ L.unLogger logger $ mkInconsMetadataLog objs
+  unless (null objs) $
+    L.unLogger logger $ mkInconsMetadataLog objs
 
 withSCUpdate
   :: (MonadIO m, MonadBaseControl IO m)
-  => SchemaCacheRef -> L.Logger L.Hasura -> m (a, RebuildableSchemaCache) -> m a
-withSCUpdate scr logger action =
+  => SchemaCacheRef
+  -> L.Logger L.Hasura
+  -> Maybe (STM.TVar Bool)
+  -> m (a, RebuildableSchemaCache)
+  -> m a
+withSCUpdate scr logger mLogCheckerTVar action =
   withMVarMasked lk $ \() -> do
     (!res, !newSC) <- action
     liftIO $ do
@@ -178,8 +184,22 @@ withSCUpdate scr logger action =
       modifyIORef' cacheRef $ \(_, prevVer) ->
         let !newVer = incSchemaCacheVer prevVer
           in (newSC, newVer)
-      -- log any inconsistent objects
-      logInconsObjs logger $ scInconsistentObjs $ lastBuiltSchemaCache newSC
+
+      let inconsistentObjectsList = scInconsistentObjs $ lastBuiltSchemaCache newSC
+          logInconsistentMetadata = logInconsObjs logger inconsistentObjectsList
+      -- log any inconsistent objects only once and not everytime this method is called
+      case mLogCheckerTVar of
+        Nothing             -> do logInconsistentMetadata
+        Just logCheckerTVar -> do
+          logCheck <- liftIO $ STM.readTVarIO logCheckerTVar
+          if null inconsistentObjectsList && logCheck
+            then do
+              STM.atomically $ STM.writeTVar logCheckerTVar False
+            else do
+              when (not logCheck && not (null inconsistentObjectsList)) $ do
+                STM.atomically $ STM.writeTVar logCheckerTVar True
+                logInconsistentMetadata
+
       onChange
     return res
   where
@@ -424,7 +444,7 @@ v1QueryHandler query = do
   (liftEitherM . authorizeV1QueryApi query) =<< ask
   scRef  <- asks (scCacheRef . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
-  res    <- bool (fst <$> action) (withSCUpdate scRef logger action) $ queryModifiesSchemaCache query
+  res    <- bool (fst <$> action) (withSCUpdate scRef logger Nothing action) $ queryModifiesSchemaCache query
   return $ HttpResponse res []
   where
     action = do
@@ -469,9 +489,18 @@ v1MetadataHandler query = do
   experimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
   maintenanceMode      <- asks (scEnableMaintenanceMode . hcServerCtx)
   let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures
-  r <- withSCUpdate scRef logger $
-       runMetadataQuery env instanceId userInfo httpMgr serverConfigCtx
-                        schemaCache query
+  r <- withSCUpdate
+    scRef
+    logger
+    Nothing $
+    runMetadataQuery
+      env
+      instanceId
+      userInfo
+      httpMgr
+      serverConfigCtx
+      schemaCache
+      query
   pure $ HttpResponse r []
 
 v2QueryHandler
@@ -486,7 +515,7 @@ v2QueryHandler query = do
   (liftEitherM . authorizeV2QueryApi query) =<< ask
   scRef  <- asks (scCacheRef . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
-  res    <- bool (fst <$> dbAction) (withSCUpdate scRef logger dbAction) $
+  res    <- bool (fst <$> dbAction) (withSCUpdate scRef logger Nothing dbAction) $
             V2Q.queryModifiesSchema query
   return $ HttpResponse res []
   where
@@ -856,7 +885,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
     let healthzAction = do
           sc <- getSCFromRef $ scCacheRef serverCtx
           eitherHealth <- runMetadataStorageT checkMetadataStorageHealth
-          let dbOk = either (const False) id eitherHealth
+          let dbOk = fromRight False eitherHealth
               okText = "OK"
               warnText = "WARN: inconsistent objects in schema"
               errorText = "ERROR"
