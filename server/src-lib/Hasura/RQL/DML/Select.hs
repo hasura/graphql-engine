@@ -11,7 +11,6 @@ import qualified Data.Sequence                             as DS
 import qualified Database.PG.Query                         as Q
 
 import           Control.Monad.Trans.Control               (MonadBaseControl)
-import           Data.Aeson.Types
 import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.SQL.DML          as S
@@ -40,27 +39,6 @@ type SelectQExt b = SelectG (ExtCol b) (BoolExp b) Int
 data ExtCol (b :: BackendType)
   = ECSimple !(Column b)
   | ECRel !RelName !(Maybe RelName) !(SelectQExt b)
-
-instance Backend b => ToJSON (ExtCol b) where
-  toJSON (ECSimple s) = toJSON s
-  toJSON (ECRel rn mrn selq) =
-    object $ [ "name" .= rn
-             , "alias" .= mrn
-             ] ++ selectGToPairs selq
-
-instance Backend b => FromJSON (ExtCol b) where
-  parseJSON v@(Object o) =
-    ECRel
-    <$> o .:  "name"
-    <*> o .:? "alias"
-    <*> parseJSON v
-  parseJSON v@(String _) =
-    ECSimple <$> parseJSON v
-  parseJSON _ =
-    fail $ mconcat
-    [ "A column should either be a string or an "
-    , "object (relationship)"
-    ]
 
 convSelCol
   :: (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m)
@@ -313,7 +291,6 @@ convSelectQuery
      )
   => SessVarBldr ('Postgres 'Vanilla) m
   -> ValueParser ('Postgres 'Vanilla) m S.SQLExp
-  -- -> (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp)
   -> SelectQuery
   -> m (AnnSimpleSelect ('Postgres 'Vanilla))
 convSelectQuery sessVarBldr prepArgBuilder (DMLQuery _ qt selQ) = do

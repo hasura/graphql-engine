@@ -17,8 +17,6 @@ module Hasura.RQL.Types.Action
   , adTimeout
   , ActionType(..)
   , _ActionMutation
-  , CreateAction(..)
-  , UpdateAction(..)
   , ActionDefinitionInput
   , InputWebhook(..)
 
@@ -38,7 +36,6 @@ module Hasura.RQL.Types.Action
   , ActionPermissionInfo(..)
 
   , ActionPermissionMap
-  , CreateActionPermission(..)
 
   , ActionMetadata(..)
   , amName
@@ -229,34 +226,6 @@ $(makeLenses ''ActionInfo)
 type ActionDefinitionInput =
   ActionDefinition (ArgumentDefinition GraphQLType) InputWebhook
 
-data CreateAction
-  = CreateAction
-  { _caName       :: !ActionName
-  , _caDefinition :: !ActionDefinitionInput
-  , _caComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Generic)
-instance NFData CreateAction
-instance Cacheable CreateAction
-$(J.deriveJSON hasuraJSON ''CreateAction)
-
-data UpdateAction
-  = UpdateAction
-  { _uaName       :: !ActionName
-  , _uaDefinition :: !ActionDefinitionInput
-  , _uaComment    :: !(Maybe Text)
-  } deriving (Show, Eq)
-$(J.deriveJSON hasuraJSON ''UpdateAction)
-
-data CreateActionPermission
-  = CreateActionPermission
-  { _capAction     :: !ActionName
-  , _capRole       :: !RoleName
-  , _capDefinition :: !(Maybe J.Value)
-  , _capComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Generic)
-instance NFData CreateActionPermission
-instance Cacheable CreateActionPermission
-$(J.deriveJSON hasuraJSON ''CreateActionPermission)
 
 -- representation of action permission metadata
 data ActionPermissionMetadata

@@ -1,11 +1,13 @@
 module Hasura.RQL.DDL.Relationship.Rename
-  (runRenameRel)
-where
+  ( RenameRel
+  , runRenameRel
+  ) where
 
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict   as Map
 
+import           Data.Aeson
 import           Data.Text.Extended
 
 import           Hasura.Base.Error
@@ -13,6 +15,22 @@ import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Schema (renameRelationshipInMetadata)
 import           Hasura.RQL.Types
 
+
+data RenameRel b
+  = RenameRel
+  { _rrSource  :: !SourceName
+  , _rrTable   :: !(TableName b)
+  , _rrName    :: !RelName
+  , _rrNewName :: !RelName
+  }
+
+instance (Backend b) => FromJSON (RenameRel b) where
+  parseJSON = withObject "rename relationship" $ \o ->
+    RenameRel
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
+      <*> o .: "name"
+      <*> o .: "new_name"
 
 renameRelP2
   :: forall b m

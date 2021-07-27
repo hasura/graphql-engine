@@ -6,6 +6,7 @@ module Hasura.RQL.DDL.EventTrigger
   , dropEventTriggerInMetadata
   , RedeliverEventQuery
   , runRedeliverEvent
+  , InvokeEventTriggerQuery
   , runInvokeEventTrigger
   -- TODO(from master): review
   , archiveEvents
@@ -14,24 +15,122 @@ module Hasura.RQL.DDL.EventTrigger
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                    as HM
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Database.PG.Query                      as Q
+import qualified Data.ByteString.Lazy               as LBS
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.HashMap.Strict.InsOrd         as OMap
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
+import qualified Text.Regex.TDFA                    as TDFA
 
-import           Control.Lens                           ((.~))
+import           Control.Lens                       ((.~))
 import           Data.Aeson
 import           Data.Text.Extended
 
-import qualified Hasura.SQL.AnyBackend                  as AB
-import qualified Hasura.Tracing                         as Tracing
+import qualified Hasura.Backends.Postgres.DDL.Table as PG
+import qualified Hasura.Backends.Postgres.SQL.Types as PG
+import qualified Hasura.SQL.AnyBackend              as AB
+import qualified Hasura.Tracing                     as Tracing
 
-import           Hasura.Backends.Postgres.DDL.Table
-import           Hasura.Backends.Postgres.Execute.Types
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.Session
+
+
+data CreateEventTriggerQuery (b :: BackendType)
+  = CreateEventTriggerQuery
+  { _cetqSource         :: !SourceName
+  , _cetqName           :: !TriggerName
+  , _cetqTable          :: !(TableName b)
+  , _cetqInsert         :: !(Maybe SubscribeOpSpec)
+  , _cetqUpdate         :: !(Maybe SubscribeOpSpec)
+  , _cetqDelete         :: !(Maybe SubscribeOpSpec)
+  , _cetqEnableManual   :: !(Maybe Bool)
+  , _cetqRetryConf      :: !(Maybe RetryConf)
+  , _cetqWebhook        :: !(Maybe InputWebhook)
+  , _cetqWebhookFromEnv :: !(Maybe Text)
+  , _cetqHeaders        :: !(Maybe [HeaderConf])
+  , _cetqReplace        :: !Bool
+  }
+
+instance Backend b => FromJSON (CreateEventTriggerQuery b) where
+  parseJSON  = withObject "create event trigger" \o -> do
+    sourceName      <- o .:? "source" .!= defaultSource
+    name            <- o .:  "name"
+    table           <- o .:  "table"
+    insert          <- o .:? "insert"
+    update          <- o .:? "update"
+    delete          <- o .:? "delete"
+    enableManual    <- o .:? "enable_manual" .!= False
+    retryConf       <- o .:? "retry_conf"
+    webhook         <- o .:? "webhook"
+    webhookFromEnv  <- o .:? "webhook_from_env"
+    headers         <- o .:? "headers"
+    replace         <- o .:? "replace" .!= False
+    let regex = "^[A-Za-z]+[A-Za-z0-9_\\-]*$" :: LBS.ByteString
+        compiledRegex = TDFA.makeRegex regex :: TDFA.Regex
+        isMatch = TDFA.match compiledRegex . T.unpack $ triggerNameToTxt name
+    unless isMatch $
+      fail "only alphanumeric and underscore and hyphens allowed for name"
+    unless (T.length (triggerNameToTxt name) <= maxTriggerNameLength) $
+      fail "event trigger name can be at most 42 characters"
+    unless (any isJust [insert, update, delete] || enableManual) $
+      fail "atleast one amongst insert/update/delete/enable_manual spec must be provided"
+    case (webhook, webhookFromEnv) of
+      (Just _, Nothing) -> return ()
+      (Nothing, Just _) -> return ()
+      (Just _, Just _)  -> fail "only one of webhook or webhook_from_env should be given"
+      _                 -> fail "must provide webhook or webhook_from_env"
+    mapM_ checkEmptyCols [insert, update, delete]
+    return $ CreateEventTriggerQuery sourceName name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace
+    where
+      checkEmptyCols spec
+        = case spec of
+        Just (SubscribeOpSpec (SubCArray cols) _) -> when (null cols) (fail "found empty column specification")
+        Just (SubscribeOpSpec _ (Just (SubCArray cols)) ) -> when (null cols) (fail "found empty payload specification")
+        _ -> return ()
+
+
+data DeleteEventTriggerQuery (b :: BackendType)
+  = DeleteEventTriggerQuery
+  { _detqSource :: !SourceName
+  , _detqName   :: !TriggerName
+  }
+
+instance FromJSON (DeleteEventTriggerQuery b) where
+  parseJSON = withObject "delete event trigger" $ \o ->
+    DeleteEventTriggerQuery
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "name"
+
+
+data RedeliverEventQuery (b :: BackendType)
+  = RedeliverEventQuery
+  { _rdeqEventId :: !EventId
+  , _rdeqSource  :: !SourceName
+  }
+
+instance FromJSON (RedeliverEventQuery b) where
+  parseJSON = withObject "redeliver event trigger" $ \o ->
+    RedeliverEventQuery
+      <$> o .: "event_id"
+      <*> o .:? "source" .!= defaultSource
+
+
+data InvokeEventTriggerQuery (b :: BackendType)
+  = InvokeEventTriggerQuery
+  { _ietqName    :: !TriggerName
+  , _ietqSource  :: !SourceName
+  , _ietqPayload :: !Value
+  }
+
+instance Backend b => FromJSON (InvokeEventTriggerQuery b) where
+  parseJSON = withObject "invoke event trigger" $ \o ->
+    InvokeEventTriggerQuery
+      <$> o .: "name"
+      <*> o .:? "source" .!= defaultSource
+      <*> o .: "payload"
+
 
 archiveEvents :: TriggerName -> Q.TxE QErr ()
 archiveEvents trn =
@@ -99,8 +198,8 @@ createEventTriggerQueryMetadata
   -> m (TableCoreInfo ('Postgres pgKind), EventTriggerConf)
 createEventTriggerQueryMetadata q = do
   (tableCoreInfo, replace, triggerConf) <- resolveEventTriggerQuery q
-  let table = cetqTable q
-      source = cetqSource q
+  let table = _cetqTable q
+      source = _cetqSource q
       triggerName = etcName triggerConf
       metadataObj =
         MOSourceObjId source
@@ -143,7 +242,7 @@ runDeleteEventTriggerQuery (DeleteEventTriggerQuery source name) = do
     $ tableMetadataSetter @('Postgres pgKind) source table %~ dropEventTriggerInMetadata name
 
   liftEitherM $ liftIO $ runPgSourceWriteTx (_siConfiguration sourceInfo) $ do
-    delTriggerQ name
+    PG.delTriggerQ name
     archiveEvents name
   pure successMsg
 
@@ -167,11 +266,11 @@ runRedeliverEvent (RedeliverEventQuery eventId source) = do
   pure successMsg
 
 insertManualEvent
-  :: QualifiedTable
+  :: PG.QualifiedTable
   -> TriggerName
   -> Value
   -> Q.TxE QErr EventId
-insertManualEvent (QualifiedObject sn tn) trn rowData = do
+insertManualEvent (PG.QualifiedObject sn tn) trn rowData = do
   runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
     SELECT hdb_catalog.insert_event_log($1, $2, $3, $4, $5)
   |] (sn, tn, trn, (tshow MANUAL), Q.AltJ rowData) False
@@ -214,14 +313,14 @@ runInvokeEventTrigger (InvokeEventTriggerQuery name source payload) = do
 
 getEventTriggerDef
   :: TriggerName
-  -> Q.TxE QErr (QualifiedTable, EventTriggerConf)
+  -> Q.TxE QErr (PG.QualifiedTable, EventTriggerConf)
 getEventTriggerDef triggerName = do
   (sn, tn, Q.AltJ etc) <- Q.getRow <$> Q.withQE defaultTxErrorHandler
     [Q.sql|
      SELECT e.schema_name, e.table_name, e.configuration::json
      FROM hdb_catalog.event_triggers e where e.name = $1
            |] (Identity triggerName) False
-  return (QualifiedObject sn tn, etc)
+  return (PG.QualifiedObject sn tn, etc)
 
 askTabInfoFromTrigger
   :: (QErrM m, CacheRM m)
@@ -243,3 +342,12 @@ askEventTriggerInfo sourceName trn = do
   HM.lookup trn etim `onNothing` throw400 NotExists errMsg
   where
     errMsg = "event trigger " <> triggerNameToTxt trn <<> " does not exist"
+
+
+-- This change helps us create functions for the event triggers
+-- without the function name being truncated by PG, since PG allows
+-- for only 63 chars for identifiers.
+-- Reasoning for the 42 characters:
+-- 63 - (notify_hasura_) - (_INSERT | _UPDATE | _DELETE)
+maxTriggerNameLength :: Int
+maxTriggerNameLength = 42

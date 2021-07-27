@@ -2,6 +2,7 @@ module Hasura.RQL.DDL.RemoteRelationship
   ( runCreateRemoteRelationship
   , runDeleteRemoteRelationship
   , runUpdateRemoteRelationship
+  , DeleteRemoteRelationship
   , dropRemoteRelationshipInMetadata
   , PartiallyResolvedSource(..)
   , buildRemoteFieldInfo
@@ -14,6 +15,7 @@ import qualified Data.HashMap.Strict                        as Map
 import qualified Data.HashMap.Strict.InsOrd                 as OMap
 import qualified Data.HashSet                               as S
 
+import           Data.Aeson
 import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend                      as AB
@@ -62,12 +64,26 @@ runUpdateRemoteRelationship RemoteRelationship {..} = do
       %~ OMap.insert _rtrName metadata
   pure successMsg
 
+data DeleteRemoteRelationship (b :: BackendType)
+  = DeleteRemoteRelationship
+  { _drrSource :: !SourceName
+  , _drrTable  :: !(TableName b)
+  , _drrName   :: !RemoteRelationshipName
+  }
+
+instance Backend b => FromJSON (DeleteRemoteRelationship b) where
+  parseJSON = withObject "delete remote relationship" $ \o ->
+    DeleteRemoteRelationship
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
+      <*> o .: "name"
+
 runDeleteRemoteRelationship
   :: forall b m
    . (BackendMetadata b, MonadError QErr m, CacheRWM m, MetadataM m)
   => DeleteRemoteRelationship b
   -> m EncJSON
-runDeleteRemoteRelationship (DeleteRemoteRelationship source table relName)= do
+runDeleteRemoteRelationship (DeleteRemoteRelationship source table relName) = do
   fieldInfoMap <- askFieldInfoMap @b source table
   void $ askRemoteRel fieldInfoMap relName
   let metadataObj = MOSourceObjId source

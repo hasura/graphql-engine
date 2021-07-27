@@ -21,7 +21,6 @@ import qualified Hasura.SQL.AnyBackend      as AB
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
-import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.Types
@@ -34,16 +33,13 @@ data AddComputedField b
   , _afcName       :: !ComputedFieldName
   , _afcDefinition :: !(ComputedFieldDefinition b)
   , _afcComment    :: !(Maybe Text)
-  } deriving (Generic)
-deriving instance (Backend b) => Show (AddComputedField b)
-deriving instance (Backend b) => Eq (AddComputedField b)
-instance (Backend b) => NFData (AddComputedField b)
-instance (Backend b) => Cacheable (AddComputedField b)
+  } deriving stock (Generic)
+
 instance (Backend b) => ToJSON (AddComputedField b) where
   toJSON = genericToJSON hasuraJSON
 
 instance (Backend b) => FromJSON (AddComputedField b) where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "add computed field" $ \o ->
     AddComputedField
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"
@@ -79,14 +75,10 @@ data DropComputedField b
   , _dccTable   :: !(TableName b)
   , _dccName    :: !ComputedFieldName
   , _dccCascade :: !Bool
-  } deriving (Generic)
-deriving instance (Backend b) => Show (DropComputedField b)
-deriving instance (Backend b) => Eq (DropComputedField b)
-instance (Backend b) => ToJSON (DropComputedField b) where
-  toJSON = genericToJSON hasuraJSON
+  }
 
 instance (Backend b) => FromJSON (DropComputedField b) where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "drop computed field" $ \o ->
     DropComputedField
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"

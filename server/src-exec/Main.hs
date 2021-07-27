@@ -3,28 +3,7 @@
 
 module Main where
 
-import           Control.Applicative
-import           Control.Exception
-import           Control.Monad.Trans.Managed        (ManagedT (..), lowerManagedT)
-import           Data.Int                           (Int64)
-import           Data.Text.Conversions              (convertText)
-import           Data.Time.Clock                    (getCurrentTime)
-import           Data.Time.Clock.POSIX              (getPOSIXTime)
-
-import           Hasura.App
-import           Hasura.Logging                     (Hasura, LogLevel (..),
-                                                     defaultEnabledEngineLogTypes)
-import           Hasura.Metadata.Class
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Schema
-import           Hasura.RQL.DDL.Schema.Cache.Common
-import           Hasura.RQL.DDL.Schema.Source
-import           Hasura.RQL.Types
-import           Hasura.Server.Init
-import           Hasura.Server.Migrate              (downgradeCatalog)
-import           Hasura.Server.Types                (MaintenanceMode (..))
-import           Hasura.Server.Version
-import           Hasura.Server.Version.TH
 
 import qualified Control.Concurrent.Extended        as C
 import qualified Data.ByteString.Char8              as BC
@@ -32,11 +11,32 @@ import qualified Data.ByteString.Lazy               as BL
 import qualified Data.ByteString.Lazy.Char8         as BLC
 import qualified Data.Environment                   as Env
 import qualified Database.PG.Query                  as Q
-import qualified Hasura.GC                          as GC
-import qualified Hasura.Tracing                     as Tracing
 import qualified System.Exit                        as Sys
 import qualified System.Metrics                     as EKG
 import qualified System.Posix.Signals               as Signals
+
+import           Control.Exception
+import           Control.Monad.Trans.Managed        (ManagedT (..), lowerManagedT)
+import           Data.Int                           (Int64)
+import           Data.Text.Conversions              (convertText)
+import           Data.Time.Clock                    (getCurrentTime)
+import           Data.Time.Clock.POSIX              (getPOSIXTime)
+
+import qualified Hasura.GC                          as GC
+import qualified Hasura.Tracing                     as Tracing
+
+import           Hasura.App
+import           Hasura.Logging                     (Hasura, LogLevel (..),
+                                                     defaultEnabledEngineLogTypes)
+import           Hasura.Metadata.Class
+import           Hasura.RQL.DDL.Schema
+import           Hasura.RQL.DDL.Schema.Cache.Common
+import           Hasura.RQL.Types
+import           Hasura.Server.Init
+import           Hasura.Server.Migrate              (downgradeCatalog)
+import           Hasura.Server.Types                (MaintenanceMode (..))
+import           Hasura.Server.Version
+import           Hasura.Server.Version.TH
 
 
 main :: IO ()

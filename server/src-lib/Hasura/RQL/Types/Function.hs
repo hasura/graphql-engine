@@ -140,28 +140,6 @@ emptyFunctionConfig :: FunctionConfig
 emptyFunctionConfig = FunctionConfig Nothing Nothing
 
 
--- | JSON API payload for v2 of 'track_function':
---
--- https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#track-function-v2
-data TrackFunctionV2 (b :: BackendType)
-  = TrackFunctionV2
-  { _tfv2Source        :: !SourceName
-  , _tfv2Function      :: !(FunctionName b)
-  , _tfv2Configuration :: !FunctionConfig
-  } deriving (Generic)
-deriving instance Backend b => Show (TrackFunctionV2 b)
-deriving instance Backend b => Eq   (TrackFunctionV2 b)
-
-instance Backend b => ToJSON (TrackFunctionV2 b) where
-  toJSON = genericToJSON hasuraJSON
-
-instance Backend b => FromJSON (TrackFunctionV2 b) where
-  parseJSON = withObject "Object" $ \o ->
-    TrackFunctionV2
-    <$> o .:? "source" .!= defaultSource
-    <*> o .: "function"
-    <*> o .:? "configuration" .!= emptyFunctionConfig
-
 -- Lists are used to model overloaded functions.
 type DBFunctionsMetadata b = HashMap (FunctionName b) [RawFunctionInfo b]
 

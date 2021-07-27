@@ -48,7 +48,6 @@ data RQLQuery
   | RQBigqueryRunSql !BigQuery.BigQueryRunSQL
   | RQBigqueryDatabaseInspection !BigQuery.BigQueryRunSQL
   | RQBulk ![RQLQuery]
-  deriving (Show)
 
 $(deriveFromJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
@@ -138,4 +137,4 @@ runQueryM env = \case
   RQCitusRunSql q                -> Postgres.runRunSQL @'Citus q
   RQBigqueryRunSql q             -> BigQuery.runSQL q
   RQBigqueryDatabaseInspection q -> BigQuery.runDatabaseInspection q
-  RQBulk   l                     -> encJFromList <$> indexedMapM (runQueryM env) l
+  RQBulk l                       -> encJFromList <$> indexedMapM (runQueryM env) l

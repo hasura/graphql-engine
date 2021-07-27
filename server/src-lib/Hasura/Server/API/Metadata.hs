@@ -94,8 +94,8 @@ data RQLMetadataV1
   | RMUntrackFunction !(AnyBackend UnTrackFunction)
 
   -- Functions permissions
-  | RMCreateFunctionPermission !(AnyBackend CreateFunctionPermission)
-  | RMDropFunctionPermission   !(AnyBackend DropFunctionPermission)
+  | RMCreateFunctionPermission !(AnyBackend FunctionPermissionArgument)
+  | RMDropFunctionPermission   !(AnyBackend FunctionPermissionArgument)
 
   -- Computed fields (PG-specific)
   | RMAddComputedField  !(AddComputedField  ('Postgres 'Vanilla))
@@ -178,7 +178,6 @@ data RQLMetadataV1
 
   -- Bulk metadata queries
   | RMBulk [RQLMetadataRequest]
-  deriving (Eq)
 
 instance FromJSON RQLMetadataV1 where
   parseJSON =  withObject "RQLMetadataV1" \o -> do
@@ -265,7 +264,7 @@ instance FromJSON RQLMetadataV1 where
 data RQLMetadataV2
   = RMV2ReplaceMetadata !ReplaceMetadataV2
   | RMV2ExportMetadata  !ExportMetadata
-  deriving (Eq, Generic)
+  deriving (Generic)
 
 instance FromJSON RQLMetadataV2 where
   parseJSON = genericParseJSON $
@@ -277,7 +276,6 @@ instance FromJSON RQLMetadataV2 where
 data RQLMetadataRequest
   = RMV1 !RQLMetadataV1
   | RMV2 !RQLMetadataV2
-  deriving (Eq)
 
 instance FromJSON RQLMetadataRequest where
   parseJSON = withObject "RQLMetadataRequest" $ \o -> do
@@ -292,7 +290,7 @@ data RQLMetadata
   = RQLMetadata
   { _rqlMetadataResourceVersion :: !(Maybe MetadataResourceVersion)
   , _rqlMetadata                :: !RQLMetadataRequest
-  } deriving (Eq)
+  }
 
 instance FromJSON RQLMetadata where
   parseJSON = withObject "RQLMetadata" $ \o -> do

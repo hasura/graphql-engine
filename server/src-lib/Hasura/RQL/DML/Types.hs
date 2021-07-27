@@ -5,7 +5,6 @@ module Hasura.RQL.DML.Types
        , getSourceDMLQuery
 
        , SelectG(..)
-       , selectGToPairs
 
        , Wildcard(..)
        , SelCol(..)
@@ -19,8 +18,6 @@ module Hasura.RQL.DML.Types
        , OnConflict(..)
        , ConflictAction(..)
        , ConstraintOn(..)
-
-       , InsertTxConflictCtx(..)
 
        , UpdVals
        , UpdateQuery(..)
@@ -54,7 +51,7 @@ import           Hasura.SQL.Backend
 
 newtype OrderByExp
   = OrderByExp { getOrderByItems :: [OrderByItem ('Postgres 'Vanilla)] }
-  deriving (Show, Eq, ToJSON)
+  deriving (Show, Eq)
 
 instance FromJSON OrderByExp where
   parseJSON = \case
@@ -91,13 +88,11 @@ data DMLQuery a
   deriving (Show, Eq)
 
 instance (FromJSON a) => FromJSON (DMLQuery a) where
-  parseJSON o@(Object v) =
+  parseJSON = withObject "query" \o ->
     DMLQuery
-    <$> v .:? "source" .!= defaultSource
-    <*> v .: "table"
-    <*> parseJSON o
-  parseJSON _          =
-    fail "Expected an object for query"
+    <$> o .:? "source" .!= defaultSource
+    <*> o .: "table"
+    <*> parseJSON (Object o)
 
 getSourceDMLQuery :: forall a. DMLQuery a -> SourceName
 getSourceDMLQuery (DMLQuery source _ _) = source
@@ -111,26 +106,12 @@ data SelectG a b c
   , sqOffset  :: !(Maybe c)          -- Offset
   } deriving (Show, Eq)
 
-$(deriveJSON hasuraJSON{omitNothingFields=True} ''SelectG)
-
-selectGToPairs :: (KeyValue kv, ToJSON a, ToJSON b, ToJSON c)
-               => SelectG a b c -> [kv]
-selectGToPairs (SelectG selCols mWh mOb mLt mOf) =
-  [ "columns" .= selCols
-  , "where" .= mWh
-  , "order_by" .= mOb
-  , "limit" .= mLt
-  , "offset" .= mOf
-  ]
+$(deriveFromJSON hasuraJSON{omitNothingFields=True} ''SelectG)
 
 data Wildcard
   = Star
   | StarDot !Wildcard
   deriving (Show, Eq, Ord)
-
-wcToText :: Wildcard -> Text
-wcToText Star         = "*"
-wcToText (StarDot wc) = "*." <> wcToText wc
 
 parseWildcard :: AT.Parser Wildcard
 parseWildcard =
@@ -162,23 +143,11 @@ instance FromJSON SelCol where
     , "object (relationship)"
     ]
 
-instance ToJSON SelCol where
-  toJSON (SCStar wc) = String $ wcToText wc
-  toJSON (SCExtSimple s) = toJSON s
-  toJSON (SCExtRel rn mrn selq) =
-    object $ [ "name" .= rn
-             , "alias" .= mrn
-             ] ++ selectGToPairs selq
-
 type SelectQ  = SelectG SelCol (BoolExp ('Postgres 'Vanilla)) Int
 type SelectQT = SelectG SelCol (BoolExp ('Postgres 'Vanilla)) Value
 
 type SelectQuery  = DMLQuery SelectQ
 type SelectQueryT = DMLQuery SelectQT
-
-instance ToJSON a => ToJSON (DMLQuery (SelectG SelCol (BoolExp ('Postgres 'Vanilla)) a)) where
-  toJSON (DMLQuery src qt selQ) =
-    object $ ["source" .= src, "table" .= qt] <> selectGToPairs selQ
 
 type InsObj b = ColumnValues b Value
 
@@ -190,15 +159,10 @@ data ConflictAction
 instance FromJSON ConflictAction where
   parseJSON (String "ignore") = return CAIgnore
   parseJSON (String "update") = return CAUpdate
-  parseJSON _ =
-    fail "Expecting 'ignore' or 'update'"
-
-instance ToJSON ConflictAction where
-  toJSON CAUpdate = String "update"
-  toJSON CAIgnore = String "ignore"
+  parseJSON _                 = fail "Expecting 'ignore' or 'update'"
 
 newtype ConstraintOn
-  = ConstraintOn {getPGCols :: [PGCol]} deriving (Show, Eq, ToJSON)
+  = ConstraintOn {getPGCols :: [PGCol]} deriving (Show, Eq)
 
 instance FromJSON ConstraintOn where
   parseJSON v@(String _) =
@@ -215,7 +179,7 @@ data OnConflict
   , ocAction       :: !ConflictAction
   } deriving (Show, Eq)
 
-$(deriveJSON hasuraJSON{omitNothingFields=True} ''OnConflict)
+$(deriveFromJSON hasuraJSON{omitNothingFields=True} ''OnConflict)
 
 data InsertQuery
   = InsertQuery
@@ -226,24 +190,14 @@ data InsertQuery
   , iqReturning  :: !(Maybe [PGCol])
   } deriving (Show, Eq)
 
-$(deriveToJSON hasuraJSON{omitNothingFields=True} ''InsertQuery)
-
 instance FromJSON InsertQuery where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "insert query" $ \o ->
     InsertQuery
       <$> o .: "table"
       <*> o .:? "source" .!= defaultSource
       <*> o .: "objects"
       <*> o .:? "on_conflict"
       <*> o .:? "returning"
-
-data InsertTxConflictCtx
-  = InsertTxConflictCtx
-  { itcAction        :: !ConflictAction
-  , itcConstraint    :: !(Maybe ConstraintName)
-  , itcSetExpression :: !(Maybe Text)
-  } deriving (Show, Eq)
-$(deriveJSON hasuraJSON{omitNothingFields=True} ''InsertTxConflictCtx)
 
 type UpdVals b = ColumnValues b Value
 
@@ -260,7 +214,7 @@ data UpdateQuery
   } deriving (Show, Eq)
 
 instance FromJSON UpdateQuery where
-  parseJSON (Object o) =
+  parseJSON = withObject "update query" \o ->
     UpdateQuery
     <$> o .:  "table"
     <*> o .:? "source" .!= defaultSource
@@ -270,20 +224,6 @@ instance FromJSON UpdateQuery where
     <*> (o .:? "$mul" .!= M.empty)
     <*> o .:? "$default" .!= []
     <*> o .:? "returning"
-  parseJSON _ =
-    fail "Expecting an object for update query"
-
-instance ToJSON UpdateQuery where
-  toJSON (UpdateQuery tn src wc setE incE mulE defE ret) =
-    object [ "table" .= tn
-           , "source" .= src
-           , "where" .= wc
-           , "$set" .= setE
-           , "$inc" .= incE
-           , "$mul" .= mulE
-           , "$default" .= defE
-           , "returning" .= ret
-           ]
 
 data DeleteQuery
   = DeleteQuery
@@ -293,10 +233,8 @@ data DeleteQuery
   , doReturning :: !(Maybe [PGCol]) -- columns returning
   } deriving (Show, Eq)
 
-$(deriveToJSON hasuraJSON{omitNothingFields=True} ''DeleteQuery)
-
 instance FromJSON DeleteQuery where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "delete query" $ \o ->
     DeleteQuery
       <$> o .: "table"
       <*> o .:? "source" .!= defaultSource
@@ -311,10 +249,8 @@ data CountQuery
   , cqWhere    :: !(Maybe (BoolExp ('Postgres 'Vanilla)))
   } deriving (Show, Eq)
 
-$(deriveToJSON hasuraJSON{omitNothingFields=True} ''CountQuery)
-
 instance FromJSON CountQuery where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "count query" $ \o ->
     CountQuery
       <$> o .: "table"
       <*> o .:? "source" .!= defaultSource
@@ -330,7 +266,7 @@ data QueryT
   | QTBulk   ![QueryT]
   deriving (Show, Eq)
 
-$(deriveJSON
+$(deriveFromJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
                  , sumEncoding = TaggedObject "type" "args"
                  }

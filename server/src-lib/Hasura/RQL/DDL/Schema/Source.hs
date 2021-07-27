@@ -2,18 +2,17 @@ module Hasura.RQL.DDL.Schema.Source where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                    as Env
-import qualified Data.HashMap.Strict                 as HM
-import qualified Data.HashMap.Strict.InsOrd          as OMap
-import qualified Database.PG.Query                   as Q
+import qualified Data.HashMap.Strict          as HM
+import qualified Data.HashMap.Strict.InsOrd   as OMap
 
-import           Control.Lens                        (at, (.~), (^.))
-import           Control.Monad.Trans.Control         (MonadBaseControl)
+import           Control.Lens                 (at, (.~), (^.))
+import           Control.Monad.Trans.Control  (MonadBaseControl)
+import           Data.Aeson
+import           Data.Aeson.TH
 import           Data.Text.Extended
 
-import qualified Hasura.SQL.AnyBackend               as AB
+import qualified Hasura.SQL.AnyBackend        as AB
 
-import           Hasura.Backends.Postgres.Connection
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Deps
@@ -21,29 +20,28 @@ import           Hasura.RQL.DDL.Schema.Common
 import           Hasura.RQL.Types
 
 
-mkPgSourceResolver :: Q.PGLogger -> SourceResolver
-mkPgSourceResolver pgLogger _ config = runExceptT do
-  env <- lift Env.getEnvironment
-  let PostgresSourceConnInfo urlConf poolSettings allowPrepare isoLevel _ = _pccConnectionInfo config
-  -- If the user does not provide values for the pool settings, then use the default values
-  let (maxConns, idleTimeout, retries) = getDefaultPGPoolSettingIfNotExists poolSettings defaultPostgresPoolSettings
-  urlText <- resolveUrlConf env urlConf
-  let connInfo = Q.ConnInfo retries $ Q.CDDatabaseURI $ txtToBs urlText
-      connParams = Q.defaultConnParams{ Q.cpIdleTime = idleTimeout
-                                      , Q.cpConns = maxConns
-                                      , Q.cpAllowPrepare = allowPrepare
-                                      , Q.cpMbLifetime = _ppsConnectionLifetime =<< poolSettings
-                                      , Q.cpTimeout = _ppsPoolTimeout =<< poolSettings
-                                      }
-  pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
-  let pgExecCtx = mkPGExecCtx isoLevel pgPool
-  pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty
+--------------------------------------------------------------------------------
+-- Add source
 
---- Metadata APIs related
+data AddSource b
+  = AddSource
+  { _asName                 :: !SourceName
+  , _asConfiguration        :: !(SourceConnConfiguration b)
+  , _asReplaceConfiguration :: !Bool
+  }
+
+instance (Backend b) => FromJSON (AddSource b) where
+  parseJSON = withObject "add source" $ \o ->
+    AddSource
+      <$> o .: "name"
+      <*> o .: "configuration"
+      <*> o .:? "replace_configuration" .!= False
+
 runAddSource
   :: forall m b
    . (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
-  => AddSource b -> m EncJSON
+  => AddSource b
+  -> m EncJSON
 runAddSource (AddSource name sourceConfig replaceConfiguration) = do
   sources <- scSources <$> askSchemaCache
 
@@ -57,6 +55,17 @@ runAddSource (AddSource name sourceConfig replaceConfiguration) = do
 
   buildSchemaCacheFor (MOSource name) metadataModifier
   pure successMsg
+
+
+--------------------------------------------------------------------------------
+-- Rename source
+
+data RenameSource
+  = RenameSource
+  { _rmName    :: !SourceName
+  , _rmNewName :: !SourceName
+  }
+$(deriveFromJSON hasuraJSON ''RenameSource)
 
 runRenameSource
   :: forall m
@@ -96,6 +105,20 @@ runRenameSource RenameSource {..} = do
 
     renameSource :: forall b. SourceName -> SourceMetadata b -> SourceMetadata b
     renameSource newName metadata = metadata { _smName = newName }
+
+
+--------------------------------------------------------------------------------
+-- Drop source
+
+data DropSource
+  = DropSource
+  { _dsName    :: !SourceName
+  , _dsCascade :: !Bool
+  } deriving (Show, Eq)
+
+instance FromJSON DropSource where
+  parseJSON = withObject "drop source" $ \o ->
+    DropSource <$> o .: "name" <*> o .:? "cascade" .!= False
 
 runDropSource
   :: forall m. (MonadError QErr m, CacheRWM m, MonadIO m, MonadBaseControl IO m, MetadataM m)
