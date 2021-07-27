@@ -9,6 +9,7 @@
 - server/bigquery: Fix issues related to adding and querying from non-US datasets (closes [6937](https://github.com/hasura/graphql-engine/issues/6937)).
 - console: add pagination on the Raw SQL results page
 - console: fix issues with replacing invalid graphql identifiers in table and column names
+- console: show error message on inconsistent objects table
 
 
 ## v2.0.3
