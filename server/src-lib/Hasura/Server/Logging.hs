@@ -14,6 +14,7 @@ module Hasura.Server.Logging
   , WebHookLog(..)
   , HttpException
   , HttpLog (..)
+  , MetadataLog(..)
   , EnvVarsMovedToMetadata(..)
   , DeprecatedEnvVars(..)
   , logDeprecatedEnvVars

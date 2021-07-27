@@ -3,6 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: log warning if there are errors while executing clean up actions after "drop source" (previously it would throw an error) 
 - server: Fixed a bug where MSSQL and BigQuery would ignore environment variables set from the console
 - server: Fixing bug in ReplaceMetadata parser - Moving from Alternative to committed-choice.
 - server: Relax the unique operation name constraint when adding a query to a query collection

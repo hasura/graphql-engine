@@ -490,6 +490,7 @@ v1MetadataHandler query = do
     Nothing $
     runMetadataQuery
       env
+      logger
       instanceId
       userInfo
       httpMgr
