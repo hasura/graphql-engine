@@ -12,6 +12,8 @@ module Hasura.Backends.Postgres.Connection
   , runQueryTx
   , withUserInfo
   , withTraceContext
+  , setHeadersTx
+  , setTraceContextInTx
   , sessionInfoJsonExp
 
   , RespTx
@@ -172,6 +174,12 @@ withUserInfo uInfo = \case
     let vars = _uiSession uInfo
     in LTTx $ setHeadersTx vars >> tx
 
+setTraceContextInTx :: (MonadIO m) => Tracing.TraceContext -> Q.TxET QErr m ()
+setTraceContextInTx traceCtx =
+  let sql = Q.fromText $ "SET LOCAL \"hasura.trace_context\" = " <>
+            toSQLTxt (S.SELit . encodeToStrictText . Tracing.injectEventContext $ traceCtx)
+  in Q.unitQE defaultTxErrorHandler sql () False
+
 -- | Inject the trace context as a transaction-local variable,
 -- so that it can be picked up by any triggers (including event triggers).
 withTraceContext
@@ -182,13 +190,7 @@ withTraceContext
 withTraceContext ctx = \case
   LTErr e  -> LTErr e
   LTNoTx a -> LTNoTx a
-  LTTx tx  ->
-    let sql = Q.fromText $
-          "SET LOCAL \"hasura.tracecontext\" = " <>
-            toSQLTxt (S.SELit . encodeToStrictText . Tracing.injectEventContext $ ctx)
-        setTraceContext =
-          Q.unitQE defaultTxErrorHandler sql () False
-     in LTTx $ setTraceContext >> tx
+  LTTx tx  -> LTTx $ (setTraceContextInTx ctx) >> tx
 
 instance (Monad m) => Applicative (LazyTxT e m) where
   pure = LTNoTx
