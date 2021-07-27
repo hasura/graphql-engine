@@ -29,7 +29,6 @@ module Hasura.RQL.Types.RemoteRelationship
   , _RemoteSourceRelDef
   , FieldCall(..)
   , RemoteArguments(..)
-  , DeleteRemoteRelationship(..)
   , graphQLValueToJSON
   ) where
 
@@ -402,21 +401,16 @@ instance ToJSON RemoteRelationshipDef where
           object [ "remote_schema" .= toJSON schema ]
 
 -- | Metadata type for remote relationship
-data RemoteRelationship b =
-  RemoteRelationship
-    { _rtrName       :: !RemoteRelationshipName
-    -- ^ Field name to which we'll map the remote in hasura; this becomes part
-    -- of the hasura schema.
-    , _rtrSource     :: !SourceName
-    , _rtrTable      :: !(TableName b)
-    -- ^ (SourceName, QualifiedTable) determines the table on which the relationship
-    -- is defined
-    , _rtrDefinition :: !RemoteRelationshipDef
-    }  deriving (Generic)
-deriving instance (Backend b) => Show (RemoteRelationship b)
-deriving instance (Backend b) => Eq   (RemoteRelationship b)
-instance (Backend b) => NFData    (RemoteRelationship b)
-instance (Backend b) => Cacheable (RemoteRelationship b)
+data RemoteRelationship b = RemoteRelationship
+  { _rtrName       :: !RemoteRelationshipName
+  -- ^ Field name to which we'll map the remote in hasura; this becomes part
+  -- of the hasura schema.
+  , _rtrSource     :: !SourceName
+  , _rtrTable      :: !(TableName b)
+  -- ^ (SourceName, QualifiedTable) determines the table on which the relationship
+  -- is defined
+  , _rtrDefinition :: !RemoteRelationshipDef
+  }  deriving (Generic)
 
 instance (Backend b) => ToJSON (RemoteRelationship b) where
   toJSON = genericToJSON hasuraJSON
@@ -432,21 +426,3 @@ instance (Backend b) => FromJSON (RemoteRelationship b) where
       <*> o .: "table"
       <*> pure (RemoteSchemaRelDef RFRemoteSchemaOnly $ RemoteSchemaRelationshipDef  name hasuraFields remoteField)
 $(makeLenses ''RemoteRelationship)
-
-data DeleteRemoteRelationship (b :: BackendType) = DeleteRemoteRelationship
-  { drrSource :: !SourceName
-  , drrTable  :: !(TableName b)
-  , drrName   :: !RemoteRelationshipName
-  } deriving stock (Generic)
-deriving instance (Backend b) => Show (DeleteRemoteRelationship b)
-deriving instance (Backend b) => Eq   (DeleteRemoteRelationship b)
-
-instance Backend b => FromJSON (DeleteRemoteRelationship b) where
-  parseJSON = withObject "Object" $ \o ->
-    DeleteRemoteRelationship
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
-      <*> o .: "name"
-
-instance Backend b => ToJSON (DeleteRemoteRelationship b) where
-  toJSON = genericToJSON hasuraJSON{omitNothingFields=True}

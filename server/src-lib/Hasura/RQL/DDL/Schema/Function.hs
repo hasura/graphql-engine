@@ -21,11 +21,7 @@ import           Hasura.SQL.Tag
 import           Hasura.Session
 
 
-newtype TrackFunction b
-  = TrackFunction
-  { tfName :: FunctionName b }
-deriving instance (Backend b) => Show (TrackFunction b)
-deriving instance (Backend b) => Eq (TrackFunction b)
+newtype TrackFunction b = TrackFunction { tfName :: FunctionName b }
 deriving instance (Backend b) => FromJSON (TrackFunction b)
 deriving instance (Backend b) => ToJSON (TrackFunction b)
 
@@ -41,7 +37,7 @@ trackFunctionP1
 trackFunctionP1 sourceName qf = do
   rawSchemaCache <- askSchemaCache
   unless (isJust $ AB.unpackAnyBackend @b =<< Map.lookup sourceName (scSources rawSchemaCache)) $
-    throw400 NotExists $ sourceName <<> " is not a known " <> (reify $ backendTag @b) <<> " source"
+    throw400 NotExists $ sourceName <<> " is not a known " <> reify (backendTag @b) <<> " source"
   when (isJust $ unsafeFunctionInfo @b sourceName qf $ scSources rawSchemaCache) $
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
   let qt = functionToTable @b qf
@@ -81,6 +77,22 @@ runTrackFunc (TrackFunction qf) = do
   trackFunctionP1 @b defaultSource qf
   trackFunctionP2 @b defaultSource qf emptyFunctionConfig
 
+-- | JSON API payload for v2 of 'track_function':
+--
+-- https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#track-function-v2
+data TrackFunctionV2 (b :: BackendType) = TrackFunctionV2
+  { _tfv2Source        :: !SourceName
+  , _tfv2Function      :: !(FunctionName b)
+  , _tfv2Configuration :: !FunctionConfig
+  }
+
+instance Backend b => FromJSON (TrackFunctionV2 b) where
+  parseJSON = withObject "track function" $ \o ->
+    TrackFunctionV2
+    <$> o .:? "source" .!= defaultSource
+    <*> o .: "function"
+    <*> o .:? "configuration" .!= emptyFunctionConfig
+
 runTrackFunctionV2
   :: forall b m
    . (BackendMetadata b, QErrM m, CacheRWM m, MetadataM m)
@@ -93,15 +105,10 @@ runTrackFunctionV2 (TrackFunctionV2 source qf config) = do
 -- | JSON API payload for 'untrack_function':
 --
 -- https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#untrack-function
-data UnTrackFunction b
-  = UnTrackFunction
+data UnTrackFunction b = UnTrackFunction
   { _utfFunction :: !(FunctionName b)
   , _utfSource   :: !SourceName
-  } deriving (Generic)
-deriving instance (Backend b) => Show (UnTrackFunction b)
-deriving instance (Backend b) => Eq (UnTrackFunction b)
-instance (Backend b) => ToJSON (UnTrackFunction b) where
-  toJSON = genericToJSON hasuraJSON
+  }
 
 instance (Backend b) => FromJSON (UnTrackFunction b) where
   -- Following was the previous implementation, which while seems to be correct,
@@ -186,21 +193,16 @@ is started with
 to false (by default, it's set to true).
 -}
 
-data CreateFunctionPermission b
-  = CreateFunctionPermission
+data FunctionPermissionArgument b = FunctionPermissionArgument
   { _afpFunction :: !(FunctionName b)
   , _afpSource   :: !SourceName
   , _afpRole     :: !RoleName
-  } deriving (Generic)
-deriving instance (Backend b) => Show (CreateFunctionPermission b)
-deriving instance (Backend b) => Eq (CreateFunctionPermission b)
-instance (Backend b) => ToJSON (CreateFunctionPermission b) where
-  toJSON = genericToJSON hasuraJSON
+  }
 
-instance (Backend b) => FromJSON (CreateFunctionPermission b) where
+instance (Backend b) => FromJSON (FunctionPermissionArgument b) where
   parseJSON v =
-    flip (withObject "CreateFunctionPermission") v $ \o ->
-      CreateFunctionPermission
+    flip (withObject "function permission") v $ \o ->
+      FunctionPermissionArgument
       <$> o .: "function"
       <*> o .:? "source" .!= defaultSource
       <*> o .: "role"
@@ -212,9 +214,9 @@ runCreateFunctionPermission
      , MetadataM m
      , BackendMetadata b
      )
-  => CreateFunctionPermission b
+  => FunctionPermissionArgument b
   -> m EncJSON
-runCreateFunctionPermission (CreateFunctionPermission functionName source role) = do
+runCreateFunctionPermission (FunctionPermissionArgument functionName source role) = do
   sourceCache <- scSources <$> askSchemaCache
   functionInfo <- askFunctionInfo @b source functionName
   when (role `elem` _fiPermissions functionInfo) $
@@ -247,8 +249,6 @@ dropFunctionPermissionInMetadata
 dropFunctionPermissionInMetadata source function role = MetadataModifier $
   metaSources.ix source.toSourceMetadata.(smFunctions @b).ix function.fmPermissions %~ filter ((/=) role . _fpmRole)
 
-type DropFunctionPermission = CreateFunctionPermission
-
 runDropFunctionPermission
   :: forall m b
    . ( CacheRWM m
@@ -256,9 +256,9 @@ runDropFunctionPermission
      , MetadataM m
      , BackendMetadata b
      )
-  => DropFunctionPermission b
+  => FunctionPermissionArgument b
   -> m EncJSON
-runDropFunctionPermission (CreateFunctionPermission functionName source role) = do
+runDropFunctionPermission (FunctionPermissionArgument functionName source role) = do
   functionInfo <- askFunctionInfo @b source functionName
   unless (role `elem` _fiPermissions functionInfo) $
     throw400 NotExists $

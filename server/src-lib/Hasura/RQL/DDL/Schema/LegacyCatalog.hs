@@ -22,6 +22,7 @@ import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Base.Error
 import           Hasura.Eventing.ScheduledTrigger
+import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.Types

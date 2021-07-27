@@ -70,7 +70,6 @@ import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Catalog
-import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query                    (requiresAdmin, runQueryM)
@@ -1012,3 +1011,21 @@ telemetryNotice =
   "Help us improve Hasura! The graphql-engine server collects anonymized "
   <> "usage stats which allows us to keep improving Hasura at warp speed. "
   <> "To read more or opt-out, visit https://hasura.io/docs/latest/graphql/core/guides/telemetry.html"
+
+mkPgSourceResolver :: Q.PGLogger -> SourceResolver
+mkPgSourceResolver pgLogger _ config = runExceptT do
+  env <- lift Env.getEnvironment
+  let PostgresSourceConnInfo urlConf poolSettings allowPrepare isoLevel _ = _pccConnectionInfo config
+  -- If the user does not provide values for the pool settings, then use the default values
+  let (maxConns, idleTimeout, retries) = getDefaultPGPoolSettingIfNotExists poolSettings defaultPostgresPoolSettings
+  urlText <- resolveUrlConf env urlConf
+  let connInfo = Q.ConnInfo retries $ Q.CDDatabaseURI $ txtToBs urlText
+      connParams = Q.defaultConnParams{ Q.cpIdleTime = idleTimeout
+                                      , Q.cpConns = maxConns
+                                      , Q.cpAllowPrepare = allowPrepare
+                                      , Q.cpMbLifetime = _ppsConnectionLifetime =<< poolSettings
+                                      , Q.cpTimeout = _ppsPoolTimeout =<< poolSettings
+                                      }
+  pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
+  let pgExecCtx = mkPGExecCtx isoLevel pgPool
+  pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty

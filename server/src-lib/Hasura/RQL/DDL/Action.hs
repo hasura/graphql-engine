@@ -1,5 +1,5 @@
 module Hasura.RQL.DDL.Action
-  ( CreateAction
+  ( CreateAction(..)
   , runCreateAction
   , resolveAction
 
@@ -10,7 +10,7 @@ module Hasura.RQL.DDL.Action
   , runDropAction
   , dropActionInMetadata
 
-  , CreateActionPermission
+  , CreateActionPermission(..)
   , runCreateActionPermission
 
   , DropActionPermission
@@ -47,6 +47,14 @@ getActionInfo actionName = do
   actionMap <- scActions <$> askSchemaCache
   onNothing (Map.lookup actionName actionMap) $
     throw400 NotExists $ "action with name " <> actionName <<> " does not exist"
+
+data CreateAction
+  = CreateAction
+  { _caName       :: !ActionName
+  , _caDefinition :: !ActionDefinitionInput
+  , _caComment    :: !(Maybe Text)
+  }
+$(J.deriveJSON hasuraJSON ''CreateAction)
 
 runCreateAction
   :: (QErrM m , CacheRWM m, MetadataM m)
@@ -120,6 +128,14 @@ resolveAction env AnnotatedCustomTypes{..} ActionDefinition{..} allScalars = do
        , outputObject
        )
 
+data UpdateAction
+  = UpdateAction
+  { _uaName       :: !ActionName
+  , _uaDefinition :: !ActionDefinitionInput
+  , _uaComment    :: !(Maybe Text)
+  }
+$(J.deriveFromJSON hasuraJSON ''UpdateAction)
+
 runUpdateAction
   :: forall m. ( QErrM m , CacheRWM m, MetadataM m)
   => UpdateAction -> m EncJSON
@@ -178,6 +194,15 @@ dropActionInMetadata name =
 newtype ActionMetadataField
   = ActionMetadataField { unActionMetadataField :: Text }
   deriving (Show, Eq, J.FromJSON, J.ToJSON)
+
+data CreateActionPermission
+  = CreateActionPermission
+  { _capAction     :: !ActionName
+  , _capRole       :: !RoleName
+  , _capDefinition :: !(Maybe J.Value)
+  , _capComment    :: !(Maybe Text)
+  }
+$(J.deriveFromJSON hasuraJSON ''CreateActionPermission)
 
 runCreateActionPermission
   :: (QErrM m , CacheRWM m, MetadataM m)

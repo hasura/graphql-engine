@@ -36,11 +36,11 @@ import qualified Hasura.Server.AuthSpec               as AuthSpec
 import qualified Hasura.Server.MigrateSpec            as MigrateSpec
 import qualified Hasura.Server.TelemetrySpec          as TelemetrySpec
 
-import           Hasura.App                           (PGMetadataStorageAppT (..))
+import           Hasura.App                           (PGMetadataStorageAppT (..),
+                                                       mkPgSourceResolver)
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DDL.Schema.Cache.Common
-import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
 import           Hasura.Server.Migrate

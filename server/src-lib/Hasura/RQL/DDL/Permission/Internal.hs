@@ -6,7 +6,6 @@ import qualified Data.HashMap.Strict                        as M
 import qualified Data.Text                                  as T
 
 import           Control.Lens                               hiding ((.=))
-import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Data.Kind                                  (Type)
 import           Data.Text.Extended
@@ -64,7 +63,7 @@ askPermInfo tabInfo roleName pa =
 
 
 newtype CreatePerm a b = CreatePerm (WithTable b (PermDef (a b)))
-  deriving newtype (Show, Eq, FromJSON, ToJSON)
+  deriving newtype (FromJSON)
 
 data CreatePermP1Res a
   = CreatePermP1Res
@@ -107,14 +106,10 @@ data DropPerm (a :: BackendType -> Type) b
   { dipSource :: !SourceName
   , dipTable  :: !(TableName b)
   , dipRole   :: !RoleName
-  } deriving (Generic)
-deriving instance (Backend b) => Show (DropPerm a b)
-deriving instance (Backend b) => Eq   (DropPerm a b)
-instance (Backend b) => ToJSON (DropPerm a b) where
-  toJSON = genericToJSON hasuraJSON{omitNothingFields=True}
+  }
 
 instance (Backend b) => FromJSON (DropPerm a b) where
-  parseJSON = withObject "DropPerm" $ \o ->
+  parseJSON = withObject "drop permission" $ \o ->
     DropPerm
     <$> o .:? "source" .!= defaultSource
     <*> o .: "table"

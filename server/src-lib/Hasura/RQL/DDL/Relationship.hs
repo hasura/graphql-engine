@@ -1,11 +1,15 @@
 module Hasura.RQL.DDL.Relationship
-  ( runCreateRelationship
+  ( CreateArrRel(..)
+  , CreateObjRel(..)
+  , runCreateRelationship
   , objRelP2Setup
   , arrRelP2Setup
 
+  , DropRel
   , runDropRel
   , dropRelationshipInMetadata
 
+  , SetRelComment
   , runSetRelComment
   )
 where
@@ -30,10 +34,21 @@ import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.Types
 
 
+--------------------------------------------------------------------------------
+-- Create local relationship
+
+newtype CreateArrRel b = CreateArrRel { unCreateArrRel :: WithTable b (ArrRelDef b) }
+  deriving newtype (FromJSON)
+
+newtype CreateObjRel b = CreateObjRel { unCreateObjRel :: WithTable b (ObjRelDef b) }
+  deriving newtype (FromJSON)
+
 runCreateRelationship
   :: forall m b a
    . (MonadError QErr m, CacheRWM m, ToJSON a, MetadataM m, Backend b, BackendMetadata b)
-  => RelType -> WithTable b (RelDef a) -> m EncJSON
+  => RelType
+  -> WithTable b (RelDef a)
+  -> m EncJSON
 runCreateRelationship relType (WithTable source tableName relDef) = do
   let relName = _rdName relDef
   -- Check if any field with relationship name already exists in the table
@@ -72,41 +87,6 @@ runCreateRelationship relType (WithTable source tableName relDef) = do
     $ MetadataModifier
     $ tableMetadataSetter @b source tableName %~ addRelationshipToMetadata
   pure successMsg
-
-runDropRel
-  :: forall b m
-   . (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
-  => DropRel b -> m EncJSON
-runDropRel (DropRel source qt rn cascade) = do
-  depObjs <- collectDependencies
-  withNewInconsistentObjsCheck do
-    metadataModifiers <- traverse purgeRelDep depObjs
-    buildSchemaCache $ MetadataModifier $
-      tableMetadataSetter @b source qt %~
-      dropRelationshipInMetadata rn . foldr (.) id metadataModifiers
-  pure successMsg
-  where
-    collectDependencies = do
-      tabInfo <- askTableCoreInfo @b source qt
-      void $ askRelType (_tciFieldInfoMap tabInfo) rn ""
-      sc      <- askSchemaCache
-      let depObjs = getDependentObjs
-                      sc
-                      (SOSourceObj source
-                        $ AB.mkAnyBackend
-                        $ SOITableObj @b qt
-                        $ TORel rn)
-      when (depObjs /= [] && not cascade) $ reportDeps depObjs
-      pure depObjs
-
-dropRelationshipInMetadata
-  :: RelName -> TableMetadata b -> TableMetadata b
-dropRelationshipInMetadata relName =
-  -- Since the name of a relationship is unique in a table, the relationship
-  -- with given name may present in either array or object relationships but
-  -- not in both.
-  (tmObjectRelationships %~ OMap.delete relName)
-  . (tmArrayRelationships %~ OMap.delete relName)
 
 objRelP2Setup
   :: forall b m
@@ -220,6 +200,19 @@ mkFkeyRel relType io source rn sourceTable remoteTable remoteColumns foreignKeys
     reverseHM :: Eq y => Hashable y => HashMap x y -> HashMap y x
     reverseHM = HM.fromList . fmap swap . HM.toList
 
+getRequiredFkey
+  :: (QErrM m, Backend b)
+  => NonEmpty (Column b)
+  -> [ForeignKey b]
+  -> m (ForeignKey b)
+getRequiredFkey cols fkeys =
+  case filteredFkeys of
+    [k] -> return k
+    []  -> throw400 ConstraintError "no foreign constraint exists on the given column"
+    _   -> throw400 ConstraintError "more than one foreign key constraint exists on the given column"
+  where
+    filteredFkeys = filter ((== HS.fromList (toList cols)) . HM.keysSet . _fkColumnMapping) fkeys
+
 drUsingColumnDep
   :: forall b
    . Backend b
@@ -235,6 +228,61 @@ drUsingColumnDep source qt col =
         $ TOCol @b col)
       DRUsingColumn
 
+
+--------------------------------------------------------------------------------
+-- Drop local relationship
+
+data DropRel b
+  = DropRel
+  { _drSource       :: !SourceName
+  , _drTable        :: !(TableName b)
+  , _drRelationship :: !RelName
+  , _drCascade      :: !Bool
+  }
+
+instance (Backend b) => FromJSON (DropRel b) where
+  parseJSON = withObject "drop relationship" $ \o ->
+    DropRel
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
+      <*> o .: "relationship"
+      <*> o .:? "cascade" .!= False
+
+runDropRel
+  :: forall b m
+   . (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
+  => DropRel b -> m EncJSON
+runDropRel (DropRel source qt rn cascade) = do
+  depObjs <- collectDependencies
+  withNewInconsistentObjsCheck do
+    metadataModifiers <- traverse purgeRelDep depObjs
+    buildSchemaCache $ MetadataModifier $
+      tableMetadataSetter @b source qt %~
+      dropRelationshipInMetadata rn . foldr (.) id metadataModifiers
+  pure successMsg
+  where
+    collectDependencies = do
+      tabInfo <- askTableCoreInfo @b source qt
+      void $ askRelType (_tciFieldInfoMap tabInfo) rn ""
+      sc      <- askSchemaCache
+      let depObjs = getDependentObjs
+                      sc
+                      (SOSourceObj source
+                        $ AB.mkAnyBackend
+                        $ SOITableObj @b qt
+                        $ TORel rn)
+      when (depObjs /= [] && not cascade) $ reportDeps depObjs
+      pure depObjs
+
+dropRelationshipInMetadata
+  :: RelName -> TableMetadata b -> TableMetadata b
+dropRelationshipInMetadata relName =
+  -- Since the name of a relationship is unique in a table, the relationship
+  -- with given name may present in either array or object relationships but
+  -- not in both.
+  (tmObjectRelationships %~ OMap.delete relName)
+  . (tmArrayRelationships %~ OMap.delete relName)
+
 purgeRelDep
   :: forall b m
    . QErrM m
@@ -246,10 +294,33 @@ purgeRelDep (SOSourceObj _ exists)
 purgeRelDep d = throw500 $ "unexpected dependency of relationship : "
                 <> reportSchemaObj d
 
+
+--------------------------------------------------------------------------------
+-- Set local relationship comment
+
+data SetRelComment b
+  = SetRelComment
+  { arSource       :: !SourceName
+  , arTable        :: !(TableName b)
+  , arRelationship :: !RelName
+  , arComment      :: !(Maybe Text)
+  } deriving (Generic)
+deriving instance (Backend b) => Show (SetRelComment b)
+deriving instance (Backend b) => Eq (SetRelComment b)
+
+instance (Backend b) => FromJSON (SetRelComment b) where
+  parseJSON = withObject "set relationship comment" $ \o ->
+    SetRelComment
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
+      <*> o .: "relationship"
+      <*> o .:? "comment"
+
 runSetRelComment
   :: forall m b
    . (CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b)
-  => SetRelComment b -> m EncJSON
+  => SetRelComment b
+  -> m EncJSON
 runSetRelComment defn = do
   tabInfo <- askTableCoreInfo @b source qt
   relType <- riType <$> askRelType (_tciFieldInfoMap tabInfo) rn ""
@@ -265,16 +336,3 @@ runSetRelComment defn = do
   pure successMsg
   where
     SetRelComment source qt rn comment = defn
-
-getRequiredFkey
-  :: (QErrM m, Backend b)
-  => NonEmpty (Column b)
-  -> [ForeignKey b]
-  -> m (ForeignKey b)
-getRequiredFkey cols fkeys =
-  case filteredFkeys of
-    [k] -> return k
-    []  -> throw400 ConstraintError "no foreign constraint exists on the given column"
-    _   -> throw400 ConstraintError "more than one foreign key constraint exists on the given column"
-  where
-    filteredFkeys = filter ((== HS.fromList (toList cols)) . HM.keysSet . _fkColumnMapping) fkeys

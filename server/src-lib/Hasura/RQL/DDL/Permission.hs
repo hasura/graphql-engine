@@ -372,14 +372,10 @@ data SetPermComment b
   , apRole       :: !RoleName
   , apPermission :: !PermType
   , apComment    :: !(Maybe Text)
-  } deriving (Generic)
-deriving instance (Backend b) => Show (SetPermComment b)
-deriving instance (Backend b) => Eq (SetPermComment b)
-instance (Backend b) => ToJSON (SetPermComment b) where
-  toJSON = genericToJSON hasuraJSON
+  }
 
 instance (Backend b) => FromJSON (SetPermComment b) where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "set permission comment" $ \o ->
     SetPermComment
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"
