@@ -6,11 +6,11 @@
 - server: Fixed a bug where MSSQL and BigQuery would ignore environment variables set from the console
 - server: Fixing bug in ReplaceMetadata parser - Moving from Alternative to committed-choice.
 - server: Relax the unique operation name constraint when adding a query to a query collection
+- server: officially deprecate query plan caching, which had already been disabled for a long time
 - server/bigquery: Fix issues related to adding and querying from non-US datasets (closes [6937](https://github.com/hasura/graphql-engine/issues/6937)).
 - console: add pagination on the Raw SQL results page
 - console: fix issues with replacing invalid graphql identifiers in table and column names
 - console: show error message on inconsistent objects table
-
 
 ## v2.0.3
 (Add entries below in the order of server, console, cli, docs, others)

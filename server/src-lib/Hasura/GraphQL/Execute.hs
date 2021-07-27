@@ -41,7 +41,6 @@ import qualified Hasura.GraphQL.Execute.Types           as ET
 import qualified Hasura.Logging                         as L
 import qualified Hasura.RQL.IR                          as IR
 import qualified Hasura.SQL.AnyBackend                  as AB
-import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Base.Error
@@ -65,7 +64,6 @@ data ExecutionCtx
   = ExecutionCtx
   { _ecxLogger          :: !(L.Logger L.Hasura)
   , _ecxSqlGenCtx       :: !SQLGenCtx
-  -- , _ecxPlanCache       :: !EP.PlanCache
   , _ecxSchemaCache     :: !SchemaCache
   , _ecxSchemaCacheVer  :: !SchemaCacheVer
   , _ecxHttpManager     :: !HTTP.Manager
@@ -262,7 +260,6 @@ getResolvedExecPlan
      )
   => Env.Environment
   -> L.Logger L.Hasura
-  -- -> EP.PlanCache
   -> UserInfo
   -> SQLGenCtx
   -> SchemaCache
@@ -271,80 +268,53 @@ getResolvedExecPlan
   -> HTTP.Manager
   -> [HTTP.Header]
   -> (GQLReqUnparsed, GQLReqParsed)
-  -> m (Telem.CacheHit, (ParameterizedQueryHash, ResolvedExecutionPlan))
-getResolvedExecPlan env logger {- planCache-} userInfo sqlGenCtx
-  sc _scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) = -- do
-
-  -- See Note [Temporarily disabling query plan caching]
-  -- planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo) opNameM queryStr
-  --          queryType planCache
---   case planM of
---     -- plans are only for queries and subscriptions
---     Just plan -> (Telem.Hit,) <$> case plan of
---       EP.RPQuery queryPlan -> do
--- --        (tx, genSql) <- EQ.queryOpFromPlan env httpManager reqHeaders userInfo queryVars queryPlan
---         return $ QueryExecutionPlan _ -- tx (Just genSql)
---       EP.RPSubs subsPlan ->
---         return $ SubscriptionExecutionPlan _ -- <$> EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan
---     Nothing -> (Telem.Miss,) <$> noExistingPlan
-  (Telem.Miss,) <$> noExistingPlan
-  where
-    -- GQLReq opNameM queryStr queryVars = reqUnparsed
-    -- addPlanToCache plan =
-    --   liftIO $ EP.addPlan scVer (userRole userInfo)
-    --   opNameM queryStr plan planCache
-    noExistingPlan :: m (ParameterizedQueryHash, ResolvedExecutionPlan)
-    noExistingPlan = do
-      -- GraphQL requests may incorporate fragments which insert a pre-defined
-      -- part of a GraphQL query. Here we make sure to remember those
-      -- pre-defined sections, so that when we encounter a fragment spread
-      -- later, we can inline it instead.
-      let takeFragment = \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing
-          fragments =
-            mapMaybe takeFragment $ unGQLExecDoc $ _grQuery reqParsed
-      (gCtx, queryParts) <- getExecPlanPartial userInfo sc queryType reqParsed
-
-      (normalizedSelectionSet, resolvedExecPlan) <-
-        case queryParts of
-          G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives selSet -> do
-            -- (Here the above fragment inlining is actually executed.)
-            inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-            (executionPlan, queryRootFields, normalizedSelectionSet, dirMap) <-
-              EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders directives inlinedSelSet varDefs (_grVariables reqUnparsed) (scSetGraphqlIntrospectionOptions sc)
-            pure $ (normalizedSelectionSet, QueryExecutionPlan executionPlan queryRootFields dirMap)
-
-            -- See Note [Temporarily disabling query plan caching]
-            -- traverse_ (addPlanToCache . EP.RPQuery) plan
-          G.TypedOperationDefinition G.OperationTypeMutation _ varDefs directives selSet -> do
-            -- (Here the above fragment inlining is actually executed.)
-            inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-            (executionPlan, normalizedSelectionSet) <-
-              EM.convertMutationSelectionSet env logger gCtx sqlGenCtx userInfo httpManager reqHeaders directives inlinedSelSet varDefs (_grVariables reqUnparsed) (scSetGraphqlIntrospectionOptions sc)
-            pure $ (normalizedSelectionSet, MutationExecutionPlan executionPlan)
-            -- See Note [Temporarily disabling query plan caching]
-            -- traverse_ (addPlanToCache . EP.RPQuery) plan
-          G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives selSet -> do
-            -- (Here the above fragment inlining is actually executed.)
-            inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-            -- Parse as query to check correctness
-            (unpreparedAST, _reusability, normalizedDirectives, normalizedSelectionSet) <-
-              EQ.parseGraphQLQuery gCtx varDefs (_grVariables reqUnparsed) directives inlinedSelSet
-            -- Process directives on the subscription
-            (dirMap, _) <-  (`onLeft` reportParseErrors) =<<
-              runParseT (parseDirectives customDirectives (G.DLExecutable G.EDLSUBSCRIPTION) normalizedDirectives)
-            -- A subscription should have exactly one root field.
-            -- However, for testing purposes, we may allow several root fields; we check for this by
-            -- looking for directive "_multiple_top_level_fields" on the subscription. THIS IS NOT A
-            -- SUPPORTED FEATURE. We might remove it in the future without warning. DO NOT USE THIS.
-            allowMultipleRootFields <- withDirective dirMap multipleRootFields $ pure . isJust
-            case inlinedSelSet of
-              [_] -> pure ()
-              []  -> throw500 "empty selset for subscription"
-              _   -> unless allowMultipleRootFields $
-                throw400 ValidationFailed "subscriptions must select one top level field"
-            subscriptionPlan <- buildSubscriptionPlan userInfo unpreparedAST
-            pure (normalizedSelectionSet, SubscriptionExecutionPlan subscriptionPlan)
-      -- the parameterized query hash is calculated here because it is used in multiple
-      -- places and instead of calculating it separately, this is a common place to calculate
-      -- the parameterized query hash and then thread it to the required places
-      pure $ (calculateParameterizedQueryHash normalizedSelectionSet, resolvedExecPlan)
+  -> m (ParameterizedQueryHash, ResolvedExecutionPlan)
+getResolvedExecPlan env logger userInfo sqlGenCtx
+  sc _scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) = do
+  -- GraphQL requests may incorporate fragments which insert a pre-defined
+  -- part of a GraphQL query. Here we make sure to remember those
+  -- pre-defined sections, so that when we encounter a fragment spread
+  -- later, we can inline it instead.
+  let takeFragment = \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing
+      fragments =
+        mapMaybe takeFragment $ unGQLExecDoc $ _grQuery reqParsed
+  (gCtx, queryParts) <- getExecPlanPartial userInfo sc queryType reqParsed
+  (normalizedSelectionSet, resolvedExecPlan) <-
+    case queryParts of
+      G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives selSet -> do
+        -- (Here the above fragment inlining is actually executed.)
+        inlinedSelSet <- EI.inlineSelectionSet fragments selSet
+        (executionPlan, queryRootFields, normalizedSelectionSet, dirMap) <-
+          EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders directives inlinedSelSet varDefs (_grVariables reqUnparsed) (scSetGraphqlIntrospectionOptions sc)
+        pure $ (normalizedSelectionSet, QueryExecutionPlan executionPlan queryRootFields dirMap)
+      G.TypedOperationDefinition G.OperationTypeMutation _ varDefs directives selSet -> do
+        -- (Here the above fragment inlining is actually executed.)
+        inlinedSelSet <- EI.inlineSelectionSet fragments selSet
+        (executionPlan, normalizedSelectionSet) <-
+          EM.convertMutationSelectionSet env logger gCtx sqlGenCtx userInfo httpManager reqHeaders directives inlinedSelSet varDefs (_grVariables reqUnparsed) (scSetGraphqlIntrospectionOptions sc)
+        pure $ (normalizedSelectionSet, MutationExecutionPlan executionPlan)
+      G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives selSet -> do
+        -- (Here the above fragment inlining is actually executed.)
+        inlinedSelSet <- EI.inlineSelectionSet fragments selSet
+        -- Parse as query to check correctness
+        (unpreparedAST, normalizedDirectives, normalizedSelectionSet) <-
+          EQ.parseGraphQLQuery gCtx varDefs (_grVariables reqUnparsed) directives inlinedSelSet
+        -- Process directives on the subscription
+        dirMap <-  (`onLeft` reportParseErrors) =<<
+          runParseT (parseDirectives customDirectives (G.DLExecutable G.EDLSUBSCRIPTION) normalizedDirectives)
+        -- A subscription should have exactly one root field.
+        -- However, for testing purposes, we may allow several root fields; we check for this by
+        -- looking for directive "_multiple_top_level_fields" on the subscription. THIS IS NOT A
+        -- SUPPORTED FEATURE. We might remove it in the future without warning. DO NOT USE THIS.
+        allowMultipleRootFields <- withDirective dirMap multipleRootFields $ pure . isJust
+        case inlinedSelSet of
+          [_] -> pure ()
+          []  -> throw500 "empty selset for subscription"
+          _   -> unless allowMultipleRootFields $
+            throw400 ValidationFailed "subscriptions must select one top level field"
+        subscriptionPlan <- buildSubscriptionPlan userInfo unpreparedAST
+        pure (normalizedSelectionSet, SubscriptionExecutionPlan subscriptionPlan)
+  -- the parameterized query hash is calculated here because it is used in multiple
+  -- places and instead of calculating it separately, this is a common place to calculate
+  -- the parameterized query hash and then thread it to the required places
+  pure $ (calculateParameterizedQueryHash normalizedSelectionSet, resolvedExecPlan)

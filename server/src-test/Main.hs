@@ -25,7 +25,6 @@ import           System.Environment                   (getEnvironment)
 import           System.Exit                          (exitFailure)
 import           Test.Hspec
 
-import qualified Hasura.CacheBoundedSpec              as CacheBoundedSpec
 import qualified Hasura.EventingSpec                  as EventingSpec
 import qualified Hasura.GraphQL.Parser.DirectivesTest as GraphQLDirectivesSpec
 import qualified Hasura.GraphQL.Schema.RemoteTest     as GraphRemoteSchemaSpec
@@ -77,7 +76,6 @@ unitSpecs = do
   describe "Data.Parser.JSONPath" JsonPath.spec
   describe "Data.Parser.URLTemplate" URLTemplate.spec
   describe "Data.Time" TimeSpec.spec
-  describe "Hasura.Cache.Bounded" CacheBoundedSpec.spec
   describe "Hasura.Eventing" EventingSpec.spec
   describe "Hasura.GraphQL.Parser.Directives" GraphQLDirectivesSpec.spec
   describe "Hasura.GraphQL.Schema.Remote" GraphRemoteSchemaSpec.spec

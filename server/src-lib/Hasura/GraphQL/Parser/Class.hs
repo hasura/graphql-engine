@@ -2,7 +2,6 @@
 module Hasura.GraphQL.Parser.Class
   ( MonadParse(..)
   , parseError
-  , QueryReusability(..)
   , module Hasura.GraphQL.Parser.Class
   ) where
 

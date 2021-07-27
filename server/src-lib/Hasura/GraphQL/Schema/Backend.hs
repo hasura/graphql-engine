@@ -160,7 +160,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     :: (MonadSchema n m, MonadError QErr m)
     => ColumnType b
     -> Nullability
-    -> m (Parser 'Both n (Opaque (ColumnValue b)))
+    -> m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
   -- | The "path" argument for json column fields
   jsonPathArg
     :: MonadParse n

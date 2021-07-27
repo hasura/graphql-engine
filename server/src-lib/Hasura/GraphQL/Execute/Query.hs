@@ -42,14 +42,13 @@ parseGraphQLQuery
   -> [G.Directive G.Name]
   -> G.SelectionSet G.NoFragments G.Name
   -> m ( InsOrdHashMap G.Name (QueryRootField UnpreparedValue)
-       , QueryReusability
        , [G.Directive Variable]
        , G.SelectionSet G.NoFragments Variable
        )
 parseGraphQLQuery gqlContext varDefs varValsM directives fields = do
   (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe Map.empty varValsM) directives fields
-  (parsedQuery, queryReusability) <- (gqlQueryParser gqlContext >>> (`onLeft` reportParseErrors)) resolvedSelSet
-  pure (parsedQuery, queryReusability, resolvedDirectives, resolvedSelSet)
+  parsedQuery <- (gqlQueryParser gqlContext >>> (`onLeft` reportParseErrors)) resolvedSelSet
+  pure (parsedQuery, resolvedDirectives, resolvedSelSet)
 
 
 convertQuerySelSet
@@ -73,14 +72,14 @@ convertQuerySelSet
 convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs varValsM
   introspectionDisabledRoles = do
   -- Parse the GraphQL query into the RQL AST
-  (unpreparedQueries, _reusability, normalizedDirectives, normalizedSelectionSet) <-
+  (unpreparedQueries, normalizedDirectives, normalizedSelectionSet) <-
     parseGraphQLQuery gqlContext varDefs varValsM directives fields
 
   -- Transform the query plans into an execution plan
   let usrVars = _uiSession userInfo
 
   -- Process directives on the query
-  (dirMap, _) <- (`onLeft` reportParseErrors) =<<
+  dirMap <- (`onLeft` reportParseErrors) =<<
     runParseT (parseDirectives customDirectives (G.DLExecutable G.EDLQUERY) normalizedDirectives)
 
   executionPlan <- for unpreparedQueries \case
@@ -101,5 +100,4 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
       pure $ ExecStepAction actionExecution (ActionsInfo actionName fch) remoteJoins
     RFRaw r -> flip onLeft throwError =<< executeIntrospection userInfo r introspectionDisabledRoles
 
-  -- See Note [Temporarily disabling query plan caching]
   pure (executionPlan, OMap.elems unpreparedQueries, normalizedSelectionSet, dirMap)

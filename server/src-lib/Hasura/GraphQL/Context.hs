@@ -39,4 +39,4 @@ instance J.ToJSON GQLContext where
 
 type ParserFn a
   =  G.SelectionSet G.NoFragments Variable
-  -> Either (NESeq ParseError) (a, QueryReusability)
+  -> Either (NESeq ParseError) a

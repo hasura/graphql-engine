@@ -12,7 +12,7 @@ module Hasura.Server.Telemetry.Counters
     recordTimingMetric
   , RequestDimensions(..), RequestTimings(..)
   -- *** Dimensions
-  , CacheHit(..), QueryType(..), Locality(..), Transport(..)
+  , QueryType(..), Locality(..), Transport(..)
   -- ** Metric upload
   , dumpServiceTimingMetrics
   , ServiceTimingMetrics(..)
@@ -36,9 +36,8 @@ import           GHC.IO.Unsafe         (unsafePerformIO)
 -- | The properties that characterize this request. The dimensions over which
 -- we collect metrics for each serviced request.
 data RequestDimensions =
-  RequestDimensions {
-        telemCacheHit  :: !CacheHit
-      , telemQueryType :: !QueryType
+  RequestDimensions
+      { telemQueryType :: !QueryType
       , telemLocality  :: !Locality
       , telemTransport :: !Transport
       }
@@ -95,13 +94,6 @@ requestCounters = unsafePerformIO $ newIORef HM.empty
 approxStartTime :: POSIXTime
 {-# NOINLINE approxStartTime #-}
 approxStartTime = unsafePerformIO getPOSIXTime
-
--- | Did this request hit the plan cache?
-data CacheHit = Hit | Miss
-  deriving (Enum, Show, Eq, Generic)
-instance Hashable CacheHit
-instance A.ToJSON CacheHit
-instance A.FromJSON CacheHit
 
 -- | Was this request a mutation (involved DB writes)?
 data QueryType = Mutation | Query

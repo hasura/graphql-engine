@@ -239,7 +239,6 @@ data WSServerEnv
   , _wseHManager        :: !H.Manager
   , _wseCorsPolicy      :: !CorsPolicy
   , _wseSQLCtx          :: !SQLGenCtx
-  -- , _wseQueryCache      :: !E.PlanCache -- See Note [Temporarily disabling query plan caching]
   , _wseServer          :: !WSServer
   , _wseEnableAllowlist :: !Bool
   , _wseKeepAliveDelay  :: !KeepAliveDelay
@@ -378,11 +377,11 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore 
   reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q
   reqParsed <- onLeft reqParsedE (withComplete . preExecErr requestId)
   execPlanE <- runExceptT $ E.getResolvedExecPlan
-    env logger {- planCache -}
+    env logger
     userInfo sqlGenCtx sc scVer queryType
     httpMgr reqHdrs (q, reqParsed)
 
-  (telemCacheHit, (parameterizedQueryHash, execPlan)) <- onLeft execPlanE (withComplete . preExecErr requestId)
+  (parameterizedQueryHash, execPlan) <- onLeft execPlanE (withComplete . preExecErr requestId)
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts dirMap -> Tracing.trace "Query" $ do
@@ -444,7 +443,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore 
             E.ExecStepRaw json -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
               buildRaw json
-          buildResultFromFragments Telem.Query telemCacheHit timerTot requestId conclusion
+          buildResultFromFragments Telem.Query timerTot requestId conclusion
           case conclusion of
             Left _        -> pure ()
             Right results -> Tracing.interpTraceT (withExceptT mempty) $
@@ -510,7 +509,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore 
             E.ExecStepRaw json -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
               buildRaw json
-          buildResultFromFragments Telem.Query telemCacheHit timerTot requestId conclusion
+          buildResultFromFragments Telem.Query timerTot requestId conclusion
       liftIO $ sendCompleted (Just requestId)
 
     E.SubscriptionExecutionPlan subExec -> do
@@ -591,7 +590,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore 
       Left (Right err) -> postExecErr requestId err
       Right results    -> f results
 
-    buildResultFromFragments telemQueryType telemCacheHit timerTot requestId r =
+    buildResultFromFragments telemQueryType timerTot requestId r =
       buildResult requestId r \results -> do
         let telemLocality = foldMap rfLocality results
             telemTimeIO   = convertDuration $ sum $ fmap rfTimeIO results
@@ -607,7 +606,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore 
       value <- mapExceptT lift $ extractFieldFromResponse (G.unName fieldName) resp
       return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) []
 
-    WSServerEnv logger lqMap getSchemaCache httpMgr _ sqlGenCtx {- planCache -}
+    WSServerEnv logger lqMap getSchemaCache httpMgr _ sqlGenCtx
       _ enableAL _keepAliveDelay _ = serverEnv
 
     WSConnData userInfoR opMap errRespTy queryType = WS.getData wsConn
@@ -888,14 +887,13 @@ createWSServerEnv
   -> Bool
   -> KeepAliveDelay
   -> ServerMetrics
-  -- -> E.PlanCache
   -> m WSServerEnv
 createWSServerEnv logger lqState getSchemaCache httpManager
-  corsPolicy sqlGenCtx enableAL keepAliveDelay serverMetrics {- planCache -} = do
+  corsPolicy sqlGenCtx enableAL keepAliveDelay serverMetrics = do
   wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
   return $
     WSServerEnv logger lqState getSchemaCache httpManager corsPolicy
-    sqlGenCtx {- planCache -} wsServer enableAL keepAliveDelay serverMetrics
+    sqlGenCtx wsServer enableAL keepAliveDelay serverMetrics
 
 createWSServerApp
   :: ( HasVersion

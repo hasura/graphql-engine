@@ -219,20 +219,20 @@ runGQ
   -> GQLReqUnparsed
   -> m (ParameterizedQueryHash, HttpResponse (Maybe GQResponse, EncJSON))
 runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
-  (telemTimeTot_DT, (telemCacheHit, (telemQueryType, telemTimeIO_DT, telemLocality, resp, parameterizedQueryHash))) <- withElapsedTime $ do
-    E.ExecutionCtx _ sqlGenCtx {- planCache -} sc scVer httpManager enableAL <- ask
+  (telemTimeTot_DT, (telemQueryType, telemTimeIO_DT, telemLocality, resp, parameterizedQueryHash)) <- withElapsedTime $ do
+    E.ExecutionCtx _ sqlGenCtx sc scVer httpManager enableAL <- ask
 
     -- run system authorization on the GraphQL API
     reqParsed <- E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
                  >>= flip onLeft throwError
 
-    (telemCacheHit, (parameterizedQueryHash, execPlan)) <-
+    (parameterizedQueryHash, execPlan) <-
       E.getResolvedExecPlan
-        env logger {- planCache -}
+        env logger
         userInfo sqlGenCtx sc scVer queryType
         httpManager reqHeaders (reqUnparsed, reqParsed)
 
-    (telemCacheHit,) <$> case execPlan of
+    case execPlan of
       E.QueryExecutionPlan queryPlans asts dirMap -> trace "Query" $ do
         let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
             cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars

@@ -19,7 +19,6 @@ newtype TestMonad a = TestMonad { runTest :: Either Text a }
 instance MonadParse TestMonad where
   withPath = const id
   parseErrorWith = const $ TestMonad . Left
-  markNotReusable = pure ()
 
 
 -- values generation

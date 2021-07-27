@@ -319,8 +319,6 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
       unLogger logger $ mkGenericStrLog LevelInfo "schema-sync" ("Schema sync enabled. Polling at " <> show i)
       void $ startSchemaSyncListenerThread logger metadataDbPool instanceId i metaVersionRef
 
-  -- See Note [Temporarily disabling query plan caching]
-  -- (planCache, schemaCacheRef) <- initialiseCache
   schemaCacheRef <- initialiseCache rebuildableSchemaCache
 
   pure $ ServeCtx _gcHttpManager instanceId loggers soEnabledLogTypes metadataDbPool latch
@@ -507,7 +505,6 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
              _scInstanceId
              soEnabledAPIs
              soLiveQueryOpts
-             soPlanCacheOptions
              soResponseInternalErrorsConfig
              postPollHook
              _scSchemaCacheRef

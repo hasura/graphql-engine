@@ -3,26 +3,25 @@
 
 module Hasura.Backends.MySQL.Instances.Schema where
 
-import qualified Data.Aeson                                  as J
-import qualified Data.HashMap.Strict                         as HM
-import qualified Data.List.NonEmpty                          as NE
+import qualified Data.Aeson                            as J
+import qualified Data.HashMap.Strict                   as HM
+import qualified Data.List.NonEmpty                    as NE
 import           Data.Text.Extended
-import qualified Database.MySQL.Base.Types                   as MySQL
-import qualified Hasura.Backends.MySQL.Types                 as MySQL
+import qualified Database.MySQL.Base.Types             as MySQL
+import qualified Hasura.Backends.MySQL.Types           as MySQL
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Parser                       hiding (EnumValueInfo, field)
-import qualified Hasura.GraphQL.Parser                       as P
-import           Hasura.GraphQL.Parser.Internal.Parser       hiding (field)
-import           Hasura.GraphQL.Parser.Internal.TypeChecking
+import           Hasura.GraphQL.Parser                 hiding (EnumValueInfo, field)
+import qualified Hasura.GraphQL.Parser                 as P
+import           Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import           Hasura.GraphQL.Schema.Backend
-import qualified Hasura.GraphQL.Schema.Build                 as GSB
+import qualified Hasura.GraphQL.Schema.Build           as GSB
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.Prelude
 import           Hasura.RQL.IR
-import qualified Hasura.RQL.IR.Select                        as IR
-import qualified Hasura.RQL.IR.Update                        as IR
-import           Hasura.RQL.Types                            as RQL
-import qualified Language.GraphQL.Draft.Syntax               as G
+import qualified Hasura.RQL.IR.Select                  as IR
+import qualified Hasura.RQL.IR.Update                  as IR
+import           Hasura.RQL.Types                      as RQL
+import qualified Language.GraphQL.Draft.Syntax         as G
 
 instance BackendSchema 'MySQL where
   buildTableQueryFields          = GSB.buildTableQueryFields
@@ -170,9 +169,9 @@ buildFunctionMutationFields' _ _ _ _ _ _ =
 columnParser' :: (MonadSchema n m, MonadError QErr m) =>
   ColumnType 'MySQL ->
   G.Nullability ->
-  m (Parser 'Both n (Opaque (ColumnValue 'MySQL)))
+  m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL)))
 columnParser' columnType (G.Nullability isNullable) =
-  opaque . fmap (ColumnValue columnType) <$> case columnType of
+  peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
     ColumnScalar scalarType -> case scalarType of
       MySQL.Bit      -> pure $ possiblyNullable scalarType $ MySQL.BitValue <$> P.boolean
       MySQL.String   -> pure $ possiblyNullable scalarType $ MySQL.VarcharValue <$> P.string
@@ -193,14 +192,6 @@ columnParser' columnType (G.Nullability isNullable) =
           pure $ possiblyNullable MySQL.VarChar $ P.enum enumName Nothing (mkEnumValue <$> enumValuesList)
         Nothing -> throw400 ValidationFailed "empty enum values"
   where
-    opaque :: MonadParse m => Parser 'Both m a -> Parser 'Both m (Opaque a)
-    opaque parser = parser
-      { pParser = \case
-          P.GraphQLValue (G.VVariable var@Variable{ vInfo, vValue }) -> do
-            typeCheck False (P.toGraphQLType $ pType parser) var
-            P.mkOpaque (Just vInfo) <$> pParser parser (absurd <$> vValue)
-          value -> P.mkOpaque Nothing <$> pParser parser value
-      }
     possiblyNullable :: (MonadParse m) => MySQL.Type -> Parser 'Both m MySQL.ScalarValue -> Parser 'Both m MySQL.ScalarValue
     possiblyNullable _scalarType
       | isNullable = fmap (fromMaybe MySQL.NullValue) . P.nullable
@@ -267,8 +258,8 @@ comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do
       desc = G.Description $ "Boolean expression to compare columns of type "
         <>  P.getName typedParser
         <<> ". All fields are combined with logical 'AND'."
-      textListParser = P.list textParser `P.bind` traverse P.openOpaque
-      columnListParser = P.list typedParser `P.bind` traverse P.openOpaque
+      textListParser = fmap openValueOrigin <$> P.list textParser
+      columnListParser = fmap openValueOrigin <$> P.list typedParser
   pure $ P.object name (Just desc) $ catMaybes <$> sequenceA
     [ P.fieldOptional $$(G.litName "_is_null") Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean)
     , P.fieldOptional $$(G.litName "_eq")      Nothing (AEQ True . mkParameter <$> typedParser)

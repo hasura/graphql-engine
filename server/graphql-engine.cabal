@@ -554,7 +554,6 @@ library
                      , Hasura.GraphQL.Execute.LiveQuery.State
                      , Hasura.GraphQL.Execute.LiveQuery.TMap
                      , Hasura.GraphQL.Execute.Mutation
-                     , Hasura.GraphQL.Execute.Plan
                      , Hasura.GraphQL.Execute.Remote
                      , Hasura.GraphQL.Execute.RemoteJoin
                      , Hasura.GraphQL.Execute.RemoteJoin.Types
@@ -687,7 +686,6 @@ test-suite graphql-engine-tests
     Data.Parser.URLTemplate
     Data.Text.RawString
     Data.TimeSpec
-    Hasura.CacheBoundedSpec
     Hasura.EventingSpec
     Hasura.GraphQL.Parser.DirectivesTest
     Hasura.GraphQL.Parser.TestUtils
@@ -699,23 +697,3 @@ test-suite graphql-engine-tests
     Hasura.Server.AuthSpec
     Hasura.Server.MigrateSpec
     Hasura.Server.TelemetrySpec
-
--- Benchmarks related to caching (e.g. the plan cache).
---
--- NOTE: Some of these are very slow and can only be reasonably run with `cache -n 1` for now.
-benchmark cache
-  import: common-all, common-exe
-  type: exitcode-stdio-1.0
-  main-is: Main.hs
-  hs-source-dirs: src-bench-cache
-  build-depends:     base
-                   , criterion
-                   , mwc-random
-                   , mwc-probability
-                   , vector
-                   , deepseq
-                   , graphql-engine
-                   , split
-                   , async
-                   , text
-                   , bytestring
