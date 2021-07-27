@@ -47,7 +47,7 @@ convSelCol
   -> SelCol
   -> m [ExtCol ('Postgres 'Vanilla)]
 convSelCol _ _ (SCExtSimple cn) =
-  return [ECSimple cn]
+  pure [ECSimple cn]
 convSelCol fieldInfoMap _ (SCExtRel rn malias selQ) = do
   -- Point to the name key
   let pgWhenRelErr = "only relationships can be expanded"
@@ -56,7 +56,7 @@ convSelCol fieldInfoMap _ (SCExtRel rn malias selQ) = do
   let (RelInfo _ _ _ relTab _ _ _) = relInfo
   (rfim, rspi) <- fetchRelDet rn relTab
   resolvedSelQ <- resolveStar rfim rspi selQ
-  return [ECRel rn malias resolvedSelQ]
+  pure [ECRel rn malias resolvedSelQ]
 convSelCol fieldInfoMap spi (SCStar wildcard) =
   convWildcard fieldInfoMap spi wildcard
 
@@ -68,7 +68,7 @@ convWildcard
   -> m [ExtCol ('Postgres 'Vanilla)]
 convWildcard fieldInfoMap selPermInfo wildcard =
   case wildcard of
-  Star         -> return simpleCols
+  Star         -> pure simpleCols
   (StarDot wc) -> (simpleCols ++) <$> (catMaybes <$> relExtCols wc)
   where
     cols = spiCols selPermInfo
@@ -85,7 +85,7 @@ convWildcard fieldInfoMap selPermInfo wildcard =
 
       forM mRelSelPerm $ \relSelPermInfo -> do
         rExtCols <- convWildcard (_tciFieldInfoMap $ _tiCoreInfo relTabInfo) relSelPermInfo wc
-        return $ ECRel relName Nothing $
+        pure $ ECRel relName Nothing $
           SelectG rExtCols Nothing Nothing Nothing Nothing
 
     relExtCols wc = mapM (mkRelCol wc) relColInfos
@@ -99,13 +99,13 @@ resolveStar
 resolveStar fim selPermInfo (SelectG selCols mWh mOb mLt mOf) = do
   procOverrides <- fmap (concat . catMaybes) $ withPathK "columns" $
     indexedForM selCols $ \selCol -> case selCol of
-    (SCStar _) -> return Nothing
+    (SCStar _) -> pure Nothing
     _          -> Just <$> convSelCol fim selPermInfo selCol
   everything <- case wildcards of
-    [] -> return []
+    [] -> pure []
     _  -> convWildcard fim selPermInfo $ maximum wildcards
   let extCols = unionBy equals procOverrides everything
-  return $ SelectG extCols mWh mOb mLt mOf
+  pure $ SelectG extCols mWh mOb mLt mOf
   where
     wildcards = lefts $ map mkEither selCols
 
@@ -121,7 +121,7 @@ convOrderByElem
   => SessVarBldr ('Postgres 'Vanilla) m
   -> (FieldInfoMap (FieldInfo ('Postgres 'Vanilla)), SelPermInfo ('Postgres 'Vanilla))
   -> OrderByCol
-  -> m (AnnOrderByElement ('Postgres 'Vanilla) S.SQLExp)
+  -> m (AnnotatedOrderByElement ('Postgres 'Vanilla) S.SQLExp)
 convOrderByElem sessVarBldr (flds, spi) = \case
   OCPG fldName -> do
     fldInfo <- askFieldInfo flds fldName
@@ -134,7 +134,7 @@ convOrderByElem sessVarBldr (flds, spi) = \case
            [ fldName <<> " has type 'geometry'"
            , " and cannot be used in order_by"
            ]
-          else return $ AOCColumn colInfo
+          else pure $ AOCColumn colInfo
       FIRelationship _ -> throw400 UnexpectedPayload $ mconcat
         [ fldName <<> " is a"
         , " relationship and should be expanded"
@@ -165,8 +165,7 @@ convOrderByElem sessVarBldr (flds, spi) = \case
           ]
         (relFim, relSelPermInfo) <- fetchRelDet (riName relInfo) (riRTable relInfo)
         resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter relSelPermInfo
-        AOCObjectRelation relInfo resolvedSelFltr <$>
-          convOrderByElem sessVarBldr (relFim, relSelPermInfo) rest
+        AOCObjectRelation relInfo resolvedSelFltr <$> convOrderByElem sessVarBldr (relFim, relSelPermInfo) rest
       FIRemoteRelationship {} ->
         throw400 UnexpectedPayload (mconcat [ fldName <<> " is a remote field" ])
 
@@ -195,11 +194,11 @@ convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
       (colInfo, caseBoolExpMaybe) <- convExtSimple fieldInfoMap selPermInfo pgCol
       resolvedCaseBoolExp <-
         traverse (convAnnColumnCaseBoolExpPartialSQL sessVarBldr) caseBoolExpMaybe
-      return (fromCol @('Postgres 'Vanilla) pgCol, mkAnnColumnField colInfo resolvedCaseBoolExp Nothing)
+      pure (fromCol @('Postgres 'Vanilla) pgCol, mkAnnColumnField colInfo resolvedCaseBoolExp Nothing)
     (ECRel relName mAlias relSelQ) -> do
       annRel <- convExtRel fieldInfoMap relName mAlias
                 relSelQ sessVarBldr prepValBldr
-      return ( fromRel $ fromMaybe relName mAlias
+      pure ( fromRel $ fromMaybe relName mAlias
              , either AFObjectRelation AFArrayRelation annRel
              )
 
@@ -221,7 +220,7 @@ convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
       tabArgs = SelectArgs wClause annOrdByM mQueryLimit (fromIntegral <$> mQueryOffset) Nothing
 
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
-  return $ AnnSelectG annFlds tabFrom tabPerm tabArgs strfyNum
+  pure $ AnnSelectG annFlds tabFrom tabPerm tabArgs strfyNum
 
   where
     mQueryOffset = sqOffset selQ
@@ -264,10 +263,10 @@ convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
   case relTy of
     ObjRel -> do
       when misused $ throw400 UnexpectedPayload objRelMisuseMsg
-      return $ Left $ AnnRelationSelectG (fromMaybe relName mAlias) colMapping $
+      pure $ Left $ AnnRelationSelectG (fromMaybe relName mAlias) colMapping $
         AnnObjectSelectG (_asnFields annSel) relTab $ _tpFilter $ _asnPerm annSel
     ArrRel ->
-      return $ Right $ ASSimple $ AnnRelationSelectG (fromMaybe relName mAlias)
+      pure $ Right $ ASSimple $ AnnRelationSelectG (fromMaybe relName mAlias)
                colMapping annSel
   where
     pgWhenRelErr = "only relationships can be expanded"

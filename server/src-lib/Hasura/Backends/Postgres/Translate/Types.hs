@@ -79,20 +79,19 @@ data ArrayRelationSource
 instance Hashable ArrayRelationSource
 deriving instance Eq ArrayRelationSource
 
-data ArraySelectNode
-  = ArraySelectNode
-  { _asnTopExtractors :: ![PG.Extractor]
-  , _asnSelectNode    :: !SelectNode
+data MultiRowSelectNode
+  = MultiRowSelectNode
+  { _mrsnTopExtractors :: ![PG.Extractor]
+  , _mrsnSelectNode    :: !SelectNode
   }
 
-instance Semigroup ArraySelectNode where
-  ArraySelectNode lTopExtrs lSelNode <> ArraySelectNode rTopExtrs rSelNode =
-    ArraySelectNode (lTopExtrs <> rTopExtrs) (lSelNode <> rSelNode)
+instance Semigroup MultiRowSelectNode where
+  MultiRowSelectNode lTopExtrs lSelNode <> MultiRowSelectNode rTopExtrs rSelNode =
+    MultiRowSelectNode (lTopExtrs <> rTopExtrs) (lSelNode <> rSelNode)
 
 data ComputedFieldTableSetSource
   = ComputedFieldTableSetSource
   { _cftssFieldName    :: !FieldName
-  , _cftssSelectType   :: !JsonAggSelect
   , _cftssSelectSource :: !SelectSource
   } deriving (Generic)
 instance Hashable ComputedFieldTableSetSource
@@ -114,9 +113,9 @@ instance Hashable ArrayConnectionSource
 data JoinTree
   = JoinTree
   { _jtObjectRelations        :: !(HM.HashMap ObjectRelationSource SelectNode)
-  , _jtArrayRelations         :: !(HM.HashMap ArrayRelationSource ArraySelectNode)
-  , _jtArrayConnections       :: !(HM.HashMap ArrayConnectionSource ArraySelectNode)
-  , _jtComputedFieldTableSets :: !(HM.HashMap ComputedFieldTableSetSource SelectNode)
+  , _jtArrayRelations         :: !(HM.HashMap ArrayRelationSource MultiRowSelectNode)
+  , _jtArrayConnections       :: !(HM.HashMap ArrayConnectionSource MultiRowSelectNode)
+  , _jtComputedFieldTableSets :: !(HM.HashMap ComputedFieldTableSetSource MultiRowSelectNode)
   }
 
 instance Semigroup JoinTree where

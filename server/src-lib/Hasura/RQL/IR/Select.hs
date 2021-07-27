@@ -96,9 +96,9 @@ data ConnectionSplit (b :: BackendType) v
   = ConnectionSplit
   { _csKind    :: !ConnectionSplitKind
   , _csValue   :: !v
-  , _csOrderBy :: !(OrderByItemG b (AnnOrderByElementG b ()))
+  , _csOrderBy :: !(OrderByItemG b (AnnotatedOrderByElement b v))
   } deriving (Functor, Generic, Foldable, Traversable)
-instance (Backend b, Hashable (ColumnInfo b), Hashable v) => Hashable (ConnectionSplit b v)
+instance (Backend b, Hashable (ColumnInfo b), Hashable v, Hashable (BooleanOperators b v)) => Hashable (ConnectionSplit b v)
 
 data ConnectionSlice
   = SliceFirst !Int
@@ -133,7 +133,7 @@ type SelectFrom b = SelectFromG b (SQLExpression b)
 data SelectArgsG (b :: BackendType) v
   = SelectArgs
   { _saWhere    :: !(Maybe (AnnBoolExp b v))
-  , _saOrderBy  :: !(Maybe (NE.NonEmpty (AnnOrderByItemG b v)))
+  , _saOrderBy  :: !(Maybe (NE.NonEmpty (AnnotatedOrderByItemG b v)))
   , _saLimit    :: !(Maybe Int)
   , _saOffset   :: !(Maybe Int64)
   , _saDistinct :: !(Maybe (NE.NonEmpty (Column b)))
@@ -159,24 +159,51 @@ noSelectArgs = SelectArgs Nothing Nothing Nothing Nothing Nothing
 
 -- Order by argument
 
-data AnnOrderByElementG (b :: BackendType) v
-  = AOCColumn !(ColumnInfo b)
-  | AOCObjectRelation !(RelInfo b) !v !(AnnOrderByElementG b v)
-  | AOCArrayAggregation !(RelInfo b) !v !(AnnAggregateOrderBy b)
+-- | The order by element for a computed field based on its return type
+data ComputedFieldOrderByElement (b :: BackendType) v
+  = CFOBEScalar !(ScalarType b)
+  -- ^ Sort by the scalar computed field
+  | CFOBETableAggregation !(TableName b)
+    !(AnnBoolExp b v) -- ^ Permission filter of the retuning table
+    !(AnnotatedAggregateOrderBy b)
+  -- ^ Sort by aggregation fields of table rows returned by computed field
   deriving (Generic, Functor, Foldable, Traversable)
-deriving instance (Backend b, Eq v) => Eq (AnnOrderByElementG b v)
-instance (Backend b, Hashable v) => Hashable (AnnOrderByElementG b v)
+deriving instance (Backend b, Eq v, Eq (BooleanOperators b v)) => Eq (ComputedFieldOrderByElement b v)
+instance (Backend b, Hashable v, Hashable (BooleanOperators b v)) => Hashable (ComputedFieldOrderByElement b v)
 
-data AnnAggregateOrderBy (b :: BackendType)
+data ComputedFieldOrderBy (b :: BackendType) v
+  = ComputedFieldOrderBy
+  { _cfobXField          :: !(XComputedField b)
+  , _cfobName            :: !ComputedFieldName
+  , _cfobFunction        :: !(FunctionName b)
+  , _cfobFunctionArgsExp :: !(FunctionArgsExpTableRow b v)
+  , _cfobOrderByElement  :: !(ComputedFieldOrderByElement b v)
+  } deriving (Generic, Functor, Foldable, Traversable)
+deriving instance (Backend b, Eq v, Eq (BooleanOperators b v)) => Eq (ComputedFieldOrderBy b v)
+instance (Backend b, Hashable v, Hashable (BooleanOperators b v)) => Hashable (ComputedFieldOrderBy b v)
+
+data AnnotatedOrderByElement (b :: BackendType) v
+  = AOCColumn !(ColumnInfo b)
+  | AOCObjectRelation !(RelInfo b)
+    !(AnnBoolExp b v) -- ^ Permission filter of the remote table to which the relationship is defined
+    !(AnnotatedOrderByElement b v)
+  | AOCArrayAggregation !(RelInfo b)
+    !(AnnBoolExp b v) -- ^ Permission filter of the remote table to which the relationship is defined
+    !(AnnotatedAggregateOrderBy b)
+  | AOCComputedField !(ComputedFieldOrderBy b v)
+  deriving (Generic, Functor, Foldable, Traversable)
+deriving instance (Backend b, Eq v, Eq (BooleanOperators b v)) => Eq (AnnotatedOrderByElement b v)
+instance (Backend b, Hashable v, Hashable (BooleanOperators b v)) => Hashable (AnnotatedOrderByElement b v)
+
+data AnnotatedAggregateOrderBy (b :: BackendType)
   = AAOCount
   | AAOOp !Text !(ColumnInfo b)
   deriving (Generic)
-deriving instance (Backend b) => Eq (AnnAggregateOrderBy b)
-instance (Backend b) => Hashable (AnnAggregateOrderBy b)
+deriving instance (Backend b) => Eq (AnnotatedAggregateOrderBy b)
+instance (Backend b) => Hashable (AnnotatedAggregateOrderBy b)
 
-type AnnOrderByElement b v = AnnOrderByElementG b (AnnBoolExp b v)
-type AnnOrderByItemG b v = OrderByItemG b (AnnOrderByElement b v)
-type AnnOrderByItem b = AnnOrderByItemG b (SQLExpression b)
+type AnnotatedOrderByItemG b v = OrderByItemG b (AnnotatedOrderByElement b v)
+type AnnotatedOrderByItem b = AnnotatedOrderByItemG b (SQLExpression b)
 
 
 -- Fields
@@ -466,6 +493,17 @@ type FunctionArgExp          b   = FunctionArgsExpG (SQLExpression b)
 emptyFunctionArgsExp :: FunctionArgsExpG a
 emptyFunctionArgsExp = FunctionArgsExp [] HM.empty
 
+functionArgsWithTableRowAndSession
+  :: v
+  -> FunctionTableArgument
+  -> Maybe FunctionSessionArgument
+  -> [ArgumentExp b v]
+functionArgsWithTableRowAndSession  _    _              Nothing = [AETableRow Nothing] -- No session argument
+functionArgsWithTableRowAndSession  sess (FTAFirst)     _       = [AETableRow Nothing, AESession sess]
+functionArgsWithTableRowAndSession  sess (FTANamed _ 0) _       = [AETableRow Nothing, AESession sess] -- Index is 0 implies table argument is first
+functionArgsWithTableRowAndSession  sess _              _       = [AESession sess, AETableRow Nothing]
+
+
 -- | If argument positional index is less than or equal to length of
 -- 'positional' arguments then insert the value in 'positional' arguments else
 -- insert the value with argument name in 'named' arguments
@@ -488,4 +526,4 @@ insertFunctionArg argName idx value (FunctionArgsExp positional named) =
 
 $(makeLenses ''AnnSelectG)
 $(makePrisms ''AnnFieldG)
-$(makePrisms ''AnnOrderByElementG)
+$(makePrisms ''AnnotatedOrderByElement)

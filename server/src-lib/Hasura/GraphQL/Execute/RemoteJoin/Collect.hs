@@ -322,19 +322,10 @@ transformAnnFields path fields = do
     mkScalarComputedFieldSelect :: ScalarComputedField b -> (AnnFieldG b (Const Void) (UnpreparedValue b))
     mkScalarComputedFieldSelect ScalarComputedField{..} =
       let functionArgs = flip FunctionArgsExp mempty
-            $ functionArgsWithTableRowAndSession _scfTableArgument _scfSessionArgument
+            $ functionArgsWithTableRowAndSession UVSession _scfTableArgument _scfSessionArgument
           fieldSelect = flip CFSScalar Nothing
             $ ComputedFieldScalarSelect _scfFunction functionArgs _scfType Nothing
       in AFComputedField _scfXField _scfName fieldSelect
-      where
-        functionArgsWithTableRowAndSession
-          :: FunctionTableArgument
-          -> Maybe FunctionSessionArgument
-          -> [ArgumentExp b (UnpreparedValue b)]
-        functionArgsWithTableRowAndSession  _              Nothing = [AETableRow Nothing] -- No session argument
-        functionArgsWithTableRowAndSession  (FTAFirst)     _       = [AETableRow Nothing, AESession UVSession]
-        functionArgsWithTableRowAndSession  (FTANamed _ 0) _       = [AETableRow Nothing, AESession UVSession] -- Index is 0 implies table argument is first
-        functionArgsWithTableRowAndSession  _              _       = [AESession UVSession, AETableRow Nothing]
 
 
 mapToNonEmpty :: RemoteJoinMap -> Maybe RemoteJoins

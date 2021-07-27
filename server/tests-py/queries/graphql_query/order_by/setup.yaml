@@ -11,11 +11,13 @@ args:
         phone INTEGER,
         address TEXT
       );
+
       create table author(
           id serial primary key,
           name text unique,
           contact_id INTEGER REFERENCES contact(id)
       );
+
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -24,14 +26,27 @@ args:
         is_published BOOLEAN,
         published_on TIMESTAMP
       );
+
+      CREATE FUNCTION get_articles(hasura_session json, author_row author)
+      RETURNS SETOF article AS $$
+        SELECT *
+        FROM article
+        WHERE author_id = author_row.id AND
+          ( title ilike  ('%' || (hasura_session ->> 'x-hasura-search') || '%')
+            OR content  ilike  ('%' || (hasura_session ->> 'x-hasura-search') || '%')
+          )
+      $$ LANGUAGE SQL STABLE;
+
       insert into contact (phone)
       values
       (1234567890),
       (1234567891);
+
       insert into author (name, contact_id)
       values
       ('Author 1', 2),
       ('Author 2', 1);
+
       insert into article (title,content,author_id,is_published)
       values
       (
@@ -56,6 +71,7 @@ args:
         album_id INTEGER NOT NULL PRIMARY KEY,
         title TEXT NOT NULL
       );
+
       create table "Track" (
       track_id INTEGER NOT NULL PRIMARY KEY,
       name TEXT NOT NULL,
@@ -63,8 +79,10 @@ args:
       milliseconds INTEGER NOT NULL,
       bytes INTEGER NOT NULL
       );
+
       insert into "Album" (album_id, title)
       values ( 1, 'Big Ones' ), (2, 'Face Lift');
+
       insert into "Track"
       (track_id, name, album_id, milliseconds, bytes)
       values
@@ -75,16 +93,24 @@ args:
       ( 5, 'Random', 2, 1094732, 6032547) ,
       ( 6, 'Good One', 2, 346208, 6732987) ,
       ( 7, 'Mistress', 2, 420985, 7521946);
+
+      CREATE FUNCTION track_size_mb(track_row "Track")
+      RETURNS INTEGER AS $$
+        SELECT (track_row.bytes / 1048576)
+      $$ LANGUAGE SQL STABLE;
+
       CREATE table "Tag" (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         album_id INTEGER NOT NULL REFERENCES "Album"(album_id)
       );
+
       INSERT INTO "Tag" (name, album_id)
       VALUES
       ( 'Rock',    1),
       ( 'Folk',    1),
       ( 'Hip Hop', 2);
+
       CREATE TABLE employee (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL UNIQUE,
@@ -108,6 +134,16 @@ args:
   args:
     schema: public
     name: article
+
+# Computed field to author table
+- type: add_computed_field
+  args:
+    table: author
+    name: get_articles
+    definition:
+      function: get_articles
+      table_argument: author_row
+      session_argument: hasura_session
 
 #Object relationship
 - type: create_object_relationship
@@ -160,6 +196,14 @@ args:
       foreign_key_constraint_on:
         table: Track
         column: album_id
+
+# Create computed field for Track table
+- type: add_computed_field
+  args:
+    table: Track
+    name: size
+    definition:
+      function: track_size_mb
 
 # Insert values in Album and Track
 - type: track_table
