@@ -30,58 +30,72 @@ const MetadataStatus = ({ dispatch, metadata }) => {
           </tr>
         </thead>
         <tbody>
-          {metadata.inconsistentObjects.map((ico, _i) => {
+          {metadata.inconsistentObjects.map((iconsistentObject, _i) => {
             let name;
             let definition;
-            if (ico.type === 'source') {
-              name = ico.definition;
+            if (iconsistentObject.type === 'source') {
+              name = iconsistentObject.definition;
             }
             if (
-              ico.type === 'object_relation' ||
-              ico.type === 'array_relation'
+              iconsistentObject.type === 'object_relation' ||
+              iconsistentObject.type === 'array_relation'
             ) {
-              name = ico.definition.name;
+              name = iconsistentObject.definition.name;
               definition = `relationship of table "${getTableNameFromDef(
-                ico.definition.table
+                iconsistentObject.definition.table
               )}"`;
-            } else if (ico.type === 'remote_relationship') {
-              name = ico.definition.name;
+            } else if (iconsistentObject.type === 'remote_relationship') {
+              name = iconsistentObject.definition.name;
               definition = `relationship between table "${getTableNameFromDef(
-                ico.definition.table
-              )}" and remote schema "${ico.definition.remote_schema}"`;
-            } else if (permissionTypes.includes(ico.type)) {
-              name = `${ico.definition.role}-permission`;
-              definition = `${ico.type} on table "${getTableNameFromDef(
-                ico.definition.table
-              )}"`;
-            } else if (ico.type === 'table') {
-              name = getTableNameFromDef(ico.definition);
-              definition = name;
-            } else if (ico.type === 'function') {
-              name = getTableNameFromDef(ico.definition);
-              definition = name;
-            } else if (ico.type === 'event_trigger') {
-              name = ico.definition.configuration.name;
-              definition = `event trigger on table "${getTableNameFromDef(
-                ico.definition.table
-              )}"`;
-            } else if (ico.type === 'remote_schema') {
-              name = ico.definition.name;
-              let url = `"${
-                ico.definition.definition.url ||
-                ico.definition.definition.url_from_env
+                iconsistentObject.definition.table
+              )}" and remote schema "${
+                iconsistentObject.definition.remote_schema
               }"`;
-              if (ico.definition.definition.url_from_env) {
+            } else if (permissionTypes.includes(iconsistentObject.type)) {
+              name = `${iconsistentObject.definition.role}-permission`;
+              definition = `${
+                iconsistentObject.type
+              } on table "${getTableNameFromDef(
+                iconsistentObject.definition.table
+              )}"`;
+            } else if (iconsistentObject.type === 'table') {
+              name = getTableNameFromDef(iconsistentObject.definition);
+              definition = name;
+            } else if (iconsistentObject.type === 'function') {
+              name = getTableNameFromDef(iconsistentObject.definition);
+              definition = name;
+            } else if (iconsistentObject.type === 'event_trigger') {
+              name = iconsistentObject.definition.configuration.name;
+              definition = `event trigger on table "${getTableNameFromDef(
+                iconsistentObject.definition.table
+              )}"`;
+            } else if (iconsistentObject.type === 'remote_schema') {
+              name = iconsistentObject.definition.name;
+              let url = `"${
+                iconsistentObject.definition.definition.url ||
+                iconsistentObject.definition.definition.url_from_env
+              }"`;
+              if (iconsistentObject.definition.definition.url_from_env) {
                 url = `the url from the value of env var ${url}`;
               }
               definition = `remote schema named "${name}" at ${url}`;
             }
             return (
               <tr key={_i}>
-                <td>{name}</td>
-                <td>{ico.type}</td>
-                <td>{definition}</td>
-                <td>{ico.reason}</td>
+                <td data-test={`inconsistent_name_${_i}`}>{name}</td>
+                <td data-test={`inconsistent_type_${_i}`}>
+                  {iconsistentObject.type}
+                </td>
+                <td data-test={`inconsistent_description_${_i}`}>
+                  {definition}
+                </td>
+                <td data-test={`inconsistent_reason_${_i}`}>
+                  <div>
+                    <b>{iconsistentObject.reason}</b>
+                    <br />
+                    {iconsistentObject.message}
+                  </div>
+                </td>
               </tr>
             );
           })}
