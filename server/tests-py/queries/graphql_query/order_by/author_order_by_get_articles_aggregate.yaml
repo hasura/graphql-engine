@@ -1,0 +1,31 @@
+description: Fetch author with order by using computed field aggregate returns set of articles with a search query via session variable
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: admin
+  X-Hasura-Search: '1'
+query:
+  query: |
+    query{
+      author(order_by: {get_articles_aggregate: {count: desc}}){
+        id
+        name
+        get_articles{
+          id
+          title
+          content
+        }
+      }
+    }
+response:
+  data:
+    author:
+    - id: 1
+      name: Author 1
+      get_articles:
+      - id: 1
+        title: Article 1
+        content: Sample article content 1
+    - id: 2
+      name: Author 2
+      get_articles: []

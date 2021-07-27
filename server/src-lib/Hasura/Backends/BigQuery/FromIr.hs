@@ -403,7 +403,7 @@ fromSelectArgsG selectArgsG = do
       Nothing -> pure Proxy
       Just {} -> refute (pure DistinctIsn'tSupported)
   (argsOrderBy, joins) <-
-    runWriterT (traverse fromAnnOrderByItemG (maybe [] toList orders))
+    runWriterT (traverse fromAnnotatedOrderByItemG (maybe [] toList orders))
   -- Any object-relation joins that we generated, we record their
   -- generated names into a mapping.
   let argsExistingJoins =
@@ -424,10 +424,10 @@ fromSelectArgsG selectArgsG = do
 
 -- | Produce a valid ORDER BY construct, telling about any joins
 -- needed on the side.
-fromAnnOrderByItemG ::
-     Ir.AnnOrderByItemG 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
-fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
-  orderByFieldName <- unfurlAnnOrderByElement obiColumn
+fromAnnotatedOrderByItemG ::
+     Ir.AnnotatedOrderByItemG 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
+fromAnnotatedOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
+  orderByFieldName <- unfurlAnnotatedOrderByElement obiColumn
   let morderByOrder =
         obiType
   let orderByNullsOrder =
@@ -439,9 +439,9 @@ fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
 -- | Unfurl the nested set of object relations (tell'd in the writer)
 -- that are terminated by field name (Ir.AOCColumn and
 -- Ir.AOCArrayAggregation).
-unfurlAnnOrderByElement ::
-     Ir.AnnOrderByElement 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
-unfurlAnnOrderByElement =
+unfurlAnnotatedOrderByElement ::
+     Ir.AnnotatedOrderByElement 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
+unfurlAnnotatedOrderByElement =
   \case
     Ir.AOCColumn pgColumnInfo -> lift (fromPGColumnInfo pgColumnInfo)
     Ir.AOCObjectRelation Rql.RelInfo {riMapping = mapping, riRTable = tableName} annBoolExp annOrderByElementG -> do
@@ -477,7 +477,7 @@ unfurlAnnOrderByElement =
                    }
              , unfurledObjectTableAlias = Just (tableName, joinAliasEntity)
              })
-      local (const joinAliasEntity) (unfurlAnnOrderByElement annOrderByElementG)
+      local (const joinAliasEntity) (unfurlAnnotatedOrderByElement annOrderByElementG)
     Ir.AOCArrayAggregation Rql.RelInfo {riMapping = mapping, riRTable = tableName} annBoolExp annAggregateOrderBy -> do
       selectFrom <- lift (lift (fromQualifiedTable tableName))
       let alias = aggFieldName

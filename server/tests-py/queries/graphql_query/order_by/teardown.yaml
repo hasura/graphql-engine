@@ -3,9 +3,11 @@ args:
 - type: run_sql
   args:
     sql: |
+      DROP FUNCTION get_articles(json, author);
       DROP TABLE article;
       DROP TABLE author;
       DROP TABLE contact;
+      DROP FUNCTION track_size_mb("Track");
       DROP TABLE "Track";
       DROP TABLE "Tag";
       DROP TABLE "Album";

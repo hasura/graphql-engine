@@ -625,7 +625,7 @@ tableOrderByArg
   => SourceName
   -> TableInfo b
   -> SelPermInfo b
-  -> m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnOrderByItemG b (UnpreparedValue b)))))
+  -> m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnotatedOrderByItemG b (UnpreparedValue b)))))
 tableOrderByArg sourceName tableInfo selectPermissions = do
   orderByParser <- orderByExp sourceName tableInfo selectPermissions
   pure $ do
@@ -738,7 +738,7 @@ tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions = do
   where
     base64Text = base64Decode <$> P.string
 
-    appendPrimaryKeyOrderBy :: NonEmpty (IR.AnnOrderByItemG b v) -> NonEmpty (IR.AnnOrderByItemG b v)
+    appendPrimaryKeyOrderBy :: NonEmpty (IR.AnnotatedOrderByItemG b v) -> NonEmpty (IR.AnnotatedOrderByItemG b v)
     appendPrimaryKeyOrderBy orderBys@(h NE.:| t) =
       let orderByColumnNames =
             orderBys ^.. traverse . to IR.obiColumn . IR._AOCColumn . to pgiColumn
@@ -748,7 +748,7 @@ tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions = do
       in h NE.:| (t <> pkeyOrderBys)
 
     parseConnectionSplit
-      :: Maybe (NonEmpty (IR.AnnOrderByItemG b (UnpreparedValue b)))
+      :: Maybe (NonEmpty (IR.AnnotatedOrderByItemG b (UnpreparedValue b)))
       -> IR.ConnectionSplitKind
       -> BL.ByteString
       -> n (NonEmpty (IR.ConnectionSplit b (UnpreparedValue b)))
@@ -774,10 +774,14 @@ tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions = do
             pgValue <- liftQErr $ parseScalarValueColumnType columnType orderByItemValue
             let unresolvedValue = UVParameter Nothing $ ColumnValue columnType pgValue
             pure $ IR.ConnectionSplit splitKind unresolvedValue $
-                   IR.OrderByItemG orderType (() <$ annObCol) nullsOrder
+                   IR.OrderByItemG orderType annObCol nullsOrder
       where
         throwInvalidCursor = parseError "the \"after\" or \"before\" cursor is invalid"
         liftQErr = either (parseError . qeError) pure . runExcept
+
+        mkAggregateOrderByPath = \case
+           IR.AAOCount    -> [J.Key "count"]
+           IR.AAOOp t col -> [J.Key t, J.Key $ toTxt $ pgiColumn col]
 
         getPathFromOrderBy = \case
           IR.AOCColumn pgColInfo ->
@@ -788,15 +792,24 @@ tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions = do
             in pathElement : getPathFromOrderBy obCol
           IR.AOCArrayAggregation relInfo _ aggOb ->
             let fieldName = J.Key $ relNameToTxt (riName relInfo) <> "_aggregate"
-            in fieldName : case aggOb of
-                 IR.AAOCount    -> [J.Key "count"]
-                 IR.AAOOp t col -> [J.Key t, J.Key $ toTxt $ pgiColumn col]
+            in fieldName : mkAggregateOrderByPath aggOb
+          IR.AOCComputedField cfob ->
+            let fieldNameText = computedFieldNameToText $ IR._cfobName cfob
+            in case IR._cfobOrderByElement cfob of
+                 IR.CFOBEScalar _ -> [J.Key fieldNameText]
+                 IR.CFOBETableAggregation _ _ aggOb ->
+                   J.Key (fieldNameText <> "_aggregate") : mkAggregateOrderByPath aggOb
 
         getOrderByColumnType = \case
           IR.AOCColumn pgColInfo -> pgiType pgColInfo
           IR.AOCObjectRelation _ _ obCol -> getOrderByColumnType obCol
-          IR.AOCArrayAggregation _ _ aggOb ->
-            case aggOb of
+          IR.AOCArrayAggregation _ _ aggOb -> aggregateOrderByColumnType aggOb
+          IR.AOCComputedField cfob ->
+            case IR._cfobOrderByElement cfob of
+              IR.CFOBEScalar scalarType          -> ColumnScalar scalarType
+              IR.CFOBETableAggregation _ _ aggOb -> aggregateOrderByColumnType aggOb
+          where
+            aggregateOrderByColumnType = \case
               IR.AAOCount        -> ColumnScalar (aggregateOrderByCountType @b)
               IR.AAOOp _ colInfo -> pgiType colInfo
 
@@ -1311,7 +1324,7 @@ functionArgs functionTrackedAs (toList -> inputArgs) = do
 
 tablePermissionsInfo :: Backend b => SelPermInfo b -> TablePerms b
 tablePermissionsInfo selectPermissions = IR.TablePerm
-  { IR._tpFilter = (fmap . fmap) partialSQLExpToUnpreparedValue $ spiFilter selectPermissions
+  { IR._tpFilter = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions
   , IR._tpLimit  = spiLimit selectPermissions
   }
 

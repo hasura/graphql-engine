@@ -894,6 +894,12 @@ class TestGraphQLQueryOrderBy:
     def test_album_order_by_tracks_tags(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/album_order_by_tracks_tags.yaml', transport)
 
+    def test_Track_order_by_size(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/Track_order_by_size.yaml', transport)
+
+    def test_author_order_by_get_articles_aggregate(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author_order_by_get_articles_aggregate.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/order_by'
