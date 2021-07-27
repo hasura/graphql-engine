@@ -2,6 +2,7 @@ module Hasura.RQL.DDL.Schema.Source where
 
 import           Hasura.Prelude
 
+import qualified Data.Aeson                   as J
 import qualified Data.HashMap.Strict          as HM
 import qualified Data.HashMap.Strict.InsOrd   as OMap
 
@@ -9,8 +10,10 @@ import           Control.Lens                 (at, (.~), (^.))
 import           Control.Monad.Trans.Control  (MonadBaseControl)
 import           Data.Aeson
 import           Data.Aeson.TH
+import           Data.Has
 import           Data.Text.Extended
 
+import qualified Hasura.Logging               as L
 import qualified Hasura.SQL.AnyBackend        as AB
 
 import           Hasura.Base.Error
@@ -18,6 +21,7 @@ import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Schema.Common
 import           Hasura.RQL.Types
+import           Hasura.Server.Logging        (MetadataLog (..))
 
 
 --------------------------------------------------------------------------------
@@ -121,14 +125,23 @@ instance FromJSON DropSource where
     DropSource <$> o .: "name" <*> o .:? "cascade" .!= False
 
 runDropSource
-  :: forall m. (MonadError QErr m, CacheRWM m, MonadIO m, MonadBaseControl IO m, MetadataM m)
+  :: forall m r.
+     ( MonadError QErr m
+     , CacheRWM m
+     , MonadIO m
+     , MonadBaseControl IO m
+     , MetadataM m
+     , MonadReader r m
+     , Has (L.Logger L.Hasura) r
+     )
   => DropSource -> m EncJSON
 runDropSource (DropSource name cascade) = do
   sc <- askSchemaCache
+  logger <- asks getter
   let sources = scSources sc
   case HM.lookup name sources of
     Just backendSourceInfo ->
-      AB.dispatchAnyBackend @BackendMetadata backendSourceInfo $ dropSource sc
+      AB.dispatchAnyBackend @BackendMetadata backendSourceInfo $ dropSource logger sc
 
     Nothing -> do
       metadata <- getMetadata
@@ -143,8 +156,8 @@ runDropSource (DropSource name cascade) = do
           buildSchemaCacheFor (MOSource name) dropSourceMetadataModifier
   pure successMsg
   where
-    dropSource :: forall b. (BackendMetadata b) => SchemaCache -> SourceInfo b -> m ()
-    dropSource sc sourceInfo = do
+    dropSource :: forall b. (BackendMetadata b) => L.Logger L.Hasura -> SchemaCache -> SourceInfo b -> m ()
+    dropSource logger sc sourceInfo = do
       let sourceConfig = _siConfiguration sourceInfo
       let indirectDeps = mapMaybe getIndirectDep $
                          getDependentObjs sc (SOSource name)
@@ -159,8 +172,17 @@ runDropSource (DropSource name cascade) = do
         tell dropSourceMetadataModifier
 
       buildSchemaCacheFor (MOSource name) metadataModifier
-      postDropSourceHook @b sourceConfig
+
+      -- We only log errors that arise from 'postDropSourceHook' here, and not
+      -- surface them as end-user errors. See comment
+      -- https://github.com/hasura/graphql-engine/issues/7092#issuecomment-873845282
+      runExceptT (postDropSourceHook @b sourceConfig) >>= either logDropSourceHookError pure
       where
+        logDropSourceHookError err =
+          let msg = "Error executing cleanup actions after removing source '" <> toTxt name
+                    <> "'. Consider cleaning up tables in hdb_catalog schema manually."
+          in L.unLogger logger $ MetadataLog L.LevelWarn msg (J.toJSON err)
+
         getIndirectDep :: SchemaObjId -> Maybe (SourceObjId b)
         getIndirectDep = \case
           SOSourceObj s o ->

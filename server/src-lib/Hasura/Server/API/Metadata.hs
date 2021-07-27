@@ -16,7 +16,9 @@ import           Control.Monad.Trans.Control               (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.Aeson.Casing
+import           Data.Has                                  (Has)
 
+import qualified Hasura.Logging                            as L
 import qualified Hasura.Tracing                            as Tracing
 
 import           Hasura.Base.Error
@@ -308,6 +310,7 @@ runMetadataQuery
      , MonadResolveSource m
      )
   => Env.Environment
+  -> L.Logger L.Hasura
   -> InstanceId
   -> UserInfo
   -> HTTP.Manager
@@ -315,10 +318,11 @@ runMetadataQuery
   -> RebuildableSchemaCache
   -> RQLMetadata
   -> m (EncJSON, RebuildableSchemaCache)
-runMetadataQuery env instanceId userInfo httpManager serverConfigCtx schemaCache RQLMetadata{..} = do
+runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx schemaCache RQLMetadata{..} = do
   (metadata, currentResourceVersion) <- fetchMetadata
   ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
     runMetadataQueryM env currentResourceVersion _rqlMetadata
+    & flip runReaderT logger
     & runMetadataT metadata
     & runCacheRWT schemaCache
     & peelRun (RunCtx userInfo httpManager serverConfigCtx)
@@ -379,6 +383,8 @@ runMetadataQueryM
      , MetadataM m
      , MonadMetadataStorageQueryAPI m
      , HasServerConfigCtx m
+     , MonadReader r m
+     , Has (L.Logger L.Hasura) r
      )
   => Env.Environment
   -> MetadataResourceVersion
@@ -389,7 +395,7 @@ runMetadataQueryM env currentResourceVersion = withPathK "args" . \case
   RMV2 q -> runMetadataQueryV2M currentResourceVersion q
 
 runMetadataQueryV1M
-  :: forall m
+  :: forall m r
    . ( HasVersion
      , MonadIO m
      , MonadBaseControl IO m
@@ -401,6 +407,8 @@ runMetadataQueryV1M
      , MetadataM m
      , MonadMetadataStorageQueryAPI m
      , HasServerConfigCtx m
+     , MonadReader r m
+     , Has (L.Logger L.Hasura) r
      )
   => Env.Environment
   -> MetadataResourceVersion
