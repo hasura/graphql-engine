@@ -165,6 +165,22 @@ push_server_binary() {
               gs://graphql-engine-cdn.hasura.io/server/latest/linux-amd64
 }
 
+push_cli_ext() {
+    local BUCKET_PATH="gs://graphql-engine-cdn.hasura.io/cli-ext/releases/versioned/${CIRCLE_TAG}"
+    pushd /build/_cli_ext_output/
+
+    # the cli-ext binaries have names in format "cli-ext-hasura-<node version>-<os>-<architecture>"
+    # this transforms the file names into the format "cli-ext-<os>-<architecture>
+    # eg. "cli-ext-hasura-node12-linux-amd64" -> "cli-ext-linux-amd64"
+    for filename in "$(ls)"; do
+        new_filename="$(echo "$filename" | awk -F '-' '{print $1"-"$2"-"$5"-"$6}')"
+        gsutil cp "$filename" "${BUCKET_PATH}/${new_filename}"
+    done
+
+    popd
+}
+
+
 # skip deploy for pull requests
 if [[ -n "${CIRCLE_PR_NUMBER:-}" ]]; then
     echo "not deploying for PRs"
@@ -193,6 +209,7 @@ if [[ -z "$CIRCLE_TAG" ]]; then
     exit
 fi
 
+push_cli_ext
 deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
