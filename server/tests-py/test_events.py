@@ -785,9 +785,9 @@ class TestManualEvents(object):
         return 'queries/event_triggers/manual_events'
 
     def test_basic(self, hge_ctx, evts_webhook):
-        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/manual_events/enabled.yaml')
+        st_code, resp = hge_ctx.v1metadataq_f('queries/event_triggers/manual_events/enabled.yaml')
         assert st_code == 200, resp
-        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/manual_events/disabled.yaml')
+        st_code, resp = hge_ctx.v1metadataq_f('queries/event_triggers/manual_events/disabled.yaml')
         assert st_code == 400, resp
 
 @usefixtures('per_method_tests_db_state')

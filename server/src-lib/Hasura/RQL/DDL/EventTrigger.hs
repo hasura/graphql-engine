@@ -7,7 +7,6 @@ module Hasura.RQL.DDL.EventTrigger
   , RedeliverEventQuery
   , runRedeliverEvent
   , runInvokeEventTrigger
-
   -- TODO(from master): review
   , archiveEvents
   , getEventTriggerDef
@@ -24,6 +23,7 @@ import           Data.Aeson
 import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend                  as AB
+import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Backends.Postgres.DDL.Table
 import           Hasura.Backends.Postgres.Execute.Types
@@ -32,7 +32,6 @@ import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.Session
-
 
 archiveEvents :: TriggerName -> Q.TxE QErr ()
 archiveEvents trn =
@@ -172,20 +171,21 @@ insertManualEvent
   -> TriggerName
   -> Value
   -> Q.TxE QErr EventId
-insertManualEvent qt trn rowData = do
-  let op = tshow MANUAL
-  eids <- map runIdentity <$> Q.listQE defaultTxErrorHandler [Q.sql|
-           SELECT hdb_catalog.insert_event_log($1, $2, $3, $4, $5)
-                |] (sn, tn, trn, op, Q.AltJ $ toJSON rowData) True
-  getEid eids
-  where
-    QualifiedObject sn tn = qt
-    getEid []    = throw500 "could not create manual event"
-    getEid (x:_) = return x
+insertManualEvent (QualifiedObject sn tn) trn rowData = do
+  runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
+    SELECT hdb_catalog.insert_event_log($1, $2, $3, $4, $5)
+  |] (sn, tn, trn, (tshow MANUAL), Q.AltJ rowData) False
 
 runInvokeEventTrigger
   :: forall pgKind m
-   . (BackendMetadata ('Postgres pgKind), MonadIO m, QErrM m, CacheRM m, MetadataM m)
+   . ( BackendMetadata ('Postgres pgKind)
+     , MonadIO m
+     , QErrM m
+     , CacheRM m
+     , MetadataM m
+     , Tracing.MonadTrace m
+     , UserInfoM m
+     )
   => InvokeEventTriggerQuery ('Postgres pgKind)
   -> m EncJSON
 runInvokeEventTrigger (InvokeEventTriggerQuery name source payload) = do
@@ -193,8 +193,19 @@ runInvokeEventTrigger (InvokeEventTriggerQuery name source payload) = do
   assertManual $ etiOpsDef trigInfo
   ti  <- askTabInfoFromTrigger source name
   sourceConfig <- askSourceConfig @('Postgres pgKind) source
-  eid <- liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $
-         insertManualEvent (tableInfoName ti) name payload
+  traceCtx <- Tracing.currentContext
+  userInfo <- askUserInfo
+  -- NOTE: The methods `setTraceContextInTx` and `setHeadersTx` are being used
+  -- to ensure that the trace context and user info are set with valid values
+  -- while being used in the PG function `insert_event_log`.
+  -- See Issue(#7087) for more details on a bug that was being caused
+  -- in the absence of these methods.
+  eid <- liftEitherM
+          $  liftIO
+          $  runPgSourceWriteTx sourceConfig
+          $  setHeadersTx (_uiSession userInfo)
+          >> setTraceContextInTx traceCtx
+          >> insertManualEvent (tableInfoName ti) name payload
   return $ encJFromJValue $ object ["event_id" .= eid]
   where
     assertManual (TriggerOpsDef _ _ _ man) = case man of
