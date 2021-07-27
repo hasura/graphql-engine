@@ -52,7 +52,6 @@ import           Data.Aeson.Internal
 import           Data.Aeson.TH
 import           Data.Monoid
 import           Data.Text.Extended
-import           Data.Typeable                  (Typeable)
 
 import           Hasura.Incremental             (Cacheable)
 import           Hasura.RQL.Types.Backend
@@ -129,7 +128,7 @@ data GExists (b :: BackendType) a
   } deriving (Functor, Foldable, Traversable, Generic)
 deriving instance (Backend b, Show a) => Show (GExists b a)
 deriving instance (Backend b, Eq   a) => Eq   (GExists b a)
-deriving instance (Backend b, Typeable a, Data a) => Data (GExists b a)
+deriving instance (Backend b, Data a) => Data (GExists b a)
 instance (Backend b, NFData    a) => NFData    (GExists b a)
 instance (Backend b, Data      a) => Plated    (GExists b a)
 instance (Backend b, Cacheable a) => Cacheable (GExists b a)
@@ -189,8 +188,7 @@ data PartialSQLExp (b :: BackendType)
   = PSESessVar !(SessionVarType b) !SessionVariable
   | PSESQLExp !(SQLExpression b)
   deriving (Generic)
-deriving instance (Backend b) => Eq   (PartialSQLExp b)
-deriving instance (Backend b) => Data (PartialSQLExp b)
+deriving instance (Backend b) => Eq (PartialSQLExp b)
 instance (Backend b, NFData    (BooleanOperators b (PartialSQLExp b))) => NFData    (PartialSQLExp b)
 instance (Backend b, Cacheable (BooleanOperators b (PartialSQLExp b))) => Hashable  (PartialSQLExp b)
 instance (Backend b, Hashable  (BooleanOperators b (PartialSQLExp b))) => Cacheable (PartialSQLExp b)
