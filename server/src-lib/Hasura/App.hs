@@ -537,10 +537,13 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
   liftIO $ logInconsObjs logger inconsObjs
 
+  -- NOTE: `newLogTVar` is being used to make sure that the metadata logger runs only once
+  --       while logging errors or any `inconsistent_metadata` logs.
+  newLogTVar <- liftIO $ STM.newTVarIO False
   -- Start a background thread for processing schema sync event present in the '_sscSyncEventRef'
   _ <- startSchemaSyncProcessorThread logger _scHttpManager _scMetaVersionRef
                                cacheRef _scInstanceId
-                               serverConfigCtx
+                               serverConfigCtx newLogTVar
 
   let
     maxEvThrds       = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
