@@ -229,55 +229,11 @@ fieldWithDefault
 fieldWithDefault name description defaultValue parser = InputFieldsParser
   { ifDefinitions = [mkDefinition name description $ IFOptional (pType parser) (Just defaultValue)]
   , ifParser = M.lookup name >>> withPath (++[Key (unName name)]) . \case
-      Just value -> peelVariableWith True expectedType value >>= parseValue expectedType
+      Just value -> peelVariableWith True expectedType value >>= pInputParser parser
       Nothing    -> pInputParser parser $ GraphQLValue $ literal defaultValue
   }
   where
     expectedType = toGraphQLType $ pType parser
-    parseValue _ value = pInputParser parser value
-    {- See Note [Temporarily disabling query plan caching] in
-    Hasura.GraphQL.Execute.Plan.
-
-    parseValue expectedType value = case value of
-      VVariable (var@Variable { vInfo, vValue }) -> do
-        typeCheck expectedType var
-        -- This case is tricky: if we get a nullable variable, we have to
-        -- pessimistically mark the query non-reusable, regardless of its
-        -- contents. Why? Well, suppose we have a type like
-        --
-        --     type Foo {
-        --       bar(arg: Int = 42): String
-        --     }
-        --
-        -- and suppose we receive the following query:
-        --
-        --     query blah($var: Int) {
-        --       foo {
-        --         bar(arg: $var)
-        --       }
-        --     }
-        --
-        -- Suppose no value is provided for $var, so it defaults to null. When
-        -- we parse the arg field, we see it has a default value, so we
-        -- substitute 42 for null and carry on. But now we’ve discarded the
-        -- information that this value came from a variable at all, so if we
-        -- cache the query plan, changes to the variable will be ignored, since
-        -- we’ll always use 42!
-        --
-        -- Note that the problem doesn’t go away even if $var has a non-null
-        -- value. In that case, we’d simply have flipped the problem around: now
-        -- our cached query plan will do the wrong thing if $var *is* null,
-        -- since we won’t know to substitute 42.
-        --
-        -- Theoretically, we could be smarter here: we could record a sort of
-        -- “derived variable reference” that includes a new default value. But
-        -- that would be more complicated, so for now we don’t do that.
-        case vInfo of
-          VIRequired _   -> pInputParser parser value
-          VIOptional _ _ -> markNotReusable *> parseValue expectedType (literal vValue)
-      VNull -> pInputParser parser $ literal defaultValue
-      _     -> pInputParser parser value
-     -}
 
 
 -- -----------------------------------------------------------------------------

@@ -4,24 +4,23 @@ module Hasura.Backends.BigQuery.Instances.Schema () where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                                  as J
-import qualified Data.HashMap.Strict                         as Map
-import qualified Data.List.NonEmpty                          as NE
-import qualified Data.Text                                   as T
+import qualified Data.Aeson                            as J
+import qualified Data.HashMap.Strict                   as Map
+import qualified Data.List.NonEmpty                    as NE
+import qualified Data.Text                             as T
 
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.BigQuery.Types              as BigQuery
-import qualified Hasura.GraphQL.Parser                       as P
-import qualified Hasura.GraphQL.Schema.Build                 as GSB
-import qualified Hasura.RQL.IR.Select                        as IR
-import qualified Hasura.RQL.IR.Update                        as IR
-import qualified Language.GraphQL.Draft.Syntax               as G
+import qualified Hasura.Backends.BigQuery.Types        as BigQuery
+import qualified Hasura.GraphQL.Parser                 as P
+import qualified Hasura.GraphQL.Schema.Build           as GSB
+import qualified Hasura.RQL.IR.Select                  as IR
+import qualified Hasura.RQL.IR.Update                  as IR
+import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Parser                       hiding (EnumValueInfo, field)
-import           Hasura.GraphQL.Parser.Internal.Parser       hiding (field)
-import           Hasura.GraphQL.Parser.Internal.TypeChecking
+import           Hasura.GraphQL.Parser                 hiding (EnumValueInfo, field)
+import           Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Select
@@ -194,9 +193,9 @@ bqColumnParser
   :: (MonadSchema n m, MonadError QErr m)
   => ColumnType 'BigQuery
   -> G.Nullability
-  -> m (Parser 'Both n (Opaque (ColumnValue 'BigQuery)))
+  -> m (Parser 'Both n (ValueWithOrigin (ColumnValue 'BigQuery)))
 bqColumnParser columnType (G.Nullability isNullable) =
-  opaque . fmap (ColumnValue columnType) <$> case columnType of
+  peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
     ColumnScalar scalarType -> case scalarType of
       -- bytestrings
       -- we only accept string literals
@@ -237,29 +236,6 @@ bqColumnParser columnType (G.Nullability isNullable) =
           pure $ possiblyNullable BigQuery.StringScalarType $ P.enum enumName Nothing (mkEnumValue <$> enumValuesList)
         Nothing -> throw400 ValidationFailed "empty enum values"
   where
-    -- Sadly, this combinator is not sound in general, so we can’t export it
-    -- for general-purpose use. If we did, someone could write this:
-    --
-    --   mkParameter <$> opaque do
-    --     n <- int
-    --     pure (mkIntColumnValue (n + 1))
-    --
-    -- Now we’d end up with a UVParameter that has a variable in it, so we’d
-    -- parameterize over it. But when we’d reuse the plan, we wouldn’t know to
-    -- increment the value by 1, so we’d use the wrong value!
-    --
-    -- We could theoretically solve this by retaining a reference to the parser
-    -- itself and re-parsing each new value, using the saved parser, which
-    -- would admittedly be neat. But it’s more complicated, and it isn’t clear
-    -- that it would actually be useful, so for now we don’t support it.
-    opaque :: MonadParse m => Parser 'Both m a -> Parser 'Both m (Opaque a)
-    opaque parser = parser
-      { pParser = \case
-          P.GraphQLValue (G.VVariable var@Variable{ vInfo, vValue }) -> do
-            typeCheck False (P.toGraphQLType $ pType parser) var
-            P.mkOpaque (Just vInfo) <$> pParser parser (absurd <$> vValue)
-          value -> P.mkOpaque Nothing <$> pParser parser value
-      }
     possiblyNullable _scalarType
       | isNullable = fmap (fromMaybe BigQuery.NullValue) . P.nullable
       | otherwise  = id
@@ -325,8 +301,8 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
       desc = G.Description $ "Boolean expression to compare columns of type "
         <>  P.getName typedParser
         <<> ". All fields are combined with logical 'AND'."
-      textListParser = P.list textParser `P.bind` traverse P.openOpaque
-      columnListParser = P.list typedParser `P.bind` traverse P.openOpaque
+      textListParser = fmap openValueOrigin <$> P.list textParser
+      columnListParser = fmap openValueOrigin <$> P.list typedParser
   pure $ P.object name (Just desc) $ catMaybes <$> sequenceA
     [ P.fieldOptional $$(G.litName "_is_null") Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean)
     , P.fieldOptional $$(G.litName "_eq")      Nothing (AEQ True . mkParameter <$> typedParser)

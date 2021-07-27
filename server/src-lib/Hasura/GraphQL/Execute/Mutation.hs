@@ -83,12 +83,12 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
 
   (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe Map.empty varValsM) directives fields
   -- Parse the GraphQL query into the RQL AST
-  (unpreparedQueries, _reusability)
-    :: (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue), QueryReusability)
+  unpreparedQueries
+    :: OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)
     <-(mutationParser >>> (`onLeft` reportParseErrors)) resolvedSelSet
 
   -- Process directives on the mutation
-  (_dirMap, _) <-  (`onLeft` reportParseErrors) =<<
+  _dirMap <-  (`onLeft` reportParseErrors) =<<
     runParseT (parseDirectives customDirectives (G.DLExecutable G.EDLMUTATION) resolvedDirectives)
 
   -- Transform the RQL AST into a prepared SQL query

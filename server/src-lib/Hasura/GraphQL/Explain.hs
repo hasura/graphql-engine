@@ -94,7 +94,7 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
     G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives selSet -> do
       -- (Here the above fragment inlining is actually executed.)
       inlinedSelSet <- E.inlineSelectionSet fragments selSet
-      (unpreparedQueries, _, _, _) <-
+      (unpreparedQueries, _, _) <-
         E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
       -- TODO: validate directives here
       encJFromList <$>
@@ -106,7 +106,7 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
     G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives selSet -> do
       -- (Here the above fragment inlining is actually executed.)
       inlinedSelSet <- E.inlineSelectionSet fragments selSet
-      (unpreparedQueries, _, _, _) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
+      (unpreparedQueries, _, _) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
       -- TODO: validate directives here
       validSubscription <-  E.buildSubscriptionPlan userInfo unpreparedQueries
       case validSubscription of

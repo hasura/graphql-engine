@@ -48,7 +48,6 @@ peelVariableWith :: MonadParse m => Bool -> GType -> InputValue Variable -> m (I
 peelVariableWith locationHasDefaultValue locationType = \case
   GraphQLValue (VVariable var) -> do
     typeCheck locationHasDefaultValue locationType var
-    markNotReusable
     pure $ absurd <$> vValue var
   value -> pure value
 

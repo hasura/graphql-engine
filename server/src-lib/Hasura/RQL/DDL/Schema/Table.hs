@@ -156,7 +156,7 @@ checkConflictingNode sc tnGQL = do
         ]
   case queryParser introspectionQuery of
     Left _ -> pure ()
-    Right (results, _reusability) -> do
+    Right results -> do
       case OMap.lookup $$(G.litName "__schema") results of
         Just (RFRaw (JO.Object schema)) -> do
           let names = do

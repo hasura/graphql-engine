@@ -47,7 +47,6 @@ import qualified Hasura.GraphQL.Execute                    as E
 import qualified Hasura.GraphQL.Execute.LiveQuery.Options  as EL
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
 import qualified Hasura.GraphQL.Execute.LiveQuery.State    as EL
-import qualified Hasura.GraphQL.Execute.Plan               as E
 import qualified Hasura.GraphQL.Explain                    as GE
 import qualified Hasura.GraphQL.Transport.HTTP             as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
@@ -83,7 +82,7 @@ import           Hasura.Session
 
 data SchemaCacheRef
   = SchemaCacheRef
-  { _scrLock     :: MVar ()
+  { _scrLock  :: MVar ()
   -- ^ The idea behind explicit locking here is to
   --
   --   1. Allow maximum throughput for serving requests (/v1/graphql) (as each
@@ -98,9 +97,7 @@ data SchemaCacheRef
   -- the IORef) where we serve a request with a stale schemacache but I guess
   -- it is an okay trade-off to pay for a higher throughput (I remember doing a
   -- bunch of benchmarks to test this hypothesis).
-  , _scrCache    :: IORef (RebuildableSchemaCache, SchemaCacheVer)
-  , _scrOnChange :: IO ()
-  -- ^ an action to run when schemacache changes
+  , _scrCache :: IORef (RebuildableSchemaCache, SchemaCacheVer)
   }
 
 data ServerCtx
@@ -112,7 +109,6 @@ data ServerCtx
   , scSQLGenCtx                    :: !SQLGenCtx
   , scEnabledAPIs                  :: !(S.HashSet API)
   , scInstanceId                   :: !InstanceId
-  -- , scPlanCache                    :: !E.PlanCache -- See Note [Temporarily disabling query plan caching]
   , scLQState                      :: !EL.LiveQueriesState
   , scEnableAllowlist              :: !Bool
   , scEkgStore                     :: !EKG.Store
@@ -200,10 +196,9 @@ withSCUpdate scr logger mLogCheckerTVar action =
                 STM.atomically $ STM.writeTVar logCheckerTVar True
                 logInconsistentMetadata
 
-      onChange
     return res
   where
-    SchemaCacheRef lk cacheRef onChange = scr
+    SchemaCacheRef lk cacheRef = scr
 
 mkGetHandler :: Handler m (HttpLogMetadata m, APIResp) -> APIHandler m ()
 mkGetHandler = AHGet
@@ -559,13 +554,12 @@ v1Alpha1GQHandler queryType query = do
   scRef                <- asks (scCacheRef . hcServerCtx)
   (sc, scVer)          <- liftIO $ readIORef $ _scrCache scRef
   sqlGenCtx            <- asks (scSQLGenCtx . hcServerCtx)
-  -- planCache            <- asks (scPlanCache . hcServerCtx)
   enableAL             <- asks (scEnableAllowlist . hcServerCtx)
   logger               <- asks (scLogger . hcServerCtx)
   responseErrorsConfig <- asks (scResponseInternalErrorsConfig . hcServerCtx)
   env                  <- asks (scEnvironment . hcServerCtx)
 
-  let execCtx = E.ExecutionCtx logger sqlGenCtx {- planCache -}
+  let execCtx = E.ExecutionCtx logger sqlGenCtx
                 (lastBuiltSchemaCache sc) scVer manager enableAL
 
   flip runReaderT execCtx $
@@ -768,7 +762,6 @@ mkWaiApp
   -> S.HashSet API
   -- ^ set of the enabled 'API's
   -> EL.LiveQueriesOptions
-  -> E.PlanCacheOptions
   -> ResponseInternalErrorsConfig
   -> Maybe EL.LiveQueryPostPollHook
   -> SchemaCacheRef
@@ -785,7 +778,7 @@ mkWaiApp
   -> S.HashSet (L.EngineLogType L.Hasura)
   -> m HasuraApp
 mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig
+         enableTelemetry instanceId apis lqOpts responseErrorsConfig
          liveQueryHook schemaCacheRef ekgStore serverMetrics enableRSPermsCtx functionPermsCtx
          connectionOptions keepAliveDelay maintenanceMode experimentalFeatures enabledLogTypes = do
 
@@ -796,7 +789,7 @@ mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enable
 
     lqState <- liftIO $ EL.initLiveQueriesState lqOpts postPollHook
     wsServerEnv <- WS.createWSServerEnv logger lqState getSchemaCache httpManager
-                                        corsPolicy sqlGenCtx enableAL keepAliveDelay serverMetrics {- planCache -}
+                                        corsPolicy sqlGenCtx enableAL keepAliveDelay serverMetrics
 
     let serverCtx = ServerCtx
                     { scLogger                       =  logger
@@ -806,7 +799,6 @@ mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enable
                     , scSQLGenCtx                    =  sqlGenCtx
                     , scEnabledAPIs                  =  apis
                     , scInstanceId                   =  instanceId
-                    -- , scPlanCache                    =  planCache
                     , scLQState                      =  lqState
                     , scEnableAllowlist              =  enableAL
                     , scEkgStore                     =  ekgStore
@@ -831,16 +823,12 @@ mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enable
 
     return $ HasuraApp waiApp schemaCacheRef (EL._lqsAsyncActions lqState) stopWSServer
 
--- initialiseCache :: m (E.PlanCache, SchemaCacheRef)
 initialiseCache :: MonadIO m => RebuildableSchemaCache -> m SchemaCacheRef
 initialiseCache schemaCache = do
   cacheLock <- liftIO $ newMVar ()
   cacheCell <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
-  -- planCache <- liftIO $ E.initPlanCache planCacheOptions
-  let cacheRef = SchemaCacheRef cacheLock cacheCell E.clearPlanCache
-  -- pure (planCache, cacheRef)
+  let cacheRef = SchemaCacheRef cacheLock cacheCell
   pure cacheRef
-
 
 httpApp
   :: forall m
@@ -1006,11 +994,12 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
           onlyAdmin
           respJ <- liftIO $ EKG.sampleAll $ scEkgStore serverCtx
           return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue $ EKG.sampleToJson respJ) [])
+      -- This deprecated endpoint used to show the query plan cache pre-PDV.
+      -- Eventually this endpoint can be removed.
       Spock.get "dev/plan_cache" $ spockAction encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
-          respJ <- liftIO E.dumpPlanCache {- scPlanCache serverCtx -}
-          return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue respJ) [])
+          return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue J.Null) [])
       Spock.get "dev/subscriptions" $ spockAction encodeQErr id $
         mkGetHandler $ do
           onlyAdmin

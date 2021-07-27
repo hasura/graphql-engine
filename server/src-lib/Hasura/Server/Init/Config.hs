@@ -17,9 +17,7 @@ import           Data.Time
 import           Data.URL.Template
 import           Network.Wai.Handler.Warp                 (HostPreference)
 
-import qualified Hasura.Cache.Bounded                     as Cache
 import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
-import qualified Hasura.GraphQL.Execute.Plan              as E
 import qualified Hasura.Logging                           as L
 import qualified System.Metrics                           as EKG
 import qualified System.Metrics.Distribution              as EKG.Distribution
@@ -91,7 +89,6 @@ data RawServeOptions impl
   , rsoEnableAllowlist               :: !Bool
   , rsoEnabledLogTypes               :: !(Maybe [L.EngineLogType impl])
   , rsoLogLevel                      :: !(Maybe L.LogLevel)
-  , rsoPlanCacheSize                 :: !(Maybe Cache.CacheSize)
   , rsoDevMode                       :: !Bool
   , rsoAdminInternalErrors           :: !(Maybe Bool)
   , rsoEventsHttpPoolSize            :: !(Maybe Int)
@@ -150,7 +147,6 @@ data ServeOptions impl
   , soEnableAllowlist               :: !Bool
   , soEnabledLogTypes               :: !(Set.HashSet (L.EngineLogType impl))
   , soLogLevel                      :: !L.LogLevel
-  , soPlanCacheOptions              :: !E.PlanCacheOptions
   , soResponseInternalErrorsConfig  :: !ResponseInternalErrorsConfig
   , soEventsHttpPoolSize            :: !(Maybe Int)
   , soEventsFetchInterval           :: !(Maybe Milliseconds)
@@ -369,9 +365,6 @@ instance L.EnabledLogTypes impl => FromEnv [L.EngineLogType impl] where
 
 instance FromEnv L.LogLevel where
   fromEnv = readLogLevel
-
-instance FromEnv Cache.CacheSize where
-  fromEnv = Cache.parseCacheSize
 
 instance FromEnv URLTemplate where
   fromEnv = parseURLTemplate . T.pack
