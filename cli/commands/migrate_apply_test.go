@@ -17,6 +17,30 @@ import (
 	. "github.com/onsi/gomega/gexec"
 )
 
+func AddDatabaseToHasura(hgeEndpoint, sourceName, databaseKind string) (string, func()) {
+
+	if databaseKind == "postgres" {
+		connectionStringPG, teardownPG := testutil.StartPGContainer(GinkgoT())
+		testutil.AddPGSourceToHasura(GinkgoT(), hgeEndpoint, connectionStringPG, sourceName)
+		return connectionStringPG, teardownPG
+	}
+	if databaseKind == "citus" {
+		connectionStringCitus, teardownCitus := testutil.StartCitusContainer(GinkgoT())
+		testutil.AddCitusSourceToHasura(GinkgoT(), hgeEndpoint, connectionStringCitus, sourceName)
+		return connectionStringCitus, teardownCitus
+	}
+
+	if databaseKind == "mssql" {
+		mssqlPort, teardownMSSQL := testutil.StartMSSQLContainer(GinkgoT())
+		connectionStringMSSQL := fmt.Sprintf("DRIVER={ODBC Driver 17 for SQL Server};SERVER=%s,%s;DATABASE=master;Uid=SA;Pwd=%s;Encrypt=no", testutil.DockerSwitchIP, mssqlPort, testutil.MSSQLPassword)
+		testutil.AddMSSQLSourceToHasura(GinkgoT(), hgeEndpoint, connectionStringMSSQL, sourceName)
+		return connectionStringMSSQL, teardownMSSQL
+
+	}
+
+	return "", nil
+}
+
 var testMigrateApply = func(projectDirectory string, globalFlags []string) {
 	Context("migrate apply", func() {
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
@@ -38,9 +62,9 @@ var testMigrateApply = func(projectDirectory string, globalFlags []string) {
 			"applied",
 		}
 
-		Eventually(session, 60*40).Should(Exit(0))
+		Eventually(session, timeout).Should(Exit(0))
 		for _, keyword := range wantKeywordList {
-			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring(keyword))
+			Expect(session.Err.Contents()).Should(ContainSubstring(keyword))
 		}
 	})
 }
@@ -66,9 +90,9 @@ var testMigrateApplySkipExecution = func(projectDirectory string, globalFlags []
 			"applied",
 		}
 
-		Eventually(session, 60*40).Should(Exit(0))
+		Eventually(session, timeout).Should(Exit(0))
 		for _, keyword := range wantKeywordList {
-			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring(keyword))
+			Expect(session.Err.Contents()).Should(ContainSubstring(keyword))
 		}
 
 		session = testutil.Hasura(testutil.CmdOpts{
@@ -83,9 +107,9 @@ var testMigrateApplySkipExecution = func(projectDirectory string, globalFlags []
 			"applied",
 		}
 
-		Eventually(session, 60*40).Should(Exit(0))
+		Eventually(session, timeout).Should(Exit(0))
 		for _, keyword := range wantKeywordList {
-			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring(keyword))
+			Expect(session.Err.Contents()).Should(ContainSubstring(keyword))
 		}
 
 		session = testutil.Hasura(testutil.CmdOpts{
@@ -103,9 +127,9 @@ var testMigrateApplySkipExecution = func(projectDirectory string, globalFlags []
 			".*Present        Not Present*.",
 		}
 
-		Eventually(session, 60*40).Should(Exit(0))
+		Eventually(session, timeout).Should(Exit(0))
 		for _, keyword := range wantKeywordList {
-			Eventually(session.Out, 60*40).Should(Say(keyword))
+			Expect(session.Wait(timeout).Out).Should(Say(keyword))
 		}
 
 	})
@@ -184,15 +208,14 @@ var _ = Describe("hasura migrate apply (config v3)", func() {
 	var teardown func()
 	var pgSource = randomdata.SillyName()
 	var citusSource = randomdata.SillyName()
+	var mssqlSource = randomdata.SillyName()
 	BeforeEach(func() {
 		projectDirectory = testutil.RandDirName()
 		hgeEndPort, teardownHGE := testutil.StartHasuraWithMetadataDatabase(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint = fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
-		connectionStringPG, teardownPG := testutil.StartPGContainer(GinkgoT())
-		connectionStringCitus, teardownCitus := testutil.StartCitusContainer(GinkgoT())
-		// add a pg source named default
-		testutil.AddPGSourceToHasura(GinkgoT(), hgeEndpoint, connectionStringPG, pgSource)
-		testutil.AddCitusSourceToHasura(GinkgoT(), hgeEndpoint, connectionStringCitus, citusSource)
+		_, teardownPG := AddDatabaseToHasura(hgeEndpoint, pgSource, "postgres")
+		_, teardownCitus := AddDatabaseToHasura(hgeEndpoint, citusSource, "citus")
+		_, teardownMSSQL := AddDatabaseToHasura(hgeEndpoint, mssqlSource, "mssql")
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: []string{"init", projectDirectory},
 		})
@@ -202,13 +225,15 @@ var _ = Describe("hasura migrate apply (config v3)", func() {
 			teardownHGE()
 			teardownPG()
 			teardownCitus()
+			teardownMSSQL()
 		}
 	})
 	AfterEach(func() { teardown() })
 
-	It("should apply the migrations on server ", func() {
+	It("should apply the migrations on server", func() {
 		testMigrateApply(projectDirectory, []string{"--database-name", pgSource})
 		testMigrateApply(projectDirectory, []string{"--database-name", citusSource})
+		testMigrateApply(projectDirectory, []string{"--database-name", mssqlSource})
 	})
 	It("should mark the migrations as applied ", func() {
 		testMigrateApplySkipExecution(projectDirectory, []string{"--database-name", pgSource})

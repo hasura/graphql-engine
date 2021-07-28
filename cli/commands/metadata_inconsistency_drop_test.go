@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Pallinder/go-randomdata"
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -13,20 +14,23 @@ import (
 
 var _ = Describe("hasura metadata inconsistency drop", func() {
 
-	var dirName string
+	var projectDirectory string
+	var sourceName string
 	var teardown func()
 	BeforeEach(func() {
-		dirName = testutil.RandDirName()
+		projectDirectory = testutil.RandDirName()
 		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
-		testutil.RunCommandAndSucceed(testutil.CmdOpts{
-			Args: []string{"init", dirName},
-		})
-		editEndpointInConfig(filepath.Join(dirName, defaultConfigFilename), hgeEndpoint)
+		sourceName = randomdata.SillyName()
+		connectionString, teardownPG := AddDatabaseToHasura(hgeEndpoint, sourceName, "postgres")
+		copyTestConfigV3Project(projectDirectory)
+		editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
+		editSourceNameInConfigV3ProjectTemplate(projectDirectory, sourceName, connectionString)
 
 		teardown = func() {
-			os.RemoveAll(dirName)
+			os.RemoveAll(projectDirectory)
 			teardownHGE()
+			teardownPG()
 		}
 	})
 
@@ -34,13 +38,28 @@ var _ = Describe("hasura metadata inconsistency drop", func() {
 
 	Context("metadata inconsistency drop test", func() {
 		It("Drops inconsistent objects from the metadata", func() {
-			session := testutil.Hasura(testutil.CmdOpts{
-				Args:             []string{"metadata", "inconsistency", "drop"},
-				WorkingDirectory: dirName,
+			testutil.RunCommandAndSucceed(testutil.CmdOpts{
+				Args:             []string{"metadata", "apply"},
+				WorkingDirectory: projectDirectory,
 			})
-			want := `all inconsistent objects removed from metadata`
-			Eventually(session, 60*40).Should(Exit(0))
-			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring(want))
+			session := testutil.Hasura(testutil.CmdOpts{
+				Args:             []string{"metadata", "inconsistency", "status"},
+				WorkingDirectory: projectDirectory,
+			})
+			Eventually(session, timeout).Should(Exit(1))
+			Expect(session.Err.Contents()).Should(ContainSubstring("metadata is inconsistent, use list command to see the objects"))
+
+			testutil.RunCommandAndSucceed(testutil.CmdOpts{
+				Args:             []string{"metadata", "inconsistency", "drop"},
+				WorkingDirectory: projectDirectory,
+			})
+			session = testutil.Hasura(testutil.CmdOpts{
+				Args:             []string{"metadata", "inconsistency", "status"},
+				WorkingDirectory: projectDirectory,
+			})
+			want := `metadata is consistent`
+			Eventually(session, timeout).Should(Exit(0))
+			Expect(session.Err.Contents()).Should(ContainSubstring(want))
 		})
 	})
 })

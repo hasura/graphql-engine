@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -13,19 +14,19 @@ import (
 
 var _ = Describe("hasura actions use-codegen", func() {
 
-	var dirName string
+	var projectDirectory string
 	var teardown func()
 	BeforeEach(func() {
-		dirName = testutil.RandDirName()
+		projectDirectory = testutil.RandDirName()
 		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
-			Args: []string{"init", dirName},
+			Args: []string{"init", projectDirectory},
 		})
-		editEndpointInConfig(filepath.Join(dirName, defaultConfigFilename), hgeEndpoint)
+		editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
 
 		teardown = func() {
-			os.RemoveAll(dirName)
+			os.RemoveAll(projectDirectory)
 			teardownHGE()
 		}
 	})
@@ -36,17 +37,31 @@ var _ = Describe("hasura actions use-codegen", func() {
 		It("should change the config.yaml file and create the nodejs-express directory ", func() {
 			session := testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"actions", "use-codegen", "--framework", "nodejs-express", "--output-dir", "codegen", "--with-starter-kit", "true"},
-				WorkingDirectory: dirName,
+				WorkingDirectory: projectDirectory,
 			})
 			wantKeywordList := []string{
 				"Starter kit cloned at",
 				"Codegen configuration updated in config.yaml",
 			}
 
-			Eventually(session, 60*40).Should(Exit(0))
+			Eventually(session, timeout).Should(Exit(0))
 			for _, keyword := range wantKeywordList {
-				Eventually(session.Wait().Err.Contents(), 60*40).Should(ContainSubstring(keyword))
+				Expect(session.Err.Contents()).Should(ContainSubstring(keyword))
 			}
+			configPath := filepath.Join(projectDirectory, "config.yaml")
+			contents, err := ioutil.ReadFile(configPath)
+			Expect(err).To(BeNil())
+			wantKeywordList = []string{
+				"framework: nodejs-express",
+				"output_dir: codegen",
+			}
+
+			for _, keyword := range wantKeywordList {
+				Eventually(contents).Should(ContainSubstring(keyword))
+			}
+
+			Expect(filepath.Join(projectDirectory, "nodejs-express")).To(BeADirectory())
+
 		})
 	})
 })

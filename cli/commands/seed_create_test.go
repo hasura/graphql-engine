@@ -34,8 +34,8 @@ var testSeedCreate = func(projectDirectory string, globalFlags []string) {
 		Args:             append([]string{"seed", "create", "table_seed", "--from-table", "table1"}, globalFlags...),
 		WorkingDirectory: projectDirectory,
 	})
-	Eventually(session, 60*60).Should(Exit(0))
-	Eventually(session.Wait().Err.Contents()).Should(ContainSubstring("created seed file successfully"))
+	Eventually(session, timeout).Should(Exit(0))
+	Expect(session.Err.Contents()).Should(ContainSubstring("created seed file successfully"))
 }
 
 var _ = Describe("hasura seed create", func() {
@@ -47,10 +47,8 @@ var _ = Describe("hasura seed create", func() {
 			projectDirectory = testutil.RandDirName()
 			hgeEndPort, teardownHGE := testutil.StartHasuraWithMetadataDatabase(GinkgoT(), testutil.HasuraDockerImage)
 			hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
-
-			connectionUrl, teardownPG := testutil.StartPGContainer(GinkgoT())
 			sourceName = randomdata.SillyName()
-			testutil.AddPGSourceToHasura(GinkgoT(), hgeEndpoint, connectionUrl, sourceName)
+			_, teardownPG := AddDatabaseToHasura(hgeEndpoint, sourceName, "postgres")
 
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
 				Args: []string{"init", projectDirectory},

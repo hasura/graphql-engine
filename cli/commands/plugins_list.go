@@ -114,7 +114,6 @@ func (p *pluginListOptions) run() error {
 	return printTable(p.EC.Stdout, cols, rows)
 }
 
-
 func printTable(out io.Writer, columns []string, rows [][]string) error {
 	w := tabwriter.NewWriter(out, 0, 0, 2, ' ', 0)
 	fmt.Fprint(w, strings.Join(columns, "\t"))
