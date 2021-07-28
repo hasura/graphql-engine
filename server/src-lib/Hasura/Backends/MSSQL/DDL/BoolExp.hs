@@ -6,7 +6,7 @@ import qualified Data.Aeson                   as J
 import qualified Data.HashMap.Strict          as Map
 import qualified Data.Text                    as T
 
-import           Data.Text.Extended           (dquote, (<<>))
+import           Data.Text.Extended           (dquote, toTxt, (<<>))
 
 import           Hasura.Backends.MSSQL.Types  hiding (ColumnType)
 import           Hasura.Base.Error
@@ -22,12 +22,11 @@ parseBoolExpOperations
   => ValueParser 'MSSQL m v
   -> TableName
   -> FieldInfoMap (FieldInfo 'MSSQL)
-  -> ColumnInfo 'MSSQL
+  -> ColumnReference 'MSSQL
   -> J.Value
   -> m [OpExpG 'MSSQL v]
-parseBoolExpOperations rhsParser _table _fields columnInfo value =
-  withPathK (columnNameText $ pgiColumn columnInfo) $
-    parseOperations (pgiType columnInfo) value
+parseBoolExpOperations rhsParser _table _fields columnRef value =
+  withPathK (toTxt columnRef) $ parseOperations (columnReferenceType columnRef) value
   where
     parseWithTy ty = rhsParser (CollectableTypeScalar ty)
 
@@ -88,7 +87,7 @@ parseBoolExpOperations rhsParser _table _fields columnInfo value =
         x                -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
 
       where
-        colTy = pgiType columnInfo
+        colTy = columnReferenceType columnRef
 
         parseOne = parseWithTy columnType val
         parseManyWithType ty = rhsParser (CollectableTypeArray ty) val

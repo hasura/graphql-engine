@@ -86,13 +86,8 @@ boolExp sourceName tableInfo selectPermissions = memoizeOn 'boolExp (sourceName,
           -- For a computed field to qualify in boolean expression it shouldn't have any input arguments
           case toList _cffInputArgs of
             [] -> do
-              let sessionArgPresence = case _cffSessionArgument of
-                    Nothing -> SAPNotPresent
-                    Just _  -> case _cffTableArgument of
-                      FTAFirst     -> SAPSecond P.UVSession -- If table argument is first, then session argument will be second
-                      FTANamed _ 0 -> SAPSecond P.UVSession -- Index 0 => table argument is first
-                      FTANamed{}   -> SAPFirst P.UVSession -- If table argument is second, then session argument will be firest
-
+              let sessionArgPresence =
+                    mkSessionArgumentPresence P.UVSession _cffSessionArgument _cffTableArgument
               fmap (AVComputedField . AnnComputedFieldBoolExp _cfiXComputedFieldInfo _cfiName _cffName sessionArgPresence)
                 <$> case _cfiReturnType of
                       CFRScalar scalarType -> lift $ fmap CFBEScalar <$> comparisonExps @b (ColumnScalar scalarType)

@@ -118,7 +118,7 @@ resolveStar fim selPermInfo (SelectG selCols mWh mOb mLt mOf) = do
 
 convOrderByElem
   :: (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m)
-  => SessVarBldr ('Postgres 'Vanilla) m
+  => SessionVariableBuilder ('Postgres 'Vanilla) m
   -> (FieldInfoMap (FieldInfo ('Postgres 'Vanilla)), SelPermInfo ('Postgres 'Vanilla))
   -> OrderByCol
   -> m (AnnotatedOrderByElement ('Postgres 'Vanilla) S.SQLExp)
@@ -179,7 +179,7 @@ convSelectQ
   -> FieldInfoMap (FieldInfo ('Postgres 'Vanilla))  -- Table information of current table
   -> SelPermInfo ('Postgres 'Vanilla)   -- Additional select permission info
   -> SelectQExt ('Postgres 'Vanilla)     -- Given Select Query
-  -> SessVarBldr ('Postgres 'Vanilla) m
+  -> SessionVariableBuilder ('Postgres 'Vanilla) m
   -> ValueParser ('Postgres 'Vanilla) m S.SQLExp
   -> m (AnnSimpleSelect ('Postgres 'Vanilla))
 convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
@@ -250,7 +250,7 @@ convExtRel
   -> RelName
   -> Maybe RelName
   -> SelectQExt ('Postgres 'Vanilla)
-  -> SessVarBldr ('Postgres 'Vanilla) m
+  -> SessionVariableBuilder ('Postgres 'Vanilla) m
   -> ValueParser ('Postgres 'Vanilla) m S.SQLExp
   -> m (Either (ObjectRelationSelect ('Postgres 'Vanilla)) (ArraySelect ('Postgres 'Vanilla)))
 convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
@@ -288,7 +288,7 @@ convSelectQuery
      , TableInfoRM ('Postgres 'Vanilla) m
      , HasServerConfigCtx m
      )
-  => SessVarBldr ('Postgres 'Vanilla) m
+  => SessionVariableBuilder ('Postgres 'Vanilla) m
   -> ValueParser ('Postgres 'Vanilla) m S.SQLExp
   -> SelectQuery
   -> m (AnnSimpleSelect ('Postgres 'Vanilla))

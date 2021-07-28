@@ -3,6 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: Support computed fields in permission check/filter (close #7102)
 - server: support computed fields in query 'order_by' (close #7103)
 - server: log warning if there are errors while executing clean up actions after "drop source" (previously it would throw an error) 
 - server: Fixed a bug where MSSQL and BigQuery would ignore environment variables set from the console

@@ -3,6 +3,7 @@ module Hasura.Backends.Postgres.Translate.BoolExp
   ( toSQLBoolExp
   , getBoolExpDeps
   , annBoolExp
+  , BoolExpRHSParser(..)
   ) where
 
 import           Hasura.Prelude
@@ -17,6 +18,13 @@ import           Hasura.Base.Error
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
+
+-- | Context to parse a RHS value in a boolean expression
+data BoolExpRHSParser (b :: BackendType) m v
+  = BoolExpRHSParser
+  { _berpValueParser  :: !(ValueParser b m v) -- ^ Parse a JSON value with enforcing a column type
+  , _berpSessionValue :: !v -- ^ Required for a computed field SQL function with session argument
+  }
 
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null
@@ -36,7 +44,7 @@ notEqualsBoolExpBuilder qualColExp rhsExp =
 
 annBoolExp
   :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b)
-  => ValueParser b m v
+  => BoolExpRHSParser b m v
   -> TableName b
   -> FieldInfoMap (FieldInfo b)
   -> GBoolExp b ColExp
@@ -49,8 +57,7 @@ annBoolExp rhsParser rootTable fim boolExp =
     BoolExists (GExists refqt whereExp) ->
       withPathK "_exists" $ do
         refFields <- withPathK "_table" $ askFieldInfoMapSource refqt
-        annWhereExp <- withPathK "_where" $
-                       annBoolExp rhsParser rootTable refFields whereExp
+        annWhereExp <- withPathK "_where" $ annBoolExp rhsParser rootTable refFields whereExp
         return $ BoolExists $ GExists refqt annWhereExp
     BoolFld fld -> BoolFld <$> annColExp rhsParser rootTable fim fld
   where
@@ -58,7 +65,7 @@ annBoolExp rhsParser rootTable fim boolExp =
 
 annColExp
   :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b)
-  => ValueParser b m v
+  => BoolExpRHSParser b m v
   -> TableName b
   -> FieldInfoMap (FieldInfo b)
   -> ColExp
@@ -66,15 +73,33 @@ annColExp
 annColExp rhsParser rootTable colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn pgi -> AVColumn pgi <$> parseBoolExpOperations rhsParser rootTable colInfoMap pgi colVal
+    FIColumn pgi -> AVColumn pgi <$> parseBoolExpOperations (_berpValueParser rhsParser) rootTable colInfoMap (ColumnReferenceColumn pgi) colVal
+
     FIRelationship relInfo -> do
       relBoolExp      <- decodeValue colVal
       relFieldInfoMap <- askFieldInfoMapSource $ riRTable relInfo
-      annRelBoolExp   <- annBoolExp rhsParser rootTable relFieldInfoMap $
-                         unBoolExp relBoolExp
+      annRelBoolExp   <- annBoolExp rhsParser rootTable relFieldInfoMap $ unBoolExp relBoolExp
       return $ AVRelationship relInfo annRelBoolExp
-    FIComputedField _ ->
-      throw400 UnexpectedPayload "Computed columns can not be part of the where clause"
+
+    FIComputedField ComputedFieldInfo{..} -> do
+      let ComputedFieldFunction{..} = _cfiFunction
+      case toList _cffInputArgs of
+        [] -> do
+          let hasuraSession = _berpSessionValue rhsParser
+              sessionArgPresence = mkSessionArgumentPresence hasuraSession _cffSessionArgument _cffTableArgument
+          AVComputedField . AnnComputedFieldBoolExp _cfiXComputedFieldInfo _cfiName _cffName sessionArgPresence
+            <$> case _cfiReturnType of
+                  CFRScalar scalarType -> CFBEScalar
+                    <$> parseBoolExpOperations (_berpValueParser rhsParser) rootTable colInfoMap (ColumnReferenceComputedField _cfiName scalarType) colVal
+                  CFRSetofTable table  -> do
+                    tableBoolExp <- decodeValue colVal
+                    tableFieldInfoMap <- askFieldInfoMapSource table
+                    annTableBoolExp <- annBoolExp rhsParser table tableFieldInfoMap $ unBoolExp tableBoolExp
+                    pure $ CFBETable table annTableBoolExp
+
+        _  -> throw400 UnexpectedPayload
+              "Computed columns with input arguments can not be part of the where clause"
+
     -- TODO Rakesh (from master)
     FIRemoteRelationship{} ->
       throw400 UnexpectedPayload "remote field unsupported"

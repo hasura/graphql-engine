@@ -20,6 +20,7 @@ module Hasura.RQL.IR.BoolExp
   , STIntersectsGeomminNband(..)
 
   , SessionArgumentPresence(..)
+  , mkSessionArgumentPresence
   , ComputedFieldBoolExp(..)
   , AnnComputedFieldBoolExp(..)
   , AnnBoolExpFld(..)
@@ -186,6 +187,7 @@ makePrisms ''GBoolExp
 -- inline the session variables.
 data PartialSQLExp (b :: BackendType)
   = PSESessVar !(SessionVarType b) !SessionVariable
+  | PSESession
   | PSESQLExp !(SQLExpression b)
   deriving (Generic)
 deriving instance (Backend b) => Eq (PartialSQLExp b)
@@ -196,11 +198,13 @@ instance (Backend b, Hashable  (BooleanOperators b (PartialSQLExp b))) => Cachea
 instance Backend b => ToJSON (PartialSQLExp b) where
   toJSON = \case
     PSESessVar colTy sessVar -> toJSON (colTy, sessVar)
+    PSESession               -> String "hasura_session"
     PSESQLExp e              -> toJSON e
 
 isStaticValue :: PartialSQLExp backend -> Bool
 isStaticValue = \case
   PSESessVar _ _ -> False
+  PSESession     -> False
   PSESQLExp _    -> True
 
 hasStaticExp :: Backend b => OpExpG b (PartialSQLExp b) -> Bool
@@ -297,8 +301,8 @@ opExpDepCol = \case
   _      -> Nothing
 
 -- | The presence of session argument in the SQL function of a computed field.
--- Since we only support maximum of 2 arguments in boolean expression, the position
--- (if present) is either first or second. The other mandatory argument is table row input.
+-- Since we only support computed fields with SQL functions having maximum of 2 arguments in boolean expression,
+-- the position (if present) is either first or second. The other mandatory argument is table row input.
 data SessionArgumentPresence a
   = SAPNotPresent
   | SAPFirst a
@@ -307,6 +311,18 @@ data SessionArgumentPresence a
 instance (NFData a) => NFData (SessionArgumentPresence a)
 instance (Cacheable a) => Cacheable (SessionArgumentPresence a)
 instance (Hashable a) => Hashable (SessionArgumentPresence a)
+
+-- | Determine the position of session argument
+mkSessionArgumentPresence :: forall v a. v -> Maybe a -> FunctionTableArgument -> SessionArgumentPresence v
+mkSessionArgumentPresence sessionValue = \case
+  Nothing -> const $ SAPNotPresent
+  Just _ -> \case
+    -- If table argument is first, then session argument will be second
+    FTAFirst     -> SAPSecond sessionValue
+    -- Argument index 0 implies it is first
+    FTANamed _ 0 -> SAPSecond sessionValue
+  -- If table argument is second, then session argument will be first
+    FTANamed{}   -> SAPFirst sessionValue
 
 -- | This type is used to represent the kinds of boolean expression used for compouted fields
 -- based on the return type of the SQL function
@@ -336,7 +352,7 @@ instance (Backend b, Hashable  (BooleanOperators b a), Hashable  a) => Hashable 
 data AnnComputedFieldBoolExp (b :: BackendType) a
   = AnnComputedFieldBoolExp
   { _acfbXFieldInfo              :: !(XComputedField b)
-  , _acfbName                    :: !(ComputedFieldName)
+  , _acfbName                    :: !ComputedFieldName
   , _acfbFunction                :: !(FunctionName b)
   , _acfbSessionArgumentPresence :: !(SessionArgumentPresence a)
   , _acfbBoolExp                 :: !(ComputedFieldBoolExp b a)

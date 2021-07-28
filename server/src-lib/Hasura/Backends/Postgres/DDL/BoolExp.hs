@@ -22,23 +22,6 @@ import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
 
--- | Represents a reference to a Postgres column, possibly casted an arbitrary
--- number of times. Used within 'parseOperationsExpression' for bookkeeping.
-data ColumnReference (b :: BackendType)
-  = ColumnReferenceColumn !(ColumnInfo b)
-  | ColumnReferenceCast !(ColumnReference b) !(ColumnType b)
-
-columnReferenceType :: ColumnReference backend -> ColumnType backend
-columnReferenceType = \case
-  ColumnReferenceColumn column     -> pgiType column
-  ColumnReferenceCast _ targetType -> targetType
-
-instance Backend b => ToTxt (ColumnReference b) where
-  toTxt = \case
-    ColumnReferenceColumn column -> toTxt $ pgiColumn column
-    ColumnReferenceCast reference targetType ->
-      toTxt reference <> "::" <> toTxt targetType
-
 parseBoolExpOperations
   :: forall pgKind m v
    . ( Backend ('Postgres pgKind)
@@ -48,19 +31,18 @@ parseBoolExpOperations
   => ValueParser ('Postgres pgKind) m v
   -> QualifiedTable
   -> FieldInfoMap (FieldInfo ('Postgres pgKind))
-  -> ColumnInfo ('Postgres pgKind)
+  -> ColumnReference ('Postgres pgKind)
   -> Value
   -> m [OpExpG ('Postgres pgKind) v]
-parseBoolExpOperations rhsParser rootTable fim columnInfo value = do
+parseBoolExpOperations rhsParser rootTable fim columnRef value = do
   restrictJSONColumn
-  withPathK (getPGColTxt $ pgiColumn columnInfo) $
-    parseOperations (ColumnReferenceColumn columnInfo) value
+  withPathK (toTxt columnRef) $ parseOperations columnRef value
   where
     restrictJSONColumn :: m ()
-    restrictJSONColumn = case columnInfo of
-      ColumnInfo _ _ _ (ColumnScalar PGJSON) _ _ ->
+    restrictJSONColumn = case columnReferenceType columnRef of
+      ColumnScalar PGJSON ->
         throwError (err400 UnexpectedPayload "JSON column can not be part of boolean expression")
-      _                                          -> pure ()
+      _                   -> pure ()
 
     parseOperations :: ColumnReference ('Postgres pgKind) -> Value -> m [OpExpG ('Postgres pgKind) v]
     parseOperations column = \case
