@@ -1,27 +1,27 @@
 package testutil
 
 import (
-  "context"
-  "database/sql"
-  "errors"
-  "fmt"
-  "github.com/ory/dockertest/v3/docker"
-  "io/ioutil"
-  "net/http"
-  "os"
-  "strings"
-  "testing"
-  "time"
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"strings"
+	"testing"
+	"time"
 
-  "github.com/gofrs/uuid"
-  "github.com/stretchr/testify/require"
+	"github.com/ory/dockertest/v3/docker"
 
-  "github.com/Pallinder/go-randomdata"
+	"github.com/gofrs/uuid"
 
-  _ "github.com/denisenkom/go-mssqldb"
-  "github.com/hasura/graphql-engine/cli/v2/internal/httpc"
-  _ "github.com/lib/pq"
-  "github.com/ory/dockertest/v3"
+	"github.com/Pallinder/go-randomdata"
+
+	_ "github.com/denisenkom/go-mssqldb"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
+	_ "github.com/lib/pq"
+	"github.com/ory/dockertest/v3"
 )
 
 // helper function to get image repo and tag separately
@@ -48,20 +48,20 @@ type TestingT interface {
 func StartHasura(t TestingT, image string) (port string, teardown func()) {
 	connectionUrl, teardownPG := StartPGContainer(t)
 	port, teardownHasura := StartHasuraWithPG(t, image, connectionUrl)
-	return port, func() {teardownHasura(); teardownPG()}
+	return port, func() { teardownHasura(); teardownPG() }
 }
 
 func StartHasuraCLIMigrations(t TestingT, image string, pgConnectionUrl string, metadataDir, migrationsDir string) (port string, teardown func()) {
-  port, teardownHasura := StartHasuraWithPG(t, image, pgConnectionUrl, func(o *docker.HostConfig) {
-	o.Binds = []string{}
-	if len(metadataDir) > 0 {
-	  o.Binds = append(o.Binds, fmt.Sprintf("%s:%s", metadataDir, "/hasura-metadata"))
-	}
-	if len(migrationsDir) > 0 {
-	  o.Binds = append(o.Binds, fmt.Sprintf("%s:%s", migrationsDir, "/hasura-migrations"))
-	}
-  })
-  return port, func() {teardownHasura()}
+	port, teardownHasura := StartHasuraWithPG(t, image, pgConnectionUrl, func(o *docker.HostConfig) {
+		o.Binds = []string{}
+		if len(metadataDir) > 0 {
+			o.Binds = append(o.Binds, fmt.Sprintf("%s:%s", metadataDir, "/hasura-metadata"))
+		}
+		if len(migrationsDir) > 0 {
+			o.Binds = append(o.Binds, fmt.Sprintf("%s:%s", migrationsDir, "/hasura-migrations"))
+		}
+	})
+	return port, func() { teardownHasura() }
 }
 
 func StartHasuraWithPG(t TestingT, image string, pgConnectionUrl string, dockerOpts ...func(*docker.HostConfig)) (port string, teardown func()) {
@@ -204,19 +204,19 @@ func StartHasuraWithMetadataDatabase(t TestingT, image string) (port string, tea
 func StartHasuraWithMSSQLSource(t *testing.T, version string) (string, string, func()) {
 	hasuraPort, hasuraTeardown := StartHasuraWithMetadataDatabase(t, version)
 	sourcename := randomdata.SillyName()
-	mssqlPort, mssqlTeardown := startMSSQLContainer(t)
+	mssqlPort, mssqlTeardown := StartMSSQLContainer(t)
 
 	teardown := func() {
 		hasuraTeardown()
 		mssqlTeardown()
 	}
 	connectionString := fmt.Sprintf("DRIVER={ODBC Driver 17 for SQL Server};SERVER=%s,%s;DATABASE=master;Uid=SA;Pwd=%s;Encrypt=no", DockerSwitchIP, mssqlPort, MSSQLPassword)
-	addMSSQLSourceToHasura(t, fmt.Sprintf("%s:%s", BaseURL, hasuraPort), connectionString, sourcename)
+	AddMSSQLSourceToHasura(t, fmt.Sprintf("%s:%s", BaseURL, hasuraPort), connectionString, sourcename)
 	return hasuraPort, sourcename, teardown
 }
 
 // startsMSSQLContainer and creates a database and returns the port number
-func startMSSQLContainer(t *testing.T) (string, func()) {
+func StartMSSQLContainer(t TestingT) (string, func()) {
 	pool, err := dockertest.NewPool("")
 	pool.MaxWait = time.Minute
 	if err != nil {
@@ -305,7 +305,7 @@ func StartPGContainer(t TestingT) (connectionString string, teardown func()) {
 	return connectionString, teardown
 }
 
-func addMSSQLSourceToHasura(t *testing.T, hasuraEndpoint, connectionString, sourceName string) {
+func AddMSSQLSourceToHasura(t TestingT, hasuraEndpoint, connectionString, sourceName string) {
 	url := fmt.Sprintf("%s/v1/metadata", hasuraEndpoint)
 	body := fmt.Sprintf(`
 {
@@ -324,7 +324,9 @@ func addMSSQLSourceToHasura(t *testing.T, hasuraEndpoint, connectionString, sour
 	fmt.Println(hasuraEndpoint)
 
 	req, err := http.NewRequest("POST", url, strings.NewReader(body))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 	req.Header.Set("Content-Type", "application/json")
 	adminSecret := os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET")
 	if adminSecret != "" {
@@ -332,7 +334,9 @@ func addMSSQLSourceToHasura(t *testing.T, hasuraEndpoint, connectionString, sour
 	}
 
 	r, err := http.DefaultClient.Do(req)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if r.StatusCode != http.StatusOK {
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {

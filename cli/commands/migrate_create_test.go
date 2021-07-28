@@ -53,9 +53,9 @@ var _ = Describe("hasura migrate create (config v3)", func() {
 			"version",
 		}
 
-		Eventually(session, 60*60).Should(Exit(0))
+		Eventually(session, timeout).Should(Exit(0))
 		for _, keyword := range wantKeywordList {
-			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring(keyword))
+			Expect(session.Err.Contents()).Should(ContainSubstring(keyword))
 		}
 		dirs, err := os.ReadDir(filepath.Join(projectDirectory, "migrations", "default"))
 		Expect(err).To(BeNil())
@@ -87,9 +87,9 @@ var _ = Describe("hasura migrate create (config v3)", func() {
 			"version",
 		}
 
-		Eventually(session, 60*60).Should(Exit(0))
+		Eventually(session, timeout).Should(Exit(0))
 		for _, keyword := range wantKeywordList {
-			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring(keyword))
+			Expect(session.Err.Contents()).Should(ContainSubstring(keyword))
 		}
 		dirs, err := os.ReadDir(filepath.Join(projectDirectory, "migrations", sourceName))
 		Expect(err).To(BeNil())
@@ -150,9 +150,9 @@ var _ = Describe("hasura migrate create (config v2)", func() {
 				},
 				WorkingDirectory: projectDirectory,
 			})
-			Eventually(session, 60*60).Should(Exit(0))
+			Eventually(session, timeout).Should(Exit(0))
 			for _, keyword := range wantKeywordList {
-				Eventually(session.Wait().Err.Contents()).Should(ContainSubstring(keyword))
+				Expect(session.Err.Contents()).Should(ContainSubstring(keyword))
 			}
 
 			dirs, err := os.ReadDir(filepath.Join(projectDirectory, "migrations"))

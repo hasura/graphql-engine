@@ -19,16 +19,16 @@ var testExportMetadataToStdout = func(projectDirectory string) {
 			Args:             []string{"metadata", "export", "-o", "yaml"},
 			WorkingDirectory: projectDirectory,
 		})
-		Eventually(session, 60*40).Should(Exit(0))
-		stdout := session.Wait().Out.Contents()
+		Eventually(session, timeout).Should(Exit(0))
+		stdout := session.Out.Contents()
 		Eventually(isYAML(stdout)).Should(BeTrue())
 
 		session = testutil.Hasura(testutil.CmdOpts{
 			Args:             []string{"metadata", "export", "--output", "json"},
 			WorkingDirectory: projectDirectory,
 		})
-		Eventually(session, 60*40).Should(Exit(0))
-		stdout = session.Wait().Out.Contents()
+		Eventually(session, timeout).Should(Exit(0))
+		stdout = session.Out.Contents()
 		Eventually(isJSON(stdout)).Should(BeTrue())
 	})
 }
@@ -42,8 +42,7 @@ var _ = Describe("hasura metadata export (config v3)", func() {
 		hgeEndPort, teardownHGE := testutil.StartHasuraWithMetadataDatabase(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 
-		connectionString, teardownPG := testutil.StartPGContainer(GinkgoT())
-		testutil.AddPGSourceToHasura(GinkgoT(), hgeEndpoint, connectionString, sourceName)
+		connectionString, teardownPG := AddDatabaseToHasura(hgeEndpoint, sourceName, "postgres")
 
 		// clone template project directory as test project directory
 		copyTestConfigV3Project(projectDirectory)
@@ -71,8 +70,8 @@ var _ = Describe("hasura metadata export (config v3)", func() {
 				Args:             []string{"metadata", "export"},
 				WorkingDirectory: projectDirectory,
 			})
-			Eventually(session, 60*40).Should(Exit(0))
-			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring("Metadata exported"))
+			Eventually(session, timeout).Should(Exit(0))
+			Expect(session.Err.Contents()).Should(ContainSubstring("Metadata exported"))
 			Expect(filepath.Join(projectDirectory, "metadata", "databases", sourceName, "tables", "public_albums.yaml")).Should(BeAnExistingFile())
 		})
 		testExportMetadataToStdout(projectDirectory)
@@ -112,8 +111,8 @@ var _ = Describe("hasura metadata export (config v2)", func() {
 				Args:             []string{"metadata", "export"},
 				WorkingDirectory: projectDirectory,
 			})
-			Eventually(session, 60*40).Should(Exit(0))
-			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring("Metadata exported"))
+			Eventually(session, timeout).Should(Exit(0))
+			Expect(session.Err.Contents()).Should(ContainSubstring("Metadata exported"))
 			Expect(filepath.Join(projectDirectory, "metadata", "tables.yaml")).Should(BeAnExistingFile())
 		})
 		testExportMetadataToStdout(projectDirectory)

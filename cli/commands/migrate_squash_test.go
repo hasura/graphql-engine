@@ -27,8 +27,8 @@ var _ = Describe("hasura migrate squash (config v3)", func() {
 			}, globalFlags...),
 			WorkingDirectory: projectDirectory,
 		})
-		Eventually(session, 60*40).Should(Exit(0))
-		logs := string(session.Wait().Err.Contents())
+		Eventually(session, timeout).Should(Exit(0))
+		logs := string(session.Err.Contents())
 		version := regexp.MustCompile(`"version":\d+`)
 		matches := version.FindStringSubmatch(logs)
 		session = testutil.Hasura(testutil.CmdOpts{
@@ -48,9 +48,9 @@ var _ = Describe("hasura migrate squash (config v3)", func() {
 			"till",
 		}
 
-		Eventually(session, 60*40).Should(Exit(0))
+		Eventually(session, timeout).Should(Exit(0))
 		for _, keyword := range wantKeywordList {
-			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring(keyword))
+			Expect(session.Err.Contents()).Should(ContainSubstring(keyword))
 		}
 		// verify files were deleted
 		v := strings.Split(matches[0], ":")[1]
@@ -60,7 +60,7 @@ var _ = Describe("hasura migrate squash (config v3)", func() {
 			Args:             append([]string{"migrate", "status"}, globalFlags...),
 			WorkingDirectory: projectDirectory,
 		})
-		Eventually(session, 60).Should(Exit(0))
+		Eventually(session, timeout).Should(Exit(0))
 		Eventually(session.Out.Contents()).ShouldNot(ContainSubstring(v))
 	}
 

@@ -13,19 +13,17 @@ import (
 
 var _ = Describe("hasura metadata reload", func() {
 
-	var dirName string
+	var projectDirectory string
 	var teardown func()
 	BeforeEach(func() {
-		dirName = testutil.RandDirName()
+		projectDirectory = testutil.RandDirName()
 		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
-		testutil.RunCommandAndSucceed(testutil.CmdOpts{
-			Args: []string{"init", dirName},
-		})
-		editEndpointInConfig(filepath.Join(dirName, defaultConfigFilename), hgeEndpoint)
+		copyTestConfigV2Project(projectDirectory)
+		editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
 
 		teardown = func() {
-			os.RemoveAll(dirName)
+			os.RemoveAll(projectDirectory)
 			teardownHGE()
 		}
 	})
@@ -36,11 +34,46 @@ var _ = Describe("hasura metadata reload", func() {
 		It("should reload metadata", func() {
 			session := testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"metadata", "reload"},
-				WorkingDirectory: dirName,
+				WorkingDirectory: projectDirectory,
 			})
 			want := `Metadata reloaded`
-			Eventually(session, 60*40).Should(Exit(0))
-			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring(want))
+			Eventually(session, timeout).Should(Exit(0))
+			Expect(session.Err.Contents()).Should(ContainSubstring(want))
+		})
+	})
+
+	Context("metadata reload test incase of inconsistent metadata", func() {
+		It("should reload the metadata on server and get inconsistent metadata", func() {
+			testutil.RunCommandAndSucceed(testutil.CmdOpts{
+				Args:             []string{"migrate", "apply", "--up", "all"},
+				WorkingDirectory: projectDirectory,
+			})
+			testutil.RunCommandAndSucceed(testutil.CmdOpts{
+				Args:             []string{"metadata", "apply"},
+				WorkingDirectory: projectDirectory,
+			})
+			testutil.RunCommandAndSucceed(testutil.CmdOpts{
+				Args:             []string{"migrate", "apply", "--down", "all"},
+				WorkingDirectory: projectDirectory,
+			})
+			session := testutil.Hasura(testutil.CmdOpts{
+				Args:             []string{"metadata", "inconsistency", "status"},
+				WorkingDirectory: projectDirectory,
+			})
+			want := `metadata is consistent`
+			Eventually(session, timeout).Should(Exit(0))
+			Expect(session.Err.Contents()).Should(ContainSubstring(want))
+			testutil.RunCommandAndSucceed(testutil.CmdOpts{
+				Args:             []string{"metadata", "reload"},
+				WorkingDirectory: projectDirectory,
+			})
+			session = testutil.Hasura(testutil.CmdOpts{
+				Args:             []string{"metadata", "inconsistency", "status"},
+				WorkingDirectory: projectDirectory,
+			})
+			want = `metadata is inconsistent, use list command to see the objects`
+			Eventually(session.Wait(timeout)).Should(Exit(1))
+			Expect(session.Err.Contents()).Should(ContainSubstring(want))
 		})
 	})
 })

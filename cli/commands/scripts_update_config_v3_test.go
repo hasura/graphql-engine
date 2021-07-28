@@ -89,7 +89,7 @@ var _ = Describe("hasura scripts update-project-v3", func() {
 			})
 
 			Eventually(session.Err, 60).Should(Say(`.*error.*`))
-			Eventually(session, 60*4).Should(Exit())
+			Eventually(session.Wait(timeout)).Should(Exit())
 		})
 
 		Context("applies metadata and migrations on staging hasura instance", func() {
@@ -101,16 +101,16 @@ var _ = Describe("hasura scripts update-project-v3", func() {
 				Args:             []string{"migrate", "apply", "--database-name", "default", "--endpoint", stagingEndpoint},
 				WorkingDirectory: projectDirectory,
 			})
-			Eventually(session, 60*4).Should(Exit(0))
-			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring("nothing to apply"))
+			Eventually(session, timeout).Should(Exit(0))
+			Expect(session.Err.Contents()).Should(ContainSubstring("nothing to apply"))
 
 			// This now should not trigger a state migration
 			session = testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"migrate", "apply", "--database-name", "default", "--endpoint", stagingEndpoint, "--log-level", "debug"},
 				WorkingDirectory: projectDirectory,
 			})
-			Eventually(session, 60*4).Should(Exit(0))
-			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring(`{"level":"debug","msg":"skipping state migration, found IsStateCopyCompleted: true Migrations: map[default:map[1620138136207:false 1620138146208:false 1620138161039:false 1620138169404:false 1620138179776:false 1620138189381:false 1620138199344:false]]"`))
+			Eventually(session, timeout).Should(Exit(0))
+			Expect(session.Err.Contents()).Should(ContainSubstring(`{"level":"debug","msg":"skipping state migration, found IsStateCopyCompleted: true Migrations: map[default:map[1620138136207:false 1620138146208:false 1620138161039:false 1620138169404:false 1620138179776:false 1620138189381:false 1620138199344:false]]"`))
 		})
 		Context("applies metadata and migrations on production hasura instance", func() {
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
@@ -133,8 +133,8 @@ var _ = Describe("hasura scripts update-project-v3", func() {
 				WorkingDirectory: projectDirectory,
 			})
 
-			Eventually(session, 60*4).Should(Exit(0))
-			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring("nothing to apply"))
+			Eventually(session, timeout).Should(Exit(0))
+			Expect(session.Err.Contents()).Should(ContainSubstring("nothing to apply"))
 		})
 	})
 })

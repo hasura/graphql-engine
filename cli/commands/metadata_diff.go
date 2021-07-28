@@ -1,23 +1,23 @@
 package commands
 
 import (
-  "fmt"
-  "github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
-  "io"
-  "io/ioutil"
-  "os"
-  "strings"
+	"fmt"
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
+	"io"
+	"io/ioutil"
+	"os"
+	"strings"
 
-  "github.com/aryann/difflib"
+	"github.com/aryann/difflib"
 
-  "github.com/hasura/graphql-engine/cli/v2"
-  "github.com/hexops/gotextdiff"
-  "github.com/hexops/gotextdiff/myers"
-  "github.com/hexops/gotextdiff/span"
-  "github.com/mgutz/ansi"
-  "github.com/pkg/errors"
-  "github.com/spf13/cobra"
-  "gopkg.in/yaml.v2"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hexops/gotextdiff"
+	"github.com/hexops/gotextdiff/myers"
+	"github.com/hexops/gotextdiff/span"
+	"github.com/mgutz/ansi"
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 )
 
 type MetadataDiffOptions struct {

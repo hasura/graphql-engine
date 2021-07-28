@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -19,6 +20,7 @@ import (
 
 const (
 	defaultConfigFilename = "config.yaml"
+	timeout               = testutil.DefaultE2ETestTimeout
 )
 
 func TestE2e(t *testing.T) {

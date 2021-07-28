@@ -2,10 +2,10 @@ package commands
 
 import (
 	"fmt"
-	"github.com/Pallinder/go-randomdata"
 	"os"
 	"path/filepath"
 
+	"github.com/Pallinder/go-randomdata"
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -19,10 +19,8 @@ var _ = Describe("hasura metadata inconsistency list", func() {
 		projectDirectory = testutil.RandDirName()
 		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
-
 		sourceName := randomdata.SillyName()
-		connectionString, teardownPG := testutil.StartPGContainer(GinkgoT())
-		testutil.AddPGSourceToHasura(GinkgoT(), hgeEndpoint, connectionString, sourceName)
+		connectionString, teardownPG := AddDatabaseToHasura(hgeEndpoint, sourceName, "postgres")
 		copyTestConfigV3Project(projectDirectory)
 		editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
 		editSourceNameInConfigV3ProjectTemplate(projectDirectory, sourceName, connectionString)
@@ -53,16 +51,17 @@ var _ = Describe("hasura metadata inconsistency list", func() {
 				Args:             []string{"metadata", "inconsistency", "list"},
 				WorkingDirectory: projectDirectory,
 			})
-			Eventually(session, 60*40).Should(Exit(0))
-			matcher(session.Wait().Out.Contents())
+			Eventually(session, timeout).Should(Exit(0))
+			stdout := session.Out.Contents()
+			matcher(stdout)
 		})
 		Context("Lists all inconsistent objects in json format", func() {
 			session := testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"metadata", "inconsistency", "list", "-o", "json"},
 				WorkingDirectory: projectDirectory,
 			})
-			Eventually(session, 60*40).Should(Exit(0))
-			stdout := session.Wait().Out.Contents()
+			Eventually(session, timeout).Should(Exit(0))
+			stdout := session.Out.Contents()
 			Eventually(isJSON(stdout)).Should(BeTrue())
 			matcher(stdout)
 		})
