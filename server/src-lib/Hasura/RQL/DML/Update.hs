@@ -95,7 +95,7 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
 
 validateUpdateQueryWith
   :: (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m)
-  => SessVarBldr ('Postgres 'Vanilla) m
+  => SessionVariableBuilder ('Postgres 'Vanilla) m
   -> ValueParser ('Postgres 'Vanilla) m S.SQLExp
   -> UpdateQuery
   -> m (AnnUpd ('Postgres 'Vanilla))

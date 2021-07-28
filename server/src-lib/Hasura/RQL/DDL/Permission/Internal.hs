@@ -79,7 +79,8 @@ procBoolExp
   -> BoolExp b
   -> m (AnnBoolExpPartialSQL b, [SchemaDependency])
 procBoolExp source tn fieldInfoMap be = do
-  abe <- annBoolExp parseCollectableType tn fieldInfoMap $ unBoolExp be
+  let rhsParser = BoolExpRHSParser parseCollectableType PSESession
+  abe <- annBoolExp rhsParser tn fieldInfoMap $ unBoolExp be
   let deps = getBoolExpDeps source tn abe
   return (abe, deps)
 

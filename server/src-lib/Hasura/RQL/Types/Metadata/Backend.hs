@@ -82,7 +82,7 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
     => ValueParser b m v
     -> TableName b
     -> FieldInfoMap (FieldInfo b)
-    -> ColumnInfo b
+    -> ColumnReference b
     -> Value
     -> m [OpExpG b v]
 

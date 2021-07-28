@@ -602,6 +602,15 @@ class TestGraphqlQueryPermissions:
     def test_author_articles_without_required_headers_set(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_articles_without_required_headers.yaml', transport)
 
+    def test_reader_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/reader_author.yaml', transport)
+
+    def test_tutor_get_students(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/tutor_get_students.yaml', transport)
+
+    def test_tutor_get_students_session(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/tutor_get_students_session.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/permissions'

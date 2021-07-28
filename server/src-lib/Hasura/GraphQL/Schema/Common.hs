@@ -47,6 +47,7 @@ textToName textName = G.mkName textName `onNothing` throw400 ValidationFailed
 
 partialSQLExpToUnpreparedValue :: PartialSQLExp b -> P.UnpreparedValue b
 partialSQLExpToUnpreparedValue (PSESessVar pftype var) = P.UVSessionVar pftype var
+partialSQLExpToUnpreparedValue PSESession              = P.UVSession
 partialSQLExpToUnpreparedValue (PSESQLExp sqlExp)      = P.UVLiteral sqlExp
 
 mapField

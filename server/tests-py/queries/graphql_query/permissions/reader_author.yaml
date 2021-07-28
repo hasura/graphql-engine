@@ -1,0 +1,17 @@
+description: A reader fetch authors with atleast one published article
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: reader
+query:
+  query: |
+    query {
+      author{
+        name
+      }
+    }
+response:
+  data:
+    author:
+    - name: Author 1
+    - name: Author 2

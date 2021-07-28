@@ -25,12 +25,15 @@ module Hasura.RQL.Types.Column
 
   , fromCol
   , ColumnValues
+
+  , ColumnReference(..)
+  , columnReferenceType
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as M
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict            as M
+import qualified Language.GraphQL.Draft.Syntax  as G
 
 import           Control.Lens.TH
 import           Data.Aeson
@@ -38,9 +41,10 @@ import           Data.Aeson.TH
 import           Data.Text.Extended
 
 import           Hasura.Base.Error
-import           Hasura.Incremental            (Cacheable)
+import           Hasura.Incremental             (Cacheable)
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.ComputedField
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
@@ -201,3 +205,23 @@ fromCol :: Backend b => Column b -> FieldName
 fromCol = FieldName . toTxt
 
 type ColumnValues b a = HashMap (Column b) a
+
+-- | Represents a reference to a source column, possibly casted an arbitrary
+-- number of times. Used within 'parseBoolExpOperations' for bookkeeping.
+data ColumnReference (b :: BackendType)
+  = ColumnReferenceColumn !(ColumnInfo b)
+  | ColumnReferenceComputedField !ComputedFieldName !(ScalarType b)
+  | ColumnReferenceCast !(ColumnReference b) !(ColumnType b)
+
+columnReferenceType :: ColumnReference backend -> ColumnType backend
+columnReferenceType = \case
+  ColumnReferenceColumn column              -> pgiType column
+  ColumnReferenceComputedField _ scalarType -> ColumnScalar scalarType
+  ColumnReferenceCast _ targetType          -> targetType
+
+instance Backend b => ToTxt (ColumnReference b) where
+  toTxt = \case
+    ColumnReferenceColumn column -> toTxt $ pgiColumn column
+    ColumnReferenceComputedField name _ -> toTxt name
+    ColumnReferenceCast reference targetType ->
+      toTxt reference <> "::" <> toTxt targetType
