@@ -144,8 +144,6 @@ instance (MonadIO m, MonadError QErr m, HasHttpManagerM m
             { scMetadataResourceVersion = Just resourceVersion} }
         , invalidations)
 
-
-
 buildSchemaCacheRule
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
   -- what we want!
@@ -169,22 +167,22 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     resolveDependencies -< (outputs, unresolvedDependencies)
 
   -- Step 3: Build the GraphQL schema.
-  (gqlContext, gqlSchemaInconsistentObjects) <- runWriterA buildGQLContext -<
-    ( QueryHasura
-    , _boSources resolvedOutputs
-    , _boRemoteSchemas resolvedOutputs
-    , _boActions resolvedOutputs
-    , _actNonObjects $ _boCustomTypes resolvedOutputs
-    )
+  (gqlContext, gqlContextUnauth, gqlSchemaInconsistentObjects) <- bindA -<
+    buildGQLContext
+      QueryHasura
+      (_boSources resolvedOutputs)
+      (_boRemoteSchemas resolvedOutputs)
+      (_boActions resolvedOutputs)
+      (_actNonObjects $ _boCustomTypes resolvedOutputs)
 
   -- Step 4: Build the relay GraphQL schema
-  (relayContext, relaySchemaInconsistentObjects) <- runWriterA buildGQLContext -<
-    ( QueryRelay
-    , _boSources resolvedOutputs
-    , _boRemoteSchemas resolvedOutputs
-    , _boActions resolvedOutputs
-    , _actNonObjects $ _boCustomTypes resolvedOutputs
-    )
+  (relayContext, relayContextUnauth, relaySchemaInconsistentObjects) <- bindA -<
+    buildGQLContext
+      QueryRelay
+      (_boSources resolvedOutputs)
+      (_boRemoteSchemas resolvedOutputs)
+      (_boActions resolvedOutputs)
+      (_actNonObjects $ _boCustomTypes resolvedOutputs)
 
   let
     duplicateVariables :: EndpointMetadata a -> Bool
@@ -228,10 +226,10 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     , scRemoteSchemas = fmap fst (_boRemoteSchemas resolvedOutputs) -- remoteSchemaMap
     , scAllowlist = _boAllowlist resolvedOutputs
     -- , scCustomTypes = _boCustomTypes resolvedOutputs
-    , scGQLContext = fst gqlContext
-    , scUnauthenticatedGQLContext = snd gqlContext
-    , scRelayContext = fst relayContext
-    , scUnauthenticatedRelayContext = snd relayContext
+    , scGQLContext = gqlContext
+    , scUnauthenticatedGQLContext = gqlContextUnauth
+    , scRelayContext = relayContext
+    , scUnauthenticatedRelayContext = relayContextUnauth
     -- , scGCtxMap = gqlSchema
     -- , scDefaultRemoteGCtx = remoteGQLSchema
     , scDepMap = resolvedDependencies
