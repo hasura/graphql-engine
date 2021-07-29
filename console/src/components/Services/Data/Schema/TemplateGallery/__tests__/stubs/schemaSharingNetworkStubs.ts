@@ -1,6 +1,9 @@
 import { rest } from 'msw';
 import { HasuraMetadataV3 } from '../../../../../../../metadata/types';
-import { BASE_URL_TEMPLATE, ROOT_CONFIG_PATH } from '../../schemaSharingConfig';
+import {
+  BASE_URL_TEMPLATE,
+  ROOT_CONFIG_PATH,
+} from '../../templateGalleryConfig';
 import { ServerJsonRootConfig } from '../../types';
 
 export const CATEGORY_1 = 'AAAAAAAA';

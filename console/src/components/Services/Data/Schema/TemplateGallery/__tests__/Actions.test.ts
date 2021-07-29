@@ -4,10 +4,10 @@ import {
   applyTemplate,
   fetchGlobalSchemaSharingConfiguration,
   fetchSchemaConfigurationByName,
-  schemaSharingReducer,
+  templateGalleryReducer,
 } from '../Actions';
 import { CATEGORY_1, networkStubs } from './stubs/schemaSharingNetworkStubs';
-import { SchemaSharingStore } from '../types';
+import { TemplateGalleryStore } from '../types';
 
 const server = setupServer();
 
@@ -18,7 +18,7 @@ afterAll(() => server.close());
 const getStore = () => {
   return configureStore<any>({
     reducer: {
-      schemaSharing: schemaSharingReducer,
+      templateGallery: templateGalleryReducer,
       metadata: () => ({ metadataObject: { version: 3 } }),
     },
   });
@@ -33,21 +33,21 @@ describe('SchemaSharing state', () => {
       const store = getStore();
 
       await store.dispatch(fetchGlobalSchemaSharingConfiguration());
-      expect(store.getState().schemaSharing).toMatchSnapshot();
+      expect(store.getState().templateGallery).toMatchSnapshot();
     });
 
     it("should dispatch root config failure when the api don't work", async () => {
       server.use(networkStubs.rootJsonError);
-      const expected: SchemaSharingStore = {
+      const expected: TemplateGalleryStore = {
         globalConfigState: 'failure',
-        schemas: undefined,
+        templates: undefined,
       };
       // any to not add the whole store
       const store = getStore();
 
       await store.dispatch(fetchGlobalSchemaSharingConfiguration());
 
-      expect(store.getState().schemaSharing).toEqual(expected);
+      expect(store.getState().templateGallery).toEqual(expected);
     });
   });
   describe('fetch single config file', () => {
@@ -74,7 +74,7 @@ describe('SchemaSharing state', () => {
 
       // Assert
 
-      expect(store.getState().schemaSharing).toMatchSnapshot();
+      expect(store.getState().templateGallery).toMatchSnapshot();
     });
   });
   describe('apply schema', () => {
@@ -107,16 +107,16 @@ describe('SchemaSharing state', () => {
       );
 
       // Assert
-      expect(store.getState().schemaSharing).toMatchSnapshot();
+      expect(store.getState().templateGallery).toMatchSnapshot();
     });
   });
   describe('reducer', () => {
     it('should have the correct default state', () => {
-      const result = schemaSharingReducer(undefined, { type: '' });
+      const result = templateGalleryReducer(undefined, { type: '' });
 
       expect(result).toStrictEqual({
         globalConfigState: 'none',
-        schemas: undefined,
+        templates: undefined,
       });
     });
   });

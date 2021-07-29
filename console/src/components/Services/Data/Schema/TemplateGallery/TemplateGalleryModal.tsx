@@ -6,12 +6,12 @@ import {
   schemaSharingSelectors,
 } from './Actions';
 import Modal from '../../../../Common/Modal/Modal';
-import styles from './SchemaGallery.scss';
+import styles from './TemplateGallery.scss';
 import { ModalType } from './types';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import { showErrorNotification } from '../../../Common/Notification';
 
-export const SchemaGalleryModalBody: React.VFC<{
+export const TemplateGalleryModalBody: React.VFC<{
   content: ModalType;
 }> = ({ content }) => {
   const dispatch = useAppDispatch();
@@ -45,7 +45,7 @@ export const SchemaGalleryModalBody: React.VFC<{
     return (
       <div>
         <span className={`fa fa-spinner fa-spin ${styles.mr_md}`} />
-        Loading schema
+        Loading template
       </div>
     );
   }
@@ -103,7 +103,7 @@ export const SchemaGalleryModalBody: React.VFC<{
   );
 };
 
-export const SchemaGalleryModal: React.VFC<{
+export const TemplateGalleryModal: React.VFC<{
   content: ModalType;
   closeModal: () => void;
 }> = ({ content, closeModal }) => {
@@ -156,7 +156,7 @@ export const SchemaGalleryModal: React.VFC<{
               className={`fa fa-upload ${styles.icon_padding}`}
               aria-hidden
             />
-            Install Schema
+            Install Template
           </>
         ) : undefined
       }
@@ -173,7 +173,7 @@ export const SchemaGalleryModal: React.VFC<{
         ) : undefined
       }
     >
-      <SchemaGalleryModalBody content={content} />
+      <TemplateGalleryModalBody content={content} />
     </Modal>
   );
 };

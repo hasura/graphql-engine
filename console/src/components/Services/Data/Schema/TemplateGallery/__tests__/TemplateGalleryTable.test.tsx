@@ -8,15 +8,15 @@ import {
 import { setupServer } from 'msw/node';
 import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
-import { schemaSharingReducer } from '../Actions';
+import { templateGalleryReducer } from '../Actions';
 import {
-  SchemaGalleryBody,
-  SchemaGalleryContentRow,
-} from '../SchemaGalleryTable';
+  TemplateGalleryBody,
+  TemplateGalleryContentRow,
+} from '../TemplateGalleryTable';
 import { networkStubs } from './stubs/schemaSharingNetworkStubs';
-import { SchemaSharingTemplateItem } from '../types';
+import { TemplateGalleryTemplateItem } from '../types';
 
-const templateItem: SchemaSharingTemplateItem = {
+const templateItem: TemplateGalleryTemplateItem = {
   templateVersion: 1,
   metadataVersion: 3,
   key: 'template-1',
@@ -29,13 +29,13 @@ const templateItem: SchemaSharingTemplateItem = {
   relativeFolderPath: './test',
 };
 
-describe('SchemaGalleryContentRow', () => {
+describe('TemplateGalleryContentRow', () => {
   it('should display the content', () => {
     const openModal = jest.fn();
     render(
       <table>
         <tbody>
-          <SchemaGalleryContentRow
+          <TemplateGalleryContentRow
             template={templateItem}
             openModal={openModal}
           />
@@ -66,13 +66,13 @@ const renderSchemaGalleryBody = () => {
 
   const store = configureStore<any>({
     reducer: {
-      schemaSharing: schemaSharingReducer,
+      templateGallery: templateGalleryReducer,
       metadata: () => ({ metadataObject: { version: 3 } }),
     },
   });
   render(
     <Provider store={store} key="provider">
-      <SchemaGalleryBody onModalOpen={openModalFn} />
+      <TemplateGalleryBody onModalOpen={openModalFn} />
     </Provider>
   );
 
@@ -81,20 +81,22 @@ const renderSchemaGalleryBody = () => {
   };
 };
 
-describe('SchemaGalleryBody', () => {
+describe('TemplateGalleryBody', () => {
   it('should display loading at first', async () => {
     server.use(networkStubs.rootJsonWithLoading);
 
     renderSchemaGalleryBody();
 
-    expect(screen.getByText(/loading schemas/i)).toBeVisible();
+    expect(screen.getByText(/loading templates/i)).toBeVisible();
   });
   it('should display an error when the api return something bad', async () => {
     server.use(networkStubs.rootJsonError);
 
     renderSchemaGalleryBody();
 
-    await waitForElementToBeRemoved(() => screen.getByText(/loading schemas/i));
+    await waitForElementToBeRemoved(() =>
+      screen.getByText(/loading templates/i)
+    );
 
     expect(
       screen.getByText(/something went wrong, please try again later\./i)
@@ -105,7 +107,9 @@ describe('SchemaGalleryBody', () => {
 
     renderSchemaGalleryBody();
 
-    await waitForElementToBeRemoved(() => screen.getByText(/loading schemas/i));
+    await waitForElementToBeRemoved(() =>
+      screen.getByText(/loading templates/i)
+    );
 
     expect(screen.getByText(/no template/i)).toBeVisible();
   });
@@ -114,7 +118,9 @@ describe('SchemaGalleryBody', () => {
 
     const { openModalFn } = renderSchemaGalleryBody();
 
-    await waitForElementToBeRemoved(() => screen.getByText(/loading schemas/i));
+    await waitForElementToBeRemoved(() =>
+      screen.getByText(/loading templates/i)
+    );
 
     expect(screen.getByText(/aaaaaaaa/i)).toBeVisible();
 

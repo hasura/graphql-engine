@@ -9,11 +9,11 @@ import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
 import { RequestHandler } from 'msw/lib/types/handlers/RequestHandler';
 import {
-  schemaSharingReducer,
+  templateGalleryReducer,
   fetchGlobalSchemaSharingConfiguration,
 } from '../Actions';
 import { CATEGORY_1, networkStubs } from './stubs/schemaSharingNetworkStubs';
-import { SchemaGalleryModalBody } from '../SchemaGalleryModal';
+import { TemplateGalleryModalBody } from '../TemplateGalleryModal';
 
 const server = setupServer();
 
@@ -25,7 +25,7 @@ const schemaGalleryModalBodyRender = async (...handlers: RequestHandler[]) => {
   server.use(networkStubs.rootJson, ...handlers);
   const store = configureStore<any>({
     reducer: {
-      schemaSharing: schemaSharingReducer,
+      templateGallery: templateGalleryReducer,
       metadata: () => ({ metadataObject: { version: 3 } }),
     },
   });
@@ -34,14 +34,14 @@ const schemaGalleryModalBodyRender = async (...handlers: RequestHandler[]) => {
 
   render(
     <Provider store={store} key="provider">
-      <SchemaGalleryModalBody
+      <TemplateGalleryModalBody
         content={{ key: 'template-1', section: CATEGORY_1 }}
       />
     </Provider>
   );
 };
 
-describe('SchemaGalleryModalBody', () => {
+describe('TemplateGalleryModalBody', () => {
   it('should display loading at first', async () => {
     await schemaGalleryModalBodyRender(
       networkStubs.template1.configSlow,
@@ -50,7 +50,7 @@ describe('SchemaGalleryModalBody', () => {
       networkStubs.template1.secondSql
     );
 
-    expect(screen.getByText(/loading schema/i)).toBeVisible();
+    expect(screen.getByText(/loading template/i)).toBeVisible();
   });
   it('should display an error when a request is failing', async () => {
     await schemaGalleryModalBodyRender(
@@ -60,7 +60,9 @@ describe('SchemaGalleryModalBody', () => {
       networkStubs.template1.secondSqlError
     );
 
-    await waitForElementToBeRemoved(() => screen.getByText(/loading schema/i));
+    await waitForElementToBeRemoved(() =>
+      screen.getByText(/loading template/i)
+    );
 
     expect(
       screen.getByText(/something went wrong, please try again later\./i)
@@ -74,7 +76,9 @@ describe('SchemaGalleryModalBody', () => {
       networkStubs.template1.secondSql
     );
 
-    await waitForElementToBeRemoved(() => screen.getByText(/loading schema/i));
+    await waitForElementToBeRemoved(() =>
+      screen.getByText(/loading template/i)
+    );
 
     expect(screen.getByText(/long long description/i)).toBeVisible();
 
