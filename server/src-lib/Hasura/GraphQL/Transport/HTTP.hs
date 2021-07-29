@@ -208,6 +208,7 @@ runGQ
      , MonadTrace m
      , MonadExecuteQuery m
      , MonadMetadataStorage (MetadataStorageT m)
+     , EB.MonadQueryTags m
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -230,7 +231,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       E.getResolvedExecPlan
         env logger
         userInfo sqlGenCtx sc scVer queryType
-        httpManager reqHeaders (reqUnparsed, reqParsed)
+        httpManager reqHeaders (reqUnparsed, reqParsed) reqId
 
     case execPlan of
       E.QueryExecutionPlan queryPlans asts dirMap -> trace "Query" $ do
@@ -502,6 +503,7 @@ runGQBatched
      , MonadExecuteQuery m
      , HttpLog m
      , MonadMetadataStorage (MetadataStorageT m)
+     , EB.MonadQueryTags m
      )
   => Env.Environment
   -> L.Logger L.Hasura

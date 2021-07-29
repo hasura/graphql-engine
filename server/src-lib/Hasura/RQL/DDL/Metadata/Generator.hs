@@ -469,3 +469,12 @@ instance Arbitrary CronSchedule where
 
 instance Arbitrary ParentRoles where
   arbitrary = genericArbitrary
+
+instance Arbitrary QueryTagsConfig where
+  arbitrary = genericArbitrary
+
+instance Arbitrary QueryTagsFormat where
+  arbitrary = genericArbitrary
+
+instance Arbitrary QueryTagsPerSourceConfig where
+  arbitrary = genericArbitrary

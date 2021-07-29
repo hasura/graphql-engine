@@ -249,6 +249,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     , scMetricsConfig = _boMetricsConfig resolvedOutputs
     , scMetadataResourceVersion = Nothing
     , scSetGraphqlIntrospectionOptions = _metaSetGraphqlIntrospectionOptions metadata
+    , scQueryTagsConfig = _boQueryTagsConfig resolvedOutputs
     }
   where
     getSourceConfigIfNeeded
@@ -443,7 +444,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
       let Metadata sources remoteSchemas collections allowlists
             customTypes actions cronTriggers endpoints apiLimits metricsConfig inheritedRoles
-            _introspectionDisabledRoles = metadata
+            _introspectionDisabledRoles queryTagsConfig = metadata
           actionRoles = map _apmRole . _amPermissions =<< OMap.elems actions
           remoteSchemaRoles = map _rspmRole . _rsmPermissions =<< OMap.elems remoteSchemas
           sourceRoles =
@@ -587,16 +588,17 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       cronTriggersMap <- buildCronTriggers -< ((), OMap.elems cronTriggers)
 
       returnA -< BuildOutputs
-        { _boSources       = M.map fst sourcesOutput
-        , _boActions       = actionCache
-        , _boRemoteSchemas = remoteSchemaCache
-        , _boAllowlist     = allowList
-        , _boCustomTypes   = annotatedCustomTypes
-        , _boCronTriggers  = cronTriggersMap
-        , _boEndpoints     = resolvedEndpoints
-        , _boApiLimits     = apiLimits
-        , _boMetricsConfig = metricsConfig
-        , _boRoles         = mapFromL _rRoleName orderedRoles
+        { _boSources         = M.map fst sourcesOutput
+        , _boActions         = actionCache
+        , _boRemoteSchemas   = remoteSchemaCache
+        , _boAllowlist       = allowList
+        , _boCustomTypes     = annotatedCustomTypes
+        , _boCronTriggers    = cronTriggersMap
+        , _boEndpoints       = resolvedEndpoints
+        , _boApiLimits       = apiLimits
+        , _boMetricsConfig   = metricsConfig
+        , _boRoles           = mapFromL _rRoleName orderedRoles
+        , _boQueryTagsConfig = queryTagsConfig
         }
 
     mkEndpointMetadataObject (name, createEndpoint) =

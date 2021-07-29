@@ -59,6 +59,8 @@ Note: Parameterized query hash is a PRO only feature
 
 module Hasura.GraphQL.ParameterizedQueryHash
   ( calculateParameterizedQueryHash
+  , mkUnsafeParameterizedQueryHash
+  , unParamQueryHash
   , ParameterizedQueryHash
   )
 where
@@ -133,3 +135,6 @@ normalizeSelectionSet =  (normalizeSelection =<<)
 
 calculateParameterizedQueryHash :: G.SelectionSet G.NoFragments Variable -> ParameterizedQueryHash
 calculateParameterizedQueryHash = ParameterizedQueryHash . cryptoHash . Text.run . G.selectionSet . normalizeSelectionSet
+
+mkUnsafeParameterizedQueryHash :: Text -> ParameterizedQueryHash
+mkUnsafeParameterizedQueryHash = ParameterizedQueryHash . txtToBs

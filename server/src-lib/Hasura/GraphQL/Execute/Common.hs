@@ -72,4 +72,3 @@ instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (MetadataStorageT m)
 
   executeIntrospection userInfo introspectionQuery rolesDisabled =
     lift $ executeIntrospection userInfo introspectionQuery rolesDisabled
-

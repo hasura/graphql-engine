@@ -35,6 +35,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Parser
+import           Hasura.QueryTags
 import           Hasura.RQL.DML.Internal                    (dmlTxErrorHandler)
 import           Hasura.RQL.IR
 import           Hasura.RQL.Types
@@ -76,12 +77,14 @@ pgDBQueryPlan
   -> SourceName
   -> SourceConfig ('Postgres pgKind)
   -> QueryDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
+  -> QueryTagsComment
   -> m (DBStepInfo ('Postgres pgKind))
-pgDBQueryPlan userInfo sourceName sourceConfig qrf = do
+pgDBQueryPlan userInfo sourceName sourceConfig qrf queryTags = do
   (preparedQuery, PlanningSt _ _ planVals expectedVariables) <-
     flip runStateT initPlanningSt $ traverse prepareWithPlan qrf
   validateSessionVariables expectedVariables $ _uiSession userInfo
-  let (action, preparedSQL) = mkCurPlanTx userInfo $ irToRootFieldPlan planVals preparedQuery
+  let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags (irToRootFieldPlan planVals preparedQuery) queryTags
+  let (action, preparedSQL) = mkCurPlanTx userInfo preparedSQLWithQueryTags
   pure $ DBStepInfo @('Postgres pgKind) sourceName sourceConfig preparedSQL action
 
 pgDBQueryExplain
@@ -140,12 +143,13 @@ convertDelete
   => UserInfo
   -> IR.AnnDelG ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> Bool
+  -> QueryTagsComment
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
-convertDelete userInfo deleteOperation stringifyNum = do
+convertDelete userInfo deleteOperation stringifyNum queryTags = do
   let (preparedDelete, expectedVariables) =
         flip runState Set.empty $ traverse prepareWithoutPlan deleteOperation
   validateSessionVariables expectedVariables $ _uiSession userInfo
-  pure $ PGE.execDeleteQuery stringifyNum userInfo (preparedDelete, Seq.empty)
+  pure $ flip runReaderT queryTags $ PGE.execDeleteQuery stringifyNum userInfo (preparedDelete, Seq.empty)
 
 convertUpdate
   :: forall pgKind m
@@ -156,14 +160,15 @@ convertUpdate
   => UserInfo
   -> IR.AnnUpdG ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> Bool
+  -> QueryTagsComment
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
-convertUpdate userInfo updateOperation stringifyNum = do
+convertUpdate userInfo updateOperation stringifyNum queryTags = do
   let (preparedUpdate, expectedVariables) = flip runState Set.empty $ traverse prepareWithoutPlan updateOperation
   if null $ IR.uqp1OpExps updateOperation
   then pure $ pure $ IR.buildEmptyMutResp $ IR.uqp1Output preparedUpdate
   else do
     validateSessionVariables expectedVariables $ _uiSession userInfo
-    pure $ PGE.execUpdateQuery stringifyNum userInfo (preparedUpdate, Seq.empty)
+    pure $ flip runReaderT queryTags $ PGE.execUpdateQuery stringifyNum userInfo (preparedUpdate, Seq.empty)
 
 convertInsert
   :: forall pgKind m
@@ -175,11 +180,12 @@ convertInsert
   => UserInfo
   -> IR.AnnInsert ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> Bool
+  -> QueryTagsComment
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
-convertInsert userInfo insertOperation stringifyNum = do
+convertInsert userInfo insertOperation stringifyNum queryTags = do
   let (preparedInsert, expectedVariables) = flip runState Set.empty $ traverse prepareWithoutPlan insertOperation
   validateSessionVariables expectedVariables $ _uiSession userInfo
-  pure $ convertToSQLTransaction preparedInsert userInfo Seq.empty stringifyNum
+  pure $ flip runReaderT queryTags $ convertToSQLTransaction preparedInsert userInfo Seq.empty stringifyNum
 
 -- | A pared-down version of 'Query.convertQuerySelSet', for use in execution of
 -- special case of SQL function mutations (see 'MDBFunction').
@@ -193,8 +199,10 @@ convertFunction
   -> JsonAggSelect
   -> IR.AnnSimpleSelectG ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -- ^ VOLATILE function as 'SelectExp'
+  -> QueryTagsComment
+  -- ^ Query Tags
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
-convertFunction userInfo jsonAggSelect unpreparedQuery = do
+convertFunction userInfo jsonAggSelect unpreparedQuery queryTags = do
   -- Transform the RQL AST into a prepared SQL query
   (preparedQuery, PlanningSt _ _ planVals expectedVariables)
     <- flip runStateT initPlanningSt
@@ -204,10 +212,10 @@ convertFunction userInfo jsonAggSelect unpreparedQuery = do
         case jsonAggSelect of
           JASMultipleRows -> QDBMultipleRows
           JASSingleObject -> QDBSingleRow
+  let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags (irToRootFieldPlan planVals $ queryResultFn preparedQuery) queryTags
   pure $!
     fst $ -- forget (Maybe PreparedSql)
-      mkCurPlanTx userInfo $
-        irToRootFieldPlan planVals $ queryResultFn preparedQuery
+      mkCurPlanTx userInfo preparedSQLWithQueryTags
 
 pgDBMutationPlan
   :: forall pgKind m
@@ -221,16 +229,16 @@ pgDBMutationPlan
   -> SourceName
   -> SourceConfig ('Postgres pgKind)
   -> MutationDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
+  -> QueryTagsComment
   -> m (DBStepInfo ('Postgres pgKind))
-pgDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf =
-  go <$> case mrf of
-    MDBInsert s              -> convertInsert userInfo s stringifyNum
-    MDBUpdate s              -> convertUpdate userInfo s stringifyNum
-    MDBDelete s              -> convertDelete userInfo s stringifyNum
-    MDBFunction returnsSet s -> convertFunction userInfo returnsSet s
+pgDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf queryTags  =
+    go <$> case mrf of
+    MDBInsert s              -> convertInsert userInfo s stringifyNum queryTags
+    MDBUpdate s              -> convertUpdate userInfo s stringifyNum queryTags
+    MDBDelete s              -> convertDelete userInfo s stringifyNum queryTags
+    MDBFunction returnsSet s -> convertFunction userInfo returnsSet s queryTags
   where
     go v = DBStepInfo @('Postgres pgKind) sourceName sourceConfig Nothing v
-
 
 -- subscription
 
@@ -245,13 +253,15 @@ pgDBSubscriptionPlan
   -> SourceName
   -> SourceConfig ('Postgres pgKind)
   -> InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind)))
+  -> QueryTagsComment
   -> m (LiveQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)))
-pgDBSubscriptionPlan userInfo _sourceName sourceConfig unpreparedAST = do
+pgDBSubscriptionPlan userInfo _sourceName sourceConfig unpreparedAST queryTags = do
   (preparedAST, PGL.QueryParametersInfo{..}) <- flip runStateT mempty $
     for unpreparedAST $ traverse (PGL.resolveMultiplexedValue $ _uiSession userInfo)
   let multiplexedQuery = PGL.mkMultiplexedQuery preparedAST
+      multiplexedQueryWithQueryTags = multiplexedQuery { PGL.unMultiplexedQuery = appendSQLWithQueryTags (PGL.unMultiplexedQuery multiplexedQuery) queryTags}
       roleName = _uiRole userInfo
-      parameterizedPlan = ParameterizedLiveQueryPlan roleName multiplexedQuery
+      parameterizedPlan = ParameterizedLiveQueryPlan roleName multiplexedQueryWithQueryTags
 
   -- We need to ensure that the values provided for variables are correct according to Postgres.
   -- Without this check an invalid value for a variable for one instance of the subscription will
@@ -298,3 +308,15 @@ irToRootFieldPlan prepped = \case
     mkPreparedSql ::  (t -> Q.Query) -> t -> PreparedSql
     mkPreparedSql f simpleSel =
       PreparedSql (f simpleSel) prepped
+
+-- Append Query Tags to the Prepared SQL
+appendPreparedSQLWithQueryTags :: PreparedSql -> QueryTagsComment -> PreparedSql
+appendPreparedSQLWithQueryTags preparedSQL queryTags =
+  preparedSQL {_psQuery = appendSQLWithQueryTags query queryTags}
+  where
+    query = _psQuery preparedSQL
+
+appendSQLWithQueryTags :: Q.Query -> QueryTagsComment -> Q.Query
+appendSQLWithQueryTags query queryTags = query {Q.getQueryText = queryText <> (_unQueryTagsComment queryTags)}
+  where
+    queryText = Q.getQueryText query

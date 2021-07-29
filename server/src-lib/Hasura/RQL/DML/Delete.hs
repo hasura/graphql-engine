@@ -1,3 +1,6 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
+
 module Hasura.RQL.DML.Delete
   ( validateDeleteQWith
   , validateDeleteQ
@@ -10,6 +13,7 @@ module Hasura.RQL.DML.Delete
 import           Hasura.Prelude
 
 import qualified Data.Sequence                                as DS
+import qualified Data.Tagged                                  as Tagged
 import qualified Database.PG.Query                            as Q
 
 import           Control.Monad.Trans.Control                  (MonadBaseControl)
@@ -24,12 +28,15 @@ import           Hasura.Backends.Postgres.Translate.Returning
 import           Hasura.Backends.Postgres.Types.Table
 import           Hasura.Base.Error
 import           Hasura.EncJSON
+import           Hasura.QueryTags
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.Delete
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Session
+
+import           Hasura.GraphQL.Execute.Backend
 
 
 validateDeleteQWith
@@ -91,17 +98,18 @@ validateDeleteQ query = do
     validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder query
 
 runDelete
-  :: ( QErrM m, UserInfoM m, CacheRM m
-     , HasServerConfigCtx m, MonadIO m
-     , Tracing.MonadTrace m, MonadBaseControl IO m
-     , MetadataM m
-     )
+  :: forall m
+    . ( QErrM m, UserInfoM m, CacheRM m
+      , HasServerConfigCtx m, MonadIO m
+      , Tracing.MonadTrace m, MonadBaseControl IO m
+      , MetadataM m, MonadQueryTags m)
   => DeleteQuery
   -> m EncJSON
 runDelete q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (doSource q)
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   userInfo <- askUserInfo
+  let queryTags = QueryTagsComment $ Tagged.untag $ createQueryTags @m Nothing (encodeOptionalQueryTags Nothing)
   validateDeleteQ q
     >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
-        . execDeleteQuery strfyNum userInfo
+        . flip runReaderT queryTags . execDeleteQuery strfyNum userInfo

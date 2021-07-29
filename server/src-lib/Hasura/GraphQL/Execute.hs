@@ -22,6 +22,7 @@ import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.HashSet                           as HS
+import qualified Data.Tagged                            as Tagged
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
@@ -55,6 +56,9 @@ import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
+
+import           Hasura.QueryTags
+import           Hasura.Server.Types                    (RequestId (..))
 
 
 type QueryParts = G.TypedOperationDefinition G.FragmentSpread G.Name
@@ -153,11 +157,14 @@ data SubscriptionExecution
     !(ActionLogResponseMap -> ExceptT QErr IO (SourceName, LiveQueryPlan))
 
 buildSubscriptionPlan
-  :: (MonadError QErr m)
+  :: forall m
+   . (MonadError QErr m, EB.MonadQueryTags m)
   => UserInfo
   -> InsOrdHashMap G.Name (IR.QueryRootField UnpreparedValue)
+  -> ParameterizedQueryHash
+  -> QueryTagsConfig
   -> m SubscriptionExecution
-buildSubscriptionPlan userInfo rootFields = do
+buildSubscriptionPlan userInfo rootFields parameterizedQueryHash queryTagsConfig = do
   (onSourceFields, noRelationActionFields) <- foldlM go (mempty, mempty) (OMap.toList rootFields)
 
   if | null onSourceFields -> do
@@ -178,9 +185,9 @@ buildSubscriptionPlan userInfo rootFields = do
                    JASSingleObject -> IR.QDBSingleRow    selectAST
              pure $ (sourceName, AB.mkAnyBackend $ IR.SourceConfigWith srcConfig $ IR.QDBR queryDB)
 
-         case toList sourceSubFields of
-           []      -> throw500 "empty selset for subscription"
-           (sub:_) -> buildAction sub sourceSubFields
+         case OMap.toList sourceSubFields of
+           []                      -> throw500 "empty selset for subscription"
+           ((rootFieldName,sub):_) -> buildAction sub sourceSubFields rootFieldName
 
      | otherwise ->
        throw400 NotSupported
@@ -210,19 +217,22 @@ buildSubscriptionPlan userInfo rootFields = do
                 pure $ first (OMap.insert gName (Left (actionId, (srcConfig, dbExecution)))) accFields
           IR.AQQuery _ -> throw400 NotSupported "query actions cannot be run as a subscription"
 
-    buildAction (sourceName, exists) allFields = do
+    buildAction (sourceName, exists) allFields rootFieldName = do
       lqp <- AB.dispatchAnyBackend @EB.BackendExecute exists
         \(IR.SourceConfigWith sourceConfig _ :: IR.SourceConfigWith db b) -> do
            qdbs <- traverse (checkField @b sourceName) allFields
+           let subscriptionQueryTagsAttributes = encodeQueryTags $  QTLiveQuery $ LivequeryMetadata rootFieldName parameterizedQueryHash
+           let qtSourceConfig = getQueryTagsSourceConfig queryTagsConfig sourceName
+           let queryTagsComment = QueryTagsComment $ Tagged.untag $ EB.createQueryTags @m (Just qtSourceConfig) subscriptionQueryTagsAttributes
            LQP . AB.mkAnyBackend . MultiplexedLiveQueryPlan
-             <$> EB.mkDBSubscriptionPlan userInfo sourceName sourceConfig qdbs
+             <$> EB.mkDBSubscriptionPlan userInfo sourceName sourceConfig qdbs queryTagsComment
       pure (sourceName, lqp)
 
     checkField
-      :: forall b m. (Backend b, MonadError QErr m)
+      :: forall b m1 . (Backend b, MonadError QErr m1)
       => SourceName
       -> (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)))
-      -> m (IR.QueryDB b (Const Void) (UnpreparedValue b))
+      -> m1 (IR.QueryDB b (Const Void) (UnpreparedValue b))
     checkField sourceName (src, exists)
       | sourceName /= src = throw400 NotSupported "all fields of a subscription must be from the same source"
       | otherwise         = case AB.unpackAnyBackend exists of
@@ -257,6 +267,7 @@ getResolvedExecPlan
      , MonadIO m
      , Tracing.MonadTrace m
      , EC.MonadGQLExecutionCheck m
+     , EB.MonadQueryTags m
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -268,9 +279,10 @@ getResolvedExecPlan
   -> HTTP.Manager
   -> [HTTP.Header]
   -> (GQLReqUnparsed, GQLReqParsed)
+  -> RequestId
   -> m (ParameterizedQueryHash, ResolvedExecutionPlan)
 getResolvedExecPlan env logger userInfo sqlGenCtx
-  sc _scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) = do
+  sc _scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) reqId = do
   -- GraphQL requests may incorporate fragments which insert a pre-defined
   -- part of a GraphQL query. Here we make sure to remember those
   -- pre-defined sections, so that when we encounter a fragment spread
@@ -279,26 +291,35 @@ getResolvedExecPlan env logger userInfo sqlGenCtx
       fragments =
         mapMaybe takeFragment $ unGQLExecDoc $ _grQuery reqParsed
   (gCtx, queryParts) <- getExecPlanPartial userInfo sc queryType reqParsed
-  (normalizedSelectionSet, resolvedExecPlan) <-
+
+  let maybeOperationName = (Just <$> _unOperationName) =<< _grOperationName reqParsed
+  let queryTagsConfig = scQueryTagsConfig sc
+
+  (parameterizedQueryHash, resolvedExecPlan) <-
     case queryParts of
       G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives selSet -> do
         -- (Here the above fragment inlining is actually executed.)
         inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-        (executionPlan, queryRootFields, normalizedSelectionSet, dirMap) <-
-          EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders directives inlinedSelSet varDefs (_grVariables reqUnparsed) (scSetGraphqlIntrospectionOptions sc)
-        pure $ (normalizedSelectionSet, QueryExecutionPlan executionPlan queryRootFields dirMap)
+        (executionPlan, queryRootFields, dirMap, parameterizedQueryHash) <-
+          EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders directives inlinedSelSet
+            varDefs (_grVariables reqUnparsed) (scSetGraphqlIntrospectionOptions sc)
+            reqId maybeOperationName queryTagsConfig
+        pure $ (parameterizedQueryHash, QueryExecutionPlan executionPlan queryRootFields dirMap)
       G.TypedOperationDefinition G.OperationTypeMutation _ varDefs directives selSet -> do
         -- (Here the above fragment inlining is actually executed.)
         inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-        (executionPlan, normalizedSelectionSet) <-
-          EM.convertMutationSelectionSet env logger gCtx sqlGenCtx userInfo httpManager reqHeaders directives inlinedSelSet varDefs (_grVariables reqUnparsed) (scSetGraphqlIntrospectionOptions sc)
-        pure $ (normalizedSelectionSet, MutationExecutionPlan executionPlan)
+        (executionPlan, parameterizedQueryHash) <-
+          EM.convertMutationSelectionSet env logger gCtx sqlGenCtx userInfo httpManager reqHeaders
+            directives inlinedSelSet varDefs (_grVariables reqUnparsed) (scSetGraphqlIntrospectionOptions sc)
+            reqId maybeOperationName queryTagsConfig
+        pure $ (parameterizedQueryHash, MutationExecutionPlan executionPlan)
       G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives selSet -> do
         -- (Here the above fragment inlining is actually executed.)
         inlinedSelSet <- EI.inlineSelectionSet fragments selSet
         -- Parse as query to check correctness
         (unpreparedAST, normalizedDirectives, normalizedSelectionSet) <-
           EQ.parseGraphQLQuery gCtx varDefs (_grVariables reqUnparsed) directives inlinedSelSet
+        let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
         -- Process directives on the subscription
         dirMap <-  (`onLeft` reportParseErrors) =<<
           runParseT (parseDirectives customDirectives (G.DLExecutable G.EDLSUBSCRIPTION) normalizedDirectives)
@@ -312,9 +333,9 @@ getResolvedExecPlan env logger userInfo sqlGenCtx
           []  -> throw500 "empty selset for subscription"
           _   -> unless allowMultipleRootFields $
             throw400 ValidationFailed "subscriptions must select one top level field"
-        subscriptionPlan <- buildSubscriptionPlan userInfo unpreparedAST
-        pure (normalizedSelectionSet, SubscriptionExecutionPlan subscriptionPlan)
+        subscriptionPlan <- buildSubscriptionPlan userInfo unpreparedAST parameterizedQueryHash queryTagsConfig
+        pure (parameterizedQueryHash, SubscriptionExecutionPlan subscriptionPlan)
   -- the parameterized query hash is calculated here because it is used in multiple
   -- places and instead of calculating it separately, this is a common place to calculate
   -- the parameterized query hash and then thread it to the required places
-  pure $ (calculateParameterizedQueryHash normalizedSelectionSet, resolvedExecPlan)
+  pure $ (parameterizedQueryHash, resolvedExecPlan)

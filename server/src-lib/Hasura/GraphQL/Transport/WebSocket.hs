@@ -345,6 +345,7 @@ onStart
      , MonadExecuteQuery m
      , MC.MonadBaseControl IO m
      , MonadMetadataStorage (MetadataStorageT m)
+     , EB.MonadQueryTags m
      )
   => Env.Environment
   -> HashSet (L.EngineLogType L.Hasura)
@@ -379,7 +380,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore 
   execPlanE <- runExceptT $ E.getResolvedExecPlan
     env logger
     userInfo sqlGenCtx sc scVer queryType
-    httpMgr reqHdrs (q, reqParsed)
+    httpMgr reqHdrs (q, reqParsed) requestId
 
   (parameterizedQueryHash, execPlan) <- onLeft execPlanE (withComplete . preExecErr requestId)
 
@@ -708,6 +709,7 @@ onMessage
      , MonadExecuteQuery m
      , MC.MonadBaseControl IO m
      , MonadMetadataStorage (MetadataStorageT m)
+     , EB.MonadQueryTags m
      )
   => Env.Environment
   -> HashSet (L.EngineLogType L.Hasura)
@@ -907,6 +909,7 @@ createWSServerApp
      , Tracing.HasReporter m
      , MonadExecuteQuery m
      , MonadMetadataStorage (MetadataStorageT m)
+     , EB.MonadQueryTags m
      )
   => Env.Environment
   -> HashSet (L.EngineLogType L.Hasura)
