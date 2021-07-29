@@ -14,6 +14,7 @@
 - console: add pagination on the Raw SQL results page
 - console: fix issues with replacing invalid graphql identifiers in table and column names
 - console: show error message on inconsistent objects table
+- cli: add support for `query_tags` metadata object
 
 ## v2.0.3
 (Add entries below in the order of server, console, cli, docs, others)
