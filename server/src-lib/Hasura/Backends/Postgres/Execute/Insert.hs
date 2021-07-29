@@ -29,6 +29,7 @@ import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.Select    (PostgresAnnotatedFieldJSON)
 import           Hasura.Base.Error
 import           Hasura.EncJSON
+import           Hasura.QueryTags
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
@@ -42,6 +43,7 @@ convertToSQLTransaction
      , Tracing.MonadTrace m
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
+     , MonadReader QueryTagsComment m
      )
   => IR.AnnInsert ('Postgres pgKind) (Const Void) PG.SQLExp
   -> UserInfo
@@ -65,6 +67,7 @@ insertMultipleObjects
      , Tracing.MonadTrace m
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
+     , MonadReader QueryTagsComment m
      )
   => IR.MultiObjIns ('Postgres pgKind) PG.SQLExp
   -> [(PGCol, PG.SQLExp)]
@@ -117,6 +120,7 @@ insertObject
      , Tracing.MonadTrace m
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
+     , MonadReader QueryTagsComment m
      )
   => IR.SingleObjIns ('Postgres pgKind) PG.SQLExp
   -> [(PGCol, PG.SQLExp)]
@@ -204,6 +208,7 @@ insertObjRel
      , Tracing.MonadTrace m
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
+     , MonadReader QueryTagsComment m
      )
   => Seq.Seq Q.PrepArg
   -> UserInfo
@@ -238,6 +243,7 @@ insertArrRel
      , Tracing.MonadTrace m
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
+     , MonadReader QueryTagsComment m
      )
   => [(PGCol, PG.SQLExp)]
   -> UserInfo

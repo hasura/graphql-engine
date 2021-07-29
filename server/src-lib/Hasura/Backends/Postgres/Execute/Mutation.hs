@@ -32,6 +32,7 @@ import           Hasura.Backends.Postgres.Translate.Select
 import           Hasura.Backends.Postgres.Translate.Update
 import           Hasura.Base.Error
 import           Hasura.EncJSON
+import           Hasura.QueryTags
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.Delete
 import           Hasura.RQL.IR.Insert
@@ -56,7 +57,6 @@ instance (Backend b, ToJSON a) => ToJSON (MutateResp b a) where
 
 instance (Backend b, FromJSON a) => FromJSON (MutateResp b a) where
   parseJSON = genericParseJSON hasuraJSON
-
 
 type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
 
@@ -85,6 +85,7 @@ runMutation
   ( MonadTx m
   , Backend ('Postgres pgKind)
   , PostgresAnnotatedFieldJSON pgKind
+  , MonadReader QueryTagsComment m
   )
   => Mutation ('Postgres pgKind)
   -> m EncJSON
@@ -97,6 +98,7 @@ mutateAndReturn
   ( MonadTx m
   , Backend ('Postgres pgKind)
   , PostgresAnnotatedFieldJSON pgKind
+  , MonadReader QueryTagsComment m
   )
   => Mutation ('Postgres pgKind)
   -> m EncJSON
@@ -109,14 +111,15 @@ execUpdateQuery
    . ( MonadTx m
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
+     , MonadReader QueryTagsComment m
      )
   => Bool
   -> UserInfo
   -> (AnnUpd ('Postgres pgKind), DS.Seq Q.PrepArg)
   -> m EncJSON
-execUpdateQuery strfyNum userInfo (u, p) =
-  runMutation $ mkMutation userInfo (uqp1Table u) (MCCheckConstraint updateCTE, p)
-                (uqp1Output u) (uqp1AllCols u) strfyNum
+execUpdateQuery strfyNum userInfo (u, p)  =
+  runMutation
+    (mkMutation userInfo (uqp1Table u) (MCCheckConstraint updateCTE, p) (uqp1Output u) (uqp1AllCols u) strfyNum)
   where
     updateCTE = mkUpdateCTE u
 
@@ -125,14 +128,15 @@ execDeleteQuery
    . ( MonadTx m
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
+     , MonadReader QueryTagsComment m
      )
   => Bool
   -> UserInfo
   -> (AnnDel ('Postgres pgKind), DS.Seq Q.PrepArg)
   -> m EncJSON
-execDeleteQuery strfyNum remoteJoinCtx (u, p) =
-  runMutation $ mkMutation remoteJoinCtx (dqp1Table u) (MCDelete delete, p)
-                (dqp1Output u) (dqp1AllCols u) strfyNum
+execDeleteQuery strfyNum userInfo (u, p) =
+  runMutation
+    (mkMutation userInfo (dqp1Table u) (MCDelete delete, p) (dqp1Output u) (dqp1AllCols u) strfyNum)
   where
     delete = mkDelete u
 
@@ -140,6 +144,7 @@ execInsertQuery
   :: ( MonadTx m
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
+     , MonadReader QueryTagsComment m
      )
   => Bool
   -> UserInfo
@@ -147,8 +152,7 @@ execInsertQuery
   -> m EncJSON
 execInsertQuery strfyNum userInfo (u, p) =
   runMutation
-     $ mkMutation userInfo (iqp1Table u) (MCCheckConstraint insertCTE, p)
-                (iqp1Output u) (iqp1AllCols u) strfyNum
+    (mkMutation userInfo (iqp1Table u) (MCCheckConstraint insertCTE, p) (iqp1Output u) (iqp1AllCols u) strfyNum)
   where
     insertCTE = mkInsertCTE u
 
@@ -173,6 +177,7 @@ mutateAndSel
    . ( MonadTx m
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
+     , MonadReader QueryTagsComment m
      )
   => Mutation ('Postgres pgKind)
   -> m EncJSON
@@ -196,6 +201,7 @@ executeMutationOutputQuery
    . ( MonadTx m
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
+     , MonadReader QueryTagsComment m
      )
   => QualifiedTable
   -> [ColumnInfo ('Postgres pgKind)]
@@ -206,12 +212,14 @@ executeMutationOutputQuery
   -> [Q.PrepArg] -- ^ Prepared params
   -> m EncJSON
 executeMutationOutputQuery qt allCols preCalAffRows cte mutOutput strfyNum prepArgs = do
+  queryTags <- ask
   let queryTx :: Q.FromRes a => m a
       queryTx = do
         let selectWith = mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum
             query = Q.fromBuilder $ toSQL selectWith
+            queryWithQueryTags = query { Q.getQueryText = (Q.getQueryText query) <> (_unQueryTagsComment queryTags) }
         -- See Note [Prepared statements in Mutations]
-        liftTx (Q.rawQE dmlTxErrorHandler query prepArgs False)
+        liftTx (Q.rawQE dmlTxErrorHandler queryWithQueryTags prepArgs False)
 
   if checkPermissionRequired cte
     then withCheckPermission $ Q.getRow <$> queryTx

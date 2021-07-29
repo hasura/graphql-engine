@@ -80,6 +80,8 @@ import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.Session
 
+import qualified Hasura.GraphQL.Execute.Backend            as EB
+
 data SchemaCacheRef
   = SchemaCacheRef
   { _scrLock  :: MVar ()
@@ -431,7 +433,7 @@ mkSpockAction serverCtx@ServerCtx{..} qErrEncoder qErrModifier apiHandler = do
 
 v1QueryHandler
   :: ( HasVersion, MonadIO m, MonadBaseControl IO m, MonadMetadataApiAuthorization m, Tracing.MonadTrace m
-     , MonadReader HandlerCtx m, MonadMetadataStorage m, MonadResolveSource m
+     , MonadReader HandlerCtx m, MonadMetadataStorage m, MonadResolveSource m, EB.MonadQueryTags m
      )
   => RQLQuery
   -> m (HttpResponse EncJSON)
@@ -504,6 +506,7 @@ v2QueryHandler
      , MonadReader HandlerCtx m
      , MonadMetadataStorage m
      , MonadResolveSource m
+     , EB.MonadQueryTags m
      )
   => V2Q.RQLQuery
   -> m (HttpResponse EncJSON)
@@ -543,6 +546,7 @@ v1Alpha1GQHandler
      , MonadReader HandlerCtx m
      , HttpLog m
      , MonadMetadataStorage (MetadataStorageT m)
+     , EB.MonadQueryTags m
      )
   => E.GraphQLQueryType -> GH.GQLBatchedReqs GH.GQLQueryText
   -> m (HttpLogMetadata m, HttpResponse EncJSON)
@@ -592,6 +596,7 @@ v1GQHandler
      , MonadError QErr m
      , MonadReader HandlerCtx m
      , MonadMetadataStorage (MetadataStorageT m)
+     , EB.MonadQueryTags m
      )
   => GH.GQLBatchedReqs GH.GQLQueryText
   -> m (HttpLogMetadata m, HttpResponse EncJSON)
@@ -609,6 +614,7 @@ v1GQRelayHandler
      , MonadError QErr m
      , MonadReader HandlerCtx m
      , MonadMetadataStorage (MetadataStorageT m)
+     , EB.MonadQueryTags m
      )
   => GH.GQLBatchedReqs GH.GQLQueryText
   -> m (HttpLogMetadata m, HttpResponse EncJSON)
@@ -620,6 +626,7 @@ gqlExplainHandler
                , MonadError QErr m
                , MonadReader HandlerCtx m
                , MonadMetadataStorage (MetadataStorageT m)
+               , EB.MonadQueryTags m
                )
   => GE.GQLExplain
   -> m (HttpResponse EncJSON)
@@ -737,6 +744,7 @@ mkWaiApp
      , HasResourceLimits m
      , MonadMetadataStorage (MetadataStorageT m)
      , MonadResolveSource m
+     , EB.MonadQueryTags m
      )
   => (ServerCtx -> Spock.SpockT m ())
   -> Env.Environment
@@ -850,6 +858,7 @@ httpApp
      , MonadMetadataStorage (MetadataStorageT m)
      , HasResourceLimits m
      , MonadResolveSource m
+     , EB.MonadQueryTags m
      )
   => (ServerCtx -> Spock.SpockT m ())
   ->  CorsConfig
@@ -910,6 +919,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
              , GH.MonadExecuteQuery n
              , MonadMetadataStorage (MetadataStorageT n)
              , HttpLog n
+             , EB.MonadQueryTags n
              )
           => RestRequest Spock.SpockMethod
           -> Handler (Tracing.TraceT n) (HttpLogMetadata n, APIResp)

@@ -48,6 +48,8 @@ import           Hasura.Server.Utils
 import           Hasura.Server.Version               (HasVersion)
 import           Hasura.Session
 
+import           Hasura.GraphQL.Execute.Backend
+
 
 data RQLQueryV1
   = RQAddExistingTableOrView !(TrackTable ('Postgres 'Vanilla))
@@ -177,6 +179,7 @@ runQuery
   :: ( HasVersion, MonadIO m, Tracing.MonadTrace m
      , MonadBaseControl IO m, MonadMetadataStorage m
      , MonadResolveSource m
+     , MonadQueryTags m
      )
   => Env.Environment
   -> InstanceId
@@ -351,6 +354,7 @@ runQueryM
      , Tracing.MonadTrace m
      , MetadataM m
      , MonadMetadataStorageQueryAPI m
+     , MonadQueryTags m
      )
   => Env.Environment
   -> RQLQuery

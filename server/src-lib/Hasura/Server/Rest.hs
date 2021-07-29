@@ -35,6 +35,8 @@ import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
 
+import qualified Hasura.GraphQL.Execute.Backend         as EB
+
 
 -- Note: There may be a better way of constructing this when building the Endpoint datastructure.
 parseVariableNames :: EndpointMetadata GQLQueryWithText -> [Text]
@@ -116,6 +118,7 @@ runCustomEndpoint
        , GH.MonadExecuteQuery m
        , MonadMetadataStorage (MetadataStorageT m)
        , HttpLog m
+       , EB.MonadQueryTags m
        )
     => Env.Environment
     -> E.ExecutionCtx

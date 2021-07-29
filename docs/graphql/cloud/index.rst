@@ -43,6 +43,7 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
       - :ref:`read_replicas`
       - :ref:`response_caching`
       - :ref:`tracing`
+      - :ref:`query_tags`
 
   .. container:: toc-list-section
 
@@ -81,6 +82,7 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
   read-replicas
   response-caching
   tracing
+  query-tags
   Billing <billing/index>
   hasurapro-cli/index
   api-reference

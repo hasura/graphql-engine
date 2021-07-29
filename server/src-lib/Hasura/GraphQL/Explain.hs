@@ -25,6 +25,7 @@ import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.Instances          ()
+import           Hasura.GraphQL.ParameterizedQueryHash
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.Instances        ()
@@ -76,6 +77,7 @@ explainGQLQuery
     , MonadIO m
     , MonadBaseControl IO m
     , MonadMetadataStorage (MetadataStorageT m)
+    , MonadQueryTags m
     )
   => SchemaCache
   -> GQLExplain
@@ -106,9 +108,11 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
     G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives selSet -> do
       -- (Here the above fragment inlining is actually executed.)
       inlinedSelSet <- E.inlineSelectionSet fragments selSet
-      (unpreparedQueries, _, _) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
+      (unpreparedQueries, _, normalizedSelectionSet) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
+      let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
       -- TODO: validate directives here
-      validSubscription <-  E.buildSubscriptionPlan userInfo unpreparedQueries
+      -- query-tags are not necessary for EXPLAIN API
+      validSubscription <-  E.buildSubscriptionPlan userInfo unpreparedQueries parameterizedQueryHash emptyQueryTagsConfig
       case validSubscription of
         E.SEAsyncActionsWithNoRelationships _ -> throw400 NotSupported "async action query fields without relationships to table cannot be explained"
         E.SEOnSourceDB actionIds liveQueryBuilder -> do

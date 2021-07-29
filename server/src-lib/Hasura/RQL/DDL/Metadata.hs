@@ -92,6 +92,8 @@ pg trigger and archive events for dropped event triggers. This is handled
 explicitly in @'runReplaceMetadata' function.
 -}
 
+-- | Replace the 'current metadata' with the 'new metadata'
+-- The 'new metadata' might come via the 'Import Metadata' in console
 runReplaceMetadata
   :: ( CacheRWM m
      , MetadataM m
@@ -141,6 +143,11 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
   when (inheritedRoles /= mempty && EFInheritedRoles `notElem` experimentalFeatures) $
     throw400 ConstraintViolation "inherited_roles can only be added when it's enabled in the experimental features"
 
+  let queryTagsConfig =
+        case _rmv2Metadata of
+          RMWithSources m    -> _metaQueryTagsConfig m
+          RMWithoutSources _ -> emptyQueryTagsConfig
+
   oldMetadata <- getMetadata
   let (oldCronTriggersIncludedInMetadata, oldCronTriggersNotIncludedInMetadata) =
         (OMap.filter ctIncludeInMetadata (_metaCronTriggers  oldMetadata)
@@ -175,7 +182,7 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
       pure $ Metadata (OMap.singleton defaultSource newDefaultSourceMetadata)
                         _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist
                         _mnsCustomTypes _mnsActions cronTriggers (_metaRestEndpoints oldMetadata)
-                        emptyApiLimit emptyMetricsConfig mempty introspectionDisabledRoles
+                        emptyApiLimit emptyMetricsConfig mempty introspectionDisabledRoles queryTagsConfig
   putMetadata metadata
 
   case _rmv2AllowInconsistentMetadata of
