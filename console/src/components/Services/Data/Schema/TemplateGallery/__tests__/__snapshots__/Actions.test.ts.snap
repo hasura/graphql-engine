@@ -3,7 +3,7 @@
 exports[`SchemaSharing state apply schema should apply migration 1`] = `
 Object {
   "globalConfigState": "success",
-  "schemas": Object {
+  "templates": Object {
     "sections": Array [
       Object {
         "name": "AAAAAAAA",
@@ -12,7 +12,7 @@ Object {
             "description": "This is the description of template one",
             "details": Object {
               "blogPostLink": "https://hasura.io/blog/whats-new-in-hasura-cloud-may-2021/",
-              "imageUrl": "https://raw.githubusercontent.com/hasura/schema-sharing/main/./postgres-template-1/someImage.url",
+              "imageUrl": "https://raw.githubusercontent.com/hasura/template-gallery/main/./postgres-template-1/someImage.url",
               "longDescription": "long long description",
               "metadataObject": Object {
                 "metadata": Object {
@@ -77,7 +77,7 @@ Object {
                 },
                 "resource_version": 13,
               },
-              "publicUrl": "https://github.com/hasura/schema-sharing/blob/main/./postgres-template-1",
+              "publicUrl": "https://github.com/hasura/template-gallery/blob/main/./postgres-template-1",
               "sql": "
 CREATE SCHEMA _onetoone;
 
@@ -150,7 +150,7 @@ INSERT INTO \\"_onetoone\\".\\"passport_info\\" (\\"passport_number\\", \\"owner
 exports[`SchemaSharing state fetch single config file should populate with all the data from the gihtub api 1`] = `
 Object {
   "globalConfigState": "success",
-  "schemas": Object {
+  "templates": Object {
     "sections": Array [
       Object {
         "name": "AAAAAAAA",
@@ -159,7 +159,7 @@ Object {
             "description": "This is the description of template one",
             "details": Object {
               "blogPostLink": "https://hasura.io/blog/whats-new-in-hasura-cloud-may-2021/",
-              "imageUrl": "https://raw.githubusercontent.com/hasura/schema-sharing/main/./postgres-template-1/someImage.url",
+              "imageUrl": "https://raw.githubusercontent.com/hasura/template-gallery/main/./postgres-template-1/someImage.url",
               "longDescription": "long long description",
               "metadataObject": Object {
                 "metadata": Object {
@@ -224,7 +224,7 @@ Object {
                 },
                 "resource_version": 13,
               },
-              "publicUrl": "https://github.com/hasura/schema-sharing/blob/main/./postgres-template-1",
+              "publicUrl": "https://github.com/hasura/template-gallery/blob/main/./postgres-template-1",
               "sql": "
 CREATE SCHEMA _onetoone;
 
@@ -297,7 +297,7 @@ INSERT INTO \\"_onetoone\\".\\"passport_info\\" (\\"passport_number\\", \\"owner
 exports[`SchemaSharing state global config get flow should dispatch the root config success when the api works 1`] = `
 Object {
   "globalConfigState": "success",
-  "schemas": Object {
+  "templates": Object {
     "sections": Array [
       Object {
         "name": "AAAAAAAA",

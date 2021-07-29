@@ -2,6 +2,8 @@
 .table {
   width: 100%;
   background-color: white;
+  margin-top: 20px;
+  margin-bottom: 10px;
 }
 
 .image_in_detail {
@@ -14,6 +16,15 @@
 
 .pr_md {
   padding-right: 24px;
+}
+
+.mb_none {
+  margin-bottom: 0;
+}
+
+.header_table_description {
+  margin-bottom: 10px;
+  padding-bottom: 0;
 }
 
 .mr_md {
