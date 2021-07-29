@@ -27,6 +27,8 @@ type ErrParsingMetadataObject interface {
 	// ErrorContext will contain any additional information regarding error
 	ErrorContext() string
 
+	// Unwrap will make sure the error returned is unwrappable
+	// https://blog.golang.org/go1.13-errors#TOC_3.1.
 	Unwrap() error
 	error
 }

@@ -11,6 +11,7 @@ import (
 	graphqlschemaintrospection "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/graphql_schema_introspection"
 	inheritedroles "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/inherited_roles"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/querycollections"
+	querytags "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/query_tags"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/remoteschemas"
 	restendpoints "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/rest_endpoints"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/sources"
@@ -57,6 +58,7 @@ func GetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) metadata
 			// hasura pro specific metadata objects
 			objects = append(objects, apilimits.New(ec, metadataDir))
 			objects = append(objects, graphqlschemaintrospection.New(ec, metadataDir))
+			objects = append(objects, querytags.New(ec, metadataDir))
 		}
 	}
 
