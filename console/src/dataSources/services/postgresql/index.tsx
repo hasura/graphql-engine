@@ -584,7 +584,6 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     permissions: {
       enabled: true,
-      aggregation: true,
     },
     track: {
       enabled: false,
@@ -731,6 +730,7 @@ export const postgres: DataSourcesAPI = {
   permissionColumnDataTypes,
   viewsSupported: true,
   supportedColumnOperators: null,
+  aggregationPermissionsAllowed: true,
   supportedFeatures,
   violationActions,
   defaultRedirectSchema,

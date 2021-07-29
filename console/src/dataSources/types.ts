@@ -285,7 +285,6 @@ export type SupportedFeaturesType = {
     };
     permissions: {
       enabled: boolean;
-      aggregation: boolean;
     };
     track: {
       enabled: boolean;

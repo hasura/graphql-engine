@@ -245,5 +245,6 @@ WHERE
   permissionColumnDataTypes: null,
   viewsSupported: false,
   supportedColumnOperators: null,
+  aggregationPermissionsAllowed: false,
   violationActions,
 };

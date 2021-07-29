@@ -163,7 +163,6 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     permissions: {
       enabled: true,
-      aggregation: false,
     },
     track: {
       enabled: false,
@@ -916,6 +915,7 @@ WHERE
   permissionColumnDataTypes,
   viewsSupported: false,
   supportedColumnOperators,
+  aggregationPermissionsAllowed: false,
   supportedFeatures,
   violationActions,
   defaultRedirectSchema,
