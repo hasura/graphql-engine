@@ -117,7 +117,7 @@
     "@babel/preset-react": "7.9.4",
     "@babel/preset-typescript": "7.13.0",
     "@babel/register": "7.9.0",
-    "@babel/runtime": "7.9.6",
+    "@babel/runtime": "7.14.8",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^11.2.7",
     "@types/clean-webpack-plugin": "0.1.3",
