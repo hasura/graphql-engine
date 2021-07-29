@@ -2,6 +2,7 @@
 
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
+- console: add template gallery
 
 ## v2.0.4
 

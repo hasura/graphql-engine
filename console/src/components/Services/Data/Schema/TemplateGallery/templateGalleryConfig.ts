@@ -1,7 +1,7 @@
-export const isSchemaSharingEnabled = false;
+export const isTemplateGalleryEnabled = true;
 
 const repo_owner = 'hasura';
-const repo_name = 'schema-sharing';
+const repo_name = 'template-gallery';
 const repo_branch = 'main';
 
 export const BASE_URL_TEMPLATE = `https://raw.githubusercontent.com/${repo_owner}/${repo_name}/${repo_branch}`;

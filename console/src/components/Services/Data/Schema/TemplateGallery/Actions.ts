@@ -12,26 +12,26 @@ import {
 } from '../../../../../metadata/queryUtils';
 import { HasuraMetadataV3 } from '../../../../../metadata/types';
 import {
-  SchemaSharingSection,
-  SchemaSharingStore,
-  SchemaSharingTemplateDetailFull,
-  SchemaSharingTemplateItem,
+  TemplateGallerySection,
+  TemplateGalleryStore,
+  TemplateGalleryTemplateDetailFull,
+  TemplateGalleryTemplateItem,
   ServerJsonRootConfig,
-  ServerJsonSchemaDefinition,
+  ServerJsonTemplateDefinition,
 } from './types';
 import {
   BASE_URL_PUBLIC,
   BASE_URL_TEMPLATE,
   ROOT_CONFIG_PATH,
-} from './schemaSharingConfig';
+} from './templateGalleryConfig';
 
 const mapRootJsonFromServerToState = (
   data: ServerJsonRootConfig,
   metadataVersion: number
-): Required<SchemaSharingStore['schemas']> => {
+): Required<TemplateGalleryStore['templates']> => {
   const sectionsGroups: Record<
     string,
-    SchemaSharingTemplateItem[]
+    TemplateGalleryTemplateItem[]
   > = Object.entries(data)
     .map(([key, value]) => ({
       ...value,
@@ -42,9 +42,9 @@ const mapRootJsonFromServerToState = (
         value.metadata_version === `${metadataVersion}` &&
         value.template_version === '1'
     )
-    .reduce<Record<string, SchemaSharingTemplateItem[]>>(
+    .reduce<Record<string, TemplateGalleryTemplateItem[]>>(
       (previousValue, currentValue) => {
-        const item: SchemaSharingTemplateItem = {
+        const item: TemplateGalleryTemplateItem = {
           type: 'database',
           isPartialData: true,
           fetchingStatus: 'none',
@@ -67,7 +67,7 @@ const mapRootJsonFromServerToState = (
       {}
     );
 
-  const sections: SchemaSharingSection[] = Object.entries(sectionsGroups).map(
+  const sections: TemplateGallerySection[] = Object.entries(sectionsGroups).map(
     ([name, templates]) => ({
       name,
       templates,
@@ -79,14 +79,14 @@ const mapRootJsonFromServerToState = (
   };
 };
 
-const initialStoreState: SchemaSharingStore = {
+const initialStoreState: TemplateGalleryStore = {
   globalConfigState: 'none',
-  schemas: undefined,
+  templates: undefined,
 };
 
 export const schemaSharingSelectors = {
   getGlobalConfigState: (state: ReduxState) =>
-    state.schemaSharing.globalConfigState,
+    state.templateGallery.globalConfigState,
   getTemplateBySectionAndKey: ({
     key,
     section,
@@ -94,7 +94,7 @@ export const schemaSharingSelectors = {
     key: string;
     section: string;
   }) => (state: ReduxState) => {
-    const maybeSection = state.schemaSharing.schemas?.sections?.find(
+    const maybeSection = state.templateGallery.templates?.sections?.find(
       block => block.name === section
     );
     if (!maybeSection) {
@@ -109,7 +109,7 @@ export const schemaSharingSelectors = {
     return maybeTemplate;
   },
   getSchemasForDb: (driver: Driver) => (state: ReduxState) =>
-    state.schemaSharing.schemas?.sections
+    state.templateGallery.templates?.sections
       .map(section => ({
         ...section,
         templates: section.templates.filter(
@@ -120,11 +120,11 @@ export const schemaSharingSelectors = {
 };
 
 export const fetchGlobalSchemaSharingConfiguration = createAsyncThunk<
-  Required<SchemaSharingStore['schemas']>,
+  Required<TemplateGalleryStore['templates']>,
   undefined,
   AsyncThunkConfig
 >(
-  'SchemaSharing/GET_REPOSITORY_ROOT_CONFIG',
+  'TemplateGallery/GET_REPOSITORY_ROOT_CONFIG',
   async (params, { dispatch, getState }) => {
     const rawData = await dispatch(requestAction(ROOT_CONFIG_PATH));
     const payload = JSON.parse(rawData);
@@ -134,11 +134,11 @@ export const fetchGlobalSchemaSharingConfiguration = createAsyncThunk<
 );
 
 export const fetchSchemaConfigurationByName = createAsyncThunk<
-  SchemaSharingTemplateDetailFull,
+  TemplateGalleryTemplateDetailFull,
   { key: string; category: string },
   AsyncThunkConfig
 >(
-  'SchemaSharing/FETCH_ITEM_CONFIG',
+  'TemplateGallery/FETCH_ITEM_CONFIG',
   async ({ key, category }, { dispatch, getState }) => {
     const maybeTemplate = schemaSharingSelectors.getTemplateBySectionAndKey({
       key,
@@ -154,7 +154,7 @@ export const fetchSchemaConfigurationByName = createAsyncThunk<
     const itemConfigRaw = await dispatch(
       requestAction(`${baseTemplatePath}/config.json`)
     );
-    const itemConfig: ServerJsonSchemaDefinition = JSON.parse(itemConfigRaw);
+    const itemConfig: ServerJsonTemplateDefinition = JSON.parse(itemConfigRaw);
 
     const sqlFiles = await Promise.all(
       itemConfig.sqlFiles.map(sqlFile =>
@@ -168,7 +168,7 @@ export const fetchSchemaConfigurationByName = createAsyncThunk<
       )
     );
 
-    const fullObject: SchemaSharingTemplateDetailFull = {
+    const fullObject: TemplateGalleryTemplateDetailFull = {
       sql: sqlFiles.join('\n'),
       blogPostLink: itemConfig.blogPostLink,
       imageUrl: `${baseTemplatePath}/${itemConfig.imageUrl}`,
@@ -186,7 +186,7 @@ export const applyTemplate = createAsyncThunk<
   { key: string; category: string },
   AsyncThunkConfig
 >(
-  'SchemaSharing/applyTemplate',
+  'TemplateGallery/applyTemplate',
   async ({ key, category }, { getState, dispatch }) => {
     let template = schemaSharingSelectors.getTemplateBySectionAndKey({
       key,
@@ -290,7 +290,7 @@ export const applyTemplate = createAsyncThunk<
 );
 
 const schemaSharingSlice = createSlice({
-  name: 'schemaSharing',
+  name: 'templateGallery',
   initialState: initialStoreState,
   reducers: {},
   extraReducers: builder => {
@@ -305,7 +305,7 @@ const schemaSharingSlice = createSlice({
         fetchGlobalSchemaSharingConfiguration.fulfilled,
         (state, { payload }) => {
           state.globalConfigState = 'success';
-          state.schemas = payload;
+          state.templates = payload;
         }
       )
       .addCase(
@@ -318,7 +318,7 @@ const schemaSharingSlice = createSlice({
             },
           }
         ) => {
-          const maybeTemplate = state.schemas?.sections
+          const maybeTemplate = state.templates?.sections
             ?.find?.(section => section.name === category)
             ?.templates?.find(template => template.key === key);
           if (maybeTemplate) {
@@ -337,7 +337,7 @@ const schemaSharingSlice = createSlice({
             payload,
           }
         ) => {
-          const maybeTemplate = state.schemas?.sections
+          const maybeTemplate = state.templates?.sections
             ?.find?.(section => section.name === category)
             ?.templates?.find(template => template.key === key);
           if (maybeTemplate) {
@@ -357,7 +357,7 @@ const schemaSharingSlice = createSlice({
             },
           }
         ) => {
-          const maybeTemplate = state.schemas?.sections
+          const maybeTemplate = state.templates?.sections
             ?.find?.(section => section.name === category)
             ?.templates?.find(template => template.key === key);
           if (maybeTemplate) {
@@ -370,4 +370,4 @@ const schemaSharingSlice = createSlice({
 
 const { reducer } = schemaSharingSlice;
 
-export const schemaSharingReducer = reducer;
+export const templateGalleryReducer = reducer;

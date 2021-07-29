@@ -5,12 +5,12 @@ import addExistingTableReducer from './Add/AddExistingTableViewActions';
 import rawSQLReducer from './RawSQL/Actions';
 import { dataSidebarReducer } from './DataSubSidebar';
 import customFunctionReducer from './Function/customFunctionReducer';
-import { schemaSharingReducer } from './Schema/SchemaSharing/Actions';
+import { templateGalleryReducer } from './Schema/TemplateGallery/Actions';
 
 const dataReducer = {
   tables: tableReducer,
   functions: customFunctionReducer,
-  schemaSharing: schemaSharingReducer,
+  templateGallery: templateGalleryReducer,
   addTable: combineReducers({
     table: addTableReducer,
     existingTableView: addExistingTableReducer,

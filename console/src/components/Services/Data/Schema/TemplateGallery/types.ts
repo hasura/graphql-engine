@@ -5,13 +5,13 @@ export type ModalType = { key: string; section: string };
 
 export type modalOpenFn = (params: ModalType) => void;
 
-export type SchemaSharingFetchingStatus =
+export type TemplateGalleryFetchingStatus =
   | 'success'
   | 'fetching'
   | 'failure'
   | 'none';
 
-export type SchemaSharingTemplateDetailFull = {
+export type TemplateGalleryTemplateDetailFull = {
   sql: string;
   longDescription?: string;
   imageUrl?: string;
@@ -23,7 +23,7 @@ export type SchemaSharingTemplateDetailFull = {
   };
 };
 
-export type SchemaSharingTemplateItem = {
+export type TemplateGalleryTemplateItem = {
   templateVersion: number;
   metadataVersion: number;
   key: string;
@@ -32,20 +32,20 @@ export type SchemaSharingTemplateItem = {
   description: string;
   relativeFolderPath: string;
   dialect: Driver;
-  fetchingStatus: SchemaSharingFetchingStatus;
+  fetchingStatus: TemplateGalleryFetchingStatus;
   isPartialData: boolean;
-  details?: SchemaSharingTemplateDetailFull;
+  details?: TemplateGalleryTemplateDetailFull;
 };
 
-export interface SchemaSharingSection {
+export interface TemplateGallerySection {
   name: string;
-  templates: SchemaSharingTemplateItem[];
+  templates: TemplateGalleryTemplateItem[];
 }
 
-export interface SchemaSharingStore {
-  globalConfigState: SchemaSharingFetchingStatus;
-  schemas?: {
-    sections: SchemaSharingSection[];
+export interface TemplateGalleryStore {
+  globalConfigState: TemplateGalleryFetchingStatus;
+  templates?: {
+    sections: TemplateGallerySection[];
   };
 }
 
@@ -62,7 +62,7 @@ export interface ServerJsonRootConfig {
   };
 }
 
-export interface ServerJsonSchemaDefinition {
+export interface ServerJsonTemplateDefinition {
   longDescription?: string;
   imageUrl?: string;
   blogPostLink?: string;
