@@ -8,7 +8,6 @@ module Hasura.Backends.Postgres.Execute.Prepare
   , prepareWithPlan
   , prepareWithoutPlan
   , resolveUnpreparedValue
-  , validateSessionVariables
   , withUserVars
   ) where
 
@@ -17,7 +16,6 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                                as J
 import qualified Data.HashMap.Strict                       as Map
-import qualified Data.HashSet                              as Set
 import qualified Data.IntMap                               as IntMap
 import qualified Database.PG.Query                         as Q
 import qualified Language.GraphQL.Draft.Syntax             as G
@@ -33,9 +31,7 @@ import           Hasura.Base.Error
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.RQL.DML.Internal                   (currentSession,
-                                                            retrieveAndFlagSessionVariableValue,
-                                                            withTypeAnn)
+import           Hasura.RQL.DML.Internal                   (fromCurrentSession, withTypeAnn)
 import           Hasura.RQL.Types
 import           Hasura.Session
 
@@ -49,42 +45,61 @@ type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
 
 data PlanningSt
   = PlanningSt
-  { _psArgNumber        :: !Int
-  , _psVariables        :: !PlanVariables
-  , _psPrepped          :: !PrepArgMap
-  , _psSessionVariables :: !(Set.HashSet SessionVariable)
+  { _psArgNumber :: !Int
+  , _psVariables :: !PlanVariables
+  , _psPrepped   :: !PrepArgMap
   }
 
 initPlanningSt :: PlanningSt
-initPlanningSt =
-  PlanningSt 2 Map.empty IntMap.empty Set.empty
+initPlanningSt = PlanningSt 2 Map.empty IntMap.empty
 
-prepareWithPlan :: (MonadState PlanningSt m) => UnpreparedValue ('Postgres pgKind) -> m S.SQLExp
-prepareWithPlan = \case
+prepareWithPlan
+  :: ( MonadState PlanningSt m
+     , MonadError QErr m
+     )
+  => UserInfo
+  -> UnpreparedValue ('Postgres pgKind)
+  -> m S.SQLExp
+prepareWithPlan userInfo = \case
   UVParameter varInfoM ColumnValue{..} -> do
     argNum <- maybe getNextArgNum (getVarArgNum . getName) varInfoM
     addPrepArg argNum (binEncoder cvValue, cvValue)
     return $ toPrepParam argNum (unsafePGColumnToBackend cvType)
 
   UVSessionVar ty sessVar -> do
-    sessVarVal <- retrieveAndFlagSessionVariableValue insertSessionVariable sessVar currentSessionExp
+    -- For queries, we need to make sure the session variables are passed. However,
+    -- we want to keep them as variables in the resulting SQL in order to keep
+    -- hitting query caching for similar queries.
+    _ <- getSessionVariableValue sessVar (_uiSession userInfo)
+          `onNothing`
+            throw400 NotFound
+              ("missing session variable: "  <>> sessionVariableToText sessVar)
+    let sessVarVal = fromCurrentSession currentSessionExp sessVar
     pure $ withTypeAnn ty sessVarVal
 
   UVLiteral sqlExp -> pure sqlExp
   UVSession        -> pure currentSessionExp
   where
     currentSessionExp = S.SEPrep 1
-    insertSessionVariable sessVar plan =
-      plan { _psSessionVariables = Set.insert sessVar $ _psSessionVariables plan }
 
-prepareWithoutPlan :: (MonadState (Set.HashSet SessionVariable) m) => UnpreparedValue ('Postgres pgKind) -> m S.SQLExp
-prepareWithoutPlan = \case
+prepareWithoutPlan
+  :: (MonadError QErr m)
+  => UserInfo
+  -> UnpreparedValue ('Postgres pgKind)
+  -> m S.SQLExp
+prepareWithoutPlan userInfo = \case
   UVParameter _ cv        -> pure $ toTxtValue cv
   UVLiteral sqlExp        -> pure sqlExp
-  UVSession               -> pure currentSession
+  UVSession               -> pure $ sessionInfoJsonExp $ _uiSession userInfo
   UVSessionVar ty sessVar -> do
-    sessVarVal <- retrieveAndFlagSessionVariableValue Set.insert sessVar currentSession
-    pure $ withTypeAnn ty sessVarVal
+    let maybeSessionVariableValue =
+          getSessionVariableValue sessVar (_uiSession userInfo)
+    sessionVariableValue <-
+      fmap S.SELit
+        <$> onNothing maybeSessionVariableValue
+            $ throw400 NotFound
+            $ "missing session variable: "  <>> sessionVariableToText sessVar
+    pure $ withTypeAnn ty sessionVariableValue
 
 resolveUnpreparedValue
   :: (MonadError QErr m)
@@ -108,17 +123,11 @@ withUserVars usrVars list =
       prepArg = Q.toPrepVal (Q.AltJ usrVars)
   in IntMap.insert 1 (prepArg, usrVarsAsPgScalar) list
 
-validateSessionVariables :: MonadError QErr m => Set.HashSet SessionVariable -> SessionVariables -> m ()
-validateSessionVariables requiredVariables sessionVariables = do
-  let missingSessionVariables = requiredVariables `Set.difference` getSessionVariablesSet sessionVariables
-  unless (null missingSessionVariables) do
-    throw400 NotFound $ "missing session variables: " <> dquoteList (sessionVariableToText <$> toList missingSessionVariables)
-
 getVarArgNum :: (MonadState PlanningSt m) => G.Name -> m Int
 getVarArgNum var = do
-  PlanningSt curArgNum vars prepped sessionVariables <- get
+  PlanningSt curArgNum vars prepped <- get
   Map.lookup var vars `onNothing` do
-    put $ PlanningSt (curArgNum + 1) (Map.insert var curArgNum vars) prepped sessionVariables
+    put $ PlanningSt (curArgNum + 1) (Map.insert var curArgNum vars) prepped
     pure curArgNum
 
 addPrepArg

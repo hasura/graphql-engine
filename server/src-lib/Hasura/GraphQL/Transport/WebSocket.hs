@@ -433,7 +433,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore 
             E.ExecStepAction actionExecPlan _ remoteJoins -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
               (time, (resp, _)) <- doQErr $ do
-                (time, (resp, hdrs)) <- EA.runActionExecution actionExecPlan
+                (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                 finalResponse <-
                   maybe
                   (pure resp)
@@ -496,7 +496,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore 
             E.ExecStepAction actionExecPlan _ remoteJoins -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
               (time, (resp, hdrs)) <- doQErr $ do
-                (time, (resp, hdrs)) <- EA.runActionExecution actionExecPlan
+                (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                 finalResponse <-
                   maybe
                   (pure resp)

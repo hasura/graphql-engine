@@ -29,7 +29,7 @@
       - extensions:
           path: "$"
           code: not-found
-        message: 'missing session variables: "x-hasura-user-id"'
+        message: 'missing session variable: "x-hasura-user-id"'
   query:
     query: |
       mutation {

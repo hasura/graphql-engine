@@ -8,7 +8,6 @@ module Hasura.Backends.Postgres.Instances.Execute
 import           Hasura.Prelude
 
 import qualified Control.Monad.Trans.Control                as MT
-import qualified Data.HashSet                               as Set
 import qualified Data.IntMap                                as IntMap
 import qualified Data.Sequence                              as Seq
 import qualified Database.PG.Query                          as Q
@@ -80,9 +79,8 @@ pgDBQueryPlan
   -> QueryTagsComment
   -> m (DBStepInfo ('Postgres pgKind))
 pgDBQueryPlan userInfo sourceName sourceConfig qrf queryTags = do
-  (preparedQuery, PlanningSt _ _ planVals expectedVariables) <-
-    flip runStateT initPlanningSt $ traverse prepareWithPlan qrf
-  validateSessionVariables expectedVariables $ _uiSession userInfo
+  (preparedQuery, PlanningSt _ _ planVals) <-
+    flip runStateT initPlanningSt $ traverse (prepareWithPlan userInfo) qrf
   let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags (irToRootFieldPlan planVals preparedQuery) queryTags
   let (action, preparedSQL) = mkCurPlanTx userInfo preparedSQLWithQueryTags
   pure $ DBStepInfo @('Postgres pgKind) sourceName sourceConfig preparedSQL action
@@ -146,9 +144,7 @@ convertDelete
   -> QueryTagsComment
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
 convertDelete userInfo deleteOperation stringifyNum queryTags = do
-  let (preparedDelete, expectedVariables) =
-        flip runState Set.empty $ traverse prepareWithoutPlan deleteOperation
-  validateSessionVariables expectedVariables $ _uiSession userInfo
+  preparedDelete <- traverse (prepareWithoutPlan userInfo) deleteOperation
   pure $ flip runReaderT queryTags $ PGE.execDeleteQuery stringifyNum userInfo (preparedDelete, Seq.empty)
 
 convertUpdate
@@ -163,12 +159,13 @@ convertUpdate
   -> QueryTagsComment
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
 convertUpdate userInfo updateOperation stringifyNum queryTags = do
-  let (preparedUpdate, expectedVariables) = flip runState Set.empty $ traverse prepareWithoutPlan updateOperation
+  preparedUpdate <- traverse (prepareWithoutPlan userInfo) updateOperation
   if null $ IR.uqp1OpExps updateOperation
   then pure $ pure $ IR.buildEmptyMutResp $ IR.uqp1Output preparedUpdate
-  else do
-    validateSessionVariables expectedVariables $ _uiSession userInfo
-    pure $ flip runReaderT queryTags $ PGE.execUpdateQuery stringifyNum userInfo (preparedUpdate, Seq.empty)
+  else
+    pure
+      $ flip runReaderT queryTags
+      $ PGE.execUpdateQuery stringifyNum userInfo (preparedUpdate, Seq.empty)
 
 convertInsert
   :: forall pgKind m
@@ -183,8 +180,7 @@ convertInsert
   -> QueryTagsComment
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
 convertInsert userInfo insertOperation stringifyNum queryTags = do
-  let (preparedInsert, expectedVariables) = flip runState Set.empty $ traverse prepareWithoutPlan insertOperation
-  validateSessionVariables expectedVariables $ _uiSession userInfo
+  preparedInsert <- traverse (prepareWithoutPlan userInfo) insertOperation
   pure $ flip runReaderT queryTags $ convertToSQLTransaction preparedInsert userInfo Seq.empty stringifyNum
 
 -- | A pared-down version of 'Query.convertQuerySelSet', for use in execution of
@@ -204,10 +200,9 @@ convertFunction
   -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
 convertFunction userInfo jsonAggSelect unpreparedQuery queryTags = do
   -- Transform the RQL AST into a prepared SQL query
-  (preparedQuery, PlanningSt _ _ planVals expectedVariables)
+  (preparedQuery, PlanningSt _ _ planVals )
     <- flip runStateT initPlanningSt
-       $ traverse prepareWithPlan unpreparedQuery
-  validateSessionVariables expectedVariables $ _uiSession userInfo
+       $ traverse (prepareWithPlan userInfo) unpreparedQuery
   let queryResultFn =
         case jsonAggSelect of
           JASMultipleRows -> QDBMultipleRows

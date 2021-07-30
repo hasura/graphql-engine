@@ -8,7 +8,7 @@
     - extensions:
         path: "$"
         code: not-found
-      message: 'missing session variables: "x-hasura-critic-id"'
+      message: 'missing session variable: "x-hasura-critic-id"'
   query:
     query: |
       query {

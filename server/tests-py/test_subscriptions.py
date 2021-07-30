@@ -4,6 +4,7 @@ import pytest
 import json
 import queue
 import ruamel.yaml as yaml
+from validate import check_query_f
 
 usefixtures = pytest.mark.usefixtures
 
@@ -71,6 +72,10 @@ class TestSubscriptionBasic:
     @classmethod
     def dir(cls):
         return 'queries/subscriptions/basic'
+
+    @pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
+    def test_negative(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/negative_test.yaml', transport)
 
     '''
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_error
