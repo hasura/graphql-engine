@@ -3,12 +3,14 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 - console: add template gallery
+- server: subscriptions now validate that all session variables are properly set (#7111)
+
 
 ## v2.0.4
 
 - server: Support computed fields in permission check/filter (close #7102)
 - server: support computed fields in query 'order_by' (close #7103)
-- server: log warning if there are errors while executing clean up actions after "drop source" (previously it would throw an error) 
+- server: log warning if there are errors while executing clean up actions after "drop source" (previously it would throw an error)
 - server: Fixed a bug where MSSQL and BigQuery would ignore environment variables set from the console
 - server: Fixing bug in ReplaceMetadata parser - Moving from Alternative to committed-choice.
 - server: Relax the unique operation name constraint when adding a query to a query collection

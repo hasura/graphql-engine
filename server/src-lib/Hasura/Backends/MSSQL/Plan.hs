@@ -41,10 +41,8 @@ planQuery
   -> m Select
 planQuery sessionVariables queryDB = do
   rootField <- traverse (prepareValueQuery sessionVariables) queryDB
-  sel <-
-    runValidate (runFromIr (fromRootField rootField))
+  runValidate (runFromIr (fromRootField rootField))
     `onLeft` (throw400 NotSupported . tshow)
-  pure sel
 
 -- | Prepare a value without any query planning; we just execute the
 -- query with the values embedded.
@@ -74,8 +72,8 @@ planSubscription
   -> SessionVariables
   -> m (Reselect, PrepareState)
 planSubscription unpreparedMap sessionVariables = do
-  let (rootFieldMap, prepareState) =
-        runState
+  (rootFieldMap, prepareState) <-
+        runStateT
           (traverse
             (traverse (prepareValueSubscription (getSessionVariablesSet sessionVariables)))
             unpreparedMap)
@@ -152,9 +150,10 @@ emptyPrepareState = PrepareState
 
 -- | Prepare a value for multiplexed queries.
 prepareValueSubscription
-  :: Set.HashSet SessionVariable
+  :: (MonadState PrepareState m, MonadError QErr m)
+  => Set.HashSet SessionVariable
   -> GraphQL.UnpreparedValue 'MSSQL
-  -> State PrepareState Expression
+  -> m Expression
 prepareValueSubscription globalVariables =
   \case
     GraphQL.UVLiteral x -> pure x
@@ -164,13 +163,17 @@ prepareValueSubscription globalVariables =
       pure $ resultVarExp (RootPath `FieldPath` "session")
 
     GraphQL.UVSessionVar _typ text -> do
+      if Set.member text globalVariables
+        then pure ()
+        else throw400 NotFound
+              ("missing session variable: "  <>> sessionVariableToText text)
       modify' (\s -> s {sessionVariables = text `Set.insert` sessionVariables s})
       pure $ resultVarExp (sessionDot $ toTxt text)
 
     GraphQL.UVParameter mVariableInfo columnValue ->
       case fmap GraphQL.getName mVariableInfo of
         Nothing -> do
-          currentIndex <- (toInteger . length) <$> gets positionalArguments
+          currentIndex <- toInteger . length <$> gets positionalArguments
           modify' (\s -> s {
             positionalArguments = positionalArguments s <> [columnValue] })
           pure (resultVarExp (syntheticIx currentIndex))
@@ -197,7 +200,7 @@ prepareValueSubscription globalVariables =
       queryDot name = RootPath `FieldPath` "query" `FieldPath` name
 
       syntheticIx :: Integer -> JsonPath
-      syntheticIx i = (RootPath `FieldPath` "synthetic" `IndexPath` i)
+      syntheticIx i = RootPath `FieldPath` "synthetic" `IndexPath` i
 
       sessionDot :: Text -> JsonPath
       sessionDot name = RootPath `FieldPath` "session" `FieldPath` name

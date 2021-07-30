@@ -282,7 +282,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
 
                 (time, (resp, _)) <- doQErr $ do
-                  (time, (resp, hdrs)) <- EA.runActionExecution aep
+                  (time, (resp, hdrs)) <- EA.runActionExecution userInfo aep
                   finalResponse <-
                     maybe
                     (pure resp)
@@ -352,7 +352,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               E.ExecStepAction aep _ remoteJoins -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
                 (time, (resp, hdrs)) <- doQErr $ do
-                  (time, (resp, hdrs)) <- EA.runActionExecution aep
+                  (time, (resp, hdrs)) <- EA.runActionExecution userInfo aep
                   finalResponse <-
                     maybe
                     (pure resp)
