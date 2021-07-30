@@ -243,7 +243,7 @@ function start_dbs() {
 #################################
 
 if [ "$MODE" = "graphql-engine" ]; then
-  cd "$PROJECT_ROOT/server"
+  cd "$PROJECT_ROOT"
   # Existing tix files for a different hge binary will cause issues:
   rm -f graphql-engine.tix
 
@@ -429,7 +429,7 @@ elif [ "$MODE" = "test" ]; then
   ########################################
   ###     Integration / unit tests     ###
   ########################################
-  cd "$PROJECT_ROOT/server"
+  cd "$PROJECT_ROOT"
 
   # Until we can use a real webserver for TestEventFlood, limit concurrency
   export HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE=8
