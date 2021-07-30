@@ -368,6 +368,24 @@ class TestWithRelay:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + "with_relay.yaml")
 
+@use_test_fixtures
+class TestExecutionWithCustomization:
+
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/remote_relationships/schema_customization/"
+
+    def test_basic_relationship(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'basic_relationship.yaml')
+
+    def test_nested_fields(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_nested_fields.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'basic_nested_fields.yaml')
+
+
 class TestComputedFieldsInRemoteRelationship:
 
     @classmethod

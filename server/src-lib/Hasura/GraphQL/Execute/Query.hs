@@ -107,8 +107,8 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
               dbStepInfo <- mkDBQueryPlan @b userInfo sourceName sourceConfig noRelsDBAST queryTagsText
               pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
       RFRemote rf -> do
-        RemoteFieldG remoteSchemaInfo remoteField <- runVariableCache $ for rf $ resolveRemoteVariable userInfo
-        pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeQuery [G.SelectionField remoteField]
+        RemoteFieldG remoteSchemaInfo resultCustomizer remoteField <- runVariableCache $ for rf $ resolveRemoteVariable userInfo
+        pure $ buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeQuery $ getRemoteFieldSelectionSet remoteField
       RFAction action -> do
         let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
         (actionExecution, actionName, fch) <- pure $ case noRelsDBAST of

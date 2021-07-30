@@ -76,8 +76,8 @@ buildGQLContext queryType sources allRemoteSchemas allActions nonObjectCustomTyp
       allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
       adminRemoteRelationshipQueryCtx =
         allRemoteSchemas
-        <&> (\(remoteSchemaCtx, _metadataObj) ->
-               (_rscIntro remoteSchemaCtx, _rscParsed remoteSchemaCtx))
+        <&> (\(RemoteSchemaCtx{..}, _metadataObj) ->
+               RemoteRelationshipQueryContext _rscIntroOriginal _rscParsed $ rsCustomizer _rscInfo)
       allRoles :: Set.HashSet RoleName
       allRoles = nonTableRoles <> allTableRoles
       -- The function permissions context doesn't actually matter because the
@@ -115,8 +115,8 @@ buildGQLContext queryType sources allRemoteSchemas allActions nonObjectCustomTyp
   let (remotes, remoteErrors) =
         runState (remoteSchemaFields queryFieldNames mutationFieldNames allRemoteSchemas) mempty
 
-  let adminQueryRemotes = concatMap (piQuery . snd . snd) remotes
-      adminMutationRemotes = concatMap (concat . piMutation . snd . snd) remotes
+  let adminQueryRemotes = concatMap (piQuery . _rrscParsedIntrospection . snd) remotes
+      adminMutationRemotes = concatMap (concat . piMutation . _rrscParsedIntrospection . snd) remotes
 
   roleContexts <-
     Set.toMap allRoles & Map.traverseWithKey \role () ->
@@ -138,7 +138,7 @@ buildRoleContext
   -> RemoteSchemaCache
   -> [ActionInfo]
   -> NonObjectTypeMap
-  -> [( RemoteSchemaName , (IntrospectionResult, ParsedIntrospection))]
+  -> [( RemoteSchemaName , RemoteRelationshipQueryContext)]
   -> RoleName
   -> RemoteSchemaPermsCtx
   -> m (RoleContext GQLContext)
@@ -158,8 +158,9 @@ buildRoleContext
          -- when remote schema permissions are not enabled, then remote schemas
          -- are a public entity which is accesible to all the roles
          | otherwise                                        -> pure remotes
-    let queryRemotes    = getQueryRemotes    $ snd . snd <$> roleBasedRemoteSchemas
-        mutationRemotes = getMutationRemotes $ snd . snd <$> roleBasedRemoteSchemas
+    let parsedIntrospections = _rrscParsedIntrospection . snd <$> roleBasedRemoteSchemas
+        queryRemotes    = getQueryRemotes parsedIntrospections
+        mutationRemotes = getMutationRemotes parsedIntrospections
         remoteRelationshipQueryContext = Map.fromList roleBasedRemoteSchemas
         roleQueryContext = QueryContext
           stringifyNum
@@ -361,16 +362,17 @@ buildRoleBasedRemoteSchemaParser
    . (MonadError QErr m, MonadUnique m, MonadIO m)
   => RoleName
   -> RemoteSchemaCache
-  -> m [(RemoteSchemaName, (IntrospectionResult, ParsedIntrospection))]
+  -> m [(RemoteSchemaName, RemoteRelationshipQueryContext )]
 buildRoleBasedRemoteSchemaParser roleName remoteSchemaCache = do
   let remoteSchemaIntroInfos = map fst $ toList remoteSchemaCache
   remoteSchemaPerms <-
-    for remoteSchemaIntroInfos $ \(RemoteSchemaCtx remoteSchemaName _ remoteSchemaInfo _ _ permissions) ->
-      for (Map.lookup roleName permissions) $ \introspectRes -> do
+    for remoteSchemaIntroInfos $ \RemoteSchemaCtx{..} ->
+      for (Map.lookup roleName _rscPermissions) $ \introspectRes -> do
+        let customizer = rsCustomizer _rscInfo
         (queryParsers, mutationParsers, subscriptionParsers) <-
-             P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes remoteSchemaInfo
+             P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes _rscInfo
         let parsedIntrospection = ParsedIntrospection queryParsers mutationParsers subscriptionParsers
-        return (remoteSchemaName, (introspectRes, parsedIntrospection))
+        return (_rscName, RemoteRelationshipQueryContext introspectRes parsedIntrospection customizer)
   return $ catMaybes remoteSchemaPerms
 
 -- checks that there are no conflicting root field names between remotes and
@@ -381,18 +383,18 @@ remoteSchemaFields
   => [G.Name]
   -> [G.Name]
   -> HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
-  -> m [( RemoteSchemaName , (IntrospectionResult, ParsedIntrospection))]
+  -> m [( RemoteSchemaName , RemoteRelationshipQueryContext)]
 remoteSchemaFields queryFieldNames mutationFieldNames allRemoteSchemas = do
   foldlM go [] $ Map.toList allRemoteSchemas
   where
-    go :: [( RemoteSchemaName , (IntrospectionResult, ParsedIntrospection))]
+    go :: [( RemoteSchemaName , RemoteRelationshipQueryContext)]
        -> (RemoteSchemaName, (RemoteSchemaCtx, MetadataObject))
-       -> m [( RemoteSchemaName , (IntrospectionResult, ParsedIntrospection))]
-    go okSchemas (newSchemaName, (newSchemaContext, newMetadataObject)) = do
+       -> m [( RemoteSchemaName , RemoteRelationshipQueryContext)]
+    go okSchemas (newSchemaName, (RemoteSchemaCtx{..}, newMetadataObject)) = do
       let (queryOld, mutationOld) =
-            unzip $ fmap ((\case ParsedIntrospection q m _ -> (q,m)) . snd . snd) okSchemas
+            unzip $ fmap ((\case ParsedIntrospection q m _ -> (q,m)) . _rrscParsedIntrospection . snd) okSchemas
       let ParsedIntrospection queryNew mutationNew _subscriptionNew
-            = _rscParsed newSchemaContext
+            = _rscParsed
       checkedDuplicates <- runExceptT do
         -- First we check for conflicts in query_root
         -- Check for conflicts between remotes
@@ -417,7 +419,7 @@ remoteSchemaFields queryFieldNames mutationFieldNames allRemoteSchemas = do
           withRecordInconsistency' reason meta
           return $ okSchemas
         Right () ->
-          return $ (newSchemaName, ( _rscIntro newSchemaContext,_rscParsed newSchemaContext)):okSchemas
+          return $ (newSchemaName, RemoteRelationshipQueryContext _rscIntroOriginal _rscParsed $ rsCustomizer _rscInfo):okSchemas
     -- variant of 'withRecordInconsistency' that works with 'MonadState' rather than 'ArrowWriter'
     withRecordInconsistency' reason metadata = modify' (InconsistentObject reason Nothing metadata Seq.:<|)
 

@@ -117,8 +117,8 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
             dbStepInfo <- mkDBMutationPlan @b userInfo stringifyNum sourceName sourceConfig noRelsDBAST mutationQueryTags
             pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
       RFRemote remoteField -> do
-        RemoteFieldG remoteSchemaInfo resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
-        pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeMutation $ [G.SelectionField resolvedRemoteField]
+        RemoteFieldG remoteSchemaInfo resultCustomizer resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
+        pure $ buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeMutation $ getRemoteFieldSelectionSet resolvedRemoteField
       RFAction action -> do
         let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionMutation action
         (actionName, _fch) <- pure $ case noRelsDBAST of

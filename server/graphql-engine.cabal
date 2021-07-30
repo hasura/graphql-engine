@@ -623,6 +623,8 @@ library
                      , Network.URI.Extended
                      , Network.Wai.Extended
                      , Network.Wai.Handler.WebSockets.Custom
+                     , Test.QuickCheck.Arbitrary.Extended
+                     , Test.QuickCheck.Arbitrary.Partial
 
 executable graphql-engine
   import: common-all, common-exe
@@ -650,6 +652,7 @@ test-suite graphql-engine-tests
     , cron
     , dependent-map
     , dependent-sum
+    , generic-arbitrary
     , graphql-engine
     , graphql-parser
     , hspec >=2.6.1 && <3
@@ -659,6 +662,7 @@ test-suite graphql-engine-tests
     , http-client
     , http-client-tls
     , http-types
+    , insert-ordered-containers
     , jose
     , kan-extensions
     , lens
@@ -673,12 +677,14 @@ test-suite graphql-engine-tests
     , process
     , QuickCheck
     , safe
+    , scientific
     , split
     , template-haskell
     , text
     , time
     , transformers-base
     , unordered-containers
+    , vector
   hs-source-dirs: src-test
   main-is: Main.hs
   other-modules:
@@ -689,10 +695,13 @@ test-suite graphql-engine-tests
     Data.Text.RawString
     Data.TimeSpec
     Hasura.EventingSpec
+    Hasura.Generator
     Hasura.GraphQL.Parser.DirectivesTest
     Hasura.GraphQL.Parser.TestUtils
     Hasura.GraphQL.Schema.RemoteTest
     Hasura.IncrementalSpec
+    Hasura.SessionSpec
+    Hasura.GraphQL.RemoteServerSpec
     Hasura.RQL.Types.EndpointSpec
     Hasura.SQL.WKTSpec
     Hasura.Server.AuthSpec
