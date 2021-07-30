@@ -1,19 +1,19 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-
 module Hasura.Backends.MySQL.Types where
 
+import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
+import qualified Database.MySQL.Base.Types              as MySQLTypes (Type (..))
+import qualified Text.Builder                           as TB
+
 import           Data.ByteString
-import           Data.Data
-import           Data.Hashable
 import           Data.Int
 import           Data.Pool
-import           Data.Set
 import           Data.Text.Encoding                     (decodeUtf8With, encodeUtf8)
 import           Data.Text.Encoding.Error               (lenientDecode)
 import           Data.Text.Extended                     (ToTxt (..))
@@ -22,12 +22,11 @@ import           Data.Time.Clock
 import           Data.Time.LocalTime
 import           Data.Word                              (Word16)
 import           Database.MySQL.Base
-import qualified Database.MySQL.Base.Types              as MySQLTypes (Type (..))
+
 import           Hasura.Base.Error                      (QErr)
+import           Hasura.Base.Instances                  ()
 import           Hasura.Incremental.Internal.Dependency (Cacheable (..))
-import           Hasura.Prelude
 import           Hasura.SQL.Types                       (ToSQL (..))
-import qualified Text.Builder                           as TB
 
 
 data ConnPoolSettings
@@ -35,8 +34,6 @@ data ConnPoolSettings
     { _cscIdleTimeout    :: !Word
     , _cscMaxConnections :: !Word
     } deriving (Eq, Show, NFData, Generic, Hashable, Cacheable)
-instance Cacheable Word where
-  unchanged _ = (==)
 defaultConnPoolSettings :: ConnPoolSettings
 defaultConnPoolSettings =
   ConnPoolSettings
@@ -62,22 +59,22 @@ data ConnSourceConfig
     , _cscPoolSettings :: !ConnPoolSettings
     } deriving (Eq, Show, NFData, Generic, Hashable)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = False} ''ConnSourceConfig)
-instance Cacheable Word16 where
-  unchanged _ = (==)
 deriving instance Cacheable ConnSourceConfig
 
 
-data SourceConfig
-  = SourceConfig
-    { scConfig         :: !ConnSourceConfig
-    , scConnectionPool :: !(Pool Connection)
-    } deriving (Eq, Generic, J.ToJSON)
-instance J.ToJSON (Pool Connection) where
-  toJSON = const (J.String "_REDACTED_")
-instance Eq (Pool Connection) where
-  _ == _ = True
+data SourceConfig = SourceConfig
+  { scConfig         :: !ConnSourceConfig
+  , scConnectionPool :: !(Pool Connection)
+  }
+
+instance Eq SourceConfig where
+  (==) = (==) `on` scConfig
+
 instance Cacheable SourceConfig where
   unchanged _ = (==)
+
+instance J.ToJSON SourceConfig where
+  toJSON = J.toJSON . scConfig
 
 
 data TableName
@@ -173,11 +170,24 @@ parseMySQLScalarType = \case
   _                    -> MySQLTypes.Null
 
 
+
+-- | Small wrapper around ByteString, that allows for custom JSON instances that
+-- specifically treat it as a series of UTF8 codepoints.
+newtype UTF8ByteString = UTF8BS { unBS :: ByteString }
+  deriving newtype (Show, Read, Eq, Ord, Hashable, Cacheable, NFData)
+
+instance J.FromJSON UTF8ByteString where
+  parseJSON = J.withText "ByteString" (pure . UTF8BS . encodeUtf8)
+
+instance J.ToJSON UTF8ByteString where
+  toJSON = J.String . decodeUtf8With lenientDecode . unBS
+
+
 data ScalarValue
   = BigValue !Int32 -- Not (!Int64) due to scalar-representation
-  | BinaryValue !ByteString
+  | BinaryValue !UTF8ByteString
   | BitValue !Bool
-  | BlobValue !ByteString
+  | BlobValue !UTF8ByteString
   | CharValue !Text
   | DatetimeValue !UTCTime
   | DateValue !Day
@@ -198,25 +208,17 @@ data ScalarValue
   | NumericValue !Double -- Not (!Decimal) due to scalar-representation -- TODO: Double check
   | PointValue !Text -- TODO
   | PolygonValue !Text -- TODO
-  | SetValue !(Set Text)
+  | SetValue !(HashSet Text)
   | SmallValue !Int32 -- Not (!Int16) due to scalar-representation
   | TextValue !Text
   | TimestampValue !UTCTime
   | TimeValue !TimeOfDay
   | TinyValue !Int32 -- Not (!Int8) due to scalar-representation
   | UnknownValue !Text
-  | VarbinaryValue !ByteString
+  | VarbinaryValue !UTF8ByteString
   | VarcharValue !Text
   | YearValue !Word16 -- (4-digit year)
-  deriving (Show, Read, Eq, Ord, Generic, J.ToJSON, J.ToJSONKey, J.FromJSON, Data, NFData, Cacheable)
-instance Hashable ScalarValue where
-  hashWithSalt i = hashWithSalt i . tshow
-instance ToTxt ScalarValue where
-  toTxt = tshow
-instance J.ToJSON ByteString where
-  toJSON = J.String . decodeUtf8With lenientDecode
-instance J.FromJSON ByteString where
-  parseJSON = J.withText "ByteString" (pure . encodeUtf8)
+  deriving (Show, Read, Eq, Ord, Generic, J.ToJSON, Hashable, Cacheable, NFData)
 
 
 parseScalarValue :: ScalarType -> Text -> Either QErr (ScalarValue)
@@ -246,12 +248,10 @@ data OrderBy = OrderBy
 
 data Expression
   = ValueExpression ScalarValue
-  deriving (Show, Eq, Generic, Data, Hashable, Cacheable, NFData)
+  deriving (Show, Eq, Generic, Hashable, Cacheable, NFData)
 
 instance J.ToJSON Expression where
   toJSON (ValueExpression scalarValue) = J.toJSON scalarValue
-instance J.FromJSON Expression where
-  parseJSON value = ValueExpression <$> J.parseJSON value
 
 instance ToSQL Expression where
   toSQL = TB.text . tshow

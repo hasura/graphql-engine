@@ -4,22 +4,21 @@
 
 module Hasura.Backends.BigQuery.Source where
 
+import           Hasura.Prelude
 
-import           Control.Concurrent.MVar
-import           Control.DeepSeq
 import qualified Crypto.PubKey.RSA.Types as Cry
 import qualified Data.Aeson              as J
 import qualified Data.Aeson.Casing       as J
 import qualified Data.Aeson.TH           as J
 import qualified Data.ByteString.Lazy    as BL
 import qualified Data.HashMap.Strict     as HM
-import           Data.Hashable           (hashWithSalt)
 import qualified Data.Text.Encoding      as TE
 import qualified Data.X509               as X509
 import qualified Data.X509.Memory        as X509
+
+import           Control.Concurrent.MVar
+
 import           Hasura.Incremental      (Cacheable (..))
-import           Hasura.Prelude
-import           System.IO.Unsafe        (unsafePerformIO)
 
 
 data PKey = PKey
@@ -147,19 +146,14 @@ data BigQuerySourceConfig
   , _scProjectId         :: !Text -- this is part of service-account.json, but we put it here on purpose
   , _scAccessTokenMVar   :: !(MVar (Maybe TokenResp))
   , _scGlobalSelectLimit :: !Int
-  } deriving (Eq, Generic, NFData)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase){J.omitNothingFields=True} ''BigQuerySourceConfig)
-deriving instance Show BigQuerySourceConfig
-deriving instance Hashable BigQuerySourceConfig
+  } deriving (Eq)
 instance Cacheable BigQuerySourceConfig where
   unchanged _ = (==)
-
-instance Show (MVar (Maybe TokenResp)) where
-  -- show = maybe "NOTHING" (const "_REDACTED_") . unsafePerformIO . readIORef
-  show = (const "_REDACTED_")
-instance J.FromJSON (MVar (Maybe TokenResp)) where
-  parseJSON _ = pure $ unsafePerformIO $ newEmptyMVar
-instance J.ToJSON (MVar (Maybe TokenResp)) where
-  toJSON _ = J.String "_REDACTED_"
-instance Hashable (MVar (Maybe TokenResp)) where
-  hashWithSalt i r = hashWithSalt i (unsafePerformIO $ readMVar r)
+instance J.ToJSON BigQuerySourceConfig where
+  toJSON BigQuerySourceConfig{..} =
+    J.object
+      [ "service_account"     J..= _scServiceAccount
+      , "datasets"            J..= _scDatasets
+      , "project_id"          J..= _scProjectId
+      , "global_select_limit" J..= _scGlobalSelectLimit
+      ]

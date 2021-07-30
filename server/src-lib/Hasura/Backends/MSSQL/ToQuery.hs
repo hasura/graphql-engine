@@ -6,7 +6,6 @@
 module Hasura.Backends.MSSQL.ToQuery
   ( fromSelect
   , fromReselect
-  , toSQL
   , toQueryFlat
   , toQueryPretty
   , fromDelete
@@ -26,7 +25,6 @@ import           Data.String
 import           Database.ODBC.SQLServer
 
 import           Hasura.Backends.MSSQL.Types
-import           Hasura.SQL.Types            (ToSQL (..))
 
 
 --------------------------------------------------------------------------------

@@ -21,7 +21,24 @@ import qualified Text.Regex.TDFA.Pattern    as TDFA
 
 import           Data.Functor.Product
 import           Data.GADT.Compare
+import           Data.Hashable
 import           Data.Text
+import           Data.Time.Calendar
+import           Data.Time.Clock
+import           Data.Time.LocalTime
+
+
+--------------------------------------------------------------------------------
+-- Hashable
+
+instance Hashable UTCTime where
+  hashWithSalt i = hashWithSalt i . show
+
+instance Hashable Day where
+  hashWithSalt i = hashWithSalt i . show
+
+instance Hashable TimeOfDay where
+  hashWithSalt i = hashWithSalt i . show
 
 
 --------------------------------------------------------------------------------
