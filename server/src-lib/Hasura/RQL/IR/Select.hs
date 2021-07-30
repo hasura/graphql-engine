@@ -401,11 +401,13 @@ data RemoteFieldArgument
 
 data RemoteSchemaSelect (b :: BackendType)
   = RemoteSchemaSelect
-  { _rselArgs         :: ![RemoteFieldArgument]
-  , _rselSelection    :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)
-  , _rselHasuraFields :: !(HashSet (DBJoinField b))
-  , _rselFieldCall    :: !(NonEmpty FieldCall)
-  , _rselRemoteSchema :: !RemoteSchemaInfo
+  { _rselName             :: !G.Name
+  , _rselArgs             :: ![RemoteFieldArgument]
+  , _rselResultCustomizer :: !RemoteResultCustomizer
+  , _rselSelection        :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)
+  , _rselHasuraFields     :: !(HashSet (DBJoinField b))
+  , _rselFieldCall        :: !(NonEmpty FieldCall)
+  , _rselRemoteSchema     :: !RemoteSchemaInfo
   }
 
 -- | Captures the selection set of a remote source relationship.

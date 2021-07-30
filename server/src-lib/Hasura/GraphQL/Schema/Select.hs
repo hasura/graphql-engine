@@ -57,7 +57,9 @@ import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser                      (FieldParser, InputFieldsParser,
                                                              Kind (..), Parser,
                                                              UnpreparedValue (..), mkParameter)
-import           Hasura.GraphQL.Parser.Class
+import           Hasura.GraphQL.Parser.Class                (MonadParse (parseErrorWith, withPath),
+                                                             MonadSchema (..), MonadTableInfo,
+                                                             askRoleName, askTableInfo, parseError)
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
@@ -900,30 +902,32 @@ tableAggregationFields sourceName tableInfo selectPermissions = memoizeOn 'table
       in P.subselection_ operator Nothing subselectionParser
          <&> IR.AFOp . IR.AggregateOp opText
 
-lookupRemoteField'
+lookupNestedFieldType'
   :: (MonadSchema n m, MonadError QErr m)
-  => [P.Definition P.FieldInfo]
+  => G.Name
+  -> RemoteSchemaIntrospection
   -> FieldCall
-  -> m P.FieldInfo
-lookupRemoteField' fieldInfos (FieldCall fcName _) =
-  case find ((== fcName) . P.dName) fieldInfos of
-    Nothing -> throw400 RemoteSchemaError $ "field with name " <> fcName <<> " not found"
-    Just (P.Definition _ _ _ fieldInfo) -> pure fieldInfo
+  -> m G.GType
+lookupNestedFieldType' parentTypeName remoteSchemaIntrospection (FieldCall fcName _) =
+  case lookupObject remoteSchemaIntrospection parentTypeName of
+    Nothing -> throw400 RemoteSchemaError $ "object with name " <> parentTypeName <<> " not found"
+    Just G.ObjectTypeDefinition{..} ->
+      case find ((== fcName) . G._fldName) _otdFieldsDefinition of
+        Nothing -> throw400 RemoteSchemaError $ "field with name " <> fcName <<> " not found"
+        Just G.FieldDefinition{..} -> pure _fldType
 
-lookupRemoteField
+lookupNestedFieldType
   :: (MonadSchema n m, MonadError QErr m)
-  => [P.Definition P.FieldInfo]
+  => G.Name
+  -> RemoteSchemaIntrospection
   -> NonEmpty FieldCall
-  -> m P.FieldInfo
-lookupRemoteField fieldInfos (fieldCall :| rest) =
+  -> m G.GType
+lookupNestedFieldType parentTypeName remoteSchemaIntrospection (fieldCall :| rest) = do
+  fieldType <- lookupNestedFieldType' parentTypeName remoteSchemaIntrospection fieldCall
   case NE.nonEmpty rest of
-    Nothing -> lookupRemoteField' fieldInfos fieldCall
+    Nothing -> pure $ fieldType
     Just rest' -> do
-      (P.FieldInfo _ type') <- lookupRemoteField' fieldInfos fieldCall
-      (P.Definition _ _ _ (P.ObjectInfo objFieldInfos _))
-       <- onNothing (P.getObjectInfo type') $
-          throw400 RemoteSchemaError $ "field " <> fcName fieldCall <<> " is expected to be an object"
-      lookupRemoteField objFieldInfos rest'
+      lookupNestedFieldType (G.getBaseType fieldType) remoteSchemaIntrospection rest'
 
 -- | An individual field of a table
 --
@@ -1122,12 +1126,11 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
   case remoteFieldInfo of
     RFISource _remoteSource -> throw500 "not supported yet"
     RFISchema remoteSchema -> do
-      let RemoteSchemaFieldInfo name _params hasuraFields remoteFields remoteSchemaInfo remoteSchemaInputValueDefns remoteSchemaName (table, source) = remoteSchema
-      (roleIntrospectionResult, parsedIntrospection) <-
+      let RemoteSchemaFieldInfo name params hasuraFields remoteFields remoteSchemaInfo remoteSchemaInputValueDefns remoteSchemaName (table, source) = remoteSchema
+      RemoteRelationshipQueryContext roleIntrospectionResultOriginal _ remoteSchemaCustomizer <-
         -- The remote relationship field should not be accessible
         -- if the remote schema is not accessible to the said role
         hoistMaybe $ Map.lookup remoteSchemaName remoteRelationshipQueryCtx
-      let fieldDefns = map P.fDefinition (piQuery parsedIntrospection)
       role <- askRoleName
       let hasuraFieldNames = Set.map dbJoinFieldToName hasuraFields
           relationshipDef = RemoteSchemaRelationshipDef remoteSchemaName hasuraFieldNames remoteFields
@@ -1137,44 +1140,55 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
           -- we don't validate the remote relationship when the role is admin
           -- because it's already been validated, when the remote relationship
           -- was created
-          pure (remoteSchemaInputValueDefns, _rfiParamMap remoteSchema)
+          pure (remoteSchemaInputValueDefns, params)
         else do
           fieldInfoMap <- (_tciFieldInfoMap . _tiCoreInfo) <$> askTableInfo @b source table
           roleRemoteField <-
             afold @(Either _) $
-            validateRemoteSchemaRelationship relationshipDef table name source (remoteSchemaInfo, roleIntrospectionResult) fieldInfoMap
+            validateRemoteSchemaRelationship relationshipDef table name source (remoteSchemaInfo, roleIntrospectionResultOriginal) fieldInfoMap
           pure $ (_rfiInputValueDefinitions roleRemoteField, _rfiParamMap roleRemoteField)
-      let RemoteSchemaIntrospection typeDefns = irDoc roleIntrospectionResult
+      let roleIntrospection@(RemoteSchemaIntrospection typeDefns) = irDoc roleIntrospectionResultOriginal
           -- add the new input value definitions created by the remote relationship
           -- to the existing schema introspection of the role
           remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> newInpValDefns
-      fieldName <- textToName $ remoteRelationshipNameToText $ _rfiName remoteSchema
+      fieldName <- textToName $ remoteRelationshipNameToText name
+
       -- This selection set parser, should be of the remote node's selection set parser, which comes
       -- from the fieldCall
-      nestedFieldInfo <- lift $ lookupRemoteField fieldDefns $ unRemoteFields $ _rfiRemoteFields remoteSchema
-      case nestedFieldInfo of
-        P.FieldInfo{ P.fType = fieldType } -> do
-          let typeName = P.getName fieldType
-          fieldTypeDefinition <- onNothing (lookupType (irDoc roleIntrospectionResult) typeName)
-                                 -- the below case will never happen because we get the type name
-                                 -- from the schema document itself i.e. if a field exists for the
-                                 -- given role, then it's return type also must exist
-                                 $ throw500 $ "unexpected: " <> typeName <<> " not found "
-          -- These are the arguments that are given by the user while executing a query
-          let remoteFieldUserArguments = map snd $ Map.toList remoteFieldParamMap
-          remoteFld <-
-            lift $ remoteField remoteRelationshipIntrospection fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
-          pure $ pure $ remoteFld
-            `P.bindField` \G.Field{ G._fArguments = args, G._fSelectionSet = selSet } -> do
-              let remoteArgs =
-                    Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue $ argVal
-              pure $ IR.AFRemote $ IR.RemoteSelectRemoteSchema $ IR.RemoteSchemaSelect
-                { _rselArgs          = remoteArgs
-                , _rselSelection     = selSet
-                , _rselHasuraFields  = _rfiHasuraFields remoteSchema
-                , _rselFieldCall     = unRemoteFields $ _rfiRemoteFields remoteSchema
-                , _rselRemoteSchema  = _rfiRemoteSchema remoteSchema
-                }
+      let fieldCalls = unRemoteFields remoteFields
+          parentTypeName = irQueryRoot roleIntrospectionResultOriginal
+      nestedFieldType <- lift $ lookupNestedFieldType parentTypeName roleIntrospection fieldCalls
+      let typeName = G.getBaseType nestedFieldType
+      fieldTypeDefinition <- onNothing (lookupType roleIntrospection typeName)
+                              -- the below case will never happen because we get the type name
+                              -- from the schema document itself i.e. if a field exists for the
+                              -- given role, then it's return type also must exist
+                              $ throw500 $ "unexpected: " <> typeName <<> " not found "
+      -- These are the arguments that are given by the user while executing a query
+      let remoteFieldUserArguments = map snd $ Map.toList remoteFieldParamMap
+      remoteFld <-
+        lift $
+          customizeFieldParser (,) remoteSchemaCustomizer parentTypeName <$>
+          remoteField remoteRelationshipIntrospection fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
+      pure $ pure $ remoteFld
+        `P.bindField` \(resultCustomizer, G.Field{ G._fArguments = args, G._fSelectionSet = selSet }) -> do
+          let remoteArgs =
+                Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue $ argVal
+          let resultCustomizer' = applyFieldCalls fieldCalls resultCustomizer
+          pure $ IR.AFRemote $ IR.RemoteSelectRemoteSchema $ IR.RemoteSchemaSelect
+            { _rselName             = fieldName
+            , _rselArgs             = remoteArgs
+            , _rselResultCustomizer = resultCustomizer'
+            , _rselSelection        = selSet
+            , _rselHasuraFields     = hasuraFields
+            , _rselFieldCall        = fieldCalls
+            , _rselRemoteSchema     = remoteSchemaInfo
+            }
+  where
+    -- Apply parent field calls so that the result customizer modifies the nested field
+    applyFieldCalls :: NonEmpty FieldCall -> RemoteResultCustomizer -> RemoteResultCustomizer
+    applyFieldCalls fieldCalls resultCustomizer =
+      foldr (modifyFieldByName . fcName) resultCustomizer $ NE.init fieldCalls
 
 -- | The custom SQL functions' input "args" field parser
 -- > function_name(args: function_args)

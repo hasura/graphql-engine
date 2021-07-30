@@ -275,9 +275,9 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                   (RJ.processRemoteJoins env httpManager reqHeaders userInfo $ encJToLBS resp)
                   remoteJoins
                 return $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
-              E.ExecStepRemote rsi gqlReq -> do
+              E.ExecStepRemote rsi resultCustomizer gqlReq -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
-                runRemoteGQ httpManager fieldName rsi gqlReq
+                runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq
               E.ExecStepAction aep _ remoteJoins -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
 
@@ -346,9 +346,9 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                   (RJ.processRemoteJoins env httpManager reqHeaders userInfo $ encJToLBS resp)
                   remoteJoins
                 return $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse responseHeaders
-              E.ExecStepRemote rsi gqlReq -> do
+              E.ExecStepRemote rsi resultCustomizer gqlReq -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
-                runRemoteGQ httpManager fieldName rsi gqlReq
+                runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq
               E.ExecStepAction aep _ remoteJoins -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
                 (time, (resp, hdrs)) <- doQErr $ do
@@ -382,10 +382,10 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 
     forWithKey = flip OMap.traverseWithKey
 
-    runRemoteGQ httpManager fieldName rsi gqlReq = do
+    runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq = do
       (telemTimeIO_DT, remoteResponseHeaders, resp) <-
-        doQErr $ E.execRemoteGQ env httpManager userInfo reqHeaders rsi gqlReq
-      value <- extractFieldFromResponse (G.unName fieldName) resp
+        doQErr $ E.execRemoteGQ env httpManager userInfo reqHeaders (rsDef rsi) gqlReq
+      value <- extractFieldFromResponse fieldName rsi resultCustomizer resp
       let filteredHeaders = filter ((== "Set-Cookie") . fst) remoteResponseHeaders
       pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) filteredHeaders
 
@@ -466,19 +466,34 @@ coalescePostgresMutations plan = do
   Just (oneSourceConfig, mutations)
 
 extractFieldFromResponse
-  :: Monad m => Text -> LBS.ByteString -> ExceptT (Either GQExecError QErr) m JO.Value
-extractFieldFromResponse fieldName bs = do
-  val <- onLeft (JO.eitherDecode bs) $ do400 . T.pack
+  :: forall m. Monad m
+  => G.Name
+  -> RemoteSchemaInfo
+  -> RemoteResultCustomizer
+  -> LBS.ByteString
+  -> ExceptT (Either GQExecError QErr) m JO.Value
+extractFieldFromResponse fieldName rsi resultCustomizer resp = do
+  let namespace = fmap G.unName $ _rscNamespaceFieldName $ rsCustomizer rsi
+      fieldName' = G.unName fieldName
+  val <- onLeft (JO.eitherDecode resp) $ do400 . T.pack
   valObj <- onLeft (JO.asObject val) do400
-  dataVal <- case JO.toList valObj of
+  dataVal <- applyRemoteResultCustomizer resultCustomizer <$> case JO.toList valObj of
     [("data", v)] -> pure v
     _ -> case JO.lookup "errors" valObj of
       Just (JO.Array err) -> doGQExecError $ toList $ fmap JO.fromOrdered err
       _                   -> do400 "Received invalid JSON value from remote"
-  dataObj <- onLeft (JO.asObject dataVal) do400
-  fieldVal <- onNothing (JO.lookup fieldName dataObj) $
-    do400 $ "expecting key " <> fieldName
-  return fieldVal
+  case namespace of
+    Just _ ->
+      -- If using a custom namespace field then the response from the remote server
+      -- will already be unwrapped so just return it.
+      return dataVal
+    _ ->  do
+      -- No custom namespace so we need to look up the field name in the data
+      -- object.
+      dataObj <- onLeft (JO.asObject dataVal) do400
+      fieldVal <- onNothing (JO.lookup fieldName' dataObj) $
+        do400 $ "expecting key " <> fieldName'
+      return fieldVal
   where
     do400 = withExceptT Right . throw400 RemoteSchemaError
     doGQExecError = withExceptT Left . throwError . GQExecError

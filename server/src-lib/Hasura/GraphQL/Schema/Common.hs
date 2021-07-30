@@ -31,12 +31,19 @@ type AnnotatedField      b = IR.AnnFieldG           b (IR.RemoteSelect Unprepare
 type ConnectionFields    b = IR.ConnectionFields    b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
 type EdgeFields          b = IR.EdgeFields          b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
 
+data RemoteRelationshipQueryContext
+  = RemoteRelationshipQueryContext
+  { _rrscIntrospectionResultOriginal :: !IntrospectionResult
+  , _rrscParsedIntrospection         :: !ParsedIntrospection
+  , _rrscRemoteSchemaCustomizer      :: !RemoteSchemaCustomizer
+  }
+
 data QueryContext =
   QueryContext
   { qcStringifyNum              :: !Bool
   , qcDangerousBooleanCollapse  :: !Bool
   , qcQueryType                 :: !ET.GraphQLQueryType
-  , qcRemoteRelationshipContext :: !(HashMap RemoteSchemaName (IntrospectionResult, ParsedIntrospection))
+  , qcRemoteRelationshipContext :: !(HashMap RemoteSchemaName RemoteRelationshipQueryContext)
   , qcFunctionPermsContext      :: !FunctionPermissionsCtx
   }
 

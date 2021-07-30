@@ -4,6 +4,7 @@ module Data.List.Extended
        , getDifference
        , getDifferenceOn
        , getOverlapWith
+       , hasNoDuplicates
        , module L
        ) where
 
@@ -34,3 +35,6 @@ getOverlapWith getKey left right =
   Map.elems $ Map.intersectionWith (,) (mkMap left) (mkMap right)
   where
     mkMap = Map.fromList . map (\v -> (getKey v, v))
+
+hasNoDuplicates :: (Eq a, Hashable a) => [a] -> Bool
+hasNoDuplicates xs = Set.size (Set.fromList xs) == length xs

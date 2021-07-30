@@ -51,11 +51,11 @@ newtype Reporter = Reporter
       :: forall io a
        . MonadIO io
       => TraceContext
-      -- ^ the current trace context
+      -- the current trace context
       -> Text
-      -- ^ human-readable name for this block of code
+      -- human-readable name for this block of code
       -> io (a, TracingMetadata)
-      -- ^ the action whose execution we want to report, returning
+      -- the action whose execution we want to report, returning
       -- any metadata emitted
       -> io a
   }

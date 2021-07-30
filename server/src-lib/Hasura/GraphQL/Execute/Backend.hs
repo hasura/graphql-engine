@@ -149,6 +149,7 @@ data ExecutionStep where
   -- | A graphql query to execute against a remote schema
   ExecStepRemote
     :: !RemoteSchemaInfo
+    -> !RemoteResultCustomizer
     -> !GH.GQLReqOutgoing
     -> ExecutionStep
   -- | Output a plain JSON object

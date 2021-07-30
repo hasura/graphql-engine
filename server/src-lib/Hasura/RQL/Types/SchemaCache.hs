@@ -47,10 +47,15 @@ module Hasura.RQL.Types.SchemaCache
 
   , IntrospectionResult(..)
   , ParsedIntrospection(..)
+  , RemoteSchemaCustomizer(..)
+  , remoteSchemaCustomizeTypeName
+  , remoteSchemaCustomizeFieldName
+  , remoteSchemaDecustomizeTypeName
+  , remoteSchemaDecustomizeFieldName
   , RemoteSchemaCtx(..)
   , rscName
   , rscInfo
-  , rscIntro
+  , rscIntroOriginal
   , rscParsed
   , rscRawIntrospectionResult
   , rscPermissions
@@ -220,10 +225,10 @@ type WithDeps a = (a, [SchemaDependency])
 
 data IntrospectionResult
   = IntrospectionResult
-  { irDoc              :: RemoteSchemaIntrospection
-  , irQueryRoot        :: G.Name
-  , irMutationRoot     :: Maybe G.Name
-  , irSubscriptionRoot :: Maybe G.Name
+  { irDoc              :: !RemoteSchemaIntrospection
+  , irQueryRoot        :: !G.Name
+  , irMutationRoot     :: !(Maybe G.Name)
+  , irSubscriptionRoot :: !(Maybe G.Name)
   } deriving (Show, Eq, Generic)
 instance Cacheable IntrospectionResult
 
@@ -238,21 +243,22 @@ data ParsedIntrospection
 data RemoteSchemaCtx
   = RemoteSchemaCtx
   { _rscName                   :: !RemoteSchemaName
-  , _rscIntro                  :: !IntrospectionResult
+  , _rscIntroOriginal          :: !IntrospectionResult -- ^ Original remote schema without customizations
   , _rscInfo                   :: !RemoteSchemaInfo
   , _rscRawIntrospectionResult :: !BL.ByteString
-  -- ^ The raw response from the introspection query against the remote server.
+  -- ^ The raw response from the introspection query against the remote server,
+  -- or the serialized customized introspection result if there are schema customizations.
   -- We store this so we can efficiently service 'introspect_remote_schema'.
-  , _rscParsed                 ::  ParsedIntrospection
+  , _rscParsed                 ::  ParsedIntrospection -- ^ FieldParsers with schema customizations applied
   , _rscPermissions            :: !(M.HashMap RoleName IntrospectionResult)
   }
 $(makeLenses ''RemoteSchemaCtx)
 
 instance ToJSON RemoteSchemaCtx where
-  toJSON (RemoteSchemaCtx name _ info _ _ _) =
+  toJSON RemoteSchemaCtx {..} =
     object $
-      [ "name" .= name
-      , "info" .= toJSON info
+      [ "name" .= _rscName
+      , "info" .= toJSON _rscInfo
       ]
 
 type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx

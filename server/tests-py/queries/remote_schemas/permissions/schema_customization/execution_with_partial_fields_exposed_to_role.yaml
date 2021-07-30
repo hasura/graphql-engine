@@ -1,0 +1,110 @@
+- description: query the remote schema with only fields that have been exposed to the role 'user'
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  query:
+    query: |
+      query {
+        my_remote_schema {
+          user (user_id: 1) {
+            foo_user_id
+          }
+        }
+      }
+  response:
+    data:
+      my_remote_schema:
+        user:
+          foo_user_id: 1
+
+- description: query the remote schema with only fields that have been exposed to the role 'user' using a fragment
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  query:
+    query: |
+      query {
+        my_remote_schema {
+          user (user_id: 1) {
+            ... userFrag
+          }
+        }
+      }
+
+      fragment userFrag on FooUser {
+        foo_user_id
+      }
+  response:
+    data:
+      my_remote_schema:
+        user:
+          foo_user_id: 1
+
+- description: query the remote schema with only fields that have been exposed to the role 'user' using an inline fragment
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  query:
+    query: |
+      query {
+        my_remote_schema {
+          user (user_id: 1) {
+            ... on FooUser {
+              foo_user_id
+            }
+          }
+        }
+      }
+  response:
+    data:
+      my_remote_schema:
+        user:
+          foo_user_id: 1
+
+- description: query the remote schema with fields that have not been exposed to the role 'user'
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  query:
+    query: |
+      query {
+        my_remote_schema {
+          hello
+          user (user_id: 1) {
+            foo_user_id
+            foo_gimmeText(text: "hello")
+          }
+        }
+      }
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.my_remote_schema.selectionSet.user.selectionSet.foo_gimmeText
+        code: validation-failed
+      message: "field \"foo_gimmeText\" not found in type: 'FooUser'"
+
+- description: run the above query as admin
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        my_remote_schema {
+          hello
+          user (user_id: 1) {
+            foo_user_id
+            foo_gimmeText(text: "hello")
+          }
+        }
+      }
+  response:
+    data:
+      my_remote_schema:
+        hello: world
+        user:
+          foo_user_id: 1
+          foo_gimmeText: hello

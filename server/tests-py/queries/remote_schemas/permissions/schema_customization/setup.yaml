@@ -1,0 +1,13 @@
+type: add_remote_schema
+args:
+  name: my-remote-schema
+  definition:
+    url: http://localhost:4020
+    forward_client_headers: false
+    customization:
+      root_fields_namespace: my_remote_schema
+      type_names: 
+        prefix: Foo
+      field_names:
+        - parent_type: User
+          prefix: foo_

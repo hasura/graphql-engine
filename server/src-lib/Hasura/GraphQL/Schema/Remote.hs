@@ -1,19 +1,26 @@
+{-# LANGUAGE RecursiveDo  #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Hasura.GraphQL.Schema.Remote
   ( buildRemoteParser
   , remoteField
+  , customizeFieldParser
   ) where
 
 import           Hasura.Prelude
 
+import qualified Control.Monad.State.Lazy                    as Lazy
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.HashMap.Strict.InsOrd                  as OMap
 import qualified Data.HashMap.Strict.InsOrd.Extended         as OMap
 import qualified Data.List.NonEmpty                          as NE
+import qualified Data.Text                                   as T
 import qualified Language.GraphQL.Draft.Syntax               as G
 
+import           Control.Lens.Extended                       (Lens', _1, _2, _3, _4, set, use, (%=),
+                                                              (^.))
 import           Data.Monoid                                 (Any (..))
+import           Data.Parser.JSONPath
 import           Data.Text.Extended
 import           Data.Type.Equality
 
@@ -22,13 +29,15 @@ import qualified Hasura.GraphQL.Parser.Internal.TypeChecking as P
 
 import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser                       as P
+import           Hasura.RQL.Types.Common                     (stringScalar)
 import           Hasura.RQL.Types.RemoteSchema
-import           Hasura.RQL.Types.SchemaCache
+import           Hasura.RQL.Types.SchemaCache                (IntrospectionResult (IntrospectionResult, irMutationRoot, irQueryRoot, irSubscriptionRoot))
 
 
 --------------------------------------------------------------------------------
 -- Top level function
 
+-- TODO return ParsedIntrospection ?
 buildRemoteParser
   :: forall m n
    . (MonadSchema n m, MonadError QErr m)
@@ -38,17 +47,37 @@ buildRemoteParser
        , Maybe [P.FieldParser n RemoteField]
        , Maybe [P.FieldParser n RemoteField]
        )
-buildRemoteParser (IntrospectionResult sdoc queryRoot mutationRoot subscriptionRoot) info = do
+  -- ^ parsers for, respectively: queries, mutations, and subscriptions
+buildRemoteParser introspectionResult remoteSchemaInfo = do
+  (rawQueryParsers, rawMutationParsers, rawSubscriptionParsers) <- buildRawRemoteParser introspectionResult remoteSchemaInfo
+  pure $ evalMemoState $ do
+    queryParsers <- customizeFieldParsers remoteSchemaInfo (irQueryRoot introspectionResult) rawQueryParsers
+    mutationParsers <- sequence $ customizeFieldParsers remoteSchemaInfo <$> irMutationRoot introspectionResult <*> rawMutationParsers
+    subscriptionParsers <- sequence $ customizeFieldParsers remoteSchemaInfo <$> irSubscriptionRoot introspectionResult <*> rawSubscriptionParsers
+    pure (queryParsers, mutationParsers, subscriptionParsers)
+
+buildRawRemoteParser
+  :: forall m n
+   . (MonadSchema n m, MonadError QErr m)
+  => IntrospectionResult
+  -> RemoteSchemaInfo
+  -> m ( [P.FieldParser n RawRemoteField]
+       , Maybe [P.FieldParser n RawRemoteField]
+       , Maybe [P.FieldParser n RawRemoteField]
+       )
+  -- ^ parsers for, respectively: queries, mutations, and subscriptions
+buildRawRemoteParser (IntrospectionResult sdoc queryRoot mutationRoot subscriptionRoot) info@RemoteSchemaInfo{..} = do
   queryT <- makeParsers queryRoot
   mutationT <- makeNonQueryRootFieldParser mutationRoot $$(G.litName "Mutation")
   subscriptionT <- makeNonQueryRootFieldParser subscriptionRoot $$(G.litName "Subscription")
   return (queryT, mutationT, subscriptionT)
   where
-    makeFieldParser :: G.FieldDefinition RemoteSchemaInputValueDefinition -> m (P.FieldParser n RemoteField)
+    makeFieldParser :: G.FieldDefinition RemoteSchemaInputValueDefinition -> m (P.FieldParser n RawRemoteField)
     makeFieldParser fieldDef = do
       fldParser <- remoteFieldFromDefinition sdoc fieldDef
-      pure $ (RemoteFieldG info) <$> fldParser
-    makeParsers :: G.Name -> m [P.FieldParser n RemoteField]
+      pure $ RemoteFieldG info mempty <$> fldParser
+
+    makeParsers :: G.Name -> m [P.FieldParser n RawRemoteField]
     makeParsers rootName =
       case lookupType sdoc rootName of
         Just (G.TypeDefinitionObject o) ->
@@ -62,14 +91,13 @@ buildRemoteParser (IntrospectionResult sdoc queryRoot mutationRoot subscriptionR
     -- schema document, then an error is thrown.  If no root name has been provided, we lookup the
     -- schema document for an object with the default name and if that's not found, we omit the said
     -- Root from the schema.
-    makeNonQueryRootFieldParser :: Maybe G.Name -> G.Name -> m (Maybe [P.FieldParser n RemoteField])
+    makeNonQueryRootFieldParser :: Maybe G.Name -> G.Name -> m (Maybe [P.FieldParser n RawRemoteField])
     makeNonQueryRootFieldParser userProvidedRootName defaultRootName =
       case userProvidedRootName of
         Just _rootName -> traverse makeParsers userProvidedRootName
         Nothing ->
           let isDefaultRootObjectExists = isJust $ lookupObject sdoc defaultRootName
           in bool (pure Nothing) (traverse makeParsers $ Just defaultRootName) $ isDefaultRootObjectExists
-
 
 
 --------------------------------------------------------------------------------
@@ -819,13 +847,20 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
       remoteSchemaUnion     sdoc unionTypeDefn <&> mkFieldParserWithSelectionSet argsParser
     _ -> throw400 RemoteSchemaError "expected output type, but got input type"
   where
+    mkField :: Maybe G.Name
+      -> HashMap G.Name (G.Value RemoteSchemaVariable)
+      -> G.SelectionSet G.NoFragments RemoteSchemaVariable
+      -> G.Field G.NoFragments RemoteSchemaVariable
+    mkField alias args selSet =
+      G.Field alias fieldName args mempty selSet
+
     mkFieldParserWithoutSelectionSet
       :: InputFieldsParser n (Altered, HashMap G.Name (G.Value RemoteSchemaVariable))
       -> Parser 'Both n ()
       -> FieldParser n (G.Field G.NoFragments RemoteSchemaVariable)
     mkFieldParserWithoutSelectionSet argsParser outputParser =
       P.rawSelection fieldName description argsParser outputParser
-        <&> \(alias, _, (_, args)) -> G.Field alias fieldName args mempty []
+        <&> \(alias, _, (_, args)) -> mkField alias args []
 
     mkFieldParserWithSelectionSet
       :: InputFieldsParser n (Altered, HashMap G.Name (G.Value RemoteSchemaVariable))
@@ -833,7 +868,7 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
       -> FieldParser n (G.Field G.NoFragments RemoteSchemaVariable)
     mkFieldParserWithSelectionSet argsParser outputParser =
       P.rawSubselection fieldName description argsParser outputParser
-        <&> \(alias, _, (_, args), selSet) -> G.Field alias fieldName args mempty selSet
+        <&> \(alias, _, (_, args), selSet) -> mkField alias args selSet
 
 -- | helper function to get a parser of an object with it's name
 --   This function is called from 'remoteSchemaInterface' and
@@ -850,3 +885,246 @@ getObjectParser
 getObjectParser schemaDoc getObject objName = do
   obj <- remoteSchemaObject schemaDoc =<< getObject objName
   return $ (objName,) <$> obj
+
+addCustomNamespace
+  :: forall m. MonadParse m
+  => RemoteSchemaInfo
+  -> G.Name
+  -> G.Name
+  -> [P.FieldParser m RawRemoteField]
+  -> P.FieldParser m RemoteField
+addCustomNamespace remoteSchemaInfo rootTypeName namespace fieldParsers =
+  P.subselection_ namespace Nothing remoteFieldParser
+  where
+    rawRemoteFieldsParser :: Parser 'Output m [RawRemoteField]
+    rawRemoteFieldsParser = P.selectionSet rootTypeName Nothing fieldParsers <&>
+      toList . OMap.mapWithKey (\alias -> \case
+          P.SelectField fld  -> fld
+          P.SelectTypename fld ->
+            -- In P.selectionSet we lose the resultCustomizer from __typename fields so we need to put it back
+            let resultCustomizer = modifyFieldByName alias $ customizeTypeNameString $ _rscCustomizeTypeName $ rsCustomizer remoteSchemaInfo
+            in RemoteFieldG remoteSchemaInfo resultCustomizer $ G.Field (Just alias) $$(G.litName "__typename") mempty mempty mempty)
+
+    remoteFieldParser :: Parser 'Output m RemoteField
+    remoteFieldParser = rawRemoteFieldsParser <&> \remoteFields ->
+      RemoteFieldG remoteSchemaInfo
+        (foldMap _rfResultCustomizer remoteFields)
+        (RRFNamespaceField $ G.SelectionField . _rfField <$> remoteFields)
+
+customizeFieldParsers
+  :: forall m n. (MonadState MemoState m, MonadFix m, MonadParse n)
+  => RemoteSchemaInfo
+  -> G.Name
+  -> [P.FieldParser n RawRemoteField]
+  -> m [P.FieldParser n RemoteField]
+customizeFieldParsers remoteSchemaInfo@RemoteSchemaInfo{..} rootTypeName fieldParsers = do
+  fieldParsers' <-
+      if hasTypeOrFieldCustomizations rsCustomizer
+      then
+        traverse (customizeFieldParser' (set rfResultCustomizer) rsCustomizer rootTypeName) fieldParsers
+      else
+        -- no need to customize individual FieldParsers if there are no type or field name customizations
+        pure fieldParsers
+  pure $ case _rscNamespaceFieldName rsCustomizer of
+    Nothing        -> fmap realRemoteField <$> fieldParsers'
+    Just namespace -> [addCustomNamespace remoteSchemaInfo rootTypeName namespace fieldParsers']
+
+customizeFieldParser
+  :: forall n a b. (MonadParse n)
+  => (RemoteResultCustomizer -> a -> b)
+  -> RemoteSchemaCustomizer
+  -> G.Name
+  -> P.FieldParser n a
+  -> (P.FieldParser n b)
+customizeFieldParser setResultCustomizer remoteSchemaCustomizer rootTypeName =
+  if hasTypeOrFieldCustomizations remoteSchemaCustomizer
+  then evalMemoState . customizeFieldParser' setResultCustomizer remoteSchemaCustomizer rootTypeName
+  else fmap $ setResultCustomizer mempty
+
+customizeFieldParser'
+  :: forall m n a b. (MonadState MemoState m, MonadFix m, MonadParse n)
+  => (RemoteResultCustomizer -> a -> b)
+  -> RemoteSchemaCustomizer
+  -> G.Name
+  -> P.FieldParser n a
+  -> m (P.FieldParser n b)
+
+customizeFieldParser' setResultCustomizer remoteSchemaCustomizer rootTypeName P.FieldParser{..} = do
+  customizedDefinition <- customizeFieldDefinition remoteSchemaCustomizer rootTypeName fDefinition
+  let customizedRootTypeName = remoteSchemaCustomizeTypeName remoteSchemaCustomizer rootTypeName
+  pure P.FieldParser
+      { fParser =
+          fParserWithResultCustomizer <=<
+            customizeField customizedRootTypeName (dInfo customizedDefinition) . fmap customizeVariable
+      , fDefinition = customizedDefinition
+      }
+  where
+    fParserWithResultCustomizer :: (RemoteResultCustomizer, G.Field G.NoFragments Variable) -> n b
+    fParserWithResultCustomizer (resultCustomizer, fld) =
+      setResultCustomizer resultCustomizer <$> fParser fld
+
+    customizeVariable :: Variable -> Variable
+    customizeVariable Variable{..} = Variable{vType = customizeGraphQLType vType, ..}
+
+    customizeGraphQLType :: G.GType -> G.GType
+    customizeGraphQLType = \case
+      G.TypeNamed nullability name -> G.TypeNamed nullability $ remoteSchemaDecustomizeTypeName remoteSchemaCustomizer name
+      G.TypeList nullability gtype -> G.TypeList nullability $ customizeGraphQLType gtype
+
+    customizeField :: G.Name -> P.FieldInfo -> G.Field G.NoFragments var -> n (RemoteResultCustomizer, G.Field G.NoFragments var)
+    customizeField parentTypeName (P.FieldInfo _ fieldType) (G.Field alias fieldName args directives selSet) = do
+      let fieldName' = if "__" `T.isPrefixOf` G.unName fieldName
+            then fieldName
+            else remoteSchemaDecustomizeFieldName remoteSchemaCustomizer parentTypeName fieldName
+          alias' = alias <|> if fieldName' == fieldName then Nothing else Just fieldName
+      selSet' :: [(RemoteResultCustomizer, G.Selection G.NoFragments var)] <- withPath (++ [Key "selectionSet"]) $
+        case fieldType ^. definitionLens of
+          typeDef@(Definition _ _ _ TIObject{})    -> traverse (customizeSelection typeDef) selSet
+          typeDef@(Definition _ _ _ TIInterface{}) -> traverse (customizeSelection typeDef) selSet
+          typeDef@(Definition _ _ _ TIUnion{})     -> traverse (customizeSelection typeDef) selSet
+          _                                        -> pure $ (mempty,) <$> selSet
+      let resultCustomizer = modifyFieldByName (fromMaybe fieldName' alias') $
+            if fieldName' == $$(G.litName "__typename")
+              then customizeTypeNameString (_rscCustomizeTypeName remoteSchemaCustomizer)
+              else foldMap fst selSet'
+      pure $ (resultCustomizer, G.Field alias' fieldName' args directives $ snd <$> selSet')
+
+    customizeSelection :: Definition (TypeInfo 'Output) -> G.Selection G.NoFragments var -> n (RemoteResultCustomizer, G.Selection G.NoFragments var)
+    customizeSelection parentTypeDef = \case
+      G.SelectionField fld@G.Field{..} ->
+        withPath (++ [Key $ G.unName _fName]) $ do
+          let parentTypeName = getName parentTypeDef
+          fieldInfo <- findField _fName parentTypeName $ dInfo parentTypeDef
+          second G.SelectionField <$> customizeField parentTypeName fieldInfo fld
+      G.SelectionInlineFragment G.InlineFragment{..} -> do
+        inlineFragmentType <-
+          case _ifTypeCondition of
+            Nothing       -> pure parentTypeDef
+            Just typeName -> findSubtype typeName parentTypeDef
+        customizedSelectionSet <- traverse (customizeSelection inlineFragmentType) _ifSelectionSet
+        pure $ (foldMap fst customizedSelectionSet, G.SelectionInlineFragment G.InlineFragment
+          { _ifTypeCondition = remoteSchemaDecustomizeTypeName remoteSchemaCustomizer <$> _ifTypeCondition
+          , _ifSelectionSet = snd <$> customizedSelectionSet
+          , .. })
+
+    findField :: G.Name -> G.Name -> TypeInfo 'Output -> n P.FieldInfo
+    findField fieldName parentTypeName parentTypeInfo =
+      if fieldName == $$(G.litName "__typename") -- TODO can we avoid checking for __typename in two different places?
+        then pure $ P.FieldInfo [] $ NonNullable $ TNamed $ mkDefinition stringScalar Nothing TIScalar
+        else do
+          fields <- case parentTypeInfo of
+            TIObject objectInfo       -> pure $ oiFields objectInfo
+            TIInterface interfaceInfo -> pure $ iiFields interfaceInfo
+            _                         -> parseError $ "Type " <> parentTypeName <<> " has no fields"
+          fld <- find ((== fieldName) . dName) fields `onNothing` parseError ("field " <> fieldName <<> " not found in type: " <> squote parentTypeName)
+          pure $ dInfo fld
+
+    findSubtype :: G.Name -> Definition (TypeInfo 'Output) -> n (Definition (TypeInfo 'Output))
+    findSubtype typeName parentTypeDef =
+      if typeName == getName parentTypeDef
+        then pure parentTypeDef
+        else do
+          possibleTypes <-
+            case dInfo parentTypeDef of
+              TIInterface interfaceInfo -> pure $ iiPossibleTypes interfaceInfo
+              TIUnion unionInfo         -> pure $ uiPossibleTypes unionInfo
+              _                         -> parseError $ "Type " <> getName parentTypeDef <<> " has no possible subtypes"
+          fmap TIObject <$> find ((== typeName) . dName) possibleTypes `onNothing`
+            parseError ("Type " <> typeName <<> " is not a subtype of " <>> getName parentTypeDef)
+
+type MemoState = (HashMap G.Name ObjectInfo, HashMap G.Name InterfaceInfo, HashMap G.Name UnionInfo, HashMap G.Name InputObjectInfo)
+
+evalMemoState :: Lazy.State MemoState a -> a
+evalMemoState = flip Lazy.evalState (mempty, mempty, mempty, mempty)
+
+-- | memo function used to "tie the knot" and preserve sharing in the customized type definitions
+-- It would be nice if we could just re-use MonadSchema and memoizeOn, but the types there are too
+-- parser-specific.
+memo :: (MonadState s m, MonadFix m, Hashable k, Eq k) => Lens' s (HashMap k v) -> (k -> v -> m v) -> k -> v -> m v
+memo lens f k v = do
+  m <- use lens
+  Map.lookup k m `onNothing` mdo
+    -- Note: v' is added to the state _before_ it is produced
+    lens %= Map.insert k v'
+    v' <- f k v
+    pure v'
+
+customizeFieldDefinition
+  :: forall m. (MonadState MemoState m, MonadFix m)
+  => RemoteSchemaCustomizer
+  -> G.Name
+  -> Definition P.FieldInfo
+  -> m (Definition P.FieldInfo)
+customizeFieldDefinition remoteSchemaCustomizer = customizeFieldDefinition'
+  where
+    customizeFieldDefinition' :: G.Name -> Definition P.FieldInfo -> m (Definition P.FieldInfo)
+    customizeFieldDefinition' parentTypeName Definition{..} = do
+      dInfo' <- customizeFieldInfo dInfo
+      pure Definition
+        { dName = remoteSchemaCustomizeFieldName remoteSchemaCustomizer parentTypeName dName
+        , dInfo = dInfo'
+        , ..
+        }
+
+    customizeFieldInfo :: P.FieldInfo -> m P.FieldInfo
+    customizeFieldInfo (P.FieldInfo args typ) =
+      P.FieldInfo <$> traverse (traverse $ customizeInputFieldInfo) args <*> customizeType typ
+
+    customizeTypeDefinition :: (G.Name -> b -> m b) -> Definition b -> m (Definition b)
+    customizeTypeDefinition f Definition{..} = do
+      dInfo' <- f dName dInfo
+      pure Definition
+        { dName = remoteSchemaCustomizeTypeName remoteSchemaCustomizer dName
+        , dInfo = dInfo'
+        , ..
+        }
+
+    customizeType :: Type k -> m (Type k)
+    customizeType = \case
+      NonNullable nn -> NonNullable <$> customizeNonNullableType nn
+      Nullable nn    -> Nullable <$> customizeNonNullableType nn
+
+    customizeNonNullableType :: NonNullableType k -> m (NonNullableType k)
+    customizeNonNullableType = \case
+      TList typ         -> TList <$> customizeType typ
+      TNamed definition -> TNamed <$> customizeTypeDefinition customizeTypeInfo definition
+
+    customizeTypeInfo :: G.Name -> TypeInfo k -> m (TypeInfo k)
+    customizeTypeInfo typeName = \case
+      ti@TIScalar       -> pure ti
+      ti@TIEnum{}       -> pure ti
+      TIInputObject ioi -> TIInputObject <$> customizeInputObjectInfo typeName ioi
+      TIObject oi       -> TIObject <$> customizeObjectInfo typeName oi
+      TIInterface ii    -> TIInterface <$> customizeInterfaceInfo typeName ii
+      TIUnion ui        -> TIUnion <$> customizeUnionInfo typeName ui
+
+    customizeInputFieldInfo :: InputFieldInfo -> m InputFieldInfo
+    customizeInputFieldInfo = \case
+      IFRequired nnType    -> IFRequired <$> customizeNonNullableType nnType
+      IFOptional typ value -> IFOptional <$> customizeType typ <*> pure value
+
+    customizeObjectInfo :: G.Name -> ObjectInfo -> m ObjectInfo
+    customizeObjectInfo = memo _1 $ \typeName ObjectInfo{..} -> do
+      oiFields' <- traverse (customizeFieldDefinition' typeName) oiFields
+      oiImplements' <- traverse (customizeTypeDefinition customizeInterfaceInfo) oiImplements
+      pure ObjectInfo
+        { oiFields = oiFields'
+        , oiImplements = oiImplements'
+        }
+
+    customizeInterfaceInfo :: G.Name -> InterfaceInfo -> m InterfaceInfo
+    customizeInterfaceInfo = memo _2 $ \typeName InterfaceInfo{..} -> do
+      iiFields' <- traverse (customizeFieldDefinition' typeName) iiFields
+      iiPossibleTypes' <- traverse (customizeTypeDefinition customizeObjectInfo) iiPossibleTypes
+      pure InterfaceInfo
+        { iiFields = iiFields'
+        , iiPossibleTypes = iiPossibleTypes'
+        }
+
+    customizeUnionInfo :: G.Name -> UnionInfo -> m UnionInfo
+    customizeUnionInfo = memo _3 $ \_typeName (UnionInfo possibleTypes) ->
+      UnionInfo <$> traverse (customizeTypeDefinition customizeObjectInfo) possibleTypes
+
+    customizeInputObjectInfo :: G.Name -> InputObjectInfo -> m InputObjectInfo
+    customizeInputObjectInfo = memo _4 $ \_typeName (InputObjectInfo args) ->
+      InputObjectInfo <$> traverse (traverse $ customizeInputFieldInfo) args

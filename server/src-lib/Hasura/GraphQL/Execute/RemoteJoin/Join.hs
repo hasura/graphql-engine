@@ -114,11 +114,12 @@ compositeValueToJSON = \case
 -- and made GraphQL request to remote server to fetch remote join values.
 data RemoteJoinField
   = RemoteJoinField
-  { _rjfRemoteSchema :: !RemoteSchemaInfo -- ^ The remote schema server info.
-  , _rjfAlias        :: !Alias -- ^ Top level alias of the field
-  , _rjfField        :: !(G.Field G.NoFragments RemoteSchemaVariable) -- ^ The field AST
-  , _rjfFieldCall    :: ![G.Name] -- ^ Path to remote join value
-  } deriving (Show, Eq)
+  { _rjfRemoteSchema     :: !RemoteSchemaInfo -- ^ The remote schema server info.
+  , _rjfAlias            :: !Alias -- ^ Top level alias of the field
+  , _rjfResultCustomizer :: !RemoteResultCustomizer -- ^ Customizer for JSON results from the remote server
+  , _rjfField            :: !(G.Field G.NoFragments RemoteSchemaVariable) -- ^ The field AST
+  , _rjfFieldCall        :: ![G.Name] -- ^ Path to remote join value
+  }
 
 -- | Generate composite JSON ('CompositeValue') parameterised over 'RemoteJoinField'
 --   from remote join map and query response JSON from Postgres.
@@ -153,7 +154,7 @@ traverseQueryResponseJSON rjm =
           -> n (Maybe RemoteJoinField)
         mkRemoteSchemaField siblingFields remoteJoin = runMaybeT $ do
           counter <- getCounter
-          let RemoteJoin fieldName inputArgs selSet hasuraFields fieldCall rsi _ = remoteJoin
+          let RemoteJoin fieldName relationshipName inputArgs resultCustomizer selSet hasuraFields fieldCall rsi _ = remoteJoin
           -- when any of the joining fields are `NULL`, we don't query
           -- the remote schema
           --
@@ -206,8 +207,10 @@ traverseQueryResponseJSON rjm =
               hasuraFieldArgs = flip Map.filterWithKey siblingFieldArgs $ \k _ -> k `elem` hasuraFieldVariables
           fieldAlias <- lift $ pathToAlias (appendPath fieldName path) counter
           queryField <- lift $ fieldCallsToField (inputArgsToMap inputArgs) hasuraFieldArgs selSet fieldAlias fieldCall
+          let resultCustomizer' = applyAliasMapping (singletonAliasMapping relationshipName fieldAlias) resultCustomizer
           pure $ RemoteJoinField rsi
                                  fieldAlias
+                                 resultCustomizer'
                                  queryField
                                  (map fcName $ toList $ NE.tail fieldCall)
           where
@@ -288,7 +291,7 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
     resolvedRemoteFields <- runVariableCache $ traverse (traverse (resolveRemoteVariable userInfo)) $ _rjfField <$> batch
     let gqlReq = fieldsToRequest resolvedRemoteFields
     -- NOTE: discard remote headers (for now):
-    (_, _, respBody) <- execRemoteGQ env manager userInfo reqHdrs rsi gqlReq
+    (_, _, respBody) <- execRemoteGQ env manager userInfo reqHdrs (rsDef rsi) gqlReq
     case AO.eitherDecode respBody of
       Left e -> throw500 $ "Remote server response is not valid JSON: " <> T.pack e
       Right r -> do
@@ -297,7 +300,9 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
         if | isNothing errors || errors == Just AO.Null ->
                case AO.lookup "data" respObj of
                  Nothing -> throw400 Unexpected "\"data\" field not found in remote response"
-                 Just v  -> onLeft (AO.asObject v) throw500
+                 Just v  -> do
+                   let v' = applyRemoteResultCustomizer (foldMap _rjfResultCustomizer batch) v
+                   AO.asObject v' `onLeft` throw500
 
            | otherwise ->
              throwError (err400 Unexpected "Errors from remote server")

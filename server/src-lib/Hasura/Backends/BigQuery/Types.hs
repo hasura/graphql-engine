@@ -173,7 +173,6 @@ data JoinSource
   = JoinSelect Select
   -- We're not using existingJoins at the moment, which was used to
   -- avoid re-joining on the same table twice.
-  -- | JoinReselect Reselect
   deriving (Eq, Ord, Show, Generic, Data, Lift)
 instance FromJSON JoinSource
 instance Hashable JoinSource
@@ -700,8 +699,8 @@ liberalDecimalParser fromText json = viaText <|> viaNumber
       -- Parsing scientific is safe; it doesn't normalise until we ask
       -- it to.
       case readP_to_S scientificP (T.unpack text) of
-        [(_)] -> pure (fromText text)
-        _     -> fail ("String containing decimal places is invalid: " ++ show text)
+        [_] -> pure (fromText text)
+        _   -> fail ("String containing decimal places is invalid: " ++ show text)
     viaNumber = do
       d <- J.parseJSON json
       -- Converting a scientific to an unbounded number is unsafe, but
