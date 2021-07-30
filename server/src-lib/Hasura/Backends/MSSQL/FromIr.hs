@@ -258,12 +258,20 @@ reproject label = \case
     AggregateProjection (Aliased {aliasedThing = OpAggregate aggName (fixColumnEntity label <$> expressions), ..})
   AggregateProjection (Aliased {aliasedThing = CountAggregate countableFieldnames, ..}) ->
     AggregateProjection (Aliased {aliasedThing = CountAggregate $ fixEntity label <$> countableFieldnames, ..})
+  AggregateProjection (Aliased {aliasedThing = JsonQueryOpAggregate aggName expressions, ..}) ->
+    AggregateProjection (Aliased {aliasedThing = JsonQueryOpAggregate aggName (fixColumnEntity label <$> expressions), ..})
   x -> x
   where
+    fixColumnEntity :: Text -> Expression -> Expression
     fixColumnEntity entity = \case
       ColumnExpression fName ->
         ColumnExpression $ fixEntity entity fName
+      JsonQueryExpression expression ->
+        JsonQueryExpression $ fixColumnEntity entity expression
+      SelectExpression Select{..} ->
+        SelectExpression $ Select {selectProjections = reproject entity <$> selectProjections, ..}
       x -> x
+    fixEntity :: Text -> FieldName -> FieldName
     fixEntity entity FieldName{..} = FieldName {fieldNameEntity = entity, ..}
 
 
@@ -672,30 +680,22 @@ fromAggregateField aggregateField =
       StarCountable               -> pure StarCountable
       NonNullFieldCountable names -> NonNullFieldCountable <$> traverse fromPGCol names
       DistinctCountable     names -> DistinctCountable     <$> traverse fromPGCol names
-
---      fmap
---        CountAggregate
---        (pure countType
---         case countType of
---           PG.CTStar -> pure StarCountable
---           PG.CTSimple fields ->
---             case nonEmpty fields of
---               Nothing -> refute (pure MalformedAgg)
---               Just fields' -> do
---                 fields'' <- traverse fromPGCol fields'
---                 pure (NonNullFieldCountable fields'')
---           PG.CTDistinct fields ->
---             case nonEmpty fields of
---               Nothing -> refute (pure MalformedAgg)
---               Just fields' -> do
---                 fields'' <- traverse fromPGCol fields'
---                 pure (DistinctCountable fields''))
     IR.AFOp IR.AggregateOp {_aoOp = op, _aoFields = fields} -> do
-      args <- for fields \(_fieldName, pgColFld) ->
+      projections :: [Projection] <- for fields \(fieldName, pgColFld) ->
         case pgColFld of
-          IR.CFCol pgCol _pgType -> fmap ColumnExpression (fromPGCol pgCol)
-          IR.CFExp text          -> pure (ValueExpression (ODBC.TextValue text))
-      pure (OpAggregate op args)
+          IR.CFCol pgCol _pgType -> do
+            fname <- fromPGCol pgCol
+            pure $ AggregateProjection $ Aliased (JsonQueryOpAggregate op [ColumnExpression fname]) (IR.getFieldNameTxt fieldName)
+          IR.CFExp text          -> do
+            pure $ ExpressionProjection $ Aliased (ValueExpression (ODBC.TextValue text)) (IR.getFieldNameTxt fieldName)
+      pure $ OpAggregate op $
+        [ JsonQueryExpression $ SelectExpression $
+            emptySelect
+              { selectProjections = projections
+              , selectFor = JsonFor $ ForJson JsonSingleton NoRoot
+              }
+        ]
+
 
 -- | The main sources of fields, either constants, fields or via joins.
 fromAnnFieldsG ::

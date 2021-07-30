@@ -312,7 +312,9 @@ fromAggregate :: Aggregate -> Printer
 fromAggregate =
   \case
     CountAggregate countable -> "COUNT(" <+> fromCountable countable <+> ")"
-    OpAggregate text args ->
+    OpAggregate _text args ->
+      "(" <+> SepByPrinter ", " (map fromExpression (toList args)) <+> ")"
+    JsonQueryOpAggregate text args ->
       QueryPrinter (rawUnescapedText text) <+>
       "(" <+> SepByPrinter ", " (map fromExpression (toList args)) <+> ")"
     TextAggregate text -> fromExpression (ValueExpression (TextValue text))

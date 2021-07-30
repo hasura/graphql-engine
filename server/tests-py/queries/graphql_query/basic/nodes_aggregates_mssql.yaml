@@ -6,8 +6,10 @@ response:
     person_aggregate:
       welp:
         count: 4
-        sum: 10
-        min: 1
+        sum:
+          id: 10
+        min:
+          id: 1
       blah:
       - id: 1
         name: John\

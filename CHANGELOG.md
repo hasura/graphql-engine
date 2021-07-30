@@ -17,6 +17,8 @@
 - console: add pagination on the Raw SQL results page
 - console: fix issues with replacing invalid graphql identifiers in table and column names
 - console: show error message on inconsistent objects table
+- server/mssql: Fix [graphql-engine#7130](https://github.com/hasura/graphql-engine/issues/7130) for `__typename` errors and more
+generally, JSON-style aggregates.
 - cli: add support for `query_tags` metadata object
 
 ## v2.0.3
