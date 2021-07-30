@@ -228,6 +228,52 @@ class SampleAuthGraphQL(RequestHandler):
         resp.headers['Custom-Header'] = 'custom-value'
         return resp
 
+# GraphQL server that can return arbitrary size result
+class BigInterface(graphene.Interface):
+    hello = graphene.Field(graphene.String)
+
+class Big(graphene.ObjectType):
+    class Meta:
+        interfaces = (BigInterface, )
+
+    big = graphene.Field(BigInterface, required=False)
+    many = graphene.Field(graphene.List(BigInterface), required=False, arg=graphene.Int(default_value=10))
+
+    # hello = graphene.Field(graphene.String)
+
+    def resolve_hello(self, info):
+        return "Hello"
+
+    def resolve_big(self, info):
+        return self
+
+    def resolve_many(self, info, arg):
+        for i in range(arg):
+            yield self
+
+class BigQuery(graphene.ObjectType):
+    # start = graphene.Field(BigInterface)
+    start = graphene.Field(Big)
+
+    def resolve_start(self, info):
+        return Big()
+
+big_schema = graphene.Schema(query=BigQuery)
+
+class BigGraphQL(RequestHandler):
+    def get(self, request):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def post(self, request):
+        if not request.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = big_schema.execute(request.json['query'])
+        resp = mkJSONResp(res)
+        resp.headers['Set-Cookie'] = 'abcd'
+        resp.headers['Custom-Header'] = 'custom-value'
+        return resp
+
+
 # GraphQL server with interfaces
 
 class Character(graphene.Interface):
@@ -237,25 +283,6 @@ class Character(graphene.Interface):
     def __init__(self, id, name):
         self.id = id
         self.name = name
-
-class Human(graphene.ObjectType):
-    class Meta:
-        interfaces = (Character, )
-
-    home_planet = graphene.String()
-
-    def __init__(self, home_planet, character):
-        self.home_planet = home_planet
-        self.character = character
-
-    def resolve_id(self, info):
-        return self.character.id
-
-    def resolve_name(self, info):
-        return self.character.name
-
-    def refolve_primary_function(self, info):
-        return self.home_planet
 
 class Droid(graphene.ObjectType):
     class Meta:
@@ -276,18 +303,44 @@ class Droid(graphene.ObjectType):
     def resolve_primary_function(self, info):
         return self.primary_function
 
+class Human(graphene.ObjectType):
+    class Meta:
+        interfaces = (Character, )
+
+    home_planet = graphene.String()
+
+    droid = graphene.Field(Droid, required=False)
+
+    def __init__(self, home_planet, droid, character):
+        self.home_planet = home_planet
+        self.character = character
+        self.droid = droid
+
+    def resolve_id(self, info):
+        return self.character.id
+
+    def resolve_name(self, info):
+        return self.character.name
+
+    def resolve_primary_function(self, info):
+        return self.home_planet
+
+    def resolve_droid(self, info):
+        return self.droid
+
 class CharacterSearchResult(graphene.Union):
     class Meta:
         types = (Human,Droid)
 
+r2 = Droid("Astromech", Character(1,'R2-D2'))
 all_characters = {
- 4: Droid("Astromech", Character(1,'R2-D2')),
- 5: Human("Tatooine", Character(2, "Luke Skywalker")),
+ 4: r2,
+ 5: Human("Tatooine", r2, Character(2, "Luke Skywalker")),
 }
 
 character_search_results = {
  1: Droid("Astromech", Character(6,'R2-D2')),
- 2: Human("Tatooine", Character(7, "Luke Skywalker")),
+ 2: Human("Tatooine", r2, Character(7, "Luke Skywalker")),
 }
 
 class CharacterIFaceQuery(graphene.ObjectType):
@@ -297,8 +350,16 @@ class CharacterIFaceQuery(graphene.ObjectType):
         episode=graphene.Int(required=True)
     )
 
+    heroes = graphene.Field(
+        graphene.List(Character),
+        required=False
+    )
+
     def resolve_hero(_, info, episode):
         return all_characters.get(episode)
+
+    def resolve_heroes(_, info):
+        return all_characters.values()
 
 schema = graphene.Schema(query=CharacterIFaceQuery, types=[Human, Droid])
 
@@ -310,7 +371,7 @@ class CharacterInterfaceGraphQL(RequestHandler):
     def post(self, req):
         if not req.json:
             return Response(HTTPStatus.BAD_REQUEST)
-        res = character_interface_schema.execute(req.json['query'])
+        res = character_interface_schema.execute(req.json['query'], variable_values=req.json.get('variables'))
         return mkJSONResp(res)
 
 class InterfaceGraphQLErrEmptyFieldList(RequestHandler):
@@ -743,7 +804,8 @@ handlers = MkHandlers({
     '/person-graphql': PersonGraphQL,
     '/header-graphql': HeaderTestGraphQL,
     '/messages-graphql' : MessagesGraphQL,
-    '/auth-graphql': SampleAuthGraphQL
+    '/auth-graphql': SampleAuthGraphQL,
+    '/big': BigGraphQL
 })
 
 

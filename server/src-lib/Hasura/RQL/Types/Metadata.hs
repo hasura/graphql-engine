@@ -651,10 +651,11 @@ metadataToOrdJSON ( Metadata
                       ] <> catMaybes [maybeCommentToMaybeOrdPair permComment]
 
         remoteSchemaDefToOrdJSON :: RemoteSchemaDef -> AO.Value
-        remoteSchemaDefToOrdJSON (RemoteSchemaDef url urlFromEnv headers frwrdClientHdrs timeout) =
+        remoteSchemaDefToOrdJSON (RemoteSchemaDef url urlFromEnv headers frwrdClientHdrs timeout customization) =
           AO.object $ catMaybes [ maybeToPair "url" url
                                 , maybeToPair "url_from_env" urlFromEnv
                                 , maybeToPair "timeout_seconds" timeout
+                                , maybeToPair "customization" customization
                                 , headers >>= listToMaybeOrdPair "headers" AO.toOrdered
                                 ] <> [("forward_client_headers", AO.toOrdered frwrdClientHdrs) | frwrdClientHdrs]
           where

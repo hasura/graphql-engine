@@ -83,6 +83,7 @@ NOTE: This only includes the diff between v2.0.0 and v2.0.0-beta.2
   faster query responses.
 - server: BigQuery: various bug fixes related to aggregations
 - server: fix add source API wiping out source's metadata when replace_configuration is true
+- server: add support for customization of field names and type names when adding a remote schema
 - console: add foreign key CRUD functionality to ms sql server tables
 - console: allow tracking of custom SQL functions having composite type (rowtype) input arguments
 - console: allow input object presets in remote schema permissions

@@ -12,7 +12,6 @@ module Hasura.GraphQL.Execute
   , checkQueryInAllowlist
   , MultiplexedLiveQueryPlan(..)
   , LiveQueryPlan (..)
-  , getQueryParts -- this function is exposed for testing in parameterized query hash
   ) where
 
 import           Hasura.Prelude
@@ -27,13 +26,10 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 
-import           Data.Text.Extended
-
 import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Execute.Action          as EA
 import qualified Hasura.GraphQL.Execute.Backend         as EB
 import qualified Hasura.GraphQL.Execute.Common          as EC
-import qualified Hasura.GraphQL.Execute.Inline          as EI
 import qualified Hasura.GraphQL.Execute.LiveQuery.Plan  as EL
 import qualified Hasura.GraphQL.Execute.Mutation        as EM
 import qualified Hasura.GraphQL.Execute.Query           as EQ
@@ -61,8 +57,6 @@ import           Hasura.QueryTags
 import           Hasura.Server.Types                    (RequestId (..))
 
 
-type QueryParts = G.TypedOperationDefinition G.FragmentSpread G.Name
-
 -- | Execution context
 data ExecutionCtx
   = ExecutionCtx
@@ -74,40 +68,15 @@ data ExecutionCtx
   , _ecxEnableAllowList :: !Bool
   }
 
--- | Depending on the request parameters, fetch the correct typed operation
--- definition from the GraphQL query
-getQueryParts
-  :: MonadError QErr m
-  => GQLReqParsed
-  -> m QueryParts
-getQueryParts (GQLReq opNameM q _varValsM) = do
-  let (selSets, opDefs, _fragDefsL) = G.partitionExDefs $ unGQLExecDoc q
-  case (opNameM, selSets, opDefs) of
-    (Just opName, [], _) -> do
-      let n = _unOperationName opName
-          opDefM = find (\opDef -> G._todName opDef == Just n) opDefs
-      onNothing opDefM $ throw400 ValidationFailed $
-        "no such operation found in the document: " <> dquote n
-    (Just _, _, _)  ->
-      throw400 ValidationFailed $ "operationName cannot be used when " <>
-      "an anonymous operation exists in the document"
-    (Nothing, [selSet], []) ->
-      return $ G.TypedOperationDefinition G.OperationTypeQuery Nothing [] [] selSet
-    (Nothing, [], [opDef])  ->
-      return opDef
-    (Nothing, _, _) ->
-      throw400 ValidationFailed $ "exactly one operation has to be present " <>
-      "in the document when operationName is not specified"
-
 getExecPlanPartial
   :: (MonadError QErr m)
   => UserInfo
   -> SchemaCache
   -> ET.GraphQLQueryType
   -> GQLReqParsed
-  -> m (C.GQLContext, QueryParts)
+  -> m (C.GQLContext, SingleOperation)
 getExecPlanPartial userInfo sc queryType req =
-  (getGCtx ,) <$> getQueryParts req
+  (getGCtx ,) <$> getSingleOperation req
   where
     role = _uiRole userInfo
 
@@ -129,7 +98,6 @@ getExecPlanPartial userInfo sc queryType req =
           case _uiBackendOnlyFieldAccess userInfo of
             BOFAAllowed    -> fromMaybe frontend backend
             BOFADisallowed -> frontend
-
 
 -- The graphql query is resolved into a sequence of execution operations
 data ResolvedExecutionPlan
@@ -283,13 +251,6 @@ getResolvedExecPlan
   -> m (ParameterizedQueryHash, ResolvedExecutionPlan)
 getResolvedExecPlan env logger userInfo sqlGenCtx
   sc _scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) reqId = do
-  -- GraphQL requests may incorporate fragments which insert a pre-defined
-  -- part of a GraphQL query. Here we make sure to remember those
-  -- pre-defined sections, so that when we encounter a fragment spread
-  -- later, we can inline it instead.
-  let takeFragment = \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing
-      fragments =
-        mapMaybe takeFragment $ unGQLExecDoc $ _grQuery reqParsed
   (gCtx, queryParts) <- getExecPlanPartial userInfo sc queryType reqParsed
 
   let maybeOperationName = (Just <$> _unOperationName) =<< _grOperationName reqParsed
@@ -297,25 +258,19 @@ getResolvedExecPlan env logger userInfo sqlGenCtx
 
   (parameterizedQueryHash, resolvedExecPlan) <-
     case queryParts of
-      G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives selSet -> do
-        -- (Here the above fragment inlining is actually executed.)
-        inlinedSelSet <- EI.inlineSelectionSet fragments selSet
+      G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives inlinedSelSet -> do
         (executionPlan, queryRootFields, dirMap, parameterizedQueryHash) <-
           EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders directives inlinedSelSet
             varDefs (_grVariables reqUnparsed) (scSetGraphqlIntrospectionOptions sc)
             reqId maybeOperationName queryTagsConfig
         pure $ (parameterizedQueryHash, QueryExecutionPlan executionPlan queryRootFields dirMap)
-      G.TypedOperationDefinition G.OperationTypeMutation _ varDefs directives selSet -> do
-        -- (Here the above fragment inlining is actually executed.)
-        inlinedSelSet <- EI.inlineSelectionSet fragments selSet
+      G.TypedOperationDefinition G.OperationTypeMutation _ varDefs directives inlinedSelSet -> do
         (executionPlan, parameterizedQueryHash) <-
           EM.convertMutationSelectionSet env logger gCtx sqlGenCtx userInfo httpManager reqHeaders
             directives inlinedSelSet varDefs (_grVariables reqUnparsed) (scSetGraphqlIntrospectionOptions sc)
             reqId maybeOperationName queryTagsConfig
         pure $ (parameterizedQueryHash, MutationExecutionPlan executionPlan)
-      G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives selSet -> do
-        -- (Here the above fragment inlining is actually executed.)
-        inlinedSelSet <- EI.inlineSelectionSet fragments selSet
+      G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> do
         -- Parse as query to check correctness
         (unpreparedAST, normalizedDirectives, normalizedSelectionSet) <-
           EQ.parseGraphQLQuery gCtx varDefs (_grVariables reqUnparsed) directives inlinedSelSet
