@@ -70,7 +70,6 @@ main = withVersion $$(getVersionFromEnvironment) $ parseArgs >>= \case
 
 unitSpecs :: Spec
 unitSpecs = do
-  -- describe "Hasura.RQL.Metadata" MetadataSpec.spec -- Commenting until optimizing the test in CI
   describe "Data.NonNegativeInt" NonNegetiveIntSpec.spec
   describe "Data.Parser.CacheControl" CacheControlParser.spec
   describe "Data.Parser.JSONPath" JsonPath.spec

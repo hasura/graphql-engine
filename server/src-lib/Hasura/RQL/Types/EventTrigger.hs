@@ -38,13 +38,13 @@ import           Hasura.RQL.Types.Common            (InputWebhook)
 -- | Unique name for event trigger.
 newtype TriggerName = TriggerName { unTriggerName :: NonEmptyText }
   deriving (Show, Eq, Ord, Hashable, ToTxt, FromJSON, ToJSON, ToJSONKey
-           , Q.ToPrepArg, Generic, NFData, Cacheable, Arbitrary, Q.FromCol)
+           , Q.ToPrepArg, Generic, NFData, Cacheable, Q.FromCol)
 
 triggerNameToTxt :: TriggerName -> Text
 triggerNameToTxt = unNonEmptyText . unTriggerName
 
 newtype EventId = EventId {unEventId :: Text}
-  deriving (Show, Eq, Ord, Hashable, ToTxt, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, ToTxt, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, NFData, Cacheable)
 
 data Ops = INSERT | UPDATE | DELETE | MANUAL deriving (Show)
 

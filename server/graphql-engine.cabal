@@ -249,7 +249,6 @@ library
 
                      -- testing
                      , QuickCheck
-                     , generic-arbitrary
                      , quickcheck-instances
 
                      , directory
@@ -273,7 +272,7 @@ library
                      -- bigquery support
                      , memory
                      , x509-store
-                     
+
                      , tagged
 
                      -- mysql
@@ -311,7 +310,6 @@ library
                      , Data.Time.Clock.Units
                      , Data.URL.Template
                      , GHC.Stats.Extended
-                     , Test.QuickCheck.Arbitrary.Partial
                      , Hasura.App
                      , Hasura.Metadata.Class
 
@@ -500,7 +498,6 @@ library
                      , Hasura.RQL.DDL.InheritedRoles
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.Metadata
-                     , Hasura.RQL.DDL.Metadata.Generator
                      , Hasura.RQL.DDL.Metadata.Types
                      , Hasura.RQL.DDL.Permission
                      , Hasura.RQL.DDL.Permission.Internal
@@ -696,7 +693,6 @@ test-suite graphql-engine-tests
     Hasura.GraphQL.Parser.TestUtils
     Hasura.GraphQL.Schema.RemoteTest
     Hasura.IncrementalSpec
-    Hasura.RQL.MetadataSpec
     Hasura.RQL.Types.EndpointSpec
     Hasura.SQL.WKTSpec
     Hasura.Server.AuthSpec

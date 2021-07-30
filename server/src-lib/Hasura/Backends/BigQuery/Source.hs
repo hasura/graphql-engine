@@ -14,7 +14,6 @@ import qualified Data.Aeson.TH           as J
 import qualified Data.ByteString.Lazy    as BL
 import qualified Data.HashMap.Strict     as HM
 import           Data.Hashable           (hashWithSalt)
-import qualified Data.Text               as T
 import qualified Data.Text.Encoding      as TE
 import qualified Data.X509               as X509
 import qualified Data.X509.Memory        as X509
@@ -34,12 +33,6 @@ deriving instance J.ToJSON Cry.PrivateKey -- orphan
 deriving instance J.ToJSON Cry.PublicKey -- orphan
 deriving instance Hashable Cry.PrivateKey -- orphan
 deriving instance Hashable Cry.PublicKey -- orphan
-instance Arbitrary Cry.PrivateKey where -- orphan
-  arbitrary = genericArbitrary
-instance Arbitrary Cry.PublicKey where -- orphan
-  arbitrary = genericArbitrary
-instance Arbitrary PKey where
-  arbitrary = genericArbitrary
 instance J.FromJSON PKey where
   parseJSON = J.withText "private_key" $ \k ->
     case X509.readKeyFileFromMemory $ TE.encodeUtf8 k of
@@ -52,8 +45,6 @@ instance J.ToJSON PKey where
 newtype GoogleAccessToken
   = GoogleAccessToken Text
   deriving (Show, Eq, J.FromJSON, J.ToJSON, Hashable, Generic, Data, NFData)
-instance Arbitrary GoogleAccessToken where
-  arbitrary = genericArbitrary
 
 
 data TokenResp
@@ -65,8 +56,6 @@ instance J.FromJSON TokenResp where
   parseJSON = J.withObject "TokenResp" $ \o -> TokenResp
     <$> o J..: "access_token"
     <*> o J..: "expires_in"
-instance Arbitrary TokenResp where
-  arbitrary = genericArbitrary
 
 
 dummyTokenResp :: TokenResp
@@ -80,8 +69,6 @@ data ServiceAccount
   , _saProjectId   :: !Text
   } deriving (Eq, Show, Data, NFData, Generic, Hashable)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase){J.omitNothingFields=False} ''ServiceAccount)
-instance Arbitrary ServiceAccount where
-  arbitrary = genericArbitrary
 
 
 data ConfigurationJSON a
@@ -89,8 +76,6 @@ data ConfigurationJSON a
   | FromYamlJSON a
   deriving stock (Show, Eq, Generic)
   deriving (NFData, Hashable)
-instance Arbitrary a => Arbitrary (ConfigurationJSON a) where
-  arbitrary = genericArbitrary
 instance J.FromJSON a => J.FromJSON (ConfigurationJSON a) where
   parseJSON = \case
     J.Object o | Just (J.String text) <- HM.lookup "from_env" o -> pure (FromEnvJSON text)
@@ -111,8 +96,6 @@ data ConfigurationInputs
   | FromEnvs !Text
   deriving stock (Show, Eq, Generic)
   deriving (NFData, Hashable)
-instance Arbitrary ConfigurationInputs where
-  arbitrary = genericArbitrary
 instance J.ToJSON ConfigurationInputs where
   toJSON = \case
     FromYamls i -> J.toJSON i
@@ -131,8 +114,6 @@ data ConfigurationInput
   | FromEnv !Text
   deriving stock (Show, Eq, Generic)
   deriving (NFData, Hashable)
-instance Arbitrary ConfigurationInput where
-  arbitrary = genericArbitrary
 instance J.ToJSON ConfigurationInput where
   toJSON = \case
     FromYaml i -> J.toJSON i
@@ -141,7 +122,7 @@ instance J.FromJSON ConfigurationInput where
   parseJSON = \case
     J.Object o     -> FromEnv <$> o J..: "from_env"
     s@(J.String _) -> FromYaml <$> J.parseJSON s
-    (J.Number n)   -> FromYaml <$> J.parseJSON (J.String (T.pack (show n)))
+    (J.Number n)   -> FromYaml <$> J.parseJSON (J.String (tshow n))
     _              -> fail "one of string or number or object must be provided"
 
 
@@ -155,8 +136,6 @@ data BigQueryConnSourceConfig
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''BigQueryConnSourceConfig)
 deriving instance Show BigQueryConnSourceConfig
 deriving instance Hashable BigQueryConnSourceConfig
-instance Arbitrary BigQueryConnSourceConfig where
-  arbitrary = genericArbitrary
 instance Cacheable BigQueryConnSourceConfig where
   unchanged _ = (==)
 
@@ -172,8 +151,6 @@ data BigQuerySourceConfig
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase){J.omitNothingFields=True} ''BigQuerySourceConfig)
 deriving instance Show BigQuerySourceConfig
 deriving instance Hashable BigQuerySourceConfig
-instance Arbitrary BigQuerySourceConfig where
-  arbitrary = genericArbitrary
 instance Cacheable BigQuerySourceConfig where
   unchanged _ = (==)
 
@@ -186,5 +163,3 @@ instance J.ToJSON (MVar (Maybe TokenResp)) where
   toJSON _ = J.String "_REDACTED_"
 instance Hashable (MVar (Maybe TokenResp)) where
   hashWithSalt i r = hashWithSalt i (unsafePerformIO $ readMVar r)
-instance Arbitrary (MVar (Maybe TokenResp)) where
-  arbitrary = genericArbitrary @(Maybe TokenResp) <&> (unsafePerformIO . newMVar)
