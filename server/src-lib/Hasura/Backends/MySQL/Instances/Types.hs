@@ -15,10 +15,6 @@ import           Hasura.SQL.Backend
 import qualified Language.GraphQL.Draft.Syntax as G
 
 
-instance Arbitrary Void where
-  arbitrary = error "MySQL backend does not support this operation yet."
-
-
 instance Backend 'MySQL where
   type SourceConfig            'MySQL = MySQL.SourceConfig
   type SourceConnConfiguration 'MySQL = MySQL.ConnSourceConfig

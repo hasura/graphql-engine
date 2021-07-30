@@ -27,7 +27,6 @@ import           Hasura.Base.Error                      (QErr)
 import           Hasura.Incremental.Internal.Dependency (Cacheable (..))
 import           Hasura.Prelude
 import           Hasura.SQL.Types                       (ToSQL (..))
-import           System.IO.Unsafe                       (unsafePerformIO)
 import qualified Text.Builder                           as TB
 
 
@@ -36,8 +35,6 @@ data ConnPoolSettings
     { _cscIdleTimeout    :: !Word
     , _cscMaxConnections :: !Word
     } deriving (Eq, Show, NFData, Generic, Hashable, Cacheable)
-instance Arbitrary ConnPoolSettings where
-  arbitrary = genericArbitrary
 instance Cacheable Word where
   unchanged _ = (==)
 defaultConnPoolSettings :: ConnPoolSettings
@@ -65,8 +62,6 @@ data ConnSourceConfig
     , _cscPoolSettings :: !ConnPoolSettings
     } deriving (Eq, Show, NFData, Generic, Hashable)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = False} ''ConnSourceConfig)
-instance Arbitrary ConnSourceConfig where
-  arbitrary = genericArbitrary
 instance Cacheable Word16 where
   unchanged _ = (==)
 deriving instance Cacheable ConnSourceConfig
@@ -77,15 +72,10 @@ data SourceConfig
     { scConfig         :: !ConnSourceConfig
     , scConnectionPool :: !(Pool Connection)
     } deriving (Eq, Generic, J.ToJSON)
-instance Arbitrary SourceConfig where
-  arbitrary = genericArbitrary
 instance J.ToJSON (Pool Connection) where
   toJSON = const (J.String "_REDACTED_")
 instance Eq (Pool Connection) where
   _ == _ = True
-instance Arbitrary (Pool Connection) where
-  arbitrary = pure . unsafePerformIO $
-    createPool (connect defaultConnectInfo) close 1 (60 {-seconds-} * 60 {-minutes-}) 1
 instance Cacheable SourceConfig where
   unchanged _ = (==)
 
@@ -95,8 +85,6 @@ data TableName
     { name   :: !Text
     , schema :: !Text
     } deriving (Show, Eq, Ord, Generic, J.ToJSONKey, J.ToJSON, J.FromJSON, Data, Hashable, Cacheable, NFData)
-instance Arbitrary TableName where
-  arbitrary = genericArbitrary
 instance ToTxt TableName where
   toTxt TableName{..} = name
 
@@ -122,8 +110,6 @@ newtype Column
     { unColumn :: Text }
     deriving newtype (Show, Eq, Ord, ToTxt, J.FromJSONKey, J.ToJSONKey, J.FromJSON, J.ToJSON, Hashable, Cacheable, NFData)
     deriving (Generic)
-instance Arbitrary Column where
-  arbitrary = genericArbitrary
 
 
 type ScalarType = MySQLTypes.Type

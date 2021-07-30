@@ -36,7 +36,6 @@ class
   ( Representable (PgExtraTableMetadata pgKind)
   , J.ToJSON      (PgExtraTableMetadata pgKind)
   , J.FromJSON    (PgExtraTableMetadata pgKind)
-  , Arbitrary     (PgExtraTableMetadata pgKind)
   ) => PostgresBackend (pgKind :: PostgresKind) where
   type PgExtraTableMetadata pgKind :: Type
 

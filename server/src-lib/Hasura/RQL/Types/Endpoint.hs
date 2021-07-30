@@ -42,7 +42,7 @@ import           Hasura.RQL.Types.QueryCollection (CollectionName, QueryName)
 
 newtype EndpointMethod = EndpointMethod { unEndpointMethod :: Text }
   deriving
-  ( Show, Eq, Ord, Hashable, ToJSON , ToTxt, Generic, Arbitrary, ToJSONKey)
+  ( Show, Eq, Ord, Hashable, ToJSON , ToTxt, Generic, ToJSONKey)
 
 instance FromJSON EndpointMethod where
   -- TODO: Use a more representititve datatype
@@ -55,13 +55,13 @@ instance FromJSON EndpointMethod where
 newtype EndpointName = EndpointName { unEndpointName :: NonEmptyText }
   deriving ( Show, Eq, Ord, Hashable, ToJSON, ToJSONKey
            , FromJSON, FromJSONKey, Q.FromCol, Q.ToPrepArg, ToTxt
-           , Generic, Arbitrary
+           , Generic
            )
 
 newtype EndpointUrl = EndpointUrl { unEndpointUrl :: NonEmptyText }
   deriving ( Show, Eq, Ord, Hashable, ToJSON, ToJSONKey
            , FromJSON, FromJSONKey, Q.FromCol, Q.ToPrepArg, ToTxt
-           , Generic, Arbitrary
+           , Generic
            )
 
 mkEndpointUrl :: ToTxt a => a -> Maybe EndpointUrl

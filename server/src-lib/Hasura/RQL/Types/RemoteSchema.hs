@@ -36,7 +36,7 @@ newtype RemoteSchemaName
   { unRemoteSchemaName :: NonEmptyText }
   deriving ( Show, Eq, Ord, Hashable, J.ToJSON, J.ToJSONKey
            , J.FromJSON, Q.ToPrepArg, Q.FromCol, ToTxt, NFData
-           , Generic, Cacheable, Arbitrary
+           , Generic, Cacheable
            )
 
 -- | 'RemoteSchemaDef' after validation and baking-in of defaults in 'validateRemoteSchemaDef'.

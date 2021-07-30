@@ -334,9 +334,6 @@ instance FromJSON PostgresPoolSettings where
       <*> o .:? "pool_timeout"
       <*> ((o .:? "connection_lifetime") <&> parseConnLifeTime)
 
-instance Arbitrary PostgresPoolSettings where
-  arbitrary = genericArbitrary
-
 data DefaultPostgresPoolSettings =
   DefaultPostgresPoolSettings
   { _dppsMaxConnections     :: !Int
@@ -391,9 +388,6 @@ instance Cacheable SSLMode
 instance Hashable SSLMode
 instance NFData SSLMode
 
-instance Arbitrary SSLMode where
-  arbitrary = genericArbitrary
-
 instance Show SSLMode where
   show = \case
    Disable    -> "disable"
@@ -432,17 +426,11 @@ instance FromJSON CertVar where
   parseJSON (String s) = pure (CertLiteral (T.unpack s))
   parseJSON x          = withObject "CertVar" (\o -> CertVar <$> o .: "from_env") x
 
-instance Arbitrary CertVar where
-  arbitrary = genericArbitrary
-
 newtype CertData = CertData { unCert :: Text }
   deriving (Show, Eq, Generic)
 
 instance ToJSON CertData where
   toJSON = String . unCert
-
-instance Arbitrary CertData where
-  arbitrary = genericArbitrary
 
 data PGClientCerts p a = PGClientCerts
   { pgcSslCert     :: a
@@ -472,9 +460,6 @@ instance (NFData p, NFData a) => NFData (PGClientCerts p a)
 instance ToJSON SSLMode where
   toJSON = String . tshow
 
-instance (Arbitrary p, Arbitrary a) => Arbitrary (PGClientCerts p a) where
-  arbitrary = genericArbitrary
-
 deriving instance Generic Q.TxIsolation
 instance Cacheable Q.TxIsolation
 instance NFData    Q.TxIsolation
@@ -488,9 +473,6 @@ instance ToJSON Q.TxIsolation where
   toJSON Q.ReadCommitted  = "read-committed"
   toJSON Q.RepeatableRead = "repeatable-read"
   toJSON Q.Serializable   = "serializable"
-
-instance Arbitrary Q.TxIsolation where
-  arbitrary = genericArbitrary
 
 data PostgresSourceConnInfo
   = PostgresSourceConnInfo
@@ -515,9 +497,6 @@ instance FromJSON PostgresSourceConnInfo where
       <*> o .:? "isolation_level" .!= Q.ReadCommitted
       <*> o .:? "ssl_configuration"
 
-instance Arbitrary PostgresSourceConnInfo where
-  arbitrary = genericArbitrary
-
 data PostgresConnConfiguration
   = PostgresConnConfiguration
   { _pccConnectionInfo :: !PostgresSourceConnInfo
@@ -528,6 +507,3 @@ instance Hashable PostgresConnConfiguration
 instance NFData PostgresConnConfiguration
 $(deriveJSON hasuraJSON{omitNothingFields = True} ''PostgresConnConfiguration)
 $(makeLenses ''PostgresConnConfiguration)
-
-instance Arbitrary PostgresConnConfiguration where
-  arbitrary = genericArbitrary
