@@ -7,3 +7,15 @@ args:
     table:
       schema: hge_tests
       name: test_t1
+
+- type: mssql_create_select_permission
+  args:
+    source: mssql
+    table:
+      name: test_t1
+      schema: hge_tests
+    role: user
+    permission:
+      columns: '*'
+      filter:
+        c1: X-Hasura-Custom

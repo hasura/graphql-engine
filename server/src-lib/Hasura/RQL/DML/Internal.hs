@@ -307,16 +307,6 @@ withTypeAnn ty sessVarVal = flip S.SETyAnn (S.mkTypeAnn ty) $
     CollectableTypeScalar baseTy -> withConstructorFn baseTy sessVarVal
     CollectableTypeArray _       -> sessVarVal
 
-retrieveAndFlagSessionVariableValue
-  :: (MonadState s m)
-  => (SessionVariable -> s -> s)
-  -> SessionVariable
-  -> S.SQLExp
-  -> m S.SQLExp
-retrieveAndFlagSessionVariableValue updateState sessVar currentSessionExp = do
-  modify $ updateState sessVar
-  pure $ fromCurrentSession currentSessionExp sessVar
-
 fromCurrentSession
   :: S.SQLExp
   -> SessionVariable
