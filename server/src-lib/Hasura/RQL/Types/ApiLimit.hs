@@ -109,7 +109,7 @@ instance ToJSON DepthLimit where
 newtype MaxDepth
   = MaxDepth { unMaxDepth :: Int }
   deriving stock (Show, Eq, Ord, Generic)
-  deriving newtype (ToJSON, FromJSON, Arbitrary)
+  deriving newtype (ToJSON, FromJSON)
 
 
 data NodeLimit
@@ -129,7 +129,7 @@ instance ToJSON NodeLimit where
 newtype MaxNodes
   = MaxNodes { unMaxNodes :: Int }
   deriving stock (Show, Eq, Ord, Generic)
-  deriving newtype (ToJSON, FromJSON, Arbitrary)
+  deriving newtype (ToJSON, FromJSON)
 
 $(makeLenses ''ApiLimit)
 $(makeLenses ''RateLimit)

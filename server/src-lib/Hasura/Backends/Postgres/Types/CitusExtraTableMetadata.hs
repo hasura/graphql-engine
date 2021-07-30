@@ -21,7 +21,5 @@ data ExtraTableMetadata
 instance Hashable ExtraTableMetadata
 instance Cacheable ExtraTableMetadata
 instance NFData ExtraTableMetadata
-instance Arbitrary ExtraTableMetadata where
-  arbitrary = genericArbitrary
 
 $(J.deriveJSON J.defaultOptions{ J.constructorTagModifier = JC.snakeCase, J.fieldLabelModifier = JC.snakeCase } ''ExtraTableMetadata)

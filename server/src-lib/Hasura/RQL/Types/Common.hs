@@ -59,7 +59,6 @@ import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
 import qualified PostgreSQL.Binary.Decoding    as PD
-import qualified Test.QuickCheck               as QC
 
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -79,7 +78,7 @@ import           Hasura.RQL.DDL.Headers        ()
 newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
   deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, ToJSONKey
-           , Q.ToPrepArg, Q.FromCol, Generic, Arbitrary, NFData, Cacheable)
+           , Q.ToPrepArg, Q.FromCol, Generic, NFData, Cacheable)
 
 instance ToTxt RelName where
   toTxt = relNameToTxt
@@ -152,7 +151,7 @@ newtype FieldName
   = FieldName { getFieldNameTxt :: Text }
   deriving ( Show, Eq, Ord, Hashable, FromJSON, ToJSON
            , FromJSONKey, ToJSONKey, Data, Generic
-           , IsString, Arbitrary, NFData, Cacheable
+           , IsString, NFData, Cacheable
            , Semigroup
            )
 
@@ -187,9 +186,6 @@ instance ToJSONKey SourceName
 instance Hashable SourceName
 instance NFData SourceName
 instance Cacheable SourceName
-
-instance Arbitrary SourceName where
-  arbitrary = SNName <$> arbitrary
 
 defaultSource :: SourceName
 defaultSource = SNDefault
@@ -267,7 +263,7 @@ newtype ResolvedWebhook
 
 newtype InputWebhook
   = InputWebhook {unInputWebhook :: URLTemplate}
-  deriving (Show, Eq, Generic, Arbitrary)
+  deriving (Show, Eq, Generic)
 instance NFData InputWebhook
 instance Cacheable InputWebhook
 instance Hashable InputWebhook
@@ -302,9 +298,6 @@ instance FromJSON Timeout where
       True  -> return $ Timeout timeout
       False -> fail "timeout value cannot be negative"
 
-instance Arbitrary Timeout where
-  arbitrary = Timeout <$> QC.choose (0, 10000000)
-
 defaultActionTimeoutSecs :: Timeout
 defaultActionTimeoutSecs = Timeout 30
 
@@ -327,9 +320,6 @@ instance FromJSON UrlConf where
       Error s   -> fail s
       Success a -> pure $ UrlValue a
   parseJSON _          = fail "one of string or object must be provided for url/webhook"
-
-instance Arbitrary UrlConf where
-  arbitrary = genericArbitrary
 
 resolveUrlConf
   :: MonadError QErr m => Env.Environment -> UrlConf -> m Text

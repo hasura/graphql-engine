@@ -18,23 +18,29 @@ module Hasura.RQL.Types.Endpoint.Trie
 
 import           Hasura.Prelude
 
-import           Data.Aeson          (ToJSON, ToJSONKey)
 import qualified Data.HashMap.Strict as M
 import qualified Data.Set            as S
 import qualified Data.Text           as T
+
+import           Data.Aeson          (ToJSON, ToJSONKey)
 import           Data.Text.Extended  (ToTxt (..))
-import           Test.QuickCheck     (scale)
+import           Test.QuickCheck
 
 
 -- | A component in a URL path: either a literal or a wildcard parameter
-data PathComponent a = PathLiteral a | PathParam deriving (Show, Eq, Ord, Generic)
+data PathComponent a
+  = PathLiteral a
+  | PathParam
+  deriving stock (Show, Eq, Ord, Generic)
 
 instance ToTxt a => ToTxt (PathComponent a) where
   toTxt (PathLiteral x) = toTxt x
   toTxt PathParam       = "*"
 
 instance Arbitrary a => Arbitrary (PathComponent a) where
-  arbitrary = genericArbitrary
+  arbitrary = oneof [ PathLiteral <$> arbitrary
+                    , pure PathParam
+                    ]
 
 type Path a = [PathComponent a]
 

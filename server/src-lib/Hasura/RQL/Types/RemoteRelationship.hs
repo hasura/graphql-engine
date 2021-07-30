@@ -62,7 +62,7 @@ newtype RemoteRelationshipName = RemoteRelationshipName
   { unRemoteRelationshipName :: NonEmptyText
   }
   deriving ( Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, FromJSON
-           , Q.ToPrepArg, Q.FromCol, ToTxt, Cacheable, NFData, Arbitrary
+           , Q.ToPrepArg, Q.FromCol, ToTxt, Cacheable, NFData
            )
 
 remoteRelationshipNameToText :: RemoteRelationshipName -> Text
