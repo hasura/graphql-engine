@@ -1,18 +1,19 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-
 module Hasura.Backends.MySQL.Instances.Types where
 
+import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
 import qualified Database.MySQL.Base.Types     as MySQL
+import qualified Language.GraphQL.Draft.Syntax as G
+
 import qualified Hasura.Backends.MySQL.Types   as MySQL
+
 import           Hasura.Base.Error
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers        ()
 import           Hasura.RQL.Types.Backend
 import           Hasura.SQL.Backend
-import qualified Language.GraphQL.Draft.Syntax as G
 
 
 instance Backend 'MySQL where
