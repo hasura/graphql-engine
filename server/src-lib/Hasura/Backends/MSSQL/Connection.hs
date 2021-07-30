@@ -75,7 +75,6 @@ instance Hashable MSSQLConnectionInfo
 instance NFData MSSQLConnectionInfo
 $(deriveToJSON hasuraJSON ''MSSQLConnectionInfo)
 
-
 instance FromJSON MSSQLConnectionInfo where
   parseJSON = withObject "Object" $ \o ->
     MSSQLConnectionInfo
