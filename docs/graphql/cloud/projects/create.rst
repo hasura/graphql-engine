@@ -15,7 +15,8 @@ Creating projects
 Introduction
 ------------
 
-You can create a new Hasura Cloud project with either a new Postgres database, or an existing Postgres database with a publicly available IP address.
+You can create a new Hasura Cloud project with either a new Postgres database, or an existing
+Postgres database with a publicly available IP address.
 
 Step 1: Project setup
 ---------------------
@@ -50,9 +51,12 @@ On the Hasura console, navigate to ``Data -> Manage -> Connect Database``:
 New database
 ^^^^^^^^^^^^
 
-Hasura Cloud does not host databases, but does provide integrations with which you can create databases on managed cloud providers like Heroku. Integrations for AWS, GCP, and Azure are coming soon.
+Hasura Cloud does not host databases, but does provide integrations with which you can create databases on
+managed cloud providers like Heroku. Integrations for AWS, GCP, and Azure are coming soon.
 
-To get started, choose ``Create Heroku Database -> Create Database``, and follow the prompts to authenticate with Heroku. Hasura Cloud will integrate with your Heroku account and manage the initial setup of a dev-tier Postgres instance. You can always upgrade the instance and manage options later through your Heroku account.
+To get started, choose ``Create Heroku Database -> Create Database``, and follow the prompts to authenticate
+with Heroku. Hasura Cloud will integrate with your Heroku account and manage the initial setup of a dev-tier
+Postgres instance. You can always upgrade the instance and manage options later through your Heroku account.
 
 .. thumbnail:: /img/graphql/cloud/projects/project-new-database-setup.png
    :alt: database setup with new database
@@ -60,7 +64,8 @@ To get started, choose ``Create Heroku Database -> Create Database``, and follow
 
 Existing database
 ^^^^^^^^^^^^^^^^^
-To use an existing database, choose ``Connect existing database`` and enter your database connection URL and enter your database connection string (looks like ``postgres://username:password@hostname:port/dbname``).
+To use an existing database, choose ``Connect existing database`` and enter your database connection URL and
+enter your database connection string (looks like ``postgres://username:password@hostname:port/dbname``).
 
 .. thumbnail:: /img/graphql/cloud/getting-started/connect-db.png
    :alt: database setup with existing database
@@ -77,7 +82,9 @@ To use an existing database, choose ``Connect existing database`` and enter your
 Allowing connections from Hasura Cloud IP
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For some cloud services, like GCP, you'll need to adjust your Postgres connection settings to allow connections from the Hasura Cloud IP address. You can copy the IP address from the copy icon in the ``Hasura Cloud IP`` field on the project's details view. You may also need to disable SSL. Adding custom cert information to a Hasura Cloud instance is not yet available. 
+For some cloud services, like GCP, you'll need to adjust your Postgres connection settings to allow connections from
+the Hasura Cloud IP address. You can copy the IP address from the copy icon in the ``Hasura Cloud IP`` field on the
+project's details view.
 
 .. thumbnail:: /img/graphql/cloud/projects/hasura-cloud-ip.png
    :alt: Hasura Cloud IP field

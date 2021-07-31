@@ -28,7 +28,7 @@ Available APIs
 +----------------------------------+---------------------------------------------------+------------------+
 | Metadata *(> v2.0)*              | :ref:`/v1/metadata <metadata_api>`                | Admin only       |
 +----------------------------------+---------------------------------------------------+------------------+
-| Schema/Metadata *(< v1.3)*       | :ref:`/v1/query <schema_metadata_api>`            | Admin only       |
+| Schema/Metadata *(deprecated)*   | :ref:`/v1/query <schema_metadata_api>`            | Admin only       |
 +----------------------------------+---------------------------------------------------+------------------+
 | Restified GQL                    | :ref:`/api/rest <restified_api>`                  | GQL REST Routes  |
 +----------------------------------+---------------------------------------------------+------------------+
@@ -65,8 +65,8 @@ See details at :ref:`api_reference_relay_graphql`.
 
 .. _schema_api:
 
-Schema API (v2.0 and above)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Schema API
+^^^^^^^^^^
 
 Hasura exposes a schema API for directly executing SQL on the underlying Postgres.
 
@@ -76,8 +76,8 @@ See details at :ref:`schema_apis`.
 
 .. _metadata_api:
 
-Metadata API (v2.0 and above)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Metadata API
+^^^^^^^^^^^^
 
 Hasura exposes a metadata API for managing metadata.
 
@@ -87,8 +87,8 @@ See details at :ref:`metadata_apis`.
 
 .. _schema_metadata_api:
 
-Schema / metadata API (v1.3 and below)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Schema / metadata API (Deprecated)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Hasura exposes a schema / metadata API for managing metadata for permissions/relationships or for directly
 executing SQL on the underlying Postgres.
@@ -163,9 +163,9 @@ See details at :ref:`explain_api_reference`.
 
   GraphQL API <graphql-api/index>
   Relay GraphQL API <relay-graphql-api/index>
-  Schema APIs (v2.0 and above) <schema-api/index>
-  Metadata APIs (v2.0 and above) <metadata-api/index>
-  Schema / Metadata APIs <schema-metadata-api/index>
+  Schema APIs <schema-api/index>
+  Metadata APIs <metadata-api/index>
+  Schema / Metadata APIs (Deprecated) <schema-metadata-api/index>
   RESTified GraphQL Endpoints <restified>
   Version API <version>
   Health check API <health>

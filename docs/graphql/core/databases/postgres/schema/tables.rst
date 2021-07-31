@@ -208,6 +208,12 @@ in our table.
 See the :ref:`query <graphql_api_query>` and :ref:`mutation <graphql_api_mutation>`
 API references for the full specifications.
 
+GraphQL types documentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Hasura automatically picks up any comments that might have been added to your tables
+and columns and adds them as GraphQL descriptions of the auto-generated types and fields.
+
 Try out basic GraphQL requests
 ------------------------------
 

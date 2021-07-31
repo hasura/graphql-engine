@@ -10,7 +10,7 @@ window.hdocs = (function () {
       document.getElementById('nav_tree_icon').addEventListener('click', hdocs.handleNavClick);
       document.getElementById('sidebar-close').addEventListener('click', hdocs.handleNavClick);
 
-      document.getElementById('close-banner').addEventListener('click', hdocs.closeBanner);
+      // document.getElementById('close-banner').addEventListener('click', hdocs.closeBanner);
 
       // document.getElementById('thumb_up_button').addEventListener('click', function () { hdocs.sendFeedback('positive', 'Great to hear that! If you have any other feedback, please share here:') });
       // document.getElementById('thumb_down_button').addEventListener('click', function () { hdocs.sendFeedback('negative', 'Sorry to hear that. Please tell us what you were looking for:') });

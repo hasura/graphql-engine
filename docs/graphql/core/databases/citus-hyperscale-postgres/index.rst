@@ -4,8 +4,8 @@
 
 .. _database_citus-hyperscale-postgres:
 
-Citus - Hyperscale (Postgres flavour)
-=====================================
+Citus / Hyperscale
+==================
 
 .. contents:: Table of contents
   :backlinks: none
