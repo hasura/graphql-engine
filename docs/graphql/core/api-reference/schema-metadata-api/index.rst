@@ -4,8 +4,8 @@
 
 .. _schema_metadata_apis:
 
-Schema / Metadata API Reference
-===============================
+Schema / Metadata API Reference (Deprecated)
+============================================
 
 .. contents:: Table of contents
   :backlinks: none
