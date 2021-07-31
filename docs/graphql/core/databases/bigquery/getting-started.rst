@@ -86,7 +86,7 @@ Creating a Service Account
      :width: 400px
 
 
-- Give it a name, and under roles, and grant these 3 roles: ``Bigquery Metadata Viewer``, ``BigQuery Data Viewer`` and ``BigQuery Job User``.
+- Give it a name, and under roles, and grant these 3 roles: ``BigQuery Metadata Viewer``, ``BigQuery Data Viewer`` and ``BigQuery Job User``.
 
   .. thumbnail:: /img/graphql/core/databases/bigquery/2-service-account-details.png
      :alt: Add source
