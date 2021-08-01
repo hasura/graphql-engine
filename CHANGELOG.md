@@ -13,6 +13,7 @@
 - server: fix inherited roles bug where mutations were not accessible when inherited roles was enabled
 - server: reintroduce the unique name constraint in allowed lists
 - server: subscriptions now validate that all session variables are properly set (#7111)
+- console: fix metadata out-of-date errors when creating tables with certain configurations (fix #6805) (fix #7233)
 - cli-migrations-v2: fix database url showing up in metadata (#7319)
 
 ## v2.0.4
