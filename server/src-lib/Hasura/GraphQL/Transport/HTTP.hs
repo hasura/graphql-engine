@@ -535,7 +535,7 @@ runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs qu
   case query of
     GQLSingleRequest req -> do
       (parameterizedQueryHash, httpResp) <- runGQ env logger reqId userInfo ipAddress reqHdrs queryType req
-      let httpLoggingMetadata = buildHttpLogMetadata @m [parameterizedQueryHash] $ Just L.RequestSingle
+      let httpLoggingMetadata = buildHttpLogMetadata @m (PQHSetSingleton parameterizedQueryHash) L.RequestModeSingle
       pure (httpLoggingMetadata, snd <$> httpResp)
     GQLBatchedReqs reqs -> do
       -- It's unclear what we should do if we receive multiple
@@ -547,7 +547,7 @@ runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs qu
             . encJFromList
             . map (either (encJFromJValue . encodeGQErr includeInternal) _hrBody)
       responses <- traverse (try . (fmap . fmap . fmap) snd . runGQ env logger reqId userInfo ipAddress reqHdrs queryType) reqs
-      let httpLoggingMetadata = buildHttpLogMetadata @m (rights $ map (fmap fst) responses) $ Just L.RequestBatched
+      let httpLoggingMetadata = buildHttpLogMetadata @m (PQHSetBatched $ rights $ map (fmap fst) responses) L.RequestModeBatched
       pure (httpLoggingMetadata, removeHeaders (map (fmap snd) responses))
   where
     try = flip catchError (pure . Left) . fmap Right
