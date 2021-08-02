@@ -2,6 +2,7 @@
 
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
+- server: fix http-log bug where batches with only one request emitted the parameterised query hash as a string instead of in a singleton array
 - console: add template gallery
 - server: subscriptions now validate that all session variables are properly set (#7111)
 
