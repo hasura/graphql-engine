@@ -352,7 +352,6 @@ export interface DataSourcesAPI {
   viewsSupported: boolean;
   // use null, if all operators are supported
   supportedColumnOperators: string[] | null;
-  aggregationPermissionsAllowed: boolean;
   supportedFeatures?: SupportedFeaturesType;
   violationActions: ViolationActions[];
   defaultRedirectSchema?: string;

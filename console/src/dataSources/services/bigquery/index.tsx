@@ -138,6 +138,7 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     permissions: {
       enabled: true,
+      aggregation: true,
     },
     track: {
       enabled: true,
@@ -420,6 +421,5 @@ export const bigquery: DataSourcesAPI = {
   permissionColumnDataTypes,
   viewsSupported: false,
   supportedColumnOperators,
-  aggregationPermissionsAllowed: false,
   violationActions,
 };

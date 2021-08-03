@@ -1497,7 +1497,7 @@ class Permissions extends Component {
       };
 
       const getAggregationSection = () => {
-        if (!dataSource.aggregationPermissionsAllowed) {
+        if (!isFeatureSupported('tables.permissions.aggregation')) {
           return null;
         }
 
