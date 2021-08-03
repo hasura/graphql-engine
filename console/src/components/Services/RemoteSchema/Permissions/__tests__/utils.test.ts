@@ -119,5 +119,10 @@ describe('Utils.ts', () => {
     // with presets
     const sdl2_args = generateSDL(schemaFields2, args2);
     expect(sdl2_args).toMatchSnapshot();
+
+    // w/o query root, should not have schema prefix
+    const schemaFields3 = getType(clientSchema1, permissionsSchema1);
+    const sdl3 = generateSDL(schemaFields3, {});
+    expect(sdl3).toMatchSnapshot();
   });
 });
