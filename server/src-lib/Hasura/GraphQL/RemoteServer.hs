@@ -8,6 +8,7 @@ module Hasura.GraphQL.RemoteServer
   , introspectionResultToJSON
   , parseIntrospectionResult
   , getCustomizer
+  , validateSchemaCustomizationsDistinct
   ) where
 
 import           Hasura.Prelude
@@ -71,13 +72,19 @@ validateSchemaCustomizations
   => RemoteSchemaCustomizer
   -> RemoteSchemaIntrospection
   -> m ()
-validateSchemaCustomizations remoteSchemaCustomizer (RemoteSchemaIntrospection typeDefinitions) = do
-  traverse_ validateInterfaceFields typeDefinitions
-  validateTypeMappingsAreDistinct
-  traverse_ validateFieldMappingsAreDistinct typeDefinitions
+validateSchemaCustomizations remoteSchemaCustomizer remoteSchemaIntrospection = do
+  validateSchemaCustomizationsConsistent remoteSchemaCustomizer remoteSchemaIntrospection
+  validateSchemaCustomizationsDistinct remoteSchemaCustomizer remoteSchemaIntrospection
 
+validateSchemaCustomizationsConsistent
+  :: forall m
+   . MonadError QErr m
+  => RemoteSchemaCustomizer
+  -> RemoteSchemaIntrospection
+  -> m ()
+validateSchemaCustomizationsConsistent remoteSchemaCustomizer (RemoteSchemaIntrospection typeDefinitions) = do
+  traverse_ validateInterfaceFields typeDefinitions
   where
-    customizeTypeName = remoteSchemaCustomizeTypeName remoteSchemaCustomizer
     customizeFieldName = remoteSchemaCustomizeFieldName remoteSchemaCustomizer
 
     validateInterfaceFields :: G.TypeDefinition [G.Name] a -> m ()
@@ -95,6 +102,20 @@ validateSchemaCustomizations remoteSchemaCustomizer (RemoteSchemaIntrospection t
                 <<> ". Interface field name maps to " <> interfaceCustomizedFieldName
                 <<> ". Type field name maps to " <> typeCustomizedFieldName <<> "."
       _ -> pure ()
+
+
+validateSchemaCustomizationsDistinct
+  :: forall m
+   . MonadError QErr m
+  => RemoteSchemaCustomizer
+  -> RemoteSchemaIntrospection
+  -> m ()
+validateSchemaCustomizationsDistinct remoteSchemaCustomizer (RemoteSchemaIntrospection typeDefinitions) = do
+  validateTypeMappingsAreDistinct
+  traverse_ validateFieldMappingsAreDistinct typeDefinitions
+  where
+    customizeTypeName = remoteSchemaCustomizeTypeName remoteSchemaCustomizer
+    customizeFieldName = remoteSchemaCustomizeFieldName remoteSchemaCustomizer
 
     validateTypeMappingsAreDistinct :: m ()
     validateTypeMappingsAreDistinct = do
