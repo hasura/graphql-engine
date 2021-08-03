@@ -248,14 +248,11 @@ jobs:
           name: Build the binary
           working_directory: ./server
           command: |
-            # for PRs non-optimized build, else optimized build
-            if [[ "$CIRCLE_BRANCH" =~ ^(dev|release) || "$CIRCLE_TAG" =~ ^v ]]; then
-              echo "Branch starts with dev or release, or tagged commit starts with v. Optimized build"
-              make ci-build
-            else
-              echo "Non-release branch, build with coverage"
-              make enable_coverage=true ci-build
-            fi
+            # NOTE: previously we used enable_coverage=true here for
+            # non-release builds, but to support our performance regression
+            # testing workflow we need all builds to be built with the same
+            # options that have performance implications.
+            make ci-build
       - save_cache:
           key: cabal-packages-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
           paths:

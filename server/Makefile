@@ -32,6 +32,8 @@ ci-build:
 	# Passing `--enable-coverage` to `cabal v2-build` appears to enable coverage for all packages, not
 	# just local packages (at least as of cabal-install-2.4.1.0), so add `coverage: true` to the
 	# `cabal.project.local` file in the appropriate package stanza.
+	#
+	# NOTE: enable_coverage is now unused, at time of this writing
 	if [[ -n '$(enable_coverage)' ]]; then \
 		printf '\npackage graphql-engine\n  coverage: true\n' >> cabal.project.local; \
 	fi
