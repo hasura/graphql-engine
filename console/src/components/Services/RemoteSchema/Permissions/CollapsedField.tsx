@@ -15,18 +15,21 @@ export const CollapsedField: React.FC<CollapsedFieldProps> = ({
   expanded,
 }) => (
   <>
-    <button data-test={`field-${i.typeName}`} onClick={onExpand} id={i.name}>
-      {expanded && (
-        <span className={`${styles.padd_small_left} ${styles.fw_large}`}>
+    {i.return ? (
+      <span className={`${styles.padd_small_left} ${styles.fw_medium}`}>
+        {i.name}
+      </span>
+    ) : (
+      <button data-test={`field-${i.typeName}`} onClick={onExpand} id={i.name}>
+        <span
+          className={`${styles.padd_small_left} ${
+            expanded ? styles.fw_large : styles.fw_medium
+          }`}
+        >
           {i.name}
         </span>
-      )}
-      {!expanded && (
-        <span className={`${styles.padd_small_left} ${styles.fw_medium}`}>
-          {i.name}
-        </span>
-      )}
-    </button>
+      </button>
+    )}
     {i.return && (
       <>
         :

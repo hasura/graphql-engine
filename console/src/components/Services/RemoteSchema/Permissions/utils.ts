@@ -655,7 +655,10 @@ export const generateSDL = (
     if (!isEmpty(fieldDef)) result = `${result}\n${fieldDef}\n`;
   });
 
-  prefix = `${prefix}
+  prefix =
+    prefix === `schema{`
+      ? ''
+      : `${prefix}
 }\n`;
 
   if (isEmpty(result)) return '';
