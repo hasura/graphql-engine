@@ -219,7 +219,8 @@ buildTablePermissions = Inc.cache proc (proxy, source, tableCache, tableFields, 
    |) alignedPermissions
   -- see [Inherited roles architecture for postgres read queries]
   (| foldlA' (\accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) -> do
-       let metadataRoleSelectPermission = _permSel =<< M.lookup roleName accumulatedRolePermMap
+       let metadataRolePermInfo = M.lookup roleName accumulatedRolePermMap
+           metadataRoleSelectPermission = _permSel =<< metadataRolePermInfo
        roleSelectPermission <-
          bindA -<
          case metadataRoleSelectPermission of
@@ -236,7 +237,13 @@ buildTablePermissions = Inc.cache proc (proxy, source, tableCache, tableFields, 
                   -- not yet built due to wrong ordering of the roles, check `orderRoles`
                   "buildTablePermissions: table role permissions for role: " <> role <<> " not found"
              pure $ combineSelectPermInfos <$> NE.nonEmpty (catMaybes $ _permSel <$> parentRoleTablePerms)
-       let rolePermInfo = RolePermInfo Nothing roleSelectPermission Nothing Nothing
+       let rolePermInfo =
+             case metadataRolePermInfo of
+               -- Some permissions exist in the metadata for the current role, so we have to just
+               -- update the select permission without affecting the other permissions
+               Just metadataRolePermInfo' -> metadataRolePermInfo' { _permSel = roleSelectPermission }
+               -- There was no `RolePermInfo` found for the current role, so we initialize it
+               Nothing                    -> RolePermInfo Nothing roleSelectPermission Nothing Nothing
        returnA -< M.insert roleName rolePermInfo accumulatedRolePermMap)
    |) metadataRolePermissions (bool mempty orderedRoles $ EFInheritedRoles `elem` experimentalFeatures)
   -- build permissions for inherited roles only when inherited roles is enabled
