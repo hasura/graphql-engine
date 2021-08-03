@@ -15,7 +15,6 @@ class TestAllowlistQueries:
 
     def test_query_user(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_user.yaml', transport)
-        check_query_f(hge_ctx, self.dir() + '/duplicate_operation_names.yaml', transport)
 
     def test_query_user_by_pk(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_user_by_pk.yaml', transport)
@@ -33,6 +32,7 @@ class TestAllowlistQueries:
         # test only for http
         transport = 'http'
         check_query_f(hge_ctx, self.dir() + '/update_query.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/add_duplicate_query.yaml')
 
     @classmethod
     def dir(cls):

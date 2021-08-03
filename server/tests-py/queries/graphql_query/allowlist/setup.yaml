@@ -57,14 +57,6 @@ args:
               company
             }
           }
-      # Adding a query with a duplicate name
-      - name: query_1
-        query: |
-          query {
-            user {
-              name
-            }
-          }
 
 - type: add_collection_to_allowlist
   args:

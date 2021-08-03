@@ -28,7 +28,7 @@ You can add or remove a operation in the allow-list in two ways:
   add a new operation to the allow-list or upload a list of new operations from a file that will be added to the
   allow-list. You can also see a list of existing operations in the allow-list and delete them individually.
 
-  * You can add an individual operation, like the one below, manually to the allow-list with a name.
+  * You can add an individual operation, like the one below, manually to the allow-list with a unique name. Note that this unique name is just an identifier for the query in the collection, it is not related to the operation name of the query.
 
     .. code-block:: graphql
 
@@ -97,10 +97,9 @@ The following are the recommended best practices for enabling/disabling allow-li
 
 * **In CI/CD instances**: Enable the allow-list for testing.
 
-* **In production instances**: Enabling the allow-list is highly recommended when running the GraphQL engine in production. 
-
+* **In production instances**: Enabling the allow-list is highly recommended when running the GraphQL engine in production.
 
 .. admonition:: Allow Lists in Hasura Cloud
   :class: dhc
-  
+
   Hasura Cloud lets you generate allowed queries from real usage in your application. For more, information, see :ref:`Allow Lists in Hasura Cloud <allow_lists>`.
