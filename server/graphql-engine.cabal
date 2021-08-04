@@ -395,6 +395,10 @@ library
                      , Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
 
                      , Hasura.Backends.MySQL.Types
+                     , Hasura.Backends.MySQL.Types.Internal
+                     , Hasura.Backends.MySQL.Types.Instances
+                     , Hasura.Backends.MySQL.Plan
+                     , Hasura.Backends.MySQL.FromIr
                      , Hasura.Backends.MySQL.Connection
                      , Hasura.Backends.MySQL.Meta
                      , Hasura.Backends.MySQL.Instances.Types
@@ -403,6 +407,7 @@ library
                      , Hasura.Backends.MySQL.Instances.Execute
                      , Hasura.Backends.MySQL.Instances.Transport
                      , Hasura.Backends.MySQL.SQL
+                     , Hasura.Backends.MySQL.ToQuery
                      , Hasura.Backends.MySQL.Instances.API
 
                      -- Exposed for benchmark:
