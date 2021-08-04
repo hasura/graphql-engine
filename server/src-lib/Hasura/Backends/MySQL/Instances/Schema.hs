@@ -1,11 +1,12 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-
 module Hasura.Backends.MySQL.Instances.Schema where
 
 import qualified Data.Aeson                            as J
+import           Data.ByteString                       (ByteString)
 import qualified Data.HashMap.Strict                   as HM
 import qualified Data.List.NonEmpty                    as NE
+import           Data.Text.Encoding                    (encodeUtf8)
 import           Data.Text.Extended
 import qualified Database.MySQL.Base.Types             as MySQL
 import qualified Hasura.Backends.MySQL.Types           as MySQL
@@ -40,11 +41,11 @@ instance BackendSchema 'MySQL where
   orderByOperators               = orderByOperators'
   comparisonExps                 = comparisonExps'
   updateOperators                = updateOperators'
-  mkCountType                    = error "MySQL backend does not support this operation yet."
-  aggregateOrderByCountType      = error "MySQL backend does not support this operation yet."
-  computedField                  = error "MySQL backend does not support this operation yet."
-  node                           = error "MySQL backend does not support this operation yet."
-  columnDefaultValue             = error "MySQL backend does not support this operation yet."
+  mkCountType                    = error "mkCountType: MySQL backend does not support this operation yet."
+  aggregateOrderByCountType      = error "aggregateOrderByCountType: MySQL backend does not support this operation yet."
+  computedField                  = error "computedField: MySQL backend does not support this operation yet."
+  node                           = error "node: MySQL backend does not support this operation yet."
+  columnDefaultValue             = error "columnDefaultValue: MySQL backend does not support this operation yet."
 
 mysqlTableArgs
   :: forall r m n
@@ -165,6 +166,8 @@ buildFunctionMutationFields' ::
 buildFunctionMutationFields' _ _ _ _ _ _ =
   pure []
 
+bsParser :: MonadParse m => Parser 'Both m ByteString
+bsParser = encodeUtf8 <$> P.string
 
 columnParser' :: (MonadSchema n m, MonadError QErr m) =>
   ColumnType 'MySQL ->
@@ -173,17 +176,32 @@ columnParser' :: (MonadSchema n m, MonadError QErr m) =>
 columnParser' columnType (G.Nullability isNullable) =
   peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
     ColumnScalar scalarType -> case scalarType of
+      MySQL.Decimal  -> pure $ possiblyNullable scalarType $ MySQL.DecimalValue <$> P.float
+      MySQL.Tiny     -> pure $ possiblyNullable scalarType $ MySQL.TinyValue <$> P.int
+      MySQL.Short    -> pure $ possiblyNullable scalarType $ MySQL.SmallValue <$> P.int
+      MySQL.Long     -> pure $ possiblyNullable scalarType $ MySQL.IntValue <$> P.int
+      MySQL.Float    -> pure $ possiblyNullable scalarType $ MySQL.FloatValue <$> P.float
+      MySQL.Double   -> pure $ possiblyNullable scalarType $ MySQL.DoubleValue <$> P.float
+      MySQL.Null     -> pure $ possiblyNullable scalarType $ MySQL.NullValue <$ P.string
+      MySQL.LongLong -> pure $ possiblyNullable scalarType $ MySQL.BigValue <$> P.int
+      MySQL.Int24    -> pure $ possiblyNullable scalarType $ MySQL.MediumValue <$> P.int
+      MySQL.Date -> pure $ possiblyNullable scalarType $ MySQL.DateValue <$> P.string
+      MySQL.Year -> pure $ possiblyNullable scalarType $ MySQL.YearValue <$> P.string
       MySQL.Bit      -> pure $ possiblyNullable scalarType $ MySQL.BitValue <$> P.boolean
       MySQL.String   -> pure $ possiblyNullable scalarType $ MySQL.VarcharValue <$> P.string
-      MySQL.Decimal  -> pure $ possiblyNullable scalarType $ MySQL.DecimalValue <$> P.float
-      MySQL.Double   -> pure $ possiblyNullable scalarType $ MySQL.DoubleValue <$> P.float
-      MySQL.Float    -> pure $ possiblyNullable scalarType $ MySQL.FloatValue <$> P.float
-      MySQL.Int24    -> pure $ possiblyNullable scalarType $ MySQL.MediumValue <$> P.int
-      MySQL.LongLong -> pure $ possiblyNullable scalarType $ MySQL.BigValue <$> P.int
-      MySQL.Long     -> pure $ possiblyNullable scalarType $ MySQL.IntValue <$> P.int
-      MySQL.Short    -> pure $ possiblyNullable scalarType $ MySQL.SmallValue <$> P.int
-      MySQL.Tiny     -> pure $ possiblyNullable scalarType $ MySQL.TinyValue <$> P.int
-      _              -> pure $ possiblyNullable scalarType $ MySQL.NullValue <$ P.string -- TODO: Complete this
+      MySQL.VarChar     -> pure $ possiblyNullable scalarType $ MySQL.VarcharValue <$> P.string
+      MySQL.DateTime -> pure $ possiblyNullable scalarType $ MySQL.DatetimeValue <$> P.string
+      MySQL.Blob -> pure $ possiblyNullable scalarType $ MySQL.BlobValue <$> bsParser
+      MySQL.Timestamp -> pure $ possiblyNullable scalarType $ MySQL.TimestampValue <$> P.string
+      _              -> do
+        name <- MySQL.mkMySQLScalarTypeName scalarType
+        let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
+        pure $ Parser
+          { pType = schemaType
+          , pParser =
+              valueToJSON (P.toGraphQLType schemaType) >=>
+              either (parseErrorWith ParseFailed . qeError) pure . (MySQL.parseScalarValue scalarType)
+          }
     ColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (HM.toList enumValues) of
         Just enumValuesList -> do

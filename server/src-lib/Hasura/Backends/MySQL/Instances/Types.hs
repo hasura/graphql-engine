@@ -2,10 +2,10 @@
 
 module Hasura.Backends.MySQL.Instances.Types where
 
-import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
 import qualified Database.MySQL.Base.Types     as MySQL
+import           Hasura.Prelude
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Hasura.Backends.MySQL.Types   as MySQL
@@ -27,12 +27,12 @@ instance Backend 'MySQL where
   type ConstraintName          'MySQL = MySQL.ConstraintName
   type BasicOrderType          'MySQL = MySQL.Order
   type NullsOrderType          'MySQL = MySQL.NullsOrder
-  type CountType               'MySQL = Void -- MySQL.Countable MySQL.ColumnName
+  type CountType               'MySQL = MySQL.Countable MySQL.Column
   type Column                  'MySQL = MySQL.Column
   type ScalarValue             'MySQL = MySQL.ScalarValue
   type ScalarType              'MySQL = MySQL.ScalarType -- DB.Type
   type SQLExpression           'MySQL = MySQL.Expression
-  type SQLOperator             'MySQL = Void -- MySQL.Op
+  type SQLOperator             'MySQL = MySQL.Op
   type BooleanOperators        'MySQL = Const Void
   type XComputedField          'MySQL = Void
   type XRelay                  'MySQL = Void
@@ -77,16 +77,16 @@ instance Backend 'MySQL where
     MySQL.Json       -> False
 
   textToScalarValue :: Maybe Text -> ScalarValue 'MySQL
-  textToScalarValue = error "MySQL backend does not support this operation yet."
+  textToScalarValue = error "textToScalarValue: MySQL backend does not support this operation yet."
 
   parseScalarValue :: ScalarType 'MySQL -> J.Value -> Either QErr (ScalarValue 'MySQL)
-  parseScalarValue = error "MySQL backend does not support this operation yet."
+  parseScalarValue = error "parseScalarValue: MySQL backend does not support this operation yet."
 
   scalarValueToJSON :: ScalarValue 'MySQL -> J.Value
-  scalarValueToJSON = error "MySQL backend does not support this operation yet."
+  scalarValueToJSON = error "scalarValueToJSON: MySQL backend does not support this operation yet."
 
   functionToTable :: FunctionName 'MySQL -> TableName 'MySQL
-  functionToTable = error "MySQL backend does not support this operation yet."
+  functionToTable = error "functionToTable: MySQL backend does not support this operation yet."
 
   tableToFunction :: TableName 'MySQL -> FunctionName 'MySQL
   tableToFunction = MySQL.name
@@ -99,10 +99,10 @@ instance Backend 'MySQL where
             throw400 ValidationFailed ("TableName " <> gName <> " is not a valid GraphQL identifier")
 
   functionGraphQLName :: FunctionName 'MySQL -> Either QErr G.Name
-  functionGraphQLName = error "MySQL backend does not support this operation yet."
+  functionGraphQLName = error "functionGraphQLName: MySQL backend does not support this operation yet."
 
   scalarTypeGraphQLName :: ScalarType 'MySQL -> Either QErr G.Name
-  scalarTypeGraphQLName = error "MySQL backend does not support this operation yet."
+  scalarTypeGraphQLName = error "scalarTypeGraphQLName: MySQL backend does not support this operation yet."
 
   snakeCaseTableName :: TableName 'MySQL -> Text
   snakeCaseTableName MySQL.TableName { name, schema } = schema <> "_" <> name
