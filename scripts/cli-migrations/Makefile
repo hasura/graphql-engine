@@ -41,8 +41,8 @@ prepare-local-env:
 	mkdir _cli_migrations_output
 	# get server image and save it	
 	LATEST_RELEASE=$(shell curl --silent "https://api.github.com/repos/hasura/graphql-engine/releases" | jq '.[0]' | grep '"tag_name":' |  sed -E 's/.*"([^"]+)".*/\1/')
-	mkdir _server_output && cd _server_output && docker save -o image.tar hasura/graphql-engine:$$LATEST_RELEASE && cd -
-	mkdir -p _cli_output/binaries && cd _cli_output/binaries && curl -LO https://github.com/hasura/graphql-engine/releases/download/$$LATEST_RELEASE/cli-hasura-linux-amd64 && cd -
+	mkdir _server_output && cd _server_output && docker pull hasura/graphql-engine:$$LATEST_RELEASE && docker save -o image.tar hasura/graphql-engine:$$LATEST_RELEASE && cd -
+	mkdir -p _cli_output/binaries && cd _cli_output/binaries && curl --silent -LO https://github.com/hasura/graphql-engine/releases/download/$$LATEST_RELEASE/cli-hasura-linux-amd64 && cd -
 
 	# edit makefile to use /tmp/build as BUILD_DIR
 	cd $$MAKEFILE_DIR && sed -i 's/BUILD_DIR ?= \/build/BUILD_DIR ?= \/tmp\/build/' Makefile

@@ -15,7 +15,9 @@
       "configuration": {
         "connection_info": {
           "use_prepared_statements": true,
-          "database_url": "postgres://postgres:postgrespassword@postgres:5432/postgres",
+          "database_url": {
+            "from_env": "HASURA_GRAPHQL_DATABASE_URL"
+          },
           "isolation_level": "read-committed",
           "pool_settings": {
             "connection_lifetime": 600,
