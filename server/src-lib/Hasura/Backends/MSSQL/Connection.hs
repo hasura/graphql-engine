@@ -19,7 +19,7 @@ import           Hasura.Incremental      (Cacheable (..))
 -- | ODBC connection string for MSSQL server
 newtype MSSQLConnectionString
   = MSSQLConnectionString {unMSSQLConnectionString :: Text}
-  deriving (Show, Eq, ToJSON, FromJSON, Cacheable, Hashable, NFData, Arbitrary)
+  deriving (Show, Eq, ToJSON, FromJSON, Cacheable, Hashable, NFData)
 
 data InputConnectionString
   = RawString !MSSQLConnectionString
@@ -28,9 +28,6 @@ data InputConnectionString
 instance Cacheable InputConnectionString
 instance Hashable InputConnectionString
 instance NFData InputConnectionString
-
-instance Arbitrary InputConnectionString where
-  arbitrary = genericArbitrary
 
 instance ToJSON InputConnectionString where
   toJSON =
@@ -61,9 +58,6 @@ instance FromJSON MSSQLPoolSettings where
       <$> o .:? "max_connections" .!= _mpsMaxConnections defaultMSSQLPoolSettings
       <*> o .:? "idle_timeout"    .!= _mpsIdleTimeout    defaultMSSQLPoolSettings
 
-instance Arbitrary MSSQLPoolSettings where
-  arbitrary = genericArbitrary
-
 defaultMSSQLPoolSettings :: MSSQLPoolSettings
 defaultMSSQLPoolSettings =
   MSSQLPoolSettings
@@ -81,10 +75,6 @@ instance Hashable MSSQLConnectionInfo
 instance NFData MSSQLConnectionInfo
 $(deriveToJSON hasuraJSON ''MSSQLConnectionInfo)
 
-instance Arbitrary MSSQLConnectionInfo where
-  arbitrary = genericArbitrary
-
-
 instance FromJSON MSSQLConnectionInfo where
   parseJSON = withObject "Object" $ \o ->
     MSSQLConnectionInfo
@@ -99,9 +89,6 @@ instance Cacheable MSSQLConnConfiguration
 instance Hashable MSSQLConnConfiguration
 instance NFData MSSQLConnConfiguration
 $(deriveJSON hasuraJSON ''MSSQLConnConfiguration)
-
-instance Arbitrary MSSQLConnConfiguration where
-  arbitrary = genericArbitrary
 
 newtype MSSQLPool
   = MSSQLPool { unMSSQLPool :: Pool.Pool ODBC.Connection }

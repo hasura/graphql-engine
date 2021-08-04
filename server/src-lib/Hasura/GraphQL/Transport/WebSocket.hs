@@ -345,6 +345,7 @@ onStart
      , MonadExecuteQuery m
      , MC.MonadBaseControl IO m
      , MonadMetadataStorage (MetadataStorageT m)
+     , EB.MonadQueryTags m
      )
   => Env.Environment
   -> HashSet (L.EngineLogType L.Hasura)
@@ -379,7 +380,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore 
   execPlanE <- runExceptT $ E.getResolvedExecPlan
     env logger
     userInfo sqlGenCtx sc scVer queryType
-    httpMgr reqHdrs (q, reqParsed)
+    httpMgr reqHdrs (q, reqParsed) requestId
 
   (parameterizedQueryHash, execPlan) <- onLeft execPlanE (withComplete . preExecErr requestId)
 
@@ -426,13 +427,13 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore 
                 (RJ.processRemoteJoins env httpMgr reqHdrs userInfo $ encJToLBS resp)
                 remoteJoins
               return $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
-            E.ExecStepRemote rsi gqlReq -> do
+            E.ExecStepRemote rsi resultCustomizer gqlReq -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
-              runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
+              runRemoteGQ fieldName userInfo reqHdrs rsi resultCustomizer gqlReq
             E.ExecStepAction actionExecPlan _ remoteJoins -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
               (time, (resp, _)) <- doQErr $ do
-                (time, (resp, hdrs)) <- EA.runActionExecution actionExecPlan
+                (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                 finalResponse <-
                   maybe
                   (pure resp)
@@ -495,7 +496,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore 
             E.ExecStepAction actionExecPlan _ remoteJoins -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
               (time, (resp, hdrs)) <- doQErr $ do
-                (time, (resp, hdrs)) <- EA.runActionExecution actionExecPlan
+                (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                 finalResponse <-
                   maybe
                   (pure resp)
@@ -503,9 +504,9 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore 
                   remoteJoins
                 pure (time, (finalResponse, hdrs))
               pure $ ResultsFragment time Telem.Empty resp $ fromMaybe [] hdrs
-            E.ExecStepRemote rsi gqlReq -> do
+            E.ExecStepRemote rsi resultCustomizer gqlReq -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
-              runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
+              runRemoteGQ fieldName userInfo reqHdrs rsi resultCustomizer gqlReq
             E.ExecStepRaw json -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
               buildRaw json
@@ -600,10 +601,10 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore 
         -- Telemetry. NOTE: don't time network IO:
         Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
-    runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq = do
+    runRemoteGQ fieldName userInfo reqHdrs rsi resultCustomizer gqlReq = do
       (telemTimeIO_DT, _respHdrs, resp) <-
-        doQErr $ E.execRemoteGQ env httpMgr userInfo reqHdrs rsi gqlReq
-      value <- mapExceptT lift $ extractFieldFromResponse (G.unName fieldName) resp
+        doQErr $ E.execRemoteGQ env httpMgr userInfo reqHdrs (rsDef rsi) gqlReq
+      value <- mapExceptT lift $ extractFieldFromResponse fieldName rsi resultCustomizer resp
       return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) []
 
     WSServerEnv logger lqMap getSchemaCache httpMgr _ sqlGenCtx
@@ -708,6 +709,7 @@ onMessage
      , MonadExecuteQuery m
      , MC.MonadBaseControl IO m
      , MonadMetadataStorage (MetadataStorageT m)
+     , EB.MonadQueryTags m
      )
   => Env.Environment
   -> HashSet (L.EngineLogType L.Hasura)
@@ -907,6 +909,7 @@ createWSServerApp
      , Tracing.HasReporter m
      , MonadExecuteQuery m
      , MonadMetadataStorage (MetadataStorageT m)
+     , EB.MonadQueryTags m
      )
   => Env.Environment
   -> HashSet (L.EngineLogType L.Hasura)

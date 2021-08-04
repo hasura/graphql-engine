@@ -59,16 +59,18 @@ and hasura session arguments.
 -- | A 'RemoteJoin' represents the context of remote relationship to be extracted from 'AnnFieldG's.
 data RemoteJoin
   = RemoteJoin
-  { _rjName          :: !FieldName -- ^ The remote join field name.
-  , _rjArgs          :: ![RemoteFieldArgument] -- ^ User-provided arguments with variables.
-  , _rjSelSet        :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)  -- ^ User-provided selection set of remote field.
-  , _rjHasuraFields  :: !(HashSet FieldName) -- ^ Table fields.
-  , _rjFieldCall     :: !(NonEmpty FieldCall) -- ^ Remote server fields.
-  , _rjRemoteSchema  :: !RemoteSchemaInfo -- ^ The remote schema server info.
-  , _rjPhantomFields :: ![FieldName]
+  { _rjName             :: !FieldName -- ^ The remote join field name in the remote schema
+  , _rjRelationshipName :: !G.Name -- ^ The name of the remote join relationship in the Hasura schema
+  , _rjArgs             :: ![RemoteFieldArgument] -- ^ User-provided arguments with variables.
+  , _rjResultCustomizer :: !RemoteResultCustomizer -- ^ Customizer for JSON result from the remote server
+  , _rjSelSet           :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)  -- ^ User-provided selection set of remote field.
+  , _rjHasuraFields     :: !(HashSet FieldName) -- ^ Table fields.
+  , _rjFieldCall        :: !(NonEmpty FieldCall) -- ^ Remote server fields.
+  , _rjRemoteSchema     :: !RemoteSchemaInfo -- ^ The remote schema server info.
+  , _rjPhantomFields    :: ![FieldName]
     -- ^ Hasura fields which are not in the selection set, but are required as
     -- parameters to satisfy the remote join. See Note [Phantom fields in Remote Joins].
-  } deriving (Eq)
+  }
 
 type RemoteJoins = NE.NonEmpty (FieldPath, NE.NonEmpty RemoteJoin)
 type RemoteJoinMap = Map.HashMap FieldPath (NE.NonEmpty RemoteJoin)

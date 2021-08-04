@@ -34,6 +34,7 @@ import           Hasura.Server.Types
 import           Hasura.Server.Version               (HasVersion)
 import           Hasura.Session
 
+import           Hasura.GraphQL.Execute.Backend
 
 data RQLQuery
   = RQInsert !InsertQuery
@@ -63,6 +64,7 @@ runQuery
      , Tracing.MonadTrace m
      , MonadMetadataStorage m
      , MonadResolveSource m
+     , MonadQueryTags m
      )
   => Env.Environment
   -> InstanceId
@@ -123,6 +125,7 @@ runQueryM
      , HasServerConfigCtx m
      , Tracing.MonadTrace m
      , MetadataM m
+     , MonadQueryTags m
      )
   => Env.Environment -> RQLQuery -> m EncJSON
 runQueryM env = \case

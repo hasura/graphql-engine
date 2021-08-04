@@ -217,6 +217,7 @@ export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
 export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
 export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES=true
 export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
+export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES="inherited_roles"
 
 export PYTEST_ADDOPTS="-vv"
 
@@ -275,7 +276,7 @@ case "$SERVER_TEST_TO_RUN" in
     TEST_TYPE="admin-secret"
 
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
 
     start_multiple_hge_servers
 
@@ -290,7 +291,7 @@ case "$SERVER_TEST_TO_RUN" in
 
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
     export HASURA_GRAPHQL_UNAUTHORIZED_ROLE="anonymous"
-    
+
 
     run_hge_with_args serve
 
@@ -309,7 +310,7 @@ case "$SERVER_TEST_TO_RUN" in
 
     init_jwt
 
-    export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"    
+    export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key }')"
 
     start_multiple_hge_servers
@@ -328,7 +329,7 @@ case "$SERVER_TEST_TO_RUN" in
     init_jwt
 
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_format: "stringified_json"}')"
 
     run_hge_with_args serve
@@ -347,7 +348,7 @@ case "$SERVER_TEST_TO_RUN" in
     init_jwt
 
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , audience: "myapp-1234"}')"
 
     run_hge_with_args serve
@@ -368,7 +369,7 @@ case "$SERVER_TEST_TO_RUN" in
 
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , audience: ["myapp-1234", "myapp-9876"]}')"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
 
     run_hge_with_args serve
     wait_for_port 8080
@@ -387,7 +388,7 @@ case "$SERVER_TEST_TO_RUN" in
     init_jwt
 
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , issuer: "https://hasura.com"}')"
 
     run_hge_with_args serve
@@ -411,7 +412,7 @@ case "$SERVER_TEST_TO_RUN" in
     # hasura claims at one level of nesting
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$.hasura_claims"}')"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
 
     run_hge_with_args serve
     wait_for_port 8080
@@ -425,7 +426,7 @@ case "$SERVER_TEST_TO_RUN" in
     # hasura claims at two levels of nesting with claims_namespace_path containing special character
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$.hasura['\''claims%'\'']"}')"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
 
     run_hge_with_args serve
     wait_for_port 8080
@@ -439,7 +440,7 @@ case "$SERVER_TEST_TO_RUN" in
     # hasura claims at the root of the JWT token
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$"}')"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
 
     run_hge_with_args serve
     wait_for_port 8080
@@ -460,7 +461,7 @@ case "$SERVER_TEST_TO_RUN" in
 
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id"}, "x-hasura-allowed-roles": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.allowed"}, "x-hasura-default-role": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.default"}}}')"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
 
     run_hge_with_args serve
     wait_for_port 8080
@@ -476,7 +477,7 @@ case "$SERVER_TEST_TO_RUN" in
 
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id", "default":"1"}, "x-hasura-allowed-roles": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.allowed", "default":["user","editor"]}, "x-hasura-default-role": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.default","default":"user"}}}')"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
 
     run_hge_with_args serve
     wait_for_port 8080
@@ -495,7 +496,7 @@ case "$SERVER_TEST_TO_RUN" in
     init_jwt
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , allowed_skew: 60}')"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
 
     run_hge_with_args serve
     wait_for_port 8080
@@ -516,7 +517,7 @@ case "$SERVER_TEST_TO_RUN" in
 
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id"}, "x-hasura-allowed-roles": ["user","editor"], "x-hasura-default-role": "user","x-hasura-custom-header":"custom-value"}}')"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
 
     run_hge_with_args serve
     wait_for_port 8080
@@ -537,7 +538,7 @@ case "$SERVER_TEST_TO_RUN" in
 
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , header: {"type": "Cookie", "name": "hasura_user"}}')"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
 
     run_hge_with_args serve
     wait_for_port 8080
@@ -554,7 +555,7 @@ case "$SERVER_TEST_TO_RUN" in
     echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH CORS DOMAINS ########>\n"
     export HASURA_GRAPHQL_CORS_DOMAIN="http://*.localhost, http://localhost:3000, https://*.foo.bar.com"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
     TEST_TYPE="cors-domains"
 
     run_hge_with_args serve
@@ -591,7 +592,7 @@ case "$SERVER_TEST_TO_RUN" in
   ws-init-cookie-noread)
     echo "$(time_elapsed): testcase 2: no read cookie, cors disabled"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
     TEST_TYPE="ws-init-cookie-noread"
     export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
     export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
@@ -610,7 +611,7 @@ case "$SERVER_TEST_TO_RUN" in
   ws-init-cookie-read-cors-disabled)
     echo "$(time_elapsed): testcase 3: read cookie, cors disabled and ws-read-cookie"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
     TEST_TYPE="ws-init-cookie-read-cors-disabled"
     export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
     export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
@@ -727,7 +728,6 @@ case "$SERVER_TEST_TO_RUN" in
   inherited-roles)
       echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH EXPERIMENTAL FEATURE: INHERITED-ROLES ########>\n"
       TEST_TYPE="experimental-features-inherited-roles"
-      export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES="inherited_roles"
       export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
       run_hge_with_args serve
@@ -738,7 +738,6 @@ case "$SERVER_TEST_TO_RUN" in
       pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test-inherited-roles -k TestGraphQLInheritedRolesPostgres
       pytest --hge-urls="$HGE_URL" --pg-urls="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-inherited-roles test_graphql_mutations.py::TestGraphQLInheritedRoles
 
-      unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
       unset HASURA_GRAPHQL_ADMIN_SECRET
 
       kill_hge_servers
@@ -945,7 +944,7 @@ case "$SERVER_TEST_TO_RUN" in
     kill_hge_servers
     # end allowlist queries test
     ;;
-  
+
   developer-api-tests)
     echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH DEVELOPER API ENABLED ########>\n"
     TEST_TYPE="developer-api-tests"
@@ -1137,7 +1136,6 @@ admin_users = postgres' > pgbouncer/pgbouncer.ini
     backend-mssql)
     echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH SQL SERVER BACKEND ###########################################>\n"
     TEST_TYPE="no-auth"
-    export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES="inherited_roles"
 
     run_hge_with_args serve
     wait_for_port 8080
@@ -1152,7 +1150,6 @@ admin_users = postgres' > pgbouncer/pgbouncer.ini
 
     pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --test-inherited-roles -k TestGraphQLInheritedRolesMSSQL --backend mssql
 
-    unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
     # end inherited roles test
 
     kill_hge_servers

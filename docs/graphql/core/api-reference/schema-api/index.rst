@@ -4,8 +4,8 @@
 
 .. _schema_apis:
 
-Schema API Reference (v2.0 and above)
-=====================================
+Schema API Reference
+====================
 
 .. contents:: Table of contents
   :backlinks: none

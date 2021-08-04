@@ -31,6 +31,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Parser
+import           Hasura.QueryTags
 import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 import           Hasura.Session
@@ -66,8 +67,10 @@ msDBQueryPlan
   -> SourceName
   -> SourceConfig 'MSSQL
   -> QueryDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL)
+  -> QueryTagsComment
   -> m (DBStepInfo 'MSSQL)
-msDBQueryPlan userInfo sourceName sourceConfig qrf = do
+msDBQueryPlan userInfo sourceName sourceConfig qrf _queryTags = do
+  -- TODO (naveen): Append Query Tags to the query
   let sessionVariables = _uiSession userInfo
   statement <- planQuery sessionVariables qrf
   let printer = fromSelect statement
@@ -206,8 +209,9 @@ msDBMutationPlan
   -> SourceName
   -> SourceConfig 'MSSQL
   -> MutationDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL)
+  -> QueryTagsComment
   -> m (DBStepInfo 'MSSQL)
-msDBMutationPlan _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
+msDBMutationPlan _userInfo _stringifyNum _sourceName _sourceConfig _mrf _queryTags =
   throw500 "mutations are not supported in MSSQL; this should be unreachable"
 
 
@@ -222,10 +226,11 @@ msDBSubscriptionPlan
   -> SourceName
   -> SourceConfig 'MSSQL
   -> InsOrdHashMap G.Name (QueryDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL))
+  -> QueryTagsComment
   -> m (LiveQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL))
-msDBSubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig rootFields = do
+msDBSubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig rootFields _queryTags = do
+  -- TODO (naveen): Append query tags to the reselect
   (reselect, prepareState) <- planSubscription rootFields _uiSession
-
   cohortVariables <- prepareStateCohortVariables sourceConfig _uiSession prepareState
   let parameterizedPlan = ParameterizedLiveQueryPlan _uiRole $ MultiplexedQuery' reselect
 

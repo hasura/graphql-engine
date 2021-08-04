@@ -1,16 +1,13 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 {- |
-
 Generic re-implementation of Arbitrary, that discards unrepresentable
 values. Modified from the existing generic-arbitrary.
-
 This is a parallel reimplementation of Arbitrary, in which each type might fail
 to produce a value, if it contains a dreaded @Void@ field or any otherwise
 unrepresentable type that cannot have a 'Arbitrary' instance. The default
 generic implementation automatically disregard constructors whose walues
 contains such a field, allowing all strctures with other constructors to suceed.
-
 -}
 
 module Test.QuickCheck.Arbitrary.Partial

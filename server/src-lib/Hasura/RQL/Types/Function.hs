@@ -40,7 +40,7 @@ instance Show FunctionVolatility where
 
 newtype FunctionArgName =
   FunctionArgName { getFuncArgNameTxt :: Text}
-  deriving (Show, Eq, NFData, ToJSON, FromJSON, ToTxt, IsString, Generic, Arbitrary, Cacheable, Hashable)
+  deriving (Show, Eq, NFData, ToJSON, FromJSON, ToTxt, IsString, Generic, Cacheable, Hashable)
 
 newtype HasDefault = HasDefault { unHasDefault :: Bool }
   deriving (Show, Eq, ToJSON, Cacheable, NFData, Hashable)

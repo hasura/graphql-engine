@@ -19,6 +19,7 @@ import           Data.Aeson                             hiding (json)
 import           Data.Text.Extended
 
 import qualified Hasura.GraphQL.Execute                 as E
+import           Hasura.GraphQL.ParameterizedQueryHash  (ParameterizedQueryHashList (..))
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Syntax          as G
@@ -34,6 +35,8 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
+
+import qualified Hasura.GraphQL.Execute.Backend         as EB
 
 
 -- Note: There may be a better way of constructing this when building the Endpoint datastructure.
@@ -116,6 +119,7 @@ runCustomEndpoint
        , GH.MonadExecuteQuery m
        , MonadMetadataStorage (MetadataStorageT m)
        , HttpLog m
+       , EB.MonadQueryTags m
        )
     => Env.Environment
     -> E.ExecutionCtx
@@ -157,10 +161,10 @@ runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestReques
           -- through to the /v1/graphql endpoint.
           (httpLoggingMetadata, handlerResp) <- flip runReaderT execCtx $ do
               (parameterizedQueryHash, resp) <- GH.runGQ env (E._ecxLogger execCtx) requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables)
-              let httpLogMetadata = buildHttpLogMetadata @m [parameterizedQueryHash] Nothing
+              let httpLogMetadata = buildHttpLogMetadata @m (PQHSetSingleton parameterizedQueryHash) RequestModeNonBatchable
               return (httpLogMetadata, fst <$> resp)
           case sequence handlerResp of
-            Just resp -> pure $ (httpLoggingMetadata, fmap encodeHTTPResp resp)
+            Just resp -> pure (httpLoggingMetadata, fmap encodeHTTPResp resp)
             -- a Nothing value here indicates a failure to parse the cached request from redis.
             -- TODO: Do we need an additional log message here?
             Nothing -> throw500 "An unexpected error occurred while fetching the data from the cache"

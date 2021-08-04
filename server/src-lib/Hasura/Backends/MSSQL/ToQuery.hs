@@ -6,7 +6,6 @@
 module Hasura.Backends.MSSQL.ToQuery
   ( fromSelect
   , fromReselect
-  , toSQL
   , toQueryFlat
   , toQueryPretty
   , fromDelete
@@ -26,7 +25,6 @@ import           Data.String
 import           Database.ODBC.SQLServer
 
 import           Hasura.Backends.MSSQL.Types
-import           Hasura.SQL.Types            (ToSQL (..))
 
 
 --------------------------------------------------------------------------------
@@ -312,7 +310,9 @@ fromAggregate :: Aggregate -> Printer
 fromAggregate =
   \case
     CountAggregate countable -> "COUNT(" <+> fromCountable countable <+> ")"
-    OpAggregate text args ->
+    OpAggregate _text args ->
+      "(" <+> SepByPrinter ", " (map fromExpression (toList args)) <+> ")"
+    JsonQueryOpAggregate text args ->
       QueryPrinter (rawUnescapedText text) <+>
       "(" <+> SepByPrinter ", " (map fromExpression (toList args)) <+> ")"
     TextAggregate text -> fromExpression (ValueExpression (TextValue text))

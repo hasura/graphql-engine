@@ -83,7 +83,7 @@ func (c *CronTriggers) Export(metadata yaml.MapSlice) (map[string][]byte, metada
 		return nil, c.error(err)
 	}
 	return map[string][]byte{
-		filepath.ToSlash(filepath.Join(c.MetadataDir, c.Key())): data,
+		filepath.ToSlash(filepath.Join(c.MetadataDir, c.Filename())): data,
 	}, nil
 }
 

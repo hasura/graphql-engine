@@ -59,8 +59,11 @@ Note: Parameterized query hash is a PRO only feature
 
 module Hasura.GraphQL.ParameterizedQueryHash
   ( calculateParameterizedQueryHash
+  , mkUnsafeParameterizedQueryHash
+  , unParamQueryHash
   , ParameterizedQueryHash
-  )
+  , ParameterizedQueryHashList(..)
+  ,parameterizedQueryHashListToObject)
 where
 
 import           Hasura.Prelude
@@ -75,6 +78,49 @@ import qualified Text.Builder                   as Text
 import           Hasura.GraphQL.Parser          (InputValue (..), Variable (..))
 
 import           Hasura.Server.Utils            (cryptoHash)
+
+-- | a set of parameterized query hashes attached to a request
+-- this type exists because a simple list of 'ParameterisedQueryHash'es won't
+-- let us log a single-request batch and a single non-batched request
+-- differently. the log format uses json lists for requests executed in batched
+-- mode, for fields like @query@, but not for requests in single mode (e.g.
+-- @query: "..."@ vs @query: ["..."]@) and so to conform to that, we capture the
+-- whole _set_ of parameterised query hashes when it's created, tagging it with
+-- information about how it was created (i.e. from a batched request, a single
+-- request, etc.)
+data ParameterizedQueryHashList
+  = PQHSetEmpty
+  -- ^ an empty query hash set, either for an operation that does not produce
+  -- query hashes, or due to failure in operation execution
+  | PQHSetSingleton !ParameterizedQueryHash
+  -- ^ a query hash set consisting of a single element, corresponding to e.g.
+  -- a single (non-batched) graphql request
+  | PQHSetBatched ![ParameterizedQueryHash]
+  -- ^ a query hash set associated to a batched request
+  -- note that this does not need to contain multiple query hashes: it is possible
+  -- for a batch to contain only one request
+  deriving (Show, Eq)
+
+-- we use something that explicitly produces an 'J.Object' instead of writing
+-- a 'J.ToJSON' instance. in the latter case, functions consuming the output of
+-- 'J.toJSON' would have to perform a partial pattern-match on the 'J.Value'
+-- output to extract a JSON object from it. for the other patterns, it would
+-- have to either throw a runtime error on or silently ignore the other
+-- patterns, and the latter choice would cause a silent failure if the
+-- 'J.ToJSON' instance were modified to no longer always return objects
+parameterizedQueryHashListToObject :: ParameterizedQueryHashList -> J.Object
+parameterizedQueryHashListToObject = Map.fromList . \case
+  -- when a non-graphql query is executed, or when the request fails,
+  -- there are no hashes to log
+  PQHSetEmpty -> []
+  -- when there's no batching of graphql queries, we log the parameterized query hash as a string
+  PQHSetSingleton queryHash ->
+    [("parameterized_query_hash" , J.toJSON queryHash)]
+  -- when there's a batch of graphql queries (even if the batch contains only one request),
+  -- we log the parameterized query hashes of every request in a list
+  PQHSetBatched queryHashes ->
+    [("parameterized_query_hash" , J.toJSON queryHashes)]
+
 
 newtype ParameterizedQueryHash
   = ParameterizedQueryHash { unParamQueryHash :: B.ByteString }
@@ -133,3 +179,6 @@ normalizeSelectionSet =  (normalizeSelection =<<)
 
 calculateParameterizedQueryHash :: G.SelectionSet G.NoFragments Variable -> ParameterizedQueryHash
 calculateParameterizedQueryHash = ParameterizedQueryHash . cryptoHash . Text.run . G.selectionSet . normalizeSelectionSet
+
+mkUnsafeParameterizedQueryHash :: Text -> ParameterizedQueryHash
+mkUnsafeParameterizedQueryHash = ParameterizedQueryHash . txtToBs

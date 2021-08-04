@@ -47,6 +47,7 @@ import           Network.HTTP.Client.Extended
 import           Options.Applicative
 import           System.Environment                         (getEnvironment)
 
+import qualified Hasura.GraphQL.Execute.Backend             as EB
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll      as EL
 import qualified Hasura.GraphQL.Transport.WebSocket.Server  as WS
 import qualified Hasura.Tracing                             as Tracing
@@ -459,6 +460,7 @@ runHGEServer
      , HasResourceLimits m
      , MonadMetadataStorage (MetadataStorageT m)
      , MonadResolveSource m
+     , EB.MonadQueryTags m
      )
   => (ServerCtx -> Spock.SpockT m ())
   -> Env.Environment
@@ -816,6 +818,7 @@ execQuery
      , HasServerConfigCtx m
      , MetadataM m
      , MonadMetadataStorageQueryAPI m
+     , EB.MonadQueryTags m
      )
   => Env.Environment
   -> BLC.ByteString
@@ -900,6 +903,9 @@ instance (MonadIO m) => WS.MonadWSLog (PGMetadataStorageAppT m) where
 
 instance (Monad m) => MonadResolveSource (PGMetadataStorageAppT m) where
   getSourceResolver = mkPgSourceResolver <$> asks snd
+
+instance (Monad m) => EB.MonadQueryTags (PGMetadataStorageAppT m) where
+  createQueryTags _qtSourceConfig _attributes = mempty
 
 runInSeparateTx
   :: (MonadIO m)

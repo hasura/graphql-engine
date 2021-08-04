@@ -576,6 +576,230 @@ input StringQueryOperatorInput{
 "
 `;
 
+exports[`Utils.ts generateSDL 5`] = `
+" 
+type books{
+      author : Int!
+      book_name : String!
+      id : Int!
+      user : users!
+}
+
+type users{
+      books : [books!]!
+      books_aggregate : books_aggregate!
+      id : Int!
+      name : String!
+}
+
+type books_aggregate{
+      aggregate : books_aggregate_fields
+      nodes : [books!]!
+}
+
+type books_aggregate_fields{
+      avg : books_avg_fields
+      count : Int
+      max : books_max_fields
+      min : books_min_fields
+      stddev : books_stddev_fields
+      stddev_pop : books_stddev_pop_fields
+      stddev_samp : books_stddev_samp_fields
+      sum : books_sum_fields
+      var_pop : books_var_pop_fields
+      var_samp : books_var_samp_fields
+      variance : books_variance_fields
+}
+
+type books_avg_fields{
+      author : Float
+      id : Float
+}
+
+type books_max_fields{
+      author : Int
+      book_name : String
+      id : Int
+}
+
+type books_min_fields{
+      author : Int
+      book_name : String
+      id : Int
+}
+
+type books_stddev_fields{
+      author : Float
+      id : Float
+}
+
+type books_stddev_pop_fields{
+      author : Float
+      id : Float
+}
+
+type books_stddev_samp_fields{
+      author : Float
+      id : Float
+}
+
+type books_sum_fields{
+      author : Int
+      id : Int
+}
+
+type books_var_pop_fields{
+      author : Float
+      id : Float
+}
+
+type books_var_samp_fields{
+      author : Float
+      id : Float
+}
+
+type books_variance_fields{
+      author : Float
+      id : Float
+}
+
+input users_order_by{
+      books_aggregate : books_aggregate_order_by
+      id : order_by
+      name : order_by
+}
+
+input books_aggregate_order_by{
+      avg : books_avg_order_by
+      count : order_by
+      max : books_max_order_by
+      min : books_min_order_by
+      stddev : books_stddev_order_by
+      stddev_pop : books_stddev_pop_order_by
+      stddev_samp : books_stddev_samp_order_by
+      sum : books_sum_order_by
+      var_pop : books_var_pop_order_by
+      var_samp : books_var_samp_order_by
+      variance : books_variance_order_by
+}
+
+input books_avg_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_max_order_by{
+      author : order_by
+      book_name : order_by
+      id : order_by
+}
+
+input books_min_order_by{
+      author : order_by
+      book_name : order_by
+      id : order_by
+}
+
+input books_stddev_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_stddev_pop_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_stddev_samp_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_sum_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_var_pop_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_var_samp_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_variance_order_by{
+      author : order_by
+      id : order_by
+}
+
+input books_bool_exp{
+      _and : [books_bool_exp]
+      _not : books_bool_exp
+      _or : [books_bool_exp]
+      author : Int_comparison_exp
+      book_name : String_comparison_exp
+      id : Int_comparison_exp
+      user : users_bool_exp
+}
+
+input Int_comparison_exp{
+      _eq : Int
+      _gt : Int
+      _gte : Int
+      _in : [Int!]
+      _is_null : Boolean
+      _lt : Int
+      _lte : Int
+      _neq : Int
+      _nin : [Int!]
+}
+
+input String_comparison_exp{
+      _eq : String
+      _gt : String
+      _gte : String
+      _ilike : String
+      _in : [String!]
+      _is_null : Boolean
+      _like : String
+      _lt : String
+      _lte : String
+      _neq : String
+      _nilike : String
+      _nin : [String!]
+      _nlike : String
+      _nsimilar : String
+      _similar : String
+}
+
+input users_bool_exp{
+      _and : [users_bool_exp]
+      _not : users_bool_exp
+      _or : [users_bool_exp]
+      books : books_bool_exp
+      id : Int_comparison_exp
+      name : String_comparison_exp
+}
+
+enum order_by{
+      asc
+      asc_nulls_first
+      asc_nulls_last
+      desc
+      desc_nulls_first
+      desc_nulls_last
+}
+
+enum users_select_column{
+      id
+      name
+}
+"
+`;
+
 exports[`Utils.ts getRemoteSchemaFields 1`] = `
 Array [
   Object {

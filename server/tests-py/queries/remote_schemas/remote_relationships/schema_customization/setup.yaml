@@ -1,0 +1,79 @@
+type: bulk
+args:
+
+# To model this:
+
+# query {
+#   profiles {
+#     id
+#     message {
+#       id
+#       msg
+#     }
+#   }
+# }
+
+#Profile table
+
+- type: run_sql
+  args:
+    sql: |
+      create table profiles (
+          id serial primary key,
+          name text
+      );
+      insert into profiles (name) values
+      ( 'alice' ),
+      ( 'bob' ),
+      ( 'alice');
+      create table authors (
+         id serial primary key,
+         name text
+      );
+      create table employees (
+         id serial primary key,
+         name text
+      );
+      insert into employees (name) values ('alice'),(NULL),('bob');
+
+- type: track_table
+  args:
+    schema: public
+    name: profiles
+
+- type: add_remote_schema
+  args:
+    name: my-remote-schema
+    definition:
+      url: http://localhost:4000
+      forward_client_headers: false
+      customization:
+        root_fields_namespace: foo_root
+        type_names:
+          mapping:
+            Message: FooMessage
+        field_names:
+          - parent_type: query_root
+            prefix: foo_root_
+            mapping:
+              message: foo_message
+          - parent_type: Communication
+            prefix: foo_comm_
+            mapping:
+              name: foo_name
+          - parent_type: Message
+            prefix: foo_comm_
+            mapping:
+              name: foo_name
+          - parent_type: User
+            prefix: foo_user_
+
+- type: track_table
+  args:
+    schema: public
+    name: authors
+
+- type: track_table
+  args:
+    schema: public
+    name: employees

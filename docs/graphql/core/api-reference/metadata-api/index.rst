@@ -4,8 +4,8 @@
 
 .. _metadata_apis:
 
-Metadata API Reference (v2.0 and above)
-=======================================
+Metadata API Reference
+======================
 
 .. contents:: Table of contents
   :backlinks: none

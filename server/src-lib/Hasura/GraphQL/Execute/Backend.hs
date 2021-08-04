@@ -10,6 +10,8 @@ import qualified Network.HTTP.Types                      as HTTP
 
 import           Control.Monad.Trans.Control             (MonadBaseControl)
 import           Data.Kind                               (Type)
+import           Data.SqlCommenter
+import           Data.Tagged
 import           Data.Text.Extended
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol  as GH
@@ -21,14 +23,24 @@ import           Hasura.GraphQL.Execute.Action.Types     (ActionExecutionPlan)
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Execute.RemoteJoin.Types
 import           Hasura.GraphQL.Parser                   hiding (Type)
+import           Hasura.QueryTags
 import           Hasura.RQL.IR
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.QueryTags              (QueryTagsSourceConfig)
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Backend
 import           Hasura.Server.Version                   (HasVersion)
 import           Hasura.Session
+
+import           Hasura.Metadata.Class
+import           Hasura.Tracing                          (TraceT)
+
+import           Hasura.Backends.Postgres.Connection     (LazyTxT)
+import           Hasura.RQL.DDL.Schema.Cache             (CacheRWT)
+import           Hasura.RQL.Types.Run                    (RunT (..))
+import           Hasura.RQL.Types.SchemaCache.Build      (MetadataT (..))
 
 
 -- | This typeclass enacapsulates how a given backend translates a root field into an execution
@@ -45,22 +57,28 @@ class ( Backend b
 
   -- execution plan generation
   mkDBQueryPlan
-    :: (MonadError QErr m)
+    :: forall m
+     . ( MonadError QErr m
+       , MonadQueryTags m
+       )
     => UserInfo
     -> SourceName
     -> SourceConfig b
     -> QueryDB b (Const Void) (UnpreparedValue b)
+    -> QueryTagsComment
     -> m (DBStepInfo b)
   mkDBMutationPlan
     :: forall m
      . ( MonadError QErr m
        , HasVersion
+       , MonadQueryTags m
        )
     => UserInfo
     -> Bool
     -> SourceName
     -> SourceConfig b
     -> MutationDB b (Const Void) (UnpreparedValue b)
+    -> QueryTagsComment
     -> m (DBStepInfo b)
   mkDBSubscriptionPlan
     :: forall m
@@ -71,6 +89,7 @@ class ( Backend b
     -> SourceName
     -> SourceConfig b
     -> InsOrdHashMap G.Name (QueryDB b (Const Void) (UnpreparedValue b))
+    -> QueryTagsComment
     -> m (LiveQueryPlan b (MultiplexedQuery b))
   mkDBQueryExplain
     :: forall m
@@ -130,6 +149,7 @@ data ExecutionStep where
   -- | A graphql query to execute against a remote schema
   ExecStepRemote
     :: !RemoteSchemaInfo
+    -> !RemoteResultCustomizer
     -> !GH.GQLReqOutgoing
     -> ExecutionStep
   -- | Output a plain JSON object
@@ -142,3 +162,33 @@ data ExecutionStep where
 -- independent. In the future, when we implement a client-side dataloader and generalized joins,
 -- this will need to be changed into an annotated tree.
 type ExecutionPlan = InsOrdHashMap G.Name ExecutionStep
+
+class (Monad m) => MonadQueryTags m where
+  -- | Creates Query Tags. These are appended to the Generated SQL.
+  -- Helps users to use native database monitoring tools to get some 'application-context'.
+  createQueryTags
+    :: (Maybe QueryTagsSourceConfig) -> [Attribute] -> Tagged m Text
+
+instance (MonadQueryTags m) => MonadQueryTags (ReaderT r m) where
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (ReaderT r m) Text
+
+instance (MonadQueryTags m) => MonadQueryTags (ExceptT e m) where
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (ExceptT e m) Text
+
+instance (MonadQueryTags m) => MonadQueryTags (TraceT m) where
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (TraceT m) Text
+
+instance (MonadQueryTags m) => MonadQueryTags (MetadataStorageT m) where
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (MetadataStorageT m) Text
+
+instance (MonadQueryTags m) => MonadQueryTags (LazyTxT QErr m) where
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (LazyTxT QErr m) Text
+
+instance (MonadQueryTags m) => MonadQueryTags (MetadataT m) where
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (MetadataT m) Text
+
+instance (MonadQueryTags m) => MonadQueryTags (CacheRWT m) where
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (CacheRWT m) Text
+
+instance (MonadQueryTags m) => MonadQueryTags (RunT m) where
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (RunT m) Text

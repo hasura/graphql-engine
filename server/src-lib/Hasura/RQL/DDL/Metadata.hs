@@ -19,18 +19,19 @@ module Hasura.RQL.DDL.Metadata
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Ordered                 as AO
-import qualified Data.HashMap.Strict.InsOrd         as OMap
-import qualified Data.HashSet                       as HS
-import qualified Data.List                          as L
+import qualified Data.Aeson.Ordered                  as AO
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.HashMap.Strict.InsOrd.Extended as OMap
+import qualified Data.HashSet                        as HS
+import qualified Data.List                           as L
 
-import           Control.Lens                       ((.~), (^?))
+import           Control.Lens                        ((.~), (^?))
 import           Data.Aeson
-import           Data.Text.Extended                 ((<<>))
+import           Data.Text.Extended                  ((<<>))
 
-import qualified Hasura.SQL.AnyBackend              as AB
+import qualified Hasura.SQL.AnyBackend               as AB
 
-import           Hasura.Backends.Postgres.DDL.Table (delTriggerQ)
+import           Hasura.Backends.Postgres.DDL.Table  (delTriggerQ)
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
@@ -49,7 +50,7 @@ import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
-import           Hasura.Server.Types                (ExperimentalFeature (..))
+import           Hasura.Server.Types                 (ExperimentalFeature (..))
 
 
 runClearMetadata
@@ -92,6 +93,8 @@ pg trigger and archive events for dropped event triggers. This is handled
 explicitly in @'runReplaceMetadata' function.
 -}
 
+-- | Replace the 'current metadata' with the 'new metadata'
+-- The 'new metadata' might come via the 'Import Metadata' in console
 runReplaceMetadata
   :: ( CacheRWM m
      , MetadataM m
@@ -141,29 +144,17 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
   when (inheritedRoles /= mempty && EFInheritedRoles `notElem` experimentalFeatures) $
     throw400 ConstraintViolation "inherited_roles can only be added when it's enabled in the experimental features"
 
-  oldMetadata <- getMetadata
-  let (oldCronTriggersIncludedInMetadata, oldCronTriggersNotIncludedInMetadata) =
-        (OMap.filter ctIncludeInMetadata (_metaCronTriggers  oldMetadata)
-        ,OMap.filter (not . ctIncludeInMetadata) (_metaCronTriggers  oldMetadata))
-      newCronTriggers =
+  let queryTagsConfig =
         case _rmv2Metadata of
-          RMWithoutSources m -> _mnsCronTriggers m
-          RMWithSources m    -> _metaCronTriggers m
-  dropFutureCronEvents $ MetadataCronTriggers $ OMap.keys oldCronTriggersIncludedInMetadata
-  cronTriggers <- do
-    -- traverse over the new cron triggers and check if any of them
-    -- already exists as a cron trigger with "included_in_metadata: false"
-    for_ newCronTriggers $ \ct ->
-      when (ctName ct `OMap.member` oldCronTriggersNotIncludedInMetadata) $
-        throw400 AlreadyExists $
-        "cron trigger with name "
-        <> ctName ct
-        <<> " already exists as a cron trigger with \"included_in_metadata\" as false"
-    -- we add the old cron triggers with included_in_metadata set to false with the
-    -- newly added cron triggers
-    pure $ newCronTriggers <> oldCronTriggersNotIncludedInMetadata
+          RMWithSources m    -> _metaQueryTagsConfig m
+          RMWithoutSources _ -> emptyQueryTagsConfig
+
+  oldMetadata <- getMetadata
+
+  (cronTriggersMetadata, cronTriggersToBeAdded) <- processCronTriggers oldMetadata
+
   metadata <- case _rmv2Metadata of
-    RMWithSources m -> pure $ m { _metaCronTriggers = cronTriggers }
+    RMWithSources m -> pure $ m { _metaCronTriggers = cronTriggersMetadata }
     RMWithoutSources MetadataNoSources{..} -> do
       let maybeDefaultSourceMetadata = oldMetadata ^? metaSources.ix defaultSource.toSourceMetadata
       defaultSourceMetadata <- onNothing maybeDefaultSourceMetadata $
@@ -174,8 +165,8 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
                                      }
       pure $ Metadata (OMap.singleton defaultSource newDefaultSourceMetadata)
                         _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist
-                        _mnsCustomTypes _mnsActions cronTriggers (_metaRestEndpoints oldMetadata)
-                        emptyApiLimit emptyMetricsConfig mempty introspectionDisabledRoles
+                        _mnsCustomTypes _mnsActions cronTriggersMetadata (_metaRestEndpoints oldMetadata)
+                        emptyApiLimit emptyMetricsConfig mempty introspectionDisabledRoles queryTagsConfig
   putMetadata metadata
 
   case _rmv2AllowInconsistentMetadata of
@@ -185,7 +176,7 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
       buildSchemaCacheStrict
 
   -- populate future cron events for all the new cron triggers that are imported
-  for_ newCronTriggers $ \CronTriggerMetadata {..} ->
+  for_ cronTriggersToBeAdded $ \CronTriggerMetadata {..} ->
     populateInitialCronTriggerEvents ctSchedule ctName
 
   -- See Note [Clear postgres schema for dropped triggers]
@@ -195,6 +186,62 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
   where
     getOnlyPGSources :: Metadata -> InsOrdHashMap SourceName (SourceMetadata ('Postgres 'Vanilla))
     getOnlyPGSources = OMap.mapMaybe AB.unpackAnyBackend . _metaSources
+
+    {- Note [Cron triggers behaviour with replace metadata]
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    When the metadata is replaced, we delete only the cron triggers
+    that were deleted, instead of deleting all the old cron triggers (which
+    existed in the metadata before it was replaced) and inserting all the
+    new cron triggers. This is done this way, because when a cron trigger is
+    dropped, the cron events associated with it will also be dropped from the DB
+    and when a new cron trigger is added, new cron events are generated by the
+    graphql-engine. So, this way we only delete and insert the data which has been changed.
+
+    The cron triggers that were deleted is calculated by getting a diff
+    of the old cron triggers and the new cron triggers. Note that we don't just
+    check the name of the trigger to calculate the diff, the whole cron trigger
+    definition is considered in the calculation.
+
+    Note: Only cron triggers with `include_in_metadata` set to `true` can be updated/deleted
+    via the replace metadata API. Cron triggers with `include_in_metadata` can only be modified
+    via the `create_cron_trigger` and `delete_cron_trigger` APIs.
+
+    -}
+    processCronTriggers oldMetadata = do
+      let (oldCronTriggersIncludedInMetadata, oldCronTriggersNotIncludedInMetadata) =
+            OMap.partition ctIncludeInMetadata (_metaCronTriggers oldMetadata)
+          allNewCronTriggers =
+            case _rmv2Metadata of
+              RMWithoutSources m -> _mnsCronTriggers m
+              RMWithSources m    -> _metaCronTriggers m
+          -- this function is intended to use with `Map.differenceWith`, it's used when two
+          -- equal keys are encountered, then the values are compared to calculate the diff.
+          -- see https://hackage.haskell.org/package/unordered-containers-0.2.14.0/docs/Data-HashMap-Internal.html#v:differenceWith
+          leftIfDifferent l r
+            | l == r    = Nothing
+            | otherwise = Just l
+          cronTriggersToBeAdded = Map.differenceWith leftIfDifferent
+                                                     (OMap.toHashMap allNewCronTriggers)
+                                                     (OMap.toHashMap oldCronTriggersIncludedInMetadata)
+          cronTriggersToBeDropped = Map.differenceWith leftIfDifferent
+                                                       (OMap.toHashMap oldCronTriggersIncludedInMetadata)
+                                                       (OMap.toHashMap allNewCronTriggers)
+      dropFutureCronEvents $ MetadataCronTriggers $ Map.keys cronTriggersToBeDropped
+      cronTriggers <- do
+        -- traverse over the new cron triggers and check if any of them
+        -- already exists as a cron trigger with "included_in_metadata: false"
+        for_ allNewCronTriggers $ \ct ->
+          when (ctName ct `OMap.member` oldCronTriggersNotIncludedInMetadata) $
+            throw400 AlreadyExists $
+            "cron trigger with name "
+            <> ctName ct
+            <<> " already exists as a cron trigger with \"included_in_metadata\" as false"
+        -- we add the old cron triggers with included_in_metadata set to false with the
+        -- newly added cron triggers
+        pure $ allNewCronTriggers <> oldCronTriggersNotIncludedInMetadata
+      pure $ (cronTriggers, cronTriggersToBeAdded)
+
 
     dropPostgresTriggers
       :: InsOrdHashMap SourceName (SourceMetadata ('Postgres 'Vanilla)) -- ^ old pg sources

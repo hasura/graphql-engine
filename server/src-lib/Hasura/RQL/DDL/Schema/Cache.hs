@@ -92,6 +92,7 @@ buildRebuildableSchemaCacheWithReason reason env metadata = do
     Inc.build (buildSchemaCacheRule env) (metadata, initialInvalidationKeys)
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
+
 newtype CacheRWT m a
   -- The CacheInvalidations component of the state could actually be collected using WriterT, but
   -- WriterT implementations prior to transformers-0.5.6.0 (which added
@@ -144,8 +145,6 @@ instance (MonadIO m, MonadError QErr m, HasHttpManagerM m
             { scMetadataResourceVersion = Just resourceVersion} }
         , invalidations)
 
-
-
 buildSchemaCacheRule
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
   -- what we want!
@@ -169,22 +168,22 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     resolveDependencies -< (outputs, unresolvedDependencies)
 
   -- Step 3: Build the GraphQL schema.
-  (gqlContext, gqlSchemaInconsistentObjects) <- runWriterA buildGQLContext -<
-    ( QueryHasura
-    , _boSources resolvedOutputs
-    , _boRemoteSchemas resolvedOutputs
-    , _boActions resolvedOutputs
-    , _actNonObjects $ _boCustomTypes resolvedOutputs
-    )
+  (gqlContext, gqlContextUnauth, gqlSchemaInconsistentObjects) <- bindA -<
+    buildGQLContext
+      QueryHasura
+      (_boSources resolvedOutputs)
+      (_boRemoteSchemas resolvedOutputs)
+      (_boActions resolvedOutputs)
+      (_actNonObjects $ _boCustomTypes resolvedOutputs)
 
   -- Step 4: Build the relay GraphQL schema
-  (relayContext, relaySchemaInconsistentObjects) <- runWriterA buildGQLContext -<
-    ( QueryRelay
-    , _boSources resolvedOutputs
-    , _boRemoteSchemas resolvedOutputs
-    , _boActions resolvedOutputs
-    , _actNonObjects $ _boCustomTypes resolvedOutputs
-    )
+  (relayContext, relayContextUnauth, relaySchemaInconsistentObjects) <- bindA -<
+    buildGQLContext
+      QueryRelay
+      (_boSources resolvedOutputs)
+      (_boRemoteSchemas resolvedOutputs)
+      (_boActions resolvedOutputs)
+      (_actNonObjects $ _boCustomTypes resolvedOutputs)
 
   let
     duplicateVariables :: EndpointMetadata a -> Bool
@@ -228,10 +227,10 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     , scRemoteSchemas = fmap fst (_boRemoteSchemas resolvedOutputs) -- remoteSchemaMap
     , scAllowlist = _boAllowlist resolvedOutputs
     -- , scCustomTypes = _boCustomTypes resolvedOutputs
-    , scGQLContext = fst gqlContext
-    , scUnauthenticatedGQLContext = snd gqlContext
-    , scRelayContext = fst relayContext
-    , scUnauthenticatedRelayContext = snd relayContext
+    , scGQLContext = gqlContext
+    , scUnauthenticatedGQLContext = gqlContextUnauth
+    , scRelayContext = relayContext
+    , scUnauthenticatedRelayContext = relayContextUnauth
     -- , scGCtxMap = gqlSchema
     -- , scDefaultRemoteGCtx = remoteGQLSchema
     , scDepMap = resolvedDependencies
@@ -249,6 +248,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     , scMetricsConfig = _boMetricsConfig resolvedOutputs
     , scMetadataResourceVersion = Nothing
     , scSetGraphqlIntrospectionOptions = _metaSetGraphqlIntrospectionOptions metadata
+    , scQueryTagsConfig = _boQueryTagsConfig resolvedOutputs
     }
   where
     getSourceConfigIfNeeded
@@ -443,7 +443,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
       let Metadata sources remoteSchemas collections allowlists
             customTypes actions cronTriggers endpoints apiLimits metricsConfig inheritedRoles
-            _introspectionDisabledRoles = metadata
+            _introspectionDisabledRoles queryTagsConfig = metadata
           actionRoles = map _apmRole . _amPermissions =<< OMap.elems actions
           remoteSchemaRoles = map _rspmRole . _rsmPermissions =<< OMap.elems remoteSchemas
           sourceRoles =
@@ -587,16 +587,17 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       cronTriggersMap <- buildCronTriggers -< ((), OMap.elems cronTriggers)
 
       returnA -< BuildOutputs
-        { _boSources       = M.map fst sourcesOutput
-        , _boActions       = actionCache
-        , _boRemoteSchemas = remoteSchemaCache
-        , _boAllowlist     = allowList
-        , _boCustomTypes   = annotatedCustomTypes
-        , _boCronTriggers  = cronTriggersMap
-        , _boEndpoints     = resolvedEndpoints
-        , _boApiLimits     = apiLimits
-        , _boMetricsConfig = metricsConfig
-        , _boRoles         = mapFromL _rRoleName orderedRoles
+        { _boSources         = M.map fst sourcesOutput
+        , _boActions         = actionCache
+        , _boRemoteSchemas   = remoteSchemaCache
+        , _boAllowlist       = allowList
+        , _boCustomTypes     = annotatedCustomTypes
+        , _boCronTriggers    = cronTriggersMap
+        , _boEndpoints       = resolvedEndpoints
+        , _boApiLimits       = apiLimits
+        , _boMetricsConfig   = metricsConfig
+        , _boRoles           = mapFromL _rRoleName orderedRoles
+        , _boQueryTagsConfig = queryTagsConfig
         }
 
     mkEndpointMetadataObject (name, createEndpoint) =
@@ -847,11 +848,16 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         -- We want to cache this call because it fetches the remote schema over HTTP, and we don’t
         -- want to re-run that if the remote schema definition hasn’t changed.
         buildRemoteSchema = Inc.cache proc (invalidationKeys, remoteSchema@(RemoteSchemaMetadata name defn comment _)) -> do
+          -- TODO is it strange how we convert from RemoteSchemaMetadata back
+          --      to AddRemoteSchemaQuery here? Document types please.
           let addRemoteSchemaQuery = AddRemoteSchemaQuery name defn comment
           Inc.dependOn -< Inc.selectKeyD name invalidationKeys
           (| withRecordInconsistency (liftEitherA <<< bindA -<
-               runExceptT $ addRemoteSchemaP2Setup env addRemoteSchemaQuery)
+               runExceptT $ noopTrace $ addRemoteSchemaP2Setup env addRemoteSchemaQuery)
            |) (mkRemoteSchemaMetadataObject remoteSchema)
+        -- TODO continue propagating MonadTrace up calls so that we can get tracing for remote schema introspection.
+        -- This will require modifying CacheBuild.
+        noopTrace = Tracing.runTraceTWithReporter Tracing.noReporter "buildSchemaCacheRule"
 
 {- Note [Keep invalidation keys for inconsistent objects]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

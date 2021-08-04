@@ -164,10 +164,10 @@ buildRemoteFieldInfo sourceSource sourceTable fields RemoteRelationship{..} allS
               ]
         pure (RFISource $ mkAnyBackend @b' rsri, tableDependencies <> columnDependencies)
     RemoteSchemaRelDef _ remoteRelationship@RemoteSchemaRelationshipDef{..} -> do
-      (RemoteSchemaCtx _ introspectionResult remoteSchemaInfo _ _ _) <-
+      RemoteSchemaCtx {..} <-
         onNothing (Map.lookup _rrdRemoteSchemaName remoteSchemaMap)
           $ throw400 RemoteSchemaError $ "remote schema with name " <> _rrdRemoteSchemaName <<> " not found"
-      remoteField <- validateRemoteSchemaRelationship remoteRelationship _rtrTable _rtrName _rtrSource (remoteSchemaInfo, introspectionResult) fields
+      remoteField <- validateRemoteSchemaRelationship remoteRelationship _rtrTable _rtrName _rtrSource (_rscInfo, _rscIntroOriginal) fields
         `onLeft` (throw400 RemoteSchemaError . errorToText)
       let tableDep = SchemaDependency (SOSourceObj _rtrSource $ AB.mkAnyBackend $ SOITable @b _rtrTable) DRTable
           remoteSchemaDep = SchemaDependency (SORemoteSchema _rrdRemoteSchemaName) DRRemoteSchema

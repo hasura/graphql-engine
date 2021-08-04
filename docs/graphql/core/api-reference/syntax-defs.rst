@@ -1115,8 +1115,123 @@ RemoteSchemaDef
            }
       ],
       "forward_client_headers": boolean,
-      "timeout_seconds": integer
+      "timeout_seconds": integer,
+      "customization": RemoteSchemaCustomization_
    }
+
+.. _RemoteSchemaCustomization:
+
+RemoteSchemaCustomization
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+      "root_fields_namespace": String,
+      "type_names": {
+        "prefix": String,
+        "suffix": String,
+        "mapping": {
+          String: String
+        }
+      },
+      "field_names": [
+        { "parent_type": String,
+          "prefix": String,
+          "suffix": String,
+          "mapping": {
+            String: String
+          }
+        }
+      ]
+   }
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - ``root_fields_namespace``
+     - false
+     - String
+     - If provided, the fields of the remote schema will be nested under this top level field
+   * - ``type_names``
+     - false
+     - RemoteTypeCustomization_
+     - Customization of type names in the remote schema
+   * - ``field_names``
+     - false
+     - [RemoteFieldCustomization_]
+     - Customization of field names for types in the remote schema
+
+.. _RemoteTypeCustomization
+
+RemoteTypeCustomization
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - ``prefix``
+     - false
+     - String
+     - Prefix applied to type names in the remote schema
+   * - ``suffix``
+     - false
+     - String
+     - Suffix applied to type names in the remote schema
+   * - ``mapping``
+     - false
+     - ``{String: String}``
+     - Explicit mapping of type names in the remote schema
+       Note: explicit mapping takes precedence over ``prefix`` and ``suffix``.
+
+- Type name prefix and suffix will be applied to all types in the schema
+  except the root types (for query, mutation and subscription),
+  types starting with ``__``, standard scalar types (``Int``, ``Float``, ``String``, ``Boolean``, and ``ID``),
+  and types with an explicit mapping.
+- Root types, types starting with ``__``,  and standard scalar types may only be customized with an explicit mapping.
+
+
+.. _RemoteFieldCustomization
+
+RemoteFieldCustomization
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - ``parent_type``
+     - true
+     - String
+     - Name of the parent type (in the original remote schema) for fields to be customized
+   * - ``prefix``
+     - false
+     - String
+     - Prefix applied to field names in parent type
+   * - ``suffix``
+     - false
+     - String
+     - Suffix applied to field names in the parent type
+   * - ``mapping``
+     - false
+     - ``{String: String}``
+     - Explicit mapping of field names in the parent type
+       Note: explicit mapping takes precedence over ``prefix`` and ``suffix``.
+
+- Fields that are part of an interface must be renamed consistently across all object types that implement that interface.
+
 
 .. _CollectionName:
 

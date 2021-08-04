@@ -3,9 +3,20 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: preserve unchanged cron triggers in `replace_metadata` API
+- server: fix inherited roles bug where mutations were not accessible when inherited roles was enabled
+- server: reintroduce the unique name constraint in allowed lists
+- server: fix http-log bug where batches with only one request emitted the parameterised query hash as a string instead of in a singleton array
+- console: add template gallery
+- server: subscriptions now validate that all session variables are properly set (#7111)
+- console: add template gallery
+- cli-migrations-v2: fix database url showing up in metadata (#7319)
+
+## v2.0.4
+
 - server: Support computed fields in permission check/filter (close #7102)
 - server: support computed fields in query 'order_by' (close #7103)
-- server: log warning if there are errors while executing clean up actions after "drop source" (previously it would throw an error) 
+- server: log warning if there are errors while executing clean up actions after "drop source" (previously it would throw an error)
 - server: Fixed a bug where MSSQL and BigQuery would ignore environment variables set from the console
 - server: Fixing bug in ReplaceMetadata parser - Moving from Alternative to committed-choice.
 - server: Relax the unique operation name constraint when adding a query to a query collection
@@ -14,6 +25,9 @@
 - console: add pagination on the Raw SQL results page
 - console: fix issues with replacing invalid graphql identifiers in table and column names
 - console: show error message on inconsistent objects table
+- server/mssql: Fix [graphql-engine#7130](https://github.com/hasura/graphql-engine/issues/7130) for `__typename` errors and more
+generally, JSON-style aggregates.
+- cli: add support for `query_tags` metadata object
 
 ## v2.0.3
 (Add entries below in the order of server, console, cli, docs, others)
@@ -77,6 +91,7 @@ NOTE: This only includes the diff between v2.0.0 and v2.0.0-beta.2
   faster query responses.
 - server: BigQuery: various bug fixes related to aggregations
 - server: fix add source API wiping out source's metadata when replace_configuration is true
+- server: add support for customization of field names and type names when adding a remote schema
 - console: add foreign key CRUD functionality to ms sql server tables
 - console: allow tracking of custom SQL functions having composite type (rowtype) input arguments
 - console: allow input object presets in remote schema permissions

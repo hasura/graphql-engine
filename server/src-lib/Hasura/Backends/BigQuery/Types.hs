@@ -173,7 +173,6 @@ data JoinSource
   = JoinSelect Select
   -- We're not using existingJoins at the moment, which was used to
   -- avoid re-joining on the same table twice.
-  -- | JoinReselect Reselect
   deriving (Eq, Ord, Show, Generic, Data, Lift)
 instance FromJSON JoinSource
 instance Hashable JoinSource
@@ -350,8 +349,6 @@ instance Hashable TableName
 instance Cacheable TableName
 instance ToJSONKey TableName
 instance NFData TableName
-instance Arbitrary TableName where arbitrary = genericArbitrary
-
 instance ToTxt TableName where toTxt = tshow
 
 data FieldName = FieldName
@@ -375,7 +372,6 @@ instance Hashable Comment
 instance Cacheable Comment
 instance ToJSON Comment
 instance NFData Comment
-instance Arbitrary ColumnName where arbitrary = genericArbitrary
 
 newtype EntityAlias = EntityAlias
   { entityAliasText :: Text
@@ -587,7 +583,7 @@ data UnifiedOn = UnifiedOn
 
 -- Copied from feature/mssql
 newtype FunctionName = FunctionName Text -- TODO: Improve this type when SQL function support added
- deriving (FromJSON, ToJSON, ToJSONKey, ToTxt, Arbitrary, Show, Eq, Ord, Hashable, Cacheable, NFData)
+ deriving (FromJSON, ToJSON, ToJSONKey, ToTxt, Show, Eq, Ord, Hashable, Cacheable, NFData)
 
 --------------------------------------------------------------------------------
 -- Backend-related stuff
@@ -703,8 +699,8 @@ liberalDecimalParser fromText json = viaText <|> viaNumber
       -- Parsing scientific is safe; it doesn't normalise until we ask
       -- it to.
       case readP_to_S scientificP (T.unpack text) of
-        [(_)] -> pure (fromText text)
-        _     -> fail ("String containing decimal places is invalid: " ++ show text)
+        [_] -> pure (fromText text)
+        _   -> fail ("String containing decimal places is invalid: " ++ show text)
     viaNumber = do
       d <- J.parseJSON json
       -- Converting a scientific to an unbounded number is unsafe, but

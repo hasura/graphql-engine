@@ -17,6 +17,30 @@ class TestGraphQLQueryBasicMySQL:
     def test_replace_metadata(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/replace_metadata.yaml')
 
+    def test_select_query_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/basic.yaml')
+
+    def test_select_quoted_col(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_quoted_col.yaml')
+
+    def test_select_offset_limit(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_limit.yaml')
+
+    def test_select_query_ignore_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml')
+
+    def test_select_offset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_offset.yaml')
+
+    def test_select_limit(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_limit.yaml')
+
+    def test_col_not_present(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_col_not_present_err.yaml')
+
+    def test_non_tracked_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_non_tracked_table_err.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/mysql'
