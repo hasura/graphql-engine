@@ -4,13 +4,6 @@ import { HerokuSession } from '../Services/Data/DataSources/CreateDataSource/Her
 export type CloudProjectInfo = {
   name: string;
   plan_name: string;
-  heroku_integrations: {
-    app_id: string;
-    app_name: string;
-    project_id: string;
-    var_name: string;
-    webhook_id: string;
-  };
   owner: {
     id: string;
     email: string;

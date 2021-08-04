@@ -23,7 +23,9 @@ const Endpoints = {
   consoleNotificationsStg:
     'https://notifications.hasura-stg.hasura-app.io/v1/graphql',
   consoleNotificationsProd: 'https://notifications.hasura.io/v1/graphql',
-  hasuraCloudDataGraphql: `${globals.cloudDataApiUrl}/v1/graphql`,
+  luxDataGraphql: globals.luxDataHost
+    ? `${window.location.protocol}//${globals.luxDataHost}/v1/graphql`
+    : `${globals.cloudDataApiUrl}/v1/graphql`,
 };
 
 const globalCookiePolicy = 'same-origin';

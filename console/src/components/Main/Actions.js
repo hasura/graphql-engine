@@ -474,7 +474,7 @@ export const fetchHerokuSession = () => dispatch => {
   dispatch({
     type: FETCHING_HEROKU_SESSION,
   });
-  return fetch(Endpoints.hasuraCloudDataGraphql, {
+  return fetch(Endpoints.luxDataGraphql, {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -503,83 +503,6 @@ export const fetchHerokuSession = () => dispatch => {
     .catch(e => {
       console.error('Failed fetching Heroku session');
       console.error(e);
-    });
-};
-
-const fetchCloudProjectInfo = () => dispatch => {
-  if (globals.consoleType !== 'cloud') {
-    return;
-  }
-  if (!Endpoints.hasuraCloudDataGraphql) {
-    return;
-  }
-
-  // TODO: this needs to be addressed in a better way with Apollo Client
-  const projectID = globals.hasuraCloudProjectId;
-  const query = `
-  query ProjectsQuery($id: uuid!) {
-    projects_by_pk(id: $id) {
-      name
-      plan_name
-      tenant {
-        active
-        region
-        custom_domains {
-          id
-          fqdn
-          dns_validation
-          created_at
-          cert
-        }
-      }
-      heroku_integrations {
-        app_id
-        app_name
-        project_id
-        var_name
-        webhook_id
-      }
-      owner {
-        id
-        email
-      }
-      collaborators {
-        collaborator {
-          email
-          id
-        }
-      }
-    }
-  }
-  `;
-  const variables = {
-    id: projectID,
-  };
-  return fetch(Endpoints.hasuraCloudDataGraphql, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include',
-    body: JSON.stringify({
-      query,
-      variables,
-    }),
-  })
-    .then(r => r.json())
-    .then(data => {
-      const projectData = data?.data?.projects_by_pk;
-      dispatch({
-        type: SET_CLOUD_PROJECT_INFO,
-        data: projectData,
-      });
-    })
-    .catch(e => {
-      console.error(e);
-      dispatch({
-        type: SET_CLOUD_PROJECT_INFO,
-        data: undefined,
-      });
     });
 };
 
@@ -757,5 +680,4 @@ export {
   RUN_TIME_ERROR,
   registerRunTimeError,
   fetchConsoleNotifications,
-  fetchCloudProjectInfo,
 };

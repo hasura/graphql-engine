@@ -29,7 +29,9 @@ declare global {
       projectID: Nullable<string>;
       userRole: Nullable<string>;
       cloudRootDomain: Nullable<string>;
+      luxDataHost: Nullable<string>;
       consoleType: ConsoleType;
+      eeMode: Nullable<string>;
     };
   }
   const CONSOLE_ASSET_VERSION: string;
@@ -66,8 +68,10 @@ const globals = {
   hasuraCloudTenantId: window.__env?.tenantID,
   hasuraCloudProjectId: window.__env?.projectID,
   cloudDataApiUrl: `${window.location?.protocol}//data.${window.__env?.cloudRootDomain}`,
+  luxDataHost: window.__env?.luxDataHost,
   userRole: undefined, // userRole is not applicable for the OSS console
   consoleType: window.__env?.consoleType,
+  eeMode: window.__env?.eeMode === 'true',
 };
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {
   if (!window.__env?.dataApiUrl) {
