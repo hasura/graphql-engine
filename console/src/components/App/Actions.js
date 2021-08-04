@@ -1,10 +1,6 @@
 import defaultState from './State';
 import { loadConsoleOpts } from '../../telemetry/Actions';
-import {
-  fetchServerConfig,
-  fetchHerokuSession,
-  fetchCloudProjectInfo,
-} from '../Main/Actions';
+import { fetchServerConfig, fetchHerokuSession } from '../Main/Actions';
 
 const LOAD_REQUEST = 'App/ONGOING_REQUEST';
 const DONE_REQUEST = 'App/DONE_REQUEST';
@@ -22,7 +18,6 @@ export const requireAsyncGlobals = (
       shouldLoadOpts && dispatch(loadConsoleOpts()),
       shouldLoadServerConfig && dispatch(fetchServerConfig),
       dispatch(fetchHerokuSession()),
-      dispatch(fetchCloudProjectInfo()),
     ]).finally(callback);
   };
 };
