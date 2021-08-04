@@ -1,34 +1,20 @@
 import React from 'react';
 import { Route, IndexRedirect, IndexRoute } from 'react-router';
-
 import { connect } from 'react-redux';
 
 import globals from './Globals';
-
 import { App, Main, PageNotFound } from 'components';
-
 import validateLogin from './utils/validateLogin';
-
 import { requireAsyncGlobals } from './components/App/Actions';
-
 import { composeOnEnterHooks } from 'utils/router';
-
 import { loadMigrationStatus } from './components/Main/Actions';
-
 import { dataRouterUtils } from './components/Services/Data';
-
 import { getRemoteSchemaRouter } from './components/Services/RemoteSchema';
-
 import { getActionsRouter } from './components/Services/Actions';
-
 import { eventsRoutes } from './components/Services/Events';
-
 import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorer';
-
 import generatedVoyagerConnector from './components/Services/VoyagerView/VoyagerView';
-
 import generatedLoginConnector from './components/Login/Login';
-
 import settingsContainer from './components/Services/Settings/Container';
 import ApiContainer from './components/Services/ApiExplorer/Container';
 import metadataOptionsConnector from './components/Services/Settings/MetadataOptions/MetadataOptions';
@@ -37,11 +23,8 @@ import allowedQueriesConnector from './components/Services/Settings/AllowedQueri
 import inheritedRolesConnector from './components/Services/Settings/InheritedRoles/InheritedRoles';
 import logoutConnector from './components/Services/Settings/Logout/Logout';
 import aboutConnector from './components/Services/Settings/About/About';
-
 import { showErrorNotification } from './components/Services/Common/Notification';
 import { CLI_CONSOLE_MODE } from './constants';
-import UIKit from './components/UIKit/';
-import { Heading } from './components/UIKit/atoms';
 import { SupportContainer } from './components/Services/Support/SupportContainer';
 import HelpPage from './components/Services/Support/HelpPage';
 import CreateRestView from './components/Services/ApiExplorer/Rest/Create/';
@@ -103,19 +86,6 @@ const routes = store => {
 
   const actionsRouter = getActionsRouter(connect, store, composeOnEnterHooks);
 
-  const uiKitRouter = globals.isProduction ? null : (
-    <Route
-      path="/ui-elements"
-      // TODO: fix me
-      component={() => (
-        <div>
-          <Heading />
-          <UIKit />
-        </div>
-      )}
-    />
-  );
-
   return (
     <Route
       path="/"
@@ -176,7 +146,6 @@ const routes = store => {
         {remoteSchemaRouter}
         {actionsRouter}
         {eventsRoutes}
-        {uiKitRouter}
         <Route path="support" component={SupportContainer}>
           <Route path="forums" component={HelpPage} />
         </Route>
