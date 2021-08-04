@@ -1,0 +1,16 @@
+description: Basic offset and offset query
+url: /v1/graphql
+status: 200
+response:
+  data:
+    hasura_author:
+    - name: Author 2
+      id: 2
+query:
+  query: |
+    query {
+      hasura_author(offset: 1, limit 1) {
+        id
+        name
+      }
+    }

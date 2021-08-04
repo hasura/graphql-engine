@@ -1,0 +1,16 @@
+description: Basic limit query
+url: /v1/graphql
+status: 200
+response:
+  data:
+    hasura_author:
+    - name: Author 1
+      id: 1
+query:
+  query: |
+    query {
+      hasura_author(limit: 1) {
+        id
+        name
+      }
+    }

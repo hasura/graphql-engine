@@ -38,9 +38,8 @@ args:
       INSERT INTO author
           (name, createdAt)
       VALUES
-          ( 'Author 1', '2017-09-21T09:39:44' ),
-          ( 'Author 2', '2017-09-21T09:50:44' );
-
+          ( 'Author 1', '2017-09-21 09:39:44' ),
+          ( 'Author 2', '2017-09-21 09:50:44' );
 
 - type: mysql_run_sql
   args:

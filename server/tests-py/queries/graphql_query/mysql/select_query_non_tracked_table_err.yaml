@@ -1,0 +1,18 @@
+description: Select query on table which is not tracked
+url: /v1/graphql
+status: 200
+response:
+  errors:
+  - extensions:
+      code: validation-failed
+      path: $.selectionSet.hasura_random
+    message: |-
+      field "hasura_random" not found in type: 'query_root'
+query:
+  query: |
+    query {
+      hasura_random (order_by: {id: asc}) {
+        id
+        name
+      }
+    }
