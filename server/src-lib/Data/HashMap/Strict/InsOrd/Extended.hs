@@ -2,15 +2,16 @@ module Data.HashMap.Strict.InsOrd.Extended
   ( module OMap
   , groupTuples
   , groupListWith
+  , partition
   ) where
 
 import           Data.HashMap.Strict.InsOrd as OMap
-import qualified Data.Sequence.NonEmpty     as NE
 import qualified Data.List                  as L
+import qualified Data.Sequence.NonEmpty     as NE
 
 import           Data.Hashable              (Hashable)
 
-import           Prelude                    (Eq, Foldable, Functor, flip, fmap, ($), (<>))
+import           Prelude
 
 groupTuples
   :: (Eq k, Hashable k, Foldable t)
@@ -26,3 +27,12 @@ groupListWith
   => (v -> k) -> t v -> OMap.InsOrdHashMap k (NE.NESeq v)
 groupListWith f l =
   groupTuples $ fmap (\v -> (f v, v)) l
+
+partition :: (Eq k, Hashable k) => (v -> Bool) -> OMap.InsOrdHashMap k v -> (OMap.InsOrdHashMap k v, OMap.InsOrdHashMap k v)
+partition predicate =
+  OMap.foldlWithKey'
+    (\(left, right) key val ->
+       if (predicate val)
+       then (OMap.insert key val left, right)
+       else (left, OMap.insert key val right))
+    (mempty, mempty)

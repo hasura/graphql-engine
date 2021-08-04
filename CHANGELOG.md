@@ -3,6 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: preserve unchanged cron triggers in `replace_metadata` API
 - server: fix inherited roles bug where mutations were not accessible when inherited roles was enabled
 - server: reintroduce the unique name constraint in allowed lists
 - server: fix http-log bug where batches with only one request emitted the parameterised query hash as a string instead of in a singleton array
