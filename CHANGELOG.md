@@ -3,6 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: prevent invalid collisions in remote variable cache key (close #7170)
 - server: preserve unchanged cron triggers in `replace_metadata` API
 - server: fix inherited roles bug where mutations were not accessible when inherited roles was enabled
 - server: reintroduce the unique name constraint in allowed lists

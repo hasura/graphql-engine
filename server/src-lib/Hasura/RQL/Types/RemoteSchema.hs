@@ -300,9 +300,10 @@ data SessionArgumentPresetInfo
 instance Hashable SessionArgumentPresetInfo
 instance Cacheable SessionArgumentPresetInfo
 
--- | RemoteSchemaVariable is used to capture all the details required
---   to resolve a session preset variable.
---   See Note [Remote Schema Permissions Architecture]
+-- | Details required to resolve a "session variable preset" variable.
+--
+-- See Notes [Remote Schema Argument Presets] and [Remote Schema Permissions
+-- Architecture] for additional information.
 data RemoteSchemaVariable
   = SessionPresetVariable !SessionVariable !G.Name !SessionArgumentPresetInfo
   | QueryVariable !Variable
@@ -311,8 +312,9 @@ data RemoteSchemaVariable
 instance Hashable RemoteSchemaVariable
 instance Cacheable RemoteSchemaVariable
 
--- | This data type is an extension of the `G.InputValueDefinition`, it
---   may contain a preset with it.
+-- | Extends 'G.InputValueDefinition' with an optional preset argument.
+--
+-- See Note [Remote Schema Argument Presets] for additional information.
 data RemoteSchemaInputValueDefinition
   = RemoteSchemaInputValueDefinition
   { _rsitdDefinition     :: !G.InputValueDefinition
