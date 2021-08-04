@@ -9,8 +9,7 @@
 - console: add template gallery
 - server: subscriptions now validate that all session variables are properly set (#7111)
 - console: add template gallery
-
-
+- cli-migrations-v2: fix database url showing up in metadata (#7319)
 
 ## v2.0.4
 
