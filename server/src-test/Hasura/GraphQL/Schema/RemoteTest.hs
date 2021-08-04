@@ -10,6 +10,7 @@ import qualified Language.GraphQL.Draft.Parser         as G
 import qualified Language.GraphQL.Draft.Syntax         as G
 import qualified Network.URI                           as N
 
+import           Control.Lens                          (Prism', _Right, prism', to, (^..))
 import           Data.Text.Extended
 import           Data.Text.RawString
 import           Test.Hspec
@@ -18,6 +19,7 @@ import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 
 import           Hasura.Base.Error
 import           Hasura.GraphQL.Execute.Inline
+import           Hasura.GraphQL.Execute.Remote         (resolveRemoteVariable, runVariableCache)
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser.Monad
 import           Hasura.GraphQL.Parser.Schema
@@ -107,11 +109,11 @@ buildQueryParsers introspection = do
 
 
 runQueryParser
-  :: P.FieldParser TestMonad a
+  :: P.FieldParser TestMonad any
   -> ([G.VariableDefinition], G.SelectionSet G.NoFragments G.Name)
   -> M.HashMap G.Name J.Value
-  -> a
-runQueryParser parser (varDefs, selSet) vars = runIdentity $ runError $ do
+  -> any
+runQueryParser parser (varDefs, selSet) vars = runIdentity . runError $ do
   (_, resolvedSelSet) <- resolveVariables varDefs vars [] selSet
   field <- case resolvedSelSet of
     [G.SelectionField f] -> pure f
@@ -119,16 +121,17 @@ runQueryParser parser (varDefs, selSet) vars = runIdentity $ runError $ do
   runTest (P.fParser parser field) `onLeft` throw500
 
 run
-  :: Text           -- schema
-  -> Text           -- query
-  -> LBS.ByteString -- variables
+  :: Text           -- ^ schema
+  -> Text           -- ^ query
+  -> LBS.ByteString -- ^ variables
   -> IO (G.Field G.NoFragments RemoteSchemaVariable)
-run s q v = do
-  parser <- buildQueryParsers $ mkTestRemoteSchema s
+run schema query variables = do
+  parser <- buildQueryParsers $ mkTestRemoteSchema schema
   pure $ runQueryParser
     parser
-    (mkTestExecutableDocument q)
-    (mkTestVariableValues v)
+    (mkTestExecutableDocument query)
+    (mkTestVariableValues variables)
+
 
 
 -- actual test
@@ -138,6 +141,7 @@ spec = do
   testNoVarExpansionIfNoPreset
   testNoVarExpansionIfNoPresetUnlessTopLevelOptionalField
   testPartialVarExpansionIfPreset
+  testVariableSubstitutionCollision
 
 testNoVarExpansionIfNoPreset :: Spec
 testNoVarExpansionIfNoPreset = it "variables aren't expanded if there's no preset" $ do
@@ -298,3 +302,62 @@ query($a: A!) {
         )
       ]
     )
+
+
+-- | Regression test for https://github.com/hasura/graphql-engine/issues/7170
+testVariableSubstitutionCollision :: Spec
+testVariableSubstitutionCollision = it "ensures that remote variables are de-duplicated by type and value, not just by value" $ do
+  field <- run schema query variables
+  let
+    dummyUserInfo =
+      UserInfo
+        adminRoleName
+        (mempty @SessionVariables)
+        BOFADisallowed
+  eField <-
+    runExceptT
+    . runVariableCache
+    . traverse (resolveRemoteVariable dummyUserInfo)
+    $ field
+  let
+    variableNames =
+      eField ^.. _Right . to G._fArguments . traverse . _VVariable . to vInfo . to getName . to G.unName
+  variableNames `shouldBe` ["hasura_json_var_1", "hasura_json_var_2"]
+  where
+    -- A schema whose values are representable as collections of JSON values.
+    schema :: Text
+    schema = [raw|
+scalar Int
+scalar String
+
+type Query {
+  test(a: [Int], b: [String]): Int
+}
+|]
+    -- A query against values from 'schema' using JSON variable substitution.
+    query :: Text
+    query = [raw|
+query($a: [Int], $b: [String]) {
+  test(a: $a, b: $b)
+}
+|]
+    -- Two identical JSON variables to substitute; 'schema' and 'query' declare
+    -- that these variables should have different types despite both being
+    -- empty collections.
+    variables :: LBS.ByteString
+    variables = [raw|
+{
+  "a": [],
+  "b": []
+}
+|]
+
+-- | Convenience function to focus on a 'G.VVariable' when pulling test values
+-- out in 'testVariableSubstitutionCollision'.
+_VVariable :: Prism' (G.Value var) var
+_VVariable = prism' upcast downcast
+  where
+    upcast = G.VVariable
+    downcast = \case
+      G.VVariable var -> Just var
+      _               -> Nothing
