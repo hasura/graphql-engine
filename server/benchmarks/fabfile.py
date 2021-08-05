@@ -7,6 +7,7 @@ import time
 import concurrent.futures
 import io
 import os
+import pathlib
 import queue
 from fabric import Connection
 import patchwork.transfers
@@ -24,10 +25,10 @@ from functools import reduce
 
 #### Environment/arguments: ####
 
-# We'll upload reports to: 
+# We'll upload reports to:
 #   f"{RESULTS_S3_BUCKET}/mono-pr-{PR_NUMBER}/{benchmark_set}.json"
-# Result sets can be retreived efficiently with 
-#   s3.list_objects(Bucket=RESULTS_S3_BUCKET, Prefix=f"{THIS_S3_BUCKET_PREFIX}/")['Contents'] 
+# Result sets can be retreived efficiently with
+#   s3.list_objects(Bucket=RESULTS_S3_BUCKET, Prefix=f"{THIS_S3_BUCKET_PREFIX}/")['Contents']
 PR_NUMBER = os.environ['PR_NUMBER']
 THIS_S3_BUCKET_PREFIX = f"mono-pr-{PR_NUMBER}"
 
@@ -70,8 +71,8 @@ REGRESSION_REPORT_COMMENT_FILENAME = "/tmp/hasura_regression_report_comment.md"
 def main():
     try:
         benchmark_sets_basepath = abs_path("benchmark_sets")
-        benchmark_sets = os.listdir(benchmark_sets_basepath)
-        # print(os.listdir(os.path.join(benchmark_sets_basepath, "chinook")))
+        benchmark_sets = [ dir for dir in os.listdir(benchmark_sets_basepath)
+            if not pathlib.Path(benchmark_sets_basepath, dir, 'SKIP_CI').is_file()]
 
         # Start all the instances we need and run benchmarks in parallel
         # NOTE: ProcessPoolExecutor doesn't work with shared queue
@@ -107,7 +108,7 @@ def main():
 
 def new_boto_session():
     # For other auth options:
-    #     https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html 
+    #     https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html
     # NOTE: we must start a new 'Session' per thread:
     return boto3.Session(
         aws_access_key_id=AWS_ACCESS_KEY_ID,
@@ -247,7 +248,7 @@ def run_benchmark_set(benchmark_set, use_spot=True):
                 # "key_filename": "
                 "key_filename": key_file.name,
                 ## NOTE: I couldn't figure out how to take the key from a string:
-                ##    https://github.com/paramiko/paramiko/issues/1866 
+                ##    https://github.com/paramiko/paramiko/issues/1866
                 # "pkey": paramiko.rsakey.RSAKey.from_private_key(io.StringIO(BENCHMARKS_AWS_PRIVATE_KEY)),
             }
         )
