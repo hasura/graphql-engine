@@ -4,6 +4,8 @@
 (Add entries below in the order of server, console, cli, docs, others)
 - console: fix untracked foreign-key relationships suggestion across schemas
 
+- server: fix for incorrect `__typename` value in nested remote joins with a customized remote schema
+
 ## v2.0.5
 
 - server: prevent invalid collisions in remote variable cache key (close #7170)

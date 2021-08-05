@@ -1171,13 +1171,12 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
           customizeFieldParser (,) remoteSchemaCustomizer parentTypeName <$>
           remoteField remoteRelationshipIntrospection fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
       pure $ pure $ remoteFld
-        `P.bindField` \(resultCustomizer, G.Field{ G._fArguments = args, G._fSelectionSet = selSet }) -> do
+        `P.bindField` \(resultCustomizer, G.Field{ G._fArguments = args, G._fSelectionSet = selSet, G._fName = fname}) -> do
           let remoteArgs =
                 Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue $ argVal
-          let resultCustomizer' = applyFieldCalls fieldCalls resultCustomizer
+          let resultCustomizer' = applyFieldCalls fieldCalls $ applyAliasMapping (singletonAliasMapping fname (fcName $ NE.last fieldCalls)) resultCustomizer
           pure $ IR.AFRemote $ IR.RemoteSelectRemoteSchema $ IR.RemoteSchemaSelect
-            { _rselName             = fieldName
-            , _rselArgs             = remoteArgs
+            { _rselArgs             = remoteArgs
             , _rselResultCustomizer = resultCustomizer'
             , _rselSelection        = selSet
             , _rselHasuraFields     = hasuraFields

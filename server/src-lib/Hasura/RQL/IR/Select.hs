@@ -401,8 +401,7 @@ data RemoteFieldArgument
 
 data RemoteSchemaSelect (b :: BackendType)
   = RemoteSchemaSelect
-  { _rselName             :: !G.Name
-  , _rselArgs             :: ![RemoteFieldArgument]
+  { _rselArgs             :: ![RemoteFieldArgument]
   , _rselResultCustomizer :: !RemoteResultCustomizer
   , _rselSelection        :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)
   , _rselHasuraFields     :: !(HashSet (DBJoinField b))

@@ -342,13 +342,14 @@ getRemoteFieldSelectionSet = \case
     RRFRealField fld         -> [G.SelectionField fld]
 
 -- | Mapping that can be provided to a RemoteResultCustomizer
--- to map field aliases that were not available at field parse time.
+-- to map top-level field aliases that were not available at field parse time.
 -- E.g. for aliases created in the remote server query for remote joins.
-type AliasMapping = G.Name -> G.Name
+newtype AliasMapping = AliasMapping { unAliasMapping :: Endo G.Name }
+  deriving (Semigroup, Monoid)
 
 -- | AliasMapping that maps a single field name to an alias
 singletonAliasMapping :: G.Name -> G.Name -> AliasMapping
-singletonAliasMapping fieldName alias fieldName' =
+singletonAliasMapping fieldName alias = AliasMapping $ Endo $ \fieldName' ->
   if fieldName == fieldName' then alias else fieldName'
 
 -- | Function to modify JSON values returned from the remote server
@@ -361,14 +362,12 @@ newtype RemoteResultCustomizer =
 
 -- | Apply a RemoteResultCustomizer to a JSON value
 applyRemoteResultCustomizer :: RemoteResultCustomizer -> JO.Value -> JO.Value
-applyRemoteResultCustomizer = maybe id (appEndo . ($ id)) . unRemoteResultCustomizer
+applyRemoteResultCustomizer = maybe id (appEndo . ($ mempty)) . unRemoteResultCustomizer
 
 -- | Apply an AliasMapping to a RemoteResultCustomizer.
--- Once an alias mapping is a applied to a customizer any further
--- alias mapping applications will be ignored.
 applyAliasMapping :: AliasMapping -> RemoteResultCustomizer -> RemoteResultCustomizer
 applyAliasMapping aliasMapping (RemoteResultCustomizer m) = RemoteResultCustomizer $
-  m <&> \g _ -> g aliasMapping
+  m <&> \g aliasMapping' -> g $ aliasMapping' <> aliasMapping
 
 -- | Take a RemoteResultCustomizer for a JSON subtree, and a fieldName,
 -- and produce a RemoteResultCustomizer for a parent object or array of objects
@@ -376,9 +375,9 @@ applyAliasMapping aliasMapping (RemoteResultCustomizer m) = RemoteResultCustomiz
 modifyFieldByName :: G.Name -> RemoteResultCustomizer -> RemoteResultCustomizer
 modifyFieldByName fieldName (RemoteResultCustomizer m) = RemoteResultCustomizer $
   m <&> \g aliasMapping -> Endo $
-    let Endo f = g id -- AliasMapping is only applied to the top level so use id for nested customizers
+    let Endo f = g mempty -- AliasMapping is only applied to the top level so use mempty for nested customizers
         modifyFieldByName' = \case
-          JO.Object o -> JO.Object $ JO.adjust f (G.unName $ aliasMapping fieldName) o
+          JO.Object o -> JO.Object $ JO.adjust f (G.unName $ (appEndo $ unAliasMapping aliasMapping) fieldName) o
           JO.Array a  -> JO.Array $ modifyFieldByName' <$> a
           v           -> v
     in modifyFieldByName'
