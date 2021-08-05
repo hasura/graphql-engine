@@ -154,7 +154,7 @@ traverseQueryResponseJSON rjm =
           -> n (Maybe RemoteJoinField)
         mkRemoteSchemaField siblingFields remoteJoin = runMaybeT $ do
           counter <- getCounter
-          let RemoteJoin fieldName relationshipName inputArgs resultCustomizer selSet hasuraFields fieldCall rsi _ = remoteJoin
+          let RemoteJoin fieldName inputArgs resultCustomizer selSet hasuraFields fieldCall rsi _ = remoteJoin
           -- when any of the joining fields are `NULL`, we don't query
           -- the remote schema
           --
@@ -207,7 +207,7 @@ traverseQueryResponseJSON rjm =
               hasuraFieldArgs = flip Map.filterWithKey siblingFieldArgs $ \k _ -> k `elem` hasuraFieldVariables
           fieldAlias <- lift $ pathToAlias (appendPath fieldName path) counter
           queryField <- lift $ fieldCallsToField (inputArgsToMap inputArgs) hasuraFieldArgs selSet fieldAlias fieldCall
-          let resultCustomizer' = applyAliasMapping (singletonAliasMapping relationshipName fieldAlias) resultCustomizer
+          let resultCustomizer' = applyAliasMapping (singletonAliasMapping (fcName $ NE.head fieldCall) fieldAlias) resultCustomizer
           pure $ RemoteJoinField rsi
                                  fieldAlias
                                  resultCustomizer'

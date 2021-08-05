@@ -60,7 +60,6 @@ and hasura session arguments.
 data RemoteJoin
   = RemoteJoin
   { _rjName             :: !FieldName -- ^ The remote join field name in the remote schema
-  , _rjRelationshipName :: !G.Name -- ^ The name of the remote join relationship in the Hasura schema
   , _rjArgs             :: ![RemoteFieldArgument] -- ^ User-provided arguments with variables.
   , _rjResultCustomizer :: !RemoteResultCustomizer -- ^ Customizer for JSON result from the remote server
   , _rjSelSet           :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)  -- ^ User-provided selection set of remote field.

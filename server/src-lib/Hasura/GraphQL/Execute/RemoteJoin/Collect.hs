@@ -266,7 +266,7 @@ transformAnnFields path fields = do
         RemoteSelectSource _s      -> error "remote source relationshsip found"
 
       remoteJoins = remoteSelects <&> \(fieldName, remoteSelect) ->
-        let RemoteSchemaSelect relationshipName argsMap resultCustomizer selSet hasuraFields remoteFields rsi = remoteSelect
+        let RemoteSchemaSelect argsMap resultCustomizer selSet hasuraFields remoteFields rsi = remoteSelect
             hasuraFieldNames = HS.map dbJoinFieldToName hasuraFields
 
             -- See Note [Phantom fields in Remote Joins]
@@ -276,7 +276,7 @@ transformAnnFields path fields = do
 
             phantomFields = HS.filter (not . fieldPresentInSelection) hasuraFields
             phantomFieldNames = toList $ HS.map dbJoinFieldToName phantomFields
-        in (phantomFields, RemoteJoin fieldName relationshipName argsMap resultCustomizer selSet hasuraFieldNames remoteFields rsi phantomFieldNames)
+        in (phantomFields, RemoteJoin fieldName argsMap resultCustomizer selSet hasuraFieldNames remoteFields rsi phantomFieldNames)
 
   transformedFields <- forM fields $ \(fieldName, field') -> do
     let fieldPath = appendPath fieldName path
