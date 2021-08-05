@@ -3,14 +3,13 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+## v2.0.5
+
 - server: prevent invalid collisions in remote variable cache key (close #7170)
 - server: preserve unchanged cron triggers in `replace_metadata` API
 - server: fix inherited roles bug where mutations were not accessible when inherited roles was enabled
 - server: reintroduce the unique name constraint in allowed lists
-- server: fix http-log bug where batches with only one request emitted the parameterised query hash as a string instead of in a singleton array
-- console: add template gallery
 - server: subscriptions now validate that all session variables are properly set (#7111)
-- console: add template gallery
 - cli-migrations-v2: fix database url showing up in metadata (#7319)
 
 ## v2.0.4
@@ -23,6 +22,7 @@
 - server: Relax the unique operation name constraint when adding a query to a query collection
 - server: officially deprecate query plan caching, which had already been disabled for a long time
 - server/bigquery: Fix issues related to adding and querying from non-US datasets (closes [6937](https://github.com/hasura/graphql-engine/issues/6937)).
+- console: add template gallery
 - console: add pagination on the Raw SQL results page
 - console: fix issues with replacing invalid graphql identifiers in table and column names
 - console: show error message on inconsistent objects table
