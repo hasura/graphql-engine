@@ -383,13 +383,20 @@ def generate_regression_report():
             merge_base_report_dict[bench['name']] = bench
 
         # Record residency stats before any benchmarks have run, to present as
-        # a baseline for serving this particular schema
-        this_live_bytes       =       this_report[0]["extended_hasura_checks"]["live_bytes_before"]
-        this_mem_in_use       =       this_report[0]["extended_hasura_checks"]["mem_in_use_bytes_before"]
-        merge_base_live_bytes = merge_base_report[0]["extended_hasura_checks"]["live_bytes_before"]
-        merge_base_mem_in_use = merge_base_report[0]["extended_hasura_checks"]["mem_in_use_bytes_before"]
-        mem_in_use_diff = pct_change(merge_base_mem_in_use, this_mem_in_use)
-        live_bytes_diff = pct_change(merge_base_live_bytes, this_live_bytes)
+        # a baseline for serving this particular schema:
+        def mem_regression(ix, stat):
+            this_bytes       =       this_report[ix]["extended_hasura_checks"][stat]
+            merge_base_bytes = merge_base_report[ix]["extended_hasura_checks"][stat]
+            return pct_change(merge_base_bytes, this_bytes)
+        mem_in_use_before_diff = mem_regression(0, "mem_in_use_bytes_before")
+        live_bytes_before_diff = mem_regression(0, "live_bytes_before")
+        # ...and also the live_bytes after, which lets us see e.g. whether a
+        # memory improvement was just creation of thunks that get evaluated
+        # when we do actual work:
+        live_bytes_after_diff = mem_regression(-1, "live_bytes_after")
+        mem_in_use_after_diff = mem_regression(-1, "mem_in_use_bytes_after")
+        # ^^^ NOTE: ideally we'd want to pause before collecting mem_in_use
+        #     here too I guess, to allow RTS to reclaim
 
         for this_bench in this_report:
             # this_bench['requests']['count'] # TODO use this to normalize allocations
@@ -434,7 +441,7 @@ def generate_regression_report():
                 continue
             benchmark_set_results.append((name, metrics))
 
-        results[benchmark_set_name] = (mem_in_use_diff, live_bytes_diff, benchmark_set_results)
+        results[benchmark_set_name] = (mem_in_use_before_diff, live_bytes_before_diff, mem_in_use_after_diff, live_bytes_after_diff, benchmark_set_results)
 
     return results, merge_base_pr
 
@@ -478,16 +485,20 @@ def pretty_print_regression_report_github_comment(results, merge_base_pr, output
         else:                  return "+++ "  # GREEN
 
     out(            f"``` diff                                       ")  # START DIFF SYNTAX
-    for benchmark_set_name, (mem_in_use_diff, live_bytes_diff, benchmarks) in results.items():
-        u = mem_in_use_diff
-        l = live_bytes_diff
+    for benchmark_set_name, (mem_in_use_before_diff, live_bytes_before_diff, mem_in_use_after_diff, live_bytes_after_diff, benchmarks) in results.items():
+        l0 = live_bytes_before_diff
+        l1 = live_bytes_after_diff
+        u0 = mem_in_use_before_diff
+        u1 = mem_in_use_after_diff
         out(        f"{col( )}    ┌{'─'*(len(benchmark_set_name)+4)}┐")
         out(        f"{col( )}    │  {benchmark_set_name}  │"         )
         out(        f"{col( )}    └{'─'*(len(benchmark_set_name)+4)}┘")
         out(        f"{col( )}                                       ")
-        out(        f"{col( )}    ᐉ  Baseline memory usage for schema:")
-        out(        f"{col(l)}        {'live_bytes':<25}:  {l:>6.1f}")
-        out(        f"{col(u)}        {'mem_in_use':<25}:  {u:>6.1f}")
+        out(        f"{col( )}    ᐉ  Memory Residency (RTS-reported):")
+        out(        f"{col(l0)}        {'live_bytes':<25}:  {l0:>6.1f}   (BEFORE benchmarks ran; baseline for schema)")
+        out(        f"{col(l1)}        {'live_bytes':<25}:  {l1:>6.1f}   (AFTER benchmarks ran)")
+        out(        f"{col(u0)}        {'mem_in_use':<25}:  {u0:>6.1f}   (BEFORE benchmarks ran; baseline for schema)")
+        out(        f"{col(u1)}        {'mem_in_use':<25}:  {u1:>6.1f}   (AFTER benchmarks ran)")
         for bench_name, metrics in benchmarks:
             out(    f"{col( )}                                       ")
             out(    f"{col( )}    ᐅ {bench_name.replace('-k6-custom','').replace('_',' ')}:")
