@@ -44,6 +44,7 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
       - :ref:`response_caching`
       - :ref:`tracing`
       - :ref:`query_tags`
+      - :ref:`dedicated_vpc`
 
   .. container:: toc-list-section
 
@@ -83,6 +84,7 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
   response-caching
   tracing
   query-tags
+  dedicated-vpc
   Billing <billing/index>
   hasurapro-cli/index
   api-reference
