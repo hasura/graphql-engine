@@ -79,6 +79,7 @@ import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates                 (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
+import           Hasura.Server.Metrics                      (ServerMetrics (..))
 import           Hasura.Server.Migrate                      (getMigratedFrom, migrateCatalog)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
@@ -471,7 +472,7 @@ runHGEServer
   -- ^ start time
   -> Maybe EL.LiveQueryPostPollHook
   -> ServerMetrics
-  -> EKG.Store
+  -> EKG.Store EKG.EmptyMetrics
   -> ManagedT m ()
 runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook serverMetrics ekgStore = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These

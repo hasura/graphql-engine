@@ -446,6 +446,7 @@ library
                      -- exposed for Pro
                      , Hasura.Server.API.Config
                      , Hasura.Server.Telemetry
+                     , Hasura.Server.Metrics
                      -- Exposed for testing:
                      , Hasura.Server.Telemetry.Counters
                      , Hasura.Server.Auth.JWT

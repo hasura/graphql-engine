@@ -73,6 +73,7 @@ import           Hasura.Server.Compression
 import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
+import           Hasura.Server.Metrics                     (ServerMetrics)
 import           Hasura.Server.Middleware                  (corsMiddleware)
 import           Hasura.Server.Rest
 import           Hasura.Server.Types
@@ -113,7 +114,7 @@ data ServerCtx
   , scInstanceId                   :: !InstanceId
   , scLQState                      :: !EL.LiveQueriesState
   , scEnableAllowlist              :: !Bool
-  , scEkgStore                     :: !EKG.Store
+  , scEkgStore                     :: !(EKG.Store EKG.EmptyMetrics)
   , scResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig
   , scEnvironment                  :: !Env.Environment
   , scRemoteSchemaPermsCtx         :: !RemoteSchemaPermsCtx
@@ -774,7 +775,7 @@ mkWaiApp
   -> ResponseInternalErrorsConfig
   -> Maybe EL.LiveQueryPostPollHook
   -> SchemaCacheRef
-  -> EKG.Store
+  -> EKG.Store EKG.EmptyMetrics
   -> ServerMetrics
   -> RemoteSchemaPermsCtx
   -> FunctionPermissionsCtx
