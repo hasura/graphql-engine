@@ -828,7 +828,7 @@ ColumnExp
    :class: haskell-pre
 
    {
-       PGColumn_ : { Operator_ : Value }
+       PGColumn_ | scalar ComputedFieldName_ : { Operator_ : Value }
    }
 
 .. _MetadataOperator:

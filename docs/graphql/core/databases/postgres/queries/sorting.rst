@@ -382,6 +382,111 @@ For array relationships only aggregates can be used for sorting.
     }
 
 
+Sorting based on computed fields
+--------------------------------
+
+Only scalar computed fields and aggregates of table computed fields can be used for sorting.
+
+For scalar computed fields
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Scalar computed fields can be used for sorting just like columns.
+
+**Example:** Computed field ``total_marks`` is defined on ``student`` table which calculates
+the sum of marks obtained in each subject. Fetch a list of students sorted by their total marks:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      student(order_by: {total_marks: desc}){
+        id
+        name
+        total_marks
+        physics
+        chemistry
+        maths
+      }
+    }
+  :response:
+    {
+      "data": {
+        "student": [
+          {
+            "id": 2,
+            "name": "Bob",
+            "total_marks": 60,
+            "physics": 21,
+            "chemistry": 22,
+            "maths": 17
+          },
+          {
+            "id": 1,
+            "name": "Alice",
+            "total_marks": 59,
+            "physics": 23,
+            "chemistry": 22,
+            "maths": 14
+          }
+        ]
+      }
+    }
+
+
+For table computed fields
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Aggregates of table being returned by table computed fields can be used for sorting.
+
+**Example:** Computed field ``get_articles`` is defined to ``author`` table returns list of articles.
+Fetch a list of authors sorted by their articles count.
+
+.. graphiql::
+  :view_only:
+  :query:
+    query{
+      author(order_by: {get_articles_aggregate: {count: desc}}){
+        id
+        name
+        get_articles{
+          id
+          title
+          content
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 1,
+            "name": "Author 1",
+            "get_articles": [
+              {
+                "id": 1,
+                "title": "Article 1",
+                "content": "Sample article content 1"
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "name": "Author 2",
+            "get_articles": []
+          }
+        ]
+      }
+    }
+
+.. Note::
+
+   Only computed fields whose associated SQL function with no input arguments other than
+   table row and hasura session arguments are supported in order by.
+
+.. admonition:: Supported from
+
+   Ordering by computed fields is supported from version ``v2.0.2`` and above
+
 Sorting by multiple fields
 --------------------------
 **Example:** Fetch a list of articles that is sorted by their rating (descending) and then on their published
