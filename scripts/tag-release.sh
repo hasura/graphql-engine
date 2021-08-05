@@ -37,7 +37,7 @@ find "$ROOT/install-manifests" \
      's#(hasura/graphql-engine:)v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(.*)*$#\1'"${TAG}"'\9#' {} \;
 
 # update version in CLI installation instructions
-sed -i -E 's#(.*)v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(.*)*$#\1'"${TAG}"'\9#' "${ROOT}/cli/README.md" "${ROOT}/docs/graphql/core/hasura-cli/install-hasura-cli.rst" "${ROOT}/cli/get.sh"
+sed -i -E 's#(.*)v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(.*)*$#\1'"${TAG}"'\9#' "${ROOT}/cli/README.md" "${ROOT}/docs/graphql/core/hasura-cli/install-hasura-cli.rst"
 
 # add the latest tag to the catalog_versions file
 [ -n "$(tail -c1 "$ROOT/server/src-rsr/catalog_versions.txt")" ] && echo >> "$ROOT/server/src-rsr/catalog_versions.txt"
@@ -46,8 +46,7 @@ echo $TAG $(cat "$ROOT/server/src-rsr/catalog_version.txt") >> "$ROOT/server/src
 git add "$ROOT/install-manifests" \
         "$ROOT/server/src-rsr" \
         "${ROOT}/cli/README.md" \
-        "${ROOT}/docs/graphql/core/hasura-cli/install-hasura-cli.rst" \
-        "${ROOT}/cli/get.sh"
+        "${ROOT}/docs/graphql/core/hasura-cli/install-hasura-cli.rst"
 
 git commit -m "tag release $TAG"
 
