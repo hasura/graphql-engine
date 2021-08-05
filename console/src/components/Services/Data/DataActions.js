@@ -218,7 +218,7 @@ const loadSchema = configOptions => {
     };
 
     return dispatch(exportMetadata()).then(state => {
-      const metadataTables = getTablesInfoSelector(state)(configOptions);
+      const metadataTables = getTablesInfoSelector(state)({});
       return dispatch(requestAction(url, options)).then(
         data => {
           if (!data || !data[0] || !data[0].result) return;
