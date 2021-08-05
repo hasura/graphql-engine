@@ -41,6 +41,7 @@ import           Data.Text.Conversions                     (convertText)
 import           Data.Text.Extended
 import           Network.Mime                              (defaultMimeLookup)
 import           System.FilePath                           (joinPath, takeFileName)
+import           System.Mem                                (performMajorGC)
 import           Web.Spock.Core                            ((<//>))
 
 import qualified Hasura.GraphQL.Execute                    as E
@@ -997,6 +998,8 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
     exposeRtsStats <- liftIO RTS.getRTSStatsEnabled
     when exposeRtsStats $ do
       Spock.get "dev/rts_stats" $ do
+        -- This ensures the live_bytes and other counters from GCDetails are fresh:
+        liftIO performMajorGC
         stats <- liftIO RTS.getRTSStats
         Spock.json stats
 
