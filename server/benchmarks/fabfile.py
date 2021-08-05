@@ -443,10 +443,11 @@ def pretty_print_regression_report_github_comment(results, merge_base_pr, output
     f = open(output_filename, "w")
     def out(s): f.write(s+"\n")
 
-    out(f"## Benchmark Results")
+    out(f"## Benchmark Results") # NOTE: We use this header to identify benchmark reports in `hide-benchmark-reports.sh`
     out(f"")
     out((f"The regression report below shows, for each benchmark, the **percent change** for "
-         f"different metrics, between the merge base (the changes from #{merge_base_pr}) and "
+         f"different metrics, between the merge base (the changes from **PR {merge_base_pr}**) and "
+         # NOTE: we don't use #{merge_base_pr} because we want to avoid backlinks from the target PRs
          f"this PR. For advice on interpreting benchmarks, please see [benchmarks/README.md]"
          f"(https://github.com/hasura/graphql-engine-mono/blob/main/server/benchmarks/README.md)."))
     out(f"")
