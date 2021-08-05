@@ -225,14 +225,15 @@ export const getEstimateCountQuery = (
   tableName: string
 ) => {
   return `
-SELECT
-  reltuples::BIGINT
-FROM
-  pg_class
-WHERE
-  oid = (quote_ident('${schemaName}') || '.' || quote_ident('${tableName}'))::regclass::oid
-  AND relname = '${tableName}';
-`;
+  SELECT
+    reltuples::BIGINT
+  FROM
+    pg_class c
+  JOIN
+    pg_namespace n ON c.relnamespace = n.oid
+  WHERE
+    c.relname = quote_ident('${tableName}') AND n.nspname = quote_ident('${schemaName}');
+  `;
 };
 
 export const cascadeSqlQuery = (sql: string) => {
