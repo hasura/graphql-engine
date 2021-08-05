@@ -1,6 +1,6 @@
 .. meta::
    :description: Use custom field names for Postgres in Hasura
-   :keywords: hasura, docs, postgres, schema, custom field name
+   :keywords: hasura, docs, postgres, schema, custom field name, rename
 
 .. _custom_field_names:
 
@@ -16,7 +16,7 @@ Introduction
 ------------
 
 Hasura auto-generates GraphQL field names based on your database table and column names. If you'd like to change the defaults,
-it is possible to override the auto-generated table and column field names exposed over the GraphQL API.
+it is possible to override and rename the auto-generated table and column field names exposed over the GraphQL API.
 
 ..  admonition:: Supported from
 
