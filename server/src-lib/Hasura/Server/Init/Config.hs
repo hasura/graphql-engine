@@ -19,9 +19,6 @@ import           Network.Wai.Handler.Warp                 (HostPreference)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
 import qualified Hasura.Logging                           as L
-import qualified System.Metrics                           as EKG
-import qualified System.Metrics.Distribution              as EKG.Distribution
-import qualified System.Metrics.Gauge                     as EKG.Gauge
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -376,30 +373,3 @@ type WithEnv a = ReaderT Env (ExceptT String Identity) a
 
 runWithEnv :: Env -> WithEnv a -> Either String a
 runWithEnv env m = runIdentity $ runExceptT $ runReaderT m env
-
--- | Collection of various server metrics
-data ServerMetrics
-  = ServerMetrics
-  { smWarpThreads              :: !EKG.Gauge.Gauge
-  -- ^ Current Number of active Warp threads
-  , smWebsocketConnections     :: !EKG.Gauge.Gauge
-  -- ^ Current number of active websocket connections
-  , smActiveSubscriptions      :: !EKG.Gauge.Gauge
-  -- ^ Current number of active subscriptions
-  , smNumEventsFetchedPerBatch :: !EKG.Distribution.Distribution
-  -- ^ Total Number of events fetched from last 'Event Trigger Fetch'
-  , smNumEventHTTPWorkers      :: !EKG.Gauge.Gauge
-  -- ^ Current number of Event trigger's HTTP workers in process
-  , smEventQueueTime           :: !EKG.Distribution.Distribution
-  -- ^ Time (in seconds) between the 'Event Trigger Fetch' from DB and the processing of the event
-  }
-
-createServerMetrics :: EKG.Store -> IO ServerMetrics
-createServerMetrics store = do
-  smWarpThreads <- EKG.createGauge "warp_threads" store
-  smWebsocketConnections <- EKG.createGauge "websocket_connections" store
-  smActiveSubscriptions <- EKG.createGauge "active_subscriptions" store
-  smNumEventsFetchedPerBatch <- EKG.createDistribution "events_fetched_per_batch" store
-  smNumEventHTTPWorkers <- EKG.createGauge "num_event_trigger_http_workers" store
-  smEventQueueTime <- EKG.createDistribution "event_queue_time" store
-  pure ServerMetrics { .. }

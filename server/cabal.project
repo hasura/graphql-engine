@@ -43,7 +43,7 @@ package graphql-engine
 source-repository-package
   type: git
   location: https://github.com/hasura/pg-client-hs.git
-  tag: 7debae41daae4ac39a06e73677d2202722d90b6a
+  tag: 92975d0f8f933c8d06913dc97af259253bf7fb5f
 
 source-repository-package
   type: git
@@ -72,3 +72,13 @@ package odbc
   -- that third-party packages are warning-free, hence this -Wno-error.
   -- When the changes in odbc are released, we can instead depend on
   -- the hackage version, and remove it from this list of packages.
+
+source-repository-package
+  type: git
+  location: https://github.com/hasura/ekg-core.git
+  tag: e31b47d5c67e1347f141079ad2d18f682e1b046f
+
+source-repository-package
+  type: git
+  location: https://github.com/hasura/ekg-json.git
+  tag: 098e3a5951c4991c823815706f1f58f608bb6ec3

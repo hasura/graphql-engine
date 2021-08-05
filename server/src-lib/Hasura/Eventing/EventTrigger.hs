@@ -81,7 +81,7 @@ import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Init.Config
+import           Hasura.Server.Metrics                  (ServerMetrics (..))
 import           Hasura.Server.Migrate.Internal         (getCatalogVersion)
 import           Hasura.Server.Migrate.Version          (latestCatalogVersionString)
 import           Hasura.Server.Types

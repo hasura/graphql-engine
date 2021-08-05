@@ -18,9 +18,11 @@ import qualified System.Posix.Signals               as Signals
 import           Control.Exception
 import           Control.Monad.Trans.Managed        (ManagedT (..), lowerManagedT)
 import           Data.Int                           (Int64)
+import           Data.Kind                          (Type)
 import           Data.Text.Conversions              (convertText)
 import           Data.Time.Clock                    (getCurrentTime)
 import           Data.Time.Clock.POSIX              (getPOSIXTime)
+import           GHC.TypeLits                       (Symbol)
 
 import qualified Hasura.GC                          as GC
 import qualified Hasura.Tracing                     as Tracing
@@ -33,6 +35,7 @@ import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
+import           Hasura.Server.Metrics              (ServerMetricsSpec, createServerMetrics)
 import           Hasura.Server.Migrate              (downgradeCatalog)
 import           Hasura.Server.Types                (MaintenanceMode (..))
 import           Hasura.Server.Version
@@ -58,15 +61,18 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
 
   withVersion $$(getVersionFromEnvironment) $ case hgeCmd of
     HCServe serveOptions -> do
-      ekgStore <- liftIO do
-        s <- EKG.newStore
-        EKG.registerGcMetrics s
+      (ekgStore, serverMetrics) <- liftIO $ do
+        store <- EKG.newStore @AppMetricsSpec
+        EKG.register (EKG.subset GcSubset store) EKG.registerGcMetrics
 
         let getTimeMs :: IO Int64
             getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
+        EKG.register store $ EKG.registerCounter ServerTimestampMs () getTimeMs
 
-        EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs s
-        pure s
+        serverMetrics <-
+          liftIO $ createServerMetrics $ EKG.subset ServerSubset store
+
+        pure (EKG.subset EKG.emptyOf store, serverMetrics)
 
       -- It'd be nice if we didn't have to call runManagedT twice here, but
       -- there is a data dependency problem since the call to runPGMetadataStorageApp
@@ -93,7 +99,6 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
         _idleGCThread <- C.forkImmortal "ourIdleGC" logger $
           GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
-        serverMetrics <- liftIO $ createServerMetrics ekgStore
         flip runPGMetadataStorageAppT (_scMetadataDbPool serveCtx, pgLogger) . lowerManagedT $ do
           runHGEServer (const $ pure ()) env serveOptions serveCtx initTime Nothing serverMetrics ekgStore
 
@@ -156,3 +161,19 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
       pgLogger <- _lsPgLogger <$> mkLoggers defaultEnabledEngineLogTypes LevelInfo
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
       liftIO $ Q.initPGPool connInfo connParams pgLogger
+
+-- | A specification of all EKG metrics tracked in `runApp`.
+data AppMetricsSpec
+  :: Symbol -- Metric name
+  -> EKG.MetricType -- Metric type, e.g. Counter, Gauge
+  -> Type -- Tag structure
+  -> Type
+  where
+  ServerSubset
+    :: ServerMetricsSpec name metricType tags
+    -> AppMetricsSpec name metricType tags
+  GcSubset
+    :: EKG.GcMetrics name metricType tags
+    -> AppMetricsSpec name metricType tags
+  ServerTimestampMs
+    :: AppMetricsSpec "ekg.server_timestamp_ms" 'EKG.CounterType ()

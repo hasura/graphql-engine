@@ -52,7 +52,7 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol      (OperationName)
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common                     (SourceName, unNonNegativeDiffTime)
-import           Hasura.Server.Init                          (ServerMetrics (..))
+import           Hasura.Server.Metrics                       (ServerMetrics (..))
 import           Hasura.Server.Types                         (RequestId)
 
 

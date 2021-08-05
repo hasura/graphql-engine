@@ -82,8 +82,8 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Auth                           (AuthMode, UserAuthentication,
                                                                resolveUserInfo)
 import           Hasura.Server.Cors
-import           Hasura.Server.Init.Config                    (KeepAliveDelay (..),
-                                                               ServerMetrics (..))
+import           Hasura.Server.Init.Config                    (KeepAliveDelay (..))
+import           Hasura.Server.Metrics                        (ServerMetrics (..))
 import           Hasura.Server.Types                          (RequestId, getRequestId)
 import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
