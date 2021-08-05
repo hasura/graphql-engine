@@ -2,6 +2,7 @@
 
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
+- console: fix untracked foreign-key relationships suggestion across schemas
 
 ## v2.0.5
 
