@@ -77,8 +77,14 @@ REGRESSION_REPORT_COMMENT_FILENAME = "/tmp/hasura_regression_report_comment.md"
 def main():
     try:
         benchmark_sets_basepath = abs_path("benchmark_sets")
+        # Collect the benchmarks we'll run in CI:
         benchmark_sets = [ dir for dir in os.listdir(benchmark_sets_basepath)
             if not pathlib.Path(benchmark_sets_basepath, dir, 'SKIP_CI').is_file()]
+
+        # Theses benchmark sets won't have raw regression numbers displayed
+        # (likely because they are unstable for now)
+        skip_pr_report_names = [ dir for dir in os.listdir(benchmark_sets_basepath)
+            if pathlib.Path(benchmark_sets_basepath, dir, 'SKIP_PR_REPORT').is_file()]
 
         # Start all the instances we need and run benchmarks in parallel
         # NOTE: ProcessPoolExecutor doesn't work with shared queue
@@ -93,6 +99,7 @@ def main():
         report, merge_base_pr = generate_regression_report()
         pretty_print_regression_report_github_comment(
             report,
+            skip_pr_report_names,
             merge_base_pr,
             REGRESSION_REPORT_COMMENT_FILENAME
         )
@@ -453,7 +460,7 @@ def generate_regression_report():
 
 # We (ab)use githubs syntax highlighting for displaying the regression report
 # table as a github comment, that can be easily scanned
-def pretty_print_regression_report_github_comment(results, merge_base_pr, output_filename):
+def pretty_print_regression_report_github_comment(results, skip_pr_report_names, merge_base_pr, output_filename):
     f = open(output_filename, "w")
     def out(s): f.write(s+"\n")
 
@@ -494,6 +501,7 @@ def pretty_print_regression_report_github_comment(results, merge_base_pr, output
 
     out(            f"``` diff                                       ")  # START DIFF SYNTAX
     for benchmark_set_name, (mem_in_use_before_diff, live_bytes_before_diff, mem_in_use_after_diff, live_bytes_after_diff, benchmarks) in results.items():
+        if benchmark_set_name[:-5] in skip_pr_report_names: continue
         l0 = live_bytes_before_diff
         l1 = live_bytes_after_diff
         u0 = mem_in_use_before_diff

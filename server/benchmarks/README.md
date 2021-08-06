@@ -8,7 +8,14 @@ Here is an overview of this directory:
 
 Each sub-directory here contains a different schema and accompanying latency
 benchmarks (see below for adding your own). Each benchmark set runs in parallel
-on CI.
+on CI. See `benchmark_sets/chinook/` for reference.
+
+In a benchmark set directory, the existence of an empty file named one of the
+following have the following effects:
+
+- `SKIP_CI`: don't run the benchmark in CI at all
+- `SKIP_PR_REPORT`: don't post the regression results directly in the PR
+  comment body (useful if the results are noisy for now)
 
 ### bench.sh
 
@@ -83,3 +90,8 @@ follow the pattern from `chinook`. The process looks like:
 Make sure the benchmark set takes **less than 20 minutes**, otherwise it will
 be killed. You can always split benchmarks up into two different sets to be run
 in parallel.
+
+If a benchmark set is not fairly stable, or you're not sure if it is, add an
+empty file named `SKIP_PR_REPORT` in the benchmark set's directory; this will
+prevent display of regression numbers in the PR comment body, but will still
+run and record the benchmarks.
