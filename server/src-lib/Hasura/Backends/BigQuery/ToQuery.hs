@@ -107,10 +107,11 @@ fromExpression =
       "(" <+> fromExpression x <+> ") != (" <+> fromExpression y <+> ")"
     ToStringExpression e -> "CONCAT(" <+> fromExpression e <+> ", '')"
     SelectExpression s -> "(" <+> IndentPrinter 1 (fromSelect s) <+> ")"
+    ListExpression xs -> " UNNEST ([" <+> (SepByPrinter ", " $ fromExpression <$> xs) <+> "])"
     OpExpression op x y ->
       "(" <+>
       fromExpression x <+>
-      ") " <+> fromOp op <+> " (" <+> fromExpression y <+> ")"
+      ") " <+> fromOp op <+> fromExpression y
     ConditionalProjection expression fieldName ->
       "(CASE WHEN(" <+> fromExpression expression <+>
       ") THEN " <+> fromFieldName fieldName <+>
@@ -140,6 +141,9 @@ fromOp =
     MoreOp        -> ">"
     MoreOrEqualOp -> ">="
     LessOrEqualOp -> "<="
+    InOp          -> "IN"
+    NotInOp       -> "NOT IN"
+
 
 fromPath :: JsonPath -> Printer
 fromPath path =

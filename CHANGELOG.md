@@ -7,6 +7,7 @@
 - server: fix an issue with remote relationships when join columns are aliased (close #7180)
 - server: fix for incorrect `__typename` value in nested remote joins with a customized remote schema
 - server: fix a bug where some unicode characters in default string values for fields in remote schemas could lead to internal errors
+- server: bigquery: implement `_in` and `_nin` operators. (close #7343)
 - console: fix untracked foreign-key relationships suggestion across schemas
 - cli: fix SDL formatting in `actions.graphql`(#7296)
 

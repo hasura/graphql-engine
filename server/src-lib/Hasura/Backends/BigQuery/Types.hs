@@ -250,6 +250,7 @@ data Expression
     -- ^ This is for getting actual atomic values out of a JSON
     -- string.
   | OpExpression Op Expression Expression
+  | ListExpression [Expression]
   | CastExpression Expression ScalarType
   | ConditionalProjection Expression FieldName
   deriving (Eq, Ord, Show, Generic, Data, Lift)
@@ -382,7 +383,8 @@ data Op
   | LessOrEqualOp
   | MoreOp
   | MoreOrEqualOp
-  -- | SIN
+  | InOp
+  | NotInOp
   -- | SNE
   -- | SLIKE
   -- | SNLIKE
@@ -392,7 +394,6 @@ data Op
   -- | SNSIMILAR
   -- | SGTE
   -- | SLTE
-  -- | SNIN
   -- | SContains
   -- | SContainedIn
   -- | SHasKey

@@ -41,7 +41,7 @@ data RemoteRelationshipQueryContext
 data QueryContext =
   QueryContext
   { qcStringifyNum              :: !Bool
-  , qcDangerousBooleanCollapse  :: !Bool
+  , qcDangerousBooleanCollapse  :: !Bool -- ^ should boolean fields be collapsed to True when null is given?
   , qcQueryType                 :: !ET.GraphQLQueryType
   , qcRemoteRelationshipContext :: !(HashMap RemoteSchemaName RemoteRelationshipQueryContext)
   , qcFunctionPermsContext      :: !FunctionPermissionsCtx

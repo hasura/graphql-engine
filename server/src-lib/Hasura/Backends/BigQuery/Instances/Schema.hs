@@ -9,6 +9,7 @@ import qualified Data.HashMap.Strict                   as Map
 import qualified Data.List.NonEmpty                    as NE
 import qualified Data.Text                             as T
 
+import           Data.Has
 import           Data.Text.Extended
 
 import qualified Hasura.Backends.BigQuery.Types        as BigQuery
@@ -22,6 +23,7 @@ import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser                 hiding (EnumValueInfo, field)
 import           Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import           Hasura.GraphQL.Schema.Backend
+import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.RQL.IR
@@ -288,11 +290,12 @@ bqOrderByOperators = NE.fromList
     define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
 
 bqComparisonExps
-  :: forall m n
-  . (BackendSchema 'BigQuery, MonadSchema n m, MonadError QErr m)
+  :: forall m n r
+  .  (BackendSchema 'BigQuery, MonadSchema n m, MonadError QErr m, MonadReader r m, Has QueryContext r)
   => ColumnType 'BigQuery
   -> m (Parser 'Input n [ComparisonExp 'BigQuery])
 bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
+  collapseIfNull <- asks $ qcDangerousBooleanCollapse . getter
   -- see Note [Columns in comparison expression are never nullable]
   typedParser        <- columnParser columnType (G.Nullability False)
   nullableTextParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability True)
@@ -303,15 +306,19 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
         <<> ". All fields are combined with logical 'AND'."
       textListParser = fmap openValueOrigin <$> P.list textParser
       columnListParser = fmap openValueOrigin <$> P.list typedParser
-  pure $ P.object name (Just desc) $ catMaybes <$> sequenceA
-    [ P.fieldOptional $$(G.litName "_is_null") Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean)
-    , P.fieldOptional $$(G.litName "_eq")      Nothing (AEQ True . mkParameter <$> typedParser)
-    , P.fieldOptional $$(G.litName "_neq")     Nothing (ANE True . mkParameter <$> typedParser)
-    , P.fieldOptional $$(G.litName "_gt")      Nothing (AGT  . mkParameter <$> typedParser)
-    , P.fieldOptional $$(G.litName "_lt")      Nothing (ALT  . mkParameter <$> typedParser)
-    , P.fieldOptional $$(G.litName "_gte")     Nothing (AGTE . mkParameter <$> typedParser)
-    , P.fieldOptional $$(G.litName "_lte")     Nothing (ALTE . mkParameter <$> typedParser)
+      mkListLiteral :: [ColumnValue 'BigQuery] -> UnpreparedValue 'BigQuery
+      mkListLiteral =
+        P.UVLiteral . BigQuery.ListExpression . fmap (BigQuery.ValueExpression . cvValue)
+  pure $ P.object name (Just desc) $ fmap catMaybes $ sequenceA $ concat
+    [ equalityOperators
+        collapseIfNull
+        (mkParameter <$> typedParser)
+        (mkListLiteral <$> columnListParser)
+    , comparisonOperators
+        collapseIfNull
+        (mkParameter <$> typedParser)
     ]
+
 
 bqMkCountType
   :: Maybe Bool
