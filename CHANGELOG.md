@@ -22,7 +22,6 @@
 
 ## v2.0.4
 
-- server: Adding support for TLS allowlist by domain and service id (port)
 - server: Support computed fields in permission check/filter (close #7102)
 - server: support computed fields in query 'order_by' (close #7103)
 - server: log warning if there are errors while executing clean up actions after "drop source" (previously it would throw an error)

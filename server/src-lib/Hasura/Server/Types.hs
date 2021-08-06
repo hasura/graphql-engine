@@ -4,14 +4,12 @@ import           Hasura.Prelude
 
 import           Data.Aeson
 
-import qualified Control.Concurrent.STM        as STM
 import qualified Data.HashSet                  as Set
 import qualified Database.PG.Query             as Q
 import qualified Network.HTTP.Types            as HTTP
 
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Function
-import           Hasura.RQL.Types.Network
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.Server.Utils
 
@@ -79,14 +77,3 @@ data ServerConfigCtx
   , _sccMaintenanceMode      :: !MaintenanceMode
   , _sccExperimentalFeatures :: !(Set.HashSet ExperimentalFeature)
   } deriving (Show, Eq)
-
-newtype TlsAllowList =
-  TlsAllowList
-  { tlsAllowList :: STM.TVar [TlsAllow]
-  }
-
-newEmptyTlsAllowlist :: MonadIO m => m TlsAllowList
-newEmptyTlsAllowlist = liftIO $ TlsAllowList <$> STM.newTVarIO []
-
-updateTlsAllowlist :: MonadIO m => TlsAllowList -> [TlsAllow] -> m ()
-updateTlsAllowlist (TlsAllowList al) = liftIO . STM.atomically . STM.writeTVar al
