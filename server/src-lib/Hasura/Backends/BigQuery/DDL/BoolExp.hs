@@ -44,6 +44,12 @@ parseBoolExpOperations rhsParser _table _fields columnRef value =
         "_neq" -> parseNeq
         "$neq" -> parseNeq
 
+        "$in"  -> parseIn
+        "_in"  -> parseIn
+
+        "$nin" -> parseNin
+        "_nin" -> parseNin
+
         "_gt"  -> parseGt
         "$gt"  -> parseGt
 
@@ -61,10 +67,14 @@ parseBoolExpOperations rhsParser _table _fields columnRef value =
         x      -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
 
       where
+        colTy = columnReferenceType columnRef
         parseOne = parseWithTy columnType val
+        parseManyWithType ty = rhsParser (CollectableTypeArray ty) val
 
         parseEq = AEQ False <$> parseOne
         parseNeq = ANE False <$> parseOne
+        parseIn    = AIN <$> parseManyWithType colTy
+        parseNin   = ANIN <$> parseManyWithType colTy
         parseGt = AGT <$> parseOne
         parseLt = ALT <$> parseOne
         parseGte = AGTE <$> parseOne

@@ -1334,13 +1334,13 @@ fromOpExpG expression op =
     Ir.AEQ True val  -> pure (EqualExpression expression val)
     Ir.ANE False val -> pure (nullableBoolInequality expression val)
     Ir.ANE True val  -> pure (NotEqualExpression expression val)
+    Ir.AIN val       -> pure (OpExpression InOp expression val)
+    Ir.ANIN val      -> pure (OpExpression NotInOp expression val)
     Ir.AGT val       -> pure (OpExpression MoreOp expression val)
     Ir.ALT val       -> pure (OpExpression LessOp expression val)
     Ir.AGTE val      -> pure (OpExpression MoreOrEqualOp expression val)
     Ir.ALTE val      -> pure (OpExpression LessOrEqualOp expression val)
     Ir.ACast _casts  -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
-    Ir.AIN _val      -> refute (pure (UnsupportedOpExpG op)) -- S.BECompareAny S.SEQ lhs val
-    Ir.ANIN _val     -> refute (pure (UnsupportedOpExpG op)) -- S.BENot $ S.BECompareAny S.SEQ lhs val
     Ir.ALIKE _val    -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLIKE lhs val
     Ir.ANLIKE _val   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNLIKE lhs val
     Ir.CEQ _rhsCol   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol
