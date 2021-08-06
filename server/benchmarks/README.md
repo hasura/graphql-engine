@@ -36,8 +36,8 @@ be ignored.
 - **bytes_alloc_per_req should be very stable** but of course doesn't measure,
   e.g. whether we're generating efficient SQL 
 
-- **min latency is often very stable**, especially when we have many (>5,000) samples; a
-  regression here very likely means a change to the code is influencing performance
+- **min latency is often stable**, especially when we have many (>5,000) samples; a
+  regression here may mean a change to the code is influencing performance
   ...or it might **indicate the test run was unstable** and should be taken
   with a grain of salt, or retried
 

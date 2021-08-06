@@ -63,6 +63,12 @@ RESULTS_S3_BUCKET = 'hasura-benchmark-results'
 # NOTE: Reports uploaded will be PUBLICLY ACCESSIBLE at:
 def s3_url(filename, bucket_prefix=THIS_S3_BUCKET_PREFIX):
     return f"https://{RESULTS_S3_BUCKET}.s3.us-east-2.amazonaws.com/{bucket_prefix}/{filename}"
+# This short identifier format (e.g. 'mono-pr-1998/chinook') is understood by
+# graphql-bench viewer:
+def s3_short_id(filename, bucket_prefix=THIS_S3_BUCKET_PREFIX):
+    return f"{bucket_prefix}/{filename[:-5]}"
+def graphql_bench_url(short_ids):
+    return f"https://hasura.github.io/graphql-bench/app/web-app/#{','.join(short_ids)}"
 
 # We'll write to this, CI will look for it and insert it into the PR comment thread:
 REGRESSION_REPORT_COMMENT_FILENAME = "/tmp/hasura_regression_report_comment.md"
@@ -461,19 +467,21 @@ def pretty_print_regression_report_github_comment(results, merge_base_pr, output
     out(f"")
     out(f"More significant regressions or improvements will be colored with `#b31d28` or `#22863a`, respectively.")
     out(f"")
-    out(f"You can view the raw reports here:")
+    out(f"You can view graphs of the full reports here:")
     for benchmark_set_name, _ in results.items():
-      out(f"- **{benchmark_set_name}**: [these changes]({s3_url(benchmark_set_name)}) vs. "
-          f"[merge base]({s3_url(benchmark_set_name, 'mono-pr-'+merge_base_pr)})")
-    out(f"")
-    out(f"These can be visualized with `graphql-bench`, [hosted here](https://hasura.github.io/graphql-bench/app/web-app/).")
+        these_id = s3_short_id(benchmark_set_name)
+        base_id  = s3_short_id(benchmark_set_name, 'mono-pr-'+merge_base_pr)
+        out(f"- **{benchmark_set_name}**: "
+            f"[:bar_chart: these changes]({graphql_bench_url([these_id])})... "
+            f"[:bar_chart: merge base]({graphql_bench_url([base_id])})... "
+            f"[:bar_chart: both compared]({graphql_bench_url([these_id, base_id])})")
     out(f"")
     out(f"<details open><summary>Click here for a detailed report.</summary>")
     out(f"")
 
     # Return what should be the first few chars of the line, which will detemine its styling:
     def col(val=None):
-        if val == None:        return "*   "  # NORMAL
+        if val == None:        return "#   "  # GRAY
         elif abs(val) <= 2.0:  return "#   "  # GRAY
         elif abs(val) <= 3.5:  return "*   "  # NORMAL
         # ^^^ So far variation in min, bytes, and median seem to stay within this range.
