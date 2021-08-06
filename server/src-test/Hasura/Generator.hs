@@ -42,7 +42,7 @@ sublistOf1 xs = sublistOf xs `suchThat` (not . null)
 -- Third party instances
 
 instance Arbitrary Text where
-  arbitrary = T.pack <$> listOf (elements alphaNumerics)
+  arbitrary = T.pack <$> listOf arbitraryUnicodeChar
 
 instance (Arbitrary k, Eq k, Hashable k, Arbitrary v) => Arbitrary (HashMap k v) where
   arbitrary = Map.fromList <$> arbitrary
