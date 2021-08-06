@@ -633,8 +633,7 @@ library
                      , Network.URI.Extended
                      , Network.Wai.Extended
                      , Network.Wai.Handler.WebSockets.Custom
-                     , Test.QuickCheck.Arbitrary.Extended
-                     , Test.QuickCheck.Arbitrary.Partial
+
 
 executable graphql-engine
   import: common-all, common-exe
@@ -662,7 +661,6 @@ test-suite graphql-engine-tests
     , cron
     , dependent-map
     , dependent-sum
-    , generic-arbitrary
     , graphql-engine
     , graphql-parser
     , hspec >=2.6.1 && <3
