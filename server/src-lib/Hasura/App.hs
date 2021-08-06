@@ -12,19 +12,27 @@ import qualified Control.Exception.Lifted                   as LE
 import qualified Data.Aeson                                 as A
 import qualified Data.ByteString.Char8                      as BC
 import qualified Data.ByteString.Lazy.Char8                 as BLC
+import qualified Data.Default.Class                         as HTTP
 import qualified Data.Environment                           as Env
 import qualified Data.HashMap.Strict                        as HM
 import qualified Data.Set                                   as Set
 import qualified Data.Text                                  as T
 import qualified Data.Time.Clock                            as Clock
+import qualified Data.X509                                  as HTTP
+import qualified Data.X509.CertificateStore                 as HTTP
+import qualified Data.X509.Validation                       as HTTP
 import qualified Data.Yaml                                  as Y
 import qualified Database.PG.Query                          as Q
+import qualified Network.Connection                         as HTTP
 import qualified Network.HTTP.Client                        as HTTP
 import qualified Network.HTTP.Client.TLS                    as HTTP
+import qualified Network.TLS                                as HTTP
+import qualified Network.TLS.Extra                          as TLS
 import qualified Network.Wai.Handler.Warp                   as Warp
 import qualified System.Log.FastLogger                      as FL
 import qualified System.Metrics                             as EKG
 import qualified System.Metrics.Gauge                       as EKG.Gauge
+import qualified System.X509                                as HTTP
 import qualified Text.Mustache.Compile                      as M
 import qualified Web.Spock.Core                             as Spock
 
@@ -40,9 +48,9 @@ import           Control.Monad.Trans.Managed                (ManagedT (..))
 import           Control.Monad.Unique
 import           Data.FileEmbed                             (makeRelativeToProject)
 import           Data.Time.Clock                            (UTCTime)
-#ifndef PROFILING
+
 import           GHC.AssertNF
-#endif
+
 import           Network.HTTP.Client.Extended
 import           Options.Applicative
 import           System.Environment                         (getEnvironment)
@@ -72,6 +80,8 @@ import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Network                   (TlsAllow (TlsAllow),
+                                                             TlsPermission (SelfSigned))
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query                    (requiresAdmin, runQueryM)
 import           Hasura.Server.App
@@ -165,13 +175,72 @@ mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =
 -- | Context required for all graphql-engine CLI commands
 data GlobalCtx
   = GlobalCtx
-  { _gcHttpManager             :: !HTTP.Manager
+  { _gcHttpMgrAndTlsAllowList  :: !HttpMgrWithTlsAllowList
   , _gcMetadataDbConnInfo      :: !Q.ConnInfo
   , _gcDefaultPostgresConnInfo :: !(Maybe (UrlConf, Q.ConnInfo), Maybe Int)
     -- ^ --database-url option, @'UrlConf' is required to construct default source configuration
     -- and optional retries
   }
 
+data HttpMgrWithTlsAllowList =
+  HttpMgrWithTlsAllowList
+  { manager   :: HTTP.Manager
+  , allowList :: TlsAllowList
+  }
+
+mkMgr :: IO HttpMgrWithTlsAllowList
+mkMgr = do
+  allowList :: STM.TVar [TlsAllow] <- STM.newTVarIO []
+  systemStore <- HTTP.getSystemCertificateStore
+  let settings = HTTP.mkManagerSettings (tlsSettingsComplex systemStore allowList) Nothing
+  manager <- HTTP.newManager settings
+  pure $ HttpMgrWithTlsAllowList manager (TlsAllowList allowList)
+
+  where
+  tlsSettingsComplex :: HTTP.CertificateStore -> STM.TVar [TlsAllow] -> HTTP.TLSSettings
+  tlsSettingsComplex systemStore = HTTP.TLSSettings . clientParams systemStore
+
+  clientParams :: HTTP.CertificateStore -> STM.TVar [TlsAllow] -> HTTP.ClientParams
+  clientParams systemStore allowList =
+    (HTTP.defaultParamsClient hostName serviceIdBlob)
+      { HTTP.clientSupported = HTTP.def { HTTP.supportedCiphers = TLS.ciphersuite_default } -- supportedCiphers :: [Cipher]	Supported cipher methods. The default is empty, specify a suitable cipher list. ciphersuite_default is often a good choice.  Default: [] -- https://hackage.haskell.org/package/tls-1.5.5/docs/Network-TLS.html#t:Cipher
+      , HTTP.clientShared = HTTP.def { HTTP.sharedCAStore = systemStore }
+      , HTTP.clientHooks =
+        HTTP.def
+          { HTTP.onServerCertificate = (certValidation allowList)
+          } }
+
+  certValidation :: STM.TVar [TlsAllow] -> HTTP.CertificateStore -> HTTP.ValidationCache -> HTTP.ServiceID -> HTTP.CertificateChain -> IO [HTTP.FailedReason]
+  certValidation allowList' certStore validationCache sid chain = do
+    res       <- HTTP.onServerCertificate HTTP.def certStore validationCache sid chain
+    allowList <- STM.readTVarIO allowList'
+    if any (allowed sid res) allowList
+      then pure []
+      else pure res
+
+  -- These always seem to be overwritten when a connection is established
+  -- Should leave as errors in this case in order to validate this assumption.
+  hostName      = error "hostname undefined"
+  serviceIdBlob = error "serviceIdBlob undefined"
+
+  -- Checks that:
+  -- * the service (host) and service-suffix (port) match
+  -- * the error response is permitted
+  allowed :: (String, BC.ByteString) -> [HTTP.FailedReason] -> TlsAllow -> Bool
+  allowed (sHost, sPort) res (TlsAllow aHost aPort aPermit) =
+      (sHost == aHost)
+      && (BC.unpack sPort ==? aPort)
+      && all (\x -> any (($ x) . permitted) (fromMaybe [SelfSigned] aPermit)) res
+      -- TODO: Could clean up this check some more.
+
+  permitted SelfSigned HTTP.SelfSigned       = True
+  permitted SelfSigned (HTTP.NameMismatch _) = True
+  permitted SelfSigned HTTP.LeafNotV3        = True -- TODO: What does this mean????
+  permitted SelfSigned _                     = False
+  -- allowed HTTP.UnknownCA = True -- As described in https://hackage.haskell.org/package/tls-0.8.5/docs/src/Network-TLS-Core.html -- This is taken care of by the system certificate set.
+
+  _ ==? Nothing = True
+  a ==? Just a' = a == a'
 
 initGlobalCtx
   :: (MonadIO m)
@@ -182,7 +251,10 @@ initGlobalCtx
   -- ^ the user's DB URL
   -> m GlobalCtx
 initGlobalCtx env metadataDbUrl defaultPgConnInfo = do
-  httpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
+  -- allowList  <- liftIO $ STM.newTVarIO []
+  -- manager'   <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
+  -- let manager = HttpMgrWithTlsAllowList manager' (TlsAllowList allowList)
+  manager <- liftIO $ mkMgr
 
   let PostgresConnInfo dbUrlConf maybeRetries = defaultPgConnInfo
       mkConnInfoFromSource dbUrl = do
@@ -193,7 +265,7 @@ initGlobalCtx env metadataDbUrl defaultPgConnInfo = do
         in (Q.ConnInfo retries . Q.CDDatabaseURI . txtToBs . T.pack) mdbUrl
 
       mkGlobalCtx mdbConnInfo sourceConnInfo =
-        pure $ GlobalCtx httpManager mdbConnInfo (sourceConnInfo, maybeRetries)
+        pure $ GlobalCtx manager mdbConnInfo (sourceConnInfo, maybeRetries)
 
   case (metadataDbUrl, dbUrlConf) of
     (Nothing, Nothing) ->
@@ -228,6 +300,7 @@ data ServeCtx
   , _scSchemaCache     :: !RebuildableSchemaCache
   , _scSchemaCacheRef  :: !SchemaCacheRef
   , _scMetaVersionRef  :: !(STM.TMVar MetadataResourceVersion)
+  , _scTlsAllowList    :: !TlsAllowList
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -301,13 +374,17 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
         in PostgresConnConfiguration sourceConnInfo Nothing
       sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse
 
-  let serverConfigCtx =
+  let
+    serverConfigCtx =
         ServerConfigCtx soInferFunctionPermissions soEnableRemoteSchemaPermissions
                         sqlGenCtx soEnableMaintenanceMode soExperimentalFeatures
 
+    httpMgr  = manager _gcHttpMgrAndTlsAllowList
+    tlsAllow = allowList _gcHttpMgrAndTlsAllowList
+
   (rebuildableSchemaCache, _) <-
     lift . flip onException (flushLogger loggerCtx) $
-    migrateCatalogSchema env logger metadataDbPool maybeDefaultSourceConfig _gcHttpManager
+    migrateCatalogSchema env logger metadataDbPool maybeDefaultSourceConfig httpMgr tlsAllow
       serverConfigCtx (mkPgSourceResolver pgLogger)
 
 
@@ -323,8 +400,8 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
 
   schemaCacheRef <- initialiseCache rebuildableSchemaCache
 
-  pure $ ServeCtx _gcHttpManager instanceId loggers soEnabledLogTypes metadataDbPool latch
-                  rebuildableSchemaCache schemaCacheRef metaVersionRef
+  pure $ ServeCtx httpMgr instanceId loggers soEnabledLogTypes metadataDbPool latch
+                  rebuildableSchemaCache schemaCacheRef metaVersionRef tlsAllow
 
 mkLoggers
   :: (MonadIO m, MonadBaseControl IO m)
@@ -341,12 +418,17 @@ mkLoggers enabledLogs logLevel = do
 -- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
 migrateCatalogSchema
   :: (HasVersion, MonadIO m, MonadBaseControl IO m)
-  => Env.Environment -> Logger Hasura -> Q.PGPool -> Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
-  -> HTTP.Manager -> ServerConfigCtx
+  => Env.Environment
+  -> Logger Hasura
+  -> Q.PGPool
+  -> Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
+  -> HTTP.Manager
+  -> TlsAllowList
+  -> ServerConfigCtx
   -> SourceResolver
   -> m (RebuildableSchemaCache, UTCTime)
 migrateCatalogSchema env logger pool defaultSourceConfig
-                     httpManager serverConfigCtx
+                     httpManager tlsAllowlist serverConfigCtx
                      sourceResolver = do
   currentTime <- liftIO Clock.getCurrentTime
   initialiseResult <- runExceptT $ do
@@ -369,7 +451,7 @@ migrateCatalogSchema env logger pool defaultSourceConfig
             -- @'CatalogUpdate' re-creates event triggers in the database.
             if version < 43 then CatalogUpdate else CatalogSync
     schemaCache <- runCacheBuild cacheBuildParams $
-                   buildRebuildableSchemaCacheWithReason buildReason env metadata
+                   buildRebuildableSchemaCacheWithReason buildReason env metadata tlsAllowlist
     pure (migrationResult, schemaCache)
 
   (migrationResult, schemaCache) <-
@@ -481,9 +563,9 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
   -- tool.
   --
   -- NOTE: be sure to compile WITHOUT code coverage, for this to work properly.
-#ifndef PROFILING
+
   liftIO disableAssertNF
-#endif
+
 
   let sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse
       Loggers loggerCtx logger _ = _scLoggers
@@ -520,6 +602,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
              soEnableMaintenanceMode
              soExperimentalFeatures
              _scEnabledLogTypes
+             (tlsAllowList _scTlsAllowList)
 
   let serverConfigCtx =
         ServerConfigCtx soInferFunctionPermissions

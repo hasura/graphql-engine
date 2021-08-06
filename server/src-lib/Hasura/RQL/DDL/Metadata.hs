@@ -166,7 +166,7 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
       pure $ Metadata (OMap.singleton defaultSource newDefaultSourceMetadata)
                         _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist
                         _mnsCustomTypes _mnsActions cronTriggersMetadata (_metaRestEndpoints oldMetadata)
-                        emptyApiLimit emptyMetricsConfig mempty introspectionDisabledRoles queryTagsConfig
+                        emptyApiLimit emptyMetricsConfig mempty introspectionDisabledRoles queryTagsConfig Nothing
   putMetadata metadata
 
   case _rmv2AllowInconsistentMetadata of

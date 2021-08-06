@@ -57,7 +57,10 @@ runApp :: Env.Environment -> HGEOptions Hasura -> IO ()
 runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
   initTime <- liftIO getCurrentTime
   globalCtx@GlobalCtx{..} <- initGlobalCtx env metadataDbUrl rci
-  let (maybeDefaultPgConnInfo, maybeRetries) = _gcDefaultPostgresConnInfo
+  let
+    (maybeDefaultPgConnInfo, maybeRetries) = _gcDefaultPostgresConnInfo
+    httpMgr      = manager   _gcHttpMgrAndTlsAllowList
+    tlsAllowlist = allowList _gcHttpMgrAndTlsAllowList
 
   withVersion $$(getVersionFromEnvironment) $ case hgeCmd of
     HCServe serveOptions -> do
@@ -122,14 +125,14 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
           serverConfigCtx =
             ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode mempty
           cacheBuildParams =
-            CacheBuildParams _gcHttpManager pgSourceResolver serverConfigCtx
+            CacheBuildParams httpMgr pgSourceResolver serverConfigCtx
       runManagedT (mkMinimalPool _gcMetadataDbConnInfo) $ \metadataDbPool -> do
         res <- flip runPGMetadataStorageAppT (metadataDbPool, pgLogger) $
           runMetadataStorageT $ liftEitherM do
           (metadata, _) <- fetchMetadata
-          runAsAdmin _gcHttpManager serverConfigCtx $ do
+          runAsAdmin httpMgr serverConfigCtx $ do
             schemaCache <- runCacheBuild cacheBuildParams $
-                           buildRebuildableSchemaCache env metadata
+                           buildRebuildableSchemaCache env metadata tlsAllowlist
             execQuery env queryBs
               & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
               & runMetadataT metadata
