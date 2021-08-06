@@ -1,9 +1,11 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
+
 (Add entries below in the order of server, console, cli, docs, others)
 
 - server: fix for incorrect `__typename` value in nested remote joins with a customized remote schema
+- server: fix a bug where some unicode characters in default string values for fields in remote schemas could lead to internal errors
 - console: fix untracked foreign-key relationships suggestion across schemas
 - cli: fix SDL formatting in `actions.graphql`(#7296)
 
