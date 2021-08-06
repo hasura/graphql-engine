@@ -2,9 +2,10 @@
 
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
-- console: fix untracked foreign-key relationships suggestion across schemas
 
 - server: fix for incorrect `__typename` value in nested remote joins with a customized remote schema
+- console: fix untracked foreign-key relationships suggestion across schemas
+- cli: fix SDL formatting in `actions.graphql`(#7296)
 
 ## v2.0.5
 

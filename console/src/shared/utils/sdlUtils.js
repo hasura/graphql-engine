@@ -227,7 +227,7 @@ const getArgumentsSdl = args => {
 const getFieldsSdl = fields => {
   const fieldsSdl = fields.map(f => {
     const argSdl = f.arguments ? getArgumentsSdl(f.arguments) : '';
-    return `  ${getEntityDescriptionSdl(f)}${f.name} ${argSdl}: ${f.type}`;
+    return `  ${getEntityDescriptionSdl(f)}${f.name}${argSdl}: ${f.type}`;
   });
   return fieldsSdl.join('\n');
 };
