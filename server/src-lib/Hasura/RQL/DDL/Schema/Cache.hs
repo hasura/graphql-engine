@@ -68,7 +68,8 @@ import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Types                         hiding (fmFunction, tmTable)
 import           Hasura.SQL.Tag
-import           Hasura.Server.Types                      (MaintenanceMode (..))
+import           Hasura.Server.Types                      (MaintenanceMode (..), TlsAllowList (..),
+                                                           updateTlsAllowlist)
 import           Hasura.Server.Version                    (HasVersion)
 import           Hasura.Session
 
@@ -77,6 +78,7 @@ buildRebuildableSchemaCache
   :: HasVersion
   => Env.Environment
   -> Metadata
+  -> TlsAllowList
   -> CacheBuild RebuildableSchemaCache
 buildRebuildableSchemaCache =
   buildRebuildableSchemaCacheWithReason CatalogSync
@@ -86,10 +88,12 @@ buildRebuildableSchemaCacheWithReason
   => BuildReason
   -> Env.Environment
   -> Metadata
+  -> TlsAllowList
   -> CacheBuild RebuildableSchemaCache
-buildRebuildableSchemaCacheWithReason reason env metadata = do
+buildRebuildableSchemaCacheWithReason reason env metadata tlsAllowlist = do
   result <- flip runReaderT reason $
-    Inc.build (buildSchemaCacheRule env) (metadata, initialInvalidationKeys)
+    Inc.build (buildSchemaCacheRule tlsAllowlist env) (metadata, initialInvalidationKeys)
+
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
 
@@ -153,9 +157,10 @@ buildSchemaCacheRule
      , MonadReader BuildReason m, HasHttpManagerM m, MonadResolveSource m
      , HasServerConfigCtx m
      )
-  => Env.Environment
+  => TlsAllowList
+  -> Env.Environment
   -> (Metadata, InvalidationKeys) `arr` SchemaCache
-buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
+buildSchemaCacheRule tlsAllowlist env = proc (metadata, invalidationKeys) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
 
   -- Step 1: Process metadata and collect dependency information.
@@ -443,7 +448,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
       let Metadata sources remoteSchemas collections allowlists
             customTypes actions cronTriggers endpoints apiLimits metricsConfig inheritedRoles
-            _introspectionDisabledRoles queryTagsConfig = metadata
+            _introspectionDisabledRoles queryTagsConfig _tlsWhitelist = metadata
           actionRoles = map _apmRole . _amPermissions =<< OMap.elems actions
           remoteSchemaRoles = map _rspmRole . _rsmPermissions =<< OMap.elems remoteSchemas
           sourceRoles =
@@ -585,6 +590,9 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
           returnA -< (M.empty, emptyAnnotatedCustomTypes)
 
       cronTriggersMap <- buildCronTriggers -< ((), OMap.elems cronTriggers)
+
+      -- Note: Updates from metadata that include changes to the TLS AllowList will be written here.
+      bindA -< updateTlsAllowlist tlsAllowlist (metaTlsAllowlist metadata)
 
       returnA -< BuildOutputs
         { _boSources         = M.map fst sourcesOutput

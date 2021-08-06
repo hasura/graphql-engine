@@ -66,6 +66,7 @@ import           Hasura.HTTP
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Network                  (TlsAllow)
 import           Hasura.Server.API.Config                  (runGetConfig)
 import           Hasura.Server.API.Metadata
 import           Hasura.Server.API.Query
@@ -124,6 +125,7 @@ data ServerCtx
   , scExperimentalFeatures         :: !(S.HashSet ExperimentalFeature)
   , scEnabledLogTypes              :: !(S.HashSet (L.EngineLogType L.Hasura))
   -- ^ this is only required for the short-term fix in https://github.com/hasura/graphql-engine-mono/issues/1770
+  , scTlsAllowlist                 :: !(STM.TVar [TlsAllow])
   }
 
 data HandlerCtx
@@ -787,11 +789,12 @@ mkWaiApp
   -> S.HashSet ExperimentalFeature
   -- ^ Set of the enabled experimental features
   -> S.HashSet (L.EngineLogType L.Hasura)
+  -> STM.TVar [TlsAllow]
   -> m HasuraApp
 mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole consoleAssetsDir
          enableTelemetry instanceId apis lqOpts responseErrorsConfig
          liveQueryHook schemaCacheRef ekgStore serverMetrics enableRSPermsCtx functionPermsCtx
-         connectionOptions keepAliveDelay maintenanceMode experimentalFeatures enabledLogTypes = do
+         connectionOptions keepAliveDelay maintenanceMode experimentalFeatures enabledLogTypes tlsWhitelist = do
 
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
@@ -820,6 +823,7 @@ mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enable
                     , scEnableMaintenanceMode        = maintenanceMode
                     , scExperimentalFeatures         = experimentalFeatures
                     , scEnabledLogTypes              = enabledLogTypes
+                    , scTlsAllowlist                 = tlsWhitelist
                     }
 
     spockApp <- liftWithStateless $ \lowerIO ->
