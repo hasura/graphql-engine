@@ -239,8 +239,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
             remoteSchemas = OMap.elems queryPlans >>= \case
               E.ExecStepDB _headers _dbAST remoteJoins -> do
-                concatMap (map RJ._rjRemoteSchema . toList . snd) $
-                  maybe [] toList remoteJoins
+                maybe [] (map RJ._rsjRemoteSchema . RJ.getRemoteSchemaJoins) remoteJoins
               _ -> []
             actionsInfo = foldl getExecStepActionWithActionInfo [] $ OMap.elems $ OMap.filter (\case
               E.ExecStepAction _ _ _remoteJoins -> True
@@ -270,11 +269,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                           tx
                           genSql
                 finalResponse <-
-                  maybe
-                  (pure resp)
-                  (RJ.processRemoteJoins env httpManager reqHeaders userInfo $ encJToLBS resp)
-                  remoteJoins
-                return $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
+                  RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins
+                pure $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
               E.ExecStepRemote rsi resultCustomizer gqlReq -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
                 runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq
@@ -284,10 +280,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                 (time, (resp, _)) <- doQErr $ do
                   (time, (resp, hdrs)) <- EA.runActionExecution userInfo aep
                   finalResponse <-
-                    maybe
-                    (pure resp)
-                    (RJ.processRemoteJoins env httpManager reqHeaders userInfo $ encJToLBS resp)
-                    remoteJoins
+                    RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins
                   pure (time, (finalResponse, hdrs))
                 pure $ ResultsFragment time Telem.Empty resp []
               E.ExecStepRaw json -> do
@@ -341,11 +334,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                           genSql
 
                 finalResponse <-
-                  maybe
-                  (pure resp)
-                  (RJ.processRemoteJoins env httpManager reqHeaders userInfo $ encJToLBS resp)
-                  remoteJoins
-                return $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse responseHeaders
+                    RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins
+                pure $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse responseHeaders
               E.ExecStepRemote rsi resultCustomizer gqlReq -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
                 runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq
@@ -354,10 +344,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                 (time, (resp, hdrs)) <- doQErr $ do
                   (time, (resp, hdrs)) <- EA.runActionExecution userInfo aep
                   finalResponse <-
-                    maybe
-                    (pure resp)
-                    (RJ.processRemoteJoins env httpManager reqHeaders userInfo $ encJToLBS resp)
-                    remoteJoins
+                    RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins
                   pure (time, (finalResponse, hdrs))
                 pure $ ResultsFragment time Telem.Empty resp $ fromMaybe [] hdrs
               E.ExecStepRaw json -> do
@@ -387,7 +374,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         doQErr $ E.execRemoteGQ env httpManager userInfo reqHeaders (rsDef rsi) gqlReq
       value <- extractFieldFromResponse fieldName rsi resultCustomizer resp
       let filteredHeaders = filter ((== "Set-Cookie") . fst) remoteResponseHeaders
-      pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) filteredHeaders
+      pure $ ResultsFragment telemTimeIO_DT Telem.Remote (encJFromOrderedValue value) filteredHeaders
 
     buildResultFromFragments
        :: Telem.QueryType
@@ -500,7 +487,7 @@ extractFieldFromResponse fieldName rsi resultCustomizer resp = do
 
 buildRaw :: Applicative m => JO.Value -> m ResultsFragment
 buildRaw json = do
-  let obj = JO.toEncJSON json
+  let obj = encJFromOrderedValue json
       telemTimeIO_DT = 0
   pure $ ResultsFragment telemTimeIO_DT Telem.Local obj []
 
