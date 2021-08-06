@@ -28,7 +28,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.API.PGDump
 import           Hasura.Server.Init                  (DowngradeOptions (..))
 import           Hasura.Server.Migrate
-import           Hasura.Server.Types                 (MaintenanceMode (..), newEmptyTlsAllowlist)
+import           Hasura.Server.Types                 (MaintenanceMode (..))
 import           Hasura.Server.Version               (HasVersion)
 import           Hasura.Session
 
@@ -88,8 +88,7 @@ spec
 spec srcConfig pgExecCtx pgConnInfo = do
   let migrateCatalogAndBuildCache env time = do
         (migrationResult, metadata) <- runTx pgExecCtx $ migrateCatalog (Just srcConfig) MaintenanceModeDisabled time
-        tlsAllowlist                <- newEmptyTlsAllowlist
-        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache env metadata tlsAllowlist)
+        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache env metadata)
 
       dropAndInit env time = lift $ CacheRefT $ flip modifyMVar \_ ->
         (runTx pgExecCtx dropHdbCatalogSchema) *> (migrateCatalogAndBuildCache env time)

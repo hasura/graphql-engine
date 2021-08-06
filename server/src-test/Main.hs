@@ -126,9 +126,7 @@ buildPostgresSpecs maybeUrlTemplate = do
         (metadata, schemaCache) <- run do
           metadata <- snd <$> (liftEitherM . runExceptT . runLazyTx pgContext Q.ReadWrite)
                       (migrateCatalog (Just sourceConfig) maintenanceMode =<< liftIO getCurrentTime)
-          -- TODO: Decide if this should be passed in via reader
-          tlsAllowlist <- newEmptyTlsAllowlist
-          schemaCache <- lift $ lift $ buildRebuildableSchemaCache envMap metadata tlsAllowlist
+          schemaCache <- lift $ lift $ buildRebuildableSchemaCache envMap metadata
           pure (metadata, schemaCache)
 
         cacheRef <- newMVar schemaCache

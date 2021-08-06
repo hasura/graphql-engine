@@ -342,7 +342,6 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
             & peelRun (RunCtx userInfo httpManager serverConfigCtx)
             & runExceptT
             & liftEitherM
-
           pure (r, modSchemaCache')
         MaintenanceModeEnabled ->
           throw500 "metadata cannot be modified in maintenance mode"

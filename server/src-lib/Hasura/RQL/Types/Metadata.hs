@@ -35,7 +35,6 @@ import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.GraphqlSchemaIntrospection
 import           Hasura.RQL.Types.Metadata.Backend
 import           Hasura.RQL.Types.Metadata.Instances         ()
-import           Hasura.RQL.Types.Network
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.QueryTags
@@ -334,9 +333,7 @@ data Metadata
   , _metaInheritedRoles                 :: !InheritedRoles
   , _metaSetGraphqlIntrospectionOptions :: !SetGraphqlIntrospectionOptions
   , _metaQueryTagsConfig                :: !QueryTagsConfig
-  , _metaNetwork                        :: !(Maybe Network)
   } deriving (Show, Eq, Generic)
-
 $(makeLenses ''Metadata)
 
 instance FromJSON Metadata where
@@ -347,28 +344,23 @@ instance FromJSON Metadata where
     rawSources <- o .: "sources"
     sources <- oMapFromL getSourceName <$> traverse parseSourceMetadata rawSources
     endpoints <- oMapFromL _ceName <$> o .:? "rest_endpoints" .!= []
-    network <- o .:? "network"
     (remoteSchemas, queryCollections, allowlist, customTypes,
      actions, cronTriggers, apiLimits, metricsConfig, inheritedRoles,
      disabledSchemaIntrospectionRoles, queryTagsConfig) <- parseNonSourcesMetadata o
     pure $ Metadata sources remoteSchemas queryCollections allowlist
            customTypes actions cronTriggers endpoints apiLimits metricsConfig inheritedRoles disabledSchemaIntrospectionRoles
-           queryTagsConfig network
+           queryTagsConfig
     where
       parseSourceMetadata :: Value -> Parser (AB.AnyBackend SourceMetadata)
       parseSourceMetadata = withObject "SourceMetadata" \o -> do
         backendKind <- o .:? "kind" .!= Postgres Vanilla
         AB.parseAnyBackendFromJSON backendKind (Object o)
 
+
 emptyMetadata :: Metadata
 emptyMetadata =
   Metadata mempty mempty mempty mempty emptyCustomTypes mempty mempty mempty
-    emptyApiLimit emptyMetricsConfig mempty mempty emptyQueryTagsConfig Nothing
-
-metaTlsAllowlist :: Metadata -> [TlsAllow]
-metaTlsAllowlist m = case _metaNetwork m of
-  (Just m') -> networkTlsAllowlist m'
-  _         -> []
+    emptyApiLimit emptyMetricsConfig mempty mempty emptyQueryTagsConfig
 
 tableMetadataSetter
   :: (BackendMetadata b)
@@ -450,7 +442,6 @@ metadataToOrdJSON ( Metadata
                     inheritedRoles
                     introspectionDisabledRoles
                     queryTagsConfig
-                    tlsWhitelist
                   ) = AO.object $ [ versionPair , sourcesPair] <>
                       catMaybes [ remoteSchemasPair
                                 , queryCollectionsPair
@@ -464,7 +455,6 @@ metadataToOrdJSON ( Metadata
                                 , inheritedRolesPair
                                 , introspectionDisabledRolesPair
                                 , queryTagsConfigPair
-                                , networkPair tlsWhitelist
                                 ]
   where
     versionPair          = ("version", AO.toOrdered currentMetadataVersion)
@@ -491,10 +481,6 @@ metadataToOrdJSON ( Metadata
         (Just ("graphql_schema_introspection", AO.toOrdered introspectionDisabledRoles))
         Nothing
         (introspectionDisabledRoles == mempty)
-
-    networkPair :: Maybe Network -> Maybe (Text, AO.Value)
-    networkPair (Just n) = Just ("network", AO.toOrdered n)
-    networkPair _        = Nothing
 
     queryTagsConfigPair = if queryTagsConfig == emptyQueryTagsConfig then Nothing
                           else Just ("query_tags", AO.toOrdered queryTagsConfig)
@@ -857,4 +843,3 @@ $(deriveToJSON defaultOptions ''GetCatalogState)
 
 instance FromJSON GetCatalogState where
   parseJSON _ = pure GetCatalogState
-
