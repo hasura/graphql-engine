@@ -13,6 +13,7 @@ import {
   escapeTableName,
 } from '../../../../dataSources/common';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
+import { exportMetadata } from '../../../../metadata/actions';
 import {
   getTrackTableQuery,
   getUntrackTableQuery,
@@ -267,7 +268,9 @@ const createTableSql = () => {
     const errorMsg = 'Create table failed';
 
     const customOnSuccess = () => {
-      dispatch(trackTable({ schema: currentSchema, name: tableName }));
+      dispatch(exportMetadata()).then(() => {
+        dispatch(trackTable({ schema: currentSchema, name: tableName }));
+      });
     };
     const customOnError = err => {
       dispatch({ type: REQUEST_ERROR, data: errorMsg });
