@@ -14,17 +14,20 @@ module Hasura.EncJSON
   , encJFromList
   , encJFromAssocList
   , encJFromInsOrdHashMap
+  , encJFromOrderedValue
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                      as J
-import qualified Data.ByteString                 as B
-import qualified Data.ByteString.Builder         as BB
-import qualified Data.ByteString.Lazy            as BL
-import qualified Data.Text.Encoding              as TE
-import qualified Database.PG.Query               as Q
-import qualified Data.HashMap.Strict.InsOrd      as OMap
+import qualified Data.Aeson                 as J
+import qualified Data.Aeson.Ordered         as JO
+import qualified Data.ByteString            as B
+import qualified Data.ByteString.Builder    as BB
+import qualified Data.ByteString.Lazy       as BL
+import qualified Data.HashMap.Strict.InsOrd as OMap
+import qualified Data.Text.Encoding         as TE
+import qualified Data.Vector                as V
+import qualified Database.PG.Query          as Q
 
 -- encoded json
 -- TODO (from master): can be improved with gadts capturing bytestring, lazybytestring
@@ -98,3 +101,15 @@ encJFromAssocList = \case
 
 encJFromInsOrdHashMap :: InsOrdHashMap Text EncJSON -> EncJSON
 encJFromInsOrdHashMap = encJFromAssocList . OMap.toList
+
+-- | Encode a 'JO.Value' as 'EncJSON'.
+encJFromOrderedValue :: JO.Value -> EncJSON
+encJFromOrderedValue = \case
+  JO.Object obj ->
+    encJFromAssocList $ (map . second) encJFromOrderedValue $ JO.toList obj
+  JO.Array vec ->
+    encJFromList $ map encJFromOrderedValue $ V.toList vec
+  JO.String s -> encJFromJValue s
+  JO.Number sci -> encJFromJValue sci
+  JO.Bool b -> encJFromJValue b
+  JO.Null -> encJFromJValue J.Null

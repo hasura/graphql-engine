@@ -258,6 +258,15 @@ class TestExecution:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'query_with_errors_arr.yaml')
 
+    def test_with_aliased_remote_join_keys(self, hge_ctx):
+        """
+        Regression test for https://github.com/hasura/graphql-engine/issues/7180.
+        """
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        print(resp)
+        check_query_f(hge_ctx, self.dir() + 'basic_relationship_alias.yaml')
+
     def test_with_scalar_relationship(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_scalar.yaml')
         assert st_code == 200, resp

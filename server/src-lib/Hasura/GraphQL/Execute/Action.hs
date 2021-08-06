@@ -117,7 +117,7 @@ resolveActionExecution
 resolveActionExecution env logger userInfo annAction execContext =
   case actionSource of
     -- Build client response
-    ASINoSource -> ActionExecution $ first (AO.toEncJSON . makeActionResponseNoRelations annFields) <$> runWebhook
+    ASINoSource -> ActionExecution $ first (encJFromOrderedValue . makeActionResponseNoRelations annFields) <$> runWebhook
     ASISource _ sourceConfig -> ActionExecution do
       (webhookRes, respHeaders) <- runWebhook
       let webhookResponseExpression = RS.AEInput $ UVLiteral $
@@ -235,7 +235,7 @@ resolveAsyncActionQuery userInfo annAction =
           AsyncId               -> pure $ AO.String $ actionIdToText actionId
           AsyncCreatedAt        -> pure $ AO.toOrdered $ J.toJSON _alrCreatedAt
           AsyncErrors           -> pure $ AO.toOrdered $ J.toJSON _alrErrors
-      pure $ AO.toEncJSON $ AO.object resolvedFields
+      pure $ encJFromOrderedValue $ AO.object resolvedFields
 
     ASISource sourceName sourceConfig ->
       let jsonAggSelect = mkJsonAggSelect outputType

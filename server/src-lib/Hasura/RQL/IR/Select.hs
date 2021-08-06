@@ -37,8 +37,6 @@ import           Control.Lens.TH                     (makeLenses, makePrisms)
 import           Data.Int                            (Int64)
 import           Data.Kind                           (Type)
 
-import qualified Hasura.SQL.AnyBackend               as AB
-
 import           Hasura.GraphQL.Parser.Schema        (InputValue)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.OrderBy
@@ -208,6 +206,8 @@ type AnnotatedOrderByItem b = AnnotatedOrderByItemG b (SQLExpression b)
 
 -- Fields
 
+-- The field name here is the GraphQL alias, i.e, the name with which the field
+-- should appear in the response
 type Fields a = [(FieldName, a)]
 
 data AnnFieldG (b :: BackendType) (r :: BackendType -> Type) v
@@ -446,8 +446,8 @@ data RemoteSelect
     (vf :: BackendType -> Type)
     (src :: BackendType)
   = RemoteSelectRemoteSchema !(RemoteSchemaSelect src)
+  -- | RemoteSelectSource !(AB.AnyBackend (RemoteSourceSelect src vf))
   -- ^ AnyBackend is used here to capture a relationship to an arbitrary target
-  | RemoteSelectSource !(AB.AnyBackend (RemoteSourceSelect src vf))
 
 -- Permissions
 

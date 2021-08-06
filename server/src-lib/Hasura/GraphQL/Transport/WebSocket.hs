@@ -20,7 +20,6 @@ import qualified Control.Concurrent.STM                       as STM
 import qualified Control.Monad.Trans.Control                  as MC
 import qualified Data.Aeson                                   as J
 import qualified Data.Aeson.Casing                            as J
-import qualified Data.Aeson.Ordered                           as JO
 import qualified Data.Aeson.TH                                as J
 import qualified Data.ByteString.Lazy                         as LBS
 import qualified Data.CaseInsensitive                         as CI
@@ -390,8 +389,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore 
           cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
           remoteSchemas = OMap.elems queryPlan >>= \case
             E.ExecStepDB _remoteHeaders _ remoteJoins ->
-              concatMap (map RJ._rjRemoteSchema . toList . snd) $
-                maybe [] toList remoteJoins
+              maybe [] (map RJ._rsjRemoteSchema . RJ.getRemoteSchemaJoins) remoteJoins
             _ -> []
           actionsInfo = foldl getExecStepActionWithActionInfo [] $ OMap.elems $ OMap.filter (\case
               E.ExecStepAction _ _ _remoteJoins -> True
@@ -422,11 +420,8 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore 
                        tx
                        genSql
               finalResponse <-
-                maybe
-                (pure resp)
-                (RJ.processRemoteJoins env httpMgr reqHdrs userInfo $ encJToLBS resp)
-                remoteJoins
-              return $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
+                RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins
+              pure $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
             E.ExecStepRemote rsi resultCustomizer gqlReq -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
               runRemoteGQ fieldName userInfo reqHdrs rsi resultCustomizer gqlReq
@@ -435,10 +430,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore 
               (time, (resp, _)) <- doQErr $ do
                 (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                 finalResponse <-
-                  maybe
-                  (pure resp)
-                  (RJ.processRemoteJoins env httpMgr reqHdrs userInfo $ encJToLBS resp)
-                  remoteJoins
+                  RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins
                 pure (time, (finalResponse, hdrs))
               pure $ ResultsFragment time Telem.Empty resp []
             E.ExecStepRaw json -> do
@@ -488,20 +480,14 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore 
                          tx
                          genSql
               finalResponse <-
-                maybe
-                (pure resp)
-                (RJ.processRemoteJoins env httpMgr reqHdrs userInfo $ encJToLBS resp)
-                remoteJoins
-              return $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
+                RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins
+              pure $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
             E.ExecStepAction actionExecPlan _ remoteJoins -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
               (time, (resp, hdrs)) <- doQErr $ do
                 (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                 finalResponse <-
-                  maybe
-                  (pure resp)
-                  (RJ.processRemoteJoins env httpMgr reqHdrs userInfo $ encJToLBS resp)
-                  remoteJoins
+                  RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins
                 pure (time, (finalResponse, hdrs))
               pure $ ResultsFragment time Telem.Empty resp $ fromMaybe [] hdrs
             E.ExecStepRemote rsi resultCustomizer gqlReq -> do
@@ -601,11 +587,19 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) = catchAndIgnore 
         -- Telemetry. NOTE: don't time network IO:
         Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
+    runRemoteGQ
+      :: G.Name
+      -> UserInfo
+      -> [H.Header]
+      -> RemoteSchemaInfo
+      -> RemoteResultCustomizer
+      -> GQLReqOutgoing
+      -> ExceptT (Either GQExecError QErr) (ExceptT () m) ResultsFragment
     runRemoteGQ fieldName userInfo reqHdrs rsi resultCustomizer gqlReq = do
-      (telemTimeIO_DT, _respHdrs, resp) <-
-        doQErr $ E.execRemoteGQ env httpMgr userInfo reqHdrs (rsDef rsi) gqlReq
+      (telemTimeIO_DT, _respHdrs, resp) <- doQErr $
+        E.execRemoteGQ env httpMgr userInfo reqHdrs (rsDef rsi) gqlReq
       value <- mapExceptT lift $ extractFieldFromResponse fieldName rsi resultCustomizer resp
-      return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) []
+      return $ ResultsFragment telemTimeIO_DT Telem.Remote (encJFromOrderedValue value) []
 
     WSServerEnv logger lqMap getSchemaCache httpMgr _ sqlGenCtx
       _ enableAL _keepAliveDelay _ = serverEnv

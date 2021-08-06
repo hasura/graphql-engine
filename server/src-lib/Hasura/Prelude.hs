@@ -31,6 +31,8 @@ module Hasura.Prelude
   , startTimer
   -- * Aeson options
   , hasuraJSON
+  -- * Extensions to @Data.Foldable@
+  , fold'
   , module Data.Time.Clock.Units
   ) where
 
@@ -51,8 +53,8 @@ import           Data.Bool                   as M (bool)
 import           Data.Coerce
 import           Data.Data                   as M (Data (..))
 import           Data.Either                 as M (lefts, partitionEithers, rights)
-import           Data.Foldable               as M (asum, fold, foldlM, foldrM, for_, toList,
-                                                   traverse_)
+import           Data.Foldable               as M (asum, fold, foldMap', foldlM, foldrM, for_,
+                                                   toList, traverse_)
 import           Data.Function               as M (on, (&))
 import           Data.Functor                as M (($>), (<&>))
 import           Data.Functor.Const          as M (Const)
@@ -156,7 +158,7 @@ findWithIndex p l = do
   i <- findIndex p l
   pure (v, i)
 
--- TODO (from master): Move to Data.HashMap.Strict.Extended; rename to fromListWith?
+-- TODO (from main): Move to Data.HashMap.Strict.Extended; rename to fromListWith?
 mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
 mapFromL f = Map.fromList . map (\v -> (f v, v))
 
@@ -198,18 +200,36 @@ startTimer = do
     aft <- liftIO Clock.getMonotonicTimeNSec
     return $ nanoseconds $ fromIntegral (aft - bef)
 
--- copied from http://hackage.haskell.org/package/errors-2.3.0/docs/src/Control.Error.Util.html#hoistMaybe
+-- | Upgrade a 'Maybe' to a 'MaybeT'.
+--
+-- cf. http://hackage.haskell.org/package/errors-2.3.0/docs/src/Control.Error.Util.html#hoistMaybe
 hoistMaybe :: Applicative m => Maybe b -> MaybeT m b
 hoistMaybe = MaybeT . pure
 
+-- | Upgrade an 'Either' to an 'ExceptT'.
+--
+-- cf. http://hackage.haskell.org/package/errors-2.3.0/docs/src/Control.Error.Util.html#hoistEither
 hoistEither :: Applicative m => Either e a -> ExceptT e m a
 hoistEither = ExceptT . pure
 
 tshow :: Show a => a -> Text
 tshow = T.pack . show
 
+-- | Customized 'J.Options' which apply "snake case" to Generic or Template
+-- Haskell JSON derivations.
+--
+-- For example, a Haskell field @fooBar@ would be de/serialized from/to JSON as
+-- @foo_bar@.
 hasuraJSON :: J.Options
 hasuraJSON = J.aesonPrefix J.snakeCase
 
 instance (Hashable a) => Hashable (Seq a) where
   hashWithSalt i = H.hashWithSalt i . toList
+
+-- | Given a structure with elements whose type is a 'Monoid', combine them via
+-- the monoid's @('<>')@ operator.
+--
+-- This fold is right-associative and strict in the accumulator; it's defined
+-- as @foldMap id@, per the documentation in @Data.Foldable@.
+fold' :: (Monoid m, Foldable t) => t m -> m
+fold' = foldMap' id
