@@ -8,10 +8,7 @@ import {
   getTimeoutSeconds,
   baseUrl,
 } from '../../../helpers/eventHelpers';
-import {
-  validateCTrigger,
-  ResultType,
-} from '../../validators/validators';
+import { validateCTrigger, ResultType } from '../../validators/validators';
 
 const EVENT_TRIGGER_INDEX_ROUTE = '/events/data';
 
@@ -70,7 +67,9 @@ export const expandOneOffPendingEvent = () => {
 
 export const expandOneOffProcessedEvent = () => {
   // processed events tab
-  cy.get(getElementFromAlias('adhoc-events-container-tabs-events-processed')).click();
+  cy.get(
+    getElementFromAlias('adhoc-events-container-tabs-events-processed')
+  ).click();
   cy.url().should('eq', `${baseUrl}/events/one-off-scheduled-events/processed`);
   // expand processed event
   cy.get(getElementFromAlias('expand-event')).first().click();
@@ -85,7 +84,9 @@ export const expandOneOffProcessedEvent = () => {
 
 export const expandOneOffLogs = () => {
   // invocation logs tab
-  cy.get(getElementFromAlias('adhoc-events-container-tabs-events-logs')).click();
+  cy.get(
+    getElementFromAlias('adhoc-events-container-tabs-events-logs')
+  ).click();
   cy.url().should('eq', `${baseUrl}/events/one-off-scheduled-events/logs`);
   // expand logs
   cy.get(getElementFromAlias('expand-event')).first().click();
