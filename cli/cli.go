@@ -722,12 +722,16 @@ func (ec *ExecutionContext) Validate() error {
 		return err
 	}
 	// check if server is using metadata v3
-	requestUri := ""
-	if ec.Config.APIPaths.V1Query != "" {
-		requestUri = fmt.Sprintf("%s/%s", ec.Config.Endpoint, ec.Config.APIPaths.V1Query)
-	} else {
-		requestUri = fmt.Sprintf("%s/%s", ec.Config.Endpoint, "v1/query")
+	uri, err := url.Parse(ec.Config.Endpoint)
+	if err != nil {
+		return fmt.Errorf("error while parsing the endpoint :%w", err)
 	}
+	if ec.Config.APIPaths.V1Query != "" {
+		uri.Path = path.Join(uri.Path, ec.Config.APIPaths.V1Query)
+	} else {
+		uri.Path = path.Join(uri.Path, "v1/query")
+	}
+	requestUri := uri.String()
 	metadata, err := commonmetadata.New(httpClient, requestUri).ExportMetadata()
 	if err != nil {
 		return err

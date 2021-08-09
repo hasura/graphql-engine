@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -135,8 +137,11 @@ var testMigrateApplySkipExecution = func(projectDirectory string, globalFlags []
 	})
 }
 
-var testByRunningAPI = func(hgeEndpoint string, url string, body io.Reader) {
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/%s", hgeEndpoint, url), body)
+var testByRunningAPI = func(hgeEndpoint string, urlPath string, body io.Reader) {
+	uri, err := url.Parse(hgeEndpoint)
+	Expect(err).To(BeNil())
+	uri.Path = path.Join(uri.Path, urlPath)
+	req, err := http.NewRequest("POST", uri.String(), body)
 	Expect(err).To(BeNil())
 
 	req.Header.Set("Content-Type", "application/json")
@@ -146,8 +151,8 @@ var testByRunningAPI = func(hgeEndpoint string, url string, body io.Reader) {
 	}
 
 	resp, err := http.DefaultClient.Do(req)
-	defer resp.Body.Close()
 	Expect(err).To(BeNil())
+	defer resp.Body.Close()
 	Expect(fmt.Sprint(resp.StatusCode)).Should(ContainSubstring(fmt.Sprint(http.StatusOK)))
 
 }
