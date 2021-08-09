@@ -5,11 +5,14 @@
     "TEST_MODE": "parallel",
     "MIGRATE_URL": "http://localhost:9693/apis/migrate"
   },
-  "ignoreTestFiles": ["spec.ts", "validators.ts", "utils.ts"],
+  "ignoreTestFiles": ["spec.ts", "validators.ts", "utils.ts", "*.spec.ts"],
   "viewportWidth": 1280,
   "viewportHeight": 720,
   "chromeWebSecurity": false,
   "video": false,
   "projectId": "5yiuic",
-  "retries": 1
+  "retries": {
+    "runMode": 2,
+    "openMode": 1
+  }
 }
