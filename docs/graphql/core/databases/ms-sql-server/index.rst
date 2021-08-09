@@ -15,7 +15,7 @@ MS SQL Server
 Introduction
 ------------
 
-Hasura allows connecting to a SQL Server database and build an GraphQL API based on the database schema.
+Hasura allows connecting to a SQL Server database and build a GraphQL API based on the database schema.
 
 .. admonition:: Supported versions:
 
