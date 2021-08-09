@@ -8,6 +8,7 @@ import           Hasura.Prelude
 import qualified Data.Dependent.Map            as DM
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashMap.Strict.InsOrd    as OMap
+import qualified Data.HashSet.InsOrd           as OSet
 import qualified Data.URL.Template             as UT
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.URI.Extended          as N
@@ -204,6 +205,8 @@ instance (Cacheable k, Cacheable v) => Cacheable (HashMap k v) where
   unchanged accesses = liftEq2 (unchanged accesses) (unchanged accesses)
 instance (Cacheable a) => Cacheable (HashSet a) where
   unchanged = liftEq . unchanged
+instance (Cacheable a) => Cacheable (OSet.InsOrdHashSet a) where
+  unchanged accesses l r = unchanged accesses (OSet.toHashSet l) (OSet.toHashSet r)
 instance (Cacheable a) => Cacheable (CI a) where
   unchanged _ = (==)
 instance (Cacheable a) => Cacheable (Set a) where

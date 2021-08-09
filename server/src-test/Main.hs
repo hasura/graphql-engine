@@ -29,6 +29,7 @@ import qualified Hasura.GraphQL.Parser.DirectivesTest as GraphQLDirectivesSpec
 import qualified Hasura.GraphQL.RemoteServerSpec      as RemoteServerSpec
 import qualified Hasura.GraphQL.Schema.RemoteTest     as GraphRemoteSchemaSpec
 import qualified Hasura.IncrementalSpec               as IncrementalSpec
+import qualified Hasura.RQL.PermissionSpec            as PermSpec
 import qualified Hasura.RQL.Types.EndpointSpec        as EndpointSpec
 import qualified Hasura.SQL.WKTSpec                   as WKTSpec
 import qualified Hasura.Server.AuthSpec               as AuthSpec
@@ -83,6 +84,7 @@ unitSpecs = do
   describe "Hasura.SQL.WKT" WKTSpec.spec
   describe "Hasura.Server.Auth" AuthSpec.spec
   describe "Hasura.Server.Telemetry" TelemetrySpec.spec
+  describe "Hasura.RQL.PermissionSpec" PermSpec.spec
 
 buildPostgresSpecs :: HasVersion => Maybe URLTemplate -> IO Spec
 buildPostgresSpecs maybeUrlTemplate = do

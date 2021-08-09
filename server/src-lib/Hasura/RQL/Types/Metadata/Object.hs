@@ -130,6 +130,38 @@ data MetadataObject
   } deriving (Eq)
 $(makeLenses ''MetadataObject)
 
+data InconsistentRoleEntity
+  = InconsistentTablePermission
+      !SourceName
+      !Text
+      -- ^ Table name -- using `Text` here instead of `TableName b` for simplification,
+      -- Otherwise, we'll have to create a newtype wrapper around `TableName b` and then
+      -- use it with `AB.AnyBackend`
+      !PermType
+  | InconsistentRemoteSchemaPermission !RemoteSchemaName
+  deriving (Eq)
+
+instance ToTxt InconsistentRoleEntity where
+  toTxt (InconsistentTablePermission source table permType) =
+    permTypeToCode permType
+    <> " permission"
+    <> (", table: " :: Text)
+    <> table
+    <> ", source: "
+    <> squote source
+  toTxt (InconsistentRemoteSchemaPermission remoteSchemaName) =
+    "remote schema: " <> squote remoteSchemaName
+
+instance ToJSON InconsistentRoleEntity where
+  toJSON = \case
+    InconsistentTablePermission sourceName tableName permType ->
+      object [ "table" .= tableName
+             , "source" .= sourceName
+             , "permission_type" .= permType
+             ]
+    InconsistentRemoteSchemaPermission remoteSchemaName ->
+      object [ "remote_schema" .= remoteSchemaName ]
+
 data InconsistentMetadata
   = InconsistentObject !Text !(Maybe Value) !MetadataObject
   | ConflictingObjects !Text ![MetadataObject]
@@ -137,8 +169,23 @@ data InconsistentMetadata
   | DuplicateRestVariables !Text !MetadataObject
   | InvalidRestSegments !Text !MetadataObject
   | AmbiguousRestEndpoints !Text ![MetadataObject]
+  | ConflictingInheritedPermission !RoleName !InconsistentRoleEntity
   deriving (Eq)
 $(makePrisms ''InconsistentMetadata)
+
+-- | Helper function to differentiate which type of inconsistent
+--   metadata can be dropped, if an inconsistency cannot be resolved
+--   by dropping any part of the metadata then this function should
+--   return `False`, otherwise it should return `True`
+droppableInconsistentMetadata :: InconsistentMetadata -> Bool
+droppableInconsistentMetadata = \case
+  InconsistentObject {}             -> True
+  ConflictingObjects {}             -> True
+  DuplicateObjects {}               -> True
+  DuplicateRestVariables {}         -> True
+  InvalidRestSegments {}            -> True
+  AmbiguousRestEndpoints {}         -> True
+  ConflictingInheritedPermission {} -> False
 
 getInconsistentRemoteSchemas :: [InconsistentMetadata] -> [RemoteSchemaName]
 getInconsistentRemoteSchemas =
@@ -146,12 +193,13 @@ getInconsistentRemoteSchemas =
 
 imObjectIds :: InconsistentMetadata -> [MetadataObjId]
 imObjectIds = \case
-  InconsistentObject _ _ metadata -> [_moId metadata]
-  ConflictingObjects _ metadatas  -> map _moId metadatas
-  DuplicateObjects objectId _     -> [objectId]
-  DuplicateRestVariables _ md     -> [_moId md]
-  InvalidRestSegments _ md        -> [_moId md]
-  AmbiguousRestEndpoints _ mds    -> take 1 $ map _moId mds -- TODO: Take 1 is a workaround to ensure that conflicts are not reported multiple times per endpoint.
+  InconsistentObject _ _ metadata    -> [_moId metadata]
+  ConflictingObjects _ metadatas     -> map _moId metadatas
+  DuplicateObjects objectId _        -> [objectId]
+  DuplicateRestVariables _ md        -> [_moId md]
+  InvalidRestSegments _ md           -> [_moId md]
+  AmbiguousRestEndpoints _ mds       -> take 1 $ map _moId mds -- TODO: Take 1 is a workaround to ensure that conflicts are not reported multiple times per endpoint.
+  ConflictingInheritedPermission _ _ -> mempty -- @mempty@ because in such a case we just want the user to know that the permission was not able to derive and this inconsistency is purely informational
 
 imReason :: InconsistentMetadata -> Text
 imReason = \case
@@ -161,6 +209,11 @@ imReason = \case
   DuplicateRestVariables reason _ -> "Duplicate variables found in endpoint path: " <> reason
   InvalidRestSegments reason _    -> "Empty segments or unnamed variables are not allowed: " <> reason
   AmbiguousRestEndpoints reason _ -> "Ambiguous URL paths: " <> reason
+  ConflictingInheritedPermission roleName entity ->
+    "Could not inherit permission for the role "
+    <> squote roleName
+    <> (" for the entity: " :: Text)
+    <> squote entity
 
 -- | Builds a map from each unique metadata object id to the inconsistencies associated with it.
 -- Note that a single inconsistency can involve multiple metadata objects, so the same inconsistency
@@ -184,6 +237,11 @@ instance ToJSON InconsistentMetadata where
         DuplicateRestVariables _ md  -> metadataObjectFields Nothing md
         InvalidRestSegments _ md     -> metadataObjectFields Nothing md
         AmbiguousRestEndpoints _ mds -> [ "conflicts" .= map _moDefinition mds ]
+        ConflictingInheritedPermission role inconsistentEntity ->
+          [ "name" .= role
+          , "type" .= String ("inherited role permission inconsistency" :: Text)
+          , "entity" .= inconsistentEntity
+          ]
 
       metadataObjectFields (maybeMessage :: Maybe Value) (MetadataObject objectId definition) =
         [ "type" .= String (moiTypeName objectId)

@@ -2,7 +2,6 @@ module Hasura.RQL.Types.Function where
 
 import           Hasura.Prelude
 
-import qualified Data.HashSet             as Set
 import qualified Data.Sequence            as Seq
 import qualified Data.Text                as T
 
@@ -84,6 +83,15 @@ $(deriveJSON
     defaultOptions{ sumEncoding = UntaggedValue, constructorTagModifier = map toLower . drop 3 }
     ''FunctionExposedAs)
 
+newtype FunctionPermissionInfo
+  = FunctionPermissionInfo
+  { _fpmRole       :: RoleName
+  } deriving (Show, Eq, Generic)
+instance Cacheable FunctionPermissionInfo
+$(makeLenses ''FunctionPermissionInfo)
+$(deriveJSON hasuraJSON ''FunctionPermissionInfo)
+
+type FunctionPermissionsMap = HashMap RoleName FunctionPermissionInfo
 
 -- | Tracked SQL function metadata. See 'buildFunctionInfo'.
 data FunctionInfo (b :: BackendType)
@@ -101,7 +109,7 @@ data FunctionInfo (b :: BackendType)
   -- automatically created; so strictly speaking this field means "the function
   -- returns the composite type corresponding to this table".
   , _fiDescription   :: !(Maybe Text)
-  , _fiPermissions   :: !(Set.HashSet RoleName)
+  , _fiPermissions   :: !FunctionPermissionsMap
   , _fiJsonAggSelect :: !JsonAggSelect
   -- ^ Roles to which the function is accessible
   } deriving (Generic)
@@ -156,11 +164,3 @@ instance ToJSON FunctionPermissionsCtx where
   toJSON = \case
     FunctionPermissionsInferred -> Bool True
     FunctionPermissionsManual   -> Bool False
-
-newtype FunctionPermissionMetadata
-  = FunctionPermissionMetadata
-  { _fpmRole       :: RoleName
-  } deriving (Show, Eq, Generic)
-instance Cacheable FunctionPermissionMetadata
-$(makeLenses ''FunctionPermissionMetadata)
-$(deriveJSON hasuraJSON ''FunctionPermissionMetadata)

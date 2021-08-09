@@ -1,0 +1,6 @@
+type: run_sql
+args:
+  cascade: true
+  sql: |
+    DROP FUNCTION add_to_score (json, text, integer);
+    DROP TABLE "user";

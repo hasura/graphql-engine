@@ -21,7 +21,7 @@ ws-graphql-api-disabled
 ws-metadata-api-disabled
 remote-schema-permissions
 function-permissions
-inherited-roles
+roles-inheritance
 remote-schema-https
 query-caching
 query-logs

@@ -9,6 +9,7 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict        as Map
 import qualified Data.HashMap.Strict.InsOrd as OMap
 
+import           Control.Lens               ((^.))
 import           Data.Aeson
 import           Data.Text.Extended
 
@@ -217,9 +218,10 @@ runCreateFunctionPermission
   => FunctionPermissionArgument b
   -> m EncJSON
 runCreateFunctionPermission (FunctionPermissionArgument functionName source role) = do
+  metadata <- getMetadata
   sourceCache <- scSources <$> askSchemaCache
   functionInfo <- askFunctionInfo @b source functionName
-  when (role `elem` _fiPermissions functionInfo) $
+  when (doesFunctionPermissionExist @b metadata source functionName role) $
     throw400 AlreadyExists $
     "permission of role "
     <> role <<> " already exists for function " <> functionName <<> " in source: " <>> source
@@ -236,7 +238,7 @@ runCreateFunctionPermission (FunctionPermissionArgument functionName source role
     $ MetadataModifier
     $ metaSources.ix
         source.toSourceMetadata.(smFunctions @b).ix functionName.fmPermissions
-    %~ (:) (FunctionPermissionMetadata role)
+    %~ (:) (FunctionPermissionInfo role)
   pure successMsg
 
 dropFunctionPermissionInMetadata
@@ -249,6 +251,10 @@ dropFunctionPermissionInMetadata
 dropFunctionPermissionInMetadata source function role = MetadataModifier $
   metaSources.ix source.toSourceMetadata.(smFunctions @b).ix function.fmPermissions %~ filter ((/=) role . _fpmRole)
 
+doesFunctionPermissionExist :: forall b . (BackendMetadata b) => Metadata -> SourceName -> FunctionName b -> RoleName -> Bool
+doesFunctionPermissionExist metadata sourceName functionName roleName =
+  any ((== roleName) . _fpmRole) $ metadata ^. (metaSources.ix sourceName.toSourceMetadata.(smFunctions @b).ix functionName.fmPermissions)
+
 runDropFunctionPermission
   :: forall m b
    . ( CacheRWM m
@@ -259,8 +265,8 @@ runDropFunctionPermission
   => FunctionPermissionArgument b
   -> m EncJSON
 runDropFunctionPermission (FunctionPermissionArgument functionName source role) = do
-  functionInfo <- askFunctionInfo @b source functionName
-  unless (role `elem` _fiPermissions functionInfo) $
+  metadata <- getMetadata
+  unless (doesFunctionPermissionExist @b metadata source functionName role) $
     throw400 NotExists $
     "permission of role "
     <> role <<> " does not exist for function " <> functionName <<> " in source: " <>> source

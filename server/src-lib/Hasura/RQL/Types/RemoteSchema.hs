@@ -271,16 +271,16 @@ instance J.ToJSON RemoteSchemaPermissionDefinition where
   toJSON (RemoteSchemaPermissionDefinition schema) =
     J.object $ [ "schema" J..= J.String (TB.run . G.schemaDocument $ schema)]
 
-data AddRemoteSchemaPermissions
-  = AddRemoteSchemaPermissions
+data AddRemoteSchemaPermission
+  = AddRemoteSchemaPermission
   { _arspRemoteSchema :: !RemoteSchemaName
   , _arspRole         :: !RoleName
   , _arspDefinition   :: !RemoteSchemaPermissionDefinition
   , _arspComment      :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
-instance NFData AddRemoteSchemaPermissions
-instance Cacheable AddRemoteSchemaPermissions
-$(J.deriveJSON hasuraJSON ''AddRemoteSchemaPermissions)
+instance NFData AddRemoteSchemaPermission
+instance Cacheable AddRemoteSchemaPermission
+$(J.deriveJSON hasuraJSON ''AddRemoteSchemaPermission)
 
 data DropRemoteSchemaPermissions
   = DropRemoteSchemaPermissions

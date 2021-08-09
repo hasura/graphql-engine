@@ -7,7 +7,6 @@ where
 import           Hasura.Prelude
 
 import qualified Control.Monad.Validate             as MV
-import qualified Data.HashSet                       as S
 import qualified Data.Sequence                      as Seq
 import qualified Data.Text                          as T
 import qualified Language.GraphQL.Draft.Syntax      as G
@@ -26,7 +25,6 @@ import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.SQL.Backend
 import           Hasura.Server.Utils
-
 
 mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg ('Postgres pgKind)]
 mkFunctionArgs defArgsNo tys argNames =
@@ -62,7 +60,7 @@ buildFunctionInfo
   -> QualifiedFunction
   -> SystemDefined
   -> FunctionConfig
-  -> [FunctionPermissionMetadata]
+  -> FunctionPermissionsMap
   -> RawFunctionInfo ('Postgres pgKind)
   -> m (FunctionInfo ('Postgres pgKind), SchemaDependency)
 buildFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFuncInfo =
@@ -109,7 +107,7 @@ buildFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFunc
           retJsonAggSelect = bool JASSingleObject JASMultipleRows retSet
           functionInfo =
             FunctionInfo qf systemDefined funVol exposeAs inputArguments
-                         retTable (getPGDescription <$> descM) (S.fromList $ _fpmRole <$> permissions)
+                         retTable (getPGDescription <$> descM) permissions
                          retJsonAggSelect
 
       pure ( functionInfo

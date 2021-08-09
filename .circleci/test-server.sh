@@ -725,20 +725,24 @@ case "$SERVER_TEST_TO_RUN" in
       kill_hge_servers
       ;;
 
-  inherited-roles)
-      echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH EXPERIMENTAL FEATURE: INHERITED-ROLES ########>\n"
-      TEST_TYPE="experimental-features-inherited-roles"
+  roles-inheritance)
+      echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH EXPERIMENTAL FEATURE: ROLES INHERITANCE ########>\n"
+      TEST_TYPE="experimental-features-roles-inheritance"
+
       export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+      export HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS="true"
+      export HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS=false
 
       run_hge_with_args serve
       wait_for_port 8080
 
-
       pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test-inherited-roles -k TestGraphQLInheritedRolesSchema
       pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test-inherited-roles -k TestGraphQLInheritedRolesPostgres
-      pytest --hge-urls="$HGE_URL" --pg-urls="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-inherited-roles test_graphql_mutations.py::TestGraphQLInheritedRoles
+      pytest --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-inherited-roles --enable-remote-schema-permissions --test-function-permissions test_roles_inheritance.py
 
       unset HASURA_GRAPHQL_ADMIN_SECRET
+      unset HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS
+      unset HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS
 
       kill_hge_servers
       ;;

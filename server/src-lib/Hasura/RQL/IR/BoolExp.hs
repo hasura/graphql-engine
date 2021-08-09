@@ -192,8 +192,8 @@ data PartialSQLExp (b :: BackendType)
   deriving (Generic)
 deriving instance (Backend b) => Eq (PartialSQLExp b)
 instance (Backend b, NFData    (BooleanOperators b (PartialSQLExp b))) => NFData    (PartialSQLExp b)
-instance (Backend b, Cacheable (BooleanOperators b (PartialSQLExp b))) => Hashable  (PartialSQLExp b)
-instance (Backend b, Hashable  (BooleanOperators b (PartialSQLExp b))) => Cacheable (PartialSQLExp b)
+instance (Backend b, Hashable  (BooleanOperators b (PartialSQLExp b))) => Hashable  (PartialSQLExp b)
+instance (Backend b, Cacheable (BooleanOperators b (PartialSQLExp b))) => Cacheable (PartialSQLExp b)
 
 instance Backend b => ToJSON (PartialSQLExp b) where
   toJSON = \case

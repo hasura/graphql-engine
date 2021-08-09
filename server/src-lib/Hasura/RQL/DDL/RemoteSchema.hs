@@ -20,6 +20,7 @@ import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.HashSet                           as S
 
+import           Control.Lens                           ((^.))
 import           Control.Monad.Unique
 import           Data.Text.Extended
 import           Network.HTTP.Client.Extended
@@ -59,15 +60,20 @@ runAddRemoteSchema env q@(AddRemoteSchemaQuery name defn comment) = do
     -- runAddRemoteSchemaPermissions below
     remoteSchemaMeta = RemoteSchemaMetadata name defn comment mempty
 
+doesRemoteSchemaPermissionExist :: Metadata -> RemoteSchemaName -> RoleName -> Bool
+doesRemoteSchemaPermissionExist metadata remoteSchemaName roleName =
+  any ((== roleName) . _rspmRole) $ metadata ^. (metaRemoteSchemas.ix remoteSchemaName.rsmPermissions)
+
 runAddRemoteSchemaPermissions
   :: ( QErrM m
      , CacheRWM m
      , HasServerConfigCtx m
      , MetadataM m
      )
-  => AddRemoteSchemaPermissions
+  => AddRemoteSchemaPermission
   -> m EncJSON
 runAddRemoteSchemaPermissions q = do
+  metadata <- getMetadata
   remoteSchemaPermsCtx <- _sccRemoteSchemaPermsCtx <$> askServerConfigCtx
   unless (remoteSchemaPermsCtx == RemoteSchemaPermsEnabled) $ do
     throw400 ConstraintViolation
@@ -77,7 +83,7 @@ runAddRemoteSchemaPermissions q = do
   remoteSchemaCtx <-
     onNothing (Map.lookup name remoteSchemaMap) $
       throw400 NotExists $ "remote schema " <> name <<> " doesn't exist"
-  onJust (Map.lookup role $ _rscPermissions remoteSchemaCtx) $ \_ ->
+  when (doesRemoteSchemaPermissionExist metadata name role) $
     throw400 AlreadyExists $ "permissions for role: " <> role <<> " for remote schema:"
       <> name <<> " already exists"
   resolveRoleBasedRemoteSchema providedSchemaDoc remoteSchemaCtx
@@ -85,7 +91,7 @@ runAddRemoteSchemaPermissions q = do
     MetadataModifier $ metaRemoteSchemas.ix name.rsmPermissions %~ (:) remoteSchemaPermMeta
   pure successMsg
   where
-    AddRemoteSchemaPermissions name role defn comment = q
+    AddRemoteSchemaPermission name role defn comment = q
 
     remoteSchemaPermMeta = RemoteSchemaPermissionMetadata role defn comment
 
@@ -99,11 +105,11 @@ runDropRemoteSchemaPermissions
   => DropRemoteSchemaPermissions
   -> m EncJSON
 runDropRemoteSchemaPermissions (DropRemoteSchemaPermissions name roleName) = do
+  metadata <- getMetadata
   remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
-  RemoteSchemaCtx {..} <-
-    onNothing (Map.lookup name remoteSchemaMap) $
-      throw400 NotExists $ "remote schema " <> name <<> " doesn't exist"
-  onNothing (Map.lookup roleName _rscPermissions) $
+  onNothing (Map.lookup name remoteSchemaMap) $
+    throw400 NotExists $ "remote schema " <> name <<> " doesn't exist"
+  unless (doesRemoteSchemaPermissionExist metadata name roleName)$
     throw400 NotExists $ "permissions for role: " <> roleName <<> " for remote schema:"
      <> name <<> " doesn't exist"
   buildSchemaCacheFor (MORemoteSchemaPermissions name roleName) $

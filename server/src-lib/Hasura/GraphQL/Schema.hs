@@ -442,7 +442,7 @@ buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> funct
   functionSelectExpParsers <- for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
     guard
       $ roleName == adminRoleName
-      || roleName `elem` _fiPermissions functionInfo
+      || roleName `Map.member` _fiPermissions functionInfo
       || functionPermsCtx == FunctionPermissionsInferred
     let targetTableName = _fiReturnType functionInfo
     targetTableInfo <- askTableInfo sourceName targetTableName
@@ -520,7 +520,7 @@ buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMu
     guard $
       -- when function permissions are inferred, we don't expose the
       -- mutation functions for non-admin roles. See Note [Function Permissions]
-      roleName == adminRoleName || roleName `elem` (_fiPermissions functionInfo)
+      roleName == adminRoleName || roleName `Map.member` (_fiPermissions functionInfo)
     lift $ buildFunctionMutationFields sourceName sourceConfig functionName functionInfo targetTableName selectPerms
   pure $ concat $ catMaybes $ tableMutations <> functionMutations
 

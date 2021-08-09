@@ -12,7 +12,6 @@ module Hasura.RQL.Types.Common
 
        , ToAesonPairs(..)
 
-       , EquatableGType(..)
        , InpValInfo(..)
 
        , SystemDefined(..)
@@ -49,6 +48,7 @@ module Hasura.RQL.Types.Common
 
        , MetricsConfig(..)
        , emptyMetricsConfig
+
        ) where
 
 import           Hasura.Prelude
@@ -198,15 +198,6 @@ data InpValInfo
   , _iviType   :: !G.GType
   } deriving (Show, Eq, TH.Lift, Generic)
 instance Cacheable InpValInfo
-
-instance EquatableGType InpValInfo where
-  type EqProps InpValInfo = (G.Name, G.GType)
-  getEqProps ity = (,) (_iviName ity) (_iviType ity)
-
--- | Typeclass for equating relevant properties of various GraphQL types defined below
-class EquatableGType a where
-  type EqProps a
-  getEqProps :: a -> EqProps a
 
 newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
   deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, NFData, Cacheable)

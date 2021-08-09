@@ -5,6 +5,7 @@ module Hasura.RQL.Types.Table where
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                 as M
+import qualified Data.HashMap.Strict.Extended        as M
 import qualified Data.HashSet                        as HS
 import qualified Data.List.NonEmpty                  as NE
 import qualified Data.Text                           as T
@@ -15,6 +16,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.Extended
 import           Data.Aeson.TH
 import           Data.List.Extended                  (duplicates)
+import           Data.Semigroup                      (Any (..), Max (..))
 import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.SQL.Types  as PG (PGDescription)
@@ -34,7 +36,6 @@ import           Hasura.SQL.AnyBackend               (runBackend)
 import           Hasura.SQL.Backend
 import           Hasura.Server.Utils                 (englishList)
 import           Hasura.Session
-
 
 data TableCustomRootFields
   = TableCustomRootFields
@@ -164,7 +165,7 @@ data InsPermInfo (b :: BackendType)
   , ipiCheck           :: !(AnnBoolExpPartialSQL b)
   , ipiSet             :: !(PreSetColsPartial b)
   , ipiBackendOnly     :: !Bool
-  , ipiRequiredHeaders :: ![Text]
+  , ipiRequiredHeaders :: !(HS.HashSet Text)
   } deriving (Generic)
 
 deriving instance
@@ -189,6 +190,69 @@ instance
   ) => ToJSON (InsPermInfo b) where
   toJSON = genericToJSON hasuraJSON
 
+-- | This type is only used as an intermediate type
+--   to combine more than one select permissions
+data CombinedSelPermInfo (b :: BackendType)
+  = CombinedSelPermInfo
+  { cspiCols                 :: ![(M.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)))]
+  , cspiScalarComputedFields :: ![(M.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b)))]
+  , cspiFilter               :: ![(AnnBoolExpPartialSQL b)]
+  , cspiLimit                :: !(Maybe (Max Int))
+  , cspiAllowAgg             :: !Any
+  , cspiRequiredHeaders      :: !(HS.HashSet Text)
+  }
+
+instance (Backend b) => Semigroup (CombinedSelPermInfo b) where
+  CombinedSelPermInfo colsL scalarComputedFieldsL filterL limitL allowAggL reqHeadersL
+    <> CombinedSelPermInfo colsR scalarComputedFieldsR filterR limitR allowAggR reqHeadersR =
+    CombinedSelPermInfo
+      (colsL <> colsR)
+      (scalarComputedFieldsL <> scalarComputedFieldsR)
+      (filterL <> filterR)
+      (limitL <> limitR)
+      (allowAggL <> allowAggR)
+      (reqHeadersL <> reqHeadersR)
+
+combinedSelPermInfoToSelPermInfo
+  :: Backend b
+  => Int
+  -> CombinedSelPermInfo b
+  -> SelPermInfo b
+combinedSelPermInfoToSelPermInfo selPermsCount CombinedSelPermInfo {..} =
+  SelPermInfo
+    (mergeColumnsWithBoolExp <$> M.unionsAll cspiCols)
+    (mergeColumnsWithBoolExp <$> M.unionsAll cspiScalarComputedFields)
+    (BoolOr cspiFilter)
+    (getMax <$> cspiLimit)
+    (getAny cspiAllowAgg)
+    cspiRequiredHeaders
+  where
+    mergeColumnsWithBoolExp
+      :: NonEmpty  (Maybe (GBoolExp b (AnnColumnCaseBoolExpField b (PartialSQLExp b))))
+      -> Maybe     (GBoolExp b (AnnColumnCaseBoolExpField b (PartialSQLExp b)))
+    mergeColumnsWithBoolExp booleanExpressions
+      -- when all the parent roles have a select permission, then we set
+      -- the case boolean expression to `Nothing`. Suppose this were not done, then
+      -- the resulting boolean expression will an expression which will always evaluate to
+      -- `True`. So, to avoid additional computations, we just set the case boolean expression
+      -- to `Nothing`.
+      --
+      -- Suppose, an inherited role, `inherited_role` inherits from two roles `role1` and `role2`.
+      -- `role1` has the filter: `{"published": {"eq": true}}` and `role2` has the filter:
+      -- `{"early_preview": {"eq": true}}` then the filter boolean expression of the inherited select permission will be
+      -- the boolean OR of the parent roles filters.
+
+      --  Now, let's say both `role1` and `role2` allow access to
+      -- the `title` column of the table, the case boolean expression of the `title` column will be
+      -- the boolean OR of the parent roles filters i.e. same as the filter of the select permission. Since,
+      -- the column case boolean expression is equal to the row filter boolean expression, the column
+      -- case boolean expression will always evaluate to `True`, since the column case boolean expression
+      -- will always evaluate to `True`, we simply remove the boolean case expression when for a column all
+      -- the select permissions exists.
+      | selPermsCount == length booleanExpressions = Nothing
+      | otherwise                  =
+          let nonNothingBoolExps = catMaybes $ toList booleanExpressions
+          in bool (Just $ BoolOr nonNothingBoolExps) Nothing $ null nonNothingBoolExps
 
 data SelPermInfo (b :: BackendType)
   = SelPermInfo
@@ -204,7 +268,7 @@ data SelPermInfo (b :: BackendType)
   , spiFilter               :: !(AnnBoolExpPartialSQL b)
   , spiLimit                :: !(Maybe Int)
   , spiAllowAgg             :: !Bool
-  , spiRequiredHeaders      :: ![Text]
+  , spiRequiredHeaders      :: !(HashSet Text)
   } deriving (Generic)
 
 deriving instance
@@ -237,7 +301,7 @@ data UpdPermInfo (b :: BackendType)
   , upiFilter          :: !(AnnBoolExpPartialSQL b)
   , upiCheck           :: !(Maybe (AnnBoolExpPartialSQL b))
   , upiSet             :: !(PreSetColsPartial b)
-  , upiRequiredHeaders :: ![Text]
+  , upiRequiredHeaders :: !(HashSet Text)
   } deriving (Generic)
 
 deriving instance
@@ -267,7 +331,7 @@ data DelPermInfo (b :: BackendType)
   = DelPermInfo
   { dpiTable           :: !(TableName b)
   , dpiFilter          :: !(AnnBoolExpPartialSQL b)
-  , dpiRequiredHeaders :: ![Text]
+  , dpiRequiredHeaders :: !(HashSet Text)
   } deriving (Generic)
 
 deriving instance
@@ -291,7 +355,6 @@ instance
   , ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
   ) => ToJSON (DelPermInfo b) where
   toJSON = genericToJSON hasuraJSON
-
 
 data RolePermInfo (b :: BackendType)
   = RolePermInfo

@@ -117,7 +117,7 @@ data RQLMetadataV1
   | RMIntrospectRemoteSchema !RemoteSchemaNameQuery
 
   -- Remote schemas permissions
-  | RMAddRemoteSchemaPermissions  !AddRemoteSchemaPermissions
+  | RMAddRemoteSchemaPermissions  !AddRemoteSchemaPermission
   | RMDropRemoteSchemaPermissions !DropRemoteSchemaPermissions
 
   -- Scheduled triggers
