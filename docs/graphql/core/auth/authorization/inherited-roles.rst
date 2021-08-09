@@ -21,6 +21,11 @@ Once an inherited role is created, it can be treated as any other role i.e. can 
 
 Inherited roles are useful when you need to define multiple permission rules (may be overlapping) on schema objects and also for greater modularity in role management.
 
+By default, inherited roles will try to inherit the permissions from its parent roles. If you'd rather like to
+have a different permission than the inherited one for a particular entity and role pair,
+then it can be done by creating a permission for the entity and role pair. After creating this permission,
+it will override the inherited permission.
+
 .. note::
 
    By default, inherited roles will try to inherit the permissions from its parent roles.
@@ -110,8 +115,11 @@ Creating inherited roles
       }
 
 
-How is the permission of the inherited role inferred?
------------------------------------------------------
+How is the permission of the inherited role inherited?
+------------------------------------------------------
+
+1. Select Permissions
+^^^^^^^^^^^^^^^^^^^^^
 
 A select permission is comprised of the following things:
 
@@ -120,10 +128,6 @@ A select permission is comprised of the following things:
 3. Limit
 4. Allow aggregation
 5. Scalar computed fields accessible to the role
-
-.. note::
-
-   Inherited roles can only combine SELECT permissions currently
 
 Suppose there are two roles, ``role1`` gives access to column ``C1`` with row filter ``P1`` and ``role2`` gives access to columns ``C1`` and ``C2`` with row filter ``P2``. Consider the following GraphQL query executed with an inherited role comprised of ``role1`` and ``role2``:
 
@@ -151,6 +155,7 @@ The other parameters of the select permission will be combined in the following 
 1. Limit - Maximum of the limits will be the limit of the inherited role
 2. Allow aggregations - If any of the role allows aggregation, then the inherited role will allow aggregation
 3. Scalar computed fields - same as table column fields, as in the above example
+
 
 Accessibility of a field for an inherited role
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -350,13 +355,70 @@ with inherited roles when a column doesn't have permission in the particular row
          }
        }
 
+2. Mutation and remote schema permissions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Present limitations
--------------------
+A mutation (insert, update and delete) or remote schema permission is inherited in the following manner:
 
-Currently, inherited roles are supported only for Postgres read queries and subscriptions.
-The following features are **not** supported for inherited roles yet:
+Suppose there's an inherited role ``(R)`` which inherits permissions from ``n`` parent roles namely
+``pr1``, ``pr2``, ``pr3`` ... ``prn``. The permission for the role ``R`` on some entity can only be inherited when the
+permission on the entity is the same for all its parent roles.
 
-1. Mutations
-2. Actions
-3. Remote schemas
+For example, if two insert permissions are configured in the following way:
+
+1. insert permission of role ``pr1``
+
+.. code-block:: json
+
+   {
+       "type" : "pg_create_insert_permission",
+       "args" : {
+           "table" : "article",
+           "source": "default",
+           "role" : "pr1",
+           "permission" : {
+               "check" : {
+                   "author_id" : "X-HASURA-AUTHOR-ID"
+               }
+           }
+       }
+   }
+
+2. insert permission of the role ``pr2``
+
+.. code-block:: json
+
+   {
+       "type" : "pg_create_insert_permission",
+       "args" : {
+           "table" : "article",
+           "source": "default",
+           "role" : "pr2",
+           "permission" : {
+               "check" : {
+                   "author_id" : "X-HASURA-USER-ID"
+               }
+           }
+       }
+   }
+
+The ``check`` constraint is different in both the permissions and there's no way to
+resolve this conflict.
+
+Whenever a conflict occurs while a role inherits from its parents,
+then the metadata for that entity and role combination will be marked as inconsistent.
+These can be seen by calling the :ref:`get_inconsistent_metadata <get_inconsistent_metadata>` API.
+Following the above example, the role ``R`` which is trying to inherit permissions from the
+role ``pr1`` and ``pr2`` will be marked as inconsistent for the table permission of the table ``article``.
+
+This inconsistency is informational and can be ignored if the conflicting role entity pair
+is not going to be used. If this inconsistency needs to be resolved, then it can be done by adding
+a permission explicitly for the conflicting role entity pair.
+
+3. Actions and Custom Function Permissions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Inheritance of permissions of actions and custom function work in the following manner:
+
+If any of the parent roles have permission configured for a given action or custom function, then the
+inherited role will also be able to access the given action or remote schema.

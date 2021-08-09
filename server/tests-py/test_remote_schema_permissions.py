@@ -67,7 +67,7 @@ class TestAddRemoteSchemaPermissions:
         """ reset the changes to the original config """
         st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'update_remote_schema/revert_to_original_config.yaml')
         assert st_code == 200, resp
-    
+
     def test_update_remote_schema_details_with_permissions_set_with_error(self, hge_ctx):
         st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
         assert st_code == 200, resp

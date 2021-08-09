@@ -28,7 +28,7 @@ import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Control.Lens                  ((.~))
+import           Control.Lens                  ((.~), (^.))
 import           Data.Text.Extended
 
 import           Hasura.Base.Error
@@ -195,6 +195,10 @@ newtype ActionMetadataField
   = ActionMetadataField { unActionMetadataField :: Text }
   deriving (Show, Eq, J.FromJSON, J.ToJSON)
 
+doesActionPermissionExist :: Metadata -> ActionName -> RoleName -> Bool
+doesActionPermissionExist metadata actionName roleName =
+  any ((== roleName) . _apmRole) $ metadata ^. (metaActions.ix actionName.amPermissions)
+
 data CreateActionPermission
   = CreateActionPermission
   { _capAction     :: !ActionName
@@ -208,8 +212,8 @@ runCreateActionPermission
   :: (QErrM m , CacheRWM m, MetadataM m)
   => CreateActionPermission -> m EncJSON
 runCreateActionPermission createActionPermission = do
-  actionInfo <- getActionInfo actionName
-  void $ onJust (Map.lookup roleName $ _aiPermissions actionInfo) $ const $
+  metadata <- getMetadata
+  when (doesActionPermissionExist metadata actionName roleName) $
     throw400 AlreadyExists $ "permission for role " <> roleName
     <<> " is already defined on " <>> actionName
   buildSchemaCacheFor (MOActionPermission actionName roleName)
@@ -231,8 +235,8 @@ runDropActionPermission
   :: (QErrM m, CacheRWM m, MetadataM m)
   => DropActionPermission -> m EncJSON
 runDropActionPermission dropActionPermission = do
-  actionInfo <- getActionInfo actionName
-  void $ onNothing (Map.lookup roleName $ _aiPermissions actionInfo) $
+  metadata <- getMetadata
+  unless (doesActionPermissionExist metadata actionName roleName) $
     throw400 NotExists $
     "permission for role: " <> roleName <<> " is not defined on " <>> actionName
   buildSchemaCacheFor (MOActionPermission actionName roleName) $

@@ -1,0 +1,50 @@
+- description: Add an explicit permission to a role which inherits successfully from its parent roles
+  url: /v1/metadata
+  status: 200
+  query:
+    type: pg_create_update_permission
+    args:
+      table: articles
+      role: author_editor_publisher
+      permission:
+        columns:
+          - title
+          - content
+          - is_published
+        set:
+          updated_at: "NOW()"
+        filter:
+          _or:
+            - id: X-Hasura-Author-Id
+            - editor_id: X-Hasura-Editor-Id
+
+- description: query to test if the update mutation uses the
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+          update_articles (_set: {is_published: false}, where: {title: {_eq: "Article Title 2"}}) {
+            affected_rows
+            returning {
+              title
+              content
+            }
+          }
+      }
+  response:
+    data:
+      update_articles:
+        affected_rows: 1
+        returning:
+          - title: Article Title 2
+            content: Article Content 2
+
+- description: Add an explicit permission to a role which inherits successfully from its parent roles
+  url: /v1/metadata
+  status: 200
+  query:
+    type: pg_drop_update_permission
+    args:
+      table: articles
+      role: author_editor_publisher

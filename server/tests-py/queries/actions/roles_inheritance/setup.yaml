@@ -1,0 +1,88 @@
+type: bulk
+args:
+- type: pg_track_table
+  args:
+    table: user
+
+- type: pg_track_table
+  args:
+    table: article
+
+- type: set_custom_types
+  args:
+    objects:
+    - name: UserId
+      fields:
+      - name: id
+        type: Int!
+      relationships:
+      - name: user
+        type: object
+        remote_table: user
+        field_mapping:
+          id: id
+      - name: articles
+        type: array
+        remote_table: article
+        field_mapping:
+          id: user_id
+
+- type: create_action
+  args:
+    name: create_user
+    definition:
+      kind: synchronous
+      arguments:
+      - name: email
+        type: String!
+      - name: name
+        type: String!
+      output_type: UserId
+      handler: http://127.0.0.1:5593/create-user
+
+- type: create_action_permission
+  args:
+    action: create_user
+    role: role1
+
+- type: create_action_permission
+  args:
+    action: create_user
+    role: role2
+
+- type: pg_create_select_permission
+  args:
+    table: article
+    role: role3
+    permission:
+      columns:
+        - name
+        - user_id
+      filter:
+        user_id: "X-Hasura-User-Id"
+
+- type: pg_create_select_permission
+  args:
+    table: article
+    role: role4
+    permission:
+      columns:
+        - name
+        - user_id
+      filter:
+        user_id: "X-Hasura-User-Id"
+
+- type: add_inherited_role
+  args:
+    role_name: inherited_role1
+    role_set:
+      - role1
+      - role2
+      - role3
+
+- type: add_inherited_role
+  args:
+    role_name: inherited_role2
+    role_set:
+      - role3
+      - role4

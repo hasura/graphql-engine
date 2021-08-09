@@ -88,7 +88,7 @@ buildFunctionInfo
   -> FunctionName 'BigQuery
   -> SystemDefined
   -> FunctionConfig
-  -> [FunctionPermissionMetadata]
+  -> FunctionPermissionsMap
   -> RawFunctionInfo 'BigQuery
   -> m (FunctionInfo 'BigQuery, SchemaDependency)
 buildFunctionInfo _ _ _ _ _ _ =

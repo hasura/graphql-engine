@@ -215,7 +215,7 @@ data FunctionMetadata b
   = FunctionMetadata
   { _fmFunction      :: !(FunctionName b)
   , _fmConfiguration :: !FunctionConfig
-  , _fmPermissions   :: ![FunctionPermissionMetadata]
+  , _fmPermissions   :: ![FunctionPermissionInfo]
   } deriving (Generic)
 deriving instance (Backend b) => Show (FunctionMetadata b)
 deriving instance (Backend b) => Eq (FunctionMetadata b)

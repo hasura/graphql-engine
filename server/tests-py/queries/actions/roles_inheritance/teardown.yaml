@@ -1,0 +1,17 @@
+type: bulk
+args:
+
+- type: drop_inherited_role
+  args:
+    role_name: inherited_role2
+
+- type: drop_inherited_role
+  args:
+    role_name: inherited_role1
+
+- type: drop_action
+  args:
+    name: create_user
+
+- type: set_custom_types
+  args: {}

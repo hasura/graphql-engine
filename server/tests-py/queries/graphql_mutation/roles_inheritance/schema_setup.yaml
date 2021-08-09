@@ -1,0 +1,35 @@
+type: run_sql
+args:
+  sql: |
+      CREATE table editors (
+        id serial primary key,
+        first_name text,
+        last_name text,
+        phone text,
+        age int,
+        updated_at timestamptz default now(),
+        created_at timestamptz default now()
+      );
+
+      CREATE TABLE authors (
+        id serial primary key,
+        first_name text,
+        last_name text,
+        phone text,
+        age int,
+        followers int default 0,
+        editor_id int references editors(id),
+        updated_at timestamptz default now(),
+        created_at timestamptz default now()
+      );
+
+      CREATE TABLE articles (
+        id serial primary key,
+        title text,
+        content text,
+        is_published boolean default false,
+        author_id int references authors(id),
+        editor_id int references editors(id),
+        updated_at timestamptz default now(),
+        created_at timestamptz default now()
+      );

@@ -3,6 +3,7 @@ module Hasura.RQL.DDL.Permission.Internal where
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                        as M
+import qualified Data.HashSet                               as Set
 import qualified Data.Text                                  as T
 
 import           Control.Lens                               hiding ((.=))
@@ -98,9 +99,9 @@ getDepHeadersFromVal val = case val of
     parseObject o =
       concatMap getDepHeadersFromVal (M.elems o)
 
-getDependentHeaders :: BoolExp b -> [Text]
+getDependentHeaders :: BoolExp b -> HashSet Text
 getDependentHeaders (BoolExp boolExp) =
-  flip foldMap boolExp $ \(ColExp _ v) -> getDepHeadersFromVal v
+  Set.fromList $ flip foldMap boolExp $ \(ColExp _ v) -> getDepHeadersFromVal v
 
 data DropPerm (a :: BackendType -> Type) b
   = DropPerm

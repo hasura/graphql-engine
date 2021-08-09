@@ -331,11 +331,23 @@ def actions_fixture(hge_ctx):
     webhook_httpd.server_close()
     web_server.join()
 
+use_action_fixtures = pytest.mark.usefixtures(
+    "actions_fixture",
+    'per_class_db_schema_for_mutation_tests',
+    'per_method_db_data_for_mutation_tests'
+)
+
 @pytest.fixture(scope='class')
 def functions_permissions_fixtures(hge_ctx):
     if not hge_ctx.function_permissions:
         pytest.skip('These tests are meant to be run with --test-function-permissions set')
         return
+
+use_function_permission_fixtures = pytest.mark.usefixtures(
+    'per_class_db_schema_for_mutation_tests',
+    'per_method_db_data_for_mutation_tests',
+    'functions_permissions_fixtures'
+)
 
 @pytest.fixture(scope='class')
 def inherited_role_fixtures(hge_ctx):
@@ -409,9 +421,24 @@ def per_class_db_schema_for_mutation_tests(request, hge_ctx):
     or variables `schema_setup_files` and `schema_teardown_files`
     that provides the list of setup and teardown files respectively
     """
-    yield from db_context_with_schema_common(
-        request, hge_ctx, 'schema_setup_files', 'schema_setup.yaml', 'schema_teardown_files', 'schema_teardown.yaml', True
-    )
+
+    # setting the default metadata API version to v1
+    setup_metadata_api_version = getattr(request.cls, 'setup_metadata_api_version',"v1")
+
+    (setup, teardown, schema_setup, schema_teardown) = [ 'setup.yaml',
+                                                         'teardown.yaml',
+                                                         'schema_setup.yaml',
+                                                         'schema_teardown.yaml']
+
+    if setup_metadata_api_version == "v1":
+        yield from db_context_with_schema_common(
+            request, hge_ctx, 'schema_setup_files', 'schema_setup.yaml', 'schema_teardown_files', 'schema_teardown.yaml', True
+        )
+    else:
+        yield from db_context_with_schema_common_new (
+            request, hge_ctx, 'schema_setup_files', setup, 'schema_teardown_files', teardown,
+            schema_setup, schema_teardown, True
+        )
 
 @pytest.fixture(scope='function')
 def per_method_db_data_for_mutation_tests(request, hge_ctx, per_class_db_schema_for_mutation_tests):
@@ -544,8 +571,8 @@ def db_context_common_new(
     teardown = get_files(teardown_files_attr, teardown_default_file)
     setup_default_sql_file = os.path.join(request.cls.dir(), setup_default_sql_file)
     teardown_default_sql_file = os.path.join(request.cls.dir(), teardown_default_sql_file)
-    yield from setup_and_teardown(request, hge_ctx, setup, teardown,
-                                  setup_default_sql_file, teardown_default_sql_file, check_file_exists, skip_setup, skip_teardown)
+    yield from setup_and_teardown( request, hge_ctx, setup, teardown,
+                                   setup_default_sql_file, teardown_default_sql_file, check_file_exists, skip_setup, skip_teardown)
 
 def setup_and_teardown_v1q(request, hge_ctx, setup_files, teardown_files, check_file_exists=True, skip_setup=False, skip_teardown=False):
     def assert_file_exists(f):

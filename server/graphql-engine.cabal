@@ -494,6 +494,7 @@ library
                      , Hasura.RQL.Types.Source
                      , Hasura.RQL.Types.Table
                      , Hasura.RQL.Types.Roles
+                     , Hasura.RQL.Types.Roles.Internal
                      , Hasura.RQL.DDL.Action
                      , Hasura.RQL.DDL.ApiLimit
                      , Hasura.RQL.DDL.ComputedField
@@ -707,6 +708,7 @@ test-suite graphql-engine-tests
     Hasura.IncrementalSpec
     Hasura.SessionSpec
     Hasura.GraphQL.RemoteServerSpec
+    Hasura.RQL.PermissionSpec
     Hasura.RQL.Types.EndpointSpec
     Hasura.SQL.WKTSpec
     Hasura.Server.AuthSpec

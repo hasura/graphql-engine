@@ -16,6 +16,7 @@ module Hasura.RQL.DDL.Schema.Cache
   , buildRebuildableSchemaCacheWithReason
   , CacheRWT
   , runCacheRWT
+  , mkBooleanPermissionMap
   ) where
 
 import           Hasura.Prelude
@@ -67,10 +68,50 @@ import           Hasura.RQL.DDL.Schema.Cache.Permission
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Types                         hiding (fmFunction, tmTable)
+import           Hasura.RQL.Types.Roles.Internal          (CheckPermission (..))
 import           Hasura.SQL.Tag
-import           Hasura.Server.Types                      (MaintenanceMode (..))
+import           Hasura.Server.Types                      (ExperimentalFeature (..),
+                                                           MaintenanceMode (..))
 import           Hasura.Server.Version                    (HasVersion)
 import           Hasura.Session
+
+{- Note [Roles Inheritance]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Roles may have parent roles defined from which they can inherit permission and this is
+called as roles inheritance. Roles which have parents can also be parents of other roles.
+So, cycle in roles should be disallowed and this is done in the `orderRoles` function.
+
+When the metadata contains a permission for a role for a entity, then it will override the
+inherited permission, if any.
+
+Roles inheritance work differently for different features:
+
+1. Select permissions
+~~~~~~~~~~~~~~~~~~~~~
+
+See note [Inherited roles architecture for read queries]
+
+2. Mutation permissions and remote schema permissions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For mutation and remote schema permissions, an inherited role can only inherit permission
+from its parent roles when the relevant parts of the permissions are equal i.e. the non-relevant
+parts are discarded for the equality, for example, in two remote schema permissions the order
+of the fields in an Object type is discarded.
+
+When an inherited role cannot inherit permission from its parents due to a conflict, then we mark
+the inherited role and the entity (remote schema or table) combination as inconsistent in the metadata.
+
+3. Actions and Custom function permissions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Currently, actions and custom function permissions can be thought of as a boolean. Either a role has
+permission to the entity or it doesn't, so in these cases there's no possiblity of a conflict. An inherited
+role will have access to the action/function if any one of the parents have permission to access the
+action/function.
+
+-}
 
 
 buildRebuildableSchemaCache
@@ -260,7 +301,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
          , BackendMetadata b
          )
       => ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey)
-         , SourceName, (SourceConnConfiguration b)
+         , SourceName, SourceConnConfiguration b
          ) `arr` Maybe (SourceConfig b)
     getSourceConfigIfNeeded = Inc.cache proc (invalidationKeys, sourceName, sourceConfig) -> do
       let metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
@@ -315,7 +356,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       => (Int, SourceConfig b) `arr` RecreateEventTriggers
     initCatalogIfNeeded = Inc.cache proc (numEventTriggers, sc) -> do
       arrM id -< do
-        if (numEventTriggers > 0) then do
+        if numEventTriggers > 0 then do
           case backendTag @b of
             Tag.PostgresVanillaTag -> do
               migrationTime <- liftIO getCurrentTime
@@ -366,13 +407,13 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
          , DBFunctionsMetadata b
          , RemoteSchemaMap
          , Inc.Dependency InvalidationKeys
-         , [Role]
+         , OrderedRoles
          ) `arr` BackendSourceInfo
     buildSource = proc (allSources, sourceMetadata, sourceConfig, tablesRawInfo, _dbTables, dbFunctions, remoteSchemaMap, invalidationKeys, orderedRoles) -> do
       let SourceMetadata source tables functions _ = sourceMetadata
           tablesMetadata = OMap.elems tables
           (_ , nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
-          eventTriggers = map (_tmTable &&& (OMap.elems . _tmEventTriggers)) tablesMetadata
+          eventTriggers = map (_tmTable &&& OMap.elems . _tmEventTriggers) tablesMetadata
           alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
           alignTableMap = M.intersectionWith (,)
           metadataInvalidationKey = Inc.selectD #_ikMetadata invalidationKeys
@@ -422,12 +463,15 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                  (| withRecordInconsistency (
                     (| modifyErrA (do
                          let funcDefs = fromMaybe [] $ M.lookup qf dbFunctions
-                         rawfi <- bindErrorA -< handleMultipleFunctions @b qf funcDefs
-                         (fi, dep) <- bindErrorA -< buildFunctionInfo source qf systemDefined config functionPermissions rawfi
+                         rawfunctionInfo <- bindErrorA -< handleMultipleFunctions @b qf funcDefs
+                         let metadataPermissions = mapFromL _fpmRole functionPermissions
+                             permissionsMap = mkBooleanPermissionMap FunctionPermissionInfo metadataPermissions orderedRoles
+                         (functionInfo, dep) <- bindErrorA -< buildFunctionInfo source qf systemDefined config permissionsMap rawfunctionInfo
                          recordDependencies -< (metadataObject, schemaObject, [dep])
-                         returnA -< fi)
+                         returnA -< functionInfo)
                     |) addFunctionContext)
                   |) metadataObject) |)
+
         >-> (\infos -> M.catMaybes infos >- returnA)
 
       returnA -< AB.mkAnyBackend $ SourceInfo source tableCache functionCache sourceConfig
@@ -463,11 +507,11 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
             in concat $ flip map remoteSchemaPermsList $
                  (\(remoteSchemaName, remoteSchemaPerms) ->
                     flip map remoteSchemaPerms $ \(RemoteSchemaPermissionMetadata role defn comment) ->
-                     AddRemoteSchemaPermissions remoteSchemaName role defn comment
+                     AddRemoteSchemaPermission remoteSchemaName role defn comment
                  )
 
       -- roles which have some kind of permission (action/remote schema/table/function) set in the metadata
-      let metadataRoles = mapFromL _rRoleName $ (`Role` (ParentRoles mempty)) <$> toList allRoleNames
+      let metadataRoles = mapFromL _rRoleName $ (`Role` ParentRoles mempty) <$> toList allRoleNames
 
       resolvedInheritedRoles <- buildInheritedRoles -< (allRoleNames, OMap.elems inheritedRoles)
 
@@ -475,19 +519,47 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
       orderedRoles <- bindA -< orderRoles $ M.elems allRoles
 
+      isInheritedRolesEnabled <- bindA -< (EFInheritedRoles `elem`) . _sccExperimentalFeatures  <$> askServerConfigCtx
+
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
-      remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, (OMap.elems remoteSchemas))
+      remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, OMap.elems remoteSchemas)
 
       -- remote schema permissions
       remoteSchemaCache <- (remoteSchemaMap >- returnA)
         >-> (\info -> (info, M.groupOn _arspRemoteSchema remoteSchemaPermissions)
                      >- alignExtraRemoteSchemaInfo mkRemoteSchemaPermissionMetadataObject)
         >-> (| Inc.keyed (\_ ((remoteSchemaCtx, metadataObj), remoteSchemaPerms) -> do
-                   permissionInfo <-
+                   metadataPermissionsMap <-
                      buildRemoteSchemaPermissions -< (remoteSchemaCtx, remoteSchemaPerms)
+                   -- convert to the intermediate form `CheckPermission` whose `Semigroup`
+                   -- instance is used to combine permissions
+                   let metadataCheckPermissionsMap = CPDefined <$> metadataPermissionsMap
+                   allRolesUnresolvedPermissionsMap <-
+                     bindA -<
+                     if isInheritedRolesEnabled
+                     then
+                       foldM (\accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) -> do
+                                rolePermission <- onNothing (M.lookup roleName accumulatedRolePermMap) $ do
+                                    parentRolePermissions <-
+                                      for (toList parentRoles) $ \role ->
+                                        onNothing (M.lookup role accumulatedRolePermMap) $ throw500 $
+                                        "remote schema permissions: bad ordering of roles, could not find the permission of role: " <>> role
+                                    let combinedPermission = sconcat <$> nonEmpty parentRolePermissions
+                                    pure $ fromMaybe CPUndefined combinedPermission
+                                pure $ M.insert roleName rolePermission accumulatedRolePermMap)
+                             metadataCheckPermissionsMap
+                             (_unOrderedRoles orderedRoles)
+                     else pure metadataCheckPermissionsMap
+                   -- traverse through `allRolesUnresolvedPermissionsMap` to record any inconsistencies (if exists)
+                   resolvedPermissions <-
+                     (| traverseA (\(roleName, checkPermission) -> do
+                             let inconsistentRoleEntity = InconsistentRemoteSchemaPermission $ _rscName remoteSchemaCtx
+                             resolvedCheckPermission <- resolveCheckPermission -< (checkPermission, roleName, inconsistentRoleEntity)
+                             returnA -< (roleName, resolvedCheckPermission))
+                     |) (M.toList allRolesUnresolvedPermissionsMap)
                    returnA -< (remoteSchemaCtx
-                               { _rscPermissions = permissionInfo
+                               { _rscPermissions = M.mapMaybe id $ M.fromList resolvedPermissions
                                }
                               , metadataObj))
              |)
@@ -527,7 +599,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       sourcesOutput <-
         (| Inc.keyed (\_ exists ->
              AB.dispatchAnyBackendArrow @BackendMetadata (
-               proc ( (partiallyResolvedSource :: PartiallyResolvedSource b)
+               proc ( partiallyResolvedSource :: PartiallyResolvedSource b
                     , (allResolvedSources, invalidationKeys, remoteSchemaCtxMap, orderedRoles)
                     ) -> do
                  let
@@ -574,7 +646,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       let actionList = OMap.elems actions
       (actionCache, annotatedCustomTypes) <- case maybeResolvedCustomTypes of
         Just resolvedCustomTypes -> do
-          actionCache' <- buildActions -< ((resolvedCustomTypes, scalarsMap), actionList)
+          actionCache' <- buildActions -< ((resolvedCustomTypes, scalarsMap, orderedRoles), actionList)
           returnA -< (actionCache', resolvedCustomTypes)
 
         -- If the custom types themselves are inconsistent, we can’t really do
@@ -587,16 +659,16 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       cronTriggersMap <- buildCronTriggers -< ((), OMap.elems cronTriggers)
 
       returnA -< BuildOutputs
-        { _boSources         = M.map fst sourcesOutput
-        , _boActions         = actionCache
-        , _boRemoteSchemas   = remoteSchemaCache
-        , _boAllowlist       = allowList
-        , _boCustomTypes     = annotatedCustomTypes
-        , _boCronTriggers    = cronTriggersMap
-        , _boEndpoints       = resolvedEndpoints
-        , _boApiLimits       = apiLimits
-        , _boMetricsConfig   = metricsConfig
-        , _boRoles           = mapFromL _rRoleName orderedRoles
+        { _boSources       = M.map fst sourcesOutput
+        , _boActions       = actionCache
+        , _boRemoteSchemas = remoteSchemaCache
+        , _boAllowlist     = allowList
+        , _boCustomTypes   = annotatedCustomTypes
+        , _boCronTriggers  = cronTriggersMap
+        , _boEndpoints     = resolvedEndpoints
+        , _boApiLimits     = apiLimits
+        , _boMetricsConfig = metricsConfig
+        , _boRoles         = mapFromL _rRoleName $ _unOrderedRoles orderedRoles
         , _boQueryTagsConfig = queryTagsConfig
         }
 
@@ -701,11 +773,11 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     buildRemoteSchemaPermissions
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
          , Inc.ArrowCache m arr, MonadError QErr m)
-      => (RemoteSchemaCtx, [AddRemoteSchemaPermissions]) `arr` (M.HashMap RoleName IntrospectionResult)
+      => (RemoteSchemaCtx, [AddRemoteSchemaPermission]) `arr` M.HashMap RoleName IntrospectionResult
     buildRemoteSchemaPermissions = buildInfoMap _arspRole mkRemoteSchemaPermissionMetadataObject buildRemoteSchemaPermission
       where
         buildRemoteSchemaPermission = proc (remoteSchemaCtx, remoteSchemaPerm) -> do
-          let AddRemoteSchemaPermissions rsName roleName defn _ = remoteSchemaPerm
+          let AddRemoteSchemaPermission rsName roleName defn _ = remoteSchemaPerm
               metadataObject = mkRemoteSchemaPermissionMetadataObject remoteSchemaPerm
               schemaObject = SORemoteSchemaPermission rsName roleName
               providedSchemaDoc = _rspdSchema defn
@@ -816,12 +888,12 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     buildActions
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr)
-      => ( (AnnotatedCustomTypes, DMap.DMap BackendTag ScalarSet)
+      => ( (AnnotatedCustomTypes, DMap.DMap BackendTag ScalarSet, OrderedRoles)
          , [ActionMetadata]
          ) `arr` HashMap ActionName ActionInfo
     buildActions = buildInfoMap _amName mkActionMetadataObject buildAction
       where
-        buildAction = proc ((resolvedCustomTypes, scalarsMap), action) -> do
+        buildAction = proc ((resolvedCustomTypes, scalarsMap, orderedRoles), action) -> do
           let ActionMetadata name comment def actionPermissions = action
               addActionContext e = "in action " <> name <<> "; " <> e
           (| withRecordInconsistency (
@@ -829,10 +901,11 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                   (resolvedDef, outObject) <- liftEitherA <<< bindA -<
                     runExceptT $ resolveAction env resolvedCustomTypes def scalarsMap
                   let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
-                      permissionMap = mapFromL _apiRole permissionInfos
+                      metadataPermissionMap = mapFromL _apiRole permissionInfos
+                      permissionsMap = mkBooleanPermissionMap ActionPermissionInfo metadataPermissionMap orderedRoles
                       forwardClientHeaders = _adForwardClientHeaders resolvedDef
                       outputType = unGraphQLType $ _adOutputType def
-                  returnA -< ActionInfo name (outputType, outObject) resolvedDef permissionMap forwardClientHeaders comment)
+                  returnA -< ActionInfo name (outputType, outObject) resolvedDef permissionsMap forwardClientHeaders comment)
               |) addActionContext)
            |) (mkActionMetadataObject action)
 

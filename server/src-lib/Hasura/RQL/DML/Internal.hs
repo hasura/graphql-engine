@@ -49,10 +49,10 @@ mkAdminRolePermInfo ti =
 
 
     tn = _tciName ti
-    i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False []
-    s = SelPermInfo pgColsWithFilter scalarComputedFields' annBoolExpTrue Nothing True []
-    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty []
-    d = DelPermInfo tn annBoolExpTrue []
+    i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False mempty
+    s = SelPermInfo pgColsWithFilter scalarComputedFields' annBoolExpTrue Nothing True mempty
+    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty mempty
+    d = DelPermInfo tn annBoolExpTrue mempty
 
 askPermInfo'
   :: (UserInfoM m, Backend b)
@@ -364,7 +364,7 @@ toJSONableExp strfyNum colTy asText expn
   | otherwise = expn
 
 -- validate headers
-validateHeaders :: (UserInfoM m, QErrM m) => [Text] -> m ()
+validateHeaders :: (UserInfoM m, QErrM m) => HashSet Text -> m ()
 validateHeaders depHeaders = do
   headers <- getSessionVariables . _uiSession <$> askUserInfo
   forM_ depHeaders $ \hdr ->

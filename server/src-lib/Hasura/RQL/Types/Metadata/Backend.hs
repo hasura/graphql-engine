@@ -23,8 +23,10 @@ import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 import           Hasura.Server.Types
 
-
-class (Backend b) => BackendMetadata (b :: BackendType) where
+class ( Backend b
+      , Eq (BooleanOperators b (PartialSQLExp b))
+      , Hashable (BooleanOperators b (PartialSQLExp b))
+      ) => BackendMetadata (b :: BackendType) where
 
   buildComputedFieldInfo
     :: (MonadError QErr m)
@@ -92,7 +94,7 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
     -> FunctionName b
     -> SystemDefined
     -> FunctionConfig
-    -> [FunctionPermissionMetadata]
+    -> FunctionPermissionsMap
     -> RawFunctionInfo b
     -> m (FunctionInfo b, SchemaDependency)
 

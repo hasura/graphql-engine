@@ -1,0 +1,5 @@
+type: run_sql
+args:
+  sql: |
+    DELETE FROM "user";
+    SELECT setval('user_id_seq', 1, FALSE);
