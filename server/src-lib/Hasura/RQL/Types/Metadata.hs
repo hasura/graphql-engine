@@ -61,6 +61,18 @@ parseListAsMap t mapFn listP = do
     <> tshow duplicates
   pure $ oMapFromL mapFn list
 
+-- | Versioning the @'Metadata' JSON structure to track backwards incompatible changes.
+-- This value is included in the metadata JSON object at top level 'version' key.
+-- Always metadata is emitted in the latest version via export metadata API (@'runExportMetadata' handler).
+-- Adding a new value constructor to @'MetadataVersion' type bumps the metadata version.
+--
+-- NOTE: When metadata version is bumped:
+-- 1. The Hasura CLI and Console actively use export metadata API to read metadata.
+--    Hence, it is necessary to update CLI and Console to read latest metadata.
+--    All changes SHOULD be released hand in hand (preferebly in one pull request)
+-- 2. There might be other third party services (developed by Hasura users) which use
+--    the export metadata API. Apart from changelog, we need to establish the metadata
+--    version update by bumping up the minor version of the GraphQL Engine.
 data MetadataVersion
   = MVVersion1
   | MVVersion2
@@ -414,10 +426,10 @@ instance Monoid MetadataModifier where
 noMetadataModify :: MetadataModifier
 noMetadataModify = mempty
 
--- | Encode 'Metadata' to JSON with deterministic ordering. Ordering of object keys and array
--- elements should  remain consistent across versions of graphql-engine if possible!
--- Rakesh says the consistency is really what's important here, rather than any particular
--- ordering (e.g. "version" being at the top).
+-- | Encode 'Metadata' to JSON with deterministic ordering (e.g. "version" being at the top).
+-- The CLI system stores metadata in files and has option to show changes in git diff style.
+-- The diff shouldn't appear different for no metadata changes. So, the ordering of object keys and
+-- array elements should  remain consistent across versions of graphql-engine if possible.
 --
 -- Note: While modifying any part of the code below, make sure the encoded JSON of each type is
 -- parsable via its 'FromJSON' instance.
