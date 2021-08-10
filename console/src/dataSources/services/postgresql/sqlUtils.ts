@@ -197,7 +197,13 @@ WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHER
   AND t.typcategory != 'P'
 GROUP BY t.typcategory;`;
 
-export const fetchColumnDefaultFunctions = (schema = 'public') => `
+export const fetchColumnDefaultFunctions = (schema = 'public') => {
+  let schemaList = `('pg_catalog', 'public'`;
+  if (schema !== 'public') {
+    schemaList += `, '${schema}'`;
+  }
+  schemaList += ')';
+  return `
 SELECT string_agg(pgp.proname, ','),
   t.typname as "Type"
 from pg_proc pgp
@@ -211,11 +217,11 @@ WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHER
   AND t.typname != 'unknown'
   AND t.typcategory != 'P'
   AND (array_length(pgp.proargtypes, 1) = 0)
-  AND ( pgn.nspname = '${schema}' OR pgn.nspname = 'pg_catalog' )
+  AND (pgn.nspname IN ${schemaList})
   AND pgp.proretset=false
 GROUP BY t.typname
-ORDER BY t.typname ASC;
-`;
+ORDER BY t.typname ASC;`;
+};
 
 export const isSQLFunction = (str: string | undefined) =>
   new RegExp(/.*\(\)$/gm).test(str || '');
