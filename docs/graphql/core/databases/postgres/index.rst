@@ -25,7 +25,7 @@ Postgres flavours
 -----------------
 
 Hasura also supports databases with full Postgres compatibility like
-Yugabyte, Timescale, Citus, Aurora, RDS.
+YugabyteDB, Timescale, Citus, Aurora, RDS.
 
 We have more distributed flavours like CockroachDB coming soon. See `GitHub issue <https://github.com/hasura/graphql-engine/issues/678>`__.
 

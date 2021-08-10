@@ -34,6 +34,7 @@ Supported databases
   ms-sql-server/index
   citus-hyperscale-postgres/index
   bigquery/index
+  yugabytedb/index
   Connecting databases <connect-db>
 
 .. admonition:: Additional Resources
