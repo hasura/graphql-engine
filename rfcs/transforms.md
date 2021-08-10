@@ -40,11 +40,10 @@ data Transforms
  -- ^ The template engine to use for transformations. Default: go-basic  
   }
 
--- | The order of evaluation is removeHeaders and then addHeaders
+-- | We can add custom headers (we could do remove/update things here but defer for later)
 data TransformHeaders
   = TransformHeaders
   { addHeaders :: [(HeaderName, TemplateText}]
-  , removeHeaders :: [HeaderName]
   }
   
 data TemplatingEngine = GoBasic
@@ -119,13 +118,12 @@ transforms:
      param2: {{.value2}}
 ```
 
-4. Transform the request headers. For example, below we add a custom header from the event payload and modify the `User-Agent`. As noted in the spec, we first remove headers and then add headers. 
+4. Transform the request headers. For example, below we add a custom header from the event payload.
 
 ```
 transforms:
    request_headers:
      add_headers: [{"x-cutom-id": "{{.event.user_id}}"}, { "User-Agent": myapp-server}]
-     remove_headers: [User-Agent]
 ```
 
 5. Change the request content type. The following example changes the content type to `x-www-form-urlencoded`. Note that we still supply the request_body as a JSON. Every top-level field/value is converted into a form parameter (and value is url encoded).
@@ -189,18 +187,19 @@ The server also provides a `v1/metadata` type called `test_http_transformer` whi
 ```
 type: test_http_transformer
 args:
-  payload:
+  request:
     webhook_url: {{WEBHOOK_URL}} -- note that payload can reference env vars
-    event:
-      user_id: 1
-      username: bob
-      password: cat
+    request_body:
+      event:
+        user_id: 1
+        username: bob
+        password: cat
   transformer:
     request_method: GET
     request_url: {{webhook_url}}/{{event.user_id}}
     query_params:
-      param1: "event.username"
-      param2: "event.password"
+      param1: "{{event.username}}"
+      param2: "{{event.password}}"
 ```
 
 Output:
