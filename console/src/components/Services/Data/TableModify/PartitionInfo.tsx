@@ -82,7 +82,7 @@ const PartitionInfo: React.FC<Props> = ({ table, dispatch }) => {
               })}
             </div>
           ))}
-          <hr />
+          <hr className="my-lg" />
         </>
       )}
     </div>

@@ -54,7 +54,7 @@ const TableRow = ({
         <td key={-1} className={styles.bulkSelectCell}>
           <input
             onChange={bulkSection.onChange}
-            className={styles.cursorPointer}
+            className={`${styles.cursorPointer} legacy-input-fix`}
             checked={bulkSection.checked}
             data-role={bulkSection.role}
             disabled={bulkSection.disableCheckbox}

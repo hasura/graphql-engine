@@ -69,7 +69,7 @@ const ListComponent: React.FC<Props> = ({
           )
         </div>
       </div>
-      <hr />
+      <hr className="my-lg" />
       {restEndpoints.map(endpoint => (
         <>
           <div
@@ -140,7 +140,7 @@ const ListComponent: React.FC<Props> = ({
               </div>
             </div>
           </div>
-          <hr />
+          <hr className="my-lg" />
         </>
       ))}
     </div>
