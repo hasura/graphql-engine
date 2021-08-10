@@ -286,7 +286,7 @@ const RawSQL = ({
         <label>
           <input
             checked={isCascadeChecked}
-            className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+            className={`${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
             id="cascade-checkbox"
             type="checkbox"
             onChange={() => {
@@ -321,7 +321,7 @@ const RawSQL = ({
           <label>
             <input
               checked={isTableTrackChecked}
-              className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+              className={`${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
               id="track-checkbox"
               type="checkbox"
               disabled={checkChangeLang()}
@@ -363,7 +363,7 @@ const RawSQL = ({
           <label>
             <input
               checked={isMigrationChecked}
-              className={styles.add_mar_right_small}
+              className={`${styles.add_mar_right_small} legacy-input-fix`}
               id="migration-checkbox"
               type="checkbox"
               onChange={dispatchIsMigration}

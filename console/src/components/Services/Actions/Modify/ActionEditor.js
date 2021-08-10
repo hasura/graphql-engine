@@ -124,7 +124,7 @@ const ActionEditor = ({
         label={actionDefinitionInfo.label}
         tooltip={actionDefinitionInfo.tooltip}
       />
-      <hr />
+      <hr className="my-lg" />
       <GraphQLEditor
         value={typesDefinitionSdl}
         error={typesDefinitionError}
@@ -135,7 +135,7 @@ const ActionEditor = ({
         tooltip={typeDefinitionInfo.tooltip}
         allowEmpty
       />
-      <hr />
+      <hr className="my-lg" />
       <div className={actionStyles.comment_container_styles}>
         <h2
           className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
@@ -149,7 +149,7 @@ const ActionEditor = ({
           onChange={updateActionComment}
         />
       </div>
-      <hr />
+      <hr className="my-lg" />
       <HandlerEditor
         value={handler}
         disabled={readOnlyMode}
@@ -158,7 +158,7 @@ const ActionEditor = ({
         className={styles.add_mar_bottom_mid}
         service="create-action"
       />
-      <hr />
+      <hr className="my-lg" />
       {actionType === 'query' ? null : (
         <React.Fragment>
           <KindEditor
@@ -167,7 +167,7 @@ const ActionEditor = ({
             className={styles.add_mar_bottom_mid}
             disabled={readOnlyMode}
           />
-          <hr />
+          <hr className="my-lg" />
         </React.Fragment>
       )}
       <HeaderConfEditor
@@ -177,7 +177,7 @@ const ActionEditor = ({
         setHeaders={setHeaders}
         disabled={readOnlyMode}
       />
-      <hr />
+      <hr className="my-lg" />
       <div className={styles.display_flex}>
         {!readOnlyMode && (
           <React.Fragment>

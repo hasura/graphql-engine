@@ -63,6 +63,7 @@ const LimitsTable: React.FC<Props> = ({
                 <input
                   type="radio"
                   id="enable"
+                  className="legacy-input-fix"
                   checked={!apiLimitsDisabled}
                   disabled={loading}
                   onChange={() => updateGlobalAPISetting(false)}
@@ -73,6 +74,7 @@ const LimitsTable: React.FC<Props> = ({
                 <input
                   type="radio"
                   id="disable"
+                  className="legacy-input-fix"
                   disabled={loading}
                   checked={apiLimitsDisabled}
                   onChange={() => updateGlobalAPISetting(true)}

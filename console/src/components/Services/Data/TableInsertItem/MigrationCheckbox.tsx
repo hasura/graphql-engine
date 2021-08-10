@@ -22,7 +22,7 @@ const MigrationCheckbox = ({
           checked={isChecked}
           title="This is a migration"
           onChange={onChange}
-          className={styles.migrationCheckbox}
+          className={`${styles.migrationCheckbox} legacy-input-fix`}
         />
         This is a migration
         <ToolTip

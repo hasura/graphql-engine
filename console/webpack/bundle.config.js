@@ -6,10 +6,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const relativeAssetsPath = '../lib';
 const assetsPath = path.join(__dirname, relativeAssetsPath);
 
-const WebpackIsomorphicToolsPlugin = require('webpack-isomorphic-tools/plugin');
-const webpackIsomorphicToolsPlugin = new WebpackIsomorphicToolsPlugin(
-  require('./webpack-isomorphic-tools')
-);
+const commonConfig = require('./common.config');
 
 const TerserPlugin = require('terser-webpack-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
@@ -80,18 +77,6 @@ module.exports = {
         loader: 'ignore-loader',
       },
       {
-        test: /\.css$/,
-        use: [
-          'style-loader',
-          {
-            loader: 'css-loader',
-            options: {
-              importLoaders: 1,
-            },
-          },
-        ],
-      },
-      {
         test: /\.scss$/,
         use: [
           MiniCssExtractPlugin.loader,
@@ -106,50 +91,7 @@ module.exports = {
           'sass-loader?outputStyle=expanded&sourceMap=false&sourceMapContents=false',
         ],
       },
-      {
-        test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-          {
-            loader: 'url-loader',
-            options: { limit: 10000, mimetype: 'application/font-woff' },
-          },
-        ],
-      },
-      {
-        test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-          {
-            loader: 'url-loader',
-            options: { limit: 10000, mimetype: 'application/font-woff' },
-          },
-        ],
-      },
-      {
-        test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-          {
-            loader: 'url-loader',
-            options: { limit: 10000, mimetype: 'application/octet-stream' },
-          },
-        ],
-      },
-      {
-        test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,
-        use: [{ loader: 'file-loader' }],
-      },
-      {
-        test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-          {
-            loader: 'url-loader',
-            options: { limit: 10000, mimetype: 'image/svg+xml' },
-          },
-        ],
-      },
-      {
-        test: webpackIsomorphicToolsPlugin.regular_expression('images'),
-        use: [{ loader: 'url-loader', options: { limit: 10240 } }],
-      },
+      ...commonConfig.assetsRules,
     ],
   },
   resolve: {

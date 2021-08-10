@@ -60,7 +60,7 @@ const Operations = ({
           <input
             onChange={o.onChange}
             data-test={o.testIdentifier}
-            className={`${styles.display_inline} ${styles.add_mar_right_small} ${styles.cursorPointer}`}
+            className={`${styles.display_inline} ${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
             type="checkbox"
             name={o.name}
             checked={o.isChecked}

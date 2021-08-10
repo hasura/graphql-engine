@@ -70,7 +70,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
           </Button>
         </div>
         <div className={styles.add_mar_top}>{endpointState.comment}</div>
-        <hr />
+        <hr className="my-lg" />
         <div className={styles.rest_details_layout}>
           <div className={styles.rest_details_left_content}>
             <div>
@@ -104,7 +104,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
                 </span>
               ))}
             </div>
-            <hr />
+            <hr className="my-lg" />
             <div className={styles.gql_header_details}>
               <h4
                 className={`${styles.subheading_text} ${styles.display_inline}`}

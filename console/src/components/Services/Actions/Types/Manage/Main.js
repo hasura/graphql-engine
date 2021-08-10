@@ -63,7 +63,7 @@ const Manage = ({ allTypes, dispatch, readOnlyMode, ...manageProps }) => {
         readOnlyMode={readOnlyMode}
         allowEmpty
       />
-      <hr />
+      <hr className="my-lg" />
       <Button
         onClick={onSave}
         disabled={!allowSave}

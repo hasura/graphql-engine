@@ -35,7 +35,7 @@ const ArgElement: React.FC<Props> = ({
         <input
           checked={arg.isChecked}
           type="checkbox"
-          className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+          className={`${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
         />
         {arg.name}
       </div>

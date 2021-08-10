@@ -132,7 +132,7 @@ const AddAction = ({
         label={actionDefinitionInfo.label}
         tooltip={actionDefinitionInfo.tooltip}
       />
-      <hr />
+      <hr className="my-lg" />
       <GraphQLEditor
         value={typesDefinitionSdl}
         error={typesDefinitionError}
@@ -143,7 +143,7 @@ const AddAction = ({
         tooltip={typeDefinitionInfo.tooltip}
         allowEmpty
       />
-      <hr />
+      <hr className="my-lg" />
       <div className={actionStyles.comment_container_styles}>
         <h2
           className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
@@ -159,7 +159,7 @@ const AddAction = ({
           className={`form-control ${styles.inputWidthLarge}`}
         />
       </div>
-      <hr />
+      <hr className="my-lg" />
       <HandlerEditor
         value={handler}
         onChange={handlerOnChange}
@@ -168,7 +168,7 @@ const AddAction = ({
         service="create-action"
         disabled={readOnlyMode}
       />
-      <hr />
+      <hr className="my-lg" />
       {actionType === 'query' ? null : (
         <React.Fragment>
           <KindEditor
@@ -177,7 +177,7 @@ const AddAction = ({
             className={styles.add_mar_bottom_mid}
             disabled={readOnlyMode}
           />
-          <hr />
+          <hr className="my-lg" />
         </React.Fragment>
       )}
       <HeadersConfEditor
@@ -187,7 +187,7 @@ const AddAction = ({
         setHeaders={setHeaders}
         disabled={readOnlyMode}
       />
-      <hr />
+      <hr className="my-lg" />
       <Button
         color="yellow"
         size="sm"

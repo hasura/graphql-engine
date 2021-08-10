@@ -293,7 +293,7 @@ const ForeignKeySelector = ({
                   checked={selected === va}
                   onChange={onCheck}
                   data-test={`foreign-key-${index}-${action}-${va}`}
-                  className={styles.add_mar_right_small}
+                  className={`legacy-input-fix ${styles.add_mar_right_small}`}
                   title={inputTitle}
                   disabled={disabled}
                 />

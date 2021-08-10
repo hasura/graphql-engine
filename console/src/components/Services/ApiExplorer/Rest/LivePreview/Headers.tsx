@@ -56,6 +56,7 @@ const Headers: React.FC<HeaderComponentProps> = ({
               value={header.key}
               onChange={toggleActiveState(header.index)}
               checked={header.isActive}
+              className="legacy-input-fix"
             />
           </td>
           <td>

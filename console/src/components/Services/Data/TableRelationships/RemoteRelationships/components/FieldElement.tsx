@@ -37,7 +37,7 @@ const FieldElement: React.FC<Props> = ({ field, handleToggle }) => {
           <input
             checked={field.isChecked}
             type="checkbox"
-            className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+            className={`${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
           />
           {field.name}
         </div>

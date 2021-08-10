@@ -90,6 +90,7 @@ export const LimitsForm: React.FC<LimitFormProps> = ({
               <input
                 type="radio"
                 id={`enable_${limit}`}
+                className="legacy-input-fix"
                 checked={state === RoleState.enabled}
                 onChange={onRadioChange(limit, RoleState.enabled)}
               />
@@ -101,6 +102,7 @@ export const LimitsForm: React.FC<LimitFormProps> = ({
               <div className="radio_input">
                 <input
                   type="radio"
+                  className="legacy-input-fix"
                   id={`disable_${limit}`}
                   checked={state === RoleState.disabled}
                   onChange={onRadioChange(limit, RoleState.disabled)}
@@ -112,6 +114,7 @@ export const LimitsForm: React.FC<LimitFormProps> = ({
               <div className="radio_input">
                 <input
                   type="radio"
+                  className="legacy-input-fix"
                   id={`global_${limit}`}
                   checked={state === RoleState.global}
                   onChange={onRadioChange(limit, RoleState.global)}
@@ -138,6 +141,7 @@ export const LimitsForm: React.FC<LimitFormProps> = ({
                     <input
                       type="checkbox"
                       id="additional_unique_param"
+                      className="legacy-input-fix"
                       checked={addUniqueParams}
                       disabled={isDisabled}
                       onChange={() => setAddUniqueParams(pre => !pre)}
@@ -149,6 +153,7 @@ export const LimitsForm: React.FC<LimitFormProps> = ({
                   <div className="radio_input">
                     <input
                       type="radio"
+                      className="legacy-input-fix"
                       id="ip_address"
                       checked={
                         isGlobal
@@ -163,6 +168,7 @@ export const LimitsForm: React.FC<LimitFormProps> = ({
                   <div className="radio_input">
                     <input
                       type="radio"
+                      className="legacy-input-fix"
                       id="session_variable"
                       checked={
                         isGlobal

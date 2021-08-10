@@ -97,7 +97,7 @@ class ReloadMetadata extends Component {
                 onChange={this.toggleShouldReloadRemoteSchemas}
                 checked={shouldReloadRemoteSchemas}
                 readOnly
-                className={`${metaDataStyles.add_mar_right_small} ${metaDataStyles.cursorPointer}`}
+                className={`${metaDataStyles.add_mar_right_small} ${metaDataStyles.cursorPointer} legacy-input-fix`}
               />
               Reload all remote schemas
             </label>
@@ -114,7 +114,7 @@ class ReloadMetadata extends Component {
               onChange={this.toggleShouldReloadAllSources}
               checked={shouldReloadAllSources}
               readOnly
-              className={`${metaDataStyles.add_mar_right_small} ${metaDataStyles.cursorPointer}`}
+              className={`${metaDataStyles.add_mar_right_small} ${metaDataStyles.cursorPointer} legacy-input-fix`}
             />
             Reload all databases
           </label>

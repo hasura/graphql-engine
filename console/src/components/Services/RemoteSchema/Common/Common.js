@@ -143,7 +143,7 @@ class Common extends React.Component {
             title="Special characters except '-' or '_' are not allowed"
           />
         </label>
-        <hr />
+        <hr className="my-lg" />
         <div className={styles.subheading_text}>
           GraphQL server URL *
           <OverlayTrigger placement="right" overlay={tooltips.graphqlurl}>
@@ -192,7 +192,7 @@ class Common extends React.Component {
           <label>
             <input
               onChange={this.toggleForwardHeaders.bind(this)}
-              className={styles.display_inline + ' ' + styles.add_mar_right}
+              className={`${styles.display_inline} ${styles.add_mar_right} legacy-input-fix`}
               type="checkbox"
               value="forwardHeaders"
               data-test="forward-remote-schema-headers"
@@ -229,9 +229,9 @@ class Common extends React.Component {
           placeHolderText={this.getPlaceHolderText.bind(this)}
           keyInputPlaceholder="header name"
         />
-        <hr />
+        <hr className="my-lg" />
         {getTimeoutSection()}
-        <hr />
+        <hr className="my-lg" />
         <div className={styles.subheading_text}>
           Comment
           <OverlayTrigger placement="right" overlay={tooltips.comment}>

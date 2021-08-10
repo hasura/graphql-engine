@@ -93,7 +93,7 @@ const OperationEditor = (props: OperationEditorProps) => {
                 >
                   <input
                     type="checkbox"
-                    className={`${styles.opsCheckboxDisabled} ${styles.cursorPointer}`}
+                    className={`${styles.opsCheckboxDisabled} ${styles.cursorPointer} legacy-input-fix`}
                     checked={col.enabled}
                     disabled={readOnly}
                     readOnly

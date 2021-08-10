@@ -46,7 +46,7 @@ const Landing: React.FC<Props> = props => {
             Create
           </Button>
         </div>
-        <hr />
+        <hr className="my-lg" />
         <div>
           <TopicDescription
             title="What are Cron Triggers?"
@@ -54,7 +54,7 @@ const Landing: React.FC<Props> = props => {
             imgAlt={CRON_TRIGGER}
             description={topicDescription}
           />
-          <hr className={styles.clear_fix} />
+          <hr className={`${styles.clear_fix} my-lg`} />
         </div>
       </div>
     </div>

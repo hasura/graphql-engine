@@ -15,6 +15,7 @@ const webpackIsomorphicToolsPlugin = new WebpackIsomorphicToolsPlugin(
 );
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
+const commonConfig = require('./common.config');
 
 module.exports = {
   mode: 'development',
@@ -28,11 +29,7 @@ module.exports = {
   },
   entry: {
     main: [
-      'webpack-hot-middleware/client?path=http://' +
-        host +
-        ':' +
-        port +
-        '/__webpack_hmr',
+      `webpack-hot-middleware/client?path=http://${host}:${port}/__webpack_hmr`,
       'bootstrap-loader?extractStyles',
       'font-awesome-webpack!./src/theme/font-awesome.config.js',
       './src/client.js',
@@ -42,7 +39,7 @@ module.exports = {
     path: assetsPath,
     filename: '[name]-[hash].js',
     chunkFilename: '[name]-[chunkhash].js',
-    publicPath: 'http://' + host + ':' + port + hasuraConfig.webpackPrefix,
+    publicPath: `http://${host}:${port}${hasuraConfig.webpackPrefix}`,
   },
   module: {
     rules: [
@@ -61,18 +58,6 @@ module.exports = {
         loader: 'ignore-loader',
       },
       {
-        test: /\.css$/,
-        use: [
-          'style-loader',
-          {
-            loader: 'css-loader',
-            options: {
-              importLoaders: 1,
-            },
-          },
-        ],
-      },
-      {
         test: /\.scss$/,
         use: [
           'style-loader',
@@ -88,50 +73,7 @@ module.exports = {
           'sass-loader?outputStyle=expanded&sourceMap',
         ],
       },
-      {
-        test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-          {
-            loader: 'url-loader',
-            options: { limit: 10000, mimetype: 'application/font-woff' },
-          },
-        ],
-      },
-      {
-        test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-          {
-            loader: 'url-loader',
-            options: { limit: 10000, mimetype: 'application/font-woff' },
-          },
-        ],
-      },
-      {
-        test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-          {
-            loader: 'url-loader',
-            options: { limit: 10000, mimetype: 'application/octet-stream' },
-          },
-        ],
-      },
-      {
-        test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,
-        use: [{ loader: 'file-loader' }],
-      },
-      {
-        test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-          {
-            loader: 'url-loader',
-            options: { limit: 10000, mimetype: 'image/svg+xml' },
-          },
-        ],
-      },
-      {
-        test: webpackIsomorphicToolsPlugin.regular_expression('images'),
-        use: [{ loader: 'url-loader', options: { limit: 10240 } }],
-      },
+      ...commonConfig.assetsRules,
     ],
   },
   resolve: {

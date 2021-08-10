@@ -41,7 +41,7 @@ const Info: React.FC = () => {
           imgAlt={ADHOC_EVENTS_HEADING}
           description={topicDescription}
         />
-        <hr className={styles.clear_fix} />
+        <hr className={`${styles.clear_fix} my-lg`} />
       </div>
     </div>
   );

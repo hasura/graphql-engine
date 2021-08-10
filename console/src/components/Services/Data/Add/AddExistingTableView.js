@@ -81,7 +81,7 @@ class AddExistingTableView extends Component {
                 }}
                 data-test="existing-table"
               />
-              <hr />
+              <hr className="my-lg" />
               <input
                 value="Add"
                 type="submit"

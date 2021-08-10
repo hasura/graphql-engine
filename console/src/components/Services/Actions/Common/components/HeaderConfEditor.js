@@ -33,7 +33,7 @@ const HeaderConfEditor = ({
             type="checkbox"
             checked={forwardClientHeaders}
             onChange={toggleForwardClientHeaders}
-            className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+            className={`${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
             disabled={disabled}
           />
           Forward client headers to webhook

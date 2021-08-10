@@ -132,9 +132,9 @@ const TableColumn = props => {
           colDefaultFunctions={defaultFunctions}
         />
       </span>
-      <label>
+      <label className="flex items-center">
         <input
-          className={styles.inputCheckbox}
+          className={`${styles.inputCheckbox} legacy-input-fix`}
           checked={column.nullable}
           type="checkbox"
           onChange={onColNullableChange.bind(undefined, i)}
@@ -142,9 +142,9 @@ const TableColumn = props => {
         />
         Nullable
       </label>
-      <label>
+      <label className="flex items-center">
         <input
-          className={styles.inputCheckbox}
+          className={`${styles.inputCheckbox} legacy-input-fix`}
           checked={isColumnUnique}
           type="checkbox"
           onChange={onColUniqueChange.bind(

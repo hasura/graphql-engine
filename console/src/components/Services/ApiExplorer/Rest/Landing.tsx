@@ -25,7 +25,7 @@ const Landing = () => (
       Create endpoints from GraphQL queries using{' '}
       <Link to="/api/api-explorer">GraphiQL</Link>.
     </div>
-    <hr />
+    <hr className="my-lg" />
     <TopicDescription
       title="What are REST endpoints?"
       imgElement={<LandingImage />}
@@ -33,7 +33,7 @@ const Landing = () => (
       description={landingDescription}
       knowMoreHref="https://hasura.io/docs/latest/graphql/core/api-reference/restified.html"
     />
-    <hr className={styles.clear_fix} />
+    <hr className={`${styles.clear_fix} my-lg`} />
   </div>
 );
 

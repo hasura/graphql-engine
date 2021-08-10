@@ -77,6 +77,7 @@ const MethodsInput: React.FC<MethodsInputProps> = ({
               type="checkbox"
               checked={inp.checked}
               onChange={onClickCheckBox}
+              className="legacy-input-fix"
               value={inp.label}
               id={`rest-method-${inp.label}`}
             />
