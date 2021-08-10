@@ -209,7 +209,7 @@ const ColumnCreator = ({
         <label className={styles.nullLabel}>
           <input
             type="checkbox"
-            className={`${styles.input} ${styles.nullable} input-sm form-control`}
+            className={`${styles.input} ${styles.nullable} input-sm form-control legacy-input-fix`}
             data-test="nullable-checkbox"
             {...colNull}
           />
@@ -225,7 +225,7 @@ const ColumnCreator = ({
         <label className={styles.nullLabel}>
           <input
             type="checkbox"
-            className={`${styles.input} ${styles.nullable} input-sm form-control`}
+            className={`${styles.input} ${styles.nullable} input-sm form-control legacy-input-fix`}
             {...colUnique}
             data-test="unique-checkbox"
           />

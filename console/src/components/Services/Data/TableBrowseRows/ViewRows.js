@@ -150,7 +150,7 @@ const ViewRows = props => {
       Header: (
         <div className={styles.tableCenterContent}>
           <input
-            className={`${styles.inputCheckbox} ${styles.headerInputCheckbox}`}
+            className={`${styles.inputCheckbox} ${styles.headerInputCheckbox} legacy-input-fix`}
             checked={
               curRows.length > 0 && selectedRows.length === curRows.length
             }
@@ -494,7 +494,7 @@ const ViewRows = props => {
       newRow.tableRowSelectAction = (
         <div className={styles.tableCenterContent}>
           <input
-            className={styles.inputCheckbox}
+            className={`${styles.inputCheckbox} legacy-input-fix`}
             type="checkbox"
             disabled={_disableBulkSelect}
             title={_disableBulkSelect ? NO_PRIMARY_KEY_MSG : ''}

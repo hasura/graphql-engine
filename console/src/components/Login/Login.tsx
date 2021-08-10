@@ -97,12 +97,12 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
           </Button>
         </div>
         <div className={styles.add_pad_left}>
-          <label className={`${styles.cursorPointer}`}>
+          <label className={`${styles.cursorPointer} flex items-center`}>
             <input
               type="checkbox"
               checked={shouldPersist}
               onChange={toggleShouldPersist}
-              className={`${styles.add_mar_right_small} ${styles.remove_margin_top} ${styles.cursorPointer}`}
+              className={`${styles.add_mar_right_small} ${styles.remove_margin_top} ${styles.cursorPointer} legacy-input-fix`}
             />
             Remember in this browser
           </label>

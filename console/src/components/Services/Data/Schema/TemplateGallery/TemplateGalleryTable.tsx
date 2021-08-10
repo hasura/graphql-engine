@@ -16,7 +16,7 @@ export const TemplateGalleryContentRow: React.VFC<{
   return (
     <tr key={template.key} className={styles.row_content}>
       <td className={styles.td}>
-        <a onClick={openModal} className={styles.on_hover}>
+        <a onClick={openModal} className={`${styles.on_hover} text-secondary`}>
           {template.title}
         </a>
       </td>
@@ -61,7 +61,7 @@ export const TemplateGalleryBody: React.VFC<{ onModalOpen: modalOpenFn }> = ({
   return (
     <>
       <h2
-        className={`${globalStyles.heading_text} ${styles.header_table_description}`}
+        className={`${globalStyles.heading_text} ${styles.header_table_description} mb-sm`}
       >
         Template Gallery
       </h2>

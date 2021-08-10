@@ -91,6 +91,7 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
                   checked={i.checked}
                   data-test={`checkbox-${i.name}`}
                   onChange={onCheck(ix)}
+                  className="legacy-input-fix"
                 />
               )}
               {i.children && (

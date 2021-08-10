@@ -70,6 +70,7 @@ const IntrospectionForm: React.FC<
               <div className="radio_input">
                 <input
                   type="radio"
+                  className="legacy-input-fix"
                   id="enable_introspection"
                   checked={!formState.instrospectionIsDisabled}
                   onChange={onRadioChange(false)}
@@ -80,6 +81,7 @@ const IntrospectionForm: React.FC<
               <div className="radio_input">
                 <input
                   type="radio"
+                  className="legacy-input-fix"
                   id="disable_introspection"
                   checked={!!formState.instrospectionIsDisabled}
                   onChange={onRadioChange(true)}
