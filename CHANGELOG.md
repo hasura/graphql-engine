@@ -4,6 +4,8 @@
 
 (Add entries below in the order of server, console, cli, docs, others)
 
+## v2.0.6
+
 - server: Add support for inherited roles for mutations, remote schema, actions and custom function permissions
 - server: fix an issue with remote relationships when join columns are aliased (close #7180)
 - server: fix for incorrect `__typename` value in nested remote joins with a customized remote schema
