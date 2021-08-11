@@ -14,6 +14,7 @@ type MetadataState = {
   error: null | string | boolean;
   loading: boolean;
   inconsistentObjects: any[];
+  inconsistentInheritedRoles: any[];
   ongoingRequest: boolean; // deprecate
   allowedQueries: AllowedQueriesCollection[];
   inheritedRoles: InheritedRole[];
@@ -25,6 +26,7 @@ const defaultState: MetadataState = {
   error: null,
   loading: false,
   inconsistentObjects: [],
+  inconsistentInheritedRoles: [],
   ongoingRequest: false,
   allowedQueries: [],
   inheritedRoles: [],
@@ -130,7 +132,12 @@ export const metadataReducer = (
     case 'Metadata/LOAD_INCONSISTENT_OBJECTS_SUCCESS':
       return {
         ...state,
-        inconsistentObjects: action.data,
+        inconsistentObjects: action.data.filter(
+          (t: any) => t.type !== 'inherited role permission inconsistency'
+        ),
+        inconsistentInheritedRoles: action.data.filter(
+          (t: any) => t.type === 'inherited role permission inconsistency'
+        ),
         ongoingRequest: false,
       };
     case 'Metadata/LOAD_INCONSISTENT_OBJECTS_REQUEST':

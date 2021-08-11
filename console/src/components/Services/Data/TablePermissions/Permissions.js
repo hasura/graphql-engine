@@ -116,6 +116,23 @@ class Permissions extends Component {
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchFunctionInit());
+
+    if (this.props.permissionsState.inconsistentInhertiedRole) {
+      const tableSchema = findTable(
+        this.props.allSchemas,
+        generateTableDef(
+          this.props.permissionsState.inconsistentInhertiedRole.table,
+          this.props.permissionsState.inconsistentInhertiedRole.schema
+        )
+      );
+      dispatch(
+        permOpenEdit(
+          tableSchema,
+          this.props.permissionsState.inconsistentInhertiedRole.role,
+          this.props.permissionsState.inconsistentInhertiedRole.permission_type
+        )
+      );
+    }
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {

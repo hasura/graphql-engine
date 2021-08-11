@@ -85,6 +85,7 @@ const SET_DB_CONNECTION_ENV_VAR = 'Data/SET_DB_CONNECTION_ENV_VAR';
 const RESET_DB_CONNECTION_ENV_VAR = 'Data/RESET_DB_CONNECTION_ENV_VAR';
 
 const SET_ALL_SOURCES_SCHEMAS = 'Data/SET_ALL_SOURCES_SCHEMAS';
+const SET_INCONSISTENT_INHERITED_ROLE = 'Data/SET_INCONSISTENT_INHERITED_ROLE';
 
 export const mergeRemoteRelationshipsWithSchema = (
   remoteRelationships,
@@ -1168,6 +1169,17 @@ const dataReducer = (state = defaultState, action) => {
           dbURL: '',
         },
       };
+    case SET_INCONSISTENT_INHERITED_ROLE:
+      return {
+        ...state,
+        modify: {
+          ...state.modify,
+          permissionsState: {
+            ...state.modify.permissionsState,
+            inconsistentInhertiedRole: action.inconsistent_inherited_role,
+          },
+        },
+      };
     default:
       return state;
   }
@@ -1202,4 +1214,5 @@ export {
   SET_FILTER_SCHEMA,
   SET_FILTER_TABLES,
   fetchPartitionDetails,
+  SET_INCONSISTENT_INHERITED_ROLE,
 };

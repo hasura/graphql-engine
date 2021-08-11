@@ -14,6 +14,7 @@
 - server: fix a bug where some unicode characters in default string values for fields in remote schemas could lead to internal errors
 - server: bigquery: implement `_in` and `_nin` operators. (close #7343)
 - console: fix untracked foreign-key relationships suggestion across schemas
+- console: allow resolution of conflicting inherited role permissions
 - cli: fix SDL formatting in `actions.graphql`(#7296)
 
 ## v2.0.5
