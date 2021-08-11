@@ -727,6 +727,7 @@ jobs:
             make jest
   # test console
   test_console:
+    resource_class: medium+
     docker:
       - image: hasura/graphql-engine-console-builder:80c71f5dd8f1e33b92d3ec2da7abc1ff8d7936a88d3ee0004fd7ad37aacf3b3a
         environment:
