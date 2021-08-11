@@ -45,10 +45,9 @@ After making your changes
 
 ...and the server:
 
-    $ cd server
     $ ln -s cabal.project.dev cabal.project.local
     $ cabal new-update
-    $ cabal new-build
+    $ cabal new-build graphql-engine
 
 To set up the project configuration to coincide with the testing scripts below, thus avoiding recompilation when testing locally, rather use `cabal.project.dev-sh.local` instead of `cabal.project.dev`:
 
@@ -110,7 +109,7 @@ The following command can be used to build and launch a local `graphql-engine` i
 ```
 cabal new-run -- exe:graphql-engine \
   --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
-  serve --enable-console --console-assets-dir=../console/static/dist
+  serve --enable-console --console-assets-dir=console/static/dist
 ```
 
 This will launch a server on port 8080, and it will serve the console assets if they were built with `npm run server-build` as mentioned above.

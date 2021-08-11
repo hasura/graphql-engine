@@ -12,19 +12,13 @@
 --     $ cabal new-build --project-file=cabal.project.myconfig
 --
 -- See: https://www.haskell.org/cabal/users-guide/nix-local-build.html#configuring-builds-with-cabal-project
-packages: .
+
+packages: server
 
 constraints:
-  -- ensure we don't end up with a freeze file that forces an incompatible
-  -- version in CI for Setup.hs scripts.
+  -- Ensure we don't end up with a freeze file that forces an incompatible
+  -- version in CI for `Setup.hs` scripts.
   setup.Cabal <3.4
-
-allow-newer:
-  -- dependent-map depends on constraints-extras, but its bounds have not yet
-  -- been relaxed for GHC 8.10.
-  constraints-extras-0.3.0.2:base,
-  constraints-extras-0.3.0.2:constraints,
-  constraints-extras-0.3.0.2:template-haskell
 
 package *
   optimization: 2
@@ -82,3 +76,4 @@ source-repository-package
   type: git
   location: https://github.com/hasura/ekg-json.git
   tag: 098e3a5951c4991c823815706f1f58f608bb6ec3
+
