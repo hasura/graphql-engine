@@ -178,7 +178,10 @@ PGSourceConnectionInfo
      - false
      - ``read-committed`` | ``repeatable-read`` | ``serializable``
      - The transaction isolation level in which the queries made to the source will be run with (default: ``read-committed``).
-
+   * - ssl_configuration
+     - false
+     - PGCertSettings_
+     - The client SSL certificate settings for the database (*Only available in Cloud*).
 
 .. _MsSQLSourceConnectionInfo:
 
@@ -254,6 +257,38 @@ PGPoolSettings
        created. A value of 0 indicates we should never destroy an active connection. If 0 is
        passed, memory from large query results may not be reclaimed. (default: 600 sec)
 
+.. _PGCertSettings:
+
+PGCertSettings
+^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - sslmode
+     - true
+     - ``String``
+     - The SSL connection mode. See the libpq ssl `support docs <https://www.postgresql.org/docs/9.1/libpq-ssl.html>` for more details.
+   * - sslrootcert
+     - true
+     - FromEnv_
+     - Environment variable which stores trusted certificate authorities.
+   * - sslcert
+     - true
+     - FromEnv_
+     - Environment variable which stores the client certificate.
+   * - sslkey
+     - true
+     - FromEnv_
+     - Environment variable which stores the client private key.
+   * - sslpassword
+     - false
+     - ``String`` | FromEnv_
+     - Password in the case where the sslkey is encrypted.
 
 .. _MsSQLPoolSettings:
 
