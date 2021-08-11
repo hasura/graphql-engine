@@ -733,10 +733,15 @@ jobs:
           HASURA_GRAPHQL_DATABASE_URL: "postgres://gql_test:@localhost:5432/gql_test"
           CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
           GHCRTS: -N1
+          TEST_MSSQL_DATABASE_URL: "DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=master;Uid=SA;Pwd=hasuraMSSQL1"
       - image: circleci/postgres:10-alpine-postgis
         environment:
           POSTGRES_USER: gql_test
           POSTGRES_DB: gql_test
+      - image: mcr.microsoft.com/mssql/server:2019-CU10-ubuntu-20.04
+        environment:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: hasuraMSSQL1
     working_directory: ~/graphql-engine
     parallelism: 4
     steps:
@@ -757,6 +762,7 @@ jobs:
             - ~/.npm
             - ~/.cache
       - *wait_for_postgres
+      - *wait_for_mssql
       - run:
           name: test console
           command: .circleci/test-console.sh
