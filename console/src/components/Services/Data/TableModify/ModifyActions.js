@@ -2077,6 +2077,125 @@ export const setViewCustomColumnNames = (
   );
 };
 
+const saveIndex = (indexInfo, successCb, errorCb) => (dispatch, getState) => {
+  if (!indexInfo) {
+    return;
+  }
+
+  if (!dataSource.createIndexSql && !dataSource.dropIndexSql) {
+    // ERROR: this datasource does not support creation/deletion of indexes
+    return;
+  }
+
+  if (
+    !indexInfo?.index_name?.trim() ||
+    !indexInfo?.index_columns?.length ||
+    !indexInfo?.index_type
+  ) {
+    dispatch(
+      showErrorNotification(
+        'Some required fields are missing',
+        'Index Name, Index Columns and Index Type are all required fields'
+      )
+    );
+    return;
+  }
+
+  const { currentSchema, currentTable, currentDataSource } = getState().tables;
+  const upQueries = [];
+  const downQueries = [];
+
+  const upSql = dataSource.createIndexSql({
+    table: { schema: currentSchema, name: currentTable },
+    columns: indexInfo?.index_columns,
+    indexName: indexInfo?.index_name?.trim(),
+    indexType: indexInfo?.index_type,
+    unique: indexInfo?.unique,
+  });
+  const downSql = dataSource.dropIndexSql(indexInfo?.index_name);
+
+  upQueries.push(getRunSqlQuery(upSql, currentDataSource));
+  downQueries.push(getRunSqlQuery(downSql, currentDataSource));
+
+  const migrationName = `create_index_${indexInfo?.index_name || ''}`;
+  const requestMsg = 'Creating index....';
+  const successMsg = `Created index ${indexInfo?.index_name} successfully`;
+  const errorMsg = 'Failed to create index';
+
+  const customOnSuccess = () => successCb?.();
+
+  const customOnError = () => errorCb?.();
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    upQueries,
+    downQueries,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
+const removeIndex = (indexInfo, successCb, errorCb) => (dispatch, getState) => {
+  if (!indexInfo) {
+    return;
+  }
+
+  if (!dataSource.createIndexSql && !dataSource.dropIndexSql) {
+    // ERROR: this datasource does not support creation/deletion of indexes
+    return;
+  }
+
+  const removeConfirmation = getConfirmation(
+    `You want to remove the index: ${indexInfo?.index_name || ''}`
+  );
+  if (!removeConfirmation) {
+    return;
+  }
+
+  const { currentTable, currentSchema, currentDataSource } = getState().tables;
+  const upQueries = [];
+  const downQueries = [];
+
+  const upSql = dataSource.dropIndexSql(indexInfo?.index_name);
+  const downSql = dataSource.createIndexSql({
+    indexName: indexInfo?.index_name,
+    indexType: indexInfo?.index_type,
+    table: { schema: currentSchema, name: currentTable },
+    columns: indexInfo?.index_columns,
+    unique: indexInfo?.unique,
+  });
+
+  upQueries.push(getRunSqlQuery(upSql, currentDataSource));
+  downQueries.push(getRunSqlQuery(downSql, currentDataSource));
+
+  const migrationName = `drop_index_${indexInfo?.index_name || 'indexName'}`;
+  const requestMsg = 'Removing index....';
+  const successMsg = 'Removed index successfully';
+  const errorMsg = 'Failed to remove index';
+
+  const customOnSuccess = () => successCb?.();
+
+  const customOnError = () => errorCb?.();
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    upQueries,
+    downQueries,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
 export {
   FETCH_COLUMN_TYPE_CASTS,
   FETCH_COLUMN_TYPE_CASTS_FAIL,
@@ -2138,4 +2257,6 @@ export {
   modifyRootFields,
   setCheckConstraints,
   modifyTableCustomName,
+  saveIndex,
+  removeIndex,
 };
