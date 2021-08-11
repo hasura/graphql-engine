@@ -515,6 +515,16 @@ class TestActionIntrospection:
     def test_output_types(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/output_types_query.yaml')
 
+@pytest.mark.usefixtures('per_class_tests_db_state')
+class TestFunctionReturnTypeIntrospection:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/actions/introspection/function_return_type'
+
+    def test_function_return_type(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/function_return_type.yaml')
+
 
 @use_action_fixtures
 class TestActionTimeout:
