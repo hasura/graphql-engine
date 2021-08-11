@@ -20,8 +20,8 @@ telemetryCountersTests = do
       fmap serviceTimingMetrics dumpServiceTimingMetrics `shouldReturn` []
 
     -- excercise accumulating and buckets:
-    let expected =
-          -- NOTE: ordering is arbitrary here (and hence fragile)
+    let expected = sort
+          -- NOTE: since ordering is arbitrary here (and hence fragile), we sort the results before comparing
           [ServiceTimingMetric {
               dimensions = RequestDimensions Mutation Local HTTP
             , bucket = RunningTimeBucket {bucketGreaterThan      = 0.050}
@@ -44,8 +44,8 @@ telemetryCountersTests = do
       recordTimingMetric (RequestDimensions Mutation Local  HTTP)      (RequestTimings 1 0.9990)
       -- bucket 1 sec - 1 hour:
       recordTimingMetric (RequestDimensions  Query    Remote WebSocket) (RequestTimings 1 5.0000)
-      fmap serviceTimingMetrics dumpServiceTimingMetrics `shouldReturn` expected
+      fmap (sort . serviceTimingMetrics) dumpServiceTimingMetrics `shouldReturn` expected
 
     it "serializes and deserializes properly" $ do
-      fmap (fmap serviceTimingMetrics . A.eitherDecode . A.encode) dumpServiceTimingMetrics
+      fmap (fmap (sort . serviceTimingMetrics) . A.eitherDecode . A.encode) dumpServiceTimingMetrics
         `shouldReturn` Right expected
