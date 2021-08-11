@@ -171,7 +171,9 @@ export const fetchSchemaConfigurationByName = createAsyncThunk<
     const fullObject: TemplateGalleryTemplateDetailFull = {
       sql: sqlFiles.join('\n'),
       blogPostLink: itemConfig.blogPostLink,
-      imageUrl: `${baseTemplatePath}/${itemConfig.imageUrl}`,
+      imageUrl: itemConfig.imageUrl
+        ? `${baseTemplatePath}/${itemConfig.imageUrl}`
+        : undefined,
       longDescription: itemConfig.longDescription,
       metadataObject,
       publicUrl,

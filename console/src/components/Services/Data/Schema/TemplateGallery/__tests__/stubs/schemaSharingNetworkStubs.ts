@@ -199,6 +199,20 @@ export const networkStubs = {
         )
       )
     ),
+    configNoImage: rest.get(`${BASE_PS_URL}/config.json`, (req, res, context) =>
+      res(
+        context.text(
+          JSON.stringify({
+            longDescription: 'long long description',
+            blogPostLink:
+              'https://hasura.io/blog/whats-new-in-hasura-cloud-may-2021/',
+            sqlFiles: ['./first.sql', './second.sql'],
+            metadataUrl: './meta.json',
+            affectedMetadata: ['some', 'meta'],
+          })
+        )
+      )
+    ),
     configSlow: rest.get(`${BASE_PS_URL}/config.json`, (req, res, context) =>
       res(
         context.text(

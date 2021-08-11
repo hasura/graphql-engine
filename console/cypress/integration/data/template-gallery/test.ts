@@ -1,11 +1,11 @@
-import { getIndexRoute } from '../../../helpers/dataHelpers';
+import { getDbRoute } from '../../../helpers/dataHelpers';
 import { setMetaData } from '../../validators/validators';
 import { setPromptValue, testMode } from '../../../helpers/common';
 
 const setup = () => {
   describe('Setup route', () => {
     it('Visit the index route', () => {
-      cy.visit(getIndexRoute());
+      cy.visit(getDbRoute());
       cy.wait(7000);
       setMetaData();
     });
@@ -13,13 +13,12 @@ const setup = () => {
 };
 
 export const runSchemaSharingTests = () => {
-  describe.skip('schema sharing', () => {
+  describe('template gallery', () => {
     it('display content', () => {
       cy.contains('default').click();
-      cy.get('[data-test=schema-container-tabs-data-gallery]').click();
       const oneToOne = cy.get('table').contains('Relationships: One-to-One');
       oneToOne.click();
-      cy.contains('Install Schema').click();
+      cy.contains('Install Template').click();
       cy.wait(1000);
       const installed = cy.get('[data-test=table-links]').contains('_onetoone');
       installed.click();

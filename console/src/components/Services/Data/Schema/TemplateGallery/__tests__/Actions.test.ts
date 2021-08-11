@@ -76,6 +76,31 @@ describe('SchemaSharing state', () => {
 
       expect(store.getState().templateGallery).toMatchSnapshot();
     });
+    it('should set imageUrl as undefined when there is no image', async () => {
+      // Prepare
+      server.use(
+        networkStubs.rootJson,
+        networkStubs.template1.configNoImage,
+        networkStubs.template1.firstSql,
+        networkStubs.template1.secondSql,
+        networkStubs.template1.metadata
+      );
+
+      const store = getStore();
+
+      await store.dispatch(fetchGlobalSchemaSharingConfiguration());
+      // Act
+      await store.dispatch(
+        fetchSchemaConfigurationByName({
+          key: 'template-1',
+          category: CATEGORY_1,
+        })
+      );
+
+      // Assert
+
+      expect(store.getState().templateGallery).toMatchSnapshot();
+    });
   });
   describe('apply schema', () => {
     it('should apply migration', async () => {
