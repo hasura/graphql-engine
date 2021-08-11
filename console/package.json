@@ -105,7 +105,8 @@
     "sql-formatter": "2.3.3",
     "styled-components": "5.0.1",
     "styled-system": "5.1.5",
-    "subscriptions-transport-ws": "0.9.16"
+    "subscriptions-transport-ws": "0.9.16",
+    "ts-essentials": "^7.0.3"
   },
   "devDependencies": {
     "@babel/cli": "7.13.10",

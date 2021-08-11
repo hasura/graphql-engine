@@ -1,4 +1,4 @@
-import { Table, FrequentlyUsedColumn } from '../../types';
+import { Table, FrequentlyUsedColumn, IndexType } from '../../types';
 import { isColTypeString } from '.';
 import { FunctionState } from './types';
 import { QualifiedTable } from '../../../metadata/types';
@@ -1045,6 +1045,71 @@ SELECT n.nspname::text AS table_schema,
    AND r.contype = 'c'::"char"
    ) AS info;
 `;
+
+export const tableIndexSql = (options: { schema: string; table: string }) => `
+    SELECT
+    COALESCE(
+        json_agg(
+            row_to_json(info)
+        ),
+        '[]' :: JSON
+    ) AS indexes
+    FROM
+    (
+      SELECT
+          t.relname as table_name,
+          i.relname as index_name,
+          it.table_schema as table_schema,
+          am.amname as index_type,
+          array_agg(DISTINCT a.attname) as index_columns,
+          pi.indexdef as index_definition_sql
+      FROM
+          pg_class t,
+          pg_class i,
+          pg_index ix,
+          pg_attribute a,
+          information_schema.tables it,
+          pg_am am,
+          pg_indexes pi
+      WHERE
+          t.oid = ix.indrelid
+          and i.oid = ix.indexrelid
+          and a.attrelid = t.oid
+          and a.attnum = ANY(ix.indkey)
+          and t.relkind = 'r'
+          and pi.indexname = i.relname
+          and t.relname = '${options.table}'
+          and it.table_schema = '${options.schema}'
+          and am.oid = i.relam
+      GROUP BY
+          t.relname,
+          i.relname,
+          it.table_schema,
+          am.amname,
+          pi.indexdef
+      ORDER BY
+          t.relname,
+          i.relname
+    ) as info;
+  `;
+
+export const getCreateIndexSql = (indexObj: {
+  indexName: string;
+  indexType: IndexType;
+  table: QualifiedTable;
+  columns: string[];
+  unique?: boolean;
+}) => {
+  const { indexName, indexType, table, columns, unique = false } = indexObj;
+
+  return `
+  CREATE ${unique ? 'UNIQUE' : ''} INDEX "${indexName}" on
+  "${table.schema}"."${table.name}" using ${indexType} (${columns.join(', ')});
+`;
+};
+
+export const getDropIndexSql = (indexName: string) =>
+  `DROP INDEX IF EXISTS "${indexName}"`;
 
 export const frequentlyUsedColumns: FrequentlyUsedColumn[] = [
   {

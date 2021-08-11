@@ -72,6 +72,121 @@ hr {
   // overflow: auto;
 }
 
+.modifyIndexEditorExpand {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.modifyIndexSelectContainer {
+  width: 100%;
+  max-width: 280px;
+  &:first-child {
+    margin-right: 18px;
+  }
+}
+
+.indexEditorContainer {
+  display: flex;
+  flex-direction: column;
+}
+.indexEditorGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 20px;
+  align-items: center;
+  grid-template-rows: 1fr 1fr max-content;
+}
+
+.selectIndexMenuHeader {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  align-items: center;
+}
+
+.indexDef {
+  display: grid;
+  grid-auto-flow: column;
+  column-gap: 8px;
+}
+
+.indexesList {
+  margin-bottom: 20px;
+}
+
+.indexesListItem {
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
+  grid-column-gap: 8px;
+  align-items: baseline;
+  &:not(:last-child) {
+    margin-bottom: 8px;
+  }
+  & > p {
+    margin-bottom: 0;
+  }
+}
+
+.indexRemoveBtn {
+  user-select: none;
+  color: rgb(206, 26, 26);
+  margin-right: 12px;
+  &:hover {
+    cursor: pointer;
+  }
+  &:disabled {
+    cursor: not-allowed;
+    color: unset;
+  }
+}
+
+.uppercase {
+  text-transform: uppercase;
+}
+
+.indexCreateFormLabel {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.indexOptionsContainer {
+  width: 50%;
+  display: flex;
+  grid-row: 3;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.indexOption {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  input[type='checkbox'] {
+    margin-left: 16px;
+    margin-top: 0px !important;
+    width: 15px;
+    height: 15px;
+  }
+}
+
+.inputNameStyles {
+  margin-top: 8px;
+  height: 38px;
+}
+
+.indexColumnSelectStyles {
+  margin-top: 8px;
+  caret-color: transparent;
+}
+
+.uniqueCheckbox {
+  outline: 0;
+  user-select: none;
+}
+
 .readOnly {
   padding: 8px 12px;
   border-radius: 4px;
@@ -110,8 +225,4 @@ hr {
 
 .paddingTopSm {
   padding-top: 10px !important;
-}
-
-.max_width {
-  max-width: 200px;
 }

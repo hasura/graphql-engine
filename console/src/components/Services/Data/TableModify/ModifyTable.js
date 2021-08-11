@@ -51,6 +51,7 @@ import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { NotSupportedNote } from '../../../Common/NotSupportedNote';
 import ConnectedComputedFields from './ComputedFields';
 import FeatureDisabled from '../FeatureDisabled';
+import IndexFields from './IndexFields';
 import PartitionInfo from './PartitionInfo';
 
 class ModifyTable extends React.Component {
@@ -311,7 +312,12 @@ class ModifyTable extends React.Component {
                   <hr className="my-lg" />
                 </>
               )}
-
+              {isFeatureSupported('tables.modify.indexes.view') ? (
+                <>
+                  <IndexFields tableSchema={table} />
+                  <hr />
+                </>
+              ) : null}
               {isFeatureSupported('tables.modify.triggers') && (
                 <>
                   <div className={styles.add_mar_bottom}>

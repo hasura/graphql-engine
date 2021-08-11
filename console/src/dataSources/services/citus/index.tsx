@@ -1,3 +1,5 @@
+import { DeepRequired } from 'ts-essentials';
+
 import { DataSourcesAPI } from '../..';
 import { getFetchTablesListQuery, schemaListSql } from './sqlUtils';
 import {
@@ -14,10 +16,13 @@ import {
   supportedFeatures as PgSupportedFeatures,
 } from '../postgresql';
 
-export const supportedFeatures: SupportedFeaturesType = {
+export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
   ...PgSupportedFeatures,
   driver: {
     name: 'citus',
+    fetchVersion: {
+      enabled: false,
+    },
   },
   tables: {
     ...(PgSupportedFeatures?.tables ?? {}),
@@ -35,6 +40,10 @@ export const supportedFeatures: SupportedFeaturesType = {
       setAsEnum: false,
       untrack: true,
       delete: true,
+      indexes: {
+        edit: false,
+        view: false,
+      },
     },
   },
   events: {

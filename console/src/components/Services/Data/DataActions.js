@@ -47,6 +47,10 @@ import {
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import { services } from '../../../dataSources/services';
 import insertReducer from './TableInsertItem/InsertActions';
+import {
+  checkFeatureSupport,
+  READ_ONLY_RUN_SQL_QUERIES,
+} from '../../../helpers/versionUtils';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
@@ -995,6 +999,46 @@ const fetchPartitionDetails = table => {
         dispatch(
           showErrorNotification(
             'Error fetching partition information',
+            null,
+            error
+          )
+        );
+      }
+    );
+  };
+};
+
+export const fetchTableIndexDetails = tableInfo => {
+  return (dispatch, getState) => {
+    const url = Endpoints.query;
+    const currState = getState();
+    const { currentDataSource } = currState.tables;
+    const { table_name: table, table_schema: schema } = tableInfo;
+    const query = getRunSqlQuery(
+      dataSource.tableIndexSql({ table, schema }),
+      currentDataSource,
+      false,
+      checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) || false
+    );
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(query),
+    };
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        try {
+          return JSON.parse(data?.result?.[1]?.[0] ?? '[]');
+        } catch (err) {
+          console.error(err);
+          return [];
+        }
+      },
+      error => {
+        dispatch(
+          showErrorNotification(
+            'Error fetching indexes information',
             null,
             error
           )
