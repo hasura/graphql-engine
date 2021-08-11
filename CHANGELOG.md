@@ -4,6 +4,8 @@
 
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: fix GraphQL type for single-row returning functions (close #7109)
+
 ## v2.0.6
 
 - server: Add support for inherited roles for mutations, remote schema, actions and custom function permissions

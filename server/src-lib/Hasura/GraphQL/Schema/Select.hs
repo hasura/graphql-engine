@@ -461,7 +461,7 @@ selectFunction sourceName function fieldName description selectPermissions = do
   tableInfo          <- askTableInfo sourceName tableName
   tableArgsParser    <- tableArguments sourceName tableInfo selectPermissions
   functionArgsParser <- customSQLFunctionArgs function
-  selectionSetParser <- tableSelectionList sourceName tableInfo selectPermissions
+  selectionSetParser <- returnFunctionParser sourceName tableInfo selectPermissions
   let argsParser = liftA2 (,) functionArgsParser tableArgsParser
   pure $ P.subselection fieldName description argsParser selectionSetParser
     <&> \((funcArgs, tableArgs'), fields) -> IR.AnnSelectG
@@ -471,6 +471,14 @@ selectFunction sourceName function fieldName description selectPermissions = do
       , IR._asnArgs     = tableArgs'
       , IR._asnStrfyNum = stringifyNum
       }
+
+  where
+    -- | For some return type T, we decide between returning 'T' or '[T!]!'.
+    -- see https://github.com/hasura/graphql-engine/issues/7109
+    returnFunctionParser =
+      case _fiJsonAggSelect function of
+        JASSingleObject -> tableSelectionSet
+        JASMultipleRows -> tableSelectionList
 
 selectFunctionAggregate
   :: forall b r m n
