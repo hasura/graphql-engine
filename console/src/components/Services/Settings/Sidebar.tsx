@@ -12,6 +12,7 @@ import styles from '../../Common/TableCommon/Table.scss';
 
 interface Metadata {
   inconsistentObjects: Record<string, unknown>[];
+  inconsistentInheritedRoles: Record<string, unknown>[];
 }
 
 type SidebarProps = {
@@ -45,7 +46,12 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
   });
 
   const consistentIcon =
-    metadata.inconsistentObjects.length === 0 ? <CheckIcon /> : <CrossIcon />;
+    metadata.inconsistentObjects.length === 0 &&
+    metadata.inconsistentInheritedRoles.length === 0 ? (
+      <CheckIcon />
+    ) : (
+      <CrossIcon />
+    );
 
   sectionsData.push({
     key: 'status',

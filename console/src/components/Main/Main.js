@@ -20,6 +20,7 @@ import {
 } from '../Common/utils/routesUtils';
 import { getPathRoot } from '../Common/utils/urlUtils';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
+import _push from '../Services/Data/push';
 import {
   emitProClickedEvent,
   featureCompatibilityInit,
@@ -127,6 +128,14 @@ class Main extends React.Component {
   handleMetadataRedirect() {
     if (this.props.metadata.inconsistentObjects.length > 0) {
       this.props.dispatch(redirectToMetadataStatus());
+    }
+    if (
+      this.props.metadata.inconsistentInheritedRoles.length > 0 &&
+      !this.props.inconsistentInheritedRole
+    ) {
+      this.props.dispatch(
+        _push(`${globals.urlPrefix}/settings/metadata-status`)
+      );
     }
   }
 
@@ -482,6 +491,8 @@ const mapStateToProps = (state, ownProps) => {
     console_opts: state.telemetry.console_opts,
     requestHeaders: state.tables.dataHeaders,
     schemaList: state.tables.schemaList,
+    inconsistentInheritedRole:
+      state.tables.modify.permissionsState.inconsistentInhertiedRole,
   };
 };
 
