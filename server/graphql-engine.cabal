@@ -78,26 +78,12 @@ common common-all
     TypeFamilies
     TypeFamilyDependencies
     TypeOperators
+    
+-- just testing
 
 common common-exe
   ghc-options:
     -threaded -rtsopts
-    -- `-I0` disables idle GC. We do this in application code now. See 'ourIdleGC' for details.
-    -- `-T` is required to collect the stats we use in 'ourIdleGC'.
-    --
-    -- `-qn2` limits the parallel GC to at most 2 capabilities. This came up in #3354/#3394, as the
-    -- parallel GC was causing significant performance overhead. Folks in #ghc on freenode advised
-    -- limiting the parallel GC to 2 or 3 capabilities as a very conservative choice, since more
-    -- than that is highly unlikely to ever be helpful. More benchmarking would be useful to know if
-    -- this is the right decision. It’s possible it would better to just turn it off completely.
-    --
-    -- `-kc8K` helps limit memory consumption in websockets (perhaps elsewhere) by making the
-    -- cost of a thread's first (and probably only) stack overflow less severe.
-    -- See:https://github.com/hasura/graphql-engine/issues/5190
-    --
-    -- `--disable-delayed-os-memory-return` seems to help lower reported residency, in particular
-    -- in situations where we seem to be dealing with haskell heap fragmentation. This is more a
-    -- workaround for limitations in monitoring tools than anything...
     "-with-rtsopts=-N -I0 -T -qn2 -kc8K --disable-delayed-os-memory-return"
 
 library
