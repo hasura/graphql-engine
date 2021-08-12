@@ -4,6 +4,7 @@
 
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: fix GraphQL type for remote relationship field (close #7284)
 - server: support EdDSA algorithm and key type for JWT
 - server: fix GraphQL type for single-row returning functions (close #7109)
 - console: add support for creation of indexes for Postgres data sources

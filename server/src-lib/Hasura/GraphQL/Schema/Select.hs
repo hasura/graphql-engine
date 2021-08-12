@@ -1176,8 +1176,9 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
       let remoteFieldUserArguments = map snd $ Map.toList remoteFieldParamMap
       remoteFld <-
         lift $
-          customizeFieldParser (,) remoteSchemaCustomizer parentTypeName <$>
+          customizeFieldParser (,) remoteSchemaCustomizer parentTypeName . P.wrapFieldParser nestedFieldType <$>
           remoteField remoteRelationshipIntrospection fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
+
       pure $ pure $ remoteFld
         `P.bindField` \(resultCustomizer, G.Field{ G._fArguments = args, G._fSelectionSet = selSet, G._fName = fname}) -> do
           let remoteArgs =

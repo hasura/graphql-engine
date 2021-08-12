@@ -200,14 +200,9 @@ actionOutputFields outputType annotatedObject = do
           selection   = P.selection_ fieldName description $ case objectFieldType of
             AOFTScalar def -> customScalarParser def
             AOFTEnum   def -> customEnumParser   def
-          fieldParser = \case
-            G.TypeNamed (G.Nullability True)  _ -> P.nullableField    selection
-            G.TypeNamed (G.Nullability False) _ -> P.nonNullableField selection
-            G.TypeList  (G.Nullability True)  t -> P.nullableField    $ P.multipleField $ fieldParser t
-            G.TypeList  (G.Nullability False) t -> P.nonNullableField $ P.multipleField $ fieldParser t
           pgColumnInfo =
             ColumnInfo (unsafePGCol $ G.unName fieldName) fieldName 0 (ColumnScalar PGJSON) (G.isNullable gType) Nothing
-      in fieldParser gType $> RQL.mkAnnColumnField pgColumnInfo Nothing Nothing
+      in P.wrapFieldParser gType selection $> RQL.mkAnnColumnField pgColumnInfo Nothing Nothing
 
     relationshipFieldParser
       :: TypeRelationship (TableInfo ('Postgres 'Vanilla)) (ColumnInfo ('Postgres 'Vanilla))
@@ -229,7 +224,7 @@ actionOutputFields outputType annotatedObject = do
             P.subselection_ fieldName desc selectionSetParser
               <&> \fields -> RQL.AFObjectRelation $ RQL.AnnRelationSelectG tableRelName columnMapping $
                              RQL.AnnObjectSelectG fields tableName $
-                             (fmap . fmap) partialSQLExpToUnpreparedValue $ spiFilter tablePerms
+                             (fmap partialSQLExpToUnpreparedValue <$> spiFilter tablePerms)
         ArrRel -> do
           let desc = Just $ G.Description "An array relationship"
           otherTableParser <- lift $ selectTable sourceName tableInfo fieldName desc tablePerms
