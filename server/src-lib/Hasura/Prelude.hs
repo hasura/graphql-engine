@@ -19,6 +19,9 @@ module Hasura.Prelude
   , hoistMaybe
   , hoistEither
   , tshow
+  -- * Trace debugging
+  , ltrace
+  , ltraceM
   -- * Efficient coercions
   , coerce
   , findWithIndex
@@ -96,8 +99,11 @@ import qualified Data.Hashable               as H
 import qualified Data.Text                   as T
 import qualified Data.Text.Encoding          as TE
 import qualified Data.Text.Encoding.Error    as TE
+import qualified Data.Text.Lazy              as TL
 import qualified GHC.Clock                   as Clock
 
+import           Debug.Trace                 (trace, traceM)
+import qualified Text.Pretty.Simple          as PS
 
 alphabet :: String
 alphabet = ['a'..'z'] ++ ['A'..'Z']
@@ -233,3 +239,15 @@ instance (Hashable a) => Hashable (Seq a) where
 -- as @foldMap id@, per the documentation in @Data.Foldable@.
 fold' :: (Monoid m, Foldable t) => t m -> m
 fold' = foldMap' id
+
+-- Fancy trace debugging
+
+-- | Labeled, prettified traceShowId
+ltrace :: Show a => String -> a -> a
+ltrace lbl x = trace (lbl <> ": " <> TL.unpack (PS.pShow x)) x
+{-# warning ltrace "ltrace left in code" #-}
+
+-- | Labeled, prettified traceShowM
+ltraceM :: Applicative m => Show a => String -> a -> m ()
+ltraceM lbl x = traceM (lbl <> ": " <> TL.unpack (PS.pShow x))
+{-# warning ltraceM "ltraceM left in code" #-}
