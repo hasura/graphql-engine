@@ -235,7 +235,6 @@ export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES=true
 export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
 export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES="inherited_roles"
 
-export PYTEST_ADDOPTS="-vv"
 
 HGE_PIDS=""
 WH_PID=""
@@ -965,7 +964,7 @@ case "$SERVER_TEST_TO_RUN" in
     run_hge_with_args serve --enabled-apis "$HASURA_GRAPHQL_ENABLED_APIS"
     wait_for_port 8080
 
-    pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-developer-api-enabled test_dev_endpoints.py
+    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-developer-api-enabled test_dev_endpoints.py
 
     unset HASURA_GRAPHQL_ENABLED_APIS
 
@@ -1142,8 +1141,22 @@ admin_users = postgres' > pgbouncer/pgbouncer.ini
 
     # end horizontal scale test
     ;;
-    # backend-* tests are excluded from `server-test-names.txt`
-    # and are run via their respective `test_oss_server_*` circleci jobs
+    #
+    # ###########################################
+    # the following backend-* tests are excluded from `server-test-names.txt`
+    # and are run via their respective `test_oss_server_*` jobs
+    #
+    # [Specifying Pytests with -k flag]
+    # tests are run with the -k flag to filter on common and
+    # backend-specific test classes using keyword expressions.
+    #
+    # this reduces the number of unrelated tests skipped, which
+    # avoids an increasingly negative impact on our test run
+    # time as we add more backends and tests.
+    #
+    # https://docs.pytest.org/en/6.2.x/usage.html#specifying-tests-selecting-tests
+    # https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#adding-test-support-for-a-new-backend
+    #
     backend-mssql)
     echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH SQL SERVER BACKEND ###########################################>\n"
     TEST_TYPE="no-auth"
@@ -1154,7 +1167,8 @@ admin_users = postgres' > pgbouncer/pgbouncer.ini
     source_data_sources_utils
     add_mssql_source 8080 "$HASURA_GRAPHQL_MSSQL_SOURCE_URL"
 
-    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend mssql
+    # See note [Specifying Pytests with -k flag]
+    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend mssql -k "MSSQL or Common"
 
     # start inherited roles test
     echo -e "\n$(time_elapsed): <########## TEST INHERITED-ROLES WITH SQL SERVER BACKEND ###########################################>\n"
@@ -1175,7 +1189,25 @@ admin_users = postgres' > pgbouncer/pgbouncer.ini
     source_data_sources_utils
     add_citus_source 8080 "$HASURA_GRAPHQL_CITUS_SOURCE_URL"
 
-    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend citus
+    # See note [Specifying Pytests with -k flag]
+    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend citus -k "Citus or Common"
+
+    kill_hge_servers
+    ;;
+    backend-bigquery)
+    echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH BIGQUERY BACKEND ###########################################>\n"
+    TEST_TYPE="no-auth"
+
+    source_data_sources_utils
+    verify_bigquery_pytest_env
+
+    export HASURA_BIGQUERY_SERVICE_ACCOUNT=$(cat "$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE")
+
+    run_hge_with_args serve
+    wait_for_port 8080
+
+    # See note [Specifying Pytests with -k flag]
+    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend bigquery -k "BigQuery or Common"
 
     kill_hge_servers
     ;;
