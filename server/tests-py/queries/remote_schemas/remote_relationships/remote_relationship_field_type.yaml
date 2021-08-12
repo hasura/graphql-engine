@@ -1,0 +1,29 @@
+#Test case for bug reported at https://github.com/hasura/graphql-engine/issues/7284
+description: Introspect a object type definition to check its field types
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query {
+      profiles_type: __type(name: "profiles"){
+        fields{
+          name
+          type{
+            kind
+          }
+        }
+      }
+    }
+response:
+  data:
+    profiles_type:
+      fields:
+      - name: id
+        type:
+          kind: NON_NULL
+      - name: messagesNestedArgs
+        type:
+          kind: LIST
+      - name: name
+        type:
+          kind: SCALAR

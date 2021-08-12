@@ -18,6 +18,7 @@ import qualified Data.HashMap.Strict.Extended                as M
 import qualified Data.HashMap.Strict.InsOrd                  as OMap
 import qualified Data.HashSet                                as S
 import qualified Data.List.Extended                          as LE
+import qualified Language.GraphQL.Draft.Syntax               as G
 
 import           Data.Parser.JSONPath
 import           Data.Text.Extended
@@ -94,6 +95,14 @@ nullableField (FieldParser (Definition n u d (FieldInfo as t)) p) =
 multipleField :: forall m a. FieldParser m a -> FieldParser m a
 multipleField (FieldParser (Definition n u d (FieldInfo as t)) p) =
   FieldParser (Definition n u d (FieldInfo as (Nullable (TList t)))) p
+
+-- | Decorate a schema field with reference to given @'G.GType'
+wrapFieldParser :: forall m a. G.GType -> FieldParser m a -> FieldParser m a
+wrapFieldParser = \case
+  G.TypeNamed (G.Nullability True)  _ -> nullableField
+  G.TypeNamed (G.Nullability False) _ -> nonNullableField
+  G.TypeList  (G.Nullability True)  t -> nullableField    . multipleField . wrapFieldParser t
+  G.TypeList  (G.Nullability False) t -> nonNullableField . multipleField . wrapFieldParser t
 
 -- | Decorate a schema output type as NON_NULL
 nonNullableParser :: forall m a . Parser 'Output m a -> Parser 'Output m a

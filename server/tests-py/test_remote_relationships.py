@@ -417,3 +417,15 @@ class TestComputedFieldsInRemoteRelationship:
 
     def test_remote_join_with_computed_field_session(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + 'remote_join_with_computed_field_session.yaml')
+
+@use_test_fixtures
+class TestRemoteRelationshipFieldType:
+
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/remote_relationships"
+
+    def test_remote_relationship_field_type(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + '/setup_remote_rel_nested_args.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + '/remote_relationship_field_type.yaml')
