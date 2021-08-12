@@ -277,9 +277,16 @@ The current workflow for supporting a new backend in integration tests is as fol
     3. `teardown_<backend>` and `cleardb_<backend>`
     4. important: filename suffixes should be the same as the value that’s being passed to `—backend`; that's how the files are looked up.
 4. Specify a `backend` parameter for [the `per_backend_tests` fixture](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-1034b560ce9984643a4aa4edab1d612aa512f1c3c28bbc93364700620681c962R420), parameterised by backend. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-40b7c6ad5362e70cafd29a3ac5d0a5387bd75befad92532ea4aaba99421ba3c8R12-R13).
-5. Optional: Run the existing (Postgres) test suite against the new backend to identify and group common and backend-specific tests into their own classes.
 
-Tests against alternative backends aren't yet run/supported in CI, so please test locally.
+**Test suite naming convention**
+The current convention is to indicate the backend(s) tests can be run against in the class name. For example:
+    * `TestGraphQLQueryBasicMySQL` for tests that can only be run on MySQL
+    * `TestGraphQLQueryBasicCommon` for tests that can be run against more than one backend
+    * if a test class doesn't have a suffix specifying the backend, nor does its name end in `Common`, then it is likely a test written pre-v2.0 that can only be run on Postgres
+
+This naming convention enables easier test filtering with [pytest command line flags](https://docs.pytest.org/en/6.2.x/usage.html#specifying-tests-selecting-tests).
+
+The backend-specific and common test suites are disjoint; for example, run `pytest --integration -k "Common or MySQL" --backend mysql` to run all MySQL tests.
 
 ### Create Pull Request
 

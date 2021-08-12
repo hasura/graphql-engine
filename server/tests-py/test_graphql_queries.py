@@ -328,7 +328,7 @@ class TestGraphQLQueryBasicCitus:
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['citus', 'postgres'])
 @usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryFragments:
+class TestGraphQLQueryFragmentsCommon:
 
     def test_select_query_top_level_fragment(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_top_level_fragment.yaml', transport)

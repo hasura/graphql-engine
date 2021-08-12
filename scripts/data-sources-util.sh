@@ -67,3 +67,12 @@ function add_mysql_source() {
     curl "$metadata_url" \
     --data-raw '{"type":"replace_metadata","args":{"version":3,"sources":[{"name":"mysql","kind":"mysql","tables":[],"configuration":{"database":"hasura","user":"'"$MYSQL_USER"'","password":"'"$MYSQL_PASSWORD"'","host":"127.0.0.1","port":'"$MYSQL_PORT"',"pool_settings":{}}}]}}'
 }
+
+function verify_bigquery_pytest_env() {
+    # check that required bigquery environment variables are present
+    if [[ -z "${HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE:-}" || -z "${HASURA_BIGQUERY_PROJECT_ID:-}"  ]]; then
+      echo "HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE and HASURA_BIGQUERY_PROJECT_ID environment variables are needed to run these tests."
+      echo "See https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#running-the-python-test-suite-on-bigquery for more information."
+      exit 1
+    fi
+}
