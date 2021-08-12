@@ -131,6 +131,7 @@ library
                      , pg-client
                      , postgresql-binary
                      , postgresql-libpq
+                     , pretty-simple
                      , process
                      , profunctors
                      , retry
