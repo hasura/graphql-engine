@@ -8,7 +8,7 @@ certifi==2019.9.11
 cffi==1.13.2
 chardet==3.0.4
 croniter==0.3.31
-cryptography==2.8
+cryptography==3.4.7
 execnet==1.7.1
 graphene==2.1.8
 graphql-core==2.2.1
@@ -23,7 +23,7 @@ promise==2.2.1
 psycopg2-binary==2.8.4
 py==1.8.0
 pycparser==2.19
-PyJWT==1.7.1
+PyJWT==2.1.0
 pyparsing==2.4.5
 pytest==5.3.1
 pytest-forked==1.1.3

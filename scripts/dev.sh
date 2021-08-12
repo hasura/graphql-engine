@@ -78,7 +78,7 @@ try_jq() {
 
 # Bump this to:
 #  - force a reinstall of python dependencies, etc.
-DEVSH_VERSION=1.4
+DEVSH_VERSION=1.5
 
 case "${1-}" in
   graphql-engine)
@@ -528,6 +528,8 @@ elif [ "$MODE" = "test" ]; then
       rm -rf "$PY_VENV"
       echo "$DEVSH_VERSION" > "$DEVSH_VERSION_FILE"
     fi
+    # cryptography 3.4.7 version requires Rust dependencies by default. But we don't need them for our tests, hence disabling them via the following env var => https://stackoverflow.com/a/66334084
+    export CRYPTOGRAPHY_DONT_BUILD_RUST=1
     set +u  # for venv activate
     if [ ! -d "$PY_VENV" ]; then
       python3 -m venv "$PY_VENV"

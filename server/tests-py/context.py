@@ -479,6 +479,9 @@ class HGECtx:
         self.hge_jwt_conf = config.getoption('--hge-jwt-conf')
         if self.hge_jwt_conf is not None:
             self.hge_jwt_conf_dict = json.loads(self.hge_jwt_conf)
+            self.hge_jwt_algo = self.hge_jwt_conf_dict["type"]
+            if self.hge_jwt_algo == "Ed25519":
+                self.hge_jwt_algo = "EdDSA"
         self.webhook_insecure = config.getoption('--test-webhook-insecure')
         self.metadata_disabled = config.getoption('--test-metadata-disabled')
         self.may_skip_test_teardown = False

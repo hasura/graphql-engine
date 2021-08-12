@@ -175,8 +175,7 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace
                 "name": "bar",
             }
             claim = mk_claims_with_namespace_path(claim,hClaims,claims_namespace_path)
-            headers['Authorization'] = 'Bearer ' + jwt.encode(claim, hge_ctx.hge_jwt_key, algorithm='RS512').decode(
-                'UTF-8')
+            headers['Authorization'] = 'Bearer ' + jwt.encode(claim, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
 
         #Use the hasura role specified in the test case, and create an authorization token which will be verified by webhook
         if hge_ctx.hge_webhook is not None and len(headers) > 0:
