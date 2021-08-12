@@ -82,7 +82,7 @@ class TestJWTExpirySkew():
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         exp = datetime.now(timezone.utc) - timedelta(seconds = 30)
         self.claims['exp'] = round(exp.timestamp())
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['response'] = {
             'data': {
@@ -108,7 +108,7 @@ class TestJWTExpirySkew():
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
             self.conf = yaml.safe_load(c)
-        curr_time = datetime.utcnow()
+        curr_time = datetime.now()
         exp_time = curr_time + timedelta(hours=10)
         self.claims = {
             'sub': '1234567890',
@@ -139,7 +139,7 @@ class TestJWTBasic():
         if 'claims_namespace_path' in hge_ctx.hge_jwt_conf_dict:
             claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         self.conf['headers'].update(authz_header)
         self.conf['url'] = endpoint
@@ -157,7 +157,7 @@ class TestJWTBasic():
             claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
 
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         self.conf['headers'].update(authz_header)
         self.conf['response'] = {
@@ -186,7 +186,7 @@ class TestJWTBasic():
             claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
 
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         self.conf['headers'].update(authz_header)
         self.conf['response'] = {
@@ -216,7 +216,7 @@ class TestJWTBasic():
             claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
 
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         self.conf['headers'].update(authz_header)
         self.conf['response'] = {
@@ -245,7 +245,7 @@ class TestJWTBasic():
             claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
 
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         self.conf['headers'].update(authz_header)
         self.conf['response'] = {
@@ -275,10 +275,10 @@ class TestJWTBasic():
             claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
 
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
-        exp = datetime.utcnow() - timedelta(minutes=1)
+        exp = datetime.now() - timedelta(minutes=1)
         self.claims['exp'] = round(exp.timestamp())
 
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         self.conf['headers'].update(authz_header)
         self.conf['response'] = {
@@ -309,7 +309,10 @@ class TestJWTBasic():
 
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         wrong_key = gen_rsa_key()
-        token = jwt.encode(self.claims, wrong_key, algorithm='HS256').decode('utf-8')
+        other_algo = 'HS256'
+        if hge_ctx.hge_jwt_algo == 'HS256':
+            other_algo = 'HS384'
+        token = jwt.encode(self.claims, wrong_key, algorithm=other_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         self.conf['headers'].update(authz_header)
         self.conf['response'] = {
@@ -343,7 +346,7 @@ class TestJWTBasic():
             claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         self.claims['aud'] = 'hasura-test-suite'
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         self.conf['headers'].update(authz_header)
         self.conf['url'] = endpoint
@@ -365,7 +368,7 @@ class TestJWTBasic():
 
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         self.claims['iss'] = 'rubbish-issuer'
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         self.conf['headers'].update(authz_header)
         self.conf['url'] = endpoint
@@ -376,7 +379,7 @@ class TestJWTBasic():
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
             self.conf = yaml.safe_load(c)
-        curr_time = datetime.utcnow()
+        curr_time = datetime.now()
         exp_time = curr_time + timedelta(hours=10)
         self.claims = {
             'sub': '1234567890',
@@ -411,7 +414,7 @@ def gen_rsa_key():
 class TestSubscriptionJwtExpiry(object):
 
     def test_jwt_expiry(self, hge_ctx, ws_client):
-        curr_time = datetime.utcnow()
+        curr_time = datetime.now()
         self.claims = {
             'sub': '1234567890',
             'name': 'John Doe',
@@ -429,7 +432,7 @@ class TestSubscriptionJwtExpiry(object):
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         exp = curr_time + timedelta(seconds=4)
         self.claims['exp'] = round(exp.timestamp())
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         payload = dict()
         payload['headers'] = authz_header
@@ -458,7 +461,7 @@ class TestJwtAudienceCheck():
 
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         self.claims['aud'] = audience
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path=claims_namespace_path)
 
@@ -479,7 +482,7 @@ class TestJwtAudienceCheck():
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         self.claims['aud'] = 'rubbish_audience'
 
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['response'] = {
             'errors': [{
@@ -502,7 +505,7 @@ class TestJwtAudienceCheck():
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
             self.conf = yaml.safe_load(c)
-        curr_time = datetime.utcnow()
+        curr_time = datetime.now()
         exp_time = curr_time + timedelta(hours=1)
         self.claims = {
             'sub': '1234567890',
@@ -540,7 +543,7 @@ class TestJwtIssuerCheck():
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         self.claims['iss'] = issuer
 
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path=claims_namespace_path)
 
@@ -561,7 +564,7 @@ class TestJwtIssuerCheck():
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         self.claims['iss'] = 'rubbish_issuer'
 
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['response'] = {
             'errors': [{
@@ -584,7 +587,7 @@ class TestJwtIssuerCheck():
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
             self.conf = yaml.safe_load(c)
-        curr_time = datetime.utcnow()
+        curr_time = datetime.now()
         exp_time = curr_time + timedelta(hours=1)
         self.claims = {
             'sub': '1234567890',
