@@ -78,6 +78,9 @@ Then click ``Review + create``.
 
    If you're using a database user other than the default one, make sure to give it the right :ref:`Postgres permissions <cloud_postgres_permissions>`.
 
+.. note::
+   For Azure flexible server, Hasura v1.x does not work with `JIT <https://www.postgresql.org/docs/11/runtime-config-query.html#GUC-JIT>`__ turned on. JIT can be turned off from Azure console. Hasura v2.x works fine with JIT enabled.
+   
 Step 3: Allow connections to your DB from Hasura Cloud
 ------------------------------------------------------
 
