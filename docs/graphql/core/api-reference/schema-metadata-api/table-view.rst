@@ -4,8 +4,8 @@
 
 .. _api_tables_views:
 
-Schema/Metadata API Reference: Tables/Views
-===========================================
+Schema/Metadata API Reference: Tables/Views (Deprecated)
+========================================================
 
 .. contents:: Table of contents
   :backlinks: none

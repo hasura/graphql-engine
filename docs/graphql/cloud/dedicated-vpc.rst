@@ -2,7 +2,7 @@
    :description: Dedicated VPC with VPC peering and private network access
    :keywords: hasura, cloud, docs, VPC, VPC peering
 
-.. _cloud_dedicated_vpc:
+.. _dedicated_vpc:
 
 Dedicated VPC
 =============
@@ -15,7 +15,7 @@ Dedicated VPC
 Introduction
 ------------
 
-Customers can request a Dedicated VPC to be provisioned for them on Hasura Cloud
+Users can request a Dedicated VPC to be provisioned for them on Hasura Cloud
 so that they have better isolation in terms of their project placement and they
 can initiate VPC peering with their own networks for secure connectivity.
 

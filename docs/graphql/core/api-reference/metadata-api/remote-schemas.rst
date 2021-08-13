@@ -4,8 +4,8 @@
 
 .. _metadata_api_remote_schemas:
 
-Metadata API Reference: Remote schemas (v2.0 and above)
-=======================================================
+Metadata API Reference: Remote schemas
+======================================
 
 .. contents:: Table of contents
   :backlinks: none

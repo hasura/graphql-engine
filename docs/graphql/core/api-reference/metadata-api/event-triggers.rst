@@ -4,8 +4,8 @@
 
 .. _metadata_api_event_triggers:
 
-Metadata API Reference: Event Triggers (v2.0 and above)
-=======================================================
+Metadata API Reference: Event Triggers
+======================================
 
 .. contents:: Table of contents
   :backlinks: none

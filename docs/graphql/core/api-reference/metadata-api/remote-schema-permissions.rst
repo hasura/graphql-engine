@@ -4,8 +4,8 @@
 
 .. _metadata_remote_schema_api_permission:
 
-Metadata API Reference: Remote Schema Permissions (v2.0 and above)
-==================================================================
+Metadata API Reference: Remote Schema Permissions
+=================================================
 
 .. contents:: Table of contents
    :backlinks: none

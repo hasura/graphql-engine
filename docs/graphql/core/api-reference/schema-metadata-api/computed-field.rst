@@ -4,8 +4,8 @@
 
 .. _api_computed_field:
 
-Schema/Metadata API Reference: Computed Fields
-==============================================
+Schema/Metadata API Reference: Computed Fields (Deprecated)
+===========================================================
 
 .. contents:: Table of contents
   :backlinks: none

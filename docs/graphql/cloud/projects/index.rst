@@ -57,10 +57,9 @@ Dig deeper
    Transfer Ownership <ownership>
    Project Env vars <env-vars>
    Project Domains <domains>
-   Securing projects <secure>
    Switching pricing plans <pricing>
    Deployment regions <regions>
-   GitHub Integration <github-integration>
+   GitHub Deployment <github-integration>
    Heroku database URL Sync <heroku-url-sync>
    Maintenance mode <maintenance-mode>
    Deleting projects <delete>

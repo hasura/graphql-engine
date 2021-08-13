@@ -4,8 +4,8 @@
 
 .. _api_event_triggers:
 
-Schema/Metadata API Reference: Event Triggers
-=============================================
+Schema/Metadata API Reference: Event Triggers (Deprecated)
+==========================================================
 
 .. contents:: Table of contents
   :backlinks: none

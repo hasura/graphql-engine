@@ -4,8 +4,8 @@
 
 .. _metadata_api_relationship:
 
-Metadata API Reference: Relationships (v2.0 and above)
-======================================================
+Metadata API Reference: Relationships
+=====================================
 
 .. contents:: Table of contents
   :backlinks: none

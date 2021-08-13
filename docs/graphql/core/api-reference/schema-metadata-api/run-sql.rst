@@ -4,8 +4,8 @@
 
 .. _api_run_sql:
 
-Schema/Metadata API Reference: Run SQL
-======================================
+Schema/Metadata API Reference: Run SQL (Deprecated)
+===================================================
 
 .. contents:: Table of contents
   :backlinks: none

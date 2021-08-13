@@ -4,8 +4,8 @@
 
 .. _metadata_api_restified_endpoints:
 
-Metadata API Reference: RESTified GraphQL Endpoints (v2.0 and above)
-====================================================================
+Metadata API Reference: RESTified GraphQL Endpoints
+===================================================
 
 .. contents:: Table of contents
   :backlinks: none

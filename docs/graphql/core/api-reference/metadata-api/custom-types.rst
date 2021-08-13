@@ -4,8 +4,8 @@
 
 .. _metadata_api_custom_types:
 
-Metadata API Reference: Custom Types (v2.0 and above)
-=====================================================
+Metadata API Reference: Custom Types
+====================================
 
 .. contents:: Table of contents
   :backlinks: none

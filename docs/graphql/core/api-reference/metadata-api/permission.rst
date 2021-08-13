@@ -4,8 +4,8 @@
 
 .. _metadata_api_permission:
 
-Metadata API Reference: Permissions (v2.0 and above)
-====================================================
+Metadata API Reference: Permissions
+===================================
 
 .. contents:: Table of contents
   :backlinks: none

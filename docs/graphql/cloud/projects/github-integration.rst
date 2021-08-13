@@ -1,11 +1,11 @@
 .. meta::
    :description: GitHub Integration
-   :keywords: hasura, docs, project, github
+   :keywords: hasura, docs, project, github, deployment, git
 
 .. _github_integration:
 
-GitHub Integration
-==================
+GitHub Deployment
+=================
 
 .. contents:: Table of contents
   :backlinks: none

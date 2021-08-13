@@ -4,8 +4,8 @@
 
 .. _api_query_collections:
 
-Schema/Metadata API Reference: Query collections
-================================================
+Schema/Metadata API Reference: Query collections (Deprecated)
+=============================================================
 
 .. contents:: Table of contents
   :backlinks: none

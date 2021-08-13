@@ -1202,7 +1202,7 @@ RemoteSchemaCustomization
      - [RemoteFieldCustomization_]
      - Customization of field names for types in the remote schema
 
-.. _RemoteTypeCustomization
+.. _RemoteTypeCustomization:
 
 RemoteTypeCustomization
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -1235,10 +1235,10 @@ RemoteTypeCustomization
 - Root types, types starting with ``__``,  and standard scalar types may only be customized with an explicit mapping.
 
 
-.. _RemoteFieldCustomization
+.. _RemoteFieldCustomization:
 
 RemoteFieldCustomization
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1

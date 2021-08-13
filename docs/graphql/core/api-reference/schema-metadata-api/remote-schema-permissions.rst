@@ -4,8 +4,8 @@
 
 .. _remote_schema_api_permission:
 
-Schema/Metadata API Reference: Remote Schema Permissions
-========================================================
+Schema/Metadata API Reference: Remote Schema Permissions (Deprecated)
+=====================================================================
 
 .. contents:: Table of contents
    :backlinks: none

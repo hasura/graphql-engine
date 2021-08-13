@@ -4,8 +4,8 @@
 
 .. _metadata_api_manage_metadata:
 
-Metadata API Reference: Manage metadata (v2.0 and above)
-========================================================
+Metadata API Reference: Manage metadata
+=======================================
 
 .. contents:: Table of contents
   :backlinks: none
