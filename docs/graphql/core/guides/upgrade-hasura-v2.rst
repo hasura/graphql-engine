@@ -185,6 +185,16 @@ and restarting your Hasura instance should work seamlessly. The database connect
 env var will be added as a database with the name ``default`` automatically and all existing metadata and migrations will be
 assumed to belong to it.
 
+.. note::
+
+   In case you happen to have a large number of past cron and event trigger logs in your database, this might slow down the update
+   to v2 and might even cause unexpected errors in certain scenarios.
+
+   **It is highly recommended to clean up past cron and event trigger logs data from the database before attempting the update**.
+
+   You can take a dump of this data before cleaning up if you wish to keep the log history. This data can be restored back into the DB if
+   required post the update.
+
 .. _hasura_v1_to_v2_post_update_steps:
 
 Post update steps
