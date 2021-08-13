@@ -51,8 +51,6 @@ Please note that setting up SSL is not covered in this guide. You can find more
 information at `Nginx docs
 <https://nginx.org/en/docs/http/configuring_https_servers.html>`__.
 
-For detailed `installation of nginx <https://www.armanism.com/blog/install-nginx-on-ubuntu>`_.
-
 To serve Hasura with a URL prefix instead of a separate subdomain, use
 ``location /hasura/`` or similar.
 
