@@ -4,8 +4,8 @@
 
 .. _metadata_api_tables_views:
 
-Metadata API Reference: Tables/Views (v2.0 and above)
-=====================================================
+Metadata API Reference: Tables/Views
+====================================
 
 .. contents:: Table of contents
   :backlinks: none

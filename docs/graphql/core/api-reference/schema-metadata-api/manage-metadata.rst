@@ -4,8 +4,8 @@
 
 .. _api_manage_metadata:
 
-Schema/Metadata API Reference: Manage metadata
-==============================================
+Schema/Metadata API Reference: Manage metadata (Deprecated)
+===========================================================
 
 .. contents:: Table of contents
   :backlinks: none

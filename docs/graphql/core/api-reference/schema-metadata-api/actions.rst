@@ -4,8 +4,8 @@
 
 .. _api_actions:
 
-Schema/Metadata API Reference: Actions
-======================================
+Schema/Metadata API Reference: Actions (Deprecated)
+===================================================
 
 .. contents:: Table of contents
   :backlinks: none

@@ -28,7 +28,7 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
       - :ref:`create_project`
       - :ref:`manage_project_collaborators`
       - :ref:`manage_project_env_vars`
-      - :ref:`secure_project`
+      - :ref:`manage_project_domains`
 
   .. container:: toc-list-section
 
