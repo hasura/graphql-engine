@@ -385,20 +385,20 @@ data Op
   | MoreOrEqualOp
   | InOp
   | NotInOp
-  -- | SNE
-  -- | SLIKE
-  -- | SNLIKE
-  -- | SILIKE
-  -- | SNILIKE
-  -- | SSIMILAR
-  -- | SNSIMILAR
-  -- | SGTE
-  -- | SLTE
-  -- | SContains
-  -- | SContainedIn
-  -- | SHasKey
-  -- | SHasKeysAny
-  -- | SHasKeysAll
+  --  | SNE
+  --  | SLIKE
+  --  | SNLIKE
+  --  | SILIKE
+  --  | SNILIKE
+  --  | SSIMILAR
+  --  | SNSIMILAR
+  --  | SGTE
+  --  | SLTE
+  --  | SContains
+  --  | SContainedIn
+  --  | SHasKey
+  --  | SHasKeysAny
+  --  | SHasKeysAll
   deriving (Eq, Ord, Show, Generic, Data, Lift)
 instance FromJSON Op
 instance Hashable Op

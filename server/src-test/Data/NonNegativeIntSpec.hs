@@ -1,5 +1,5 @@
-module Data.NonNegativeIntSpec (spec) where
 -- | basic tests on NonNegativeIntType
+module Data.NonNegativeIntSpec (spec) where
 
 import           Prelude
 

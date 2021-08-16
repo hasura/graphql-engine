@@ -195,9 +195,9 @@ instance Result InformationSchemaColumnKey where
             "COLUMN_KEY in INFORMATION_SCHEMA cannot be NULL"
       Just bs -> case bs of
         -- Could have used 'readMaybe' here, but we need the specific errors.
-        "PRI" -> PRI -- ^ primay key
-        "UNI" -> UNI -- ^ unique key
-        "MUL" -> MUL -- ^ foreign key (`MUL`tiple allowed, non-unique key)
+        "PRI" -> PRI -- primary key
+        "UNI" -> UNI -- unique key
+        "MUL" -> MUL -- foreign key (`MUL`tiple allowed, non-unique key)
         "" -> BLANK
         x ->
           throw $
