@@ -8,6 +8,7 @@
 - server: support EdDSA algorithm and key type for JWT
 - server: fix GraphQL type for single-row returning functions (close #7109)
 - console: add support for creation of indexes for Postgres data sources
+- console: allow same named queries and unnamed queries on allowlist file upload
 
 ## v2.0.6
 
