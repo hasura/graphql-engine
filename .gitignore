@@ -15,3 +15,6 @@ venv
 
 # Test artifacts
 *.tix
+
+# ignored so that everyone can have their own hie.yaml
+hie.yaml
