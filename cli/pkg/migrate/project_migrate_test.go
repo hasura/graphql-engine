@@ -37,6 +37,7 @@ func TestProjectMigrate_ApplyConfig_v3(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
+		want    []ApplyResult
 		wantErr bool
 	}{
 		{
@@ -47,6 +48,18 @@ func TestProjectMigrate_ApplyConfig_v3(t *testing.T) {
 			},
 			args{
 				[]ProjectMigrationApplierOption{ApplyOnAllDatabases()},
+			},
+			[]ApplyResult{
+				{
+					"s1",
+					"migrations applied on database: s1",
+					nil,
+				},
+				{
+					"s2",
+					"migrations applied on database: s2",
+					nil,
+				},
 			},
 			false,
 		},
@@ -59,6 +72,13 @@ func TestProjectMigrate_ApplyConfig_v3(t *testing.T) {
 			args{
 				[]ProjectMigrationApplierOption{ApplyOnDatabaseName("s1"), ApplyVersion("1623841477474", MigrationDirectionDown)},
 			},
+			[]ApplyResult{
+				{
+					"s1",
+					"migrations applied",
+					nil,
+				},
+			},
 			false,
 		},
 		{
@@ -70,6 +90,13 @@ func TestProjectMigrate_ApplyConfig_v3(t *testing.T) {
 			args{
 				[]ProjectMigrationApplierOption{ApplyOnDatabaseName("s1"), ApplyVersion("1623841477474", MigrationDirectionUp)},
 			},
+			[]ApplyResult{
+				{
+					"s1",
+					"migrations applied",
+					nil,
+				},
+			},
 			false,
 		},
 	}
@@ -77,11 +104,12 @@ func TestProjectMigrate_ApplyConfig_v3(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			p, err := NewProjectMigrate(tt.fields.projectDirectory, WithAdminSecret(testutil.TestAdminSecret), WithEndpoint(tt.fields.endpointString))
 			require.NoError(t, err)
-			err = p.Apply(tt.args.opts...)
+			got, err := p.Apply(tt.args.opts...)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
 			}
 		})
 	}
@@ -103,6 +131,7 @@ func TestProjectMigrate_Apply_Configv2(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
+		want    []ApplyResult
 		wantErr bool
 	}{
 		{
@@ -114,6 +143,11 @@ func TestProjectMigrate_Apply_Configv2(t *testing.T) {
 			},
 			args{
 				[]ProjectMigrationApplierOption{ApplyOnAllDatabases()},
+			},
+			[]ApplyResult{
+				{
+					Message: "migrations applied",
+				},
 			},
 			false,
 		},
@@ -127,6 +161,11 @@ func TestProjectMigrate_Apply_Configv2(t *testing.T) {
 			args{
 				[]ProjectMigrationApplierOption{ApplyVersion("1623842054907", MigrationDirectionDown)},
 			},
+			[]ApplyResult{
+				{
+					Message: "migrations applied",
+				},
+			},
 			false,
 		},
 		{
@@ -139,7 +178,12 @@ func TestProjectMigrate_Apply_Configv2(t *testing.T) {
 			args{
 				[]ProjectMigrationApplierOption{ApplyVersion("1623842054907", MigrationDirectionDown)},
 			},
-			true,
+			[]ApplyResult{
+				{
+					Error: fmt.Errorf("skipping applying migrations on database , encountered: \nMigration not applied in database"),
+				},
+			},
+			false,
 		},
 		{
 			"can apply up migrations of a version on a config v2 project",
@@ -151,6 +195,11 @@ func TestProjectMigrate_Apply_Configv2(t *testing.T) {
 			args{
 				[]ProjectMigrationApplierOption{ApplyVersion("1623842054907", MigrationDirectionUp)},
 			},
+			[]ApplyResult{
+				{
+					Message: "migrations applied",
+				},
+			},
 			false,
 		},
 	}
@@ -158,11 +207,12 @@ func TestProjectMigrate_Apply_Configv2(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			p, err := NewProjectMigrate(tt.fields.projectDirectory, WithAdminSecret(testutil.TestAdminSecret), WithEndpoint(tt.fields.endpointString))
 			require.NoError(t, err)
-			err = p.Apply(tt.args.opts...)
+			got, err := p.Apply(tt.args.opts...)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
 			}
 		})
 	}
@@ -287,7 +337,8 @@ func TestProjectMigrate_Status_ConfigV2(t *testing.T) {
 ]`,
 			false,
 			func(t *testing.T, p *ProjectMigrate) {
-				assert.NoError(t, p.Apply(ApplyOnAllDatabases()))
+				_, err := p.Apply(ApplyOnAllDatabases())
+				assert.NoError(t, err)
 			},
 		},
 	}
@@ -332,25 +383,24 @@ func TestProjectMigrate_Status_ConfigV3(t *testing.T) {
 	type fields struct {
 		projectDirectory string
 		adminSecret      string
-		endpointString   string
 	}
 	type args struct {
 		opts []ProjectMigrationStatusOption
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    string
-		wantErr bool
-		before  func(t *testing.T, p *ProjectMigrate)
+		name      string
+		fields    fields
+		args      args
+		want      string
+		wantErr   bool
+		testSetup func() (hgeEndpoint string, teardown func())
+		before    func(t *testing.T, p *ProjectMigrate)
 	}{
 		{
 			"can get status of migrations",
 			fields{
 				projectDirectory: "testdata/projectv3",
 				adminSecret:      "",
-				endpointString:   hgeEndpoint,
 			},
 			args{
 				opts: []ProjectMigrationStatusOption{},
@@ -426,6 +476,7 @@ func TestProjectMigrate_Status_ConfigV3(t *testing.T) {
   }
 ]`,
 			false,
+			func() (string, func()) { return hgeEndpoint, func() {} },
 			func(t *testing.T, p *ProjectMigrate) {},
 		},
 		{
@@ -433,7 +484,6 @@ func TestProjectMigrate_Status_ConfigV3(t *testing.T) {
 			fields{
 				projectDirectory: "testdata/projectv3",
 				adminSecret:      "",
-				endpointString:   hgeEndpoint,
 			},
 			args{
 				opts: []ProjectMigrationStatusOption{},
@@ -510,32 +560,56 @@ func TestProjectMigrate_Status_ConfigV3(t *testing.T) {
   }
 ]`,
 			false,
+			func() (string, func()) { return hgeEndpoint, func() {} },
 			func(t *testing.T, p *ProjectMigrate) {
-				assert.NoError(t, p.Apply(ApplyOnAllDatabases()))
+				_, err := p.Apply(ApplyOnAllDatabases())
+				assert.NoError(t, err)
+			},
+		},
+		{
+			"can throw an error when no databases are connected to hge",
+			fields{
+				projectDirectory: "testdata/projectv3",
+				adminSecret:      "",
+			},
+			args{
+				opts: []ProjectMigrationStatusOption{},
+			},
+			``,
+			true,
+			func() (string, func()) {
+				port, teardown := testutil.StartHasuraWithMetadataDatabase(t, testutil.HasuraDockerImage)
+				return fmt.Sprintf("http://%s:%s", testutil.Hostname, port), teardown
+			},
+			func(t *testing.T, p *ProjectMigrate) {
+				_, err := p.Apply(ApplyOnAllDatabases())
+				assert.NoError(t, err)
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p, err := NewProjectMigrate(tt.fields.projectDirectory, WithAdminSecret(testutil.TestAdminSecret), WithEndpoint(tt.fields.endpointString))
+			hgeEndpoint, setupTeardown := tt.testSetup()
+			defer setupTeardown()
+			p, err := NewProjectMigrate(tt.fields.projectDirectory, WithAdminSecret(testutil.TestAdminSecret), WithEndpoint(hgeEndpoint))
 			require.NoError(t, err)
-			applier, err := NewProjectMigrate(tt.fields.projectDirectory, WithAdminSecret(testutil.TestAdminSecret), WithEndpoint(tt.fields.endpointString))
+			applier, err := NewProjectMigrate(tt.fields.projectDirectory, WithAdminSecret(testutil.TestAdminSecret), WithEndpoint(hgeEndpoint))
 			require.NoError(t, err)
 			tt.before(t, applier)
 			got, err := p.status(tt.args.opts...)
 			if tt.wantErr {
 				require.Error(t, err)
-			}
-			require.NoError(t, err)
-			gotJSON, err := json.Marshal(got)
-			require.NoError(t, err)
-			require.JSONEq(t, tt.want, string(gotJSON))
+			} else {
+				gotJSON, err := json.Marshal(got)
+				require.NoError(t, err)
+				require.JSONEq(t, tt.want, string(gotJSON))
 
-			statusJson, err := p.StatusJSON(tt.args.opts...)
-			require.NoError(t, err)
-			statusJsonb, err := ioutil.ReadAll(statusJson)
-			require.NoError(t, err)
-			require.JSONEq(t, tt.want, string(statusJsonb))
+				statusJson, err := p.StatusJSON(tt.args.opts...)
+				require.NoError(t, err)
+				statusJsonb, err := ioutil.ReadAll(statusJson)
+				require.NoError(t, err)
+				require.JSONEq(t, tt.want, string(statusJsonb))
+			}
 		})
 	}
 }
