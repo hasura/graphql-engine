@@ -1,7 +1,7 @@
 # anchor refs to be used elsewhere
 refs:
   constants:
-    - &server_builder_image hasura/graphql-engine-server-builder:dda6ced5f151ecd817ae38a6cca6009405f4aae4120d270222a3689c7600bfef
+    - &server_builder_image hasura/graphql-engine-server-builder:7211cd8c7fda955603dfc9639d5c031b7549677ee888d86f7110d29c1084262c
     - &mssql_image hasura/mssql-server-2019-cu10-ubuntu-20.04:187352320456c39572656ce46cc292369cffa01ac0e90fcdf179c01d36fb3952
   skip_job_on_ciignore: &skip_job_on_ciignore
     run:
@@ -118,6 +118,30 @@ refs:
       command: |
         psql "$DATABASE_URL" -c "SELECT * FROM citus_version();" | grep -q -F '(1 row)' \
           || (echo "Failed checking Citus DB presence" && exit 1)
+
+  authenticate_bigquery: &authenticate_bigquery
+    run:
+      name: authenticate bigquery service account
+      working_directory: ~/graphql-engine/server/tests-py
+      command: |
+        echo "${HASURA_BIGQUERY_SERVICE_KEY}" > "$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE"
+        gcloud auth activate-service-account --key-file="$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE"
+  ensure_bigquery_db: &ensure_bigquery_db
+    run:
+      name: ensure the bigquery data source is accessible
+      command: |
+        for i in `seq 1 60`;
+          do
+            curl "https://content-bigquery.googleapis.com/bigquery/v2/projects/$HASURA_BIGQUERY_PROJECT_ID/queries?alt=json&key=$HASURA_BIGQUERY_API_KEY" \
+              --data-binary '{"query":"select 123"}' \
+              -H "Authorization: Bearer $(gcloud auth print-access-token $HASURA_BIGQUERY_IAM_ACCOUNT \
+              --project=$HASURA_BIGQUERY_PROJECT_ID)" -H 'content-type: application/json' \
+              && echo Success && exit 0
+            echo -n .
+            sleep 1
+          done
+          echo Failed waiting for bigquery && exit 1
+
 
   filter_only_vtags: &filter_only_vtags
     filters:
@@ -383,6 +407,46 @@ jobs:
             OUTPUT_FOLDER: "/build/_server_test_output/citus"
           command: |
             .circleci/test-server.sh
+      - store_artifacts:
+          path: /build/_server_test_output
+          destination: server_test
+
+
+  # pytest the server with BigQuery
+  test_oss_server_bigquery:
+    docker:
+      - image: *server_builder_image
+      - image: hasura/postgres-13.0-alpine-postgis3:latest
+        <<: *test_pg_env
+    environment:
+      # Setting default number of threads to 2
+      # since circleci allocates 2 cpus per test container
+      GHCRTS: -N2
+      # NOTE: pytests depend on this being set to 8
+      HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE: 8
+      HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
+      HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:@localhost:5432/gql_test2
+      GRAPHQL_ENGINE: /build/_server_output/graphql-engine
+      GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
+      MIX_FILES_FOLDER: /build/_server_output/mix
+      HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE: gcloud-service-key.json
+    working_directory: ~/graphql-engine
+    steps:
+      - attach_workspace:
+          at: /build
+      - *skip_job_on_ciignore
+      - checkout
+      - *wait_for_postgres
+      - *ensure_postgres_db
+      - *authenticate_bigquery
+      - *ensure_bigquery_db
+      - run:
+          name: Run tests
+          environment:
+            SERVER_TEST_TO_RUN: "backend-bigquery"
+            OUTPUT_FOLDER: "/build/_server_test_output/bigquery"
+          command: |
+            oss-.circleci/test-server.sh
       - store_artifacts:
           path: /build/_server_test_output
           destination: server_test
@@ -861,6 +925,12 @@ workflows:
           <<: *filter_only_vtags
           requires:
             - build_server
+      - test_oss_server_bigquery:
+          <<: *filter_only_branches
+          context:
+            - pytest-bigquery
+          requires:
+          - build_oss_server
       - test_server_pg_13:
           <<: *filter_only_vtags
           requires:
