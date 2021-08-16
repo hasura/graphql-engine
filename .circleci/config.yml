@@ -126,6 +126,7 @@ refs:
       command: |
         echo "${HASURA_BIGQUERY_SERVICE_KEY}" > "$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE"
         gcloud auth activate-service-account --key-file="$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE"
+
   ensure_bigquery_db: &ensure_bigquery_db
     run:
       name: ensure the bigquery data source is accessible
@@ -141,7 +142,6 @@ refs:
             sleep 1
           done
           echo Failed waiting for bigquery && exit 1
-
 
   filter_only_vtags: &filter_only_vtags
     filters:
@@ -411,9 +411,8 @@ jobs:
           path: /build/_server_test_output
           destination: server_test
 
-
   # pytest the server with BigQuery
-  test_oss_server_bigquery:
+  test_server_bigquery:
     docker:
       - image: *server_builder_image
       - image: hasura/postgres-13.0-alpine-postgis3:latest
@@ -446,7 +445,7 @@ jobs:
             SERVER_TEST_TO_RUN: "backend-bigquery"
             OUTPUT_FOLDER: "/build/_server_test_output/bigquery"
           command: |
-            oss-.circleci/test-server.sh
+            .circleci/test-server.sh
       - store_artifacts:
           path: /build/_server_test_output
           destination: server_test
@@ -925,12 +924,12 @@ workflows:
           <<: *filter_only_vtags
           requires:
             - build_server
-      - test_oss_server_bigquery:
-          <<: *filter_only_branches
+      - test_server_bigquery:
+          <<: *filter_only_vtags
           context:
             - pytest-bigquery
           requires:
-          - build_oss_server
+          - build_server
       - test_server_pg_13:
           <<: *filter_only_vtags
           requires:
