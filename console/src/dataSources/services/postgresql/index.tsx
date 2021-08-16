@@ -241,6 +241,18 @@ export const getGroupedTableComputedFields = (
   return groupedComputedFields;
 };
 
+export const getComputedFieldFunction = (
+  computedField: ComputedField,
+  allFunctions: PGFunction[]
+) => {
+  const computedFieldFnDef = computedField.definition.function;
+  return findFunction(
+    allFunctions,
+    computedFieldFnDef.name,
+    computedFieldFnDef.schema
+  );
+};
+
 const schemaListSql = (
   schemas?: string[]
 ) => `SELECT schema_name FROM information_schema.schemata WHERE

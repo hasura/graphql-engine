@@ -815,6 +815,7 @@ class Permissions extends Component {
                   loadSchemasFunc={loadSchemasFunc}
                   tableDef={generateTableDef(tableName, currentSchema)}
                   allTableSchemas={allSchemas}
+                  allFunctions={allFunctions}
                   schemaList={schemaList}
                   filter={filterString[filterType]}
                   dispatch={dispatch}
