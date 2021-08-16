@@ -26,7 +26,6 @@ import {
   isJsonString,
   isObject,
 } from '../../../../Common/utils/jsUtils';
-// import { ColumnArray } from './ColumnArray';
 import {
   addToPrefix,
   boolOperators,
@@ -42,11 +41,16 @@ import {
   TABLE_KEY,
   WHERE_KEY,
 } from './utils';
-import SelectGroup from './SelectGroup';
+import SelectGroup, { QuotedSelectGroup } from './SelectGroup';
+import {
+  getComputedFieldFunction,
+  getGroupedTableComputedFields,
+} from '../../../../../dataSources/services/postgresql';
 
 class PermissionBuilder extends React.Component {
   static propTypes = {
     allTableSchemas: PropTypes.array.isRequired,
+    allFunctions: PropTypes.array.isRequired,
     schemaList: PropTypes.array.isRequired,
     dispatch: PropTypes.func.isRequired,
     dispatchFuncSetFilter: PropTypes.func.isRequired,
@@ -433,6 +437,18 @@ class PermissionBuilder extends React.Component {
         selectDispatchFunc(e.target.value);
       };
 
+      if (typeof values?.[1] !== 'string') {
+        return (
+          <SelectGroup
+            selectDispatchFunc={selectDispatchFunc}
+            value={value}
+            values={values}
+            prefix={prefix}
+            disabledValues={disabledValues}
+          />
+        );
+      }
+
       const _selectOptions = [];
       [''].concat(values).forEach((val, i) => {
         const optionVal = addToPrefix(prefix, val);
@@ -574,13 +590,13 @@ class PermissionBuilder extends React.Component {
         input = inputBox();
         suggestion = jsonSuggestion();
       } else if (valueType === 'column') {
-        if (Array.isArray(tableColumns)) {
+        if (typeof tableColumns?.[0] === 'string') {
           input = wrapDoubleQuotes(
             renderSelect(dispatchInput, value, tableColumns)
           );
-        } else if (tableColumns.relationships || tableColumns.columns) {
+        } else if (tableColumns?.[0]?.optGroupTitle) {
           input = (
-            <SelectGroup
+            <QuotedSelectGroup
               selectDispatchFunc={dispatchInput}
               value={value}
               values={tableColumns}
@@ -619,15 +635,21 @@ class PermissionBuilder extends React.Component {
             });
           };
 
-          const options = {};
+          const options = [];
           // uncomment options.relationships assignment to enable selection of relationships
           if (i === 0) {
-            options.root = ['$'];
-            // options.relationships = getTableRelationshipNames(prevTable);
-            options.columns = getTableColumnNames(prevTable);
+            options.push({ optGroupTitle: 'root', options: ['$'] });
+            // options.push({optGroupTitle: 'relationships', options: getTableRelationshipNames(prevTable)});
+            options.push({
+              optGroupTitle: 'columns',
+              options: getTableColumnNames(prevTable),
+            });
           } else if (arr[i - 1] === '$') {
-            // options.relationships = getTableRelationshipNames(rootTable);
-            options.columns = getTableColumnNames(rootTable);
+            // options.push({optGroupTitle: 'relationships', options: getTableRelationshipNames(rootTable)});
+            options.push({
+              optGroupTitle: 'columns',
+              options: getTableColumnNames(rootTable),
+            });
             prevTable = rootTable;
           } else if (arr[i - 1]?.length) {
             if (prevTable) {
@@ -636,8 +658,12 @@ class PermissionBuilder extends React.Component {
                 const def = getRelationshipRefTable(prevTable, rel);
                 prevTable = findTable(allTableSchemas, def);
                 if (prevTable) {
-                  // options.relationships = getTableRelationshipNames(prevTable);
+                  // options.push({optGroupTitle: 'relationships', options: getTableRelationshipNames(prevTable)});
                   options.columns = getTableColumnNames(prevTable);
+                  options.push({
+                    optGroupTitle: 'columns',
+                    options: getTableColumnNames(prevTable),
+                  });
                 } else {
                   return null;
                 }
@@ -797,12 +823,27 @@ class PermissionBuilder extends React.Component {
     ) => {
       let tableColumnNames = [];
       let tableRelationshipNames = [];
+      let computedFieldFn;
       let tableSchema;
       if (tableDef) {
         tableSchema = findTable(tableSchemas, tableDef);
         if (tableSchema) {
           tableColumnNames = getTableColumnNames(tableSchema);
           tableRelationshipNames = getTableRelationshipNames(tableSchema);
+          const { allFunctions } = this.props;
+          const computedFields = getGroupedTableComputedFields(
+            tableSchema,
+            allFunctions
+          );
+          const computedField = computedFields.scalar.find(
+            cs => cs.name === columnName
+          );
+          if (computedField) {
+            computedFieldFn = getComputedFieldFunction(
+              computedField,
+              allFunctions
+            );
+          }
         }
       }
 
@@ -818,6 +859,14 @@ class PermissionBuilder extends React.Component {
           tableSchemas,
           schemaList,
           prefix
+        );
+      } else if (computedFieldFn) {
+        _columnExp = renderOperatorExp(
+          dispatchFunc,
+          expression,
+          prefix,
+          computedFieldFn?.return_type_name,
+          tableColumnNames
         );
       } else {
         let columnType = '';
@@ -985,26 +1034,40 @@ class PermissionBuilder extends React.Component {
 
       let tableColumnNames = [];
       let tableRelationshipNames = [];
+      let scalarComputedFields = [];
       if (tableDef) {
         const tableSchema = findTable(tableSchemas, tableDef);
         if (tableSchema) {
           tableColumnNames = getTableColumnNames(tableSchema);
           tableRelationshipNames = getTableRelationshipNames(tableSchema);
+          const { allFunctions } = this.props;
+          const computedFields = getGroupedTableComputedFields(
+            tableSchema,
+            allFunctions
+          );
+          scalarComputedFields = computedFields.scalar.filter(sc => {
+            const cFn = getComputedFieldFunction(sc, allFunctions)
+              ?.input_arg_types;
+            // Only the computed fields that do not require extra arguments other than the table row
+            // are currenlty supported by the server https://github.com/hasura/graphql-engine/issues/7336
+            return cFn?.length === 1 && cFn[0].name === tableDef.name;
+          });
         }
       }
 
-      const columnOptions = tableColumnNames.concat(tableRelationshipNames);
-
-      const operatorOptions = boolOperators
-        .concat(['---'])
-        .concat(existOperators)
-        .concat(['---'])
-        .concat(columnOptions);
+      const computedFieldsOptions = scalarComputedFields.map(f => f.name);
+      const newOperatorOptions = [
+        { optGroupTitle: 'bool operators', options: boolOperators },
+        { optGroupTitle: 'exist operators', options: existOperators },
+        { optGroupTitle: 'columns', options: tableColumnNames },
+        { optGroupTitle: 'relationships', options: tableRelationshipNames },
+        { optGroupTitle: 'computed fields', options: computedFieldsOptions },
+      ];
 
       const _boolExpKey = renderSelect(
         dispatchOperationSelect,
         operation,
-        operatorOptions,
+        newOperatorOptions,
         prefix,
         ['---']
       );
