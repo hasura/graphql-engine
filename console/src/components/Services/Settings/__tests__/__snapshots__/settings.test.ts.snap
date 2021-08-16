@@ -1,0 +1,97 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AllowedQueries_Utils.ts renameDuplicates should rename duplicate queries 1`] = `
+Array [
+  Object {
+    "name": "getAuthors_1",
+    "query": "query getAuthors {
+  author {
+    id
+    name
+  }
+}",
+  },
+  Object {
+    "name": "getAuthors_2",
+    "query": "query getAuthors {
+  author {
+    id
+    name
+    address
+  }
+}",
+  },
+  Object {
+    "name": "getAuthors_3",
+    "query": "query getAuthors {
+  author {
+    id
+    name
+    age
+  }
+}",
+  },
+  Object {
+    "name": "unnamed",
+    "query": "{
+  student {
+    id
+    name
+    age
+  }
+}",
+  },
+  Object {
+    "name": "unnamed_1",
+    "query": "{
+  student {
+    id
+    name
+    roll
+  }
+}",
+  },
+  Object {
+    "name": "unnamed_2",
+    "query": "{
+  student {
+    id
+    name
+    address
+  }
+}",
+  },
+  Object {
+    "name": "getArticles",
+    "query": "query getArticles {
+  article {
+    id
+    title
+  }
+}",
+  },
+  Object {
+    "name": "getArticle",
+    "query": "query getArticle {
+  article {
+    id
+    title
+    ...frag
+  }
+}
+
+fragment frag on Starship {
+  name
+}",
+  },
+  Object {
+    "name": "addArticles",
+    "query": "mutation addArticles {
+  insert_articles {
+    id
+    title
+  }
+}",
+  },
+]
+`;

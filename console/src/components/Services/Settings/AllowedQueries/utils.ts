@@ -1,5 +1,6 @@
 import { parse, print, visit, DefinitionNode } from 'graphql';
 import { AllowedQueriesCollection } from '../../../../metadata/reducer';
+import { allowedQueriesCollection } from '../../../../metadata/utils';
 
 export type NewDefinitionNode = DefinitionNode & {
   name?: {
@@ -69,6 +70,7 @@ const getQueryString = (
   return queryString;
 };
 
+// parses the query string and returns an array of queries
 export const parseQueryString = (queryString: string) => {
   const queries: { name: string; query: string }[] = [];
 
@@ -99,27 +101,15 @@ export const parseQueryString = (queryString: string) => {
   );
 
   queryDefs.forEach(queryDef => {
-    if (!queryDef.name) {
-      throw new Error(`Operation without name found: ${print(queryDef)}`);
-    }
+    const queryName = queryDef.name ? queryDef.name.value : `unnamed`;
 
     const query = {
-      name: queryDef.name.value,
+      name: queryName,
       query: getQueryString(queryDef, fragmentDefs, definitionHash),
     };
 
     queries.push(query);
   });
-
-  const queryNames = queries.map(q => q.name);
-  const duplicateNames = queryNames.filter(
-    (q, i) => queryNames.indexOf(q) !== i
-  );
-  if (duplicateNames.length > 0) {
-    throw new Error(
-      `Operations with duplicate names found: ${duplicateNames.join(', ')}`
-    );
-  }
 
   return queries;
 };
@@ -135,6 +125,35 @@ export const getQueriesInCollection = (
     }
   });
   return queries;
+};
+
+// check if the uploaded queries have same names within the file, or among the already present queries
+export const renameDuplicates = (
+  fileQueries: { name: string; query: string }[],
+  allQueries: AllowedQueriesCollection[]
+) => {
+  // we only allow addition to allowedQueriesCollection from console atm
+  const allowListQueries = getQueriesInCollection(
+    allowedQueriesCollection,
+    allQueries
+  );
+
+  const queryNames = new Set();
+  allowListQueries.forEach(query => queryNames.add(query.name));
+
+  const updatedQueries = fileQueries.map(query => {
+    let queryName = query.name;
+    if (queryNames.has(queryName)) {
+      let num = 1;
+      while (queryNames.has(queryName)) {
+        queryName = `${query.name}_${num++}`;
+      }
+    }
+    queryNames.add(queryName);
+    return { name: queryName, query: query.query };
+  });
+
+  return updatedQueries;
 };
 
 export const checkLastQuery = (
