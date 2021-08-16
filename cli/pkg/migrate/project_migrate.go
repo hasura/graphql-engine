@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/hasura/graphql-engine/cli/v2/commands"
+
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/spf13/viper"
 )
@@ -28,9 +30,11 @@ func (p *ProjectMigrate) StatusJSON(opts ...ProjectMigrationStatusOption) (io.Re
 	return lister.StatusJSON(opts...)
 }
 
-func (p *ProjectMigrate) Apply(opts ...ProjectMigrationApplierOption) error {
+type ApplyResult commands.MigrateApplyResult
+
+func (p *ProjectMigrate) Apply(opts ...ProjectMigrationApplierOption) ([]ApplyResult, error) {
 	applier := newProjectMigrationsApplier(p.ec)
-	return applier.Apply(opts...)
+	return applier.apply(opts...)
 }
 
 func NewProjectMigrate(projectDirectory string, opts ...ProjectMigrateOption) (*ProjectMigrate, error) {
