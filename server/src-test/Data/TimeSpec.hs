@@ -1,5 +1,5 @@
-module Data.TimeSpec (spec) where
 -- | Time-related properties we care about.
+module Data.TimeSpec (spec) where
 
 import           Data.Aeson
 import           Data.Time

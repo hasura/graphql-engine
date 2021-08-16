@@ -72,7 +72,7 @@ parseFieldResult f@Field{..} mBs =
       in  J.String fvalue
     DateTime -> maybe J.Null (J.String . decodeUtf8) mBs
     _ -> error $ "parseResult: not implemented yet "  <> show f <> " " <> show mBs
-    -- ^ TODO: handle remaining cases
+    -- TODO: handle remaining cases
 
 
 fieldsToAeson :: [Field] -> [[Maybe ByteString]] -> [Value]
