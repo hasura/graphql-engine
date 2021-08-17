@@ -4,6 +4,7 @@
 
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: optimize SQL query generation with LIMITs (close #5745)
 
 ## v2.0.7
 
