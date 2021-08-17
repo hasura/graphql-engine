@@ -13,7 +13,7 @@
 - console: add support for creation of indexes for Postgres data sources
 - console: allow same named queries and unnamed queries on allowlist file upload
 - console: support computed fields in permission builder
-
+- console: add custom timeouts to actions
 
 ## v2.0.6
 
