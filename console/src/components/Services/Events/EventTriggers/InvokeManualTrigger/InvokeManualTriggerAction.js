@@ -14,14 +14,11 @@ const FETCH_EVENT_STATUS_SUCCESS =
 const FETCH_EVENT_STATUS_FAIL = '@invokeManualTrigger/FETCH_EVENT_STATUS_FAIL';
 const RESET = '@invokeManualTrigger/RESET';
 
-const invokeManualTrigger = (name, args, source) => (dispatch, getState) => {
+const invokeManualTrigger = (name, payload, source) => (dispatch, getState) => {
   dispatch({ type: INVOKING_EVENT_TRIGGER });
 
   const url = Endpoints.metadata;
-  const query = invokeManualTriggerQuery(
-    { name, source, payload: { row: args } },
-    source
-  );
+  const query = invokeManualTriggerQuery({ name, source, payload }, source);
   const options = {
     method: 'POST',
     headers: dataHeaders(getState),

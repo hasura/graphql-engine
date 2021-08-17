@@ -147,15 +147,13 @@ sessionInfoJsonExp :: SessionVariables -> S.SQLExp
 sessionInfoJsonExp = S.SELit . encodeToStrictText
 
 withUserInfo :: (MonadIO m) => UserInfo -> LazyTxT QErr m a -> LazyTxT QErr m a
-withUserInfo uInfo ltx =
-  let vars = _uiSession uInfo
-  in LazyTxT (setHeadersTx vars) >> ltx
+withUserInfo uInfo ltx = LazyTxT (setHeadersTx $ _uiSession uInfo) >> ltx
 
 setTraceContextInTx :: (MonadIO m) => Tracing.TraceContext -> Q.TxET QErr m ()
-setTraceContextInTx traceCtx =
-  let sql = Q.fromText $ "SET LOCAL \"hasura.trace_context\" = " <>
+setTraceContextInTx traceCtx = Q.unitQE defaultTxErrorHandler sql () False
+  where
+    sql = Q.fromText $ "SET LOCAL \"hasura.tracecontext\" = " <>
             toSQLTxt (S.SELit . encodeToStrictText . Tracing.injectEventContext $ traceCtx)
-  in Q.unitQE defaultTxErrorHandler sql () False
 
 -- | Inject the trace context as a transaction-local variable,
 -- so that it can be picked up by any triggers (including event triggers).
@@ -164,13 +162,7 @@ withTraceContext
   => Tracing.TraceContext
   -> LazyTxT QErr m a
   -> LazyTxT QErr m a
-withTraceContext ctx ltx =
-  let sql = Q.fromText $
-        "SET LOCAL \"hasura.tracecontext\" = " <>
-        toSQLTxt (S.SELit . encodeToStrictText . Tracing.injectEventContext $ ctx)
-      setTraceContext =
-        Q.unitQE defaultTxErrorHandler sql () False
-  in LazyTxT setTraceContext >> ltx
+withTraceContext ctx ltx = LazyTxT (setTraceContextInTx ctx) >> ltx
 
 deriving instance Tracing.MonadTrace m => Tracing.MonadTrace (Q.TxET e m)
 deriving instance Tracing.MonadTrace m => Tracing.MonadTrace (LazyTxT e m)
