@@ -78,6 +78,8 @@ CREATE TABLE hdb_catalog.hdb_cron_event_invocation_logs
     ON UPDATE CASCADE ON DELETE CASCADE
 );
 
+CREATE INDEX hdb_cron_event_invocation_event_id ON hdb_catalog.hdb_cron_event_invocation_logs (event_id);
+
 CREATE TABLE hdb_catalog.hdb_scheduled_events
 (
   id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
