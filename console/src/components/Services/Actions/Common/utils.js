@@ -34,6 +34,7 @@ export const generateActionDefinition = ({
   actionType,
   headers,
   forwardClientHeaders,
+  timeout,
 }) => {
   return {
     arguments: filterNameLessTypeLess(args),
@@ -43,6 +44,7 @@ export const generateActionDefinition = ({
     type: actionType,
     headers: transformHeaders(headers),
     forward_client_headers: forwardClientHeaders,
+    timeout,
   };
 };
 

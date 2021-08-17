@@ -4,6 +4,7 @@ import {
   getElementFromClassName,
 } from '../../helpers/dataHelpers';
 import { setPromptValue } from '../../helpers/common';
+import { getTimeoutSeconds } from '../../helpers/eventHelpers';
 
 const statements = {
   createMutationActionText: `type Mutation {
@@ -91,6 +92,9 @@ const typeIntoHandler = (content: string) => {
 
 const clickOnCreateAction = () => {
   cy.get(getElementFromAlias('create-action-btn')).click({ force: true });
+  cy.get('.notification', { timeout: 5000 })
+    .should('be.visible')
+    .and('contain', 'Created action successfully');
   cy.wait(5000);
 };
 
@@ -116,8 +120,15 @@ export const createMutationAction = () => {
   clearHandler();
   // type into handler
   typeIntoHandler(statements.createMutationHandler);
+  cy.get(getElementFromAlias('action-timeout-seconds'))
+    .clear()
+    .type(getTimeoutSeconds());
   // click to create action
   clickOnCreateAction();
+  cy.get(getElementFromAlias('modify-action-timeout-seconds')).should(
+    'have.value',
+    '25'
+  );
 };
 
 export const verifyMutation = () => {
@@ -159,7 +170,20 @@ export const modifyMutationAction = () => {
   clearHandler();
   typeIntoHandler(statements.changeHandlerText);
 
+  cy.get(
+    getElementFromAlias('modify-action-timeout-seconds')
+  ).type('{selectall}', { force: true });
+  cy.get(getElementFromAlias('modify-action-timeout-seconds'))
+    .clear()
+    .type('50');
   cy.get(getElementFromAlias('save-modify-action-changes')).click();
+  cy.get('.notification', { timeout: 5000 })
+    .should('be.visible')
+    .and('contain', 'Action saved successfully');
+  cy.get(getElementFromAlias('modify-action-timeout-seconds')).should(
+    'have.value',
+    '50'
+  );
   cy.wait(5000);
 
   // permissions part

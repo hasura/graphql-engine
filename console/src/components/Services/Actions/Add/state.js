@@ -38,6 +38,7 @@ const state = {
   derive: {
     operation: '',
   },
+  timeout: '',
   comment: '',
 };
 

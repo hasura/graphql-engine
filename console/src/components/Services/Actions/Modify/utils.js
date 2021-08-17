@@ -34,6 +34,7 @@ export const getModifyState = (currentAction, allTypes) => {
     kind: actionDef.kind,
     headers: parseServerHeaders(actionDef.headers),
     forwardClientHeaders: actionDef.forward_client_headers,
+    timeout: actionDef?.timeout ?? '',
     comment: currentAction.comment,
   };
   return modifyState;
