@@ -57,6 +57,7 @@ Dig deeper
    Transfer Ownership <ownership>
    Project Env vars <env-vars>
    Project Domains <domains>
+   Securing projects <secure>
    Switching pricing plans <pricing>
    Deployment regions <regions>
    GitHub Deployment <github-integration>
