@@ -256,7 +256,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
         ++ [| ("3", MigrationPair from3To4 Nothing) |]
         :  migrationsFromFile [5..42]
         ++ [| ("42", MigrationPair from42To43 (Just from43To42)) |]
-        : migrationsFromFile [44..46]
+        : migrationsFromFile [44..latestCatalogVersion]
      )
   where
     runTxOrPrint :: Q.Query -> m ()
