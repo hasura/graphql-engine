@@ -18,7 +18,7 @@ Introduction
 You can export data like metrics and operation logs of your Hasura Cloud project to external services.
 
 Supported integrations
-----------------------
+---------------------- 
 
 Check out the following guides for tutorials on how to integrate the following services with Hasura Cloud.
 
@@ -28,3 +28,4 @@ Check out the following guides for tutorials on how to integrate the following s
 
    Datadog <datadog> 
    New Relic <newrelic>
+   Azure Monitor <azure-monitor>
