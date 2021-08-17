@@ -3,6 +3,7 @@ module Hasura.RQL.DDL.Schema.LegacyCatalog
   ( saveMetadataToHdbTables
   , fetchMetadataFromHdbTables
   , recreateSystemMetadata
+  , addCronTriggerForeignKeyConstraint
   ) where
 
 import           Hasura.Prelude
@@ -528,6 +529,16 @@ fetchMetadataFromHdbTables = liftTx do
                           ( QualifiedObject schema table
                           , RemoteRelationshipMetadata name definition
                           )
+
+addCronTriggerForeignKeyConstraint :: MonadTx m => m ()
+addCronTriggerForeignKeyConstraint =
+  liftTx $
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+      ALTER TABLE hdb_catalog.hdb_cron_events ADD CONSTRAINT
+     hdb_cron_events_trigger_name_fkey FOREIGN KEY (trigger_name)
+     REFERENCES hdb_catalog.hdb_cron_triggers(name)
+     ON UPDATE CASCADE ON DELETE CASCADE;
+     |] () False
 
 -- | Drops and recreates all “system-defined” metadata, aka metadata for tables and views in the
 -- @information_schema@ and @hdb_catalog@ schemas. These tables and views are tracked to expose them
