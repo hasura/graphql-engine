@@ -1,0 +1,52 @@
+- description: Set table customization for article table using bigquery_set_table_customization API
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: bigquery_set_table_customization
+    args:
+      source: bigquery
+      table:
+        dataset: hasura
+        name: article
+      configuration:
+        custom_root_fields:
+          select: sileckte
+          select_by_pk: sileckte_by_pk
+          select_aggregate: sileckte_aggrigeyte
+        custom_name: articilis
+        custom_column_names:
+          id: di
+          title: tittelle
+
+
+- description: Select query on article with customization
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      sileckte:
+      - di: '1'
+        tittelle: Title 1
+      - di: '2'
+        tittelle: Title 2
+      - di: '3'
+        tittelle: Title 3
+      sileckte_aggrigeyte:
+        aggregate:
+          count: '3'
+  query:
+    query: |
+      query {
+        sileckte (order_by: {di: asc}) {
+          di
+          tittelle
+        }
+        sileckte_aggrigeyte {
+          aggregate {
+            count
+          }
+        }
+      }
+

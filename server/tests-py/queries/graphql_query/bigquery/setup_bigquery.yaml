@@ -1,3 +1,175 @@
 type: bulk
-args: []
+args:
+
+
+- type: bigquery_track_table
+  args:
+    source: hasura_global_limited
+    table:
+      dataset: hasura
+      name: LimitedAlbum
+
+- type: bigquery_track_table
+  args:
+    source: hasura_global_limited
+    table:
+      dataset: hasura
+      name: LimitedArtist
+
+- type: bigquery_create_object_relationship
+  args:
+    source: hasura_global_limited
+    table:
+      dataset: hasura
+      name: LimitedAlbum
+    name: artist
+    using:
+      manual_configuration:
+        remote_table:
+          dataset: hasura
+          name: LimitedArtist
+        column_mapping:
+          artist_other_id: artist_self_id
+
+- type: bigquery_create_array_relationship
+  args:
+    source: hasura_global_limited
+    table:
+      dataset: hasura
+      name: LimitedArtist
+    name: albums
+    using:
+      manual_configuration:
+        remote_table:
+          dataset: hasura
+          name: LimitedAlbum
+        column_mapping:
+          artist_self_id: artist_other_id
+
+
+- type: bigquery_track_table
+  args:
+    source: bigquery
+    table:
+      dataset: hasura
+      name: author
+
+- type: bigquery_track_table
+  args:
+    source: bigquery
+    table:
+      dataset: hasura
+      name: article
+
+- type: bigquery_create_array_relationship
+  args:
+    source: bigquery
+    table:
+      dataset: hasura
+      name: author
+    name: articles
+    using:
+      manual_configuration:
+        remote_table:
+          dataset: hasura
+          name: article
+        column_mapping:
+          id: author_id
+
+- type: bigquery_create_object_relationship
+  args:
+    source: bigquery
+    table:
+      dataset: hasura
+      name: article
+    name: author
+    using:
+      manual_configuration:
+        remote_table:
+          dataset: hasura
+          name: author
+        column_mapping:
+          author_id: id
+
+- type: bigquery_create_select_permission
+  args:
+    role: published_only
+    source: bigquery
+    table:
+      dataset: hasura
+      name: article
+    permission:
+      columns:
+        - is_published
+        - id
+        - title
+      filter:
+        is_published: true
+
+- type: bigquery_create_select_permission
+  args:
+    role: exact_article_id
+    source: bigquery
+    table:
+      dataset: hasura
+      name: article
+    permission:
+      columns:
+        - id
+        - title
+        - content
+      filter:
+        id: {'_eq': 2}
+
+- type: bigquery_create_select_permission
+  args:
+    role: empty_perms
+    source: bigquery
+    table:
+      dataset: hasura
+      name: article
+    permission:
+      columns: []
+      filter: {}
+
+- type: bigquery_create_select_permission
+  args:
+    role: user
+    source: bigquery
+    table:
+      dataset: hasura
+      name: article
+    permission:
+      columns:
+        - id
+        - title
+        - content
+        - author_id
+        - is_published
+        - published_on
+        - created_at
+      filter: {}
+
+- type: bigquery_create_select_permission
+  args:
+    role: test_timestamp_perm
+    source: bigquery
+    table:
+      dataset: hasura
+      name: article
+    permission:
+      columns:
+        - id
+        - title
+        - content
+      filter:
+        created_at: {'_eq': '2008-12-25T07:30:02'}
+
+
+- type: bigquery_track_table
+  args:
+    source: bigquery
+    table:
+      dataset: hasura
+      name: all_types
 
