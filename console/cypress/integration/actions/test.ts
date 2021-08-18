@@ -13,7 +13,7 @@ const setup = () => {
   describe('Setup route', () => {
     it('Visit the index route', () => {
       cy.visit('/actions/manage/actions');
-      cy.wait(7000);
+      // Get and set validation metadata
       setMetaData();
     });
   });

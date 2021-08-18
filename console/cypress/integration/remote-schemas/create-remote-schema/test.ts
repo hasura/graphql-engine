@@ -17,7 +17,7 @@ import {
   deleteRemoteSchema,
   visitRemoteSchemaPermissionsTab,
   createSimpleRemoteSchemaPermission,
-  passWithUpdateRemoteSchema
+  passWithUpdateRemoteSchema,
 } from './spec';
 
 const setup = () => {
@@ -25,7 +25,6 @@ const setup = () => {
     it('Visit the index route', () => {
       // Visit the index route
       cy.visit('/remote-schemas/manage/schemas');
-      cy.wait(7000);
       // Get and set validation metadata
       setMetaData();
     });

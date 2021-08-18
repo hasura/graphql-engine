@@ -172,8 +172,11 @@ const Onboarding: React.FC<OnboardingProps> = ({
         </div>
       )}
       {visible && (
-        <div className={styles.onboarding_popup}>
-          <div className={styles.popup_header}>
+        <div className={styles.onboarding_popup} data-test="onboarding-popup">
+          <div
+            className={styles.popup_header}
+            data-test="onboarding-popup-header"
+          >
             <img src={hasuraDarkIcon} alt="Hasura Logo" />
             <strong>Hi there, let&apos;s get started with Hasura!</strong>
           </div>
@@ -188,12 +191,17 @@ const Onboarding: React.FC<OnboardingProps> = ({
             </ul>
           </div>
           <div className={styles.popup_buttons}>
-            <button onClick={togglePopup} className={styles.button}>
+            <button
+              onClick={togglePopup}
+              className={styles.button}
+              data-test="btn-hide-for-now"
+            >
               Hide for now
             </button>
             <button
               onClick={markCompleted}
               className={`${styles.button} ${styles.muted}`}
+              data-test="btn-ob-dont-show-again"
             >
               Don&apos;t show me again
             </button>
