@@ -15,6 +15,7 @@
 - server: fix GraphQL type for single-row returning functions (close #7109)
 - server: update non-existent event trigger, action and query collection error msgs (close #7396) 
 - console: add support for creation of indexes for Postgres data sources
+- docs: document the cleanup process for scheduled triggers
 - console: allow same named queries and unnamed queries on allowlist file upload
 - console: support computed fields in permission builder
 - console: add custom timeouts to actions

@@ -14,7 +14,9 @@ Clean up event data
 Introduction
 ------------
 
-Hasura stores event data associated with Event Triggers in the metadata schema. If there are lots of events, the metadata tables can get huge and you may want to prune them. You can use any of the following options to prune your event data depending on your need.
+Hasura stores event data associated with Event Triggers in **the `hdb_catalog` schema of the database containing the source table**.
+
+If there are lots of events, the metadata tables can get huge and you may want to prune them. You can use any of the following options to prune your event data depending on your need.
 
 Tables involved
 ---------------
@@ -79,3 +81,28 @@ Option 5: Clear everything
    DELETE FROM hdb_catalog.event_invocation_logs;
 
    DELETE FROM hdb_catalog.event_log;
+
+Clearing data before a particular time period
+---------------------------------------------
+
+If you wish to keep recent data and only clear data before a particular time period
+you can add the following time clause to your query's where clause:
+
+.. code-block:: SQL
+
+   -- units can be 'minutes', 'hours', 'days', 'months', 'years'
+   created_at < now() - interval '<x> <units>'
+
+For example: to delete all processed events and HTTP logs older than 3 months:
+
+.. code-block:: SQL
+
+   DELETE FROM hdb_catalog.event_invocation_logs
+   WHERE created_at < now() - interval '3 months';
+
+   DELETE FROM hdb_catalog.event_log
+   WHERE (delivered = true OR error = true)
+    AND created_at < now() - interval '3 months';
+
+See the `Postgres date/time functions <https://www.postgresql.org/docs/current/functions-datetime.html>`__
+for more details.
