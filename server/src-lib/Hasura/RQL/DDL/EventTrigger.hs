@@ -234,7 +234,7 @@ runDeleteEventTriggerQuery (DeleteEventTriggerQuery source name) = do
         flip map (HM.toList $ _siTables @('Postgres pgKind) sourceInfo) $ \(table, tableInfo) ->
         HM.map (const table) $ _tiEventTriggerInfoMap tableInfo
   table <- onNothing maybeTable $ throw400 NotExists $
-           "event trigger with name " <> name <<> " not exists"
+           "event trigger with name " <> name <<> " does not exist"
 
   withNewInconsistentObjsCheck
     $ buildSchemaCache
@@ -304,9 +304,11 @@ runInvokeEventTrigger (InvokeEventTriggerQuery name source payload) = do
           $  runPgSourceWriteTx sourceConfig
           $  setHeadersTx (_uiSession userInfo)
           >> setTraceContextInTx traceCtx
-          >> insertManualEvent (tableInfoName ti) name payload
+          >> insertManualEvent (tableInfoName ti) name (makePayload payload)
   return $ encJFromJValue $ object ["event_id" .= eid]
   where
+    makePayload o = object [ "old" .= Null, "new" .= o ]
+
     assertManual (TriggerOpsDef _ _ _ man) = case man of
       Just True -> return ()
       _         -> throw400 NotSupported "manual mode is not enabled for event trigger"

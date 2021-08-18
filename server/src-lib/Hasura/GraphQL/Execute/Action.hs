@@ -159,9 +159,9 @@ makeActionResponseNoRelations annFields webhookResponse =
             RS.AFExpression t -> Just $ AO.String t
             RS.AFColumn     c -> AO.toOrdered <$> Map.lookup (pgiName $ RS._acfInfo c) obj
             _                 -> AO.toOrdered <$> Map.lookup fieldText (mapKeys G.unName obj)
-                                -- ^ NOTE (Sam): This case would still not allow for aliased fields to be
-                                --   a part of the response. Also, seeing that none of the other `annField`
-                                --   types would be caught in the example, I've chosen to leave it as it is.
+                                -- NOTE (Sam): This case would still not allow for aliased fields to be
+                                -- a part of the response. Also, seeing that none of the other `annField`
+                                -- types would be caught in the example, I've chosen to leave it as it is.
   in case webhookResponse of
     AWRArray objs -> AO.array $ map mkResponseObject objs
     AWRObject obj -> mkResponseObject obj

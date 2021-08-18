@@ -1,2 +1,70 @@
 type: bulk
-args: []
+args:
+
+- type: bigquery_untrack_table
+  args:
+    source: bigquery
+    table:
+      dataset: hasura
+      name: all_types
+
+- type: bigquery_drop_relationship
+  args:
+    source: bigquery
+    table:
+      dataset: hasura
+      name: article
+    relationship: author
+
+- type: bigquery_drop_relationship
+  args:
+    source: bigquery
+    table:
+      dataset: hasura
+      name: author
+    relationship: articles
+
+- type: bigquery_untrack_table
+  args:
+    source: bigquery
+    table:
+      dataset: hasura
+      name: article
+
+- type: bigquery_untrack_table
+  args:
+    source: bigquery
+    table:
+      dataset: hasura
+      name: author
+
+- type: bigquery_drop_relationship
+  args:
+    source: hasura_global_limited
+    table:
+      dataset: hasura
+      name: LimitedArtist
+    relationship: albums
+
+- type: bigquery_drop_relationship
+  args:
+    source: hasura_global_limited
+    table:
+      dataset: hasura
+      name: LimitedAlbum
+    relationship: artist
+
+- type: bigquery_untrack_table
+  args:
+    source: hasura_global_limited
+    table:
+      dataset: hasura
+      name: LimitedArtist
+
+- type: bigquery_untrack_table
+  args:
+    source: hasura_global_limited
+    table:
+      dataset: hasura
+      name: LimitedAlbum
+

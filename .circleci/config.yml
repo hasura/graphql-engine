@@ -852,11 +852,6 @@ jobs:
       - checkout
       - *skip_server_tests
       - run:
-          name: install_necessary_packages
-          command: |
-            apt-get update
-            apt install -y curl procps
-      - run:
           name: upgrade_test
           command: .circleci/server-upgrade-downgrade/run.sh
           environment:

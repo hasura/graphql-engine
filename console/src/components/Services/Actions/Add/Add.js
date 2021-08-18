@@ -15,14 +15,15 @@ import {
   setHeaders as dispatchNewHeaders,
   toggleForwardClientHeaders as toggleFCH,
   resetDerivedActionParentOperation,
+  setActionTimeout,
   setActionComment,
 } from './reducer';
 import { createAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
-import ToolTip from '../../../Common/Tooltip/Tooltip';
 import { showWarningNotification } from '../../Common/Notification';
 import GraphQLEditor from '../Common/components/GraphQLEditor';
 import { actionDefinitionInfo } from '../Modify/ActionEditor';
+import { Tooltip, OverlayTrigger } from 'react-bootstrap';
 
 export const typeDefinitionInfo = {
   label: 'New types definition',
@@ -41,6 +42,7 @@ const AddAction = ({
   forwardClientHeaders,
   derive,
   readOnlyMode,
+  timeoutConf: timeout,
   comment,
 }) => {
   useEffect(() => {
@@ -62,8 +64,8 @@ const AddAction = ({
 
   const handlerOnChange = e => dispatch(setActionHandler(e.target.value));
   const kindOnChange = k => dispatch(setActionKind(k));
+  const timeoutOnChange = e => dispatch(setActionTimeout(e.target.value));
   const commentOnChange = e => dispatch(setActionComment(e.target.value));
-
   const {
     sdl: typesDefinitionSdl,
     error: typesDefinitionError,
@@ -188,6 +190,36 @@ const AddAction = ({
         disabled={readOnlyMode}
       />
       <hr className="my-lg" />
+      <div className={styles.subheading_text}>
+        Action custom timeout
+        <OverlayTrigger
+          placement="right"
+          overlay={
+            <Tooltip id="tooltip-cascade">
+              Configure timeout for Action. Defaults to 30 seconds.
+            </Tooltip>
+          }
+        >
+          <i className="fa fa-question-circle" aria-hidden="true" />
+        </OverlayTrigger>
+      </div>
+      <label
+        className={`${styles.inputLabel} radio-inline ${styles.padd_left_remove}`}
+      >
+        <input
+          className="form-control"
+          type="number"
+          placeholder="Timeout in seconds"
+          value={timeout}
+          data-key="timeoutConf"
+          data-test="action-timeout-seconds"
+          onChange={timeoutOnChange}
+          disabled={readOnlyMode}
+          pattern="^\d+$"
+          title="Only non negative integers are allowed"
+        />
+      </label>
+      <hr className="my-lg" />
       <Button
         color="yellow"
         size="sm"
@@ -199,7 +231,7 @@ const AddAction = ({
         Create
       </Button>
       {readOnlyMode && (
-        <ToolTip
+        <Tooltip
           id="tooltip-actions-add-readonlymode"
           message="Adding new action is not allowed in Read only mode!"
         />

@@ -4,12 +4,20 @@
 
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: optimize SQL query generation with LIMITs (close #5745)
+
+## v2.0.7
+
+- server: fix v2 -> v1 downgrade bug when cron triggers exist
+- server: add index on the `event_id` column of the `hdb_cron_event_invocation_logs` table
 - server: fix GraphQL type for remote relationship field (close #7284)
 - server: support EdDSA algorithm and key type for JWT
 - server: fix GraphQL type for single-row returning functions (close #7109)
+- server: update non-existent event trigger, action and query collection error msgs (close #7396) 
 - console: add support for creation of indexes for Postgres data sources
 - console: allow same named queries and unnamed queries on allowlist file upload
 - console: support computed fields in permission builder
+- console: add custom timeouts to actions
 
 ## v2.0.6
 
@@ -18,6 +26,7 @@
 - server: fix for incorrect `__typename` value in nested remote joins with a customized remote schema
 - server: fix a bug where some unicode characters in default string values for fields in remote schemas could lead to internal errors
 - server: bigquery: implement `_in` and `_nin` operators. (close #7343)
+- server: bigquery: custom root names, table names and field names for bigquery are included in tests
 - console: fix untracked foreign-key relationships suggestion across schemas
 - console: allow resolution of conflicting inherited role permissions
 - cli: fix SDL formatting in `actions.graphql`(#7296)

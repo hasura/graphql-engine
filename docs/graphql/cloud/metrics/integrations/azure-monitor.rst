@@ -1,0 +1,181 @@
+.. meta::
+    :description: Azure monitor Integration on Hasura Cloud
+    :keywords: hasura, docs, metrics, integration, export logs, azure monitor
+ 
+.. _ss_azure_monitor_integration:
+ 
+Azure Monitor Integration
+=========================
+ 
+.. contents:: Table of contents
+   :backlinks: none
+   :depth: 2
+   :local:
+ 
+Introduction
+------------
+You can export metrics and operation logs of your Hasura Cloud project to `Azure Monitor <https://azure.microsoft.com/en-in/services/monitor/>`_.
+This can be configured on the integrations tab on the project's setting page.
+
+.. note::
+
+    Azure monitor Integration is only available for Hasura Cloud projects on the ``Standard`` (pay-as-you-go) tier and above.
+
+Prerequisites
+-------------
+         
+* Create a `Service Principal <https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal#register-an-application-with-azure-ad-and-create-a-service-principal>`_
+  in Azure.
+      
+* From the ``Overview`` tab of the created Service principal , retrieve ``Application (client) ID`` (Referred as
+  ``Active Directory Client ID`` in this context) and ``Directory (tenant) ID`` (Referred as ``Active Directory Tenant ID``
+  in this context)
+    
+  .. thumbnail:: /img/graphql/cloud/metrics/service-principal-properties.png
+        :alt: Service Principal Properties
+        :width: 1146px 
+    
+* From the ``Certificates & secrets`` tab of the created service principal, Create a client secret by clicking  ``New client secret``.
+  Add a suitable description and expiry period for the secret and click ``Add``. Copy the value of the created secret
+  (Referred as ``Active Directory Client Secret`` in this context)
+    
+  .. thumbnail:: /img/graphql/cloud/metrics/service-principal-secret.png
+        :alt: Service Principal Secret
+        :width: 1146px 
+
+* Create a `Log Analytics Workspace <https://docs.microsoft.com/en-us/azure/azure-monitor/logs/quick-create-workspace>`_ in Azure.
+* From the ``Agents management`` tab of the created log analytics workspace, retrieve ``Workspace ID`` and ``Primary Key``
+  (Referred as ``Shared Key`` in this context).
+            
+  .. thumbnail:: /img/graphql/cloud/metrics/log-analytics-workspace-config.png
+    :alt: Log Analytics workspace config parameters
+    :width: 1146px
+            
+* From the ``Properties`` tab of the created log analytics workspace, retrieve ``Resource ID`` and ``Location`` (Referred as
+  ``Region`` in this context)
+            
+  .. thumbnail:: /img/graphql/cloud/metrics/log-analytics-properties.png
+    :alt: Log Analytics Properties
+    :width: 1146px        
+
+* Assign the Role ``Monitoring Metrics Publisher`` to the Service principal against the Log analytics workspace. From the
+  ``Access control (IAM)`` tab of the created log analytics workspace, Click on  ``Add`` and select ``Add role assignment``.
+  In the Add role assignment panel, Select the Role as ``Monitoring Metrics Publisher`` and select the created service principal
+  for role assignment and click ``Save``.
+    
+  .. thumbnail:: /img/graphql/cloud/metrics/service-principal-role.png
+        :alt: Service Principal Role
+        :width: 1146px 
+
+
+Configure Azure Monitor integration
+-----------------------------------
+
+Navigate to the integrations tab on project settings page to find Azure Monitor integration.
+
+.. thumbnail:: /img/graphql/cloud/metrics/integrate-azure-monitor.png
+   :alt: Configure Azure Monitor Integration
+   :width: 1146px
+
+Enter the values of config parameters obtained from the steps in pre-requisites in the Azure monitor integration form.
+In addition to the above parameters, the following fields are also needed:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 40
+
+   * - Field
+     - Description
+
+   * - `Namespace <https://docs.microsoft.com/en-us/azure/azure-monitor/essentials/metrics-custom-overview#namespace>`_ 
+     - Namespaces are a way to categorize or group similar metrics together. 
+
+   * - `Log type <https://docs.microsoft.com/en-us/azure/azure-monitor/logs/data-collector-api#request-headers>`_
+     - The record type of the log that is being submitted. It can contain only letters, numbers, and the underscore (_) character,
+       and it can't exceed 100 characters.
+   
+   * - Custom Attributes **(Optional)**
+     - Custom Attributes associated with your logs. A default source tag ``hasura-logs`` is added to all exported logs. 
+
+After adding appropriate values in the Azure monitor Integration panel, click ``Save``.
+
+Checking the status of the integration
+--------------------------------------
+
+The green/red dot signifies the status of the integration. Green signifies successful exporting of logs to Azure monitor. 
+When logs are successfully exported, ``Last Exported`` is continuously updated, indicating the timestamp of the last log
+line successfully exported to your Azure monitor dashboard.
+
+.. thumbnail:: /img/graphql/cloud/metrics/configure-azure-monitor-done.png
+   :alt: Azure monitor Integration successfully configured
+   :width: 1146px
+
+In case there is an error while exporting logs to Azure monitor, the dot is red and the HTTP status code of the error and
+the message is displayed right below it.
+
+.. thumbnail:: /img/graphql/cloud/metrics/configure-azure-monitor-fail.png
+   :alt: Azure monitor Integration unable to push logs
+   :width: 1146px
+
+View metrics
+------------
+
+The integration exports the following five metrics to Azure monitor:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 30
+
+   * - Metric Exported
+     - Metric Name in Azure monitor
+
+   * - Average number of requests
+     - ``average_requests_per_minute``
+  
+   * - Average request execution time 
+     - ``average_execution_time``
+
+   * - Success rate of requests 
+     - ``success_rate``
+
+   * - Active subscriptions 
+     - ``active_subscriptions``
+
+   * - Number of websockets open
+     - ``websockets_open``
+
+Non zero values of all the above metrics are exported over a one minute time interval. 
+
+To navigate to `Azure monitor metrics dashboard <https://portal.azure.com/#blade/Microsoft_Azure_Monitoring/AzureMonitoringBrowseBlade/metrics>`_
+,click ``View Metrics``.
+
+.. thumbnail:: /img/graphql/cloud/metrics/azure-monitor-view-metrics.png
+   :alt: Azure monitor Integration successfully configured
+   :width: 1146px
+
+From the ``Select a scope`` panel, expand the resource group which contains the ``Log analytics workspace`` and select it
+and click ``Apply``.In the filter menu, select the correct namespace and ``Add filter`` to view the individual metric.
+
+.. thumbnail:: /img/graphql/cloud/metrics/azure-monitor-metrics.png
+   :alt: Metrics successfully exported to Azure monitor
+   :width: 1146px
+
+View logs
+---------
+   
+To navigate to `Azure monitor logs dashboard <https://portal.azure.com/#blade/Microsoft_Azure_Monitoring/AzureMonitoringBrowseBlade/logs>`_
+, click ``View Logs``.
+   
+.. thumbnail:: /img/graphql/cloud/metrics/azure-monitor-view-logs.png
+    :alt: Azure monitor Integration successfully configured
+    :width: 1146px
+
+From the ``Select a scope`` panel, expand the resource group which contains the ``Log analytics workspace`` and select it
+and click ``Apply``.  The logs can be filtered using ``Log type``. Use ``{YOUR_LOG_TYPE}_CL`` search parameter to filter the
+logs. Custom log types are displayed in the left of the Query panel.
+
+.. thumbnail:: /img/graphql/cloud/metrics/azure-monitor-logs.png
+    :alt: Logs successfully exported to Azure monitor
+    :width: 1146px
+   
+   

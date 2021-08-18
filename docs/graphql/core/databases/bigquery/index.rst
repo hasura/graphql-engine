@@ -55,6 +55,7 @@ Know more
   :titlesonly:
 
   Getting Started <getting-started>
+  Schema <schema/index>
 
 .. TODO: DB-COMPATIBILITY
 
