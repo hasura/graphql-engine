@@ -137,7 +137,7 @@ getCollectionDef
 getCollectionDef collName = do
   detM <- getCollectionDefM collName
   onNothing detM $ throw400 NotExists $
-    "query collection with name " <> collName <<> " does not exists"
+    "query collection with name " <> collName <<> " does not exist"
 
 getCollectionDefM
   :: (QErrM m, MetadataM m)
