@@ -22,7 +22,7 @@ the following ways:
   depend on other fields passed in the input. e.g. set ``submission_time`` of an online quiz as 1 hour from the
   ``start_time``.
 - :ref:`Role based column presets <column_presets>`: set up presets, using session variables or fixed values, that are
-  applied when a new row is created with a particular :ref:`user role <roles_variables>`.
+  applied when a row is created/updated with a particular :ref:`user role <roles_variables>`.
   E.g. set a ``user_id`` field automatically from a session variable/authorization header.
 - :ref:`Created_at / updated_at timestamps <created_updated_timestamps>`: set up ``created_at`` and ``updated_at`` timestamp values.
 
