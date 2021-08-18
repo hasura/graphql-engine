@@ -143,7 +143,7 @@ runUpdateAction (UpdateAction actionName actionDefinition actionComment) = do
   sc <- askSchemaCache
   let actionsMap = scActions sc
   void $ onNothing (Map.lookup actionName actionsMap) $
-    throw400 NotExists $ "action with name " <> actionName <<> " not exists"
+    throw400 NotExists $ "action with name " <> actionName <<> " does not exist"
   buildSchemaCacheFor (MOAction actionName) $ updateActionMetadataModifier actionDefinition actionComment
   pure successMsg
     where

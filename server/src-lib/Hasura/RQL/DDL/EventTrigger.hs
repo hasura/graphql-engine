@@ -234,7 +234,7 @@ runDeleteEventTriggerQuery (DeleteEventTriggerQuery source name) = do
         flip map (HM.toList $ _siTables @('Postgres pgKind) sourceInfo) $ \(table, tableInfo) ->
         HM.map (const table) $ _tiEventTriggerInfoMap tableInfo
   table <- onNothing maybeTable $ throw400 NotExists $
-           "event trigger with name " <> name <<> " not exists"
+           "event trigger with name " <> name <<> " does not exist"
 
   withNewInconsistentObjsCheck
     $ buildSchemaCache
