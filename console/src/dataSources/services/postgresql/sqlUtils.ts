@@ -1104,7 +1104,9 @@ export const getCreateIndexSql = (indexObj: {
 
   return `
   CREATE ${unique ? 'UNIQUE' : ''} INDEX "${indexName}" on
-  "${table.schema}"."${table.name}" using ${indexType} (${columns.join(', ')});
+  "${table.schema}"."${table.name}" using ${indexType} (${columns
+    .map(c => `"${c}"`)
+    .join(', ')});
 `;
 };
 
