@@ -34,7 +34,9 @@ hosted on GitHub pages and the Postgres+GraphQL Engine is running on Postgres.
   ```
 - Apply the migrations:
   ```bash
+  hasura metadata apply
   hasura migrate apply
+  hasura metadata reload
   ```
 - Edit `HASURA_GRAPHQL_ENGINE_HOSTNAME` in `src/constants.js` and set it to the Hasura app URL:
   ```js
