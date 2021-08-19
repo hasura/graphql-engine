@@ -41,7 +41,8 @@ Request
 
    {
      "opts": ["-O", "-x", "--schema-only", "--schema", "public"],
-     "clean_output": true
+     "clean_output": true,
+     "source": "postgres"
    }
 
 - ``opts``: Arguments to be passed to the ``pg_dump`` tool. Represented as array
@@ -59,6 +60,8 @@ Request
   -  ``COMMENT ON SCHEMA public is 'standard public schema'``;
   -  Comments (``--``) and empty newlines.
   -  Postgres triggers created by Hasura for event triggers.
+
+- ``source``: Database to dump. When this optional argument is skipped, it is set to ``default``.
 
 
 Sample response
