@@ -26,6 +26,7 @@ The react client is a forked version of [urigo/whatsapp-client-react](https://gi
 - Apply the migrations:
   ```bash
   cd hasura 
+  hasura metadata apply --endpoint "https://whatsapp-clone.hasura.app"
   hasura migrate apply --endpoint "https://whatsapp-clone.hasura.app"
   ```
 

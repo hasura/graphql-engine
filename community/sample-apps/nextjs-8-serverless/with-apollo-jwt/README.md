@@ -14,10 +14,11 @@
 1. Add your Hasura project URL in `hasura/config.yaml`
 
 ```yaml
+version: 3
 endpoint: https://my-app.hasura.app
 ```
 
-2. Run `hasura migrate apply` and `hasura metadata apply` inside `hasura` directory to create the required tables and permissions for the app.
+2. Run `hasura metadata apply` and `hasura migrate apply` inside `hasura` directory to create the required tables and permissions for the app.
 
 ## Deploy JWT Server
 

@@ -111,7 +111,7 @@ endpoint: https://<your-app.hasura.app>
 admin_secret: <your-admin-secret>
 ```
 
-2. Run `hasura migrate apply` inside `hasura` directory to create the required tables and permissions for the app
+2. Run `hasura metadata apply && hasura migrate apply` inside `hasura` directory to create the required tables and permissions for the app
 
 ## Create Auth0 Rule
 

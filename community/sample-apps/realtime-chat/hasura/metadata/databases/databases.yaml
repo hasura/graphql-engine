@@ -1,4 +1,5 @@
 - name: default
+  kind: postgres
   configuration:
     connection_info:
       database_url:
@@ -8,8 +9,8 @@
         max_connections: 50
         retries: 1
   tables:
-  - "!include public_message.yaml"
-  - "!include public_user.yaml"
-  - "!include public_user_online.yaml"
-  - "!include public_user_typing.yaml"
+  - "!include default/tables/public_message.yaml"
+  - "!include default/tables/public_user.yaml"
+  - "!include default/tables/public_user_online.yaml"
+  - "!include default/tables/public_user_typing.yaml"
   functions: []
