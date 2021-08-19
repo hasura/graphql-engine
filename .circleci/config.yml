@@ -817,7 +817,10 @@ workflows:
   version: 2
   workflow_v20200414:
     jobs:
-      - check_build_worthiness: *filter_only_vtags
+      - check_build_worthiness:
+          <<: *filter_only_vtags
+          context:
+            - pytest-bigquery
       - test_and_build_cli_ext:
           <<: *filter_only_vtags
           requires:
