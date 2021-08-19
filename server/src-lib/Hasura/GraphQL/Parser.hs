@@ -7,14 +7,18 @@ module Hasura.GraphQL.Parser
   , bind
   , bindFields
 
-  , ScalarRepresentation(..)
-  , scalar
   , boolean
   , int
   , float
   , string
   , identifier
+  , uuid
+  , json
+  , jsonb
+  , nonNegativeInt
+  , bigInt
   , unsafeRawScalar
+  , jsonScalar
 
   , enum
   , nullable
@@ -40,6 +44,7 @@ module Hasura.GraphQL.Parser
   , subselection_
 
   , jsonToGraphQL
+  , valueToJSON
 
   , module Hasura.GraphQL.Parser.Class
   , module Hasura.GraphQL.Parser.Column
@@ -49,6 +54,8 @@ module Hasura.GraphQL.Parser
 
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Column
+import           Hasura.GraphQL.Parser.Internal.Convert
 import           Hasura.GraphQL.Parser.Internal.Parser
+import           Hasura.GraphQL.Parser.Internal.Scalars
 import           Hasura.GraphQL.Parser.Monad
 import           Hasura.GraphQL.Parser.Schema

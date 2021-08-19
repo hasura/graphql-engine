@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use hasura version to print the Hasura version on the Hasura CLI
+   :description: Print the CLI version using the Hasura CLI
    :keywords: hasura, docs, CLI, hasura version
 
 .. _hasura_version:

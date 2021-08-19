@@ -17,7 +17,7 @@ import {
 interface Props extends EventsLogsInjectedProps {}
 
 const ProcessedEvents: React.FC<Props> = props => {
-  const { dispatch, triggerName, readOnlyMode } = props;
+  const { triggerName, readOnlyMode, dispatch, currentSource } = props;
 
   const renderRows: FilterRenderProp = (
     rows,
@@ -34,6 +34,7 @@ const ProcessedEvents: React.FC<Props> = props => {
       runQuery={runQuery}
       columns={['id', 'delivered', 'created_at', 'tries']}
       identifier={triggerName}
+      triggerType="data"
     />
   );
 
@@ -47,8 +48,8 @@ const ProcessedEvents: React.FC<Props> = props => {
       />
       <br />
       <FilterQuery
-        table={etEventsTable}
         dispatch={dispatch}
+        table={etEventsTable}
         render={renderRows}
         presets={{
           filters: [
@@ -62,6 +63,10 @@ const ProcessedEvents: React.FC<Props> = props => {
           sorts: [makeOrderBy('created_at', 'desc')],
         }}
         relationships={['logs']}
+        triggerName={triggerName}
+        triggerType="data"
+        triggerOp="processed"
+        currentSource={currentSource}
       />
     </React.Fragment>
   );

@@ -1,0 +1,37 @@
+description: Explain query with limit and order by with an object relationship's column
+url: /v1/graphql/explain
+status: 200
+query:
+  query:
+    query: |
+      query {
+        article(limit: 2, order_by: {author: {id: desc}}){
+          id
+          title
+          content
+        }
+      }
+response:
+- field: article
+  plan:
+  - Aggregate  (cost=77.07..77.08 rows=1 width=32)
+  - "  ->  Limit  (cost=77.04..77.04 rows=2 width=36)"
+  - "        ->  Sort  (cost=77.04..79.06 rows=810 width=36)"
+  - "              Sort Key: author.id DESC"
+  - "              ->  Hash Left Join  (cost=38.58..68.94 rows=810 width=36)"
+  - "                    Hash Cond: (article.author_id = author.id)"
+  - "                    ->  Seq Scan on article  (cost=0.00..18.10 rows=810 width=72)"
+  - "                    ->  Hash  (cost=22.70..22.70 rows=1270 width=4)"
+  - "                          ->  Seq Scan on author  (cost=0.00..22.70 rows=1270
+    width=4)"
+  - "                    SubPlan 1"
+  - "                      ->  Result  (cost=0.00..0.01 rows=1 width=32)"
+  sql: 'SELECT  coalesce(json_agg("root" ORDER BY "root.or.author.pg.id" DESC NULLS
+    FIRST), ''[]'' ) AS "root" FROM  (SELECT  "_2_root.or.author"."root.or.author.pg.id"
+    AS "root.or.author.pg.id", row_to_json((SELECT  "_3_e"  FROM  (SELECT  "_0_root.base"."id"
+    AS "id", "_0_root.base"."title" AS "title", "_0_root.base"."content" AS "content"       )
+    AS "_3_e"      ) ) AS "root" FROM  (SELECT  *  FROM "public"."article"  WHERE
+    (''true'')     ) AS "_0_root.base" LEFT OUTER JOIN LATERAL (SELECT  "_1_root.or.author.base"."id"
+    AS "root.or.author.pg.id" FROM  (SELECT  *  FROM "public"."author"  WHERE (("_0_root.base"."author_id")
+    = ("id"))     ) AS "_1_root.or.author.base"      ) AS "_2_root.or.author" ON (''true'')    ORDER
+    BY "root.or.author.pg.id" DESC NULLS FIRST LIMIT 2 ) AS "_4_root"      '

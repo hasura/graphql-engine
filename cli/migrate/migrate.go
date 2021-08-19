@@ -12,19 +12,18 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 	"sync"
 	"text/tabwriter"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli/metadata/types"
-	"github.com/hasura/graphql-engine/cli/migrate/database"
-	"github.com/hasura/graphql-engine/cli/migrate/source"
+	"github.com/hasura/graphql-engine/cli/v2/util"
+
+	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/source"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
 )
 
 // DefaultPrefetchMigrations sets the number of migrations to pre-read
@@ -106,43 +105,51 @@ type Migrate struct {
 	DryRun        bool
 }
 
+type NewMigrateOpts struct {
+	sourceUrl, databaseUrl string
+	cmd                    bool
+	configVersion          int
+	tlsConfig              *tls.Config
+	logger                 *log.Logger
+	hasuraOpts             *database.HasuraOpts
+}
+
 // New returns a new Migrate instance from a source URL and a database URL.
 // The URL scheme is defined by each driver.
-func New(sourceUrl string, databaseUrl string, cmd bool, configVersion int, tlsConfig *tls.Config, logger *log.Logger) (*Migrate, error) {
-	m := newCommon(cmd)
-
-	sourceName, err := schemeFromUrl(sourceUrl)
+func New(opts NewMigrateOpts) (*Migrate, error) {
+	m := newCommon(opts.cmd)
+	sourceName, err := schemeFromUrl(opts.sourceUrl)
 	if err != nil {
 		log.Debug(err)
 		return nil, err
 	}
 	m.sourceName = sourceName
-	m.sourceURL = sourceUrl
+	m.sourceURL = opts.sourceUrl
 
-	databaseName, err := schemeFromUrl(databaseUrl)
+	databaseName, err := schemeFromUrl(opts.databaseUrl)
 	if err != nil {
 		log.Debug(err)
 		return nil, err
 	}
 	m.databaseName = databaseName
-	m.databaseURL = databaseUrl
+	m.databaseURL = opts.databaseUrl
 
-	if logger == nil {
-		logger = log.New()
+	if opts.logger == nil {
+		opts.logger = log.New()
 	}
-	m.Logger = logger
+	m.Logger = opts.logger
 
-	sourceDrv, err := source.Open(sourceUrl, logger)
+	sourceDrv, err := source.Open(opts.sourceUrl, opts.logger)
 	if err != nil {
 		log.Debug(err)
 		return nil, err
 	}
 	m.sourceDrv = sourceDrv
-	if configVersion >= 2 {
+	if opts.configVersion >= 2 {
 		m.sourceDrv.DefaultParser(source.DefaultParsev2)
 	}
 
-	databaseDrv, err := database.Open(databaseUrl, cmd, tlsConfig, logger)
+	databaseDrv, err := database.Open(opts.databaseUrl, opts.cmd, opts.tlsConfig, opts.logger, opts.hasuraOpts)
 	if err != nil {
 		log.Debug(err)
 		return nil, err
@@ -215,14 +222,14 @@ func (m *Migrate) readStatusFromSource() (err error) {
 		}
 		return err
 	}
-	m.status.Append(m.newMigrationStatus(firstVersion, "source"))
+	m.status.Append(m.newMigrationStatus(firstVersion, "source", false))
 	from := int64(firstVersion)
 
 	lastVersion, err := m.sourceDrv.GetLocalVersion()
 	if err != nil {
 		return err
 	}
-	m.status.Append(m.newMigrationStatus(lastVersion, "source"))
+	m.status.Append(m.newMigrationStatus(lastVersion, "source", false))
 	to := int64(lastVersion)
 
 	for from < to {
@@ -230,7 +237,7 @@ func (m *Migrate) readStatusFromSource() (err error) {
 		if err != nil {
 			return err
 		}
-		m.status.Append(m.newMigrationStatus(next, "source"))
+		m.status.Append(m.newMigrationStatus(next, "source", false))
 		from = int64(next)
 	}
 
@@ -242,34 +249,35 @@ func (m *Migrate) readStatusFromDatabase() (err error) {
 	if !ok {
 		return nil
 	}
-	m.status.Append(m.newMigrationStatus(firstVersion, "database"))
-	from := int64(firstVersion)
+	m.status.Append(m.newMigrationStatus(firstVersion.Version, "database", firstVersion.Dirty))
+	from := int64(firstVersion.Version)
 
 	lastVersion, ok := m.databaseDrv.Last()
 	if !ok {
 		return nil
 	}
-	m.status.Append(m.newMigrationStatus(lastVersion, "database"))
-	to := int64(lastVersion)
+	m.status.Append(m.newMigrationStatus(lastVersion.Version, "database", lastVersion.Dirty))
+	to := int64(lastVersion.Version)
 
 	for from < to {
 		next, ok := m.databaseDrv.Next(suint64(from))
 		if !ok {
 			return nil
 		}
-		m.status.Append(m.newMigrationStatus(next, "database"))
-		from = int64(next)
+		m.status.Append(m.newMigrationStatus(next.Version, "database", next.Dirty))
+		from = int64(next.Version)
 	}
 	return err
 }
 
-func (m *Migrate) newMigrationStatus(version uint64, driverType string) *MigrationStatus {
+func (m *Migrate) newMigrationStatus(version uint64, driverType string, dirty bool) *MigrationStatus {
 	var migrStatus *MigrationStatus
 	migrStatus, ok := m.status.Read(version)
 	if !ok {
 		migrStatus = &MigrationStatus{
 			Version: version,
 			Name:    m.sourceDrv.ReadName(version),
+			IsDirty: dirty,
 		}
 	}
 
@@ -278,6 +286,7 @@ func (m *Migrate) newMigrationStatus(version uint64, driverType string) *Migrati
 		migrStatus.IsPresent = true
 	case "database":
 		migrStatus.IsApplied = true
+		migrStatus.IsDirty = dirty
 	default:
 		return nil
 	}
@@ -321,53 +330,8 @@ func (m *Migrate) GetUnappliedMigrations(version uint64) []uint64 {
 	return m.sourceDrv.GetUnappliedMigrations(version)
 }
 
-func (m *Migrate) GetIntroSpectionSchema() (interface{}, error) {
-	return m.databaseDrv.GetIntroSpectionSchema()
-}
-
-func (m *Migrate) SetMetadataPlugins(plugins types.MetadataPlugins) {
-	m.databaseDrv.SetMetadataPlugins(plugins)
-}
-
-func (m *Migrate) EnableCheckMetadataConsistency(enabled bool) {
-	m.databaseDrv.EnableCheckMetadataConsistency(enabled)
-}
-
-func (m *Migrate) ExportMetadata() (map[string][]byte, error) {
-	return m.databaseDrv.ExportMetadata()
-}
-
-func (m *Migrate) WriteMetadata(files map[string][]byte) error {
-	return m.sourceDrv.WriteMetadata(files)
-}
-
-func (m *Migrate) ResetMetadata() error {
-	return m.databaseDrv.ResetMetadata()
-}
-
-// ReloadMetadata - Reload metadata on the database
-func (m *Migrate) ReloadMetadata() error {
-	return m.databaseDrv.ReloadMetadata()
-}
-
-func (m *Migrate) GetInconsistentMetadata() (bool, []database.InconsistentMetadataInterface, error) {
-	return m.databaseDrv.GetInconsistentMetadata()
-}
-
-func (m *Migrate) DropInconsistentMetadata() error {
-	return m.databaseDrv.DropInconsistentMetadata()
-}
-
-func (m *Migrate) BuildMetadata() (yaml.MapSlice, error) {
-	return m.databaseDrv.BuildMetadata()
-}
-
-func (m *Migrate) ApplyMetadata() error {
-	return m.databaseDrv.ApplyMetadata()
-}
-
-func (m *Migrate) ExportSchemaDump(schemName []string) ([]byte, error) {
-	return m.databaseDrv.ExportSchemaDump(schemName)
+func (m *Migrate) ExportSchemaDump(schemName []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {
+	return m.databaseDrv.ExportSchemaDump(schemName, sourceName, sourceKind)
 }
 
 func (m *Migrate) RemoveVersions(versions []uint64) error {
@@ -576,7 +540,7 @@ func (m *Migrate) QueryWithVersion(version uint64, data io.ReadCloser, skipExecu
 	}
 
 	if version != 0 {
-		if err := m.databaseDrv.InsertVersion(int64(version)); err != nil {
+		if err := m.databaseDrv.SetVersion(int64(version), false); err != nil {
 			m.databaseDrv.ResetQuery()
 			return m.unlockErr(err)
 		}
@@ -805,12 +769,6 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 			return
 		}
 
-		err = m.versionDownExists(from)
-		if err != nil {
-			ret <- err
-			return
-		}
-
 		prev, err := m.sourceDrv.Prev(from)
 		if os.IsNotExist(err) {
 			migr, err := m.metanewMigration(from, -1)
@@ -834,23 +792,29 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 			return
 		}
 
-		migr, err := m.metanewMigration(from, int64(prev))
-		if err != nil {
-			ret <- err
-			return
+		err = m.versionDownExists(from)
+		if err == nil {
+			migr, err := m.metanewMigration(from, int64(prev))
+			if err != nil {
+				ret <- err
+				return
+			}
+
+			ret <- migr
+			go migr.Buffer()
+
+			migr, err = m.newMigration(from, int64(prev))
+			if err != nil {
+				ret <- err
+				return
+			}
+
+			ret <- migr
+			go migr.Buffer()
+		} else {
+			m.Logger.Warnf("%v", err)
 		}
 
-		ret <- migr
-		go migr.Buffer()
-
-		migr, err = m.newMigration(from, int64(prev))
-		if err != nil {
-			ret <- err
-			return
-		}
-
-		ret <- migr
-		go migr.Buffer()
 		from = prev
 	}
 }
@@ -1158,7 +1122,7 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}) {
 			return
 		}
 
-		migr, err := m.metanewMigration(suint64(from), int64(prev))
+		migr, err := m.metanewMigration(suint64(from), int64(prev.Version))
 		if err != nil {
 			ret <- err
 			return
@@ -1167,7 +1131,7 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}) {
 		ret <- migr
 		go migr.Buffer()
 
-		migr, err = m.newMigration(suint64(from), int64(prev))
+		migr, err = m.newMigration(suint64(from), int64(prev.Version))
 		if err != nil {
 			ret <- err
 			return
@@ -1175,7 +1139,7 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}) {
 
 		ret <- migr
 		go migr.Buffer()
-		from = int64(prev)
+		from = int64(prev.Version)
 		count++
 	}
 }
@@ -1187,7 +1151,6 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}) {
 // to stop execution because it might have received a stop signal on the
 // GracefulStop channel.
 func (m *Migrate) runMigrations(ret <-chan interface{}) error {
-	var lastInsertVersion int64
 	for r := range ret {
 		if m.stop() {
 			return nil
@@ -1202,21 +1165,17 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 			migr := r.(*Migration)
 			if migr.Body != nil {
 				if !m.SkipExecution {
+					m.Logger.Debugf("applying migration: %s", migr.FileName)
 					if err := m.databaseDrv.Run(migr.BufferedBody, migr.FileType, migr.FileName); err != nil {
 						return err
 					}
 				}
-
 				version := int64(migr.Version)
-				if version == migr.TargetVersion {
-					if version != lastInsertVersion {
-						// Insert Version number into the table
-						if err := m.databaseDrv.InsertVersion(version); err != nil {
-							return err
-						}
-						lastInsertVersion = version
-					}
-				} else {
+				// Insert Version number into the table
+				if err := m.databaseDrv.SetVersion(version, false); err != nil {
+					return err
+				}
+				if version != migr.TargetVersion {
 					// Delete Version number from the table
 					if err := m.databaseDrv.RemoveVersion(version); err != nil {
 						return err
@@ -1599,11 +1558,7 @@ func (m *Migrate) unlock() error {
 	defer func() {
 		m.isLocked = false
 	}()
-
-	if err := m.databaseDrv.UnLock(); err != nil {
-		return err
-	}
-	return nil
+	return m.databaseDrv.UnLock()
 }
 
 // unlockErr calls unlock and returns a combined error
@@ -1788,8 +1743,9 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 
 		prev, ok := m.databaseDrv.Prev(suint64(from))
 		if !ok {
+			prev := new(database.MigrationVersion)
 			// Check if any prev version available in source
-			prev, err = m.sourceDrv.Prev(suint64(from))
+			prev.Version, err = m.sourceDrv.Prev(suint64(from))
 			if os.IsNotExist(err) && to == -1 {
 				// apply nil migration
 				migr, err := m.metanewMigration(suint64(from), -1)
@@ -1821,7 +1777,7 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 			return
 		}
 
-		migr, err := m.metanewMigration(suint64(from), int64(prev))
+		migr, err := m.metanewMigration(suint64(from), int64(prev.Version))
 		if err != nil {
 			ret <- err
 			return
@@ -1830,7 +1786,7 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 		ret <- migr
 		go migr.Buffer()
 
-		migr, err = m.newMigration(suint64(from), int64(prev))
+		migr, err = m.newMigration(suint64(from), int64(prev.Version))
 		if err != nil {
 			ret <- err
 			return
@@ -1838,35 +1794,9 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 
 		ret <- migr
 		go migr.Buffer()
-		from = int64(prev)
+		from = int64(prev.Version)
 		noOfAppliedMigrations++
 	}
-}
-
-func (m *Migrate) ApplySeed(q interface{}) error {
-	return m.databaseDrv.ApplySeed(q)
-}
-
-func (m *Migrate) ExportDataDump(tableNames []string) ([]byte, error) {
-	// to support tables starting with capital letters
-	modifiedTableNames := make([]string, len(tableNames))
-
-	for idx, val := range tableNames {
-		split := strings.Split(val, ".")
-		splitLen := len(split)
-
-		if splitLen != 1 && splitLen != 2 {
-			return nil, fmt.Errorf(`invalid schema/table provided "%s"`, val)
-		}
-
-		if splitLen == 2 {
-			modifiedTableNames[idx] = fmt.Sprintf(`"%s"."%s"`, split[0], split[1])
-		} else {
-			modifiedTableNames[idx] = fmt.Sprintf(`"%s"`, val)
-		}
-	}
-
-	return m.databaseDrv.ExportDataDump(modifiedTableNames)
 }
 
 func printDryRunStatus(migrations []*Migration) *bytes.Buffer {

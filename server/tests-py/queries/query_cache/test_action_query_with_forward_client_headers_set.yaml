@@ -1,0 +1,19 @@
+- description: Run get_user_by_email_1 query action with valid email, the response should be an error saying that caching is disabled
+  url: /v1/graphql
+  status: 400
+  query:
+    query: |
+      query ($email: String!) @cached(ttl: 300) {
+        get_user_by_email_1(email: $email){
+          user
+        }
+      }
+  variables:
+    email: clarke1@gmail.com
+  
+  response:
+    errors:
+      - extensions:
+          path: $
+          code: not-supported
+        message: 'Actions which forward client headers cannot currently be cached'

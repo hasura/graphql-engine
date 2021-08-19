@@ -15,7 +15,7 @@ Projects & collaborators
 Introduction
 ------------
 
-The ``Projects`` page show a list of your projects.
+The ``Projects`` page shows a list of your projects.
 
 .. thumbnail:: /img/graphql/cloud/projects/projects-list.png
    :alt: Projects list
@@ -27,11 +27,11 @@ For each project, you can do the one of the following actions:
    :alt: Project actions
    :width: 860px
 
-- Click ``Launch Console`` to open the Hasura console in your browser. The ``Pro`` tab
+- Click ``Launch Console`` to open the Hasura console in your browser. The ``Monitoring`` tab
   lets you use the Pro features that Hasura Cloud has set up for you.
 
-  .. thumbnail:: /img/graphql/cloud/metrics/pro-tab-overview.png
-     :alt: Hasura Console: Pro tab
+  .. thumbnail:: /img/graphql/cloud/metrics/monitoring-tab-overview.png
+     :alt: Hasura Console: Monitoring tab
      :width: 900px
 
 - Click the gear icon to manage your project
@@ -54,11 +54,15 @@ Dig deeper
    Creating projects <create>
    Project Details <details>
    Project Collaborators <collaborators>
+   Transfer Ownership <ownership>
    Project Env vars <env-vars>
    Project Domains <domains>
    Securing projects <secure>
    Switching pricing plans <pricing>
    Deployment regions <regions>
+   GitHub Deployment <github-integration>
    Heroku database URL Sync <heroku-url-sync>
+   Maintenance mode <maintenance-mode>
    Deleting projects <delete>
+   Updating v1.3 projects to v2.0 <move-project-v2>
    

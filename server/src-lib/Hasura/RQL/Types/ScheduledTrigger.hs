@@ -20,11 +20,19 @@ module Hasura.RQL.Types.ScheduledTrigger
   , ScheduledEventInvocation(..)
   , OneOffScheduledEvent(..)
   , CronEvent(..)
+  , ScheduledEventPagination(..)
+  , GetScheduledEvents(..)
+  , WithTotalCount(..)
+  , DeleteScheduledEvent(..)
+  , GetInvocationsBy(..)
+  , GetEventInvocations(..)
+  , ClearCronEvents (..)
   ) where
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Aeson.Types
 import           Data.Time.Clock
 import           Data.Time.Clock.Units
 import           Data.Time.Format.ISO8601
@@ -77,7 +85,7 @@ instance FromJSON STRetryConf where
     then fail "num_retries cannot be a negative value"
     else pure $ STRetryConf numRetries' retryInterval timeout tolerance
 
-$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''STRetryConf)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''STRetryConf)
 
 defaultSTRetryConf :: STRetryConf
 defaultSTRetryConf =
@@ -116,7 +124,7 @@ instance FromJSON CronTriggerMetadata where
       ctComment <- o .:? "comment"
       pure CronTriggerMetadata {..}
 
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CronTriggerMetadata)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''CronTriggerMetadata)
 
 data CreateCronTrigger
   = CreateCronTrigger
@@ -148,13 +156,13 @@ instance FromJSON CreateCronTrigger where
       cctReplace <- o .:? "replace" .!= False
       pure CreateCronTrigger {..}
 
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateCronTrigger)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''CreateCronTrigger)
 
 newtype ScheduledTriggerName
   = ScheduledTriggerName { unName :: TriggerName }
   deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 2 snakeCase) ''ScheduledTriggerName)
+$(deriveJSON hasuraJSON ''ScheduledTriggerName)
 
 formatTime' :: UTCTime -> Text
 formatTime'= T.pack . iso8601Show
@@ -182,7 +190,7 @@ instance FromJSON CreateScheduledEvent where
                                    <*> o .:? "retry_conf" .!= defaultSTRetryConf
                                    <*> o .:? "comment"
 
-$(deriveToJSON (aesonDrop 3 snakeCase) ''CreateScheduledEvent)
+$(deriveToJSON hasuraJSON ''CreateScheduledEvent)
 
 -- | The 'ScheduledEventType' data type is needed to differentiate
 --   between a 'CronScheduledEvent' and 'OneOffScheduledEvent' scheduled
@@ -211,12 +219,24 @@ data ScheduledEventInvocation
   , _seiResponse  :: !(Maybe Value)
   , _seiCreatedAt :: !UTCTime
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 4 snakeCase) ''ScheduledEventInvocation)
+$(deriveJSON hasuraJSON ''ScheduledEventInvocation)
 
 data ScheduledEvent
   = SEOneOff
   | SECron !TriggerName
   deriving (Show, Eq)
+
+parseScheduledEvent :: Object -> Parser ScheduledEvent
+parseScheduledEvent o = do
+  ty <- o .: "type"
+  case ty of
+    Cron   -> SECron <$> o .: "trigger_name"
+    OneOff -> pure SEOneOff
+
+scheduledEventToPairs :: ScheduledEvent -> [Pair]
+scheduledEventToPairs = \case
+  SEOneOff    -> ["type" .= OneOff]
+  SECron name -> ["type" .= Cron, "trigger_name" .= name]
 
 data CronEventSeed
   = CronEventSeed
@@ -281,17 +301,105 @@ data OneOffScheduledEvent
   , _ooseNextRetryAt   :: !(Maybe UTCTime)
   , _ooseComment       :: !(Maybe Text)
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 5 snakeCase) ''OneOffScheduledEvent)
+$(deriveJSON hasuraJSON ''OneOffScheduledEvent)
 
 data CronEvent
   = CronEvent
   { _ceId            :: !CronEventId
   , _ceTriggerName   :: !TriggerName
   , _ceScheduledTime :: !UTCTime
+  -- ^ We expect this to always be at second zero, since cron events have
+  -- minute resolution. Note that a OneOffScheduledEvent has full timestamp
+  -- precision.
   , _ceStatus        :: !Text
   , _ceTries         :: !Int
   , _ceCreatedAt     :: !UTCTime
   -- ^ it is the time at which the cron event generator created the event
   , _ceNextRetryAt   :: !(Maybe UTCTime)
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase) ''CronEvent)
+$(deriveJSON hasuraJSON ''CronEvent)
+
+data ScheduledEventPagination
+  = ScheduledEventPagination
+  { _sepLimit  :: !(Maybe Int)
+  , _sepOffset :: !(Maybe Int)
+  } deriving (Show, Eq)
+
+parseScheduledEventPagination :: Object -> Parser ScheduledEventPagination
+parseScheduledEventPagination o =
+  ScheduledEventPagination
+    <$> o .:? "limit"
+    <*> o .:? "offset"
+
+scheduledEventPaginationToPairs :: ScheduledEventPagination -> [Pair]
+scheduledEventPaginationToPairs ScheduledEventPagination{..} =
+  ["limit" .= _sepLimit, "offset" .= _sepOffset]
+
+-- | Query type to fetch all one-off/cron scheduled events
+data GetScheduledEvents
+  = GetScheduledEvents
+  { _gseScheduledEvent :: !ScheduledEvent
+  , _gsePagination     :: !ScheduledEventPagination
+  , _gseStatus         :: ![ScheduledEventStatus]
+  } deriving (Show, Eq)
+instance ToJSON GetScheduledEvents where
+  toJSON GetScheduledEvents{..} =
+    object $ scheduledEventToPairs _gseScheduledEvent
+          <> scheduledEventPaginationToPairs _gsePagination
+          <> ["status" .= _gseStatus]
+
+instance FromJSON GetScheduledEvents where
+  parseJSON = withObject "Object" $ \o ->
+    GetScheduledEvents
+      <$> parseScheduledEvent o
+      <*> parseScheduledEventPagination o
+      <*> o .:? "status" .!= []
+
+data WithTotalCount a
+  = WithTotalCount
+  { _wtcCount :: !Int
+  , _wtcData  :: !a
+  } deriving (Show, Eq)
+
+-- | Query type to delete cron/one-off events.
+data DeleteScheduledEvent
+  = DeleteScheduledEvent
+  { _dseType    :: !ScheduledEventType
+  , _dseEventId :: !ScheduledEventId
+  } deriving (Show, Eq)
+$(deriveJSON hasuraJSON ''DeleteScheduledEvent)
+
+data GetInvocationsBy
+  = GIBEventId !EventId !ScheduledEventType
+  | GIBEvent !ScheduledEvent
+  deriving (Show, Eq)
+
+data GetEventInvocations
+  = GetEventInvocations
+  { _geiInvocationsBy :: !GetInvocationsBy
+  , _geiPagination    :: !ScheduledEventPagination
+  } deriving (Eq, Show)
+
+instance FromJSON GetEventInvocations where
+  parseJSON = withObject "Object" $ \o ->
+    GetEventInvocations
+      <$> (parseEventId o <|> (GIBEvent <$> parseScheduledEvent o))
+      <*> parseScheduledEventPagination o
+    where
+      parseEventId o =
+        GIBEventId <$> o .: "event_id" <*> o .: "type"
+
+instance ToJSON GetEventInvocations where
+  toJSON GetEventInvocations{..} =
+    object $ case _geiInvocationsBy of
+             GIBEventId eventId eventType -> ["event_id" .= eventId, "type" .= eventType]
+             GIBEvent event               -> scheduledEventToPairs event
+          <> scheduledEventPaginationToPairs _geiPagination
+
+data ClearCronEvents
+  = SingleCronTrigger !TriggerName
+  -- ^ Used to delete the cron events only of the specified cron trigger
+  | MetadataCronTriggers ![TriggerName]
+  -- ^ Used to delete all the cron events of the cron triggers with `include_in_metadata: true`
+  -- It is used in the case of the `replace_metadata` API
+  deriving (Show, Eq)

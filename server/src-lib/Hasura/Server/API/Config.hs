@@ -5,15 +5,20 @@ module Hasura.Server.API.Config
   , runGetConfig
   ) where
 
-import           Data.Aeson.Casing
+import           Hasura.Prelude
+
 import           Data.Aeson.TH
 
-import           Hasura.Prelude
-import           Hasura.Server.Auth
-import           Hasura.Server.Auth.JWT
-import           Hasura.Server.Version                    (HasVersion, Version, currentVersion)
+import qualified Data.HashSet                             as Set
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
+
+import           Hasura.RQL.Types                         (FunctionPermissionsCtx,
+                                                           RemoteSchemaPermsCtx)
+import           Hasura.Server.Auth
+import           Hasura.Server.Auth.JWT
+import           Hasura.Server.Types                      (ExperimentalFeature)
+import           Hasura.Server.Version                    (HasVersion, Version, currentVersion)
 
 data JWTInfo
   = JWTInfo
@@ -21,26 +26,39 @@ data JWTInfo
   , jwtiClaimsFormat    :: !JWTClaimsFormat
   , jwtiClaimsMap       :: !(Maybe JWTCustomClaimsMap)
   } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 4 snakeCase) ''JWTInfo)
+$(deriveToJSON hasuraJSON ''JWTInfo)
 
 data ServerConfig
   = ServerConfig
-  { scfgVersion            :: !Version
-  , scfgIsAdminSecretSet   :: !Bool
-  , scfgIsAuthHookSet      :: !Bool
-  , scfgIsJwtSet           :: !Bool
-  , scfgJwt                :: !(Maybe JWTInfo)
-  , scfgIsAllowListEnabled :: !Bool
-  , scfgLiveQueries        :: !LQ.LiveQueriesOptions
-  , scfgConsoleAssetsDir   :: !(Maybe Text)
+  { scfgVersion                          :: !Version
+  , scfgIsFunctionPermissionsInferred    :: !FunctionPermissionsCtx
+  , scfgIsRemoteSchemaPermissionsEnabled :: !RemoteSchemaPermsCtx
+  , scfgIsAdminSecretSet                 :: !Bool
+  , scfgIsAuthHookSet                    :: !Bool
+  , scfgIsJwtSet                         :: !Bool
+  , scfgJwt                              :: !(Maybe JWTInfo)
+  , scfgIsAllowListEnabled               :: !Bool
+  , scfgLiveQueries                      :: !LQ.LiveQueriesOptions
+  , scfgConsoleAssetsDir                 :: !(Maybe Text)
+  , scfgExperimentalFeatures             :: !(Set.HashSet ExperimentalFeature)
   } deriving (Show, Eq)
+$(deriveToJSON hasuraJSON ''ServerConfig)
 
-$(deriveToJSON (aesonDrop 4 snakeCase) ''ServerConfig)
-
-runGetConfig :: HasVersion => AuthMode -> Bool -> LQ.LiveQueriesOptions -> Maybe Text -> ServerConfig
-runGetConfig am isAllowListEnabled liveQueryOpts consoleAssetsDir = ServerConfig
+runGetConfig
+  :: HasVersion
+  => FunctionPermissionsCtx
+  -> RemoteSchemaPermsCtx
+  -> AuthMode
+  -> Bool
+  -> LQ.LiveQueriesOptions
+  -> Maybe Text
+  -> Set.HashSet ExperimentalFeature
+  -> ServerConfig
+runGetConfig functionPermsCtx remoteSchemaPermsCtx am isAllowListEnabled
+  liveQueryOpts consoleAssetsDir experimentalFeatures = ServerConfig
     currentVersion
+    functionPermsCtx
+    remoteSchemaPermsCtx
     (isAdminSecretSet am)
     (isAuthHookSet am)
     (isJWTSet am)
@@ -48,6 +66,7 @@ runGetConfig am isAllowListEnabled liveQueryOpts consoleAssetsDir = ServerConfig
     isAllowListEnabled
     liveQueryOpts
     consoleAssetsDir
+    experimentalFeatures
 
 isAdminSecretSet :: AuthMode -> Bool
 isAdminSecretSet = \case

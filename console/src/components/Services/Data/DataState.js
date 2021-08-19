@@ -1,3 +1,5 @@
+import { dataSource } from '../../../dataSources';
+
 const defaultCurFilter = {
   where: { $and: [{ '': { $eq: '' } }] },
   limit: 10,
@@ -20,8 +22,6 @@ const defaultViewState = {
   lastError: {},
   lastSuccess: {},
   manualTriggers: [],
-  triggeredRow: -1,
-  triggeredFunction: null,
   estimatedCount: 0,
   isCountEstimated: 0,
 };
@@ -39,6 +39,7 @@ const defaultPermissionsState = {
   bulkSelect: [],
   applySamePermissions: [],
   isEditing: false,
+  inconsistentInhertiedRole: null,
 };
 
 const defaultQueryPermissions = {
@@ -91,8 +92,8 @@ const defaultModifyState = {
       refSchemaName: '',
       refTableName: '',
       colMappings: [{ '': '' }],
-      onDelete: 'restrict',
-      onUpdate: 'restrict',
+      onDelete: dataSource?.violationActions?.[0] ?? '',
+      onUpdate: dataSource?.violationActions?.[0] ?? '',
     },
   ],
   checkConstraintsModify: [],
@@ -108,6 +109,7 @@ const defaultModifyState = {
     rSchema: null,
     rcol: [],
     isUnique: false,
+    isPrimary: false,
   },
   manualRelAdd: {
     relName: '',
@@ -120,6 +122,7 @@ const defaultModifyState = {
   remoteRelationships: {
     remoteSchema: {},
   },
+  custom_name: '',
   rootFieldsEdit: {
     select: '',
     select_by_pk: '',
@@ -131,8 +134,8 @@ const defaultModifyState = {
     delete: '',
     delete_by_pk: '',
   },
-  permissionsState: { ...defaultPermissionsState },
-  prevPermissionState: { ...defaultPermissionsState },
+  permissionsState: defaultPermissionsState,
+  prevPermissionState: defaultPermissionsState,
   ongoingRequest: false,
   lastError: null,
   lastSuccess: null,
@@ -145,6 +148,8 @@ const defaultModifyState = {
 };
 
 const defaultState = {
+  schemaFilter: [],
+  tableFilter: {},
   columnDataTypes: [], // To store list of column types supported by postgres
   columnDataTypeInfoErr: null,
   columnDefaultFunctions: {},
@@ -167,18 +172,23 @@ const defaultState = {
     lastSuccess: null,
   },
   allSchemas: [],
-  allRoles: [],
   postgresFunctions: [],
   nonTrackablePostgresFunctions: [],
-  trackedFunctions: [],
   listingSchemas: [],
   untrackedRelations: [],
-  schemaList: ['public'],
-  currentSchema: 'public',
+  schemaList: [],
+  currentSchema: '',
+  currentDataSource: '',
   adminSecretError: false,
   dataHeaders: {
     'content-type': 'application/json',
   },
+  dbConnection: {
+    envVar: '',
+    dbURL: '',
+    dbName: '',
+  },
+  allSourcesSchemas: {},
 };
 
 export default defaultState;

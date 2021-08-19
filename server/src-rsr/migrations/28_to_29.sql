@@ -74,7 +74,7 @@ CREATE VIEW hdb_catalog.hdb_table_info_agg AS
       WHERE "column".attrelid = "table".oid
         -- columns where attnum <= 0 are special, system-defined columns
         AND "column".attnum > 0
-        -- dropped columns still exist in the system catalog as “zombie” columns, so ignore those
+        -- dropped columns still exist in the system catalog as "zombie" columns, so ignore those
         AND NOT "column".attisdropped
     ) columns ON true
 

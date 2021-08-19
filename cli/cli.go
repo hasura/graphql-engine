@@ -12,6 +12,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -23,15 +24,34 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/pgdump"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1graphql"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/database/hasuradb"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1metadata"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1query"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v2query"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/commonmetadata"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/settings"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/migrations"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+
 	"github.com/Masterminds/semver"
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
-	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
-	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
-	"github.com/hasura/graphql-engine/cli/plugins"
-	"github.com/hasura/graphql-engine/cli/telemetry"
-	"github.com/hasura/graphql-engine/cli/util"
-	"github.com/hasura/graphql-engine/cli/version"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
+	"github.com/hasura/graphql-engine/cli/v2/plugins"
+	"github.com/hasura/graphql-engine/cli/v2/telemetry"
+	"github.com/hasura/graphql-engine/cli/v2/util"
+	"github.com/hasura/graphql-engine/cli/v2/version"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -50,9 +70,6 @@ const (
 	// Name of the file to store last update check time
 	LastUpdateCheckFileName = "last_update_check_at"
 
-	// Name of the cli extension plugin
-	CLIExtPluginName = "cli-ext"
-
 	DefaultMigrationsDirectory = "migrations"
 	DefaultMetadataDirectory   = "metadata"
 	DefaultSeedsDirectory      = "seeds"
@@ -67,7 +84,7 @@ const (
 const (
 	StrTelemetryNotice = `Help us improve Hasura! The cli collects anonymized usage stats which
 allow us to keep improving Hasura at warp speed. To opt-out or read more,
-visit https://hasura.io/docs/1.0/graphql/manual/guides/telemetry.html
+visit https://hasura.io/docs/latest/graphql/core/guides/telemetry.html
 `
 )
 
@@ -79,15 +96,18 @@ const (
 	V1 ConfigVersion = iota + 1
 	// V2 represents config version 2
 	V2
+	V3
 )
 
 // ServerAPIPaths has the custom paths defined for server api
 type ServerAPIPaths struct {
-	Query   string `yaml:"query,omitempty"`
-	GraphQL string `yaml:"graphql,omitempty"`
-	Config  string `yaml:"config,omitempty"`
-	PGDump  string `yaml:"pg_dump,omitempty"`
-	Version string `yaml:"version,omitempty"`
+	V1Query    string `yaml:"v1_query,omitempty"`
+	V2Query    string `yaml:"v2_query,omitempty"`
+	V1Metadata string `yaml:"v1_metadata,omitempty"`
+	GraphQL    string `yaml:"graphql,omitempty"`
+	Config     string `yaml:"config,omitempty"`
+	PGDump     string `yaml:"pg_dump,omitempty"`
+	Version    string `yaml:"version,omitempty"`
 }
 
 // GetQueryParams - encodes the values in url
@@ -144,7 +164,7 @@ func (c *ConfigVersion) String() string {
 
 // IsValid returns if its a valid config version
 func (c ConfigVersion) IsValid() bool {
-	return c != 0 && c <= V2
+	return c != 0 && c <= V3
 }
 
 // ServerConfig has the config values required to contact the server
@@ -221,9 +241,34 @@ func (s *ServerConfig) GetVersionEndpoint() string {
 }
 
 // GetQueryEndpoint provides the url to contact the query API
-func (s *ServerConfig) GetQueryEndpoint() string {
+func (s *ServerConfig) GetV1QueryEndpoint() string {
 	nurl := *s.ParsedEndpoint
-	nurl.Path = path.Join(nurl.Path, s.APIPaths.Query)
+	nurl.Path = path.Join(nurl.Path, s.APIPaths.V1Query)
+	return nurl.String()
+}
+
+func (s *ServerConfig) GetV2QueryEndpoint() string {
+	nurl := *s.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, s.APIPaths.V2Query)
+	return nurl.String()
+}
+
+func (s *ServerConfig) GetPGDumpEndpoint() string {
+	nurl := *s.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, s.APIPaths.PGDump)
+	return nurl.String()
+}
+
+func (s *ServerConfig) GetV1GraphqlEndpoint() string {
+	nurl := *s.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, s.APIPaths.GraphQL)
+	return nurl.String()
+}
+
+// GetQueryEndpoint provides the url to contact the query API
+func (s *ServerConfig) GetV1MetadataEndpoint() string {
+	nurl := *s.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, s.APIPaths.V1Metadata)
 	return nurl.String()
 }
 
@@ -287,6 +332,9 @@ type Config struct {
 	// Version of the config.
 	Version ConfigVersion `yaml:"version,omitempty"`
 
+	// DisableInteractive disables interactive prompt
+	DisableInteractive bool `yaml:"disable_interactive,omitempty"`
+
 	// ServerConfig to be used by CLI to contact server.
 	ServerConfig `yaml:",inline"`
 
@@ -307,7 +355,8 @@ type Config struct {
 type ExecutionContext struct {
 	// CMDName is the name of CMD (os.Args[0]). To be filled in later to
 	// correctly render example strings etc.
-	CMDName string
+	CMDName        string
+	Stderr, Stdout io.Writer
 
 	// ID is a unique ID for this Execution
 	ID string
@@ -383,11 +432,45 @@ type ExecutionContext struct {
 
 	// IsTerminal indicates whether the current session is a terminal or not
 	IsTerminal bool
+
+	// instance of API client which communicates with Hasura API
+	APIClient *hasura.Client
+
+	// current database on which operation is being done
+	Source        Source
+	HasMetadataV3 bool
+
+	// after a `scripts update-config-v3` all migrate commands will try to automatically
+	// move cli state from hdb_catalog.* tables to catalog state if that hasn't happened
+	// already this configuration option will disable this step
+	// more details in: https://github.com/hasura/graphql-engine/issues/6861
+	DisableAutoStateMigration bool
+
+	// CliExtDestinationDir is the directory path that will be used to setup cli-ext
+	CliExtDestinationDir string
+
+	// CliExtDestinationBinPath is the full path of the cli-ext binary
+	CliExtDestinationBinPath string
+
+	// CLIExtSourceBinPath is the full path to a copy of cli-ext binary in the local file system
+	CliExtSourceBinPath string
+
+	// proPluginVersionValidated is used to avoid validating pro plugin multiple times
+	// while preparing the execution context
+	proPluginVersionValidated bool
+}
+
+type Source struct {
+	Name string
+	Kind hasura.SourceKind
 }
 
 // NewExecutionContext returns a new instance of execution context
 func NewExecutionContext() *ExecutionContext {
-	ec := &ExecutionContext{}
+	ec := &ExecutionContext{
+		Stderr: os.Stderr,
+		Stdout: os.Stdout,
+	}
 	ec.Telemetry = telemetry.BuildEvent()
 	ec.Telemetry.Version = version.BuildVersion
 	return ec
@@ -425,6 +508,11 @@ func (ec *ExecutionContext) Prepare() error {
 	err = ec.setupPlugins()
 	if err != nil {
 		return errors.Wrap(err, "setting up plugins path failed")
+	}
+
+	if !ec.proPluginVersionValidated {
+		ec.validateProPluginVersion()
+		ec.proPluginVersionValidated = true
 	}
 
 	err = ec.setupCodegenAssetsRepo()
@@ -476,6 +564,27 @@ func (ec *ExecutionContext) setupPlugins() error {
 		ec.PluginsConfig.Repo.DisableCloneOrUpdate = true
 	}
 	return ec.PluginsConfig.Prepare()
+}
+
+func (ec *ExecutionContext) validateProPluginVersion() {
+	installedPlugins, err := ec.PluginsConfig.ListInstalledPlugins()
+	if err != nil {
+		return
+	}
+
+	proPluginVersion := installedPlugins["pro"]
+	cliVersion := ec.Version.GetCLIVersion()
+
+	proPluginSemVer, _ := semver.NewVersion(proPluginVersion)
+	cliSemVer := ec.Version.CLISemver
+	if proPluginSemVer == nil || cliSemVer == nil {
+		return
+	}
+
+	if cliSemVer.Major() != proPluginSemVer.Major() {
+		ec.Logger.Warnf("[cli: %s] [pro plugin: %s] incompatible version of cli and pro plugin.", cliVersion, proPluginVersion)
+		ec.Logger.Warn("Try running `hasura plugins upgrade pro` or `hasura plugins install pro --version <version>`")
+	}
 }
 
 func (ec *ExecutionContext) setupCodegenAssetsRepo() error {
@@ -564,7 +673,7 @@ func (ec *ExecutionContext) Validate() error {
 		}
 	}
 
-	if ec.Config.Version == V2 && ec.Config.MetadataDirectory != "" {
+	if ec.Config.Version >= V2 && ec.Config.MetadataDirectory != "" {
 		// set name of metadata directory
 		ec.MetadataDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataDirectory)
 		if _, err := os.Stat(ec.MetadataDir); os.IsNotExist(err) {
@@ -589,18 +698,74 @@ func (ec *ExecutionContext) Validate() error {
 	if err != nil {
 		return errors.Wrap(err, "error in getting server feature flags")
 	}
-
-	state := util.GetServerState(ec.Config.ServerConfig.GetQueryEndpoint(), ec.Config.ServerConfig.AdminSecret, ec.Config.ServerConfig.TLSConfig, ec.Version.ServerSemver, ec.Logger)
-	ec.ServerUUID = state.UUID
-	ec.Telemetry.ServerUUID = ec.ServerUUID
-	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
-	// Set headers required for communicating with HGE
+	var headers map[string]string
 	if ec.Config.AdminSecret != "" {
-		headers := map[string]string{
+		headers = map[string]string{
 			GetAdminSecretHeaderName(ec.Version): ec.Config.AdminSecret,
 		}
 		ec.SetHGEHeaders(headers)
 	}
+
+	if !strings.HasSuffix(ec.Config.Endpoint, "/") {
+		ec.Config.Endpoint = fmt.Sprintf("%s/", ec.Config.Endpoint)
+	}
+	httpClient, err := httpc.New(
+		&http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: ec.Config.TLSConfig,
+			},
+		},
+		ec.Config.Endpoint,
+		headers,
+	)
+	if err != nil {
+		return err
+	}
+	// check if server is using metadata v3
+	uri, err := url.Parse(ec.Config.Endpoint)
+	if err != nil {
+		return fmt.Errorf("error while parsing the endpoint :%w", err)
+	}
+	if ec.Config.APIPaths.V1Query != "" {
+		uri.Path = path.Join(uri.Path, ec.Config.APIPaths.V1Query)
+	} else {
+		uri.Path = path.Join(uri.Path, "v1/query")
+	}
+	requestUri := uri.String()
+	metadata, err := commonmetadata.New(httpClient, requestUri).ExportMetadata()
+	if err != nil {
+		return err
+	}
+	var v struct {
+		Version int `json:"version"`
+	}
+	if err := json.NewDecoder(metadata).Decode(&v); err != nil {
+		return err
+	}
+	if v.Version == 3 {
+		ec.HasMetadataV3 = true
+	}
+	if ec.Config.Version >= V3 && !ec.HasMetadataV3 {
+		return fmt.Errorf("config v3 can only be used with servers having metadata version >= 3")
+	}
+
+	ec.APIClient = &hasura.Client{
+		V1Metadata: v1metadata.New(httpClient, ec.Config.GetV1MetadataEndpoint()),
+		V1Query:    v1query.New(httpClient, ec.Config.GetV1QueryEndpoint()),
+		V2Query:    v2query.New(httpClient, ec.Config.GetV2QueryEndpoint()),
+		PGDump:     pgdump.New(httpClient, ec.Config.GetPGDumpEndpoint()),
+		V1Graphql:  v1graphql.New(httpClient, ec.Config.GetV1GraphqlEndpoint()),
+	}
+	var state *util.ServerState
+	if ec.HasMetadataV3 {
+		state = util.GetServerState(ec.Config.GetV1MetadataEndpoint(), ec.Config.ServerConfig.AdminSecret, ec.Config.ServerConfig.TLSConfig, ec.HasMetadataV3, ec.Logger)
+	} else {
+		state = util.GetServerState(ec.Config.GetV1QueryEndpoint(), ec.Config.ServerConfig.AdminSecret, ec.Config.ServerConfig.TLSConfig, ec.HasMetadataV3, ec.Logger)
+	}
+	ec.ServerUUID = state.UUID
+	ec.Telemetry.ServerUUID = ec.ServerUUID
+	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
+	// Set headers required for communicating with HGE
 	return nil
 }
 
@@ -635,6 +800,8 @@ func (ec *ExecutionContext) WriteConfig(config *Config) error {
 	return ioutil.WriteFile(ec.ConfigFile, y, 0644)
 }
 
+type DefaultAPIPath string
+
 // readConfig reads the configuration from config file, flags and env vars,
 // through viper.
 func (ec *ExecutionContext) readConfig() error {
@@ -649,11 +816,13 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetDefault("admin_secret", "")
 	v.SetDefault("access_key", "")
 	v.SetDefault("api_paths.query", "v1/query")
+	v.SetDefault("api_paths.v2_query", "v2/query")
+	v.SetDefault("api_paths.v1_metadata", "v1/metadata")
 	v.SetDefault("api_paths.graphql", "v1/graphql")
 	v.SetDefault("api_paths.config", "v1alpha1/config")
 	v.SetDefault("api_paths.pg_dump", "v1alpha1/pg_dump")
 	v.SetDefault("api_paths.version", "v1/version")
-	v.SetDefault("metadata_directory", "")
+	v.SetDefault("metadata_directory", DefaultMetadataDirectory)
 	v.SetDefault("migrations_directory", DefaultMigrationsDirectory)
 	v.SetDefault("seeds_directory", DefaultSeedsDirectory)
 	v.SetDefault("actions.kind", "synchronous")
@@ -672,16 +841,19 @@ func (ec *ExecutionContext) readConfig() error {
 	}
 
 	ec.Config = &Config{
-		Version: ConfigVersion(v.GetInt("version")),
+		Version:            ConfigVersion(v.GetInt("version")),
+		DisableInteractive: v.GetBool("disable_interactive"),
 		ServerConfig: ServerConfig{
 			Endpoint:    v.GetString("endpoint"),
 			AdminSecret: adminSecret,
 			APIPaths: &ServerAPIPaths{
-				Query:   v.GetString("api_paths.query"),
-				GraphQL: v.GetString("api_paths.graphql"),
-				Config:  v.GetString("api_paths.config"),
-				PGDump:  v.GetString("api_paths.pg_dump"),
-				Version: v.GetString("api_paths.version"),
+				V1Query:    v.GetString("api_paths.query"),
+				V2Query:    v.GetString("api_paths.v2_query"),
+				V1Metadata: v.GetString("api_paths.v1_metadata"),
+				GraphQL:    v.GetString("api_paths.graphql"),
+				Config:     v.GetString("api_paths.config"),
+				PGDump:     v.GetString("api_paths.pg_dump"),
+				Version:    v.GetString("api_paths.version"),
 			},
 			InsecureSkipTLSVerify: v.GetBool("insecure_skip_tls_verify"),
 			CAPath:                v.GetString("certificate_authority"),
@@ -719,7 +891,6 @@ func (ec *ExecutionContext) readConfig() error {
 		return errors.Wrap(err, "setting up TLS config failed")
 	}
 	return ec.Config.ServerConfig.SetHTTPClient()
-	return nil
 }
 
 // setupSpinner creates a default spinner if the context does not already have
@@ -727,7 +898,7 @@ func (ec *ExecutionContext) readConfig() error {
 func (ec *ExecutionContext) setupSpinner() {
 	if ec.Spinner == nil {
 		spnr := spinner.New(spinner.CharSets[7], 100*time.Millisecond)
-		spnr.Writer = os.Stderr
+		spnr.Writer = ec.Stderr
 		ec.Spinner = spnr
 	}
 }
@@ -767,6 +938,7 @@ func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
 		logger := logrus.New()
 		ec.Logger = logger
+		ec.Logger.SetOutput(ec.Stderr)
 	}
 
 	if ec.LogLevel != "" {
@@ -795,49 +967,41 @@ func (ec *ExecutionContext) setVersion() {
 	}
 }
 
-// InstallPlugin installs a plugin depending on forceCLIVersion.
-// If forceCLIVersion is set, it uses ec.Version.CLISemver version for the plugin to be installed.
-// Else, it installs the latest version of the plugin
-func (ec ExecutionContext) InstallPlugin(name string, forceCLIVersion bool) error {
-	var version *semver.Version
-	if forceCLIVersion {
-		err := ec.PluginsConfig.Repo.EnsureUpdated()
-		if err != nil {
-			ec.Logger.Debugf("cannot update plugin index %v", err)
-		}
-		version = ec.Version.CLISemver
-	}
-	plugin, err := ec.PluginsConfig.GetPlugin(name, plugins.FetchOpts{
-		Version: version,
-	})
-	if err != nil {
-		if err != plugins.ErrIsAlreadyInstalled {
-			return errors.Wrapf(err, "cannot fetch plugin manfiest %s", name)
-		}
-		return nil
-	}
-	if ec.Spinner.Active() {
-		prevPrefix := ec.Spinner.Prefix
-		defer ec.Spin(prevPrefix)
-	}
-	ec.Spin(fmt.Sprintf("Installing plugin %s...", name))
-	defer ec.Spinner.Stop()
-	err = ec.PluginsConfig.Install(plugin)
-	if err != nil {
-		msg := fmt.Sprintf(`unable to install %s plugin. execute the following commands to continue:
-
-  hasura plugins install %s
-`, name, name)
-		ec.Logger.Info(msg)
-		return errors.Wrapf(err, "cannot install plugin %s", name)
-	}
-	ec.Logger.WithField("name", name).Infoln("plugin installed")
-	return nil
-}
-
 func GetAdminSecretHeaderName(v *version.Version) string {
 	if v.ServerFeatureFlags.HasAccessKey {
 		return XHasuraAccessKey
 	}
 	return XHasuraAdminSecret
+}
+
+func GetCommonMetadataOps(ec *ExecutionContext) hasura.CommonMetadataOperations {
+	if !ec.HasMetadataV3 {
+		return ec.APIClient.V1Query
+	}
+	return ec.APIClient.V1Metadata
+}
+
+func GetMigrationsStateStore(ec *ExecutionContext) statestore.MigrationsStateStore {
+	if ec.Config.Version <= V2 {
+		if !ec.HasMetadataV3 {
+			return migrations.NewMigrationStateStoreHdbTable(ec.APIClient.V1Query, migrations.DefaultSchema, migrations.DefaultMigrationsTable)
+		}
+		return migrations.NewMigrationStateStoreHdbTable(ec.APIClient.V2Query, migrations.DefaultSchema, migrations.DefaultMigrationsTable)
+	}
+	return migrations.NewCatalogStateStore(statestore.NewCLICatalogState(ec.APIClient.V1Metadata))
+}
+
+func GetSettingsStateStore(ec *ExecutionContext, databaseName string) statestore.SettingsStateStore {
+	const (
+		defaultSettingsTable = "migration_settings"
+		defaultSchema        = "hdb_catalog"
+	)
+
+	if ec.Config.Version <= V2 {
+		if !ec.HasMetadataV3 {
+			return settings.NewStateStoreHdbTable(ec.APIClient.V1Query, databaseName, defaultSchema, defaultSettingsTable)
+		}
+		return settings.NewStateStoreHdbTable(ec.APIClient.V2Query, databaseName, defaultSchema, defaultSettingsTable)
+	}
+	return settings.NewStateStoreCatalog(statestore.NewCLICatalogState(ec.APIClient.V1Metadata))
 }

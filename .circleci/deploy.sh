@@ -58,10 +58,9 @@ draft_github_release() {
         --draft \
         -a /build/_cli_output/binaries/cli-hasura-darwin-amd64 \
         -a /build/_cli_output/binaries/cli-hasura-linux-amd64 \
+        -a /build/_cli_output/binaries/cli-hasura-darwin-arm64 \
+        -a /build/_cli_output/binaries/cli-hasura-linux-arm64 \
         -a /build/_cli_output/binaries/cli-hasura-windows-amd64.exe \
-        -a /build/_cli_ext_output/cli-ext-hasura-linux.tar.gz \
-        -a /build/_cli_ext_output/cli-ext-hasura-macos.tar.gz \
-        -a /build/_cli_ext_output/cli-ext-hasura-win.zip \
         -m "$CIRCLE_TAG" \
         -m "${RELEASE_BODY}" \
      "$CIRCLE_TAG"
@@ -108,39 +107,6 @@ deploy_console() {
     unset DIST_PATH
 }
 
-deploy_cli_ext() {
-    echo "deploying extension cli"
-
-    cd "$ROOT/cli-ext"
-    export VERSION=$(../scripts/get-version.sh)
-    export DIST_PATH="/build/_cli_ext_output"
-
-    configure_git
-    git clone https://github.com/hasura/cli-plugins-index.git ~/plugins-index
-    cd ~/plugins-index
-    git checkout -b cli-ext-${LATEST_TAG}
-    mkdir -p ./plugins/cli-ext/${LATEST_TAG}
-    # Replace existing cli-ext.yaml to work with previous versions of plugin system
-    cp ${DIST_PATH}/manifest.yaml ./plugins/cli-ext.yaml
-    # Copy the manifest to versioned folder structure
-    cp ${DIST_PATH}/manifest.yaml ./plugins/cli-ext/${LATEST_TAG}/manifest.yaml
-    git add .
-    git commit -m "update cli-ext manifest to ${LATEST_TAG}"
-    git push -q https://${GITHUB_TOKEN}@github.com/hasura/cli-plugins-index.git cli-ext-${LATEST_TAG}
-    hub pull-request -f -F- <<<"Update cli-ext manifest to ${LATEST_TAG}" -r ${REVIEWERS} -a ${REVIEWERS}
-
-    unset VERSION
-    unset DIST_PATH
-}
-
-# build and push container for auto-migrations
-build_and_push_cli_migrations_image_v1() {
-    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations"
-    docker load -i /build/_cli_migrations_output/v1.tar
-    docker tag cli-migrations "$IMAGE_TAG"
-    docker push "$IMAGE_TAG"
-}
-
 # build and push container for auto-migrations-v2
 build_and_push_cli_migrations_image_v2() {
     IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations-v2"
@@ -149,22 +115,30 @@ build_and_push_cli_migrations_image_v2() {
     docker push "$IMAGE_TAG"
 }
 
-# build and push latest container for auto-migrations
-push_latest_cli_migrations_image_v1() {
-    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations"
-    LATEST_IMAGE_TAG="hasura/graphql-engine:latest.cli-migrations"
-
-    # push latest.cli-migrations tag
-    docker tag "$IMAGE_TAG" "$LATEST_IMAGE_TAG"
-    docker push "$LATEST_IMAGE_TAG"
-}
-
 # build and push latest container for auto-migrations-v2
 push_latest_cli_migrations_image_v2() {
     IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations-v2"
     LATEST_IMAGE_TAG="hasura/graphql-engine:latest.cli-migrations-v2"
 
     # push latest.cli-migrations-v2 tag
+    docker tag "$IMAGE_TAG" "$LATEST_IMAGE_TAG"
+    docker push "$LATEST_IMAGE_TAG"
+}
+
+# build and push container for auto-migrations-v3
+build_and_push_cli_migrations_image_v3() {
+    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations-v3"
+    docker load -i /build/_cli_migrations_output/v3.tar
+    docker tag cli-migrations-v3 "$IMAGE_TAG"
+    docker push "$IMAGE_TAG"
+}
+
+# build and push latest container for auto-migrations-v3
+push_latest_cli_migrations_image_v3() {
+    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations-v3"
+    LATEST_IMAGE_TAG="hasura/graphql-engine:latest.cli-migrations-v3"
+
+    # push latest.cli-migrations-v3 tag
     docker tag "$IMAGE_TAG" "$LATEST_IMAGE_TAG"
     docker push "$LATEST_IMAGE_TAG"
 }
@@ -222,16 +196,15 @@ fi
 deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
-    build_and_push_cli_migrations_image_v1
     build_and_push_cli_migrations_image_v2
-    deploy_cli_ext
+    build_and_push_cli_migrations_image_v3
 
     # if this is a stable release, update all latest assets
     if [ $IS_STABLE_RELEASE = true ]; then
         deploy_server_latest
         push_server_binary
-        push_latest_cli_migrations_image_v1
         push_latest_cli_migrations_image_v2
+        push_latest_cli_migrations_image_v3
         send_pr_to_repo graphql-engine-heroku
         deploy_do_manifests
     fi

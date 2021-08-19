@@ -11,34 +11,18 @@ module Hasura.RQL.DDL.Schema.Enum (
 
   -- * Loading table info
   , resolveEnumReferences
-  , fetchAndValidateEnumValues
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                 as M
-import qualified Data.List.NonEmpty                  as NE
-import qualified Data.Sequence                       as Seq
-import qualified Data.Sequence.NonEmpty              as NESeq
-import qualified Data.Text                           as T
-import qualified Database.PG.Query                   as Q
-import qualified Language.GraphQL.Draft.Syntax       as G
+import qualified Data.HashMap.Strict      as M
+import qualified Data.Sequence            as Seq
+import qualified Data.Sequence.NonEmpty   as NESeq
 
-import           Control.Monad.Validate
-import           Data.List                           (delete)
-import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.DML    as S
-
-import           Hasura.Backends.Postgres.Connection
-import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
-import           Hasura.SQL.Backend
-import           Hasura.SQL.Types
-import           Hasura.Server.Utils                 (makeReasonMessage)
-
+import           Hasura.RQL.Types.Table
 
 -- | Given a map of enum tables, computes all enum references implied by the given set of foreign
 -- keys. A foreign key constitutes an enum reference iff the following conditions hold:
@@ -47,114 +31,17 @@ import           Hasura.Server.Utils                 (makeReasonMessage)
 --   2. The referenced column is the table’s primary key.
 --   3. The referenced table is, in fact, an enum table.
 resolveEnumReferences
-  :: HashMap QualifiedTable (PrimaryKey PGCol, EnumValues)
-  -> HashSet ForeignKey
-  -> HashMap PGCol (NonEmpty (EnumReference 'Postgres))
+  :: forall b
+   . Backend b
+  => HashMap (TableName b) (PrimaryKey b (Column b), EnumValues)
+  -> HashSet (ForeignKey b)
+  -> HashMap (Column b) (NonEmpty (EnumReference b))
 resolveEnumReferences enumTables =
   M.fromListWith (<>) . map (fmap (:|[])) . mapMaybe resolveEnumReference . toList
   where
-    resolveEnumReference :: ForeignKey -> Maybe (PGCol, EnumReference 'Postgres)
+    resolveEnumReference :: ForeignKey b -> Maybe (Column b, EnumReference b)
     resolveEnumReference foreignKey = do
-      [(localColumn, foreignColumn)] <- pure $ M.toList (_fkColumnMapping foreignKey)
+      [(localColumn, foreignColumn)] <- pure $ M.toList (_fkColumnMapping @b foreignKey)
       (primaryKey, enumValues) <- M.lookup (_fkForeignTable foreignKey) enumTables
       guard (_pkColumns primaryKey == foreignColumn NESeq.:<|| Seq.Empty)
       pure (localColumn, EnumReference (_fkForeignTable foreignKey) enumValues)
-
-data EnumTableIntegrityError
-  = EnumTableMissingPrimaryKey
-  | EnumTableMultiColumnPrimaryKey ![PGCol]
-  | EnumTableNonTextualPrimaryKey !(RawColumnInfo 'Postgres)
-  | EnumTableNoEnumValues
-  | EnumTableInvalidEnumValueNames !(NE.NonEmpty Text)
-  | EnumTableNonTextualCommentColumn !(RawColumnInfo 'Postgres)
-  | EnumTableTooManyColumns ![PGCol]
-
-fetchAndValidateEnumValues
-  :: (MonadTx m)
-  => QualifiedTable
-  -> Maybe (PrimaryKey (RawColumnInfo 'Postgres))
-  -> [RawColumnInfo 'Postgres]
-  -> m EnumValues
-fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
-  either (throw400 ConstraintViolation . showErrors) pure =<< runValidateT fetchAndValidate
-  where
-    fetchAndValidate :: (MonadTx m, MonadValidate [EnumTableIntegrityError] m) => m EnumValues
-    fetchAndValidate = do
-      primaryKeyColumn <- tolerate validatePrimaryKey
-      maybeCommentColumn <- validateColumns primaryKeyColumn
-      maybe (refute mempty) (fetchEnumValues maybeCommentColumn) primaryKeyColumn
-      where
-        validatePrimaryKey = case maybePrimaryKey of
-          Nothing -> refute [EnumTableMissingPrimaryKey]
-          Just primaryKey -> case _pkColumns primaryKey of
-            column NESeq.:<|| Seq.Empty -> case prciType column of
-              PGText -> pure column
-              _      -> refute [EnumTableNonTextualPrimaryKey column]
-            columns -> refute [EnumTableMultiColumnPrimaryKey $ map prciName (toList columns)]
-
-        validateColumns primaryKeyColumn = do
-          let nonPrimaryKeyColumns = maybe columnInfos (`delete` columnInfos) primaryKeyColumn
-          case nonPrimaryKeyColumns of
-            [] -> pure Nothing
-            [column] -> case prciType column of
-              PGText -> pure $ Just column
-              _      -> dispute [EnumTableNonTextualCommentColumn column] $> Nothing
-            columns -> dispute [EnumTableTooManyColumns $ map prciName columns] $> Nothing
-
-        fetchEnumValues maybeCommentColumn primaryKeyColumn = do
-          let nullExtr = S.Extractor S.SENull Nothing
-              commentExtr = maybe nullExtr (S.mkExtr . prciName) maybeCommentColumn
-              -- FIXME: postgres-specific sql generation
-              query = Q.fromBuilder $ toSQL S.mkSelect
-                { S.selFrom = Just $ S.mkSimpleFromExp tableName
-                , S.selExtr = [S.mkExtr (prciName primaryKeyColumn), commentExtr] }
-          rawEnumValues <- liftTx $ Q.withQE defaultTxErrorHandler query () True
-          when (null rawEnumValues) $ dispute [EnumTableNoEnumValues]
-          let enumValues = flip map rawEnumValues $
-                \(enumValueText, comment) ->
-                  case mkValidEnumValueName enumValueText of
-                    Nothing        -> Left enumValueText
-                    Just enumValue -> Right (EnumValue enumValue, EnumValueInfo comment)
-              badNames = lefts enumValues
-              validEnums = rights enumValues
-          case NE.nonEmpty badNames of
-            Just someBadNames -> refute [EnumTableInvalidEnumValueNames someBadNames]
-            Nothing           -> pure $ M.fromList validEnums
-
-        -- https://graphql.github.io/graphql-spec/June2018/#EnumValue
-        mkValidEnumValueName name =
-          if name `elem` ["true", "false", "null"] then Nothing
-          else G.mkName name
-
-    showErrors :: [EnumTableIntegrityError] -> Text
-    showErrors allErrors =
-      "the table " <> tableName <<> " cannot be used as an enum " <> reasonsMessage
-      where
-        reasonsMessage = makeReasonMessage allErrors showOne
-
-        showOne :: EnumTableIntegrityError -> Text
-        showOne = \case
-          EnumTableMissingPrimaryKey -> "the table must have a primary key"
-          EnumTableMultiColumnPrimaryKey cols ->
-            "the table’s primary key must not span multiple columns ("
-              <> commaSeparated (sort cols) <> ")"
-          EnumTableNonTextualPrimaryKey colInfo -> typeMismatch "primary key" colInfo PGText
-          EnumTableNoEnumValues -> "the table must have at least one row"
-          EnumTableInvalidEnumValueNames values ->
-            let pluralString = " are not valid GraphQL enum value names"
-                valuesString = case NE.reverse (NE.sort values) of
-                  value NE.:| [] -> "value " <> value <<> " is not a valid GraphQL enum value name"
-                  value2 NE.:| [value1] -> "values " <> value1 <<> " and " <> value2 <<> pluralString
-                  lastValue NE.:| otherValues ->
-                    "values " <> commaSeparated (reverse otherValues) <> ", and "
-                      <> lastValue <<> pluralString
-            in "the " <> valuesString
-          EnumTableNonTextualCommentColumn colInfo -> typeMismatch "comment column" colInfo PGText
-          EnumTableTooManyColumns cols ->
-            "the table must have exactly one primary key and optionally one comment column, not "
-              <> T.pack (show $ length cols) <> " columns ("
-              <> commaSeparated (sort cols) <> ")"
-          where
-            typeMismatch description colInfo expected =
-              "the table’s " <> description <> " (" <> prciName colInfo <<> ") must have type "
-                <> expected <<> ", not type " <>> prciType colInfo

@@ -4,7 +4,14 @@
   .collapsibleToggle {
     cursor: pointer;
     display: inline-block;
+    list-style-type: none;
 
+    &::-webkit-details-marker {
+      display:none;
+    }
+    &::marker {
+      display: none;
+    }
     .collapsibleIndicatorWrapper {
       padding-right: 10px;
       font-size: 12px;

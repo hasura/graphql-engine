@@ -1,0 +1,32 @@
+description: Try to add an endpoint with duplicate params
+url: /v1/query
+status: 400
+response:
+  internal:
+    - definition:
+        definition:
+          query:
+            collection_name: test_collection
+            query_name: simple_query
+        url: foo/:id/bar/:id
+        methods:
+          - GET
+        name: duplicate
+        comment:
+      reason: "Duplicate variables found in endpoint path: foo/:id/bar/:id"
+      name: endpoint duplicate
+      type: endpoint
+  path: $.args
+  error: 'Duplicate variables found in endpoint path: foo/:id/bar/:id'
+  code: invalid-configuration
+query:
+  type: create_rest_endpoint
+  args:
+    url: "foo/:id/bar/:id"
+    name: duplicate
+    methods:
+      - GET
+    definition:
+      query:
+        collection_name: test_collection
+        query_name: simple_query

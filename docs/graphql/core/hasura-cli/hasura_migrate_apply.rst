@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use hasura migrate apply to apply Hasura migrations on a database with the Hasura CLI
+   :description: Apply migrations on the database using the Hasura CLI
    :keywords: hasura, docs, CLI, hasura migrate apply
 
 .. _hasura_migrate_apply:
@@ -71,6 +71,8 @@ Options
       --version string   only apply this particular migration
       --skip-execution   skip executing the migration action, but mark them as applied
       --type string      type of migration (up, down) to be used with version flag (default "up")
+      --dry-run          print the names of migrations which are going to be applied
+      --all-databases    set this flag to attempt to apply migrations on all databases present on server
   -h, --help             help for apply
 
 Options inherited from parent commands
@@ -78,15 +80,16 @@ Options inherited from parent commands
 
 ::
 
-      --admin-secret string            admin secret for Hasura GraphQL engine
-      --certificate-authority string   path to a cert file for the certificate authority
-      --endpoint string                http(s) endpoint for Hasura GraphQL engine
+      --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
+      --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
+      --database-name string           database on which operation should be applied
+      --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
       --envfile string                 .env filename to load ENV vars from (default ".env")
-      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false)
+      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
       --log-level string               log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color                       do not colorize output (default: false)
       --project string                 directory where commands are executed (default: current dir)
-      --skip-update-check              Skip automatic update check on command execution
+      --skip-update-check              skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Exit with error if diff with BASE_BRANCH only contains files mentioned in
+# Exit with error if diff with origin/master only contains files mentioned in
 # .ciignore so that the build can be stopped.
 #
 # Adapted from:
@@ -25,10 +25,10 @@ if [[ "$CIRCLE_BRANCH" = "release-"* ]]; then
     exit
 fi
 
-BASE_BRANCH="master"
-
-if [[ "$CIRCLE_PROJECT_REPONAME" == "graphql-engine-mono" ]]; then
-    BASE_BRANCH="main"
+# always build commits tagged [force ci]
+if git log --format=%B -n 1 $CIRCLE_SHA | grep -q "\[force ci\]"; then
+  echo "Forcing CI run as requested"
+  exit
 fi
 
 # get the diff
@@ -41,14 +41,14 @@ if [[ ! -z "$CIRCLE_COMPARE_URL" ]]; then
     fi
     echo "Diff: $COMMIT_RANGE"
     changes="$(git diff $COMMIT_RANGE --name-only -- . ':!scripts' ':!assets' ':!docs' ':!community' ':!install-manifests' ':!github' ':!*.md' ':!.ciignore' ':!.gitignore' ':!LICENSE' ':!.github')"
-elif [[ "$CIRCLE_BRANCH" == "$BASE_BRANCH" ]]; then
-    # CIRCLE_COMPARE_URL is not set, but branch is BASE_BRANCH, diff with last commit
+elif [[ "$CIRCLE_BRANCH" == "master" ]]; then
+    # CIRCLE_COMPARE_URL is not set, but branch is master, diff with last commit
     echo "Diff: HEAD~1"
     changes="$(git diff HEAD~1 --name-only -- . ':!scripts' ':!assets' ':!docs' ':!community' ':!install-manifests' ':!github' ':!*.md' ':!.ciignore' ':!.gitignore' ':!LICENSE' ':!.github')"
 else
-    # CIRCLE_COMPARE_URL is not set, branch is not BASE_BRANCH, diff with BASE_BRANCH
-    echo "Diff: origin/$BASE_BRANCH..HEAD"
-    changes="$(git diff-tree --no-commit-id --name-only -r origin/$BASE_BRANCH..HEAD -- . ':!scripts' ':!assets' ':!docs' ':!community' ':!install-manifests' ':!github' ':!*.md' ':!.ciignore' ':!.gitignore' ':!LICENSE' ':!.github')"
+    # CIRCLE_COMPARE_URL is not set, branch is not master, diff with origin/master
+    echo "Diff: origin/master..HEAD"
+    changes="$(git diff-tree --no-commit-id --name-only -r origin/master..HEAD -- . ':!scripts' ':!assets' ':!docs' ':!community' ':!install-manifests' ':!github' ':!*.md' ':!.ciignore' ':!.gitignore' ':!LICENSE' ':!.github')"
 fi
 
 echo "Changes in this build:"

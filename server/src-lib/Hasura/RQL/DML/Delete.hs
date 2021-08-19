@@ -1,8 +1,10 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
+
 module Hasura.RQL.DML.Delete
   ( validateDeleteQWith
   , validateDeleteQ
   , AnnDelG(..)
-  , traverseAnnDel
   , AnnDel
   , execDeleteQuery
   , runDelete
@@ -10,10 +12,11 @@ module Hasura.RQL.DML.Delete
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                             as Env
 import qualified Data.Sequence                                as DS
+import qualified Data.Tagged                                  as Tagged
 import qualified Database.PG.Query                            as Q
 
+import           Control.Monad.Trans.Control                  (MonadBaseControl)
 import           Data.Aeson
 
 import qualified Hasura.Backends.Postgres.SQL.DML             as S
@@ -22,23 +25,29 @@ import qualified Hasura.Tracing                               as Tracing
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.Execute.Mutation
 import           Hasura.Backends.Postgres.Translate.Returning
+import           Hasura.Backends.Postgres.Types.Table
+import           Hasura.Base.Error
 import           Hasura.EncJSON
+import           Hasura.QueryTags
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.Delete
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                        (HasVersion)
+import           Hasura.RQL.Types.Run
+import           Hasura.Session
+
+import           Hasura.GraphQL.Execute.Backend
 
 
 validateDeleteQWith
-  :: (UserInfoM m, QErrM m, CacheRM m)
-  => SessVarBldr 'Postgres m
-  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  :: (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m)
+  => SessionVariableBuilder ('Postgres 'Vanilla) m
+  -> (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp)
   -> DeleteQuery
-  -> m (AnnDel 'Postgres)
+  -> m (AnnDel ('Postgres 'Vanilla))
 validateDeleteQWith sessVarBldr prepValBldr
-  (DeleteQuery tableName rqlBE mRetCols) = do
-  tableInfo <- askTabInfo tableName
+  (DeleteQuery tableName _ rqlBE mRetCols) = do
+  tableInfo <- askTabInfoSource tableName
   let coreInfo = _tiCoreInfo tableInfo
 
   -- If table is view then check if it deletable
@@ -64,7 +73,7 @@ validateDeleteQWith sessVarBldr prepValBldr
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
-    convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr prepValBldr
+    convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr tableName (valueParserWithCollectableType prepValBldr)
 
   resolvedDelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      dpiFilter delPerm
@@ -81,18 +90,26 @@ validateDeleteQWith sessVarBldr prepValBldr
 
 validateDeleteQ
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => DeleteQuery -> m (AnnDel 'Postgres, DS.Seq Q.PrepArg)
-validateDeleteQ =
-  runDMLP1T . validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder
+  => DeleteQuery -> m (AnnDel ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
+validateDeleteQ query = do
+  let source = doSource query
+  tableCache :: TableCache ('Postgres 'Vanilla) <- askTableCache source
+  flip runTableCacheRT (source, tableCache) $ runDMLP1T $
+    validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder query
 
 runDelete
-  :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
-     , MonadTx m, HasSQLGenCtx m, MonadIO m
-     , Tracing.MonadTrace m
-     )
-  => Env.Environment
-  -> DeleteQuery
+  :: forall m
+    . ( QErrM m, UserInfoM m, CacheRM m
+      , HasServerConfigCtx m, MonadIO m
+      , Tracing.MonadTrace m, MonadBaseControl IO m
+      , MetadataM m, MonadQueryTags m)
+  => DeleteQuery
   -> m EncJSON
-runDelete env q = do
-  strfyNum <- stringifyNum <$> askSQLGenCtx
-  validateDeleteQ q >>= execDeleteQuery env strfyNum Nothing
+runDelete q = do
+  sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (doSource q)
+  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
+  userInfo <- askUserInfo
+  let queryTags = QueryTagsComment $ Tagged.untag $ createQueryTags @m Nothing (encodeOptionalQueryTags Nothing)
+  validateDeleteQ q
+    >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
+        . flip runReaderT queryTags . execDeleteQuery strfyNum userInfo

@@ -1,31 +1,31 @@
-
 .. meta::
-   :description: Use hasura seeds to manage seed data
-   :keywords: hasura, docs, CLI, hasura seeds
+   :description: Manage seed data using the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura seed
 
 .. _hasura_seed:
 
 Hasura CLI: hasura seed
 -----------------------
 
-Manage seed data
+Manage seed data.
 
 Synopsis
 ~~~~~~~~
 
 
-Manage seed data
+Manage seed data.
 
-Alias: sd
+Alias: sd, seeds
 
 Options
 ~~~~~~~
 
 ::
 
-      --admin-secret string            admin secret for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
+      --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
       --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
-      --endpoint string                http(s) endpoint for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ENDPOINT")
+      --database-name string           database on which operation should be applied
+      --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
   -h, --help                           help for seed
       --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
 
@@ -38,12 +38,12 @@ Options inherited from parent commands
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color            do not colorize output (default: false)
       --project string      directory where commands are executed (default: current dir)
-      --skip-update-check   Skip automatic update check on command execution
+      --skip-update-check   skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~
 
-* :ref:`hasura <hasura>` 	 - Hasura GraphQL Engine command line tool
+* :ref:`hasura <hasura>` 	 - Hasura GraphQL engine command line tool
 * :ref:`hasura seed apply <hasura_seed_apply>` 	 - Apply seed data
 * :ref:`hasura seed create <hasura_seed_create>` 	 - Create a new seed file
 

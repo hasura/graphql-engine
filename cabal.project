@@ -1,0 +1,79 @@
+-- Global project configuration.
+--
+-- This file can be overridden with cabal.project.local (see e.g. cabal.project.dev)
+--
+-- If you need to switch between several local configurations you can also
+-- create a symlink to this file with a different name, e.g.:
+--     $ ln -s cabal.project cabal.project.myconfig
+--     $ ln -s cabal.project.freeze cabal.project.myconfig.freeze
+-- ...and then create a new set of overrides in:
+--     cabal.project.myconfig.local
+-- ...and then invoke cabal with
+--     $ cabal new-build --project-file=cabal.project.myconfig
+--
+-- See: https://www.haskell.org/cabal/users-guide/nix-local-build.html#configuring-builds-with-cabal-project
+
+packages: server
+
+constraints:
+  -- Ensure we don't end up with a freeze file that forces an incompatible
+  -- version in CI for `Setup.hs` scripts.
+  setup.Cabal <3.4
+
+package *
+  optimization: 2
+  -- For tooling, e.g. 'weeder', and IDE-like stuff:
+  ghc-options: -fwrite-ide-info
+
+  haddock-html: true
+  haddock-hoogle: true
+  haddock-hyperlink-source: true
+  haddock-quickjump: true
+
+package graphql-engine
+  ghc-options: -j
+  haddock-options: "--show-all"
+
+source-repository-package
+  type: git
+  location: https://github.com/hasura/pg-client-hs.git
+  tag: 92975d0f8f933c8d06913dc97af259253bf7fb5f
+
+source-repository-package
+  type: git
+  location: https://github.com/hasura/graphql-parser-hs.git
+  tag: 21c1ddfb41791578b66633a2e51f9deb43761108
+
+source-repository-package
+  type: git
+  location: https://github.com/hasura/ci-info-hs.git
+  tag: be578a01979fc95137cc2c84827f9fafb99df60f
+
+source-repository-package
+  type: git
+  location: https://github.com/hasura/pool.git
+  tag: bc4c3f739a8fb8ec4444336a34662895831c9acf
+
+source-repository-package
+  type: git
+  location: https://github.com/fpco/odbc.git
+  tag: 7c0cea45d0b779419eb16177407c4ee9e7ba4c6f
+
+package odbc
+  ghc-options: -Wwarn
+  -- Our CI compiles with -Werror, which is also applied to those packages
+  -- while it's fine for packages we maintain, we can't actually enforce
+  -- that third-party packages are warning-free, hence this -Wno-error.
+  -- When the changes in odbc are released, we can instead depend on
+  -- the hackage version, and remove it from this list of packages.
+
+source-repository-package
+  type: git
+  location: https://github.com/hasura/ekg-core.git
+  tag: e31b47d5c67e1347f141079ad2d18f682e1b046f
+
+source-repository-package
+  type: git
+  location: https://github.com/hasura/ekg-json.git
+  tag: 098e3a5951c4991c823815706f1f58f608bb6ec3
+

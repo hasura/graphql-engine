@@ -1,3 +1,6 @@
+import { MetadataDataSource } from '../../../../metadata/types';
+import { ReduxState } from './../../../../types';
+
 type TableSchema = {
   primary_key?: { columns: string[] };
   columns: Array<{ column_name: string }>;
@@ -13,6 +16,22 @@ export const isTableWithPK = (
   return (
     !!tableSchema.primary_key && tableSchema.primary_key.columns.length > 0
   );
+};
+
+export const getTableConfiguration = (
+  tables: ReduxState['tables'],
+  sources: MetadataDataSource[]
+) => {
+  const {
+    currentSchema,
+    currentTable: originalTable,
+    currentDataSource,
+  } = tables;
+  return sources
+    ?.find(s => s.name === currentDataSource)
+    ?.tables.find(
+      t => originalTable === t.table.name && currentSchema === t.table.schema
+    )?.configuration;
 };
 
 export const compareRows = (
@@ -36,25 +55,4 @@ export const compareRows = (
     }
   });
   return same;
-};
-
-export const isPostgresTimeoutError = (error: {
-  code: string;
-  internal?: { error?: { message?: string } };
-  message?: { error?: string; internal?: { error?: { message?: string } } };
-}) => {
-  if (error.internal && error.internal.error) {
-    return !!error.internal?.error?.message?.includes('statement timeout');
-  }
-
-  if (error.message && error.message.error === 'postgres query error') {
-    if (error.message.internal) {
-      return !!error.message.internal.error?.message?.includes(
-        'statement timeout'
-      );
-    }
-    return error.message.error.includes('statement timeout');
-  }
-
-  return false;
 };

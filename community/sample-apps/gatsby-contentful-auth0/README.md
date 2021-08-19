@@ -12,7 +12,7 @@ npm install
 > Note: if you clone this project through the Gatsby CLI, it will install the modules for you.
 
 ## Auth0
-This application uses Auth0 to manage identity. Refer to the [Auth0 integration guide](https://hasura.io/docs/1.0/graphql/manual/guides/integrations/auth0-jwt.html) for the configuration.
+This application uses Auth0 to manage identity. Refer to the [Auth0 integration guide](https://hasura.io/docs/latest/graphql/core/guides/integrations/auth0-jwt.html) for the configuration.
 
 ### Modify auth config
 
@@ -31,7 +31,9 @@ Contentful remote schema is added as part of the migration. Configure the enviro
 Execute the following command inside `hasura` to apply the migrations
 
 ```bash
+hasura metadata apply
 hasura migrate apply
+hasura metadata reload
 ```
 
 This will create all the necessary tables, relationships and remote joins.

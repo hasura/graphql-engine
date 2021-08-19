@@ -1,37 +1,8 @@
 /* Constants */
 
 // TODO: generate using SQL query to handle all types
-export const PGTypes = {
-  boolean: ['boolean'],
-  character: ['character', 'character varying', 'text', 'citext'],
-  dateTime: [
-    'timestamp',
-    'timestamp with time zone',
-    'timestamp without time zone',
-    'date',
-    'time',
-    'time with time zone',
-    'time without time zone',
-    'interval',
-  ],
-  geometry: ['geometry'],
-  geography: ['geography'],
-  json: ['json'],
-  jsonb: ['jsonb'],
-  numeric: [
-    'smallint',
-    'integer',
-    'bigint',
-    'decimal',
-    'numeric',
-    'real',
-    'double precision',
-  ],
-  uuid: ['uuid'],
-  user_defined: [], // default for all other types
-};
 
-const operatorTypePGTypesMap = {
+const operatorTypeTypesMap = {
   comparision: [
     'boolean',
     'character',
@@ -44,7 +15,6 @@ const operatorTypePGTypesMap = {
   jsonb: ['jsonb'],
   geometric: ['geometry'],
   geometric_geographic: ['geometry', 'geography'],
-  is_null: Object.keys(PGTypes), // all types
 };
 
 const boolOperatorsInfo = {
@@ -68,6 +38,10 @@ const columnOperatorsInfo = {
     inputStructure: 'object',
   },
   _ne: {
+    type: 'comparision',
+    inputStructure: 'object',
+  },
+  _neq: {
     type: 'comparision',
     inputStructure: 'object',
   },
@@ -97,32 +71,32 @@ const columnOperatorsInfo = {
   },
   _ceq: {
     type: 'comparision',
-    inputStructure: 'object',
+    inputStructure: 'array',
     inputType: 'column',
   },
   _cne: {
     type: 'comparision',
-    inputStructure: 'object',
+    inputStructure: 'array',
     inputType: 'column',
   },
   _cgt: {
     type: 'comparision',
-    inputStructure: 'object',
+    inputStructure: 'array',
     inputType: 'column',
   },
   _clt: {
     type: 'comparision',
-    inputStructure: 'object',
+    inputStructure: 'array',
     inputType: 'column',
   },
   _cgte: {
     type: 'comparision',
-    inputStructure: 'object',
+    inputStructure: 'array',
     inputType: 'column',
   },
   _clte: {
     type: 'comparision',
-    inputStructure: 'object',
+    inputStructure: 'array',
     inputType: 'column',
   },
   _is_null: {
@@ -234,20 +208,33 @@ const columnOperatorsInfo = {
   },
 };
 
-const getPGTypesOperators = () => {
-  const _PGTypesOperators = {};
+export const getPermissionOperators = (supportedOperators, typeMap) => {
+  let modifiedColumnOperatorsInfo = columnOperatorsInfo;
+  if (Array.isArray(supportedOperators)) {
+    modifiedColumnOperatorsInfo = supportedOperators.reduce(
+      (ops, opName) => ({
+        ...ops,
+        [opName]: columnOperatorsInfo[opName],
+      }),
+      {}
+    );
+  }
 
-  Object.keys(columnOperatorsInfo).forEach(op => {
-    operatorTypePGTypesMap[columnOperatorsInfo[op].type].forEach(type => {
-      _PGTypesOperators[type] = _PGTypesOperators[type] || [];
-      _PGTypesOperators[type].push(op);
+  const operators = {};
+  const operatorMap = {
+    ...operatorTypeTypesMap,
+    is_null: Object.keys(typeMap),
+  };
+
+  Object.keys(modifiedColumnOperatorsInfo).forEach(op => {
+    operatorMap[modifiedColumnOperatorsInfo[op].type].forEach(type => {
+      operators[type] = operators[type] || [];
+      operators[type].push(op);
     });
   });
 
-  return _PGTypesOperators;
+  return operators;
 };
-
-export const PGTypesOperators = getPGTypesOperators();
 
 export const boolOperators = Object.keys(boolOperatorsInfo);
 
@@ -298,15 +285,10 @@ export const getOperatorInputType = operator => {
     : null;
 };
 
-export const getRootPGType = type => {
-  let rootType;
+export const getRootType = (type, typeMap) => {
+  const typeMapKeys = Object.keys(typeMap);
 
-  for (const rType of Object.keys(PGTypes)) {
-    if (PGTypes[rType].includes(type)) {
-      rootType = rType;
-      break;
-    }
-  }
+  let rootType = typeMapKeys.find(rType => typeMap[rType].includes(type));
 
   if (!rootType) {
     rootType = 'user_defined';

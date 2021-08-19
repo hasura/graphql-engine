@@ -26,7 +26,7 @@ const Migrations = ({ dispatch, migrationMode }) => {
         <li>
           Read more about managing migrations with Hasura at the{' '}
           <a
-            href="https://hasura.io/docs/1.0/graphql/manual/migrations/index.html"
+            href="https://hasura.io/docs/latest/graphql/core/migrations/index.html"
             target="_blank"
             rel="noopener noreferrer"
           >

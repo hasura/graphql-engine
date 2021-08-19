@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
@@ -109,16 +109,31 @@ func genReSTCustom(cmd *cobra.Command, w io.Writer, titlePrefix string, linkHand
 		long = short
 	}
 	info := short
-
+	buf.WriteString(".. meta::\n")
+	buf.WriteString("   :description: " + info + " using the Hasura CLI\n")
+	buf.WriteString("   :keywords: hasura, docs, CLI")
+	if cmd.CommandPath() != "hasura" {
+		buf.WriteString(", " + cmd.CommandPath() + "\n")
+	} else {
+		buf.WriteString("\n")
+	}
+	buf.WriteString("\n")
 	buf.WriteString(".. _" + ref + ":\n\n")
 
 	buf.WriteString(titlePrefix + name + "\n")
 	buf.WriteString(strings.Repeat("-", len(titlePrefix+name)) + "\n\n")
-	buf.WriteString(info + "\n\n")
+	buf.WriteString(info + ".\n\n")
 
 	buf.WriteString("Synopsis\n")
 	buf.WriteString("~~~~~~~~\n\n")
-	buf.WriteString("\n" + long + "\n\n")
+	if name == "hasura" {
+		buf.WriteString("::")
+	}
+	buf.WriteString("\n" + long)
+	if name != "hasura" && name != "hasura scripts update-project-v2" {
+		buf.WriteString(".")
+	}
+	buf.WriteString("\n\n")
 
 	if cmd.Runnable() {
 		buf.WriteString(fmt.Sprintf("::\n\n  %s\n\n", cmd.UseLine()))
@@ -194,7 +209,6 @@ func genReSTTreeCustom(cmd *cobra.Command, dir, titlePrefix string, filePrepende
 			return err
 		}
 	}
-
 	basename := strings.Replace(cmd.CommandPath(), " ", "_", -1) + ".rst"
 	filename := filepath.Join(dir, basename)
 	f, err := os.Create(filename)

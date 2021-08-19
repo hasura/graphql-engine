@@ -116,7 +116,8 @@ table tbody tr th {
       padding: 0px 0px;
       // border-left: 5px solid transparent;
 
-      a {
+      a,
+      .dbSelect {
         color: #767e93;
         background-color: #f0f0f0;
         width: 100%;
@@ -140,7 +141,8 @@ table tbody tr th {
       color: #333;
       text-decoration: none;
 
-      a {
+      a,
+      .dbSelect {
         text-decoration: none;
         background-color: #fff3d5;
         display: inline-block;
@@ -200,6 +202,10 @@ table tbody tr th {
 .flex_space_between {
   display: flex;
   justify-content: space-between;
+}
+.flex_justify_center {
+  display: flex;
+  justify-content: center;
 }
 
 .flex_0 {
@@ -474,6 +480,9 @@ input {
   padding-right: 0 !important;
 }
 
+.add_pad_min {
+  padding: 1em;
+}
 .add_pad_right {
   padding-right: 15px;
 }
@@ -538,6 +547,10 @@ input {
   margin-left: 10px;
 }
 
+.add_pad_left_mid {
+  padding-left: 10px;
+}
+
 .add_mar_small {
   margin-right: 10px !important;
 }
@@ -578,12 +591,19 @@ code {
   padding-top: 5px;
 }
 
+.padd_small {
+  padding: 5px;
+}
+
 .padd_top_medium {
   padding-top: 10px;
 }
 
 .add_pad_top {
   padding-top: 20px;
+}
+.add_pad_top_10 {
+  padding-top: 10px;
 }
 
 .padd_bottom {
@@ -907,6 +927,10 @@ code {
   text-align: center;
 }
 
+.w350 {
+  width: 350px;
+}
+
 .subheading_text {
   font-size: 15px;
   font-weight: bold;
@@ -914,6 +938,17 @@ code {
   margin-top: 0;
   margin-bottom: 0;
 
+  i {
+    margin-left: 5px;
+  }
+}
+
+.subheading_text_no_padd {
+  font-size: 15px;
+  font-weight: bold;
+  padding-bottom: 8px;
+  margin-top: 0;
+  margin-bottom: 0;
   i {
     margin-left: 5px;
   }
@@ -1303,6 +1338,14 @@ code {
   font-style: normal;
 }
 
+.fontStyleItalic {
+  font-style: italic;
+}
+
+.fontSizeSm {
+  font-size: 13px !important;
+}
+
 .cursorPointer {
   cursor: pointer;
 }
@@ -1384,6 +1427,159 @@ code {
   hyphens: auto;
   white-space: normal;
   display: block;
+}
+
+.permissionSummaryBtn {
+  margin: 0 auto;
+  margin-left: -23px;
+}
+
+.add_mar_40 {
+  margin-left: 40px;
+}
+
+.manage_dbs_page {
+  margin-right: 40px;
+}
+
+.manage_db_content {
+  margin-top: 20px;
+}
+
+.boldTitle {
+  color: #788095;
+  font-weight: bold;
+  font-size: 14px;
+  margin-left: 2px;
+}
+
+.db_list_item {
+  border-bottom: 1px solid rgb(232, 232, 232);
+  padding-left: 0;
+  min-width: 1100px;
+}
+
+.db_list_item:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.show_connection_string {
+  display: -webkit-inline-box;
+  &:hover {
+    cursor: pointer;
+  }
+  color: #337ab7;
+  p {
+    margin-bottom: 0;
+  }
+}
+
+.showAdminSecret {
+  font-size: 16px;
+}
+
+.db_large_string_break_words {
+  max-width: 40%;
+  word-break: break-word;
+  flex: 1;
+
+  i {
+    cursor: pointer;
+  }
+}
+
+.flex_width {
+  width: 80%;
+}
+
+.text_red {
+  color: rgb(192, 32, 32);
+}
+
+.connect_db_content {
+  display: flex;
+  flex-direction: column;
+  padding-left: 10px;
+}
+
+.connect_db_header {
+  font-weight: 700;
+}
+
+.connect_db_radios {
+  display: flex;
+  align-items: center;
+  height: auto;
+  justify-content: flex-start;
+  padding-bottom: 10px;
+  font-size: 14px;
+  input[type='radio'] {
+    margin-right: 4px;
+  }
+}
+.label_disabled {
+  color: #4d4d4db3;
+  cursor: not-allowed;
+}
+
+.connect_db_radio_label {
+  margin-right: 24px;
+}
+
+.connect_form_layout {
+  width: 100%;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+.connect_db_input_label {
+  display: inline-block;
+  max-width: 100%;
+  padding-bottom: 10px;
+  font-weight: 700;
+}
+
+.connect_db_input_pad {
+  margin-bottom: 16px;
+}
+
+.add_button_layout {
+  width: 40%;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  align-self: flex-end;
+}
+
+.connection_settings_layout {
+  width: 100%;
+  margin: 10px 0px;
+}
+
+.connection_settings_header {
+  font-weight: bold;
+  border: none;
+  outline: none;
+}
+
+.connection_settings_form {
+  margin-top: 12px;
+  padding-left: 30px;
+}
+
+.float_right {
+  float: right;
+}
+
+.icon_margin {
+  margin-right: 4px;
+}
+
+.connect_form_width {
+  width: 50%;
 }
 
 /* container height subtracting top header and bottom scroll bar */

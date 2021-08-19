@@ -1,0 +1,32 @@
+description: Tries to create an endpoint with trailing slash
+url: /v1/query
+status: 400
+response:
+  internal:
+    - definition:
+        definition:
+          query:
+            collection_name: test_collection
+            query_name: simple_query
+        url: foo/
+        methods:
+          - GET
+        name: trailing
+        comment:
+      reason: "Empty segments or unnamed variables are not allowed: foo/"
+      name: endpoint trailing
+      type: endpoint
+  path: $.args
+  error: 'Empty segments or unnamed variables are not allowed: foo/'
+  code: invalid-configuration
+query:
+  type: create_rest_endpoint
+  args:
+    url: "foo/"
+    name: trailing
+    methods:
+      - GET
+    definition:
+      query:
+        collection_name: test_collection
+        query_name: simple_query

@@ -14,6 +14,8 @@ const state = {
   isFetching: false,
   headers: [defaultHeader],
   forwardClientHeaders: false,
+  timeout: '',
+  comment: '',
 };
 
 export default state;

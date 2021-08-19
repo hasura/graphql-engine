@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata/actions"
-	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -21,17 +21,17 @@ func newActionsCreateCmd(ec *cli.ExecutionContext, v *viper.Viper) *cobra.Comman
 	}
 	actionsCreateCmd := &cobra.Command{
 		Use:   "create [action-name]",
-		Short: "Create an action",
-		Example: `  # Create an Action
+		Short: "Create a Hasura action",
+		Example: `  # Create a Hasura action
   hasura actions create [action-name]
 
-  # Create an action with codegen
-  hasura actions create [action-name] --with-codegen true
+  # Create a Hasura action with codegen
+  hasura actions create [action-name] --with-codegen
 
-  # Create an action by deriving from a hasura operation
+  # Create a Hasura action by deriving from a hasura operation
   hasura actions create [action-name] --derive-from ''
 
-  # Create an action with a different kind or webhook
+  # Create a Hasura action with a different kind or webhook
   hasura actions create [action-name] --kind [synchronous|asynchronous] --webhook [http://localhost:3000]`,
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
@@ -64,17 +64,12 @@ type actionsCreateOptions struct {
 }
 
 func (o *actionsCreateOptions) run() error {
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
-	if err != nil {
-		return err
-	}
-
-	// introspect Hasura schema if a mutation is being derived
-	var introSchema interface{}
+	var introSchema hasura.IntrospectionSchema
+	var err error
 	if o.deriveFrom != "" {
 		o.deriveFrom = strings.TrimSpace(o.deriveFrom)
 		o.EC.Spin("Deriving a Hasura operation...")
-		introSchema, err = migrateDrv.GetIntroSpectionSchema()
+		introSchema, err = o.EC.APIClient.V1Graphql.GetIntrospectionSchema()
 		if err != nil {
 			return errors.Wrap(err, "error in fetching introspection schema")
 		}
@@ -89,7 +84,10 @@ func (o *actionsCreateOptions) run() error {
 	if err != nil {
 		return errors.Wrap(err, "error in creating action")
 	}
-	err = migrateDrv.ApplyMetadata()
+	opts := &MetadataApplyOptions{
+		EC: o.EC,
+	}
+	err = opts.Run()
 	if err != nil {
 		return errors.Wrap(err, "error in applying metadata")
 	}

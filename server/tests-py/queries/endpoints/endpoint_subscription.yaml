@@ -1,0 +1,35 @@
+description: Try to add an endpoint with duplicate params
+url: /v1/query
+status: 400
+response:
+  internal:
+    - definition:
+        definition:
+          query:
+            collection_name: test_collection
+            query_name: simple_subscription
+        url: foo/bar/subscribe
+        methods:
+          - GET
+        name: foo
+        comment:
+      reason:
+        "Inconsistent object: in endpoint foo: query with name simple_subscription
+        is a subscription"
+      name: endpoint foo
+      type: endpoint
+  path: $.args
+  error: 'Inconsistent object: in endpoint foo: query with name simple_subscription
+    is a subscription'
+  code: invalid-configuration
+query:
+  type: create_rest_endpoint
+  args:
+    url: "foo/bar/subscribe"
+    name: foo
+    methods:
+      - GET
+    definition:
+      query:
+        collection_name: test_collection
+        query_name: simple_subscription

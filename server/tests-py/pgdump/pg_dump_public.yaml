@@ -1,4 +1,8 @@
+# Test output of pg_dump clean output.
+# Including "SET check_function_bodies = false;" avoids https://github.com/hasura/graphql-engine-mono/issues/1007
 descriptions: Execute pg_dump on public schema
+headers:
+  X-Hasura-Role: admin
 url: /v1alpha1/pg_dump
 status: 200
 query:
@@ -11,6 +15,7 @@ query:
   clean_output: true
 # response on postgres 9.4 and 9.5
 response_9: |
+  SET check_function_bodies = false;
   CREATE TABLE public.articles (
       id integer NOT NULL,
       author_id integer NOT NULL,
@@ -45,6 +50,7 @@ response_9: |
       ADD CONSTRAINT articles_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.authors(id);
 # response on postgres 10 and 11
 response_10_11: |
+  SET check_function_bodies = false;
   CREATE TABLE public.articles (
       id integer NOT NULL,
       author_id integer NOT NULL,

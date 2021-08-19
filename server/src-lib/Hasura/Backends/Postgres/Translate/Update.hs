@@ -12,10 +12,13 @@ import           Hasura.Backends.Postgres.Translate.Insert
 import           Hasura.Backends.Postgres.Translate.Returning
 import           Hasura.RQL.IR.Update
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 
 
 mkUpdateCTE
-  :: AnnUpd 'Postgres -> S.CTE
+  :: Backend ('Postgres pgKind)
+  => AnnUpd ('Postgres pgKind)
+  -> S.CTE
 mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
   S.CTEUpdate update
   where
@@ -31,7 +34,7 @@ mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
     tableFltrExpr = toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
     checkExpr = toSQLBoolExp (S.QualTable tn) chk
 
-expandOperator :: [ColumnInfo 'Postgres] -> (PGCol, UpdOpExpG S.SQLExp) -> S.SetExpItem
+expandOperator :: [ColumnInfo ('Postgres pgKind)] -> (PGCol, UpdOpExpG S.SQLExp) -> S.SetExpItem
 expandOperator infos (column, op) = S.SetExpItem $ (column,) $ case op of
   UpdSet          e -> e
   UpdInc          e -> S.mkSQLOpExp S.incOp               identifier (asNum  e)
@@ -48,5 +51,5 @@ expandOperator infos (column, op) = S.SetExpItem $ (column,) $ case op of
     asArray a  = S.SETyAnn (S.SEArray a) S.textArrTypeAnn
     asNum  e   = S.SETyAnn e $
       case find (\info -> pgiColumn info == column) infos <&> pgiType of
-        Just (ColumnScalar s) -> S.mkTypeAnn $ PGTypeScalar s
+        Just (ColumnScalar s) -> S.mkTypeAnn $ CollectableTypeScalar s
         _                     -> S.numericTypeAnn

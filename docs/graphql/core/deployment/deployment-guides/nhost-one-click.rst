@@ -23,18 +23,15 @@ One-click deploy on Nhost
 .. note::
    Make sure to `create an Nhost account <https://nhost.io/register>`__ first. Nhost offers a 30-day trial with its starter plan.
 
-Once you're logged into your Nhost account, click the button bellow to configure your project.
+Once you're logged into your Nhost account, click the ``create project`` button below to configure your project.
 
-.. image:: https://nhost.io/images/create-project-button.png
-   :width: 300px
-   :class: no-shadow
-   :alt: Deploy with Nhost
+.. thumbnail:: /img/graphql/core/deployment/create-project-nhost.png
+   :alt: Create a project
 
 On the following page you can choose a plan and a location for your project:
 
-.. image:: https://nhost.io/images/create-project-form.png
-   :class: no-shadow
-   :alt: Choose a plan and locatino for your project
+.. thumbnail:: /img/graphql/core/deployment/choose-plan-nhost.png
+   :alt: Choose a plan and location for your project
 
 The creation and provisioning of your backend should be ready in roughly 30 seconds. 
 Your project has now a GraphQL API, a PostgreSQL database, user management, and storage for your files!
@@ -42,22 +39,20 @@ Your project has now a GraphQL API, a PostgreSQL database, user management, and 
 Access your Hasura console
 --------------------------
 
-Once your Nhost project is up and running, please go ahead and click on the ``Hasura`` option on the left menu.
+Once your Nhost project is up and running, the ``Overview`` page will give information about the endpoints.
 
-.. image:: https://nhost.io/images/project-hasura.png
-   :class: no-shadow
-   :alt: Hasura console URL on Nhost
+.. thumbnail:: /img/graphql/core/deployment/nhost-dashboard.png
+   :alt: Dashboard   
 
-The Hasura console endpoint is highlighted in red and has the following structure:
+Click on the ``Hasura`` tab in the navigation to open the dashboard. Then click on the ``Open Hasura Console`` button
+to open the Hasura console.
 
-.. code-block:: bash
+.. thumbnail:: /img/graphql/core/deployment/nhost-hasura-console.png
+   :alt: Nhost Hasura console  
 
-   https://<hasura-slug>.nhost.app/
-
-To test it, you can either create tables directly using the console, or add new users to your project clicking on ``Auth`` on the left menu.
+To test it, you can either create tables directly using the console, or add new users to your project clicking on ``Auth`` on the navigation menu.
 
 There is also a ``GraphQL API`` option for you to test the API.
-Check out :ref:`making your first GraphQL query <first_graphql_query>` for more information.
 
 References
 ----------

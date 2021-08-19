@@ -366,29 +366,30 @@ class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
         if req_path == "/fail":
             self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
             self.end_headers()
-            self.server.error_queue.put({"path": req_path,
-                                         "body": req_json,
-                                         "headers": req_headers})
-        elif req_path == "/timeout_short":
-            time.sleep(5)
+        # This endpoint just sleeps for 2 seconds:
+        elif req_path == "/sleep_2s":
+            time.sleep(2)
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
-            self.server.error_queue.put({"path": req_path,
-                                         "body": req_json,
-                                         "headers": req_headers})
-        elif req_path == "/timeout_long":
-            time.sleep(5)
+        # This is like a sleep endpoint above, but allowing us to decide
+        # externally when the webhook can return, with unblock()
+        elif req_path == "/block":
+            if not self.server.unblocked:
+                self.server.blocked_count += 1
+                with self.server.unblocked_wait:
+                    # We expect this timeout never to be reached, but if
+                    # something goes wrong the main thread will block forever:
+                    self.server.unblocked_wait.wait(timeout=60)
+                self.server.blocked_count -= 1
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
-            self.server.resp_queue.put({"path": req_path,
-                                        "body": req_json,
-                                        "headers": req_headers})
         else:
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
-            self.server.resp_queue.put({"path": req_path,
-                                        "body": req_json,
-                                        "headers": req_headers})
+
+        self.server.resp_queue.put({"path": req_path,
+                                    "body": req_json,
+                                    "headers": req_headers})
 
 # A very slightly more sane/performant http server.
 # See: https://stackoverflow.com/a/14089457/176841
@@ -399,9 +400,24 @@ class ThreadedHTTPServer(ThreadingMixIn, http.server.HTTPServer):
 
 class EvtsWebhookServer(ThreadedHTTPServer):
     def __init__(self, server_address):
-        self.resp_queue = queue.Queue(maxsize=1)
-        self.error_queue = queue.Queue()
+        # Data received from hasura by our web hook, pushed after it returns to the client:
+        self.resp_queue = queue.Queue()
+        # We use these two vars to coordinate unblocking in the /block route
+        self.unblocked = False
+        self.unblocked_wait = threading.Condition()
+        # ...and this for bookkeeping open blocked requests; this becomes
+        # meaningless after the first call to unblock()
+        self.blocked_count = 0
+
         super().__init__(server_address, EvtsWebhookHandler)
+
+    # Unblock all webhook requests to /block. Idempotent.
+    def unblock(self):
+        self.unblocked = True
+        with self.unblocked_wait:
+            # NOTE: this only affects currently wait()-ing threads, future
+            # wait()s will block again (hence the simple self.unblocked flag)
+            self.unblocked_wait.notify_all()
 
     def server_bind(self):
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -409,13 +425,6 @@ class EvtsWebhookServer(ThreadedHTTPServer):
 
     def get_event(self, timeout):
         return self.resp_queue.get(timeout=timeout)
-
-    def get_error_queue_size(self):
-        sz = 0
-        while not self.error_queue.empty():
-            self.error_queue.get()
-            sz = sz + 1
-        return sz
 
     def is_queue_empty(self):
         return self.resp_queue.empty
@@ -470,10 +479,15 @@ class HGECtx:
         self.hge_jwt_conf = config.getoption('--hge-jwt-conf')
         if self.hge_jwt_conf is not None:
             self.hge_jwt_conf_dict = json.loads(self.hge_jwt_conf)
+            self.hge_jwt_algo = self.hge_jwt_conf_dict["type"]
+            if self.hge_jwt_algo == "Ed25519":
+                self.hge_jwt_algo = "EdDSA"
         self.webhook_insecure = config.getoption('--test-webhook-insecure')
         self.metadata_disabled = config.getoption('--test-metadata-disabled')
         self.may_skip_test_teardown = False
+        self.function_permissions = config.getoption('--test-function-permissions')
 
+        # This will be GC'd, but we also explicitly dispose() in teardown()
         self.engine = create_engine(self.pg_url)
         self.meta = MetaData()
 
@@ -481,35 +495,74 @@ class HGECtx:
 
         self.hge_scale_url = config.getoption('--test-hge-scale-url')
         self.avoid_err_msg_checks = config.getoption('--avoid-error-message-checks')
+        self.inherited_roles_tests = config.getoption('--test-inherited-roles')
+        self.pro_tests = config.getoption('--pro-tests')
 
         self.ws_client = GQLWsClient(self, '/v1/graphql')
+        self.ws_client_v1alpha1 = GQLWsClient(self, '/v1alpha1/graphql')
+        self.ws_client_relay = GQLWsClient(self, '/v1beta1/relay')
+
+        self.backend = config.getoption('--backend')
+        self.default_backend = 'postgres'
+        self.is_default_backend = self.backend == self.default_backend
 
         # HGE version
         result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
         env_version = os.getenv('VERSION')
         self.version = env_version if env_version else result.stdout.decode('utf-8').strip()
-        if not self.metadata_disabled and not config.getoption('--skip-schema-setup'):
+        if self.is_default_backend and not self.metadata_disabled and not config.getoption('--skip-schema-setup'):
           try:
-              st_code, resp = self.v1q_f('queries/clear_db.yaml')
+              st_code, resp = self.v2q_f("queries/" + self.backend_suffix("clear_db")+ ".yaml")
           except requests.exceptions.RequestException as e:
               self.teardown()
               raise HGECtxError(repr(e))
           assert st_code == 200, resp
 
         # Postgres version
-        pg_version_text = self.sql('show server_version_num').fetchone()['server_version_num']
-        self.pg_version = int(pg_version_text)
-
+        if self.is_default_backend:
+            pg_version_text = self.sql('show server_version_num').fetchone()['server_version_num']
+            self.pg_version = int(pg_version_text)
 
     def reflect_tables(self):
         self.meta.reflect(bind=self.engine)
 
-    def anyq(self, u, q, h):
-        resp = self.http.post(
-            self.hge_url + u,
-            json=q,
-            headers=h
-        )
+    def anyq(self, u, q, h, b = None, v = None):
+        resp = None
+        if v == 'GET':
+          resp = self.http.get(
+              self.hge_url + u,
+              headers=h
+          )
+        elif v == 'POST' and b:
+          # TODO: Figure out why the requests are failing with a byte object passed in as `data`
+          resp = self.http.post(
+              self.hge_url + u,
+              data=b,
+              headers=h
+           )
+        elif v == 'PATCH' and b:
+          resp = self.http.patch(
+              self.hge_url + u,
+              data=b,
+              headers=h
+           )
+        elif v == 'PUT' and b:
+          resp = self.http.put(
+              self.hge_url + u,
+              data=b,
+              headers=h
+           )
+        elif v == 'DELETE':
+          resp = self.http.delete(
+              self.hge_url + u,
+              headers=h
+           )
+        else:
+          resp = self.http.post(
+              self.hge_url + u,
+              json=q,
+              headers=h
+           )
         # NOTE: make sure we preserve key ordering so we can test the ordering
         # properties in the graphql spec properly
         # Returning response headers to get the request id from response
@@ -521,12 +574,12 @@ class HGECtx:
         conn.close()
         return res
 
-    def v1q(self, q, headers = {}):
+    def execute_query(self, q, url_path, headers = {}):
         h = headers.copy()
         if self.hge_key is not None:
             h['X-Hasura-Admin-Secret'] = self.hge_key
         resp = self.http.post(
-            self.hge_url + "/v1/query",
+            self.hge_url + url_path,
             json=q,
             headers=h
         )
@@ -534,12 +587,55 @@ class HGECtx:
         # properties in the graphql spec properly
         return resp.status_code, resp.json(object_pairs_hook=OrderedDict)
 
+
+    def v1q(self, q, headers = {}):
+        return self.execute_query(q, "/v1/query", headers)
+
     def v1q_f(self, fn):
         with open(fn) as f:
             # NOTE: preserve ordering with ruamel
             yml = yaml.YAML()
             return self.v1q(yml.load(f))
 
+    def v2q(self, q, headers = {}):
+        return self.execute_query(q, "/v2/query", headers)
+
+    def v2q_f(self, fn):
+        with open(fn) as f:
+            # NOTE: preserve ordering with ruamel
+            yml = yaml.YAML()
+            return self.v2q(yml.load(f))
+
+    def backend_suffix(self, filename):
+        if self.is_default_backend:
+            return filename
+        else:
+            return filename + "_" + self.backend
+
+    def v1metadataq(self, q, headers = {}):
+        return self.execute_query(q, "/v1/metadata", headers)
+
+    def v1metadataq_f(self, fn):
+        with open(fn) as f:
+            # NOTE: preserve ordering with ruamel
+            yml = yaml.YAML()
+            return self.v1metadataq(yml.load(f))
+
     def teardown(self):
         self.http.close()
         self.engine.dispose()
+        # Close websockets:
+        self.ws_client.teardown()
+        self.ws_client_v1alpha1.teardown()
+        self.ws_client_relay.teardown()
+
+    def v1GraphqlExplain(self, q, hdrs=None):
+        headers = {}
+
+        if hdrs != None:
+            headers = hdrs
+        if self.hge_key != None:
+            headers['X-Hasura-Admin-Secret'] = self.hge_key
+
+        resp = self.http.post(self.hge_url + '/v1/graphql/explain', json=q, headers=headers)
+        return resp.status_code, resp.json()

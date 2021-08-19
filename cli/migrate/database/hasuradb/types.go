@@ -7,7 +7,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
-	"github.com/hasura/graphql-engine/cli/migrate/database"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
 
 	"github.com/qor/transition"
 )
@@ -29,6 +29,7 @@ func (h *HasuraInterfaceBulk) ResetArgs() {
 type HasuraInterfaceQuery struct {
 	Type    requestTypes    `json:"type" yaml:"type"`
 	Version metadataVersion `json:"version,omitempty" yaml:"version,omitempty"`
+	Source  string          `json:"source,omitempty" yaml:"source,omitempty"`
 	Args    interface{}     `json:"args" yaml:"args"`
 }
 
@@ -37,6 +38,7 @@ type metadataVersion int
 const (
 	v1 metadataVersion = 1
 	v2                 = 2
+	v3                 = 3
 )
 
 type newHasuraIntefaceQuery struct {
@@ -148,6 +150,8 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		}
 	case setTableCustomFields:
 		q.Args = &setTableCustomFieldsV2Input{}
+	case setTableCustomization:
+		q.Args = &setTableCustomizationInput{}
 	case setTableIsEnum:
 		q.Args = &setTableIsEnumInput{}
 	case untrackTable:
@@ -330,6 +334,7 @@ type PostgresError struct {
 type SchemaDump struct {
 	Opts        []string `json:"opts"`
 	CleanOutput bool     `json:"clean_output"`
+	Database    string   `json:"source,omitempty"`
 }
 
 func (h HasuraError) Error() string {
@@ -414,6 +419,7 @@ const (
 	trackTable                  requestTypes = "track_table"
 	addExistingTableOrView                   = "add_existing_table_or_view"
 	setTableCustomFields                     = "set_table_custom_fields"
+	setTableCustomization                    = "set_table_customization"
 	setTableIsEnum                           = "set_table_is_enum"
 	untrackTable                             = "untrack_table"
 	trackFunction                            = "track_function"
@@ -527,8 +533,9 @@ func (t *trackTableInput) UnmarshalJSON(b []byte) error {
 }
 
 type tableConfiguration struct {
-	CustomRootFields  map[string]string `json:"custom_root_fields" yaml:"custom_root_fields"`
-	CustomColumnNames map[string]string `json:"custom_column_names" yaml:"custom_column_names"`
+	CustomName        string            `json:"custom_name,omitempty" yaml:"custom_name,omitempty"`
+	CustomRootFields  map[string]string `json:"custom_root_fields,omitempty" yaml:"custom_root_fields,omitempty"`
+	CustomColumnNames map[string]string `json:"custom_column_names,omitempty" yaml:"custom_column_names,omitempty"`
 }
 
 type trackTableV2Input struct {
@@ -539,6 +546,11 @@ type trackTableV2Input struct {
 type setTableCustomFieldsV2Input struct {
 	Table tableSchema `json:"table" yaml:"table"`
 	tableConfiguration
+}
+
+type setTableCustomizationInput struct {
+	Table              tableSchema `json:"table" yaml:"table"`
+	tableConfiguration `json:"configuration,omitempty" yaml:"configuration,omitempty"`
 }
 
 type setTableIsEnumInput struct {
@@ -969,123 +981,9 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 	}
 }
 
-type InconsistentMetadata struct {
-	IsConsistent        bool                          `json:"is_consistent"`
-	InConsistentObjects []InconsistentMeatadataObject `json:"inconsistent_objects"`
-}
-
-type InconsistentMeatadataObject struct {
-	Type       string      `json:"type"`
-	Reason     string      `json:"reason"`
-	Definition interface{} `json:"definition"`
-}
-
-func (i *InconsistentMeatadataObject) UnmarshalJSON(b []byte) error {
-	type t InconsistentMeatadataObject
-	var q t
-	if err := json.Unmarshal(b, &q); err != nil {
-		return err
-	}
-	defBody, err := json.Marshal(q.Definition)
-	if err != nil {
-		return err
-	}
-	switch q.Type {
-	case "object_relation":
-		q.Definition = &createObjectRelationshipInput{}
-	case "array_relation":
-		q.Definition = &createArrayRelationshipInput{}
-	case "select_permission":
-		q.Definition = &createSelectPermissionInput{}
-	case "update_permission":
-		q.Definition = &createUpdatePermissionInput{}
-	case "insert_permission":
-		q.Definition = &createInsertPermissionInput{}
-	case "delete_permission":
-		q.Definition = &createDeletePermissionInput{}
-	case "table":
-		q.Definition = &trackTableInput{}
-	case "function":
-		q.Definition = &trackFunctionInput{}
-	case "event_trigger":
-		q.Definition = &createEventTriggerInput{}
-	case "remote_schema":
-		q.Definition = &addRemoteSchemaInput{}
-	}
-	if err := json.Unmarshal(defBody, &q.Definition); err != nil {
-		return err
-	}
-	*i = InconsistentMeatadataObject(q)
-	return nil
-}
-
-func (i InconsistentMeatadataObject) GetType() string {
-	return i.Type
-}
-
-func (i InconsistentMeatadataObject) GetName() string {
-	switch defType := i.Definition.(type) {
-	case *createObjectRelationshipInput:
-		return defType.Name
-	case *createArrayRelationshipInput:
-		return defType.Name
-	case *createSelectPermissionInput:
-		return fmt.Sprintf("%s-permission", defType.Role)
-	case *createUpdatePermissionInput:
-		return fmt.Sprintf("%s-permission", defType.Role)
-	case *createInsertPermissionInput:
-		return fmt.Sprintf("%s-permission", defType.Role)
-	case *createDeletePermissionInput:
-		return fmt.Sprintf("%s-permission", defType.Role)
-	case *trackTableInput:
-		return defType.Name
-	case *trackFunctionInput:
-		return defType.Name
-	case *createEventTriggerInput:
-		return defType.Name
-	case *addRemoteSchemaInput:
-		return defType.Name
-	}
-	return "N/A"
-}
-
-func (i InconsistentMeatadataObject) GetDescription() string {
-	switch defType := i.Definition.(type) {
-	case *createObjectRelationshipInput:
-		return fmt.Sprintf("relationship of table %s in %s schema", defType.Table.Name, defType.Table.Schema)
-	case *createArrayRelationshipInput:
-		return fmt.Sprintf("relationship of table %s in %s schema", defType.Table.Name, defType.Table.Schema)
-	case *createSelectPermissionInput:
-		return fmt.Sprintf("%s on table %s in %s schema", i.Type, defType.Table.Name, defType.Table.Schema)
-	case *createUpdatePermissionInput:
-		return fmt.Sprintf("%s on table %s in %s schema", i.Type, defType.Table.Name, defType.Table.Schema)
-	case *createInsertPermissionInput:
-		return fmt.Sprintf("%s on table %s in %s schema", i.Type, defType.Table.Name, defType.Table.Schema)
-	case *createDeletePermissionInput:
-		return fmt.Sprintf("%s on table %s in %s schema", i.Type, defType.Table.Name, defType.Table.Schema)
-	case *trackTableInput:
-		return fmt.Sprintf("table %s in %s schema", defType.tableSchema.Name, defType.tableSchema.Schema)
-	case *trackFunctionInput:
-		return fmt.Sprintf("function %s in %s schema", defType.Name, defType.Schema)
-	case *createEventTriggerInput:
-		return fmt.Sprintf("event trigger %s on table %s in %s schema", defType.Name, defType.Table.Name, defType.Table.Schema)
-	case *addRemoteSchemaInput:
-		url := defType.Definition["url"]
-		urlFromEnv, ok := defType.Definition["url_from_env"]
-		if ok {
-			url = fmt.Sprintf("the url from the value of env var %s", urlFromEnv)
-		}
-		return fmt.Sprintf("remote schema %s at %s", defType.Name, url)
-	}
-	return "N/A"
-}
-
-func (i InconsistentMeatadataObject) GetReason() string {
-	return i.Reason
-}
-
 type RunSQLInput struct {
 	SQL                      string `json:"sql" yaml:"sql"`
+	Source                   string `json:"source,omitempty" yaml:"source,omitempty"`
 	Cascade                  bool   `json:"cascade,omitempty" yaml:"cascade,omitempty"`
 	ReadOnly                 bool   `json:"read_only,omitempty" yaml:"read_only,omitempty"`
 	CheckMetadataConsistency *bool  `json:"check_metadata_consistency,omitempty" yaml:"check_metadata_consistency,omitempty"`

@@ -1,5 +1,5 @@
 description: Reload schema cache (metadata)
-url: /v1/query
+url: /v1/metadata
 status: 200
 query:
   type: reload_metadata

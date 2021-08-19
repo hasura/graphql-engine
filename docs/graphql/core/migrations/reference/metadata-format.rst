@@ -2,7 +2,7 @@
    :description: Hasura Metadata file format reference
    :keywords: hasura, docs, metadata, file format
 
-.. _metadata_format_v2:
+.. _metadata_format:
 
 Metadata format reference
 =========================
@@ -15,12 +15,12 @@ Metadata format reference
 Introduction
 ------------
 
-With ``config v2``, the metadata that is exported from the server is a directory
-of multiple files.
+With ``config v3``, the metadata that is exported from the server by the CLI is a
+directory of multiple files/directories.
 
 .. note::
 
-  For ``config v1``, see :ref:`metadata_file_format_v1`.
+  For ``config v2``, see :ref:`metadata_format_v2`.
 
 Metadata directory format
 -------------------------
@@ -31,6 +31,10 @@ The following files will be generated in the ``metadata/`` directory of your pro
   :backlinks: none
   :depth: 1
   :local:
+
+.. note::
+
+  The output of the :ref:`export_metadata <export_metadata>` API is a JSON version of the metadata files.
 
 actions.graphql
 ^^^^^^^^^^^^^^^
@@ -136,19 +140,6 @@ The ``webhook`` can be an HTTP endpoint or an environment variable containing th
   
   The metadata about a cron trigger will not be stored if ``Include this trigger in Hasura Metadata`` is disabled in the advanced option of ``events`` on the console or ``include_in_metadata`` is passed as ``false`` via the API.
 
-functions.yaml
-^^^^^^^^^^^^^^
-
-Contains the metadata related to :ref:`custom functions<custom_sql_functions>`.
-
-**Example**: A custom SQL function called ``search_books``.
-
-.. code-block::  yaml
-
-    - function:
-      schema: public
-      name: search_books
-
 query_collections.yaml
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -202,55 +193,71 @@ The ``remote_schemas.yaml`` file contains the metadata related to :ref:`remote s
         url_from_env: REMOTE_SCHEMA
         timeout_seconds: 40
 
-tables.yaml
-^^^^^^^^^^^
-
-The ``tables.yaml`` file contains metadata related to :ref:`tables<schema_tables>`.
-
-**Example**: Two tables called ``authors`` and ``books`` including relationships and an event trigger defined on the ``authors`` table.
-
-.. code-block::  yaml
-
-    - table:
-        schema: public
-        name: authors
-      array_relationships:
-      - name: books
-        using:
-          foreign_key_constraint_on:
-            column: author_id
-            table:
-              schema: public
-              name: books
-      event_triggers:
-      - name: event_test
-        definition:
-          enable_manual: false
-          insert:
-            columns: '*'
-          delete:
-            columns: '*'
-          update:
-            columns:
-            - id
-            - author_name
-        retry_conf:
-          num_retries: 1
-          interval_sec: 10
-          timeout_sec: 60
-        webhook: <webhook_url>
-    - table:
-        schema: public
-        name: books
-      object_relationships:
-      - name: author
-        using:
-          foreign_key_constraint_on: author_id
-
 version.yaml
 ^^^^^^^^^^^^
 The ``version.yaml`` file contains the metadata format version.
 
 .. code-block:: yaml
 
-    version: 2
+    version: 3
+
+databases
+^^^^^^^^^
+
+.. contents::
+  :backlinks: none
+  :depth: 1
+  :local:
+
+.. code-block:: bash
+
+  metadata
+  ├── actions.graphql
+  ├── actions.yaml
+  ├── allow_list.yaml
+  ├── cron_triggers.yaml
+  ├── databases
+  │   ├── databases.yaml
+  │   └── default
+  │       └── tables
+  │           ├── public_t1.yaml
+  ├── query_collections.yaml
+  ├── remote_schemas.yaml
+  └── version.yaml
+
+databases.yaml
+^^^^^^^^^^^^^^
+
+.. code-block:: yaml
+
+  - name: default
+    configuration:
+      connection_info:
+        database_url: <database_url>
+        pool_settings:
+          idle_timeout: 180
+          max_connections: 50
+          retries: 1
+    tables:
+    - "!include public_t1.yaml"
+    functions: []
+
+.. note::
+  ``database_url`` can be set from an environment variable
+  by specifying it as:
+  
+  .. code-block:: yaml
+
+    database_url:
+      from_env: SOME_ENVIRONMENT_VARIABLE
+
+
+public_t1.yaml
+^^^^^^^^^^^^^^
+
+.. code-block:: yaml
+
+  table:
+  name: t1
+  schema: public
+

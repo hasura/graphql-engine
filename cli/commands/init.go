@@ -7,20 +7,21 @@ import (
 	"path/filepath"
 	"strings"
 
-	crontriggers "github.com/hasura/graphql-engine/cli/metadata/cron_triggers"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
+	crontriggers "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/cron_triggers"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/functions"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/sources"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/tables"
 
-	"github.com/hasura/graphql-engine/cli/metadata/actions"
-	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
-	"github.com/hasura/graphql-engine/cli/metadata/allowlist"
-	"github.com/hasura/graphql-engine/cli/metadata/functions"
-	"github.com/hasura/graphql-engine/cli/metadata/querycollections"
-	"github.com/hasura/graphql-engine/cli/metadata/remoteschemas"
-	"github.com/hasura/graphql-engine/cli/metadata/tables"
-	metadataTypes "github.com/hasura/graphql-engine/cli/metadata/types"
-	metadataVersion "github.com/hasura/graphql-engine/cli/metadata/version"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions"
+	actionMetadataFileTypes "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/allowlist"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/querycollections"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/remoteschemas"
+	metadataVersion "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/version"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -38,8 +39,8 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	initCmd := &cobra.Command{
 		Use:   "init [directory-name]",
-		Short: "Initialize directory for Hasura GraphQL Engine migrations",
-		Long:  "Create directories and files required for enabling migrations on Hasura GraphQL Engine",
+		Short: "Initialize a directory for Hasura GraphQL engine migrations",
+		Long:  "Create directories and files required for enabling migrations on the Hasura GraphQL engine",
 		Example: `  # Create a directory to store migrations
   hasura init [directory-name]
 
@@ -51,7 +52,7 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Create a hasura project in the current working directory
   hasura init .
 
-  # See https://hasura.io/docs/1.0/graphql/manual/migrations/index.html for more details`,
+  # See https://hasura.io/docs/latest/graphql/core/migrations/index.html for more details`,
 		SilenceUsage: true,
 		Args:         cobra.MaximumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -59,6 +60,10 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 			err := ec.Prepare()
 			if err != nil {
 				return err
+			}
+			// show deprecation message if initializing a config v1 project
+			if opts.Version <= cli.V1 {
+				return fmt.Errorf("config v1 is deprecated, please consider using config v3")
 			}
 			return ec.PluginsConfig.Repo.EnsureCloned()
 		},
@@ -71,11 +76,11 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	f := initCmd.Flags()
-	f.Var(cli.NewConfigVersionValue(cli.V2, &opts.Version), "version", "config version to be used")
+	f.Var(cli.NewConfigVersionValue(cli.V3, &opts.Version), "version", "config version to be used")
 	f.StringVar(&opts.InitDir, "directory", "", "name of directory where files will be created")
-	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL Engine")
+	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
+	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL engine")
+	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL engine")
 	f.StringVar(&opts.Template, "install-manifest", "", "install manifest to be cloned")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 	f.MarkDeprecated("directory", "use directory-name argument instead")
@@ -173,7 +178,7 @@ func (o *InitOptions) createExecutionDirectory() error {
 
 	// create the execution directory
 	if _, err := os.Stat(o.EC.ExecutionDirectory); err == nil {
-		return errors.Errorf("directory '%s' already exist", o.EC.ExecutionDirectory)
+		return errors.Errorf("directory '%s' already exists", o.EC.ExecutionDirectory)
 	}
 	err := os.MkdirAll(o.EC.ExecutionDirectory, os.ModePerm)
 	if err != nil {
@@ -205,7 +210,7 @@ func (o *InitOptions) createFiles() error {
 				Endpoint: "http://localhost:8080",
 			},
 			MetadataDirectory: "metadata",
-			ActionConfig: &types.ActionExecutionConfig{
+			ActionConfig: &actionMetadataFileTypes.ActionExecutionConfig{
 				Kind:                  "synchronous",
 				HandlerWebhookBaseURL: "http://localhost:3000",
 			},
@@ -236,24 +241,30 @@ func (o *InitOptions) createFiles() error {
 		return errors.Wrap(err, "cannot write migration directory")
 	}
 
-	if config.Version == cli.V2 {
+	if config.Version >= cli.V2 {
 		// create metadata directory
 		o.EC.MetadataDir = filepath.Join(o.EC.ExecutionDirectory, cli.DefaultMetadataDirectory)
 		err = os.MkdirAll(o.EC.MetadataDir, os.ModePerm)
 		if err != nil {
 			return errors.Wrap(err, "cannot write metadata directory")
 		}
+		o.EC.Version.GetServerFeatureFlags()
 
 		// create metadata files
-		plugins := make(metadataTypes.MetadataPlugins, 0)
+		plugins := make(metadataobject.Objects, 0)
 		plugins = append(plugins, metadataVersion.New(o.EC, o.EC.MetadataDir))
-		plugins = append(plugins, tables.New(o.EC, o.EC.MetadataDir))
-		plugins = append(plugins, functions.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, querycollections.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, allowlist.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, remoteschemas.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, actions.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, crontriggers.New(o.EC, o.EC.MetadataDir))
+		if config.Version == cli.V3 {
+			plugins = append(plugins, sources.New(o.EC, o.EC.MetadataDir))
+		} else {
+			plugins = append(plugins, tables.New(o.EC, o.EC.MetadataDir))
+			plugins = append(plugins, functions.New(o.EC, o.EC.MetadataDir))
+		}
+
 		for _, plg := range plugins {
 			err := plg.CreateFiles()
 			if err != nil {
@@ -282,7 +293,7 @@ func (o *InitOptions) createTemplateFiles() error {
 	templatePath := filepath.Join(o.EC.InitTemplatesRepo.Path, o.Template)
 	info, err := os.Stat(templatePath)
 	if err != nil {
-		return errors.Wrap(err, "template doesn't exists")
+		return errors.Wrap(err, "template doesn't exist")
 	}
 	if !info.IsDir() {
 		return errors.Errorf("template should be a directory")

@@ -3,21 +3,25 @@ url: /v1/query
 status: 400
 response:
   internal:
-  - definition:
-      using:
-        foreign_key_constraint_on: published_on
-      name: author
-      comment:
-      table:
-        schema: public
-        name: article
-    reason: 'in table "article": in relationship "author": no foreign constraint exists
-      on the given column'
-    type: object_relation
+    - definition:
+        using:
+          foreign_key_constraint_on: published_on
+        name: author
+        source: default
+        comment:
+        table:
+          schema: public
+          name: article
+      reason:
+        'Inconsistent object: in table "article": in relationship "author": no
+        foreign constraint exists on the given column'
+      name: object_relation author in table article in source default
+      type: object_relation
   path: $.args
-  error: 'in table "article": in relationship "author": no foreign constraint exists
-    on the given column'
-  code: constraint-violation
+  error:
+    'Inconsistent object: in table "article": in relationship "author": no foreign
+    constraint exists on the given column'
+  code: invalid-configuration
 query:
   type: create_object_relationship
   args:

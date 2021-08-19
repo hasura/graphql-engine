@@ -2,7 +2,6 @@
 
 module Hasura.Server.Version
   ( Version(..)
-  , getVersionFromEnvironment
 
   , HasVersion
   , currentVersion
@@ -13,17 +12,14 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.SemVer                as V
-import qualified Data.Text                  as T
-import qualified Language.Haskell.TH.Syntax as TH
+import qualified Data.SemVer           as V
+import qualified Data.Text             as T
 
-import           Text.Regex.TDFA           ((=~~))
-import           Control.Lens               ((^.), (^?))
-import           Data.Aeson                 (FromJSON (..), ToJSON (..))
-import           Data.Text.Conversions      (FromText (..), ToText (..))
+import           Control.Lens          ((^.), (^?))
+import           Data.Aeson            (FromJSON (..), ToJSON (..))
+import           Data.Text.Conversions (FromText (..), ToText (..))
+import           Text.Regex.TDFA       ((=~~))
 
-import           Hasura.RQL.Instances       ()
-import           Hasura.Server.Utils        (getValFromEnvOrScript)
 
 data Version
   = VersionDev !Text
@@ -32,7 +28,7 @@ data Version
 
 instance ToText Version where
   toText = \case
-    VersionDev txt -> txt
+    VersionDev txt         -> txt
     VersionRelease version -> "v" <> V.toText version
 
 instance FromText Version where
@@ -45,11 +41,6 @@ instance ToJSON Version where
 
 instance FromJSON Version where
   parseJSON = fmap fromText . parseJSON
-
-getVersionFromEnvironment :: TH.Q (TH.TExp Version)
-getVersionFromEnvironment = do
-  let txt = getValFromEnvOrScript "VERSION" "../scripts/get-version.sh"
-  [|| fromText $ T.dropWhileEnd (== '\n') $ T.pack $$(txt) ||]
 
 -- | Lots of random things need access to the current version. It would be very convenient to define
 -- @version :: 'Version'@ in this module and export it, and indeed, that’s what we used to do! But
@@ -87,8 +78,8 @@ consoleAssetsVersion = case currentVersion of
       (mr:_) -> case getTextFromId mr of
         Nothing -> Nothing
         Just r  -> if
-          | T.null r   -> Nothing
-          | otherwise  -> T.pack <$> getChannelFromPreRelease (T.unpack r)
+          | T.null r  -> Nothing
+          | otherwise -> T.pack <$> getChannelFromPreRelease (T.unpack r)
 
     getChannelFromPreRelease :: String -> Maybe String
     getChannelFromPreRelease sv = sv =~~ ("^([a-z]+)"::String)

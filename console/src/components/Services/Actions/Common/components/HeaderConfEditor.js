@@ -6,7 +6,6 @@ import Headers from '../../../../Common/Headers/Headers';
 const editorLabel = 'Headers';
 const editorTooltip =
   'Headers Hasura will send to the webhook with the POST request';
-// Tooltip todo
 
 const HeaderConfEditor = ({
   className,
@@ -34,7 +33,7 @@ const HeaderConfEditor = ({
             type="checkbox"
             checked={forwardClientHeaders}
             onChange={toggleForwardClientHeaders}
-            className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+            className={`${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
             disabled={disabled}
           />
           Forward client headers to webhook

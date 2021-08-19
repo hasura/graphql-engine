@@ -70,7 +70,7 @@
 - ignore: {name: Use sequenceA}
 - ignore: {name: Use camelCase}
 - ignore: {name: Redundant return}
-- ignore: {name: Use <$>, within: Hasura.RQL.DDL.Metadata}
+- ignore: {name: Use <$>, within: [Hasura.RQL.DDL.Metadata, Hasura.Backends.MSSQL.Types.Instances]}
 - ignore: {name: Functor law, within: Hasura.Server.AuthSpec}
 
 # Define some custom infix operators
@@ -109,6 +109,17 @@
     - warn: {lhs: "case x of {Just b -> pure b; Nothing -> a}", rhs: "onNothing x a"}
     - warn: {lhs: "case x of {Nothing -> a; Just b -> return b}", rhs: "onNothing x a"}
     - warn: {lhs: "case x of {Just b -> return b; Nothing -> a}", rhs: "onNothing x a"}
+    - warn: {lhs: "Data.Text.pack (Prelude.show x)", rhs: "Hasura.Prelude.tshow x"}
+    # mapKeys:
+    - warn: {lhs: "Data.HashMap.Strict.Extended.fromList . map (first f) . Data.HashMap.Strict.Extended.toList", rhs: "mapKeys f"}
+    - warn: {lhs: "Data.HashMap.Strict.fromList . map (first f) . Data.HashMap.Strict.toList", rhs: "mapKeys f"}
+    - warn: {lhs: "Data.HashMap.Strict.Extended.fromList $ map (first f) $ Data.HashMap.Strict.Extended.toList x", rhs: "mapKeys f x"}
+    - warn: {lhs: "Data.HashMap.Strict.fromList $ map (first f) $ Data.HashMap.Strict.toList x", rhs: "mapKeys f x"}
+    # MaybeT
+    - warn: {lhs: "MaybeT (pure x)",         rhs: "hoistMaybe x"}
+    - warn: {lhs: "MaybeT (return x)",       rhs: "hoistMaybe x"}
+    - warn: {lhs: "MaybeT (pure Nothing)",   rhs: "Control.Applicative.empty"}
+    - warn: {lhs: "MaybeT (return Nothing)", rhs: "Control.Applicative.empty"}
 
 - group:
     name: data-text-extended
@@ -117,3 +128,4 @@
     - package base
     rules:
     - warn: {lhs: "Data.Text.intercalate \", \" x", rhs: "commaSeparated x", note: "From Data.Text.Extended"}
+    - warn: {lhs: "Data.Text.Extended.intercalate \", \" x", rhs: "commaSeparated x"}

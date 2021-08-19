@@ -1,8 +1,11 @@
 BUILDDIR   := bin
-ASSETS     := $(BUILDDIR)/cli-ext-hasura-macos.tar.gz $(BUILDDIR)/cli-ext-hasura-linux.tar.gz $(BUILDDIR)/cli-ext-hasura-win.zip
-CHECKSUMS  := $(patsubst %,%.sha256,$(ASSETS))
+BINARY_ASSETS := $(BUILDDIR)/cli-ext-hasura-node12-linux-x64 $(BUILDDIR)/cli-ext-hasura-node12-macos-x64 $(BUILDDIR)/cli-ext-hasura-node12-win-x64.exe $(BUILDDIR)/cli-ext-hasura-node12-linux-arm64 $(BUILDDIR)/cli-ext-hasura-node16-macos-arm64
+BINARY_ASSET_CHECKSUMS := $(patsubst %,%.sha256,$(BINARY_ASSETS))
 
 COMPRESS := gzip --best -k -c
+
+deps:
+	npm install
 
 ci-deps:
 	if [ ! -d "node_modules" ]; then npm ci; fi
@@ -30,10 +33,10 @@ upx-compress: $(BUILDDIR)
 %.sha256: %
 	shasum -a 256 $< > $@
 
-.PHONY: deploy
-deploy: $(CHECKSUMS)
-	./scripts/generate-manifest.sh && \
-	$(RM) $(BUILDDIR)/tmp.yaml
+.PHONY: build
+build:
+	npm run build
+	$(MAKE) $(BINARY_ASSET_CHECKSUMS)
 
 .PHONY: clean
 clean:

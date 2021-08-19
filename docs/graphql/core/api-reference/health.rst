@@ -21,6 +21,7 @@ Endpoint
 --------
 
 All requests are ``GET`` requests to the ``/healthz`` endpoint.
+There's also ``/hasura/healthz`` available as an alternative, which mirrors ``/healthz`` completely.
 
 API Spec
 --------
@@ -70,4 +71,4 @@ Sample response
 Disabling Health check API
 --------------------------
 
-The ``healthz`` API endpoint is public and cannot be disabled
+The ``healthz`` API endpoint is public and cannot be disabled.

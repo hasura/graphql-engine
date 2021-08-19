@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Button from '../../../Common/Button/Button';
-import { dropInconsistentObjects } from '../Actions';
 import { permissionTypes, getTableNameFromDef } from '../utils';
 import metaDataStyles from '../Settings.scss';
 import styles from '../../../Common/TableCommon/Table.scss';
@@ -8,6 +7,15 @@ import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ReloadMetadata from '../MetadataOptions/ReloadMetadata';
+import { dropInconsistentObjects } from '../../../../metadata/actions';
+import {
+  fetchDataInit,
+  SET_INCONSISTENT_INHERITED_ROLE,
+  updateCurrentSchema,
+  UPDATE_CURRENT_DATA_SOURCE,
+} from '../../Data/DataActions';
+import { setDriver } from '../../../../dataSources';
+import _push from '../../Data/push';
 
 const MetadataStatus = ({ dispatch, metadata }) => {
   const [shouldShowErrorBanner, toggleErrorBanner] = useState(true);
@@ -15,6 +23,50 @@ const MetadataStatus = ({ dispatch, metadata }) => {
   const dismissErrorBanner = () => {
     toggleErrorBanner(false);
   };
+
+  const resolveInconsistentInheritedRole = inconsistentInheritedRoleObj => {
+    const {
+      table,
+      source,
+      permission_type,
+    } = inconsistentInheritedRoleObj.entity;
+    const role = inconsistentInheritedRoleObj.name;
+    const schema = metadata.metadataObject.sources
+      .find(s => s.name === source)
+      .tables.find(t => t.table.name === table).table.schema;
+
+    const driver = metadata.metadataObject.sources.find(s => s.name === source)
+      .kind;
+
+    /* 
+      Load up the database details and schema details
+    */
+
+    dispatch({
+      type: UPDATE_CURRENT_DATA_SOURCE,
+      source: source,
+    });
+    setDriver(driver);
+
+    dispatch(fetchDataInit(source, driver)).finally(() => {
+      dispatch(updateCurrentSchema(schema, source)).then(() => {
+        dispatch({
+          type: SET_INCONSISTENT_INHERITED_ROLE,
+          inconsistent_inherited_role: {
+            role: role,
+            permission_type: permission_type,
+            table: table,
+            schema: schema,
+            source: source,
+          },
+        });
+        dispatch(
+          _push(`/data/${source}/schema/${schema}/tables/${table}/permissions`)
+        );
+      });
+    });
+  };
+
   const inconsistentObjectsTable = () => {
     return (
       <table
@@ -27,58 +79,91 @@ const MetadataStatus = ({ dispatch, metadata }) => {
             <th>Type</th>
             <th>Description</th>
             <th>Reason</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {metadata.inconsistentObjects.map((ico, _i) => {
+          {[
+            ...metadata.inconsistentObjects,
+            ...metadata.inconsistentInheritedRoles,
+          ].map((iconsistentObject, _i) => {
             let name;
             let definition;
+            if (iconsistentObject.type === 'source') {
+              name = iconsistentObject.definition;
+            }
             if (
-              ico.type === 'object_relation' ||
-              ico.type === 'array_relation'
+              iconsistentObject.type === 'object_relation' ||
+              iconsistentObject.type === 'array_relation'
             ) {
-              name = ico.definition.name;
+              name = iconsistentObject.definition.name;
               definition = `relationship of table "${getTableNameFromDef(
-                ico.definition.table
+                iconsistentObject.definition.table
               )}"`;
-            } else if (ico.type === 'remote_relationship') {
-              name = ico.definition.name;
+            } else if (iconsistentObject.type === 'remote_relationship') {
+              name = iconsistentObject.definition.name;
               definition = `relationship between table "${getTableNameFromDef(
-                ico.definition.table
-              )}" and remote schema "${ico.definition.remote_schema}"`;
-            } else if (permissionTypes.includes(ico.type)) {
-              name = `${ico.definition.role}-permission`;
-              definition = `${ico.type} on table "${getTableNameFromDef(
-                ico.definition.table
-              )}"`;
-            } else if (ico.type === 'table') {
-              name = getTableNameFromDef(ico.definition);
-              definition = name;
-            } else if (ico.type === 'function') {
-              name = getTableNameFromDef(ico.definition);
-              definition = name;
-            } else if (ico.type === 'event_trigger') {
-              name = ico.definition.configuration.name;
-              definition = `event trigger on table "${getTableNameFromDef(
-                ico.definition.table
-              )}"`;
-            } else if (ico.type === 'remote_schema') {
-              name = ico.definition.name;
-              let url = `"${
-                ico.definition.definition.url ||
-                ico.definition.definition.url_from_env
+                iconsistentObject.definition.table
+              )}" and remote schema "${
+                iconsistentObject.definition.remote_schema
               }"`;
-              if (ico.definition.definition.url_from_env) {
+            } else if (permissionTypes.includes(iconsistentObject.type)) {
+              name = `${iconsistentObject.definition.role}-permission`;
+              definition = `${
+                iconsistentObject.type
+              } on table "${getTableNameFromDef(
+                iconsistentObject.definition.table
+              )}"`;
+            } else if (iconsistentObject.type === 'table') {
+              name = getTableNameFromDef(iconsistentObject.definition);
+              definition = name;
+            } else if (iconsistentObject.type === 'function') {
+              name = getTableNameFromDef(iconsistentObject.definition);
+              definition = name;
+            } else if (iconsistentObject.type === 'event_trigger') {
+              name = iconsistentObject.definition.configuration.name;
+              definition = `event trigger on table "${getTableNameFromDef(
+                iconsistentObject.definition.table
+              )}"`;
+            } else if (iconsistentObject.type === 'remote_schema') {
+              name = iconsistentObject.definition.name;
+              let url = `"${
+                iconsistentObject.definition.definition.url ||
+                iconsistentObject.definition.definition.url_from_env
+              }"`;
+              if (iconsistentObject.definition.definition.url_from_env) {
                 url = `the url from the value of env var ${url}`;
               }
               definition = `remote schema named "${name}" at ${url}`;
             }
             return (
               <tr key={_i}>
-                <td>{name}</td>
-                <td>{ico.type}</td>
-                <td>{definition}</td>
-                <td>{ico.reason}</td>
+                <td data-test={`inconsistent_name_${_i}`}>{name}</td>
+                <td data-test={`inconsistent_type_${_i}`}>
+                  {`${iconsistentObject.type} `}
+                </td>
+                <td data-test={`inconsistent_description_${_i}`}>
+                  {definition}
+                </td>
+                <td data-test={`inconsistent_reason_${_i}`}>
+                  <div>
+                    <b>{iconsistentObject.reason}</b>
+                    <br />
+                    {iconsistentObject.message}
+                  </div>
+                </td>
+                <td data-test={`inconsistent_action_${_i}`}>
+                  {iconsistentObject.type ===
+                  'inherited role permission inconsistency' ? (
+                    <Button
+                      onClick={() =>
+                        resolveInconsistentInheritedRole(iconsistentObject)
+                      }
+                    >
+                      Resolve
+                    </Button>
+                  ) : null}
+                </td>
               </tr>
             );
           })}
@@ -102,7 +187,10 @@ const MetadataStatus = ({ dispatch, metadata }) => {
     const isInconsistentRemoteSchemaPresent = metadata.inconsistentObjects.some(
       i => i.type === 'remote_schema'
     );
-    if (metadata.inconsistentObjects.length === 0) {
+    if (
+      metadata.inconsistentObjects.length === 0 &&
+      metadata.inconsistentInheritedRoles.length === 0
+    ) {
       return (
         <div className={styles.add_mar_top}>
           <div className={metaDataStyles.content_width}>
@@ -178,14 +266,20 @@ const MetadataStatus = ({ dispatch, metadata }) => {
   };
 
   const banner = () => {
-    if (metadata.inconsistentObjects.length === 0) {
+    if (
+      metadata.inconsistentObjects.length === 0 &&
+      metadata.inconsistentInheritedRoles.length === 0
+    ) {
       return null;
     }
     if (!shouldShowErrorBanner) {
       return null;
     }
     const urlSearchParams = new URLSearchParams(window.location.search);
-    if (urlSearchParams.get('is_redirected') !== 'true') {
+    if (
+      urlSearchParams.get('is_redirected') !== 'true' &&
+      metadata.inconsistentObjects.length !== 0
+    ) {
       return null;
     }
     return (

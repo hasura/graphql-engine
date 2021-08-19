@@ -1,8 +1,7 @@
 {-# LANGUAGE DerivingStrategies #-}
 
 module Hasura.Server.Auth
-  ( getUserInfo
-  , getUserInfoWithExpTime
+  ( getUserInfoWithExpTime
   , AuthMode (..)
   , setupAuthMode
   , AdminSecretHash
@@ -26,25 +25,26 @@ module Hasura.Server.Auth
 
 import           Hasura.Prelude
 
-import qualified Control.Concurrent.Async.Lifted.Safe as LA
-import qualified Crypto.Hash                          as Crypto
-import qualified Data.Text.Encoding                   as T
-import qualified Network.HTTP.Client                  as H
-import qualified Network.HTTP.Types                   as N
+import qualified Crypto.Hash                 as Crypto
+import qualified Data.Text.Encoding          as T
+import qualified Network.HTTP.Client         as H
+import qualified Network.HTTP.Types          as N
 
-import           Control.Concurrent.Extended          (forkImmortal)
-import           Control.Monad.Trans.Control          (MonadBaseControl)
-import           Data.IORef                           (newIORef)
-import           Data.Time.Clock                      (UTCTime)
+import           Control.Concurrent.Extended (ForkableMonadIO, forkManagedT)
+import           Control.Monad.Morph         (hoist)
+import           Control.Monad.Trans.Control (MonadBaseControl)
+import           Control.Monad.Trans.Managed (ManagedT)
+import           Data.IORef                  (newIORef)
+import           Data.Time.Clock             (UTCTime)
 
-import qualified Hasura.Tracing                       as Tracing
+import qualified Hasura.Tracing              as Tracing
 
+import           Hasura.Base.Error
 import           Hasura.Logging
-import           Hasura.RQL.Types
-import           Hasura.Server.Auth.JWT               hiding (processJwt_)
+import           Hasura.Server.Auth.JWT      hiding (processJwt_)
 import           Hasura.Server.Auth.WebHook
 import           Hasura.Server.Utils
-import           Hasura.Server.Version                (HasVersion)
+import           Hasura.Server.Version       (HasVersion)
 import           Hasura.Session
 
 
@@ -57,6 +57,7 @@ class (Monad m) => UserAuthentication m where
     -> [N.Header]
     -- ^ request headers
     -> AuthMode
+    -> Maybe ReqsText
     -> m (Either QErr (UserInfo, Maybe UTCTime))
 
 -- | The hashed admin password. 'hashAdminSecret' is our public interface for
@@ -87,7 +88,7 @@ hashAdminSecret = AdminSecretHash . Crypto.hash . T.encodeUtf8
 -- @Maybe RoleName@ below is the optionally-defined role for the
 -- unauthenticated (anonymous) user.
 --
--- See: https://hasura.io/docs/1.0/graphql/manual/auth/authentication/unauthenticated-access.html
+-- See: https://hasura.io/docs/latest/graphql/core/auth/authentication/unauthenticated-access.html
 
 data AuthMode
   = AMNoAuth
@@ -102,9 +103,7 @@ data AuthMode
 -- This must only be run once, on launch.
 setupAuthMode
   :: ( HasVersion
-     , MonadIO m
-     , MonadBaseControl IO m
-     , LA.Forall (LA.Pure m)
+     , ForkableMonadIO m
      , Tracing.HasReporter m
      )
   => Maybe AdminSecretHash
@@ -113,7 +112,7 @@ setupAuthMode
   -> Maybe RoleName
   -> H.Manager
   -> Logger Hasura
-  -> ExceptT Text m AuthMode
+  -> ExceptT Text (ManagedT m) AuthMode
 setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logger =
   case (mAdminSecretHash, mWebHook, mJwtSecret) of
     (Just hash, Nothing,   Nothing)      -> return $ AMAdminSecret hash mUnAuthRole
@@ -148,50 +147,38 @@ setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logge
     -- mkJwtCtx :: HasVersion => JWTConfig -> m JWTCtx
     mkJwtCtx
       :: ( HasVersion
-         , MonadIO m
-         , MonadBaseControl IO m
-         , LA.Forall (LA.Pure m)
+         , ForkableMonadIO m
          , Tracing.HasReporter m
          )
       => JWTConfig
-      -> ExceptT Text m JWTCtx
+      -> ExceptT Text (ManagedT m) JWTCtx
     mkJwtCtx JWTConfig{..} = do
       jwkRef <- case jcKeyOrUrl of
         Left jwk  -> liftIO $ newIORef (JWKSet [jwk])
         Right url -> getJwkFromUrl url
-      return $ JWTCtx jwkRef jcAudience jcIssuer jcClaims
+      let jwtHeader = fromMaybe JHAuthorization jcHeader
+      return $ JWTCtx jwkRef jcAudience jcIssuer jcClaims jcAllowedSkew jwtHeader
       where
         -- if we can't find any expiry time for the JWK (either in @Expires@ header or @Cache-Control@
         -- header), do not start a background thread for refreshing the JWK
         getJwkFromUrl url = do
           ref <- liftIO $ newIORef $ JWKSet []
-          maybeExpiry <- withJwkError $ Tracing.runTraceT "jwk init" $ updateJwkRef logger httpManager url ref
+          maybeExpiry <- hoist lift $ withJwkError $ Tracing.runTraceT "jwk init" $ updateJwkRef logger httpManager url ref
           case maybeExpiry of
             Nothing   -> return ref
             Just time -> do
-              void . lift $ forkImmortal "jwkRefreshCtrl" logger $
+              void . lift $ forkManagedT "jwkRefreshCtrl" logger $
                 jwkRefreshCtrl logger httpManager url ref (convertDuration time)
               return ref
 
         withJwkError act = do
           res <- runExceptT act
-          case res of
-            Right r -> return r
-            Left err  -> case err of
-              -- when fetching JWK initially, except expiry parsing error, all errors are critical
-              JFEHttpException _ msg  -> throwError msg
-              JFEHttpError _ _ _ e    -> throwError e
-              JFEJwkParseError _ e    -> throwError e
-              JFEExpiryParseError _ _ -> return Nothing
-
-getUserInfo
-  :: (HasVersion, MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m)
-  => Logger Hasura
-  -> H.Manager
-  -> [N.Header]
-  -> AuthMode
-  -> m UserInfo
-getUserInfo l m r a = fst <$> getUserInfoWithExpTime l m r a
+          onLeft res $ \case
+            -- when fetching JWK initially, except expiry parsing error, all errors are critical
+            JFEHttpException _ msg  -> throwError msg
+            JFEHttpError _ _ _ e    -> throwError e
+            JFEJwkParseError _ e    -> throwError e
+            JFEExpiryParseError _ _ -> return Nothing
 
 -- | Authenticate the request using the headers and the configured 'AuthMode'.
 getUserInfoWithExpTime
@@ -200,13 +187,15 @@ getUserInfoWithExpTime
   -> H.Manager
   -> [N.Header]
   -> AuthMode
+  -> Maybe ReqsText
   -> m (UserInfo, Maybe UTCTime)
 getUserInfoWithExpTime = getUserInfoWithExpTime_ userInfoFromAuthHook processJwt
 
 -- Broken out for testing with mocks:
 getUserInfoWithExpTime_
   :: forall m _Manager _Logger_Hasura. (MonadIO m, MonadError QErr m)
-  => (_Logger_Hasura -> _Manager -> AuthHook -> [N.Header] -> m (UserInfo, Maybe UTCTime))
+  => (_Logger_Hasura -> _Manager -> AuthHook -> [N.Header]
+      -> Maybe ReqsText -> m (UserInfo, Maybe UTCTime))
   -- ^ mock 'userInfoFromAuthHook'
   -> (JWTCtx -> [N.Header] -> Maybe RoleName -> m (UserInfo, Maybe UTCTime))
   -- ^ mock 'processJwt'
@@ -214,8 +203,9 @@ getUserInfoWithExpTime_
   -> _Manager
   -> [N.Header]
   -> AuthMode
+  -> Maybe ReqsText
   -> m (UserInfo, Maybe UTCTime)
-getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHeaders = \case
+getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHeaders authMode  reqs = case authMode of
 
   AMNoAuth -> withNoExpTime $ mkUserInfoFallbackAdminRole UAuthNotSet
 
@@ -232,8 +222,9 @@ getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHead
         Just unAuthRole ->
           mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent sessionVariables
 
+  -- this is the case that actually ends up consuming the request AST
   AMAdminSecretAndHook realAdminSecretHash hook ->
-    checkingSecretIfSent realAdminSecretHash $ userInfoFromAuthHook_ logger manager hook rawHeaders
+    checkingSecretIfSent realAdminSecretHash $ userInfoFromAuthHook_ logger manager hook rawHeaders reqs
 
   AMAdminSecretAndJWT realAdminSecretHash jwtSecret unAuthRole ->
     checkingSecretIfSent realAdminSecretHash $ processJwt_ jwtSecret rawHeaders unAuthRole

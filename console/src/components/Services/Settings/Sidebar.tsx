@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import React from 'react';
 import { Link, RouteComponentProps } from 'react-router';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
@@ -11,6 +12,7 @@ import styles from '../../Common/TableCommon/Table.scss';
 
 interface Metadata {
   inconsistentObjects: Record<string, unknown>[];
+  inconsistentInheritedRoles: Record<string, unknown>[];
 }
 
 type SidebarProps = {
@@ -18,7 +20,13 @@ type SidebarProps = {
   metadata: Metadata;
 };
 
-type SectionDataKey = 'actions' | 'status' | 'allow-list' | 'logout' | 'about';
+type SectionDataKey =
+  | 'actions'
+  | 'status'
+  | 'allow-list'
+  | 'logout'
+  | 'about'
+  | 'inherited-roles';
 
 interface SectionData {
   key: SectionDataKey;
@@ -38,7 +46,12 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
   });
 
   const consistentIcon =
-    metadata.inconsistentObjects.length === 0 ? <CheckIcon /> : <CrossIcon />;
+    metadata.inconsistentObjects.length === 0 &&
+    metadata.inconsistentInheritedRoles.length === 0 ? (
+      <CheckIcon />
+    ) : (
+      <CrossIcon />
+    );
 
   sectionsData.push({
     key: 'status',
@@ -61,7 +74,11 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
 
   const adminSecret = getAdminSecret();
 
-  if (adminSecret && globals.consoleMode !== CLI_CONSOLE_MODE) {
+  if (
+    adminSecret &&
+    globals.consoleMode !== CLI_CONSOLE_MODE &&
+    globals.consoleType !== 'cloud'
+  ) {
     sectionsData.push({
       key: 'logout',
       link: '/settings/logout',
@@ -75,6 +92,13 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
     link: '/settings/about',
     dataTestVal: 'about-link',
     title: 'About',
+  });
+
+  sectionsData.push({
+    key: 'inherited-roles',
+    link: '/settings/inherited-roles',
+    dataTestVal: 'inherited-roles-link',
+    title: 'Inherited Roles',
   });
 
   const currentLocation = location.pathname;

@@ -34,7 +34,7 @@ CMD graphql-engine \
 
 ### Local
 
-This is covered in the documentation here: https://hasura.io/docs/1.0/graphql/manual/migrations/auto-apply-migrations.html
+This is covered in the documentation here: https://hasura.io/docs/latest/graphql/core/migrations/auto-apply-migrations.html
 The below [Configuration](#configuration) will also be applicable.
 
 ### Heroku

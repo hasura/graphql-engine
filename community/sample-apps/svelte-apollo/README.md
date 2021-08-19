@@ -6,9 +6,9 @@ A sample [Svelte 3](https://svelte.dev) app to demonstrate usage of GraphQL Quer
 
 ## Create new Hasura Cloud project
 
-- Create new Hasura Cloud project with the `Try a free database with Heroku` option.
-
-  Please check out our [docs](https://hasura.io/docs/cloud/1.0/manual/getting-started/index.html) for the detailed steps.
+- Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
+  
+  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
 
 - Get the app URL (something like `https://<my-project-name>.hasura.app`)
 - Create `author` table:

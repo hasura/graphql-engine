@@ -1,0 +1,4 @@
+- "!include pub_t3.yaml"
+- "!include pub_t4.yaml"
+- "!include public_t1.yaml"
+- "!include public_t2.yaml"

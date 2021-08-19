@@ -68,3 +68,49 @@
     }
   }
 }
+
+.RolesEditor {
+  padding: 15px;
+  background-color: white;
+  border: 1px solid #ccc;
+  max-width: inherit;
+}
+
+.filterContainer {
+  display: grid;
+  row-gap: 5px;
+}
+
+.roleOption {
+  padding: 2px;
+}
+
+.inheritedRoleNameContainer {
+  padding: 10px;
+}
+
+[type="checkbox"] {
+    vertical-align:top;
+}
+
+.header {
+  background: none;
+  display: flex;
+  align-items: center;
+}
+
+.headerBadge {
+  padding-left: 10px;
+}
+
+.editorHeader {
+  display: flex;
+}
+
+.roleNameContainer{
+  padding-left: 15px;
+}
+
+.metaDataMargin {
+  margin-left: 15px;
+}

@@ -1,13 +1,15 @@
 module Data.Parser.JSONPathSpec (spec) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types     (encodeJSONPath)
+
+import qualified Data.Text            as T
 
 import           Data.Parser.JSONPath
 import           Test.Hspec
 import           Test.QuickCheck
 
-import qualified Data.Text            as T
+import           Hasura.Base.Error    (encodeJSONPath)
+
 
 spec :: Spec
 spec = describe "encode and parse JSONPath" $ do

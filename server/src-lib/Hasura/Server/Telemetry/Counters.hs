@@ -1,5 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE RecordWildCards       #-}
+
 {-|
   Counters used in telemetry collection. Additional counters can be added here.and
   serviced in "Hasura.Server.Telemetry".
@@ -12,7 +12,7 @@ module Hasura.Server.Telemetry.Counters
     recordTimingMetric
   , RequestDimensions(..), RequestTimings(..)
   -- *** Dimensions
-  , CacheHit(..), QueryType(..), Locality(..), Transport(..)
+  , QueryType(..), Locality(..), Transport(..)
   -- ** Metric upload
   , dumpServiceTimingMetrics
   , ServiceTimingMetrics(..)
@@ -22,26 +22,26 @@ module Hasura.Server.Telemetry.Counters
   )
   where
 
+import           Hasura.Prelude
+
 import qualified Data.Aeson            as A
-import qualified Data.Aeson.Casing     as A
 import qualified Data.Aeson.TH         as A
-import           Data.Hashable
 import qualified Data.HashMap.Strict   as HM
+
 import           Data.IORef
 import           Data.Time.Clock.POSIX (POSIXTime, getPOSIXTime)
 import           GHC.IO.Unsafe         (unsafePerformIO)
-import           Hasura.Prelude
+
 
 -- | The properties that characterize this request. The dimensions over which
 -- we collect metrics for each serviced request.
 data RequestDimensions =
-  RequestDimensions {
-        telemCacheHit  :: !CacheHit
-      , telemQueryType :: !QueryType
+  RequestDimensions
+      { telemQueryType :: !QueryType
       , telemLocality  :: !Locality
       , telemTransport :: !Transport
       }
-      deriving (Show, Generic, Eq)
+      deriving (Show, Generic, Eq, Ord)
 
 instance Hashable RequestDimensions
 
@@ -68,7 +68,7 @@ data RequestTimingsCount  =
     -- ^ The number of requests that have contributed to the accumulated timings above.
     -- So e.g. @telemTimeTot / count@ would give the mean service time.
     }
-      deriving (Show, Generic, Eq)
+      deriving (Show, Generic, Eq, Ord)
 
 -- | Sum
 instance Semigroup RequestTimingsCount where
@@ -95,16 +95,9 @@ approxStartTime :: POSIXTime
 {-# NOINLINE approxStartTime #-}
 approxStartTime = unsafePerformIO getPOSIXTime
 
--- | Did this request hit the plan cache?
-data CacheHit = Hit | Miss
-  deriving (Enum, Show, Eq, Generic)
-instance Hashable CacheHit
-instance A.ToJSON CacheHit
-instance A.FromJSON CacheHit
-
 -- | Was this request a mutation (involved DB writes)?
 data QueryType = Mutation | Query
-  deriving (Enum, Show, Eq, Generic)
+  deriving (Enum, Show, Eq, Ord, Generic)
 instance Hashable QueryType
 instance A.ToJSON QueryType
 instance A.FromJSON QueryType
@@ -115,7 +108,7 @@ data Locality
   | Local -- ^ local DB data
   | Remote -- ^ remote schema
   | Heterogeneous -- ^ mixed
-  deriving (Enum, Show, Eq, Generic)
+  deriving (Enum, Show, Eq, Ord, Generic)
 instance Hashable Locality
 instance A.ToJSON Locality
 instance A.FromJSON Locality
@@ -129,7 +122,7 @@ instance Monoid Locality where
 
 -- | Was this a query over http or websockets?
 data Transport = HTTP | WebSocket
-  deriving (Enum, Show, Eq, Generic)
+  deriving (Enum, Show, Eq, Ord, Generic)
 instance Hashable Transport
 instance A.ToJSON Transport
 instance A.FromJSON Transport
@@ -166,18 +159,18 @@ data ServiceTimingMetrics
     -- ^ This is set to a new unique value when the counters reset (e.g. because of a restart)
   , serviceTimingMetrics :: [ServiceTimingMetric]
   }
-  deriving (Show, Generic, Eq)
+  deriving (Show, Generic, Eq, Ord)
 data ServiceTimingMetric
   = ServiceTimingMetric
   { dimensions :: RequestDimensions
   , bucket     :: RunningTimeBucket
   , metrics    :: RequestTimingsCount
   }
-  deriving (Show, Generic, Eq)
+  deriving (Show, Generic, Eq, Ord)
 
 
-$(A.deriveJSON (A.aesonDrop 5 A.snakeCase) ''RequestTimingsCount)
-$(A.deriveJSON (A.aesonDrop 5 A.snakeCase) ''RequestDimensions)
+$(A.deriveJSON hasuraJSON ''RequestTimingsCount)
+$(A.deriveJSON hasuraJSON ''RequestDimensions)
 
 instance A.ToJSON ServiceTimingMetric
 instance A.FromJSON ServiceTimingMetric

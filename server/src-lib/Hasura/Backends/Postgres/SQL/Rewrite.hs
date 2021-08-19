@@ -5,8 +5,7 @@ module Hasura.Backends.Postgres.SQL.Rewrite
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict            as Map
-import qualified Data.Text                      as T
+import qualified Data.HashMap.Strict                as Map
 
 import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
@@ -43,7 +42,7 @@ withNumPfx :: Identifier -> Int -> Identifier
 withNumPfx iden i =
   Identifier pfx <> iden
   where
-    pfx = T.pack $ "_" <> show i <> "_"
+    pfx = "_" <> tshow i <> "_"
 
 addAlias :: S.Alias -> Uniq S.Alias
 addAlias (S.Alias iden) = do

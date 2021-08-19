@@ -7,13 +7,13 @@ import {
   ETOperationColumn,
   VoidCallback,
 } from '../../types';
-import { TableColumn } from '../../../../Common/utils/pgUtils';
 import {
   parseEventTriggerOperations,
   getETOperationColumns,
 } from '../../utils';
 
 import Operations from '../Common/Operations';
+import { TableColumn } from '../../../../../dataSources/types';
 
 type OperationEditorProps = {
   currentTrigger: EventTrigger;
@@ -93,7 +93,7 @@ const OperationEditor = (props: OperationEditorProps) => {
                 >
                   <input
                     type="checkbox"
-                    className={`${styles.opsCheckboxDisabled} ${styles.cursorPointer}`}
+                    className={`${styles.opsCheckboxDisabled} ${styles.cursorPointer} legacy-input-fix`}
                     checked={col.enabled}
                     disabled={readOnly}
                     readOnly

@@ -44,7 +44,7 @@ Edit ``deployment.yaml`` and set the right database url:
   ...
     env:
     - name: HASURA_GRAPHQL_DATABASE_URL
-      value: postgres://username:password@hostname:port/dbname
+      value: postgres://<username>:<password>@hostname:<port>/<dbname>
   ...
 
 Examples of ``HASURA_GRAPHQL_DATABASE_URL``:
@@ -87,7 +87,7 @@ For example, using Docker-for-desktop on Mac:
   hasura       LoadBalancer   10.96.214.240   localhost     80:30303/TCP   4m
   kubernetes   ClusterIP      10.96.0.1       <none>        443/TCP        8m
 
-Head to: http://localhost and the console should load!
+Head to: ``http://localhost`` and the console should load!
 
 Step 5: Track existing tables and relationships
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -119,7 +119,7 @@ Update the ``deployment.yaml`` to set the ``HASURA_GRAPHQL_ADMIN_SECRET`` enviro
         args: ["serve", "--enable-console"]
         env:
         - name: HASURA_GRAPHQL_DATABASE_URL
-          value: postgres://username:password@hostname:port/dbname
+          value: postgres://<username>:<password>@hostname:<port>/<dbname>
         - name: HASURA_GRAPHQL_ADMIN_SECRET
           value: mysecretkey
         ports:
@@ -141,7 +141,7 @@ In case you're using the CLI to open the Hasura console, use the ``admin-secret`
 
 .. code-block:: bash
 
-   hasura console --admin-secret=myadminsecretkey
+   hasura console --admin-secret=<myadminsecretkey>
 
 .. _kubernetes_logs:
 

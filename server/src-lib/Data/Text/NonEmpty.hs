@@ -20,7 +20,7 @@ import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
 newtype NonEmptyText = NonEmptyText { unNonEmptyText :: Text }
   deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, ToTxt, Generic, NFData)
 
-instance Arbitrary NonEmptyText where
+instance QC.Arbitrary NonEmptyText where
   arbitrary = NonEmptyText . T.pack <$> QC.listOf1 (QC.elements alphaNumerics)
 
 mkNonEmptyText :: Text -> Maybe NonEmptyText
@@ -31,9 +31,7 @@ mkNonEmptyTextUnsafe :: Text -> NonEmptyText
 mkNonEmptyTextUnsafe = NonEmptyText
 
 parseNonEmptyText :: MonadFail m => Text -> m NonEmptyText
-parseNonEmptyText text = case mkNonEmptyText text of
-  Nothing     -> fail "empty string not allowed"
-  Just neText -> return neText
+parseNonEmptyText text = mkNonEmptyText text `onNothing` fail "empty string not allowed"
 
 nonEmptyText :: Text -> Q (TExp NonEmptyText)
 nonEmptyText = parseNonEmptyText >=> \text -> [|| text ||]

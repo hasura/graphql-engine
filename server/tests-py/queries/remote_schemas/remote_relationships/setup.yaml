@@ -14,6 +14,7 @@ args:
 # }
 
 #Profile table
+
 - type: run_sql
   args:
     sql: |
@@ -21,13 +22,39 @@ args:
           id serial primary key,
           name text
       );
-- type: run_sql
-  args:
-    sql: |
       insert into profiles (name) values
       ( 'alice' ),
       ( 'bob' ),
-      ( 'alice')
+      ( 'alice');
+      create table authors (
+         id serial primary key,
+         name text
+      );
+      create table employees (
+         id serial primary key,
+         name text
+      );
+      insert into employees (name) values ('alice'),(NULL),('bob');
+      create table students (
+        id serial primary key,
+        name text not null,
+        physics integer,
+        maths integer
+      );
+      insert into students (name, physics, maths) values ('alice', 45, 48), ('bob', 32, 40);
+      create function total_marks(student_row students)
+      returns integer as $$
+        select student_row.physics + student_row.maths
+      $$ language sql stable;
+      create function total_marks_offset(student_row students, "offset" integer)
+      returns integer as $$
+        select student_row.physics + student_row.maths - "offset"
+      $$ language sql stable;
+      create function total_marks_session(student_row students, hasura_session json)
+      returns integer as $$
+        select student_row.physics + student_row.maths - (hasura_session ->> 'x-hasura-offset')::integer
+      $$ language sql stable;
+
 - type: track_table
   args:
     schema: public
@@ -40,29 +67,42 @@ args:
       url: http://localhost:4000
       forward_client_headers: false
 
-- type: run_sql
-  args:
-    sql: |
-      create table authors (
-         id serial primary key,
-         name text
-      );
-
 - type: track_table
   args:
     schema: public
     name: authors
 
-- type: run_sql
-  args:
-    sql: |
-      create table employees (
-         id serial primary key,
-         name text
-      );
-      insert into employees (name) values ('alice'),(NULL),('bob');
-
 - type: track_table
   args:
     schema: public
     name: employees
+
+- type: track_table
+  args:
+    schema: public
+    name: students
+
+- type: add_computed_field
+  args:
+    table: students
+    name: total_marks
+    definition:
+      function: total_marks
+      table_argument: student_row
+
+- type: add_computed_field
+  args:
+    table: students
+    name: total_marks_offset
+    definition:
+      function: total_marks_offset
+      table_argument: student_row
+
+- type: add_computed_field
+  args:
+    table: students
+    name: total_marks_session
+    definition:
+      function: total_marks_session
+      table_argument: student_row
+      session_argument: hasura_session

@@ -31,4 +31,4 @@ query:
       - name: author
         columns:
         - id
-        - name 
+        - name

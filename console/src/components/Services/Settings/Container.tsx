@@ -6,6 +6,7 @@ import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 
 type Metadata = {
   inconsistentObjects: Record<string, unknown>[];
+  inconsistentInheritedRoles: Record<string, unknown>[];
   ongoingRequest: boolean;
   allowedQueries: Record<string, any>[];
 };

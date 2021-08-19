@@ -42,10 +42,12 @@ class Common extends React.Component {
       envName,
       timeoutConf,
       forwardClientHeaders,
+      comment,
+      isNew = false,
     } = this.props;
-    const { isModify, id } = this.props.editState;
+    const { isModify } = this.props.editState;
 
-    const isDisabled = id >= 0 && !isModify;
+    const isDisabled = !isNew && !isModify;
     const urlRequired = !manualUrl && !envName;
 
     const tooltips = {
@@ -74,6 +76,11 @@ class Common extends React.Component {
         <Tooltip id="tooltip-cascade">
           Configure timeout for your remote GraphQL server. Defaults to 60
           seconds.
+        </Tooltip>
+      ),
+      comment: (
+        <Tooltip id="tooltip-cascade">
+          A statement to help describe the remote schema in brief
         </Tooltip>
       ),
     };
@@ -129,14 +136,14 @@ class Common extends React.Component {
             value={name}
             data-key="name"
             onChange={this.handleInputChange.bind(this)}
-            disabled={isDisabled}
+            disabled={!isNew}
             required
             data-test="remote-schema-schema-name"
             pattern="^[a-zA-Z0-9-_]*$"
             title="Special characters except '-' or '_' are not allowed"
           />
         </label>
-        <hr />
+        <hr className="my-lg" />
         <div className={styles.subheading_text}>
           GraphQL server URL *
           <OverlayTrigger placement="right" overlay={tooltips.graphqlurl}>
@@ -185,7 +192,7 @@ class Common extends React.Component {
           <label>
             <input
               onChange={this.toggleForwardHeaders.bind(this)}
-              className={styles.display_inline + ' ' + styles.add_mar_right}
+              className={`${styles.display_inline} ${styles.add_mar_right} legacy-input-fix`}
               type="checkbox"
               value="forwardHeaders"
               data-test="forward-remote-schema-headers"
@@ -222,8 +229,29 @@ class Common extends React.Component {
           placeHolderText={this.getPlaceHolderText.bind(this)}
           keyInputPlaceholder="header name"
         />
-        <hr />
+        <hr className="my-lg" />
         {getTimeoutSection()}
+        <hr className="my-lg" />
+        <div className={styles.subheading_text}>
+          Comment
+          <OverlayTrigger placement="right" overlay={tooltips.comment}>
+            <i className="fa fa-question-circle" aria-hidden="true" />
+          </OverlayTrigger>
+        </div>
+        <label
+          className={`${styles.inputLabel} radio-inline ${styles.padd_left_remove}`}
+        >
+          <input
+            className="form-control"
+            type="text"
+            placeholder="Comment"
+            value={comment}
+            data-key="comment"
+            onChange={this.handleInputChange.bind(this)}
+            disabled={isDisabled}
+            data-test="remote-schema-comment"
+          />
+        </label>
       </div>
     );
   }

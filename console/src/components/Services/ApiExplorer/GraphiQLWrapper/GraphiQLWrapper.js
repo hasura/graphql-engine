@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { push } from 'react-router-redux';
 import GraphiQL from 'graphiql';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -38,6 +37,8 @@ import snippets from './snippets';
 import 'graphiql/graphiql.css';
 import './GraphiQL.css';
 import 'graphiql-code-exporter/CodeExporter.css';
+import _push from '../../Data/push';
+import { isQueryValid } from '../Rest/utils';
 
 class GraphiQLWrapper extends Component {
   constructor(props) {
@@ -163,7 +164,21 @@ class GraphiQLWrapper extends Component {
       );
       dispatch(setTypeDefinition(typesSdl, null, null, sdlParse(typesSdl)));
       dispatch(setDerivedActionParentOperation(query.trim()));
-      dispatch(push(getActionsCreateRoute()));
+      dispatch(_push(getActionsCreateRoute()));
+    };
+
+    const routeToREST = gqlProps => () => {
+      const { query, schema } = graphiqlContext.state;
+      if (!query || !schema || !gqlProps.query || !isQueryValid(query)) {
+        dispatch(
+          showErrorNotification(
+            'Unable to create a REST endpoint',
+            'Please enter a valid named GraphQL query or mutation'
+          )
+        );
+        return;
+      }
+      dispatch(_push('/api/rest/create'));
     };
 
     const renderGraphiql = graphiqlProps => {
@@ -206,6 +221,11 @@ class GraphiQLWrapper extends Component {
             title: 'GraphQL Voyager',
             onClick: () => window.open(voyagerUrl, '_blank'),
             icon: <i className="fa fa-external-link" aria-hidden="true" />,
+          },
+          {
+            label: 'REST',
+            title: 'REST Endpoints',
+            onClick: routeToREST(graphiqlProps),
           },
         ];
         if (mode === 'graphql') {

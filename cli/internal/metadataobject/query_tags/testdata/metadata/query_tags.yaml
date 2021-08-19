@@ -1,0 +1,5 @@
+default_format: Standard
+per_source_configuration:
+  source_name: postgres
+  format: SQLCommenter
+  disabled: false

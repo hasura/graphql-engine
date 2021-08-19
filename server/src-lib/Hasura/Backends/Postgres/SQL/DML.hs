@@ -5,9 +5,9 @@ import           Hasura.Prelude
 import qualified Data.Aeson                         as J
 import qualified Data.Aeson.Casing                  as J
 import qualified Data.HashMap.Strict                as HM
-import qualified Data.Text                          as T
 import qualified Text.Builder                       as TB
 
+import           Data.Int                           (Int64)
 import           Data.String                        (fromString)
 import           Data.Text.Extended
 
@@ -211,9 +211,10 @@ mkQual :: QualifiedTable -> Qual
 mkQual = QualTable
 
 instance ToSQL Qual where
-  toSQL (QualifiedIdentifier i tyM) = toSQL i <> toSQL tyM
-  toSQL (QualTable qt)              = toSQL qt
-  toSQL (QualVar v)                 = TB.text v
+  toSQL (QualifiedIdentifier i Nothing)   = toSQL i
+  toSQL (QualifiedIdentifier i (Just ty)) = parenB (toSQL i <> toSQL ty)
+  toSQL (QualTable qt)                    = toSQL qt
+  toSQL (QualVar v)                       = TB.text v
 
 mkQIdentifier :: (IsIdentifier a, IsIdentifier b) => a -> b -> QIdentifier
 mkQIdentifier q t = QIdentifier (QualifiedIdentifier (toIdentifier q) Nothing) (toIdentifier t)
@@ -261,29 +262,29 @@ newtype TypeAnn
 instance ToSQL TypeAnn where
   toSQL (TypeAnn ty) = "::" <> TB.text ty
 
-mkTypeAnn :: PGType PGScalarType -> TypeAnn
+mkTypeAnn :: CollectableType PGScalarType -> TypeAnn
 mkTypeAnn = TypeAnn . toSQLTxt
 
 intTypeAnn :: TypeAnn
-intTypeAnn = mkTypeAnn $ PGTypeScalar PGInteger
+intTypeAnn = mkTypeAnn $ CollectableTypeScalar PGInteger
 
 numericTypeAnn :: TypeAnn
-numericTypeAnn = mkTypeAnn $ PGTypeScalar PGNumeric
+numericTypeAnn = mkTypeAnn $ CollectableTypeScalar PGNumeric
 
 textTypeAnn :: TypeAnn
-textTypeAnn = mkTypeAnn $ PGTypeScalar PGText
+textTypeAnn = mkTypeAnn $ CollectableTypeScalar PGText
 
 textArrTypeAnn :: TypeAnn
-textArrTypeAnn = mkTypeAnn $ PGTypeArray PGText
+textArrTypeAnn = mkTypeAnn $ CollectableTypeArray PGText
 
 jsonTypeAnn :: TypeAnn
-jsonTypeAnn = mkTypeAnn $ PGTypeScalar PGJSON
+jsonTypeAnn = mkTypeAnn $ CollectableTypeScalar PGJSON
 
 jsonbTypeAnn :: TypeAnn
-jsonbTypeAnn = mkTypeAnn $ PGTypeScalar PGJSONB
+jsonbTypeAnn = mkTypeAnn $ CollectableTypeScalar PGJSONB
 
 boolTypeAnn :: TypeAnn
-boolTypeAnn = mkTypeAnn $ PGTypeScalar PGBoolean
+boolTypeAnn = mkTypeAnn $ CollectableTypeScalar PGBoolean
 
 data CountType
   = CTStar
@@ -322,6 +323,7 @@ data SQLExp
   | SERowIdentifier !Identifier
   | SEQIdentifier !QIdentifier
   | SEFnApp !Text ![SQLExp] !(Maybe OrderByExp)
+  -- ^ this is used to apply a sql function to an expression. The 'Text' is the function name
   | SEOpApp !SQLOp ![SQLExp]
   | SETyAnn !SQLExp !TypeAnn
   | SECond !BoolExp !SQLExp !SQLExp
@@ -339,11 +341,12 @@ instance Cacheable SQLExp
 instance Hashable SQLExp
 
 withTyAnn :: PGScalarType -> SQLExp -> SQLExp
-withTyAnn colTy v = SETyAnn v . mkTypeAnn $ PGTypeScalar colTy
+withTyAnn colTy v = SETyAnn v . mkTypeAnn $ CollectableTypeScalar colTy
 
 instance J.ToJSON SQLExp where
   toJSON = J.toJSON . toSQLTxt
 
+-- Use the 'Extractor' data-type to Postgres alias tables/columns
 newtype Alias
   = Alias { getAlias :: Identifier }
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
@@ -374,7 +377,7 @@ instance ToSQL SQLExp where
   toSQL (SEStar Nothing) =
     TB.char '*'
   toSQL (SEStar (Just qual)) =
-    mconcat [parenB (toSQL qual), TB.char '.', TB.char '*']
+    mconcat [toSQL qual, TB.char '.', TB.char '*']
   toSQL (SEIdentifier iden) =
     toSQL iden
   toSQL (SERowIdentifier iden) =
@@ -408,9 +411,12 @@ instance ToSQL SQLExp where
   toSQL (SEFunction funcExp) = toSQL funcExp
 
 intToSQLExp :: Int -> SQLExp
-intToSQLExp =
-  SEUnsafe . T.pack . show
+intToSQLExp = SEUnsafe . tshow
 
+int64ToSQLExp :: Int64 -> SQLExp
+int64ToSQLExp = SEUnsafe . tshow
+
+-- | Extractor can be used to apply Postgres alias to a column
 data Extractor = Extractor !SQLExp !(Maybe Alias)
   deriving (Show, Eq, Generic, Data)
 instance NFData Extractor
@@ -424,9 +430,8 @@ mkSQLOpExp
   -> SQLExp -- result
 mkSQLOpExp op lhs rhs = SEOpApp op [lhs, rhs]
 
-mkColDefValMap :: [PGCol] -> HM.HashMap PGCol SQLExp
-mkColDefValMap cols =
-  HM.fromList $ zip cols (repeat $ SEUnsafe "DEFAULT")
+columnDefaultValue :: SQLExp
+columnDefaultValue = SEUnsafe "DEFAULT"
 
 handleIfNull :: SQLExp -> SQLExp -> SQLExp
 handleIfNull l e = SEFnApp "coalesce" [e, l] Nothing
@@ -743,6 +748,7 @@ data CompareOp
   | SHasKey
   | SHasKeysAny
   | SHasKeysAll
+  | SMatchesFulltext
   deriving (Eq, Generic, Data)
 instance NFData CompareOp
 instance Cacheable CompareOp
@@ -750,29 +756,30 @@ instance Hashable CompareOp
 
 instance Show CompareOp where
   show = \case
-    SEQ          -> "="
-    SGT          -> ">"
-    SLT          -> "<"
-    SIN          -> "IN"
-    SNE          -> "<>"
-    SGTE         -> ">="
-    SLTE         -> "<="
-    SNIN         -> "NOT IN"
-    SLIKE        -> "LIKE"
-    SNLIKE       -> "NOT LIKE"
-    SILIKE       -> "ILIKE"
-    SNILIKE      -> "NOT ILIKE"
-    SSIMILAR     -> "SIMILAR TO"
-    SNSIMILAR    -> "NOT SIMILAR TO"
-    SREGEX    -> "~"
-    SIREGEX    -> "~*"
-    SNREGEX    -> "!~"
-    SNIREGEX    -> "!~*"
-    SContains    -> "@>"
-    SContainedIn -> "<@"
-    SHasKey      -> "?"
-    SHasKeysAny  -> "?|"
-    SHasKeysAll  -> "?&"
+    SEQ              -> "="
+    SGT              -> ">"
+    SLT              -> "<"
+    SIN              -> "IN"
+    SNE              -> "<>"
+    SGTE             -> ">="
+    SLTE             -> "<="
+    SNIN             -> "NOT IN"
+    SLIKE            -> "LIKE"
+    SNLIKE           -> "NOT LIKE"
+    SILIKE           -> "ILIKE"
+    SNILIKE          -> "NOT ILIKE"
+    SSIMILAR         -> "SIMILAR TO"
+    SNSIMILAR        -> "NOT SIMILAR TO"
+    SREGEX           -> "~"
+    SIREGEX          -> "~*"
+    SNREGEX          -> "!~"
+    SNIREGEX         -> "!~*"
+    SContains        -> "@>"
+    SContainedIn     -> "<@"
+    SHasKey          -> "?"
+    SHasKeysAny      -> "?|"
+    SHasKeysAll      -> "?&"
+    SMatchesFulltext -> "@"
 
 instance ToSQL CompareOp where
   toSQL = fromString . show
@@ -953,3 +960,13 @@ instance (ToSQL v) => ToSQL (SelectWithG v) where
       f (Alias al, q) = toSQL al <~> "AS" <~> parenB (toSQL q)
 
 type SelectWith = SelectWithG CTE
+
+
+-- local helpers
+
+infixr 6 <+>
+(<+>) :: (ToSQL a) => Text -> [a] -> TB.Builder
+(<+>) _ [] = mempty
+(<+>) kat (x:xs) =
+  toSQL x <> mconcat [ TB.text kat <> toSQL x' | x' <- xs ]
+{-# INLINE (<+>) #-}

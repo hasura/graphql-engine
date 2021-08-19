@@ -1,14 +1,18 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
+
 module Hasura.RQL.DML.Update
   ( runUpdate
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                             as Env
 import qualified Data.HashMap.Strict                          as M
 import qualified Data.Sequence                                as DS
+import qualified Data.Tagged                                  as Tagged
 import qualified Database.PG.Query                            as Q
 
+import           Control.Monad.Trans.Control                  (MonadBaseControl)
 import           Data.Aeson.Types
 import           Data.Text.Extended
 
@@ -19,66 +23,72 @@ import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.Execute.Mutation
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.Returning
+import           Hasura.Backends.Postgres.Types.Table
+import           Hasura.Base.Error
 import           Hasura.EncJSON
+import           Hasura.QueryTags
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.Update
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                        (HasVersion)
+import           Hasura.RQL.Types.Run
+import           Hasura.SQL.Types
 import           Hasura.Session
+
+import           Hasura.GraphQL.Execute.Backend
 
 
 convInc
   :: (QErrM m)
-  => (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  => ValueParser ('Postgres 'Vanilla) m S.SQLExp
   -> PGCol
-  -> ColumnType 'Postgres
+  -> ColumnType ('Postgres 'Vanilla)
   -> Value
   -> m (PGCol, S.SQLExp)
 convInc f col colType val = do
-  prepExp <- f colType val
+  prepExp <- f (CollectableTypeScalar colType) val
   return (col, S.SEOpApp S.incOp [S.mkSIdenExp col, prepExp])
 
 convMul
   :: (QErrM m)
-  => (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  => ValueParser ('Postgres 'Vanilla) m S.SQLExp
   -> PGCol
-  -> ColumnType 'Postgres
+  -> ColumnType ('Postgres 'Vanilla)
   -> Value
   -> m (PGCol, S.SQLExp)
 convMul f col colType val = do
-  prepExp <- f colType val
+  prepExp <- f (CollectableTypeScalar colType) val
   return (col, S.SEOpApp S.mulOp [S.mkSIdenExp col, prepExp])
 
 convSet
   :: (QErrM m)
-  => (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  => ValueParser ('Postgres 'Vanilla) m S.SQLExp
   -> PGCol
-  -> ColumnType 'Postgres
+  -> ColumnType ('Postgres 'Vanilla)
   -> Value
   -> m (PGCol, S.SQLExp)
 convSet f col colType val = do
-  prepExp <- f colType val
+  prepExp <- f (CollectableTypeScalar colType) val
   return (col, prepExp)
 
-convDefault :: (Monad m) => PGCol -> ColumnType 'Postgres -> () -> m (PGCol, S.SQLExp)
+convDefault :: (Monad m) => PGCol -> ColumnType ('Postgres 'Vanilla) -> () -> m (PGCol, S.SQLExp)
 convDefault col _ _ = return (col, S.SEUnsafe "DEFAULT")
 
 convOp
   :: (UserInfoM m, QErrM m)
-  => FieldInfoMap (FieldInfo 'Postgres)
+  => FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
   -> [PGCol]
-  -> UpdPermInfo 'Postgres
+  -> UpdPermInfo ('Postgres 'Vanilla)
   -> [(PGCol, a)]
-  -> (PGCol -> ColumnType 'Postgres -> a -> m (PGCol, S.SQLExp))
+  -> (PGCol -> ColumnType ('Postgres 'Vanilla) -> a -> m (PGCol, S.SQLExp))
   -> m [(PGCol, S.SQLExp)]
 convOp fieldInfoMap preSetCols updPerm objs conv =
   forM objs $ \(pgCol, a) -> do
     -- if column has predefined value then throw error
     when (pgCol `elem` preSetCols) $ throwNotUpdErr pgCol
-    checkPermOnCol PTUpdate allowedCols pgCol
-    colType <- askPGType fieldInfoMap pgCol relWhenPgErr
+    checkPermOnCol @('Postgres 'Vanilla) PTUpdate allowedCols pgCol
+    colType <- askColumnType fieldInfoMap pgCol relWhenPgErr
     res <- conv pgCol colType a
     -- build a set expression's entry
     withPathK (getPGColTxt pgCol) $ return res
@@ -91,14 +101,14 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
         <> " for role " <> roleName <<> "; its value is predefined in permission"
 
 validateUpdateQueryWith
-  :: (UserInfoM m, QErrM m, CacheRM m)
-  => SessVarBldr 'Postgres m
-  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  :: (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m)
+  => SessionVariableBuilder ('Postgres 'Vanilla) m
+  -> ValueParser ('Postgres 'Vanilla) m S.SQLExp
   -> UpdateQuery
-  -> m (AnnUpd 'Postgres)
+  -> m (AnnUpd ('Postgres 'Vanilla))
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   let tableName = uqTable uq
-  tableInfo <- withPathK "table" $ askTabInfo tableName
+  tableInfo <- withPathK "table" $ askTabInfoSource tableName
   let coreInfo = _tiCoreInfo tableInfo
 
   -- If it is view then check if it is updatable
@@ -151,7 +161,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
-    convBoolExp fieldInfoMap selPerm (uqWhere uq) sessVarBldr prepValBldr
+    convBoolExp fieldInfoMap selPerm (uqWhere uq) sessVarBldr tableName prepValBldr
 
   resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      upiFilter updPerm
@@ -175,16 +185,26 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 
 validateUpdateQuery
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => UpdateQuery -> m (AnnUpd 'Postgres, DS.Seq Q.PrepArg)
-validateUpdateQuery =
-  runDMLP1T . validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder
+  => UpdateQuery -> m (AnnUpd ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
+validateUpdateQuery query = do
+  let source = uqSource query
+  tableCache :: TableCache ('Postgres 'Vanilla) <- askTableCache source
+  flip runTableCacheRT (source, tableCache) $ runDMLP1T $
+    validateUpdateQueryWith sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query
 
 runUpdate
-  :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
-     , MonadTx m, HasSQLGenCtx m, MonadIO m
-     , Tracing.MonadTrace m
-     )
-  => Env.Environment -> UpdateQuery -> m EncJSON
-runUpdate env q = do
-  strfyNum <- stringifyNum <$> askSQLGenCtx
-  validateUpdateQuery q >>= execUpdateQuery env strfyNum Nothing
+  :: forall m
+    . ( QErrM m, UserInfoM m, CacheRM m
+      , HasServerConfigCtx m, MonadBaseControl IO m
+      , MonadIO m, Tracing.MonadTrace m, MetadataM m
+      , MonadQueryTags m
+      )
+  => UpdateQuery -> m EncJSON
+runUpdate q = do
+  sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (uqSource q)
+  userInfo <- askUserInfo
+  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
+  let queryTags = QueryTagsComment $ Tagged.untag $ createQueryTags @m Nothing (encodeOptionalQueryTags Nothing)
+  validateUpdateQuery q
+    >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
+        . flip runReaderT queryTags . execUpdateQuery strfyNum userInfo

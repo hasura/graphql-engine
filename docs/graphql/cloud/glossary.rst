@@ -16,16 +16,14 @@ Hasura Cloud Project
 --------------------
 
 A Project is an individual GraphQL API hosted by Hasura Cloud. You
-can create a Project by going to the cloud dashboard and providing
-a PostgreSQL database URL. You can also provision a database on
-cloud platforms like Heroku from the Hasura Cloud Dashboard itself.
+can create a Project by going to the cloud dashboard and then connecting a database
+from the Hasura console. You can also provision a database on cloud platforms like
+Heroku from the Hasura console itself.
 
 Each project is allocated a unique auto-generated name and an ID.
 You can use this name or ID while communicating to Hasura team
 regarding this project. Each project is also assigned a GraphQL API
 endpoint of the format ``https://<project-name>.hasura.app/v1/graphql``.
-
-Editing the Project name and adding custom domains will be available soon.
 
 For example, a project might be called ``usable-cobra-29`` with ID
 ``bf0ea856-76a2-42c2-8a91-66ca9b9206e8``.
@@ -44,13 +42,15 @@ Hasura Collaborator Token
 -------------------------
 
 When you open the Hasura Console on a Cloud Project, you will not be asked to
-enter the admin secret like Hasura Core version. Instead, you will be
+enter the admin secret like Hasura Core version. Instead, if you are an admin,
+the console will be accessible with the admin secret already set, or if you are a
+collaborator with limited access you will be
 automatically logged into the Console via an OAuth2.0 based authorization flow.
 You will be given the right access based on your permissions for the particular
 Hasura Cloud Project.
 
 After the login process is complete, you'll see a new header called
-``Hasura-Collaborator-Token`` in the "Request Headers" section of GraphiQL. 
+``Hasura-Collaborator-Token`` in the "Request Headers" section of GraphiQL.
 This token is used instead of admin secret to authenticate and authorize
 all the requests made from the Console. The token is only valid for 5mins
 and is refreshed silently by the Console. It is to be used only from Console.

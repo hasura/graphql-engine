@@ -3,13 +3,14 @@ package commands
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"text/tabwriter"
 
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/v2/util"
+
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/migrate"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -27,28 +28,36 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Check status on a different server:
   hasura migrate status --endpoint "<endpoint>"`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return validateConfigV3Flags(cmd, ec)
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.EC.Spin("Fetching migration status...")
+			opts.Source = ec.Source
 			status, err := opts.Run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
 				return err
 			}
 			buf := printStatus(status)
-			fmt.Fprintf(os.Stdout, "%s", buf)
+			fmt.Fprintf(ec.Stdout, "%s", buf)
 			return nil
 		},
 	}
-
 	return migrateStatusCmd
 }
 
 type MigrateStatusOptions struct {
-	EC *cli.ExecutionContext
+	EC     *cli.ExecutionContext
+	Source cli.Source
 }
 
 func (o *MigrateStatusOptions) Run() (*migrate.Status, error) {
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
+	if o.EC.Config.Version <= cli.V2 {
+		o.Source.Name = ""
+		o.Source.Kind = hasura.SourceKindPG
+	}
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Source.Name, o.Source.Kind)
 	if err != nil {
 		return nil, err
 	}

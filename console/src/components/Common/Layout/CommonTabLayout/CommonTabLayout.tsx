@@ -31,7 +31,7 @@ const CommonTabLayout: React.FC<Props> = props => {
 
   return (
     <div className={styles.subHeader}>
-      <BreadCrumb breadCrumbs={breadCrumbs} />
+      {breadCrumbs.length ? <BreadCrumb breadCrumbs={breadCrumbs} /> : null}
       <h2 className={`${styles.heading_text} ${styles.set_line_height}`}>
         {heading || ''}
       </h2>

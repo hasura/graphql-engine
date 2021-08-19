@@ -9,15 +9,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/commands"
-
 	"github.com/briandowns/spinner"
-	"github.com/hasura/graphql-engine/cli"
-	integrationtest "github.com/hasura/graphql-engine/cli/integration_test"
+	"github.com/hasura/graphql-engine/cli/v2"
+	integrationtest "github.com/hasura/graphql-engine/cli/v2/integration_test"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	"github.com/spf13/viper"
 
-	v1 "github.com/hasura/graphql-engine/cli/integration_test/v1"
-	v2 "github.com/hasura/graphql-engine/cli/integration_test/v2"
+	v2 "github.com/hasura/graphql-engine/cli/v2/integration_test/v2"
+	v3 "github.com/hasura/graphql-engine/cli/v2/integration_test/v3"
 	"github.com/sirupsen/logrus/hooks/test"
 )
 
@@ -26,53 +25,6 @@ func init() {
 }
 
 func TestCommands(t *testing.T) {
-	// Run tests only for config version v1
-	t.Run("config=v1", func(t *testing.T) {
-		// Initialize ec
-		ec := cli.NewExecutionContext()
-		ec.Config = &cli.Config{}
-		logger, _ := test.NewNullLogger()
-		ec.Logger = logger
-		ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
-		ec.Spinner.Writer = ioutil.Discard
-		ec.Viper = viper.New()
-
-		initDir := filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000)))
-		defer os.RemoveAll(initDir)
-
-		// This will prepare the execution context, so no need to run ec.Prepare() on all the other tests
-		t.Run("prepare", func(t *testing.T) {
-			integrationtest.TestPrepare(t, ec)
-		})
-
-		skip(t)
-		// This will init the project dir
-		t.Run("init command", func(t *testing.T) {
-			v1.TestInitCmd(t, ec, initDir)
-		})
-
-		skip(t)
-		// This will validate the project dir
-		t.Run("validate", func(t *testing.T) {
-			integrationtest.TestValidate(t, ec)
-		})
-
-		skip(t)
-		t.Run("console command", func(t *testing.T) {
-			v1.TestConsoleCmd(t, ec)
-		})
-
-		skip(t)
-		t.Run("migrate commands", func(t *testing.T) {
-			v1.TestMigrateCmd(t, ec)
-		})
-
-		skip(t)
-		t.Run("metadata commands", func(t *testing.T) {
-			v1.TestMetadataCmd(t, ec)
-		})
-	})
-
 	// Run tests only for config version v2
 	t.Run("config=v2", func(t *testing.T) {
 		ec := cli.NewExecutionContext()
@@ -86,6 +38,9 @@ func TestCommands(t *testing.T) {
 		initDir := filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000)))
 		defer os.RemoveAll(initDir)
 
+		hasuraPort, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
+		defer teardown()
+
 		// This will prepare the execution context, so no need to run ec.Prepare() on all the other tests
 		t.Run("prepare", func(t *testing.T) {
 			integrationtest.TestPrepare(t, ec)
@@ -94,7 +49,7 @@ func TestCommands(t *testing.T) {
 		skip(t)
 		// This will init the project dir
 		t.Run("init command", func(t *testing.T) {
-			v2.TestInitCmd(t, ec, initDir)
+			v2.TestInitCmd(t, ec, initDir, hasuraPort)
 		})
 
 		skip(t)
@@ -102,21 +57,6 @@ func TestCommands(t *testing.T) {
 		t.Run("validate", func(t *testing.T) {
 			integrationtest.TestValidate(t, ec)
 		})
-
-		skip(t)
-		if cliExtManifestFilePath := os.Getenv("HASURA_GRAPHQL_TEST_CLI_EXT_MANIFEST_FILE_PATH"); cliExtManifestFilePath != "" {
-			t.Run("cli-ext-plugin-install", func(t *testing.T) {
-				installOpts := &commands.PluginInstallOptions{
-					EC:           ec,
-					Name:         cli.CLIExtPluginName,
-					ManifestFile: cliExtManifestFilePath,
-				}
-				err := installOpts.Run()
-				if err != nil {
-					t.Fatalf("unable to install %s plugin, got %v", cli.CLIExtPluginName, err)
-				}
-			})
-		}
 
 		skip(t)
 		t.Run("console command", func(t *testing.T) {
@@ -143,7 +83,7 @@ func TestCommands(t *testing.T) {
 			v2.TestSeedsApplyCmd(t, ec)
 		})
 	})
-	t.Run("config=v2/incomplete_metadata_dir", func(t *testing.T) {
+	t.Run("config=v3", func(t *testing.T) {
 		ec := cli.NewExecutionContext()
 		ec.Config = &cli.Config{}
 		logger, _ := test.NewNullLogger()
@@ -155,6 +95,9 @@ func TestCommands(t *testing.T) {
 		initDir := filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000)))
 		defer os.RemoveAll(initDir)
 
+		hasuraPort, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
+		defer teardown()
+
 		// This will prepare the execution context, so no need to run ec.Prepare() on all the other tests
 		t.Run("prepare", func(t *testing.T) {
 			integrationtest.TestPrepare(t, ec)
@@ -163,7 +106,7 @@ func TestCommands(t *testing.T) {
 		skip(t)
 		// This will init the project dir
 		t.Run("init command", func(t *testing.T) {
-			v2.TestInitCmd(t, ec, initDir)
+			v3.TestInitCmd(t, ec, initDir, hasuraPort)
 		})
 
 		skip(t)
@@ -173,25 +116,29 @@ func TestCommands(t *testing.T) {
 		})
 
 		skip(t)
-		if cliExtManifestFilePath := os.Getenv("HASURA_GRAPHQL_TEST_CLI_EXT_MANIFEST_FILE_PATH"); cliExtManifestFilePath != "" {
-			t.Run("cli-ext-plugin-install", func(t *testing.T) {
-				installOpts := &commands.PluginInstallOptions{
-					EC:           ec,
-					Name:         cli.CLIExtPluginName,
-					ManifestFile: cliExtManifestFilePath,
-				}
-				err := installOpts.Run()
-				if err != nil {
-					t.Fatalf("unable to install %s plugin, got %v", cli.CLIExtPluginName, err)
-				}
-			})
-		}
-
-		skip(t)
-		t.Run("metadata apply", func(t *testing.T) {
-			v2.TestIncompleteMetadataDir(t, ec)
+		t.Run("console command", func(t *testing.T) {
+			v3.TestConsoleCmd(t, ec)
 		})
 
+		skip(t)
+		t.Run("migrate commands", func(t *testing.T) {
+			v3.TestMigrateCmd(t, ec)
+		})
+
+		skip(t)
+		t.Run("metadata commands", func(t *testing.T) {
+			v3.TestMetadataCmd(t, ec)
+		})
+
+		skip(t)
+		t.Run("seed create command", func(t *testing.T) {
+			v3.TestSeedsCreateCmd(t, ec)
+		})
+
+		skip(t)
+		t.Run("seed apply commands", func(t *testing.T) {
+			v3.TestSeedsApplyCmd(t, ec)
+		})
 	})
 }
 

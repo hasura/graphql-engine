@@ -1,36 +1,37 @@
 module Hasura.Backends.Postgres.SQL.Value
   ( PGScalarValue(..)
-  , pgColValueToInt
   , pgScalarValueToJson
   , withConstructorFn
   , parsePGValue
   , scientificToInteger
   , scientificToFloat
+  , textToScalarValue
 
-  , TxtEncodedPGVal(..)
-  , txtEncodedPGVal
+  , TxtEncodedVal(..)
+  , txtEncodedVal
 
   , binEncoder
   , txtEncoder
-  , toBinaryValue
-  , toTxtValue
   , toPrepParam
   ) where
 
+
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Text                as AE
-import qualified Data.Aeson.Types               as AT
-import qualified Data.ByteString                as B
-import qualified Data.Text                      as T
-import qualified Data.Text.Conversions          as TC
-import qualified Data.Text.Encoding             as TE
-import qualified Data.Text.Lazy                 as TL
-import qualified Data.UUID                      as UUID
-import qualified Database.PG.Query              as Q
-import qualified Database.PG.Query.PTI          as PTI
-import qualified Database.PostgreSQL.LibPQ      as PQ
-import qualified PostgreSQL.Binary.Encoding     as PE
+import           Hasura.SQL.Value                   (TxtEncodedVal (..))
+
+import qualified Data.Aeson.Text                    as AE
+import qualified Data.Aeson.Types                   as AT
+import qualified Data.ByteString                    as B
+import qualified Data.Text                          as T
+import qualified Data.Text.Conversions              as TC
+import qualified Data.Text.Encoding                 as TE
+import qualified Data.Text.Lazy                     as TL
+import qualified Data.UUID                          as UUID
+import qualified Database.PG.Query                  as Q
+import qualified Database.PG.Query.PTI              as PTI
+import qualified Database.PostgreSQL.LibPQ          as PQ
+import qualified PostgreSQL.Binary.Encoding         as PE
 
 import           Data.Aeson
 import           Data.Int
@@ -58,6 +59,22 @@ instance FromJSON RasterWKB where
 instance ToJSON RasterWKB where
   toJSON = toJSON . TC.toText . getRasterWKB
 
+newtype Ltree = Ltree Text
+  deriving (Show, Eq)
+
+instance ToJSON Ltree where
+    toJSON (Ltree t) = toJSON t
+
+instance FromJSON Ltree where
+    parseJSON = \case
+        String t ->
+            if any T.null $ T.splitOn (T.pack ".") t
+                then fail message
+                else pure $ Ltree t
+        _ -> fail message
+        where
+            message = "Expecting label path: a sequence of zero or more labels separated by dots, for example L1.L2.L3"
+
 --  Binary value. Used in prepared sq
 data PGScalarValue
   = PGValInteger !Int32
@@ -82,6 +99,9 @@ data PGScalarValue
   | PGValGeo !GeometryWithCRS
   | PGValRaster !RasterWKB
   | PGValUUID !UUID.UUID
+  | PGValLtree !Ltree
+  | PGValLquery !Text
+  | PGValLtxtquery !Text
   | PGValUnknown !Text
   deriving (Show, Eq)
 
@@ -112,13 +132,13 @@ pgScalarValueToJson = \case
   PGValGeo o    -> toJSON o
   PGValRaster r -> toJSON r
   PGValUUID u -> toJSON u
+  PGValLtree t -> toJSON t
+  PGValLquery t -> toJSON t
+  PGValLtxtquery t -> toJSON t
   PGValUnknown t -> toJSON t
 
-pgColValueToInt :: PGScalarValue -> Maybe Int
-pgColValueToInt (PGValInteger i)  = Just $ fromIntegral i
-pgColValueToInt (PGValSmallInt i) = Just $ fromIntegral i
-pgColValueToInt (PGValBigInt i)   = Just $ fromIntegral i
-pgColValueToInt _                 = Nothing
+textToScalarValue :: Maybe Text -> PGScalarValue
+textToScalarValue = maybe (PGNull PGText) PGValText
 
 withConstructorFn :: PGScalarType -> S.SQLExp -> S.SQLExp
 withConstructorFn ty v
@@ -127,18 +147,22 @@ withConstructorFn ty v
   | otherwise = v
 
 
+-- TODO: those two functions are useful outside of Postgres, and
+-- should be moved to a common place of the code. Perhaps the Prelude?
 scientificToInteger :: (Integral i, Bounded i) => Scientific -> AT.Parser i
-scientificToInteger num = case toBoundedInteger num of
-  Just parsed -> pure parsed
-  Nothing     -> fail $ "The value " ++ show num ++ " lies outside the "
-                     ++ "bounds or is not an integer.  Maybe it is a "
-                     ++ "float, or is there integer overflow?"
+scientificToInteger num =
+  toBoundedInteger num
+  `onNothing`
+   fail ("The value " ++ show num ++ " lies outside the "
+      ++ "bounds or is not an integer.  Maybe it is a "
+      ++ "float, or is there integer overflow?")
 
 scientificToFloat :: (RealFloat f) => Scientific -> AT.Parser f
-scientificToFloat num = case toBoundedRealFloat num of
-  Right parsed -> pure parsed
-  Left _       -> fail $ "The value " ++ show num ++ " lies outside the "
-                    ++ "bounds.  Is it overflowing the float bounds?"
+scientificToFloat num =
+  toBoundedRealFloat num
+  `onLeft` \ _ ->
+  fail ("The value " ++ show num ++ " lies outside the "
+     ++ "bounds.  Is it overflowing the float bounds?")
 
 
 parsePGValue :: PGScalarType -> Value -> AT.Parser PGScalarValue
@@ -146,6 +170,7 @@ parsePGValue ty val = case (ty, val) of
   (_          , Null)     -> pure $ PGNull ty
   (PGUnknown _, String t) -> pure $ PGValUnknown t
   (PGRaster   , _)        -> parseTyped -- strictly parse raster value
+  (PGLtree    , _)        -> parseTyped
   (_          , String t) -> parseTyped <|> pure (PGValUnknown t)
   (_          , _)        -> parseTyped
   where
@@ -180,39 +205,27 @@ parsePGValue ty val = case (ty, val) of
       PGGeography -> PGValGeo <$> parseJSON val
       PGRaster -> PGValRaster <$> parseJSON val
       PGUUID -> PGValUUID <$> parseJSON val
+      PGLtree -> PGValLtree <$> parseJSON val
+      PGLquery -> PGValLquery <$> parseJSON val
+      PGLtxtquery -> PGValLtxtquery <$> parseJSON val
       PGUnknown tyName ->
         fail $ "A string is expected for type: " ++ T.unpack tyName
+      PGCompositeScalar tyName ->
+        fail $ "A string is expected for type: " ++ T.unpack tyName
 
-data TxtEncodedPGVal
-  = TENull
-  | TELit !Text
-  deriving (Show, Eq, Generic)
-
-instance Hashable TxtEncodedPGVal
-
-instance ToJSON TxtEncodedPGVal where
-  toJSON = \case
-    TENull  -> Null
-    TELit t -> String t
-
-instance FromJSON TxtEncodedPGVal where
-  parseJSON Null       = pure TENull
-  parseJSON (String t) = pure $ TELit t
-  parseJSON v          = AT.typeMismatch "String" v
-
-txtEncodedPGVal :: PGScalarValue -> TxtEncodedPGVal
-txtEncodedPGVal colVal = case colVal of
-  PGValInteger i  -> TELit $ T.pack $ show i
-  PGValSmallInt i -> TELit $ T.pack $ show i
-  PGValBigInt i   -> TELit $ T.pack $ show i
-  PGValFloat f    -> TELit $ T.pack $ show f
-  PGValDouble d   -> TELit $ T.pack $ show d
-  PGValNumeric sc -> TELit $ T.pack $ show sc
+txtEncodedVal :: PGScalarValue -> TxtEncodedVal
+txtEncodedVal = \case
+  PGValInteger i  -> TELit $ tshow i
+  PGValSmallInt i -> TELit $ tshow i
+  PGValBigInt i   -> TELit $ tshow i
+  PGValFloat f    -> TELit $ tshow f
+  PGValDouble d   -> TELit $ tshow d
+  PGValNumeric sc -> TELit $ tshow sc
   -- PostgreSQL doesn't like scientific notation for money, so pass it
   -- with 2 decimal places.
   PGValMoney m    -> TELit $ T.pack $ formatScientific Fixed (Just 2) m
   PGValBoolean b  -> TELit $ bool "false" "true" b
-  PGValChar t     -> TELit $ T.pack $ show t
+  PGValChar t     -> TELit $ T.singleton t
   PGValVarchar t  -> TELit t
   PGValText t     -> TELit t
   PGValCitext t   -> TELit t
@@ -233,10 +246,45 @@ txtEncodedPGVal colVal = case colVal of
     AE.encodeToLazyText o
   PGValRaster r -> TELit $ TC.toText $ getRasterWKB r
   PGValUUID u -> TELit $ UUID.toText u
+  PGValLtree (Ltree t) -> TELit t
+  PGValLquery t -> TELit t
+  PGValLtxtquery t -> TELit t
   PGValUnknown t -> TELit t
 
+pgTypeOid :: PGScalarType -> PQ.Oid
+pgTypeOid = \case
+  PGSmallInt          -> PTI.int2
+  PGInteger           -> PTI.int4
+  PGBigInt            -> PTI.int8
+  PGSerial            -> PTI.int4
+  PGBigSerial         -> PTI.int8
+  PGFloat             -> PTI.float4
+  PGDouble            -> PTI.float8
+  PGNumeric           -> PTI.numeric
+  PGMoney             -> PTI.numeric
+  PGBoolean           -> PTI.bool
+  PGChar              -> PTI.char
+  PGVarchar           -> PTI.varchar
+  PGText              -> PTI.text
+  PGCitext            -> PTI.text -- Explict type cast to citext needed, See also Note [Type casting prepared params]
+  PGDate              -> PTI.date
+  PGTimeStamp         -> PTI.timestamp
+  PGTimeStampTZ       -> PTI.timestamptz
+  PGTimeTZ            -> PTI.timetz
+  PGJSON              -> PTI.json
+  PGJSONB             -> PTI.jsonb
+  PGGeometry          -> PTI.text -- we are using the ST_GeomFromGeoJSON($i) instead of $i
+  PGGeography         -> PTI.text
+  PGRaster            -> PTI.text -- we are using the ST_RastFromHexWKB($i) instead of $i
+  PGUUID              -> PTI.uuid
+  PGLtree             -> PTI.text
+  PGLquery            -> PTI.text
+  PGLtxtquery         -> PTI.text
+  (PGUnknown _)       -> PTI.auto
+  PGCompositeScalar _ -> PTI.auto
+
 binEncoder :: PGScalarValue -> Q.PrepArg
-binEncoder colVal = case colVal of
+binEncoder = \case
   PGValInteger i                   -> Q.toPrepVal i
   PGValSmallInt i                  -> Q.toPrepVal i
   PGValBigInt i                    -> Q.toPrepVal i
@@ -259,10 +307,13 @@ binEncoder colVal = case colVal of
   PGValGeo o                       -> Q.toPrepVal $ TL.toStrict $ AE.encodeToLazyText o
   PGValRaster r                    -> Q.toPrepVal $ TC.toText $ getRasterWKB r
   PGValUUID u                      -> Q.toPrepVal u
+  PGValLtree (Ltree t)             -> Q.toPrepVal t
+  PGValLquery t                    -> Q.toPrepVal t
+  PGValLtxtquery t                 -> Q.toPrepVal t
   PGValUnknown t                   -> (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
 
 txtEncoder :: PGScalarValue -> S.SQLExp
-txtEncoder colVal = case txtEncodedPGVal colVal of
+txtEncoder colVal = case txtEncodedVal colVal of
   TENull  -> S.SENull
   TELit t -> S.SELit t
 
@@ -279,10 +330,3 @@ toPrepParam :: Int -> PGScalarType -> S.SQLExp
 toPrepParam i ty =
   -- See Note [Type casting prepared params] above
   S.withTyAnn ty . withConstructorFn ty $ S.SEPrep i
-
-toBinaryValue :: WithScalarType PGScalarValue -> Q.PrepArg
-toBinaryValue = binEncoder . pstValue
-
-toTxtValue :: WithScalarType PGScalarValue -> S.SQLExp
-toTxtValue (WithScalarType ty val) =
-  S.withTyAnn ty . withConstructorFn ty $ txtEncoder val

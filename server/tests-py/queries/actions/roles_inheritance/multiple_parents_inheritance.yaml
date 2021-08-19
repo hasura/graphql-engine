@@ -1,0 +1,14 @@
+description: When any one of the parent roles can access the action then the inherited role should also be able to access the action
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      create_user (name: "alex", email: "alex@hasura.io") {
+        id
+      }
+    }
+response:
+  data:
+    create_user:
+      id: 1

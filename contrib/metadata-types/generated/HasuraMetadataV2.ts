@@ -79,7 +79,7 @@
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
  */
 export interface HeaderFromValue {
     /**
@@ -94,7 +94,7 @@ export interface HeaderFromValue {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
  */
 export interface HeaderFromEnv {
     /**
@@ -109,7 +109,7 @@ export interface HeaderFromEnv {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objectfield
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objectfield
  */
 export interface ObjectField {
     /**
@@ -129,7 +129,7 @@ export interface ObjectField {
 /**
  * Type used in exported 'metadata.json' and replace metadata endpoint
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/manage-metadata.html#replace-metadata
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/manage-metadata.html#replace-metadata
  */
 export interface HasuraMetadataV2 {
     actions?:           Action[];
@@ -145,7 +145,7 @@ export interface HasuraMetadataV2 {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#args-syntax
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#args-syntax
  */
 export interface Action {
     /**
@@ -170,7 +170,7 @@ export interface Action {
  * Definition of the action
  *
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#actiondefinition
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#actiondefinition
  */
 export interface ActionDefinition {
     arguments?:              InputArgument[];
@@ -188,7 +188,7 @@ export interface ActionDefinition {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#inputargument
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#inputargument
  */
 export interface InputArgument {
     name: string;
@@ -197,10 +197,10 @@ export interface InputArgument {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
  *
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
  */
 export interface Header {
     /**
@@ -231,7 +231,7 @@ export interface Permissions {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/query-collections.html#add-collection-to-allowlist-syntax
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/query-collections.html#add-collection-to-allowlist-syntax
  */
 export interface AllowList {
     /**
@@ -242,7 +242,7 @@ export interface AllowList {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/scheduled-triggers.html#create-cron-trigger
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/scheduled-triggers.html#create-cron-trigger
  */
 export interface CronTrigger {
     /**
@@ -285,7 +285,7 @@ export interface CronTrigger {
  * Retry configuration if scheduled invocation delivery fails
  *
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/scheduled-triggers.html#retryconfst
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/scheduled-triggers.html#retryconfst
  */
 export interface RetryConfST {
     /**
@@ -320,7 +320,7 @@ export interface CustomTypes {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#enumtype
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#enumtype
  */
 export interface EnumType {
     /**
@@ -339,7 +339,7 @@ export interface EnumType {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#enumvalue
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#enumvalue
  */
 export interface EnumValue {
     /**
@@ -358,7 +358,7 @@ export interface EnumValue {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#inputobjecttype
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#inputobjecttype
  */
 export interface InputObjectType {
     /**
@@ -377,7 +377,7 @@ export interface InputObjectType {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#inputobjectfield
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#inputobjectfield
  */
 export interface InputObjectField {
     /**
@@ -396,7 +396,7 @@ export interface InputObjectField {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objecttype
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objecttype
  */
 export interface ObjectType {
     /**
@@ -419,7 +419,7 @@ export interface ObjectType {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objectrelationship
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objectrelationship
  */
 export interface CustomTypeObjectRelationship {
     /**
@@ -455,7 +455,7 @@ export enum CustomTypeObjectRelationshipType {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#scalartype
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#scalartype
  */
 export interface ScalarType {
     /**
@@ -471,7 +471,7 @@ export interface ScalarType {
 /**
  * A custom SQL function to add to the GraphQL schema with configuration.
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-functions.html#args-syntax
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#args-syntax
  */
 export interface CustomFunction {
     /**
@@ -489,7 +489,7 @@ export interface CustomFunction {
  *
  * Configuration for a CustomFunction
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-functions.html#function-configuration
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#function-configuration
  */
 export interface FunctionConfiguration {
     /**
@@ -510,7 +510,7 @@ export interface QualifiedFunction {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/query-collections.html#args-syntax
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/query-collections.html#args-syntax
  */
 export interface QueryCollectionEntry {
     /**
@@ -536,7 +536,7 @@ export interface Definition {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#collectionquery
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#collectionquery
  */
 export interface QueryCollection {
     name:  string;
@@ -545,7 +545,7 @@ export interface QueryCollection {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-schemas.html#add-remote-schema
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-schemas.html#add-remote-schema
  */
 export interface RemoteSchema {
     /**
@@ -566,7 +566,7 @@ export interface RemoteSchema {
  * Name of the remote schema
  *
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#remoteschemadef
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#remoteschemadef
  */
 export interface RemoteSchemaDef {
     forward_client_headers?: boolean;
@@ -585,7 +585,7 @@ export interface TableEntry {
     /**
      * Configuration for the table/view
      *
-     * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#table-config
+     * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#table-config
      */
     configuration?:        TableConfig;
     delete_permissions?:   DeletePermissionEntry[];
@@ -601,7 +601,7 @@ export interface TableEntry {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#create-array-relationship-syntax
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#create-array-relationship-syntax
  */
 export interface ArrayRelationship {
     /**
@@ -623,7 +623,7 @@ export interface ArrayRelationship {
  *
  * Use one of the available ways to define an object relationship
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#arrrelusing
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusing
  */
 export interface ArrRelUsing {
     /**
@@ -641,7 +641,7 @@ export interface ArrRelUsing {
  *
  * The column with foreign key constraint
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#arrrelusingfkeyon
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusingfkeyon
  */
 export interface ArrRelUsingFKeyOn {
     column: string;
@@ -653,7 +653,7 @@ export interface ArrRelUsingFKeyOn {
  *
  * Manual mapping of table and columns
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#arrrelusingmanualmapping
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusingmanualmapping
  */
 export interface ArrRelUsingManualMapping {
     /**
@@ -668,7 +668,7 @@ export interface ArrRelUsingManualMapping {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html#args-syntax
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/computed-field.html#args-syntax
  */
 export interface ComputedField {
     /**
@@ -689,7 +689,7 @@ export interface ComputedField {
  * The computed field definition
  *
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html#computedfielddefinition
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/computed-field.html#computedfielddefinition
  */
 export interface ComputedFieldDefinition {
     /**
@@ -711,9 +711,13 @@ export interface ComputedFieldDefinition {
 /**
  * Configuration for the table/view
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#table-config
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#table-config
  */
 export interface TableConfig {
+    /**
+     * Customise the table name / query root name
+     */
+    custom_name: string;
     /**
      * Customise the column names
      */
@@ -729,7 +733,7 @@ export interface TableConfig {
  *
  * Customise the root fields
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#custom-root-fields
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#custom-root-fields
  */
 export interface CustomRootFields {
     /**
@@ -772,7 +776,7 @@ export interface CustomRootFields {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#create-delete-permission-syntax
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-delete-permission-syntax
  */
 export interface DeletePermissionEntry {
     /**
@@ -793,7 +797,7 @@ export interface DeletePermissionEntry {
  * The permission definition
  *
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#deletepermission
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#deletepermission
  */
 export interface DeletePermission {
     /**
@@ -805,7 +809,7 @@ export interface DeletePermission {
 /**
  * NOTE: The metadata type doesn't QUITE match the 'create' arguments here
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger
  */
 export interface EventTrigger {
     /**
@@ -837,35 +841,35 @@ export interface EventTrigger {
 export interface EventTriggerDefinition {
     /**
      *
-     * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+     * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
      */
     delete?:       OperationSpec;
     enable_manual: boolean;
     /**
      *
-     * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+     * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
      */
     insert?: OperationSpec;
     /**
      *
-     * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+     * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
      */
     update?: OperationSpec;
 }
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
  */
 export interface OperationSpec {
     /**
      *
-     * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
+     * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
      */
     columns: string[] | Columns;
     /**
      *
-     * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
+     * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
      */
     payload?: string[] | Columns;
 }
@@ -878,7 +882,7 @@ export enum Columns {
  * The SQL function
  *
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#retryconf
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#retryconf
  */
 export interface RetryConf {
     /**
@@ -900,7 +904,7 @@ export interface RetryConf {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#args-syntax
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#args-syntax
  */
 export interface InsertPermissionEntry {
     /**
@@ -921,7 +925,7 @@ export interface InsertPermissionEntry {
  * The permission definition
  *
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#insertpermission
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#insertpermission
  */
 export interface InsertPermission {
     /**
@@ -947,7 +951,7 @@ export interface InsertPermission {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#args-syntax
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#args-syntax
  */
 export interface ObjectRelationship {
     /**
@@ -969,7 +973,7 @@ export interface ObjectRelationship {
  *
  * Use one of the available ways to define an object relationship
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#objrelusing
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#objrelusing
  */
 export interface ObjRelUsing {
     /**
@@ -987,7 +991,7 @@ export interface ObjRelUsing {
  *
  * Manual mapping of table and columns
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#objrelusingmanualmapping
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#objrelusingmanualmapping
  */
 export interface ObjRelUsingManualMapping {
     /**
@@ -1002,7 +1006,7 @@ export interface ObjRelUsingManualMapping {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#args-syntax
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#args-syntax
  */
 export interface RemoteRelationship {
     /**
@@ -1041,14 +1045,14 @@ export interface RemoteField {
      * joined with.
      * It is recursive because the remote field maybe nested deeply in the remote schema.
      *
-     * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#remotefield
+     * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#remotefield
      */
     field?: { [key: string]: RemoteField };
 }
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#create-select-permission-syntax
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-select-permission-syntax
  */
 export interface SelectPermissionEntry {
     /**
@@ -1069,7 +1073,7 @@ export interface SelectPermissionEntry {
  * The permission definition
  *
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#selectpermission
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#selectpermission
  */
 export interface SelectPermission {
     /**
@@ -1096,7 +1100,7 @@ export interface SelectPermission {
 
 /**
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#create-update-permission-syntax
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-update-permission-syntax
  */
 export interface UpdatePermissionEntry {
     /**
@@ -1117,7 +1121,7 @@ export interface UpdatePermissionEntry {
  * The permission definition
  *
  *
- * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#updatepermission
+ * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#updatepermission
  */
 export interface UpdatePermission {
     /**

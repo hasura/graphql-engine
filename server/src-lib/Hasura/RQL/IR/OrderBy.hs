@@ -8,12 +8,11 @@ module Hasura.RQL.IR.OrderBy
 
 import           Hasura.Prelude
 
-import qualified Data.Text                  as T
+import qualified Data.Text                as T
 
 import           Data.Aeson
-import           Data.Aeson.Casing
 
-import           Hasura.RQL.Instances       ()
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
 
@@ -30,13 +29,6 @@ instance FromJSON OrderByCol where
     (String t) -> orderByColFromToks $ T.split (=='.') t
     v          -> parseJSON v >>= orderByColFromToks
 
-instance ToJSON OrderByCol where
-  toJSON = toJSON . orderByColToTxt
-
-orderByColToTxt :: OrderByCol -> Text
-orderByColToTxt = \case
-  OCPG pgCol      -> getFieldNameTxt pgCol
-  OCRel rel obCol -> getFieldNameTxt rel <> "." <> orderByColToTxt obCol
 
 orderByColFromToks
   :: (MonadFail m)
@@ -71,9 +63,3 @@ deriving instance (Backend b, Eq a)   => Eq   (OrderByItemG b a)
 instance (Backend b, Hashable a) => Hashable (OrderByItemG b a)
 
 type OrderByItem b = OrderByItemG b OrderByCol
-
-instance (Backend b, FromJSON a) => FromJSON (OrderByItemG b a) where
-  parseJSON = genericParseJSON (aesonPrefix snakeCase){omitNothingFields=True}
-
-instance (Backend b, ToJSON a) => ToJSON (OrderByItemG b a) where
-  toJSON = genericToJSON (aesonPrefix snakeCase){omitNothingFields=True}

@@ -3,24 +3,29 @@ url: /v1/query
 status: 400
 response:
   internal:
-  - definition:
-      using:
-        foreign_key_constraint_on:
-          column: author_id
-          table:
-            schema: public
-            name: article
-      name: AuthorId
-      comment:
-      table:
-        schema: public
-        name: author
-    reason: field definition conflicts with custom field name for postgres column
-      "id"
-    type: array_relation
+    - definition:
+        using:
+          foreign_key_constraint_on:
+            column: author_id
+            table:
+              schema: public
+              name: article
+        name: AuthorId
+        source: default
+        comment:
+        table:
+          schema: public
+          name: author
+      reason:
+        'Inconsistent object: field definition conflicts with custom field name
+        for postgres column "id"'
+      name: array_relation AuthorId in table author in source default
+      type: array_relation
   path: $.args
-  error: field definition conflicts with custom field name for postgres column "id"
-  code: constraint-violation
+  error:
+    'Inconsistent object: field definition conflicts with custom field name for
+    postgres column "id"'
+  code: invalid-configuration
 query:
   type: create_array_relationship
   args:

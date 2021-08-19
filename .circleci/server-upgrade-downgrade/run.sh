@@ -1,5 +1,17 @@
 #! /usr/bin/env bash
 
+# This script tests the migration path both *from* the latest release *to* the
+# version in this PR, and the downgrade path *back* to that release. It makes
+# use of the functionality already excercised in our integration tests, and
+# does something like:
+#
+#    for a subset of tests in tests that are okay to run here:
+#       run setup and test using OLD_VERSION, don't run teardown
+#       start THIS_VERSION, running migration code on anything set up above
+#         run the same pytests, don't run setup or teardown
+#       start OLD_VERSION again, running down migrations
+#         run the same pytests, don't run setup
+#
 # If no arguments are provided to this script, all the server upgrade tests will be run
 # With arguments, you can specify which server upgrade pytests should be run
 # Any options provided to this script will be applied to the
@@ -80,7 +92,13 @@ CURRENT_SERVER_LOG=$SERVER_OUTPUT_DIR/upgrade-test-current-server.log
 HGE_ENDPOINT=http://localhost:$HASURA_GRAPHQL_SERVER_PORT
 PYTEST_DIR="${ROOT}/../../server/tests-py"
 
-pip3 -q install -r "${PYTEST_DIR}/requirements.txt"
+# This seems to flake out relatively often; try a mirror if so.
+# Might also need to disable ipv6 or use a longer --timeout
+# cryptography 3.4.7 version requires Rust dependencies by default. But we don't need them for our tests, hence disabling them via the following env var => https://stackoverflow.com/a/66334084
+export CRYPTOGRAPHY_DONT_BUILD_RUST=1
+
+pip3 -q install -r "${PYTEST_DIR}/requirements.txt" ||\
+pip3 -q install -i http://mirrors.digitalocean.com/pypi/web/simple --trusted-host mirrors.digitalocean.com  -r "${PYTEST_DIR}/requirements.txt"
 
 # export them so that GraphQL Engine can use it
 export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES="$HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES"
@@ -122,17 +140,6 @@ trap rm_worktree ERR
 
 make_latest_release_worktree() {
 	git worktree add --detach "$WORKTREE_DIR" "$RELEASE_VERSION"
-        cd "$WORKTREE_DIR"
-        # FIX ME: Remove the patch below after the next stable release
-        # The --avoid-error-message-checks in pytest was implementated  as a rather relaxed check than
-        # what we intended to have. In versions <= v1.3.0,
-        # this check allows response to be success even if the expected response is a failure.
-        # The patch below fixes that issue.
-        # The `git apply` should give errors from next release onwards,
-        # since this change is going to be included in the next release version
-        git apply "${ROOT}/err_msg.patch" || \
-		(log "Remove the git apply in make_latest_release_worktree function"  && false)
-        cd - > /dev/null
 }
 
 cleanup_hasura_metadata_if_present() {
@@ -158,13 +165,25 @@ get_current_catalog_version() {
 }
 
 args=("$@")
+# Return the list of tests over which we will perform a
+# test-upgrade-test-downgrade-test sequence in run_server_upgrade_pytest().
+#
+# See pytest_report_collectionfinish() for the logic that determines what is an
+# "upgrade test", namely presence of particular markers.
 get_server_upgrade_tests() {
 	cd $RELEASE_PYTEST_DIR
 	tmpfile="$(mktemp --dry-run)"
 	set -x
-	# FIX ME: Deselecting some introspection tests from the previous test suite
+	# NOTE: any tests deselected in run_server_upgrade_pytest need to be filtered out here too
+	#
+	# FIX ME: Deselecting some introspection tests and event trigger tests from the previous test suite
 	# which throw errors on the latest build. Even when the output of the current build is more accurate.
 	# Remove these deselects after the next stable release
+	#
+	# NOTE: test_events.py involves presistent state and probably isn't
+	#       feasible to run here
+	# FIXME: re-enable test_graphql_queries.py::TestGraphQLQueryFunctions
+	#        (fixing "already exists" error) if possible
 	python3 -m pytest -q --collect-only --collect-upgrade-tests-to-file "$tmpfile" \
 		-m 'allow_server_upgrade_test and not skip_server_upgrade_test' \
 		--deselect test_schema_stitching.py::TestRemoteSchemaBasic::test_introspection \
@@ -174,6 +193,12 @@ get_server_upgrade_tests() {
                 --deselect test_graphql_mutations.py::TestGraphqlMutationCustomSchema::test_update_article \
                 --deselect test_graphql_queries.py::TestGraphQLQueryEnums::test_introspect_user_role \
                 --deselect test_schema_stitching.py::TestRemoteSchemaQueriesOverWebsocket::test_remote_query_error \
+                --deselect test_events.py::TestCreateAndDelete::test_create_reset \
+                --deselect test_events.py::TestUpdateEvtQuery::test_update_basic \
+                --deselect test_schema_stitching.py::TestAddRemoteSchemaTbls::test_add_schema \
+                --deselect test_schema_stitching.py::TestAddRemoteSchemaTbls::test_add_conflicting_table \
+                --deselect test_events.py \
+                --deselect test_graphql_queries.py::TestGraphQLQueryFunctions \
 		"${args[@]}" 1>/dev/null 2>/dev/null
 	set +x
 	cat "$tmpfile"
@@ -181,6 +206,8 @@ get_server_upgrade_tests() {
 	rm "$tmpfile"
 }
 
+# The test-upgrade-test-downgrade-test sequence, run for each of many sets of
+# tests passed as the argument.
 run_server_upgrade_pytest() {
 	HGE_PID=""
 	cleanup_hge(){
@@ -317,6 +344,18 @@ make_latest_release_worktree
 
 cleanup_hasura_metadata_if_present
 
+# We run_server_upgrade_pytest over each test individually to minimize the
+# chance of breakage (e.g. where two different tests have conflicting
+# setup.yaml which create the same table)
+#
+# TODO this is really slow (~1hr). There seems to be no good way to do many
+# tests in a batch because very few tests use unique table names, for instance.
+# We could:
+#  - try to give each setup.yaml unique names (very arduous), or
+#  - hand select a few tests that we think matter for the upgrade-downgrade case
+#    and make them compatible, or small enough in number we can run them
+#    sequentially
+#  - ???
 for pytest in $(get_server_upgrade_tests) ; do
 	log "Running pytest $pytest"
 	run_server_upgrade_pytest "$pytest"

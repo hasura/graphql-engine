@@ -5,28 +5,31 @@ import           Hasura.Prelude
 import qualified Data.Aeson                 as J
 import qualified Data.HashMap.Strict.InsOrd as OMap
 
+import           Data.Kind                  (Type)
+
 import           Hasura.EncJSON
 import           Hasura.RQL.IR.Select
-import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Backend
 import           Hasura.SQL.Backend
 
 
-data MutFldG (b :: BackendType) v
+data MutFldG (b :: BackendType) (r :: BackendType -> Type) v
   = MCount
   | MExp !Text
-  | MRet !(AnnFieldsG b v)
+  | MRet !(AnnFieldsG b r v)
+  deriving (Functor, Foldable, Traversable)
 
-type MutFld b = MutFldG b (SQLExpression b)
+type MutFld b = MutFldG b (Const Void) (SQLExpression b)
+type MutFldsG b r v = Fields (MutFldG b r v)
 
-type MutFldsG b v = Fields (MutFldG b v)
+data MutationOutputG (b :: BackendType) (r :: BackendType -> Type) v
+  = MOutMultirowFields  !(MutFldsG b r v)
+  | MOutSinglerowObject !(AnnFieldsG b r v)
+  deriving (Functor, Foldable, Traversable)
 
-data MutationOutputG (b :: BackendType) v
-  = MOutMultirowFields !(MutFldsG b v)
-  | MOutSinglerowObject !(AnnFieldsG b v)
+type MutationOutput b = MutationOutputG b (Const Void) (SQLExpression b)
 
-type MutationOutput b = MutationOutputG b (SQLExpression b)
-
-type MutFlds b = MutFldsG b (SQLExpression b)
+type MutFlds b = MutFldsG b (Const Void) (SQLExpression b)
 
 buildEmptyMutResp :: MutationOutput backend -> EncJSON
 buildEmptyMutResp = \case
@@ -38,35 +41,7 @@ buildEmptyMutResp = \case
       MExp e -> J.toJSON e
       MRet _ -> J.toJSON ([] :: [J.Value])
 
-traverseMutFld
-  :: (Applicative f)
-  => (a -> f b)
-  -> MutFldG backend a
-  -> f (MutFldG backend b)
-traverseMutFld f = \case
-  MCount    -> pure MCount
-  MExp t    -> pure $ MExp t
-  MRet flds -> MRet <$> traverse (traverse (traverseAnnField f)) flds
-
-traverseMutationOutput
-  :: (Applicative f)
-  => (a -> f b)
-  -> MutationOutputG backend a -> f (MutationOutputG backend b)
-traverseMutationOutput f = \case
-  MOutMultirowFields mutationFields ->
-    MOutMultirowFields <$> traverse (traverse (traverseMutFld f)) mutationFields
-  MOutSinglerowObject annFields ->
-    MOutSinglerowObject <$> traverseAnnFields f annFields
-
-traverseMutFlds
-  :: (Applicative f)
-  => (a -> f b)
-  -> MutFldsG backend a
-  -> f (MutFldsG backend b)
-traverseMutFlds f =
-  traverse (traverse (traverseMutFld f))
-
-hasNestedFld :: MutationOutputG backend a -> Bool
+hasNestedFld :: MutationOutputG backend r a -> Bool
 hasNestedFld = \case
   MOutMultirowFields flds     -> any isNestedMutFld flds
   MOutSinglerowObject annFlds -> any isNestedAnnField annFlds

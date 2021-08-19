@@ -1,16 +1,17 @@
 module Hasura.RQL.IR.Update where
 
-
 import           Hasura.Prelude
+
+import           Data.Kind                (Type)
 
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.Returning
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
 
 
-data AnnUpdG (b :: BackendType) v
+data AnnUpdG (b :: BackendType) (r :: BackendType -> Type) v
   = AnnUpd
   { uqp1Table   :: !(TableName b)
   , uqp1OpExps  :: ![(Column b, UpdOpExpG v)]
@@ -19,20 +20,21 @@ data AnnUpdG (b :: BackendType) v
   -- we don't prepare the arguments for returning
   -- however the session variable can still be
   -- converted as desired
-  , uqp1Output  :: !(MutationOutputG b v)
+  , uqp1Output  :: !(MutationOutputG b r v)
   , uqp1AllCols :: ![ColumnInfo b]
-  }
+  } deriving (Functor, Foldable, Traversable)
 
-type AnnUpd b = AnnUpdG b (SQLExpression b)
+type AnnUpd b = AnnUpdG b (Const Void) (SQLExpression b)
 
-data UpdOpExpG v = UpdSet !v
-                 | UpdInc !v
-                 | UpdAppend !v
-                 | UpdPrepend !v
-                 | UpdDeleteKey !v
-                 | UpdDeleteElem !v
-                 | UpdDeleteAtPath ![v]
-                 deriving (Functor, Foldable, Traversable, Generic, Data)
+data UpdOpExpG v
+  = UpdSet !v
+  | UpdInc !v
+  | UpdAppend !v
+  | UpdPrepend !v
+  | UpdDeleteKey !v
+  | UpdDeleteElem !v
+  | UpdDeleteAtPath ![v]
+  deriving (Functor, Foldable, Traversable, Generic, Data)
 
 
 -- NOTE: This function can be improved, because we use
@@ -48,18 +50,3 @@ updateOperatorText (UpdPrepend      _) = "_prepend"
 updateOperatorText (UpdDeleteKey    _) = "_delete_key"
 updateOperatorText (UpdDeleteElem   _) = "_delete_elem"
 updateOperatorText (UpdDeleteAtPath _) = "_delete_at_path"
-
-traverseAnnUpd
-  :: (Applicative f)
-  => (a -> f b)
-  -> AnnUpdG backend a
-  -> f (AnnUpdG backend b)
-traverseAnnUpd f annUpd =
-  AnnUpd tn
-  <$> traverse (traverse $ traverse f) opExps
-  <*> ((,) <$> traverseAnnBoolExp f whr <*> traverseAnnBoolExp f fltr)
-  <*> traverseAnnBoolExp f chk
-  <*> traverseMutationOutput f mutOutput
-  <*> pure allCols
-  where
-    AnnUpd tn opExps (whr, fltr) chk mutOutput allCols = annUpd

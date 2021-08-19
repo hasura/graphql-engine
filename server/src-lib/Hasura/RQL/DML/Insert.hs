@@ -7,41 +7,46 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict                          as HM
 import qualified Data.HashSet                                 as HS
 import qualified Data.Sequence                                as DS
+import qualified Data.Tagged                                  as Tagged
 import qualified Database.PG.Query                            as Q
 
+import           Control.Monad.Trans.Control                  (MonadBaseControl)
 import           Data.Aeson.Types
 import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.SQL.DML             as S
+import qualified Hasura.Tracing                               as Tracing
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.Execute.Mutation
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.Returning
+import           Hasura.Backends.Postgres.Types.Table
+import           Hasura.Base.Error
 import           Hasura.EncJSON
+import           Hasura.QueryTags
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.Insert
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                        (HasVersion)
+import           Hasura.RQL.Types.Run
 import           Hasura.Session
 
+import           Hasura.GraphQL.Execute.Backend
 
-import qualified Data.Environment                             as Env
-import qualified Hasura.Tracing                               as Tracing
 
 convObj
   :: (UserInfoM m, QErrM m)
-  => (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  => (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp)
   -> HM.HashMap PGCol S.SQLExp
   -> HM.HashMap PGCol S.SQLExp
-  -> FieldInfoMap (FieldInfo 'Postgres)
-  -> InsObj
+  -> FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
+  -> InsObj ('Postgres 'Vanilla)
   -> m ([PGCol], [S.SQLExp])
 convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
   inpInsVals <- flip HM.traverseWithKey insObj $ \c val -> do
     let relWhenPGErr = "relationships can't be inserted"
-    colType <- askPGType fieldInfoMap c relWhenPGErr
+    colType <- askColumnType fieldInfoMap c relWhenPGErr
     -- if column has predefined value then throw error
     when (c `elem` preSetCols) $ throwNotInsErr c
     -- Encode aeson's value into prepared value
@@ -67,11 +72,11 @@ validateInpCols inpCols updColsPerm = forM_ inpCols $ \inpCol ->
 
 buildConflictClause
   :: (UserInfoM m, QErrM m)
-  => SessVarBldr 'Postgres m
-  -> TableInfo 'Postgres
+  => SessionVariableBuilder ('Postgres 'Vanilla) m
+  -> TableInfo ('Postgres 'Vanilla)
   -> [PGCol]
   -> OnConflict
-  -> m (ConflictClauseP1 'Postgres S.SQLExp)
+  -> m (ConflictClauseP1 ('Postgres 'Vanilla) S.SQLExp)
 buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) =
   case (mTCol, mTCons, act) of
     (Nothing, Nothing, CAIgnore)    -> return $ CP1DoNothing Nothing
@@ -105,7 +110,7 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
     validateCols c = do
       let targetcols = getPGCols c
       void $ withPathK "constraint_on" $ indexedForM targetcols $
-        \pgCol -> askPGType fieldInfoMap pgCol ""
+        \pgCol -> askColumnType fieldInfoMap pgCol ""
 
     validateConstraint c = do
       let tableConsNames = maybe [] toList $
@@ -126,18 +131,18 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
 
 
 convInsertQuery
-  :: (UserInfoM m, QErrM m, CacheRM m)
-  => (Value -> m [InsObj])
-  -> SessVarBldr 'Postgres m
-  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  :: (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m)
+  => (Value -> m [InsObj ('Postgres 'Vanilla)])
+  -> SessionVariableBuilder ('Postgres 'Vanilla) m
+  -> (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp)
   -> InsertQuery
-  -> m (InsertQueryP1 'Postgres)
-convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRetCols) = do
+  -> m (InsertQueryP1 ('Postgres 'Vanilla))
+convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName _ val oC mRetCols) = do
 
   insObjs <- objsParser val
 
   -- Get the current table information
-  tableInfo <- askTabInfo tableName
+  tableInfo <- askTabInfoSource tableName
   let coreInfo = _tiCoreInfo tableInfo
 
   -- If table is view then check if it is insertable
@@ -146,7 +151,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
 
   -- Check if the role has insert permissions
   insPerm   <- askInsPermInfo tableInfo
-  updPerm   <- askPermInfo' PAUpdate tableInfo
+  updPerm  <- askPermInfo' PAUpdate tableInfo
 
   -- Check if all dependent headers are present
   validateHeaders $ ipiRequiredHeaders insPerm
@@ -164,8 +169,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
 
   let mutOutput = mkDefaultMutFlds mAnnRetCols
 
-  let defInsVals = S.mkColDefValMap $
-                   map pgiColumn $ getCols fieldInfoMap
+  let defInsVals = HM.fromList [(column, S.columnDefaultValue) | column <- pgiColumn <$> getCols fieldInfoMap]
       allCols    = getCols fieldInfoMap
       insCols    = HM.keys defInsVals
 
@@ -180,12 +184,11 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
   updCheck <- traverse (convAnnBoolExpPartialSQL sessVarFromCurrentSetting) (upiCheck =<< updPerm)
 
   conflictClause <- withPathK "on_conflict" $ forM oC $ \c -> do
-      roleName <- askCurRole
-      unless (isTabUpdatable roleName tableInfo) $ throw400 PermissionDenied $
-        "upsert is not allowed for role " <> roleName
-        <<> " since update permissions are not defined"
-
-      buildConflictClause sessVarBldr tableInfo inpCols c
+    role <- askCurRole
+    unless (isTabUpdatable role tableInfo) $ throw400 PermissionDenied $
+      "upsert is not allowed for role " <> role
+      <<> " since update permissions are not defined"
+    buildConflictClause sessVarBldr tableInfo inpCols c
   return $ InsertQueryP1 tableName insCols sqlExps
            conflictClause (insCheck, updCheck) mutOutput allCols
   where
@@ -196,25 +199,33 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
 convInsQ
   :: (QErrM m, UserInfoM m, CacheRM m)
   => InsertQuery
-  -> m (InsertQueryP1 'Postgres, DS.Seq Q.PrepArg)
-convInsQ =
-  runDMLP1T .
-  convInsertQuery (withPathK "objects" . decodeInsObjs)
-  sessVarFromCurrentSetting
-  binRHSBuilder
+  -> m (InsertQueryP1 ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
+convInsQ query = do
+  let source = iqSource query
+  tableCache :: TableCache ('Postgres 'Vanilla) <- askTableCache source
+  flip runTableCacheRT (source, tableCache) $ runDMLP1T $
+    convInsertQuery (withPathK "objects" . decodeInsObjs)
+    sessVarFromCurrentSetting binRHSBuilder query
 
 runInsert
-  :: ( HasVersion, QErrM m, UserInfoM m
-     , CacheRM m, MonadTx m, HasSQLGenCtx m, MonadIO m
-     , Tracing.MonadTrace m
-     )
-  => Env.Environment -> InsertQuery -> m EncJSON
-runInsert env q = do
+  :: forall m
+    . ( QErrM m, UserInfoM m
+      , CacheRM m, HasServerConfigCtx m
+      , MonadIO m, Tracing.MonadTrace m
+      , MonadBaseControl IO m, MetadataM m
+      , MonadQueryTags m
+      )
+  => InsertQuery -> m EncJSON
+runInsert q = do
+  sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (iqSource q)
+  userInfo <- askUserInfo
   res <- convInsQ q
-  strfyNum <- stringifyNum <$> askSQLGenCtx
-  execInsertQuery env strfyNum Nothing res
+  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
+  let queryTags = QueryTagsComment $ Tagged.untag $ createQueryTags @m Nothing (encodeOptionalQueryTags Nothing)
+  runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $
+    runReaderT (execInsertQuery strfyNum userInfo res) queryTags
 
-decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj]
+decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj ('Postgres 'Vanilla)]
 decodeInsObjs v = do
   objs <- decodeValue v
   when (null objs) $ throw400 UnexpectedPayload "objects should not be empty"

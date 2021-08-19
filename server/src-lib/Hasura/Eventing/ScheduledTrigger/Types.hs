@@ -1,17 +1,18 @@
 module Hasura.Eventing.ScheduledTrigger.Types where
 
-import           Data.Time.Clock
-import           Hasura.Eventing.HTTP
 import           Hasura.Prelude
+
+import qualified Data.Aeson           as J
+import qualified Data.Aeson.TH        as J
+
+import           Data.Time.Clock
+
+import qualified Hasura.Logging       as L
+
+import           Hasura.Base.Error
+import           Hasura.Eventing.HTTP
 import           Hasura.RQL.Types
 
-import qualified Data.Aeson                 as J
-import qualified Data.Aeson.Casing          as J
-import qualified Data.Aeson.TH              as J
-import qualified Database.PG.Query          as Q
-import qualified Database.PG.Query.PTI      as PTI
-import qualified Hasura.Logging             as L
-import qualified PostgreSQL.Binary.Encoding as PE
 
 newtype ScheduledTriggerInternalErr
   = ScheduledTriggerInternalErr QErr
@@ -50,18 +51,7 @@ data ScheduledEventWebhookPayload
   -- don't send it
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventWebhookPayload)
-
-newtype ScheduledEventIdArray =
-  ScheduledEventIdArray { unScheduledEventIdArray :: [ScheduledEventId]}
-  deriving (Show, Eq)
-
-instance Q.ToPrepArg ScheduledEventIdArray where
-  toPrepVal (ScheduledEventIdArray l) =
-    Q.toPrepValHelper PTI.unknown encoder $ map unEventId l
-    where
-      -- 25 is the OID value of TEXT, https://jdbc.postgresql.org/development/privateapi/constant-values.html
-      encoder = PE.array 25 . PE.dimensionArray foldl' (PE.encodingArray . PE.text_strict)
+$(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''ScheduledEventWebhookPayload)
 
 data ScheduledEventOp
   = SEOpRetry !UTCTime

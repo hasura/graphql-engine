@@ -1,14 +1,6 @@
 module Hasura.GraphQL.Execute.Query
   ( convertQuerySelSet
-  -- , queryOpFromPlan
-  -- , ReusableQueryPlan
-  , PreparedSql(..)
-  , traverseQueryRootField -- for live query planning
   , parseGraphQLQuery
-
-  , MonadQueryInstrumentation(..)
-  , ExtractProfile(..)
-  , noProfile
   ) where
 
 import           Hasura.Prelude
@@ -17,146 +9,60 @@ import qualified Data.Aeson                                as J
 import qualified Data.Environment                          as Env
 import qualified Data.HashMap.Strict                       as Map
 import qualified Data.HashMap.Strict.InsOrd                as OMap
-import qualified Data.Sequence.NonEmpty                    as NESeq
-import qualified Database.PG.Query                         as Q
+import qualified Data.Tagged                               as Tagged
 import qualified Language.GraphQL.Draft.Syntax             as G
 import qualified Network.HTTP.Client                       as HTTP
 import qualified Network.HTTP.Types                        as HTTP
 
-import qualified Hasura.Backends.Postgres.Translate.Select as DS
+import qualified Hasura.GraphQL.Execute.RemoteJoin.Collect as RJ
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
 import qualified Hasura.Logging                            as L
-import qualified Hasura.RQL.IR.Select                      as DS
-import qualified Hasura.Tracing                            as Tracing
+import qualified Hasura.RQL.Types.QueryTags                as RQL
+import qualified Hasura.SQL.AnyBackend                     as AB
 
-import           Hasura.Backends.Postgres.Connection
-import           Hasura.EncJSON
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
+import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.Common
-import           Hasura.GraphQL.Execute.Prepare
+import           Hasura.GraphQL.Execute.Instances          ()
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
+import           Hasura.GraphQL.ParameterizedQueryHash
 import           Hasura.GraphQL.Parser
+import           Hasura.GraphQL.Parser.Directives
+import           Hasura.QueryTags
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
 
+import           Hasura.Server.Types                       (RequestId (..))
 
-data ActionQueryPlan (b :: BackendType)
-  = AQPAsyncQuery !(DS.AnnSimpleSel b) -- ^ Cacheable plan
-  | AQPQuery !ActionExecuteTx -- ^ Non cacheable transaction
-
-actionQueryToRootFieldPlan
-  :: PrepArgMap -> ActionQueryPlan 'Postgres -> RootFieldPlan
-actionQueryToRootFieldPlan prepped = \case
-  AQPAsyncQuery s -> RFPPostgres $
-    PreparedSql (DS.selectQuerySQL DS.JASSingleObject s) prepped Nothing
-  AQPQuery tx     -> RFPActionQuery tx
-
--- See Note [Temporarily disabling query plan caching]
--- data ReusableVariableTypes
--- data ReusableVariableValues
-
--- data ReusableQueryPlan
---   = ReusableQueryPlan
---   { _rqpVariableTypes :: !ReusableVariableTypes
---   , _rqpFldPlans      :: !FieldPlans
---   }
-
--- instance J.ToJSON ReusableQueryPlan where
---   toJSON (ReusableQueryPlan varTypes fldPlans) =
---     J.object [ "variables"       J..= () -- varTypes
---              , "field_plans"     J..= fldPlans
---              ]
-
--- withPlan
---   :: (MonadError QErr m)
---   => SessionVariables -> PGPlan -> HashMap G.Name (WithScalarType PGScalarValue) -> m PreparedSql
--- withPlan usrVars (PGPlan q reqVars prepMap remoteJoins) annVars = do
---   prepMap' <- foldM getVar prepMap (Map.toList reqVars)
---   let args = withUserVars usrVars $ IntMap.elems prepMap'
---   return $ PreparedSql q args remoteJoins
---   where
---     getVar accum (var, prepNo) = do
---       let varName = G.unName var
---       colVal <- onNothing (Map.lookup var annVars) $
---         throw500 $ "missing variable in annVars : " <> varName
---       let prepVal = (toBinaryValue colVal, pstValue colVal)
---       return $ IntMap.insert prepNo prepVal accum
-
-
-traverseQueryRootField
-  :: forall f a b c d h backend
-   . Applicative f
-  => (a -> f b)
-  -> RootField (QueryDB backend a) c h d
-  -> f (RootField (QueryDB backend b) c h d)
-traverseQueryRootField f = traverseDB \case
-  QDBSimple s      -> QDBSimple      <$> DS.traverseAnnSimpleSelect f s
-  QDBPrimaryKey s  -> QDBPrimaryKey  <$> DS.traverseAnnSimpleSelect f s
-  QDBAggregation s -> QDBAggregation <$> DS.traverseAnnAggregateSelect f s
-  QDBConnection s  -> QDBConnection  <$> DS.traverseConnectionSelect f s
 
 parseGraphQLQuery
   :: MonadError QErr m
   => GQLContext
   -> [G.VariableDefinition]
   -> Maybe (HashMap G.Name J.Value)
+  -> [G.Directive G.Name]
   -> G.SelectionSet G.NoFragments G.Name
-  -> m ( InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres))
-       , QueryReusability
+  -> m ( InsOrdHashMap G.Name (QueryRootField UnpreparedValue)
+       , [G.Directive Variable]
+       , G.SelectionSet G.NoFragments Variable
        )
-parseGraphQLQuery gqlContext varDefs varValsM fields =
-  resolveVariables varDefs (fromMaybe Map.empty varValsM) fields
-  >>= (gqlQueryParser gqlContext >>> (`onLeft` reportParseErrors))
-  where
-    reportParseErrors errs = case NESeq.head errs of
-      -- TODO: Our error reporting machinery doesn’t currently support reporting
-      -- multiple errors at once, so we’re throwing away all but the first one
-      -- here. It would be nice to report all of them!
-      ParseError{ pePath, peMessage, peCode } ->
-        throwError (err400 peCode peMessage){ qePath = pePath }
+parseGraphQLQuery gqlContext varDefs varValsM directives fields = do
+  (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe Map.empty varValsM) directives fields
+  parsedQuery <- (gqlQueryParser gqlContext >>> (`onLeft` reportParseErrors)) resolvedSelSet
+  pure (parsedQuery, resolvedDirectives, resolvedSelSet)
 
--- | Monads which support query instrumentation
-class Monad m => MonadQueryInstrumentation m where
-  -- | Returns the appropriate /instrumentation/ (if any) for a SQL query, as
-  -- requested by the provided directives. Instrumentation is “SQL middleware”:
-  --
-  --   * The @'Q.Query' -> 'Q.Query'@ function is applied to the query just
-  --     prior to execution, and it can adjust the query in arbitrary ways.
-  --
-  --   * The 'ExtractProfile' function is applied to the query /result/, and it
-  --     can perform arbitrary side-effects based on its contents. (This is
-  --     currently just a hook for tracing, a la 'Tracing.MonadTrace'.)
-  --
-  -- The open-source version of graphql-engine does not currently perform any
-  -- instrumentation, so this serves only as a hook for downstream clients.
-  askInstrumentQuery
-    :: [G.Directive G.Name]
-    -> m (Q.Query -> Q.Query, ExtractProfile)
-
-  -- A default for monad transformer instances
-  default askInstrumentQuery
-    :: (m ~ t n, MonadTrans t, MonadQueryInstrumentation n)
-    => [G.Directive G.Name]
-    -> m (Q.Query -> Q.Query, ExtractProfile)
-  askInstrumentQuery = lift . askInstrumentQuery
-
-instance MonadQueryInstrumentation m => MonadQueryInstrumentation (ReaderT r m)
-instance MonadQueryInstrumentation m => MonadQueryInstrumentation (ExceptT e m)
-instance MonadQueryInstrumentation m => MonadQueryInstrumentation (Tracing.TraceT m)
 
 convertQuerySelSet
-  :: forall m tx .
+  :: forall m .
      ( MonadError QErr m
      , HasVersion
-     , MonadIO m
-     , Tracing.MonadTrace m
-     , MonadQueryInstrumentation m
-     , MonadIO tx
-     , MonadTx tx
-     , Tracing.MonadTrace tx
+     , MonadGQLExecutionCheck m
+     , MonadQueryTags m
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -168,77 +74,47 @@ convertQuerySelSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m ( ExecutionPlan (tx EncJSON, Maybe PreparedSql)
-       -- , Maybe ReusableQueryPlan
-       , [QueryRootField (UnpreparedValue 'Postgres)]
-       )
-convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs varValsM = do
+  -> SetGraphqlIntrospectionOptions
+  -> RequestId
+  -> Maybe G.Name
+  -- ^ Graphql Operation Name
+  -> RQL.QueryTagsConfig
+  -> m (ExecutionPlan, [QueryRootField UnpreparedValue], DirectiveMap, ParameterizedQueryHash)
+convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs varValsM
+  introspectionDisabledRoles reqId maybeOperationName queryTagsConfig = do
   -- Parse the GraphQL query into the RQL AST
-  (unpreparedQueries, _reusability) <- parseGraphQLQuery gqlContext varDefs varValsM fields
-
-  -- Transform the RQL AST into a prepared SQL query
-  queryPlan <- for unpreparedQueries \unpreparedQuery -> do
-    (preparedQuery, PlanningSt _ _ planVals expectedVariables)
-      <- flip runStateT initPlanningSt
-         $ traverseQueryRootField prepareWithPlan unpreparedQuery
-           >>= traverseAction convertActionQuery
-    validateSessionVariables expectedVariables $ _uiSession userInfo
-    traverseDB (pure . irToRootFieldPlan planVals) preparedQuery
-      >>= traverseAction (pure . actionQueryToRootFieldPlan planVals)
-
-  (instrument, ep) <- askInstrumentQuery directives
+  (unpreparedQueries, normalizedDirectives, normalizedSelectionSet) <-
+    parseGraphQLQuery gqlContext varDefs varValsM directives fields
 
   -- Transform the query plans into an execution plan
-  let executionPlan = queryPlan <&> \case
-        RFRemote (remoteSchemaInfo, remoteField) ->
-          buildExecStepRemote
-            remoteSchemaInfo
-            G.OperationTypeQuery
-            varDefs
-            [G.SelectionField remoteField]
-            varValsM
-        RFDB db      -> ExecStepDB $ mkCurPlanTx env manager reqHeaders userInfo instrument ep (RFPPostgres db)
-        RFAction rfp -> ExecStepDB $ mkCurPlanTx env manager reqHeaders userInfo instrument ep rfp
-        RFRaw r      -> ExecStepRaw r
+  let usrVars = _uiSession userInfo
 
-  let asts :: [QueryRootField (UnpreparedValue 'Postgres)]
-      asts = OMap.elems unpreparedQueries
-  pure (executionPlan, asts)  -- See Note [Temporarily disabling query plan caching]
-  where
-    usrVars = _uiSession userInfo
+  -- Process directives on the query
+  dirMap <- (`onLeft` reportParseErrors) =<<
+    runParseT (parseDirectives customDirectives (G.DLExecutable G.EDLQUERY) normalizedDirectives)
 
-    convertActionQuery
-      :: ActionQuery 'Postgres (UnpreparedValue 'Postgres) -> StateT PlanningSt m (ActionQueryPlan 'Postgres)
-    convertActionQuery = \case
-      AQQuery s -> lift $ do
-        result <- resolveActionExecution env logger userInfo s $ ActionExecContext manager reqHeaders usrVars
-        pure $ AQPQuery $ _aerTransaction result
-      AQAsync s -> AQPAsyncQuery <$>
-        DS.traverseAnnSimpleSelect prepareWithPlan (resolveAsyncActionQuery userInfo s)
+  let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
 
--- See Note [Temporarily disabling query plan caching]
--- use the existing plan and new variables to create a pg query
--- queryOpFromPlan
---   :: ( HasVersion
---      , MonadError QErr m
---      , Tracing.MonadTrace m
---      , MonadIO tx
---      , MonadTx tx
---      , Tracing.MonadTrace tx
---      )
---   => Env.Environment
---   -> HTTP.Manager
---   -> [HTTP.Header]
---   -> UserInfo
---   -> Maybe GH.VariableValues
---   -> ReusableQueryPlan
---   -> m (tx EncJSON, GeneratedSqlMap)
--- queryOpFromPlan env  manager reqHdrs userInfo varValsM (ReusableQueryPlan varTypes fldPlans) = do
---   validatedVars <- _validateVariablesForReuse varTypes varValsM
---   -- generate the SQL and prepared vars or the bytestring
---   resolved <- forM fldPlans $ \(alias, fldPlan) ->
---     (alias,) <$> case fldPlan of
---       RFPRaw resp        -> return $ RRRaw resp
---       RFPPostgres pgPlan -> RRSql <$> withPlan (_uiSession userInfo) pgPlan validatedVars
-
---   (,) <$> mkLazyRespTx env manager reqHdrs userInfo resolved <*> pure (mkGeneratedSqlMap resolved)
+  executionPlan <- flip OMap.traverseWithKey unpreparedQueries $ \rootFieldName rootFieldUnpreparedValue -> do
+    case rootFieldUnpreparedValue of
+      RFDB sourceName exists ->
+        AB.dispatchAnyBackend @BackendExecute exists
+            \(SourceConfigWith (sourceConfig :: (SourceConfig b)) (QDBR db)) -> do
+              let queryTagsAttributes = encodeQueryTags $  QTQuery $ QueryMetadata reqId maybeOperationName rootFieldName parameterizedQueryHash
+              let qtSourceConfig = getQueryTagsSourceConfig queryTagsConfig sourceName
+              let queryTagsText = QueryTagsComment $ Tagged.untag $ createQueryTags @m (Just qtSourceConfig) queryTagsAttributes
+              let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoins db
+              dbStepInfo <- mkDBQueryPlan @b userInfo sourceName sourceConfig noRelsDBAST queryTagsText
+              pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
+      RFRemote rf -> do
+        RemoteFieldG remoteSchemaInfo resultCustomizer remoteField <- runVariableCache $ for rf $ resolveRemoteVariable userInfo
+        pure $ buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeQuery $ getRemoteFieldSelectionSet remoteField
+      RFAction action -> do
+        let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
+        (actionExecution, actionName, fch) <- pure $ case noRelsDBAST of
+          AQQuery s -> (AEPSync $ resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders usrVars), _aaeName s, _aaeForwardClientHeaders s)
+          AQAsync s -> (AEPAsyncQuery $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s, _aaaqName s, _aaaqForwardClientHeaders s)
+        pure $ ExecStepAction actionExecution (ActionsInfo actionName fch) remoteJoins
+      RFRaw r -> flip onLeft throwError =<< executeIntrospection userInfo r introspectionDisabledRoles
+  -- See Note [Temporarily disabling query plan caching]
+  pure (executionPlan, OMap.elems unpreparedQueries, dirMap, parameterizedQueryHash)

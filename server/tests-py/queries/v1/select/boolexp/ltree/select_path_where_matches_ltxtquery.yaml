@@ -1,0 +1,49 @@
+- description: Select `ltree` paths matching an `ltxtquery` full text query
+  url: /v1/query
+  status: 200
+  response:
+    - path: Tree.Science.Astronomy
+    - path: Tree.Science.Astronomy.Astrophysics
+    - path: Tree.Science.Astronomy.Cosmology
+    - path: Tree.Hobbies.Amateurs_Astronomy
+  query:
+    type: select
+    args:
+      table: tree
+      where:
+        path:
+          $matches_fulltext: "Astro*% & !pictures@"
+      columns:
+        - path
+
+- description: Select `ltree` paths matching an invalid `ltxtquery` full text query
+  url: /v1/query
+  status: 500
+  response:
+    internal:
+      statement: "SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\" FROM  (SELECT\
+        \  row_to_json((SELECT  \"_1_e\"  FROM  (SELECT  \"_0_root.base\".\"path\" AS\
+        \ \"path\"       ) AS \"_1_e\"      ) ) AS \"root\" FROM  (SELECT  *  FROM \"\
+        public\".\"tree\"  WHERE ((\"public\".\"tree\".\"path\") @ (($1)::ltxtquery))\
+        \     ) AS \"_0_root.base\"      ) AS \"_2_root\"      "
+      prepared: true
+      error:
+        exec_status: FatalError
+        hint:
+        message: syntax error
+        status_code: '42601'
+        description:
+      arguments:
+      - (Oid 25,Just ("Astro*% & !pictures@\\",Binary))
+    path: $.args
+    error: database query error
+    code: unexpected
+  query:
+    type: select
+    args:
+      table: tree
+      where:
+        path:
+          $matches_fulltext: "Astro*% & !pictures@\\"
+      columns:
+        - path

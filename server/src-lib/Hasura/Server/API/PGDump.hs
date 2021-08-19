@@ -4,28 +4,37 @@ module Hasura.Server.API.PGDump
   , execPGDump
   ) where
 
-import           Control.Exception      (IOException, try)
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
-import qualified Data.ByteString.Lazy   as BL
-import           Data.Char              (isSpace)
-import qualified Data.List              as L
-import qualified Data.Text              as T
+import           Control.Exception     (IOException, try)
+import           Data.Aeson
+import           Data.Char             (isSpace)
 import           Data.Text.Conversions
-import qualified Database.PG.Query      as Q
 import           Hasura.Prelude
-import qualified Hasura.RQL.Types.Error as RTE
+import           Hasura.RQL.Types      (SourceName, defaultSource)
 import           System.Exit
 import           System.Process
-import qualified Text.Regex.TDFA        as TDFA
+
+import qualified Data.ByteString.Lazy  as BL
+import qualified Data.List             as L
+import qualified Data.Text             as T
+import qualified Database.PG.Query     as Q
+import qualified Hasura.Base.Error     as RTE
+import qualified Text.Regex.TDFA       as TDFA
+
 
 data PGDumpReqBody =
   PGDumpReqBody
-  { prbOpts        :: ![String]
-  , prbCleanOutput :: !(Maybe Bool)
+  { prbSource      :: !SourceName
+  , prbOpts        :: ![String]
+  , prbCleanOutput :: !Bool
   } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 3 snakeCase) ''PGDumpReqBody)
+instance FromJSON PGDumpReqBody where
+  parseJSON = withObject "Object" $ \o ->
+    PGDumpReqBody
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "opts"
+      <*> o .:? "clean_output" .!= False
+
 
 execPGDump
   :: (MonadError RTE.QErr m, MonadIO m)
@@ -35,10 +44,8 @@ execPGDump
 execPGDump b ci = do
   eOutput <- liftIO $ try execProcess
   output <- onLeft eOutput throwException
-  case output of
-    Left err ->
-      RTE.throw500 $ "error while executing pg_dump: " <> err
-    Right dump -> return dump
+  onLeft output $ \err ->
+    RTE.throw500 $ "error while executing pg_dump: " <> err
   where
     throwException :: (MonadError RTE.QErr m) => IOException -> m a
     throwException _ = RTE.throw500 "internal exception while executing pg_dump"
@@ -53,7 +60,7 @@ execPGDump b ci = do
     opts = connString : "--encoding=utf8" : prbOpts b
 
     clean str
-      | Just True == prbCleanOutput b =
+      | prbCleanOutput b =
           unlines $ filter (not . shouldDropLine) (lines str)
       | otherwise = str
 
@@ -74,7 +81,6 @@ execPGDump b ci = do
       , "SET client_encoding = 'UTF8';"
       , "SET standard_conforming_strings = on;"
       , "SELECT pg_catalog.set_config('search_path', '', false);"
-      , "SET check_function_bodies = false;"
       , "SET xmloption = content;"
       , "SET client_min_messages = warning;"
       , "SET row_security = off;"

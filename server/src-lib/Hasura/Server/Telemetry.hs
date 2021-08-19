@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
 {-|
   Send anonymized metrics to the telemetry server regarding usage of various
   features of Hasura.
@@ -10,23 +9,11 @@ module Hasura.Server.Telemetry
   )
   where
 
-import           Control.Exception                (try)
-import           Control.Lens
-import           Data.Text.Conversions            (UTF8 (..), decodeText)
-
-import           Hasura.HTTP
-import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.RQL.Types
-import           Hasura.Server.Telemetry.Counters
-import           Hasura.Server.Types
-import           Hasura.Server.Version
-import           Hasura.Session
 
 import qualified CI
 import qualified Control.Concurrent.Extended      as C
 import qualified Data.Aeson                       as A
-import qualified Data.Aeson.Casing                as A
 import qualified Data.Aeson.TH                    as A
 import qualified Data.ByteString.Lazy             as BL
 import qualified Data.HashMap.Strict              as Map
@@ -36,12 +23,25 @@ import qualified Network.HTTP.Client              as HTTP
 import qualified Network.HTTP.Types               as HTTP
 import qualified Network.Wreq                     as Wreq
 
+import           Control.Exception                (try)
+import           Control.Lens
+import           Data.Text.Conversions            (UTF8 (..), decodeText)
+
+import           Hasura.HTTP
+import           Hasura.Logging
+import           Hasura.RQL.Types
+import           Hasura.Server.Telemetry.Counters
+import           Hasura.Server.Types
+import           Hasura.Server.Version
+import           Hasura.Session
+
+
 data RelationshipMetric
   = RelationshipMetric
   { _rmManual :: !Int
   , _rmAuto   :: !Int
   } deriving (Show, Eq)
-$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''RelationshipMetric)
+$(A.deriveToJSON hasuraJSON ''RelationshipMetric)
 
 data PermissionMetric
   = PermissionMetric
@@ -51,7 +51,7 @@ data PermissionMetric
   , _pmDelete :: !Int
   , _pmRoles  :: !Int
   } deriving (Show, Eq)
-$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''PermissionMetric)
+$(A.deriveToJSON hasuraJSON ''PermissionMetric)
 
 data ActionMetric
     = ActionMetric
@@ -61,7 +61,7 @@ data ActionMetric
     , _amTypeRelationships :: !Int
     , _amCustomTypes       :: !Int
     } deriving (Show, Eq)
-$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''ActionMetric)
+$(A.deriveToJSON hasuraJSON ''ActionMetric)
 
 data Metrics
   = Metrics
@@ -77,7 +77,7 @@ data Metrics
   , _mtPgVersion      :: !PGVersion
   , _mtActions        :: !ActionMetric
   } deriving (Show, Eq)
-$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''Metrics)
+$(A.deriveToJSON hasuraJSON ''Metrics)
 
 data HasuraTelemetry
   = HasuraTelemetry
@@ -87,14 +87,14 @@ data HasuraTelemetry
   , _htCi          :: !(Maybe CI.CI)
   , _htMetrics     :: !Metrics
   } deriving (Show)
-$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''HasuraTelemetry)
+$(A.deriveToJSON hasuraJSON ''HasuraTelemetry)
 
 data TelemetryPayload
   = TelemetryPayload
   { _tpTopic :: !Text
   , _tpData  :: !HasuraTelemetry
   } deriving (Show)
-$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''TelemetryPayload)
+$(A.deriveToJSON hasuraJSON ''TelemetryPayload)
 
 telemetryUrl :: Text
 telemetryUrl = "https://telemetry.hasura.io/v1/http"
@@ -165,37 +165,41 @@ computeMetrics sc _mtServiceTimings _mtPgVersion =
       _mtEventTriggers = Map.size $ Map.filter (not . Map.null)
                     $ Map.map _tiEventTriggerInfoMap userTables
       _mtRemoteSchemas   = Map.size $ scRemoteSchemas sc
-      _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . fiSystemDefined) $ scFunctions sc
+      _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . _fiSystemDefined) pgFunctionCache
       _mtActions = computeActionsMetrics $ scActions sc
 
   in Metrics{..}
 
   where
-    userTables = Map.filter (not . isSystemDefined . _tciSystemDefined . _tiCoreInfo) $ scTables sc
+      -- TODO: multiple sources
+    pgTableCache    = fromMaybe mempty $ unsafeTableCache    @('Postgres 'Vanilla) defaultSource $ scSources sc
+    pgFunctionCache = fromMaybe mempty $ unsafeFunctionCache @('Postgres 'Vanilla) defaultSource $ scSources sc
+    userTables = Map.filter (not . isSystemDefined . _tciSystemDefined . _tiCoreInfo) pgTableCache
     countUserTables predicate = length . filter predicate $ Map.elems userTables
 
-    calcPerms :: (RolePermInfo 'Postgres -> Maybe a) -> [RolePermInfo 'Postgres] -> Int
+    calcPerms :: (RolePermInfo ('Postgres 'Vanilla) -> Maybe a) -> [RolePermInfo ('Postgres 'Vanilla)] -> Int
     calcPerms fn perms = length $ mapMaybe fn perms
 
-    permsOfTbl :: TableInfo 'Postgres -> [(RoleName, RolePermInfo 'Postgres)]
+    permsOfTbl :: TableInfo b -> [(RoleName, RolePermInfo b)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap
 
 computeActionsMetrics :: ActionCache -> ActionMetric
 computeActionsMetrics actionCache =
   ActionMetric syncActionsLen asyncActionsLen queryActionsLen typeRelationships customTypesLen
-  where actions = Map.elems actionCache
-        syncActionsLen  = length . filter ((== ActionMutation ActionSynchronous) . _adType . _aiDefinition) $ actions
-        asyncActionsLen  = length . filter ((== ActionMutation ActionAsynchronous) . _adType . _aiDefinition) $ actions
-        queryActionsLen = length . filter ((== ActionQuery) . _adType . _aiDefinition) $ actions
+  where
+    actions = Map.elems actionCache
+    syncActionsLen  = length . filter ((== ActionMutation ActionSynchronous)  . _adType . _aiDefinition) $ actions
+    asyncActionsLen = length . filter ((== ActionMutation ActionAsynchronous) . _adType . _aiDefinition) $ actions
+    queryActionsLen = length . filter ((== ActionQuery)                       . _adType . _aiDefinition) $ actions
 
-        outputTypesLen = length . L.nub . map (_adOutputType . _aiDefinition) $ actions
-        inputTypesLen = length . L.nub . concatMap (map _argType . _adArguments . _aiDefinition) $ actions
-        customTypesLen = inputTypesLen + outputTypesLen
+    outputTypesLen = length . L.nub . map (_adOutputType . _aiDefinition) $ actions
+    inputTypesLen = length . L.nub . concatMap (map _argType . _adArguments . _aiDefinition) $ actions
+    customTypesLen = inputTypesLen + outputTypesLen
 
-        typeRelationships =
-          length . L.nub . concatMap
-          (map _trName . maybe [] toList . _otdRelationships . _aiOutputObject) $
-          actions
+    typeRelationships =
+      length . L.nub . concatMap
+      (map _trName . maybe [] toList . _otdRelationships . _aotDefinition . snd . _aiOutputObject) $
+      actions
 
 -- | Logging related
 
