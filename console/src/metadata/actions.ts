@@ -3,6 +3,7 @@ import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import {
   ConnectionPoolSettings,
   HasuraMetadataV3,
+  InconsistentObject,
   IsolationLevelOptions,
   MetadataDataSource,
   RestEndpointEntry,
@@ -73,7 +74,7 @@ export interface ExportMetadataRequest {
 
 export interface LoadInconsistentObjectsSuccess {
   type: 'Metadata/LOAD_INCONSISTENT_OBJECTS_SUCCESS';
-  data: any;
+  data: InconsistentObject[];
 }
 export interface LoadInconsistentObjectsRequest {
   type: 'Metadata/LOAD_INCONSISTENT_OBJECTS_REQUEST';
