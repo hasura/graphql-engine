@@ -8,7 +8,7 @@ A sample [Svelte 3](https://svelte.dev) app to demonstrate usage of GraphQL Quer
 
 - Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
   
-  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
+  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/signup)
 
 - Get the app URL (something like `https://<my-project-name>.hasura.app`)
 - Create `author` table:
