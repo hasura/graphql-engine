@@ -88,7 +88,18 @@ module.exports = {
               modules: {},
             },
           },
-          'sass-loader?outputStyle=expanded&sourceMap=false&sourceMapContents=false',
+          {
+            loader: 'sass-loader',
+            options: {
+              // Prefer `dart-sass`
+              implementation: require('sass'),
+              sassOptions: {
+                outputStyle: 'expanded',
+              },
+              sourceMap: false,
+              sourceMapContents: false,
+            },
+          },
         ],
       },
       ...commonConfig.assetsRules,

@@ -70,7 +70,17 @@ module.exports = {
               },
             },
           },
-          'sass-loader?outputStyle=expanded&sourceMap',
+          {
+            loader: 'sass-loader',
+            options: {
+              // Prefer `dart-sass`
+              implementation: require('sass'),
+              sassOptions: {
+                outputStyle: 'expanded',
+              },
+              sourceMap: true,
+            },
+          },
         ],
       },
       ...commonConfig.assetsRules,
