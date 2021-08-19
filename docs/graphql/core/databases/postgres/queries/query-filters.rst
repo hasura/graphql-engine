@@ -201,6 +201,56 @@ Fetch a list of articles that were published on a certain date (``published_on``
       }
     }
 
+.. admonition:: Caveat for "null" values
+
+  By design, the ``_eq`` or ``_neq`` operators will not return rows with ``null`` values.
+
+  To also return rows with ``null`` values, the ``_is_null`` operator needs to be used
+  along with these joined by the ``_or`` operator.
+
+  For example, to fetch a list of articles where the ``is_published`` column is either ``false`` or ``null``:
+
+  .. graphiql::
+    :view_only:
+    :query:
+      query {
+        articles (
+          where: {
+            _or: [
+              {is_published: {_eq: false}},
+              {is_published: {_is_null: true}}
+            ]
+          }
+        )
+        {
+          id
+          title
+          is_published
+        }
+      }
+    :response:
+      {
+        "data": {
+          "articles": [
+            {
+              "id": 1,
+              "title": "Robben Island",
+              "is_published": false
+            },
+            {
+              "id": 2,
+              "title": "The Life of Matthias",
+              "is_published": false
+            },
+            {
+              "id": 3,
+              "title": "All about Hasura",
+              "is_published": null
+            },
+          ]
+        }
+      }
+
 Greater than or less than operators (_gt, _lt, _gte, _lte)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
