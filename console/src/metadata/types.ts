@@ -1004,3 +1004,41 @@ export interface HasuraMetadataV3 {
     disabled_for_roles: string[];
   };
 }
+
+// Inconsistent Objects
+
+export interface InconsistentObject {
+  definition:
+    | string
+    | {
+        comment: string;
+        definition: InconsistentObjectDefinition;
+      };
+  reason: string;
+  name: string;
+  type: string;
+  message:
+    | string
+    | {
+        message: string;
+        request: InconsistentObjectRequest;
+      };
+}
+
+type InconsistentObjectRequest = {
+  proxy: string | null;
+  secure: boolean;
+  path: string;
+  responseTimeout: string;
+  method: 'POST' | 'GET' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTION';
+  host: string;
+  requestVersion: `${number}`;
+  redirectCount: `${number}`;
+  port: `${number}`;
+};
+
+type InconsistentObjectDefinition = {
+  timeout_seconds: number;
+  url_from_env: string;
+  forward_client_headers: boolean;
+};

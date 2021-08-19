@@ -136,6 +136,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
               }
               definition = `remote schema named "${name}" at ${url}`;
             }
+            const message = iconsistentObject.message;
             return (
               <tr key={_i}>
                 <td data-test={`inconsistent_name_${_i}`}>{name}</td>
@@ -149,7 +150,13 @@ const MetadataStatus = ({ dispatch, metadata }) => {
                   <div>
                     <b>{iconsistentObject.reason}</b>
                     <br />
-                    {iconsistentObject.message}
+                    {typeof message === 'string' ? (
+                      message
+                    ) : message ? (
+                      <pre className="text-base">
+                        <code>{JSON.stringify(message, null, 2)}</code>
+                      </pre>
+                    ) : null}
                   </div>
                 </td>
                 <td data-test={`inconsistent_action_${_i}`}>
