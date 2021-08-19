@@ -162,7 +162,7 @@ runUntrackFunc (UnTrackFunction functionName sourceName) = do
   void $ askFunctionInfo @b sourceName functionName
   withNewInconsistentObjsCheck
     $ buildSchemaCache
-    $ dropFunctionInMetadata @b defaultSource functionName
+    $ dropFunctionInMetadata @b sourceName functionName
   pure successMsg
 
 dropFunctionInMetadata
