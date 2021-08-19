@@ -4,7 +4,6 @@ import { browserHistory } from 'react-router';
 
 // Since we only use it in dev, this warning doesn't make sense.
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { createLogger } from 'redux-logger';
 import { configureStore } from '@reduxjs/toolkit';
 import { telemetryMiddleware } from './telemetry';
 import reducer from './reducer';
@@ -13,7 +12,7 @@ export const store = configureStore({
   reducer,
   middleware: getDefaultMiddleware => {
     // Middleware by default : https://redux-toolkit.js.org/api/getDefaultMiddleware#included-default-middleware
-    let middlewares = getDefaultMiddleware({
+    return getDefaultMiddleware({
       // Removed because we use callbacks in some places and they are not serializable.
       // see https://redux.js.org/style-guide/style-guide#do-not-put-non-serializable-values-in-state-or-actions
       serializableCheck: false,
@@ -21,14 +20,6 @@ export const store = configureStore({
       // See https://redux.js.org/style-guide/style-guide#do-not-mutate-state
       immutableCheck: false,
     }).concat([routerMiddleware(browserHistory), telemetryMiddleware]);
-
-    if (__DEVELOPMENT__) {
-      middlewares = middlewares.concat(
-        createLogger({ diff: true, duration: true })
-      );
-    }
-
-    return middlewares;
   },
 
   // Enable redux browser devtools
