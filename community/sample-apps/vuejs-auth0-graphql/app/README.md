@@ -70,7 +70,7 @@ Head to [https://hasura.io/jwt-config](https://hasura.io/jwt-config) and generat
 
 - Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
   
-  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
+  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/signup)
 
 After deploying, add the following environment variables to configure JWT mode:
 
