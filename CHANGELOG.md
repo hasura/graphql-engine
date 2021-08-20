@@ -14,6 +14,7 @@
 - console: support insecure TLS allowlist
 - console: support computed fields in remote schema join
 - cli: fix delay starting console using `hasura console` (#7255
+- cli: add deploy option (close #7349)
 
 ## v2.0.7
 

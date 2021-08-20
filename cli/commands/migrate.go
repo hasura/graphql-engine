@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
@@ -14,6 +15,7 @@ import (
 	mig "github.com/hasura/graphql-engine/cli/v2/migrate/cmd"
 	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	// Initialize migration drivers
@@ -43,6 +45,20 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	f := migrateCmd.PersistentFlags()
+	migrateCommonFlags(f, v)
+
+	migrateCmd.AddCommand(
+		newMigrateApplyCmd(ec),
+		newMigrateStatusCmd(ec),
+		newMigrateCreateCmd(ec),
+		newMigrateSquashCmd(ec),
+		newMigrateDeleteCmd(ec),
+	)
+
+	return migrateCmd
+}
+
+func migrateCommonFlags(f *pflag.FlagSet, v *viper.Viper) {
 	f.StringVar(&ec.Source.Name, "database-name", "", "database on which operation should be applied")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
@@ -62,16 +78,6 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f.BoolVar(&ec.DisableAutoStateMigration, "disable-auto-state-migration", false, "after a config v3 update, disable automatically moving state from hdb_catalog.schema_migrations to catalog state")
 	f.MarkHidden("disable-auto-state-migration")
-
-	migrateCmd.AddCommand(
-		newMigrateApplyCmd(ec),
-		newMigrateStatusCmd(ec),
-		newMigrateCreateCmd(ec),
-		newMigrateSquashCmd(ec),
-		newMigrateDeleteCmd(ec),
-	)
-
-	return migrateCmd
 }
 
 var errDatabaseNotFound = errors.New("database not found")

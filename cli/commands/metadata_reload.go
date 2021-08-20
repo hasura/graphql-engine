@@ -26,14 +26,7 @@ func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura metadata export --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.EC.Spin("Reloading metadata...")
-			err := opts.run()
-			opts.EC.Spinner.Stop()
-			if err != nil {
-				return errors.Wrap(err, "failed to reload metadata")
-			}
-			opts.EC.Logger.Info("Metadata reloaded")
-			return nil
+			return opts.runWithInfo()
 		},
 	}
 
@@ -42,6 +35,17 @@ func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 type metadataReloadOptions struct {
 	EC *cli.ExecutionContext
+}
+
+func (o *metadataReloadOptions) runWithInfo() error {
+	o.EC.Spin("Reloading metadata...")
+	err := o.run()
+	o.EC.Spinner.Stop()
+	if err != nil {
+		return errors.Wrap(err, "failed to reload metadata")
+	}
+	o.EC.Logger.Info("Metadata reloaded")
+	return nil
 }
 
 func (o *metadataReloadOptions) run() error {
