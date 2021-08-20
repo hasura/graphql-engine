@@ -18,7 +18,7 @@ func NewDeployCmd(ec *cli.ExecutionContext) *cobra.Command {
 			EC:           ec,
 			AllDatabases: true,
 		},
-		MetadataReloadOpts: metadataReloadOptions{
+		MetadataReloadOpts: MetadataReloadOptions{
 			EC: ec,
 		},
 	}
@@ -82,12 +82,18 @@ type DeployOptions struct {
 	EC                 *cli.ExecutionContext
 	MetadataApplyOpts  MetadataApplyOptions
 	MigrateApplyOpts   MigrateApplyOptions
-	MetadataReloadOpts metadataReloadOptions
+	MetadataReloadOpts MetadataReloadOptions
 }
 
 func (opts *DeployOptions) Run() error {
-	opts.MetadataApplyOpts.Run()
-	opts.MigrateApplyOpts.Run()
-	opts.MetadataReloadOpts.runWithInfo()
+	if err := opts.MetadataApplyOpts.Run(); err != nil {
+		return err
+	}
+	if err := opts.MigrateApplyOpts.Run(); err != nil {
+		return err
+	}
+	if err := opts.MetadataReloadOpts.runWithInfo(); err != nil {
+		return err
+	}
 	return nil
 }

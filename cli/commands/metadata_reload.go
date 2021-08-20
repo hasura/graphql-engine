@@ -9,7 +9,7 @@ import (
 )
 
 func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
-	opts := &metadataReloadOptions{
+	opts := &MetadataReloadOptions{
 		EC: ec,
 	}
 
@@ -33,11 +33,11 @@ func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return metadataReloadCmd
 }
 
-type metadataReloadOptions struct {
+type MetadataReloadOptions struct {
 	EC *cli.ExecutionContext
 }
 
-func (o *metadataReloadOptions) runWithInfo() error {
+func (o *MetadataReloadOptions) runWithInfo() error {
 	o.EC.Spin("Reloading metadata...")
 	err := o.run()
 	o.EC.Spinner.Stop()
@@ -48,10 +48,9 @@ func (o *metadataReloadOptions) runWithInfo() error {
 	return nil
 }
 
-func (o *metadataReloadOptions) run() error {
-
+func (o *MetadataReloadOptions) run() error {
 	var err error
-	metadataHandler := projectmetadata.NewHandlerFromEC(ec)
+	metadataHandler := projectmetadata.NewHandlerFromEC(o.EC)
 	_, err = metadataHandler.ReloadMetadata()
 	if err != nil {
 		return errors.Wrap(err, "Cannot reload metadata")
