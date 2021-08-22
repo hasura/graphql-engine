@@ -5,7 +5,12 @@ import { getDataOptions, inferDefaultValues } from '../Common/utils';
 
 import TableColumnDefault from './TableColumnDefault';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
-import { dataSource, isFeatureSupported } from '../../../../dataSources';
+import {
+  dataSource,
+  isFeatureSupported,
+  defaultValueTypes,
+} from '../../../../dataSources';
+import SearchableSelect from '../../../Common/SearchableSelect/SearchableSelect';
 
 /* Custom style object for searchable select box */
 const customSelectBoxStyles = {
@@ -30,6 +35,7 @@ const TableColumn = props => {
     onColumnChange,
     onColTypeChange,
     setColDefaultValue,
+    setColDefaultValueType,
     onColNullableChange,
     onColUniqueChange,
     dataTypes: restTypes,
@@ -53,6 +59,7 @@ const TableColumn = props => {
 
   const handleColTypeChange = selectedOption => {
     onColTypeChange(selectedOption.colIdentifier, selectedOption.value);
+    setColDefaultValueType(selectedOption.colIdentifier, defaultValueTypes.DEFINEDAS);
   };
   const { columnDataTypes, columnTypeValueMap } = getDataOptions(
     dataSource.commonDataTypes,
@@ -86,7 +93,7 @@ const TableColumn = props => {
       : getInferredDefaultValues();
 
   return (
-    <div key={i} className={`${styles.display_flex} form-group`}>
+    <div key={i} className={`${styles.displayFlexContainer} form-group`}>
       <input
         type="text"
         className={`${styles.input} form-control`}
@@ -124,13 +131,30 @@ const TableColumn = props => {
         )}
       </span>
       <span className={`${styles.inputDefault} ${styles.defaultWidth}`}>
-        <TableColumnDefault
-          onChange={setColDefaultValue}
-          colIndex={i}
-          testId={`col-default-${i}`}
-          column={column}
-          colDefaultFunctions={defaultFunctions}
-        />
+        {column.type?.toLowerCase() == 'text' && (
+          <span data-test={`col-defaulttype-${i}`}>
+            <SearchableSelect
+              options={Object.values(defaultValueTypes)}
+              onChange={data => setColDefaultValueType(i, data)}
+              value={column.defaultType?.label || defaultValueTypes.DEFINEDAS.label}
+              bsClass={`col-type-${0} modify_select`}
+              styleOverrides={{
+                ...customSelectBoxStyles,
+                container: { marginBottom: '5px' },
+              }}
+              filterOption="prefix"
+            />
+          </span>
+        )}
+        {column.defaultType?.value != 'none' && (
+          <TableColumnDefault
+            onChange={setColDefaultValue}
+            colIndex={i}
+            testId={`col-default-${i}`}
+            column={column}
+            colDefaultFunctions={defaultFunctions}
+          />
+        )}
       </span>
       <label className="flex items-center">
         <input

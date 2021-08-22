@@ -5,6 +5,7 @@ import {
   deleteBITestTable,
   checkInsertRoute,
   failBIWrongDataType,
+  passBIModifyTableNoneInput,
   failBIUniqueKeys,
   passBIInsert20Rows,
   checkBrowseRoute,
@@ -38,6 +39,7 @@ const setup = () => {
 export const runInsertBrowseTests = () => {
   describe('Table: Browse and Insert', () => {
     it('Create a table with fields of all data types', passBICreateTable);
+    it('Check modify table text none input', passBIModifyTableNoneInput);
     it('Search for tables', passSearchTables);
     it('Check Insert Route', checkInsertRoute);
     it('Fails when entered wrong data type', failBIWrongDataType);

@@ -28,6 +28,7 @@ const SET_COLUMNS_BULK = 'AddTable/SET_COLUMNS_BULK';
 const SET_COLNAME = 'AddTable/SET_COLNAME';
 const SET_COLTYPE = 'AddTable/SET_COLTYPE';
 const SET_COLDEFAULT = 'AddTable/SET_COLDEFAULT';
+const SET_COLDEFAULTTYPE = 'AddTable/SET_COLDEFAULTTYPE';
 const REMOVE_COLDEFAULT = 'AddTable/REMOVE_COLDEFAULT';
 const SET_COLNULLABLE = 'AddTable/SET_COLNULLABLE';
 const SET_COLUNIQUE = 'AddTable/SET_COLUNIQUE';
@@ -68,6 +69,11 @@ const setColDefault = (colDefault, index, isNull) => ({
   colDefault,
   index,
   isNull,
+});
+const setColDefaultType = (colDefaultType, index) => ({
+  type: SET_COLDEFAULTTYPE,
+  colDefaultType,
+  index,
 });
 const setColType = (coltype, index) => ({
   type: SET_COLTYPE,
@@ -386,6 +392,19 @@ const addTableReducerCore = (state = defaultState, action) => {
           ...state.columns.slice(ij + 1),
         ],
       };
+    case SET_COLDEFAULTTYPE:
+      const il = action.index;
+      return {
+        ...state,
+        columns: [
+          ...state.columns.slice(0, il),
+          {
+            ...state.columns[il],
+            defaultType: action.colDefaultType,
+          },
+          ...state.columns.slice(il + 1),
+        ],
+      };
     case SET_COLDEFAULT:
       const ik = action.index;
       let defaultObj = {};
@@ -515,6 +534,7 @@ export {
   setColNullable,
   setColUnique,
   setColDefault,
+  setColDefaultType,
   removeColDefault,
   addCol,
   setPk,

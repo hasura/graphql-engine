@@ -6,6 +6,7 @@ import {
   getElementFromAlias,
   typeDefaults,
   tableColumnTypeSelector,
+  tableColumnDefaultTypeSelector,
   getIndexRoute,
 } from '../../../helpers/dataHelpers';
 
@@ -32,7 +33,12 @@ const setColumns = () => {
       .first()
       .click();
 
+    // Test default type dropdown is visible and changing it's value hides
+    // or shows default input box as per selected value.
     if (i === dataTypes.indexOf('text')) {
+      tableColumnDefaultTypeSelector(`col-defaulttype-${i}`, 'none');
+      cy.get(getElementFromAlias(`col-default-${i}`)).should("have.length", 0);
+      tableColumnDefaultTypeSelector(`col-defaulttype-${i}`, 'definedas')
       cy.get(getElementFromAlias(`unique-${i}`)).check();
     }
     // Set appropriate default if the type is not serial
@@ -104,6 +110,30 @@ export const passBICreateTable = () => {
   cy.get(getElementFromAlias('table-create')).click();
   cy.wait(7000);
   validateCT(getTableName(0, testName), ResultType.SUCCESS);
+};
+
+export const passBIModifyTableNoneInput = () => {
+  cy.visit(`${getIndexRoute()}tables/${getTableName(0, testName)}/modify`, {
+    onBeforeLoad(win) {
+      cy.stub(win, 'prompt').returns('text_none')
+      cy.stub(win, 'alert').as('windowAlert')
+    }
+  });
+  cy.wait(1000);
+  cy.get(getElementFromAlias('modify-table-edit-add-new-column')).click();
+  cy.get(getElementFromAlias('column-name')).type('text_none');
+  tableColumnTypeSelector('col-type-0');
+  cy.get(getElementFromAlias('data_test_column_type_value_text'))
+    .first().click();
+  // Check if the element exists.
+  cy.get(getElementFromAlias('default-value'));
+  tableColumnDefaultTypeSelector('default-valuetype', 'none');
+  // Check if the element exists is hidden.
+  cy.get(getElementFromAlias('default-value')).should("have.length", 0);
+  cy.get(getElementFromAlias('modify-table-add-new-column-save')).click();
+  cy.get(getElementFromAlias(`modify-table-edit-column-${numOfDataTypes}`)).click();
+  cy.get(getElementFromAlias('edit-col-default')).should('have.value', '');
+  cy.get(getElementFromAlias(`modify-table-column-${numOfDataTypes}-remove`)).click();
 };
 
 export const passSearchTables = () => {

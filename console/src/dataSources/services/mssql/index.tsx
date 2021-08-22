@@ -421,7 +421,9 @@ FROM sys.objects as obj
         currentCols[i].default !== undefined &&
         currentCols[i].default?.value !== ''
       ) {
-        if (isColTypeString(currentCols[i].type)) {
+        if (currentCols[i]?.default?.value === "''::text") {
+          tableDefSql += ` DEFAULT ''`;
+        } else if (isColTypeString(currentCols[i].type)) {
           // if a column type is text and if it has a non-func default value, add a single quote
           tableDefSql += ` DEFAULT '${currentCols[i]?.default?.value}'`;
         } else {
@@ -625,7 +627,9 @@ FROM sys.objects as obj
     if (options.unique) {
       sql += ` UNIQUE`;
     }
-    if (options.default) {
+    if (options.default.includes('::text')) {
+      sql += ` CONSTRAINT "${constraintName}" DEFAULT '' WITH VALUES`;
+    } else if (options.default) {
       sql += ` CONSTRAINT "${constraintName}" DEFAULT '${options.default}' WITH VALUES`;
     }
     return sql;
