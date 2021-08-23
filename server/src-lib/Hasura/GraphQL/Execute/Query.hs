@@ -116,5 +116,4 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
           AQAsync s -> (AEPAsyncQuery $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s, _aaaqName s, _aaaqForwardClientHeaders s)
         pure $ ExecStepAction actionExecution (ActionsInfo actionName fch) remoteJoins
       RFRaw r -> flip onLeft throwError =<< executeIntrospection userInfo r introspectionDisabledRoles
-  -- See Note [Temporarily disabling query plan caching]
   pure (executionPlan, OMap.elems unpreparedQueries, dirMap, parameterizedQueryHash)
