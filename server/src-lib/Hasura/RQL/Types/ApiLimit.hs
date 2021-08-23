@@ -36,19 +36,23 @@ instance ToJSON ApiLimit where
 emptyApiLimit :: ApiLimit
 emptyApiLimit = ApiLimit Nothing Nothing Nothing False
 
-data RateLimit
-  = RateLimit
-  { _rlGlobal  :: !RateLimitConfig
-  , _rlPerRole :: !(InsOrdHashMap RoleName RateLimitConfig)
+data Limit a
+  = Limit
+  { _lGlobal  :: !a
+  , _lPerRole :: !(InsOrdHashMap RoleName a)
   } deriving (Show, Eq, Generic)
 
-instance FromJSON RateLimit where
-  parseJSON = withObject "RateLimit" $ \o ->
-    RateLimit <$>  o .: "global" <*> o .:? "per_role" .!= mempty
+instance FromJSON a => FromJSON (Limit a) where
+  parseJSON = withObject "Limit" $ \o ->
+    Limit <$>  o .: "global" <*> o .:? "per_role" .!= mempty
 
-instance ToJSON RateLimit where
+instance ToJSON a => ToJSON (Limit a) where
   toJSON =
     genericToJSON (Casing.aesonPrefix Casing.snakeCase)
+
+type RateLimit = Limit RateLimitConfig
+type DepthLimit = Limit MaxDepth
+type NodeLimit = Limit MaxNodes
 
 data RateLimitConfig
   = RateLimitConfig
@@ -92,47 +96,12 @@ instance FromJSON UniqueParamConfig where
         _ -> fail errMsg
       errMsg = "Not a valid value. Should be either: 'IP' or a list of Hasura session variables"
 
-data DepthLimit
-  = DepthLimit
-  { _dlGlobal  :: !MaxDepth
-  , _dlPerRole :: !(InsOrdHashMap RoleName MaxDepth)
-  } deriving (Show, Eq, Generic)
-
-instance FromJSON DepthLimit where
-  parseJSON = withObject "DepthLimit" $ \o ->
-    DepthLimit <$> o .: "global" <*> o .:? "per_role" .!= mempty
-
-instance ToJSON DepthLimit where
-  toJSON =
-    genericToJSON (Casing.aesonPrefix Casing.snakeCase)
-
 newtype MaxDepth
   = MaxDepth { unMaxDepth :: Int }
   deriving stock (Show, Eq, Ord, Generic)
   deriving newtype (ToJSON, FromJSON)
 
-
-data NodeLimit
-  = NodeLimit
-  { _nlGlobal  :: !MaxNodes
-  , _nlPerRole :: !(InsOrdHashMap RoleName MaxNodes)
-  } deriving (Show, Eq, Generic)
-
-instance FromJSON NodeLimit where
-  parseJSON = withObject "NodeLimit" $ \o ->
-    NodeLimit <$> o .: "global" <*> o .:? "per_role" .!= mempty
-
-instance ToJSON NodeLimit where
-  toJSON =
-    genericToJSON (Casing.aesonPrefix Casing.snakeCase)
-
 newtype MaxNodes
   = MaxNodes { unMaxNodes :: Int }
   deriving stock (Show, Eq, Ord, Generic)
   deriving newtype (ToJSON, FromJSON)
-
-$(makeLenses ''ApiLimit)
-$(makeLenses ''RateLimit)
-$(makeLenses ''DepthLimit)
-$(makeLenses ''NodeLimit)
-
