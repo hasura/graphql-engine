@@ -77,7 +77,7 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
   };
 
   return (
-    <ul>
+    <ul className="pl-md">
       {list.map(
         (i: FieldType, ix) =>
           !i.name.startsWith('enum') &&
