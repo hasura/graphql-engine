@@ -367,6 +367,13 @@ A nested insert mutation is processed as follows:
    ``author_id`` set to the author's ``id`` collected in the step 2. Hence, it's not possible to specify ``author_id``
    in the data for the articles relationship.
 
+.. note::
+
+  The order of object insertion can be controlled using the :ref:`insertion_order <ObjRelUsingManualMapping>` option while
+  creating a manual relationship. This is necessary to ensure :ref:`nested inserts <one-to-one-insert>` in one-to-one
+  relationships are possible using either side as the parent which would otherwise error out with a ``Not-NULL violation`` error in one of
+  the cases.
+
 Many-to-many relationships
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Let's say the ``articles`` has a :ref:`many-to-many relationship <many_to_many_modelling>` with the ``tags`` table via
