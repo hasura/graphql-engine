@@ -160,6 +160,7 @@ import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.GraphqlSchemaIntrospection
 import           Hasura.RQL.Types.Metadata.Object
+import           Hasura.RQL.Types.Network                    (TlsAllow)
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.QueryTags
 import           Hasura.RQL.Types.Relationship
@@ -332,6 +333,7 @@ data SchemaCache
   , scMetadataResourceVersion        :: !(Maybe MetadataResourceVersion)
   , scSetGraphqlIntrospectionOptions :: !SetGraphqlIntrospectionOptions
   , scQueryTagsConfig                :: !QueryTagsConfig
+  , scTlsAllowlist                   :: ![TlsAllow]
   }
 
 -- WARNING: this can only be used for debug purposes, as it loses all
@@ -354,6 +356,7 @@ instance ToJSON SchemaCache where
     , "metrics_config"                    .= toJSON scMetricsConfig
     , "metadata_resource_version"         .= toJSON scMetadataResourceVersion
     , "set_graphql_introspection_options" .= toJSON scSetGraphqlIntrospectionOptions
+    , "tls_allowlist"                     .= toJSON scTlsAllowlist
     ]
 
 getAllRemoteSchemas :: SchemaCache -> [RemoteSchemaName]

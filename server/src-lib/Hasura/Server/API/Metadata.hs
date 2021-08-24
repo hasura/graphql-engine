@@ -33,6 +33,7 @@ import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.GraphqlSchemaIntrospection
 import           Hasura.RQL.DDL.InheritedRoles
 import           Hasura.RQL.DDL.Metadata
+import           Hasura.RQL.DDL.Network
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryCollection
 import           Hasura.RQL.DDL.Relationship
@@ -173,6 +174,10 @@ data RQLMetadataV1
   -- Introspection options
   | RMSetGraphqlSchemaIntrospectionOptions !SetGraphqlIntrospectionOptions
 
+  -- Network
+  | RMAddHostToTLSAllowlist !AddHostToTLSAllowlist
+  | RMDropHostFromTLSAllowlist !DropHostFromTLSAllowlist
+
   -- Debug
   | RMDumpInternalState !DumpInternalState
   | RMGetCatalogState  !GetCatalogState
@@ -238,6 +243,9 @@ instance FromJSON RQLMetadataV1 where
       "reload_metadata"                          -> RMReloadMetadata                       <$> args
       "get_inconsistent_metadata"                -> RMGetInconsistentMetadata              <$> args
       "drop_inconsistent_metadata"               -> RMDropInconsistentMetadata             <$> args
+
+      "add_host_to_tls_allowlist"                -> RMAddHostToTLSAllowlist                <$> args
+      "drop_host_from_tls_allowlist"             -> RMDropHostFromTLSAllowlist             <$> args
 
       "dump_internal_state"                      -> RMDumpInternalState                    <$> args
       "get_catalog_state"                        -> RMGetCatalogState                      <$> args
@@ -342,6 +350,7 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
             & peelRun (RunCtx userInfo httpManager serverConfigCtx)
             & runExceptT
             & liftEitherM
+
           pure (r, modSchemaCache')
         MaintenanceModeEnabled ->
           throw500 "metadata cannot be modified in maintenance mode"
@@ -510,6 +519,9 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDropInconsistentMetadata q             -> runDropInconsistentMetadata q
 
   RMSetGraphqlSchemaIntrospectionOptions q -> runSetGraphqlSchemaIntrospectionOptions q
+
+  RMAddHostToTLSAllowlist q                -> runAddHostToTLSAllowlist q
+  RMDropHostFromTLSAllowlist q             -> runDropHostFromTLSAllowlist q
 
   RMDumpInternalState q                    -> runDumpInternalState q
   RMGetCatalogState q                      -> runGetCatalogState q

@@ -6,6 +6,7 @@ import qualified Data.HashMap.Strict.Extended        as M
 
 import           Control.Lens                        hiding (set, (.=))
 import           Data.Aeson.Types
+import qualified Data.Text                           as T
 import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend               as AB
@@ -54,6 +55,7 @@ data MetadataObjId
   | MOCronTrigger !TriggerName
   | MOInheritedRole !RoleName
   | MOEndpoint !EndpointName
+  | MOHostTlsAllowlist !String
   deriving (Generic)
 $(makePrisms ''MetadataObjId)
 deriving instance Eq MetadataObjId
@@ -71,6 +73,7 @@ moiTypeName = \case
   MOActionPermission _ _        -> "action_permission"
   MOInheritedRole _             -> "inherited_role"
   MOEndpoint _                  -> "endpoint"
+  MOHostTlsAllowlist _          -> "host_network_tls_allowlist"
  where
     handleSourceObj :: forall b. SourceMetadataObjId b -> Text
     handleSourceObj = \case
@@ -97,6 +100,7 @@ moiName objectId = moiTypeName objectId <> " " <> case objectId of
   MOActionPermission name roleName -> toTxt roleName <> " permission in " <> toTxt name
   MOInheritedRole inheritedRoleName -> "inherited role " <> toTxt inheritedRoleName
   MOEndpoint name -> toTxt name
+  MOHostTlsAllowlist hostTlsAllowlist -> T.pack hostTlsAllowlist
   where
     handleSourceObj
       :: forall b
