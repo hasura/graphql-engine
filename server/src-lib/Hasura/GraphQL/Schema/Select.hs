@@ -40,10 +40,12 @@ import qualified Data.Text                                  as T
 import qualified Language.GraphQL.Draft.Syntax              as G
 
 import           Control.Lens                               hiding (index)
+import           Data.Align                                 (align)
 import           Data.Has
 import           Data.Int                                   (Int64)
 import           Data.Parser.JSONPath
 import           Data.Text.Extended
+import           Data.These                                 (partitionThese)
 import           Data.Traversable                           (mapAccumL)
 
 import qualified Hasura.Backends.Postgres.SQL.Types         as PG

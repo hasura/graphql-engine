@@ -14,7 +14,9 @@ import qualified Language.GraphQL.Draft.Syntax      as G
 import           Control.Arrow.Extended
 import           Control.Lens                       (_3, _4, (^.))
 import           Data.Aeson
+import           Data.Align                         (align)
 import           Data.Text.Extended
+import           Data.These                         (These (..))
 
 import qualified Hasura.Incremental                 as Inc
 import qualified Hasura.SQL.AnyBackend              as AB

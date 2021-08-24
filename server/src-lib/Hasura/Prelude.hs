@@ -51,7 +51,6 @@ import           Control.Monad.State.Strict  as M
 import           Control.Monad.Trans.Maybe   as M (MaybeT (..))
 import           Control.Monad.Writer.Strict as M (MonadWriter (..), WriterT (..), execWriterT,
                                                    runWriterT)
-import           Data.Align                  as M (Semialign (align, alignWith))
 import           Data.Bool                   as M (bool)
 import           Data.Coerce
 import           Data.Data                   as M (Data (..))
@@ -78,8 +77,6 @@ import           Data.Sequence               as M (Seq)
 import           Data.Sequence.NonEmpty      as M (NESeq)
 import           Data.String                 as M (IsString)
 import           Data.Text                   as M (Text)
-import           Data.These                  as M (These (..), fromThese, mergeThese,
-                                                   mergeTheseWith, partitionThese, these)
 import           Data.Time.Clock.Units
 import           Data.Traversable            as M (for)
 import           Data.Void                   as M (Void, absurd)
