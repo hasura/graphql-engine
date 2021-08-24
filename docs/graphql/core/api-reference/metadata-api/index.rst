@@ -543,6 +543,16 @@ The various types of queries are listed in the following table:
      - 1
      - Set graphql introspection options
 
+   * - :ref:`metadata_add_host_to_tls_allowlist`
+     - :ref:`add_host_to_tls_allowlist_args <add_host_to_tls_allowlist_syntax>`
+     - 1
+     - Add an endpoint to the TLS Allowlist
+
+   * - :ref:`metadata_drop_host_from_tls_allowlist`
+     - :ref:`drop_host_from_tls_allowlist_args <drop_host_from_tls_allowlist_syntax>`
+     - 1
+     - Drop an endpoint from the TLS Allowlist
+
 
 .. TODO: MSSQL_UNSUPPORTED
 
@@ -716,3 +726,4 @@ The version is incremented on any operation that modified metadata as well as ``
   Actions <actions>
   Manage Metadata <manage-metadata>
   Introspection options <introspection>
+  Network Options <network>

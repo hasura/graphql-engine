@@ -134,6 +134,10 @@ data RQLMetadataV1
   -- Introspection options
   | RMSetGraphqlSchemaIntrospectionOptions !SetGraphqlIntrospectionOptions
 
+  -- Network
+  | RMAddHostToTLSAllowlist !AddHostToTLSAllowlist
+  | RMDropHostFromTLSAllowlist !DropHostFromTLSAllowlist
+
   -- Debug
   | RMDumpInternalState !DumpInternalState
   | RMGetCatalogState  !GetCatalogState

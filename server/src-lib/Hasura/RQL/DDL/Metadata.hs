@@ -39,6 +39,7 @@ import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Endpoint
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.InheritedRoles
+import           Hasura.RQL.DDL.Network
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteRelationship
@@ -166,7 +167,7 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
       pure $ Metadata (OMap.singleton defaultSource newDefaultSourceMetadata)
                         _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist
                         _mnsCustomTypes _mnsActions cronTriggersMetadata (_metaRestEndpoints oldMetadata)
-                        emptyApiLimit emptyMetricsConfig mempty introspectionDisabledRoles queryTagsConfig
+                        emptyApiLimit emptyMetricsConfig mempty introspectionDisabledRoles queryTagsConfig emptyNetwork
   putMetadata metadata
 
   case _rmv2AllowInconsistentMetadata of
@@ -381,6 +382,7 @@ purgeMetadataObj = \case
   MOCronTrigger ctName                  -> dropCronTriggerInMetadata ctName
   MOEndpoint epName                     -> dropEndpointInMetadata epName
   MOInheritedRole role                  -> dropInheritedRoleInMetadata role
+  MOHostTlsAllowlist host               -> dropHostFromAllowList host
   where
     handleSourceObj :: forall b. BackendMetadata b => SourceName -> SourceMetadataObjId b -> MetadataModifier
     handleSourceObj source = \case

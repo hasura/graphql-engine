@@ -6,6 +6,7 @@
 
 - server: optimize SQL query generation with LIMITs (close #5745)
 - server: fix broken `untrack_function` for non-default source
+- server: Adding support for TLS allowlist by domain and service id (port)
 - console: fix error due too rendering inconsistent object's message
 
 ## v2.0.7

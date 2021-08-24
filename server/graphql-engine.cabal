@@ -273,9 +273,12 @@ library
                      -- bigquery support
                      , memory
                      , x509-store
-
+                     , connection
+                     , tls
+                     , x509-validation
+                     , data-default-class
+                     , x509-system
                      , tagged
-
                      -- mysql
                      , mysql
                      , mysql-simple
@@ -482,6 +485,7 @@ library
                      , Hasura.RQL.Types.Metadata.Backend
                      , Hasura.RQL.Types.Metadata.Instances
                      , Hasura.RQL.Types.Metadata.Object
+                     , Hasura.RQL.Types.Network
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.Types.QueryTags
@@ -533,6 +537,7 @@ library
                      , Hasura.RQL.DDL.Schema.Source
                      , Hasura.RQL.DDL.EventTrigger
                      , Hasura.RQL.DDL.ScheduledTrigger
+                     , Hasura.RQL.DDL.Network
                      , Hasura.RQL.DML.Count
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Insert
@@ -629,6 +634,7 @@ library
                      , Hasura.Tracing
                      , Hasura.QueryTags
                      , Network.HTTP.Client.Extended
+                     , Network.HTTP.Client.DynamicTlsPermissions
                      , Network.URI.Extended
                      , Network.Wai.Extended
                      , Network.Wai.Handler.WebSockets.Custom

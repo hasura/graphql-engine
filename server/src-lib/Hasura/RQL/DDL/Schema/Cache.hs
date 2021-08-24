@@ -131,6 +131,7 @@ buildRebuildableSchemaCacheWithReason
 buildRebuildableSchemaCacheWithReason reason env metadata = do
   result <- flip runReaderT reason $
     Inc.build (buildSchemaCacheRule env) (metadata, initialInvalidationKeys)
+
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
 
@@ -290,6 +291,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     , scMetadataResourceVersion = Nothing
     , scSetGraphqlIntrospectionOptions = _metaSetGraphqlIntrospectionOptions metadata
     , scQueryTagsConfig = _boQueryTagsConfig resolvedOutputs
+    , scTlsAllowlist = _boTlsAllowlist resolvedOutputs
     }
   where
     getSourceConfigIfNeeded
@@ -487,7 +489,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
       let Metadata sources remoteSchemas collections allowlists
             customTypes actions cronTriggers endpoints apiLimits metricsConfig inheritedRoles
-            _introspectionDisabledRoles queryTagsConfig = metadata
+            _introspectionDisabledRoles queryTagsConfig networkConfig = metadata
           actionRoles = map _apmRole . _amPermissions =<< OMap.elems actions
           remoteSchemaRoles = map _rspmRole . _rsmPermissions =<< OMap.elems remoteSchemas
           sourceRoles =
@@ -670,6 +672,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         , _boMetricsConfig = metricsConfig
         , _boRoles         = mapFromL _rRoleName $ _unOrderedRoles orderedRoles
         , _boQueryTagsConfig = queryTagsConfig
+        , _boTlsAllowlist  = (networkTlsAllowlist networkConfig)
         }
 
     mkEndpointMetadataObject (name, createEndpoint) =

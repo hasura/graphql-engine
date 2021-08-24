@@ -41,7 +41,6 @@ import           Hasura.Server.Types                (MaintenanceMode (..))
 import           Hasura.Server.Version
 import           Hasura.Server.Version.TH
 
-
 main :: IO ()
 main = do
   tryExit $ do
@@ -57,7 +56,8 @@ runApp :: Env.Environment -> HGEOptions Hasura -> IO ()
 runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
   initTime <- liftIO getCurrentTime
   globalCtx@GlobalCtx{..} <- initGlobalCtx env metadataDbUrl rci
-  let (maybeDefaultPgConnInfo, maybeRetries) = _gcDefaultPostgresConnInfo
+  let
+    (maybeDefaultPgConnInfo, maybeRetries) = _gcDefaultPostgresConnInfo
 
   withVersion $$(getVersionFromEnvironment) $ case hgeCmd of
     HCServe serveOptions -> do

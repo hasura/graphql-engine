@@ -117,6 +117,7 @@ data BuildOutputs
   , _boMetricsConfig   :: !MetricsConfig
   , _boRoles           :: !(HashMap RoleName Role)
   , _boQueryTagsConfig :: !QueryTagsConfig
+  , _boTlsAllowlist    :: ![TlsAllow]
   }
 $(makeLenses ''BuildOutputs)
 
