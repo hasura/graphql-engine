@@ -730,13 +730,15 @@ data TypeDefinitionsWrapper where
 
 -- | Recursively collects all type definitions accessible from the given value.
 collectTypeDefinitions
-  :: (HasTypeDefinitions a, MonadError ConflictingDefinitions m)
+  :: HasTypeDefinitions a
   => a
-  -> m (HashMap Name (Definition SomeTypeInfo))
+  -> Either ConflictingDefinitions (HashMap Name (Definition SomeTypeInfo))
 collectTypeDefinitions x =
   fmap (fmap fst) $
+  runExcept $
   flip execStateT Map.empty $
   flip runReaderT (TypeOriginStack []) $
+  runTypeAccumulation $
   accumulateTypeDefinitions x
 
 newtype TypeOriginStack = TypeOriginStack [Name]
@@ -759,16 +761,30 @@ data ConflictingDefinitions
     (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
   -- ^ Type collection has found at least two types with the same name.
 
+-- | Although the majority of graphql-engine is written in terms of abstract
+-- mtl-style effect monads, we figured out that this particular codepath is
+-- quite hot, and that mtl has a measurable negative effect for accumulating
+-- types from the schema, both in profiling and in benchmarking.  Using an
+-- explicit transformers-style effect stack seems to overall memory usage by
+-- about 3-7%.
+newtype TypeAccumulation a = TypeAccumulation
+  { runTypeAccumulation
+      :: ReaderT TypeOriginStack
+       ( StateT (HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack))
+       ( ExceptT ConflictingDefinitions Identity))
+         a
+  }
+  deriving (Functor, Applicative, Monad)
+  deriving (MonadReader TypeOriginStack)
+  deriving (MonadState (HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack)))
+  deriving (MonadError ConflictingDefinitions)
+
 class HasTypeDefinitions a where
   -- | Recursively accumulates all type definitions accessible from the given
   -- value. This is done statefully to avoid infinite loops arising from
   -- recursive type definitions; see Note [Tying the knot] in Hasura.GraphQL.Parser.Class.
   accumulateTypeDefinitions
-    :: ( MonadError ConflictingDefinitions m
-       , MonadReader TypeOriginStack m
-       , MonadState (HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack)) m
-       )
-    => a -> m ()
+    :: a -> TypeAccumulation ()
 
 instance HasTypeDefinitions (Definition (TypeInfo k)) where
   accumulateTypeDefinitions definition = do
