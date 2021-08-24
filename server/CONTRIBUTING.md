@@ -278,6 +278,10 @@ The current workflow for supporting a new backend in integration tests is as fol
     4. important: filename suffixes should be the same as the value that’s being passed to `—backend`; that's how the files are looked up.
 4. Specify a `backend` parameter for [the `per_backend_tests` fixture](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-1034b560ce9984643a4aa4edab1d612aa512f1c3c28bbc93364700620681c962R420), parameterised by backend. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-40b7c6ad5362e70cafd29a3ac5d0a5387bd75befad92532ea4aaba99421ba3c8R12-R13).
 
+Note: When teardown is not disabled (via `skip_teardown`, in which case, this phase is skipped entirely), `teardown.yaml` always runs before `schema_teardown.yaml`, even if the tests fail. See `setup_and_teardown` in `server/tests-py/conftest.py` for the full source code/logic.
+
+This means, for example, that if `teardown.yaml` untracks a table, and `schema_teardown.yaml` runs raw SQL to drop the table, both would succeed (assuming the table is tracked/exists).
+
 **Test suite naming convention**
 The current convention is to indicate the backend(s) tests can be run against in the class name. For example:
     * `TestGraphQLQueryBasicMySQL` for tests that can only be run on MySQL
