@@ -136,6 +136,12 @@ Learn course
 
 For a full hands-on tour of Hasura, check out our `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__.
 
+Stay up to date
+^^^^^^^^^^^^^^^
+
+We release new features every month. Sign up for our newsletter by using the link below. We send newsletters only once a month.
+`https://hasura.io/newsletter/ <https://hasura.io/newsletter/>`__.
+
 Database operations
 ^^^^^^^^^^^^^^^^^^^
 
