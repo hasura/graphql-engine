@@ -49,7 +49,7 @@ import           Hasura.GraphQL.Execute.LiveQuery.Poll
 import           Hasura.GraphQL.ParameterizedQueryHash       (ParameterizedQueryHash)
 import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP.Protocol      (OperationName)
-import           Hasura.GraphQL.Transport.WebSocket.Protocol
+import           Hasura.GraphQL.Transport.WebSocket.Protocol (OperationId)
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common                     (SourceName, unNonNegativeDiffTime)
 import           Hasura.Server.Metrics                       (ServerMetrics (..))

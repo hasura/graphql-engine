@@ -324,11 +324,21 @@ For the ``serve`` sub-command these are the available flags and environment vari
 
        *(Available for versions > v2.0.0)*
 
-   * - ``--websocket-keepalive``
+   * - ``--websocket-keepalive <SECONDS>``
      - ``HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE``
-     - WebSocket keep-alive timeout in seconds (default: 5)
+     - Used to set the ``Keep Alive`` delay for client that use the ``subscription-transport-ws`` (Apollo) protocol.
+       For ``graphql-ws`` clients the graphql-engine sends ``PING`` messages instead.
+
+       (default: ``5``)
 
        *(Available for versions > v2.0.0)*
+    
+   * - ``--websocket-connection-init-timeout <SECONDS>``
+     - ``HASURA_GRAPHQL_WEBSOCKET_CONNECTION_INIT_TIMEOUT``
+     - Used to set the connection initialisation timeout for ``graphql-ws`` clients. This is ignored
+       for ``subscription-transport-ws`` (Apollo) clients.
+
+       (default: ``3``)
 
 .. note::
 

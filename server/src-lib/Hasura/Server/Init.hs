@@ -221,6 +221,9 @@ mkServeOptions rso = do
   gracefulShutdownTime <-
     fromMaybe 60 <$> withEnv (rsoGracefulShutdownTimeout rso) (fst gracefulShutdownEnv)
 
+  webSocketConnectionInitTimeout <- WSConnectionInitTimeout . fromIntegral . fromMaybe 3
+      <$> withEnv (rsoWebSocketConnectionInitTimeout rso) (fst webSocketConnectionInitTimeoutEnv)
+
   pure $ ServeOptions
            port
            host
@@ -256,6 +259,7 @@ mkServeOptions rso = do
            eventsFetchBatchSize
            devMode
            gracefulShutdownTime
+           webSocketConnectionInitTimeout
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -1196,6 +1200,7 @@ serveOptsToLog so =
       , "experimental_features" J..= soExperimentalFeatures so
       , "events_fetch_batch_size" J..= soEventsFetchBatchSize so
       , "graceful_shutdown_timeout" J..= soGracefulShutdownTimeout so
+      , "websocket_connection_init_timeout" J..= show (soWebsocketConnectionInitTimeout so)
       ]
 
 mkGenericStrLog :: L.LogLevel -> Text -> String -> StartupLog
@@ -1252,6 +1257,7 @@ serveOptionsParser =
   <*> parseExperimentalFeatures
   <*> parseEventsFetchBatchSize
   <*> parseGracefulShutdownTimeout
+  <*> parseWebSocketConnectionInitTimeout
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
@@ -1299,6 +1305,7 @@ parseWebSocketCompression =
            help (snd webSocketCompressionEnv)
          )
 
+-- NOTE: this is purely used by Apollo-Subscription-Transport-WS
 webSocketKeepAliveEnv :: (String, String)
 webSocketKeepAliveEnv =
   ( "HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE"
@@ -1311,4 +1318,19 @@ parseWebSocketKeepAlive =
   option (eitherReader readEither)
          ( long "websocket-keepalive" <>
            help (snd webSocketKeepAliveEnv)
+         )
+
+-- NOTE: this is purely used by GraphQL-WS
+webSocketConnectionInitTimeoutEnv :: (String, String)
+webSocketConnectionInitTimeoutEnv =
+  ( "HASURA_GRAPHQL_WEBSOCKET_CONNECTION_INIT_TIMEOUT" -- FIXME?: maybe a better name
+  , "Control websocket connection_init timeout (default 3 seconds)"
+  )
+
+parseWebSocketConnectionInitTimeout :: Parser (Maybe Int)
+parseWebSocketConnectionInitTimeout =
+  optional $
+  option (eitherReader readEither)
+         ( long "websocket-connection-init-timeout" <>
+           help (snd webSocketConnectionInitTimeoutEnv)
          )

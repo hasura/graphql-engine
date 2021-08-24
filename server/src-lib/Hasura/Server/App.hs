@@ -51,7 +51,7 @@ import qualified Hasura.GraphQL.Execute.LiveQuery.State    as EL
 import qualified Hasura.GraphQL.Explain                    as GE
 import qualified Hasura.GraphQL.Transport.HTTP             as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
-import qualified Hasura.GraphQL.Transport.WebSocket        as WS
+import qualified Hasura.GraphQL.Transport.WSServerApp      as WS
 import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
 import qualified Hasura.Logging                            as L
 import qualified Hasura.Server.API.PGDump                  as PGD
@@ -782,16 +782,16 @@ mkWaiApp
   -> FunctionPermissionsCtx
   -> WS.ConnectionOptions
   -> KeepAliveDelay
-  -- ^ Metadata storage connection pool
   -> MaintenanceMode
   -> S.HashSet ExperimentalFeature
   -- ^ Set of the enabled experimental features
   -> S.HashSet (L.EngineLogType L.Hasura)
+  -> WSConnectionInitTimeout
   -> m HasuraApp
 mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole consoleAssetsDir
          enableTelemetry instanceId apis lqOpts responseErrorsConfig
          liveQueryHook schemaCacheRef ekgStore serverMetrics enableRSPermsCtx functionPermsCtx
-         connectionOptions keepAliveDelay maintenanceMode experimentalFeatures enabledLogTypes = do
+         connectionOptions keepAliveDelay maintenanceMode experimentalFeatures enabledLogTypes wsConnInitTimeout = do
 
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
@@ -799,21 +799,21 @@ mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enable
         postPollHook = fromMaybe (EL.defaultLiveQueryPostPollHook logger) liveQueryHook
 
     lqState <- liftIO $ EL.initLiveQueriesState lqOpts postPollHook
-    wsServerEnv <- WS.createWSServerEnv logger lqState getSchemaCache httpManager
-                                        corsPolicy sqlGenCtx enableAL keepAliveDelay serverMetrics
+    wsServerEnv <- WS.createWSServerEnv logger lqState getSchemaCache httpManager corsPolicy
+                                        sqlGenCtx enableAL keepAliveDelay serverMetrics
 
     let serverCtx = ServerCtx
-                    { scLogger                       =  logger
-                    , scCacheRef                     =  schemaCacheRef
-                    , scAuthMode                     =  mode
-                    , scManager                      =  httpManager
-                    , scSQLGenCtx                    =  sqlGenCtx
-                    , scEnabledAPIs                  =  apis
-                    , scInstanceId                   =  instanceId
-                    , scLQState                      =  lqState
-                    , scEnableAllowlist              =  enableAL
-                    , scEkgStore                     =  ekgStore
-                    , scEnvironment                  =  env
+                    { scLogger                       = logger
+                    , scCacheRef                     = schemaCacheRef
+                    , scAuthMode                     = mode
+                    , scManager                      = httpManager
+                    , scSQLGenCtx                    = sqlGenCtx
+                    , scEnabledAPIs                  = apis
+                    , scInstanceId                   = instanceId
+                    , scLQState                      = lqState
+                    , scEnableAllowlist              = enableAL
+                    , scEkgStore                     = ekgStore
+                    , scEnvironment                  = env
                     , scResponseInternalErrorsConfig = responseErrorsConfig
                     , scRemoteSchemaPermsCtx         = enableRSPermsCtx
                     , scFunctionPermsCtx             = functionPermsCtx
@@ -826,7 +826,7 @@ mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enable
       Spock.spockAsApp $ Spock.spockT lowerIO $
         httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
 
-    let wsServerApp  = WS.createWSServerApp env enabledLogTypes mode wsServerEnv -- TODO: Lyndon: Can we pass environment through wsServerEnv?
+    let wsServerApp  = WS.createWSServerApp env enabledLogTypes mode wsServerEnv wsConnInitTimeout -- TODO: Lyndon: Can we pass environment through wsServerEnv?
         stopWSServer = WS.stopWSServerApp wsServerEnv
 
     waiApp <- liftWithStateless $ \lowerIO ->

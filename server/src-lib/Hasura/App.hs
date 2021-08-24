@@ -537,6 +537,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
              soEnableMaintenanceMode
              soExperimentalFeatures
              _scEnabledLogTypes
+             soWebsocketConnectionInitTimeout
 
   let serverConfigCtx =
         ServerConfigCtx soInferFunctionPermissions

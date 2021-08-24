@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import time
 import ruamel.yaml as yaml
 from ruamel.yaml.compat import ordereddict, StringIO
 from ruamel.yaml.comments import CommentedMap
@@ -148,7 +149,7 @@ def mk_claims_with_namespace_path(claims,hasura_claims,namespace_path):
 
 # Returns the response received and a bool indicating whether the test passed
 # or not (this will always be True unless we are `--accepting`)
-def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace_path=None):
+def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace_path=None, gqlws=False):
     hge_ctx.tests_passed = True
     headers = {}
     if 'headers' in conf:
@@ -211,13 +212,13 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace
                                       conf['status'], conf.get('response'), conf.get('resp_headers'), body=conf.get('body'), method=conf.get('method'))
     elif transport == 'websocket':
         print('running on websocket')
-        return validate_gql_ws_q(hge_ctx, conf, headers, retry=True)
+        return validate_gql_ws_q(hge_ctx, conf, headers, retry=True, gqlws=gqlws)
     elif transport == 'subscription':
         print('running via subscription')
-        return validate_gql_ws_q(hge_ctx, conf, headers, retry=True, via_subscription=True)
+        return validate_gql_ws_q(hge_ctx, conf, headers, retry=True, via_subscription=True, gqlws=gqlws)
 
 
-def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=False):
+def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=False, gqlws=False):
     assert 'response' in conf
     assert conf['url'].endswith('/graphql') or conf['url'].endswith('/relay')
     endpoint = conf['url']
@@ -236,11 +237,20 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
         ws_client = hge_ctx.ws_client_v1alpha1
     elif endpoint == '/v1beta1/relay':
         ws_client = hge_ctx.ws_client_relay
+    elif gqlws: # for `graphQL-ws` clients
+        ws_client = hge_ctx.ws_client_graphql_ws
     else:
         ws_client = hge_ctx.ws_client
     print(ws_client.ws_url)
     if not headers or len(headers) == 0:
         ws_client.init({})
+    
+    if ws_client.remote_closed or ws_client.is_closing:
+        ws_client.create_conn()
+        if not headers or len(headers) == 0 or hge_ctx.hge_key is None:
+            ws_client.init()
+        else:
+            ws_client.init_as_admin()
 
     query_resp = ws_client.send_query(query, query_id='hge_test', headers=headers, timeout=15)
     resp = next(query_resp)
@@ -253,18 +263,22 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
             ws_client.recreate_conn()
             return validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, False)
         else:
-            assert resp['type'] in ['data', 'error'], resp
+            assert resp['type'] in ['data', 'error', 'next'], resp
 
     if 'errors' in exp_http_response or 'error' in exp_http_response:
-        assert resp['type'] in ['data', 'error'], resp
+        assert resp['type'] in ['data', 'error', 'next'], resp
     else:
-        assert resp['type'] == 'data', resp
+        assert resp['type'] == 'data' or resp['type'] == 'next', resp
     assert 'payload' in resp, resp
 
     if via_subscription:
-        ws_client.send({ 'id': 'hge_test', 'type': 'stop' })
-        with pytest.raises(queue.Empty):
-            ws_client.get_ws_event(0)
+        if not gqlws:
+            ws_client.send({ 'id': 'hge_test', 'type': 'stop' })
+        else:
+            ws_client.send({ 'id': 'hge_test', 'type': 'complete' })
+        if not gqlws: # NOTE: for graphql-ws, we have some elements that are left in the queue especially after a 'next' message.
+            with pytest.raises(queue.Empty):
+                ws_client.get_ws_event(0)
     else:
         resp_done = next(query_resp)
         assert resp_done['type'] == 'complete'
@@ -414,7 +428,7 @@ def get_conf_f(f):
     with open(f, 'r+') as c:
         return yaml.YAML().load(c)
 
-def check_query_f(hge_ctx, f, transport='http', add_auth=True):
+def check_query_f(hge_ctx, f, transport='http', add_auth=True, gqlws = False):
     print("Test file: " + f)
     hge_ctx.may_skip_test_teardown = False
     print ("transport="+transport)
@@ -429,14 +443,14 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True):
         conf = yml.load(c)
         if isinstance(conf, list):
             for ix, sconf in enumerate(conf):
-                actual_resp, matched = check_query(hge_ctx, sconf, transport, add_auth)
+                actual_resp, matched = check_query(hge_ctx, sconf, transport, add_auth, None, gqlws)
                 if PytestConf.config.getoption("--accept") and not matched:
                     conf[ix]['response'] = actual_resp
                     should_write_back = True
         else:
             if conf['status'] != 200:
                 hge_ctx.may_skip_test_teardown = True
-            actual_resp, matched = check_query(hge_ctx, conf, transport, add_auth)
+            actual_resp, matched = check_query(hge_ctx, conf, transport, add_auth, None, gqlws)
             # If using `--accept` write the file back out with the new expected
             # response set to the actual response we got:
             if PytestConf.config.getoption("--accept") and not matched:

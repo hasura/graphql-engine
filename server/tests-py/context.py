@@ -32,6 +32,7 @@ class PytestConf():
 class HGECtxError(Exception):
     pass
 
+# NOTE: use this to generate a GraphQL client that uses the `Apollo`(subscription-transport-ws) sub-protocol
 class GQLWsClient():
 
     def __init__(self, hge_ctx, endpoint):
@@ -160,6 +161,151 @@ class GQLWsClient():
             self._ws.close()
         self.wst.join()
 
+# NOTE: use this to generate a GraphQL client that uses the `graphql-ws` sub-protocol
+class GraphQLWSClient():
+
+    def __init__(self, hge_ctx, endpoint):
+        self.hge_ctx = hge_ctx
+        self.ws_queue = queue.Queue(maxsize=-1)
+        self.ws_url = urlparse(hge_ctx.hge_url)._replace(scheme='ws',
+                                                         path=endpoint)
+        self.create_conn()
+
+    def get_queue(self):
+        return self.ws_queue.queue
+
+    def clear_queue(self):
+        self.ws_queue.queue.clear()
+
+    def create_conn(self):
+        self.ws_queue.queue.clear()
+        self.ws_id_query_queues = dict()
+        self.ws_active_query_ids = set()
+
+        self.connected_event = threading.Event()
+        self.init_done = False
+        self.is_closing = False
+        self.remote_closed = False
+
+        self._ws = websocket.WebSocketApp(self.ws_url.geturl(),
+            on_open=self._on_open, on_message=self._on_message, on_close=self._on_close, subprotocols=["graphql-transport-ws"])
+        self.wst = threading.Thread(target=self._ws.run_forever)
+        self.wst.daemon = True
+        self.wst.start()
+
+    def recreate_conn(self):
+        self.teardown()
+        self.create_conn()
+
+    def wait_for_connection(self, timeout=10):
+        assert not self.is_closing
+        assert self.connected_event.wait(timeout=timeout)
+
+    def get_ws_event(self, timeout):
+        return self.ws_queue.get(timeout=timeout)
+
+    def has_ws_query_events(self, query_id):
+        return not self.ws_id_query_queues[query_id].empty()
+
+    def get_ws_query_event(self, query_id, timeout):
+        print("HELLO", self.ws_active_query_ids)
+        return self.ws_id_query_queues[query_id].get(timeout=timeout)
+
+    def send(self, frame):
+        self.wait_for_connection()
+        if frame.get('type') == 'complete':
+            self.ws_active_query_ids.discard( frame.get('id') )
+        elif frame.get('type') == 'subscribe' and 'id' in frame:
+            self.ws_id_query_queues[frame['id']] = queue.Queue(maxsize=-1)
+        self._ws.send(json.dumps(frame))
+
+    def init_as_admin(self):
+        headers={}
+        if self.hge_ctx.hge_key:
+            headers = {'x-hasura-admin-secret': self.hge_ctx.hge_key}
+        self.init(headers)
+
+    def init(self, headers={}):
+        payload = {'type': 'connection_init', 'payload': {}}
+
+        if headers and len(headers) > 0:
+            payload['payload']['headers'] = headers
+
+        self.send(payload)
+        ev = self.get_ws_event(5)
+        assert ev['type'] == 'connection_ack', ev
+        self.init_done = True
+
+    def stop(self, query_id):
+        data = {'id': query_id, 'type': 'complete'}
+        self.send(data)
+        self.ws_active_query_ids.discard(query_id)
+
+    def gen_id(self, size=6, chars=string.ascii_letters + string.digits):
+        new_id = ''.join(random.choice(chars) for _ in range(size))
+        if new_id in self.ws_active_query_ids:
+            return self.gen_id(size, chars)
+        return new_id
+
+    def send_query(self, query, query_id=None, headers={}, timeout=60):
+        graphql.parse(query['query'])
+        if headers and len(headers) > 0:
+            #Do init If headers are provided
+            self.clear_queue()
+            self.init(headers)
+        elif not self.init_done:
+            self.init()
+        if query_id == None:
+            query_id = self.gen_id()
+        frame = {
+            'id': query_id,
+            'type': 'subscribe',
+            'payload': query,
+        }
+        self.ws_active_query_ids.add(query_id)
+        self.send(frame)
+        while True:
+            yield self.get_ws_query_event(query_id, timeout)
+
+    def _on_open(self):
+        if not self.is_closing:
+            self.connected_event.set()
+
+    def _on_message(self, message):
+        # NOTE: make sure we preserve key ordering so we can test the ordering
+        # properties in the graphql spec properly
+        json_msg = json.loads(message, object_pairs_hook=OrderedDict)
+        if json_msg['type'] == 'ping':
+            new_msg = json_msg
+            new_msg['type'] = 'pong'
+            self.send(json.dumps(new_msg))
+            return
+        
+        if 'id' in json_msg:
+            query_id = json_msg['id']
+            if json_msg.get('type') == 'complete':
+                #Remove from active queries list
+                self.ws_active_query_ids.discard( query_id )
+            if not query_id in self.ws_id_query_queues:
+                self.ws_id_query_queues[json_msg['id']] = queue.Queue(maxsize=-1)
+            #Put event in the correponding query_queue
+            self.ws_id_query_queues[query_id].put(json_msg)
+        
+        if json_msg['type'] != 'ping':
+            self.ws_queue.put(json_msg)
+
+    def _on_close(self):
+        self.remote_closed = True
+        self.init_done = False
+    
+    def get_conn_close_state(self):
+        return self.remote_closed or self.is_closing
+
+    def teardown(self):
+        self.is_closing = True
+        if not self.remote_closed:
+            self._ws.close()
+        self.wst.join()
 
 class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
 
@@ -501,6 +647,7 @@ class HGECtx:
         self.ws_client = GQLWsClient(self, '/v1/graphql')
         self.ws_client_v1alpha1 = GQLWsClient(self, '/v1alpha1/graphql')
         self.ws_client_relay = GQLWsClient(self, '/v1beta1/relay')
+        self.ws_client_graphql_ws = GraphQLWSClient(self, '/v1/graphql')
 
         self.backend = config.getoption('--backend')
         self.default_backend = 'postgres'
@@ -628,6 +775,7 @@ class HGECtx:
         self.ws_client.teardown()
         self.ws_client_v1alpha1.teardown()
         self.ws_client_relay.teardown()
+        self.ws_client_graphql_ws.teardown()
 
     def v1GraphqlExplain(self, q, hdrs=None):
         headers = {}

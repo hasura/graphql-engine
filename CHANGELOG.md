@@ -5,8 +5,10 @@
 (Add entries below in the order of server, console, cli, docs, others)
 
 - server: optimize SQL query generation with LIMITs (close #5745)
+- server: update non-existent event trigger, action and query collection error msgs (close #7396) 
 - server: fix broken `untrack_function` for non-default source
 - server: Adding support for TLS allowlist by domain and service id (port)
+- server: add support for `graphql-ws` clients
 - console: fix error due too rendering inconsistent object's message
 
 ## v2.0.7
@@ -16,7 +18,6 @@
 - server: fix GraphQL type for remote relationship field (close #7284)
 - server: support EdDSA algorithm and key type for JWT
 - server: fix GraphQL type for single-row returning functions (close #7109)
-- server: update non-existent event trigger, action and query collection error msgs (close #7396) 
 - console: add support for creation of indexes for Postgres data sources
 - docs: document the cleanup process for scheduled triggers
 - console: allow same named queries and unnamed queries on allowlist file upload

@@ -1,6 +1,6 @@
 import pytest
 import time
-from context import HGECtx, HGECtxError, ActionsWebhookServer, EvtsWebhookServer, HGECtxGQLServer, GQLWsClient, PytestConf
+from context import HGECtx, HGECtxError, ActionsWebhookServer, EvtsWebhookServer, HGECtxGQLServer, GQLWsClient, PytestConf, GraphQLWSClient
 import threading
 import random
 from datetime import datetime
@@ -384,6 +384,16 @@ def ws_client(request, hge_ctx):
     This fixture provides an Apollo GraphQL websockets client
     """
     client = GQLWsClient(hge_ctx, '/v1/graphql')
+    time.sleep(0.1)
+    yield client
+    client.teardown()
+
+@pytest.fixture(scope='class')
+def ws_client_graphql_ws(request, hge_ctx):
+    """
+    This fixture provides an GraphQL-WS client
+    """
+    client = GraphQLWSClient(hge_ctx, '/v1/graphql')
     time.sleep(0.1)
     yield client
     client.teardown()
