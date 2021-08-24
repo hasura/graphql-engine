@@ -17,6 +17,7 @@ import qualified Network.Wai.Extended                   as Wai
 import           Control.Monad.Trans.Control            (MonadBaseControl)
 import           Data.Aeson                             hiding (json)
 import           Data.Text.Extended
+import           Data.These                             (These (..))
 
 import qualified Hasura.GraphQL.Execute                 as E
 import           Hasura.GraphQL.ParameterizedQueryHash  (ParameterizedQueryHashList (..))

@@ -37,9 +37,11 @@ import           Control.Lens                             hiding ((.=))
 import           Control.Monad.Trans.Control              (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson
+import           Data.Align                               (align)
 import           Data.Either                              (isLeft)
 import           Data.Proxy
 import           Data.Text.Extended
+import           Data.These                               (These (..))
 import           Data.Time.Clock                          (getCurrentTime)
 import           Network.HTTP.Client.Extended             hiding (Proxy)
 
