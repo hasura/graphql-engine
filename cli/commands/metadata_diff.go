@@ -2,11 +2,12 @@ package commands
 
 import (
 	"fmt"
-	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
 	"github.com/aryann/difflib"
 
@@ -151,7 +152,8 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 		return errors.Wrap(err, "cannot unmarshal local metadata")
 	}
 
-	err = printDiff(string(oldYaml), string(newYaml), from, to, o.Output, o.DiffType, o.DisableColor)
+	// Here oldYaml is project's metadata and newYaml is server's metadata for having diff similar to git diff i.e taking server has base before has been taken as server's metadata
+	err = printDiff(string(newYaml), string(oldYaml), to, from, o.Output, o.DiffType, o.DisableColor)
 	if err != nil {
 		return err
 	}
