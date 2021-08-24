@@ -42,7 +42,7 @@ Request
    {
      "opts": ["-O", "-x", "--schema-only", "--schema", "public"],
      "clean_output": true,
-     "source": "postgres"
+     "source": "<database-source-name>"
    }
 
 - ``opts``: Arguments to be passed to the ``pg_dump`` tool. Represented as array
@@ -61,8 +61,8 @@ Request
   -  Comments (``--``) and empty newlines.
   -  Postgres triggers created by Hasura for event triggers.
 
-- ``source``: Database to dump. When this optional argument is skipped, it is set to ``default``.
-
+- ``source``: the name of the connected database on which to run ``pg_dump`` on. If skipped, 
+  it is set to ``default``
 
 Sample response
 ^^^^^^^^^^^^^^^

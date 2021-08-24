@@ -198,7 +198,7 @@ API Reference - Mutation
    * - inc-argument
      - false
      - incArgExp_
-     - Integer value to be incremented to Int columns in the table
+     - Integer value to be incremented to Int columns in the table (Negative integers can be used to decrement)
    * - append-argument
      - false
      - appendArgExp_
