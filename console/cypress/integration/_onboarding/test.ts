@@ -1,8 +1,4 @@
-import {
-  viewOnboarding,
-  hideNow,
-  dontShowAgain,
-} from './spec';
+import { viewOnboarding, hideNow, dontShowAgain } from './spec';
 import { testMode } from '../../helpers/common';
 import { setMetaData } from '../validators/validators';
 import { getIndexRoute } from '../../helpers/dataHelpers';

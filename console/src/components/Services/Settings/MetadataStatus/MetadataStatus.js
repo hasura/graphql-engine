@@ -86,69 +86,69 @@ const MetadataStatus = ({ dispatch, metadata }) => {
           {[
             ...metadata.inconsistentObjects,
             ...metadata.inconsistentInheritedRoles,
-          ].map((iconsistentObject, _i) => {
+          ].map((inconsistentObject, _i) => {
             let name;
             let definition;
-            if (iconsistentObject.type === 'source') {
-              name = iconsistentObject.definition;
+            if (inconsistentObject.type === 'source') {
+              name = inconsistentObject.definition;
             }
             if (
-              iconsistentObject.type === 'object_relation' ||
-              iconsistentObject.type === 'array_relation'
+              inconsistentObject.type === 'object_relation' ||
+              inconsistentObject.type === 'array_relation'
             ) {
-              name = iconsistentObject.definition.name;
+              name = inconsistentObject.definition.name;
               definition = `relationship of table "${getTableNameFromDef(
-                iconsistentObject.definition.table
+                inconsistentObject.definition.table
               )}"`;
-            } else if (iconsistentObject.type === 'remote_relationship') {
-              name = iconsistentObject.definition.name;
+            } else if (inconsistentObject.type === 'remote_relationship') {
+              name = inconsistentObject.definition.name;
               definition = `relationship between table "${getTableNameFromDef(
-                iconsistentObject.definition.table
+                inconsistentObject.definition.table
               )}" and remote schema "${
-                iconsistentObject.definition.remote_schema
+                inconsistentObject.definition.remote_schema
               }"`;
-            } else if (permissionTypes.includes(iconsistentObject.type)) {
-              name = `${iconsistentObject.definition.role}-permission`;
+            } else if (permissionTypes.includes(inconsistentObject.type)) {
+              name = `${inconsistentObject.definition.role}-permission`;
               definition = `${
-                iconsistentObject.type
+                inconsistentObject.type
               } on table "${getTableNameFromDef(
-                iconsistentObject.definition.table
+                inconsistentObject.definition.table
               )}"`;
-            } else if (iconsistentObject.type === 'table') {
-              name = getTableNameFromDef(iconsistentObject.definition);
+            } else if (inconsistentObject.type === 'table') {
+              name = getTableNameFromDef(inconsistentObject.definition);
               definition = name;
-            } else if (iconsistentObject.type === 'function') {
-              name = getTableNameFromDef(iconsistentObject.definition);
+            } else if (inconsistentObject.type === 'function') {
+              name = getTableNameFromDef(inconsistentObject.definition);
               definition = name;
-            } else if (iconsistentObject.type === 'event_trigger') {
-              name = iconsistentObject.definition.configuration.name;
+            } else if (inconsistentObject.type === 'event_trigger') {
+              name = inconsistentObject.definition.configuration.name;
               definition = `event trigger on table "${getTableNameFromDef(
-                iconsistentObject.definition.table
+                inconsistentObject.definition.table
               )}"`;
-            } else if (iconsistentObject.type === 'remote_schema') {
-              name = iconsistentObject.definition.name;
+            } else if (inconsistentObject.type === 'remote_schema') {
+              name = inconsistentObject.definition.name;
               let url = `"${
-                iconsistentObject.definition.definition.url ||
-                iconsistentObject.definition.definition.url_from_env
+                inconsistentObject.definition.definition.url ||
+                inconsistentObject.definition.definition.url_from_env
               }"`;
-              if (iconsistentObject.definition.definition.url_from_env) {
+              if (inconsistentObject.definition.definition.url_from_env) {
                 url = `the url from the value of env var ${url}`;
               }
               definition = `remote schema named "${name}" at ${url}`;
             }
-            const message = iconsistentObject.message;
+            const message = inconsistentObject.message;
             return (
               <tr key={_i}>
                 <td data-test={`inconsistent_name_${_i}`}>{name}</td>
                 <td data-test={`inconsistent_type_${_i}`}>
-                  {`${iconsistentObject.type} `}
+                  {`${inconsistentObject.type} `}
                 </td>
                 <td data-test={`inconsistent_description_${_i}`}>
                   {definition}
                 </td>
                 <td data-test={`inconsistent_reason_${_i}`}>
                   <div>
-                    <b>{iconsistentObject.reason}</b>
+                    <b>{inconsistentObject.reason}</b>
                     <br />
                     {typeof message === 'string' ? (
                       message
@@ -160,11 +160,11 @@ const MetadataStatus = ({ dispatch, metadata }) => {
                   </div>
                 </td>
                 <td data-test={`inconsistent_action_${_i}`}>
-                  {iconsistentObject.type ===
+                  {inconsistentObject.type ===
                   'inherited role permission inconsistency' ? (
                     <Button
                       onClick={() =>
-                        resolveInconsistentInheritedRole(iconsistentObject)
+                        resolveInconsistentInheritedRole(inconsistentObject)
                       }
                     >
                       Resolve
