@@ -5,7 +5,7 @@
 (Add entries below in the order of server, console, cli, docs, others)
 
 - server: optimize SQL query generation with LIMITs (close #5745)
-- server: update non-existent event trigger, action and query collection error msgs (close #7396) 
+- server: update non-existent event trigger, action and query collection error msgs (close #7396)
 - server: fix broken `untrack_function` for non-default source
 - server: Adding support for TLS allowlist by domain and service id (port)
 - server: add support for `graphql-ws` clients
