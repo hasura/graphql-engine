@@ -436,8 +436,11 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
               buildRaw json
           buildResultFromFragments Telem.Query timerTot requestId conclusion
           case conclusion of
-            Left _        -> pure ()
-            Right results -> Tracing.interpTraceT (withExceptT mempty) $
+            Left _ -> pure ()
+            Right results -> do
+              -- Note: The result of cacheStore is ignored here since we can't ensure that
+              --       the WS client will respond correctly to multiple messages.
+              void $ Tracing.interpTraceT (withExceptT mempty) $
                              cacheStore cacheKey cachedDirective $ encJFromInsOrdHashMap $
                              rfResponse <$> OMap.mapKeys G.unName results
       liftIO $ sendCompleted (Just requestId)

@@ -17,7 +17,8 @@ module Hasura.GraphQL.Transport.HTTP
   , OperationName(..)
   , GQLQueryText(..)
   , ResultsFragment(..)
-
+  , CacheStoreSuccess(..)
+  , CacheStoreFailure(..)
   , SessVarPred
   , filterVariablesFromQuery
   , runSessVarPred
@@ -36,7 +37,7 @@ import qualified Language.GraphQL.Draft.Syntax                as G
 import qualified Network.HTTP.Types                           as HTTP
 import qualified Network.Wai.Extended                         as Wai
 
-import           Control.Lens                                 (Traversal', toListOf)
+import           Control.Lens                                 (Traversal', _4, toListOf)
 import           Control.Monad.Morph                          (hoist)
 import           Control.Monad.Trans.Control                  (MonadBaseControl)
 
@@ -83,6 +84,19 @@ instance J.ToJSON QueryCacheKey where
   toJSON (QueryCacheKey qs ur sess) =
     J.object ["query_string" J..= qs, "user_role" J..= ur, "session" J..= sess]
 
+type CacheStoreResponse = Either CacheStoreFailure CacheStoreSuccess
+
+data CacheStoreSuccess
+  = CacheStoreSkipped
+  | CacheStoreHit
+  deriving (Eq, Show)
+
+data CacheStoreFailure
+  = CacheStoreLimitReached
+  | CacheStoreNotEnoughCapacity
+  | CacheStoreBackendError String
+  deriving (Eq, Show)
+
 class Monad m => MonadExecuteQuery m where
   -- | This method does two things: it looks up a query result in the
   -- server-side cache, if a cache is used, and it additionally returns HTTP
@@ -119,7 +133,7 @@ class Monad m => MonadExecuteQuery m where
     -- ^ Cached Directive from GraphQL query AST
     -> EncJSON
     -- ^ Result of a query execution
-    -> TraceT (ExceptT QErr m) ()
+    -> TraceT (ExceptT QErr m) CacheStoreResponse
     -- ^ Always succeeds
 
   default cacheLookup :: (m ~ t n, MonadTrans t, MonadExecuteQuery n) =>
@@ -127,7 +141,7 @@ class Monad m => MonadExecuteQuery m where
   cacheLookup a b c d = hoist (hoist lift) $ cacheLookup a b c d
 
   default cacheStore :: (m ~ t n, MonadTrans t, MonadExecuteQuery n) =>
-    QueryCacheKey -> Maybe CachedDirective -> EncJSON -> TraceT (ExceptT QErr m) ()
+    QueryCacheKey -> Maybe CachedDirective -> EncJSON -> TraceT (ExceptT QErr m) CacheStoreResponse
   cacheStore a b c = hoist (hoist lift) $ cacheStore  a b c
 
 
@@ -288,8 +302,18 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                 buildRaw json
             out@(_, _, _, HttpResponse responseData _, _) <-
               buildResultFromFragments Telem.Query conclusion responseHeaders parameterizedQueryHash
-            Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheStore cacheKey cachedDirective $ snd responseData
-            pure out
+            Tracing.interpTraceT (liftEitherM . runExceptT) do
+              cacheStoreRes <- cacheStore cacheKey cachedDirective (snd responseData)
+              let
+                headers = case cacheStoreRes of
+                  -- Note: Warning header format: "Warning: <warn-code> <warn-agent> <warn-text> [warn-date]"
+                  -- See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Warning
+                  Right _                            -> []
+                  (Left CacheStoreLimitReached)      -> [("warning", "199 - cache-store-size-limit-exceeded")]
+                  (Left CacheStoreNotEnoughCapacity) -> [("warning", "199 - cache-store-capacity-exceeded")]
+                  (Left (CacheStoreBackendError _))  -> [("warning", "199 - cache-store-error")]
+                in
+                pure $ out & _4 %~ addHttpResponseHeaders headers
 
       E.MutationExecutionPlan mutationPlans -> do
         {- Note [Backwards-compatible transaction optimisation]

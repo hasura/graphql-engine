@@ -67,7 +67,8 @@ import           Hasura.GraphQL.Execute                     (ExecutionStep (..),
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Action.Subscription
 import           Hasura.GraphQL.Logging                     (MonadQueryLog (..))
-import           Hasura.GraphQL.Transport.HTTP              (MonadExecuteQuery (..))
+import           Hasura.GraphQL.Transport.HTTP              (CacheStoreSuccess (CacheStoreSkipped),
+                                                             MonadExecuteQuery (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol     (toParsed)
 import           Hasura.Logging
 import           Hasura.Metadata.Class
@@ -872,7 +873,7 @@ instance (MonadIO m) => HttpLog (PGMetadataStorageAppT m) where
 
 instance (Monad m) => MonadExecuteQuery (PGMetadataStorageAppT m) where
   cacheLookup _ _ _ _ = pure ([], Nothing)
-  cacheStore  _ _ _ = pure ()
+  cacheStore  _ _ _   = pure (Right CacheStoreSkipped)
 
 instance (MonadIO m, MonadBaseControl IO m) => UserAuthentication (Tracing.TraceT (PGMetadataStorageAppT m)) where
   resolveUserInfo logger manager headers authMode reqs =

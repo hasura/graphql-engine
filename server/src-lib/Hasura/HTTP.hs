@@ -4,6 +4,7 @@ module Hasura.HTTP
   , hdrsToText
   , addDefaultHeaders
   , HttpResponse(..)
+  , addHttpResponseHeaders
   ) where
 
 import           Hasura.Prelude
@@ -70,3 +71,6 @@ data HttpResponse a
   { _hrBody    :: !a
   , _hrHeaders :: !HTTP.ResponseHeaders
   } deriving (Functor, Foldable, Traversable)
+
+addHttpResponseHeaders :: HTTP.ResponseHeaders -> HttpResponse a -> HttpResponse a
+addHttpResponseHeaders newHeaders (HttpResponse b h) = HttpResponse b (newHeaders <> h)
