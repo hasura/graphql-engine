@@ -11,6 +11,7 @@ args:
       drop function if exists total_marks_offset(students, integer);
       drop function if exists total_marks_session(students, json);
       drop table if exists students;
+      drop table if exists regression_7172;
 
 # also drops remote relationship as direct dep
 - type: remove_remote_schema

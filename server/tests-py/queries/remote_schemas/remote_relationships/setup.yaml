@@ -54,6 +54,11 @@ args:
       returns integer as $$
         select student_row.physics + student_row.maths - (hasura_session ->> 'x-hasura-offset')::integer
       $$ language sql stable;
+      create table regression_7172 (
+        id serial primary key,
+        features json
+      );
+      insert into regression_7172 (features) values ('{"Start Color":44}');
 
 - type: track_table
   args:
@@ -106,3 +111,8 @@ args:
       function: total_marks_session
       table_argument: student_row
       session_argument: hasura_session
+
+- type: track_table
+  args:
+    schema: public
+    name: regression_7172

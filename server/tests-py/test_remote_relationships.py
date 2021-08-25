@@ -186,6 +186,11 @@ class TestExecution:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'query_with_arr_rel.yaml')
 
+    def test_regression_7172(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_regression_7172.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'regression_7172.yaml')
+
     def test_basic_relationship_joining_singleton_to_array(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_joining_singleton_with_array.yaml')
         assert st_code == 200, resp
