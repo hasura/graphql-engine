@@ -1,9 +1,9 @@
 package querytags
 
 import (
+	"github.com/google/go-cmp/cmp"
 	"io/ioutil"
 	"testing"
-	"github.com/google/go-cmp/cmp"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -114,7 +114,7 @@ per_source_configuration:
 			got, err := obj.Export(tt.args.metadata)
 			if tt.wantErr {
 				require.Error(t, err)
-			}else {
+			} else {
 				require.NoError(t, err)
 				var wantContent = map[string]string{}
 				var gotContent = map[string]string{}

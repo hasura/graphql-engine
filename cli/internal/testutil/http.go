@@ -19,7 +19,7 @@ func SendHTTPRequestWithFileAsBody(t *testing.T, filepath, url string) *http.Res
 	err = json.Unmarshal(b, &body)
 	require.NoError(t, err)
 
-	req := newPOSTRequest(t, "POST", url, body)
+	req := NewRequest(t, "POST", url, body)
 
 	c := http.Client{}
 	resp, err := c.Do(req)
@@ -28,7 +28,7 @@ func SendHTTPRequestWithFileAsBody(t *testing.T, filepath, url string) *http.Res
 	return resp
 }
 
-func newPOSTRequest(t *testing.T, method, urlStr string, body interface{}) *http.Request {
+func NewRequest(t *testing.T, method, urlStr string, body interface{}) *http.Request {
 	u, err := url.ParseRequestURI(urlStr)
 	require.NoError(t, err)
 	var buf io.ReadWriter
@@ -45,6 +45,9 @@ func newPOSTRequest(t *testing.T, method, urlStr string, body interface{}) *http
 
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
+	}
+	if len(TestAdminSecret) > 0 {
+		req.Header.Set("x-hasura-admin-secret", TestAdminSecret)
 	}
 	return req
 }

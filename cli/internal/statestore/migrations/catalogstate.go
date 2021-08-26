@@ -87,3 +87,15 @@ func (m *CatalogStateStore) GetVersions(database string) (map[uint64]bool, error
 	}
 	return versions, nil
 }
+
+func (m *CatalogStateStore) SetVersions(database string, versions []statestore.Version) error {
+	state, err := m.getCLIState()
+	if err != nil {
+		return err
+	}
+	for _, v := range versions {
+		versionString := fmt.Sprintf("%d", v.Version)
+		state.SetMigration(database, versionString, v.Dirty)
+	}
+	return m.setCLIState(*state)
+}
