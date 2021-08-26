@@ -40,7 +40,7 @@ Hasura GraphQL engine supports:
 
 - :ref:`Postgres <database_postgres>`
 - :ref:`MS SQL Server <database_ms_sql_server>`
-- :ref:`Citus - Hyperscale <database_citus-hyperscale-postgres>`
+- :ref:`Citus / Hyperscale <database_citus-hyperscale-postgres>`
 - :ref:`BigQuery <database_bigquery>`
 - **MySQL** (in preview) - See the :ref:`preview guide <mysql_preview>`
 

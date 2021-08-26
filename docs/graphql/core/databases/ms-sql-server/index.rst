@@ -27,17 +27,25 @@ Get Started
 
 To try Hasura with SQL Server, you'll need your own new or existing SQL Server database.
 
-Here are 2 ways you can get started with Hasura:
+Here are 2 ways you can get started with Hasura and SQL Server:
 
-1. :ref:`Hasura Cloud<database_ms_sql_server_cloud>`: You'll need to be able to access your SQL Server database from Hasura Cloud.
-2. :ref:`Docker<database_ms_sql_server_docker>`: Run Hasura with Docker and then connect your SQL Server database to Hasura.
+1. :ref:`Hasura Cloud <database_ms_sql_server_cloud>`: You'll need to be able to access your SQL Server database from Hasura Cloud.
+2. :ref:`Docker <database_ms_sql_server_docker>`: Run Hasura with Docker and then connect your SQL Server database to Hasura.
+
+Supported features
+------------------
+
+Hasura currently supports queries, subscriptions, relationships and permissions on MS SQL Server.
+
+Next up on our roadmap for Hasura + SQL Server:
+
+- Support for stored procedures & functions (`#7073 <https://github.com/hasura/graphql-engine/issues/7073>`__)
+- Mutations: Run inserts, updates, deletes, stored procedures and transactions securely on SQL Server over a GraphQL API (`#7074 <https://github.com/hasura/graphql-engine/issues/7074>`__)
+- Event triggers: Trigger HTTP webhooks with atomic capture and atleast once guarantee whenever data changes inside the database (`#7075 <https://github.com/hasura/graphql-engine/issues/7075>`__)
+- Remote Joins: Join models in SQL Server to models from other API services (GraphQL or REST) (`#7076 <https://github.com/hasura/graphql-engine/issues/7076>`__)
 
 Keep up to date
 ---------------
-
-Hasura supports queries, subscriptions, relationships and permissions on MS SQL Server.
-
-Please watch this space to get the latest docs on how you can try these features out via the console or by manipulating metadata in JSON/YAML directly.
 
 If you'd like to stay informed about the status of SQL Server support, subscribe to our newsletter and join our discord!
 
