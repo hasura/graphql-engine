@@ -204,7 +204,6 @@ data RelInfo (b :: BackendType)
   , riMapping     :: !(HashMap (Column b) (Column b))
   , riRTable      :: !(TableName b)
   , riIsManual    :: !Bool
-  , riIsNullable  :: !Nullable
   , riInsertOrder :: !InsertOrder
   } deriving (Generic)
 deriving instance Backend b => Show (RelInfo b)
