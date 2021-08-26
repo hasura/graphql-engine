@@ -7,12 +7,18 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 )
 
+type Version struct {
+	Version int64
+	Dirty   bool
+}
+
 // Abstraction for the storage layer for migration state
 type MigrationsStateStore interface {
 	InsertVersion(database string, version int64) error
 	RemoveVersion(database string, version int64) error
 	SetVersion(database string, version int64, dirty bool) error
 	GetVersions(database string) (map[uint64]bool, error)
+	SetVersions(database string, versions []Version) error
 
 	PrepareMigrationsStateStore(database string) error
 }
@@ -120,8 +126,12 @@ func CopyMigrationState(src, dest MigrationsStateStore, srcdatabase, destdatabas
 	if err != nil {
 		return err
 	}
-	for k, v := range versions {
-		dest.SetVersion(destdatabase, int64(k), v)
+	var vs []Version
+	for v, dirty := range versions {
+		vs = append(vs, Version{int64(v), dirty})
+	}
+	if err := dest.SetVersions(destdatabase, vs); err != nil {
+		return err
 	}
 	return nil
 }

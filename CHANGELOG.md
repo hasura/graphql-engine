@@ -10,6 +10,7 @@
 - server: Adding support for TLS allowlist by domain and service id (port)
 - server: add support for `graphql-ws` clients
 - console: fix error due too rendering inconsistent object's message
+- cli: fix delay starting console using `hasura console` (#7255)
 
 ## v2.0.7
 

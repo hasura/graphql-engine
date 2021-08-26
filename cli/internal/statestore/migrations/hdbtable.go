@@ -2,9 +2,10 @@ package migrations
 
 import (
 	"fmt"
-	"strconv"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
+	"strconv"
+	"strings"
 
 	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
 )
@@ -133,4 +134,26 @@ func (m *MigrationStateStoreHdbTable) GetVersions(sourceName string) (map[uint64
 		// m.hasuraDB.migrations.Append(database.MigrationVersion{Version: uint64(version), Dirty: dirty})
 	}
 	return versions, nil
+}
+
+// SetVersions is similar to SetVersion defined above. with the only difference, this is adapted to accept multiple versions
+func (m *MigrationStateStoreHdbTable) SetVersions(sourceName string, versions []statestore.Version) error {
+	var insertSql []string
+	for _, v := range versions {
+		if v.Version >= 0 || (v.Version == database.NilVersion && v.Dirty) {
+			insertSql = append(insertSql, `INSERT INTO `+fmt.Sprintf("%s.%s", m.schema, m.table)+` (version, dirty) VALUES (`+strconv.FormatInt(v.Version, 10)+`, `+fmt.Sprintf("'%t'", v.Dirty)+`)`+fmt.Sprintf(` ON CONFLICT(version) DO UPDATE SET dirty='%t'`, v.Dirty))
+		}
+
+	}
+	if len(insertSql) > 0 {
+		query := hasura.PGRunSQLInput{
+			Source: sourceName,
+			SQL:    strings.Join(insertSql, ";"),
+		}
+		_, err := m.client.PGRunSQL(query)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
