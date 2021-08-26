@@ -60,6 +60,7 @@ Dig deeper
    Securing projects <secure>
    Switching pricing plans <pricing>
    Deployment regions <regions>
+   Managing development environments <environments>
    GitHub Deployment <github-integration>
    Heroku database URL Sync <heroku-url-sync>
    Maintenance mode <maintenance-mode>
