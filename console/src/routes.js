@@ -31,6 +31,11 @@ import CreateRestView from './components/Services/ApiExplorer/Rest/Create/';
 import RestListView from './components/Services/ApiExplorer/Rest/List';
 import DetailsView from './components/Services/ApiExplorer/Rest/Details';
 import TempHerokuCallback from './components/Services/Data/DataSources/CreateDataSource/Heroku/TempCallback';
+import InsecureDomains from './components/Services/Settings/InsercureDomains/AllowInsecureDomains';
+import {
+  checkFeatureSupport,
+  INSECURE_TLS_ALLOW_LIST,
+} from './helpers/versionUtils';
 
 const routes = store => {
   // load hasuractl migration status
@@ -141,6 +146,9 @@ const routes = store => {
           <Route path="logout" component={logoutConnector(connect)} />
           <Route path="about" component={aboutConnector(connect)} />
           <Route path="inherited-roles" component={inheritedRolesConnector} />
+          {checkFeatureSupport(INSECURE_TLS_ALLOW_LIST) && (
+            <Route path="insecure-domain" component={InsecureDomains} />
+          )}
         </Route>
         {dataRouter}
         {remoteSchemaRouter}

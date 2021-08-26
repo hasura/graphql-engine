@@ -537,7 +537,7 @@ export const getDatabaseSchemasInfo = (sourceType = 'postgres', sourceName) => (
 ) => {
   const url = Endpoints.query;
   const sql = services[sourceType].getDatabaseInfo;
-  const query = getRunSqlQuery(sql, sourceName);
+  const query = getRunSqlQuery(sql, sourceName, false, true);
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
