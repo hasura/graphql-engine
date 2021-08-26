@@ -19,14 +19,14 @@
     # explicitly drop non-cascading dependency
     - type: bigquery_drop_relationship
       args:
-        source: bigquery
+        source: hasura
         table:
           dataset: hasura
           name: author
         relationship: articles
     - type: bigquery_untrack_table
       args:
-        source: bigquery
+        source: hasura
         table:
           dataset: hasura
           name: article
@@ -34,7 +34,7 @@
     # track table with customizations
     - type: bigquery_track_table
       args:
-        source: bigquery
+        source: hasura
         table:
           dataset: hasura
           name: article
@@ -51,7 +51,7 @@
     # restore previously (explicitly and implicitly) dropped dependencies
     - type: bigquery_create_array_relationship
       args:
-        source: bigquery
+        source: hasura
         table:
           dataset: hasura
           name: author
@@ -66,7 +66,7 @@
 
     - type: bigquery_create_object_relationship
       args:
-        source: bigquery
+        source: hasura
         table:
           dataset: hasura
           name: article
@@ -82,7 +82,7 @@
     - type: bigquery_create_select_permission
       args:
         role: published_only
-        source: bigquery
+        source: hasura
         table:
           dataset: hasura
           name: article
@@ -97,7 +97,7 @@
     - type: bigquery_create_select_permission
       args:
         role: exact_article_id
-        source: bigquery
+        source: hasura
         table:
           dataset: hasura
           name: article
@@ -112,7 +112,7 @@
     - type: bigquery_create_select_permission
       args:
         role: empty_perms
-        source: bigquery
+        source: hasura
         table:
           dataset: hasura
           name: article
@@ -123,7 +123,7 @@
     - type: bigquery_create_select_permission
       args:
         role: user
-        source: bigquery
+        source: hasura
         table:
           dataset: hasura
           name: article
@@ -141,7 +141,7 @@
     - type: bigquery_create_select_permission
       args:
         role: test_timestamp_perm
-        source: bigquery
+        source: hasura
         table:
           dataset: hasura
           name: article
@@ -183,4 +183,3 @@
           }
         }
       }
-
