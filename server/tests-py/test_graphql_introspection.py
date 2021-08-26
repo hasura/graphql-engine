@@ -40,21 +40,8 @@ class TestNullableObjectRelationshipInSchema:
     def dir(cls):
         return "queries/graphql_introspection/nullable_object_relationship"
 
-    def test_introspection(self, hge_ctx):
-        with open(self.dir() + "/../introspection.yaml") as c:
-            conf = yaml.safe_load(c)
-        resp, _ = check_query(hge_ctx, conf)
-        for t in resp['data']['__schema']['types']:
-            if t['name'] == 'table2':
-                for fld in t['fields']:
-                    if fld['name'] == 'via_table1':
-                        # graphql schema introspection doesn't explictly mark
-                        # the fields to be nullable (it does in the non-null
-                        # case). So checking this should be sufficient to detect
-                        # if its nullable. If this is not nullable, the
-                        # top-level kind would be `NON_NULL` and its `ofType`
-                        # would have the actual type
-                        assert fld['type']['kind'] == 'OBJECT'
+    def test_introspection_both_directions_both_nullabilities(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/nullability.yaml")
 
 def getTypeNameFromType(typeObject):
     if typeObject['name'] != None:

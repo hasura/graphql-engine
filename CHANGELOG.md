@@ -4,6 +4,7 @@
 
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: fix nullability of object relationships (close #7201)
 - server: optimize SQL query generation with LIMITs (close #5745)
 - server: update non-existent event trigger, action and query collection error msgs (close #7396)
 - server: fix broken `untrack_function` for non-default source

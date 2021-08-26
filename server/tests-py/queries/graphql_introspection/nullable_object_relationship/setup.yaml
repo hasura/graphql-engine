@@ -10,7 +10,15 @@ args:
       CREATE TABLE table2 (
         id serial primary key,
         name text,
-        table1_id INTEGER REFERENCES table1(id)
+        table1_id INTEGER UNIQUE REFERENCES table1(id),
+        table1_id_not_null INTEGER NOT NULL UNIQUE REFERENCES table1(id),
+        unique (name, table1_id)
+      );
+      CREATE TABLE joint_foreign_key (
+        id serial primary key,
+        table2_name text not null,
+        table2_table1_id integer null,
+        foreign key (table2_name, table2_table1_id) references table2 (name, table1_id)
       );
 
 - type: track_table
@@ -21,6 +29,10 @@ args:
   version: 2
   args:
     table: table2
+- type: track_table
+  version: 2
+  args:
+    table: joint_foreign_key
 
 - type: create_object_relationship
   args:
@@ -28,3 +40,39 @@ args:
     table: table2
     using:
       foreign_key_constraint_on: table1_id
+
+- type: create_object_relationship
+  args:
+    name: via_table1_not_null
+    table: table2
+    using:
+      foreign_key_constraint_on: table1_id_not_null
+
+- type: create_object_relationship
+  args:
+    name: via_table2
+    table: table1
+    using:
+      foreign_key_constraint_on:
+        table: table2
+        columns:
+        - table1_id
+
+- type: create_object_relationship
+  args:
+    name: via_table2_not_null
+    table: table1
+    using:
+      foreign_key_constraint_on:
+        table: table2
+        columns:
+        - table1_id_not_null
+
+- type: create_object_relationship
+  args:
+    name: table2
+    table: joint_foreign_key
+    using:
+      foreign_key_constraint_on:
+      - table2_name
+      - table2_table1_id

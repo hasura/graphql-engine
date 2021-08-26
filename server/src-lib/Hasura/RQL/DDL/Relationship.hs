@@ -95,9 +95,8 @@ objRelP2Setup
   -> TableName b
   -> HashMap (TableName b) (HashSet (ForeignKey b))
   -> RelDef (ObjRelUsing b)
-  -> FieldInfoMap (ColumnInfo b)
   -> m (RelInfo b, [SchemaDependency])
-objRelP2Setup source qt foreignKeys (RelDef rn ru _) fieldInfoMap = case ru of
+objRelP2Setup source qt foreignKeys (RelDef rn ru _) = case ru of
   RUManual rm -> do
     let refqt = rmTable rm
         (lCols, rCols) = unzip $ HM.toList $ rmColumns rm
@@ -110,7 +109,7 @@ objRelP2Setup source qt foreignKeys (RelDef rn ru _) fieldInfoMap = case ru of
                                               reason
         dependencies = map (mkDependency qt DRLeftColumn) lCols
                     <> map (mkDependency refqt DRRightColumn) rCols
-    pure (RelInfo rn ObjRel (rmColumns rm) refqt True Nullable io, dependencies)
+    pure (RelInfo rn ObjRel (rmColumns rm) refqt True io, dependencies)
   RUFKeyOn (SameTable columns) -> do
     foreignTableForeignKeys <- findTable @b qt foreignKeys
     ForeignKey constraint foreignTable colMap <- getRequiredFkey columns (HS.toList foreignTableForeignKeys)
@@ -129,10 +128,7 @@ objRelP2Setup source qt foreignKeys (RelDef rn ru _) fieldInfoMap = case ru of
                 $ SOITable @b foreignTable)
               DRRemoteTable
           ] <> fmap (drUsingColumnDep @b source qt) (toList columns)
-    colInfo <- traverse ((`HM.lookup` fieldInfoMap) . fromCol @b) columns
-                 `onNothing` throw500 "could not find column info in schema cache"
-    let nullable = boolToNullable $ all pgiIsNullable colInfo
-    pure (RelInfo rn ObjRel colMap foreignTable False nullable BeforeParent, dependencies)
+    pure (RelInfo rn ObjRel colMap foreignTable False BeforeParent, dependencies)
   RUFKeyOn (RemoteTable remoteTable remoteCols) ->
     mkFkeyRel ObjRel AfterParent source rn qt remoteTable remoteCols foreignKeys
 
@@ -161,7 +157,7 @@ arrRelP2Setup foreignKeys source qt (RelDef rn ru _) = case ru of
                                     $ TOCol @b c)
                                   DRRightColumn)
                   rCols
-    pure (RelInfo rn ArrRel (rmColumns rm) refqt True Nullable AfterParent, deps)
+    pure (RelInfo rn ArrRel (rmColumns rm) refqt True  AfterParent, deps)
   RUFKeyOn (ArrRelUsingFKeyOn refqt refCols) ->
     mkFkeyRel ArrRel AfterParent source rn qt refqt refCols foreignKeys
 
@@ -195,11 +191,12 @@ mkFkeyRel relType io source rn sourceTable remoteTable remoteColumns foreignKeys
                 $ SOITable @b remoteTable)
               DRRemoteTable
           ] <> fmap (drUsingColumnDep @b source remoteTable) (toList remoteColumns)
-    pure (RelInfo rn relType (reverseHM colMap) remoteTable False NotNullable io, dependencies)
+    pure (RelInfo rn relType (reverseHM colMap) remoteTable False io, dependencies)
   where
     reverseHM :: Eq y => Hashable y => HashMap x y -> HashMap y x
     reverseHM = HM.fromList . fmap swap . HM.toList
 
+-- | Try to find a foreign key constraint, identifying a constraint by its set of columns
 getRequiredFkey
   :: (QErrM m, Backend b)
   => NonEmpty (Column b)
@@ -208,8 +205,8 @@ getRequiredFkey
 getRequiredFkey cols fkeys =
   case filteredFkeys of
     [k] -> return k
-    []  -> throw400 ConstraintError "no foreign constraint exists on the given column"
-    _   -> throw400 ConstraintError "more than one foreign key constraint exists on the given column"
+    []  -> throw400 ConstraintError "no foreign constraint exists on the given column(s)"
+    _   -> throw400 ConstraintError "more than one foreign key constraint exists on the given column(s)"
   where
     filteredFkeys = filter ((== HS.fromList (toList cols)) . HM.keysSet . _fkColumnMapping) fkeys
 

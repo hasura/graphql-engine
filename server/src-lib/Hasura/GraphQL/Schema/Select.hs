@@ -993,7 +993,7 @@ fieldSelection sourceName table maybePkeyColumns fieldInfo selectPermissions = d
                <&> IR.mkAnnColumnField columnInfo caseBoolExpUnpreparedValue
 
     FIRelationship relationshipInfo ->
-      concat . maybeToList <$> relationshipField sourceName relationshipInfo
+      concat . maybeToList <$> relationshipField sourceName table relationshipInfo
 
     FIComputedField computedFieldInfo ->
       maybeToList <$> computedField sourceName computedFieldInfo table selectPermissions
@@ -1006,30 +1006,73 @@ relationshipField
   :: forall b r m n
    . MonadBuildSchema b r m n
   => SourceName
+  -> TableName b
   -> RelInfo b
   -> m (Maybe [FieldParser n (AnnotatedField b)])
-relationshipField sourceName relationshipInfo = runMaybeT do
-  let otherTableName = riRTable     relationshipInfo
-      colMapping     = riMapping    relationshipInfo
-      relName        = riName       relationshipInfo
-      nullable       = riIsNullable relationshipInfo
-  otherTableInfo <- lift $ askTableInfo sourceName otherTableName
+relationshipField sourceName table RelInfo{..} = runMaybeT do
+  otherTableInfo <- lift $ askTableInfo sourceName riRTable
   remotePerms  <- MaybeT $ tableSelectPermissions otherTableInfo
-  relFieldName <- lift $ textToName $ relNameToTxt relName
-  case riType relationshipInfo of
+  relFieldName <- lift $ textToName $ relNameToTxt riName
+  case riType of
     ObjRel -> do
       let desc = Just $ G.Description "An object relationship"
       selectionSetParser <- lift $ tableSelectionSet sourceName otherTableInfo remotePerms
+      -- We need to set the correct nullability of our GraphQL field.  Manual
+      -- relationships are always nullable, and so are "reverse" object
+      -- relationships, i.e. Hasura relationships that are generated from a
+      -- referenced table to a referencing table.  For automatic forward object
+      -- relationships, i.e. the generated relationship from table1 to table2,
+      -- where table1 has a foreign key constraint, we have to do some work.
+      --
+      -- Specifically, we would like to mark the relationship generated from a
+      -- foreign key constraint from table1 to table2 to be non-nullable if
+      -- Postgres enforces that for each row in table1, a corresponding row in
+      -- table2 exists.  From the Postgres manual:
+      --
+      -- "Normally, a referencing row need not satisfy the foreign key
+      -- constraint if any of its referencing columns are null.  If MATCH FULL
+      -- is added to the foreign key declaration, a referencing row escapes
+      -- satisfying the constraint only if all its referencing columns are null
+      -- (so a mix of null and non-null values is guaranteed to fail a MATCH
+      -- FULL constraint)."
+      --
+      -- https://www.postgresql.org/docs/9.5/ddl-constraints.html#DDL-CONSTRAINTS-FK
+      --
+      -- Since we don't store MATCH FULL in the RQL representation of the
+      -- database, the closest we can get is to only set the field to be
+      -- non-nullable if _all_ of the columns that reference the foreign table
+      -- are non-nullable.  Strictly speaking, we could do slightly better by
+      -- setting the field to be non-nullable also if the foreign key has MATCH
+      -- FULL set, and _any_ of the columns is non-nullable.  But we skip doing
+      -- this since, as of writing this, the old code used to make the wrong
+      -- decision about nullability of joint foreign keys entirely, so this is
+      -- probably not a very widely used mode of use.  The impact of this
+      -- suboptimality is merely that in introspection some fields might get
+      -- marked nullable which are in fact known to always be non-null.
+      nullable <- case (riIsManual, riInsertOrder) of
+        -- Automatically generated forward relationship
+        (False, BeforeParent) -> do
+          tableInfo <- askTableInfo @b sourceName table
+          let columns = Map.keys riMapping
+              fieldInfoMap = _tciFieldInfoMap $ _tiCoreInfo tableInfo
+              findColumn col = Map.lookup (fromCol @b col) fieldInfoMap ^? _Just._FIColumn
+          -- Fetch information about the referencing columns of the foreign key
+          -- constraint
+          colInfo <- traverse findColumn columns
+                     `onNothing` throw500 "could not find column info in schema cache"
+          pure $ boolToNullable $ any pgiIsNullable colInfo
+        -- Manual or reverse relationships are always nullable
+        _ -> pure Nullable
       pure $ pure $ case nullable of { Nullable -> id; NotNullable -> P.nonNullableField} $
         P.subselection_ relFieldName desc selectionSetParser
-             <&> \fields -> IR.AFObjectRelation $ IR.AnnRelationSelectG relName colMapping $
-                    IR.AnnObjectSelectG fields otherTableName $
+             <&> \fields -> IR.AFObjectRelation $ IR.AnnRelationSelectG riName riMapping $
+                    IR.AnnObjectSelectG fields riRTable $
                     IR._tpFilter $ tablePermissionsInfo remotePerms
     ArrRel -> do
       let arrayRelDesc = Just $ G.Description "An array relationship"
       otherTableParser <- lift $ selectTable sourceName otherTableInfo relFieldName arrayRelDesc remotePerms
       let arrayRelField = otherTableParser <&> \selectExp -> IR.AFArrayRelation $
-            IR.ASSimple $ IR.AnnRelationSelectG relName colMapping selectExp
+            IR.ASSimple $ IR.AnnRelationSelectG riName riMapping selectExp
           relAggFieldName = relFieldName <> $$(G.litName "_aggregate")
           relAggDesc      = Just $ G.Description "An aggregate relationship"
       remoteAggField <- lift $ selectTableAggregate sourceName otherTableInfo relAggFieldName relAggDesc remotePerms
@@ -1044,8 +1087,8 @@ relationshipField sourceName relationshipInfo = runMaybeT do
             relConnectionDesc = Just $ G.Description "An array relationship connection"
         MaybeT $ lift $ selectTableConnection sourceName otherTableInfo relConnectionName relConnectionDesc pkeyColumns remotePerms
       pure $ catMaybes [ Just arrayRelField
-                       , fmap (IR.AFArrayRelation . IR.ASAggregate . IR.AnnRelationSelectG relName colMapping) <$> remoteAggField
-                       , fmap (IR.AFArrayRelation . IR.ASConnection . IR.AnnRelationSelectG relName colMapping) <$> remoteConnectionField
+                       , fmap (IR.AFArrayRelation . IR.ASAggregate . IR.AnnRelationSelectG riName riMapping) <$> remoteAggField
+                       , fmap (IR.AFArrayRelation . IR.ASConnection . IR.AnnRelationSelectG riName riMapping) <$> remoteConnectionField
                        ]
 
 -- | Computed field parser
