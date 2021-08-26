@@ -443,16 +443,15 @@ elif [ "$MODE" = "test" ]; then
   export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
   export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
 
-  # It's better UX to build first (possibly failing) before trying to launch
-  # PG, but make sure that new-run uses the exact same build plan, else we risk
-  # rebuilding twice... ugh
-  # Formerly this was a `cabal build` but mixing cabal build and cabal run
-  # seems to conflict now, causing re-linking, haddock runs, etc. Instead do a
-  # `graphql-engine version` to trigger build
-  cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
-      --metadata-database-url="$PG_DB_URL" version
-
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
+    # It's better UX to build first (possibly failing) before trying to launch
+    # PG, but make sure that new-run uses the exact same build plan, else we risk
+    # rebuilding twice... ugh
+    # Formerly this was a `cabal build` but mixing cabal build and cabal run
+    # seems to conflict now, causing re-linking, haddock runs, etc. Instead do a
+    # `graphql-engine version` to trigger build
+    cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
+        --metadata-database-url="$PG_DB_URL" version
     start_dbs
   else
     # unit tests just need access to a postgres instance:
