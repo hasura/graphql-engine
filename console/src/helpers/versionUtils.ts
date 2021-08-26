@@ -3,11 +3,13 @@ import globals from '../Globals';
 const semver = require('semver');
 
 export const READ_ONLY_RUN_SQL_QUERIES = 'readOnlyRunSqlQueries';
+export const INSECURE_TLS_ALLOW_LIST = 'insecureTlsAllowList';
 
 // list of feature launch versions
 const featureLaunchVersions = {
   // feature: 'v1.0.1'
   [READ_ONLY_RUN_SQL_QUERIES]: 'v1.1.0',
+  [INSECURE_TLS_ALLOW_LIST]: 'v2.0.8',
 };
 
 type Feature = keyof typeof featureLaunchVersions;

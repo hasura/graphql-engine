@@ -970,6 +970,11 @@ export interface InheritedRole {
   role_set: string[];
 }
 
+export interface DomainList {
+  host: string;
+  suffix?: string;
+  perms?: string[];
+}
 export interface APILimits {
   per_role?: Record<string, number>;
   global?: number;
@@ -990,6 +995,7 @@ export interface HasuraMetadataV3 {
   query_collections?: QueryCollectionEntry[];
   allowlist?: AllowList[];
   inherited_roles: InheritedRole[];
+  network?: { tls_allowlist?: DomainList[] };
   rest_endpoints?: RestEndpointEntry[];
   api_limits?: {
     disabled?: boolean;
