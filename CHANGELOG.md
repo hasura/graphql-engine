@@ -10,9 +10,10 @@
 - server: fix broken `untrack_function` for non-default source
 - server: Adding support for TLS allowlist by domain and service id (port)
 - server: add support for `graphql-ws` clients
-- console: fix error due too rendering inconsistent object's message
+- console: fix error due to rendering inconsistent object's message
 - console: support insecure TLS allowlist
-- cli: fix delay starting console using `hasura console` (#7255)
+- console: support computed fields in remote schema join
+- cli: fix delay starting console using `hasura console` (#7255
 
 ## v2.0.7
 

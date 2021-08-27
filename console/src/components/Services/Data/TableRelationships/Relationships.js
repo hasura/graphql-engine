@@ -310,6 +310,7 @@ const Relationships = ({
   manualRelAdd,
   currentSchema,
   migrationMode,
+  allFunctions,
   schemaList,
   readOnlyMode,
   currentSource,
@@ -494,6 +495,7 @@ const Relationships = ({
                 relationships={existingRemoteRelationships}
                 reduxDispatch={dispatch}
                 table={tableSchema}
+                allFunctions={allFunctions}
                 remoteSchemas={remoteSchemas}
               />
             </div>
@@ -518,24 +520,32 @@ Relationships.propTypes = {
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
   lastFormError: PropTypes.object,
+  allFunctions: PropTypes.array.isRequired,
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
   remoteSchemas: PropTypes.array.isRequired,
 };
 
-const mapStateToProps = (state, ownProps) => ({
-  tableName: ownProps.params.table,
-  allSchemas: state.tables.allSchemas,
-  currentSchema: state.tables.currentSchema,
-  migrationMode: state.main.migrationMode,
-  readOnlyMode: state.main.readOnlyMode,
-  serverVersion: state.main.serverVersion,
-  schemaList: state.tables.schemaList,
-  remoteSchemas: getRemoteSchemasSelector(state).map(schema => schema.name),
-  adminHeaders: state.tables.dataHeaders,
-  currentSource: state.tables.currentDataSource,
-  ...state.tables.modify,
-});
+const mapStateToProps = (state, ownProps) => {
+  const {
+    nonTrackablePostgresFunctions: nonTrackableFns,
+    postgresFunctions: trackedFns,
+  } = state.tables;
+  return {
+    tableName: ownProps.params.table,
+    allSchemas: state.tables.allSchemas,
+    currentSchema: state.tables.currentSchema,
+    migrationMode: state.main.migrationMode,
+    readOnlyMode: state.main.readOnlyMode,
+    serverVersion: state.main.serverVersion,
+    schemaList: state.tables.schemaList,
+    allFunctions: nonTrackableFns?.concat(trackedFns ?? []) ?? [],
+    remoteSchemas: getRemoteSchemasSelector(state).map(schema => schema.name),
+    adminHeaders: state.tables.dataHeaders,
+    currentSource: state.tables.currentDataSource,
+    ...state.tables.modify,
+  };
+};
 
 const relationshipsConnector = connect =>
   connect(mapStateToProps)(Relationships);

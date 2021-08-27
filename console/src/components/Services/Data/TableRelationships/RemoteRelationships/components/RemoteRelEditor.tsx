@@ -25,6 +25,11 @@ import {
 import Explorer from './Explorer';
 import { ReduxState, ReduxAction } from '../../../../../../types';
 import { Table } from '../../../../../../dataSources/types';
+import { PGFunction } from '../../../../../../dataSources/services/postgresql/types';
+import {
+  getComputedFieldFunction,
+  getGroupedTableComputedFields,
+} from '../../../../../../dataSources/services/postgresql';
 
 type Props = {
   table: Table;
@@ -32,6 +37,7 @@ type Props = {
   isLast: boolean;
   state: RemoteRelationship;
   dispatch: React.Dispatch<RemoteRelAction>;
+  allFunctions: PGFunction[];
   reduxDispatch: ThunkAction<void, ReduxState, unknown, ReduxAction>;
 };
 
@@ -40,6 +46,7 @@ const RemoteRelEditor: React.FC<Props> = ({
   isLast,
   remoteSchemas,
   state,
+  allFunctions,
   dispatch,
   reduxDispatch,
 }) => {
@@ -75,6 +82,18 @@ const RemoteRelEditor: React.FC<Props> = ({
     (c: { column_name: string }) => {
       return c.column_name;
     }
+  );
+
+  const computedFields = getGroupedTableComputedFields(table, allFunctions);
+  const scalarComputedFields = computedFields.scalar.filter(sc => {
+    const cFn = getComputedFieldFunction(sc, allFunctions)?.input_arg_types;
+    // Only the computed fields that do not require extra arguments other than the table row
+    // are currenlty supported by the server https://github.com/hasura/graphql-engine/issues/7336
+    return cFn?.length === 1 && cFn[0].name === table.table_name;
+  });
+
+  const computedFieldsNames = scalarComputedFields.map(
+    f => f.computed_field_name
   );
 
   return (
@@ -152,7 +171,10 @@ const RemoteRelEditor: React.FC<Props> = ({
             handleArgValueKindChange={handleArgValueKindChange}
             handleArgValueChange={handleArgValueChange}
             remoteSchemaName={state.remoteSchema}
-            columns={tableColumns}
+            columns={{
+              columns: tableColumns,
+              computedFields: computedFieldsNames,
+            }}
             reduxDispatch={reduxDispatch}
           />
         </div>

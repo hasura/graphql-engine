@@ -33,6 +33,7 @@ class RelationshipsView extends Component {
       lastFormError,
       lastSuccess,
       dispatch,
+      allFunctions,
       manualRelAdd,
       currentSchema,
       migrationMode,
@@ -137,6 +138,7 @@ class RelationshipsView extends Component {
             relationships={tableSchema.remote_relationships}
             reduxDispatch={dispatch}
             table={tableSchema}
+            allFunctions={allFunctions}
             remoteSchemas={remoteSchemas}
           />
         </div>
@@ -200,22 +202,30 @@ RelationshipsView.propTypes = {
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
   serverVersion: PropTypes.string,
+  allFunctions: PropTypes.array.isRequired,
   remoteSchemas: PropTypes.array.isRequired,
   featuresCompatibility: PropTypes.object,
 };
 
-const mapStateToProps = (state, ownProps) => ({
-  tableName: ownProps.params.table,
-  allSchemas: state.tables.allSchemas,
-  currentSchema: state.tables.currentSchema,
-  migrationMode: state.main.migrationMode,
-  readOnlyMode: state.main.readOnlyMode,
-  serverVersion: state.main.serverVersion,
-  schemaList: state.tables.schemaList,
-  remoteSchemas: getRemoteSchemasSelector(state).map(schema => schema.name),
-  currentSource: state.tables.currentDataSource,
-  ...state.tables.modify,
-});
+const mapStateToProps = (state, ownProps) => {
+  const {
+    nonTrackablePostgresFunctions: nonTrackableFns,
+    postgresFunctions: trackedFns,
+  } = state.tables;
+  return {
+    tableName: ownProps.params.table,
+    allSchemas: state.tables.allSchemas,
+    currentSchema: state.tables.currentSchema,
+    migrationMode: state.main.migrationMode,
+    readOnlyMode: state.main.readOnlyMode,
+    serverVersion: state.main.serverVersion,
+    allFunctions: nonTrackableFns?.concat(trackedFns ?? []) ?? [],
+    schemaList: state.tables.schemaList,
+    remoteSchemas: getRemoteSchemasSelector(state).map(schema => schema.name),
+    currentSource: state.tables.currentDataSource,
+    ...state.tables.modify,
+  };
+};
 
 const relationshipsViewConnector = connect =>
   connect(mapStateToProps)(RelationshipsView);

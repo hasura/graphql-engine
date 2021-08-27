@@ -6,11 +6,13 @@ import ToolTip from '../../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 import { Dispatch } from '../../../../../types';
 import { Table } from '../../../../../dataSources/types';
+import { PGFunction } from '../../../../../dataSources/services/postgresql/types';
 
 type Props = {
   relationships: RemoteRelationshipServer[];
   reduxDispatch: Dispatch;
   table: Table;
+  allFunctions: PGFunction[];
   remoteSchemas: string[];
 };
 
@@ -18,6 +20,7 @@ const RemoteRelationships: React.FC<Props> = ({
   relationships,
   reduxDispatch,
   table,
+  allFunctions,
   remoteSchemas,
 }) => {
   return (
@@ -32,6 +35,7 @@ const RemoteRelationships: React.FC<Props> = ({
         <RemoteRelationshipList
           relationships={relationships}
           table={table}
+          allFunctions={allFunctions}
           remoteSchemas={remoteSchemas}
           reduxDispatch={reduxDispatch}
         />
