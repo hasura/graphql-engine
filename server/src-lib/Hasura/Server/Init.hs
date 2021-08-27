@@ -26,9 +26,8 @@ import           Data.URL.Template
 import           Network.Wai.Handler.Warp                 (HostPreference)
 import           Options.Applicative
 
-import qualified Hasura.Cache.Bounded                     as Cache
+import qualified Hasura.Cache.Bounded                     as Cache (CacheSize, parseCacheSize)
 import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
-import qualified Hasura.GraphQL.Execute.Plan              as E
 import qualified Hasura.Logging                           as L
 
 import           Hasura.Backends.Postgres.Connection
@@ -174,8 +173,6 @@ mkServeOptions rso = do
   enabledLogs <- maybe L.defaultEnabledLogTypes Set.fromList <$>
                  withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
-  planCacheOptions <- E.PlanCacheOptions . fromMaybe 4000 <$>
-                      withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
   devMode <- withEnvBool (rsoDevMode rso) $ fst devModeEnv
   adminInternalErrors <- fromMaybe True <$> -- Default to `true` to enable backwards compatibility
                          withEnv (rsoAdminInternalErrors rso) (fst adminInternalErrorsEnv)
@@ -224,6 +221,9 @@ mkServeOptions rso = do
   gracefulShutdownTime <-
     fromMaybe 60 <$> withEnv (rsoGracefulShutdownTimeout rso) (fst gracefulShutdownEnv)
 
+  webSocketConnectionInitTimeout <- WSConnectionInitTimeout . fromIntegral . fromMaybe 3
+      <$> withEnv (rsoWebSocketConnectionInitTimeout rso) (fst webSocketConnectionInitTimeoutEnv)
+
   pure $ ServeOptions
            port
            host
@@ -244,7 +244,6 @@ mkServeOptions rso = do
            enableAL
            enabledLogs
            serverLogLevel
-           planCacheOptions
            internalErrorsConfig
            eventsHttpPoolSize
            eventsFetchInterval
@@ -260,6 +259,7 @@ mkServeOptions rso = do
            eventsFetchBatchSize
            devMode
            gracefulShutdownTime
+           webSocketConnectionInitTimeout
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -1102,28 +1102,14 @@ enableAllowlistEnv =
   , "Only accept allowed GraphQL queries"
   )
 
--- NOTES re. default:
---     There's a lot of guesswork and estimation here. Based on our test suite
---   the average in-memory payload for a cache entry is 7kb, with the largest
---   being 70kb. 128mb per-HEC seems like a reasonable default upper bound
---   (note there is a distinct stripe per-HEC, for now; so this would give 1GB
---   for an 8-core machine), which gives us a range of 2,000 to 18,000 here.
---     Analysis of telemetry is hazy here; see
---   https://github.com/hasura/graphql-engine/issues/5363 for some discussion.
-planCacheSizeEnv :: (String, String)
-planCacheSizeEnv =
-  ( "HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE"
-  , "The maximum number of query plans that can be cached, allowed values: 0-65535, " <>
-    "0 disables the cache. Default 4000"
-  )
-
 parsePlanCacheSize :: Parser (Maybe Cache.CacheSize)
 parsePlanCacheSize =
   optional $
     option (eitherReader Cache.parseCacheSize)
     ( long "query-plan-cache-size" <>
-      metavar "QUERY_PLAN_CACHE_SIZE" <>
-      help (snd planCacheSizeEnv)
+      help ("[DEPRECATED: value ignored.] The maximum number of query plans " <>
+            "that can be cached, allowed values: 0-65535, " <>
+            "0 disables the cache. Default 4000")
     )
 
 parseEnabledLogs :: L.EnabledLogTypes impl => Parser (Maybe [L.EngineLogType impl])
@@ -1206,7 +1192,6 @@ serveOptsToLog so =
       , "enable_allowlist" J..= soEnableAllowlist so
       , "enabled_log_types" J..= soEnabledLogTypes so
       , "log_level" J..= soLogLevel so
-      , "plan_cache_options" J..= soPlanCacheOptions so
       , "remote_schema_permissions" J..= soEnableRemoteSchemaPermissions so
       , "websocket_compression_options" J..= show (WS.connectionCompressionOptions . soConnectionOptions $ so)
       , "websocket_keep_alive" J..= show (soWebsocketKeepAlive so)
@@ -1215,6 +1200,7 @@ serveOptsToLog so =
       , "experimental_features" J..= soExperimentalFeatures so
       , "events_fetch_batch_size" J..= soEventsFetchBatchSize so
       , "graceful_shutdown_timeout" J..= soGracefulShutdownTimeout so
+      , "websocket_connection_init_timeout" J..= show (soWebsocketConnectionInitTimeout so)
       ]
 
 mkGenericStrLog :: L.LogLevel -> Text -> String -> StartupLog
@@ -1255,7 +1241,7 @@ serveOptionsParser =
   <*> parseEnableAllowlist
   <*> parseEnabledLogs
   <*> parseLogLevel
-  <*> parsePlanCacheSize
+  <*  parsePlanCacheSize -- parsed (for backwards compatibility reasons) but ignored
   <*> parseGraphqlDevMode
   <*> parseGraphqlAdminInternalErrors
   <*> parseGraphqlEventsHttpPoolSize
@@ -1271,6 +1257,7 @@ serveOptionsParser =
   <*> parseExperimentalFeatures
   <*> parseEventsFetchBatchSize
   <*> parseGracefulShutdownTimeout
+  <*> parseWebSocketConnectionInitTimeout
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
@@ -1318,6 +1305,7 @@ parseWebSocketCompression =
            help (snd webSocketCompressionEnv)
          )
 
+-- NOTE: this is purely used by Apollo-Subscription-Transport-WS
 webSocketKeepAliveEnv :: (String, String)
 webSocketKeepAliveEnv =
   ( "HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE"
@@ -1330,4 +1318,19 @@ parseWebSocketKeepAlive =
   option (eitherReader readEither)
          ( long "websocket-keepalive" <>
            help (snd webSocketKeepAliveEnv)
+         )
+
+-- NOTE: this is purely used by GraphQL-WS
+webSocketConnectionInitTimeoutEnv :: (String, String)
+webSocketConnectionInitTimeoutEnv =
+  ( "HASURA_GRAPHQL_WEBSOCKET_CONNECTION_INIT_TIMEOUT" -- FIXME?: maybe a better name
+  , "Control websocket connection_init timeout (default 3 seconds)"
+  )
+
+parseWebSocketConnectionInitTimeout :: Parser (Maybe Int)
+parseWebSocketConnectionInitTimeout =
+  optional $
+  option (eitherReader readEither)
+         ( long "websocket-connection-init-timeout" <>
+           help (snd webSocketConnectionInitTimeoutEnv)
          )

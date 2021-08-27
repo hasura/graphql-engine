@@ -88,7 +88,7 @@ buildFunctionInfo
   -> FunctionName 'MSSQL
   -> SystemDefined
   -> FunctionConfig
-  -> [FunctionPermissionMetadata]
+  -> FunctionPermissionsMap
   -> RawFunctionInfo 'MSSQL
   -> m (FunctionInfo 'MSSQL, SchemaDependency)
 buildFunctionInfo _ _ _ _ _ _ =

@@ -66,7 +66,7 @@ import qualified Hasura.Tracing                  as Tracing
 import           Hasura.Base.Error
 import           Hasura.HTTP
 import           Hasura.Logging                  (Hasura, LogLevel (..), Logger (..))
-import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
+import           Hasura.Server.Auth.JWT.Internal (parseEdDSAKey, parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
 import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader,
                                                   isSessionVariable, userRoleHeader)
@@ -657,14 +657,15 @@ instance J.FromJSON JWTConfig where
     where
       parseKey keyType rawKey =
        case keyType of
-          "HS256" -> runEither $ parseHmacKey rawKey 256
-          "HS384" -> runEither $ parseHmacKey rawKey 384
-          "HS512" -> runEither $ parseHmacKey rawKey 512
-          "RS256" -> runEither $ parseRsaKey rawKey
-          "RS384" -> runEither $ parseRsaKey rawKey
-          "RS512" -> runEither $ parseRsaKey rawKey
-          -- TODO(from master): support ES256, ES384, ES512, PS256, PS384
-          _       -> invalidJwk ("Key type: " <> T.unpack keyType <> " is not supported")
+          "HS256"   -> runEither $ parseHmacKey rawKey 256
+          "HS384"   -> runEither $ parseHmacKey rawKey 384
+          "HS512"   -> runEither $ parseHmacKey rawKey 512
+          "RS256"   -> runEither $ parseRsaKey rawKey
+          "RS384"   -> runEither $ parseRsaKey rawKey
+          "RS512"   -> runEither $ parseRsaKey rawKey
+          "Ed25519" -> runEither $ parseEdDSAKey rawKey
+          -- TODO(from master): support ES256, ES384, ES512, PS256, PS384, Ed448 (JOSE doesn't support it as of now)
+          _         -> invalidJwk ("Key type: " <> T.unpack keyType <> " is not supported")
 
       runEither = either (invalidJwk . T.unpack) return
 

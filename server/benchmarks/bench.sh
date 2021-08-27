@@ -2,6 +2,9 @@
 set -euo pipefail
 shopt -s globstar
 
+# NOTE: we want to use --network=host everywhere we use docker here, for
+# performance (supposedly).  We include X:X port mappings which will be used on
+# Mac and Windows(?) where --network=host is ignored.
 
 echo_pretty() {
     echo ">>> $(tput setaf 2)$1$(tput sgr0)"
@@ -13,7 +16,7 @@ cat <<EOL
 
 Run hasura benchmarks
 
-Usage:   
+Usage:
     $ $0 <benchmark_dir> [<hasura_docker_image>] [<sleep_time_sec_before_bench>]
 
 The first argument chooses the particular benchmark set to run e.g. "chinook"
@@ -29,7 +32,7 @@ exit 1
 }
 
 [ ! -d "benchmark_sets/${1-}" ] && die_usage
-BENCH_DIR="benchmark_sets/$1"
+BENCH_DIR="$(pwd)/benchmark_sets/$1"
 REQUESTED_HASURA_DOCKER_IMAGE="${2-}"
 # We may wish to sleep after setting up the schema, etc. to e.g. allow memory
 # to settle to a baseline before we measure it:
@@ -47,8 +50,20 @@ function cleanup {
       || echo "Stopping hasura failed, maybe it never started?"
   fi
   pg_cleanup || echo "Stopping postgres failed, maybe it never started?"
+
+  custom_cleanup || echo "Custom cleanup failed"
 }
 trap cleanup EXIT
+
+# How can we communicate with localhost from a container?
+if [ $(uname -s) = Darwin ]; then
+  # Docker for mac:
+  LOCALHOST_FROM_CONTAINER=host.docker.internal
+  DOCKER_NETWORK_HOST_MODE=""
+else
+  LOCALHOST_FROM_CONTAINER=127.0.0.1
+  DOCKER_NETWORK_HOST_MODE="--network=host"
+fi
 
 # The beefy c4.8xlarge EC2 instance has two sockets, so we'll try our best to
 # pin hasura on one and postgres on the other
@@ -79,13 +94,13 @@ fi
 #   Postgres     #
 ##################
 # FYI this is adapted from scripts/containers/postgres, and uses settings
-# (ports, passwords, etc) identical to `dev.sh postgres`
+# (ports, passwords, etc) identical to `dev.sh postgres` for compatibility
+# with `dev.sh graphql-engine`
 
-
-PG_PORT=25430
+PG_PORT=25432
 PG_PASSWORD=postgres
-PG_CONTAINER_NAME="hasura-benchmarks-postgres-$PG_PORT"
-PG_DB_URL="postgres://postgres:$PG_PASSWORD@127.0.0.1:$PG_PORT/postgres"
+PG_CONTAINER_NAME="hasura-dev-postgres-$PG_PORT"
+PG_DB_URL="postgres://postgres:$PG_PASSWORD@$LOCALHOST_FROM_CONTAINER:$PG_PORT/postgres"
 PSQL_DOCKER="docker exec -u postgres -i $PG_CONTAINER_NAME psql $PG_DB_URL"
 
 if [ "$(awk '/^MemTotal:/{print $2}' /proc/meminfo)" -ge "30000000" ]; then
@@ -157,7 +172,7 @@ CONF_FLAGS=$(echo "$CONF" | sed  -e 's/^/-c /'  | tr '\n' ' ')
 #   numbers we get here are useful in absolute terms as well, representing ideal
 #   performance)
 #
-# [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSPerformance.html 
+# [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSPerformance.html
 # [2]: https://performance.sunlight.io/postgres/
 function pg_launch_container(){
   echo_pretty "Launching postgres container: $PG_CONTAINER_NAME"
@@ -167,6 +182,7 @@ function pg_launch_container(){
     -p 127.0.0.1:"$PG_PORT":$PG_PORT \
     --expose="$PG_PORT" \
     -e POSTGRES_PASSWORD="$PG_PASSWORD" \
+    $DOCKER_NETWORK_HOST_MODE \
     -d circleci/postgres:11.5-alpine-postgis \
     $CONF_FLAGS
 }
@@ -188,21 +204,25 @@ function pg_cleanup(){
 ######################
 #   graphql-engine   #
 ######################
-  
+
 # This matches the default we use in `dev.sh graphql-engine`
 HASURA_GRAPHQL_SERVER_PORT=8181
+# For Mac compatibility, we need to use this URL for hasura when communicating
+# FROM a container (in this case graphql-bench):
+HASURA_URL_FROM_CONTAINER="http://$LOCALHOST_FROM_CONTAINER:$HASURA_GRAPHQL_SERVER_PORT"
+# ...and for anything outside a container, just:
 HASURA_URL="http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT"
 
 # Maybe launch the hasura instance we'll benchmark
 function maybe_launch_hasura_container() {
   if [ ! -z "$REQUESTED_HASURA_DOCKER_IMAGE" ]; then
     HASURA_CONTAINER_NAME="graphql-engine-to-benchmark"
-    $TASKSET_HASURA docker run -d -p $HASURA_GRAPHQL_SERVER_PORT:$HASURA_GRAPHQL_SERVER_PORT \
+    $TASKSET_HASURA docker run -d -p 127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT:$HASURA_GRAPHQL_SERVER_PORT \
       --name "$HASURA_CONTAINER_NAME" \
       -e HASURA_GRAPHQL_DATABASE_URL=$PG_DB_URL \
       -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
       -e HASURA_GRAPHQL_SERVER_PORT="$HASURA_GRAPHQL_SERVER_PORT" \
-      --network=host \
+      $DOCKER_NETWORK_HOST_MODE \
       "$REQUESTED_HASURA_DOCKER_IMAGE" \
       graphql-engine serve +RTS -T $HASURA_RTS -RTS
       # ^^^ We run with `+RTS -T` to expose the /dev/rts_stats endpoint for
@@ -214,7 +234,10 @@ function maybe_launch_hasura_container() {
 
 function hasura_wait() {
   # Wait for the graphql-engine under bench to be ready
-  echo -n "Waiting for graphql-engine"
+  echo -n "Waiting for graphql-engine at $HASURA_URL"
+  if [ -z "$REQUESTED_HASURA_DOCKER_IMAGE" ]; then
+    echo -n " (e.g. from 'dev.sh graphql-engine')"
+  fi
   until curl -s "$HASURA_URL/v1/query" &>/dev/null; do
     echo -n '.' && sleep 0.2
   done
@@ -235,12 +258,12 @@ function install_latest_graphql_bench() {
   echo_pretty "Installing/updating graphql-bench"
   graphql_bench_git=$(mktemp -d -t graphql-bench-XXXXXXXXXX)
   git clone --depth=1 https://github.com/hasura/graphql-bench.git "$graphql_bench_git"
-  
+
   cd "$graphql_bench_git"
   # We name this 'graphql-bench-ci' so it doesn't interfere with other versions
   # (e.g. local dev of `graphql-bench`, installed with `make
   # build_local_docker_image`:
-  docker build -t graphql-bench-ci:latest ./app 
+  docker build -t graphql-bench-ci:latest ./app
   cd -
   echo_pretty "Done"
 }
@@ -251,22 +274,52 @@ function run_benchmarks() {
   cd "$BENCH_DIR"
   # This reads config.query.yaml from the current directory, outputting
   # report.json to the same directory
-  $TASKSET_K6 docker run --net=host -v "$PWD":/app/tmp -i $K6_DOCKER_t_OR_init \
+  $TASKSET_K6 docker run $DOCKER_NETWORK_HOST_MODE -v "$PWD":/app/tmp -i $K6_DOCKER_t_OR_init \
     graphql-bench-ci query \
     --config="./tmp/config.query.yaml" \
-    --outfile="./tmp/report.json" --url "$HASURA_URL/v1/graphql"
+    --outfile="./tmp/report.json" --url "$HASURA_URL_FROM_CONTAINER/v1/graphql"
 
   echo_pretty "Done. Report at $PWD/report.json"
+  cd -
+}
+
+function custom_setup() {
+  cd "$BENCH_DIR"
+  if [ -x setup.sh ]; then
+    echo_pretty "Running custom setup script"
+    ./setup.sh
+  fi
+
+  cd -
+}
+
+function custom_cleanup() {
+  cd "$BENCH_DIR"
+  if [ -x cleanup.sh ]; then
+    echo_pretty "Running custom cleanup script"
+    ./cleanup.sh
+  fi
+
   cd -
 }
 
 function load_data_and_schema() {
   echo_pretty "Loading data and adding schema"
   cd "$BENCH_DIR"
-  gunzip -c dump.sql.gz | $PSQL_DOCKER &> /dev/null
-  # --fail-with-body is what we want, but is not available on older curl:
-  # TODO LATER: use /v1/metadata once stable
-  curl --fail -X POST -H "Content-Type: application/json" -d @replace_metadata.json "$HASURA_URL/v1/query"
+  if [ -f dump.sql.gz ]; then
+    gunzip -c dump.sql.gz | $PSQL_DOCKER &> /dev/null
+  else
+    echo_pretty "No data to load"
+  fi
+
+  if [ -f replace_metadata.json ]; then
+    # --fail-with-body is what we want, but is not available on older curl:
+    # TODO LATER: use /v1/metadata once stable
+    curl --fail -X POST -H "Content-Type: application/json" -d @replace_metadata.json "$HASURA_URL/v1/query"
+  else
+    echo_pretty "No metadata to replace"
+  fi
+
   cd -
 }
 
@@ -283,6 +336,8 @@ install_latest_graphql_bench
 pg_wait
 maybe_launch_hasura_container
 hasura_wait
+
+custom_setup
 
 load_data_and_schema
 run_benchmarks

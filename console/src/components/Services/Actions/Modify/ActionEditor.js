@@ -16,11 +16,13 @@ import {
   setActionComment,
   setHeaders as dispatchNewHeaders,
   toggleForwardClientHeaders as toggleFCH,
+  setActionTimeout,
 } from './reducer';
 import { saveAction, deleteAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
 import GraphQLEditor from '../Common/components/GraphQLEditor';
 import { typeDefinitionInfo } from '../Add/Add';
+import { Tooltip, OverlayTrigger } from 'react-bootstrap';
 
 export const actionDefinitionInfo = {
   label: 'Action definition',
@@ -45,6 +47,7 @@ const ActionEditor = ({
     actionDefinition,
     typeDefinition,
     comment,
+    timeout,
   } = modifyProps;
 
   const {
@@ -68,6 +71,7 @@ const ActionEditor = ({
 
   const handlerOnChange = e => dispatch(setActionHandler(e.target.value));
   const kindOnChange = k => dispatch(setActionKind(k));
+  const timeoutOnChange = e => dispatch(setActionTimeout(e.target.value));
 
   const actionDefinitionOnChange = (value, error, timer, ast) => {
     dispatch(setActionDefinition(value, error, timer, ast));
@@ -124,7 +128,7 @@ const ActionEditor = ({
         label={actionDefinitionInfo.label}
         tooltip={actionDefinitionInfo.tooltip}
       />
-      <hr />
+      <hr className="my-lg" />
       <GraphQLEditor
         value={typesDefinitionSdl}
         error={typesDefinitionError}
@@ -135,7 +139,7 @@ const ActionEditor = ({
         tooltip={typeDefinitionInfo.tooltip}
         allowEmpty
       />
-      <hr />
+      <hr className="my-lg" />
       <div className={actionStyles.comment_container_styles}>
         <h2
           className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
@@ -149,7 +153,7 @@ const ActionEditor = ({
           onChange={updateActionComment}
         />
       </div>
-      <hr />
+      <hr className="my-lg" />
       <HandlerEditor
         value={handler}
         disabled={readOnlyMode}
@@ -158,7 +162,7 @@ const ActionEditor = ({
         className={styles.add_mar_bottom_mid}
         service="create-action"
       />
-      <hr />
+      <hr className="my-lg" />
       {actionType === 'query' ? null : (
         <React.Fragment>
           <KindEditor
@@ -167,7 +171,7 @@ const ActionEditor = ({
             className={styles.add_mar_bottom_mid}
             disabled={readOnlyMode}
           />
-          <hr />
+          <hr className="my-lg" />
         </React.Fragment>
       )}
       <HeaderConfEditor
@@ -177,7 +181,37 @@ const ActionEditor = ({
         setHeaders={setHeaders}
         disabled={readOnlyMode}
       />
-      <hr />
+      <hr className="my-lg" />
+      <div className={styles.subheading_text}>
+        Action custom timeout
+        <OverlayTrigger
+          placement="right"
+          overlay={
+            <Tooltip id="tooltip-cascade">
+              Configure timeout for Action. Defaults to 30 seconds.
+            </Tooltip>
+          }
+        >
+          <i className="fa fa-question-circle" aria-hidden="true" />
+        </OverlayTrigger>
+      </div>
+      <label
+        className={`${styles.inputLabel} radio-inline ${styles.padd_left_remove}`}
+      >
+        <input
+          className="form-control"
+          type="number"
+          placeholder="Timeout in seconds"
+          value={timeout}
+          data-key="timeoutConf"
+          data-test="modify-action-timeout-seconds"
+          onChange={timeoutOnChange}
+          disabled={readOnlyMode}
+          pattern="^\d+$"
+          title="Only non negative integers are allowed"
+        />
+      </label>
+      <hr className="my-lg" />
       <div className={styles.display_flex}>
         {!readOnlyMode && (
           <React.Fragment>

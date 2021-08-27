@@ -17,13 +17,8 @@ import           Data.Time
 import           Data.URL.Template
 import           Network.Wai.Handler.Warp                 (HostPreference)
 
-import qualified Hasura.Cache.Bounded                     as Cache
 import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
-import qualified Hasura.GraphQL.Execute.Plan              as E
 import qualified Hasura.Logging                           as L
-import qualified System.Metrics                           as EKG
-import qualified System.Metrics.Distribution              as EKG.Distribution
-import qualified System.Metrics.Gauge                     as EKG.Gauge
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -68,45 +63,58 @@ instance ToJSON OptionalInterval where
     Skip       -> toJSON @Milliseconds 0
     Interval s -> toJSON s
 
+data API
+  = METADATA
+  | GRAPHQL
+  | PGDUMP
+  | DEVELOPER
+  | CONFIG
+  deriving (Show, Eq, Read, Generic)
+
+$(J.deriveJSON (J.defaultOptions { J.constructorTagModifier = map toLower })
+  ''API)
+
+instance Hashable API
+
 data RawServeOptions impl
   = RawServeOptions
-  { rsoPort                          :: !(Maybe Int)
-  , rsoHost                          :: !(Maybe HostPreference)
-  , rsoConnParams                    :: !RawConnParams
-  , rsoTxIso                         :: !(Maybe Q.TxIsolation)
-  , rsoAdminSecret                   :: !(Maybe AdminSecretHash)
-  , rsoAuthHook                      :: !RawAuthHook
-  , rsoJwtSecret                     :: !(Maybe JWTConfig)
-  , rsoUnAuthRole                    :: !(Maybe RoleName)
-  , rsoCorsConfig                    :: !(Maybe CorsConfig)
-  , rsoEnableConsole                 :: !Bool
-  , rsoConsoleAssetsDir              :: !(Maybe Text)
-  , rsoEnableTelemetry               :: !(Maybe Bool)
-  , rsoWsReadCookie                  :: !Bool
-  , rsoStringifyNum                  :: !Bool
-  , rsoDangerousBooleanCollapse      :: !(Maybe Bool)
-  , rsoEnabledAPIs                   :: !(Maybe [API])
-  , rsoMxRefetchInt                  :: !(Maybe LQ.RefetchInterval)
-  , rsoMxBatchSize                   :: !(Maybe LQ.BatchSize)
-  , rsoEnableAllowlist               :: !Bool
-  , rsoEnabledLogTypes               :: !(Maybe [L.EngineLogType impl])
-  , rsoLogLevel                      :: !(Maybe L.LogLevel)
-  , rsoPlanCacheSize                 :: !(Maybe Cache.CacheSize)
-  , rsoDevMode                       :: !Bool
-  , rsoAdminInternalErrors           :: !(Maybe Bool)
-  , rsoEventsHttpPoolSize            :: !(Maybe Int)
-  , rsoEventsFetchInterval           :: !(Maybe Milliseconds)
-  , rsoAsyncActionsFetchInterval     :: !(Maybe Milliseconds)
-  , rsoLogHeadersFromEnv             :: !Bool
-  , rsoEnableRemoteSchemaPermissions :: !Bool
-  , rsoWebSocketCompression          :: !Bool
-  , rsoWebSocketKeepAlive            :: !(Maybe Int)
-  , rsoInferFunctionPermissions      :: !(Maybe Bool)
-  , rsoEnableMaintenanceMode         :: !Bool
-  , rsoSchemaPollInterval            :: !(Maybe Milliseconds)
-  , rsoExperimentalFeatures          :: !(Maybe [ExperimentalFeature])
-  , rsoEventsFetchBatchSize          :: !(Maybe NonNegativeInt)
-  , rsoGracefulShutdownTimeout       :: !(Maybe Seconds)
+  { rsoPort                           :: !(Maybe Int)
+  , rsoHost                           :: !(Maybe HostPreference)
+  , rsoConnParams                     :: !RawConnParams
+  , rsoTxIso                          :: !(Maybe Q.TxIsolation)
+  , rsoAdminSecret                    :: !(Maybe AdminSecretHash)
+  , rsoAuthHook                       :: !RawAuthHook
+  , rsoJwtSecret                      :: !(Maybe JWTConfig)
+  , rsoUnAuthRole                     :: !(Maybe RoleName)
+  , rsoCorsConfig                     :: !(Maybe CorsConfig)
+  , rsoEnableConsole                  :: !Bool
+  , rsoConsoleAssetsDir               :: !(Maybe Text)
+  , rsoEnableTelemetry                :: !(Maybe Bool)
+  , rsoWsReadCookie                   :: !Bool
+  , rsoStringifyNum                   :: !Bool
+  , rsoDangerousBooleanCollapse       :: !(Maybe Bool)
+  , rsoEnabledAPIs                    :: !(Maybe [API])
+  , rsoMxRefetchInt                   :: !(Maybe LQ.RefetchInterval)
+  , rsoMxBatchSize                    :: !(Maybe LQ.BatchSize)
+  , rsoEnableAllowlist                :: !Bool
+  , rsoEnabledLogTypes                :: !(Maybe [L.EngineLogType impl])
+  , rsoLogLevel                       :: !(Maybe L.LogLevel)
+  , rsoDevMode                        :: !Bool
+  , rsoAdminInternalErrors            :: !(Maybe Bool)
+  , rsoEventsHttpPoolSize             :: !(Maybe Int)
+  , rsoEventsFetchInterval            :: !(Maybe Milliseconds)
+  , rsoAsyncActionsFetchInterval      :: !(Maybe Milliseconds)
+  , rsoLogHeadersFromEnv              :: !Bool
+  , rsoEnableRemoteSchemaPermissions  :: !Bool
+  , rsoWebSocketCompression           :: !Bool
+  , rsoWebSocketKeepAlive             :: !(Maybe Int)
+  , rsoInferFunctionPermissions       :: !(Maybe Bool)
+  , rsoEnableMaintenanceMode          :: !Bool
+  , rsoSchemaPollInterval             :: !(Maybe Milliseconds)
+  , rsoExperimentalFeatures           :: !(Maybe [ExperimentalFeature])
+  , rsoEventsFetchBatchSize           :: !(Maybe NonNegativeInt)
+  , rsoGracefulShutdownTimeout        :: !(Maybe Seconds)
+  , rsoWebSocketConnectionInitTimeout :: !(Maybe Int)
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -124,48 +132,57 @@ shouldIncludeInternal role = \case
   InternalErrorsAdminOnly   -> role == adminRoleName
   InternalErrorsDisabled    -> False
 
-newtype KeepAliveDelay
-  = KeepAliveDelay
-      { unKeepAliveDelay :: Seconds
-      } deriving (Eq, Show)
+newtype KeepAliveDelay = KeepAliveDelay { unKeepAliveDelay :: Seconds }
+  deriving (Eq, Show)
+$(J.deriveJSON hasuraJSON ''KeepAliveDelay)
+
+defaultKeepAliveDelay :: KeepAliveDelay
+defaultKeepAliveDelay = KeepAliveDelay $ fromIntegral (5 :: Int)
+
+newtype WSConnectionInitTimeout = WSConnectionInitTimeout { unWSConnectionInitTimeout :: Seconds }
+  deriving (Eq, Show)
+$(J.deriveJSON hasuraJSON ''WSConnectionInitTimeout)
+
+defaultWSConnectionInitTimeout :: WSConnectionInitTimeout
+defaultWSConnectionInitTimeout = WSConnectionInitTimeout $ fromIntegral (3 :: Int)
 
 data ServeOptions impl
   = ServeOptions
-  { soPort                          :: !Int
-  , soHost                          :: !HostPreference
-  , soConnParams                    :: !Q.ConnParams
-  , soTxIso                         :: !Q.TxIsolation
-  , soAdminSecret                   :: !(Maybe AdminSecretHash)
-  , soAuthHook                      :: !(Maybe AuthHook)
-  , soJwtSecret                     :: !(Maybe JWTConfig)
-  , soUnAuthRole                    :: !(Maybe RoleName)
-  , soCorsConfig                    :: !CorsConfig
-  , soEnableConsole                 :: !Bool
-  , soConsoleAssetsDir              :: !(Maybe Text)
-  , soEnableTelemetry               :: !Bool
-  , soStringifyNum                  :: !Bool
-  , soDangerousBooleanCollapse      :: !Bool
-  , soEnabledAPIs                   :: !(Set.HashSet API)
-  , soLiveQueryOpts                 :: !LQ.LiveQueriesOptions
-  , soEnableAllowlist               :: !Bool
-  , soEnabledLogTypes               :: !(Set.HashSet (L.EngineLogType impl))
-  , soLogLevel                      :: !L.LogLevel
-  , soPlanCacheOptions              :: !E.PlanCacheOptions
-  , soResponseInternalErrorsConfig  :: !ResponseInternalErrorsConfig
-  , soEventsHttpPoolSize            :: !(Maybe Int)
-  , soEventsFetchInterval           :: !(Maybe Milliseconds)
-  , soAsyncActionsFetchInterval     :: !OptionalInterval
-  , soLogHeadersFromEnv             :: !Bool
-  , soEnableRemoteSchemaPermissions :: !RemoteSchemaPermsCtx
-  , soConnectionOptions             :: !WS.ConnectionOptions
-  , soWebsocketKeepAlive            :: !KeepAliveDelay
-  , soInferFunctionPermissions      :: !FunctionPermissionsCtx
-  , soEnableMaintenanceMode         :: !MaintenanceMode
-  , soSchemaPollInterval            :: !OptionalInterval
-  , soExperimentalFeatures          :: !(Set.HashSet ExperimentalFeature)
-  , soEventsFetchBatchSize          :: !NonNegativeInt
-  , soDevMode                       :: !Bool
-  , soGracefulShutdownTimeout       :: !Seconds
+  { soPort                           :: !Int
+  , soHost                           :: !HostPreference
+  , soConnParams                     :: !Q.ConnParams
+  , soTxIso                          :: !Q.TxIsolation
+  , soAdminSecret                    :: !(Maybe AdminSecretHash)
+  , soAuthHook                       :: !(Maybe AuthHook)
+  , soJwtSecret                      :: !(Maybe JWTConfig)
+  , soUnAuthRole                     :: !(Maybe RoleName)
+  , soCorsConfig                     :: !CorsConfig
+  , soEnableConsole                  :: !Bool
+  , soConsoleAssetsDir               :: !(Maybe Text)
+  , soEnableTelemetry                :: !Bool
+  , soStringifyNum                   :: !Bool
+  , soDangerousBooleanCollapse       :: !Bool
+  , soEnabledAPIs                    :: !(Set.HashSet API)
+  , soLiveQueryOpts                  :: !LQ.LiveQueriesOptions
+  , soEnableAllowlist                :: !Bool
+  , soEnabledLogTypes                :: !(Set.HashSet (L.EngineLogType impl))
+  , soLogLevel                       :: !L.LogLevel
+  , soResponseInternalErrorsConfig   :: !ResponseInternalErrorsConfig
+  , soEventsHttpPoolSize             :: !(Maybe Int)
+  , soEventsFetchInterval            :: !(Maybe Milliseconds)
+  , soAsyncActionsFetchInterval      :: !OptionalInterval
+  , soLogHeadersFromEnv              :: !Bool
+  , soEnableRemoteSchemaPermissions  :: !RemoteSchemaPermsCtx
+  , soConnectionOptions              :: !WS.ConnectionOptions
+  , soWebsocketKeepAlive             :: !KeepAliveDelay
+  , soInferFunctionPermissions       :: !FunctionPermissionsCtx
+  , soEnableMaintenanceMode          :: !MaintenanceMode
+  , soSchemaPollInterval             :: !OptionalInterval
+  , soExperimentalFeatures           :: !(Set.HashSet ExperimentalFeature)
+  , soEventsFetchBatchSize           :: !NonNegativeInt
+  , soDevMode                        :: !Bool
+  , soGracefulShutdownTimeout        :: !Seconds
+  , soWebsocketConnectionInitTimeout :: !WSConnectionInitTimeout
   }
 
 data DowngradeOptions
@@ -217,19 +234,6 @@ data HGECommandG a
   | HCVersion
   | HCDowngrade !DowngradeOptions
   deriving (Show, Eq)
-
-data API
-  = METADATA
-  | GRAPHQL
-  | PGDUMP
-  | DEVELOPER
-  | CONFIG
-  deriving (Show, Eq, Read, Generic)
-
-$(J.deriveJSON (J.defaultOptions { J.constructorTagModifier = map toLower })
-  ''API)
-
-instance Hashable API
 
 $(J.deriveJSON (J.aesonPrefix J.camelCase){J.omitNothingFields=True} ''PostgresRawConnDetails)
 
@@ -370,9 +374,6 @@ instance L.EnabledLogTypes impl => FromEnv [L.EngineLogType impl] where
 instance FromEnv L.LogLevel where
   fromEnv = readLogLevel
 
-instance FromEnv Cache.CacheSize where
-  fromEnv = Cache.parseCacheSize
-
 instance FromEnv URLTemplate where
   fromEnv = parseURLTemplate . T.pack
 
@@ -383,30 +384,3 @@ type WithEnv a = ReaderT Env (ExceptT String Identity) a
 
 runWithEnv :: Env -> WithEnv a -> Either String a
 runWithEnv env m = runIdentity $ runExceptT $ runReaderT m env
-
--- | Collection of various server metrics
-data ServerMetrics
-  = ServerMetrics
-  { smWarpThreads              :: !EKG.Gauge.Gauge
-  -- ^ Current Number of active Warp threads
-  , smWebsocketConnections     :: !EKG.Gauge.Gauge
-  -- ^ Current number of active websocket connections
-  , smActiveSubscriptions      :: !EKG.Gauge.Gauge
-  -- ^ Current number of active subscriptions
-  , smNumEventsFetchedPerBatch :: !EKG.Distribution.Distribution
-  -- ^ Total Number of events fetched from last 'Event Trigger Fetch'
-  , smNumEventHTTPWorkers      :: !EKG.Gauge.Gauge
-  -- ^ Current number of Event trigger's HTTP workers in process
-  , smEventQueueTime           :: !EKG.Distribution.Distribution
-  -- ^ Time (in seconds) between the 'Event Trigger Fetch' from DB and the processing of the event
-  }
-
-createServerMetrics :: EKG.Store -> IO ServerMetrics
-createServerMetrics store = do
-  smWarpThreads <- EKG.createGauge "warp_threads" store
-  smWebsocketConnections <- EKG.createGauge "websocket_connections" store
-  smActiveSubscriptions <- EKG.createGauge "active_subscriptions" store
-  smNumEventsFetchedPerBatch <- EKG.createDistribution "events_fetched_per_batch" store
-  smNumEventHTTPWorkers <- EKG.createGauge "num_event_trigger_http_workers" store
-  smEventQueueTime <- EKG.createDistribution "event_queue_time" store
-  pure ServerMetrics { .. }

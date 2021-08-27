@@ -12,7 +12,6 @@ module Hasura.RQL.Types.Common
 
        , ToAesonPairs(..)
 
-       , EquatableGType(..)
        , InpValInfo(..)
 
        , SystemDefined(..)
@@ -49,6 +48,7 @@ module Hasura.RQL.Types.Common
 
        , MetricsConfig(..)
        , emptyMetricsConfig
+
        ) where
 
 import           Hasura.Prelude
@@ -59,7 +59,6 @@ import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
 import qualified PostgreSQL.Binary.Decoding    as PD
-import qualified Test.QuickCheck               as QC
 
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -79,7 +78,7 @@ import           Hasura.RQL.DDL.Headers        ()
 newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
   deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, ToJSONKey
-           , Q.ToPrepArg, Q.FromCol, Generic, Arbitrary, NFData, Cacheable)
+           , Q.ToPrepArg, Q.FromCol, Generic, NFData, Cacheable)
 
 instance ToTxt RelName where
   toTxt = relNameToTxt
@@ -105,7 +104,7 @@ instance ToJSON JsonAggSelect where
 data RelType
   = ObjRel
   | ArrRel
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Generic, Data)
 instance NFData RelType
 instance Hashable RelType
 instance Cacheable RelType
@@ -152,7 +151,7 @@ newtype FieldName
   = FieldName { getFieldNameTxt :: Text }
   deriving ( Show, Eq, Ord, Hashable, FromJSON, ToJSON
            , FromJSONKey, ToJSONKey, Data, Generic
-           , IsString, Arbitrary, NFData, Cacheable
+           , IsString, NFData, Cacheable
            , Semigroup
            )
 
@@ -188,9 +187,6 @@ instance Hashable SourceName
 instance NFData SourceName
 instance Cacheable SourceName
 
-instance Arbitrary SourceName where
-  arbitrary = SNName <$> arbitrary
-
 defaultSource :: SourceName
 defaultSource = SNDefault
 
@@ -202,15 +198,6 @@ data InpValInfo
   , _iviType   :: !G.GType
   } deriving (Show, Eq, TH.Lift, Generic)
 instance Cacheable InpValInfo
-
-instance EquatableGType InpValInfo where
-  type EqProps InpValInfo = (G.Name, G.GType)
-  getEqProps ity = (,) (_iviName ity) (_iviType ity)
-
--- | Typeclass for equating relevant properties of various GraphQL types defined below
-class EquatableGType a where
-  type EqProps a
-  getEqProps :: a -> EqProps a
 
 newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
   deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, NFData, Cacheable)
@@ -267,7 +254,7 @@ newtype ResolvedWebhook
 
 newtype InputWebhook
   = InputWebhook {unInputWebhook :: URLTemplate}
-  deriving (Show, Eq, Generic, Arbitrary)
+  deriving (Show, Eq, Generic)
 instance NFData InputWebhook
 instance Cacheable InputWebhook
 instance Hashable InputWebhook
@@ -302,9 +289,6 @@ instance FromJSON Timeout where
       True  -> return $ Timeout timeout
       False -> fail "timeout value cannot be negative"
 
-instance Arbitrary Timeout where
-  arbitrary = Timeout <$> QC.choose (0, 10000000)
-
 defaultActionTimeoutSecs :: Timeout
 defaultActionTimeoutSecs = Timeout 30
 
@@ -327,9 +311,6 @@ instance FromJSON UrlConf where
       Error s   -> fail s
       Success a -> pure $ UrlValue a
   parseJSON _          = fail "one of string or object must be provided for url/webhook"
-
-instance Arbitrary UrlConf where
-  arbitrary = genericArbitrary
 
 resolveUrlConf
   :: MonadError QErr m => Env.Environment -> UrlConf -> m Text

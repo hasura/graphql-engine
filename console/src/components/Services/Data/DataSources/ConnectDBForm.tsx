@@ -154,7 +154,7 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
           </>
         ) : null}
         <p
-          className={`${styles.remove_pad_bottom} ${styles.connect_db_header}`}
+          className={`${styles.remove_pad_bottom} mb-md ${styles.connect_db_header}`}
         >
           {title ?? defaultTitle}
           <Tooltip message="Environment variable recommended" />
@@ -177,7 +177,7 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
           {connectionRadios.map(radioBtn => (
             <label
               key={`label-${radioBtn.title}`}
-              className={`${styles.connect_db_radio_label} ${
+              className={`${styles.connect_db_radio_label} inline-flex ${
                 !isDBSupported(connectionDBState.dbType, radioBtn.value)
                   ? styles.label_disabled
                   : ''
@@ -186,6 +186,7 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
               <input
                 type="radio"
                 value={radioBtn.value}
+                className="legacy-input-fix"
                 name={
                   !isreadreplica
                     ? 'connection-type'

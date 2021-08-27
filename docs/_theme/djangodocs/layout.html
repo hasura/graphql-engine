@@ -30,7 +30,7 @@
 {# TODO: replace react & graphiql imports with a custom directive #}
 {# b/c we're not using any graphiql functionality, only styles #}
 
-{% set deferred_script_files = ['_static/react/react.min.js', '_static/react/react-dom.min.js', '_static/graphiql/graphiql.min.js', '_static/scripts/hdocs.js'] %}
+{% set deferred_script_files = ['_static/react/react-17.0.2.min.js', '_static/react/react-dom-17.0.2.min.js', '_static/graphiql/graphiql-1.4.2.min.js', '_static/scripts/hdocs.js'] %}
 
 {%- if pagename.endswith('mysql-preview') %}
   {% set deferred_script_files = deferred_script_files + ['_static/scripts/mysql-subscribe.js'] %}
@@ -60,6 +60,7 @@
 {% block document %}
     <div class="main_container_wrapper">
       {% include 'pages/loading.html' %}
+      <!--
       <div id="banner-stripe" class="hasuraConBannerBg">
         <div class="containerWidth">
           <div class="commonBannerStripWrapper">
@@ -75,6 +76,7 @@
           </div>
         </div>
       </div>
+      -->
       <header
         id="header"
         class='blueBgColor boderBottom'
@@ -253,7 +255,7 @@
                 -->
                 <div id="docs-header-actions">
                   <div class="inline-block" id="input_search_box">
-                    <a id="search_help" class="hide" onClick="if (Intercom) Intercom('show');" href="javascript:undefined">
+                    <a id="search_help" class="hide" target="_blank" rel="noopener noreferrer" href="https://hasura.io/help">
                       Can't find what you're looking for?
                     </a>
                     <span class="fa fa-search search_icon"></span>
@@ -281,39 +283,39 @@
 
               <div class="nav">{{ secondnav() }}</div>
 
-              <div class="feedback_wrapper">
-                <div id="feedback" class="feedback">
-                  Was this page helpful?
-                  <!-- inline svgs to allow color manipulation on hover -->
-                  <div id="thumb_up_button" class="display_inl actions thumb_up">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="21px" height="21px" viewBox="0 0 561 561" style="enable-background:new 0 0 561 561;" xml:space="preserve">
-                      <g>
-	                    <g id="thumb-up">
-		                  <path d="M0,535.5h102v-306H0V535.5z M561,255c0-28.05-22.95-51-51-51H349.35l25.5-117.3c0-2.55,0-5.1,0-7.65    c0-10.2-5.1-20.4-10.199-28.05L336.6,25.5L168.3,193.8c-10.2,7.65-15.3,20.4-15.3,35.7v255c0,28.05,22.95,51,51,51h229.5    c20.4,0,38.25-12.75,45.9-30.6l76.5-181.051c2.55-5.1,2.55-12.75,2.55-17.85v-51H561C561,257.55,561,255,561,255z" fill="#787878"/>
-	                    </g>
-                      </g>
-                    </svg>
-                  </div>
-                  <div id="thumb_down_button" class="display_inl actions thumb_down">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_2" x="0px" y="0px" width="21px" height="21px" viewBox="0 0 561 561" style="enable-background:new 0 0 561 561;" xml:space="preserve">
-                      <g>
-                        <g id="thumb-down">
-                            <path d="M357,25.5H127.5c-20.4,0-38.25,12.75-45.9,30.6L5.1,237.15C2.55,242.25,0,247.35,0,255v48.45l0,0V306    c0,28.05,22.95,51,51,51h160.65l-25.5,117.3c0,2.55,0,5.101,0,7.65c0,10.2,5.1,20.399,10.2,28.05l28.05,25.5l168.3-168.3    c10.2-10.2,15.3-22.95,15.3-35.7v-255C408,48.45,385.05,25.5,357,25.5z M459,25.5v306h102v-306H459z" fill="#787878"/>
-                        </g>
-                      </g>
-                    </svg>
-                  </div>
-                </div>
-                <div id="detailed_feedback" class="hide">
-                  <div id="feedback_detail_msg"></div>
-                  <textarea rows="4" cols="75" id="feedback_box" data-id="0"></textarea>
-                  <br/>
-                  <button id="feedback_btn">Submit</button>
-                </div>
-                <div id="thank_you" class="hide">
-                  Thank you for your feedback!
-                </div>
-              </div>
+              <!--<div class="feedback_wrapper">-->
+                <!--<div id="feedback" class="feedback">-->
+                  <!--Was this page helpful?-->
+                  <!--&lt;!&ndash; inline svgs to allow color manipulation on hover &ndash;&gt;-->
+                  <!--<div id="thumb_up_button" class="display_inl actions thumb_up">-->
+                    <!--<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="21px" height="21px" viewBox="0 0 561 561" style="enable-background:new 0 0 561 561;" xml:space="preserve">-->
+                      <!--<g>-->
+	                    <!--<g id="thumb-up">-->
+		                  <!--<path d="M0,535.5h102v-306H0V535.5z M561,255c0-28.05-22.95-51-51-51H349.35l25.5-117.3c0-2.55,0-5.1,0-7.65    c0-10.2-5.1-20.4-10.199-28.05L336.6,25.5L168.3,193.8c-10.2,7.65-15.3,20.4-15.3,35.7v255c0,28.05,22.95,51,51,51h229.5    c20.4,0,38.25-12.75,45.9-30.6l76.5-181.051c2.55-5.1,2.55-12.75,2.55-17.85v-51H561C561,257.55,561,255,561,255z" fill="#787878"/>-->
+	                    <!--</g>-->
+                      <!--</g>-->
+                    <!--</svg>-->
+                  <!--</div>-->
+                  <!--<div id="thumb_down_button" class="display_inl actions thumb_down">-->
+                    <!--<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_2" x="0px" y="0px" width="21px" height="21px" viewBox="0 0 561 561" style="enable-background:new 0 0 561 561;" xml:space="preserve">-->
+                      <!--<g>-->
+                        <!--<g id="thumb-down">-->
+                            <!--<path d="M357,25.5H127.5c-20.4,0-38.25,12.75-45.9,30.6L5.1,237.15C2.55,242.25,0,247.35,0,255v48.45l0,0V306    c0,28.05,22.95,51,51,51h160.65l-25.5,117.3c0,2.55,0,5.101,0,7.65c0,10.2,5.1,20.399,10.2,28.05l28.05,25.5l168.3-168.3    c10.2-10.2,15.3-22.95,15.3-35.7v-255C408,48.45,385.05,25.5,357,25.5z M459,25.5v306h102v-306H459z" fill="#787878"/>-->
+                        <!--</g>-->
+                      <!--</g>-->
+                    <!--</svg>-->
+                  <!--</div>-->
+                <!--</div>-->
+                <!--<div id="detailed_feedback" class="hide">-->
+                  <!--<div id="feedback_detail_msg"></div>-->
+                  <!--<textarea rows="4" cols="75" id="feedback_box" data-id="0"></textarea>-->
+                  <!--<br/>-->
+                  <!--<button id="feedback_btn">Submit</button>-->
+                <!--</div>-->
+                <!--<div id="thank_you" class="hide">-->
+                  <!--Thank you for your feedback!-->
+                <!--</div>-->
+              <!--</div>-->
               <div class="subscribe-form-wrapper">
                 <div class="mc_embed_signup">
                   <div class="subscribe-form-content">

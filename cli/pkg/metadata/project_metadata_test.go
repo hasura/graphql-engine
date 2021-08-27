@@ -220,7 +220,7 @@ func TestProjectMetadata_GetInconsistentMetadata(t *testing.T) {
 		// - apply metadata
 		// - drop a table via run_sql API
 		// - reload metadata
-		err := migrations.Apply(migrate.ApplyOnAllDatabases())
+		_, err := migrations.Apply(migrate.ApplyOnAllDatabases())
 		require.NoError(t, err)
 		_, err = metadata.Apply()
 		require.NoError(t, err)

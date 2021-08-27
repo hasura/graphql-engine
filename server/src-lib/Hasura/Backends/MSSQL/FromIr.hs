@@ -258,12 +258,20 @@ reproject label = \case
     AggregateProjection (Aliased {aliasedThing = OpAggregate aggName (fixColumnEntity label <$> expressions), ..})
   AggregateProjection (Aliased {aliasedThing = CountAggregate countableFieldnames, ..}) ->
     AggregateProjection (Aliased {aliasedThing = CountAggregate $ fixEntity label <$> countableFieldnames, ..})
+  AggregateProjection (Aliased {aliasedThing = JsonQueryOpAggregate aggName expressions, ..}) ->
+    AggregateProjection (Aliased {aliasedThing = JsonQueryOpAggregate aggName (fixColumnEntity label <$> expressions), ..})
   x -> x
   where
+    fixColumnEntity :: Text -> Expression -> Expression
     fixColumnEntity entity = \case
       ColumnExpression fName ->
         ColumnExpression $ fixEntity entity fName
+      JsonQueryExpression expression ->
+        JsonQueryExpression $ fixColumnEntity entity expression
+      SelectExpression Select{..} ->
+        SelectExpression $ Select {selectProjections = reproject entity <$> selectProjections, ..}
       x -> x
+    fixEntity :: Text -> FieldName -> FieldName
     fixEntity entity FieldName{..} = FieldName {fieldNameEntity = entity, ..}
 
 
@@ -358,7 +366,7 @@ fromSelectArgsG selectArgsG = do
   -- you can just drop the Proxy wrapper.
   let argsDistinct = Proxy
   (argsOrderBy, joins) <-
-    runWriterT (traverse fromAnnOrderByItemG (maybe [] toList orders))
+    runWriterT (traverse fromAnnotatedOrderByItemG (maybe [] toList orders))
   -- Any object-relation joins that we generated, we record their
   -- generated names into a mapping.
   let argsExistingJoins =
@@ -378,11 +386,11 @@ fromSelectArgsG selectArgsG = do
 
 -- | Produce a valid ORDER BY construct, telling about any joins
 -- needed on the side.
-fromAnnOrderByItemG
-  :: IR.AnnOrderByItemG 'MSSQL Expression
+fromAnnotatedOrderByItemG
+  :: IR.AnnotatedOrderByItemG 'MSSQL Expression
   -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
-fromAnnOrderByItemG IR.OrderByItemG {obiType, obiColumn = obiColumn, obiNulls} = do
-  (orderByFieldName, orderByType) <- unfurlAnnOrderByElement obiColumn
+fromAnnotatedOrderByItemG IR.OrderByItemG {obiType, obiColumn = obiColumn, obiNulls} = do
+  (orderByFieldName, orderByType) <- unfurlAnnotatedOrderByElement obiColumn
   let orderByNullsOrder = fromMaybe NullsAnyOrder obiNulls
       orderByOrder      = fromMaybe AscOrder obiType
   pure OrderBy {..}
@@ -390,10 +398,10 @@ fromAnnOrderByItemG IR.OrderByItemG {obiType, obiColumn = obiColumn, obiNulls} =
 -- | Unfurl the nested set of object relations (tell'd in the writer)
 -- that are terminated by field name (IR.AOCColumn and
 -- IR.AOCArrayAggregation).
-unfurlAnnOrderByElement
-   :: IR.AnnOrderByElement 'MSSQL Expression
+unfurlAnnotatedOrderByElement
+   :: IR.AnnotatedOrderByElement 'MSSQL Expression
    -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) (FieldName, Maybe TSQL.ScalarType)
-unfurlAnnOrderByElement =
+unfurlAnnotatedOrderByElement =
   \case
     IR.AOCColumn pgColumnInfo -> do
       fieldName <- lift (fromPGColumnInfo pgColumnInfo)
@@ -444,7 +452,7 @@ unfurlAnnOrderByElement =
              })
       local
         (const (EntityAlias joinAliasEntity))
-        (unfurlAnnOrderByElement annOrderByElementG)
+        (unfurlAnnotatedOrderByElement annOrderByElementG)
     IR.AOCArrayAggregation IR.RelInfo {riMapping = mapping, riRTable = tableName} annBoolExp annAggregateOrderBy -> do
       selectFrom <- lift (lift (fromQualifiedTable tableName))
       let alias = aggFieldName
@@ -672,30 +680,22 @@ fromAggregateField aggregateField =
       StarCountable               -> pure StarCountable
       NonNullFieldCountable names -> NonNullFieldCountable <$> traverse fromPGCol names
       DistinctCountable     names -> DistinctCountable     <$> traverse fromPGCol names
-
---      fmap
---        CountAggregate
---        (pure countType
---         case countType of
---           PG.CTStar -> pure StarCountable
---           PG.CTSimple fields ->
---             case nonEmpty fields of
---               Nothing -> refute (pure MalformedAgg)
---               Just fields' -> do
---                 fields'' <- traverse fromPGCol fields'
---                 pure (NonNullFieldCountable fields'')
---           PG.CTDistinct fields ->
---             case nonEmpty fields of
---               Nothing -> refute (pure MalformedAgg)
---               Just fields' -> do
---                 fields'' <- traverse fromPGCol fields'
---                 pure (DistinctCountable fields''))
     IR.AFOp IR.AggregateOp {_aoOp = op, _aoFields = fields} -> do
-      args <- for fields \(_fieldName, pgColFld) ->
+      projections :: [Projection] <- for fields \(fieldName, pgColFld) ->
         case pgColFld of
-          IR.CFCol pgCol _pgType -> fmap ColumnExpression (fromPGCol pgCol)
-          IR.CFExp text          -> pure (ValueExpression (ODBC.TextValue text))
-      pure (OpAggregate op args)
+          IR.CFCol pgCol _pgType -> do
+            fname <- fromPGCol pgCol
+            pure $ AggregateProjection $ Aliased (JsonQueryOpAggregate op [ColumnExpression fname]) (IR.getFieldNameTxt fieldName)
+          IR.CFExp text          -> do
+            pure $ ExpressionProjection $ Aliased (ValueExpression (ODBC.TextValue text)) (IR.getFieldNameTxt fieldName)
+      pure $ OpAggregate op $
+        [ JsonQueryExpression $ SelectExpression $
+            emptySelect
+              { selectProjections = projections
+              , selectFor = JsonFor $ ForJson JsonSingleton NoRoot
+              }
+        ]
+
 
 -- | The main sources of fields, either constants, fields or via joins.
 fromAnnFieldsG ::
@@ -727,18 +727,6 @@ fromAnnFieldsG existingJoins stringifyNumbers (IR.FieldName name, field) =
         (\aliasedThing ->
            JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
         (fromArraySelectG arraySelectG)
-    -- this will be gone once the code which collects remote joins from the IR
-    -- emits a modified IR where remote relationships can't be reached
-    IR.AFRemote _ ->
-      pure
-        (ExpressionFieldSource
-           Aliased
-             { aliasedThing = TSQL.ValueExpression
-                              (ODBC.TextValue "null: remote field selected")
-             , aliasedAlias = name
-             })
-    -- TODO: implement this
-    IR.AFDBRemote _ -> error "FIXME"
 
 -- | Here is where we project a field as a column expression. If
 -- number stringification is on, then we wrap it in a

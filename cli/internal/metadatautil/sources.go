@@ -110,6 +110,20 @@ func GetSourcesAndKind(exportMetadata func() (io.Reader, error)) ([]Source, erro
 	return sources, nil
 }
 
+var ErrNoConnectedSources = errors.New("0 connected sources found on hasura")
+
+// GetSourcesAndKindStrict is like GetSourcesAndKind but will return an error when  no sources are found
+func GetSourcesAndKindStrict(exportMetadata func() (io.Reader, error)) ([]Source, error) {
+	sources, err := GetSourcesAndKind(exportMetadata)
+	if err != nil {
+		return nil, err
+	}
+	if len(sources) == 0 {
+		return nil, ErrNoConnectedSources
+	}
+	return sources, nil
+}
+
 func DatabaseChooserUI(exportMetadata func() (io.Reader, error)) (string, error) {
 	sources, err := GetSources(exportMetadata)
 	if err != nil {

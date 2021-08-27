@@ -1,7 +1,4 @@
 module Hasura.RQL.DML.Internal where
--- ( mkAdminRolePermInfo
--- , SessVarBldr
--- ) where
 
 import           Hasura.Prelude
 
@@ -52,10 +49,10 @@ mkAdminRolePermInfo ti =
 
 
     tn = _tciName ti
-    i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False []
-    s = SelPermInfo pgColsWithFilter scalarComputedFields' annBoolExpTrue Nothing True []
-    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty []
-    d = DelPermInfo tn annBoolExpTrue []
+    i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False mempty
+    s = SelPermInfo pgColsWithFilter scalarComputedFields' annBoolExpTrue Nothing True mempty
+    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty mempty
+    d = DelPermInfo tn annBoolExpTrue mempty
 
 askPermInfo'
   :: (UserInfoM m, Backend b)
@@ -207,7 +204,11 @@ fetchRelTabInfo refTabName =
   modifyErrAndSet500 ("foreign " <> ) $
     askTabInfoSource refTabName
 
-type SessVarBldr b m = SessionVarType b -> SessionVariable -> m (SQLExpression b)
+data SessionVariableBuilder b m
+  = SessionVariableBuilder
+  { _svbCurrentSession :: !(SQLExpression b)
+  , _svbVariableParser :: !(SessionVarType b -> SessionVariable -> m (SQLExpression b))
+  }
 
 fetchRelDet
   :: (UserInfoM m, QErrM m, TableInfoRM b m, Backend b)
@@ -234,7 +235,7 @@ fetchRelDet relName refTabName = do
 checkOnColExp
   :: (UserInfoM m, QErrM m, TableInfoRM b m, Backend b)
   => SelPermInfo b
-  -> SessVarBldr b m
+  -> SessionVariableBuilder b m
   -> AnnBoolExpFldSQL b
   -> m (AnnBoolExpFldSQL b)
 checkOnColExp spi sessVarBldr annFld = case annFld of
@@ -267,7 +268,7 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
 
 convAnnBoolExpPartialSQL
   :: (Applicative f, Backend backend)
-  => SessVarBldr backend f
+  => SessionVariableBuilder backend f
   -> AnnBoolExpPartialSQL backend
   -> f (AnnBoolExpSQL backend)
 convAnnBoolExpPartialSQL f =
@@ -275,7 +276,7 @@ convAnnBoolExpPartialSQL f =
 
 convAnnColumnCaseBoolExpPartialSQL
   :: (Applicative f, Backend backend)
-  => SessVarBldr backend f
+  => SessionVariableBuilder backend f
   -> AnnColumnCaseBoolExpPartialSQL backend
   -> f (AnnColumnCaseBoolExp backend (SQLExpression backend))
 convAnnColumnCaseBoolExpPartialSQL f =
@@ -283,17 +284,18 @@ convAnnColumnCaseBoolExpPartialSQL f =
 
 convPartialSQLExp
   :: (Applicative f)
-  => SessVarBldr backend f
+  => SessionVariableBuilder backend f
   -> PartialSQLExp backend
   -> f (SQLExpression backend)
-convPartialSQLExp f = \case
+convPartialSQLExp sessVarBldr = \case
   PSESQLExp sqlExp                 -> pure sqlExp
-  PSESessVar colTy sessionVariable -> f colTy sessionVariable
+  PSESession                       -> pure $ _svbCurrentSession sessVarBldr
+  PSESessVar colTy sessionVariable -> (_svbVariableParser sessVarBldr) colTy sessionVariable
 
 sessVarFromCurrentSetting
-  :: (Applicative f) => CollectableType PGScalarType -> SessionVariable -> f S.SQLExp
-sessVarFromCurrentSetting pgType sessVar =
-  pure $ sessVarFromCurrentSetting' pgType sessVar
+  :: (Applicative f) => SessionVariableBuilder ('Postgres pgKind) f
+sessVarFromCurrentSetting =
+  SessionVariableBuilder currentSession $ \ty var -> pure $ sessVarFromCurrentSetting' ty var
 
 sessVarFromCurrentSetting' :: CollectableType PGScalarType -> SessionVariable -> S.SQLExp
 sessVarFromCurrentSetting' ty sessVar =
@@ -304,16 +306,6 @@ withTypeAnn ty sessVarVal = flip S.SETyAnn (S.mkTypeAnn ty) $
   case ty of
     CollectableTypeScalar baseTy -> withConstructorFn baseTy sessVarVal
     CollectableTypeArray _       -> sessVarVal
-
-retrieveAndFlagSessionVariableValue
-  :: (MonadState s m)
-  => (SessionVariable -> s -> s)
-  -> SessionVariable
-  -> S.SQLExp
-  -> m S.SQLExp
-retrieveAndFlagSessionVariableValue updateState sessVar currentSessionExp = do
-  modify $ updateState sessVar
-  pure $ fromCurrentSession currentSessionExp sessVar
 
 fromCurrentSession
   :: S.SQLExp
@@ -329,7 +321,7 @@ currentSession = S.SEUnsafe "current_setting('hasura.user')::json"
 checkSelPerm
   :: (UserInfoM m, QErrM m, TableInfoRM b m, Backend b)
   => SelPermInfo b
-  -> SessVarBldr b m
+  -> SessionVariableBuilder b m
   -> AnnBoolExpSQL b
   -> m (AnnBoolExpSQL b)
 checkSelPerm spi sessVarBldr =
@@ -340,12 +332,13 @@ convBoolExp
   => FieldInfoMap (FieldInfo b)
   -> SelPermInfo b
   -> BoolExp b
-  -> SessVarBldr b m
+  -> SessionVariableBuilder b m
   -> TableName b
   -> ValueParser b m (SQLExpression b)
   -> m (AnnBoolExpSQL b)
 convBoolExp cim spi be sessVarBldr rootTable rhsParser = do
-  abe <- annBoolExp rhsParser rootTable cim $ unBoolExp be
+  let boolExpRHSParser = BoolExpRHSParser rhsParser $ _svbCurrentSession sessVarBldr
+  abe <- annBoolExp boolExpRHSParser rootTable cim $ unBoolExp be
   checkSelPerm spi sessVarBldr abe
 
 dmlTxErrorHandler :: Q.PGTxErr -> QErr
@@ -371,7 +364,7 @@ toJSONableExp strfyNum colTy asText expn
   | otherwise = expn
 
 -- validate headers
-validateHeaders :: (UserInfoM m, QErrM m) => [Text] -> m ()
+validateHeaders :: (UserInfoM m, QErrM m) => HashSet Text -> m ()
 validateHeaders depHeaders = do
   headers <- getSessionVariables . _uiSession <$> askUserInfo
   forM_ depHeaders $ \hdr ->

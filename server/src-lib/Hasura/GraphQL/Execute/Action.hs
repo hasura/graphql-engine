@@ -25,7 +25,6 @@ import qualified Data.ByteString.Lazy                      as BL
 import qualified Data.CaseInsensitive                      as CI
 import qualified Data.Environment                          as Env
 import qualified Data.HashMap.Strict                       as Map
-import qualified Data.HashSet                              as Set
 import qualified Data.IntMap                               as IntMap
 import qualified Data.Text                                 as T
 import qualified Database.PG.Query                         as Q
@@ -89,8 +88,10 @@ runActionExecution
      , MonadError QErr m, Tracing.MonadTrace m
      , MonadMetadataStorage (MetadataStorageT m)
      )
-  => ActionExecutionPlan -> m (DiffTime, (EncJSON, Maybe HTTP.ResponseHeaders))
-runActionExecution aep =
+  => UserInfo
+  -> ActionExecutionPlan
+  -> m (DiffTime, (EncJSON, Maybe HTTP.ResponseHeaders))
+runActionExecution userInfo aep =
   withElapsedTime $ case aep of
     AEPSync e -> second Just <$> unActionExecution e
     AEPAsyncQuery (AsyncActionQueryExecutionPlan actionId execution) -> do
@@ -99,7 +100,7 @@ runActionExecution aep =
         AAQENoRelationships f -> liftEither $ f actionLogResponse
         AAQEOnSourceDB srcConfig (AsyncActionQuerySourceExecution _ jsonAggSelect f) -> do
           let selectAST = f actionLogResponse
-          (selectResolved, _) <- flip runStateT Set.empty $ traverse prepareWithoutPlan selectAST
+          selectResolved <- traverse (prepareWithoutPlan userInfo) selectAST
           let querySQL = Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggSelect selectResolved
           liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx srcConfig) Q.ReadOnly $ liftTx $ asSingleRowJsonResp querySQL []
     AEPAsyncMutation actionId -> pure $ (,Nothing) $ encJFromJValue $ actionIdToText actionId
@@ -116,14 +117,14 @@ resolveActionExecution
 resolveActionExecution env logger userInfo annAction execContext =
   case actionSource of
     -- Build client response
-    ASINoSource -> ActionExecution $ first (AO.toEncJSON . makeActionResponseNoRelations annFields) <$> runWebhook
+    ASINoSource -> ActionExecution $ first (encJFromOrderedValue . makeActionResponseNoRelations annFields) <$> runWebhook
     ASISource _ sourceConfig -> ActionExecution do
       (webhookRes, respHeaders) <- runWebhook
       let webhookResponseExpression = RS.AEInput $ UVLiteral $
             toTxtValue $ ColumnValue (ColumnScalar PGJSONB) $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
           selectAstUnresolved = processOutputSelectionSet webhookResponseExpression
                                 outputType definitionList annFields stringifyNum
-      (astResolved, finalPlanningSt) <- flip runStateT initPlanningSt $ traverse prepareWithPlan selectAstUnresolved
+      (astResolved, finalPlanningSt) <- flip runStateT initPlanningSt $ traverse (prepareWithPlan userInfo) selectAstUnresolved
       let prepArgs = fmap fst $ IntMap.elems $ withUserVars (_uiSession userInfo) $ _psPrepped finalPlanningSt
       (,respHeaders) <$> executeActionInDb sourceConfig astResolved prepArgs
   where
@@ -158,9 +159,9 @@ makeActionResponseNoRelations annFields webhookResponse =
             RS.AFExpression t -> Just $ AO.String t
             RS.AFColumn     c -> AO.toOrdered <$> Map.lookup (pgiName $ RS._acfInfo c) obj
             _                 -> AO.toOrdered <$> Map.lookup fieldText (mapKeys G.unName obj)
-                                -- ^ NOTE (Sam): This case would still not allow for aliased fields to be
-                                --   a part of the response. Also, seeing that none of the other `annField`
-                                --   types would be caught in the example, I've chosen to leave it as it is.
+                                -- NOTE (Sam): This case would still not allow for aliased fields to be
+                                -- a part of the response. Also, seeing that none of the other `annField`
+                                -- types would be caught in the example, I've chosen to leave it as it is.
   in case webhookResponse of
     AWRArray objs -> AO.array $ map mkResponseObject objs
     AWRObject obj -> mkResponseObject obj
@@ -234,7 +235,7 @@ resolveAsyncActionQuery userInfo annAction =
           AsyncId               -> pure $ AO.String $ actionIdToText actionId
           AsyncCreatedAt        -> pure $ AO.toOrdered $ J.toJSON _alrCreatedAt
           AsyncErrors           -> pure $ AO.toOrdered $ J.toJSON _alrErrors
-      pure $ AO.toEncJSON $ AO.object resolvedFields
+      pure $ encJFromOrderedValue $ AO.object resolvedFields
 
     ASISource sourceName sourceConfig ->
       let jsonAggSelect = mkJsonAggSelect outputType

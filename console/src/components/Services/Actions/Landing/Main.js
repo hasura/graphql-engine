@@ -25,7 +25,7 @@ class Landing extends React.Component {
             description="Actions are custom queries or mutations that are resolved via HTTP handlers. Actions can be used to carry out complex data validations, data enrichment from external sources or execute just about any custom business logic."
             knowMoreHref="https://hasura.io/docs/latest/graphql/core/actions/index.html"
           />
-          <hr className={styles.clear_fix} />
+          <hr className={`${styles.clear_fix} my-lg`} />
         </div>
       );
     };
@@ -64,7 +64,7 @@ class Landing extends React.Component {
               </h2>
               {getAddBtn()}
             </div>
-            <hr />
+            <hr className="my-lg" />
 
             {getIntroSection()}
           </div>

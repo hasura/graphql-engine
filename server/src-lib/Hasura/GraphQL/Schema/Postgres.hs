@@ -20,7 +20,7 @@ buildActionQueryFields
   :: MonadBuildSchema ('Postgres 'Vanilla) r m n
   => NonObjectTypeMap
   -> ActionInfo
-  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
 buildActionQueryFields nonObjectCustomTypes actionInfo =
   maybeToList <$> case _adType (_aiDefinition actionInfo) of
     ActionQuery                       ->
@@ -33,7 +33,7 @@ buildActionMutationFields
   :: MonadBuildSchema ('Postgres 'Vanilla) r m n
   => NonObjectTypeMap
   -> ActionInfo
-  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
 buildActionMutationFields nonObjectCustomTypes actionInfo =
   maybeToList <$> case _adType (_aiDefinition actionInfo) of
     ActionQuery -> pure Nothing
@@ -45,8 +45,7 @@ buildActionMutationFields nonObjectCustomTypes actionInfo =
 buildActionSubscriptionFields
   :: MonadBuildSchema ('Postgres 'Vanilla) r m n
   => ActionInfo
-  -> m [FieldParser n (QueryRootField UnpreparedValue
-                       UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
 buildActionSubscriptionFields actionInfo =
   maybeToList <$> case _adType (_aiDefinition actionInfo) of
     ActionQuery                       -> pure Nothing

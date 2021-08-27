@@ -4,8 +4,8 @@
 
 .. _metadata_api_sources:
 
-Metadata API Reference: Databases (v2.0 and above)
-==================================================
+Metadata API Reference: Databases
+=================================
 
 .. contents:: Table of contents
   :backlinks: none

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
@@ -31,7 +31,7 @@ func MetadataAPI(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 		return
 	}
-	mdHandler := metadataobject.NewHandlerFromEC(ec)
+	mdHandler := projectmetadata.NewHandlerFromEC(ec)
 	// Switch on request method
 	switch c.Request.Method {
 	case "GET":

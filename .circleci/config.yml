@@ -1,7 +1,7 @@
 # anchor refs to be used elsewhere
 refs:
   constants:
-    - &server_builder_image hasura/graphql-engine-server-builder:dda6ced5f151ecd817ae38a6cca6009405f4aae4120d270222a3689c7600bfef
+    - &server_builder_image hasura/graphql-engine-server-builder:bb7caa0b5222f6ebf6cd9af5c5c258df6f4dafa18e29d6f44d1744bb276fd03f
     - &mssql_image hasura/mssql-server-2019-cu10-ubuntu-20.04:187352320456c39572656ce46cc292369cffa01ac0e90fcdf179c01d36fb3952
   skip_job_on_ciignore: &skip_job_on_ciignore
     run:
@@ -119,6 +119,30 @@ refs:
         psql "$DATABASE_URL" -c "SELECT * FROM citus_version();" | grep -q -F '(1 row)' \
           || (echo "Failed checking Citus DB presence" && exit 1)
 
+  authenticate_bigquery: &authenticate_bigquery
+    run:
+      name: authenticate bigquery service account
+      working_directory: ~/graphql-engine/server/tests-py
+      command: |
+        echo "${HASURA_BIGQUERY_SERVICE_KEY}" > "$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE"
+        gcloud auth activate-service-account --key-file="$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE"
+
+  ensure_bigquery_db: &ensure_bigquery_db
+    run:
+      name: ensure the bigquery data source is accessible
+      command: |
+        for i in `seq 1 60`;
+          do
+            curl "https://content-bigquery.googleapis.com/bigquery/v2/projects/$HASURA_BIGQUERY_PROJECT_ID/queries?alt=json&key=$HASURA_BIGQUERY_API_KEY" \
+              --data-binary '{"query":"select 123"}' \
+              -H "Authorization: Bearer $(gcloud auth print-access-token $HASURA_BIGQUERY_IAM_ACCOUNT \
+              --project=$HASURA_BIGQUERY_PROJECT_ID)" -H 'content-type: application/json' \
+              && echo Success && exit 0
+            echo -n .
+            sleep 1
+          done
+          echo Failed waiting for bigquery && exit 1
+
   filter_only_vtags: &filter_only_vtags
     filters:
       tags:
@@ -234,34 +258,31 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - cabal-store-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
-            - cabal-store-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-
-            - cabal-store-v3-{{ checksum "server/cabal.project" }}-
+            - cabal-store-v3-{{ checksum "cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "cabal.project.freeze" }}
+            - cabal-store-v3-{{ checksum "cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-
+            - cabal-store-v3-{{ checksum "cabal.project" }}-
             - cabal-store-v3-
       - restore_cache:
           keys:
-            - cabal-packages-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
-            - cabal-packages-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-
-            - cabal-packages-v3-{{ checksum "server/cabal.project" }}-
+            - cabal-packages-v3-{{ checksum "cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "cabal.project.freeze" }}
+            - cabal-packages-v3-{{ checksum "cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-
+            - cabal-packages-v3-{{ checksum "cabal.project" }}-
             - cabal-packages-v3-
       - run:
           name: Build the binary
           working_directory: ./server
           command: |
-            # for PRs non-optimized build, else optimized build
-            if [[ "$CIRCLE_BRANCH" =~ ^(dev|release) || "$CIRCLE_TAG" =~ ^v ]]; then
-              echo "Branch starts with dev or release, or tagged commit starts with v. Optimized build"
-              make ci-build
-            else
-              echo "Non-release branch, build with coverage"
-              make enable_coverage=true ci-build
-            fi
+            # NOTE: previously we used enable_coverage=true here for
+            # non-release builds, but to support our performance regression
+            # testing workflow we need all builds to be built with the same
+            # options that have performance implications.
+            make ci-build
       - save_cache:
-          key: cabal-packages-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
+          key: cabal-packages-v3-{{ checksum "cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "cabal.project.freeze" }}
           paths:
             - ~/.cabal/packages
       - save_cache:
-          key: cabal-store-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
+          key: cabal-store-v3-{{ checksum "cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "cabal.project.freeze" }}
           paths:
             - ~/.cabal/store
       - store_artifacts:
@@ -384,6 +405,45 @@ jobs:
           environment:
             SERVER_TEST_TO_RUN: "backend-citus"
             OUTPUT_FOLDER: "/build/_server_test_output/citus"
+          command: |
+            .circleci/test-server.sh
+      - store_artifacts:
+          path: /build/_server_test_output
+          destination: server_test
+
+  # pytest the server with BigQuery
+  test_server_bigquery:
+    docker:
+      - image: *server_builder_image
+      - image: hasura/postgres-13.0-alpine-postgis3:latest
+        <<: *test_pg_env
+    environment:
+      # Setting default number of threads to 2
+      # since circleci allocates 2 cpus per test container
+      GHCRTS: -N2
+      # NOTE: pytests depend on this being set to 8
+      HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE: 8
+      HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
+      HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:@localhost:5432/gql_test2
+      GRAPHQL_ENGINE: /build/_server_output/graphql-engine
+      GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
+      MIX_FILES_FOLDER: /build/_server_output/mix
+      HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE: gcloud-service-key.json
+    working_directory: ~/graphql-engine
+    steps:
+      - attach_workspace:
+          at: /build
+      - *skip_job_on_ciignore
+      - checkout
+      - *wait_for_postgres
+      - *ensure_postgres_db
+      - *authenticate_bigquery
+      - *ensure_bigquery_db
+      - run:
+          name: Run tests
+          environment:
+            SERVER_TEST_TO_RUN: "backend-bigquery"
+            OUTPUT_FOLDER: "/build/_server_test_output/bigquery"
           command: |
             .circleci/test-server.sh
       - store_artifacts:
@@ -730,16 +790,22 @@ jobs:
             make jest
   # test console
   test_console:
+    resource_class: medium+
     docker:
       - image: hasura/graphql-engine-console-builder:80c71f5dd8f1e33b92d3ec2da7abc1ff8d7936a88d3ee0004fd7ad37aacf3b3a
         environment:
           HASURA_GRAPHQL_DATABASE_URL: "postgres://gql_test:@localhost:5432/gql_test"
           CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
           GHCRTS: -N1
+          TEST_MSSQL_DATABASE_URL: "DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=master;Uid=SA;Pwd=hasuraMSSQL1"
       - image: circleci/postgres:10-alpine-postgis
         environment:
           POSTGRES_USER: gql_test
           POSTGRES_DB: gql_test
+      - image: mcr.microsoft.com/mssql/server:2019-CU10-ubuntu-20.04
+        environment:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: hasuraMSSQL1
     working_directory: ~/graphql-engine
     parallelism: 4
     steps:
@@ -760,6 +826,7 @@ jobs:
             - ~/.npm
             - ~/.cache
       - *wait_for_postgres
+      - *wait_for_mssql
       - run:
           name: test console
           command: .circleci/test-console.sh
@@ -784,11 +851,6 @@ jobs:
       - *skip_job_on_ciignore
       - checkout
       - *skip_server_tests
-      - run:
-          name: install_necessary_packages
-          command: |
-            apt-get update
-            apt install -y curl procps
       - run:
           name: upgrade_test
           command: .circleci/server-upgrade-downgrade/run.sh
@@ -857,6 +919,12 @@ workflows:
           <<: *filter_only_vtags
           requires:
             - build_server
+      - test_server_bigquery:
+          <<: *filter_only_vtags
+          context:
+            - pytest-bigquery
+          requires:
+          - build_server
       - test_server_pg_13:
           <<: *filter_only_vtags
           requires:

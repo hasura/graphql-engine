@@ -206,7 +206,7 @@ export const exchangeHerokuCode = (code: string) => {
   const variables = {
     code,
   };
-  return fetch(Endpoints.hasuraCloudDataGraphql, {
+  return fetch(Endpoints.luxDataGraphql, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -271,7 +271,7 @@ export const getEnvVars = () => {
   const variables = {
     tenantId,
   };
-  return fetch(Endpoints.hasuraCloudDataGraphql, {
+  return fetch(Endpoints.luxDataGraphql, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -318,7 +318,7 @@ export const updateEnvVars = (
     currentHash,
     envs,
   };
-  return fetch(Endpoints.hasuraCloudDataGraphql, {
+  return fetch(Endpoints.luxDataGraphql, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -344,7 +344,7 @@ export const updateEnvVars = (
 };
 
 export const getEmptyEnvVar = (envVars: Record<string, any>) => {
-  const newEnvVarName = 'HEROKU_DATABASE_URL';
+  const newEnvVarName = 'PG_DATABASE_URL';
   let suffix = 0;
   while (
     Object.keys(envVars).some(e => e === `${newEnvVarName}${suffix || ''}`) ||
@@ -448,7 +448,7 @@ export const startHerokuDBURLSync = (
     projectID,
     env: envVar,
   };
-  return fetch(Endpoints.hasuraCloudDataGraphql, {
+  return fetch(Endpoints.luxDataGraphql, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',

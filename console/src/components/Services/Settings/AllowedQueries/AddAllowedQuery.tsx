@@ -5,7 +5,7 @@ import styles from './AllowedQueries.scss';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 
-import { readFile, parseQueryString } from './utils';
+import { readFile, parseQueryString, renameDuplicates } from './utils';
 import { showErrorNotification } from '../../Common/Notification';
 import { addAllowedQueries } from '../../../../metadata/actions';
 import { allowedQueriesCollection } from '../../../../metadata/utils';
@@ -20,10 +20,11 @@ const defaultManualQuery: AllowedQueriesCollection = {
 
 type AddAllowedQueryProps = {
   dispatch: Dispatch;
+  allowedQueries: AllowedQueriesCollection[];
 };
 
 const AddAllowedQuery: React.FC<AddAllowedQueryProps> = props => {
-  const { dispatch } = props;
+  const { dispatch, allowedQueries } = props;
 
   const [manualQuery, setManualQuery] = useState<AllowedQueriesCollection>(
     defaultManualQuery
@@ -44,7 +45,8 @@ const AddAllowedQuery: React.FC<AddAllowedQueryProps> = props => {
     const addFileQueries = (content: string) => {
       try {
         const fileQueries = parseQueryString(content);
-        dispatch(addAllowedQueries(fileQueries, toggle));
+        const updatedQueries = renameDuplicates(fileQueries, allowedQueries);
+        dispatch(addAllowedQueries(updatedQueries, toggle));
       } catch (error) {
         dispatch(
           showErrorNotification('Uploading operations failed', error.message)
@@ -73,7 +75,11 @@ const AddAllowedQuery: React.FC<AddAllowedQueryProps> = props => {
     <div>
       <div>
         <div className={styles.add_mar_bottom_mid}>
-          <b>Operation name:</b>
+          <b>Query name:</b>
+          <Tooltip
+            message="This is an identifier for the query in the collection. 
+          This should be unique in the collection and can be different from the operation name of the query."
+          />
         </div>
         <input
           type="text"

@@ -3,6 +3,7 @@ import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import {
   ConnectionPoolSettings,
   HasuraMetadataV3,
+  InconsistentObject,
   IsolationLevelOptions,
   MetadataDataSource,
   RestEndpointEntry,
@@ -29,6 +30,8 @@ import {
   addAllowedQuery,
   getSourceFromInconistentObjects,
   getRemoteSchemaNameFromInconsistentObjects,
+  addInsecureDomainQuery,
+  deleteDomain,
 } from './utils';
 import {
   makeMigrationCall,
@@ -73,7 +76,7 @@ export interface ExportMetadataRequest {
 
 export interface LoadInconsistentObjectsSuccess {
   type: 'Metadata/LOAD_INCONSISTENT_OBJECTS_SUCCESS';
-  data: any;
+  data: InconsistentObject[];
 }
 export interface LoadInconsistentObjectsRequest {
   type: 'Metadata/LOAD_INCONSISTENT_OBJECTS_REQUEST';
@@ -1035,6 +1038,71 @@ export const addAllowedQueries = (
       dispatch({ type: 'Metadata/ADD_ALLOWED_QUERIES', data: queries });
       callback();
     };
+
+    const onError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [upQuery],
+      undefined,
+      migrationName,
+      onSuccess,
+      onError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+export const addInsecureDomain = (
+  host: string,
+  callback: any
+): Thunk<void, MetadataActions> => {
+  return (dispatch, getState) => {
+    if (!host.trim().length) {
+      dispatch(showErrorNotification('No domain found'));
+
+      return;
+    }
+    const upQuery = addInsecureDomainQuery(host);
+    const migrationName = `add_insecure_tls_domains`;
+    const requestMsg = 'Adding domain to insecure TLS allow list...';
+    const successMsg = `Domain added to insecure TLS allow list successfully`;
+    const errorMsg = 'Adding domain to insecure TLS allow list failed';
+
+    const onSuccess = () => {
+      callback();
+    };
+
+    const onError = () => {};
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [upQuery],
+      undefined,
+      migrationName,
+      onSuccess,
+      onError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+export const deleteInsecureDomain = (
+  host: string
+): Thunk<void, MetadataActions> => {
+  return (dispatch, getState) => {
+    const upQuery = deleteDomain(host);
+    const migrationName = `delete_insecure_domain`;
+    const requestMsg = 'Deleting Insecure domain...';
+    const successMsg = 'Domain deleted!';
+    const errorMsg = 'Deleting domain failed!';
+
+    const onSuccess = () => {};
 
     const onError = () => {};
 

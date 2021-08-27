@@ -18,12 +18,12 @@ import           Control.Exception.Safe
 import           Control.Monad.IO.Class
 import           Control.Monad.Trans.Except
 import           Data.Aeson
-import qualified Data.Aeson as Aeson
+import qualified Data.Aeson                          as Aeson
 import           Data.Foldable
 import           Data.Maybe
-import qualified Data.Sequence as Seq
-import           Data.Text (Text)
-import qualified Data.Text as T
+import qualified Data.Sequence                       as Seq
+import           Data.Text                           (Text)
+import qualified Data.Text                           as T
 import           GHC.Generics
 import           Hasura.Backends.BigQuery.Connection
 import           Hasura.Backends.BigQuery.Source
@@ -48,7 +48,7 @@ data RestProblem
 
 data RestTableList = RestTableList
   { nextPageToken :: Maybe Text
-  , tables :: [RestTableBrief]
+  , tables        :: [RestTableBrief]
   } deriving (Show)
 
 instance FromJSON RestTableList where
@@ -72,13 +72,13 @@ instance FromJSON RestTableBrief
 data RestTableReference = RestTableReference
   { datasetId :: Text
   , projectId :: Text
-  , tableId :: Text
+  , tableId   :: Text
   } deriving (Show, Generic)
 instance FromJSON RestTableReference
 
 data RestTable = RestTable
   { tableReference :: RestTableReference
-  , schema :: RestTableSchema
+  , schema         :: RestTableSchema
   } deriving (Show, Generic)
 instance FromJSON RestTable
 
@@ -88,7 +88,7 @@ data RestTableSchema = RestTableSchema
 instance FromJSON RestTableSchema
 
 data RestFieldSchema = RestFieldSchema
-  { name :: Text
+  { name  :: Text
   , type' :: RestType
     -- ^ The field data type. Possible values include STRING, BYTES,
     -- INTEGER, INT64 (same as INTEGER), FLOAT, FLOAT64 (same as
@@ -96,7 +96,7 @@ data RestFieldSchema = RestFieldSchema
     -- DATETIME, GEOGRAPHY, NUMERIC, RECORD (where RECORD indicates
     -- that the field contains a nested schema) or STRUCT (same as
     -- RECORD).
-  , mode :: Mode
+  , mode  :: Mode
   -- The field mode. Possible values include NULLABLE, REQUIRED and
   -- REPEATED. The default value is NULLABLE.
   } deriving (Show, Generic)
@@ -118,7 +118,7 @@ instance FromJSON Mode where
       "NULLABLE" -> pure Nullable
       "REQUIRED" -> pure Required
       "REPEATED" -> pure Repeated
-      _ -> fail ("invalid mode " ++ show s)
+      _          -> fail ("invalid mode " ++ show s)
 
 data RestType
   = STRING
@@ -139,26 +139,26 @@ instance FromJSON RestType where
   parseJSON j = do
     s <- parseJSON j
     case s :: Text of
-      "STRING" -> pure STRING
-      "BYTES" -> pure BYTES
-      "INTEGER" -> pure INTEGER
-      "INT64" -> pure INTEGER
-      "FLOAT" -> pure FLOAT
-      "FLOAT64" -> pure FLOAT
-      "BOOLEAN" -> pure BOOL
-      "BOOL" -> pure BOOL
-      "TIMESTAMP" -> pure TIMESTAMP
-      "DATE" -> pure DATE
-      "TIME" -> pure TIME
-      "DATETIME" -> pure DATETIME
-      "GEOGRAPHY" -> pure GEOGRAPHY
-      "NUMERIC" -> pure DECIMAL
-      "DECIMAL" -> pure DECIMAL
+      "STRING"     -> pure STRING
+      "BYTES"      -> pure BYTES
+      "INTEGER"    -> pure INTEGER
+      "INT64"      -> pure INTEGER
+      "FLOAT"      -> pure FLOAT
+      "FLOAT64"    -> pure FLOAT
+      "BOOLEAN"    -> pure BOOL
+      "BOOL"       -> pure BOOL
+      "TIMESTAMP"  -> pure TIMESTAMP
+      "DATE"       -> pure DATE
+      "TIME"       -> pure TIME
+      "DATETIME"   -> pure DATETIME
+      "GEOGRAPHY"  -> pure GEOGRAPHY
+      "NUMERIC"    -> pure DECIMAL
+      "DECIMAL"    -> pure DECIMAL
       "BIGNUMERIC" -> pure BIGDECIMAL
       "BIGDECIMAL" -> pure BIGDECIMAL
-      "RECORD" -> pure STRUCT
-      "STRUCT" -> pure STRUCT
-      _ -> fail ("invalid type " ++ show s)
+      "RECORD"     -> pure STRUCT
+      "STRUCT"     -> pure STRUCT
+      _            -> fail ("invalid type " ++ show s)
 
 --------------------------------------------------------------------------------
 -- REST request
@@ -204,7 +204,7 @@ getTablesForDataSet sc@BigQuerySourceConfig{..} dataSet = do
                 Left e -> pure (Left (GetMetaDecodeProblem e))
                 Right RestTableList {nextPageToken, tables} ->
                   case nextPageToken of
-                    Nothing -> pure (Right (toList (acc <> Seq.fromList tables)))
+                    Nothing    -> pure (Right (toList (acc <> Seq.fromList tables)))
                     Just token -> run (pure token) (acc <> Seq.fromList tables)
             _ -> pure (Left (RESTRequestNonOK (getResponseStatus resp)))
       where
@@ -213,15 +213,13 @@ getTablesForDataSet sc@BigQuerySourceConfig{..} dataSet = do
            T.unpack _scProjectId  <>
            "/datasets/" <>
            T.unpack dataSet <>
-           "/tables?alt=json&key=" <>
-           -- T.unpack apiToken <>
-           "&" <>
+           "/tables?alt=json&" <>
            T.unpack (encodeParams extraParameters)
         extraParameters = pageTokenParam
           where
             pageTokenParam =
               case pageToken of
-                Nothing -> []
+                Nothing    -> []
                 Just token -> [("pageToken", token)]
 
 -- | Get tables in the schema.
@@ -244,7 +242,7 @@ getTable sc@BigQuerySourceConfig {..} dataSet tableId = do
           case getResponseStatusCode resp of
             200 ->
               case Aeson.eitherDecode (getResponseBody resp) of
-                Left e -> pure (Left (GetMetaDecodeProblem e))
+                Left e      -> pure (Left (GetMetaDecodeProblem e))
                 Right table -> pure (Right table)
             _ -> pure (Left (RESTRequestNonOK (getResponseStatus resp)))
       where
@@ -255,9 +253,7 @@ getTable sc@BigQuerySourceConfig {..} dataSet tableId = do
           T.unpack dataSet <>
           "/tables/" <>
           T.unpack tableId <>
-          "?alt=json&key=" <>
-           -- T.unpack apiToken <>
-          "&" <>
+          "?alt=json&" <>
           T.unpack (encodeParams extraParameters)
         extraParameters = []
 

@@ -150,8 +150,12 @@ mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkS
 -- expressions that refer to the @result_vars@ input object, collecting information
 -- about various parameters of the query along the way.
 resolveMultiplexedValue
-  :: (MonadState (QueryParametersInfo ('Postgres pgKind)) m)
-  => SessionVariables -> UnpreparedValue ('Postgres pgKind) -> m S.SQLExp
+  :: ( MonadState (QueryParametersInfo ('Postgres pgKind)) m
+     , MonadError QErr m
+     )
+  => SessionVariables
+  -> UnpreparedValue ('Postgres pgKind)
+  -> m S.SQLExp
 resolveMultiplexedValue allSessionVars = \case
   UVParameter varM colVal -> do
     varJsonPath <- case fmap PS.getName varM of
@@ -164,6 +168,10 @@ resolveMultiplexedValue allSessionVars = \case
         pure ["synthetic", tshow syntheticVarIndex]
     pure $ fromResVars (CollectableTypeScalar $ unsafePGColumnToBackend $ cvType colVal) varJsonPath
   UVSessionVar ty sessVar -> do
+    _ <- getSessionVariableValue sessVar allSessionVars
+          `onNothing`
+            throw400 NotFound
+              ("missing session variable: "  <>> sessionVariableToText sessVar)
     modifying qpiReferencedSessionVariables (Set.insert sessVar)
     pure $ fromResVars ty ["session", sessionVariableToText sessVar]
   UVLiteral sqlExp -> pure sqlExp

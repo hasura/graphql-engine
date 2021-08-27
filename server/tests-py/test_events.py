@@ -785,10 +785,29 @@ class TestManualEvents(object):
         return 'queries/event_triggers/manual_events'
 
     def test_basic(self, hge_ctx, evts_webhook):
-        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/manual_events/enabled.yaml')
+        st_code, resp = hge_ctx.v1metadataq_f('queries/event_triggers/manual_events/enabled.yaml')
         assert st_code == 200, resp
-        st_code, resp = hge_ctx.v1q_f('queries/event_triggers/manual_events/disabled.yaml')
+        st_code, resp = hge_ctx.v1metadataq_f('queries/event_triggers/manual_events/disabled.yaml')
         assert st_code == 400, resp
+
+    # This test is being added to ensure that the manual events
+    # are not failing after any reload_metadata operation, this
+    # has been an issue of concern in some of the recent releases(v2.0.1 onwards)
+    def test_basic_with_reload_metadata(self, hge_ctx, evts_webhook):
+        reload_metadata_q = {
+            "type": "reload_metadata",
+            "args": {
+                "reload_sources": True
+            }
+        }
+
+        for _ in range(5):
+            self.test_basic(hge_ctx, evts_webhook)
+
+            st_code, resp = hge_ctx.v1metadataq(reload_metadata_q)
+            assert st_code == 200, resp
+
+            self.test_basic(hge_ctx, evts_webhook)           
 
 @usefixtures('per_method_tests_db_state')
 class TestEventsAsynchronousExecution(object):

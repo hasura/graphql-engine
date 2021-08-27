@@ -1,4 +1,5 @@
 import React from 'react';
+import { DeepRequired } from 'ts-essentials';
 import { DataSourcesAPI } from '../..';
 import { QualifiedTable } from '../../../metadata/types';
 import {
@@ -96,9 +97,12 @@ const violationActions: ViolationActions[] = [
   'set default',
 ];
 
-export const supportedFeatures: SupportedFeaturesType = {
+export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
   driver: {
     name: 'mssql',
+    fetchVersion: {
+      enabled: false,
+    },
   },
   schemas: {
     create: {
@@ -112,6 +116,7 @@ export const supportedFeatures: SupportedFeaturesType = {
     create: {
       enabled: true,
       frequentlyUsedColumns: false,
+      columnTypeSelector: false,
     },
     browse: {
       enabled: true,
@@ -122,6 +127,7 @@ export const supportedFeatures: SupportedFeaturesType = {
       enabled: false,
     },
     modify: {
+      editableTableName: false,
       enabled: true,
       columns: {
         view: true,
@@ -148,6 +154,10 @@ export const supportedFeatures: SupportedFeaturesType = {
         view: true,
         edit: false,
       },
+      indexes: {
+        view: false,
+        edit: false,
+      },
       customGqlRoot: false,
       setAsEnum: false,
       untrack: true,
@@ -160,9 +170,11 @@ export const supportedFeatures: SupportedFeaturesType = {
     relationships: {
       enabled: true,
       track: true,
+      remoteRelationships: false,
     },
     permissions: {
       enabled: true,
+      aggregation: false,
     },
     track: {
       enabled: false,
@@ -915,7 +927,6 @@ WHERE
   permissionColumnDataTypes,
   viewsSupported: false,
   supportedColumnOperators,
-  aggregationPermissionsAllowed: false,
   supportedFeatures,
   violationActions,
   defaultRedirectSchema,

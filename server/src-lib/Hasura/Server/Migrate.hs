@@ -256,7 +256,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
         ++ [| ("3", MigrationPair from3To4 Nothing) |]
         :  migrationsFromFile [5..42]
         ++ [| ("42", MigrationPair from42To43 (Just from43To42)) |]
-        : migrationsFromFile [44..46]
+        : migrationsFromFile [44..latestCatalogVersion]
      )
   where
     runTxOrPrint :: Q.Query -> m ()
@@ -281,7 +281,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
                     SourceMetadata defaultSource _mnsTables _mnsFunctions defaultSourceConfig
               in Metadata (OMap.singleton defaultSource defaultSourceMetadata)
                    _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist _mnsCustomTypes _mnsActions _mnsCronTriggers mempty
-                   emptyApiLimit emptyMetricsConfig mempty mempty
+                   emptyApiLimit emptyMetricsConfig mempty mempty emptyQueryTagsConfig emptyNetwork
         liftTx $ insertMetadataInCatalog metadataV3
 
     from43To42 = do
@@ -301,5 +301,12 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
                 MetadataNoSources _smTables _smFunctions _metaRemoteSchemas _metaQueryCollections
                                   _metaAllowlist _metaCustomTypes _metaActions _metaCronTriggers
           _ -> throw400 NotSupported "Cannot downgrade since there are more than one source"
-        liftTx $ runHasSystemDefinedT (SystemDefined False) $ saveMetadataToHdbTables metadataV2
+        liftTx $ do
+          runHasSystemDefinedT (SystemDefined False) $ saveMetadataToHdbTables metadataV2
+          -- when the graphql-engine is migrated from v1 to v2, we drop the foreign key
+          -- constraint of the `hdb_catalog.hdb_cron_event` table because the cron triggers
+          -- in v2 are saved in the `hdb_catalog.hdb_metadata` table. So, when a downgrade
+          -- happens, we need to delay adding the foreign key constraint until the
+          -- cron triggers are added in the `hdb_catalog.hdb_cron_triggers`
+          addCronTriggerForeignKeyConstraint
         recreateSystemMetadata

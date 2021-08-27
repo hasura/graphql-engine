@@ -21,7 +21,7 @@ hosted on GitHub pages and the Postgres+GraphQL Engine is running on Postgres.
 
 - Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
   
-  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
+  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/signup)
 - Get the Hasura app URL (say `realtime-poll.hasura.app`)
 - Clone this repo:
   ```bash
@@ -35,7 +35,9 @@ hosted on GitHub pages and the Postgres+GraphQL Engine is running on Postgres.
   ```
 - Apply the migrations:
   ```bash
+  hasura metadata apply
   hasura migrate apply
+  hasura metadata reload
   ```
 - Edit `HASURA_GRAPHQL_ENGINE_HOSTNAME` in `src/apollo.js` and set it to the
   Hasura app URL:

@@ -29,7 +29,7 @@ const setup = () => {
   describe('Setup route', () => {
     it('Visit the index route', () => {
       cy.visit(getIndexRoute());
-      cy.wait(7000);
+      // Get and set validation metadata
       setMetaData();
     });
   });

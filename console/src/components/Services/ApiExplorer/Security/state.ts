@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction, configureStore } from '@reduxjs/toolkit';
+import { Nullable } from './../../../Common/utils/tsUtils';
 import { RoleState } from './utils';
 
 const initialState = {
@@ -14,11 +15,14 @@ const initialState = {
     per_role: {} as Record<string, number>,
   },
   rate_limit: {
-    global: {} as { unique_params: 'IP' | string[]; max_reqs_per_min: number },
+    global: {} as {
+      unique_params: Nullable<'IP' | string[]>;
+      max_reqs_per_min: number;
+    },
     state: RoleState.disabled,
     per_role: {} as Record<
       string,
-      { unique_params: 'IP' | string[]; max_reqs_per_min: number }
+      { unique_params: Nullable<'IP' | string[]>; max_reqs_per_min: number }
     >,
   },
 };
@@ -68,7 +72,7 @@ const formStateSLice = createSlice({
       if (!state.rate_limit.per_role[action.payload.role]) {
         state.rate_limit.per_role[action.payload.role] = {
           max_reqs_per_min: action.payload.limit,
-          unique_params: [''],
+          unique_params: null,
         };
       } else {
         state.rate_limit.per_role[action.payload.role].max_reqs_per_min =

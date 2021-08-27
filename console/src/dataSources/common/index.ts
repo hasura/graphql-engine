@@ -87,7 +87,7 @@ export function escapeTableColumns(table: Table) {
   return getTableColumnNames(table)
     .filter(col => pattern.test(col))
     .reduce((acc: Record<string, string>, col) => {
-      let newColName = col.replace(/\W+/, '_');
+      let newColName = col.replace(/\W+/g, '_');
       if (/^\d/.test(newColName)) newColName = `column_${newColName}`;
       acc[col] = newColName;
       return acc;
@@ -98,7 +98,7 @@ export function escapeTableName(tableName: string): Nullable<string> {
   const pattern = /\W+|^\d/;
   if (!pattern.test(tableName)) return null;
   if (/^\d/.test(tableName)) tableName = `table_${tableName}`;
-  return tableName.toLowerCase().replace(/\s+|_?\W+_?/, '_');
+  return tableName.toLowerCase().replace(/\s+|_?\W+_?/g, '_');
 }
 
 export const getTableColumn = (table: Table, columnName: string) => {

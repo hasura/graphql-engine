@@ -33,7 +33,6 @@ import ConnectDatabase from './DataSources/ConnectDatabase';
 import { setDriver } from '../../../dataSources';
 import { UPDATE_CURRENT_DATA_SOURCE } from './DataActions';
 import { getSourcesFromMetadata } from '../../../metadata/selector';
-import SchemaGallery from './Schema/SchemaSharing/SchemaGallery';
 
 const makeDataRouter = (
   connect,
@@ -58,9 +57,7 @@ const makeDataRouter = (
       <Route path="manage/create" component={ConnectedCreateDataSourcePage} />
       <Route path="schema/manage/connect" component={ConnectDatabase} />
       <Route path="manage/edit/:databaseName" component={ConnectDatabase} />
-      <Route path=":source/gallery" component={SchemaGallery} />
       <Route path=":source" component={ConnectedDataSourceContainer}>
-        <Route path="display" component={ConnectedDataSourceContainer} />
         <Route path="schema">
           <Route path=":schema" component={schemaConnector(connect)} />
           <Route path=":schema/tables" component={schemaConnector(connect)} />

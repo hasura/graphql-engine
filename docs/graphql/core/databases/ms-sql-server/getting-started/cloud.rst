@@ -18,6 +18,10 @@ Try it out
 Step 1: Create an account on Hasura Cloud and create a new Hasura Project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Navigate to `cloud.hasura.io
+<https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default>`__, and
+create a new Hasura Cloud account.
+
 Once you create a project on Hasura Cloud, hit the "Launch Console" button
 to open the Hasura Console for your project.
 
@@ -56,7 +60,7 @@ Here's an example of what your connection strings might look like with a SQL ser
 
 Once you add the database, you'll see your database pop up on the sidebar.
 
-Step 5: Option 1: Track existing tables
+Step 3: Option 1: Track existing tables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you have existing tables, head to the database page by clicking on the database name on the sidebar. You should see a list of tables.
@@ -77,7 +81,7 @@ If you have foreign keys, you'll also see suggested relationships. Again, you ca
    :alt: Track relationships
    :width: 1000px
 
-Step 5: Option 2: Create new tables
+Step 3: Option 2: Create new tables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you don't have existing tables, head to the Run SQL window
@@ -93,7 +97,7 @@ in its GraphQL schema.
    :width: 1000px
 
 
-Step 6: Try out a GraphQL query
+Step 4: Try out a GraphQL query
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Head to the ``GraphiQL`` tab in the console and try running a GraphQL query! Use the explorer sidebar on GraphQL to get help in creating a GraphQL query.

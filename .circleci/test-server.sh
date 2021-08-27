@@ -48,7 +48,19 @@ init_jwt() {
 	cd "$OUTPUT_FOLDER/ssl"
 	openssl genrsa -out jwt_private.key 2048
 	openssl rsa -pubout -in jwt_private.key -out  jwt_public.key
+  openssl genpkey -algorithm ed25519 -outform PEM -out ed25519_jwt_private.key
+  openssl pkey -pubout -in ed25519_jwt_private.key -out ed25519_jwt_public.key
 	cd "$CUR_DIR"
+}
+
+# init_hge_and_test_jwt function will run the hge server using the environment varibles and run the pytest which is sent as argument
+# The first argument is the relative path of the jwt-key-file. the jwt-key-file can be RSA or EdDSA
+# The second argument is the test to run, eg. test_jwt_claims_map.py::TestJWTClaimsMapBasic, test_jwt.py, etc.
+init_hge_and_test_jwt(){
+  run_hge_with_args serve
+  wait_for_port 8080
+  pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/$1" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" $2
+  kill_hge_servers
 }
 
 init_ssl() {
@@ -199,6 +211,10 @@ echo -e "INFO: Logs Folder        : $OUTPUT_FOLDER\n"
 
 # This seems to flake out relatively often; try a mirror if so.
 # Might also need to disable ipv6 or use a longer --timeout
+
+# cryptography 3.4.7 version requires Rust dependencies by default. But we don't need them for our tests, hence disabling them via the following env var => https://stackoverflow.com/a/66334084
+export CRYPTOGRAPHY_DONT_BUILD_RUST=1
+
 pip3 install -r requirements.txt ||\
 pip3 install -i http://mirrors.digitalocean.com/pypi/web/simple --trusted-host mirrors.digitalocean.com   -r requirements.txt
 
@@ -217,8 +233,8 @@ export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
 export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
 export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES=true
 export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
+export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES="inherited_roles"
 
-export PYTEST_ADDOPTS="-vv"
 
 HGE_PIDS=""
 WH_PID=""
@@ -273,9 +289,8 @@ case "$SERVER_TEST_TO_RUN" in
   admin-secret)
     echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET #####################################>\n"
     TEST_TYPE="admin-secret"
-
-    export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
     
+    export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"    
 
     start_multiple_hge_servers
 
@@ -290,7 +305,6 @@ case "$SERVER_TEST_TO_RUN" in
 
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
     export HASURA_GRAPHQL_UNAUTHORIZED_ROLE="anonymous"
-    
 
     run_hge_with_args serve
 
@@ -309,12 +323,22 @@ case "$SERVER_TEST_TO_RUN" in
 
     init_jwt
 
-    export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"    
+    export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key }')"
 
     start_multiple_hge_servers
 
     run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET"
+
+    kill_hge_servers
+    
+    # Ed25519 test
+
+    export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key }')"
+
+    start_multiple_hge_servers
+
+    run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/ed25519_jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET"
 
     kill_hge_servers
 
@@ -328,15 +352,15 @@ case "$SERVER_TEST_TO_RUN" in
     init_jwt
 
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_format: "stringified_json"}')"
 
-    run_hge_with_args serve
-    wait_for_port 8080
+    init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt.py
 
-    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt.py
-
-    kill_hge_servers
+    export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , claims_format: "stringified_json"}')"
+    
+    init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt.py 
+  
     # unset HASURA_GRAPHQL_JWT_SECRET
     ;;
 
@@ -347,15 +371,14 @@ case "$SERVER_TEST_TO_RUN" in
     init_jwt
 
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , audience: "myapp-1234"}')"
 
-    run_hge_with_args serve
-    wait_for_port 8080
+    init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt.py
 
-    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt.py
-
-    kill_hge_servers
+    export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , audience: "myapp-1234"}')"
+    
+    init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt.py
 
     #unset HASURA_GRAPHQL_JWT_SECRET
     ;;
@@ -369,13 +392,11 @@ case "$SERVER_TEST_TO_RUN" in
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , audience: ["myapp-1234", "myapp-9876"]}')"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
     
+    init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt.py
 
-    run_hge_with_args serve
-    wait_for_port 8080
-
-    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt.py
-
-    kill_hge_servers
+    export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , audience: ["myapp-1234", "myapp-9876"]}')"
+    
+    init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt.py
 
     unset HASURA_GRAPHQL_JWT_SECRET
     ;;
@@ -387,15 +408,14 @@ case "$SERVER_TEST_TO_RUN" in
     init_jwt
 
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , issuer: "https://hasura.com"}')"
 
-    run_hge_with_args serve
-    wait_for_port 8080
+    init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt.py
+    
+    export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , issuer: "https://hasura.com"}')"
 
-    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt.py
-
-    kill_hge_servers
+    init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt.py
 
     unset HASURA_GRAPHQL_JWT_SECRET
     ;;
@@ -412,27 +432,23 @@ case "$SERVER_TEST_TO_RUN" in
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$.hasura_claims"}')"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
     
+    init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt.py
 
-    run_hge_with_args serve
-    wait_for_port 8080
-
-    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt.py
-
-    kill_hge_servers
+    export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , claims_namespace_path: "$.hasura_claims"}')"
+    
+    init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt.py
 
     unset HASURA_GRAPHQL_JWT_SECRET
 
     # hasura claims at two levels of nesting with claims_namespace_path containing special character
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$.hasura['\''claims%'\'']"}')"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+    init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt.py
+
+    export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , claims_namespace_path: "$.hasura['\''claims%'\'']"}')"
     
-
-    run_hge_with_args serve
-    wait_for_port 8080
-
-    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt.py
-
-    kill_hge_servers
+    init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt.py
 
     unset HASURA_GRAPHQL_JWT_SECRET
 
@@ -440,13 +456,11 @@ case "$SERVER_TEST_TO_RUN" in
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$"}')"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
     
-
-    run_hge_with_args serve
-    wait_for_port 8080
-
-    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt.py
-
-    kill_hge_servers
+    init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt.py
+    
+    export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , claims_namespace_path: "$"}')"
+    
+    init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt.py
 
     unset HASURA_GRAPHQL_JWT_SECRET
     ;;
@@ -459,15 +473,14 @@ case "$SERVER_TEST_TO_RUN" in
     init_jwt
 
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id"}, "x-hasura-allowed-roles": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.allowed"}, "x-hasura-default-role": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.default"}}}')"
-    export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+    export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"    
+
+    init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt_claims_map.py::TestJWTClaimsMapBasic
     
-
-    run_hge_with_args serve
-    wait_for_port 8080
-
-    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt_claims_map.py::TestJWTClaimsMapBasic
-
-    kill_hge_servers
+    export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id"}, "x-hasura-allowed-roles": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.allowed"}, "x-hasura-default-role": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.default"}}}')"
+    
+    init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt_claims_map.py::TestJWTClaimsMapBasic
 
     unset HASURA_GRAPHQL_JWT_SECRET
 
@@ -477,13 +490,12 @@ case "$SERVER_TEST_TO_RUN" in
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id", "default":"1"}, "x-hasura-allowed-roles": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.allowed", "default":["user","editor"]}, "x-hasura-default-role": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.default","default":"user"}}}')"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
     
+    init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt_claims_map.py::TestJWTClaimsMapBasic
+    
+    export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id", "default":"1"}, "x-hasura-allowed-roles": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.allowed", "default":["user","editor"]}, "x-hasura-default-role": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.default","default":"user"}}}')"
+    
+    init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt_claims_map.py::TestJWTClaimsMapBasic
 
-    run_hge_with_args serve
-    wait_for_port 8080
-
-    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt_claims_map.py::TestJWTClaimsMapBasic
-
-    kill_hge_servers
 
     unset HASURA_GRAPHQL_JWT_SECRET
     ;;
@@ -495,14 +507,12 @@ case "$SERVER_TEST_TO_RUN" in
     init_jwt
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , allowed_skew: 60}')"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+    init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt.py::TestJWTExpirySkew
     
-
-    run_hge_with_args serve
-    wait_for_port 8080
-
-    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt.py::TestJWTExpirySkew
-
-    kill_hge_servers
+    export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , allowed_skew: 60}')"
+    
+    init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt.py::TestJWTExpirySkew
 
     unset HASURA_GRAPHQL_JWT_SECRET
     ;;
@@ -515,15 +525,14 @@ case "$SERVER_TEST_TO_RUN" in
     init_jwt
 
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id"}, "x-hasura-allowed-roles": ["user","editor"], "x-hasura-default-role": "user","x-hasura-custom-header":"custom-value"}}')"
-    export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+    export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"   
+
+    init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt_claims_map.py::TestJWTClaimsMapWithStaticHasuraClaimsMapValues
+
+    export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id"}, "x-hasura-allowed-roles": ["user","editor"], "x-hasura-default-role": "user","x-hasura-custom-header":"custom-value"}}')"
     
-
-    run_hge_with_args serve
-    wait_for_port 8080
-
-    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt_claims_map.py::TestJWTClaimsMapWithStaticHasuraClaimsMapValues
-
-    kill_hge_servers
+    init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt_claims_map.py::TestJWTClaimsMapWithStaticHasuraClaimsMapValues
 
     unset HASURA_GRAPHQL_JWT_SECRET
     ;;
@@ -538,13 +547,11 @@ case "$SERVER_TEST_TO_RUN" in
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , header: {"type": "Cookie", "name": "hasura_user"}}')"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
     
-
-    run_hge_with_args serve
-    wait_for_port 8080
-
-    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt.py
-
-    kill_hge_servers
+    init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt.py
+    
+    export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , header: {"type": "Cookie", "name": "hasura_user"}}')"
+    
+    init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt.py
 
     unset HASURA_GRAPHQL_JWT_SECRET
     ;;
@@ -554,7 +561,7 @@ case "$SERVER_TEST_TO_RUN" in
     echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH CORS DOMAINS ########>\n"
     export HASURA_GRAPHQL_CORS_DOMAIN="http://*.localhost, http://localhost:3000, https://*.foo.bar.com"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
     TEST_TYPE="cors-domains"
 
     run_hge_with_args serve
@@ -591,7 +598,7 @@ case "$SERVER_TEST_TO_RUN" in
   ws-init-cookie-noread)
     echo "$(time_elapsed): testcase 2: no read cookie, cors disabled"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
     TEST_TYPE="ws-init-cookie-noread"
     export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
     export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
@@ -610,7 +617,7 @@ case "$SERVER_TEST_TO_RUN" in
   ws-init-cookie-read-cors-disabled)
     echo "$(time_elapsed): testcase 3: read cookie, cors disabled and ws-read-cookie"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-    
+
     TEST_TYPE="ws-init-cookie-read-cors-disabled"
     export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
     export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
@@ -724,22 +731,24 @@ case "$SERVER_TEST_TO_RUN" in
       kill_hge_servers
       ;;
 
-  inherited-roles)
-      echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH EXPERIMENTAL FEATURE: INHERITED-ROLES ########>\n"
-      TEST_TYPE="experimental-features-inherited-roles"
-      export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES="inherited_roles"
+  roles-inheritance)
+      echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH EXPERIMENTAL FEATURE: ROLES INHERITANCE ########>\n"
+      TEST_TYPE="experimental-features-roles-inheritance"
+
       export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+      export HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS="true"
+      export HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS=false
 
       run_hge_with_args serve
       wait_for_port 8080
 
-
       pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test-inherited-roles -k TestGraphQLInheritedRolesSchema
       pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test-inherited-roles -k TestGraphQLInheritedRolesPostgres
-      pytest --hge-urls="$HGE_URL" --pg-urls="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-inherited-roles test_graphql_mutations.py::TestGraphQLInheritedRoles
+      pytest --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-inherited-roles --enable-remote-schema-permissions --test-function-permissions test_roles_inheritance.py
 
-      unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
       unset HASURA_GRAPHQL_ADMIN_SECRET
+      unset HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS
+      unset HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS
 
       kill_hge_servers
       ;;
@@ -945,7 +954,7 @@ case "$SERVER_TEST_TO_RUN" in
     kill_hge_servers
     # end allowlist queries test
     ;;
-  
+
   developer-api-tests)
     echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH DEVELOPER API ENABLED ########>\n"
     TEST_TYPE="developer-api-tests"
@@ -955,7 +964,7 @@ case "$SERVER_TEST_TO_RUN" in
     run_hge_with_args serve --enabled-apis "$HASURA_GRAPHQL_ENABLED_APIS"
     wait_for_port 8080
 
-    pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-developer-api-enabled test_dev_endpoints.py
+    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-developer-api-enabled test_dev_endpoints.py
 
     unset HASURA_GRAPHQL_ENABLED_APIS
 
@@ -1132,12 +1141,25 @@ admin_users = postgres' > pgbouncer/pgbouncer.ini
 
     # end horizontal scale test
     ;;
-    # backend-* tests are excluded from `server-test-names.txt`
-    # and are run via their respective `test_oss_server_*` circleci jobs
+    #
+    # ###########################################
+    # the following backend-* tests are excluded from `server-test-names.txt`
+    # and are run via their respective `test_oss_server_*` jobs
+    #
+    # [Specifying Pytests with -k flag]
+    # tests are run with the -k flag to filter on common and
+    # backend-specific test classes using keyword expressions.
+    #
+    # this reduces the number of unrelated tests skipped, which
+    # avoids an increasingly negative impact on our test run
+    # time as we add more backends and tests.
+    #
+    # https://docs.pytest.org/en/6.2.x/usage.html#specifying-tests-selecting-tests
+    # https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#adding-test-support-for-a-new-backend
+    #
     backend-mssql)
     echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH SQL SERVER BACKEND ###########################################>\n"
     TEST_TYPE="no-auth"
-    export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES="inherited_roles"
 
     run_hge_with_args serve
     wait_for_port 8080
@@ -1145,14 +1167,14 @@ admin_users = postgres' > pgbouncer/pgbouncer.ini
     source_data_sources_utils
     add_mssql_source 8080 "$HASURA_GRAPHQL_MSSQL_SOURCE_URL"
 
-    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend mssql
+    # See note [Specifying Pytests with -k flag]
+    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend mssql -k "MSSQL or Common"
 
     # start inherited roles test
     echo -e "\n$(time_elapsed): <########## TEST INHERITED-ROLES WITH SQL SERVER BACKEND ###########################################>\n"
 
     pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --test-inherited-roles -k TestGraphQLInheritedRolesMSSQL --backend mssql
 
-    unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
     # end inherited roles test
 
     kill_hge_servers
@@ -1167,7 +1189,25 @@ admin_users = postgres' > pgbouncer/pgbouncer.ini
     source_data_sources_utils
     add_citus_source 8080 "$HASURA_GRAPHQL_CITUS_SOURCE_URL"
 
-    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend citus
+    # See note [Specifying Pytests with -k flag]
+    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend citus -k "Citus or Common"
+
+    kill_hge_servers
+    ;;
+    backend-bigquery)
+    echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH BIGQUERY BACKEND ###########################################>\n"
+    TEST_TYPE="no-auth"
+
+    source_data_sources_utils
+    verify_bigquery_pytest_env
+
+    export HASURA_BIGQUERY_SERVICE_ACCOUNT=$(cat "$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE")
+
+    run_hge_with_args serve
+    wait_for_port 8080
+
+    # See note [Specifying Pytests with -k flag]
+    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend bigquery -k "Bigquery or Common"
 
     kill_hge_servers
     ;;

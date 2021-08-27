@@ -105,7 +105,7 @@ trimNullChars = T.takeWhile (/= '\x0')
 newtype TableName
   = TableName { getTableTxt :: Text }
   deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Data
-           , Generic, Arbitrary, NFData, Cacheable, IsString )
+           , Generic, NFData, Cacheable, IsString )
 
 instance IsIdentifier TableName where
   toIdentifier (TableName t) = Identifier t
@@ -147,7 +147,7 @@ instance ToSQL ConstraintName where
 
 newtype FunctionName
   = FunctionName { getFunctionTxt :: Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Data, Generic, Arbitrary, NFData, Cacheable)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Data, Generic, NFData, Cacheable)
 
 instance IsIdentifier FunctionName where
   toIdentifier (FunctionName t) = Identifier t
@@ -161,7 +161,7 @@ instance ToSQL FunctionName where
 newtype SchemaName
   = SchemaName { getSchemaTxt :: Text }
   deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Data, Generic
-           , Arbitrary, NFData, Cacheable, IsString )
+           , NFData, Cacheable, IsString )
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
@@ -182,10 +182,6 @@ data QualifiedObject a
   } deriving (Show, Eq, Functor, Ord, Generic, Data)
 instance (NFData a) => NFData (QualifiedObject a)
 instance (Cacheable a) => Cacheable (QualifiedObject a)
-
-instance (Arbitrary a) => Arbitrary (QualifiedObject a) where
-  arbitrary = genericArbitrary
-
 
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
@@ -243,7 +239,7 @@ newtype PGDescription
 newtype PGCol
   = PGCol { getPGColTxt :: Text }
   deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey
-           , FromJSONKey, Data, Generic, Arbitrary, NFData, Cacheable, IsString )
+           , FromJSONKey, Data, Generic, NFData, Cacheable, IsString )
 
 instance IsIdentifier PGCol where
   toIdentifier (PGCol t) = Identifier t

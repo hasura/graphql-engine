@@ -42,7 +42,6 @@ import           Data.Aeson.Types              (Parser, toJSONKeyText)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
-
 import           Hasura.Base.Error
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.Server.Utils
@@ -52,7 +51,7 @@ import           Hasura.Tracing                (TraceT)
 newtype RoleName
   = RoleName {getRoleTxt :: NonEmptyText}
   deriving ( Show, Eq, Ord, Hashable, FromJSONKey, ToJSONKey, FromJSON
-           , ToJSON, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary, NFData, Cacheable )
+           , ToJSON, Q.FromCol, Q.ToPrepArg, Generic, NFData, Cacheable )
 
 roleNameToTxt :: RoleName -> Text
 roleNameToTxt = unNonEmptyText . getRoleTxt

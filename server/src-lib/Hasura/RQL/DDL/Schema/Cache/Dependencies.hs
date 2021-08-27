@@ -17,6 +17,7 @@ import           Data.Text.Extended
 import qualified Hasura.SQL.AnyBackend              as AB
 
 import           Hasura.Base.Error
+import           Hasura.RQL.DDL.Network
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 
@@ -174,7 +175,12 @@ deleteMetadataObject = \case
   MOEndpoint name                     -> boEndpoints %~ M.delete name
   MOActionPermission name role        -> boActions.ix name.aiPermissions %~ M.delete role
   MOInheritedRole name                -> boRoles %~ M.delete name
+  MOHostTlsAllowlist host             -> removeHostFromAllowList host
   where
+    removeHostFromAllowList hst bo = bo {
+      _boTlsAllowlist = filter (not . checkForHostnameInAllowlistObject hst) (_boTlsAllowlist bo)
+    }
+
     deleteObjId :: forall b. (Backend b) => SourceMetadataObjId b -> BackendSourceInfo -> BackendSourceInfo
     deleteObjId sourceObjId sourceInfo =
       maybe
@@ -187,7 +193,7 @@ deleteMetadataObject = \case
       SMOTable    name -> siTables    %~ M.delete name
       SMOFunction name -> siFunctions %~ M.delete name
       SMOFunctionPermission functionName role ->
-        siFunctions.ix functionName.fiPermissions %~ HS.delete role
+        siFunctions.ix functionName.fiPermissions %~ M.delete role
       SMOTableObj tableName tableObjectId -> siTables.ix tableName %~ case tableObjectId of
         MTORel name _              -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRel name)
         MTOComputedField name      -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromComputedField name)

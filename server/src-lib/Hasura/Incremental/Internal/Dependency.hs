@@ -8,6 +8,7 @@ import           Hasura.Prelude
 import qualified Data.Dependent.Map            as DM
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashMap.Strict.InsOrd    as OMap
+import qualified Data.HashSet.InsOrd           as OSet
 import qualified Data.URL.Template             as UT
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.URI.Extended          as N
@@ -161,25 +162,27 @@ instance (Cacheable a) => Cacheable (Dependency a) where
 -- -------------------------------------------------------------------------------------------------
 -- boilerplate Cacheable instances
 
-instance Cacheable Char where unchanged _ = (==)
-instance Cacheable Double where unchanged _ = (==)
-instance Cacheable Int where unchanged _ = (==)
-instance Cacheable Int32 where unchanged _ = (==)
-instance Cacheable Integer where unchanged _ = (==)
-instance Cacheable Scientific where unchanged _ = (==)
-instance Cacheable Text where unchanged _ = (==)
-instance Cacheable NonEmptyText where unchanged _ = (==)
-instance Cacheable N.URIAuth where unchanged _ = (==)
-instance Cacheable G.Name where unchanged _ = (==)
-instance Cacheable DiffTime where unchanged _ = (==)
+instance Cacheable Char            where unchanged _ = (==)
+instance Cacheable Double          where unchanged _ = (==)
+instance Cacheable Int             where unchanged _ = (==)
+instance Cacheable Int32           where unchanged _ = (==)
+instance Cacheable Integer         where unchanged _ = (==)
+instance Cacheable Scientific      where unchanged _ = (==)
+instance Cacheable Text            where unchanged _ = (==)
+instance Cacheable NonEmptyText    where unchanged _ = (==)
+instance Cacheable N.URIAuth       where unchanged _ = (==)
+instance Cacheable G.Name          where unchanged _ = (==)
+instance Cacheable DiffTime        where unchanged _ = (==)
 instance Cacheable NominalDiffTime where unchanged _ = (==)
-instance Cacheable UTCTime where unchanged _ = (==)
-instance Cacheable Day where unchanged _ = (==)
-instance Cacheable TimeOfDay where unchanged _ = (==)
-instance Cacheable LocalTime where unchanged _ = (==)
-instance Cacheable ByteString where unchanged _ = (==)
-instance Cacheable Float where unchanged _ = (==)
-instance Cacheable Word8 where unchanged _ = (==)
+instance Cacheable UTCTime         where unchanged _ = (==)
+instance Cacheable Day             where unchanged _ = (==)
+instance Cacheable TimeOfDay       where unchanged _ = (==)
+instance Cacheable LocalTime       where unchanged _ = (==)
+instance Cacheable ByteString      where unchanged _ = (==)
+instance Cacheable Float           where unchanged _ = (==)
+instance Cacheable Word            where unchanged _ = (==)
+instance Cacheable Word8           where unchanged _ = (==)
+instance Cacheable Word16          where unchanged _ = (==)
 
 -- instances for CronSchedule from package `cron`
 instance Cacheable StepField
@@ -202,6 +205,8 @@ instance (Cacheable k, Cacheable v) => Cacheable (HashMap k v) where
   unchanged accesses = liftEq2 (unchanged accesses) (unchanged accesses)
 instance (Cacheable a) => Cacheable (HashSet a) where
   unchanged = liftEq . unchanged
+instance (Cacheable a) => Cacheable (OSet.InsOrdHashSet a) where
+  unchanged accesses l r = unchanged accesses (OSet.toHashSet l) (OSet.toHashSet r)
 instance (Cacheable a) => Cacheable (CI a) where
   unchanged _ = (==)
 instance (Cacheable a) => Cacheable (Set a) where

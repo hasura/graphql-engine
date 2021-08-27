@@ -6,6 +6,7 @@ import subprocess
 
 from validate import check_query_f, check_query, get_conf_f
 from remote_server import NodeGraphQL
+from conftest import use_action_fixtures
 
 """
 TODO:- Test Actions metadata
@@ -18,12 +19,6 @@ def graphql_service():
     yield svc
     svc.stop()
 
-
-use_action_fixtures = pytest.mark.usefixtures(
-    "actions_fixture",
-    'per_class_db_schema_for_mutation_tests',
-    'per_method_db_data_for_mutation_tests'
-)
 
 use_action_fixtures_with_remote_joins = pytest.mark.usefixtures(
     "graphql_service",
@@ -519,6 +514,16 @@ class TestActionIntrospection:
 
     def test_output_types(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/output_types_query.yaml')
+
+@pytest.mark.usefixtures('per_class_tests_db_state')
+class TestFunctionReturnTypeIntrospection:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/actions/introspection/function_return_type'
+
+    def test_function_return_type(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/function_return_type.yaml')
 
 
 @use_action_fixtures

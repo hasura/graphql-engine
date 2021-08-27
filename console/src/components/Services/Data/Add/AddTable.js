@@ -520,7 +520,7 @@ class AddTable extends Component {
             className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
           >
             <TableName onChange={this.onTableNameChange.bind(this)} />
-            <hr />
+            <hr className="my-lg" />
             <TableColumns
               uniqueKeys={uniqueKeys}
               dataTypes={dataTypes}
@@ -543,7 +543,7 @@ class AddTable extends Component {
               />
             ) : null}
 
-            <hr />
+            <hr className="my-lg" />
             <h4 className={styles.subheading_text}>
               Primary Key &nbsp; &nbsp;
               <ToolTip message={primaryKeyDescription} />
@@ -554,7 +554,7 @@ class AddTable extends Component {
               setPk={setPk}
               dispatch={dispatch}
             />
-            <hr />
+            <hr className="my-lg" />
             <h4 className={styles.subheading_text}>
               Foreign Keys &nbsp; &nbsp;
               <ToolTip message={foreignKeyDescription} />
@@ -570,7 +570,7 @@ class AddTable extends Component {
               fkToggled={fkToggled}
               schemaList={schemaList}
             />
-            <hr />
+            <hr className="my-lg" />
             <h4 className={styles.subheading_text}>
               Unique Keys &nbsp; &nbsp;
               <ToolTip message={uniqueKeyDescription} />
@@ -584,7 +584,7 @@ class AddTable extends Component {
               dispatch={dispatch}
               setUniqueKeys={setUniqueKeys}
             />
-            <hr />
+            <hr className="my-lg" />
             <h4 className={styles.subheading_text}>
               Check Constraints &nbsp; &nbsp;
               <ToolTip message={checkConstraintsDescription} />
@@ -593,9 +593,9 @@ class AddTable extends Component {
               constraints={checkConstraints}
               dispatch={dispatch}
             />
-            <hr />
+            <hr className="my-lg" />
             <TableComment onChange={this.onTableCommentChange} />
-            <hr />
+            <hr className="my-lg" />
             <Button
               type="submit"
               onClick={this.validateAndSubmit}

@@ -37,7 +37,6 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Types           (InstanceId (..))
 import           Hasura.Session
 
-
 data ThreadType
   = TTListener
   | TTProcessor
@@ -158,12 +157,13 @@ startSchemaSyncProcessorThread
   -> SchemaCacheRef
   -> InstanceId
   -> ServerConfigCtx
+  -> STM.TVar Bool
   -> ManagedT m Immortal.Thread
 startSchemaSyncProcessorThread logger httpMgr
-  schemaSyncEventRef cacheRef instanceId serverConfigCtx = do
+  schemaSyncEventRef cacheRef instanceId serverConfigCtx logTVar = do
   -- Start processor thread
   processorThread <- C.forkManagedT "SchemeUpdate.processor" logger $
-    processor logger httpMgr schemaSyncEventRef cacheRef instanceId serverConfigCtx
+    processor logger httpMgr schemaSyncEventRef cacheRef instanceId serverConfigCtx logTVar
   logThreadStarted logger instanceId TTProcessor processorThread
   pure processorThread
 
@@ -175,34 +175,43 @@ schemaVersionCheckHandler
   :: Q.PGPool -> STM.TMVar MetadataResourceVersion -> IO (Either QErr ())
 schemaVersionCheckHandler pool metaVersionRef =
   runExceptT (Q.runTx pool (Q.RepeatableRead, Nothing)
-                $ fetchMetadataResourceVersionFromCatalog)
-              >>=
-                \case
-                  Right version -> Right <$> forcePut metaVersionRef version
-                  Left err      -> pure $ Left err
+                $ fetchMetadataResourceVersionFromCatalog) >>= \case
+                    Right version -> Right <$> forcePut metaVersionRef version
+                    Left err      -> pure $ Left err
 
-data ErrorState = ErrorState { _unState :: (Maybe MetadataResourceVersion) }
-  deriving (Show, Eq)
+data ErrorState = ErrorState
+  { _esLastErrorSeen       :: !(Maybe QErr)
+  , _esLastMetadataVersion :: !(Maybe MetadataResourceVersion)
+  } deriving (Show, Eq)
 
 -- NOTE: The ErrorState type is to be used mainly for the `listener` method below.
 --       This will help prevent logging the same error with the same MetadataResourceVersion
 --       multiple times consecutively. When the `listener` is in ErrorState we don't log the
 --       next error until the resource version has changed/updated.
 
-emptyErrorState :: ErrorState
-emptyErrorState = ErrorState Nothing
+defaultErrorState :: ErrorState
+defaultErrorState = ErrorState Nothing Nothing
 
 -- | NOTE: this can be updated to use lenses
-updateErrorInState :: ErrorState -> MetadataResourceVersion -> ErrorState
-updateErrorInState es mrv = es { _unState = (Just mrv) }
+updateErrorInState :: ErrorState -> QErr -> MetadataResourceVersion -> ErrorState
+updateErrorInState es qerr mrv = es
+  { _esLastErrorSeen       = Just qerr
+  , _esLastMetadataVersion = Just mrv }
 
 isInErrorState :: ErrorState -> Bool
-isInErrorState = isJust . _unState
+isInErrorState es =
+  (isJust . _esLastErrorSeen) es && (isJust . _esLastMetadataVersion) es
 
-toLogError :: ErrorState -> MetadataResourceVersion -> Bool
-toLogError es mrv = case _unState es of
-  Just mrv' -> mrv' /= mrv
-  Nothing   -> True
+toLogError :: ErrorState -> QErr -> MetadataResourceVersion -> Bool
+toLogError es qerr mrv = not $ isQErrLastSeen || isMetadataResourceVersionLastSeen
+  where
+    isQErrLastSeen = case _esLastErrorSeen es of
+      Just lErrS -> lErrS == qerr
+      Nothing    -> False
+
+    isMetadataResourceVersionLastSeen = case _esLastMetadataVersion es of
+      Just lMRV -> lMRV == mrv
+      Nothing   -> False
 
 -- | An IO action that listens to postgres for events and pushes them to a Queue, in a loop forever.
 listener
@@ -212,7 +221,7 @@ listener
   -> STM.TMVar MetadataResourceVersion
   -> Milliseconds
   -> m void
-listener logger pool metaVersionRef interval = L.iterateM_ listenerLoop emptyErrorState
+listener logger pool metaVersionRef interval = L.iterateM_ listenerLoop defaultErrorState
   where
   listenerLoop errorState = do
     mrv  <- liftIO $ STM.atomically $ STM.tryTakeTMVar metaVersionRef
@@ -220,17 +229,17 @@ listener logger pool metaVersionRef interval = L.iterateM_ listenerLoop emptyErr
     let metadataVersion = fromMaybe initialResourceVersion mrv
     nextErr <- case resp of
       Left respErr -> do
-        if (toLogError errorState metadataVersion)
+        if (toLogError errorState respErr metadataVersion)
           then do
             logError logger TTListener $ TEQueryError respErr
             logInfo logger TTListener $ object [ "metadataResourceVersion" .= toJSON metadataVersion ]
-            pure $ updateErrorInState errorState metadataVersion
+            pure $ updateErrorInState errorState respErr metadataVersion
           else do
             pure errorState
       Right _ -> do
         when (isInErrorState errorState) $
           logInfo logger TTListener $ object [ "message" .= ("SchemaSync Restored..." :: Text) ]
-        pure emptyErrorState
+        pure defaultErrorState
     liftIO $ C.sleep $ milliseconds interval
     pure nextErr
 
@@ -247,13 +256,13 @@ processor
   -> SchemaCacheRef
   -> InstanceId
   -> ServerConfigCtx
+  -> STM.TVar Bool
   -> m void
 processor logger httpMgr metaVersionRef
-  cacheRef instanceId serverConfigCtx = forever $ do
+  cacheRef instanceId serverConfigCtx logTVar = forever $ do
   metaVersion <- liftIO $ STM.atomically $ STM.takeTMVar metaVersionRef
-
   respErr <- runMetadataStorageT $
-    refreshSchemaCache metaVersion instanceId logger httpMgr cacheRef TTProcessor serverConfigCtx
+    refreshSchemaCache metaVersion instanceId logger httpMgr cacheRef TTProcessor serverConfigCtx logTVar
   onLeft respErr (logError logger TTProcessor . TEQueryError)
 
 refreshSchemaCache
@@ -269,10 +278,11 @@ refreshSchemaCache
   -> SchemaCacheRef
   -> ThreadType
   -> ServerConfigCtx
+  -> STM.TVar Bool
   -> m ()
 refreshSchemaCache resourceVersion instanceId logger httpManager
-    cacheRef threadType serverConfigCtx = do
-      respErr <- runExceptT $ withSCUpdate cacheRef logger $ do
+    cacheRef threadType serverConfigCtx logTVar = do
+      respErr <- runExceptT $ withSCUpdate cacheRef logger (Just logTVar) $ do
         rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
         (msg, cache, _) <- peelRun runCtx $ runCacheRWT rebuildableCache $ do
           schemaCache <- askSchemaCache

@@ -298,7 +298,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
         </CollapsibleToggle>
       </div>
       <div className={styles.rest_preview_req_var_layout}>
-        <hr />
+        <hr className="my-lg" />
         <Button
           size="sm"
           onClick={runQuery}

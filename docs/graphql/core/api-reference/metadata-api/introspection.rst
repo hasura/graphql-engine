@@ -4,9 +4,8 @@
 
 .. _metadata_graphql_introspection_:
 
-========================================================================
- Metadata API Reference: GraphQL Introspection Options (v2.0 and above)
-========================================================================
+Metadata API Reference: GraphQL Introspection Options
+=====================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -14,7 +13,7 @@
   :local:
 
 Introduction
-============
+------------
 
 API to set GraphQL introspection options. One of the options is to disable
 introspection for the specified roles.
@@ -22,7 +21,7 @@ introspection for the specified roles.
 .. _metadata_set_graphql_introspection_options:
 
 set_graphql_introspection_options
-=================================
+---------------------------------
 
 ``set_graphql_schema_introspection_options`` is used to set graphql introspection options. Calling this API will
 replace existing (if any) introspection options.

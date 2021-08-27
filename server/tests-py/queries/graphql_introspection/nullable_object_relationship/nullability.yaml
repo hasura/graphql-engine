@@ -1,0 +1,81 @@
+description: Test that object relationships have the correct nullability
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query {
+      table1 : __type(name: "table1") {
+        fields {
+          name
+          type {
+            kind
+          }
+        }
+      }
+      table2 : __type(name: "table2") {
+        fields {
+          name
+          type {
+            kind
+          }
+        }
+      }
+      joint_foreign_key : __type(name: "joint_foreign_key") {
+        fields {
+          name
+          type {
+            kind
+          }
+        }
+      }
+    }
+response:
+  data:
+    table1:
+      fields:
+      - name: id
+        type:
+          kind: NON_NULL
+      - name: name
+        type:
+          kind: SCALAR
+      - name: via_table2
+        type:
+          kind: OBJECT    # this is what we're testing
+      - name: via_table2_not_null
+        type:
+          kind: OBJECT    # this is what we're testing
+    table2:
+      fields:
+      - name: id
+        type:
+          kind: NON_NULL
+      - name: name
+        type:
+          kind: SCALAR
+      - name: table1_id
+        type:
+          kind: SCALAR
+      - name: table1_id_not_null
+        type:
+          kind: NON_NULL
+      - name: via_table1
+        type:
+          kind: OBJECT    # this is what we're testing
+      - name: via_table1_not_null
+        type:
+          kind: NON_NULL  # this is what we're testing
+    joint_foreign_key:
+      fields:
+      - name: id
+        type:
+          kind: NON_NULL
+      - name: table2
+        type:
+          kind: OBJECT    # This is what we're testing
+      - name: table2_name
+        type:
+          kind: NON_NULL
+      - name: table2_table1_id
+        type:
+          kind: SCALAR

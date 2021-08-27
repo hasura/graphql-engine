@@ -81,5 +81,7 @@ runQueryLazyTx pgExecCtx txAccess tx = do
     $ withUserInfo userInfo tx
 
 peelRun
-  :: RunCtx -> RunT m a -> ExceptT QErr m a
+  :: RunCtx
+  -> RunT m a
+  -> ExceptT QErr m a
 peelRun runCtx (RunT m) = runReaderT m runCtx

@@ -14,6 +14,7 @@ import {
 import { AllowedQueriesCollection } from '../../../../metadata/reducer';
 import { Dispatch } from '../../../../types';
 import { getCollectionNames, checkLastQuery } from './utils';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 type AllowedQueriesListProps = {
   dispatch: Dispatch;
@@ -34,6 +35,7 @@ const AllowedQueriesList: React.FC<AllowedQueriesListProps> = props => {
     return allowedQueries.map((query, i) => {
       const queryName = query.name;
       const collectionName = query.collection;
+      const queryId = `${queryName}_${collectionName}_${i}`;
 
       const collapsedLabel = () => (
         <div>
@@ -45,17 +47,17 @@ const AllowedQueriesList: React.FC<AllowedQueriesListProps> = props => {
       const expandedLabel = collapsedLabel;
 
       const queryEditorExpanded = () => {
-        const modifiedQuery = modifiedQueries[queryName] || { ...query };
+        const modifiedQuery = modifiedQueries[queryId] || { ...query };
 
         const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           const newModifiedQueries = { ...modifiedQueries };
-          newModifiedQueries[queryName].name = e.target.value;
+          newModifiedQueries[queryId].name = e.target.value;
           setModifiedQueries(newModifiedQueries);
         };
 
         const handleQueryChange = (val: string) => {
           const newModifiedQueries = { ...modifiedQueries };
-          newModifiedQueries[queryName].query = val;
+          newModifiedQueries[queryId].query = val;
           setModifiedQueries(newModifiedQueries);
         };
 
@@ -63,7 +65,11 @@ const AllowedQueriesList: React.FC<AllowedQueriesListProps> = props => {
           <div>
             <div>
               <div className={styles.add_mar_bottom_mid}>
-                <b>Operation name:</b>
+                <b>Query name:</b>
+                <Tooltip
+                  message="This is an identifier for the query in the collection. 
+                This should be unique in the collection and can be different from the operation name of the query."
+                />
               </div>
               <input
                 type="text"
@@ -96,13 +102,13 @@ const AllowedQueriesList: React.FC<AllowedQueriesListProps> = props => {
 
       const editorExpandCallback = () => {
         const newModifiedQueries = { ...modifiedQueries };
-        newModifiedQueries[queryName] = { ...query };
+        newModifiedQueries[queryId] = { ...query };
         setModifiedQueries(newModifiedQueries);
       };
 
       const editorCollapseCallback = () => {
         const newModifiedQueries = { ...modifiedQueries };
-        delete newModifiedQueries[queryName];
+        delete newModifiedQueries[queryId];
         setModifiedQueries(newModifiedQueries);
       };
 
@@ -110,7 +116,7 @@ const AllowedQueriesList: React.FC<AllowedQueriesListProps> = props => {
         dispatch(
           updateAllowedQuery(
             queryName,
-            modifiedQueries[queryName],
+            modifiedQueries[queryId],
             collectionName
           )
         );
@@ -126,7 +132,7 @@ const AllowedQueriesList: React.FC<AllowedQueriesListProps> = props => {
       };
 
       return (
-        <div key={queryName}>
+        <div key={queryId}>
           <ExpandableEditor
             editorExpanded={queryEditorExpanded}
             property={`query-${i}`}

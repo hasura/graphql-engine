@@ -3,7 +3,7 @@
 module Hasura.Server.Logging
   ( StartupLog(..)
   , PGLog(..)
-  , RequestBatching(..)
+  , RequestMode(..)
   , mkInconsMetadataLog
   , mkHttpAccessLogContext
   , mkHttpErrorLogContext
@@ -14,6 +14,7 @@ module Hasura.Server.Logging
   , WebHookLog(..)
   , HttpException
   , HttpLog (..)
+  , MetadataLog(..)
   , EnvVarsMovedToMetadata(..)
   , DeprecatedEnvVars(..)
   , logDeprecatedEnvVars
@@ -132,15 +133,26 @@ instance ToJSON WebHookLog where
            , "message" .= whlMessage whl
            ]
 
-data RequestBatching = RequestBatched | RequestSingle
+-- | whether a request is executed in batched mode or not
+data RequestMode
+  = RequestModeBatched
+  -- ^ this request is batched
+  | RequestModeSingle
+  -- ^ this is a single request
+  | RequestModeNonBatchable
+  -- ^ this request is of a kind for which batching is not done or does not make sense
+  | RequestModeError
+  -- ^ the execution of this request failed
   deriving (Show, Eq)
 
-instance ToJSON RequestBatching where
+instance ToJSON RequestMode where
   toJSON = \case
-    RequestBatched -> "batched"
-    RequestSingle  -> "single"
+    RequestModeBatched      -> "batched"
+    RequestModeSingle       -> "single"
+    RequestModeNonBatchable -> "non-graphql"
+    RequestModeError        -> "error"
 
-newtype CommonHttpLogMetadata = CommonHttpLogMetadata {_chlmRequestType :: Maybe RequestBatching}
+newtype CommonHttpLogMetadata = CommonHttpLogMetadata {_chlmRequestMode :: RequestMode}
   deriving (Show, Eq)
 
 -- | The http-log metadata attached to HTTP requests running in the monad 'm', split into a
@@ -154,14 +166,14 @@ type HttpLogMetadata m = (CommonHttpLogMetadata, ExtraHttpLogMetadata m)
 buildHttpLogMetadata
   :: forall m
    . HttpLog m
-  => [ParameterizedQueryHash]
-  -> Maybe RequestBatching
+  => ParameterizedQueryHashList
+  -> RequestMode
   -> HttpLogMetadata m
 buildHttpLogMetadata xs rb = (CommonHttpLogMetadata rb, buildExtraHttpLogMetadata @m xs)
 
 -- | synonym for clarity, writing `emptyHttpLogMetadata @m` instead of `def @(HttpLogMetadata m)`
 emptyHttpLogMetadata :: forall m. HttpLog m => HttpLogMetadata m
-emptyHttpLogMetadata = (CommonHttpLogMetadata Nothing, emptyExtraHttpLogMetadata @m)
+emptyHttpLogMetadata = (CommonHttpLogMetadata RequestModeNonBatchable, emptyExtraHttpLogMetadata @m)
 
 
 {- Note [Disable query printing when query-log is disabled]
@@ -178,7 +190,7 @@ class Monad m => HttpLog m where
 
   emptyExtraHttpLogMetadata :: ExtraHttpLogMetadata m
 
-  buildExtraHttpLogMetadata :: [ParameterizedQueryHash] -> ExtraHttpLogMetadata m
+  buildExtraHttpLogMetadata :: ParameterizedQueryHashList -> ExtraHttpLogMetadata m
 
   logHttpError
     :: Logger Hasura
@@ -295,7 +307,7 @@ data OperationLog
   , olQuery              :: !(Maybe Value)
   , olRawQuery           :: !(Maybe Text)
   , olError              :: !(Maybe QErr)
-  , olRequestMode        :: !(Maybe RequestBatching)
+  , olRequestMode        :: !RequestMode
   } deriving (Show, Eq)
 
 $(deriveToJSON hasuraJSON{omitNothingFields = True} ''OperationLog)
@@ -319,7 +331,7 @@ mkHttpAccessLogContext
   -> Maybe (DiffTime, DiffTime)
   -> Maybe CompressionType
   -> [HTTP.Header]
-  -> Maybe RequestBatching
+  -> RequestMode
   -> HttpLogContext
 mkHttpAccessLogContext userInfoM enabledLogTypes reqId req (_, parsedReq) res mTiming compressTypeM headers batching =
   let http = HttpInfoLog
@@ -380,7 +392,7 @@ mkHttpErrorLogContext userInfoM enabledLogTypes reqId waiReq (reqBody, parsedReq
            -- if parsedReq is Nothing, add the raw query
            , olRawQuery           = maybe (reqToLog $ Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq
            , olError              = Just err
-           , olRequestMode        = Nothing
+           , olRequestMode        = RequestModeError
            }
 
       -- See Note [Disable query printing when query-log is disabled]

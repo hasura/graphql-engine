@@ -32,13 +32,32 @@ export const passCreateTable = () => {
 
 export const passInsertValues = () => {
   clearText();
-  prevStr = 'INSERT INTO Apic_test_table_rsql VALUES (1);';
-  cy.get('textarea').type(prevStr, { force: true });
+  // eslint-disable-next-line prefer-spread
+  const str = Array.apply(null, Array(15))
+    .map(
+      (_, ix: number) => `INSERT INTO Apic_test_table_rsql VALUES (${+ix + 1});`
+    )
+    .join('\n');
+  cy.get('textarea').type(str, { force: true });
   cy.wait(1000);
   cy.get(getElementFromAlias('run-sql')).click();
   cy.wait(5000);
 };
 
+export const readQuery = () => {
+  clearText();
+  prevStr = 'SELECT * FROM public.Apic_test_table_rsql;';
+  cy.get('textarea').type(prevStr, { force: true });
+  cy.wait(1000); // debounce
+  cy.get(getElementFromAlias('run-sql')).click();
+  cy.wait(3000); // debounce
+  cy.get('div.rt-tr-group').should('have.length', 10);
+  cy.get('button.-btn').last().click();
+  cy.wait(500);
+  cy.get('div.rt-tr-group').should('have.length', 5);
+  cy.get('div.rt-td').first().should('have.text', '11');
+  cy.get('div.rt-td').last().should('have.text', "NULL");
+};
 export const passAlterTable = () => {
   clearText();
   prevStr = 'ALTER TABLE Apic_test_table_rsql ADD COLUMN name text;';

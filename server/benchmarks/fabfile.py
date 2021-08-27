@@ -7,6 +7,7 @@ import time
 import concurrent.futures
 import io
 import os
+import pathlib
 import queue
 from fabric import Connection
 import patchwork.transfers
@@ -24,10 +25,10 @@ from functools import reduce
 
 #### Environment/arguments: ####
 
-# We'll upload reports to: 
+# We'll upload reports to:
 #   f"{RESULTS_S3_BUCKET}/mono-pr-{PR_NUMBER}/{benchmark_set}.json"
-# Result sets can be retreived efficiently with 
-#   s3.list_objects(Bucket=RESULTS_S3_BUCKET, Prefix=f"{THIS_S3_BUCKET_PREFIX}/")['Contents'] 
+# Result sets can be retreived efficiently with
+#   s3.list_objects(Bucket=RESULTS_S3_BUCKET, Prefix=f"{THIS_S3_BUCKET_PREFIX}/")['Contents']
 PR_NUMBER = os.environ['PR_NUMBER']
 THIS_S3_BUCKET_PREFIX = f"mono-pr-{PR_NUMBER}"
 
@@ -62,6 +63,12 @@ RESULTS_S3_BUCKET = 'hasura-benchmark-results'
 # NOTE: Reports uploaded will be PUBLICLY ACCESSIBLE at:
 def s3_url(filename, bucket_prefix=THIS_S3_BUCKET_PREFIX):
     return f"https://{RESULTS_S3_BUCKET}.s3.us-east-2.amazonaws.com/{bucket_prefix}/{filename}"
+# This short identifier format (e.g. 'mono-pr-1998/chinook') is understood by
+# graphql-bench viewer:
+def s3_short_id(filename, bucket_prefix=THIS_S3_BUCKET_PREFIX):
+    return f"{bucket_prefix}/{filename[:-5]}"
+def graphql_bench_url(short_ids):
+    return f"https://hasura.github.io/graphql-bench/app/web-app/#{','.join(short_ids)}"
 
 # We'll write to this, CI will look for it and insert it into the PR comment thread:
 REGRESSION_REPORT_COMMENT_FILENAME = "/tmp/hasura_regression_report_comment.md"
@@ -70,8 +77,14 @@ REGRESSION_REPORT_COMMENT_FILENAME = "/tmp/hasura_regression_report_comment.md"
 def main():
     try:
         benchmark_sets_basepath = abs_path("benchmark_sets")
-        benchmark_sets = os.listdir(benchmark_sets_basepath)
-        # print(os.listdir(os.path.join(benchmark_sets_basepath, "chinook")))
+        # Collect the benchmarks we'll run in CI:
+        benchmark_sets = [ dir for dir in os.listdir(benchmark_sets_basepath)
+            if not pathlib.Path(benchmark_sets_basepath, dir, 'SKIP_CI').is_file()]
+
+        # Theses benchmark sets won't have raw regression numbers displayed
+        # (likely because they are unstable for now)
+        skip_pr_report_names = [ dir for dir in os.listdir(benchmark_sets_basepath)
+            if pathlib.Path(benchmark_sets_basepath, dir, 'SKIP_PR_REPORT').is_file()]
 
         # Start all the instances we need and run benchmarks in parallel
         # NOTE: ProcessPoolExecutor doesn't work with shared queue
@@ -86,6 +99,7 @@ def main():
         report, merge_base_pr = generate_regression_report()
         pretty_print_regression_report_github_comment(
             report,
+            skip_pr_report_names,
             merge_base_pr,
             REGRESSION_REPORT_COMMENT_FILENAME
         )
@@ -107,7 +121,7 @@ def main():
 
 def new_boto_session():
     # For other auth options:
-    #     https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html 
+    #     https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html
     # NOTE: we must start a new 'Session' per thread:
     return boto3.Session(
         aws_access_key_id=AWS_ACCESS_KEY_ID,
@@ -247,7 +261,7 @@ def run_benchmark_set(benchmark_set, use_spot=True):
                 # "key_filename": "
                 "key_filename": key_file.name,
                 ## NOTE: I couldn't figure out how to take the key from a string:
-                ##    https://github.com/paramiko/paramiko/issues/1866 
+                ##    https://github.com/paramiko/paramiko/issues/1866
                 # "pkey": paramiko.rsakey.RSAKey.from_private_key(io.StringIO(BENCHMARKS_AWS_PRIVATE_KEY)),
             }
         )
@@ -382,13 +396,20 @@ def generate_regression_report():
             merge_base_report_dict[bench['name']] = bench
 
         # Record residency stats before any benchmarks have run, to present as
-        # a baseline for serving this particular schema
-        this_live_bytes       =       this_report[0]["extended_hasura_checks"]["live_bytes_before"]
-        this_mem_in_use       =       this_report[0]["extended_hasura_checks"]["mem_in_use_bytes_before"]
-        merge_base_live_bytes = merge_base_report[0]["extended_hasura_checks"]["live_bytes_before"]
-        merge_base_mem_in_use = merge_base_report[0]["extended_hasura_checks"]["mem_in_use_bytes_before"]
-        mem_in_use_diff = pct_change(merge_base_mem_in_use, this_mem_in_use)
-        live_bytes_diff = pct_change(merge_base_live_bytes, this_live_bytes)
+        # a baseline for serving this particular schema:
+        def mem_regression(ix, stat):
+            this_bytes       =       this_report[ix]["extended_hasura_checks"][stat]
+            merge_base_bytes = merge_base_report[ix]["extended_hasura_checks"][stat]
+            return pct_change(merge_base_bytes, this_bytes)
+        mem_in_use_before_diff = mem_regression(0, "mem_in_use_bytes_before")
+        live_bytes_before_diff = mem_regression(0, "live_bytes_before")
+        # ...and also the live_bytes after, which lets us see e.g. whether a
+        # memory improvement was just creation of thunks that get evaluated
+        # when we do actual work:
+        live_bytes_after_diff = mem_regression(-1, "live_bytes_after")
+        mem_in_use_after_diff = mem_regression(-1, "mem_in_use_bytes_after")
+        # ^^^ NOTE: ideally we'd want to pause before collecting mem_in_use
+        #     here too I guess, to allow RTS to reclaim
 
         for this_bench in this_report:
             # this_bench['requests']['count'] # TODO use this to normalize allocations
@@ -433,39 +454,41 @@ def generate_regression_report():
                 continue
             benchmark_set_results.append((name, metrics))
 
-        results[benchmark_set_name] = (mem_in_use_diff, live_bytes_diff, benchmark_set_results)
+        results[benchmark_set_name] = (mem_in_use_before_diff, live_bytes_before_diff, mem_in_use_after_diff, live_bytes_after_diff, benchmark_set_results)
 
     return results, merge_base_pr
 
 # We (ab)use githubs syntax highlighting for displaying the regression report
 # table as a github comment, that can be easily scanned
-def pretty_print_regression_report_github_comment(results, merge_base_pr, output_filename):
+def pretty_print_regression_report_github_comment(results, skip_pr_report_names, merge_base_pr, output_filename):
     f = open(output_filename, "w")
     def out(s): f.write(s+"\n")
 
-    out(f"# Benchmark Results")
+    out(f"## Benchmark Results") # NOTE: We use this header to identify benchmark reports in `hide-benchmark-reports.sh`
     out(f"")
-    out(f"The regression report below shows, for each benchmark, the **percent change** for")
-    out(f"different metrics, between the merge base (the changes from #{merge_base_pr})")
-    out(f"and this PR.")
+    out((f"The regression report below shows, for each benchmark, the **percent change** for "
+         f"different metrics, between the merge base (the changes from **PR {merge_base_pr}**) and "
+         # NOTE: we don't use #{merge_base_pr} because we want to avoid backlinks from the target PRs
+         f"this PR. For advice on interpreting benchmarks, please see [benchmarks/README.md]"
+         f"(https://github.com/hasura/graphql-engine-mono/blob/main/server/benchmarks/README.md)."))
     out(f"")
     out(f"More significant regressions or improvements will be colored with `#b31d28` or `#22863a`, respectively.")
     out(f"")
-    out(f"For advice on interpreting benchmarks, please see "+
-         "[benchmarks/README.md](https://github.com/hasura/graphql-engine-mono/blob/main/server/benchmarks/README.md)")
-    out(f"")
-    out(f"You can view the raw reports here:")
-    out(f"")
+    out(f"You can view graphs of the full reports here:")
     for benchmark_set_name, _ in results.items():
-      out(f"- **{benchmark_set_name}**: [these changes]({s3_url(benchmark_set_name)}) vs. "+
-                                  f"[merge base]({s3_url(benchmark_set_name, 'mono-pr-'+merge_base_pr)})")
+        these_id = s3_short_id(benchmark_set_name)
+        base_id  = s3_short_id(benchmark_set_name, 'mono-pr-'+merge_base_pr)
+        out(f"- **{benchmark_set_name}**: "
+            f"[:bar_chart: these changes]({graphql_bench_url([these_id])})... "
+            f"[:bar_chart: merge base]({graphql_bench_url([base_id])})... "
+            f"[:bar_chart: both compared]({graphql_bench_url([these_id, base_id])})")
     out(f"")
-    out(f"These can be visualized with `graphql-bench`, [hosted here](https://hasura.github.io/graphql-bench/app/web-app/)")
+    out(f"<details open><summary>Click here for a detailed report.</summary>")
     out(f"")
 
     # Return what should be the first few chars of the line, which will detemine its styling:
     def col(val=None):
-        if val == None:        return "*   "  # NORMAL
+        if val == None:        return "#   "  # GRAY
         elif abs(val) <= 2.0:  return "#   "  # GRAY
         elif abs(val) <= 3.5:  return "*   "  # NORMAL
         # ^^^ So far variation in min, bytes, and median seem to stay within this range.
@@ -477,16 +500,21 @@ def pretty_print_regression_report_github_comment(results, merge_base_pr, output
         else:                  return "+++ "  # GREEN
 
     out(            f"``` diff                                       ")  # START DIFF SYNTAX
-    for benchmark_set_name, (mem_in_use_diff, live_bytes_diff, benchmarks) in results.items():
-        u = mem_in_use_diff
-        l = live_bytes_diff
+    for benchmark_set_name, (mem_in_use_before_diff, live_bytes_before_diff, mem_in_use_after_diff, live_bytes_after_diff, benchmarks) in results.items():
+        if benchmark_set_name[:-5] in skip_pr_report_names: continue
+        l0 = live_bytes_before_diff
+        l1 = live_bytes_after_diff
+        u0 = mem_in_use_before_diff
+        u1 = mem_in_use_after_diff
         out(        f"{col( )}    ┌{'─'*(len(benchmark_set_name)+4)}┐")
         out(        f"{col( )}    │  {benchmark_set_name}  │"         )
         out(        f"{col( )}    └{'─'*(len(benchmark_set_name)+4)}┘")
         out(        f"{col( )}                                       ")
-        out(        f"{col( )}    ᐉ  Baseline memory usage for schema:")
-        out(        f"{col(l)}        {'live_bytes':<25}:  {l:>6.1f}")
-        out(        f"{col(u)}        {'mem_in_use':<25}:  {u:>6.1f}")
+        out(        f"{col( )}    ᐉ  Memory Residency (RTS-reported):")
+        out(        f"{col(l0)}        {'live_bytes':<25}:  {l0:>6.1f}   (BEFORE benchmarks ran; baseline for schema)")
+        out(        f"{col(l1)}        {'live_bytes':<25}:  {l1:>6.1f}   (AFTER benchmarks ran)")
+        out(        f"{col(u0)}        {'mem_in_use':<25}:  {u0:>6.1f}   (BEFORE benchmarks ran; baseline for schema)")
+        out(        f"{col(u1)}        {'mem_in_use':<25}:  {u1:>6.1f}   (AFTER benchmarks ran)")
         for bench_name, metrics in benchmarks:
             out(    f"{col( )}                                       ")
             out(    f"{col( )}    ᐅ {bench_name.replace('-k6-custom','').replace('_',' ')}:")
@@ -494,6 +522,7 @@ def pretty_print_regression_report_github_comment(results, merge_base_pr, output
                 out(f"{col(d)}        {metric_name:<25}:  {d:>6.1f}")
         out(        f"{col( )}                                       ")
     out(            f"```                                            ")  # END DIFF SYNTAX
+    out(f"</details>")
 
     say(f"Wrote github comment to {REGRESSION_REPORT_COMMENT_FILENAME}")
     f.close()

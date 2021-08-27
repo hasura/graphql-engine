@@ -7,37 +7,36 @@ module Hasura.Backends.Postgres.Instances.Schema
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                                  as J
-import qualified Data.HashMap.Strict                         as Map
-import qualified Data.HashMap.Strict.Extended                as M
-import qualified Data.HashMap.Strict.InsOrd.Extended         as OMap
-import qualified Data.List.NonEmpty                          as NE
-import qualified Data.Text                                   as T
-import qualified Language.GraphQL.Draft.Syntax               as G
+import qualified Data.Aeson                             as J
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.Extended           as M
+import qualified Data.HashMap.Strict.InsOrd.Extended    as OMap
+import qualified Data.List.NonEmpty                     as NE
+import qualified Data.Text                              as T
+import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Data.Has
 import           Data.Parser.JSONPath
 import           Data.Text.Extended
 import           Data.Typeable
 
-import qualified Hasura.GraphQL.Parser                       as P
-import qualified Hasura.GraphQL.Schema.Backend               as BS
-import qualified Hasura.GraphQL.Schema.Build                 as GSB
-import qualified Hasura.RQL.IR.Select                        as IR
-import qualified Hasura.RQL.IR.Update                        as IR
-import qualified Hasura.SQL.AnyBackend                       as AB
+import qualified Hasura.GraphQL.Parser                  as P
+import qualified Hasura.GraphQL.Schema.Backend          as BS
+import qualified Hasura.GraphQL.Schema.Build            as GSB
+import qualified Hasura.RQL.IR.Select                   as IR
+import qualified Hasura.RQL.IR.Update                   as IR
+import qualified Hasura.SQL.AnyBackend                  as AB
 
-import           Hasura.Backends.Postgres.SQL.DML            as PG hiding (CountType)
-import           Hasura.Backends.Postgres.SQL.Types          as PG hiding (FunctionName, TableName)
-import           Hasura.Backends.Postgres.SQL.Value          as PG
+import           Hasura.Backends.Postgres.SQL.DML       as PG hiding (CountType)
+import           Hasura.Backends.Postgres.SQL.Types     as PG hiding (FunctionName, TableName)
+import           Hasura.Backends.Postgres.SQL.Value     as PG
 import           Hasura.Backends.Postgres.Types.BoolExp
 import           Hasura.Backends.Postgres.Types.Column
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Parser                       hiding (EnumValueInfo, field)
-import           Hasura.GraphQL.Parser.Internal.Parser       hiding (field)
-import           Hasura.GraphQL.Parser.Internal.TypeChecking
-import           Hasura.GraphQL.Schema.Backend               (BackendSchema, ComparisonExp,
-                                                              MonadBuildSchema)
+import           Hasura.GraphQL.Parser                  hiding (EnumValueInfo, field)
+import           Hasura.GraphQL.Parser.Internal.Parser  hiding (field)
+import           Hasura.GraphQL.Schema.Backend          (BackendSchema, ComparisonExp,
+                                                         MonadBuildSchema)
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Select
@@ -67,7 +66,7 @@ class PostgresSchema (pgKind :: PostgresKind) where
     -> G.Name
     -> NESeq (ColumnInfo ('Postgres pgKind))
     -> SelPermInfo ('Postgres pgKind)
-    -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+    -> m [FieldParser n (QueryRootField UnpreparedValue)]
   pgkBuildFunctionRelayQueryFields
     :: BS.MonadBuildSchema ('Postgres pgKind) r m n
     => SourceName
@@ -77,7 +76,7 @@ class PostgresSchema (pgKind :: PostgresKind) where
     -> TableName ('Postgres pgKind)
     -> NESeq (ColumnInfo ('Postgres pgKind))
     -> SelPermInfo ('Postgres pgKind)
-    -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+    -> m [FieldParser n (QueryRootField UnpreparedValue)]
   pgkRelayExtension
     :: Maybe (XRelay ('Postgres pgKind))
   pgkNode
@@ -161,7 +160,7 @@ buildTableRelayQueryFields
   -> G.Name
   -> NESeq (ColumnInfo ('Postgres pgKind))
   -> SelPermInfo  ('Postgres pgKind)
-  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
 buildTableRelayQueryFields sourceName sourceInfo tableName tableInfo gqlName pkeyColumns selPerms = do
   let
     mkRF = RFDB sourceName
@@ -184,7 +183,7 @@ buildFunctionRelayQueryFields
   -> TableName    ('Postgres pgKind)
   -> NESeq (ColumnInfo ('Postgres pgKind))
   -> SelPermInfo  ('Postgres pgKind)
-  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
 buildFunctionRelayQueryFields sourceName sourceInfo functionName functionInfo tableName pkeyColumns selPerms = do
   funcName <- functionGraphQLName @('Postgres pgKind) functionName `onLeft` throwError
   let
@@ -206,12 +205,12 @@ columnParser
   :: (MonadSchema n m, MonadError QErr m)
   => ColumnType ('Postgres pgKind)
   -> G.Nullability
-  -> m (Parser 'Both n (Opaque (ColumnValue ('Postgres pgKind))))
+  -> m (Parser 'Both n (ValueWithOrigin (ColumnValue ('Postgres pgKind))))
 columnParser columnType (G.Nullability isNullable) =
   -- TODO(PDV): It might be worth memoizing this function even though it isn’t
   -- recursive simply for performance reasons, since it’s likely to be hammered
   -- during schema generation. Need to profile to see whether or not it’s a win.
-  opaque . fmap (ColumnValue columnType) <$> case columnType of
+  peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
     ColumnScalar scalarType -> possiblyNullable scalarType <$> do
       -- We convert the value to JSON and use the FromJSON instance. This avoids
       -- having two separate ways of parsing a value in the codebase, which
@@ -242,29 +241,6 @@ columnParser columnType (G.Nullability isNullable) =
           pure $ possiblyNullable PGText $ P.enum name Nothing (mkEnumValue <$> enumValuesList)
         Nothing -> throw400 ValidationFailed "empty enum values"
   where
-    -- Sadly, this combinator is not sound in general, so we can’t export it
-    -- for general-purpose use. If we did, someone could write this:
-    --
-    --   mkParameter <$> opaque do
-    --     n <- int
-    --     pure (mkIntColumnValue (n + 1))
-    --
-    -- Now we’d end up with a UVParameter that has a variable in it, so we’d
-    -- parameterize over it. But when we’d reuse the plan, we wouldn’t know to
-    -- increment the value by 1, so we’d use the wrong value!
-    --
-    -- We could theoretically solve this by retaining a reference to the parser
-    -- itself and re-parsing each new value, using the saved parser, which
-    -- would admittedly be neat. But it’s more complicated, and it isn’t clear
-    -- that it would actually be useful, so for now we don’t support it.
-    opaque :: MonadParse m => Parser 'Both m a -> Parser 'Both m (Opaque a)
-    opaque parser = parser
-      { pParser = \case
-          P.GraphQLValue (G.VVariable var@Variable{ vInfo, vValue }) -> do
-            typeCheck False (P.toGraphQLType $ pType parser) var
-            P.mkOpaque (Just vInfo) <$> pParser parser (absurd <$> vValue)
-          value -> P.mkOpaque Nothing <$> pParser parser value
-      }
     possiblyNullable scalarType
       | isNullable = fmap (fromMaybe $ PGNull scalarType) . P.nullable
       | otherwise  = id
@@ -347,8 +323,8 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
       desc = G.Description $ "Boolean expression to compare columns of type "
         <>  P.getName typedParser
         <<> ". All fields are combined with logical 'AND'."
-      textListParser   = P.list textParser  `P.bind` traverse P.openOpaque
-      columnListParser = P.list typedParser `P.bind` traverse P.openOpaque
+      textListParser   = fmap openValueOrigin <$> P.list textParser
+      columnListParser = fmap openValueOrigin <$> P.list typedParser
 
   pure $ P.object name (Just desc) $ fmap catMaybes $ sequenceA $ concat
     [ flip (maybe []) maybeCastParser $ \castParser ->

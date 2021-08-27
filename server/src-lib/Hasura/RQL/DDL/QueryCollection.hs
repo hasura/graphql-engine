@@ -15,7 +15,9 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict.InsOrd       as OMap
 import qualified Data.HashSet.InsOrd              as HSIns
 
+import           Data.List.Extended               (duplicates)
 import           Data.Text.Extended
+import           Data.Text.NonEmpty
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
@@ -23,26 +25,44 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.Session
 
+
+addCollectionP2
+  :: (QErrM m)
+  => CollectionDef -> m ()
+addCollectionP2 (CollectionDef queryList) =
+  withPathK "queries" $
+    unless (null duplicateNames) $ throw400 NotSupported $
+      "found duplicate query names "
+      <> dquoteList (unNonEmptyText . unQueryName <$> toList duplicateNames)
+  where
+    duplicateNames = duplicates $ map _lqName queryList
+
 runCreateCollection
   :: (QErrM m, CacheRWM m, MetadataM m)
   => CreateCollection -> m EncJSON
-runCreateCollection cc@(CreateCollection collectionName _ _) = do
-  collDetM <- getCollectionDefM collectionName
+runCreateCollection cc = do
+  collDetM <- getCollectionDefM collName
   withPathK "name" $
     onJust collDetM $ const $ throw400 AlreadyExists $
-      "query collection with name " <> collectionName <<> " already exists"
+      "query collection with name " <> collName <<> " already exists"
+  withPathK "definition" $ addCollectionP2 def
   withNewInconsistentObjsCheck
     $ buildSchemaCache
     $ MetadataModifier
-    $ metaQueryCollections %~ OMap.insert collectionName cc
+    $ metaQueryCollections %~ OMap.insert collName cc
   return successMsg
+  where
+    CreateCollection collName def _ = cc
 
 runAddQueryToCollection
   :: (CacheRWM m, MonadError QErr m, MetadataM m)
   => AddQueryToCollection -> m EncJSON
 runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
   (CreateCollection _ (CollectionDef qList) comment) <- getCollectionDef collName
+  let queryExists = flip any qList $ \q -> _lqName q == queryName
 
+  when queryExists $ throw400 AlreadyExists $ "query with name "
+    <> queryName <<> " already exists in collection " <>> collName
   let collDef = CollectionDef $ qList <> pure listQ
   withNewInconsistentObjsCheck
     $ buildSchemaCache
@@ -117,7 +137,7 @@ getCollectionDef
 getCollectionDef collName = do
   detM <- getCollectionDefM collName
   onNothing detM $ throw400 NotExists $
-    "query collection with name " <> collName <<> " does not exists"
+    "query collection with name " <> collName <<> " does not exist"
 
 getCollectionDefM
   :: (QErrM m, MetadataM m)

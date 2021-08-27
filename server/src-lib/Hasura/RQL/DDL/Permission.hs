@@ -221,7 +221,7 @@ buildInsPermInfo source tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCol
     void $ withPathK "columns" $ indexedForM insCols $ \col ->
            askColumnType fieldInfoMap col ""
     let fltrHeaders = getDependentHeaders checkCond
-        reqHdrs = fltrHeaders `union` setHdrs
+        reqHdrs = fltrHeaders `HS.union` (HS.fromList setHdrs)
         insColDeps = map (mkColDep @b DRUntyped source tn) insCols
         deps = mkParentDep @b source tn : beDeps ++ setColDeps ++ insColDeps
         insColsWithoutPresets = insCols \\ HM.keys setColsSQL
@@ -321,7 +321,7 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
   let updColDeps = map (mkColDep @b DRUntyped source tn) updCols
       deps = mkParentDep @b source tn : beDeps ++ maybe [] snd checkExpr ++ updColDeps ++ setColDeps
       depHeaders = getDependentHeaders fltr
-      reqHeaders = depHeaders `union` setHeaders
+      reqHeaders = depHeaders `HS.union` (HS.fromList setHeaders)
       updColsWithoutPreSets = updCols \\ HM.keys setColsSQL
 
   return (UpdPermInfo (HS.fromList updColsWithoutPreSets) tn be (fst <$> checkExpr) setColsSQL reqHeaders, deps)
@@ -372,14 +372,10 @@ data SetPermComment b
   , apRole       :: !RoleName
   , apPermission :: !PermType
   , apComment    :: !(Maybe Text)
-  } deriving (Generic)
-deriving instance (Backend b) => Show (SetPermComment b)
-deriving instance (Backend b) => Eq (SetPermComment b)
-instance (Backend b) => ToJSON (SetPermComment b) where
-  toJSON = genericToJSON hasuraJSON
+  }
 
 instance (Backend b) => FromJSON (SetPermComment b) where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "set permission comment" $ \o ->
     SetPermComment
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"

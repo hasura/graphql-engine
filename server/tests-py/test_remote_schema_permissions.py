@@ -67,7 +67,7 @@ class TestAddRemoteSchemaPermissions:
         """ reset the changes to the original config """
         st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'update_remote_schema/revert_to_original_config.yaml')
         assert st_code == 200, resp
-    
+
     def test_update_remote_schema_details_with_permissions_set_with_error(self, hge_ctx):
         st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
         assert st_code == 200, resp
@@ -125,6 +125,23 @@ class TestRemoteSchemaPermissionsExecution:
 
     def test_execution_with_unknown_role(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + 'unknown_role_execution.yaml')
+
+@use_test_fixtures
+class TestCustomizedRemoteSchemaPermissionsExecution:
+
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/permissions/schema_customization/"
+
+    def test_execution_with_subset_of_fields_exposed_to_role(self, hge_ctx):
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'execution_with_partial_fields_exposed_to_role.yaml')
+
+    def test_execution_with_subset_of_arguments_exposed_to_role(self, hge_ctx):
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_arguments.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'execution_with_partial_args_exposed_to_role.yaml')
 
 @use_test_fixtures
 class TestRemoteSchemaPermissionsArgumentPresets:

@@ -1,6 +1,5 @@
 module Hasura.Backends.BigQuery.DDL
   ( buildComputedFieldInfo
-  , buildRemoteFieldInfo
   , fetchAndValidateEnumValues
   , createTableEventTrigger
   , buildEventTriggerInfo
@@ -30,7 +29,6 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
-import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
@@ -51,15 +49,6 @@ buildComputedFieldInfo
   -> m (ComputedFieldInfo 'BigQuery)
 buildComputedFieldInfo _ _ _ _ _ _ =
   throw400 NotSupported "Computed fields aren't supported for BigQuery sources"
-
-buildRemoteFieldInfo
-  :: (MonadError QErr m)
-  => RemoteRelationship 'BigQuery
-  -> [ColumnInfo 'BigQuery]
-  -> RemoteSchemaMap
-  -> m (RemoteFieldInfo 'BigQuery, [SchemaDependency])
-buildRemoteFieldInfo _ _ _ =
-  throw400 NotSupported "Remote joins aren't supported for BigQuery sources"
 
 fetchAndValidateEnumValues
   :: (Monad m)
@@ -99,7 +88,7 @@ buildFunctionInfo
   -> FunctionName 'BigQuery
   -> SystemDefined
   -> FunctionConfig
-  -> [FunctionPermissionMetadata]
+  -> FunctionPermissionsMap
   -> RawFunctionInfo 'BigQuery
   -> m (FunctionInfo 'BigQuery, SchemaDependency)
 buildFunctionInfo _ _ _ _ _ _ =

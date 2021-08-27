@@ -4,25 +4,26 @@ module Hasura.Backends.BigQuery.Instances.Schema () where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                                  as J
-import qualified Data.HashMap.Strict                         as Map
-import qualified Data.List.NonEmpty                          as NE
-import qualified Data.Text                                   as T
+import qualified Data.Aeson                            as J
+import qualified Data.HashMap.Strict                   as Map
+import qualified Data.List.NonEmpty                    as NE
+import qualified Data.Text                             as T
 
+import           Data.Has
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.BigQuery.Types              as BigQuery
-import qualified Hasura.GraphQL.Parser                       as P
-import qualified Hasura.GraphQL.Schema.Build                 as GSB
-import qualified Hasura.RQL.IR.Select                        as IR
-import qualified Hasura.RQL.IR.Update                        as IR
-import qualified Language.GraphQL.Draft.Syntax               as G
+import qualified Hasura.Backends.BigQuery.Types        as BigQuery
+import qualified Hasura.GraphQL.Parser                 as P
+import qualified Hasura.GraphQL.Schema.Build           as GSB
+import qualified Hasura.RQL.IR.Select                  as IR
+import qualified Hasura.RQL.IR.Update                  as IR
+import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Parser                       hiding (EnumValueInfo, field)
-import           Hasura.GraphQL.Parser.Internal.Parser       hiding (field)
-import           Hasura.GraphQL.Parser.Internal.TypeChecking
+import           Hasura.GraphQL.Parser                 hiding (EnumValueInfo, field)
+import           Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import           Hasura.GraphQL.Schema.Backend
+import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.RQL.IR
@@ -77,7 +78,7 @@ bqBuildTableRelayQueryFields
   -> G.Name
   -> NESeq (ColumnInfo 'BigQuery)
   -> SelPermInfo  'BigQuery
-  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
 bqBuildTableRelayQueryFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
   pure []
 
@@ -91,7 +92,7 @@ bqBuildTableInsertMutationFields
   -> InsPermInfo 'BigQuery
   -> Maybe (SelPermInfo 'BigQuery)
   -> Maybe (UpdPermInfo 'BigQuery)
-  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
 bqBuildTableInsertMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
   pure []
 
@@ -104,7 +105,7 @@ bqBuildTableUpdateMutationFields
   -> G.Name
   -> UpdPermInfo 'BigQuery
   -> Maybe (SelPermInfo 'BigQuery)
-  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
 bqBuildTableUpdateMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _updPerns _selPerms =
   pure []
 
@@ -117,7 +118,7 @@ bqBuildTableDeleteMutationFields
   -> G.Name
   -> DelPermInfo 'BigQuery
   -> Maybe (SelPermInfo 'BigQuery)
-  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
 bqBuildTableDeleteMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _delPerns _selPerms =
   pure []
 
@@ -129,7 +130,7 @@ bqBuildFunctionQueryFields
     -> FunctionInfo 'BigQuery
     -> TableName 'BigQuery
     -> SelPermInfo 'BigQuery
-    -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+    -> m [FieldParser n (QueryRootField UnpreparedValue)]
 bqBuildFunctionQueryFields _ _ _ _ _ _ =
   pure []
 
@@ -142,7 +143,7 @@ bqBuildFunctionRelayQueryFields
   -> TableName    'BigQuery
   -> NESeq (ColumnInfo 'BigQuery)
   -> SelPermInfo  'BigQuery
-  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
 bqBuildFunctionRelayQueryFields _sourceName _sourceInfo _functionName _functionInfo _tableName _pkeyColumns _selPerms =
   pure []
 
@@ -154,7 +155,7 @@ bqBuildFunctionMutationFields
     -> FunctionInfo 'BigQuery
     -> TableName 'BigQuery
     -> SelPermInfo 'BigQuery
-    -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+    -> m [FieldParser n (MutationRootField UnpreparedValue)]
 bqBuildFunctionMutationFields _ _ _ _ _ _ =
   pure []
 
@@ -194,9 +195,9 @@ bqColumnParser
   :: (MonadSchema n m, MonadError QErr m)
   => ColumnType 'BigQuery
   -> G.Nullability
-  -> m (Parser 'Both n (Opaque (ColumnValue 'BigQuery)))
+  -> m (Parser 'Both n (ValueWithOrigin (ColumnValue 'BigQuery)))
 bqColumnParser columnType (G.Nullability isNullable) =
-  opaque . fmap (ColumnValue columnType) <$> case columnType of
+  peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
     ColumnScalar scalarType -> case scalarType of
       -- bytestrings
       -- we only accept string literals
@@ -237,29 +238,6 @@ bqColumnParser columnType (G.Nullability isNullable) =
           pure $ possiblyNullable BigQuery.StringScalarType $ P.enum enumName Nothing (mkEnumValue <$> enumValuesList)
         Nothing -> throw400 ValidationFailed "empty enum values"
   where
-    -- Sadly, this combinator is not sound in general, so we can’t export it
-    -- for general-purpose use. If we did, someone could write this:
-    --
-    --   mkParameter <$> opaque do
-    --     n <- int
-    --     pure (mkIntColumnValue (n + 1))
-    --
-    -- Now we’d end up with a UVParameter that has a variable in it, so we’d
-    -- parameterize over it. But when we’d reuse the plan, we wouldn’t know to
-    -- increment the value by 1, so we’d use the wrong value!
-    --
-    -- We could theoretically solve this by retaining a reference to the parser
-    -- itself and re-parsing each new value, using the saved parser, which
-    -- would admittedly be neat. But it’s more complicated, and it isn’t clear
-    -- that it would actually be useful, so for now we don’t support it.
-    opaque :: MonadParse m => Parser 'Both m a -> Parser 'Both m (Opaque a)
-    opaque parser = parser
-      { pParser = \case
-          P.GraphQLValue (G.VVariable var@Variable{ vInfo, vValue }) -> do
-            typeCheck False (P.toGraphQLType $ pType parser) var
-            P.mkOpaque (Just vInfo) <$> pParser parser (absurd <$> vValue)
-          value -> P.mkOpaque Nothing <$> pParser parser value
-      }
     possiblyNullable _scalarType
       | isNullable = fmap (fromMaybe BigQuery.NullValue) . P.nullable
       | otherwise  = id
@@ -312,11 +290,12 @@ bqOrderByOperators = NE.fromList
     define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
 
 bqComparisonExps
-  :: forall m n
-  . (BackendSchema 'BigQuery, MonadSchema n m, MonadError QErr m)
+  :: forall m n r
+  .  (BackendSchema 'BigQuery, MonadSchema n m, MonadError QErr m, MonadReader r m, Has QueryContext r)
   => ColumnType 'BigQuery
   -> m (Parser 'Input n [ComparisonExp 'BigQuery])
 bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
+  collapseIfNull <- asks $ qcDangerousBooleanCollapse . getter
   -- see Note [Columns in comparison expression are never nullable]
   typedParser        <- columnParser columnType (G.Nullability False)
   nullableTextParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability True)
@@ -325,17 +304,21 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
       desc = G.Description $ "Boolean expression to compare columns of type "
         <>  P.getName typedParser
         <<> ". All fields are combined with logical 'AND'."
-      textListParser = P.list textParser `P.bind` traverse P.openOpaque
-      columnListParser = P.list typedParser `P.bind` traverse P.openOpaque
-  pure $ P.object name (Just desc) $ catMaybes <$> sequenceA
-    [ P.fieldOptional $$(G.litName "_is_null") Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean)
-    , P.fieldOptional $$(G.litName "_eq")      Nothing (AEQ True . mkParameter <$> typedParser)
-    , P.fieldOptional $$(G.litName "_neq")     Nothing (ANE True . mkParameter <$> typedParser)
-    , P.fieldOptional $$(G.litName "_gt")      Nothing (AGT  . mkParameter <$> typedParser)
-    , P.fieldOptional $$(G.litName "_lt")      Nothing (ALT  . mkParameter <$> typedParser)
-    , P.fieldOptional $$(G.litName "_gte")     Nothing (AGTE . mkParameter <$> typedParser)
-    , P.fieldOptional $$(G.litName "_lte")     Nothing (ALTE . mkParameter <$> typedParser)
+      textListParser = fmap openValueOrigin <$> P.list textParser
+      columnListParser = fmap openValueOrigin <$> P.list typedParser
+      mkListLiteral :: [ColumnValue 'BigQuery] -> UnpreparedValue 'BigQuery
+      mkListLiteral =
+        P.UVLiteral . BigQuery.ListExpression . fmap (BigQuery.ValueExpression . cvValue)
+  pure $ P.object name (Just desc) $ fmap catMaybes $ sequenceA $ concat
+    [ equalityOperators
+        collapseIfNull
+        (mkParameter <$> typedParser)
+        (mkListLiteral <$> columnListParser)
+    , comparisonOperators
+        collapseIfNull
+        (mkParameter <$> typedParser)
     ]
+
 
 bqMkCountType
   :: Maybe Bool

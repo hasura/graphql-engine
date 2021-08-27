@@ -72,7 +72,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     -> TableInfo b
     -> G.Name
     -> SelPermInfo b
-    -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+    -> m [FieldParser n (QueryRootField UnpreparedValue)]
   buildTableRelayQueryFields
     :: MonadBuildSchema b r m n
     => SourceName
@@ -82,7 +82,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     -> G.Name
     -> NESeq (ColumnInfo b)
     -> SelPermInfo b
-    -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+    -> m [FieldParser n (QueryRootField UnpreparedValue)]
   buildTableInsertMutationFields
     :: MonadBuildSchema b r m n
     => SourceName
@@ -93,7 +93,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     -> InsPermInfo b
     -> Maybe (SelPermInfo b)
     -> Maybe (UpdPermInfo b)
-    -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+    -> m [FieldParser n (MutationRootField UnpreparedValue)]
   buildTableUpdateMutationFields
     :: MonadBuildSchema b r m n
     => SourceName
@@ -103,7 +103,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     -> G.Name
     -> UpdPermInfo b
     -> Maybe (SelPermInfo b)
-    -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+    -> m [FieldParser n (MutationRootField UnpreparedValue)]
   buildTableDeleteMutationFields
     :: MonadBuildSchema b r m n
     => SourceName
@@ -113,7 +113,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     -> G.Name
     -> DelPermInfo b
     -> Maybe (SelPermInfo b)
-    -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+    -> m [FieldParser n (MutationRootField UnpreparedValue)]
   buildFunctionQueryFields
     :: MonadBuildSchema b r m n
     => SourceName
@@ -122,7 +122,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     -> FunctionInfo b
     -> TableName b
     -> SelPermInfo b
-    -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+    -> m [FieldParser n (QueryRootField UnpreparedValue)]
   buildFunctionRelayQueryFields
     :: MonadBuildSchema b r m n
     => SourceName
@@ -132,7 +132,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     -> TableName b
     -> NESeq (ColumnInfo b)
     -> SelPermInfo b
-    -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+    -> m [FieldParser n (QueryRootField UnpreparedValue)]
   buildFunctionMutationFields
     :: MonadBuildSchema b r m n
     => SourceName
@@ -141,7 +141,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     -> FunctionInfo b
     -> TableName b
     -> SelPermInfo b
-    -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+    -> m [FieldParser n (MutationRootField UnpreparedValue)]
 
   -- table components
   tableArguments
@@ -160,7 +160,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     :: (MonadSchema n m, MonadError QErr m)
     => ColumnType b
     -> Nullability
-    -> m (Parser 'Both n (Opaque (ColumnValue b)))
+    -> m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
   -- | The "path" argument for json column fields
   jsonPathArg
     :: MonadParse n

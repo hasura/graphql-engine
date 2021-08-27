@@ -13,19 +13,17 @@ import (
 
 var _ = Describe("hasura metadata clear", func() {
 
-	var dirName string
+	var projectDirectory string
 	var teardown func()
 	BeforeEach(func() {
-		dirName = testutil.RandDirName()
+		projectDirectory = testutil.RandDirName()
 		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
-		testutil.RunCommandAndSucceed(testutil.CmdOpts{
-			Args: []string{"init", dirName},
-		})
-		editEndpointInConfig(filepath.Join(dirName, defaultConfigFilename), hgeEndpoint)
+		copyTestConfigV3Project(projectDirectory)
+		editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
 
 		teardown = func() {
-			os.RemoveAll(dirName)
+			os.RemoveAll(projectDirectory)
 			teardownHGE()
 		}
 	})
@@ -36,12 +34,25 @@ var _ = Describe("hasura metadata clear", func() {
 
 	Context("metadata clear test", func() {
 		It("should clear metadata on server", func() {
+			testutil.RunCommandAndSucceed(testutil.CmdOpts{
+				Args:             []string{"metadata", "apply"},
+				WorkingDirectory: projectDirectory,
+			})
 			session := testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"metadata", "clear"},
-				WorkingDirectory: dirName,
+				WorkingDirectory: projectDirectory,
 			})
-			Eventually(session, 60*40).Should(Exit(0))
-			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring("Metadata cleared"))
+			Eventually(session, timeout).Should(Exit(0))
+			Expect(session.Err.Contents()).Should(ContainSubstring("Metadata cleared"))
+
+			session = testutil.Hasura(testutil.CmdOpts{
+				Args:             []string{"metadata", "diff"},
+				WorkingDirectory: projectDirectory,
+			})
+			Eventually(session, timeout).Should(Exit(0))
+			stdout := session.Out.Contents()
+			Expect(stdout).Should(ContainSubstring("tables"))
+
 		})
 	})
 })

@@ -1,10 +1,10 @@
-import { Table, FrequentlyUsedColumn } from '../../types';
+import { Table, FrequentlyUsedColumn, IndexType } from '../../types';
 import { isColTypeString } from '.';
 import { FunctionState } from './types';
 import { QualifiedTable } from '../../../metadata/types';
 import { quoteDefault } from '../../../components/Services/Data/utils';
 
-const sqlEscapeText = (rawText: string) => {
+export const sqlEscapeText = (rawText: string) => {
   let text = rawText;
 
   if (text) {
@@ -197,7 +197,13 @@ WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHER
   AND t.typcategory != 'P'
 GROUP BY t.typcategory;`;
 
-export const fetchColumnDefaultFunctions = (schema = 'public') => `
+export const fetchColumnDefaultFunctions = (schema = 'public') => {
+  let schemaList = `('pg_catalog', 'public'`;
+  if (schema !== 'public') {
+    schemaList += `, '${schema}'`;
+  }
+  schemaList += ')';
+  return `
 SELECT string_agg(pgp.proname, ','),
   t.typname as "Type"
 from pg_proc pgp
@@ -211,11 +217,11 @@ WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHER
   AND t.typname != 'unknown'
   AND t.typcategory != 'P'
   AND (array_length(pgp.proargtypes, 1) = 0)
-  AND ( pgn.nspname = '${schema}' OR pgn.nspname = 'pg_catalog' )
+  AND (pgn.nspname IN ${schemaList})
   AND pgp.proretset=false
 GROUP BY t.typname
-ORDER BY t.typname ASC;
-`;
+ORDER BY t.typname ASC;`;
+};
 
 export const isSQLFunction = (str: string | undefined) =>
   new RegExp(/.*\(\)$/gm).test(str || '');
@@ -225,14 +231,15 @@ export const getEstimateCountQuery = (
   tableName: string
 ) => {
   return `
-SELECT
-  reltuples::BIGINT
-FROM
-  pg_class
-WHERE
-  oid = (quote_ident('${schemaName}') || '.' || quote_ident('${tableName}'))::regclass::oid
-  AND relname = '${tableName}';
-`;
+  SELECT
+    reltuples::BIGINT
+  FROM
+    pg_class c
+  JOIN
+    pg_namespace n ON c.relnamespace = n.oid
+  WHERE
+    c.relname = quote_ident('${tableName}') AND n.nspname = quote_ident('${schemaName}');
+  `;
 };
 
 export const cascadeSqlQuery = (sql: string) => {
@@ -1038,6 +1045,73 @@ SELECT n.nspname::text AS table_schema,
    AND r.contype = 'c'::"char"
    ) AS info;
 `;
+
+export const tableIndexSql = (options: { schema: string; table: string }) => `
+    SELECT
+    COALESCE(
+        json_agg(
+            row_to_json(info)
+        ),
+        '[]' :: JSON
+    ) AS indexes
+    FROM
+    (
+      SELECT
+          t.relname as table_name,
+          i.relname as index_name,
+          it.table_schema as table_schema,
+          am.amname as index_type,
+          array_agg(DISTINCT a.attname) as index_columns,
+          pi.indexdef as index_definition_sql
+      FROM
+          pg_class t,
+          pg_class i,
+          pg_index ix,
+          pg_attribute a,
+          information_schema.tables it,
+          pg_am am,
+          pg_indexes pi
+      WHERE
+          t.oid = ix.indrelid
+          and i.oid = ix.indexrelid
+          and a.attrelid = t.oid
+          and a.attnum = ANY(ix.indkey)
+          and t.relkind = 'r'
+          and pi.indexname = i.relname
+          and t.relname = '${options.table}'
+          and it.table_schema = '${options.schema}'
+          and am.oid = i.relam
+      GROUP BY
+          t.relname,
+          i.relname,
+          it.table_schema,
+          am.amname,
+          pi.indexdef
+      ORDER BY
+          t.relname,
+          i.relname
+    ) as info;
+  `;
+
+export const getCreateIndexSql = (indexObj: {
+  indexName: string;
+  indexType: IndexType;
+  table: QualifiedTable;
+  columns: string[];
+  unique?: boolean;
+}) => {
+  const { indexName, indexType, table, columns, unique = false } = indexObj;
+
+  return `
+  CREATE ${unique ? 'UNIQUE' : ''} INDEX "${indexName}" on
+  "${table.schema}"."${table.name}" using ${indexType} (${columns
+    .map(c => `"${c}"`)
+    .join(', ')});
+`;
+};
+
+export const getDropIndexSql = (indexName: string) =>
+  `DROP INDEX IF EXISTS "${indexName}"`;
 
 export const frequentlyUsedColumns: FrequentlyUsedColumn[] = [
   {

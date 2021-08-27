@@ -221,13 +221,16 @@ export const deleteCTTestTable = () => {
   cy.visit(
     `/data/default/schema/public/tables/${getTableName(0, testName)}/browse`
   );
-  cy.get(getElementFromAlias('table-modify')).click();
+  cy.get(getElementFromAlias('table-modify'), { timeout: 5000 }).click();
   //   Click on delete
   setPromptValue(getTableName(0, testName));
   cy.get(getElementFromAlias('delete-table')).click();
   //   Confirm
   cy.window().its('prompt').should('be.called');
-  cy.wait(7000);
+  cy.get(getElementFromAlias('data-create-table'), { timeout: 5000 }).should(
+    'exist'
+  );
+
   //   Match the URL
   cy.url().should('eq', `${baseUrl}/data/default/schema/public`);
   //   Validate

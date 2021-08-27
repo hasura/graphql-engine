@@ -1,3 +1,4 @@
+import { Nullable } from './../components/Common/utils/tsUtils';
 import {
   inconsistentObjectsQuery,
   getReloadMetadataQuery,
@@ -121,6 +122,20 @@ export const createAllowListQuery = (
   };
 };
 
+export const addInsecureDomainQuery = (host: string) => {
+  return {
+    type: 'add_host_to_tls_allowlist',
+    args: { host, permissions: ['self-signed'] },
+  };
+};
+
+export const deleteDomain = (host: string) => {
+  return {
+    type: 'drop_host_from_tls_allowlist',
+    args: { host },
+  };
+};
+
 export const reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery = (
   remoteSchemaName: string,
   source: string
@@ -179,7 +194,7 @@ export const updateAPILimitsQuery = ({
     depth_limit?: APILimitInputType<number>;
     node_limit?: APILimitInputType<number>;
     rate_limit?: APILimitInputType<{
-      unique_params: 'IP' | string[];
+      unique_params: Nullable<'IP' | string[]>;
       max_reqs_per_min: number;
     }>;
   };

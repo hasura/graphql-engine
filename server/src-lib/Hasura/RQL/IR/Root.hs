@@ -72,7 +72,14 @@ data ActionMutation (b :: BackendType) (r :: BackendType -> Type) v
 newtype QueryDBRoot    r v b = QDBR (QueryDB    b r (v b))
 newtype MutationDBRoot r v b = MDBR (MutationDB b r (v b))
 
+-- | Represents a query root field to an action
+type QueryActionRoot v
+  = ActionQuery ('Postgres 'Vanilla) (RemoteSelect v) (v ('Postgres 'Vanilla))
 
-type QueryRootField        r v = RootField (QueryDBRoot    r v) RQL.RemoteField (ActionQuery    ('Postgres 'Vanilla) r (v ('Postgres 'Vanilla))) JO.Value
-type MutationRootField     r v = RootField (MutationDBRoot r v) RQL.RemoteField (ActionMutation ('Postgres 'Vanilla) r (v ('Postgres 'Vanilla))) JO.Value
-type SubscriptionRootField r v = RootField (QueryDBRoot    r v) Void            Void                                                             Void
+-- | Represents a mutation root field to an action
+type MutationActionRoot v
+  = ActionMutation ('Postgres 'Vanilla) (RemoteSelect v) (v ('Postgres 'Vanilla))
+
+type QueryRootField        v = RootField (QueryDBRoot    (RemoteSelect v) v) RQL.RemoteField (QueryActionRoot v)    JO.Value
+type MutationRootField     v = RootField (MutationDBRoot (RemoteSelect v) v) RQL.RemoteField (MutationActionRoot v) JO.Value
+type SubscriptionRootField v = RootField (QueryDBRoot    (RemoteSelect v) v) Void            Void                   Void

@@ -37,8 +37,6 @@ import           Control.Lens.TH                     (makeLenses, makePrisms)
 import           Data.Int                            (Int64)
 import           Data.Kind                           (Type)
 
-import qualified Hasura.SQL.AnyBackend               as AB
-
 import           Hasura.GraphQL.Parser.Schema        (InputValue)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.OrderBy
@@ -96,9 +94,9 @@ data ConnectionSplit (b :: BackendType) v
   = ConnectionSplit
   { _csKind    :: !ConnectionSplitKind
   , _csValue   :: !v
-  , _csOrderBy :: !(OrderByItemG b (AnnOrderByElementG b ()))
+  , _csOrderBy :: !(OrderByItemG b (AnnotatedOrderByElement b v))
   } deriving (Functor, Generic, Foldable, Traversable)
-instance (Backend b, Hashable (ColumnInfo b), Hashable v) => Hashable (ConnectionSplit b v)
+instance (Backend b, Hashable (ColumnInfo b), Hashable v, Hashable (BooleanOperators b v)) => Hashable (ConnectionSplit b v)
 
 data ConnectionSlice
   = SliceFirst !Int
@@ -133,7 +131,7 @@ type SelectFrom b = SelectFromG b (SQLExpression b)
 data SelectArgsG (b :: BackendType) v
   = SelectArgs
   { _saWhere    :: !(Maybe (AnnBoolExp b v))
-  , _saOrderBy  :: !(Maybe (NE.NonEmpty (AnnOrderByItemG b v)))
+  , _saOrderBy  :: !(Maybe (NE.NonEmpty (AnnotatedOrderByItemG b v)))
   , _saLimit    :: !(Maybe Int)
   , _saOffset   :: !(Maybe Int64)
   , _saDistinct :: !(Maybe (NE.NonEmpty (Column b)))
@@ -159,28 +157,57 @@ noSelectArgs = SelectArgs Nothing Nothing Nothing Nothing Nothing
 
 -- Order by argument
 
-data AnnOrderByElementG (b :: BackendType) v
-  = AOCColumn !(ColumnInfo b)
-  | AOCObjectRelation !(RelInfo b) !v !(AnnOrderByElementG b v)
-  | AOCArrayAggregation !(RelInfo b) !v !(AnnAggregateOrderBy b)
+-- | The order by element for a computed field based on its return type
+data ComputedFieldOrderByElement (b :: BackendType) v
+  = CFOBEScalar !(ScalarType b)
+  -- ^ Sort by the scalar computed field
+  | CFOBETableAggregation !(TableName b)
+    !(AnnBoolExp b v) -- ^ Permission filter of the retuning table
+    !(AnnotatedAggregateOrderBy b)
+  -- ^ Sort by aggregation fields of table rows returned by computed field
   deriving (Generic, Functor, Foldable, Traversable)
-deriving instance (Backend b, Eq v) => Eq (AnnOrderByElementG b v)
-instance (Backend b, Hashable v) => Hashable (AnnOrderByElementG b v)
+deriving instance (Backend b, Eq v, Eq (BooleanOperators b v)) => Eq (ComputedFieldOrderByElement b v)
+instance (Backend b, Hashable v, Hashable (BooleanOperators b v)) => Hashable (ComputedFieldOrderByElement b v)
 
-data AnnAggregateOrderBy (b :: BackendType)
+data ComputedFieldOrderBy (b :: BackendType) v
+  = ComputedFieldOrderBy
+  { _cfobXField          :: !(XComputedField b)
+  , _cfobName            :: !ComputedFieldName
+  , _cfobFunction        :: !(FunctionName b)
+  , _cfobFunctionArgsExp :: !(FunctionArgsExpTableRow b v)
+  , _cfobOrderByElement  :: !(ComputedFieldOrderByElement b v)
+  } deriving (Generic, Functor, Foldable, Traversable)
+deriving instance (Backend b, Eq v, Eq (BooleanOperators b v)) => Eq (ComputedFieldOrderBy b v)
+instance (Backend b, Hashable v, Hashable (BooleanOperators b v)) => Hashable (ComputedFieldOrderBy b v)
+
+data AnnotatedOrderByElement (b :: BackendType) v
+  = AOCColumn !(ColumnInfo b)
+  | AOCObjectRelation !(RelInfo b)
+    !(AnnBoolExp b v) -- ^ Permission filter of the remote table to which the relationship is defined
+    !(AnnotatedOrderByElement b v)
+  | AOCArrayAggregation !(RelInfo b)
+    !(AnnBoolExp b v) -- ^ Permission filter of the remote table to which the relationship is defined
+    !(AnnotatedAggregateOrderBy b)
+  | AOCComputedField !(ComputedFieldOrderBy b v)
+  deriving (Generic, Functor, Foldable, Traversable)
+deriving instance (Backend b, Eq v, Eq (BooleanOperators b v)) => Eq (AnnotatedOrderByElement b v)
+instance (Backend b, Hashable v, Hashable (BooleanOperators b v)) => Hashable (AnnotatedOrderByElement b v)
+
+data AnnotatedAggregateOrderBy (b :: BackendType)
   = AAOCount
   | AAOOp !Text !(ColumnInfo b)
   deriving (Generic)
-deriving instance (Backend b) => Eq (AnnAggregateOrderBy b)
-instance (Backend b) => Hashable (AnnAggregateOrderBy b)
+deriving instance (Backend b) => Eq (AnnotatedAggregateOrderBy b)
+instance (Backend b) => Hashable (AnnotatedAggregateOrderBy b)
 
-type AnnOrderByElement b v = AnnOrderByElementG b (AnnBoolExp b v)
-type AnnOrderByItemG b v = OrderByItemG b (AnnOrderByElement b v)
-type AnnOrderByItem b = AnnOrderByItemG b (SQLExpression b)
+type AnnotatedOrderByItemG b v = OrderByItemG b (AnnotatedOrderByElement b v)
+type AnnotatedOrderByItem b = AnnotatedOrderByItemG b (SQLExpression b)
 
 
 -- Fields
 
+-- The field name here is the GraphQL alias, i.e, the name with which the field
+-- should appear in the response
 type Fields a = [(FieldName, a)]
 
 data AnnFieldG (b :: BackendType) (r :: BackendType -> Type) v
@@ -188,8 +215,11 @@ data AnnFieldG (b :: BackendType) (r :: BackendType -> Type) v
   | AFObjectRelation !(ObjectRelationSelectG b r v)
   | AFArrayRelation !(ArraySelectG b r v)
   | AFComputedField !(XComputedField b) !ComputedFieldName !(ComputedFieldSelect b r v)
-  | AFRemote !(RemoteSelect b)
-  | AFDBRemote !(AB.AnyBackend (DBRemoteSelect b r))
+  -- | A relationship to a remote source/remote schema. Its kind is
+  -- (r :: BackendType -> Type) so that AFRemote can capture something
+  -- that is specific to the backend AnnFieldG. See RemoteSelect. When
+  -- remote joins are extracted from the structure, 'r' becomes 'Const Void'
+  | AFRemote !(r b)
   | AFNodeId !(XRelay b) !(TableName b) !(PrimaryKeyColumns b)
   | AFExpression !Text
   deriving (Functor, Foldable, Traversable)
@@ -361,7 +391,7 @@ type ArraySelect b = ArraySelectG b (Const Void) (SQLExpression b)
 type ArraySelectFieldsG b r v = Fields (ArraySelectG b r v)
 
 
--- Remote schema relationship
+-- Remote schema relationships
 
 data RemoteFieldArgument
   = RemoteFieldArgument
@@ -369,25 +399,55 @@ data RemoteFieldArgument
   , _rfaValue    :: !(InputValue RemoteSchemaVariable)
   } deriving (Eq,Show)
 
-data RemoteSelect (b :: BackendType)
-  = RemoteSelect
-  { _rselArgs         :: ![RemoteFieldArgument]
-  , _rselSelection    :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)
-  , _rselHasuraFields :: !(HashSet (DBJoinField b))
-  , _rselFieldCall    :: !(NonEmpty FieldCall)
-  , _rselRemoteSchema :: !RemoteSchemaInfo
+data RemoteSchemaSelect (b :: BackendType)
+  = RemoteSchemaSelect
+  { _rselArgs             :: ![RemoteFieldArgument]
+  , _rselResultCustomizer :: !RemoteResultCustomizer
+  , _rselSelection        :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)
+  , _rselHasuraFields     :: !(HashSet (DBJoinField b))
+  , _rselFieldCall        :: !(NonEmpty FieldCall)
+  , _rselRemoteSchema     :: !RemoteSchemaInfo
   }
 
+-- | Captures the selection set of a remote source relationship.
+data SourceRelationshipSelection
+    (b :: BackendType)
+    (r :: BackendType -> Type)
+    (vf :: BackendType -> Type)
+  = SourceRelationshipObject !(AnnObjectSelectG b r (vf b))
+  | SourceRelationshipArray !(AnnSimpleSelectG b r (vf b))
+  | SourceRelationshipArrayAggregate !(AnnAggregateSelectG b r (vf b))
 
--- Remote db relationship
+-- | A relationship to a remote source. 'vf' (could use a better name) is
+-- analogous to 'v' in other IR types such as 'AnnFieldG'. vf's kind is
+-- (BackendType -> Type) instead of v's 'Type' so that 'v' of 'AnnFieldG' can
+-- be specific to the backend that it captures ('b' of an AnnFieldG changes as
+-- we walk down the IR branches which capture relationships to other databases)
+data RemoteSourceSelect
+    (src :: BackendType)
+    (vf :: BackendType -> Type)
+    (tgt :: BackendType)
+  = RemoteSourceSelect
+    { _rssSourceName   :: !SourceName
+    , _rssSourceConfig :: !(SourceConfig tgt)
+    , _rssSelection    :: !(SourceRelationshipSelection tgt (RemoteSelect vf) vf)
+    , _rssJoinMapping  :: !(HM.HashMap FieldName (ColumnInfo src, ScalarType tgt, Column tgt))
+    -- ^ Additional information about the source's join columns:
+    -- (ColumnInfo src) so that we can add the join column to the AST
+    -- (ScalarType tgt) so that the remote can interpret the join values coming
+    -- from src
+    -- (Column tgt) so that an appropriate join condition / IN clause can be built
+    -- by the remote
+    }
 
-data DBRemoteSelect (src :: BackendType) (r :: BackendType -> Type) (tgt :: BackendType)
-  = DBRemoteSelect
-  { _dbrselHasuraColumns :: ![(ColumnInfo src, ColumnInfo tgt)]
-  , _dbrselTargetQuery   :: !(QueryDB tgt r (r tgt))
-  , _dbrselTargetConfig  :: !(SourceConfig tgt)
-  }
-
+-- | A remote relationship to either a remote schema or a remote source.
+-- See RemoteSourceSelect for explanation on 'vf'.
+data RemoteSelect
+    (vf :: BackendType -> Type)
+    (src :: BackendType)
+  = RemoteSelectRemoteSchema !(RemoteSchemaSelect src)
+  -- | RemoteSelectSource !(AB.AnyBackend (RemoteSourceSelect src vf))
+  -- ^ AnyBackend is used here to capture a relationship to an arbitrary target
 
 -- Permissions
 
@@ -434,6 +494,17 @@ type FunctionArgExp          b   = FunctionArgsExpG (SQLExpression b)
 emptyFunctionArgsExp :: FunctionArgsExpG a
 emptyFunctionArgsExp = FunctionArgsExp [] HM.empty
 
+functionArgsWithTableRowAndSession
+  :: v
+  -> FunctionTableArgument
+  -> Maybe FunctionSessionArgument
+  -> [ArgumentExp b v]
+functionArgsWithTableRowAndSession  _    _              Nothing = [AETableRow Nothing] -- No session argument
+functionArgsWithTableRowAndSession  sess (FTAFirst)     _       = [AETableRow Nothing, AESession sess]
+functionArgsWithTableRowAndSession  sess (FTANamed _ 0) _       = [AETableRow Nothing, AESession sess] -- Index is 0 implies table argument is first
+functionArgsWithTableRowAndSession  sess _              _       = [AESession sess, AETableRow Nothing]
+
+
 -- | If argument positional index is less than or equal to length of
 -- 'positional' arguments then insert the value in 'positional' arguments else
 -- insert the value with argument name in 'named' arguments
@@ -455,5 +526,6 @@ insertFunctionArg argName idx value (FunctionArgsExp positional named) =
 -- Lenses
 
 $(makeLenses ''AnnSelectG)
+$(makeLenses ''SelectArgsG)
 $(makePrisms ''AnnFieldG)
-$(makePrisms ''AnnOrderByElementG)
+$(makePrisms ''AnnotatedOrderByElement)

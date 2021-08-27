@@ -5,6 +5,8 @@ import           Hasura.Prelude
 import qualified Data.Aeson                     as J
 import qualified Data.HashMap.Strict            as Map
 
+import           Data.Text.Extended
+
 import           Hasura.Backends.BigQuery.Types
 import           Hasura.Base.Error
 import           Hasura.RQL.IR.BoolExp
@@ -20,12 +22,11 @@ parseBoolExpOperations
   => ValueParser 'BigQuery m v
   -> TableName
   -> FieldInfoMap (FieldInfo 'BigQuery)
-  -> ColumnInfo 'BigQuery
+  -> ColumnReference 'BigQuery
   -> J.Value
   -> m [OpExpG 'BigQuery v]
-parseBoolExpOperations rhsParser _table _fields columnInfo value =
-  withPathK (columnName $ pgiColumn columnInfo) $
-    parseOperations (pgiType columnInfo) value
+parseBoolExpOperations rhsParser _table _fields columnRef value =
+  withPathK (toTxt columnRef) $ parseOperations (columnReferenceType columnRef) value
   where
     parseWithTy ty = rhsParser (CollectableTypeScalar ty)
 
@@ -42,6 +43,12 @@ parseBoolExpOperations rhsParser _table _fields columnInfo value =
 
         "_neq" -> parseNeq
         "$neq" -> parseNeq
+
+        "$in"  -> parseIn
+        "_in"  -> parseIn
+
+        "$nin" -> parseNin
+        "_nin" -> parseNin
 
         "_gt"  -> parseGt
         "$gt"  -> parseGt
@@ -60,10 +67,14 @@ parseBoolExpOperations rhsParser _table _fields columnInfo value =
         x      -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
 
       where
+        colTy = columnReferenceType columnRef
         parseOne = parseWithTy columnType val
+        parseManyWithType ty = rhsParser (CollectableTypeArray ty) val
 
         parseEq = AEQ False <$> parseOne
         parseNeq = ANE False <$> parseOne
+        parseIn    = AIN <$> parseManyWithType colTy
+        parseNin   = ANIN <$> parseManyWithType colTy
         parseGt = AGT <$> parseOne
         parseLt = ALT <$> parseOne
         parseGte = AGTE <$> parseOne

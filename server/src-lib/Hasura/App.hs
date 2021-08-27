@@ -40,17 +40,21 @@ import           Control.Monad.Trans.Managed                (ManagedT (..))
 import           Control.Monad.Unique
 import           Data.FileEmbed                             (makeRelativeToProject)
 import           Data.Time.Clock                            (UTCTime)
+
 #ifndef PROFILING
 import           GHC.AssertNF
 #endif
+
 import           Network.HTTP.Client.Extended
 import           Options.Applicative
 import           System.Environment                         (getEnvironment)
 
+import qualified Hasura.GraphQL.Execute.Backend             as EB
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll      as EL
 import qualified Hasura.GraphQL.Transport.WebSocket.Server  as WS
 import qualified Hasura.Tracing                             as Tracing
 
+import           Data.IORef                                 (readIORef)
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Base.Error
 import           Hasura.EncJSON
@@ -63,14 +67,14 @@ import           Hasura.GraphQL.Execute                     (ExecutionStep (..),
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Action.Subscription
 import           Hasura.GraphQL.Logging                     (MonadQueryLog (..))
-import           Hasura.GraphQL.Transport.HTTP              (MonadExecuteQuery (..))
+import           Hasura.GraphQL.Transport.HTTP              (CacheStoreSuccess (CacheStoreSkipped),
+                                                             MonadExecuteQuery (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol     (toParsed)
 import           Hasura.Logging
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Catalog
-import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query                    (requiresAdmin, runQueryM)
@@ -79,13 +83,14 @@ import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates                 (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
+import           Hasura.Server.Metrics                      (ServerMetrics (..))
 import           Hasura.Server.Migrate                      (getMigratedFrom, migrateCatalog)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
-
+import           Network.HTTP.Client.DynamicTlsPermissions  (mkMgr)
 
 data ExitCode
 -- these are used during server initialization:
@@ -171,6 +176,11 @@ data GlobalCtx
     -- and optional retries
   }
 
+
+readTlsAllowlist :: SchemaCacheRef -> IO [TlsAllow]
+readTlsAllowlist scRef = do
+  (rbsc, _) <- readIORef (_scrCache scRef)
+  pure $ scTlsAllowlist $ lastBuiltSchemaCache rbsc
 
 initGlobalCtx
   :: (MonadIO m)
@@ -300,7 +310,8 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
         in PostgresConnConfiguration sourceConnInfo Nothing
       sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse
 
-  let serverConfigCtx =
+  let
+    serverConfigCtx =
         ServerConfigCtx soInferFunctionPermissions soEnableRemoteSchemaPermissions
                         sqlGenCtx soEnableMaintenanceMode soExperimentalFeatures
 
@@ -320,11 +331,11 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
       unLogger logger $ mkGenericStrLog LevelInfo "schema-sync" ("Schema sync enabled. Polling at " <> show i)
       void $ startSchemaSyncListenerThread logger metadataDbPool instanceId i metaVersionRef
 
-  -- See Note [Temporarily disabling query plan caching]
-  -- (planCache, schemaCacheRef) <- initialiseCache
   schemaCacheRef <- initialiseCache rebuildableSchemaCache
 
-  pure $ ServeCtx _gcHttpManager instanceId loggers soEnabledLogTypes metadataDbPool latch
+  srvMgr <- liftIO $ mkMgr (readTlsAllowlist schemaCacheRef)
+
+  pure $ ServeCtx srvMgr instanceId loggers soEnabledLogTypes metadataDbPool latch
                   rebuildableSchemaCache schemaCacheRef metaVersionRef
 
 mkLoggers
@@ -342,8 +353,12 @@ mkLoggers enabledLogs logLevel = do
 -- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
 migrateCatalogSchema
   :: (HasVersion, MonadIO m, MonadBaseControl IO m)
-  => Env.Environment -> Logger Hasura -> Q.PGPool -> Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
-  -> HTTP.Manager -> ServerConfigCtx
+  => Env.Environment
+  -> Logger Hasura
+  -> Q.PGPool
+  -> Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
+  -> HTTP.Manager
+  -> ServerConfigCtx
   -> SourceResolver
   -> m (RebuildableSchemaCache, UTCTime)
 migrateCatalogSchema env logger pool defaultSourceConfig
@@ -462,6 +477,7 @@ runHGEServer
      , HasResourceLimits m
      , MonadMetadataStorage (MetadataStorageT m)
      , MonadResolveSource m
+     , EB.MonadQueryTags m
      )
   => (ServerCtx -> Spock.SpockT m ())
   -> Env.Environment
@@ -472,7 +488,7 @@ runHGEServer
   -- ^ start time
   -> Maybe EL.LiveQueryPostPollHook
   -> ServerMetrics
-  -> EKG.Store
+  -> EKG.Store EKG.EmptyMetrics
   -> ManagedT m ()
 runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook serverMetrics ekgStore = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
@@ -481,9 +497,11 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
   -- tool.
   --
   -- NOTE: be sure to compile WITHOUT code coverage, for this to work properly.
+
 #ifndef PROFILING
   liftIO disableAssertNF
 #endif
+
 
   let sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse
       Loggers loggerCtx logger _ = _scLoggers
@@ -508,7 +526,6 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
              _scInstanceId
              soEnabledAPIs
              soLiveQueryOpts
-             soPlanCacheOptions
              soResponseInternalErrorsConfig
              postPollHook
              _scSchemaCacheRef
@@ -521,6 +538,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
              soEnableMaintenanceMode
              soExperimentalFeatures
              _scEnabledLogTypes
+             soWebsocketConnectionInitTimeout
 
   let serverConfigCtx =
         ServerConfigCtx soInferFunctionPermissions
@@ -537,10 +555,13 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
   liftIO $ logInconsObjs logger inconsObjs
 
+  -- NOTE: `newLogTVar` is being used to make sure that the metadata logger runs only once
+  --       while logging errors or any `inconsistent_metadata` logs.
+  newLogTVar <- liftIO $ STM.newTVarIO False
   -- Start a background thread for processing schema sync event present in the '_sscSyncEventRef'
   _ <- startSchemaSyncProcessorThread logger _scHttpManager _scMetaVersionRef
                                cacheRef _scInstanceId
-                               serverConfigCtx
+                               serverConfigCtx newLogTVar
 
   let
     maxEvThrds       = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
@@ -817,6 +838,7 @@ execQuery
      , HasServerConfigCtx m
      , MetadataM m
      , MonadMetadataStorageQueryAPI m
+     , EB.MonadQueryTags m
      )
   => Env.Environment
   -> BLC.ByteString
@@ -851,7 +873,7 @@ instance (MonadIO m) => HttpLog (PGMetadataStorageAppT m) where
 
 instance (Monad m) => MonadExecuteQuery (PGMetadataStorageAppT m) where
   cacheLookup _ _ _ _ = pure ([], Nothing)
-  cacheStore  _ _ _ = pure ()
+  cacheStore  _ _ _   = pure (Right CacheStoreSkipped)
 
 instance (MonadIO m, MonadBaseControl IO m) => UserAuthentication (Tracing.TraceT (PGMetadataStorageAppT m)) where
   resolveUserInfo logger manager headers authMode reqs =
@@ -901,6 +923,9 @@ instance (MonadIO m) => WS.MonadWSLog (PGMetadataStorageAppT m) where
 
 instance (Monad m) => MonadResolveSource (PGMetadataStorageAppT m) where
   getSourceResolver = mkPgSourceResolver <$> asks snd
+
+instance (Monad m) => EB.MonadQueryTags (PGMetadataStorageAppT m) where
+  createQueryTags _qtSourceConfig _attributes = mempty
 
 runInSeparateTx
   :: (MonadIO m)
@@ -1009,3 +1034,21 @@ telemetryNotice =
   "Help us improve Hasura! The graphql-engine server collects anonymized "
   <> "usage stats which allows us to keep improving Hasura at warp speed. "
   <> "To read more or opt-out, visit https://hasura.io/docs/latest/graphql/core/guides/telemetry.html"
+
+mkPgSourceResolver :: Q.PGLogger -> SourceResolver
+mkPgSourceResolver pgLogger _ config = runExceptT do
+  env <- lift Env.getEnvironment
+  let PostgresSourceConnInfo urlConf poolSettings allowPrepare isoLevel _ = _pccConnectionInfo config
+  -- If the user does not provide values for the pool settings, then use the default values
+  let (maxConns, idleTimeout, retries) = getDefaultPGPoolSettingIfNotExists poolSettings defaultPostgresPoolSettings
+  urlText <- resolveUrlConf env urlConf
+  let connInfo = Q.ConnInfo retries $ Q.CDDatabaseURI $ txtToBs urlText
+      connParams = Q.defaultConnParams{ Q.cpIdleTime = idleTimeout
+                                      , Q.cpConns = maxConns
+                                      , Q.cpAllowPrepare = allowPrepare
+                                      , Q.cpMbLifetime = _ppsConnectionLifetime =<< poolSettings
+                                      , Q.cpTimeout = _ppsPoolTimeout =<< poolSettings
+                                      }
+  pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
+  let pgExecCtx = mkPGExecCtx isoLevel pgPool
+  pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty

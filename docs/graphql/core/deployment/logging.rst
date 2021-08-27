@@ -24,6 +24,12 @@ Based on your deployment method, the Hasura GraphQL engine logs can be accessed 
 - :ref:`On Azure <azure_logs>`
 - :ref:`On Google Cloud & Kubernetes <gc_kubernetes_logs>`
 
+.. admonition:: Detailed Logging in Hasura Cloud
+  :class: dhc
+  
+  If you’re looking for more in-depth logging information, along with a console for browsing logs, please see :ref:`Metrics with Hasura Cloud <metrics>`.
+
+
 .. _log-types:
 
 Different log-types

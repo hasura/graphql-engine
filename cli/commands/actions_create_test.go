@@ -61,9 +61,9 @@ var _ = Describe("actions_create", func() {
 			}
 
 			for _, keyword := range wantKeywordList {
-				Eventually(session, 60*40).Should(Say(keyword))
+				Eventually(session.Wait(timeout)).Should(Say(keyword))
 			}
-			Eventually(session, 60*40).Should(Exit(0))
+			Eventually(session, timeout).Should(Exit(0))
 		})
 	})
 })

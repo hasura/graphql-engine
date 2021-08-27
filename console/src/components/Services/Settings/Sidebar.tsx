@@ -9,9 +9,14 @@ import { CLI_CONSOLE_MODE } from '../../../constants';
 import { getAdminSecret } from '../ApiExplorer/ApiRequest/utils';
 
 import styles from '../../Common/TableCommon/Table.scss';
+import {
+  checkFeatureSupport,
+  INSECURE_TLS_ALLOW_LIST,
+} from '../../../helpers/versionUtils';
 
 interface Metadata {
   inconsistentObjects: Record<string, unknown>[];
+  inconsistentInheritedRoles: Record<string, unknown>[];
 }
 
 type SidebarProps = {
@@ -25,7 +30,8 @@ type SectionDataKey =
   | 'allow-list'
   | 'logout'
   | 'about'
-  | 'inherited-roles';
+  | 'inherited-roles'
+  | 'insecure-domain';
 
 interface SectionData {
   key: SectionDataKey;
@@ -45,7 +51,12 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
   });
 
   const consistentIcon =
-    metadata.inconsistentObjects.length === 0 ? <CheckIcon /> : <CrossIcon />;
+    metadata.inconsistentObjects.length === 0 &&
+    metadata.inconsistentInheritedRoles.length === 0 ? (
+      <CheckIcon />
+    ) : (
+      <CrossIcon />
+    );
 
   sectionsData.push({
     key: 'status',
@@ -94,6 +105,14 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
     dataTestVal: 'inherited-roles-link',
     title: 'Inherited Roles',
   });
+
+  if (checkFeatureSupport(INSECURE_TLS_ALLOW_LIST))
+    sectionsData.push({
+      key: 'insecure-domain',
+      link: '/settings/insecure-domain',
+      dataTestVal: 'insecure-domain-link',
+      title: 'Insecure TLS Allow List',
+    });
 
   const currentLocation = location.pathname;
 

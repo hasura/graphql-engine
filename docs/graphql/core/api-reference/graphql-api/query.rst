@@ -450,7 +450,7 @@ AndExp
       rating: {
         _gt: 1,
         _lt: 5
-      }  
+      }
 
 .. _OrExp:
 
@@ -910,6 +910,25 @@ TableOrderBy
     }
   }
 
+**For computed fields**
+
+Returning scalar values:
+
+.. parsed-literal::
+
+    {computed-field-name: OrderByEnum_}
+
+Returning set of table rows:
+
+.. parsed-literal::
+
+    {computed-field-name: TableOrderBy_}
+
+.. parsed-literal::
+
+    {computed-field-name_aggregate: AggregateOrderBy_}
+
+
 Order by type for ``article`` table:
 
 .. code-block:: graphql
@@ -923,6 +942,54 @@ Order by type for ``article`` table:
      author: author_order_by
      #order by using "likes" array relationship aggregates
      likes_aggregate: likes_aggregate_order_by
+   }
+
+**For computed fields returning scalar type**
+
+.. parsed-literal::
+   {computed-field-name: OrderByEnum_}
+
+*Example*
+
+Consider a table ``student`` contains integer columns for course subjects to store marks. A
+computed field with the name ``total_marks`` defined to calculate sum of all subject marks.
+We need to fetch ``student`` rows sorted by ``total_marks``.
+
+.. code-block:: graphql
+
+   query {
+     student(order_by: {total_marks: desc}){
+       id
+       name
+       total_marks
+     }
+   }
+
+**For computed fields returning table row type**
+
+Computed fields returning set of table rows can be used to sort the query by their aggregate
+fields.
+
+.. parsed-literal::
+   {computed-field-name_aggregate: AggregateOrderBy_}
+
+*Example*
+
+A computed field ``get_articles`` is defined on the ``author`` table which returns set of
+``article`` table rows. Fetch authors sorted by the count of their articles.
+
+.. code-block:: graphql
+
+   query {
+     author(order_by: {get_articles_aggregate: {count: desc}}){
+       id
+       name
+       get_articles{
+         id
+         title
+         content
+       }
+     }
    }
 
 .. _OrderByEnum:

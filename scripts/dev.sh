@@ -78,7 +78,7 @@ try_jq() {
 
 # Bump this to:
 #  - force a reinstall of python dependencies, etc.
-DEVSH_VERSION=1.4
+DEVSH_VERSION=1.5
 
 case "${1-}" in
   graphql-engine)
@@ -243,7 +243,7 @@ function start_dbs() {
 #################################
 
 if [ "$MODE" = "graphql-engine" ]; then
-  cd "$PROJECT_ROOT/server"
+  cd "$PROJECT_ROOT"
   # Existing tix files for a different hge binary will cause issues:
   rm -f graphql-engine.tix
 
@@ -429,7 +429,7 @@ elif [ "$MODE" = "test" ]; then
   ########################################
   ###     Integration / unit tests     ###
   ########################################
-  cd "$PROJECT_ROOT/server"
+  cd "$PROJECT_ROOT"
 
   # Until we can use a real webserver for TestEventFlood, limit concurrency
   export HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE=8
@@ -443,16 +443,15 @@ elif [ "$MODE" = "test" ]; then
   export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
   export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
 
-  # It's better UX to build first (possibly failing) before trying to launch
-  # PG, but make sure that new-run uses the exact same build plan, else we risk
-  # rebuilding twice... ugh
-  # Formerly this was a `cabal build` but mixing cabal build and cabal run
-  # seems to conflict now, causing re-linking, haddock runs, etc. Instead do a
-  # `graphql-engine version` to trigger build
-  cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
-      --metadata-database-url="$PG_DB_URL" version
-
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
+    # It's better UX to build first (possibly failing) before trying to launch
+    # PG, but make sure that new-run uses the exact same build plan, else we risk
+    # rebuilding twice... ugh
+    # Formerly this was a `cabal build` but mixing cabal build and cabal run
+    # seems to conflict now, causing re-linking, haddock runs, etc. Instead do a
+    # `graphql-engine version` to trigger build
+    cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
+        --metadata-database-url="$PG_DB_URL" version
     start_dbs
   else
     # unit tests just need access to a postgres instance:
@@ -528,6 +527,8 @@ elif [ "$MODE" = "test" ]; then
       rm -rf "$PY_VENV"
       echo "$DEVSH_VERSION" > "$DEVSH_VERSION_FILE"
     fi
+    # cryptography 3.4.7 version requires Rust dependencies by default. But we don't need them for our tests, hence disabling them via the following env var => https://stackoverflow.com/a/66334084
+    export CRYPTOGRAPHY_DONT_BUILD_RUST=1
     set +u  # for venv activate
     if [ ! -d "$PY_VENV" ]; then
       python3 -m venv "$PY_VENV"

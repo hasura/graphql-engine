@@ -30,11 +30,17 @@ Install a binary globally
     your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
 
     If you'd prefer to install to a different location other than ``/usr/local/bin``, set the
-    env var ``INSTALL_PATH``:
+    ``INSTALL_PATH`` variable accordingly:
 
     .. code-block:: bash
 
       curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | INSTALL_PATH=$HOME/bin bash
+
+    You can also install a specific version of the CLI by providing the ``VERSION`` variable:
+
+    .. code-block:: bash
+
+      curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION=v2.0.7 bash
 
   .. tab:: Mac
 
@@ -48,11 +54,17 @@ Install a binary globally
     your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
 
     If you'd prefer to install to a different location other than ``/usr/local/bin``, set the
-    env var ``INSTALL_PATH``:
+    ``INSTALL_PATH`` variable accordingly:
 
     .. code-block:: bash
 
       curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | INSTALL_PATH=$HOME/bin bash
+
+    You can also install a specific version of the CLI by providing the ``VERSION`` variable:
+
+    .. code-block:: bash
+
+      curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION=v2.0.7 bash
 
   .. tab:: Windows
 

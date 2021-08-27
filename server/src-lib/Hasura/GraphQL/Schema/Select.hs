@@ -40,10 +40,12 @@ import qualified Data.Text                                  as T
 import qualified Language.GraphQL.Draft.Syntax              as G
 
 import           Control.Lens                               hiding (index)
+import           Data.Align                                 (align)
 import           Data.Has
 import           Data.Int                                   (Int64)
 import           Data.Parser.JSONPath
 import           Data.Text.Extended
+import           Data.These                                 (partitionThese)
 import           Data.Traversable                           (mapAccumL)
 
 import qualified Hasura.Backends.Postgres.SQL.Types         as PG
@@ -57,7 +59,9 @@ import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser                      (FieldParser, InputFieldsParser,
                                                              Kind (..), Parser,
                                                              UnpreparedValue (..), mkParameter)
-import           Hasura.GraphQL.Parser.Class
+import           Hasura.GraphQL.Parser.Class                (MonadParse (parseErrorWith, withPath),
+                                                             MonadSchema (..), MonadTableInfo,
+                                                             askRoleName, askTableInfo, parseError)
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
@@ -139,7 +143,7 @@ selectTableConnection
   -> PrimaryKeyColumns b  -- ^ primary key columns
   -> SelPermInfo b        -- ^ select permissions of the table
   -> m (Maybe (FieldParser n (ConnectionSelectExp b)))
-selectTableConnection sourceName tableInfo fieldName description pkeyColumns selectPermissions = do
+selectTableConnection sourceName tableInfo fieldName description pkeyColumns selectPermissions =
   for (relayExtension @b) \xRelayInfo -> memoizeOn 'selectTableConnection (sourceName, tableName, fieldName) do
     stringifyNum       <- asks $ qcStringifyNum . getter
     selectArgsParser   <- tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions
@@ -398,7 +402,7 @@ tableConnectionSelectionSet
   => SourceName
   -> TableInfo b
   -> SelPermInfo b
-  -> m (Parser 'Output n (IR.ConnectionFields b UnpreparedValue (UnpreparedValue b)))
+  -> m (Parser 'Output n (ConnectionFields b))
 tableConnectionSelectionSet sourceName tableInfo selectPermissions = memoizeOn 'tableConnectionSelectionSet (sourceName, tableName) do
   tableGQLName <- getTableGQLName tableInfo
   edgesParser  <- tableEdgesSelectionSet tableGQLName
@@ -432,7 +436,7 @@ tableConnectionSelectionSet sourceName tableInfo selectPermissions = memoizeOn '
          <&> parsedSelectionsToFields IR.PageInfoTypename
 
     tableEdgesSelectionSet
-      :: G.Name -> m (Parser 'Output n (IR.EdgeFields b UnpreparedValue (UnpreparedValue b)))
+      :: G.Name -> m (Parser 'Output n (EdgeFields b))
     tableEdgesSelectionSet tableGQLName = do
       edgeNodeParser      <- P.nonNullableParser <$> tableSelectionSet sourceName tableInfo selectPermissions
       let edgesType = tableGQLName <> $$(G.litName "Edge")
@@ -459,7 +463,7 @@ selectFunction sourceName function fieldName description selectPermissions = do
   tableInfo          <- askTableInfo sourceName tableName
   tableArgsParser    <- tableArguments sourceName tableInfo selectPermissions
   functionArgsParser <- customSQLFunctionArgs function
-  selectionSetParser <- tableSelectionList sourceName tableInfo selectPermissions
+  selectionSetParser <- returnFunctionParser sourceName tableInfo selectPermissions
   let argsParser = liftA2 (,) functionArgsParser tableArgsParser
   pure $ P.subselection fieldName description argsParser selectionSetParser
     <&> \((funcArgs, tableArgs'), fields) -> IR.AnnSelectG
@@ -469,6 +473,14 @@ selectFunction sourceName function fieldName description selectPermissions = do
       , IR._asnArgs     = tableArgs'
       , IR._asnStrfyNum = stringifyNum
       }
+
+  where
+    -- | For some return type T, we decide between returning 'T' or '[T!]!'.
+    -- see https://github.com/hasura/graphql-engine/issues/7109
+    returnFunctionParser =
+      case _fiJsonAggSelect function of
+        JASSingleObject -> tableSelectionSet
+        JASMultipleRows -> tableSelectionList
 
 selectFunctionAggregate
   :: forall b r m n
@@ -517,7 +529,7 @@ selectFunctionConnection
   -> PrimaryKeyColumns ('Postgres pgKind) -- ^ primary key columns of the target table
   -> SelPermInfo ('Postgres pgKind)       -- ^ select permissions of the target table
   -> m (Maybe (FieldParser n (ConnectionSelectExp ('Postgres pgKind))))
-selectFunctionConnection sourceName function fieldName description pkeyColumns selectPermissions = do
+selectFunctionConnection sourceName function fieldName description pkeyColumns selectPermissions =
   for (relayExtension @('Postgres pgKind)) \xRelayInfo -> do
     stringifyNum <- asks $ qcStringifyNum . getter
     let tableName = _fiReturnType function
@@ -580,8 +592,10 @@ defaultTableArgs sourceName tableInfo selectPermissions = do
           , IR._saDistinct = distinctArg
           }
   pure $ result `P.bindFields` \args -> do
-    onJust (IR._saOrderBy args) \orderBy ->
-      onJust (IR._saDistinct args) (validateArgs orderBy)
+    sequence_ do
+      orderBy  <- IR._saOrderBy  args
+      distinct <- IR._saDistinct args
+      Just $ validateArgs orderBy distinct
     pure args
   where
     validateArgs orderByCols distinctCols = do
@@ -623,7 +637,7 @@ tableOrderByArg
   => SourceName
   -> TableInfo b
   -> SelPermInfo b
-  -> m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnOrderByItemG b (UnpreparedValue b)))))
+  -> m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnotatedOrderByItemG b (UnpreparedValue b)))))
 tableOrderByArg sourceName tableInfo selectPermissions = do
   orderByParser <- orderByExp sourceName tableInfo selectPermissions
   pure $ do
@@ -736,7 +750,7 @@ tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions = do
   where
     base64Text = base64Decode <$> P.string
 
-    appendPrimaryKeyOrderBy :: NonEmpty (IR.AnnOrderByItemG b v) -> NonEmpty (IR.AnnOrderByItemG b v)
+    appendPrimaryKeyOrderBy :: NonEmpty (IR.AnnotatedOrderByItemG b v) -> NonEmpty (IR.AnnotatedOrderByItemG b v)
     appendPrimaryKeyOrderBy orderBys@(h NE.:| t) =
       let orderByColumnNames =
             orderBys ^.. traverse . to IR.obiColumn . IR._AOCColumn . to pgiColumn
@@ -746,7 +760,7 @@ tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions = do
       in h NE.:| (t <> pkeyOrderBys)
 
     parseConnectionSplit
-      :: Maybe (NonEmpty (IR.AnnOrderByItemG b (UnpreparedValue b)))
+      :: Maybe (NonEmpty (IR.AnnotatedOrderByItemG b (UnpreparedValue b)))
       -> IR.ConnectionSplitKind
       -> BL.ByteString
       -> n (NonEmpty (IR.ConnectionSplit b (UnpreparedValue b)))
@@ -772,10 +786,14 @@ tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions = do
             pgValue <- liftQErr $ parseScalarValueColumnType columnType orderByItemValue
             let unresolvedValue = UVParameter Nothing $ ColumnValue columnType pgValue
             pure $ IR.ConnectionSplit splitKind unresolvedValue $
-                   IR.OrderByItemG orderType (() <$ annObCol) nullsOrder
+                   IR.OrderByItemG orderType annObCol nullsOrder
       where
         throwInvalidCursor = parseError "the \"after\" or \"before\" cursor is invalid"
         liftQErr = either (parseError . qeError) pure . runExcept
+
+        mkAggregateOrderByPath = \case
+           IR.AAOCount    -> [J.Key "count"]
+           IR.AAOOp t col -> [J.Key t, J.Key $ toTxt $ pgiColumn col]
 
         getPathFromOrderBy = \case
           IR.AOCColumn pgColInfo ->
@@ -786,15 +804,24 @@ tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions = do
             in pathElement : getPathFromOrderBy obCol
           IR.AOCArrayAggregation relInfo _ aggOb ->
             let fieldName = J.Key $ relNameToTxt (riName relInfo) <> "_aggregate"
-            in fieldName : case aggOb of
-                 IR.AAOCount    -> [J.Key "count"]
-                 IR.AAOOp t col -> [J.Key t, J.Key $ toTxt $ pgiColumn col]
+            in fieldName : mkAggregateOrderByPath aggOb
+          IR.AOCComputedField cfob ->
+            let fieldNameText = computedFieldNameToText $ IR._cfobName cfob
+            in case IR._cfobOrderByElement cfob of
+                 IR.CFOBEScalar _ -> [J.Key fieldNameText]
+                 IR.CFOBETableAggregation _ _ aggOb ->
+                   J.Key (fieldNameText <> "_aggregate") : mkAggregateOrderByPath aggOb
 
         getOrderByColumnType = \case
           IR.AOCColumn pgColInfo -> pgiType pgColInfo
           IR.AOCObjectRelation _ _ obCol -> getOrderByColumnType obCol
-          IR.AOCArrayAggregation _ _ aggOb ->
-            case aggOb of
+          IR.AOCArrayAggregation _ _ aggOb -> aggregateOrderByColumnType aggOb
+          IR.AOCComputedField cfob ->
+            case IR._cfobOrderByElement cfob of
+              IR.CFOBEScalar scalarType          -> ColumnScalar scalarType
+              IR.CFOBETableAggregation _ _ aggOb -> aggregateOrderByColumnType aggOb
+          where
+            aggregateOrderByColumnType = \case
               IR.AAOCount        -> ColumnScalar (aggregateOrderByCountType @b)
               IR.AAOOp _ colInfo -> pgiType colInfo
 
@@ -883,32 +910,34 @@ tableAggregationFields sourceName tableInfo selectPermissions = memoizeOn 'table
           subselectionParser = P.selectionSet setName setDesc columns
             <&> parsedSelectionsToFields IR.CFExp
       in P.subselection_ operator Nothing subselectionParser
-         <&> (IR.AFOp . IR.AggregateOp opText)
+         <&> IR.AFOp . IR.AggregateOp opText
 
-lookupRemoteField'
+lookupNestedFieldType'
   :: (MonadSchema n m, MonadError QErr m)
-  => [P.Definition P.FieldInfo]
+  => G.Name
+  -> RemoteSchemaIntrospection
   -> FieldCall
-  -> m P.FieldInfo
-lookupRemoteField' fieldInfos (FieldCall fcName _) =
-  case find ((== fcName) . P.dName) fieldInfos of
-    Nothing -> throw400 RemoteSchemaError $ "field with name " <> fcName <<> " not found"
-    Just (P.Definition _ _ _ fieldInfo) -> pure fieldInfo
+  -> m G.GType
+lookupNestedFieldType' parentTypeName remoteSchemaIntrospection (FieldCall fcName _) =
+  case lookupObject remoteSchemaIntrospection parentTypeName of
+    Nothing -> throw400 RemoteSchemaError $ "object with name " <> parentTypeName <<> " not found"
+    Just G.ObjectTypeDefinition{..} ->
+      case find ((== fcName) . G._fldName) _otdFieldsDefinition of
+        Nothing -> throw400 RemoteSchemaError $ "field with name " <> fcName <<> " not found"
+        Just G.FieldDefinition{..} -> pure _fldType
 
-lookupRemoteField
+lookupNestedFieldType
   :: (MonadSchema n m, MonadError QErr m)
-  => [P.Definition P.FieldInfo]
+  => G.Name
+  -> RemoteSchemaIntrospection
   -> NonEmpty FieldCall
-  -> m P.FieldInfo
-lookupRemoteField fieldInfos (fieldCall :| rest) =
+  -> m G.GType
+lookupNestedFieldType parentTypeName remoteSchemaIntrospection (fieldCall :| rest) = do
+  fieldType <- lookupNestedFieldType' parentTypeName remoteSchemaIntrospection fieldCall
   case NE.nonEmpty rest of
-    Nothing -> lookupRemoteField' fieldInfos fieldCall
+    Nothing -> pure $ fieldType
     Just rest' -> do
-      (P.FieldInfo _ type') <- lookupRemoteField' fieldInfos fieldCall
-      (P.Definition _ _ _ (P.ObjectInfo objFieldInfos _))
-       <- onNothing (P.getObjectInfo type') $
-          throw400 RemoteSchemaError $ "field " <> fcName fieldCall <<> " is expected to be an object"
-      lookupRemoteField objFieldInfos rest'
+      lookupNestedFieldType (G.getBaseType fieldType) remoteSchemaIntrospection rest'
 
 -- | An individual field of a table
 --
@@ -964,7 +993,7 @@ fieldSelection sourceName table maybePkeyColumns fieldInfo selectPermissions = d
                <&> IR.mkAnnColumnField columnInfo caseBoolExpUnpreparedValue
 
     FIRelationship relationshipInfo ->
-      concat . maybeToList <$> relationshipField sourceName relationshipInfo
+      concat . maybeToList <$> relationshipField sourceName table relationshipInfo
 
     FIComputedField computedFieldInfo ->
       maybeToList <$> computedField sourceName computedFieldInfo table selectPermissions
@@ -977,30 +1006,73 @@ relationshipField
   :: forall b r m n
    . MonadBuildSchema b r m n
   => SourceName
+  -> TableName b
   -> RelInfo b
   -> m (Maybe [FieldParser n (AnnotatedField b)])
-relationshipField sourceName relationshipInfo = runMaybeT do
-  let otherTableName = riRTable     relationshipInfo
-      colMapping     = riMapping    relationshipInfo
-      relName        = riName       relationshipInfo
-      nullable       = riIsNullable relationshipInfo
-  otherTableInfo <- lift $ askTableInfo sourceName otherTableName
+relationshipField sourceName table RelInfo{..} = runMaybeT do
+  otherTableInfo <- lift $ askTableInfo sourceName riRTable
   remotePerms  <- MaybeT $ tableSelectPermissions otherTableInfo
-  relFieldName <- lift $ textToName $ relNameToTxt relName
-  case riType relationshipInfo of
+  relFieldName <- lift $ textToName $ relNameToTxt riName
+  case riType of
     ObjRel -> do
       let desc = Just $ G.Description "An object relationship"
       selectionSetParser <- lift $ tableSelectionSet sourceName otherTableInfo remotePerms
+      -- We need to set the correct nullability of our GraphQL field.  Manual
+      -- relationships are always nullable, and so are "reverse" object
+      -- relationships, i.e. Hasura relationships that are generated from a
+      -- referenced table to a referencing table.  For automatic forward object
+      -- relationships, i.e. the generated relationship from table1 to table2,
+      -- where table1 has a foreign key constraint, we have to do some work.
+      --
+      -- Specifically, we would like to mark the relationship generated from a
+      -- foreign key constraint from table1 to table2 to be non-nullable if
+      -- Postgres enforces that for each row in table1, a corresponding row in
+      -- table2 exists.  From the Postgres manual:
+      --
+      -- "Normally, a referencing row need not satisfy the foreign key
+      -- constraint if any of its referencing columns are null.  If MATCH FULL
+      -- is added to the foreign key declaration, a referencing row escapes
+      -- satisfying the constraint only if all its referencing columns are null
+      -- (so a mix of null and non-null values is guaranteed to fail a MATCH
+      -- FULL constraint)."
+      --
+      -- https://www.postgresql.org/docs/9.5/ddl-constraints.html#DDL-CONSTRAINTS-FK
+      --
+      -- Since we don't store MATCH FULL in the RQL representation of the
+      -- database, the closest we can get is to only set the field to be
+      -- non-nullable if _all_ of the columns that reference the foreign table
+      -- are non-nullable.  Strictly speaking, we could do slightly better by
+      -- setting the field to be non-nullable also if the foreign key has MATCH
+      -- FULL set, and _any_ of the columns is non-nullable.  But we skip doing
+      -- this since, as of writing this, the old code used to make the wrong
+      -- decision about nullability of joint foreign keys entirely, so this is
+      -- probably not a very widely used mode of use.  The impact of this
+      -- suboptimality is merely that in introspection some fields might get
+      -- marked nullable which are in fact known to always be non-null.
+      nullable <- case (riIsManual, riInsertOrder) of
+        -- Automatically generated forward relationship
+        (False, BeforeParent) -> do
+          tableInfo <- askTableInfo @b sourceName table
+          let columns = Map.keys riMapping
+              fieldInfoMap = _tciFieldInfoMap $ _tiCoreInfo tableInfo
+              findColumn col = Map.lookup (fromCol @b col) fieldInfoMap ^? _Just._FIColumn
+          -- Fetch information about the referencing columns of the foreign key
+          -- constraint
+          colInfo <- traverse findColumn columns
+                     `onNothing` throw500 "could not find column info in schema cache"
+          pure $ boolToNullable $ any pgiIsNullable colInfo
+        -- Manual or reverse relationships are always nullable
+        _ -> pure Nullable
       pure $ pure $ case nullable of { Nullable -> id; NotNullable -> P.nonNullableField} $
         P.subselection_ relFieldName desc selectionSetParser
-             <&> \fields -> IR.AFObjectRelation $ IR.AnnRelationSelectG relName colMapping $
-                    IR.AnnObjectSelectG fields otherTableName $
+             <&> \fields -> IR.AFObjectRelation $ IR.AnnRelationSelectG riName riMapping $
+                    IR.AnnObjectSelectG fields riRTable $
                     IR._tpFilter $ tablePermissionsInfo remotePerms
     ArrRel -> do
       let arrayRelDesc = Just $ G.Description "An array relationship"
       otherTableParser <- lift $ selectTable sourceName otherTableInfo relFieldName arrayRelDesc remotePerms
       let arrayRelField = otherTableParser <&> \selectExp -> IR.AFArrayRelation $
-            IR.ASSimple $ IR.AnnRelationSelectG relName colMapping selectExp
+            IR.ASSimple $ IR.AnnRelationSelectG riName riMapping selectExp
           relAggFieldName = relFieldName <> $$(G.litName "_aggregate")
           relAggDesc      = Just $ G.Description "An aggregate relationship"
       remoteAggField <- lift $ selectTableAggregate sourceName otherTableInfo relAggFieldName relAggDesc remotePerms
@@ -1015,8 +1087,8 @@ relationshipField sourceName relationshipInfo = runMaybeT do
             relConnectionDesc = Just $ G.Description "An array relationship connection"
         MaybeT $ lift $ selectTableConnection sourceName otherTableInfo relConnectionName relConnectionDesc pkeyColumns remotePerms
       pure $ catMaybes [ Just arrayRelField
-                       , fmap (IR.AFArrayRelation . IR.ASAggregate . IR.AnnRelationSelectG relName colMapping) <$> remoteAggField
-                       , fmap (IR.AFArrayRelation . IR.ASConnection . IR.AnnRelationSelectG relName colMapping) <$> remoteConnectionField
+                       , fmap (IR.AFArrayRelation . IR.ASAggregate . IR.AnnRelationSelectG riName riMapping) <$> remoteAggField
+                       , fmap (IR.AFArrayRelation . IR.ASConnection . IR.AnnRelationSelectG riName riMapping) <$> remoteConnectionField
                        ]
 
 -- | Computed field parser
@@ -1104,59 +1176,72 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
   -- https://github.com/hasura/graphql-engine/issues/5144
   -- The above issue is easily fixable by removing the following guard and 'MaybeT' monad transformation
   guard $ queryType == ET.QueryHasura
-  let RemoteFieldInfo name _params hasuraFields remoteFields
-        remoteSchemaInfo remoteSchemaInputValueDefns remoteSchemaName (table, source) = remoteFieldInfo
-  (roleIntrospectionResult, parsedIntrospection) <-
-    -- The remote relationship field should not be accessible
-    -- if the remote schema is not accessible to the said role
-    hoistMaybe $ Map.lookup remoteSchemaName remoteRelationshipQueryCtx
-  let fieldDefns = map P.fDefinition (piQuery parsedIntrospection)
-  role <- askRoleName
-  let hasuraFieldNames = Set.map dbJoinFieldToName hasuraFields
-      remoteRelationship = RemoteRelationship name source table hasuraFieldNames remoteSchemaName remoteFields
-  (newInpValDefns, remoteFieldParamMap) <-
-    if | role == adminRoleName ->
-         -- we don't validate the remote relationship when the role is admin
-         -- because it's already been validated, when the remote relationship
-         -- was created
-         pure (remoteSchemaInputValueDefns, _rfiParamMap remoteFieldInfo)
-       | otherwise -> do
-           fieldInfoMap <- (_tciFieldInfoMap . _tiCoreInfo) <$> askTableInfo @b source table
-           roleRemoteField <-
-             afold @(Either _) $
-             validateRemoteRelationship remoteRelationship (remoteSchemaInfo, roleIntrospectionResult) fieldInfoMap
-           pure $ (_rfiInputValueDefinitions roleRemoteField, _rfiParamMap roleRemoteField)
-  let RemoteSchemaIntrospection typeDefns = irDoc roleIntrospectionResult
-      -- add the new input value definitions created by the remote relationship
-      -- to the existing schema introspection of the role
-      remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> newInpValDefns
-  fieldName <- textToName $ remoteRelationshipNameToText $ _rfiName remoteFieldInfo
-  -- This selection set parser, should be of the remote node's selection set parser, which comes
-  -- from the fieldCall
-  nestedFieldInfo <- lift $ lookupRemoteField fieldDefns $ unRemoteFields $ _rfiRemoteFields remoteFieldInfo
-  case nestedFieldInfo of
-    P.FieldInfo{ P.fType = fieldType } -> do
-      let typeName = P.getName fieldType
-      fieldTypeDefinition <- onNothing (lookupType (irDoc roleIntrospectionResult) typeName)
-                             -- the below case will never happen because we get the type name
-                             -- from the schema document itself i.e. if a field exists for the
-                             -- given role, then it's return type also must exist
-                             $ throw500 $ "unexpected: " <> typeName <<> " not found "
+  case remoteFieldInfo of
+    RFISource _remoteSource -> throw500 "not supported yet"
+    RFISchema remoteSchema -> do
+      let RemoteSchemaFieldInfo name params hasuraFields remoteFields remoteSchemaInfo remoteSchemaInputValueDefns remoteSchemaName (table, source) = remoteSchema
+      RemoteRelationshipQueryContext roleIntrospectionResultOriginal _ remoteSchemaCustomizer <-
+        -- The remote relationship field should not be accessible
+        -- if the remote schema is not accessible to the said role
+        hoistMaybe $ Map.lookup remoteSchemaName remoteRelationshipQueryCtx
+      role <- askRoleName
+      let hasuraFieldNames = Set.map dbJoinFieldToName hasuraFields
+          relationshipDef = RemoteSchemaRelationshipDef remoteSchemaName hasuraFieldNames remoteFields
+      (newInpValDefns :: [(G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)], remoteFieldParamMap) <-
+        if role == adminRoleName
+        then do
+          -- we don't validate the remote relationship when the role is admin
+          -- because it's already been validated, when the remote relationship
+          -- was created
+          pure (remoteSchemaInputValueDefns, params)
+        else do
+          fieldInfoMap <- (_tciFieldInfoMap . _tiCoreInfo) <$> askTableInfo @b source table
+          roleRemoteField <-
+            afold @(Either _) $
+            validateRemoteSchemaRelationship relationshipDef table name source (remoteSchemaInfo, roleIntrospectionResultOriginal) fieldInfoMap
+          pure $ (_rfiInputValueDefinitions roleRemoteField, _rfiParamMap roleRemoteField)
+      let roleIntrospection@(RemoteSchemaIntrospection typeDefns) = irDoc roleIntrospectionResultOriginal
+          -- add the new input value definitions created by the remote relationship
+          -- to the existing schema introspection of the role
+          remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> newInpValDefns
+      fieldName <- textToName $ remoteRelationshipNameToText name
+
+      -- This selection set parser, should be of the remote node's selection set parser, which comes
+      -- from the fieldCall
+      let fieldCalls = unRemoteFields remoteFields
+          parentTypeName = irQueryRoot roleIntrospectionResultOriginal
+      nestedFieldType <- lift $ lookupNestedFieldType parentTypeName roleIntrospection fieldCalls
+      let typeName = G.getBaseType nestedFieldType
+      fieldTypeDefinition <- onNothing (lookupType roleIntrospection typeName)
+                              -- the below case will never happen because we get the type name
+                              -- from the schema document itself i.e. if a field exists for the
+                              -- given role, then it's return type also must exist
+                              $ throw500 $ "unexpected: " <> typeName <<> " not found "
       -- These are the arguments that are given by the user while executing a query
       let remoteFieldUserArguments = map snd $ Map.toList remoteFieldParamMap
       remoteFld <-
-        lift $ remoteField remoteRelationshipIntrospection fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
+        lift $
+          customizeFieldParser (,) remoteSchemaCustomizer parentTypeName . P.wrapFieldParser nestedFieldType <$>
+          remoteField remoteRelationshipIntrospection fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
+
       pure $ pure $ remoteFld
-        `P.bindField` \G.Field{ G._fArguments = args, G._fSelectionSet = selSet } -> do
+        `P.bindField` \(resultCustomizer, G.Field{ G._fArguments = args, G._fSelectionSet = selSet, G._fName = fname}) -> do
           let remoteArgs =
                 Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue $ argVal
-          pure $ IR.AFRemote $ IR.RemoteSelect
-            { _rselArgs          = remoteArgs
-            , _rselSelection     = selSet
-            , _rselHasuraFields  = _rfiHasuraFields remoteFieldInfo
-            , _rselFieldCall     = unRemoteFields $ _rfiRemoteFields remoteFieldInfo
-            , _rselRemoteSchema  = _rfiRemoteSchema remoteFieldInfo
+          let resultCustomizer' = applyFieldCalls fieldCalls $ applyAliasMapping (singletonAliasMapping fname (fcName $ NE.last fieldCalls)) resultCustomizer
+          pure $ IR.AFRemote $ IR.RemoteSelectRemoteSchema $ IR.RemoteSchemaSelect
+            { _rselArgs             = remoteArgs
+            , _rselResultCustomizer = resultCustomizer'
+            , _rselSelection        = selSet
+            , _rselHasuraFields     = hasuraFields
+            , _rselFieldCall        = fieldCalls
+            , _rselRemoteSchema     = remoteSchemaInfo
             }
+  where
+    -- Apply parent field calls so that the result customizer modifies the nested field
+    applyFieldCalls :: NonEmpty FieldCall -> RemoteResultCustomizer -> RemoteResultCustomizer
+    applyFieldCalls fieldCalls resultCustomizer =
+      foldr (modifyFieldByName . fcName) resultCustomizer $ NE.init fieldCalls
 
 -- | The custom SQL functions' input "args" field parser
 -- > function_name(args: function_args)
@@ -1306,7 +1391,7 @@ functionArgs functionTrackedAs (toList -> inputArgs) = do
 
 tablePermissionsInfo :: Backend b => SelPermInfo b -> TablePerms b
 tablePermissionsInfo selectPermissions = IR.TablePerm
-  { IR._tpFilter = (fmap . fmap) partialSQLExpToUnpreparedValue $ spiFilter selectPermissions
+  { IR._tpFilter = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions
   , IR._tpLimit  = spiLimit selectPermissions
   }
 
@@ -1405,7 +1490,7 @@ nodePG = memoizeOn 'nodePG () do
 nodeField
   :: forall m n r
    . MonadBuildSchema ('Postgres 'Vanilla) r m n
-  => m (P.FieldParser n (IR.QueryRootField UnpreparedValue UnpreparedValue))
+  => m (P.FieldParser n (IR.QueryRootField UnpreparedValue))
 nodeField = do
   let idDescription = G.Description "A globally unique id"
       idArgument = P.field $$(G.litName "id") (Just idDescription) P.identifier

@@ -10,7 +10,10 @@ import {
   getQualifiedTableDef,
 } from '../../../../dataSources';
 import { capitalize } from '../../../Common/utils/jsUtils';
-import { exportMetadata } from '../../../../metadata/actions';
+import {
+  exportMetadata,
+  loadInconsistentObjects,
+} from '../../../../metadata/actions';
 import {
   getCreatePermissionQuery,
   getDropPermissionQuery,
@@ -824,6 +827,8 @@ const permChangePermissions = changeType => {
       dispatch(permSetRoleName(''));
       dispatch(permCloseEdit());
       dispatch(exportMetadata());
+
+      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
     };
     const customOnError = () => {};
 

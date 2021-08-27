@@ -12,6 +12,7 @@ import {
   getRunSqlQuery,
   WhereClause,
 } from '../../src/components/Common/utils/v1QueryUtils';
+import { Driver } from '.';
 
 export interface Relationship
   extends Pick<BaseTable, 'table_name' | 'table_schema'> {
@@ -88,6 +89,24 @@ export type ComputedField = {
     session_argument: string | null;
   };
   comment: string | null;
+};
+
+export type IndexType = 'btree' | 'hash' | 'gin' | 'gist' | 'spgist' | 'brin';
+
+export type Index = {
+  table_name: string;
+  table_schema: string;
+  index_name: string;
+  index_type: IndexType;
+  index_columns: string[];
+  index_definition_sql: string;
+};
+
+export type IndexFormTips = {
+  unique: string;
+  indexName: string;
+  indexColumns: string;
+  indexType: string;
 };
 
 export type Schema = {
@@ -214,7 +233,7 @@ export type PermissionColumnCategories = Record<ColumnCategories, string[]>;
 
 export type SupportedFeaturesType = {
   driver: {
-    name: string;
+    name: Driver;
     fetchVersion?: {
       enabled: boolean;
     };
@@ -273,6 +292,10 @@ export type SupportedFeaturesType = {
         view: boolean;
         edit: boolean;
       };
+      indexes?: {
+        view: boolean;
+        edit: boolean;
+      };
       customGqlRoot?: boolean;
       setAsEnum?: boolean;
       untrack?: boolean;
@@ -285,6 +308,7 @@ export type SupportedFeaturesType = {
     };
     permissions: {
       enabled: boolean;
+      aggregation: boolean;
     };
     track: {
       enabled: boolean;

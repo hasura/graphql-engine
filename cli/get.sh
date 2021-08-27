@@ -33,15 +33,24 @@ fi
 
 release=${1:-latest}
 
-log "Getting $release version..."
+log "Selecting version..."
 
+# releases.hasura.io is not updated to point to 2.x releases
+# in the interim, hardcode latest version
+
+# TODO: uncommment when releases.hasura.io is updated
+#
 # adapted from https://github.com/openfaas/faas-cli/blob/master/get.sh
-version=`echo $(curl -s -f -H 'Content-Type: application/json' https://releases.hasura.io/graphql-engine?agent=cli-get.sh) | sed -n -e "s/^.*\"$release\":\"\([^\",}]*\)\".*$/\1/p"`
+# version=${VERSION:-`echo $(curl -s -f -H 'Content-Type: application/json' \
+    # https://releases.hasura.io/graphql-engine?agent=cli-get.sh) | sed -n -e "s/^.*\"$release\":\"\([^\",}]*\)\".*$/\1/p"`}
+
+version=${VERSION:-v2.0.6}
+
 if [ ! $version ]; then
     log "${YELLOW}"
     log "Failed while attempting to install hasura graphql-engine cli. Please manually install:"
     log ""
-    log "2. Open your web browser and go to https://github.com/hasura/graphql-engine/releases"
+    log "1. Open your web browser and go to https://github.com/hasura/graphql-engine/releases"
     log "2. Download the cli from latest release for your platform. Name it 'hasura'."
     log "3. chmod +x ./hasura"
     log "4. mv ./hasura /usr/local/bin"
@@ -49,7 +58,12 @@ if [ ! $version ]; then
     die "exiting..."
 fi
 
-log "Latest version is $version"
+log "Selected version: $version"
+
+log "${YELLOW}"
+log NOTE: Install a specific version of the CLI by using VERSION variable
+log 'curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION=v2.0.6 bash'
+log "${NC}"
 
 # check for existing hasura installation
 hasCli=$(which hasura)
@@ -82,7 +96,7 @@ if [[ "$archstr" == 'x86_64' ]]; then
 elif [[ "$archstr" == 'arm64' ]] || [[ "$archstr" == 'aarch64' ]]; then
     arch='arm64'
 else
-    die "prebuilt binaries for $(arch) architecture not avialable, please try building from source https://github.com/hasura/graphql-engine/blob/master/cli/README.md"
+    die "prebuilt binaries for $(arch) architecture not available, please try building from source https://github.com/hasura/graphql-engine/blob/master/cli/README.md"
 fi
 
 # some variables
@@ -102,7 +116,7 @@ try chmod +x $targetFile
 log "${GREEN}Download complete!${NC}"
 
 # check for sudo
-needSudo=$(touch ${INSTALL_PATH}/.hasurainstall &> /dev/null)
+needSudo=$(mkdir -p ${INSTALL_PATH} && touch ${INSTALL_PATH}/.hasurainstall &> /dev/null)
 if [[ "$?" == "1" ]]; then
     NEED_SUDO=1
 fi

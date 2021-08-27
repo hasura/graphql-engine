@@ -29,11 +29,7 @@ Quickstart guides
   - Recommended as it's **the fastest way** to try Hasura GraphQL engine out.
   - Comes with **extra features for reliability and security** and a managed metadata database.
 
-- :ref:`Using Docker <docker_simple>` - Set up Hasura GraphQL engine with a PG metadata database using Docker Compose.
-
-  - Recommended if you want to **run Hasura locally**.
-  - Recommended if your database cannot be exposed to Hasura Cloud.
-
+Hasura is open-source and can also be downloaded locally. :ref:`Set up Hasura GraphQL engine using Docker Compose <docker_simple>`. This is recommended if you want to **run Hasura locally** or if your database cannot be exposed to Hasura Cloud.
 
 .. TODO: add link to detailed deployment guides post 2.0 content update
 
@@ -44,14 +40,20 @@ Hasura GraphQL engine supports:
 
 - :ref:`Postgres <database_postgres>`
 - :ref:`MS SQL Server <database_ms_sql_server>`
+- :ref:`Citus / Hyperscale <database_citus-hyperscale-postgres>`
+- :ref:`BigQuery <database_bigquery>`
 - **MySQL** (in preview) - See the :ref:`preview guide <mysql_preview>`
+
+.. admonition:: Additional Resources
+
+  Get Started with Hasura today - `Watch video guide <https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=>`__.
 
 .. toctree::
    :maxdepth: 2
    :titlesonly:
    :hidden:
 
-   Hasura Cloud quickstart <https://hasura.io/docs/latest/graphql/cloud/getting-started/index.html>
-   Docker quickstart <docker-simple>
+   Quickstart with Hasura Cloud <https://hasura.io/docs/latest/graphql/cloud/getting-started/index.html>
+   Quickstart with Hasura using Docker <docker-simple>
    Making your first GraphQL query <first-graphql-query>
 

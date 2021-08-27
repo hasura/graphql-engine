@@ -4,8 +4,8 @@
 
 .. _metadata_api_custom_functions:
 
-Metadata API Reference: Custom Functions (v2.0 and above)
-=========================================================
+Metadata API Reference: Custom Functions
+========================================
 
 .. contents:: Table of contents
   :backlinks: none

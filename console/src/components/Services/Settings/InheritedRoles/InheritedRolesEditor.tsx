@@ -151,7 +151,7 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
                 )}
               </div>
             </div>
-            <hr />
+            <hr className="my-lg" />
             <div className={styles.filterContainer}>
               <TextInput
                 onChange={filterTextChange}
@@ -180,6 +180,7 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
                     .map((option: Option, index) => (
                       <div key={index} className={styles.roleOption}>
                         <input
+                          className="legacy-input-fix"
                           type="checkbox"
                           checked={option.isChecked}
                           onChange={checkboxValueChange}
@@ -190,7 +191,7 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
                       </div>
                     ))}
             </div>
-            <hr />
+            <hr className="my-lg" />
             <div>
               <Button
                 color="yellow"

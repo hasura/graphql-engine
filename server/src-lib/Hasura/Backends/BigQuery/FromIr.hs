@@ -403,7 +403,7 @@ fromSelectArgsG selectArgsG = do
       Nothing -> pure Proxy
       Just {} -> refute (pure DistinctIsn'tSupported)
   (argsOrderBy, joins) <-
-    runWriterT (traverse fromAnnOrderByItemG (maybe [] toList orders))
+    runWriterT (traverse fromAnnotatedOrderByItemG (maybe [] toList orders))
   -- Any object-relation joins that we generated, we record their
   -- generated names into a mapping.
   let argsExistingJoins =
@@ -424,10 +424,10 @@ fromSelectArgsG selectArgsG = do
 
 -- | Produce a valid ORDER BY construct, telling about any joins
 -- needed on the side.
-fromAnnOrderByItemG ::
-     Ir.AnnOrderByItemG 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
-fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
-  orderByFieldName <- unfurlAnnOrderByElement obiColumn
+fromAnnotatedOrderByItemG ::
+     Ir.AnnotatedOrderByItemG 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
+fromAnnotatedOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
+  orderByFieldName <- unfurlAnnotatedOrderByElement obiColumn
   let morderByOrder =
         obiType
   let orderByNullsOrder =
@@ -439,9 +439,9 @@ fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
 -- | Unfurl the nested set of object relations (tell'd in the writer)
 -- that are terminated by field name (Ir.AOCColumn and
 -- Ir.AOCArrayAggregation).
-unfurlAnnOrderByElement ::
-     Ir.AnnOrderByElement 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
-unfurlAnnOrderByElement =
+unfurlAnnotatedOrderByElement ::
+     Ir.AnnotatedOrderByElement 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
+unfurlAnnotatedOrderByElement =
   \case
     Ir.AOCColumn pgColumnInfo -> lift (fromPGColumnInfo pgColumnInfo)
     Ir.AOCObjectRelation Rql.RelInfo {riMapping = mapping, riRTable = tableName} annBoolExp annOrderByElementG -> do
@@ -477,7 +477,7 @@ unfurlAnnOrderByElement =
                    }
              , unfurledObjectTableAlias = Just (tableName, joinAliasEntity)
              })
-      local (const joinAliasEntity) (unfurlAnnOrderByElement annOrderByElementG)
+      local (const joinAliasEntity) (unfurlAnnotatedOrderByElement annOrderByElementG)
     Ir.AOCArrayAggregation Rql.RelInfo {riMapping = mapping, riRTable = tableName} annBoolExp annAggregateOrderBy -> do
       selectFrom <- lift (lift (fromQualifiedTable tableName))
       let alias = aggFieldName
@@ -791,17 +791,6 @@ fromAnnFieldsG existingJoins stringifyNumbers (Rql.FieldName name, field) =
         (\aliasedThing ->
            JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
         (fromArraySelectG arraySelectG)
-    -- this will be gone once the code which collects remote joins from the IR
-    -- emits a modified IR where remote relationships can't be reached
-    Ir.AFRemote _ ->
-      pure
-        (ExpressionFieldSource
-           Aliased
-             { aliasedThing = BigQuery.ValueExpression (StringValue "null: remote field selected")
-             , aliasedAlias = name
-             })
-    -- TODO: implement this
-    Ir.AFDBRemote _ -> error "FIXME"
 
 
 -- | Here is where we project a field as a column expression. If
@@ -1345,13 +1334,13 @@ fromOpExpG expression op =
     Ir.AEQ True val  -> pure (EqualExpression expression val)
     Ir.ANE False val -> pure (nullableBoolInequality expression val)
     Ir.ANE True val  -> pure (NotEqualExpression expression val)
+    Ir.AIN val       -> pure (OpExpression InOp expression val)
+    Ir.ANIN val      -> pure (OpExpression NotInOp expression val)
     Ir.AGT val       -> pure (OpExpression MoreOp expression val)
     Ir.ALT val       -> pure (OpExpression LessOp expression val)
     Ir.AGTE val      -> pure (OpExpression MoreOrEqualOp expression val)
     Ir.ALTE val      -> pure (OpExpression LessOrEqualOp expression val)
     Ir.ACast _casts  -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
-    Ir.AIN _val      -> refute (pure (UnsupportedOpExpG op)) -- S.BECompareAny S.SEQ lhs val
-    Ir.ANIN _val     -> refute (pure (UnsupportedOpExpG op)) -- S.BENot $ S.BECompareAny S.SEQ lhs val
     Ir.ALIKE _val    -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLIKE lhs val
     Ir.ANLIKE _val   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNLIKE lhs val
     Ir.CEQ _rhsCol   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol

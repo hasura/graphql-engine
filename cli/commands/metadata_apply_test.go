@@ -14,21 +14,45 @@ import (
 )
 
 var commonMetadataCommandsTest = func(projectDirectory string) {
+	Context("check the behavior --dry-run", func() {
+		testutil.RunCommandAndSucceed(testutil.CmdOpts{
+			Args:             []string{"metadata", "apply", "--dry-run"},
+			WorkingDirectory: projectDirectory,
+		})
+		session := testutil.Hasura(testutil.CmdOpts{
+			Args:             []string{"metadata", "diff"},
+			WorkingDirectory: projectDirectory,
+		})
+
+		Eventually(session, timeout).Should(Exit(0))
+		stdout := session.Out.Contents()
+		Expect(stdout).Should(ContainSubstring("tables"))
+	})
 	Context("should apply metadata to server", func() {
 		session := testutil.Hasura(testutil.CmdOpts{
 			Args:             []string{"metadata", "apply"},
 			WorkingDirectory: projectDirectory,
 		})
-		Eventually(session, 60*40).Should(Exit(0))
-		Eventually(session.Wait().Err.Contents()).Should(ContainSubstring("Metadata applied"))
+		Eventually(session, timeout).Should(Exit(0))
+		Expect(session.Err.Contents()).Should(ContainSubstring("Metadata applied"))
 	})
 	Context("apply metadata to server and it should output the metadata of project to stdout", func() {
-		session := testutil.Hasura(testutil.CmdOpts{
+		projectSession := testutil.Hasura(testutil.CmdOpts{
 			Args:             []string{"metadata", "apply", "--output", "json"},
 			WorkingDirectory: projectDirectory,
 		})
-		Eventually(session, 60*40).Should(Exit(0))
-		Eventually(isJSON(session.Wait().Out.Contents())).Should(BeTrue())
+		Eventually(projectSession, timeout).Should(Exit(0))
+		Eventually(isJSON(projectSession.Out.Contents())).Should(BeTrue())
+		projectStdout := projectSession.Out.Contents()
+
+		serverSession := testutil.Hasura(testutil.CmdOpts{
+			Args:             []string{"metadata", "export", "--output", "json"},
+			WorkingDirectory: projectDirectory,
+		})
+		Eventually(serverSession, timeout).Should(Exit(0))
+		Eventually(isJSON(serverSession.Out.Contents())).Should(BeTrue())
+		serverStdout := serverSession.Out.Contents()
+		Expect(serverStdout).Should(MatchJSON(projectStdout))
 	})
 }
 

@@ -1,20 +1,20 @@
-{-# LANGUAGE Arrows       #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE Arrows #-}
 
 module Hasura.RQL.DDL.Schema.Cache.Permission
   ( buildTablePermissions
   , mkPermissionMetadataObject
   , mkRemoteSchemaPermissionMetadataObject
   , orderRoles
+  , OrderedRoles
+  , _unOrderedRoles
+  , mkBooleanPermissionMap
+  , resolveCheckPermission
   ) where
 
 import           Hasura.Prelude
 
 import qualified Data.Graph                         as G
 import qualified Data.HashMap.Strict                as M
-import qualified Data.HashMap.Strict.Extended       as M
-import qualified Data.HashSet                       as Set
-import qualified Data.List.NonEmpty                 as NE
 import qualified Data.Sequence                      as Seq
 
 import           Control.Arrow.Extended
@@ -29,21 +29,40 @@ import           Hasura.Base.Error
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Roles.Internal    (CheckPermission (..), CombineRolePermInfo (..),
+                                                     rolePermInfoToCombineRolePermInfo)
 import           Hasura.Server.Types
 import           Hasura.Session
 
 
-{- Note: [Inherited roles architecture for postgres read queries]
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{- Note: [Inherited roles architecture for read queries]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 1. Schema generation
 --------------------
 
 Schema generation for inherited roles is similar to the schema
 generation of non-inherited roles. In the case of inherited roles,
-we combine the `SelectPermInfo`s (see `combineSelectPermInfos`) of the
+we combine the `SelectPermInfo`s of the
 inherited role's role set and a new `SelectPermInfo` will be generated
 which will be the select permission of the inherited role.
+
+Two `SelPermInfo`s will be combined in the following manner:
+
+1. Columns - The `SelPermInfo` contains a hashset of the columns that are
+   accessible to the role. To combine two `SelPermInfo`s, every column of the
+   hashset is coupled with the boolean expression (filter) of the `SelPermInfo`
+   and a hash map of all the columns is created out of it, this hashmap is
+   generated for the `SelPermInfo`s that are going to be combined. These hashmaps
+   are then unioned and the values of these hashmaps are `OR`ed. When a column
+   is accessible to all the select permissions then the nullability of the column
+   is inferred from the DB column otherwise the column is explicitly marked as
+   nullable to accomodate cell-value nullification.
+2. Scalar computed fields - Scalar computed fields work the same as Columns (#1)
+3. Filter / Boolean expression - The filters are combined using a `BoolOr`
+4. Limit - Limits are combined by taking the maximum of the two limits
+5. Allow Aggregation - Aggregation is allowed, if any of the permissions allow it.
+6. Request Headers - Request headers are concatenated
 
 2. SQL generation
 -----------------
@@ -56,100 +75,33 @@ See note [SQL generation for inherited roles]
 The columns accessible to an inherited role are explicitly set to
 nullable irrespective of the nullability of the DB column to accomodate
 cell value nullification.
-
 -}
 
--- | This type is only used in the `combineSelectPermInfos` for
---   combining select permissions efficiently
-data CombinedSelPermInfo (b :: BackendType)
-  = CombinedSelPermInfo
-  { cspiCols                 :: ![(M.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)))]
-  , cspiScalarComputedFields :: ![(M.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b)))]
-  , cspiFilter               :: ![(AnnBoolExpPartialSQL b)]
-  , cspiLimit                :: !(Maybe Int)
-  , cspiAllowAgg             :: !Bool
-  , cspiRequiredHeaders      :: !(Set.HashSet Text)
-  }
-
-
--- | combineSelectPermInfos combines multiple `SelPermInfo`s
---   into one `SelPermInfo`. Two `SelPermInfo` will
---   be combined in the following manner:
---
---   1. Columns - The `SelPermInfo` contains a hashset of the columns that are
---      accessible to the role. To combine two `SelPermInfo`s, every column of the
---      hashset is coupled with the boolean expression (filter) of the `SelPermInfo`
---      and a hash map of all the columns is created out of it, this hashmap is
---      generated for the `SelPermInfo`s that are going to be combined. These hashmaps
---      are then unioned and the values of these hashmaps are `OR`ed. When a column
---      is accessible to all the select permissions then the nullability of the column
---      is inferred from the DB column otherwise the column is explicitly marked as
---      nullable to accomodate cell-value nullification.
---   2. Scalar computed fields - Scalar computed fields work the same as Columns (#1)
---   3. Filter / Boolean expression - The filters are combined using a `BoolOr`
---   4. Limit - Limits are combined by taking the maximum of the two limits
---   5. Allow Aggregation - Aggregation is allowed, if any of the permissions allow it.
---   6. Request Headers - Request headers are concatenated
---
---   To maintain backwards compatibility, we handle the case of single select permission
---   differently i.e. we don't want the case statements that always evaluate to true with
---   the columns
---
-combineSelectPermInfos
-  :: forall b
-   . (Backend b)
-  => NE.NonEmpty (SelPermInfo b)
-  -> SelPermInfo b
-combineSelectPermInfos (headSelPermInfo NE.:| []) = headSelPermInfo
-combineSelectPermInfos selPermInfos@(headSelPermInfo NE.:| restSelPermInfos) =
-  let CombinedSelPermInfo {..}
-        = foldr combine (modifySingleSelectPerm headSelPermInfo) restSelPermInfos
-      mergeColumnsWithBoolExp xs
-        | length selPermInfos == length xs = Nothing
-        | otherwise                        = foldr combineCaseBoolExps Nothing xs
-  in SelPermInfo (mergeColumnsWithBoolExp <$> M.unionsAll cspiCols)
-                 (mergeColumnsWithBoolExp <$> M.unionsAll cspiScalarComputedFields)
-                 (BoolOr cspiFilter)
-                 cspiLimit
-                 cspiAllowAgg
-                 (toList cspiRequiredHeaders)
+mkBooleanPermissionMap :: (RoleName -> a) -> HashMap RoleName a -> OrderedRoles -> HashMap RoleName a
+mkBooleanPermissionMap constructorFn metadataPermissions orderedRoles =
+  foldl' combineBooleanPermission metadataPermissions $ _unOrderedRoles orderedRoles
   where
-    modifySingleSelectPerm :: SelPermInfo b -> CombinedSelPermInfo b
-    modifySingleSelectPerm SelPermInfo {..} =
-      let columnCaseBoolExp = fmap AnnColumnCaseBoolExpField spiFilter
-          colsWithColCaseBoolExp = spiCols $> Just columnCaseBoolExp
-          scalarCompFieldsWithColCaseBoolExp = spiScalarComputedFields $> Just columnCaseBoolExp
-      in
-        CombinedSelPermInfo [colsWithColCaseBoolExp]
-                            [scalarCompFieldsWithColCaseBoolExp]
-                            [spiFilter]
-                            spiLimit
-                            spiAllowAgg
-                            (Set.fromList spiRequiredHeaders)
+    combineBooleanPermission accumulatedPermMap (Role roleName (ParentRoles parentRoles)) =
+      case M.lookup roleName accumulatedPermMap of
+        -- We check if a permission for the given role exists in the metadata, if it
+        -- exists, we use that
+        Just _  -> accumulatedPermMap
+        -- 2. When the permission doesn't exist, we try to inherit the permission from its parent roles
+        -- For boolean permissions, if any of the parent roles have a permission to access an entity,
+        -- then the inherited role will also be able to access the entity.
+        Nothing ->
+          -- see Note [Roles Inheritance]
+          let canInheritPermission = any ((`M.member` accumulatedPermMap)) (toList parentRoles)
+          in if canInheritPermission
+             then M.insert roleName (constructorFn roleName) accumulatedPermMap
+             else accumulatedPermMap
 
-    combine :: SelPermInfo b -> CombinedSelPermInfo b -> CombinedSelPermInfo b
-    combine (modifySingleSelectPerm -> lSelPermInfo) accSelPermInfo =
-      CombinedSelPermInfo
-      { cspiCols = (cspiCols lSelPermInfo) <> (cspiCols accSelPermInfo)
-      , cspiScalarComputedFields =
-        (cspiScalarComputedFields lSelPermInfo) <> (cspiScalarComputedFields accSelPermInfo)
-      , cspiFilter = (cspiFilter lSelPermInfo) <> (cspiFilter accSelPermInfo)
-      , cspiLimit =
-          case (cspiLimit lSelPermInfo, cspiLimit accSelPermInfo) of
-            (Nothing, Nothing) -> Nothing
-            (Just l, Nothing)  -> Just l
-            (Nothing, Just r)  -> Just r
-            (Just l , Just r)  -> Just $ max l r
-      , cspiAllowAgg = cspiAllowAgg lSelPermInfo || cspiAllowAgg accSelPermInfo
-      , cspiRequiredHeaders = (cspiRequiredHeaders lSelPermInfo) <> (cspiRequiredHeaders accSelPermInfo)
-      }
-
-    combineCaseBoolExps l r =
-      case (l, r) of
-        (Nothing, Nothing)                     -> Nothing
-        (Just caseBoolExp, Nothing)            -> Just caseBoolExp
-        (Nothing, Just caseBoolExp)            -> Just caseBoolExp
-        (Just caseBoolExpL, Just caseBoolExpR) -> Just $ BoolOr [caseBoolExpL, caseBoolExpR]
+-- | `OrderedRoles` is a data type to hold topologically sorted roles
+--   according to each role's parent roles, see `orderRoles` for more details.
+newtype OrderedRoles
+  = OrderedRoles { _unOrderedRoles :: [Role] }
+  deriving (Eq, Generic)
+instance Inc.Cacheable OrderedRoles
 
 -- | 'orderRoles' is used to order the roles, in such a way that given
 --   a role R with n parent roles - PR1, PR2 .. PRn, then the 'orderRoles'
@@ -164,7 +116,7 @@ combineSelectPermInfos selPermInfos@(headSelPermInfo NE.:| restSelPermInfos) =
 orderRoles
   :: MonadError QErr m
   => [Role]
-  -> m [Role]
+  -> m OrderedRoles
 orderRoles allRoles = do
   -- inherited roles can be created from other inherited and non-inherited roles
   -- So, roles can be thought of as a graph where non-inherited roles don't have
@@ -181,7 +133,7 @@ orderRoles allRoles = do
     let roleCycles = map (tshow . map (roleNameToTxt . _rRoleName) . appendFirstElementAtEnd .  G.flattenSCC) cyclicRoles
     throw400 CyclicDependency $ "found cycle(s) in roles: " <> commaSeparated roleCycles
   let allOrderedRoles = G.flattenSCCs orderedGraphNodes
-  pure allOrderedRoles
+  pure $ OrderedRoles allOrderedRoles
   where
     checkCycle = \case
       G.AcyclicSCC _ -> False
@@ -189,6 +141,54 @@ orderRoles allRoles = do
 
     appendFirstElementAtEnd []     = []
     appendFirstElementAtEnd (x:xs) = (x:xs) ++ [x]
+
+-- | `resolveCheckPermission` is a helper arrow function which will convert the indermediate
+--    type `CheckPermission` to its original type. It will record any metadata inconsistencies, if exists.
+resolveCheckPermission
+  :: forall arr m p
+   . ( ArrowChoice  arr, Inc.ArrowCache m arr
+     , ArrowWriter (Seq CollectedInfo) arr
+     )
+   => ( CheckPermission p
+      , RoleName
+      , InconsistentRoleEntity
+      -- ^ the InconsistentRoleEntity  will only be used when the permission is inconsistent
+      ) `arr` (Maybe p)
+resolveCheckPermission = proc (checkPermission, roleName, inconsistentEntity) -> do
+  case checkPermission of
+    CPInconsistent -> do
+      let inconsistentObj =
+            -- check `Conflicts while inheriting permissions` in `rfcs/inherited-roles-improvements.md`
+            CIInconsistency $
+            ConflictingInheritedPermission roleName inconsistentEntity
+      tellA -< Seq.singleton inconsistentObj
+      bindA -< pure Nothing
+    CPDefined permissionDefn -> bindA -< pure $ Just permissionDefn
+    CPUndefined              -> bindA -< pure Nothing
+
+resolveCheckTablePermission
+  :: forall b a arr m
+   . ( ArrowChoice arr,  Inc.ArrowCache m arr
+     ,  ArrowWriter (Seq CollectedInfo) arr
+     , BackendMetadata b
+     )
+   => ( CheckPermission (PermInfo a b)
+      , Maybe (RolePermInfo b)
+      , RolePermInfo b -> Maybe (PermInfo a b)
+      , RoleName
+      , SourceName
+      , TableName b
+      , PermType
+      ) `arr` (Maybe (PermInfo a b))
+resolveCheckTablePermission = proc (inheritedPermission, accumulatedRolePermInfo, permAcc, roleName, source, table, permType) -> do
+  -- when for a given entity and role, a permission exists in the metadata, we override the metadata permission
+  -- over the inherited permission
+  let checkPermission = maybeOverrideInheritedPermission accumulatedRolePermInfo inheritedPermission permAcc
+      inconsistentRoleEntity = InconsistentTablePermission source (toTxt table) permType
+  resolveCheckPermission -< (checkPermission, roleName, inconsistentRoleEntity)
+  where
+    maybeOverrideInheritedPermission accumulatedRolePermInfo inheritedRolePermission permAcc =
+      maybe inheritedRolePermission CPDefined (permAcc =<< accumulatedRolePermInfo)
 
 buildTablePermissions
   :: forall b arr m
@@ -203,12 +203,13 @@ buildTablePermissions
      , Inc.Dependency (TableCoreCache b)
      , FieldInfoMap (FieldInfo b)
      , TablePermissionInputs b
-     , [Role]
+     , OrderedRoles
      ) `arr` (RolePermInfoMap b)
 buildTablePermissions = Inc.cache proc (proxy, source, tableCache, tableFields, tablePermissions, orderedRoles) -> do
   let alignedPermissions = alignPermissions tablePermissions
       table = _tpiTable tablePermissions
   experimentalFeatures <- bindA -< _sccExperimentalFeatures <$> askServerConfigCtx
+  let isInheritedRolesEnabled = EFInheritedRoles `elem` experimentalFeatures
   metadataRolePermissions <-
     (| Inc.keyed (\_ (insertPermission, selectPermission, updatePermission, deletePermission) -> do
        insert <- buildPermission -< (proxy, tableCache, source, table, tableFields, listToMaybe insertPermission)
@@ -217,31 +218,33 @@ buildTablePermissions = Inc.cache proc (proxy, source, tableCache, tableFields, 
        delete <- buildPermission -< (proxy, tableCache, source, table, tableFields, listToMaybe deletePermission)
        returnA -< RolePermInfo insert select update delete)
    |) alignedPermissions
-  -- see [Inherited roles architecture for postgres read queries]
-  (| foldlA' (\accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) -> do
-       let metadataRoleSelectPermission = _permSel =<< M.lookup roleName accumulatedRolePermMap
-       roleSelectPermission <-
-         bindA -<
-         case metadataRoleSelectPermission of
-           -- There's an permission set for the role in the metadata, so we use that
-           Just metadataRoleSelectPermission' -> pure $ Just metadataRoleSelectPermission'
-           -- no permission found in the metadata, so we inherit permissions from the parent
-           -- roles
-           Nothing                            -> do
-             parentRoleTablePerms <-
-               for (toList parentRoles) $ \role ->
-                 onNothing (M.lookup role accumulatedRolePermMap) $ throw500 $
-                  -- this error will ideally never be thrown, but if it's thrown then
-                  -- it's possible that the permissions for the role do exist, but it's
-                  -- not yet built due to wrong ordering of the roles, check `orderRoles`
-                  "buildTablePermissions: table role permissions for role: " <> role <<> " not found"
-             pure $ combineSelectPermInfos <$> NE.nonEmpty (catMaybes $ _permSel <$> parentRoleTablePerms)
-       let rolePermInfo = RolePermInfo Nothing roleSelectPermission Nothing Nothing
-       returnA -< M.insert roleName rolePermInfo accumulatedRolePermMap)
-   |) metadataRolePermissions (bool mempty orderedRoles $ EFInheritedRoles `elem` experimentalFeatures)
-  -- build permissions for inherited roles only when inherited roles is enabled
+  if isInheritedRolesEnabled
+  then
+    (| foldlA' (\accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) -> do
+         parentRolePermissions <-
+           bindA -<
+             for (toList parentRoles) $ \role ->
+               onNothing (M.lookup role accumulatedRolePermMap) $ throw500 $
+                -- this error will ideally never be thrown, but if it's thrown then
+                -- it's possible that the permissions for the role do exist, but it's
+                -- not yet built due to wrong ordering of the roles, check `orderRoles`
+                "buildTablePermissions: table role permissions for role: " <> role <<> " not found"
+         let combinedParentRolePermInfo = mconcat $ fmap rolePermInfoToCombineRolePermInfo parentRolePermissions
+             selectPermissionsCount = length $ filter (isJust . _permSel) parentRolePermissions
+         let accumulatedRolePermission = M.lookup roleName accumulatedRolePermMap
+         let roleSelectPermission =
+               case (_permSel =<< accumulatedRolePermission) of
+                 Just metadataSelectPerm -> Just metadataSelectPerm
+                 Nothing -> combinedSelPermInfoToSelPermInfo selectPermissionsCount <$> (crpiSelPerm combinedParentRolePermInfo)
+         roleInsertPermission <- resolveCheckTablePermission -< (crpiInsPerm combinedParentRolePermInfo, accumulatedRolePermission, _permIns, roleName, source, table, PTInsert)
+         roleUpdatePermission <- resolveCheckTablePermission -< (crpiUpdPerm combinedParentRolePermInfo, accumulatedRolePermission, _permUpd, roleName, source, table, PTUpdate)
+         roleDeletePermission <- resolveCheckTablePermission -< (crpiDelPerm combinedParentRolePermInfo, accumulatedRolePermission, _permDel, roleName, source, table, PTDelete)
+         let rolePermInfo = RolePermInfo roleInsertPermission roleSelectPermission roleUpdatePermission roleDeletePermission
+         returnA -< M.insert roleName rolePermInfo accumulatedRolePermMap)
+     |) metadataRolePermissions (_unOrderedRoles orderedRoles)
+  else returnA -< metadataRolePermissions
   where
-    mkMap :: [PermDef a] -> HashMap RoleName (PermDef a)
+    mkMap :: [PermDef e] -> HashMap RoleName (PermDef e)
     mkMap = mapFromL _pdRole
 
     alignPermissions TablePermissionInputs{..} =
@@ -269,9 +272,9 @@ mkPermissionMetadataObject source table permDef =
   in MetadataObject objectId definition
 
 mkRemoteSchemaPermissionMetadataObject
-  :: AddRemoteSchemaPermissions
+  :: AddRemoteSchemaPermission
   -> MetadataObject
-mkRemoteSchemaPermissionMetadataObject (AddRemoteSchemaPermissions rsName roleName defn _) =
+mkRemoteSchemaPermissionMetadataObject (AddRemoteSchemaPermission rsName roleName defn _) =
   let objectId = MORemoteSchemaPermissions rsName roleName
   in MetadataObject objectId $ toJSON defn
 

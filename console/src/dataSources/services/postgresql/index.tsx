@@ -1,4 +1,6 @@
 import React from 'react';
+import { DeepRequired } from 'ts-essentials';
+
 import {
   Table,
   TableColumn,
@@ -6,6 +8,7 @@ import {
   SupportedFeaturesType,
   BaseTableColumn,
   ViolationActions,
+  IndexType,
 } from '../../types';
 import { QUERY_TYPES, Operations } from '../../common';
 import { PGFunction } from './types';
@@ -62,6 +65,9 @@ import {
   deleteFunctionSql,
   getEventInvocationInfoByIDSql,
   getDatabaseInfo,
+  tableIndexSql,
+  getCreateIndexSql,
+  getDropIndexSql,
   getTableInfo,
   getDatabaseVersionSql,
 } from './sqlUtils';
@@ -233,6 +239,18 @@ export const getGroupedTableComputedFields = (
   });
 
   return groupedComputedFields;
+};
+
+export const getComputedFieldFunction = (
+  computedField: ComputedField,
+  allFunctions: PGFunction[]
+) => {
+  const computedFieldFnDef = computedField.definition.function;
+  return findFunction(
+    allFunctions,
+    computedFieldFnDef.name,
+    computedFieldFnDef.schema
+  );
 };
 
 const schemaListSql = (
@@ -513,7 +531,31 @@ const permissionColumnDataTypes = {
   user_defined: [], // default for all other types
 };
 
-export const supportedFeatures: SupportedFeaturesType = {
+const indexFormToolTips = {
+  unique:
+    'Causes the system to check for duplicate values in the table when the index is created (if data already exist) and each time data is added',
+  indexName:
+    'The name of the index to be created. No schema name can be included here; the index is always created in the same schema as its parent table',
+  indexType:
+    'Only B-Tree, GiST, GIN and BRIN support multi-column indexes on PostgreSQL',
+  indexColumns:
+    'In PostgreSQL, at most 32 fields can be provided while creating an index',
+};
+
+const indexTypes: Record<string, IndexType> = {
+  BRIN: 'brin',
+  'SP-GIST': 'spgist',
+  GiST: 'gist',
+  HASH: 'hash',
+  'B-Tree': 'btree',
+  GIN: 'gin',
+};
+
+const supportedIndex = {
+  multiColumn: ['brin', 'gist', 'btree', 'gin'],
+  singleColumn: ['hash', 'spgist'],
+};
+export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
   driver: {
     name: 'postgres',
     fetchVersion: {
@@ -537,11 +579,13 @@ export const supportedFeatures: SupportedFeaturesType = {
     browse: {
       enabled: true,
       aggregation: true,
+      customPagination: false,
     },
     insert: {
       enabled: true,
     },
     modify: {
+      readOnly: false,
       enabled: true,
       editableTableName: true,
       comments: {
@@ -572,6 +616,10 @@ export const supportedFeatures: SupportedFeaturesType = {
         view: true,
         edit: true,
       },
+      indexes: {
+        view: true,
+        edit: true,
+      },
       customGqlRoot: true,
       setAsEnum: true,
       untrack: true,
@@ -584,6 +632,7 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     permissions: {
       enabled: true,
+      aggregation: true,
     },
     track: {
       enabled: false,
@@ -723,6 +772,12 @@ export const postgres: DataSourcesAPI = {
   deleteFunctionSql,
   getEventInvocationInfoByIDSql,
   getDatabaseInfo,
+  tableIndexSql,
+  createIndexSql: getCreateIndexSql,
+  dropIndexSql: getDropIndexSql,
+  indexFormToolTips,
+  indexTypes,
+  supportedIndex,
   getTableInfo,
   operators,
   generateTableRowRequest,
@@ -730,7 +785,6 @@ export const postgres: DataSourcesAPI = {
   permissionColumnDataTypes,
   viewsSupported: true,
   supportedColumnOperators: null,
-  aggregationPermissionsAllowed: true,
   supportedFeatures,
   violationActions,
   defaultRedirectSchema,

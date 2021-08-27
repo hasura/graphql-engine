@@ -1,10 +1,71 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
+
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: fix nullability of object relationships (close #7201)
+- server: optimize SQL query generation with LIMITs (close #5745)
+- server: update non-existent event trigger, action and query collection error msgs (close #7396)
+- server: fix broken `untrack_function` for non-default source
+- server: Adding support for TLS allowlist by domain and service id (port)
+- server: add support for `graphql-ws` clients
+- console: fix error due too rendering inconsistent object's message
+- console: support insecure TLS allowlist
+- cli: fix delay starting console using `hasura console` (#7255)
+
+## v2.0.7
+
+- server: fix v2 -> v1 downgrade bug when cron triggers exist
+- server: add index on the `event_id` column of the `hdb_cron_event_invocation_logs` table
+- server: fix GraphQL type for remote relationship field (close #7284)
+- server: support EdDSA algorithm and key type for JWT
+- server: fix GraphQL type for single-row returning functions (close #7109)
+- console: add support for creation of indexes for Postgres data sources
+- docs: document the cleanup process for scheduled triggers
+- console: allow same named queries and unnamed queries on allowlist file upload
+- console: support computed fields in permission builder
+- console: add custom timeouts to actions
+
+## v2.0.6
+
+- server: Add support for inherited roles for mutations, remote schema, actions and custom function permissions
+- server: fix an issue with remote relationships when join columns are aliased (close #7180)
+- server: fix for incorrect `__typename` value in nested remote joins with a customized remote schema
+- server: fix a bug where some unicode characters in default string values for fields in remote schemas could lead to internal errors
+- server: bigquery: implement `_in` and `_nin` operators. (close #7343)
+- server: bigquery: custom root names, table names and field names for bigquery are included in tests
+- console: fix untracked foreign-key relationships suggestion across schemas
+- console: allow resolution of conflicting inherited role permissions
+- cli: fix SDL formatting in `actions.graphql`(#7296)
+
+## v2.0.5
+
+- server: prevent invalid collisions in remote variable cache key (close #7170)
+- server: preserve unchanged cron triggers in `replace_metadata` API
+- server: fix inherited roles bug where mutations were not accessible when inherited roles was enabled
+- server: reintroduce the unique name constraint in allowed lists
+- server: subscriptions now validate that all session variables are properly set (#7111)
+- console: fix metadata out-of-date errors when creating tables with certain configurations (fix #6805) (fix #7233)
+- cli-migrations-v2: fix database url showing up in metadata (#7319)
+
+## v2.0.4
+
+- server: Support computed fields in permission check/filter (close #7102)
+- server: support computed fields in query 'order_by' (close #7103)
+- server: log warning if there are errors while executing clean up actions after "drop source" (previously it would throw an error)
+- server: Fixed a bug where MSSQL and BigQuery would ignore environment variables set from the console
 - server: Fixing bug in ReplaceMetadata parser - Moving from Alternative to committed-choice.
 - server: Relax the unique operation name constraint when adding a query to a query collection
+- server: officially deprecate query plan caching, which had already been disabled for a long time
+- server/bigquery: Fix issues related to adding and querying from non-US datasets (closes [6937](https://github.com/hasura/graphql-engine/issues/6937)).
+- console: add template gallery
+- console: add pagination on the Raw SQL results page
+- console: fix issues with replacing invalid graphql identifiers in table and column names
+- console: show error message on inconsistent objects table
+- server/mssql: Fix [graphql-engine#7130](https://github.com/hasura/graphql-engine/issues/7130) for `__typename` errors and more
+generally, JSON-style aggregates.
+- cli: add support for `query_tags` metadata object
 
 ## v2.0.3
 (Add entries below in the order of server, console, cli, docs, others)
@@ -68,6 +129,7 @@ NOTE: This only includes the diff between v2.0.0 and v2.0.0-beta.2
   faster query responses.
 - server: BigQuery: various bug fixes related to aggregations
 - server: fix add source API wiping out source's metadata when replace_configuration is true
+- server: add support for customization of field names and type names when adding a remote schema
 - console: add foreign key CRUD functionality to ms sql server tables
 - console: allow tracking of custom SQL functions having composite type (rowtype) input arguments
 - console: allow input object presets in remote schema permissions

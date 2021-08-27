@@ -83,4 +83,11 @@ RUN apt -y update \
 RUN mkdir -p /usr/share/man/man{1,7} && apt-get -y update
 
 RUN apt-get -y update \
-    && apt-get -y install pgbouncer jq postgresql-client-13 default-mysql-client
+    && apt-get -y install pgbouncer jq postgresql-client-13 default-mysql-client procps
+
+# Install Google Cloud SDK required to test BigQuery backend
+# https://cloud.google.com/sdk/docs/install#deb
+RUN curl https://sdk.cloud.google.com | bash -s -- --disable-prompts
+
+# add the Google Cloud SDK command line tools to the $PATH.
+ENV PATH="/root/google-cloud-sdk/bin:${PATH}"

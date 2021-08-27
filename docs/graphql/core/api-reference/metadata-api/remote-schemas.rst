@@ -4,8 +4,8 @@
 
 .. _metadata_api_remote_schemas:
 
-Metadata API Reference: Remote schemas (v2.0 and above)
-=======================================================
+Metadata API Reference: Remote schemas
+======================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -45,7 +45,25 @@ An example request as follows:
                "url": "https://remote-server.com/graphql",
                "headers": [{"name": "X-Server-Request-From", "value": "Hasura"}],
                "forward_client_headers": false,
-               "timeout_seconds": 60
+               "timeout_seconds": 60,
+               "customization": {
+                  "root_fields_namespace": "some_field_name",
+                  "type_names": {
+                      "prefix": "some_type_name_prefix",
+                      "suffix": "some_type_name_suffix",
+                      "mapping": {
+                          "some_type_name": "some_new_type_name"
+                      }
+                  },
+                  "field_names": [ {
+                      "parent_type": "some_type_name",
+                      "prefix": "some_field_name_prefix",
+                      "suffix": "some_field_name_suffix",
+                      "mapping": {
+                          "some_field_name": "some_new_field_name"
+                      }
+                  } ]
+               }
            },
            "comment": "some optional comment"
        }
@@ -99,7 +117,25 @@ An example request as follows:
                "url": "https://remote-server.com/graphql",
                "headers": [{"name": "X-Server-Request-From", "value": "Hasura"}],
                "forward_client_headers": false,
-               "timeout_seconds": 60
+               "timeout_seconds": 60,
+               "customization": {
+                  "root_fields_namespace": "some_field_name",
+                  "type_names": {
+                      "prefix": "some_type_name_prefix",
+                      "suffix": "some_type_name_suffix",
+                      "mapping": {
+                          "some_type_name": "some_new_type_name"
+                      }
+                  },
+                  "field_names": [ {
+                      "parent_type": "some_type_name",
+                      "prefix": "some_field_name_prefix",
+                      "suffix": "some_field_name_suffix",
+                      "mapping": {
+                          "some_field_name": "some_new_field_name"
+                      }
+                  } ]
+               }
            },
            "comment": "some optional comment"
        }

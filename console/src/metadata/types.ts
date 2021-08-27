@@ -1,3 +1,4 @@
+import { Nullable } from './../components/Common/utils/tsUtils';
 import { Driver } from '../dataSources';
 import { PermissionsType } from '../components/Services/RemoteSchema/Permissions/types';
 
@@ -969,6 +970,11 @@ export interface InheritedRole {
   role_set: string[];
 }
 
+export interface DomainList {
+  host: string;
+  suffix?: string;
+  perms?: string[];
+}
 export interface APILimits {
   per_role?: Record<string, number>;
   global?: number;
@@ -989,13 +995,14 @@ export interface HasuraMetadataV3 {
   query_collections?: QueryCollectionEntry[];
   allowlist?: AllowList[];
   inherited_roles: InheritedRole[];
+  network?: { tls_allowlist?: DomainList[] };
   rest_endpoints?: RestEndpointEntry[];
   api_limits?: {
     disabled?: boolean;
     depth_limit?: APILimit<number>;
     node_limit?: APILimit<number>;
     rate_limit?: APILimit<{
-      unique_params: 'IP' | string[];
+      unique_params: Nullable<'IP' | string[]>;
       max_reqs_per_min: number;
     }>;
   };
@@ -1003,3 +1010,41 @@ export interface HasuraMetadataV3 {
     disabled_for_roles: string[];
   };
 }
+
+// Inconsistent Objects
+
+export interface InconsistentObject {
+  definition:
+    | string
+    | {
+        comment: string;
+        definition: InconsistentObjectDefinition;
+      };
+  reason: string;
+  name: string;
+  type: string;
+  message:
+    | string
+    | {
+        message: string;
+        request: InconsistentObjectRequest;
+      };
+}
+
+type InconsistentObjectRequest = {
+  proxy: string | null;
+  secure: boolean;
+  path: string;
+  responseTimeout: string;
+  method: 'POST' | 'GET' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTION';
+  host: string;
+  requestVersion: `${number}`;
+  redirectCount: `${number}`;
+  port: `${number}`;
+};
+
+type InconsistentObjectDefinition = {
+  timeout_seconds: number;
+  url_from_env: string;
+  forward_client_headers: boolean;
+};

@@ -51,6 +51,7 @@ import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { NotSupportedNote } from '../../../Common/NotSupportedNote';
 import ConnectedComputedFields from './ComputedFields';
 import FeatureDisabled from '../FeatureDisabled';
+import IndexFields from './IndexFields';
 import PartitionInfo from './PartitionInfo';
 
 class ModifyTable extends React.Component {
@@ -163,7 +164,7 @@ class ModifyTable extends React.Component {
             toggleEnum={toggleEnum}
             loading={tableEnum.loading}
           />
-          <hr />
+          <hr className="my-lg" />
         </React.Fragment>
       );
     };
@@ -240,14 +241,14 @@ class ModifyTable extends React.Component {
                     columnDefaultFunctions={columnDefaultFunctions}
                     postgresVersion={postgresVersion}
                   />
-                  <hr />
+                  <hr className="my-lg" />
                 </>
               )}
 
               {isFeatureSupported('tables.modify.computedFields') && (
                 <>
                   <ConnectedComputedFields tableSchema={table} />
-                  <hr />
+                  <hr className="my-lg" />
                 </>
               )}
 
@@ -266,7 +267,7 @@ class ModifyTable extends React.Component {
                     dispatch={dispatch}
                     currentSchema={currentSchema}
                   />
-                  <hr />
+                  <hr className="my-lg" />
                 </>
               )}
 
@@ -287,7 +288,7 @@ class ModifyTable extends React.Component {
                       !isFeatureSupported('tables.modify.foreignKeys.edit')
                     }
                   />
-                  <hr />
+                  <hr className="my-lg" />
                 </>
               )}
 
@@ -308,10 +309,15 @@ class ModifyTable extends React.Component {
                       !isFeatureSupported('tables.modify.uniqueKeys.edit')
                     }
                   />
-                  <hr />
+                  <hr className="my-lg" />
                 </>
               )}
-
+              {isFeatureSupported('tables.modify.indexes.view') ? (
+                <>
+                  <IndexFields tableSchema={table} />
+                  <hr />
+                </>
+              ) : null}
               {isFeatureSupported('tables.modify.triggers') && (
                 <>
                   <div className={styles.add_mar_bottom}>
@@ -319,7 +325,7 @@ class ModifyTable extends React.Component {
                     <NotSupportedNote unsupported={['mysql']} />
                   </div>
                   <TriggerEditorList tableSchema={table} dispatch={dispatch} />
-                  <hr />
+                  <hr className="my-lg" />
                 </>
               )}
               {isFeatureSupported('tables.modify.checkConstraints.view') && (
@@ -339,7 +345,7 @@ class ModifyTable extends React.Component {
                       !isFeatureSupported('tables.modify.checkConstraints.edit')
                     }
                   />
-                  <hr />
+                  <hr className="my-lg" />
                 </>
               )}
               {table.table_type === 'PARTITIONED TABLE' && (
@@ -348,7 +354,7 @@ class ModifyTable extends React.Component {
               {isFeatureSupported('tables.modify.customGqlRoot') && (
                 <>
                   <RootFields tableSchema={table} />
-                  <hr />
+                  <hr className="my-lg" />
                 </>
               )}
               {isFeatureSupported('tables.modify.setAsEnum') &&

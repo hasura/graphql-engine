@@ -1,5 +1,6 @@
 /* eslint-disable import/no-mutable-exports */
 import { useState, useEffect } from 'react';
+import { DeepRequired } from 'ts-essentials';
 
 import { Path, get } from '../components/Common/utils/tsUtils';
 import { services } from './services';
@@ -9,6 +10,7 @@ import {
   ComputedField,
   TableColumn,
   FrequentlyUsedColumn,
+  IndexType,
   PermissionColumnCategories,
   SupportedFeaturesType,
   generateTableRowRequestType,
@@ -19,6 +21,7 @@ import {
   GenerateDeleteRowRequest,
   GenerateBulkDeleteRowRequest,
   ViolationActions,
+  IndexFormTips as IndexFormToolTips,
 } from './types';
 import { PGFunction, FunctionState } from './services/postgresql/types';
 import { Operations } from './common';
@@ -333,6 +336,21 @@ export interface DataSourcesAPI {
     schemas: string[];
     tables: Table[];
   }) => string;
+  tableIndexSql?: (options: { schema: string; table: string }) => string;
+  createIndexSql?: (indexInfo: {
+    indexName: string;
+    indexType: IndexType;
+    table: QualifiedTable;
+    columns: string[];
+    unique?: boolean;
+  }) => string;
+  dropIndexSql?: (indexName: string) => string;
+  indexFormToolTips?: IndexFormToolTips;
+  indexTypes?: Record<string, IndexType>;
+  supportedIndex?: {
+    multiColumn: string[];
+    singleColumn: string[];
+  };
   getFKRelations: (options: { schemas: string[]; tables: Table[] }) => string;
   getReferenceOption: (opt: string) => string;
   deleteFunctionSql?: (
@@ -352,8 +370,7 @@ export interface DataSourcesAPI {
   viewsSupported: boolean;
   // use null, if all operators are supported
   supportedColumnOperators: string[] | null;
-  aggregationPermissionsAllowed: boolean;
-  supportedFeatures?: SupportedFeaturesType;
+  supportedFeatures?: DeepRequired<SupportedFeaturesType>;
   violationActions: ViolationActions[];
   defaultRedirectSchema?: string;
   generateInsertRequest?: () => generateInsertRequestType;
@@ -367,27 +384,25 @@ export interface DataSourcesAPI {
 export let currentDriver: Driver = 'postgres';
 export let dataSource: DataSourcesAPI = services[currentDriver || 'postgres'];
 
-export const isFeatureSupported = (feature: Path<SupportedFeaturesType>) => {
+export const isFeatureSupported = (
+  feature: Path<DeepRequired<SupportedFeaturesType>>
+) => {
   if (dataSource.supportedFeatures)
     return get(dataSource.supportedFeatures, feature);
 };
 
-export const getSupportedDrivers = (
-  feature: Path<SupportedFeaturesType>
-): Driver[] => {
-  const isEnabled = (supportedFeatures: SupportedFeaturesType) => {
-    return get(supportedFeatures, feature) || false;
-  };
-
-  return [
+export const getSupportedDrivers = (feature: Path<SupportedFeaturesType>) =>
+  [
     PGSupportedFeatures,
     MssqlSupportedFeatures,
     BigQuerySupportedFeatures,
     CitusQuerySupportedFeatures,
-  ]
-    .filter(d => isEnabled(d))
-    .map(d => d.driver.name) as Driver[];
-};
+  ].reduce((driverList: Driver[], supportedFeaturesObj) => {
+    if (get(supportedFeaturesObj, feature)) {
+      return [...driverList, supportedFeaturesObj.driver.name];
+    }
+    return driverList;
+  }, []);
 
 class DataSourceChangedEvent extends Event {
   static type = 'data-source-changed';

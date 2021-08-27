@@ -34,6 +34,7 @@ import           Hasura.Server.Types
 import           Hasura.Server.Version               (HasVersion)
 import           Hasura.Session
 
+import           Hasura.GraphQL.Execute.Backend
 
 data RQLQuery
   = RQInsert !InsertQuery
@@ -48,7 +49,6 @@ data RQLQuery
   | RQBigqueryRunSql !BigQuery.BigQueryRunSQL
   | RQBigqueryDatabaseInspection !BigQuery.BigQueryRunSQL
   | RQBulk ![RQLQuery]
-  deriving (Show)
 
 $(deriveFromJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
@@ -64,6 +64,7 @@ runQuery
      , Tracing.MonadTrace m
      , MonadMetadataStorage m
      , MonadResolveSource m
+     , MonadQueryTags m
      )
   => Env.Environment
   -> InstanceId
@@ -124,6 +125,7 @@ runQueryM
      , HasServerConfigCtx m
      , Tracing.MonadTrace m
      , MetadataM m
+     , MonadQueryTags m
      )
   => Env.Environment -> RQLQuery -> m EncJSON
 runQueryM env = \case
@@ -138,4 +140,4 @@ runQueryM env = \case
   RQCitusRunSql q                -> Postgres.runRunSQL @'Citus q
   RQBigqueryRunSql q             -> BigQuery.runSQL q
   RQBigqueryDatabaseInspection q -> BigQuery.runDatabaseInspection q
-  RQBulk   l                     -> encJFromList <$> indexedMapM (runQueryM env) l
+  RQBulk l                       -> encJFromList <$> indexedMapM (runQueryM env) l

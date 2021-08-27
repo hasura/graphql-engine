@@ -10,10 +10,11 @@ window.hdocs = (function () {
       document.getElementById('nav_tree_icon').addEventListener('click', hdocs.handleNavClick);
       document.getElementById('sidebar-close').addEventListener('click', hdocs.handleNavClick);
 
-      document.getElementById('thumb_up_button').addEventListener('click', function () { hdocs.sendFeedback('positive', 'Great to hear that! If you have any other feedback, please share here:') });
-      document.getElementById('thumb_down_button').addEventListener('click', function () { hdocs.sendFeedback('negative', 'Sorry to hear that. Please tell us what you were looking for:') });
-      document.getElementById('feedback_btn').addEventListener('click', hdocs.handleSubmitFeedback);
-      document.getElementById('close-banner').addEventListener('click', hdocs.closeBanner)
+      // document.getElementById('close-banner').addEventListener('click', hdocs.closeBanner);
+
+      // document.getElementById('thumb_up_button').addEventListener('click', function () { hdocs.sendFeedback('positive', 'Great to hear that! If you have any other feedback, please share here:') });
+      // document.getElementById('thumb_down_button').addEventListener('click', function () { hdocs.sendFeedback('negative', 'Sorry to hear that. Please tell us what you were looking for:') });
+      // document.getElementById('feedback_btn').addEventListener('click', hdocs.handleSubmitFeedback);
 
       docsearch({
         appId: 'WCBB1VVLRC',
@@ -27,7 +28,6 @@ window.hdocs = (function () {
       hdocs.getGithubStarCount();
       hdocs.setReleaseTags();
       hdocs.setExternalLinks();
-      hdocs.setupIntercom();
       hdocs.setupGraphiQL();
       hdocs.newsletterForm();
     },
@@ -129,17 +129,6 @@ window.hdocs = (function () {
     setExternalLinks: function () {
       Array.from(document.getElementsByClassName('external')).forEach(function (el) { el.setAttribute('target', '_blank') });
     },
-    setupIntercom: function () {
-      window.intercomSettings = {
-        app_id: "rucirpb3"
-      };
-      var w = window; var ic = w.Intercom; if (typeof ic === "function") { ic('reattach_activator'); ic('update', intercomSettings); } else {
-        var d = document; var i = function () { i.c(arguments) }; i.q = []; i.c = function (args) { i.q.push(args) }; w.Intercom = i; function l() {
-          var s = d.createElement('script'); s.type = 'text/javascript'; s.async = true; s.src = 'https://widget.intercom.io/widget/rucirpb3'; var
-            x = d.getElementsByTagName('script')[0]; x.parentNode.insertBefore(s, x);
-        } if (w.attachEvent) { w.attachEvent('onload', l); } else { w.addEventListener('load', l, false); }
-      }
-    },
     transformSearchData: function (suggestions) {
       if (window.location.origin !== 'https://hasura.io') {
         suggestions.forEach(function (suggestion) {
@@ -182,63 +171,63 @@ window.hdocs = (function () {
         body.classList.remove('no_scroll');
       }
     },
-    sendFeedback: function (feedback, feedbackDetailMsg) {
-      const insertQuery = {
-        'type': 'insert',
-        'args': {
-          'table': 'docs_feedback',
-          'objects': [
-            {
-              'page': window.location.pathname,
-              'feedback': feedback
-            }
-          ],
-          'returning': ['id']
-        }
-      };
-
-      hdocs.request(DB_URL, insertQuery, 'POST')
-        .then(function (response) {
-          const data = JSON.parse(response);
-
-          if (feedback == 'positive' || (feedback == 'negative' && !Intercom)) {
-            document.getElementById('feedback_box').setAttribute('data-id', data['returning'][0]['id']);
-            document.getElementById('feedback_detail_msg').innerHTML = feedbackDetailMsg;
-            document.getElementById('feedback').classList.add('hide');
-            document.getElementById('detailed_feedback').classList.remove('hide');
-          }
-        })
-        .catch(function (err) {
-          alert('Error capturing feedback');
-          console.log(err);
-        });
-    },
-    handleSubmitFeedback: function () {
-      const feedbackBox = document.getElementById('feedback_box');
-      const feedbackId = feedbackBox.getAttribute('data-id');
-      const feedbackContent = feedbackBox.value;
-
-      const updateQuery = {
-        'type': 'update',
-        'args': {
-          'table': 'docs_feedback',
-          '$set': {
-            'feedback_content': feedbackContent
-          },
-          'where': { 'id': feedbackId }
-        }
-      };
-
-      hdocs.request(DB_URL, updateQuery, 'POST')
-        .then(function (response) {
-          document.getElementById('detailed_feedback').classList.add('hide');
-          document.getElementById('thank_you').classList.remove('hide');
-        })
-        .catch(function (err) {
-          alert('Error capturing feedback');
-          console.log(err);
-        });
-    },
+    // sendFeedback: function (feedback, feedbackDetailMsg) {
+    //   const insertQuery = {
+    //     'type': 'insert',
+    //     'args': {
+    //       'table': 'docs_feedback',
+    //       'objects': [
+    //         {
+    //           'page': window.location.pathname,
+    //           'feedback': feedback
+    //         }
+    //       ],
+    //       'returning': ['id']
+    //     }
+    //   };
+    //
+    //   hdocs.request(DB_URL, insertQuery, 'POST')
+    //     .then(function (response) {
+    //       const data = JSON.parse(response);
+    //
+    //       if (feedback == 'positive' || feedback == 'negative') {
+    //         document.getElementById('feedback_box').setAttribute('data-id', data['returning'][0]['id']);
+    //         document.getElementById('feedback_detail_msg').innerHTML = feedbackDetailMsg;
+    //         document.getElementById('feedback').classList.add('hide');
+    //         document.getElementById('detailed_feedback').classList.remove('hide');
+    //       }
+    //     })
+    //     .catch(function (err) {
+    //       alert('Error capturing feedback');
+    //       console.log(err);
+    //     });
+    // },
+    // handleSubmitFeedback: function () {
+    //   const feedbackBox = document.getElementById('feedback_box');
+    //   const feedbackId = feedbackBox.getAttribute('data-id');
+    //   const feedbackContent = feedbackBox.value;
+    //
+    //   const updateQuery = {
+    //     'type': 'update',
+    //     'args': {
+    //       'table': 'docs_feedback',
+    //       '$set': {
+    //         'feedback_content': feedbackContent
+    //       },
+    //       'where': { 'id': feedbackId }
+    //     }
+    //   };
+    //
+    //   hdocs.request(DB_URL, updateQuery, 'POST')
+    //     .then(function (response) {
+    //       document.getElementById('detailed_feedback').classList.add('hide');
+    //       document.getElementById('thank_you').classList.remove('hide');
+    //     })
+    //     .catch(function (err) {
+    //       alert('Error capturing feedback');
+    //       console.log(err);
+    //     });
+    // },
     graphQLFetcher: function (endpoint) {
       endpoint = endpoint || HDOCS_GRAPHIQL_DEFAULT_ENDPOINT;
 

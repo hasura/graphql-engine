@@ -9,7 +9,6 @@ import qualified Data.Environment                     as Env
 import qualified Data.NonNegativeIntSpec              as NonNegetiveIntSpec
 import qualified Data.Parser.CacheControlSpec         as CacheControlParser
 import qualified Data.Parser.JSONPathSpec             as JsonPath
-import qualified Data.Parser.URLTemplate              as URLTemplate
 import qualified Data.TimeSpec                        as TimeSpec
 import qualified Database.PG.Query                    as Q
 import qualified Network.HTTP.Client                  as HTTP
@@ -25,22 +24,23 @@ import           System.Environment                   (getEnvironment)
 import           System.Exit                          (exitFailure)
 import           Test.Hspec
 
-import qualified Hasura.CacheBoundedSpec              as CacheBoundedSpec
 import qualified Hasura.EventingSpec                  as EventingSpec
 import qualified Hasura.GraphQL.Parser.DirectivesTest as GraphQLDirectivesSpec
+import qualified Hasura.GraphQL.RemoteServerSpec      as RemoteServerSpec
 import qualified Hasura.GraphQL.Schema.RemoteTest     as GraphRemoteSchemaSpec
 import qualified Hasura.IncrementalSpec               as IncrementalSpec
+import qualified Hasura.RQL.PermissionSpec            as PermSpec
 import qualified Hasura.RQL.Types.EndpointSpec        as EndpointSpec
 import qualified Hasura.SQL.WKTSpec                   as WKTSpec
 import qualified Hasura.Server.AuthSpec               as AuthSpec
 import qualified Hasura.Server.MigrateSpec            as MigrateSpec
 import qualified Hasura.Server.TelemetrySpec          as TelemetrySpec
 
-import           Hasura.App                           (PGMetadataStorageAppT (..))
+import           Hasura.App                           (PGMetadataStorageAppT (..),
+                                                       mkPgSourceResolver)
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DDL.Schema.Cache.Common
-import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
 import           Hasura.Server.Migrate
@@ -71,21 +71,20 @@ main = withVersion $$(getVersionFromEnvironment) $ parseArgs >>= \case
 
 unitSpecs :: Spec
 unitSpecs = do
-  -- describe "Hasura.RQL.Metadata" MetadataSpec.spec -- Commenting until optimizing the test in CI
   describe "Data.NonNegativeInt" NonNegetiveIntSpec.spec
   describe "Data.Parser.CacheControl" CacheControlParser.spec
   describe "Data.Parser.JSONPath" JsonPath.spec
-  describe "Data.Parser.URLTemplate" URLTemplate.spec
   describe "Data.Time" TimeSpec.spec
-  describe "Hasura.Cache.Bounded" CacheBoundedSpec.spec
   describe "Hasura.Eventing" EventingSpec.spec
   describe "Hasura.GraphQL.Parser.Directives" GraphQLDirectivesSpec.spec
   describe "Hasura.GraphQL.Schema.Remote" GraphRemoteSchemaSpec.spec
   describe "Hasura.Incremental" IncrementalSpec.spec
   describe "Hasura.RQL.Types.Endpoint" EndpointSpec.spec
+  describe "Hasura.GraphQL.RemoteServer" RemoteServerSpec.spec
   describe "Hasura.SQL.WKT" WKTSpec.spec
   describe "Hasura.Server.Auth" AuthSpec.spec
   describe "Hasura.Server.Telemetry" TelemetrySpec.spec
+  describe "Hasura.RQL.PermissionSpec" PermSpec.spec
 
 buildPostgresSpecs :: HasVersion => Maybe URLTemplate -> IO Spec
 buildPostgresSpecs maybeUrlTemplate = do

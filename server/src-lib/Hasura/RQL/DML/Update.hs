@@ -1,3 +1,6 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
+
 module Hasura.RQL.DML.Update
   ( runUpdate
   ) where
@@ -6,6 +9,7 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                          as M
 import qualified Data.Sequence                                as DS
+import qualified Data.Tagged                                  as Tagged
 import qualified Database.PG.Query                            as Q
 
 import           Control.Monad.Trans.Control                  (MonadBaseControl)
@@ -22,6 +26,7 @@ import           Hasura.Backends.Postgres.Translate.Returning
 import           Hasura.Backends.Postgres.Types.Table
 import           Hasura.Base.Error
 import           Hasura.EncJSON
+import           Hasura.QueryTags
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.BoolExp
@@ -30,6 +35,8 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
 import           Hasura.Session
+
+import           Hasura.GraphQL.Execute.Backend
 
 
 convInc
@@ -95,7 +102,7 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
 
 validateUpdateQueryWith
   :: (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m)
-  => SessVarBldr ('Postgres 'Vanilla) m
+  => SessionVariableBuilder ('Postgres 'Vanilla) m
   -> ValueParser ('Postgres 'Vanilla) m S.SQLExp
   -> UpdateQuery
   -> m (AnnUpd ('Postgres 'Vanilla))
@@ -186,15 +193,18 @@ validateUpdateQuery query = do
     validateUpdateQueryWith sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query
 
 runUpdate
-  :: ( QErrM m, UserInfoM m, CacheRM m
-     , HasServerConfigCtx m, MonadBaseControl IO m
-     , MonadIO m, Tracing.MonadTrace m, MetadataM m
-     )
+  :: forall m
+    . ( QErrM m, UserInfoM m, CacheRM m
+      , HasServerConfigCtx m, MonadBaseControl IO m
+      , MonadIO m, Tracing.MonadTrace m, MetadataM m
+      , MonadQueryTags m
+      )
   => UpdateQuery -> m EncJSON
 runUpdate q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (uqSource q)
   userInfo <- askUserInfo
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
+  let queryTags = QueryTagsComment $ Tagged.untag $ createQueryTags @m Nothing (encodeOptionalQueryTags Nothing)
   validateUpdateQuery q
     >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
-        . execUpdateQuery strfyNum userInfo
+        . flip runReaderT queryTags . execUpdateQuery strfyNum userInfo

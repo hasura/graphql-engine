@@ -6,7 +6,11 @@ import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryCollection
+import           Hasura.RQL.DDL.Relationship
+import           Hasura.RQL.DDL.Relationship.Rename
+import           Hasura.RQL.DDL.RemoteRelationship
 import           Hasura.RQL.DDL.Schema
+import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
 import           Hasura.SQL.AnyBackend
 
@@ -53,8 +57,8 @@ data RQLMetadataV1
   | RMUntrackFunction !(AnyBackend UnTrackFunction)
 
   -- Functions permissions
-  | RMCreateFunctionPermission !(AnyBackend CreateFunctionPermission)
-  | RMDropFunctionPermission   !(AnyBackend DropFunctionPermission)
+  | RMCreateFunctionPermission !(AnyBackend FunctionPermissionArgument)
+  | RMDropFunctionPermission   !(AnyBackend FunctionPermissionArgument)
 
   -- Computed fields (PG-specific)
   | RMAddComputedField  !(AddComputedField  ('Postgres 'Vanilla))
@@ -74,7 +78,7 @@ data RQLMetadataV1
   | RMIntrospectRemoteSchema !RemoteSchemaNameQuery
 
   -- Remote schemas permissions
-  | RMAddRemoteSchemaPermissions  !AddRemoteSchemaPermissions
+  | RMAddRemoteSchemaPermissions  !AddRemoteSchemaPermission
   | RMDropRemoteSchemaPermissions !DropRemoteSchemaPermissions
 
   -- Scheduled triggers
@@ -129,6 +133,10 @@ data RQLMetadataV1
 
   -- Introspection options
   | RMSetGraphqlSchemaIntrospectionOptions !SetGraphqlIntrospectionOptions
+
+  -- Network
+  | RMAddHostToTLSAllowlist !AddHostToTLSAllowlist
+  | RMDropHostFromTLSAllowlist !DropHostFromTLSAllowlist
 
   -- Debug
   | RMDumpInternalState !DumpInternalState

@@ -16,7 +16,7 @@ import qualified Data.List.NonEmpty                         as NE
 import qualified Data.Text                                  as T
 import qualified Database.PG.Query                          as Q
 
-import           Control.Lens                               hiding (op)
+import           Control.Lens                               ((^?))
 import           Control.Monad.Writer.Strict
 import           Data.Text.Extended
 
@@ -220,11 +220,11 @@ mkBaseTableColumnAlias :: Identifier -> PGCol -> Identifier
 mkBaseTableColumnAlias pfx pgColumn =
   pfx <> Identifier ".pg." <> toIdentifier pgColumn
 
-mkOrderByFieldName :: RelName -> FieldName
-mkOrderByFieldName relName =
-  FieldName $ relNameToTxt relName <> "." <> "order_by"
+mkOrderByFieldName :: ToTxt a => a -> FieldName
+mkOrderByFieldName name =
+  FieldName $ toTxt name <> "." <> "order_by"
 
-mkAggregateOrderByAlias :: AnnAggregateOrderBy ('Postgres pgKind) -> S.Alias
+mkAggregateOrderByAlias :: AnnotatedAggregateOrderBy ('Postgres pgKind) -> S.Alias
 mkAggregateOrderByAlias = (S.Alias . Identifier) . \case
   AAOCount         -> "count"
   AAOOp opText col -> opText <> "." <> getPGColTxt (pgiColumn col)
@@ -284,7 +284,7 @@ withForceAggregation tyAnn e =
 mkAggregateOrderByExtractorAndFields
   :: forall pgKind
    . Backend ('Postgres pgKind)
-  => AnnAggregateOrderBy ('Postgres pgKind)
+  => AnnotatedAggregateOrderBy ('Postgres pgKind)
   -> (S.Extractor, AggregateFields ('Postgres pgKind))
 mkAggregateOrderByExtractorAndFields annAggOrderBy =
   case annAggOrderBy of
@@ -309,7 +309,7 @@ mkAggregateOrderByExtractorAndFields annAggOrderBy =
     alias = Just $ mkAggregateOrderByAlias annAggOrderBy
 
 mkAnnOrderByAlias
-  :: Identifier -> FieldName -> SimilarArrayFields -> AnnOrderByElementG ('Postgres pgKind) v -> S.Alias
+  :: Identifier -> FieldName -> SimilarArrayFields -> AnnotatedOrderByElement ('Postgres pgKind) v -> S.Alias
 mkAnnOrderByAlias pfx parAls similarFields = \case
   AOCColumn pgColumnInfo ->
     let pgColumn = pgiColumn pgColumnInfo
@@ -328,14 +328,27 @@ mkAnnOrderByAlias pfx parAls similarFields = \case
                  mkOrderByFieldName rn
         obAls = arrPfx <> Identifier "." <> toIdentifier (mkAggregateOrderByAlias aggOrderBy)
     in S.Alias obAls
+  AOCComputedField cfOrderBy ->
+    let fieldName = fromComputedField $ _cfobName cfOrderBy
+    in case _cfobOrderByElement cfOrderBy of
+      CFOBEScalar _ -> S.Alias $ mkComputedFieldTableAlias pfx fieldName
+      CFOBETableAggregation _ _ aggOrderBy ->
+        let cfPfx = mkComputedFieldTableAlias pfx fieldName
+            obAls = cfPfx <> Identifier "." <> toIdentifier (mkAggregateOrderByAlias aggOrderBy)
+        in S.Alias obAls
 
-processDistinctOnColumns
+applyDistinctOnAtBase
+  :: NE.NonEmpty PGCol -> S.DistinctExpr
+applyDistinctOnAtBase =
+  S.DistinctOn . map (S.SEIdentifier . toIdentifier) . toList
+
+applyDistinctOnAtNode
   :: Identifier
   -> NE.NonEmpty PGCol
   -> ( S.DistinctExpr
      , [(S.Alias, S.SQLExp)] -- additional column extractors
      )
-processDistinctOnColumns pfx neCols = (distOnExp, colExtrs)
+applyDistinctOnAtNode pfx neCols = (distOnExp, colExtrs)
   where
     cols = toList neCols
     distOnExp = S.DistinctOn $ map (S.SEIdentifier . toIdentifier . mkQColAls) cols
@@ -349,7 +362,7 @@ mkSimilarArrayFields
   :: forall pgKind v
    . (Backend ('Postgres pgKind), Eq v)
   => AnnFieldsG ('Postgres pgKind) (Const Void) v
-  -> Maybe (NE.NonEmpty (AnnOrderByItemG ('Postgres pgKind) v))
+  -> Maybe (NE.NonEmpty (AnnotatedOrderByItemG ('Postgres pgKind) v))
   -> SimilarArrayFields
 mkSimilarArrayFields annFields maybeOrderBys =
   HM.fromList $ flip map allTuples $
@@ -432,7 +445,7 @@ withWriteArrayRelation action =
   pure (out, (source, topExtractor, nodeExtractors))
   where
     updateJoinTree joinTree (source, topExtractor, nodeExtractors) =
-      let arraySelectNode = ArraySelectNode [topExtractor] $
+      let arraySelectNode = MultiRowSelectNode [topExtractor] $
                             SelectNode nodeExtractors joinTree
       in mempty{_jtArrayRelations = HM.singleton source arraySelectNode}
 
@@ -450,24 +463,25 @@ withWriteArrayConnection action =
   pure (out, (source, topExtractor, nodeExtractors))
   where
     updateJoinTree joinTree (source, topExtractor, nodeExtractors) =
-      let arraySelectNode = ArraySelectNode [topExtractor] $
+      let arraySelectNode = MultiRowSelectNode [topExtractor] $
                             SelectNode nodeExtractors joinTree
       in mempty{_jtArrayConnections = HM.singleton source arraySelectNode}
 
 withWriteComputedFieldTableSet
   :: (MonadWriter JoinTree m)
   => m ( ComputedFieldTableSetSource
+       , S.Extractor
        , HM.HashMap S.Alias S.SQLExp
        , a
        )
   -> m a
 withWriteComputedFieldTableSet action =
   withWriteJoinTree updateJoinTree $ do
-    (source, nodeExtractors, out) <- action
-    pure (out, (source, nodeExtractors))
+    (source, topExtractor, nodeExtractors, out) <- action
+    pure (out, (source, topExtractor, nodeExtractors))
   where
-    updateJoinTree joinTree (source, nodeExtractors) =
-      let selectNode = SelectNode nodeExtractors joinTree
+    updateJoinTree joinTree (source, topExtractor, nodeExtractors) =
+      let selectNode = MultiRowSelectNode [topExtractor] $ SelectNode nodeExtractors joinTree
       in mempty{_jtComputedFieldTableSets = HM.singleton source selectNode}
 
 
@@ -487,8 +501,14 @@ processAnnSimpleSelect
        )
 processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel = do
   (selectSource, orderByAndDistinctExtrs, _) <-
-    processSelectParams sourcePrefixes fieldAlias similarArrayFields tableFrom
-    permLimitSubQuery tablePermissions tableArgs
+    processSelectParams
+      sourcePrefixes
+      fieldAlias
+      similarArrayFields
+      tableFrom
+      permLimitSubQuery
+      tablePermissions
+      tableArgs
   annFieldsExtr <- processAnnFields (_pfThis sourcePrefixes) fieldAlias similarArrayFields annSelFields
   let allExtractors = HM.fromList $ annFieldsExtr : orderByAndDistinctExtrs
   pure (selectSource, allExtractors)
@@ -513,8 +533,14 @@ processAnnAggregateSelect
        )
 processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
   (selectSource, orderByAndDistinctExtrs, _) <-
-    processSelectParams sourcePrefixes fieldAlias similarArrayFields tableFrom
-    permLimitSubQuery tablePermissions tableArgs
+    processSelectParams
+      sourcePrefixes
+      fieldAlias
+      similarArrayFields
+      tableFrom
+      permLimitSubQuery
+      tablePermissions
+      tableArgs
   let thisSourcePrefix = _pfThis sourcePrefixes
   processedFields <- forM aggSelFields $ \(fieldName, field) ->
     (fieldName,) <$>
@@ -526,7 +552,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
       TAFNodes _ annFields -> do
         annFieldExtr <- processAnnFields thisSourcePrefix fieldName similarArrayFields annFields
         pure ( [annFieldExtr]
-             , withJsonAggExtr permLimitSubQuery (_ssOrderBy selectSource) $
+             , withJsonAggExtr permLimitSubQuery (orderByForJsonAgg selectSource) $
                S.Alias $ toIdentifier fieldName
              )
       TAFExp e ->
@@ -557,7 +583,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
 mkPermissionLimitSubQuery
   :: Maybe Int
   -> TableAggregateFields ('Postgres pgKind)
-  -> Maybe (NE.NonEmpty (AnnOrderByItem ('Postgres pgKind)))
+  -> Maybe (NE.NonEmpty (AnnotatedOrderByItem ('Postgres pgKind)))
   -> PermissionLimitSubQuery
 mkPermissionLimitSubQuery permLimit aggFields orderBys =
   case permLimit of
@@ -599,7 +625,7 @@ processArrayRelation sourcePrefixes fieldAlias relAlias arrSel =
       (source, nodeExtractors) <-
         processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery sel
       let topExtr = asJsonAggExtr JASMultipleRows (S.toAlias fieldAlias)
-                    permLimitSubQuery $ _ssOrderBy source
+                    permLimitSubQuery $ orderByForJsonAgg source
       pure ( ArrayRelationSource relAlias colMapping source
            , topExtr
            , nodeExtractors
@@ -624,6 +650,24 @@ processArrayRelation sourcePrefixes fieldAlias relAlias arrSel =
            , ()
            )
 
+{- Note [Optimizing queries using limit/offset]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Refer to the issue https://github.com/hasura/graphql-engine/issues/5745
+
+Before this change, limit/offset/distinct_on is applied at outer selection
+node along with order by clause. This greatly reduces query performance if
+our base selection table contains many rows and relationships are selected
+which joins remote tables. We need to optimize application of limit wrt to
+order by input.
+
+If "Order by" is not present:
+  Apply limit/offset/distinct on at the base table selection
+Else if "Order by" contains only columns:
+  Apply limit/offset/distinct_on at the base table selection along with order by
+Otherwise:
+  Apply limit/offset/distinct_on at the node selection along with order by
+-}
+
 processSelectParams
   :: forall pgKind m
    . ( MonadReader Bool m
@@ -643,25 +687,23 @@ processSelectParams
        )
 processSelectParams sourcePrefixes fieldAlias similarArrFields selectFrom
                     permLimitSubQ tablePermissions tableArgs = do
-  maybeOrderBy <- mapM
-                  (processOrderByItems thisSourcePrefix fieldAlias similarArrFields)
-                  orderByM
+  (additionalExtrs, selectSorting, cursorExp) <-
+    processOrderByItems thisSourcePrefix fieldAlias similarArrFields distM orderByM
   let fromItem = selectFromToFromItem (_pfBase sourcePrefixes) selectFrom
-      (maybeDistinct, distinctExtrs) =
-        maybe (Nothing, []) (first Just) $ processDistinctOnColumns thisSourcePrefix <$> distM
       finalWhere = toSQLBoolExp (selectFromToQual selectFrom) $
                    maybe permFilter (andAnnBoolExps permFilter) whereM
-      selectSource = SelectSource thisSourcePrefix fromItem maybeDistinct finalWhere
-                     ((^. _2) <$> maybeOrderBy) finalLimit offsetM
-      orderByExtrs = maybe [] (^. _1) maybeOrderBy
+      sortingAndSlicing = SortingAndSlicing selectSorting selectSlicing
+      selectSource = SelectSource thisSourcePrefix fromItem finalWhere
+                     sortingAndSlicing
   pure ( selectSource
-       , orderByExtrs <> distinctExtrs
-       , (^. _3) <$> maybeOrderBy
+       , additionalExtrs
+       , cursorExp
        )
   where
     thisSourcePrefix = _pfThis sourcePrefixes
     SelectArgs whereM orderByM inpLimitM offsetM distM = tableArgs
     TablePerm permFilter permLimit = tablePermissions
+    selectSlicing = SelectSlicing finalLimit offsetM
     finalLimit =
     -- if sub query is required, then only use input limit
     --    because permission limit is being applied in subquery
@@ -674,7 +716,7 @@ processSelectParams sourcePrefixes fieldAlias similarArrFields selectFrom
       case (inpLimitM, permLimit) of
         (inpLim, Nothing)     -> inpLim
         (Nothing, permLim)    -> permLim
-        (Just inp, Just perm) -> Just $ if inp < perm then inp else perm
+        (Just inp, Just perm) -> Just if inp < perm then inp else perm
 
 processOrderByItems
   :: forall pgKind m
@@ -685,39 +727,42 @@ processOrderByItems
   => Identifier
   -> FieldName
   -> SimilarArrayFields
-  -> NE.NonEmpty (AnnOrderByItem ('Postgres pgKind))
+  -> Maybe (NE.NonEmpty PGCol)
+  -> Maybe (NE.NonEmpty (AnnotatedOrderByItem ('Postgres pgKind)))
   -> m ( [(S.Alias, S.SQLExp)] -- Order by Extractors
-       , S.OrderByExp
-       , S.SQLExp -- The cursor expression
+       , SelectSorting
+       , Maybe S.SQLExp -- The cursor expression
        )
-processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = do
-  orderByItemExps <- forM orderByItems processAnnOrderByItem
-  let orderByExp = S.OrderByExp $ toOrderByExp <$> orderByItemExps
-      orderByExtractors = concat $ toList $ map snd . toList <$> orderByItemExps
-      cursor = mkCursorExp $ toList orderByItemExps
-  pure (orderByExtractors, orderByExp, cursor)
+processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \case
+  Nothing -> pure ([], NoSorting $ applyDistinctOnAtBase <$> distOnCols, Nothing)
+  Just orderByItems -> do
+    orderByItemExps <- forM orderByItems processAnnOrderByItem
+    let (sorting, distinctOnExtractors) = generateSorting orderByItemExps
+        orderByExtractors = concat $ toList $ map snd . toList <$> orderByItemExps
+        cursor = mkCursorExp $ toList orderByItemExps
+    pure (orderByExtractors <> distinctOnExtractors, sorting, Just cursor)
   where
     processAnnOrderByItem
-      :: AnnOrderByItem ('Postgres pgKind)
-      -> m (OrderByItemG ('Postgres pgKind) (AnnOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.Alias, SQLExpression ('Postgres pgKind))))
+      :: AnnotatedOrderByItem ('Postgres pgKind)
+      -> m (OrderByItemG ('Postgres pgKind) (AnnotatedOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.Alias, SQLExpression ('Postgres pgKind))))
     processAnnOrderByItem orderByItem =
       forM orderByItem $ \ordByCol -> (ordByCol,) <$>
-      processAnnOrderByElement sourcePrefix' fieldAlias' ordByCol
+      processAnnotatedOrderByElement sourcePrefix' fieldAlias' ordByCol
 
-    processAnnOrderByElement
-      :: Identifier -> FieldName -> AnnOrderByElement ('Postgres pgKind) S.SQLExp -> m (S.Alias, S.SQLExp)
-    processAnnOrderByElement sourcePrefix fieldAlias annObCol = do
+    processAnnotatedOrderByElement
+      :: Identifier -> FieldName -> AnnotatedOrderByElement ('Postgres pgKind) S.SQLExp -> m (S.Alias, (SQLExpression ('Postgres pgKind)))
+    processAnnotatedOrderByElement sourcePrefix fieldAlias annObCol = do
       let ordByAlias = mkAnnOrderByAlias sourcePrefix fieldAlias similarArrayFields annObCol
       (ordByAlias, ) <$> case annObCol of
         AOCColumn pgColInfo -> pure $
           S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ toIdentifier $ pgiColumn pgColInfo
 
         AOCObjectRelation relInfo relFilter rest -> withWriteObjectRelation $ do
-          let RelInfo relName _ colMapping relTable _ _ _ = relInfo
+          let RelInfo relName _ colMapping relTable _ _ = relInfo
               relSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName
               fieldName = mkOrderByFieldName relName
           (relOrderByAlias, relOrdByExp) <-
-            processAnnOrderByElement relSourcePrefix fieldName rest
+            processAnnotatedOrderByElement relSourcePrefix fieldName rest
           let selectSource = ObjectSelectSource relSourcePrefix
                              (S.FISimple relTable Nothing)
                              (toSQLBoolExp (S.QualTable relTable) relFilter)
@@ -728,16 +773,16 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
                )
 
         AOCArrayAggregation relInfo relFilter aggOrderBy -> withWriteArrayRelation $ do
-          let RelInfo relName _ colMapping relTable _ _ _ = relInfo
+          let RelInfo relName _ colMapping relTable _ _ = relInfo
               fieldName = mkOrderByFieldName relName
               relSourcePrefix = mkArrayRelationSourcePrefix sourcePrefix fieldAlias
                                 similarArrayFields fieldName
               relAlias = mkArrayRelationAlias fieldAlias similarArrayFields fieldName
               (topExtractor, fields) = mkAggregateOrderByExtractorAndFields aggOrderBy
               selectSource = SelectSource relSourcePrefix
-                             (S.FISimple relTable Nothing) Nothing
+                             (S.FISimple relTable Nothing)
                              (toSQLBoolExp (S.QualTable relTable) relFilter)
-                             Nothing Nothing Nothing
+                             noSortingAndSlicing
               relSource = ArrayRelationSource relAlias colMapping selectSource
           pure ( relSource
                , topExtractor
@@ -745,15 +790,76 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
                , S.mkQIdenExp relSourcePrefix (mkAggregateOrderByAlias aggOrderBy)
                )
 
-    toOrderByExp
-      :: OrderByItemG ('Postgres pgKind) (AnnOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.Alias, SQLExpression ('Postgres pgKind)))
-      -> S.OrderByItem
-    toOrderByExp orderByItemExp =
-      let OrderByItemG obTyM expAlias obNullsM = fst . snd <$> orderByItemExp
-      in S.OrderByItem (S.SEIdentifier $ toIdentifier expAlias) obTyM obNullsM
+        AOCComputedField ComputedFieldOrderBy{..} ->
+          case _cfobOrderByElement of
+            CFOBEScalar _                                          -> do
+              let functionArgs = fromTableRowArgs sourcePrefix _cfobFunctionArgsExp
+                  functionExp  = S.FunctionExp _cfobFunction functionArgs Nothing
+              pure $ S.SEFunction functionExp
+            CFOBETableAggregation _ tableFilter aggOrderBy -> withWriteComputedFieldTableSet $ do
+              let fieldName = mkOrderByFieldName _cfobName
+                  computedFieldSourcePrefix = mkComputedFieldTableAlias sourcePrefix fieldName
+                  (topExtractor, fields) = mkAggregateOrderByExtractorAndFields aggOrderBy
+                  fromItem = selectFromToFromItem sourcePrefix $
+                             FromFunction _cfobFunction _cfobFunctionArgsExp Nothing
+                  functionQual = S.QualifiedIdentifier (functionToIdentifier _cfobFunction) Nothing
+                  selectSource = SelectSource computedFieldSourcePrefix fromItem
+                                 (toSQLBoolExp functionQual tableFilter)
+                                 noSortingAndSlicing
+                  source = ComputedFieldTableSetSource fieldName selectSource
+              pure ( source
+                   , topExtractor
+                   , HM.fromList $ aggregateFieldsToExtractorExps computedFieldSourcePrefix fields
+                   , S.mkQIdenExp computedFieldSourcePrefix (mkAggregateOrderByAlias aggOrderBy)
+                   )
+
+    -- | To sort queries, the 'ORDER BY' clause is used. The order by clause is applied either at base table selection
+    -- or outer node selection based on whether the list of order by expression contains non-column order by item.
+    -- For more details see Note [Optimizing queries using limit/offset].
+    generateSorting
+      :: NE.NonEmpty (OrderByItemG ('Postgres pgKind) (AnnotatedOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.Alias, SQLExpression ('Postgres pgKind))))
+      -> ( SelectSorting
+         , [(S.Alias, SQLExpression ('Postgres pgKind))] -- 'distinct on' column extractors
+         )
+    generateSorting orderByExps@(firstOrderBy NE.:| restOrderBys) =
+      case fst $ obiColumn firstOrderBy of
+        AOCColumn columnInfo ->
+          -- If rest order by expressions are all columns then apply order by clause at base selection.
+          if all (isJust . getColumnOrderBy . obiColumn) restOrderBys then
+            -- Collect column order by expressions from the rest.
+            let restColumnOrderBys = mapMaybe (sequenceA . (getColumnOrderBy <$>)) restOrderBys
+                firstColumnOrderBy = firstOrderBy{obiColumn = columnInfo}
+            in sortAtBase $ firstColumnOrderBy NE.:| restColumnOrderBys
+
+          -- Else rest order by expressions contain atleast one non-column order by.
+          -- So, apply order by clause at node selection.
+          else sortAtNode
+        _                    ->
+          -- First order by expression is non-column. So, apply order by clause at node selection.
+          sortAtNode
+
+      where
+        getColumnOrderBy = (^? _AOCColumn) . fst
+
+        sortAtNode =
+          let toOrderByExp orderByItemExp =
+                let OrderByItemG obTyM expAlias obNullsM = fst . snd <$> orderByItemExp
+                in S.OrderByItem (S.SEIdentifier $ toIdentifier expAlias) obTyM obNullsM
+              orderByExp = S.OrderByExp $ toOrderByExp <$> orderByExps
+              (maybeDistOn, distOnExtrs) = NE.unzip $ applyDistinctOnAtNode sourcePrefix' <$> distOnCols
+          in (SortAtNode orderByExp maybeDistOn, fromMaybe [] distOnExtrs)
+
+        sortAtBase columnOrderBys =
+          let mkBaseOrderByItem (OrderByItemG orderByType columnInfo nullsOrder) =
+                S.OrderByItem
+                (S.SEIdentifier $ toIdentifier $ pgiColumn columnInfo)
+                orderByType nullsOrder
+              orderByExp = S.OrderByExp $ mkBaseOrderByItem <$> columnOrderBys
+              distOnExp = applyDistinctOnAtBase <$> distOnCols
+          in (SortAtBase orderByExp distOnExp, [])
 
     mkCursorExp
-      :: [OrderByItemG ('Postgres pgKind) (AnnOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.Alias, SQLExpression ('Postgres pgKind)))]
+      :: [OrderByItemG ('Postgres pgKind) (AnnotatedOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.Alias, SQLExpression ('Postgres pgKind)))]
       -> S.SQLExp
     mkCursorExp orderByItemExps =
       S.applyJsonBuildObj $ flip concatMap orderByItemExps $
@@ -761,6 +867,13 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
         let OrderByItemG _ (annObCol, (_, valExp)) _ = orderByItemExp
         in annObColToJSONField valExp annObCol
       where
+        mkAggOrderByValExp valExp = \case
+          AAOCount -> [S.SELit "count", valExp]
+          AAOOp opText colInfo ->
+            [ S.SELit opText
+            , S.applyJsonBuildObj [S.SELit $ getPGColTxt $ pgiColumn colInfo, valExp]
+            ]
+
         annObColToJSONField valExp = \case
           AOCColumn pgCol -> [S.SELit $ getPGColTxt $ pgiColumn pgCol, valExp]
           AOCObjectRelation relInfo _ obCol ->
@@ -769,14 +882,16 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
             ]
           AOCArrayAggregation relInfo _ aggOrderBy ->
             [ S.SELit $ relNameToTxt (riName relInfo) <> "_aggregate"
-            , S.applyJsonBuildObj $
-              case aggOrderBy of
-                AAOCount -> [S.SELit "count", valExp]
-                AAOOp opText colInfo ->
-                  [ S.SELit opText
-                  , S.applyJsonBuildObj [S.SELit $ getPGColTxt $ pgiColumn colInfo, valExp]
-                  ]
+            , S.applyJsonBuildObj $ mkAggOrderByValExp valExp aggOrderBy
             ]
+          AOCComputedField cfOrderBy ->
+            let fieldNameText = computedFieldNameToText $ _cfobName cfOrderBy
+            in case _cfobOrderByElement cfOrderBy of
+                 CFOBEScalar _ -> [S.SELit fieldNameText, valExp]
+                 CFOBETableAggregation _ _ aggOrderBy ->
+                   [ S.SELit $ fieldNameText <> "_aggregate"
+                   , S.applyJsonBuildObj $ mkAggOrderByValExp valExp aggOrderBy
+                   ]
 
 aggregateFieldsToExtractorExps
   :: Identifier -> AggregateFields ('Postgres pgKind) -> [(S.Alias, S.SQLExp)]
@@ -876,10 +991,6 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
 
       AFColumn c -> toSQLCol c
 
-      -- this will be gone once the code which collects remote joins from the IR
-      -- emits a modified IR where remote relationships can't be reached
-      AFRemote _ -> pure $ S.SELit "null: remote field selected"
-
       AFObjectRelation objSel -> withWriteObjectRelation $ do
         let AnnRelationSelectG relName relMapping annObjSel = objSel
             AnnObjectSelectG objAnnFields tableFrom tableFilter = annObjSel
@@ -921,15 +1032,14 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
         (selectSource, nodeExtractors) <-
           processAnnSimpleSelect (mkSourcePrefixes computedFieldSourcePrefix)
           fieldName PLSQNotRequired sel
-        let computedFieldTableSetSource =
-              ComputedFieldTableSetSource fieldName selectTy selectSource
+        let computedFieldTableSetSource = ComputedFieldTableSetSource fieldName selectSource
+            extractor = asJsonAggExtr selectTy (S.toAlias fieldName) PLSQNotRequired $
+                        orderByForJsonAgg selectSource
         pure ( computedFieldTableSetSource
+             , extractor
              , nodeExtractors
              , S.mkQIdenExp computedFieldSourcePrefix fieldName
              )
-
-      -- TODO: implement this
-      AFDBRemote _ -> error "FIXME"
 
 
   pure $ annRowToJson @pgKind fieldAlias fieldExps
@@ -1002,21 +1112,27 @@ generateSQLSelect joinCondition selectSource selectNode =
   S.mkSelect
   { S.selExtr = [S.Extractor e $ Just a | (a, e) <- HM.toList extractors]
   , S.selFrom = Just $ S.FromExp [joinedFrom]
-  , S.selOrderBy = maybeOrderby
-  , S.selLimit = S.LimitExp . S.intToSQLExp <$> maybeLimit
-  , S.selOffset = S.OffsetExp . S.int64ToSQLExp <$> maybeOffset
-  , S.selDistinct = maybeDistinct
+  , S.selOrderBy = nodeOrderBy
+  , S.selLimit = S.LimitExp . S.intToSQLExp <$> _ssLimit nodeSlicing
+  , S.selOffset = S.OffsetExp . S.int64ToSQLExp <$> _ssOffset nodeSlicing
+  , S.selDistinct = nodeDistinctOn
   }
   where
-    SelectSource sourcePrefix fromItem maybeDistinct whereExp
-      maybeOrderby maybeLimit maybeOffset = selectSource
+    SelectSource sourcePrefix fromItem whereExp sortAndSlice = selectSource
     SelectNode extractors joinTree = selectNode
     JoinTree objectRelations arrayRelations arrayConnections computedFields = joinTree
+    ApplySortingAndSlicing (baseOrderBy, baseSlicing, baseDistinctOn)
+      (nodeOrderBy, nodeSlicing, nodeDistinctOn) = applySortingAndSlicing sortAndSlice
+
     -- this is the table which is aliased as "sourcePrefix.base"
     baseSelect = S.mkSelect
       { S.selExtr  = [S.Extractor (S.SEStar Nothing) Nothing]
       , S.selFrom  = Just $ S.FromExp [fromItem]
       , S.selWhere = Just $ injectJoinCond joinCondition whereExp
+      , S.selOrderBy = baseOrderBy
+      , S.selLimit = S.LimitExp . S.intToSQLExp <$> _ssLimit baseSlicing
+      , S.selOffset = S.OffsetExp . S.int64ToSQLExp <$> _ssOffset baseSlicing
+      , S.selDistinct = baseDistinctOn
       }
     baseSelectAlias = S.Alias $ mkBaseTableAlias sourcePrefix
     baseFromItem = S.mkSelFromItem baseSelect baseSelectAlias
@@ -1034,7 +1150,6 @@ generateSQLSelect joinCondition selectSource selectNode =
                  map arrayConnectionToFromItem (HM.toList arrayConnections) <>
                  map computedFieldToFromItem (HM.toList computedFields)
 
-
     objectRelationToFromItem
       :: (ObjectRelationSource, SelectNode) -> S.FromItem
     objectRelationToFromItem (objectRelationSource, node) =
@@ -1045,7 +1160,7 @@ generateSQLSelect joinCondition selectSource selectNode =
       in S.mkLateralFromItem select alias
 
     arrayRelationToFromItem
-      :: (ArrayRelationSource, ArraySelectNode) -> S.FromItem
+      :: (ArrayRelationSource, MultiRowSelectNode) -> S.FromItem
     arrayRelationToFromItem (arrayRelationSource, arraySelectNode) =
       let ArrayRelationSource _ colMapping source = arrayRelationSource
           alias = S.Alias $ _ssPrefix source
@@ -1054,29 +1169,27 @@ generateSQLSelect joinCondition selectSource selectNode =
       in S.mkLateralFromItem select alias
 
     arrayConnectionToFromItem
-      :: (ArrayConnectionSource, ArraySelectNode) -> S.FromItem
+      :: (ArrayConnectionSource, MultiRowSelectNode) -> S.FromItem
     arrayConnectionToFromItem (arrayConnectionSource, arraySelectNode) =
       let selectWith = connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode
           alias = S.Alias $ _ssPrefix $ _acsSource arrayConnectionSource
       in S.FISelectWith (S.Lateral True) selectWith alias
 
     computedFieldToFromItem
-      :: (ComputedFieldTableSetSource, SelectNode) -> S.FromItem
+      :: (ComputedFieldTableSetSource, MultiRowSelectNode) -> S.FromItem
     computedFieldToFromItem (computedFieldTableSource, node) =
-      let ComputedFieldTableSetSource fieldName selectTy source = computedFieldTableSource
-          internalSelect = generateSQLSelect (S.BELit True) source node
-          extractor = asJsonAggExtr selectTy (S.toAlias fieldName) PLSQNotRequired $
-                      _ssOrderBy source
+      let ComputedFieldTableSetSource _ source = computedFieldTableSource
+          internalSelect = generateSQLSelect (S.BELit True) source $ _mrsnSelectNode node
           alias = S.Alias $ _ssPrefix source
           select = S.mkSelect
-                { S.selExtr = [extractor]
+                { S.selExtr = _mrsnTopExtractors node
                 , S.selFrom = Just $ S.FromExp [S.mkSelFromItem internalSelect alias]
                 }
       in S.mkLateralFromItem select alias
 
 generateSQLSelectFromArrayNode
   :: SelectSource
-  -> ArraySelectNode
+  -> MultiRowSelectNode
   -> S.BoolExp
   -> S.Select
 generateSQLSelectFromArrayNode selectSource arraySelectNode joinCondition =
@@ -1085,7 +1198,7 @@ generateSQLSelectFromArrayNode selectSource arraySelectNode joinCondition =
   , S.selFrom = Just $ S.FromExp [selectFrom]
   }
   where
-    ArraySelectNode topExtractors selectNode = arraySelectNode
+    MultiRowSelectNode topExtractors selectNode = arraySelectNode
     selectFrom = S.mkSelFromItem
                  (generateSQLSelect joinCondition selectSource selectNode) $
                  S.Alias $ _ssPrefix selectSource
@@ -1102,7 +1215,7 @@ mkAggregateSelect annAggSel =
         runWriter $ flip runReaderT strfyNum $
         processAnnAggregateSelect sourcePrefixes rootFieldName annAggSel
       selectNode = SelectNode nodeExtractors joinTree
-      arrayNode = ArraySelectNode [topExtractor] selectNode
+      arrayNode = MultiRowSelectNode [topExtractor] selectNode
   in prefixNumToAliases $
      generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
   where
@@ -1126,8 +1239,8 @@ mkSQLSelect jsonAggSelect annSel =
         processAnnSimpleSelect sourcePrefixes rootFldName permLimitSubQuery annSel
       selectNode = SelectNode nodeExtractors joinTree
       topExtractor = asJsonAggExtr jsonAggSelect rootFldAls permLimitSubQuery
-                     $ _ssOrderBy selectSource
-      arrayNode = ArraySelectNode [topExtractor] selectNode
+                     $ orderByForJsonAgg selectSource
+      arrayNode = MultiRowSelectNode [topExtractor] selectNode
   in prefixNumToAliases $
      generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
   where
@@ -1149,7 +1262,7 @@ mkConnectionSelect connectionSelect =
         runWriter $ flip runReaderT strfyNum $
         processConnectionSelect sourcePrefixes rootFieldName
         (S.Alias rootIdentifier) mempty connectionSelect
-      selectNode = ArraySelectNode [topExtractor] $
+      selectNode = MultiRowSelectNode [topExtractor] $
                        SelectNode nodeExtractors joinTree
   in prefixNumToAliasesSelectWith $
      connectionToSelectWith (S.Alias rootIdentifier) connectionSource selectNode
@@ -1227,8 +1340,14 @@ processConnectionSelect
        )
 processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connectionSelect = do
   (selectSource, orderByAndDistinctExtrs, maybeOrderByCursor) <-
-    processSelectParams sourcePrefixes fieldAlias similarArrayFields selectFrom
-    permLimitSubQuery tablePermissions tableArgs
+    processSelectParams
+      sourcePrefixes
+      fieldAlias
+      similarArrayFields
+      selectFrom
+      permLimitSubQuery
+      tablePermissions
+      tableArgs
 
   let mkCursorExtractor = (S.Alias cursorIdentifier,) . (`S.SETyAnn` S.textTypeAnn)
       cursorExtractors = case maybeOrderByCursor of
@@ -1237,8 +1356,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
           -- Extract primary key columns from base select along with cursor expression.
           -- Those columns are required to perform connection split via a WHERE clause.
           mkCursorExtractor primaryKeyColumnsObjectExp : primaryKeyColumnExtractors
-      orderByExp = _ssOrderBy selectSource
-  (topExtractorExp, exps) <- flip runStateT [] $ processFields orderByExp
+  (topExtractorExp, exps) <- flip runStateT [] $ processFields selectSource
   let topExtractor = S.Extractor topExtractorExp $ Just $ S.Alias fieldIdentifier
       allExtractors = HM.fromList $ cursorExtractors <> exps <> orderByAndDistinctExtrs
       arrayConnectionSource = ArrayConnectionSource relAlias colMapping
@@ -1314,8 +1432,8 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
          , MonadWriter JoinTree n
          , MonadState [(S.Alias, S.SQLExp)] n
          )
-      => Maybe S.OrderByExp -> n S.SQLExp
-    processFields orderByExp =
+      => SelectSource -> n S.SQLExp
+    processFields selectSource =
       fmap (S.applyJsonBuildObj . concat) $
       forM fields $
         \(FieldName fieldText, field) -> (S.SELit fieldText:) . pure <$>
@@ -1323,7 +1441,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
           ConnectionTypename t              -> pure $ withForceAggregation S.textTypeAnn $ S.SELit t
           ConnectionPageInfo pageInfoFields -> pure $ processPageInfoFields pageInfoFields
           ConnectionEdges edges ->
-            fmap (flip mkSimpleJsonAgg orderByExp . S.applyJsonBuildObj . concat) $ forM edges $
+            fmap (flip mkSimpleJsonAgg (orderByForJsonAgg selectSource) . S.applyJsonBuildObj . concat) $ forM edges $
             \(FieldName edgeText, edge) -> (S.SELit edgeText:) . pure <$>
             case edge of
               EdgeTypename t -> pure $ S.SELit t
@@ -1357,7 +1475,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
 connectionToSelectWith
   :: S.Alias
   -> ArrayConnectionSource
-  -> ArraySelectNode
+  -> MultiRowSelectNode
   -> S.SelectWithG S.Select
 connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode =
   let extractionSelect = S.mkSelect
@@ -1368,7 +1486,7 @@ connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode =
   where
     ArrayConnectionSource _ columnMapping maybeSplit maybeSlice selectSource =
       arrayConnectionSource
-    ArraySelectNode topExtractors selectNode = arraySelectNode
+    MultiRowSelectNode topExtractors selectNode = arraySelectNode
     baseSelectIdentifier = Identifier "__base_select"
     splitSelectIdentifier = Identifier "__split_select"
     sliceSelectIdentifier = Identifier "__slice_select"

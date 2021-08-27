@@ -34,6 +34,9 @@ Hasura Cloud creates an initial project. Click ``Launch Console`` to open the Ha
    :alt: Connect new or existing database
    :width: 556px
 
+
+.. _create_new_db_with_cloud:
+
 Step 3: Connect new/existing database
 -------------------------------------
 
@@ -159,6 +162,10 @@ You can click the gear icon in the Hasura Cloud dashboard to manage your Hasura 
 .. thumbnail:: /img/graphql/cloud/getting-started/project-manage.png
   :alt: Project actions
   :width: 860px
+  
+.. admonition:: Additional Resources
+
+  Get Started with Hasura today - `Watch video guide <https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=>`__.
 
 .. toctree::
    :maxdepth: 1

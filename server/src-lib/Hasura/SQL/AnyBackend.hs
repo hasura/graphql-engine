@@ -19,13 +19,13 @@ module Hasura.SQL.AnyBackend
 
 import           Hasura.Prelude
 
-import           Control.Arrow.Extended            (ArrowChoice, arr, (|||))
+import           Control.Arrow.Extended (ArrowChoice, arr, (|||))
 import           Data.Aeson
-import           Data.Aeson.Types                  (Parser)
-import           Data.Kind                         (Constraint, Type)
-import           Language.Haskell.TH               hiding (Type)
-import           Test.QuickCheck.Arbitrary.Partial
+import           Data.Aeson.Types       (Parser)
+import           Data.Kind              (Constraint, Type)
+import           Language.Haskell.TH    hiding (Type)
 
+import           Hasura.Incremental     (Cacheable)
 import           Hasura.SQL.Backend
 import           Hasura.SQL.TH
 import           Hasura.SQL.Tag
@@ -493,7 +493,7 @@ dispatchAnyBackendArrow' arrow = spreadChoice >>> coalesceChoice @c arrow
 -- practice we need slightly more complex types. Specifically: the only call
 -- site for 'dispatchAnyBackendArrow' uses a four element tuple containing an
 -- 'AnyBackend'.
-newtype BackendArrowTuple x y z i (b :: BackendType) = BackendArrowTuple { unTuple :: (x, y, i b, z) }
+newtype BackendArrowTuple x i (b :: BackendType) = BackendArrowTuple { unTuple :: (i b, x) }
 
 -- | Finally, we can do the dispatch on the four-elements tuple.
 -- Here's what happens, step by step:
@@ -526,15 +526,15 @@ dispatchAnyBackendArrow
        (i :: BackendType -> Type)
        (r :: Type)
        (arr :: Type -> Type -> Type)
-       x y z
+       x
    . (ArrowChoice arr, AllBackendsSatisfy c)
-  => (forall b. c b => arr (x, y, i b, z) r)
-  -> arr (x, y, AnyBackend i, z) r
+  => (forall b. c b => arr (i b, x) r)
+  -> arr (AnyBackend i, x) r
 dispatchAnyBackendArrow arrow =
   arr cons >>> dispatchAnyBackendArrow' @c (arr unTuple >>> arrow)
   where
-    cons :: (x, y, AnyBackend i, z) -> AnyBackend (BackendArrowTuple x y z i)
-    cons (x, y, e, z) = mapBackend e \ib -> BackendArrowTuple (x, y, ib, z)
+    cons :: (AnyBackend i, x) -> AnyBackend (BackendArrowTuple x i)
+    cons (e, x) = mapBackend e \ib -> BackendArrowTuple (ib, x)
 
 
 
@@ -583,6 +583,4 @@ deriving instance i `SatisfiesForAllBackends` Show => Show (AnyBackend i)
 deriving instance i `SatisfiesForAllBackends` Eq => Eq (AnyBackend i)
 
 instance i `SatisfiesForAllBackends` Hashable => Hashable (AnyBackend i)
-instance i `SatisfiesForAllBackends` PartialArbitrary => PartialArbitrary (AnyBackend i)
-instance i `SatisfiesForAllBackends` Arbitrary => Arbitrary (AnyBackend i) where
-  arbitrary = genericArbitrary
+instance i `SatisfiesForAllBackends` Cacheable => Cacheable (AnyBackend i)

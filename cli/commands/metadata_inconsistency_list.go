@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -46,10 +46,10 @@ type metadataInconsistencyListOptions struct {
 
 	outputFormat        string
 	isConsistent        bool
-	inconsistentObjects []metadataobject.InconsistentMetadataObject
+	inconsistentObjects []projectmetadata.InconsistentMetadataObject
 }
 
-func (o *metadataInconsistencyListOptions) read(handler *metadataobject.Handler) error {
+func (o *metadataInconsistencyListOptions) read(handler *projectmetadata.Handler) error {
 	var err error
 	o.isConsistent, o.inconsistentObjects, err = handler.GetInconsistentMetadata()
 	if err != nil {
@@ -61,7 +61,7 @@ func (o *metadataInconsistencyListOptions) read(handler *metadataobject.Handler)
 func (o *metadataInconsistencyListOptions) run() error {
 	o.EC.Spin("Getting inconsistent metadata...")
 
-	err := o.read(metadataobject.NewHandlerFromEC(o.EC))
+	err := o.read(projectmetadata.NewHandlerFromEC(o.EC))
 	if err != nil {
 		return err
 	}

@@ -48,6 +48,8 @@ import           Hasura.Server.Utils
 import           Hasura.Server.Version               (HasVersion)
 import           Hasura.Session
 
+import           Hasura.GraphQL.Execute.Backend
+
 
 data RQLQueryV1
   = RQAddExistingTableOrView !(TrackTable ('Postgres 'Vanilla))
@@ -139,19 +141,16 @@ data RQLQueryV1
   | RQDumpInternalState !DumpInternalState
 
   | RQSetCustomTypes !CustomTypes
-  deriving (Eq)
 
 data RQLQueryV2
   = RQV2TrackTable !(TrackTableV2 ('Postgres 'Vanilla))
   | RQV2SetTableCustomFields !SetTableCustomFields -- deprecated
   | RQV2TrackFunction !(TrackFunctionV2 ('Postgres 'Vanilla))
   | RQV2ReplaceMetadata !ReplaceMetadataV2
-  deriving (Eq)
 
 data RQLQuery
   = RQV1 !RQLQueryV1
   | RQV2 !RQLQueryV2
-  deriving (Eq)
 
 instance FromJSON RQLQuery where
   parseJSON = withObject "Object" $ \o -> do
@@ -180,6 +179,7 @@ runQuery
   :: ( HasVersion, MonadIO m, Tracing.MonadTrace m
      , MonadBaseControl IO m, MonadMetadataStorage m
      , MonadResolveSource m
+     , MonadQueryTags m
      )
   => Env.Environment
   -> InstanceId
@@ -354,6 +354,7 @@ runQueryM
      , Tracing.MonadTrace m
      , MetadataM m
      , MonadMetadataStorageQueryAPI m
+     , MonadQueryTags m
      )
   => Env.Environment
   -> RQLQuery

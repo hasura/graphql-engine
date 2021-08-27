@@ -1,4 +1,3 @@
-{-# LANGUAGE Arrows       #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Hasura.GraphQL.Schema
@@ -11,9 +10,9 @@ import qualified Data.Aeson.Ordered                    as JO
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
 import qualified Data.HashSet                          as Set
+import qualified Data.Sequence                         as Seq
 import qualified Language.GraphQL.Draft.Syntax         as G
 
-import           Control.Arrow.Extended
 import           Control.Lens.Extended
 import           Control.Monad.Unique
 import           Data.Has
@@ -39,7 +38,6 @@ import           Hasura.GraphQL.Schema.Postgres
 import           Hasura.GraphQL.Schema.Remote          (buildRemoteParser)
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
-import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 import           Hasura.Session
@@ -49,93 +47,89 @@ import           Hasura.Session
 -- Building contexts
 
 buildGQLContext
-  :: forall arr m
-   . ( ArrowChoice arr
-     , ArrowWriter (Seq InconsistentMetadata) arr
-     , ArrowKleisli m arr
-     , MonadError QErr m
+  :: forall m
+   . ( MonadError QErr m
      , MonadIO m
      , MonadUnique m
      , HasServerConfigCtx m
      )
-  => ( GraphQLQueryType
-     , SourceCache
-     , RemoteSchemaCache
-     , ActionCache
-     , NonObjectTypeMap
-     )
-     `arr`
-     ( HashMap RoleName (RoleContext GQLContext)
-     , GQLContext
-     )
-buildGQLContext =
-  proc (queryType, sources, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
-    ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx@(SQLGenCtx stringifyNum boolCollapse) _maintenanceMode _experimentalFeatures <-
-      bindA -< askServerConfigCtx
-    let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
+  => GraphQLQueryType
+  -> SourceCache
+  -> RemoteSchemaCache
+  -> ActionCache
+  -> NonObjectTypeMap
+  -> m ( HashMap RoleName (RoleContext GQLContext)
+       , GQLContext
+       , Seq InconsistentMetadata
+       )
+buildGQLContext queryType sources allRemoteSchemas allActions nonObjectCustomTypes = do
+  ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx@(SQLGenCtx stringifyNum boolCollapse) _maintenanceMode _experimentalFeatures <-
+    askServerConfigCtx
+  let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
 
-    let nonTableRoles =
-          Set.insert adminRoleName $
-          (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
-          <> Set.fromList (bool mempty remoteSchemasRoles $ remoteSchemaPermsCtx == RemoteSchemaPermsEnabled)
-        allActionInfos = Map.elems allActions
+  let nonTableRoles =
+        Set.insert adminRoleName $
+        (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
+        <> Set.fromList (bool mempty remoteSchemasRoles $ remoteSchemaPermsCtx == RemoteSchemaPermsEnabled)
+      allActionInfos = Map.elems allActions
 
-        allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
-        adminRemoteRelationshipQueryCtx =
-          allRemoteSchemas
-          <&> (\(remoteSchemaCtx, _metadataObj) ->
-                 (_rscIntro remoteSchemaCtx, _rscParsed remoteSchemaCtx))
-        allRoles :: Set.HashSet RoleName
-        allRoles = nonTableRoles <> allTableRoles
-        -- The function permissions context doesn't actually matter because the
-        -- admin will have access to the function anyway
-        adminQueryContext = QueryContext
-          stringifyNum
-          boolCollapse
-          queryType
-          adminRemoteRelationshipQueryCtx
-          FunctionPermissionsInferred
+      allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
+      adminRemoteRelationshipQueryCtx =
+        allRemoteSchemas
+        <&> (\(RemoteSchemaCtx{..}, _metadataObj) ->
+               RemoteRelationshipQueryContext _rscIntroOriginal _rscParsed $ rsCustomizer _rscInfo)
+      allRoles :: Set.HashSet RoleName
+      allRoles = nonTableRoles <> allTableRoles
+      -- The function permissions context doesn't actually matter because the
+      -- admin will have access to the function anyway
+      adminQueryContext = QueryContext
+        stringifyNum
+        boolCollapse
+        queryType
+        adminRemoteRelationshipQueryCtx
+        FunctionPermissionsInferred
 
-    -- build the admin DB-only context so that we can check against name clashes with remotes
-    -- TODO: Is there a better way to check for conflicts without actually building the admin schema?
-    adminHasuraDBContext <- bindA -<
+  -- build the admin DB-only context so that we can check against name clashes with remotes
+  -- TODO: Is there a better way to check for conflicts without actually building the admin schema?
+  adminHasuraDBContext <-
       buildFullestDBSchema adminQueryContext sources allActionInfos nonObjectCustomTypes
 
-    -- TODO factor out the common function; throw500 in both cases:
-    queryFieldNames :: [G.Name] <- bindA -<
-      case P.discardNullability $ P.parserType $ fst adminHasuraDBContext of
-        -- It really ought to be this case; anything else is a programming error.
-        P.TNamed (P.Definition _ _ _ (P.TIObject (P.ObjectInfo rootFields _interfaces))) ->
-          pure $ fmap P.dName rootFields
-        _ -> throw500 "We encountered an root query of unexpected GraphQL type.  It should be an object type."
-    let mutationFieldNames :: [G.Name]
-        mutationFieldNames =
-          case P.discardNullability . P.parserType <$> snd adminHasuraDBContext of
-            Just (P.TNamed def) ->
-              case P.dInfo def of
-                -- It really ought to be this case; anything else is a programming error.
-                P.TIObject (P.ObjectInfo rootFields _interfaces) -> fmap P.dName rootFields
-                _                                                -> []
-            _ -> []
+  -- TODO factor out the common function; throw500 in both cases:
+  queryFieldNames :: [G.Name] <-
+    case P.discardNullability $ P.parserType $ fst adminHasuraDBContext of
+      -- It really ought to be this case; anything else is a programming error.
+      P.TNamed (P.Definition _ _ _ (P.TIObject (P.ObjectInfo rootFields _interfaces))) ->
+        pure $ fmap P.dName rootFields
+      _ -> throw500 "We encountered an root query of unexpected GraphQL type.  It should be an object type."
+  let mutationFieldNames :: [G.Name]
+      mutationFieldNames =
+        case P.discardNullability . P.parserType <$> snd adminHasuraDBContext of
+          Just (P.TNamed def) ->
+            case P.dInfo def of
+              -- It really ought to be this case; anything else is a programming error.
+              P.TIObject (P.ObjectInfo rootFields _interfaces) -> fmap P.dName rootFields
+              _                                                -> []
+          _ -> []
 
-    -- This block of code checks that there are no conflicting root field names between remotes.
-    remotes <- remoteSchemaFields -< (queryFieldNames, mutationFieldNames, allRemoteSchemas)
+  -- This block of code checks that there are no conflicting root field names between remotes.
+  let (remotes, remoteErrors) =
+        runState (remoteSchemaFields queryFieldNames mutationFieldNames allRemoteSchemas) mempty
 
-    let adminQueryRemotes = concatMap (piQuery . snd . snd) remotes
-        adminMutationRemotes = concatMap (concat . piMutation . snd . snd) remotes
+  let adminQueryRemotes = concatMap (piQuery . _rrscParsedIntrospection . snd) remotes
+      adminMutationRemotes = concatMap (concat . piMutation . _rrscParsedIntrospection . snd) remotes
 
-    roleContexts <- bindA -<
-      ( Set.toMap allRoles & Map.traverseWithKey \role () ->
-          case queryType of
-            QueryHasura ->
-              buildRoleContext (sqlGenCtx, queryType, functionPermsCtx) sources allRemoteSchemas allActionInfos
-              nonObjectCustomTypes remotes role remoteSchemaPermsCtx
-            QueryRelay ->
-              buildRelayRoleContext (sqlGenCtx, queryType, functionPermsCtx) sources allActionInfos
-              nonObjectCustomTypes role
-      )
-    unauthenticated <- bindA -< unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsCtx
-    returnA -< (roleContexts, unauthenticated)
+  roleContexts <-
+    Set.toMap allRoles & Map.traverseWithKey \role () ->
+    case queryType of
+      QueryHasura ->
+        buildRoleContext (sqlGenCtx, queryType, functionPermsCtx) sources allRemoteSchemas allActionInfos
+        nonObjectCustomTypes remotes role remoteSchemaPermsCtx
+      QueryRelay ->
+        buildRelayRoleContext (sqlGenCtx, queryType, functionPermsCtx) sources allActionInfos
+        nonObjectCustomTypes role
+
+  unauthenticated <- unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsCtx
+  pure (roleContexts, unauthenticated, remoteErrors)
 
 buildRoleContext
   :: forall m. (MonadError QErr m, MonadIO m, MonadUnique m)
@@ -144,7 +138,7 @@ buildRoleContext
   -> RemoteSchemaCache
   -> [ActionInfo]
   -> NonObjectTypeMap
-  -> [( RemoteSchemaName , (IntrospectionResult, ParsedIntrospection))]
+  -> [( RemoteSchemaName , RemoteRelationshipQueryContext)]
   -> RoleName
   -> RemoteSchemaPermsCtx
   -> m (RoleContext GQLContext)
@@ -164,8 +158,9 @@ buildRoleContext
          -- when remote schema permissions are not enabled, then remote schemas
          -- are a public entity which is accesible to all the roles
          | otherwise                                        -> pure remotes
-    let queryRemotes    = getQueryRemotes    $ snd . snd <$> roleBasedRemoteSchemas
-        mutationRemotes = getMutationRemotes $ snd . snd <$> roleBasedRemoteSchemas
+    let parsedIntrospections = _rrscParsedIntrospection . snd <$> roleBasedRemoteSchemas
+        queryRemotes    = getQueryRemotes parsedIntrospections
+        mutationRemotes = getMutationRemotes parsedIntrospections
         remoteRelationshipQueryContext = Map.fromList roleBasedRemoteSchemas
         roleQueryContext = QueryContext
           stringifyNum
@@ -207,9 +202,9 @@ buildRoleContext
     getMutationRemotes = concatMap (concat . piMutation)
 
     buildSource :: forall b. BackendSchema b => SourceInfo b ->
-      ConcreteSchemaT m ( [FieldParser (P.ParseT Identity) (QueryRootField    UnpreparedValue UnpreparedValue)]
-                        , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue UnpreparedValue)]
-                        , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue UnpreparedValue)]
+      ConcreteSchemaT m ( [FieldParser (P.ParseT Identity) (QueryRootField    UnpreparedValue)]
+                        , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
+                        , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
                         )
     buildSource (SourceInfo sourceName tables functions sourceConfig) = do
       let validFunctions = takeValidFunctions functions
@@ -276,9 +271,9 @@ buildRelayRoleContext
 
   where
     buildSource :: forall b. BackendSchema b => SourceInfo b ->
-        ConcreteSchemaT m ( [FieldParser (P.ParseT Identity) (QueryRootField    UnpreparedValue UnpreparedValue)]
-                          , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue UnpreparedValue)]
-                          , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue UnpreparedValue)]
+        ConcreteSchemaT m ( [FieldParser (P.ParseT Identity) (QueryRootField    UnpreparedValue)]
+                          , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
+                          , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
                           )
     buildSource (SourceInfo sourceName tables functions sourceConfig) = do
       let validFunctions = takeValidFunctions functions
@@ -296,8 +291,8 @@ buildFullestDBSchema
   -> SourceCache
   -> [ActionInfo]
   -> NonObjectTypeMap
-  -> m (        Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField    UnpreparedValue UnpreparedValue))
-       , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue UnpreparedValue)))
+  -> m ( Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
+       , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
        )
 buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes =
   runMonadSchema adminRoleName queryContext sources do
@@ -317,8 +312,8 @@ buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes =
 
   where
     buildSource :: forall b. BackendSchema b => SourceInfo b ->
-        ConcreteSchemaT m ( [FieldParser (P.ParseT Identity) (QueryRootField    UnpreparedValue UnpreparedValue)]
-                          , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue UnpreparedValue)]
+        ConcreteSchemaT m ( [FieldParser (P.ParseT Identity) (QueryRootField    UnpreparedValue)]
+                          , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
                           )
     buildSource (SourceInfo sourceName tables functions sourceConfig) = do
       let validFunctions = takeValidFunctions functions
@@ -367,63 +362,66 @@ buildRoleBasedRemoteSchemaParser
    . (MonadError QErr m, MonadUnique m, MonadIO m)
   => RoleName
   -> RemoteSchemaCache
-  -> m [(RemoteSchemaName, (IntrospectionResult, ParsedIntrospection))]
+  -> m [(RemoteSchemaName, RemoteRelationshipQueryContext )]
 buildRoleBasedRemoteSchemaParser roleName remoteSchemaCache = do
   let remoteSchemaIntroInfos = map fst $ toList remoteSchemaCache
   remoteSchemaPerms <-
-    for remoteSchemaIntroInfos $ \(RemoteSchemaCtx remoteSchemaName _ remoteSchemaInfo _ _ permissions) ->
-      for (Map.lookup roleName permissions) $ \introspectRes -> do
+    for remoteSchemaIntroInfos $ \RemoteSchemaCtx{..} ->
+      for (Map.lookup roleName _rscPermissions) $ \introspectRes -> do
+        let customizer = rsCustomizer _rscInfo
         (queryParsers, mutationParsers, subscriptionParsers) <-
-             P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes remoteSchemaInfo
+             P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes _rscInfo
         let parsedIntrospection = ParsedIntrospection queryParsers mutationParsers subscriptionParsers
-        return (remoteSchemaName, (introspectRes, parsedIntrospection))
+        return (_rscName, RemoteRelationshipQueryContext introspectRes parsedIntrospection customizer)
   return $ catMaybes remoteSchemaPerms
 
 -- checks that there are no conflicting root field names between remotes and
 -- hasura fields
 remoteSchemaFields
-  :: forall arr m
-   . ( ArrowChoice arr
-     , ArrowWriter (Seq InconsistentMetadata) arr
-     , ArrowKleisli m arr
-     , MonadError QErr m
-     )
-  => ([G.Name], [G.Name], HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))
-     `arr`
-     [( RemoteSchemaName , (IntrospectionResult, ParsedIntrospection))]
-remoteSchemaFields = proc (queryFieldNames, mutationFieldNames, allRemoteSchemas) -> do
-  (| foldlA' (\okSchemas (newSchemaName, (newSchemaContext, newMetadataObject)) -> do
-       checkedDuplicates <- (| withRecordInconsistency (do
-         let (queryOld, mutationOld) =
-               unzip $ fmap ((\case ParsedIntrospection q m _ -> (q,m)) . snd . snd) okSchemas
-         let ParsedIntrospection queryNew mutationNew _subscriptionNew
-               = _rscParsed newSchemaContext
-         -- Check for conflicts between remotes
-         bindErrorA -<
-           for_ (duplicates (fmap (P.getName . fDefinition) (queryNew ++ concat queryOld))) $
-           \name -> throw400 Unexpected $ "Duplicate remote field " <> squote name
-         -- Check for conflicts between this remote and the tables
-         bindErrorA -<
-           for_ (duplicates (fmap (P.getName . fDefinition) queryNew ++ queryFieldNames)) $
-           \name -> throw400 RemoteSchemaConflicts $ "Field cannot be overwritten by remote field " <> squote name
-         -- Ditto, but for mutations
-         case mutationNew of
-           Nothing -> returnA -< ()
-           Just ms -> do
-             bindErrorA -<
-               for_ (duplicates (fmap (P.getName . fDefinition) (ms ++ concat (catMaybes mutationOld)))) $
-               \name -> throw400 Unexpected $ "Duplicate remote field " <> squote name
-             -- Ditto, but for mutations
-             bindErrorA -<
-               for_ (duplicates (fmap (P.getName . fDefinition) ms ++ mutationFieldNames)) $
-               \name -> throw400 Unexpected $ "Field cannot be overwritten by remote field " <> squote name
-         -- No need to check subscriptions as these are not supported
-         returnA -< ()
-         ) |) newMetadataObject
-       case checkedDuplicates of
-         Nothing -> returnA -< okSchemas
-         Just _  -> returnA -< (newSchemaName, ( _rscIntro newSchemaContext,_rscParsed newSchemaContext)):okSchemas
-     ) |) [] (Map.toList allRemoteSchemas)
+  :: forall m
+   . MonadState (Seq InconsistentMetadata) m
+  => [G.Name]
+  -> [G.Name]
+  -> HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
+  -> m [( RemoteSchemaName , RemoteRelationshipQueryContext)]
+remoteSchemaFields queryFieldNames mutationFieldNames allRemoteSchemas = do
+  foldlM go [] $ Map.toList allRemoteSchemas
+  where
+    go :: [( RemoteSchemaName , RemoteRelationshipQueryContext)]
+       -> (RemoteSchemaName, (RemoteSchemaCtx, MetadataObject))
+       -> m [( RemoteSchemaName , RemoteRelationshipQueryContext)]
+    go okSchemas (newSchemaName, (RemoteSchemaCtx{..}, newMetadataObject)) = do
+      let (queryOld, mutationOld) =
+            unzip $ fmap ((\case ParsedIntrospection q m _ -> (q,m)) . _rrscParsedIntrospection . snd) okSchemas
+      let ParsedIntrospection queryNew mutationNew _subscriptionNew
+            = _rscParsed
+      checkedDuplicates <- runExceptT do
+        -- First we check for conflicts in query_root
+        -- Check for conflicts between remotes
+        for_ (duplicates (fmap (P.getName . fDefinition) (queryNew ++ concat queryOld))) $
+          \name -> throwError (newMetadataObject, "Duplicate remote field " <> squote name)
+        -- Check for conflicts between this remote and the tables
+        for_ (duplicates (fmap (P.getName . fDefinition) queryNew ++ queryFieldNames)) $
+          \name -> throwError (newMetadataObject, "Field cannot be overwritten by remote field " <> squote name)
+        -- Ditto, but for mutations - i.e. with mutation_root
+        onJust mutationNew \ms -> do
+          -- Check for conflicts between remotes
+          for_ (duplicates (fmap (P.getName . fDefinition) (ms ++ concat (catMaybes mutationOld)))) $
+            \name -> throwError (newMetadataObject, "Duplicate remote field " <> squote name)
+          -- Check for conflicts between this remote and the tables
+          for_ (duplicates (fmap (P.getName . fDefinition) ms ++ mutationFieldNames)) $
+            \name -> throwError (newMetadataObject, "Field cannot be overwritten by remote field " <> squote name)
+        -- No need to check for conflicts with other subscriptions, since remote subscriptions are not supported
+
+      -- Only add remote if no errors found
+      case checkedDuplicates of
+        Left (meta, reason) -> do
+          withRecordInconsistency' reason meta
+          return $ okSchemas
+        Right () ->
+          return $ (newSchemaName, RemoteRelationshipQueryContext _rscIntroOriginal _rscParsed $ rsCustomizer _rscInfo):okSchemas
+    -- variant of 'withRecordInconsistency' that works with 'MonadState' rather than 'ArrowWriter'
+    withRecordInconsistency' reason metadata = modify' (InconsistentObject reason Nothing metadata Seq.:<|)
 
 buildQueryFields
   :: forall b r m n
@@ -432,7 +430,7 @@ buildQueryFields
   -> SourceConfig b
   -> TableCache b
   -> FunctionCache b
-  -> m [P.FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
 buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> functions) = do
   roleName <- askRoleName
   functionPermsCtx <- asks $ qcFunctionPermsContext . getter
@@ -444,7 +442,7 @@ buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> funct
   functionSelectExpParsers <- for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
     guard
       $ roleName == adminRoleName
-      || roleName `elem` _fiPermissions functionInfo
+      || roleName `Map.member` _fiPermissions functionInfo
       || functionPermsCtx == FunctionPermissionsInferred
     let targetTableName = _fiReturnType functionInfo
     targetTableInfo <- askTableInfo sourceName targetTableName
@@ -459,7 +457,7 @@ buildRelayQueryFields
   -> SourceConfig b
   -> TableCache b
   -> FunctionCache b
-  -> m [P.FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
 buildRelayQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> functions) = do
   tableConnectionFields <- for (Map.toList tables) \(tableName, tableInfo) -> runMaybeT do
     tableGQLName <- getTableGQLName @b tableInfo
@@ -484,7 +482,7 @@ buildMutationFields
   -> SourceConfig b
   -> TableCache b
   -> FunctionCache b
-  -> m [P.FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  -> m [P.FieldParser n (MutationRootField UnpreparedValue)]
 buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMutation -> functions) = do
   roleName <- askRoleName
   tableMutations <- for (Map.toList tables) \(tableName, tableInfo) -> do
@@ -522,7 +520,7 @@ buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMu
     guard $
       -- when function permissions are inferred, we don't expose the
       -- mutation functions for non-admin roles. See Note [Function Permissions]
-      roleName == adminRoleName || roleName `elem` (_fiPermissions functionInfo)
+      roleName == adminRoleName || roleName `Map.member` (_fiPermissions functionInfo)
     lift $ buildFunctionMutationFields sourceName sourceConfig functionName functionInfo targetTableName selectPerms
   pure $ concat $ catMaybes $ tableMutations <> functionMutations
 
@@ -540,13 +538,13 @@ buildQueryParser
      , MonadRole r m
      , Has QueryContext r
      )
-  => [P.FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  => [P.FieldParser n (QueryRootField UnpreparedValue)]
   -> [P.FieldParser n RemoteField]
   -> [ActionInfo]
   -> NonObjectTypeMap
-  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue UnpreparedValue)))
-  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue UnpreparedValue))
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue UnpreparedValue)))
+  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
+  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 buildQueryParser pgQueryFields remoteFields allActions nonObjectCustomTypes mutationParser subscriptionParser = do
   actionQueryFields <- concat <$> traverse (buildActionQueryFields nonObjectCustomTypes) allActions
   let allQueryFields = pgQueryFields <> actionQueryFields <> map (fmap RFRemote) remoteFields
@@ -554,10 +552,10 @@ buildQueryParser pgQueryFields remoteFields allActions nonObjectCustomTypes muta
 
 queryWithIntrospectionHelper
   :: forall n m. (MonadSchema n m, MonadError QErr m)
-  => [P.FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
-  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue UnpreparedValue)))
-  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue UnpreparedValue))
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue UnpreparedValue)))
+  => [P.FieldParser n (QueryRootField UnpreparedValue)]
+  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
+  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
   basicQueryP <- queryRootFromFields basicQueryFP
   emptyIntro  <- emptyIntrospection
@@ -588,15 +586,15 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
 queryRootFromFields
   :: forall n m
    . (MonadError QErr m, MonadParse n)
-  => [P.FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue UnpreparedValue)))
+  => [P.FieldParser n (QueryRootField UnpreparedValue)]
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryRootFromFields fps =
   P.safeSelectionSet queryRoot Nothing fps <&> fmap (fmap typenameToRawRF)
 
 emptyIntrospection
   :: forall m n
    . (MonadSchema n m, MonadError QErr m)
-  => m [P.FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  => m [P.FieldParser n (QueryRootField UnpreparedValue)]
 emptyIntrospection = do
   emptyQueryP <- queryRootFromFields @n []
   introspectionTypes <- collectTypes (P.parserType emptyQueryP)
@@ -630,9 +628,9 @@ buildSubscriptionParser
      , MonadRole r m
      , Has QueryContext r
      )
-  => [P.FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  => [P.FieldParser n (QueryRootField UnpreparedValue)]
   -> [ActionInfo]
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue UnpreparedValue)))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 buildSubscriptionParser queryFields allActions = do
   actionSubscriptionFields <- concat <$> traverse buildActionSubscriptionFields allActions
   let subscriptionFields = queryFields <> actionSubscriptionFields
@@ -648,8 +646,8 @@ buildMutationParser
   => [P.FieldParser n RemoteField]
   -> [ActionInfo]
   -> NonObjectTypeMap
-  -> [P.FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
-  -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue UnpreparedValue))))
+  -> [P.FieldParser n (MutationRootField UnpreparedValue)]
+  -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
 buildMutationParser allRemotes allActions nonObjectCustomTypes mutationFields = do
   actionParsers <- concat <$> traverse (buildActionMutationFields nonObjectCustomTypes) allActions
   let mutationFieldsParser =

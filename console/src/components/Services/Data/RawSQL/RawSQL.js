@@ -27,6 +27,7 @@ import {
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
+import ResultTable from './ResultTable';
 import { getLSItem, setLSItem, LS_KEYS } from '../../../../utils/localStorage';
 import DropDownSelector from './DropDownSelector';
 import { getSourceDriver } from '../utils';
@@ -279,57 +280,13 @@ const RawSQL = ({
     );
   };
 
-  const getResultTable = () => {
-    let resultTable = null;
-
-    if (resultType && resultType !== 'command') {
-      const getTableHeadings = () => {
-        return resultHeaders.map((columnName, i) => (
-          <th key={i}>{columnName}</th>
-        ));
-      };
-
-      const getRows = () => {
-        return result.map((row, i) => (
-          <tr key={i}>
-            {row.map((columnValue, j) => (
-              <td key={j}>{columnValue}</td>
-            ))}
-          </tr>
-        ));
-      };
-
-      resultTable = (
-        <div
-          className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
-        >
-          <h4 className={styles.subheading_text}>SQL Result:</h4>
-          <div className={styles.tableContainer}>
-            <table
-              className={`table table-bordered table-striped table-hover ${styles.table} `}
-            >
-              <thead>
-                <tr>{getTableHeadings()}</tr>
-              </thead>
-              <tbody>{getRows()}</tbody>
-            </table>
-          </div>
-          <br />
-          <br />
-        </div>
-      );
-    }
-
-    return resultTable;
-  };
-
   const getMetadataCascadeSection = () => {
     return (
       <div className={styles.add_mar_top_small}>
         <label>
           <input
             checked={isCascadeChecked}
-            className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+            className={`${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
             id="cascade-checkbox"
             type="checkbox"
             onChange={() => {
@@ -364,7 +321,7 @@ const RawSQL = ({
           <label>
             <input
               checked={isTableTrackChecked}
-              className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+              className={`${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
               id="track-checkbox"
               type="checkbox"
               disabled={checkChangeLang()}
@@ -406,7 +363,7 @@ const RawSQL = ({
           <label>
             <input
               checked={isMigrationChecked}
-              className={styles.add_mar_right_small}
+              className={`${styles.add_mar_right_small} legacy-input-fix`}
               id="migration-checkbox"
               type="checkbox"
               onChange={dispatchIsMigration}
@@ -547,7 +504,14 @@ const RawSQL = ({
 
       {getMigrationWarningModal()}
 
-      <div className={styles.add_mar_bottom}>{getResultTable()}</div>
+      <div className={styles.add_mar_bottom}>
+        {resultType &&
+          resultType !== 'command' &&
+          result &&
+          result?.length > 0 && (
+            <ResultTable rows={result} headers={resultHeaders} />
+          )}
+      </div>
     </div>
   );
 };

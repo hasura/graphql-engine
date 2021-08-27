@@ -23,8 +23,10 @@ import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 import           Hasura.Server.Types
 
-
-class (Backend b) => BackendMetadata (b :: BackendType) where
+class ( Backend b
+      , Eq (BooleanOperators b (PartialSQLExp b))
+      , Hashable (BooleanOperators b (PartialSQLExp b))
+      ) => BackendMetadata (b :: BackendType) where
 
   buildComputedFieldInfo
     :: (MonadError QErr m)
@@ -47,9 +49,10 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
   -- | Function that resolves the connection related source configuration, and
   -- creates a connection pool (and other related parameters) in the process
   resolveSourceConfig
-    :: (MonadIO m, MonadBaseControl IO m, MonadResolveSource m)
+    :: (MonadIO m, MonadResolveSource m)
     => SourceName
     -> SourceConnConfiguration b
+    -> Env.Environment
     -> m (Either QErr (SourceConfig b))
 
   -- | Function that introspects a database for tables, columns, functions etc.
@@ -81,7 +84,7 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
     => ValueParser b m v
     -> TableName b
     -> FieldInfoMap (FieldInfo b)
-    -> ColumnInfo b
+    -> ColumnReference b
     -> Value
     -> m [OpExpG b v]
 
@@ -91,7 +94,7 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
     -> FunctionName b
     -> SystemDefined
     -> FunctionConfig
-    -> [FunctionPermissionMetadata]
+    -> FunctionPermissionsMap
     -> RawFunctionInfo b
     -> m (FunctionInfo b, SchemaDependency)
 

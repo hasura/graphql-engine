@@ -86,17 +86,17 @@ For actions and function permissions, the ``Any`` monoid can be used to derive t
 
 ## Conflicts while inheriting permissions
 
-Conflicts will occur when two permissions are not equal and we don't know how to combine them.
+While inheriting a mutation or remote schema permission, a conflict may occur when there's a conflict, a conflict
+maybe caused when inheriting permission from two parent roles if the relevant parts cannot be combined. For example,
+if the preset of the ``check`` argument of two permissions are different then it's a conflict.
 
-There are two approaches here when there's a conflict,
+When a conflict occurs while inheriting permission for a role, the ``(role, entity)`` combination will be set as
+inconsistent in the metadata. This info can be retrieved by the ``get_inconsistent_metadata`` API. This inconsistency
+can be resolved by setting the permission of the conflicting ``(role, entity)`` combination.
 
-1. Don't do anything for the `(role, entity)` combination,
-2. Set the metadata as inconsistent for the `(role, entity)` combination
-
-In the #1 approach, the user will not know that the `(role, entity)` combination has a conflict
-
-In the #2 approach, currently we don't support setting a permission explicitly to Nothing.
-
+NOTE: When the ``drop_inconsistent_metadata`` is called then these conflicts will not be dropped because there is nothing
+there to drop in the metadata which will resolve this inconsistency, we can drop the inherited role itself to resolve the inconsistency,
+but it's not a solution because other permissions exposed by the inherited role maybe consistent and we would not like to drop them.
 
 ## Open Questions
 
@@ -106,4 +106,12 @@ In the #2 approach, currently we don't support setting a permission explicitly t
    example: a remote relationship is dependent on its remote schema, so we know that when the remote schema is dropped, if the remote relationship exists then we need to make the metadata inconsistent, in this case the dropping of
    the remote schema being the trigger to check its dependencies but it's not the case with roles because a role will be deleted only when no permission (table/remote/function/action) uses the role.
 3. Currently, the select permission of an inherited role cannot be expressed in the current select permission metadata syntax because it doesn't account for the column(s) being conditionally present depending on the row filter. TODO (future work) - product team
-4. When there are the `(role, entity)` conflicts, how will `drop_inconsistent_metadata` work? What should it be dropping then?
+
+## Future work
+
+1. We should expose an API about the roles metadata which should give details like
+    1. How a role's permissions is inherited (if inherited) and what does the inherited permission look like?
+
+    For non-select permissions this is straight-forward because the inherited permission when inherited successfully will be permission
+    of one of the parent role, but in case of select permissions, the inherited permission may not be like one of the parent role permissions
+    and currently there's no way to express it in the current metadata select permission syntax

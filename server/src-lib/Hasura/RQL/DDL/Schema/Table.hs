@@ -38,8 +38,9 @@ import           Control.Arrow.Extended
 import           Control.Lens.Extended              hiding ((.=))
 import           Control.Monad.Trans.Control        (MonadBaseControl)
 import           Data.Aeson
-import           Data.Aeson.TH
+import           Data.Align                         (align)
 import           Data.Text.Extended
+import           Data.These                         (These (..))
 
 import qualified Hasura.Incremental                 as Inc
 import qualified Hasura.SQL.AnyBackend              as AB
@@ -68,18 +69,13 @@ deriving instance (Backend b) => Show (TrackTable b)
 deriving instance (Backend b) => Eq (TrackTable b)
 
 instance (Backend b) => FromJSON (TrackTable b) where
-  parseJSON v = withOptions <|> withoutOptions
+  parseJSON v = withOptions v <|> withoutOptions
     where
-      withOptions = flip (withObject "TrackTable") v $ \o -> TrackTable
+      withOptions = withObject "track table" \o -> TrackTable
         <$> o .:? "source" .!= defaultSource
         <*> o .: "table"
         <*> o .:? "is_enum" .!= False
       withoutOptions = TrackTable defaultSource <$> parseJSON v <*> pure False
-
-instance (Backend b) => ToJSON (TrackTable b) where
-  toJSON (TrackTable source name isEnum)
-    | isEnum = object [ "source" .= source, "table" .= name, "is_enum" .= isEnum ]
-    | otherwise = toJSON name
 
 data SetTableIsEnum
   = SetTableIsEnum
@@ -87,10 +83,9 @@ data SetTableIsEnum
   , stieTable  :: !QualifiedTable
   , stieIsEnum :: !Bool
   } deriving (Show, Eq)
-$(deriveToJSON hasuraJSON ''SetTableIsEnum)
 
 instance FromJSON SetTableIsEnum where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "set table is enum" $ \o ->
     SetTableIsEnum
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"
@@ -101,14 +96,12 @@ data UntrackTable b =
   { utSource  :: !SourceName
   , utTable   :: !(TableName b)
   , utCascade :: !Bool
-  } deriving (Generic)
+  }
 deriving instance (Backend b) => Show (UntrackTable b)
 deriving instance (Backend b) => Eq (UntrackTable b)
-instance (Backend b) => ToJSON (UntrackTable b) where
-  toJSON = genericToJSON hasuraJSON{omitNothingFields=True}
 
 instance (Backend b) => FromJSON (UntrackTable b) where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "untrack table" $ \o ->
     UntrackTable
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"
@@ -165,7 +158,7 @@ checkConflictingNode sc tnGQL = do
         ]
   case queryParser introspectionQuery of
     Left _ -> pure ()
-    Right (results, _reusability) -> do
+    Right results -> do
       case OMap.lookup $$(G.litName "__schema") results of
         Just (RFRaw (JO.Object schema)) -> do
           let names = do
@@ -223,12 +216,10 @@ data TrackTableV2 b
   = TrackTableV2
   { ttv2Table         :: !(TrackTable b)
   , ttv2Configuration :: !(TableConfig b)
-  } deriving (Show, Eq, Generic)
-instance (Backend b) => ToJSON (TrackTableV2 b) where
-  toJSON = genericToJSON hasuraJSON
+  } deriving (Show, Eq)
 
 instance (Backend b) => FromJSON (TrackTableV2 b) where
-  parseJSON = withObject "Object" $ \o -> do
+  parseJSON = withObject "track table" $ \o -> do
     table <- parseJSON $ Object o
     configuration <- o .:? "configuration" .!= emptyTableConfig
     pure $ TrackTableV2 table configuration
@@ -256,13 +247,10 @@ data SetTableCustomization b
   { _stcSource        :: !SourceName
   , _stcTable         :: !(TableName b)
   , _stcConfiguration :: !(TableConfig b)
-  } deriving (Show, Eq, Generic)
-
-instance (Backend b) => ToJSON (SetTableCustomization b) where
-  toJSON = genericToJSON hasuraJSON
+  } deriving (Show, Eq)
 
 instance (Backend b) => FromJSON (SetTableCustomization b) where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "set table customization" $ \o ->
     SetTableCustomization
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"
@@ -275,10 +263,9 @@ data SetTableCustomFields
   , _stcfCustomRootFields  :: !TableCustomRootFields
   , _stcfCustomColumnNames :: !(CustomColumnNames ('Postgres 'Vanilla))
   } deriving (Show, Eq)
-$(deriveToJSON hasuraJSON ''SetTableCustomFields)
 
 instance FromJSON SetTableCustomFields where
-  parseJSON = withObject "SetTableCustomFields" $ \o ->
+  parseJSON = withObject "set table custom fields" $ \o ->
     SetTableCustomFields
     <$> o .:? "source" .!= defaultSource
     <*> o .: "table"

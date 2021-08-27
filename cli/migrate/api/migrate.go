@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
+
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
@@ -79,7 +80,7 @@ func MigrateAPI(c *gin.Context) {
 	//sourceURL := sourcePtr.(*url.URL)
 	logger := loggerPtr.(*logrus.Logger)
 
-	mdHandler := metadataobject.NewHandlerFromEC(ec)
+	mdHandler := projectmetadata.NewHandlerFromEC(ec)
 	// Switch on request method
 	switch c.Request.Method {
 	case "GET":

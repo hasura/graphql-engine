@@ -39,6 +39,7 @@ const defaultPermissionsState = {
   bulkSelect: [],
   applySamePermissions: [],
   isEditing: false,
+  inconsistentInhertiedRole: null,
 };
 
 const defaultQueryPermissions = {

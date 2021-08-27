@@ -57,7 +57,10 @@ const IntrospectionForm: React.FC<
         </h5>
       </div>
       <form onSubmit={submit}>
-        <div key={currentRowKey} className={styles.form_group}>
+        <div
+          key={currentRowKey}
+          className={`${styles.form_group} ${styles.form_justify}`}
+        >
           <div className={styles.left}>
             <h5>Introspection</h5>
             <p>Enable GraphQL schema introspection requests.</p>
@@ -67,6 +70,7 @@ const IntrospectionForm: React.FC<
               <div className="radio_input">
                 <input
                   type="radio"
+                  className="legacy-input-fix"
                   id="enable_introspection"
                   checked={!formState.instrospectionIsDisabled}
                   onChange={onRadioChange(false)}
@@ -77,6 +81,7 @@ const IntrospectionForm: React.FC<
               <div className="radio_input">
                 <input
                   type="radio"
+                  className="legacy-input-fix"
                   id="disable_introspection"
                   checked={!!formState.instrospectionIsDisabled}
                   onChange={onRadioChange(true)}

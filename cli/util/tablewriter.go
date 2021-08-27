@@ -4,7 +4,6 @@ import (
 	"io"
 
 	"github.com/olekukonko/tablewriter"
-
 )
 
 func NewTableWriter(w io.Writer) *tablewriter.Table {

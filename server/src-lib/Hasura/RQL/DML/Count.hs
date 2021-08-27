@@ -71,7 +71,7 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
 -- SELECT count(*) FROM (SELECT * FROM .. WHERE ..) r;
 validateCountQWith
   :: (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m)
-  => SessVarBldr ('Postgres 'Vanilla) m
+  => SessionVariableBuilder ('Postgres 'Vanilla) m
   -> (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp)
   -> CountQuery
   -> m CountQueryP1

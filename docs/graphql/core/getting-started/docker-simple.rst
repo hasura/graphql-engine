@@ -68,7 +68,7 @@ Navigate to ``Data -> Manage -> Connect Database``:
   :alt: Connect database
   :width: 1000px
 
-Enter your database connection URL.
+Enter your database connection URL. *(See the note below if you do not have an existing database)*
 
 Click ``Connect Database``.
 
@@ -79,12 +79,12 @@ Click ``Connect Database``.
 .. admonition:: Starting from scratch
 
   If you are looking to start setting up a backend from scratch, we recommend
-  using Postgres as the database. If you do not have an existing Postgres database, you can choose
-  to connect to the same Postgres database that is used to store the Hasura metadata.
+  using Postgres as the database.
 
-  You can pick the database connection URL from the value assigned to the
-  ``HASURA_GRAPHQL_METADATA_DATABASE_URL`` env var in the docker compose file and use
-  that in this step.
+  If you do not have an existing Postgres database, you can choose to connect to the Postgres
+  database that was created along with Hasura (to store its metadata) and use it as a data source as well.
+  The docker-compose file has an additional env var ``PG_DATABASE_URL`` which points to the created metadata database.
+  You can use this env var to connect the same database as a data source and continue.
 
 Step 4: Try out Hasura
 ----------------------
@@ -136,6 +136,12 @@ Learn course
 
 For a full hands-on tour of Hasura, check out our `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__.
 
+Stay up to date
+^^^^^^^^^^^^^^^
+
+We release new features every month. Sign up for our newsletter by using the link below. We send newsletters only once a month.
+`https://hasura.io/newsletter/ <https://hasura.io/newsletter/>`__.
+
 Database operations
 ^^^^^^^^^^^^^^^^^^^
 
@@ -169,3 +175,7 @@ Detailed Docker setup
 This was a quickstart guide to get the Hasura GraphQL engine up and running
 quickly. For more detailed instructions on deploying using Docker, check out
 :ref:`deployment_docker`.
+
+.. admonition:: Additional Resources
+
+  Get Started with Hasura today - `Watch video guide <https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=>`__.

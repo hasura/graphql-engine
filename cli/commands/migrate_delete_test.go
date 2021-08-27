@@ -54,7 +54,7 @@ var _ = Describe("hasura migrate delete", func() {
 			}
 
 			for _, keyword := range wantKeywordList {
-				Eventually(session.Err, 60*40).Should(Say(keyword))
+				Expect(session.Wait(timeout).Err).Should(Say(keyword))
 			}
 
 			session = testutil.Hasura(testutil.CmdOpts{
@@ -62,7 +62,7 @@ var _ = Describe("hasura migrate delete", func() {
 				WorkingDirectory: projectDirectory,
 			})
 
-			Eventually(session.Err, 60*40).Should(Say("--database-name flag is required"))
+			Expect(session.Wait(timeout).Err).Should(Say("--database-name flag is required"))
 
 			args := strings.Join([]string{"yes", "|", testutil.CLIBinaryPath, "migrate", "delete", "--all", "--database-name", "default"}, " ")
 			cmd := exec.Command("bash", "-c", args)
@@ -73,14 +73,14 @@ var _ = Describe("hasura migrate delete", func() {
 				NewPrefixedWriter(testutil.DebugErrPrefix, GinkgoWriter),
 			)
 			Expect(err).To(BeNil())
-			Eventually(session.Err, 60*40).Should(Say("Deleted migrations"))
+			Expect(session.Wait(timeout).Err).Should(Say("Deleted migrations"))
 
 			session = testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"migrate", "status", "--database-name", "default"},
 				WorkingDirectory: projectDirectory,
 			})
-			Eventually(session.Err, 60*40).ShouldNot(Say(version))
-			Eventually(session, 60*50).Should(Exit(0))
+			Expect(session.Wait(timeout).Err).ShouldNot(Say(version))
+			Eventually(session, timeout).Should(Exit(0))
 		})
 	})
 
@@ -111,7 +111,7 @@ var _ = Describe("hasura migrate delete", func() {
 			}
 
 			for _, keyword := range wantKeywordList {
-				Eventually(session.Err, 60*40).Should(Say(keyword))
+				Expect(session.Wait(timeout).Err).Should(Say(keyword))
 			}
 
 			session = testutil.Hasura(testutil.CmdOpts{
@@ -119,7 +119,7 @@ var _ = Describe("hasura migrate delete", func() {
 				WorkingDirectory: projectDirectory,
 			})
 
-			Eventually(session.Err, 60*40).Should(Say("--database-name flag is required"))
+			Expect(session.Wait(timeout).Err).Should(Say("--database-name flag is required"))
 
 			args := strings.Join([]string{"yes", "|", testutil.CLIBinaryPath, "migrate", "delete", "--all", "--server", "--database-name", "default"}, " ")
 			cmd := exec.Command("bash", "-c", args)
@@ -130,16 +130,16 @@ var _ = Describe("hasura migrate delete", func() {
 				NewPrefixedWriter(testutil.DebugErrPrefix, GinkgoWriter),
 			)
 			Expect(err).To(BeNil())
-			Eventually(session.Err, 60*40).Should(Say("Deleted migrations"))
+			Expect(session.Wait(timeout).Err).Should(Say("Deleted migrations"))
 
 			session = testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"migrate", "status", "--database-name", "default"},
 				WorkingDirectory: projectDirectory,
 			})
-			Eventually(session.Out, 60*40).Should(Say(version))
-			Eventually(session.Out, 60*40).Should(Say("Present"))
-			Eventually(session.Out, 60*40).Should(Say("Not Present"))
-			Eventually(session, 60*50).Should(Exit(0))
+			Eventually(session.Out).Should(Say(version))
+			Eventually(session.Out).Should(Say("Present"))
+			Eventually(session.Out).Should(Say("Not Present"))
+			Eventually(session, timeout).Should(Exit(0))
 		})
 	})
 
@@ -170,21 +170,21 @@ var _ = Describe("hasura migrate delete", func() {
 			}
 
 			for _, keyword := range wantKeywordList {
-				Eventually(session.Err, 60*40).Should(Say(keyword))
+				Expect(session.Wait(timeout).Err).Should(Say(keyword))
 			}
 
 			session = testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"migrate", "delete", "--version", version, "--database-name", "default"},
 				WorkingDirectory: dirName,
 			})
-			Eventually(session.Err, 60*40).Should(Say("Deleted migrations"))
+			Expect(session.Wait(timeout).Err).Should(Say("Deleted migrations"))
 
 			session = testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"migrate", "status", "--database-name", "default"},
 				WorkingDirectory: dirName,
 			})
-			Eventually(session.Err, 60*40).ShouldNot(Say(version))
-			Eventually(session, 60*50).Should(Exit(0))
+			Expect(session.Wait(timeout).Err).ShouldNot(Say(version))
+			Eventually(session, timeout).Should(Exit(0))
 		})
 	})
 
@@ -215,21 +215,21 @@ var _ = Describe("hasura migrate delete", func() {
 			}
 
 			for _, keyword := range wantKeywordList {
-				Eventually(session.Err, 60*40).Should(Say(keyword))
+				Expect(session.Wait(timeout).Err).Should(Say(keyword))
 			}
 
 			session = testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"migrate", "delete", "--version", version},
 				WorkingDirectory: projectDirectory,
 			})
-			Eventually(session.Err, 60*40).Should(Say("Deleted migrations"))
+			Expect(session.Wait(timeout).Err).Should(Say("Deleted migrations"))
 
 			session = testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"migrate", "status"},
 				WorkingDirectory: projectDirectory,
 			})
-			Eventually(session.Err, 60*40).ShouldNot(Say(version))
-			Eventually(session, 60*50).Should(Exit(0))
+			Expect(session.Wait(timeout).Err).ShouldNot(Say(version))
+			Eventually(session, timeout).Should(Exit(0))
 		})
 	})
 
@@ -260,7 +260,7 @@ var _ = Describe("hasura migrate delete", func() {
 			}
 
 			for _, keyword := range wantKeywordList {
-				Eventually(session.Err, 60*40).Should(Say(keyword))
+				Expect(session.Wait(timeout).Err).Should(Say(keyword))
 			}
 
 			args := []string{"migrate", "delete", "--all", "--force"}
@@ -272,14 +272,14 @@ var _ = Describe("hasura migrate delete", func() {
 				NewPrefixedWriter(testutil.DebugErrPrefix, GinkgoWriter),
 			)
 			Expect(err).To(BeNil())
-			Eventually(session.Err, 60*40).Should(Say("Deleted migrations"))
+			Expect(session.Wait(timeout).Err).Should(Say("Deleted migrations"))
 
 			session = testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"migrate", "status"},
 				WorkingDirectory: projectDirectory,
 			})
-			Eventually(session.Err, 60*40).ShouldNot(Say(version))
-			Eventually(session, 60*50).Should(Exit(0))
+			Expect(session.Wait(timeout).Err).ShouldNot(Say(version))
+			Eventually(session, timeout).Should(Exit(0))
 		})
 	})
 
@@ -310,7 +310,7 @@ var _ = Describe("hasura migrate delete", func() {
 			}
 
 			for _, keyword := range wantKeywordList {
-				Eventually(session.Err, 60*40).Should(Say(keyword))
+				Expect(session.Wait(timeout).Err).Should(Say(keyword))
 			}
 
 			args := []string{"migrate", "delete", "--all", "--server", "--force"}
@@ -322,16 +322,16 @@ var _ = Describe("hasura migrate delete", func() {
 				NewPrefixedWriter(testutil.DebugErrPrefix, GinkgoWriter),
 			)
 			Expect(err).To(BeNil())
-			Eventually(session.Err, 60*40).Should(Say("Deleted migrations"))
+			Expect(session.Wait(timeout).Err).Should(Say("Deleted migrations"))
 
 			session = testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"migrate", "status"},
 				WorkingDirectory: projectDirectory,
 			})
-			Eventually(session.Out, 60*40).Should(Say(version))
-			Eventually(session.Out, 60*40).Should(Say("Present"))
-			Eventually(session.Out, 60*40).Should(Say("Not Present"))
-			Eventually(session, 60*50).Should(Exit(0))
+			Expect(session.Wait(timeout).Out).Should(Say(version))
+			Expect(session.Wait(timeout).Out).Should(Say("Present"))
+			Expect(session.Wait(timeout).Out).Should(Say("Not Present"))
+			Eventually(session, timeout).Should(Exit(0))
 		})
 	})
 })

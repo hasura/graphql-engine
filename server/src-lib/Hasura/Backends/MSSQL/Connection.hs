@@ -2,6 +2,7 @@ module Hasura.Backends.MSSQL.Connection where
 
 import           Hasura.Prelude
 
+import qualified Data.Environment        as Env
 import qualified Data.Pool               as Pool
 import qualified Database.ODBC.SQLServer as ODBC
 
@@ -10,15 +11,15 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Data.Environment        as Env
 import           Data.Text               (pack, unpack)
 import           Hasura.Base.Error
 import           Hasura.Incremental      (Cacheable (..))
 
+
 -- | ODBC connection string for MSSQL server
 newtype MSSQLConnectionString
   = MSSQLConnectionString {unMSSQLConnectionString :: Text}
-  deriving (Show, Eq, ToJSON, FromJSON, Cacheable, Hashable, NFData, Arbitrary)
+  deriving (Show, Eq, ToJSON, FromJSON, Cacheable, Hashable, NFData)
 
 data InputConnectionString
   = RawString !MSSQLConnectionString
@@ -27,9 +28,6 @@ data InputConnectionString
 instance Cacheable InputConnectionString
 instance Hashable InputConnectionString
 instance NFData InputConnectionString
-
-instance Arbitrary InputConnectionString where
-  arbitrary = genericArbitrary
 
 instance ToJSON InputConnectionString where
   toJSON =
@@ -60,9 +58,6 @@ instance FromJSON MSSQLPoolSettings where
       <$> o .:? "max_connections" .!= _mpsMaxConnections defaultMSSQLPoolSettings
       <*> o .:? "idle_timeout"    .!= _mpsIdleTimeout    defaultMSSQLPoolSettings
 
-instance Arbitrary MSSQLPoolSettings where
-  arbitrary = genericArbitrary
-
 defaultMSSQLPoolSettings :: MSSQLPoolSettings
 defaultMSSQLPoolSettings =
   MSSQLPoolSettings
@@ -80,10 +75,6 @@ instance Hashable MSSQLConnectionInfo
 instance NFData MSSQLConnectionInfo
 $(deriveToJSON hasuraJSON ''MSSQLConnectionInfo)
 
-instance Arbitrary MSSQLConnectionInfo where
-  arbitrary = genericArbitrary
-
-
 instance FromJSON MSSQLConnectionInfo where
   parseJSON = withObject "Object" $ \o ->
     MSSQLConnectionInfo
@@ -99,9 +90,6 @@ instance Hashable MSSQLConnConfiguration
 instance NFData MSSQLConnConfiguration
 $(deriveJSON hasuraJSON ''MSSQLConnConfiguration)
 
-instance Arbitrary MSSQLConnConfiguration where
-  arbitrary = genericArbitrary
-
 newtype MSSQLPool
   = MSSQLPool { unMSSQLPool :: Pool.Pool ODBC.Connection }
 
@@ -109,9 +97,9 @@ createMSSQLPool
   :: MonadIO m
   => QErrM m
   => MSSQLConnectionInfo
+  -> Env.Environment
   -> m (MSSQLConnectionString, MSSQLPool)
-createMSSQLPool (MSSQLConnectionInfo iConnString MSSQLPoolSettings{..}) = do
-  env        <- liftIO Env.getEnvironment
+createMSSQLPool (MSSQLConnectionInfo iConnString MSSQLPoolSettings{..}) env = do
   connString <- resolveInputConnectionString env iConnString
   pool       <- liftIO
                   $ MSSQLPool

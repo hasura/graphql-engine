@@ -15,10 +15,12 @@ Securing projects
 Introduction
 ------------
 
-To make sure that your GraphQL endpoint and the Hasura console are not publicly accessible, you need to configure an admin secret key.
+To make sure that your GraphQL endpoint is not publicly accessible,
+a randomly generated admin secret key is added by default to your project at the
+time of project creation.
 
-Adding an admin secret
-----------------------
+Updating the admin secret
+-------------------------
 
 Step 1: Go to settings
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -32,25 +34,25 @@ On the project overview, click on the settings icon on the top right of the rele
 Step 2: Navigate to env vars
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-On the ``Env vars`` tab, click the button to add a new env var.
+On the ``Env vars`` tab, you will see the ``HASURA_GRAPHQL_ADMIN_SECRET`` env var.
 
-.. thumbnail:: /img/graphql/cloud/projects/secure-envvars.png
+.. thumbnail:: /img/graphql/cloud/projects/secure-admin-envvar.png
    :alt: Navigate to env vars
-   :width: 865px
+   :width: 1100px
 
-Step 3: Add an admin secret
+Step 3: Update admin secret
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the ``Key`` dropdown, choose ``ADMIN_SECRET`` and add a secret of your choice in the ``Value`` field. Then click the ``Add`` button.
+Click on the ``HASURA_GRAPHQL_ADMIN_SECRET`` env var to update the value.
 
-.. thumbnail:: /img/graphql/cloud/projects/secure-add-envvar.png
+.. thumbnail:: /img/graphql/cloud/projects/secure-update-envvar.png
    :alt: Set admin secret
-   :width: 865px
+   :width: 1100px
 
 Accessing Hasura
 ----------------
 
-After setting an admin secret, when you launch the console from the Hasura Cloud dashboard, you'll be authenticated as an admin. 
+When you launch the console from the Hasura Cloud dashboard, you'll be authenticated as an admin.
 If you want to make API calls from outside the console, you need to pass the admin secret as the `x-hasura-admin-secret` request header.
 
 .. note::

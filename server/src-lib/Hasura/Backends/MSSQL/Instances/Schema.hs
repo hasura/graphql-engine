@@ -4,25 +4,24 @@ module Hasura.Backends.MSSQL.Instances.Schema () where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                         as Map
-import qualified Data.List.NonEmpty                          as NE
-import qualified Database.ODBC.SQLServer                     as ODBC
-import qualified Language.GraphQL.Draft.Syntax               as G
+import qualified Data.HashMap.Strict                   as Map
+import qualified Data.List.NonEmpty                    as NE
+import qualified Database.ODBC.SQLServer               as ODBC
+import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Data.Has
-import           Data.Text.Encoding                          (encodeUtf8)
+import           Data.Text.Encoding                    (encodeUtf8)
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.MSSQL.Types                 as MSSQL
-import qualified Hasura.GraphQL.Parser                       as P
-import qualified Hasura.GraphQL.Schema.Build                 as GSB
-import qualified Hasura.RQL.IR.Select                        as IR
-import qualified Hasura.RQL.IR.Update                        as IR
+import qualified Hasura.Backends.MSSQL.Types           as MSSQL
+import qualified Hasura.GraphQL.Parser                 as P
+import qualified Hasura.GraphQL.Schema.Build           as GSB
+import qualified Hasura.RQL.IR.Select                  as IR
+import qualified Hasura.RQL.IR.Update                  as IR
 
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Parser                       hiding (EnumValueInfo, field)
-import           Hasura.GraphQL.Parser.Internal.Parser       hiding (field)
-import           Hasura.GraphQL.Parser.Internal.TypeChecking
+import           Hasura.GraphQL.Parser                 hiding (EnumValueInfo, field)
+import           Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
@@ -79,7 +78,7 @@ msBuildTableRelayQueryFields
   -> G.Name
   -> NESeq (ColumnInfo 'MSSQL)
   -> SelPermInfo  'MSSQL
-  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
 msBuildTableRelayQueryFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
   pure []
 
@@ -93,7 +92,7 @@ msBuildTableInsertMutationFields
   -> InsPermInfo 'MSSQL
   -> Maybe (SelPermInfo 'MSSQL)
   -> Maybe (UpdPermInfo 'MSSQL)
-  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
 msBuildTableInsertMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
   pure []
 
@@ -106,7 +105,7 @@ msBuildTableUpdateMutationFields
   -> G.Name
   -> UpdPermInfo 'MSSQL
   -> Maybe (SelPermInfo 'MSSQL)
-  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
 msBuildTableUpdateMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _updPerns _selPerms =
   pure []
 
@@ -119,7 +118,7 @@ msBuildTableDeleteMutationFields
   -> G.Name
   -> DelPermInfo 'MSSQL
   -> Maybe (SelPermInfo 'MSSQL)
-  -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
 msBuildTableDeleteMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _delPerns _selPerms =
   pure []
 
@@ -131,7 +130,7 @@ msBuildFunctionQueryFields
     -> FunctionInfo 'MSSQL
     -> TableName 'MSSQL
     -> SelPermInfo 'MSSQL
-    -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+    -> m [FieldParser n (QueryRootField UnpreparedValue)]
 msBuildFunctionQueryFields _ _ _ _ _ _ =
   pure []
 
@@ -144,7 +143,7 @@ msBuildFunctionRelayQueryFields
   -> TableName    'MSSQL
   -> NESeq (ColumnInfo 'MSSQL)
   -> SelPermInfo  'MSSQL
-  -> m [FieldParser n (QueryRootField UnpreparedValue UnpreparedValue)]
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
 msBuildFunctionRelayQueryFields _sourceName _sourceInfo _functionName _functionInfo _tableName _pkeyColumns _selPerms =
   pure []
 
@@ -156,7 +155,7 @@ msBuildFunctionMutationFields
     -> FunctionInfo 'MSSQL
     -> TableName 'MSSQL
     -> SelPermInfo 'MSSQL
-    -> m [FieldParser n (MutationRootField UnpreparedValue UnpreparedValue)]
+    -> m [FieldParser n (MutationRootField UnpreparedValue)]
 msBuildFunctionMutationFields _ _ _ _ _ _ =
   pure []
 
@@ -196,9 +195,9 @@ msColumnParser
   :: (MonadSchema n m, MonadError QErr m)
   => ColumnType 'MSSQL
   -> G.Nullability
-  -> m (Parser 'Both n (Opaque (ColumnValue 'MSSQL)))
+  -> m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MSSQL)))
 msColumnParser columnType (G.Nullability isNullable) =
-  opaque . fmap (ColumnValue columnType) <$> case columnType of
+  peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
     -- TODO: the mapping here is not consistent with mkMSSQLScalarTypeName. For
     -- example, exposing all the float types as a GraphQL Float type is
     -- incorrect, similarly exposing all the integer types as a GraphQL Int
@@ -244,29 +243,6 @@ msColumnParser columnType (G.Nullability isNullable) =
           pure $ possiblyNullable MSSQL.VarcharType $ P.enum enumName Nothing (mkEnumValue <$> enumValuesList)
         Nothing -> throw400 ValidationFailed "empty enum values"
   where
-    -- Sadly, this combinator is not sound in general, so we can’t export it
-    -- for general-purpose use. If we did, someone could write this:
-    --
-    --   mkParameter <$> opaque do
-    --     n <- int
-    --     pure (mkIntColumnValue (n + 1))
-    --
-    -- Now we’d end up with a UVParameter that has a variable in it, so we’d
-    -- parameterize over it. But when we’d reuse the plan, we wouldn’t know to
-    -- increment the value by 1, so we’d use the wrong value!
-    --
-    -- We could theoretically solve this by retaining a reference to the parser
-    -- itself and re-parsing each new value, using the saved parser, which
-    -- would admittedly be neat. But it’s more complicated, and it isn’t clear
-    -- that it would actually be useful, so for now we don’t support it.
-    opaque :: MonadParse m => Parser 'Both m a -> Parser 'Both m (Opaque a)
-    opaque parser = parser
-      { pParser = \case
-          P.GraphQLValue (G.VVariable var@Variable{ vInfo, vValue }) -> do
-            typeCheck False (P.toGraphQLType $ pType parser) var
-            P.mkOpaque (Just vInfo) <$> pParser parser (absurd <$> vValue)
-          value -> P.mkOpaque Nothing <$> pParser parser value
-      }
     possiblyNullable _scalarType
       | isNullable = fmap (fromMaybe ODBC.NullValue) . P.nullable
       | otherwise  = id
@@ -329,8 +305,8 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
   nullableTextParser <- columnParser (ColumnScalar @'MSSQL MSSQL.VarcharType) (G.Nullability True)
   textParser         <- columnParser (ColumnScalar @'MSSQL MSSQL.VarcharType) (G.Nullability False)
   let
-    columnListParser = P.list typedParser `P.bind` traverse P.openOpaque
-    textListParser   = P.list textParser  `P.bind` traverse P.openOpaque
+    columnListParser = fmap openValueOrigin <$> P.list typedParser
+    textListParser   = fmap openValueOrigin <$> P.list textParser
 
   -- field info
   let

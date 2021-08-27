@@ -1,5 +1,4 @@
-module Hasura.Backends.MySQL.Meta where
-
+module Hasura.Backends.MySQL.Meta (getMetadata) where
 
 import           Control.Exception                     (throw)
 import qualified Data.ByteString.Char8                 as B8
@@ -43,7 +42,7 @@ mergeMetadata InformationSchema{..} =
       { _ptmiOid = OID 0
       , _ptmiColumns =
           [ RawColumnInfo
-              { prciName = Column $ fromMaybe "" isColumnName
+              { prciName = Column isColumnName
               , prciPosition = fromIntegral isOrdinalPosition
               , prciType = parseMySQLScalarType isColumnType -- TODO: This needs to become more precise by considering Field length and character-set
               , prciIsNullable = isIsNullable == "YES" -- ref: https://dev.mysql.com/doc/refman/8.0/en/information-schema-columns-table.html
@@ -56,7 +55,7 @@ mergeMetadata InformationSchema{..} =
               (Constraint
                 (ConstraintName $ fromMaybe "" isConstraintName)
                 (OID $ fromIntegral $ fromMaybe 0 isConstraintOrdinalPosition))
-              (SNE.singleton (Column $ fromMaybe "" isColumnName))
+              (SNE.singleton (Column isColumnName))
           else Nothing
       , _ptmiUniqueConstraints = if isColumnKey == UNI
           then HS.singleton
@@ -75,7 +74,7 @@ mergeMetadata InformationSchema{..} =
                        (fromMaybe "" isReferencedTableName)
                        (fromMaybe "" isReferencedTableSchema))
                      (HM.singleton
-                       (Column $ fromMaybe "" isColumnName)
+                       (Column isColumnName)
                        (Column $ fromMaybe "" isReferencedColumnName))
                    )
                  )
@@ -104,7 +103,7 @@ data InformationSchema
   = InformationSchema
     { isTableSchema                :: !Text
     , isTableName                  :: !Text
-    , isColumnName                 :: !(Maybe Text)
+    , isColumnName                 :: !Text
     , isOrdinalPosition            :: !Word
     , isColumnDefault              :: !(Maybe Text)
     , isIsNullable                 :: !Text
@@ -196,9 +195,9 @@ instance Result InformationSchemaColumnKey where
             "COLUMN_KEY in INFORMATION_SCHEMA cannot be NULL"
       Just bs -> case bs of
         -- Could have used 'readMaybe' here, but we need the specific errors.
-        "PRI" -> PRI -- ^ primay key
-        "UNI" -> UNI -- ^ unique key
-        "MUL" -> MUL -- ^ foreign key (`MUL`tiple allowed, non-unique key)
+        "PRI" -> PRI -- primary key
+        "UNI" -> UNI -- unique key
+        "MUL" -> MUL -- foreign key (`MUL`tiple allowed, non-unique key)
         "" -> BLANK
         x ->
           throw $
