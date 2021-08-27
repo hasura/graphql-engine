@@ -2,13 +2,14 @@ import React from 'react';
 import { TreeArgElement, ArgValueKind } from '../utils';
 import styles from '../SchemaExplorer.scss';
 import ArgValueElement from './ArgValue';
+import { HasuraColumn } from './Explorer';
 
 type Props = {
   arg: TreeArgElement;
   handleToggle: (a: TreeArgElement) => void;
   handleArgValueKindChange: (a: TreeArgElement, type: ArgValueKind) => void;
   handleArgValueChange: (a: TreeArgElement, value: string) => void;
-  columns: string[];
+  columns: HasuraColumn;
 };
 
 const ArgElement: React.FC<Props> = ({

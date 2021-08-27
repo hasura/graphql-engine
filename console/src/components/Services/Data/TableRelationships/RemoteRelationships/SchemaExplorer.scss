@@ -1,4 +1,4 @@
-@import "../../../../Common/Common.scss";
+@import '../../../../Common/Common.scss';
 
 .schemaExplorerContainer {
   background-color: #f7f7f7;
@@ -7,7 +7,7 @@
   border-radius: 4px;
 }
 
-.height200Px { 
+.height200Px {
   height: 200px;
 }
 
@@ -29,16 +29,15 @@
 }
 
 .scalarColumnSelect {
-  margin-left:  5px;
+  margin-left: 5px;
   border-radius: 4px;
-  background-color: white; 
+  background-color: white;
   border: 1px solid #ccc;
 }
 
 .argValue {
   background-color: white;
-  height: 30px;
-  padding: 5px;
+  padding-right: 2.5rem;
   color: #555555;
   font-style: normal;
 }
@@ -54,6 +53,6 @@
 }
 
 .argElement {
-  color: #8B2BB9;
+  color: #8b2bb9;
   font-style: italic;
 }
