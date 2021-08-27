@@ -29,10 +29,10 @@ Examples
     hasura deploy
 
     # Use with admin secret:
-    hasura metadata apply --admin-secret "<admin-secret>"
+    hasura deploy --admin-secret "<admin-secret>"
 
-    # Apply metadata to an instance specified by the flag:
-    hasura metadata apply --endpoint "<endpoint>"
+    # Use with endpoint:
+    hasura deploy --endpoint "<endpoint>"
 
 Options
 ~~~~~~~

@@ -45,7 +45,8 @@ func TestDeployCmd(t *testing.T, ec *cli.ExecutionContext) {
 				EC: ec,
 			},
 			MigrateApplyOpts: commands.MigrateApplyOptions{
-				EC: ec,
+				EC:           ec,
+				AllDatabases: true,
 			},
 			MetadataReloadOpts: commands.MetadataReloadOptions{
 				EC: ec,

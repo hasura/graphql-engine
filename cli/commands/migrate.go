@@ -45,7 +45,7 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	f := migrateCmd.PersistentFlags()
-	migrateCommonFlags(f, v)
+	migrateCommonFlags(ec, f, v)
 
 	migrateCmd.AddCommand(
 		newMigrateApplyCmd(ec),
@@ -58,8 +58,8 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return migrateCmd
 }
 
-func migrateCommonFlags(f *pflag.FlagSet, v *viper.Viper) {
-	f.StringVar(&ec.Source.Name, "database-name", "", "database on which operation should be applied")
+func migrateCommonFlags(ecp *cli.ExecutionContext, f *pflag.FlagSet, v *viper.Viper) {
+	f.StringVar(&ecp.Source.Name, "database-name", "", "database on which operation should be applied")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
@@ -76,7 +76,7 @@ func migrateCommonFlags(f *pflag.FlagSet, v *viper.Viper) {
 	util.BindPFlag(v, "certificate_authority", f.Lookup("certificate-authority"))
 	util.BindPFlag(v, "disable_interactive", f.Lookup("disable-interactive"))
 
-	f.BoolVar(&ec.DisableAutoStateMigration, "disable-auto-state-migration", false, "after a config v3 update, disable automatically moving state from hdb_catalog.schema_migrations to catalog state")
+	f.BoolVar(&ecp.DisableAutoStateMigration, "disable-auto-state-migration", false, "after a config v3 update, disable automatically moving state from hdb_catalog.schema_migrations to catalog state")
 	f.MarkHidden("disable-auto-state-migration")
 }
 

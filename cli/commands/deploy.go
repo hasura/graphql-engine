@@ -30,10 +30,10 @@ func NewDeployCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura deploy
 
   # Use with admin secret:
-  hasura metadata apply --admin-secret "<admin-secret>"
+  hasura deploy --admin-secret "<admin-secret>"
 
-  # Apply metadata to an instance specified by the flag:
-  hasura metadata apply --endpoint "<endpoint>"`,
+  # Use with endpoint:
+  hasura deploy --endpoint "<endpoint>"`,
 		SilenceUsage: false,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Root().PersistentPreRun(cmd, args)
@@ -71,7 +71,7 @@ func NewDeployCmd(ec *cli.ExecutionContext) *cobra.Command {
 	flagConfig := &pflag.Flag{Name: "all-databases", Changed: true, Hidden: true}
 	flags.AddFlag(flagConfig)
 
-	migrateCommonFlags(flags, v)
+	migrateCommonFlags(ec, flags, v)
 	flags.Set("disable-interactive", "true")
 	flags.MarkHidden("disable-interactive")
 	flags.MarkHidden("database-name")
