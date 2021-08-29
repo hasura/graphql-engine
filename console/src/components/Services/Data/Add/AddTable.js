@@ -9,6 +9,7 @@ import UniqueKeyWrapper from './UniqueKeyWrapper';
 import FrequentlyUsedColumnSelector from '../Common/Components/FrequentlyUsedColumnSelector';
 
 import { showErrorNotification } from '../../Common/Notification';
+import { defaultValueTypes } from '../../../../dataSources';
 
 import TableName from './TableName';
 import TableColumns from './TableColumns';
@@ -24,6 +25,7 @@ import {
   setColType,
   setColNullable,
   setColDefault,
+  setColDefaultType,
   setForeignKeys,
   setUniqueKeys,
   setFreqUsedColumn,
@@ -184,6 +186,28 @@ class AddTable extends Component {
     const { dispatch } = this.props;
     dispatch(setColDefault(value, i, isNullableChecked));
   };
+
+  setColDefaultValueType = (index, valueType) => {
+    const { dispatch } = this.props;
+    dispatch(setColDefaultType(valueType, index));
+  };
+
+  modifiedDefaultValue(columns) {
+    columns.map((column, index) => {
+      const modifiedValue =
+        column.defaultType?.value != defaultValueTypes.DEFINEDAS.value
+          ? null
+          : column.type?.toLowerCase() == 'text' &&
+            (!column.default || column.default?.value == '')
+          ? "''::text"
+          : null;
+      if (modifiedValue) {
+        this.props.dispatch(
+          setColDefault(modifiedValue, index, column.nullable)
+        );
+      }
+    });
+  }
 
   minPrimaryKeyCheck() {
     return this.props.primaryKeys.filter(key => key !== '').length > 0;
@@ -425,6 +449,9 @@ class AddTable extends Component {
     // trim all validColumns names
     const trimmedColumns = this.trimColumnNames(validColumns);
 
+    // Update the value to respect valueType dropdown's values.
+    this.modifiedDefaultValue(this.props.columns);
+
     if (
       this.checkAndNotify(
         this.tableNameEmptyCheck(tableNameTrimmed),
@@ -533,6 +560,7 @@ class AddTable extends Component {
               onColNullableChange={this.onColNullableChange}
               onColUniqueChange={this.onColUniqueChange}
               setColDefaultValue={this.setColDefaultValue}
+              setColDefaultValueType={this.setColDefaultValueType}
             />
             {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
               <FrequentlyUsedColumnSelector

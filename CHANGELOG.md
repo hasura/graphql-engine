@@ -13,6 +13,7 @@
 - console: fix error due to rendering inconsistent object's message
 - console: support insecure TLS allowlist
 - console: support computed fields in remote schema join
+- console: add option to have empty default for text database columns
 - cli: fix delay starting console using `hasura console` (#7255
 
 ## v2.0.7

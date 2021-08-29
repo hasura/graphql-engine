@@ -15,7 +15,12 @@ import { addColSql } from '../TableModify/ModifyActions';
 import styles from './ModifyTable.scss';
 import FrequentlyUsedColumnSelector from '../Common/Components/FrequentlyUsedColumnSelector';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
-import { dataSource, isFeatureSupported } from '../../../../dataSources';
+import {
+  dataSource,
+  isFeatureSupported,
+  defaultValueTypes,
+} from '../../../../dataSources';
+import SearchableSelect from '../../../Common/SearchableSelect/SearchableSelect';
 
 const useColumnEditor = (dispatch, tableName) => {
   const initialState = {
@@ -24,6 +29,7 @@ const useColumnEditor = (dispatch, tableName) => {
     colNull: true,
     colUnique: false,
     colDefault: '',
+    colDefaultType: defaultValueTypes.DEFINEDAS,
     colDependentSQLGenerator: null,
   };
 
@@ -34,12 +40,19 @@ const useColumnEditor = (dispatch, tableName) => {
     colNull,
     colUnique,
     colDefault,
+    colDefaultType,
     colDependentSQLGenerator,
   } = columnState;
 
   const onSubmit = () => {
     // auto-trim column name
     const trimmedColName = colName.trim();
+    const modifiedDefaultValue =
+      colDefaultType.value == defaultValueTypes.DEFINEDAS.value
+        ? colDefault == '' && colType == 'text'
+          ? "''::text"
+          : colDefault
+        : '';
 
     // validate before sending
     if (!gqlPattern.test(trimmedColName)) {
@@ -65,7 +78,7 @@ const useColumnEditor = (dispatch, tableName) => {
           colType,
           colNull,
           colUnique,
-          colDefault,
+          modifiedDefaultValue,
           colDependentSQLGenerator,
           () => setColumnState(initialState)
         )
@@ -83,7 +96,11 @@ const useColumnEditor = (dispatch, tableName) => {
     colType: {
       value: colType,
       onChange: selected => {
-        setColumnState({ ...columnState, colType: selected.value });
+        setColumnState({
+          ...columnState,
+          colType: selected.value,
+          colDefaultType: defaultValueTypes.DEFINEDAS,
+        });
       },
     },
     colNull: {
@@ -96,6 +113,12 @@ const useColumnEditor = (dispatch, tableName) => {
       checked: colUnique,
       onChange: e => {
         setColumnState({ ...columnState, colUnique: e.target.checked });
+      },
+    },
+    colDefaultType: {
+      value: colDefaultType,
+      onChange: data => {
+        setColumnState({ ...columnState, colDefaultType: data });
       },
     },
     colDefault: {
@@ -133,6 +156,7 @@ const ColumnCreator = ({
     colType,
     colNull,
     colUnique,
+    colDefaultType,
     colDefault,
     frequentlyUsedColumn,
     onSubmit,
@@ -252,17 +276,49 @@ const ColumnCreator = ({
       defaultOptions = getDefaultFunctionsOptions(colDefaultFunctions, 0);
     }
 
+    const customSelectBoxStyles = {
+      container: {
+        marginBottom: '5px',
+        minWidth: '155px'
+      },
+      dropdownIndicator: {
+        padding: '5px',
+      },
+      placeholder: {
+        top: '44%',
+        fontSize: '12px',
+      },
+      singleValue: {
+        fontSize: '12px',
+        top: '44%',
+        color: '#555555',
+      },
+    };
+
     return (
-      <CustomInputAutoSuggest
-        placeholder="default value"
-        options={defaultOptions}
-        className={`${styles.input}
-          ${styles.defaultInput}
-          input-sm form-control`}
-        {...colDefault}
-        data-test="default-value"
-        theme={theme}
-      />
+      <div className={`${styles.input} ${styles.defaultInput}`}>
+        {colType.value?.toLowerCase() == 'text' && (
+          <div data-test="default-valuetype">
+            <SearchableSelect
+              options={Object.values(defaultValueTypes)}
+              onChange={colDefaultType.onChange}
+              value={colDefaultType.value.label}
+              bsClass={`col-type-${0} modify_select`}
+              styleOverrides={customSelectBoxStyles}
+            />
+          </div>
+        )}
+        {colDefaultType.value.value != 'none' && (
+          <CustomInputAutoSuggest
+            placeholder="default value"
+            options={defaultOptions}
+            className={`input-sm form-control`}
+            {...colDefault}
+            data-test="default-value"
+            theme={theme}
+          />
+        )}
+      </div>
     );
   };
 
@@ -278,7 +334,7 @@ const ColumnCreator = ({
 
   const expandedContent = () => (
     <div>
-      <form className={`form-inline ${styles.display_flex}`}>
+      <form className={`form-inline ${styles.displayFlexContainer}`}>
         {getColumnNameInput()}
         {getColumnTypeInput()}
         {getColumnNullableInput()}

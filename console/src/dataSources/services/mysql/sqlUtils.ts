@@ -135,7 +135,9 @@ export const getAddColumnSql = (
   if (options.unique) {
     sql += ' unique';
   }
-  if (options.default) {
+  if (options.default.includes('::text')) {
+    sql += '';
+  } else if (options.default) {
     let defaultVal = options.default;
     if (isColTypeString(columnType)) {
       defaultVal = `'${options.default}'`;
@@ -243,7 +245,7 @@ export const getAlterColumnTypeSql = (
   alter table ${getMySQLNameString(
     schemaName,
     tableName
-  )} modify column \`${columnName}\` ${columnType};  
+  )} modify column \`${columnName}\` ${columnType};
 `;
 
 export const getDropColumnDefaultSql = (
@@ -341,7 +343,9 @@ export const getCreateTableQueries = (
       currentCols[i].default !== undefined &&
       currentCols[i].default?.value !== ''
     ) {
-      if (isColTypeString(currentCols[i].type)) {
+      if (currentCols[i]?.default?.value === "''::text") {
+        tableDefSql += ` DEFAULT ''`;
+      } else if (isColTypeString(currentCols[i].type)) {
         // if a column type is text and if it has a non-func default value, add a single quote
         tableDefSql += ` DEFAULT '${currentCols[i]?.default?.value}'`;
       } else {

@@ -60,6 +60,12 @@ export const getElementFromAlias = (alias: string) => `[data-test="${alias}"]`;
 
 export const getElementFromClassName = (cn: string) => `.${cn}`;
 
+export const tableColumnDefaultTypeSelector = (alias: string, value: string) => {
+  cy.get(`${getElementFromAlias(alias)}`)
+    .find('input').focus().clear();
+  cy.get(getElementFromAlias(`data_test_column_type_value_${value}`))
+    .first().click();
+};
 export const tableColumnTypeSelector = (alias: string) => {
   cy.get(`${getElementFromAlias(alias)}`)
     .children('div')

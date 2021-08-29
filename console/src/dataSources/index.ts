@@ -453,6 +453,11 @@ export const useDataSource = (): {
   };
 };
 
+export const defaultValueTypes = Object.freeze({
+  NONE: { value: 'none', label: 'None' },
+  DEFINEDAS: { value: 'definedas', label: 'Defined As' },
+});
+
 if ((module as any).hot) {
   // // todo
   // (module as any).hot.dispose((data: any) => {

@@ -296,7 +296,8 @@ export const getCreateTableQueries = (
     ) {
       if (
         isColTypeString(currentCols[i].type) &&
-        !isSQLFunction(currentCols[i]?.default?.value)
+        !isSQLFunction(currentCols[i]?.default?.value) &&
+        !currentCols[i]?.default?.value.includes('::text')
       ) {
         // if a column type is text and if it has a non-func default value, add a single quote by default
         tableDefSql += ` DEFAULT '${currentCols[i]?.default?.value}'`;
