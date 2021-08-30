@@ -91,7 +91,7 @@ Rate Limiting
 Cache writes are rate limited, with a rate depending on your plan. The rate
 limit is based on the total number of bytes written to the cache in a sliding
 window. If you exceed the rate limit, the HTTP response will indicate this
-with a 429 (Too Many Requests) error response.
+with a warning header: "Warning: 199 - cache-store-capacity-exceeded".
 
 Session variables
 -----------------
