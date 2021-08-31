@@ -16,6 +16,9 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/cheggaaa/pb/v3"
+	"golang.org/x/crypto/ssh/terminal"
+
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
 	"github.com/hasura/graphql-engine/cli/v2/util"
@@ -48,6 +51,26 @@ var (
 	ErrMigrationMode    = fmt.Errorf("Migration mode is enabled")
 )
 
+const (
+	applyingMigrationsMessage = "Applying migrations"
+)
+
+func newProgressBar(str string, w io.Writer) *pb.ProgressBar {
+	// bar template configuration
+	str = fmt.Sprintf(`"%v: "`, str)
+	var barTemplateConfiguration string = fmt.Sprintf(`{{ cyan %s }} {{ counters .}} {{ bar . "[" "=" ">" "." "]"}} {{percent .}}`, str)
+	bar := pb.ProgressBarTemplate(barTemplateConfiguration).New(0)
+	bar.SetRefreshRate(time.Microsecond)
+	if !terminal.IsTerminal(int(os.Stdin.Fd())) {
+		bar.SetWidth(210)
+	}
+	bar.Set(pb.CleanOnFinish, true)
+	if w != nil {
+		bar.SetWriter(w)
+	}
+	return bar
+}
+
 // ErrShortLimit is an error returned when not enough migrations
 // can be returned by a source for a given limit.
 type ErrShortLimit struct {
@@ -78,6 +101,8 @@ type Migrate struct {
 
 	// Logger is the global logger object to print logs.
 	Logger *log.Logger
+	stderr io.Writer
+	stdout io.Writer
 
 	// GracefulStop accepts `true` and will stop executing migrations
 	// as soon as possible at a safe break point, so that the database
@@ -111,6 +136,8 @@ type NewMigrateOpts struct {
 	configVersion          int
 	tlsConfig              *tls.Config
 	logger                 *log.Logger
+	Stdout                 io.Writer
+	Stderr                 io.Writer
 	hasuraOpts             *database.HasuraOpts
 }
 
@@ -118,6 +145,9 @@ type NewMigrateOpts struct {
 // The URL scheme is defined by each driver.
 func New(opts NewMigrateOpts) (*Migrate, error) {
 	m := newCommon(opts.cmd)
+	m.stdout = opts.Stdout
+	m.stderr = opts.Stderr
+
 	sourceName, err := schemeFromUrl(opts.sourceUrl)
 	if err != nil {
 		log.Debug(err)
@@ -510,11 +540,12 @@ func (m *Migrate) Migrate(version uint64, direction string) error {
 	}
 
 	ret := make(chan interface{}, m.PrefetchMigrations)
-	go m.read(version, direction, ret)
+	bar := newProgressBar(applyingMigrationsMessage, m.stderr)
+	go m.read(version, direction, ret, bar)
 	if m.DryRun {
 		return m.unlockErr(m.runDryRun(ret))
 	} else {
-		return m.unlockErr(m.runMigrations(ret))
+		return m.unlockErr(m.runMigrations(ret, bar))
 	}
 }
 
@@ -569,17 +600,18 @@ func (m *Migrate) Steps(n int64) error {
 	}
 
 	ret := make(chan interface{}, m.PrefetchMigrations)
+	bar := newProgressBar(applyingMigrationsMessage, m.stderr)
 
 	if n > 0 {
-		go m.readUp(n, ret)
+		go m.readUp(n, ret, bar)
 	} else {
-		go m.readDown(-n, ret)
+		go m.readDown(-n, ret, bar)
 	}
 
 	if m.DryRun {
 		return m.unlockErr(m.runDryRun(ret))
 	} else {
-		return m.unlockErr(m.runMigrations(ret))
+		return m.unlockErr(m.runMigrations(ret, bar))
 	}
 }
 
@@ -609,13 +641,13 @@ func (m *Migrate) Up() error {
 	}
 
 	ret := make(chan interface{}, m.PrefetchMigrations)
-
-	go m.readUp(-1, ret)
+	bar := newProgressBar(applyingMigrationsMessage, m.stderr)
+	go m.readUp(-1, ret, bar)
 
 	if m.DryRun {
 		return m.unlockErr(m.runDryRun(ret))
 	} else {
-		return m.unlockErr(m.runMigrations(ret))
+		return m.unlockErr(m.runMigrations(ret, bar))
 	}
 }
 
@@ -645,12 +677,13 @@ func (m *Migrate) Down() error {
 	}
 
 	ret := make(chan interface{}, m.PrefetchMigrations)
-	go m.readDown(-1, ret)
+	bar := newProgressBar(applyingMigrationsMessage, m.stderr)
+	go m.readDown(-1, ret, bar)
 
 	if m.DryRun {
 		return m.unlockErr(m.runDryRun(ret))
 	} else {
-		return m.unlockErr(m.runMigrations(ret))
+		return m.unlockErr(m.runMigrations(ret, bar))
 	}
 }
 
@@ -823,8 +856,10 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 // Each migration is then written to the ret channel.
 // If an error occurs during reading, that error is written to the ret channel, too.
 // Once read is done reading it will close the ret channel.
-func (m *Migrate) read(version uint64, direction string, ret chan<- interface{}) {
+func (m *Migrate) read(version uint64, direction string, ret chan<- interface{}, bar *pb.ProgressBar) {
 	defer close(ret)
+
+	bar.SetTotal(1)
 
 	if direction == "up" {
 		if m.stop() {
@@ -929,12 +964,30 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{})
 // Each migration is then written to the ret channel.
 // If an error occurs during reading, that error is written to the ret channel, too.
 // Once readUp is done reading it will close the ret channel.
-func (m *Migrate) readUp(limit int64, ret chan<- interface{}) {
+func (m *Migrate) readUp(limit int64, ret chan<- interface{}, bar *pb.ProgressBar) {
 	defer close(ret)
 
 	if limit == 0 {
 		ret <- ErrNoChange
 		return
+	}
+
+	if limit == -1 { // To get no of migrations to be applied on  server if limit is -1
+		noOfUnappliedMigrations := 0
+		for _, migration := range m.status.Migrations {
+			if migration.IsPresent && !migration.IsApplied { // needs to be applied
+				noOfUnappliedMigrations++
+			}
+		}
+
+		if noOfUnappliedMigrations == 0 {
+			ret <- ErrNoChange
+			return
+		}
+
+		bar.SetTotal(int64(noOfUnappliedMigrations))
+	} else {
+		bar.SetTotal(limit)
 	}
 
 	count := int64(0)
@@ -1056,7 +1109,7 @@ func (m *Migrate) readUp(limit int64, ret chan<- interface{}) {
 // Each migration is then written to the ret channel.
 // If an error occurs during reading, that error is written to the ret channel, too.
 // Once readDown is done reading it will close the ret channel.
-func (m *Migrate) readDown(limit int64, ret chan<- interface{}) {
+func (m *Migrate) readDown(limit int64, ret chan<- interface{}, bar *pb.ProgressBar) {
 	defer close(ret)
 
 	if limit == 0 {
@@ -1080,6 +1133,18 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}) {
 	if from == -1 && limit > 0 {
 		ret <- ErrNoChange
 		return
+	}
+
+	if limit == -1 { // To get no of migrations to be rollback on  server if limit is -1
+		noOfAppliedMigrations := 0
+		for _, migration := range m.status.Migrations {
+			if migration.IsPresent && migration.IsApplied { // needs to be applied
+				noOfAppliedMigrations++
+			}
+		}
+		bar.SetTotal(int64(noOfAppliedMigrations))
+	} else {
+		bar.SetTotal(limit)
 	}
 
 	count := int64(0)
@@ -1150,7 +1215,9 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}) {
 // Before running a newly received migration it will check if it's supposed
 // to stop execution because it might have received a stop signal on the
 // GracefulStop channel.
-func (m *Migrate) runMigrations(ret <-chan interface{}) error {
+func (m *Migrate) runMigrations(ret <-chan interface{}, bar *pb.ProgressBar) error {
+	bar.Start()
+	defer bar.Finish()
 	for r := range ret {
 		if m.stop() {
 			return nil
@@ -1170,6 +1237,7 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 						return err
 					}
 				}
+				bar.Increment()
 				version := int64(migr.Version)
 				// Insert Version number into the table
 				if err := m.databaseDrv.SetVersion(version, false); err != nil {
@@ -1599,16 +1667,17 @@ func (m *Migrate) GotoVersion(gotoVersion int64) error {
 	}
 
 	ret := make(chan interface{})
+	bar := newProgressBar(applyingMigrationsMessage, m.stderr)
 	if currVersion <= gotoVersion {
-		go m.readUpFromVersion(-1, gotoVersion, ret)
+		go m.readUpFromVersion(-1, gotoVersion, ret, bar)
 	} else if currVersion > gotoVersion {
-		go m.readDownFromVersion(currVersion, gotoVersion, ret)
+		go m.readDownFromVersion(currVersion, gotoVersion, ret, bar)
 	}
 
 	if m.DryRun {
 		return m.unlockErr(m.runDryRun(ret))
 	} else {
-		return m.unlockErr(m.runMigrations(ret))
+		return m.unlockErr(m.runMigrations(ret, bar))
 	}
 }
 
@@ -1617,17 +1686,37 @@ func (m *Migrate) GotoVersion(gotoVersion int64) error {
 // Each migration is then written to the ret channel.
 // If an error occurs during reading, that error is written to the ret channel, too.
 // Once readUpFromVersion is done reading it will close the ret channel.
-func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}) {
+func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}, bar *pb.ProgressBar) {
 	defer close(ret)
-	var noOfAppliedMigrations int
+	var noOfUnappliedMigrations int = 0
+
+	if to == -1 {
+		ret <- ErrNoChange
+		return
+	}
+
+	for _, i := range m.status.Migrations {
+		if i.Version > uint64(to) {
+			continue
+		}
+		if i.IsPresent && !i.IsApplied { // needs to be applied
+			noOfUnappliedMigrations++
+		}
+	}
+
+	if noOfUnappliedMigrations == 0 {
+		ret <- ErrNoChange
+		return
+	}
+
+	bar.SetTotal(int64(noOfUnappliedMigrations))
+
 	for {
 		if m.stop() {
 			return
 		}
+
 		if from == to {
-			if noOfAppliedMigrations == 0 {
-				ret <- ErrNoChange
-			}
 			return
 		}
 
@@ -1668,7 +1757,6 @@ func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}
 
 			go migr.Buffer()
 			from = int64(firstVersion)
-			noOfAppliedMigrations++
 			continue
 		}
 
@@ -1710,7 +1798,6 @@ func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}
 		ret <- migr
 		go migr.Buffer()
 		from = int64(next)
-		noOfAppliedMigrations++
 	}
 }
 
@@ -1719,19 +1806,38 @@ func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}
 // Each migration is then written to the ret channel.
 // If an error occurs during reading, that error is written to the ret channel, too.
 // Once readDownFromVersion is done reading it will close the ret channel.
-func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface{}) {
+func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface{}, bar *pb.ProgressBar) {
 	defer close(ret)
 	var err error
-	var noOfAppliedMigrations int
+	var noOfAppliedMigrations int = 0
+
+	if from == -1 {
+		ret <- ErrNoChange
+		return
+	}
+
+	for _, i := range m.status.Migrations {
+		if i.Version > uint64(from) || (to >= 0 && i.Version <= uint64(to)) {
+			continue
+		}
+		if i.IsPresent && i.IsApplied { // needs to be applied
+			noOfAppliedMigrations++
+		}
+	}
+
+	if noOfAppliedMigrations == 0 {
+		ret <- ErrNoChange
+		return
+	}
+
+	bar.SetTotal(int64(noOfAppliedMigrations))
+
 	for {
 		if m.stop() {
 			return
 		}
 
 		if from == to {
-			if noOfAppliedMigrations == 0 {
-				ret <- ErrNoChange
-			}
 			return
 		}
 
@@ -1767,7 +1873,6 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 				go migr.Buffer()
 
 				from = database.NilVersion
-				noOfAppliedMigrations++
 				continue
 			} else if err != nil {
 				ret <- err
@@ -1795,7 +1900,6 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 		ret <- migr
 		go migr.Buffer()
 		from = int64(prev.Version)
-		noOfAppliedMigrations++
 	}
 }
 
