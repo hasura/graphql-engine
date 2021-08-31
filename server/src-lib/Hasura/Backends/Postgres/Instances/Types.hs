@@ -77,6 +77,7 @@ instance
   type XComputedField          ('Postgres pgKind) = XEnable
   type XRelay                  ('Postgres pgKind) = XEnable
   type XNodesAgg               ('Postgres pgKind) = XEnable
+  type XNestedInserts          ('Postgres pgKind) = XEnable
 
   functionArgScalarType   = PG.mkFunctionArgScalarType
   isComparableType        = PG.isComparableType

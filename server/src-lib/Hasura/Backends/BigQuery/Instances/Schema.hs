@@ -45,8 +45,9 @@ instance BackendSchema 'BigQuery where
   buildFunctionMutationFields    = bqBuildFunctionMutationFields
 
   -- backend extensions
-  relayExtension    = Nothing
-  nodesAggExtension = Just ()
+  relayExtension         = Nothing
+  nodesAggExtension      = Just ()
+  nestedInsertsExtension = Nothing
 
   -- table arguments
   tableArguments = bqTableArgs

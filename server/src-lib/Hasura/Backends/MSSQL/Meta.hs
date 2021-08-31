@@ -70,6 +70,7 @@ data SysColumn = SysColumn
   , scColumnId                :: Int
   , scUserTypeId              :: Int
   , scIsNullable              :: Bool
+  , scIsIdentity              :: IsIdentityColumn
   , scJoinedSysType           :: SysType
   , scJoinedForeignKeyColumns :: [SysForeignKeyColumn]
   } deriving (Show, Generic)
@@ -135,6 +136,7 @@ transformColumn columnInfo =
       -- or dropped. We assume here that this arbitrary column id can
       -- serve the same purpose.
       prciIsNullable  = scIsNullable columnInfo
+      prciIsIdentity  = scIsIdentity columnInfo
       prciDescription = Nothing
       prciType = parseScalarType $ styName $ scJoinedSysType columnInfo
       foreignKeys = scJoinedForeignKeyColumns columnInfo <&> \foreignKeyColumn ->

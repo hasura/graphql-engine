@@ -120,6 +120,9 @@ class
   type XRelay                  b :: Type
   type XNodesAgg               b :: Type
 
+  -- | Extension to flag the availability of object and array relationships in inserts (aka nested inserts).
+  type XNestedInserts  b :: Type
+
   -- functions on types
   functionArgScalarType :: FunctionArgType b -> ScalarType b
   isComparableType      :: ScalarType b -> Bool

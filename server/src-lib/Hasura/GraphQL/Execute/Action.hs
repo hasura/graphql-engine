@@ -277,11 +277,11 @@ resolveAsyncActionQuery userInfo annAction =
       RS.mkAnnColumnField (mkPGColumnInfo columnInfoArgs) Nothing Nothing
 
     mkPGColumnInfo (column', columnType) =
-      ColumnInfo column' (G.unsafeMkName $ getPGColTxt column') 0 (ColumnScalar columnType) True Nothing
+      ColumnInfo column' (G.unsafeMkName $ getPGColTxt column') 0 (ColumnScalar columnType) True notIdentityColumn Nothing
 
     tableBoolExpression =
       let actionIdColumnInfo = ColumnInfo (unsafePGCol "id") $$(G.litName "id")
-                               0 (ColumnScalar PGUUID) False Nothing
+                               0 (ColumnScalar PGUUID) False notIdentityColumn Nothing
           actionIdColumnEq = BoolFld $ AVColumn actionIdColumnInfo [AEQ True $ UVLiteral $ S.SELit $ actionIdToText actionId]
           sessionVarsColumnInfo = mkPGColumnInfo sessionVarsColumn
           sessionVarValue = UVParameter Nothing $ ColumnValue (ColumnScalar PGJSONB) $

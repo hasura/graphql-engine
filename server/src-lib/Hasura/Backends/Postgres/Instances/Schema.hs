@@ -129,8 +129,9 @@ instance
   tableArguments = defaultTableArgs
 
   -- backend extensions
-  relayExtension    = pgkRelayExtension @pgKind
-  nodesAggExtension = Just ()
+  relayExtension         = pgkRelayExtension @pgKind
+  nodesAggExtension      = Just ()
+  nestedInsertsExtension = Just ()
 
   -- indivdual components
   columnParser              = columnParser
