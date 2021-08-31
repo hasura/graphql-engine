@@ -17,6 +17,7 @@
 - console: support insecure TLS allowlist
 - console: support computed fields in remote schema join
 - console: fix data sidebar not updated when a table is renamed
+- console: fix primary key ordering (close #7402)
 - cli: fix delay starting console using `hasura console` (#7255
 
 ## v2.0.7
