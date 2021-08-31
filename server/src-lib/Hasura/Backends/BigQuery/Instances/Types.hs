@@ -39,6 +39,7 @@ instance Backend 'BigQuery where
   type XComputedField          'BigQuery = XDisable
   type XRelay                  'BigQuery = XDisable
   type XNodesAgg               'BigQuery = XEnable
+  type XNestedInserts          'BigQuery = XDisable
 
   type ExtraTableMetadata      'BigQuery = ()
 

@@ -46,6 +46,7 @@ instance BackendSchema 'MySQL where
   computedField                  = error "computedField: MySQL backend does not support this operation yet."
   node                           = error "node: MySQL backend does not support this operation yet."
   columnDefaultValue             = error "columnDefaultValue: MySQL backend does not support this operation yet."
+  nestedInsertsExtension         = Nothing
 
 mysqlTableArgs
   :: forall r m n

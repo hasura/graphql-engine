@@ -37,7 +37,7 @@ instance BackendSchema 'MSSQL where
   -- top level parsers
   buildTableQueryFields          = GSB.buildTableQueryFields
   buildTableRelayQueryFields     = msBuildTableRelayQueryFields
-  buildTableInsertMutationFields = msBuildTableInsertMutationFields
+  buildTableInsertMutationFields = GSB.buildTableInsertMutationFields
   buildTableUpdateMutationFields = msBuildTableUpdateMutationFields
   buildTableDeleteMutationFields = msBuildTableDeleteMutationFields
   buildFunctionQueryFields       = msBuildFunctionQueryFields
@@ -45,8 +45,9 @@ instance BackendSchema 'MSSQL where
   buildFunctionMutationFields    = msBuildFunctionMutationFields
 
   -- backend extensions
-  relayExtension    = Nothing
-  nodesAggExtension = Just ()
+  relayExtension         = Nothing
+  nodesAggExtension      = Just ()
+  nestedInsertsExtension = Nothing
 
   -- table arguments
   tableArguments = msTableArgs
@@ -80,20 +81,6 @@ msBuildTableRelayQueryFields
   -> SelPermInfo  'MSSQL
   -> m [FieldParser n (QueryRootField UnpreparedValue)]
 msBuildTableRelayQueryFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
-  pure []
-
-msBuildTableInsertMutationFields
-  :: MonadBuildSchema 'MSSQL r m n
-  => SourceName
-  -> SourceConfig 'MSSQL
-  -> TableName 'MSSQL
-  -> TableInfo 'MSSQL
-  -> G.Name
-  -> InsPermInfo 'MSSQL
-  -> Maybe (SelPermInfo 'MSSQL)
-  -> Maybe (UpdPermInfo 'MSSQL)
-  -> m [FieldParser n (MutationRootField UnpreparedValue)]
-msBuildTableInsertMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
   pure []
 
 msBuildTableUpdateMutationFields

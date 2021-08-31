@@ -46,6 +46,9 @@ mergeMetadata InformationSchema{..} =
               , prciPosition = fromIntegral isOrdinalPosition
               , prciType = parseMySQLScalarType isColumnType -- TODO: This needs to become more precise by considering Field length and character-set
               , prciIsNullable = isIsNullable == "YES" -- ref: https://dev.mysql.com/doc/refman/8.0/en/information-schema-columns-table.html
+              , prciIsIdentity = notIdentityColumn -- TODO: The identity-ness of column is not explicitly available in MySQL INFORMATION_SCHEMA.COLUMNS table.
+                                                   --       Determine this value from 'EXTRA' field. Till then we assume it as not identity.
+                                                   -- issue: https://github.com/hasura/graphql-engine/issues/7450
               , prciDescription = Just $ G.Description isColumnComment
               }
           ]

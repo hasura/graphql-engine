@@ -16,6 +16,8 @@ module Hasura.RQL.IR.Insert where
 
 import           Hasura.Prelude
 
+import           Control.Lens                  ((^?))
+import           Control.Lens.TH               (makePrisms)
 import           Data.Kind                     (Type)
 
 import           Hasura.RQL.IR.BoolExp
@@ -47,7 +49,7 @@ data AnnInsert (b :: BackendType) (r :: BackendType -> Type) v
 
 data AnnIns (b :: BackendType) (f :: Type -> Type) (v :: Type)
   = AnnIns
-  { _aiInsObj         :: !(f (AnnInsObj b v))
+  { _aiInsObj         :: !(f (AnnotatedInsertRow b v))
   , _aiTableName      :: !(TableName b)
   , _aiConflictClause :: !(Maybe (ConflictClauseP1 b v))
   , _aiCheckCond      :: !(AnnBoolExp b v, Maybe (AnnBoolExp b v))
@@ -67,24 +69,19 @@ newtype Single a = Single { unSingle :: a }
 type SingleObjIns b v = AnnIns b Single v
 type MultiObjIns  b v = AnnIns b []     v
 
+-- | An insert item.
+-- The object and array relationships are not unavailable when 'XNestedInserts b = XDisable'
+
+data AnnotatedInsert (b :: BackendType) v
+  = AIColumn !(Column b, v)
+  | AIObjectRelationship !(XNestedInserts b) !(ObjRelIns b v)
+  | AIArrayRelationship !(XNestedInserts b) !(ArrRelIns b v)
+  deriving (Functor, Foldable, Traversable)
 
 -- | One individual row to be inserted.
 -- Contains the columns' values and all the matching recursive relationship inserts.
 
-data AnnInsObj (b :: BackendType) v
-  = AnnInsObj
-  { _aioColumns :: ![(Column b, v)]
-  , _aioObjRels :: ![ObjRelIns b v]
-  , _aioArrRels :: ![ArrRelIns b v]
-  } deriving (Functor, Foldable, Traversable)
-
-instance Semigroup (AnnInsObj backend v) where
-  (AnnInsObj col1 obj1 rel1) <> (AnnInsObj col2 obj2 rel2) =
-    AnnInsObj (col1 <> col2) (obj1 <> obj2) (rel1 <> rel2)
-
-instance Monoid (AnnInsObj backend v) where
-  mempty = AnnInsObj [] [] []
-
+type AnnotatedInsertRow b v = [AnnotatedInsert b v]
 
 -- | One individual relationship.
 -- Unlike other types, this one is not parameterized by the type of the leaves
@@ -142,3 +139,15 @@ data InsertQueryP1 (b :: BackendType)
   , iqp1Output    :: !(MutationOutput b)
   , iqp1AllCols   :: ![ColumnInfo b]
   }
+
+-- Template Haskell related
+$(makePrisms ''AnnotatedInsert)
+
+getInsertColumns :: AnnotatedInsertRow b v -> [(Column b, v)]
+getInsertColumns = mapMaybe (^? _AIColumn)
+
+getInsertObjectRelationships :: AnnotatedInsertRow b v -> [ObjRelIns b v]
+getInsertObjectRelationships = mapMaybe (fmap snd . (^? _AIObjectRelationship))
+
+getInsertArrayRelationships :: AnnotatedInsertRow b v -> [ArrRelIns b v]
+getInsertArrayRelationships = mapMaybe (fmap snd . (^? _AIArrayRelationship))

@@ -335,8 +335,8 @@ alterColumnsInMetadata
   -> TableName b
   -> m ()
 alterColumnsInMetadata source alteredCols fields sc tn = for_ alteredCols $
-  \( RawColumnInfo oldName _ oldType _ _
-   , RawColumnInfo newName _ newType _ _ ) -> do
+  \( RawColumnInfo{prciName = oldName, prciType = oldType}
+   , RawColumnInfo{prciName = newName, prciType = newType}) -> do
     if | oldName /= newName ->
          renameColumnInMetadata oldName newName source tn fields
 

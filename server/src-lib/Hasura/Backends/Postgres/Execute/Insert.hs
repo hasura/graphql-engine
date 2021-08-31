@@ -80,14 +80,14 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
     bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
     IR.AnnIns insObjs table conflictClause checkCondition columnInfos defVals = multiObjIns
-    allInsObjRels = concatMap IR._aioObjRels insObjs
-    allInsArrRels = concatMap IR._aioArrRels insObjs
+    allInsObjRels = concatMap IR.getInsertObjectRelationships insObjs
+    allInsArrRels = concatMap IR.getInsertArrayRelationships insObjs
     anyRelsToInsert = not $ null allInsArrRels && null allInsObjRels
 
     withoutRelsInsert = do
-      indexedForM_ (IR._aioColumns <$> insObjs) \column ->
+      indexedForM_ (IR.getInsertColumns <$> insObjs) \column ->
         validateInsert (map fst column) [] (map fst additionalColumns)
-      let columnValues = map (mkSQLRow defVals) $ union additionalColumns . IR._aioColumns <$> insObjs
+      let columnValues = map (mkSQLRow defVals) $ union additionalColumns . IR.getInsertColumns <$> insObjs
           columnNames  = Map.keys defVals
           insertQuery  = IR.InsertQueryP1
             table
@@ -151,7 +151,9 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tra
   return (totAffRows, colValM)
   where
     IR.AnnIns (IR.Single annObj) table onConflict checkCond allColumns defaultValues = singleObjIns
-    IR.AnnInsObj columns objectRels arrayRels = annObj
+    columns = IR.getInsertColumns annObj
+    objectRels = IR.getInsertObjectRelationships annObj
+    arrayRels = IR.getInsertArrayRelationships annObj
 
     afterInsert, beforeInsert :: [IR.ObjRelIns ('Postgres pgKind) PG.SQLExp]
     (afterInsert, beforeInsert) =

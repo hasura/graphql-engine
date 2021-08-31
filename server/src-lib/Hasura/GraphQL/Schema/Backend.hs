@@ -45,7 +45,7 @@ import qualified Hasura.RQL.IR.Select          as IR
 import qualified Hasura.RQL.IR.Update          as IR
 
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Parser
+import           Hasura.GraphQL.Parser         hiding (Type)
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.RQL.IR
 import           Hasura.RQL.Types              hiding (EnumValueInfo)
@@ -154,6 +154,7 @@ class Backend b => BackendSchema (b :: BackendType) where
   -- backend extensions
   relayExtension    :: Maybe (XRelay b)
   nodesAggExtension :: Maybe (XNodesAgg b)
+  nestedInsertsExtension :: Maybe (XNestedInserts b)
 
   -- individual components
   columnParser

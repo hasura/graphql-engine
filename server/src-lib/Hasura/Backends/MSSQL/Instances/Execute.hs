@@ -212,7 +212,7 @@ msDBMutationPlan
   -> QueryTagsComment
   -> m (DBStepInfo 'MSSQL)
 msDBMutationPlan _userInfo _stringifyNum _sourceName _sourceConfig _mrf _queryTags =
-  throw500 "mutations are not supported in MSSQL; this should be unreachable"
+  throw400 NotSupported "mutations are not supported in MSSQL"
 
 
 -- subscription
