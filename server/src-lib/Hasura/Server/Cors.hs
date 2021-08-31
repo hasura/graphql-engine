@@ -18,6 +18,7 @@ import           Hasura.Prelude
 import qualified Data.Aeson           as J
 import qualified Data.Aeson.TH        as J
 import qualified Data.Attoparsec.Text as AT
+import qualified Data.Char            as C
 import qualified Data.HashSet         as Set
 import qualified Data.Text            as T
 
@@ -157,7 +158,11 @@ domainParser parser = do
 
   where
     schemeParser :: AT.Parser Text
-    schemeParser = AT.string "http://" <|> AT.string "https://"
+    schemeParser = do
+      -- supports a custom URI scheme, rather than just http:// or https:// (see OSS #5818)
+      scheme <- AT.takeWhile1 (\x -> C.isAlphaNum x || elem x ['+', '.', '-'])
+      sep <- AT.string "://"
+      return $ scheme <> sep
 
     hostPortParser :: AT.Parser Text
     hostPortParser = hostWithPortParser <|> AT.takeText

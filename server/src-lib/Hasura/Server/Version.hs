@@ -2,7 +2,6 @@
 
 module Hasura.Server.Version
   ( Version(..)
-  , getVersionFromEnvironment
 
   , HasVersion
   , currentVersion
@@ -13,18 +12,14 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.SemVer                as V
-import qualified Data.Text                  as T
-import qualified Language.Haskell.TH.Syntax as TH
+import qualified Data.SemVer           as V
+import qualified Data.Text             as T
 
-import           Control.Lens               ((^.), (^?))
-import           Data.Aeson                 (FromJSON (..), ToJSON (..))
-import           Data.FileEmbed             (makeRelativeToProject)
-import           Data.Text.Conversions      (FromText (..), ToText (..))
-import           Text.Regex.TDFA            ((=~~))
+import           Control.Lens          ((^.), (^?))
+import           Data.Aeson            (FromJSON (..), ToJSON (..))
+import           Data.Text.Conversions (FromText (..), ToText (..))
+import           Text.Regex.TDFA       ((=~~))
 
-import           Hasura.RQL.Instances       ()
-import           Hasura.Server.Utils        (getValFromEnvOrScript)
 
 data Version
   = VersionDev !Text
@@ -46,11 +41,6 @@ instance ToJSON Version where
 
 instance FromJSON Version where
   parseJSON = fmap fromText . parseJSON
-
-getVersionFromEnvironment :: TH.Q (TH.TExp Version)
-getVersionFromEnvironment = do
-  txt <- getValFromEnvOrScript "VERSION" <$> makeRelativeToProject "../scripts/get-version.sh"
-  [|| fromText $ T.dropWhileEnd (== '\n') $ T.pack $$(txt) ||]
 
 -- | Lots of random things need access to the current version. It would be very convenient to define
 -- @version :: 'Version'@ in this module and export it, and indeed, that’s what we used to do! But

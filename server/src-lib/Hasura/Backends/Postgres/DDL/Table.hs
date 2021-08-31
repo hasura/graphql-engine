@@ -33,11 +33,11 @@ import qualified Hasura.SQL.AnyBackend               as AB
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.DML
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Base.Error
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.SchemaCacheTypes
@@ -101,19 +101,22 @@ mkAllTriggersQ trn qt allCols fullspec = do
 
 data OpVar = OLD | NEW deriving (Show)
 
+-- | Formats each columns to appropriate SQL expression
 toJSONableExp :: Bool -> ColumnType ('Postgres pgKind) -> Bool -> SQLExp -> SQLExp
-toJSONableExp strfyNum colTy asText expn
+toJSONableExp strfyNum colTy  asText expn
+  -- If its a numeric column greater than a 32-bit integer, we have to stringify it as JSON spec doesn't support >32-bit integers
   | asText || (isScalarColumnWhere isBigNum colTy && strfyNum) =
     expn `SETyAnn` textTypeAnn
+  -- If the column is either a `Geometry` or `Geography` then apply the `ST_AsGeoJSON` function to convert it into GeoJSON format
   | isScalarColumnWhere isGeoType colTy =
       SEFnApp "ST_AsGeoJSON"
       [ expn
       , SEUnsafe "15" -- max decimal digits
       , SEUnsafe "4"  -- to print out crs
-      ] Nothing
-      `SETyAnn` jsonTypeAnn
+      ] Nothing `SETyAnn` jsonTypeAnn
   | otherwise = expn
 
+-- | Define the pgSQL trigger functions on database events.
 mkTriggerQ
   :: forall pgKind m
    . (Backend ('Postgres pgKind), MonadTx m, MonadReader ServerConfigCtx m)
@@ -123,23 +126,24 @@ mkTriggerQ
   -> Ops
   -> SubscribeOpSpec
   -> m ()
-mkTriggerQ trn qt@(QualifiedObject schema table) allCols op (SubscribeOpSpec columns payload) = do
+mkTriggerQ trn qt@(QualifiedObject schema table) allCols op (SubscribeOpSpec listenColumns deliveryColumns') = do
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> ask
   liftTx $ Q.multiQE defaultTxErrorHandler $ Q.fromText . TL.toStrict $
-    let payloadColumns = fromMaybe SubCStar payload
-        mkQId opVar colInfo = toJSONableExp strfyNum (pgiType colInfo) False $
-          SEQIdentifier $ QIdentifier (opToQual opVar) $ toIdentifier $ pgiColumn colInfo
-        getRowExpression opVar = case payloadColumns of
-          SubCStar -> applyRowToJson' $ SEUnsafe $ tshow opVar
-          SubCArray cols -> applyRowToJson' $
-            mkRowExp $ map (toExtr . mkQId opVar) $
-            getColInfos cols allCols
+    let
+        -- If there are no specific delivery columns selected by user then all the columns will be delivered
+        -- in payload hence 'SubCStar'.
+        deliveryColumns = fromMaybe SubCStar deliveryColumns'
+        getApplicableColumns = \case
+          SubCStar       -> allCols
+          SubCArray cols -> getColInfos cols allCols
 
-        renderRow opVar = case columns of
-          SubCStar -> applyRow $ SEUnsafe $ tshow opVar
-          SubCArray cols -> applyRow $
-            mkRowExp $ map (toExtr . mkQId opVar) $
-            getColInfos cols allCols
+        -- Columns that should be present in the payload. By default, all columns are present.
+        applicableDeliveryCols = getApplicableColumns deliveryColumns
+        getRowExpression opVar = applyRowToJson' $ mkRowExpression opVar strfyNum applicableDeliveryCols
+
+        -- Columns that user subscribed to listen for changes. By default, we listen on all columns.
+        applicableListenCols = getApplicableColumns listenColumns
+        renderRow opVar = applyRow $ mkRowExpression opVar strfyNum applicableListenCols
 
         oldDataExp = case op of
           INSERT -> SENull
@@ -168,8 +172,22 @@ mkTriggerQ trn qt@(QualifiedObject schema table) allCols op (SubscribeOpSpec col
   where
     applyRowToJson' e = SEFnApp "row_to_json" [e] Nothing
     applyRow e = SEFnApp "row" [e] Nothing
-    toExtr = flip Extractor Nothing
     opToQual = QualVar . tshow
+
+    mkRowExpression opVar strfyNum columns
+      = mkRowExp $ map (\col -> toExtractor (mkQId opVar strfyNum col) col) columns
+
+    mkQId opVar strfyNum colInfo  = toJSONableExp strfyNum (pgiType colInfo) False $
+          SEQIdentifier $ QIdentifier (opToQual opVar) $ toIdentifier $ pgiColumn colInfo
+
+    -- Generate the SQL expression
+    toExtractor sqlExp column
+      -- If the column type is either 'Geography' or 'Geometry', then after applying the 'ST_AsGeoJSON' function
+      -- to the column, alias the value of the expression with the column name else it uses `st_asgeojson` as
+      -- the column name.
+      | isScalarColumnWhere isGeoType (pgiType column) = Extractor sqlExp (Just $ getAlias column)
+      | otherwise  = Extractor sqlExp Nothing
+    getAlias col = toAlias $ Identifier $ getPGColTxt (pgiColumn col)
 
 buildEventTriggerInfo
   :: forall (pgKind :: PostgresKind) m
@@ -267,10 +285,10 @@ updateColumnInEventTrigger table oCol nCol refTable = rewriteEventTriggerConf
     rewriteSubsCols = \case
       SubCStar       -> SubCStar
       SubCArray cols -> SubCArray $ map getNewCol cols
-    rewriteOpSpec (SubscribeOpSpec cols payload) =
+    rewriteOpSpec (SubscribeOpSpec listenColumns deliveryColumns) =
       SubscribeOpSpec
-      (rewriteSubsCols cols)
-      (rewriteSubsCols <$> payload)
+      (rewriteSubsCols listenColumns)
+      (rewriteSubsCols <$> deliveryColumns)
     rewriteTrigOpsDef (TriggerOpsDef ins upd del man) =
       TriggerOpsDef
       (rewriteOpSpec <$> ins)

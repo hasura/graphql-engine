@@ -5,9 +5,7 @@
 
 module Hasura.Backends.MSSQL.ToQuery
   ( fromSelect
-  , withExplain
   , fromReselect
-  , toSQL
   , toQueryFlat
   , toQueryPretty
   , fromDelete
@@ -17,13 +15,16 @@ module Hasura.Backends.MSSQL.ToQuery
 import           Hasura.Prelude              hiding (GT, LT)
 
 import qualified Data.Text                   as T
+import qualified Data.Text.Extended          as T
+import qualified Data.Text.Lazy              as L
+import qualified Data.Text.Lazy.Builder      as L
 
+import           Data.Aeson                  (ToJSON (..))
 import           Data.List                   (intersperse)
 import           Data.String
 import           Database.ODBC.SQLServer
 
 import           Hasura.Backends.MSSQL.Types
-import           Hasura.SQL.Types            (ToSQL (..))
 
 
 --------------------------------------------------------------------------------
@@ -51,9 +52,10 @@ instance IsString Printer where
 --------------------------------------------------------------------------------
 -- Instances
 
-instance ToSQL Expression where
-  toSQL = fromString . show . toQueryFlat . fromExpression
-
+-- This is a debug instance, only here because it avoids a circular
+-- dependency between this module and Types/Instances.
+instance ToJSON Expression where
+  toJSON = toJSON . T.toTxt . toQueryFlat . fromExpression
 
 --------------------------------------------------------------------------------
 -- Printer generators
@@ -61,35 +63,34 @@ instance ToSQL Expression where
 fromExpression :: Expression -> Printer
 fromExpression =
   \case
+    CastExpression e t ->
+      "CAST(" <+> fromExpression e <+>
+      " AS " <+> fromString (T.unpack t) <+> ")"
     JsonQueryExpression e -> "JSON_QUERY(" <+> fromExpression e <+> ")"
     JsonValueExpression e path ->
-      "JSON_VALUE(" <+> fromExpression e <+> ", " <+> fromPath path <+> ")"
+      "JSON_VALUE(" <+> fromExpression e <+> fromPath path <+> ")"
     ValueExpression value -> QueryPrinter (toSql value)
     AndExpression xs ->
-      SepByPrinter
-        (NewlinePrinter <+> "AND ")
-        (toList
-           (fmap
-              (\x -> "(" <+> fromExpression x <+> ")")
-              (fromMaybe (pure trueExpression) (nonEmpty xs))))
+      case xs of
+        [] -> truePrinter
+        _ ->
+          SepByPrinter
+            (NewlinePrinter <+> "AND ")
+            (fmap (\x -> "(" <+> fromExpression x <+> ")") (toList xs))
     OrExpression xs ->
-      SepByPrinter
-        (NewlinePrinter <+> " OR ")
-        (toList
-           (fmap
-              (\x -> "(" <+> fromExpression x <+> ")")
-              (fromMaybe (pure falseExpression) (nonEmpty xs))))
+      case xs of
+        [] -> falsePrinter
+        _ ->
+          SepByPrinter
+            (NewlinePrinter <+> "OR ")
+            (fmap (\x -> "(" <+> fromExpression x <+> ")") (toList xs))
     NotExpression expression -> "NOT " <+> (fromExpression expression)
-    ExistsExpression select -> "EXISTS (" <+> fromSelect select <+> ")"
+    ExistsExpression sel     -> "EXISTS (" <+> fromSelect sel <+> ")"
     IsNullExpression expression ->
       "(" <+> fromExpression expression <+> ") IS NULL"
     IsNotNullExpression expression ->
       "(" <+> fromExpression expression <+> ") IS NOT NULL"
     ColumnExpression fieldName -> fromFieldName fieldName
-    EqualExpression x y ->
-      "(" <+> fromExpression x <+> ") = (" <+> fromExpression y <+> ")"
-    NotEqualExpression x y ->
-      "(" <+> fromExpression x <+> ") != (" <+> fromExpression y <+> ")"
     ToStringExpression e -> "CONCAT(" <+> fromExpression e <+> ", '')"
     SelectExpression s -> "(" <+> IndentPrinter 1 (fromSelect s) <+> ")"
     MethodExpression field method args ->
@@ -105,6 +106,10 @@ fromExpression =
       "(" <+> fromExpression e <+> ")." <+>
       fromString (show op) <+>
       "(" <+> fromExpression str <+> ") = 1"
+    ConditionalProjection expression fieldName ->
+      "(CASE WHEN(" <+>
+      fromExpression expression <+>
+      ") THEN " <+> fromFieldName fieldName <+> " ELSE NULL END)"
 
 fromOp :: Op -> Printer
 fromOp =
@@ -117,12 +122,20 @@ fromOp =
     NIN   -> "NOT IN"
     LIKE  -> "LIKE"
     NLIKE -> "NOT LIKE"
+    EQ'   -> "="
+    NEQ'  -> "!="
 
 fromPath :: JsonPath -> Printer
-fromPath = \case
-  RootPath      -> "$"
-  IndexPath r i -> fromPath r <+> "[" <+> fromString (show i) <+> "]"
-  FieldPath r f -> fromPath r <+> ".\"" <+> fromString (T.unpack f) <+> "\""
+fromPath path =
+  ", " <+> string path
+  where
+    string = fromExpression .
+             ValueExpression . TextValue . L.toStrict . L.toLazyText . go
+    go =
+      \case
+        RootPath      -> "$"
+        IndexPath r i -> go r <> "[" <> L.fromString (show i) <> "]"
+        FieldPath r f -> go r <> ".\"" <> L.fromText f <> "\""
 
 fromFieldName :: FieldName -> Printer
 fromFieldName (FieldName {..}) =
@@ -142,15 +155,16 @@ fromSelect Select {..} = wrapFor selectFor result
   where
     result =
       SepByPrinter
-      NewlinePrinter
+      NewlinePrinter $
       [ "SELECT " <+>
         IndentPrinter
           7
           (SepByPrinter
              ("," <+> NewlinePrinter)
              (map fromProjection (toList selectProjections)))
-      , "FROM " <+> IndentPrinter 5 (fromFrom selectFrom)
-      , SepByPrinter
+      ] <>
+      [ "FROM " <+> IndentPrinter 5 (fromFrom f) | Just f <- [selectFrom] ] <>
+      [ SepByPrinter
           NewlinePrinter
           (map
              (\Join {..} ->
@@ -168,19 +182,10 @@ fromSelect Select {..} = wrapFor selectFor result
       , fromFor selectFor
       ]
 
-withExplain :: Printer -> Printer
-withExplain p =
-  SepByPrinter
-    NewlinePrinter
-      [ "SET SHOWPLAN_TEXT ON"
-      , p
-      , "SET SHOWPLAN_TEXT OFF"
-      ]
-
 fromJoinSource :: JoinSource -> Printer
 fromJoinSource =
   \case
-    JoinSelect select     -> fromSelect select
+    JoinSelect sel        -> fromSelect sel
     JoinReselect reselect -> fromReselect reselect
 
 fromReselect :: Reselect -> Printer
@@ -195,8 +200,8 @@ fromReselect Reselect {..} = wrapFor reselectFor result
             (SepByPrinter
                ("," <+> NewlinePrinter)
                (map fromProjection (toList reselectProjections)))
-        , fromFor reselectFor
         , fromWhere reselectWhere
+        , fromFor reselectFor
         ]
 
 fromOrderBys ::
@@ -210,7 +215,15 @@ fromOrderBys top moffset morderBys =
         (SepByPrinter
            NewlinePrinter
            [ case morderBys of
-               Nothing -> "1"
+               -- If you ORDER BY 1, a text field will signal an
+               -- error. What we want instead is to just order by
+               -- nothing, but also satisfy the syntactic
+               -- requirements. Thus ORDER BY (SELECT NULL).
+               --
+               -- This won't create consistent orderings, but that's
+               -- why you should specify an order_by in your GraphQL
+               -- query anyway, to define the ordering.
+               Nothing -> "(SELECT NULL) /* ORDER BY is required for OFFSET */"
                Just orderBys ->
                  SepByPrinter
                    ("," <+> NewlinePrinter)
@@ -221,11 +234,11 @@ fromOrderBys top moffset morderBys =
                  "OFFSET " <+> fromExpression offset <+> " ROWS"
                (Top n, Nothing) ->
                  "OFFSET 0 ROWS FETCH NEXT " <+>
-                 QueryPrinter (toSql n) <+> " ROWS ONLY"
+                 QueryPrinter (toSql (IntValue n)) <+> " ROWS ONLY"
                (Top n, Just offset) ->
                  "OFFSET " <+>
                  fromExpression offset <+>
-                 " ROWS FETCH NEXT " <+> QueryPrinter (toSql n) <+> " ROWS ONLY"
+                 " ROWS FETCH NEXT " <+> QueryPrinter (toSql (IntValue n)) <+> " ROWS ONLY"
            ])
     ]
 
@@ -233,8 +246,26 @@ fromOrderBys top moffset morderBys =
 fromOrderBy :: OrderBy -> [Printer]
 fromOrderBy OrderBy {..} =
   [ fromNullsOrder orderByFieldName orderByNullsOrder
-  , fromFieldName orderByFieldName <+> " " <+> fromOrder orderByOrder
+    -- Above: This doesn't do anything when using text, ntext or image
+    -- types. See below on CAST commentary.
+  , wrapNullHandling (fromFieldName orderByFieldName) <+>
+    " " <+> fromOrder orderByOrder
   ]
+  where
+    wrapNullHandling inner =
+      case orderByType of
+        Just TextType  -> castTextish inner
+        Just WtextType -> castTextish inner
+        -- Above: For some types, we have to do null handling manually
+        -- ourselves:
+        _              -> inner
+    -- Direct quote from SQL Server error response:
+    --
+    -- > The text, ntext, and image data types cannot be compared or
+    -- > sorted, except when using IS NULL or LIKE operator.
+    --
+    -- So we cast it to a varchar, maximum length.
+    castTextish inner = "CAST(" <+> inner <+> " AS VARCHAR(MAX))"
 
 fromOrder :: Order -> Printer
 fromOrder =
@@ -259,7 +290,7 @@ fromFor =
   \case
     NoFor -> ""
     JsonFor ForJson {jsonCardinality} ->
-      "FOR JSON PATH" <+>
+      "FOR JSON PATH, INCLUDE_NULL_VALUES" <+>
       case jsonCardinality of
         JsonArray     -> ""
         JsonSingleton -> ", WITHOUT_ARRAY_WRAPPER"
@@ -279,7 +310,9 @@ fromAggregate :: Aggregate -> Printer
 fromAggregate =
   \case
     CountAggregate countable -> "COUNT(" <+> fromCountable countable <+> ")"
-    OpAggregate text args ->
+    OpAggregate _text args ->
+      "(" <+> SepByPrinter ", " (map fromExpression (toList args)) <+> ")"
+    JsonQueryOpAggregate text args ->
       QueryPrinter (rawUnescapedText text) <+>
       "(" <+> SepByPrinter ", " (map fromExpression (toList args)) <+> ")"
     TextAggregate text -> fromExpression (ValueExpression (TextValue text))
@@ -297,16 +330,33 @@ fromCountable =
 fromWhere :: Where -> Printer
 fromWhere =
   \case
-    Where expressions ->
-      case (filter ((/= trueExpression) . collapse)) expressions of
-        [] -> ""
-        collapsedExpressions ->
-          "WHERE " <+>
-          IndentPrinter 6 (fromExpression (AndExpression collapsedExpressions))
-      where collapse (AndExpression [x]) = collapse x
-            collapse (AndExpression [])  = trueExpression
-            collapse (OrExpression [x])  = collapse x
-            collapse x                   = x
+    Where expressions
+      | Just whereExp <- collapseWhere (AndExpression expressions) ->
+        "WHERE " <+> IndentPrinter 6 (fromExpression whereExp)
+      | otherwise -> ""
+
+-- Drop useless examples like this from the output:
+--
+-- WHERE (((1<>1))
+--       AND ((1=1)))
+--       AND ((1=1))
+--
+-- And
+--
+-- WHERE ((1<>1))
+--
+-- They're redundant, but make the output less readable.
+collapseWhere :: Expression -> Maybe Expression
+collapseWhere = go
+  where
+    go =
+      \case
+        ValueExpression (BoolValue True) -> Nothing
+        AndExpression xs ->
+          case mapMaybe go xs of
+            [] -> Nothing
+            ys -> pure (AndExpression ys)
+        e -> pure e
 
 fromFrom :: From -> Printer
 fromFrom =
@@ -314,6 +364,7 @@ fromFrom =
     FromQualifiedTable aliasedQualifiedTableName ->
       fromAliased (fmap fromTableName aliasedQualifiedTableName)
     FromOpenJson openJson -> fromAliased (fmap fromOpenJson openJson)
+    FromSelect select -> fromAliased (fmap (parens . fromSelect) select)
 
 fromOpenJson :: OpenJson -> Printer
 fromOpenJson OpenJson {openJsonExpression, openJsonWith} =
@@ -321,13 +372,14 @@ fromOpenJson OpenJson {openJsonExpression, openJsonWith} =
     NewlinePrinter
     [ "OPENJSON(" <+>
       IndentPrinter 9 (fromExpression openJsonExpression) <+> ")"
-    , "WITH (" <+>
-      IndentPrinter
-        5
-        (SepByPrinter
-           ("," <+> NewlinePrinter)
-           (toList (fmap fromJsonFieldSpec openJsonWith))) <+>
-      ")"
+    , case openJsonWith of
+        Nothing -> ""
+        Just openJsonWith' -> "WITH (" <+>
+          IndentPrinter
+            5
+            (SepByPrinter
+               ("," <+> NewlinePrinter)
+               (fmap fromJsonFieldSpec $ toList openJsonWith')) <+> ")"
     ]
 
 fromJsonFieldSpec :: JsonFieldSpec -> Printer
@@ -338,7 +390,11 @@ fromJsonFieldSpec =
     UuidField name mPath   -> fromNameText name <+> " UNIQUEIDENTIFIER" <+> quote mPath
     JsonField name mPath   -> fromJsonFieldSpec (StringField name mPath) <+> " AS JSON"
     where
-      quote mPath = maybe "" ((\p -> " '" <+> p <+> "'"). fromPath) mPath
+      quote mPath = maybe "" ((\p -> " '" <+> p <+> "'"). go) mPath
+      go = \case
+        RootPath      -> "$"
+        IndexPath r i -> go r <+> "[" <+> fromString (show i) <+> "]"
+        FieldPath r f -> go r <+> ".\"" <+> fromString (T.unpack f) <+> "\""
 
 fromTableName :: TableName -> Printer
 fromTableName TableName {tableName, tableSchema} =
@@ -352,11 +408,14 @@ fromAliased Aliased {..} =
 fromNameText :: Text -> Printer
 fromNameText t = QueryPrinter (rawUnescapedText ("[" <> t <> "]"))
 
-trueExpression :: Expression
-trueExpression = ValueExpression (BoolValue True)
+truePrinter :: Printer
+truePrinter = "(1=1)"
 
-falseExpression :: Expression
-falseExpression = ValueExpression (BoolValue False)
+falsePrinter :: Printer
+falsePrinter = "(1<>1)"
+
+parens :: Printer -> Printer
+parens p = "(" <+> IndentPrinter 1 p <+> ")"
 
 -- | Wrap a select with things needed when using FOR JSON.
 wrapFor :: For -> Printer -> Printer

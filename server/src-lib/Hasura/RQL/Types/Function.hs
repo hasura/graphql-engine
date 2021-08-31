@@ -2,20 +2,17 @@ module Hasura.RQL.Types.Function where
 
 import           Hasura.Prelude
 
-import qualified Data.HashSet                       as Set
-import qualified Data.Sequence                      as Seq
-import qualified Data.Text                          as T
+import qualified Data.Sequence            as Seq
+import qualified Data.Text                as T
 
 import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Char                          (toLower)
+import           Data.Char                (toLower)
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.Types as PG
-
-import           Hasura.Incremental                 (Cacheable)
+import           Hasura.Incremental       (Cacheable)
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
@@ -42,10 +39,10 @@ instance Show FunctionVolatility where
 
 newtype FunctionArgName =
   FunctionArgName { getFuncArgNameTxt :: Text}
-  deriving (Show, Eq, NFData, ToJSON, FromJSON, ToTxt, IsString, Generic, Arbitrary, Cacheable)
+  deriving (Show, Eq, NFData, ToJSON, FromJSON, ToTxt, IsString, Generic, Cacheable, Hashable)
 
 newtype HasDefault = HasDefault { unHasDefault :: Bool }
-  deriving (Show, Eq, ToJSON, Cacheable)
+  deriving (Show, Eq, ToJSON, Cacheable, NFData, Hashable)
 
 data FunctionArg (b :: BackendType)
   = FunctionArg
@@ -56,6 +53,8 @@ data FunctionArg (b :: BackendType)
 deriving instance Backend b => Show (FunctionArg b)
 deriving instance Backend b => Eq   (FunctionArg b)
 instance Backend b => Cacheable (FunctionArg b)
+instance Backend b => NFData (FunctionArg b)
+instance Backend b => Hashable (FunctionArg b)
 instance (Backend b) => ToJSON (FunctionArg b) where
   toJSON = genericToJSON hasuraJSON
 
@@ -73,7 +72,6 @@ $(makePrisms ''InputArgument)
 
 type FunctionInputArgument b = InputArgument (FunctionArg b)
 
-
 -- | Indicates whether the user requested the corresponding function to be
 -- tracked as a mutation or a query/subscription, in @track_function@.
 data FunctionExposedAs = FEAQuery | FEAMutation
@@ -85,6 +83,15 @@ $(deriveJSON
     defaultOptions{ sumEncoding = UntaggedValue, constructorTagModifier = map toLower . drop 3 }
     ''FunctionExposedAs)
 
+newtype FunctionPermissionInfo
+  = FunctionPermissionInfo
+  { _fpmRole       :: RoleName
+  } deriving (Show, Eq, Generic)
+instance Cacheable FunctionPermissionInfo
+$(makeLenses ''FunctionPermissionInfo)
+$(deriveJSON hasuraJSON ''FunctionPermissionInfo)
+
+type FunctionPermissionsMap = HashMap RoleName FunctionPermissionInfo
 
 -- | Tracked SQL function metadata. See 'buildFunctionInfo'.
 data FunctionInfo (b :: BackendType)
@@ -101,8 +108,8 @@ data FunctionInfo (b :: BackendType)
   -- ^ NOTE: when a table is created, a new composite type of the same name is
   -- automatically created; so strictly speaking this field means "the function
   -- returns the composite type corresponding to this table".
-  , _fiDescription   :: !(Maybe PG.PGDescription) -- FIXME: make generic
-  , _fiPermissions   :: !(Set.HashSet RoleName)
+  , _fiDescription   :: !(Maybe Text)
+  , _fiPermissions   :: !FunctionPermissionsMap
   , _fiJsonAggSelect :: !JsonAggSelect
   -- ^ Roles to which the function is accessible
   } deriving (Generic)
@@ -141,49 +148,8 @@ emptyFunctionConfig :: FunctionConfig
 emptyFunctionConfig = FunctionConfig Nothing Nothing
 
 
--- | JSON API payload for v2 of 'track_function':
---
--- https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#track-function-v2
-data TrackFunctionV2 (b :: BackendType)
-  = TrackFunctionV2
-  { _tfv2Source        :: !SourceName
-  , _tfv2Function      :: !(FunctionName b)
-  , _tfv2Configuration :: !FunctionConfig
-  } deriving (Generic)
-deriving instance Backend b => Show (TrackFunctionV2 b)
-deriving instance Backend b => Eq   (TrackFunctionV2 b)
-
-instance Backend b => ToJSON (TrackFunctionV2 b) where
-  toJSON = genericToJSON hasuraJSON
-
-instance Backend b => FromJSON (TrackFunctionV2 b) where
-  parseJSON = withObject "Object" $ \o ->
-    TrackFunctionV2
-    <$> o .:? "source" .!= defaultSource
-    <*> o .: "function"
-    <*> o .:? "configuration" .!= emptyFunctionConfig
-
--- | Raw SQL function metadata from postgres
-data RawFunctionInfo
-  = RawFunctionInfo
-  { rfiOid              :: !OID
-  , rfiHasVariadic      :: !Bool
-  , rfiFunctionType     :: !FunctionVolatility
-  , rfiReturnTypeSchema :: !PG.SchemaName
-  , rfiReturnTypeName   :: !PG.PGScalarType
-  , rfiReturnTypeType   :: !PG.PGTypeKind
-  , rfiReturnsSet       :: !Bool
-  , rfiInputArgTypes    :: ![PG.QualifiedPGType]
-  , rfiInputArgNames    :: ![FunctionArgName]
-  , rfiDefaultArgs      :: !Int
-  , rfiReturnsTable     :: !Bool
-  , rfiDescription      :: !(Maybe PG.PGDescription)
-  } deriving (Show, Eq, Generic)
-instance NFData RawFunctionInfo
-instance Cacheable RawFunctionInfo
-$(deriveJSON hasuraJSON ''RawFunctionInfo)
-
-type DBFunctionsMetadata b = HashMap (FunctionName b) [RawFunctionInfo] -- TODO: Generalize RawFunctionInfo
+-- Lists are used to model overloaded functions.
+type DBFunctionsMetadata b = HashMap (FunctionName b) [RawFunctionInfo b]
 
 data FunctionPermissionsCtx
   = FunctionPermissionsInferred
@@ -198,11 +164,3 @@ instance ToJSON FunctionPermissionsCtx where
   toJSON = \case
     FunctionPermissionsInferred -> Bool True
     FunctionPermissionsManual   -> Bool False
-
-newtype FunctionPermissionMetadata
-  = FunctionPermissionMetadata
-  { _fpmRole       :: RoleName
-  } deriving (Show, Eq, Generic)
-instance Cacheable FunctionPermissionMetadata
-$(makeLenses ''FunctionPermissionMetadata)
-$(deriveJSON hasuraJSON ''FunctionPermissionMetadata)

@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { push } from 'react-router-redux';
 import GraphiQL from 'graphiql';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -165,7 +164,7 @@ class GraphiQLWrapper extends Component {
       );
       dispatch(setTypeDefinition(typesSdl, null, null, sdlParse(typesSdl)));
       dispatch(setDerivedActionParentOperation(query.trim()));
-      dispatch(push(getActionsCreateRoute()));
+      dispatch(_push(getActionsCreateRoute()));
     };
 
     const routeToREST = gqlProps => () => {

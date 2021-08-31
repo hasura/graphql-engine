@@ -1,3 +1,5 @@
+import { addSource } from './../../../../metadata/sourcesUtils';
+import { isObject, isEqual } from './../../../Common/utils/jsUtils';
 import { Table } from '../../../../dataSources/types';
 import { MetadataDataSource } from '../../../../metadata/types';
 
@@ -38,6 +40,31 @@ export const getDatasourceURL = (
   return link.from_env.toString();
 };
 
+export function parsePgUrl(
+  url: string
+): Partial<Omit<URL, 'searchParams' | 'toJSON'>> {
+  try {
+    const protocol = new URL(url).protocol;
+    const newUrl = url.replace(protocol, 'http://');
+    const parsed = new URL(newUrl);
+    return {
+      origin: parsed.origin.replace('http:', protocol),
+      hash: parsed.hash,
+      host: parsed.host,
+      hostname: parsed.hostname,
+      port: parsed.port,
+      href: parsed.href.replace('http:', protocol),
+      password: parsed.password,
+      pathname: parsed.pathname,
+      search: parsed.search,
+      username: parsed.username,
+      protocol,
+    };
+  } catch (error) {
+    return {};
+  }
+}
+
 type TableType = Record<string, { table_type: Table['table_type'] }>;
 type SchemaType = Record<string, TableType>;
 type SourceSchemasType = Record<string, SchemaType>;
@@ -66,19 +93,25 @@ export const canReUseTableTypes = (
   );
 };
 
-export const readFile = (
-  file: File | null,
-  callback: (content: string) => void
+export type AddSourceArg = ReturnType<typeof addSource>['args'];
+
+export const dataSourceIsEqual = (
+  sourceFromMetaData: MetadataDataSource,
+  data: AddSourceArg
 ) => {
-  const reader = new FileReader();
-  reader.onload = event => {
-    const content = event.target!.result as string;
-    callback(content);
-  };
+  const ignoreFields = ['tables', 'kind', 'name', 'replace_configuration'];
 
-  reader.onerror = event => {
-    console.error(`File could not be read! Code ${event.target!.error!.code}`);
-  };
+  const filterFields = (obj: Record<string, any>) =>
+    Object.entries(obj).reduce((acc: Record<string, any>, [key, value]) => {
+      if (value !== null && !ignoreFields.includes(key)) {
+        if (isObject(value)) {
+          acc[key] = filterFields(value);
+        } else {
+          acc[key] = value;
+        }
+      }
+      return acc;
+    }, {});
 
-  if (file) reader.readAsText(file);
+  return isEqual(filterFields(sourceFromMetaData), filterFields(data));
 };

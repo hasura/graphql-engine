@@ -7,20 +7,38 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , runDeleteScheduledEvent
   , runGetScheduledEvents
   , runGetEventInvocations
+  , populateInitialCronTriggerEvents
   ) where
 
-import           Hasura.Backends.Postgres.DDL.Table (getHeaderInfosFromConf)
-import           Hasura.EncJSON
-import           Hasura.Eventing.ScheduledTrigger
-import           Hasura.Metadata.Class
+import           System.Cron.Types                  (CronSchedule)
+
 import           Hasura.Prelude
-import           Hasura.RQL.Types
 
 import qualified Data.Aeson                         as J
 import qualified Data.Environment                   as Env
 import qualified Data.HashMap.Strict                as Map
 import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.Time.Clock                    as C
+
+import           Hasura.Backends.Postgres.DDL.Table (getHeaderInfosFromConf)
+import           Hasura.Base.Error
+import           Hasura.EncJSON
+import           Hasura.Eventing.ScheduledTrigger
+import           Hasura.Metadata.Class
+import           Hasura.RQL.Types
+
+populateInitialCronTriggerEvents
+  :: ( MonadIO m
+     , MonadMetadataStorageQueryAPI m
+     )
+  => CronSchedule
+  -> TriggerName
+  -> m ()
+populateInitialCronTriggerEvents schedule triggerName = do
+  currentTime <- liftIO C.getCurrentTime
+  let scheduleTimes = generateScheduleTimes currentTime 100 schedule
+  createScheduledEvent $ SESCron $ map (CronEventSeed triggerName) scheduleTimes
+  pure ()
 
 -- | runCreateCronTrigger will update a existing cron trigger when the 'replace'
 --   value is set to @true@ and when replace is @false@ a new cron trigger will
@@ -57,9 +75,7 @@ runCreateCronTrigger CreateCronTrigger {..} = do
         buildSchemaCacheFor metadataObj
           $ MetadataModifier
           $ metaCronTriggers %~ OMap.insert cctName metadata
-        currentTime <- liftIO C.getCurrentTime
-        let scheduleTimes = generateScheduleTimes currentTime 100 cctCronSchedule -- generate next 100 events
-        createScheduledEvent $ SESCron $ map (CronEventSeed cctName) scheduleTimes
+        populateInitialCronTriggerEvents cctCronSchedule cctName
         return successMsg
 
 resolveCronTrigger
@@ -92,7 +108,7 @@ updateCronTrigger cronTriggerMetadata = do
   buildSchemaCacheFor (MOCronTrigger triggerName)
     $ MetadataModifier
     $ metaCronTriggers %~ OMap.insert triggerName cronTriggerMetadata
-  dropFutureCronEvents triggerName
+  dropFutureCronEvents $ SingleCronTrigger triggerName
   currentTime <- liftIO C.getCurrentTime
   let scheduleTimes = generateScheduleTimes currentTime 100 $ ctSchedule cronTriggerMetadata
   createScheduledEvent $ SESCron $ map (CronEventSeed triggerName) scheduleTimes
@@ -109,7 +125,7 @@ runDeleteCronTrigger (ScheduledTriggerName stName) = do
   withNewInconsistentObjsCheck
     $ buildSchemaCache
     $ dropCronTriggerInMetadata stName
-  dropFutureCronEvents stName
+  dropFutureCronEvents $ SingleCronTrigger stName
   return successMsg
 
 dropCronTriggerInMetadata :: TriggerName -> MetadataModifier

@@ -17,6 +17,7 @@ module Hasura.RQL.Types
   , askSourceTables
   , askTableCache
   , askTabInfo
+  , askTableMetadata
   , askTabInfoSource
   , askTableCoreInfo
   , askTableCoreInfoSource
@@ -27,48 +28,52 @@ module Hasura.RQL.Types
   , askComputedFieldInfo
   , askRemoteRel
   , findTable
+  , throwTableDoesNotExist
   , module R
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                 as M
-import qualified Database.PG.Query                   as Q
+import qualified Data.HashMap.Strict                         as M
+import qualified Database.PG.Query                           as Q
 
-import           Control.Lens                        (at, (^.))
+import           Control.Lens                                (Traversal', at, preview, (^.))
 import           Control.Monad.Unique
 import           Data.Text.Extended
-import           Network.HTTP.Client.Extended        (HasHttpManagerM (..))
+import           Network.HTTP.Client.Extended                (HasHttpManagerM (..))
 
-import           Hasura.Backends.Postgres.Connection as R
-import           Hasura.RQL.IR.BoolExp               as R
-import           Hasura.RQL.Types.Action             as R
-import           Hasura.RQL.Types.ApiLimit           as R
-import           Hasura.RQL.Types.Backend            as R
-import           Hasura.RQL.Types.Column             as R
-import           Hasura.RQL.Types.Common             as R
-import           Hasura.RQL.Types.ComputedField      as R
-import           Hasura.RQL.Types.CustomTypes        as R
-import           Hasura.RQL.Types.Endpoint           as R
-import           Hasura.RQL.Types.Error              as R
-import           Hasura.RQL.Types.EventTrigger       as R
-import           Hasura.RQL.Types.Function           as R
-import           Hasura.RQL.Types.InheritedRoles     as R
-import           Hasura.RQL.Types.Metadata           as R
-import           Hasura.RQL.Types.Metadata.Backend   as R
-import           Hasura.RQL.Types.Metadata.Object    as R
-import           Hasura.RQL.Types.Permission         as R
-import           Hasura.RQL.Types.QueryCollection    as R
-import           Hasura.RQL.Types.Relationship       as R
-import           Hasura.RQL.Types.RemoteRelationship as R
-import           Hasura.RQL.Types.RemoteSchema       as R
-import           Hasura.RQL.Types.ScheduledTrigger   as R
-import           Hasura.RQL.Types.SchemaCache        as R
-import           Hasura.RQL.Types.SchemaCache.Build  as R
-import           Hasura.RQL.Types.SchemaCacheTypes   as R
-import           Hasura.RQL.Types.Source             as R
-import           Hasura.RQL.Types.Table              as R
-import           Hasura.SQL.Backend                  as R
+import           Hasura.Backends.Postgres.Connection         as R
+import           Hasura.Base.Error
+import           Hasura.RQL.IR.BoolExp                       as R
+import           Hasura.RQL.Types.Action                     as R
+import           Hasura.RQL.Types.ApiLimit                   as R
+import           Hasura.RQL.Types.Backend                    as R
+import           Hasura.RQL.Types.Column                     as R
+import           Hasura.RQL.Types.Common                     as R
+import           Hasura.RQL.Types.ComputedField              as R
+import           Hasura.RQL.Types.CustomTypes                as R
+import           Hasura.RQL.Types.Endpoint                   as R
+import           Hasura.RQL.Types.EventTrigger               as R
+import           Hasura.RQL.Types.Function                   as R
+import           Hasura.RQL.Types.GraphqlSchemaIntrospection as R
+import           Hasura.RQL.Types.Metadata                   as R
+import           Hasura.RQL.Types.Metadata.Backend           as R
+import           Hasura.RQL.Types.Metadata.Object            as R
+import           Hasura.RQL.Types.Network                    as R
+import           Hasura.RQL.Types.Permission                 as R
+import           Hasura.RQL.Types.QueryCollection            as R
+import           Hasura.RQL.Types.QueryTags                  as R
+import           Hasura.RQL.Types.Relationship               as R
+import           Hasura.RQL.Types.RemoteRelationship         as R
+import           Hasura.RQL.Types.RemoteSchema               as R
+import           Hasura.RQL.Types.Roles                      as R
+import           Hasura.RQL.Types.ScheduledTrigger           as R
+import           Hasura.RQL.Types.SchemaCache                as R
+import           Hasura.RQL.Types.SchemaCache.Build          as R
+import           Hasura.RQL.Types.SchemaCacheTypes           as R
+import           Hasura.RQL.Types.Source                     as R
+import           Hasura.RQL.Types.Table                      as R
+import           Hasura.SQL.Backend                          as R
 import           Hasura.Server.Types
 import           Hasura.Session
 import           Hasura.Tracing
@@ -81,7 +86,7 @@ askSourceInfo
   -> m (SourceInfo b)
 askSourceInfo sourceName = do
   sources <- scSources <$> askSchemaCache
-  onNothing (unsafeSourceInfo =<< M.lookup sourceName sources) $ do
+  onNothing (unsafeSourceInfo @b =<< M.lookup sourceName sources) $ do
     -- FIXME: this error can also happen for a lookup with the wrong type
     metadata <- getMetadata
     case metadata ^. metaSources . at sourceName of
@@ -95,7 +100,7 @@ askSourceConfig
    . (CacheRM m, MonadError QErr m, Backend b, MetadataM m)
   => SourceName
   -> m (SourceConfig b)
-askSourceConfig = fmap (_siConfiguration @b) . askSourceInfo
+askSourceConfig = fmap _siConfiguration . askSourceInfo @b
 
 askSourceTables
   :: forall b m
@@ -128,12 +133,37 @@ askTabInfoSource
 askTabInfoSource tableName = do
   lookupTableInfo tableName >>= (`onNothing` (throwTableDoesNotExist @b) tableName)
 
+-- | Retrieve 'TableMetadata' from the stateful 'MetadataM' environment that is
+-- associated with the given 'SourceName' and 'TableName' for a particular 'Backend'.
+askTableMetadata
+  :: forall b m
+   . (QErrM m, MetadataM m, Backend b, BackendMetadata b)
+  => SourceName
+  -> TableName b
+  -> m (TableMetadata b)
+askTableMetadata sourceName tableName = do
+  tableMetadataMaybe <- getMetadata <&> preview focusTableMetadata
+  tableMetadataMaybe `onNothing`
+    throwTableDoesNotExist @b tableName
+  where
+    -- | Focus on all 'TableMetadata' elements associated with the given 'Backend'
+    -- for the provided @sourceName@ and @tableName@.
+    focusTableMetadata :: Traversal' Metadata (TableMetadata b)
+    focusTableMetadata =
+      metaSources
+      . ix sourceName
+      . toSourceMetadata @b
+      . smTables
+      . ix tableName
 
 class (Monad m) => HasServerConfigCtx m where
   askServerConfigCtx :: m ServerConfigCtx
 
 instance (HasServerConfigCtx m)
          => HasServerConfigCtx (ReaderT r m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (HasServerConfigCtx m)
+         => HasServerConfigCtx (ExceptT e m) where
   askServerConfigCtx = lift askServerConfigCtx
 instance (HasServerConfigCtx m)
          => HasServerConfigCtx (StateT s m) where
@@ -294,4 +324,3 @@ askRemoteRel fieldInfoMap relName = do
     (FIRemoteRelationship remoteFieldInfo) -> return remoteFieldInfo
     _                                      ->
       throw400 UnexpectedPayload "expecting a remote relationship"
-

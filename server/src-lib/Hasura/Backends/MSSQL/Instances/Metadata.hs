@@ -11,7 +11,6 @@ import           Hasura.SQL.Backend
 
 instance BackendMetadata 'MSSQL where
   buildComputedFieldInfo     = MSSQL.buildComputedFieldInfo
-  buildRemoteFieldInfo       = MSSQL.buildRemoteFieldInfo
   fetchAndValidateEnumValues = MSSQL.fetchAndValidateEnumValues
   resolveSourceConfig        = MSSQL.resolveSourceConfig
   resolveDatabaseMetadata    = MSSQL.resolveDatabaseMetadata

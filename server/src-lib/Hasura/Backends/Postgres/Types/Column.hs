@@ -2,7 +2,6 @@ module Hasura.Backends.Postgres.Types.Column where
 
 import           Hasura.Backends.Postgres.Instances.Types ()
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.RQL.Instances                     ()
 import           Hasura.RQL.Types.Column
 import           Hasura.SQL.Backend
 

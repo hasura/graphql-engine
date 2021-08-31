@@ -38,9 +38,9 @@ Options
 
 ::
 
-      --dry-run     show a diff instead of applying the metadata
-      --from-file   apply metadata from migrations/metadata.[yaml|json]
-  -h, --help        help for apply
+      --dry-run         show metadata generated from project directory without applying to server.  generated metadata will be printed as JSON by default, use -o flag for other display formats
+  -h, --help            help for apply
+  -o, --output string   specify an output format to show applied metadata. Allowed values: json, yaml (default "json")
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

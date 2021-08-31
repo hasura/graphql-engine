@@ -8,9 +8,13 @@ module Hasura.Backends.BigQuery.FromIr
   , Error(..)
   , runFromIr
   , FromIr
-  , jsonFieldName
+  , FromIrConfig(..)
+  , defaultFromIrConfig
+  , bigQuerySourceConfigToFromIrConfig
+  , Top(..) -- Re-export for FromIrConfig.
   ) where
 
+import           Hasura.Backends.BigQuery.Source          (BigQuerySourceConfig (..))
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                      as HM
@@ -22,10 +26,7 @@ import           Control.Monad.Validate
 import           Data.Map.Strict                          (Map)
 import           Data.Proxy
 
-import qualified Hasura.GraphQL.Context                   as GraphQL
-import qualified Hasura.RQL.IR.BoolExp                    as Ir
-import qualified Hasura.RQL.IR.OrderBy                    as Ir
-import qualified Hasura.RQL.IR.Select                     as Ir
+import qualified Hasura.RQL.IR                            as Ir
 import qualified Hasura.RQL.Types.Column                  as Rql
 import qualified Hasura.RQL.Types.Common                  as Rql
 import qualified Hasura.RQL.Types.Relationship            as Rql
@@ -43,12 +44,12 @@ data Error
   = FromTypeUnsupported (Ir.SelectFromG 'BigQuery Expression)
   | NoOrderSpecifiedInOrderBy
   | MalformedAgg
-  | FieldTypeUnsupportedForNow (Ir.AnnFieldG 'BigQuery Expression)
-  | AggTypeUnsupportedForNow (Ir.TableAggregateFieldG 'BigQuery Expression)
-  | NodesUnsupportedForNow (Ir.TableAggregateFieldG 'BigQuery Expression)
+  | FieldTypeUnsupportedForNow (Ir.AnnFieldG 'BigQuery (Const Void) Expression)
+  | AggTypeUnsupportedForNow (Ir.TableAggregateFieldG 'BigQuery (Const Void) Expression)
+  | NodesUnsupportedForNow (Ir.TableAggregateFieldG 'BigQuery (Const Void) Expression)
   | NoProjectionFields
   | NoAggregatesMustBeABug
-  | UnsupportedArraySelect (Ir.ArraySelectG 'BigQuery Expression)
+  | UnsupportedArraySelect (Ir.ArraySelectG 'BigQuery (Const Void) Expression)
   | UnsupportedOpExpG (Ir.OpExpG 'BigQuery Expression)
   | UnsupportedSQLExp Expression
   | UnsupportedDistinctOn
@@ -92,8 +93,27 @@ instance Show Error where
 -- setting the current entity that a given field name refers to. See
 -- @fromPGCol@.
 newtype FromIr a = FromIr
-  { unFromIr :: StateT (Map Text Int) (Validate (NonEmpty Error)) a
+  { unFromIr :: ReaderT FromIrReader (StateT FromIrState (Validate (NonEmpty Error))) a
   } deriving (Functor, Applicative, Monad, MonadValidate (NonEmpty Error))
+
+data FromIrState = FromIrState
+  { indices :: !(Map Text Int)
+  }
+
+data FromIrReader = FromIrReader
+  { config :: !FromIrConfig
+  }
+
+-- | Config values for the from-IR translator.
+data FromIrConfig = FromIrConfig
+  { globalSelectLimit :: !Top
+    -- ^ Applies globally to all selects, and may be reduced to
+    -- something even smaller by permission/user args.
+  }
+
+-- | A default config.
+defaultFromIrConfig :: FromIrConfig
+defaultFromIrConfig = FromIrConfig {globalSelectLimit = NoTop}
 
 data StringifyNumbers
   = StringifyNumbers
@@ -103,41 +123,49 @@ data StringifyNumbers
 --------------------------------------------------------------------------------
 -- Runners
 
-runFromIr :: FromIr a -> Validate (NonEmpty Error) a
-runFromIr fromIr = evalStateT (unFromIr fromIr) mempty
+runFromIr :: FromIrConfig -> FromIr a -> Validate (NonEmpty Error) a
+runFromIr config fromIr =
+  evalStateT
+    (runReaderT (unFromIr fromIr) (FromIrReader {config}))
+    (FromIrState {indices = mempty})
+
+bigQuerySourceConfigToFromIrConfig :: BigQuerySourceConfig -> FromIrConfig
+bigQuerySourceConfigToFromIrConfig BigQuerySourceConfig {_scGlobalSelectLimit} =
+  FromIrConfig {globalSelectLimit = Top _scGlobalSelectLimit}
 
 --------------------------------------------------------------------------------
 -- Similar rendition of old API
 
-mkSQLSelect ::
-     Rql.JsonAggSelect
-  -> Ir.AnnSelectG 'BigQuery (Ir.AnnFieldsG 'BigQuery Expression) Expression
+-- | Here is where we apply a top-level annotation to the select to
+-- indicate to the data loader that this select ought to produce a
+-- single object or an array.
+mkSQLSelect
+  :: Rql.JsonAggSelect
+  -> Ir.AnnSelectG 'BigQuery (Const Void) (Ir.AnnFieldG 'BigQuery (Const Void)) Expression
   -> FromIr BigQuery.Select
-mkSQLSelect jsonAggSelect annSimpleSel =
-  case jsonAggSelect of
-    Rql.JASMultipleRows -> fromSelectRows annSimpleSel
-    Rql.JASSingleObject -> do
-      select <- fromSelectRows annSimpleSel
-      pure
-        select
-          { selectFor =
-              JsonFor
-                ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot}
-          , selectTop = Top 1
-          }
+mkSQLSelect jsonAggSelect annSimpleSel = do
+  select <- fromSelectRows annSimpleSel
+  pure
+    (select
+       { selectCardinality =
+           case jsonAggSelect of
+             Rql.JASMultipleRows -> Many
+             Rql.JASSingleObject -> One
+       })
 
 -- | Convert from the IR database query into a select.
-fromRootField :: GraphQL.QueryDB 'BigQuery Expression -> FromIr Select
+fromRootField :: Ir.QueryDB 'BigQuery (Const Void) Expression -> FromIr Select
 fromRootField =
   \case
-    (GraphQL.QDBSingleRow s)    -> mkSQLSelect Rql.JASSingleObject s
-    (GraphQL.QDBMultipleRows s) -> mkSQLSelect Rql.JASMultipleRows s
-    (GraphQL.QDBAggregation s)  -> fromSelectAggregate s
+    (Ir.QDBSingleRow s)    -> mkSQLSelect Rql.JASSingleObject s
+    (Ir.QDBMultipleRows s) -> mkSQLSelect Rql.JASMultipleRows s
+    (Ir.QDBAggregation s)  -> fromSelectAggregate Nothing s
+    (Ir.QDBConnection _)   -> refute $ pure ConnectionsNotSupported
 
 --------------------------------------------------------------------------------
 -- Top-level exported functions
 
-fromSelectRows :: Ir.AnnSelectG 'BigQuery (Ir.AnnFieldsG 'BigQuery Expression) Expression -> FromIr BigQuery.Select
+fromSelectRows :: Ir.AnnSelectG 'BigQuery (Const Void) (Ir.AnnFieldG 'BigQuery (Const Void)) Expression -> FromIr BigQuery.Select
 fromSelectRows annSelectG = do
   selectFrom <-
     case from of
@@ -158,20 +186,20 @@ fromSelectRows annSelectG = do
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
   selectProjections <-
-    case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
-      Nothing -> refute (pure NoProjectionFields)
-      Just ne -> pure ne
+    NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
+      `onNothing` refute (pure NoProjectionFields)
+  globalTop <- getGlobalTop
   pure
     Select
-      {selectFinalWantedFields = pure (fieldTextNames fields),  selectGroupBy = mempty
+      {selectCardinality = Many, selectFinalWantedFields = pure (fieldTextNames fields),  selectGroupBy = mempty
       , selectOrderBy = argsOrderBy
-      , selectTop = permissionBasedTop <> argsTop
+      -- We DO APPLY the global top here, because this pulls down all rows.
+      , selectTop = globalTop <> permissionBasedTop <> argsTop
       , selectProjections
       , selectFrom
       , selectJoins = argsJoins <> mapMaybe fieldSourceJoin fieldSources
       , selectWhere = argsWhere <> Where [filterExpression]
-      , selectFor =
-          JsonFor ForJson {jsonCardinality = JsonArray, jsonRoot = NoRoot}
+
       , selectOffset = argsOffset
       }
   where
@@ -183,65 +211,161 @@ fromSelectRows annSelectG = do
                   } = annSelectG
     Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
-      case mPermLimit of
-        Nothing    -> NoTop
-        Just limit -> Top limit
+      maybe NoTop Top mPermLimit
     stringifyNumbers =
       if num
         then StringifyNumbers
         else LeaveNumbersAlone
 
-fromSelectAggregate ::
-     Ir.AnnSelectG 'BigQuery [(Rql.FieldName, Ir.TableAggregateFieldG 'BigQuery Expression)] Expression
+fromSelectAggregate
+  :: Maybe (EntityAlias, HashMap ColumnName ColumnName)
+  -> Ir.AnnSelectG 'BigQuery (Const Void) (Ir.TableAggregateFieldG 'BigQuery (Const Void)) Expression
   -> FromIr BigQuery.Select
-fromSelectAggregate annSelectG = do
+fromSelectAggregate minnerJoinFields annSelectG = do
   selectFrom <-
     case from of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
       _                            -> refute (pure (FromTypeUnsupported from))
-  fieldSources <-
-    runReaderT (traverse fromTableAggregateFieldG fields) (fromAlias selectFrom)
+  args'@Args {argsWhere, argsOrderBy, argsJoins, argsTop, argsOffset, argsDistinct = Proxy} <-
+    runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
-  Args { argsOrderBy
-       , argsWhere
-       , argsJoins
-       , argsTop
-       , argsDistinct = Proxy
-       , argsOffset
-       } <- runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
+  mforeignKeyConditions <-
+    for minnerJoinFields $ \(entityAlias, mapping) ->
+      runReaderT
+        (fromMappingFieldNames (fromAlias selectFrom) mapping)
+        entityAlias
+  fieldSources <-
+    runReaderT
+      (traverse
+         (fromTableAggregateFieldG
+            args'
+            permissionBasedTop
 
-
+            stringifyNumbers)
+         fields)
+      (fromAlias selectFrom)
   selectProjections <-
-    case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
-      Nothing -> refute (pure NoProjectionFields)
-      Just ne -> pure ne
+    onNothing
+    (NE.nonEmpty
+       (concatMap (toList . fieldSourceProjections) fieldSources))
+    (refute (pure NoProjectionFields))
+  indexAlias <- generateEntityAlias IndexTemplate
   pure
     Select
-      { selectFinalWantedFields = Nothing
+      { selectCardinality = One
+      , selectFinalWantedFields = Nothing
       , selectGroupBy = mempty
       , selectProjections
-      , selectTop = permissionBasedTop <> argsTop
-      , selectFrom
-      , selectJoins = argsJoins <> mapMaybe fieldSourceJoin fieldSources
-      , selectWhere = argsWhere <> Where [filterExpression]
-      , selectFor =
-          JsonFor ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot}
-      , selectOrderBy = argsOrderBy
-      , selectOffset = argsOffset
+      , selectTop = NoTop
+      , selectFrom =
+          FromSelect
+            (Aliased
+               { aliasedThing =
+                   Select
+                     { selectProjections =
+                         case mforeignKeyConditions of
+                           Nothing -> pure StarProjection
+                           Just innerJoinFields ->
+                             pure StarProjection <>
+                             -- We setup an index over every row in
+                             -- the sub select.  Then if you look at
+                             -- the outer Select, you can see we apply
+                             -- a WHERE that uses this index for
+                             -- LIMIT/OFFSET.
+                             pure
+                               (WindowProjection
+                                  (Aliased
+                                     { aliasedAlias = unEntityAlias indexAlias
+                                     , aliasedThing =
+                                         RowNumberOverPartitionBy
+                                           -- The row numbers start from 1.
+                                           (NE.fromList (map fst innerJoinFields))
+                                           argsOrderBy
+                                           -- Above: Having the order by
+                                           -- in here ensures that the
+                                           -- row numbers are ordered by
+                                           -- this ordering. Below, we
+                                           -- order again for the
+                                           -- general row order. Both
+                                           -- are needed!
+                                     }))
+                     , selectFrom
+                     , selectJoins =
+                         argsJoins <> mapMaybe fieldSourceJoin fieldSources
+                     , selectWhere = argsWhere <> (Where [filterExpression])
+                     , selectOrderBy = argsOrderBy
+                     -- Above: This is important to have here, because
+                     -- offset/top apply AFTER ordering is applied, so
+                     -- you can't put an order by in afterwards in a
+                     -- parent query. Therefore be careful about
+                     -- putting this elsewhere.
+                     , selectFinalWantedFields = Nothing
+                     , selectCardinality = Many
+                     , selectTop = maybe argsTop (const NoTop) mforeignKeyConditions
+                     , selectOffset = maybe argsOffset (const Nothing) mforeignKeyConditions
+                     , selectGroupBy = mempty
+                     }
+               , aliasedAlias = entityAliasText (fromAlias selectFrom)
+               })
+      , selectJoins = mempty
+      , selectWhere =
+          case mforeignKeyConditions of
+            Nothing -> mempty
+            Just {} ->
+              let offset =
+                    case argsOffset of
+                      Nothing -> mempty
+                      Just offset' ->
+                        Where
+                          -- Apply an offset using the row_number from above.
+                          [ OpExpression
+                              MoreOp
+                              (ColumnExpression
+                                 FieldName
+                                   { fieldNameEntity =
+                                       coerce (fromAlias selectFrom)
+                                   , fieldName = unEntityAlias indexAlias
+                                   })
+                              offset'
+                          ]
+                  limit =
+                    case argsTop of
+                      NoTop -> mempty
+                      Top limit' ->
+                        Where
+                          -- Apply a limit using the row_number from above.
+                          [ OpExpression
+                              LessOp
+                              (ColumnExpression
+                                 FieldName
+                                   { fieldNameEntity =
+                                       coerce (fromAlias selectFrom)
+                                   , fieldName = unEntityAlias indexAlias
+                                   })
+                              (ValueExpression . IntegerValue . Int64 . tshow $
+                               limit' + 1 -- Because the row_number() indexing starts at 1.
+                               -- So idx<l+1  means idx<2 where l = 1 i.e. "limit to 1 row".
+                               )
+                          ]
+               in offset <> limit
+      , selectOrderBy = Nothing
+      , selectOffset = Nothing
       }
   where
     Ir.AnnSelectG { _asnFields = fields
                   , _asnFrom = from
                   , _asnPerm = perm
                   , _asnArgs = args
-                  , _asnStrfyNum = _num -- TODO: Do we ignore this for aggregates?
+                  , _asnStrfyNum = num -- TODO: Do we ignore this for aggregates?
                   } = annSelectG
     Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
-      case mPermLimit of
-        Nothing    -> NoTop
-        Just limit -> Top limit
+      maybe NoTop Top mPermLimit
+    stringifyNumbers =
+      if num
+        then StringifyNumbers
+        else LeaveNumbersAlone
 
 --------------------------------------------------------------------------------
 -- GraphQL Args
@@ -264,11 +388,10 @@ data UnfurledJoin = UnfurledJoin
 
 fromSelectArgsG :: Ir.SelectArgsG 'BigQuery Expression -> ReaderT EntityAlias FromIr Args
 fromSelectArgsG selectArgsG = do
+  let argsOffset = ValueExpression . IntegerValue . Int64 . tshow <$> moffset
   argsWhere <-
     maybe (pure mempty) (fmap (Where . pure) . fromAnnBoolExp) mannBoolExp
   argsTop <- maybe (pure mempty) (pure . Top) mlimit
-  argsOffset <-
-    maybe (pure Nothing) (fmap Just . lift . fromSQLExpAsInt) moffset
   -- Not supported presently, per Vamshi:
   --
   -- > It is hardly used and we don't have to go to great lengths to support it.
@@ -280,7 +403,7 @@ fromSelectArgsG selectArgsG = do
       Nothing -> pure Proxy
       Just {} -> refute (pure DistinctIsn'tSupported)
   (argsOrderBy, joins) <-
-    runWriterT (traverse fromAnnOrderByItemG (maybe [] toList orders))
+    runWriterT (traverse fromAnnotatedOrderByItemG (maybe [] toList orders))
   -- Any object-relation joins that we generated, we record their
   -- generated names into a mapping.
   let argsExistingJoins =
@@ -301,17 +424,14 @@ fromSelectArgsG selectArgsG = do
 
 -- | Produce a valid ORDER BY construct, telling about any joins
 -- needed on the side.
-fromAnnOrderByItemG ::
-     Ir.AnnOrderByItemG 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
-fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
-  orderByFieldName <- unfurlAnnOrderByElement obiColumn
+fromAnnotatedOrderByItemG ::
+     Ir.AnnotatedOrderByItemG 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
+fromAnnotatedOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
+  orderByFieldName <- unfurlAnnotatedOrderByElement obiColumn
   let morderByOrder =
         obiType
   let orderByNullsOrder =
-        case obiNulls of
-          Nothing -> NullsAnyOrder
-          Just nullsOrder ->
-            nullsOrder
+        fromMaybe NullsAnyOrder obiNulls
   case morderByOrder of
     Just orderByOrder -> pure OrderBy {..}
     Nothing           -> refute (pure NoOrderSpecifiedInOrderBy)
@@ -319,15 +439,15 @@ fromAnnOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
 -- | Unfurl the nested set of object relations (tell'd in the writer)
 -- that are terminated by field name (Ir.AOCColumn and
 -- Ir.AOCArrayAggregation).
-unfurlAnnOrderByElement ::
-     Ir.AnnOrderByElement 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
-unfurlAnnOrderByElement =
+unfurlAnnotatedOrderByElement ::
+     Ir.AnnotatedOrderByElement 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
+unfurlAnnotatedOrderByElement =
   \case
     Ir.AOCColumn pgColumnInfo -> lift (fromPGColumnInfo pgColumnInfo)
-    Ir.AOCObjectRelation Rql.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
-      selectFrom <- lift (lift (fromQualifiedTable table))
+    Ir.AOCObjectRelation Rql.RelInfo {riMapping = mapping, riRTable = tableName} annBoolExp annOrderByElementG -> do
+      selectFrom <- lift (lift (fromQualifiedTable tableName))
       joinAliasEntity <-
-        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText table))))
+        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText tableName))))
       joinOn <- lift (fromMappingFieldNames joinAliasEntity mapping)
       whereExpression <-
         lift (local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp))
@@ -339,13 +459,12 @@ unfurlAnnOrderByElement =
                    { joinSource =
                        JoinSelect
                          Select
-                           {selectFinalWantedFields = Nothing,  selectGroupBy = mempty
+                           {selectCardinality = One, selectFinalWantedFields = Nothing,  selectGroupBy = mempty
                            , selectTop = NoTop
                            , selectProjections = NE.fromList [StarProjection]
                            , selectFrom
                            , selectJoins = []
                            , selectWhere = Where ([whereExpression])
-                           , selectFor = NoFor
                            , selectOrderBy = Nothing
                            , selectOffset = Nothing
                            }
@@ -353,17 +472,17 @@ unfurlAnnOrderByElement =
                    , joinAlias = joinAliasEntity
                    , joinOn
                    , joinProvenance = OrderByJoinProvenance
-                   , joinFieldName = tableNameText table -- TODO: not needed.
+                   , joinFieldName = tableNameText tableName -- TODO: not needed.
                    , joinExtractPath = Nothing
                    }
-             , unfurledObjectTableAlias = Just (table, joinAliasEntity)
+             , unfurledObjectTableAlias = Just (tableName, joinAliasEntity)
              })
-      local (const joinAliasEntity) (unfurlAnnOrderByElement annOrderByElementG)
-    Ir.AOCArrayAggregation Rql.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annAggregateOrderBy -> do
-      selectFrom <- lift (lift (fromQualifiedTable table))
+      local (const joinAliasEntity) (unfurlAnnotatedOrderByElement annOrderByElementG)
+    Ir.AOCArrayAggregation Rql.RelInfo {riMapping = mapping, riRTable = tableName} annBoolExp annAggregateOrderBy -> do
+      selectFrom <- lift (lift (fromQualifiedTable tableName))
       let alias = aggFieldName
       joinAlias <-
-        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText table))))
+        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText tableName))))
       joinOn <- lift (fromMappingFieldNames joinAlias mapping)
       innerJoinFields <-
         lift (fromMappingFieldNames (fromAlias selectFrom) mapping)
@@ -386,7 +505,7 @@ unfurlAnnOrderByElement =
                     { joinSource =
                         JoinSelect
                           Select
-                            {selectFinalWantedFields = Nothing,  selectTop = NoTop
+                            {selectCardinality = One, selectFinalWantedFields = Nothing,  selectTop = NoTop
                             , selectProjections =
                                 AggregateProjection
                                   Aliased
@@ -405,20 +524,16 @@ unfurlAnnOrderByElement =
                             , selectFrom
                             , selectJoins = []
                             , selectWhere = Where [whereExpression]
-                            , selectFor = NoFor
                             , selectOrderBy = Nothing
                             , selectOffset = Nothing
                             -- This group by corresponds to the field name projections above.
-                            , selectGroupBy =
-                                map
-                                  (\(fieldName', _) -> fieldName')
-                                  innerJoinFields
+                            , selectGroupBy = map fst innerJoinFields
                             }
                     , joinRightTable = fromAlias selectFrom
                     , joinProvenance = OrderByJoinProvenance
                     , joinAlias = joinAlias
                     , joinOn
-                    , joinFieldName = tableNameText table -- TODO: not needed.
+                    , joinFieldName = tableNameText tableName -- TODO: not needed.
                     , joinExtractPath = Nothing
                     }
               , unfurledObjectTableAlias = Nothing
@@ -455,11 +570,11 @@ fromAnnBoolExpFld ::
      Ir.AnnBoolExpFld 'BigQuery Expression -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
-    Ir.AVCol pgColumnInfo opExpGs -> do
+    Ir.AVColumn pgColumnInfo opExpGs -> do
       expression <- fmap ColumnExpression (fromPGColumnInfo pgColumnInfo)
       expressions <- traverse (lift . fromOpExpG expression) opExpGs
       pure (AndExpression expressions)
-    Ir.AVRel Rql.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
+    Ir.AVRelationship Rql.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
       selectFrom <- lift (fromQualifiedTable table)
       foreignKeyConditions <- fromMapping selectFrom mapping
       whereExpression <-
@@ -467,7 +582,7 @@ fromAnnBoolExpFld =
       pure
         (ExistsExpression
            Select
-             {selectFinalWantedFields = Nothing,  selectGroupBy = mempty
+             {selectCardinality = One, selectFinalWantedFields = Nothing,  selectGroupBy = mempty
              , selectOrderBy = Nothing
              , selectProjections =
                  NE.fromList
@@ -481,7 +596,6 @@ fromAnnBoolExpFld =
              , selectJoins = mempty
              , selectWhere = Where (foreignKeyConditions <> [whereExpression])
              , selectTop = NoTop
-             , selectFor = NoFor
              , selectOffset = Nothing
              })
 
@@ -499,7 +613,7 @@ fromGExists Ir.GExists {_geTable, _geWhere} = do
     local (const (fromAlias selectFrom)) (fromGBoolExp _geWhere)
   pure
     Select
-      {selectFinalWantedFields = Nothing,  selectGroupBy = mempty
+      {selectCardinality = One, selectFinalWantedFields = Nothing,  selectGroupBy = mempty
       , selectOrderBy = Nothing
       , selectProjections =
           NE.fromList
@@ -513,7 +627,6 @@ fromGExists Ir.GExists {_geTable, _geWhere} = do
       , selectJoins = mempty
       , selectWhere = Where [whereExpression]
       , selectTop = NoTop
-      , selectFor = NoFor
       , selectOffset = Nothing
       }
 
@@ -529,8 +642,11 @@ fromGExists Ir.GExists {_geTable, _geWhere} = do
 data FieldSource
   = ExpressionFieldSource (Aliased Expression)
   | JoinFieldSource (Aliased Join)
-  | AggregateFieldSource (NonEmpty (Aliased Aggregate))
+  | AggregateFieldSource Text (NonEmpty (Aliased Aggregate))
+  | ArrayAggFieldSource (Aliased ArrayAgg)
   deriving (Eq, Show)
+
+
 
 -- Example:
 --
@@ -576,8 +692,12 @@ data FieldSource
 -- FROM chinook.`Track` AS `t_Track1`
 --
 fromTableAggregateFieldG ::
-     (Rql.FieldName, Ir.TableAggregateFieldG 'BigQuery Expression) -> ReaderT EntityAlias FromIr FieldSource
-fromTableAggregateFieldG (Rql.FieldName name, field) =
+     Args
+  -> Top
+  -> StringifyNumbers
+  -> (Rql.FieldName, Ir.TableAggregateFieldG 'BigQuery (Const Void) Expression)
+  -> ReaderT EntityAlias FromIr FieldSource
+fromTableAggregateFieldG args permissionBasedTop stringifyNumbers (Rql.FieldName name, field) =
   case field of
     Ir.TAFAgg (aggregateFields :: [(Rql.FieldName, Ir.AggregateField 'BigQuery)]) ->
       case NE.nonEmpty aggregateFields of
@@ -591,7 +711,7 @@ fromTableAggregateFieldG (Rql.FieldName name, field) =
                       Aliased {aliasedAlias = Rql.getFieldNameTxt fieldName, ..})
                    (fromAggregateField aggregateField))
               fields
-          pure (AggregateFieldSource aggregates)
+          pure (AggregateFieldSource name aggregates)
     Ir.TAFExp text ->
       pure
         (ExpressionFieldSource
@@ -599,7 +719,26 @@ fromTableAggregateFieldG (Rql.FieldName name, field) =
              { aliasedThing = BigQuery.ValueExpression (StringValue text)
              , aliasedAlias = name
              })
-    Ir.TAFNodes {} -> refute (pure (NodesUnsupportedForNow field))
+    Ir.TAFNodes _ (fields :: [(Rql.FieldName, Ir.AnnFieldG 'BigQuery (Const Void) Expression)]) -> do
+      fieldSources <-
+        traverse
+          (fromAnnFieldsG (argsExistingJoins args) stringifyNumbers)
+          fields
+      arrayAggProjections <-
+        NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
+          `onNothing` refute (pure NoProjectionFields)
+      globalTop <- lift getGlobalTop
+      pure
+        (ArrayAggFieldSource
+           Aliased
+             { aliasedThing =
+                 ArrayAgg
+                   { arrayAggProjections
+                   , arrayAggOrderBy = argsOrderBy args
+                   , arrayAggTop = globalTop <> argsTop args <> permissionBasedTop
+                   }
+             , aliasedAlias = name
+             })
 
 fromAggregateField :: Ir.AggregateField 'BigQuery -> ReaderT EntityAlias FromIr Aggregate
 fromAggregateField aggregateField =
@@ -610,10 +749,7 @@ fromAggregateField aggregateField =
       NonNullFieldCountable names -> NonNullFieldCountable <$> traverse fromPGCol names
       DistinctCountable     names -> DistinctCountable     <$> traverse fromPGCol names
     Ir.AFOp Ir.AggregateOp {_aoOp = op, _aoFields = fields} -> do
-      fs <-
-        case NE.nonEmpty fields of
-          Nothing -> refute (pure MalformedAgg)
-          Just fs -> pure fs
+      fs <- NE.nonEmpty fields `onNothing` refute (pure MalformedAgg)
       args <-
         traverse
           (\(Rql.FieldName fieldName, pgColFld) -> do
@@ -629,7 +765,7 @@ fromAggregateField aggregateField =
 fromAnnFieldsG ::
      Map TableName EntityAlias
   -> StringifyNumbers
-  -> (Rql.FieldName, Ir.AnnFieldG 'BigQuery Expression)
+  -> (Rql.FieldName, Ir.AnnFieldG 'BigQuery (Const Void) Expression)
   -> ReaderT EntityAlias FromIr FieldSource
 fromAnnFieldsG existingJoins stringifyNumbers (Rql.FieldName name, field) =
   case field of
@@ -655,6 +791,7 @@ fromAnnFieldsG existingJoins stringifyNumbers (Rql.FieldName name, field) =
         (\aliasedThing ->
            JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
         (fromArraySelectG arraySelectG)
+
 
 -- | Here is where we project a field as a column expression. If
 -- number stringification is on, then we wrap it in a
@@ -695,17 +832,86 @@ fieldSourceProjections =
     JoinFieldSource aliasedJoin ->
       NE.fromList
         -- Here we're producing all join fields needed later for
-        -- Haskell-native joining.
+        -- Haskell-native joining.  They will be removed by upstream
+        -- code.
         ([ FieldNameProjection
            (Aliased {aliasedThing = right, aliasedAlias = fieldNameText right})
          | (_left, right) <- joinOn join'
-         ] <> case joinProvenance join' of
-                ArrayAggregateJoinProvenance ->
-                  pure (EntityProjection aliasedJoin {aliasedThing = joinAlias join'})
-                _ ->  [])
-
+         ] <>
+         -- Below:
+         -- When we're doing an array-aggregate, e.g.
+         --
+         -- query MyQuery {
+         --   hasura_Artist {
+         --     albums_aggregate {
+         --       aggregate {
+         --         count
+         --       }
+         --     }
+         --   }
+         -- }
+         --
+         -- we're going to do a join on the albums table, and that
+         -- join query will produce a single-row result. Therefore we
+         -- can grab the whole entity as a STRUCT-typed object. See
+         -- also the docs for 'fromArrayRelationSelectG' and for
+         -- 'fromArrayAggregateSelectG'.
+         case joinProvenance join' of
+           ArrayJoinProvenance fields ->
+             pure
+               (ArrayEntityProjection
+                  (joinAlias join')
+                  aliasedJoin
+                    { aliasedThing =
+                        fmap
+                          (\name ->
+                             FieldName
+                               { fieldName = name
+                               , fieldNameEntity =
+                                   entityAliasText (joinAlias join')
+                               })
+                          fields
+                    , aliasedAlias = aliasedAlias aliasedJoin
+                    })
+           ObjectJoinProvenance fields ->
+             pure
+               (EntityProjection
+                  aliasedJoin
+                    { aliasedThing =
+                        fmap
+                          (\name ->
+                             ( FieldName
+                                 { fieldName = name
+                                 , fieldNameEntity =
+                                     entityAliasText (joinAlias join')
+                                 }
+                             , NoOrigin))
+                          fields
+                    , aliasedAlias = aliasedAlias aliasedJoin
+                    })
+           ArrayAggregateJoinProvenance fields ->
+             pure
+               (EntityProjection
+                  aliasedJoin
+                    { aliasedThing =
+                        fmap
+                          (\(name, fieldOrigin) ->
+                             ( FieldName
+                                 { fieldName = name
+                                 , fieldNameEntity =
+                                     entityAliasText (joinAlias join')
+                                 }
+                             , fieldOrigin))
+                          fields
+                    , aliasedAlias = aliasedAlias aliasedJoin
+                    })
+           _ -> [])
       where join' = aliasedThing aliasedJoin
-    AggregateFieldSource aggregates -> fmap AggregateProjection aggregates
+    AggregateFieldSource name aggregates ->
+      pure
+        (AggregateProjections
+           (Aliased {aliasedThing = aggregates, aliasedAlias = name}))
+    ArrayAggFieldSource arrayAgg -> pure (ArrayAggProjection arrayAgg)
   where
     fieldNameText FieldName {fieldName} = fieldName
 
@@ -715,13 +921,20 @@ fieldSourceJoin =
     JoinFieldSource aliasedJoin -> pure (aliasedThing aliasedJoin)
     ExpressionFieldSource {}    -> Nothing
     AggregateFieldSource {}     -> Nothing
+    ArrayAggFieldSource {}      -> Nothing
 
 --------------------------------------------------------------------------------
 -- Joins
 
+-- | Produce the join for an object relation. We produce a normal
+-- select, but then include join fields. Then downstream, the
+-- DataLoader will execute the lhs select and rhs join in separate
+-- server queries, then do a Haskell-native join on the join fields.
+--
+-- See also 'fromArrayRelationSelectG' for similar example.
 fromObjectRelationSelectG ::
      Map TableName EntityAlias
-  -> Ir.ObjectRelationSelectG 'BigQuery Expression
+  -> Ir.ObjectRelationSelectG 'BigQuery (Const Void) Expression
   -> ReaderT EntityAlias FromIr Join
 -- We're not using existingJoins at the moment, which was used to
 -- avoid re-joining on the same table twice.
@@ -733,14 +946,11 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
       (const entityAlias)
       (traverse (fromAnnFieldsG mempty LeaveNumbersAlone) fields)
   selectProjections <-
-    case NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources) of
-      Nothing -> refute (pure NoProjectionFields)
-      Just ne -> pure ne
+    NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
+      `onNothing` refute (pure NoProjectionFields)
   joinFieldName <- lift (fromRelName aarRelationshipName)
   joinAlias <-
     lift (generateEntityAlias (ObjectRelationTemplate joinFieldName))
-  let selectFor =
-        JsonFor ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot}
   filterExpression <- local (const entityAlias) (fromAnnBoolExp tableFilter)
   innerJoinFields <- fromMappingFieldNames (fromAlias selectFrom) mapping
   joinOn <-
@@ -754,13 +964,16 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
                  , aliasedAlias = fieldName fieldName'
                  })
           innerJoinFields
+  let selectFinalWantedFields = pure (fieldTextNames fields)
   pure
     Join
       { joinAlias
       , joinSource =
           JoinSelect
             Select
-              {selectFinalWantedFields = pure (fieldTextNames fields),  selectGroupBy = mempty
+              { selectCardinality = One
+              , selectFinalWantedFields
+              , selectGroupBy = mempty
               , selectOrderBy = Nothing
               , selectTop = NoTop
               , selectProjections =
@@ -768,23 +981,26 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
               , selectFrom
               , selectJoins = mapMaybe fieldSourceJoin fieldSources
               , selectWhere = Where [filterExpression]
-              , selectFor
               , selectOffset = Nothing
               }
       , joinOn
       , joinRightTable = fromAlias selectFrom
-      , joinProvenance = ObjectJoinProvenance
+      , joinProvenance =
+          ObjectJoinProvenance
+            (fromMaybe [] selectFinalWantedFields) -- TODO: OK?
+      -- Above: Needed by DataLoader to determine the type of
+      -- Haskell-native join to perform.
       , joinFieldName
       , joinExtractPath = Nothing
       }
   where
-    Ir.AnnObjectSelectG { _aosFields = fields :: Ir.AnnFieldsG 'BigQuery Expression
+    Ir.AnnObjectSelectG { _aosFields = fields :: Ir.AnnFieldsG 'BigQuery (Const Void) Expression
                         , _aosTableFrom = tableFrom :: TableName
                         , _aosTableFilter = tableFilter :: Ir.AnnBoolExp 'BigQuery Expression
                         } = annObjectSelectG
     Ir.AnnRelationSelectG { aarRelationshipName
                           , aarColumnMapping = mapping :: HashMap ColumnName ColumnName
-                          , aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG 'BigQuery Expression
+                          , aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG 'BigQuery (Const Void) Expression
                           } = annRelationSelectG
 
 -- We're not using existingJoins at the moment, which was used to
@@ -798,7 +1014,7 @@ _lookupTableFrom existingJoins tableFrom = do
     Just entityAlias -> pure (Left entityAlias)
     Nothing          -> fmap Right (fromQualifiedTable tableFrom)
 
-fromArraySelectG :: Ir.ArraySelectG 'BigQuery Expression -> ReaderT EntityAlias FromIr Join
+fromArraySelectG :: Ir.ArraySelectG 'BigQuery (Const Void) Expression -> ReaderT EntityAlias FromIr Join
 fromArraySelectG =
   \case
     Ir.ASSimple arrayRelationSelectG ->
@@ -806,12 +1022,20 @@ fromArraySelectG =
     Ir.ASAggregate arrayAggregateSelectG ->
       fromArrayAggregateSelectG arrayAggregateSelectG
 
+-- | Produce the join for an array aggregate relation. We produce a
+-- normal select, but then include join fields. Then downstream, the
+-- DataLoader will execute the lhs select and rhs join in separate
+-- server queries, then do a Haskell-native join on the join fields.
+--
+-- See also 'fromArrayRelationSelectG' for similar example.
 fromArrayAggregateSelectG ::
-     Ir.AnnRelationSelectG 'BigQuery (Ir.AnnAggregateSelectG 'BigQuery Expression)
+     Ir.AnnRelationSelectG 'BigQuery (Ir.AnnAggregateSelectG 'BigQuery (Const Void) Expression)
   -> ReaderT EntityAlias FromIr Join
 fromArrayAggregateSelectG annRelationSelectG = do
   joinFieldName <- lift (fromRelName aarRelationshipName)
-  select <- lift (fromSelectAggregate annSelectG)
+  select <- do
+    lhsEntityAlias <- ask
+    lift (fromSelectAggregate (pure (lhsEntityAlias, mapping)) annSelectG)
   alias <- lift (generateEntityAlias (ArrayAggregateTemplate joinFieldName))
   joinOn <- fromMappingFieldNames alias mapping
   innerJoinFields <-
@@ -825,21 +1049,25 @@ fromArrayAggregateSelectG annRelationSelectG = do
                  , aliasedAlias = fieldName fieldName'
                  })
           innerJoinFields
-  joinSelect <-
-    pure
-      select
-        { selectWhere = selectWhere select
-        , selectProjections =
-            selectProjections select <> NE.fromList joinFieldProjections
-        , selectGroupBy = map (\(fieldName', _) -> fieldName') innerJoinFields
-        }
+  let projections =
+          (selectProjections select <> NE.fromList joinFieldProjections)
+      joinSelect =
+          select
+            { selectWhere = selectWhere select
+            , selectGroupBy = map fst innerJoinFields
+            , selectProjections = projections
+            }
   pure
     Join
       { joinAlias = alias
       , joinSource = JoinSelect joinSelect
       , joinRightTable = fromAlias (selectFrom select)
       , joinOn
-      , joinProvenance = ArrayAggregateJoinProvenance
+      , joinProvenance =
+          ArrayAggregateJoinProvenance $
+            mapMaybe (\p -> (, aggregateProjectionsFieldOrigin p) <$> projectionAlias p) . toList . selectProjections $ select
+         -- Above: Needed by DataLoader to determine the type of
+         -- Haskell-native join to perform.
       , joinFieldName
       , joinExtractPath = Nothing
       }
@@ -849,13 +1077,72 @@ fromArrayAggregateSelectG annRelationSelectG = do
                           , aarAnnSelect = annSelectG
                           } = annRelationSelectG
 
+-- | Produce a join for an array relation.
+--
+-- Array relations in PG/MSSQL are expressed using LEFT OUTER JOIN
+-- LATERAL or OUTER APPLY, which are essentially producing for each
+-- row on the left an array of the result from the right. Which is
+-- absolutely what you want for the array relationship.
+--
+-- BigQuery doesn't support that. Therefore we are instead performing
+-- one big array aggregation, for ALL rows in the table - there is no
+-- join occurring on the left-hand-side table, grouped by join
+-- fields. The data-loader will perform the LHS query and the RHS query
+-- separately.
+--
+-- What we do have is a GROUP BY and make sure that the join fields
+-- are included in the output. Finally, in the
+-- DataLoader.Plan/DataLoader.Execute, we implement a Haskell-native
+-- join of the left-hand-side table and the right-hand-side table.
+--
+-- Data looks like:
+--
+--     join_field_a | join_field_b | aggFieldName (array type)
+--     1            | 1            | [ { x: 1, y: 2 }, ... ]
+--     1            | 2            | [ { x: 1, y: 2 }, ... ]
+--
+-- etc.
+--
+-- We want to produce a query that looks like:
+--
+--     SELECT artist_other_id,  -- For joining.
+--
+--            array_agg(struct(album_self_id, title)) as aggFieldName
+--
+--            -- ^ Aggregating the actual data.
+--
+--     FROM (SELECT *,  -- Get everything, plus the row number:
+--
+--                  ROW_NUMBER() OVER(PARTITION BY artist_other_id) artist_album_index
+--
+--           FROM hasura.Album
+--           ORDER BY album_self_id ASC
+--
+--           -- ^ Order by here is important for stable results.  Any
+--           order by clauses for the album should appear here, NOT IN
+--           THE ARRAY_AGG.
+--
+--           )
+--
+--           AS indexed_album
+--
+--     WHERE artist_album_index > 1
+--     -- ^ Here is where offsetting occurs.
+--
+--     GROUP BY artist_other_id
+--     -- ^ Group by for joining.
+--
+--     ORDER BY artist_other_id;
+--     ^ Ordering for the artist table should appear here.
+
 fromArrayRelationSelectG ::
-     Ir.ArrayRelationSelectG 'BigQuery Expression
+     Ir.ArrayRelationSelectG 'BigQuery (Const Void) Expression
   -> ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
-  select <- lift (fromSelectRows annSelectG)
+  select <- lift (fromSelectRows annSelectG) -- Take the original select.
   joinFieldName <- lift (fromRelName aarRelationshipName)
   alias <- lift (generateEntityAlias (ArrayRelationTemplate joinFieldName))
+  indexAlias <- lift (generateEntityAlias IndexTemplate)
   joinOn <- fromMappingFieldNames alias mapping
   innerJoinFields <-
     fromMappingFieldNames (fromAlias (selectFrom select)) mapping
@@ -868,40 +1155,104 @@ fromArrayRelationSelectG annRelationSelectG = do
                  , aliasedAlias = fieldName fieldName'
                  })
           innerJoinFields
-  joinSelect <-
-    pure
-      Select
-        {selectFinalWantedFields = selectFinalWantedFields select,  selectTop = NoTop
-        , selectProjections =
-            NE.fromList joinFieldProjections <>
-            pure
-              (ArrayAggProjection
-                 Aliased
-                   { aliasedThing =
-                       ArrayAgg
-                         { arrayAggProjections = selectProjections select
-                         , arrayAggOrderBy = selectOrderBy select
-                         , arrayAggTop = selectTop select
-                         , arrayAggOffset = selectOffset select
-                         }
-                   , aliasedAlias = aggFieldName
-                   })
-        , selectFrom = selectFrom select
-        , selectJoins = selectJoins select
-        , selectWhere = selectWhere select
-        , selectFor = NoFor
-        , selectOrderBy = Nothing
-        , selectOffset = Nothing
-      -- This group by corresponds to the field name projections above.
-        , selectGroupBy = map (\(fieldName', _) -> fieldName') innerJoinFields
-        }
+      joinSelect =
+          Select
+            { selectCardinality = One
+            , selectFinalWantedFields = selectFinalWantedFields select
+            , selectTop = NoTop
+            , selectProjections =
+                NE.fromList joinFieldProjections <>
+                pure
+                  (ArrayAggProjection
+                     Aliased
+                       { aliasedThing =
+                           ArrayAgg
+                             { arrayAggProjections =
+                                 fmap
+                                   aliasToFieldProjection
+                                   (selectProjections select)
+                             , arrayAggOrderBy = Nothing
+                             , arrayAggTop = selectTop select
+                               -- The sub-select takes care of caring about global top.
+                               --
+                               -- This handles the LIMIT need.
+                             }
+                       , aliasedAlias = aggFieldName
+                       })
+            , selectFrom =
+                FromSelect
+                  (Aliased
+                     { aliasedAlias = coerce (fromAlias (selectFrom select))
+                     , aliasedThing =
+                         Select
+                           { selectProjections =
+                               selectProjections select <>
+                               NE.fromList joinFieldProjections <>
+                               pure
+                                 (WindowProjection
+                                    (Aliased
+                                       { aliasedAlias = unEntityAlias indexAlias
+                                       , aliasedThing =
+                                           RowNumberOverPartitionBy
+                                             -- The row numbers start from 1.
+                                             (NE.fromList
+                                                (map fst innerJoinFields))
+                                             (selectOrderBy select)
+                                             -- Above: Having the order by
+                                             -- in here ensures that the
+                                             -- row numbers are ordered by
+                                             -- this ordering. Below, we
+                                             -- order again for the
+                                             -- general row order. Both
+                                             -- are needed!
+                                       }))
+                           , selectFrom = selectFrom select
+                           , selectJoins = selectJoins select
+                           , selectWhere = selectWhere select
+                           , selectOrderBy = selectOrderBy select
+                             -- Above: This orders the rows themselves. In
+                             -- the RowNumberOverPartitionBy, we also set
+                             -- a row order for the calculation of the
+                             -- indices. Both are needed!
+                           , selectOffset = Nothing
+                           , selectFinalWantedFields =
+                               selectFinalWantedFields select
+                           , selectCardinality = Many
+                           , selectTop = NoTop
+                           , selectGroupBy = mempty
+                           }
+                     })
+            , selectWhere =
+                case selectOffset select of
+                  Nothing -> mempty
+                  Just offset ->
+                    Where
+                      [ OpExpression
+                          MoreOp
+                          (ColumnExpression FieldName {fieldNameEntity = coerce (fromAlias (selectFrom select)), fieldName = unEntityAlias indexAlias})
+                          offset
+                      ]
+            , selectOrderBy = Nothing -- Not needed.
+            , selectJoins = mempty
+            , selectOffset = Nothing
+          -- This group by corresponds to the field name projections above. E.g. artist_other_id
+            , selectGroupBy = map (fst) innerJoinFields
+            }
   pure
     Join
       { joinAlias = alias
       , joinSource = JoinSelect joinSelect
       , joinRightTable = fromAlias (selectFrom select)
       , joinOn
-      , joinProvenance = ArrayJoinProvenance
+      , joinProvenance =
+          ArrayJoinProvenance
+            (if True
+               then (fromMaybe [] (selectFinalWantedFields select))
+               else (mapMaybe
+                       projectionAlias
+                       (toList (selectProjections select))))
+      -- Above: Needed by DataLoader to determine the type of
+      -- Haskell-native join to perform.
       , joinFieldName
       , joinExtractPath = Just aggFieldName
       }
@@ -910,6 +1261,22 @@ fromArrayRelationSelectG annRelationSelectG = do
                           , aarColumnMapping = mapping :: HashMap ColumnName ColumnName
                           , aarAnnSelect = annSelectG
                           } = annRelationSelectG
+
+-- | For entity projections, convert any entity aliases to their field
+-- names. TODO: Add an explanation for this.
+aliasToFieldProjection :: Projection -> Projection
+aliasToFieldProjection =
+  \case
+    EntityProjection Aliased {aliasedAlias = name, aliasedThing = fields} ->
+      EntityProjection
+        Aliased
+          { aliasedAlias = name
+          , aliasedThing =
+              fmap
+                (\(FieldName {..}, origin) -> (FieldName {fieldNameEntity = name, ..}, origin))
+                fields
+          }
+    p -> p
 
 fromRelName :: Rql.RelName -> FromIr Text
 fromRelName relName =
@@ -961,27 +1328,27 @@ fromMappingFieldNames localFrom =
 fromOpExpG :: Expression -> Ir.OpExpG 'BigQuery Expression -> FromIr Expression
 fromOpExpG expression op =
   case op of
-    Ir.ANISNULL                  -> pure (IsNullExpression expression)
-    Ir.ANISNOTNULL               -> pure (IsNotNullExpression expression)
-    Ir.AEQ False val             -> pure (nullableBoolEquality expression val)
-    Ir.AEQ True val              -> pure (EqualExpression expression val)
-    Ir.ANE False val             -> pure (nullableBoolInequality expression val)
-    Ir.ANE True val              -> pure (NotEqualExpression expression val)
-    Ir.AGT val                   -> pure (OpExpression MoreOp expression val)
-    Ir.ALT val                   -> pure (OpExpression LessOp expression val)
-    Ir.AGTE val                  -> pure (OpExpression MoreOrEqualOp expression val)
-    Ir.ALTE val                  -> pure (OpExpression LessOrEqualOp expression val)
-    Ir.ACast _casts              -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
-    Ir.AIN _val                  -> refute (pure (UnsupportedOpExpG op)) -- S.BECompareAny S.SEQ lhs val
-    Ir.ANIN _val                 -> refute (pure (UnsupportedOpExpG op)) -- S.BENot $ S.BECompareAny S.SEQ lhs val
-    Ir.ALIKE _val                -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLIKE lhs val
-    Ir.ANLIKE _val               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNLIKE lhs val
-    Ir.CEQ _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol
-    Ir.CNE _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNE lhs $ mkQCol rhsCol
-    Ir.CGT _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGT lhs $ mkQCol rhsCol
-    Ir.CLT _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs $ mkQCol rhsCol
-    Ir.CGTE _rhsCol              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
-    Ir.CLTE _rhsCol              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
+    Ir.ANISNULL      -> pure (IsNullExpression expression)
+    Ir.ANISNOTNULL   -> pure (IsNotNullExpression expression)
+    Ir.AEQ False val -> pure (nullableBoolEquality expression val)
+    Ir.AEQ True val  -> pure (EqualExpression expression val)
+    Ir.ANE False val -> pure (nullableBoolInequality expression val)
+    Ir.ANE True val  -> pure (NotEqualExpression expression val)
+    Ir.AIN val       -> pure (OpExpression InOp expression val)
+    Ir.ANIN val      -> pure (OpExpression NotInOp expression val)
+    Ir.AGT val       -> pure (OpExpression MoreOp expression val)
+    Ir.ALT val       -> pure (OpExpression LessOp expression val)
+    Ir.AGTE val      -> pure (OpExpression MoreOrEqualOp expression val)
+    Ir.ALTE val      -> pure (OpExpression LessOrEqualOp expression val)
+    Ir.ACast _casts  -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
+    Ir.ALIKE _val    -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLIKE lhs val
+    Ir.ANLIKE _val   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNLIKE lhs val
+    Ir.CEQ _rhsCol   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol
+    Ir.CNE _rhsCol   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNE lhs $ mkQCol rhsCol
+    Ir.CGT _rhsCol   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGT lhs $ mkQCol rhsCol
+    Ir.CLT _rhsCol   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs $ mkQCol rhsCol
+    Ir.CGTE _rhsCol  -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
+    Ir.CLTE _rhsCol  -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
     -- These are new as of 2021-02-18 to this API. Not sure what to do with them at present, marking as unsupported.
 
 nullableBoolEquality :: Expression -> Expression -> Expression
@@ -997,9 +1364,6 @@ nullableBoolInequality x y =
     [ NotEqualExpression x y
     , AndExpression [IsNotNullExpression x, IsNullExpression y]
     ]
-
-fromSQLExpAsInt :: Expression -> FromIr Expression
-fromSQLExpAsInt = pure
 
 fromGBoolExp :: Ir.GBoolExp 'BigQuery Expression -> ReaderT EntityAlias FromIr Expression
 fromGBoolExp =
@@ -1021,9 +1385,6 @@ trueExpression = ValueExpression (BoolValue True)
 --------------------------------------------------------------------------------
 -- Constants
 
-jsonFieldName :: Text
-jsonFieldName = "json"
-
 aggFieldName :: Text
 aggFieldName = "agg"
 
@@ -1039,11 +1400,15 @@ data NameTemplate
   | ObjectRelationTemplate Text
   | TableTemplate Text
   | ForOrderAlias Text
+  | IndexTemplate
 
 generateEntityAlias :: NameTemplate -> FromIr EntityAlias
 generateEntityAlias template = do
-  FromIr (modify' (M.insertWith (+) prefix start))
-  i <- FromIr get
+  FromIr
+    (modify'
+       (\FromIrState {..} ->
+          FromIrState {indices = M.insertWith (+) prefix start indices, ..}))
+  i <- FromIr (gets indices)
   pure (EntityAlias (prefix <> tshow (fromMaybe start (M.lookup prefix i))))
   where
     start = 1
@@ -1055,9 +1420,24 @@ generateEntityAlias template = do
         ObjectRelationTemplate sample -> "or_" <> sample
         TableTemplate sample          -> "t_" <> sample
         ForOrderAlias sample          -> "order_" <> sample
+        IndexTemplate                 -> "idx"
 
 fromAlias :: From -> EntityAlias
 fromAlias (FromQualifiedTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
+fromAlias (FromSelect Aliased {aliasedAlias})         = EntityAlias aliasedAlias
 
-fieldTextNames :: Ir.AnnFieldsG 'BigQuery Expression -> [Text]
+fieldTextNames :: Ir.AnnFieldsG 'BigQuery (Const Void) Expression -> [Text]
 fieldTextNames = fmap (\(Rql.FieldName name, _) -> name)
+
+unEntityAlias :: EntityAlias -> Text
+unEntityAlias (EntityAlias t) = t
+
+--------------------------------------------------------------------------------
+-- Global limit support
+
+getGlobalTop :: FromIr Top
+getGlobalTop =
+  FromIr
+    (asks
+       (\FromIrReader {config = FromIrConfig {globalSelectLimit}} ->
+          globalSelectLimit))

@@ -5,20 +5,20 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/internal/cliext"
-	cliextension "github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/cli_extension"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/editor"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
-	"github.com/hasura/graphql-engine/cli/util"
-	"github.com/hasura/graphql-engine/cli/version"
-	"github.com/pkg/errors"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
+
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/cliext"
+	cliextension "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/cli_extension"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/editor"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
+	"github.com/hasura/graphql-engine/cli/v2/util"
+	"github.com/hasura/graphql-engine/cli/v2/version"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
 
 const (
-	actionsFileName = "actions.yaml"
 	graphqlFileName = "actions.graphql"
 )
 
@@ -28,6 +28,7 @@ type ActionConfig struct {
 	serverFeatureFlags *version.ServerFeatureFlags
 	cliExtensionConfig *cliextension.Config
 	ensureCliExt       func() error
+	cleanupCliExt      func()
 
 	logger *logrus.Logger
 }
@@ -38,9 +39,12 @@ func New(ec *cli.ExecutionContext, baseDir string) *ActionConfig {
 		ActionConfig:       ec.Config.ActionConfig,
 		serverFeatureFlags: ec.Version.ServerFeatureFlags,
 		logger:             ec.Logger,
-		cliExtensionConfig: cliextension.NewCLIExtensionConfig(cliext.BinPath(ec), ec.Logger),
+		cliExtensionConfig: cliextension.NewCLIExtensionConfig(&ec.CliExtDestinationBinPath, ec.Logger),
 		ensureCliExt: func() error {
 			return cliext.Setup(ec)
+		},
+		cleanupCliExt: func() {
+			cliext.Cleanup(ec)
 		},
 	}
 	return cfg
@@ -48,6 +52,7 @@ func New(ec *cli.ExecutionContext, baseDir string) *ActionConfig {
 
 func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFrom string) error {
 	err := a.ensureCliExt()
+	defer a.cleanupCliExt()
 	if err != nil {
 		return err
 	}
@@ -55,12 +60,12 @@ func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFrom s
 	// Read the content of graphql file
 	graphqlFileContent, err := a.GetActionsGraphQLFileContent()
 	if err != nil {
-		return errors.Wrapf(err, "error in reading %s file", graphqlFileName)
+		return fmt.Errorf("error in reading %s file: %w", graphqlFileName, err)
 	}
 	// Read actions.yaml
 	oldAction, err := a.GetActionsFileContent()
 	if err != nil {
-		return errors.Wrapf(err, "error in reading %s file", actionsFileName)
+		return fmt.Errorf("error in reading %s file: %w", a.Filename(), err)
 	}
 	// check if action already present
 	for _, currAction := range oldAction.Actions {
@@ -95,14 +100,14 @@ input SampleInput {
 		}
 		sdlToResp, err := a.cliExtensionConfig.ConvertMetadataToSDL(sdlToReq)
 		if err != nil {
-			return errors.Wrap(err, "error in converting metadata to sdl")
+			return fmt.Errorf("error in converting metadata to sdl: %w", err)
 		}
 		defaultSDL = sdlToResp.SDL.Complete
 	}
 	graphqlFileContent = defaultSDL + "\n" + graphqlFileContent
 	data, err := editor.CaptureInputFromEditor(editor.GetPreferredEditorFromEnvironment, graphqlFileContent, "graphql")
 	if err != nil {
-		return errors.Wrap(err, "error in getting input from editor")
+		return fmt.Errorf("error in getting input from editor: %w", err)
 	}
 	sdlFromReq := types.SDLFromRequest{
 		SDL: types.SDLPayload{
@@ -111,7 +116,7 @@ input SampleInput {
 	}
 	sdlFromResp, err := a.cliExtensionConfig.ConvertSDLToMetadata(sdlFromReq)
 	if err != nil {
-		return errors.Wrap(err, "error in converting sdl to metadata")
+		return fmt.Errorf("error in converting sdl to metadata: %w", err)
 	}
 	currentActionNames := make([]string, 0)
 	for actionIndex, action := range sdlFromResp.Actions {
@@ -184,28 +189,29 @@ input SampleInput {
 	// write actions.yaml
 	commonByt, err := yaml.Marshal(common)
 	if err != nil {
-		return errors.Wrap(err, "error in marshalling common")
+		return fmt.Errorf("error in marshalling common: %w", err)
 	}
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, actionsFileName), commonByt, 0644)
+	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, a.Filename()), commonByt, 0644)
 	if err != nil {
-		return errors.Wrapf(err, "error in writing %s file", actionsFileName)
+		return fmt.Errorf("error in writing %s file: %w", a.Filename(), err)
 	}
 	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, graphqlFileName), data, 0644)
 	if err != nil {
-		return errors.Wrapf(err, "error in writing %s file", graphqlFileName)
+		return fmt.Errorf("error in writing %s file: %w", graphqlFileName, err)
 	}
 	return nil
 }
 
 func (a *ActionConfig) Codegen(name string, derivePld types.DerivePayload) error {
 	err := a.ensureCliExt()
+	defer a.cleanupCliExt()
 	if err != nil {
 		return err
 	}
 
 	graphqlFileContent, err := a.GetActionsGraphQLFileContent()
 	if err != nil {
-		return errors.Wrapf(err, "error in reading %s file", graphqlFileName)
+		return fmt.Errorf("error in reading %s file: %w", graphqlFileName, err)
 	}
 	data := types.ActionsCodegenRequest{
 		ActionName: name,
@@ -220,12 +226,12 @@ func (a *ActionConfig) Codegen(name string, derivePld types.DerivePayload) error
 	}
 	resp, err := a.cliExtensionConfig.GetActionsCodegen(data)
 	if err != nil {
-		return errors.Wrapf(err, "error in getting codegen for action %s", data.ActionName)
+		return fmt.Errorf("error in getting codegen for action %s: %w", data.ActionName, err)
 	}
 	for _, file := range resp.Files {
 		err = ioutil.WriteFile(filepath.Join(a.ActionConfig.Codegen.OutputDir, file.Name), []byte(file.Content), 0644)
 		if err != nil {
-			return errors.Wrap(err, "error in writing codegen file")
+			return fmt.Errorf("error in writing codegen file: %w", err)
 		}
 	}
 	return nil
@@ -241,7 +247,7 @@ func (a *ActionConfig) CreateFiles() error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, actionsFileName), data, 0644)
+	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, a.Filename()), data, 0644)
 	if err != nil {
 		return err
 	}
@@ -253,11 +259,11 @@ func (a *ActionConfig) CreateFiles() error {
 	return nil
 }
 
-func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
+func (a *ActionConfig) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingMetadataObject {
 	if !a.serverFeatureFlags.HasAction {
 		_, err := a.GetActionsFileContent()
 		if err == nil {
-			a.logger.WithField("metadata_plugin", "actions").Warnf("Skipping building %s", actionsFileName)
+			a.logger.WithField("metadata_plugin", "actions").Warnf("Skipping building %s", a.Filename())
 		}
 		_, err = a.GetActionsGraphQLFileContent()
 		if err == nil {
@@ -266,13 +272,14 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 		return nil
 	}
 	err := a.ensureCliExt()
+	defer a.cleanupCliExt()
 	if err != nil {
-		return err
+		return a.error(err)
 	}
 	// Read actions.graphql
 	graphqlFileContent, err := a.GetActionsGraphQLFileContent()
 	if err != nil {
-		return errors.Wrapf(err, "error in reading %s file", graphqlFileName)
+		return a.error(fmt.Errorf("error in reading %s file: %w", graphqlFileName, err))
 	}
 
 	sdlFromReq := types.SDLFromRequest{
@@ -282,13 +289,13 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 	}
 	sdlFromResp, err := a.cliExtensionConfig.ConvertSDLToMetadata(sdlFromReq)
 	if err != nil {
-		return errors.Wrap(err, "error in converting sdl to metadata")
+		return a.error(fmt.Errorf("error in converting sdl to metadata: %w", err))
 	}
 
 	// Read actions.yaml
 	oldAction, err := a.GetActionsFileContent()
 	if err != nil {
-		return errors.Wrapf(err, "error in reading %s", actionsFileName)
+		return a.error(fmt.Errorf("error in reading %s: %w", a.Filename(), err))
 	}
 	for actionIndex, action := range oldAction.Actions {
 		var isFound bool
@@ -305,7 +312,7 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 			}
 		}
 		if !isFound {
-			return fmt.Errorf("action %s is not present in %s", action.Name, graphqlFileName)
+			return a.error(fmt.Errorf("action %s is not present in %s", action.Name, graphqlFileName))
 		}
 	}
 	for customTypeIndex, customType := range oldAction.CustomTypes.Enums {
@@ -319,7 +326,7 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 			}
 		}
 		if !isFound {
-			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
+			return a.error(fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName))
 		}
 	}
 	for customTypeIndex, customType := range oldAction.CustomTypes.InputObjects {
@@ -333,7 +340,7 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 			}
 		}
 		if !isFound {
-			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
+			return a.error(fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName))
 		}
 	}
 	for customTypeIndex, customType := range oldAction.CustomTypes.Objects {
@@ -347,7 +354,7 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 			}
 		}
 		if !isFound {
-			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
+			return a.error(fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName))
 		}
 	}
 	for customTypeIndex, customType := range oldAction.CustomTypes.Scalars {
@@ -361,7 +368,7 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 			}
 		}
 		if !isFound {
-			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
+			return a.error(fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName))
 		}
 	}
 	if len(sdlFromResp.Actions) != 0 {
@@ -382,14 +389,15 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 	return nil
 }
 
-func (a *ActionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
+func (a *ActionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
 	if !a.serverFeatureFlags.HasAction {
-		a.logger.Debugf("Skipping creating %s and %s", actionsFileName, graphqlFileName)
+		a.logger.Debugf("Skipping creating %s and %s", a.Filename(), graphqlFileName)
 		return make(map[string][]byte), nil
 	}
 	err := a.ensureCliExt()
+	defer a.cleanupCliExt()
 	if err != nil {
-		return nil, err
+		return nil, a.error(err)
 	}
 	var actions yaml.MapSlice
 	for _, item := range metadata {
@@ -401,37 +409,41 @@ func (a *ActionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error)
 	}
 	ymlByt, err := yaml.Marshal(actions)
 	if err != nil {
-		return nil, errors.Wrap(err, "error in marshalling actions, custom_types from metadata")
+		return nil, a.error(fmt.Errorf("error in marshalling actions, custom_types from metadata: %w", err))
 	}
 	var common types.Common
 	err = yaml.Unmarshal(ymlByt, &common)
 	if err != nil {
-		return nil, errors.Wrap(err, "error in unmarshal to common")
+		return nil, a.error(fmt.Errorf("error in unmarshal to common: %w", err))
 	}
 	var sdlToReq types.SDLToRequest
 	sdlToReq.Types = common.CustomTypes
 	sdlToReq.Actions = common.Actions
 	sdlToResp, err := a.cliExtensionConfig.ConvertMetadataToSDL(sdlToReq)
 	if err != nil {
-		return nil, errors.Wrap(err, "error in converting metadata to sdl")
+		return nil, a.error(fmt.Errorf("error in converting metadata to sdl: %w", err))
 	}
 	common.SetExportDefault()
 	commonByt, err := yaml.Marshal(common)
 	if err != nil {
-		return nil, errors.Wrap(err, "error in marshaling common")
+		return nil, a.error(fmt.Errorf("error in marshaling common: %w", err))
 	}
 	return map[string][]byte{
-		filepath.Join(a.MetadataDir, actionsFileName): commonByt,
-		filepath.Join(a.MetadataDir, graphqlFileName): []byte(sdlToResp.SDL.Complete),
+		filepath.ToSlash(filepath.Join(a.MetadataDir, a.Filename())):    commonByt,
+		filepath.ToSlash(filepath.Join(a.MetadataDir, graphqlFileName)): []byte(sdlToResp.SDL.Complete),
 	}, nil
 }
 
-func (a *ActionConfig) Name() string {
+func (a *ActionConfig) Key() string {
 	return "actions"
 }
 
+func (a *ActionConfig) Filename() string {
+	return "actions.yaml"
+}
+
 func (a *ActionConfig) GetActionsFileContent() (content types.Common, err error) {
-	commonByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, actionsFileName))
+	commonByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, a.Filename()))
 	if err != nil {
 		return
 	}
@@ -450,4 +462,8 @@ func (a *ActionConfig) GetActionsGraphQLFileContent() (sdl string, err error) {
 
 func (a *ActionConfig) getActionsCodegenURI(framework string) string {
 	return fmt.Sprintf(`https://raw.githubusercontent.com/%s/master/%s/actions-codegen.js`, util.ActionsCodegenOrg, framework)
+}
+
+func (a *ActionConfig) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
+	return metadataobject.NewErrParsingMetadataObject(a, err, additionalContext...)
 }

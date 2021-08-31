@@ -32,20 +32,18 @@ import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
 import           Hasura.Incremental            (Cacheable)
-import           Hasura.RQL.Instances          ()
-
 
 
 newtype CollectionName
   = CollectionName {unCollectionName :: NonEmptyText}
   deriving ( Show, Eq, Ord, Hashable, ToJSON, ToJSONKey
            , FromJSON, Q.FromCol, Q.ToPrepArg, ToTxt
-           , Generic, Arbitrary
+           , Generic
            )
 
 newtype QueryName
   = QueryName {unQueryName :: NonEmptyText}
-  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, ToTxt, Generic, Arbitrary, Cacheable)
+  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, ToTxt, Generic, Cacheable)
 
 newtype GQLQuery
   = GQLQuery { unGQLQuery :: G.ExecutableDocument G.Name }

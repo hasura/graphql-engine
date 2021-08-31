@@ -1,23 +1,21 @@
 package seed
 
 import (
-	"fmt"
 	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/pgdump"
-	"github.com/hasura/graphql-engine/cli/internal/hasura/v1query"
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/pgdump"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1query"
 
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 )
 
 func TestDriver_ExportDatadump(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
+	port, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardown()
 	type fields struct {
 		SendBulk     sendBulk
@@ -39,17 +37,11 @@ func TestDriver_ExportDatadump(t *testing.T) {
 			"can export data dump",
 			fields{
 				func() sendBulk {
-					c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", port), nil)
-					if err != nil {
-						t.Fatal(err)
-					}
+					c := testutil.NewHttpcClient(t, port, nil)
 					return v1query.New(c, "v2/query").Bulk
 				}(),
 				func() hasura.PGDump {
-					c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", port), nil)
-					if err != nil {
-						t.Fatal(err)
-					}
+					c := testutil.NewHttpcClient(t, port, nil)
 					return pgdump.New(c, "v1alpha1/pg_dump")
 				}(),
 			},
@@ -69,10 +61,7 @@ SELECT pg_catalog.setval('public.authors_id_seq', 1, false);
 `,
 			false,
 			func(t *testing.T) {
-				c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", port), nil)
-				if err != nil {
-					t.Fatal(err)
-				}
+				c := testutil.NewHttpcClient(t, port, nil)
 				q := v1query.New(c, "v2/query")
 				b, err := ioutil.ReadFile("testdata/seeds/articles.sql")
 				require.NoError(t, err)

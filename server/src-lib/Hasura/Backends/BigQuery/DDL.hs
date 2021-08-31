@@ -1,6 +1,5 @@
 module Hasura.Backends.BigQuery.DDL
   ( buildComputedFieldInfo
-  , buildRemoteFieldInfo
   , fetchAndValidateEnumValues
   , createTableEventTrigger
   , buildEventTriggerInfo
@@ -12,33 +11,32 @@ module Hasura.Backends.BigQuery.DDL
   )
 where
 
-import           Hasura.Backends.BigQuery.DDL.BoolExp
 import           Hasura.Prelude
+
+import qualified Data.Environment                     as Env
 
 import           Data.Aeson
 
-import qualified Data.Environment                         as Env
+import qualified Hasura.Backends.BigQuery.Types       as BigQuery
 
+import           Hasura.Backends.BigQuery.DDL.BoolExp
+import           Hasura.Backends.BigQuery.DDL.Source  as M
+import           Hasura.Base.Error
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
-import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 import           Hasura.Server.Types
-import           Hasura.Backends.BigQuery.Instances.Types ()
 import           Hasura.Server.Utils
 import           Hasura.Session
 
-import qualified Hasura.Backends.BigQuery.Types           as BigQuery
-import           Hasura.Backends.BigQuery.DDL.Source      as M
 
 buildComputedFieldInfo
   :: (MonadError QErr m)
@@ -46,20 +44,11 @@ buildComputedFieldInfo
   -> TableName 'BigQuery
   -> ComputedFieldName
   -> ComputedFieldDefinition 'BigQuery
-  -> RawFunctionInfo
+  -> RawFunctionInfo 'BigQuery
   -> Maybe Text
   -> m (ComputedFieldInfo 'BigQuery)
 buildComputedFieldInfo _ _ _ _ _ _ =
   throw400 NotSupported "Computed fields aren't supported for BigQuery sources"
-
-buildRemoteFieldInfo
-  :: (MonadError QErr m)
-  => RemoteRelationship 'BigQuery
-  -> [ColumnInfo 'BigQuery]
-  -> RemoteSchemaMap
-  -> m (RemoteFieldInfo 'BigQuery, [SchemaDependency])
-buildRemoteFieldInfo _ _ _ =
-  throw400 NotSupported "Remote joins aren't supported for BigQuery sources"
 
 fetchAndValidateEnumValues
   :: (Monad m)
@@ -99,8 +88,8 @@ buildFunctionInfo
   -> FunctionName 'BigQuery
   -> SystemDefined
   -> FunctionConfig
-  -> [FunctionPermissionMetadata]
-  -> RawFunctionInfo
+  -> FunctionPermissionsMap
+  -> RawFunctionInfo 'BigQuery
   -> m (FunctionInfo 'BigQuery, SchemaDependency)
 buildFunctionInfo _ _ _ _ _ _ =
   throw400 NotSupported "SQL Functions are not supported for BigQuery source"

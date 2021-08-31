@@ -1,0 +1,22 @@
+type: run_sql
+args:
+  sql: |
+    CREATE TABLE "user" (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      score INTEGER,
+      role_echo TEXT DEFAULT ''
+    );
+
+    insert into "user" (name, score) values ('user 1', 143), ('user 2', 132);
+
+    CREATE FUNCTION add_to_score(hasura_session json, search text, increment integer default 1)
+    RETURNS SETOF "user" AS $$
+        UPDATE "user"
+        SET score = score + increment
+        WHERE name ilike ('%' || search || '%')
+        RETURNING id,
+                  name,
+                  score,
+                  hasura_session->>'x-hasura-role' AS role_echo
+      $$ LANGUAGE sql VOLATILE;

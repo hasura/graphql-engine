@@ -8,16 +8,15 @@ import qualified Data.HashMap.Strict                 as M
 
 import           Control.Lens
 import           Data.Aeson.Extended
-import           Data.Aeson.TH
 
 import qualified Hasura.SQL.AnyBackend               as AB
 import qualified Hasura.Tracing                      as Tracing
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Base.Error
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Instances          ()
 import           Hasura.RQL.Types.Table
@@ -79,7 +78,7 @@ data ResolvedSource b
   , _rsTables    :: !(DBTablesMetadata b)
   , _rsFunctions :: !(DBFunctionsMetadata b)
   , _rsPgScalars :: !(HashSet (ScalarType b))
-  } deriving (Eq)
+  }
 
 type SourceTables b = HashMap SourceName (TableCache b)
 
@@ -100,39 +99,3 @@ instance (MonadResolveSource m) => MonadResolveSource (Tracing.TraceT m) where
 
 instance (MonadResolveSource m) => MonadResolveSource (LazyTxT QErr m) where
   getSourceResolver = lift getSourceResolver
-
--- Metadata API related types
-data AddSource b
-  = AddSource
-  { _asName                 :: !SourceName
-  , _asConfiguration        :: !(SourceConnConfiguration b)
-  , _asReplaceConfiguration :: !Bool
-  } deriving (Generic)
-deriving instance (Backend b) => Show (AddSource b)
-deriving instance (Backend b) => Eq (AddSource b)
-
-instance (Backend b) => ToJSON (AddSource b) where
-  toJSON = genericToJSON hasuraJSON
-
-instance (Backend b) => FromJSON (AddSource b) where
-  parseJSON = withObject "Object" $ \o ->
-    AddSource
-      <$> o .: "name"
-      <*> o .: "configuration"
-      <*> o .:? "replace_configuration" .!= False
-
-data DropSource
-  = DropSource
-  { _dsName    :: !SourceName
-  , _dsCascade :: !Bool
-  } deriving (Show, Eq)
-$(deriveToJSON hasuraJSON ''DropSource)
-
-instance FromJSON DropSource where
-  parseJSON = withObject "Object" $ \o ->
-    DropSource <$> o .: "name" <*> o .:? "cascade" .!= False
-
-newtype PostgresSourceName =
-  PostgresSourceName {_psnName :: SourceName}
-  deriving (Show, Eq)
-$(deriveJSON hasuraJSON ''PostgresSourceName)

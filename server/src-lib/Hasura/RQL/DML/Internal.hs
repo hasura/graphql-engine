@@ -1,7 +1,4 @@
 module Hasura.RQL.DML.Internal where
--- ( mkAdminRolePermInfo
--- , SessVarBldr
--- ) where
 
 import           Hasura.Prelude
 
@@ -23,6 +20,7 @@ import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.Backends.Postgres.Translate.Column
 import           Hasura.Backends.Postgres.Types.Column
+import           Hasura.Base.Error
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Session
@@ -51,10 +49,10 @@ mkAdminRolePermInfo ti =
 
 
     tn = _tciName ti
-    i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False []
-    s = SelPermInfo pgColsWithFilter scalarComputedFields' annBoolExpTrue Nothing True []
-    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty []
-    d = DelPermInfo tn annBoolExpTrue []
+    i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False mempty
+    s = SelPermInfo pgColsWithFilter scalarComputedFields' annBoolExpTrue Nothing True mempty
+    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty mempty
+    d = DelPermInfo tn annBoolExpTrue mempty
 
 askPermInfo'
   :: (UserInfoM m, Backend b)
@@ -87,7 +85,7 @@ askPermInfo pa tableInfo = do
   roleName  <- askCurRole
   mPermInfo <- askPermInfo' pa tableInfo
   onNothing mPermInfo $ throw400 PermissionDenied $ mconcat
-    [ pt <> " on " <>> _tciName (_tiCoreInfo tableInfo)
+    [ pt <> " on " <>> tableInfoName tableInfo
     , " for role " <>> roleName
     , " is not allowed. "
     ]
@@ -153,6 +151,22 @@ checkPermOnCol pt allowedCols col = do
         , permTypeToCode pt <> " column " <>> col
         ]
 
+checkSelectPermOnScalarComputedField
+  :: forall b m
+   . (UserInfoM m, QErrM m)
+  => SelPermInfo b
+  -> ComputedFieldName
+  -> m ()
+checkSelectPermOnScalarComputedField selPermInfo computedField = do
+  role <- askCurRole
+  unless (M.member computedField $ spiScalarComputedFields selPermInfo) $
+    throw400 PermissionDenied $ permErrMsg role
+  where
+    permErrMsg role
+      | role == adminRoleName = "no such computed field exists : " <>> computedField
+      | otherwise =
+        "role " <> role <<> " does not have permission to select computed field" <>> computedField
+
 valueParserWithCollectableType
   :: forall pgKind m
    . (Backend ('Postgres pgKind), MonadError QErr m)
@@ -190,7 +204,11 @@ fetchRelTabInfo refTabName =
   modifyErrAndSet500 ("foreign " <> ) $
     askTabInfoSource refTabName
 
-type SessVarBldr b m = SessionVarType b -> SessionVariable -> m (SQLExpression b)
+data SessionVariableBuilder b m
+  = SessionVariableBuilder
+  { _svbCurrentSession :: !(SQLExpression b)
+  , _svbVariableParser :: !(SessionVarType b -> SessionVariable -> m (SQLExpression b))
+  }
 
 fetchRelDet
   :: (UserInfoM m, QErrM m, TableInfoRM b m, Backend b)
@@ -217,49 +235,67 @@ fetchRelDet relName refTabName = do
 checkOnColExp
   :: (UserInfoM m, QErrM m, TableInfoRM b m, Backend b)
   => SelPermInfo b
-  -> SessVarBldr b m
+  -> SessionVariableBuilder b m
   -> AnnBoolExpFldSQL b
   -> m (AnnBoolExpFldSQL b)
 checkOnColExp spi sessVarBldr annFld = case annFld of
-  AVCol colInfo _ -> do
+  AVColumn colInfo _ -> do
     let cn = pgiColumn colInfo
     checkSelOnCol spi cn
     return annFld
-  AVRel relInfo nesAnn -> do
+  AVRelationship relInfo nesAnn -> do
     relSPI <- snd <$> fetchRelDet (riName relInfo) (riRTable relInfo)
     modAnn <- checkSelPerm relSPI sessVarBldr nesAnn
     resolvedFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter relSPI
-    return $ AVRel relInfo $ andAnnBoolExps modAnn resolvedFltr
+    return $ AVRelationship relInfo $ andAnnBoolExps modAnn resolvedFltr
+  AVComputedField cfBoolExp -> do
+    roleName <- askCurRole
+    let fieldName = _acfbName cfBoolExp
+    case _acfbBoolExp cfBoolExp of
+      CFBEScalar _ -> do
+        checkSelectPermOnScalarComputedField spi fieldName
+        pure annFld
+      CFBETable table nesBoolExp -> do
+        tableInfo <- modifyErrAndSet500 ("function " <>) $ askTabInfoSource table
+        let errMsg _ = "role " <> roleName <<> " does not have permission to read "
+                     <> " computed field " <> fieldName <<> "; no permission on table " <>> table
+        tableSPI <- modifyErr errMsg $  askSelPermInfo tableInfo
+        modBoolExp <- checkSelPerm tableSPI sessVarBldr nesBoolExp
+        resolvedFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter tableSPI
+      -- Including table permission filter; "input condition" AND "permission filter condition"
+        let finalBoolExp = andAnnBoolExps modBoolExp resolvedFltr
+        pure $ AVComputedField cfBoolExp{_acfbBoolExp = CFBETable table finalBoolExp}
 
 convAnnBoolExpPartialSQL
   :: (Applicative f, Backend backend)
-  => SessVarBldr backend f
+  => SessionVariableBuilder backend f
   -> AnnBoolExpPartialSQL backend
   -> f (AnnBoolExpSQL backend)
 convAnnBoolExpPartialSQL f =
-  traverseAnnBoolExp (convPartialSQLExp f)
+  (traverse . traverse) (convPartialSQLExp f)
 
 convAnnColumnCaseBoolExpPartialSQL
   :: (Applicative f, Backend backend)
-  => SessVarBldr backend f
+  => SessionVariableBuilder backend f
   -> AnnColumnCaseBoolExpPartialSQL backend
   -> f (AnnColumnCaseBoolExp backend (SQLExpression backend))
 convAnnColumnCaseBoolExpPartialSQL f =
-  traverseAnnColumnCaseBoolExp (convPartialSQLExp f)
+  (traverse . traverse) (convPartialSQLExp f)
 
 convPartialSQLExp
   :: (Applicative f)
-  => SessVarBldr backend f
+  => SessionVariableBuilder backend f
   -> PartialSQLExp backend
   -> f (SQLExpression backend)
-convPartialSQLExp f = \case
+convPartialSQLExp sessVarBldr = \case
   PSESQLExp sqlExp                 -> pure sqlExp
-  PSESessVar colTy sessionVariable -> f colTy sessionVariable
+  PSESession                       -> pure $ _svbCurrentSession sessVarBldr
+  PSESessVar colTy sessionVariable -> (_svbVariableParser sessVarBldr) colTy sessionVariable
 
 sessVarFromCurrentSetting
-  :: (Applicative f) => CollectableType PGScalarType -> SessionVariable -> f S.SQLExp
-sessVarFromCurrentSetting pgType sessVar =
-  pure $ sessVarFromCurrentSetting' pgType sessVar
+  :: (Applicative f) => SessionVariableBuilder ('Postgres pgKind) f
+sessVarFromCurrentSetting =
+  SessionVariableBuilder currentSession $ \ty var -> pure $ sessVarFromCurrentSetting' ty var
 
 sessVarFromCurrentSetting' :: CollectableType PGScalarType -> SessionVariable -> S.SQLExp
 sessVarFromCurrentSetting' ty sessVar =
@@ -270,16 +306,6 @@ withTypeAnn ty sessVarVal = flip S.SETyAnn (S.mkTypeAnn ty) $
   case ty of
     CollectableTypeScalar baseTy -> withConstructorFn baseTy sessVarVal
     CollectableTypeArray _       -> sessVarVal
-
-retrieveAndFlagSessionVariableValue
-  :: (MonadState s m)
-  => (SessionVariable -> s -> s)
-  -> SessionVariable
-  -> S.SQLExp
-  -> m S.SQLExp
-retrieveAndFlagSessionVariableValue updateState sessVar currentSessionExp = do
-  modify $ updateState sessVar
-  pure $ fromCurrentSession currentSessionExp sessVar
 
 fromCurrentSession
   :: S.SQLExp
@@ -295,7 +321,7 @@ currentSession = S.SEUnsafe "current_setting('hasura.user')::json"
 checkSelPerm
   :: (UserInfoM m, QErrM m, TableInfoRM b m, Backend b)
   => SelPermInfo b
-  -> SessVarBldr b m
+  -> SessionVariableBuilder b m
   -> AnnBoolExpSQL b
   -> m (AnnBoolExpSQL b)
 checkSelPerm spi sessVarBldr =
@@ -306,12 +332,13 @@ convBoolExp
   => FieldInfoMap (FieldInfo b)
   -> SelPermInfo b
   -> BoolExp b
-  -> SessVarBldr b m
+  -> SessionVariableBuilder b m
   -> TableName b
   -> ValueParser b m (SQLExpression b)
   -> m (AnnBoolExpSQL b)
 convBoolExp cim spi be sessVarBldr rootTable rhsParser = do
-  abe <- annBoolExp rhsParser rootTable cim $ unBoolExp be
+  let boolExpRHSParser = BoolExpRHSParser rhsParser $ _svbCurrentSession sessVarBldr
+  abe <- annBoolExp boolExpRHSParser rootTable cim $ unBoolExp be
   checkSelPerm spi sessVarBldr abe
 
 dmlTxErrorHandler :: Q.PGTxErr -> QErr
@@ -337,7 +364,7 @@ toJSONableExp strfyNum colTy asText expn
   | otherwise = expn
 
 -- validate headers
-validateHeaders :: (UserInfoM m, QErrM m) => [Text] -> m ()
+validateHeaders :: (UserInfoM m, QErrM m) => HashSet Text -> m ()
 validateHeaders depHeaders = do
   headers <- getSessionVariables . _uiSession <$> askUserInfo
   forM_ depHeaders $ \hdr ->

@@ -31,9 +31,10 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.Column (toTxtValue)
 import           Hasura.Backends.Postgres.Types.Column
-import           Hasura.GraphQL.Context
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Parser
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Session
@@ -94,9 +95,11 @@ instance ToTxt MultiplexedQuery where
 
 
 toSQLFromItem
-  :: Backend ('Postgres pgKind)
+  :: ( Backend ('Postgres pgKind)
+     , DS.PostgresAnnotatedFieldJSON pgKind
+     )
   => S.Alias
-  -> QueryDB ('Postgres pgKind) S.SQLExp
+  -> QueryDB ('Postgres pgKind) (Const Void) S.SQLExp
   -> S.FromItem
 toSQLFromItem = flip \case
   QDBSingleRow    s -> S.mkSelFromItem $ DS.mkSQLSelect JASSingleObject s
@@ -105,8 +108,10 @@ toSQLFromItem = flip \case
   QDBConnection   s -> S.mkSelectWithFromItem $ DS.mkConnectionSelect s
 
 mkMultiplexedQuery
-  :: Backend ('Postgres pgKind)
-  => OMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) S.SQLExp)
+  :: ( Backend ('Postgres pgKind)
+     , DS.PostgresAnnotatedFieldJSON pgKind
+     )
+  => OMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) (Const Void) S.SQLExp)
   -> MultiplexedQuery
 mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkSelect
   { S.selExtr =
@@ -145,9 +150,13 @@ mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkS
 -- expressions that refer to the @result_vars@ input object, collecting information
 -- about various parameters of the query along the way.
 resolveMultiplexedValue
-  :: (MonadState (QueryParametersInfo ('Postgres pgKind)) m)
-  => UnpreparedValue ('Postgres pgKind) -> m S.SQLExp
-resolveMultiplexedValue = \case
+  :: ( MonadState (QueryParametersInfo ('Postgres pgKind)) m
+     , MonadError QErr m
+     )
+  => SessionVariables
+  -> UnpreparedValue ('Postgres pgKind)
+  -> m S.SQLExp
+resolveMultiplexedValue allSessionVars = \case
   UVParameter varM colVal -> do
     varJsonPath <- case fmap PS.getName varM of
       Just varName -> do
@@ -159,10 +168,17 @@ resolveMultiplexedValue = \case
         pure ["synthetic", tshow syntheticVarIndex]
     pure $ fromResVars (CollectableTypeScalar $ unsafePGColumnToBackend $ cvType colVal) varJsonPath
   UVSessionVar ty sessVar -> do
+    _ <- getSessionVariableValue sessVar allSessionVars
+          `onNothing`
+            throw400 NotFound
+              ("missing session variable: "  <>> sessionVariableToText sessVar)
     modifying qpiReferencedSessionVariables (Set.insert sessVar)
     pure $ fromResVars ty ["session", sessionVariableToText sessVar]
   UVLiteral sqlExp -> pure sqlExp
-  UVSession -> pure $ fromResVars (CollectableTypeScalar PGJSON) ["session"]
+  UVSession -> do
+    -- if the entire session is referenced, then add all session vars in referenced vars
+    modifying qpiReferencedSessionVariables (const $ getSessionVariablesSet allSessionVars)
+    pure $ fromResVars (CollectableTypeScalar PGJSON) ["session"]
   where
     fromResVars pgType jPath = addTypeAnnotation pgType $ S.SEOpApp (S.SQLOp "#>>")
       [ S.SEQIdentifier $ S.QIdentifier (S.QualifiedIdentifier (Identifier "_subs") Nothing) (Identifier "result_vars")

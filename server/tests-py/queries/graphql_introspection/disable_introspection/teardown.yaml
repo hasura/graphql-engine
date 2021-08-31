@@ -1,0 +1,3 @@
+type: set_graphql_schema_introspection_options
+args:
+  disabled_for_roles: []

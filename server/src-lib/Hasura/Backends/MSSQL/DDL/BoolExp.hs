@@ -2,17 +2,16 @@ module Hasura.Backends.MSSQL.DDL.BoolExp where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                            as J
-import qualified Data.HashMap.Strict                   as Map
-import qualified Data.Text                             as T
+import qualified Data.Aeson                   as J
+import qualified Data.HashMap.Strict          as Map
+import qualified Data.Text                    as T
 
-import           Data.Text.Extended                    (dquote, (<<>))
+import           Data.Text.Extended           (dquote, toTxt, (<<>))
 
-import           Hasura.Backends.MSSQL.Instances.Types ()
-import           Hasura.Backends.MSSQL.Types           hiding (ColumnType)
+import           Hasura.Backends.MSSQL.Types  hiding (ColumnType)
+import           Hasura.Base.Error
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
@@ -23,12 +22,11 @@ parseBoolExpOperations
   => ValueParser 'MSSQL m v
   -> TableName
   -> FieldInfoMap (FieldInfo 'MSSQL)
-  -> ColumnInfo 'MSSQL
+  -> ColumnReference 'MSSQL
   -> J.Value
   -> m [OpExpG 'MSSQL v]
-parseBoolExpOperations rhsParser _table _fields columnInfo value =
-  withPathK (columnNameText $ pgiColumn columnInfo) $
-    parseOperations (pgiType columnInfo) value
+parseBoolExpOperations rhsParser _table _fields columnRef value =
+  withPathK (toTxt columnRef) $ parseOperations (columnReferenceType columnRef) value
   where
     parseWithTy ty = rhsParser (CollectableTypeScalar ty)
 
@@ -89,7 +87,7 @@ parseBoolExpOperations rhsParser _table _fields columnInfo value =
         x                -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
 
       where
-        colTy = pgiType columnInfo
+        colTy = columnReferenceType columnRef
 
         parseOne = parseWithTy columnType val
         parseManyWithType ty = rhsParser (CollectableTypeArray ty) val

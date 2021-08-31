@@ -7,11 +7,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { exists } from '../../../Common/utils/jsUtils';
-import {
-  currentDriver,
-  dataSource,
-  isFeatureSupported,
-} from '../../../../dataSources';
+import { dataSource, isFeatureSupported } from '../../../../dataSources';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { getPersistedPageSize } from './tableUtils';
 import { getManualEventsTriggers } from '../../../../metadata/selector';
@@ -114,7 +110,7 @@ class ViewTable extends Component {
       s => s.table_name === tableName && s.table_schema === currentSchema
     );
 
-    if (!tableSchema && currentDriver === 'postgres') {
+    if (!tableSchema) {
       throw new NotFoundError();
     }
 
@@ -181,11 +177,9 @@ class ViewTable extends Component {
 
     return (
       <RightContainer>
-        <div className={styles.padd_left}>
-          {header}
-          {comment}
-          <div>{viewRows}</div>
-        </div>
+        {header}
+        {comment}
+        <div>{viewRows}</div>
       </RightContainer>
     );
   }

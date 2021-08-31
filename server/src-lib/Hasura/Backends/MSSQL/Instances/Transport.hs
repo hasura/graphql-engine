@@ -18,6 +18,7 @@ import qualified Hasura.Logging                          as L
 import           Hasura.Backends.MSSQL.Connection
 import           Hasura.Backends.MSSQL.Instances.Execute
 import           Hasura.Backends.MSSQL.ToQuery
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
@@ -57,7 +58,7 @@ runQuery
   -> L.Logger L.Hasura
   -> SourceConfig 'MSSQL
   -> ExceptT QErr IO EncJSON
-  -> Maybe Text
+  -> Maybe (PreparedQuery 'MSSQL)
   -> m (DiffTime, EncJSON)
   -- ^ Also return the time spent in the PG query; for telemetry.
 runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql =  do
@@ -87,7 +88,7 @@ runMutation
   -> L.Logger L.Hasura
   -> SourceConfig 'MSSQL
   -> ExceptT QErr IO EncJSON
-  -> Maybe Text
+  -> Maybe (PreparedQuery 'MSSQL)
   -> m (DiffTime, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
@@ -130,10 +131,12 @@ run action = do
 mkQueryLog
   :: GQLReqUnparsed
   -> G.Name
-  -> Maybe Text
+  -> Maybe (PreparedQuery 'MSSQL)
   -> RequestId
   -> QueryLog
 mkQueryLog gqlQuery fieldName preparedSql requestId =
   QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId QueryLogKindDatabase
   where
-    generatedQuery = preparedSql <&> \qs -> GeneratedQuery qs J.Null
+    generatedQuery =
+      preparedSql <&> \queryString
+        -> GeneratedQuery queryString J.Null

@@ -18,6 +18,7 @@ import           Hasura.Metadata.Class
 
 import qualified Hasura.Tracing               as Tracing
 
+import           Hasura.Base.Error
 import           Hasura.RQL.Types
 import           Hasura.Session
 
@@ -80,5 +81,7 @@ runQueryLazyTx pgExecCtx txAccess tx = do
     $ withUserInfo userInfo tx
 
 peelRun
-  :: RunCtx -> RunT m a -> ExceptT QErr m a
+  :: RunCtx
+  -> RunT m a
+  -> ExceptT QErr m a
 peelRun runCtx (RunT m) = runReaderT m runCtx

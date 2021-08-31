@@ -6,14 +6,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
 func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
+	port, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardown()
 	type fields struct {
 		Client *httpc.Client
@@ -56,7 +56,7 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
                     "database_url": {
                         "from_env": "HASURA_GRAPHQL_DATABASE_URL"
                     },
-		    "isolation_level": "read-committed",
+		    		"isolation_level": "read-committed",
                     "pool_settings": {
                         "retries": 1,
                         "idle_timeout": 180,
@@ -86,8 +86,9 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
                 "schema": "default",
                 "name": "test"
             },
-            "reason": "no such table/view exists in source: \"default.test\"",
-            "type": "table"
+	        "name":"table default.test in source default",
+	        "reason":"Inconsistent object: no such table/view exists in source: \"default.test\"",
+	        "type":"table"
         }
     ]
 }`

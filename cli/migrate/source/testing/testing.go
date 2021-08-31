@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/migrate/source"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/source"
 )
 
 // Test runs tests against source implementations.

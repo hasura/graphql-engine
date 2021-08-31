@@ -107,7 +107,8 @@
     "react",
     "import",
     "@typescript-eslint/eslint-plugin",
-    "react-hooks"
+    "react-hooks",
+    "testing-library"
   ],
   "settings": {
     "import/resolve": {
@@ -174,6 +175,7 @@
         "@typescript-eslint/no-parameter-properties": "off",
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-var-requires": "off",
+        "@typescript-eslint/no-shadow": "error",
         "@typescript-eslint/no-useless-constructor": "error",
         "@typescript-eslint/no-unused-expressions": [
           "error"
@@ -200,6 +202,7 @@
         "no-useless-constructor": "off",
         "no-unused-expressions": "off",
         "no-console": "off",
+        "no-shadow": "off",
         "prefer-destructuring": "off",
         "no-plusplus": "off",
         "jsx-a11y/anchor-is-valid": "off",
@@ -215,6 +218,11 @@
         "react/jsx-indent": "off",
         "arrow-body-style": "off"
       }
+    },
+    {
+      // 3) Now we enable eslint-plugin-testing-library rules or preset only for matching files!
+      "files": ["src/**/__tests__/**/*.[jt]s?(x)", "src/**/?(*.)+(spec|test).[jt]s?(x)"],
+      "extends": ["plugin:testing-library/react", "plugin:jest-dom/recommended"]
     }
   ]
 }

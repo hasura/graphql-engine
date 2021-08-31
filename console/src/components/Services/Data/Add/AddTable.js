@@ -45,6 +45,8 @@ import {
   tableColumnTypesNotif,
   tableColumnDefaultsNotif,
   tableMinPrimaryKeyNotif,
+  tableNameMaxLengthNotif,
+  tableColumnMaxLengthNotif,
 } from './AddWarning';
 
 import styles from '../../../Common/TableCommon/Table.scss';
@@ -55,6 +57,8 @@ import {
   uniqueKeyDescription,
   checkConstraintsDescription,
 } from '../Common/TooltipMessages';
+import { dataSource, isFeatureSupported } from '../../../../dataSources';
+import { maxAllowedColumnLength } from '../constants';
 
 /* AddTable is a wrapper which wraps
  *  1) Table Name input
@@ -97,6 +101,22 @@ class AddTable extends Component {
 
   componentDidMount() {
     this.props.dispatch(fetchColumnTypeInfo());
+    this.props.dispatch(
+      setForeignKeys([
+        {
+          refSchemaName: '',
+          refTableName: '',
+          colMappings: [
+            {
+              column: '',
+              refColumn: '',
+            },
+          ],
+          onUpdate: dataSource.violationActions[0],
+          onDelete: dataSource.violationActions[0],
+        },
+      ])
+    );
   }
 
   componentWillUnmount() {
@@ -204,6 +224,14 @@ class AddTable extends Component {
     }
   }
 
+  isValidLength(s) {
+    return s.length < maxAllowedColumnLength;
+  }
+
+  validateTableNameLength(name) {
+    return this.isValidLength(name);
+  }
+
   tableNameEmptyCheck(name) {
     return name !== null;
   }
@@ -290,6 +318,16 @@ class AddTable extends Component {
           cols[i].name.toString() +
           ')'
         );
+      }
+    }
+    return '';
+  }
+
+  validateColumnNameLengths(cols) {
+    const l = cols.length;
+    for (let i = 0; i < l; i++) {
+      if (!this.isValidLength(cols[i].name)) {
+        return false;
       }
     }
     return '';
@@ -397,12 +435,20 @@ class AddTable extends Component {
         gqlTableErrorNotif
       ) &&
       this.checkAndNotify(
+        this.validateTableNameLength(tableNameTrimmed),
+        tableNameMaxLengthNotif
+      ) &&
+      this.checkAndNotify(
         this.validateEnoughColumns(trimmedColumns),
         tableEnufColumnsNotif
       ) &&
       this.checkAndNotify(
         this.validateColumnNames(trimmedColumns),
         gqlColumnErrorNotif
+      ) &&
+      this.checkAndNotify(
+        this.validateColumnNameLengths(trimmedColumns),
+        tableColumnMaxLengthNotif
       ) &&
       this.checkAndNotify(
         this.validateNoDupNames(trimmedColumns),
@@ -445,7 +491,6 @@ class AddTable extends Component {
       checkConstraints,
       postgresVersion,
     } = this.props;
-
     const getCreateBtnText = () => {
       let createBtnText = 'Add Table';
       if (ongoingRequest) {
@@ -475,7 +520,7 @@ class AddTable extends Component {
             className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
           >
             <TableName onChange={this.onTableNameChange.bind(this)} />
-            <hr />
+            <hr className="my-lg" />
             <TableColumns
               uniqueKeys={uniqueKeys}
               dataTypes={dataTypes}
@@ -489,15 +534,16 @@ class AddTable extends Component {
               onColUniqueChange={this.onColUniqueChange}
               setColDefaultValue={this.setColDefaultValue}
             />
-            <div>
+            {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
               <FrequentlyUsedColumnSelector
                 onSelect={setFreqUsedColumn}
                 action={'add'}
                 dispatch={dispatch}
                 postgresVersion={postgresVersion}
               />
-            </div>
-            <hr />
+            ) : null}
+
+            <hr className="my-lg" />
             <h4 className={styles.subheading_text}>
               Primary Key &nbsp; &nbsp;
               <ToolTip message={primaryKeyDescription} />
@@ -508,7 +554,7 @@ class AddTable extends Component {
               setPk={setPk}
               dispatch={dispatch}
             />
-            <hr />
+            <hr className="my-lg" />
             <h4 className={styles.subheading_text}>
               Foreign Keys &nbsp; &nbsp;
               <ToolTip message={foreignKeyDescription} />
@@ -524,7 +570,7 @@ class AddTable extends Component {
               fkToggled={fkToggled}
               schemaList={schemaList}
             />
-            <hr />
+            <hr className="my-lg" />
             <h4 className={styles.subheading_text}>
               Unique Keys &nbsp; &nbsp;
               <ToolTip message={uniqueKeyDescription} />
@@ -538,7 +584,7 @@ class AddTable extends Component {
               dispatch={dispatch}
               setUniqueKeys={setUniqueKeys}
             />
-            <hr />
+            <hr className="my-lg" />
             <h4 className={styles.subheading_text}>
               Check Constraints &nbsp; &nbsp;
               <ToolTip message={checkConstraintsDescription} />
@@ -547,9 +593,9 @@ class AddTable extends Component {
               constraints={checkConstraints}
               dispatch={dispatch}
             />
-            <hr />
+            <hr className="my-lg" />
             <TableComment onChange={this.onTableCommentChange} />
-            <hr />
+            <hr className="my-lg" />
             <Button
               type="submit"
               onClick={this.validateAndSubmit}

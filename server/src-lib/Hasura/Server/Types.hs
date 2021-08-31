@@ -15,14 +15,18 @@ import           Hasura.Server.Utils
 
 newtype RequestId
   = RequestId { unRequestId :: Text }
-  deriving (Show, Eq, ToJSON, FromJSON)
+  deriving (Show, Eq, ToJSON, FromJSON, Hashable)
 
-getRequestId :: (MonadIO m) => [HTTP.Header] -> m RequestId
-getRequestId headers =
+getRequestId :: (MonadIO m) => [HTTP.Header] -> m (RequestId, [HTTP.Header])
+getRequestId headers = do
   -- generate a request id for every request if the client has not sent it
+  let mkHeader = (requestIdHeader,)
   case getRequestHeader requestIdHeader headers  of
-    Nothing    -> RequestId <$> liftIO generateFingerprint
-    Just reqId -> return $ RequestId $ bsToTxt reqId
+    Nothing    -> do
+      reqId <- liftIO generateFingerprint
+      let r = RequestId reqId
+      pure (r, mkHeader (txtToBs reqId) : headers)
+    Just reqId -> pure (RequestId $ bsToTxt reqId, headers)
 
 newtype DbUid
   = DbUid { getDbUid :: Text }

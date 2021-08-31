@@ -14,7 +14,7 @@ import           Hasura.Prelude
 import qualified Database.PG.Query                   as Q
 
 import           Hasura.Backends.Postgres.Connection
-import           Hasura.RQL.Types.Error
+import           Hasura.Base.Error
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.SchemaCache        (MetadataResourceVersion (..),
                                                       initialResourceVersion)

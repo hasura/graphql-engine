@@ -27,22 +27,26 @@ module Hasura.RQL.DDL.Schema.Table
 
 import           Hasura.Prelude
 
+import qualified Data.Aeson.Ordered                 as JO
 import qualified Data.HashMap.Strict.Extended       as Map
 import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.HashSet                       as S
 import qualified Language.GraphQL.Draft.Syntax      as G
 
+
 import           Control.Arrow.Extended
 import           Control.Lens.Extended              hiding ((.=))
 import           Control.Monad.Trans.Control        (MonadBaseControl)
 import           Data.Aeson
-import           Data.Aeson.TH
+import           Data.Align                         (align)
 import           Data.Text.Extended
+import           Data.These                         (These (..))
 
 import qualified Hasura.Incremental                 as Inc
 import qualified Hasura.SQL.AnyBackend              as AB
 
 import           Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Schema.Common       (textToName)
@@ -50,6 +54,7 @@ import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Common
 import           Hasura.RQL.DDL.Schema.Enum         (resolveEnumReferences)
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types                   hiding (fmFunction)
 import           Hasura.Server.Utils
 
@@ -64,18 +69,13 @@ deriving instance (Backend b) => Show (TrackTable b)
 deriving instance (Backend b) => Eq (TrackTable b)
 
 instance (Backend b) => FromJSON (TrackTable b) where
-  parseJSON v = withOptions <|> withoutOptions
+  parseJSON v = withOptions v <|> withoutOptions
     where
-      withOptions = flip (withObject "TrackTable") v $ \o -> TrackTable
+      withOptions = withObject "track table" \o -> TrackTable
         <$> o .:? "source" .!= defaultSource
         <*> o .: "table"
         <*> o .:? "is_enum" .!= False
       withoutOptions = TrackTable defaultSource <$> parseJSON v <*> pure False
-
-instance (Backend b) => ToJSON (TrackTable b) where
-  toJSON (TrackTable source name isEnum)
-    | isEnum = object [ "source" .= source, "table" .= name, "is_enum" .= isEnum ]
-    | otherwise = toJSON name
 
 data SetTableIsEnum
   = SetTableIsEnum
@@ -83,10 +83,9 @@ data SetTableIsEnum
   , stieTable  :: !QualifiedTable
   , stieIsEnum :: !Bool
   } deriving (Show, Eq)
-$(deriveToJSON hasuraJSON ''SetTableIsEnum)
 
 instance FromJSON SetTableIsEnum where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "set table is enum" $ \o ->
     SetTableIsEnum
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"
@@ -97,14 +96,12 @@ data UntrackTable b =
   { utSource  :: !SourceName
   , utTable   :: !(TableName b)
   , utCascade :: !Bool
-  } deriving (Generic)
+  }
 deriving instance (Backend b) => Show (UntrackTable b)
 deriving instance (Backend b) => Eq (UntrackTable b)
-instance (Backend b) => ToJSON (UntrackTable b) where
-  toJSON = genericToJSON hasuraJSON{omitNothingFields=True}
 
 instance (Backend b) => FromJSON (UntrackTable b) where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "untrack table" $ \o ->
     UntrackTable
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"
@@ -161,16 +158,17 @@ checkConflictingNode sc tnGQL = do
         ]
   case queryParser introspectionQuery of
     Left _ -> pure ()
-    Right (results, _reusability) -> do
+    Right results -> do
       case OMap.lookup $$(G.litName "__schema") results of
-        Just (RFRaw (Object schema)) -> do
+        Just (RFRaw (JO.Object schema)) -> do
           let names = do
-                Object queryType <- Map.lookup "queryType" schema
-                Array fields <- Map.lookup "fields" queryType
-                traverse (\case Object field -> do
-                                  String name <- Map.lookup "name" field
-                                  pure name
-                                _ -> Nothing) fields
+                JO.Object queryType <- JO.lookup "queryType" schema
+                JO.Array fields <- JO.lookup "fields" queryType
+                for fields \case
+                  JO.Object field -> do
+                    JO.String name <- JO.lookup "name" field
+                    pure name
+                  _ -> Nothing
           case names of
             Nothing -> pure ()
             Just ns ->
@@ -218,12 +216,10 @@ data TrackTableV2 b
   = TrackTableV2
   { ttv2Table         :: !(TrackTable b)
   , ttv2Configuration :: !(TableConfig b)
-  } deriving (Show, Eq, Generic)
-instance (Backend b) => ToJSON (TrackTableV2 b) where
-  toJSON = genericToJSON hasuraJSON
+  } deriving (Show, Eq)
 
 instance (Backend b) => FromJSON (TrackTableV2 b) where
-  parseJSON = withObject "Object" $ \o -> do
+  parseJSON = withObject "track table" $ \o -> do
     table <- parseJSON $ Object o
     configuration <- o .:? "configuration" .!= emptyTableConfig
     pure $ TrackTableV2 table configuration
@@ -246,16 +242,15 @@ runSetExistingTableIsEnumQ (SetTableIsEnum source tableName isEnum) = do
     $ tableMetadataSetter @('Postgres 'Vanilla) source tableName.tmIsEnum .~ isEnum
   return successMsg
 
-data SetTableCustomization
+data SetTableCustomization b
   = SetTableCustomization
   { _stcSource        :: !SourceName
-  , _stcTable         :: !QualifiedTable
-  , _stcConfiguration :: !(TableConfig ('Postgres 'Vanilla))
+  , _stcTable         :: !(TableName b)
+  , _stcConfiguration :: !(TableConfig b)
   } deriving (Show, Eq)
-$(deriveToJSON hasuraJSON ''SetTableCustomization)
 
-instance FromJSON SetTableCustomization where
-  parseJSON = withObject "Object" $ \o ->
+instance (Backend b) => FromJSON (SetTableCustomization b) where
+  parseJSON = withObject "set table customization" $ \o ->
     SetTableCustomization
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"
@@ -268,10 +263,9 @@ data SetTableCustomFields
   , _stcfCustomRootFields  :: !TableCustomRootFields
   , _stcfCustomColumnNames :: !(CustomColumnNames ('Postgres 'Vanilla))
   } deriving (Show, Eq)
-$(deriveToJSON hasuraJSON ''SetTableCustomFields)
 
 instance FromJSON SetTableCustomFields where
-  parseJSON = withObject "SetTableCustomFields" $ \o ->
+  parseJSON = withObject "set table custom fields" $ \o ->
     SetTableCustomFields
     <$> o .:? "source" .!= defaultSource
     <*> o .: "table"
@@ -290,11 +284,14 @@ runSetTableCustomFieldsQV2 (SetTableCustomFields source tableName rootFields col
   return successMsg
 
 runSetTableCustomization
-  :: (QErrM m, CacheRWM m, MetadataM m) => SetTableCustomization -> m EncJSON
+  :: forall b m
+  . (QErrM m, CacheRWM m, MetadataM m, Backend b, BackendMetadata b)
+  => SetTableCustomization b
+  -> m EncJSON
 runSetTableCustomization (SetTableCustomization source table config) = do
-  void $ askTabInfo @('Postgres 'Vanilla) source table
+  void $ askTabInfo @b source table
   buildSchemaCacheFor
-    (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable @('Postgres 'Vanilla) table)
+    (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable @b table)
     $ MetadataModifier
     $ tableMetadataSetter source table.tmConfiguration .~ config
   return successMsg
@@ -456,6 +453,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
         , _tciEnumValues = enumValues
         , _tciCustomConfig = config
         , _tciDescription = _ptmiDescription metadataTable
+        , _tciExtraTableMetadata = _ptmiExtraTableMetadata metadataTable
         }
 
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column
@@ -514,6 +512,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
         , pgiPosition = prciPosition rawInfo
         , pgiType = resolvedType
         , pgiIsNullable = prciIsNullable rawInfo
+        , pgiIsIdentity = prciIsIdentity rawInfo
         , pgiDescription = prciDescription rawInfo
         }
       where

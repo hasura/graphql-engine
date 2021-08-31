@@ -36,6 +36,8 @@ import {
   generateTableDef,
   dataSource,
   escapeTableColumns,
+  escapeTableName,
+  currentDriver,
 } from '../../../../dataSources';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import {
@@ -452,7 +454,8 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
       return dispatch(showSuccessNotification('No changes'));
     }
     const migrationUp = [];
-    if (constraintName) {
+    // droping PK
+    if (constraintName && !numSelectedPkColumns) {
       migrationUp.push(
         getRunSqlQuery(
           dataSource.getDropConstraintSql(
@@ -464,8 +467,22 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
         )
       );
     }
-    // skip creating a new config if no columns were selected
-    if (numSelectedPkColumns) {
+    // Altering PK
+    else if (constraintName && numSelectedPkColumns) {
+      migrationUp.push(
+        getRunSqlQuery(
+          dataSource.getAlterPkSql({
+            schemaName,
+            tableName,
+            selectedPkColumns,
+            constraintName,
+          }),
+          source
+        )
+      );
+    }
+    // Creating a new PK entry
+    else if (!constraintName && numSelectedPkColumns) {
       migrationUp.push(
         getRunSqlQuery(
           dataSource.getCreatePkSql({
@@ -654,7 +671,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
     const requestMsg = 'Saving foreign key...';
     const successMsg = 'Foreign key saved';
     const errorMsg = 'Failed setting foreign key';
-
+    const violiationActions = dataSource?.violationActions;
     const customOnSuccess = () => {
       if (!constraintName) {
         const newFks = [...getState().tables.modify.fkModify];
@@ -665,8 +682,8 @@ const saveForeignKeys = (index, tableSchema, columns) => {
             {
               refTableName: '',
               colMappings: [{ column: '', refColumn: '' }],
-              onUpdate: 'restrict',
-              onDelete: 'restrict',
+              onUpdate: violiationActions?.[0],
+              onDelete: violiationActions?.[0],
             },
           ])
         );
@@ -951,7 +968,8 @@ const untrackTableSql = tableName => {
     const currentSchema = getState().tables.currentSchema;
     const currentDataSource = getState().tables.currentDataSource;
     const tableDef = generateTableDef(tableName, currentSchema);
-    const table = findTable(getState().tables.allSchemas, tableDef);
+    const { allSchemas } = getState().tables;
+    const table = findTable(allSchemas, tableDef);
     const migration = new Migration();
     migration.add(
       getUntrackTableQuery(tableDef, currentDataSource),
@@ -959,6 +977,7 @@ const untrackTableSql = tableName => {
         tableDef,
         source: currentDataSource,
         customColumnNames: escapeTableColumns(table),
+        customName: escapeTableName(tableName),
       })
     );
 
@@ -1100,13 +1119,14 @@ const deleteViewSql = (viewName, viewType) => {
 
 const deleteColumnSql = (column, tableSchema) => {
   return (dispatch, getState) => {
+    const commonDataObject = { ...column, ...tableSchema };
     const source = getState().tables.currentDataSource;
-    const name = column.column_name;
-    const tableName = column.table_name;
-    const currentSchema = column.table_schema;
-    const comment = column.comment;
-    const is_nullable = column.is_nullable;
-    const col_type = column.data_type_name;
+    const name = commonDataObject.column_name;
+    const tableName = commonDataObject.table_name;
+    const currentSchema = commonDataObject.table_schema;
+    const comment = commonDataObject.comment;
+    const is_nullable = commonDataObject.is_nullable;
+    const col_type = commonDataObject.data_type_name;
     const foreign_key_constraints = tableSchema.foreign_key_constraints.filter(
       fkc => {
         const columnKeys = Object.keys(fkc.column_mapping);
@@ -1200,7 +1220,7 @@ const deleteColumnSql = (column, tableSchema) => {
       });
     }
 
-    if (column.column_default !== null) {
+    if (commonDataObject.column_default !== null) {
       // add column default to down migration
       migration.UNSAFE_add(
         null,
@@ -1209,7 +1229,7 @@ const deleteColumnSql = (column, tableSchema) => {
             tableName,
             currentSchema,
             name,
-            column.column_default,
+            commonDataObject.column_default,
             col_type
           ),
           source
@@ -1285,6 +1305,7 @@ const addColSql = (
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     const source = getState().tables.currentDataSource;
+    const constraint_name = `default_${source}_${currentSchema}_${tableName}_${colName}`;
     const sqlUp = dataSource.getAddColumnSql(
       tableName,
       currentSchema,
@@ -1295,7 +1316,8 @@ const addColSql = (
         unique: colUnique,
         default: colDefault,
         sqlGenerator: colDependentSQLGenerator,
-      }
+      },
+      currentDriver === 'mssql' ? constraint_name : undefined
     );
 
     const runSqlQueryDown = dataSource.getDropColumnSql(
@@ -1538,7 +1560,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
 
     const customOnSuccess = () => {
       if (metadataMigration.migration.hasValue()) {
-        makeMetadataMigrationCall();
+        dispatch(exportMetadata(makeMetadataMigrationCall));
       } else {
         successCallback();
       }
@@ -2055,6 +2077,125 @@ export const setViewCustomColumnNames = (
   );
 };
 
+const saveIndex = (indexInfo, successCb, errorCb) => (dispatch, getState) => {
+  if (!indexInfo) {
+    return;
+  }
+
+  if (!dataSource.createIndexSql && !dataSource.dropIndexSql) {
+    // ERROR: this datasource does not support creation/deletion of indexes
+    return;
+  }
+
+  if (
+    !indexInfo?.index_name?.trim() ||
+    !indexInfo?.index_columns?.length ||
+    !indexInfo?.index_type
+  ) {
+    dispatch(
+      showErrorNotification(
+        'Some required fields are missing',
+        'Index Name, Index Columns and Index Type are all required fields'
+      )
+    );
+    return;
+  }
+
+  const { currentSchema, currentTable, currentDataSource } = getState().tables;
+  const upQueries = [];
+  const downQueries = [];
+
+  const upSql = dataSource.createIndexSql({
+    table: { schema: currentSchema, name: currentTable },
+    columns: indexInfo?.index_columns,
+    indexName: indexInfo?.index_name?.trim(),
+    indexType: indexInfo?.index_type,
+    unique: indexInfo?.unique,
+  });
+  const downSql = dataSource.dropIndexSql(indexInfo?.index_name);
+
+  upQueries.push(getRunSqlQuery(upSql, currentDataSource));
+  downQueries.push(getRunSqlQuery(downSql, currentDataSource));
+
+  const migrationName = `create_index_${indexInfo?.index_name || ''}`;
+  const requestMsg = 'Creating index....';
+  const successMsg = `Created index ${indexInfo?.index_name} successfully`;
+  const errorMsg = 'Failed to create index';
+
+  const customOnSuccess = () => successCb?.();
+
+  const customOnError = () => errorCb?.();
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    upQueries,
+    downQueries,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
+const removeIndex = (indexInfo, successCb, errorCb) => (dispatch, getState) => {
+  if (!indexInfo) {
+    return;
+  }
+
+  if (!dataSource.createIndexSql && !dataSource.dropIndexSql) {
+    // ERROR: this datasource does not support creation/deletion of indexes
+    return;
+  }
+
+  const removeConfirmation = getConfirmation(
+    `You want to remove the index: ${indexInfo?.index_name || ''}`
+  );
+  if (!removeConfirmation) {
+    return;
+  }
+
+  const { currentTable, currentSchema, currentDataSource } = getState().tables;
+  const upQueries = [];
+  const downQueries = [];
+
+  const upSql = dataSource.dropIndexSql(indexInfo?.index_name);
+  const downSql = dataSource.createIndexSql({
+    indexName: indexInfo?.index_name,
+    indexType: indexInfo?.index_type,
+    table: { schema: currentSchema, name: currentTable },
+    columns: indexInfo?.index_columns,
+    unique: indexInfo?.unique,
+  });
+
+  upQueries.push(getRunSqlQuery(upSql, currentDataSource));
+  downQueries.push(getRunSqlQuery(downSql, currentDataSource));
+
+  const migrationName = `drop_index_${indexInfo?.index_name || 'indexName'}`;
+  const requestMsg = 'Removing index....';
+  const successMsg = 'Removed index successfully';
+  const errorMsg = 'Failed to remove index';
+
+  const customOnSuccess = () => successCb?.();
+
+  const customOnError = () => errorCb?.();
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    upQueries,
+    downQueries,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
 export {
   FETCH_COLUMN_TYPE_CASTS,
   FETCH_COLUMN_TYPE_CASTS_FAIL,
@@ -2116,4 +2257,6 @@ export {
   modifyRootFields,
   setCheckConstraints,
   modifyTableCustomName,
+  saveIndex,
+  removeIndex,
 };

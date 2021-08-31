@@ -2,8 +2,8 @@
    :description: Manage remote relationships with the Hasura metadata API
    :keywords: hasura, docs, metadata API, API reference, remote joins, remote relationships
 
-Metadata API Reference: Remote Relationships (v2.0 and above)
-=============================================================
+Metadata API Reference: Remote Relationships
+============================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -72,8 +72,8 @@ Args syntax
      - Object with table name and schema
    * - hasura_fields
      - true
-     - [:ref:`PGColumn <PGColumn>`]
-     - Column(s) in the table that is used for joining with remote schema field. All join keys in ``remote_field`` must appear here.
+     - [:ref:`PGColumn <PGColumn>` | :ref:`ComputedFieldName <ComputedFieldName>`]
+     - Column/Computed field(s) in the table that is used for joining with remote schema field. All join keys in ``remote_field`` must appear here.
    * - remote_schema
      - true
      - :ref:`RemoteSchemaName <RemoteSchemaName>`

@@ -12,6 +12,8 @@ interface ArgSelectProps {
   value?: ArgTreeType | ReactText;
   level: number;
   setArg: (e: Record<string, unknown>) => void;
+  isInputObjectType?: boolean;
+  isFirstLevelInputObjPreset?: boolean;
 }
 
 export const ArgSelect: React.FC<ArgSelectProps> = ({
@@ -20,6 +22,8 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
   value,
   level,
   setArg = e => console.log(e),
+  isInputObjectType,
+  isFirstLevelInputObjPreset,
 }) => {
   const [expanded, setExpanded] = useState(false);
   const autoExpanded = useRef(false);
@@ -47,7 +51,12 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
     }
   }, [value, k, expanded]);
 
+  // for input object types having children, hide first level args
+  const hideInputArgName = isInputObjectType && level === 0;
   const { children } = getChildArguments(v as GraphQLInputField);
+  if (hideInputArgName && children) {
+    if (!expanded) setExpanded(true);
+  }
 
   const setArgVal = (val: Record<string, any>) => {
     const prevVal = prevState.current;
@@ -66,45 +75,84 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
   if (children) {
     return (
       <>
-        <button onClick={toggleExpandMode} style={{ marginLeft: '-1em' }}>
-          {expanded ? '-' : '+'}
-        </button>
-        {!expanded && (
-          <label
-            className={`${styles.argSelect} ${styles.fw_medium}`}
-            htmlFor={k}
-          >
-            {k}:
-          </label>
+        {!hideInputArgName ? (
+          <>
+            <button onClick={toggleExpandMode} style={{ marginLeft: '-1em' }}>
+              {expanded ? '-' : '+'}
+            </button>
+            {!expanded && (
+              <label
+                className={`${styles.argSelect} ${styles.fw_medium}`}
+                htmlFor={k}
+              >
+                {k}:
+              </label>
+            )}
+            {expanded && (
+              <label
+                className={`${styles.argSelect} ${styles.fw_large}`}
+                htmlFor={k}
+              >
+                {k}:
+              </label>
+            )}
+          </>
+        ) : null}
+        {hideInputArgName ? (
+          expanded &&
+          Object.values(children).map(i => {
+            if (typeof value === 'string') return undefined;
+            const childVal =
+              value && typeof value === 'object' ? value[i?.name] : undefined;
+            return (
+              <li key={i.name}>
+                <ArgSelect
+                  keyName={i.name}
+                  setArg={val => setArgVal({ [k]: val })}
+                  valueField={i}
+                  value={childVal}
+                  level={level + 1}
+                />
+              </li>
+            );
+          })
+        ) : (
+          <ul>
+            {expanded &&
+              Object.values(children).map(i => {
+                if (typeof value === 'string') return undefined;
+                const childVal =
+                  value && typeof value === 'object'
+                    ? value[i?.name]
+                    : undefined;
+                return (
+                  <li key={i.name}>
+                    <ArgSelect
+                      keyName={i.name}
+                      setArg={val => setArgVal({ [k]: val })}
+                      valueField={i}
+                      value={childVal}
+                      level={level + 1}
+                    />
+                  </li>
+                );
+              })}
+          </ul>
         )}
-        {expanded && (
-          <label
-            className={`${styles.argSelect} ${styles.fw_large}`}
-            htmlFor={k}
-          >
-            {k}:
-          </label>
-        )}
-        <ul>
-          {expanded &&
-            Object.values(children).map(i => {
-              if (typeof value === 'string') return undefined;
-              const childVal =
-                value && typeof value === 'object' ? value[i?.name] : undefined;
-              return (
-                <li key={i.name}>
-                  <ArgSelect
-                    keyName={i.name}
-                    setArg={val => setArgVal({ [k]: val })}
-                    valueField={i}
-                    value={childVal}
-                    level={level + 1}
-                  />
-                </li>
-              );
-            })}
-        </ul>
       </>
+    );
+  }
+  if (isFirstLevelInputObjPreset) {
+    return (
+      <RSPInput
+        v={v as GraphQLInputField}
+        k={k}
+        editMode
+        setArgVal={setArgVal}
+        value={value}
+        setEditMode={() => {}}
+        isFirstLevelInputObjPreset
+      />
     );
   }
   return (

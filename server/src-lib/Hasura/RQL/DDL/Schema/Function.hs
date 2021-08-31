@@ -9,20 +9,20 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict        as Map
 import qualified Data.HashMap.Strict.InsOrd as OMap
 
+import           Control.Lens               ((^.))
 import           Data.Aeson
 import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend      as AB
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
+import           Hasura.SQL.Tag
 import           Hasura.Session
 
-newtype TrackFunction b
-  = TrackFunction
-  { tfName :: FunctionName b }
-deriving instance (Backend b) => Show (TrackFunction b)
-deriving instance (Backend b) => Eq (TrackFunction b)
+
+newtype TrackFunction b = TrackFunction { tfName :: FunctionName b }
 deriving instance (Backend b) => FromJSON (TrackFunction b)
 deriving instance (Backend b) => ToJSON (TrackFunction b)
 
@@ -37,6 +37,8 @@ trackFunctionP1
   -> m ()
 trackFunctionP1 sourceName qf = do
   rawSchemaCache <- askSchemaCache
+  unless (isJust $ AB.unpackAnyBackend @b =<< Map.lookup sourceName (scSources rawSchemaCache)) $
+    throw400 NotExists $ sourceName <<> " is not a known " <> reify (backendTag @b) <<> " source"
   when (isJust $ unsafeFunctionInfo @b sourceName qf $ scSources rawSchemaCache) $
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
   let qt = functionToTable @b qf
@@ -62,12 +64,9 @@ handleMultipleFunctions
   -> [a]
   -> m a
 handleMultipleFunctions qf = \case
-  []      ->
-    throw400 NotExists $ "no such function exists in postgres : " <>> qf
   [fi] -> return fi
-  _       ->
-    throw400 NotSupported $
-    "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
+  []   -> throw400 NotExists $ "no such function exists: " <>> qf
+  _    -> throw400 NotSupported $ "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
 
 runTrackFunc
   :: forall b m
@@ -78,6 +77,22 @@ runTrackFunc (TrackFunction qf) = do
   -- v1 track_function lacks a means to take extra arguments
   trackFunctionP1 @b defaultSource qf
   trackFunctionP2 @b defaultSource qf emptyFunctionConfig
+
+-- | JSON API payload for v2 of 'track_function':
+--
+-- https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#track-function-v2
+data TrackFunctionV2 (b :: BackendType) = TrackFunctionV2
+  { _tfv2Source        :: !SourceName
+  , _tfv2Function      :: !(FunctionName b)
+  , _tfv2Configuration :: !FunctionConfig
+  }
+
+instance Backend b => FromJSON (TrackFunctionV2 b) where
+  parseJSON = withObject "track function" $ \o ->
+    TrackFunctionV2
+    <$> o .:? "source" .!= defaultSource
+    <*> o .: "function"
+    <*> o .:? "configuration" .!= emptyFunctionConfig
 
 runTrackFunctionV2
   :: forall b m
@@ -91,23 +106,43 @@ runTrackFunctionV2 (TrackFunctionV2 source qf config) = do
 -- | JSON API payload for 'untrack_function':
 --
 -- https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#untrack-function
-data UnTrackFunction b
-  = UnTrackFunction
+data UnTrackFunction b = UnTrackFunction
   { _utfFunction :: !(FunctionName b)
   , _utfSource   :: !SourceName
-  } deriving (Generic)
-deriving instance (Backend b) => Show (UnTrackFunction b)
-deriving instance (Backend b) => Eq (UnTrackFunction b)
-instance (Backend b) => ToJSON (UnTrackFunction b) where
-  toJSON = genericToJSON hasuraJSON
+  }
 
 instance (Backend b) => FromJSON (UnTrackFunction b) where
-  parseJSON v = withSource <|> withoutSource
-    where
-      withoutSource = UnTrackFunction <$> parseJSON v <*> pure defaultSource
-      withSource = flip (withObject "UnTrackFunction") v \o ->
-                   UnTrackFunction <$> o .: "function"
-                                   <*> o .:? "source" .!= defaultSource
+  -- Following was the previous implementation, which while seems to be correct,
+  -- has an unexpected behaviour. In the case when @source@ key is present but
+  -- @function@ key is absent, it would silently coerce it into a @default@
+  -- source. The culprint being the _alternative_ operator, which silently fails
+  -- the first parse. This note exists so that we don't try to simplify using
+  -- the _alternative_ pattern here.
+  -- Previous implementation :-
+  -- Consider the following JSON -
+  --  {
+  --    "source": "custom_source",
+  --    "schema": "public",
+  --    "name": "my_function"
+  --  }
+  -- it silently fails parsing the source here because @function@ key is not
+  -- present, and proceeds to parse using @withoutSource@ as default source. Now
+  -- this is surprising for the user, because they mention @source@ key
+  -- explicitly. A better behaviour is to explicitly look for @function@ key if
+  -- a @source@ key is present.
+  -- >>
+  -- parseJSON v = withSource <|> withoutSource
+  --   where
+  --     withoutSource = UnTrackFunction <$> parseJSON v <*> pure defaultSource
+  --     withSource = flip (withObject "UnTrackFunction") v \o -> do
+  --                  UnTrackFunction <$> o .: "function"
+  --                                  <*> o .:? "source" .!= defaultSource
+  parseJSON v = flip (withObject "UnTrackFunction") v $ \o -> do
+    source <- o .:? "source"
+    case source of
+      Just src -> flip UnTrackFunction src <$> o .: "function"
+      Nothing  -> UnTrackFunction <$> parseJSON v <*> pure defaultSource
+
 
 askFunctionInfo
   :: forall b m
@@ -127,7 +162,7 @@ runUntrackFunc (UnTrackFunction functionName sourceName) = do
   void $ askFunctionInfo @b sourceName functionName
   withNewInconsistentObjsCheck
     $ buildSchemaCache
-    $ dropFunctionInMetadata @b defaultSource functionName
+    $ dropFunctionInMetadata @b sourceName functionName
   pure successMsg
 
 dropFunctionInMetadata
@@ -159,21 +194,16 @@ is started with
 to false (by default, it's set to true).
 -}
 
-data CreateFunctionPermission b
-  = CreateFunctionPermission
+data FunctionPermissionArgument b = FunctionPermissionArgument
   { _afpFunction :: !(FunctionName b)
   , _afpSource   :: !SourceName
   , _afpRole     :: !RoleName
-  } deriving (Generic)
-deriving instance (Backend b) => Show (CreateFunctionPermission b)
-deriving instance (Backend b) => Eq (CreateFunctionPermission b)
-instance (Backend b) => ToJSON (CreateFunctionPermission b) where
-  toJSON = genericToJSON hasuraJSON
+  }
 
-instance (Backend b) => FromJSON (CreateFunctionPermission b) where
+instance (Backend b) => FromJSON (FunctionPermissionArgument b) where
   parseJSON v =
-    flip (withObject "CreateFunctionPermission") v $ \o ->
-      CreateFunctionPermission
+    flip (withObject "function permission") v $ \o ->
+      FunctionPermissionArgument
       <$> o .: "function"
       <*> o .:? "source" .!= defaultSource
       <*> o .: "role"
@@ -185,12 +215,13 @@ runCreateFunctionPermission
      , MetadataM m
      , BackendMetadata b
      )
-  => CreateFunctionPermission b
+  => FunctionPermissionArgument b
   -> m EncJSON
-runCreateFunctionPermission (CreateFunctionPermission functionName source role) = do
+runCreateFunctionPermission (FunctionPermissionArgument functionName source role) = do
+  metadata <- getMetadata
   sourceCache <- scSources <$> askSchemaCache
   functionInfo <- askFunctionInfo @b source functionName
-  when (role `elem` _fiPermissions functionInfo) $
+  when (doesFunctionPermissionExist @b metadata source functionName role) $
     throw400 AlreadyExists $
     "permission of role "
     <> role <<> " already exists for function " <> functionName <<> " in source: " <>> source
@@ -207,7 +238,7 @@ runCreateFunctionPermission (CreateFunctionPermission functionName source role) 
     $ MetadataModifier
     $ metaSources.ix
         source.toSourceMetadata.(smFunctions @b).ix functionName.fmPermissions
-    %~ (:) (FunctionPermissionMetadata role)
+    %~ (:) (FunctionPermissionInfo role)
   pure successMsg
 
 dropFunctionPermissionInMetadata
@@ -220,7 +251,9 @@ dropFunctionPermissionInMetadata
 dropFunctionPermissionInMetadata source function role = MetadataModifier $
   metaSources.ix source.toSourceMetadata.(smFunctions @b).ix function.fmPermissions %~ filter ((/=) role . _fpmRole)
 
-type DropFunctionPermission = CreateFunctionPermission
+doesFunctionPermissionExist :: forall b . (BackendMetadata b) => Metadata -> SourceName -> FunctionName b -> RoleName -> Bool
+doesFunctionPermissionExist metadata sourceName functionName roleName =
+  any ((== roleName) . _fpmRole) $ metadata ^. (metaSources.ix sourceName.toSourceMetadata.(smFunctions @b).ix functionName.fmPermissions)
 
 runDropFunctionPermission
   :: forall m b
@@ -229,11 +262,11 @@ runDropFunctionPermission
      , MetadataM m
      , BackendMetadata b
      )
-  => DropFunctionPermission b
+  => FunctionPermissionArgument b
   -> m EncJSON
-runDropFunctionPermission (CreateFunctionPermission functionName source role) = do
-  functionInfo <- askFunctionInfo @b source functionName
-  unless (role `elem` _fiPermissions functionInfo) $
+runDropFunctionPermission (FunctionPermissionArgument functionName source role) = do
+  metadata <- getMetadata
+  unless (doesFunctionPermissionExist @b metadata source functionName role) $
     throw400 NotExists $
     "permission of role "
     <> role <<> " does not exist for function " <> functionName <<> " in source: " <>> source

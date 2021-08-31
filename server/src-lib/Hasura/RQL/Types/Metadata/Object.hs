@@ -6,7 +6,7 @@ import qualified Data.HashMap.Strict.Extended        as M
 
 import           Control.Lens                        hiding (set, (.=))
 import           Data.Aeson.Types
-import           Data.Hashable
+import qualified Data.Text                           as T
 import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend               as AB
@@ -43,7 +43,6 @@ deriving instance (Backend b) => Show (SourceMetadataObjId b)
 deriving instance (Backend b) => Eq (SourceMetadataObjId b)
 instance (Backend b) => Hashable (SourceMetadataObjId b)
 
--- See Note [Existentially Quantified Types]
 data MetadataObjId
   = MOSource !SourceName
   | MOSourceObjId !SourceName !(AB.AnyBackend SourceMetadataObjId)
@@ -56,31 +55,11 @@ data MetadataObjId
   | MOCronTrigger !TriggerName
   | MOInheritedRole !RoleName
   | MOEndpoint !EndpointName
+  | MOHostTlsAllowlist !String
+  deriving (Generic)
 $(makePrisms ''MetadataObjId)
-
-instance Hashable MetadataObjId where
-  hashWithSalt salt = \case
-    MOSource sourceName                    -> hashWithSalt salt sourceName
-    MOSourceObjId sourceName sourceObjId   -> hashWithSalt salt (sourceName, sourceObjId)
-    MORemoteSchema remoteSchemaName        -> hashWithSalt salt remoteSchemaName
-    MORemoteSchemaPermissions remoteSchemaName roleName -> hashWithSalt salt (remoteSchemaName, roleName)
-    MOCustomTypes                          -> hashWithSalt salt ()
-    MOAction actionName                    -> hashWithSalt salt actionName
-    MOActionPermission actionName roleName -> hashWithSalt salt (actionName, roleName)
-    MOCronTrigger triggerName              -> hashWithSalt salt triggerName
-    MOInheritedRole roleName               -> hashWithSalt salt roleName
-    MOEndpoint endpoint                    -> hashWithSalt salt endpoint
-
-instance Eq MetadataObjId where
-  (MOSource s1) == (MOSource s2)                                         = s1 == s2
-  (MOSourceObjId s1 id1) == (MOSourceObjId s2 id2)                       = s1 == s2 && id1 == id2
-  (MORemoteSchema n1) == (MORemoteSchema n2)                             = n1 == n2
-  (MORemoteSchemaPermissions n1 r1) == (MORemoteSchemaPermissions n2 r2) = n1 == n2 && r1 == r2
-  MOCustomTypes == MOCustomTypes                                         = True
-  (MOActionPermission an1 r1) == (MOActionPermission an2 r2)             = an1 == an2 && r1 == r2
-  (MOCronTrigger trn1) == (MOCronTrigger trn2)                           = trn1 == trn2
-  (MOInheritedRole rn1) == (MOInheritedRole rn2)                         = rn1 == rn2
-  _ == _                                                                 = False
+deriving instance Eq MetadataObjId
+instance Hashable MetadataObjId
 
 moiTypeName :: MetadataObjId -> Text
 moiTypeName = \case
@@ -94,6 +73,7 @@ moiTypeName = \case
   MOActionPermission _ _        -> "action_permission"
   MOInheritedRole _             -> "inherited_role"
   MOEndpoint _                  -> "endpoint"
+  MOHostTlsAllowlist _          -> "host_network_tls_allowlist"
  where
     handleSourceObj :: forall b. SourceMetadataObjId b -> Text
     handleSourceObj = \case
@@ -120,6 +100,7 @@ moiName objectId = moiTypeName objectId <> " " <> case objectId of
   MOActionPermission name roleName -> toTxt roleName <> " permission in " <> toTxt name
   MOInheritedRole inheritedRoleName -> "inherited role " <> toTxt inheritedRoleName
   MOEndpoint name -> toTxt name
+  MOHostTlsAllowlist hostTlsAllowlist -> T.pack hostTlsAllowlist
   where
     handleSourceObj
       :: forall b
@@ -153,6 +134,38 @@ data MetadataObject
   } deriving (Eq)
 $(makeLenses ''MetadataObject)
 
+data InconsistentRoleEntity
+  = InconsistentTablePermission
+      !SourceName
+      !Text
+      -- ^ Table name -- using `Text` here instead of `TableName b` for simplification,
+      -- Otherwise, we'll have to create a newtype wrapper around `TableName b` and then
+      -- use it with `AB.AnyBackend`
+      !PermType
+  | InconsistentRemoteSchemaPermission !RemoteSchemaName
+  deriving (Eq)
+
+instance ToTxt InconsistentRoleEntity where
+  toTxt (InconsistentTablePermission source table permType) =
+    permTypeToCode permType
+    <> " permission"
+    <> (", table: " :: Text)
+    <> table
+    <> ", source: "
+    <> squote source
+  toTxt (InconsistentRemoteSchemaPermission remoteSchemaName) =
+    "remote schema: " <> squote remoteSchemaName
+
+instance ToJSON InconsistentRoleEntity where
+  toJSON = \case
+    InconsistentTablePermission sourceName tableName permType ->
+      object [ "table" .= tableName
+             , "source" .= sourceName
+             , "permission_type" .= permType
+             ]
+    InconsistentRemoteSchemaPermission remoteSchemaName ->
+      object [ "remote_schema" .= remoteSchemaName ]
+
 data InconsistentMetadata
   = InconsistentObject !Text !(Maybe Value) !MetadataObject
   | ConflictingObjects !Text ![MetadataObject]
@@ -160,8 +173,23 @@ data InconsistentMetadata
   | DuplicateRestVariables !Text !MetadataObject
   | InvalidRestSegments !Text !MetadataObject
   | AmbiguousRestEndpoints !Text ![MetadataObject]
+  | ConflictingInheritedPermission !RoleName !InconsistentRoleEntity
   deriving (Eq)
 $(makePrisms ''InconsistentMetadata)
+
+-- | Helper function to differentiate which type of inconsistent
+--   metadata can be dropped, if an inconsistency cannot be resolved
+--   by dropping any part of the metadata then this function should
+--   return `False`, otherwise it should return `True`
+droppableInconsistentMetadata :: InconsistentMetadata -> Bool
+droppableInconsistentMetadata = \case
+  InconsistentObject {}             -> True
+  ConflictingObjects {}             -> True
+  DuplicateObjects {}               -> True
+  DuplicateRestVariables {}         -> True
+  InvalidRestSegments {}            -> True
+  AmbiguousRestEndpoints {}         -> True
+  ConflictingInheritedPermission {} -> False
 
 getInconsistentRemoteSchemas :: [InconsistentMetadata] -> [RemoteSchemaName]
 getInconsistentRemoteSchemas =
@@ -169,21 +197,27 @@ getInconsistentRemoteSchemas =
 
 imObjectIds :: InconsistentMetadata -> [MetadataObjId]
 imObjectIds = \case
-  InconsistentObject _ _ metadata -> [_moId metadata]
-  ConflictingObjects _ metadatas  -> map _moId metadatas
-  DuplicateObjects objectId _     -> [objectId]
-  DuplicateRestVariables _ md     -> [_moId md]
-  InvalidRestSegments _ md        -> [_moId md]
-  AmbiguousRestEndpoints _ mds    -> take 1 $ map _moId mds -- TODO: Take 1 is a workaround to ensure that conflicts are not reported multiple times per endpoint.
+  InconsistentObject _ _ metadata    -> [_moId metadata]
+  ConflictingObjects _ metadatas     -> map _moId metadatas
+  DuplicateObjects objectId _        -> [objectId]
+  DuplicateRestVariables _ md        -> [_moId md]
+  InvalidRestSegments _ md           -> [_moId md]
+  AmbiguousRestEndpoints _ mds       -> take 1 $ map _moId mds -- TODO: Take 1 is a workaround to ensure that conflicts are not reported multiple times per endpoint.
+  ConflictingInheritedPermission _ _ -> mempty -- @mempty@ because in such a case we just want the user to know that the permission was not able to derive and this inconsistency is purely informational
 
 imReason :: InconsistentMetadata -> Text
 imReason = \case
-  InconsistentObject reason _ _   -> reason
-  ConflictingObjects reason _     -> reason
-  DuplicateObjects objectId _     -> "multiple definitions for " <> moiName objectId
-  DuplicateRestVariables reason _ -> reason
-  InvalidRestSegments reason _    -> reason
-  AmbiguousRestEndpoints reason _ -> reason
+  InconsistentObject reason _ _   -> "Inconsistent object: " <> reason
+  ConflictingObjects reason _     -> "Conflicting objects: " <> reason
+  DuplicateObjects objectId _     -> "Multiple definitions for: " <> moiName objectId
+  DuplicateRestVariables reason _ -> "Duplicate variables found in endpoint path: " <> reason
+  InvalidRestSegments reason _    -> "Empty segments or unnamed variables are not allowed: " <> reason
+  AmbiguousRestEndpoints reason _ -> "Ambiguous URL paths: " <> reason
+  ConflictingInheritedPermission roleName entity ->
+    "Could not inherit permission for the role "
+    <> squote roleName
+    <> (" for the entity: " :: Text)
+    <> squote entity
 
 -- | Builds a map from each unique metadata object id to the inconsistencies associated with it.
 -- Note that a single inconsistency can involve multiple metadata objects, so the same inconsistency
@@ -197,7 +231,7 @@ instance ToJSON InconsistentMetadata where
   toJSON inconsistentMetadata = object (("reason" .= imReason inconsistentMetadata) : extraFields)
     where
       extraFields = case inconsistentMetadata of
-        InconsistentObject _ internal metadata -> metadataObjectFields internal metadata
+        InconsistentObject _ message metadata -> metadataObjectFields message metadata
         ConflictingObjects _ metadatas ->
           [ "objects" .= map (object . metadataObjectFields Nothing) metadatas ]
         DuplicateObjects objectId definitions ->
@@ -207,8 +241,14 @@ instance ToJSON InconsistentMetadata where
         DuplicateRestVariables _ md  -> metadataObjectFields Nothing md
         InvalidRestSegments _ md     -> metadataObjectFields Nothing md
         AmbiguousRestEndpoints _ mds -> [ "conflicts" .= map _moDefinition mds ]
+        ConflictingInheritedPermission role inconsistentEntity ->
+          [ "name" .= role
+          , "type" .= String ("inherited role permission inconsistency" :: Text)
+          , "entity" .= inconsistentEntity
+          ]
 
-      metadataObjectFields (maybeInternal :: Maybe Value) (MetadataObject objectId definition) =
+      metadataObjectFields (maybeMessage :: Maybe Value) (MetadataObject objectId definition) =
         [ "type" .= String (moiTypeName objectId)
+        , "name" .= String (moiName objectId)
         , "definition" .= definition ]
-        <> maybe [] (\internal -> ["internal" .= internal]) maybeInternal
+        <> maybe [] (\message -> ["message" .= message]) maybeMessage

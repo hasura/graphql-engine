@@ -7,21 +7,21 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
-	crontriggers "github.com/hasura/graphql-engine/cli/internal/metadataobject/cron_triggers"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/functions"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/sources"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/tables"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
+	crontriggers "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/cron_triggers"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/functions"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/sources"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/tables"
 
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions"
-	actionMetadataFileTypes "github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/allowlist"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/querycollections"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/remoteschemas"
-	metadataVersion "github.com/hasura/graphql-engine/cli/internal/metadataobject/version"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions"
+	actionMetadataFileTypes "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/allowlist"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/querycollections"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/remoteschemas"
+	metadataVersion "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/version"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -178,7 +178,7 @@ func (o *InitOptions) createExecutionDirectory() error {
 
 	// create the execution directory
 	if _, err := os.Stat(o.EC.ExecutionDirectory); err == nil {
-		return errors.Errorf("directory '%s' already exist", o.EC.ExecutionDirectory)
+		return errors.Errorf("directory '%s' already exists", o.EC.ExecutionDirectory)
 	}
 	err := os.MkdirAll(o.EC.ExecutionDirectory, os.ModePerm)
 	if err != nil {
@@ -293,7 +293,7 @@ func (o *InitOptions) createTemplateFiles() error {
 	templatePath := filepath.Join(o.EC.InitTemplatesRepo.Path, o.Template)
 	info, err := os.Stat(templatePath)
 	if err != nil {
-		return errors.Wrap(err, "template doesn't exists")
+		return errors.Wrap(err, "template doesn't exist")
 	}
 	if !info.IsDir() {
 		return errors.Errorf("template should be a directory")

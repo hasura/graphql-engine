@@ -86,7 +86,6 @@ export const getColumnUpdateMigration = (
 
   const tableDef = generateTableDef(tableName, currentSchema);
   const table = findTable(allSchemas, tableDef);
-
   if (!table || !currentSchema) {
     throw new Error(`Table "${tableDef.name} does not exist`);
   }
@@ -105,14 +104,18 @@ export const getColumnUpdateMigration = (
     tableName,
     currentSchema || '',
     colName,
-    colType
+    colType,
+    nullable
   );
   const columnChangesDownQuery = dataSource.getAlterColumnTypeSql(
     tableName,
     currentSchema || '',
     colName,
-    originalData_type
+    originalData_type,
+    originalColNullable === 'YES'
   );
+
+  const quotedColName = `"${colName}"`;
 
   const migration = new Migration();
 
@@ -130,13 +133,14 @@ export const getColumnUpdateMigration = (
       currentSchema,
       colName,
       quoteDefault(colDefault),
-      source
+      `default_${source}_${currentSchema}_${tableName}_${colName}`
     );
   } else {
     columnDefaultUpQuery = dataSource.getDropColumnDefaultSql(
       tableName,
       currentSchema,
-      colName
+      colName,
+      `default_${source}_${currentSchema}_${tableName}_${colName}`
     );
   }
 
@@ -147,13 +151,14 @@ export const getColumnUpdateMigration = (
       currentSchema,
       colName,
       quoteDefault(originalColDefault),
-      source
+      `${source}_${tableName}_${colName}_default`
     );
   } else {
     columnDefaultDownQuery = dataSource.getDropColumnDefaultSql(
       tableName,
       currentSchema,
-      colName
+      colName,
+      `${source}_${tableName}_${colName}_default`
     );
   }
 
@@ -170,12 +175,14 @@ export const getColumnUpdateMigration = (
     const nullableUpQuery = dataSource.getDropNotNullSql(
       tableName,
       currentSchema,
-      colName
+      colName,
+      colType
     );
     const nullableDownQuery = dataSource.getSetNotNullSql(
       tableName,
       currentSchema,
-      colName
+      colName,
+      colType
     );
     if (originalColNullable !== 'YES') {
       migration.add(
@@ -187,7 +194,8 @@ export const getColumnUpdateMigration = (
     const nullableUpQuery = dataSource.getSetNotNullSql(
       tableName,
       currentSchema,
-      colName
+      colName,
+      colType
     );
     const nullableDownQuery = dataSource.getDropNotNullSql(
       tableName,
@@ -208,7 +216,7 @@ export const getColumnUpdateMigration = (
       tableName,
       currentSchema,
       `${tableName}_${colName}_key`,
-      [colName]
+      [quotedColName]
     );
     const uniqueDownQuery = dataSource.getDropConstraintSql(
       tableName,
@@ -227,7 +235,7 @@ export const getColumnUpdateMigration = (
       tableName,
       currentSchema,
       `${tableName}_${colName}_key`,
-      [colName]
+      [quotedColName]
     );
     const uniqueUpQuery = dataSource.getDropConstraintSql(
       tableName,
@@ -280,8 +288,7 @@ export const getColumnUpdateMigration = (
           tableName,
           currentSchema,
           newName,
-          colName,
-          colType
+          colName
         ),
         source
       ),
@@ -290,8 +297,7 @@ export const getColumnUpdateMigration = (
           tableName,
           currentSchema,
           colName,
-          newName,
-          colType
+          newName
         ),
         source
       )
@@ -308,7 +314,7 @@ export const getColumnUpdateMigration = (
   if (customFieldName) {
     if (customFieldName !== existingCustomColumnNames[colName]) {
       isCustomFieldNameChanged = true;
-      newCustomColumnNames[colName] = customFieldName.trim();
+      newCustomColumnNames[newName || colName] = customFieldName.trim();
     }
   } else if (existingCustomColumnNames[colName]) {
     isCustomFieldNameChanged = true;
@@ -349,13 +355,17 @@ export const getDownQueryComments = (
   source: string
 ) => {
   if (Array.isArray(upqueries) && upqueries.length >= 0) {
-    let comment = `-- Could not auto-generate a down migration.
--- Please write an appropriate down migration for the SQL below:`;
-    comment = upqueries.reduce(
-      (acc, i) => `${acc}
--- ${i.args.sql}`,
-      comment
-    );
+    const comment = [
+      'Could not auto-generate a down migration.',
+      'Please write an appropriate down migration for the SQL below:',
+      ...upqueries.map(i => i.args.sql),
+      '',
+    ]
+      .join('\n')
+      // Normalize \r\n to \n and add comments before every line
+      .replace(/\r?(^|\n)(?!$)/g, '$1-- ')
+      // Eliminate trailing spaces
+      .replace(/ +\n/g, '\n');
     return [getRunSqlQuery(comment, source)];
   }
   // all other errors

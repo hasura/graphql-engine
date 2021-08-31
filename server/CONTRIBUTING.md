@@ -7,17 +7,13 @@ own machine and how to contribute.
 
 - [GHC](https://www.haskell.org/ghc/) 8.10.2 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
   - There are various ways these can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
+- There are few system packages required like `libpq-dev`, `libssl-dev`, etc. The best place to get the entire list is from the packager [Dockerfile](https://github.com/hasura/graphql-engine/blob/master/.circleci/server-builder.dockerfile)
+
+For building console and running test suite:
+
 - [Node.js](https://nodejs.org/en/) (>= v8.9)
 - npm >= 5.7
-- [gsutil](https://cloud.google.com/storage/docs/gsutil)
-- libpq-dev
-- libkrb5-dev
-- openssl and libssl-dev
 - python >= 3.5 with pip3 and virtualenv
-
-The last few prerequisites can be installed on Debian or Ubuntu with:
-
-    $ sudo apt install libpq-dev libkrb5-dev python3 python3-pip python3-venv openssl libssl-dev
 
 Additionally, you will need a way to run a Postgres database server. The `dev.sh` script (described below) can set up a Postgres instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
 
@@ -49,10 +45,9 @@ After making your changes
 
 ...and the server:
 
-    $ cd server
     $ ln -s cabal.project.dev cabal.project.local
     $ cabal new-update
-    $ cabal new-build
+    $ cabal new-build graphql-engine
 
 To set up the project configuration to coincide with the testing scripts below, thus avoiding recompilation when testing locally, rather use `cabal.project.dev-sh.local` instead of `cabal.project.dev`:
 
@@ -101,7 +96,7 @@ Optionally, launch a new container for alternative (MSSQL) backend with:
 
 Tests can be run against a specific backend (defaulting to Postgres) with the `backend` flag, for example:
 
-    $ scripts/dev.sh test --integration -k TestGraphQLQueryBasicCommon --backend mssql
+    $ scripts/dev.sh test --integration -k TestGraphQLQueryBasicCommon --backend (bigquery|citus|mssql|postgres)
 
 ### Run and test manually
 
@@ -114,7 +109,7 @@ The following command can be used to build and launch a local `graphql-engine` i
 ```
 cabal new-run -- exe:graphql-engine \
   --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
-  serve --enable-console --console-assets-dir=../console/static/dist
+  serve --enable-console --console-assets-dir=console/static/dist
 ```
 
 This will launch a server on port 8080, and it will serve the console assets if they were built with `npm run server-build` as mentioned above.
@@ -220,6 +215,23 @@ Some other useful points of note:
              --backend mssql -k TestGraphQLQueryBasicCommon
     ```
 
+##### Running the Python test suite on BigQuery
+Running integration tests against a BigQuery data source is a little more involved due to the necessary service account requirements. Before running the test suite either [manually](https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#run-and-test-manually) or [via `dev.sh`](https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#run-and-test-via-devsh):
+1. Ensure you have access to a [Google Cloud Console service account](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating).
+2. [Create and download a new service account key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys).
+3. [Activate the service account](https://cloud.google.com/sdk/gcloud/reference/auth/activate-service-account), if it is not already activated.
+4. Verify the service account is accessible via the [BigQuery API](https://cloud.google.com/bigquery/docs/reference/rest):
+     1. Update the environment variables in `scripts/verify-bigquery-creds.sh` with the credentials for your service account.
+     2. Run `source scripts/verify-bigquery-creds.sh`.
+     3. If the query succeeds, the service account is setup correctly to run tests against BigQuery locally.
+5. Create a new `hasura` data source, and run the contents of [this `schema_setup_bigquery.sql` file](https://github.com/hasura/graphql-engine/blob/master/server/tests-py/queries/graphql_query/bigquery/schema_setup_bigquery.sql) against it.
+6. Finally, run the BigQuery test suite with `HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE` and `HASURA_BIGQUERY_PROJECT_ID` environment variables set. For example:
+  ```
+  export HASURA_BIGQUERY_PROJECT_ID=# the project ID of the service account from step 1
+  export HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE=# the filepath to the downloaded service account key from step 2
+  scripts/dev.sh test --integration --backend bigquery -k TestGraphQLQueryBasicBigquery
+  ```
+
 ##### Guide on writing python tests
 
 1. Check whether the test you intend to write already exists in the test suite, so that there will be no
@@ -264,10 +276,21 @@ The current workflow for supporting a new backend in integration tests is as fol
     2. `schema_setup_<backend>`: for `v2/query` queries such as `<backend>_run_sql`. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-b34081ef8e1c34492fcf0cf72a8c1d64bcb66944f2ab2efb9ac0812cd7a003c7).
     3. `teardown_<backend>` and `cleardb_<backend>`
     4. important: filename suffixes should be the same as the value that’s being passed to `—backend`; that's how the files are looked up.
-4. Write test using [the `per_backend_tests` fixture](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-1034b560ce9984643a4aa4edab1d612aa512f1c3c28bbc93364700620681c962R420), parameterised by backend. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-40b7c6ad5362e70cafd29a3ac5d0a5387bd75befad92532ea4aaba99421ba3c8R12-R13).
-5. Optional: Run the existing (Postgres) test suite against the new backend to identify and group common and backend-specific tests into their own classes.
+4. Specify a `backend` parameter for [the `per_backend_tests` fixture](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-1034b560ce9984643a4aa4edab1d612aa512f1c3c28bbc93364700620681c962R420), parameterised by backend. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-40b7c6ad5362e70cafd29a3ac5d0a5387bd75befad92532ea4aaba99421ba3c8R12-R13).
 
-Tests against alternative backends aren't yet run/supported in CI, so please test locally.
+Note: When teardown is not disabled (via `skip_teardown`, in which case, this phase is skipped entirely), `teardown.yaml` always runs before `schema_teardown.yaml`, even if the tests fail. See `setup_and_teardown` in `server/tests-py/conftest.py` for the full source code/logic.
+
+This means, for example, that if `teardown.yaml` untracks a table, and `schema_teardown.yaml` runs raw SQL to drop the table, both would succeed (assuming the table is tracked/exists).
+
+**Test suite naming convention**
+The current convention is to indicate the backend(s) tests can be run against in the class name. For example:
+    * `TestGraphQLQueryBasicMySQL` for tests that can only be run on MySQL
+    * `TestGraphQLQueryBasicCommon` for tests that can be run against more than one backend
+    * if a test class doesn't have a suffix specifying the backend, nor does its name end in `Common`, then it is likely a test written pre-v2.0 that can only be run on Postgres
+
+This naming convention enables easier test filtering with [pytest command line flags](https://docs.pytest.org/en/6.2.x/usage.html#specifying-tests-selecting-tests).
+
+The backend-specific and common test suites are disjoint; for example, run `pytest --integration -k "Common or MySQL" --backend mysql` to run all MySQL tests.
 
 ### Create Pull Request
 

@@ -29,6 +29,7 @@ const ColumnEditorList = ({
   currentSchema,
   columnEdit,
   dispatch,
+  readOnlyMode,
   validTypeCasts,
   dataTypeIndexMap,
   columnDefaultFunctions,
@@ -61,7 +62,6 @@ const ColumnEditorList = ({
   return columns.map((col, i) => {
     const colName = col.column_name;
     const isArrayDataType = col.data_type === dataSource.columnDataTypes.ARRAY;
-
     // todo -- create getColumnProperties utility
     const getDisplayName = () => {
       if (isArrayDataType) {
@@ -111,6 +111,7 @@ const ColumnEditorList = ({
         <GqlCompatibilityWarning
           identifier={colName}
           className={styles.add_mar_left_small}
+          ifWarningCanBeFixed
         />
       );
     };
@@ -261,6 +262,7 @@ const ColumnEditorList = ({
           property={`column-${i}`}
           service="modify-table"
           saveFunc={onSubmit}
+          readOnlyMode={readOnlyMode}
           removeFunc={columnProperties.pkConstraint ? null : onDelete}
           collapsedClass={styles.display_flex}
           expandedLabel={expandedLabel}

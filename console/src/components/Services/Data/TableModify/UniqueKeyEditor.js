@@ -12,6 +12,7 @@ const UniqueKeyEditor = ({
   tableSchema,
   setUniqueKeys,
   dispatch,
+  readOnlyMode,
 }) => {
   const columns = tableSchema.columns.sort(ordinalColSort);
   // columns in the right order with their indices
@@ -164,6 +165,7 @@ const UniqueKeyEditor = ({
           editorExpanded={expandedContent}
           expandedLabel={expandedLabel}
           collapsedLabel={collapsedLabel}
+          readOnlyMode={readOnlyMode}
           property={`unique-key-${i}`}
           service="modify-table"
           saveFunc={saveFunc}

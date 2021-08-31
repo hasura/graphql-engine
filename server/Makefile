@@ -18,22 +18,24 @@ build_output := /build/_server_output
 # This glob is a pretty heavy hammer designed to work regardless of `cabal-install` version (see the
 # aforementioned link for why that’s tricky). If `cabal v2-*` ever gets a better way to do this,
 # please replace this with something less hacky.
-executables_glob := dist-newstyle/build/*/*/graphql-engine-*/**/opt/build/{graphql-engine/graphql-engine,graphql-engine-tests/graphql-engine-tests}
+executables_glob := ../dist-newstyle/build/*/*/graphql-engine-*/**/opt/build/{graphql-engine/graphql-engine,graphql-engine-tests/graphql-engine-tests}
 
 # These are the directories where `cabal v2-build --enable-coverage` sticks .mix files. It would be
 # much better if cabal-install supported something like stack’s `stack hpc report`, which passes the
 # right `--hpcdir` options automatically.
-mix_dirs_glob := dist-newstyle/**/hpc/vanilla/mix/**/{graphql-engine-1.0.0,graphql-engine}/
+mix_dirs_glob := ../dist-newstyle/**/hpc/vanilla/mix/**/{graphql-engine-1.0.0,graphql-engine}/
 
 # assumes this is built in circleci
 ci-build:
 	## configure
-	cp cabal.project.ci cabal.project.local
+	cp cabal.project.ci ../cabal.project.local
 	# Passing `--enable-coverage` to `cabal v2-build` appears to enable coverage for all packages, not
 	# just local packages (at least as of cabal-install-2.4.1.0), so add `coverage: true` to the
 	# `cabal.project.local` file in the appropriate package stanza.
+	#
+	# NOTE: enable_coverage is now unused, at time of this writing
 	if [[ -n '$(enable_coverage)' ]]; then \
-		printf '\npackage graphql-engine\n  coverage: true\n' >> cabal.project.local; \
+		printf '\npackage graphql-engine\n  coverage: true\n' >> ../cabal.project.local; \
 	fi
 	cabal v2-update
 	## build

@@ -76,7 +76,6 @@ module Hasura.Eventing.ScheduledTrigger
   , generateScheduleTimes
 
   , CronEventSeed(..)
-  , initLockedEventsCtx
   , LockedEventsCtx(..)
 
   -- * Database interactions
@@ -124,8 +123,8 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Text.Builder                           as TB
 
 import           Control.Arrow.Extended                 (dup)
-import           Control.Concurrent.Extended            (sleep)
-import           Control.Concurrent.STM.TVar
+import           Control.Concurrent.Extended            (Forever (..), sleep)
+import           Control.Concurrent.STM
 import           Data.Has
 import           Data.Int                               (Int64)
 import           Data.List                              (unfoldr)
@@ -138,15 +137,16 @@ import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Backends.Postgres.DDL.Table     (getHeaderInfosFromConf)
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Base.Error
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.Eventing.ScheduledTrigger.Types
-import           Hasura.HTTP
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Server.Version                  (HasVersion)
+
 
 -- | runCronEventsGenerator makes sure that all the cron triggers
 --   have an adequate buffer of cron events.
@@ -167,8 +167,9 @@ runCronEventsGenerator logger getSC = do
       -- Poll the DB only when there's at-least one cron trigger present
       -- in the schema cache
       -- get cron trigger stats from db
+      -- When shutdown is initiated, we stop generating new cron events
       eitherRes <- runMetadataStorageT $ do
-        deprivedCronTriggerStats <- getDeprivedCronTriggerStats
+        deprivedCronTriggerStats <- getDeprivedCronTriggerStats $ Map.keys cronTriggersCache
         -- join stats with cron triggers and produce @[(CronTriggerInfo, CronTriggerStats)]@
         cronTriggersForHydrationWithStats <-
           catMaybes <$>
@@ -221,13 +222,13 @@ processCronEvents
      , MonadMetadataStorage (MetadataStorageT m)
      )
   => L.Logger L.Hasura
-  -> LogEnvHeaders
+  -> LogBehavior
   -> HTTP.Manager
   -> [CronEvent]
   -> IO SchemaCache
   -> TVar (Set.Set CronEventId)
   -> m ()
-processCronEvents logger logEnv httpMgr cronEvents getSC lockedCronEvents = do
+processCronEvents logger logBehavior httpMgr cronEvents getSC lockedCronEvents = do
   cronTriggersInfo <- scCronTriggers <$> liftIO getSC
   -- save the locked cron events that have been fetched from the
   -- database, the events stored here will be unlocked in case a
@@ -245,7 +246,7 @@ processCronEvents logger logEnv httpMgr cronEvents getSC lockedCronEvents = do
                       Nothing
             retryCtx = RetryContext tries ctiRetryConf
         finally <- runMetadataStorageT $ flip runReaderT (logger, httpMgr) $
-                   processScheduledEvent logEnv id' ctiHeaders retryCtx
+                   processScheduledEvent logBehavior id' ctiHeaders retryCtx
                                          payload webhookUrl Cron
         removeEventFromLockedEvents id' lockedCronEvents
         onLeft finally logInternalError
@@ -260,12 +261,12 @@ processOneOffScheduledEvents
      )
   => Env.Environment
   -> L.Logger L.Hasura
-  -> LogEnvHeaders
+  -> LogBehavior
   -> HTTP.Manager
   -> [OneOffScheduledEvent]
   -> TVar (Set.Set OneOffScheduledEventId)
   -> m ()
-processOneOffScheduledEvents env logger logEnv httpMgr
+processOneOffScheduledEvents env logger logBehavior httpMgr
                              oneOffEvents lockedOneOffScheduledEvents = do
   -- save the locked one-off events that have been fetched from the
   -- database, the events stored here will be unlocked in case a
@@ -282,7 +283,7 @@ processOneOffScheduledEvents env logger logEnv httpMgr
           retryCtx = RetryContext _ooseTries _ooseRetryConf
 
       flip runReaderT (logger, httpMgr) $
-        processScheduledEvent logEnv _ooseId headerInfo retryCtx payload webhookUrl OneOff
+        processScheduledEvent logBehavior _ooseId headerInfo retryCtx payload webhookUrl OneOff
       removeEventFromLockedEvents _ooseId lockedOneOffScheduledEvents
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
@@ -295,23 +296,23 @@ processScheduledTriggers
      )
   => Env.Environment
   -> L.Logger L.Hasura
-  -> LogEnvHeaders
+  -> LogBehavior
   -> HTTP.Manager
   -> IO SchemaCache
   -> LockedEventsCtx
-  -> m void
-processScheduledTriggers env logger logEnv httpMgr getSC LockedEventsCtx {..} =
-  forever $ do
+  -> m (Forever m)
+processScheduledTriggers env logger logBehavior httpMgr getSC LockedEventsCtx {..} = do
+  return $ Forever () $ const $ do
     result <- runMetadataStorageT getScheduledEventsForDelivery
     case result of
       Left e -> logInternalError e
       Right (cronEvents, oneOffEvents) -> do
-        processCronEvents logger logEnv httpMgr cronEvents getSC leCronEvents
-        processOneOffScheduledEvents env logger logEnv httpMgr oneOffEvents leOneOffEvents
-    -- NOTE: cron events are scheduled at times with minute resolution (as on
-    -- unix), while one-off events can be set for arbitrary times. The sleep
-    -- time here determines how overdue a scheduled event (cron or one-off)
-    -- might be before we begin processing:
+        processCronEvents logger logBehavior httpMgr cronEvents getSC leCronEvents
+        processOneOffScheduledEvents env logger logBehavior httpMgr oneOffEvents leOneOffEvents
+        -- NOTE: cron events are scheduled at times with minute resolution (as on
+        -- unix), while one-off events can be set for arbitrary times. The sleep
+        -- time here determines how overdue a scheduled event (cron or one-off)
+        -- might be before we begin processing:
     liftIO $ sleep (seconds 10)
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
@@ -325,7 +326,7 @@ processScheduledEvent
      , Tracing.HasReporter m
      , MonadMetadataStorage m
      )
-  => LogEnvHeaders
+  => LogBehavior
   -> ScheduledEventId
   -> [EventHeaderInfo]
   -> RetryContext
@@ -333,7 +334,7 @@ processScheduledEvent
   -> Text
   -> ScheduledEventType
   -> m ()
-processScheduledEvent logEnv eventId eventHeaders retryCtx payload webhookUrl type'
+processScheduledEvent logBehavior eventId eventHeaders retryCtx payload webhookUrl type'
                       = Tracing.runTraceT traceNote do
   currentTime <- liftIO getCurrentTime
   let retryConf = _rctxConf retryCtx
@@ -345,14 +346,13 @@ processScheduledEvent logEnv eventId eventHeaders retryCtx payload webhookUrl ty
       let timeoutSeconds = round $ unNonNegativeDiffTime
                              $ strcTimeoutSeconds retryConf
           httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
-          headers = addDefaultHeaders $ map encodeHeader eventHeaders
-          extraLogCtx = ExtraLogContext (Just currentTime) eventId
+          (headers, decodedHeaders) = prepareHeaders logBehavior eventHeaders
+          extraLogCtx = ExtraLogContext eventId (sewpName payload)
           webhookReqBodyJson = J.toJSON payload
           webhookReqBody = J.encode webhookReqBodyJson
           requestDetails = RequestDetails $ BL.length webhookReqBody
       eitherRes <- runExceptT $ tryWebhook headers httpTimeout webhookReqBody (T.unpack webhookUrl)
-      logHTTPForST eitherRes extraLogCtx requestDetails
-      let decodedHeaders = map (decodeHeader logEnv eventHeaders) headers
+      logHTTPForST eitherRes extraLogCtx requestDetails logBehavior
       case eitherRes of
         Left e  -> processError eventId retryCtx decodedHeaders type' webhookReqBodyJson e
         Right r -> processSuccess eventId decodedHeaders type' webhookReqBodyJson r
@@ -494,22 +494,25 @@ mkInvocation eventId status reqHeaders respBody respHeaders reqBodyJson
 -- The point here is to maintain a certain number of future events so the user
 -- can kind of see what's coming up, and obviously to give 'processCronEvents'
 -- something to do.
-getDeprivedCronTriggerStatsTx :: Q.TxE QErr [CronTriggerStats]
-getDeprivedCronTriggerStatsTx =
+getDeprivedCronTriggerStatsTx :: [TriggerName] -> Q.TxE QErr [CronTriggerStats]
+getDeprivedCronTriggerStatsTx cronTriggerNames =
   map (\(n, count, maxTx) -> CronTriggerStats n count maxTx) <$>
     Q.listQE defaultTxErrorHandler
     [Q.sql|
-     SELECT * FROM
+      SELECT t.trigger_name, coalesce(q.upcoming_events_count, 0), coalesce(q.max_scheduled_time, now())
+      FROM (SELECT UNNEST ($1::text[]) as trigger_name) as t
+      LEFT JOIN
       ( SELECT
          trigger_name,
-          count(*) as upcoming_events_count,
+          count(1) as upcoming_events_count,
           max(scheduled_time) as max_scheduled_time
          FROM hdb_catalog.hdb_cron_events
          WHERE tries = 0 and status = 'scheduled'
          GROUP BY trigger_name
       ) AS q
-      WHERE q.upcoming_events_count < 100
-     |] () True
+      ON t.trigger_name = q.trigger_name
+      WHERE coalesce(q.upcoming_events_count, 0) < 100
+     |] (Identity $ PGTextArray $ map triggerNameToTxt cronTriggerNames) True
 
 -- TODO
 --  - cron events have minute resolution, while one-off events have arbitrary
@@ -638,6 +641,8 @@ setScheduledEventOpTx eventId op type' = case op of
 
 unlockScheduledEventsTx :: ScheduledEventType -> [ScheduledEventId] -> Q.TxE QErr Int
 unlockScheduledEventsTx type' eventIds =
+  let eventIdsTextArray = map unEventId eventIds
+  in
   case type' of
     Cron ->
       (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
@@ -648,8 +653,7 @@ unlockScheduledEventsTx type' eventIds =
         WHERE id = ANY($1::text[]) and status = 'locked'
         RETURNING *)
         SELECT count(*) FROM "cte"
-      |] (Identity $ ScheduledEventIdArray eventIds) True
-
+      |] (Identity $ PGTextArray eventIdsTextArray) True
     OneOff ->
       (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
       [Q.sql|
@@ -659,7 +663,7 @@ unlockScheduledEventsTx type' eventIds =
         WHERE id = ANY($1::text[]) AND status = 'locked'
         RETURNING *)
         SELECT count(*) FROM "cte"
-      |] (Identity $ ScheduledEventIdArray eventIds) True
+      |] (Identity $ PGTextArray eventIdsTextArray) True
 
 unlockAllLockedScheduledEventsTx :: Q.TxE QErr ()
 unlockAllLockedScheduledEventsTx = do
@@ -708,14 +712,20 @@ insertScheduledEventTx = \case
           toArr (CronEventSeed n t) = [(triggerNameToTxt n), (formatTime' t)]
           toTupleExp = S.TupleExp . map S.SELit
 
-dropFutureCronEventsTx :: TriggerName -> Q.TxE QErr ()
-dropFutureCronEventsTx name =
-  Q.unitQE defaultTxErrorHandler
-   [Q.sql|
-    DELETE FROM hdb_catalog.hdb_cron_events
-    WHERE trigger_name = $1 AND scheduled_time > now() AND tries = 0
-   |] (Identity name) False
-
+dropFutureCronEventsTx :: ClearCronEvents -> Q.TxE QErr ()
+dropFutureCronEventsTx = \case
+  SingleCronTrigger triggerName ->
+    Q.unitQE defaultTxErrorHandler
+    [Q.sql|
+     DELETE FROM hdb_catalog.hdb_cron_events
+     WHERE trigger_name = $1 AND scheduled_time > now() AND tries = 0
+    |] (Identity triggerName) True
+  MetadataCronTriggers triggerNames ->
+    Q.unitQE defaultTxErrorHandler
+    [Q.sql|
+     DELETE FROM hdb_catalog.hdb_cron_events
+     WHERE scheduled_time > now() AND tries = 0 AND trigger_name = ANY($1::text[])
+    |] (Identity $ PGTextArray $ map triggerNameToTxt triggerNames) False
 
 cronEventsTable :: QualifiedTable
 cronEventsTable =

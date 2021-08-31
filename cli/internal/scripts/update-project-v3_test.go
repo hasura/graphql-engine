@@ -4,17 +4,17 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/internal/statestore"
-	"github.com/hasura/graphql-engine/cli/internal/statestore/migrations"
-	"github.com/hasura/graphql-engine/cli/internal/statestore/settings"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/migrations"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/settings"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/v1metadata"
-	"github.com/hasura/graphql-engine/cli/internal/hasura/v1query"
-	"github.com/hasura/graphql-engine/cli/internal/hasura/v2query"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1metadata"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1query"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v2query"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -221,7 +221,7 @@ func Test_removeDirectories(t *testing.T) {
 }
 
 func Test_copyState(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
+	port, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardown()
 	type args struct {
 		ec           *cli.ExecutionContext
@@ -254,17 +254,17 @@ func Test_copyState(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srcSettings := cli.GetSettingsStateStore(tt.args.ec)
+			srcSettings := cli.GetSettingsStateStore(tt.args.ec, "default")
 			assert.NoError(t, srcSettings.PrepareSettingsDriver())
 			srcMigrations := cli.GetMigrationsStateStore(tt.args.ec)
-			assert.NoError(t, srcMigrations.PrepareMigrationsStateStore())
+			assert.NoError(t, srcMigrations.PrepareMigrationsStateStore("default"))
 
 			dstSettings := settings.NewStateStoreCatalog(statestore.NewCLICatalogState(tt.args.ec.APIClient.V1Metadata))
 			dstMigrations := migrations.NewCatalogStateStore(statestore.NewCLICatalogState(tt.args.ec.APIClient.V1Metadata))
 			assert.NoError(t, srcSettings.UpdateSetting("test", "test"))
 			assert.NoError(t, srcMigrations.SetVersion("", 123, false))
-			if err := copyState(tt.args.ec, tt.args.destdatabase); (err != nil) != tt.wantErr {
-				t.Fatalf("copyState() error = %v, wantErr %v", err, tt.wantErr)
+			if err := CopyState(tt.args.ec, "default", tt.args.destdatabase); (err != nil) != tt.wantErr {
+				t.Fatalf("CopyState() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			v, err := dstSettings.GetSetting("test")
 			assert.NoError(t, err)

@@ -225,7 +225,10 @@ const ModifyView = props => {
     </Button>
   );
 
-  if (!isFeatureSupported('tables.modify.enabled')) {
+  if (
+    !isFeatureSupported('tables.modify.enabled') ||
+    isFeatureSupported('tables.modify.readOnly')
+  ) {
     return (
       <FeatureDisabled
         tab="modify"
@@ -261,13 +264,24 @@ const ModifyView = props => {
               sql={viewDefSql}
               source={currentSource}
             />
-            <hr />
+            <hr className="my-lg" />
             {getViewColumnsSection()}
-            <hr />
-            <ComputedFields tableSchema={tableSchema} />
-            <hr />
-            <RootFields tableSchema={tableSchema} />
-            <hr />
+            <hr className="my-lg" />
+
+            {isFeatureSupported('tables.modify.computedFields') && (
+              <>
+                <ComputedFields tableSchema={tableSchema} />
+                <hr className="my-lg" />
+              </>
+            )}
+
+            {isFeatureSupported('tables.modify.customGqlRoot') && (
+              <>
+                <RootFields tableSchema={tableSchema} />
+                <hr className="my-lg" />
+              </>
+            )}
+
             {untrackBtn}
             {deleteBtn}
             <br />

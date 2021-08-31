@@ -48,6 +48,11 @@ a union of top-level nodes from each of the sub-schemas.
   app users to the GraphQL APIs that are auto-generated via Hasura, head to
   :ref:`auth`
 
+.. admonition:: Health monitoring of remote schemas in Hasura Cloud
+  :class: dhc
+  
+  Hasura Cloud offers built-in API metrics with integrated health checks and distributed tracing for your remote schemas. Read more at :ref:`Distributed Tracing in Hasura Cloud <tracing>`.
+
 Learn more
 ----------
 

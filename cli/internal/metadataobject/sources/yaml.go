@@ -60,11 +60,12 @@ func resolveTags(ctx map[string]string, node *yaml.Node) (*yaml.Node, error) {
 		}
 		baseDir, ok := ctx[includeTag]
 		if !ok {
-			return nil, fmt.Errorf("parser errror: base directory for !include tag not specified")
+			return nil, fmt.Errorf("parser error: base directory for !include tag not specified")
 		}
-		file, err := ioutil.ReadFile(filepath.Join(baseDir, node.Value))
+		fileLocation := filepath.Join(baseDir, node.Value)
+		file, err := ioutil.ReadFile(fileLocation)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", fileLocation, err)
 		}
 		newctx := map[string]string{}
 		for k, v := range ctx {
@@ -74,9 +75,9 @@ func resolveTags(ctx map[string]string, node *yaml.Node) (*yaml.Node, error) {
 		var f = newFragment(newctx)
 		err = yaml.Unmarshal(file, f)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", fileLocation, err)
 		}
-		return f.content, err
+		return f.content, nil
 	}
 	switch node.Tag {
 	case includeTag:
@@ -85,12 +86,9 @@ func resolveTags(ctx map[string]string, node *yaml.Node) (*yaml.Node, error) {
 		if strings.Contains(node.Value, includeTag) {
 			node.Tag = includeTag
 			parts := strings.Split(node.Value, " ")
-			if len(parts) == 2 {
-				node.Value = strings.Trim(parts[1], "\"")
-				return resolve(node)
-			}
+			node.Value = strings.Trim(strings.Join(parts[1:], " "), "\"")
+			return resolve(node)
 		}
-
 	}
 
 	switch node.Kind {

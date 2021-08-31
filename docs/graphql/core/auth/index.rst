@@ -52,3 +52,10 @@ As you can see from this:
 .. admonition:: Additional Resources
 
   Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.
+
+.. hiding this as it mixes auth for the data plane with auth for the control plane and might be confusing
+
+  .. admonition:: Adding collaborators in Hasura Cloud
+    :class: dhc
+
+    Hasura Cloud offers collaborators in addition to role management. Collaborators can be granted access to specific portions of the console, like Metrics. Additionally, adding collaborators allows you to avoid sharing the `HASURA-ADMIN-SECRET`. For more information about collaborator management, see :ref:`Collaborators in Hasura Cloud <manage_project_collaborators>`.

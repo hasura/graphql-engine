@@ -72,3 +72,11 @@ export type RunSqlType = {
     sql: string;
   };
 };
+
+export type Entry<O, K extends keyof O> = [K, O[K]];
+export type Entries<O> = Entry<O, keyof O>[];
+
+declare global {
+  // eslint-disable-next-line no-underscore-dangle
+  const __DEVELOPMENT__: boolean;
+}

@@ -4,10 +4,10 @@ module Hasura.RQL.DML.Insert
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                             as Env
 import qualified Data.HashMap.Strict                          as HM
 import qualified Data.HashSet                                 as HS
 import qualified Data.Sequence                                as DS
+import qualified Data.Tagged                                  as Tagged
 import qualified Database.PG.Query                            as Q
 
 import           Control.Monad.Trans.Control                  (MonadBaseControl)
@@ -22,14 +22,17 @@ import           Hasura.Backends.Postgres.Execute.Mutation
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.Returning
 import           Hasura.Backends.Postgres.Types.Table
+import           Hasura.Base.Error
 import           Hasura.EncJSON
+import           Hasura.QueryTags
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.Insert
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
+
+import           Hasura.GraphQL.Execute.Backend
 
 
 convObj
@@ -69,7 +72,7 @@ validateInpCols inpCols updColsPerm = forM_ inpCols $ \inpCol ->
 
 buildConflictClause
   :: (UserInfoM m, QErrM m)
-  => SessVarBldr ('Postgres 'Vanilla) m
+  => SessionVariableBuilder ('Postgres 'Vanilla) m
   -> TableInfo ('Postgres 'Vanilla)
   -> [PGCol]
   -> OnConflict
@@ -130,7 +133,7 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
 convInsertQuery
   :: (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m)
   => (Value -> m [InsObj ('Postgres 'Vanilla)])
-  -> SessVarBldr ('Postgres 'Vanilla) m
+  -> SessionVariableBuilder ('Postgres 'Vanilla) m
   -> (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp)
   -> InsertQuery
   -> m (InsertQueryP1 ('Postgres 'Vanilla))
@@ -205,18 +208,22 @@ convInsQ query = do
     sessVarFromCurrentSetting binRHSBuilder query
 
 runInsert
-  :: ( HasVersion, QErrM m, UserInfoM m
-     , CacheRM m, HasServerConfigCtx m
-     , MonadIO m, Tracing.MonadTrace m
-     , MonadBaseControl IO m, MetadataM m
-     )
-  => Env.Environment -> InsertQuery -> m EncJSON
-runInsert env q = do
+  :: forall m
+    . ( QErrM m, UserInfoM m
+      , CacheRM m, HasServerConfigCtx m
+      , MonadIO m, Tracing.MonadTrace m
+      , MonadBaseControl IO m, MetadataM m
+      , MonadQueryTags m
+      )
+  => InsertQuery -> m EncJSON
+runInsert q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (iqSource q)
+  userInfo <- askUserInfo
   res <- convInsQ q
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
+  let queryTags = QueryTagsComment $ Tagged.untag $ createQueryTags @m Nothing (encodeOptionalQueryTags Nothing)
   runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $
-    execInsertQuery env strfyNum Nothing res
+    runReaderT (execInsertQuery strfyNum userInfo res) queryTags
 
 decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj ('Postgres 'Vanilla)]
 decodeInsObjs v = do

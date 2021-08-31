@@ -7,17 +7,17 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
 func TestClient_GetIntrospectionSchema(t *testing.T) {
-	portHasuraV13, teardown13 := testutil.StartHasura(t, "v1.3.3")
+	portHasuraV13, teardown13 := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown13()
-	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraVersion)
+	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardownLatest()
 	type fields struct {
 		Client *httpc.Client
@@ -31,7 +31,7 @@ func TestClient_GetIntrospectionSchema(t *testing.T) {
 		wantErr    bool
 	}{
 		{
-			"get Introspection Schema from v1.3.3",
+			"get Introspection Schema from hasura/graphql-engine:v1.3.3",
 			fields{
 				Client: testutil.NewHttpcClient(t, portHasuraV13, nil),
 				path:   "/v1/graphql",
@@ -73,7 +73,7 @@ func TestClient_GetIntrospectionSchema(t *testing.T) {
 				require.NoError(t, err)
 				gotb, err := json.MarshalIndent(got, "", "  ")
 				require.NoError(t, err)
-				require.Equal(t, string(wantb), string(gotb))
+				require.JSONEq(t, string(wantb), string(gotb))
 			}
 		})
 	}

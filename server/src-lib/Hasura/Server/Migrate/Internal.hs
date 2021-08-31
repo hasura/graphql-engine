@@ -2,15 +2,20 @@ module Hasura.Server.Migrate.Internal
   ( runTx
   , getCatalogVersion
   , from3To4
-  )
-where
-import           Hasura.Backends.Postgres.Connection
+  , setCatalogVersion
+  ) where
+
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Error
-import           Hasura.RQL.Types.EventTrigger
+
+import           Data.Time.Clock                     (UTCTime)
 
 import qualified Data.Aeson                          as A
 import qualified Database.PG.Query                   as Q
+
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Base.Error
+import           Hasura.RQL.Types.EventTrigger
+
 
 runTx :: (MonadTx m) => Q.Query -> m ()
 runTx = liftTx . Q.multiQE defaultTxErrorHandler
@@ -47,3 +52,10 @@ from3To4 = liftTx $ Q.catchE defaultTxErrorHandler $ do
                                             configuration = $1
                                             WHERE name = $2
                                             |] (Q.AltJ $ A.toJSON etc, name) True
+
+setCatalogVersion :: MonadTx m => Text -> UTCTime -> m ()
+setCatalogVersion ver time = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
+    INSERT INTO hdb_catalog.hdb_version (version, upgraded_on) VALUES ($1, $2)
+    ON CONFLICT ((version IS NOT NULL))
+    DO UPDATE SET version = $1, upgraded_on = $2
+  |] (ver, time) False

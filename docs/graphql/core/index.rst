@@ -87,6 +87,7 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
       - :ref:`api_reference`
       - :ref:`How It Works <how_it_works>`
       - :ref:`Troubleshooting <troubleshooting>`
+      - :ref:`FAQs <faq>`
       - :ref:`security_protocol`
 
   .. container:: toc-list-section
@@ -100,7 +101,7 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
       - `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__
       - `GraphQL & Hasura Courses <https://hasura.io/learn/>`__
       - :ref:`Guides & Resources <guides>`
-      - :ref:`Upgrading to Hasura v2 <upgrade_hasura_v2>`
+      - :ref:`Updating to Hasura v2 <upgrade_hasura_v2>`
 
 
 .. toctree::

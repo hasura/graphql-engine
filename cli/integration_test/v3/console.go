@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/commands"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/commands"
 )
 
 func TestConsoleCmd(t *testing.T, ec *cli.ExecutionContext) {

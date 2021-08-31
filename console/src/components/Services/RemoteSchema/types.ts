@@ -27,6 +27,7 @@ export type EditState = {
   originalEnvUrl: string;
   originalTimeoutConf: string;
   originalForwardClientHeaders: boolean;
+  originalComment?: string;
 };
 
 export type AddState = AsyncState & {
@@ -37,6 +38,7 @@ export type AddState = AsyncState & {
   name: string;
   forwardClientHeaders: boolean;
   editState: EditState;
+  comment?: string;
 };
 
 export type ListState = AsyncState & {

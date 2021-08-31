@@ -24,8 +24,9 @@ import           Control.Monad.Trans.Control        (MonadBaseControl (..))
 import           Data.Either                        (isRight)
 
 import           Hasura.Backends.Postgres.SQL.Error
+import           Hasura.Base.Error
 import           Hasura.Incremental                 (Cacheable (..))
-import           Hasura.RQL.Types.Error
+
 
 -- See Note [Existentially Quantified Types]
 type RunTx =
@@ -106,6 +107,7 @@ data PGSourceConfig
   { _pscExecCtx              :: !PGExecCtx
   , _pscConnInfo             :: !Q.ConnInfo
   , _pscReadReplicaConnInfos :: !(Maybe (NonEmpty Q.ConnInfo))
+  , _pscPostDropHook         :: !(IO ())
   } deriving (Generic)
 
 instance Eq PGSourceConfig where

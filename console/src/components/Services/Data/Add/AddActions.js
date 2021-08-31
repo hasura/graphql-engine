@@ -7,8 +7,13 @@ import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
 import { getTableModifyRoute } from '../../../Common/utils/routesUtils';
 import { dataSource } from '../../../../dataSources';
-import { findTable, escapeTableColumns } from '../../../../dataSources/common';
+import {
+  findTable,
+  escapeTableColumns,
+  escapeTableName,
+} from '../../../../dataSources/common';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
+import { exportMetadata } from '../../../../metadata/actions';
 import {
   getTrackTableQuery,
   getUntrackTableQuery,
@@ -156,6 +161,7 @@ export const trackTable = payload => (dispatch, getState) => {
     tableDef: payload,
     source: currentDataSource,
     customColumnNames: escapeTableColumns(table),
+    customName: escapeTableName(payload.name),
   });
   const requestBodyDown = getUntrackTableQuery(payload, currentDataSource);
 
@@ -262,7 +268,9 @@ const createTableSql = () => {
     const errorMsg = 'Create table failed';
 
     const customOnSuccess = () => {
-      dispatch(trackTable({ schema: currentSchema, name: tableName }));
+      dispatch(exportMetadata()).then(() => {
+        dispatch(trackTable({ schema: currentSchema, name: tableName }));
+      });
     };
     const customOnError = err => {
       dispatch({ type: REQUEST_ERROR, data: errorMsg });

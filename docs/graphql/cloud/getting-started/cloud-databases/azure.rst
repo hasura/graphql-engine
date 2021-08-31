@@ -78,6 +78,9 @@ Then click ``Review + create``.
 
    If you're using a database user other than the default one, make sure to give it the right :ref:`Postgres permissions <cloud_postgres_permissions>`.
 
+.. note::
+   For Azure flexible server, Hasura v1.x does not work with `JIT <https://www.postgresql.org/docs/11/runtime-config-query.html#GUC-JIT>`__ turned on. JIT can be turned off from Azure console. Hasura v2.x works fine with JIT enabled.
+   
 Step 3: Allow connections to your DB from Hasura Cloud
 ------------------------------------------------------
 
@@ -151,8 +154,7 @@ You can check out our `30-Minute Hasura Basics Course <https://hasura.io/learn/g
 and other `GraphQL & Hasura Courses <https://hasura.io/learn/>`__ for a more detailed introduction to Hasura.
 
 You can also click the gear icon to manage your Hasura Cloud project. (e.g. add :ref:`collaborators <manage_project_collaborators>`,
-:ref:`env vars <manage_project_env_vars>` or :ref:`custom domains <manage_project_domains>`) and :ref:`add an admin secret <secure_project>`
-to make sure that your GraphQL endpoint and the Hasura console are not publicly accessible.
+:ref:`env vars <manage_project_env_vars>` or :ref:`custom domains <manage_project_domains>`).
 
 .. thumbnail:: /img/graphql/cloud/getting-started/project-manage.png
   :alt: Project actions

@@ -1,0 +1,11 @@
+cradle:
+  cabal:
+    - path: "./server/src-lib"
+      component: "graphql-engine:lib:graphql-engine"
+    - path: "./server/src-exec"
+      component: "graphql-engine:exe:graphql-engine"
+    - path: "./server/src-test"
+      component: "graphql-engine:test:graphql-engine-tests"
+    - path: "./server/src-bench-cache"
+      component: "graphql-engine:bench:cache"
+

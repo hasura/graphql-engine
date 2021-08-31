@@ -1,5 +1,6 @@
 const defaultState = {
   inconsistentObjects: [],
+  inconsistentInheritedRoles: [],
   ongoingRequest: false,
   allowedQueries: [],
 };

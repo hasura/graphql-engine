@@ -29,9 +29,10 @@ module Hasura.Eventing.HTTP
   , mkClientErr
   , mkWebhookReq
   , mkResp
-  , LogEnvHeaders
-  , encodeHeader
-  , decodeHeader
+  , LogBehavior(..)
+  , ResponseLogBehavior(..)
+  , HeaderLogBehavior(..)
+  , prepareHeaders
   , getRetryAfterHeaderFromHTTPErr
   , getRetryAfterHeaderFromResp
   , parseRetryHeaderValue
@@ -43,11 +44,11 @@ module Hasura.Eventing.HTTP
 import qualified Data.ByteString               as BS
 import qualified Data.ByteString.Lazy          as LBS
 import qualified Data.CaseInsensitive          as CI
+import qualified Data.HashMap.Lazy             as HML
 import qualified Data.TByteString              as TBS
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as TE
 import qualified Data.Text.Encoding.Error      as TE
-import qualified Data.Time.Clock               as Time
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.HTTP.Types            as HTTP
 
@@ -57,13 +58,25 @@ import           Data.Aeson.TH
 import           Data.Either
 import           Data.Has
 import           Data.Int                      (Int64)
+import           Hasura.HTTP                   (addDefaultHeaders)
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.EventTrigger
+import           Hasura.Server.Version         (HasVersion)
 import           Hasura.Tracing
 
-type LogEnvHeaders = Bool
+data LogBehavior =
+  LogBehavior
+  { _lbHeader   :: !HeaderLogBehavior
+  , _lbResponse :: !ResponseLogBehavior
+  }
+
+data HeaderLogBehavior = LogEnvValue | LogEnvVarname
+  deriving (Show, Eq)
+
+data ResponseLogBehavior = LogSanitisedResponse | LogEntireResponse
+  deriving (Show, Eq)
 
 retryAfterHeader :: CI.CI Text
 retryAfterHeader = "Retry-After"
@@ -136,11 +149,9 @@ data Invocation (a :: TriggerTypes)
 
 data ExtraLogContext
   = ExtraLogContext
-  { elEventCreatedAt :: Maybe Time.UTCTime
-  , elEventId        :: EventId
+  { elEventId   :: !EventId
+  , elEventName :: !(Maybe TriggerName)
   } deriving (Show, Eq)
-
-$(deriveJSON hasuraJSON{omitNothingFields=True} ''ExtraLogContext)
 
 data HTTPResp (a :: TriggerTypes)
    = HTTPResp
@@ -206,24 +217,38 @@ $(deriveToJSON hasuraJSON ''RequestDetails)
 
 data HTTPRespExtra (a :: TriggerTypes)
   = HTTPRespExtra
-  { _hreResponse :: !(Either (HTTPErr a) (HTTPResp a))
-  , _hreContext  :: !ExtraLogContext
-  , _hreRequest  :: !RequestDetails
+  { _hreResponse    :: !(Either (HTTPErr a) (HTTPResp a))
+  , _hreContext     :: !ExtraLogContext
+  , _hreRequest     :: !RequestDetails
+  , _hreLogResponse :: !ResponseLogBehavior
+  -- ^ Whether to log the entire response, including the body and the headers,
+  -- which may contain sensitive information.
   }
 
 instance ToJSON (HTTPRespExtra a) where
-  toJSON (HTTPRespExtra resp ctxt req) =
+  toJSON (HTTPRespExtra resp ctxt req logResp) =
     case resp of
-      Left errResp ->
-        object [ "response" .= toJSON errResp
-               , "request" .= toJSON req
-               , "context" .= toJSON ctxt
-               ]
-      Right rsp ->
-        object [ "response" .= toJSON rsp
-               , "request" .= toJSON req
-               , "context" .= toJSON ctxt
-               ]
+      Left errResp -> object $
+        [ "response" .= toJSON errResp
+        , "request" .= toJSON req
+        , "event_id" .= elEventId ctxt
+        ] ++ eventName
+      Right okResp -> object $
+        [ "response" .= case logResp of
+            LogEntireResponse    -> toJSON okResp
+            LogSanitisedResponse -> sanitisedRespJSON okResp
+        , "request" .= toJSON req
+        , "event_id" .= elEventId ctxt
+        ] ++ eventName
+    where
+      eventName = case elEventName ctxt of
+        Just name -> [ "event_name" .= name ]
+        Nothing   -> []
+      sanitisedRespJSON v
+        = Object $ HML.fromList
+        [ "size" .= hrsSize v
+        , "status" .= hrsStatus v
+        ]
 
 instance ToEngineLog (HTTPRespExtra 'EventType) Hasura where
   toEngineLog resp = (LevelInfo, eventTriggerLogType, toJSON resp)
@@ -274,10 +299,11 @@ logHTTPForET
   => Either (HTTPErr 'EventType) (HTTPResp 'EventType)
   -> ExtraLogContext
   -> RequestDetails
+  -> LogBehavior
   -> m ()
-logHTTPForET eitherResp extraLogCtx reqDetails = do
+logHTTPForET eitherResp extraLogCtx reqDetails logBehavior = do
   logger :: Logger Hasura <- asks getter
-  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx reqDetails
+  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx reqDetails (_lbResponse logBehavior)
 
 logHTTPForST
   :: ( MonadReader r m
@@ -287,10 +313,11 @@ logHTTPForST
   => Either (HTTPErr 'ScheduledType) (HTTPResp 'ScheduledType)
   -> ExtraLogContext
   -> RequestDetails
+  -> LogBehavior
   -> m ()
-logHTTPForST eitherResp extraLogCtx reqDetails = do
+logHTTPForST eitherResp extraLogCtx reqDetails logBehavior = do
   logger :: Logger Hasura <- asks getter
-  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx reqDetails
+  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx reqDetails (_lbResponse logBehavior)
 
 runHTTP :: (MonadIO m) => HTTP.Manager -> HTTP.Request -> m (Either (HTTPErr a) (HTTPResp a))
 runHTTP manager req = do
@@ -353,20 +380,33 @@ encodeHeader (EventHeaderInfo hconf cache) =
    in (ciname, value)
 
 decodeHeader
-  :: LogEnvHeaders -> [EventHeaderInfo] -> (HTTP.HeaderName, BS.ByteString)
+  :: LogBehavior -> [EventHeaderInfo] -> (HTTP.HeaderName, BS.ByteString)
   -> HeaderConf
-decodeHeader logenv headerInfos (hdrName, hdrVal)
+decodeHeader logBehavior headerInfos (hdrName, hdrVal)
   = let name = decodeBS $ CI.original hdrName
         getName ehi = let (HeaderConf name' _) = ehiHeaderConf ehi
                       in name'
         mehi = find (\hi -> getName hi == name) headerInfos
     in case mehi of
          Nothing -> HeaderConf name (HVValue (decodeBS hdrVal))
-         Just ehi -> if logenv
-                     then HeaderConf name (HVValue (ehiCachedValue ehi))
-                     else ehiHeaderConf ehi
+         Just ehi -> case _lbHeader logBehavior of
+                       LogEnvValue   -> HeaderConf name (HVValue (ehiCachedValue ehi))
+                       LogEnvVarname -> ehiHeaderConf ehi
    where
      decodeBS = TE.decodeUtf8With TE.lenientDecode
+
+-- | Encodes given request headers along with our 'defaultHeaders' and returns
+-- them along with the re-decoded set of headers (for logging purposes).
+prepareHeaders
+  :: HasVersion
+  => LogBehavior
+  -> [EventHeaderInfo]
+  -> ([HTTP.Header], [HeaderConf])
+prepareHeaders logBehavior headerInfos = (headers, logHeaders)
+  where
+    encodedHeaders = map encodeHeader headerInfos
+    headers = addDefaultHeaders encodedHeaders
+    logHeaders = map (decodeHeader logBehavior headerInfos) headers
 
 getRetryAfterHeaderFromHTTPErr :: HTTPErr a -> Maybe Text
 getRetryAfterHeaderFromHTTPErr (HStatus resp) = getRetryAfterHeaderFromResp resp

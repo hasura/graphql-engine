@@ -16,7 +16,7 @@ fi
 MSSQL_PASSWORD=hasuraMSSQL1
 MSSQL_CONTAINER_NAME="hasura-dev-mssql-$MSSQL_PORT"
 MSSQL_DB_URL="DRIVER={ODBC Driver 17 for SQL Server};SERVER=127.0.0.1,$MSSQL_PORT;Uid=sa;Pwd=$MSSQL_PASSWORD;"
-MSSQL_DOCKER="docker exec -it $MSSQL_CONTAINER_NAME /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P $MSSQL_PASSWORD"
+MSSQL_DOCKER="docker exec -it $MSSQL_CONTAINER_NAME sqlcmd -S localhost -U sa -P $MSSQL_PASSWORD"
 
 
 ######################
@@ -25,8 +25,8 @@ MSSQL_DOCKER="docker exec -it $MSSQL_CONTAINER_NAME /opt/mssql-tools/bin/sqlcmd 
 
 function mssql_launch_container(){
   echo_pretty "Launching MSSQL container: $MSSQL_CONTAINER_NAME"
-  docker run --name $MSSQL_CONTAINER_NAME -e 'ACCEPT_EULA=Y' -e "SA_PASSWORD=$MSSQL_PASSWORD" \
-    -p 127.0.0.1:"$MSSQL_PORT":1433 -d mcr.microsoft.com/mssql/server:2019-CU8-ubuntu-16.04
+  docker run --name $MSSQL_CONTAINER_NAME \
+    -p 127.0.0.1:"$MSSQL_PORT":1433 -d hasura/mssql-server-2019-cu10-ubuntu-20.04:latest
 }
 
 function mssql_wait {

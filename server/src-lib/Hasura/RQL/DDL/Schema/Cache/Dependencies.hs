@@ -16,6 +16,8 @@ import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend              as AB
 
+import           Hasura.Base.Error
+import           Hasura.RQL.DDL.Network
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 
@@ -130,6 +132,8 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
                 TOTrigger triggerName ->
                   unless (M.member triggerName (_tiEventTriggerInfoMap tableInfo)) $ Left $
                     "no event trigger named " <> triggerName <<> " is defined for table " <>> tableName
+      SORole roleName -> void $ (M.lookup roleName (_boRoles cache))
+        `onNothing` Left ("parent role " <> roleName <<> " does not exist")
 
     castSourceInfo
       :: (Backend b) => SourceName -> SourceObjId b -> Either Text (SourceInfo b)
@@ -152,7 +156,7 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
       => TableInfo b -> FieldName -> Getting (First a) (FieldInfo b) a -> Text -> Either Text a
     resolveField tableInfo fieldName fieldType fieldTypeName = do
       let coreInfo = _tiCoreInfo tableInfo
-          tableName = _tciName coreInfo
+          tableName = tableInfoName tableInfo
       fieldInfo <- M.lookup fieldName (_tciFieldInfoMap coreInfo) `onNothing` Left
         ("table " <> tableName <<> " has no field named " <>> fieldName)
       (fieldInfo ^? fieldType) `onNothing` Left
@@ -170,8 +174,13 @@ deleteMetadataObject = \case
   MOAction name                       -> boActions %~ M.delete name
   MOEndpoint name                     -> boEndpoints %~ M.delete name
   MOActionPermission name role        -> boActions.ix name.aiPermissions %~ M.delete role
-  MOInheritedRole name                -> boInheritedRoles %~ M.delete name
+  MOInheritedRole name                -> boRoles %~ M.delete name
+  MOHostTlsAllowlist host             -> removeHostFromAllowList host
   where
+    removeHostFromAllowList hst bo = bo {
+      _boTlsAllowlist = filter (not . checkForHostnameInAllowlistObject hst) (_boTlsAllowlist bo)
+    }
+
     deleteObjId :: forall b. (Backend b) => SourceMetadataObjId b -> BackendSourceInfo -> BackendSourceInfo
     deleteObjId sourceObjId sourceInfo =
       maybe
@@ -184,7 +193,7 @@ deleteMetadataObject = \case
       SMOTable    name -> siTables    %~ M.delete name
       SMOFunction name -> siFunctions %~ M.delete name
       SMOFunctionPermission functionName role ->
-        siFunctions.ix functionName.fiPermissions %~ HS.delete role
+        siFunctions.ix functionName.fiPermissions %~ M.delete role
       SMOTableObj tableName tableObjectId -> siTables.ix tableName %~ case tableObjectId of
         MTORel name _              -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRel name)
         MTOComputedField name      -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromComputedField name)

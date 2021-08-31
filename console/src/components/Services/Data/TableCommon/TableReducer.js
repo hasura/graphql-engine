@@ -162,6 +162,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           rSchema: selectedRel.rSchema,
           rcol: selectedRel.rcol,
           isUnique: selectedRel.isUnique,
+          isPrimary: selectedRel.isPrimary,
         },
       };
     case REL_RESET:

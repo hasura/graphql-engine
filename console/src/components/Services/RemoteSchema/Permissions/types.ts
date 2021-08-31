@@ -79,11 +79,13 @@ export type ChildArgumentType = {
 export type CustomFieldType = {
   name: string;
   checked: boolean;
-  args?: GraphQLArgument[];
+  args?: Record<string, GraphQLArgument>;
   return?: string;
   typeName?: string;
   children?: FieldType[];
   defaultValue?: any;
+  isInputObjectType?: boolean;
+  parentName?: string;
 };
 
 export type FieldType = CustomFieldType & GraphQLField<any, any>;

@@ -7,7 +7,6 @@ where
 import           Hasura.Prelude
 
 import qualified Control.Monad.Validate             as MV
-import qualified Data.HashSet                       as S
 import qualified Data.Sequence                      as Seq
 import qualified Data.Text                          as T
 import qualified Language.GraphQL.Draft.Syntax      as G
@@ -18,15 +17,14 @@ import           Data.Text.Extended
 import qualified Hasura.SQL.AnyBackend              as AB
 
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Base.Error
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.SQL.Backend
 import           Hasura.Server.Utils
-
 
 mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg ('Postgres pgKind)]
 mkFunctionArgs defArgsNo tys argNames =
@@ -62,15 +60,15 @@ buildFunctionInfo
   -> QualifiedFunction
   -> SystemDefined
   -> FunctionConfig
-  -> [FunctionPermissionMetadata]
-  -> RawFunctionInfo
+  -> FunctionPermissionsMap
+  -> RawFunctionInfo ('Postgres pgKind)
   -> m (FunctionInfo ('Postgres pgKind), SchemaDependency)
 buildFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFuncInfo =
   either (throw400 NotSupported . showErrors) pure
     =<< MV.runValidateT validateFunction
   where
     functionArgs = mkFunctionArgs defArgsNo inpArgTyps inpArgNames
-    RawFunctionInfo _ hasVariadic funVol retSn retN retTyTyp retSet
+    PGRawFunctionInfo _ hasVariadic funVol retSn retN retTyTyp retSet
                 inpArgTyps inpArgNames defArgsNo returnsTab descM
                 = rawFuncInfo
     returnType = QualifiedPGType retSn retN retTyTyp
@@ -109,7 +107,7 @@ buildFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFunc
           retJsonAggSelect = bool JASSingleObject JASMultipleRows retSet
           functionInfo =
             FunctionInfo qf systemDefined funVol exposeAs inputArguments
-                         retTable descM (S.fromList $ _fpmRole <$> permissions)
+                         retTable (getPGDescription <$> descM) permissions
                          retJsonAggSelect
 
       pure ( functionInfo

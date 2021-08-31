@@ -26,10 +26,27 @@ version control.
 Supported databases
 -------------------
 
+Hasura GraphQL engine supports:
+
+- :ref:`Postgres <database_postgres>`
+- :ref:`MS SQL Server <database_ms_sql_server>`
+- :ref:`Citus / Hyperscale <database_citus-hyperscale-postgres>`
+- :ref:`BigQuery <database_bigquery>`
+- **MySQL** (in preview) - See the :ref:`preview guide <mysql_preview>`
+
+
+.. admonition:: Additional Resources
+
+  Get Started with Hasura today - `Watch video guide <https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=>`__.
+
+
 .. toctree::
   :maxdepth: 1
+  :hidden:
   :titlesonly:
 
   postgres/index
   ms-sql-server/index
+  citus-hyperscale-postgres/index
+  bigquery/index
   Connecting databases <connect-db>

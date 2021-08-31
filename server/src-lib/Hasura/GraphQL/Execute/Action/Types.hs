@@ -16,6 +16,7 @@ import qualified Hasura.Logging                as L
 import qualified Hasura.RQL.IR.Select          as RS
 import qualified Hasura.Tracing                as Tracing
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Parser
 import           Hasura.RQL.DDL.Headers
@@ -34,7 +35,7 @@ data AsyncActionQuerySourceExecution v
   = AsyncActionQuerySourceExecution
   { _aaqseSource        :: !SourceName
   , _aaqseJsonAggSelect :: !JsonAggSelect
-  , _aaqseSelectBuilder :: !(ActionLogResponse -> RS.AnnSimpleSelG ('Postgres 'Vanilla) v)
+  , _aaqseSelectBuilder :: !(ActionLogResponse -> RS.AnnSimpleSelectG ('Postgres 'Vanilla) (Const Void) v)
   }
 
 data AsyncActionQueryExecution v
@@ -121,6 +122,7 @@ data ActionHandlerLog
   = ActionHandlerLog
   { _ahlRequestSize  :: !Int64
   , _ahlResponseSize :: !Int64
+  , _ahlActionName   :: !ActionName
   } deriving (Show)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''ActionHandlerLog)
 

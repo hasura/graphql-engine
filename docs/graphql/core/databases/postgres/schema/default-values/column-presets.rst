@@ -1,11 +1,11 @@
 .. meta::
-   :description: Set default field values for Postgres using role-based column presets
-   :keywords: hasura, docs, postgres, schema, default value, role-based, column preset
+  :description: Set field values for Postgres using role-based column presets
+  :keywords: hasura, docs, postgres, schema, role-based, column preset
 
 .. _column_presets:
 
-Postgres: Setting default values for fields using role-based column presets
-===========================================================================
+Postgres: Setting values for fields using role-based column presets
+===================================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -15,16 +15,16 @@ Postgres: Setting default values for fields using role-based column presets
 Introduction
 ------------
 
-Let's say you want certain fields to have their values set automatically when not explicitly passed using session
-variables or fixed values when a new row is created with a particular :ref:`user role <roles_variables>`.
+Let's say you want certain fields to have their values set automatically using session variables or fixed values when a row
+is created/updated with a particular :ref:`user role <roles_variables>`.
 
-Hasura GraphQL engine's column presets let you define role-based default values for any field/column. These values
+Hasura GraphQL engine's column presets let you define role-based values for any field/column. These values
 can either be a session variable value or a static value.
 
 .. admonition:: Column preset restricts mutation access for configured role
 
-  If a column has a preset defined for a given role, access to the column for mutations will be restricted for users
-  with that role.
+  Column preset values are not overridable by the user. ie. If a column has a preset defined for a given role, access to the column
+  for the mutation will be restricted for users with that role.
 
 **Example:** Say we have a field ``user_id`` in a table ``article`` which is to be set to the id of the user, from
 the value of the user's session variable whenever a new row is added to the ``article`` table.

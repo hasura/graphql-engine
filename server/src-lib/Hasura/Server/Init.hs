@@ -6,6 +6,8 @@ module Hasura.Server.Init
   , module Hasura.Server.Init.Config
   ) where
 
+import           Hasura.Prelude
+
 import qualified Data.Aeson                               as J
 import qualified Data.Aeson.TH                            as J
 import qualified Data.HashSet                             as Set
@@ -13,23 +15,24 @@ import qualified Data.String                              as DataString
 import qualified Data.Text                                as T
 import qualified Database.PG.Query                        as Q
 import qualified Language.Haskell.TH.Syntax               as TH
+import qualified Network.WebSockets                       as WS
 import qualified Text.PrettyPrint.ANSI.Leijen             as PP
 
+import           Data.ByteString.Char8                    (pack, unpack)
 import           Data.FileEmbed                           (embedStringFile, makeRelativeToProject)
+import           Data.Text.Encoding                       (encodeUtf8)
 import           Data.Time                                (NominalDiffTime)
 import           Data.URL.Template
 import           Network.Wai.Handler.Warp                 (HostPreference)
-import qualified Network.WebSockets                       as WS
 import           Options.Applicative
 
-import qualified Hasura.Cache.Bounded                     as Cache
+import qualified Hasura.Cache.Bounded                     as Cache (CacheSize, parseCacheSize)
 import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
-import qualified Hasura.GraphQL.Execute.Plan              as E
 import qualified Hasura.Logging                           as L
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Base.Error
 import           Hasura.Eventing.EventTrigger             (defaultFetchBatchSize)
-import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
@@ -38,7 +41,9 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
-import           Network.URI                              (parseURI)
+import           Network.HTTP.Types.URI                   (Query, QueryItem, parseQuery,
+                                                           renderQuery)
+import           Network.URI                              (URI (..), parseURI, uriQuery)
 
 getDbId :: Q.TxE QErr Text
 getDbId =
@@ -168,8 +173,6 @@ mkServeOptions rso = do
   enabledLogs <- maybe L.defaultEnabledLogTypes Set.fromList <$>
                  withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
-  planCacheOptions <- E.PlanCacheOptions . fromMaybe 4000 <$>
-                      withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
   devMode <- withEnvBool (rsoDevMode rso) $ fst devModeEnv
   adminInternalErrors <- fromMaybe True <$> -- Default to `true` to enable backwards compatibility
                          withEnv (rsoAdminInternalErrors rso) (fst adminInternalErrorsEnv)
@@ -215,6 +218,12 @@ mkServeOptions rso = do
     fromMaybe defaultFetchBatchSize
     <$> withEnv (rsoEventsFetchBatchSize rso) (fst eventsFetchBatchSizeEnv)
 
+  gracefulShutdownTime <-
+    fromMaybe 60 <$> withEnv (rsoGracefulShutdownTimeout rso) (fst gracefulShutdownEnv)
+
+  webSocketConnectionInitTimeout <- WSConnectionInitTimeout . fromIntegral . fromMaybe 3
+      <$> withEnv (rsoWebSocketConnectionInitTimeout rso) (fst webSocketConnectionInitTimeoutEnv)
+
   pure $ ServeOptions
            port
            host
@@ -235,7 +244,6 @@ mkServeOptions rso = do
            enableAL
            enabledLogs
            serverLogLevel
-           planCacheOptions
            internalErrorsConfig
            eventsHttpPoolSize
            eventsFetchInterval
@@ -249,6 +257,9 @@ mkServeOptions rso = do
            schemaPollInterval
            experimentalFeatures
            eventsFetchBatchSize
+           devMode
+           gracefulShutdownTime
+           webSocketConnectionInitTimeout
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -620,6 +631,13 @@ experimentalFeaturesEnv =
   , "Comma separated list of experimental features. (all: inherited_roles)"
   )
 
+gracefulShutdownEnv :: (String, String)
+gracefulShutdownEnv =
+  ( "HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT"
+  , "Timeout for graceful shutdown before which in-flight scheduled events, " <>
+     " cron events and async actions to complete (default: 60 seconds)"
+  )
+
 consoleAssetsDirEnv :: (String, String)
 consoleAssetsDirEnv =
   ( "HASURA_GRAPHQL_CONSOLE_ASSETS_DIR"
@@ -954,6 +972,14 @@ parseExperimentalFeatures = optional $
            help (snd experimentalFeaturesEnv)
          )
 
+parseGracefulShutdownTimeout :: Parser (Maybe Seconds)
+parseGracefulShutdownTimeout = optional $
+  option (eitherReader readEither)
+         ( long "graceful-shutdown-timeout" <>
+           metavar "<INTERVAL (seconds)>" <>
+           help (snd gracefulShutdownEnv)
+         )
+
 parseMxRefetchInt :: Parser (Maybe LQ.RefetchInterval)
 parseMxRefetchInt =
   optional $
@@ -1076,28 +1102,14 @@ enableAllowlistEnv =
   , "Only accept allowed GraphQL queries"
   )
 
--- NOTES re. default:
---     There's a lot of guesswork and estimation here. Based on our test suite
---   the average in-memory payload for a cache entry is 7kb, with the largest
---   being 70kb. 128mb per-HEC seems like a reasonable default upper bound
---   (note there is a distinct stripe per-HEC, for now; so this would give 1GB
---   for an 8-core machine), which gives us a range of 2,000 to 18,000 here.
---     Analysis of telemetry is hazy here; see
---   https://github.com/hasura/graphql-engine/issues/5363 for some discussion.
-planCacheSizeEnv :: (String, String)
-planCacheSizeEnv =
-  ( "HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE"
-  , "The maximum number of query plans that can be cached, allowed values: 0-65535, " <>
-    "0 disables the cache. Default 4000"
-  )
-
 parsePlanCacheSize :: Parser (Maybe Cache.CacheSize)
 parsePlanCacheSize =
   optional $
     option (eitherReader Cache.parseCacheSize)
     ( long "query-plan-cache-size" <>
-      metavar "QUERY_PLAN_CACHE_SIZE" <>
-      help (snd planCacheSizeEnv)
+      help ("[DEPRECATED: value ignored.] The maximum number of query plans " <>
+            "that can be cached, allowed values: 0-65535, " <>
+            "0 disables the cache. Default 4000")
     )
 
 parseEnabledLogs :: L.EnabledLogTypes impl => Parser (Maybe [L.EngineLogType impl])
@@ -1113,6 +1125,21 @@ parseLogLevel = optional $
          ( long "log-level" <>
            help (snd logLevelEnv)
          )
+
+censorQueryItem :: Text -> QueryItem -> QueryItem
+censorQueryItem sensitive (key, Just _) | key == encodeUtf8 sensitive = (key, Just "...")
+censorQueryItem _ qi = qi
+
+censorQuery :: Text -> Query -> Query
+censorQuery sensitive = fmap (censorQueryItem sensitive)
+
+updateQuery :: (Query -> Query) -> URI -> URI
+updateQuery f uri =
+  let queries = parseQuery $ pack $ uriQuery uri
+  in uri { uriQuery = unpack (renderQuery True $ f queries) }
+
+censorURI :: Text -> URI -> URI
+censorURI sensitive uri = updateQuery (censorQuery sensitive) uri
 
 -- Init logging related
 connInfoToLog :: Q.ConnInfo -> StartupLog
@@ -1131,7 +1158,7 @@ connInfoToLog connInfo =
                  ]
 
     mkDBUriLog uri =
-      case show <$> parseURI uri of
+      case show . censorURI "sslpassword" <$> parseURI uri of
         Nothing -> J.object
           [ "error" J..= ("parsing database url failed" :: String)]
         Just s  -> J.object
@@ -1165,7 +1192,6 @@ serveOptsToLog so =
       , "enable_allowlist" J..= soEnableAllowlist so
       , "enabled_log_types" J..= soEnabledLogTypes so
       , "log_level" J..= soLogLevel so
-      , "plan_cache_options" J..= soPlanCacheOptions so
       , "remote_schema_permissions" J..= soEnableRemoteSchemaPermissions so
       , "websocket_compression_options" J..= show (WS.connectionCompressionOptions . soConnectionOptions $ so)
       , "websocket_keep_alive" J..= show (soWebsocketKeepAlive so)
@@ -1173,6 +1199,8 @@ serveOptsToLog so =
       , "enable_maintenance_mode" J..= soEnableMaintenanceMode so
       , "experimental_features" J..= soExperimentalFeatures so
       , "events_fetch_batch_size" J..= soEventsFetchBatchSize so
+      , "graceful_shutdown_timeout" J..= soGracefulShutdownTimeout so
+      , "websocket_connection_init_timeout" J..= show (soWebsocketConnectionInitTimeout so)
       ]
 
 mkGenericStrLog :: L.LogLevel -> Text -> String -> StartupLog
@@ -1213,7 +1241,7 @@ serveOptionsParser =
   <*> parseEnableAllowlist
   <*> parseEnabledLogs
   <*> parseLogLevel
-  <*> parsePlanCacheSize
+  <*  parsePlanCacheSize -- parsed (for backwards compatibility reasons) but ignored
   <*> parseGraphqlDevMode
   <*> parseGraphqlAdminInternalErrors
   <*> parseGraphqlEventsHttpPoolSize
@@ -1228,6 +1256,8 @@ serveOptionsParser =
   <*> parseSchemaPollInterval
   <*> parseExperimentalFeatures
   <*> parseEventsFetchBatchSize
+  <*> parseGracefulShutdownTimeout
+  <*> parseWebSocketConnectionInitTimeout
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
@@ -1275,6 +1305,7 @@ parseWebSocketCompression =
            help (snd webSocketCompressionEnv)
          )
 
+-- NOTE: this is purely used by Apollo-Subscription-Transport-WS
 webSocketKeepAliveEnv :: (String, String)
 webSocketKeepAliveEnv =
   ( "HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE"
@@ -1287,4 +1318,19 @@ parseWebSocketKeepAlive =
   option (eitherReader readEither)
          ( long "websocket-keepalive" <>
            help (snd webSocketKeepAliveEnv)
+         )
+
+-- NOTE: this is purely used by GraphQL-WS
+webSocketConnectionInitTimeoutEnv :: (String, String)
+webSocketConnectionInitTimeoutEnv =
+  ( "HASURA_GRAPHQL_WEBSOCKET_CONNECTION_INIT_TIMEOUT" -- FIXME?: maybe a better name
+  , "Control websocket connection_init timeout (default 3 seconds)"
+  )
+
+parseWebSocketConnectionInitTimeout :: Parser (Maybe Int)
+parseWebSocketConnectionInitTimeout =
+  optional $
+  option (eitherReader readEither)
+         ( long "websocket-connection-init-timeout" <>
+           help (snd webSocketConnectionInitTimeoutEnv)
          )

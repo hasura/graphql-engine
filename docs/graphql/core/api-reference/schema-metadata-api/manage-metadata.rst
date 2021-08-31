@@ -4,8 +4,8 @@
 
 .. _api_manage_metadata:
 
-Schema/Metadata API Reference: Manage metadata
-==============================================
+Schema/Metadata API Reference: Manage metadata (Deprecated)
+===========================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -167,8 +167,8 @@ Args syntax
      - Description
    * - reload_remote_schemas
      - false
-     - Boolean
-     - If set to ``true``, all remote schemas' (including inconsistent ones) cached GraphQL schemas are refreshed (default: ``false``)
+     - ``Boolean`` | [:ref:`RemoteSchemaName`]
+     - If set to ``true``, all remote schemas' (including inconsistent ones) cached GraphQL schemas are refreshed (default: ``true``)
 
 .. _clear_metadata:
 

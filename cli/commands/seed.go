@@ -3,13 +3,13 @@ package commands
 import (
 	"fmt"
 
-	"github.com/hasura/graphql-engine/cli/seed"
+	"github.com/hasura/graphql-engine/cli/v2/seed"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/internal/metadatautil"
-	"github.com/hasura/graphql-engine/cli/internal/scripts"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -32,29 +32,44 @@ func NewSeedCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err := ec.Validate(); err != nil {
 				return err
 			}
-			if ec.Config.Version >= cli.V3 {
-				if !cmd.Flags().Changed("database-name") {
-					return errors.New("--database-name flag is required")
-				}
-				sourceKind, err := metadatautil.GetSourceKind(ec.APIClient.V1Metadata.ExportMetadata, ec.Source.Name)
-				if err != nil {
-					return err
-				}
-				if sourceKind == nil {
-					return fmt.Errorf("cannot determine source kind for %v", ec.Source.Name)
-				}
-				ec.Source.Kind = *sourceKind
-				// check if seed ops are supported for the database
-				if !seed.IsSeedsSupported(*sourceKind) {
-					return fmt.Errorf("seed operations on database %s of kind %s is not supported", ec.Source.Name, *sourceKind)
-				}
-			} else {
-				// for project using config older than v3, use PG source kind
+			// for project using config older than v3, use PG source kind
+			if ec.Config.Version < cli.V3 {
 				ec.Source.Kind = hasura.SourceKindPG
 				if err := scripts.CheckIfUpdateToConfigV3IsRequired(ec); err != nil {
 					return err
 				}
+				return nil
 			}
+
+			// for project using config equal to or greater than v3
+			// database-name flag is required when running in non-terminal mode
+			if (!ec.IsTerminal || ec.Config.DisableInteractive) && !cmd.Flags().Changed("database-name") {
+				return errors.New("--database-name flag is required")
+			}
+
+			// prompt UI for choosing database if source name is not set
+			if ec.Source.Name == "" {
+				databaseName, err := metadatautil.DatabaseChooserUI(ec.APIClient.V1Metadata.ExportMetadata)
+				if err != nil {
+					return err
+				}
+				ec.Source.Name = databaseName
+			}
+
+			sourceKind, err := metadatautil.GetSourceKind(ec.APIClient.V1Metadata.ExportMetadata, ec.Source.Name)
+			if err != nil {
+				return err
+			}
+			if sourceKind == nil {
+				return fmt.Errorf("cannot determine source kind for %v", ec.Source.Name)
+			}
+			ec.Source.Kind = *sourceKind
+
+			// check if seed ops are supported for the database
+			if !seed.IsSeedsSupported(*sourceKind) {
+				return fmt.Errorf("seed operations on database %s of kind %s is not supported", ec.Source.Name, *sourceKind)
+			}
+
 			return nil
 		},
 	}
@@ -73,12 +88,14 @@ func NewSeedCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
 	f.String("certificate-authority", "", "path to a cert file for the certificate authority")
+	f.Bool("disable-interactive", false, "disables interactive prompts (default: false)")
 
 	util.BindPFlag(v, "endpoint", f.Lookup("endpoint"))
 	util.BindPFlag(v, "admin_secret", f.Lookup("admin-secret"))
 	util.BindPFlag(v, "access_key", f.Lookup("access-key"))
 	util.BindPFlag(v, "insecure_skip_tls_verify", f.Lookup("insecure-skip-tls-verify"))
 	util.BindPFlag(v, "certificate_authority", f.Lookup("certificate-authority"))
+	util.BindPFlag(v, "disable_interactive", f.Lookup("disable-interactive"))
 
 	return seedCmd
 }

@@ -7,7 +7,11 @@ import { getDatabaseTableTypeInfoForAllSources } from './DataActions';
 import { isInconsistentSource, getSourceDriver } from './utils';
 import { canReUseTableTypes } from './DataSources/utils';
 import { useDataSource } from '../../../dataSources';
-import { getDataSources } from '../../../metadata/selector';
+import {
+  getDataSources,
+  getSourcesFromMetadata,
+  getTablesFromAllSources,
+} from '../../../metadata/selector';
 import {
   updateCurrentSchema,
   UPDATE_CURRENT_DATA_SOURCE,
@@ -68,6 +72,7 @@ const DataSubSidebar = props => {
     pathname,
     dataSources,
     sidebarLoadingState,
+    currentTable,
   } = props;
   const { setDriver } = useDataSource();
 
@@ -229,7 +234,7 @@ const DataSubSidebar = props => {
         setTreeViewItems(newItems);
       }
     );
-  }, [sources.length, tables, functions, enums, schemaList]);
+  }, [sources.length, tables, functions, enums, schemaList, currentTable]);
 
   const loadStyle = {
     pointerEvents: 'none',
@@ -309,19 +314,19 @@ const DataSubSidebar = props => {
 const mapStateToProps = state => {
   return {
     migrationMode: state.main.migrationMode,
-    sources: state.metadata.metadataObject.sources,
+    sources: getSourcesFromMetadata(state),
     inconsistentObjects: state.metadata.inconsistentObjects,
-    tables: state.metadata.metadataObject.sources.map(s => s.tables).flat()
-      .length,
-    enums: state.metadata.metadataObject.sources
+    tables: getTablesFromAllSources(state).flat().length,
+    enums: getSourcesFromMetadata(state)
       .map(s => s.tables)
       .flat()
       .filter(item => item.hasOwnProperty('is_enum')).length,
-    functions: state.metadata.metadataObject.sources
+    functions: getSourcesFromMetadata(state)
       .map(s => s.functions || [])
       .flat().length,
     currentDataSource: state.tables.currentDataSource,
     currentSchema: state.tables.currentSchema,
+    currentTable: state.tables.currentTable,
     schemaList: state.tables.schemaList,
     allSourcesSchemas: state.tables?.allSourcesSchemas,
     pathname: state?.routing?.locationBeforeTransitions?.pathname,

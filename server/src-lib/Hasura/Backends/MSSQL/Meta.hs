@@ -6,22 +6,23 @@ module Hasura.Backends.MSSQL.Meta
 
 import           Hasura.Prelude
 
+import qualified Data.ByteString.UTF8                  as BSUTF8
 import qualified Data.HashMap.Strict                   as HM
 import qualified Data.HashSet                          as HS
 import qualified Data.Text                             as T
 import qualified Data.Text.Encoding                    as T
-import qualified Database.PG.Query                     as Q (sqlFromFile)
+import qualified Database.ODBC.SQLServer               as ODBC
 
 import           Data.Aeson                            as Aeson
-import           Data.FileEmbed                        (makeRelativeToProject)
+import           Data.FileEmbed                        (embedFile, makeRelativeToProject)
 import           Data.String
 
 import           Hasura.Backends.MSSQL.Connection
 import           Hasura.Backends.MSSQL.Instances.Types ()
 import           Hasura.Backends.MSSQL.Types
+import           Hasura.Base.Error
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common               (OID (..))
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 
@@ -33,12 +34,13 @@ loadDBMetadata
   :: (MonadError QErr m, MonadIO m)
   => MSSQLPool -> m (DBTablesMetadata 'MSSQL)
 loadDBMetadata pool = do
-  let sql = $(makeRelativeToProject "src-rsr/mssql_table_metadata.sql" >>= Q.sqlFromFile)
-  sysTablesText <- runJSONPathQuery pool (fromString sql)
+  let
+    queryBytes = $(makeRelativeToProject "src-rsr/mssql_table_metadata.sql" >>= embedFile)
+    odbcQuery :: ODBC.Query = fromString . BSUTF8.toString $ queryBytes
+  sysTablesText <- runJSONPathQuery pool odbcQuery
   case Aeson.eitherDecodeStrict (T.encodeUtf8 sysTablesText) of
     Left e          -> throw500 $ T.pack $ "error loading sql server database schema: " <> e
     Right sysTables -> pure $ HM.fromList $ map transformTable sysTables
-
 
 --------------------------------------------------------------------------------
 -- Local types
@@ -50,7 +52,7 @@ data SysTable = SysTable
   , staJoinedSysSchema :: SysSchema
   } deriving (Show, Generic)
 
-instance FromJSON (SysTable) where
+instance FromJSON SysTable where
   parseJSON = genericParseJSON hasuraJSON
 
 
@@ -59,7 +61,7 @@ data SysSchema = SysSchema
   , ssSchemaId :: Int
   } deriving (Show, Generic)
 
-instance FromJSON (SysSchema) where
+instance FromJSON SysSchema where
   parseJSON = genericParseJSON hasuraJSON
 
 
@@ -68,6 +70,7 @@ data SysColumn = SysColumn
   , scColumnId                :: Int
   , scUserTypeId              :: Int
   , scIsNullable              :: Bool
+  , scIsIdentity              :: IsIdentityColumn
   , scJoinedSysType           :: SysType
   , scJoinedForeignKeyColumns :: [SysForeignKeyColumn]
   } deriving (Show, Generic)
@@ -80,7 +83,7 @@ data SysType = SysType
   , styUserTypeId :: Int
   } deriving (Show, Generic)
 
-instance FromJSON (SysType) where
+instance FromJSON SysType where
   parseJSON = genericParseJSON hasuraJSON
 
 
@@ -96,7 +99,7 @@ data SysForeignKeyColumn = SysForeignKeyColumn
   , sfkcJoinedReferencedSysSchema  :: SysSchema
   } deriving (Show, Generic)
 
-instance FromJSON (SysForeignKeyColumn) where
+instance FromJSON SysForeignKeyColumn where
   parseJSON = genericParseJSON hasuraJSON
 
 
@@ -119,6 +122,7 @@ transformTable tableInfo =
        foreignKeysMetadata
        Nothing  -- no views, only tables
        Nothing  -- no description
+       ()
      )
 
 transformColumn
@@ -132,6 +136,7 @@ transformColumn columnInfo =
       -- or dropped. We assume here that this arbitrary column id can
       -- serve the same purpose.
       prciIsNullable  = scIsNullable columnInfo
+      prciIsIdentity  = scIsIdentity columnInfo
       prciDescription = Nothing
       prciType = parseScalarType $ styName $ scJoinedSysType columnInfo
       foreignKeys = scJoinedForeignKeyColumns columnInfo <&> \foreignKeyColumn ->

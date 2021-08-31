@@ -1,9 +1,12 @@
+{-# LANGUAGE DeriveAnyClass #-}
+
 module Hasura.GraphQL.Execute.Remote
   ( buildExecStepRemote
   , collectVariablesFromSelectionSet
   , collectVariables
   , resolveRemoteVariable
   , resolveRemoteField
+  , runVariableCache
   ) where
 
 import           Hasura.Prelude
@@ -18,8 +21,8 @@ import           Data.Text.Extended
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 
-import           Hasura.GraphQL.Context                 (RemoteField, RemoteFieldG (..))
-import           Hasura.GraphQL.Execute.Prepare
+import           Hasura.Base.Error
+import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.Types
@@ -69,10 +72,11 @@ collectVariablesFromSelectionSet =
 
 buildExecStepRemote
   :: RemoteSchemaInfo
+  -> RemoteResultCustomizer
   -> G.OperationType
   -> G.SelectionSet G.NoFragments Variable
   -> ExecutionStep
-buildExecStepRemote remoteSchemaInfo tp selSet =
+buildExecStepRemote remoteSchemaInfo resultCustomizer tp selSet =
   let unresolvedSelSet = unresolveVariables selSet
       allVars = map mkVariableDefinitionAndValue $ Set.toList $ collectVariables selSet
       varValues = Map.fromList $ map snd allVars
@@ -80,45 +84,81 @@ buildExecStepRemote remoteSchemaInfo tp selSet =
       varDefs = map fst allVars
       _grQuery = G.TypedOperationDefinition tp Nothing varDefs [] unresolvedSelSet
       _grVariables = varValsM
-  in ExecStepRemote remoteSchemaInfo GH.GQLReq{_grOperationName = Nothing, ..}
+  in ExecStepRemote remoteSchemaInfo resultCustomizer GH.GQLReq{_grOperationName = Nothing, ..}
 
+-- | Association between keys uniquely identifying some remote JSON variable and
+-- an 'Int' identifier that will be used to construct a valid variable name to
+-- be used in a GraphQL query.
+newtype RemoteJSONVariableMap =
+  RemoteJSONVariableMap (HashMap RemoteJSONVariableKey Int)
+  deriving newtype (Eq, Monoid, Semigroup)
 
--- | resolveRemoteVariable resolves a `RemoteSchemaVariable` into a GraphQL `Variable`. A
---   `RemoteSchemaVariable` can either be a query variable i.e. variable provided in the
---   query or it can be a `SessionPresetVariable` in which case we look up the value of
---   the session variable and coerce it into the appropriate type and then construct the
---   GraphQL `Variable`. *NOTE*: The session variable preset is a hard preset i.e. if the
---   session variable doesn't exist, an error will be thrown.
+-- | A unique identifier for some remote JSON variable whose name will need to
+-- be substituted when constructing a GraphQL query.
 --
---   The name of the GraphQL variable generated will be a GraphQL-ized (replacing '-' by '_')
---   version of the session
---   variable, since session variables are not valid GraphQL names.
+-- For a detailed explanation of this behavior, see the following comment:
+-- https://github.com/hasura/graphql-engine/issues/7170#issuecomment-880838970
+data RemoteJSONVariableKey = RemoteJSONVariableKey !G.GType !J.Value
+  deriving stock (Eq, Generic)
+  deriving anyclass (Hashable)
+
+-- | Resolves a `RemoteSchemaVariable` into a GraphQL `Variable`.
 --
---   For example, considering the following schema for a role:
+-- A `RemoteSchemaVariable` can either be a query variable (i.e. a variable
+-- provided in the query) or it can be a `SessionPresetVariable` (in which case
+-- we look up the value of the session variable and coerce it into the
+-- appropriate type and then construct the GraphQL 'Variable').
 --
+-- NOTE: The session variable preset is a hard preset (i.e. if the session
+-- variable doesn't exist, an error will be thrown).
+--
+-- The name of the GraphQL variable generated will be a GraphQL-ized version of
+-- the session variable (i.e. '-' will be replaced with '_'), since session
+-- variables are not valid GraphQL names.
+--
+-- Additionally, we need to handle partially traversed JSON values; likewise, we
+-- create a new variable out of thin air.
+--
+-- For example, considering the following schema for a role:
+--
+--   input UserName {
+--     firstName : String! @preset(value:"Foo")
+--     lastName  : String!
+--   }
 --
 --   type Query {
---     user(user_id: Int! @preset(value:"x-hasura-user-id")): User
+--     user(
+--       user_id:   Int! @preset(value:"x-hasura-user-id")
+--       user_name: UserName!
+--     ): User
 --   }
 --
---   and the incoming query to the graphql-engine is:
+-- and the incoming query to the graphql-engine is:
 --
---   query {
---     user { id name }
+--   query($foo: UserName!) {
+--     user(user_name: $foo) { id name }
 --   }
 --
---   After resolving the session argument presets, the query that will
---   be sent to the remote server will be:
+-- with variables:
 --
---   query ($x_hasura_user_id: Int!) {
---     user (user_id: $x_hasura_user_id)  { id name }
+--   { "foo": {"lastName": "Bar"} }
+--
+--
+-- After resolving the session argument presets, the query that will be sent to
+-- the remote server will be:
+--
+-- query ($x_hasura_user_id: Int!, $hasura_json_var_1: String!) {
+--   user (user_id: $x_hasura_user_id, user_name: {firstName: "Foo", lastName: $hasura_json_var_1}) {
+--     id
+--     name
 --   }
+-- }
 --
 resolveRemoteVariable
   :: (MonadError QErr m)
   => UserInfo
   -> RemoteSchemaVariable
-  -> m Variable
+  -> StateT RemoteJSONVariableMap m Variable
 resolveRemoteVariable userInfo = \case
   SessionPresetVariable sessionVar typeName presetInfo -> do
     sessionVarVal <- onNothing (getSessionVariableValue sessionVar $ _uiSession userInfo)
@@ -162,11 +202,28 @@ resolveRemoteVariable userInfo = \case
     -- nullability is false, because we treat presets as hard presets
     let variableGType = G.TypeNamed (G.Nullability False) typeName
     pure $ Variable (VIRequired varName) variableGType (GraphQLValue coercedValue)
+  RemoteJSONValue gtype jsonValue -> do
+    let key = RemoteJSONVariableKey gtype jsonValue
+    varMap <- gets coerce
+    index <- Map.lookup key varMap `onNothing` do
+      let i = Map.size varMap + 1
+      put . coerce $ Map.insert key i varMap
+      pure i
+    let varName = G.unsafeMkName $ "hasura_json_var_" <> tshow index
+    pure $ Variable (VIRequired varName) gtype $ JSONValue jsonValue
   QueryVariable variable -> pure variable
 
+-- | TODO: Documentation.
 resolveRemoteField
-  :: (MonadError QErr m)
+  :: (MonadError QErr m, Traversable f)
   => UserInfo
-  -> RemoteField
-  -> m (RemoteFieldG Variable)
+  -> RemoteFieldG f RemoteSchemaVariable
+  -> StateT RemoteJSONVariableMap m (RemoteFieldG f Variable)
 resolveRemoteField userInfo = traverse (resolveRemoteVariable userInfo)
+
+-- | TODO: Documentation.
+runVariableCache
+  :: Monad m
+  => StateT RemoteJSONVariableMap m a
+  -> m a
+runVariableCache = flip evalStateT mempty

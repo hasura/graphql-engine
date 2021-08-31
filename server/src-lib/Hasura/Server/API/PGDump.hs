@@ -4,22 +4,22 @@ module Hasura.Server.API.PGDump
   , execPGDump
   ) where
 
-import           Control.Exception      (IOException, try)
+import           Control.Exception     (IOException, try)
 import           Data.Aeson
-import           Data.Aeson.TH
-import           Data.Char              (isSpace)
+import           Data.Char             (isSpace)
 import           Data.Text.Conversions
 import           Hasura.Prelude
-import           Hasura.RQL.Types       (SourceName, defaultSource)
+import           Hasura.RQL.Types      (SourceName, defaultSource)
 import           System.Exit
 import           System.Process
 
-import qualified Data.ByteString.Lazy   as BL
-import qualified Data.List              as L
-import qualified Data.Text              as T
-import qualified Database.PG.Query      as Q
-import qualified Hasura.RQL.Types.Error as RTE
-import qualified Text.Regex.TDFA        as TDFA
+import qualified Data.ByteString.Lazy  as BL
+import qualified Data.List             as L
+import qualified Data.Text             as T
+import qualified Database.PG.Query     as Q
+import qualified Hasura.Base.Error     as RTE
+import qualified Text.Regex.TDFA       as TDFA
+
 
 data PGDumpReqBody =
   PGDumpReqBody
@@ -28,14 +28,13 @@ data PGDumpReqBody =
   , prbCleanOutput :: !Bool
   } deriving (Show, Eq)
 
-$(deriveToJSON hasuraJSON ''PGDumpReqBody)
-
 instance FromJSON PGDumpReqBody where
   parseJSON = withObject "Object" $ \o ->
     PGDumpReqBody
       <$> o .:? "source" .!= defaultSource
       <*> o .: "opts"
       <*> o .:? "clean_output" .!= False
+
 
 execPGDump
   :: (MonadError RTE.QErr m, MonadIO m)

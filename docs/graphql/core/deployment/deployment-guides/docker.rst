@@ -15,11 +15,8 @@ Run Hasura GraphQL engine using Docker
 Introduction
 ------------
 
-This guide assumes that you already have Postgres running and helps you set up the Hasura GraphQL engine using Docker
-and connect it to your Postgres database.
-
-In case you'd like to run Hasura with a fresh Postgres database, follow :ref:`this guide <docker_simple>`
-to deploy the Hasura GraphQL engine along with a Postgres instance using Docker Compose.
+This guide will help you deploy the Hasura GraphQL engine and a Postgres database to store its metadata
+using Docker Compose.
 
 Deploying Hasura using Docker
 -----------------------------
@@ -28,133 +25,39 @@ Prerequisites
 ^^^^^^^^^^^^^
 
 - `Docker <https://docs.docker.com/install/>`_
+- `Docker Compose <https://docs.docker.com/compose/install/>`__
 
+Step 1: Get the docker-compose file
+-----------------------------------
 
-Step 1: Get the **docker-run.sh** bash script
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The `hasura/graphql-engine/install-manifests <https://github.com/hasura/graphql-engine/tree/stable/install-manifests>`_
-repo contains all installation manifests required to deploy Hasura anywhere.
-
-Get the Docker run bash script from there:
+The `hasura/graphql-engine/install-manifests <https://github.com/hasura/graphql-engine/tree/stable/install-manifests>`__ repo
+contains all installation manifests required to deploy Hasura anywhere. Get the docker compose file from there:
 
 .. code-block:: bash
 
-   $ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-run/docker-run.sh
+   # in a new directory run
+   wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml
+   # or run
+   curl https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml -o docker-compose.yml
 
-Step 2: Configure the **docker-run.sh** script
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 2: Run Hasura GraphQL engine
+---------------------------------
 
-The ``docker-run.sh`` script has a sample Docker run command in it. The following changes have to be
-made to the command:
+The following command will run Hasura GraphQL engine along with a Postgres database to store its metadata.
 
-- Database URL
-- Network config
+.. code-block::  bash
 
-Database URL
-************
+   $ docker-compose up -d
 
-Edit the ``HASURA_GRAPHQL_DATABASE_URL`` env var value, so that you can connect to your Postgres instance.
-
-.. code-block:: bash
-   :emphasize-lines: 3
-
-   #! /bin/bash
-   docker run -d -p 8080:8080 \
-     -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@hostname:<port>/<dbname> \
-     -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
-     hasura/graphql-engine:latest
-
-Examples of ``HASURA_GRAPHQL_DATABASE_URL``:
-
-- ``postgres://admin:password@localhost:5432/my-db``
-- ``postgres://admin:@localhost:5432/my-db`` *(if there is no password)*
-
-.. note::
-
-  - If your **password contains special characters** (e.g. #, %, $, @, etc.), you need to URL encode them in the
-    ``HASURA_GRAPHQL_DATABASE_URL`` env var (e.g. %40 for @).
-
-    You can check the :ref:`logs <docker_logs>` to see if the database credentials are proper and if Hasura is able
-    to connect to the database.
-
-  - Hasura GraphQL engine needs access permissions to your Postgres database as described in
-    :ref:`Postgres permissions <postgres_permissions>`.
-
-Network config
-**************
-
-If your Postgres instance is running on ``localhost``, the following changes will be needed to the ``docker run``
-command to allow the Docker container to access the host's network:
-
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: Linux
-
-     Add the ``--net=host`` flag to access the host's Postgres service.
-
-     This is what your command should look like:
-
-     .. code-block:: bash
-        :emphasize-lines: 1
-
-        docker run -d --net=host \
-          -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@hostname:<port>/<dbname> \
-          -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
-          hasura/graphql-engine:latest
-
-  .. tab:: Docker for Mac
-
-     Use ``host.docker.internal`` as hostname to access the host's Postgres service.
-
-     This is what your command should look like:
-
-     .. code-block:: bash
-        :emphasize-lines: 2
-
-        docker run -d -p 8080:8080 \
-          -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@host.docker.internal:<port>/<dbname> \
-          -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
-          hasura/graphql-engine:latest
-
-  .. tab:: Docker for Windows
-
-     Use ``docker.for.win.localhost`` as hostname to access the host's Postgres service.
-
-     This is what your command should look like:
-
-     .. code-block:: bash
-        :emphasize-lines: 2
-
-        docker run -d -p 8080:8080 \
-          -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@docker.for.win.localhost:<port>/<dbname> \
-          -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
-          hasura/graphql-engine:latest
-          
-
-Step 3: Run the Hasura Docker container
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Execute ``docker-run.sh`` & check if everything is running well:
+Check if the containers are running:
 
 .. code-block:: bash
 
-   $ ./docker-run.sh
-   $ docker ps
+  $ docker ps
 
-   CONTAINER ID  IMAGE                    ...  CREATED  STATUS  PORTS           ...
-   097f58433a2b  hasura/graphql-engine..  ...  1m ago   Up 1m   8080->8080/tcp  ...
-
-Step 4: Open the Hasura console
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Head to ``http://localhost:8080/console`` to open the Hasura console.
-
-Step 5: Track existing tables and relationships
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-See :ref:`schema_existing_db` to enable GraphQL over the database.
+  CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
+  097f58433a2b hasura/graphql-engine ... 1m ago  Up 1m  8080->8080/tcp ...
+  b0b1aac0508d postgres              ... 1m ago  Up 1m  5432/tcp       ...
 
 .. _docker_secure:
 
@@ -164,24 +67,31 @@ Securing the GraphQL endpoint
 To make sure that your GraphQL endpoint and the Hasura console are not publicly accessible, you need to
 configure an admin secret key.
 
-Run the Docker command with an admin-secret env var
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Run the Docker container with an admin-secret env var
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: bash
+.. code-block:: yaml
    :emphasize-lines: 5
 
-    #! /bin/bash
-    docker run -d -p 8080:8080 \
-     -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@hostname:<port>/<dbname> \
-     -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
-     -e HASURA_GRAPHQL_ADMIN_SECRET=<myadminsecretkey> \
-     hasura/graphql-engine:latest
+   graphql-engine:
+     image: hasura/graphql-engine:v2.0.0
+     environment:
+       HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+       HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+     ...
 
 .. note::
 
   The ``HASURA_GRAPHQL_ADMIN_SECRET`` should never be passed from the client to the Hasura GraphQL engine as it would
   give the client full admin rights to your Hasura instance. See :ref:`auth` for information on
   setting up authentication.
+
+.. hiding this as it mixes auth for the data plane with auth for the control plane and might be confusing
+
+  .. admonition:: Using collaborators as an alternative to Hasura Admin Secret sharing with Hasura Cloud
+    :class: dhc
+
+    Hasura Cloud offers console collaborators which avoids sharing the `HASURA-ADMIN-SECRET` with those that shouldn't have unrestricted access to your project. For more information about collaborator management, see :ref:`Collaborators in Hasura Cloud <manage_project_collaborators>`.
 
 .. _docker_logs:
 
@@ -195,10 +105,12 @@ GraphQL engine container:
 
   $ docker ps
 
-  CONTAINER ID        IMAGE                       ...
-  cdfbc6b94c70        hasura/graphql-engine..     ...
+  CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
+  097f58433a2b hasura/graphql-engine ... 1m ago  Up 1m  8080->8080/tcp ...
+  b0b1aac0508d postgres              ... 1m ago  Up 1m  5432/tcp       ...
 
-  $ docker logs cdfbc6b94c70
+
+  $ docker logs 097f58433a2b
 
   {"timestamp":"2018-10-09T11:20:32.054+0000", "level":"info", "type":"http-log", "detail":{"status":200, "query_hash":"01640c6dd131826cff44308111ed40d7fbd1cbed", "http_version":"HTTP/1.1", "query_execution_time":3.0177627e-2, "request_id":null, "url":"/v1/graphql", "user":{"x-hasura-role":"admin"}, "ip":"127.0.0.1", "response_size":209329, "method":"POST", "detail":null}}
   ...
@@ -231,20 +143,26 @@ All the versions can be found at: https://github.com/hasura/graphql-engine/relea
 Step 2: Update the Docker image
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the ``docker run`` command or the ``docker-compose`` command that you're running, update the image tag to this
+In the ``docker-compose`` command that you're running, update the image tag to this
 latest version.
 
 For example, if you had:
 
 .. raw:: html
 
-   <code>docker run hasura/graphql-engine:v1.0.0-alpha01 ...</code>
+   <code>
+     graphql-engine:<br/>
+     &nbsp;&nbsp;image: hasura/graphql-engine:v1.2.0
+   </code>
 
 you should change it to:
 
 .. raw:: html
 
-   <code>docker run hasura/graphql-engine:<span class="latest-release-tag">latest</span> ...</code>
+   <code>
+     graphql-engine:<br/>
+     &nbsp;&nbsp;image: hasura/graphql-engine:<span class="latest-release-tag">latest</span>
+   </code>
 
 .. note::
 

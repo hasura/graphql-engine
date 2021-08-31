@@ -1,4 +1,4 @@
-type: invoke_event_trigger
+type: pg_invoke_event_trigger
 args:
   name: t1_enabled
   payload:

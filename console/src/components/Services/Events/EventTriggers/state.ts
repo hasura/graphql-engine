@@ -33,7 +33,7 @@ const defaultState: LocalEventTriggerState = {
   name: '',
   table: {
     name: '',
-    schema: 'public',
+    schema: '',
   },
   operations: {
     insert: false,

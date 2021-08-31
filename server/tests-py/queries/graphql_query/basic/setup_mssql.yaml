@@ -1,42 +1,50 @@
 type: bulk
 args:
 
-#Types table
+# track tables
 - type: mssql_track_table
   args:
     source: mssql
     table:
       name: test_types
 
-#Author table
 - type: mssql_track_table
   args:
     source: mssql
     table:
       name: author
 
-#Article table
 - type: mssql_track_table
   args:
     source: mssql
     table:
       name: article
 
-#User table
 - type: mssql_track_table
   args:
     source: mssql
     table:
       name: user
 
-#Person table
 - type: mssql_track_table
   args:
     source: mssql
     table:
       name: person
 
-#Object relationship
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: article_multi
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: author_multi
+
+# create relationships
 - type: mssql_create_object_relationship
   args:
     source: mssql
@@ -45,7 +53,6 @@ args:
     using:
       foreign_key_constraint_on: author_id
 
-#Object relationship
 - type: mssql_create_object_relationship
   args:
     source: mssql
@@ -54,7 +61,6 @@ args:
     using:
       foreign_key_constraint_on: co_author_id
 
-#Array relationship
 - type: mssql_create_array_relationship
   args:
     source: mssql
@@ -66,7 +72,6 @@ args:
         column: author_id
 
 
-#Array relationship
 - type: mssql_create_array_relationship
   args:
     source: mssql
@@ -76,3 +81,21 @@ args:
       foreign_key_constraint_on:
         table: article
         column: co_author_id
+
+- type: mssql_create_object_relationship
+  args:
+    source: mssql
+    table: article_multi
+    name: author
+    using:
+      foreign_key_constraint_on: ["author_id1", "author_id2"]
+
+- type: mssql_create_array_relationship
+  args:
+    source: mssql
+    table: author_multi
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article_multi
+        columns: ["author_id1", "author_id2"]

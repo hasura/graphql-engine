@@ -547,6 +547,10 @@ input {
   margin-left: 10px;
 }
 
+.add_pad_left_mid {
+  padding-left: 10px;
+}
+
 .add_mar_small {
   margin-right: 10px !important;
 }
@@ -1334,6 +1338,14 @@ code {
   font-style: normal;
 }
 
+.fontStyleItalic {
+  font-style: italic;
+}
+
+.fontSizeSm {
+  font-size: 13px !important;
+}
+
 .cursorPointer {
   cursor: pointer;
 }
@@ -1444,6 +1456,7 @@ code {
 .db_list_item {
   border-bottom: 1px solid rgb(232, 232, 232);
   padding-left: 0;
+  min-width: 1100px;
 }
 
 .db_list_item:last-of-type {
@@ -1469,8 +1482,15 @@ code {
 .db_large_string_break_words {
   max-width: 40%;
   word-break: break-word;
-  padding: 1em;
-  display: flex;
+  flex: 1;
+
+  i {
+    cursor: pointer;
+  }
+}
+
+.flex_width {
+  width: 80%;
 }
 
 .text_red {
@@ -1484,8 +1504,7 @@ code {
 }
 
 .connect_db_header {
-  font-weight: bold;
-  font-size: medium;
+  font-weight: 700;
 }
 
 .connect_db_radios {
@@ -1493,12 +1512,15 @@ code {
   align-items: center;
   height: auto;
   justify-content: flex-start;
-  padding-top: 10px;
   padding-bottom: 10px;
   font-size: 14px;
   input[type='radio'] {
     margin-right: 4px;
   }
+}
+.label_disabled {
+  color: #4d4d4db3;
+  cursor: not-allowed;
 }
 
 .connect_db_radio_label {
@@ -1544,25 +1566,8 @@ code {
 }
 
 .connection_settings_form {
-  display: flex;
-  flex-direction: row;
   margin-top: 12px;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.connection_settings_form_input_layout {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  label {
-    margin-bottom: 10px !important;
-  }
-}
-
-.connnection_settings_form_input {
-  width: 65%;
+  padding-left: 30px;
 }
 
 .float_right {

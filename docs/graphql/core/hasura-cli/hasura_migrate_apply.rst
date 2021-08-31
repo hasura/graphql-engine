@@ -72,6 +72,7 @@ Options
       --skip-execution   skip executing the migration action, but mark them as applied
       --type string      type of migration (up, down) to be used with version flag (default "up")
       --dry-run          print the names of migrations which are going to be applied
+      --all-databases    set this flag to attempt to apply migrations on all databases present on server
   -h, --help             help for apply
 
 Options inherited from parent commands

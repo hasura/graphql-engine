@@ -36,7 +36,7 @@ Postgres constructs.
   Default field values <default-values/index>
   Enum type fields <enums>
   Computed fields <computed-fields>
-  Customise auto-generated field <custom-field-names>
+  Customise auto-generated fields <custom-field-names>
   Data validations <data-validations>
   Using an existing database <using-existing-database>
   Relay schema <relay-schema>

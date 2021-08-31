@@ -2,14 +2,14 @@
 
 module Hasura.Backends.MSSQL.Plan where
   -- TODO: Re-add the export list after cleaning up the module
-  -- ( planNoPlan
-  -- , planNoPlanMap
-  -- , planMultiplex
+  -- ( planQuery
+  -- , planSubscription
   -- ) where
 
 import           Hasura.Prelude                hiding (first)
 
 import qualified Data.Aeson                    as J
+import           Data.ByteString.Lazy          (toStrict)
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as Set
@@ -18,70 +18,68 @@ import qualified Database.ODBC.SQLServer       as ODBC
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Control.Monad.Validate
-import           Data.ByteString.Lazy          (toStrict)
 import           Data.Text.Extended
 
 import qualified Hasura.GraphQL.Parser         as GraphQL
 import qualified Hasura.RQL.Types.Column       as RQL
 
-import           Hasura.Backends.MSSQL.FromIr  as TSQL
-import           Hasura.Backends.MSSQL.Types   as TSQL
-import           Hasura.GraphQL.Context
-import           Hasura.RQL.Types.Error
+import           Hasura.Backends.MSSQL.FromIr
+import           Hasura.Backends.MSSQL.Types
+import           Hasura.Base.Error
+import           Hasura.RQL.IR
 import           Hasura.SQL.Backend
 import           Hasura.Session
 
 
-newtype QDB v b = QDB (QueryDB b v)
+--------------------------------------------------------------------------------
+-- Top-level planner
 
-type SubscriptionRootFieldMSSQL v = RootField (QDB v) Void Void {-(RQL.AnnActionAsyncQuery 'MSSQL v)-} Void
-
-
--- --------------------------------------------------------------------------------
--- -- Top-level planner
-
-planNoPlan
+planQuery
   :: MonadError QErr m
-  => UserInfo
-  -> QueryDB 'MSSQL (GraphQL.UnpreparedValue 'MSSQL)
+  => SessionVariables
+  -> QueryDB 'MSSQL (Const Void) (GraphQL.UnpreparedValue 'MSSQL)
   -> m Select
-planNoPlan userInfo queryDB = do
-  rootField <- traverseQueryDB (prepareValueNoPlan (_uiSession userInfo)) queryDB
-  select <-
-    runValidate (TSQL.runFromIr (TSQL.fromRootField rootField))
+planQuery sessionVariables queryDB = do
+  rootField <- traverse (prepareValueQuery sessionVariables) queryDB
+  runValidate (runFromIr (fromRootField rootField))
     `onLeft` (throw400 NotSupported . tshow)
-  pure
-    select
-      { selectFor =
-          case selectFor select of
-            NoFor           -> NoFor
-            JsonFor forJson ->
-              JsonFor forJson {jsonRoot =
-                                 case jsonRoot forJson of
-                                   NoRoot -> Root "root"
-                                   -- Keep whatever's there if already
-                                   -- specified. In the case of an
-                                   -- aggregate query, the root will
-                                   -- be specified "aggregate", for
-                                   -- example.
-                                   keep   -> keep
-                              }
-      }
 
-planMultiplex
+-- | Prepare a value without any query planning; we just execute the
+-- query with the values embedded.
+prepareValueQuery
   :: MonadError QErr m
-  => OMap.InsOrdHashMap G.Name (QueryDB 'MSSQL (GraphQL.UnpreparedValue 'MSSQL))
+  => SessionVariables
+  -> GraphQL.UnpreparedValue 'MSSQL
+  -> m Expression
+prepareValueQuery sessionVariables =
+  {- History note:
+      This function used to be called 'planNoPlan', and was used for building sql
+      expressions for queries. That evolved differently, but this function is now
+      left as a *suggestion* for implementing support for mutations.
+      -}
+  \case
+    GraphQL.UVLiteral x -> pure x
+    GraphQL.UVSession -> pure $ ValueExpression $ ODBC.ByteStringValue $ toStrict $ J.encode sessionVariables
+    GraphQL.UVParameter _ RQL.ColumnValue{..} -> pure $ ValueExpression cvValue
+    GraphQL.UVSessionVar _typ sessionVariable -> do
+      value <- getSessionVariableValue sessionVariable sessionVariables
+        `onNothing` throw400 NotFound ("missing session variable: " <>> sessionVariable)
+      pure $ ValueExpression $ ODBC.TextValue value
+
+planSubscription
+  :: MonadError QErr m
+  => OMap.InsOrdHashMap G.Name (QueryDB 'MSSQL (Const Void) (GraphQL.UnpreparedValue 'MSSQL))
   -> SessionVariables
   -> m (Reselect, PrepareState)
-planMultiplex unpreparedMap sessionVariables = do
-  let (rootFieldMap, prepareState) =
-        runState
+planSubscription unpreparedMap sessionVariables = do
+  (rootFieldMap, prepareState) <-
+        runStateT
           (traverse
-            (traverseQueryDB (prepareValueMultiplex (getSessionVariablesSet sessionVariables)))
+            (traverse (prepareValueSubscription (getSessionVariablesSet sessionVariables)))
             unpreparedMap)
           emptyPrepareState
   selectMap <-
-    runValidate (TSQL.runFromIr (traverse TSQL.fromRootField rootFieldMap))
+    runValidate (runFromIr (traverse fromRootField rootFieldMap))
     `onLeft` (throw400 NotSupported . tshow)
   pure (collapseMap selectMap, prepareState)
 
@@ -95,7 +93,7 @@ planMultiplex unpreparedMap sessionVariables = do
   -- selectMap <-
   --   first
   --     FromIrError
-  --     (runValidate (TSQL.runFromIr (traverse TSQL.fromRootField rootFieldMap)))
+  --     (runValidate (runFromIr (traverse fromRootField rootFieldMap)))
   -- pure (collapseMap selectMap)
 
 --------------------------------------------------------------------------------
@@ -115,17 +113,17 @@ collapseMap selects =
     }
   where
     projectSelect :: (G.Name, Select) -> Projection
-    projectSelect (name, select) =
+    projectSelect (name, sel) =
       ExpressionProjection
         (Aliased
-           { aliasedThing = SelectExpression select
+           { aliasedThing = SelectExpression sel
            , aliasedAlias = G.unName name
            })
 
 --------------------------------------------------------------------------------
 -- Session variables
 
-globalSessionExpression :: TSQL.Expression
+globalSessionExpression :: Expression
 globalSessionExpression =
   ValueExpression (ODBC.TextValue "current_setting('hasura.user')::json")
 
@@ -134,7 +132,7 @@ globalSessionExpression =
 -- Resolving values
 
 data PrepareError
-  = FromIrError (NonEmpty TSQL.Error)
+  = FromIrError (NonEmpty Error)
 
 data PrepareState = PrepareState
   { positionalArguments :: ![RQL.ColumnValue 'MSSQL]
@@ -149,63 +147,36 @@ emptyPrepareState = PrepareState
   , sessionVariables = mempty
   }
 
--- | Prepare a value without any query planning; we just execute the
--- query with the values embedded.
-prepareValueNoPlan
-  :: MonadError QErr m
-  => SessionVariables
-  -> GraphQL.UnpreparedValue 'MSSQL
-  -> m TSQL.Expression
-prepareValueNoPlan sessionVariables =
-  \case
-    GraphQL.UVLiteral x -> pure x
-    GraphQL.UVSession -> pure $ ValueExpression $ ODBC.ByteStringValue $ toStrict $ J.encode sessionVariables
-    GraphQL.UVParameter _ RQL.ColumnValue{..} -> pure $ ValueExpression cvValue
-    GraphQL.UVSessionVar _typ sessionVariable -> do
-      value <- getSessionVariableValue sessionVariable sessionVariables
-        `onNothing` throw400 NotFound ("missing session variable: " <>> sessionVariable)
-      pure $ ValueExpression $ ODBC.TextValue value
 
 -- | Prepare a value for multiplexed queries.
-prepareValueMultiplex
-  :: Set.HashSet SessionVariable
+prepareValueSubscription
+  :: (MonadState PrepareState m, MonadError QErr m)
+  => Set.HashSet SessionVariable
   -> GraphQL.UnpreparedValue 'MSSQL
-  -> State PrepareState TSQL.Expression
-prepareValueMultiplex globalVariables =
+  -> m Expression
+prepareValueSubscription globalVariables =
   \case
     GraphQL.UVLiteral x -> pure x
+
     GraphQL.UVSession -> do
       modify' (\s -> s {sessionVariables = sessionVariables s <> globalVariables})
-      pure $ JsonValueExpression
-        (ColumnExpression
-          FieldName
-          { fieldNameEntity = rowAlias
-          , fieldName = resultVarsAlias
-          })
-        (RootPath `FieldPath` "session")
+      pure $ resultVarExp (RootPath `FieldPath` "session")
+
     GraphQL.UVSessionVar _typ text -> do
+      if Set.member text globalVariables
+        then pure ()
+        else throw400 NotFound
+              ("missing session variable: "  <>> sessionVariableToText text)
       modify' (\s -> s {sessionVariables = text `Set.insert` sessionVariables s})
-      pure $ JsonValueExpression
-        (ColumnExpression
-          FieldName
-          { fieldNameEntity = rowAlias
-          , fieldName = resultVarsAlias
-          })
-        (RootPath `FieldPath` "session" `FieldPath` toTxt text)
+      pure $ resultVarExp (sessionDot $ toTxt text)
+
     GraphQL.UVParameter mVariableInfo columnValue ->
       case fmap GraphQL.getName mVariableInfo of
         Nothing -> do
+          currentIndex <- toInteger . length <$> gets positionalArguments
           modify' (\s -> s {
             positionalArguments = positionalArguments s <> [columnValue] })
-          index <- (toInteger . length) <$> gets positionalArguments
-          pure
-            (JsonValueExpression
-               (ColumnExpression
-                  FieldName
-                    { fieldNameEntity = rowAlias
-                    , fieldName = resultVarsAlias
-                    })
-               (RootPath `FieldPath` "synthetic" `IndexPath` index))
+          pure (resultVarExp (syntheticIx currentIndex))
         Just name -> do
           modify
             (\s ->
@@ -213,14 +184,26 @@ prepareValueMultiplex globalVariables =
                  { namedArguments =
                      HM.insert name columnValue (namedArguments s)
                  })
-          pure
-            (JsonValueExpression
-               (ColumnExpression
-                  FieldName
-                    { fieldNameEntity = rowAlias
-                    , fieldName = resultVarsAlias
-                    })
-               (RootPath `FieldPath` "query" `FieldPath` G.unName name))
+          pure $ resultVarExp (queryDot $ G.unName name)
+
+    where
+      resultVarExp :: JsonPath -> Expression
+      resultVarExp =
+        JsonValueExpression $
+          ColumnExpression $
+            FieldName
+              { fieldNameEntity = rowAlias
+              , fieldName = resultVarsAlias
+              }
+
+      queryDot :: Text -> JsonPath
+      queryDot name = RootPath `FieldPath` "query" `FieldPath` name
+
+      syntheticIx :: Integer -> JsonPath
+      syntheticIx i = RootPath `FieldPath` "synthetic" `IndexPath` i
+
+      sessionDot :: Text -> JsonPath
+      sessionDot name = RootPath `FieldPath` "session" `FieldPath` name
 
 
 resultIdAlias :: T.Text

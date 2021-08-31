@@ -1,0 +1,40 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE profile (
+          id TEXT,
+          name TEXT
+      );
+
+      INSERT INTO profile (id, name) VALUES ('10', 'Miles'), ('42', 'Charlie');
+
+      CREATE FUNCTION me(hasura_session json)
+      RETURNS SETOF profile AS $$
+        SELECT * FROM profile
+        WHERE id = hasura_session ->> 'x-hasura-user-id'
+      $$ LANGUAGE sql STABLE;
+
+- type: track_table
+  args:
+    schema: public
+    name: profile
+
+- type: create_select_permission
+  args:
+    table: profile
+    role: user
+    permission:
+      columns: [id, name]
+      filter: {}
+
+- type: track_function
+  version: 2
+  args:
+    function:
+        name: me
+        schema: public
+    configuration:
+        session_argument: hasura_session

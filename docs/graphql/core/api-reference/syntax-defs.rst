@@ -105,6 +105,50 @@ PGConfiguration
      - [PGSourceConnectionInfo_]
      - Optional list of read replica configuration *(supported only in cloud/enterprise versions)*
 
+.. _MsSQLConfiguration:
+
+MsSQLConfiguration
+^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - connection_info
+     - true
+     - MsSQLSourceConnectionInfo_
+     - Connection parameters for the source
+
+
+.. _BigQueryConfiguration:
+
+BigQueryConfiguration
+^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - service_account
+     - true
+     - ``JSON String`` | ``JSON`` | FromEnv_
+     - Service account for BigQuery database
+   * - project_id
+     - true
+     - ``String`` | FromEnv_
+     - Project Id for BigQuery database
+   * - datasets
+     - true
+     - ``[String]`` | FromEnv_
+     - List of BigQuery datasets
+
+
 .. _PGSourceConnectionInfo:
 
 PGSourceConnectionInfo
@@ -122,7 +166,7 @@ PGSourceConnectionInfo
      - ``String`` | FromEnv_
      - The database connection URL string, or as an environment variable
    * - pool_settings
-     - true
+     - false
      - PGPoolSettings_
      - Connection pool settings
    * - use_prepared_statements
@@ -134,6 +178,31 @@ PGSourceConnectionInfo
      - false
      - ``read-committed`` | ``repeatable-read`` | ``serializable``
      - The transaction isolation level in which the queries made to the source will be run with (default: ``read-committed``).
+   * - ssl_configuration
+     - false
+     - PGCertSettings_
+     - The client SSL certificate settings for the database (*Only available in Cloud*).
+
+.. _MsSQLSourceConnectionInfo:
+
+MsSQLSourceConnectionInfo
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - connection_string
+     - true
+     - ``String`` | FromEnv_
+     - The database connection string, or as an environment variable
+   * - pool_settings
+     - false
+     - MsSQLPoolSettings_
+     - Connection pool settings
 
 
 .. _FromEnv:
@@ -187,6 +256,60 @@ PGPoolSettings
      - Time from connection creation after which the connection should be destroyed and a new one
        created. A value of 0 indicates we should never destroy an active connection. If 0 is
        passed, memory from large query results may not be reclaimed. (default: 600 sec)
+
+.. _PGCertSettings:
+
+PGCertSettings
+^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - sslmode
+     - true
+     - ``String``
+     - The SSL connection mode. See the libpq ssl `support docs <https://www.postgresql.org/docs/9.1/libpq-ssl.html>` for more details.
+   * - sslrootcert
+     - true
+     - FromEnv_
+     - Environment variable which stores trusted certificate authorities.
+   * - sslcert
+     - true
+     - FromEnv_
+     - Environment variable which stores the client certificate.
+   * - sslkey
+     - true
+     - FromEnv_
+     - Environment variable which stores the client private key.
+   * - sslpassword
+     - false
+     - ``String`` | FromEnv_
+     - Password in the case where the sslkey is encrypted.
+
+.. _MsSQLPoolSettings:
+
+MsSQLPoolSettings
+^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - max_connections
+     - false
+     - ``Integer``
+     - Maximum number of connections to be kept in the pool (default: 50)
+   * - idle_timeout
+     - false
+     - ``Integer``
+     - The idle timeout (in seconds) per connection (default: 180)
 
 
 .. _PGColumnType:
@@ -740,7 +863,7 @@ ColumnExp
    :class: haskell-pre
 
    {
-       PGColumn_ : { Operator_ : Value }
+       PGColumn_ | scalar ComputedFieldName_ : { Operator_ : Value }
    }
 
 .. _MetadataOperator:
@@ -1027,8 +1150,123 @@ RemoteSchemaDef
            }
       ],
       "forward_client_headers": boolean,
-      "timeout_seconds": integer
+      "timeout_seconds": integer,
+      "customization": RemoteSchemaCustomization_
    }
+
+.. _RemoteSchemaCustomization:
+
+RemoteSchemaCustomization
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+      "root_fields_namespace": String,
+      "type_names": {
+        "prefix": String,
+        "suffix": String,
+        "mapping": {
+          String: String
+        }
+      },
+      "field_names": [
+        { "parent_type": String,
+          "prefix": String,
+          "suffix": String,
+          "mapping": {
+            String: String
+          }
+        }
+      ]
+   }
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - ``root_fields_namespace``
+     - false
+     - String
+     - If provided, the fields of the remote schema will be nested under this top level field
+   * - ``type_names``
+     - false
+     - RemoteTypeCustomization_
+     - Customization of type names in the remote schema
+   * - ``field_names``
+     - false
+     - [RemoteFieldCustomization_]
+     - Customization of field names for types in the remote schema
+
+.. _RemoteTypeCustomization:
+
+RemoteTypeCustomization
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - ``prefix``
+     - false
+     - String
+     - Prefix applied to type names in the remote schema
+   * - ``suffix``
+     - false
+     - String
+     - Suffix applied to type names in the remote schema
+   * - ``mapping``
+     - false
+     - ``{String: String}``
+     - Explicit mapping of type names in the remote schema
+       Note: explicit mapping takes precedence over ``prefix`` and ``suffix``.
+
+- Type name prefix and suffix will be applied to all types in the schema
+  except the root types (for query, mutation and subscription),
+  types starting with ``__``, standard scalar types (``Int``, ``Float``, ``String``, ``Boolean``, and ``ID``),
+  and types with an explicit mapping.
+- Root types, types starting with ``__``,  and standard scalar types may only be customized with an explicit mapping.
+
+
+.. _RemoteFieldCustomization:
+
+RemoteFieldCustomization
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - ``parent_type``
+     - true
+     - String
+     - Name of the parent type (in the original remote schema) for fields to be customized
+   * - ``prefix``
+     - false
+     - String
+     - Prefix applied to field names in parent type
+   * - ``suffix``
+     - false
+     - String
+     - Suffix applied to field names in the parent type
+   * - ``mapping``
+     - false
+     - ``{String: String}``
+     - Explicit mapping of field names in the parent type
+       Note: explicit mapping takes precedence over ``prefix`` and ``suffix``.
+
+- Fields that are part of an interface must be renamed consistently across all object types that implement that interface.
+
 
 .. _CollectionName:
 

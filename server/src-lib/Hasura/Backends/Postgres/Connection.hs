@@ -5,18 +5,15 @@
 
 module Hasura.Backends.Postgres.Connection
   ( MonadTx(..)
-  , LazyTxT
-  , LazyTx
+  , LazyTxT(..)
 
   , runLazyTx
   , runQueryTx
   , withUserInfo
   , withTraceContext
+  , setHeadersTx
+  , setTraceContextInTx
   , sessionInfoJsonExp
-
-  , RespTx
-  , LazyRespTx
-  , lazyTxToQTx
 
   , doesSchemaExist
   , doesTableExist
@@ -26,6 +23,10 @@ module Hasura.Backends.Postgres.Connection
   , PostgresPoolSettings(..)
   , PostgresSourceConnInfo(..)
   , PostgresConnConfiguration(..)
+  , PGClientCerts(..)
+  , CertVar(..)
+  , CertData(..)
+  , SSLMode(..)
   , DefaultPostgresPoolSettings(..)
   , getDefaultPGPoolSettingIfNotExists
   , defaultPostgresPoolSettings
@@ -36,6 +37,7 @@ module Hasura.Backends.Postgres.Connection
   , psciPoolSettings
   , psciUsePreparedStatements
   , psciIsolationLevel
+  , psciSslConfiguration
   , module ET
   ) where
 
@@ -51,10 +53,18 @@ import           Control.Monad.Trans.Control            (MonadBaseControl (..))
 import           Control.Monad.Unique
 import           Control.Monad.Validate
 import           Data.Aeson
+import           Data.Aeson.Casing                      (aesonDrop)
 import           Data.Aeson.Extended
 import           Data.Aeson.TH
+import           Data.Bifoldable
+import           Data.Bifunctor
+import           Data.Bitraversable
+import           Data.Char                              (toLower)
+import           Data.Hashable.Time                     ()
+import           Data.Semigroup                         (Max (..))
+import           Data.Text                              (unpack)
 import           Data.Time
-import           Network.HTTP.Client.Extended           (HasHttpManagerM (..))
+import           Test.QuickCheck.Instances.Semigroup    ()
 import           Test.QuickCheck.Instances.Time         ()
 
 import qualified Hasura.Backends.Postgres.SQL.DML       as S
@@ -62,13 +72,14 @@ import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Backends.Postgres.Execute.Types as ET
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.EncJSON
+import           Hasura.Base.Error
+import           Hasura.Base.Instances                  ()
 import           Hasura.Incremental                     (Cacheable (..))
-import           Hasura.RQL.Types.Common                (UrlConf)
-import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.Common                (UrlConf (..))
 import           Hasura.SQL.Types
 import           Hasura.Server.Utils                    (parseConnLifeTime, readIsoLevel)
 import           Hasura.Session
+
 
 class (MonadError QErr m) => MonadTx m where
   liftTx :: Q.TxE QErr a -> m a
@@ -83,32 +94,29 @@ instance (MonadTx m) => MonadTx (ValidateT e m) where
   liftTx = lift . liftTx
 instance (MonadTx m) => MonadTx (Tracing.TraceT m) where
   liftTx = lift . liftTx
+instance (MonadIO m) => MonadTx (Q.TxET QErr m) where
+  liftTx = hoist liftIO
 
--- | Like 'Q.TxE', but defers acquiring a Postgres connection until the first
--- execution of 'liftTx'.  If no call to 'liftTx' is ever reached (i.e. a
--- successful result is returned or an error is raised before ever executing a
--- query), no connection is ever acquired.
+-- | This type *used to be* like 'Q.TxE', but deferred acquiring a Postgres
+-- connection until the first execution of 'liftTx'.  If no call to 'liftTx' is
+-- ever reached (i.e. a successful result is returned or an error is raised
+-- before ever executing a query), no connection was ever acquired.
 --
--- This is useful for certain code paths that only conditionally need database
+-- This was useful for certain code paths that only conditionally need database
 -- access. For example, although most queries will eventually hit Postgres,
 -- introspection queries or queries that exclusively use remote schemas never
--- will; using 'LazyTxT e m' keeps those branches from unnecessarily allocating a
--- connection.
-data LazyTxT e m a
-  = LTErr !e
-  | LTNoTx !a
-  | LTTx !(Q.TxET e m a)
-  deriving (Show, Functor)
-
--- orphan:
-instance Show (Q.TxET e m a) where
-  show = const "(error \"TxE\")"
-
-lazyTxToQTx :: (Monad m) => LazyTxT e m a -> Q.TxET e m a
-lazyTxToQTx = \case
-  LTErr e  -> throwError e
-  LTNoTx r -> return r
-  LTTx tx  -> tx
+-- will; using 'LazyTxT e m' keeps those branches from unnecessarily allocating
+-- a connection.
+--
+-- However introspection queries and remote queries now never end up producing a
+-- 'LazyTxT' action, and hence the laziness adds no benefit, so that we could
+-- simplify this type, its name being a mere reminder of a past design of
+-- graphql-engine.
+--
+-- It may be worthwhile in the future to simply replace this type with Q.TxET
+-- entirely.
+newtype LazyTxT e m a = LazyTxT {unLazyTxT :: Q.TxET e m a}
+  deriving (Functor, Applicative, Monad, MonadError e, MonadIO, MonadTrans)
 
 runLazyTx
   :: ( MonadIO m
@@ -117,26 +125,16 @@ runLazyTx
   => PGExecCtx
   -> Q.TxAccess
   -> LazyTxT QErr m a -> ExceptT QErr m a
-runLazyTx pgExecCtx txAccess = \case
-  LTErr e  -> throwError e
-  LTNoTx a -> return a
-  LTTx tx  ->
-    case txAccess of
-      Q.ReadOnly  -> _pecRunReadOnly pgExecCtx tx
-      Q.ReadWrite -> _pecRunReadWrite pgExecCtx tx
+runLazyTx pgExecCtx = \case
+  Q.ReadOnly  -> _pecRunReadOnly pgExecCtx . unLazyTxT
+  Q.ReadWrite -> _pecRunReadWrite pgExecCtx . unLazyTxT
 
 -- | This runs the given set of statements (Tx) without wrapping them in BEGIN
 -- and COMMIT. This should only be used for running a single statement query!
 runQueryTx
-  :: (MonadIO m, MonadError QErr m) => PGExecCtx -> LazyTx QErr a -> m a
-runQueryTx pgExecCtx = \case
-  LTErr e  -> throwError e
-  LTNoTx a -> return a
-  LTTx tx  -> liftEither =<< liftIO (runExceptT $ _pecRunReadNoTx pgExecCtx tx)
-
-type RespTx = Q.TxE QErr EncJSON
-type LazyTx e a = LazyTxT e IO a
-type LazyRespTx = LazyTx QErr EncJSON
+  :: (MonadIO m, MonadError QErr m) => PGExecCtx -> LazyTxT QErr IO a -> m a
+runQueryTx pgExecCtx ltx =
+  liftEither =<< liftIO (runExceptT $ _pecRunReadNoTx pgExecCtx (unLazyTxT ltx))
 
 setHeadersTx :: (MonadIO m) => SessionVariables -> Q.TxET QErr m ()
 setHeadersTx session = do
@@ -149,12 +147,13 @@ sessionInfoJsonExp :: SessionVariables -> S.SQLExp
 sessionInfoJsonExp = S.SELit . encodeToStrictText
 
 withUserInfo :: (MonadIO m) => UserInfo -> LazyTxT QErr m a -> LazyTxT QErr m a
-withUserInfo uInfo = \case
-  LTErr e  -> LTErr e
-  LTNoTx a -> LTNoTx a
-  LTTx tx  ->
-    let vars = _uiSession uInfo
-    in LTTx $ setHeadersTx vars >> tx
+withUserInfo uInfo ltx = LazyTxT (setHeadersTx $ _uiSession uInfo) >> ltx
+
+setTraceContextInTx :: (MonadIO m) => Tracing.TraceContext -> Q.TxET QErr m ()
+setTraceContextInTx traceCtx = Q.unitQE defaultTxErrorHandler sql () False
+  where
+    sql = Q.fromText $ "SET LOCAL \"hasura.tracecontext\" = " <>
+            toSQLTxt (S.SELit . encodeToStrictText . Tracing.injectEventContext $ traceCtx)
 
 -- | Inject the trace context as a transaction-local variable,
 -- so that it can be picked up by any triggers (including event triggers).
@@ -163,72 +162,16 @@ withTraceContext
   => Tracing.TraceContext
   -> LazyTxT QErr m a
   -> LazyTxT QErr m a
-withTraceContext ctx = \case
-  LTErr e  -> LTErr e
-  LTNoTx a -> LTNoTx a
-  LTTx tx  ->
-    let sql = Q.fromText $
-          "SET LOCAL \"hasura.tracecontext\" = " <>
-            toSQLTxt (S.SELit . encodeToStrictText . Tracing.injectEventContext $ ctx)
-        setTraceContext =
-          Q.unitQE defaultTxErrorHandler sql () False
-     in LTTx $ setTraceContext >> tx
+withTraceContext ctx ltx = LazyTxT (setTraceContextInTx ctx) >> ltx
 
-instance (Monad m) => Applicative (LazyTxT e m) where
-  pure = LTNoTx
+deriving instance Tracing.MonadTrace m => Tracing.MonadTrace (Q.TxET e m)
+deriving instance Tracing.MonadTrace m => Tracing.MonadTrace (LazyTxT e m)
 
-  LTErr e   <*> _        = LTErr e
-  LTNoTx f  <*> r        = fmap f r
-  LTTx _    <*> LTErr e  = LTErr e
-  LTTx txf  <*> LTNoTx a = LTTx $ txf <*> pure a
-  LTTx txf  <*> LTTx tx  = LTTx $ txf <*> tx
+deriving instance (MonadIO m) => MonadTx (LazyTxT QErr m)
 
-instance (Monad m) => Monad (LazyTxT e m) where
-  LTErr e >>= _  = LTErr e
-  LTNoTx a >>= f = f a
-  LTTx txa >>= f =
-    LTTx $ txa >>= lazyTxToQTx . f
+deriving instance (MonadBase IO m) => MonadBase IO (LazyTxT e m)
 
-instance (Monad m) => MonadError e (LazyTxT e m) where
-  throwError = LTErr
-  LTErr e  `catchError` f = f e
-  LTNoTx a `catchError` _ = LTNoTx a
-  LTTx txe `catchError` f =
-    LTTx $ txe `catchError` (lazyTxToQTx . f)
-
-instance MonadTrans (LazyTxT e) where
-  lift = LTTx . lift
-
-instance (Tracing.MonadTrace m) => Tracing.MonadTrace (LazyTxT e m) where
-  trace t = \case
-    LTTx (Q.TxET tx) -> LTTx $ Q.TxET $ Tracing.trace t tx
-    v                -> v
-  currentContext  = lift Tracing.currentContext
-  currentReporter = lift Tracing.currentReporter
-  attachMetadata  = lift . Tracing.attachMetadata
-
-instance UserInfoM m => UserInfoM (LazyTxT e m) where
-  askUserInfo = lift askUserInfo
-
-instance HasHttpManagerM m => HasHttpManagerM (LazyTxT e m) where
-  askHttpManager = lift askHttpManager
-
-instance (MonadIO m) => MonadTx (LazyTxT QErr m) where
-  liftTx = LTTx . (hoist liftIO)
-
-instance (MonadIO m) => MonadTx (Q.TxET QErr m) where
-  liftTx = hoist liftIO
-
-instance (MonadIO m) => MonadIO (LazyTxT e m) where
-  liftIO = LTTx . liftIO
-
-instance (MonadIO m) => MonadBase IO (LazyTxT e m) where
-  liftBase = liftIO
-
-instance (MonadIO m, MonadBaseControl IO m) => MonadBaseControl IO (LazyTxT e m) where
-  type StM (LazyTxT e m) a = StM (Q.TxET e m) a
-  liftBaseWith f = LTTx $ liftBaseWith \run -> f (run . lazyTxToQTx)
-  restoreM = LTTx . restoreM
+deriving instance (MonadBaseControl IO m) => MonadBaseControl IO (LazyTxT e m)
 
 instance (MonadIO m) => MonadUnique (LazyTxT e m) where
   newUnique = liftIO newUnique
@@ -316,9 +259,6 @@ instance FromJSON PostgresPoolSettings where
       <*> o .:? "pool_timeout"
       <*> ((o .:? "connection_lifetime") <&> parseConnLifeTime)
 
-instance Arbitrary PostgresPoolSettings where
-  arbitrary = genericArbitrary
-
 data DefaultPostgresPoolSettings =
   DefaultPostgresPoolSettings
   { _dppsMaxConnections     :: !Int
@@ -361,6 +301,90 @@ getDefaultPGPoolSettingIfNotExists connSettings defaultPgPoolSettings =
     idleTimeout = fromMaybe defIdleTimeout . _ppsIdleTimeout
     retries = fromMaybe defRetries . _ppsRetries
 
+data SSLMode =
+    Disable
+  | Allow
+  | Prefer
+  | Require
+  | VerifyCA
+  | VerifyFull
+  deriving (Eq, Ord, Generic, Enum, Bounded)
+instance Cacheable SSLMode
+instance Hashable SSLMode
+instance NFData SSLMode
+
+instance Show SSLMode where
+  show = \case
+   Disable    -> "disable"
+   Allow      -> "allow"
+   Prefer     -> "prefer"
+   Require    -> "require"
+   VerifyCA   -> "verify-ca"
+   VerifyFull -> "verify-full"
+
+deriving via (Max SSLMode) instance Semigroup SSLMode
+
+instance FromJSON SSLMode where
+    parseJSON = withText "SSLMode" $ \case
+      "disable"     -> pure Disable
+      "allow"       -> pure Allow
+      "prefer"      -> pure Prefer
+      "require"     -> pure Require
+      "verify-ca"   -> pure VerifyCA
+      "verify-full" -> pure VerifyFull
+      err           -> fail $ "Invalid SSL Mode " <> unpack err
+
+data CertVar
+  = CertVar     String
+  | CertLiteral String
+  deriving (Show, Eq, Generic)
+
+instance Cacheable CertVar
+instance Hashable CertVar
+instance NFData CertVar
+
+instance ToJSON CertVar where
+  toJSON (CertVar     var) = (object ["from_env" .= var])
+  toJSON (CertLiteral var) = String (T.pack var)
+
+instance FromJSON CertVar where
+  parseJSON (String s) = pure (CertLiteral (T.unpack s))
+  parseJSON x          = withObject "CertVar" (\o -> CertVar <$> o .: "from_env") x
+
+newtype CertData = CertData { unCert :: Text }
+  deriving (Show, Eq, Generic)
+
+instance ToJSON CertData where
+  toJSON = String . unCert
+
+data PGClientCerts p a = PGClientCerts
+  { pgcSslCert     :: a
+  , pgcSslKey      :: a
+  , pgcSslRootCert :: a
+  , pgcSslMode     :: SSLMode
+  , pgcSslPassword :: Maybe p
+  } deriving (Show, Eq, Generic, Functor, Foldable, Traversable)
+$(deriveFromJSON (aesonDrop 3 (fmap toLower)) ''PGClientCerts)
+$(deriveToJSON (aesonDrop 3 (fmap toLower)) ''PGClientCerts)
+
+instance Bifunctor PGClientCerts where
+  bimap f g pgCerts = g <$> pgCerts { pgcSslPassword = f <$> (pgcSslPassword pgCerts)}
+
+instance Bifoldable PGClientCerts where
+  bifoldMap f g PGClientCerts{..} =
+    fold $ fmap g [pgcSslCert, pgcSslKey, pgcSslRootCert] <> maybe [] (pure . f) pgcSslPassword
+
+instance Bitraversable PGClientCerts where
+  bitraverse f g PGClientCerts{..} =
+    PGClientCerts <$> g pgcSslCert <*> g pgcSslKey <*> g pgcSslRootCert <*> pure pgcSslMode <*> traverse f pgcSslPassword
+
+instance (Cacheable p, Cacheable a) => Cacheable (PGClientCerts p a)
+instance (Hashable p, Hashable a) => Hashable (PGClientCerts p a)
+instance (NFData p, NFData a) => NFData (PGClientCerts p a)
+
+instance ToJSON SSLMode where
+  toJSON = String . tshow
+
 deriving instance Generic Q.TxIsolation
 instance Cacheable Q.TxIsolation
 instance NFData    Q.TxIsolation
@@ -375,15 +399,13 @@ instance ToJSON Q.TxIsolation where
   toJSON Q.RepeatableRead = "repeatable-read"
   toJSON Q.Serializable   = "serializable"
 
-instance Arbitrary Q.TxIsolation where
-  arbitrary = genericArbitrary
-
 data PostgresSourceConnInfo
   = PostgresSourceConnInfo
   { _psciDatabaseUrl           :: !UrlConf
   , _psciPoolSettings          :: !(Maybe PostgresPoolSettings)
   , _psciUsePreparedStatements :: !Bool
   , _psciIsolationLevel        :: !Q.TxIsolation
+  , _psciSslConfiguration      :: !(Maybe (PGClientCerts CertVar CertVar))
   } deriving (Show, Eq, Generic)
 instance Cacheable PostgresSourceConnInfo
 instance Hashable PostgresSourceConnInfo
@@ -398,12 +420,7 @@ instance FromJSON PostgresSourceConnInfo where
       <*> o .:? "pool_settings"
       <*> o .:? "use_prepared_statements" .!= False -- By default preparing statements is OFF for postgres source
       <*> o .:? "isolation_level" .!= Q.ReadCommitted
-
-instance Arbitrary PostgresSourceConnInfo where
-  arbitrary = genericArbitrary
-
-instance Arbitrary (NonEmpty PostgresSourceConnInfo) where
-  arbitrary = genericArbitrary
+      <*> o .:? "ssl_configuration"
 
 data PostgresConnConfiguration
   = PostgresConnConfiguration
@@ -415,6 +432,3 @@ instance Hashable PostgresConnConfiguration
 instance NFData PostgresConnConfiguration
 $(deriveJSON hasuraJSON{omitNothingFields = True} ''PostgresConnConfiguration)
 $(makeLenses ''PostgresConnConfiguration)
-
-instance Arbitrary PostgresConnConfiguration where
-  arbitrary = genericArbitrary

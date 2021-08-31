@@ -6,9 +6,9 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/catalogstate"
-	"github.com/hasura/graphql-engine/cli/internal/hasura/commonmetadata"
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/catalogstate"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/commonmetadata"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
 type Client struct {

@@ -21,6 +21,8 @@ You can view all the details about your project in the ``General`` tab.
    :alt: General tab
    :width: 900px
 
+.. _rename_project:
+
 Name
 ----
 

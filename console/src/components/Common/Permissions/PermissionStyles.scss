@@ -22,11 +22,6 @@
     width: 250px;
   }
 
-  //.permissionDelete {
-  //  cursor: pointer;
-  //  margin-left: 10px;
-  //}
-
   .bulkSelect {
     margin-right: 10px !important;
   }
@@ -68,15 +63,10 @@
   font-size: 12px;
   margin-right: 5px;
   margin-bottom: 20px;
-  //float: right;
-  //clear: both;
 
   .permissionsLegendValue {
     margin-right: 15px;
   }
-}
-
-.newRoleInput {
 }
 
 .fkSelect {
@@ -219,9 +209,14 @@
   color: green;
 }
 
+.permissionSymbolPAW {
+  color: #ffc627;
+}
+
 .permissionSymbolNA,
 .permissionSymbolFA,
-.permissionSymbolPA {
+.permissionSymbolPA,
+.permissionSymbolPAW {
   font-size: 16px;
 }
 

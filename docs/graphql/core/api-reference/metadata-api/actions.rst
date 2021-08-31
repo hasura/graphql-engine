@@ -4,8 +4,8 @@
 
 .. _metadata_api_actions:
 
-Metadata API Reference: Actions (v2.0 and above)
-================================================
+Metadata API Reference: Actions
+===============================
 
 .. contents:: Table of contents
   :backlinks: none

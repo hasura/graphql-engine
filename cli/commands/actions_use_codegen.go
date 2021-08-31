@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

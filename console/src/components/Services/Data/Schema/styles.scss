@@ -54,16 +54,88 @@
 }
 
 .replica_badge {
-  display: flex;
   align-items: center;
   background-color: #ccc;
   width: auto;
   border-radius: 10px;
   height: 20px;
-  padding: 8px;
+  padding: 4px 12px;
   font-size: 13px;
   color: black;
-  margin: 0px 4px;
+  margin: 0px 20px;
   font-weight: 600;
   letter-spacing: 0.3px;
+}
+
+.container_max_width {
+  width: 600px;
+}
+
+.collapsibleWrapper {
+  margin-bottom: 5px;
+  padding: 1px 12px !important;
+  border-radius: 8px;
+
+  .collapsibleToggle {
+    cursor: pointer;
+    display: inline-block;
+    outline: none;
+
+    .collapsibleIndicatorWrapper {
+      position: absolute;
+      float: left;
+      right: 0;
+      padding-right: 30px;
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.5);
+
+      .collapsibleIndicator {
+        transition: transform 0.4s ease;
+      }
+
+      .collapsibleIndicatorOpen {
+        transform: rotate(180deg);
+      }
+    }
+
+    .titleWrapper {
+      display: inline-block;
+    }
+  }
+}
+
+.display_flex_container {
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+}
+
+.display_flex {
+  display: flex;
+  align-items: flex-start;
+}
+
+.dataSource_label {
+  font-weight: bold;
+  float: left;
+  width: 130px;
+}
+
+.dbversion_label {
+  font-weight: bold;
+  float: left;
+  flex: 0 0 130px;
+}
+.mr_xxs {
+  margin-right: 4px;
+}
+
+.ion_icon {
+  font-size: 16px;
+  vertical-align: -2px;
+}
+
+.tab_heading_flex {
+  display: flex;
+  align-items: center;
 }

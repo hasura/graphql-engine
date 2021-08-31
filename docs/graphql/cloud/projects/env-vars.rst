@@ -22,7 +22,7 @@ Adding an env var
 
 Click on the ``New Env Var`` button and either choose an env var from the dropdown or add a custom env var.
 
-.. thumbnail:: /img/graphql/cloud/projects/secure-envvars.png
+.. thumbnail:: /img/graphql/cloud/projects/new-envvars.png
    :alt: add env var options
    :width: 1200px
 

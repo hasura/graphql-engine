@@ -89,18 +89,12 @@ instance (FromJSON a, Backend b) => FromJSON (RelUsing b a) where
 
 data ArrRelUsingFKeyOn (b :: BackendType)
   = ArrRelUsingFKeyOn
-  { arufTable  :: !(TableName b)
-  , arufColumn :: !(Column b)
+  { arufTable   :: !(TableName b)
+  , arufColumns :: !(NonEmpty (Column b))
   } deriving (Generic)
 deriving instance Backend b => Eq (ArrRelUsingFKeyOn b)
 deriving instance Backend b => Show (ArrRelUsingFKeyOn b)
 instance Backend b => Cacheable (ArrRelUsingFKeyOn b)
-
-instance (Backend b) => FromJSON (ArrRelUsingFKeyOn b) where
-  parseJSON = genericParseJSON hasuraJSON{omitNothingFields=True}
-
-instance (Backend b) => ToJSON (ArrRelUsingFKeyOn b) where
-  toJSON = genericToJSON hasuraJSON{omitNothingFields=True}
 
 -- TODO: This has to move to a common module
 data WithTable b a
@@ -126,8 +120,8 @@ instance (ToAesonPairs a, Backend b) => ToJSON (WithTable b a) where
     object $ ("source" .= sourceName):("table" .= tn):toAesonPairs rel
 
 data ObjRelUsingChoice b
-  = SameTable !(Column b)
-  | RemoteTable !(TableName b) !(Column b)
+  = SameTable !(NonEmpty (Column b))
+  | RemoteTable !(TableName b) !(NonEmpty (Column b))
   deriving (Generic)
 deriving instance Backend b => Eq (ObjRelUsingChoice b)
 deriving instance Backend b => Show (ObjRelUsingChoice b)
@@ -135,86 +129,72 @@ instance (Backend b) => Cacheable (ObjRelUsingChoice b)
 
 instance (Backend b) => ToJSON (ObjRelUsingChoice b) where
   toJSON = \case
-    SameTable col -> toJSON col
-    RemoteTable qt lcol ->
+    SameTable (col :| []) -> toJSON col
+    SameTable cols        -> toJSON cols
+    RemoteTable qt (lcol :| []) ->
       object
         [ "table" .= qt
         , "column" .= lcol
         ]
+    RemoteTable qt lcols ->
+      object
+        [ "table" .= qt
+        , "columns" .= lcols
+        ]
 
 instance (Backend b) => FromJSON (ObjRelUsingChoice b) where
   parseJSON = \case
-    v@(String _) -> SameTable <$> parseJSON v
-    Object o     -> RemoteTable <$> o .: "table" <*> o .: "column"
-    _            -> fail "expected single column or columns/table"
+    Object o -> do
+      table   <- o .:  "table"
+      column  <- o .:? "column"
+      columns <- o .:? "columns"
+      cols <- case (column, columns) of
+        (Just col, Nothing)   -> parseColumns col
+        (Nothing , Just cols) -> parseColumns cols
+        _                     -> fail "expected exactly one of 'column' or 'columns'"
+      pure $ RemoteTable table cols
+    val -> SameTable <$> parseColumns val
+    where
+      parseColumns :: Value -> Parser (NonEmpty (Column b))
+      parseColumns = \case
+        v@(String _) -> pure <$> parseJSON v
+        v@(Array _)  -> parseJSON v
+        _            -> fail "Expected string or array"
+
+instance (Backend b) => ToJSON (ArrRelUsingFKeyOn b) where
+  toJSON ArrRelUsingFKeyOn {arufTable=_arufTable, arufColumns=_arufColumns} =
+    object $
+     ("table" .= _arufTable) :
+     case _arufColumns of
+       col :| [] -> ["column"  .= col]
+       cols      -> ["columns" .= cols]
+
+instance (Backend b) => FromJSON (ArrRelUsingFKeyOn b) where
+  parseJSON = \case
+    Object o -> do
+      table   <- o .:  "table"
+      column  <- o .:? "column"
+      columns <- o .:? "columns"
+      cols <- case (column, columns) of
+        (Just col, Nothing)   -> parseColumns col
+        (Nothing , Just cols) -> parseColumns cols
+        _                     -> fail "expected exactly one of 'column' or 'columns'"
+      pure $ ArrRelUsingFKeyOn table cols
+    _ -> fail "Expecting object { table, columns }."
+
+    where
+      parseColumns :: Value -> Parser (NonEmpty (Column b))
+      parseColumns = \case
+        v@(String _) -> pure <$> parseJSON v
+        v@(Array _)  -> parseJSON v
+        _            -> fail "Expected string or array"
 
 type ArrRelUsing b = RelUsing b (ArrRelUsingFKeyOn b)
 type ArrRelDef b = RelDef (ArrRelUsing b)
-type CreateArrRel b = WithTable b (ArrRelDef b)
 
 type ObjRelUsing b = RelUsing b (ObjRelUsingChoice b)
 type ObjRelDef b = RelDef (ObjRelUsing b)
-type CreateObjRel b = WithTable b (ObjRelDef b)
 
-data DropRel b
-  = DropRel
-  { drSource       :: !SourceName
-  , drTable        :: !(TableName b)
-  , drRelationship :: !RelName
-  , drCascade      :: !Bool
-  } deriving (Generic)
-deriving instance (Backend b) => Show (DropRel b)
-deriving instance (Backend b) => Eq (DropRel b)
-instance (Backend b) => ToJSON (DropRel b) where
-  toJSON = genericToJSON hasuraJSON{omitNothingFields = True}
-
-instance (Backend b) => FromJSON (DropRel b) where
-  parseJSON = withObject "Object" $ \o ->
-    DropRel
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
-      <*> o .: "relationship"
-      <*> o .:? "cascade" .!= False
-
-data SetRelComment b
-  = SetRelComment
-  { arSource       :: !SourceName
-  , arTable        :: !(TableName b)
-  , arRelationship :: !RelName
-  , arComment      :: !(Maybe T.Text)
-  } deriving (Generic)
-deriving instance (Backend b) => Show (SetRelComment b)
-deriving instance (Backend b) => Eq (SetRelComment b)
-instance (Backend b) => ToJSON (SetRelComment b) where
-  toJSON = genericToJSON hasuraJSON{omitNothingFields = True}
-
-instance (Backend b) => FromJSON (SetRelComment b) where
-  parseJSON = withObject "Object" $ \o ->
-    SetRelComment
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
-      <*> o .: "relationship"
-      <*> o .:? "comment"
-
-data RenameRel b
-  = RenameRel
-  { rrSource  :: !SourceName
-  , rrTable   :: !(TableName b)
-  , rrName    :: !RelName
-  , rrNewName :: !RelName
-  } deriving (Generic)
-deriving instance (Backend b) => Show (RenameRel b)
-deriving instance (Backend b) => Eq (RenameRel b)
-instance (Backend b) => ToJSON (RenameRel b) where
-  toJSON = genericToJSON hasuraJSON
-
-instance (Backend b) => FromJSON (RenameRel b) where
-  parseJSON = withObject "Object" $ \o ->
-    RenameRel
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
-      <*> o .: "name"
-      <*> o .: "new_name"
 
 -- should this be parameterized by both the source and the destination backend?
 data RelInfo (b :: BackendType)
@@ -224,7 +204,6 @@ data RelInfo (b :: BackendType)
   , riMapping     :: !(HashMap (Column b) (Column b))
   , riRTable      :: !(TableName b)
   , riIsManual    :: !Bool
-  , riIsNullable  :: !Bool
   , riInsertOrder :: !InsertOrder
   } deriving (Generic)
 deriving instance Backend b => Show (RelInfo b)
@@ -238,6 +217,25 @@ instance (Backend b) => FromJSON (RelInfo b) where
 
 instance (Backend b) => ToJSON (RelInfo b) where
   toJSON = genericToJSON hasuraJSON
+
+data Nullable = Nullable | NotNullable
+  deriving (Eq, Show, Generic)
+
+instance NFData Nullable
+instance Cacheable Nullable
+instance Hashable Nullable
+
+boolToNullable :: Bool -> Nullable
+boolToNullable True  = Nullable
+boolToNullable False = NotNullable
+
+instance FromJSON Nullable where
+  parseJSON = fmap boolToNullable . parseJSON
+
+instance ToJSON Nullable where
+  toJSON = toJSON . \case
+    Nullable    -> True
+    NotNullable -> False
 
 fromRel :: RelName -> FieldName
 fromRel = FieldName . relNameToTxt

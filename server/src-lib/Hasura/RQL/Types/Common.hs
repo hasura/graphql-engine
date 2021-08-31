@@ -12,7 +12,6 @@ module Hasura.RQL.Types.Common
 
        , ToAesonPairs(..)
 
-       , EquatableGType(..)
        , InpValInfo(..)
 
        , SystemDefined(..)
@@ -46,50 +45,40 @@ module Hasura.RQL.Types.Common
        , JsonAggSelect (..)
 
        , intScalar, floatScalar, stringScalar, boolScalar, idScalar
-       , mkScalarTypeName
 
        , MetricsConfig(..)
        , emptyMetricsConfig
+
        ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                   as Env
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
-import qualified Language.GraphQL.Draft.Syntax      as G
-import qualified Language.Haskell.TH.Syntax         as TH
-import qualified PostgreSQL.Binary.Decoding         as PD
-import qualified Test.QuickCheck                    as QC
+import qualified Data.Environment              as Env
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Language.Haskell.TH.Syntax    as TH
+import qualified PostgreSQL.Binary.Decoding    as PD
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Bifunctor                     (bimap)
-import           Data.Hashable.Time                 ()
-import           Data.Scientific                    (toBoundedInteger)
+import           Data.Bifunctor                (bimap)
+import           Data.Scientific               (toBoundedInteger)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 import           Data.URL.Template
 
-
-import qualified Hasura.Backends.Postgres.SQL.Types as PG
-
+import           Hasura.Base.Error
 import           Hasura.EncJSON
-import           Hasura.Incremental                 (Cacheable)
-import           Hasura.RQL.DDL.Headers             ()
-import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Error
-import           Hasura.SQL.Backend                 (BackendType)
-import           Hasura.SQL.Types
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.DDL.Headers        ()
+
 
 newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
   deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, ToJSONKey
-           , Q.ToPrepArg, Q.FromCol, Generic, Arbitrary, NFData, Cacheable)
-
-instance PG.IsIdentifier RelName where
-  toIdentifier rn = PG.Identifier $ relNameToTxt rn
+           , Q.ToPrepArg, Q.FromCol, Generic, NFData, Cacheable)
 
 instance ToTxt RelName where
   toTxt = relNameToTxt
@@ -115,7 +104,7 @@ instance ToJSON JsonAggSelect where
 data RelType
   = ObjRel
   | ArrRel
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Generic, Data)
 instance NFData RelType
 instance Hashable RelType
 instance Cacheable RelType
@@ -153,26 +142,6 @@ instance ToJSON InsertOrder where
     BeforeParent -> String "before_parent"
     AfterParent  -> String "after_parent"
 
--- should this be parameterized by both the source and the destination backend?
-data RelInfo (b :: BackendType)
-  = RelInfo
-  { riName        :: !RelName
-  , riType        :: !RelType
-  , riMapping     :: !(HashMap (Column b) (Column b))
-  , riRTable      :: !(TableName b)
-  , riIsManual    :: !Bool
-  , riIsNullable  :: !Bool
-  , riInsertOrder :: !InsertOrder
-  } deriving (Generic)
-deriving instance Backend b => Show (RelInfo b)
-deriving instance Backend b => Eq   (RelInfo b)
-instance Backend b => NFData (RelInfo b)
-instance Backend b => Cacheable (RelInfo b)
-instance Backend b => Hashable (RelInfo b)
-instance Backend b => FromJSON (RelInfo b) where
-  parseJSON = genericParseJSON hasuraJSON
-instance Backend b => ToJSON (RelInfo b) where
-  toJSON = genericToJSON hasuraJSON
 
 -- | Postgres OIDs. <https://www.postgresql.org/docs/12/datatype-oid.html>
 newtype OID = OID { unOID :: Int }
@@ -182,12 +151,9 @@ newtype FieldName
   = FieldName { getFieldNameTxt :: Text }
   deriving ( Show, Eq, Ord, Hashable, FromJSON, ToJSON
            , FromJSONKey, ToJSONKey, Data, Generic
-           , IsString, Arbitrary, NFData, Cacheable
+           , IsString, NFData, Cacheable
            , Semigroup
            )
-
-instance PG.IsIdentifier FieldName where
-  toIdentifier (FieldName f) = PG.Identifier f
 
 instance ToTxt FieldName where
   toTxt (FieldName c) = c
@@ -221,9 +187,6 @@ instance Hashable SourceName
 instance NFData SourceName
 instance Cacheable SourceName
 
-instance Arbitrary SourceName where
-  arbitrary = SNName <$> arbitrary
-
 defaultSource :: SourceName
 defaultSource = SNDefault
 
@@ -235,15 +198,6 @@ data InpValInfo
   , _iviType   :: !G.GType
   } deriving (Show, Eq, TH.Lift, Generic)
 instance Cacheable InpValInfo
-
-instance EquatableGType InpValInfo where
-  type EqProps InpValInfo = (G.Name, G.GType)
-  getEqProps ity = (,) (_iviName ity) (_iviType ity)
-
--- | Typeclass for equating relevant properties of various GraphQL types defined below
-class EquatableGType a where
-  type EqProps a
-  getEqProps :: a -> EqProps a
 
 newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
   deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, NFData, Cacheable)
@@ -300,7 +254,7 @@ newtype ResolvedWebhook
 
 newtype InputWebhook
   = InputWebhook {unInputWebhook :: URLTemplate}
-  deriving (Show, Eq, Generic, Arbitrary)
+  deriving (Show, Eq, Generic)
 instance NFData InputWebhook
 instance Cacheable InputWebhook
 instance Hashable InputWebhook
@@ -335,9 +289,6 @@ instance FromJSON Timeout where
       True  -> return $ Timeout timeout
       False -> fail "timeout value cannot be negative"
 
-instance Arbitrary Timeout where
-  arbitrary = Timeout <$> QC.choose (0, 10000000)
-
 defaultActionTimeoutSecs :: Timeout
 defaultActionTimeoutSecs = Timeout 30
 
@@ -361,9 +312,6 @@ instance FromJSON UrlConf where
       Success a -> pure $ UrlValue a
   parseJSON _          = fail "one of string or object must be provided for url/webhook"
 
-instance Arbitrary UrlConf where
-  arbitrary = genericArbitrary
-
 resolveUrlConf
   :: MonadError QErr m => Env.Environment -> UrlConf -> m Text
 resolveUrlConf env = \case
@@ -384,17 +332,6 @@ floatScalar  = $$(G.litName "Float")
 stringScalar = $$(G.litName "String")
 boolScalar   = $$(G.litName "Boolean")
 idScalar     = $$(G.litName "ID")
-
--- TODO: This has to move into a Postgres specific module
-mkScalarTypeName :: MonadError QErr m => PG.PGScalarType -> m G.Name
-mkScalarTypeName PG.PGInteger  = pure intScalar
-mkScalarTypeName PG.PGBoolean  = pure boolScalar
-mkScalarTypeName PG.PGFloat    = pure floatScalar
-mkScalarTypeName PG.PGText     = pure stringScalar
-mkScalarTypeName PG.PGVarchar  = pure stringScalar
-mkScalarTypeName scalarType = G.mkName (toSQLTxt scalarType) `onNothing` throw400 ValidationFailed
-  ("cannot use SQL type " <> scalarType <<> " in the GraphQL schema because its name is not a "
-  <> "valid GraphQL identifier")
 
 -- | Various user-controlled configuration for metrics used by Pro
 data MetricsConfig

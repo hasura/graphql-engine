@@ -2,18 +2,11 @@ module Hasura.Server.Utils where
 
 import           Hasura.Prelude
 
-import           Control.Lens               ((^..))
-import           Data.Aeson
-import           Data.Aeson.Internal
-import           Data.Char
-import           Data.Text.Extended
-import           Data.Time
-import           Language.Haskell.TH.Syntax (Q, TExp)
-import           System.Environment
-import           System.Exit
-import           System.Process
-
+import qualified Crypto.Hash                as Crypto
+import qualified Data.Aeson                 as J
 import qualified Data.ByteString            as B
+import qualified Data.ByteString.Base16     as Base16
+import qualified Data.ByteString.Lazy       as BL
 import qualified Data.CaseInsensitive       as CI
 import qualified Data.HashSet               as Set
 import qualified Data.List.NonEmpty         as NE
@@ -31,7 +24,20 @@ import qualified Text.Regex.TDFA            as TDFA
 import qualified Text.Regex.TDFA.ReadRegex  as TDFA
 import qualified Text.Regex.TDFA.TDFA       as TDFA
 
-import           Hasura.RQL.Instances       ()
+import           Control.Lens               ((^..))
+import           Data.Aeson
+import           Data.Aeson.Internal
+import           Data.ByteArray             (convert)
+import           Data.Char
+import           Data.Text.Extended
+import           Data.Time
+import           Language.Haskell.TH.Syntax (Q, TExp)
+import           System.Environment
+import           System.Exit
+import           System.Process
+
+import           Hasura.Base.Instances      ()
+
 
 jsonHeader :: HTTP.Header
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")
@@ -154,8 +160,11 @@ commonResponseHeadersIgnored =
   , "Content-Type", "Content-Length"
   ]
 
+sessionVariablePrefix :: Text
+sessionVariablePrefix = "x-hasura-"
+
 isSessionVariable :: Text -> Bool
-isSessionVariable = T.isPrefixOf "x-hasura-" . T.toLower
+isSessionVariable = T.isPrefixOf sessionVariablePrefix . T.toLower
 
 isReqUserId :: Text -> Bool
 isReqUserId = (== "req_user_id") . T.toLower
@@ -246,6 +255,12 @@ executeJSONPath jsonPath = iparse (valueParser jsonPath)
                   Index i -> withArray "Array" $
                              maybe (fail "Array index out of range") pure . (V.!? i)
 
+sha1 :: BL.ByteString -> B.ByteString
+sha1 = convert @_ @B.ByteString . Crypto.hashlazy @Crypto.SHA1
+
+cryptoHash :: J.ToJSON a => a -> B.ByteString
+cryptoHash = Base16.encode . sha1 . J.encode
+
 readIsoLevel :: String -> Either String Q.TxIsolation
 readIsoLevel isoS =
   case isoS of
@@ -259,3 +274,36 @@ parseConnLifeTime = \case
   Nothing -> Just 600  -- Not set by user; use the default timeout
   Just 0  -> Nothing   -- user wants to disable PG_CONN_LIFETIME
   Just n  -> Just n    -- user specified n seconds lifetime
+
+
+-- | The environment variables that were moved to metadata. These environment
+-- variables are available if a v1 hasura project is run an v2 hasura server.
+-- These environment variables are marked as deprecated only when the v1 hasura
+-- project is migrated to v2 project.
+newtype EnvVarsMovedToMetadata
+  = EnvVarsMovedToMetadata { unEnvVarsMovedToMetadata :: [String] }
+  deriving (Show)
+
+-- | These env vars are completely deprecated
+newtype DeprecatedEnvVars
+  = DeprecatedEnvVars { unDeprecatedEnvVars :: [String] }
+  deriving (Show)
+
+envVarsMovedToMetadata :: EnvVarsMovedToMetadata
+envVarsMovedToMetadata = EnvVarsMovedToMetadata
+  [ "HASURA_GRAPHQL_NO_OF_RETRIES"
+  , "HASURA_GRAPHQL_PG_CONNECTIONS"
+  , "HASURA_GRAPHQL_PG_TIMEOUT"
+  , "HASURA_GRAPHQL_PG_CONN_LIFETIME"
+  , "HASURA_GRAPHQL_PG_POOL_TIMEOUT"
+  , "HASURA_GRAPHQL_USE_PREPARED_STATEMENTS"
+  , "HASURA_GRAPHQL_TX_ISOLATION"
+  , "HASURA_GRAPHQL_CONNECTIONS_PER_READ_REPLICA"
+  ]
+
+deprecatedEnvVars :: DeprecatedEnvVars
+deprecatedEnvVars = DeprecatedEnvVars
+  [ "HASURA_GRAPHQL_PG_STRIPES"
+  , "HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE"
+  , "HASURA_GRAPHQL_STRIPES_PER_READ_REPLICA"
+  ]

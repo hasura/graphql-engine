@@ -13,9 +13,8 @@ import qualified Hasura.Backends.MSSQL.Connection as MSSQL
 import qualified Hasura.Backends.MSSQL.Types      as MSSQL
 
 import           Hasura.Backends.MSSQL.ToQuery    ()
-import           Hasura.RQL.DDL.Headers           ()
+import           Hasura.Base.Error
 import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 
 
@@ -23,8 +22,8 @@ instance Backend 'MSSQL where
   type SourceConfig            'MSSQL = MSSQL.MSSQLSourceConfig
   type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
   type Identifier              'MSSQL = Void
-  type Alias                   'MSSQL = MSSQL.EntityAlias
   type TableName               'MSSQL = MSSQL.TableName
+  type RawFunctionInfo         'MSSQL = Void
   type FunctionName            'MSSQL = MSSQL.FunctionName
   type FunctionArgType         'MSSQL = Void
   type ConstraintName          'MSSQL = ()
@@ -38,11 +37,12 @@ instance Backend 'MSSQL where
   type SQLExpression           'MSSQL = MSSQL.Expression
   type SQLOperator             'MSSQL = MSSQL.Op
 
+  type ExtraTableMetadata      'MSSQL = ()
+
   type XComputedField          'MSSQL = XDisable
-  type XRemoteField            'MSSQL = XDisable
   type XRelay                  'MSSQL = XDisable
   type XNodesAgg               'MSSQL = XEnable
-  type XDistinct               'MSSQL = XDisable
+  type XNestedInserts          'MSSQL = XDisable
 
   functionArgScalarType :: FunctionArgType 'MSSQL -> ScalarType 'MSSQL
   functionArgScalarType = absurd
@@ -75,9 +75,8 @@ instance Backend 'MSSQL where
   functionGraphQLName :: FunctionName 'MSSQL -> Either QErr G.Name
   functionGraphQLName = error "Unexpected MSSQL error: calling functionGraphQLName. Please report this error at https://github.com/hasura/graphql-engine/issues/6590"
 
-  -- TODO: Is this Postgres specific? Should it be removed from the class?
   scalarTypeGraphQLName :: ScalarType 'MSSQL -> Either QErr G.Name
-  scalarTypeGraphQLName = error "Unexpected MSSQL error: calling scalarTypeGraphQLName. Please report this error at https://github.com/hasura/graphql-engine/issues/6590"
+  scalarTypeGraphQLName = runExcept . MSSQL.mkMSSQLScalarTypeName
 
   snakeCaseTableName :: TableName 'MSSQL -> Text
   snakeCaseTableName = MSSQL.snakeCaseTableName

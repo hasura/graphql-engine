@@ -19,6 +19,7 @@ import           Data.List.Extended               (duplicates)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.QueryCollection
@@ -136,7 +137,7 @@ getCollectionDef
 getCollectionDef collName = do
   detM <- getCollectionDefM collName
   onNothing detM $ throw400 NotExists $
-    "query collection with name " <> collName <<> " does not exists"
+    "query collection with name " <> collName <<> " does not exist"
 
 getCollectionDefM
   :: (QErrM m, MetadataM m)

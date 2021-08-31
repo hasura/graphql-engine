@@ -2,6 +2,7 @@ import React from 'react';
 
 import Button from '../../../../../Common/Button';
 import { ButtonProps } from '../../../../../Common/Button/Button';
+
 import styles from '../../../../../Common/Permissions/PermissionStyles.scss';
 
 type PermissionsActionButtonProps = {
@@ -25,7 +26,8 @@ type PermissionEditorProps = {
   closeFn: () => void;
   saveFn: () => void;
   removeFn: () => void;
-  isPermSet: boolean;
+  permissionAccessInMetadata: 'full' | 'no' | 'partial';
+  table: string;
 };
 const PermissionEditor: React.FC<PermissionEditorProps> = ({
   role,
@@ -33,18 +35,34 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({
   closeFn,
   saveFn,
   removeFn,
-  isPermSet,
+  permissionAccessInMetadata,
+  table,
 }) =>
   isEditing ? (
     <div className={styles.activeEdit}>
       <div className={styles.add_mar_bottom}>
-        This function is {!isPermSet ? 'not' : null} allowed for role:{' '}
-        <b>{role}</b>
+        {permissionAccessInMetadata === 'partial' ? (
+          <>
+            Partial permissions: please enable <b>select</b> permissions for
+            table <b>{table}</b> for role <b>{role}</b> if you want the function
+            exposed.
+          </>
+        ) : (
+          <>
+            This function is{' '}
+            {permissionAccessInMetadata === 'no' ? 'not' : null} allowed for
+            role: <b>{role}</b>
+          </>
+        )}
         <br />
-        Click {!isPermSet ? '"Save"' : '"Remove"'} if you wish to{' '}
-        {!isPermSet ? 'allow' : 'disallow'} it.
+        <br />
+        <p>
+          Click {permissionAccessInMetadata === 'no' ? '"Save"' : '"Remove"'} if
+          you wish to{' '}
+          {permissionAccessInMetadata === 'no' ? 'allow' : 'disallow'} it.
+        </p>
       </div>
-      {!isPermSet ? (
+      {permissionAccessInMetadata === 'no' ? (
         <PermissionsActionButton onClick={saveFn} color="yellow" text="Save" />
       ) : (
         <PermissionsActionButton onClick={removeFn} color="red" text="Remove" />

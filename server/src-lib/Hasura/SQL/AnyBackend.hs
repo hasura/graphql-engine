@@ -3,25 +3,29 @@
 
 module Hasura.SQL.AnyBackend
   ( AnyBackend
+  , liftTag
   , mkAnyBackend
   , mapBackend
+  , traverseBackend
   , dispatchAnyBackend
   , dispatchAnyBackend'
   , dispatchAnyBackendArrow
   , unpackAnyBackend
   , composeAnyBackend
   , runBackend
+  , parseAnyBackendFromJSON
+  , debugAnyBackendToJSON
   ) where
 
 import           Hasura.Prelude
 
 import           Control.Arrow.Extended (ArrowChoice, arr, (|||))
-import           Data.Aeson             (FromJSON (..), ToJSON (..), Value (..), withObject, (.:?))
-import           Data.Hashable          (Hashable (hashWithSalt))
+import           Data.Aeson
+import           Data.Aeson.Types       (Parser)
 import           Data.Kind              (Constraint, Type)
 import           Language.Haskell.TH    hiding (Type)
-import           Test.QuickCheck        (oneof)
 
+import           Hasura.Incremental     (Cacheable)
 import           Hasura.SQL.Backend
 import           Hasura.SQL.TH
 import           Hasura.SQL.Tag
@@ -66,6 +70,8 @@ $(do
       -- (we Apply a type Variable to a Promoted name)
       [normalType $ AppT (VarT typeVarName) (getBackendTypeValue b)]
     )
+    -- classes in the deriving clause
+    [ ''Generic ]
  )
 
 
@@ -137,6 +143,25 @@ type SatisfiesForAllBackends
 --------------------------------------------------------------------------------
 -- Functions on AnyBackend
 
+-- | How to obtain a tag from a runtime value. This function is generated with
+-- Template Haskell for each 'Backend'. The case switch looks like this:
+--
+--   Postgres -> PostgresValue PostgresTag
+--   MSSQL    -> MSSQLValue    MSSQLTag
+--   ...
+liftTag :: BackendType -> AnyBackend BackendTag
+liftTag t = $(backendCase
+  -- the expression on which we do the case switch
+  [| t |]
+  -- the pattern for a given backend: the backend type itself
+  (\(con :| args) -> pure $ ConP con [ConP a [] | a <- args])
+  -- the body for a given backend: creating and wrapping the tag
+  (\b -> [| $(pure $ ConE $ getBackendValueName b) $(pure $ ConE $ getBackendTagName b) |])
+  -- no default case: every constructor should be handled
+  Nothing
+  )
+
+
 -- | Transforms an `AnyBackend i` into an `AnyBackend j`.
 mapBackend
   :: forall
@@ -166,6 +191,38 @@ mapBackend e f =
     pure $ CaseE caseExpr matches
    )
 
+-- | Traverse an `AnyBackend i` into an `f (AnyBackend j)`.
+traverseBackend
+ :: forall
+     (c :: BackendType -> Constraint)
+     (i :: BackendType -> Type)
+     (j :: BackendType -> Type)
+     f
+  . (AllBackendsSatisfy c, Applicative f)
+ => AnyBackend i
+ -> (forall b. c b => i b -> f (j b))
+ -> f (AnyBackend j)
+traverseBackend e f =
+  -- generates a case switch that, for each constructor, applies the provided function
+  --   case e of
+  --     FooValue x -> FooValue <$> f x
+  --     BarValue x -> BarValue <$> f x
+  $(do
+    -- we create a case match for each backend
+    matches <- forEachBackend \b -> do
+      -- the name of the constructor
+      let consName = getBackendValueName b
+      -- the patterrn we match: `FooValue x`
+      let matchPattern = ConP consName [VarP $ mkName "x"]
+      -- the body of the match: `FooValue <$> f x`
+      matchBody <- [| $(pure $ ConE consName) <$> f x |]
+      pure $ Match matchPattern (NormalB matchBody) []
+    -- the expression on which we do the case
+    caseExpr <- [| e |]
+    -- return the the expression of the case switch
+    pure $ CaseE caseExpr matches
+   )
+
 
 -- | Creates a new @AnyBackend i@ for a given backend @b@ by wrapping the given @i b@.
 mkAnyBackend
@@ -178,7 +235,7 @@ mkAnyBackend
 mkAnyBackend =
   -- generates a case switch that associates a tag constructor to a value constructor
   --   case backendTag @b of
-  --     FooTag-> FooValue
+  --     FooTag -> FooValue
   --     BarTag -> BarValue
   $(backendCase [| backendTag @b |]
     -- the pattern for a backend
@@ -436,7 +493,7 @@ dispatchAnyBackendArrow' arrow = spreadChoice >>> coalesceChoice @c arrow
 -- practice we need slightly more complex types. Specifically: the only call
 -- site for 'dispatchAnyBackendArrow' uses a four element tuple containing an
 -- 'AnyBackend'.
-newtype BackendArrowTuple x y z i (b :: BackendType) = BackendArrowTuple { unTuple :: (x, y, i b, z) }
+newtype BackendArrowTuple x i (b :: BackendType) = BackendArrowTuple { unTuple :: (i b, x) }
 
 -- | Finally, we can do the dispatch on the four-elements tuple.
 -- Here's what happens, step by step:
@@ -469,71 +526,61 @@ dispatchAnyBackendArrow
        (i :: BackendType -> Type)
        (r :: Type)
        (arr :: Type -> Type -> Type)
-       x y z
+       x
    . (ArrowChoice arr, AllBackendsSatisfy c)
-  => (forall b. c b => arr (x, y, i b, z) r)
-  -> arr (x, y, AnyBackend i, z) r
+  => (forall b. c b => arr (i b, x) r)
+  -> arr (AnyBackend i, x) r
 dispatchAnyBackendArrow arrow =
   arr cons >>> dispatchAnyBackendArrow' @c (arr unTuple >>> arrow)
   where
-    cons :: (x, y, AnyBackend i, z) -> AnyBackend (BackendArrowTuple x y z i)
-    cons (x, y, e, z) = mapBackend e \ib -> BackendArrowTuple (x, y, ib, z)
+    cons :: (AnyBackend i, x) -> AnyBackend (BackendArrowTuple x i)
+    cons (e, x) = mapBackend e \ib -> BackendArrowTuple (ib, x)
+
+
+
+--------------------------------------------------------------------------------
+-- JSON functions
+
+-- | Attempts to parse an 'AnyBackend' from a JSON value, using the provided
+-- backend information.
+parseAnyBackendFromJSON
+  :: i `SatisfiesForAllBackends` FromJSON
+  => BackendType
+  -> Value
+  -> Parser (AnyBackend i)
+parseAnyBackendFromJSON backendKind value = do
+  -- generates the following case for all backends:
+  --   Foo -> FooValue <$> parseJSON value
+  --   Bar -> BarValue <$> parseJSON value
+  --   ...
+  $(backendCase [| backendKind |]
+     -- the pattern for a given backend
+     ( \(con :| args) -> pure $ ConP con [ConP arg [] | arg <- args] )
+     -- the body for each backend
+     ( \b -> do
+         let valueCon = pure $ ConE $ getBackendValueName b
+         [| $valueCon <$> parseJSON value |]
+     )
+     -- no default case
+     Nothing
+   )
+
+-- | Outputs a debug JSON value from an 'AnyBackend'. This function must only be
+-- used for debug purposes, as it has no way of inserting the backend kind in
+-- the output, since there's no guarantee that the output will be an object.
+debugAnyBackendToJSON
+  :: i `SatisfiesForAllBackends` ToJSON
+  => AnyBackend i
+  -> Value
+debugAnyBackendToJSON e = dispatchAnyBackend' @ToJSON e toJSON
 
 
 
 --------------------------------------------------------------------------------
 -- Instances for 'AnyBackend'
 
-instance i `SatisfiesForAllBackends` Show => Show (AnyBackend i) where
-  show e = dispatchAnyBackend' @Show e show
+deriving instance i `SatisfiesForAllBackends` Show => Show (AnyBackend i)
+deriving instance i `SatisfiesForAllBackends` Eq => Eq (AnyBackend i)
 
-instance i `SatisfiesForAllBackends` Eq => Eq (AnyBackend i) where
-  e1 == e2 =
-    -- generates the following case expression for all backends:
-    --   (FooValue a, FooValue b) -> a == b
-    --   ...
-    --   _ -> False
-    $(backendCase [| (e1, e2) |]
-       -- the pattern for a given backend
-       ( \b -> do
-           let valueCon n = pure $ ConP (getBackendValueName b) [VarP $ mkName n]
-           [p| ($(valueCon "a"), $(valueCon "b")) |]
-       )
-       -- the body for each backend
-       ( const [| a == b |] )
-       -- the default case
-       ( Just [| False |] )
-     )
-
-instance i `SatisfiesForAllBackends` ToJSON => ToJSON (AnyBackend i) where
-  toJSON e = dispatchAnyBackend' @ToJSON e toJSON
-
-instance i `SatisfiesForAllBackends` FromJSON => FromJSON (AnyBackend i) where
-  parseJSON = withObject "AnyBackend" $ \o -> do
-    backendKind <- fromMaybe (Postgres Vanilla) <$> o .:? "kind"
-    -- generates the following case for all backends:
-    --   Foo -> FooValue <$> parseJSON (Object o)
-    --   Bar -> BarValue <$> parseJSON (Object o)
-    --   ...
-    $(backendCase [| backendKind |]
-       -- the pattern for a given backend
-       ( \b -> do
-           (con:args) <- pure b
-           pure $ ConP con [ConP arg [] | arg <- args]
-       )
-       -- the body for each backend
-       ( \b -> do
-           let valueCon = pure $ ConE $ getBackendValueName b
-           [| $valueCon <$> parseJSON (Object o) |]
-       )
-       -- no default case
-       Nothing
-     )
-
-instance i `SatisfiesForAllBackends` Hashable => Hashable (AnyBackend i) where
-  hashWithSalt salt e = dispatchAnyBackend' @Hashable e (hashWithSalt salt)
-
-instance i `SatisfiesForAllBackends` Arbitrary => Arbitrary (AnyBackend i) where
-  arbitrary = oneof
-    -- generates @FooValue <$> arbitrary@ for each backend
-    $(backendList \b -> [| $(pure $ ConE $ getBackendValueName b) <$> arbitrary |])
+instance i `SatisfiesForAllBackends` Hashable => Hashable (AnyBackend i)
+instance i `SatisfiesForAllBackends` Cacheable => Cacheable (AnyBackend i)

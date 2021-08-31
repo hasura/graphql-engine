@@ -12,32 +12,15 @@ import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Types.BoolExp
+import           Hasura.Base.Error
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
-
--- | Represents a reference to a Postgres column, possibly casted an arbitrary
--- number of times. Used within 'parseOperationsExpression' for bookkeeping.
-data ColumnReference (b :: BackendType)
-  = ColumnReferenceColumn !(ColumnInfo b)
-  | ColumnReferenceCast !(ColumnReference b) !(ColumnType b)
-
-columnReferenceType :: ColumnReference backend -> ColumnType backend
-columnReferenceType = \case
-  ColumnReferenceColumn column     -> pgiType column
-  ColumnReferenceCast _ targetType -> targetType
-
-instance Backend b => ToTxt (ColumnReference b) where
-  toTxt = \case
-    ColumnReferenceColumn column -> toTxt $ pgiColumn column
-    ColumnReferenceCast reference targetType ->
-      toTxt reference <> "::" <> toTxt targetType
 
 parseBoolExpOperations
   :: forall pgKind m v
@@ -48,19 +31,18 @@ parseBoolExpOperations
   => ValueParser ('Postgres pgKind) m v
   -> QualifiedTable
   -> FieldInfoMap (FieldInfo ('Postgres pgKind))
-  -> ColumnInfo ('Postgres pgKind)
+  -> ColumnReference ('Postgres pgKind)
   -> Value
   -> m [OpExpG ('Postgres pgKind) v]
-parseBoolExpOperations rhsParser rootTable fim columnInfo value = do
+parseBoolExpOperations rhsParser rootTable fim columnRef value = do
   restrictJSONColumn
-  withPathK (getPGColTxt $ pgiColumn columnInfo) $
-    parseOperations (ColumnReferenceColumn columnInfo) value
+  withPathK (toTxt columnRef) $ parseOperations columnRef value
   where
     restrictJSONColumn :: m ()
-    restrictJSONColumn = case columnInfo of
-      ColumnInfo _ _ _ (ColumnScalar PGJSON) _ _ ->
+    restrictJSONColumn = case columnReferenceType columnRef of
+      ColumnScalar PGJSON ->
         throwError (err400 UnexpectedPayload "JSON column can not be part of boolean expression")
-      _                                          -> pure ()
+      _                   -> pure ()
 
     parseOperations :: ColumnReference ('Postgres pgKind) -> Value -> m [OpExpG ('Postgres pgKind) v]
     parseOperations column = \case
@@ -274,31 +256,22 @@ parseBoolExpOperations rhsParser rootTable fim columnInfo value = do
           _ -> throwError $ buildMsg colTy [PGGeometry, PGGeography]
 
         decodeAndValidateRhsCol :: Value -> m (PGCol, Maybe QualifiedTable)
-        decodeAndValidateRhsCol v@(String _) = do
-          j <- decodeValue v
-          col <- validateRhsCol fim j
-          pure (col, Nothing)
-        decodeAndValidateRhsCol (Array path) = do
-          case toList path of
+        decodeAndValidateRhsCol v = case v of
+          String _   -> go Nothing fim v
+          Array path -> case toList path of
             [] -> throw400 Unexpected "path cannot be empty"
-            [col] -> do
-              j <- decodeValue col
-              col' <- validateRhsCol fim j
-              pure $ (col', Nothing)
-            (root : col : []) -> do
-              root' :: Text <- decodeValue root
-              unless (root' == "$") $
-                throw400 NotSupported "Relationship references are not supported in column comparison RHS"
-              rootTableInfo <-
-                lookupTableCoreInfo rootTable
-                >>= (`onNothing` (throw500 $ "unexpected: " <> rootTable <<> " doesn't exist"))
-              j <- decodeValue col
-              col' <- validateRhsCol (_tciFieldInfoMap rootTableInfo) j
-              pure $ (col', Just rootTable)
+            [col] -> go Nothing fim col
+            [String "$", col] -> do
+              rootTableInfo <- lookupTableCoreInfo rootTable >>=
+                flip onNothing (throw500 $ "unexpected: " <> rootTable <<> " doesn't exist")
+              go (Just rootTable) (_tciFieldInfoMap rootTableInfo) col
             _ -> throw400 NotSupported "Relationship references are not supported in column comparison RHS"
-
-        decodeAndValidateRhsCol _ =
-          throw400 Unexpected "a boolean expression JSON can either be a string or an array"
+          _ -> throw400 Unexpected "a boolean expression JSON must be either a string or an array"
+          where
+            go rootInfo fieldsInfoMap columnValue = do
+              colName <- decodeValue columnValue
+              colInfo <- validateRhsCol fieldsInfoMap colName
+              pure (colInfo, rootInfo)
 
         parseST3DDWithinObj = ABackendSpecific <$> do
           guardType [PGGeometry]
@@ -308,12 +281,12 @@ parseBoolExpOperations rhsParser rootTable fim columnInfo value = do
           return $ AST3DDWithinGeom $ DWithinGeomOp dist from
 
         validateRhsCol fieldInfoMap rhsCol = do
-          let errMsg = "column operators can only compare postgres columns"
-          rhsType <- askColumnType fieldInfoMap rhsCol errMsg
-          if colTy /= rhsType
-            then throw400 UnexpectedPayload $
-                 "incompatible column types : " <> column <<> ", " <>> rhsCol
-            else return rhsCol
+          rhsType <- askColumnType fieldInfoMap rhsCol "column operators can only compare postgres columns"
+          when (colTy /= rhsType) $
+            throw400 UnexpectedPayload $ "incompatible column types: " <>
+            column <<> " has type " <> colTy <<> ", but " <>
+            rhsCol <<> " has type " <>> rhsType
+          pure rhsCol
 
         parseWithTy ty = rhsParser (CollectableTypeScalar ty) val
 

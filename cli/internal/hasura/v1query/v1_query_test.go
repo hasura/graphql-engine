@@ -1,26 +1,25 @@
 package v1query
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/sourceops/postgres"
-	pg "github.com/hasura/graphql-engine/cli/internal/hasura/sourceops/postgres"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/postgres"
+	pg "github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/postgres"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/commonmetadata"
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/commonmetadata"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestClient_Send(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, "v1.3.3")
+	port, teardown := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown()
 	type fields struct {
 		Client                       *httpc.Client
@@ -41,13 +40,7 @@ func TestClient_Send(t *testing.T) {
 		{
 			"can send a request",
 			fields{
-				Client: func() *httpc.Client {
-					c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", port), nil)
-					if err != nil {
-						t.Fatal(err)
-					}
-					return c
-				}(),
+				Client:                       testutil.NewHttpcClient(t, port, nil),
 				path:                         "v1/query",
 				HasuraDatabaseRequests:       nil,
 				HasuraCommonMetadataRequests: nil,
@@ -84,13 +77,13 @@ func TestClient_Send(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			assert.Equal(t, tt.wantJSONResponseBody, string(b))
+			assert.JSONEq(t, tt.wantJSONResponseBody, string(b))
 		})
 	}
 }
 
 func TestClient_Bulk(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, "v1.3.3")
+	port, teardown := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown()
 	type fields struct {
 		Client                  *httpc.Client
@@ -111,14 +104,8 @@ func TestClient_Bulk(t *testing.T) {
 		{
 			"can send a bulk request",
 			fields{
-				Client: func() *httpc.Client {
-					c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", port), nil)
-					if err != nil {
-						t.Fatal(err)
-					}
-					return c
-				}(),
-				path: "v1/query",
+				Client: testutil.NewHttpcClient(t, port, nil),
+				path:   "v1/query",
 			},
 			args{
 				args: []hasura.RequestBody{
@@ -167,14 +154,8 @@ func TestClient_Bulk(t *testing.T) {
 		{
 			"can throw error on a bad request",
 			fields{
-				Client: func() *httpc.Client {
-					c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", port), nil)
-					if err != nil {
-						t.Fatal(err)
-					}
-					return c
-				}(),
-				path: "v1/query",
+				Client: testutil.NewHttpcClient(t, port, nil),
+				path:   "v1/query",
 			},
 			args{
 				args: []hasura.RequestBody{
@@ -213,7 +194,7 @@ func TestClient_Bulk(t *testing.T) {
 				require.NoError(t, err)
 				gotb, err := ioutil.ReadAll(got)
 				require.NoError(t, err)
-				require.Equal(t, tt.want, string(gotb))
+				require.JSONEq(t, tt.want, string(gotb))
 			}
 		})
 	}

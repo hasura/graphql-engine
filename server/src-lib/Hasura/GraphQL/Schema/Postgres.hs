@@ -9,10 +9,10 @@ module Hasura.GraphQL.Schema.Postgres
 
 import           Hasura.Prelude
 
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser         hiding (EnumValueInfo, field)
 import           Hasura.GraphQL.Schema.Action
 import           Hasura.GraphQL.Schema.Backend (MonadBuildSchema)
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 
 

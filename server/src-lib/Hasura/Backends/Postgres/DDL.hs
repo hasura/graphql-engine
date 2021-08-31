@@ -14,11 +14,11 @@ import           Hasura.Backends.Postgres.DDL.Table        as M
 import           Hasura.Backends.Postgres.SQL.DML
 import           Hasura.Backends.Postgres.Translate.Column
 import           Hasura.Backends.Postgres.Types.Column
+import           Hasura.Base.Error
 import           Hasura.Prelude
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 import           Hasura.Server.Utils

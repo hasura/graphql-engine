@@ -17,6 +17,7 @@ import qualified Hasura.Backends.Postgres.SQL.DML          as S
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.Select
+import           Hasura.Base.Error
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.Returning
 import           Hasura.RQL.IR.Select
@@ -68,7 +69,9 @@ mkDefaultMutFlds = MOutMultirowFields . \case
     mutFlds = [("affected_rows", MCount)]
 
 mkMutFldExp
-  :: Backend ('Postgres pgKind)
+  :: ( Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
   => Identifier
   -> Maybe Int
   -> Bool
@@ -116,7 +119,9 @@ WITH "<table-name>__mutation_result_alias" AS (
 -- | Generate mutation output expression with given mutation CTE statement.
 -- See Note [Mutation output expression].
 mkMutationOutputExp
-  :: Backend ('Postgres pgKind)
+  :: ( Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
   => QualifiedTable
   -> [ColumnInfo ('Postgres pgKind)]
   -> Maybe Int

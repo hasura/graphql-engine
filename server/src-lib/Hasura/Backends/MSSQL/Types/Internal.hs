@@ -14,7 +14,9 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Data.Text.Encoding            (encodeUtf8)
 
-import           Hasura.RQL.Types.Error
+import qualified Hasura.RQL.Types.Common       as RQL
+
+import           Hasura.Base.Error
 import           Hasura.SQL.Backend
 
 
@@ -57,7 +59,6 @@ data UnifiedOn = UnifiedOn
   { table  :: !UnifiedTableName
   , column :: !Text
   }
-
 -------------------------------------------------------------------------------
 -- AST types
 
@@ -73,13 +74,26 @@ data BooleanOperators a
 data Select = Select
   { selectTop         :: !Top
   , selectProjections :: ![Projection]
-  , selectFrom        :: !From
+  , selectFrom        :: !(Maybe From)
   , selectJoins       :: ![Join]
   , selectWhere       :: !Where
   , selectFor         :: !For
   , selectOrderBy     :: !(Maybe (NonEmpty OrderBy))
   , selectOffset      :: !(Maybe Expression)
   }
+
+emptySelect :: Select
+emptySelect =
+  Select
+    { selectFrom        = Nothing
+    , selectTop         = NoTop
+    , selectProjections = []
+    , selectJoins       = []
+    , selectWhere       = Where []
+    , selectOrderBy     = Nothing
+    , selectFor         = NoFor
+    , selectOffset      = Nothing
+    }
 
 data Delete = Delete
   { deleteTable :: !(Aliased TableName)
@@ -96,6 +110,7 @@ data OrderBy = OrderBy
   { orderByFieldName  :: FieldName
   , orderByOrder      :: Order
   , orderByNullsOrder :: NullsOrder
+  , orderByType       :: Maybe ScalarType
   }
 
 data Order
@@ -162,8 +177,6 @@ data Expression
   | IsNullExpression Expression
   | IsNotNullExpression Expression
   | ColumnExpression FieldName
-  | EqualExpression Expression Expression
-  | NotEqualExpression Expression Expression
   | JsonQueryExpression Expression
     -- ^ This one acts like a "cast to JSON" and makes SQL Server
     -- behave like it knows your field is JSON and not double-encode
@@ -177,6 +190,8 @@ data Expression
   | OpExpression Op Expression Expression
   | ListExpression [Expression]
   | STOpExpression SpatialOp Expression Expression
+  | CastExpression Expression Text
+  | ConditionalProjection Expression FieldName
 
 data JsonPath
   = RootPath
@@ -186,20 +201,23 @@ data JsonPath
 data Aggregate
   = CountAggregate (Countable FieldName)
   | OpAggregate !Text [Expression]
+  | JsonQueryOpAggregate !Text [Expression] -- ^ aggregate that is within a SelectExpression within a JsonQueryExpression within an OpAggregate
   | TextAggregate !Text
 
 data Countable name
   = StarCountable
   | NonNullFieldCountable (NonEmpty name)
   | DistinctCountable (NonEmpty name)
+deriving instance Functor Countable
 
 data From
   = FromQualifiedTable (Aliased TableName)
   | FromOpenJson (Aliased OpenJson)
+  | FromSelect (Aliased Select)
 
 data OpenJson = OpenJson
   { openJsonExpression :: Expression
-  , openJsonWith       :: NonEmpty JsonFieldSpec
+  , openJsonWith       :: Maybe (NonEmpty JsonFieldSpec)
   }
 
 data JsonFieldSpec
@@ -244,6 +262,8 @@ data Op
   | LIKE
   | NLIKE
   | NIN
+  | EQ'
+  | NEQ'
 
 -- | Supported operations for spatial data types
 data SpatialOp
@@ -313,6 +333,24 @@ scalarTypeDBName = \case
   GeometryType  -> "geometry"
   -- the input form for types that aren't explicitly supported is a string
   UnknownType t -> t
+
+mkMSSQLScalarTypeName :: MonadError QErr m => ScalarType -> m G.Name
+mkMSSQLScalarTypeName = \case
+  CharType     -> pure RQL.stringScalar
+  WcharType    -> pure RQL.stringScalar
+  WvarcharType -> pure RQL.stringScalar
+  VarcharType  -> pure RQL.stringScalar
+  WtextType    -> pure RQL.stringScalar
+  TextType     -> pure RQL.stringScalar
+  FloatType    -> pure RQL.floatScalar
+  -- integer types
+  IntegerType  -> pure RQL.intScalar
+  -- boolean type
+  BitType      -> pure RQL.boolScalar
+  scalarType -> G.mkName (scalarTypeDBName scalarType) `onNothing` throw400 ValidationFailed
+    ("cannot use SQL type " <> scalarTypeDBName scalarType <> " in the GraphQL schema because its name is not a "
+    <> "valid GraphQL identifier")
+
 
 parseScalarValue :: ScalarType -> J.Value -> Either QErr Value
 parseScalarValue scalarType jValue = case scalarType of

@@ -28,33 +28,7 @@ module Hasura.Server.Auth.JWT
   , JWTCustomClaimsMap(..)
   ) where
 
-import           Control.Exception.Lifted        (try)
-import           Control.Lens
-import           Control.Monad.Trans.Control     (MonadBaseControl)
-import           Control.Monad.Trans.Maybe
-import           Data.IORef                      (IORef, readIORef, writeIORef)
-import           Data.Parser.JSONPath            (parseJSONPath)
-import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
-                                                  getCurrentTime)
-#ifndef PROFILING
-import           GHC.AssertNF
-#endif
-import           Network.URI                     (URI)
-
-import           Data.Aeson.Internal             (JSONPath)
-import           Data.Parser.CacheControl
-import           Data.Parser.Expires
-import           Hasura.HTTP
-import           Hasura.Logging                  (Hasura, LogLevel (..), Logger (..))
 import           Hasura.Prelude
-import           Hasura.RQL.Types
-import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
-import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader,
-                                                  isSessionVariable, userRoleHeader)
-import           Hasura.Server.Version           (HasVersion)
-import           Hasura.Session
-import qualified Hasura.Tracing                  as Tracing
 
 import qualified Control.Concurrent.Extended     as C
 import qualified Crypto.JWT                      as Jose
@@ -71,6 +45,34 @@ import qualified Network.HTTP.Client             as HTTP
 import qualified Network.HTTP.Types              as HTTP
 import qualified Network.Wreq                    as Wreq
 import qualified Web.Spock.Internal.Cookies      as Spock
+
+import           Control.Exception.Lifted        (try)
+import           Control.Lens
+import           Control.Monad.Trans.Control     (MonadBaseControl)
+import           Data.Aeson.Internal             (JSONPath)
+import           Data.IORef                      (IORef, readIORef, writeIORef)
+import           Data.Parser.CacheControl
+import           Data.Parser.Expires
+import           Data.Parser.JSONPath            (parseJSONPath)
+import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
+                                                  getCurrentTime)
+#ifndef PROFILING
+import           GHC.AssertNF
+#endif
+import           Network.URI                     (URI)
+
+import qualified Hasura.Tracing                  as Tracing
+
+import           Hasura.Base.Error
+import           Hasura.HTTP
+import           Hasura.Logging                  (Hasura, LogLevel (..), Logger (..))
+import           Hasura.Server.Auth.JWT.Internal (parseEdDSAKey, parseHmacKey, parseRsaKey)
+import           Hasura.Server.Auth.JWT.Logging
+import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader,
+                                                  isSessionVariable, userRoleHeader)
+import           Hasura.Server.Version           (HasVersion)
+import           Hasura.Session
+
 
 newtype RawJWT = RawJWT BL.ByteString
 
@@ -655,14 +657,15 @@ instance J.FromJSON JWTConfig where
     where
       parseKey keyType rawKey =
        case keyType of
-          "HS256" -> runEither $ parseHmacKey rawKey 256
-          "HS384" -> runEither $ parseHmacKey rawKey 384
-          "HS512" -> runEither $ parseHmacKey rawKey 512
-          "RS256" -> runEither $ parseRsaKey rawKey
-          "RS384" -> runEither $ parseRsaKey rawKey
-          "RS512" -> runEither $ parseRsaKey rawKey
-          -- TODO(from master): support ES256, ES384, ES512, PS256, PS384
-          _       -> invalidJwk ("Key type: " <> T.unpack keyType <> " is not supported")
+          "HS256"   -> runEither $ parseHmacKey rawKey 256
+          "HS384"   -> runEither $ parseHmacKey rawKey 384
+          "HS512"   -> runEither $ parseHmacKey rawKey 512
+          "RS256"   -> runEither $ parseRsaKey rawKey
+          "RS384"   -> runEither $ parseRsaKey rawKey
+          "RS512"   -> runEither $ parseRsaKey rawKey
+          "Ed25519" -> runEither $ parseEdDSAKey rawKey
+          -- TODO(from master): support ES256, ES384, ES512, PS256, PS384, Ed448 (JOSE doesn't support it as of now)
+          _         -> invalidJwk ("Key type: " <> T.unpack keyType <> " is not supported")
 
       runEither = either (invalidJwk . T.unpack) return
 

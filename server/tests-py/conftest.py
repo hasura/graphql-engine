@@ -1,6 +1,6 @@
 import pytest
 import time
-from context import HGECtx, HGECtxError, ActionsWebhookServer, EvtsWebhookServer, HGECtxGQLServer, GQLWsClient, PytestConf
+from context import HGECtx, HGECtxError, ActionsWebhookServer, EvtsWebhookServer, HGECtxGQLServer, GQLWsClient, PytestConf, GraphQLWSClient
 import threading
 import random
 from datetime import datetime
@@ -180,6 +180,21 @@ This option may result in test failures if the schema has to change between the 
         default="postgres"
     )
 
+    parser.addoption(
+        "--pro-tests",
+        action="store_true",
+        default=False,
+        help="Flag to specify if the pro tests are to be run"
+    )
+
+    parser.addoption(
+        "--test-developer-api-enabled", action="store_true",
+        help="Run Test cases with the Developer API Enabled",
+        default=False
+    )
+
+
+
 #By default,
 #1) Set default parallelism to one
 #2) Set test grouping to by filename (--dist=loadfile)
@@ -280,7 +295,7 @@ def hge_ctx(request):
     try:
         hge_ctx = HGECtx(hge_url, pg_url, config)
     except HGECtxError as e:
-        assert False, "Error from hge_cxt: " + str(e)
+        assert False, "Error from hge_ctx: " + str(e)
         # TODO this breaks things (https://github.com/pytest-dev/pytest-xdist/issues/86)
         #      so at least make sure the real error gets printed (above)
         pytest.exit(str(e))
@@ -302,9 +317,10 @@ def evts_webhook(request):
 
 @pytest.fixture(scope='module')
 def actions_fixture(hge_ctx):
-    pg_version = hge_ctx.pg_version
-    if pg_version < 100000: # version less than 10.0
-        pytest.skip('Actions are not supported on Postgres version < 10')
+    if hge_ctx.is_default_backend:
+        pg_version = hge_ctx.pg_version
+        if pg_version < 100000: # version less than 10.0
+            pytest.skip('Actions are not supported on Postgres version < 10')
 
     # Start actions' webhook server
     webhook_httpd = ActionsWebhookServer(hge_ctx, server_address=('127.0.0.1', 5593))
@@ -315,16 +331,34 @@ def actions_fixture(hge_ctx):
     webhook_httpd.server_close()
     web_server.join()
 
+use_action_fixtures = pytest.mark.usefixtures(
+    "actions_fixture",
+    'per_class_db_schema_for_mutation_tests',
+    'per_method_db_data_for_mutation_tests'
+)
+
 @pytest.fixture(scope='class')
 def functions_permissions_fixtures(hge_ctx):
     if not hge_ctx.function_permissions:
         pytest.skip('These tests are meant to be run with --test-function-permissions set')
         return
 
+use_function_permission_fixtures = pytest.mark.usefixtures(
+    'per_class_db_schema_for_mutation_tests',
+    'per_method_db_data_for_mutation_tests',
+    'functions_permissions_fixtures'
+)
+
 @pytest.fixture(scope='class')
 def inherited_role_fixtures(hge_ctx):
     if not hge_ctx.inherited_roles_tests:
         pytest.skip('These tests are meant to be run with --test-inherited-roles set')
+        return
+
+@pytest.fixture(scope='class')
+def pro_tests_fixtures(hge_ctx):
+    if not hge_ctx.pro_tests:
+        pytest.skip('These tests are meant to be run with --pro-tests set')
         return
 
 @pytest.fixture(scope='class')
@@ -355,6 +389,16 @@ def ws_client(request, hge_ctx):
     client.teardown()
 
 @pytest.fixture(scope='class')
+def ws_client_graphql_ws(request, hge_ctx):
+    """
+    This fixture provides an GraphQL-WS client
+    """
+    client = GraphQLWSClient(hge_ctx, '/v1/graphql')
+    time.sleep(0.1)
+    yield client
+    client.teardown()
+
+@pytest.fixture(scope='class')
 def per_class_tests_db_state(request, hge_ctx):
     """
     Set up the database state for select queries.
@@ -362,22 +406,12 @@ def per_class_tests_db_state(request, hge_ctx):
     Expects either `dir()` method which provides the directory
     with `setup.yaml` and `teardown.yaml` files
     Or class variables `setup_files` and `teardown_files` that provides
-    the list of setup and teardown files respectively
+    the list of setup and teardown files respectively.
+    By default, for a postgres backend the setup and teardown is done via
+    the `/v1/query` endpoint, to setup using the `/v1/metadata` (metadata setup)
+    and `/v2/query` (DB setup), set the `setup_metadata_api_version` to "v2"
     """
     yield from db_state_context(request, hge_ctx)
-
-@pytest.fixture(scope='class')
-def per_class_tests_db_state_new(request, hge_ctx):
-    """
-    Set up the database state for select queries.
-    Has a class level scope, since select queries does not change database state
-    Expects either `dir()` method which provides the directory
-    with `setup.yaml` and `teardown.yaml` files
-    Or class variables `setup_files` and `teardown_files` that provides
-    the list of setup and teardown files respectively
-    """
-    print ("per_class_tests_db_state_new")
-    yield from db_state_context_new(request, hge_ctx)
 
 @pytest.fixture(scope='function')
 def per_method_tests_db_state(request, hge_ctx):
@@ -397,9 +431,24 @@ def per_class_db_schema_for_mutation_tests(request, hge_ctx):
     or variables `schema_setup_files` and `schema_teardown_files`
     that provides the list of setup and teardown files respectively
     """
-    yield from db_context_with_schema_common(
-        request, hge_ctx, 'schema_setup_files', 'schema_setup.yaml', 'schema_teardown_files', 'schema_teardown.yaml', True
-    )
+
+    # setting the default metadata API version to v1
+    setup_metadata_api_version = getattr(request.cls, 'setup_metadata_api_version',"v1")
+
+    (setup, teardown, schema_setup, schema_teardown) = [ 'setup.yaml',
+                                                         'teardown.yaml',
+                                                         'schema_setup.yaml',
+                                                         'schema_teardown.yaml']
+
+    if setup_metadata_api_version == "v1":
+        yield from db_context_with_schema_common(
+            request, hge_ctx, 'schema_setup_files', 'schema_setup.yaml', 'schema_teardown_files', 'schema_teardown.yaml', True
+        )
+    else:
+        yield from db_context_with_schema_common_new (
+            request, hge_ctx, 'schema_setup_files', setup, 'schema_teardown_files', teardown,
+            schema_setup, schema_teardown, True
+        )
 
 @pytest.fixture(scope='function')
 def per_method_db_data_for_mutation_tests(request, hge_ctx, per_class_db_schema_for_mutation_tests):
@@ -418,6 +467,11 @@ def per_method_db_data_for_mutation_tests(request, hge_ctx, per_class_db_schema_
     )
 
 @pytest.fixture(scope='function')
+def backend():
+    "This fixture provides a default `backend` value for the `per_backend_tests` fixture"
+    return 'postgres'
+
+@pytest.fixture(scope='function', autouse=True)
 def per_backend_tests(hge_ctx, backend):
     """
     This fixture ignores backend-specific tests unless the relevant --backend flag has been passed.
@@ -439,15 +493,30 @@ def db_state_context(request, hge_ctx):
         for filename in ['setup', 'teardown', 'schema_setup', 'schema_teardown']
     ]
 
-    if hge_ctx.backend == 'postgres':
-        db_context = db_context_with_schema_common(
-            request, hge_ctx, 'setup_files', 'setup.yaml', 'teardown_files',
-            'teardown.yaml', True
-        )
+    # only lookup files relevant to the tests being run.
+    # defaults to postgres file lookup
+    check_file_exists = hge_ctx.backend == backend
+
+    # setting the default metadata API version to v1
+    setup_metadata_api_version = getattr(request.cls, 'setup_metadata_api_version',"v1")
+
+    if hge_ctx.is_default_backend:
+        if setup_metadata_api_version == "v1":
+            # setup the metadata and DB schema using the `/v1/query` endpoint
+            db_context = db_context_with_schema_common(
+                request, hge_ctx, 'setup_files', 'setup.yaml', 'teardown_files',
+                'teardown.yaml', check_file_exists        )
+        elif setup_metadata_api_version == "v2":
+            # setup the metadata using the "/v1/metadata" and the DB schema using the `/v2/query` endpoints
+            db_context = db_context_with_schema_common_new (
+                request, hge_ctx, 'setup_files', setup, 'teardown_files',
+                teardown, schema_setup, schema_teardown, check_file_exists
+            )
     else:
+        # setup the metadata using the "/v1/metadata" and the DB schema using the `/v2/query` endpoints
         db_context = db_context_with_schema_common_new (
             request, hge_ctx, 'setup_files', setup, 'teardown_files',
-            teardown, schema_setup, schema_teardown, True
+            teardown, schema_setup, schema_teardown, check_file_exists
         )
     yield from db_context
 
@@ -512,8 +581,8 @@ def db_context_common_new(
     teardown = get_files(teardown_files_attr, teardown_default_file)
     setup_default_sql_file = os.path.join(request.cls.dir(), setup_default_sql_file)
     teardown_default_sql_file = os.path.join(request.cls.dir(), teardown_default_sql_file)
-    yield from setup_and_teardown(request, hge_ctx, setup, teardown,
-                                  setup_default_sql_file, teardown_default_sql_file, check_file_exists, skip_setup, skip_teardown)
+    yield from setup_and_teardown( request, hge_ctx, setup, teardown,
+                                   setup_default_sql_file, teardown_default_sql_file, check_file_exists, skip_setup, skip_teardown)
 
 def setup_and_teardown_v1q(request, hge_ctx, setup_files, teardown_files, check_file_exists=True, skip_setup=False, skip_teardown=False):
     def assert_file_exists(f):
@@ -580,5 +649,5 @@ def is_master(config):
 
 use_inherited_roles_fixtures = pytest.mark.usefixtures(
     "inherited_role_fixtures",
-    "per_class_tests_db_state_new"
+    "per_class_tests_db_state"
 )

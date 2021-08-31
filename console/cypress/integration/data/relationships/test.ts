@@ -16,7 +16,7 @@ const setup = () => {
   describe('Check Data Tab', () => {
     it('Clicking on Data tab opens the correct route', () => {
       cy.visit(getIndexRoute());
-      cy.wait(7000);
+      // Get and set validation metadata
       setMetaData();
     });
   });

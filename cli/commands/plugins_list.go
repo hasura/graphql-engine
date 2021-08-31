@@ -10,7 +10,6 @@ source: https://github.com/kubernetes-sigs/krew/blob/master/cmd/krew/cmd/list.go
 import (
 	"fmt"
 	"io"
-	"os"
 	"runtime"
 	"sort"
 	"strings"
@@ -19,8 +18,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/plugins"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/plugins"
 )
 
 func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -112,7 +111,7 @@ func (p *pluginListOptions) run() error {
 	}
 	rows = sortByFirstColumn(rows)
 	ec.Spinner.Stop()
-	return printTable(os.Stdout, cols, rows)
+	return printTable(p.EC.Stdout, cols, rows)
 }
 
 func printTable(out io.Writer, columns []string, rows [][]string) error {

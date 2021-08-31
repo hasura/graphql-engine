@@ -3,24 +3,24 @@ package commands
 import (
 	"bytes"
 	"fmt"
+
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
-
-	"github.com/hasura/graphql-engine/cli/internal/cliext"
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/v2/internal/cliext"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
+	"github.com/hasura/graphql-engine/cli/v2/migrate"
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
-	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
-	"github.com/hasura/graphql-engine/cli/migrate/source"
-	"github.com/hasura/graphql-engine/cli/migrate/source/file"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/database/hasuradb"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/source"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/source/file"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -310,7 +310,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 				return errors.Wrap(err, "unable to initialize migrations driver")
 			}
 			var files map[string][]byte
-			mdHandler := metadataobject.NewHandlerFromEC(ec)
+			mdHandler := projectmetadata.NewHandlerFromEC(ec)
 			files, err = mdHandler.ExportMetadata()
 			if err != nil {
 				return errors.Wrap(err, "cannot export metadata from server")

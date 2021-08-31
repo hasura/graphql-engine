@@ -20,6 +20,7 @@ import requestAction from '../../../../utils/requestAction';
 import {
   dataSource,
   escapeTableColumns,
+  escapeTableName,
   findTable,
 } from '../../../../dataSources';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
@@ -55,18 +56,21 @@ const trackAllItems = (sql, isMigration, migrationName, source, driver) => (
 
   const objects = parseCreateSQL(sql, driver);
   const changes = [];
-  objects.forEach(({ type, name, schema }) => {
+  objects.forEach(({ type, name, schema, isPartition }) => {
+    if (isPartition) return;
     let req = {};
     if (type === 'function') {
       req = getTrackFunctionQuery(name, schema, source, {}, driver);
     } else {
       const tableDef = { name, schema };
-      const table = findTable(getState().tables.allSchemas, tableDef);
+      const { allSchemas } = getState().tables;
+      const table = findTable(allSchemas, tableDef);
       req = getTrackTableQuery({
         tableDef,
         source,
         driver,
         customColumnNames: escapeTableColumns(table),
+        customName: escapeTableName(name),
       });
     }
     changes.push(req);
@@ -270,8 +274,8 @@ const rawSQLReducer = (state = defaultState, action) => {
         lastError: null,
         lastSuccess: true,
         resultType: 'tuples',
-        result: action.data.result.slice(1),
-        resultHeaders: action.data.result[0],
+        result: action?.data?.result?.slice?.(1) ?? [],
+        resultHeaders: action?.data?.result?.[0] ?? [],
       };
     case REQUEST_ERROR:
       return {

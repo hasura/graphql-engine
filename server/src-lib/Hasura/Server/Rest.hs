@@ -17,22 +17,27 @@ import qualified Network.Wai.Extended                   as Wai
 import           Control.Monad.Trans.Control            (MonadBaseControl)
 import           Data.Aeson                             hiding (json)
 import           Data.Text.Extended
+import           Data.These                             (These (..))
 
 import qualified Hasura.GraphQL.Execute                 as E
+import           Hasura.GraphQL.ParameterizedQueryHash  (ParameterizedQueryHashList (..))
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Syntax          as G
 
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                 (MonadQueryLog)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
 import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
-import           Hasura.Server.Logging                  (HttpLog (..))
+import           Hasura.Server.Logging
 import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
+
+import qualified Hasura.GraphQL.Execute.Backend         as EB
 
 
 -- Note: There may be a better way of constructing this when building the Endpoint datastructure.
@@ -54,25 +59,31 @@ resolveVar varName (That _providedVar) = Left $ "Unexpected variable " <> toTxt 
 resolveVar varName (These expectedVar providedVar) =
   -- TODO: See CustomTypes.hs for SCALAR types
   case G._vdType expectedVar of
-    G.TypeNamed (G.Nullability _) typeName -> case providedVar of
+    G.TypeNamed (G.Nullability nullable) typeName -> case providedVar of
       Right r -> Right (Just r)
       Left l
-        | typeName == boolScalar && T.null l -> Right $ Just $ J.Bool True -- Key present but value missing for bools defaults to True.
-        | typeName == stringScalar           -> Right $ Just $ J.String l -- Note: Strings don't need to be decoded since the format already matches.
-        | typeName == $$(G.litName "UUID")   -> Right $ Just $ J.String l -- TODO: Handle UUIDs - Is this litName correct?
-        | typeName == idScalar               -> Right $ Just $ J.String l
-        | otherwise -> case J.decodeStrict (T.encodeUtf8 l) of
-          (Just    J.Null     ) | typeName == $$(G.litName "Null")   -> pure $ Just J.Null
-                                | otherwise                          -> Left $ "Expected " <> toTxt typeName <> " got Null"
-          (Just x@(J.Bool   _)) | typeName == boolScalar             -> pure $ Just x
-                                | typeName == $$(G.litName "Bool")   -> pure $ Just x
-                                | otherwise                          -> Left $ "Expected " <> toTxt typeName <> " got Bool"
-          (Just x@(J.Number _)) | typeName == $$(G.litName "Number") -> pure $ Just x -- TODO: Check other numeric types
-                                | typeName == intScalar              -> pure $ Just x
-                                | typeName == floatScalar            -> pure $ Just x
-                                | typeName == $$(G.litName "Double") -> pure $ Just x
-                                | otherwise                          -> Left $ "Expected " <> toTxt typeName <> " got Number"
-          _ -> Left ("Type of URL parameter not supported - Consider putting it in the request body: " <> tshow l)
+        | typeName == stringScalar -> Right $ Just $ J.String l -- "String" -- Note: Strings don't need to be decoded since the format already matches.
+        | otherwise ->
+          case (J.decodeStrict (T.encodeUtf8 l), nullable)
+          of (Just J.Null, True) -> pure Nothing
+             (decoded, _)
+                | typeName == boolScalar && T.null l -> Right $ Just $ J.Bool True -- Key present but value missing for bools defaults to True.
+                | typeName == $$(G.litName "UUID") -> Right $ Just $ J.String l
+                | typeName == $$(G.litName "uuid") -> Right $ Just $ J.String l
+                | typeName == idScalar             -> Right $ Just $ J.String l -- "ID" -- Note: Console doesn't expose this as a column type.
+                | otherwise -> case decoded of
+                  (Just   (J.Null    ))                                       -> Left $ "Null or missing value for non-nullable variable: " <> G.unName varName
+                  (Just x@(J.Bool   _)) | typeName == boolScalar              -> pure $ Just x -- "Boolean"
+                                        | typeName == $$(G.litName "Bool")    -> pure $ Just x
+                                        | otherwise                           -> Left $ "Expected " <> toTxt typeName <> " for variable " <> G.unName varName <> " got Bool"
+                  (Just x@(J.Number _)) | typeName == intScalar               -> pure $ Just x -- "Int"
+                                        | typeName == floatScalar             -> pure $ Just x -- "Float"
+                                        | typeName == $$(G.litName "Number")  -> pure $ Just x
+                                        | typeName == $$(G.litName "Double")  -> pure $ Just x
+                                        | typeName == $$(G.litName "float8")  -> pure $ Just x
+                                        | typeName == $$(G.litName "numeric") -> pure $ Just x
+                                        | otherwise                           -> Left $ "Expected " <> toTxt typeName <> " for variable " <> G.unName varName <> " got Number"
+                  _ -> Left ("Type of URL parameter for variable " <> G.unName varName <> " not supported - Consider putting it in the request body: " <> tshow l)
 
     -- TODO: This is a fallthrough case and is still required
     --       but we can move checks for template variables being
@@ -109,6 +120,7 @@ runCustomEndpoint
        , GH.MonadExecuteQuery m
        , MonadMetadataStorage (MetadataStorageT m)
        , HttpLog m
+       , EB.MonadQueryTags m
        )
     => Env.Environment
     -> E.ExecutionCtx
@@ -118,7 +130,7 @@ runCustomEndpoint
     -> Wai.IpAddress
     -> RestRequest EndpointMethod
     -> EndpointTrie GQLQueryWithText
-    -> m (HTTPLoggingMetadata m, HttpResponse EncJSON)
+    -> m (HttpLogMetadata m, HttpResponse EncJSON)
 runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestRequest{..} endpoints = do
   -- First match the path to an endpoint.
   case matchPath reqMethod (T.split (== '/') reqPath) endpoints of
@@ -149,11 +161,11 @@ runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestReques
           -- with the query string from the schema cache, and pass it
           -- through to the /v1/graphql endpoint.
           (httpLoggingMetadata, handlerResp) <- flip runReaderT execCtx $ do
-              (normalizedSelectionSet, resp) <- GH.runGQ env (E._ecxLogger execCtx) requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables)
-              let httpLoggingMetadata = buildHTTPLoggingMetadata @m [normalizedSelectionSet]
-              return (httpLoggingMetadata, fst <$> resp)
+              (parameterizedQueryHash, resp) <- GH.runGQ env (E._ecxLogger execCtx) requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables)
+              let httpLogMetadata = buildHttpLogMetadata @m (PQHSetSingleton parameterizedQueryHash) RequestModeNonBatchable
+              return (httpLogMetadata, fst <$> resp)
           case sequence handlerResp of
-            Just resp -> pure $ (httpLoggingMetadata, fmap encodeHTTPResp resp)
+            Just resp -> pure (httpLoggingMetadata, fmap encodeHTTPResp resp)
             -- a Nothing value here indicates a failure to parse the cached request from redis.
             -- TODO: Do we need an additional log message here?
             Nothing -> throw500 "An unexpected error occurred while fetching the data from the cache"

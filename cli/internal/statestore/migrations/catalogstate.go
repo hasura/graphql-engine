@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/hasura/graphql-engine/cli/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
 
 	"github.com/pkg/errors"
 )
@@ -68,7 +68,7 @@ func (m *CatalogStateStore) RemoveVersion(database string, version int64) error 
 	return m.setCLIState(*state)
 }
 
-func (m *CatalogStateStore) PrepareMigrationsStateStore() error {
+func (m *CatalogStateStore) PrepareMigrationsStateStore(_ string) error {
 	return nil
 }
 
@@ -86,4 +86,16 @@ func (m *CatalogStateStore) GetVersions(database string) (map[uint64]bool, error
 		versions[parsedVersion] = dirty
 	}
 	return versions, nil
+}
+
+func (m *CatalogStateStore) SetVersions(database string, versions []statestore.Version) error {
+	state, err := m.getCLIState()
+	if err != nil {
+		return err
+	}
+	for _, v := range versions {
+		versionString := fmt.Sprintf("%d", v.Version)
+		state.SetMigration(database, versionString, v.Dirty)
+	}
+	return m.setCLIState(*state)
 }

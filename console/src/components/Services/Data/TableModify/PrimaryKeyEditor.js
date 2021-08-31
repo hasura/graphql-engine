@@ -18,6 +18,7 @@ const PrimaryKeyEditor = ({
   pkModify,
   dispatch,
   currentSchema,
+  readOnlyMode,
 }) => {
   const columns = tableSchema.columns;
   const tablePrimaryKeyColumns = tableSchema.primary_key
@@ -121,6 +122,7 @@ const PrimaryKeyEditor = ({
       collapsedLabel={pkEditorCollapsedLabel}
       expandedLabel={pkEditorExpandedLabel}
       editorExpanded={pkEditorExpanded}
+      readOnlyMode={readOnlyMode}
       property={'pks'}
       service="modify-table"
       saveFunc={onSave}

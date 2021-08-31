@@ -16,23 +16,34 @@ import qualified Hasura.GraphQL.Execute.Types       as ET (GraphQLQueryType)
 import qualified Hasura.GraphQL.Parser              as P
 import qualified Hasura.RQL.IR.Select               as IR
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser              (UnpreparedValue)
 import           Hasura.RQL.Types
 
-type SelectExp           b = IR.AnnSimpleSelG       b (UnpreparedValue b)
-type AggSelectExp        b = IR.AnnAggregateSelectG b (UnpreparedValue b)
-type ConnectionSelectExp b = IR.ConnectionSelect    b (UnpreparedValue b)
-type SelectArgs          b = IR.SelectArgsG         b (UnpreparedValue b)
-type TablePerms          b = IR.TablePermG          b (UnpreparedValue b)
-type AnnotatedFields     b = IR.AnnFieldsG          b (UnpreparedValue b)
-type AnnotatedField      b = IR.AnnFieldG           b (UnpreparedValue b)
+
+type SelectExp           b = IR.AnnSimpleSelectG    b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+type AggSelectExp        b = IR.AnnAggregateSelectG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+type ConnectionSelectExp b = IR.ConnectionSelect    b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+type SelectArgs          b = IR.SelectArgsG         b                                   (UnpreparedValue b)
+type TablePerms          b = IR.TablePermG          b                                   (UnpreparedValue b)
+type AnnotatedFields     b = IR.AnnFieldsG          b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+type AnnotatedField      b = IR.AnnFieldG           b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+type ConnectionFields    b = IR.ConnectionFields    b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+type EdgeFields          b = IR.EdgeFields          b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+
+data RemoteRelationshipQueryContext
+  = RemoteRelationshipQueryContext
+  { _rrscIntrospectionResultOriginal :: !IntrospectionResult
+  , _rrscParsedIntrospection         :: !ParsedIntrospection
+  , _rrscRemoteSchemaCustomizer      :: !RemoteSchemaCustomizer
+  }
 
 data QueryContext =
   QueryContext
   { qcStringifyNum              :: !Bool
-  , qcDangerousBooleanCollapse  :: !Bool
+  , qcDangerousBooleanCollapse  :: !Bool -- ^ should boolean fields be collapsed to True when null is given?
   , qcQueryType                 :: !ET.GraphQLQueryType
-  , qcRemoteRelationshipContext :: !(HashMap RemoteSchemaName (IntrospectionResult, ParsedIntrospection))
+  , qcRemoteRelationshipContext :: !(HashMap RemoteSchemaName RemoteRelationshipQueryContext)
   , qcFunctionPermsContext      :: !FunctionPermissionsCtx
   }
 
@@ -43,6 +54,7 @@ textToName textName = G.mkName textName `onNothing` throw400 ValidationFailed
 
 partialSQLExpToUnpreparedValue :: PartialSQLExp b -> P.UnpreparedValue b
 partialSQLExpToUnpreparedValue (PSESessVar pftype var) = P.UVSessionVar pftype var
+partialSQLExpToUnpreparedValue PSESession              = P.UVSession
 partialSQLExpToUnpreparedValue (PSESQLExp sqlExp)      = P.UVLiteral sqlExp
 
 mapField
@@ -95,19 +107,6 @@ mkDescriptionWith :: Maybe PG.PGDescription -> Text -> G.Description
 mkDescriptionWith descM defaultTxt = G.Description $ case descM of
   Nothing                         -> defaultTxt
   Just (PG.PGDescription descTxt) -> T.unlines [descTxt, "\n", defaultTxt]
-
--- | The default @'skip' and @'include' directives
-defaultDirectives :: [P.DirectiveInfo]
-defaultDirectives =
-  [mkDirective $$(G.litName "skip"), mkDirective $$(G.litName "include")]
-  where
-    ifInputField =
-      P.mkDefinition $$(G.litName "if") Nothing $ P.IFRequired $ P.TNamed $
-      P.mkDefinition $$(G.litName "Boolean") Nothing P.TIScalar
-    dirLocs = map G.DLExecutable
-      [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
-    mkDirective name =
-      P.DirectiveInfo name Nothing [ifInputField] dirLocs
 
 -- TODO why do we do these validations at this point? What does it mean to track
 --      a function but not add it to the schema...?

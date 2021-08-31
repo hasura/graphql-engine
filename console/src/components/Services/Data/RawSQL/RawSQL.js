@@ -10,7 +10,7 @@ import Tooltip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import Alert from '../../../Common/Alert';
 import StatementTimeout from './StatementTimeout';
-import { parseCreateSQL } from './utils';
+import { parseCreateSQL, removeCommentsSQL } from './utils';
 import styles from '../../../Common/TableCommon/Table.scss';
 import {
   executeSQL,
@@ -27,12 +27,20 @@ import {
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
+import ResultTable from './ResultTable';
 import { getLSItem, setLSItem, LS_KEYS } from '../../../../utils/localStorage';
 import DropDownSelector from './DropDownSelector';
 import { getSourceDriver } from '../utils';
 import { getDataSources } from '../../../../metadata/selector';
 import { services } from '../../../../dataSources/services';
-import { isFeatureSupported } from '../../../../dataSources';
+import { isFeatureSupported, setDriver } from '../../../../dataSources';
+import { fetchDataInit, UPDATE_CURRENT_DATA_SOURCE } from '../DataActions';
+
+const checkChangeLang = (sql, selectedDriver) => {
+  return (
+    !sql?.match(/(?:\$\$\s+)?language\s+plpgsql/i) && selectedDriver === 'citus'
+  );
+};
 
 /**
  * # RawSQL React FC
@@ -82,14 +90,24 @@ const RawSQL = ({
 
   const [selectedDatabase, setSelectedDatabase] = useState(currentDataSource);
   const [selectedDriver, setSelectedDriver] = useState('postgres');
+  const [suggestLangChange, setSuggestLangChange] = useState(false);
 
   useEffect(() => {
     const driver = getSourceDriver(sources, selectedDatabase);
     setSelectedDriver(driver);
-    if (driver !== 'postgres') setStatementTimeout(null);
+    if (!isFeatureSupported('rawSQL.statementTimeout'))
+      setStatementTimeout(null);
   }, [selectedDatabase, sources]);
 
   const dropDownSelectorValueChange = value => {
+    const driver = getSourceDriver(sources, value);
+    dispatch({
+      type: UPDATE_CURRENT_DATA_SOURCE,
+      source: value,
+    });
+    setDriver(driver);
+    dispatch(fetchDataInit(value, driver));
+
     setSelectedDatabase(value);
   };
 
@@ -105,6 +123,14 @@ const RawSQL = ({
       setLSItem(LS_KEYS.rawSQLKey, sqlText);
     };
   }, [dispatch, sql, sqlText]);
+
+  useEffect(() => {
+    if (checkChangeLang(sql, selectedDriver)) {
+      setSuggestLangChange(true);
+    } else {
+      setSuggestLangChange(false);
+    }
+  }, [sql, selectedDriver]);
 
   const submitSQL = () => {
     if (!sqlText) {
@@ -178,18 +204,19 @@ const RawSQL = ({
 
   const getSQLSection = () => {
     const handleSQLChange = val => {
+      const cleanSql = removeCommentsSQL(val);
       onChangeSQLText(val);
       dispatch({ type: SET_SQL, data: val });
 
       // set migration checkbox true
-      if (services[selectedDriver].checkSchemaModification(val)) {
+      if (services[selectedDriver].checkSchemaModification(cleanSql)) {
         dispatch({ type: SET_MIGRATION_CHECKED, data: true });
       } else {
         dispatch({ type: SET_MIGRATION_CHECKED, data: false });
       }
 
       // set track this checkbox true
-      const objects = parseCreateSQL(val, selectedDriver);
+      const objects = parseCreateSQL(cleanSql, selectedDriver);
       if (objects.length) {
         let allObjectsTrackable = true;
 
@@ -253,57 +280,13 @@ const RawSQL = ({
     );
   };
 
-  const getResultTable = () => {
-    let resultTable = null;
-
-    if (resultType && resultType !== 'command') {
-      const getTableHeadings = () => {
-        return resultHeaders.map((columnName, i) => (
-          <th key={i}>{columnName}</th>
-        ));
-      };
-
-      const getRows = () => {
-        return result.map((row, i) => (
-          <tr key={i}>
-            {row.map((columnValue, j) => (
-              <td key={j}>{columnValue}</td>
-            ))}
-          </tr>
-        ));
-      };
-
-      resultTable = (
-        <div
-          className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
-        >
-          <h4 className={styles.subheading_text}>SQL Result:</h4>
-          <div className={styles.tableContainer}>
-            <table
-              className={`table table-bordered table-striped table-hover ${styles.table} `}
-            >
-              <thead>
-                <tr>{getTableHeadings()}</tr>
-              </thead>
-              <tbody>{getRows()}</tbody>
-            </table>
-          </div>
-          <br />
-          <br />
-        </div>
-      );
-    }
-
-    return resultTable;
-  };
-
   const getMetadataCascadeSection = () => {
     return (
       <div className={styles.add_mar_top_small}>
         <label>
           <input
             checked={isCascadeChecked}
-            className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+            className={`${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
             id="cascade-checkbox"
             type="checkbox"
             onChange={() => {
@@ -338,9 +321,10 @@ const RawSQL = ({
           <label>
             <input
               checked={isTableTrackChecked}
-              className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+              className={`${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
               id="track-checkbox"
               type="checkbox"
+              disabled={checkChangeLang()}
               onChange={dispatchTrackThis}
               data-test="raw-sql-track-check"
             />
@@ -379,7 +363,7 @@ const RawSQL = ({
           <label>
             <input
               checked={isMigrationChecked}
-              className={styles.add_mar_right_small}
+              className={`${styles.add_mar_right_small} legacy-input-fix`}
               id="migration-checkbox"
               type="checkbox"
               onChange={dispatchIsMigration}
@@ -459,7 +443,7 @@ const RawSQL = ({
       </div>
       <div className={styles.add_mar_top}>
         <div className={`${styles.padd_left_remove} col-xs-8`}>
-          <NotesSection />
+          <NotesSection suggestLangChange={suggestLangChange} />
         </div>
         <div className={`${styles.padd_left_remove} col-xs-8`}>
           <label>
@@ -482,7 +466,7 @@ const RawSQL = ({
           {getMetadataCascadeSection()}
           {getMigrationSection()}
 
-          {selectedDriver === 'postgres' && (
+          {isFeatureSupported('rawSQL.statementTimeout') && (
             <StatementTimeout
               statementTimeout={statementTimeout}
               isMigrationChecked={
@@ -520,7 +504,14 @@ const RawSQL = ({
 
       {getMigrationWarningModal()}
 
-      <div className={styles.add_mar_bottom}>{getResultTable()}</div>
+      <div className={styles.add_mar_bottom}>
+        {resultType &&
+          resultType !== 'command' &&
+          result &&
+          result?.length > 0 && (
+            <ResultTable rows={result} headers={resultHeaders} />
+          )}
+      </div>
     </div>
   );
 };

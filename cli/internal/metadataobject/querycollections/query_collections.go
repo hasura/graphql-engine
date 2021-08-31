@@ -4,14 +4,12 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
+
 	"github.com/sirupsen/logrus"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"gopkg.in/yaml.v2"
-)
-
-const (
-	fileName string = "query_collections.yaml"
 )
 
 type QueryCollectionConfig struct {
@@ -37,17 +35,17 @@ func (q *QueryCollectionConfig) CreateFiles() error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(q.MetadataDir, fileName), data, 0644)
+	err = ioutil.WriteFile(filepath.Join(q.MetadataDir, q.Filename()), data, 0644)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (q *QueryCollectionConfig) Build(metadata *yaml.MapSlice) error {
-	data, err := ioutil.ReadFile(filepath.Join(q.MetadataDir, fileName))
+func (q *QueryCollectionConfig) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingMetadataObject {
+	data, err := ioutil.ReadFile(filepath.Join(q.MetadataDir, q.Filename()))
 	if err != nil {
-		return err
+		return q.error(err)
 	}
 	item := yaml.MapItem{
 		Key: "query_collections",
@@ -55,7 +53,7 @@ func (q *QueryCollectionConfig) Build(metadata *yaml.MapSlice) error {
 	var obj []yaml.MapSlice
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
-		return err
+		return q.error(err)
 	}
 	if len(obj) != 0 {
 		item.Value = obj
@@ -64,7 +62,7 @@ func (q *QueryCollectionConfig) Build(metadata *yaml.MapSlice) error {
 	return nil
 }
 
-func (q *QueryCollectionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
+func (q *QueryCollectionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
 	var queryCollections interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
@@ -78,13 +76,21 @@ func (q *QueryCollectionConfig) Export(metadata yaml.MapSlice) (map[string][]byt
 	}
 	data, err := yaml.Marshal(queryCollections)
 	if err != nil {
-		return nil, err
+		return nil, q.error(err)
 	}
 	return map[string][]byte{
-		filepath.Join(q.MetadataDir, fileName): data,
+		filepath.ToSlash(filepath.Join(q.MetadataDir, q.Filename())): data,
 	}, nil
 }
 
-func (q *QueryCollectionConfig) Name() string {
+func (q *QueryCollectionConfig) Key() string {
 	return "query_collections"
+}
+
+func (q *QueryCollectionConfig) Filename() string {
+	return "query_collections.yaml"
+}
+
+func (q *QueryCollectionConfig) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
+	return metadataobject.NewErrParsingMetadataObject(q, err, additionalContext...)
 }

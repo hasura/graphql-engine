@@ -3,6 +3,7 @@
 module Hasura.Server.Logging
   ( StartupLog(..)
   , PGLog(..)
+  , RequestMode(..)
   , mkInconsMetadataLog
   , mkHttpAccessLogContext
   , mkHttpErrorLogContext
@@ -13,28 +14,45 @@ module Hasura.Server.Logging
   , WebHookLog(..)
   , HttpException
   , HttpLog (..)
+  , MetadataLog(..)
+  , EnvVarsMovedToMetadata(..)
+  , DeprecatedEnvVars(..)
+  , logDeprecatedEnvVars
+  , CommonHttpLogMetadata(..)
+  , HttpLogMetadata
+  , buildHttpLogMetadata
+  , emptyHttpLogMetadata
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy          as BL
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Network.HTTP.Types            as HTTP
-import qualified Network.Wai.Extended          as Wai
+import qualified Data.ByteString.Lazy                  as BL
+import qualified Data.Environment                      as Env
+import qualified Data.HashMap.Strict                   as HM
+import qualified Data.HashSet                          as Set
+import qualified Data.TByteString                      as TBS
+import qualified Data.Text                             as T
+import qualified Network.HTTP.Types                    as HTTP
+import qualified Network.Wai.Extended                  as Wai
 
 import           Data.Aeson
 import           Data.Aeson.TH
-import           Data.Int                      (Int64)
+import           Data.Int                              (Int64)
+import           Data.Text.Extended
 
-import           Hasura.GraphQL.Parser.Schema  (Variable)
+import           Hasura.Base.Error
+import           Hasura.GraphQL.ParameterizedQueryHash
 import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Server.Compression
 import           Hasura.Server.Types
+import           Hasura.Server.Utils                   (DeprecatedEnvVars (..),
+                                                        EnvVarsMovedToMetadata (..),
+                                                        deprecatedEnvVars, envVarsMovedToMetadata)
 import           Hasura.Session
-import           Hasura.Tracing                (TraceT)
+import           Hasura.Tracing                        (TraceT)
 
 
 data StartupLog
@@ -115,15 +133,70 @@ instance ToJSON WebHookLog where
            , "message" .= whlMessage whl
            ]
 
-class (Monad m, Monoid (HTTPLoggingMetadata m)) => HttpLog m where
+-- | whether a request is executed in batched mode or not
+data RequestMode
+  = RequestModeBatched
+  -- ^ this request is batched
+  | RequestModeSingle
+  -- ^ this is a single request
+  | RequestModeNonBatchable
+  -- ^ this request is of a kind for which batching is not done or does not make sense
+  | RequestModeError
+  -- ^ the execution of this request failed
+  deriving (Show, Eq)
 
-  type HTTPLoggingMetadata m
+instance ToJSON RequestMode where
+  toJSON = \case
+    RequestModeBatched      -> "batched"
+    RequestModeSingle       -> "single"
+    RequestModeNonBatchable -> "non-graphql"
+    RequestModeError        -> "error"
 
-  buildHTTPLoggingMetadata :: [(G.SelectionSet G.NoFragments Variable)] -> HTTPLoggingMetadata m
+newtype CommonHttpLogMetadata = CommonHttpLogMetadata {_chlmRequestMode :: RequestMode}
+  deriving (Show, Eq)
+
+-- | The http-log metadata attached to HTTP requests running in the monad 'm', split into a
+-- common portion that is present regardless of 'm', and a monad-specific one defined in the
+-- 'HttpLog' instance.
+--
+-- This allows us to not have to duplicate the code that generates the common part of the metadata
+-- across OSS and Pro, so that instances only have to implement the part of it unique to them.
+type HttpLogMetadata m = (CommonHttpLogMetadata, ExtraHttpLogMetadata m)
+
+buildHttpLogMetadata
+  :: forall m
+   . HttpLog m
+  => ParameterizedQueryHashList
+  -> RequestMode
+  -> HttpLogMetadata m
+buildHttpLogMetadata xs rb = (CommonHttpLogMetadata rb, buildExtraHttpLogMetadata @m xs)
+
+-- | synonym for clarity, writing `emptyHttpLogMetadata @m` instead of `def @(HttpLogMetadata m)`
+emptyHttpLogMetadata :: forall m. HttpLog m => HttpLogMetadata m
+emptyHttpLogMetadata = (CommonHttpLogMetadata RequestModeNonBatchable, emptyExtraHttpLogMetadata @m)
+
+
+{- Note [Disable query printing when query-log is disabled]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+As a temporary hack (as per https://github.com/hasura/graphql-engine-mono/issues/1770),
+we want to print the graphql query string in `http-log` or `websocket-log` only
+when `query-log` is enabled.
+-}
+
+class Monad m => HttpLog m where
+
+  -- | Extra http-log metadata that we attach when operating in 'm'.
+  type ExtraHttpLogMetadata m
+
+  emptyExtraHttpLogMetadata :: ExtraHttpLogMetadata m
+
+  buildExtraHttpLogMetadata :: ParameterizedQueryHashList -> ExtraHttpLogMetadata m
 
   logHttpError
     :: Logger Hasura
     -- ^ the logger
+    -> HashSet (EngineLogType Hasura)
+    -- ^ this is only required for the short-term fix in https://github.com/hasura/graphql-engine-mono/issues/1770
     -> Maybe UserInfo
     -- ^ user info may or may not be present (error can happen during user resolution)
     -> RequestId
@@ -141,6 +214,8 @@ class (Monad m, Monoid (HTTPLoggingMetadata m)) => HttpLog m where
   logHttpSuccess
     :: Logger Hasura
     -- ^ the logger
+    -> HashSet (EngineLogType Hasura)
+    -- ^ this is only required for the short-term fix in https://github.com/hasura/graphql-engine-mono/issues/1770
     -> Maybe UserInfo
     -- ^ user info may or may not be present (error can happen during user resolution)
     -> RequestId
@@ -160,38 +235,41 @@ class (Monad m, Monoid (HTTPLoggingMetadata m)) => HttpLog m where
     -- ^ possible compression type
     -> [HTTP.Header]
     -- ^ list of request headers
-    -> HTTPLoggingMetadata m
+    -> HttpLogMetadata m
     -> m ()
 
 instance HttpLog m => HttpLog (TraceT m) where
 
-  type HTTPLoggingMetadata (TraceT m) = HTTPLoggingMetadata m
+  type ExtraHttpLogMetadata (TraceT m) = ExtraHttpLogMetadata m
 
-  buildHTTPLoggingMetadata a = buildHTTPLoggingMetadata @m a
+  buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
+  emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
+  logHttpError a b c d e f g h = lift $ logHttpError a b c d e f g h
 
-  logHttpSuccess a b c d e f g h i j k = lift $ logHttpSuccess a b c d e f g h i j k
+  logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
 
 instance HttpLog m => HttpLog (ReaderT r m) where
 
-  type HTTPLoggingMetadata (ReaderT r m) = HTTPLoggingMetadata m
+  type ExtraHttpLogMetadata (ReaderT r m) = ExtraHttpLogMetadata m
 
-  buildHTTPLoggingMetadata a = buildHTTPLoggingMetadata @m a
+  buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
+  emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
+  logHttpError a b c d e f g h = lift $ logHttpError a b c d e f g h
 
-  logHttpSuccess a b c d e f g h i j k = lift $ logHttpSuccess a b c d e f g h i j k
+  logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
 
 instance HttpLog m => HttpLog (MetadataStorageT m) where
 
-  type HTTPLoggingMetadata (MetadataStorageT m) = HTTPLoggingMetadata m
+  type ExtraHttpLogMetadata (MetadataStorageT m) = ExtraHttpLogMetadata m
 
-  buildHTTPLoggingMetadata a = buildHTTPLoggingMetadata @m a
+  buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
+  emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
+  logHttpError a b c d e f g h = lift $ logHttpError a b c d e f g h
 
-  logHttpSuccess a b c d e f g h i j k = lift $ logHttpSuccess a b c d e f g h i j k
+  logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
 
 -- | Log information about the HTTP request
 data HttpInfoLog
@@ -229,6 +307,7 @@ data OperationLog
   , olQuery              :: !(Maybe Value)
   , olRawQuery           :: !(Maybe Text)
   , olError              :: !(Maybe QErr)
+  , olRequestMode        :: !RequestMode
   } deriving (Show, Eq)
 
 $(deriveToJSON hasuraJSON{omitNothingFields = True} ''OperationLog)
@@ -244,21 +323,24 @@ $(deriveToJSON hasuraJSON ''HttpLogContext)
 mkHttpAccessLogContext
   :: Maybe UserInfo
   -- ^ Maybe because it may not have been resolved
+  -> HashSet (EngineLogType Hasura)
   -> RequestId
   -> Wai.Request
+  -> (BL.ByteString, Maybe Value)
   -> BL.ByteString
   -> Maybe (DiffTime, DiffTime)
   -> Maybe CompressionType
   -> [HTTP.Header]
+  -> RequestMode
   -> HttpLogContext
-mkHttpAccessLogContext userInfoM reqId req res mTiming compressTypeM headers =
+mkHttpAccessLogContext userInfoM enabledLogTypes reqId req (_, parsedReq) res mTiming compressTypeM headers batching =
   let http = HttpInfoLog
              { hlStatus      = status
              , hlMethod      = bsToTxt $ Wai.requestMethod req
              , hlSource      = Wai.getSourceFromFallback req
              , hlPath        = bsToTxt $ Wai.rawPathInfo req
              , hlHttpVersion = Wai.httpVersion req
-             , hlCompression  = compressTypeM
+             , hlCompression = compressTypeM
              , hlHeaders     = headers
              }
       op = OperationLog
@@ -267,7 +349,9 @@ mkHttpAccessLogContext userInfoM reqId req res mTiming compressTypeM headers =
            , olResponseSize = respSize
            , olRequestReadTime    = Seconds . fst <$> mTiming
            , olQueryExecutionTime = Seconds . snd <$> mTiming
-           , olQuery = Nothing
+           , olRequestMode = batching
+           -- See Note [Disable query printing when query-log is disabled]
+           , olQuery = bool Nothing parsedReq $ Set.member ELTQueryLog enabledLogTypes
            , olRawQuery = Nothing
            , olError = Nothing
            }
@@ -279,6 +363,7 @@ mkHttpAccessLogContext userInfoM reqId req res mTiming compressTypeM headers =
 mkHttpErrorLogContext
   :: Maybe UserInfo
   -- ^ Maybe because it may not have been resolved
+  -> HashSet (EngineLogType Hasura)
   -> RequestId
   -> Wai.Request
   -> (BL.ByteString, Maybe Value)
@@ -287,7 +372,7 @@ mkHttpErrorLogContext
   -> Maybe CompressionType
   -> [HTTP.Header]
   -> HttpLogContext
-mkHttpErrorLogContext userInfoM reqId waiReq (reqBody, parsedReq) err mTiming compressTypeM headers =
+mkHttpErrorLogContext userInfoM enabledLogTypes reqId waiReq (reqBody, parsedReq) err mTiming compressTypeM headers =
   let http = HttpInfoLog
              { hlStatus      = qeStatus err
              , hlMethod      = bsToTxt $ Wai.requestMethod waiReq
@@ -303,10 +388,16 @@ mkHttpErrorLogContext userInfoM reqId waiReq (reqBody, parsedReq) err mTiming co
            , olResponseSize       = Just $ BL.length $ encode err
            , olRequestReadTime    = Seconds . fst <$> mTiming
            , olQueryExecutionTime = Seconds . snd <$> mTiming
-           , olQuery              = parsedReq
-           , olRawQuery           = maybe (Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq
+           , olQuery              = reqToLog parsedReq
+           -- if parsedReq is Nothing, add the raw query
+           , olRawQuery           = maybe (reqToLog $ Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq
            , olError              = Just err
+           , olRequestMode        = RequestModeError
            }
+
+      -- See Note [Disable query printing when query-log is disabled]
+      reqToLog :: Maybe a -> Maybe a
+      reqToLog req = bool Nothing req $ Set.member ELTQueryLog enabledLogTypes
   in HttpLogContext http op reqId
 
 data HttpLogLine
@@ -324,3 +415,32 @@ mkHttpLog httpLogCtx =
   let isError = isJust $ olError $ hlcOperation httpLogCtx
       logLevel = bool LevelInfo LevelError isError
   in HttpLogLine logLevel httpLogCtx
+
+-- | Log warning messages for deprecated environment variables
+logDeprecatedEnvVars
+  :: Logger Hasura
+  -> Env.Environment
+  -> SourceCache
+  -> IO ()
+logDeprecatedEnvVars logger env sources = do
+  let toText envVars = commaSeparated envVars
+      -- The environment variables that have been initialized by user
+      envVarsInitialized = fmap fst (Env.toList env)
+      checkDeprecatedEnvVars envs = T.pack <$> envVarsInitialized `intersect` envs
+
+  -- When a source named 'default' is present, it means that it is a migrated v2
+  -- hasura project. In such cases log those environment variables that are moved
+  -- to the metadata
+  onJust (HM.lookup SNDefault sources) $ \_defSource -> do
+    let deprecated = checkDeprecatedEnvVars (unEnvVarsMovedToMetadata envVarsMovedToMetadata)
+    unless (null deprecated) $
+      unLogger logger $ UnstructuredLog LevelWarn $ TBS.fromText $
+        "The following environment variables are deprecated and moved to metadata: " <>
+        toText deprecated
+
+  -- Log when completely deprecated environment variables are present
+  let deprecated = checkDeprecatedEnvVars (unDeprecatedEnvVars deprecatedEnvVars)
+  unless (null deprecated) $
+    unLogger logger $ UnstructuredLog LevelWarn $ TBS.fromText $
+      "The following environment variables are deprecated: " <>
+      toText deprecated

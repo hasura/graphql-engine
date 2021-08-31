@@ -4,16 +4,16 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/catalogstate"
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/catalogstate"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 )
 
 func TestCatalogStateStore_InsertVersion(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
+	port, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardown()
 	type fields struct {
 		c *statestore.CLICatalogState

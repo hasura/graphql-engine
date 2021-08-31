@@ -204,3 +204,20 @@ args:
     role_set:
       - free_user
       - premium_user_free_trial
+
+- type: pg_create_select_permission
+  args:
+    table: authors
+    role: non_paying_user
+    permission:
+      columns:
+        - name
+        - followers
+      filter: {}
+
+- type: add_inherited_role
+  args:
+    role_name: non_paying_user_and_guest
+    role_set:
+      - non_paying_user
+      - guest

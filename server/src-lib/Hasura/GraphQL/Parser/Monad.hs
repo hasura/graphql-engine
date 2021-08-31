@@ -8,6 +8,7 @@ module Hasura.GraphQL.Parser.Monad
   , ParseT
   , runParseT
   , ParseError(..)
+  , reportParseErrors
   ) where
 
 import           Hasura.Prelude
@@ -27,9 +28,10 @@ import           Data.Proxy                   (Proxy (..))
 import           System.IO.Unsafe             (unsafeInterleaveIO)
 import           Type.Reflection              (Typeable, typeRep, (:~:) (..))
 
+import           Hasura.Base.Error
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.RQL.Types.Error       (Code)
+
 
 -- -------------------------------------------------------------------------------------------------
 -- schema construction
@@ -162,30 +164,39 @@ newtype instance ParserById m '(p, a) = ParserById (p m a)
 -- query parsing
 
 newtype ParseT m a = ParseT
-  { unParseT :: ReaderT JSONPath (StateT QueryReusability (ValidateT (NESeq ParseError) m)) a
+  { unParseT :: ReaderT JSONPath (ValidateT (NESeq ParseError) m) a
   } deriving (Functor, Applicative, Monad)
 
 runParseT
   :: Functor m
   => ParseT m a
-  -> m (Either (NESeq ParseError) (a, QueryReusability))
+  -> m (Either (NESeq ParseError) a)
 runParseT = unParseT
   >>> flip runReaderT []
-  >>> flip runStateT mempty
   >>> runValidateT
 
 instance MonadTrans ParseT where
-  lift = ParseT . lift . lift . lift
+  lift = ParseT . lift . lift
 
 instance Monad m => MonadParse (ParseT m) where
   withPath f x = ParseT $ withReaderT f $ unParseT x
   parseErrorWith code text = ParseT $ do
     path <- ask
     lift $ refute $ NE.singleton ParseError{ peCode = code, pePath = path, peMessage = text }
-  markNotReusable = ParseT $ lift $ put NotReusable
 
 data ParseError = ParseError
   { pePath    :: JSONPath
   , peMessage :: Text
   , peCode    :: Code
   }
+
+reportParseErrors
+  :: MonadError QErr m
+  => NESeq ParseError
+  -> m a
+reportParseErrors errs = case NE.head errs of
+  -- TODO: Our error reporting machinery doesn’t currently support reporting
+  -- multiple errors at once, so we’re throwing away all but the first one
+  -- here. It would be nice to report all of them!
+  ParseError{ pePath, peMessage, peCode } ->
+    throwError (err400 peCode peMessage){ qePath = pePath }

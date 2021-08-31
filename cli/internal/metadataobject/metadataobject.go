@@ -1,64 +1,72 @@
 package metadataobject
 
 import (
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/allowlist"
-	apilimits "github.com/hasura/graphql-engine/cli/internal/metadataobject/api_limits"
-	crontriggers "github.com/hasura/graphql-engine/cli/internal/metadataobject/cron_triggers"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/functions"
-	inheritedroles "github.com/hasura/graphql-engine/cli/internal/metadataobject/inherited_roles"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/querycollections"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/remoteschemas"
-	restendpoints "github.com/hasura/graphql-engine/cli/internal/metadataobject/rest_endpoints"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/sources"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/tables"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/version"
+	"fmt"
+	"strings"
+
 	"gopkg.in/yaml.v2"
 )
 
 type Objects []Object
 
 type Object interface {
-	Build(metadata *yaml.MapSlice) error
-	Export(metadata yaml.MapSlice) (map[string][]byte, error)
+	Build(metadata *yaml.MapSlice) ErrParsingMetadataObject
+	Export(metadata yaml.MapSlice) (map[string][]byte, ErrParsingMetadataObject)
 	CreateFiles() error
-	Name() string
+	Key() string
+	Filename() string
 }
 
-func GetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) Objects {
-	var metadataDir string
-	if len(dir) == 0 {
-		metadataDir = ec.MetadataDir
-	} else {
-		metadataDir = dir[0]
-	}
-	ec.Version.GetServerFeatureFlags()
-	objects := make(Objects, 0)
-	if ec.Config.Version >= cli.V2 && metadataDir != "" {
-		objects = append(objects, version.New(ec, metadataDir))
-		objects = append(objects, querycollections.New(ec, metadataDir))
-		objects = append(objects, allowlist.New(ec, metadataDir))
-		objects = append(objects, remoteschemas.New(ec, metadataDir))
-		objects = append(objects, actions.New(ec, metadataDir))
-		objects = append(objects, crontriggers.New(ec, metadataDir))
-		objects = append(objects, restendpoints.New(ec, metadataDir))
-		objects = append(objects, inheritedroles.New(ec, metadataDir))
-		objects = append(objects, apilimits.New(ec, metadataDir))
+type ErrParsingMetadataObject interface {
+	// ObjectName corresponds to metadata object in JSON format
+	// eg: source, api_limits etc
+	ObjectName() string
+	// Filename corresponding to metadata object
+	// eg: databases.yaml, actions.yaml
+	Filename() string
+	// ErrorContext will contain any additional information regarding error
+	ErrorContext() string
 
-		if ec.HasMetadataV3 {
-			if ec.Config.Version >= cli.V3 {
-				objects = append(objects, sources.New(ec, metadataDir))
-			} else {
-				objects = append(objects, tables.NewV3MetadataTableConfig(ec, metadataDir))
-				objects = append(objects, functions.NewV3MetadataFunctionConfig(ec, metadataDir))
-				objects = append(objects, version.NewV3MetadataVersion(ec, metadataDir))
-			}
-		} else {
-			objects = append(objects, tables.New(ec, metadataDir))
-			objects = append(objects, functions.New(ec, metadataDir))
-		}
-	}
-
-	return objects
+	// Unwrap will make sure the error returned is unwrappable
+	// https://blog.golang.org/go1.13-errors#TOC_3.1.
+	Unwrap() error
+	error
 }
+
+func NewErrParsingMetadataObject(o Object, err error, context ...string) ErrParsingMetadataObject {
+	return &errParsingMetadataObjectFile{o.Key(), o.Filename(), context, err}
+}
+
+type errParsingMetadataObjectFile struct {
+	objectName string
+	fileName   string
+	context    []string
+	err        error
+}
+
+func (e *errParsingMetadataObjectFile) ObjectName() string {
+	return e.objectName
+}
+
+func (e *errParsingMetadataObjectFile) Filename() string {
+	return e.fileName
+}
+
+func (e *errParsingMetadataObjectFile) ErrorContext() string {
+	if len(e.context) != 0 {
+		return fmt.Sprintf("context: %v\n", strings.Join(e.context, "\n"))
+	}
+	return ""
+}
+
+func (e *errParsingMetadataObjectFile) Error() string {
+	return strings.Trim(fmt.Sprintf(
+		"\nerror parsing metadata \nobject: %v\nfile: %v\nerror: %v\n%v",
+		e.ObjectName(),
+		e.Filename(),
+		e.err.Error(),
+		e.ErrorContext(),
+	), "\n")
+}
+
+func (e *errParsingMetadataObjectFile) Unwrap() error { return e.err }

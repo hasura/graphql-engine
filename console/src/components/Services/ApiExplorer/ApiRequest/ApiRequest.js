@@ -368,7 +368,7 @@ class ApiRequest extends Component {
                   <input
                     type="checkbox"
                     name="sponsored"
-                    className={styles.common_checkbox + ' common_checkbox'}
+                    className={`${styles.common_checkbox} legacy-input-fix common_checkbox`}
                     id={i + 1}
                     checked={header.isActive}
                     data-header-id={i}

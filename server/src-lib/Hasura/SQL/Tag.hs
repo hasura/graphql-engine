@@ -39,6 +39,8 @@ $(let name = mkName "BackendTag" in
     -- the resulting type (BackendTag 'Foo)
     (AppT (ConT name) (getBackendTypeValue b))
   )
+  -- deriving clauses
+  []
  )
 
 
@@ -58,12 +60,14 @@ $(concat <$> forEachBackend \b -> do
   [d| instance HasTag $promotedName where backendTag = $tagName |]
  )
 
+
 -- | How to convert back from a tag to a runtime value. This function
 -- is generated with Template Haskell for each 'Backend'. The case
 -- switch looks like this:
 --
---   PostgresTag -> Postgres
---   MSSQLTag    -> MSSQL
+--   PostgresVanillaTag -> Postgres Vanilla
+--   PostgresCitusTag   -> Postgres Citus
+--   MSSQLTag           -> MSSQL
 --   ...
 reify :: BackendTag b -> BackendType
 reify t = $(backendCase

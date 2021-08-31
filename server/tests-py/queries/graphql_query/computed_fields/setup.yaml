@@ -1,9 +1,5 @@
 type: bulk
 args:
-
-
-
-
 - type: run_sql
   args:
     sql: |
@@ -37,6 +33,13 @@ args:
           ( title ilike ('%' || search || '%')
             OR content ilike ('%' || search || '%')
           ) AND author_id = author_row.id
+      $$ LANGUAGE sql STABLE;
+
+      CREATE FUNCTION fetch_articles_plain(author_row author)
+      RETURNS SETOF article AS $$
+        SELECT *
+        FROM article
+        WHERE author_id = author_row.id
       $$ LANGUAGE sql STABLE;
 
       CREATE FUNCTION full_name(author)
@@ -117,6 +120,14 @@ args:
 - type: add_computed_field
   args:
     table: author
+    name: get_articles_plain
+    definition:
+      function: fetch_articles_plain
+      table_argument: author_row
+
+- type: add_computed_field
+  args:
+    table: author
     name: full_name
     definition:
       function: full_name
@@ -184,3 +195,8 @@ args:
     name: sum_float
     definition:
       function: get_sum
+
+- type: track_function
+  args:
+    name: fetch_articles
+    schema: public

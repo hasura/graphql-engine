@@ -116,6 +116,23 @@ class Permissions extends Component {
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchFunctionInit());
+
+    if (this.props.permissionsState.inconsistentInhertiedRole) {
+      const tableSchema = findTable(
+        this.props.allSchemas,
+        generateTableDef(
+          this.props.permissionsState.inconsistentInhertiedRole.table,
+          this.props.permissionsState.inconsistentInhertiedRole.schema
+        )
+      );
+      dispatch(
+        permOpenEdit(
+          tableSchema,
+          this.props.permissionsState.inconsistentInhertiedRole.role,
+          this.props.permissionsState.inconsistentInhertiedRole.permission_type
+        )
+      );
+    }
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
@@ -671,7 +688,7 @@ class Permissions extends Component {
                   onClick={onClick}
                   disabled={disabled}
                   title={disabled ? noFilterPermissionMsg : ''}
-                  className={styles.bottom5}
+                  className={`legacy-input-fix ${styles.bottom5}`}
                   readOnly
                 />
                 {label}
@@ -798,6 +815,7 @@ class Permissions extends Component {
                   loadSchemasFunc={loadSchemasFunc}
                   tableDef={generateTableDef(tableName, currentSchema)}
                   allTableSchemas={allSchemas}
+                  allFunctions={allFunctions}
                   schemaList={schemaList}
                   filter={filterString[filterType]}
                   dispatch={dispatch}
@@ -868,7 +886,7 @@ class Permissions extends Component {
               className={disabled ? styles.disabled : ''}
               title={disabled ? noFilterPermissionMsg : ''}
             >
-              <hr />
+              <hr className="my-lg" />
               {addTooltip(
                 updateFilterTypeLabel[filterType],
                 getUpdateTooltip(filterType)
@@ -951,6 +969,7 @@ class Permissions extends Component {
                   <label>
                     <input
                       type="checkbox"
+                      className="legacy-input-fix"
                       checked={checked}
                       value={fieldName}
                       onChange={dispatchToggleField(fieldType)}
@@ -1497,7 +1516,7 @@ class Permissions extends Component {
       };
 
       const getAggregationSection = () => {
-        if (!dataSource.aggregationPermissionsAllowed) {
+        if (!isFeatureSupported('tables.permissions.aggregation')) {
           return null;
         }
 
@@ -1541,6 +1560,7 @@ class Permissions extends Component {
                   <input
                     type="checkbox"
                     checked={aggregationAllowed}
+                    className="legacy-input-fix"
                     value="toggle_aggregation"
                     onChange={handleClick}
                     disabled={noPermissions}
@@ -1687,7 +1707,7 @@ class Permissions extends Component {
 
           clonePermissionsHtml = (
             <div>
-              <hr />
+              <hr className="my-lg" />
               <CollapsibleToggle
                 title={getSectionHeader('Clone permissions', cloneToolTip)}
                 useDefaultTitleStyle

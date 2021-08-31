@@ -4,8 +4,8 @@
 
 .. _api_permission:
 
-Schema/Metadata API Reference: Permissions
-==========================================
+Schema/Metadata API Reference: Permissions (Deprecated)
+=======================================================
 
 .. contents:: Table of contents
   :backlinks: none

@@ -20,6 +20,7 @@ import qualified Hasura.Tracing                             as Tracing
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.BoolExp
+import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
@@ -70,7 +71,7 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
 -- SELECT count(*) FROM (SELECT * FROM .. WHERE ..) r;
 validateCountQWith
   :: (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m)
-  => SessVarBldr ('Postgres 'Vanilla) m
+  => SessionVariableBuilder ('Postgres 'Vanilla) m
   -> (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp)
   -> CountQuery
   -> m CountQueryP1

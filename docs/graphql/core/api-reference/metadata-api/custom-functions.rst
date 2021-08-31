@@ -4,8 +4,8 @@
 
 .. _metadata_api_custom_functions:
 
-Metadata API Reference: Custom Functions (v2.0 and above)
-=========================================================
+Metadata API Reference: Custom Functions
+========================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -140,8 +140,10 @@ Remove an SQL function ``search_articles``:
    {
        "type": "pg_untrack_function",
        "args": {
-           "schema": "public",
-           "name": "search_articles",
+           "function": {
+              "schema": "public",
+              "name": "search_articles"
+           },
            "source": "default"
        }
    }
@@ -156,7 +158,7 @@ Args syntax
      - Required
      - Schema
      - Description
-   * - table
+   * - function
      - true
      - :ref:`FunctionName <FunctionName>`
      - Name of the SQL function
