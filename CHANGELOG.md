@@ -4,6 +4,8 @@
 
 (Add entries below in the order of server, console, cli, docs, others)
 
+- cli: add progress bar for `migrate apply` command (#4795)
+
 ## v2.0.8
 
 - server: fix nullability of object relationships (close #7201)

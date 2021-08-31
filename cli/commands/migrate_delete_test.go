@@ -48,9 +48,7 @@ var _ = Describe("hasura migrate delete", func() {
 				WorkingDirectory: projectDirectory,
 			})
 			wantKeywordList := []string{
-				".*Applying migrations...*.",
-				".*migrations*.",
-				".*applied*.",
+				"migrations applied",
 			}
 
 			for _, keyword := range wantKeywordList {
@@ -105,9 +103,7 @@ var _ = Describe("hasura migrate delete", func() {
 				WorkingDirectory: projectDirectory,
 			})
 			wantKeywordList := []string{
-				".*Applying migrations...*.",
-				".*migrations*.",
-				".*applied*.",
+				"migrations applied",
 			}
 
 			for _, keyword := range wantKeywordList {
@@ -164,9 +160,7 @@ var _ = Describe("hasura migrate delete", func() {
 				WorkingDirectory: dirName,
 			})
 			wantKeywordList := []string{
-				".*Applying migrations...*.",
-				".*migrations*.",
-				".*applied*.",
+				"migrations applied",
 			}
 
 			for _, keyword := range wantKeywordList {
@@ -209,9 +203,7 @@ var _ = Describe("hasura migrate delete", func() {
 				WorkingDirectory: projectDirectory,
 			})
 			wantKeywordList := []string{
-				".*Applying migrations...*.",
-				".*migrations*.",
-				".*applied*.",
+				"migrations applied",
 			}
 
 			for _, keyword := range wantKeywordList {
@@ -254,9 +246,7 @@ var _ = Describe("hasura migrate delete", func() {
 				WorkingDirectory: projectDirectory,
 			})
 			wantKeywordList := []string{
-				".*Applying migrations...*.",
-				".*migrations*.",
-				".*applied*.",
+				"migrations applied",
 			}
 
 			for _, keyword := range wantKeywordList {
@@ -304,9 +294,7 @@ var _ = Describe("hasura migrate delete", func() {
 				WorkingDirectory: projectDirectory,
 			})
 			wantKeywordList := []string{
-				".*Applying migrations...*.",
-				".*migrations*.",
-				".*applied*.",
+				"migrations applied",
 			}
 
 			for _, keyword := range wantKeywordList {

@@ -136,6 +136,8 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceK
 		isCmd, int(ec.Config.Version),
 		ec.Config.ServerConfig.TLSConfig,
 		ec.Logger,
+		ec.Stdout,
+		ec.Stderr,
 		&migratedb.HasuraOpts{
 			HasMetadataV3: ec.HasMetadataV3,
 			SourceName:    sourceName,

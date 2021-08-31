@@ -215,11 +215,7 @@ func (o *MigrateApplyOptions) Apply() (chan MigrateApplyResult, error) {
 				}
 				o.Source.Kind = source.Kind
 				o.Source.Name = source.Name
-				if !o.DryRun {
-					o.EC.Spin(fmt.Sprintf("Applying migrations on database: %s ", o.Source.Name))
-				}
 				err := o.Exec()
-				o.EC.Spinner.Stop()
 				if err != nil {
 					result.Message, result.Error = handleError(err)
 				} else {
@@ -231,16 +227,12 @@ func (o *MigrateApplyOptions) Apply() (chan MigrateApplyResult, error) {
 	} else {
 		go func() {
 			defer close(resultChan)
-			if !o.DryRun {
-				o.EC.Spin("Applying migrations...")
-			}
 			result := MigrateApplyResult{
 				DatabaseName: o.Source.Name,
 				Message:      "",
 				Error:        nil,
 			}
 			err := o.Exec()
-			o.EC.Spinner.Stop()
 			if err != nil {
 				result.Message, result.Error = handleError(err)
 			} else {
