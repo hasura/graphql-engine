@@ -16,6 +16,7 @@ import           Data.Aeson
 import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend               as AB
+import qualified Hasura.Tracing                      as Tracing
 
 import           Hasura.Backends.Postgres.DDL.Source (ToMetadataFetchQuery, fetchFunctionMetadata,
                                                       fetchTableMetadata)
@@ -29,8 +30,9 @@ import           Hasura.RQL.DDL.Schema.Common
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.Types                    hiding (ConstraintName, fmFunction,
                                                       tmComputedFields, tmTable)
+import           Hasura.RQL.Types.Run
 import           Hasura.Server.Utils                 (quoteRegex)
-
+import           Hasura.Session
 
 data RunSQL
   = RunSQL
@@ -140,17 +142,25 @@ runRunSQL
      , MonadBaseControl IO m
      , MonadError QErr m
      , MonadIO m
+     , Tracing.MonadTrace m
+     , UserInfoM m
      )
   => RunSQL
   -> m EncJSON
-runRunSQL q@RunSQL {..}
-  -- see Note [Checking metadata consistency in run_sql]
-  | isSchemaCacheBuildRequiredRunSQL q
-  = withMetadataCheck @pgKind rSource rCascade rTxAccessMode $ execRawSQL rSql
-  | otherwise
-  = askSourceConfig @('Postgres pgKind) rSource >>= \sourceConfig ->
-      liftEitherM $ runExceptT $
-      runLazyTx (_pscExecCtx sourceConfig) rTxAccessMode $ execRawSQL rSql
+runRunSQL q@RunSQL{..} = do
+  sourceConfig <- askSourceConfig @('Postgres pgKind) rSource
+  traceCtx <- Tracing.currentContext
+  userInfo <- askUserInfo
+  let pgExecCtx = _pscExecCtx sourceConfig
+  if (isSchemaCacheBuildRequiredRunSQL q)
+    then do
+      -- see Note [Checking metadata consistency in run_sql]
+      withMetadataCheck @pgKind rSource rCascade rTxAccessMode
+        $ withTraceContext traceCtx
+        $ withUserInfo userInfo
+        $ execRawSQL rSql
+    else do
+      runQueryLazyTx pgExecCtx rTxAccessMode $ execRawSQL rSql
   where
     execRawSQL :: (MonadTx n) => Text -> n EncJSON
     execRawSQL =

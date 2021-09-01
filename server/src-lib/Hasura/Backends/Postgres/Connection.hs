@@ -9,6 +9,7 @@ module Hasura.Backends.Postgres.Connection
 
   , runLazyTx
   , runQueryTx
+  , runQueryTxWithCtx
   , withUserInfo
   , withTraceContext
   , setHeadersTx
@@ -135,6 +136,18 @@ runQueryTx
   :: (MonadIO m, MonadError QErr m) => PGExecCtx -> LazyTxT QErr IO a -> m a
 runQueryTx pgExecCtx ltx =
   liftEither =<< liftIO (runExceptT $ _pecRunReadNoTx pgExecCtx (unLazyTxT ltx))
+
+-- NOTE: Same warning as 'runQueryTx' applies here.
+-- This variant of 'runQueryTx' allows passing the `userInfo` context and `tracecontext`.
+runQueryTxWithCtx
+  :: (MonadIO m, MonadError QErr m)
+  => UserInfo
+  -> Tracing.TraceContext
+  -> PGExecCtx
+  -> LazyTxT QErr IO a
+  -> m a
+runQueryTxWithCtx userInfo traceCtx pgExecCtx =
+  runQueryTx pgExecCtx . withUserInfo userInfo . withTraceContext traceCtx
 
 setHeadersTx :: (MonadIO m) => SessionVariables -> Q.TxET QErr m ()
 setHeadersTx session = do
