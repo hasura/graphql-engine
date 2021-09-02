@@ -199,7 +199,7 @@ mkAggregateSelect Args {..} foreignKeyConditions selectFrom aggregates =
               JsonQueryExpression $
               SelectExpression $
               Select
-                { selectProjections = reproject aggSubselectName <$> projections
+                { selectProjections = projections
                 , selectTop = NoTop
                 , selectFrom = pure $
                     FromSelect
@@ -233,48 +233,6 @@ mkAggregateSelect Args {..} foreignKeyConditions selectFrom aggregates =
   | (index, (fieldName, projections)) <- aggregates
   ]
 
-
--- | Re-project projections in the aggSubselectName scope
---
--- For example,
---
--- [ AggregateProjection
---     (Aliased {aliasedThing = CountAggregate StarCountable, aliasedAlias = "count"})
--- , AggregateProjection
---     (Aliased
---       { aliasedThing = OpAggregate "sum"
---           [ ColumnExpression
---               (FieldName
---                 { fieldName = "id"
---                 , fieldNameEntity = "t_person1" -- <<<<< This needs to be `aggSubselectName`
---                 })
---           ]
---       , aliasedAlias = "sum"
---       })
---
-reproject :: Text -> Projection -> Projection
-reproject label = \case
-  AggregateProjection (Aliased {aliasedThing = OpAggregate aggName expressions, ..}) ->
-    AggregateProjection (Aliased {aliasedThing = OpAggregate aggName (fixColumnEntity label <$> expressions), ..})
-  AggregateProjection (Aliased {aliasedThing = CountAggregate countableFieldnames, ..}) ->
-    AggregateProjection (Aliased {aliasedThing = CountAggregate $ fixEntity label <$> countableFieldnames, ..})
-  AggregateProjection (Aliased {aliasedThing = JsonQueryOpAggregate aggName expressions, ..}) ->
-    AggregateProjection (Aliased {aliasedThing = JsonQueryOpAggregate aggName (fixColumnEntity label <$> expressions), ..})
-  x -> x
-  where
-    fixColumnEntity :: Text -> Expression -> Expression
-    fixColumnEntity entity = \case
-      ColumnExpression fName ->
-        ColumnExpression $ fixEntity entity fName
-      JsonQueryExpression expression ->
-        JsonQueryExpression $ fixColumnEntity entity expression
-      SelectExpression Select{..} ->
-        SelectExpression $ Select {selectProjections = reproject entity <$> selectProjections, ..}
-      x -> x
-    fixEntity :: Text -> FieldName -> FieldName
-    fixEntity entity FieldName{..} = FieldName {fieldNameEntity = entity, ..}
-
-
 fromSelectAggregate
   :: Maybe (EntityAlias, HashMap ColumnName ColumnName)
   -> IR.AnnSelectG 'MSSQL (Const Void) (IR.TableAggregateFieldG 'MSSQL (Const Void)) Expression
@@ -307,8 +265,7 @@ fromSelectAggregate
   expss :: [(Int, [Projection])] <- flip runReaderT (fromAlias selectFrom) $ sequence $ mapMaybe fromTableExpFieldG fields
   nodes :: [(Int, (IR.FieldName, [Projection]))] <-
     flip runReaderT (fromAlias selectFrom) $ sequence $ mapMaybe (fromTableNodesFieldG argsExistingJoins stringifyNumbers) fields
-  aggregates :: [(Int, (IR.FieldName, [Projection]))] <-
-    flip runReaderT (fromAlias selectFrom) $ sequence $ mapMaybe fromTableAggFieldG fields
+  let aggregates :: [(Int, (IR.FieldName, [Projection]))] = mapMaybe fromTableAggFieldG fields
   pure
     Select
       { selectProjections =
@@ -628,7 +585,6 @@ fromGExists IR.GExists {_geTable, _geWhere} = do
 data FieldSource
   = ExpressionFieldSource (Aliased Expression)
   | JoinFieldSource (Aliased Join)
-  | AggregateFieldSource [Aliased Aggregate]
   deriving (Eq, Show)
 
 -- | Get FieldSource from a TAFExp type table aggregate field
@@ -648,14 +604,12 @@ fromTableExpFieldG = \case
 
 fromTableAggFieldG ::
   (Int, (IR.FieldName, IR.TableAggregateFieldG 'MSSQL (Const Void) Expression)) ->
-  Maybe (ReaderT EntityAlias FromIr (Int, (IR.FieldName, [Projection])))
+  Maybe (Int, (IR.FieldName, [Projection]))
 fromTableAggFieldG = \case
-  (index, (fieldName, IR.TAFAgg (aggregateFields :: [(IR.FieldName, IR.AggregateField 'MSSQL)]))) -> Just do
-    aggregates <-
-      for aggregateFields \(fieldName', aggregateField) ->
-        fromAggregateField aggregateField <&> \aliasedThing ->
-          Aliased {aliasedAlias = IR.getFieldNameTxt fieldName', ..}
-    pure (index, (fieldName, fieldSourceProjections $ AggregateFieldSource aggregates))
+  (index, (fieldName, IR.TAFAgg (aggregateFields :: [(IR.FieldName, IR.AggregateField 'MSSQL)]))) -> Just $
+    let aggregates = aggregateFields <&> \(fieldName', aggregateField) ->
+          fromAggregateField (IR.getFieldNameTxt fieldName') aggregateField
+    in (index, (fieldName, aggregates))
   _ -> Nothing
 
 
@@ -672,29 +626,30 @@ fromTableNodesFieldG argsExistingJoins stringifyNumbers = \case
   _ -> Nothing
 
 
-fromAggregateField :: IR.AggregateField 'MSSQL -> ReaderT EntityAlias FromIr Aggregate
-fromAggregateField aggregateField =
+fromAggregateField :: Text -> IR.AggregateField 'MSSQL -> Projection
+fromAggregateField alias aggregateField =
   case aggregateField of
-    IR.AFExp text        -> pure (TextAggregate text)
-    IR.AFCount countType -> CountAggregate <$> case countType of
-      StarCountable               -> pure StarCountable
-      NonNullFieldCountable names -> NonNullFieldCountable <$> traverse fromPGCol names
-      DistinctCountable     names -> DistinctCountable     <$> traverse fromPGCol names
-    IR.AFOp IR.AggregateOp {_aoOp = op, _aoFields = fields} -> do
-      projections :: [Projection] <- for fields \(fieldName, pgColFld) ->
-        case pgColFld of
-          IR.CFCol pgCol _pgType -> do
-            fname <- fromPGCol pgCol
-            pure $ AggregateProjection $ Aliased (JsonQueryOpAggregate op [ColumnExpression fname]) (IR.getFieldNameTxt fieldName)
-          IR.CFExp text          -> do
-            pure $ ExpressionProjection $ Aliased (ValueExpression (ODBC.TextValue text)) (IR.getFieldNameTxt fieldName)
-      pure $ OpAggregate op $
-        [ JsonQueryExpression $ SelectExpression $
+    IR.AFExp text        -> AggregateProjection $ Aliased (TextAggregate text) alias
+    IR.AFCount countType -> AggregateProjection . flip Aliased alias . CountAggregate $ case countType of
+      StarCountable               -> StarCountable
+      NonNullFieldCountable names -> NonNullFieldCountable $ fmap columnFieldAggEntity names
+      DistinctCountable     names -> DistinctCountable     $ fmap columnFieldAggEntity names
+    IR.AFOp IR.AggregateOp {_aoOp = op, _aoFields = fields} ->
+      let projections :: [Projection] = fields <&> \(fieldName, pgColFld) ->
+            case pgColFld of
+              IR.CFCol pgCol _pgType ->
+                let fname = columnFieldAggEntity pgCol
+                in AggregateProjection $ Aliased (OpAggregate op [ColumnExpression fname]) (IR.getFieldNameTxt fieldName)
+              IR.CFExp text          ->
+                ExpressionProjection $ Aliased (ValueExpression (ODBC.TextValue text)) (IR.getFieldNameTxt fieldName)
+      in ExpressionProjection $ flip Aliased alias $ JsonQueryExpression $ SelectExpression $
             emptySelect
               { selectProjections = projections
               , selectFor = JsonFor $ ForJson JsonSingleton NoRoot
               }
-        ]
+
+  where
+    columnFieldAggEntity col = columnNameToFieldName col $ EntityAlias aggSubselectName
 
 
 -- | The main sources of fields, either constants, fields or via joins.
@@ -786,7 +741,6 @@ fieldSourceProjections =
                        (joinAliasToField
                           (joinJoinAlias (aliasedThing aliasedJoin))))
               }))
-    AggregateFieldSource aggregates -> fmap AggregateProjection aggregates
 
 joinAliasToField :: JoinAlias -> FieldName
 joinAliasToField JoinAlias {..} =
@@ -800,7 +754,6 @@ fieldSourceJoin =
   \case
     JoinFieldSource aliasedJoin -> pure (aliasedThing aliasedJoin)
     ExpressionFieldSource {}    -> Nothing
-    AggregateFieldSource {}     -> Nothing
 
 
 --------------------------------------------------------------------------------

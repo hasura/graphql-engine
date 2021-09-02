@@ -201,7 +201,6 @@ data JsonPath
 data Aggregate
   = CountAggregate (Countable FieldName)
   | OpAggregate !Text [Expression]
-  | JsonQueryOpAggregate !Text [Expression] -- ^ aggregate that is within a SelectExpression within a JsonQueryExpression within an OpAggregate
   | TextAggregate !Text
 
 data Countable name
