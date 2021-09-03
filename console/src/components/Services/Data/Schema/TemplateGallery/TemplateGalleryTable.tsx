@@ -103,7 +103,7 @@ export const TemplateGalleryBody: React.VFC<{ onModalOpen: modalOpenFn }> = ({
           ))}
         </tbody>
       </table>
-      <p>
+      <p className="mb-lg">
         Want to contribute to the official template gallery?{' '}
         <a
           target="_blank"

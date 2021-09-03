@@ -143,7 +143,7 @@ class Common extends React.Component {
             title="Special characters except '-' or '_' are not allowed"
           />
         </label>
-        <hr className="my-lg" />
+        <hr className="my-md" />
         <div className={styles.subheading_text}>
           GraphQL server URL *
           <OverlayTrigger placement="right" overlay={tooltips.graphqlurl}>
@@ -229,9 +229,9 @@ class Common extends React.Component {
           placeHolderText={this.getPlaceHolderText.bind(this)}
           keyInputPlaceholder="header name"
         />
-        <hr className="my-lg" />
+        <hr className="my-md" />
         {getTimeoutSection()}
-        <hr className="my-lg" />
+        <hr className="my-md" />
         <div className={styles.subheading_text}>
           Comment
           <OverlayTrigger placement="right" overlay={tooltips.comment}>

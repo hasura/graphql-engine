@@ -134,7 +134,7 @@ const AddAction = ({
         label={actionDefinitionInfo.label}
         tooltip={actionDefinitionInfo.tooltip}
       />
-      <hr className="my-lg" />
+      <hr className="my-md" />
       <GraphQLEditor
         value={typesDefinitionSdl}
         error={typesDefinitionError}
@@ -145,7 +145,7 @@ const AddAction = ({
         tooltip={typeDefinitionInfo.tooltip}
         allowEmpty
       />
-      <hr className="my-lg" />
+      <hr className="my-md" />
       <div className={actionStyles.comment_container_styles}>
         <h2
           className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
@@ -161,7 +161,7 @@ const AddAction = ({
           className={`form-control ${styles.inputWidthLarge}`}
         />
       </div>
-      <hr className="my-lg" />
+      <hr className="my-md" />
       <HandlerEditor
         value={handler}
         onChange={handlerOnChange}
@@ -170,7 +170,7 @@ const AddAction = ({
         service="create-action"
         disabled={readOnlyMode}
       />
-      <hr className="my-lg" />
+      <hr className="my-md" />
       {actionType === 'query' ? null : (
         <React.Fragment>
           <KindEditor
@@ -179,7 +179,7 @@ const AddAction = ({
             className={styles.add_mar_bottom_mid}
             disabled={readOnlyMode}
           />
-          <hr className="my-lg" />
+          <hr className="my-md" />
         </React.Fragment>
       )}
       <HeadersConfEditor
@@ -189,7 +189,7 @@ const AddAction = ({
         setHeaders={setHeaders}
         disabled={readOnlyMode}
       />
-      <hr className="my-lg" />
+      <hr className="my-md" />
       <div className={styles.subheading_text}>
         Action custom timeout
         <OverlayTrigger
@@ -219,7 +219,7 @@ const AddAction = ({
           title="Only non negative integers are allowed"
         />
       </label>
-      <hr className="my-lg" />
+      <hr className="my-md" />
       <Button
         color="yellow"
         size="sm"

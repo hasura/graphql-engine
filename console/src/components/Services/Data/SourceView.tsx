@@ -132,7 +132,7 @@ const SourceView: React.FC<Props> = props => {
             ]}
           />
         </div>
-        <div className={`${styles.display_flex} mb-lg`}>
+        <div className={`${styles.display_flex}`}>
           <h2
             className={`${styles.headerText} ${styles.display_inline} ${styles.add_mar_right_mid}`}
           >
@@ -142,8 +142,8 @@ const SourceView: React.FC<Props> = props => {
         </div>
       </div>
       <div>
-        <hr className="my-lg" />
-        <div id="schema-list-view" className="space-y-sm my-lg ">
+        <hr className="my-md" />
+        <div id="schema-list-view" className="space-y-sm">
           {schemaList.length ? (
             schemaList.map((schema, key: number) => {
               return (
@@ -188,7 +188,7 @@ const SourceView: React.FC<Props> = props => {
             <div>There are no schemas at the moment</div>
           )}
         </div>
-        <hr className="my-lg" />
+        <hr className="my-md" />
         {isTemplateGalleryEnabled ? <TemplateGallery /> : null}
       </div>
     </div>

@@ -43,7 +43,7 @@ const Relationships = ({
             readOnlyMode={readOnlyMode}
             dataSources={dataSources}
           />
-          <hr className="my-lg" />
+          <hr className="my-md" />
         </div>
       </div>
       <div className={`${styles.fixed} hidden`}>{alert}</div>

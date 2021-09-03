@@ -50,7 +50,7 @@ class RemoteSchema extends React.Component {
               </h2>
               {getAddBtn()}
             </div>
-            <hr className="my-lg" />
+            <hr className="my-md" />
 
             <TopicDescription
               title="What are Remote Schemas?"

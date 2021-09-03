@@ -265,49 +265,42 @@ class ApiRequest extends Component {
               styles.stickyHeader
             }
           >
-            <div
-              className={`col-xs-12 ${styles.padd_remove} ${styles.add_mar_bottom_mid}`}
-            >
-              <div
-                className={
-                  'input-group ' +
-                  styles.inputGroupWrapper +
-                  ' ' +
-                  styles.cursorNotAllowed
-                }
-              >
-                <div className={'input-group-btn ' + styles.inputGroupBtn}>
-                  <button type="button" className={'btn btn-default'}>
-                    {this.props.method}
-                  </button>
-                </div>
+            <div className={'flex mb-md'}>
+              <div className="flex items-center w-full">
+                <button
+                  type="button"
+                  className="inline-flex cursor-default h-input font-semibold items-center px-3 rounded-l border border-r-0 border-gray-300 bg-gray-50"
+                >
+                  {this.props.method}
+                </button>
                 <input
                   value={getGraphQLEndpoint(mode)}
                   type="text"
                   readOnly
-                  className={styles.inputGroupInput + ' form-control '}
+                  className="flex-1 min-w-0 block w-full px-3 py-2 h-input rounded-r border-gray-300"
                 />
               </div>
-            </div>
-            <div
-              className={`${styles.display_flex} ${styles.graphiqlModeToggle} ${styles.cursorPointer}`}
-              onClick={toggleGraphiqlMode}
-            >
-              <Toggle
-                checked={mode === 'relay'}
-                className={`${styles.display_flex} ${styles.add_mar_right_mid}`}
-                readOnly
-                disabled={loading}
-                icons={false}
-              />
-              <span className={styles.add_mar_right_mid}>Relay API</span>
-              <Tooltip
-                id="relay-mode-toggle"
-                placement="left"
-                message={
-                  'Toggle to point this GraphiQL to a relay-compliant GraphQL API served at /v1beta1/relay'
-                }
-              />
+
+              <div
+                className="flex items-center ml-md cursor-pointer"
+                onClick={toggleGraphiqlMode}
+              >
+                <Toggle
+                  checked={mode === 'relay'}
+                  className={`${styles.display_flex} ${styles.add_mar_right_mid}`}
+                  readOnly
+                  disabled={loading}
+                  icons={false}
+                />
+                <span className="whitespace-nowrap">Relay API</span>
+                <Tooltip
+                  id="relay-mode-toggle"
+                  placement="left"
+                  message={
+                    'Toggle to point this GraphiQL to a relay-compliant GraphQL API served at /v1beta1/relay'
+                  }
+                />
+              </div>
             </div>
           </div>
         </CollapsibleToggle>
@@ -364,24 +357,23 @@ class ApiRequest extends Component {
 
             if (!header.isNewHeader) {
               headerActiveCheckbox = (
-                <td>
+                <td className="text-center">
                   <input
                     type="checkbox"
                     name="sponsored"
-                    className={`${styles.common_checkbox} legacy-input-fix common_checkbox`}
+                    style={{ outline: 'none' }}
+                    className="mr-1 border-gray-400 rounded outline-none focus:outline-none focus:ring-2 focus:ring-offset-2  focus:ring-yellow-400"
                     id={i + 1}
                     checked={header.isActive}
                     data-header-id={i}
                     onChange={onHeaderValueChanged}
                     data-element-name="isActive"
                   />
-                  <label
-                    htmlFor={i + 1}
-                    className={
-                      styles.common_checkbox_label + ' common_checkbox_label'
-                    }
-                  />
                 </td>
+              );
+            } else {
+              headerActiveCheckbox = (
+                <td className="border-t border-gray-200" />
               );
             }
 
@@ -395,22 +387,15 @@ class ApiRequest extends Component {
           const getHeaderKey = () => {
             let className = '';
             if (header.isNewHeader) {
-              className =
-                styles.border_right +
-                ' ' +
-                styles.tableTdLeft +
-                ' ' +
-                styles.borderTop +
-                ' ' +
-                styles.tableEnterKey;
+              className = 'border-r border-t border-gray-200';
             } else {
-              className = styles.border_right;
+              className = 'border-r border-gray-200';
             }
 
             return (
-              <td colSpan={getColSpan()} className={className}>
+              <td className={className}>
                 <input
-                  className={'form-control ' + styles.responseTableInput}
+                  className="w-full border-0 outline-none focus:ring-0 focus:outline-none"
                   value={header.key || ''}
                   disabled={header.isDisabled === true}
                   data-header-id={i}
@@ -429,12 +414,7 @@ class ApiRequest extends Component {
           const getHeaderValue = () => {
             let className = '';
             if (header.isNewHeader) {
-              className =
-                styles.borderTop +
-                ' ' +
-                styles.tableEnterKey +
-                ' ' +
-                styles.tableLastTd;
+              className = 'border-t border-gray-200';
             }
 
             let type = 'text';
@@ -445,7 +425,7 @@ class ApiRequest extends Component {
             return (
               <td colSpan={getColSpan()} className={className}>
                 <input
-                  className={'form-control ' + styles.responseTableInput}
+                  className="w-full border-0 focus:ring-0 focus:outline-none"
                   value={header.value || ''}
                   disabled={header.isDisabled === true}
                   data-header-id={i}
@@ -472,7 +452,7 @@ class ApiRequest extends Component {
                   message="Show admin secret"
                 >
                   <i
-                    className={styles.showAdminSecret + ' fa fa-eye'}
+                    className="cursor-pointer mr-md fa fa-eye"
                     data-header-id={i}
                     aria-hidden="true"
                     onClick={onShowAdminSecretClicked}
@@ -495,16 +475,12 @@ class ApiRequest extends Component {
 
               if (isAnalyzingToken && analyzingHeaderRow === i) {
                 analyzeIcon = (
-                  <i
-                    className={
-                      styles.showInspectorLoading + ' fa fa-spinner fa-spin'
-                    }
-                  />
+                  <i className="cursor-pointer mr-md fa fa-spinner fa-spin" />
                 );
               } else {
                 analyzeIcon = (
                   <i
-                    className={styles.showInspector + ' fa fa-user-secret'}
+                    className="cursor-pointer mr-md fa fa-user-secret"
                     token={token}
                     data-header-index={i}
                     onClick={this.analyzeBearerToken}
@@ -533,7 +509,7 @@ class ApiRequest extends Component {
           const getHeaderRemoveBtn = () => {
             return (
               <i
-                className={styles.closeHeader + ' fa fa-times'}
+                className="cursor-pointer mr-md fa fa-times"
                 data-header-id={i}
                 aria-hidden="true"
                 onClick={onDeleteHeaderClicked}
@@ -546,7 +522,7 @@ class ApiRequest extends Component {
 
             if (!header.isNewHeader) {
               headerActions = (
-                <td>
+                <td className="text-right">
                   {getHeaderAdminVal()}
                   {getJWTInspectorIcon()}
                   {getHeaderRemoveBtn()}
@@ -596,33 +572,25 @@ class ApiRequest extends Component {
           toggleHandler={toggleHandler}
           useDefaultTitleStyle
         >
-          <div className={styles.responseTable + ' ' + styles.remove_all_pad}>
-            <table
-              className={
-                'table ' + styles.tableBorder + ' ' + styles.remove_margin
-              }
-            >
+          <div className="mt-md overflow-x-auto border border-gray-300 rounded">
+            <table className="min-w-full divide-y divide-gray-200">
               <thead>
-                <tr>
-                  <th className={styles.wd4 + ' ' + styles.headerHeading} />
+                <tr className="bg-gray-50">
                   <th
-                    className={
-                      styles.wd48 +
-                      ' ' +
-                      styles.border_right +
-                      ' ' +
-                      styles.headerHeading
-                    }
+                    className={`w-16 px-md py-sm max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider ${styles.wd4}`}
                   >
+                    Enable
+                  </th>
+                  <th className="px-md py-sm max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider">
                     Key
                   </th>
-                  <th className={styles.wd48 + ' ' + styles.headerHeading}>
+                  <th className="px-md py-sm max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider">
                     Value
                   </th>
-                  <th className={styles.wd4 + ' ' + styles.headerHeading} />
+                  <th className="w-16 px-md py-sm max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider" />
                 </tr>
               </thead>
-              <tbody>{getHeaderRows()}</tbody>
+              <tbody className="bg-white">{getHeaderRows()}</tbody>
             </table>
           </div>
         </CollapsibleToggle>

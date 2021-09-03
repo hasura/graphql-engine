@@ -151,7 +151,7 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
                 )}
               </div>
             </div>
-            <hr className="my-lg" />
+            <hr className="my-md" />
             <div className={styles.filterContainer}>
               <TextInput
                 onChange={filterTextChange}
@@ -191,7 +191,7 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
                       </div>
                     ))}
             </div>
-            <hr className="my-lg" />
+            <hr className="my-md" />
             <div>
               <Button
                 color="yellow"

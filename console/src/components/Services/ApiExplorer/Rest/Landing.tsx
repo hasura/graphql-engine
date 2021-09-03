@@ -25,7 +25,7 @@ const Landing = () => (
       Create endpoints from GraphQL queries using{' '}
       <Link to="/api/api-explorer">GraphiQL</Link>.
     </div>
-    <hr className="my-lg" />
+    <hr className="my-md" />
     <TopicDescription
       title="What are REST endpoints?"
       imgElement={<LandingImage />}

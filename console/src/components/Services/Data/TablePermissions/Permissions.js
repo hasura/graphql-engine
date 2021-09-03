@@ -886,7 +886,7 @@ class Permissions extends Component {
               className={disabled ? styles.disabled : ''}
               title={disabled ? noFilterPermissionMsg : ''}
             >
-              <hr className="my-lg" />
+              <hr className="my-md" />
               {addTooltip(
                 updateFilterTypeLabel[filterType],
                 getUpdateTooltip(filterType)
@@ -1707,7 +1707,7 @@ class Permissions extends Component {
 
           clonePermissionsHtml = (
             <div>
-              <hr className="my-lg" />
+              <hr className="my-md" />
               <CollapsibleToggle
                 title={getSectionHeader('Clone permissions', cloneToolTip)}
                 useDefaultTitleStyle

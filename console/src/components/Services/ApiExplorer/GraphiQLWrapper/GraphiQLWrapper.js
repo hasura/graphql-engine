@@ -74,8 +74,6 @@ class GraphiQLWrapper extends Component {
   };
 
   render() {
-    const styles = require('../../../Common/Common.scss');
-
     const {
       numberOfTables,
       urlParams,
@@ -276,7 +274,7 @@ class GraphiQLWrapper extends Component {
     return (
       <GraphiQLErrorBoundary>
         <div
-          className={`react-container-graphql ${styles.wd100} ${styles.height100} ${styles.box_shadow}`}
+          className={`react-container-graphql w-full h-full border mt-md overflow-hidden rounded border-gray-300`}
         >
           <OneGraphExplorer
             renderGraphiql={renderGraphiql}

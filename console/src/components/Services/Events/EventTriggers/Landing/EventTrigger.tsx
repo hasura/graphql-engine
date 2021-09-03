@@ -84,7 +84,7 @@ insert_user(objects: [{name: "testuser"}] ){
           </h2>
           {getAddBtn()}
         </div>
-        <hr className="my-lg" />
+        <hr className="my-md" />
 
         {getIntroSection()}
 
