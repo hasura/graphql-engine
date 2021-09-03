@@ -46,7 +46,7 @@ const Landing: React.FC<Props> = props => {
             Create
           </Button>
         </div>
-        <hr className="my-lg" />
+        <hr className="my-md" />
         <div>
           <TopicDescription
             title="What are Cron Triggers?"

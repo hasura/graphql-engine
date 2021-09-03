@@ -1,8 +1,6 @@
 import React from 'react';
 import { Link, RouteComponentProps } from 'react-router';
 
-import styles from './ApiExplorer.scss';
-
 type TopNavProps = {
   location: RouteComponentProps<unknown, unknown>['location'];
 };
@@ -41,20 +39,29 @@ const TopNav: React.FC<TopNavProps> = ({ location }) => {
   };
 
   return (
-    <div className={styles.topNavContainer}>
-      {sectionsData.map(section => (
-        <div role="presentation" key={section.key}>
-          <Link
-            to={section.link}
-            data-test={section.dataTestVal}
-            className={`${styles.sectionLink} ${
-              isActive(section.link) ? styles.sectionLinkActive : ''
-            }`}
+    <div className="flex justify-between items-center border-b border-gray-300 bg-white px-sm">
+      <div className="flex space-x-4 px-1">
+        {sectionsData.map(section => (
+          <div
+            role="presentation"
+            className={`whitespace-nowrap font-medium pt-2 pb-1 px-2 border-b-4
+        ${
+          isActive(section.link)
+            ? 'border-gray-300 hover:border-gray-300'
+            : 'border-white hover:border-gray-100'
+        }`}
+            key={section.key}
           >
-            {section.title}
-          </Link>
-        </div>
-      ))}
+            <Link
+              to={section.link}
+              data-test={section.dataTestVal}
+              className="text-gray-600 font-semibold no-underline hover:text-gray-600 hover:no-underline focus:text-gray-600 focus:no-underline"
+            >
+              {section.title}
+            </Link>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

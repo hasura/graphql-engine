@@ -81,9 +81,8 @@
 }
 
 .apiRequestBody {
-  margin: 20px 0;
-  height: 100%;
-  min-height: 60vh;
+  min-height: calc(100vh - 54px);
+  padding-bottom:32px;
 }
 
 .apiExplorerWrapper {
@@ -377,11 +376,6 @@
       background-color: #f8fafb;
 
       .inputGroupWrapper {
-        -webkit-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
-        -moz-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
-        box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
-        border-radius: 5px;
-
         .inputGroupBtn {
           button {
             width: 100px;

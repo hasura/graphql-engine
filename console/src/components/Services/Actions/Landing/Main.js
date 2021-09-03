@@ -64,7 +64,7 @@ class Landing extends React.Component {
               </h2>
               {getAddBtn()}
             </div>
-            <hr className="my-lg" />
+            <hr className="my-md" />
 
             {getIntroSection()}
           </div>

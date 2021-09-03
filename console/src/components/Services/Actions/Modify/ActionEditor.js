@@ -128,7 +128,7 @@ const ActionEditor = ({
         label={actionDefinitionInfo.label}
         tooltip={actionDefinitionInfo.tooltip}
       />
-      <hr className="my-lg" />
+      <hr className="my-md" />
       <GraphQLEditor
         value={typesDefinitionSdl}
         error={typesDefinitionError}
@@ -139,7 +139,7 @@ const ActionEditor = ({
         tooltip={typeDefinitionInfo.tooltip}
         allowEmpty
       />
-      <hr className="my-lg" />
+      <hr className="my-md" />
       <div className={actionStyles.comment_container_styles}>
         <h2
           className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
@@ -153,7 +153,7 @@ const ActionEditor = ({
           onChange={updateActionComment}
         />
       </div>
-      <hr className="my-lg" />
+      <hr className="my-md" />
       <HandlerEditor
         value={handler}
         disabled={readOnlyMode}
@@ -162,7 +162,7 @@ const ActionEditor = ({
         className={styles.add_mar_bottom_mid}
         service="create-action"
       />
-      <hr className="my-lg" />
+      <hr className="my-md" />
       {actionType === 'query' ? null : (
         <React.Fragment>
           <KindEditor
@@ -171,7 +171,7 @@ const ActionEditor = ({
             className={styles.add_mar_bottom_mid}
             disabled={readOnlyMode}
           />
-          <hr className="my-lg" />
+          <hr className="my-md" />
         </React.Fragment>
       )}
       <HeaderConfEditor
@@ -181,7 +181,7 @@ const ActionEditor = ({
         setHeaders={setHeaders}
         disabled={readOnlyMode}
       />
-      <hr className="my-lg" />
+      <hr className="my-md" />
       <div className={styles.subheading_text}>
         Action custom timeout
         <OverlayTrigger
@@ -211,7 +211,7 @@ const ActionEditor = ({
           title="Only non negative integers are allowed"
         />
       </label>
-      <hr className="my-lg" />
+      <hr className="my-md" />
       <div className={styles.display_flex}>
         {!readOnlyMode && (
           <React.Fragment>

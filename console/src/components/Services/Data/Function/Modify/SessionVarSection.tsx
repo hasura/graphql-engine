@@ -46,7 +46,7 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
 
   return (
     <>
-      <hr className="my-lg" />
+      <hr className="my-md" />
       <h4 className={styles.subheading_text}>
         Session argument
         <ToolTip message="the function argument into which hasura session variables will be passed" />

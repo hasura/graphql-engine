@@ -68,3 +68,9 @@ a[class=''] {
 .dropdown button {
   background-color: rgb(239, 239, 239);
 }
+
+
+/* To remove botstrap html font size from 10px */
+html {
+    font-size: 14px;
+}

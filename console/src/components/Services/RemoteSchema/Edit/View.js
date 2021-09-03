@@ -35,7 +35,7 @@ const RSHeadersDisplay = ({ data }) =>
                     : '<' + header.value + '>'}
                 </td>
               </tr>,
-              index !== data.length - 1 ? <hr className="my-lg" /> : null,
+              index !== data.length - 1 ? <hr className="my-md" /> : null,
             ])}
       </td>
     </tr>

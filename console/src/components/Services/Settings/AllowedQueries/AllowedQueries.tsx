@@ -26,12 +26,12 @@ const AllowedQueries: React.FC<Props> = props => {
         <h2 className={styles.headerText}>Allow List</h2>
         <div className={`${styles.add_mar_top} ${styles.wd60}`}>
           <AllowedQueriesNotes />
-          <hr className="my-lg" />
+          <hr className="my-md" />
           <AddAllowedQuery
             dispatch={dispatch}
             allowedQueries={allowedQueries}
           />
-          <hr className="my-lg" />
+          <hr className="my-md" />
           <AllowedQueriesList
             dispatch={dispatch}
             allowedQueries={allowedQueries}

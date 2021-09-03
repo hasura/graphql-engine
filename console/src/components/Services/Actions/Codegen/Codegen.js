@@ -189,7 +189,7 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
           dispatch={dispatch}
         />
       </div>
-      <hr className="my-lg" />
+      <hr className="my-md" />
       {getDerivationInfo()}
     </div>
   );

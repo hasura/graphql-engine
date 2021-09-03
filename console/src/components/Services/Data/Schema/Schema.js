@@ -671,9 +671,9 @@ class Schema extends Component {
               </h2>
               {getCreateBtn()}
             </div>
-            <hr className="my-lg" />
+            <hr className="my-md" />
             {getCurrentSchemaSection()}
-            <hr className="my-lg" />
+            <hr className="my-md" />
             {getUntrackedTablesSection()}
             {isFeatureSupported('tables.relationships.track') &&
               getUntrackedRelationsSection()}
@@ -682,7 +682,7 @@ class Schema extends Component {
             )}
             {isFeatureSupported('functions.nonTrackableFunctions.enabled') &&
               getNonTrackableFunctionsSection()}
-            <hr className="my-lg" />
+            <hr className="my-md" />
           </div>
         </div>
       </RightContainer>

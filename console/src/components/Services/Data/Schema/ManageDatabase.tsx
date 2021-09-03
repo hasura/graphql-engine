@@ -286,7 +286,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
           </div>
         </div>
         <div className={styles.manage_db_content}>
-          <hr className="my-lg" />
+          <hr className="my-md" />
           <h3 className={styles.heading_text}>Connected Databases</h3>
           <div className={styles.flexColumn}>
             {dataSources.length ? (
@@ -309,7 +309,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
               </span>
             )}
           </div>
-          <hr className="my-lg" />
+          <hr className="my-md" />
         </div>
       </div>
     </RightContainer>

@@ -24,7 +24,7 @@ const FormSection: React.FC<Props> = ({ children, id, tooltip, heading }) => {
         )}
       </h2>
       {children}
-      <hr className="my-lg" />
+      <hr className="my-md" />
     </div>
   );
 };
