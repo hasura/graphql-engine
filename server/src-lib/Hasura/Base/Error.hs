@@ -63,109 +63,88 @@ import qualified Database.PG.Query      as Q
 import qualified Network.HTTP.Types     as N
 
 data Code
-  = PermissionDenied
-  | NotNullViolation
-  | NotExists
+  = AccessDenied
+  | ActionWebhookCode !Text
   | AlreadyExists
-  | PostgresError
-  | PostgresMaxConnectionsError
-  | MSSQLError
-  | DatabaseConnectionTimeout
-  | BigQueryError
-  | NotSupported
-  | DependencyError
-  | InvalidHeaders
-  | InvalidJSON
-  | AccessDenied
-  | ParseFailed
-  | ConstraintError
-  | PermissionError
-  | NotFound
-  | Unexpected
-  | UnexpectedPayload
-  | NoUpdate
   | AlreadyTracked
   | AlreadyUntracked
-  | InvalidParams
-  | AlreadyInit
-  | ConstraintViolation
-  | DataException
   | BadRequest
-  | MethodNotAllowed
-  | Conflict
-  | InvalidConfiguration
-  -- Graphql error
-  | NoTables
-  | ValidationFailed
+  | BigQueryError
   | Busy
-  -- JWT Auth errors
-  | JWTRoleClaimMissing
-  | JWTInvalidClaims
-  | JWTInvalid
-  | JWTInvalidKey
-  -- Remote schemas
-  | RemoteSchemaError
-  | RemoteSchemaConflicts
   | CoercionError
-  -- Websocket/Subscription errors
-  | StartFailed
-  | InvalidCustomTypes
-  -- Actions Webhook code
-  | ActionWebhookCode !Text
+  | Conflict
+  | ConstraintError
+  | ConstraintViolation
+  | CustomCode !Text -- ^ Custom code for extending this sum-type easily
   | CyclicDependency
-  -- Custom code for extending this sum-type easily
-  | CustomCode !Text
+  | DataException
+  | DependencyError
+  | InvalidConfiguration
+  | InvalidHeaders
+  | InvalidJSON
+  | InvalidParams
+  | JWTInvalid
+  | JWTInvalidClaims
+  | JWTRoleClaimMissing
+  | MSSQLError
+  | MethodNotAllowed
+  | NotExists
+  | NotFound
+  | NotSupported
+  | ParseFailed
+  | PermissionDenied
+  | PermissionError
+  | PostgresError
+  | PostgresMaxConnectionsError
+  | RemoteSchemaConflicts
+  | RemoteSchemaError
+  | StartFailed -- ^ Websockets
+  | Unexpected
+  | UnexpectedPayload
+  | ValidationFailed
   deriving (Eq)
 
 instance Show Code where
   show = \case
-    NotNullViolation            -> "not-null-violation"
-    DataException               -> "data-exception"
-    BadRequest                  -> "bad-request"
-    ConstraintViolation         -> "constraint-violation"
-    PermissionDenied            -> "permission-denied"
-    NotExists                   -> "not-exists"
+    AccessDenied                -> "access-denied"
+    ActionWebhookCode t         -> T.unpack t
     AlreadyExists               -> "already-exists"
     AlreadyTracked              -> "already-tracked"
     AlreadyUntracked            -> "already-untracked"
-    PostgresError               -> "postgres-error"
-    PostgresMaxConnectionsError -> "postgres-max-connections-error"
-    MSSQLError                  -> "mssql-error"
-    DatabaseConnectionTimeout   -> "connection-timeout-error"
-    -- TODO (Naveen): We don't use the above error anywhere, do we remove this?
-    NotSupported                -> "not-supported"
+    BadRequest                  -> "bad-request"
+    BigQueryError               -> "bigquery-error"
+    Busy                        -> "busy"
+    CoercionError               -> "coercion-error"
+    Conflict                    -> "conflict"
+    ConstraintError             -> "constraint-error"
+    ConstraintViolation         -> "constraint-violation"
+    CustomCode t                -> T.unpack t
+    CyclicDependency            -> "cyclic-dependency"
+    DataException               -> "data-exception"
     DependencyError             -> "dependency-error"
+    InvalidConfiguration        -> "invalid-configuration"
     InvalidHeaders              -> "invalid-headers"
     InvalidJSON                 -> "invalid-json"
-    AccessDenied                -> "access-denied"
-    ParseFailed                 -> "parse-failed"
-    ConstraintError             -> "constraint-error"
-    PermissionError             -> "permission-error"
+    InvalidParams               -> "invalid-params"
+    JWTInvalid                  -> "invalid-jwt"
+    JWTInvalidClaims            -> "jwt-invalid-claims"
+    JWTRoleClaimMissing         -> "jwt-missing-role-claims"
+    MSSQLError                  -> "mssql-error"
+    MethodNotAllowed            -> "method-not-allowed"
+    NotExists                   -> "not-exists"
     NotFound                    -> "not-found"
+    NotSupported                -> "not-supported"
+    ParseFailed                 -> "parse-failed"
+    PermissionDenied            -> "permission-denied"
+    PermissionError             -> "permission-error"
+    PostgresError               -> "postgres-error"
+    PostgresMaxConnectionsError -> "postgres-max-connections-error"
+    RemoteSchemaConflicts       -> "remote-schema-conflicts"
+    RemoteSchemaError           -> "remote-schema-error"
+    StartFailed                 -> "start-failed"
     Unexpected                  -> "unexpected"
     UnexpectedPayload           -> "unexpected-payload"
-    NoUpdate                    -> "no-update"
-    InvalidParams               -> "invalid-params"
-    AlreadyInit                 -> "already-initialised"
-    NoTables                    -> "no-tables"
     ValidationFailed            -> "validation-failed"
-    Busy                        -> "busy"
-    JWTRoleClaimMissing         -> "jwt-missing-role-claims"
-    JWTInvalidClaims            -> "jwt-invalid-claims"
-    JWTInvalid                  -> "invalid-jwt"
-    JWTInvalidKey               -> "invalid-jwt-key"
-    RemoteSchemaError           -> "remote-schema-error"
-    RemoteSchemaConflicts       -> "remote-schema-conflicts"
-    CoercionError               -> "coercion-error"
-    StartFailed                 -> "start-failed"
-    InvalidCustomTypes          -> "invalid-custom-types"
-    MethodNotAllowed            -> "method-not-allowed"
-    Conflict                    -> "conflict"
-    BigQueryError               -> "bigquery-error"
-    InvalidConfiguration        -> "invalid-configuration"
-    CyclicDependency            -> "cyclic-dependency"
-    ActionWebhookCode t         -> T.unpack t
-    CustomCode t                -> T.unpack t
 
 data QErr
   = QErr
