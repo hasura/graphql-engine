@@ -10,7 +10,6 @@ module Hasura.RQL.DDL.EventTrigger
   , runInvokeEventTrigger
   -- TODO(from master): review
   , archiveEvents
-  , getEventTriggerDef
   ) where
 
 import           Hasura.Prelude
@@ -27,13 +26,13 @@ import           Data.Aeson
 import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.DDL.Table as PG
-import qualified Hasura.Backends.Postgres.SQL.Types as PG
 import qualified Hasura.SQL.AnyBackend              as AB
 import qualified Hasura.Tracing                     as Tracing
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Eventing.Backend
 import           Hasura.Session
 
 
@@ -42,9 +41,9 @@ data CreateEventTriggerQuery (b :: BackendType)
   { _cetqSource         :: !SourceName
   , _cetqName           :: !TriggerName
   , _cetqTable          :: !(TableName b)
-  , _cetqInsert         :: !(Maybe SubscribeOpSpec)
-  , _cetqUpdate         :: !(Maybe SubscribeOpSpec)
-  , _cetqDelete         :: !(Maybe SubscribeOpSpec)
+  , _cetqInsert         :: !(Maybe (SubscribeOpSpec b))
+  , _cetqUpdate         :: !(Maybe (SubscribeOpSpec b))
+  , _cetqDelete         :: !(Maybe (SubscribeOpSpec b))
   , _cetqEnableManual   :: !(Maybe Bool)
   , _cetqRetryConf      :: !(Maybe RetryConf)
   , _cetqWebhook        :: !(Maybe InputWebhook)
@@ -140,44 +139,16 @@ archiveEvents trn =
            WHERE trigger_name = $1
                 |] (Identity trn) False
 
-checkEvent :: EventId -> Q.TxE QErr ()
-checkEvent eid = do
-  events <- Q.listQE defaultTxErrorHandler
-            [Q.sql|
-              SELECT l.locked IS NOT NULL AND l.locked >= (NOW() - interval '30 minute')
-              FROM hdb_catalog.event_log l
-              WHERE l.id = $1
-              |] (Identity eid) True
-  event <- getEvent events
-  assertEventUnlocked event
-  where
-    getEvent []    = throw400 NotExists "event not found"
-    getEvent (x:_) = return x
-
-    assertEventUnlocked (Identity locked) = when locked $
-      throw400 Busy "event is already being processed"
-
-markForDelivery :: EventId -> Q.TxE QErr ()
-markForDelivery eid =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-          UPDATE hdb_catalog.event_log
-          SET
-          delivered = 'f',
-          error = 'f',
-          tries = 0
-          WHERE id = $1
-          |] (Identity eid) True
-
 resolveEventTriggerQuery
-  :: forall pgKind m
-   . (Backend ('Postgres pgKind), UserInfoM m, QErrM m, CacheRM m)
-  => CreateEventTriggerQuery ('Postgres pgKind)
-  -> m (TableCoreInfo ('Postgres pgKind), Bool, EventTriggerConf)
+  :: forall b m
+   . (Backend b, UserInfoM m, QErrM m, CacheRM m)
+  => CreateEventTriggerQuery b
+  -> m (TableCoreInfo b, Bool, EventTriggerConf b)
 resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace) = do
   ti <- askTableCoreInfo source qt
   -- can only replace for same table
   when replace $ do
-    ti' <- _tiCoreInfo <$> askTabInfoFromTrigger source name
+    ti' <- _tiCoreInfo <$> askTabInfoFromTrigger @b source name
     when (_tciName ti' /= _tciName ti) $ throw400 NotSupported "cannot replace table or schema for trigger"
 
   assertCols ti insert
@@ -195,7 +166,7 @@ createEventTriggerQueryMetadata
   :: forall pgKind m
    . (BackendMetadata ('Postgres pgKind), QErrM m, UserInfoM m, CacheRWM m, MetadataM m)
   => CreateEventTriggerQuery ('Postgres pgKind)
-  -> m (TableCoreInfo ('Postgres pgKind), EventTriggerConf)
+  -> m (TableCoreInfo ('Postgres pgKind), EventTriggerConf ('Postgres pgKind))
 createEventTriggerQueryMetadata q = do
   (tableCoreInfo, replace, triggerConf) <- resolveEventTriggerQuery q
   let table = _cetqTable q
@@ -250,61 +221,36 @@ dropEventTriggerInMetadata :: TriggerName -> TableMetadata b -> TableMetadata b
 dropEventTriggerInMetadata name =
   tmEventTriggers %~ OMap.delete name
 
-deliverEvent :: EventId -> Q.TxE QErr ()
-deliverEvent eventId = do
-  checkEvent eventId
-  markForDelivery eventId
-
 runRedeliverEvent
-  :: forall pgKind m
-   . (BackendMetadata ('Postgres pgKind), MonadIO m, CacheRM m, QErrM m, MetadataM m)
-  => RedeliverEventQuery ('Postgres pgKind)
+  :: forall b m
+   . (BackendEventTrigger b, MonadIO m, CacheRM m, QErrM m, MetadataM m)
+  => RedeliverEventQuery b
   -> m EncJSON
 runRedeliverEvent (RedeliverEventQuery eventId source) = do
-  sourceConfig <- askSourceConfig @('Postgres pgKind) source
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ deliverEvent eventId
+  sourceConfig <- askSourceConfig @b source
+  redeliverEvent @b sourceConfig eventId
   pure successMsg
 
-insertManualEvent
-  :: PG.QualifiedTable
-  -> TriggerName
-  -> Value
-  -> Q.TxE QErr EventId
-insertManualEvent (PG.QualifiedObject sn tn) trn rowData = do
-  runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
-    SELECT hdb_catalog.insert_event_log($1, $2, $3, $4, $5)
-  |] (sn, tn, trn, (tshow MANUAL), Q.AltJ rowData) False
-
 runInvokeEventTrigger
-  :: forall pgKind m
-   . ( BackendMetadata ('Postgres pgKind)
-     , MonadIO m
+  :: forall b m
+   . ( MonadIO m
      , QErrM m
      , CacheRM m
      , MetadataM m
      , Tracing.MonadTrace m
      , UserInfoM m
+     , BackendEventTrigger b
      )
-  => InvokeEventTriggerQuery ('Postgres pgKind)
+  => InvokeEventTriggerQuery b
   -> m EncJSON
 runInvokeEventTrigger (InvokeEventTriggerQuery name source payload) = do
-  trigInfo <- askEventTriggerInfo source name
+  trigInfo <- askEventTriggerInfo @b source name
   assertManual $ etiOpsDef trigInfo
   ti  <- askTabInfoFromTrigger source name
-  sourceConfig <- askSourceConfig @('Postgres pgKind) source
+  sourceConfig <- askSourceConfig @b source
   traceCtx <- Tracing.currentContext
   userInfo <- askUserInfo
-  -- NOTE: The methods `setTraceContextInTx` and `setHeadersTx` are being used
-  -- to ensure that the trace context and user info are set with valid values
-  -- while being used in the PG function `insert_event_log`.
-  -- See Issue(#7087) for more details on a bug that was being caused
-  -- in the absence of these methods.
-  eid <- liftEitherM
-          $  liftIO
-          $  runPgSourceWriteTx sourceConfig
-          $  setHeadersTx (_uiSession userInfo)
-          >> setTraceContextInTx traceCtx
-          >> insertManualEvent (tableInfoName ti) name (makePayload payload)
+  eid <- insertManualEvent @b sourceConfig (tableInfoName @b ti) name (makePayload payload) userInfo traceCtx
   return $ encJFromJValue $ object ["event_id" .= eid]
   where
     makePayload o = object [ "old" .= Null, "new" .= o ]
@@ -313,38 +259,26 @@ runInvokeEventTrigger (InvokeEventTriggerQuery name source payload) = do
       Just True -> return ()
       _         -> throw400 NotSupported "manual mode is not enabled for event trigger"
 
-getEventTriggerDef
-  :: TriggerName
-  -> Q.TxE QErr (PG.QualifiedTable, EventTriggerConf)
-getEventTriggerDef triggerName = do
-  (sn, tn, Q.AltJ etc) <- Q.getRow <$> Q.withQE defaultTxErrorHandler
-    [Q.sql|
-     SELECT e.schema_name, e.table_name, e.configuration::json
-     FROM hdb_catalog.event_triggers e where e.name = $1
-           |] (Identity triggerName) False
-  return (PG.QualifiedObject sn tn, etc)
-
 askTabInfoFromTrigger
-  :: (QErrM m, CacheRM m)
-  => SourceName -> TriggerName -> m (TableInfo ('Postgres 'Vanilla))
-askTabInfoFromTrigger sourceName trn = do
+  :: (Backend b, QErrM m, CacheRM m)
+  => SourceName -> TriggerName -> m (TableInfo b)
+askTabInfoFromTrigger sourceName triggerName = do
   sc <- askSchemaCache
   let tabInfos = HM.elems $ fromMaybe mempty $ unsafeTableCache sourceName $ scSources sc
-  find (isJust . HM.lookup trn . _tiEventTriggerInfoMap) tabInfos
+  find (isJust . HM.lookup triggerName . _tiEventTriggerInfoMap) tabInfos
     `onNothing` throw400 NotExists errMsg
   where
-    errMsg = "event trigger " <> triggerNameToTxt trn <<> " does not exist"
+    errMsg = "event trigger " <> triggerName <<> " does not exist"
 
 askEventTriggerInfo
-  :: (QErrM m, CacheRM m)
-  => SourceName -> TriggerName -> m EventTriggerInfo
-askEventTriggerInfo sourceName trn = do
-  ti <- askTabInfoFromTrigger sourceName trn
-  let etim = _tiEventTriggerInfoMap ti
-  HM.lookup trn etim `onNothing` throw400 NotExists errMsg
+  :: forall b m. (QErrM m, CacheRM m, Backend b)
+  => SourceName -> TriggerName -> m (EventTriggerInfo b)
+askEventTriggerInfo sourceName triggerName = do
+  triggerInfo <- askTabInfoFromTrigger @b sourceName triggerName
+  let eventTriggerInfoMap = _tiEventTriggerInfoMap triggerInfo
+  HM.lookup triggerName eventTriggerInfoMap `onNothing` throw400 NotExists errMsg
   where
-    errMsg = "event trigger " <> triggerNameToTxt trn <<> " does not exist"
-
+    errMsg = "event trigger " <> triggerName <<> " does not exist"
 
 -- This change helps us create functions for the event triggers
 -- without the function name being truncated by PG, since PG allows

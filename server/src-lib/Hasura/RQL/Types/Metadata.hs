@@ -152,7 +152,7 @@ type Relationships a = InsOrdHashMap RelName a
 type ComputedFields b = InsOrdHashMap ComputedFieldName (ComputedFieldMetadata b)
 type RemoteRelationships = InsOrdHashMap RemoteRelationshipName RemoteRelationshipMetadata
 type Permissions a = InsOrdHashMap RoleName a
-type EventTriggers = InsOrdHashMap TriggerName EventTriggerConf
+type EventTriggers b = InsOrdHashMap TriggerName (EventTriggerConf b)
 
 data TableMetadata b
   = TableMetadata
@@ -167,7 +167,7 @@ data TableMetadata b
   , _tmSelectPermissions   :: !(Permissions (SelPermDef b))
   , _tmUpdatePermissions   :: !(Permissions (UpdPermDef b))
   , _tmDeletePermissions   :: !(Permissions (DelPermDef b))
-  , _tmEventTriggers       :: !EventTriggers
+  , _tmEventTriggers       :: !(EventTriggers b)
   } deriving (Generic)
 deriving instance (Backend b) => Show (TableMetadata b)
 deriving instance (Backend b) => Eq (TableMetadata b)
@@ -627,7 +627,7 @@ metadataToOrdJSON ( Metadata
                       , ("permission", permToOrdJSON permission)
                       ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
 
-        eventTriggerConfToOrdJSON :: EventTriggerConf -> AO.Value
+        eventTriggerConfToOrdJSON :: forall b. Backend b => EventTriggerConf b -> AO.Value
         eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers) =
           AO.object $ [ ("name", AO.toOrdered name)
                       , ("definition", AO.toOrdered definition)
@@ -864,4 +864,3 @@ $(deriveToJSON defaultOptions ''GetCatalogState)
 
 instance FromJSON GetCatalogState where
   parseJSON _ = pure GetCatalogState
-

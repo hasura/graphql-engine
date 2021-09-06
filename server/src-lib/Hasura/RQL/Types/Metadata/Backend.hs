@@ -68,7 +68,7 @@ class ( Backend b
     -> TableName b
     -> [ColumnInfo b]
     -> TriggerName
-    -> TriggerOpsDef
+    -> TriggerOpsDef b
     -> m (Either QErr ())
 
   buildEventTriggerInfo
@@ -76,8 +76,8 @@ class ( Backend b
     => Env.Environment
     -> SourceName
     -> TableName b
-    -> EventTriggerConf
-    -> m (EventTriggerInfo, [SchemaDependency])
+    -> EventTriggerConf b
+    -> m (EventTriggerInfo b, [SchemaDependency])
 
   parseBoolExpOperations
     :: (MonadError QErr m, TableCoreInfoRM b m)
@@ -103,8 +103,8 @@ class ( Backend b
     -> Column b
     -> Column b
     -> TableName b
-    -> EventTriggerConf
-    -> EventTriggerConf
+    -> EventTriggerConf b
+    -> EventTriggerConf b
 
   parseCollectableType
     :: (MonadError QErr m)

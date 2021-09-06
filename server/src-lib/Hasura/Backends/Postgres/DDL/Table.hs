@@ -58,7 +58,7 @@ createTableEventTrigger
   -> QualifiedTable
   -> [ColumnInfo ('Postgres pgKind)]
   -> TriggerName
-  -> TriggerOpsDef
+  -> TriggerOpsDef ('Postgres pgKind)
   -> m (Either QErr ())
 createTableEventTrigger serverConfigCtx sourceConfig table columns triggerName opsDefinition = runPgSourceWriteTx sourceConfig $ do
   -- Clean all existing triggers
@@ -92,7 +92,7 @@ mkAllTriggersQ
   => TriggerName
   -> QualifiedTable
   -> [ColumnInfo ('Postgres pgKind)]
-  -> TriggerOpsDef
+  -> TriggerOpsDef ('Postgres pgKind)
   -> m ()
 mkAllTriggersQ trn qt allCols fullspec = do
   onJust (tdInsert fullspec) (mkTriggerQ trn qt allCols INSERT)
@@ -124,7 +124,7 @@ mkTriggerQ
   -> QualifiedTable
   -> [ColumnInfo ('Postgres pgKind)]
   -> Ops
-  -> SubscribeOpSpec
+  -> SubscribeOpSpec ('Postgres pgKind)
   -> m ()
 mkTriggerQ trn qt@(QualifiedObject schema table) allCols op (SubscribeOpSpec listenColumns deliveryColumns') = do
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> ask
@@ -195,8 +195,8 @@ buildEventTriggerInfo
   => Env.Environment
   -> SourceName
   -> QualifiedTable
-  -> EventTriggerConf
-  -> m (EventTriggerInfo, [SchemaDependency])
+  -> EventTriggerConf ('Postgres pgKind)
+  -> m (EventTriggerInfo ('Postgres pgKind), [SchemaDependency])
 buildEventTriggerInfo env source qt (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
   webhookConf <- case (webhook, webhookFromEnv) of
     (Just w, Nothing)    -> return $ WCValue w
@@ -218,7 +218,7 @@ getTrigDefDeps
    . (Backend ('Postgres pgKind))
   => SourceName
   -> QualifiedTable
-  -> TriggerOpsDef
+  -> TriggerOpsDef ('Postgres pgKind)
   -> [SchemaDependency]
 getTrigDefDeps source qt (TriggerOpsDef mIns mUpd mDel _) =
   mconcat $ catMaybes [ subsOpSpecDeps <$> mIns
@@ -226,7 +226,7 @@ getTrigDefDeps source qt (TriggerOpsDef mIns mUpd mDel _) =
                       , subsOpSpecDeps <$> mDel
                       ]
   where
-    subsOpSpecDeps :: SubscribeOpSpec -> [SchemaDependency]
+    subsOpSpecDeps :: SubscribeOpSpec ('Postgres pgKind) -> [SchemaDependency]
     subsOpSpecDeps os =
       let cols = getColsFromSub $ sosColumns os
           colDeps = flip map cols $ \col ->
@@ -279,7 +279,7 @@ updateColumnInEventTrigger
   -> PGCol
   -> PGCol
   -> QualifiedTable
-  -> EventTriggerConf -> EventTriggerConf
+  -> EventTriggerConf ('Postgres pgKind) -> EventTriggerConf ('Postgres pgKind)
 updateColumnInEventTrigger table oCol nCol refTable = rewriteEventTriggerConf
   where
     rewriteSubsCols = \case

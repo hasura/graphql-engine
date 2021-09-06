@@ -14,7 +14,10 @@ import qualified Database.PG.Query                   as Q
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Base.Error
+import           Hasura.RQL.Types.Backend            (Backend)
+import           Hasura.RQL.Types.Common             (InputWebhook)
 import           Hasura.RQL.Types.EventTrigger
+import           Hasura.SQL.Backend
 
 
 runTx :: (MonadTx m) => Q.Query -> m ()
@@ -26,7 +29,7 @@ getCatalogVersion :: Q.TxE QErr Text
 getCatalogVersion = runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
   [Q.sql| SELECT version FROM hdb_catalog.hdb_version |] () False
 
-from3To4 :: MonadTx m => m ()
+from3To4 :: forall m. (Backend ('Postgres 'Vanilla), MonadTx m) => m ()
 from3To4 = liftTx $ Q.catchE defaultTxErrorHandler $ do
     Q.unitQ [Q.sql|
       ALTER TABLE hdb_catalog.event_triggers
@@ -44,6 +47,14 @@ from3To4 = liftTx $ Q.catchE defaultTxErrorHandler $ do
       DROP COLUMN retry_interval,
       DROP COLUMN headers |] () False
     where
+      uncurryEventTrigger
+        :: ( TriggerName
+           , Q.AltJ (TriggerOpsDef ('Postgres 'Vanilla))
+           , InputWebhook
+           , Int
+           , Int
+           , Q.AltJ (Maybe [HeaderConf]))
+        -> EventTriggerConf ('Postgres 'Vanilla)
       uncurryEventTrigger (trn, Q.AltJ tDef, w, nr, rint, Q.AltJ headers) =
         EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint Nothing) headers
       updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _) = Q.unitQ [Q.sql|

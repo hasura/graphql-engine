@@ -373,33 +373,6 @@ makeLenses ''RolePermInfo
 
 type RolePermInfoMap b = M.HashMap RoleName (RolePermInfo b)
 
-data EventTriggerInfo
- = EventTriggerInfo
-   { etiName        :: !TriggerName
-   , etiOpsDef      :: !TriggerOpsDef
-   , etiRetryConf   :: !RetryConf
-   , etiWebhookInfo :: !WebhookConfInfo
-   -- ^ The HTTP(s) URL which will be called with the event payload on configured operation.
-   -- Must be a POST handler. This URL can be entered manually or can be picked up from an
-   -- environment variable (the environment variable needs to be set before using it for
-   -- this configuration).
-   , etiHeaders     :: ![EventHeaderInfo]
-   -- ^ Custom headers can be added to an event trigger. Each webhook request will have these
-   -- headers added.
-   } deriving (Generic, Show, Eq)
-instance NFData EventTriggerInfo
-
-instance ToJSON EventTriggerInfo where
-  toJSON EventTriggerInfo{..} =
-    object [ "name" .= etiName
-           , "ops_def" .= etiOpsDef
-           , "retry_conf" .= etiRetryConf
-           , "webhook_info" .= etiWebhookInfo
-           , "headers" .= etiHeaders
-           ]
-
-type EventTriggerInfoMap = M.HashMap TriggerName EventTriggerInfo
-
 -- data ConstraintType
 --   = CTCHECK
 --   | CTFOREIGNKEY
@@ -574,7 +547,7 @@ data TableInfo (b :: BackendType)
   = TableInfo
   { _tiCoreInfo            :: TableCoreInfo b
   , _tiRolePermInfoMap     :: !(RolePermInfoMap b)
-  , _tiEventTriggerInfoMap :: !EventTriggerInfoMap
+  , _tiEventTriggerInfoMap :: !(EventTriggerInfoMap b)
   } deriving (Generic)
 
 instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (TableInfo b) where

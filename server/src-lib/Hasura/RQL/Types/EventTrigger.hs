@@ -17,22 +17,25 @@ module Hasura.RQL.Types.EventTrigger
   , defaultTimeoutSeconds
 
   , RecreateEventTriggers (..)
+  , EventTriggerInfo (..)
+  , EventTriggerInfoMap
   ) where
 
 import           Hasura.Prelude
 
-import qualified Database.PG.Query                  as Q
+import qualified Data.HashMap.Strict      as M
+import qualified Database.PG.Query        as Q
 
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
-import qualified Hasura.Backends.Postgres.SQL.Types as PG
-
-import           Hasura.Incremental                 (Cacheable)
+import           Hasura.Incremental       (Cacheable)
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.Common            (InputWebhook)
+import           Hasura.RQL.Types.Backend
+import           Hasura.RQL.Types.Common  (InputWebhook)
+import           Hasura.SQL.Backend
 
 
 -- | Unique name for event trigger.
@@ -48,33 +51,41 @@ newtype EventId = EventId {unEventId :: Text}
 
 data Ops = INSERT | UPDATE | DELETE | MANUAL deriving (Show)
 
-data SubscribeColumns = SubCStar | SubCArray [PG.PGCol]
-  deriving (Show, Eq, Generic)
-instance NFData SubscribeColumns
-instance Cacheable SubscribeColumns
+data SubscribeColumns (b :: BackendType) = SubCStar | SubCArray [Column b]
+  deriving (Generic)
+deriving instance Backend b => Show (SubscribeColumns b)
+deriving instance Backend b => Eq (SubscribeColumns b)
+instance Backend b => NFData (SubscribeColumns b)
+instance Backend b => Cacheable (SubscribeColumns b)
 
-instance FromJSON SubscribeColumns where
+
+instance Backend b => FromJSON (SubscribeColumns b) where
   parseJSON (String s) = case s of
                           "*" -> return SubCStar
                           _   -> fail "only * or [] allowed"
   parseJSON v@(Array _) = SubCArray <$> parseJSON v
   parseJSON _ = fail "unexpected columns"
 
-instance ToJSON SubscribeColumns where
+instance Backend b => ToJSON (SubscribeColumns b) where
   toJSON SubCStar         = "*"
   toJSON (SubCArray cols) = toJSON cols
 
-data SubscribeOpSpec
+data SubscribeOpSpec (b :: BackendType)
   = SubscribeOpSpec
-  { sosColumns :: !SubscribeColumns
+  { sosColumns :: !(SubscribeColumns b)
   -- ^ Columns of the table that user can subscribe to listen for changes.
-  , sosPayload :: !(Maybe SubscribeColumns)
+  , sosPayload :: !(Maybe (SubscribeColumns b))
   -- ^ Columns that the event trigger payload should consists. If set, only those columns will be
   -- visible in the payload. By default, the payload consists of all the columns of the table.
   } deriving (Show, Eq, Generic)
-instance NFData SubscribeOpSpec
-instance Cacheable SubscribeOpSpec
-$(deriveJSON hasuraJSON{omitNothingFields=True} ''SubscribeOpSpec)
+instance (Backend b) => NFData (SubscribeOpSpec b)
+instance (Backend b) => Cacheable (SubscribeOpSpec b)
+
+instance Backend b => FromJSON (SubscribeOpSpec b) where
+  parseJSON = genericParseJSON hasuraJSON {omitNothingFields=True}
+
+instance Backend b => ToJSON (SubscribeOpSpec b) where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields=True}
 
 defaultNumRetries :: Int
 defaultNumRetries = 0
@@ -132,32 +143,62 @@ instance NFData WebhookConfInfo
 $(deriveToJSON hasuraJSON{omitNothingFields=True} ''WebhookConfInfo)
 
 -- | The table operations on which the event trigger will be invoked.
-data TriggerOpsDef
+data TriggerOpsDef (b :: BackendType)
   = TriggerOpsDef
-  { tdInsert       :: !(Maybe SubscribeOpSpec)
-  , tdUpdate       :: !(Maybe SubscribeOpSpec)
-  , tdDelete       :: !(Maybe SubscribeOpSpec)
+  { tdInsert       :: !(Maybe (SubscribeOpSpec b))
+  , tdUpdate       :: !(Maybe (SubscribeOpSpec b))
+  , tdDelete       :: !(Maybe (SubscribeOpSpec b))
   , tdEnableManual :: !(Maybe Bool)
   } deriving (Show, Eq, Generic)
-instance NFData TriggerOpsDef
-instance Cacheable TriggerOpsDef
-$(deriveJSON hasuraJSON{omitNothingFields=True} ''TriggerOpsDef)
+instance Backend b => NFData (TriggerOpsDef b)
+instance Backend b => Cacheable (TriggerOpsDef b)
 
-data EventTriggerConf
+instance Backend b => FromJSON (TriggerOpsDef b) where
+  parseJSON = genericParseJSON hasuraJSON  {omitNothingFields=True}
+
+instance Backend b => ToJSON (TriggerOpsDef b) where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields=True}
+
+data EventTriggerConf (b :: BackendType)
   = EventTriggerConf
   { etcName           :: !TriggerName
-  , etcDefinition     :: !TriggerOpsDef
+  , etcDefinition     :: !(TriggerOpsDef b)
   , etcWebhook        :: !(Maybe InputWebhook)
   , etcWebhookFromEnv :: !(Maybe Text)
   , etcRetryConf      :: !RetryConf
   , etcHeaders        :: !(Maybe [HeaderConf])
   } deriving (Show, Eq, Generic)
-instance Cacheable EventTriggerConf
+instance Backend b => Cacheable (EventTriggerConf b)
 
-$(deriveJSON hasuraJSON{omitNothingFields=True} ''EventTriggerConf)
+instance Backend b => FromJSON (EventTriggerConf b) where
+  parseJSON = genericParseJSON hasuraJSON {omitNothingFields=True}
+
+instance Backend b => ToJSON (EventTriggerConf b) where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields=True}
 
 data RecreateEventTriggers
   = RETRecreate
   | RETDoNothing
   deriving (Show, Eq, Generic)
 instance Cacheable RecreateEventTriggers
+
+data EventTriggerInfo (b :: BackendType)
+ = EventTriggerInfo
+   { etiName        :: !TriggerName
+   , etiOpsDef      :: !(TriggerOpsDef b)
+   , etiRetryConf   :: !RetryConf
+   , etiWebhookInfo :: !WebhookConfInfo
+   -- ^ The HTTP(s) URL which will be called with the event payload on configured operation.
+   -- Must be a POST handler. This URL can be entered manually or can be picked up from an
+   -- environment variable (the environment variable needs to be set before using it for
+   -- this configuration).
+   , etiHeaders     :: ![EventHeaderInfo]
+   -- ^ Custom headers can be added to an event trigger. Each webhook request will have these
+   -- headers added.
+   } deriving (Generic, Eq)
+instance Backend b => NFData (EventTriggerInfo b)
+
+instance Backend b => ToJSON (EventTriggerInfo b) where
+  toJSON = genericToJSON hasuraJSON
+
+type EventTriggerInfoMap b = M.HashMap TriggerName (EventTriggerInfo b)

@@ -67,7 +67,7 @@ createTableEventTrigger
   -> TableName 'BigQuery
   -> [ColumnInfo 'BigQuery]
   -> TriggerName
-  -> TriggerOpsDef
+  -> TriggerOpsDef 'BigQuery
   -> m (Either QErr ())
 createTableEventTrigger _ _ _ _ _ _ = runExceptT $
   throw400 NotSupported "Cannot create table event triggers in BigQuery sources"
@@ -77,8 +77,8 @@ buildEventTriggerInfo
   => Env.Environment
   -> SourceName
   -> TableName 'BigQuery
-  -> EventTriggerConf
-  -> m (EventTriggerInfo, [SchemaDependency])
+  -> EventTriggerConf 'BigQuery
+  -> m (EventTriggerInfo 'BigQuery, [SchemaDependency])
 buildEventTriggerInfo _ _ _ _ =
   throw400 NotSupported "Table event triggers are not supported for BigQuery sources"
 
@@ -99,8 +99,8 @@ updateColumnInEventTrigger
   -> Column 'BigQuery
   -> Column 'BigQuery
   -> TableName 'BigQuery
-  -> EventTriggerConf
-  -> EventTriggerConf
+  -> EventTriggerConf 'BigQuery
+  -> EventTriggerConf 'BigQuery
 updateColumnInEventTrigger _ _ _ _ = id
 
 parseCollectableType

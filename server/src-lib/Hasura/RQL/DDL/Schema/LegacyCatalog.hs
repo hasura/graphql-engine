@@ -145,9 +145,9 @@ insertRelationshipToCatalog (QualifiedObject schema table) relType (RelDef name 
       VALUES ($1, $2, $3, $4, $5 :: jsonb, $6, $7) |]
 
 addEventTriggerToCatalog
-  :: MonadTx m
+  :: (MonadTx m, Backend ('Postgres pgKind))
   => QualifiedTable
-  -> EventTriggerConf
+  -> EventTriggerConf ('Postgres pgKind)
   -> m ()
 addEventTriggerToCatalog qt etc = liftTx do
   Q.unitQE defaultTxErrorHandler
@@ -366,8 +366,8 @@ fetchMetadataFromHdbTables = liftTx do
     mkTriggerMetaDefs = mapM trigRowToDef
 
     trigRowToDef (sn, tn, Q.AltJ configuration) = do
-      conf <- decodeValue configuration
-      return (QualifiedObject sn tn, conf::EventTriggerConf)
+      conf :: EventTriggerConf ('Postgres pgKind) <- decodeValue configuration
+      return (QualifiedObject sn tn, conf)
 
     fetchTables =
       Q.listQ [Q.sql|
