@@ -49,6 +49,9 @@ module Hasura.RQL.Types.Common
        , MetricsConfig(..)
        , emptyMetricsConfig
 
+       , PGConnectionParams(..)
+       , getPGConnectionStringFromParams
+       , getConnOptionsFromConnParams
        ) where
 
 import           Hasura.Prelude
@@ -60,6 +63,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
 import qualified PostgreSQL.Binary.Decoding    as PD
 
+import           Control.Lens                  (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -68,6 +72,7 @@ import           Data.Scientific               (toBoundedInteger)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 import           Data.URL.Template
+import           Network.URI
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
@@ -249,7 +254,7 @@ instance FromJSON NonNegativeDiffTime where
       False -> fail "negative value not allowed"
 
 newtype ResolvedWebhook
-  = ResolvedWebhook { unResolvedWebhook :: Text}
+  = ResolvedWebhook { unResolvedWebhook :: Text }
   deriving ( Show, Eq, FromJSON, ToJSON, Hashable, ToTxt)
 
 newtype InputWebhook
@@ -292,33 +297,128 @@ instance FromJSON Timeout where
 defaultActionTimeoutSecs :: Timeout
 defaultActionTimeoutSecs = Timeout 30
 
+-- | See API reference here:
+--   https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconnectionparameters
+data PGConnectionParams = PGConnectionParams
+  { _pgcpHost     :: !Text
+  , _pgcpUsername :: !Text
+  , _pgcpPassword :: !(Maybe Text)
+  , _pgcpPort     :: !Int
+  , _pgcpDatabase :: !Text
+  } deriving (Show, Eq, Generic)
+instance NFData PGConnectionParams
+instance Cacheable PGConnectionParams
+instance Hashable PGConnectionParams
+$(makeLenses ''PGConnectionParams)
+$(deriveToJSON hasuraJSON{omitNothingFields = True} ''PGConnectionParams)
+
+instance FromJSON PGConnectionParams where
+  parseJSON = withObject "PGConnectionParams" $ \o ->
+    PGConnectionParams
+      <$> o .:  "host"
+      <*> o .:  "username"
+      <*> o .:? "password"
+      <*> o .:  "port"
+      <*> o .:  "database"
+
 data UrlConf
   = UrlValue !InputWebhook
+  -- ^ the database connection string
   | UrlFromEnv !T.Text
+  -- ^ the name of environment variable containing the connection string
+  | UrlFromParams !PGConnectionParams
+  -- ^ the minimum required `connection parameters` to construct a valid connection string
   deriving (Show, Eq, Generic)
 instance NFData UrlConf
 instance Cacheable UrlConf
 instance Hashable UrlConf
 
 instance ToJSON UrlConf where
-  toJSON (UrlValue w)      = toJSON w
-  toJSON (UrlFromEnv wEnv) = object ["from_env" .= wEnv ]
+  toJSON (UrlValue w)            = toJSON w
+  toJSON (UrlFromEnv wEnv)       = object [ "from_env" .= wEnv ]
+  toJSON (UrlFromParams wParams) = object [ "connection_parameters" .= wParams ]
 
 instance FromJSON UrlConf where
-  parseJSON (Object o) = UrlFromEnv <$> o .: "from_env"
+  parseJSON (Object o) = do
+    mFromEnv    <- (fmap . fmap) UrlFromEnv    (o .:? "from_env")
+    mFromParams <- (fmap . fmap) UrlFromParams (o .:? "connection_parameters")
+    case (mFromEnv, mFromParams) of
+      (Just fromEnv, Nothing)    -> pure fromEnv
+      (Nothing, Just fromParams) -> pure fromParams
+      (Just _, Just _)           -> fail $ commonJSONParseErrorMessage "Only one of "
+      (Nothing, Nothing)         -> fail $ commonJSONParseErrorMessage "Either "
+      where
+          -- NOTE(Sam): Maybe this could be put with other string manipulation utils
+          -- helper to apply `dquote` for values of type `String`
+          dquoteStr :: String -> String
+          dquoteStr = T.unpack . dquote . T.pack
+
+          -- helper for formatting error messages within this instance
+          commonJSONParseErrorMessage :: String -> String
+          commonJSONParseErrorMessage strToBePrepended =
+            strToBePrepended <> dquoteStr "from_env" <> " or "
+            <> dquoteStr "connection_parameters" <> " should be provided"
+
   parseJSON t@(String _) =
     case (fromJSON t) of
       Error s   -> fail s
       Success a -> pure $ UrlValue a
-  parseJSON _          = fail "one of string or object must be provided for url/webhook"
 
-resolveUrlConf
-  :: MonadError QErr m => Env.Environment -> UrlConf -> m Text
+  parseJSON _            = fail "one of string or object must be provided for url/webhook"
+
+getConnOptionsFromConnParams :: PGConnectionParams -> Q.ConnOptions
+getConnOptionsFromConnParams PGConnectionParams{..} =
+  Q.ConnOptions {
+    connHost     = T.unpack _pgcpHost
+  , connUser     = T.unpack _pgcpUsername
+  , connPort     = _pgcpPort
+  , connDatabase = T.unpack _pgcpDatabase
+  , connPassword = T.unpack $ fromMaybe "" _pgcpPassword
+  , connOptions  = Nothing
+  }
+
+-- | Construct a Postgres connection URI as a String from 'PGConnectionParams'.
+--
+-- NOTE: This function takes care to properly escape all URI components, as
+-- Postgres requires that a connection URI is percent-encoded if it includes
+-- symbols with "special meaning".
+--
+-- See the @libpq@ documentation for details: https://www.postgresql.org/docs/13/libpq-connect.html#id-1.7.3.8.3.6
+getPGConnectionStringFromParams :: PGConnectionParams -> String
+getPGConnectionStringFromParams PGConnectionParams{..} =
+  let uriAuth = rectifyAuth $ URIAuth {
+        uriUserInfo = getURIAuthUserInfo _pgcpUsername _pgcpPassword
+      , uriRegName  = unpackEscape _pgcpHost
+      , uriPort     = show _pgcpPort
+      }
+      pgConnectionURI = rectify $ URI {
+        uriScheme    = "postgresql"
+      , uriAuthority = Just uriAuth
+      , uriPath      = "/" <> unpackEscape _pgcpDatabase
+      , uriQuery     = ""
+      , uriFragment  = ""
+      }
+  in
+  uriToString id pgConnectionURI $ "" -- NOTE: this is done because uriToString returns a value of type ShowS
+  where
+    -- Helper to manage proper escaping in URI components.
+    unpackEscape = escapeURIString isUnescapedInURIComponent . T.unpack
+
+    -- Construct the 'URIAuth' 'uriUserInfo' component string from a username
+    -- and optional password provided by 'PGConnectionParams'.
+    getURIAuthUserInfo :: Text -> Maybe Text -> String
+    getURIAuthUserInfo username mPassword = case mPassword of
+      Nothing       -> unpackEscape username
+      Just password -> unpackEscape username <> ":" <> unpackEscape password
+
+resolveUrlConf :: MonadError QErr m => Env.Environment -> UrlConf -> m Text
 resolveUrlConf env = \case
-  UrlValue v        -> unResolvedWebhook <$> resolveWebhook env v
-  UrlFromEnv envVar -> getEnv env envVar
+  UrlValue v               -> unResolvedWebhook <$> resolveWebhook env v
+  UrlFromEnv envVar        -> getEnv env envVar
+  UrlFromParams connParams ->
+    pure . T.pack $ getPGConnectionStringFromParams connParams
 
-getEnv :: QErrM m => Env.Environment -> T.Text -> m T.Text
+getEnv :: QErrM m => Env.Environment -> Text -> m Text
 getEnv env k = do
   let mEnv = Env.lookupEnv env (T.unpack k)
   case mEnv of
