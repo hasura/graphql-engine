@@ -31,6 +31,7 @@ import qualified Network.WebSockets                          as WS
 import qualified StmContainers.Map                           as STMMap
 import qualified System.IO.Error                             as E
 
+import           Hasura.GraphQL.ParameterizedQueryHash       (ParameterizedQueryHash)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.Logging                              as L
@@ -72,10 +73,12 @@ $(J.deriveToJSON
 -- extra websocket event info
 data WSEventInfo
   = WSEventInfo
-  { _wseiEventType          :: !(Maybe ServerMsgType)
-  , _wseiOperationId        :: !(Maybe OperationId)
-  , _wseiQueryExecutionTime :: !(Maybe Double)
-  , _wseiResponseSize       :: !(Maybe Int64)
+  { _wseiEventType              :: !(Maybe ServerMsgType)
+  , _wseiOperationId            :: !(Maybe OperationId)
+  , _wseiOperationName          :: !(Maybe OperationName)
+  , _wseiQueryExecutionTime     :: !(Maybe Double)
+  , _wseiResponseSize           :: !(Maybe Int64)
+  , _wseiParameterizedQueryHash :: !(Maybe ParameterizedQueryHash)
   } deriving (Show, Eq)
 $(J.deriveToJSON
   J.defaultOptions { J.fieldLabelModifier = J.snakeCase . drop 5

@@ -3,13 +3,13 @@
 {-# LANGUAGE CPP #-}
 
 module Hasura.GraphQL.Transport.WebSocket
-  ( onConn
+  ( -- | the main handlers for the websocket server
+    onConn
   , onMessage
   , onClose
-  -- ^ the main handlers for the websocket server
+  -- | helpers for sending messages to the client
   , sendMsg
   , sendCloseWithMsg
-  -- ^ helpers for sending messages to the client
   ) where
 
 -- NOTE!:
@@ -64,6 +64,7 @@ import           Hasura.Backends.Postgres.Instances.Transport (runPGMutationTran
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
+import           Hasura.GraphQL.ParameterizedQueryHash        (ParameterizedQueryHash)
 import           Hasura.GraphQL.Parser.Directives             (cached)
 import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP                (MonadExecuteQuery (..),
@@ -110,11 +111,12 @@ $(J.deriveToJSON
 
 data OperationDetails
   = OperationDetails
-  { _odOperationId   :: !OperationId
-  , _odRequestId     :: !(Maybe RequestId)
-  , _odOperationName :: !(Maybe OperationName)
-  , _odOperationType :: !OpDetail
-  , _odQuery         :: !(Maybe GQLReqUnparsed)
+  { _odOperationId            :: !OperationId
+  , _odRequestId              :: !(Maybe RequestId)
+  , _odOperationName          :: !(Maybe OperationName)
+  , _odOperationType          :: !OpDetail
+  , _odQuery                  :: !(Maybe GQLReqUnparsed)
+  , _odParameterizedQueryHash :: !(Maybe ParameterizedQueryHash)
   } deriving (Show, Eq)
 $(J.deriveToJSON hasuraJSON ''OperationDetails)
 
@@ -215,8 +217,15 @@ sendCloseWithMsg logger wsConn errCode mErrServerMsg = do
     wsc    = WS.getRawWebSocketConnection wsConn
     errMsg = encodeServerErrorMsg errCode
 
-sendMsgWithMetadata :: (MonadIO m) => WSConn -> ServerMsg -> LQ.LiveQueryMetadata -> m ()
-sendMsgWithMetadata wsConn msg (LQ.LiveQueryMetadata execTime) =
+sendMsgWithMetadata
+  :: (MonadIO m)
+  => WSConn
+  -> ServerMsg
+  -> Maybe OperationName
+  -> Maybe ParameterizedQueryHash
+  -> LQ.LiveQueryMetadata
+  -> m ()
+sendMsgWithMetadata wsConn msg opName paramQueryHash (LQ.LiveQueryMetadata execTime) =
   liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse bs wsInfo
   where
     bs = encodeServerMsg msg
@@ -227,8 +236,10 @@ sendMsgWithMetadata wsConn msg (LQ.LiveQueryMetadata execTime) =
     wsInfo = Just $! WS.WSEventInfo
       { WS._wseiEventType = msgType
       , WS._wseiOperationId = operationId
+      , WS._wseiOperationName = opName
       , WS._wseiQueryExecutionTime = Just $! realToFrac execTime
       , WS._wseiResponseSize = Just $! LBS.length bs
+      , WS._wseiParameterizedQueryHash = paramQueryHash
       }
 
 onConn :: (MonadIO m, MonadReader WSServerEnv m)
@@ -352,11 +363,12 @@ onStart
   -> m ()
 onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions = catchAndIgnore $ do
   timerTot <- startTimer
-  opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
+  op <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
+  let opName = _grOperationName q
 
   -- NOTE: it should be safe to rely on this check later on in this function, since we expect that
   -- we process all operations on a websocket connection serially:
-  when (isJust opM) $ withComplete $ sendStartErr $
+  when (isJust op) $ withComplete $ sendStartErr $
     "an operation already exists with this id: " <> unOperationId opId
 
   userInfoM <- liftIO $ STM.readTVarIO userInfoR
@@ -401,7 +413,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
       case cachedValue of
         Just cachedResponseData -> do
           logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindCached
-          sendSuccResp cachedResponseData $ LQ.LiveQueryMetadata 0
+          sendSuccResp cachedResponseData opName parameterizedQueryHash $ LQ.LiveQueryMetadata 0
         Nothing -> do
           conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
             E.ExecStepDB _headers exists remoteJoins -> doQErr $ do
@@ -434,7 +446,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
             E.ExecStepRaw json -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
               buildRaw json
-          buildResultFromFragments Telem.Query timerTot requestId conclusion
+          buildResultFromFragments Telem.Query timerTot requestId conclusion opName parameterizedQueryHash
           case conclusion of
             Left _ -> pure ()
             Right results -> do
@@ -443,7 +455,8 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
               void $ Tracing.interpTraceT (withExceptT mempty) $
                              cacheStore cacheKey cachedDirective $ encJFromInsOrdHashMap $
                              rfResponse <$> OMap.mapKeys G.unName results
-      liftIO $ sendCompleted (Just requestId)
+
+      liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
 
     E.MutationExecutionPlan mutationPlan -> do
       -- See Note [Backwards-compatible transaction optimisation]
@@ -458,7 +471,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                 telemLocality  = Telem.Local
                 telemTimeIO    = convertDuration telemTimeIO_DT
             telemTimeTot <- Seconds <$> timerTot
-            sendSuccResp (encJFromInsOrdHashMap $ OMap.mapKeys G.unName results) $
+            sendSuccResp (encJFromInsOrdHashMap $ OMap.mapKeys G.unName results) opName parameterizedQueryHash $
               LQ.LiveQueryMetadata telemTimeIO_DT
             -- Telemetry. NOTE: don't time network IO:
             Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
@@ -497,8 +510,8 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
             E.ExecStepRaw json -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
               buildRaw json
-          buildResultFromFragments Telem.Query timerTot requestId conclusion
-      liftIO $ sendCompleted (Just requestId)
+          buildResultFromFragments Telem.Query timerTot requestId conclusion opName parameterizedQueryHash
+      liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
 
     E.SubscriptionExecutionPlan subExec -> do
       case subExec of
@@ -507,7 +520,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
           liftIO do
             let allActionIds = map fst $ OMap.elems actions
             case NE.nonEmpty allActionIds of
-              Nothing -> sendCompleted $ Just requestId
+              Nothing -> sendCompleted (Just requestId) (Just parameterizedQueryHash)
               Just actionIds -> do
                 let sendResponseIO actionLogMap = do
                      (dTime, resultsE) <- withElapsedTime $ runExceptT $
@@ -521,10 +534,10 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                          let dataMsg =  sendDataMsg $
                                         DataMsg opId $ pure $ encJToLBS $
                                         encJFromInsOrdHashMap $ OMap.mapKeys G.unName results
-                         sendMsgWithMetadata wsConn dataMsg $ LQ.LiveQueryMetadata dTime
+                         sendMsgWithMetadata wsConn dataMsg opName (Just parameterizedQueryHash) $ LQ.LiveQueryMetadata dTime
 
                     asyncActionQueryLive = LQ.LAAQNoRelationships $
-                      LQ.LiveAsyncActionQueryWithNoRelationships sendResponseIO (sendCompleted (Just requestId))
+                      LQ.LiveAsyncActionQueryWithNoRelationships sendResponseIO (sendCompleted (Just requestId) (Just parameterizedQueryHash))
 
                 LQ.addAsyncActionLiveQuery (LQ._lqsAsyncActions lqMap) opId actionIds
                                            (sendError requestId) asyncActionQueryLive
@@ -556,7 +569,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                                             nonEmptyActionIds onUnexpectedException
                                             asyncActionQueryLive
 
-      liftIO $ logOpEv ODStarted (Just requestId)
+      liftIO $ logOpEv ODStarted (Just requestId) (Just parameterizedQueryHash)
   where
     sendDataMsg = WS._wsaGetDataMessageType onMessageActions
     closeConnAction = WS._wsaConnectionCloseAction onMessageActions
@@ -583,12 +596,12 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
       Left (Right err) -> postExecErr requestId err
       Right results    -> f results
 
-    buildResultFromFragments telemQueryType timerTot requestId r =
+    buildResultFromFragments telemQueryType timerTot requestId r opName pqh =
       buildResult requestId r \results -> do
         let telemLocality = foldMap rfLocality results
             telemTimeIO   = convertDuration $ sum $ fmap rfTimeIO results
         telemTimeTot <- Seconds <$> timerTot
-        sendSuccResp (encJFromInsOrdHashMap (fmap rfResponse (OMap.mapKeys G.unName results))) $
+        sendSuccResp (encJFromInsOrdHashMap (fmap rfResponse (OMap.mapKeys G.unName results))) opName pqh $
           LQ.LiveQueryMetadata $ sum $ fmap rfTimeIO results
         -- Telemetry. NOTE: don't time network IO:
         Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
@@ -612,11 +625,11 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
 
     WSConnData userInfoR opMap errRespTy queryType = WS.getData wsConn
 
-    logOpEv opTy reqId =
+    logOpEv opTy reqId parameterizedQueryHash =
       -- See Note [Disable query printing when query-log is disabled]
       let queryToLog = bool Nothing (Just q) (Set.member L.ELTQueryLog enabledLogTypes)
       in logWSEvent logger wsConn $ EOperation $
-           OperationDetails opId reqId (_grOperationName q) opTy queryToLog
+           OperationDetails opId reqId (_grOperationName q) opTy queryToLog parameterizedQueryHash
 
     getErrFn ERTLegacy           = encodeQErr
     getErrFn ERTGraphqlCompliant = encodeGQLErr
@@ -625,17 +638,17 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
       let errFn = getErrFn errRespTy
       sendMsg wsConn $
         SMErr $ ErrorMsg opId $ errFn False $ err400 StartFailed e
-      liftIO $ logOpEv (ODProtoErr e) Nothing
+      liftIO $ logOpEv (ODProtoErr e) Nothing Nothing
       liftIO $ closeConnAction wsConn opId (T.unpack e)
 
-    sendCompleted reqId = do
+    sendCompleted reqId paramQueryHash = do
       sendMsg wsConn (SMComplete . CompletionMsg $ opId)
-      logOpEv ODCompleted reqId
+      logOpEv ODCompleted reqId paramQueryHash
 
     postExecErr :: RequestId -> QErr -> ExceptT () m ()
     postExecErr reqId qErr = do
       let errFn = getErrFn errRespTy False
-      liftIO $ logOpEv (ODQueryErr qErr) (Just reqId)
+      liftIO $ logOpEv (ODQueryErr qErr) (Just reqId) Nothing
       postExecErr' $ GQExecError $ pure $ errFn qErr
 
     postExecErr' :: GQExecError -> ExceptT () m ()
@@ -646,21 +659,27 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
 
     sendError reqId qErr = do
       let errFn = getErrFn errRespTy
-      logOpEv (ODQueryErr qErr) (Just reqId)
+      logOpEv (ODQueryErr qErr) (Just reqId) Nothing
       let err = case errRespTy of
             ERTLegacy           -> errFn False qErr
             ERTGraphqlCompliant -> J.object ["errors" J..= [errFn False qErr]]
       sendMsg wsConn (SMErr $ ErrorMsg opId err)
 
-    sendSuccResp :: EncJSON -> LQ.LiveQueryMetadata -> ExceptT () m ()
-    sendSuccResp encJson =
-      sendMsgWithMetadata wsConn $
-        sendDataMsg $ DataMsg opId $ pure $ encJToLBS encJson
+    sendSuccResp
+      :: EncJSON
+      -> Maybe OperationName
+      -> ParameterizedQueryHash
+      -> LQ.LiveQueryMetadata
+      -> ExceptT () m ()
+    sendSuccResp encJson opName queryHash =
+      sendMsgWithMetadata wsConn
+        (sendDataMsg $ DataMsg opId $ pure $ encJToLBS encJson)
+        opName (Just queryHash)
 
     withComplete :: ExceptT () m () -> ExceptT () m a
     withComplete action = do
       action
-      liftIO $ sendCompleted Nothing
+      liftIO $ sendCompleted Nothing Nothing
       throwError ()
 
     restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder lqId actionLogMap = do
@@ -676,7 +695,16 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         -- crucial we don't lose lqId after addLiveQuery returns successfully.
         !lqId <- liftIO $ AB.dispatchAnyBackend @BackendTransport exists
           \(E.MultiplexedLiveQueryPlan liveQueryPlan) ->
-            LQ.addLiveQuery logger (_wseServerMetrics serverEnv) subscriberMetadata lqMap sourceName parameterizedQueryHash opName requestId liveQueryPlan liveQOnChange
+            LQ.addLiveQuery logger
+                            (_wseServerMetrics serverEnv)
+                            subscriberMetadata
+                            lqMap
+                            sourceName
+                            parameterizedQueryHash
+                            opName
+                            requestId
+                            liveQueryPlan
+                            (liveQOnChange opName parameterizedQueryHash)
 #ifndef PROFILING
         liftIO $ $assertNFHere (lqId, opName)  -- so we don't write thunks to mutable vars
 #endif
@@ -687,12 +715,13 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         pure lqId
 
     -- on change, send message on the websocket
-    liveQOnChange :: LQ.OnChange
-    liveQOnChange = \case
+    liveQOnChange :: Maybe OperationName -> ParameterizedQueryHash -> LQ.OnChange
+    liveQOnChange opName queryHash = \case
       Right (LQ.LiveQueryResponse bs dTime) ->
         sendMsgWithMetadata wsConn
-        (sendDataMsg $ DataMsg opId $ pure $ LBS.fromStrict bs)
-        (LQ.LiveQueryMetadata dTime)
+          (sendDataMsg $ DataMsg opId $ pure $ LBS.fromStrict bs)
+          opName (Just queryHash)
+          (LQ.LiveQueryMetadata dTime)
       resp -> sendMsg wsConn $
         sendDataMsg $ DataMsg opId $ LBS.fromStrict . LQ._lqrPayload <$> resp
 
@@ -785,7 +814,7 @@ stopOperation serverEnv wsConn opId logWhenOpNotExist = do
     logger = _wseLogger serverEnv
     lqMap  = _wseLiveQMap serverEnv
     opMap  = _wscOpMap $ WS.getData wsConn
-    opDet n = OperationDetails opId Nothing n ODStopped Nothing
+    opDet n = OperationDetails opId Nothing n ODStopped Nothing Nothing
 
 onConnInit
   :: (HasVersion, MonadIO m, UserAuthentication (Tracing.TraceT m))
