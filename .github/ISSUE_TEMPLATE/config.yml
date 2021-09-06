@@ -1,0 +1,12 @@
+blank_issues_enabled: false
+contact_links:
+  - name: ☁️ Hasura Cloud Help & Support Center
+    url: https://cloud.hasura.io/support
+    about: For Issues related to Hasura Cloud ⚡️
+  - name: ❓ Get Support from Discord Community
+    url: https://discord.com/invite/hasura
+    about: Please ask and answer questions here. 🏥
+  - name: 🙋‍♀️ Have a question on how to achieve something with Hasura?
+    url: https://github.com/hasura/graphql-engine/discussions
+    about: Start a GitHub discussion
+    
