@@ -48,6 +48,9 @@ class TestMetadata:
 
     def test_pg_add_source(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_add_source.yaml')
+    
+    def test_pg_add_source_with_source_parameters(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/pg_add_source_with_parameters.yaml')
 
     def test_pg_track_table_source(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_track_table_source.yaml')

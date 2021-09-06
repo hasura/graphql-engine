@@ -163,8 +163,8 @@ PGSourceConnectionInfo
      - Description
    * - database_url
      - true
-     - ``String`` | FromEnv_
-     - The database connection URL string, or as an environment variable
+     - ``String`` | FromEnv_ | PGConnectionParameters_
+     - The database connection URL as a string, as an environment variable, or as connection parameters.
    * - pool_settings
      - false
      - PGPoolSettings_
@@ -221,6 +221,40 @@ FromEnv
      - true
      - ``String``
      - Name of the environment variable
+
+.. _PGConnectionParameters:
+
+PGConnectionParameters
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - username
+     - true
+     - ``String``
+     - The Postgres user to be connected
+   * - password
+     - false
+     - ``String``
+     - The Postgres user's password
+   * - database
+     - true
+     - ``String``
+     - The database name
+   * - host
+     - true
+     - ``String``
+     - The name of the host to connect to
+   * - port
+     - true
+     - ``Integer``
+     - The port number to connect with, at the server host
+
 
 .. _PGPoolSettings:
 

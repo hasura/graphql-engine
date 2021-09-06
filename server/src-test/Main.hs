@@ -30,6 +30,7 @@ import qualified Hasura.GraphQL.RemoteServerSpec      as RemoteServerSpec
 import qualified Hasura.GraphQL.Schema.RemoteTest     as GraphRemoteSchemaSpec
 import qualified Hasura.IncrementalSpec               as IncrementalSpec
 import qualified Hasura.RQL.PermissionSpec            as PermSpec
+import qualified Hasura.RQL.Types.CommonSpec          as CommonTypesSpec
 import qualified Hasura.RQL.Types.EndpointSpec        as EndpointSpec
 import qualified Hasura.SQL.WKTSpec                   as WKTSpec
 import qualified Hasura.Server.AuthSpec               as AuthSpec
@@ -79,6 +80,7 @@ unitSpecs = do
   describe "Hasura.GraphQL.Parser.Directives" GraphQLDirectivesSpec.spec
   describe "Hasura.GraphQL.Schema.Remote" GraphRemoteSchemaSpec.spec
   describe "Hasura.Incremental" IncrementalSpec.spec
+  describe "Hasura.RQL.Types.Common" CommonTypesSpec.spec
   describe "Hasura.RQL.Types.Endpoint" EndpointSpec.spec
   describe "Hasura.GraphQL.RemoteServer" RemoteServerSpec.spec
   describe "Hasura.SQL.WKT" WKTSpec.spec

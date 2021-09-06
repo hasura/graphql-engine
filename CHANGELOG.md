@@ -6,6 +6,7 @@
 
 - server: disable mutation for materialised views (#6688)
 - server: set `tracecontext` and `userInfo` for DML actions on Postgres sources
+- server: add support for `connection_parameters` on `pg_add_source` API
 - cli: add progress bar for `migrate apply` command (#4795)
 
 ## v2.0.8
