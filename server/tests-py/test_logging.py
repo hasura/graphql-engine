@@ -10,6 +10,19 @@ from context import PytestConf
 if not PytestConf.config.getoption("--test-logging"):
     pytest.skip("--test-logging missing, skipping tests", allow_module_level=True)
 
+def parse_logs():
+    # parse the log file into a json list
+    log_file = os.getenv('LOGGING_TEST_LOGFILE_PATH', None)
+    if not log_file:
+        print('Could not determine log file path to test logging!')
+        assert False
+    loglines = []
+    with open(log_file, 'r') as f:
+        loglines = f.readlines()
+    logs = list(map(lambda x: json.loads(x.strip()), loglines))
+    assert len(logs) > 0
+    return logs
+
 class TestLogging():
     dir = 'queries/logging'
     success_query = {'query': 'query { hello {code name} }'}
@@ -70,25 +83,12 @@ class TestLogging():
             assert resp.status_code == 401 and 'error' in resp.json()
 
             # gather and parse the logs now
-            self.logs = self._parse_logs(hge_ctx)
+            self.logs = parse_logs()
             # sometimes the log might take time to buffer
             time.sleep(2)
             yield
         finally:
             self._teardown(hge_ctx)
-
-    def _parse_logs(self, hge_ctx):
-        # parse the log file into a json list
-        log_file = os.getenv('LOGGING_TEST_LOGFILE_PATH', None)
-        if not log_file:
-            print('Could not determine log file path to test logging!')
-            assert False
-        loglines = []
-        with open(log_file, 'r') as f:
-            loglines = f.readlines()
-        logs = list(map(lambda x: json.loads(x.strip()), loglines))
-        assert len(logs) > 0
-        return logs
 
     def test_startup_logs(self, hge_ctx):
         def _get_server_config(x):
@@ -205,3 +205,78 @@ class TestLogging():
         assert http_logs[0]['detail']['operation']['error']['code'] == 'access-denied'
         assert http_logs[0]['detail']['operation'].get('query') is None
         assert http_logs[0]['detail']['operation']['raw_query'] is not None
+
+
+class TestWebsocketLogging():
+    """
+    Test logs emitted on websocket transport
+    1. websocket-log
+    2. ws-server
+    """
+    dir = 'queries/logging'
+    query = {
+        'query': 'query GetHello { hello {code name} }',
+        'operationName': 'GetHello'
+    }
+    query_id = 'successful-ws-log-test'
+
+    def _teardown(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx):
+        # setup some tables
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+
+        try:
+            # make a successful websocket query
+            headers = {'x-request-id': self.query_id}
+            if hge_ctx.hge_key:
+                headers['x-hasura-admin-secret'] = hge_ctx.hge_key
+
+            resp = hge_ctx.ws_client.send_query(self.query, headers=headers,
+                                                query_id=self.query_id,
+                                                timeout=5)
+            try:
+                ev = next(resp)
+                assert ev['type'] == 'data' and ev['id'] == self.query_id, ev
+            finally:
+                hge_ctx.ws_client.stop(self.query_id)
+
+            # sometimes the log might take time to buffer
+            time.sleep(2)
+            # gather and parse the logs now
+            self.logs = parse_logs()
+            yield
+        finally:
+            self._teardown(hge_ctx)
+
+    def test_websocket_log(self, hge_ctx):
+        """
+        tests for the `websocket-log` type. currently tests presence of operation_name
+        """
+        def _get_websocket_operation_logs(x):
+            return x['type'] == 'websocket-log' and x['detail']['event']['type'] == 'operation'
+
+        ws_logs = list(filter(_get_websocket_operation_logs, self.logs))
+        assert len(ws_logs) > 0
+        onelog = ws_logs[0]['detail']['event']['detail']
+        assert 'request_id' in onelog
+        assert 'operation_name' in onelog
+        assert 'query' in onelog
+        assert 'query' in onelog['query']
+
+    def test_ws_server_log(self, hge_ctx):
+        """
+        tests for the `websocket-log` type. currently tests presence of operation_name
+        """
+        def _get_ws_server_logs(x):
+            return x['type'] == 'ws-server' and 'metadata' in x['detail']
+
+        ws_logs = list(filter(_get_ws_server_logs, self.logs))
+        assert len(ws_logs) > 0
+        onelog = ws_logs[0]['detail']
+        assert 'operation_id' in onelog['metadata']
+        assert 'operation_name' in onelog['metadata']

@@ -772,6 +772,8 @@ case "$SERVER_TEST_TO_RUN" in
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
     export HASURA_GRAPHQL_ENABLED_LOG_TYPES=" startup,http-log,webhook-log,websocket-log,query-log"
+    export HASURA_GRAPHQL_LOG_LEVEL="debug"
+
 
     #run_hge_with_args serve
     # we are doing this instead of calling run_hge_with_args, because we want to save in a custom log file
