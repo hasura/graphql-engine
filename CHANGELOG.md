@@ -4,6 +4,7 @@
 
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: disable mutation for materialised views (#6688)
 - server: set `tracecontext` and `userInfo` for DML actions on Postgres sources
 - cli: add progress bar for `migrate apply` command (#4795)
 
