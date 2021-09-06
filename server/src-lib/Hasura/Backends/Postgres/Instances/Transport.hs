@@ -62,13 +62,11 @@ runPGQuery
   -> Maybe EQ.PreparedSql
   -> m (DiffTime, EncJSON)
   -- ^ Also return the time spent in the PG query; for telemetry.
-runPGQuery reqId query fieldName userInfo logger sourceConfig tx genSql = do
+runPGQuery reqId query fieldName _userInfo logger sourceConfig tx genSql = do
   -- log the generated SQL and the graphql query
-  traceCtx <- currentContext
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
   withElapsedTime $ trace ("Postgres Query for root field " <>> fieldName) $
-    Tracing.interpTraceT id $
-    hoist (runQueryTxWithCtx userInfo traceCtx $ _pscExecCtx sourceConfig) tx
+    Tracing.interpTraceT id $ hoist (runQueryTx $ _pscExecCtx sourceConfig) tx
 
 runPGMutation
   :: ( MonadIO m
