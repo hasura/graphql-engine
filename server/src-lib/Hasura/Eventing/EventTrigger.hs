@@ -267,7 +267,7 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx{..} L
             let eventTriggerCount = sum (M.size . _tiEventTriggerInfoMap <$> tables)
 
             -- only process events for this source if at least one event trigger exists
-            if eventTriggerCount > 0 then fmap (concat . toList) $
+            if eventTriggerCount > 0 then (concat . toList) <$>
               for (unsafeSourceConfiguration @('Postgres 'Vanilla) sourceCache) \sourceConfig -> do
                 fetchEventsTxE <-
                   case maintenanceMode of
@@ -534,7 +534,7 @@ logQErr err = do
   L.unLogger logger $ EventInternalErr err
 
 getEventTriggerInfoFromEvent
-  :: SchemaCache -> Event -> Either Text EventTriggerInfo
+  :: SchemaCache -> Event -> Either Text (EventTriggerInfo ('Postgres 'Vanilla))
 getEventTriggerInfoFromEvent sc e = do
   let table = eTable e
       mTableInfo = unsafeTableInfo @('Postgres 'Vanilla) (eSource e) table $ scSources sc

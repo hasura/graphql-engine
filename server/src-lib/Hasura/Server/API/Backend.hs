@@ -47,7 +47,7 @@ commandParser expected constructor provided arguments =
   -- is not the command we were expecting here, it is fine to continue with another".
   whenMaybe (expected == provided) $ constructor <$> (J.parseJSON arguments <?> J.Key "args")
 
-sourceCommands, tableCommands, tablePermissionsCommands, functionCommands, functionPermissionsCommands, relationshipCommands, remoteRelationshipCommands
+sourceCommands, tableCommands, tablePermissionsCommands, functionCommands, functionPermissionsCommands, relationshipCommands, remoteRelationshipCommands, eventTriggerCommands
   :: forall (b :: BackendType). Backend b
   => [CommandParser]
 sourceCommands =
@@ -89,4 +89,8 @@ remoteRelationshipCommands =
   [ commandParser "create_remote_relationship" $ RMCreateRemoteRelationship . mkAnyBackend @b
   , commandParser "update_remote_relationship" $ RMUpdateRemoteRelationship . mkAnyBackend @b
   , commandParser "delete_remote_relationship" $ RMDeleteRemoteRelationship
+  ]
+eventTriggerCommands =
+  [ commandParser "invoke_event_trigger" $ RMInvokeEventTrigger . mkAnyBackend @b
+  , commandParser "redeliver_event"      $ RMRedeliverEvent     . mkAnyBackend @b
   ]

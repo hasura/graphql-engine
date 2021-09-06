@@ -44,6 +44,7 @@ import           Hasura.RQL.DDL.ScheduledTrigger
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Eventing.Backend
 import           Hasura.RQL.Types.Run
 import           Hasura.SQL.AnyBackend
 import           Hasura.SQL.Tag
@@ -107,8 +108,10 @@ data RQLMetadataV1
   -- Tables event triggers (PG-specific)
   | RMPgCreateEventTrigger !(CreateEventTriggerQuery ('Postgres 'Vanilla))
   | RMPgDeleteEventTrigger !(DeleteEventTriggerQuery ('Postgres 'Vanilla))
-  | RMPgRedeliverEvent     !(RedeliverEventQuery     ('Postgres 'Vanilla))
-  | RMPgInvokeEventTrigger !(InvokeEventTriggerQuery ('Postgres 'Vanilla))
+
+  -- Event Trigger APIs
+  | RMRedeliverEvent       !(AnyBackend RedeliverEventQuery)
+  | RMInvokeEventTrigger   !(AnyBackend InvokeEventTriggerQuery)
 
   -- Remote schemas
   | RMAddRemoteSchema        !AddRemoteSchemaQuery
@@ -361,8 +364,8 @@ queryModifiesMetadata :: RQLMetadataRequest -> Bool
 queryModifiesMetadata = \case
   RMV1 q ->
     case q of
-      RMPgRedeliverEvent _        -> False
-      RMPgInvokeEventTrigger _    -> False
+      RMRedeliverEvent _          -> False
+      RMInvokeEventTrigger _      -> False
       RMGetInconsistentMetadata _ -> False
       RMIntrospectRemoteSchema _  -> False
       RMDumpInternalState _       -> False
@@ -424,49 +427,49 @@ runMetadataQueryV1M
   -> RQLMetadataV1
   -> m EncJSON
 runMetadataQueryV1M env currentResourceVersion = \case
-  RMAddSource q                            -> dispatch runAddSource  q
+  RMAddSource q                            -> dispatchMetadata runAddSource  q
   RMDropSource q                           -> runDropSource q
   RMRenameSource   q                       -> runRenameSource q
 
-  RMTrackTable q                           -> dispatch runTrackTableV2Q q
-  RMUntrackTable q                         -> dispatch runUntrackTableQ q
-  RMSetTableCustomization q                -> dispatch runSetTableCustomization q
+  RMTrackTable q                           -> dispatchMetadata runTrackTableV2Q q
+  RMUntrackTable q                         -> dispatchMetadata runUntrackTableQ q
+  RMSetTableCustomization q                -> dispatchMetadata runSetTableCustomization q
 
   RMPgSetTableIsEnum q                     -> runSetExistingTableIsEnumQ q
 
-  RMCreateInsertPermission q               -> dispatch runCreatePerm q
-  RMCreateSelectPermission q               -> dispatch runCreatePerm q
-  RMCreateUpdatePermission q               -> dispatch runCreatePerm q
-  RMCreateDeletePermission q               -> dispatch runCreatePerm q
-  RMDropInsertPermission q                 -> dispatch runDropPerm q
-  RMDropSelectPermission q                 -> dispatch runDropPerm q
-  RMDropUpdatePermission q                 -> dispatch runDropPerm q
-  RMDropDeletePermission q                 -> dispatch runDropPerm q
-  RMSetPermissionComment q                 -> dispatch runSetPermComment q
+  RMCreateInsertPermission q               -> dispatchMetadata runCreatePerm q
+  RMCreateSelectPermission q               -> dispatchMetadata runCreatePerm q
+  RMCreateUpdatePermission q               -> dispatchMetadata runCreatePerm q
+  RMCreateDeletePermission q               -> dispatchMetadata runCreatePerm q
+  RMDropInsertPermission q                 -> dispatchMetadata runDropPerm q
+  RMDropSelectPermission q                 -> dispatchMetadata runDropPerm q
+  RMDropUpdatePermission q                 -> dispatchMetadata runDropPerm q
+  RMDropDeletePermission q                 -> dispatchMetadata runDropPerm q
+  RMSetPermissionComment q                 -> dispatchMetadata runSetPermComment q
 
-  RMCreateObjectRelationship q             -> dispatch (runCreateRelationship ObjRel . unCreateObjRel) q
-  RMCreateArrayRelationship q              -> dispatch (runCreateRelationship ArrRel . unCreateArrRel) q
-  RMDropRelationship q                     -> dispatch runDropRel q
-  RMSetRelationshipComment q               -> dispatch runSetRelComment q
-  RMRenameRelationship q                   -> dispatch runRenameRel q
+  RMCreateObjectRelationship q             -> dispatchMetadata (runCreateRelationship ObjRel . unCreateObjRel) q
+  RMCreateArrayRelationship q              -> dispatchMetadata (runCreateRelationship ArrRel . unCreateArrRel) q
+  RMDropRelationship q                     -> dispatchMetadata runDropRel q
+  RMSetRelationshipComment q               -> dispatchMetadata runSetRelComment q
+  RMRenameRelationship q                   -> dispatchMetadata runRenameRel q
 
-  RMCreateRemoteRelationship q             -> dispatch runCreateRemoteRelationship q
-  RMUpdateRemoteRelationship q             -> dispatch runUpdateRemoteRelationship q
+  RMCreateRemoteRelationship q             -> dispatchMetadata runCreateRemoteRelationship q
+  RMUpdateRemoteRelationship q             -> dispatchMetadata runUpdateRemoteRelationship q
   RMDeleteRemoteRelationship q             -> runDeleteRemoteRelationship q
 
-  RMTrackFunction q                        -> dispatch runTrackFunctionV2 q
-  RMUntrackFunction q                      -> dispatch runUntrackFunc q
+  RMTrackFunction q                        -> dispatchMetadata runTrackFunctionV2 q
+  RMUntrackFunction q                      -> dispatchMetadata runUntrackFunc q
 
-  RMCreateFunctionPermission q             -> dispatch runCreateFunctionPermission q
-  RMDropFunctionPermission q               -> dispatch runDropFunctionPermission q
+  RMCreateFunctionPermission q             -> dispatchMetadata runCreateFunctionPermission q
+  RMDropFunctionPermission q               -> dispatchMetadata runDropFunctionPermission q
 
   RMAddComputedField q                     -> runAddComputedField q
   RMDropComputedField q                    -> runDropComputedField q
 
   RMPgCreateEventTrigger q                 -> runCreateEventTriggerQuery q
   RMPgDeleteEventTrigger q                 -> runDeleteEventTriggerQuery q
-  RMPgRedeliverEvent     q                 -> runRedeliverEvent q
-  RMPgInvokeEventTrigger q                 -> runInvokeEventTrigger q
+  RMRedeliverEvent     q                   -> dispatchEventTrigger runRedeliverEvent q
+  RMInvokeEventTrigger q                   -> dispatchEventTrigger runInvokeEventTrigger q
 
   RMAddRemoteSchema q                      -> runAddRemoteSchema env q
   RMUpdateRemoteSchema q                   -> runUpdateRemoteSchema env q
@@ -529,11 +532,15 @@ runMetadataQueryV1M env currentResourceVersion = \case
 
   RMBulk q                                 -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
   where
-    dispatch
+    dispatchMetadata
       :: (forall b. BackendMetadata b => i b -> a)
       -> AnyBackend i
       -> a
-    dispatch f x = dispatchAnyBackend @BackendMetadata x f
+    dispatchMetadata f x = dispatchAnyBackend @BackendMetadata x f
+
+    dispatchEventTrigger :: (forall b. BackendEventTrigger b => i b -> a) -> AnyBackend i -> a
+    dispatchEventTrigger f x = dispatchAnyBackend @BackendEventTrigger x f
+
 
 
 runMetadataQueryV2M

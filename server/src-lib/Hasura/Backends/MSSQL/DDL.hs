@@ -67,7 +67,7 @@ createTableEventTrigger
   -> TableName 'MSSQL
   -> [ColumnInfo 'MSSQL]
   -> TriggerName
-  -> TriggerOpsDef
+  -> TriggerOpsDef 'MSSQL
   -> m (Either QErr ())
 createTableEventTrigger _ _ _ _ _ _ = runExceptT $
   throw400 NotSupported "Cannot create table event triggers in MSSQL sources"
@@ -77,8 +77,8 @@ buildEventTriggerInfo
   => Env.Environment
   -> SourceName
   -> TableName 'MSSQL
-  -> EventTriggerConf
-  -> m (EventTriggerInfo, [SchemaDependency])
+  -> EventTriggerConf 'MSSQL
+  -> m (EventTriggerInfo 'MSSQL, [SchemaDependency])
 buildEventTriggerInfo _ _ _ _ =
   throw400 NotSupported "Table event triggers are not supported for MSSQL sources"
 
@@ -99,8 +99,8 @@ updateColumnInEventTrigger
   -> Column 'MSSQL
   -> Column 'MSSQL
   -> TableName 'MSSQL
-  -> EventTriggerConf
-  -> EventTriggerConf
+  -> EventTriggerConf 'MSSQL
+  -> EventTriggerConf 'MSSQL
 updateColumnInEventTrigger _ _ _ _ = id
 
 parseCollectableType

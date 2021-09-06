@@ -67,8 +67,8 @@ data RQLMetadataV1
   -- Tables event triggers (PG-specific)
   | RMPgCreateEventTrigger !(CreateEventTriggerQuery ('Postgres 'Vanilla))
   | RMPgDeleteEventTrigger !(DeleteEventTriggerQuery ('Postgres 'Vanilla))
-  | RMPgRedeliverEvent     !(RedeliverEventQuery     ('Postgres 'Vanilla))
-  | RMPgInvokeEventTrigger !(InvokeEventTriggerQuery ('Postgres 'Vanilla))
+  | RMRedeliverEvent     !(AnyBackend RedeliverEventQuery)
+  | RMInvokeEventTrigger   !(AnyBackend InvokeEventTriggerQuery)
 
   -- Remote schemas
   | RMAddRemoteSchema        !AddRemoteSchemaQuery
