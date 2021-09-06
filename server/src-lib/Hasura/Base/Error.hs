@@ -102,12 +102,12 @@ data Code
   | Unexpected
   | UnexpectedPayload
   | ValidationFailed
-  deriving (Eq)
+  deriving (Show, Eq)
 
-instance Show Code where
-  show = \case
+instance ToJSON Code where
+  toJSON code = String $ case code of
     AccessDenied                -> "access-denied"
-    ActionWebhookCode t         -> T.unpack t
+    ActionWebhookCode t         -> t
     AlreadyExists               -> "already-exists"
     AlreadyTracked              -> "already-tracked"
     AlreadyUntracked            -> "already-untracked"
@@ -118,7 +118,7 @@ instance Show Code where
     Conflict                    -> "conflict"
     ConstraintError             -> "constraint-error"
     ConstraintViolation         -> "constraint-violation"
-    CustomCode t                -> T.unpack t
+    CustomCode t                -> t
     CyclicDependency            -> "cyclic-dependency"
     DataException               -> "data-exception"
     DependencyError             -> "dependency-error"
@@ -160,13 +160,13 @@ instance ToJSON QErr where
     object
     [ "path"  .= encodeJSONPath jPath
     , "error" .= msg
-    , "code"  .= show code
+    , "code"  .= code
     ]
   toJSON (QErr jPath _ msg code (Just ie)) =
     object
     [ "path"  .= encodeJSONPath jPath
     , "error" .= msg
-    , "code"  .= show code
+    , "code"  .= code
     , "internal" .= ie
     ]
 
@@ -175,7 +175,7 @@ noInternalQErrEnc (QErr jPath _ msg code _) =
   object
   [ "path"  .= encodeJSONPath jPath
   , "error" .= msg
-  , "code"  .= show code
+  , "code"  .= code
   ]
 
 encodeGQLErr :: Bool -> QErr -> Value
@@ -187,7 +187,7 @@ encodeGQLErr includeInternal (QErr jPath _ msg code mIE) =
   where
     extnsObj = object $ bool codeAndPath
                (codeAndPath ++ internal) includeInternal
-    codeAndPath = [ "code" .= show code
+    codeAndPath = [ "code" .= code
                   , "path" .= encodeJSONPath jPath
                   ]
     internal = maybe [] (\ie -> ["internal" .= ie]) mIE
