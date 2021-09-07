@@ -110,7 +110,7 @@ export const TemplateGalleryBody: React.VFC<{ onModalOpen: modalOpenFn }> = ({
           rel="noopener noreferrer"
           href="https://github.com/hasura/template-gallery/discussions/2"
         >
-          Find our more{' '}
+          Find out more{' '}
           <i className="fa fa-share-square-o" aria-hidden="true" />
         </a>
       </p>
