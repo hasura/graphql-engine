@@ -8,6 +8,7 @@
 - server: set `tracecontext` and `userInfo` for DML actions on Postgres sources
 - server: add support for `connection_parameters` on `pg_add_source` API
 - cli: add progress bar for `migrate apply` command (#4795)
+- cli: embed cli-ext for windows binaries (#7509)
 
 ## v2.0.8
 
