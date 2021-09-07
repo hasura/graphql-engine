@@ -4,6 +4,8 @@
 
 (Add entries below in the order of server, console, cli, docs, others)
 
+## v2.0.9
+
 - server: disable mutation for materialised views (#6688)
 - server: set `tracecontext` and `userInfo` for DML actions on Postgres sources
 - server: add support for `connection_parameters` on `pg_add_source` API
