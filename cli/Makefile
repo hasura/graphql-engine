@@ -57,7 +57,7 @@ copy-cli-ext: clean-cli-ext
 	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node12-linux-arm64 ./internal/cliext/static-bin/linux/arm64/cli-ext
 	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node12-macos-x64 ./internal/cliext/static-bin/darwin/amd64/cli-ext
 	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node16-macos-arm64 ./internal/cliext/static-bin/darwin/arm64/cli-ext
-	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node12-win-x64.exe ./internal/cliext/static-bin/windows/amd64/cli-ext
+	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node12-win-x64.exe ./internal/cliext/static-bin/windows/amd64/cli-ext.exe
 
 # run tests
 .PHONY: test
