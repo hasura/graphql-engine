@@ -104,7 +104,7 @@ func (o *actionsCreateOptions) run() error {
 	}
 
 	// if with-codegen flag not present, ask them if they want to codegen
-	var confirmation string
+	var confirmation bool
 	if !o.withCodegen {
 		confirmation, err = util.GetYesNoPrompt("Do you want to generate " + o.EC.Config.ActionConfig.Codegen.Framework + " code for this action and the custom types?")
 		if err != nil {
@@ -112,7 +112,7 @@ func (o *actionsCreateOptions) run() error {
 		}
 	}
 
-	if confirmation == "n" {
+	if !confirmation {
 		infoMsg := fmt.Sprintf(`You skipped codegen. For getting codegen for this action, run:
 
   hasura actions codegen %s

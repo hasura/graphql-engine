@@ -47,7 +47,7 @@ func newMigrateDeleteCmd(ec *cli.ExecutionContext) *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("error getting user input: %w", err)
 				}
-				if confirmation == "n" {
+				if !confirmation {
 					return nil
 				}
 			}

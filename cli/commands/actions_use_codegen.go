@@ -117,7 +117,7 @@ func (o *actionsUseCodegenOptions) run() error {
 		if err != nil {
 			return errors.Wrap(err, "error in getting input from user")
 		}
-		o.withStarterKit = shouldCloneStarterKit == "y"
+		o.withStarterKit = shouldCloneStarterKit
 	}
 
 	// clone the starter kit

@@ -25,7 +25,7 @@ type ServeOpts struct {
 
 	SignalChanAPIServer     chan os.Signal
 	SignalChanConsoleServer chan os.Signal
-	WG                      *sync.WaitGroup
+	WG                      sync.WaitGroup
 }
 
 // Server console and API Server

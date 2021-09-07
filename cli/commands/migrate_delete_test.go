@@ -62,8 +62,8 @@ var _ = Describe("hasura migrate delete", func() {
 
 			Expect(session.Wait(timeout).Err).Should(Say("--database-name flag is required"))
 
-			args := strings.Join([]string{"yes", "|", testutil.CLIBinaryPath, "migrate", "delete", "--all", "--database-name", "default"}, " ")
-			cmd := exec.Command("bash", "-c", args)
+			args := []string{"migrate", "delete", "--all", "--database-name", "default", "--force"}
+			cmd := exec.Command(testutil.CLIBinaryPath, args...)
 			cmd.Dir = projectDirectory
 			session, err := Start(
 				cmd,
@@ -117,8 +117,8 @@ var _ = Describe("hasura migrate delete", func() {
 
 			Expect(session.Wait(timeout).Err).Should(Say("--database-name flag is required"))
 
-			args := strings.Join([]string{"yes", "|", testutil.CLIBinaryPath, "migrate", "delete", "--all", "--server", "--database-name", "default"}, " ")
-			cmd := exec.Command("bash", "-c", args)
+			args := []string{"migrate", "delete", "--all", "--server", "--database-name", "default", "--force"}
+			cmd := exec.Command(testutil.CLIBinaryPath, args...)
 			cmd.Dir = projectDirectory
 			session, err := Start(
 				cmd,

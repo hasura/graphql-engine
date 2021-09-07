@@ -76,7 +76,7 @@ func UpdateProjectV3(opts UpdateProjectV3Opts) error {
 		if err != nil {
 			return err
 		}
-		if response == "n" {
+		if !response {
 			return nil
 		}
 	}
