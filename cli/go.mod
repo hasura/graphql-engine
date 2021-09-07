@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	cloud.google.com/go v0.54.0 // indirect
+	github.com/AlecAivazis/survey/v2 v2.3.1
 	github.com/Masterminds/semver v1.5.0
 	github.com/Microsoft/go-winio v0.4.17-0.20210211115548-6eac466e5fa3 // indirect
 	github.com/Pallinder/go-randomdata v1.2.0
@@ -11,6 +12,7 @@ require (
 	github.com/andybalholm/cascadia v1.1.0 // indirect
 	github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
+	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/briandowns/spinner v1.8.0
 	github.com/cheggaaa/pb/v3 v3.0.8
 	github.com/containerd/continuity v0.0.0-20201208142359-180525291bb7 // indirect
@@ -34,8 +36,6 @@ require (
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/lib/pq v1.1.1
-	github.com/lunixbochs/vtclean v1.0.0 // indirect
-	github.com/manifoldco/promptui v0.8.0
 	github.com/mattn/go-colorable v0.1.8
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
 	github.com/microcosm-cc/bluemonday v1.0.2 // indirect

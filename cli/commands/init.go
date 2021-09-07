@@ -22,7 +22,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/util"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -103,13 +102,9 @@ func (o *InitOptions) Run() error {
 	var infoMsg string
 	// prompt for init directory if it's not set already
 	if o.InitDir == "" {
-		p := promptui.Prompt{
-			Label:   "Name of project directory ",
-			Default: defaultDirectory,
-		}
-		r, err := p.Run()
+		r, err := util.GetInputPromptWithDefault("Name of project directory ?", defaultDirectory)
 		if err != nil {
-			return handlePromptError(err)
+			return fmt.Errorf("prompt exited: %w", err)
 		}
 		if strings.TrimSpace(r) != "" {
 			o.InitDir = r
@@ -303,11 +298,4 @@ func (o *InitOptions) createTemplateFiles() error {
 		return err
 	}
 	return nil
-}
-
-func handlePromptError(err error) error {
-	if err == promptui.ErrInterrupt {
-		return errors.New("cancelled by user")
-	}
-	return errors.Wrap(err, "prompt failed")
 }

@@ -2,7 +2,6 @@ package commands
 
 import (
 	"os"
-	"sync"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
 	"github.com/hasura/graphql-engine/cli/v2/util"
@@ -91,8 +90,6 @@ type ConsoleOptions struct {
 
 	DontOpenBrowser bool
 
-	WG *sync.WaitGroup
-
 	StaticDir       string
 	Browser         string
 	UseServerAssets bool
@@ -158,7 +155,6 @@ func (o *ConsoleOptions) Run() error {
 		TemplateProvider: templateProvider,
 	})
 
-	o.WG = new(sync.WaitGroup)
 	// start console and API HTTP Servers
 	serveOpts := &console.ServeOpts{
 		APIServer:               apiServer,
@@ -171,7 +167,6 @@ func (o *ConsoleOptions) Run() error {
 		Address:                 o.Address,
 		SignalChanConsoleServer: o.ConsoleServerInterruptSignal,
 		SignalChanAPIServer:     o.APIServerInterruptSignal,
-		WG:                      o.WG,
 	}
 
 	return console.Serve(serveOpts)
