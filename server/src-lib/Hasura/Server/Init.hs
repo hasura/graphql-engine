@@ -113,7 +113,6 @@ mkHGEOptions (HGEOptionsG rawDbUrl rawMetadataDbUrl rawCmd) =
       HCServe rso     -> HCServe <$> mkServeOptions rso
       HCExport        -> return HCExport
       HCClean         -> return HCClean
-      HCExecute       -> return HCExecute
       HCVersion       -> return HCVersion
       HCDowngrade tgt -> return (HCDowngrade tgt)
 

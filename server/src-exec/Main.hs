@@ -5,39 +5,32 @@ module Main where
 
 import           Hasura.Prelude
 
-import qualified Control.Concurrent.Extended        as C
-import qualified Data.ByteString.Char8              as BC
-import qualified Data.ByteString.Lazy               as BL
-import qualified Data.ByteString.Lazy.Char8         as BLC
-import qualified Data.Environment                   as Env
-import qualified Database.PG.Query                  as Q
-import qualified System.Exit                        as Sys
-import qualified System.Metrics                     as EKG
-import qualified System.Posix.Signals               as Signals
+import qualified Control.Concurrent.Extended as C
+import qualified Data.ByteString.Char8       as BC
+import qualified Data.Environment            as Env
+import qualified Database.PG.Query           as Q
+import qualified System.Exit                 as Sys
+import qualified System.Metrics              as EKG
+import qualified System.Posix.Signals        as Signals
 
 import           Control.Exception
-import           Control.Monad.Trans.Managed        (ManagedT (..), lowerManagedT)
-import           Data.Int                           (Int64)
-import           Data.Kind                          (Type)
-import           Data.Text.Conversions              (convertText)
-import           Data.Time.Clock                    (getCurrentTime)
-import           Data.Time.Clock.POSIX              (getPOSIXTime)
-import           GHC.TypeLits                       (Symbol)
+import           Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
+import           Data.Int                    (Int64)
+import           Data.Kind                   (Type)
+import           Data.Text.Conversions       (convertText)
+import           Data.Time.Clock             (getCurrentTime)
+import           Data.Time.Clock.POSIX       (getPOSIXTime)
+import           GHC.TypeLits                (Symbol)
 
-import qualified Hasura.GC                          as GC
-import qualified Hasura.Tracing                     as Tracing
+import qualified Hasura.GC                   as GC
 
 import           Hasura.App
-import           Hasura.Logging                     (Hasura, LogLevel (..),
-                                                     defaultEnabledEngineLogTypes)
-import           Hasura.Metadata.Class
+import           Hasura.Logging              (Hasura, LogLevel (..), defaultEnabledEngineLogTypes)
 import           Hasura.RQL.DDL.Schema
-import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
-import           Hasura.Server.Metrics              (ServerMetricsSpec, createServerMetrics)
-import           Hasura.Server.Migrate              (downgradeCatalog)
-import           Hasura.Server.Types                (MaintenanceMode (..))
+import           Hasura.Server.Metrics       (ServerMetricsSpec, createServerMetrics)
+import           Hasura.Server.Migrate       (downgradeCatalog)
 import           Hasura.Server.Version
 import           Hasura.Server.Version.TH
 
@@ -110,32 +103,6 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo dropHdbCatalogSchema
       let cleanSuccessMsg = "successfully cleaned graphql-engine related data"
       either (printErrJExit MetadataCleanError) (const $ liftIO $ putStrLn cleanSuccessMsg) res
-
-    HCExecute -> do
-      queryBs <- liftIO BL.getContents
-      let sqlGenCtx = SQLGenCtx False False
-          remoteSchemaPermsCtx = RemoteSchemaPermsDisabled
-          pgLogger = print
-          pgSourceResolver = mkPgSourceResolver pgLogger
-          functionPermsCtx = FunctionPermissionsInferred
-          maintenanceMode = MaintenanceModeDisabled
-          serverConfigCtx =
-            ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode mempty
-          cacheBuildParams =
-            CacheBuildParams _gcHttpManager pgSourceResolver serverConfigCtx
-      runManagedT (mkMinimalPool _gcMetadataDbConnInfo) $ \metadataDbPool -> do
-        res <- flip runPGMetadataStorageAppT (metadataDbPool, pgLogger) $
-          runMetadataStorageT $ liftEitherM do
-          (metadata, _) <- fetchMetadata
-          runAsAdmin _gcHttpManager serverConfigCtx $ do
-            schemaCache <- runCacheBuild cacheBuildParams $
-                           buildRebuildableSchemaCache env metadata
-            execQuery env queryBs
-              & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
-              & runMetadataT metadata
-              & runCacheRWT schemaCache
-              & fmap (\((res, _), _, _) -> res)
-        either (printErrJExit ExecuteProcessError) (liftIO . BLC.putStrLn) res
 
     HCDowngrade opts -> do
       let defaultSourceConfig = maybeDefaultPgConnInfo <&> \(dbUrlConf, _) ->
