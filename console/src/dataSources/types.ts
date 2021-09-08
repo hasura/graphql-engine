@@ -82,6 +82,7 @@ export type CheckConstraint = {
 };
 
 export type ComputedField = {
+  name?: string;
   computed_field_name: string;
   definition: {
     function: FunctionDefinition;
