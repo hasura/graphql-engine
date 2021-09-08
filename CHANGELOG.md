@@ -11,6 +11,7 @@
 - server: add support for `connection_parameters` on `pg_add_source` API
 - cli: add progress bar for `migrate apply` command (#4795)
 - cli: embed cli-ext for windows binaries (#7509)
+- cli: fix typo on deprecated warnings (#7527)
 
 ## v2.0.8
 
