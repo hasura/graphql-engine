@@ -148,7 +148,7 @@ const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
     if (
       rTableObj?.unique_constraints?.some(
         uk =>
-          uk.constraint_name.includes('_key') && checkEqual(uk.columns, rcol)
+          checkEqual(uk.columns, rcol)
       )
     ) {
       is_unique_key = true;
