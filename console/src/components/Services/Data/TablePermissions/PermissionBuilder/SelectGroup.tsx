@@ -3,7 +3,7 @@ import React from 'react';
 import styles from './PermissionBuilder.scss';
 import { addToPrefix } from './utils';
 
-type OptGroup = { optGroupTitle: string; options: string[] };
+export type OptGroup = { optGroupTitle: string; options: string[] };
 interface SelectGroupProps {
   selectDispatchFunc: (value: string) => void;
   value: string;
