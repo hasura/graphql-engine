@@ -51,6 +51,8 @@ type Data struct {
 	// Indicates whether the execution resulted in an error or not.
 	IsError bool `json:"is_error"`
 
+	Error error `json:"error"`
+
 	// Any additional payload information.
 	Payload map[string]interface{} `json:"payload"`
 
@@ -70,6 +72,7 @@ func BuildEvent() *Data {
 		OSPlatform: runtime.GOOS,
 		OSArch:     runtime.GOARCH,
 		CanBeam:    true,
+		Error:      nil,
 	}
 }
 
