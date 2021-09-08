@@ -230,7 +230,6 @@ data HGECommandG a
   = HCServe !a
   | HCExport
   | HCClean
-  | HCExecute
   | HCVersion
   | HCDowngrade !DowngradeOptions
   deriving (Show, Eq)
