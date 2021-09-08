@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/update"
 	"github.com/hasura/graphql-engine/cli/v2/version"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 const hasuraASCIIText = `
@@ -121,8 +123,16 @@ func Execute() error {
 	execCmd, err := NewDefaultHasuraCommand().ExecuteC()
 	if err != nil {
 		ec.Telemetry.IsError = true
+		ec.Telemetry.Error = err
 	}
-	ec.Telemetry.Command = execCmd.CommandPath()
+	commandPath := execCmd.CommandPath()
+	command := []string{commandPath}
+	getFlagName := func(f *pflag.Flag) {
+		flagName := fmt.Sprintf("--%s", f.Name)
+		command = append(command, flagName)
+	}
+	execCmd.Flags().Visit(getFlagName)
+	ec.Telemetry.Command = strings.Join(command, " ")
 	ec.Telemetry.Beam()
 	if ec.Spinner != nil {
 		ec.Spinner.Stop()
