@@ -11,10 +11,10 @@ function add_sources() {
             add_citus_source "$hasura_graphql_server_port" "$CITUS_DB_URL"
         ;;
         mssql)
-            add_mssql_source "$hasura_graphql_server_port" "$MSSQL_DB_URL"
+            add_mssql_source "$hasura_graphql_server_port" "$MSSQL_CONN_STR"
         ;;
         mysql)
-            add_mysql_source "$hasura_graphql_server_port" "$MSSQL_DB_URL"
+            add_mysql_source "$hasura_graphql_server_port" "$MSSQL_CONN_STR"
         ;;
         # bigquery deliberately omitted as its test setup is atypical. See:
         # https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#running-the-python-test-suite-on-bigquery

@@ -313,6 +313,7 @@ library
                      , Data.Text.NonEmpty
                      , Data.Time.Clock.Units
                      , Data.URL.Template
+                     , Database.MSSQL.Transaction
                      , GHC.Stats.Extended
                      , Hasura.App
                      , Hasura.Metadata.Class
@@ -702,6 +703,9 @@ test-suite graphql-engine-tests
     , transformers-base
     , unordered-containers
     , vector
+    -- mssql support
+    , odbc
+    , resource-pool
   hs-source-dirs: src-test
   main-is: Main.hs
   other-modules:
@@ -711,18 +715,19 @@ test-suite graphql-engine-tests
     Data.Parser.URLTemplate
     Data.Text.RawString
     Data.TimeSpec
+    Database.MSSQL.TransactionSpec
     Hasura.EventingSpec
     Hasura.Generator
     Hasura.GraphQL.Parser.DirectivesTest
     Hasura.GraphQL.Parser.TestUtils
+    Hasura.GraphQL.RemoteServerSpec
     Hasura.GraphQL.Schema.RemoteTest
     Hasura.IncrementalSpec
-    Hasura.SessionSpec
-    Hasura.GraphQL.RemoteServerSpec
     Hasura.RQL.PermissionSpec
-    Hasura.RQL.Types.EndpointSpec
     Hasura.RQL.Types.CommonSpec
-    Hasura.SQL.WKTSpec
+    Hasura.RQL.Types.EndpointSpec
     Hasura.Server.AuthSpec
     Hasura.Server.MigrateSpec
     Hasura.Server.TelemetrySpec
+    Hasura.SessionSpec
+    Hasura.SQL.WKTSpec

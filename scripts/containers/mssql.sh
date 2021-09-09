@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 ### This file is not meant to be run directly, but to be sourced from
 ### the dev script. It defines all the functions required to run an
 ### MSSQL docker container.
@@ -15,7 +16,7 @@ fi
 
 MSSQL_PASSWORD=hasuraMSSQL1
 MSSQL_CONTAINER_NAME="hasura-dev-mssql-$MSSQL_PORT"
-MSSQL_DB_URL="DRIVER={ODBC Driver 17 for SQL Server};SERVER=127.0.0.1,$MSSQL_PORT;Uid=sa;Pwd=$MSSQL_PASSWORD;"
+MSSQL_CONN_STR="DRIVER={ODBC Driver 17 for SQL Server};SERVER=127.0.0.1,$MSSQL_PORT;Uid=sa;Pwd=$MSSQL_PASSWORD;"
 MSSQL_DOCKER="docker exec -it $MSSQL_CONTAINER_NAME sqlcmd -S localhost -U sa -P $MSSQL_PASSWORD"
 
 
@@ -40,7 +41,7 @@ function mssql_wait {
 function mssql_cleanup(){
   echo_pretty "Removing $MSSQL_CONTAINER_NAME and its volumes in 5 seconds!"
   echo_pretty "  PRESS CTRL-C TO ABORT removal of all containers, or ENTER to clean up right away"
-  read -t5 || true
+  read -rt5 || true
   docker stop "$MSSQL_CONTAINER_NAME"
   docker rm -v "$MSSQL_CONTAINER_NAME"
 }

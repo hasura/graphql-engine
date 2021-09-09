@@ -165,7 +165,7 @@ fi
 ####################################
 
 source scripts/containers/postgres
-source scripts/containers/mssql
+source scripts/containers/mssql.sh
 source scripts/containers/citus
 source scripts/containers/mysql.sh
 source scripts/data-sources-util.sh
@@ -385,7 +385,7 @@ elif [ "$MODE" = "mssql" ]; then
   echo_pretty "    $ $MSSQL_DOCKER -i <import_file>"
   echo_pretty ""
   echo_pretty "Here is the database URL:"
-  echo_pretty "    $MSSQL_DB_URL"
+  echo_pretty "    $MSSQL_CONN_STR"
   echo_pretty ""
   docker logs -f --tail=0 "$MSSQL_CONTAINER_NAME"
 
@@ -453,14 +453,18 @@ elif [ "$MODE" = "test" ]; then
     cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
         --metadata-database-url="$PG_DB_URL" version
     start_dbs
-  else
-    # unit tests just need access to a postgres instance:
-    pg_start
   fi
 
   if [ "$RUN_UNIT_TESTS" = true ]; then
     echo_pretty "Running Haskell test suite"
-    HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
+
+    # unit tests need access to postgres and mssql instances:
+    mssql_start
+    pg_start
+
+    HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" \
+      HASURA_MSSQL_CONN_STR="$MSSQL_CONN_STR" \
+      cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
   fi
 
   if [ "$RUN_HLINT" = true ]; then
