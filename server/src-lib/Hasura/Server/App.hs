@@ -443,10 +443,10 @@ v1QueryHandler query = do
   (liftEitherM . authorizeV1QueryApi query) =<< ask
   scRef  <- asks (scCacheRef . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
-  res    <- bool (fst <$> action) (withSCUpdate scRef logger Nothing action) $ queryModifiesSchemaCache query
+  res    <- bool (fst <$> (action logger)) (withSCUpdate scRef logger Nothing (action logger)) $ queryModifiesSchemaCache query
   return $ HttpResponse res []
   where
-    action = do
+    action logger = do
       userInfo             <- asks hcUser
       scRef                <- asks (scCacheRef . hcServerCtx)
       schemaCache          <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
@@ -459,7 +459,7 @@ v1QueryHandler query = do
       maintenanceMode      <- asks (scEnableMaintenanceMode . hcServerCtx)
       experimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
       let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures
-      runQuery env instanceId userInfo schemaCache httpMgr
+      runQuery env logger instanceId userInfo schemaCache httpMgr
                serverConfigCtx query
 
 v1MetadataHandler

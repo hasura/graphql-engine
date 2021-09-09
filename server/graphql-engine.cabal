@@ -702,6 +702,7 @@ test-suite graphql-engine-tests
     , time
     , transformers-base
     , unordered-containers
+    , utf8-string
     , vector
     -- mssql support
     , odbc

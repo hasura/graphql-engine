@@ -10,21 +10,21 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , populateInitialCronTriggerEvents
   ) where
 
-import           System.Cron.Types                  (CronSchedule)
+import           System.Cron.Types                (CronSchedule)
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                         as J
-import qualified Data.Environment                   as Env
-import qualified Data.HashMap.Strict                as Map
-import qualified Data.HashMap.Strict.InsOrd         as OMap
-import qualified Data.Time.Clock                    as C
+import qualified Data.Aeson                       as J
+import qualified Data.Environment                 as Env
+import qualified Data.HashMap.Strict              as Map
+import qualified Data.HashMap.Strict.InsOrd       as OMap
+import qualified Data.Time.Clock                  as C
 
-import           Hasura.Backends.Postgres.DDL.Table (getHeaderInfosFromConf)
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.Metadata.Class
+import           Hasura.RQL.DDL.EventTrigger      (getHeaderInfosFromConf)
 import           Hasura.RQL.Types
 
 populateInitialCronTriggerEvents

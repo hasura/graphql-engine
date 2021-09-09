@@ -16,7 +16,6 @@ instance BackendMetadata 'BigQuery where
   resolveSourceConfig        = BigQuery.resolveSourceConfig
   resolveDatabaseMetadata    = BigQuery.resolveSource
   createTableEventTrigger    = BigQuery.createTableEventTrigger
-  buildEventTriggerInfo      = BigQuery.buildEventTriggerInfo
   parseBoolExpOperations     = BigQuery.parseBoolExpOperations
   buildFunctionInfo          = BigQuery.buildFunctionInfo
   updateColumnInEventTrigger = BigQuery.updateColumnInEventTrigger

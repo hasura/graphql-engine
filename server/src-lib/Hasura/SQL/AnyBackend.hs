@@ -10,6 +10,7 @@ module Hasura.SQL.AnyBackend
   , dispatchAnyBackend
   , dispatchAnyBackend'
   , dispatchAnyBackendArrow
+  , dispatchAnyBackendWithTwoConstraints
   , unpackAnyBackend
   , composeAnyBackend
   , runBackend
@@ -271,6 +272,19 @@ dispatchAnyBackend
   -> (forall (b :: BackendType). c b => i b -> r)
   -> r
 dispatchAnyBackend e f = $(mkDispatch 'f 'e)
+
+dispatchAnyBackendWithTwoConstraints
+  :: forall
+      (c1  :: BackendType -> Constraint)
+      (c2  :: BackendType -> Constraint)
+      (i  :: BackendType -> Type)
+      (r  :: Type)
+   . AllBackendsSatisfy c1
+  => AllBackendsSatisfy c2
+  => AnyBackend i
+  -> (forall (b :: BackendType). c1 b => c2 b => i b -> r)
+  -> r
+dispatchAnyBackendWithTwoConstraints e f = $(mkDispatch 'f 'e)
 
 -- | Unlike 'dispatchAnyBackend', the expected constraint has a different kind.
 -- Use for classes like 'Show', 'ToJSON', etc.

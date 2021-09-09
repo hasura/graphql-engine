@@ -350,19 +350,6 @@ dmlTxErrorHandler = mkTxErrorHandler $ \case
     , PGInvalidColumnReference ]
   _ -> False
 
-toJSONableExp :: Bool -> ColumnType ('Postgres pgKind) -> Bool -> S.SQLExp -> S.SQLExp
-toJSONableExp strfyNum colTy asText expn
-  | asText || (isScalarColumnWhere isBigNum colTy && strfyNum) =
-    expn `S.SETyAnn` S.textTypeAnn
-  | isScalarColumnWhere isGeoType colTy =
-      S.SEFnApp "ST_AsGeoJSON"
-      [ expn
-      , S.SEUnsafe "15" -- max decimal digits
-      , S.SEUnsafe "4"  -- to print out crs
-      ] Nothing
-      `S.SETyAnn` S.jsonTypeAnn
-  | otherwise = expn
-
 -- validate headers
 validateHeaders :: (UserInfoM m, QErrM m) => HashSet Text -> m ()
 validateHeaders depHeaders = do

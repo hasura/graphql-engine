@@ -2,7 +2,6 @@ module Hasura.Backends.BigQuery.DDL
   ( buildComputedFieldInfo
   , fetchAndValidateEnumValues
   , createTableEventTrigger
-  , buildEventTriggerInfo
   , buildFunctionInfo
   , updateColumnInEventTrigger
   , parseBoolExpOperations
@@ -12,8 +11,6 @@ module Hasura.Backends.BigQuery.DDL
 where
 
 import           Hasura.Prelude
-
-import qualified Data.Environment                     as Env
 
 import           Data.Aeson
 
@@ -71,16 +68,6 @@ createTableEventTrigger
   -> m (Either QErr ())
 createTableEventTrigger _ _ _ _ _ _ = runExceptT $
   throw400 NotSupported "Cannot create table event triggers in BigQuery sources"
-
-buildEventTriggerInfo
-  :: MonadError QErr m
-  => Env.Environment
-  -> SourceName
-  -> TableName 'BigQuery
-  -> EventTriggerConf 'BigQuery
-  -> m (EventTriggerInfo 'BigQuery, [SchemaDependency])
-buildEventTriggerInfo _ _ _ _ =
-  throw400 NotSupported "Table event triggers are not supported for BigQuery sources"
 
 buildFunctionInfo
   :: (MonadError QErr m)

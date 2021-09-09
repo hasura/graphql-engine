@@ -86,7 +86,7 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery qt _ mDistCols mWhere) = 
 
   forM_ mDistCols $ \distCols -> do
     let distColAsrns = [ checkSelOnCol selPerm
-                       , assertPGCol colInfoMap relInDistColsErr]
+                       , assertColumnExists colInfoMap relInDistColsErr]
     withPathK "distinct" $ verifyAsrns distColAsrns distCols
 
   -- convert the where clause

@@ -105,11 +105,9 @@ data RQLMetadataV1
   | RMAddComputedField  !(AddComputedField  ('Postgres 'Vanilla))
   | RMDropComputedField !(DropComputedField ('Postgres 'Vanilla))
 
-  -- Tables event triggers (PG-specific)
-  | RMPgCreateEventTrigger !(CreateEventTriggerQuery ('Postgres 'Vanilla))
-  | RMPgDeleteEventTrigger !(DeleteEventTriggerQuery ('Postgres 'Vanilla))
-
-  -- Event Trigger APIs
+  -- Tables event triggers
+  | RMCreateEventTrigger   !(AnyBackend CreateEventTriggerQuery)
+  | RMDeleteEventTrigger   !(AnyBackend DeleteEventTriggerQuery)
   | RMRedeliverEvent       !(AnyBackend RedeliverEventQuery)
   | RMInvokeEventTrigger   !(AnyBackend InvokeEventTriggerQuery)
 
@@ -466,8 +464,8 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMAddComputedField q                     -> runAddComputedField q
   RMDropComputedField q                    -> runDropComputedField q
 
-  RMPgCreateEventTrigger q                 -> runCreateEventTriggerQuery q
-  RMPgDeleteEventTrigger q                 -> runDeleteEventTriggerQuery q
+  RMCreateEventTrigger q                   -> dispatchMetadata runCreateEventTriggerQuery q
+  RMDeleteEventTrigger q                   -> dispatchMetadataAndEventTrigger runDeleteEventTriggerQuery q
   RMRedeliverEvent     q                   -> dispatchEventTrigger runRedeliverEvent q
   RMInvokeEventTrigger q                   -> dispatchEventTrigger runInvokeEventTrigger q
 
@@ -541,7 +539,11 @@ runMetadataQueryV1M env currentResourceVersion = \case
     dispatchEventTrigger :: (forall b. BackendEventTrigger b => i b -> a) -> AnyBackend i -> a
     dispatchEventTrigger f x = dispatchAnyBackend @BackendEventTrigger x f
 
-
+    dispatchMetadataAndEventTrigger
+      :: (forall b. (BackendMetadata b, BackendEventTrigger b) => i b -> a)
+      -> AnyBackend i
+      -> a
+    dispatchMetadataAndEventTrigger f x = dispatchAnyBackendWithTwoConstraints @BackendMetadata @BackendEventTrigger x f
 
 runMetadataQueryV2M
   :: ( MonadIO m
@@ -549,6 +551,8 @@ runMetadataQueryV2M
      , MetadataM m
      , MonadMetadataStorageQueryAPI m
      , HasServerConfigCtx m
+     , MonadReader r m
+     , Has (L.Logger L.Hasura) r
      )
   => MetadataResourceVersion
   -> RQLMetadataV2
