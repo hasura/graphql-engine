@@ -4,7 +4,6 @@ import           Hasura.Prelude
 
 import qualified Data.Environment        as Env
 import qualified Data.Pool               as Pool
-import qualified Data.Text               as T
 import qualified Database.ODBC.SQLServer as ODBC
 
 import           Control.Exception
@@ -15,6 +14,7 @@ import           Data.Aeson.TH
 import           Data.Text               (pack, unpack)
 import           Hasura.Base.Error
 import           Hasura.Incremental      (Cacheable (..))
+
 
 -- | ODBC connection string for MSSQL server
 newtype MSSQLConnectionString
@@ -168,5 +168,5 @@ instance Cacheable MSSQLSourceConfig where
 instance ToJSON MSSQLSourceConfig where
   toJSON = toJSON . _mscConnectionString
 
-newtype MSSQLConnErr = MSSQLConnErr { getConnErr :: T.Text }
+newtype MSSQLConnErr = MSSQLConnErr { getConnErr :: Text }
   deriving (Show, Eq, ToJSON)
