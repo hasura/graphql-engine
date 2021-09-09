@@ -64,10 +64,10 @@ data RQLMetadataV1
   | RMAddComputedField  !(AddComputedField  ('Postgres 'Vanilla))
   | RMDropComputedField !(DropComputedField ('Postgres 'Vanilla))
 
-  -- Tables event triggers (PG-specific)
-  | RMPgCreateEventTrigger !(CreateEventTriggerQuery ('Postgres 'Vanilla))
-  | RMPgDeleteEventTrigger !(DeleteEventTriggerQuery ('Postgres 'Vanilla))
-  | RMRedeliverEvent     !(AnyBackend RedeliverEventQuery)
+  -- Tables event triggers
+  | RMCreateEventTrigger   !(AnyBackend CreateEventTriggerQuery)
+  | RMDeleteEventTrigger   !(AnyBackend DeleteEventTriggerQuery)
+  | RMRedeliverEvent       !(AnyBackend RedeliverEventQuery)
   | RMInvokeEventTrigger   !(AnyBackend InvokeEventTriggerQuery)
 
   -- Remote schemas

@@ -92,5 +92,7 @@ remoteRelationshipCommands =
   ]
 eventTriggerCommands =
   [ commandParser "invoke_event_trigger" $ RMInvokeEventTrigger . mkAnyBackend @b
+  , commandParser "create_event_trigger" $ RMCreateEventTrigger . mkAnyBackend @b
+  , commandParser "delete_event_trigger" $ RMDeleteEventTrigger . mkAnyBackend @b
   , commandParser "redeliver_event"      $ RMRedeliverEvent     . mkAnyBackend @b
   ]

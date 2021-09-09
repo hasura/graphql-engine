@@ -7,6 +7,7 @@ where
 import           Data.Aeson
 
 import           Hasura.Backends.Postgres.DDL.BoolExp      as M
+import           Hasura.Backends.Postgres.DDL.EventTrigger as M
 import           Hasura.Backends.Postgres.DDL.Field        as M
 import           Hasura.Backends.Postgres.DDL.Function     as M
 import           Hasura.Backends.Postgres.DDL.Source       as M

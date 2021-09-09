@@ -6,32 +6,33 @@ module Hasura.Backends.Postgres.DDL.RunSQL
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                 as M
-import qualified Data.HashSet                        as HS
-import qualified Database.PG.Query                   as Q
-import qualified Text.Regex.TDFA                     as TDFA
+import qualified Data.HashMap.Strict                       as M
+import qualified Data.HashSet                              as HS
+import qualified Database.PG.Query                         as Q
+import qualified Text.Regex.TDFA                           as TDFA
 
-import           Control.Monad.Trans.Control         (MonadBaseControl)
+import           Control.Monad.Trans.Control               (MonadBaseControl)
 import           Data.Aeson
 import           Data.Text.Extended
 
-import qualified Hasura.SQL.AnyBackend               as AB
-import qualified Hasura.Tracing                      as Tracing
+import qualified Hasura.SQL.AnyBackend                     as AB
+import qualified Hasura.Tracing                            as Tracing
 
-import           Hasura.Backends.Postgres.DDL.Source (ToMetadataFetchQuery, fetchFunctionMetadata,
-                                                      fetchTableMetadata)
-import           Hasura.Backends.Postgres.DDL.Table
+import           Hasura.Backends.Postgres.DDL.EventTrigger
+import           Hasura.Backends.Postgres.DDL.Source       (ToMetadataFetchQuery,
+                                                            fetchFunctionMetadata,
+                                                            fetchTableMetadata)
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Base.Error
 import           Hasura.EncJSON
-import           Hasura.RQL.DDL.Deps                 (reportDepsExt)
+import           Hasura.RQL.DDL.Deps                       (reportDepsExt)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DDL.Schema.Common
 import           Hasura.RQL.DDL.Schema.Diff
-import           Hasura.RQL.Types                    hiding (ConstraintName, fmFunction,
-                                                      tmComputedFields, tmTable)
+import           Hasura.RQL.Types                          hiding (ConstraintName, fmFunction,
+                                                            tmComputedFields, tmTable)
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Utils                 (quoteRegex)
+import           Hasura.Server.Utils                       (quoteRegex)
 import           Hasura.Session
 
 data RunSQL
@@ -193,7 +194,7 @@ withMetadataCheck source cascade txAccess action = do
       -- Drop event triggers so no interference is caused to the sql query
       forM_ (M.elems preActionTables) $ \tableInfo -> do
         let eventTriggers = _tiEventTriggerInfoMap tableInfo
-        forM_ (M.keys eventTriggers) (liftTx . delTriggerQ)
+        forM_ (M.keys eventTriggers) (liftTx . dropTriggerQ)
 
       -- Get the metadata before the sql query, everything, need to filter this
       (preActionTableMeta, preActionFunctionMeta) <- fetchMeta preActionTables preActionFunctions

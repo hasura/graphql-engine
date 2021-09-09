@@ -24,9 +24,6 @@ instance BackendAPI ('Postgres 'Vanilla) where
 
       , commandParser "add_computed_field"   RMAddComputedField
       , commandParser "drop_computed_field"  RMDropComputedField
-
-      , commandParser "create_event_trigger" RMPgCreateEventTrigger
-      , commandParser "delete_event_trigger" RMPgDeleteEventTrigger
       ]
     ]
 

@@ -118,7 +118,6 @@ instance
   resolveSourceConfig        = PG.resolveSourceConfig
   resolveDatabaseMetadata    = PG.resolveDatabaseMetadata
   createTableEventTrigger    = PG.createTableEventTrigger
-  buildEventTriggerInfo      = PG.buildEventTriggerInfo @pgKind
   parseBoolExpOperations     = PG.parseBoolExpOperations
   buildFunctionInfo          = PG.buildFunctionInfo
   updateColumnInEventTrigger = PG.updateColumnInEventTrigger

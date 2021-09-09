@@ -40,22 +40,38 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     -> EventId
     -> m ()
 
+  -- | @dropTriggerAndArchiveEvents@ drops the database trigger and
+  --   marks all the events related to the event trigger as archived.
+  --   See Note [Cleanup for dropped triggers]
+  dropTriggerAndArchiveEvents
+    :: ( MonadIO m
+       , MonadError QErr m
+       )
+    => SourceConfig b
+    -> TriggerName
+    -> m ()
+
 instance BackendEventTrigger ('Postgres 'Vanilla) where
   insertManualEvent           = PG.insertManualEvent
   redeliverEvent              = PG.redeliverEvent
+  dropTriggerAndArchiveEvents = PG.dropTriggerAndArchiveEvents
 
 instance BackendEventTrigger ('Postgres 'Citus) where
   insertManualEvent _ _ _ _ _ _   = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
   redeliverEvent _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
+  dropTriggerAndArchiveEvents _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
 
 instance BackendEventTrigger 'MSSQL where
   insertManualEvent _ _ _ _ _ _   = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
+  dropTriggerAndArchiveEvents _ _ = throw400 NotSupported $ "Event triggers are not supported for MS-SQL sources"
 
 instance BackendEventTrigger 'BigQuery where
   insertManualEvent _ _ _ _ _ _   = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
+  dropTriggerAndArchiveEvents _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQUery sources"
 
 instance BackendEventTrigger 'MySQL where
   insertManualEvent _ _ _ _ _ _  = throw400 NotSupported "Event triggers are not supported for MySQL sources"
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
+  dropTriggerAndArchiveEvents _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"

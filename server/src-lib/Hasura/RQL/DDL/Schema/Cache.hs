@@ -58,6 +58,7 @@ import           Hasura.GraphQL.Schema                    (buildGQLContext)
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.CustomTypes
+import           Hasura.RQL.DDL.EventTrigger              (buildEventTriggerInfo)
 import           Hasura.RQL.DDL.InheritedRoles            (resolveInheritedRole)
 import           Hasura.RQL.DDL.RemoteRelationship        (PartiallyResolvedSource (..))
 import           Hasura.RQL.DDL.RemoteSchema

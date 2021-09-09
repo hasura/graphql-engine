@@ -24,14 +24,16 @@ import qualified Data.HashMap.Strict                 as Map
 import qualified Data.HashMap.Strict.InsOrd.Extended as OMap
 import qualified Data.HashSet                        as HS
 import qualified Data.List                           as L
+import qualified Data.TByteString                    as TBS
 
 import           Control.Lens                        ((.~), (^?))
 import           Data.Aeson
+import           Data.Has                            (Has, getter)
 import           Data.Text.Extended                  ((<<>))
 
+import qualified Hasura.Logging                      as HL
 import qualified Hasura.SQL.AnyBackend               as AB
 
-import           Hasura.Backends.Postgres.DDL.Table  (delTriggerQ)
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
@@ -51,6 +53,7 @@ import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Eventing.Backend   (BackendEventTrigger (..))
 import           Hasura.Server.Types                 (ExperimentalFeature (..))
 
 
@@ -60,6 +63,8 @@ runClearMetadata
      , MetadataM m
      , HasServerConfigCtx m
      , MonadMetadataStorageQueryAPI m
+     , MonadReader r m
+     , Has (HL.Logger HL.Hasura) r
      )
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
@@ -82,7 +87,7 @@ runClearMetadata _ = do
                & metaSources %~ OMap.insert defaultSource emptyDefaultSource
   runReplaceMetadataV1 $ RMWithSources emptyMetadata'
 
-{- Note [Clear postgres schema for dropped triggers]
+{- Note [Cleanup for dropped triggers]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 There was an issue (https://github.com/hasura/graphql-engine/issues/5461)
 fixed (via https://github.com/hasura/graphql-engine/pull/6137) related to
@@ -90,7 +95,7 @@ event triggers while replacing metadata in the catalog prior to metadata
 separation. The metadata separation solves the issue naturally, since the
 'hdb_catalog.event_triggers' table is no more in use and new/updated event
 triggers are processed in building schema cache. But we need to drop the
-pg trigger and archive events for dropped event triggers. This is handled
+database trigger and archive events for dropped event triggers. This is handled
 explicitly in @'runReplaceMetadata' function.
 -}
 
@@ -102,6 +107,8 @@ runReplaceMetadata
      , MonadIO m
      , MonadMetadataStorageQueryAPI m
      , HasServerConfigCtx m
+     , MonadReader r m
+     , Has (HL.Logger HL.Hasura) r
      )
   => ReplaceMetadata -> m EncJSON
 runReplaceMetadata = \case
@@ -115,22 +122,27 @@ runReplaceMetadataV1
      , MonadIO m
      , MonadMetadataStorageQueryAPI m
      , HasServerConfigCtx m
+     , MonadReader r m
+     , Has (HL.Logger HL.Hasura) r
      )
   => ReplaceMetadataV1 -> m EncJSON
 runReplaceMetadataV1 =
   (successMsg <$) . runReplaceMetadataV2 . ReplaceMetadataV2 NoAllowInconsistentMetadata
 
 runReplaceMetadataV2
-  :: forall m
+  :: forall m r
    . ( QErrM m
      , CacheRWM m
      , MetadataM m
      , MonadIO m
      , HasServerConfigCtx m
      , MonadMetadataStorageQueryAPI m
+     , MonadReader r m
+     , Has (HL.Logger HL.Hasura) r
      )
   => ReplaceMetadataV2 -> m EncJSON
 runReplaceMetadataV2 ReplaceMetadataV2{..} = do
+  logger :: (HL.Logger HL.Hasura) <- asks getter
   -- we drop all the future cron trigger events before inserting the new metadata
   -- and re-populating future cron events below
   experimentalFeatures <- _sccExperimentalFeatures <$> askServerConfigCtx
@@ -180,14 +192,11 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
   for_ cronTriggersToBeAdded $ \CronTriggerMetadata {..} ->
     populateInitialCronTriggerEvents ctSchedule ctName
 
-  -- See Note [Clear postgres schema for dropped triggers]
-  dropPostgresTriggers (getOnlyPGSources oldMetadata) (getOnlyPGSources metadata)
+  -- See Note [Cleanup for dropped triggers]
+  dropSourceSQLTriggers logger (_metaSources oldMetadata) (_metaSources metadata)
 
   encJFromJValue . formatInconsistentObjs . scInconsistentObjs <$> askSchemaCache
   where
-    getOnlyPGSources :: Metadata -> InsOrdHashMap SourceName (SourceMetadata ('Postgres 'Vanilla))
-    getOnlyPGSources = OMap.mapMaybe AB.unpackAnyBackend . _metaSources
-
     {- Note [Cron triggers behaviour with replace metadata]
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -243,33 +252,50 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
         pure $ allNewCronTriggers <> oldCronTriggersNotIncludedInMetadata
       pure $ (cronTriggers, cronTriggersToBeAdded)
 
-
-    dropPostgresTriggers
-      :: InsOrdHashMap SourceName (SourceMetadata ('Postgres 'Vanilla)) -- ^ old pg sources
-      -> InsOrdHashMap SourceName (SourceMetadata ('Postgres 'Vanilla)) -- ^ new pg sources
+    dropSourceSQLTriggers
+      :: HL.Logger HL.Hasura
+      -> InsOrdHashMap SourceName BackendSourceMetadata -- ^ old sources
+      -> InsOrdHashMap SourceName BackendSourceMetadata -- ^ new sources
       -> m ()
-    dropPostgresTriggers oldSources newSources =
-      for_ (OMap.toList newSources) $ \(source, newSourceCache) ->
-        onJust (OMap.lookup source oldSources) $ \oldSourceCache -> do
-          let oldTriggersMap = getPGTriggersMap oldSourceCache
-              newTriggersMap = getPGTriggersMap newSourceCache
-              droppedTriggers = OMap.keys $ oldTriggersMap `OMap.difference` newTriggersMap
-              catcher e@QErr{ qeCode }
-                | qeCode == Unexpected = pure () -- NOTE: This information should be returned by the inconsistent_metadata response, so doesn't need additional logging.
-                | otherwise = throwError e -- rethrow other errors
+    dropSourceSQLTriggers (HL.Logger logger) oldSources newSources = do
+      -- NOTE: the current implementation of this function has an edge case.
+      -- The edge case is that when a `SourceA` which contained some event triggers
+      -- is modified to point to a new database, this function will try to drop the
+      -- SQL triggers of the dropped event triggers on the new database which doesn't exist.
+      -- In the current implementation, this doesn't throw an error because the trigger is dropped
+      -- using `DROP IF EXISTS..` meaning this silently fails without throwing an error.
+      for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
+        onJust (OMap.lookup source oldSources) $ \oldBackendSourceMetadata ->
+          compose source newBackendSourceMetadata oldBackendSourceMetadata \(newSourceMetadata :: SourceMetadata b) -> do
+            dispatch oldBackendSourceMetadata \oldSourceMetadata -> do
+              let oldTriggersMap = getTriggersMap oldSourceMetadata
+                  newTriggersMap = getTriggersMap newSourceMetadata
+                  droppedTriggers = OMap.keys $ oldTriggersMap `OMap.difference` newTriggersMap
+                  catcher e@QErr{ qeCode }
+                    | qeCode == Unexpected = pure () -- NOTE: This information should be returned by the inconsistent_metadata response, so doesn't need additional logging.
+                    | otherwise = throwError e -- rethrow other errors
 
-          -- This will swallow Unexpected exceptions for sources if allow_inconsistent_metadata is enabled
-          -- This should be ok since if the sources are already missing from the cache then they should
-          -- not need to be removed.
-          --
-          -- TODO: Determine if any errors should be thrown from askSourceConfig at all if the errors are just being discarded
-          flip catchError catcher do
-            sourceConfig <- askSourceConfig @('Postgres 'Vanilla) source
-            for_ droppedTriggers $
-              \name ->
-                  liftIO $ runPgSourceWriteTx sourceConfig $ delTriggerQ name >> archiveEvents name
+              -- This will swallow Unexpected exceptions for sources if allow_inconsistent_metadata is enabled
+              -- This should be ok since if the sources are already missing from the cache then they should
+              -- not need to be removed.
+              --
+              -- TODO: Determine if any errors should be thrown from askSourceConfig at all if the errors are just being discarded
+              return $
+                flip catchError catcher do
+                  sourceConfig <- askSourceConfig @b source
+                  for_ droppedTriggers $ dropTriggerAndArchiveEvents @b sourceConfig
+
       where
-        getPGTriggersMap = OMap.unions . map _tmEventTriggers . OMap.elems . _smTables
+        getTriggersMap = OMap.unions . map _tmEventTriggers . OMap.elems . _smTables
+
+        dispatch = AB.dispatchAnyBackend @BackendEventTrigger
+
+        compose
+          :: SourceName
+          -> AB.AnyBackend i
+          -> AB.AnyBackend i
+          -> (forall b. BackendEventTrigger b => i b -> i b -> m ()) -> m ()
+        compose sourceName x y f = AB.composeAnyBackend @BackendEventTrigger f x y (logger $ HL.UnstructuredLog HL.LevelInfo $ TBS.fromText $ "Event trigger clean up couldn't be done on the source " <> sourceName <<> " because it has changed its type")
 
 processExperimentalFeatures :: HasServerConfigCtx m => Metadata -> m Metadata
 processExperimentalFeatures metadata = do

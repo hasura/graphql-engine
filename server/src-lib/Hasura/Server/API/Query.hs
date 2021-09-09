@@ -13,8 +13,10 @@ import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Has                            (Has)
 import           Network.HTTP.Client.Extended
 
+import qualified Hasura.Logging                      as L
 import qualified Hasura.Tracing                      as Tracing
 
 import           Hasura.Backends.Postgres.DDL.RunSQL
@@ -182,12 +184,13 @@ runQuery
      , MonadQueryTags m
      )
   => Env.Environment
+  -> L.Logger L.Hasura
   -> InstanceId
   -> UserInfo -> RebuildableSchemaCache -> HTTP.Manager
   -> ServerConfigCtx -> RQLQuery -> m (EncJSON, RebuildableSchemaCache)
-runQuery env instanceId userInfo sc hMgr serverConfigCtx query = do
+runQuery env logger instanceId userInfo sc hMgr serverConfigCtx query = do
   (metadata, currentResourceVersion) <- fetchMetadata
-  result <- runQueryM env query & Tracing.interpTraceT \x -> do
+  result <- runReaderT (runQueryM env query) logger & Tracing.interpTraceT \x -> do
     (((js, tracemeta), meta), rsc, ci) <-
          x & runMetadataT metadata
            & runCacheRWT sc
@@ -355,6 +358,8 @@ runQueryM
      , MetadataM m
      , MonadMetadataStorageQueryAPI m
      , MonadQueryTags m
+     , MonadReader r m
+     , Has (L.Logger L.Hasura) r
      )
   => Env.Environment
   -> RQLQuery

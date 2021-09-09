@@ -23,7 +23,7 @@ module Hasura.RQL.Types
   , askTableCoreInfoSource
   , askFieldInfoMap
   , askFieldInfoMapSource
-  , assertPGCol
+  , assertColumnExists
   , askRelType
   , askComputedFieldInfo
   , askRemoteRel
@@ -288,14 +288,15 @@ askComputedFieldInfo fields computedField = do
       , computedField <<> " is a " <> fieldType <> "; "
       ]
 
-assertPGCol :: (MonadError QErr m, Backend backend)
-            => FieldInfoMap (FieldInfo backend)
-            -> Text
-            -> Column backend
-            -> m ()
-assertPGCol m msg c = do
-  _ <- askColInfo m c msg
-  return ()
+assertColumnExists
+  :: forall backend m
+   . (MonadError QErr m, Backend backend)
+  => FieldInfoMap (FieldInfo backend)
+  -> Text
+  -> Column backend
+  -> m ()
+assertColumnExists m msg c = do
+  void $ askColInfo m c msg
 
 askRelType :: (MonadError QErr m)
            => FieldInfoMap (FieldInfo backend)

@@ -71,14 +71,6 @@ class ( Backend b
     -> TriggerOpsDef b
     -> m (Either QErr ())
 
-  buildEventTriggerInfo
-    :: MonadError QErr m
-    => Env.Environment
-    -> SourceName
-    -> TableName b
-    -> EventTriggerConf b
-    -> m (EventTriggerInfo b, [SchemaDependency])
-
   parseBoolExpOperations
     :: (MonadError QErr m, TableCoreInfoRM b m)
     => ValueParser b m v

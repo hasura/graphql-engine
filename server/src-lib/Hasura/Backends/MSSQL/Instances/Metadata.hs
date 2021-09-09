@@ -15,7 +15,6 @@ instance BackendMetadata 'MSSQL where
   resolveSourceConfig        = MSSQL.resolveSourceConfig
   resolveDatabaseMetadata    = MSSQL.resolveDatabaseMetadata
   createTableEventTrigger    = MSSQL.createTableEventTrigger
-  buildEventTriggerInfo      = MSSQL.buildEventTriggerInfo
   parseBoolExpOperations     = MSSQL.parseBoolExpOperations
   buildFunctionInfo          = MSSQL.buildFunctionInfo
   updateColumnInEventTrigger = MSSQL.updateColumnInEventTrigger

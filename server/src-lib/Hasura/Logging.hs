@@ -25,6 +25,7 @@ module Hasura.Logging
   , defaultEnabledEngineLogTypes
   , isEngineLogTypeEnabled
   , readLogTypes
+  , getFormattedTime
   ) where
 
 import           Hasura.Prelude

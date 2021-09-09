@@ -4,6 +4,7 @@ module Hasura.Server.MigrateSpec (CacheRefT(..), spec) where
 
 import           Hasura.Prelude
 
+import qualified Data.ByteString.Lazy.UTF8           as LBS
 import qualified Data.Environment                    as Env
 import qualified Database.PG.Query                   as Q
 import qualified Network.HTTP.Client.Extended        as HTTP
@@ -13,12 +14,14 @@ import           Control.Monad.Morph
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Control.Monad.Unique
 import           Control.Natural                     ((:~>) (..))
+import           Data.Aeson                          (encode)
 import           Data.Time.Clock                     (getCurrentTime)
 import           Test.Hspec.Core.Spec
 import           Test.Hspec.Expectations.Lifted
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Base.Error
+import           Hasura.Logging
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Metadata             (ClearMetadata (..), runClearMetadata)
 import           Hasura.RQL.DDL.Schema
@@ -137,6 +140,10 @@ spec srcConfig pgExecCtx pgConnInfo = do
 
   describe "recreateSystemMetadata" $ do
     let dumpMetadata = execPGDump (PGDumpReqBody defaultSource ["--schema=hdb_catalog"] False) pgConnInfo
+        logger :: Logger Hasura = Logger $ \l -> do
+          let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l
+          t <- liftIO $ getFormattedTime Nothing
+          liftIO $ putStrLn $ LBS.toString $ encode $ EngineLog t logLevel logType logDetail
 
     it "is idempotent" \(NT transact) -> do
       env <- Env.getEnvironment
@@ -157,7 +164,7 @@ spec srcConfig pgExecCtx pgConnInfo = do
       time <- getCurrentTime
       transact (dropAndInit env time) `shouldReturn` MRInitialized
       firstDump <- transact dumpMetadata
-      transact (runClearMetadata ClearMetadata) `shouldReturn` successMsg
+      transact (flip runReaderT logger $ runClearMetadata ClearMetadata) `shouldReturn` successMsg
       secondDump <- transact dumpMetadata
       secondDump `shouldBe` firstDump
 

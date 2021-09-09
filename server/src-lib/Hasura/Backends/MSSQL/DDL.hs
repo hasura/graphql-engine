@@ -2,7 +2,6 @@ module Hasura.Backends.MSSQL.DDL
   ( buildComputedFieldInfo
   , fetchAndValidateEnumValues
   , createTableEventTrigger
-  , buildEventTriggerInfo
   , buildFunctionInfo
   , updateColumnInEventTrigger
   , parseCollectableType
@@ -13,8 +12,6 @@ where
 import           Hasura.Prelude
 
 import           Data.Aeson
-
-import qualified Data.Environment                  as Env
 
 import           Hasura.Base.Error
 import           Hasura.RQL.IR.BoolExp
@@ -71,16 +68,6 @@ createTableEventTrigger
   -> m (Either QErr ())
 createTableEventTrigger _ _ _ _ _ _ = runExceptT $
   throw400 NotSupported "Cannot create table event triggers in MSSQL sources"
-
-buildEventTriggerInfo
-  :: MonadError QErr m
-  => Env.Environment
-  -> SourceName
-  -> TableName 'MSSQL
-  -> EventTriggerConf 'MSSQL
-  -> m (EventTriggerInfo 'MSSQL, [SchemaDependency])
-buildEventTriggerInfo _ _ _ _ =
-  throw400 NotSupported "Table event triggers are not supported for MSSQL sources"
 
 buildFunctionInfo
   :: (MonadError QErr m)

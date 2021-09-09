@@ -135,13 +135,13 @@ import qualified Hasura.Backends.Postgres.SQL.DML       as S
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Tracing                         as Tracing
 
-import           Hasura.Backends.Postgres.DDL.Table     (getHeaderInfosFromConf)
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Base.Error
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.Eventing.ScheduledTrigger.Types
 import           Hasura.Metadata.Class
+import           Hasura.RQL.DDL.EventTrigger            (getHeaderInfosFromConf)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
