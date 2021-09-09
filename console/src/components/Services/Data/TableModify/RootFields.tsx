@@ -1,5 +1,5 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { connect, ConnectedProps } from 'react-redux';
 
 import RootFieldsEditor from './RootFieldsEditor';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
@@ -7,12 +7,22 @@ import Tooltip from '../../../Common/Tooltip/Tooltip';
 import {
   getTableCustomRootFields,
   getTableCustomName,
+  dataSource,
 } from '../../../../dataSources';
+
+import { ReduxState } from '../../../../types';
+import { Table } from '../../../../dataSources/types';
 
 import styles from './ModifyTable.scss';
 
-const RootFields = props => {
-  const { tableSchema, rootFieldsEdit, dispatch, customName } = props;
+const RootFields: React.FC<ComputedRootFieldsProps> = ({
+  tableSchema,
+  rootFieldsEdit,
+  dispatch,
+  customName,
+  currentSchema,
+}) => {
+  const defaultSchemaForCurrentDatasource = dataSource.defaultRedirectSchema;
 
   const existingRootFields = getTableCustomRootFields(tableSchema);
   const existingCustomName = getTableCustomName(tableSchema);
@@ -30,17 +40,32 @@ const RootFields = props => {
         rootFieldsEdit={rootFieldsEdit}
         dispatch={dispatch}
         tableName={tableSchema.table_name}
+        tableSchema={
+          defaultSchemaForCurrentDatasource === currentSchema
+            ? ''
+            : currentSchema
+        }
       />
     </React.Fragment>
   );
 };
 
-const mapStateToProps = (state, ownProps) => {
+interface OwnProps {
+  tableSchema: Table;
+}
+
+const mapStateToProps = (state: ReduxState, ownProps: OwnProps) => {
   return {
     tableSchema: ownProps.tableSchema,
     rootFieldsEdit: state.tables.modify.rootFieldsEdit,
     customName: state.tables.modify.custom_name,
+    currentSchema: state.tables.currentSchema,
   };
 };
 
-export default connect(mapStateToProps)(RootFields);
+const connector = connect(mapStateToProps);
+type InjectedProps = ConnectedProps<typeof connector>;
+type ComputedRootFieldsProps = OwnProps & InjectedProps;
+
+const ConnectedRootFields = connector(RootFields);
+export default ConnectedRootFields;

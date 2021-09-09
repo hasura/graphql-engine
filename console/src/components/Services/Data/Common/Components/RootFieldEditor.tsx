@@ -1,9 +1,32 @@
 import React from 'react';
-import styles from '../../../../Common/Common.scss';
-import { getRootFieldLabel } from './utils';
+
 import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
 
-const RootFieldEditor = ({
+import { getRootFieldLabel } from './utils';
+
+import styles from '../../../../Common/Common.scss';
+
+interface RootFieldEditorProps {
+  rootFields: Record<string, string>;
+  disabled: boolean;
+  tableName: string;
+  tableSchema: string;
+  customName?: string;
+  customNameOnChange: ChangeHandler;
+  selectOnChange: ChangeHandler;
+  selectByPkOnChange: ChangeHandler;
+  selectAggOnChange: ChangeHandler;
+  insertOnChange: ChangeHandler;
+  insertOneOnChange: ChangeHandler;
+  updateOnChange: ChangeHandler;
+  updateByPkOnChange: ChangeHandler;
+  deleteOnChange: ChangeHandler;
+  deleteByPkOnChange: ChangeHandler;
+}
+
+type ChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => void;
+
+const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
   rootFields,
   disabled,
   customNameOnChange,
@@ -18,6 +41,7 @@ const RootFieldEditor = ({
   deleteByPkOnChange,
   tableName,
   customName,
+  tableSchema,
 }) => {
   const {
     select,
@@ -31,20 +55,39 @@ const RootFieldEditor = ({
     delete_by_pk: deleteByPk,
   } = rootFields;
 
-  const getDefaultRootField = rfType => {
-    if (rfType.includes('select')) {
-      return rfType.replace('select', tableName);
+  const getRootField = () => {
+    if (customName) {
+      return customName;
     }
-    if (rfType.includes('one')) {
-      return rfType.replace('one', tableName) + '_one';
+
+    if (tableSchema) {
+      return `${tableSchema}_${tableName}`;
     }
-    if (rfType === 'custom_name') {
-      return tableName;
-    }
-    return `${rfType}_${tableName}`;
+
+    return tableName;
   };
 
-  const getRow = (rfType, value, onChange, boldLabel = false) => (
+  const getDefaultRootField = (rfType: string) => {
+    const rootField = getRootField();
+
+    if (rfType.includes('select')) {
+      return rfType.replace('select', rootField);
+    }
+    if (rfType.includes('one')) {
+      return `${rfType.replace('one', rootField)}_one`;
+    }
+    if (rfType === 'custom_name') {
+      return rootField;
+    }
+    return `${rfType}_${rootField}`;
+  };
+
+  const getRow = (
+    rfType: string,
+    value: string | undefined,
+    onChange: ChangeHandler,
+    boldLabel = false
+  ) => (
     <div
       className={`${styles.display_flex} row ${styles.add_mar_bottom_small}`}
     >
@@ -55,7 +98,7 @@ const RootFieldEditor = ({
       >
         {getRootFieldLabel(rfType)}
       </div>
-      <div className={'col-md-5'}>
+      <div className="col-md-5">
         <input
           type="text"
           value={value || ''}
@@ -68,7 +111,7 @@ const RootFieldEditor = ({
     </div>
   );
 
-  const getSection = rfType => {
+  const getSection = (rfType: string) => {
     return (
       <div className={`${styles.add_mar_bottom_mid}`}>
         <CollapsibleToggle
