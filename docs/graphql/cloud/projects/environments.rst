@@ -91,7 +91,7 @@ Moving from local development to Hasura Cloud
 ---------------------------------------------
 
 If you have been using the OSS version of Hasura GraphQL engine locally using Docker
-and want to move to a Hasura Cloud project, start by creating a project at `<cloud.hasura.io>`__
+and want to move to a Hasura Cloud project, start by creating a project at `<https://cloud.hasura.io/signup>`__
 
 Once the project is created, launch console and connect your database. Make sure that the
 name of the database is same as that in your local setup.
