@@ -18,6 +18,7 @@ type RootFieldsEditorProps = {
   tableName: string;
   customName: string;
   existingCustomName?: string;
+  tableSchema: string;
 };
 
 const RootFieldsEditor = ({
@@ -27,6 +28,7 @@ const RootFieldsEditor = ({
   tableName,
   customName,
   existingCustomName,
+  tableSchema,
 }: RootFieldsEditorProps) => {
   const setRootFieldsBulk = (rf: Record<string, string>) => {
     dispatch(modifyRootFields(rf));
@@ -80,6 +82,7 @@ const RootFieldsEditor = ({
     <RootFieldEditor
       disabled={false}
       tableName={tableName}
+      tableSchema={tableSchema}
       rootFields={rootFieldsEdit}
       customName={customName}
       customNameOnChange={(e: React.ChangeEvent<HTMLInputElement>) => {
