@@ -3,6 +3,7 @@
 ## Next release
 
 (Add entries below in the order of server, console, cli, docs, others)
+- server: support MSSQL transactions
 
 ## v2.0.9
 
