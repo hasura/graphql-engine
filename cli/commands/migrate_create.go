@@ -49,10 +49,10 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Args:         cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if cmd.Flags().Changed("metadata-from-server") {
-				return fmt.Errorf("metadata-from-server flag is depricated")
+				return fmt.Errorf("metadata-from-server flag is deprecated")
 			}
 			if cmd.Flags().Changed("metadata-from-file") {
-				return fmt.Errorf("metadata-from-file flag is depricated")
+				return fmt.Errorf("metadata-from-file flag is deprecated")
 			}
 			if err := validateConfigV3Flags(cmd, ec); err != nil {
 				if errors.Is(err, errDatabaseNotFound) {
