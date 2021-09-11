@@ -132,7 +132,7 @@ export const getColumnUpdateMigration = (
       tableName,
       currentSchema,
       colName,
-      quoteDefault(colDefault),
+      quoteDefault(colDefault, colType),
       `default_${source}_${currentSchema}_${tableName}_${colName}`
     );
   } else {
@@ -150,7 +150,7 @@ export const getColumnUpdateMigration = (
       tableName,
       currentSchema,
       colName,
-      quoteDefault(originalColDefault),
+      quoteDefault(originalColDefault, originalColType),
       `${source}_${tableName}_${colName}_default`
     );
   } else {

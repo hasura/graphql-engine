@@ -609,7 +609,7 @@ export const getAddColumnSql = (
     sql += ' unique';
   }
   if (options.default) {
-    const defWithQuotes = quoteDefault(options.default);
+    const defWithQuotes = quoteDefault(options.default, columnType);
     sql += ` default ${defWithQuotes}`;
   }
 

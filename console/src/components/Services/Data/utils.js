@@ -91,8 +91,12 @@ const postgresFunctionTester = /.*\(\)$/gm;
 export const isPostgresFunction = str =>
   new RegExp(postgresFunctionTester).test(str);
 export const isTypeCast = (str = '') => str.split('::').length > 1;
-export const quoteDefault = colDefault => {
-  if (isPostgresFunction(colDefault) || isTypeCast(colDefault)) {
+export const quoteDefault = (colDefault, colType) => {
+  if (
+    isPostgresFunction(colDefault) ||
+    isTypeCast(colDefault) ||
+    (colType?.includes('timestamp') && colDefault == 'CURRENT_TIMESTAMP')
+  ) {
     return colDefault;
   }
   return `'${colDefault}'`;
