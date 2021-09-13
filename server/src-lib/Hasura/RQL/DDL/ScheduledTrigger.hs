@@ -37,7 +37,7 @@ populateInitialCronTriggerEvents
 populateInitialCronTriggerEvents schedule triggerName = do
   currentTime <- liftIO C.getCurrentTime
   let scheduleTimes = generateScheduleTimes currentTime 100 schedule
-  createScheduledEvent $ SESCron $ map (CronEventSeed triggerName) scheduleTimes
+  insertCronEvents $ map (CronEventSeed triggerName) scheduleTimes
   pure ()
 
 -- | runCreateCronTrigger will update a existing cron trigger when the 'replace'
@@ -111,7 +111,7 @@ updateCronTrigger cronTriggerMetadata = do
   dropFutureCronEvents $ SingleCronTrigger triggerName
   currentTime <- liftIO C.getCurrentTime
   let scheduleTimes = generateScheduleTimes currentTime 100 $ ctSchedule cronTriggerMetadata
-  createScheduledEvent $ SESCron $ map (CronEventSeed triggerName) scheduleTimes
+  insertCronEvents $ map (CronEventSeed triggerName) scheduleTimes
   pure successMsg
 
 runDeleteCronTrigger
@@ -136,8 +136,8 @@ runCreateScheduledEvent
   :: ( MonadMetadataStorageQueryAPI m  )
   => CreateScheduledEvent -> m EncJSON
 runCreateScheduledEvent scheduledEvent = do
-  createScheduledEvent $ SESOneOff scheduledEvent
-  pure successMsg
+  eid <- createOneOffScheduledEvent scheduledEvent
+  pure $ encJFromJValue $ J.object [ "message" J..= J.String "success", "event_id" J..= eid ]
 
 checkExists :: (CacheRM m, MonadError QErr m) => TriggerName -> m ()
 checkExists name = do

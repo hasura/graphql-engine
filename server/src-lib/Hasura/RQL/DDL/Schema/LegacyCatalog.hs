@@ -279,7 +279,7 @@ addCronTriggerToCatalog CronTriggerMetadata {..} = liftTx $ do
        ,Q.AltJ ctHeaders, ctIncludeInMetadata, ctComment) False
   currentTime <- liftIO C.getCurrentTime
   let scheduleTimes = generateScheduleTimes currentTime 100 ctSchedule -- generate next 100 events
-  insertScheduledEventTx $ SESCron $ map (CronEventSeed ctName) scheduleTimes
+  insertCronEventsTx $ map (CronEventSeed ctName) scheduleTimes
 
 fetchMetadataFromHdbTables :: MonadTx m => m MetadataNoSources
 fetchMetadataFromHdbTables = liftTx do

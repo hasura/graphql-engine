@@ -160,20 +160,32 @@ create_scheduled_event
    X-Hasura-Role: admin
 
    {
-       "type" : "create_scheduled_event",
-       "args" : {
+       "type": "create_scheduled_event",
+       "args": {
            "webhook": "https://httpbin.org/post",
            "schedule_at": "2019-09-09T22:00:00Z",
            "payload": {
                "key1": "value1",
                "key2": "value2"
            },
-           "headers" : [{
+           "headers": [{
                "name":"header-key",
                "value":"header-value"
            }],
-           "comment":"sample scheduled event comment"
+           "comment": "sample scheduled event comment"
        }
+   }
+
+Upon creating a scheduled event successfully, this API will return the ``event_id`` in the response.
+
+.. code-block:: http
+
+   HTTP/1.1 200 OK
+   Content-Type: application/json
+
+   {
+       "message": "success",
+       "event_id": "b918cd10-8853-4e66-91b8-81b5cd16e44b"
    }
 
 .. _metadata_create_scheduled_event_syntax:
@@ -212,6 +224,52 @@ Args syntax
      - false
      - Text
      - Custom comment.
+
+.. admonition:: Supported from
+
+  Scheduled triggers are supported from versions ``v1.3.0`` and above.
+
+.. _metadata_delete_scheduled_event:
+
+delete_scheduled_event
+----------------------
+
+``delete_scheduled_event`` is used to delete an existing scheduled event (one-off or cron).
+
+.. code-block:: http
+
+   POST /v1/metadata HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "delete_scheduled_event",
+       "args" : {
+           "type": "one_off",
+           "event_id": "b918cd10-8853-4e66-91b8-81b5cd16e44b"
+       }
+   }
+
+.. _metadata_delete_scheduled_event_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - type
+     - true
+     - ``one_off`` | ``cron``
+     - Type of the event trigger.
+   * - event_id
+     - true
+     - UUID
+     - The ``id`` of the scheduled event.
 
 .. admonition:: Supported from
 

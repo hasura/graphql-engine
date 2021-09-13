@@ -12,7 +12,7 @@ module Hasura.RQL.Types.ScheduledTrigger
   , ScheduledEventId
   , InvocationId
   , CronEventSeed(..)
-  , ScheduledEventSeed(..)
+  , OneOffEvent
   , ScheduledEventStatus(..)
   , scheduledEventStatusToText
   , ScheduledEventType(..)
@@ -244,10 +244,7 @@ data CronEventSeed
   , cesScheduledTime :: !UTCTime
   } deriving (Show, Eq)
 
-data ScheduledEventSeed
-  = SESCron ![CronEventSeed]
-  | SESOneOff !CreateScheduledEvent
-  deriving (Show, Eq)
+type OneOffEvent = CreateScheduledEvent
 
 data ScheduledEventStatus
   = SESScheduled
