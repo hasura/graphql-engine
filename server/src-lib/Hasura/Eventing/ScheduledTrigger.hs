@@ -88,7 +88,8 @@ module Hasura.Eventing.ScheduledTrigger
   , setScheduledEventOpTx
   , unlockScheduledEventsTx
   , unlockAllLockedScheduledEventsTx
-  , insertScheduledEventTx
+  , insertCronEventsTx
+  , insertOneOffScheduledEventTx
   , dropFutureCronEventsTx
   , getOneOffScheduledEventsTx
   , getCronEventsTx
@@ -201,7 +202,7 @@ insertCronEventsFor cronTriggersWithStats = do
         generateCronEventsFrom (ctsMaxScheduledTime stats) cti
   case scheduledEvents of
     []     -> pure ()
-    events -> insertScheduledEvent $ SESCron events
+    events -> insertCronEvents events
 
 generateCronEventsFrom :: UTCTime -> CronTriggerInfo-> [CronEventSeed]
 generateCronEventsFrom startTime CronTriggerInfo{..} =
@@ -678,39 +679,36 @@ unlockAllLockedScheduledEventsTx = do
           WHERE status = 'locked'
           |] () True
 
-insertScheduledEventTx :: ScheduledEventSeed -> Q.TxE QErr ()
-insertScheduledEventTx = \case
-  SESOneOff CreateScheduledEvent{..} ->
-    Q.unitQE defaultTxErrorHandler
-       [Q.sql|
-        INSERT INTO hdb_catalog.hdb_scheduled_events
-        (webhook_conf,scheduled_time,payload,retry_conf,header_conf,comment)
-        VALUES
-        ($1, $2, $3, $4, $5, $6)
-       |] ( Q.AltJ cseWebhook
-          , cseScheduleAt
-          , Q.AltJ csePayload
-          , Q.AltJ cseRetryConf
-          , Q.AltJ cseHeaders
-          , cseComment)
-          False
+insertCronEventsTx :: [CronEventSeed] -> Q.TxE QErr ()
+insertCronEventsTx cronSeeds = do
+  let insertCronEventsSql = TB.run $ toSQL
+        S.SQLInsert
+          { siTable    = cronEventsTable
+          , siCols     = map unsafePGCol ["trigger_name", "scheduled_time"]
+          , siValues   = S.ValuesExp $ map (toTupleExp . toArr) cronSeeds
+          , siConflict = Just $ S.DoNothing Nothing
+          , siRet      = Nothing
+          }
+  Q.unitQE defaultTxErrorHandler (Q.fromText insertCronEventsSql) () False
+  where
+    toArr (CronEventSeed n t) = [(triggerNameToTxt n), (formatTime' t)]
+    toTupleExp = S.TupleExp . map S.SELit
 
-  SESCron cronSeeds -> insertCronEventsTx cronSeeds
-    where
-      insertCronEventsTx :: [CronEventSeed] -> Q.TxE QErr ()
-      insertCronEventsTx events = do
-        let insertCronEventsSql = TB.run $ toSQL
-              S.SQLInsert
-                { siTable    = cronEventsTable
-                , siCols     = map unsafePGCol ["trigger_name", "scheduled_time"]
-                , siValues   = S.ValuesExp $ map (toTupleExp . toArr) events
-                , siConflict = Just $ S.DoNothing Nothing
-                , siRet      = Nothing
-                }
-        Q.unitQE defaultTxErrorHandler (Q.fromText insertCronEventsSql) () False
-        where
-          toArr (CronEventSeed n t) = [(triggerNameToTxt n), (formatTime' t)]
-          toTupleExp = S.TupleExp . map S.SELit
+insertOneOffScheduledEventTx :: OneOffEvent -> Q.TxE QErr EventId
+insertOneOffScheduledEventTx CreateScheduledEvent{..} =
+  runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+    [Q.sql|
+    INSERT INTO hdb_catalog.hdb_scheduled_events
+    (webhook_conf,scheduled_time,payload,retry_conf,header_conf,comment)
+    VALUES
+    ($1, $2, $3, $4, $5, $6) RETURNING id
+    |] ( Q.AltJ cseWebhook
+      , cseScheduleAt
+      , Q.AltJ csePayload
+      , Q.AltJ cseRetryConf
+      , Q.AltJ cseHeaders
+      , cseComment)
+      False
 
 dropFutureCronEventsTx :: ClearCronEvents -> Q.TxE QErr ()
 dropFutureCronEventsTx = \case

@@ -106,7 +106,8 @@ class (MonadError QErr m) => MonadMetadataStorage m where
   -- multi-source work is done. See Note [Todo: Common interface for eventing sub-system]
   getDeprivedCronTriggerStats :: [TriggerName] -> m [CronTriggerStats]
   getScheduledEventsForDelivery :: m ([CronEvent], [OneOffScheduledEvent])
-  insertScheduledEvent :: ScheduledEventSeed -> m ()
+  insertCronEvents :: [CronEventSeed] -> m ()
+  insertOneOffScheduledEvent :: OneOffEvent -> m EventId
   insertScheduledEventInvocation :: Invocation 'ScheduledType -> ScheduledEventType -> m ()
   setScheduledEventOp :: ScheduledEventId -> ScheduledEventOp -> ScheduledEventType -> m ()
   unlockScheduledEvents :: ScheduledEventType -> [ScheduledEventId] -> m Int
@@ -142,7 +143,8 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ReaderT r m) where
 
   getDeprivedCronTriggerStats          = lift . getDeprivedCronTriggerStats
   getScheduledEventsForDelivery        = lift getScheduledEventsForDelivery
-  insertScheduledEvent                 = lift . insertScheduledEvent
+  insertCronEvents                     = lift . insertCronEvents
+  insertOneOffScheduledEvent           = lift . insertOneOffScheduledEvent
   insertScheduledEventInvocation a b   = lift $ insertScheduledEventInvocation a b
   setScheduledEventOp a b c            = lift $ setScheduledEventOp a b c
   unlockScheduledEvents a b            = lift $ unlockScheduledEvents a b
@@ -176,7 +178,8 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (StateT s m) where
 
   getDeprivedCronTriggerStats          = lift . getDeprivedCronTriggerStats
   getScheduledEventsForDelivery        = lift getScheduledEventsForDelivery
-  insertScheduledEvent                 = lift . insertScheduledEvent
+  insertCronEvents                     = lift . insertCronEvents
+  insertOneOffScheduledEvent           = lift . insertOneOffScheduledEvent
   insertScheduledEventInvocation a b   = lift $ insertScheduledEventInvocation a b
   setScheduledEventOp a b c            = lift $ setScheduledEventOp a b c
   unlockScheduledEvents a b            = lift $ unlockScheduledEvents a b
@@ -210,7 +213,8 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) whe
 
   getDeprivedCronTriggerStats          = lift . getDeprivedCronTriggerStats
   getScheduledEventsForDelivery        = lift getScheduledEventsForDelivery
-  insertScheduledEvent                 = lift . insertScheduledEvent
+  insertCronEvents                     = lift . insertCronEvents
+  insertOneOffScheduledEvent           = lift . insertOneOffScheduledEvent
   insertScheduledEventInvocation a b   = lift $ insertScheduledEventInvocation a b
   setScheduledEventOp a b c            = lift $ setScheduledEventOp a b c
   unlockScheduledEvents a b            = lift $ unlockScheduledEvents a b
@@ -243,7 +247,8 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ExceptT QErr m) where
 
   getDeprivedCronTriggerStats          = lift . getDeprivedCronTriggerStats
   getScheduledEventsForDelivery        = lift getScheduledEventsForDelivery
-  insertScheduledEvent                 = lift . insertScheduledEvent
+  insertCronEvents                     = lift . insertCronEvents
+  insertOneOffScheduledEvent           = lift . insertOneOffScheduledEvent
   insertScheduledEventInvocation a b   = lift $ insertScheduledEventInvocation a b
   setScheduledEventOp a b c            = lift $ setScheduledEventOp a b c
   unlockScheduledEvents a b            = lift $ unlockScheduledEvents a b
@@ -276,7 +281,8 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (MetadataT m) where
 
   getDeprivedCronTriggerStats          = lift . getDeprivedCronTriggerStats
   getScheduledEventsForDelivery        = lift getScheduledEventsForDelivery
-  insertScheduledEvent                 = lift . insertScheduledEvent
+  insertCronEvents                     = lift . insertCronEvents
+  insertOneOffScheduledEvent           = lift . insertOneOffScheduledEvent
   insertScheduledEventInvocation a b   = lift $ insertScheduledEventInvocation a b
   setScheduledEventOp a b c            = lift $ setScheduledEventOp a b c
   unlockScheduledEvents a b            = lift $ unlockScheduledEvents a b
@@ -309,7 +315,8 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (LazyTxT QErr m) where
 
   getDeprivedCronTriggerStats          = lift . getDeprivedCronTriggerStats
   getScheduledEventsForDelivery        = lift getScheduledEventsForDelivery
-  insertScheduledEvent                 = lift . insertScheduledEvent
+  insertCronEvents                     = lift . insertCronEvents
+  insertOneOffScheduledEvent           = lift . insertOneOffScheduledEvent
   insertScheduledEventInvocation a b   = lift $ insertScheduledEventInvocation a b
   setScheduledEventOp a b c            = lift $ setScheduledEventOp a b c
   unlockScheduledEvents a b            = lift $ unlockScheduledEvents a b
@@ -415,7 +422,8 @@ instance {-# OVERLAPPABLE #-} (Monad m, Monad (t m), MonadTrans t, MonadMetadata
 
   getDeprivedCronTriggerStats        = hoist lift . getDeprivedCronTriggerStats
   getScheduledEventsForDelivery      = hoist lift getScheduledEventsForDelivery
-  insertScheduledEvent               = hoist lift . insertScheduledEvent
+  insertCronEvents                   = hoist lift . insertCronEvents
+  insertOneOffScheduledEvent         = hoist lift . insertOneOffScheduledEvent
   insertScheduledEventInvocation a b = hoist lift $ insertScheduledEventInvocation a b
   setScheduledEventOp a b c          = hoist lift $ setScheduledEventOp a b c
   unlockScheduledEvents a b          = hoist lift $ unlockScheduledEvents a b
@@ -435,9 +443,13 @@ instance {-# OVERLAPPABLE #-} (Monad m, Monad (t m), MonadTrans t, MonadMetadata
 
 -- | Operations from @'MonadMetadataStorage' used in '/v1/query' and '/v1/metadata' APIs
 class (MonadMetadataStorage m) => MonadMetadataStorageQueryAPI m where
-  -- | Record a cron/one-off event
-  createScheduledEvent :: ScheduledEventSeed -> m ()
-  createScheduledEvent = insertScheduledEvent
+  -- | Record a one-off event
+  createOneOffScheduledEvent :: OneOffEvent -> m EventId
+  createOneOffScheduledEvent = insertOneOffScheduledEvent
+
+  -- | Record a cron event
+  createCronEvents :: [CronEventSeed] -> m ()
+  createCronEvents = insertCronEvents
 
   -- | Clear cron events
   dropFutureCronEvents :: ClearCronEvents -> m ()

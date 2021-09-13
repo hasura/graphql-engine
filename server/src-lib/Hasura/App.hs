@@ -962,7 +962,8 @@ instance {-# OVERLAPPING #-} MonadIO m => MonadMetadataStorage (MetadataStorageT
 
   getDeprivedCronTriggerStats        = runInSeparateTx . getDeprivedCronTriggerStatsTx
   getScheduledEventsForDelivery      = runInSeparateTx getScheduledEventsForDeliveryTx
-  insertScheduledEvent               = runInSeparateTx . insertScheduledEventTx
+  insertCronEvents                   = runInSeparateTx . insertCronEventsTx
+  insertOneOffScheduledEvent         = runInSeparateTx . insertOneOffScheduledEventTx
   insertScheduledEventInvocation a b = runInSeparateTx $ insertInvocationTx a b
   setScheduledEventOp a b c          = runInSeparateTx $ setScheduledEventOpTx a b c
   unlockScheduledEvents a b          = runInSeparateTx $ unlockScheduledEventsTx a b

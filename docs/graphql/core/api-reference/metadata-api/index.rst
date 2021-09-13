@@ -371,6 +371,11 @@ The various types of queries are listed in the following table:
      - :ref:`create_scheduled_event_args <metadata_create_scheduled_event_syntax>`
      - 1
      - Create a new scheduled event
+   
+   * - :ref:`metadata_delete_scheduled_event`
+     - :ref:`delete_scheduled_event_args <metadata_delete_scheduled_event_syntax>`
+     - 1
+     - Delete a scheduled event
 
    * - :ref:`metadata_add_remote_schema`
      - :ref:`add_remote_schema_args <metadata_add_remote_schema_syntax>`
