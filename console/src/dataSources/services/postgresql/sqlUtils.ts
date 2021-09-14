@@ -824,14 +824,12 @@ COMMIT TRANSACTION;`;
 
 const trackableFunctionsWhere = `
 AND has_variadic = FALSE
-AND returns_set = TRUE
 AND return_type_type = 'c'
 `;
 
 const nonTrackableFunctionsWhere = `
 AND NOT (
   has_variadic = false
-  AND returns_set = TRUE
   AND return_type_type = 'c'
 )
 `;
