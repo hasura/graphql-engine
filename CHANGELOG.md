@@ -8,6 +8,8 @@
 
 - server: update `create_scheduled_event` API to return `event_id` in response
 
+- server: fix bug which allowed inconsistent metadata to exist after the `replace_metadata` API even though `allow_inconsistent_object` is set to `false`.
+
 ## v2.0.9
 
 - server: disable mutation for materialised views (#6688)

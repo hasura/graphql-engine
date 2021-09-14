@@ -43,6 +43,96 @@ class TestMetadata:
         check_query_f(hge_ctx, self.dir() +
                       '/replace_metadata_allow_inconsistent.yaml')
 
+    def test_replace_metadata_disallow_inconsistent_metadata(self, hge_ctx):
+        st_code, resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
+        assert st_code == 200, resp
+        default_source_config = {}
+        default_source = list(filter(lambda source: (source["name"] == "default"), resp["sources"]))
+        if default_source:
+            default_source_config = default_source[0]["configuration"]
+        else:
+            assert False, "default source config not found"
+            return
+        st_code, resp = hge_ctx.v1metadataq({
+               "type": "replace_metadata",
+               "version": 2,
+               "args": {
+                 "metadata": {
+                   "version": 3,
+                   "sources": [
+                     {
+                       "name": "default",
+                       "kind": "postgres",
+                       "tables": [
+                         {
+                           "table": {
+                             "schema": "public",
+                             "name": "author"
+                           },
+                           "insert_permissions": [
+                             {
+                               "role": "user1",
+                               "permission": {
+                                 "check": {},
+                                 "columns": [
+                                   "id",
+                                   "name"
+                                 ],
+                                 "backend_only": False
+                               }
+                             },
+                             {
+                               "role": "user2",
+                               "permission": {
+                                 "check": {
+                                   "id": {
+                                     "_eq": "X-Hasura-User-Id"
+                                   }
+                                 },
+                                 "columns": [
+                                   "id",
+                                   "name"
+                                 ],
+                                 "backend_only": False
+                               }
+                             }
+                           ]
+                         }
+                       ],
+                       "configuration": default_source_config
+                     }
+                   ],
+                   "inherited_roles": [
+                     {
+                       "role_name": "users",
+                       "role_set": [
+                         "user2",
+                         "user1"
+                       ]
+                     }
+                   ]
+                 }
+               }
+             })
+        assert st_code == 400, resp
+        assert resp == {
+            "internal": [
+                {
+                    "reason": "Could not inherit permission for the role 'users' for the entity: 'insert permission, table: author, source: 'default''",
+                    "name": "users",
+                    "type": "inherited role permission inconsistency",
+                    "entity": {
+                        "permission_type": "insert",
+                        "source": "default",
+                        "table": "author"
+                    }
+                }
+            ],
+            "path": "$.args",
+            "error": "cannot continue due to inconsistent metadata",
+            "code": "unexpected"
+        }
+
     def test_dump_internal_state(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/dump_internal_state.yaml')
 

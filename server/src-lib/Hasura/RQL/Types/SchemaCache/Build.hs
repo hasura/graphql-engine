@@ -246,7 +246,7 @@ buildSchemaCacheStrict = do
   buildSchemaCache noMetadataModify
   sc <- askSchemaCache
   let inconsObjs = scInconsistentObjs sc
-  when (any droppableInconsistentMetadata inconsObjs) $ do
+  unless (null inconsObjs) $ do
     let err = err400 Unexpected "cannot continue due to inconsistent metadata"
     throwError err{ qeInternal = Just $ toJSON inconsObjs }
 

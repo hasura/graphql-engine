@@ -393,7 +393,14 @@ runDropInconsistentMetadata _ = do
   metadataModifier <- execWriterT $ mapM_ (tell . purgeMetadataObj) (reverse inconsSchObjs)
   metadata <- getMetadata
   putMetadata $ unMetadataModifier metadataModifier metadata
-  buildSchemaCacheStrict
+  buildSchemaCache noMetadataModify
+  -- after building the schema cache, we need to check the inconsistent metadata, if any
+  -- are only those which are not droppable
+  newInconsistentObjects <- scInconsistentObjs <$> askSchemaCache
+  let droppableInconsistentObjects = filter droppableInconsistentMetadata newInconsistentObjects
+  unless (null droppableInconsistentObjects) $
+    throwError (err400 Unexpected "cannot continue due to new inconsistent metadata")
+      { qeInternal = Just $ toJSON newInconsistentObjects }
   return successMsg
 
 purgeMetadataObj :: MetadataObjId -> MetadataModifier
