@@ -55,14 +55,15 @@ const (
 	applyingMigrationsMessage = "Applying migrations"
 )
 
-func newProgressBar(str string, w io.Writer) *pb.ProgressBar {
+func newProgressBar(str string, w io.Writer, pbLogs bool) *pb.ProgressBar {
 	// bar template configuration
 	str = fmt.Sprintf(`"%v: "`, str)
 	var barTemplateConfiguration string = fmt.Sprintf(`{{ cyan %s }} {{ counters .}} {{ bar . "[" "=" ">" "." "]"}} {{percent .}}`, str)
 	bar := pb.ProgressBarTemplate(barTemplateConfiguration).New(0)
-	bar.SetRefreshRate(time.Microsecond)
-	if !terminal.IsTerminal(int(os.Stdin.Fd())) {
+	bar.SetRefreshRate(time.Millisecond)
+	if pbLogs && !terminal.IsTerminal(int(os.Stdin.Fd())) {
 		bar.SetWidth(210)
+		bar.Set(pb.Terminal, true)
 	}
 	bar.Set(pb.CleanOnFinish, true)
 	if w != nil {
@@ -126,8 +127,9 @@ type Migrate struct {
 
 	status *Status
 
-	SkipExecution bool
-	DryRun        bool
+	SkipExecution   bool
+	DryRun          bool
+	ProgressBarLogs bool
 }
 
 type NewMigrateOpts struct {
@@ -540,7 +542,7 @@ func (m *Migrate) Migrate(version uint64, direction string) error {
 	}
 
 	ret := make(chan interface{}, m.PrefetchMigrations)
-	bar := newProgressBar(applyingMigrationsMessage, m.stderr)
+	bar := newProgressBar(applyingMigrationsMessage, m.stderr, m.ProgressBarLogs)
 	go m.read(version, direction, ret, bar)
 	if m.DryRun {
 		return m.unlockErr(m.runDryRun(ret))
@@ -600,7 +602,7 @@ func (m *Migrate) Steps(n int64) error {
 	}
 
 	ret := make(chan interface{}, m.PrefetchMigrations)
-	bar := newProgressBar(applyingMigrationsMessage, m.stderr)
+	bar := newProgressBar(applyingMigrationsMessage, m.stderr, m.ProgressBarLogs)
 
 	if n > 0 {
 		go m.readUp(n, ret, bar)
@@ -641,7 +643,7 @@ func (m *Migrate) Up() error {
 	}
 
 	ret := make(chan interface{}, m.PrefetchMigrations)
-	bar := newProgressBar(applyingMigrationsMessage, m.stderr)
+	bar := newProgressBar(applyingMigrationsMessage, m.stderr, m.ProgressBarLogs)
 	go m.readUp(-1, ret, bar)
 
 	if m.DryRun {
@@ -677,7 +679,7 @@ func (m *Migrate) Down() error {
 	}
 
 	ret := make(chan interface{}, m.PrefetchMigrations)
-	bar := newProgressBar(applyingMigrationsMessage, m.stderr)
+	bar := newProgressBar(applyingMigrationsMessage, m.stderr, m.ProgressBarLogs)
 	go m.readDown(-1, ret, bar)
 
 	if m.DryRun {
@@ -1667,7 +1669,7 @@ func (m *Migrate) GotoVersion(gotoVersion int64) error {
 	}
 
 	ret := make(chan interface{})
-	bar := newProgressBar(applyingMigrationsMessage, m.stderr)
+	bar := newProgressBar(applyingMigrationsMessage, m.stderr, m.ProgressBarLogs)
 	if currVersion <= gotoVersion {
 		go m.readUpFromVersion(-1, gotoVersion, ret, bar)
 	} else if currVersion > gotoVersion {

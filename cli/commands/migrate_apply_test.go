@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/Pallinder/go-randomdata"
+	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
@@ -135,17 +136,18 @@ var testMigrateApplySkipExecution = func(projectDirectory string, globalFlags []
 }
 
 var testProgressBar = func(projectDirectory string) {
-	Context("migrate apply", func() {
+	progressBar := "Applying migrations:  . / 8 .*%"
+	Context("migrate apply should display progress bar", func() {
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;"},
 			WorkingDirectory: projectDirectory,
 		})
 		session := testutil.Hasura(testutil.CmdOpts{
-			Args:             []string{"migrate", "apply"},
+			Args:             []string{"migrate", "apply", "--progressbar-logs"},
 			WorkingDirectory: projectDirectory,
 		})
 		wantKeywordList := []string{
-			"Applying migrations:  . / 8 .*%",
+			progressBar,
 			"migrations applied",
 		}
 
@@ -153,6 +155,19 @@ var testProgressBar = func(projectDirectory string) {
 		for _, keyword := range wantKeywordList {
 			Eventually(session.Err, 60*40).Should(Say(keyword))
 		}
+	})
+	Context("migrate apply shouldn't display progress bar in non-terminal (default behaviour)", func() {
+		session := testutil.Hasura(testutil.CmdOpts{
+			Args:             []string{"migrate", "apply", "--down", "all"},
+			WorkingDirectory: projectDirectory,
+		})
+
+		if !terminal.IsTerminal(int(os.Stdin.Fd())) {
+			Eventually(session.Err, 60*40).ShouldNot(Say(progressBar))
+		} else {
+			Eventually(session.Err, 60*40).Should(Say(progressBar))
+		}
+		Eventually(session, 60*40).Should(Exit(0))
 	})
 }
 
