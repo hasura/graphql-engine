@@ -85,6 +85,8 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f.BoolVar(&opts.DryRun, "dry-run", false, "print the names of migrations which are going to be applied")
 	f.BoolVar(&opts.AllDatabases, "all-databases", false, "set this flag to attempt to apply migrations on all databases present on server")
+	f.BoolVar(&opts.ProgressBarLogs, "progressbar-logs", false, "print the logs of progressbar")
+	f.MarkHidden("progressbar-logs")
 	return migrateApplyCmd
 }
 
@@ -96,11 +98,12 @@ type MigrateApplyOptions struct {
 	VersionMigration string
 	MigrationType    string
 	// version up to which migration chain has to be applied
-	GotoVersion   string
-	SkipExecution bool
-	DryRun        bool
-	Source        cli.Source
-	AllDatabases  bool
+	GotoVersion     string
+	SkipExecution   bool
+	DryRun          bool
+	Source          cli.Source
+	AllDatabases    bool
+	ProgressBarLogs bool
 }
 
 func (o *MigrateApplyOptions) Validate() error {
@@ -267,6 +270,7 @@ func (o *MigrateApplyOptions) Exec() error {
 	}
 	migrateDrv.SkipExecution = o.SkipExecution
 	migrateDrv.DryRun = o.DryRun
+	migrateDrv.ProgressBarLogs = o.ProgressBarLogs
 
 	return ExecuteMigration(migrationType, migrateDrv, step)
 }
