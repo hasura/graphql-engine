@@ -747,9 +747,9 @@ const makeMigrationCall = (
   errorMsg,
   shouldSkipSchemaReload,
   skipExecution = false,
-  isRetry = false
+  isRetry = false,
+  source = getState().tables.currentDataSource
 ) => {
-  const source = getState().tables.currentDataSource;
   const { resourceVersion } = getState().metadata;
   const upQuery = {
     type: 'bulk',

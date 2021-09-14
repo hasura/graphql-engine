@@ -96,6 +96,10 @@ func MigrateAPI(c *gin.Context) {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 				return
 			}
+			if kind == nil {
+				c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: fmt.Sprintf("cannot determine source kind for %v", sourceName)})
+				return
+			}
 			sourceKind = *kind
 		}
 
@@ -144,7 +148,26 @@ func MigrateAPI(c *gin.Context) {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 				return
 			}
-			sourceKind = *kind
+			if kind == nil && len(request.Up) == 0 {
+				c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: fmt.Sprintf("didn't find any request in UP in query body %v", sourceName)})
+				return
+			}
+			if kind == nil && len(request.Up) != 0 {
+				switch databaseKind := strings.Split(request.Up[0].Type, "_")[0]; databaseKind {
+				case "pg":
+					sourceKind = hasura.SourceKindPG
+				case "mssql":
+					sourceKind = hasura.SourceKindMSSQL
+				case "citus":
+					sourceKind = hasura.SourceKindCitus
+				default:
+					c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: fmt.Sprintf("cannot determine source kind for %v", sourceName)})
+					return
+				}
+			}
+			if kind != nil {
+				sourceKind = *kind
+			}
 		}
 		t, err := migrate.NewMigrate(ec, false, sourceName, sourceKind)
 		if err != nil {

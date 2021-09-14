@@ -336,7 +336,11 @@ export const addDataSource = (
     onError,
     requestMsg,
     undefined,
-    errorMsg
+    errorMsg,
+    false,
+    false,
+    false,
+    data.payload.name
   );
 };
 
