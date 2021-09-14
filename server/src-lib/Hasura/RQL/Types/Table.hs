@@ -191,7 +191,7 @@ instance
   toJSON = genericToJSON hasuraJSON
 
 -- | This type is only used as an intermediate type
---   to combine more than one select permissions
+--   to combine more than one select permissions for inherited roles.
 data CombinedSelPermInfo (b :: BackendType)
   = CombinedSelPermInfo
   { cspiCols                 :: ![(M.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)))]

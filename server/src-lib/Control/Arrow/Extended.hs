@@ -180,7 +180,7 @@ class (Monad m, Arrow arr) => ArrowKleisli m arr | arr -> m where
 
 -- | A combinator that serves a similar role to 'returnA' in arrow notation, except that the
 -- argument is a monadic action instead of a pure value. Just as 'returnA' is actually just
--- @'arr' 'id'@, 'ruleA' is just @'arrM' 'id'@, but it is provided as a separate function for
+-- @'arr' 'id'@, 'bindA' is just @'arrM' 'id'@, but it is provided as a separate function for
 -- clarity.
 --
 -- 'bindA' is useful primarily because it allows executing a monadic action using arrow inputs
