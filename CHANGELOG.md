@@ -4,6 +4,7 @@
 
 (Add entries below in the order of server, console, cli, docs, others)
 - server: support MSSQL transactions
+- console: support tracking of functions with return a single row
 
 - server: update `create_scheduled_event` API to return `event_id` in response
 
