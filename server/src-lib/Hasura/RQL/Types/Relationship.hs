@@ -196,7 +196,6 @@ type ObjRelUsing b = RelUsing b (ObjRelUsingChoice b)
 type ObjRelDef b = RelDef (ObjRelUsing b)
 
 
--- should this be parameterized by both the source and the destination backend?
 data RelInfo (b :: BackendType)
   = RelInfo
   { riName        :: !RelName
