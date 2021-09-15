@@ -161,8 +161,9 @@ runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestReques
           -- with the query string from the schema cache, and pass it
           -- through to the /v1/graphql endpoint.
           (httpLoggingMetadata, handlerResp) <- flip runReaderT execCtx $ do
-              (parameterizedQueryHash, resp) <- GH.runGQ env (E._ecxLogger execCtx) requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables)
-              let httpLogMetadata = buildHttpLogMetadata @m (PQHSetSingleton parameterizedQueryHash) RequestModeNonBatchable
+              (gqlOperationLog, resp) <- GH.runGQ env (E._ecxLogger execCtx) requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables)
+              let httpLogMetadata =
+                    buildHttpLogMetadata @m (PQHSetSingleton (gqolParameterizedQueryHash gqlOperationLog)) RequestModeNonBatchable Nothing
               return (httpLogMetadata, fst <$> resp)
           case sequence handlerResp of
             Just resp -> pure (httpLoggingMetadata, fmap encodeHTTPResp resp)

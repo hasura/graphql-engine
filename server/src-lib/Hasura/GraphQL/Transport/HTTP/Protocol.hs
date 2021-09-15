@@ -20,6 +20,7 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , GQExecError(..)
   , GQResponse
   , isExecError
+  , ReqsText
   ) where
 
 import           Data.Text.Extended             (dquote)
@@ -83,9 +84,9 @@ instance (Hashable a) => Hashable (GQLReq a)
 --
 -- See <https://github.com/hasura/graphql-engine/issues/1812>.
 data GQLBatchedReqs a
-  = GQLSingleRequest (GQLReq a)
-  | GQLBatchedReqs [GQLReq a]
-  deriving (Show, Eq, Generic)
+  = GQLSingleRequest a
+  | GQLBatchedReqs [a]
+  deriving (Show, Eq, Generic, Functor)
 
 instance J.ToJSON a => J.ToJSON (GQLBatchedReqs a) where
   toJSON (GQLSingleRequest q) = J.toJSON q
@@ -111,6 +112,8 @@ type GQLReqUnparsed = GQLReq GQLQueryText
 --    - when '_grOperationName' is present, there is a corresponding
 --      'ExecutableDefinitionOperation' in '_grQuery'
 type GQLReqParsed = GQLReq GQLExecDoc
+
+type ReqsText = GQLBatchedReqs (GQLReq GQLQueryText)
 
 -- | A simplified form of 'GQLReqParsed' which is more ergonomic in particular
 -- for APIs that act as graphql /clients/ (e.g. in remote relationship

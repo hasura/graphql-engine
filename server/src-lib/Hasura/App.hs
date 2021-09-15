@@ -840,9 +840,9 @@ instance (MonadIO m) => HttpLog (PGMetadataStorageAppT m) where
     unLogger logger $ mkHttpLog $
       mkHttpErrorLogContext userInfoM enabledLogTypes reqId waiReq req qErr Nothing Nothing headers
 
-  logHttpSuccess logger enabledLogTypes userInfoM reqId waiReq reqBody _response compressedResponse qTime cType headers (CommonHttpLogMetadata rb, ()) =
+  logHttpSuccess logger enabledLogTypes userInfoM reqId waiReq reqBody _response compressedResponse qTime cType headers (CommonHttpLogMetadata rb batchQueryOpLogs, ()) =
     unLogger logger $ mkHttpLog $
-      mkHttpAccessLogContext userInfoM enabledLogTypes reqId waiReq reqBody compressedResponse qTime cType headers rb
+      mkHttpAccessLogContext userInfoM enabledLogTypes reqId waiReq reqBody compressedResponse qTime cType headers rb batchQueryOpLogs
 
 instance (Monad m) => MonadExecuteQuery (PGMetadataStorageAppT m) where
   cacheLookup _ _ _ _ = pure ([], Nothing)

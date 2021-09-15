@@ -4,25 +4,25 @@ module Hasura.Server.AuthSpec (spec) where
 
 import           Hasura.Prelude
 
-import qualified Crypto.JOSE.JWK             as Jose
-import qualified Crypto.JWT                  as JWT
-import qualified Data.Aeson                  as J
-import qualified Data.HashMap.Strict         as Map
-import qualified Network.HTTP.Types          as N
+import qualified Crypto.JOSE.JWK                        as Jose
+import qualified Crypto.JWT                             as JWT
+import qualified Data.Aeson                             as J
+import qualified Data.HashMap.Strict                    as Map
+import qualified Network.HTTP.Types                     as N
 
-import           Control.Lens                hiding ((.=))
+import           Control.Lens                           hiding ((.=))
 import           Control.Monad.Trans.Control
-import           Control.Monad.Trans.Managed (lowerManagedT)
-import           Data.Aeson                  ((.=))
+import           Control.Monad.Trans.Managed            (lowerManagedT)
+import           Data.Aeson                             ((.=))
 import           Data.Parser.JSONPath
 
-import qualified Hasura.Tracing              as Tracing
+import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Base.Error
+import           Hasura.GraphQL.Transport.HTTP.Protocol (ReqsText)
 import           Hasura.Logging
-import           Hasura.Server.Auth          hiding (getUserInfoWithExpTime, processJwt)
-import           Hasura.Server.Auth.JWT      hiding (processJwt)
-import           Hasura.Server.Auth.WebHook  (ReqsText)
+import           Hasura.Server.Auth                     hiding (getUserInfoWithExpTime, processJwt)
+import           Hasura.Server.Auth.JWT                 hiding (processJwt)
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.Session
