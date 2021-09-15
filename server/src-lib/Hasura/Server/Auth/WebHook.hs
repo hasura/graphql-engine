@@ -3,7 +3,6 @@ module Hasura.Server.Auth.WebHook
   , AuthHookG (..)
   , AuthHook
   , userInfoFromAuthHook
-  , type ReqsText
   ) where
 
 import           Hasura.Prelude
@@ -59,8 +58,6 @@ hookMethod authHook = case ahType authHook of
   AHTGet  -> N.GET
   AHTPost -> N.POST
 
-type ReqsText = GH.GQLBatchedReqs GH.GQLQueryText
-
 -- | Makes an authentication request to the given AuthHook and returns
 --   UserInfo parsed from the response, plus an expiration time if one
 --   was returned. Optionally passes a batch of raw GraphQL requests
@@ -72,7 +69,7 @@ userInfoFromAuthHook
   -> H.Manager
   -> AuthHook
   -> [N.Header]
-  -> Maybe ReqsText
+  -> Maybe GH.ReqsText
   -> m (UserInfo, Maybe UTCTime)
 userInfoFromAuthHook logger manager hook reqHeaders reqs = do
   resp <- (`onLeft` logAndThrow) =<< try performHTTPRequest

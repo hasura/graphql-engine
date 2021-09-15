@@ -4,8 +4,8 @@
 
 (Add entries below in the order of server, console, cli, docs, others)
 - server: support MSSQL transactions
+- server: log individual operation details in the http-log during a batch graphQL query execution
 - console: support tracking of functions with return a single row
-
 - server: update `create_scheduled_event` API to return `event_id` in response
 
 - server: fix bug which allowed inconsistent metadata to exist after the `replace_metadata` API even though `allow_inconsistent_object` is set to `false`.

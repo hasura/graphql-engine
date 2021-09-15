@@ -232,9 +232,9 @@ runGQ
   -> [HTTP.Header]
   -> E.GraphQLQueryType
   -> GQLReqUnparsed
-  -> m (ParameterizedQueryHash, HttpResponse (Maybe GQResponse, EncJSON))
+  -> m (GQLQueryOperationSuccessLog, HttpResponse (Maybe GQResponse, EncJSON))
 runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
-  (telemTimeTot_DT, (telemQueryType, telemTimeIO_DT, telemLocality, resp, parameterizedQueryHash)) <- withElapsedTime $ do
+  (totalTime, (telemQueryType, telemTimeIO_DT, telemLocality, resp, parameterizedQueryHash)) <- withElapsedTime $ do
     E.ExecutionCtx _ sqlGenCtx sc scVer httpManager enableAL <- ask
 
     -- run system authorization on the GraphQL API
@@ -380,10 +380,12 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
   -- The response and misc telemetry data:
   let telemTimeIO = convertDuration telemTimeIO_DT
-      telemTimeTot = convertDuration telemTimeTot_DT
+      telemTimeTot = convertDuration totalTime
       telemTransport = Telem.HTTP
+      requestSize = LBS.length $ J.encode reqUnparsed
+      responseSize = LBS.length $ encJToLBS $ snd $ _hrBody resp
   Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
-  return (parameterizedQueryHash, resp)
+  return (GQLQueryOperationSuccessLog reqUnparsed totalTime responseSize requestSize parameterizedQueryHash, resp)
   where
     getExecStepActionWithActionInfo acc execStep = case execStep of
        EB.ExecStepAction _ actionInfo _remoteJoins -> (actionInfo:acc)
@@ -539,14 +541,14 @@ runGQBatched
   -> Wai.IpAddress
   -> [HTTP.Header]
   -> E.GraphQLQueryType
-  -> GQLBatchedReqs GQLQueryText
+  -> GQLBatchedReqs (GQLReq GQLQueryText)
   -- ^ the batched request with unparsed GraphQL query
   -> m (HttpLogMetadata m, HttpResponse EncJSON)
 runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query =
   case query of
     GQLSingleRequest req -> do
-      (parameterizedQueryHash, httpResp) <- runGQ env logger reqId userInfo ipAddress reqHdrs queryType req
-      let httpLoggingMetadata = buildHttpLogMetadata @m (PQHSetSingleton parameterizedQueryHash) L.RequestModeSingle
+      (gqlQueryOperationLog, httpResp) <- runGQ env logger reqId userInfo ipAddress reqHdrs queryType req
+      let httpLoggingMetadata = buildHttpLogMetadata @m (PQHSetSingleton (gqolParameterizedQueryHash  gqlQueryOperationLog)) L.RequestModeSingle (Just (GQLSingleRequest (GQLQueryOperationSuccess gqlQueryOperationLog)))
       pure (httpLoggingMetadata, snd <$> httpResp)
     GQLBatchedReqs reqs -> do
       -- It's unclear what we should do if we receive multiple
@@ -557,8 +559,15 @@ runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs qu
             flip HttpResponse []
             . encJFromList
             . map (either (encJFromJValue . encodeGQErr includeInternal) _hrBody)
-      responses <- traverse (try . (fmap . fmap . fmap) snd . runGQ env logger reqId userInfo ipAddress reqHdrs queryType) reqs
-      let httpLoggingMetadata = buildHttpLogMetadata @m (PQHSetBatched $ rights $ map (fmap fst) responses) L.RequestModeBatched
-      pure (httpLoggingMetadata, removeHeaders (map (fmap snd) responses))
+      responses <- traverse (\req -> fmap (req, ) . try . (fmap . fmap . fmap) snd . runGQ env logger reqId userInfo ipAddress reqHdrs queryType $ req) reqs
+      let requestsOperationLogs = map fst $ rights $ map snd responses
+          batchOperationLogs = map (\(req, resp) ->
+                                      case resp of
+                                        Left err -> GQLQueryOperationError $ GQLQueryOperationErrorLog req err
+                                        Right (successOpLog, _) -> GQLQueryOperationSuccess successOpLog
+                                   ) responses
+          parameterizedQueryHashes = map gqolParameterizedQueryHash requestsOperationLogs
+          httpLoggingMetadata = buildHttpLogMetadata @m (PQHSetBatched parameterizedQueryHashes) L.RequestModeBatched (Just (GQLBatchedReqs batchOperationLogs))
+      pure (httpLoggingMetadata, removeHeaders (map ((fmap snd) . snd) responses))
   where
     try = flip catchError (pure . Left) . fmap Right
