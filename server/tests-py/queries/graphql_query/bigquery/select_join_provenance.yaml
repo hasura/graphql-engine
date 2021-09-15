@@ -4,7 +4,7 @@
   query:
     query: |
       query MyQuery {
-        hasura_author {
+        hasura_author(order_by: {id: asc}) {
           id
           articles_aggregate(offset: 10) {
             aggregate {
