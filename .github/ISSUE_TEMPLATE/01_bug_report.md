@@ -1,7 +1,7 @@
 ---
 name: 🐜 Bug report
 about: If something isn't working 🔧
-labels: "bug"
+labels: "k/bug"
 ---
 
 ### Version Information

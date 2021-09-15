@@ -1,7 +1,7 @@
 ---
 name: 🚀 Feature request
 about: Suggest an idea for improving Hasura
-labels: "enhancement"
+labels: "k/enhancement"
 ---
 
 ### Is your proposal related to a problem?
