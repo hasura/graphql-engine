@@ -156,7 +156,7 @@ buildPostgresSpecs maybeUrlTemplate = do
               >=> flip onLeft printErrJExit
 
         (metadata, schemaCache) <- run do
-          metadata <- snd <$> (liftEitherM . runExceptT . runLazyTx pgContext Q.ReadWrite)
+          metadata <- snd <$> (liftEitherM . runExceptT . runTx pgContext Q.ReadWrite)
                       (migrateCatalog (Just sourceConfig) maintenanceMode =<< liftIO getCurrentTime)
           schemaCache <- lift $ lift $ buildRebuildableSchemaCache envMap metadata
           pure (metadata, schemaCache)

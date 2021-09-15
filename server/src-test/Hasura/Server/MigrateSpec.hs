@@ -90,12 +90,12 @@ spec
   => PostgresConnConfiguration -> PGExecCtx -> Q.ConnInfo -> SpecWithCache m
 spec srcConfig pgExecCtx pgConnInfo = do
   let migrateCatalogAndBuildCache env time = do
-        (migrationResult, metadata) <- runTx pgExecCtx $ migrateCatalog (Just srcConfig) MaintenanceModeDisabled time
+        (migrationResult, metadata) <- runTx' pgExecCtx $ migrateCatalog (Just srcConfig) MaintenanceModeDisabled time
         (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache env metadata)
 
       dropAndInit env time = lift $ CacheRefT $ flip modifyMVar \_ ->
-        (runTx pgExecCtx dropHdbCatalogSchema) *> (migrateCatalogAndBuildCache env time)
-      downgradeTo v = runTx pgExecCtx . downgradeCatalog (Just srcConfig) DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
+        (runTx' pgExecCtx dropHdbCatalogSchema) *> (migrateCatalogAndBuildCache env time)
+      downgradeTo v = runTx' pgExecCtx . downgradeCatalog (Just srcConfig) DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
 
   describe "migrateCatalog" $ do
     it "initializes the catalog" $ singleTransaction do
@@ -155,7 +155,7 @@ spec srcConfig pgExecCtx pgConnInfo = do
         MRMigrated{} -> True
         _            -> False
       firstDump <- transact dumpMetadata
-      transact (runTx pgExecCtx recreateSystemMetadata)
+      transact (runTx' pgExecCtx recreateSystemMetadata)
       secondDump <- transact dumpMetadata
       secondDump `shouldBe` firstDump
 
@@ -168,7 +168,7 @@ spec srcConfig pgExecCtx pgConnInfo = do
       secondDump <- transact dumpMetadata
       secondDump `shouldBe` firstDump
 
-runTx
+runTx'
   :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m)
-  => PGExecCtx -> LazyTxT QErr m a -> m a
-runTx pgExecCtx = liftEitherM . runExceptT . runLazyTx pgExecCtx Q.ReadWrite
+  => PGExecCtx -> Q.TxET QErr m a -> m a
+runTx' pgExecCtx = liftEitherM . runExceptT . runTx pgExecCtx Q.ReadWrite

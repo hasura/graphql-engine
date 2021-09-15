@@ -58,7 +58,7 @@ runPGQuery
   -> UserInfo
   -> L.Logger L.Hasura
   -> SourceConfig ('Postgres pgKind)
-  -> Tracing.TraceT (LazyTxT QErr IO) EncJSON
+  -> Tracing.TraceT (Q.TxET QErr IO) EncJSON
   -> Maybe EQ.PreparedSql
   -> m (DiffTime, EncJSON)
   -- ^ Also return the time spent in the PG query; for telemetry.
@@ -80,7 +80,7 @@ runPGMutation
   -> UserInfo
   -> L.Logger L.Hasura
   -> SourceConfig ('Postgres pgKind)
-  -> Tracing.TraceT (LazyTxT QErr IO) EncJSON
+  -> Tracing.TraceT (Q.TxET QErr IO) EncJSON
   -> Maybe EQ.PreparedSql
   -> m (DiffTime, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
@@ -92,7 +92,7 @@ runPGMutation reqId query fieldName userInfo logger sourceConfig tx _genSql =  d
   withElapsedTime $ trace ("Postgres Mutation for root field " <>> fieldName) $
     Tracing.interpTraceT (
       liftEitherM . liftIO . runExceptT
-      . runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
+      . runTx (_pscExecCtx sourceConfig) Q.ReadWrite
       . withTraceContext ctx
       . withUserInfo userInfo
       ) tx
@@ -159,7 +159,7 @@ runPGMutationTransaction reqId query userInfo logger sourceConfig mutations = do
   withElapsedTime $ do
     Tracing.interpTraceT (
       liftEitherM . liftIO . runExceptT
-      . runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
+      . runTx (_pscExecCtx sourceConfig) Q.ReadWrite
       . withTraceContext ctx
       . withUserInfo userInfo
       ) $ flip OMap.traverseWithKey mutations \fieldName dbsi ->

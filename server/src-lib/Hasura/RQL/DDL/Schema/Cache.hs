@@ -368,7 +368,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
               maintenanceMode <- _sccMaintenanceMode <$> askServerConfigCtx
               let
                   initCatalogAction =
-                    runExceptT $ runLazyTx (_pscExecCtx sc) Q.ReadWrite (initCatalogForSource maintenanceMode migrationTime)
+                    runExceptT $ runTx (_pscExecCtx sc) Q.ReadWrite (initCatalogForSource maintenanceMode migrationTime)
               -- The `initCatalogForSource` action is retried here because
               -- in cloud there will be multiple workers (graphql-engine instances)
               -- trying to migrate the source catalog, when needed. This introduces

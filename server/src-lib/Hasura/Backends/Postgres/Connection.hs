@@ -5,11 +5,10 @@
 
 module Hasura.Backends.Postgres.Connection
   ( MonadTx(..)
-  , LazyTxT(..)
 
-  , runLazyTx
+  , runTx
+  , runTxWithCtx
   , runQueryTx
-  , runQueryTxWithCtx
   , withUserInfo
   , withTraceContext
   , setHeadersTx
@@ -98,56 +97,51 @@ instance (MonadTx m) => MonadTx (Tracing.TraceT m) where
 instance (MonadIO m) => MonadTx (Q.TxET QErr m) where
   liftTx = hoist liftIO
 
--- | This type *used to be* like 'Q.TxE', but deferred acquiring a Postgres
--- connection until the first execution of 'liftTx'.  If no call to 'liftTx' is
--- ever reached (i.e. a successful result is returned or an error is raised
--- before ever executing a query), no connection was ever acquired.
---
--- This was useful for certain code paths that only conditionally need database
--- access. For example, although most queries will eventually hit Postgres,
--- introspection queries or queries that exclusively use remote schemas never
--- will; using 'LazyTxT e m' keeps those branches from unnecessarily allocating
--- a connection.
---
--- However introspection queries and remote queries now never end up producing a
--- 'LazyTxT' action, and hence the laziness adds no benefit, so that we could
--- simplify this type, its name being a mere reminder of a past design of
--- graphql-engine.
---
--- It may be worthwhile in the future to simply replace this type with Q.TxET
--- entirely.
-newtype LazyTxT e m a = LazyTxT {unLazyTxT :: Q.TxET e m a}
-  deriving (Functor, Applicative, Monad, MonadError e, MonadIO, MonadTrans)
-
-runLazyTx
+-- | Executes the given query in a transaction of the specified
+-- mode, within the provided PGExecCtx.
+runTx
   :: ( MonadIO m
      , MonadBaseControl IO m
      )
   => PGExecCtx
   -> Q.TxAccess
-  -> LazyTxT QErr m a -> ExceptT QErr m a
-runLazyTx pgExecCtx = \case
-  Q.ReadOnly  -> _pecRunReadOnly pgExecCtx . unLazyTxT
-  Q.ReadWrite -> _pecRunReadWrite pgExecCtx . unLazyTxT
+  -> Q.TxET QErr m a
+  -> ExceptT QErr m a
+runTx pgExecCtx = \case
+  Q.ReadOnly  -> _pecRunReadOnly pgExecCtx
+  Q.ReadWrite -> _pecRunReadWrite pgExecCtx
+
+runTxWithCtx
+  :: ( MonadIO m
+     , MonadBaseControl IO m
+     , MonadError QErr m
+     , Tracing.MonadTrace m
+     , UserInfoM m
+     )
+  => PGExecCtx
+  -> Q.TxAccess
+  -> Q.TxET QErr m a
+  -> m a
+runTxWithCtx pgExecCtx txAccess tx = do
+  traceCtx <- Tracing.currentContext
+  userInfo <- askUserInfo
+  liftEitherM
+    $ runExceptT
+    $ runTx pgExecCtx txAccess
+    $ withTraceContext traceCtx
+    $ withUserInfo userInfo tx
 
 -- | This runs the given set of statements (Tx) without wrapping them in BEGIN
 -- and COMMIT. This should only be used for running a single statement query!
 runQueryTx
-  :: (MonadIO m, MonadError QErr m) => PGExecCtx -> LazyTxT QErr IO a -> m a
-runQueryTx pgExecCtx ltx =
-  liftEither =<< liftIO (runExceptT $ _pecRunReadNoTx pgExecCtx (unLazyTxT ltx))
-
--- NOTE: Same warning as 'runQueryTx' applies here.
--- This variant of 'runQueryTx' allows passing the `userInfo` context and `tracecontext`.
-runQueryTxWithCtx
-  :: (MonadIO m, MonadError QErr m)
-  => UserInfo
-  -> Tracing.TraceContext
-  -> PGExecCtx
-  -> LazyTxT QErr IO a
+  :: ( MonadIO m
+     , MonadError QErr m
+     )
+  => PGExecCtx
+  -> Q.TxET QErr IO a
   -> m a
-runQueryTxWithCtx userInfo traceCtx pgExecCtx =
-  runQueryTx pgExecCtx . withUserInfo userInfo . withTraceContext traceCtx
+runQueryTx pgExecCtx tx =
+  liftEither =<< liftIO (runExceptT $ _pecRunReadNoTx pgExecCtx tx)
 
 setHeadersTx :: (MonadIO m) => SessionVariables -> Q.TxET QErr m ()
 setHeadersTx session = do
@@ -159,8 +153,8 @@ setHeadersTx session = do
 sessionInfoJsonExp :: SessionVariables -> S.SQLExp
 sessionInfoJsonExp = S.SELit . encodeToStrictText
 
-withUserInfo :: (MonadIO m) => UserInfo -> LazyTxT QErr m a -> LazyTxT QErr m a
-withUserInfo uInfo ltx = LazyTxT (setHeadersTx $ _uiSession uInfo) >> ltx
+withUserInfo :: (MonadIO m) => UserInfo -> Q.TxET QErr m a -> Q.TxET QErr m a
+withUserInfo uInfo tx = setHeadersTx (_uiSession uInfo) >> tx
 
 setTraceContextInTx :: (MonadIO m) => Tracing.TraceContext -> Q.TxET QErr m ()
 setTraceContextInTx traceCtx = Q.unitQE defaultTxErrorHandler sql () False
@@ -173,20 +167,13 @@ setTraceContextInTx traceCtx = Q.unitQE defaultTxErrorHandler sql () False
 withTraceContext
   :: (MonadIO m)
   => Tracing.TraceContext
-  -> LazyTxT QErr m a
-  -> LazyTxT QErr m a
-withTraceContext ctx ltx = LazyTxT (setTraceContextInTx ctx) >> ltx
+  -> Q.TxET QErr m a
+  -> Q.TxET QErr m a
+withTraceContext ctx tx = setTraceContextInTx ctx >> tx
 
 deriving instance Tracing.MonadTrace m => Tracing.MonadTrace (Q.TxET e m)
-deriving instance Tracing.MonadTrace m => Tracing.MonadTrace (LazyTxT e m)
 
-deriving instance (MonadIO m) => MonadTx (LazyTxT QErr m)
-
-deriving instance (MonadBase IO m) => MonadBase IO (LazyTxT e m)
-
-deriving instance (MonadBaseControl IO m) => MonadBaseControl IO (LazyTxT e m)
-
-instance (MonadIO m) => MonadUnique (LazyTxT e m) where
+instance (MonadIO m) => MonadUnique (Q.TxET e m) where
   newUnique = liftIO newUnique
 
 doesSchemaExist :: MonadTx m => SchemaName -> m Bool

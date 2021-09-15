@@ -33,7 +33,6 @@ import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.Delete
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Run
 import           Hasura.Session
 
 import           Hasura.GraphQL.Execute.Backend
@@ -111,5 +110,5 @@ runDelete q = do
   userInfo <- askUserInfo
   let queryTags = QueryTagsComment $ Tagged.untag $ createQueryTags @m Nothing (encodeOptionalQueryTags Nothing)
   validateDeleteQ q
-    >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
+    >>= runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadWrite
         . flip runReaderT queryTags . execDeleteQuery strfyNum userInfo
