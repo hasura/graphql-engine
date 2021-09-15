@@ -1,6 +1,5 @@
 module Hasura.Server.Migrate.Internal
-  ( runTx
-  , getCatalogVersion
+  ( getCatalogVersion
   , from3To4
   , setCatalogVersion
   ) where
@@ -19,9 +18,6 @@ import           Hasura.RQL.Types.Common             (InputWebhook)
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.SQL.Backend
 
-
-runTx :: (MonadTx m) => Q.Query -> m ()
-runTx = liftTx . Q.multiQE defaultTxErrorHandler
 
 -- | The old 0.8 catalog version is non-integral, so we store it in the database as a
 -- string.

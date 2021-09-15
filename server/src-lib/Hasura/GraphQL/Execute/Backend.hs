@@ -37,7 +37,7 @@ import           Hasura.Session
 import           Hasura.Metadata.Class
 import           Hasura.Tracing                          (TraceT)
 
-import           Hasura.Backends.Postgres.Connection     (LazyTxT)
+import qualified Database.PG.Query                       as Q
 import           Hasura.RQL.DDL.Schema.Cache             (CacheRWT)
 import           Hasura.RQL.Types.Run                    (RunT (..))
 import           Hasura.RQL.Types.SchemaCache.Build      (MetadataT (..))
@@ -181,8 +181,8 @@ instance (MonadQueryTags m) => MonadQueryTags (TraceT m) where
 instance (MonadQueryTags m) => MonadQueryTags (MetadataStorageT m) where
   createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (MetadataStorageT m) Text
 
-instance (MonadQueryTags m) => MonadQueryTags (LazyTxT QErr m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (LazyTxT QErr m) Text
+instance (MonadQueryTags m) => MonadQueryTags (Q.TxET QErr m) where
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (Q.TxET QErr m) Text
 
 instance (MonadQueryTags m) => MonadQueryTags (MetadataT m) where
   createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (MetadataT m) Text

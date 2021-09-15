@@ -180,9 +180,6 @@ instance (HasServerConfigCtx m)
 instance (HasServerConfigCtx m)
          => HasServerConfigCtx (MetadataT m) where
   askServerConfigCtx = lift askServerConfigCtx
-instance (HasServerConfigCtx m)
-         => HasServerConfigCtx (LazyTxT QErr m) where
-  askServerConfigCtx = lift askServerConfigCtx
 instance (HasServerConfigCtx m) => HasServerConfigCtx (Q.TxET QErr m) where
   askServerConfigCtx = lift askServerConfigCtx
 instance (HasServerConfigCtx m) => HasServerConfigCtx (TableCacheRT b m) where

@@ -55,7 +55,7 @@ instance
 
   type PreparedQuery    ('Postgres pgKind) = PreparedSql
   type MultiplexedQuery ('Postgres pgKind) = PGL.MultiplexedQuery
-  type ExecutionMonad   ('Postgres pgKind) = Tracing.TraceT (LazyTxT QErr IO)
+  type ExecutionMonad   ('Postgres pgKind) = Tracing.TraceT (Q.TxET QErr IO)
 
   mkDBQueryPlan = pgDBQueryPlan
   mkDBMutationPlan = pgDBMutationPlan
@@ -125,7 +125,7 @@ pgDBLiveQueryExplain plan = do
       -- query, maybe resulting in privilege escalation:
       explainQuery = Q.fromText $ "EXPLAIN (FORMAT TEXT) " <> queryText
   cohortId <- newCohortId
-  explanationLines <- liftEitherM $ runExceptT $ runLazyTx pgExecCtx Q.ReadOnly $
+  explanationLines <- liftEitherM $ runExceptT $ runTx pgExecCtx Q.ReadOnly $
                       map runIdentity <$> PGL.executeQuery explainQuery [(cohortId, _lqpVariables plan)]
   pure $ LiveQueryPlanExplanation queryText explanationLines $ _lqpVariables plan
 
@@ -142,7 +142,7 @@ convertDelete
   -> IR.AnnDelG ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> Bool
   -> QueryTagsComment
-  -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
+  -> m (Tracing.TraceT (Q.TxET QErr IO) EncJSON)
 convertDelete userInfo deleteOperation stringifyNum queryTags = do
   preparedDelete <- traverse (prepareWithoutPlan userInfo) deleteOperation
   pure $ flip runReaderT queryTags $ PGE.execDeleteQuery stringifyNum userInfo (preparedDelete, Seq.empty)
@@ -157,7 +157,7 @@ convertUpdate
   -> IR.AnnUpdG ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> Bool
   -> QueryTagsComment
-  -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
+  -> m (Tracing.TraceT (Q.TxET QErr IO) EncJSON)
 convertUpdate userInfo updateOperation stringifyNum queryTags = do
   preparedUpdate <- traverse (prepareWithoutPlan userInfo) updateOperation
   if null $ IR.uqp1OpExps updateOperation
@@ -178,7 +178,7 @@ convertInsert
   -> IR.AnnInsert ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> Bool
   -> QueryTagsComment
-  -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
+  -> m (Tracing.TraceT (Q.TxET QErr IO) EncJSON)
 convertInsert userInfo insertOperation stringifyNum queryTags = do
   preparedInsert <- traverse (prepareWithoutPlan userInfo) insertOperation
   pure $ flip runReaderT queryTags $ convertToSQLTransaction preparedInsert userInfo Seq.empty stringifyNum
@@ -197,7 +197,7 @@ convertFunction
   -- ^ VOLATILE function as 'SelectExp'
   -> QueryTagsComment
   -- ^ Query Tags
-  -> m (Tracing.TraceT (LazyTxT QErr IO) EncJSON)
+  -> m (Tracing.TraceT (Q.TxET QErr IO) EncJSON)
 convertFunction userInfo jsonAggSelect unpreparedQuery queryTags = do
   -- Transform the RQL AST into a prepared SQL query
   (preparedQuery, PlanningSt _ _ planVals )
@@ -277,7 +277,7 @@ pgDBSubscriptionPlan userInfo _sourceName sourceConfig unpreparedAST queryTags =
 mkCurPlanTx
   :: UserInfo
   -> PreparedSql
-  -> (Tracing.TraceT (LazyTxT QErr IO) EncJSON, Maybe PreparedSql)
+  -> (Tracing.TraceT (Q.TxET QErr IO) EncJSON, Maybe PreparedSql)
 mkCurPlanTx userInfo ps@(PreparedSql q prepMap) =
   -- generate the SQL and prepared vars or the bytestring
   let args = withUserVars (_uiSession userInfo) prepMap

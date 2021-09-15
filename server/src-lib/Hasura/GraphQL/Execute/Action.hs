@@ -102,7 +102,7 @@ runActionExecution userInfo aep =
           let selectAST = f actionLogResponse
           selectResolved <- traverse (prepareWithoutPlan userInfo) selectAST
           let querySQL = Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggSelect selectResolved
-          liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx srcConfig) Q.ReadOnly $ liftTx $ asSingleRowJsonResp querySQL []
+          liftEitherM $ runExceptT $ runTx (_pscExecCtx srcConfig) Q.ReadOnly $ liftTx $ asSingleRowJsonResp querySQL []
     AEPAsyncMutation actionId -> pure $ (,Nothing) $ encJFromJValue $ actionIdToText actionId
 
 -- | Synchronously execute webhook handler and resolve response to action "output"
@@ -140,7 +140,7 @@ resolveActionExecution env logger userInfo annAction execContext =
                       => SourceConfig ('Postgres 'Vanilla) -> RS.AnnSimpleSelect ('Postgres 'Vanilla) -> [Q.PrepArg] -> m EncJSON
     executeActionInDb sourceConfig astResolved prepArgs = do
       let jsonAggType = mkJsonAggSelect outputType
-      liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly $
+      liftEitherM $ runExceptT $ runTx (_pscExecCtx sourceConfig) Q.ReadOnly $
         liftTx $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) prepArgs
 
     runWebhook :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)

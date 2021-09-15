@@ -64,7 +64,7 @@ resolveDatabaseMetadata
    . (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadIO m, MonadBaseControl IO m)
   => SourceConfig ('Postgres pgKind) -> m (Either QErr (ResolvedSource ('Postgres pgKind)))
 resolveDatabaseMetadata sourceConfig = runExceptT do
-  (tablesMeta, functionsMeta, pgScalars) <- runLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly $ do
+  (tablesMeta, functionsMeta, pgScalars) <- runTx (_pscExecCtx sourceConfig) Q.ReadOnly $ do
     tablesMeta    <- fetchTableMetadata
     functionsMeta <- fetchFunctionMetadata
     pgScalars     <- fetchPgScalars
@@ -126,7 +126,7 @@ initCatalogForSource maintenanceMode migrationTime = do
       case NE.nonEmpty neededMigrations of
         Just nonEmptyNeededMigrations -> do
           -- Migrations aren't empty. We need to update the catalog version after migrations
-          traverse_ snd nonEmptyNeededMigrations
+          liftTx $ traverse_ snd nonEmptyNeededMigrations
           setCatalogVersion "43" migrationTime
         Nothing ->
           -- No migrations exists, implies the database is migrated to latest metadata catalog version
@@ -161,18 +161,18 @@ migrateSourceCatalogFrom prevVersion
         <> latestSourceCatalogVersionText
         <> ", but the current version is " <> prevVersion
   | otherwise = do
-      traverse_ snd neededMigrations
+      liftTx $ traverse_ snd neededMigrations
       setSourceCatalogVersion
   where
     neededMigrations =
       dropWhile ((/= prevVersion) . fst) sourceMigrations
 
-sourceMigrations :: (MonadTx m) => [(Text, m ())]
+sourceMigrations :: [(Text, Q.TxE QErr ())]
 sourceMigrations =
   $(let migrationFromFile from =
           let to = from + 1
               path = "src-rsr/pg_source_migrations/" <> show from <> "_to_" <> show to <> ".sql"
-          in [| runTx $(makeRelativeToProject path >>= Q.sqlFromFile) |]
+          in [| Q.multiQE defaultTxErrorHandler $(makeRelativeToProject path >>= Q.sqlFromFile) |]
 
         migrationsFromFile = map $ \(from :: Integer) ->
           [| ($(TH.lift $ tshow from), $(migrationFromFile from)) |]
@@ -181,11 +181,11 @@ sourceMigrations =
    )
 
 -- Upgrade the hdb_catalog schema to v43 (Metadata catalog)
-upMigrationsUntil43 :: MonadTx m => [(Text, m ())]
+upMigrationsUntil43 :: [(Text, Q.TxE QErr ())]
 upMigrationsUntil43 =
     $(let migrationFromFile from to =
             let path = "src-rsr/migrations/" <> from <> "_to_" <> to <> ".sql"
-             in [| runTx $(makeRelativeToProject path >>= Q.sqlFromFile) |]
+             in [| Q.multiQE defaultTxErrorHandler $(makeRelativeToProject path >>= Q.sqlFromFile) |]
 
           migrationsFromFile = map $ \(to :: Integer) ->
             let from = to - 1

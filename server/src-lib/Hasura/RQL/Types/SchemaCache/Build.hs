@@ -43,6 +43,7 @@ import           Network.HTTP.Client.Extended
 
 import qualified Hasura.Tracing                      as Tracing
 
+import qualified Database.PG.Query                   as Q
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Base.Error
 import           Hasura.RQL.Types.Common
@@ -161,7 +162,7 @@ instance (CacheRWM m) => CacheRWM (StateT s m) where
 instance (CacheRWM m) => CacheRWM (TraceT m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
   setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
-instance (CacheRWM m) => CacheRWM (LazyTxT QErr m) where
+instance (CacheRWM m) => CacheRWM (Q.TxET QErr m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
   setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 

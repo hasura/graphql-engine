@@ -25,7 +25,6 @@ import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
 import           Hasura.Session
 
@@ -328,4 +327,4 @@ runSelect
   => SelectQuery -> m EncJSON
 runSelect q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (getSourceDMLQuery q)
-  phaseOne q >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly . phaseTwo
+  phaseOne q >>= runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadOnly . phaseTwo

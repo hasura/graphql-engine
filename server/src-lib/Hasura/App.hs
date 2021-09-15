@@ -745,7 +745,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
       -- event triggers should be tied to the life cycle of a source
       forM_ pgSources $ \pgSource -> do
         logger $ mkGenericStrLog LevelInfo "event_triggers" "unlocking events that are locked by the HGE"
-        let unlockEvents' l = MetadataStorageT $ runLazyTx (_pscExecCtx pgSource) Q.ReadWrite $ liftTx $ unlockEvents l
+        let unlockEvents' l = MetadataStorageT $ runTx (_pscExecCtx pgSource) Q.ReadWrite $ liftTx $ unlockEvents l
         unlockEventsForShutdown hasuraLogger "event_triggers" "" unlockEvents' leEvents
 
     shutdownAsyncActions

@@ -3,13 +3,11 @@
 module Hasura.RQL.Types.Run
   ( RunT(..)
   , RunCtx(..)
-  , runQueryLazyTx
   , peelRun
   ) where
 
 import           Hasura.Prelude
 
-import qualified Database.PG.Query            as Q
 import qualified Network.HTTP.Client.Extended as HTTP
 
 import           Control.Monad.Trans.Control  (MonadBaseControl)
@@ -59,26 +57,6 @@ instance (Monad m) => HasServerConfigCtx (RunT m) where
 
 instance (MonadResolveSource m) => MonadResolveSource (RunT m) where
   getSourceResolver = RunT . lift . lift $ getSourceResolver
-
-runQueryLazyTx
-  :: ( MonadIO m
-     , MonadBaseControl IO m
-     , MonadError QErr m
-     , Tracing.MonadTrace m
-     , UserInfoM m
-     )
-  => PGExecCtx
-  -> Q.TxAccess
-  -> LazyTxT QErr m a
-  -> m a
-runQueryLazyTx pgExecCtx txAccess tx = do
-  traceCtx <- Tracing.currentContext
-  userInfo <- askUserInfo
-  liftEitherM
-    $ runExceptT
-    $ runLazyTx pgExecCtx txAccess
-    $ withTraceContext traceCtx
-    $ withUserInfo userInfo tx
 
 peelRun
   :: RunCtx

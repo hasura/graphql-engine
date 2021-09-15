@@ -632,18 +632,8 @@ gqlExplainHandler
   -> m (HttpResponse EncJSON)
 gqlExplainHandler query = do
   onlyAdmin
-  scRef     <- asks (scCacheRef . hcServerCtx)
-  sc        <- getSCFromRef scRef
---  sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
---  env       <- asks (scEnvironment . hcServerCtx)
---  logger    <- asks (scLogger . hcServerCtx)
-
-
-  -- let runTx :: ReaderT HandlerCtx (Tracing.TraceT (Tracing.NoReporter (LazyTx QErr))) a
-  --           -> ExceptT QErr (ReaderT HandlerCtx (Tracing.TraceT m)) a
-  -- let runTx rttx = ExceptT . ReaderT $ \ctx -> do
-  --       runExceptT (Tracing.interpTraceT (runLazyTx pgExecCtx Q.ReadOnly) (runReaderT rttx ctx))
-
+  scRef <- asks (scCacheRef . hcServerCtx)
+  sc <- getSCFromRef scRef
   res <- GE.explainGQLQuery sc query
   return $ HttpResponse res []
 

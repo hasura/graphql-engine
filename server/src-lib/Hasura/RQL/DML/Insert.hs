@@ -29,7 +29,6 @@ import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.Insert
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Run
 import           Hasura.Session
 
 import           Hasura.GraphQL.Execute.Backend
@@ -222,7 +221,7 @@ runInsert q = do
   res <- convInsQ q
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   let queryTags = QueryTagsComment $ Tagged.untag $ createQueryTags @m Nothing (encodeOptionalQueryTags Nothing)
-  runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $
+  runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadWrite $
     runReaderT (execInsertQuery strfyNum userInfo res) queryTags
 
 decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj ('Postgres 'Vanilla)]

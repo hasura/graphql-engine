@@ -132,7 +132,7 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
       liftTx $ Q.catchE defaultTxErrorHandler $
         when createSchema $ Q.unitQ "CREATE SCHEMA hdb_catalog" () False
       enablePgcryptoExtension
-      runTx $(makeRelativeToProject "src-rsr/initialise.sql" >>= Q.sqlFromFile)
+      multiQ $(makeRelativeToProject "src-rsr/initialise.sql" >>= Q.sqlFromFile)
       updateCatalogVersion
 
       let emptyMetadata' = case maybeDefaultSourceConfig of
@@ -263,7 +263,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
     runTxOrPrint
       | dryRun =
           liftIO . TIO.putStrLn . Q.getQueryText
-      | otherwise = runTx
+      | otherwise = multiQ
 
     from42To43 = do
       when (maintenanceMode == MaintenanceModeEnabled) $
@@ -272,7 +272,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
       if dryRun then (liftIO . TIO.putStrLn . Q.getQueryText) query
         else do
         metadataV2 <- fetchMetadataFromHdbTables
-        runTx query
+        multiQ query
         defaultSourceConfig <- onNothing maybeDefaultSourceConfig $ throw400 NotSupported $
           "cannot migrate to catalog version 43 without --database-url or env var " <> tshow (fst databaseUrlEnv)
         let metadataV3 =
@@ -289,7 +289,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
       if dryRun then (liftIO . TIO.putStrLn . Q.getQueryText) query
         else do
         Metadata{..} <- liftTx fetchMetadataFromCatalog
-        runTx query
+        multiQ query
         let emptyMetadataNoSources =
               MetadataNoSources mempty mempty mempty mempty mempty emptyCustomTypes mempty mempty
         metadataV2 <- case OMap.toList _metaSources of
@@ -310,3 +310,6 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
           -- cron triggers are added in the `hdb_catalog.hdb_cron_triggers`
           addCronTriggerForeignKeyConstraint
         recreateSystemMetadata
+
+multiQ :: (MonadTx m) => Q.Query -> m ()
+multiQ = liftTx . Q.multiQE defaultTxErrorHandler

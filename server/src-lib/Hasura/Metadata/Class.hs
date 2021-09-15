@@ -20,6 +20,7 @@ import           Network.HTTP.Client.Extended
 
 import qualified Hasura.Tracing                         as Tracing
 
+import qualified Database.PG.Query                      as Q
 import           Hasura.Base.Error
 import           Hasura.Eventing.HTTP
 import           Hasura.Eventing.ScheduledTrigger.Types
@@ -301,7 +302,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (MetadataT m) where
   clearActionData                      = lift . clearActionData
   setProcessingActionLogsToPending     = lift . setProcessingActionLogsToPending
 
-instance (MonadMetadataStorage m) => MonadMetadataStorage (LazyTxT QErr m) where
+instance (MonadMetadataStorage m) => MonadMetadataStorage (Q.TxET QErr m) where
   fetchMetadataResourceVersion         = lift fetchMetadataResourceVersion
   fetchMetadata                        = lift fetchMetadata
   fetchMetadataNotifications a b       = lift $ fetchMetadataNotifications a b
@@ -491,4 +492,4 @@ instance (MonadMetadataStorageQueryAPI m) => MonadMetadataStorageQueryAPI (Reade
 instance (MonadMetadataStorageQueryAPI m) => MonadMetadataStorageQueryAPI (StateT s m)
 instance (MonadMetadataStorageQueryAPI m) => MonadMetadataStorageQueryAPI (Tracing.TraceT m)
 instance (MonadMetadataStorageQueryAPI m) => MonadMetadataStorageQueryAPI (MetadataT m)
-instance (MonadMetadataStorageQueryAPI m) => MonadMetadataStorageQueryAPI (LazyTxT QErr m)
+instance (MonadMetadataStorageQueryAPI m) => MonadMetadataStorageQueryAPI (Q.TxET QErr m)

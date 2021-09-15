@@ -32,7 +32,6 @@ import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.Update
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
 import           Hasura.Session
 
@@ -206,5 +205,5 @@ runUpdate q = do
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   let queryTags = QueryTagsComment $ Tagged.untag $ createQueryTags @m Nothing (encodeOptionalQueryTags Nothing)
   validateUpdateQuery q
-    >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
+    >>= runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadWrite
         . flip runReaderT queryTags . execUpdateQuery strfyNum userInfo

@@ -26,7 +26,6 @@ import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
 import           Hasura.Session
 
@@ -137,4 +136,4 @@ runCount
   => CountQuery -> m EncJSON
 runCount q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (cqSource q)
-  validateCountQ q >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly . countQToTx
+  validateCountQ q >>= runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadOnly . countQToTx

@@ -31,7 +31,6 @@ import           Hasura.RQL.DDL.Schema.Common
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.Types                          hiding (ConstraintName, fmFunction,
                                                             tmComputedFields, tmTable)
-import           Hasura.RQL.Types.Run
 import           Hasura.Server.Utils                       (quoteRegex)
 import           Hasura.Session
 
@@ -161,7 +160,7 @@ runRunSQL q@RunSQL{..} = do
         $ withUserInfo userInfo
         $ execRawSQL rSql
     else do
-      runQueryLazyTx pgExecCtx rTxAccessMode $ execRawSQL rSql
+      runTxWithCtx pgExecCtx rTxAccessMode $ execRawSQL rSql
   where
     execRawSQL :: (MonadTx n) => Text -> n EncJSON
     execRawSQL =
@@ -185,12 +184,12 @@ withMetadataCheck
      , MonadError QErr m
      , MonadIO m
      )
-  => SourceName -> Bool -> Q.TxAccess -> LazyTxT QErr m a -> m a
+  => SourceName -> Bool -> Q.TxAccess -> Q.TxET QErr m a -> m a
 withMetadataCheck source cascade txAccess action = do
   SourceInfo _ preActionTables preActionFunctions sourceConfig <- askSourceInfo @('Postgres pgKind) source
 
   (actionResult, metadataUpdater) <-
-    liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx sourceConfig) txAccess $ do
+    liftEitherM $ runExceptT $ runTx (_pscExecCtx sourceConfig) txAccess $ do
       -- Drop event triggers so no interference is caused to the sql query
       forM_ (M.elems preActionTables) $ \tableInfo -> do
         let eventTriggers = _tiEventTriggerInfoMap tableInfo
