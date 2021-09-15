@@ -320,6 +320,9 @@ class TestGraphqlNestedInserts:
     def test_articles_with_author(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/articles_with_author.yaml")
 
+    def test_articles_with_author_null(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/articles_with_author_null.yaml")
+
     def test_articles_with_author_author_id_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/articles_with_author_author_id_fail.yaml")
 

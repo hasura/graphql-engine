@@ -6,6 +6,7 @@ module Hasura.Prelude
   , alphaNumerics
   , onNothing
   , onJust
+  , withJust
   , onLeft
   , whenMaybe
   , choice
@@ -97,10 +98,10 @@ import qualified Data.Text                   as T
 import qualified Data.Text.Encoding          as TE
 import qualified Data.Text.Encoding.Error    as TE
 import qualified Data.Text.Lazy              as TL
+import qualified Debug.Trace                 as Debug (trace, traceM)
 import qualified GHC.Clock                   as Clock
-
-import           Debug.Trace                 (trace, traceM)
 import qualified Text.Pretty.Simple          as PS
+
 
 alphabet :: String
 alphabet = ['a'..'z'] ++ ['A'..'Z']
@@ -113,6 +114,9 @@ onNothing m act = maybe act pure m
 
 onJust :: Applicative m => Maybe a -> (a -> m ()) -> m ()
 onJust m action = maybe (pure ()) action m
+
+withJust :: Applicative m => Maybe a -> (a -> m (Maybe b)) -> m (Maybe b)
+withJust m action = maybe (pure Nothing) action m
 
 onLeft :: Applicative m => Either e a -> (e -> m a) -> m a
 onLeft e f = either f pure e
@@ -241,10 +245,10 @@ fold' = foldMap' id
 
 -- | Labeled, prettified traceShowId
 ltrace :: Show a => String -> a -> a
-ltrace lbl x = trace (lbl <> ": " <> TL.unpack (PS.pShow x)) x
+ltrace lbl x = Debug.trace (lbl <> ": " <> TL.unpack (PS.pShow x)) x
 {-# warning ltrace "ltrace left in code" #-}
 
 -- | Labeled, prettified traceShowM
 ltraceM :: Applicative m => Show a => String -> a -> m ()
-ltraceM lbl x = traceM (lbl <> ": " <> TL.unpack (PS.pShow x))
+ltraceM lbl x = Debug.traceM (lbl <> ": " <> TL.unpack (PS.pShow x))
 {-# warning ltraceM "ltraceM left in code" #-}
