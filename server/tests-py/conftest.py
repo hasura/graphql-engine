@@ -161,13 +161,6 @@ This option may result in test failures if the schema has to change between the 
     )
 
     parser.addoption(
-        "--test-inherited-roles",
-        action="store_true",
-        default=False,
-        help="Flag to specify if the inherited roles tests are to be run"
-    )
-
-    parser.addoption(
         "--redis-url",
         metavar="REDIS_URL",
         help="redis url for cache server",
@@ -348,12 +341,6 @@ use_function_permission_fixtures = pytest.mark.usefixtures(
     'per_method_db_data_for_mutation_tests',
     'functions_permissions_fixtures'
 )
-
-@pytest.fixture(scope='class')
-def inherited_role_fixtures(hge_ctx):
-    if not hge_ctx.inherited_roles_tests:
-        pytest.skip('These tests are meant to be run with --test-inherited-roles set')
-        return
 
 @pytest.fixture(scope='class')
 def pro_tests_fixtures(hge_ctx):
@@ -646,8 +633,3 @@ def is_master(config):
     node or not running xdist at all.
     """
     return not hasattr(config, 'slaveinput')
-
-use_inherited_roles_fixtures = pytest.mark.usefixtures(
-    "inherited_role_fixtures",
-    "per_class_tests_db_state"
-)

@@ -1,6 +1,6 @@
 import pytest
 from validate import check_query_f, check_query, get_conf_f
-from conftest import use_inherited_roles_fixtures, use_function_permission_fixtures
+from conftest import use_function_permission_fixtures
 
 
 # Marking all tests in this module that server upgrade tests can be run

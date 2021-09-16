@@ -742,9 +742,9 @@ case "$SERVER_TEST_TO_RUN" in
       run_hge_with_args serve
       wait_for_port 8080
 
-      pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test-inherited-roles -k TestGraphQLInheritedRolesSchema
-      pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test-inherited-roles -k TestGraphQLInheritedRolesPostgres
-      pytest --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-inherited-roles --enable-remote-schema-permissions --test-function-permissions test_roles_inheritance.py
+      pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" -k TestGraphQLInheritedRolesSchema
+      pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" -k TestGraphQLInheritedRolesPostgres
+      pytest      --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --enable-remote-schema-permissions --test-function-permissions test_roles_inheritance.py
 
       unset HASURA_GRAPHQL_ADMIN_SECRET
       unset HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS
@@ -1175,7 +1175,7 @@ admin_users = postgres' > pgbouncer/pgbouncer.ini
     # start inherited roles test
     echo -e "\n$(time_elapsed): <########## TEST INHERITED-ROLES WITH SQL SERVER BACKEND ###########################################>\n"
 
-    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --test-inherited-roles -k TestGraphQLInheritedRolesMSSQL --backend mssql
+    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL"  -k TestGraphQLInheritedRolesMSSQL --backend mssql
 
     # end inherited roles test
 

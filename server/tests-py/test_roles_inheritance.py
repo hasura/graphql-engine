@@ -1,4 +1,3 @@
-
 import pytest
 
 from validate import check_query_f, check_query
@@ -6,9 +5,6 @@ from remote_server import NodeGraphQL
 from context import PytestConf
 from conftest import use_action_fixtures, use_function_permission_fixtures
 
-
-if not PytestConf.config.getoption('--test-inherited-roles'):
-    pytest.skip('--test-inherited-roles is missing, skipping role inheritance tests', allow_module_level=True)
 
 if not PytestConf.config.getoption('--enable-remote-schema-permissions'):
     pytest.skip('--enable-remote-schema-permissions is missing, skipping role inheritance tests', allow_module_level=True)
