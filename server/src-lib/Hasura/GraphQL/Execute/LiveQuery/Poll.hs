@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 -- | Multiplexed live query poller threads; see "Hasura.GraphQL.Execute.LiveQuery" for details.
 module Hasura.GraphQL.Execute.LiveQuery.Poll (
   -- * Pollers
@@ -45,9 +43,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
   ) where
 
 import           Data.List.Split                             (chunksOf)
-#ifndef PROFILING
-import           GHC.AssertNF
-#endif
+import           GHC.AssertNF.CPP
 import           Hasura.Prelude
 
 import qualified Control.Concurrent.Async                    as A
@@ -244,9 +240,7 @@ pushResultToCohort result !respHashM (LiveQueryMetadata dTime) cohortSnapshot = 
   (subscribersToPush, subscribersToIgnore) <-
     if isExecError result || respHashM /= prevRespHashM
     then do
-#ifndef PROFILING
       $assertNFHere respHashM  -- so we don't write thunks to mutable vars
-#endif
       STM.atomically $ STM.writeTVar respRef respHashM
       return (newSinks <> curSinks, mempty)
     else

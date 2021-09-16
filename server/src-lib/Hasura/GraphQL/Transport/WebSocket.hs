@@ -1,7 +1,5 @@
 -- | This file contains the handlers that are used within websocket server
 
-{-# LANGUAGE CPP #-}
-
 module Hasura.GraphQL.Transport.WebSocket
   ( -- | the main handlers for the websocket server
     onConn
@@ -44,9 +42,7 @@ import qualified StmContainers.Map                            as STMMap
 
 import           Control.Concurrent.Extended                  (sleep)
 import           Data.String
-#ifndef PROFILING
-import           GHC.AssertNF
-#endif
+import           GHC.AssertNF.CPP
 
 import qualified Hasura.GraphQL.Execute                       as E
 import qualified Hasura.GraphQL.Execute.Action                as EA
@@ -705,9 +701,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                             requestId
                             liveQueryPlan
                             (liveQOnChange opName parameterizedQueryHash)
-#ifndef PROFILING
         liftIO $ $assertNFHere (lqId, opName)  -- so we don't write thunks to mutable vars
-#endif
 
         STM.atomically $
           -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
@@ -847,9 +841,7 @@ onConnInit logger manager wsConn authMode connParamsM onConnInitErrAction keepAl
         Left e -> do
           let !initErr = CSInitError $ qeError e
           liftIO $ do
-#ifndef PROFILING
             $assertNFHere initErr  -- so we don't write thunks to mutable vars
-#endif
             STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) initErr
 
           let connErr = ConnErrMsg $ qeError e
@@ -859,9 +851,7 @@ onConnInit logger manager wsConn authMode connParamsM onConnInitErrAction keepAl
         Right (userInfo, expTimeM) -> do
           let !csInit = CSInitialised $ WsClientState userInfo expTimeM paramHeaders ipAddress
           liftIO $ do
-#ifndef PROFILING
             $assertNFHere csInit  -- so we don't write thunks to mutable vars
-#endif
             STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) csInit
 
           sendMsg wsConn SMConnAck

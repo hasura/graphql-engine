@@ -165,7 +165,7 @@ mkServeOptions rso = do
   strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
   dangerousBooleanCollapse <-
     fromMaybe False <$> withEnv (rsoDangerousBooleanCollapse rso) (fst dangerousBooleanCollapseEnv)
-  enabledAPIs <- Set.fromList . fromMaybe defaultAPIs <$>
+  enabledAPIs <- Set.fromList . fromMaybe defaultEnabledAPIs <$>
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
   enableAL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
@@ -260,11 +260,6 @@ mkServeOptions rso = do
            gracefulShutdownTime
            webSocketConnectionInitTimeout
   where
-#ifdef DeveloperAPIs
-    defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
-#else
-    defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG]
-#endif
     defaultAsyncActionsFetchInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
     defaultSchemaPollInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
     mkConnParams (RawConnParams s c i cl p pt) = do
@@ -617,6 +612,13 @@ dangerousBooleanCollapseEnv =
     <> " value will be interpreted to mean that the field should be ignored"
     <> " [DEPRECATED, WILL BE REMOVED SOON] (default: false)"
   )
+
+defaultEnabledAPIs :: [API]
+#ifdef DeveloperAPIs
+defaultEnabledAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
+#else
+defaultEnabledAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG]
+#endif
 
 enabledAPIsEnv :: (String, String)
 enabledAPIsEnv =

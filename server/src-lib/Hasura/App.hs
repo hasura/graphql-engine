@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                  #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.App where
@@ -40,9 +39,7 @@ import           Control.Monad.Unique
 import           Data.FileEmbed                             (makeRelativeToProject)
 import           Data.Time.Clock                            (UTCTime)
 
-#ifndef PROFILING
-import           GHC.AssertNF
-#endif
+import           GHC.AssertNF.CPP
 
 import           Network.HTTP.Client.Manager                (HasHttpManagerM (..))
 import           Options.Applicative
@@ -493,11 +490,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
   -- tool.
   --
   -- NOTE: be sure to compile WITHOUT code coverage, for this to work properly.
-
-#ifndef PROFILING
   liftIO disableAssertNF
-#endif
-
 
   let sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse
       Loggers loggerCtx logger _ = _scLoggers
