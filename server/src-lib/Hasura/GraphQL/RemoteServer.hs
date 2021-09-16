@@ -21,13 +21,12 @@ import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Parser          as G
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Language.Haskell.TH.Syntax             as TH
-import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Types                     as N
+import qualified Network.HTTP.Client.Transformable      as HTTP
 import qualified Network.Wreq                           as Wreq
 
 import           Control.Arrow.Extended                 (left)
 import           Control.Exception                      (try)
-import           Control.Lens                           ((^.))
+import           Control.Lens                           (set, (^.))
 import           Control.Monad.Unique
 import           Data.Aeson                             ((.:), (.:?))
 import           Data.FileEmbed                         (makeRelativeToProject)
@@ -415,10 +414,10 @@ execRemoteGQ
   => Env.Environment
   -> HTTP.Manager
   -> UserInfo
-  -> [N.Header]
+  -> [HTTP.Header]
   -> ValidatedRemoteSchemaDef
   -> GQLReqOutgoing
-  -> m (DiffTime, [N.Header], BL.ByteString)
+  -> m (DiffTime, [HTTP.Header], BL.ByteString)
   -- ^ Returns the response body and headers, along with the time taken for the
   -- HTTP request to complete
 execRemoteGQ env manager userInfo reqHdrs rsdef gqlReq@GQLReq{..} =  do
@@ -436,16 +435,14 @@ execRemoteGQ env manager userInfo reqHdrs rsdef gqlReq@GQLReq{..} =  do
                    ]
       headers  = Map.toList $ foldr Map.union Map.empty hdrMaps
       finalHeaders = addDefaultHeaders headers
-  initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
-  initReq <- onLeft initReqE (throwRemoteSchemaHttp url)
-  let req = initReq
-           { HTTP.method = "POST"
-           , HTTP.requestHeaders = finalHeaders
-           , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode gqlReqUnparsed)
-           , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
-           }
+  initReq <- onLeft (HTTP.mkRequestEither $ tshow url) (throwRemoteSchemaHttp url)
+  let req = initReq & set HTTP.method "POST"
+                    & set HTTP.headers finalHeaders
+                    & set HTTP.body (Just $ J.encode gqlReqUnparsed)
+                    & set HTTP.timeout (HTTP.responseTimeoutMicro (timeout * 1000000))
+
   Tracing.tracedHttpRequest req \req' -> do
-    (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req' manager
+    (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.performRequest req' manager
     resp <- onLeft res (throwRemoteSchemaHttp url)
     pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
   where

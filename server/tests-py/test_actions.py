@@ -82,6 +82,9 @@ class TestActionsSync:
     def test_mirror_action_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/mirror_action_success.yaml')
 
+    def test_mirror_action_transformed_success(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/mirror_action_transformed_success.yaml')
+
     #https://github.com/hasura/graphql-engine/issues/6631
     def test_create_users_output_type(self, hge_ctx):
         gql_query = '''
@@ -446,6 +449,73 @@ class TestActionsAsync:
         # Query the action as user-id 1
         # Make request without auth using admin_secret
         check_query_timeout(hge_ctx, conf_user_1, add_auth = False, timeout = 10)
+
+    def test_create_user_transformed_success(self, hge_ctx):
+        graphql_mutation = '''
+        mutation {
+          create_user_transformed(email: "clarke@hasura.io", name: "Clarke")
+        }
+        '''
+        query = {
+            'query': graphql_mutation,
+            'variables': {}
+        }
+        status, resp, _ = hge_ctx.anyq('/v1/graphql', query, mk_headers_with_secret(hge_ctx))
+        assert status == 200, resp
+        assert 'data' in resp
+        action_id = resp['data']['create_user_transformed']
+
+        query_async = '''
+        query ($action_id: uuid!){
+          create_user_transformed(id: $action_id){
+            __typename
+            id
+            output {
+              __typename
+              id
+              user {
+                __typename
+                name
+                email
+                is_admin
+              }
+            }
+          }
+        }
+        '''
+        query = {
+            'query': query_async,
+            'variables': {
+                'action_id': action_id
+            }
+        }
+        response = {
+            'data': {
+                'create_user_transformed': {
+                    '__typename': 'create_user_transformed',
+                    'id': action_id,
+                    'output': {
+                        '__typename': 'UserId',
+                        'id': 1,
+                        'user': {
+                            '__typename': 'user',
+                            'name': 'notClarke',
+                            'email': 'foo@bar.com',
+                            'is_admin': False
+                        }
+                    }
+                }
+            }
+        }
+        conf = {
+            'url': '/v1/graphql',
+            'headers': {},
+            'query': query,
+            'status': 200,
+            'response': response
+        }
+        check_query_timeout(hge_ctx, conf, True, 10)
+
 
 def check_query_timeout(hge_ctx, conf, add_auth, timeout):
     wait_until = time.time() + timeout

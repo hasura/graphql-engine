@@ -142,6 +142,7 @@ data RQLMetadataV1
   | RMDumpInternalState !DumpInternalState
   | RMGetCatalogState  !GetCatalogState
   | RMSetCatalogState  !SetCatalogState
+  | RMValidateWebhookTransform !ValidateWebhookTransform
 
   -- Bulk metadata queries
   | RMBulk [RQLMetadataRequest]
@@ -150,7 +151,6 @@ data RQLMetadataV1
 data RQLMetadataV2
   = RMV2ReplaceMetadata !ReplaceMetadataV2
   | RMV2ExportMetadata  !ExportMetadata
-
 
 data RQLMetadataRequest
   = RMV1 !RQLMetadataV1

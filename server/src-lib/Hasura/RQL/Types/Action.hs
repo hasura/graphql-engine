@@ -33,6 +33,7 @@ module Hasura.RQL.Types.Action
   , aiForwardedClientHeaders
   , aiComment
   , defaultActionTimeoutSecs
+  , aiRequestTransform
   , ActionPermissionInfo(..)
 
   , ActionPermissionMap
@@ -42,6 +43,7 @@ module Hasura.RQL.Types.Action
   , amComment
   , amDefinition
   , amPermissions
+  , amMetadataTransform
   , ActionPermissionMetadata(..)
 
   , ActionSourceInfo(..)
@@ -68,33 +70,34 @@ module Hasura.RQL.Types.Action
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as J
-import qualified Data.Aeson.Casing             as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.Time.Clock               as UTC
-import qualified Data.UUID                     as UUID
-import qualified Database.PG.Query             as Q
-import qualified Database.PG.Query.PTI         as PTI
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Network.HTTP.Client           as HTTP
-import qualified Network.HTTP.Types            as HTTP
-import qualified PostgreSQL.Binary.Encoding    as PE
+import qualified Data.Aeson                      as J
+import qualified Data.Aeson.Casing               as J
+import qualified Data.Aeson.TH                   as J
+import qualified Data.HashMap.Strict             as Map
+import qualified Data.Time.Clock                 as UTC
+import qualified Data.UUID                       as UUID
+import qualified Database.PG.Query               as Q
+import qualified Database.PG.Query.PTI           as PTI
+import qualified Language.GraphQL.Draft.Syntax   as G
+import qualified Network.HTTP.Client             as HTTP
+import qualified Network.HTTP.Types              as HTTP
+import qualified PostgreSQL.Binary.Encoding      as PE
 
 
-import           Control.Lens                  (makeLenses, makePrisms)
+import           Control.Lens                    (makeLenses, makePrisms)
 import           Data.Aeson.Extended
-import           Data.Kind                     (Type)
+import           Data.Kind                       (Type)
 import           Data.Text.Extended
 
 import           Hasura.Base.Error
-import           Hasura.Incremental            (Cacheable)
+import           Hasura.Incremental              (Cacheable)
 import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.DDL.RequestTransform (MetadataTransform)
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.CustomTypes
-import           Hasura.RQL.Types.EventTrigger (EventId (..))
+import           Hasura.RQL.Types.EventTrigger   (EventId (..))
 import           Hasura.SQL.Backend
 import           Hasura.Session
 
@@ -218,6 +221,7 @@ data ActionInfo
   , _aiPermissions            :: !ActionPermissionMap
   , _aiForwardedClientHeaders :: !Bool
   , _aiComment                :: !(Maybe Text)
+  , _aiRequestTransform       :: !(Maybe MetadataTransform)
   } deriving (Generic)
 instance J.ToJSON ActionInfo where
   toJSON = J.genericToJSON hasuraJSON
@@ -243,10 +247,11 @@ $(J.deriveJSON
 -- representation of action metadata
 data ActionMetadata
   = ActionMetadata
-  { _amName        :: !ActionName
-  , _amComment     :: !(Maybe Text)
-  , _amDefinition  :: !ActionDefinitionInput
-  , _amPermissions :: ![ActionPermissionMetadata]
+  { _amName              :: !ActionName
+  , _amComment           :: !(Maybe Text)
+  , _amDefinition        :: !ActionDefinitionInput
+  , _amPermissions       :: ![ActionPermissionMetadata]
+  , _amMetadataTransform :: !(Maybe MetadataTransform)
   } deriving (Show, Eq, Generic)
 $(J.deriveToJSON hasuraJSON ''ActionMetadata)
 $(makeLenses ''ActionMetadata)
@@ -260,6 +265,7 @@ instance J.FromJSON ActionMetadata where
       <*> o J..:? "comment"
       <*> o J..: "definition"
       <*> o J..:? "permissions" J..!= []
+      <*> o J..:? "transform"
 
 ----------------- Resolve Types ----------------
 
@@ -288,6 +294,7 @@ data AnnActionExecution (b :: BackendType) (r :: BackendType -> Type) v
   , _aaeStrfyNum             :: !Bool
   , _aaeTimeOut              :: !Timeout
   , _aaeSource               :: !(ActionSourceInfo b)
+  , _aaeRequestTransform     :: !(Maybe MetadataTransform)
   } deriving (Functor, Foldable, Traversable)
 
 data AnnActionMutationAsync

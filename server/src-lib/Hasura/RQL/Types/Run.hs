@@ -8,15 +8,15 @@ module Hasura.RQL.Types.Run
 
 import           Hasura.Prelude
 
-import qualified Network.HTTP.Client.Extended as HTTP
+import qualified Network.HTTP.Client.Manager as HTTP
 
-import           Control.Monad.Trans.Control  (MonadBaseControl)
+import           Control.Monad.Trans.Control (MonadBaseControl)
 import           Control.Monad.Unique
-import           Hasura.Metadata.Class
 
-import qualified Hasura.Tracing               as Tracing
+import qualified Hasura.Tracing              as Tracing
 
 import           Hasura.Base.Error
+import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Session
 

@@ -23,7 +23,7 @@ import qualified Data.HashSet                           as S
 import           Control.Lens                           ((^.))
 import           Control.Monad.Unique
 import           Data.Text.Extended
-import           Network.HTTP.Client.Extended
+import           Network.HTTP.Client.Manager            (HasHttpManagerM (..))
 
 import qualified Hasura.Tracing                         as Tracing
 

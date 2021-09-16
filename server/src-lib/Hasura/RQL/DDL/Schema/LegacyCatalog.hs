@@ -101,7 +101,7 @@ saveMetadataToHdbTables (MetadataNoSources tables functions schemas collections
   withPathK "actions" $
     indexedForM_ actions $ \action -> do
       let createAction =
-            CreateAction (_amName action) (_amDefinition action) (_amComment action)
+            CreateAction (_amName action) (_amDefinition action) (_amComment action) (_amMetadataTransform action)
       addActionToCatalog createAction
       withPathK "permissions" $
         indexedForM_ (_amPermissions action) $ \permission -> do
@@ -158,7 +158,7 @@ addEventTriggerToCatalog qt etc = liftTx do
          |] (name, sn, tn, Q.AltJ $ toJSON etc) False
   where
     QualifiedObject sn tn = qt
-    (EventTriggerConf name _ _ _ _ _) = etc
+    (EventTriggerConf name _ _ _ _ _ _) = etc
 
 addComputedFieldToCatalog
   :: MonadTx m
@@ -238,7 +238,7 @@ setCustomTypesInCatalog customTypes = liftTx do
       |] () False
 
 addActionToCatalog :: (MonadTx m) =>  CreateAction -> m ()
-addActionToCatalog (CreateAction actionName actionDefinition comment) = do
+addActionToCatalog (CreateAction actionName actionDefinition comment _) = do
   liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
     INSERT into hdb_catalog.hdb_action
       (action_name, action_defn, comment)

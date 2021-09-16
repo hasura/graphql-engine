@@ -14,7 +14,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Has                            (Has)
-import           Network.HTTP.Client.Extended
+import           Network.HTTP.Client.Manager         (HasHttpManagerM (..))
 
 import qualified Hasura.Logging                      as L
 import qualified Hasura.Tracing                      as Tracing

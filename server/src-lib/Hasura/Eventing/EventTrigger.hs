@@ -47,13 +47,12 @@ module Hasura.Eventing.EventTrigger
 import           Hasura.Prelude
 
 import qualified Control.Concurrent.Async.Lifted.Safe   as LA
-import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.HashMap.Strict                    as M
 import qualified Data.TByteString                       as TBS
 import qualified Data.Text                              as T
 import qualified Data.Time.Clock                        as Time
 import qualified Database.PG.Query                      as Q
-import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.HTTP.Client.Transformable      as HTTP
 import qualified System.Metrics.Distribution            as EKG.Distribution
 import qualified System.Metrics.Gauge                   as EKG.Gauge
 
@@ -80,6 +79,7 @@ import           Hasura.Base.Error
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.DDL.RequestTransform
 import           Hasura.RQL.Types
 import           Hasura.Server.Metrics                  (ServerMetrics (..))
 import           Hasura.Server.Migrate.Internal         (getCatalogVersion)
@@ -402,22 +402,32 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx{..} L
                 setRetry e (addUTCTime 60 currentTime) maintenanceModeVersion)
               >>= flip onLeft logQErr
             Right eti -> runTraceT (spanName eti) do
-              let webhook = T.unpack $ wciCachedValue $ etiWebhookInfo eti
+              let webhookUrl = T.unpack $ wciCachedValue $ etiWebhookInfo eti
                   retryConf = etiRetryConf eti
                   timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
-                  responseTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
+                  httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
                   (headers, logHeaders) = prepareHeaders logBehavior (etiHeaders eti)
                   ep = createEventPayload retryConf e
                   payload = encode $ toJSON ep
                   extraLogCtx = ExtraLogContext (epId ep) (Just $ etiName eti)
-                  requestDetails = RequestDetails $ LBS.length payload
+                  dataTransform = mkRequestTransform <$> etiMetadataTransform eti
 
-              -- Track the number of active HTTP workers using EKG.
-              res <- bracket_
-                      (liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics)
-                      (liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics)
-                      (runExceptT $ tryWebhook headers responseTimeout payload webhook)
-              logHTTPForET res extraLogCtx requestDetails logBehavior
+              res <- runExceptT $ do
+                -- reqDetails contains the pre and post transformation
+                -- request for logging purposes.
+                reqDetails <- mkRequest headers httpTimeout payload dataTransform webhookUrl
+                let logger' res details = logHTTPForET res extraLogCtx details logBehavior
+                -- Event Triggers have a configuration parameter called
+                -- HASURA_GRAPHQL_EVENTS_HTTP_WORKERS, which is used
+                -- to control the concurrency of http delivery.
+                -- This bracket is used to increment and decrement an
+                -- HTTP Worker EKG Gauge for the duration of the
+                -- request invocation
+                bracket_
+                  (liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics)
+                  (liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics)
+                  (hoistEither =<< lift (invokeRequest reqDetails logger'))
+
               either
                 (processError sourceConfig e retryConf logHeaders ep maintenanceModeVersion)
                 (processSuccess sourceConfig e logHeaders ep maintenanceModeVersion) res

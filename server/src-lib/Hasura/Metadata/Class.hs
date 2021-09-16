@@ -16,7 +16,7 @@ import qualified Network.HTTP.Types                     as HTTP
 import           Control.Monad.Morph                    (MFunctor, hoist)
 import           Control.Monad.Trans.Control            (MonadBaseControl)
 import           Data.Aeson
-import           Network.HTTP.Client.Extended
+import           Network.HTTP.Client.Manager            (HasHttpManagerM (..))
 
 import qualified Hasura.Tracing                         as Tracing
 

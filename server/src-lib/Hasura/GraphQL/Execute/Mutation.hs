@@ -39,8 +39,7 @@ import           Hasura.QueryTags
 import           Hasura.Server.Types                       (RequestId (..))
 
 convertMutationAction
-  ::( HasVersion
-    , MonadIO m
+  ::( MonadIO m
     , MonadError QErr m
     , MonadMetadataStorage (MetadataStorageT m)
     )

@@ -154,6 +154,15 @@ class TestMetadata:
     def test_pg_multisource_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_multisource_query.yaml')
 
+    def test_validate_webhook_transform_success(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/validate_webhook_transform_success.yaml')
+
+    def test_validate_webhook_transform_bad_parse(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/validate_webhook_transform_bad_parse.yaml')
+
+    def test_validate_webhook_transform_bad_eval(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/validate_webhook_transform_bad_eval.yaml')
+
     @pytest.mark.skipif(
         os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_1') == os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_2') or
         os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_1') is None or

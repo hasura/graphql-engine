@@ -10,7 +10,7 @@ import qualified Data.Aeson.Types                          as A
 import qualified Data.Environment                          as Env
 import qualified Data.Text                                 as T
 import qualified Data.Text.Extended                        as T
-import qualified Network.HTTP.Client.Extended              as HTTP
+import qualified Network.HTTP.Client.Manager               as HTTP
 
 import           Control.Monad.Trans.Control               (MonadBaseControl)
 import           Control.Monad.Unique
@@ -183,6 +183,7 @@ data RQLMetadataV1
   | RMDumpInternalState !DumpInternalState
   | RMGetCatalogState  !GetCatalogState
   | RMSetCatalogState  !SetCatalogState
+  | RMValidateWebhookTransform !ValidateWebhookTransform
 
   -- Bulk metadata queries
   | RMBulk [RQLMetadataRequest]
@@ -253,6 +254,8 @@ instance FromJSON RQLMetadataV1 where
       "set_catalog_state"                        -> RMSetCatalogState                      <$> args
 
       "set_graphql_schema_introspection_options" -> RMSetGraphqlSchemaIntrospectionOptions <$> args
+
+      "validate_webhook_transform"               -> RMValidateWebhookTransform             <$> args
 
       "bulk"                                     -> RMBulk                                 <$> args
 
@@ -527,6 +530,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDumpInternalState q                    -> runDumpInternalState q
   RMGetCatalogState q                      -> runGetCatalogState q
   RMSetCatalogState q                      -> runSetCatalogState q
+  RMValidateWebhookTransform q             -> runValidateWebhookTransform q
 
   RMBulk q                                 -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
   where

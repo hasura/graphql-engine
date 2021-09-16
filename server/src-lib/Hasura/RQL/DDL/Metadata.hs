@@ -10,6 +10,7 @@ module Hasura.RQL.DDL.Metadata
   , runDropInconsistentMetadata
   , runGetCatalogState
   , runSetCatalogState
+  , runValidateWebhookTransform
 
   , runSetMetricsConfig
   , runRemoveMetricsConfig
@@ -20,14 +21,17 @@ module Hasura.RQL.DDL.Metadata
 import           Hasura.Prelude
 
 import qualified Data.Aeson.Ordered                  as AO
+import qualified Data.CaseInsensitive                as CI
 import qualified Data.HashMap.Strict                 as Map
 import qualified Data.HashMap.Strict.InsOrd.Extended as OMap
 import qualified Data.HashSet                        as HS
 import qualified Data.List                           as L
 import qualified Data.TByteString                    as TBS
+import qualified Network.HTTP.Client.Transformable   as HTTP
 
-import           Control.Lens                        ((.~), (^?))
+import           Control.Lens                        ((.~), (^.), (^?))
 import           Data.Aeson
+import           Data.Bifunctor                      (bimap)
 import           Data.Has                            (Has, getter)
 import           Data.Text.Extended                  ((<<>))
 
@@ -46,6 +50,7 @@ import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteRelationship
 import           Hasura.RQL.DDL.RemoteSchema
+import           Hasura.RQL.DDL.RequestTransform
 import           Hasura.RQL.DDL.ScheduledTrigger
 import           Hasura.RQL.DDL.Schema
 
@@ -461,3 +466,24 @@ runRemoveMetricsConfig = do
     $ MetadataModifier
     $ metaMetricsConfig .~ emptyMetricsConfig
   pure successMsg
+
+runValidateWebhookTransform
+  :: forall m
+   . ( QErrM m
+     , MonadIO m
+     )
+  => ValidateWebhookTransform -> m EncJSON
+runValidateWebhookTransform (ValidateWebhookTransform url payload mt) = do
+  initReq <- liftIO $ HTTP.mkRequestThrow url
+  let req = initReq & HTTP.body .~ pure (encode payload)
+      dataTransform = mkRequestTransformDebug mt
+      -- TODO(Solomon) Add SessionVariables
+      transformed = applyRequestTransform dataTransform req Nothing
+      payload' = decode @Value =<< (transformed ^. HTTP.body)
+      headers' = bimap CI.foldedCase id <$> (transformed ^. HTTP.headers)
+  pure $ encJFromJValue $ object
+    [ "webhook_url" .= (transformed ^. HTTP.url)
+    , "method"      .= (transformed ^. HTTP.method)
+    , "headers"     .=  headers'
+    , "payload"     .=  payload'
+    ]

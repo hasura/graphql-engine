@@ -39,7 +39,7 @@ import           Data.Aeson                          (Value, toJSON)
 import           Data.Aeson.TH
 import           Data.List                           (nub)
 import           Data.Text.Extended
-import           Network.HTTP.Client.Extended
+import           Network.HTTP.Client.Manager         (HasHttpManagerM (..))
 
 import qualified Hasura.Tracing                      as Tracing
 

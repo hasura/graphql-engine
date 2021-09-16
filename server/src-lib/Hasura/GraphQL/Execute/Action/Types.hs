@@ -2,19 +2,19 @@ module Hasura.GraphQL.Execute.Action.Types where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as J
-import qualified Data.Aeson.Casing             as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.HashMap.Strict           as Map
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Network.HTTP.Types            as HTTP
+import qualified Data.Aeson                        as J
+import qualified Data.Aeson.Casing                 as J
+import qualified Data.Aeson.TH                     as J
+import qualified Data.HashMap.Strict               as Map
+import qualified Language.GraphQL.Draft.Syntax     as G
+import qualified Network.HTTP.Client.Transformable as HTTP
 
-import           Control.Monad.Trans.Control   (MonadBaseControl)
-import           Data.Int                      (Int64)
+import           Control.Monad.Trans.Control       (MonadBaseControl)
+import           Data.Int                          (Int64)
 
-import qualified Hasura.Logging                as L
-import qualified Hasura.RQL.IR.Select          as RS
-import qualified Hasura.Tracing                as Tracing
+import qualified Hasura.Logging                    as L
+import qualified Hasura.RQL.IR.Select              as RS
+import qualified Hasura.Tracing                    as Tracing
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
@@ -120,11 +120,14 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionInternalError)
 -- * Action handler logging related
 data ActionHandlerLog
   = ActionHandlerLog
-  { _ahlRequestSize  :: !Int64
-  , _ahlResponseSize :: !Int64
-  , _ahlActionName   :: !ActionName
+  { _ahlRequest                :: !HTTP.Request
+  , _ahlRequestTrans           :: !(Maybe HTTP.Request)
+  , _ahlRequestSize            :: !Int64
+  , _ahlTransformedRequestSize :: !(Maybe Int64)
+  , _ahlResponseSize           :: !Int64
+  , _ahlActionName             :: !ActionName
   } deriving (Show)
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''ActionHandlerLog)
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''ActionHandlerLog)
 
 instance L.ToEngineLog ActionHandlerLog L.Hasura where
   toEngineLog ahl = (L.LevelInfo, L.ELTActionHandler, J.toJSON ahl)

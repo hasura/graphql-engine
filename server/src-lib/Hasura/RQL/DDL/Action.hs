@@ -20,21 +20,22 @@ module Hasura.RQL.DDL.Action
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.Dependent.Map            as DMap
-import qualified Data.Environment              as Env
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashMap.Strict.InsOrd    as OMap
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.Aeson                      as J
+import qualified Data.Aeson.TH                   as J
+import qualified Data.Dependent.Map              as DMap
+import qualified Data.Environment                as Env
+import qualified Data.HashMap.Strict             as Map
+import qualified Data.HashMap.Strict.InsOrd      as OMap
+import qualified Language.GraphQL.Draft.Syntax   as G
 
-import           Control.Lens                  ((.~), (^.))
+import           Control.Lens                    ((.~), (^.))
 import           Data.Text.Extended
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
-import           Hasura.RQL.DDL.CustomTypes    (lookupPGScalar)
+import           Hasura.RQL.DDL.CustomTypes      (lookupPGScalar)
+import           Hasura.RQL.DDL.RequestTransform
 import           Hasura.RQL.Types
 import           Hasura.SQL.Tag
 import           Hasura.Session
@@ -53,6 +54,7 @@ data CreateAction
   { _caName       :: !ActionName
   , _caDefinition :: !ActionDefinitionInput
   , _caComment    :: !(Maybe Text)
+  , _caTransform  :: !(Maybe MetadataTransform)
   }
 $(J.deriveJSON hasuraJSON ''CreateAction)
 
@@ -66,7 +68,7 @@ runCreateAction createAction = do
     throw400 AlreadyExists $
       "action with name " <> actionName <<> " already exists"
   let metadata = ActionMetadata actionName (_caComment createAction)
-                 (_caDefinition createAction) []
+                 (_caDefinition createAction) [] (_caTransform createAction)
   buildSchemaCacheFor (MOAction actionName)
     $ MetadataModifier
     $ metaActions %~ OMap.insert actionName metadata

@@ -1522,6 +1522,10 @@ ActionDefinition
      - false
      - Integer
      - Number of seconds to wait for response before timing out. Default: 30
+   * - transform
+     - false
+     - :ref:`RequestTransformation`
+     - Request Transformation to be applied to this Action's request
 
 
 .. _InputArgument:
@@ -1864,6 +1868,98 @@ EventTriggerColumns
    :class: haskell-pre
 
    "*" | [:ref:`PGColumn`]
+
+.. _RequestTransformation:
+
+RequestTransformation
+^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - required
+     - Schema
+     - Description
+   * - method
+     - false
+     - String
+     - Change the request method to this value.
+   * - url
+     - false
+     - String
+     - Change the request URL to this value.
+   * - body
+     - false
+     - String
+     - A template script for transforming the request body.
+   * - content_type
+     - false
+     - String
+     - Replace the Content-Type with this value. Only "application/json" and "application/x-www-form-urlencoded" are allowed. Default: "application/json"
+   * - request_headers
+     - false
+     - :ref:`TransformHeaders`
+     - Transform headers as described here.
+   * - template_engine
+     - false
+     - :ref:`TemplateEngine`
+     - Template language to be used for this transformation. Default: "Kriti"
+
+.. _TransformHeaders
+
+TransformHeaders
+^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - required
+     - Schema
+     - Description
+   * - addHeaders
+     - false
+     - Object (:ref:`HeaderKey` : :ref:`HeaderValue`)
+     - A map of Header Key Value pairs to be added to the request. Content-Type cannot be added via this map.
+   * - removeHeaders
+     - false
+     - Array of (:ref:`HeaderKey`)
+     - Headers to be removed from the request. Content-Type cannot be removed.
+
+
+.. _HeaderKey
+
+HeaderKey
+^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   String
+
+.. _HeaderValue
+
+HeaderKey
+^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   String
+
+.. _TemplateEngine
+
+TemplateEngine
+^^^^^^^^^^^^^^
+
+The JSON templating language to be used for this JSON transformation.
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   "Kriti"
+
 
 .. _RetryConf:
 

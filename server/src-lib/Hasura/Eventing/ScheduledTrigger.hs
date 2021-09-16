@@ -112,7 +112,6 @@ module Hasura.Eventing.ScheduledTrigger
 import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
-import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.List.NonEmpty                     as NE
@@ -120,7 +119,7 @@ import qualified Data.Set                               as Set
 import qualified Data.TByteString                       as TBS
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
-import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.HTTP.Client.Transformable      as HTTP
 import qualified Text.Builder                           as TB
 
 import           Control.Arrow.Extended                 (dup)
@@ -351,9 +350,13 @@ processScheduledEvent logBehavior eventId eventHeaders retryCtx payload webhookU
           extraLogCtx = ExtraLogContext eventId (sewpName payload)
           webhookReqBodyJson = J.toJSON payload
           webhookReqBody = J.encode webhookReqBodyJson
-          requestDetails = RequestDetails $ BL.length webhookReqBody
-      eitherRes <- runExceptT $ tryWebhook headers httpTimeout webhookReqBody (T.unpack webhookUrl)
-      logHTTPForST eitherRes extraLogCtx requestDetails logBehavior
+
+      eitherRes <- runExceptT $ do
+        -- reqDetails contains the pre and post transformation
+        -- request for logging purposes.
+        reqDetails <- mkRequest headers httpTimeout webhookReqBody Nothing (T.unpack webhookUrl)
+        let logger e d = logHTTPForST e extraLogCtx d logBehavior
+        hoistEither =<< lift (invokeRequest reqDetails logger)
       case eitherRes of
         Left e  -> processError eventId retryCtx decodedHeaders type' webhookReqBodyJson e
         Right r -> processSuccess eventId decodedHeaders type' webhookReqBodyJson r

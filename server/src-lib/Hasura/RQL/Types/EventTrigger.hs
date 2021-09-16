@@ -23,18 +23,19 @@ module Hasura.RQL.Types.EventTrigger
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict      as M
-import qualified Database.PG.Query        as Q
+import qualified Data.HashMap.Strict             as M
+import qualified Database.PG.Query               as Q
 
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
-import           Hasura.Incremental       (Cacheable)
+import           Hasura.Incremental              (Cacheable)
 import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.DDL.RequestTransform (MetadataTransform)
 import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Common  (InputWebhook)
+import           Hasura.RQL.Types.Common         (InputWebhook)
 import           Hasura.SQL.Backend
 
 
@@ -167,6 +168,7 @@ data EventTriggerConf (b :: BackendType)
   , etcWebhookFromEnv :: !(Maybe Text)
   , etcRetryConf      :: !RetryConf
   , etcHeaders        :: !(Maybe [HeaderConf])
+  , etcTransform      :: !(Maybe MetadataTransform)
   } deriving (Show, Eq, Generic)
 instance Backend b => Cacheable (EventTriggerConf b)
 
@@ -184,17 +186,18 @@ instance Cacheable RecreateEventTriggers
 
 data EventTriggerInfo (b :: BackendType)
  = EventTriggerInfo
-   { etiName        :: !TriggerName
-   , etiOpsDef      :: !(TriggerOpsDef b)
-   , etiRetryConf   :: !RetryConf
-   , etiWebhookInfo :: !WebhookConfInfo
+   { etiName              :: !TriggerName
+   , etiOpsDef            :: !(TriggerOpsDef b)
+   , etiRetryConf         :: !RetryConf
+   , etiWebhookInfo       :: !WebhookConfInfo
    -- ^ The HTTP(s) URL which will be called with the event payload on configured operation.
    -- Must be a POST handler. This URL can be entered manually or can be picked up from an
    -- environment variable (the environment variable needs to be set before using it for
    -- this configuration).
-   , etiHeaders     :: ![EventHeaderInfo]
+   , etiHeaders           :: ![EventHeaderInfo]
    -- ^ Custom headers can be added to an event trigger. Each webhook request will have these
    -- headers added.
+   , etiMetadataTransform :: !(Maybe MetadataTransform)
    } deriving (Generic, Eq)
 instance Backend b => NFData (EventTriggerInfo b)
 

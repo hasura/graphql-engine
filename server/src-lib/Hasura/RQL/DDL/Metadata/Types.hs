@@ -14,14 +14,16 @@ module Hasura.RQL.DDL.Metadata.Types
   , ReplaceMetadataV1(..)
   , ReplaceMetadataV2(..)
   , AllowInconsistentMetadata(..)
+  , ValidateWebhookTransform(..)
   ) where
 
 import           Hasura.Prelude
 
 import           Data.Aeson
 import           Data.Aeson.TH
-import qualified Data.HashMap.Strict as H
+import qualified Data.HashMap.Strict             as H
 
+import           Hasura.RQL.DDL.RequestTransform (MetadataTransform)
 import           Hasura.RQL.Types
 
 data ClearMetadata
@@ -168,3 +170,24 @@ instance ToJSON ReplaceMetadata where
   toJSON = \case
     RMReplaceMetadataV1 v1 -> toJSON v1
     RMReplaceMetadataV2 v2 -> toJSON v2
+
+data ValidateWebhookTransform
+  = ValidateWebhookTransform
+  { _vwtWebhookUrl  :: Text
+  , _vwtPayload     :: Value
+  , _vwtTransformer :: MetadataTransform
+  } deriving Eq
+
+instance FromJSON ValidateWebhookTransform where
+  parseJSON = withObject "ValidateWebhookTransform"$ \o -> do
+    url <- o .: "webhook_url"
+    payload <- o .: "payload"
+    transformer <- o .: "transformer"
+    pure $ ValidateWebhookTransform url payload transformer
+
+instance ToJSON ValidateWebhookTransform where
+  toJSON (ValidateWebhookTransform url payload mt) =
+    object [ "webhook_url" .= url
+           , "payload" .= payload
+           , "transfromer" .= mt
+           ]

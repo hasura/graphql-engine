@@ -10,7 +10,6 @@
 module Hasura.Eventing.HTTP
   ( HTTPErr(..)
   , HTTPResp(..)
-  , tryWebhook
   , runHTTP
   , isNetworkError
   , isNetworkErrorHC
@@ -39,31 +38,34 @@ module Hasura.Eventing.HTTP
   , TriggerTypes(..)
   , invocationVersionET
   , invocationVersionST
+  , mkRequest
+  , invokeRequest
   ) where
 
-import qualified Data.ByteString               as BS
-import qualified Data.ByteString.Lazy          as LBS
-import qualified Data.CaseInsensitive          as CI
-import qualified Data.HashMap.Lazy             as HML
-import qualified Data.TByteString              as TBS
-import qualified Data.Text                     as T
-import qualified Data.Text.Encoding            as TE
-import qualified Data.Text.Encoding.Error      as TE
-import qualified Network.HTTP.Client           as HTTP
-import qualified Network.HTTP.Types            as HTTP
+import qualified Data.ByteString                   as BS
+import qualified Data.ByteString.Lazy              as LBS
+import qualified Data.CaseInsensitive              as CI
+import qualified Data.HashMap.Lazy                 as HML
+import qualified Data.TByteString                  as TBS
+import qualified Data.Text                         as T
+import qualified Data.Text.Encoding                as TE
+import qualified Data.Text.Encoding.Error          as TE
+import qualified Network.HTTP.Client.Transformable as HTTP
 
-import           Control.Exception             (try)
+import           Control.Exception                 (try)
+import           Control.Lens                      (set)
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Either
 import           Data.Has
-import           Data.Int                      (Int64)
-import           Hasura.HTTP                   (addDefaultHeaders)
+import           Data.Int                          (Int64)
+import           Hasura.HTTP                       (addDefaultHeaders)
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.DDL.RequestTransform   (RequestTransform, applyRequestTransform)
 import           Hasura.RQL.Types.EventTrigger
-import           Hasura.Server.Version         (HasVersion)
+import           Hasura.Server.Version             (HasVersion)
 import           Hasura.Tracing
 
 data LogBehavior =
@@ -211,8 +213,12 @@ mkHTTPResp resp =
     decodeHeader (hdrName, hdrVal)
       = HeaderConf (decodeBS $ CI.original hdrName) (HVValue (decodeBS hdrVal))
 
-newtype RequestDetails
-  = RequestDetails { _rdSize :: Int64 }
+data RequestDetails
+  = RequestDetails { _rdOriginalRequest    :: HTTP.Request
+                   , _rdOriginalSize       :: Int64
+                   , _rdTransformedRequest :: Maybe HTTP.Request
+                   , _rdTransformedSize    :: Maybe Int64
+                   }
 $(deriveToJSON hasuraJSON ''RequestDetails)
 
 data HTTPRespExtra (a :: TriggerTypes)
@@ -321,40 +327,51 @@ logHTTPForST eitherResp extraLogCtx reqDetails logBehavior = do
 
 runHTTP :: (MonadIO m) => HTTP.Manager -> HTTP.Request -> m (Either (HTTPErr a) (HTTPResp a))
 runHTTP manager req = do
-  res <- liftIO $ try $ HTTP.httpLbs req manager
+  res <- liftIO $ try $ HTTP.performRequest req manager
   return $ either (Left . HClient) anyBodyParser res
 
-tryWebhook ::
-  ( MonadReader r m
-  , Has HTTP.Manager r
-  , MonadIO m
-  , MonadError (HTTPErr a) m
-  , MonadTrace m
-  )
+mkRequest ::
+  MonadError (HTTPErr a) m
   => [HTTP.Header]
   -> HTTP.ResponseTimeout
   -> LBS.ByteString
   -- ^ the request body. It is passed as a 'BL.Bytestring' because we need to
   -- log the request size. As the logging happens outside the function, we pass
   -- it the final request body, instead of 'Value'
+  -> Maybe RequestTransform
   -> String
-  -> m (HTTPResp a)
-tryWebhook headers timeout payload webhook = do
-  initReqE <- liftIO $ try $ HTTP.parseRequest webhook
-  manager <- asks getter
-  case initReqE of
+  -> m RequestDetails
+mkRequest headers timeout payload mRequestTransform webhook =
+  case HTTP.mkRequestEither (T.pack webhook) of
     Left excp -> throwError $ HClient excp
-    Right initReq -> do
-      let req =
-            initReq
-              { HTTP.method = "POST"
-              , HTTP.requestHeaders = headers
-              , HTTP.requestBody = HTTP.RequestBodyLBS payload
-              , HTTP.responseTimeout = timeout
-              }
-      tracedHttpRequest req $ \req' -> do
-        eitherResp <- runHTTP manager req'
-        onLeft eitherResp throwError
+    Right initReq ->
+      let req = initReq & set HTTP.method "POST"
+                        & set HTTP.headers headers
+                        & set HTTP.body (Just payload)
+                        & set HTTP.timeout timeout
+
+          -- TODO(Solomon) Add SessionVariables
+          transformedReq = (\rt -> applyRequestTransform rt req Nothing) <$> mRequestTransform
+          transformedReqSize = fmap HTTP.getReqSize transformedReq
+      in pure $ RequestDetails req (LBS.length payload) transformedReq transformedReqSize
+
+invokeRequest ::
+  ( MonadReader r m
+  , Has HTTP.Manager r
+  , MonadIO m
+  , MonadTrace m
+  )
+  => RequestDetails
+  -> ((Either (HTTPErr a) (HTTPResp a)) -> RequestDetails -> m ())
+  -> m (Either (HTTPErr a) (HTTPResp a))
+invokeRequest reqDetails@RequestDetails{_rdOriginalRequest, _rdTransformedRequest} logger = do
+  let finalReq = fromMaybe _rdOriginalRequest _rdTransformedRequest
+  manager <- asks getter
+  -- Perform the HTTP Request
+  eitherResp <- tracedHttpRequest finalReq $ runHTTP manager
+  -- Log the result along with the pre/post transformation Request data
+  logger eitherResp reqDetails
+  pure eitherResp
 
 mkResp :: Int -> TBS.TByteString -> [HeaderConf] -> Response a
 mkResp status payload headers =
