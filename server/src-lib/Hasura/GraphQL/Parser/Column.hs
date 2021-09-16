@@ -1,5 +1,3 @@
-{-# LANGUAGE StrictData #-}
-
 module Hasura.GraphQL.Parser.Column
   ( UnpreparedValue(..)
   , ValueWithOrigin(..)

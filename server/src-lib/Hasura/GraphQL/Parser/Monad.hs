@@ -1,5 +1,3 @@
-{-# LANGUAGE StrictData #-}
-
 -- | Monad transformers for GraphQL schema construction and query parsing.
 module Hasura.GraphQL.Parser.Monad
   ( SchemaT

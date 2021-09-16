@@ -160,7 +160,6 @@ fromRootField =
     (Ir.QDBSingleRow s)    -> mkSQLSelect Rql.JASSingleObject s
     (Ir.QDBMultipleRows s) -> mkSQLSelect Rql.JASMultipleRows s
     (Ir.QDBAggregation s)  -> fromSelectAggregate Nothing s
-    (Ir.QDBConnection _)   -> refute $ pure ConnectionsNotSupported
 
 --------------------------------------------------------------------------------
 -- Top-level exported functions
