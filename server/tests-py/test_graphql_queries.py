@@ -1,6 +1,5 @@
 import pytest
 from validate import check_query_f, check_query, get_conf_f
-from conftest import use_inherited_roles_fixtures
 from context import PytestConf
 
 # Mark that all tests in this module can be run as server upgrade tests
@@ -660,7 +659,7 @@ class TestGraphqlQueryPermissions:
 # be common across all the backends, to add DB specific tests
 # look for the  TestGraphQLInheritedRoles<backend> test classes
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
-@use_inherited_roles_fixtures
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLInheritedRolesSchema:
 
     @classmethod
@@ -724,7 +723,7 @@ class TestGraphQLInheritedRolesSchema:
         check_query_f(hge_ctx, self.dir() + '/inherited_role_parent_is_another_inherited_role.yaml')
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
-@use_inherited_roles_fixtures
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLInheritedRolesPostgres:
 
     @classmethod
@@ -741,7 +740,7 @@ class TestGraphQLInheritedRolesPostgres:
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @pytest.mark.parametrize('backend', ['mssql'])
-@usefixtures('per_backend_tests', 'inherited_role_fixtures', 'per_class_tests_db_state')
+@usefixtures('per_backend_tests', 'per_class_tests_db_state')
 class TestGraphQLInheritedRolesMSSQL:
 
     @classmethod

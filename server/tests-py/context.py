@@ -641,7 +641,6 @@ class HGECtx:
 
         self.hge_scale_url = config.getoption('--test-hge-scale-url')
         self.avoid_err_msg_checks = config.getoption('--avoid-error-message-checks')
-        self.inherited_roles_tests = config.getoption('--test-inherited-roles')
         self.pro_tests = config.getoption('--pro-tests')
 
         self.ws_client = GQLWsClient(self, '/v1/graphql')
