@@ -256,7 +256,7 @@ buildRelayRoleContext
     mutationParserBackend <-
       buildMutationParser mempty allActionInfos nonObjectCustomTypes mutationBackendFields
     subscriptionParser <-
-      P.safeSelectionSet subscriptionRoot Nothing queryPGFields <&> fmap (fmap typenameToRawRF)
+      buildSubscriptionParser queryPGFields []
     queryParserFrontend <-
       queryWithIntrospectionHelper queryPGFields mutationParserFrontend subscriptionParser
     queryParserBackend <-
@@ -341,16 +341,14 @@ unauthenticatedContext
   -> RemoteSchemaPermsCtx
   -> m GQLContext
 unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsCtx = P.runSchemaT $ do
-  let isRemoteSchemaPermsEnabled = remoteSchemaPermsCtx == RemoteSchemaPermsEnabled
-      queryFields    = bool (fmap (fmap RFRemote) adminQueryRemotes)    [] isRemoteSchemaPermsEnabled
-      mutationFields = bool (fmap (fmap RFRemote) adminMutationRemotes) [] isRemoteSchemaPermsEnabled
-  mutationParser <-
-    if null adminMutationRemotes
-    then pure Nothing
-    else P.safeSelectionSet mutationRoot Nothing mutationFields <&> Just . fmap (fmap typenameToRawRF)
-  subscriptionParser <-
-    P.safeSelectionSet subscriptionRoot Nothing [] <&> fmap (fmap typenameToRawRF)
-  queryParser <- queryWithIntrospectionHelper queryFields mutationParser subscriptionParser
+  let
+    isRemoteSchemaPermsEnabled = remoteSchemaPermsCtx == RemoteSchemaPermsEnabled
+    queryFields    = bool (fmap (fmap RFRemote) adminQueryRemotes)    [] isRemoteSchemaPermsEnabled
+    mutationFields = bool (fmap (fmap RFRemote) adminMutationRemotes) [] isRemoteSchemaPermsEnabled
+  mutationParser <- whenMaybe (not $ null mutationFields) $
+    P.safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFields
+    <&> fmap (fmap typenameToRawRF)
+  queryParser <- queryWithIntrospectionHelper queryFields mutationParser Nothing
   pure $ GQLContext (finalizeParser queryParser) (finalizeParser <$> mutationParser)
 
 
@@ -543,7 +541,7 @@ buildQueryParser
   -> [ActionInfo]
   -> NonObjectTypeMap
   -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
-  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
+  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 buildQueryParser pgQueryFields remoteFields allActions nonObjectCustomTypes mutationParser subscriptionParser = do
   actionQueryFields <- concat <$> traverse (buildActionQueryFields nonObjectCustomTypes) allActions
@@ -554,18 +552,18 @@ queryWithIntrospectionHelper
   :: forall n m. (MonadSchema n m, MonadError QErr m)
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
   -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
-  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
+  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
   basicQueryP <- queryRootFromFields basicQueryFP
   emptyIntro  <- emptyIntrospection
   let directives = directivesInfo @n
-  allBasicTypes <- collectTypes $
-    [ P.TypeDefinitionsWrapper $ P.parserType basicQueryP
-    , P.TypeDefinitionsWrapper $ P.parserType subscriptionP
-    , P.TypeDefinitionsWrapper $ P.diArguments =<< directives
+  allBasicTypes <- collectTypes $ catMaybes
+    [ Just $ P.TypeDefinitionsWrapper $ P.parserType basicQueryP
+    , Just $ P.TypeDefinitionsWrapper $ P.diArguments =<< directives
+    , P.TypeDefinitionsWrapper . P.parserType <$> mutationP
+    , P.TypeDefinitionsWrapper . P.parserType <$> subscriptionP
     ]
-    ++ maybeToList (P.TypeDefinitionsWrapper . P.parserType <$> mutationP)
   allIntrospectionTypes <- collectTypes . P.parserType =<< queryRootFromFields emptyIntro
   let allTypes = Map.unions
         [ allBasicTypes
@@ -576,7 +574,7 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
         , sTypes = allTypes
         , sQueryType = P.parserType basicQueryP
         , sMutationType = P.parserType <$> mutationP
-        , sSubscriptionType = Just $ P.parserType subscriptionP
+        , sSubscriptionType = P.parserType <$> subscriptionP
         , sDirectives = directives
         }
   let partialQueryFields =
@@ -630,11 +628,13 @@ buildSubscriptionParser
      )
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
   -> [ActionInfo]
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+  -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))))
 buildSubscriptionParser queryFields allActions = do
   actionSubscriptionFields <- concat <$> traverse buildActionSubscriptionFields allActions
   let subscriptionFields = queryFields <> actionSubscriptionFields
-  P.safeSelectionSet subscriptionRoot Nothing subscriptionFields <&> fmap (fmap typenameToRawRF)
+  whenMaybe (not $ null subscriptionFields) $
+    P.safeSelectionSet subscriptionRoot Nothing subscriptionFields
+    <&> fmap (fmap typenameToRawRF)
 
 buildMutationParser
   :: forall m n r
@@ -654,10 +654,9 @@ buildMutationParser allRemotes allActions nonObjectCustomTypes mutationFields = 
         mutationFields <>
         actionParsers <>
         fmap (fmap RFRemote) allRemotes
-  if null mutationFieldsParser
-  then pure Nothing
-  else P.safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFieldsParser
-            <&> Just . fmap (fmap typenameToRawRF)
+  whenMaybe (not $ null mutationFieldsParser) $
+    P.safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFieldsParser
+    <&> fmap (fmap typenameToRawRF)
 
 
 

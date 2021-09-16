@@ -46,6 +46,17 @@ class TestGraphQLQueryBasicMySQL:
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
+class TestGraphQLEmpty:
+
+    def test_no_empty_roots(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/check_no_empty_roots.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/empty'
+
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['bigquery'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryTableCustomizationsBigquery:

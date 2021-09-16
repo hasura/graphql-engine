@@ -92,9 +92,7 @@
       "queryType": {
         "name": "query_root"
       },
-      "subscriptionType": {
-        "name": "subscription_root"
-      },
+      "subscriptionType": null,
       "types": [
         {
           "inputFields": null,
@@ -763,16 +761,6 @@
           "possibleTypes": null,
           "interfaces": [],
           "name": "query_root",
-          "enumValues": null,
-          "description": null,
-          "fields": []
-        },
-        {
-          "inputFields": null,
-          "kind": "OBJECT",
-          "possibleTypes": null,
-          "interfaces": [],
-          "name": "subscription_root",
           "enumValues": null,
           "description": null,
           "fields": []
