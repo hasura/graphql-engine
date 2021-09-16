@@ -58,7 +58,7 @@ Example:
           -v /home/me/my-project/migrations:/hasura-migrations \
           -v /home/me/my-project/metadata:/hasura-metadata \
           -e HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:@postgres:5432/postgres \
-          hasura/graphql-engine:v2.0.0-alpha.7.cli-migrations-v3
+          hasura/graphql-engine:<version>.cli-migrations-v3
 
 
 .. _auto_apply_metadata:
