@@ -16,6 +16,7 @@
 
 ## v2.0.9
 
+- server: fix export_metadata V2 bug which included cron triggers with `include_in_metadata: false`
 - server: disable mutation for materialised views (#6688)
 - server: set `tracecontext` and `userInfo` for DML actions on Postgres sources
 - server: add support for `connection_parameters` on `pg_add_source` API
