@@ -3,10 +3,7 @@ module Hasura.GraphQL.RemoteServer
   , IntrospectionResult
   , execRemoteGQ
   , identityCustomizer
-  , customizeIntrospectionResult
   -- The following exports are needed for unit tests
-  , introspectionResultToJSON
-  , parseIntrospectionResult
   , getCustomizer
   , validateSchemaCustomizationsDistinct
   ) where
@@ -32,10 +29,10 @@ import           Control.Arrow.Extended                 (left)
 import           Control.Exception                      (try)
 import           Control.Lens                           ((^.))
 import           Control.Monad.Unique
-import           Data.Aeson                             ((.:), (.:?), (.=))
+import           Data.Aeson                             ((.:), (.:?))
 import           Data.FileEmbed                         (makeRelativeToProject)
 import           Data.List.Extended                     (duplicates)
-import           Data.Text.Extended                     (dquoteList, toTxt, (<<>))
+import           Data.Text.Extended                     (dquoteList, (<<>))
 import           Data.Tuple                             (swap)
 import           Network.URI                            (URI)
 
@@ -155,20 +152,17 @@ fetchRemoteSchema
   -> ValidatedRemoteSchemaDef
   -> m RemoteSchemaCtx
 fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef{..} = do
-  (_, _, rscRawIntrospectionResultDirty) <-
+  (_, _, _rscRawIntrospectionResult) <-
     execRemoteGQ env manager adminUserInfo [] rsDef introspectionQuery
 
   -- Parse the JSON into flat GraphQL type AST
   FromIntrospection _rscIntroOriginal <-
-    J.eitherDecode rscRawIntrospectionResultDirty `onLeft` (throwRemoteSchema . T.pack)
+    J.eitherDecode _rscRawIntrospectionResult `onLeft` (throwRemoteSchema . T.pack)
 
   -- possibly transform type names from the remote schema, per the user's 'RemoteSchemaDef'
   let rsCustomizer = getCustomizer (addDefaultRoots _rscIntroOriginal) _vrsdCustomization
 
   validateSchemaCustomizations rsCustomizer (irDoc _rscIntroOriginal)
-
-  let customizedIntro = customizeIntrospectionResult rsCustomizer _rscIntroOriginal
-      _rscRawIntrospectionResult = J.encode $ FromIntrospection customizedIntro
 
   let _rscInfo = RemoteSchemaInfo{..}
   -- Check that the parsed GraphQL type info is valid by running the schema generation
@@ -207,25 +201,14 @@ newtype FromIntrospection a
   = FromIntrospection { fromIntrospection :: a }
   deriving (Show, Eq, Generic, Functor)
 
--- | Include a map from type name to kind. This allows us to pass
--- extra type information required to convert our schema
--- back into JSON.
-data WithKinds a
-  = WithKinds !(HashMap G.Name Text) !a
-  deriving (Show, Eq, Generic, Functor)
-
 pErr :: (MonadFail m) => Text -> m a
 pErr = fail . T.unpack
 
 kindErr :: (MonadFail m) => Text -> Text -> m a
 kindErr gKind eKind = pErr $ "Invalid `kind: " <> gKind <> "` in " <> eKind
 
-
 instance J.FromJSON (FromIntrospection G.Description) where
   parseJSON = fmap (FromIntrospection . G.Description) . J.parseJSON
-
-instance J.ToJSON (FromIntrospection G.Description) where
-  toJSON = J.toJSON . G.unDescription . fromIntrospection
 
 instance J.FromJSON (FromIntrospection G.ScalarTypeDefinition) where
   parseJSON = J.withObject "ScalarTypeDefinition" $ \o -> do
@@ -236,13 +219,6 @@ instance J.FromJSON (FromIntrospection G.ScalarTypeDefinition) where
     let desc' = fmap fromIntrospection desc
         r = G.ScalarTypeDefinition desc' name []
     return $ FromIntrospection r
-
-instance J.ToJSON (FromIntrospection G.ScalarTypeDefinition) where
-  toJSON (FromIntrospection G.ScalarTypeDefinition {..}) = objectWithoutNullValues
-    [ "kind" .= J.String "SCALAR"
-    , "name" .= _stdName
-    , "description" .= fmap FromIntrospection _stdDescription
-    ]
 
 instance J.FromJSON (FromIntrospection (G.ObjectTypeDefinition G.InputValueDefinition)) where
   parseJSON = J.withObject "ObjectTypeDefinition" $ \o -> do
@@ -258,18 +234,6 @@ instance J.FromJSON (FromIntrospection (G.ObjectTypeDefinition G.InputValueDefin
         r = G.ObjectTypeDefinition desc' name implIfaces [] flds
     return $ FromIntrospection r
 
-instance J.ToJSON (WithKinds (G.ObjectTypeDefinition G.InputValueDefinition)) where
-  toJSON (WithKinds kinds G.ObjectTypeDefinition {..}) = objectWithoutNullValues
-    [ "kind" .= J.String "OBJECT"
-    , "name" .= _otdName
-    , "description" .= fmap FromIntrospection _otdDescription
-    , "fields" .= fmap (WithKinds kinds) _otdFieldsDefinition
-    , "interfaces" .= fmap (WithKinds kinds . toInterfaceTypeDefinition) _otdImplementsInterfaces
-    ]
-    where
-      toInterfaceTypeDefinition :: G.Name -> G.InterfaceTypeDefinition [G.Name] G.InputValueDefinition
-      toInterfaceTypeDefinition name = G.InterfaceTypeDefinition Nothing name [] [] []
-
 instance (J.FromJSON (FromIntrospection a)) => J.FromJSON (FromIntrospection (G.FieldDefinition a)) where
   parseJSON = J.withObject "FieldDefinition" $ \o -> do
     name  <- o .:  "name"
@@ -280,14 +244,6 @@ instance (J.FromJSON (FromIntrospection a)) => J.FromJSON (FromIntrospection (G.
         r = G.FieldDefinition desc' name (fmap fromIntrospection args)
             (fromIntrospection _type) []
     return $ FromIntrospection r
-
-instance J.ToJSON (WithKinds a) => J.ToJSON (WithKinds (G.FieldDefinition a)) where
-  toJSON (WithKinds kinds G.FieldDefinition {..}) = objectWithoutNullValues
-    [ "name" .= _fldName
-    , "description" .= fmap FromIntrospection _fldDescription
-    , "args" .= fmap (WithKinds kinds) _fldArgumentsDefinition
-    , "type" .= WithKinds kinds _fldType
-    ]
 
 instance J.FromJSON (FromIntrospection G.GType) where
   parseJSON = J.withObject "GType" $ \o -> do
@@ -309,25 +265,6 @@ instance J.FromJSON (FromIntrospection G.GType) where
         G.TypeList _ ty -> G.TypeList (G.Nullability False) ty
         G.TypeNamed _ n -> G.TypeNamed (G.Nullability False) n
 
-instance J.ToJSON (WithKinds G.GType) where
-  toJSON (WithKinds kinds gtype) = objectWithoutNullValues $ case gtype of
-    G.TypeNamed (G.Nullability True) name ->
-      [ "kind" .= Map.lookup name kinds
-      , "name" .= name
-      ]
-    G.TypeNamed (G.Nullability False) name ->
-      [ "kind" .= J.String "NON_NULL"
-      , "ofType" .= WithKinds kinds (G.TypeNamed (G.Nullability True) name)
-      ]
-    G.TypeList (G.Nullability True) ty ->
-      [ "kind" .= J.String "LIST"
-      , "ofType" .= WithKinds kinds ty
-      ]
-    G.TypeList (G.Nullability False) ty ->
-      [ "kind" .= J.String "NON_NULL"
-      , "ofType" .= WithKinds kinds (G.TypeList (G.Nullability True) ty)
-      ]
-
 instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
   parseJSON = J.withObject "InputValueDefinition" $ \o -> do
     name  <- o .:  "name"
@@ -339,21 +276,10 @@ instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
         r = G.InputValueDefinition desc' name (fromIntrospection _type) defVal' []
     return $ FromIntrospection r
 
-instance J.ToJSON (WithKinds G.InputValueDefinition) where
-  toJSON (WithKinds kinds G.InputValueDefinition {..}) = objectWithoutNullValues
-    [ "name" .= _ivdName
-    , "description" .= fmap FromIntrospection _ivdDescription
-    , "type" .= WithKinds kinds _ivdType
-    , "defaultValue" .= fmap FromIntrospection _ivdDefaultValue
-    ]
-
 instance J.FromJSON (FromIntrospection (G.Value Void)) where
    parseJSON = J.withText "Value Void" $ \t ->
      let parseValueConst = G.runParser G.value
      in FromIntrospection <$> onLeft (parseValueConst t) (fail . T.unpack)
-
-instance J.ToJSON (FromIntrospection (G.Value Void)) where
-  toJSON = J.String . toTxt . fromIntrospection
 
 instance J.FromJSON (FromIntrospection (G.InterfaceTypeDefinition [G.Name] G.InputValueDefinition)) where
   parseJSON = J.withObject "InterfaceTypeDefinition" $ \o -> do
@@ -371,15 +297,6 @@ instance J.FromJSON (FromIntrospection (G.InterfaceTypeDefinition [G.Name] G.Inp
     let r = G.InterfaceTypeDefinition desc' name [] flds possTps
     return $ FromIntrospection r
 
-instance J.ToJSON (WithKinds (G.InterfaceTypeDefinition [G.Name] G.InputValueDefinition)) where
-  toJSON (WithKinds kinds G.InterfaceTypeDefinition {..}) = objectWithoutNullValues
-    [ "kind" .= J.String "INTERFACE"
-    , "name" .= _itdName
-    , "description" .= fmap FromIntrospection _itdDescription
-    , "fields" .= fmap (WithKinds kinds) _itdFieldsDefinition
-    , "possibleTypes" .= fmap (WithKinds kinds . toObjectTypeDefinition) _itdPossibleTypes
-    ]
-
 instance J.FromJSON (FromIntrospection G.UnionTypeDefinition) where
   parseJSON = J.withObject "UnionTypeDefinition" $ \o -> do
     kind  <- o .: "kind"
@@ -392,14 +309,6 @@ instance J.FromJSON (FromIntrospection G.UnionTypeDefinition) where
     let r = G.UnionTypeDefinition desc' name [] possibleTypes'
     return $ FromIntrospection r
 
-instance J.ToJSON (WithKinds G.UnionTypeDefinition) where
-  toJSON (WithKinds kinds G.UnionTypeDefinition {..}) = objectWithoutNullValues
-    [ "kind" .= J.String "UNION"
-    , "name" .= _utdName
-    , "description" .= fmap FromIntrospection _utdDescription
-    , "possibleTypes" .= fmap (WithKinds kinds . toObjectTypeDefinition) _utdMemberTypes
-    ]
-
 instance J.FromJSON (FromIntrospection G.EnumTypeDefinition) where
   parseJSON = J.withObject "EnumTypeDefinition" $ \o -> do
     kind  <- o .: "kind"
@@ -411,14 +320,6 @@ instance J.FromJSON (FromIntrospection G.EnumTypeDefinition) where
     let r = G.EnumTypeDefinition desc' name [] (fmap fromIntrospection vals)
     return $ FromIntrospection r
 
-instance J.ToJSON (FromIntrospection G.EnumTypeDefinition) where
-  toJSON (FromIntrospection G.EnumTypeDefinition {..}) = objectWithoutNullValues
-    [ "kind" .= J.String "ENUM"
-    , "name" .= _etdName
-    , "description" .= fmap FromIntrospection _etdDescription
-    , "enumValues" .= fmap FromIntrospection _etdValueDefinitions
-    ]
-
 instance J.FromJSON (FromIntrospection G.EnumValueDefinition) where
   parseJSON = J.withObject "EnumValueDefinition" $ \o -> do
     name  <- o .:  "name"
@@ -426,12 +327,6 @@ instance J.FromJSON (FromIntrospection G.EnumValueDefinition) where
     let desc' = fmap fromIntrospection desc
     let r = G.EnumValueDefinition desc' name []
     return $ FromIntrospection r
-
-instance J.ToJSON (FromIntrospection G.EnumValueDefinition) where
-  toJSON (FromIntrospection G.EnumValueDefinition {..}) = objectWithoutNullValues
-    [ "name" .= _evdName
-    , "description" .= fmap FromIntrospection _evdDescription
-    ]
 
 instance J.FromJSON (FromIntrospection (G.InputObjectTypeDefinition G.InputValueDefinition)) where
   parseJSON = J.withObject "InputObjectTypeDefinition" $ \o -> do
@@ -444,14 +339,6 @@ instance J.FromJSON (FromIntrospection (G.InputObjectTypeDefinition G.InputValue
     when (kind /= "INPUT_OBJECT") $ kindErr kind "input_object"
     let r = G.InputObjectTypeDefinition desc' name [] inputFields
     return $ FromIntrospection r
-
-instance J.ToJSON (WithKinds (G.InputObjectTypeDefinition G.InputValueDefinition)) where
-  toJSON (WithKinds kinds G.InputObjectTypeDefinition {..}) = objectWithoutNullValues
-    [ "kind" .= J.String "INPUT_OBJECT"
-    , "name" .= _iotdName
-    , "description" .= fmap FromIntrospection _iotdDescription
-    , "inputFields" .= fmap (WithKinds kinds) _iotdValueDefinitions
-    ]
 
 instance J.FromJSON (FromIntrospection (G.TypeDefinition [G.Name] G.InputValueDefinition)) where
   parseJSON = J.withObject "TypeDefinition" $ \o -> do
@@ -471,15 +358,6 @@ instance J.FromJSON (FromIntrospection (G.TypeDefinition [G.Name] G.InputValueDe
         G.TypeDefinitionInputObject . fromIntrospection <$> J.parseJSON (J.Object o)
       _ -> pErr $ "unknown kind: " <> kind
     return $ FromIntrospection r
-
-instance J.ToJSON (WithKinds (G.TypeDefinition [G.Name] G.InputValueDefinition)) where
-  toJSON (WithKinds kinds typeDefinition) = case typeDefinition of
-    G.TypeDefinitionScalar scalarTypeDefinition -> J.toJSON $ FromIntrospection scalarTypeDefinition
-    G.TypeDefinitionObject objectTypeDefinition -> J.toJSON $ WithKinds kinds objectTypeDefinition
-    G.TypeDefinitionInterface interfaceTypeDefinition -> J.toJSON $ WithKinds kinds interfaceTypeDefinition
-    G.TypeDefinitionUnion unionTypeDefinition -> J.toJSON $ WithKinds kinds unionTypeDefinition
-    G.TypeDefinitionEnum enumTypeDefinition -> J.toJSON $ FromIntrospection enumTypeDefinition
-    G.TypeDefinitionInputObject inputObjectTypeDefinition -> J.toJSON $ WithKinds kinds inputObjectTypeDefinition
 
 instance J.FromJSON (FromIntrospection IntrospectionResult) where
   parseJSON = J.withObject "SchemaDocument" $ \o -> do
@@ -518,36 +396,6 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
           (RemoteSchemaIntrospection (fmap fromIntrospection types'))
             queryRoot mutationRoot subsRoot
     return $ FromIntrospection r
-
-instance J.ToJSON (FromIntrospection IntrospectionResult) where
-  toJSON (FromIntrospection IntrospectionResult{..}) = objectWithoutNullValues ["data" .= _data]
-    where
-      _data = objectWithoutNullValues ["__schema" .= schema]
-      schema = objectWithoutNullValues
-                [ "types" .= fmap (WithKinds kinds . fmap _rsitdDefinition) types
-                , "queryType" .= queryType
-                , "mutationType" .= mutationType
-                , "subscriptionType" .= subscriptionType
-                ]
-      RemoteSchemaIntrospection types = irDoc
-      kinds = Map.fromList $ types <&> \case
-        G.TypeDefinitionScalar G.ScalarTypeDefinition{..}           -> (_stdName, "SCALAR")
-        G.TypeDefinitionObject G.ObjectTypeDefinition{..}           -> (_otdName, "OBJECT")
-        G.TypeDefinitionInterface G.InterfaceTypeDefinition{..}     -> (_itdName, "INTERFACE")
-        G.TypeDefinitionUnion G.UnionTypeDefinition{..}             -> (_utdName, "UNION")
-        G.TypeDefinitionEnum G.EnumTypeDefinition{..}               -> (_etdName, "ENUM")
-        G.TypeDefinitionInputObject G.InputObjectTypeDefinition{..} -> (_iotdName, "INPUT_OBJECT")
-      named :: G.Name -> J.Object
-      named = ("name" .=)
-      queryType = named irQueryRoot
-      mutationType = named <$> irMutationRoot
-      subscriptionType = named <$> irSubscriptionRoot
-
-parseIntrospectionResult :: J.Value -> J.Parser IntrospectionResult
-parseIntrospectionResult value = fromIntrospection <$> J.parseJSON value
-
-introspectionResultToJSON :: IntrospectionResult -> J.Value
-introspectionResultToJSON = J.toJSON . FromIntrospection
 
 objectWithoutNullValues :: [J.Pair] -> J.Value
 objectWithoutNullValues = J.object . filter notNull
@@ -671,129 +519,6 @@ getCustomizer IntrospectionResult{..} (Just RemoteSchemaCustomization{..}) = Rem
     _rscCustomizeFieldName = fieldRenameMap
     _rscDecustomizeTypeName = invertMap typeRenameMap
     _rscDecustomizeFieldName = mapMap (mapLookup typeRenameMap *** invertMap) fieldRenameMap
-
-customizeIntrospectionResult :: RemoteSchemaCustomizer -> IntrospectionResult -> IntrospectionResult
-customizeIntrospectionResult remoteSchemaCustomizer IntrospectionResult{..} = IntrospectionResult
-    { irDoc = customizeRemoteSchemaIntrospection irDoc
-    , irQueryRoot = customizedQueryRoot
-    , irMutationRoot = customizedMutationRoot
-    , irSubscriptionRoot = customizedSubscriptionRoot
-    }
-  where
-
-    namespaceField = _rscNamespaceFieldName remoteSchemaCustomizer
-    customizeTypeName = remoteSchemaCustomizeTypeName remoteSchemaCustomizer
-    customizeFieldName = remoteSchemaCustomizeFieldName remoteSchemaCustomizer
-
-    -- Create customized root type names by appending "Query", "Mutation" or "Subscription" to the custom namespace field name
-    customizeRootTypeName suffix = maybe id (const . (<> suffix)) namespaceField
-    customizedQueryRoot = customizeRootTypeName $$(G.litName "Query") irQueryRoot
-    customizedMutationRoot = customizeRootTypeName $$(G.litName "Mutation") <$> irMutationRoot
-    customizedSubscriptionRoot = customizeRootTypeName $$(G.litName "Subscription") <$> irSubscriptionRoot
-
-    -- Create object type definitions for each of the custom namespace root types.
-    -- Each object type has a single field where the field name is
-    -- the custom namespace and the type is the original root type.
-    namespaceRootTypeDefinitions = case namespaceField of
-      Nothing -> []
-      Just namespaceFieldName ->
-        let mkNamespaceTypeDef originalRootTypeName customizedRootTypeName =
-              G.TypeDefinitionObject $ G.ObjectTypeDefinition (Just "custom namespace root type") customizedRootTypeName [] []
-                [G.FieldDefinition (Just "custom namespace field") namespaceFieldName []
-                  (G.TypeNamed (G.Nullability True) $ customizeTypeName originalRootTypeName) []]
-        in catMaybes
-            [ pure $ mkNamespaceTypeDef irQueryRoot customizedQueryRoot
-            , mkNamespaceTypeDef <$> irMutationRoot <*> customizedMutationRoot
-            , mkNamespaceTypeDef <$> irSubscriptionRoot <*> customizedSubscriptionRoot
-            ]
-
-    customizeRemoteSchemaIntrospection :: RemoteSchemaIntrospection -> RemoteSchemaIntrospection
-    customizeRemoteSchemaIntrospection (RemoteSchemaIntrospection typeDefinitions) =
-      RemoteSchemaIntrospection $ namespaceRootTypeDefinitions ++ customizeTypeDefinitions typeDefinitions
-      where
-        customizeTypeDefinitions =
-          if hasTypeOrFieldCustomizations remoteSchemaCustomizer
-            then fmap customizeTypeDefinition
-            else id -- no need to traverse the schema if there are no type or field name customizations
-
-    customizeTypeDefinition :: G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition -> G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition
-    customizeTypeDefinition = \case
-      G.TypeDefinitionScalar scalarTypeDefinition -> G.TypeDefinitionScalar $ customizeScalarTypeDefinition scalarTypeDefinition
-      G.TypeDefinitionObject objectTypeDefinition -> G.TypeDefinitionObject $ customizeObjectTypeDefinition objectTypeDefinition
-      G.TypeDefinitionInterface interfaceTypeDefinition -> G.TypeDefinitionInterface $ customizeInterfaceTypeDefinition interfaceTypeDefinition
-      G.TypeDefinitionUnion unionTypeDefinition -> G.TypeDefinitionUnion $ customizeUnionTypeDefinition unionTypeDefinition
-      G.TypeDefinitionEnum enumTypeDefinition -> G.TypeDefinitionEnum $ customizeEnumTypeDefinition enumTypeDefinition
-      G.TypeDefinitionInputObject inputObjectTypeDefinition -> G.TypeDefinitionInputObject $ customizeInputObjectTypeDefinition inputObjectTypeDefinition
-
-    customizeScalarTypeDefinition :: G.ScalarTypeDefinition  -> G.ScalarTypeDefinition
-    customizeScalarTypeDefinition G.ScalarTypeDefinition{..} =
-      G.ScalarTypeDefinition { _stdName = customizeTypeName _stdName, ..}
-
-    customizeObjectTypeDefinition :: G.ObjectTypeDefinition RemoteSchemaInputValueDefinition -> G.ObjectTypeDefinition RemoteSchemaInputValueDefinition
-    customizeObjectTypeDefinition G.ObjectTypeDefinition{..} =
-      G.ObjectTypeDefinition
-      { _otdName = customizeTypeName _otdName
-      , _otdImplementsInterfaces = customizeTypeName <$> _otdImplementsInterfaces
-      , _otdFieldsDefinition = customizeFieldDefinition (customizeFieldName _otdName) <$> _otdFieldsDefinition
-      , ..
-      }
-
-    customizeType :: G.GType -> G.GType
-    customizeType = \case
-      G.TypeNamed nullability name -> G.TypeNamed nullability $ customizeTypeName name
-      G.TypeList nullability gtype -> G.TypeList nullability $ customizeType gtype
-
-    customizeFieldDefinition :: (G.Name -> G.Name) -> G.FieldDefinition RemoteSchemaInputValueDefinition -> G.FieldDefinition RemoteSchemaInputValueDefinition
-    customizeFieldDefinition customizeFieldName' G.FieldDefinition{..} =
-      G.FieldDefinition
-      { _fldName = customizeFieldName' _fldName
-      , _fldType = customizeType _fldType
-      , _fldArgumentsDefinition = customizeRemoteSchemaInputValueDefinition <$> _fldArgumentsDefinition
-      , ..
-      }
-
-    customizeRemoteSchemaInputValueDefinition :: RemoteSchemaInputValueDefinition -> RemoteSchemaInputValueDefinition
-    customizeRemoteSchemaInputValueDefinition RemoteSchemaInputValueDefinition{..} =
-      RemoteSchemaInputValueDefinition
-      { _rsitdDefinition = customizeInputValueDefinition _rsitdDefinition
-      , ..
-      }
-
-    customizeInputValueDefinition :: G.InputValueDefinition -> G.InputValueDefinition
-    customizeInputValueDefinition G.InputValueDefinition{..} =
-      G.InputValueDefinition
-      { _ivdType = customizeType _ivdType
-      , ..
-      }
-
-    customizeInterfaceTypeDefinition :: G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition -> G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition
-    customizeInterfaceTypeDefinition G.InterfaceTypeDefinition{..} =
-      G.InterfaceTypeDefinition
-      { _itdName = customizeTypeName _itdName
-      , _itdFieldsDefinition = customizeFieldDefinition (customizeFieldName _itdName) <$> _itdFieldsDefinition
-      , _itdPossibleTypes = customizeTypeName <$> _itdPossibleTypes
-      , ..
-      }
-
-    customizeUnionTypeDefinition :: G.UnionTypeDefinition -> G.UnionTypeDefinition
-    customizeUnionTypeDefinition G.UnionTypeDefinition{..} =
-      G.UnionTypeDefinition
-      { _utdName = customizeTypeName _utdName
-      , _utdMemberTypes = customizeTypeName <$> _utdMemberTypes
-      , ..
-      }
-
-    customizeEnumTypeDefinition :: G.EnumTypeDefinition  -> G.EnumTypeDefinition
-    customizeEnumTypeDefinition G.EnumTypeDefinition{..} =
-      G.EnumTypeDefinition { _etdName = customizeTypeName _etdName, ..}
-
-    customizeInputObjectTypeDefinition :: G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition -> G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition
-    customizeInputObjectTypeDefinition G.InputObjectTypeDefinition{..} =
-      G.InputObjectTypeDefinition
-      { _iotdName = customizeTypeName _iotdName
-      , _iotdValueDefinitions = customizeRemoteSchemaInputValueDefinition <$> _iotdValueDefinitions
-      , ..
-      }
 
 throwRemoteSchema
   :: QErrM m

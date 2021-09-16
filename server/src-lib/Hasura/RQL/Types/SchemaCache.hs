@@ -248,8 +248,7 @@ data RemoteSchemaCtx
   , _rscIntroOriginal          :: !IntrospectionResult -- ^ Original remote schema without customizations
   , _rscInfo                   :: !RemoteSchemaInfo
   , _rscRawIntrospectionResult :: !BL.ByteString
-  -- ^ The raw response from the introspection query against the remote server,
-  -- or the serialized customized introspection result if there are schema customizations.
+  -- ^ The raw response from the introspection query against the remote server.
   -- We store this so we can efficiently service 'introspect_remote_schema'.
   , _rscParsed                 ::  ParsedIntrospection -- ^ FieldParsers with schema customizations applied
   , _rscPermissions            :: !(M.HashMap RoleName IntrospectionResult)
