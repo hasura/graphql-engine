@@ -1,5 +1,3 @@
-{-# LANGUAGE StrictData #-}
-
 -- | Types for representing a GraphQL schema.
 module Hasura.GraphQL.Parser.Schema (
   -- * Kinds

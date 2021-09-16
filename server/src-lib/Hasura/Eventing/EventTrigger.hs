@@ -28,8 +28,6 @@ failed requests at a regular (user-configurable) interval.
 
 -}
 
-{-# LANGUAGE StrictData #-}
-
 module Hasura.Eventing.EventTrigger
   ( initEventEngineCtx
   , processEventQueue

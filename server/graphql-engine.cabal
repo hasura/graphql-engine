@@ -72,6 +72,7 @@ common common-all
     RoleAnnotations
     ScopedTypeVariables
     StandaloneDeriving
+    StrictData
     TemplateHaskell
     TupleSections
     TypeApplications

@@ -1,5 +1,3 @@
-{-# LANGUAGE StrictData #-}
-
 -- | Defines the 'Parser' type and its primitive combinators.
 module Hasura.GraphQL.Parser.Internal.Input where
 

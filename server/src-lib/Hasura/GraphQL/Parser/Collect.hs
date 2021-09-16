@@ -1,5 +1,3 @@
-{-# LANGUAGE StrictData #-}
-
 {-| This module implements two parts of the GraphQL specification:
 
   1. <§ 5.3.2 Field Selection Merging http://spec.graphql.org/June2018/#sec-Field-Selection-Merging>

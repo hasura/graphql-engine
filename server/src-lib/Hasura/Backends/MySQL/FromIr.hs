@@ -791,4 +791,3 @@ fromRootField =
     (IR.QDBSingleRow s)    -> mkSQLSelect IR.JASSingleObject s
     (IR.QDBMultipleRows s) -> mkSQLSelect IR.JASMultipleRows s
     (IR.QDBAggregation s)  -> fromSelectAggregate Nothing s
-    (IR.QDBConnection _)   -> refute $ pure ConnectionsNotSupported
