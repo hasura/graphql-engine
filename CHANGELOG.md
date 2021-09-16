@@ -9,6 +9,7 @@
 - server: update `create_scheduled_event` API to return `event_id` in response
 - server: fix bug which allowed inconsistent metadata to exist after the `replace_metadata` API even though `allow_inconsistent_object` is set to `false`.
 - server: fix explicit `null` values not allowed in nested object relationship inserts (#7484)
+- server: prevent empty subscription roots in the schema (#6898)
 - console: support tracking of functions with return a single row
 
 ## v2.0.9
