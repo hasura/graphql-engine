@@ -1,0 +1,38 @@
+-- The project configuration used when building in CI.
+
+reject-unconstrained-dependencies: all
+
+package *
+  ghc-options:
+    -- Tune for the circleci `xlarge` resource class, which provides
+    -- 8 vcpus.
+    -j6
+    -- Limit heap size to 15G, to maintain some breathing room given
+    -- the 16G of available memory.
+    +RTS -M15000m -RTS
+
+package graphql-engine
+  ghc-options:
+    -Werror
+  tests: true
+  benchmarks: true
+
+-- %%%-BEGIN-PRO-ONLY-CONTENT-%%%
+
+-- NOTE:
+-- The label directly above this note marks the beginning of the pro-only
+-- section of this file that should be removed by `Copybara` when migrating
+-- this file to the public `graphql-engine` repository. We use a simple
+-- regular expression to identify these segments (see the "transformations" in
+-- `copy.bara.sky`), so please take care when manipulating this label!
+
+package graphql-engine-pro
+  ghc-options:
+    -O2 -Werror
+    -- Tune for the circleci `2xlarge` resource class, which provides
+    -- 16 vcpus.
+    -j14
+    -- Limit heap size to 31G, to maintain some breathing room given
+    -- the 32G of available memory.
+    +RTS -M31000m -RTS
+  tests: true
