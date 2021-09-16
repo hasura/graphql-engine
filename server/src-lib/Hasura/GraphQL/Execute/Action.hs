@@ -26,12 +26,10 @@ import qualified Data.CaseInsensitive                      as CI
 import qualified Data.Environment                          as Env
 import qualified Data.HashMap.Strict                       as Map
 import qualified Data.IntMap                               as IntMap
-import qualified Data.Text                                 as T
 import qualified Database.PG.Query                         as Q
 
 import qualified Language.GraphQL.Draft.Syntax             as G
-import qualified Network.HTTP.Client                       as HTTP
-import qualified Network.HTTP.Types                        as HTTP
+import qualified Network.HTTP.Client.Transformable         as HTTP
 import qualified Network.Wreq                              as Wreq
 
 import           Control.Concurrent.Extended               (Forever (..), sleep)
@@ -63,12 +61,12 @@ import           Hasura.GraphQL.Parser
 import           Hasura.HTTP
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.DDL.RequestTransform
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Server.Utils                       (mkClientHeadersForward,
                                                             mkSetCookieHeaders)
-import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
 
 fetchActionLogResponses
@@ -107,8 +105,7 @@ runActionExecution userInfo aep =
 
 -- | Synchronously execute webhook handler and resolve response to action "output"
 resolveActionExecution
-  :: (HasVersion)
-  => Env.Environment
+  :: Env.Environment
   -> L.Logger L.Hasura
   -> UserInfo
   -> AnnActionExecution ('Postgres 'Vanilla) (Const Void) (UnpreparedValue ('Postgres 'Vanilla))
@@ -130,7 +127,7 @@ resolveActionExecution env logger userInfo annAction execContext =
   where
     AnnActionExecution actionName outputType annFields inputPayload
       outputFields definitionList resolvedWebhook confHeaders
-      forwardClientHeaders stringifyNum timeout actionSource = annAction
+      forwardClientHeaders stringifyNum timeout actionSource metadataTransform = annAction
     ActionExecContext manager reqHeaders sessionVariables = execContext
     actionContext = ActionContext actionName
     handlerPayload = ActionWebhookPayload actionContext sessionVariables inputPayload
@@ -143,11 +140,11 @@ resolveActionExecution env logger userInfo annAction execContext =
       liftEitherM $ runExceptT $ runTx (_pscExecCtx sourceConfig) Q.ReadOnly $
         liftTx $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) prepArgs
 
-    runWebhook :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
+    runWebhook :: (MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
                => m (ActionWebhookResponse, HTTP.ResponseHeaders)
     runWebhook = flip runReaderT logger $
       callWebhook env manager outputType outputFields reqHeaders confHeaders
-        forwardClientHeaders resolvedWebhook handlerPayload timeout
+        forwardClientHeaders resolvedWebhook handlerPayload timeout metadataTransform
 
 -- | Build action response from the Webhook JSON response when there are no relationships defined
 makeActionResponseNoRelations :: RS.AnnFieldsG b r v -> ActionWebhookResponse -> AO.Value
@@ -298,8 +295,7 @@ resolveAsyncActionQuery userInfo annAction =
 -- See Note [Async action architecture] above
 asyncActionsProcessor
   :: forall m
-   . ( HasVersion
-     , MonadIO m
+   . ( MonadIO m
      , MonadBaseControl IO m
      , LA.Forall (LA.Pure m)
      , Tracing.HasReporter m
@@ -349,11 +345,12 @@ asyncActionsProcessor env logger cacheRef lockedActionEvents httpManager sleepTi
               timeout = _adTimeout definition
               outputType = _adOutputType definition
               actionContext = ActionContext actionName
+              metadataTransform = _aiRequestTransform actionInfo
           eitherRes <- runExceptT $ flip runReaderT logger $
                        callWebhook env httpManager outputType outputFields reqHeaders confHeaders
                          forwardClientHeaders webhookUrl
                          (ActionWebhookPayload actionContext sessionVariables inputPayload)
-                         timeout
+                         timeout metadataTransform
           resE <- runMetadataStorageT $ setActionStatus actionId $ case eitherRes of
               Left e                     -> AASError e
               Right (responsePayload, _) -> AASCompleted $ J.toJSON responsePayload
@@ -362,8 +359,7 @@ asyncActionsProcessor env logger cacheRef lockedActionEvents httpManager sleepTi
 
 callWebhook
   :: forall m r.
-  ( HasVersion
-  , MonadIO m
+  ( MonadIO m
   , MonadError QErr m
   , Tracing.MonadTrace m
   , MonadReader r m
@@ -379,29 +375,39 @@ callWebhook
   -> ResolvedWebhook
   -> ActionWebhookPayload
   -> Timeout
+  -> Maybe MetadataTransform
   -> m (ActionWebhookResponse, HTTP.ResponseHeaders)
 callWebhook env manager outputType outputFields reqHeaders confHeaders
-            forwardClientHeaders resolvedWebhook actionWebhookPayload timeoutSeconds = do
+            forwardClientHeaders resolvedWebhook actionWebhookPayload timeoutSeconds metadataTransform = do
   resolvedConfHeaders <- makeHeadersFromConf env confHeaders
-  let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else []
-      contentType = ("Content-Type", "application/json")
+  let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else mempty
       -- Using HashMap to avoid duplicate headers between configuration headers
       -- and client headers where configuration headers are preferred
-      hdrs = contentType : (Map.toList . Map.fromList) (resolvedConfHeaders <> clientHeaders)
+      hdrs = ("Content-Type", "application/json") : (Map.toList . Map.fromList) (resolvedConfHeaders <> clientHeaders)
       postPayload = J.toJSON actionWebhookPayload
       requestBody = J.encode postPayload
       requestBodySize = BL.length requestBody
-      url = unResolvedWebhook resolvedWebhook
       responseTimeout = HTTP.responseTimeoutMicro $ (unTimeout timeoutSeconds) * 1000000
-  httpResponse <- do
-    initReq <- liftIO $ HTTP.parseRequest (T.unpack url)
-    let req = initReq { HTTP.method          = "POST"
-                      , HTTP.requestHeaders  = addDefaultHeaders hdrs
-                      , HTTP.requestBody     = HTTP.RequestBodyLBS requestBody
-                      , HTTP.responseTimeout = responseTimeout
-                      }
-    Tracing.tracedHttpRequest req \req' ->
-      liftIO . try $ HTTP.httpLbs req' manager
+      url = unResolvedWebhook resolvedWebhook
+      sessionVars = Just $ _awpSessionVariables actionWebhookPayload
+
+  initReq <- liftIO $ HTTP.mkRequestThrow url
+
+  let req =
+        initReq
+          & set HTTP.method "POST"
+          & set HTTP.headers hdrs
+          & set HTTP.body (Just requestBody)
+          & set HTTP.timeout responseTimeout
+
+      transformedReq = (\rt -> applyRequestTransform rt req sessionVars) . mkRequestTransform <$>  metadataTransform
+      transformedPayloadSize = pure $ HTTP.getReqSize req
+      actualReq = fromMaybe req transformedReq
+
+  httpResponse <-
+    Tracing.tracedHttpRequest actualReq $ \request ->
+      liftIO . try $ HTTP.performRequest request manager
+
   let requestInfo = ActionRequestInfo url postPayload $
                      confHeaders <> toHeadersConf clientHeaders
   case httpResponse of
@@ -420,7 +426,7 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
 
       -- log the request and response to/from the action handler
       logger :: (L.Logger L.Hasura) <- asks getter
-      L.unLogger logger $ ActionHandlerLog requestBodySize responseBodySize actionName
+      L.unLogger logger $ ActionHandlerLog req transformedReq requestBodySize transformedPayloadSize responseBodySize actionName
 
       case J.eitherDecode responseBody of
         Left e -> do

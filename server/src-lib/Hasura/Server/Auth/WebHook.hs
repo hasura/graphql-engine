@@ -11,7 +11,7 @@ import qualified Data.Aeson                             as J
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.Text                              as T
-import qualified Network.HTTP.Client                    as H
+import qualified Network.HTTP.Client.Transformable      as H
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wreq                           as Wreq
 
@@ -80,21 +80,21 @@ userInfoFromAuthHook logger manager hook reqHeaders reqs = do
     performHTTPRequest :: m (Wreq.Response BL.ByteString)
     performHTTPRequest =  do
       let url = T.unpack $ ahUrl hook
-      req <- liftIO $ H.parseRequest url
+      req <- liftIO $ H.mkRequestThrow $ T.pack url
       Tracing.tracedHttpRequest req \req' -> liftIO do
         case ahType hook of
           AHTGet  -> do
             let isCommonHeader  = (`elem` commonClientHeadersIgnored)
                 filteredHeaders = filter (not . isCommonHeader . fst) reqHeaders
-            H.httpLbs (req' { H.requestHeaders = addDefaultHeaders filteredHeaders }) manager
+                req'' = req' & set H.headers (addDefaultHeaders filteredHeaders)
+            H.performRequest req'' manager
           AHTPost -> do
             let contentType = ("Content-Type", "application/json")
                 headersPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
-            H.httpLbs (req' { H.method         = "POST"
-                           , H.requestHeaders = addDefaultHeaders [contentType]
-                           , H.requestBody    = H.RequestBodyLBS . J.encode $ object ["headers" J..= headersPayload,
-                                                                                     "request" J..= reqs]
-                           }) manager
+                req'' = req & set H.method "POST"
+                            & set H.headers (addDefaultHeaders [contentType])
+                            & set H.body (Just $ J.encode $ object ["headers" J..= headersPayload, "request" J..= reqs])
+            H.performRequest req'' manager
 
     logAndThrow :: H.HttpException -> m a
     logAndThrow err = do

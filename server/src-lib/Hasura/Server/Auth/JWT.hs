@@ -30,47 +30,46 @@ module Hasura.Server.Auth.JWT
 
 import           Hasura.Prelude
 
-import qualified Control.Concurrent.Extended     as C
-import qualified Crypto.JWT                      as Jose
-import qualified Data.Aeson                      as J
-import qualified Data.Aeson.Casing               as J
-import qualified Data.Aeson.TH                   as J
-import qualified Data.ByteString.Lazy            as BL
-import qualified Data.ByteString.Lazy.Char8      as BLC
-import qualified Data.CaseInsensitive            as CI
-import qualified Data.HashMap.Strict             as Map
-import qualified Data.Text                       as T
-import qualified Data.Text.Encoding              as T
-import qualified Network.HTTP.Client             as HTTP
-import qualified Network.HTTP.Types              as HTTP
-import qualified Network.Wreq                    as Wreq
-import qualified Web.Spock.Internal.Cookies      as Spock
+import qualified Control.Concurrent.Extended       as C
+import qualified Crypto.JWT                        as Jose
+import qualified Data.Aeson                        as J
+import qualified Data.Aeson.Casing                 as J
+import qualified Data.Aeson.TH                     as J
+import qualified Data.ByteString.Lazy              as BL
+import qualified Data.ByteString.Lazy.Char8        as BLC
+import qualified Data.CaseInsensitive              as CI
+import qualified Data.HashMap.Strict               as Map
+import qualified Data.Text                         as T
+import qualified Data.Text.Encoding                as T
+import qualified Network.HTTP.Client.Transformable as HTTP
+import qualified Network.Wreq                      as Wreq
+import qualified Web.Spock.Internal.Cookies        as Spock
 
-import           Control.Exception.Lifted        (try)
+import           Control.Exception.Lifted          (try)
 import           Control.Lens
-import           Control.Monad.Trans.Control     (MonadBaseControl)
-import           Data.Aeson.Internal             (JSONPath)
-import           Data.IORef                      (IORef, readIORef, writeIORef)
+import           Control.Monad.Trans.Control       (MonadBaseControl)
+import           Data.Aeson.Internal               (JSONPath)
+import           Data.IORef                        (IORef, readIORef, writeIORef)
 import           Data.Parser.CacheControl
 import           Data.Parser.Expires
-import           Data.Parser.JSONPath            (parseJSONPath)
-import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
-                                                  getCurrentTime)
+import           Data.Parser.JSONPath              (parseJSONPath)
+import           Data.Time.Clock                   (NominalDiffTime, UTCTime, diffUTCTime,
+                                                    getCurrentTime)
 #ifndef PROFILING
 import           GHC.AssertNF
 #endif
-import           Network.URI                     (URI)
+import           Network.URI                       (URI)
 
-import qualified Hasura.Tracing                  as Tracing
+import qualified Hasura.Tracing                    as Tracing
 
 import           Hasura.Base.Error
 import           Hasura.HTTP
-import           Hasura.Logging                  (Hasura, LogLevel (..), Logger (..))
-import           Hasura.Server.Auth.JWT.Internal (parseEdDSAKey, parseHmacKey, parseRsaKey)
+import           Hasura.Logging                    (Hasura, LogLevel (..), Logger (..))
+import           Hasura.Server.Auth.JWT.Internal   (parseEdDSAKey, parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader,
-                                                  isSessionVariable, userRoleHeader)
-import           Hasura.Server.Version           (HasVersion)
+import           Hasura.Server.Utils               (executeJSONPath, getRequestHeader,
+                                                    isSessionVariable, userRoleHeader)
+import           Hasura.Server.Version             (HasVersion)
 import           Hasura.Session
 
 
@@ -281,10 +280,11 @@ updateJwkRef (Logger logger) manager url jwkRef = do
       infoMsg = "refreshing JWK from endpoint: " <> urlT
   liftIO $ logger $ JwkRefreshLog LevelInfo (Just infoMsg) Nothing
   res <- try $ do
-    initReq <- liftIO $ HTTP.parseRequest $ show url
-    let req = initReq { HTTP.requestHeaders = addDefaultHeaders (HTTP.requestHeaders initReq) }
-    Tracing.tracedHttpRequest req \req' -> do
-      liftIO $ HTTP.httpLbs req' manager
+    req <- liftIO $ HTTP.mkRequestThrow $ tshow url
+    let req' = req & over HTTP.headers addDefaultHeaders
+
+    Tracing.tracedHttpRequest req' \req'' -> do
+      liftIO $ HTTP.performRequest req'' manager
   resp <- onLeft res logAndThrowHttp
   let status = resp ^. Wreq.responseStatus
       respBody = resp ^. Wreq.responseBody

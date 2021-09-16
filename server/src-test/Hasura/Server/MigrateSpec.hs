@@ -7,7 +7,7 @@ import           Hasura.Prelude
 import qualified Data.ByteString.Lazy.UTF8           as LBS
 import qualified Data.Environment                    as Env
 import qualified Database.PG.Query                   as Q
-import qualified Network.HTTP.Client.Extended        as HTTP
+import qualified Network.HTTP.Client.Manager         as HTTP
 
 import           Control.Concurrent.MVar.Lifted
 import           Control.Monad.Morph

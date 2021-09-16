@@ -628,10 +628,11 @@ metadataToOrdJSON ( Metadata
                       ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
 
         eventTriggerConfToOrdJSON :: forall b. Backend b => EventTriggerConf b -> AO.Value
-        eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers) =
+        eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers metadataTransform) =
           AO.object $ [ ("name", AO.toOrdered name)
                       , ("definition", AO.toOrdered definition)
                       , ("retry_conf", AO.toOrdered retryConf)
+                      , ("transform", maybe AO.Null AO.toOrdered metadataTransform)
                       ] <> catMaybes [ maybeAnyToMaybeOrdPair "webhook" AO.toOrdered webhook
                                      , maybeAnyToMaybeOrdPair "webhook_from_env" AO.toOrdered webhookFromEnv
                                      , headers >>= listToMaybeOrdPair "headers" AO.toOrdered
@@ -765,9 +766,10 @@ metadataToOrdJSON ( Metadata
 
 
     actionMetadataToOrdJSON :: ActionMetadata -> AO.Value
-    actionMetadataToOrdJSON (ActionMetadata name comment definition permissions) =
+    actionMetadataToOrdJSON (ActionMetadata name comment definition permissions metaTransform) =
       AO.object $ [ ("name", AO.toOrdered name)
                   , ("definition", actionDefinitionToOrdJSON definition)
+                  , ("transform", AO.toOrdered metaTransform)
                   ]
       <> catMaybes [ maybeCommentToMaybeOrdPair comment
                    , listToMaybeOrdPair "permissions" permToOrdJSON permissions

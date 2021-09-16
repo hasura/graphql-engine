@@ -3,43 +3,45 @@ module Main (main) where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                           as A
-import qualified Data.ByteString.Lazy.Char8           as BL
-import qualified Data.Environment                     as Env
-import qualified Data.NonNegativeIntSpec              as NonNegetiveIntSpec
-import qualified Data.Parser.CacheControlSpec         as CacheControlParser
-import qualified Data.Parser.JSONPathSpec             as JsonPath
-import qualified Data.TimeSpec                        as TimeSpec
-import qualified Database.PG.Query                    as Q
-import qualified Network.HTTP.Client                  as HTTP
-import qualified Network.HTTP.Client.TLS              as HTTP
-import qualified Test.Hspec.Runner                    as Hspec
+import qualified Data.Aeson                            as A
+import qualified Data.ByteString.Lazy.Char8            as BL
+import qualified Data.Environment                      as Env
+import qualified Data.NonNegativeIntSpec               as NonNegetiveIntSpec
+import qualified Data.Parser.CacheControlSpec          as CacheControlParser
+import qualified Data.Parser.JSONPathSpec              as JsonPath
+import qualified Data.TimeSpec                         as TimeSpec
+import qualified Database.PG.Query                     as Q
+import qualified Network.HTTP.Client                   as HTTP
+import qualified Network.HTTP.Client.TLS               as HTTP
+import qualified Test.Hspec.Runner                     as Hspec
 
 import           Control.Concurrent.MVar
-import           Control.Natural                      ((:~>) (..))
-import           Data.Time.Clock                      (getCurrentTime)
+import           Control.Natural                       ((:~>) (..))
+import           Data.Time.Clock                       (getCurrentTime)
 import           Data.URL.Template
 import           Options.Applicative
-import           System.Environment                   (getEnvironment)
-import           System.Exit                          (exitFailure)
+import           System.Environment                    (getEnvironment)
+import           System.Exit                           (exitFailure)
 import           Test.Hspec
 
-import qualified Database.MSSQL.TransactionSpec       as TransactionSpec
-import qualified Hasura.EventingSpec                  as EventingSpec
-import qualified Hasura.GraphQL.Parser.DirectivesTest as GraphQLDirectivesSpec
-import qualified Hasura.GraphQL.RemoteServerSpec      as RemoteServerSpec
-import qualified Hasura.GraphQL.Schema.RemoteTest     as GraphRemoteSchemaSpec
-import qualified Hasura.IncrementalSpec               as IncrementalSpec
-import qualified Hasura.RQL.PermissionSpec            as PermSpec
-import qualified Hasura.RQL.Types.CommonSpec          as CommonTypesSpec
-import qualified Hasura.RQL.Types.EndpointSpec        as EndpointSpec
-import qualified Hasura.SQL.WKTSpec                   as WKTSpec
-import qualified Hasura.Server.AuthSpec               as AuthSpec
-import qualified Hasura.Server.MigrateSpec            as MigrateSpec
-import qualified Hasura.Server.TelemetrySpec          as TelemetrySpec
+import qualified Database.MSSQL.TransactionSpec        as TransactionSpec
+import qualified Hasura.EventingSpec                   as EventingSpec
+import qualified Hasura.GraphQL.Parser.DirectivesTest  as GraphQLDirectivesSpec
+import qualified Hasura.GraphQL.RemoteServerSpec       as RemoteServerSpec
+import qualified Hasura.GraphQL.Schema.RemoteTest      as GraphRemoteSchemaSpec
+import qualified Hasura.IncrementalSpec                as IncrementalSpec
+import qualified Hasura.RQL.PermissionSpec             as PermSpec
+import qualified Hasura.RQL.RequestTransformSpec       as RequestTransformSpec
+import qualified Hasura.RQL.Types.CommonSpec           as CommonTypesSpec
+import qualified Hasura.RQL.Types.EndpointSpec         as EndpointSpec
+import qualified Hasura.SQL.WKTSpec                    as WKTSpec
+import qualified Hasura.Server.AuthSpec                as AuthSpec
+import qualified Hasura.Server.MigrateSpec             as MigrateSpec
+import qualified Hasura.Server.TelemetrySpec           as TelemetrySpec
+import qualified Network.HTTP.Client.TransformableSpec as TransformableSpec
 
-import           Hasura.App                           (PGMetadataStorageAppT (..),
-                                                       mkPgSourceResolver)
+import           Hasura.App                            (PGMetadataStorageAppT (..),
+                                                        mkPgSourceResolver)
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DDL.Schema.Cache.Common
@@ -94,6 +96,8 @@ unitSpecs = do
   describe "Hasura.Server.Auth" AuthSpec.spec
   describe "Hasura.Server.Telemetry" TelemetrySpec.spec
   describe "Hasura.RQL.PermissionSpec" PermSpec.spec
+  describe "Hasura.RQL.RequestTransformSpec" RequestTransformSpec.spec
+  describe "Network.HTTP.Client.TransformableSpec" TransformableSpec.spec
 
 buildMSSQLSpecs :: Maybe URLTemplate -> IO Spec
 buildMSSQLSpecs maybeUrlTemplate = do

@@ -7,19 +7,20 @@ module Hasura.RQL.DDL.Schema.Cache.Common where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict.Extended as M
-import qualified Data.HashMap.Strict.InsOrd   as OMap
-import qualified Data.HashSet                 as HS
-import qualified Data.Sequence                as Seq
-import qualified Network.HTTP.Client.Extended as HTTP
+import qualified Data.HashMap.Strict.Extended      as M
+import qualified Data.HashMap.Strict.InsOrd        as OMap
+import qualified Data.HashSet                      as HS
+import qualified Data.Sequence                     as Seq
+import qualified Network.HTTP.Client.Transformable as HTTP
 
 import           Control.Arrow.Extended
 import           Control.Lens
-import           Control.Monad.Trans.Control  (MonadBaseControl)
+import           Control.Monad.Trans.Control       (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Text.Extended
+import           Network.HTTP.Client.Manager       (HasHttpManagerM (..))
 
-import qualified Hasura.Incremental           as Inc
+import qualified Hasura.Incremental                as Inc
 
 import           Hasura.Base.Error
 import           Hasura.RQL.Types
@@ -141,7 +142,7 @@ newtype CacheBuild a
            , MonadUnique
            )
 
-instance HTTP.HasHttpManagerM CacheBuild where
+instance HasHttpManagerM CacheBuild where
   askHttpManager = asks _cbpManager
 
 instance HasServerConfigCtx CacheBuild where
@@ -161,14 +162,14 @@ runCacheBuild params (CacheBuild m) = do
 runCacheBuildM
   :: ( MonadIO m
      , MonadError QErr m
-     , HTTP.HasHttpManagerM m
+     , HasHttpManagerM m
      , HasServerConfigCtx m
      , MonadResolveSource m
      )
   => CacheBuild a -> m a
 runCacheBuildM m = do
   params <- CacheBuildParams
-            <$> HTTP.askHttpManager
+            <$> askHttpManager
             <*> getSourceResolver
             <*> askServerConfigCtx
   runCacheBuild params m

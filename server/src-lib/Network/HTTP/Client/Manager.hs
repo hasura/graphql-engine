@@ -1,6 +1,6 @@
-module Network.HTTP.Client.Extended
+module Network.HTTP.Client.Manager
   ( HasHttpManagerM(..)
-  , module HTTP
+  , HTTP.Manager
   ) where
 
 import           Control.Monad.Except
@@ -8,7 +8,6 @@ import           Control.Monad.Reader
 import           Control.Monad.State.Strict
 import           Control.Monad.Writer.Strict
 import           Network.HTTP.Client         as HTTP
-
 
 class (Monad m) => HasHttpManagerM m where
   askHttpManager :: m HTTP.Manager

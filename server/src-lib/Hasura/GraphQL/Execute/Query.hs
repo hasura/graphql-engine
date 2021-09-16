@@ -34,7 +34,6 @@ import           Hasura.GraphQL.Parser.Directives
 import           Hasura.QueryTags
 import           Hasura.RQL.IR
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
 
 import           Hasura.Server.Types                       (RequestId (..))
@@ -60,7 +59,6 @@ parseGraphQLQuery gqlContext varDefs varValsM directives fields = do
 convertQuerySelSet
   :: forall m .
      ( MonadError QErr m
-     , HasVersion
      , MonadGQLExecutionCheck m
      , MonadQueryTags m
      )

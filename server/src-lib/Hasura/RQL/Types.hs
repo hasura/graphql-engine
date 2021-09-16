@@ -40,7 +40,7 @@ import qualified Database.PG.Query                           as Q
 import           Control.Lens                                (Traversal', at, preview, (^.))
 import           Control.Monad.Unique
 import           Data.Text.Extended
-import           Network.HTTP.Client.Extended                (HasHttpManagerM (..))
+import           Network.HTTP.Client.Manager                 (HasHttpManagerM (..))
 
 import           Hasura.Backends.Postgres.Connection         as R
 import           Hasura.Base.Error

@@ -41,7 +41,8 @@ from3To4 = liftTx $ Q.catchE defaultTxErrorHandler $ do
       DROP COLUMN webhook,
       DROP COLUMN num_retries,
       DROP COLUMN retry_interval,
-      DROP COLUMN headers |] () False
+      DROP COLUMN headers,
+      DROP COLUMN metadataTransform|] () False
     where
       uncurryEventTrigger
         :: ( TriggerName
@@ -52,8 +53,8 @@ from3To4 = liftTx $ Q.catchE defaultTxErrorHandler $ do
            , Q.AltJ (Maybe [HeaderConf]))
         -> EventTriggerConf ('Postgres 'Vanilla)
       uncurryEventTrigger (trn, Q.AltJ tDef, w, nr, rint, Q.AltJ headers) =
-        EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint Nothing) headers
-      updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _) = Q.unitQ [Q.sql|
+        EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint Nothing) headers Nothing
+      updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _ _) = Q.unitQ [Q.sql|
                                             UPDATE hdb_catalog.event_triggers
                                             SET
                                             configuration = $1

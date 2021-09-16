@@ -4,6 +4,10 @@ args:
   args:
     name: create_user
     clear_data: true
+- type: drop_action # also drops the permissions
+  args:
+    name: create_user_transformed
+    clear_data: true
 # clear custom types
 - type: set_custom_types
   args: {}

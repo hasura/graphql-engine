@@ -19,8 +19,7 @@ import qualified Data.Text                                  as T
 import qualified Data.Time.Clock                            as Clock
 import qualified Data.Yaml                                  as Y
 import qualified Database.PG.Query                          as Q
-import qualified Network.HTTP.Client                        as HTTP
-import qualified Network.HTTP.Client.TLS                    as HTTP
+import qualified Network.HTTP.Client.Transformable          as HTTP
 import qualified Network.Wai.Handler.Warp                   as Warp
 import qualified System.Log.FastLogger                      as FL
 import qualified System.Metrics                             as EKG
@@ -45,7 +44,7 @@ import           Data.Time.Clock                            (UTCTime)
 import           GHC.AssertNF
 #endif
 
-import           Network.HTTP.Client.Extended
+import           Network.HTTP.Client.Manager                (HasHttpManagerM (..))
 import           Options.Applicative
 import           System.Environment                         (getEnvironment)
 

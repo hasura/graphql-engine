@@ -36,6 +36,11 @@ package graphql-engine
 
 source-repository-package
   type: git
+  location: git@github.com:hasura/kriti-lang.git
+  tag: 4e0abe382f0326be7aab23fe33767390f0924b98
+
+source-repository-package
+  type: git
   location: https://github.com/hasura/pg-client-hs.git
   tag: f34319871aa5b7bc30551164bcf396f3b664631c
 

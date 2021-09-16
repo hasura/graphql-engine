@@ -46,9 +46,14 @@ def validate_event_headers(ev_headers, headers):
         v = ev_headers.get(key)
         assert v == value, (key, v)
 
+def validate_removed_event_headers (ev_headers, headers):
+    for key in headers:
+        v = ev_headers.get(key)
+        assert (not v), (key, v)
 
 def validate_event_webhook(ev_webhook_path, webhook_path):
     assert ev_webhook_path == webhook_path
+
 
 # Make some assertions on a single event recorded by webhook. Waits up to 3
 # seconds by default for an event to appear
@@ -68,6 +73,20 @@ def check_event(hge_ctx, evts_webhook, trig_name, table, operation, exp_ev_data,
     assert ev['session_variables'] == session_variables, ev
     assert ev['data'] == exp_ev_data, ev
     assert ev_full['body']['delivery_info']['current_retry'] == retry
+
+
+def check_event_transformed(hge_ctx, evts_webhook, exp_payload,
+                            headers = {},
+                            webhook_path = '/',
+                            session_variables = {'x-hasura-role': 'admin'},
+                            retry = 0,
+                            get_timeout = 3,
+                            removedHeaders = []):
+    ev_full = evts_webhook.get_event(get_timeout)
+    validate_event_webhook(ev_full['path'], webhook_path)
+    validate_event_headers(ev_full['headers'], headers)
+    validate_removed_event_headers(ev_full['headers'], removedHeaders)
+    assert ev_full['body'] == exp_payload
 
 
 def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):

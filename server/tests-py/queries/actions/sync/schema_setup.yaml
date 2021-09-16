@@ -113,6 +113,28 @@ args:
 
 - type: create_action
   args:
+    name: mirror_transformed
+    definition:
+      kind: synchronous
+      arguments:
+      - name: arg
+        type: InObject!
+      output_type: OutObject
+      handler: http://127.0.0.1:5593/mirror-action
+    transform:
+      template_engine: Kriti
+      body: |
+        {
+          "input": {
+            "arg": {
+              "id": {{ $.input.arg.name }},
+              "name": {{ $.input.arg.id }}
+            }
+          }
+        }
+
+- type: create_action
+  args:
     name: get_user_by_email
     definition:
       type: query
