@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 module Hasura.Server.Auth.JWT
   ( processJwt
   , RawJWT
@@ -55,9 +54,7 @@ import           Data.Parser.Expires
 import           Data.Parser.JSONPath              (parseJSONPath)
 import           Data.Time.Clock                   (NominalDiffTime, UTCTime, diffUTCTime,
                                                     getCurrentTime)
-#ifndef PROFILING
-import           GHC.AssertNF
-#endif
+import           GHC.AssertNF.CPP
 import           Network.URI                       (URI)
 
 import qualified Hasura.Tracing                    as Tracing
@@ -298,9 +295,7 @@ updateJwkRef (Logger logger) manager url jwkRef = do
   let parseErr e = JFEJwkParseError (T.pack e) $ "Error parsing JWK from url: " <> urlT
   !jwkset <- onLeft (J.eitherDecode' respBody) (logAndThrow . parseErr)
   liftIO $ do
-#ifndef PROFILING
     $assertNFHere jwkset  -- so we don't write thunks to mutable vars
-#endif
     writeIORef jwkRef jwkset
 
   -- first check for Cache-Control header to get max-age, if not found, look for Expires header

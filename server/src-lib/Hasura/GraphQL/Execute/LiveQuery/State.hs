@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 -- | Top-level management of live query poller threads. The implementation of the polling itself is
 -- in "Hasura.GraphQL.Execute.LiveQuery.Poll". See "Hasura.GraphQL.Execute.LiveQuery" for high-level
 -- details.
@@ -34,9 +33,7 @@ import           Control.Concurrent.Extended                 (forkImmortal, slee
 import           Control.Exception                           (mask_)
 import           Data.String
 import           Data.Text.Extended
-#ifndef PROFILING
-import           GHC.AssertNF
-#endif
+import           GHC.AssertNF.CPP
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.TMap       as TMap
 import qualified Hasura.Logging                              as L
@@ -116,9 +113,7 @@ addLiveQuery logger serverMetrics subscriberMetadata lqState
 
   let !subscriber = Subscriber subscriberId subscriberMetadata requestId operationName onResultAction
 
-#ifndef PROFILING
   $assertNFHere subscriber  -- so we don't write thunks to mutable vars
-#endif
 
   -- a handler is returned only when it is newly created
   handlerM <- STM.atomically $
@@ -142,9 +137,7 @@ addLiveQuery logger serverMetrics subscriberMetadata lqState
       pollQuery @b pollerId lqOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts handler) postPollHook
       sleep $ unNonNegativeDiffTime $ unRefetchInterval refetchInterval
     let !pState = PollerIOState threadRef pollerId
-#ifndef PROFILING
     $assertNFHere pState  -- so we don't write thunks to mutable vars
-#endif
     STM.atomically $ STM.putTMVar (_pIOState handler) pState
 
   liftIO $ EKG.Gauge.inc $ smActiveSubscriptions serverMetrics

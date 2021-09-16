@@ -117,6 +117,7 @@ library
                      , dependent-sum
                      , exceptions
                      , fast-logger
+                     , ghc-heap-view
                      , hashable
                      , hashable-time
                      , http-client-tls
@@ -287,13 +288,6 @@ library
                      , mysql
                      , mysql-simple
 
-
-  if !flag(profiling)
-    build-depends:
-      -- 0.6.1 is supposedly not okay for ghc 8.6:
-      --   https://github.com/nomeata/ghc-heap-view/issues/27
-      ghc-heap-view
-
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Trans
                      , Control.Concurrent.Extended
@@ -318,6 +312,7 @@ library
                      , Data.Time.Clock.Units
                      , Data.URL.Template
                      , Database.MSSQL.Transaction
+                     , GHC.AssertNF.CPP
                      , GHC.Stats.Extended
                      , Hasura.App
                      , Hasura.Metadata.Class

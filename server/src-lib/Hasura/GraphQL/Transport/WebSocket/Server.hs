@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                      #-}
 {-# LANGUAGE NondecreasingIndentation #-}
 {-# LANGUAGE OverloadedStrings        #-}
 
@@ -20,9 +19,7 @@ import qualified Data.TByteString                            as TBS
 import qualified Data.UUID                                   as UUID
 import qualified Data.UUID.V4                                as UUID
 import           Data.Word                                   (Word16)
-#ifndef PROFILING
-import           GHC.AssertNF
-#endif
+import           GHC.AssertNF.CPP
 import           GHC.Int                                     (Int64)
 import           Hasura.Prelude
 import qualified ListT
@@ -157,9 +154,7 @@ closeConnWithCode wsConn code bs = do
 -- so that sendMsg doesn't block
 sendMsg :: WSConn a -> WSQueueResponse -> IO ()
 sendMsg wsConn !resp = do
-#ifndef PROFILING
   $assertNFHere resp  -- so we don't write thunks to mutable vars
-#endif
   STM.atomically $ STM.writeTQueue (_wcSendQ wsConn) resp
 
 type ConnMap a = STMMap.Map WSId (WSConn a)
@@ -326,9 +321,7 @@ createServerApp wsConnInitTimeout (WSServer logger@(L.Logger writeLog) serverSta
       --      Requires a fork of 'wai-websockets' and 'websockets', it looks like.
       --      Adding `package` stanzas with -Xstrict -XStrictData for those two packages
       --      helped, cutting the number of thunks approximately in half.
-#   ifndef PROFILING
       liftIO $ $assertNFHere wsConn  -- so we don't write thunks to mutable vars
-#   endif
 
       let whenAcceptingInsertConn = liftIO $ STM.atomically $ do
             status <- STM.readTVar serverStatus
