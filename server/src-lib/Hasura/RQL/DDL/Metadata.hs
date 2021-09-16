@@ -329,7 +329,7 @@ runExportMetadataV2
   :: forall m . ( QErrM m, MetadataM m, HasServerConfigCtx m)
   => MetadataResourceVersion -> ExportMetadata -> m EncJSON
 runExportMetadataV2 currentResourceVersion ExportMetadata{} = do
-  exportMetadata <- processExperimentalFeatures =<< getMetadata
+  exportMetadata <- processMetadata =<< getMetadata
   pure $ encJFromOrderedValue $ AO.object
     [ ("resource_version", AO.toOrdered currentResourceVersion)
     , ("metadata", metadataToOrdJSON exportMetadata)
