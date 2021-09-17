@@ -70,7 +70,7 @@ data SysColumn = SysColumn
   , scColumnId                :: Int
   , scUserTypeId              :: Int
   , scIsNullable              :: Bool
-  , scIsIdentity              :: IsIdentityColumn
+  , scIsIdentity              :: Bool
   , scJoinedSysType           :: SysType
   , scJoinedForeignKeyColumns :: [SysForeignKeyColumn]
   } deriving (Show, Generic)
@@ -113,6 +113,8 @@ transformTable tableInfo =
       tableOID   = OID $ staObjectId tableInfo
       (columns, foreignKeys) = unzip $ transformColumn <$> staJoinedSysColumn tableInfo
       foreignKeysMetadata = HS.fromList $ map ForeignKeyMetadata $ coalesceKeys $ concat foreignKeys
+      identityColumns = map (ColumnName . scName) $
+                        filter scIsIdentity $ staJoinedSysColumn tableInfo
   in ( tableName
      , DBTableMetadata
        tableOID
@@ -122,7 +124,7 @@ transformTable tableInfo =
        foreignKeysMetadata
        Nothing  -- no views, only tables
        Nothing  -- no description
-       ()
+       identityColumns
      )
 
 transformColumn
@@ -136,7 +138,6 @@ transformColumn columnInfo =
       -- or dropped. We assume here that this arbitrary column id can
       -- serve the same purpose.
       prciIsNullable  = scIsNullable columnInfo
-      prciIsIdentity  = scIsIdentity columnInfo
       prciDescription = Nothing
       prciType = parseScalarType $ styName $ scJoinedSysType columnInfo
       foreignKeys = scJoinedForeignKeyColumns columnInfo <&> \foreignKeyColumn ->

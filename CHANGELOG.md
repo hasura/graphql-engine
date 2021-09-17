@@ -3,6 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: remove identity notion for table columns (fix #7557)
 - server: add webhook transformations for Actions and EventTriggers
 - server: support MSSQL transactions
 - server: log individual operation details in the http-log during a batch graphQL query execution

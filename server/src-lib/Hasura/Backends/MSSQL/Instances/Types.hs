@@ -37,7 +37,7 @@ instance Backend 'MSSQL where
   type SQLExpression           'MSSQL = MSSQL.Expression
   type SQLOperator             'MSSQL = MSSQL.Op
 
-  type ExtraTableMetadata      'MSSQL = ()
+  type ExtraTableMetadata      'MSSQL = [MSSQL.ColumnName] -- List of identity columns
 
   type XComputedField          'MSSQL = XDisable
   type XRelay                  'MSSQL = XDisable

@@ -96,9 +96,6 @@ resolveSource sourceConfig =
                                    case mode of
                                      Nullable -> True
                                      _        -> False
-                               , prciIsIdentity = notIdentityColumn -- TODO: Determine the identity-ness of BigQuery columns. Until then we assume them as not identity.
-                                                                    --       For more details refer https://en.wikipedia.org/wiki/Identity_column.
-                                                                    -- issue: https://github.com/hasura/graphql-engine/issues/7450
                                , prciDescription = Nothing
                                }
                              | (position, RestFieldSchema {name, type', mode}) <-

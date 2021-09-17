@@ -512,7 +512,6 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
         , pgiPosition = prciPosition rawInfo
         , pgiType = resolvedType
         , pgiIsNullable = prciIsNullable rawInfo
-        , pgiIsIdentity = prciIsIdentity rawInfo
         , pgiDescription = prciDescription rawInfo
         }
       where
