@@ -152,6 +152,25 @@ class TestQueryActions:
     def dir(cls):
         return 'queries/actions/sync'
 
+    # toplevel, extensions with error
+    def test_query_action_extensions_code_both_codes_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/extensions_code_both_codes.yaml')
+    # toplevel, extensions with no error
+    def test_query_action_extensions_code_toplevel_empty_extensions_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/extensions_code_toplevel_empty_extensions.yaml')
+    # toplevel, no extensions
+    def test_query_action_extensions_code_toplevel_no_extensions_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/extensions_code_toplevel_no_extensions.yaml')
+    # no toplevel, extensions with error
+    def test_query_action_extensions_code_only_extensions_code_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/extensions_code_only_extensions_code.yaml')
+    # no toplevel, extensions with no error
+    def test_query_action_extensions_code_only_empty_extensions_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/extensions_code_only_empty_extensions.yaml')
+    # no toplevel, no extensions
+    def test_query_action_extensions_code_nothing_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/extensions_code_nothing.yaml')
+
     def test_query_action_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/get_user_by_email_fail.yaml')
 

@@ -65,10 +65,28 @@ An error object looks like:
 
     {
       "message": "<mandatory-error-message>",
-      "code": "<optional-error-code>"
+      "extensions": "<optional-json-object>"
     }
 
-The HTTP status code must be ``4xx`` for an error response.
+where ``extensions`` is an optional JSON value. 
+
+If present, ``extensions`` should be a JSON object, which may have a status code
+field ``code``, along with other data you may want to add to your errors:
+
+.. code-block:: json
+
+    {
+      "code": "<optional-error-code>",
+      "optionalField1": "<custom-data-here>"
+    }
+
+The HTTP status code must be ``4xx`` in order to indicate an error response.
+
+For backwards compatibility with previous versions of Hasura, the ``code`` field
+may also be supplied at the root of the error object, i.e. at ``$.code``. This
+will be deprecated in a future release, and providing ``code`` within
+``extensions`` is preferred.
+
 
 
 Example

@@ -24,6 +24,10 @@ args:
   args:
     name: get_users_by_email
     clear_data: true
+- type: drop_action
+  args:
+    name: intentional_error
+    clear_data: true
 # clear custom types
 - type: set_custom_types
   args: {}

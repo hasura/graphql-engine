@@ -221,7 +221,7 @@ enablePgcryptoExtension = do
               _            -> requiredError
           where
             requiredError =
-              (err500 PostgresError requiredMessage) { qeInternal = Just $ toJSON e }
+              (err500 PostgresError requiredMessage) { qeInternal = Just $ ExtraInternal $ toJSON e }
             requiredMessage =
               "pgcrypto extension is required, but it could not be created;"
               <> " encountered unknown postgres error"

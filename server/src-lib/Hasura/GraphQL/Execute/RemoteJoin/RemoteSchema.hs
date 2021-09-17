@@ -150,7 +150,7 @@ getRemoteSchemaResponse env manager requestHeaders userInfo (RemoteSchemaCall rs
           in AO.asObject v' `onLeft` throw500
     | otherwise ->
       throwError (err400 Unexpected "Errors from remote server") {
-        qeInternal = Just $ A.object ["errors" A..= (AO.fromOrdered <$> errors)]
+        qeInternal = Just $ ExtraInternal $ A.object ["errors" A..= (AO.fromOrdered <$> errors)]
       }
 
 -- | Attempt to extract a deeply nested value from a remote source's 'AO.Value'

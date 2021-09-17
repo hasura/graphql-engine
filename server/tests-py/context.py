@@ -349,9 +349,17 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             resp, status = self.get_users_by_email(False)
             self._send_response(status, resp)
 
+        elif req_path == "/intentional-error":
+            resp, status = self.intentional_error()
+            self._send_response(status, resp)
+
         else:
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
+
+    def intentional_error(self):
+        blob = self.req_json['input']['blob']
+        return blob, HTTPStatus.BAD_REQUEST
 
     def create_user(self):
         email_address = self.req_json['input']['email']

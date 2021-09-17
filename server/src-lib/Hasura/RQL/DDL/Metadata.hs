@@ -405,7 +405,7 @@ runDropInconsistentMetadata _ = do
   let droppableInconsistentObjects = filter droppableInconsistentMetadata newInconsistentObjects
   unless (null droppableInconsistentObjects) $
     throwError (err400 Unexpected "cannot continue due to new inconsistent metadata")
-      { qeInternal = Just $ toJSON newInconsistentObjects }
+      { qeInternal = Just $ ExtraInternal $ toJSON newInconsistentObjects }
   return successMsg
 
 purgeMetadataObj :: MetadataObjId -> MetadataModifier

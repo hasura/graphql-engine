@@ -220,7 +220,7 @@ checkQueryInAllowlist enableAL userInfo req sc =
   where
     modErr e =
       let msg = "query is not in any of the allowlists"
-      in e{qeInternal = Just $ J.object [ "message" J..= J.String msg]}
+      in e{qeInternal = Just $ ExtraInternal $ J.object [ "message" J..= J.String msg]}
 
     isQueryInAllowlist q = HS.member gqlQuery
       where

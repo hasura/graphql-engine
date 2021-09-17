@@ -110,7 +110,17 @@ withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
   result <- runErrorA f -< (e, s)
   case result of
     Left err -> do
-      recordInconsistency -< ((qeInternal err, metadataObject), qeError err)
+      case qeInternal err of
+        Just (ExtraExtensions exts) ->
+          -- the QErr type contains an optional qeInternal :: Maybe QErrExtra field, which either stores an error coming
+          -- from an action webhook (ExtraExtensions) or an internal error thrown somewhere within graphql-engine.
+          --
+          -- if we do have an error here, it should be an internal error and hence never be of the former case:
+          recordInconsistency -< ((Just (toJSON exts), metadataObject), "withRecordInconsistency: unexpected ExtraExtensions")
+        Just (ExtraInternal internal) ->
+          recordInconsistency -< ((Just (toJSON internal), metadataObject), qeError err)
+        Nothing ->
+          recordInconsistency -< ((Nothing, metadataObject), qeError err)
       returnA -< Nothing
     Right v -> returnA -< Just v
 {-# INLINABLE withRecordInconsistency #-}
@@ -235,11 +245,11 @@ buildSchemaCacheFor objectId metadataModifier = do
 
   for_ (M.lookup objectId newInconsistentObjects) $ \matchingObjects -> do
     let reasons = commaSeparated $ imReason <$> matchingObjects
-    throwError (err400 InvalidConfiguration reasons) { qeInternal = Just $ toJSON matchingObjects }
+    throwError (err400 InvalidConfiguration reasons) { qeInternal = Just $ ExtraInternal $ toJSON matchingObjects }
 
   unless (null newInconsistentObjects) $
     throwError (err400 Unexpected "cannot continue due to new inconsistent metadata")
-      { qeInternal = Just $ toJSON (nub . concatMap toList $ M.elems newInconsistentObjects) }
+      { qeInternal = Just $ ExtraInternal $ toJSON (nub . concatMap toList $ M.elems newInconsistentObjects) }
 
 -- | Like 'buildSchemaCache', but fails if there is any inconsistent metadata.
 buildSchemaCacheStrict :: (QErrM m, CacheRWM m, MetadataM m) => m ()
@@ -249,7 +259,7 @@ buildSchemaCacheStrict = do
   let inconsObjs = scInconsistentObjs sc
   unless (null inconsObjs) $ do
     let err = err400 Unexpected "cannot continue due to inconsistent metadata"
-    throwError err{ qeInternal = Just $ toJSON inconsObjs }
+    throwError err{ qeInternal = Just $ ExtraInternal $ toJSON inconsObjs }
 
 -- | Executes the given action, and if any new 'InconsistentMetadata's are added to the schema
 -- cache as a result of its execution, raises an error.
@@ -264,6 +274,6 @@ withNewInconsistentObjsCheck action = do
         nub $ concatMap toList $ M.elems (currentObjects `diffInconsistentObjects` originalObjects)
   unless (null newInconsistentObjects) $
     throwError (err500 Unexpected "cannot continue due to newly found inconsistent metadata")
-      { qeInternal = Just $ toJSON newInconsistentObjects }
+      { qeInternal = Just $ ExtraInternal $ toJSON newInconsistentObjects }
 
   pure result
