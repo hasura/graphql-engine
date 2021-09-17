@@ -73,8 +73,9 @@ $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookPayload)
 
 data ActionWebhookErrorResponse
   = ActionWebhookErrorResponse
-  { _awerMessage :: !Text
-  , _awerCode    :: !(Maybe Text)
+  { _awerMessage    :: !Text
+  , _awerCode       :: !(Maybe Text)
+  , _awerExtensions :: !(Maybe J.Value)
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorResponse)
 

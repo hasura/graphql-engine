@@ -167,7 +167,7 @@ runRunSQL q@RunSQL{..} = do
       fmap (encJFromJValue @RunSQLRes) . liftTx . Q.multiQE rawSqlErrHandler . Q.fromText
       where
         rawSqlErrHandler txe =
-          (err400 PostgresError "query execution failed") { qeInternal = Just $ toJSON txe }
+          (err400 PostgresError "query execution failed") { qeInternal = Just $ ExtraInternal $ toJSON txe }
 
 -- | @'withMetadataCheck' cascade action@ runs @action@ and checks if the schema changed as a
 -- result. If it did, it checks to ensure the changes do not violate any integrity constraints, and

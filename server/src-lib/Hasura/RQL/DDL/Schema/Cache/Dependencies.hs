@@ -71,7 +71,7 @@ performIteration iterationNumber cache inconsistencies dependencies = do
           -- unless we did something very wrong, so halt the process and abort with some
           -- debugging information.
           throwError (err500 Unexpected "schema dependency resolution failed to terminate")
-            { qeInternal = Just $ object
+            { qeInternal = Just $ ExtraInternal $ object
                 [ "inconsistent_objects" .= object
                   [ "old" .= inconsistencies
                   , "new" .= newInconsistencies ]

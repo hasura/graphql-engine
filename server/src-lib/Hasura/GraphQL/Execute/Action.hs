@@ -439,7 +439,7 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
               addInternalToErr e =
                 let actionInternalError = J.toJSON $
                       ActionInternalError (J.String "unexpected response") requestInfo $ Just responseInfo
-                in e{qeInternal = Just actionInternalError}
+                in e{qeInternal = Just $ ExtraInternal actionInternalError}
 
           if | HTTP.statusIsSuccessful responseStatus  -> do
                  let expectingArray = isListType outputType
@@ -457,10 +457,10 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
                    pure (webhookResponse, mkSetCookieHeaders responseWreq)
 
              | HTTP.statusIsClientError responseStatus -> do
-                 ActionWebhookErrorResponse message maybeCode <-
+                 ActionWebhookErrorResponse message maybeCode maybeExtensions <-
                    modifyQErr addInternalToErr $ decodeValue responseValue
                  let code = maybe Unexpected ActionWebhookCode maybeCode
-                     qErr = QErr [] responseStatus message code Nothing
+                     qErr = QErr [] responseStatus message code (ExtraExtensions <$> maybeExtensions)
                  throwError qErr
 
              | otherwise -> do

@@ -3,6 +3,7 @@
 module Hasura.Base.Error
   ( Code(..)
   , QErr(..)
+  , QErrExtra(..)
   , encodeJSONPath
   , encodeQErr
   , encodeGQLErr
@@ -152,8 +153,23 @@ data QErr
   , qeStatus   :: !N.Status
   , qeError    :: !Text
   , qeCode     :: !Code
-  , qeInternal :: !(Maybe Value)
+  , qeInternal :: !(Maybe QErrExtra)
   } deriving (Show, Eq)
+
+-- | Extra context for a QErr, which can either be information from an internal
+-- error (e.g. from Postgres, or from a network operation timing out), or
+-- context provided when an external service or operation fails, for instance, a
+-- webhook error response may provide additional context in the `extensions`
+-- key.
+data QErrExtra
+  = ExtraExtensions !Value
+  | ExtraInternal !Value
+  deriving (Show, Eq)
+
+instance ToJSON QErrExtra where
+  toJSON = \case
+    ExtraExtensions v -> v
+    ExtraInternal v   -> v
 
 instance ToJSON QErr where
   toJSON (QErr jPath _ msg code Nothing) =
@@ -162,13 +178,16 @@ instance ToJSON QErr where
     , "error" .= msg
     , "code"  .= code
     ]
-  toJSON (QErr jPath _ msg code (Just ie)) =
-    object
-    [ "path"  .= encodeJSONPath jPath
-    , "error" .= msg
-    , "code"  .= code
-    , "internal" .= ie
-    ]
+  toJSON (QErr jPath _ msg code (Just extra)) = object $
+    case extra of
+      ExtraInternal e   -> err ++ [ "internal" .= e ]
+      ExtraExtensions{} -> err
+    where
+      err =
+        [ "path"  .= encodeJSONPath jPath
+        , "error" .= msg
+        , "code"  .= code
+        ]
 
 noInternalQErrEnc :: QErr -> Value
 noInternalQErrEnc (QErr jPath _ msg code _) =
@@ -179,18 +198,24 @@ noInternalQErrEnc (QErr jPath _ msg code _) =
   ]
 
 encodeGQLErr :: Bool -> QErr -> Value
-encodeGQLErr includeInternal (QErr jPath _ msg code mIE) =
+encodeGQLErr includeInternal (QErr jPath _ msg code maybeExtra) =
   object
   [ "message" .= msg
   , "extensions" .= extnsObj
   ]
   where
-    extnsObj = object $ bool codeAndPath
-               (codeAndPath ++ internal) includeInternal
-    codeAndPath = [ "code" .= code
-                  , "path" .= encodeJSONPath jPath
-                  ]
-    internal = maybe [] (\ie -> ["internal" .= ie]) mIE
+    appendIf cond a b = if cond then a ++ b else a
+
+    extnsObj = case maybeExtra of
+      Nothing -> object codeAndPath
+      -- if an `extensions` key is given in the error response from the webhook,
+      -- we ignore the `code` key regardless of whether the `extensions` object
+      -- contains a `code` field:
+      Just (ExtraExtensions v) -> v
+      Just (ExtraInternal v) ->
+        object $ appendIf includeInternal codeAndPath ["internal" .= v]
+    codeAndPath = ["path" .= encodeJSONPath jPath,
+                   "code" .= code]
 
 -- whether internal should be included or not
 encodeQErr :: Bool -> QErr -> Value
@@ -226,17 +251,17 @@ instance Q.FromPGConnErr QErr where
   fromPGConnErr c
     | "too many clients" `T.isInfixOf` (Q.getConnErr c) =
       let e = err500 PostgresMaxConnectionsError "max connections reached on postgres"
-      in e {qeInternal = Just $ toJSON c}
+      in e {qeInternal = Just $ ExtraInternal $ toJSON c}
 
   fromPGConnErr c =
     let e = err500 PostgresError "connection error"
-    in e {qeInternal = Just $ toJSON c}
+    in e {qeInternal = Just $ ExtraInternal $ toJSON c}
 
 -- Postgres Transaction error
 instance Q.FromPGTxErr QErr where
   fromPGTxErr txe =
     let e = err500 PostgresError "postgres tx error"
-    in e {qeInternal = Just $ toJSON txe}
+    in e {qeInternal = Just $ ExtraInternal $ toJSON txe}
 
 err400 :: Code -> Text -> QErr
 err400 c t = QErr [] N.status400 t c Nothing
@@ -284,7 +309,7 @@ internalError = err500 Unexpected
 
 throw500WithDetail :: (QErrM m) => Text -> Value -> m a
 throw500WithDetail t detail =
-  throwError $ (err500 Unexpected t) {qeInternal = Just detail}
+  throwError $ (err500 Unexpected t) {qeInternal = Just $ ExtraInternal detail}
 
 modifyQErr :: (QErrM m)
            => (QErr -> QErr) -> m a -> m a

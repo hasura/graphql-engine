@@ -527,7 +527,7 @@ throwRemoteSchemaWithInternal
   => Text -> a -> m b
 throwRemoteSchemaWithInternal msg v =
   let err = err400 RemoteSchemaError msg
-  in throwError err{qeInternal = Just $ J.toJSON v}
+  in throwError err{qeInternal = Just $ ExtraInternal $ J.toJSON v}
 
 throwRemoteSchemaHttp
   :: QErrM m
