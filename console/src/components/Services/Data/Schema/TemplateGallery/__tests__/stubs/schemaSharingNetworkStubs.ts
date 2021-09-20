@@ -177,7 +177,7 @@ export const networkStubs = {
   rootJsonWithLoading: rest.get(ROOT_CONFIG_PATH, (req, res, context) => {
     return res(
       context.text(JSON.stringify(MOCK_ROOT_CONFIG)),
-      context.delay(1000)
+      context.delay(20000)
     );
   }),
   rootJsonError: rest.get(ROOT_CONFIG_PATH, (req, res, context) => {

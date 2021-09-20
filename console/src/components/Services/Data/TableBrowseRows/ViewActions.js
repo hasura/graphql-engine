@@ -1,6 +1,6 @@
 import { defaultViewState } from '../DataState';
 import { globalCookiePolicy } from '../../../../Endpoints';
-import requestAction from 'utils/requestAction';
+import requestAction from '../../../../utils/requestAction';
 import filterReducer from './FilterActions';
 import {
   showSuccessNotification,
