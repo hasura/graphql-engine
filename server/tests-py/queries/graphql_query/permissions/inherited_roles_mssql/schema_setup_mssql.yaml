@@ -7,6 +7,14 @@ args:
 
       DROP TABLE IF EXISTS article; -- article first because of foreign key constraint
       DROP TABLE IF EXISTS author;
+      DROP TABLE IF EXISTS permissions;
+
+      CREATE TABLE permissions (
+        id int identity(1,1) primary key,
+        name nvarchar(255)
+      );
+
+      INSERT INTO permissions (name) VALUES ('perm1'), ('perm2');
 
       CREATE TABLE author (
         id int identity(1,1) primary key,
