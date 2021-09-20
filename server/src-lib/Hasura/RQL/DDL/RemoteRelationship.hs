@@ -72,7 +72,7 @@ data DeleteRemoteRelationship (b :: BackendType)
   }
 
 instance Backend b => FromJSON (DeleteRemoteRelationship b) where
-  parseJSON = withObject "delete remote relationship" $ \o ->
+  parseJSON = withObject "DeleteRemoteRelationship" $ \o ->
     DeleteRemoteRelationship
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"

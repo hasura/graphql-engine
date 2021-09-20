@@ -375,7 +375,7 @@ data SetPermComment b
   }
 
 instance (Backend b) => FromJSON (SetPermComment b) where
-  parseJSON = withObject "set permission comment" $ \o ->
+  parseJSON = withObject "SetPermComment" $ \o ->
     SetPermComment
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"

@@ -71,7 +71,7 @@ deriving instance (Backend b) => Eq (TrackTable b)
 instance (Backend b) => FromJSON (TrackTable b) where
   parseJSON v = withOptions v <|> withoutOptions
     where
-      withOptions = withObject "track table" \o -> TrackTable
+      withOptions = withObject "TrackTable" \o -> TrackTable
         <$> o .:? "source" .!= defaultSource
         <*> o .: "table"
         <*> o .:? "is_enum" .!= False
@@ -85,7 +85,7 @@ data SetTableIsEnum
   } deriving (Show, Eq)
 
 instance FromJSON SetTableIsEnum where
-  parseJSON = withObject "set table is enum" $ \o ->
+  parseJSON = withObject "SetTableIsEnum" $ \o ->
     SetTableIsEnum
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"
@@ -101,7 +101,7 @@ deriving instance (Backend b) => Show (UntrackTable b)
 deriving instance (Backend b) => Eq (UntrackTable b)
 
 instance (Backend b) => FromJSON (UntrackTable b) where
-  parseJSON = withObject "untrack table" $ \o ->
+  parseJSON = withObject "UntrackTable" $ \o ->
     UntrackTable
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"
@@ -219,7 +219,7 @@ data TrackTableV2 b
   } deriving (Show, Eq)
 
 instance (Backend b) => FromJSON (TrackTableV2 b) where
-  parseJSON = withObject "track table" $ \o -> do
+  parseJSON = withObject "TrackTableV2" $ \o -> do
     table <- parseJSON $ Object o
     configuration <- o .:? "configuration" .!= emptyTableConfig
     pure $ TrackTableV2 table configuration
@@ -250,7 +250,7 @@ data SetTableCustomization b
   } deriving (Show, Eq)
 
 instance (Backend b) => FromJSON (SetTableCustomization b) where
-  parseJSON = withObject "set table customization" $ \o ->
+  parseJSON = withObject "SetTableCustomization" $ \o ->
     SetTableCustomization
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"
@@ -265,7 +265,7 @@ data SetTableCustomFields
   } deriving (Show, Eq)
 
 instance FromJSON SetTableCustomFields where
-  parseJSON = withObject "set table custom fields" $ \o ->
+  parseJSON = withObject "SetTableCustomFields" $ \o ->
     SetTableCustomFields
     <$> o .:? "source" .!= defaultSource
     <*> o .: "table"

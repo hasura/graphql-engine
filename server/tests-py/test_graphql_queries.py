@@ -346,7 +346,7 @@ class TestGraphQLQueryBasicCitus:
     def test_create_invalid_fkey_relationship(self, hge_ctx, transport):
         st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/setup_invalid_fkey_relationship.yaml')
         assert st_code == 400, resp
-        assert resp['error'] == "Expecting object { table, columns }."
+        assert resp['error'] == "Error when parsing command create_array_relationship.\nSee our documentation at https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index.html#metadata-apis.\nInternal error message: Expecting object { table, columns }."
 
     @classmethod
     def dir(cls):
@@ -574,7 +574,7 @@ class TestGraphQLQueryBoolExpBasicMSSQL:
     def test_create_invalid_fkey_relationship(self, hge_ctx, transport):
         st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/setup_invalid_fkey_relationship_mssql.yaml')
         assert st_code == 400, resp
-        assert resp['error'] == "Expecting object { table, columns }."
+        assert resp['error'] == "Error when parsing command create_array_relationship.\nSee our documentation at https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index.html#metadata-apis.\nInternal error message: Expecting object { table, columns }."
 
     @classmethod
     def dir(cls):

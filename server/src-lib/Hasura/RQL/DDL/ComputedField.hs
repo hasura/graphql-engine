@@ -39,7 +39,7 @@ instance (Backend b) => ToJSON (AddComputedField b) where
   toJSON = genericToJSON hasuraJSON
 
 instance (Backend b) => FromJSON (AddComputedField b) where
-  parseJSON = withObject "add computed field" $ \o ->
+  parseJSON = withObject "AddComputedField" $ \o ->
     AddComputedField
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"
@@ -78,7 +78,7 @@ data DropComputedField b
   }
 
 instance (Backend b) => FromJSON (DropComputedField b) where
-  parseJSON = withObject "drop computed field" $ \o ->
+  parseJSON = withObject "DropComputedField" $ \o ->
     DropComputedField
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"

@@ -57,7 +57,7 @@ data CreateEventTriggerQuery (b :: BackendType)
   }
 
 instance Backend b => FromJSON (CreateEventTriggerQuery b) where
-  parseJSON  = withObject "create event trigger" \o -> do
+  parseJSON  = withObject "CreateEventTriggerQuery" \o -> do
     sourceName      <- o .:? "source" .!= defaultSource
     name            <- o .:  "name"
     table           <- o .:  "table"
@@ -102,7 +102,7 @@ data DeleteEventTriggerQuery (b :: BackendType)
   }
 
 instance FromJSON (DeleteEventTriggerQuery b) where
-  parseJSON = withObject "delete event trigger" $ \o ->
+  parseJSON = withObject "DeleteEventTriggerQuery" $ \o ->
     DeleteEventTriggerQuery
       <$> o .:? "source" .!= defaultSource
       <*> o .: "name"
@@ -115,7 +115,7 @@ data RedeliverEventQuery (b :: BackendType)
   }
 
 instance FromJSON (RedeliverEventQuery b) where
-  parseJSON = withObject "redeliver event trigger" $ \o ->
+  parseJSON = withObject "RedeliverEventQuery" $ \o ->
     RedeliverEventQuery
       <$> o .: "event_id"
       <*> o .:? "source" .!= defaultSource
@@ -129,7 +129,7 @@ data InvokeEventTriggerQuery (b :: BackendType)
   }
 
 instance Backend b => FromJSON (InvokeEventTriggerQuery b) where
-  parseJSON = withObject "invoke event trigger" $ \o ->
+  parseJSON = withObject "InvokeEventTriggerQuery" $ \o ->
     InvokeEventTriggerQuery
       <$> o .: "name"
       <*> o .:? "source" .!= defaultSource

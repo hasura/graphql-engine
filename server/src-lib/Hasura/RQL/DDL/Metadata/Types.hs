@@ -124,7 +124,7 @@ data ReplaceMetadataV1
   deriving (Eq)
 
 instance FromJSON ReplaceMetadataV1 where
-  parseJSON = withObject "Object" $ \o -> do
+  parseJSON = withObject "ReplaceMetadataV1" $ \o -> do
     version <- o .:? "version" .!= MVVersion1
     case version of
       MVVersion3 -> RMWithSources <$> parseJSON (Object o)

@@ -25,7 +25,7 @@ data RenameRel b
   }
 
 instance (Backend b) => FromJSON (RenameRel b) where
-  parseJSON = withObject "rename relationship" $ \o ->
+  parseJSON = withObject "RenameRel" $ \o ->
     RenameRel
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"

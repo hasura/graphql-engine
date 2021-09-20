@@ -111,7 +111,7 @@ data DropPerm (a :: BackendType -> Type) b
   }
 
 instance (Backend b) => FromJSON (DropPerm a b) where
-  parseJSON = withObject "drop permission" $ \o ->
+  parseJSON = withObject "DropPerm" $ \o ->
     DropPerm
     <$> o .:? "source" .!= defaultSource
     <*> o .: "table"

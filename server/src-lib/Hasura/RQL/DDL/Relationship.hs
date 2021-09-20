@@ -238,7 +238,7 @@ data DropRel b
   }
 
 instance (Backend b) => FromJSON (DropRel b) where
-  parseJSON = withObject "drop relationship" $ \o ->
+  parseJSON = withObject "DropRel" $ \o ->
     DropRel
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"
@@ -306,7 +306,7 @@ deriving instance (Backend b) => Show (SetRelComment b)
 deriving instance (Backend b) => Eq (SetRelComment b)
 
 instance (Backend b) => FromJSON (SetRelComment b) where
-  parseJSON = withObject "set relationship comment" $ \o ->
+  parseJSON = withObject "SetRelComment" $ \o ->
     SetRelComment
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"
