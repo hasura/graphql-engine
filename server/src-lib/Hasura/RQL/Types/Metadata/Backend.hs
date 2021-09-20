@@ -21,7 +21,6 @@ import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
-import           Hasura.Server.Types
 
 class ( Backend b
       , Eq (BooleanOperators b (PartialSQLExp b))
@@ -60,16 +59,6 @@ class ( Backend b
     :: (MonadIO m, MonadBaseControl IO m, MonadResolveSource m)
     => SourceConfig b
     -> m (Either QErr (ResolvedSource b))
-
-  createTableEventTrigger
-    :: (MonadBaseControl IO m, MonadIO m)
-    => ServerConfigCtx
-    -> SourceConfig b
-    -> TableName b
-    -> [ColumnInfo b]
-    -> TriggerName
-    -> TriggerOpsDef b
-    -> m (Either QErr ())
 
   parseBoolExpOperations
     :: (MonadError QErr m, TableCoreInfoRM b m)

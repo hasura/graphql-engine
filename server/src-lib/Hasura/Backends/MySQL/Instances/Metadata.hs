@@ -12,7 +12,6 @@ instance BackendMetadata 'MySQL where
   fetchAndValidateEnumValues = error "fetchAndValidateEnumValues: MySQL backend does not support this operation yet."
   resolveSourceConfig        = MySQL.resolveSourceConfig
   resolveDatabaseMetadata    = MySQL.resolveDatabaseMetadata
-  createTableEventTrigger    = error "createTableEventTrigger: MySQL backend does not support this operation yet."
   parseBoolExpOperations     = error "parseBoolExpOperations: MySQL backend does not support this operation yet."
   buildFunctionInfo          = error "buildFunctionInfo: MySQL backend does not support this operation yet."
   updateColumnInEventTrigger = error "updateColumnInEventTrigger: MySQL backend does not support this operation yet."

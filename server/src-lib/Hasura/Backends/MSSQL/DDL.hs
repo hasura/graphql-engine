@@ -1,7 +1,6 @@
 module Hasura.Backends.MSSQL.DDL
   ( buildComputedFieldInfo
   , fetchAndValidateEnumValues
-  , createTableEventTrigger
   , buildFunctionInfo
   , updateColumnInEventTrigger
   , parseCollectableType
@@ -25,7 +24,6 @@ import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
-import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
 
@@ -56,18 +54,6 @@ fetchAndValidateEnumValues
   -> m (Either QErr EnumValues)
 fetchAndValidateEnumValues _ _ _ _ = runExceptT $
   throw400 NotSupported "Enum tables are not supported for MSSQL sources"
-
-createTableEventTrigger
-  :: (Monad m)
-  => ServerConfigCtx
-  -> SourceConfig 'MSSQL
-  -> TableName 'MSSQL
-  -> [ColumnInfo 'MSSQL]
-  -> TriggerName
-  -> TriggerOpsDef 'MSSQL
-  -> m (Either QErr ())
-createTableEventTrigger _ _ _ _ _ _ = runExceptT $
-  throw400 NotSupported "Cannot create table event triggers in MSSQL sources"
 
 buildFunctionInfo
   :: (MonadError QErr m)

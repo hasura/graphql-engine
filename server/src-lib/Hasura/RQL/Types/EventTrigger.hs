@@ -4,7 +4,6 @@ module Hasura.RQL.Types.EventTrigger
   , TriggerName(..)
   , triggerNameToTxt
   , Ops(..)
-  , EventId(..)
   , TriggerOpsDef(..)
   , EventTriggerConf(..)
   , RetryConf(..)
@@ -17,13 +16,21 @@ module Hasura.RQL.Types.EventTrigger
   , defaultTimeoutSeconds
 
   , RecreateEventTriggers (..)
-  , EventTriggerInfo (..)
+  , EventWithSource (..)
+  , TriggerMetadata (..)
+  , Event (..)
+  , TriggerTypes (..)
+  , Invocation (..)
+  , ProcessEventError (..)
   , EventTriggerInfoMap
+  , EventTriggerInfo (..)
+  , FetchBatchSize (..)
   ) where
 
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict             as M
+import qualified Data.Time.Clock                 as Time
 import qualified Database.PG.Query               as Q
 
 import           Data.Aeson
@@ -32,10 +39,12 @@ import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
 import           Hasura.Incremental              (Cacheable)
+
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.RequestTransform (MetadataTransform)
 import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Common         (InputWebhook)
+import           Hasura.RQL.Types.Common         (InputWebhook, SourceName)
+import           Hasura.RQL.Types.Eventing
 import           Hasura.SQL.Backend
 
 
@@ -47,9 +56,6 @@ newtype TriggerName = TriggerName { unTriggerName :: NonEmptyText }
 triggerNameToTxt :: TriggerName -> Text
 triggerNameToTxt = unNonEmptyText . unTriggerName
 
-newtype EventId = EventId {unEventId :: Text}
-  deriving (Show, Eq, Ord, Hashable, ToTxt, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, NFData, Cacheable)
-
 data Ops = INSERT | UPDATE | DELETE | MANUAL deriving (Show)
 
 data SubscribeColumns (b :: BackendType) = SubCStar | SubCArray [Column b]
@@ -58,7 +64,6 @@ deriving instance Backend b => Show (SubscribeColumns b)
 deriving instance Backend b => Eq (SubscribeColumns b)
 instance Backend b => NFData (SubscribeColumns b)
 instance Backend b => Cacheable (SubscribeColumns b)
-
 
 instance Backend b => FromJSON (SubscribeColumns b) where
   parseJSON (String s) = case s of
@@ -184,6 +189,48 @@ data RecreateEventTriggers
   deriving (Show, Eq, Generic)
 instance Cacheable RecreateEventTriggers
 
+data TriggerMetadata
+  = TriggerMetadata { tmName :: TriggerName }
+  deriving (Show, Eq)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''TriggerMetadata)
+
+-- | Change data for a particular row
+--
+-- https://docs.hasura.io/1.0/graphql/manual/event-triggers/payload.html
+data Event (b :: BackendType)
+  = Event
+  { eId        :: !EventId
+  , eSource    :: !SourceName
+  , eTable     :: !(TableName b)
+  , eTrigger   :: !TriggerMetadata
+  , eEvent     :: !Value
+  , eTries     :: !Int
+  , eCreatedAt :: !Time.UTCTime
+  } deriving Generic
+deriving instance Backend b => Show (Event b)
+deriving instance Backend b => Eq (Event b)
+
+instance Backend b => FromJSON (Event b) where
+  parseJSON = genericParseJSON hasuraJSON {omitNothingFields=True}
+
+
+-- | The event payload processed by 'processEvent'
+--
+data EventWithSource (b :: BackendType)
+  = EventWithSource
+  { _ewsEvent        :: !(Event b)
+  , _ewsSourceConfig :: !(SourceConfig b)
+  , _ewsSourceName   :: !SourceName
+  , _ewsFetchTime    :: !Time.UTCTime
+    -- ^ The 'Time.UTCTime' represents the time when the event was fetched from DB.
+    -- ^ Used to calculate Event Lock time
+  }
+
+data ProcessEventError
+  = PESetRetry !Time.UTCTime
+  | PESetError
+  deriving (Show, Eq)
+
 data EventTriggerInfo (b :: BackendType)
  = EventTriggerInfo
    { etiName              :: !TriggerName
@@ -205,3 +252,6 @@ instance Backend b => ToJSON (EventTriggerInfo b) where
   toJSON = genericToJSON hasuraJSON
 
 type EventTriggerInfoMap b = M.HashMap TriggerName (EventTriggerInfo b)
+
+newtype FetchBatchSize = FetchBatchSize { _unFetchBatchSize :: Int }
+  deriving (Show, Eq)

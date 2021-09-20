@@ -15,7 +15,6 @@ instance BackendMetadata 'BigQuery where
   fetchAndValidateEnumValues = BigQuery.fetchAndValidateEnumValues
   resolveSourceConfig        = BigQuery.resolveSourceConfig
   resolveDatabaseMetadata    = BigQuery.resolveSource
-  createTableEventTrigger    = BigQuery.createTableEventTrigger
   parseBoolExpOperations     = BigQuery.parseBoolExpOperations
   buildFunctionInfo          = BigQuery.buildFunctionInfo
   updateColumnInEventTrigger = BigQuery.updateColumnInEventTrigger

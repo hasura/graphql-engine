@@ -38,6 +38,8 @@ import           Data.Text.Extended                  ((<<>))
 import qualified Hasura.Logging                      as HL
 import qualified Hasura.SQL.AnyBackend               as AB
 
+import           Hasura.Base.Error
+import           Hasura.EncJSON
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
@@ -45,6 +47,7 @@ import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Endpoint
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.InheritedRoles
+import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.Network
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Relationship
@@ -53,10 +56,6 @@ import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.RequestTransform
 import           Hasura.RQL.DDL.ScheduledTrigger
 import           Hasura.RQL.DDL.Schema
-
-import           Hasura.Base.Error
-import           Hasura.EncJSON
-import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Eventing.Backend   (BackendEventTrigger (..))
 import           Hasura.Server.Types                 (ExperimentalFeature (..))

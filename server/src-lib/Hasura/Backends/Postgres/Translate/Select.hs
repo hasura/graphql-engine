@@ -21,7 +21,6 @@ import           Control.Monad.Writer.Strict
 import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.SQL.DML           as S
-
 import           Hasura.Backends.Postgres.SQL.Rewrite
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.BoolExp

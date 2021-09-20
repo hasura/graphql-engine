@@ -35,62 +35,58 @@ module Hasura.Eventing.EventTrigger
   , defaultFetchInterval
   , defaultFetchBatchSize
   , Event(..)
-  , unlockEvents
   , EventEngineCtx(..)
   , LogBehavior(..)
   , HeaderLogBehavior(..)
   , ResponseLogBehavior(..)
+
+  -- Exported for testing
+  , saveLockedEventTriggerEvents
+  , removeEventTriggerEventFromLockedEvents
   ) where
 
 import           Hasura.Prelude
 
-import qualified Control.Concurrent.Async.Lifted.Safe   as LA
-import qualified Data.HashMap.Strict                    as M
-import qualified Data.TByteString                       as TBS
-import qualified Data.Text                              as T
-import qualified Data.Time.Clock                        as Time
-import qualified Database.PG.Query                      as Q
-import qualified Network.HTTP.Client.Transformable      as HTTP
-import qualified System.Metrics.Distribution            as EKG.Distribution
-import qualified System.Metrics.Gauge                   as EKG.Gauge
+import qualified Control.Concurrent.Async.Lifted.Safe as LA
+import qualified Data.HashMap.Strict                  as M
+import qualified Data.Set                             as Set
+import qualified Data.TByteString                     as TBS
+import qualified Data.Text                            as T
+import qualified Data.Time.Clock                      as Time
+import qualified Network.HTTP.Client                  as HTTP
+import qualified System.Metrics.Distribution          as EKG.Distribution
+import qualified System.Metrics.Gauge                 as EKG.Gauge
 
-import           Control.Concurrent.Extended            (Forever (..), sleep)
+import           Control.Concurrent.Extended          (Forever (..), sleep)
 import           Control.Concurrent.STM.TVar
-import           Control.Monad.Catch                    (MonadMask, bracket_, finally, mask_)
+import           Control.Monad.Catch                  (MonadMask, bracket_, finally, mask_)
 import           Control.Monad.STM
-import           Control.Monad.Trans.Control            (MonadBaseControl)
+import           Control.Monad.Trans.Control          (MonadBaseControl)
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Has
-import           Data.Int                               (Int64)
 import           Data.String
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 import           Data.Time.Clock
 
-import qualified Hasura.Logging                         as L
-import qualified Hasura.Tracing                         as Tracing
+import qualified Hasura.Logging                       as L
+import qualified Hasura.SQL.AnyBackend                as AB
+import qualified Hasura.Tracing                       as Tracing
 
-import           Hasura.Backends.Postgres.Execute.Types
-import           Hasura.Backends.Postgres.SQL.Types
+
+import           Hasura.Backends.Postgres.SQL.Types   hiding (TableName)
 import           Hasura.Base.Error
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.RequestTransform
 import           Hasura.RQL.Types
-import           Hasura.Server.Metrics                  (ServerMetrics (..))
-import           Hasura.Server.Migrate.Internal         (getCatalogVersion)
-import           Hasura.Server.Migrate.Version          (latestCatalogVersionString)
+import           Hasura.RQL.Types.Eventing.Backend
+import           Hasura.Server.Metrics                (ServerMetrics (..))
 import           Hasura.Server.Types
-import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Server.Version                (HasVersion)
 
-
-data TriggerMetadata
-  = TriggerMetadata { tmName :: TriggerName }
-  deriving (Show, Eq)
-
-$(deriveJSON hasuraJSON{omitNothingFields=True} ''TriggerMetadata)
 
 newtype EventInternalErr
   = EventInternalErr QErr
@@ -128,30 +124,6 @@ following way now:
 
 -- | See Note [Maintenance Mode]
 --
-data MaintenanceModeVersion
-  = PreviousMMVersion
-  -- ^ should correspond to the catalog version from which the user
-  -- is migrating from
-  | CurrentMMVersion
-  -- ^ should correspond to the latest catalog version
-  deriving (Show, Eq)
-
--- | Change data for a particular row
---
--- https://docs.hasura.io/1.0/graphql/manual/event-triggers/payload.html
-data Event
-  = Event
-  { eId        :: !EventId
-  , eSource    :: !SourceName
-  , eTable     :: !QualifiedTable
-  , eTrigger   :: !TriggerMetadata
-  , eEvent     :: !Value
-  , eTries     :: !Int
-  , eCreatedAt :: !Time.UTCTime
-  } deriving (Show, Eq)
-
-$(deriveFromJSON hasuraJSON{omitNothingFields=True} ''Event)
-
 data EventEngineCtx
   = EventEngineCtx
   { _eeCtxEventThreadsCapacity :: TVar Int
@@ -177,17 +149,20 @@ instance ToJSON QualifiedTableStrict where
             , "name"  .= tn
            ]
 
-data EventPayload
+data EventPayload (b :: BackendType)
   = EventPayload
   { epId           :: EventId
-  , epTable        :: QualifiedTableStrict
+  , epTable        :: TableName b
   , epTrigger      :: TriggerMetadata
   , epEvent        :: Value
   , epDeliveryInfo :: DeliveryInfo
   , epCreatedAt    :: Time.UTCTime
-  } deriving (Show, Eq)
+  } deriving Generic
+deriving instance Backend b => Show (EventPayload b)
+deriving instance Backend b => Eq (EventPayload b)
 
-$(deriveToJSON hasuraJSON{omitNothingFields=True} ''EventPayload)
+instance Backend b => ToJSON (EventPayload b) where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields=True}
 
 defaultMaxEventThreads :: Int
 defaultMaxEventThreads = 100
@@ -203,13 +178,24 @@ initEventEngineCtx maxT _eeCtxFetchInterval _eeCtxFetchSize = do
   _eeCtxEventThreadsCapacity <- newTVar maxT
   return $ EventEngineCtx{..}
 
--- | The event payload processed by 'processEvent'
---
--- The 'Time.UTCTime' represents the time when the event was fetched from DB.
--- Used to calculate Event Lock time
-type EventWithSource b = (Event, SourceConfig b, Time.UTCTime)
+saveLockedEventTriggerEvents :: MonadIO m => SourceName -> [EventId] -> TVar (HashMap SourceName (Set.Set EventId)) -> m ()
+saveLockedEventTriggerEvents sourceName eventIds lockedEvents =
+  liftIO $ atomically $ do
+    lockedEventsVals <- readTVar lockedEvents
+    case M.lookup sourceName lockedEventsVals of
+      Nothing -> writeTVar lockedEvents $! M.singleton sourceName (Set.fromList eventIds)
+      Just _  -> writeTVar lockedEvents $! M.insertWith Set.union sourceName (Set.fromList eventIds) lockedEventsVals
 
-type FetchEventArguments = ([EventWithSource ('Postgres 'Vanilla)], Int , Bool)
+removeEventTriggerEventFromLockedEvents
+  :: MonadIO m => SourceName -> EventId -> TVar (HashMap SourceName (Set.Set EventId)) -> m ()
+removeEventTriggerEventFromLockedEvents sourceName eventId lockedEvents =
+  liftIO $ atomically $ do
+    lockedEventsVals <- readTVar lockedEvents
+    writeTVar lockedEvents $! M.adjust (Set.delete eventId) sourceName lockedEventsVals
+
+type BackendEventWithSource = AB.AnyBackend EventWithSource
+
+type FetchEventArguments = ([BackendEventWithSource], Int , Bool)
 
 -- | Service events from our in-DB queue.
 --
@@ -244,7 +230,7 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx{..} L
   where
     fetchBatchSize = getNonNegativeInt _eeCtxFetchSize
 
-    popEventsBatch :: m [EventWithSource ('Postgres 'Vanilla)]
+    popEventsBatch :: m [BackendEventWithSource]
     popEventsBatch = do
       {-
         SELECT FOR UPDATE .. SKIP LOCKED can throw serialization errors in RepeatableRead: https://stackoverflow.com/a/53289263/1911889
@@ -256,40 +242,25 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx{..} L
         Any serial order of updates to a row will lead to an eventually consistent state as the row will have
         (delivered=t or error=t or archived=t) after a fixed number of tries (assuming it begins with locked='f').
       -}
-      pgSources <- scSources <$> liftIO getSchemaCache
+      allSources <- scSources <$> liftIO getSchemaCache
       liftIO . fmap concat $
         -- fetch pending events across all the sources asynchronously
-        LA.forConcurrently (M.toList pgSources) \(sourceName, sourceCache) -> concat . toList <$>
-          for (unsafeSourceTables @('Postgres 'Vanilla) sourceCache) \tables -> liftIO do
-            -- count the number of event triggers on tables in this source
+        LA.forConcurrently (M.toList allSources) \(sourceName, sourceCache) ->
+          AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo _sourceName tableCache _functionCache sourceConfig :: SourceInfo b) -> do
+            let tables = M.elems tableCache
             let eventTriggerCount = sum (M.size . _tiEventTriggerInfoMap <$> tables)
 
             -- only process events for this source if at least one event trigger exists
-            if eventTriggerCount > 0 then (concat . toList) <$>
-              for (unsafeSourceConfiguration @('Postgres 'Vanilla) sourceCache) \sourceConfig -> do
-                fetchEventsTxE <-
-                  case maintenanceMode of
-                    MaintenanceModeEnabled -> do
-                      maintenanceModeVersion <- runPgSourceReadTx sourceConfig getMaintenanceModeVersion
-                      pure $ fmap (fetchEventsMaintenanceMode sourceName fetchBatchSize) maintenanceModeVersion
-                    MaintenanceModeDisabled -> return $ Right $ fetchEvents sourceName fetchBatchSize
-                liftIO $ do
-                  case fetchEventsTxE of
-                    Left err -> do
+            if eventTriggerCount > 0
+              then (runExceptT (fetchUndeliveredEvents @b sourceConfig sourceName maintenanceMode (FetchBatchSize fetchBatchSize)) >>= \case
+                    Right events -> do
+                      _ <- liftIO $ EKG.Distribution.add (smNumEventsFetchedPerBatch serverMetrics) (fromIntegral $ length events)
+                      eventsFetchedTime <- liftIO getCurrentTime
+                      saveLockedEventTriggerEvents sourceName (eId <$> events) leEvents
+                      return $ map (\event -> AB.mkAnyBackend @b $ EventWithSource event sourceConfig sourceName eventsFetchedTime) events
+                    Left err     -> do
                       liftIO $ L.unLogger logger $ EventInternalErr err
-                      return []
-                    Right fetchEventsTx ->
-                      runPgSourceWriteTx sourceConfig fetchEventsTx >>= \case
-                        Left err -> do
-                          liftIO $ L.unLogger logger $ EventInternalErr err
-                          return []
-                        Right events -> do
-                          -- Track number of events fetched in EKG
-                          _ <- liftIO $ EKG.Distribution.add (smNumEventsFetchedPerBatch serverMetrics) (fromIntegral $ length events)
-                          -- The time when the events were fetched. This is used to calculate the average lock time of an event.
-                          eventsFetchedTime <- liftIO getCurrentTime
-                          saveLockedEvents (map eId events) leEvents
-                          return $ map (, sourceConfig, eventsFetchedTime) events
+                      pure [])
               else pure []
 
     -- !!! CAREFUL !!!
@@ -313,19 +284,20 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx{..} L
           -- NOTE: we implement a logical bracket pattern here with the
           -- increment and decrement of _eeCtxEventThreadsCapacity which
           -- depends on not putting anything that can throw in the body here:
-          mask_ $ do
-            liftIO $ atomically $ do  -- block until < HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE threads:
-              capacity <- readTVar _eeCtxEventThreadsCapacity
-              check $ capacity > 0
-              writeTVar _eeCtxEventThreadsCapacity (capacity - 1)
-            -- since there is some capacity in our worker threads, we can launch another:
-            let restoreCapacity = liftIO $ atomically $
-                  modifyTVar' _eeCtxEventThreadsCapacity (+ 1)
-            t <- LA.async $ flip runReaderT (logger, httpMgr) $
-                    processEvent eventWithSource `finally`
-                      -- NOTE!: this needs to happen IN THE FORKED THREAD:
-                      restoreCapacity
-            LA.link t
+          AB.dispatchAnyBackend @BackendEventTrigger eventWithSource \(eventWithSource' :: EventWithSource b) ->
+            mask_ $ do
+              liftIO $ atomically $ do  -- block until < HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE threads:
+                capacity <- readTVar _eeCtxEventThreadsCapacity
+                check $ capacity > 0
+                writeTVar _eeCtxEventThreadsCapacity (capacity - 1)
+              -- since there is some capacity in our worker threads, we can launch another:
+              let restoreCapacity = liftIO $ atomically $
+                    modifyTVar' _eeCtxEventThreadsCapacity (+ 1)
+              t <- LA.async $ flip runReaderT (logger, httpMgr) $
+                      processEvent eventWithSource' `finally`
+                        -- NOTE!: this needs to happen IN THE FORKED THREAD:
+                        restoreCapacity
+              LA.link t
 
         -- return when next batch ready; some 'processEvent' threads may be running.
         LA.wait eventsNextA
@@ -350,7 +322,7 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx{..} L
              return (eventsNext, 0, False)
 
     processEvent
-      :: forall io r
+      :: forall io r b
        . ( HasVersion
          , MonadIO io
          , MonadReader r io
@@ -358,10 +330,11 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx{..} L
          , Has (L.Logger L.Hasura) r
          , Tracing.HasReporter io
          , MonadMask io
+         , BackendEventTrigger b
          )
-      => EventWithSource ('Postgres 'Vanilla)
+      => EventWithSource b
       -> io ()
-    processEvent (e, sourceConfig, eventFetchedTime) = do
+    processEvent (EventWithSource e sourceConfig sourceName eventFetchedTime) = do
       -- Track Queue Time of Event (in seconds). See `smEventQueueTime`
       -- Queue Time = Time when the event was fetched from DB - Time when the event is being processed
       eventProcessTime <- liftIO getCurrentTime
@@ -380,9 +353,9 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx{..} L
       maintenanceModeVersionEither :: Either QErr (Maybe MaintenanceModeVersion) <-
         case maintenanceMode of
           MaintenanceModeEnabled -> do
-            maintenanceModeVersion <-
-              liftIO $ runPgSourceReadTx sourceConfig getMaintenanceModeVersion
-            return $ Just <$> maintenanceModeVersion
+            runExceptT (getMaintenanceModeVersion @b sourceConfig) <&> \case
+              Left err                     -> Left err
+              Right maintenanceModeVersion -> Right $ Just maintenanceModeVersion
           MaintenanceModeDisabled -> return $ Right Nothing
 
       case maintenanceModeVersionEither of
@@ -394,11 +367,10 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx{..} L
               --  i) schema cache is not up-to-date (due to some bug, say during schema syncing across multiple instances)
               --  ii) the event trigger is dropped when this event was just fetched
               logQErr $ err500 Unexpected err
-              liftIO (runPgSourceWriteTx sourceConfig $ do
-                currentTime <- liftIO getCurrentTime
-                -- For such an event, we unlock the event and retry after a minute
-                setRetry e (addUTCTime 60 currentTime) maintenanceModeVersion)
-              >>= flip onLeft logQErr
+              currentTime <- liftIO getCurrentTime
+              -- For such an event, we unlock the event and retry after a minute
+              runExceptT (setRetry sourceConfig e (addUTCTime 60 currentTime) maintenanceModeVersion) >>=
+                flip onLeft logQErr
             Right eti -> runTraceT (spanName eti) do
               let webhookUrl = T.unpack $ wciCachedValue $ etiWebhookInfo eti
                   retryConf = etiRetryConf eti
@@ -427,16 +399,16 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx{..} L
                   (hoistEither =<< lift (invokeRequest reqDetails logger'))
 
               either
-                (processError sourceConfig e retryConf logHeaders ep maintenanceModeVersion)
+                (processError @b sourceConfig e retryConf logHeaders ep maintenanceModeVersion)
                 (processSuccess sourceConfig e logHeaders ep maintenanceModeVersion) res
                 >>= flip onLeft logQErr
       -- removing an event from the _eeCtxLockedEvents after the event has been processed:
-      removeEventFromLockedEvents (eId e) leEvents
+      removeEventTriggerEventFromLockedEvents sourceName (eId e) leEvents
 
-createEventPayload :: RetryConf -> Event ->  EventPayload
+createEventPayload :: RetryConf -> Event b -> EventPayload b
 createEventPayload retryConf e = EventPayload
     { epId           = eId e
-    , epTable        = QualifiedTableStrict { getQualifiedTable = eTable e}
+    , epTable        = eTable e
     , epTrigger      = eTrigger e
     , epEvent        = eEvent e
     , epDeliveryInfo =  DeliveryInfo
@@ -447,11 +419,12 @@ createEventPayload retryConf e = EventPayload
     }
 
 processSuccess
-  :: ( MonadIO m )
-  => SourceConfig ('Postgres 'Vanilla)
-  -> Event
+  :: forall b m a
+   . ( MonadIO m, BackendEventTrigger b )
+  => SourceConfig b
+  -> Event b
   -> [HeaderConf]
-  -> EventPayload
+  -> EventPayload b
   -> Maybe MaintenanceModeVersion
   -> HTTPResp a
   -> m (Either QErr ())
@@ -460,17 +433,18 @@ processSuccess sourceConfig e reqHeaders ep maintenanceModeVersion resp = do
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
       invocation = mkInvocation ep respStatus reqHeaders respBody respHeaders
-  liftIO $ runPgSourceWriteTx sourceConfig $ do
-    insertInvocation invocation
-    setSuccess e maintenanceModeVersion
+  recordSuccess @b sourceConfig e invocation maintenanceModeVersion
 
 processError
-  :: ( MonadIO m )
-  => SourceConfig ('Postgres 'Vanilla)
-  -> Event
+  :: forall b m a
+   . ( MonadIO m
+     , BackendEventTrigger b
+     )
+  => SourceConfig b
+  -> Event b
   -> RetryConf
   -> [HeaderConf]
-  -> EventPayload
+  -> EventPayload b
   -> Maybe MaintenanceModeVersion
   -> HTTPErr a
   -> m (Either QErr ())
@@ -490,17 +464,16 @@ processError sourceConfig e retryConf reqHeaders ep maintenanceModeVersion err =
         HOther detail -> do
           let errMsg = TBS.fromLBS $ encode detail
           mkInvocation ep 500 reqHeaders errMsg []
-  liftIO $ runPgSourceWriteTx sourceConfig $ do
-    insertInvocation invocation
-    retryOrSetError e retryConf maintenanceModeVersion err
+  retryOrError <- retryOrSetError e retryConf err
+  recordError @b sourceConfig e invocation retryOrError maintenanceModeVersion
 
 retryOrSetError
-  :: Event
+  :: MonadIO m
+  => Event b
   -> RetryConf
-  -> Maybe MaintenanceModeVersion
   -> HTTPErr a
-  -> Q.TxE QErr ()
-retryOrSetError e retryConf maintenanceModeVersion err = do
+  -> m ProcessEventError
+retryOrSetError e retryConf err = do
   let mretryHeader = getRetryAfterHeaderFromError err
       tries = eTries e
       mretryHeaderSeconds = mretryHeader >>= parseRetryHeader
@@ -508,14 +481,13 @@ retryOrSetError e retryConf maintenanceModeVersion err = do
       noRetryHeader = isNothing mretryHeaderSeconds
   -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
   if triesExhausted && noRetryHeader
-    then do
-      setError e maintenanceModeVersion
+    then pure PESetError
     else do
       currentTime <- liftIO getCurrentTime
       let delay = fromMaybe (rcIntervalSec retryConf) mretryHeaderSeconds
           diff = fromIntegral delay
           retryTime = addUTCTime diff currentTime
-      setRetry e retryTime maintenanceModeVersion
+      pure $ PESetRetry retryTime
   where
     getRetryAfterHeaderFromError (HStatus resp) = getRetryAfterHeaderFromResp resp
     getRetryAfterHeaderFromError _              = Nothing
@@ -523,7 +495,12 @@ retryOrSetError e retryConf maintenanceModeVersion err = do
     parseRetryHeader = mfilter (> 0) . readMaybe . T.unpack
 
 mkInvocation
-  :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
+  :: Backend b
+  => EventPayload b
+  -> Int
+  -> [HeaderConf]
+  -> TBS.TByteString
+  -> [HeaderConf]
   -> Invocation 'EventType
 mkInvocation ep status reqHeaders respBody respHeaders
   = let resp = if isClientError status
@@ -542,187 +519,12 @@ logQErr err = do
   L.unLogger logger $ EventInternalErr err
 
 getEventTriggerInfoFromEvent
-  :: SchemaCache -> Event -> Either Text (EventTriggerInfo ('Postgres 'Vanilla))
+  :: forall b . Backend b => SchemaCache -> Event b -> Either Text (EventTriggerInfo b)
 getEventTriggerInfoFromEvent sc e = do
   let table = eTable e
-      mTableInfo = unsafeTableInfo @('Postgres 'Vanilla) (eSource e) table $ scSources sc
+      mTableInfo = unsafeTableInfo @b (eSource e) table $ scSources sc
   tableInfo <- onNothing mTableInfo $ Left ("table '" <> table <<> "' not found")
   let triggerName = tmName $ eTrigger e
       mEventTriggerInfo = M.lookup triggerName (_tiEventTriggerInfoMap tableInfo)
   onNothing mEventTriggerInfo $ Left ("event trigger '" <> triggerNameToTxt triggerName
     <> "' on table '" <> table <<> "' not found")
-
-
----- DATABASE QUERIES ---------------------
---
---   The API for our in-database work queue:
--------------------------------------------
-
--- | Lock and return events not yet being processed or completed, up to some
--- limit. Process events approximately in created_at order, but we make no
--- ordering guarentees; events can and will race. Nevertheless we want to
--- ensure newer change events don't starve older ones.
-fetchEvents :: SourceName -> Int -> Q.TxE QErr [Event]
-fetchEvents source limitI =
-  map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
-      UPDATE hdb_catalog.event_log
-      SET locked = NOW()
-      WHERE id IN ( SELECT l.id
-                    FROM hdb_catalog.event_log l
-                    WHERE l.delivered = 'f' and l.error = 'f'
-                          and (l.locked IS NULL or l.locked < (NOW() - interval '30 minute'))
-                          and (l.next_retry_at is NULL or l.next_retry_at <= now())
-                          and l.archived = 'f'
-                    /* NB: this ordering is important for our index `event_log_fetch_events` */
-                    /* (see `init_pg_source.sql`) */
-                    ORDER BY locked NULLS FIRST, next_retry_at NULLS FIRST, created_at
-                    LIMIT $1
-                    FOR UPDATE SKIP LOCKED )
-      RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at
-      |] (Identity limit) True
-  where uncurryEvent (id', sn, tn, trn, Q.AltJ payload, tries, created) =
-          Event
-          { eId        = id'
-          , eSource    = source
-          , eTable     = QualifiedObject sn tn
-          , eTrigger   = TriggerMetadata trn
-          , eEvent     = payload
-          , eTries     = tries
-          , eCreatedAt = created
-          }
-        limit = fromIntegral limitI :: Word64
-
-fetchEventsMaintenanceMode :: SourceName -> Int -> MaintenanceModeVersion -> Q.TxE QErr [Event]
-fetchEventsMaintenanceMode sourceName limitI = \case
-  PreviousMMVersion ->
-    map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
-        UPDATE hdb_catalog.event_log
-        SET locked = 't'
-        WHERE id IN ( SELECT l.id
-                      FROM hdb_catalog.event_log l
-                      WHERE l.delivered = 'f' and l.error = 'f' and l.locked = 'f'
-                            and (l.next_retry_at is NULL or l.next_retry_at <= now())
-                            and l.archived = 'f'
-                      ORDER BY created_at
-                      LIMIT $1
-                      FOR UPDATE SKIP LOCKED )
-        RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at
-        |] (Identity limit) True
-    where uncurryEvent (id', sn, tn, trn, Q.AltJ payload, tries, created) =
-            Event
-            { eId        = id'
-            , eSource    = SNDefault  -- in v1, there'll only be the default source
-            , eTable     = QualifiedObject sn tn
-            , eTrigger   = TriggerMetadata trn
-            , eEvent     = payload
-            , eTries     = tries
-            , eCreatedAt = created
-            }
-          limit = fromIntegral limitI :: Word64
-  CurrentMMVersion -> fetchEvents sourceName limitI
-
-insertInvocation :: Invocation 'EventType -> Q.TxE QErr ()
-insertInvocation invo = do
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-          INSERT INTO hdb_catalog.event_invocation_logs (event_id, status, request, response)
-          VALUES ($1, $2, $3, $4)
-          |] ( iEventId invo
-             , toInt64 $ iStatus invo :: Int64
-             , Q.AltJ $ toJSON $ iRequest invo
-             , Q.AltJ $ toJSON $ iResponse invo) True
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-          UPDATE hdb_catalog.event_log
-
-          SET tries = tries + 1
-          WHERE id = $1
-          |] (Identity $ iEventId invo) True
-
-setSuccess :: Event -> Maybe MaintenanceModeVersion -> Q.TxE QErr ()
-setSuccess e = \case
-  Just PreviousMMVersion ->
-    Q.unitQE defaultTxErrorHandler [Q.sql|
-    UPDATE hdb_catalog.event_log
-    SET delivered = 't', next_retry_at = NULL, locked = 'f'
-    WHERE id = $1
-    |] (Identity $ eId e) True
-  Just CurrentMMVersion -> latestVersionSetSuccess
-  Nothing               -> latestVersionSetSuccess
-  where
-    latestVersionSetSuccess =
-      Q.unitQE defaultTxErrorHandler [Q.sql|
-      UPDATE hdb_catalog.event_log
-      SET delivered = 't', next_retry_at = NULL, locked = NULL
-      WHERE id = $1
-      |] (Identity $ eId e) True
-
-setError :: Event -> Maybe MaintenanceModeVersion -> Q.TxE QErr ()
-setError e = \case
-  Just PreviousMMVersion ->
-    Q.unitQE defaultTxErrorHandler [Q.sql|
-    UPDATE hdb_catalog.event_log
-    SET error = 't', next_retry_at = NULL, locked = 'f'
-    WHERE id = $1
-    |] (Identity $ eId e) True
-  Just CurrentMMVersion -> latestVersionSetError
-  Nothing                -> latestVersionSetError
-  where
-    latestVersionSetError =
-      Q.unitQE defaultTxErrorHandler [Q.sql|
-      UPDATE hdb_catalog.event_log
-      SET error = 't', next_retry_at = NULL, locked = NULL
-      WHERE id = $1
-      |] (Identity $ eId e) True
-
-setRetry :: Event -> UTCTime -> Maybe MaintenanceModeVersion -> Q.TxE QErr ()
-setRetry e time = \case
-  Just PreviousMMVersion ->
-    Q.unitQE defaultTxErrorHandler [Q.sql|
-    UPDATE hdb_catalog.event_log
-    SET next_retry_at = $1, locked = 'f'
-    WHERE id = $2
-    |] (time, eId e) True
-  Just CurrentMMVersion -> latestVersionSetRetry
-  Nothing                -> latestVersionSetRetry
-  where
-    latestVersionSetRetry =
-      Q.unitQE defaultTxErrorHandler [Q.sql|
-              UPDATE hdb_catalog.event_log
-              SET next_retry_at = $1, locked = NULL
-              WHERE id = $2
-              |] (time, eId e) True
-
-toInt64 :: (Integral a) => a -> Int64
-toInt64 = fromIntegral
-
--- | unlockEvents takes an array of 'EventId' and unlocks them. This function is called
---   when a graceful shutdown is initiated.
-unlockEvents :: [EventId] -> Q.TxE QErr Int
-unlockEvents eventIds =
-   runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
-   [Q.sql|
-     WITH "cte" AS
-     (UPDATE hdb_catalog.event_log
-     SET locked = NULL
-     WHERE id = ANY($1::text[])
-     -- only unlock those events that have been locked, it's possible
-     -- that an event has been processed but not yet been removed from
-     -- the saved locked events, which will lead to a double send
-     AND locked IS NOT NULL
-     RETURNING *)
-     SELECT count(*) FROM "cte"
-   |] (Identity $ PGTextArray $ map unEventId eventIds) True
-
-getMaintenanceModeVersion :: Q.TxE QErr MaintenanceModeVersion
-getMaintenanceModeVersion = liftTx $ do
-  catalogVersion <- getCatalogVersion -- From the user's DB
-  -- the previous version and the current version will change depending
-  -- upon between which versions we need to support maintenance mode
-  if | catalogVersion == "40"     -> pure PreviousMMVersion
-     -- The catalog is migrated to the 43rd version for a source
-     -- which was initialised by a v1 graphql-engine instance (See @initSource@).
-     | catalogVersion == "43"     -> pure CurrentMMVersion
-     | catalogVersion == latestCatalogVersionString -> pure CurrentMMVersion
-     | otherwise                  ->
-       throw500 $
-         "Maintenance mode is only supported with catalog versions: 40, 43 and "
-         <> tshow latestCatalogVersionString

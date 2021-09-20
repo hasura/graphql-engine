@@ -154,6 +154,7 @@ resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update d
   let rconf = fromMaybe defaultRetryConf retryConf
   return (ti, replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders metaTransform)
   where
+    assertCols :: TableCoreInfo b -> Maybe (SubscribeOpSpec b) -> m ()
     assertCols ti opSpec = onJust opSpec \sos -> case sosColumns sos of
       SubCStar          -> return ()
       SubCArray columns -> forM_ columns (assertColumnExists @b (_tciFieldInfoMap ti) "")

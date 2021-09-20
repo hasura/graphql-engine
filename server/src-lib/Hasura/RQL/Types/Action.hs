@@ -97,7 +97,7 @@ import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.CustomTypes
-import           Hasura.RQL.Types.EventTrigger   (EventId (..))
+import           Hasura.RQL.Types.Eventing       (EventId (..))
 import           Hasura.SQL.Backend
 import           Hasura.Session
 

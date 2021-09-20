@@ -22,7 +22,6 @@ import qualified Hasura.Tracing                         as Tracing
 
 import qualified Database.PG.Query                      as Q
 import           Hasura.Base.Error
-import           Hasura.Eventing.HTTP
 import           Hasura.Eventing.ScheduledTrigger.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Types

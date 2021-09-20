@@ -478,8 +478,9 @@ library
                      , Hasura.RQL.Types.CustomTypes
                      , Hasura.RQL.Types.Endpoint
                      , Hasura.RQL.Types.Endpoint.Trie
-                     , Hasura.RQL.Types.Eventing.Backend
                      , Hasura.RQL.Types.EventTrigger
+                     , Hasura.RQL.Types.Eventing
+                     , Hasura.RQL.Types.Eventing.Backend
                      , Hasura.RQL.Types.GraphqlSchemaIntrospection
                      , Hasura.RQL.Types.Function
                      , Hasura.RQL.Types.Instances
@@ -701,6 +702,7 @@ test-suite graphql-engine-tests
     , safe
     , scientific
     , split
+    , stm
     , template-haskell
     , text
     , time
