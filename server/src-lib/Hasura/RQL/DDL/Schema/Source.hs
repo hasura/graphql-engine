@@ -35,7 +35,7 @@ data AddSource b
   }
 
 instance (Backend b) => FromJSON (AddSource b) where
-  parseJSON = withObject "add source" $ \o ->
+  parseJSON = withObject "AddSource" $ \o ->
     AddSource
       <$> o .: "name"
       <*> o .: "configuration"
@@ -121,7 +121,7 @@ data DropSource
   } deriving (Show, Eq)
 
 instance FromJSON DropSource where
-  parseJSON = withObject "drop source" $ \o ->
+  parseJSON = withObject "DropSource" $ \o ->
     DropSource <$> o .: "name" <*> o .:? "cascade" .!= False
 
 runDropSource

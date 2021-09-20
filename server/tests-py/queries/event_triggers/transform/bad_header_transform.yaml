@@ -3,7 +3,7 @@
   status: 400
   response:
     path: $.args.transform.request_headers.remove_headers[0]
-    error: 'Restricted Header: Content-Type'
+    error: "Error when parsing command create_event_trigger.\nSee our documentation at https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index.html#metadata-apis.\nInternal error message: Restricted Header: Content-Type"
     code: parse-failed
   query:
     type: pg_create_event_trigger

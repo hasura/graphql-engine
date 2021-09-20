@@ -16,8 +16,10 @@ module Hasura.Server.API.Backend where
 import                          Hasura.Prelude
 
 import                qualified Data.Aeson.Types           as J
+import                qualified Data.Text                  as T
 
 import                          Data.Aeson                 ((<?>))
+import                          Data.Aeson.Types           (modifyFailure)
 
 import                          Hasura.RQL.Types.Backend
 import                          Hasura.SQL.AnyBackend
@@ -45,7 +47,14 @@ commandParser expected constructor provided arguments =
   -- instance backtracks: if we used 'fail', we would not be able to distinguish between "this is
   -- the correct branch, the name matches, but the argument fails to parse, we must fail" and "this
   -- is not the command we were expecting here, it is fine to continue with another".
-  whenMaybe (expected == provided) $ constructor <$> (J.parseJSON arguments <?> J.Key "args")
+  whenMaybe (expected == provided) $
+    modifyFailure withDetails $ constructor <$> (J.parseJSON arguments <?> J.Key "args")
+  where
+    withDetails internalErrorMessage = intercalate "\n"
+      [ "Error when parsing command " <> T.unpack expected <> "."
+      , "See our documentation at https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index.html#metadata-apis."
+      , "Internal error message: " <> internalErrorMessage
+      ]
 
 sourceCommands, tableCommands, tablePermissionsCommands, functionCommands,
   functionPermissionsCommands, relationshipCommands, remoteRelationshipCommands, eventTriggerCommands

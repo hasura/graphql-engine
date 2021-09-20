@@ -88,7 +88,7 @@ data TrackFunctionV2 (b :: BackendType) = TrackFunctionV2
   }
 
 instance Backend b => FromJSON (TrackFunctionV2 b) where
-  parseJSON = withObject "track function" $ \o ->
+  parseJSON = withObject "TrackFunctionV2" $ \o ->
     TrackFunctionV2
     <$> o .:? "source" .!= defaultSource
     <*> o .: "function"
@@ -202,7 +202,7 @@ data FunctionPermissionArgument b = FunctionPermissionArgument
 
 instance (Backend b) => FromJSON (FunctionPermissionArgument b) where
   parseJSON v =
-    flip (withObject "function permission") v $ \o ->
+    flip (withObject "FunctionPermissionArgument") v $ \o ->
       FunctionPermissionArgument
       <$> o .: "function"
       <*> o .:? "source" .!= defaultSource
