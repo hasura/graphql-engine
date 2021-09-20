@@ -81,7 +81,7 @@ instance ToJSON (Response 'ScheduledType) where
 data Invocation (a :: TriggerTypes)
   = Invocation
   { iEventId  :: EventId
-  , iStatus   :: Int
+  , iStatus   :: Maybe Int
   , iRequest  :: WebhookRequest
   , iResponse :: Response a
   }

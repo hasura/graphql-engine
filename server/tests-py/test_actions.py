@@ -664,4 +664,4 @@ class TestActionTimeout:
         time.sleep(4)
         response, _ = check_query(hge_ctx, conf)
         assert 'errors' in response['data']['create_user']
-        assert 'ResponseTimeout' == response['data']['create_user']['errors']['internal']['error']['message']
+        assert 'Response timeout' == response['data']['create_user']['errors']['internal']['error']['message']

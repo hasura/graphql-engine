@@ -302,13 +302,13 @@ getWebhookInfoFromConf
   => Env.Environment
   -> WebhookConf
   -> m WebhookConfInfo
-getWebhookInfoFromConf env wc = case wc of
+getWebhookInfoFromConf env webhookConf = case webhookConf of
   WCValue w -> do
     resolvedWebhook <- resolveWebhook env w
-    return $ WebhookConfInfo wc $ unResolvedWebhook resolvedWebhook
-  WCEnv we -> do
-    envVal <- getEnv env we
-    return $ WebhookConfInfo wc envVal
+    return $ WebhookConfInfo webhookConf resolvedWebhook
+  WCEnv webhookEnvVar -> do
+    envVal <- getEnv env webhookEnvVar
+    return $ WebhookConfInfo webhookConf (ResolvedWebhook envVal)
 
 buildEventTriggerInfo
   :: forall b m

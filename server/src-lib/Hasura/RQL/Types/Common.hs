@@ -254,8 +254,10 @@ instance FromJSON NonNegativeDiffTime where
       False -> fail "negative value not allowed"
 
 newtype ResolvedWebhook
-  = ResolvedWebhook { unResolvedWebhook :: Text }
-  deriving ( Show, Eq, FromJSON, ToJSON, Hashable, ToTxt)
+  = ResolvedWebhook { unResolvedWebhook :: Text}
+  deriving ( Show, Eq, FromJSON, ToJSON, Hashable, ToTxt, Generic)
+instance NFData ResolvedWebhook
+instance Cacheable ResolvedWebhook
 
 newtype InputWebhook
   = InputWebhook {unInputWebhook :: URLTemplate}

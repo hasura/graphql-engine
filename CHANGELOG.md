@@ -3,6 +3,12 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+
+- server: improve the event trigger logging on errors
+  NOTE: This change introduces a breaking change, earlier when there
+  was a client error when trying to process an event, then the status was reported as 1000. Now, the status 1000 has been removed and if any status was received by the graphql-engine from the webhook, the status
+  of the invocation will be the same otherwise it will be `NULL`.
+- server: support `extensions` field in error responses from action webhook endpoints (fix #4001)
 - server: fix custom-check based permissions for MSSQL (#7429)
 - server: remove identity notion for table columns (fix #7557)
 - server: add webhook transformations for Actions and EventTriggers
@@ -14,8 +20,6 @@
 - server: `introspect_remote_schema` API now returns original remote schema instead of customized schema
 - server: prevent empty subscription roots in the schema (#6898)
 - console: support tracking of functions with return a single row
-
-- server: support `extensions` field in error responses from action webhook endpoints (fix #4001)
 
 ## v2.0.9
 

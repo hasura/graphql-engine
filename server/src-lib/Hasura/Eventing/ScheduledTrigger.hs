@@ -117,7 +117,6 @@ import qualified Data.HashMap.Strict                    as Map
 import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Set                               as Set
 import qualified Data.TByteString                       as TBS
-import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Network.HTTP.Client.Transformable      as HTTP
 import qualified Text.Builder                           as TB
@@ -140,13 +139,13 @@ import           Hasura.Base.Error
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.Eventing.ScheduledTrigger.Types
+import           Hasura.HTTP                            (getHTTPExceptionStatus)
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.EventTrigger            (getHeaderInfosFromConf)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Server.Version                  (HasVersion)
-
 
 -- | runCronEventsGenerator makes sure that all the cron triggers
 --   have an adequate buffer of cron events.
@@ -240,14 +239,13 @@ processCronEvents logger logBehavior httpMgr cronEvents getSC lockedCronEvents =
       Nothing ->  logInternalError $
         err500 Unexpected "could not find cron trigger in cache"
       Just CronTriggerInfo{..} -> do
-        let webhookUrl = unResolvedWebhook ctiWebhookInfo
-            payload = ScheduledEventWebhookPayload id' (Just name) st
+        let payload = ScheduledEventWebhookPayload id' (Just name) st
                       (fromMaybe J.Null ctiPayload) ctiComment
                       Nothing
             retryCtx = RetryContext tries ctiRetryConf
         finally <- runMetadataStorageT $ flip runReaderT (logger, httpMgr) $
                    processScheduledEvent logBehavior id' ctiHeaders retryCtx
-                                         payload webhookUrl Cron
+                                         payload ctiWebhookInfo Cron
         removeEventFromLockedEvents id' lockedCronEvents
         onLeft finally logInternalError
   where
@@ -276,14 +274,13 @@ processOneOffScheduledEvents env logger logBehavior httpMgr
     (either logInternalError pure) =<< runMetadataStorageT do
       webhookInfo <- resolveWebhook env _ooseWebhookConf
       headerInfo <- getHeaderInfosFromConf env _ooseHeaderConf
-      let webhookUrl = unResolvedWebhook webhookInfo
-          payload = ScheduledEventWebhookPayload _ooseId Nothing
+      let payload = ScheduledEventWebhookPayload _ooseId Nothing
                     _ooseScheduledTime (fromMaybe J.Null _oosePayload)
                     _ooseComment (Just _ooseCreatedAt)
           retryCtx = RetryContext _ooseTries _ooseRetryConf
 
       flip runReaderT (logger, httpMgr) $
-        processScheduledEvent logBehavior _ooseId headerInfo retryCtx payload webhookUrl OneOff
+        processScheduledEvent logBehavior _ooseId headerInfo retryCtx payload webhookInfo OneOff
       removeEventFromLockedEvents _ooseId lockedOneOffScheduledEvents
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
@@ -331,7 +328,7 @@ processScheduledEvent
   -> [EventHeaderInfo]
   -> RetryContext
   -> ScheduledEventWebhookPayload
-  -> Text
+  -> ResolvedWebhook
   -> ScheduledEventType
   -> m ()
 processScheduledEvent logBehavior eventId eventHeaders retryCtx payload webhookUrl type'
@@ -350,11 +347,10 @@ processScheduledEvent logBehavior eventId eventHeaders retryCtx payload webhookU
           extraLogCtx = ExtraLogContext eventId (sewpName payload)
           webhookReqBodyJson = J.toJSON payload
           webhookReqBody = J.encode webhookReqBodyJson
-
       eitherRes <- runExceptT $ do
         -- reqDetails contains the pre and post transformation
         -- request for logging purposes.
-        reqDetails <- mkRequest headers httpTimeout webhookReqBody Nothing (T.unpack webhookUrl)
+        reqDetails <- mkRequest headers httpTimeout webhookReqBody Nothing webhookUrl
         let logger e d = logHTTPForST e extraLogCtx d logBehavior
         hoistEither =<< lift (invokeRequest reqDetails logger)
       case eitherRes of
@@ -376,20 +372,17 @@ processError
   -> m ()
 processError eventId retryCtx decodedHeaders type' reqJson err = do
   let invocation = case err of
-        HClient excp -> do
-          let errMsg = TBS.fromLBS $ J.encode $ show excp
-          mkInvocation eventId 1000 decodedHeaders errMsg [] reqJson
-        HParse _ detail -> do
-          let errMsg = TBS.fromLBS $ J.encode detail
-          mkInvocation eventId 1001 decodedHeaders errMsg [] reqJson
+        HClient httpException ->
+          let statusMaybe = getHTTPExceptionStatus httpException
+          in mkInvocation eventId statusMaybe decodedHeaders (TBS.fromLBS $ J.encode httpException) [] reqJson
         HStatus errResp -> do
           let respPayload = hrsBody errResp
               respHeaders = hrsHeaders errResp
               respStatus = hrsStatus errResp
-          mkInvocation eventId respStatus decodedHeaders respPayload respHeaders reqJson
+          mkInvocation eventId (Just respStatus) decodedHeaders respPayload respHeaders reqJson
         HOther detail -> do
           let errMsg = (TBS.fromLBS $ J.encode detail)
-          mkInvocation eventId 500 decodedHeaders errMsg [] reqJson
+          mkInvocation eventId (Just 500) decodedHeaders errMsg [] reqJson
   insertScheduledEventInvocation invocation type'
   retryOrMarkError eventId retryCtx err type'
 
@@ -461,7 +454,7 @@ processSuccess eventId decodedHeaders type' reqBodyJson resp = do
   let respBody = hrsBody resp
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
-      invocation = mkInvocation eventId respStatus decodedHeaders respBody respHeaders reqBodyJson
+      invocation = mkInvocation eventId (Just respStatus) decodedHeaders respBody respHeaders reqBodyJson
   insertScheduledEventInvocation invocation type'
   setScheduledEventOp eventId (SEOpStatus SESDelivered) type'
 
@@ -473,22 +466,18 @@ processDead eventId type' =
 
 mkInvocation
   :: ScheduledEventId
-  -> Int
+  -> Maybe Int
   -> [HeaderConf]
   -> TBS.TByteString
   -> [HeaderConf]
   -> J.Value
   -> (Invocation 'ScheduledType)
-mkInvocation eventId status reqHeaders respBody respHeaders reqBodyJson
-  = let resp = if isClientError status
-          then mkClientErr respBody
-          else mkResp status respBody respHeaders
-    in
-      Invocation
-      eventId
-      status
-      (mkWebhookReq reqBodyJson reqHeaders invocationVersionST)
-      resp
+mkInvocation eventId status reqHeaders respBody respHeaders reqBodyJson =
+    Invocation
+    eventId
+    status
+    (mkWebhookReq reqBodyJson reqHeaders invocationVersionST)
+    (mkInvocationResp status respBody respHeaders)
 
 -- metadata database transactions
 
@@ -580,7 +569,7 @@ insertInvocationTx invo type' = do
          (event_id, status, request, response)
          VALUES ($1, $2, $3, $4)
         |] ( iEventId invo
-             , fromIntegral $ iStatus invo :: Int64
+             , fromIntegral <$> iStatus invo :: Maybe Int64
              , Q.AltJ $ J.toJSON $ iRequest invo
              , Q.AltJ $ J.toJSON $ iResponse invo) True
       Q.unitQE defaultTxErrorHandler [Q.sql|
@@ -595,7 +584,7 @@ insertInvocationTx invo type' = do
          (event_id, status, request, response)
          VALUES ($1, $2, $3, $4)
         |] ( iEventId invo
-             , fromIntegral $ iStatus invo :: Int64
+             , fromIntegral <$> iStatus invo :: Maybe Int64
              , Q.AltJ $ J.toJSON $ iRequest invo
              , Q.AltJ $ J.toJSON $ iResponse invo) True
       Q.unitQE defaultTxErrorHandler [Q.sql|

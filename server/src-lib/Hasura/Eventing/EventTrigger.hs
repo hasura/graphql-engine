@@ -79,6 +79,7 @@ import           Hasura.Backends.Postgres.SQL.Types   hiding (TableName)
 import           Hasura.Base.Error
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
+import           Hasura.HTTP                          (getHTTPExceptionStatus)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.RequestTransform
 import           Hasura.RQL.Types
@@ -372,7 +373,7 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx{..} L
               runExceptT (setRetry sourceConfig e (addUTCTime 60 currentTime) maintenanceModeVersion) >>=
                 flip onLeft logQErr
             Right eti -> runTraceT (spanName eti) do
-              let webhookUrl = T.unpack $ wciCachedValue $ etiWebhookInfo eti
+              let webhook = wciCachedValue $ etiWebhookInfo eti
                   retryConf = etiRetryConf eti
                   timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
                   httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
@@ -385,7 +386,7 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx{..} L
               res <- runExceptT $ do
                 -- reqDetails contains the pre and post transformation
                 -- request for logging purposes.
-                reqDetails <- mkRequest headers httpTimeout payload dataTransform webhookUrl
+                reqDetails <- mkRequest headers httpTimeout payload dataTransform webhook
                 let logger' res details = logHTTPForET res extraLogCtx details logBehavior
                 -- Event Triggers have a configuration parameter called
                 -- HASURA_GRAPHQL_EVENTS_HTTP_WORKERS, which is used
@@ -432,7 +433,7 @@ processSuccess sourceConfig e reqHeaders ep maintenanceModeVersion resp = do
   let respBody = hrsBody resp
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
-      invocation = mkInvocation ep respStatus reqHeaders respBody respHeaders
+      invocation = mkInvocation ep (Just respStatus) reqHeaders respBody respHeaders
   recordSuccess @b sourceConfig e invocation maintenanceModeVersion
 
 processError
@@ -450,20 +451,17 @@ processError
   -> m (Either QErr ())
 processError sourceConfig e retryConf reqHeaders ep maintenanceModeVersion err = do
   let invocation = case err of
-        HClient excp -> do
-          let errMsg = TBS.fromLBS $ encode $ show excp
-          mkInvocation ep 1000 reqHeaders errMsg []
-        HParse _ detail -> do
-          let errMsg = TBS.fromLBS $ encode detail
-          mkInvocation ep 1001 reqHeaders errMsg []
+        HClient httpException ->
+          let statusMaybe = getHTTPExceptionStatus httpException
+          in mkInvocation ep statusMaybe reqHeaders (TBS.fromLBS (encode httpException)) []
         HStatus errResp -> do
           let respPayload = hrsBody errResp
               respHeaders = hrsHeaders errResp
               respStatus = hrsStatus errResp
-          mkInvocation ep respStatus reqHeaders respPayload respHeaders
+          mkInvocation ep (Just respStatus) reqHeaders respPayload respHeaders
         HOther detail -> do
           let errMsg = TBS.fromLBS $ encode detail
-          mkInvocation ep 500 reqHeaders errMsg []
+          mkInvocation ep (Just 500) reqHeaders errMsg []
   retryOrError <- retryOrSetError e retryConf err
   recordError @b sourceConfig e invocation retryOrError maintenanceModeVersion
 
@@ -497,21 +495,25 @@ retryOrSetError e retryConf err = do
 mkInvocation
   :: Backend b
   => EventPayload b
-  -> Int
+  -> Maybe Int
   -> [HeaderConf]
   -> TBS.TByteString
   -> [HeaderConf]
   -> Invocation 'EventType
-mkInvocation ep status reqHeaders respBody respHeaders
-  = let resp = if isClientError status
-          then mkClientErr respBody
-          else mkResp status respBody respHeaders
-    in
-      Invocation
-      (epId ep)
-      status
-      (mkWebhookReq (toJSON ep) reqHeaders invocationVersionET)
-      resp
+mkInvocation eventPayload statusMaybe reqHeaders respBody respHeaders =
+  let resp =
+        case statusMaybe of
+          Nothing     -> mkClientErr respBody
+          Just status ->
+            if status >= 200 && status < 300
+            then mkResp status respBody respHeaders
+            else mkClientErr respBody
+  in
+    Invocation
+    (epId eventPayload)
+    statusMaybe
+    (mkWebhookReq (toJSON eventPayload) reqHeaders invocationVersionET)
+    resp
 
 logQErr :: ( MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m) => QErr -> m ()
 logQErr err = do

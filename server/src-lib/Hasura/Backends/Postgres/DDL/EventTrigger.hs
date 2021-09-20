@@ -227,7 +227,7 @@ insertInvocation invo = do
           INSERT INTO hdb_catalog.event_invocation_logs (event_id, status, request, response)
           VALUES ($1, $2, $3, $4)
           |] ( iEventId invo
-             , fromIntegral $ iStatus invo :: Int64
+             , fromIntegral <$> iStatus invo :: Maybe Int64
              , Q.AltJ $ toJSON $ iRequest invo
              , Q.AltJ $ toJSON $ iResponse invo) True
   Q.unitQE defaultTxErrorHandler [Q.sql|
