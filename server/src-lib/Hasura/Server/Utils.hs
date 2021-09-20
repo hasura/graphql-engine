@@ -307,3 +307,12 @@ deprecatedEnvVars = DeprecatedEnvVars
   , "HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE"
   , "HASURA_GRAPHQL_STRIPES_PER_READ_REPLICA"
   ]
+
+sensitiveHeaders :: HashSet HTTP.HeaderName
+sensitiveHeaders = Set.fromList
+  [ "Authorization"
+  , "Cookie"
+  ]
+
+redactSensitiveHeader :: HTTP.Header -> HTTP.Header
+redactSensitiveHeader (headerName, value) = (headerName, if headerName `elem` sensitiveHeaders then "<REDACTED>" else value)

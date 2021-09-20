@@ -43,7 +43,7 @@ import           Hasura.Incremental              (Cacheable)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.RequestTransform (MetadataTransform)
 import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Common         (InputWebhook, SourceName)
+import           Hasura.RQL.Types.Common         (InputWebhook, ResolvedWebhook, SourceName)
 import           Hasura.RQL.Types.Eventing
 import           Hasura.SQL.Backend
 
@@ -143,9 +143,10 @@ instance FromJSON WebhookConf where
 data WebhookConfInfo
   = WebhookConfInfo
   { wciWebhookConf :: !WebhookConf
-  , wciCachedValue :: !Text
+  , wciCachedValue :: !ResolvedWebhook
   } deriving (Show, Eq, Generic)
 instance NFData WebhookConfInfo
+instance Cacheable WebhookConfInfo
 $(deriveToJSON hasuraJSON{omitNothingFields=True} ''WebhookConfInfo)
 
 -- | The table operations on which the event trigger will be invoked.

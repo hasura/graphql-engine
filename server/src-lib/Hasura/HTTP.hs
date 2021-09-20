@@ -5,6 +5,8 @@ module Hasura.HTTP
   , addDefaultHeaders
   , HttpResponse(..)
   , addHttpResponseHeaders
+  , getHTTPExceptionStatus
+  , serializeHTTPExceptionMessage
   ) where
 
 import           Hasura.Prelude
@@ -14,10 +16,14 @@ import           Data.CaseInsensitive  (original)
 import           Data.Text.Conversions (UTF8 (..), convertText)
 
 import qualified Data.Aeson            as J
+import qualified Data.HashMap.Strict   as M
+import qualified Data.Text             as T
+import qualified Data.Text.Encoding    as TE
 import qualified Network.HTTP.Client   as HTTP
 import qualified Network.HTTP.Types    as HTTP
 import qualified Network.Wreq          as Wreq
 
+import           Hasura.Server.Utils   (redactSensitiveHeader)
 import           Hasura.Server.Version (HasVersion, currentVersion)
 
 hdrsToText :: [HTTP.Header] -> [(Text, Text)]
@@ -55,16 +61,68 @@ newtype HttpException
   { unHttpException :: HTTP.HttpException }
   deriving (Show)
 
+getHTTPExceptionStatus :: HttpException -> Maybe Int
+getHTTPExceptionStatus = \case
+  (HttpException (HTTP.HttpExceptionRequest _ httpExceptionContent)) ->
+    case httpExceptionContent of
+      HTTP.StatusCodeException response _   -> Just $ HTTP.statusCode $ HTTP.responseStatus response
+      HTTP.ProxyConnectException _ _ status -> Just $ HTTP.statusCode status
+      _                                     -> Nothing
+  (HttpException (HTTP.InvalidUrlException _ _)) -> Nothing
+
+serializeHTTPExceptionMessage :: HttpException -> Text
+serializeHTTPExceptionMessage (HttpException (HTTP.HttpExceptionRequest _ httpExceptionContent)) =
+  case httpExceptionContent of
+     HTTP.StatusCodeException _ _        -> "unexpected"
+     HTTP.TooManyRedirects _             -> "Too many redirects"
+     HTTP.OverlongHeaders                -> "Overlong headers"
+     HTTP.ResponseTimeout                -> "Response timeout"
+     HTTP.ConnectionTimeout              -> "Connection timeout"
+     HTTP.ConnectionFailure _            -> "Connection failure"
+     HTTP.InvalidStatusLine _            -> "Invalid HTTP Status Line"
+     HTTP.InternalException _            -> "Internal Exception"
+     HTTP.ProxyConnectException _ _ _    -> "Proxy connection exception"
+     HTTP.NoResponseDataReceived         -> "No response data received"
+     HTTP.TlsNotSupported                -> "TLS not supported"
+     HTTP.InvalidDestinationHost _       -> "Invalid destination host"
+     HTTP.InvalidHeader _                -> "Invalid Header"
+     HTTP.InvalidRequestHeader _         -> "Invalid Request Header"
+     HTTP.WrongRequestBodyStreamSize _ _ -> "Wrong request body stream size"
+     HTTP.ResponseBodyTooShort _ _       -> "Response body too short"
+     HTTP.InvalidChunkHeaders            -> "Invalid chunk headers"
+     HTTP.IncompleteHeaders              -> "Incomplete headers"
+     _                                   -> "unexpected"
+serializeHTTPExceptionMessage (HttpException (HTTP.InvalidUrlException url reason)) =  T.pack $ "URL: " <> url <> " is invalid because " <> reason
+
+encodeHTTPRequestJSON :: HTTP.Request -> J.Value
+encodeHTTPRequestJSON request =
+  J.Object $ M.fromList
+  [ ("host", J.toJSON $ TE.decodeUtf8 $ HTTP.host request)
+  , ("port" , J.toJSON $ HTTP.port request)
+  , ("secure", J.toJSON $ HTTP.secure request)
+  , ("requestHeaders" , J.toJSON $ M.fromList $ hdrsToText $ map redactSensitiveHeader $ HTTP.requestHeaders request)
+  , ("path" , J.toJSON $ TE.decodeUtf8 $ HTTP.path request)
+  , ("queryString", J.toJSON $ TE.decodeUtf8 $ HTTP.queryString request)
+  , ("method", J.toJSON $ TE.decodeUtf8 $ HTTP.method request)
+  , ("responseTimeout", J.String $ tshow $ HTTP.responseTimeout request)
+  ]
+
 instance J.ToJSON HttpException where
-  toJSON = \case
-    (HttpException (HTTP.InvalidUrlException _ e)) ->
-      J.object [ "type" J..= ("invalid_url" :: Text)
-               , "message" J..= e
-               ]
-    (HttpException (HTTP.HttpExceptionRequest _ cont)) ->
-      J.object [ "type" J..= ("http_exception" :: Text)
-               , "message" J..= show cont
-               ]
+  toJSON httpException =
+    case httpException of
+      (HttpException (HTTP.InvalidUrlException _ e)) ->
+        J.object [ "type" J..= ("invalid_url" :: Text)
+                 , "message" J..= e
+                 ]
+      (HttpException (HTTP.HttpExceptionRequest req _)) ->
+        let statusMaybe = getHTTPExceptionStatus httpException
+            exceptionContent = serializeHTTPExceptionMessage httpException
+            reqJSON = encodeHTTPRequestJSON req
+        in
+        J.object $ [ "type" J..= ("http_exception" :: Text)
+                   , "message" J..= exceptionContent
+                   , "request" J..= reqJSON
+                   ] <> maybe mempty (\status -> [ "status" J..= status]) statusMaybe
 
 data HttpResponse a
   = HttpResponse

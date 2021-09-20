@@ -27,6 +27,7 @@ module Hasura.Eventing.HTTP
   , mkClientErr
   , mkWebhookReq
   , mkResp
+  , mkInvocationResp
   , LogBehavior(..)
   , ResponseLogBehavior(..)
   , HeaderLogBehavior(..)
@@ -57,11 +58,12 @@ import           Data.Aeson.TH
 import           Data.Either
 import           Data.Has
 import           Data.Int                          (Int64)
-import           Hasura.HTTP                       (addDefaultHeaders)
+import           Hasura.HTTP                       (HttpException (..), addDefaultHeaders)
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.RequestTransform   (RequestTransform, applyRequestTransform)
+import           Hasura.RQL.Types.Common           (ResolvedWebhook (..))
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Eventing
 import           Hasura.Server.Version             (HasVersion)
@@ -95,7 +97,6 @@ data HTTPResp (a :: TriggerTypes)
    , hrsBody    :: !TBS.TByteString
    , hrsSize    :: !Int64
    } deriving (Show, Eq)
-
 $(deriveToJSON hasuraJSON{omitNothingFields=True} ''HTTPResp)
 
 instance ToEngineLog (HTTPResp 'EventType) Hasura where
@@ -105,22 +106,18 @@ instance ToEngineLog (HTTPResp 'ScheduledType) Hasura where
   toEngineLog resp = (LevelInfo, scheduledTriggerLogType, toJSON resp)
 
 data HTTPErr (a :: TriggerTypes)
-  = HClient !HTTP.HttpException
-  | HParse !HTTP.Status !String
+  = HClient !HttpException
   | HStatus !(HTTPResp a)
   | HOther !String
   deriving (Show)
 
 instance ToJSON (HTTPErr a) where
   toJSON err = toObj $ case err of
-    (HClient e) -> ("client", toJSON $ show e)
-    (HParse st e) ->
-      ( "parse"
-      , toJSON (HTTP.statusCode st,  show e)
-      )
+    (HClient httpException) ->
+      ("client", toJSON httpException)
     (HStatus resp) ->
       ("status", toJSON resp)
-    (HOther e) -> ("internal", toJSON $ show e)
+    (HOther e) -> ("internal", toJSON e)
     where
       toObj :: (Text, Value) -> Value
       toObj (k, v) = object [ "type" .= k
@@ -200,12 +197,13 @@ isNetworkError = \case
   HClient he -> isNetworkErrorHC he
   _          -> False
 
-isNetworkErrorHC :: HTTP.HttpException -> Bool
-isNetworkErrorHC = \case
-  HTTP.HttpExceptionRequest _ (HTTP.ConnectionFailure _) -> True
-  HTTP.HttpExceptionRequest _ HTTP.ConnectionTimeout     -> True
-  HTTP.HttpExceptionRequest _ HTTP.ResponseTimeout       -> True
-  _                                                      -> False
+isNetworkErrorHC :: HttpException -> Bool
+isNetworkErrorHC (HttpException exception) =
+  case exception of
+    HTTP.HttpExceptionRequest _ (HTTP.ConnectionFailure _) -> True
+    HTTP.HttpExceptionRequest _ HTTP.ConnectionTimeout     -> True
+    HTTP.HttpExceptionRequest _ HTTP.ResponseTimeout       -> True
+    _                                                      -> False
 
 anyBodyParser :: HTTP.Response LBS.ByteString -> Either (HTTPErr a) (HTTPResp a)
 anyBodyParser resp = do
@@ -261,7 +259,7 @@ logHTTPForST eitherResp extraLogCtx reqDetails logBehavior = do
 runHTTP :: (MonadIO m) => HTTP.Manager -> HTTP.Request -> m (Either (HTTPErr a) (HTTPResp a))
 runHTTP manager req = do
   res <- liftIO $ try $ HTTP.performRequest req manager
-  return $ either (Left . HClient) anyBodyParser res
+  return $ either (Left . HClient . HttpException) anyBodyParser res
 
 mkRequest ::
   MonadError (HTTPErr a) m
@@ -272,11 +270,11 @@ mkRequest ::
   -- log the request size. As the logging happens outside the function, we pass
   -- it the final request body, instead of 'Value'
   -> Maybe RequestTransform
-  -> String
+  -> ResolvedWebhook
   -> m RequestDetails
-mkRequest headers timeout payload mRequestTransform webhook =
-  case HTTP.mkRequestEither (T.pack webhook) of
-    Left excp -> throwError $ HClient excp
+mkRequest headers timeout payload mRequestTransform (ResolvedWebhook webhook) =
+  case HTTP.mkRequestEither webhook of
+    Left excp -> throwError $ HClient $ HttpException excp
     Right initReq ->
       let req = initReq & set HTTP.method "POST"
                         & set HTTP.headers headers
@@ -319,8 +317,17 @@ mkClientErr message =
 mkWebhookReq :: Value -> [HeaderConf] -> InvocationVersion -> WebhookRequest
 mkWebhookReq payload headers = WebhookRequest payload headers
 
+mkInvocationResp :: Maybe Int -> TBS.TByteString -> [HeaderConf] -> Response a
+mkInvocationResp statusMaybe responseBody responseHeaders =
+  case statusMaybe of
+    Nothing     -> mkClientErr responseBody
+    Just status ->
+      if isClientError status
+      then mkClientErr responseBody
+      else mkResp status responseBody responseHeaders
+
 isClientError :: Int -> Bool
-isClientError status = status >= 1000
+isClientError status = status >= 300
 
 encodeHeader :: EventHeaderInfo -> HTTP.Header
 encodeHeader (EventHeaderInfo hconf cache) =
