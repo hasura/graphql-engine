@@ -1,12 +1,31 @@
 {-# LANGUAGE ViewPatterns #-}
--- | Translate from the DML to the TSql dialect.
+
+{- | Translate from the DML to the TSql dialect.
+
+We use 'StateT' (newtype 'FromIr') as the base monad for all operations, since
+state is used to mangle names such that the scope of identifiers in the IR is
+preserved in the resulting TSQL.
+
+For the MSSQL backend, a supported subset of the constructs that make
+up its TSQL dialect are represented in the form of data-types in the
+Hasura.Backends.MSSQL.Types module. In this module, we translate from RQL to
+those TSQL types. And in 'ToQuery' we render/serialize/print the TSQL types to
+query-strings that are suitable to be executed on the actual MSSQL database.
+
+In places where a series of transations are scoped under a context, we use
+'ReaderT'. For example, such translations as pertaining to a table with an
+alias, will require the alias for their translation operations, like qualified
+equality checks under where clauses, etc., perhaps below multiple layers of
+nested function calls.
+
+-}
 
 module Hasura.Backends.MSSQL.FromIr
   ( fromSelectRows
   , mkSQLSelect
   , fromRootField
   , fromSelectAggregate
-  , fromAnnBoolExp
+  , fromGBoolExp
   , Error(..)
   , runFromIr
   , FromIr
@@ -107,6 +126,7 @@ fromRootField =
 --------------------------------------------------------------------------------
 -- Top-level exported functions
 
+-- | Top/root-level 'Select'. All descendent/sub-translations are collected to produce a root TSQL.Select.
 fromSelectRows :: IR.AnnSelectG 'MSSQL (Const Void) (IR.AnnFieldG 'MSSQL (Const Void)) Expression -> FromIr TSQL.Select
 fromSelectRows annSelectG = do
   selectFrom <-
@@ -126,7 +146,7 @@ fromSelectRows annSelectG = do
       (traverse (fromAnnFieldsG argsExistingJoins stringifyNumbers) fields)
       (fromAlias selectFrom)
   filterExpression <-
-    runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
+    runReaderT (fromGBoolExp permFilter) (fromAlias selectFrom)
   let selectProjections =
         concatMap (toList . fieldSourceProjections) fieldSources
   pure
@@ -256,7 +276,7 @@ fromSelectAggregate
   mforeignKeyConditions <- fmap (Where . fromMaybe []) $ for mparentRelationship $
     \(entityAlias, mapping) ->
       runReaderT (fromMapping selectFrom mapping) entityAlias
-  filterExpression <- runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
+  filterExpression <- runReaderT (fromGBoolExp permFilter) (fromAlias selectFrom)
   args'@Args{argsExistingJoins} <-
     runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
   -- Although aggregates, exps and nodes could be handled in one list,
@@ -311,7 +331,7 @@ fromSelectArgsG :: IR.SelectArgsG 'MSSQL Expression -> ReaderT EntityAlias FromI
 fromSelectArgsG selectArgsG = do
   let argsOffset = ValueExpression . ODBC.IntValue . fromIntegral <$> moffset
   argsWhere <-
-    maybe (pure mempty) (fmap (Where . pure) . fromAnnBoolExp) mannBoolExp
+    maybe (pure mempty) (fmap (Where . pure) . fromGBoolExp) mannBoolExp
   argsTop <-
     maybe (pure mempty) (pure . Top) mlimit
   -- Not supported presently, per Vamshi:
@@ -371,7 +391,7 @@ unfurlAnnotatedOrderByElement =
     IR.AOCObjectRelation IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
       selectFrom <- lift (lift (fromQualifiedTable table))
       joinAliasEntity <-
-        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText table))))
+        lift (lift (generateAlias (ForOrderAlias (tableNameText table))))
       foreignKeyConditions <- lift (fromMapping selectFrom mapping)
       -- TODO: Because these object relations are re-used by regular
       -- object mapping queries, this WHERE may be unnecessarily
@@ -382,7 +402,7 @@ unfurlAnnotatedOrderByElement =
       -- Map in 'argsExistingJoins'. That would guarantee only equal
       -- selects are re-used.
       whereExpression <-
-        lift (local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp))
+        lift (local (const (fromAlias selectFrom)) (fromGBoolExp annBoolExp))
       tell
         (pure
            UnfurledJoin
@@ -413,10 +433,10 @@ unfurlAnnotatedOrderByElement =
       selectFrom <- lift (lift (fromQualifiedTable tableName))
       let alias = aggFieldName
       joinAliasEntity <-
-        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText tableName))))
+        lift (lift (generateAlias (ForOrderAlias (tableNameText tableName))))
       foreignKeyConditions <- lift (fromMapping selectFrom mapping)
       whereExpression <-
-        lift (local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp))
+        lift (local (const (fromAlias selectFrom)) (fromGBoolExp annBoolExp))
       aggregate <-
         lift
           (local
@@ -471,7 +491,7 @@ tableNameText (TableName {tableName}) = tableName
 -- everything else is joins attached to it.
 fromQualifiedTable :: TableName -> FromIr From
 fromQualifiedTable schemadTableName@(TableName{tableName}) = do
-  alias <- generateEntityAlias (TableTemplate tableName)
+  alias <- generateAlias (TableTemplate tableName)
   pure
     (FromQualifiedTable
        (Aliased
@@ -481,14 +501,12 @@ fromQualifiedTable schemadTableName@(TableName{tableName}) = do
 
 fromTableName :: TableName -> FromIr EntityAlias
 fromTableName TableName{tableName} = do
-  alias <- generateEntityAlias (TableTemplate tableName)
+  alias <- generateAlias (TableTemplate tableName)
   pure (EntityAlias alias)
 
-fromAnnBoolExp
-  :: IR.GBoolExp 'MSSQL (IR.AnnBoolExpFld 'MSSQL Expression)
-  -> ReaderT EntityAlias FromIr Expression
-fromAnnBoolExp = traverse fromAnnBoolExpFld >=> fromGBoolExp
-
+-- | Translate an 'AnnBoolExpFld' within an 'EntityAlias' context referring to the table the `AnnBoolExpFld` field belongs to.
+--
+-- This is mutually recursive with 'fromGBoolExp', mirroring the mutually recursive structure between 'AnnBoolExpFld' and 'AnnBoolExp b a' (alias of 'GBoolExp b (AnnBoolExpFld b a)').
 fromAnnBoolExpFld
   :: IR.AnnBoolExpFld 'MSSQL Expression
   -> ReaderT EntityAlias FromIr Expression
@@ -502,7 +520,7 @@ fromAnnBoolExpFld =
       selectFrom <- lift (fromQualifiedTable table)
       foreignKeyConditions <- fromMapping selectFrom mapping
       whereExpression <-
-        local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp)
+        local (const (fromAlias selectFrom)) (fromGBoolExp annBoolExp)
       pure
         (ExistsExpression
            Select
@@ -549,28 +567,6 @@ fromPGColumnInfo IR.ColumnInfo {pgiColumn = pgCol} =
 --     FieldName
 --       {fieldName = PG.getPGColTxt pgCol, fieldNameEntity = entityAliasText})
 
-fromGExists :: IR.GExists 'MSSQL Expression -> ReaderT EntityAlias FromIr Select
-fromGExists IR.GExists {_geTable, _geWhere} = do
-  selectFrom <- lift (fromQualifiedTable _geTable)
-  whereExpression <-
-    local (const (fromAlias selectFrom)) (fromGBoolExp _geWhere)
-  pure
-    Select
-      { selectOrderBy = Nothing
-      , selectProjections =
-          [ ExpressionProjection
-              (Aliased
-                 { aliasedThing = trueExpression
-                 , aliasedAlias = existsFieldName
-                 })
-          ]
-      , selectFrom = Just selectFrom
-      , selectJoins = mempty
-      , selectWhere = Where [whereExpression]
-      , selectTop = NoTop
-      , selectFor = NoFor
-      , selectOffset = Nothing
-      }
 
 --------------------------------------------------------------------------------
 -- Sources of projected fields
@@ -704,7 +700,7 @@ fromAnnColumnField _stringifyNumbers annColumnField = do
      else case caseBoolExpMaybe of
             Nothing -> pure (ColumnExpression fieldName)
             Just ex -> do
-                ex' <- (traverse fromAnnBoolExpFld >=> fromGBoolExp) (coerce ex)
+                ex' <- fromGBoolExp (coerce ex)
                 pure (ConditionalProjection ex' fieldName)
   where
     IR.AnnColumnField { _acfInfo = IR.ColumnInfo{pgiColumn=pgCol,pgiType=typ}
@@ -773,13 +769,13 @@ fromObjectRelationSelectG existingJoins annRelationSelectG = do
         concatMap (toList . fieldSourceProjections) fieldSources
   joinJoinAlias <-
     do fieldName <- lift (fromRelName aarRelationshipName)
-       alias <- lift (generateEntityAlias (ObjectRelationTemplate fieldName))
+       alias <- lift (generateAlias (ObjectRelationTemplate fieldName))
        pure
          JoinAlias
            {joinAliasEntity = alias, joinAliasField = pure jsonFieldName}
   let selectFor =
         JsonFor ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot}
-  filterExpression <- local (const entityAlias) (fromAnnBoolExp tableFilter)
+  filterExpression <- local (const entityAlias) (fromGBoolExp tableFilter)
   case eitherAliasOrFrom of
     Right selectFrom -> do
       foreignKeyConditions <- fromMapping selectFrom mapping
@@ -849,7 +845,7 @@ fromArrayAggregateSelectG annRelationSelectG = do
     -- With this, the foreign key relations are injected automatically
     -- at the right place by fromSelectAggregate.
     lift (fromSelectAggregate (pure (lhsEntityAlias, mapping)) annSelectG)
-  alias <- lift (generateEntityAlias (ArrayAggregateTemplate fieldName))
+  alias <- lift (generateAlias (ArrayAggregateTemplate fieldName))
   pure
     Join
       { joinJoinAlias =
@@ -871,7 +867,7 @@ fromArrayRelationSelectG annRelationSelectG = do
     do foreignKeyConditions <- selectFromMapping sel mapping
        pure
          sel {selectWhere = Where foreignKeyConditions <> selectWhere sel}
-  alias <- lift (generateEntityAlias (ArrayRelationTemplate fieldName))
+  alias <- lift (generateAlias (ArrayRelationTemplate fieldName))
   pure
     Join
       { joinJoinAlias =
@@ -975,17 +971,50 @@ nullableBoolInequality x y =
     , AndExpression [IsNotNullExpression x, IsNullExpression y]
     ]
 
-fromGBoolExp :: IR.GBoolExp 'MSSQL Expression -> ReaderT EntityAlias FromIr Expression
+-- | Translate a 'GBoolExp' of a 'AnnBoolExpFld', within an 'EntityAlias' context.
+--
+-- It is mutually recursive with 'fromAnnBoolExpFld' and 'fromGExists'.
+fromGBoolExp ::
+     IR.GBoolExp 'MSSQL (IR.AnnBoolExpFld 'MSSQL Expression)
+  -> ReaderT EntityAlias FromIr Expression
 fromGBoolExp =
   \case
     IR.BoolAnd expressions ->
       fmap AndExpression (traverse fromGBoolExp expressions)
     IR.BoolOr expressions ->
       fmap OrExpression (traverse fromGBoolExp expressions)
-    IR.BoolNot expression -> fmap NotExpression (fromGBoolExp expression)
-    IR.BoolExists gExists -> fmap ExistsExpression (fromGExists gExists)
-    IR.BoolFld expression -> pure expression
-
+    IR.BoolNot expression ->
+      fmap NotExpression (fromGBoolExp expression)
+    IR.BoolExists gExists ->
+      fromGExists gExists
+    IR.BoolFld expression ->
+      fromAnnBoolExpFld expression
+  where
+    -- | For the `exists` construct, the `where` construct and its `table` are
+    -- provided as two fields of a record. Here we process the `where` clause in the
+    -- context of its `table`, to return the corresponding 'Select'.
+    fromGExists :: IR.GExists 'MSSQL (IR.AnnBoolExpFld 'MSSQL Expression) -> ReaderT EntityAlias FromIr Expression
+    fromGExists IR.GExists {_geTable, _geWhere} = do
+      selectFrom <- lift (fromQualifiedTable _geTable)
+      whereExpression <-
+        local (const (fromAlias selectFrom)) (fromGBoolExp _geWhere)
+      pure $ ExistsExpression $
+        Select
+          { selectOrderBy = Nothing
+          , selectProjections =
+              [ ExpressionProjection
+                  (Aliased
+                     { aliasedThing = trueExpression
+                     , aliasedAlias = existsFieldName
+                     })
+              ]
+          , selectFrom = Just selectFrom
+          , selectJoins = mempty
+          , selectWhere = Where [whereExpression]
+          , selectTop = NoTop
+          , selectFor = NoFor
+          , selectOffset = Nothing
+          }
 
 --------------------------------------------------------------------------------
 -- Delete
@@ -994,8 +1023,8 @@ fromDelete :: IR.AnnDel 'MSSQL -> FromIr Delete
 fromDelete (IR.AnnDel tableName (permFilter, whereClause) _ _) = do
   tableAlias <- fromTableName tableName
   runReaderT
-    (do permissionsFilter <- fromAnnBoolExp permFilter
-        whereExpression <- fromAnnBoolExp whereClause
+    (do permissionsFilter <- fromGBoolExp permFilter
+        whereExpression <- fromGBoolExp whereClause
         pure
           Delete
             { deleteTable =
@@ -1041,8 +1070,11 @@ data NameTemplate
   | TableTemplate Text
   | ForOrderAlias Text
 
-generateEntityAlias :: NameTemplate -> FromIr Text
-generateEntityAlias template = do
+-- | Generate an alias for a given entity to remove ambiguity and naming
+-- conflicts between scopes at the TSQL level. Keeps track of the increments for
+-- the alias index in the 'StateT'
+generateAlias :: NameTemplate -> FromIr Text
+generateAlias template = do
   FromIr (modify' (M.insertWith (+) prefix start))
   i <- FromIr get
   pure (prefix <> tshow (fromMaybe start (M.lookup prefix i)))

@@ -2,6 +2,12 @@ type: bulk
 args:
 
 # Tables
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table: permissions
+
 - type: mssql_track_table
   args:
     source: mssql
@@ -102,6 +108,22 @@ args:
       allow_aggregations: true
       limit: 2
       filter: {}
+
+- type: mssql_create_select_permission
+  args:
+    role: permissions_with_custom_check
+    table: article
+    source: mssql
+    permission:
+      columns: "*"
+      filter:
+        _exists:
+          _where:
+            id:
+              _eq: X-Hasura-User-Id
+          _table:
+            schema: dbo
+            name: permissions
 
 # Roles
 - type: add_inherited_role

@@ -5,6 +5,7 @@ args:
     source: mssql
     cascade: true
     sql: |
+      DROP TABLE permissions;
       DROP TABLE article;
       DROP TABLE author;
 
