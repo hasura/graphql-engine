@@ -261,13 +261,13 @@ getResolvedExecPlan env logger userInfo sqlGenCtx
       G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives inlinedSelSet -> do
         (executionPlan, queryRootFields, dirMap, parameterizedQueryHash) <-
           EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders directives inlinedSelSet
-            varDefs (_grVariables reqUnparsed) (scSetGraphqlIntrospectionOptions sc)
+            varDefs reqUnparsed (scSetGraphqlIntrospectionOptions sc)
             reqId maybeOperationName queryTagsConfig
         pure $ (parameterizedQueryHash, QueryExecutionPlan executionPlan queryRootFields dirMap)
       G.TypedOperationDefinition G.OperationTypeMutation _ varDefs directives inlinedSelSet -> do
         (executionPlan, parameterizedQueryHash) <-
           EM.convertMutationSelectionSet env logger gCtx sqlGenCtx userInfo httpManager reqHeaders
-            directives inlinedSelSet varDefs (_grVariables reqUnparsed) (scSetGraphqlIntrospectionOptions sc)
+            directives inlinedSelSet varDefs reqUnparsed (scSetGraphqlIntrospectionOptions sc)
             reqId maybeOperationName queryTagsConfig
         pure $ (parameterizedQueryHash, MutationExecutionPlan executionPlan)
       G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> do

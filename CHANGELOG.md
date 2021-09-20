@@ -3,7 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
-
+- server: add GraphQL request query in the payload for synchronous actions
 - server: improve the event trigger logging on errors
   NOTE: This change introduces a breaking change, earlier when there
   was a client error when trying to process an event, then the status was reported as 1000. Now, the status 1000 has been removed and if any status was received by the graphql-engine from the webhook, the status

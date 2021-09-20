@@ -99,7 +99,8 @@ instance J.FromJSON a => J.FromJSON (GQLBatchedReqs a) where
 newtype GQLQueryText
   = GQLQueryText
   { _unGQLQueryText :: Text
-  } deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, Hashable, IsString)
+  } deriving (Show, Eq, Ord, Hashable, IsString)
+    deriving newtype (J.FromJSON, J.ToJSON)
 
 -- | We've not yet parsed the graphql query string parameter of the POST.
 type GQLReqUnparsed = GQLReq GQLQueryText

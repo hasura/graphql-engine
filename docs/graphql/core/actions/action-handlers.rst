@@ -40,7 +40,8 @@ The request payload is of the format:
       "session_variables": {
         "x-hasura-user-id": "<session-user-id>",
         "x-hasura-role": "<session-user-role>"
-      }
+      },
+      "request_query": "<request-query>"
     }
 
 .. note::
@@ -132,7 +133,8 @@ Hasura will call the handler with the following payload:
       "session_variables": {
         "x-hasura-user-id": "423",
         "x-hasura-role": "user"
-      }
+      },
+      "request_query": "mutation {\n  UserLogin (username: \"jake\", password: \"secretpassword\") {\n    accessToken\n    userId\n  }\n}\n"
     }
 
 To return a success response, you must send the response of the action's output

@@ -67,7 +67,8 @@ of the webhook calls in the ``extensions.internal`` field.
                   "input": {
                     "email": "foo@boo.com",
                     "name": "Foo"
-                  }
+                  },
+                  "request_query": "mutation {\n    create_user(email: \"foo@bar.com\", name: \"Foo\"){\n      id\n      user {\n        name\n        email\n      }\n    }\n  }\n"
                 }
               }
             }
