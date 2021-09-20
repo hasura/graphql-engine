@@ -71,18 +71,19 @@ convertQuerySelSet
   -> [G.Directive G.Name]
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
-  -> Maybe GH.VariableValues
+  -> GH.GQLReqUnparsed
   -> SetGraphqlIntrospectionOptions
   -> RequestId
   -> Maybe G.Name
   -- ^ Graphql Operation Name
   -> RQL.QueryTagsConfig
   -> m (ExecutionPlan, [QueryRootField UnpreparedValue], DirectiveMap, ParameterizedQueryHash)
-convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs varValsM
+convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs gqlUnparsed
   introspectionDisabledRoles reqId maybeOperationName queryTagsConfig = do
+
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, normalizedDirectives, normalizedSelectionSet) <-
-    parseGraphQLQuery gqlContext varDefs varValsM directives fields
+    parseGraphQLQuery gqlContext varDefs (GH._grVariables gqlUnparsed) directives fields
 
   -- Transform the query plans into an execution plan
   let usrVars = _uiSession userInfo
@@ -110,7 +111,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
       RFAction action -> do
         let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
         (actionExecution, actionName, fch) <- pure $ case noRelsDBAST of
-          AQQuery s -> (AEPSync $ resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders usrVars), _aaeName s, _aaeForwardClientHeaders s)
+          AQQuery s -> (AEPSync $ resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders usrVars) (Just (GH._grQuery gqlUnparsed)), _aaeName s, _aaeForwardClientHeaders s)
           AQAsync s -> (AEPAsyncQuery $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s, _aaaqName s, _aaaqForwardClientHeaders s)
         pure $ ExecStepAction actionExecution (ActionsInfo actionName fch) remoteJoins
       RFRaw r -> flip onLeft throwError =<< executeIntrospection userInfo r introspectionDisabledRoles

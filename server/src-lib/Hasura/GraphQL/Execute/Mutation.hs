@@ -48,10 +48,11 @@ convertMutationAction
   -> UserInfo
   -> HTTP.Manager
   -> HTTP.RequestHeaders
+  -> Maybe GH.GQLQueryText
   -> ActionMutation ('Postgres 'Vanilla) (Const Void) (UnpreparedValue ('Postgres 'Vanilla))
   -> m ActionExecutionPlan
-convertMutationAction env logger userInfo manager reqHeaders  = \case
-  AMSync s  -> pure $ AEPSync $ resolveActionExecution env logger userInfo s actionExecContext
+convertMutationAction env logger userInfo manager reqHeaders gqlQueryText = \case
+  AMSync s  -> pure $ AEPSync $ resolveActionExecution env logger userInfo s actionExecContext gqlQueryText
   AMAsync s -> AEPAsyncMutation <$>
     liftEitherM (runMetadataStorageT $ resolveActionMutationAsync s reqHeaders userSession)
   where
@@ -78,7 +79,7 @@ convertMutationSelectionSet
   -> [G.Directive G.Name]
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
-  -> Maybe GH.VariableValues
+  -> GH.GQLReqUnparsed
   -> SetGraphqlIntrospectionOptions
   -> RequestId
   -> Maybe G.Name
@@ -86,11 +87,11 @@ convertMutationSelectionSet
   -> QueryTagsConfig
   -> m (ExecutionPlan, ParameterizedQueryHash)
 convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userInfo manager reqHeaders
-  directives fields varDefs varValsM introspectionDisabledRoles reqId maybeOperationName queryTagsConfig = do
+  directives fields varDefs gqlUnparsed introspectionDisabledRoles reqId maybeOperationName queryTagsConfig = do
   mutationParser <- onNothing (gqlMutationParser gqlContext) $
     throw400 ValidationFailed "no mutations exist"
 
-  (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe Map.empty varValsM) directives fields
+  (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe Map.empty (GH._grVariables gqlUnparsed)) directives fields
   -- Parse the GraphQL query into the RQL AST
   unpreparedQueries
     :: OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)
@@ -123,7 +124,7 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
         (actionName, _fch) <- pure $ case noRelsDBAST of
           AMSync s  -> (_aaeName s, _aaeForwardClientHeaders s)
           AMAsync s -> (_aamaName s, _aamaForwardClientHeaders s)
-        plan <- convertMutationAction env logger userInfo manager reqHeaders noRelsDBAST
+        plan <- convertMutationAction env logger userInfo manager reqHeaders (Just (GH._grQuery gqlUnparsed)) noRelsDBAST
         pure $ ExecStepAction plan (ActionsInfo actionName _fch) remoteJoins -- `_fch` represents the `forward_client_headers` option from the action
                                                                   -- definition which is currently being ignored for actions that are mutations
       RFRaw s -> flip onLeft throwError =<< executeIntrospection userInfo s introspectionDisabledRoles

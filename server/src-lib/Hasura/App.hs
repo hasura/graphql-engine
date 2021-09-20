@@ -613,7 +613,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
                             logger
                             (C.ThreadShutdown asyncActionGracefulShutdownAction) $
          asyncActionsProcessor env logger (_scrCache cacheRef)
-                               (leActionEvents lockedEventsCtx) _scHttpManager sleepTime
+                               (leActionEvents lockedEventsCtx) _scHttpManager sleepTime Nothing
 
 
   -- start a background thread to handle async action live queries

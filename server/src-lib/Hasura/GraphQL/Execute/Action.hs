@@ -58,6 +58,7 @@ import           Hasura.EncJSON
 import           Hasura.Eventing.Common
 import           Hasura.GraphQL.Execute.Action.Types       as Types
 import           Hasura.GraphQL.Parser
+import           Hasura.GraphQL.Transport.HTTP.Protocol    as GH
 import           Hasura.HTTP
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Headers
@@ -110,8 +111,9 @@ resolveActionExecution
   -> UserInfo
   -> AnnActionExecution ('Postgres 'Vanilla) (Const Void) (UnpreparedValue ('Postgres 'Vanilla))
   -> ActionExecContext
+  -> Maybe GQLQueryText
   -> ActionExecution
-resolveActionExecution env logger userInfo annAction execContext =
+resolveActionExecution env logger userInfo annAction execContext gqlQueryText =
   case actionSource of
     -- Build client response
     ASINoSource -> ActionExecution $ first (encJFromOrderedValue . makeActionResponseNoRelations annFields) <$> runWebhook
@@ -130,7 +132,7 @@ resolveActionExecution env logger userInfo annAction execContext =
       forwardClientHeaders stringifyNum timeout actionSource metadataTransform = annAction
     ActionExecContext manager reqHeaders sessionVariables = execContext
     actionContext = ActionContext actionName
-    handlerPayload = ActionWebhookPayload actionContext sessionVariables inputPayload
+    handlerPayload = ActionWebhookPayload actionContext sessionVariables inputPayload gqlQueryText
 
 
     executeActionInDb :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m)
@@ -307,8 +309,9 @@ asyncActionsProcessor
   -> STM.TVar (Set LockedActionEventId)
   -> HTTP.Manager
   -> Milliseconds
+  -> Maybe GH.GQLQueryText
   -> m (Forever m)
-asyncActionsProcessor env logger cacheRef lockedActionEvents httpManager sleepTime =
+asyncActionsProcessor env logger cacheRef lockedActionEvents httpManager sleepTime gqlQueryText =
   return $ Forever () $ const $ do
     actionCache <- scActions . lastBuiltSchemaCache . fst <$> liftIO (readIORef cacheRef)
     let asyncActions =
@@ -349,7 +352,7 @@ asyncActionsProcessor env logger cacheRef lockedActionEvents httpManager sleepTi
           eitherRes <- runExceptT $ flip runReaderT logger $
                        callWebhook env httpManager outputType outputFields reqHeaders confHeaders
                          forwardClientHeaders webhookUrl
-                         (ActionWebhookPayload actionContext sessionVariables inputPayload)
+                         (ActionWebhookPayload actionContext sessionVariables inputPayload gqlQueryText)
                          timeout metadataTransform
           resE <- runMetadataStorageT $ setActionStatus actionId $ case eitherRes of
               Left e                     -> AASError e
