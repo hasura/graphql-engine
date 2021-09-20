@@ -1,5 +1,5 @@
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-import requestAction from 'utils/requestAction';
+import requestAction from '../../../../utils/requestAction';
 import { Integers, Reals } from '../constants';
 import {
   showErrorNotification,

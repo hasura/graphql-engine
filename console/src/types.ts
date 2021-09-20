@@ -80,3 +80,6 @@ declare global {
   // eslint-disable-next-line no-underscore-dangle
   const __DEVELOPMENT__: boolean;
 }
+export type DeepPartial<T> = {
+  [P in keyof T]?: DeepPartial<T[P]>;
+};

@@ -147,6 +147,12 @@ hasura console --endpoint <DATA_API_URL> --admin-secret <your-admin-secret> (opt
 npm run dev
 ```
 
+###### Start development storybook
+
+```bash
+npm run storybook
+```
+
 ### Check out the console
 
 Visit [http://localhost:3000](http://localhost:3000) to confirm the setup.
