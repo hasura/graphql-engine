@@ -669,14 +669,14 @@ askColInfo m c msg = do
   fieldInfo <- modifyErr ("column " <>) $
              askFieldInfo m (fromCol @backend c)
   case fieldInfo of
-    (FIColumn pgColInfo)     -> pure pgColInfo
+    (FIColumn colInfo)       -> pure colInfo
     (FIRelationship   _)     -> throwErr "relationship"
     (FIComputedField _)      -> throwErr "computed field"
     (FIRemoteRelationship _) -> throwErr "remote relationship"
   where
     throwErr fieldType =
       throwError $ err400 UnexpectedPayload $ mconcat
-      [ "expecting a postgres column; but, "
+      [ "expecting a database column; but, "
       , c <<> " is a " <> fieldType <> "; "
       , msg
       ]

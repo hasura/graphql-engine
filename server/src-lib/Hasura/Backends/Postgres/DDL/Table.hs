@@ -1,6 +1,5 @@
 module Hasura.Backends.Postgres.DDL.Table
-  ( updateColumnInEventTrigger
-  , fetchAndValidateEnumValues
+  ( fetchAndValidateEnumValues
   )
 where
 
@@ -24,39 +23,10 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Base.Error
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 import           Hasura.Server.Utils
-
-updateColumnInEventTrigger
-  :: QualifiedTable
-  -> PGCol
-  -> PGCol
-  -> QualifiedTable
-  -> EventTriggerConf ('Postgres pgKind) -> EventTriggerConf ('Postgres pgKind)
-updateColumnInEventTrigger table oCol nCol refTable = rewriteEventTriggerConf
-  where
-    rewriteSubsCols = \case
-      SubCStar       -> SubCStar
-      SubCArray cols -> SubCArray $ map getNewCol cols
-    rewriteOpSpec (SubscribeOpSpec listenColumns deliveryColumns) =
-      SubscribeOpSpec
-      (rewriteSubsCols listenColumns)
-      (rewriteSubsCols <$> deliveryColumns)
-    rewriteTrigOpsDef (TriggerOpsDef ins upd del man) =
-      TriggerOpsDef
-      (rewriteOpSpec <$> ins)
-      (rewriteOpSpec <$> upd)
-      (rewriteOpSpec <$> del)
-      man
-    rewriteEventTriggerConf etc =
-      etc { etcDefinition =
-            rewriteTrigOpsDef $ etcDefinition etc
-          }
-    getNewCol col =
-      if table == refTable && oCol == col then nCol else col
 
 data EnumTableIntegrityError (b :: BackendType)
   = EnumTablePostgresError !Text

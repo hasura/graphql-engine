@@ -13,7 +13,6 @@ import qualified Data.ByteString.Char8                      as BC
 import qualified Data.ByteString.Lazy.Char8                 as BLC
 import qualified Data.Environment                           as Env
 import qualified Data.HashMap.Strict                        as HM
-import qualified Data.Set                                   as Set
 import qualified Data.Text                                  as T
 import qualified Data.Time.Clock                            as Clock
 import qualified Data.Yaml                                  as Y
@@ -26,7 +25,7 @@ import qualified System.Metrics.Gauge                       as EKG.Gauge
 import qualified Text.Mustache.Compile                      as M
 import qualified Web.Spock.Core                             as Spock
 
-import           Control.Concurrent.STM.TVar                (TVar, readTVarIO)
+import           Control.Concurrent.STM.TVar                (readTVarIO)
 import           Control.Exception                          (bracket_, throwIO)
 import           Control.Monad.Catch                        (Exception, MonadCatch, MonadMask,
                                                              MonadThrow, onException)
@@ -48,6 +47,7 @@ import           System.Environment                         (getEnvironment)
 import qualified Hasura.GraphQL.Execute.Backend             as EB
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll      as EL
 import qualified Hasura.GraphQL.Transport.WebSocket.Server  as WS
+import qualified Hasura.SQL.AnyBackend                      as AB
 import qualified Hasura.Tracing                             as Tracing
 
 import           Data.IORef                                 (readIORef)
@@ -71,6 +71,7 @@ import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Eventing.Backend
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query                    (requiresAdmin)
 import           Hasura.Server.App
@@ -555,7 +556,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
   let
     maxEvThrds       = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
     fetchI           = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
-    allPgSources     = mapMaybe (unsafeSourceConfiguration @('Postgres 'Vanilla)) $ HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
+    allSources       = HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
     eventLogBehavior = LogBehavior
       { _lbHeader = if soLogHeadersFromEnv then LogEnvValue else LogEnvVarname
       , _lbResponse = if soDevMode then LogEntireResponse else LogSanitisedResponse
@@ -577,7 +578,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
           waitForProcessingAction logger
                                   "event_triggers"
                                   (length <$> readTVarIO (leEvents lockedEventsCtx))
-                                  (EventTriggerShutdownAction (shutdownEventTriggerEvents allPgSources logger lockedEventsCtx))
+                                  (EventTriggerShutdownAction (shutdownEventTriggerEvents allSources logger lockedEventsCtx))
                                   soGracefulShutdownTimeout
     unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
     void $
@@ -728,17 +729,24 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
     -- processed but not been marked as delivered in the db will be unlocked by `shutdownEventTriggerEvents`
     -- and will be processed when the events are proccessed next time.
     shutdownEventTriggerEvents
-      :: [SourceConfig ('Postgres 'Vanilla)]
+      :: [BackendSourceInfo]
       -> Logger Hasura
       -> LockedEventsCtx
       -> IO ()
-    shutdownEventTriggerEvents pgSources hasuraLogger@(Logger logger) LockedEventsCtx {..} = do
+    shutdownEventTriggerEvents sources (Logger logger) LockedEventsCtx {..} = do
       -- TODO: is this correct?
       -- event triggers should be tied to the life cycle of a source
-      forM_ pgSources $ \pgSource -> do
-        logger $ mkGenericStrLog LevelInfo "event_triggers" "unlocking events that are locked by the HGE"
-        let unlockEvents' l = MetadataStorageT $ runTx (_pscExecCtx pgSource) Q.ReadWrite $ liftTx $ unlockEvents l
-        unlockEventsForShutdown hasuraLogger "event_triggers" "" unlockEvents' leEvents
+      lockedEvents <- readTVarIO leEvents
+      forM_ sources $ \backendSourceInfo -> do
+        AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo sourceName _ _ sourceConfig :: SourceInfo b) -> do
+          let sourceNameString = T.unpack $ sourceNameToText sourceName
+          logger $ mkGenericStrLog LevelInfo "event_triggers" $ "unlocking events of source: " ++ sourceNameString
+          onJust (HM.lookup sourceName lockedEvents) $ \sourceLockedEvents -> do
+            unlockEventsInSource @b sourceConfig sourceLockedEvents >>= \case
+              Left err -> logger $ mkGenericStrLog LevelWarn "event_trigger" $
+                "Error while unlocking event trigger events of source: " ++ sourceNameString ++ " error:" ++ show err
+              Right count -> logger $ mkGenericStrLog LevelInfo "event_trigger" $
+                show count ++ " events of source " ++ sourceNameString ++ " were successfully unlocked"
 
     shutdownAsyncActions
       :: LockedEventsCtx
@@ -746,24 +754,6 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
     shutdownAsyncActions lockedEventsCtx = do
       lockedActionEvents <- liftIO $ readTVarIO $ leActionEvents lockedEventsCtx
       setProcessingActionLogsToPending (LockedActionIdArray $ toList lockedActionEvents)
-
-    unlockEventsForShutdown
-      :: Logger Hasura
-      -> Text -- ^ trigger type
-      -> Text -- ^ event type
-      -> ([eventId] -> MetadataStorageT IO Int)
-      -> TVar (Set.Set eventId)
-      -> IO ()
-    unlockEventsForShutdown (Logger logger) triggerType eventType doUnlock lockedIdsVar = do
-      logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "unlocking scheduled events that are locked by the HGE"
-      lockedIds <- readTVarIO lockedIdsVar
-      unless (Set.null lockedIds) $ do
-        result <- runMetadataStorageT $ doUnlock $ toList lockedIds
-        case result of
-          Left err -> logger $ mkGenericStrLog LevelWarn triggerType $
-            "Error while unlocking " ++ T.unpack eventType ++ " events: " ++ show err
-          Right count -> logger $ mkGenericStrLog LevelInfo triggerType $
-            show count ++ " " ++ T.unpack eventType ++ " events successfully unlocked"
 
     -- This function is a helper function to do couple of things:
     --

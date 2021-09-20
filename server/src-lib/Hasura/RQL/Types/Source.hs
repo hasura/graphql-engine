@@ -100,3 +100,11 @@ instance (MonadResolveSource m) => MonadResolveSource (Tracing.TraceT m) where
 
 instance (MonadResolveSource m) => MonadResolveSource (Q.TxET QErr m) where
   getSourceResolver = lift getSourceResolver
+
+data MaintenanceModeVersion
+  = PreviousMMVersion
+  -- ^ should correspond to the source catalog version from which the user
+  -- is migrating from
+  | CurrentMMVersion
+  -- ^ should correspond to the latest source catalog version
+  deriving (Show, Eq)

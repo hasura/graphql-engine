@@ -1,16 +1,26 @@
 -- | Tests for stuff under Hasura.Eventing hierarchy
 module Hasura.EventingSpec (spec) where
 
-import           Hasura.Eventing.ScheduledTrigger
+
 import           Hasura.Prelude
 
+import qualified Data.HashMap.Strict              as Map
+import qualified Data.Set                         as Set
+
+import           Control.Concurrent.STM.TVar
 import           Data.Time.Clock
 import           System.Cron.Parser
 import           Test.Hspec
 
+import           Hasura.Eventing.EventTrigger
+import           Hasura.Eventing.ScheduledTrigger
+import           Hasura.RQL.Types
+
+
 spec :: Spec
 spec = do
   scheduleTriggersSpec
+  eventTriggersLockingUnlockingSpec
 
 scheduleTriggersSpec :: Spec
 scheduleTriggersSpec = do
@@ -48,3 +58,21 @@ scheduleTriggersSpec = do
       Right sched ->
         generateScheduleTimes now 3 sched
           `shouldBe` map read expected
+
+eventTriggersLockingUnlockingSpec :: Spec
+eventTriggersLockingUnlockingSpec = do
+
+  describe "check locking and unlocking of events" $ do
+
+    lockedEventsContainer <- runIO $ newTVarIO mempty
+    let eventId = EventId "a7aece90-4a6a-4a8c-ad9d-da5f25dacad9"
+
+    it "locks events correctly" $ do
+      saveLockedEventTriggerEvents SNDefault [eventId] lockedEventsContainer
+      currentLockedEvents <- readTVarIO lockedEventsContainer
+      currentLockedEvents `shouldBe` (Map.singleton SNDefault (Set.singleton eventId))
+
+    it "unlocks (removes) an event correctly from the locked events" $ do
+      removeEventTriggerEventFromLockedEvents SNDefault eventId lockedEventsContainer
+      currentLockedEvents <- readTVarIO lockedEventsContainer
+      currentLockedEvents `shouldBe` (Map.singleton SNDefault mempty)

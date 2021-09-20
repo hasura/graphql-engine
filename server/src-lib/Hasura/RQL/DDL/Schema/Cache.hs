@@ -71,6 +71,7 @@ import           Hasura.RQL.DDL.Schema.Cache.Permission
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Types                         hiding (fmFunction, tmTable)
+import           Hasura.RQL.Types.Eventing.Backend
 import           Hasura.RQL.Types.Roles.Internal          (CheckPermission (..))
 import           Hasura.SQL.Tag
 import           Hasura.Server.Types                      (ExperimentalFeature (..),
@@ -403,6 +404,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
          , MonadError QErr m
          , MonadReader BuildReason m
          , BackendMetadata b
+         , BackendEventTrigger b
          )
       => ( HashMap SourceName (AB.AnyBackend PartiallyResolvedSource)
          , SourceMetadata b
@@ -575,7 +577,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       -- first we resolve them, and build the table cache
       partiallyResolvedSources <-
         (| Inc.keyed (\_ exists ->
-             AB.dispatchAnyBackendArrow @BackendMetadata (proc (sourceMetadata, invalidationKeys) -> do
+             AB.dispatchAnyBackendArrow @BackendMetadata @BackendMetadata (proc (sourceMetadata, invalidationKeys) -> do
                let
                  sourceName = _smName sourceMetadata
                  sourceInvalidationsKeys = Inc.selectD #_ikSources invalidationKeys
@@ -603,7 +605,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       -- we need to have the table cache of all sources to build cross-sources relationships
       sourcesOutput <-
         (| Inc.keyed (\_ exists ->
-             AB.dispatchAnyBackendArrow @BackendMetadata (
+             AB.dispatchAnyBackendArrow @BackendMetadata @BackendEventTrigger (
                proc ( partiallyResolvedSource :: PartiallyResolvedSource b
                     , (allResolvedSources, invalidationKeys, remoteSchemaCtxMap, orderedRoles)
                     ) -> do
@@ -803,7 +805,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       :: forall arr m b
        . ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
          , Inc.ArrowCache m arr, MonadIO m, MonadError QErr m, MonadBaseControl IO m
-         , MonadReader BuildReason m, HasServerConfigCtx m, BackendMetadata b)
+         , MonadReader BuildReason m, HasServerConfigCtx m, BackendMetadata b, BackendEventTrigger b)
       => ( SourceName, SourceConfig b, TableCoreInfo b
          , [EventTriggerConf b], Inc.Dependency Inc.InvalidationKey
          , RecreateEventTriggers

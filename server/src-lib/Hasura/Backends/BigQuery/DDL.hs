@@ -1,7 +1,6 @@
 module Hasura.Backends.BigQuery.DDL
   ( buildComputedFieldInfo
   , fetchAndValidateEnumValues
-  , createTableEventTrigger
   , buildFunctionInfo
   , updateColumnInEventTrigger
   , parseBoolExpOperations
@@ -30,7 +29,6 @@ import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
-import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
 
@@ -56,18 +54,6 @@ fetchAndValidateEnumValues
   -> m (Either QErr EnumValues)
 fetchAndValidateEnumValues _ _ _ _ = runExceptT $
   throw400 NotSupported "Enum tables are not supported for BigQuery sources"
-
-createTableEventTrigger
-  :: (Monad m)
-  => ServerConfigCtx
-  -> SourceConfig 'BigQuery
-  -> TableName 'BigQuery
-  -> [ColumnInfo 'BigQuery]
-  -> TriggerName
-  -> TriggerOpsDef 'BigQuery
-  -> m (Either QErr ())
-createTableEventTrigger _ _ _ _ _ _ = runExceptT $
-  throw400 NotSupported "Cannot create table event triggers in BigQuery sources"
 
 buildFunctionInfo
   :: (MonadError QErr m)

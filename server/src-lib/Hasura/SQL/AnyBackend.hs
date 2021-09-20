@@ -469,12 +469,13 @@ spreadChoice = arr $ \e ->
 --         absurd )))
 coalesceChoice
   :: forall
-       (c :: BackendType -> Constraint)
+       (c1 :: BackendType -> Constraint)
+       (c2 :: BackendType -> Constraint)
        (i :: BackendType -> Type)
        (r :: Type)
        (arr :: Type -> Type -> Type)
-   . (ArrowChoice arr, AllBackendsSatisfy c)
-  => (forall b. c b => arr (i b) r)
+   . (ArrowChoice arr, AllBackendsSatisfy c1, AllBackendsSatisfy c2)
+  => (forall b. c1 b => c2 b => arr (i b) r)
   -> arr (BackendChoice i) r
 coalesceChoice arrow =
   $(do
@@ -487,21 +488,22 @@ coalesceChoice arrow =
     foldrM combine baseCase arrows
    )
 
+
 -- | Dispatch variant for use with arrow syntax. The universally quantified
 -- dispatch function is an arrow instead. Since we can't express this using
 -- Template Haskell, we instead generate the arrow by combining `spreadChoice`
 -- and `coalesceChoice`.
 dispatchAnyBackendArrow'
   :: forall
-       (c :: BackendType -> Constraint)
+       (c1 :: BackendType -> Constraint)
+       (c2 :: BackendType -> Constraint)
        (i :: BackendType -> Type)
        (r :: Type)
        (arr :: Type -> Type -> Type)
-   . (ArrowChoice arr, AllBackendsSatisfy c)
-  => (forall b. c b => arr (i b) r)
+   . (ArrowChoice arr, AllBackendsSatisfy c1, AllBackendsSatisfy c2)
+  => (forall b. c1 b => c2 b => arr (i b) r)
   -> arr (AnyBackend i) r
-dispatchAnyBackendArrow' arrow = spreadChoice >>> coalesceChoice @c arrow
-
+dispatchAnyBackendArrow' arrow = spreadChoice >>> coalesceChoice @c1 @c2 arrow
 
 -- | While dispatchAnyBackendArrow' is expressed over an `AnyBackend`, in
 -- practice we need slightly more complex types. Specifically: the only call
@@ -534,23 +536,27 @@ newtype BackendArrowTuple x i (b :: BackendType) = BackendArrowTuple { unTuple :
 -- │ r │                                                      │ r │
 -- └───┘                                                      └───┘
 --
+-- NOTE: The below function accepts two constraints, if the arrow
+-- you want to dispatch only has one constraint then repeat the constraint twice.
+-- For example:
+-- ```AB.dispatchAnyBackendArrow @BackendMetadata @BackendMetadata (proc (sourceMetadata, invalidationKeys)```
+--
 dispatchAnyBackendArrow
   :: forall
-       (c :: BackendType -> Constraint)
+       (c1 :: BackendType -> Constraint)
+       (c2 :: BackendType -> Constraint)
        (i :: BackendType -> Type)
        (r :: Type)
        (arr :: Type -> Type -> Type)
        x
-   . (ArrowChoice arr, AllBackendsSatisfy c)
-  => (forall b. c b => arr (i b, x) r)
+   . (ArrowChoice arr, AllBackendsSatisfy c1, AllBackendsSatisfy c2)
+  => (forall b. c1 b => c2 b => arr (i b, x) r)
   -> arr (AnyBackend i, x) r
 dispatchAnyBackendArrow arrow =
-  arr cons >>> dispatchAnyBackendArrow' @c (arr unTuple >>> arrow)
+  arr cons >>> dispatchAnyBackendArrow' @c1 @c2 (arr unTuple >>> arrow)
   where
     cons :: (AnyBackend i, x) -> AnyBackend (BackendArrowTuple x i)
     cons (e, x) = mapBackend e \ib -> BackendArrowTuple (ib, x)
-
-
 
 --------------------------------------------------------------------------------
 -- JSON functions

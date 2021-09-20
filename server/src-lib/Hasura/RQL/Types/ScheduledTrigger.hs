@@ -41,6 +41,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.Action       (InputWebhook (..))
 import           Hasura.RQL.Types.Common       (NonNegativeDiffTime, unsafeNonNegativeDiffTime)
 import           Hasura.RQL.Types.EventTrigger
+import           Hasura.RQL.Types.Eventing
 import           System.Cron.Types
 
 import qualified Data.Aeson                    as J

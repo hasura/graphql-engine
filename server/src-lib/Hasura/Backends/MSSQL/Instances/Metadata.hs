@@ -14,7 +14,6 @@ instance BackendMetadata 'MSSQL where
   fetchAndValidateEnumValues = MSSQL.fetchAndValidateEnumValues
   resolveSourceConfig        = MSSQL.resolveSourceConfig
   resolveDatabaseMetadata    = MSSQL.resolveDatabaseMetadata
-  createTableEventTrigger    = MSSQL.createTableEventTrigger
   parseBoolExpOperations     = MSSQL.parseBoolExpOperations
   buildFunctionInfo          = MSSQL.buildFunctionInfo
   updateColumnInEventTrigger = MSSQL.updateColumnInEventTrigger

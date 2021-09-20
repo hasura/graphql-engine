@@ -18,7 +18,6 @@ module Hasura.Eventing.HTTP
   , ExtraLogContext(..)
   , RequestDetails (..)
   , EventId
-  , Invocation(..)
   , InvocationVersion
   , Response(..)
   , WebhookRequest(..)
@@ -35,7 +34,6 @@ module Hasura.Eventing.HTTP
   , getRetryAfterHeaderFromHTTPErr
   , getRetryAfterHeaderFromResp
   , parseRetryHeaderValue
-  , TriggerTypes(..)
   , invocationVersionET
   , invocationVersionST
   , mkRequest
@@ -65,6 +63,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.RequestTransform   (RequestTransform, applyRequestTransform)
 import           Hasura.RQL.Types.EventTrigger
+import           Hasura.RQL.Types.Eventing
 import           Hasura.Server.Version             (HasVersion)
 import           Hasura.Tracing
 
@@ -82,72 +81,6 @@ data ResponseLogBehavior = LogSanitisedResponse | LogEntireResponse
 
 retryAfterHeader :: CI.CI Text
 retryAfterHeader = "Retry-After"
-
-data WebhookRequest
-  = WebhookRequest
-  { _rqPayload :: Value
-  , _rqHeaders :: [HeaderConf]
-  , _rqVersion :: Text
-  }
-$(deriveToJSON hasuraJSON{omitNothingFields=True} ''WebhookRequest)
-
-data WebhookResponse
-  = WebhookResponse
-  { _wrsBody    :: TBS.TByteString
-  , _wrsHeaders :: [HeaderConf]
-  , _wrsStatus  :: Int
-  }
-$(deriveToJSON hasuraJSON{omitNothingFields=True} ''WebhookResponse)
-
-newtype ClientError =  ClientError { _ceMessage :: TBS.TByteString}
-$(deriveToJSON hasuraJSON{omitNothingFields=True} ''ClientError)
-
-type InvocationVersion = Text
-
-invocationVersionET :: InvocationVersion
-invocationVersionET = "2"
-
-invocationVersionST :: InvocationVersion
-invocationVersionST = "1"
-
--- | There are two types of events: EventType (for event triggers) and ScheduledType (for scheduled triggers)
-data TriggerTypes = EventType | ScheduledType
-
-data Response (a :: TriggerTypes) =
-  ResponseHTTP WebhookResponse | ResponseError ClientError
-
-instance ToJSON (Response 'EventType) where
-  toJSON (ResponseHTTP resp) = object
-    [ "type" .= String "webhook_response"
-    , "data" .= toJSON resp
-    , "version" .= invocationVersionET
-    ]
-  toJSON (ResponseError err) = object
-    [ "type" .= String "client_error"
-    , "data" .= toJSON err
-    , "version" .= invocationVersionET
-    ]
-
-instance ToJSON (Response 'ScheduledType) where
-  toJSON (ResponseHTTP resp) = object
-    [ "type" .= String "webhook_response"
-    , "data" .= toJSON resp
-    , "version" .= invocationVersionST
-    ]
-  toJSON (ResponseError err) = object
-    [ "type" .= String "client_error"
-    , "data" .= toJSON err
-    , "version" .= invocationVersionST
-    ]
-
-
-data Invocation (a :: TriggerTypes)
-  = Invocation
-  { iEventId  :: EventId
-  , iStatus   :: Int
-  , iRequest  :: WebhookRequest
-  , iResponse :: Response a
-  }
 
 data ExtraLogContext
   = ExtraLogContext

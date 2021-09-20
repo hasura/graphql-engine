@@ -627,7 +627,7 @@ metadataToOrdJSON ( Metadata
                       , ("permission", permToOrdJSON permission)
                       ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
 
-        eventTriggerConfToOrdJSON :: forall b. Backend b => EventTriggerConf b -> AO.Value
+        eventTriggerConfToOrdJSON :: Backend b => EventTriggerConf b -> AO.Value
         eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers metadataTransform) =
           AO.object $ [ ("name", AO.toOrdered name)
                       , ("definition", AO.toOrdered definition)
