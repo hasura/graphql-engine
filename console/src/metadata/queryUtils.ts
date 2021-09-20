@@ -4,9 +4,9 @@ import {
   CustomTypes,
   QualifiedTable,
   QualifiedTableBigQuery,
-  HasuraMetadataV3,
   QualifiedFunction,
   RestEndpointEntry,
+  RemoteSchemaDef,
 } from './types';
 import { transformHeaders } from '../components/Common/Headers/utils';
 import { LocalEventTriggerState } from '../components/Services/Events/EventTriggers/state';
@@ -18,6 +18,7 @@ import { ConsoleState } from '../telemetry/state';
 import { TriggerOperation } from '../components/Common/FilterQuery/state';
 import { isEmpty } from '../components/Common/utils/jsUtils';
 import { Nullable } from '../components/Common/utils/tsUtils';
+import { ExportMetadataSuccess } from './actions';
 
 export const metadataQueryTypes = [
   'add_source',
@@ -54,6 +55,7 @@ export const metadataQueryTypes = [
   'get_inconsistent_metadata',
   'drop_inconsistent_metadata',
   'add_remote_schema',
+  'update_remote_schema',
   'remove_remote_schema',
   'reload_remote_schema',
   'introspect_remote_schema',
@@ -89,6 +91,8 @@ export const metadataQueryTypes = [
   'drop_function_permission',
   'create_rest_endpoint',
   'drop_rest_endpoint',
+  'add_host_to_tls_allowlist',
+  'drop_host_from_tls_allowlist',
 ] as const;
 
 export type MetadataQueryType = typeof metadataQueryTypes[number];
@@ -125,6 +129,9 @@ export const getMetadataQuery = (
       break;
     case 'bigquery':
       prefix = 'bigquery_';
+      break;
+    case 'citus':
+      prefix = 'citus_';
       break;
     case 'postgres':
     default:
@@ -381,10 +388,14 @@ export const dropInconsistentObjectsQuery = {
   args: {},
 };
 
-export const getReloadMetadataQuery = (shouldReloadRemoteSchemas: boolean) => ({
+export const getReloadMetadataQuery = (
+  shouldReloadRemoteSchemas: boolean | string[],
+  shouldReloadSources?: boolean | string[]
+) => ({
   type: 'reload_metadata',
   args: {
-    reload_remote_schemas: shouldReloadRemoteSchemas,
+    reload_sources: shouldReloadSources ?? [],
+    reload_remote_schemas: shouldReloadRemoteSchemas ?? [],
   },
 });
 
@@ -404,10 +415,10 @@ export const exportMetadataQuery = {
 };
 
 export const generateReplaceMetadataQuery = (
-  metadataJson: HasuraMetadataV3
+  metadataJson: ExportMetadataSuccess['data']
 ) => ({
   type: 'replace_metadata',
-  args: metadataJson,
+  args: metadataJson.metadata,
 });
 
 export const resetMetadataQuery = {
@@ -824,5 +835,29 @@ export const createRESTEndpointQuery = (args: RestEndpointEntry) => ({
 
 export const dropRESTEndpointQuery = (name: string) => ({
   type: 'drop_rest_endpoint',
+  args: { name },
+});
+
+const getMetadataQueryForRemoteSchema = (queryName: 'add' | 'update') => (
+  name: string,
+  definition: RemoteSchemaDef,
+  comment?: string
+) => ({
+  type: `${queryName}_remote_schema` as MetadataQueryType,
+  args: {
+    name,
+    definition,
+    comment: comment ?? null,
+  },
+});
+
+export const addRemoteSchemaQuery = getMetadataQueryForRemoteSchema('add');
+
+export const updateRemoteSchemaQuery = getMetadataQueryForRemoteSchema(
+  'update'
+);
+
+export const removeRemoteSchemaQuery = (name: string) => ({
+  type: 'remove_remote_schema',
   args: { name },
 });

@@ -1,32 +1,22 @@
 module Hasura.Backends.Postgres.DDL.Field
   ( buildComputedFieldInfo
-  , buildRemoteFieldInfo
   )
 where
 
 import           Hasura.Prelude
 
-import qualified Control.Monad.Validate                     as MV
-import qualified Data.HashMap.Strict                        as Map
-import qualified Data.HashSet                               as S
-import qualified Data.Sequence                              as Seq
-import qualified Language.GraphQL.Draft.Syntax              as G
+import qualified Control.Monad.Validate                as MV
+import qualified Data.HashSet                          as S
+import qualified Data.Sequence                         as Seq
+import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Data.Text.Extended
-
-import qualified Hasura.SQL.AnyBackend                      as AB
 
 import           Hasura.Backends.Postgres.DDL.Function
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Base.Error
-import           Hasura.RQL.DDL.RemoteRelationship.Validate
-import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Function
-import           Hasura.RQL.Types.RemoteRelationship
-import           Hasura.RQL.Types.SchemaCache
-import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 import           Hasura.Server.Utils
@@ -92,7 +82,7 @@ buildComputedFieldInfo
   -> QualifiedTable
   -> ComputedFieldName
   -> ComputedFieldDefinition ('Postgres pgKind)
-  -> RawFunctionInfo
+  -> PGRawFunctionInfo
   -> Maybe Text
   -> m (ComputedFieldInfo ('Postgres pgKind))
 buildComputedFieldInfo trackedTables table computedField definition rawFunctionInfo comment =
@@ -213,42 +203,3 @@ buildComputedFieldInfo trackedTables table computedField definition rawFunctionI
               filter ((/=) (Just name) . faName) withoutTable
       in alsoWithoutSession
 
-buildRemoteFieldInfo
-  :: forall m pgKind
-   . (Backend ('Postgres pgKind), QErrM m)
-  => RemoteRelationship ('Postgres pgKind)
-  -> [ColumnInfo ('Postgres pgKind)]
-  -> RemoteSchemaMap
-  -> m (RemoteFieldInfo ('Postgres pgKind), [SchemaDependency])
-buildRemoteFieldInfo remoteRelationship
-                          pgColumns
-                          remoteSchemaMap = do
-  let remoteSchemaName = rtrRemoteSchema remoteRelationship
-  (RemoteSchemaCtx _name introspectionResult remoteSchemaInfo _ _ _permissions) <-
-    onNothing (Map.lookup remoteSchemaName remoteSchemaMap)
-      $ throw400 RemoteSchemaError $ "remote schema with name " <> remoteSchemaName <<> " not found"
-  eitherRemoteField <- runExceptT $
-    validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionResult) pgColumns
-  remoteField <- onLeft eitherRemoteField $ throw400 RemoteSchemaError . errorToText
-  let table = rtrTable remoteRelationship
-      source = rtrSource remoteRelationship
-      schemaDependencies =
-        let tableDep = SchemaDependency
-                         (SOSourceObj source
-                            $ AB.mkAnyBackend
-                            $ SOITable @('Postgres pgKind) table)
-                         DRTable
-            columnsDep =
-              map
-                (flip SchemaDependency DRRemoteRelationship
-                   . SOSourceObj source
-                   . AB.mkAnyBackend
-                   . SOITableObj @('Postgres pgKind)table
-                   . TOCol @('Postgres pgKind)
-                   . pgiColumn)
-                $ S.toList $ _rfiHasuraFields remoteField
-            remoteSchemaDep =
-              SchemaDependency (SORemoteSchema remoteSchemaName) DRRemoteSchema
-         in (tableDep : remoteSchemaDep : columnsDep)
-
-  pure (remoteField, schemaDependencies)

@@ -4,17 +4,18 @@ module Hasura.Server.Auth.JWT.Logging
   )
   where
 
-import           Data.Aeson
-import           Hasura.HTTP
-import           Hasura.Logging        (EngineLogType (..), Hasura, InternalLogTypes (..),
-                                        LogLevel (..), ToEngineLog (..))
 import           Hasura.Prelude
-import           Hasura.Server.Logging ()
-import           Network.URI           (URI)
 
-import qualified Data.ByteString.Lazy  as BL
-import qualified Data.Text             as T
-import qualified Network.HTTP.Types    as HTTP
+import qualified Data.ByteString.Lazy as BL
+import qualified Network.HTTP.Types   as HTTP
+
+import           Data.Aeson
+import           Network.URI          (URI)
+
+import           Hasura.HTTP
+import           Hasura.Logging       (EngineLogType (..), Hasura, InternalLogTypes (..),
+                                       LogLevel (..), ToEngineLog (..))
+
 
 -- | Possible errors during fetching and parsing JWK
 -- (the 'Text' type at the end is a friendly error message)
@@ -36,8 +37,8 @@ instance ToJSON JwkFetchError where
 
     JFEHttpError url status body _ ->
       object [ "status_code" .= HTTP.statusCode status
-             , "url" .= T.pack (show url)
-             , "response" .= bsToTxt (BL.toStrict body)
+             , "url"         .= tshow url
+             , "response"    .= bsToTxt (BL.toStrict body)
              ]
 
     JFEJwkParseError e msg ->

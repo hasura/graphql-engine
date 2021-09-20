@@ -20,48 +20,36 @@ module Data.Aeson.Ordered
   , array
   , insert
   , delete
+  , adjust
   , empty
   , eitherDecode
-  , toEncJSON
   , Data.Aeson.Ordered.lookup
   , toOrdered
   , fromOrdered
   ) where
 
 import           Control.Applicative              hiding (empty)
-import qualified Data.Aeson                       as J
+import           Control.Lens                     (prism)
+import           Data.Aeson.Lens                  (AsNumber (..))
 import           Data.Aeson.Parser                (jstring)
 import           Data.Attoparsec.ByteString       (Parser)
+import           Data.Bifunctor                   (second)
+import           Data.ByteString                  (ByteString)
+import           Data.Data                        (Typeable)
+import           Data.Hashable                    (Hashable (..))
+import           Data.Scientific                  (Scientific)
+import           Data.Vector                      (Vector)
+
+import qualified Data.Aeson                       as J
 import qualified Data.Attoparsec.ByteString       as A
 import qualified Data.Attoparsec.ByteString.Char8 as A8
-import           Data.Bifunctor
-import           Data.ByteString                  (ByteString)
 import qualified Data.ByteString.Lazy             as L
-import           Data.Data
-import           Data.Functor
 import qualified Data.HashMap.Strict              as Map
 import qualified Data.HashMap.Strict.InsOrd       as OMap
-import           Data.Scientific
 import qualified Data.Text                        as T
-import           Data.Vector                      (Vector)
 import qualified Data.Vector                      as V
-import           GHC.Generics
-import           Hasura.EncJSON
+
 import           Hasura.Prelude                   hiding (empty, first, second)
-
---------------------------------------------------------------------------------
--- Encoding via Hasura's EncJSON
-
-toEncJSON :: Value -> EncJSON
-toEncJSON =
-  \case
-    Object (Object_ omap) ->
-      encJFromAssocList (map (second toEncJSON) (OMap.toList omap))
-    Array vec -> encJFromList (map toEncJSON (V.toList vec))
-    String s -> encJFromJValue s
-    Number sci -> encJFromJValue sci
-    Bool b -> encJFromJValue b
-    Null -> encJFromJValue J.Null
 
 --------------------------------------------------------------------------------
 -- Copied constants from aeson
@@ -88,7 +76,8 @@ toEncJSON =
 -- | A JSON \"object\" (key\/value map). This is where this type
 -- differs to the 'aeson' package.
 newtype Object = Object_ { unObject_ :: InsOrdHashMap Text Value}
-  deriving (Eq, Read, Show, Typeable, Data, Generic)
+  deriving stock (Data, Eq, Generic, Read, Show, Typeable)
+  deriving newtype (Hashable)
 
 -- | Union the keys, ordered, in two maps, erroring on duplicates.
 safeUnion :: Object -> Object -> Either String Object
@@ -127,6 +116,9 @@ lookup key (Object_ omap) = OMap.lookup key omap
 delete :: Text -> Object -> Object
 delete key (Object_ omap) = Object_ (OMap.delete key omap)
 
+adjust :: (Value -> Value) -> Text -> Object -> Object
+adjust f key (Object_ omap) = Object_ (OMap.adjust f key omap)
+
 -- | ToList a key.
 toList :: Object -> [(Text,Value)]
 toList (Object_ omap) = OMap.toList omap
@@ -147,7 +139,27 @@ data Value
   | Number !Scientific
   | Bool !Bool
   | Null
-  deriving (Eq, Read, Show, Typeable, Data, Generic)
+  deriving stock (Data, Eq, Generic, Read, Show, Typeable)
+
+instance Hashable Value where
+  -- Lifted from Aeson's implementation for 'Value'.
+  hashWithSalt s = \case
+    (Object o)   ->   s `hashWithSalt` (0::Int) `hashWithSalt` o
+    (Array a)    ->   foldl' hashWithSalt (s `hashWithSalt` (1::Int)) a
+    (String str) ->   s `hashWithSalt` (2::Int) `hashWithSalt` str
+    (Number n)   ->   s `hashWithSalt` (3::Int) `hashWithSalt` n
+    (Bool b)     ->   s `hashWithSalt` (4::Int) `hashWithSalt` b
+    Null         ->   s `hashWithSalt` (5::Int)
+
+-- Adapter instance for 'lens-aeson' which lets us write optics over the numeric
+-- values in ordered JSON collections as if they were plain 'Scientific' types.
+instance AsNumber Value where
+  _Number = prism upcast downcast
+    where
+      upcast = Number
+      downcast v = case v of
+        Number n -> Right n
+        _        -> Left v
 
 -- | Value pairs to Value
 object :: [(Text, Value)] -> Value

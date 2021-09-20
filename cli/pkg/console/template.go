@@ -1,17 +1,15 @@
 package console
 
 import (
+	"embed"
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"regexp"
 
 	"github.com/pkg/errors"
 
 	"github.com/gin-gonic/contrib/renders/multitemplate"
-	_ "github.com/hasura/graphql-engine/cli/pkg/console/templates/packed"
-	"github.com/hasura/graphql-engine/cli/version"
-	"github.com/markbates/pkger"
+	"github.com/hasura/graphql-engine/cli/v2/version"
 )
 
 const (
@@ -50,12 +48,14 @@ type TemplateProvider interface {
 type DefaultTemplateProvider struct {
 	basePath         string
 	templateFileName string
+	consoleFS        embed.FS
 }
 
-func NewDefaultTemplateProvider(basePath, templateFilename string) *DefaultTemplateProvider {
+func NewDefaultTemplateProvider(basePath, templateFilename string, consoleFS embed.FS) *DefaultTemplateProvider {
 	return &DefaultTemplateProvider{
 		basePath:         basePath,
 		templateFileName: templateFilename,
+		consoleFS:        consoleFS,
 	}
 }
 
@@ -69,7 +69,7 @@ func (p *DefaultTemplateProvider) TemplateFilename() string {
 
 // DoTemplateExist returns true if an asset exists at pathk
 func (p *DefaultTemplateProvider) DoTemplateExist(path string) bool {
-	_, err := pkger.Stat(path)
+	_, err := p.consoleFS.ReadFile(path)
 	return err == nil
 }
 
@@ -77,24 +77,15 @@ func (p *DefaultTemplateProvider) LoadTemplates(path string, templateNames ...st
 	r := multitemplate.New()
 
 	for _, templateName := range templateNames {
-		templateFile, err := pkger.Open(path + templateName)
+		templatePath := path + templateName
+		templateBytes, err := p.consoleFS.ReadFile(templatePath)
 		if err != nil {
-			return nil, errors.Wrap(err, "error opening file "+path+templateName)
+			return nil, errors.Wrap(err, "error reading from file "+templatePath)
 		}
-		templateBytes, err := ioutil.ReadAll(templateFile)
-		if err != nil {
-			return nil, errors.Wrap(err, "error reading from file "+path+templateName)
-		}
-
 		theTemplate, err := template.New(templateName).Parse(string(templateBytes))
 		if err != nil {
 			return nil, errors.Wrap(err, "error creating template"+path+templateName)
 		}
-		err = templateFile.Close()
-		if err != nil {
-			return nil, err
-		}
-
 		r.Add(templateName, theTemplate)
 	}
 

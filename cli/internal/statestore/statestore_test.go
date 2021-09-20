@@ -4,17 +4,17 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/catalogstate"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/catalogstate"
 
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestClientCatalogState_GetCLIState(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
+	port, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardown()
 	type fields struct {
 		Client *httpc.Client
@@ -65,7 +65,7 @@ func TestClientCatalogState_GetCLIState(t *testing.T) {
 }
 
 func TestCLICatalogState_Set(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
+	port, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardown()
 	type fields struct {
 		client hasura.CatalogStateOperations

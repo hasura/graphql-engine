@@ -31,7 +31,7 @@ function citus_launch_container(){
     -p 127.0.0.1:"$CITUS_PORT":5432 \
     --expose="$CITUS_PORT" \
     -e POSTGRES_PASSWORD="$CITUS_PASSWORD" \
-    -d citusdata/citus
+    -d citusdata/citus:10.1
 }
 
 function citus_wait {

@@ -51,6 +51,7 @@ import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { NotSupportedNote } from '../../../Common/NotSupportedNote';
 import ConnectedComputedFields from './ComputedFields';
 import FeatureDisabled from '../FeatureDisabled';
+import IndexFields from './IndexFields';
 import PartitionInfo from './PartitionInfo';
 
 class ModifyTable extends React.Component {
@@ -163,7 +164,7 @@ class ModifyTable extends React.Component {
             toggleEnum={toggleEnum}
             loading={tableEnum.loading}
           />
-          <hr />
+          <hr className="my-md" />
         </React.Fragment>
       );
     };
@@ -197,19 +198,22 @@ class ModifyTable extends React.Component {
                 </div>
               )}
 
-              {isFeatureSupported('tables.modify.comments') && (
+              {isFeatureSupported('tables.modify.comments.view') && (
                 <>
                   <TableCommentEditor
                     tableComment={tableComment}
                     tableCommentEdit={tableCommentEdit}
                     tableType="TABLE"
                     dispatch={dispatch}
+                    readOnly={
+                      !isFeatureSupported('tables.modify.comments.edit')
+                    }
                   />
                   <EnumTableModifyWarning isEnum={table.is_enum} />
                 </>
               )}
 
-              {isFeatureSupported('tables.modify.columns') && (
+              {isFeatureSupported('tables.modify.columns.view') && (
                 <>
                   <h4 className={styles.subheading_text}>Columns</h4>
                   <ColumnEditorList
@@ -219,7 +223,7 @@ class ModifyTable extends React.Component {
                     columnEdit={columnEdit}
                     dispatch={dispatch}
                     readOnlyMode={
-                      !isFeatureSupported('tables.modify.columns_edit')
+                      !isFeatureSupported('tables.modify.columns.edit')
                     }
                     currentSchema={currentSchema}
                     columnDefaultFunctions={columnDefaultFunctions}
@@ -227,7 +231,7 @@ class ModifyTable extends React.Component {
                   />
                 </>
               )}
-              {isFeatureSupported('tables.modify.columns_edit') && (
+              {isFeatureSupported('tables.modify.columns.edit') && (
                 <>
                   <ColumnCreator
                     dispatch={dispatch}
@@ -237,18 +241,18 @@ class ModifyTable extends React.Component {
                     columnDefaultFunctions={columnDefaultFunctions}
                     postgresVersion={postgresVersion}
                   />
-                  <hr />
+                  <hr className="my-md" />
                 </>
               )}
 
               {isFeatureSupported('tables.modify.computedFields') && (
                 <>
                   <ConnectedComputedFields tableSchema={table} />
-                  <hr />
+                  <hr className="my-md" />
                 </>
               )}
 
-              {isFeatureSupported('tables.modify.primaryKeys') && (
+              {isFeatureSupported('tables.modify.primaryKeys.view') && (
                 <>
                   <h4 className={styles.subheading_text}>
                     Primary Key &nbsp; &nbsp;
@@ -257,17 +261,17 @@ class ModifyTable extends React.Component {
                   <PrimaryKeyEditor
                     tableSchema={table}
                     readOnlyMode={
-                      !isFeatureSupported('tables.modify.primaryKeys_edit')
+                      !isFeatureSupported('tables.modify.primaryKeys.edit')
                     }
                     pkModify={pkModify}
                     dispatch={dispatch}
                     currentSchema={currentSchema}
                   />
-                  <hr />
+                  <hr className="my-md" />
                 </>
               )}
 
-              {isFeatureSupported('tables.modify.foreginKeys') && (
+              {isFeatureSupported('tables.modify.foreignKeys.view') && (
                 <>
                   <h4 className={styles.subheading_text}>
                     Foreign Keys &nbsp; &nbsp;
@@ -281,14 +285,14 @@ class ModifyTable extends React.Component {
                     dispatch={dispatch}
                     fkModify={fkModify}
                     readOnlyMode={
-                      !isFeatureSupported('tables.modify.foreginKeys_edit')
+                      !isFeatureSupported('tables.modify.foreignKeys.edit')
                     }
                   />
-                  <hr />
+                  <hr className="my-md" />
                 </>
               )}
 
-              {isFeatureSupported('tables.modify.uniqueKeys') && (
+              {isFeatureSupported('tables.modify.uniqueKeys.view') && (
                 <>
                   <h4 className={styles.subheading_text}>
                     Unique Keys &nbsp; &nbsp;
@@ -302,13 +306,18 @@ class ModifyTable extends React.Component {
                     uniqueKeys={uniqueKeyModify}
                     setUniqueKeys={setUniqueKeys}
                     readOnlyMode={
-                      !isFeatureSupported('tables.modify.uniqueKeys_edit')
+                      !isFeatureSupported('tables.modify.uniqueKeys.edit')
                     }
                   />
-                  <hr />
+                  <hr className="my-md" />
                 </>
               )}
-
+              {isFeatureSupported('tables.modify.indexes.view') ? (
+                <>
+                  <IndexFields tableSchema={table} />
+                  <hr />
+                </>
+              ) : null}
               {isFeatureSupported('tables.modify.triggers') && (
                 <>
                   <div className={styles.add_mar_bottom}>
@@ -316,10 +325,10 @@ class ModifyTable extends React.Component {
                     <NotSupportedNote unsupported={['mysql']} />
                   </div>
                   <TriggerEditorList tableSchema={table} dispatch={dispatch} />
-                  <hr />
+                  <hr className="my-md" />
                 </>
               )}
-              {isFeatureSupported('tables.modify.checkConstraints') && (
+              {isFeatureSupported('tables.modify.checkConstraints.view') && (
                 <>
                   <div className={styles.add_mar_bottom}>
                     <h4 className={styles.subheading_text_no_padd}>
@@ -332,8 +341,11 @@ class ModifyTable extends React.Component {
                     constraints={table.check_constraints}
                     checkConstraintsModify={checkConstraintsModify}
                     dispatch={dispatch}
+                    readOnlyMode={
+                      !isFeatureSupported('tables.modify.checkConstraints.edit')
+                    }
                   />
-                  <hr />
+                  <hr className="my-md" />
                 </>
               )}
               {table.table_type === 'PARTITIONED TABLE' && (
@@ -342,7 +354,7 @@ class ModifyTable extends React.Component {
               {isFeatureSupported('tables.modify.customGqlRoot') && (
                 <>
                   <RootFields tableSchema={table} />
-                  <hr />
+                  <hr className="my-md" />
                 </>
               )}
               {isFeatureSupported('tables.modify.setAsEnum') &&

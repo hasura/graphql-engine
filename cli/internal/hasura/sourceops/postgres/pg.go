@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
 // allow to interact with all hasura opertions on database

@@ -143,6 +143,8 @@ We can now:
         }
       }
 
+.. _one-to-one-insert:
+
 Insert using one-to-one relationships
 -------------------------------------
 
@@ -196,18 +198,15 @@ We can now:
  
  You can avoid the ``on_conflict`` clause if you will never have conflicts.
 
+Caveat for nested inserts
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Current limitations with nested one-to-one mutations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-With one-to-one relationships, currently nested mutations will work only in one of the two directions.
+Due to the way nested inserts are typically handled (described :ref:`here <nested_inserts>`),
+the order of object insertion needs to be specified using the :ref:`insertion_order <ObjRelUsingManualMapping>` option while
+creating one-to-one relationships via the API. This is necessary to ensure nested inserts are possible
+using either side as the parent which would otherwise error out with a ``Not-NULL violation`` error in one of the cases.
 
 In our example, inserting a ``passport_info`` with their nested ``owner`` will work seamlessly but trying to
-insert an ``author`` with their nested ``passport_info`` will throw a constraint violation error.
+insert an ``author`` with their nested ``passport_info`` will throw a constraint violation error in case the insertion order is
+not specified for the ``owner`` object relationship.
 
-This is due to the way Hasura GraphQL engine currently handles nested mutations (described in detail
-:ref:`here <nested_inserts>`). As nested object relations are inserted before the parent, the ``passport_info``
-will be attempted to be inserted first and the value of its ``owner_id`` will be attempted to be set as the
-``id`` of the ``author``. Due to this, based on whether the ``owner_id`` of ``passport_info`` is nullable or not, a
-``Not-NULL violation`` error will be thrown either for the ``owner_id`` field of ``passport_info`` or the ``id``
-field of ``authors``.

@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { push } from 'react-router-redux';
 import GraphiQL from 'graphiql';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -75,8 +74,6 @@ class GraphiQLWrapper extends Component {
   };
 
   render() {
-    const styles = require('../../../Common/Common.scss');
-
     const {
       numberOfTables,
       urlParams,
@@ -165,7 +162,7 @@ class GraphiQLWrapper extends Component {
       );
       dispatch(setTypeDefinition(typesSdl, null, null, sdlParse(typesSdl)));
       dispatch(setDerivedActionParentOperation(query.trim()));
-      dispatch(push(getActionsCreateRoute()));
+      dispatch(_push(getActionsCreateRoute()));
     };
 
     const routeToREST = gqlProps => () => {
@@ -277,7 +274,7 @@ class GraphiQLWrapper extends Component {
     return (
       <GraphiQLErrorBoundary>
         <div
-          className={`react-container-graphql ${styles.wd100} ${styles.height100} ${styles.box_shadow}`}
+          className={`react-container-graphql w-full h-full border mt-md overflow-hidden rounded border-gray-300`}
         >
           <OneGraphExplorer
             renderGraphiql={renderGraphiql}

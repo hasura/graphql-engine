@@ -1,5 +1,5 @@
 module Hasura.RQL.DDL.Action
-  ( CreateAction
+  ( CreateAction(..)
   , runCreateAction
   , resolveAction
 
@@ -10,7 +10,7 @@ module Hasura.RQL.DDL.Action
   , runDropAction
   , dropActionInMetadata
 
-  , CreateActionPermission
+  , CreateActionPermission(..)
   , runCreateActionPermission
 
   , DropActionPermission
@@ -20,21 +20,22 @@ module Hasura.RQL.DDL.Action
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.Dependent.Map            as DMap
-import qualified Data.Environment              as Env
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashMap.Strict.InsOrd    as OMap
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.Aeson                      as J
+import qualified Data.Aeson.TH                   as J
+import qualified Data.Dependent.Map              as DMap
+import qualified Data.Environment                as Env
+import qualified Data.HashMap.Strict             as Map
+import qualified Data.HashMap.Strict.InsOrd      as OMap
+import qualified Language.GraphQL.Draft.Syntax   as G
 
-import           Control.Lens                  ((.~))
+import           Control.Lens                    ((.~), (^.))
 import           Data.Text.Extended
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
-import           Hasura.RQL.DDL.CustomTypes    (lookupPGScalar)
+import           Hasura.RQL.DDL.CustomTypes      (lookupPGScalar)
+import           Hasura.RQL.DDL.RequestTransform
 import           Hasura.RQL.Types
 import           Hasura.SQL.Tag
 import           Hasura.Session
@@ -48,6 +49,15 @@ getActionInfo actionName = do
   onNothing (Map.lookup actionName actionMap) $
     throw400 NotExists $ "action with name " <> actionName <<> " does not exist"
 
+data CreateAction
+  = CreateAction
+  { _caName       :: !ActionName
+  , _caDefinition :: !ActionDefinitionInput
+  , _caComment    :: !(Maybe Text)
+  , _caTransform  :: !(Maybe MetadataTransform)
+  }
+$(J.deriveJSON hasuraJSON ''CreateAction)
+
 runCreateAction
   :: (QErrM m , CacheRWM m, MetadataM m)
   => CreateAction -> m EncJSON
@@ -58,7 +68,7 @@ runCreateAction createAction = do
     throw400 AlreadyExists $
       "action with name " <> actionName <<> " already exists"
   let metadata = ActionMetadata actionName (_caComment createAction)
-                 (_caDefinition createAction) []
+                 (_caDefinition createAction) [] (_caTransform createAction)
   buildSchemaCacheFor (MOAction actionName)
     $ MetadataModifier
     $ metaActions %~ OMap.insert actionName metadata
@@ -120,6 +130,14 @@ resolveAction env AnnotatedCustomTypes{..} ActionDefinition{..} allScalars = do
        , outputObject
        )
 
+data UpdateAction
+  = UpdateAction
+  { _uaName       :: !ActionName
+  , _uaDefinition :: !ActionDefinitionInput
+  , _uaComment    :: !(Maybe Text)
+  }
+$(J.deriveFromJSON hasuraJSON ''UpdateAction)
+
 runUpdateAction
   :: forall m. ( QErrM m , CacheRWM m, MetadataM m)
   => UpdateAction -> m EncJSON
@@ -127,7 +145,7 @@ runUpdateAction (UpdateAction actionName actionDefinition actionComment) = do
   sc <- askSchemaCache
   let actionsMap = scActions sc
   void $ onNothing (Map.lookup actionName actionsMap) $
-    throw400 NotExists $ "action with name " <> actionName <<> " not exists"
+    throw400 NotExists $ "action with name " <> actionName <<> " does not exist"
   buildSchemaCacheFor (MOAction actionName) $ updateActionMetadataModifier actionDefinition actionComment
   pure successMsg
     where
@@ -179,12 +197,25 @@ newtype ActionMetadataField
   = ActionMetadataField { unActionMetadataField :: Text }
   deriving (Show, Eq, J.FromJSON, J.ToJSON)
 
+doesActionPermissionExist :: Metadata -> ActionName -> RoleName -> Bool
+doesActionPermissionExist metadata actionName roleName =
+  any ((== roleName) . _apmRole) $ metadata ^. (metaActions.ix actionName.amPermissions)
+
+data CreateActionPermission
+  = CreateActionPermission
+  { _capAction     :: !ActionName
+  , _capRole       :: !RoleName
+  , _capDefinition :: !(Maybe J.Value)
+  , _capComment    :: !(Maybe Text)
+  }
+$(J.deriveFromJSON hasuraJSON ''CreateActionPermission)
+
 runCreateActionPermission
   :: (QErrM m , CacheRWM m, MetadataM m)
   => CreateActionPermission -> m EncJSON
 runCreateActionPermission createActionPermission = do
-  actionInfo <- getActionInfo actionName
-  void $ onJust (Map.lookup roleName $ _aiPermissions actionInfo) $ const $
+  metadata <- getMetadata
+  when (doesActionPermissionExist metadata actionName roleName) $
     throw400 AlreadyExists $ "permission for role " <> roleName
     <<> " is already defined on " <>> actionName
   buildSchemaCacheFor (MOActionPermission actionName roleName)
@@ -206,8 +237,8 @@ runDropActionPermission
   :: (QErrM m, CacheRWM m, MetadataM m)
   => DropActionPermission -> m EncJSON
 runDropActionPermission dropActionPermission = do
-  actionInfo <- getActionInfo actionName
-  void $ onNothing (Map.lookup roleName $ _aiPermissions actionInfo) $
+  metadata <- getMetadata
+  unless (doesActionPermissionExist metadata actionName roleName) $
     throw400 NotExists $
     "permission for role: " <> roleName <<> " is not defined on " <>> actionName
   buildSchemaCacheFor (MOActionPermission actionName roleName) $

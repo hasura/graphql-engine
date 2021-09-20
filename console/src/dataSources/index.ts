@@ -1,5 +1,6 @@
 /* eslint-disable import/no-mutable-exports */
 import { useState, useEffect } from 'react';
+import { DeepRequired } from 'ts-essentials';
 
 import { Path, get } from '../components/Common/utils/tsUtils';
 import { services } from './services';
@@ -9,10 +10,18 @@ import {
   ComputedField,
   TableColumn,
   FrequentlyUsedColumn,
+  IndexType,
   PermissionColumnCategories,
   SupportedFeaturesType,
   generateTableRowRequestType,
   BaseTableColumn,
+  generateInsertRequestType,
+  GenerateRowsCountRequestType,
+  GenerateEditRowRequest,
+  GenerateDeleteRowRequest,
+  GenerateBulkDeleteRowRequest,
+  ViolationActions,
+  IndexFormTips as IndexFormToolTips,
 } from './types';
 import { PGFunction, FunctionState } from './services/postgresql/types';
 import { Operations } from './common';
@@ -21,8 +30,15 @@ import { QualifiedTable } from '../metadata/types';
 import { supportedFeatures as PGSupportedFeatures } from './services/postgresql';
 import { supportedFeatures as MssqlSupportedFeatures } from './services/mssql';
 import { supportedFeatures as BigQuerySupportedFeatures } from './services/bigquery';
+import { supportedFeatures as CitusQuerySupportedFeatures } from './services/citus';
 
-export const drivers = ['postgres', 'mysql', 'mssql', 'bigquery'] as const;
+export const drivers = [
+  'postgres',
+  'mysql',
+  'mssql',
+  'bigquery',
+  'citus',
+] as const;
 export type Driver = typeof drivers[number];
 
 export const driverToLabel: Record<Driver, string> = {
@@ -30,6 +46,14 @@ export const driverToLabel: Record<Driver, string> = {
   postgres: 'PostgreSQL',
   mssql: 'MS SQL Server',
   bigquery: 'BigQuery',
+  citus: 'Citus',
+};
+
+export const sourceNames = {
+  postgres: PGSupportedFeatures?.driver?.name,
+  mssql: MssqlSupportedFeatures?.driver?.name,
+  bigquery: BigQuerySupportedFeatures?.driver?.name,
+  citus: CitusQuerySupportedFeatures?.driver?.name,
 };
 
 export type ColumnsInfoResult = {
@@ -197,10 +221,7 @@ export interface DataSourcesAPI {
   getDropColumnSql: (
     tableName: string,
     schemaName: string,
-    columnName: string,
-    options?: {
-      sqlGenerator?: FrequentlyUsedColumn['dependentSQLGenerator'];
-    }
+    columnName: string
   ) => string;
   getAddColumnSql: (
     tableName: string,
@@ -212,7 +233,8 @@ export interface DataSourcesAPI {
       unique: boolean;
       default: any;
       sqlGenerator?: FrequentlyUsedColumn['dependentSQLGenerator'];
-    }
+    },
+    constraintName?: string
   ) => string | string[];
   getDropNotNullSql: (
     tableName: string,
@@ -223,7 +245,8 @@ export interface DataSourcesAPI {
   getSetNotNullSql: (
     tableName: string,
     schemaName: string,
-    columnName: string
+    columnName: string,
+    columnType: string
   ) => string;
   getAddUniqueConstraintSql: (
     tableName: string,
@@ -236,7 +259,7 @@ export interface DataSourcesAPI {
     schemaName: string,
     columnName: string,
     defaultValue: any,
-    columnType: string
+    constraintName: string
   ) => string;
   getSetCommentSql: (
     on: 'table' | 'column' | string,
@@ -250,19 +273,21 @@ export interface DataSourcesAPI {
     tableName: string,
     schemaName: string,
     columnName: string,
-    columnType: string
+    columnType: string,
+    wasNullable?: boolean
   ) => string;
   getDropColumnDefaultSql: (
     tableName: string,
     schemaName: string,
-    columnName: string
+    columnName: string,
+    constraintName?: string,
+    defaultValue?: string
   ) => string;
   getRenameColumnQuery: (
     tableName: string,
     schemaName: string,
     newName: string,
-    oldName: string,
-    columnType?: string
+    oldName: string
   ) => string;
   fetchColumnCastsQuery: string;
   checkSchemaModification: (sql: string) => boolean;
@@ -283,6 +308,17 @@ export interface DataSourcesAPI {
     selectedPkColumns: string[];
     constraintName?: string;
   }) => string;
+  getAlterPkSql: ({
+    schemaName,
+    tableName,
+    selectedPkColumns,
+    constraintName,
+  }: {
+    schemaName: string;
+    tableName: string;
+    selectedPkColumns: string[];
+    constraintName: string;
+  }) => string;
   getFunctionDefinitionSql:
     | null
     | ((
@@ -300,6 +336,21 @@ export interface DataSourcesAPI {
     schemas: string[];
     tables: Table[];
   }) => string;
+  tableIndexSql?: (options: { schema: string; table: string }) => string;
+  createIndexSql?: (indexInfo: {
+    indexName: string;
+    indexType: IndexType;
+    table: QualifiedTable;
+    columns: string[];
+    unique?: boolean;
+  }) => string;
+  dropIndexSql?: (indexName: string) => string;
+  indexFormToolTips?: IndexFormToolTips;
+  indexTypes?: Record<string, IndexType>;
+  supportedIndex?: {
+    multiColumn: string[];
+    singleColumn: string[];
+  };
   getFKRelations: (options: { schemas: string[]; tables: Table[] }) => string;
   getReferenceOption: (opt: string) => string;
   deleteFunctionSql?: (
@@ -319,35 +370,39 @@ export interface DataSourcesAPI {
   viewsSupported: boolean;
   // use null, if all operators are supported
   supportedColumnOperators: string[] | null;
-  aggregationPermissionsAllowed: boolean;
-  supportedFeatures?: SupportedFeaturesType;
+  supportedFeatures?: DeepRequired<SupportedFeaturesType>;
+  violationActions: ViolationActions[];
   defaultRedirectSchema?: string;
+  generateInsertRequest?: () => generateInsertRequestType;
+  generateRowsCountRequest?: () => GenerateRowsCountRequestType;
   getPartitionDetailsSql?: (tableName: string, tableSchema: string) => string;
+  generateEditRowRequest?: () => GenerateEditRowRequest;
+  generateDeleteRowRequest?: () => GenerateDeleteRowRequest;
+  generateBulkDeleteRowRequest?: () => GenerateBulkDeleteRowRequest;
 }
 
 export let currentDriver: Driver = 'postgres';
 export let dataSource: DataSourcesAPI = services[currentDriver || 'postgres'];
 
-export const isFeatureSupported = (feature: Path<SupportedFeaturesType>) => {
+export const isFeatureSupported = (
+  feature: Path<DeepRequired<SupportedFeaturesType>>
+) => {
   if (dataSource.supportedFeatures)
     return get(dataSource.supportedFeatures, feature);
 };
 
-export const getSupportedDrivers = (
-  feature: Path<SupportedFeaturesType>
-): Driver[] => {
-  const isEnabled = (supportedFeatures: SupportedFeaturesType) => {
-    return get(supportedFeatures, feature) || false;
-  };
-
-  return [
+export const getSupportedDrivers = (feature: Path<SupportedFeaturesType>) =>
+  [
     PGSupportedFeatures,
     MssqlSupportedFeatures,
     BigQuerySupportedFeatures,
-  ]
-    .filter(d => isEnabled(d))
-    .map(d => d.driver.name) as Driver[];
-};
+    CitusQuerySupportedFeatures,
+  ].reduce((driverList: Driver[], supportedFeaturesObj) => {
+    if (get(supportedFeaturesObj, feature)) {
+      return [...driverList, supportedFeaturesObj.driver.name];
+    }
+    return driverList;
+  }, []);
 
 class DataSourceChangedEvent extends Event {
   static type = 'data-source-changed';

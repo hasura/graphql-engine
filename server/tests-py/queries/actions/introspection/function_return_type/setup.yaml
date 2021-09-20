@@ -1,0 +1,41 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      create table "user" (
+        id serial PRIMARY KEY
+      );
+
+      create function single(hasura_session json)
+      returns "user" as $$
+          select *
+          from "user" u
+          where
+          u.id = (hasura_session ->> 'x-hasura-user-id') :: int
+      $$ language sql stable;
+
+      create function multi(hasura_session json)
+      returns setof "user" as $$
+          select *
+          from "user" u
+          where
+          u.id > (hasura_session ->> 'x-hasura-user-id') :: int
+      $$ language sql stable;
+
+
+- type: track_table
+  args:
+    schema: public
+    name: user
+
+- type: track_function
+  args:
+    name: single
+    schema: public
+
+- type: track_function
+  args:
+    name: multi
+    schema: public

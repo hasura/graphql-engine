@@ -1,9 +1,6 @@
 module Hasura.Backends.BigQuery.DDL
   ( buildComputedFieldInfo
-  , buildRemoteFieldInfo
   , fetchAndValidateEnumValues
-  , createTableEventTrigger
-  , buildEventTriggerInfo
   , buildFunctionInfo
   , updateColumnInEventTrigger
   , parseBoolExpOperations
@@ -14,15 +11,12 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                         as Env
-
 import           Data.Aeson
 
-import qualified Hasura.Backends.BigQuery.Types           as BigQuery
+import qualified Hasura.Backends.BigQuery.Types       as BigQuery
 
 import           Hasura.Backends.BigQuery.DDL.BoolExp
-import           Hasura.Backends.BigQuery.DDL.Source      as M
-import           Hasura.Backends.BigQuery.Instances.Types ()
+import           Hasura.Backends.BigQuery.DDL.Source  as M
 import           Hasura.Base.Error
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Backend
@@ -31,12 +25,10 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
-import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
-import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
 
@@ -47,20 +39,11 @@ buildComputedFieldInfo
   -> TableName 'BigQuery
   -> ComputedFieldName
   -> ComputedFieldDefinition 'BigQuery
-  -> RawFunctionInfo
+  -> RawFunctionInfo 'BigQuery
   -> Maybe Text
   -> m (ComputedFieldInfo 'BigQuery)
 buildComputedFieldInfo _ _ _ _ _ _ =
   throw400 NotSupported "Computed fields aren't supported for BigQuery sources"
-
-buildRemoteFieldInfo
-  :: (MonadError QErr m)
-  => RemoteRelationship 'BigQuery
-  -> [ColumnInfo 'BigQuery]
-  -> RemoteSchemaMap
-  -> m (RemoteFieldInfo 'BigQuery, [SchemaDependency])
-buildRemoteFieldInfo _ _ _ =
-  throw400 NotSupported "Remote joins aren't supported for BigQuery sources"
 
 fetchAndValidateEnumValues
   :: (Monad m)
@@ -72,36 +55,14 @@ fetchAndValidateEnumValues
 fetchAndValidateEnumValues _ _ _ _ = runExceptT $
   throw400 NotSupported "Enum tables are not supported for BigQuery sources"
 
-createTableEventTrigger
-  :: (Monad m)
-  => ServerConfigCtx
-  -> SourceConfig 'BigQuery
-  -> TableName 'BigQuery
-  -> [ColumnInfo 'BigQuery]
-  -> TriggerName
-  -> TriggerOpsDef
-  -> m (Either QErr ())
-createTableEventTrigger _ _ _ _ _ _ = runExceptT $
-  throw400 NotSupported "Cannot create table event triggers in BigQuery sources"
-
-buildEventTriggerInfo
-  :: MonadError QErr m
-  => Env.Environment
-  -> SourceName
-  -> TableName 'BigQuery
-  -> EventTriggerConf
-  -> m (EventTriggerInfo, [SchemaDependency])
-buildEventTriggerInfo _ _ _ _ =
-  throw400 NotSupported "Table event triggers are not supported for BigQuery sources"
-
 buildFunctionInfo
   :: (MonadError QErr m)
   => SourceName
   -> FunctionName 'BigQuery
   -> SystemDefined
   -> FunctionConfig
-  -> [FunctionPermissionMetadata]
-  -> RawFunctionInfo
+  -> FunctionPermissionsMap
+  -> RawFunctionInfo 'BigQuery
   -> m (FunctionInfo 'BigQuery, SchemaDependency)
 buildFunctionInfo _ _ _ _ _ _ =
   throw400 NotSupported "SQL Functions are not supported for BigQuery source"
@@ -111,8 +72,8 @@ updateColumnInEventTrigger
   -> Column 'BigQuery
   -> Column 'BigQuery
   -> TableName 'BigQuery
-  -> EventTriggerConf
-  -> EventTriggerConf
+  -> EventTriggerConf 'BigQuery
+  -> EventTriggerConf 'BigQuery
 updateColumnInEventTrigger _ _ _ _ = id
 
 parseCollectableType

@@ -42,6 +42,7 @@ export const connectionRadios = [
 
 const dbTypePlaceholders: Record<Driver, string> = {
   postgres: 'postgresql://username:password@hostname:5432/database',
+  citus: 'postgresql://username:password@hostname:5432/database',
   mssql:
     'Driver={ODBC Driver 17 for SQL Server};Server=serveraddress;Database=dbname;Uid=username;Pwd=password;',
   mysql: 'MySQL connection string',
@@ -60,14 +61,18 @@ const driverToLabel: Record<
     label: 'MS SQL Server',
     defaultConnection: 'DATABASE_URL',
     info:
-      'Only Database URLs and Environment Variables are available using MS SQL Server',
+      'Only Database URLs and Environment Variables are available for MS SQL Server',
   },
   bigquery: {
     label: 'BigQuery',
     defaultConnection: 'CONNECTION_PARAMETERS',
     info:
-      'Only Connection Parameters and Environment Variables are available using BigQuery',
+      'Only Connection Parameters and Environment Variables are available for BigQuery',
     beta: true,
+  },
+  citus: {
+    label: 'Citus',
+    defaultConnection: 'DATABASE_URL',
   },
 };
 
@@ -120,7 +125,6 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
                   data: e.target.value,
                 })
               }
-              disabled={isEditState}
               value={connectionDBState.displayName}
               label="Database Display Name"
               placeholder="database name"
@@ -150,7 +154,7 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
           </>
         ) : null}
         <p
-          className={`${styles.remove_pad_bottom} ${styles.connect_db_header}`}
+          className={`${styles.remove_pad_bottom} mb-md ${styles.connect_db_header}`}
         >
           {title ?? defaultTitle}
           <Tooltip message="Environment variable recommended" />
@@ -173,7 +177,7 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
           {connectionRadios.map(radioBtn => (
             <label
               key={`label-${radioBtn.title}`}
-              className={`${styles.connect_db_radio_label} ${
+              className={`${styles.connect_db_radio_label} inline-flex ${
                 !isDBSupported(connectionDBState.dbType, radioBtn.value)
                   ? styles.label_disabled
                   : ''
@@ -182,6 +186,7 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
               <input
                 type="radio"
                 value={radioBtn.value}
+                className="legacy-input-fix"
                 name={
                   !isreadreplica
                     ? 'connection-type'
@@ -310,6 +315,24 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
               value={connectionDBState.databaseURLState.datasets}
               placeholder="dataset1, dataset2"
               data-test="datasets"
+            />
+            <LabeledInput
+              label="Global Select Limit"
+              onChange={e => {
+                let data = Number.parseInt(e.target.value, 10);
+                if (Number.isNaN(data) || data <= 0) {
+                  data = 0;
+                }
+                connectionDBStateDispatch({
+                  type: 'UPDATE_DB_BIGQUERY_GLOBAL_LIMIT',
+                  data,
+                });
+              }}
+              type="number"
+              min="0"
+              value={connectionDBState.databaseURLState.global_select_limit}
+              placeholder="1000"
+              data-test="global_select_limit"
             />
           </>
         ) : null}

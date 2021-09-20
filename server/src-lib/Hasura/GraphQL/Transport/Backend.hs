@@ -57,8 +57,7 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
     -> m (DiffTime, EncJSON)
   runDBSubscription
     :: forall m
-     . ( MonadIO m
-       )
+     . MonadIO m
     => SourceConfig b
     -> MultiplexedQuery b
     -> [(CohortId, CohortVariables)]

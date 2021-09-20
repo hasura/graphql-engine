@@ -26,6 +26,11 @@ args:
         published_on TIMESTAMP
       );
 
+      CREATE FUNCTION get_articles(author_row author)
+      RETURNS SETOF article as $$
+        SELECT * FROM article WHERE author_id = author_row.id
+      $$ LANGUAGE SQL STABLE;
+
       INSERT INTO article (title, content, author_id, is_published)
         VALUES
         ('Article 1', 'Sample article content 1', 1, false),
@@ -126,6 +131,7 @@ args:
         SELECT * FROM gpa WHERE
           gpa_score >= pass_gpa
       $$ language SQL STABLE;
+
       CREATE TABLE auction (
       id serial primary key,
       price integer not null DEFAULT 250,
@@ -138,6 +144,28 @@ args:
       (100), (120), (300), (260)
       ;
 
+      CREATE TABLE student_marks (
+        id SERIAL PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL,
+        physics INTEGER,
+        chemistry INTEGER,
+        mathematics INTEGER
+      );
+
+      INSERT INTO student_marks (name, physics, chemistry, mathematics) VALUES
+        ('clarke', 84, 67, 70), ('george', 56, 79, 70),
+        ('blake', 66, 89, 78), ('leonel', 90, 93, 85);
+
+      CREATE FUNCTION student_total_marks (student_row student_marks)
+      RETURNS INTEGER AS $$
+        SELECT student_row.physics + student_row.chemistry + student_row.mathematics
+      $$ LANGUAGE SQL STABLE;
+
+      CREATE FUNCTION student_total_marks_offset (hasura_session json, student_row student_marks)
+      RETURNS INTEGER AS $$
+        SELECT student_row.physics + student_row.chemistry + student_row.mathematics - (hasura_session ->> 'x-hasura-offset-marks')::integer
+      $$ LANGUAGE SQL STABLE;
+
 - type: track_table
   args:
     schema: public
@@ -148,6 +176,16 @@ args:
   args:
     schema: public
     name: article
+
+# Add computed field to author table
+- type: add_computed_field
+  args:
+    table: author
+    name: get_articles
+    definition:
+      function: get_articles
+      table_argument: author_row
+
 
 #Object relationship
 - type: create_object_relationship
@@ -223,6 +261,18 @@ args:
             is_published:
               _eq: true
       limit: 10
+
+#Author select permission for reader
+- type: create_select_permission
+  args:
+    table: author
+    role: reader
+    permission:
+      columns:
+        - name
+      filter:
+        get_articles:
+          is_published: true
 
 #Author select permission for anonymous users
 #Only authors with atleast one article will be shown
@@ -495,3 +545,50 @@ args:
     permission:
       columns: [name]
       filter: {}
+
+# Track student_marks table
+- type: track_table
+  args:
+    table: student_marks
+
+- type: add_computed_field
+  args:
+    table: student_marks
+    name: total_marks
+    definition:
+      function: student_total_marks
+      table_argument: student_row
+
+- type: add_computed_field
+  args:
+    table: student_marks
+    name: total_marks_offset
+    definition:
+      function: student_total_marks_offset
+      table_argument: student_row
+      session_argument: hasura_session
+
+- type: create_select_permission
+  args:
+    table: student_marks
+    role: tutor
+    permission:
+      columns:
+      - name
+      filter:
+        total_marks:
+          _gte: 220
+
+- type: create_select_permission
+  args:
+    table: student_marks
+    role: tutor_session
+    permission:
+      columns:
+      - name
+      computed_fields:
+      - total_marks
+      - total_marks_offset
+      filter:
+        total_marks_offset:
+          _gte: 220

@@ -68,3 +68,7 @@ transaction.
   Running this command while Hasura GraphQL engine is running might lead to
   unexpected results. It is recommended to first bring down any running
   Hasura GraphQL engine instances before downgrading the catalogue
+
+.. note::
+
+  You can downgrade a Hasura GraphQL engine v2 instance to v1 only if there is only one database connected to it.

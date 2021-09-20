@@ -17,16 +17,18 @@ module Hasura.RQL.Types
   , askSourceTables
   , askTableCache
   , askTabInfo
+  , askTableMetadata
   , askTabInfoSource
   , askTableCoreInfo
   , askTableCoreInfoSource
   , askFieldInfoMap
   , askFieldInfoMapSource
-  , assertPGCol
+  , assertColumnExists
   , askRelType
   , askComputedFieldInfo
   , askRemoteRel
   , findTable
+  , throwTableDoesNotExist
   , module R
   ) where
 
@@ -35,10 +37,10 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict                         as M
 import qualified Database.PG.Query                           as Q
 
-import           Control.Lens                                (at, (^.))
+import           Control.Lens                                (Traversal', at, preview, (^.))
 import           Control.Monad.Unique
 import           Data.Text.Extended
-import           Network.HTTP.Client.Extended                (HasHttpManagerM (..))
+import           Network.HTTP.Client.Manager                 (HasHttpManagerM (..))
 
 import           Hasura.Backends.Postgres.Connection         as R
 import           Hasura.Base.Error
@@ -52,17 +54,20 @@ import           Hasura.RQL.Types.ComputedField              as R
 import           Hasura.RQL.Types.CustomTypes                as R
 import           Hasura.RQL.Types.Endpoint                   as R
 import           Hasura.RQL.Types.EventTrigger               as R
+import           Hasura.RQL.Types.Eventing                   as R
 import           Hasura.RQL.Types.Function                   as R
 import           Hasura.RQL.Types.GraphqlSchemaIntrospection as R
-import           Hasura.RQL.Types.InheritedRoles             as R
 import           Hasura.RQL.Types.Metadata                   as R
 import           Hasura.RQL.Types.Metadata.Backend           as R
 import           Hasura.RQL.Types.Metadata.Object            as R
+import           Hasura.RQL.Types.Network                    as R
 import           Hasura.RQL.Types.Permission                 as R
 import           Hasura.RQL.Types.QueryCollection            as R
+import           Hasura.RQL.Types.QueryTags                  as R
 import           Hasura.RQL.Types.Relationship               as R
 import           Hasura.RQL.Types.RemoteRelationship         as R
 import           Hasura.RQL.Types.RemoteSchema               as R
+import           Hasura.RQL.Types.Roles                      as R
 import           Hasura.RQL.Types.ScheduledTrigger           as R
 import           Hasura.RQL.Types.SchemaCache                as R
 import           Hasura.RQL.Types.SchemaCache.Build          as R
@@ -129,12 +134,37 @@ askTabInfoSource
 askTabInfoSource tableName = do
   lookupTableInfo tableName >>= (`onNothing` (throwTableDoesNotExist @b) tableName)
 
+-- | Retrieve 'TableMetadata' from the stateful 'MetadataM' environment that is
+-- associated with the given 'SourceName' and 'TableName' for a particular 'Backend'.
+askTableMetadata
+  :: forall b m
+   . (QErrM m, MetadataM m, Backend b, BackendMetadata b)
+  => SourceName
+  -> TableName b
+  -> m (TableMetadata b)
+askTableMetadata sourceName tableName = do
+  tableMetadataMaybe <- getMetadata <&> preview focusTableMetadata
+  tableMetadataMaybe `onNothing`
+    throwTableDoesNotExist @b tableName
+  where
+    -- | Focus on all 'TableMetadata' elements associated with the given 'Backend'
+    -- for the provided @sourceName@ and @tableName@.
+    focusTableMetadata :: Traversal' Metadata (TableMetadata b)
+    focusTableMetadata =
+      metaSources
+      . ix sourceName
+      . toSourceMetadata @b
+      . smTables
+      . ix tableName
 
 class (Monad m) => HasServerConfigCtx m where
   askServerConfigCtx :: m ServerConfigCtx
 
 instance (HasServerConfigCtx m)
          => HasServerConfigCtx (ReaderT r m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (HasServerConfigCtx m)
+         => HasServerConfigCtx (ExceptT e m) where
   askServerConfigCtx = lift askServerConfigCtx
 instance (HasServerConfigCtx m)
          => HasServerConfigCtx (StateT s m) where
@@ -150,9 +180,6 @@ instance (HasServerConfigCtx m)
   askServerConfigCtx = lift askServerConfigCtx
 instance (HasServerConfigCtx m)
          => HasServerConfigCtx (MetadataT m) where
-  askServerConfigCtx = lift askServerConfigCtx
-instance (HasServerConfigCtx m)
-         => HasServerConfigCtx (LazyTxT QErr m) where
   askServerConfigCtx = lift askServerConfigCtx
 instance (HasServerConfigCtx m) => HasServerConfigCtx (Q.TxET QErr m) where
   askServerConfigCtx = lift askServerConfigCtx
@@ -259,14 +286,15 @@ askComputedFieldInfo fields computedField = do
       , computedField <<> " is a " <> fieldType <> "; "
       ]
 
-assertPGCol :: (MonadError QErr m, Backend backend)
-            => FieldInfoMap (FieldInfo backend)
-            -> Text
-            -> Column backend
-            -> m ()
-assertPGCol m msg c = do
-  _ <- askColInfo m c msg
-  return ()
+assertColumnExists
+  :: forall backend m
+   . (MonadError QErr m, Backend backend)
+  => FieldInfoMap (FieldInfo backend)
+  -> Text
+  -> Column backend
+  -> m ()
+assertColumnExists m msg c = do
+  void $ askColInfo m c msg
 
 askRelType :: (MonadError QErr m)
            => FieldInfoMap (FieldInfo backend)

@@ -114,12 +114,9 @@ instance
   , PG.ToMetadataFetchQuery pgKind
   ) => BackendMetadata ('Postgres pgKind) where
   buildComputedFieldInfo     = PG.buildComputedFieldInfo
-  buildRemoteFieldInfo       = PG.buildRemoteFieldInfo
   fetchAndValidateEnumValues = PG.fetchAndValidateEnumValues
   resolveSourceConfig        = PG.resolveSourceConfig
   resolveDatabaseMetadata    = PG.resolveDatabaseMetadata
-  createTableEventTrigger    = PG.createTableEventTrigger
-  buildEventTriggerInfo      = PG.buildEventTriggerInfo @pgKind
   parseBoolExpOperations     = PG.parseBoolExpOperations
   buildFunctionInfo          = PG.buildFunctionInfo
   updateColumnInEventTrigger = PG.updateColumnInEventTrigger

@@ -6,14 +6,15 @@ module Hasura.Backends.MSSQL.Meta
 
 import           Hasura.Prelude
 
+import qualified Data.ByteString.UTF8                  as BSUTF8
 import qualified Data.HashMap.Strict                   as HM
 import qualified Data.HashSet                          as HS
 import qualified Data.Text                             as T
 import qualified Data.Text.Encoding                    as T
-import qualified Database.PG.Query                     as Q (sqlFromFile)
+import qualified Database.ODBC.SQLServer               as ODBC
 
 import           Data.Aeson                            as Aeson
-import           Data.FileEmbed                        (makeRelativeToProject)
+import           Data.FileEmbed                        (embedFile, makeRelativeToProject)
 import           Data.String
 
 import           Hasura.Backends.MSSQL.Connection
@@ -33,12 +34,13 @@ loadDBMetadata
   :: (MonadError QErr m, MonadIO m)
   => MSSQLPool -> m (DBTablesMetadata 'MSSQL)
 loadDBMetadata pool = do
-  let sql = $(makeRelativeToProject "src-rsr/mssql_table_metadata.sql" >>= Q.sqlFromFile)
-  sysTablesText <- runJSONPathQuery pool (fromString sql)
+  let
+    queryBytes = $(makeRelativeToProject "src-rsr/mssql_table_metadata.sql" >>= embedFile)
+    odbcQuery :: ODBC.Query = fromString . BSUTF8.toString $ queryBytes
+  sysTablesText <- runJSONPathQuery pool odbcQuery
   case Aeson.eitherDecodeStrict (T.encodeUtf8 sysTablesText) of
     Left e          -> throw500 $ T.pack $ "error loading sql server database schema: " <> e
     Right sysTables -> pure $ HM.fromList $ map transformTable sysTables
-
 
 --------------------------------------------------------------------------------
 -- Local types
@@ -68,6 +70,7 @@ data SysColumn = SysColumn
   , scColumnId                :: Int
   , scUserTypeId              :: Int
   , scIsNullable              :: Bool
+  , scIsIdentity              :: Bool
   , scJoinedSysType           :: SysType
   , scJoinedForeignKeyColumns :: [SysForeignKeyColumn]
   } deriving (Show, Generic)
@@ -110,6 +113,8 @@ transformTable tableInfo =
       tableOID   = OID $ staObjectId tableInfo
       (columns, foreignKeys) = unzip $ transformColumn <$> staJoinedSysColumn tableInfo
       foreignKeysMetadata = HS.fromList $ map ForeignKeyMetadata $ coalesceKeys $ concat foreignKeys
+      identityColumns = map (ColumnName . scName) $
+                        filter scIsIdentity $ staJoinedSysColumn tableInfo
   in ( tableName
      , DBTableMetadata
        tableOID
@@ -119,7 +124,7 @@ transformTable tableInfo =
        foreignKeysMetadata
        Nothing  -- no views, only tables
        Nothing  -- no description
-       ()
+       identityColumns
      )
 
 transformColumn

@@ -6,7 +6,7 @@ response:
   - extensions:
       code: validation-failed
       path: $.selectionSet.article.args.limit
-    message: expected a 32-bit integer for type "Int", but found a string
+    message: expected a non-negative 32-bit integer for type "Int", but found a string
 query:
   query: |
     query {

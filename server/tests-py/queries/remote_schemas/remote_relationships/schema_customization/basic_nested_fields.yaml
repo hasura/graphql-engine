@@ -1,0 +1,39 @@
+description: Simple remote relationship GraphQL query
+url: /v1/graphql
+status: 200
+response:
+  data:
+    __typename: query_root
+    profiles:
+      - id: 1
+        name: alice
+        __typename: profiles
+        userNestedFields:
+          - foo_name: alice
+            __typename: FooMessage
+      - id: 2
+        name: bob
+        __typename: profiles
+        userNestedFields:
+          - foo_name: bob
+            __typename: FooMessage
+      - id: 3
+        name: alice
+        __typename: profiles
+        userNestedFields:
+          - foo_name: alice
+            __typename: FooMessage
+query:
+  query: |
+    query {
+      __typename
+      profiles {
+        id
+        name
+        __typename
+        userNestedFields {
+          foo_name
+          __typename
+        }
+      }
+    }

@@ -6,16 +6,16 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/pgdump"
-	"github.com/hasura/graphql-engine/cli/internal/hasura/v1query"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/pgdump"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1query"
 
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 )
 
 func TestDriver_ExportDatadump(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
+	port, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardown()
 	type fields struct {
 		SendBulk     sendBulk

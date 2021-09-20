@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 )
 
 func init() {

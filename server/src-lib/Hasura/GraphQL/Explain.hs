@@ -5,30 +5,31 @@ module Hasura.GraphQL.Explain
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                             as J
-import qualified Data.Aeson.TH                          as J
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.Aeson                                as J
+import qualified Data.Aeson.TH                             as J
+import qualified Data.HashMap.Strict                       as Map
+import qualified Data.HashMap.Strict.InsOrd                as OMap
+import qualified Language.GraphQL.Draft.Syntax             as G
 
-import           Control.Monad.Trans.Control            (MonadBaseControl)
+import           Control.Monad.Trans.Control               (MonadBaseControl)
 
-import qualified Hasura.GraphQL.Execute                 as E
-import qualified Hasura.GraphQL.Execute.Action          as E
-import qualified Hasura.GraphQL.Execute.Inline          as E
-import qualified Hasura.GraphQL.Execute.Query           as E
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import qualified Hasura.SQL.AnyBackend                  as AB
+import qualified Hasura.GraphQL.Execute                    as E
+import qualified Hasura.GraphQL.Execute.Action             as E
+import qualified Hasura.GraphQL.Execute.Query              as E
+import qualified Hasura.GraphQL.Execute.RemoteJoin.Collect as RJ
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
+import qualified Hasura.SQL.AnyBackend                     as AB
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Backend
-import           Hasura.GraphQL.Execute.Instances       ()
+import           Hasura.GraphQL.Execute.Instances          ()
+import           Hasura.GraphQL.ParameterizedQueryHash
 import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Transport.Backend
-import           Hasura.GraphQL.Transport.Instances     ()
+import           Hasura.GraphQL.Transport.Instances        ()
 import           Hasura.Metadata.Class
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 import           Hasura.Session
 
@@ -61,19 +62,21 @@ explainQueryField userInfo fieldName rootField = do
     RFRaw _    -> pure $ encJFromJValue $ ExplainPlan fieldName Nothing Nothing
     RFDB sourceName exists   -> do
       step <- AB.dispatchAnyBackend @BackendExecute exists
-        \(SourceConfigWith sourceConfig (QDBR db)) ->
-           mkDBQueryExplain fieldName userInfo sourceName sourceConfig db
+        \(SourceConfigWith sourceConfig (QDBR db)) -> do
+           let (newDB, remoteJoins) = RJ.getRemoteJoins db
+           unless (isNothing remoteJoins) $
+             throw400 InvalidParams "queries with remote relationships cannot be explained"
+           mkDBQueryExplain fieldName userInfo sourceName sourceConfig newDB
       AB.dispatchAnyBackend @BackendTransport step runDBQueryExplain
 
 
--- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
--- here. We should evaluate if we need it here.
 explainGQLQuery
   :: forall m
   . ( MonadError QErr m
     , MonadIO m
     , MonadBaseControl IO m
     , MonadMetadataStorage (MetadataStorageT m)
+    , MonadQueryTags m
     )
   => SchemaCache
   -> GQLExplain
@@ -84,29 +87,24 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
     mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent
                sessionVariables
   -- we don't need to check in allow list as we consider it an admin endpoint
-  let takeFragment =
-        \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing
-      fragments = mapMaybe takeFragment $ GH.unGQLExecDoc $ GH._grQuery query
   (graphQLContext, queryParts) <- E.getExecPlanPartial userInfo sc queryType query
   case queryParts of
-    G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives selSet -> do
-      -- (Here the above fragment inlining is actually executed.)
-      inlinedSelSet <- E.inlineSelectionSet fragments selSet
-      (unpreparedQueries, _, _, _) <-
+    G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives inlinedSelSet -> do
+      (unpreparedQueries, _, _) <-
         E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
-      -- TODO: validate directives here
+        -- TODO: validate directives here
       encJFromList <$>
         for (OMap.toList unpreparedQueries) (uncurry (explainQueryField userInfo))
 
     G.TypedOperationDefinition G.OperationTypeMutation _ _ _ _ ->
       throw400 InvalidParams "only queries can be explained"
 
-    G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives selSet -> do
-      -- (Here the above fragment inlining is actually executed.)
-      inlinedSelSet <- E.inlineSelectionSet fragments selSet
-      (unpreparedQueries, _, _, _) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
+    G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> do
+      (unpreparedQueries, _, normalizedSelectionSet) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
+      let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
       -- TODO: validate directives here
-      validSubscription <-  E.buildSubscriptionPlan userInfo unpreparedQueries
+      -- query-tags are not necessary for EXPLAIN API
+      validSubscription <-  E.buildSubscriptionPlan userInfo unpreparedQueries parameterizedQueryHash emptyQueryTagsConfig
       case validSubscription of
         E.SEAsyncActionsWithNoRelationships _ -> throw400 NotSupported "async action query fields without relationships to table cannot be explained"
         E.SEOnSourceDB actionIds liveQueryBuilder -> do

@@ -264,13 +264,24 @@ const ModifyView = props => {
               sql={viewDefSql}
               source={currentSource}
             />
-            <hr />
+            <hr className="my-md" />
             {getViewColumnsSection()}
-            <hr />
-            <ComputedFields tableSchema={tableSchema} />
-            <hr />
-            <RootFields tableSchema={tableSchema} />
-            <hr />
+            <hr className="my-md" />
+
+            {isFeatureSupported('tables.modify.computedFields') && (
+              <>
+                <ComputedFields tableSchema={tableSchema} />
+                <hr className="my-md" />
+              </>
+            )}
+
+            {isFeatureSupported('tables.modify.customGqlRoot') && (
+              <>
+                <RootFields tableSchema={tableSchema} />
+                <hr className="my-md" />
+              </>
+            )}
+
             {untrackBtn}
             {deleteBtn}
             <br />

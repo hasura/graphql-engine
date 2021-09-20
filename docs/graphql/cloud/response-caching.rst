@@ -69,13 +69,29 @@ argument to the ``@cached`` query directive. The value is an integer number of s
 By default, a response will be cached with a maximum lifetime of 60 seconds.
 The maximum allowed value is 300 seconds (5 minutes).
 
+Forcing the cache to refresh
+----------------------------
+
+The cache entry can be forced to refresh, regardless of the maximum
+lifetime using the ``refresh`` argument to ``@cached``. The value is a
+boolean:
+
+.. code-block:: graphql
+
+   query MyCachedQuery @cached(refresh: true) {
+     users {
+       id
+       name
+     }
+   }
+
 Rate Limiting
 -------------
 
 Cache writes are rate limited, with a rate depending on your plan. The rate
 limit is based on the total number of bytes written to the cache in a sliding
 window. If you exceed the rate limit, the HTTP response will indicate this
-with a 429 (Too Many Requests) error response.
+with a warning header: "Warning: 199 - cache-store-capacity-exceeded".
 
 Session variables
 -----------------

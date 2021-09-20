@@ -165,7 +165,11 @@ export const isStringArray = (str: string): boolean => {
 
 /* JSON utils */
 
-export function getAllJsonPaths(json: any, leafKeys: any[], prefix = '') {
+export function getAllJsonPaths(
+  json: any,
+  leafKeys: any[],
+  prefix = ''
+): Record<string, any>[] | string[] {
   const paths = [];
 
   const addPrefix = (subPath: string) => {
@@ -175,7 +179,7 @@ export function getAllJsonPaths(json: any, leafKeys: any[], prefix = '') {
   const handleSubJson = (subJson: any, newPrefix: string) => {
     const subPaths = getAllJsonPaths(subJson, leafKeys, newPrefix);
 
-    subPaths.forEach(subPath => {
+    subPaths.forEach((subPath: typeof subPaths[0]) => {
       paths.push(subPath);
     });
 

@@ -1,5 +1,10 @@
 import { MetadataActions } from './actions';
-import { HasuraMetadataV3, CollectionName, InheritedRole } from './types';
+import {
+  HasuraMetadataV3,
+  CollectionName,
+  InheritedRole,
+  InconsistentObject,
+} from './types';
 import { setAllowedQueries } from './utils';
 
 export type AllowedQueriesCollection = {
@@ -13,7 +18,8 @@ type MetadataState = {
   resourceVersion: number;
   error: null | string | boolean;
   loading: boolean;
-  inconsistentObjects: any[];
+  inconsistentObjects: InconsistentObject[];
+  inconsistentInheritedRoles: any[];
   ongoingRequest: boolean; // deprecate
   allowedQueries: AllowedQueriesCollection[];
   inheritedRoles: InheritedRole[];
@@ -25,6 +31,7 @@ const defaultState: MetadataState = {
   error: null,
   loading: false,
   inconsistentObjects: [],
+  inconsistentInheritedRoles: [],
   ongoingRequest: false,
   allowedQueries: [],
   inheritedRoles: [],
@@ -130,7 +137,12 @@ export const metadataReducer = (
     case 'Metadata/LOAD_INCONSISTENT_OBJECTS_SUCCESS':
       return {
         ...state,
-        inconsistentObjects: action.data,
+        inconsistentObjects: action.data.filter(
+          t => t.type !== 'inherited role permission inconsistency'
+        ),
+        inconsistentInheritedRoles: action.data.filter(
+          t => t.type === 'inherited role permission inconsistency'
+        ),
         ongoingRequest: false,
       };
     case 'Metadata/LOAD_INCONSISTENT_OBJECTS_REQUEST':

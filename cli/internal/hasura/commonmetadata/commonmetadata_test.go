@@ -11,19 +11,19 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
 func TestClient_ExportMetadata(t *testing.T) {
-	portHasuraV13, teardown13 := testutil.StartHasura(t, "v1.3.3")
+	portHasuraV13, teardown13 := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown13()
-	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraVersion)
+	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardownLatest()
 	type fields struct {
 		Client *httpc.Client
@@ -46,7 +46,7 @@ func TestClient_ExportMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraV13, nil),
 				path:   "v1/query",
 			},
-			hasuraVersion: "v1.3.3",
+			hasuraVersion: "hasura/graphql-engine:v1.3.3",
 			wantErr:       false,
 		},
 		{
@@ -80,7 +80,7 @@ func TestClient_ExportMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",
 			},
-			hasuraVersion: testutil.HasuraVersion,
+			hasuraVersion: testutil.HasuraDockerImage,
 			wantErr:       false,
 		},
 	}
@@ -105,9 +105,9 @@ func TestClient_ExportMetadata(t *testing.T) {
 }
 
 func TestClient_ReloadMetadata(t *testing.T) {
-	portHasuraV13, teardown13 := testutil.StartHasura(t, "v1.3.3")
+	portHasuraV13, teardown13 := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown13()
-	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraVersion)
+	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardownLatest()
 	type fields struct {
 		Client *httpc.Client
@@ -129,7 +129,7 @@ func TestClient_ReloadMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraV13, nil),
 				path:   "v1/query",
 			},
-			hasuraVersion: "v1.3.3",
+			hasuraVersion: "hasura/graphql-engine:v1.3.3",
 			wantErr:       false,
 		},
 		{
@@ -141,7 +141,7 @@ func TestClient_ReloadMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",
 			},
-			hasuraVersion: testutil.HasuraVersion,
+			hasuraVersion: testutil.HasuraDockerImage,
 			wantErr:       false,
 		},
 	}
@@ -164,9 +164,9 @@ func TestClient_ReloadMetadata(t *testing.T) {
 }
 
 func TestClient_DropInconsistentMetadata(t *testing.T) {
-	portHasuraV13, teardown13 := testutil.StartHasura(t, "v1.3.3")
+	portHasuraV13, teardown13 := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown13()
-	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraVersion)
+	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardownLatest()
 	type fields struct {
 		Client *httpc.Client
@@ -188,7 +188,7 @@ func TestClient_DropInconsistentMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraV13, nil),
 				path:   "v1/query",
 			},
-			hasuraVersion: "v1.3.3",
+			hasuraVersion: "hasura/graphql-engine:v1.3.3",
 			wantErr:       false,
 		},
 		{
@@ -200,7 +200,7 @@ func TestClient_DropInconsistentMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",
 			},
-			hasuraVersion: testutil.HasuraVersion,
+			hasuraVersion: testutil.HasuraDockerImage,
 			wantErr:       false,
 		},
 	}
@@ -223,9 +223,9 @@ func TestClient_DropInconsistentMetadata(t *testing.T) {
 }
 
 func TestClient_ResetMetadata(t *testing.T) {
-	portHasuraV13, teardown13 := testutil.StartHasura(t, "v1.3.3")
+	portHasuraV13, teardown13 := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown13()
-	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraVersion)
+	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardownLatest()
 	type fields struct {
 		Client *httpc.Client
@@ -247,7 +247,7 @@ func TestClient_ResetMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraV13, nil),
 				path:   "v1/query",
 			},
-			hasuraVersion: "v1.3.3",
+			hasuraVersion: "hasura/graphql-engine:v1.3.3",
 			wantErr:       false,
 		},
 		{
@@ -259,7 +259,7 @@ func TestClient_ResetMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",
 			},
-			hasuraVersion: testutil.HasuraVersion,
+			hasuraVersion: testutil.HasuraDockerImage,
 			wantErr:       false,
 		},
 	}
@@ -284,7 +284,7 @@ func TestClient_ResetMetadata(t *testing.T) {
 }
 
 func TestClient_GetInconsistentMetadata(t *testing.T) {
-	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraVersion)
+	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardownLatest()
 	// create a table track it and delete it
 	sendReq := func(body io.Reader, url string) {
@@ -371,7 +371,7 @@ func TestClient_GetInconsistentMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",
 			},
-			hasuraVersion: testutil.HasuraVersion,
+			hasuraVersion: testutil.HasuraDockerImage,
 			wantErr:       false,
 		},
 	}
@@ -396,9 +396,9 @@ func TestClient_GetInconsistentMetadata(t *testing.T) {
 }
 
 func TestClient_ReplaceMetadata(t *testing.T) {
-	portHasuraV13, teardown13 := testutil.StartHasura(t, "v1.3.3")
+	portHasuraV13, teardown13 := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown13()
-	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraVersion)
+	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardownLatest()
 	type fields struct {
 		Client *httpc.Client
@@ -427,7 +427,7 @@ func TestClient_ReplaceMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraV13, nil),
 				path:   "v1/query",
 			},
-			hasuraVersion: "v1.3.3",
+			hasuraVersion: "hasura/graphql-engine:v1.3.3",
 			wantErr:       false,
 		},
 		{
@@ -442,7 +442,7 @@ func TestClient_ReplaceMetadata(t *testing.T) {
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",
 			},
-			hasuraVersion: testutil.HasuraVersion,
+			hasuraVersion: testutil.HasuraDockerImage,
 			wantErr:       false,
 		},
 	}

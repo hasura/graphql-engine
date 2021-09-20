@@ -1,10 +1,17 @@
-module Hasura.Eventing.Common where
+module Hasura.Eventing.Common
+  ( LockedEventsCtx(..)
+  , saveLockedEvents
+  , removeEventFromLockedEvents
+  ) where
+
+import           Hasura.Prelude
 
 import           Control.Concurrent.STM.TVar
 import           Control.Monad.STM
-import           Hasura.Prelude
+
 import           Hasura.RQL.Types.Action           (LockedActionEventId)
-import           Hasura.RQL.Types.EventTrigger     (EventId)
+import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Eventing         (EventId)
 import           Hasura.RQL.Types.ScheduledTrigger (CronEventId, OneOffScheduledEventId)
 
 import qualified Data.Set                          as Set
@@ -13,7 +20,7 @@ data LockedEventsCtx
   = LockedEventsCtx
   { leCronEvents   :: TVar (Set.Set CronEventId)
   , leOneOffEvents :: TVar (Set.Set OneOffScheduledEventId)
-  , leEvents       :: TVar (Set.Set EventId)
+  , leEvents       :: TVar (HashMap SourceName (Set.Set EventId))
   , leActionEvents :: TVar (Set.Set LockedActionEventId)
   }
 

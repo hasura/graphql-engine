@@ -17,7 +17,7 @@ import           Control.Monad.Morph                        (hoist)
 import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.Execute.LiveQuery as PGL
-import qualified Hasura.GraphQL.Execute.Query               as EQ
+import qualified Hasura.Backends.Postgres.Instances.Execute as EQ
 import qualified Hasura.Logging                             as L
 import qualified Hasura.Tracing                             as Tracing
 
@@ -58,8 +58,8 @@ runPGQuery
   -> UserInfo
   -> L.Logger L.Hasura
   -> SourceConfig ('Postgres pgKind)
-  -> Tracing.TraceT (LazyTxT QErr IO) EncJSON
-  -> Maybe (EQ.PreparedSql pgKind)
+  -> Tracing.TraceT (Q.TxET QErr IO) EncJSON
+  -> Maybe EQ.PreparedSql
   -> m (DiffTime, EncJSON)
   -- ^ Also return the time spent in the PG query; for telemetry.
 runPGQuery reqId query fieldName _userInfo logger sourceConfig tx genSql = do
@@ -80,8 +80,8 @@ runPGMutation
   -> UserInfo
   -> L.Logger L.Hasura
   -> SourceConfig ('Postgres pgKind)
-  -> Tracing.TraceT (LazyTxT QErr IO) EncJSON
-  -> Maybe (EQ.PreparedSql pgKind)
+  -> Tracing.TraceT (Q.TxET QErr IO) EncJSON
+  -> Maybe EQ.PreparedSql
   -> m (DiffTime, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
@@ -92,19 +92,19 @@ runPGMutation reqId query fieldName userInfo logger sourceConfig tx _genSql =  d
   withElapsedTime $ trace ("Postgres Mutation for root field " <>> fieldName) $
     Tracing.interpTraceT (
       liftEitherM . liftIO . runExceptT
-      . runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
+      . runTx (_pscExecCtx sourceConfig) Q.ReadWrite
       . withTraceContext ctx
       . withUserInfo userInfo
       ) tx
 
 runPGSubscription
-  :: ( MonadIO m
-     )
+  :: MonadIO m
   => SourceConfig ('Postgres pgKind)
   -> MultiplexedQuery ('Postgres pgKind)
   -> [(CohortId, CohortVariables)]
   -> m (DiffTime, Either QErr [(CohortId, B.ByteString)])
-runPGSubscription sourceConfig query variables = withElapsedTime
+runPGSubscription sourceConfig query variables =
+  withElapsedTime
   $ runExceptT
   $ runQueryTx (_pscExecCtx sourceConfig)
   $ PGL.executeMultiplexedQuery query variables
@@ -127,13 +127,13 @@ runPGQueryExplain (DBStepInfo _ sourceConfig _ action) =
 mkQueryLog
   :: GQLReqUnparsed
   -> G.Name
-  -> Maybe (EQ.PreparedSql pgKind)
+  -> Maybe EQ.PreparedSql
   -> RequestId
   -> QueryLog
 mkQueryLog gqlQuery fieldName preparedSql requestId =
   QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId QueryLogKindDatabase
   where
-    generatedQuery = preparedSql <&> \(EQ.PreparedSql query args _) ->
+    generatedQuery = preparedSql <&> \(EQ.PreparedSql query args) ->
       GeneratedQuery (Q.getQueryText query) (J.toJSON $ pgScalarValueToJson . snd <$> args)
 
 
@@ -159,7 +159,7 @@ runPGMutationTransaction reqId query userInfo logger sourceConfig mutations = do
   withElapsedTime $ do
     Tracing.interpTraceT (
       liftEitherM . liftIO . runExceptT
-      . runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
+      . runTx (_pscExecCtx sourceConfig) Q.ReadWrite
       . withTraceContext ctx
       . withUserInfo userInfo
       ) $ flip OMap.traverseWithKey mutations \fieldName dbsi ->

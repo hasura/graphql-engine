@@ -5,6 +5,8 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , GQLReqParsed
   , GQLReqOutgoing
   , renderGQLReqOutgoing
+  , SingleOperation
+  , getSingleOperation
   , toParsed
   , GQLQueryText(..)
   , GQLExecDoc(..)
@@ -18,8 +20,10 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , GQExecError(..)
   , GQResponse
   , isExecError
+  , ReqsText
   ) where
 
+import           Data.Text.Extended             (dquote)
 import           Hasura.Prelude
 
 import qualified Data.Aeson                     as J
@@ -27,6 +31,7 @@ import qualified Data.Aeson.Casing              as J
 import qualified Data.Aeson.TH                  as J
 import qualified Data.ByteString.Lazy           as BL
 import qualified Data.HashMap.Strict            as Map
+import qualified Hasura.GraphQL.Execute.Inline  as EI
 import qualified Language.GraphQL.Draft.Parser  as G
 import qualified Language.GraphQL.Draft.Printer as G
 import qualified Language.GraphQL.Draft.Syntax  as G
@@ -35,8 +40,8 @@ import           Data.Either                    (isLeft)
 import           Language.Haskell.TH.Syntax     (Lift)
 
 import           Hasura.Base.Error
+import           Hasura.Base.Instances          ()
 import           Hasura.EncJSON
-import           Hasura.RQL.Types               ()
 
 
 -- TODO: why not just `G.ExecutableDocument G.Name`?
@@ -79,9 +84,9 @@ instance (Hashable a) => Hashable (GQLReq a)
 --
 -- See <https://github.com/hasura/graphql-engine/issues/1812>.
 data GQLBatchedReqs a
-  = GQLSingleRequest (GQLReq a)
-  | GQLBatchedReqs [GQLReq a]
-  deriving (Show, Eq, Generic)
+  = GQLSingleRequest a
+  | GQLBatchedReqs [a]
+  deriving (Show, Eq, Generic, Functor)
 
 instance J.ToJSON a => J.ToJSON (GQLBatchedReqs a) where
   toJSON (GQLSingleRequest q) = J.toJSON q
@@ -94,7 +99,8 @@ instance J.FromJSON a => J.FromJSON (GQLBatchedReqs a) where
 newtype GQLQueryText
   = GQLQueryText
   { _unGQLQueryText :: Text
-  } deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, Hashable, IsString)
+  } deriving (Show, Eq, Ord, Hashable, IsString)
+    deriving newtype (J.FromJSON, J.ToJSON)
 
 -- | We've not yet parsed the graphql query string parameter of the POST.
 type GQLReqUnparsed = GQLReq GQLQueryText
@@ -108,6 +114,8 @@ type GQLReqUnparsed = GQLReq GQLQueryText
 --      'ExecutableDefinitionOperation' in '_grQuery'
 type GQLReqParsed = GQLReq GQLExecDoc
 
+type ReqsText = GQLBatchedReqs (GQLReq GQLQueryText)
+
 -- | A simplified form of 'GQLReqParsed' which is more ergonomic in particular
 -- for APIs that act as graphql /clients/ (e.g. in remote relationship
 -- execution). This is a "desugared" request in which fragments have been
@@ -119,7 +127,12 @@ type GQLReqParsed = GQLReq GQLExecDoc
 -- '_todName' if present.
 --
 -- These could maybe benefit from an HKD refactoring.
-type GQLReqOutgoing = GQLReq (G.TypedOperationDefinition G.NoFragments G.Name)
+type GQLReqOutgoing = GQLReq SingleOperation
+
+-- | A single graphql operation to be executed, with fragment definitions
+-- inlined. This is the simplified form of 'GQLExecDoc' or
+-- 'G.ExecutableDocument':
+type SingleOperation = G.TypedOperationDefinition G.NoFragments G.Name
 
 renderGQLReqOutgoing :: GQLReqOutgoing -> GQLReqUnparsed
 renderGQLReqOutgoing = fmap (GQLQueryText . G.renderExecutableDoc . toExecDoc . inlineFrags)
@@ -131,6 +144,40 @@ renderGQLReqOutgoing = fmap (GQLQueryText . G.renderExecutableDoc . toExecDoc . 
       opDef { G._todSelectionSet = G.fmapSelectionSetFragment G.inline $ G._todSelectionSet opDef }
     toExecDoc =
       G.ExecutableDocument . pure . G.ExecutableDefinitionOperation . G.OperationDefinitionTyped
+
+-- | Obtain the actual single operation to be executed, from the possibly-
+-- multi-operation document, validating per the spec and inlining any
+-- fragment definitions (pre-defined parts of a graphql query) at fragment
+-- spreads (locations where fragments are "spliced"). See:
+--
+--     https://spec.graphql.org/June2018/#sec-Executable-Definitions  and...
+--     https://graphql.org/learn/serving-over-http/
+getSingleOperation
+  :: MonadError QErr m
+  => GQLReqParsed
+  -> m SingleOperation
+getSingleOperation (GQLReq opNameM q _varValsM) = do
+  let (selSets, opDefs, fragments) = G.partitionExDefs $ unGQLExecDoc q
+  G.TypedOperationDefinition{..} <-
+    case (opNameM, selSets, opDefs) of
+      (Just opName, [], _) -> do
+        let n = _unOperationName opName
+            opDefM = find (\opDef -> G._todName opDef == Just n) opDefs
+        onNothing opDefM $ throw400 ValidationFailed $
+          "no such operation found in the document: " <> dquote n
+      (Just _, _, _)  ->
+        throw400 ValidationFailed $ "operationName cannot be used when " <>
+        "an anonymous operation exists in the document"
+      (Nothing, [selSet], []) ->
+        return $ G.TypedOperationDefinition G.OperationTypeQuery Nothing [] [] selSet
+      (Nothing, [], [opDef])  ->
+        return opDef
+      (Nothing, _, _) ->
+        throw400 ValidationFailed $ "exactly one operation has to be present " <>
+        "in the document when operationName is not specified"
+
+  inlinedSelSet <- EI.inlineSelectionSet fragments _todSelectionSet
+  pure $ G.TypedOperationDefinition{_todSelectionSet = inlinedSelSet, ..}
 
 toParsed :: (MonadError QErr m ) => GQLReqUnparsed -> m GQLReqParsed
 toParsed req = case G.parseExecutableDoc gqlText of

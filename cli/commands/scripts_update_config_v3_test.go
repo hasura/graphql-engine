@@ -2,28 +2,29 @@ package commands
 
 import (
 	"fmt"
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
-	"github.com/hasura/graphql-engine/cli/util"
+	"os"
+	"path/filepath"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gbytes"
 	. "github.com/onsi/gomega/gexec"
-	"os"
-	"path/filepath"
 )
 
-var _ = Describe("scripts_update_project_v3", func() {
+var _ = Describe("hasura scripts update-project-v3", func() {
 	var projectDirectory string
 	var devEndpoint, stagingEndpoint, prodEndpoint string
 	var teardown func()
 	BeforeEach(func() {
 		projectDirectory = testutil.RandDirName()
 		// create three hasura instances to mimic a environment promotion scenario
-		devHasuraPort, teardownDev := testutil.StartHasura(GinkgoT(), testutil.HasuraVersion)
+		devHasuraPort, teardownDev := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		devEndpoint = fmt.Sprintf("http://0.0.0.0:%s", devHasuraPort)
-		stagingHasuraPort, teardownStaging := testutil.StartHasura(GinkgoT(), testutil.HasuraVersion)
+		stagingHasuraPort, teardownStaging := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		stagingEndpoint = fmt.Sprintf("http://0.0.0.0:%s", stagingHasuraPort)
-		prodHasuraPort, teardownProd := testutil.StartHasura(GinkgoT(), testutil.HasuraVersion)
+		prodHasuraPort, teardownProd := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		prodEndpoint = fmt.Sprintf("http://0.0.0.0:%s", prodHasuraPort)
 		teardown = func() {
 			os.RemoveAll(projectDirectory)
@@ -32,9 +33,8 @@ var _ = Describe("scripts_update_project_v3", func() {
 			teardownDev()
 		}
 	})
-	AfterEach(func() {
-		teardown()
-	})
+	AfterEach(func() { teardown() })
+
 	It("update a config v2 project to config v3", func() {
 		Context("sets up dev project", func() {
 			// copy template project directory migrations to test project directory
@@ -89,7 +89,7 @@ var _ = Describe("scripts_update_project_v3", func() {
 			})
 
 			Eventually(session.Err, 60).Should(Say(`.*error.*`))
-			Eventually(session, 60*4).Should(Exit())
+			Eventually(session.Wait(timeout)).Should(Exit())
 		})
 
 		Context("applies metadata and migrations on staging hasura instance", func() {
@@ -101,16 +101,16 @@ var _ = Describe("scripts_update_project_v3", func() {
 				Args:             []string{"migrate", "apply", "--database-name", "default", "--endpoint", stagingEndpoint},
 				WorkingDirectory: projectDirectory,
 			})
-			Eventually(session, 60*4).Should(Exit(0))
-			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring("nothing to apply"))
+			Eventually(session, timeout).Should(Exit(0))
+			Expect(session.Err.Contents()).Should(ContainSubstring("nothing to apply"))
 
 			// This now should not trigger a state migration
 			session = testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"migrate", "apply", "--database-name", "default", "--endpoint", stagingEndpoint, "--log-level", "debug"},
 				WorkingDirectory: projectDirectory,
 			})
-			Eventually(session, 60*4).Should(Exit(0))
-			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring(`{"level":"debug","msg":"skipping state migration, found IsStateCopyCompleted: true Migrations: map[default:map[1620138136207:false 1620138146208:false 1620138161039:false 1620138169404:false 1620138179776:false 1620138189381:false 1620138199344:false]]"`))
+			Eventually(session, timeout).Should(Exit(0))
+			Expect(session.Err.Contents()).Should(ContainSubstring(`{"level":"debug","msg":"skipping state migration, found IsStateCopyCompleted: true Migrations: map[default:map[1620138136207:false 1620138146208:false 1620138161039:false 1620138169404:false 1620138179776:false 1620138189381:false 1620138199344:false]]"`))
 		})
 		Context("applies metadata and migrations on production hasura instance", func() {
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
@@ -133,8 +133,8 @@ var _ = Describe("scripts_update_project_v3", func() {
 				WorkingDirectory: projectDirectory,
 			})
 
-			Eventually(session, 60*4).Should(Exit(0))
-			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring("nothing to apply"))
+			Eventually(session, timeout).Should(Exit(0))
+			Expect(session.Err.Contents()).Should(ContainSubstring("nothing to apply"))
 		})
 	})
 })

@@ -7,15 +7,15 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/editor"
-	"github.com/hasura/graphql-engine/cli/seed"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/editor"
+	"github.com/hasura/graphql-engine/cli/v2/seed"
 )
 
 type SeedNewOptions struct {
@@ -87,7 +87,7 @@ func (o *SeedNewOptions) Run() error {
 		var body []byte
 		if len(o.FromTableNames) > 0 {
 			if o.Source.Kind != hasura.SourceKindPG && o.EC.Config.Version >= cli.V3 {
-				return fmt.Errorf("--from-table is supported only for postgres sources")
+				return fmt.Errorf("--from-table is supported only for postgres databases")
 			}
 			// Send the query
 			bodyReader, err := o.Driver.ExportDatadump(o.FromTableNames, o.Source.Name)

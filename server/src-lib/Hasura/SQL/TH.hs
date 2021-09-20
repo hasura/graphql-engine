@@ -32,7 +32,7 @@ import           Language.Haskell.TH
 import           Hasura.SQL.Backend
 
 
-type BackendConstructor = [Name]
+type BackendConstructor = NonEmpty Name
 
 -- | Inspects the 'BackendType' to produce a list of its constructors in the 'Q' monad. Each
 -- constructor is represented as a list of names, to include the arguments, if any.
@@ -47,7 +47,7 @@ backendConstructors = do
       ConT argName <- pure arg
       TyConI (DataD _ _ _ _ argCons _) <- reify argName
       pure [argCon | NormalC argCon _ <- argCons]
-    pure $ map (name :) $ sequenceA argsConstructors
+    pure $ map (name :|) $ sequenceA argsConstructors
 
 -- | Associates a value in the 'Q' monad to each backend @Name@.
 forEachBackend :: (BackendConstructor -> Q a) -> Q [a]
@@ -97,17 +97,18 @@ backendCase caseExp toPat toBody defaultCase = do
       pure $ matches ++ [Match WildP defaultBody []]
   pure $ CaseE cexp allMatches
 
--- | Creates a data type in which there's one constructor per backend.  While
+-- | Creates a data type in which there's one constructor per backend. While
 -- this only returns one declaration, it nonetheless returns a @[Dec]@ as it's
 -- what the $() splice interpolation syntax expects.
 backendData
   :: Name                          -- ^ the name of the type
   -> [TyVarBndr]                   -- ^ type variables of the type if any
   -> (BackendConstructor -> Q Con) -- ^ the constructor for a given backend
+  -> [Name]                        -- ^ classes to derive using the stock strategy
   -> Q [Dec]
-backendData name tVars mkCon = do
+backendData name tVars mkCon derivs = do
   constructors <- forEachBackend mkCon
-  pure [DataD [] name tVars Nothing constructors []]
+  pure [DataD [] name tVars Nothing constructors [DerivClause (Just StockStrategy) $ map ConT derivs]]
 
 -- | Generates a case expression that applies a function @f@ to each possible value
 -- of an 'AnyBackend' @e@:

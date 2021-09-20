@@ -2,10 +2,9 @@ package commands
 
 import (
 	"io/ioutil"
-	"os"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -60,7 +59,7 @@ func (o *MetadataExportOptions) Run() error {
 		return getMetadataFromServerAndWriteToStdoutByFormat(o.EC, rawOutputFormat(o.output))
 	}
 	o.EC.Spin("Exporting metadata...")
-	metadataHandler := metadataobject.NewHandlerFromEC(o.EC)
+	metadataHandler := projectmetadata.NewHandlerFromEC(o.EC)
 	files, err := metadataHandler.ExportMetadata()
 	o.EC.Spinner.Stop()
 	if err != nil {
@@ -84,5 +83,5 @@ func getMetadataFromServerAndWriteToStdoutByFormat(ec *cli.ExecutionContext, for
 	if err != nil {
 		return errors.Wrap(err, "reading metadata failed")
 	}
-	return writeByOutputFormat(os.Stdout, jsonMetadata, format)
+	return writeByOutputFormat(ec.Stdout, jsonMetadata, format)
 }

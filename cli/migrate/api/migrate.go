@@ -4,22 +4,23 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
+
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
-
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/internal/metadatautil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/migrate"
-	"github.com/hasura/graphql-engine/cli/migrate/cmd"
-	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/migrate"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/cmd"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/database/hasuradb"
 	"github.com/sirupsen/logrus"
 )
 
@@ -79,7 +80,7 @@ func MigrateAPI(c *gin.Context) {
 	//sourceURL := sourcePtr.(*url.URL)
 	logger := loggerPtr.(*logrus.Logger)
 
-	mdHandler := metadataobject.NewHandlerFromEC(ec)
+	mdHandler := projectmetadata.NewHandlerFromEC(ec)
 	// Switch on request method
 	switch c.Request.Method {
 	case "GET":
@@ -93,6 +94,10 @@ func MigrateAPI(c *gin.Context) {
 			kind, err := metadatautil.GetSourceKind(ec.APIClient.V1Metadata.ExportMetadata, sourceName)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+				return
+			}
+			if kind == nil {
+				c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: fmt.Sprintf("cannot determine source kind for %v", sourceName)})
 				return
 			}
 			sourceKind = *kind
@@ -143,7 +148,26 @@ func MigrateAPI(c *gin.Context) {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 				return
 			}
-			sourceKind = *kind
+			if kind == nil && len(request.Up) == 0 {
+				c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: fmt.Sprintf("didn't find any request in UP in query body %v", sourceName)})
+				return
+			}
+			if kind == nil && len(request.Up) != 0 {
+				switch databaseKind := strings.Split(request.Up[0].Type, "_")[0]; databaseKind {
+				case "pg":
+					sourceKind = hasura.SourceKindPG
+				case "mssql":
+					sourceKind = hasura.SourceKindMSSQL
+				case "citus":
+					sourceKind = hasura.SourceKindCitus
+				default:
+					c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: fmt.Sprintf("cannot determine source kind for %v", sourceName)})
+					return
+				}
+			}
+			if kind != nil {
+				sourceKind = *kind
+			}
 		}
 		t, err := migrate.NewMigrate(ec, false, sourceName, sourceKind)
 		if err != nil {
@@ -151,11 +175,11 @@ func MigrateAPI(c *gin.Context) {
 			return
 		}
 		createOptions := cmd.New(timestamp, request.Name, filepath.Join(ec.MigrationDir, sourceName))
-		if version != int(cli.V1) {
+		if version != int(cli.V1) && migrate.IsMigrationsSupported(sourceKind) {
 			sqlUp := &bytes.Buffer{}
 			sqlDown := &bytes.Buffer{}
 			for _, arg := range request.Up {
-				if arg.Type == hasuradb.RunSQL {
+				if strings.Contains(arg.Type, "run_sql") {
 					argByt, err := json.Marshal(arg.Args)
 					if err != nil {
 						c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
@@ -173,7 +197,7 @@ func MigrateAPI(c *gin.Context) {
 			}
 
 			for _, arg := range request.Down {
-				if arg.Type == hasuradb.RunSQL {
+				if strings.Contains(arg.Type, "run_sql") {
 					argByt, err := json.Marshal(arg.Args)
 					if err != nil {
 						c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})

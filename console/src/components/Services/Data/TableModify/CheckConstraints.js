@@ -12,6 +12,7 @@ const CheckConstraints = ({
   constraints,
   dispatch,
   checkConstraintsModify,
+  readOnlyMode,
 }) => {
   const init = () => {
     const checkConstraintsState = constraints.map(c => ({
@@ -136,6 +137,7 @@ const CheckConstraints = ({
         removeFunc={removeFunc}
         saveFunc={saveFunc}
         isCollapsable
+        readOnlyMode={readOnlyMode}
       />
     );
   });

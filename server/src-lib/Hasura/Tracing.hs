@@ -21,24 +21,22 @@ module Hasura.Tracing
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                   as J
-import qualified Data.Aeson.Lens              as JL
-import qualified Data.Binary                  as Bin
-import qualified Data.ByteString              as BS
-import qualified Data.ByteString.Base16       as Hex
-import qualified Data.ByteString.Lazy         as BL
-import qualified Network.HTTP.Client.Extended as HTTP
-import qualified Network.HTTP.Types.Header    as HTTP
-import qualified System.Random                as Rand
-import qualified Web.HttpApiData              as HTTP
+import qualified Data.Aeson                        as J
+import qualified Data.Aeson.Lens                   as JL
+import qualified Data.Binary                       as Bin
+import qualified Data.ByteString.Base16            as Hex
+import qualified Data.ByteString.Lazy              as BL
+import qualified Network.HTTP.Client.Transformable as HTTP
+import qualified System.Random                     as Rand
+import qualified Web.HttpApiData                   as HTTP
 
-import           Control.Lens                 ((^?))
-import           Control.Monad.Catch          (MonadCatch, MonadMask, MonadThrow)
+import           Control.Lens                      (over, view, (^?))
+import           Control.Monad.Catch               (MonadCatch, MonadMask, MonadThrow)
 import           Control.Monad.Morph
 import           Control.Monad.Trans.Control
 import           Control.Monad.Unique
-import           Data.String                  (fromString)
-import           Network.URI                  (URI)
+import           Data.String                       (fromString)
+import           Network.HTTP.Client.Manager       (HasHttpManagerM (..))
 
 
 
@@ -51,11 +49,11 @@ newtype Reporter = Reporter
       :: forall io a
        . MonadIO io
       => TraceContext
-      -- ^ the current trace context
+      -- the current trace context
       -> Text
-      -- ^ human-readable name for this block of code
+      -- human-readable name for this block of code
       -> io (a, TracingMetadata)
-      -- ^ the action whose execution we want to report, returning
+      -- the action whose execution we want to report, returning
       -- any metadata emitted
       -> io a
   }
@@ -109,8 +107,8 @@ instance MonadReader r m => MonadReader r (TraceT m) where
   ask = TraceT $ lift ask
   local f m = TraceT $ mapReaderT (local f) (unTraceT m)
 
-instance (HTTP.HasHttpManagerM m) => HTTP.HasHttpManagerM (TraceT m) where
-  askHttpManager = lift HTTP.askHttpManager
+instance (HasHttpManagerM m) => HasHttpManagerM (TraceT m) where
+  askHttpManager = lift askHttpManager
 
 
 -- | Run an action in the 'TraceT' monad transformer.
@@ -259,7 +257,8 @@ extractEventContext e = do
     <*> pure freshSpanId
     <*> pure (hexToWord64 =<< e ^? JL.key "trace_context" . JL.key "span_id" . JL._String)
 
--- | Perform HTTP request which supports Trace headers
+-- | Perform HTTP request which supports Trace headers using a
+-- HTTP.Request value
 tracedHttpRequest
   :: MonadTrace m
   => HTTP.Request
@@ -268,19 +267,10 @@ tracedHttpRequest
   -- ^ a function that takes the traced request and executes it
   -> m a
 tracedHttpRequest req f = do
-  let method = bsToTxt (HTTP.method req)
-      uri = show @URI (HTTP.getUri req)
-  trace (method <> " " <> fromString uri) do
-    let reqBytes = case HTTP.requestBody req of
-          HTTP.RequestBodyBS bs         -> Just (fromIntegral (BS.length bs))
-          HTTP.RequestBodyLBS bs        -> Just (BL.length bs)
-          HTTP.RequestBodyBuilder len _ -> Just len
-          HTTP.RequestBodyStream len _  -> Just len
-          _                             -> Nothing
-    for_ reqBytes \b ->
-      attachMetadata [("request_body_bytes", fromString (show b))]
+  let method = bsToTxt (view HTTP.method req)
+      uri = view HTTP.url req
+  trace (method <> " " <> uri) do
+    let reqBytes = HTTP.getReqSize req
+    attachMetadata [("request_body_bytes", fromString (show reqBytes))]
     ctx <- currentContext
-    let req' = req { HTTP.requestHeaders =
-                       injectHttpContext ctx <> HTTP.requestHeaders req
-                   }
-    f req'
+    f $ over HTTP.headers (injectHttpContext ctx <>) req

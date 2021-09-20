@@ -15,8 +15,10 @@ export type PGFunction = {
   function_schema: string;
   function_definition: string;
   return_type_type: string;
+  return_type_name: string;
   function_type: string;
   input_arg_types?: PGInputArgType[];
+  returns_set: boolean;
 };
 
 export interface PostgresTable {

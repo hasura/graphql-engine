@@ -61,6 +61,12 @@ export const Integers = [
 
 export const COUNT_LIMIT = 100000;
 
+export const maxAllowedColumnLength = 64;
+
+const maxAllowedLength = 255;
+const unixEpochLength = 14;
+export const maxAllowedMigrationLength = maxAllowedLength - unixEpochLength;
+
 export const Reals = ['float4', 'float8', 'numeric'];
 
 export const Numerics = [...Integers, ...Reals];

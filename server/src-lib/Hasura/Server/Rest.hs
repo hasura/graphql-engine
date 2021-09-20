@@ -17,8 +17,10 @@ import qualified Network.Wai.Extended                   as Wai
 import           Control.Monad.Trans.Control            (MonadBaseControl)
 import           Data.Aeson                             hiding (json)
 import           Data.Text.Extended
+import           Data.These                             (These (..))
 
 import qualified Hasura.GraphQL.Execute                 as E
+import           Hasura.GraphQL.ParameterizedQueryHash  (ParameterizedQueryHashList (..))
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Syntax          as G
@@ -30,10 +32,12 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
 import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
-import           Hasura.Server.Logging                  (HttpLog (..))
+import           Hasura.Server.Logging
 import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
+
+import qualified Hasura.GraphQL.Execute.Backend         as EB
 
 
 -- Note: There may be a better way of constructing this when building the Endpoint datastructure.
@@ -116,6 +120,7 @@ runCustomEndpoint
        , GH.MonadExecuteQuery m
        , MonadMetadataStorage (MetadataStorageT m)
        , HttpLog m
+       , EB.MonadQueryTags m
        )
     => Env.Environment
     -> E.ExecutionCtx
@@ -125,7 +130,7 @@ runCustomEndpoint
     -> Wai.IpAddress
     -> RestRequest EndpointMethod
     -> EndpointTrie GQLQueryWithText
-    -> m (HTTPLoggingMetadata m, HttpResponse EncJSON)
+    -> m (HttpLogMetadata m, HttpResponse EncJSON)
 runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestRequest{..} endpoints = do
   -- First match the path to an endpoint.
   case matchPath reqMethod (T.split (== '/') reqPath) endpoints of
@@ -156,11 +161,12 @@ runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestReques
           -- with the query string from the schema cache, and pass it
           -- through to the /v1/graphql endpoint.
           (httpLoggingMetadata, handlerResp) <- flip runReaderT execCtx $ do
-              (normalizedSelectionSet, resp) <- GH.runGQ env (E._ecxLogger execCtx) requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables)
-              let httpLoggingMetadata = buildHTTPLoggingMetadata @m [normalizedSelectionSet]
-              return (httpLoggingMetadata, fst <$> resp)
+              (gqlOperationLog, resp) <- GH.runGQ env (E._ecxLogger execCtx) requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables)
+              let httpLogMetadata =
+                    buildHttpLogMetadata @m (PQHSetSingleton (gqolParameterizedQueryHash gqlOperationLog)) RequestModeNonBatchable Nothing
+              return (httpLogMetadata, fst <$> resp)
           case sequence handlerResp of
-            Just resp -> pure $ (httpLoggingMetadata, fmap encodeHTTPResp resp)
+            Just resp -> pure (httpLoggingMetadata, fmap encodeHTTPResp resp)
             -- a Nothing value here indicates a failure to parse the cached request from redis.
             -- TODO: Do we need an additional log message here?
             Nothing -> throw500 "An unexpected error occurred while fetching the data from the cache"

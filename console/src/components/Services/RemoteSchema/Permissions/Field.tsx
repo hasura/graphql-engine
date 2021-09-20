@@ -11,7 +11,8 @@ import { CollapsedField } from './CollapsedField';
 import { ArgSelect } from './ArgSelect';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
-import { generateTypeString } from './utils';
+import { generateTypeString, getChildArguments } from './utils';
+import Pen from './Pen';
 
 export interface FieldProps {
   i: FieldType;
@@ -26,11 +27,19 @@ export const Field: React.FC<FieldProps> = ({
   onExpand = console.log,
   expanded,
 }) => {
+  const [inputPresetMode, setInputPresetMode] = useState<boolean>(false);
+  const [autoExpandInputPresets, setAutoExpandInputPresets] = useState<boolean>(
+    false
+  );
   const context: any = useContext(PermissionEditorContext);
-  const initState =
-    context.argTree && context.argTree[i.name]
-      ? { ...context.argTree[i.name] }
+  let initState;
+  if (i.parentName) {
+    initState = context.argTree?.[i.parentName]?.[i.name]
+      ? { ...context.argTree[i.parentName][i.name] }
       : {};
+  } else {
+    initState = context.argTree?.[i.name] ? { ...context.argTree[i.name] } : {};
+  }
   const [fieldVal, setfieldVal] = useState<Record<string, any>>(initState);
   const setArg = useCallback(
     (vStr: Record<string, unknown>) => {
@@ -45,6 +54,21 @@ export const Field: React.FC<FieldProps> = ({
     [setItem, i]
   );
   useEffect(() => {
+    // auto expand args for InputObjectTypes when there is prefilled values
+    // happens only first time when the node is created
+    if (
+      fieldVal &&
+      fieldVal !== {} &&
+      Object.keys(fieldVal).length > 0 &&
+      !isEmpty(fieldVal) &&
+      !autoExpandInputPresets
+    ) {
+      setAutoExpandInputPresets(true);
+      setInputPresetMode(true);
+    }
+  }, [autoExpandInputPresets]);
+
+  useEffect(() => {
     if (
       fieldVal &&
       fieldVal !== {} &&
@@ -52,7 +76,13 @@ export const Field: React.FC<FieldProps> = ({
       !isEmpty(fieldVal)
     ) {
       context.setArgTree((argTree: Record<string, any>) => {
-        return { ...argTree, [i.name]: fieldVal };
+        const tree = i.parentName
+          ? {
+              ...argTree,
+              [i.parentName]: { ...argTree[i.parentName], [i.name]: fieldVal },
+            }
+          : { ...argTree, [i.name]: fieldVal };
+        return tree;
       });
     }
   }, [fieldVal]);
@@ -75,6 +105,13 @@ export const Field: React.FC<FieldProps> = ({
         expanded={expanded}
       />
     );
+
+  const isFirstLevelInputObjPreset =
+    i.isInputObjectType &&
+    inputPresetMode &&
+    getChildArguments(i.args[i.name]) &&
+    Object.keys(getChildArguments(i.args[i.name])).length === 0;
+
   return (
     <>
       <span
@@ -83,23 +120,31 @@ export const Field: React.FC<FieldProps> = ({
       >
         {i.name}
       </span>
-      {i.args && Object.keys(i.args).length !== 0 && ' ('}
-      {i.args && (
-        <ul data-test={i.name}>
-          {i.args &&
-            Object.entries(i.args).map(([k, v]) => (
-              <ArgSelect
-                key={k}
-                keyName={k}
-                valueField={v}
-                value={fieldVal[k]}
-                setArg={setArg}
-                level={0}
-              />
-            ))}
-        </ul>
-      )}
-      {i.args && Object.keys(i.args).length !== 0 && ' )'}
+      {(i.isInputObjectType &&
+        inputPresetMode &&
+        !isFirstLevelInputObjPreset) ||
+      !i.isInputObjectType ? (
+        <>
+          {i.args && Object.keys(i.args).length !== 0 && ' ('}
+          {i.args && (
+            <ul data-test={i.name}>
+              {i.args &&
+                Object.entries(i.args).map(([k, v]) => (
+                  <ArgSelect
+                    key={k}
+                    keyName={k}
+                    valueField={v}
+                    value={fieldVal[k]}
+                    setArg={setArg}
+                    level={0}
+                    isInputObjectType={i.isInputObjectType}
+                  />
+                ))}
+            </ul>
+          )}
+          {i.args && Object.keys(i.args).length !== 0 && ' )'}
+        </>
+      ) : null}
       {i.return && (
         <span className={styles.fw_large}>
           :
@@ -112,6 +157,24 @@ export const Field: React.FC<FieldProps> = ({
           </a>
         </span>
       )}
+      {/* show pen icon for input object types presets */}
+      {i.isInputObjectType && !inputPresetMode && !autoExpandInputPresets ? (
+        <button onClick={() => setInputPresetMode(true)}>
+          <Pen />
+        </button>
+      ) : null}
+      {i.isInputObjectType && inputPresetMode && isFirstLevelInputObjPreset ? (
+        <ArgSelect
+          key={i.name}
+          keyName={i.name}
+          valueField={i.args[i.name]}
+          value={fieldVal[i.name]}
+          setArg={setArg}
+          level={0}
+          isInputObjectType={i.isInputObjectType}
+          isFirstLevelInputObjPreset
+        />
+      ) : null}
     </>
   );
 };

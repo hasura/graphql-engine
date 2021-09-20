@@ -23,64 +23,63 @@ import           Data.Text.Extended
 import qualified Hasura.GraphQL.Parser         as GraphQL
 import qualified Hasura.RQL.Types.Column       as RQL
 
-import           Hasura.Backends.MSSQL.FromIr  as TSQL
-import           Hasura.Backends.MSSQL.Types   as TSQL
+import           Hasura.Backends.MSSQL.FromIr
+import           Hasura.Backends.MSSQL.Types
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Context
+import           Hasura.RQL.IR
 import           Hasura.SQL.Backend
 import           Hasura.Session
 
 
-newtype QDB v b = QDB (QueryDB b v)
-
-type SubscriptionRootFieldMSSQL v = RootField (QDB v) Void Void {-(RQL.AnnActionAsyncQuery 'MSSQL v)-} Void
-
-
--- --------------------------------------------------------------------------------
--- -- Top-level planner
+--------------------------------------------------------------------------------
+-- Top-level planner
 
 planQuery
   :: MonadError QErr m
   => SessionVariables
-  -> QueryDB 'MSSQL (GraphQL.UnpreparedValue 'MSSQL)
-  -> m (Select, PrepareState)
+  -> QueryDB 'MSSQL (Const Void) (GraphQL.UnpreparedValue 'MSSQL)
+  -> m Select
 planQuery sessionVariables queryDB = do
-  let (rootField, env) = flip runState emptyPrepareState $ traverseQueryDB (prepareValueQuery (getSessionVariablesSet $ sessionVariables)) queryDB
-  select <-
-    runValidate (TSQL.runFromIr (TSQL.fromRootField rootField))
+  rootField <- traverse (prepareValueQuery sessionVariables) queryDB
+  runValidate (runFromIr (fromRootField rootField))
     `onLeft` (throw400 NotSupported . tshow)
-  pure $ (,env)
-    select
-      { selectFor =
-          case selectFor select of
-            NoFor           -> NoFor
-            JsonFor forJson ->
-              JsonFor forJson {jsonRoot =
-                                 case jsonRoot forJson of
-                                   NoRoot -> Root "root"
-                                   -- Keep whatever's there if already
-                                   -- specified. In the case of an
-                                   -- aggregate query, the root will
-                                   -- be specified "aggregate", for
-                                   -- example.
-                                   keep   -> keep
-                              }
-      }
+
+-- | Prepare a value without any query planning; we just execute the
+-- query with the values embedded.
+prepareValueQuery
+  :: MonadError QErr m
+  => SessionVariables
+  -> GraphQL.UnpreparedValue 'MSSQL
+  -> m Expression
+prepareValueQuery sessionVariables =
+  {- History note:
+      This function used to be called 'planNoPlan', and was used for building sql
+      expressions for queries. That evolved differently, but this function is now
+      left as a *suggestion* for implementing support for mutations.
+      -}
+  \case
+    GraphQL.UVLiteral x -> pure x
+    GraphQL.UVSession -> pure $ ValueExpression $ ODBC.ByteStringValue $ toStrict $ J.encode sessionVariables
+    GraphQL.UVParameter _ RQL.ColumnValue{..} -> pure $ ValueExpression cvValue
+    GraphQL.UVSessionVar _typ sessionVariable -> do
+      value <- getSessionVariableValue sessionVariable sessionVariables
+        `onNothing` throw400 NotFound ("missing session variable: " <>> sessionVariable)
+      pure $ ValueExpression $ ODBC.TextValue value
 
 planSubscription
   :: MonadError QErr m
-  => OMap.InsOrdHashMap G.Name (QueryDB 'MSSQL (GraphQL.UnpreparedValue 'MSSQL))
+  => OMap.InsOrdHashMap G.Name (QueryDB 'MSSQL (Const Void) (GraphQL.UnpreparedValue 'MSSQL))
   -> SessionVariables
   -> m (Reselect, PrepareState)
 planSubscription unpreparedMap sessionVariables = do
-  let (rootFieldMap, prepareState) =
-        runState
+  (rootFieldMap, prepareState) <-
+        runStateT
           (traverse
-            (traverseQueryDB (prepareValueSubscription (getSessionVariablesSet sessionVariables)))
+            (traverse (prepareValueSubscription (getSessionVariablesSet sessionVariables)))
             unpreparedMap)
           emptyPrepareState
   selectMap <-
-    runValidate (TSQL.runFromIr (traverse TSQL.fromRootField rootFieldMap))
+    runValidate (runFromIr (traverse fromRootField rootFieldMap))
     `onLeft` (throw400 NotSupported . tshow)
   pure (collapseMap selectMap, prepareState)
 
@@ -94,7 +93,7 @@ planSubscription unpreparedMap sessionVariables = do
   -- selectMap <-
   --   first
   --     FromIrError
-  --     (runValidate (TSQL.runFromIr (traverse TSQL.fromRootField rootFieldMap)))
+  --     (runValidate (runFromIr (traverse fromRootField rootFieldMap)))
   -- pure (collapseMap selectMap)
 
 --------------------------------------------------------------------------------
@@ -114,17 +113,17 @@ collapseMap selects =
     }
   where
     projectSelect :: (G.Name, Select) -> Projection
-    projectSelect (name, select) =
+    projectSelect (name, sel) =
       ExpressionProjection
         (Aliased
-           { aliasedThing = SelectExpression select
+           { aliasedThing = SelectExpression sel
            , aliasedAlias = G.unName name
            })
 
 --------------------------------------------------------------------------------
 -- Session variables
 
-globalSessionExpression :: TSQL.Expression
+globalSessionExpression :: Expression
 globalSessionExpression =
   ValueExpression (ODBC.TextValue "current_setting('hasura.user')::json")
 
@@ -133,7 +132,7 @@ globalSessionExpression =
 -- Resolving values
 
 data PrepareError
-  = FromIrError (NonEmpty TSQL.Error)
+  = FromIrError (NonEmpty Error)
 
 data PrepareState = PrepareState
   { positionalArguments :: ![RQL.ColumnValue 'MSSQL]
@@ -148,93 +147,13 @@ emptyPrepareState = PrepareState
   , sessionVariables = mempty
   }
 
--- | Prepare a value without any query planning; Similar to
--- 'prepareValueMultiplex' we replace occurrences of session variables and
--- parameters with references, but with a slightly simpler object.
-prepareValueQuery
-  :: Set.HashSet SessionVariable
-  -> GraphQL.UnpreparedValue 'MSSQL
-  -> State PrepareState TSQL.Expression
-prepareValueQuery globalVariables =
-  \case
-    GraphQL.UVLiteral x -> pure x
-
-    GraphQL.UVSession -> do
-      modify' (\s -> s {sessionVariables = sessionVariables s <> globalVariables})
-      pure $ sessionVariable RootPath
-
-    GraphQL.UVSessionVar _typ text -> do
-      modify' (\s -> s {sessionVariables = text `Set.insert` sessionVariables s})
-      pure $ sessionVariable (RootPath `FieldPath` toTxt text)
-
-    GraphQL.UVParameter mVariableInfo columnValue ->
-      case fmap GraphQL.getName mVariableInfo of
-        Nothing -> do
-          currentIndex <- (toInteger . length) <$> gets positionalArguments
-          modify' (\s -> s {
-            positionalArguments = positionalArguments s <> [columnValue] })
-          pure (positionalArgument (RootPath `IndexPath` currentIndex))
-        Just name -> do
-          modify
-            (\s ->
-               s
-                 { namedArguments =
-                     HM.insert name columnValue (namedArguments s)
-                 })
-          pure $ namedArgument (RootPath `FieldPath` G.unName name)
-
-    where
-      -- A reference to `row.<column>`
-      rowDot :: Text -> Expression
-      rowDot field =
-        ColumnExpression
-          FieldName
-            { fieldNameEntity = rowAlias
-            , fieldName = field
-            }
-
-      -- A reference to `row.session.<field>`
-      sessionVariable :: JsonPath -> Expression
-      sessionVariable = JsonValueExpression (rowDot "session")
-
-      -- A reference to `row.positionalArguments.[ix]`
-      positionalArgument :: JsonPath -> Expression
-      positionalArgument = JsonValueExpression (rowDot "positionalArguments")
-
-      -- A reference to `row.namedArguments.<field>`
-      namedArgument :: JsonPath -> Expression
-      namedArgument = JsonValueExpression (rowDot "namedArguments")
-
-
-
--- | Prepare a value without any query planning; we just execute the
--- query with the values embedded.
-_prepareValueMutation
-  :: MonadError QErr m
-  => SessionVariables
-  -> GraphQL.UnpreparedValue 'MSSQL
-  -> m TSQL.Expression
-_prepareValueMutation sessionVariables =
-  {- History note:
-      This function used to be called 'planNoPlan', and was used for building sql
-      expressions for queries. That evolved differently, but this function is now
-      left as a *suggestion* for implementing support for mutations.
-      -}
-  \case
-    GraphQL.UVLiteral x -> pure x
-    GraphQL.UVSession -> pure $ ValueExpression $ ODBC.ByteStringValue $ toStrict $ J.encode sessionVariables
-    GraphQL.UVParameter _ RQL.ColumnValue{..} -> pure $ ValueExpression cvValue
-    GraphQL.UVSessionVar _typ sessionVariable -> do
-      value <- getSessionVariableValue sessionVariable sessionVariables
-        `onNothing` throw400 NotFound ("missing session variable: " <>> sessionVariable)
-      pure $ ValueExpression $ ODBC.TextValue value
-
 
 -- | Prepare a value for multiplexed queries.
 prepareValueSubscription
-  :: Set.HashSet SessionVariable
+  :: (MonadState PrepareState m, MonadError QErr m)
+  => Set.HashSet SessionVariable
   -> GraphQL.UnpreparedValue 'MSSQL
-  -> State PrepareState TSQL.Expression
+  -> m Expression
 prepareValueSubscription globalVariables =
   \case
     GraphQL.UVLiteral x -> pure x
@@ -244,13 +163,17 @@ prepareValueSubscription globalVariables =
       pure $ resultVarExp (RootPath `FieldPath` "session")
 
     GraphQL.UVSessionVar _typ text -> do
+      if Set.member text globalVariables
+        then pure ()
+        else throw400 NotFound
+              ("missing session variable: "  <>> sessionVariableToText text)
       modify' (\s -> s {sessionVariables = text `Set.insert` sessionVariables s})
       pure $ resultVarExp (sessionDot $ toTxt text)
 
     GraphQL.UVParameter mVariableInfo columnValue ->
       case fmap GraphQL.getName mVariableInfo of
         Nothing -> do
-          currentIndex <- (toInteger . length) <$> gets positionalArguments
+          currentIndex <- toInteger . length <$> gets positionalArguments
           modify' (\s -> s {
             positionalArguments = positionalArguments s <> [columnValue] })
           pure (resultVarExp (syntheticIx currentIndex))
@@ -277,7 +200,7 @@ prepareValueSubscription globalVariables =
       queryDot name = RootPath `FieldPath` "query" `FieldPath` name
 
       syntheticIx :: Integer -> JsonPath
-      syntheticIx i = (RootPath `FieldPath` "synthetic" `IndexPath` i)
+      syntheticIx i = RootPath `FieldPath` "synthetic" `IndexPath` i
 
       sessionDot :: Text -> JsonPath
       sessionDot name = RootPath `FieldPath` "session" `FieldPath` name

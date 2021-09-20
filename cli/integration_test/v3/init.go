@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/commands"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/commands"
 )
 
 func TestInitCmd(t *testing.T, ec *cli.ExecutionContext, initDir, hasuraPort string) {

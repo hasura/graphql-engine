@@ -4,8 +4,8 @@
 
 .. _metadata_apis:
 
-Metadata API Reference (v2.0 and above)
-=======================================
+Metadata API Reference
+======================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -247,6 +247,116 @@ The various types of queries are listed in the following table:
      - 1
      - Invoke a trigger with custom payload on a Postgres table
 
+   * - :ref:`bigquery_track_table <bigquery_track_table>`
+     - :ref:`bigquery_track_table_args <bigquery_track_table_syntax>`
+     - 1
+     - Add a BigQuery table/view with configuration
+
+   * - :ref:`bigquery_untrack_table <bigquery_untrack_table>`
+     - :ref:`bigquery_untrack_table_args <bigquery_untrack_table_syntax>`
+     - 1
+     - Remove a BigQuery table/view
+
+   * - :ref:`bigquery_set_table_customization <bigquery_set_table_customization>`
+     - :ref:`bigquery_set_table_customization_args <bigquery_set_table_customization_syntax>`
+     - 1
+     - Set table customization of an already tracked BigQuery table
+
+   * - :ref:`mssql_add_source <mssql_add_source>`
+     - :ref:`mssql_add_source_args <mssql_add_source_syntax>`
+     - 1
+     - Add an MS SQL Server database
+
+   * - :ref:`mssql_drop_source <mssql_drop_source>`
+     - :ref:`mssql_drop_source_args <mssql_drop_source_syntax>`
+     - 1
+     - Remove an MS SQL Server database
+
+   * - :ref:`mssql_track_table <mssql_track_table>`
+     - :ref:`mssql_track_table_args <mssql_track_table_syntax>`
+     - 1
+     - Add an MS SQL Server table/view with configuration
+
+   * - :ref:`mssql_untrack_table`
+     - :ref:`mssql_untrack_table_args <mssql_untrack_table_syntax>`
+     - 1
+     - Remove an MS SQL Server table/view
+
+   * - :ref:`mssql_create_object_relationship`
+     - :ref:`mssql_create_object_relationship_args <mssql_create_object_relationship_syntax>`
+     - 1
+     - Define a new object relationship between MS SQL Server tables/views
+
+   * - :ref:`mssql_create_array_relationship`
+     - :ref:`mssql_create_array_relationship_args <mssql_create_array_relationship_syntax>`
+     - 1
+     - Define a new array relationship between MS SQL Server tables/views
+
+   * - :ref:`mssql_drop_relationship`
+     - :ref:`mssql_drop_relationship_args <mssql_drop_relationship_syntax>`
+     - 1
+     - Drop an existing MS SQL Server relationship
+
+   * - :ref:`mssql_rename_relationship`
+     - :ref:`mssql_rename_relationship_args <mssql_rename_relationship_syntax>`
+     - 1
+     - Modify name of an existing MS SQL Server relationship
+
+   * - :ref:`mssql_set_relationship_comment`
+     - :ref:`mssql_set_relationship_comment_args <mssql_set_relationship_comment_syntax>`
+     - 1
+     - Set comment on an existing MS SQL Server relationship
+
+   * - :ref:`mssql_set_table_customization <mssql_set_table_customization>`
+     - :ref:`mssql_set_table_customization_args <mssql_set_table_customization_syntax>`
+     - 1
+     - Set table customization of an already tracked MS SQL Server table
+
+   * - :ref:`mssql_create_insert_permission`
+     - :ref:`mssql_create_insert_permission_args <mssql_create_insert_permission_syntax>`
+     - 1
+     - Specify insert permission for an MS SQL Server table/view
+
+   * - :ref:`mssql_drop_insert_permission`
+     - :ref:`mssql_drop_insert_permission_args <mssql_drop_insert_permission_syntax>`
+     - 1
+     - Remove existing insert permission for an MS SQL Server table/view
+
+   * - :ref:`mssql_create_select_permission`
+     - :ref:`mssql_create_select_permission_args <mssql_create_select_permission_syntax>`
+     - 1
+     - Specify select permission for an MS SQL Server table/view
+
+   * - :ref:`mssql_drop_select_permission`
+     - :ref:`mssql_drop_select_permission_args <mssql_drop_select_permission_syntax>`
+     - 1
+     - Remove existing select permission for an MS SQL Server table/view
+
+   * - :ref:`mssql_create_update_permission`
+     - :ref:`mssql_create_update_permission_args <mssql_create_update_permission_syntax>`
+     - 1
+     - Specify update permission for an MS SQL Server table/view
+
+   * - :ref:`mssql_drop_update_permission`
+     - :ref:`mssql_drop_update_permission_args <mssql_drop_update_permission_syntax>`
+     - 1
+     - Remove existing update permission for an MS SQL Server table/view
+
+   * - :ref:`mssql_create_delete_permission`
+     - :ref:`mssql_create_delete_permission_args <mssql_create_delete_permission_syntax>`
+     - 1
+     - Specify delete permission for an MS SQL Server table/view
+
+   * - :ref:`mssql_drop_delete_permission`
+     - :ref:`mssql_drop_delete_permission_args <mssql_drop_delete_permission_syntax>`
+     - 1
+     - Remove existing delete permission for an MS SQL Server table/view
+
+   * - :ref:`mssql_set_permission_comment`
+     - :ref:`mssql_set_permission_comment_args <mssql_set_permission_comment_syntax>`
+     - 1
+     - Set comment on an existing permission for an MS SQL Server table/view
+
    * - :ref:`metadata_create_cron_trigger`
      - :ref:`create_cron_trigger_args <metadata_create_cron_trigger_syntax>`
      - 1
@@ -261,11 +371,21 @@ The various types of queries are listed in the following table:
      - :ref:`create_scheduled_event_args <metadata_create_scheduled_event_syntax>`
      - 1
      - Create a new scheduled event
+   
+   * - :ref:`metadata_delete_scheduled_event`
+     - :ref:`delete_scheduled_event_args <metadata_delete_scheduled_event_syntax>`
+     - 1
+     - Delete a scheduled event
 
    * - :ref:`metadata_add_remote_schema`
      - :ref:`add_remote_schema_args <metadata_add_remote_schema_syntax>`
      - 1
      - Add a remote GraphQL server as a remote schema
+
+   * - :ref:`metadata_update_remote_schema`
+     - :ref:`update_remote_schema_args <metadata_update_remote_schema_syntax>`
+     - 1
+     - Update the details for a remote schema
 
    * - :ref:`metadata_remove_remote_schema`
      - :ref:`remove_remote_schema_args <metadata_remove_remote_schema_syntax>`
@@ -324,7 +444,7 @@ The various types of queries are listed in the following table:
      - Replace existing metadata with check against current resource_version.
 
    * - :ref:`metadata_reload_metadata`
-     - :ref:`Empty Object`
+     - :ref:`reload_metadata_args <metadata_reload_metadata_syntax>`
      - 1
      - Reload changes to the underlying Postgres DB
 
@@ -427,6 +547,76 @@ The various types of queries are listed in the following table:
      - :ref:`set_graphql_schema_introspection_options_args <set_graphql_schema_introspection_options_syntax>`
      - 1
      - Set graphql introspection options
+
+   * - :ref:`metadata_add_host_to_tls_allowlist`
+     - :ref:`add_host_to_tls_allowlist_args <add_host_to_tls_allowlist_syntax>`
+     - 1
+     - Add an endpoint to the TLS Allowlist
+
+   * - :ref:`metadata_drop_host_from_tls_allowlist`
+     - :ref:`drop_host_from_tls_allowlist_args <drop_host_from_tls_allowlist_syntax>`
+     - 1
+     - Drop an endpoint from the TLS Allowlist
+
+
+.. TODO: MSSQL_UNSUPPORTED
+
+  * - :ref:`mssql_set_table_is_enum`
+  - :ref:`mssql_set_table_is_enum_args <mssql_set_table_is_enum_syntax>`
+  - 1
+  - Set a tracked MS SQL Server table as an enum table
+
+  * - :ref:`mssql_track_function`
+  - :ref:`mssql_track_function_args <mssql_track_function_syntax>`
+  - 1
+  - Add an MS SQL Server SQL function with configuration
+
+  * - :ref:`mssql_untrack_function`
+  - :ref:`FunctionName <FunctionName>`
+  - 1
+  - Remove an MS SQL Server SQL function
+
+  * - :ref:`mssql_create_function_permission`
+  - :ref:`mssql_create_function_permission_args <mssql_create_function_permission_syntax>`
+  - 1
+  - Create an MS SQL Server function permission
+
+  * - :ref:`mssql_drop_function_permission`
+  - :ref:`mssql_drop_function_permission_args <mssql_drop_function_permission_syntax>`
+  - 1
+  - Drop an existing MS SQL Server function permission
+
+  * - :ref:`mssql_add_computed_field`
+  - :ref:`mssql_add_computed_field_args <mssql_add_computed_field_syntax>`
+  - 1
+  - Add a computed field to an MS SQL Server table/view
+
+  * - :ref:`mssql_drop_computed_field`
+  - :ref:`mssql_drop_computed_field_args <mssql_drop_computed_field_syntax>`
+  - 1
+  - Drop an MS SQL Server computed field
+
+
+  * - :ref:`mssql_create_event_trigger`
+  - :ref:`mssql_create_event_trigger_args <mssql_create_event_trigger_syntax>`
+  - 1
+  - Create or replace an event trigger on an MS SQL Server table
+
+  * - :ref:`mssql_delete_event_trigger`
+  - :ref:`mssql_delete_event_trigger_args <mssql_delete_event_trigger_syntax>`
+  - 1
+  - Delete an existing event trigger on an MS SQL Server table
+
+  * - :ref:`mssql_redeliver_event`
+  - :ref:`mssql_redeliver_event_args <mssql_redeliver_event_syntax>`
+  - 1
+  - Redeliver an existing event on an MS SQL Server table
+
+  * - :ref:`mssql_invoke_event_trigger`
+  - :ref:`mssql_invoke_event_trigger_args <mssql_invoke_event_trigger_syntax>`
+  - 1
+  - Invoke a trigger with custom payload on an MS SQL Server table
+
 
 **See:**
 
@@ -541,3 +731,4 @@ The version is incremented on any operation that modified metadata as well as ``
   Actions <actions>
   Manage Metadata <manage-metadata>
   Introspection options <introspection>
+  Network Options <network>

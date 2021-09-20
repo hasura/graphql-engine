@@ -1,0 +1,125 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Gets limits for a role Works for existing roles 1`] = `
+Array [
+  Object {
+    "global": 5,
+    "per_role": Object {
+      "user": 4,
+    },
+    "state": "enabled",
+  },
+  Object {
+    "global": 6,
+    "per_role": Object {
+      "user": 5,
+    },
+    "state": "enabled",
+  },
+  Object {
+    "global": Object {},
+    "per_role": Object {
+      "user": undefined,
+    },
+    "state": "disabled",
+  },
+]
+`;
+
+exports[`Gets limits for a role Works for existing roles 2`] = `
+Array [
+  Object {
+    "global": 5,
+    "per_role": Object {
+      "new_role": 2,
+    },
+    "state": "enabled",
+  },
+  Object {
+    "global": 6,
+    "per_role": Object {
+      "new_role": 2,
+    },
+    "state": "enabled",
+  },
+  Object {
+    "global": Object {},
+    "per_role": Object {
+      "new_role": undefined,
+    },
+    "state": "disabled",
+  },
+]
+`;
+
+exports[`Gets limits for a role Works for existing roles 3`] = `
+Array [
+  Object {
+    "global": 5,
+    "per_role": Object {
+      "test_role": 5,
+    },
+    "state": "enabled",
+  },
+  Object {
+    "global": 6,
+    "per_role": Object {
+      "test_role": 6,
+    },
+    "state": "enabled",
+  },
+  Object {
+    "global": Object {},
+    "per_role": Object {
+      "test_role": undefined,
+    },
+    "state": "disabled",
+  },
+]
+`;
+
+exports[`Gets limits for a role Works for existing roles 4`] = `
+Array [
+  Object {
+    "global": 5,
+    "per_role": Object {
+      "editor": 3,
+    },
+    "state": "enabled",
+  },
+  Object {
+    "global": 6,
+    "per_role": Object {
+      "editor": 3,
+    },
+    "state": "enabled",
+  },
+  Object {
+    "global": Object {},
+    "per_role": Object {
+      "editor": undefined,
+    },
+    "state": "disabled",
+  },
+]
+`;
+
+exports[`Gets limits for a role Works for unknown roles 1`] = `
+Array [
+  Object {
+    "global": 5,
+    "per_role": Object {},
+    "state": "global",
+  },
+  Object {
+    "global": 6,
+    "per_role": Object {},
+    "state": "global",
+  },
+  Object {
+    "global": Object {},
+    "per_role": Object {},
+    "state": "disabled",
+  },
+]
+`;

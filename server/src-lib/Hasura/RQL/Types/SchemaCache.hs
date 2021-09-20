@@ -47,10 +47,15 @@ module Hasura.RQL.Types.SchemaCache
 
   , IntrospectionResult(..)
   , ParsedIntrospection(..)
+  , RemoteSchemaCustomizer(..)
+  , remoteSchemaCustomizeTypeName
+  , remoteSchemaCustomizeFieldName
+  , remoteSchemaDecustomizeTypeName
+  , remoteSchemaDecustomizeFieldName
   , RemoteSchemaCtx(..)
   , rscName
   , rscInfo
-  , rscIntro
+  , rscIntroOriginal
   , rscParsed
   , rscRawIntrospectionResult
   , rscPermissions
@@ -134,12 +139,13 @@ import           Data.Int                                    (Int64)
 import           Data.Text.Extended
 import           System.Cron.Types
 
+import qualified Database.PG.Query                           as Q
 import qualified Hasura.Backends.Postgres.Connection         as PG
 import qualified Hasura.GraphQL.Parser                       as P
 import qualified Hasura.SQL.AnyBackend                       as AB
 
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Context                      (GQLContext, RemoteField, RoleContext)
+import           Hasura.GraphQL.Context                      (GQLContext, RoleContext)
 import           Hasura.Incremental                          (Cacheable, Dependency,
                                                               MonadDepend (..), selectKeyD)
 import           Hasura.RQL.IR.BoolExp
@@ -155,7 +161,9 @@ import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.GraphqlSchemaIntrospection
 import           Hasura.RQL.Types.Metadata.Object
+import           Hasura.RQL.Types.Network                    (TlsAllow)
 import           Hasura.RQL.Types.QueryCollection
+import           Hasura.RQL.Types.QueryTags
 import           Hasura.RQL.Types.Relationship
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.ScheduledTrigger
@@ -219,10 +227,10 @@ type WithDeps a = (a, [SchemaDependency])
 
 data IntrospectionResult
   = IntrospectionResult
-  { irDoc              :: RemoteSchemaIntrospection
-  , irQueryRoot        :: G.Name
-  , irMutationRoot     :: Maybe G.Name
-  , irSubscriptionRoot :: Maybe G.Name
+  { irDoc              :: !RemoteSchemaIntrospection
+  , irQueryRoot        :: !G.Name
+  , irMutationRoot     :: !(Maybe G.Name)
+  , irSubscriptionRoot :: !(Maybe G.Name)
   } deriving (Show, Eq, Generic)
 instance Cacheable IntrospectionResult
 
@@ -237,21 +245,21 @@ data ParsedIntrospection
 data RemoteSchemaCtx
   = RemoteSchemaCtx
   { _rscName                   :: !RemoteSchemaName
-  , _rscIntro                  :: !IntrospectionResult
+  , _rscIntroOriginal          :: !IntrospectionResult -- ^ Original remote schema without customizations
   , _rscInfo                   :: !RemoteSchemaInfo
   , _rscRawIntrospectionResult :: !BL.ByteString
   -- ^ The raw response from the introspection query against the remote server.
   -- We store this so we can efficiently service 'introspect_remote_schema'.
-  , _rscParsed                 ::  ParsedIntrospection
+  , _rscParsed                 ::  ParsedIntrospection -- ^ FieldParsers with schema customizations applied
   , _rscPermissions            :: !(M.HashMap RoleName IntrospectionResult)
   }
 $(makeLenses ''RemoteSchemaCtx)
 
 instance ToJSON RemoteSchemaCtx where
-  toJSON (RemoteSchemaCtx name _ info _ _ _) =
+  toJSON RemoteSchemaCtx {..} =
     object $
-      [ "name" .= name
-      , "info" .= toJSON info
+      [ "name" .= _rscName
+      , "info" .= toJSON _rscInfo
       ]
 
 type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
@@ -324,8 +332,32 @@ data SchemaCache
   , scMetricsConfig                  :: !MetricsConfig
   , scMetadataResourceVersion        :: !(Maybe MetadataResourceVersion)
   , scSetGraphqlIntrospectionOptions :: !SetGraphqlIntrospectionOptions
+  , scQueryTagsConfig                :: !QueryTagsConfig
+  , scTlsAllowlist                   :: ![TlsAllow]
   }
-$(deriveToJSON hasuraJSON ''SchemaCache)
+
+-- WARNING: this can only be used for debug purposes, as it loses all
+-- backend-specific information in the process!
+instance ToJSON SchemaCache where
+  toJSON SchemaCache{..} = object
+    [ "sources"                           .= toJSON (AB.debugAnyBackendToJSON <$> scSources)
+    , "actions"                           .= toJSON scActions
+    , "remote_schemas"                    .= toJSON scRemoteSchemas
+    , "allowlist"                         .= toJSON scAllowlist
+    , "g_q_l_context"                     .= toJSON scGQLContext
+    , "unauthenticated_g_q_l_context"     .= toJSON scUnauthenticatedGQLContext
+    , "relay_context"                     .= toJSON scRelayContext
+    , "unauthenticated_relay_context"     .= toJSON scUnauthenticatedRelayContext
+    , "dep_map"                           .= toJSON scDepMap
+    , "inconsistent_objs"                 .= toJSON scInconsistentObjs
+    , "cron_triggers"                     .= toJSON scCronTriggers
+    , "endpoints"                         .= toJSON scEndpoints
+    , "api_limits"                        .= toJSON scApiLimits
+    , "metrics_config"                    .= toJSON scMetricsConfig
+    , "metadata_resource_version"         .= toJSON scMetadataResourceVersion
+    , "set_graphql_introspection_options" .= toJSON scSetGraphqlIntrospectionOptions
+    , "tls_allowlist"                     .= toJSON scTlsAllowlist
+    ]
 
 getAllRemoteSchemas :: SchemaCache -> [RemoteSchemaName]
 getAllRemoteSchemas sc =
@@ -432,7 +464,7 @@ instance (Monoid w, CacheRM m) => CacheRM (WriterT w m) where
   askSchemaCache = lift askSchemaCache
 instance (CacheRM m) => CacheRM (TraceT m) where
   askSchemaCache = lift askSchemaCache
-instance (CacheRM m) => CacheRM (PG.LazyTxT QErr m) where
+instance (CacheRM m) => CacheRM (Q.TxET QErr m) where
   askSchemaCache = lift askSchemaCache
 
 getDependentObjs :: SchemaCache -> SchemaObjId -> [SchemaObjId]
@@ -486,16 +518,13 @@ getColExpDeps
   -> AnnBoolExpFld b (PartialSQLExp b)
   -> [SchemaDependency]
 getColExpDeps source tableName = \case
-  AVCol colInfo opExps ->
+  AVColumn colInfo opExps ->
     let columnName = pgiColumn colInfo
         colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
         colDep = mkColDep @b colDepReason source tableName columnName
-        depColsInOpExp = mapMaybe opExpDepCol opExps
-        colDepsInOpExp = do
-          (col, rootTable) <- depColsInOpExp
-          pure $ mkColDep @b DROnType source (fromMaybe tableName rootTable) col
+        colDepsInOpExp = mkOpExpDeps opExps
     in colDep:colDepsInOpExp
-  AVRel relInfo relBoolExp ->
+  AVRelationship relInfo relBoolExp ->
     let relationshipName = riName relInfo
         relationshipTable = riRTable relInfo
         schemaDependency =
@@ -505,3 +534,18 @@ getColExpDeps source tableName = \case
               $ SOITableObj @b tableName (TORel relationshipName))
             DROnType
     in schemaDependency : getBoolExpDeps source relationshipTable relBoolExp
+
+  AVComputedField computedFieldBoolExp ->
+    let mkComputedFieldDep' r =
+          mkComputedFieldDep @b r source tableName $ _acfbName computedFieldBoolExp
+    in case _acfbBoolExp computedFieldBoolExp of
+      CFBEScalar opExps ->
+        let computedFieldDep = mkComputedFieldDep' $
+                               bool DRSessionVariable DROnType $ any hasStaticExp opExps
+        in computedFieldDep : mkOpExpDeps opExps
+      CFBETable cfTable cfTableBoolExp ->
+        mkComputedFieldDep' DROnType : getBoolExpDeps source cfTable cfTableBoolExp
+  where
+    mkOpExpDeps opExps = do
+      (col, rootTable) <- mapMaybe opExpDepCol opExps
+      pure $ mkColDep @b DROnType source (fromMaybe tableName rootTable) col

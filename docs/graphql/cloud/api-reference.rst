@@ -47,15 +47,15 @@ distinct "Tenant ID" which is different from "Project ID". Each Project is
 associated with a Tenant. In some cases, like Metrics API, the Project ID is
 used instead of Tenant ID.
 
-List of APIs:
+List of some useful APIs:
 
 .. contents::
   :backlinks: none
   :depth: 1
   :local:
 
-Create a Tenant
-^^^^^^^^^^^^^^^
+Create a Project
+^^^^^^^^^^^^^^^^
 
 .. code-block:: graphql
 
@@ -68,6 +68,22 @@ Create a Tenant
        name
      }
    }
+
+Get Project tenant id
+^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: graphql
+
+  query getProjectTenantId {
+    projects_by_pk(
+      id: "7a79cf94-0e53-4520-a560-1b02bf522f08"
+    ) {
+      id
+      tenant {
+        id
+      }
+    }
+}
 
 Get Tenant details
 ^^^^^^^^^^^^^^^^^^

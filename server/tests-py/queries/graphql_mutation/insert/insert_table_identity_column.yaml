@@ -1,0 +1,21 @@
+description: Test case to confirm fix https://github.com/hasura/graphql-engine/issues/7557
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      insert_table_identity_column(objects: [{id: 1, name: "Foo"}]){
+        affected_rows
+        returning{
+          id
+          name
+        }
+      }
+    }
+response:
+  data:
+    insert_table_identity_column:
+      affected_rows: 1
+      returning:
+      - id: 1
+        name: Foo

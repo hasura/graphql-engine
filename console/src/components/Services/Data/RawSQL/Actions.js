@@ -274,8 +274,8 @@ const rawSQLReducer = (state = defaultState, action) => {
         lastError: null,
         lastSuccess: true,
         resultType: 'tuples',
-        result: action.data.result.slice(1),
-        resultHeaders: action.data.result[0],
+        result: action?.data?.result?.slice?.(1) ?? [],
+        resultHeaders: action?.data?.result?.[0] ?? [],
       };
     case REQUEST_ERROR:
       return {

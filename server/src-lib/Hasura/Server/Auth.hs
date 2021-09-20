@@ -25,26 +25,27 @@ module Hasura.Server.Auth
 
 import           Hasura.Prelude
 
-import qualified Crypto.Hash                 as Crypto
-import qualified Data.Text.Encoding          as T
-import qualified Network.HTTP.Client         as H
-import qualified Network.HTTP.Types          as N
+import qualified Crypto.Hash                            as Crypto
+import qualified Data.Text.Encoding                     as T
+import qualified Network.HTTP.Client                    as H
+import qualified Network.HTTP.Types                     as N
 
-import           Control.Concurrent.Extended (ForkableMonadIO, forkManagedT)
-import           Control.Monad.Morph         (hoist)
-import           Control.Monad.Trans.Control (MonadBaseControl)
-import           Control.Monad.Trans.Managed (ManagedT)
-import           Data.IORef                  (newIORef)
-import           Data.Time.Clock             (UTCTime)
+import           Control.Concurrent.Extended            (ForkableMonadIO, forkManagedT)
+import           Control.Monad.Morph                    (hoist)
+import           Control.Monad.Trans.Control            (MonadBaseControl)
+import           Control.Monad.Trans.Managed            (ManagedT)
+import           Data.IORef                             (newIORef)
+import           Data.Time.Clock                        (UTCTime)
 
-import qualified Hasura.Tracing              as Tracing
+import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Base.Error
+import           Hasura.GraphQL.Transport.HTTP.Protocol (ReqsText)
 import           Hasura.Logging
-import           Hasura.Server.Auth.JWT      hiding (processJwt_)
+import           Hasura.Server.Auth.JWT                 hiding (processJwt_)
 import           Hasura.Server.Auth.WebHook
 import           Hasura.Server.Utils
-import           Hasura.Server.Version       (HasVersion)
+import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
 

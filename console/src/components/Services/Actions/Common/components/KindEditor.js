@@ -36,7 +36,7 @@ const KindEditor = ({ value, onChange, className, disabled = false }) => {
             type="radio"
             checked={value === 'synchronous'}
             readOnly
-            className={styles.add_mar_right_small}
+            className={`${styles.add_mar_right_small} legacy-input-fix`}
             disabled={disabled}
           />
           Synchronous
@@ -49,7 +49,7 @@ const KindEditor = ({ value, onChange, className, disabled = false }) => {
             type="radio"
             readOnly
             checked={value === 'asynchronous'}
-            className={styles.add_mar_right_small}
+            className={`legacy-input-fix ${styles.add_mar_right_small}`}
             disabled={disabled}
           />
           Asynchronous

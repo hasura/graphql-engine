@@ -2,10 +2,10 @@ import React from 'react';
 import AceEditor from 'react-ace';
 
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-
-import styles from './ModifyTable.scss';
 import { deleteTrigger } from './ModifyActions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+
+import styles from './ModifyTable.scss';
 
 const TriggerEditorList = ({ tableSchema, dispatch }) => {
   const triggers = tableSchema.triggers;
@@ -15,11 +15,55 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
   }
 
   // HACK
-  const isEventTriggerPGTrigger = trigger => {
-    return trigger.action_statement.includes('hdb_views');
-  };
+  const isEventTriggerPGTrigger = trigger =>
+    trigger.action_statement.includes('hdb_views');
 
-  return triggers.map((trigger, i) => {
+  // NOTE: regarding object properties of the values within the `triggers` list
+  // action_timing      -> 'AFTER' | 'BEFORE'
+  // event_manipulation -> 'INSERT' | 'UPDATE' | 'DELETE'
+  // NOTE: Sorting & Ordering of the triggers based on occurrance and Postgres specific order of execution
+  // 1. Grouping all triggers based on the `action_timing` and `event_manipulation`. (BEFORE INSERT, BEFORE UPDATE, ...)
+  // 2. Sorting of the names of the triggers within each of the groups
+  // 3. Flatten the resultant list of lists
+  const emptyClassificationObject = {
+    BEFORE: {
+      INSERT: [],
+      UPDATE: [],
+      DELETE: [],
+    },
+    AFTER: {
+      INSERT: [],
+      UPDATE: [],
+      DELETE: [],
+    },
+  };
+  const groupedTriggers = triggers.reduce(
+    (acc, trigger) => ({
+      ...acc,
+      [trigger.action_timing]: {
+        ...acc[trigger.action_timing],
+        [trigger.event_manipulation]: [
+          ...acc[trigger.action_timing][trigger.event_manipulation],
+          trigger,
+        ],
+      },
+    }),
+    emptyClassificationObject
+  );
+  const groupedList = [
+    groupedTriggers.BEFORE.INSERT,
+    groupedTriggers.BEFORE.UPDATE,
+    groupedTriggers.BEFORE.DELETE,
+    groupedTriggers.AFTER.INSERT,
+    groupedTriggers.AFTER.UPDATE,
+    groupedTriggers.AFTER.DELETE,
+  ];
+  const sortedAndOrderedTriggers = groupedList
+    .map(triggersList =>
+      triggersList.sort((a, b) => (a.trigger_name > b.trigger_name ? 1 : -1))
+    )
+    .reduce((acc, triggerList) => [...acc, ...triggerList], []);
+  return sortedAndOrderedTriggers.map((trigger, i) => {
     const triggerName = trigger.trigger_name;
 
     const onDelete = () => {
@@ -45,22 +89,12 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
     const expandedLabel = () => <b>{triggerName}</b>;
 
     const expandedContent = () => {
-      let commentText;
+      let commentText = null;
       if (trigger.comment) {
         commentText = trigger.comment;
       } else if (isEventTriggerPGTrigger(trigger)) {
         commentText = 'This is a custom trigger generated for an Event trigger';
       }
-
-      let comment;
-      if (commentText) {
-        comment = (
-          <div className={styles.text_gray + ' ' + styles.add_mar_top}>
-            {commentText}
-          </div>
-        );
-      }
-
       return (
         <div>
           <div>
@@ -79,7 +113,11 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
               showPrintMargin={false}
               className={styles.add_mar_top_small}
             />
-            {comment}
+            {commentText && (
+              <div className={`${styles.text_gray} ${styles.add_mar_top}`}>
+                {commentText}
+              </div>
+            )}
           </div>
         </div>
       );

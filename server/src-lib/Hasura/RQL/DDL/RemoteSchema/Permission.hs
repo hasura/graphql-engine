@@ -954,7 +954,7 @@ resolveRoleBasedRemoteSchema (G.SchemaDocument providedTypeDefns) upstreamRemote
     flip onLeft (throw400 ValidationFailed . showErrors)
     =<< runValidateT
          (flip runReaderT providedSchemaDocWithDefaultScalars
-         $ validateRemoteSchema $ irDoc $ _rscIntro upstreamRemoteCtx)
+         $ validateRemoteSchema $ irDoc $ _rscIntroOriginal upstreamRemoteCtx)
   pure (introspectionRes, [schemaDependency])
   where
     showErrors :: [RoleBasedSchemaValidationError] -> Text

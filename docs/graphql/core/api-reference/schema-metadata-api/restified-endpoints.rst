@@ -4,8 +4,8 @@
 
 .. _api_restified_endpoints:
 
-Schema/Metadata API Reference: RESTified GraphQL Endpoints
-==========================================================
+Schema/Metadata API Reference: RESTified GraphQL Endpoints (Deprecated)
+=======================================================================
 
 .. contents:: Table of contents
   :backlinks: none

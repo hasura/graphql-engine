@@ -4,8 +4,8 @@
 
 .. _schema_apis:
 
-Schema API Reference (v2.0 and above)
-=====================================
+Schema API Reference
+====================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -36,7 +36,7 @@ Request structure
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v2/query HTTP/1.1
 
    {
       "type": "<query-type>",

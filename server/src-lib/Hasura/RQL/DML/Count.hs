@@ -26,7 +26,6 @@ import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
 import           Hasura.Session
 
@@ -71,7 +70,7 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
 -- SELECT count(*) FROM (SELECT * FROM .. WHERE ..) r;
 validateCountQWith
   :: (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m)
-  => SessVarBldr ('Postgres 'Vanilla) m
+  => SessionVariableBuilder ('Postgres 'Vanilla) m
   -> (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp)
   -> CountQuery
   -> m CountQueryP1
@@ -86,7 +85,7 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery qt _ mDistCols mWhere) = 
 
   forM_ mDistCols $ \distCols -> do
     let distColAsrns = [ checkSelOnCol selPerm
-                       , assertPGCol colInfoMap relInDistColsErr]
+                       , assertColumnExists colInfoMap relInDistColsErr]
     withPathK "distinct" $ verifyAsrns distColAsrns distCols
 
   -- convert the where clause
@@ -137,4 +136,4 @@ runCount
   => CountQuery -> m EncJSON
 runCount q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (cqSource q)
-  validateCountQ q >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly . countQToTx
+  validateCountQ q >>= runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadOnly . countQToTx

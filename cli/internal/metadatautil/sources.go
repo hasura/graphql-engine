@@ -1,13 +1,15 @@
 package metadatautil
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 
 	"github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/parser"
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 )
 
 func getMetadataAsYaml(exportMetadata func() (io.Reader, error)) ([]byte, error) {
@@ -106,4 +108,34 @@ func GetSourcesAndKind(exportMetadata func() (io.Reader, error)) ([]Source, erro
 		return nil, err
 	}
 	return sources, nil
+}
+
+var ErrNoConnectedSources = errors.New("0 connected sources found on hasura")
+
+// GetSourcesAndKindStrict is like GetSourcesAndKind but will return an error when  no sources are found
+func GetSourcesAndKindStrict(exportMetadata func() (io.Reader, error)) ([]Source, error) {
+	sources, err := GetSourcesAndKind(exportMetadata)
+	if err != nil {
+		return nil, err
+	}
+	if len(sources) == 0 {
+		return nil, ErrNoConnectedSources
+	}
+	return sources, nil
+}
+
+func DatabaseChooserUI(exportMetadata func() (io.Reader, error)) (string, error) {
+	sources, err := GetSources(exportMetadata)
+	if err != nil {
+		return "", fmt.Errorf("unable to get available databases: %w", err)
+	}
+	if len(sources) == 0 {
+		return "", errors.New("no connected databases found in the server")
+	}
+	databaseName, err := util.GetSelectPrompt("Select a database to use", sources)
+	if err != nil {
+		return "", fmt.Errorf("error in selecting a database to use: %w", err)
+	}
+
+	return databaseName, nil
 }

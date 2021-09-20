@@ -65,6 +65,7 @@ const FrequentlyUsedColumnSelector = ({
     <Dropdown
       testId="frequently-used-columns"
       options={frequentlyUsedColumnsOptions}
+      data-test="frequently-used-columns"
       position="bottom"
       key="frequently-used-columns"
       keyPrefix="frequently-used-columns"

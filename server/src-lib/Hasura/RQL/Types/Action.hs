@@ -17,8 +17,6 @@ module Hasura.RQL.Types.Action
   , adTimeout
   , ActionType(..)
   , _ActionMutation
-  , CreateAction(..)
-  , UpdateAction(..)
   , ActionDefinitionInput
   , InputWebhook(..)
 
@@ -35,27 +33,26 @@ module Hasura.RQL.Types.Action
   , aiForwardedClientHeaders
   , aiComment
   , defaultActionTimeoutSecs
+  , aiRequestTransform
   , ActionPermissionInfo(..)
 
   , ActionPermissionMap
-  , CreateActionPermission(..)
 
   , ActionMetadata(..)
   , amName
   , amComment
   , amDefinition
   , amPermissions
+  , amMetadataTransform
   , ActionPermissionMetadata(..)
 
   , ActionSourceInfo(..)
   , getActionSourceInfo
   , AnnActionExecution(..)
-  , traverseAnnActionExecution
   , AnnActionMutationAsync(..)
   , ActionExecContext(..)
   , AsyncActionQueryFieldG(..)
   , AnnActionAsyncQuery(..)
-  , traverseAnnActionAsyncQuery
 
   , ActionId(..)
   , LockedActionEventId
@@ -73,32 +70,34 @@ module Hasura.RQL.Types.Action
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as J
-import qualified Data.Aeson.Casing             as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.Time.Clock               as UTC
-import qualified Data.UUID                     as UUID
-import qualified Database.PG.Query             as Q
-import qualified Database.PG.Query.PTI         as PTI
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Network.HTTP.Client           as HTTP
-import qualified Network.HTTP.Types            as HTTP
-import qualified PostgreSQL.Binary.Encoding    as PE
+import qualified Data.Aeson                      as J
+import qualified Data.Aeson.Casing               as J
+import qualified Data.Aeson.TH                   as J
+import qualified Data.HashMap.Strict             as Map
+import qualified Data.Time.Clock                 as UTC
+import qualified Data.UUID                       as UUID
+import qualified Database.PG.Query               as Q
+import qualified Database.PG.Query.PTI           as PTI
+import qualified Language.GraphQL.Draft.Syntax   as G
+import qualified Network.HTTP.Client             as HTTP
+import qualified Network.HTTP.Types              as HTTP
+import qualified PostgreSQL.Binary.Encoding      as PE
 
 
-import           Control.Lens                  (makeLenses, makePrisms)
+import           Control.Lens                    (makeLenses, makePrisms)
 import           Data.Aeson.Extended
+import           Data.Kind                       (Type)
 import           Data.Text.Extended
 
 import           Hasura.Base.Error
-import           Hasura.Incremental            (Cacheable)
+import           Hasura.Incremental              (Cacheable)
 import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.DDL.RequestTransform (MetadataTransform)
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.CustomTypes
-import           Hasura.RQL.Types.EventTrigger (EventId (..))
+import           Hasura.RQL.Types.Eventing       (EventId (..))
 import           Hasura.SQL.Backend
 import           Hasura.Session
 
@@ -222,6 +221,7 @@ data ActionInfo
   , _aiPermissions            :: !ActionPermissionMap
   , _aiForwardedClientHeaders :: !Bool
   , _aiComment                :: !(Maybe Text)
+  , _aiRequestTransform       :: !(Maybe MetadataTransform)
   } deriving (Generic)
 instance J.ToJSON ActionInfo where
   toJSON = J.genericToJSON hasuraJSON
@@ -230,34 +230,6 @@ $(makeLenses ''ActionInfo)
 type ActionDefinitionInput =
   ActionDefinition (ArgumentDefinition GraphQLType) InputWebhook
 
-data CreateAction
-  = CreateAction
-  { _caName       :: !ActionName
-  , _caDefinition :: !ActionDefinitionInput
-  , _caComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Generic)
-instance NFData CreateAction
-instance Cacheable CreateAction
-$(J.deriveJSON hasuraJSON ''CreateAction)
-
-data UpdateAction
-  = UpdateAction
-  { _uaName       :: !ActionName
-  , _uaDefinition :: !ActionDefinitionInput
-  , _uaComment    :: !(Maybe Text)
-  } deriving (Show, Eq)
-$(J.deriveJSON hasuraJSON ''UpdateAction)
-
-data CreateActionPermission
-  = CreateActionPermission
-  { _capAction     :: !ActionName
-  , _capRole       :: !RoleName
-  , _capDefinition :: !(Maybe J.Value)
-  , _capComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Generic)
-instance NFData CreateActionPermission
-instance Cacheable CreateActionPermission
-$(J.deriveJSON hasuraJSON ''CreateActionPermission)
 
 -- representation of action permission metadata
 data ActionPermissionMetadata
@@ -275,10 +247,11 @@ $(J.deriveJSON
 -- representation of action metadata
 data ActionMetadata
   = ActionMetadata
-  { _amName        :: !ActionName
-  , _amComment     :: !(Maybe Text)
-  , _amDefinition  :: !ActionDefinitionInput
-  , _amPermissions :: ![ActionPermissionMetadata]
+  { _amName              :: !ActionName
+  , _amComment           :: !(Maybe Text)
+  , _amDefinition        :: !ActionDefinitionInput
+  , _amPermissions       :: ![ActionPermissionMetadata]
+  , _amMetadataTransform :: !(Maybe MetadataTransform)
   } deriving (Show, Eq, Generic)
 $(J.deriveToJSON hasuraJSON ''ActionMetadata)
 $(makeLenses ''ActionMetadata)
@@ -292,6 +265,7 @@ instance J.FromJSON ActionMetadata where
       <*> o J..:? "comment"
       <*> o J..: "definition"
       <*> o J..:? "permissions" J..!= []
+      <*> o J..:? "transform"
 
 ----------------- Resolve Types ----------------
 
@@ -302,12 +276,12 @@ data ActionSourceInfo b
 getActionSourceInfo :: AnnotatedObjectType -> ActionSourceInfo ('Postgres 'Vanilla)
 getActionSourceInfo = maybe ASINoSource (uncurry ASISource) . _aotSource
 
-data AnnActionExecution (b :: BackendType) v
+data AnnActionExecution (b :: BackendType) (r :: BackendType -> Type) v
   = AnnActionExecution
   { _aaeName                 :: !ActionName
   , _aaeOutputType           :: !GraphQLType
   -- ^ output type
-  , _aaeFields               :: !(AnnFieldsG b v)
+  , _aaeFields               :: !(AnnFieldsG b r v)
   -- ^ output selection
   , _aaePayload              :: !J.Value
   -- ^ jsonified input arguments
@@ -320,15 +294,8 @@ data AnnActionExecution (b :: BackendType) v
   , _aaeStrfyNum             :: !Bool
   , _aaeTimeOut              :: !Timeout
   , _aaeSource               :: !(ActionSourceInfo b)
-  }
-
-traverseAnnActionExecution
-  :: (Applicative f, Backend backend)
-  => (a -> f b)
-  -> AnnActionExecution backend a
-  -> f (AnnActionExecution backend b)
-traverseAnnActionExecution f (AnnActionExecution n ot fs p oF dl w h fch sn to s) =
-  traverse (traverse $ traverseAnnField f) fs <&> \tfs -> AnnActionExecution n ot tfs p oF dl w h fch sn to s
+  , _aaeRequestTransform     :: !(Maybe MetadataTransform)
+  } deriving (Functor, Foldable, Traversable)
 
 data AnnActionMutationAsync
   = AnnActionMutationAsync
@@ -337,46 +304,27 @@ data AnnActionMutationAsync
   , _aamaPayload              :: !J.Value -- ^ jsonified input arguments
   } deriving (Show, Eq)
 
-data AsyncActionQueryFieldG (b :: BackendType) v
+data AsyncActionQueryFieldG (b :: BackendType) (r :: BackendType -> Type) v
   = AsyncTypename !Text
-  | AsyncOutput !(AnnFieldsG b v)
+  | AsyncOutput !(AnnFieldsG b r v)
   | AsyncId
   | AsyncCreatedAt
   | AsyncErrors
+  deriving (Functor, Foldable, Traversable)
 
-traverseAsyncActionQueryField
-  :: (Applicative f, Backend backend)
-  => (a -> f b)
-  -> AsyncActionQueryFieldG backend a
-  -> f (AsyncActionQueryFieldG backend b)
-traverseAsyncActionQueryField f = \case
-  AsyncTypename t    -> pure $ AsyncTypename t
-  AsyncOutput fields -> AsyncOutput <$> traverse (traverse $ traverseAnnField f) fields
-  AsyncId            -> pure AsyncId
-  AsyncCreatedAt     -> pure AsyncCreatedAt
-  AsyncErrors        -> pure AsyncErrors
+type AsyncActionQueryFieldsG b r v = Fields (AsyncActionQueryFieldG b r v)
 
-type AsyncActionQueryFieldsG b v = Fields (AsyncActionQueryFieldG b v)
-
-data AnnActionAsyncQuery (b :: BackendType) v
+data AnnActionAsyncQuery (b :: BackendType) (r :: BackendType -> Type) v
   = AnnActionAsyncQuery
   { _aaaqName                 :: !ActionName
   , _aaaqActionId             :: !ActionId
   , _aaaqOutputType           :: !GraphQLType
-  , _aaaqFields               :: !(AsyncActionQueryFieldsG b v)
+  , _aaaqFields               :: !(AsyncActionQueryFieldsG b r v)
   , _aaaqDefinitionList       :: ![(Column b, ScalarType b)]
   , _aaaqStringifyNum         :: !Bool
   , _aaaqForwardClientHeaders :: !Bool
   , _aaaqSource               :: !(ActionSourceInfo b)
-  }
-
-traverseAnnActionAsyncQuery
-  :: (Applicative f, Backend backend)
-  => (a -> f b)
-  -> AnnActionAsyncQuery backend a
-  -> f (AnnActionAsyncQuery backend b)
-traverseAnnActionAsyncQuery f (AnnActionAsyncQuery n aid ot fs dl sn fch s) =
-  traverse (traverse $ traverseAsyncActionQueryField f) fs <&> \tfs -> AnnActionAsyncQuery n aid ot tfs dl sn fch s
+  } deriving (Functor, Foldable, Traversable)
 
 data ActionExecContext
   = ActionExecContext

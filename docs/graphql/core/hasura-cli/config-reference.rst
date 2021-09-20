@@ -1,6 +1,6 @@
 .. meta::
-   :description: Haura GarphQL CLI configuration reference 
-   :keywords: hasura, docs, CLI, CLI reference, config 
+   :description: Hasura GraphQL CLI configuration reference
+   :keywords: hasura, docs, CLI, CLI reference, config
 
 .. _cli_config_reference:
 

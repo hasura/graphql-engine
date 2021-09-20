@@ -75,7 +75,7 @@ defaultTxErrorHandler = mkTxErrorHandler (const False)
 mkTxErrorHandler :: (PGErrorType -> Bool) -> Q.PGTxErr -> QErr
 mkTxErrorHandler isExpectedError txe = fromMaybe unexpectedError expectedError
   where
-    unexpectedError = (internalError "database query error") { qeInternal = Just $ J.toJSON txe }
+    unexpectedError = (internalError "database query error") { qeInternal = Just $ ExtraInternal $ J.toJSON txe }
     expectedError = uncurry err400 <$> do
       errorDetail <- Q.getPGStmtErr txe
       message <- Q.edMessage errorDetail
@@ -107,6 +107,7 @@ data PGSourceConfig
   { _pscExecCtx              :: !PGExecCtx
   , _pscConnInfo             :: !Q.ConnInfo
   , _pscReadReplicaConnInfos :: !(Maybe (NonEmpty Q.ConnInfo))
+  , _pscPostDropHook         :: !(IO ())
   } deriving (Generic)
 
 instance Eq PGSourceConfig where

@@ -1,16 +1,9 @@
 type: bulk
 args:
-#Drop relationship first
-- type: drop_relationship
-  args:
-    relationship: articles
-    table:
-      schema: public
-      name: author
-    
 - type: run_sql
   args:
     sql: |
-      drop table article;
-      drop table author;
-      drop table "user";
+      DROP TABLE article;
+      DROP TABLE author;
+      DROP TABLE "user";
+  cascade: true

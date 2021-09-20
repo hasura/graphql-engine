@@ -1,3 +1,4 @@
+import { Nullable } from './../components/Common/utils/tsUtils';
 import { Driver } from '../dataSources';
 import { PermissionsType } from '../components/Services/RemoteSchema/Permissions/types';
 
@@ -5,11 +6,7 @@ export type DataSource = {
   name: string;
   url: string | { from_env: string };
   driver: Driver;
-  connection_pool_settings?: {
-    max_connections?: number;
-    idle_timeout?: number;
-    retries?: number;
-  };
+  connection_pool_settings?: ConnectionPoolSettings;
   read_replicas?: Omit<SourceConnectionInfo, 'connection_string'>[];
 };
 
@@ -882,17 +879,46 @@ export interface RestEndpointEntry {
  * Docs for type: https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgsourceconnectioninfo
  */
 
+export type SSLModeOptions = 'verify-ca' | 'verify-full' | 'disable';
+
+export type IsolationLevelOptions =
+  | 'read-committed'
+  | 'repeatable-read'
+  | 'serializable';
+
+export interface SSLConfigOptions {
+  sslmode?: SSLModeOptions;
+  sslrootcert?: {
+    from_env: string;
+  };
+  sslcert?: {
+    from_env: string;
+  };
+  sslkey?: {
+    from_env: string;
+  };
+  sslpassword?: {
+    from_env: string;
+  };
+}
+
+export interface ConnectionPoolSettings {
+  max_connections?: number;
+  idle_timeout?: number;
+  retries?: number;
+  pool_timeout?: number;
+  connection_lifetime?: number;
+}
+
 export interface SourceConnectionInfo {
   // used for SQL Server
-  connection_string: string | { from_env: string };
+  connection_string?: string | { from_env: string };
   // used for Postgres
-  database_url: string | { from_env: string };
-  pool_settings: {
-    max_connections: number;
-    idle_timeout: number;
-    retries: number;
-  };
-  use_prepared_statements: boolean;
+  database_url?: string | { from_env: string };
+  use_prepared_statements?: boolean;
+  isolation_level?: IsolationLevelOptions;
+  pool_settings?: ConnectionPoolSettings;
+  ssl_configuration?: SSLConfigOptions;
 }
 
 /**
@@ -916,12 +942,13 @@ export interface HasuraMetadataV2 {
 
 export interface MetadataDataSource {
   name: string;
-  kind?: 'postgres' | 'mysql' | 'mssql' | 'bigquery';
+  kind?: 'postgres' | 'mysql' | 'mssql' | 'bigquery' | 'citus';
   configuration?: {
     connection_info?: SourceConnectionInfo;
     // pro-only feature
     read_replicas?: SourceConnectionInfo[];
     service_account?: BigQueryServiceAccount;
+    global_select_limit?: number;
     project_id?: string;
     datasets?: string[];
   };
@@ -943,6 +970,21 @@ export interface InheritedRole {
   role_set: string[];
 }
 
+export interface DomainList {
+  host: string;
+  suffix?: string;
+  perms?: string[];
+}
+export interface APILimits {
+  per_role?: Record<string, number>;
+  global?: number;
+}
+
+type APILimit<T> = {
+  global: T;
+  per_role?: Record<string, T>;
+};
+
 export interface HasuraMetadataV3 {
   version: 3;
   sources: MetadataDataSource[];
@@ -953,5 +995,56 @@ export interface HasuraMetadataV3 {
   query_collections?: QueryCollectionEntry[];
   allowlist?: AllowList[];
   inherited_roles: InheritedRole[];
+  network?: { tls_allowlist?: DomainList[] };
   rest_endpoints?: RestEndpointEntry[];
+  api_limits?: {
+    disabled?: boolean;
+    depth_limit?: APILimit<number>;
+    node_limit?: APILimit<number>;
+    rate_limit?: APILimit<{
+      unique_params: Nullable<'IP' | string[]>;
+      max_reqs_per_min: number;
+    }>;
+  };
+  graphql_schema_introspection?: {
+    disabled_for_roles: string[];
+  };
 }
+
+// Inconsistent Objects
+
+export interface InconsistentObject {
+  definition:
+    | string
+    | {
+        comment: string;
+        definition: InconsistentObjectDefinition;
+      };
+  reason: string;
+  name: string;
+  type: string;
+  message:
+    | string
+    | {
+        message: string;
+        request: InconsistentObjectRequest;
+      };
+}
+
+type InconsistentObjectRequest = {
+  proxy: string | null;
+  secure: boolean;
+  path: string;
+  responseTimeout: string;
+  method: 'POST' | 'GET' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTION';
+  host: string;
+  requestVersion: `${number}`;
+  redirectCount: `${number}`;
+  port: `${number}`;
+};
+
+type InconsistentObjectDefinition = {
+  timeout_seconds: number;
+  url_from_env: string;
+  forward_client_headers: boolean;
+};

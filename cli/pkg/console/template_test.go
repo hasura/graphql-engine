@@ -3,7 +3,7 @@ package console
 import (
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/version"
+	"github.com/hasura/graphql-engine/cli/v2/version"
 )
 
 func TestGetConsoleTemplateVersion(t *testing.T) {
@@ -22,7 +22,7 @@ func TestGetConsoleTemplateVersion(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			v := &version.Version{}
 			v.SetServerVersion(tc.server)
-			templateProvider := NewDefaultTemplateProvider("test", "test")
+			templateProvider := NewDefaultTemplateProvider("test", "test", ConsoleFS)
 			tv := templateProvider.GetTemplateVersion(v)
 			if tv != tc.tv {
 				t.Fatalf("expected tv '%v', got '%v'", tc.tv, tv)
@@ -55,7 +55,7 @@ func TestGetConsoleAssetsVersion(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			v := &version.Version{}
 			v.SetServerVersion(tc.server)
-			templateProvider := NewDefaultTemplateProvider("test", "test")
+			templateProvider := NewDefaultTemplateProvider("test", "test", ConsoleFS)
 			tv := templateProvider.GetAssetsVersion(v)
 			if tv != tc.tv {
 				t.Fatalf("expected tv '%v', got '%v'", tc.tv, tv)

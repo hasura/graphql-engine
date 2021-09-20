@@ -1,3 +1,5 @@
+import { dataSource } from '../../../../dataSources';
+
 const defaultState = {
   tableName: null,
   tableComment: null,
@@ -13,8 +15,8 @@ const defaultState = {
           refColumn: '',
         },
       ],
-      onUpdate: 'restrict',
-      onDelete: 'restrict',
+      onUpdate: dataSource?.violationActions?.[0],
+      onDelete: dataSource?.violationActions?.[0],
     },
   ],
   uniqueKeys: [[]],

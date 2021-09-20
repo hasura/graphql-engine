@@ -132,7 +132,7 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
       liftTx $ Q.catchE defaultTxErrorHandler $
         when createSchema $ Q.unitQ "CREATE SCHEMA hdb_catalog" () False
       enablePgcryptoExtension
-      runTx $(makeRelativeToProject "src-rsr/initialise.sql" >>= Q.sqlFromFile)
+      multiQ $(makeRelativeToProject "src-rsr/initialise.sql" >>= Q.sqlFromFile)
       updateCatalogVersion
 
       let emptyMetadata' = case maybeDefaultSourceConfig of
@@ -224,13 +224,6 @@ downgradeCatalog defaultSourceConfig opts time = do
             | x == upper = Right [y]
             | otherwise = (y:) <$> dropOlderDowngrades xs
 
-setCatalogVersion :: MonadTx m => Text -> UTCTime -> m ()
-setCatalogVersion ver time = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-    INSERT INTO hdb_catalog.hdb_version (version, upgraded_on) VALUES ($1, $2)
-    ON CONFLICT ((version IS NOT NULL))
-    DO UPDATE SET version = $1, upgraded_on = $2
-  |] (ver, time) False
-
 migrations
   :: forall m. (MonadIO m, MonadTx m)
   => Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) -> Bool -> MaintenanceMode -> [(Text, MigrationPair m)]
@@ -263,14 +256,14 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
         ++ [| ("3", MigrationPair from3To4 Nothing) |]
         :  migrationsFromFile [5..42]
         ++ [| ("42", MigrationPair from42To43 (Just from43To42)) |]
-        : migrationsFromFile [44..46]
+        : migrationsFromFile [44..latestCatalogVersion]
      )
   where
     runTxOrPrint :: Q.Query -> m ()
     runTxOrPrint
       | dryRun =
           liftIO . TIO.putStrLn . Q.getQueryText
-      | otherwise = runTx
+      | otherwise = multiQ
 
     from42To43 = do
       when (maintenanceMode == MaintenanceModeEnabled) $
@@ -279,7 +272,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
       if dryRun then (liftIO . TIO.putStrLn . Q.getQueryText) query
         else do
         metadataV2 <- fetchMetadataFromHdbTables
-        runTx query
+        multiQ query
         defaultSourceConfig <- onNothing maybeDefaultSourceConfig $ throw400 NotSupported $
           "cannot migrate to catalog version 43 without --database-url or env var " <> tshow (fst databaseUrlEnv)
         let metadataV3 =
@@ -288,7 +281,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
                     SourceMetadata defaultSource _mnsTables _mnsFunctions defaultSourceConfig
               in Metadata (OMap.singleton defaultSource defaultSourceMetadata)
                    _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist _mnsCustomTypes _mnsActions _mnsCronTriggers mempty
-                   emptyApiLimit emptyMetricsConfig mempty mempty
+                   emptyApiLimit emptyMetricsConfig mempty mempty emptyQueryTagsConfig emptyNetwork
         liftTx $ insertMetadataInCatalog metadataV3
 
     from43To42 = do
@@ -296,7 +289,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
       if dryRun then (liftIO . TIO.putStrLn . Q.getQueryText) query
         else do
         Metadata{..} <- liftTx fetchMetadataFromCatalog
-        runTx query
+        multiQ query
         let emptyMetadataNoSources =
               MetadataNoSources mempty mempty mempty mempty mempty emptyCustomTypes mempty mempty
         metadataV2 <- case OMap.toList _metaSources of
@@ -308,5 +301,15 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
                 MetadataNoSources _smTables _smFunctions _metaRemoteSchemas _metaQueryCollections
                                   _metaAllowlist _metaCustomTypes _metaActions _metaCronTriggers
           _ -> throw400 NotSupported "Cannot downgrade since there are more than one source"
-        liftTx $ runHasSystemDefinedT (SystemDefined False) $ saveMetadataToHdbTables metadataV2
+        liftTx $ do
+          runHasSystemDefinedT (SystemDefined False) $ saveMetadataToHdbTables metadataV2
+          -- when the graphql-engine is migrated from v1 to v2, we drop the foreign key
+          -- constraint of the `hdb_catalog.hdb_cron_event` table because the cron triggers
+          -- in v2 are saved in the `hdb_catalog.hdb_metadata` table. So, when a downgrade
+          -- happens, we need to delay adding the foreign key constraint until the
+          -- cron triggers are added in the `hdb_catalog.hdb_cron_triggers`
+          addCronTriggerForeignKeyConstraint
         recreateSystemMetadata
+
+multiQ :: (MonadTx m) => Q.Query -> m ()
+multiQ = liftTx . Q.multiQE defaultTxErrorHandler

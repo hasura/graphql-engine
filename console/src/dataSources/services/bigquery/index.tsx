@@ -1,4 +1,5 @@
 import React from 'react';
+import { DeepRequired } from 'ts-essentials';
 import { DataSourcesAPI } from '../..';
 import { QualifiedTable } from '../../../metadata/types';
 import {
@@ -6,8 +7,8 @@ import {
   Table,
   BaseTableColumn,
   SupportedFeaturesType,
+  ViolationActions,
 } from '../../types';
-import globals from '../../../Globals';
 import { generateTableRowRequest } from './utils';
 
 const permissionColumnDataTypes = {
@@ -62,8 +63,11 @@ const operators = [
   { name: '<=', value: '$lte', graphqlOp: '_lte' },
 ];
 
+// createSQLRegex matches one or more sql for creating view, table or functions, and extracts the type, schema, name and also if it is a partition.
+// An example string it matches: CREATE TABLE myschema.user(id serial primary key, name text);
+// type = table, schema = myschema, nameWithSchema = user, partition = undefined
 // eslint-disable-next-line no-useless-escape
-const createSQLRegex = /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<tableWithSchema>\"?\w+\"?)|(?<table>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim;
+const createSQLRegex = /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<nameWithSchema>\"?\w+\"?)|(?<name>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim;
 
 export const displayTableName = (table: Table) => {
   const tableName = table.table_name;
@@ -75,9 +79,12 @@ export const isJsonColumn = (column: BaseTableColumn): boolean => {
   return column.data_type_name === 'json' || column.data_type_name === 'jsonb';
 };
 
-export const supportedFeatures: SupportedFeaturesType = {
+export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
   driver: {
     name: 'bigquery',
+    fetchVersion: {
+      enabled: false,
+    },
   },
   schemas: {
     create: {
@@ -90,6 +97,8 @@ export const supportedFeatures: SupportedFeaturesType = {
   tables: {
     create: {
       enabled: false,
+      frequentlyUsedColumns: false,
+      columnTypeSelector: false,
     },
     browse: {
       enabled: true,
@@ -100,18 +109,41 @@ export const supportedFeatures: SupportedFeaturesType = {
       enabled: false,
     },
     modify: {
+      editableTableName: false,
+      readOnly: false,
+      comments: {
+        view: false,
+        edit: false,
+      },
       enabled: false,
-      columns: false,
-      columns_edit: false,
+      columns: {
+        view: false,
+        edit: false,
+        graphqlFieldName: false,
+        frequentlyUsedColumns: false,
+      },
       computedFields: false,
-      primaryKeys: false,
-      primaryKeys_edit: false,
-      foreginKeys: false,
-      foreginKeys_edit: false,
-      uniqueKeys: false,
-      uniqueKeys_edit: false,
+      primaryKeys: {
+        view: false,
+        edit: false,
+      },
+      foreignKeys: {
+        view: false,
+        edit: false,
+      },
+      uniqueKeys: {
+        view: false,
+        edit: false,
+      },
       triggers: false,
-      checkConstraints: false,
+      checkConstraints: {
+        view: false,
+        edit: false,
+      },
+      indexes: {
+        view: false,
+        edit: false,
+      },
       customGqlRoot: false,
       setAsEnum: false,
       untrack: false,
@@ -120,9 +152,11 @@ export const supportedFeatures: SupportedFeaturesType = {
     relationships: {
       enabled: true,
       track: false,
+      remoteRelationships: false,
     },
     permissions: {
       enabled: true,
+      aggregation: true,
     },
     track: {
       enabled: true,
@@ -150,18 +184,31 @@ export const supportedFeatures: SupportedFeaturesType = {
   rawSQL: {
     enabled: true,
     tracking: false,
+    statementTimeout: false,
   },
   connectDbForm: {
-    enabled: globals.consoleType !== 'cloud',
+    enabled: true,
     connectionParameters: true,
     databaseURL: false,
     environmentVariable: true,
     read_replicas: false,
     prepared_statements: false,
+    isolation_level: false,
     connectionSettings: false,
     retries: false,
+    pool_timeout: false,
+    connection_lifetime: false,
+    ssl_certificates: false,
   },
 };
+
+const violationActions: ViolationActions[] = [
+  'restrict',
+  'no action',
+  'cascade',
+  'set null',
+  'set default',
+];
 
 export const bigquery: DataSourcesAPI = {
   isTable,
@@ -195,12 +242,8 @@ export const bigquery: DataSourcesAPI = {
   arrayToPostgresArray: () => {
     return '';
   },
-  schemaListSql: (schemaFilter: string[]) => {
-    if (schemaFilter.length)
-      return `select schema_name from INFORMATION_SCHEMA.SCHEMATA where schema_name in (${schemaFilter
-        .map(s => `'${s}'`)
-        .join(',')})`;
-    return `select schema_name from INFORMATION_SCHEMA.SCHEMATA`;
+  schemaListSql: () => {
+    return '';
   },
   parseColumnsInfoResult: () => {
     return {};
@@ -337,6 +380,9 @@ export const bigquery: DataSourcesAPI = {
   getCreatePkSql: () => {
     return '';
   },
+  getAlterPkSql: () => {
+    return '';
+  },
   getFunctionDefinitionSql: null,
   primaryKeysInfoSql: () => {
     return 'select []';
@@ -393,5 +439,5 @@ export const bigquery: DataSourcesAPI = {
   permissionColumnDataTypes,
   viewsSupported: false,
   supportedColumnOperators,
-  aggregationPermissionsAllowed: false,
+  violationActions,
 };

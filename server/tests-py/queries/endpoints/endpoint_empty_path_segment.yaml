@@ -17,8 +17,8 @@ response:
       name: endpoint foo
       type: endpoint
   path: $.args
-  error: cannot continue due to new inconsistent metadata
-  code: unexpected
+  error: 'Empty segments or unnamed variables are not allowed: foo//bar'
+  code: invalid-configuration
 query:
   type: create_rest_endpoint
   args:

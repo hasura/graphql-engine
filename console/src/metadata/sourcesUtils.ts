@@ -1,27 +1,34 @@
-import { Driver } from '../dataSources';
-import { SourceConnectionInfo } from './types';
+import { Driver, sourceNames } from '../dataSources';
+import {
+  ConnectionPoolSettings,
+  IsolationLevelOptions,
+  SourceConnectionInfo,
+  SSLConfigOptions,
+} from './types';
 
 export const addSource = (
   driver: Driver,
   payload: {
     name: string;
     dbUrl: string | { from_env: string };
-    connection_pool_settings?: {
-      max_connections?: number;
-      idle_timeout?: number;
-      retries?: number;
-    };
+    connection_pool_settings?: ConnectionPoolSettings;
     replace_configuration?: boolean;
     bigQuery: {
       projectId: string;
       datasets: string;
+      global_select_limit: number;
     };
+    sslConfiguration?: SSLConfigOptions;
     preparedStatements?: boolean;
+    isolationLevel?: IsolationLevelOptions;
   },
   // supported only for PG sources at the moment
   replicas?: Omit<
     SourceConnectionInfo,
-    'connection_string' | 'use_prepared_statements'
+    | 'connection_string'
+    | 'use_prepared_statements'
+    | 'ssl_configuration'
+    | 'isolation_level'
   >[]
 ) => {
   const replace_configuration = payload.replace_configuration ?? false;
@@ -52,6 +59,7 @@ export const addSource = (
         name: payload.name,
         configuration: {
           service_account,
+          global_select_limit: payload.bigQuery.global_select_limit,
           project_id: payload.bigQuery.projectId,
           datasets: payload.bigQuery.datasets.split(',').map(d => d.trim()),
         },
@@ -61,14 +69,16 @@ export const addSource = (
   }
 
   return {
-    type: 'pg_add_source',
+    type: `${driver === 'postgres' ? 'pg' : 'citus'}_add_source`,
     args: {
       name: payload.name,
       configuration: {
         connection_info: {
           database_url: payload.dbUrl,
-          pool_settings: payload.connection_pool_settings,
           use_prepared_statements: payload.preparedStatements,
+          isolation_level: payload.isolationLevel,
+          pool_settings: payload.connection_pool_settings,
+          ssl_configuration: payload.sslConfiguration,
         },
         read_replicas: replicas?.length ? replicas : null,
       },
@@ -80,14 +90,14 @@ export const addSource = (
 export const removeSource = (driver: Driver, name: string) => {
   let prefix = '';
   switch (driver) {
-    case 'mssql':
+    case sourceNames.mssql:
       prefix = 'mssql_';
       break;
-    case 'mysql':
-      prefix = 'mysql_';
-      break;
-    case 'bigquery':
+    case sourceNames.bigquery:
       prefix = 'bigquery_';
+      break;
+    case sourceNames.citus:
+      prefix = 'citus_';
       break;
     default:
       prefix = 'pg_';

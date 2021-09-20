@@ -1,0 +1,26 @@
+- description: Clear metadata
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: admin
+  status: 200
+  response:
+    payload:
+      error_code: ParseErrorCode
+      source_position:
+        start_line: 1
+        start_column: 1
+      message: "\nunexpected Bling"
+    headers:
+    - - content-type
+      - application/json
+    method: GET
+    webhook_url: http://localhost:1234/
+  query:
+    type: validate_webhook_transform
+    args:
+      webhook_url: http://localhost:1234
+      payload:
+        hello: world
+      transformer:
+        body: "$.hello }}"
+        template_engine: Kriti

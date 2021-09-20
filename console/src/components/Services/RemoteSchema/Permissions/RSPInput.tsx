@@ -13,6 +13,7 @@ interface RSPInputProps {
   v: GraphQLInputField;
   setArgVal: (v: Record<string, unknown>) => void;
   setEditMode: (b: boolean) => void;
+  isFirstLevelInputObjPreset?: boolean;
 }
 const RSPInputComponent: React.FC<RSPInputProps> = ({
   k,
@@ -21,6 +22,7 @@ const RSPInputComponent: React.FC<RSPInputProps> = ({
   setArgVal,
   v,
   setEditMode,
+  isFirstLevelInputObjPreset,
 }) => {
   const isSessionvar = () => {
     if (
@@ -66,7 +68,7 @@ const RSPInputComponent: React.FC<RSPInputProps> = ({
 
   return (
     <>
-      <label htmlFor={k}> {k}:</label>
+      {!isFirstLevelInputObjPreset ? <label htmlFor={k}> {k}:</label> : null}
       {editMode ? (
         <>
           <input

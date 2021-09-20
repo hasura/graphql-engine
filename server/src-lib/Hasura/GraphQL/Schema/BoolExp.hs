@@ -71,19 +71,32 @@ boolExp sourceName tableInfo selectPermissions = memoizeOn 'boolExp (sourceName,
       P.fieldOptional fieldName Nothing <$> case fieldInfo of
         -- field_name: field_type_comparison_exp
         FIColumn columnInfo ->
-          lift $ fmap (AVCol columnInfo) <$> comparisonExps @b (pgiType columnInfo)
+          lift $ fmap (AVColumn columnInfo) <$> comparisonExps @b (pgiType columnInfo)
 
         -- field_name: field_type_bool_exp
         FIRelationship relationshipInfo -> do
           remoteTableInfo <- askTableInfo sourceName $ riRTable relationshipInfo
           remotePermissions <- lift $ tableSelectPermissions remoteTableInfo
-          let remoteTableFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $
-                                  maybe annBoolExpTrue spiFilter remotePermissions
+          let remoteTableFilter = (fmap . fmap) partialSQLExpToUnpreparedValue $ maybe annBoolExpTrue spiFilter remotePermissions
           remoteBoolExp <- lift $ boolExp sourceName remoteTableInfo remotePermissions
-          pure $ fmap (AVRel relationshipInfo . andAnnBoolExps remoteTableFilter) remoteBoolExp
+          pure $ fmap (AVRelationship relationshipInfo . andAnnBoolExps remoteTableFilter) remoteBoolExp
 
-        -- Using computed fields in boolean expressions is not currently supported.
-        FIComputedField _ -> empty
+        FIComputedField ComputedFieldInfo{..} -> do
+          let ComputedFieldFunction{..} = _cfiFunction
+          -- For a computed field to qualify in boolean expression it shouldn't have any input arguments
+          case toList _cffInputArgs of
+            [] -> do
+              let sessionArgPresence =
+                    mkSessionArgumentPresence P.UVSession _cffSessionArgument _cffTableArgument
+              fmap (AVComputedField . AnnComputedFieldBoolExp _cfiXComputedFieldInfo _cfiName _cffName sessionArgPresence)
+                <$> case _cfiReturnType of
+                      CFRScalar scalarType -> lift $ fmap CFBEScalar <$> comparisonExps @b (ColumnScalar scalarType)
+                      CFRSetofTable table -> do
+                        info <- askTableInfo sourceName table
+                        permissions <- lift $ tableSelectPermissions info
+                        lift $ fmap (CFBETable table) <$> boolExp sourceName info permissions
+
+            _  -> hoistMaybe Nothing
 
         -- Using remote relationship fields in boolean expressions is not supported.
         FIRemoteRelationship _ -> empty

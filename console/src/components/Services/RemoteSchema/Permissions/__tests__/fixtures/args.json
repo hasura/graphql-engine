@@ -1,26 +1,26 @@
 {
-    "args1": {
-      "continents": {
-        "filter": {
-          "code": { "eq": "AF" }
-        }
-      },
-      "country": { "code": "IN" }
+  "args1": {
+    "continents": {
+      "filter": {
+        "code": { "eq": "AF" }
+      }
     },
-    "args2": {
-      "books": {
-        "where": {
-          "author": {
-            "_eq": "X-Hasura-User-Id"
-          }
+    "country": { "code": "IN" }
+  },
+  "args2": {
+    "books": {
+      "where": {
+        "author": {
+          "_eq": "X-Hasura-User-Id"
         }
-      },
-      "users": {
-        "where": {
-          "id": {
-            "_eq": "X-Hasura-User-Id"
-          }
+      }
+    },
+    "users": {
+      "where": {
+        "id": {
+          "_eq": "X-Hasura-User-Id"
         }
       }
     }
   }
+}

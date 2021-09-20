@@ -46,6 +46,8 @@ module Hasura.Backends.Postgres.SQL.Types
   , isBaseType
   , typeToTable
   , mkFunctionArgScalarType
+  , PGRawFunctionInfo(..)
+  , mkScalarTypeName
   )
 where
 
@@ -67,6 +69,8 @@ import           Hasura.Base.Error
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.SQL.Types
 
+import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Function
 
 newtype Identifier
   = Identifier { getIdenTxt :: Text }
@@ -101,7 +105,7 @@ trimNullChars = T.takeWhile (/= '\x0')
 newtype TableName
   = TableName { getTableTxt :: Text }
   deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Data
-           , Generic, Arbitrary, NFData, Cacheable, IsString )
+           , Generic, NFData, Cacheable, IsString )
 
 instance IsIdentifier TableName where
   toIdentifier (TableName t) = Identifier t
@@ -143,7 +147,7 @@ instance ToSQL ConstraintName where
 
 newtype FunctionName
   = FunctionName { getFunctionTxt :: Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Data, Generic, Arbitrary, NFData, Cacheable)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Data, Generic, NFData, Cacheable)
 
 instance IsIdentifier FunctionName where
   toIdentifier (FunctionName t) = Identifier t
@@ -157,7 +161,7 @@ instance ToSQL FunctionName where
 newtype SchemaName
   = SchemaName { getSchemaTxt :: Text }
   deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Data, Generic
-           , Arbitrary, NFData, Cacheable, IsString )
+           , NFData, Cacheable, IsString )
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
@@ -178,10 +182,6 @@ data QualifiedObject a
   } deriving (Show, Eq, Functor, Ord, Generic, Data)
 instance (NFData a) => NFData (QualifiedObject a)
 instance (Cacheable a) => Cacheable (QualifiedObject a)
-
-instance (Arbitrary a) => Arbitrary (QualifiedObject a) where
-  arbitrary = genericArbitrary
-
 
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
@@ -239,7 +239,7 @@ newtype PGDescription
 newtype PGCol
   = PGCol { getPGColTxt :: Text }
   deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey
-           , FromJSONKey, Data, Generic, Arbitrary, NFData, Cacheable, IsString )
+           , FromJSONKey, Data, Generic, NFData, Cacheable, IsString )
 
 instance IsIdentifier PGCol where
   toIdentifier (PGCol t) = Identifier t
@@ -515,3 +515,51 @@ mkFunctionArgScalarType (QualifiedPGType _schema name type') =
     -- the @mkScalarTypeName@ function.
     PGKindComposite -> PGCompositeScalar $ toTxt name
     _               -> name
+
+-- | Metadata describing SQL functions at the DB level, i.e. below the GraphQL layer.
+data PGRawFunctionInfo
+  = PGRawFunctionInfo
+  { rfiOid              :: !OID
+  , rfiHasVariadic      :: !Bool
+  , rfiFunctionType     :: !FunctionVolatility
+  , rfiReturnTypeSchema :: !SchemaName
+  , rfiReturnTypeName   :: !PGScalarType
+  , rfiReturnTypeType   :: !PGTypeKind
+  , rfiReturnsSet       :: !Bool
+  , rfiInputArgTypes    :: ![QualifiedPGType]
+  , rfiInputArgNames    :: ![FunctionArgName]
+  , rfiDefaultArgs      :: !Int
+  , rfiReturnsTable     :: !Bool
+  , rfiDescription      :: !(Maybe PGDescription)
+  } deriving (Show, Eq, Generic)
+instance NFData PGRawFunctionInfo
+instance Cacheable PGRawFunctionInfo
+$(deriveJSON hasuraJSON ''PGRawFunctionInfo)
+
+
+mkScalarTypeName :: MonadError QErr m => PGScalarType -> m G.Name
+mkScalarTypeName PGInteger  = pure intScalar
+mkScalarTypeName PGBoolean  = pure boolScalar
+mkScalarTypeName PGFloat    = pure floatScalar
+mkScalarTypeName PGText     = pure stringScalar
+mkScalarTypeName PGVarchar  = pure stringScalar
+mkScalarTypeName (PGCompositeScalar compositeScalarType) =
+  -- When the function argument is a row type argument
+  -- then it's possible that there can be an object type
+  -- with the table name depending upon whether the table
+  -- is tracked or not. As a result, we get a conflict between
+  -- both these types (scalar and object type with same name).
+  -- To avoid this, we suffix the table name with `_scalar`
+  -- and create a new scalar type
+  (<> $$(G.litName "_scalar")) <$> G.mkName compositeScalarType `onNothing` throw400 ValidationFailed
+  ("cannot use SQL type " <> compositeScalarType <<> " in the GraphQL schema because its name is not a "
+  <> "valid GraphQL identifier")
+mkScalarTypeName scalarType = G.mkName (toSQLTxt scalarType) `onNothing` throw400 ValidationFailed
+  ("cannot use SQL type " <> scalarType <<> " in the GraphQL schema because its name is not a "
+  <> "valid GraphQL identifier")
+
+instance IsIdentifier RelName where
+  toIdentifier rn = Identifier $ relNameToTxt rn
+
+instance IsIdentifier FieldName where
+  toIdentifier (FieldName f) = Identifier f

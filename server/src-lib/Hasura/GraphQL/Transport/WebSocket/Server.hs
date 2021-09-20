@@ -1,35 +1,7 @@
-{-# LANGUAGE CPP                      #-}
 {-# LANGUAGE NondecreasingIndentation #-}
+{-# LANGUAGE OverloadedStrings        #-}
 
-module Hasura.GraphQL.Transport.WebSocket.Server
-  ( WSId(..)
-  , WSLog(..)
-  , WSEvent(..)
-  , MessageDetails(..)
-  , WSConn
-  , getData
-  , getWSId
-  , closeConn
-  , sendMsg
-
-  , AcceptWith(..)
-  , OnConnH
-  , OnCloseH
-  , OnMessageH
-  , WSHandlers(..)
-
-  , WSServer
-  , HasuraServerApp
-  , WSEventInfo(..)
-  , WSQueueResponse(..)
-  , ServerMsgType(..)
-  , createWSServer
-  , closeAll
-  , createServerApp
-  , shutdown
-
-  , MonadWSLog (..)
-  ) where
+module Hasura.GraphQL.Transport.WebSocket.Server where
 
 import qualified Control.Concurrent.Async                    as A
 import qualified Control.Concurrent.Async.Lifted.Safe        as LA
@@ -39,15 +11,15 @@ import qualified Control.Monad.Trans.Control                 as MC
 import qualified Data.Aeson                                  as J
 import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.TH                               as J
+import qualified Data.ByteString.Char8                       as B
 import qualified Data.ByteString.Lazy                        as BL
+import qualified Data.CaseInsensitive                        as CI
 import           Data.String
 import qualified Data.TByteString                            as TBS
 import qualified Data.UUID                                   as UUID
 import qualified Data.UUID.V4                                as UUID
 import           Data.Word                                   (Word16)
-#ifndef PROFILING
-import           GHC.AssertNF
-#endif
+import           GHC.AssertNF.CPP
 import           GHC.Int                                     (Int64)
 import           Hasura.Prelude
 import qualified ListT
@@ -56,8 +28,11 @@ import qualified Network.WebSockets                          as WS
 import qualified StmContainers.Map                           as STMMap
 import qualified System.IO.Error                             as E
 
-import           Hasura.GraphQL.Transport.WebSocket.Protocol (OperationId, ServerMsgType (..))
+import           Hasura.GraphQL.ParameterizedQueryHash       (ParameterizedQueryHash)
+import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import qualified Hasura.Logging                              as L
+import           Hasura.Server.Init.Config                   (WSConnectionInitTimeout (..))
 
 newtype WSId
   = WSId { unWSId :: UUID.UUID }
@@ -95,10 +70,12 @@ $(J.deriveToJSON
 -- extra websocket event info
 data WSEventInfo
   = WSEventInfo
-  { _wseiEventType          :: !(Maybe ServerMsgType)
-  , _wseiOperationId        :: !(Maybe OperationId)
-  , _wseiQueryExecutionTime :: !(Maybe Double)
-  , _wseiResponseSize       :: !(Maybe Int64)
+  { _wseiEventType              :: !(Maybe ServerMsgType)
+  , _wseiOperationId            :: !(Maybe OperationId)
+  , _wseiOperationName          :: !(Maybe OperationName)
+  , _wseiQueryExecutionTime     :: !(Maybe Double)
+  , _wseiResponseSize           :: !(Maybe Int64)
+  , _wseiParameterizedQueryHash :: !(Maybe ParameterizedQueryHash)
   } deriving (Show, Eq)
 $(J.deriveToJSON
   J.defaultOptions { J.fieldLabelModifier = J.snakeCase . drop 5
@@ -150,6 +127,9 @@ data WSConn a
   , _wcExtraData :: !a
   }
 
+getRawWebSocketConnection :: WSConn a -> WS.Connection
+getRawWebSocketConnection = _wcConnRaw
+
 getData :: WSConn a -> a
 getData = _wcExtraData
 
@@ -174,9 +154,7 @@ closeConnWithCode wsConn code bs = do
 -- so that sendMsg doesn't block
 sendMsg :: WSConn a -> WSQueueResponse -> IO ()
 sendMsg wsConn !resp = do
-#ifndef PROFILING
   $assertNFHere resp  -- so we don't write thunks to mutable vars
-#endif
   STM.atomically $ STM.writeTQueue (_wcSendQ wsConn) resp
 
 type ConnMap a = STMMap.Map WSId (WSConn a)
@@ -233,42 +211,89 @@ data AcceptWith a
   , _awOnJwtExpiry :: !(WSConn a -> IO ())
   }
 
-type OnConnH m a    = WSId -> WS.RequestHead -> IpAddress -> m (Either WS.RejectRequest (AcceptWith a))
+-- | These set of functions or message handlers is used by the
+--   server while communicating with the client. They are particularly
+--   useful for the case when the messages being sent to the client
+--   are different for each of the sub-protocol(s) supported by the server.
+type WSKeepAliveMessageAction a   = WSConn a -> IO ()
+type WSPostExecErrMessageAction a = WSConn a -> OperationId -> GQExecError -> IO ()
+type WSOnErrorMessageAction a     = WSConn a -> ConnErrMsg  -> Maybe String -> IO ()
+type WSCloseConnAction a          = WSConn a -> OperationId -> String -> IO ()
+
+-- | Used for specific actions within the `onConn` and `onMessage` handlers
+data WSActions a = WSActions
+  { _wsaPostExecErrMessageAction :: !(WSPostExecErrMessageAction a)
+  , _wsaOnErrorMessageAction     :: !(WSOnErrorMessageAction a)
+  , _wsaConnectionCloseAction    :: !(WSCloseConnAction a)
+  , _wsaKeepAliveAction          :: !(WSKeepAliveMessageAction a)
+  -- ^ NOTE: keep alive action was made redundant because we need to send this message
+  -- after the connection has been successfully established after `connection_init`
+  , _wsaGetDataMessageType       :: !(DataMsg -> ServerMsg)
+  , _wsaAcceptRequest            :: !WS.AcceptRequest
+  }
+
+-- | to be used with `WSOnErrorMessageAction`
+onClientMessageParseErrorText :: Maybe String
+onClientMessageParseErrorText = Just "Parsing client message failed: "
+
+-- | to be used with `WSOnErrorMessageAction`
+onConnInitErrorText :: Maybe String
+onConnInitErrorText = Just "Connection initialization failed: "
+
+type OnConnH m a    = WSId -> WS.RequestHead -> IpAddress -> WSActions a -> m (Either WS.RejectRequest (AcceptWith a))
+type OnMessageH m a = WSConn a -> BL.ByteString -> WSActions a -> m ()
 type OnCloseH m a   = WSConn a -> m ()
-type OnMessageH m a = WSConn a -> BL.ByteString -> m ()
 
 -- | aka generalized 'WS.ServerApp' over @m@, which takes an IPAddress
 type HasuraServerApp m = IpAddress -> WS.PendingConnection -> m ()
 
+-- | NOTE: The types of `_hOnConn` and `_hOnMessage` were updated from `OnConnH` and `OnMessageH`
+-- because we needed to pass the subprotcol here to these methods to eventually get to `OnConnH` and `OnMessageH`.
+-- Please see `createServerApp` to get a better understanding of how these handlers are used.
 data WSHandlers m a
   = WSHandlers
-  { _hOnConn    :: OnConnH m a
-  , _hOnMessage :: OnMessageH m a
+  { _hOnConn    :: (WSId -> WS.RequestHead -> IpAddress -> WSSubProtocol -> m (Either WS.RejectRequest (AcceptWith a)))
+  , _hOnMessage :: (WSConn a -> BL.ByteString -> WSSubProtocol -> m ())
   , _hOnClose   :: OnCloseH m a
   }
 
 createServerApp
   :: (MonadIO m, MC.MonadBaseControl IO m, LA.Forall (LA.Pure m), MonadWSLog m)
-  => WSServer a
+  => WSConnectionInitTimeout
+  -> WSServer a
   -> WSHandlers m a
   -- ^ user provided handlers
   -> HasuraServerApp m
   -- ^ aka WS.ServerApp
 {-# INLINE createServerApp #-}
-createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !ipAddress !pendingConn = do
+createServerApp wsConnInitTimeout (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !ipAddress !pendingConn = do
   wsId <- WSId <$> liftIO UUID.nextRandom
   logWSLog logger $ WSLog wsId EConnectionRequest Nothing
+  -- NOTE: this timer is specific to `graphql-ws`. the server has to close the connection
+  -- if the client doesn't send a `connection_init` message within the timeout period
+  wsConnInitTimer <- liftIO $ getNewWSTimer (unWSConnectionInitTimeout wsConnInitTimeout)
   status <- liftIO $ STM.readTVarIO serverStatus
   case status of
     AcceptingConns _ -> logUnexpectedExceptions $ do
-      let reqHead = WS.pendingRequest pendingConn
-      onConnRes <- _hOnConn wsHandlers wsId reqHead ipAddress
-      either (onReject wsId) (onAccept wsId) onConnRes
+      onConnRes <- connHandler wsId reqHead ipAddress subProtocol
+      either (onReject wsId) (onAccept wsConnInitTimer wsId) onConnRes
 
     ShuttingDown ->
       onReject wsId shuttingDownReject
-
   where
+    reqHead = WS.pendingRequest pendingConn
+
+    getSubProtocolHeader rhdrs =
+      filter (\(x, _) -> x == (CI.mk . B.pack $ "Sec-WebSocket-Protocol")) $ WS.requestHeaders rhdrs
+
+    subProtocol = case getSubProtocolHeader reqHead of
+      [sph] -> toWSSubProtocol . B.unpack . snd $ sph
+      _     -> Apollo -- NOTE: we default to the apollo implemenation
+
+    connHandler    = _hOnConn wsHandlers
+    messageHandler = _hOnMessage wsHandlers
+    closeHandler   = _hOnClose wsHandlers
+
     -- It's not clear what the unexpected exception handling story here should be. So at
     -- least log properly and re-raise:
     logUnexpectedExceptions = handle $ \(e :: SomeException) -> do
@@ -286,7 +311,7 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
       liftIO $ WS.rejectRequestWith pendingConn rejectRequest
       logWSLog logger $ WSLog wsId ERejected Nothing
 
-    onAccept wsId (AcceptWith a acceptWithParams keepAlive onJwtExpiry) = do
+    onAccept wsConnInitTimer wsId (AcceptWith a acceptWithParams keepAlive onJwtExpiry) = do
       conn  <- liftIO $ WS.acceptRequestWith pendingConn acceptWithParams
       logWSLog logger $ WSLog wsId EAccepted Nothing
       sendQ <- liftIO STM.newTQueueIO
@@ -296,9 +321,7 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
       --      Requires a fork of 'wai-websockets' and 'websockets', it looks like.
       --      Adding `package` stanzas with -Xstrict -XStrictData for those two packages
       --      helped, cutting the number of thunks approximately in half.
-#   ifndef PROFILING
       liftIO $ $assertNFHere wsConn  -- so we don't write thunks to mutable vars
-#   endif
 
       let whenAcceptingInsertConn = liftIO $ STM.atomically $ do
             status <- STM.readTVar serverStatus
@@ -317,7 +340,7 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
           -- Bad luck, we were in the process of shutting the server down but a new
           -- connection was accepted. Let's just close it politely
           forceConnReconnect wsConn "shutting server down"
-          _hOnClose wsHandlers wsConn
+          closeHandler wsConn
 
         AcceptingConns _ -> do
           let rcv = forever $ do
@@ -332,7 +355,7 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
                     WS.receiveData conn
                 let message = MessageDetails (TBS.fromLBS msg) (BL.length msg)
                 logWSLog logger $ WSLog wsId (EMessageReceived message) Nothing
-                _hOnMessage wsHandlers wsConn msg
+                messageHandler wsConn msg subProtocol
 
           let send = forever $ do
                 WSQueueResponse msg wsInfo <- liftIO $ STM.atomically $ STM.readTQueue sendQ
@@ -346,6 +369,11 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
           LA.withAsync send $ \sendRef -> do
           LA.withAsync (liftIO $ keepAlive wsConn) $ \keepAliveRef -> do
           LA.withAsync (liftIO $ onJwtExpiry wsConn) $ \onJwtExpiryRef -> do
+
+          -- once connection is accepted, check the status of the timer, and if it's expired, close the connection for `graphql-ws`
+          timeoutStatus <- liftIO $ getWSTimerState wsConnInitTimer
+          when (timeoutStatus == Done && subProtocol == GraphQLWS) $
+            liftIO $ closeConnWithCode wsConn 4408 "Connection initialisation timed out"
 
           -- terminates on WS.ConnectionException and JWT expiry
           let waitOnRefs = [keepAliveRef, onJwtExpiryRef, rcvRef, sendRef]
@@ -365,7 +393,7 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
       ShuttingDown -> pure ()
       AcceptingConns connMap -> do
         liftIO $ STM.atomically $ STMMap.delete (_wcConnId wsConn) connMap
-        _hOnClose wsHandlers wsConn
+        closeHandler wsConn
         logWSLog logger $ WSLog (_wcConnId wsConn) EClosed Nothing
 
 shutdown :: WSServer a -> IO ()

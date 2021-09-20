@@ -3,6 +3,7 @@ module Hasura.RQL.DDL.Schema.LegacyCatalog
   ( saveMetadataToHdbTables
   , fetchMetadataFromHdbTables
   , recreateSystemMetadata
+  , addCronTriggerForeignKeyConstraint
   ) where
 
 import           Hasura.Prelude
@@ -22,6 +23,7 @@ import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Base.Error
 import           Hasura.Eventing.ScheduledTrigger
+import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.Types
@@ -56,9 +58,8 @@ saveMetadataToHdbTables (MetadataNoSources tables functions schemas collections
       withPathK "remote_relationships" $
         indexedForM_ _tmRemoteRelationships $
           \(RemoteRelationshipMetadata name def) -> do
-             let RemoteRelationshipDef rs hf rf = def
-             addRemoteRelationshipToCatalog $
-               RemoteRelationship name defaultSource _tmTable hf rs rf
+                addRemoteRelationshipToCatalog $
+                  RemoteRelationship name defaultSource _tmTable def
 
       -- Permissions
       withPathK "insert_permissions" $ processPerms _tmTable _tmInsertPermissions
@@ -100,7 +101,7 @@ saveMetadataToHdbTables (MetadataNoSources tables functions schemas collections
   withPathK "actions" $
     indexedForM_ actions $ \action -> do
       let createAction =
-            CreateAction (_amName action) (_amDefinition action) (_amComment action)
+            CreateAction (_amName action) (_amDefinition action) (_amComment action) (_amMetadataTransform action)
       addActionToCatalog createAction
       withPathK "permissions" $
         indexedForM_ (_amPermissions action) $ \permission -> do
@@ -144,9 +145,9 @@ insertRelationshipToCatalog (QualifiedObject schema table) relType (RelDef name 
       VALUES ($1, $2, $3, $4, $5 :: jsonb, $6, $7) |]
 
 addEventTriggerToCatalog
-  :: MonadTx m
+  :: (MonadTx m, Backend ('Postgres pgKind))
   => QualifiedTable
-  -> EventTriggerConf
+  -> EventTriggerConf ('Postgres pgKind)
   -> m ()
 addEventTriggerToCatalog qt etc = liftTx do
   Q.unitQE defaultTxErrorHandler
@@ -157,7 +158,7 @@ addEventTriggerToCatalog qt etc = liftTx do
          |] (name, sn, tn, Q.AltJ $ toJSON etc) False
   where
     QualifiedObject sn tn = qt
-    (EventTriggerConf name _ _ _ _ _) = etc
+    (EventTriggerConf name _ _ _ _ _ _) = etc
 
 addComputedFieldToCatalog
   :: MonadTx m
@@ -179,12 +180,10 @@ addRemoteRelationshipToCatalog remoteRelationship = liftTx $
        INSERT INTO hdb_catalog.hdb_remote_relationship
        (remote_relationship_name, table_schema, table_name, definition)
        VALUES ($1, $2, $3, $4::jsonb)
-  |] (rtrName remoteRelationship, schemaName, tableName, Q.AltJ definition) True
+  |] (_rtrName remoteRelationship, schemaName, tableName, Q.AltJ definition) True
   where
-    QualifiedObject schemaName tableName = rtrTable remoteRelationship
-    definition = mkRemoteRelationshipDef remoteRelationship
-    mkRemoteRelationshipDef RemoteRelationship {..} =
-      RemoteRelationshipDef rtrRemoteSchema rtrHasuraFields rtrRemoteField
+    QualifiedObject schemaName tableName = _rtrTable remoteRelationship
+    definition = _rtrDefinition remoteRelationship
 
 addFunctionToCatalog
   :: (MonadTx m, HasSystemDefined m)
@@ -239,7 +238,7 @@ setCustomTypesInCatalog customTypes = liftTx do
       |] () False
 
 addActionToCatalog :: (MonadTx m) =>  CreateAction -> m ()
-addActionToCatalog (CreateAction actionName actionDefinition comment) = do
+addActionToCatalog (CreateAction actionName actionDefinition comment _) = do
   liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
     INSERT into hdb_catalog.hdb_action
       (action_name, action_defn, comment)
@@ -280,7 +279,7 @@ addCronTriggerToCatalog CronTriggerMetadata {..} = liftTx $ do
        ,Q.AltJ ctHeaders, ctIncludeInMetadata, ctComment) False
   currentTime <- liftIO C.getCurrentTime
   let scheduleTimes = generateScheduleTimes currentTime 100 ctSchedule -- generate next 100 events
-  insertScheduledEventTx $ SESCron $ map (CronEventSeed ctName) scheduleTimes
+  insertCronEventsTx $ map (CronEventSeed ctName) scheduleTimes
 
 fetchMetadataFromHdbTables :: MonadTx m => m MetadataNoSources
 fetchMetadataFromHdbTables = liftTx do
@@ -367,8 +366,8 @@ fetchMetadataFromHdbTables = liftTx do
     mkTriggerMetaDefs = mapM trigRowToDef
 
     trigRowToDef (sn, tn, Q.AltJ configuration) = do
-      conf <- decodeValue configuration
-      return (QualifiedObject sn tn, conf::EventTriggerConf)
+      conf :: EventTriggerConf ('Postgres pgKind) <- decodeValue configuration
+      return (QualifiedObject sn tn, conf)
 
     fetchTables =
       Q.listQ [Q.sql|
@@ -530,6 +529,16 @@ fetchMetadataFromHdbTables = liftTx do
                           ( QualifiedObject schema table
                           , RemoteRelationshipMetadata name definition
                           )
+
+addCronTriggerForeignKeyConstraint :: MonadTx m => m ()
+addCronTriggerForeignKeyConstraint =
+  liftTx $
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+      ALTER TABLE hdb_catalog.hdb_cron_events ADD CONSTRAINT
+     hdb_cron_events_trigger_name_fkey FOREIGN KEY (trigger_name)
+     REFERENCES hdb_catalog.hdb_cron_triggers(name)
+     ON UPDATE CASCADE ON DELETE CASCADE;
+     |] () False
 
 -- | Drops and recreates all “system-defined” metadata, aka metadata for tables and views in the
 -- @information_schema@ and @hdb_catalog@ schemas. These tables and views are tracked to expose them

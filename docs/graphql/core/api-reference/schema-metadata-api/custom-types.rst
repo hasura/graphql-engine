@@ -4,8 +4,8 @@
 
 .. _api_custom_types:
 
-Schema/Metadata API Reference: Custom Types
-===========================================
+Schema/Metadata API Reference: Custom Types (Deprecated)
+========================================================
 
 .. contents:: Table of contents
   :backlinks: none

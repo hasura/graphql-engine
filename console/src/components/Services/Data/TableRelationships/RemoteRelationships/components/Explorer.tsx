@@ -22,8 +22,13 @@ type Props = {
   handleArgValueKindChange: (a: TreeArgElement, type: ArgValueKind) => void;
   handleArgValueChange: (a: TreeArgElement, value: string) => void;
   remoteSchemaName: string;
-  columns: string[];
+  columns: HasuraColumn;
   reduxDispatch: ThunkAction<void, ReduxState, unknown, ReduxAction>;
+};
+
+export type HasuraColumn = {
+  columns: string[];
+  computedFields: string[];
 };
 
 const Explorer: React.FC<Props> = ({
@@ -85,7 +90,13 @@ const Explorer: React.FC<Props> = ({
           }
           case 'field': {
             const el: TreeFieldElement = element;
-            return <FieldElement field={el} handleToggle={toggleField} />;
+            return (
+              <FieldElement
+                field={el}
+                handleToggle={toggleField}
+                key={`field-element-${el.name}-${el.depth}`}
+              />
+            );
           }
           default:
             return null;

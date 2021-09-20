@@ -4,21 +4,21 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
-	"github.com/hasura/graphql-engine/cli/internal/metadatautil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 
 	"github.com/fatih/color"
 
-	"github.com/hasura/graphql-engine/cli/internal/statestore"
-	"github.com/hasura/graphql-engine/cli/internal/statestore/migrations"
-	"github.com/hasura/graphql-engine/cli/internal/statestore/settings"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/migrations"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/settings"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 
 	"fmt"
 
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -76,39 +76,50 @@ func UpdateProjectV3(opts UpdateProjectV3Opts) error {
 		if err != nil {
 			return err
 		}
-		if response == "n" {
+		if !response {
 			return nil
 		}
 	}
-	// move migration child directories
-	// get directory names to move
-	targetDatabase := opts.TargetDatabase
-	if len(targetDatabase) == 0 {
-		var err error
-		targetDatabase, err = util.GetInputPrompt("what database does the current migrations / seeds belong to?")
-		if err != nil {
-			return err
-		}
-	}
 
-	opts.EC.Spinner.Start()
-	opts.EC.Spin("updating project... ")
-	// copy state
-	// if a default database is setup copy state from it
+	// if database name is set using --database-name flag, copy it to this variable
+	targetDatabase := opts.TargetDatabase
+
+	// if targetDatabase is not set, get list of databases connected from hasura
 	sources, err := metadatautil.GetSources(opts.EC.APIClient.V1Metadata.ExportMetadata)
 	if err != nil {
 		return err
 	}
+	if len(targetDatabase) == 0 {
+		if len(sources) == 1 && sources[0] == "default" {
+			targetDatabase = sources[0]
+		} else if len(sources) > 0 {
+			targetDatabase, err = util.GetSelectPrompt("what database does this current migrations / seeds belong to?", sources)
+			if err != nil {
+				return err
+			}
+		} else {
+			return fmt.Errorf("cannot determine name of database for which current migrations / seed belong to, found 0 connected databases on hasura %v", sources)
+		}
+	}
+	opts.EC.Spinner.Start()
+	opts.EC.Spin("updating project... ")
+
+	defer opts.EC.Spinner.Stop()
 	if len(sources) >= 1 {
-		if err := CopyState(opts.EC, targetDatabase); err != nil {
+		opts.EC.Logger.Debug("start: copying state from from hdb_catalog.schema_migrations")
+		opts.EC.Spin("Moving state from hdb_catalog.schema_migrations ")
+		if err := CopyState(opts.EC, targetDatabase, targetDatabase); err != nil {
 			return err
 		}
 		if opts.MoveStateOnly {
-			opts.EC.Spinner.Stop()
+			opts.EC.Logger.Debug("move state only is set, copied state and returning early")
 			return nil
 		}
+		opts.EC.Logger.Debug("completed: copying state from from hdb_catalog.schema_migrations")
 	}
 
+	opts.EC.Logger.Debug("start: copy old migrations to new directory structure")
+	opts.EC.Spin("Moving migrations and seeds to new directories ")
 	// move migration child directories
 	// get directory names to move
 	migrationDirectoriesToMove, err := getMigrationDirectoryNames(opts.Fs, opts.MigrationsAbsDirectoryPath)
@@ -142,7 +153,10 @@ func UpdateProjectV3(opts UpdateProjectV3Opts) error {
 	if err := copyFiles(opts.Fs, seedFilesToMove, opts.SeedsAbsDirectoryPath, targetSeedsDirectoryName); err != nil {
 		return errors.Wrap(err, "moving seeds to target database directory")
 	}
+	opts.EC.Logger.Debug("completed: copy old migrations to new directory structure")
 
+	opts.EC.Logger.Debug("start: generate new config file")
+	opts.EC.Spin("Generating new config file ")
 	// write new config file
 	newConfig := *opts.EC.Config
 	newConfig.Version = cli.V3
@@ -150,7 +164,10 @@ func UpdateProjectV3(opts UpdateProjectV3Opts) error {
 		return err
 	}
 	opts.EC.Config = &newConfig
+	opts.EC.Logger.Debug("completed: generate new config file")
 
+	opts.EC.Logger.Debug("start: delete old migrations and seeds")
+	opts.EC.Spin("Cleaning project directory ")
 	// delete original migrations
 	if err := removeDirectories(opts.Fs, opts.MigrationsAbsDirectoryPath, migrationDirectoriesToMove); err != nil {
 		return errors.Wrap(err, "removing up original migrations")
@@ -164,8 +181,12 @@ func UpdateProjectV3(opts UpdateProjectV3Opts) error {
 	if err := removeDirectories(opts.Fs, opts.EC.MetadataDir, metadataFiles); err != nil {
 		return err
 	}
+	opts.EC.Logger.Debug("completed: delete old migrations and seeds")
+
+	opts.EC.Logger.Debug("start: export metadata from server")
+	opts.EC.Spin("Exporting metadata from server ")
 	var files map[string][]byte
-	mdHandler := metadataobject.NewHandlerFromEC(opts.EC)
+	mdHandler := projectmetadata.NewHandlerFromEC(opts.EC)
 	files, err = mdHandler.ExportMetadata()
 	if err != nil {
 		return err
@@ -174,6 +195,8 @@ func UpdateProjectV3(opts UpdateProjectV3Opts) error {
 		return err
 	}
 	opts.EC.Spinner.Stop()
+	opts.EC.Logger.Debug("completed: export metadata from server")
+	opts.EC.Logger.Info("Operation completed")
 	return nil
 }
 
@@ -262,22 +285,22 @@ func isHasuraCLIGeneratedMigration(dirPath string) (bool, error) {
 	return regexp.MatchString(regex, filepath.Base(dirPath))
 }
 
-func CopyState(ec *cli.ExecutionContext, destdatabase string) error {
+func CopyState(ec *cli.ExecutionContext, sourceDatabase, destDatabase string) error {
 	// copy migrations state
 	src := migrations.NewMigrationStateStoreHdbTable(ec.APIClient.V2Query, migrations.DefaultSchema, migrations.DefaultMigrationsTable)
-	if err := src.PrepareMigrationsStateStore(); err != nil {
+	if err := src.PrepareMigrationsStateStore(sourceDatabase); err != nil {
 		return err
 	}
 	dst := migrations.NewCatalogStateStore(statestore.NewCLICatalogState(ec.APIClient.V1Metadata))
-	if err := dst.PrepareMigrationsStateStore(); err != nil {
+	if err := dst.PrepareMigrationsStateStore(destDatabase); err != nil {
 		return err
 	}
-	err := statestore.CopyMigrationState(src, dst, "", destdatabase)
+	err := statestore.CopyMigrationState(src, dst, sourceDatabase, destDatabase)
 	if err != nil {
 		return err
 	}
 	// copy settings state
-	srcSettingsStore := cli.GetSettingsStateStore(ec)
+	srcSettingsStore := cli.GetSettingsStateStore(ec, sourceDatabase)
 	if err := srcSettingsStore.PrepareSettingsDriver(); err != nil {
 		return err
 	}
@@ -315,6 +338,9 @@ func CheckIfUpdateToConfigV3IsRequired(ec *cli.ExecutionContext) error {
 			ec.Logger.Info("Looks like you are trying to use hasura with multiple databases, which requires some changes on your project directory\n")
 			ec.Logger.Info("please use " + color.New(color.FgCyan).SprintFunc()("hasura scripts update-project-v3") + " to make this change")
 			return errors.New("update to config V3")
+		}
+		if len(sources) == 0 {
+			return fmt.Errorf("no connected databases found on hasura")
 		}
 		// if no sources are configured prompt and upgrade
 		if len(sources) != 1 {

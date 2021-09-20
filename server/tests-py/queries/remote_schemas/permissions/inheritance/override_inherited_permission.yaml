@@ -1,0 +1,55 @@
+- description: Query using the inherited permission
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: inherited_role1
+    X-Hasura-User-Id: '1'
+  status: 200
+  query:
+    query: |
+      query {
+        hello
+        user {
+          user_id
+        }
+      }
+  response:
+    data:
+      hello: world
+      user:
+        user_id: 1
+
+- description: Configure permission for the role which will override the inherited permission
+  url: /v1/metadata
+  status: 200
+  query:
+    type: add_remote_schema_permissions
+    args:
+      remote_schema: my-remote-schema
+      role: inherited_role1
+      definition:
+        # remove the `user` field from the `Query` field
+        schema: |
+          type Query {
+            hello: String
+          }
+
+- description: Querying the `user` field should throw an error
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: inherited_role1
+    X-Hasura-User-Id: '1'
+  status: 200
+  query:
+    query: |
+      query {
+        hello
+        user {
+          user_id
+        }
+      }
+  response:
+    errors:
+      - extensions:
+          path: $.selectionSet.user
+          code: validation-failed
+        message: "field \"user\" not found in type: 'query_root'"

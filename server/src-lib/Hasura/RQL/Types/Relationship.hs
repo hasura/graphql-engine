@@ -191,73 +191,11 @@ instance (Backend b) => FromJSON (ArrRelUsingFKeyOn b) where
 
 type ArrRelUsing b = RelUsing b (ArrRelUsingFKeyOn b)
 type ArrRelDef b = RelDef (ArrRelUsing b)
-type CreateArrRel b = WithTable b (ArrRelDef b)
 
 type ObjRelUsing b = RelUsing b (ObjRelUsingChoice b)
 type ObjRelDef b = RelDef (ObjRelUsing b)
-type CreateObjRel b = WithTable b (ObjRelDef b)
 
-data DropRel b
-  = DropRel
-  { drSource       :: !SourceName
-  , drTable        :: !(TableName b)
-  , drRelationship :: !RelName
-  , drCascade      :: !Bool
-  } deriving (Generic)
-deriving instance (Backend b) => Show (DropRel b)
-deriving instance (Backend b) => Eq (DropRel b)
-instance (Backend b) => ToJSON (DropRel b) where
-  toJSON = genericToJSON hasuraJSON{omitNothingFields = True}
 
-instance (Backend b) => FromJSON (DropRel b) where
-  parseJSON = withObject "Object" $ \o ->
-    DropRel
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
-      <*> o .: "relationship"
-      <*> o .:? "cascade" .!= False
-
-data SetRelComment b
-  = SetRelComment
-  { arSource       :: !SourceName
-  , arTable        :: !(TableName b)
-  , arRelationship :: !RelName
-  , arComment      :: !(Maybe T.Text)
-  } deriving (Generic)
-deriving instance (Backend b) => Show (SetRelComment b)
-deriving instance (Backend b) => Eq (SetRelComment b)
-instance (Backend b) => ToJSON (SetRelComment b) where
-  toJSON = genericToJSON hasuraJSON{omitNothingFields = True}
-
-instance (Backend b) => FromJSON (SetRelComment b) where
-  parseJSON = withObject "Object" $ \o ->
-    SetRelComment
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
-      <*> o .: "relationship"
-      <*> o .:? "comment"
-
-data RenameRel b
-  = RenameRel
-  { rrSource  :: !SourceName
-  , rrTable   :: !(TableName b)
-  , rrName    :: !RelName
-  , rrNewName :: !RelName
-  } deriving (Generic)
-deriving instance (Backend b) => Show (RenameRel b)
-deriving instance (Backend b) => Eq (RenameRel b)
-instance (Backend b) => ToJSON (RenameRel b) where
-  toJSON = genericToJSON hasuraJSON
-
-instance (Backend b) => FromJSON (RenameRel b) where
-  parseJSON = withObject "Object" $ \o ->
-    RenameRel
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
-      <*> o .: "name"
-      <*> o .: "new_name"
-
--- should this be parameterized by both the source and the destination backend?
 data RelInfo (b :: BackendType)
   = RelInfo
   { riName        :: !RelName
@@ -265,7 +203,6 @@ data RelInfo (b :: BackendType)
   , riMapping     :: !(HashMap (Column b) (Column b))
   , riRTable      :: !(TableName b)
   , riIsManual    :: !Bool
-  , riIsNullable  :: !Bool
   , riInsertOrder :: !InsertOrder
   } deriving (Generic)
 deriving instance Backend b => Show (RelInfo b)
@@ -279,6 +216,25 @@ instance (Backend b) => FromJSON (RelInfo b) where
 
 instance (Backend b) => ToJSON (RelInfo b) where
   toJSON = genericToJSON hasuraJSON
+
+data Nullable = Nullable | NotNullable
+  deriving (Eq, Show, Generic)
+
+instance NFData Nullable
+instance Cacheable Nullable
+instance Hashable Nullable
+
+boolToNullable :: Bool -> Nullable
+boolToNullable True  = Nullable
+boolToNullable False = NotNullable
+
+instance FromJSON Nullable where
+  parseJSON = fmap boolToNullable . parseJSON
+
+instance ToJSON Nullable where
+  toJSON = toJSON . \case
+    Nullable    -> True
+    NotNullable -> False
 
 fromRel :: RelName -> FieldName
 fromRel = FieldName . relNameToTxt

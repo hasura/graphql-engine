@@ -4,21 +4,25 @@ module Hasura.Server.MigrateSpec (CacheRefT(..), spec) where
 
 import           Hasura.Prelude
 
+import qualified Data.ByteString.Lazy.UTF8           as LBS
 import qualified Data.Environment                    as Env
 import qualified Database.PG.Query                   as Q
-import qualified Network.HTTP.Client.Extended        as HTTP
+import qualified Network.HTTP.Client.Manager         as HTTP
 
 import           Control.Concurrent.MVar.Lifted
 import           Control.Monad.Morph
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Control.Monad.Unique
 import           Control.Natural                     ((:~>) (..))
+import           Data.Aeson                          (encode)
 import           Data.Time.Clock                     (getCurrentTime)
 import           Test.Hspec.Core.Spec
 import           Test.Hspec.Expectations.Lifted
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Base.Error
+import           Hasura.Logging
+import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Metadata             (ClearMetadata (..), runClearMetadata)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DDL.Schema.Cache.Common
@@ -39,7 +43,7 @@ newtype CacheRefT m a
   = CacheRefT { runCacheRefT :: MVar RebuildableSchemaCache -> m a }
   deriving
     ( Functor, Applicative, Monad, MonadIO, MonadError e, MonadBase b, MonadBaseControl b
-    , MonadTx, MonadUnique, UserInfoM, HTTP.HasHttpManagerM, HasServerConfigCtx)
+    , MonadTx, MonadUnique, UserInfoM, HTTP.HasHttpManagerM, HasServerConfigCtx, MonadMetadataStorage, MonadMetadataStorageQueryAPI)
     via (ReaderT (MVar RebuildableSchemaCache) m)
 
 instance MonadTrans CacheRefT where
@@ -52,7 +56,7 @@ instance MFunctor CacheRefT where
 instance (MonadBase IO m) => CacheRM (CacheRefT m) where
   askSchemaCache = CacheRefT (fmap lastBuiltSchemaCache . readMVar)
 
-instance (MonadIO m, MonadBaseControl IO m, MonadTx m, HTTP.HasHttpManagerM m
+instance (MonadIO m, MonadBaseControl IO m, MonadError QErr m, HTTP.HasHttpManagerM m
          , MonadResolveSource m, HasServerConfigCtx m) => CacheRWM (CacheRefT m) where
   buildSchemaCacheWithOptions reason invalidations metadata =
     CacheRefT $ flip modifyMVar \schemaCache -> do
@@ -78,20 +82,20 @@ spec
    . ( HasVersion
      , MonadIO m
      , MonadBaseControl IO m
-     , MonadError QErr m
      , HTTP.HasHttpManagerM m
      , HasServerConfigCtx m
      , MonadResolveSource m
+     , MonadMetadataStorageQueryAPI m
      )
   => PostgresConnConfiguration -> PGExecCtx -> Q.ConnInfo -> SpecWithCache m
 spec srcConfig pgExecCtx pgConnInfo = do
   let migrateCatalogAndBuildCache env time = do
-        (migrationResult, metadata) <- runTx pgExecCtx $ migrateCatalog (Just srcConfig) MaintenanceModeDisabled time
+        (migrationResult, metadata) <- runTx' pgExecCtx $ migrateCatalog (Just srcConfig) MaintenanceModeDisabled time
         (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache env metadata)
 
       dropAndInit env time = lift $ CacheRefT $ flip modifyMVar \_ ->
-        (runTx pgExecCtx dropHdbCatalogSchema) *> (migrateCatalogAndBuildCache env time)
-      downgradeTo v = runTx pgExecCtx . downgradeCatalog (Just srcConfig) DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
+        (runTx' pgExecCtx dropHdbCatalogSchema) *> (migrateCatalogAndBuildCache env time)
+      downgradeTo v = runTx' pgExecCtx . downgradeCatalog (Just srcConfig) DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
 
   describe "migrateCatalog" $ do
     it "initializes the catalog" $ singleTransaction do
@@ -136,6 +140,10 @@ spec srcConfig pgExecCtx pgConnInfo = do
 
   describe "recreateSystemMetadata" $ do
     let dumpMetadata = execPGDump (PGDumpReqBody defaultSource ["--schema=hdb_catalog"] False) pgConnInfo
+        logger :: Logger Hasura = Logger $ \l -> do
+          let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l
+          t <- liftIO $ getFormattedTime Nothing
+          liftIO $ putStrLn $ LBS.toString $ encode $ EngineLog t logLevel logType logDetail
 
     it "is idempotent" \(NT transact) -> do
       env <- Env.getEnvironment
@@ -147,7 +155,7 @@ spec srcConfig pgExecCtx pgConnInfo = do
         MRMigrated{} -> True
         _            -> False
       firstDump <- transact dumpMetadata
-      transact (runTx pgExecCtx recreateSystemMetadata)
+      transact (runTx' pgExecCtx recreateSystemMetadata)
       secondDump <- transact dumpMetadata
       secondDump `shouldBe` firstDump
 
@@ -156,11 +164,11 @@ spec srcConfig pgExecCtx pgConnInfo = do
       time <- getCurrentTime
       transact (dropAndInit env time) `shouldReturn` MRInitialized
       firstDump <- transact dumpMetadata
-      transact (hoist (hoist (runTx pgExecCtx)) $ runClearMetadata ClearMetadata) `shouldReturn` successMsg
+      transact (flip runReaderT logger $ runClearMetadata ClearMetadata) `shouldReturn` successMsg
       secondDump <- transact dumpMetadata
       secondDump `shouldBe` firstDump
 
-runTx
+runTx'
   :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m)
-  => PGExecCtx -> LazyTxT QErr m a -> m a
-runTx pgExecCtx = liftEitherM . runExceptT . runLazyTx pgExecCtx Q.ReadWrite
+  => PGExecCtx -> Q.TxET QErr m a -> m a
+runTx' pgExecCtx = liftEitherM . runExceptT . runTx pgExecCtx Q.ReadWrite

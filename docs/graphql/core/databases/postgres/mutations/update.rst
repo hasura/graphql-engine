@@ -329,9 +329,9 @@ evaluates to ``true`` for all objects.
       }
     }
 
-Increment **int** columns
--------------------------
-You can increment an ``int`` column with a given value using the ``_inc`` operator.
+Increment/Decrement **int** columns
+-----------------------------------
+You can increment/decrement an ``int`` column with a given value using the ``_inc`` operator.
 
 **Example:** Increment the ``likes`` of an article by 2:
 
@@ -362,6 +362,37 @@ You can increment an ``int`` column with a given value using the ``_inc`` operat
         }
       }
     }
+
+**Example:** Decrement the ``likes`` of an article by 2:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation update_likes {
+      update_article(
+        where: {id: {_eq: 1}},
+        _inc: {likes: -2}  # initial value: 3
+      ) {
+        affected_rows
+        returning {
+          id
+          likes
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "update_article": {
+          "affected_rows": 1,
+          "returning": {
+            "id": 1,
+            "likes": 1
+          }
+        }
+      }
+    }
+
 
 Update **jsonb** columns
 ------------------------

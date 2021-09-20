@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
-import { push } from 'react-router-redux';
 import { Link } from 'react-router';
 
+import _push from '../push';
 import Button from '../../../Common/Button/Button';
 import {
   setTableName,
@@ -225,7 +225,6 @@ class Schema extends Component {
       trackedFunctions,
       currentDataSource,
     } = this.props;
-
     const getSectionHeading = (headingText, tooltip, actionElement = null) => {
       return (
         <div>
@@ -256,7 +255,7 @@ class Schema extends Component {
           e.preventDefault();
 
           dispatch(
-            push(getSchemaAddTableRoute(currentSchema, currentDataSource))
+            _push(getSchemaAddTableRoute(currentSchema, currentDataSource))
           );
         };
 
@@ -572,6 +571,7 @@ class Schema extends Component {
                   funcs={trackableFuncs}
                   readOnlyMode={readOnlyMode}
                   source={currentDataSource}
+                  allSchemas={schema}
                 />
               ) : (
                 `Currently unsupported for ${(
@@ -671,9 +671,9 @@ class Schema extends Component {
               </h2>
               {getCreateBtn()}
             </div>
-            <hr />
+            <hr className="my-md" />
             {getCurrentSchemaSection()}
-            <hr />
+            <hr className="my-md" />
             {getUntrackedTablesSection()}
             {isFeatureSupported('tables.relationships.track') &&
               getUntrackedRelationsSection()}
@@ -682,7 +682,7 @@ class Schema extends Component {
             )}
             {isFeatureSupported('functions.nonTrackableFunctions.enabled') &&
               getNonTrackableFunctionsSection()}
-            <hr />
+            <hr className="my-md" />
           </div>
         </div>
       </RightContainer>

@@ -3,6 +3,7 @@
 module Hasura.Server.Logging
   ( StartupLog(..)
   , PGLog(..)
+  , RequestMode(..)
   , mkInconsMetadataLog
   , mkHttpAccessLogContext
   , mkHttpErrorLogContext
@@ -13,39 +14,51 @@ module Hasura.Server.Logging
   , WebHookLog(..)
   , HttpException
   , HttpLog (..)
+  , GQLBatchQueryOperationLog (..)
+  , GQLQueryOperationSuccessLog (..)
+  , GQLQueryOperationErrorLog (..)
+  , MetadataLog(..)
   , EnvVarsMovedToMetadata(..)
   , DeprecatedEnvVars(..)
   , logDeprecatedEnvVars
+  , CommonHttpLogMetadata(..)
+  , HttpLogMetadata
+  , buildHttpLogMetadata
+  , emptyHttpLogMetadata
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy          as BL
-import qualified Data.Environment              as Env
-import qualified Data.HashMap.Strict           as HM
-import qualified Data.TByteString              as TBS
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Network.HTTP.Types            as HTTP
-import qualified Network.Wai.Extended          as Wai
+import qualified Data.ByteString.Lazy                   as BL
+import qualified Data.Environment                       as Env
+import qualified Data.HashMap.Strict                    as HM
+import qualified Data.HashSet                           as Set
+import qualified Data.List.NonEmpty                     as NE
+import qualified Data.TByteString                       as TBS
+import qualified Data.Text                              as T
+import qualified Network.HTTP.Types                     as HTTP
+import qualified Network.Wai.Extended                   as Wai
 
 import           Data.Aeson
 import           Data.Aeson.TH
-import           Data.Int                      (Int64)
+import           Data.Int                               (Int64)
 import           Data.Text.Extended
 
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Parser.Schema  (Variable)
+import           Hasura.GraphQL.ParameterizedQueryHash
 import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Server.Compression
 import           Hasura.Server.Types
-import           Hasura.Server.Utils           (DeprecatedEnvVars (..), EnvVarsMovedToMetadata (..),
-                                                deprecatedEnvVars, envVarsMovedToMetadata)
+import           Hasura.Server.Utils                    (DeprecatedEnvVars (..),
+                                                         EnvVarsMovedToMetadata (..),
+                                                         deprecatedEnvVars, envVarsMovedToMetadata)
 import           Hasura.Session
-import           Hasura.Tracing                (TraceT)
+import           Hasura.Tracing                         (TraceT)
 
 
 data StartupLog
@@ -126,15 +139,105 @@ instance ToJSON WebHookLog where
            , "message" .= whlMessage whl
            ]
 
-class (Monad m, Monoid (HTTPLoggingMetadata m)) => HttpLog m where
+-- | GQLQueryOperationSuccessLog captures all the data required to construct
+--   an HTTP success log.
+data GQLQueryOperationSuccessLog
+  = GQLQueryOperationSuccessLog
+  { gqolQuery                  :: !GH.GQLReqUnparsed
+  , gqolQueryExecutionTime     :: !DiffTime
+  , gqolResponseSize           :: !Int64
+  , gqolRequestSize            :: !Int64
+  , gqolParameterizedQueryHash :: !ParameterizedQueryHash
+  } deriving (Show, Eq)
+$(deriveToJSON hasuraJSON{omitNothingFields = True} ''GQLQueryOperationSuccessLog)
 
-  type HTTPLoggingMetadata m
+-- | GQLQueryOperationErrorLog captures the request along with the error message
+data GQLQueryOperationErrorLog
+  = GQLQueryOperationErrorLog
+  { gqelQuery :: !GH.GQLReqUnparsed
+  , gqelError :: !QErr
+  } deriving (Show, Eq)
+$(deriveToJSON hasuraJSON ''GQLQueryOperationErrorLog)
 
-  buildHTTPLoggingMetadata :: [(G.SelectionSet G.NoFragments Variable)] -> HTTPLoggingMetadata m
+data GQLBatchQueryOperationLog
+  = GQLQueryOperationSuccess !GQLQueryOperationSuccessLog
+  | GQLQueryOperationError !GQLQueryOperationErrorLog
+  deriving (Show, Eq)
+
+instance ToJSON GQLBatchQueryOperationLog where
+  toJSON = \case
+    GQLQueryOperationSuccess successLog -> toJSON successLog
+    GQLQueryOperationError   errorLog   -> toJSON errorLog
+
+-- | whether a request is executed in batched mode or not
+data RequestMode
+  = RequestModeBatched
+  -- ^ this request is batched
+  | RequestModeSingle
+  -- ^ this is a single request
+  | RequestModeNonBatchable
+  -- ^ this request is of a kind for which batching is not done or does not make sense
+  | RequestModeError
+  -- ^ the execution of this request failed
+  deriving (Show, Eq)
+
+instance ToJSON RequestMode where
+  toJSON = \case
+    RequestModeBatched      -> "batched"
+    RequestModeSingle       -> "single"
+    RequestModeNonBatchable -> "non-graphql"
+    RequestModeError        -> "error"
+
+data CommonHttpLogMetadata
+  = CommonHttpLogMetadata
+  { _chlmRequestMode       :: !RequestMode
+  , _chlmBatchOperationLog :: !(Maybe (GH.GQLBatchedReqs GQLBatchQueryOperationLog))
+  }
+  deriving (Show, Eq)
+
+-- | The http-log metadata attached to HTTP requests running in the monad 'm', split into a
+-- common portion that is present regardless of 'm', and a monad-specific one defined in the
+-- 'HttpLog' instance.
+--
+-- This allows us to not have to duplicate the code that generates the common part of the metadata
+-- across OSS and Pro, so that instances only have to implement the part of it unique to them.
+type HttpLogMetadata m = (CommonHttpLogMetadata, ExtraHttpLogMetadata m)
+
+buildHttpLogMetadata
+  :: forall m
+   . HttpLog m
+  => ParameterizedQueryHashList
+  -> RequestMode
+  -> Maybe (GH.GQLBatchedReqs GQLBatchQueryOperationLog)
+  -> HttpLogMetadata m
+buildHttpLogMetadata paramQueryHashList requestMode batchQueryOperationLog =
+  (CommonHttpLogMetadata requestMode batchQueryOperationLog, buildExtraHttpLogMetadata @m paramQueryHashList)
+
+-- | synonym for clarity, writing `emptyHttpLogMetadata @m` instead of `def @(HttpLogMetadata m)`
+emptyHttpLogMetadata :: forall m. HttpLog m => HttpLogMetadata m
+emptyHttpLogMetadata = (CommonHttpLogMetadata RequestModeNonBatchable Nothing, emptyExtraHttpLogMetadata @m)
+
+{- Note [Disable query printing when query-log is disabled]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+As a temporary hack (as per https://github.com/hasura/graphql-engine-mono/issues/1770),
+we want to print the graphql query string in `http-log` or `websocket-log` only
+when `query-log` is enabled.
+-}
+
+class Monad m => HttpLog m where
+
+  -- | Extra http-log metadata that we attach when operating in 'm'.
+  type ExtraHttpLogMetadata m
+
+  emptyExtraHttpLogMetadata :: ExtraHttpLogMetadata m
+
+  buildExtraHttpLogMetadata :: ParameterizedQueryHashList -> ExtraHttpLogMetadata m
 
   logHttpError
     :: Logger Hasura
     -- ^ the logger
+    -> HashSet (EngineLogType Hasura)
+    -- ^ this is only required for the short-term fix in https://github.com/hasura/graphql-engine-mono/issues/1770
     -> Maybe UserInfo
     -- ^ user info may or may not be present (error can happen during user resolution)
     -> RequestId
@@ -152,6 +255,8 @@ class (Monad m, Monoid (HTTPLoggingMetadata m)) => HttpLog m where
   logHttpSuccess
     :: Logger Hasura
     -- ^ the logger
+    -> HashSet (EngineLogType Hasura)
+    -- ^ this is only required for the short-term fix in https://github.com/hasura/graphql-engine-mono/issues/1770
     -> Maybe UserInfo
     -- ^ user info may or may not be present (error can happen during user resolution)
     -> RequestId
@@ -171,38 +276,41 @@ class (Monad m, Monoid (HTTPLoggingMetadata m)) => HttpLog m where
     -- ^ possible compression type
     -> [HTTP.Header]
     -- ^ list of request headers
-    -> HTTPLoggingMetadata m
+    -> HttpLogMetadata m
     -> m ()
 
 instance HttpLog m => HttpLog (TraceT m) where
 
-  type HTTPLoggingMetadata (TraceT m) = HTTPLoggingMetadata m
+  type ExtraHttpLogMetadata (TraceT m) = ExtraHttpLogMetadata m
 
-  buildHTTPLoggingMetadata a = buildHTTPLoggingMetadata @m a
+  buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
+  emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
+  logHttpError a b c d e f g h = lift $ logHttpError a b c d e f g h
 
-  logHttpSuccess a b c d e f g h i j k = lift $ logHttpSuccess a b c d e f g h i j k
+  logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
 
 instance HttpLog m => HttpLog (ReaderT r m) where
 
-  type HTTPLoggingMetadata (ReaderT r m) = HTTPLoggingMetadata m
+  type ExtraHttpLogMetadata (ReaderT r m) = ExtraHttpLogMetadata m
 
-  buildHTTPLoggingMetadata a = buildHTTPLoggingMetadata @m a
+  buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
+  emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
+  logHttpError a b c d e f g h = lift $ logHttpError a b c d e f g h
 
-  logHttpSuccess a b c d e f g h i j k = lift $ logHttpSuccess a b c d e f g h i j k
+  logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
 
 instance HttpLog m => HttpLog (MetadataStorageT m) where
 
-  type HTTPLoggingMetadata (MetadataStorageT m) = HTTPLoggingMetadata m
+  type ExtraHttpLogMetadata (MetadataStorageT m) = ExtraHttpLogMetadata m
 
-  buildHTTPLoggingMetadata a = buildHTTPLoggingMetadata @m a
+  buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
+  emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
+  logHttpError a b c d e f g h = lift $ logHttpError a b c d e f g h
 
-  logHttpSuccess a b c d e f g h i j k = lift $ logHttpSuccess a b c d e f g h i j k
+  logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
 
 -- | Log information about the HTTP request
 data HttpInfoLog
@@ -240,36 +348,71 @@ data OperationLog
   , olQuery              :: !(Maybe Value)
   , olRawQuery           :: !(Maybe Text)
   , olError              :: !(Maybe QErr)
+  , olRequestMode        :: !RequestMode
   } deriving (Show, Eq)
 
 $(deriveToJSON hasuraJSON{omitNothingFields = True} ''OperationLog)
 
+-- | @BatchOperationSuccessLog@ contains the information required for a single
+--   successful operation in a batch request for OSS. This type is a subset of the @GQLQueryOperationSuccessLog@
+data BatchOperationSuccessLog
+  = BatchOperationSuccessLog
+  { bolQuery              :: !(Maybe Value)
+  , bolResponseSize       :: !Int64
+  , bolQueryExecutionTime :: !Seconds
+  } deriving (Show, Eq)
+$(deriveToJSON hasuraJSON{omitNothingFields = True} ''BatchOperationSuccessLog)
+
+-- | @BatchOperationSuccessLog@ contains the information required for a single
+--   erroneous operation in a batch request for OSS. This type is a subset of the @GQLQueryOperationErrorLog@
+data BatchOperationErrorLog
+  = BatchOperationErrorLog
+  { belQuery :: !(Maybe Value)
+  , belError :: !QErr
+  } deriving (Show, Eq)
+$(deriveToJSON hasuraJSON{omitNothingFields = True} ''BatchOperationErrorLog)
+
+data BatchOperationLog
+  = BatchOperationSuccess !BatchOperationSuccessLog
+  | BatchOperationError !BatchOperationErrorLog
+  deriving (Show, Eq)
+
+instance ToJSON BatchOperationLog where
+  toJSON = \case
+    BatchOperationSuccess successLog -> toJSON successLog
+    BatchOperationError   errorLog   -> toJSON errorLog
+
 data HttpLogContext
   = HttpLogContext
-  { hlcHttpInfo  :: !HttpInfoLog
-  , hlcOperation :: !OperationLog
-  , hlcRequestId :: !RequestId
+  { hlcHttpInfo          :: !HttpInfoLog
+  , hlcOperation         :: !OperationLog
+  , hlcRequestId         :: !RequestId
+  , hlcBatchedOperations :: !(Maybe (NE.NonEmpty BatchOperationLog))
   } deriving (Show, Eq)
-$(deriveToJSON hasuraJSON ''HttpLogContext)
+$(deriveToJSON hasuraJSON {omitNothingFields = True} ''HttpLogContext)
 
 mkHttpAccessLogContext
   :: Maybe UserInfo
   -- ^ Maybe because it may not have been resolved
+  -> HashSet (EngineLogType Hasura)
   -> RequestId
   -> Wai.Request
+  -> (BL.ByteString, Maybe Value)
   -> BL.ByteString
   -> Maybe (DiffTime, DiffTime)
   -> Maybe CompressionType
   -> [HTTP.Header]
+  -> RequestMode
+  -> Maybe (GH.GQLBatchedReqs GQLBatchQueryOperationLog)
   -> HttpLogContext
-mkHttpAccessLogContext userInfoM reqId req res mTiming compressTypeM headers =
+mkHttpAccessLogContext userInfoM enabledLogTypes reqId req (_, parsedReq) res mTiming compressTypeM headers batching queryLogMetadata =
   let http = HttpInfoLog
              { hlStatus      = status
              , hlMethod      = bsToTxt $ Wai.requestMethod req
              , hlSource      = Wai.getSourceFromFallback req
              , hlPath        = bsToTxt $ Wai.rawPathInfo req
              , hlHttpVersion = Wai.httpVersion req
-             , hlCompression  = compressTypeM
+             , hlCompression = compressTypeM
              , hlHeaders     = headers
              }
       op = OperationLog
@@ -278,11 +421,32 @@ mkHttpAccessLogContext userInfoM reqId req res mTiming compressTypeM headers =
            , olResponseSize = respSize
            , olRequestReadTime    = Seconds . fst <$> mTiming
            , olQueryExecutionTime = Seconds . snd <$> mTiming
-           , olQuery = Nothing
+           , olRequestMode = batching
+           -- See Note [Disable query printing when query-log is disabled]
+           , olQuery = bool Nothing parsedReq $ Set.member ELTQueryLog enabledLogTypes
            , olRawQuery = Nothing
            , olError = Nothing
            }
-  in HttpLogContext http op reqId
+      batchOpLog =
+        queryLogMetadata >>= (\case
+                                 GH.GQLSingleRequest _ -> Nothing -- This case is aleady handled in the `OperationLog`
+                                 GH.GQLBatchedReqs opLogs ->
+                                   NE.nonEmpty $
+                                   map (\opLog ->
+                                          case opLog of
+                                            GQLQueryOperationSuccess (GQLQueryOperationSuccessLog {..}) ->
+                                              BatchOperationSuccess $
+                                              BatchOperationSuccessLog
+                                                ((bool Nothing (Just $ toJSON gqolQuery)) $ Set.member ELTQueryLog enabledLogTypes)
+                                                gqolResponseSize
+                                                (convertDuration gqolQueryExecutionTime)
+                                            GQLQueryOperationError (GQLQueryOperationErrorLog {..}) ->
+                                              BatchOperationError $
+                                              BatchOperationErrorLog
+                                                (bool Nothing (Just $ toJSON gqelQuery) $ Set.member ELTQueryLog enabledLogTypes)
+                                                gqelError
+                                       ) opLogs)
+  in HttpLogContext http op reqId batchOpLog
   where
     status = HTTP.status200
     respSize = Just $ BL.length res
@@ -290,6 +454,7 @@ mkHttpAccessLogContext userInfoM reqId req res mTiming compressTypeM headers =
 mkHttpErrorLogContext
   :: Maybe UserInfo
   -- ^ Maybe because it may not have been resolved
+  -> HashSet (EngineLogType Hasura)
   -> RequestId
   -> Wai.Request
   -> (BL.ByteString, Maybe Value)
@@ -298,7 +463,7 @@ mkHttpErrorLogContext
   -> Maybe CompressionType
   -> [HTTP.Header]
   -> HttpLogContext
-mkHttpErrorLogContext userInfoM reqId waiReq (reqBody, parsedReq) err mTiming compressTypeM headers =
+mkHttpErrorLogContext userInfoM enabledLogTypes reqId waiReq (reqBody, parsedReq) err mTiming compressTypeM headers =
   let http = HttpInfoLog
              { hlStatus      = qeStatus err
              , hlMethod      = bsToTxt $ Wai.requestMethod waiReq
@@ -314,11 +479,17 @@ mkHttpErrorLogContext userInfoM reqId waiReq (reqBody, parsedReq) err mTiming co
            , olResponseSize       = Just $ BL.length $ encode err
            , olRequestReadTime    = Seconds . fst <$> mTiming
            , olQueryExecutionTime = Seconds . snd <$> mTiming
-           , olQuery              = parsedReq
-           , olRawQuery           = maybe (Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq
+           , olQuery              = reqToLog parsedReq
+           -- if parsedReq is Nothing, add the raw query
+           , olRawQuery           = maybe (reqToLog $ Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq
            , olError              = Just err
+           , olRequestMode        = RequestModeError
            }
-  in HttpLogContext http op reqId
+
+      -- See Note [Disable query printing when query-log is disabled]
+      reqToLog :: Maybe a -> Maybe a
+      reqToLog req = bool Nothing req $ Set.member ELTQueryLog enabledLogTypes
+  in HttpLogContext http op reqId Nothing -- Batched operation logs are always reported in logHttpSuccess even if there are errors
 
 data HttpLogLine
   = HttpLogLine

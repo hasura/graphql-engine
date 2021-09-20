@@ -6,7 +6,6 @@
 module Hasura.Backends.MSSQL.ToQuery
   ( fromSelect
   , fromReselect
-  , toSQL
   , toQueryFlat
   , toQueryPretty
   , fromDelete
@@ -19,14 +18,13 @@ import qualified Data.Text                   as T
 import qualified Data.Text.Extended          as T
 import qualified Data.Text.Lazy              as L
 import qualified Data.Text.Lazy.Builder      as L
-import qualified Text.Builder                as TB
 
+import           Data.Aeson                  (ToJSON (..))
 import           Data.List                   (intersperse)
 import           Data.String
 import           Database.ODBC.SQLServer
 
 import           Hasura.Backends.MSSQL.Types
-import           Hasura.SQL.Types            (ToSQL (..))
 
 
 --------------------------------------------------------------------------------
@@ -54,9 +52,10 @@ instance IsString Printer where
 --------------------------------------------------------------------------------
 -- Instances
 
-instance ToSQL Expression where
-  toSQL = TB.text . T.toTxt . toQueryFlat . fromExpression
-
+-- This is a debug instance, only here because it avoids a circular
+-- dependency between this module and Types/Instances.
+instance ToJSON Expression where
+  toJSON = toJSON . T.toTxt . toQueryFlat . fromExpression
 
 --------------------------------------------------------------------------------
 -- Printer generators
@@ -86,7 +85,7 @@ fromExpression =
             (NewlinePrinter <+> "OR ")
             (fmap (\x -> "(" <+> fromExpression x <+> ")") (toList xs))
     NotExpression expression -> "NOT " <+> (fromExpression expression)
-    ExistsExpression select -> "EXISTS (" <+> fromSelect select <+> ")"
+    ExistsExpression sel     -> "EXISTS (" <+> fromSelect sel <+> ")"
     IsNullExpression expression ->
       "(" <+> fromExpression expression <+> ") IS NULL"
     IsNotNullExpression expression ->
@@ -107,6 +106,10 @@ fromExpression =
       "(" <+> fromExpression e <+> ")." <+>
       fromString (show op) <+>
       "(" <+> fromExpression str <+> ") = 1"
+    ConditionalProjection expression fieldName ->
+      "(CASE WHEN(" <+>
+      fromExpression expression <+>
+      ") THEN " <+> fromFieldName fieldName <+> " ELSE NULL END)"
 
 fromOp :: Op -> Printer
 fromOp =
@@ -152,15 +155,16 @@ fromSelect Select {..} = wrapFor selectFor result
   where
     result =
       SepByPrinter
-      NewlinePrinter
+      NewlinePrinter $
       [ "SELECT " <+>
         IndentPrinter
           7
           (SepByPrinter
              ("," <+> NewlinePrinter)
              (map fromProjection (toList selectProjections)))
-      , "FROM " <+> IndentPrinter 5 (fromFrom selectFrom)
-      , SepByPrinter
+      ] <>
+      [ "FROM " <+> IndentPrinter 5 (fromFrom f) | Just f <- [selectFrom] ] <>
+      [ SepByPrinter
           NewlinePrinter
           (map
              (\Join {..} ->
@@ -181,7 +185,7 @@ fromSelect Select {..} = wrapFor selectFor result
 fromJoinSource :: JoinSource -> Printer
 fromJoinSource =
   \case
-    JoinSelect select     -> fromSelect select
+    JoinSelect sel        -> fromSelect sel
     JoinReselect reselect -> fromReselect reselect
 
 fromReselect :: Reselect -> Printer
@@ -196,8 +200,8 @@ fromReselect Reselect {..} = wrapFor reselectFor result
             (SepByPrinter
                ("," <+> NewlinePrinter)
                (map fromProjection (toList reselectProjections)))
-        , fromFor reselectFor
         , fromWhere reselectWhere
+        , fromFor reselectFor
         ]
 
 fromOrderBys ::
@@ -286,7 +290,7 @@ fromFor =
   \case
     NoFor -> ""
     JsonFor ForJson {jsonCardinality} ->
-      "FOR JSON PATH" <+>
+      "FOR JSON PATH, INCLUDE_NULL_VALUES" <+>
       case jsonCardinality of
         JsonArray     -> ""
         JsonSingleton -> ", WITHOUT_ARRAY_WRAPPER"
@@ -306,8 +310,7 @@ fromAggregate :: Aggregate -> Printer
 fromAggregate =
   \case
     CountAggregate countable -> "COUNT(" <+> fromCountable countable <+> ")"
-    OpAggregate text args ->
-      QueryPrinter (rawUnescapedText text) <+>
+    OpAggregate op args -> QueryPrinter (rawUnescapedText op) <+>
       "(" <+> SepByPrinter ", " (map fromExpression (toList args)) <+> ")"
     TextAggregate text -> fromExpression (ValueExpression (TextValue text))
 
@@ -324,9 +327,33 @@ fromCountable =
 fromWhere :: Where -> Printer
 fromWhere =
   \case
-    Where expressions ->
-      "WHERE " <+>
-      IndentPrinter 6 (fromExpression (AndExpression expressions))
+    Where expressions
+      | Just whereExp <- collapseWhere (AndExpression expressions) ->
+        "WHERE " <+> IndentPrinter 6 (fromExpression whereExp)
+      | otherwise -> ""
+
+-- Drop useless examples like this from the output:
+--
+-- WHERE (((1<>1))
+--       AND ((1=1)))
+--       AND ((1=1))
+--
+-- And
+--
+-- WHERE ((1<>1))
+--
+-- They're redundant, but make the output less readable.
+collapseWhere :: Expression -> Maybe Expression
+collapseWhere = go
+  where
+    go =
+      \case
+        ValueExpression (BoolValue True) -> Nothing
+        AndExpression xs ->
+          case mapMaybe go xs of
+            [] -> Nothing
+            ys -> pure (AndExpression ys)
+        e -> pure e
 
 fromFrom :: From -> Printer
 fromFrom =
@@ -334,6 +361,7 @@ fromFrom =
     FromQualifiedTable aliasedQualifiedTableName ->
       fromAliased (fmap fromTableName aliasedQualifiedTableName)
     FromOpenJson openJson -> fromAliased (fmap fromOpenJson openJson)
+    FromSelect select -> fromAliased (fmap (parens . fromSelect) select)
 
 fromOpenJson :: OpenJson -> Printer
 fromOpenJson OpenJson {openJsonExpression, openJsonWith} =
@@ -341,13 +369,14 @@ fromOpenJson OpenJson {openJsonExpression, openJsonWith} =
     NewlinePrinter
     [ "OPENJSON(" <+>
       IndentPrinter 9 (fromExpression openJsonExpression) <+> ")"
-    , "WITH (" <+>
-      IndentPrinter
-        5
-        (SepByPrinter
-           ("," <+> NewlinePrinter)
-           (toList (fmap fromJsonFieldSpec openJsonWith))) <+>
-      ")"
+    , case openJsonWith of
+        Nothing -> ""
+        Just openJsonWith' -> "WITH (" <+>
+          IndentPrinter
+            5
+            (SepByPrinter
+               ("," <+> NewlinePrinter)
+               (fmap fromJsonFieldSpec $ toList openJsonWith')) <+> ")"
     ]
 
 fromJsonFieldSpec :: JsonFieldSpec -> Printer
@@ -381,6 +410,9 @@ truePrinter = "(1=1)"
 
 falsePrinter :: Printer
 falsePrinter = "(1<>1)"
+
+parens :: Printer -> Printer
+parens p = "(" <+> IndentPrinter 1 p <+> ")"
 
 -- | Wrap a select with things needed when using FOR JSON.
 wrapFor :: For -> Printer -> Printer

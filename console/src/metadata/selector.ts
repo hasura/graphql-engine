@@ -56,6 +56,11 @@ export const getCurrentSource = (state: ReduxState) => {
 const getInconsistentObjects = (state: ReduxState) => {
   return state.metadata.inconsistentObjects;
 };
+const getSecuritySettings = (state: ReduxState) => {
+  const { api_limits, graphql_schema_introspection } =
+    state.metadata.metadataObject ?? {};
+  return { api_limits, graphql_schema_introspection };
+};
 
 export const getTables = createSelector(getDataSourceMetadata, source => {
   return source?.tables || [];
@@ -96,8 +101,8 @@ const permKeys: Array<keyof PermKeys> = [
   'delete_permissions',
 ];
 export const rolesSelector = createSelector(
-  [getTablesFromAllSources, getActions, getRemoteSchemas],
-  (tables, actions, remoteSchemas) => {
+  [getTablesFromAllSources, getActions, getRemoteSchemas, getSecuritySettings],
+  (tables, actions, remoteSchemas, securitySettings) => {
     const roleNames: string[] = [];
     tables?.forEach(table =>
       permKeys.forEach(key =>
@@ -112,6 +117,19 @@ export const rolesSelector = createSelector(
     remoteSchemas?.forEach(remoteSchema => {
       remoteSchema?.permissions?.forEach(p => roleNames.push(p.role));
     });
+
+    Object.entries(securitySettings.api_limits ?? {}).forEach(
+      ([limit, value]) => {
+        if (limit !== 'disabled' && typeof value !== 'boolean') {
+          Object.keys(value?.per_role ?? {}).forEach(role =>
+            roleNames.push(role)
+          );
+        }
+      }
+    );
+    securitySettings.graphql_schema_introspection?.disabled_for_roles.forEach(
+      role => roleNames.push(role)
+    );
     return Array.from(new Set(roleNames));
   }
 );

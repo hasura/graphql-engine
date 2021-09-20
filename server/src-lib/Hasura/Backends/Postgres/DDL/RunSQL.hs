@@ -1,62 +1,113 @@
 module Hasura.Backends.Postgres.DDL.RunSQL
-  (withMetadataCheck) where
+  ( runRunSQL
+  , RunSQL(..)
+  , isSchemaCacheBuildRequiredRunSQL
+  ) where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                 as M
-import qualified Data.HashMap.Strict.InsOrd          as OMap
-import qualified Data.HashSet                        as HS
-import qualified Data.List.NonEmpty                  as NE
-import qualified Database.PG.Query                   as Q
+import qualified Data.HashMap.Strict                       as M
+import qualified Data.HashSet                              as HS
+import qualified Database.PG.Query                         as Q
+import qualified Text.Regex.TDFA                           as TDFA
 
-import           Control.Lens                        ((.~))
-import           Control.Monad.Trans.Control         (MonadBaseControl)
-import           Data.Aeson.TH
-import           Data.List.Extended                  (duplicates)
+import           Control.Monad.Trans.Control               (MonadBaseControl)
+import           Data.Aeson
 import           Data.Text.Extended
 
-import qualified Hasura.SQL.AnyBackend               as AB
+import qualified Hasura.SQL.AnyBackend                     as AB
+import qualified Hasura.Tracing                            as Tracing
 
-import           Hasura.Backends.Postgres.DDL.Source (ToMetadataFetchQuery, fetchTableMetadata)
-import           Hasura.Backends.Postgres.DDL.Table
-import           Hasura.Backends.Postgres.SQL.Types  hiding (TableName)
+import           Hasura.Backends.Postgres.DDL.EventTrigger
+import           Hasura.Backends.Postgres.DDL.Source       (ToMetadataFetchQuery,
+                                                            fetchFunctionMetadata,
+                                                            fetchTableMetadata)
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Base.Error
-import           Hasura.RQL.DDL.Deps                 (reportDepsExt)
+import           Hasura.EncJSON
+import           Hasura.RQL.DDL.Deps                       (reportDepsExt)
+import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DDL.Schema.Common
-import           Hasura.RQL.DDL.Schema.Function
-import           Hasura.RQL.DDL.Schema.Rename
-import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.Types                    hiding (ConstraintName, fmFunction,
-                                                      tmComputedFields, tmTable)
+import           Hasura.RQL.DDL.Schema.Diff
+import           Hasura.RQL.Types                          hiding (ConstraintName, fmFunction,
+                                                            tmComputedFields, tmTable)
+import           Hasura.Server.Utils                       (quoteRegex)
+import           Hasura.Session
 
-
-data FunctionMeta
-  = FunctionMeta
-  { fmOid      :: !OID
-  , fmFunction :: !QualifiedFunction
-  , fmType     :: !FunctionVolatility
+data RunSQL
+  = RunSQL
+  { rSql                      :: Text
+  , rSource                   :: !SourceName
+  , rCascade                  :: !Bool
+  , rCheckMetadataConsistency :: !(Maybe Bool)
+  , rTxAccessMode             :: !Q.TxAccess
   } deriving (Show, Eq)
-$(deriveJSON hasuraJSON ''FunctionMeta)
 
-data ComputedFieldMeta
-  = ComputedFieldMeta
-  { ccmName         :: !ComputedFieldName
-  , ccmFunctionMeta :: !FunctionMeta
-  } deriving (Show, Eq)
-$(deriveJSON hasuraJSON{omitNothingFields=True} ''ComputedFieldMeta)
+instance FromJSON RunSQL where
+  parseJSON = withObject "RunSQL" $ \o -> do
+    rSql <- o .: "sql"
+    rSource <- o .:? "source" .!= defaultSource
+    rCascade <- o .:? "cascade" .!= False
+    rCheckMetadataConsistency <- o .:? "check_metadata_consistency"
+    isReadOnly <- o .:? "read_only" .!= False
+    let rTxAccessMode = if isReadOnly then Q.ReadOnly else Q.ReadWrite
+    pure RunSQL{..}
 
-data TableMeta (b :: BackendType)
-  = TableMeta
-  { tmTable          :: !QualifiedTable
-  , tmInfo           :: !(DBTableMetadata b)
-  , tmComputedFields :: ![ComputedFieldMeta]
-  } deriving (Show, Eq)
+instance ToJSON RunSQL where
+  toJSON RunSQL {..} =
+    object
+      [ "sql" .= rSql
+      , "source" .= rSource
+      , "cascade" .= rCascade
+      , "check_metadata_consistency" .= rCheckMetadataConsistency
+      , "read_only" .=
+        case rTxAccessMode of
+          Q.ReadOnly  -> True
+          Q.ReadWrite -> False
+      ]
+
+-- | see Note [Checking metadata consistency in run_sql]
+isSchemaCacheBuildRequiredRunSQL :: RunSQL -> Bool
+isSchemaCacheBuildRequiredRunSQL RunSQL {..} =
+  case rTxAccessMode of
+    Q.ReadOnly  -> False
+    Q.ReadWrite -> fromMaybe (containsDDLKeyword rSql) rCheckMetadataConsistency
+    where
+      containsDDLKeyword = TDFA.match $$(quoteRegex
+        TDFA.defaultCompOpt
+          { TDFA.caseSensitive = False
+          , TDFA.multiline = True
+          , TDFA.lastStarGreedy = True }
+          TDFA.defaultExecOpt
+          { TDFA.captureGroups = False }
+          "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b")
+
+
+{- Note [Checking metadata consistency in run_sql]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+SQL queries executed by run_sql may change the Postgres schema in arbitrary
+ways. We attempt to automatically update the metadata to reflect those changes
+as much as possible---for example, if a table is renamed, we want to update the
+metadata to track the table under its new name instead of its old one. This
+schema diffing (plus some integrity checking) is handled by withMetadataCheck.
+
+But this process has overhead---it involves reloading the metadata, diffing it,
+and rebuilding the schema cache---so we don’t want to do it if it isn’t
+necessary. The user can explicitly disable the check via the
+check_metadata_consistency option, and we also skip it if the current
+transaction is in READ ONLY mode, since the schema can’t be modified in that
+case, anyway.
+
+However, even if neither read_only or check_metadata_consistency is passed, lots
+of queries may not modify the schema at all. As a (fairly stupid) heuristic, we
+check if the query contains any keywords for DDL operations, and if not, we skip
+the metadata check as well. -}
 
 fetchMeta
   :: (ToMetadataFetchQuery pgKind, BackendMetadata ('Postgres pgKind), MonadTx m)
   => TableCache ('Postgres pgKind)
   -> FunctionCache ('Postgres pgKind)
-  -> m ([TableMeta ('Postgres pgKind)], [FunctionMeta])
+  -> m ([TableMeta ('Postgres pgKind)], [FunctionMeta ('Postgres pgKind)])
 fetchMeta tables functions = do
   tableMetaInfos <- fetchTableMetadata
   functionMetaInfos <- fetchFunctionMetadata
@@ -81,206 +132,50 @@ fetchMeta tables functions = do
 
   pure (tableMetas, functionMetas)
 
-getOverlap :: (Eq k, Hashable k) => (v -> k) -> [v] -> [v] -> [(v, v)]
-getOverlap getKey left right =
-  M.elems $ M.intersectionWith (,) (mkMap left) (mkMap right)
+runRunSQL
+  :: forall (pgKind :: PostgresKind) m
+   . ( BackendMetadata ('Postgres pgKind)
+     , ToMetadataFetchQuery pgKind
+     , CacheRWM m
+     , HasServerConfigCtx m
+     , MetadataM m
+     , MonadBaseControl IO m
+     , MonadError QErr m
+     , MonadIO m
+     , Tracing.MonadTrace m
+     , UserInfoM m
+     )
+  => RunSQL
+  -> m EncJSON
+runRunSQL q@RunSQL{..} = do
+  sourceConfig <- askSourceConfig @('Postgres pgKind) rSource
+  traceCtx <- Tracing.currentContext
+  userInfo <- askUserInfo
+  let pgExecCtx = _pscExecCtx sourceConfig
+  if (isSchemaCacheBuildRequiredRunSQL q)
+    then do
+      -- see Note [Checking metadata consistency in run_sql]
+      withMetadataCheck @pgKind rSource rCascade rTxAccessMode
+        $ withTraceContext traceCtx
+        $ withUserInfo userInfo
+        $ execRawSQL rSql
+    else do
+      runTxWithCtx pgExecCtx rTxAccessMode $ execRawSQL rSql
   where
-    mkMap = M.fromList . map (\v -> (getKey v, v))
-
-getDifference :: (Eq k, Hashable k) => (v -> k) -> [v] -> [v] -> [v]
-getDifference getKey left right =
-  M.elems $ M.difference (mkMap left) (mkMap right)
-  where
-    mkMap = M.fromList . map (\v -> (getKey v, v))
-
-data ComputedFieldDiff
-  = ComputedFieldDiff
-  { _cfdDropped    :: [ComputedFieldName]
-  , _cfdAltered    :: [(ComputedFieldMeta, ComputedFieldMeta)]
-  , _cfdOverloaded :: [(ComputedFieldName, QualifiedFunction)]
-  } deriving (Show, Eq)
-
-data TableDiff (b :: BackendType)
-  = TableDiff
-  { _tdNewName         :: !(Maybe QualifiedTable)
-  , _tdDroppedCols     :: ![Column b]
-  , _tdAddedCols       :: ![RawColumnInfo b]
-  , _tdAlteredCols     :: ![(RawColumnInfo b, RawColumnInfo b)]
-  , _tdDroppedFKeyCons :: ![ConstraintName]
-  , _tdComputedFields  :: !ComputedFieldDiff
-  -- The final list of uniq/primary constraint names
-  -- used for generating types on_conflict clauses
-  -- TODO: this ideally should't be part of TableDiff
-  , _tdUniqOrPriCons   :: ![ConstraintName]
-  , _tdNewDescription  :: !(Maybe PGDescription)
-  }
-
-getTableDiff
-  :: (Backend ('Postgres pgKind), BackendMetadata ('Postgres pgKind))
-  => TableMeta ('Postgres pgKind)
-  -> TableMeta ('Postgres pgKind)
-  -> TableDiff ('Postgres pgKind)
-getTableDiff oldtm newtm =
-  TableDiff mNewName droppedCols addedCols alteredCols
-  droppedFKeyConstraints computedFieldDiff uniqueOrPrimaryCons mNewDesc
-  where
-    mNewName = bool (Just $ tmTable newtm) Nothing $ tmTable oldtm == tmTable newtm
-    oldCols = _ptmiColumns $ tmInfo oldtm
-    newCols = _ptmiColumns $ tmInfo newtm
-
-    uniqueOrPrimaryCons = map _cName $
-      maybeToList (_pkConstraint <$> _ptmiPrimaryKey (tmInfo newtm))
-        <> toList (_ptmiUniqueConstraints $ tmInfo newtm)
-
-    mNewDesc = _ptmiDescription $ tmInfo newtm
-
-    droppedCols = map prciName $ getDifference prciPosition oldCols newCols
-    addedCols = getDifference prciPosition newCols oldCols
-    existingCols = getOverlap prciPosition oldCols newCols
-    alteredCols = filter (uncurry (/=)) existingCols
-
-    -- foreign keys are considered dropped only if their oid
-    -- and (ref-table, column mapping) are changed
-    droppedFKeyConstraints = map (_cName . _fkConstraint) $ HS.toList $
-      droppedFKeysWithOid `HS.intersection` droppedFKeysWithUniq
-    tmForeignKeys = fmap unForeignKeyMetadata . toList . _ptmiForeignKeys . tmInfo
-    droppedFKeysWithOid = HS.fromList $
-      (getDifference (_cOid . _fkConstraint) `on` tmForeignKeys) oldtm newtm
-    droppedFKeysWithUniq = HS.fromList $
-      (getDifference mkFKeyUniqId `on` tmForeignKeys) oldtm newtm
-    mkFKeyUniqId (ForeignKey _ reftn colMap) = (reftn, colMap)
-
-    -- calculate computed field diff
-    oldComputedFieldMeta = tmComputedFields oldtm
-    newComputedFieldMeta = tmComputedFields newtm
-
-    droppedComputedFields = map ccmName $
-      getDifference (fmOid . ccmFunctionMeta) oldComputedFieldMeta newComputedFieldMeta
-
-    alteredComputedFields =
-      getOverlap (fmOid . ccmFunctionMeta) oldComputedFieldMeta newComputedFieldMeta
-
-    overloadedComputedFieldFunctions =
-      let getFunction = fmFunction . ccmFunctionMeta
-          getSecondElement (_ NE.:| list) = listToMaybe list
-      in mapMaybe (fmap ((&&&) ccmName getFunction) . getSecondElement) $
-         flip NE.groupBy newComputedFieldMeta $ \l r ->
-         ccmName l == ccmName r && getFunction l == getFunction r
-
-    computedFieldDiff = ComputedFieldDiff droppedComputedFields alteredComputedFields
-                      overloadedComputedFieldFunctions
-
-getTableChangeDeps
-  :: forall pgKind m. (Backend ('Postgres pgKind), QErrM m, CacheRM m)
-  => SourceName -> QualifiedTable -> TableDiff ('Postgres pgKind) -> m [SchemaObjId]
-getTableChangeDeps source tn tableDiff = do
-  sc <- askSchemaCache
-  -- for all the dropped columns
-  droppedColDeps <- fmap concat $ forM droppedCols $ \droppedCol -> do
-    let objId = SOSourceObj source
-                  $ AB.mkAnyBackend
-                  $ SOITableObj @('Postgres pgKind) tn
-                  $ TOCol @('Postgres pgKind) droppedCol
-    return $ getDependentObjs sc objId
-  -- for all dropped constraints
-  droppedConsDeps <- fmap concat $ forM droppedFKeyConstraints $ \droppedCons -> do
-    let objId = SOSourceObj source
-                  $ AB.mkAnyBackend
-                  $ SOITableObj @('Postgres pgKind) tn
-                  $ TOForeignKey @('Postgres pgKind) droppedCons
-    return $ getDependentObjs sc objId
-  return $ droppedConsDeps <> droppedColDeps <> droppedComputedFieldDeps
-  where
-    TableDiff _ droppedCols _ _ droppedFKeyConstraints computedFieldDiff _ _ = tableDiff
-    droppedComputedFieldDeps =
-      map
-        (SOSourceObj source
-          . AB.mkAnyBackend
-          . SOITableObj @('Postgres pgKind) tn
-          . TOComputedField)
-        $ _cfdDropped computedFieldDiff
-
-data SchemaDiff (b :: BackendType)
-  = SchemaDiff
-  { _sdDroppedTables :: ![QualifiedTable]
-  , _sdAlteredTables :: ![(QualifiedTable, TableDiff b)]
-  }
-
-getSchemaDiff
-  :: BackendMetadata ('Postgres pgKind)
-  => [TableMeta ('Postgres pgKind)]
-  -> [TableMeta ('Postgres pgKind)]
-  -> SchemaDiff ('Postgres pgKind)
-getSchemaDiff oldMeta newMeta =
-  SchemaDiff droppedTables survivingTables
-  where
-    droppedTables = map tmTable $ getDifference (_ptmiOid . tmInfo) oldMeta newMeta
-    survivingTables =
-      flip map (getOverlap (_ptmiOid . tmInfo) oldMeta newMeta) $ \(oldtm, newtm) ->
-      (tmTable oldtm, getTableDiff oldtm newtm)
-
-getSchemaChangeDeps
-  :: forall pgKind m. (Backend ('Postgres pgKind), QErrM m, CacheRM m)
-  => SourceName -> SchemaDiff ('Postgres pgKind) -> m [SourceObjId ('Postgres pgKind)]
-getSchemaChangeDeps source schemaDiff = do
-  -- Get schema cache
-  sc <- askSchemaCache
-  let tableIds =
-        map
-          (SOSourceObj source . AB.mkAnyBackend . SOITable @('Postgres pgKind))
-          droppedTables
-  -- Get the dependent of the dropped tables
-  let tableDropDeps = concatMap (getDependentObjs sc) tableIds
-  tableModDeps <- concat <$> traverse (uncurry (getTableChangeDeps source)) alteredTables
-  -- return $ filter (not . isDirectDep) $
-  return $ mapMaybe getIndirectDep $
-    HS.toList $ HS.fromList $ tableDropDeps <> tableModDeps
-  where
-    SchemaDiff droppedTables alteredTables = schemaDiff
-
-    getIndirectDep :: SchemaObjId -> Maybe (SourceObjId ('Postgres pgKind))
-    getIndirectDep (SOSourceObj s exists) =
-      AB.unpackAnyBackend exists >>= \case
-        srcObjId@(SOITableObj tn _) ->
-          -- Indirect dependancy shouldn't be of same source and not among dropped tables
-          if not (s == source && tn `HS.member` HS.fromList droppedTables)
-            then Just srcObjId
-            else Nothing
-        srcObjId -> Just srcObjId
-    getIndirectDep _ = Nothing
-
-data FunctionDiff
-  = FunctionDiff
-  { fdDropped :: ![QualifiedFunction]
-  , fdAltered :: ![(QualifiedFunction, FunctionVolatility)]
-  } deriving (Show, Eq)
-
-getFuncDiff :: [FunctionMeta] -> [FunctionMeta] -> FunctionDiff
-getFuncDiff oldMeta newMeta =
-  FunctionDiff droppedFuncs alteredFuncs
-  where
-    droppedFuncs = map fmFunction $ getDifference fmOid oldMeta newMeta
-    alteredFuncs = mapMaybe mkAltered $ getOverlap fmOid oldMeta newMeta
-    mkAltered (oldfm, newfm) =
-      let isTypeAltered = fmType oldfm /= fmType newfm
-          alteredFunc = (fmFunction oldfm, fmType newfm)
-      in bool Nothing (Just alteredFunc) $ isTypeAltered
-
-getOverloadedFuncs
-  :: [QualifiedFunction] -> [FunctionMeta] -> [QualifiedFunction]
-getOverloadedFuncs trackedFuncs newFuncMeta =
-  toList $ duplicates $ map fmFunction trackedMeta
-  where
-    trackedMeta = flip filter newFuncMeta $ \fm ->
-      fmFunction fm `elem` trackedFuncs
+    execRawSQL :: (MonadTx n) => Text -> n EncJSON
+    execRawSQL =
+      fmap (encJFromJValue @RunSQLRes) . liftTx . Q.multiQE rawSqlErrHandler . Q.fromText
+      where
+        rawSqlErrHandler txe =
+          (err400 PostgresError "query execution failed") { qeInternal = Just $ ExtraInternal $ toJSON txe }
 
 -- | @'withMetadataCheck' cascade action@ runs @action@ and checks if the schema changed as a
 -- result. If it did, it checks to ensure the changes do not violate any integrity constraints, and
 -- if not, incorporates them into the schema cache.
+-- TODO(antoine): shouldn't this be generalized?
 withMetadataCheck
   :: forall (pgKind :: PostgresKind) a m
-   . ( Backend ('Postgres pgKind)
-     , BackendMetadata ('Postgres pgKind)
+   . ( BackendMetadata ('Postgres pgKind)
      , ToMetadataFetchQuery pgKind
      , CacheRWM m
      , HasServerConfigCtx m
@@ -289,22 +184,23 @@ withMetadataCheck
      , MonadError QErr m
      , MonadIO m
      )
-  => SourceName -> Bool -> Q.TxAccess -> LazyTxT QErr m a -> m a
+  => SourceName -> Bool -> Q.TxAccess -> Q.TxET QErr m a -> m a
 withMetadataCheck source cascade txAccess action = do
   SourceInfo _ preActionTables preActionFunctions sourceConfig <- askSourceInfo @('Postgres pgKind) source
 
   (actionResult, metadataUpdater) <-
-    liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx sourceConfig) txAccess $ do
+    liftEitherM $ runExceptT $ runTx (_pscExecCtx sourceConfig) txAccess $ do
       -- Drop event triggers so no interference is caused to the sql query
       forM_ (M.elems preActionTables) $ \tableInfo -> do
         let eventTriggers = _tiEventTriggerInfoMap tableInfo
-        forM_ (M.keys eventTriggers) (liftTx . delTriggerQ)
+        forM_ (M.keys eventTriggers) (liftTx . dropTriggerQ)
 
       -- Get the metadata before the sql query, everything, need to filter this
       (preActionTableMeta, preActionFunctionMeta) <- fetchMeta preActionTables preActionFunctions
 
       -- Run the action
       actionResult <- action
+
       -- Get the metadata after the sql query
       (postActionTableMeta, postActionFunctionMeta) <- fetchMeta preActionTables preActionFunctions
 
@@ -318,25 +214,26 @@ withMetadataCheck source cascade txAccess action = do
         throw400 NotSupported $ "the following tracked function(s) cannot be overloaded: "
         <> commaSeparated overloadedFuncs
 
-      indirectSourceDeps <- getSchemaChangeDeps source schemaDiff
-
-      let indirectDeps =
-            map
-              (SOSourceObj source . AB.mkAnyBackend)
-              indirectSourceDeps
       -- Report back with an error if cascade is not set
+      indirectDeps <- getSchemaChangeDeps source schemaDiff
       when (indirectDeps /= [] && not cascade) $ reportDepsExt indirectDeps []
 
       metadataUpdater <- execWriterT $ do
         -- Purge all the indirect dependents from state
-        mapM_ (purgeDependentObject source >=> tell) indirectSourceDeps
+        for_ indirectDeps \case
+          SOSourceObj sourceName objectID -> do
+            AB.dispatchAnyBackend @BackendMetadata objectID $ purgeDependentObject sourceName >=> tell
+          _ ->
+            pure ()
 
         -- Purge all dropped functions
-        let purgedFuncs = flip mapMaybe indirectSourceDeps $ \case
-              SOIFunction qf -> Just qf
-              _              -> Nothing
-
-        forM_ (droppedFuncs \\ purgedFuncs) $ tell . dropFunctionInMetadata @('Postgres pgKind) source
+        let purgedFuncs = flip mapMaybe indirectDeps \case
+              SOSourceObj _ objectID
+                | Just (SOIFunction qf) <- AB.unpackAnyBackend @('Postgres pgKind) objectID
+                -> Just qf
+              _ -> Nothing
+        for_ (droppedFuncs \\ purgedFuncs) $
+          tell . dropFunctionInMetadata @('Postgres pgKind) source
 
         -- Process altered functions
         forM_ alteredFuncs $ \(qf, newTy) -> do
@@ -345,7 +242,7 @@ withMetadataCheck source cascade txAccess action = do
             "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
 
         -- update the metadata with the changes
-        processSchemaChanges preActionTables schemaDiff
+        processSchemaDiff source preActionTables schemaDiff
 
       pure (actionResult, metadataUpdater)
 
@@ -367,97 +264,3 @@ withMetadataCheck source cascade txAccess action = do
         flip runReaderT serverConfigCtx $ mkAllTriggersQ triggerName table columns opsDefinition
 
   pure actionResult
-  where
-    processSchemaChanges
-      :: ( MonadError QErr m'
-         , CacheRM m'
-         , MonadWriter MetadataModifier m'
-         )
-      => TableCache ('Postgres pgKind) -> SchemaDiff ('Postgres pgKind) -> m' ()
-    processSchemaChanges preActionTables schemaDiff = do
-      -- Purge the dropped tables
-      forM_ droppedTables $
-        \tn -> tell $ MetadataModifier $ metaSources.ix source.(toSourceMetadata @('Postgres pgKind)).smTables %~ OMap.delete tn
-
-      for_ alteredTables $ \(oldQtn, tableDiff) -> do
-        ti <- onNothing
-          (M.lookup oldQtn preActionTables)
-          (throw500 $ "old table metadata not found in cache : " <>> oldQtn)
-        processTableChanges source (_tiCoreInfo ti) tableDiff
-      where
-        SchemaDiff droppedTables alteredTables = schemaDiff
-
-processTableChanges
-  :: forall pgKind m
-   . ( Backend ('Postgres pgKind)
-     , BackendMetadata ('Postgres pgKind)
-     , MonadError QErr m
-     , CacheRM m
-     , MonadWriter MetadataModifier m
-     )
-  => SourceName -> TableCoreInfo ('Postgres pgKind) -> TableDiff ('Postgres pgKind) -> m ()
-processTableChanges source ti tableDiff = do
-  -- If table rename occurs then don't replace constraints and
-  -- process dropped/added columns, because schema reload happens eventually
-  sc <- askSchemaCache
-  let tn = _tciName ti
-      withOldTabName = do
-        procAlteredCols sc tn
-
-      withNewTabName newTN = do
-        let tnGQL = snakeCaseQualifiedObject newTN
-        -- check for GraphQL schema conflicts on new name
-        checkConflictingNode sc tnGQL
-        procAlteredCols sc tn
-        -- update new table in metadata
-        renameTableInMetadata @('Postgres pgKind) source newTN tn
-
-  -- Process computed field diff
-  processComputedFieldDiff tn
-  -- Drop custom column names for dropped columns
-  possiblyDropCustomColumnNames tn
-  maybe withOldTabName withNewTabName mNewName
-  where
-    TableDiff mNewName droppedCols _ alteredCols _ computedFieldDiff _ _ = tableDiff
-
-    possiblyDropCustomColumnNames tn = do
-      let TableConfig customFields customColumnNames customName = _tciCustomConfig ti
-          modifiedCustomColumnNames = foldl' (flip M.delete) customColumnNames droppedCols
-      when (modifiedCustomColumnNames /= customColumnNames) $
-        tell $ MetadataModifier $
-          tableMetadataSetter @('Postgres pgKind) source tn.tmConfiguration .~ TableConfig customFields modifiedCustomColumnNames customName
-
-    procAlteredCols sc tn = for_ alteredCols $
-      \( RawColumnInfo oldName _ oldType _ _
-       , RawColumnInfo newName _ newType _ _ ) -> do
-        if | oldName /= newName ->
-             renameColumnInMetadata oldName newName source tn (_tciFieldInfoMap ti)
-
-           | oldType /= newType -> do
-              let colId =
-                    SOSourceObj source
-                      $ AB.mkAnyBackend
-                      $ SOITableObj @('Postgres pgKind) tn
-                      $ TOCol @('Postgres pgKind) oldName
-                  typeDepObjs = getDependentObjsWith (== DROnType) sc colId
-
-              unless (null typeDepObjs) $ throw400 DependencyError $
-                "cannot change type of column " <> oldName <<> " in table "
-                <> tn <<> " because of the following dependencies : " <>
-                reportSchemaObjs typeDepObjs
-
-           | otherwise -> pure ()
-
-    processComputedFieldDiff table  = do
-      let ComputedFieldDiff _ altered overloaded = computedFieldDiff
-          getFunction = fmFunction . ccmFunctionMeta
-      forM_ overloaded $ \(columnName, function) ->
-        throw400 NotSupported $ "The function " <> function
-        <<> " associated with computed field" <> columnName
-        <<> " of table " <> table <<> " is being overloaded"
-      forM_ altered $ \(old, new) ->
-        if | (fmType . ccmFunctionMeta) new == FTVOLATILE ->
-             throw400 NotSupported $ "The type of function " <> getFunction old
-             <<> " associated with computed field " <> ccmName old
-             <<> " of table " <> table <<> " is being altered to \"VOLATILE\""
-           | otherwise -> pure ()

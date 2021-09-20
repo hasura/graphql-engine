@@ -34,8 +34,15 @@ class TestV1General:
 @usefixtures('per_class_tests_db_state')
 class TestV1SelectBasic:
 
-    def test_select_query_author(self, hge_ctx):
+    def test_select_query_author_with_admin_role(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_article.yaml')
+
+    # TODO: fix these tests for JWT tests
+    # def test_select_query_author_with_user_role_success(self, hge_ctx):
+    #     check_query_f(hge_ctx, self.dir() + '/select_article_role_success.yaml')
+
+    # def test_select_query_author_with_user_role_failure(self, hge_ctx):
+    #     check_query_f(hge_ctx, self.dir() + '/select_article_role_error.yaml')
 
     def test_nested_select_article_author(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/nested_select_query_article_author.yaml')
@@ -498,6 +505,11 @@ class TestRunSQL:
         check_query_f(hge_ctx, self.dir() + '/sql_select_query.yaml')
         hge_ctx.may_skip_test_teardown = True
 
+    # TODO: create a v2 query tests module
+    def test_select_query_v2(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_select_query_v2.yaml')
+        hge_ctx.may_skip_test_teardown = True
+
     def test_select_query_read_only(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_select_query_read_only.yaml')
         hge_ctx.may_skip_test_teardown = True
@@ -511,6 +523,10 @@ class TestRunSQL:
 
     def test_sql_query_as_user_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_query_as_user_error.yaml')
+
+    # TODO: create a v2 query tests module
+    def test_sql_query_as_user_error_v2(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_query_as_user_error_v2.yaml')
 
     def test_sql_rename_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_rename_table.yaml')
@@ -536,6 +552,30 @@ class TestRunSQL:
     def dir(cls):
         return "queries/v1/run_sql"
 
+@pytest.mark.parametrize("backend", ['mssql'])
+@usefixtures('per_class_tests_db_state')
+class TestRunSQLMssql:
+    @classmethod
+    def dir(cls):
+        return "queries/v1/run_sql"
+
+    def test_select_query(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_select_query_mssql.yaml')
+
+    def test_drop_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_drop_table_mssql.yaml')
+
+    def test_rename_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_rename_table_mssql.yaml')
+
+    def test_drop_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_drop_column_mssql.yaml')
+
+    def test_add_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_add_column_mssql.yaml')
+
+    def test_rename_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_rename_column_mssql.yaml')
 
 @usefixtures('per_method_tests_db_state')
 class TestRelationships:

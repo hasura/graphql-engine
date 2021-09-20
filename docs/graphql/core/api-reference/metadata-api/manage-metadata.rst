@@ -4,8 +4,8 @@
 
 .. _metadata_api_manage_metadata:
 
-Metadata API Reference: Manage metadata (v2.0 and above)
-========================================================
+Metadata API Reference: Manage metadata
+=======================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -232,7 +232,8 @@ table using ``psql`` and this column should now be added to the GraphQL schema.
    {
        "type" : "reload_metadata",
        "args": {
-           "reload_remote_schemas": true
+           "reload_remote_schemas": true,
+           "reload_sources": false
        }
    }
 
@@ -250,8 +251,12 @@ Args syntax
      - Description
    * - reload_remote_schemas
      - false
-     - Boolean
-     - If set to ``true``, all remote schemas' (including inconsistent ones) cached GraphQL schemas are refreshed (default: ``false``)
+     - ``Boolean`` | [:ref:`RemoteSchemaName`]
+     - If set to ``true``, all remote schemas' (including inconsistent ones) cached GraphQL schemas are refreshed (default: ``true``)
+   * - reload_sources
+     - false
+     - ``Boolean`` | [:ref:`SourceName`]
+     - If set to ``true``, all sources' (including inconsistent ones) cached GraphQL schemas are refreshed (default: ``true``)
 
 .. _metadata_clear_metadata:
 

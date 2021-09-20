@@ -47,7 +47,7 @@ actionExecute
    . MonadBuildSchema ('Postgres 'Vanilla) r m n
   => NonObjectTypeMap
   -> ActionInfo
-  -> m (Maybe (FieldParser n (AnnActionExecution ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla)))))
+  -> m (Maybe (FieldParser n (AnnActionExecution ('Postgres 'Vanilla) (RQL.RemoteSelect UnpreparedValue) (UnpreparedValue ('Postgres 'Vanilla)))))
 actionExecute nonObjectTypeMap actionInfo = runMaybeT do
   roleName <- askRoleName
   guard (roleName == adminRoleName || roleName `Map.member` permissions)
@@ -70,9 +70,10 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
                , _aaeStrfyNum = stringifyNum
                , _aaeTimeOut = _adTimeout definition
                , _aaeSource  = getActionSourceInfo outputObject
+               , _aaeRequestTransform = _aiRequestTransform actionInfo
                }
   where
-    ActionInfo actionName (outputType, outputObject) definition permissions _ comment = actionInfo
+    ActionInfo actionName (outputType, outputObject) definition permissions _ comment _ = actionInfo
 
 -- | actionAsyncMutation is used to execute a asynchronous mutation action. An
 --   asynchronous action expects the field name and the input arguments to the
@@ -94,7 +95,7 @@ actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
   pure $ P.selection fieldName description inputArguments actionIdParser
     <&> AnnActionMutationAsync actionName forwardClientHeaders
   where
-    ActionInfo actionName _ definition permissions forwardClientHeaders comment = actionInfo
+    ActionInfo actionName _ definition permissions forwardClientHeaders comment _ = actionInfo
 
 -- | actionAsyncQuery is used to query/subscribe to the result of an
 --   asynchronous mutation action. The only input argument to an
@@ -113,7 +114,7 @@ actionAsyncQuery
   :: forall r m n
    . MonadBuildSchema ('Postgres 'Vanilla) r m n
   => ActionInfo
-  -> m (Maybe (FieldParser n (AnnActionAsyncQuery ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla)))))
+  -> m (Maybe (FieldParser n (AnnActionAsyncQuery ('Postgres 'Vanilla) (RQL.RemoteSelect UnpreparedValue) (UnpreparedValue ('Postgres 'Vanilla)))))
 actionAsyncQuery actionInfo = runMaybeT do
   roleName <- askRoleName
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
@@ -158,7 +159,7 @@ actionAsyncQuery actionInfo = runMaybeT do
               , _aaaqSource  = getActionSourceInfo outputObject
               }
   where
-    ActionInfo actionName (outputType, outputObject) definition permissions forwardClientHeaders comment = actionInfo
+    ActionInfo actionName (outputType, outputObject) definition permissions forwardClientHeaders comment dataTransform = actionInfo
     idFieldName = $$(G.litName "id")
     idFieldDescription = "the unique id of an action"
 
@@ -172,7 +173,7 @@ actionOutputFields
    . MonadBuildSchema ('Postgres 'Vanilla) r m n
   => G.GType
   -> AnnotatedObjectType
-  -> m (Parser 'Output n (RQL.AnnFieldsG ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla))))
+  -> m (Parser 'Output n (AnnotatedFields ('Postgres 'Vanilla)))
 actionOutputFields outputType annotatedObject = do
   let outputObject = _aotDefinition annotatedObject
       scalarOrEnumFields = map outputFieldParser $ toList $ _otdFields outputObject
@@ -194,24 +195,19 @@ actionOutputFields outputType annotatedObject = do
 
     outputFieldParser
       :: ObjectFieldDefinition (G.GType, AnnotatedObjectFieldType)
-      -> FieldParser n (RQL.AnnFieldG ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla)))
+      -> FieldParser n (AnnotatedField ('Postgres 'Vanilla))
     outputFieldParser (ObjectFieldDefinition name _ description (gType, objectFieldType)) =
       let fieldName   = unObjectFieldName name
           selection   = P.selection_ fieldName description $ case objectFieldType of
             AOFTScalar def -> customScalarParser def
             AOFTEnum   def -> customEnumParser   def
-          fieldParser = \case
-            G.TypeNamed (G.Nullability True)  _ -> P.nullableField    selection
-            G.TypeNamed (G.Nullability False) _ -> P.nonNullableField selection
-            G.TypeList  (G.Nullability True)  t -> P.nullableField    $ P.multipleField $ fieldParser t
-            G.TypeList  (G.Nullability False) t -> P.nonNullableField $ P.multipleField $ fieldParser t
           pgColumnInfo =
             ColumnInfo (unsafePGCol $ G.unName fieldName) fieldName 0 (ColumnScalar PGJSON) (G.isNullable gType) Nothing
-      in fieldParser gType $> RQL.mkAnnColumnField pgColumnInfo Nothing Nothing
+      in P.wrapFieldParser gType selection $> RQL.mkAnnColumnField pgColumnInfo Nothing Nothing
 
     relationshipFieldParser
       :: TypeRelationship (TableInfo ('Postgres 'Vanilla)) (ColumnInfo ('Postgres 'Vanilla))
-      -> m (Maybe [FieldParser n (RQL.AnnFieldG ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla)))])
+      -> m (Maybe [FieldParser n (AnnotatedField ('Postgres 'Vanilla))])
     relationshipFieldParser (TypeRelationship relName relType sourceName tableInfo fieldMapping) = runMaybeT do
       let tableName     = _tciName $ _tiCoreInfo tableInfo
           fieldName     = unRelationshipName relName
@@ -229,7 +225,7 @@ actionOutputFields outputType annotatedObject = do
             P.subselection_ fieldName desc selectionSetParser
               <&> \fields -> RQL.AFObjectRelation $ RQL.AnnRelationSelectG tableRelName columnMapping $
                              RQL.AnnObjectSelectG fields tableName $
-                             fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter tablePerms
+                             (fmap partialSQLExpToUnpreparedValue <$> spiFilter tablePerms)
         ArrRel -> do
           let desc = Just $ G.Description "An array relationship"
           otherTableParser <- lift $ selectTable sourceName tableInfo fieldName desc tablePerms
@@ -337,7 +333,7 @@ customScalarParser = \case
            | _stdName == floatScalar  -> J.toJSON <$> P.float
            | _stdName == stringScalar -> J.toJSON <$> P.string
            | _stdName == boolScalar   -> J.toJSON <$> P.boolean
-           | otherwise                -> P.namedJSON _stdName _stdDescription
+           | otherwise                -> P.jsonScalar _stdName _stdDescription
   ASTReusedScalar name pgScalarType ->
     let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
     in P.Parser

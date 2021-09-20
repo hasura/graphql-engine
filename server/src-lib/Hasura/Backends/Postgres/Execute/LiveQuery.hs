@@ -32,9 +32,9 @@ import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.Column (toTxtValue)
 import           Hasura.Backends.Postgres.Types.Column
 import           Hasura.Base.Error
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Parser
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Session
@@ -99,7 +99,7 @@ toSQLFromItem
      , DS.PostgresAnnotatedFieldJSON pgKind
      )
   => S.Alias
-  -> QueryDB ('Postgres pgKind) S.SQLExp
+  -> QueryDB ('Postgres pgKind) (Const Void) S.SQLExp
   -> S.FromItem
 toSQLFromItem = flip \case
   QDBSingleRow    s -> S.mkSelFromItem $ DS.mkSQLSelect JASSingleObject s
@@ -111,7 +111,7 @@ mkMultiplexedQuery
   :: ( Backend ('Postgres pgKind)
      , DS.PostgresAnnotatedFieldJSON pgKind
      )
-  => OMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) S.SQLExp)
+  => OMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) (Const Void) S.SQLExp)
   -> MultiplexedQuery
 mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkSelect
   { S.selExtr =
@@ -150,8 +150,12 @@ mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkS
 -- expressions that refer to the @result_vars@ input object, collecting information
 -- about various parameters of the query along the way.
 resolveMultiplexedValue
-  :: (MonadState (QueryParametersInfo ('Postgres pgKind)) m)
-  => SessionVariables -> UnpreparedValue ('Postgres pgKind) -> m S.SQLExp
+  :: ( MonadState (QueryParametersInfo ('Postgres pgKind)) m
+     , MonadError QErr m
+     )
+  => SessionVariables
+  -> UnpreparedValue ('Postgres pgKind)
+  -> m S.SQLExp
 resolveMultiplexedValue allSessionVars = \case
   UVParameter varM colVal -> do
     varJsonPath <- case fmap PS.getName varM of
@@ -164,6 +168,10 @@ resolveMultiplexedValue allSessionVars = \case
         pure ["synthetic", tshow syntheticVarIndex]
     pure $ fromResVars (CollectableTypeScalar $ unsafePGColumnToBackend $ cvType colVal) varJsonPath
   UVSessionVar ty sessVar -> do
+    _ <- getSessionVariableValue sessVar allSessionVars
+          `onNothing`
+            throw400 NotFound
+              ("missing session variable: "  <>> sessionVariableToText sessVar)
     modifying qpiReferencedSessionVariables (Set.insert sessVar)
     pure $ fromResVars ty ["session", sessionVariableToText sessVar]
   UVLiteral sqlExp -> pure sqlExp

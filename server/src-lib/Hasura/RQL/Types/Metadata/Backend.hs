@@ -2,9 +2,9 @@ module Hasura.RQL.Types.Metadata.Backend where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                    as Env
+import qualified Data.Environment               as Env
 
-import           Control.Monad.Trans.Control         (MonadBaseControl)
+import           Control.Monad.Trans.Control    (MonadBaseControl)
 import           Data.Aeson
 
 import           Hasura.Base.Error
@@ -16,16 +16,16 @@ import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Relationship
-import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
-import           Hasura.Server.Types
 
-
-class (Backend b) => BackendMetadata (b :: BackendType) where
+class ( Backend b
+      , Eq (BooleanOperators b (PartialSQLExp b))
+      , Hashable (BooleanOperators b (PartialSQLExp b))
+      ) => BackendMetadata (b :: BackendType) where
 
   buildComputedFieldInfo
     :: (MonadError QErr m)
@@ -33,16 +33,9 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
     -> TableName b
     -> ComputedFieldName
     -> ComputedFieldDefinition b
-    -> RawFunctionInfo -- TODO: Parameterize this too
+    -> RawFunctionInfo b
     -> Maybe Text
     -> m (ComputedFieldInfo b)
-
-  buildRemoteFieldInfo
-    :: (MonadError QErr m)
-    => RemoteRelationship b
-    -> [ColumnInfo b]
-    -> RemoteSchemaMap
-    -> m (RemoteFieldInfo b, [SchemaDependency])
 
   fetchAndValidateEnumValues
     :: (MonadIO m, MonadBaseControl IO m)
@@ -55,9 +48,10 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
   -- | Function that resolves the connection related source configuration, and
   -- creates a connection pool (and other related parameters) in the process
   resolveSourceConfig
-    :: (MonadIO m, MonadBaseControl IO m, MonadResolveSource m)
+    :: (MonadIO m, MonadResolveSource m)
     => SourceName
     -> SourceConnConfiguration b
+    -> Env.Environment
     -> m (Either QErr (SourceConfig b))
 
   -- | Function that introspects a database for tables, columns, functions etc.
@@ -66,30 +60,12 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
     => SourceConfig b
     -> m (Either QErr (ResolvedSource b))
 
-  createTableEventTrigger
-    :: (MonadBaseControl IO m, MonadIO m)
-    => ServerConfigCtx
-    -> SourceConfig b
-    -> TableName b
-    -> [ColumnInfo b]
-    -> TriggerName
-    -> TriggerOpsDef
-    -> m (Either QErr ())
-
-  buildEventTriggerInfo
-    :: MonadError QErr m
-    => Env.Environment
-    -> SourceName
-    -> TableName b
-    -> EventTriggerConf
-    -> m (EventTriggerInfo, [SchemaDependency])
-
   parseBoolExpOperations
     :: (MonadError QErr m, TableCoreInfoRM b m)
     => ValueParser b m v
     -> TableName b
     -> FieldInfoMap (FieldInfo b)
-    -> ColumnInfo b
+    -> ColumnReference b
     -> Value
     -> m [OpExpG b v]
 
@@ -99,8 +75,8 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
     -> FunctionName b
     -> SystemDefined
     -> FunctionConfig
-    -> [FunctionPermissionMetadata]
-    -> RawFunctionInfo
+    -> FunctionPermissionsMap
+    -> RawFunctionInfo b
     -> m (FunctionInfo b, SchemaDependency)
 
   updateColumnInEventTrigger
@@ -108,8 +84,8 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
     -> Column b
     -> Column b
     -> TableName b
-    -> EventTriggerConf
-    -> EventTriggerConf
+    -> EventTriggerConf b
+    -> EventTriggerConf b
 
   parseCollectableType
     :: (MonadError QErr m)

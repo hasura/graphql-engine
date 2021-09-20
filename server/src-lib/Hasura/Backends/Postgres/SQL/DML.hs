@@ -7,6 +7,7 @@ import qualified Data.Aeson.Casing                  as J
 import qualified Data.HashMap.Strict                as HM
 import qualified Text.Builder                       as TB
 
+import           Data.Int                           (Int64)
 import           Data.String                        (fromString)
 import           Data.Text.Extended
 
@@ -210,9 +211,10 @@ mkQual :: QualifiedTable -> Qual
 mkQual = QualTable
 
 instance ToSQL Qual where
-  toSQL (QualifiedIdentifier i tyM) = toSQL i <> toSQL tyM
-  toSQL (QualTable qt)              = toSQL qt
-  toSQL (QualVar v)                 = TB.text v
+  toSQL (QualifiedIdentifier i Nothing)   = toSQL i
+  toSQL (QualifiedIdentifier i (Just ty)) = parenB (toSQL i <> toSQL ty)
+  toSQL (QualTable qt)                    = toSQL qt
+  toSQL (QualVar v)                       = TB.text v
 
 mkQIdentifier :: (IsIdentifier a, IsIdentifier b) => a -> b -> QIdentifier
 mkQIdentifier q t = QIdentifier (QualifiedIdentifier (toIdentifier q) Nothing) (toIdentifier t)
@@ -375,7 +377,7 @@ instance ToSQL SQLExp where
   toSQL (SEStar Nothing) =
     TB.char '*'
   toSQL (SEStar (Just qual)) =
-    mconcat [parenB (toSQL qual), TB.char '.', TB.char '*']
+    mconcat [toSQL qual, TB.char '.', TB.char '*']
   toSQL (SEIdentifier iden) =
     toSQL iden
   toSQL (SERowIdentifier iden) =
@@ -410,6 +412,9 @@ instance ToSQL SQLExp where
 
 intToSQLExp :: Int -> SQLExp
 intToSQLExp = SEUnsafe . tshow
+
+int64ToSQLExp :: Int64 -> SQLExp
+int64ToSQLExp = SEUnsafe . tshow
 
 -- | Extractor can be used to apply Postgres alias to a column
 data Extractor = Extractor !SQLExp !(Maybe Alias)

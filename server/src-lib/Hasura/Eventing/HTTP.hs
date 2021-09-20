@@ -10,7 +10,6 @@
 module Hasura.Eventing.HTTP
   ( HTTPErr(..)
   , HTTPResp(..)
-  , tryWebhook
   , runHTTP
   , isNetworkError
   , isNetworkErrorHC
@@ -19,10 +18,8 @@ module Hasura.Eventing.HTTP
   , ExtraLogContext(..)
   , RequestDetails (..)
   , EventId
-  , Invocation(..)
   , InvocationVersion
   , Response(..)
-  , ResponseLogBehavior(..)
   , WebhookRequest(..)
   , WebhookResponse(..)
   , ClientError(..)
@@ -30,116 +27,67 @@ module Hasura.Eventing.HTTP
   , mkClientErr
   , mkWebhookReq
   , mkResp
-  , LogEnvHeaders
-  , encodeHeader
-  , decodeHeader
+  , mkInvocationResp
+  , LogBehavior(..)
+  , ResponseLogBehavior(..)
+  , HeaderLogBehavior(..)
+  , prepareHeaders
   , getRetryAfterHeaderFromHTTPErr
   , getRetryAfterHeaderFromResp
   , parseRetryHeaderValue
-  , TriggerTypes(..)
   , invocationVersionET
   , invocationVersionST
+  , mkRequest
+  , invokeRequest
   ) where
 
-import qualified Data.ByteString               as BS
-import qualified Data.ByteString.Lazy          as LBS
-import qualified Data.CaseInsensitive          as CI
-import qualified Data.HashMap.Lazy             as HML
-import qualified Data.TByteString              as TBS
-import qualified Data.Text                     as T
-import qualified Data.Text.Encoding            as TE
-import qualified Data.Text.Encoding.Error      as TE
-import qualified Data.Time.Clock               as Time
-import qualified Network.HTTP.Client           as HTTP
-import qualified Network.HTTP.Types            as HTTP
+import qualified Data.ByteString                   as BS
+import qualified Data.ByteString.Lazy              as LBS
+import qualified Data.CaseInsensitive              as CI
+import qualified Data.HashMap.Lazy                 as HML
+import qualified Data.TByteString                  as TBS
+import qualified Data.Text                         as T
+import qualified Data.Text.Encoding                as TE
+import qualified Data.Text.Encoding.Error          as TE
+import qualified Network.HTTP.Client.Transformable as HTTP
 
-import           Control.Exception             (try)
+import           Control.Exception                 (try)
+import           Control.Lens                      (set)
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Either
 import           Data.Has
-import           Data.Int                      (Int64)
+import           Data.Int                          (Int64)
+import           Hasura.HTTP                       (HttpException (..), addDefaultHeaders)
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.DDL.RequestTransform   (RequestTransform, applyRequestTransform)
+import           Hasura.RQL.Types.Common           (ResolvedWebhook (..))
 import           Hasura.RQL.Types.EventTrigger
+import           Hasura.RQL.Types.Eventing
+import           Hasura.Server.Version             (HasVersion)
 import           Hasura.Tracing
 
-type LogEnvHeaders = Bool
+data LogBehavior =
+  LogBehavior
+  { _lbHeader   :: !HeaderLogBehavior
+  , _lbResponse :: !ResponseLogBehavior
+  }
+
+data HeaderLogBehavior = LogEnvValue | LogEnvVarname
+  deriving (Show, Eq)
+
+data ResponseLogBehavior = LogSanitisedResponse | LogEntireResponse
+  deriving (Show, Eq)
 
 retryAfterHeader :: CI.CI Text
 retryAfterHeader = "Retry-After"
 
-data WebhookRequest
-  = WebhookRequest
-  { _rqPayload :: Value
-  , _rqHeaders :: [HeaderConf]
-  , _rqVersion :: Text
-  }
-$(deriveToJSON hasuraJSON{omitNothingFields=True} ''WebhookRequest)
-
-data WebhookResponse
-  = WebhookResponse
-  { _wrsBody    :: TBS.TByteString
-  , _wrsHeaders :: [HeaderConf]
-  , _wrsStatus  :: Int
-  }
-$(deriveToJSON hasuraJSON{omitNothingFields=True} ''WebhookResponse)
-
-newtype ClientError =  ClientError { _ceMessage :: TBS.TByteString}
-$(deriveToJSON hasuraJSON{omitNothingFields=True} ''ClientError)
-
-type InvocationVersion = Text
-
-invocationVersionET :: InvocationVersion
-invocationVersionET = "2"
-
-invocationVersionST :: InvocationVersion
-invocationVersionST = "1"
-
--- | There are two types of events: EventType (for event triggers) and ScheduledType (for scheduled triggers)
-data TriggerTypes = EventType | ScheduledType
-
-data Response (a :: TriggerTypes) =
-  ResponseHTTP WebhookResponse | ResponseError ClientError
-
-instance ToJSON (Response 'EventType) where
-  toJSON (ResponseHTTP resp) = object
-    [ "type" .= String "webhook_response"
-    , "data" .= toJSON resp
-    , "version" .= invocationVersionET
-    ]
-  toJSON (ResponseError err) = object
-    [ "type" .= String "client_error"
-    , "data" .= toJSON err
-    , "version" .= invocationVersionET
-    ]
-
-instance ToJSON (Response 'ScheduledType) where
-  toJSON (ResponseHTTP resp) = object
-    [ "type" .= String "webhook_response"
-    , "data" .= toJSON resp
-    , "version" .= invocationVersionST
-    ]
-  toJSON (ResponseError err) = object
-    [ "type" .= String "client_error"
-    , "data" .= toJSON err
-    , "version" .= invocationVersionST
-    ]
-
-
-data Invocation (a :: TriggerTypes)
-  = Invocation
-  { iEventId  :: EventId
-  , iStatus   :: Int
-  , iRequest  :: WebhookRequest
-  , iResponse :: Response a
-  }
-
 data ExtraLogContext
   = ExtraLogContext
-  { elEventCreatedAt :: Maybe Time.UTCTime
-  , elEventId        :: EventId
+  { elEventId   :: !EventId
+  , elEventName :: !(Maybe TriggerName)
   } deriving (Show, Eq)
 
 data HTTPResp (a :: TriggerTypes)
@@ -149,7 +97,6 @@ data HTTPResp (a :: TriggerTypes)
    , hrsBody    :: !TBS.TByteString
    , hrsSize    :: !Int64
    } deriving (Show, Eq)
-
 $(deriveToJSON hasuraJSON{omitNothingFields=True} ''HTTPResp)
 
 instance ToEngineLog (HTTPResp 'EventType) Hasura where
@@ -159,22 +106,18 @@ instance ToEngineLog (HTTPResp 'ScheduledType) Hasura where
   toEngineLog resp = (LevelInfo, scheduledTriggerLogType, toJSON resp)
 
 data HTTPErr (a :: TriggerTypes)
-  = HClient !HTTP.HttpException
-  | HParse !HTTP.Status !String
+  = HClient !HttpException
   | HStatus !(HTTPResp a)
   | HOther !String
   deriving (Show)
 
 instance ToJSON (HTTPErr a) where
   toJSON err = toObj $ case err of
-    (HClient e) -> ("client", toJSON $ show e)
-    (HParse st e) ->
-      ( "parse"
-      , toJSON (HTTP.statusCode st,  show e)
-      )
+    (HClient httpException) ->
+      ("client", toJSON httpException)
     (HStatus resp) ->
       ("status", toJSON resp)
-    (HOther e) -> ("internal", toJSON $ show e)
+    (HOther e) -> ("internal", toJSON e)
     where
       toObj :: (Text, Value) -> Value
       toObj (k, v) = object [ "type" .= k
@@ -200,13 +143,13 @@ mkHTTPResp resp =
     decodeHeader (hdrName, hdrVal)
       = HeaderConf (decodeBS $ CI.original hdrName) (HVValue (decodeBS hdrVal))
 
-newtype RequestDetails
-  = RequestDetails { _rdSize :: Int64 }
+data RequestDetails
+  = RequestDetails { _rdOriginalRequest    :: HTTP.Request
+                   , _rdOriginalSize       :: Int64
+                   , _rdTransformedRequest :: Maybe HTTP.Request
+                   , _rdTransformedSize    :: Maybe Int64
+                   }
 $(deriveToJSON hasuraJSON ''RequestDetails)
-
--- TODO(swann): move elsewhere? it could be useful more generally
-data ResponseLogBehavior = LogSanitisedResponse | LogEntireResponse
-  deriving (Show, Eq)
 
 data HTTPRespExtra (a :: TriggerTypes)
   = HTTPRespExtra
@@ -221,19 +164,22 @@ data HTTPRespExtra (a :: TriggerTypes)
 instance ToJSON (HTTPRespExtra a) where
   toJSON (HTTPRespExtra resp ctxt req logResp) =
     case resp of
-      Left errResp -> object
+      Left errResp -> object $
         [ "response" .= toJSON errResp
         , "request" .= toJSON req
         , "event_id" .= elEventId ctxt
-        ]
-      Right okResp -> object
+        ] ++ eventName
+      Right okResp -> object $
         [ "response" .= case logResp of
             LogEntireResponse    -> toJSON okResp
             LogSanitisedResponse -> sanitisedRespJSON okResp
         , "request" .= toJSON req
         , "event_id" .= elEventId ctxt
-        ]
+        ] ++ eventName
     where
+      eventName = case elEventName ctxt of
+        Just name -> [ "event_name" .= name ]
+        Nothing   -> []
       sanitisedRespJSON v
         = Object $ HML.fromList
         [ "size" .= hrsSize v
@@ -251,12 +197,13 @@ isNetworkError = \case
   HClient he -> isNetworkErrorHC he
   _          -> False
 
-isNetworkErrorHC :: HTTP.HttpException -> Bool
-isNetworkErrorHC = \case
-  HTTP.HttpExceptionRequest _ (HTTP.ConnectionFailure _) -> True
-  HTTP.HttpExceptionRequest _ HTTP.ConnectionTimeout     -> True
-  HTTP.HttpExceptionRequest _ HTTP.ResponseTimeout       -> True
-  _                                                      -> False
+isNetworkErrorHC :: HttpException -> Bool
+isNetworkErrorHC (HttpException exception) =
+  case exception of
+    HTTP.HttpExceptionRequest _ (HTTP.ConnectionFailure _) -> True
+    HTTP.HttpExceptionRequest _ HTTP.ConnectionTimeout     -> True
+    HTTP.HttpExceptionRequest _ HTTP.ResponseTimeout       -> True
+    _                                                      -> False
 
 anyBodyParser :: HTTP.Response LBS.ByteString -> Either (HTTPErr a) (HTTPResp a)
 anyBodyParser resp = do
@@ -289,11 +236,11 @@ logHTTPForET
   => Either (HTTPErr 'EventType) (HTTPResp 'EventType)
   -> ExtraLogContext
   -> RequestDetails
-  -> ResponseLogBehavior
+  -> LogBehavior
   -> m ()
-logHTTPForET eitherResp extraLogCtx reqDetails logResp = do
+logHTTPForET eitherResp extraLogCtx reqDetails logBehavior = do
   logger :: Logger Hasura <- asks getter
-  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx reqDetails logResp
+  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx reqDetails (_lbResponse logBehavior)
 
 logHTTPForST
   :: ( MonadReader r m
@@ -303,48 +250,59 @@ logHTTPForST
   => Either (HTTPErr 'ScheduledType) (HTTPResp 'ScheduledType)
   -> ExtraLogContext
   -> RequestDetails
-  -> ResponseLogBehavior
+  -> LogBehavior
   -> m ()
-logHTTPForST eitherResp extraLogCtx reqDetails logResp = do
+logHTTPForST eitherResp extraLogCtx reqDetails logBehavior = do
   logger :: Logger Hasura <- asks getter
-  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx reqDetails logResp
+  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx reqDetails (_lbResponse logBehavior)
 
 runHTTP :: (MonadIO m) => HTTP.Manager -> HTTP.Request -> m (Either (HTTPErr a) (HTTPResp a))
 runHTTP manager req = do
-  res <- liftIO $ try $ HTTP.httpLbs req manager
-  return $ either (Left . HClient) anyBodyParser res
+  res <- liftIO $ try $ HTTP.performRequest req manager
+  return $ either (Left . HClient . HttpException) anyBodyParser res
 
-tryWebhook ::
-  ( MonadReader r m
-  , Has HTTP.Manager r
-  , MonadIO m
-  , MonadError (HTTPErr a) m
-  , MonadTrace m
-  )
+mkRequest ::
+  MonadError (HTTPErr a) m
   => [HTTP.Header]
   -> HTTP.ResponseTimeout
   -> LBS.ByteString
   -- ^ the request body. It is passed as a 'BL.Bytestring' because we need to
   -- log the request size. As the logging happens outside the function, we pass
   -- it the final request body, instead of 'Value'
-  -> String
-  -> m (HTTPResp a)
-tryWebhook headers timeout payload webhook = do
-  initReqE <- liftIO $ try $ HTTP.parseRequest webhook
+  -> Maybe RequestTransform
+  -> ResolvedWebhook
+  -> m RequestDetails
+mkRequest headers timeout payload mRequestTransform (ResolvedWebhook webhook) =
+  case HTTP.mkRequestEither webhook of
+    Left excp -> throwError $ HClient $ HttpException excp
+    Right initReq ->
+      let req = initReq & set HTTP.method "POST"
+                        & set HTTP.headers headers
+                        & set HTTP.body (Just payload)
+                        & set HTTP.timeout timeout
+
+          -- TODO(Solomon) Add SessionVariables
+          transformedReq = (\rt -> applyRequestTransform rt req Nothing) <$> mRequestTransform
+          transformedReqSize = fmap HTTP.getReqSize transformedReq
+      in pure $ RequestDetails req (LBS.length payload) transformedReq transformedReqSize
+
+invokeRequest ::
+  ( MonadReader r m
+  , Has HTTP.Manager r
+  , MonadIO m
+  , MonadTrace m
+  )
+  => RequestDetails
+  -> ((Either (HTTPErr a) (HTTPResp a)) -> RequestDetails -> m ())
+  -> m (Either (HTTPErr a) (HTTPResp a))
+invokeRequest reqDetails@RequestDetails{_rdOriginalRequest, _rdTransformedRequest} logger = do
+  let finalReq = fromMaybe _rdOriginalRequest _rdTransformedRequest
   manager <- asks getter
-  case initReqE of
-    Left excp -> throwError $ HClient excp
-    Right initReq -> do
-      let req =
-            initReq
-              { HTTP.method = "POST"
-              , HTTP.requestHeaders = headers
-              , HTTP.requestBody = HTTP.RequestBodyLBS payload
-              , HTTP.responseTimeout = timeout
-              }
-      tracedHttpRequest req $ \req' -> do
-        eitherResp <- runHTTP manager req'
-        onLeft eitherResp throwError
+  -- Perform the HTTP Request
+  eitherResp <- tracedHttpRequest finalReq $ runHTTP manager
+  -- Log the result along with the pre/post transformation Request data
+  logger eitherResp reqDetails
+  pure eitherResp
 
 mkResp :: Int -> TBS.TByteString -> [HeaderConf] -> Response a
 mkResp status payload headers =
@@ -359,8 +317,17 @@ mkClientErr message =
 mkWebhookReq :: Value -> [HeaderConf] -> InvocationVersion -> WebhookRequest
 mkWebhookReq payload headers = WebhookRequest payload headers
 
+mkInvocationResp :: Maybe Int -> TBS.TByteString -> [HeaderConf] -> Response a
+mkInvocationResp statusMaybe responseBody responseHeaders =
+  case statusMaybe of
+    Nothing     -> mkClientErr responseBody
+    Just status ->
+      if isClientError status
+      then mkClientErr responseBody
+      else mkResp status responseBody responseHeaders
+
 isClientError :: Int -> Bool
-isClientError status = status >= 1000
+isClientError status = status >= 300
 
 encodeHeader :: EventHeaderInfo -> HTTP.Header
 encodeHeader (EventHeaderInfo hconf cache) =
@@ -370,20 +337,33 @@ encodeHeader (EventHeaderInfo hconf cache) =
    in (ciname, value)
 
 decodeHeader
-  :: LogEnvHeaders -> [EventHeaderInfo] -> (HTTP.HeaderName, BS.ByteString)
+  :: LogBehavior -> [EventHeaderInfo] -> (HTTP.HeaderName, BS.ByteString)
   -> HeaderConf
-decodeHeader logenv headerInfos (hdrName, hdrVal)
+decodeHeader logBehavior headerInfos (hdrName, hdrVal)
   = let name = decodeBS $ CI.original hdrName
         getName ehi = let (HeaderConf name' _) = ehiHeaderConf ehi
                       in name'
         mehi = find (\hi -> getName hi == name) headerInfos
     in case mehi of
          Nothing -> HeaderConf name (HVValue (decodeBS hdrVal))
-         Just ehi -> if logenv
-                     then HeaderConf name (HVValue (ehiCachedValue ehi))
-                     else ehiHeaderConf ehi
+         Just ehi -> case _lbHeader logBehavior of
+                       LogEnvValue   -> HeaderConf name (HVValue (ehiCachedValue ehi))
+                       LogEnvVarname -> ehiHeaderConf ehi
    where
      decodeBS = TE.decodeUtf8With TE.lenientDecode
+
+-- | Encodes given request headers along with our 'defaultHeaders' and returns
+-- them along with the re-decoded set of headers (for logging purposes).
+prepareHeaders
+  :: HasVersion
+  => LogBehavior
+  -> [EventHeaderInfo]
+  -> ([HTTP.Header], [HeaderConf])
+prepareHeaders logBehavior headerInfos = (headers, logHeaders)
+  where
+    encodedHeaders = map encodeHeader headerInfos
+    headers = addDefaultHeaders encodedHeaders
+    logHeaders = map (decodeHeader logBehavior headerInfos) headers
 
 getRetryAfterHeaderFromHTTPErr :: HTTPErr a -> Maybe Text
 getRetryAfterHeaderFromHTTPErr (HStatus resp) = getRetryAfterHeaderFromResp resp

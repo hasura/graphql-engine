@@ -5,32 +5,25 @@ module Hasura.Backends.BigQuery.Instances.Types where
 import           Hasura.Prelude
 
 import qualified Language.GraphQL.Draft.Syntax    as G
-import qualified Text.Builder                     as TB
 
 import           Data.Aeson
-import           Data.Functor.Const
-import           Hasura.SQL.Types
 
 import qualified Hasura.Backends.BigQuery.Source  as BigQuery
-import qualified Hasura.Backends.BigQuery.ToQuery as BigQuery (fromExpression, toTextPretty)
 import qualified Hasura.Backends.BigQuery.Types   as BigQuery
 
+import           Hasura.Backends.BigQuery.ToQuery ()
 import           Hasura.Base.Error
-import           Hasura.RQL.DDL.Headers           ()
 import           Hasura.RQL.Types.Backend
 import           Hasura.SQL.Backend
 
-
-instance ToSQL BigQuery.Expression where
-  toSQL = TB.text . BigQuery.toTextPretty . BigQuery.fromExpression
 
 instance Backend 'BigQuery where
   type SourceConfig            'BigQuery = BigQuery.BigQuerySourceConfig
   type SourceConnConfiguration 'BigQuery = BigQuery.BigQueryConnSourceConfig
   type Identifier              'BigQuery = Void
-  type Alias                   'BigQuery = BigQuery.EntityAlias
   type TableName               'BigQuery = BigQuery.TableName
   type FunctionName            'BigQuery = BigQuery.FunctionName
+  type RawFunctionInfo         'BigQuery = Void
   type FunctionArgType         'BigQuery = Void
   type ConstraintName          'BigQuery = Void
   type BasicOrderType          'BigQuery = BigQuery.Order
@@ -41,13 +34,12 @@ instance Backend 'BigQuery where
   type ScalarType              'BigQuery = BigQuery.ScalarType
   type SQLExpression           'BigQuery = BigQuery.Expression
   type SQLOperator             'BigQuery = BigQuery.Op
-  type BooleanOperators 'BigQuery = Const Void
-  type XComputedField          'BigQuery = Void
-  type XRemoteField            'BigQuery = Void
+  type BooleanOperators        'BigQuery = Const Void
 
-  type XRelay                  'BigQuery = Void
+  type XComputedField          'BigQuery = XDisable
+  type XRelay                  'BigQuery = XDisable
   type XNodesAgg               'BigQuery = XEnable
-  type XDistinct               'BigQuery = Void
+  type XNestedInserts          'BigQuery = XDisable
 
   type ExtraTableMetadata      'BigQuery = ()
 
@@ -82,7 +74,8 @@ instance Backend 'BigQuery where
   functionGraphQLName = error "functionGraphQLName"
 
   scalarTypeGraphQLName :: ScalarType 'BigQuery -> Either QErr G.Name
-  scalarTypeGraphQLName = error "scalarTypeGraphQLName"
+  scalarTypeGraphQLName = BigQuery.scalarTypeGraphQLName
 
   snakeCaseTableName :: TableName 'BigQuery -> Text
-  snakeCaseTableName = error "snakeCaseTableName"
+  snakeCaseTableName BigQuery.TableName { tableName, tableNameSchema } =
+    tableNameSchema <> "_" <> tableName

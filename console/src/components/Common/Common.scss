@@ -65,9 +65,9 @@ table {
 
 table thead tr th,
 table tbody tr th {
-  background-color: #f2f2f2 !important;
+  background-color: #f2f2f2;
   color: #4d4d4d;
-  font-weight: 600 !important;
+  font-weight: 600;
 }
 
 .full_container {
@@ -1583,7 +1583,7 @@ code {
 }
 
 /* container height subtracting top header and bottom scroll bar */
-$mainContainerHeight: calc(100vh - 50px - 20px);
+$mainContainerHeight: calc(100vh - 54px);
 
 /* Min container width below which horizontal scroll will appear */
 $minContainerWidth: 1200px;

@@ -1,5 +1,3 @@
-{-# LANGUAGE StrictData #-}
-
 {-| This module implements /fragment inlining/, which converts all fragment
 spreads in a GraphQL query to inline fragments. For example, given a query like
 

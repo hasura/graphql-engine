@@ -12,6 +12,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -23,34 +24,34 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/pgdump"
-	"github.com/hasura/graphql-engine/cli/internal/hasura/v1graphql"
-	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/pgdump"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1graphql"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/database/hasuradb"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/v1metadata"
-	"github.com/hasura/graphql-engine/cli/internal/hasura/v1query"
-	"github.com/hasura/graphql-engine/cli/internal/hasura/v2query"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1metadata"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1query"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v2query"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/commonmetadata"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/commonmetadata"
 
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 
-	"github.com/hasura/graphql-engine/cli/internal/statestore/settings"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/settings"
 
-	"github.com/hasura/graphql-engine/cli/internal/statestore/migrations"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/migrations"
 
-	"github.com/hasura/graphql-engine/cli/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
 	"github.com/Masterminds/semver"
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
-	"github.com/hasura/graphql-engine/cli/plugins"
-	"github.com/hasura/graphql-engine/cli/telemetry"
-	"github.com/hasura/graphql-engine/cli/util"
-	"github.com/hasura/graphql-engine/cli/version"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
+	"github.com/hasura/graphql-engine/cli/v2/plugins"
+	"github.com/hasura/graphql-engine/cli/v2/telemetry"
+	"github.com/hasura/graphql-engine/cli/v2/util"
+	"github.com/hasura/graphql-engine/cli/v2/version"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -331,6 +332,9 @@ type Config struct {
 	// Version of the config.
 	Version ConfigVersion `yaml:"version,omitempty"`
 
+	// DisableInteractive disables interactive prompt
+	DisableInteractive bool `yaml:"disable_interactive,omitempty"`
+
 	// ServerConfig to be used by CLI to contact server.
 	ServerConfig `yaml:",inline"`
 
@@ -351,7 +355,8 @@ type Config struct {
 type ExecutionContext struct {
 	// CMDName is the name of CMD (os.Args[0]). To be filled in later to
 	// correctly render example strings etc.
-	CMDName string
+	CMDName        string
+	Stderr, Stdout io.Writer
 
 	// ID is a unique ID for this Execution
 	ID string
@@ -441,6 +446,15 @@ type ExecutionContext struct {
 	// more details in: https://github.com/hasura/graphql-engine/issues/6861
 	DisableAutoStateMigration bool
 
+	// CliExtDestinationDir is the directory path that will be used to setup cli-ext
+	CliExtDestinationDir string
+
+	// CliExtDestinationBinPath is the full path of the cli-ext binary
+	CliExtDestinationBinPath string
+
+	// CLIExtSourceBinPath is the full path to a copy of cli-ext binary in the local file system
+	CliExtSourceBinPath string
+
 	// proPluginVersionValidated is used to avoid validating pro plugin multiple times
 	// while preparing the execution context
 	proPluginVersionValidated bool
@@ -453,7 +467,10 @@ type Source struct {
 
 // NewExecutionContext returns a new instance of execution context
 func NewExecutionContext() *ExecutionContext {
-	ec := &ExecutionContext{}
+	ec := &ExecutionContext{
+		Stderr: os.Stderr,
+		Stdout: os.Stdout,
+	}
 	ec.Telemetry = telemetry.BuildEvent()
 	ec.Telemetry.Version = version.BuildVersion
 	return ec
@@ -705,12 +722,16 @@ func (ec *ExecutionContext) Validate() error {
 		return err
 	}
 	// check if server is using metadata v3
-	requestUri := ""
-	if ec.Config.APIPaths.V1Query != "" {
-		requestUri = fmt.Sprintf("%s/%s", ec.Config.Endpoint, ec.Config.APIPaths.V1Query)
-	} else {
-		requestUri = fmt.Sprintf("%s/%s", ec.Config.Endpoint, "v1/query")
+	uri, err := url.Parse(ec.Config.Endpoint)
+	if err != nil {
+		return fmt.Errorf("error while parsing the endpoint :%w", err)
 	}
+	if ec.Config.APIPaths.V1Query != "" {
+		uri.Path = path.Join(uri.Path, ec.Config.APIPaths.V1Query)
+	} else {
+		uri.Path = path.Join(uri.Path, "v1/query")
+	}
+	requestUri := uri.String()
 	metadata, err := commonmetadata.New(httpClient, requestUri).ExportMetadata()
 	if err != nil {
 		return err
@@ -801,7 +822,7 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetDefault("api_paths.config", "v1alpha1/config")
 	v.SetDefault("api_paths.pg_dump", "v1alpha1/pg_dump")
 	v.SetDefault("api_paths.version", "v1/version")
-	v.SetDefault("metadata_directory", "")
+	v.SetDefault("metadata_directory", DefaultMetadataDirectory)
 	v.SetDefault("migrations_directory", DefaultMigrationsDirectory)
 	v.SetDefault("seeds_directory", DefaultSeedsDirectory)
 	v.SetDefault("actions.kind", "synchronous")
@@ -820,7 +841,8 @@ func (ec *ExecutionContext) readConfig() error {
 	}
 
 	ec.Config = &Config{
-		Version: ConfigVersion(v.GetInt("version")),
+		Version:            ConfigVersion(v.GetInt("version")),
+		DisableInteractive: v.GetBool("disable_interactive"),
 		ServerConfig: ServerConfig{
 			Endpoint:    v.GetString("endpoint"),
 			AdminSecret: adminSecret,
@@ -876,7 +898,7 @@ func (ec *ExecutionContext) readConfig() error {
 func (ec *ExecutionContext) setupSpinner() {
 	if ec.Spinner == nil {
 		spnr := spinner.New(spinner.CharSets[7], 100*time.Millisecond)
-		spnr.Writer = os.Stderr
+		spnr.Writer = ec.Stderr
 		ec.Spinner = spnr
 	}
 }
@@ -916,7 +938,7 @@ func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
 		logger := logrus.New()
 		ec.Logger = logger
-		ec.Logger.SetOutput(os.Stderr)
+		ec.Logger.SetOutput(ec.Stderr)
 	}
 
 	if ec.LogLevel != "" {
@@ -969,7 +991,7 @@ func GetMigrationsStateStore(ec *ExecutionContext) statestore.MigrationsStateSto
 	return migrations.NewCatalogStateStore(statestore.NewCLICatalogState(ec.APIClient.V1Metadata))
 }
 
-func GetSettingsStateStore(ec *ExecutionContext) statestore.SettingsStateStore {
+func GetSettingsStateStore(ec *ExecutionContext, databaseName string) statestore.SettingsStateStore {
 	const (
 		defaultSettingsTable = "migration_settings"
 		defaultSchema        = "hdb_catalog"
@@ -977,9 +999,9 @@ func GetSettingsStateStore(ec *ExecutionContext) statestore.SettingsStateStore {
 
 	if ec.Config.Version <= V2 {
 		if !ec.HasMetadataV3 {
-			return settings.NewStateStoreHdbTable(ec.APIClient.V1Query, defaultSchema, defaultSettingsTable)
+			return settings.NewStateStoreHdbTable(ec.APIClient.V1Query, databaseName, defaultSchema, defaultSettingsTable)
 		}
-		return settings.NewStateStoreHdbTable(ec.APIClient.V2Query, defaultSchema, defaultSettingsTable)
+		return settings.NewStateStoreHdbTable(ec.APIClient.V2Query, databaseName, defaultSchema, defaultSettingsTable)
 	}
 	return settings.NewStateStoreCatalog(statestore.NewCLICatalogState(ec.APIClient.V1Metadata))
 }

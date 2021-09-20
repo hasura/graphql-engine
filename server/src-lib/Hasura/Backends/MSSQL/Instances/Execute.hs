@@ -3,47 +3,44 @@
 module Hasura.Backends.MSSQL.Instances.Execute
   (
     MultiplexedQuery'(..),
-    PreparedQuery'(..),
     multiplexRootReselect,
-    queryEnvJson
   )
   where
 
 import           Hasura.Prelude
 
 import qualified Data.Aeson.Extended                   as J
-import qualified Data.Environment                      as Env
+import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashSet                          as Set
 import qualified Data.List.NonEmpty                    as NE
 import qualified Data.Text.Extended                    as T
 import qualified Database.ODBC.SQLServer               as ODBC
 import qualified Language.GraphQL.Draft.Syntax         as G
-import qualified Network.HTTP.Client                   as HTTP
-import qualified Network.HTTP.Types                    as HTTP
 
+import qualified Hasura.RQL.Types.Column               as RQL
 import qualified Hasura.SQL.AnyBackend                 as AB
 
 import           Hasura.Backends.MSSQL.Connection
 import           Hasura.Backends.MSSQL.FromIr          as TSQL
 import           Hasura.Backends.MSSQL.Plan
-import           Hasura.Backends.MSSQL.SQL.Value       (toTxtEncodedVal)
+import           Hasura.Backends.MSSQL.SQL.Value       (txtEncodedColVal)
 import           Hasura.Backends.MSSQL.ToQuery
 import           Hasura.Backends.MSSQL.Types           as TSQL
 import           Hasura.Base.Error
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Parser
+import           Hasura.QueryTags
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 import           Hasura.Session
 
 
 instance BackendExecute 'MSSQL where
-  type PreparedQuery    'MSSQL = PreparedQuery'
+  type PreparedQuery    'MSSQL = Text
   type MultiplexedQuery 'MSSQL = MultiplexedQuery'
   type ExecutionMonad   'MSSQL = ExceptT QErr IO
-  getRemoteJoins = const []
 
   mkDBQueryPlan = msDBQueryPlan
   mkDBMutationPlan = msDBMutationPlan
@@ -52,110 +49,35 @@ instance BackendExecute 'MSSQL where
   mkLiveQueryExplain = msDBLiveQueryExplain
 
 
--- Prepared query
+-- Multiplexed query
 
-data PreparedQuery' = PreparedQuery'
-  { pqQueryString :: Text
-  , pqGraphQlEnv  :: PrepareState
-  , pqSession     :: SessionVariables
-  }
-
--- | Render as a JSON object the variables that have been collected from an RQL
--- expression.
-queryEnvJson :: PrepareState -> SessionVariables -> J.Value
-queryEnvJson (PrepareState posArgs namedArgs requiredSessionVars) sessionVars =
-  let sessionVarValues = filterSessionVariables (\k _ -> Set.member k requiredSessionVars) sessionVars
-  in J.object
-  [ "session" J..= sessionVarValues
-  , "namedArguments" J..= toTxtEncodedVal namedArgs
-  , "positionalArguments" J..= toTxtEncodedVal posArgs
-  ]
-
--- multiplexed query
 newtype MultiplexedQuery' = MultiplexedQuery' Reselect
 
 instance T.ToTxt MultiplexedQuery' where
   toTxt (MultiplexedQuery' reselect) = T.toTxt $ toQueryPretty $ fromReselect reselect
 
 
--- query
+-- Query
 
 msDBQueryPlan
   :: forall m.
      ( MonadError QErr m
      )
-  => Env.Environment
-  -> HTTP.Manager
-  -> [HTTP.Header]
-  -> UserInfo
+  => UserInfo
   -> SourceName
   -> SourceConfig 'MSSQL
-  -> QueryDB 'MSSQL (UnpreparedValue 'MSSQL)
-  -> m ExecutionStep
-msDBQueryPlan _env _manager _reqHeaders userInfo sourceName sourceConfig qrf = do
+  -> QueryDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL)
+  -> QueryTagsComment
+  -> m (DBStepInfo 'MSSQL)
+msDBQueryPlan userInfo sourceName sourceConfig qrf _queryTags = do
+  -- TODO (naveen): Append Query Tags to the query
   let sessionVariables = _uiSession userInfo
-  (statement, queryEnv) <- planQuery sessionVariables qrf
-  let selectWithEnv = joinEnv statement sessionVariables queryEnv
-      printer = fromSelect selectWithEnv
+  statement <- planQuery sessionVariables qrf
+  let printer = fromSelect statement
       queryString = ODBC.renderQuery $ toQueryPretty printer
       pool  = _mscConnectionPool sourceConfig
       odbcQuery = encJFromText <$> runJSONPathQuery pool (toQueryFlat printer)
-  pure
-    $ ExecStepDB []
-    . AB.mkAnyBackend
-    $ DBStepInfo @'MSSQL sourceName sourceConfig (Just $ PreparedQuery' queryString queryEnv sessionVariables) odbcQuery
-
-joinEnv :: Select -> SessionVariables -> PrepareState -> Select
-joinEnv querySelect sessionVars prepState =
-  querySelect
-    -- We *prepend* the variables of 'prepState' to the list of joins to make
-    -- them available in the @where@ clause as well as subsequent queries nested
-    -- in @join@ clauses.
-    { selectJoins = [prepJoin] <> selectJoins querySelect }
-
-  where
-    prepJoin :: Join
-    prepJoin = Join
-      { joinSource = JoinSelect $ (select
-          (
-            FromOpenJson
-              Aliased
-                { aliasedThing =
-                    OpenJson
-                      { openJsonExpression =
-                          ValueExpression (ODBC.TextValue $ lbsToTxt $ J.encode $ queryEnvJson prepState sessionVars)
-                      , openJsonWith =
-                          NE.fromList
-                            [ JsonField "session" Nothing
-                            , JsonField "namedArguments" Nothing
-                            , JsonField "positionalArguments" Nothing
-                            ]
-                      }
-                , aliasedAlias = rowAlias
-                }
-          )) {selectProjections = [ StarProjection ]
-        }
-      ,joinJoinAlias =
-          JoinAlias
-            { joinAliasEntity = rowAlias
-            , joinAliasField = Nothing
-            }
-      }
-
-select :: From -> Select
-select from =
-  Select
-    { selectFrom        = from
-    , selectTop         = NoTop
-    , selectProjections = []
-    , selectJoins       = []
-    , selectWhere       = Where []
-    , selectOrderBy     = Nothing
-    , selectFor         = NoFor
-    , selectOffset      = Nothing
-    }
-
-
+  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just $ queryString) odbcQuery
 
 runShowplan
   :: ODBC.Query -> ODBC.Connection -> IO [Text]
@@ -173,13 +95,12 @@ msDBQueryExplain
   -> UserInfo
   -> SourceName
   -> SourceConfig 'MSSQL
-  -> QueryDB 'MSSQL (UnpreparedValue 'MSSQL)
+  -> QueryDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL)
   -> m (AB.AnyBackend DBStepInfo)
 msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
   let sessionVariables = _uiSession userInfo
-  (statement, queryEnv) <- planQuery sessionVariables qrf
-  let selectWithEnv = joinEnv statement sessionVariables queryEnv
-      query         = toQueryPretty (fromSelect selectWithEnv)
+  statement <- planQuery sessionVariables qrf
+  let query         = toQueryPretty (fromSelect statement)
       queryString   = ODBC.renderQuery $ query
       pool          = _mscConnectionPool sourceConfig
       odbcQuery     =
@@ -205,6 +126,7 @@ msDBLiveQueryExplain (LiveQueryPlan plan sourceConfig variables) = do
       pool = _mscConnectionPool sourceConfig
   explainInfo <- withMSSQLPool pool (runShowplan query)
   pure $ LiveQueryPlanExplanation (T.toTxt query) explainInfo variables
+
 
 --------------------------------------------------------------------------------
 -- Producing the correct SQL-level list comprehension to multiplex a query
@@ -244,13 +166,13 @@ multiplexRootReselect variables rootReselect =
               }
         ]
     , selectFrom =
-        FromOpenJson
+        Just $ FromOpenJson
           Aliased
             { aliasedThing =
                 OpenJson
                   { openJsonExpression =
                       ValueExpression (ODBC.TextValue $ lbsToTxt $ J.encode variables)
-                  , openJsonWith =
+                  , openJsonWith = Just $
                       NE.fromList
                         [ UuidField resultIdAlias (Just $ IndexPath RootPath 0)
                         , JsonField resultVarsAlias (Just $ IndexPath RootPath 1)
@@ -282,48 +204,138 @@ msDBMutationPlan
   :: forall m.
      ( MonadError QErr m
      )
-  => Env.Environment
-  -> HTTP.Manager
-  -> [HTTP.Header]
-  -> UserInfo
+  => UserInfo
   -> Bool
   -> SourceName
   -> SourceConfig 'MSSQL
-  -> MutationDB 'MSSQL (UnpreparedValue 'MSSQL)
-  -> m ExecutionStep
-msDBMutationPlan _env _manager _reqHeaders _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
-  throw500 "mutations are not supported in MSSQL; this should be unreachable"
+  -> MutationDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL)
+  -> QueryTagsComment
+  -> m (DBStepInfo 'MSSQL)
+msDBMutationPlan _userInfo _stringifyNum _sourceName _sourceConfig _mrf _queryTags =
+  throw400 NotSupported "mutations are not supported in MSSQL"
+
 
 -- subscription
 
 msDBSubscriptionPlan
   :: forall m.
      ( MonadError QErr m
+     , MonadIO m
      )
   => UserInfo
   -> SourceName
   -> SourceConfig 'MSSQL
-  -> InsOrdHashMap G.Name (QueryDB 'MSSQL (UnpreparedValue 'MSSQL))
+  -> InsOrdHashMap G.Name (QueryDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL))
+  -> QueryTagsComment
   -> m (LiveQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL))
-msDBSubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig rootFields = do
+msDBSubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig rootFields _queryTags = do
+  -- TODO (naveen): Append query tags to the reselect
   (reselect, prepareState) <- planSubscription rootFields _uiSession
-
-  let cohortVariables = prepareStateCohortVariables _uiSession prepareState
-      parameterizedPlan = ParameterizedLiveQueryPlan _uiRole $ MultiplexedQuery' reselect
+  cohortVariables <- prepareStateCohortVariables sourceConfig _uiSession prepareState
+  let parameterizedPlan = ParameterizedLiveQueryPlan _uiRole $ MultiplexedQuery' reselect
 
   pure
     $ LiveQueryPlan parameterizedPlan sourceConfig cohortVariables
 
-prepareStateCohortVariables :: SessionVariables -> PrepareState -> CohortVariables
-prepareStateCohortVariables session prepState =
-  let PrepareState{sessionVariables, namedArguments, positionalArguments} = prepState
-  -- TODO: call MSSQL validateVariables
-  -- (see https://github.com/hasura/graphql-engine-mono/issues/1210)
-  -- We need to ensure that the values provided for variables are correct according to MSSQL.
-  -- Without this check an invalid value for a variable for one instance of the subscription will
-  -- take down the entire multiplexed query.
-  in mkCohortVariables
+prepareStateCohortVariables :: (MonadError QErr m, MonadIO m) => SourceConfig 'MSSQL -> SessionVariables -> PrepareState -> m CohortVariables
+prepareStateCohortVariables sourceConfig session prepState = do
+  (namedVars, posVars) <- validateVariables sourceConfig session prepState
+  let PrepareState{sessionVariables} = prepState
+  pure $ mkCohortVariables
         sessionVariables
         session
-        (toTxtEncodedVal namedArguments)
-        (toTxtEncodedVal positionalArguments)
+        namedVars
+        posVars
+
+
+-- | Ensure that the set of variables (with value instantiations) that occur in
+-- a (RQL) query produce a well-formed and executable (SQL) query when
+-- considered in isolation.
+--
+-- This helps avoiding cascading failures in multiplexed queries.
+--
+-- c.f. https://github.com/hasura/graphql-engine-mono/issues/1210.
+validateVariables ::
+  (MonadError QErr m, MonadIO m) =>
+  SourceConfig 'MSSQL ->
+  SessionVariables ->
+  PrepareState ->
+  m (ValidatedQueryVariables, ValidatedSyntheticVariables)
+validateVariables sourceConfig sessionVariableValues prepState = do
+    let PrepareState{sessionVariables, namedArguments, positionalArguments} = prepState
+
+        -- We generate a single 'canary' query in the form:
+        --
+        -- SELECT ... [session].[x-hasura-foo] as [x-hasura-foo], ... as a, ... as b, ...
+        -- FROM OPENJSON('...')
+        -- WITH ([x-hasura-foo] NVARCHAR(MAX)) as [session]
+        --
+        -- where 'a', 'b', etc. are aliases given to positional arguments.
+        -- Named arguments and session variables are aliased to themselves.
+        --
+        -- The idea being that if the canary query succeeds we can be
+        -- reasonably confident that adding these variables to a query being
+        -- polled will not crash the poller.
+
+        occSessionVars = filterSessionVariables
+                            (\k _ -> Set.member k sessionVariables)
+                            sessionVariableValues
+
+        expSes, expNamed, expPos :: [Aliased Expression]
+        expSes = sessionReference <$> getSessionVariables occSessionVars
+        expNamed = map (
+                      \(n, v) -> Aliased (ValueExpression (RQL.cvValue v)) (G.unName n)
+                      )
+                   $ Map.toList $ namedArguments
+
+        -- For positional args we need to be a bit careful not to capture names
+        -- from expNamed and expSes (however unlikely)
+        expPos = zipWith (\n v -> Aliased (ValueExpression (RQL.cvValue v)) n)
+                           (freshVars (expNamed <> expSes)) positionalArguments
+
+        projAll :: [Projection]
+        projAll = map ExpressionProjection (expSes <> expNamed <> expPos)
+
+        canaryQuery = if null projAll
+                      then Nothing
+                      else Just $ renderQuery emptySelect {
+                                      selectProjections = projAll,
+                                      selectFrom = sessionOpenJson occSessionVars
+                                      }
+
+    onJust canaryQuery (\q -> do
+      _ :: [[ODBC.Value]] <- withMSSQLPool (_mscConnectionPool sourceConfig) (`ODBC.query` q)
+      pure ()
+     )
+
+    pure (ValidatedVariables $ txtEncodedColVal <$> namedArguments,
+          ValidatedVariables $ txtEncodedColVal <$> positionalArguments)
+
+    where
+      renderQuery :: Select -> ODBC.Query
+      renderQuery = toQueryFlat . fromSelect
+
+      freshVars :: [Aliased a] -> [Text]
+      freshVars boundNames = filter (not . (`elem` map aliasedAlias boundNames)) chars
+
+      -- Infinite list of expression aliases.
+      chars :: [Text]
+      chars = [ y T.<>> x | y <- [""] <|> chars, x <- ['a'..'z']]
+
+      sessionOpenJson :: SessionVariables -> Maybe From
+      sessionOpenJson occSessionVars =
+        nonEmpty (getSessionVariables occSessionVars)
+        <&> \fields -> FromOpenJson $
+              Aliased
+                (
+                  OpenJson
+                    (ValueExpression $ ODBC.TextValue $ lbsToTxt $ J.encode occSessionVars)
+                    (pure (sessField <$> fields))
+                )
+                "session"
+
+      sessField :: Text -> JsonFieldSpec
+      sessField var = StringField  var Nothing
+
+      sessionReference :: Text -> Aliased Expression
+      sessionReference var = Aliased (ColumnExpression (TSQL.FieldName var "session")) var

@@ -57,7 +57,7 @@ Computed fields whose associated SQL function returns a
 Let's say we have the following schema:
 
 .. code-block:: plpgsql
-  
+
   authors(id integer, first_name text, last_name text)
 
 :ref:`Define an SQL function <create_sql_functions>` called ``author_full_name``:
@@ -109,9 +109,9 @@ The return table must be tracked to define such a computed field.
 Let's say we have the following schema:
 
 .. code-block:: plpgsql
-  
+
   authors(id integer, first_name text, last_name text)
-                                                      
+
   articles(id integer, title text, content text, author_id integer)
 
 Now we can define a :ref:`table relationship <table_relationships>` on the ``authors``
@@ -345,3 +345,77 @@ The value of generated columns is also computed from other columns of a table. P
 come with their own limitations. Hasura's computed fields are defined via an SQL function, which allows users
 to define any complex business logic in a function. Generated columns will go together with computed fields where
 Hasura treats generated columns as normal Postgres columns.
+
+Computed fields in Remote relationships
+---------------------------------------
+
+Using computed fields in :doc:`Remote relationships <remote-relationships/index>` allows transformation of data
+from table columns before joining with data from remote sources. For instance, suppose we want to extract certain
+field from a ``json`` column and join it with a field in a remote schema by argument value. We would define a computed
+field which returns a scalar type of the field value in the ``json`` column and use it to join the graphql field of
+the remote schema. Consider the following Postgres schema.
+
+.. thumbnail:: /img/graphql/core/databases/postgres/schema/computed-fields-remote-relationship.png
+
+.. code-block:: plpgsql
+
+   CREATE TABLE "user" (id SERIAL PRIMARY KEY, name TEXT UNIQUE NOT NULL, address json NOT NULL);
+
+   -- SQL function returns city of a "user" using "->>" json operator
+   CREATE FUNCTION get_city(table_row "user")
+   RETURNS TEXT AS $$
+     SELECT table_row.address ->> 'city'
+   $$ LANGUAGE sql STABLE;
+
+Now, let's track the table and add computed field ``user_city`` using the SQL function ``get_city``. Consider the
+following remote schema.
+
+.. code-block:: graphql
+
+     type Query {
+       get_coordinates(city: String): Coordinates
+     }
+     type Coordinates{
+       lat: Float
+       long: Float
+     }
+
+
+:ref:`Define a remote relationship<create_remote_relationship>` with name ``user_location`` from ``user_city``
+scalar computed field to ``get_coordinates`` remote schema field. We can query users with the pincode of their residing place.
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      user {
+        id
+        name
+        user_city
+        user_location
+      }
+    }
+  :response:
+    {
+      "data": {
+        "authors": [
+          {
+            "id": 1,
+            "name": "Alice",
+            "user_city": "Frisco",
+            "user_location": {
+              "lat": 33.155373,
+              "long": -96.818733
+            }
+          }
+        ]
+      }
+    }
+
+.. note::
+
+   Only ``Scalar computed fields`` are allowed to join fields from remote sources
+
+.. admonition:: Supported from
+
+   This feature is available in ``v2.0.1`` and above

@@ -8,21 +8,16 @@ import (
 
 // this can be overridden by ldflags
 var (
-	HasuraVersion = func() string {
-		graphqlEngineDockerTag := os.Getenv("HASURA_TEST_CLI_HGE_DOCKER_TAG")
-		if graphqlEngineDockerTag != "" {
-			return graphqlEngineDockerTag
+	HasuraDockerImage = func() string {
+		graphqlEngineDockerImage := os.Getenv("HASURA_TEST_CLI_HGE_DOCKER_IMAGE")
+		if graphqlEngineDockerImage != "" {
+			return graphqlEngineDockerImage
 		}
-
 		return ""
 	}()
-	HasuraDockerRepo = func() string {
-		graphqlEngineDockerTag := os.Getenv("HASURA_TEST_CLI_HGE_DOCKER_REPO")
-		if graphqlEngineDockerTag != "" {
-			return graphqlEngineDockerTag
-		}
-		return "hasura/graphql-engine"
-	}()
+
+	TestAdminSecret = os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET")
+
 	DockerSwitchIP = func() string {
 		switch runtime.GOOS {
 		case "darwin", "windows":

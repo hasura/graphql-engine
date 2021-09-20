@@ -14,10 +14,10 @@ import {
   failWithRemoteSchemaEnvUrl,
   failWithRemoteSchemaEnvHeader,
   passWithRemoteSchemaHeader,
-  passWithEditRemoteSchema,
   deleteRemoteSchema,
   visitRemoteSchemaPermissionsTab,
   createSimpleRemoteSchemaPermission,
+  passWithUpdateRemoteSchema,
 } from './spec';
 
 const setup = () => {
@@ -25,7 +25,6 @@ const setup = () => {
     it('Visit the index route', () => {
       // Visit the index route
       cy.visit('/remote-schemas/manage/schemas');
-      cy.wait(7000);
       // Get and set validation metadata
       setMetaData();
     });
@@ -70,7 +69,7 @@ export const runCreateRemoteSchemaTableTests = () => {
       failWithRemoteSchemaEnvHeader
     );
     it('Create remote schema with headers', passWithRemoteSchemaHeader);
-    it('Edit remote schema with headers', passWithEditRemoteSchema);
+    it('Update remote schema on Modify page', passWithUpdateRemoteSchema);
     it('Delete remote schema with headers', deleteRemoteSchema);
   });
 };

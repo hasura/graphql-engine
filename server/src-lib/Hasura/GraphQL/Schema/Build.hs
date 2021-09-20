@@ -12,12 +12,12 @@ import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend          as AB
 
-import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser          hiding (EnumValueInfo, field)
 import           Hasura.GraphQL.Schema.Backend  (MonadBuildSchema)
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Mutation
 import           Hasura.GraphQL.Schema.Select
+import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 
 

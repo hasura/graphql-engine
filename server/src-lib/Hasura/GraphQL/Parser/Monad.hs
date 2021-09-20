@@ -1,5 +1,3 @@
-{-# LANGUAGE StrictData #-}
-
 -- | Monad transformers for GraphQL schema construction and query parsing.
 module Hasura.GraphQL.Parser.Monad
   ( SchemaT
@@ -164,27 +162,25 @@ newtype instance ParserById m '(p, a) = ParserById (p m a)
 -- query parsing
 
 newtype ParseT m a = ParseT
-  { unParseT :: ReaderT JSONPath (StateT QueryReusability (ValidateT (NESeq ParseError) m)) a
+  { unParseT :: ReaderT JSONPath (ValidateT (NESeq ParseError) m) a
   } deriving (Functor, Applicative, Monad)
 
 runParseT
   :: Functor m
   => ParseT m a
-  -> m (Either (NESeq ParseError) (a, QueryReusability))
+  -> m (Either (NESeq ParseError) a)
 runParseT = unParseT
   >>> flip runReaderT []
-  >>> flip runStateT mempty
   >>> runValidateT
 
 instance MonadTrans ParseT where
-  lift = ParseT . lift . lift . lift
+  lift = ParseT . lift . lift
 
 instance Monad m => MonadParse (ParseT m) where
   withPath f x = ParseT $ withReaderT f $ unParseT x
   parseErrorWith code text = ParseT $ do
     path <- ask
     lift $ refute $ NE.singleton ParseError{ peCode = code, pePath = path, peMessage = text }
-  markNotReusable = ParseT $ lift $ put NotReusable
 
 data ParseError = ParseError
   { pePath    :: JSONPath

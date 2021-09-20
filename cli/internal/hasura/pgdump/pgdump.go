@@ -7,9 +7,9 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 )
 
 type Client struct {
@@ -40,7 +40,7 @@ func (c *Client) Send(request hasura.PGDumpRequest) (io.Reader, error) {
 		return nil, err
 	}
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("pg_dump request: %d %s", response.StatusCode, responseBody.String())
+		return nil, fmt.Errorf("pg_dump request: %d \n%s", response.StatusCode, responseBody.String())
 	}
 	return responseBody, nil
 }

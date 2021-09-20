@@ -8,9 +8,9 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
 // implements all metadata operations which does not depend on the database
@@ -120,26 +120,20 @@ func (c *ClientCommonMetadataOps) ReplaceMetadata(metadata io.Reader) (io.Reader
 }
 
 func (c *ClientCommonMetadataOps) GetInconsistentMetadata() (*hasura.GetInconsistentMetadataResponse, error) {
-	request := hasura.RequestBody{
-		Type: "get_inconsistent_metadata",
-		Args: map[string]string{},
-	}
-	responseBody := new(bytes.Buffer)
-	response, err := c.send(request, responseBody)
+	inconsistentMetadata := new(hasura.GetInconsistentMetadataResponse)
+	responseBody, err := c.GetInconsistentMetadataRaw()
 	if err != nil {
 		return nil, err
 	}
-	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%s", responseBody.String())
-	}
-	inconsistentMetadata := new(hasura.GetInconsistentMetadataResponse)
 	if err := json.NewDecoder(responseBody).Decode(inconsistentMetadata); err != nil {
 		return nil, fmt.Errorf("decoding response: %w", err)
 	}
 	return inconsistentMetadata, nil
 }
 
-func (c *ClientCommonMetadataOps) GetInconsistentMetadataReader() (io.Reader, error) {
+// GetInconsistentMetadataRaw
+// https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/manage-metadata.html#metadata-get-inconsistent-metadata
+func (c *ClientCommonMetadataOps) GetInconsistentMetadataRaw() (io.Reader, error) {
 	request := hasura.RequestBody{
 		Type: "get_inconsistent_metadata",
 		Args: map[string]string{},
@@ -155,6 +149,7 @@ func (c *ClientCommonMetadataOps) GetInconsistentMetadataReader() (io.Reader, er
 	return responseBody, nil
 }
 
+// SendCommonMetadataOperation send any request to metadata endpoint on hasura server by default this should be v1/metadata
 func (c *ClientCommonMetadataOps) SendCommonMetadataOperation(body interface{}) (*httpc.Response, io.Reader, error) {
 	req, err := c.NewRequest(http.MethodPost, c.path, body)
 	if err != nil {

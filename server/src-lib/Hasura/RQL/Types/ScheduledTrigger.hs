@@ -12,7 +12,7 @@ module Hasura.RQL.Types.ScheduledTrigger
   , ScheduledEventId
   , InvocationId
   , CronEventSeed(..)
-  , ScheduledEventSeed(..)
+  , OneOffEvent
   , ScheduledEventStatus(..)
   , scheduledEventStatusToText
   , ScheduledEventType(..)
@@ -26,6 +26,7 @@ module Hasura.RQL.Types.ScheduledTrigger
   , DeleteScheduledEvent(..)
   , GetInvocationsBy(..)
   , GetEventInvocations(..)
+  , ClearCronEvents (..)
   ) where
 
 import           Data.Aeson
@@ -40,6 +41,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.Action       (InputWebhook (..))
 import           Hasura.RQL.Types.Common       (NonNegativeDiffTime, unsafeNonNegativeDiffTime)
 import           Hasura.RQL.Types.EventTrigger
+import           Hasura.RQL.Types.Eventing
 import           System.Cron.Types
 
 import qualified Data.Aeson                    as J
@@ -243,10 +245,7 @@ data CronEventSeed
   , cesScheduledTime :: !UTCTime
   } deriving (Show, Eq)
 
-data ScheduledEventSeed
-  = SESCron ![CronEventSeed]
-  | SESOneOff !CreateScheduledEvent
-  deriving (Show, Eq)
+type OneOffEvent = CreateScheduledEvent
 
 data ScheduledEventStatus
   = SESScheduled
@@ -394,3 +393,11 @@ instance ToJSON GetEventInvocations where
              GIBEventId eventId eventType -> ["event_id" .= eventId, "type" .= eventType]
              GIBEvent event               -> scheduledEventToPairs event
           <> scheduledEventPaginationToPairs _geiPagination
+
+data ClearCronEvents
+  = SingleCronTrigger !TriggerName
+  -- ^ Used to delete the cron events only of the specified cron trigger
+  | MetadataCronTriggers ![TriggerName]
+  -- ^ Used to delete all the cron events of the cron triggers with `include_in_metadata: true`
+  -- It is used in the case of the `replace_metadata` API
+  deriving (Show, Eq)

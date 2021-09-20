@@ -12,7 +12,6 @@ module Hasura.RQL.Types.Common
 
        , ToAesonPairs(..)
 
-       , EquatableGType(..)
        , InpValInfo(..)
 
        , SystemDefined(..)
@@ -46,50 +45,45 @@ module Hasura.RQL.Types.Common
        , JsonAggSelect (..)
 
        , intScalar, floatScalar, stringScalar, boolScalar, idScalar
-       , mkScalarTypeName
 
        , MetricsConfig(..)
        , emptyMetricsConfig
+
+       , PGConnectionParams(..)
+       , getPGConnectionStringFromParams
+       , getConnOptionsFromConnParams
        ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                   as Env
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
-import qualified Language.GraphQL.Draft.Syntax      as G
-import qualified Language.Haskell.TH.Syntax         as TH
-import qualified PostgreSQL.Binary.Decoding         as PD
-import qualified Test.QuickCheck                    as QC
+import qualified Data.Environment              as Env
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Language.Haskell.TH.Syntax    as TH
+import qualified PostgreSQL.Binary.Decoding    as PD
 
+import           Control.Lens                  (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Bifunctor                     (bimap)
-import           Data.Hashable.Time                 ()
-import           Data.Scientific                    (toBoundedInteger)
+import           Data.Bifunctor                (bimap)
+import           Data.Scientific               (toBoundedInteger)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 import           Data.URL.Template
-
-
-import qualified Hasura.Backends.Postgres.SQL.Types as PG
+import           Network.URI
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
-import           Hasura.Incremental                 (Cacheable)
-import           Hasura.RQL.DDL.Headers             ()
-import           Hasura.RQL.Types.Backend
-import           Hasura.SQL.Backend                 (BackendType)
-import           Hasura.SQL.Types
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.DDL.Headers        ()
+
 
 newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
   deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, ToJSONKey
-           , Q.ToPrepArg, Q.FromCol, Generic, Arbitrary, NFData, Cacheable)
-
-instance PG.IsIdentifier RelName where
-  toIdentifier rn = PG.Identifier $ relNameToTxt rn
+           , Q.ToPrepArg, Q.FromCol, Generic, NFData, Cacheable)
 
 instance ToTxt RelName where
   toTxt = relNameToTxt
@@ -115,7 +109,7 @@ instance ToJSON JsonAggSelect where
 data RelType
   = ObjRel
   | ArrRel
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Generic, Data)
 instance NFData RelType
 instance Hashable RelType
 instance Cacheable RelType
@@ -153,26 +147,6 @@ instance ToJSON InsertOrder where
     BeforeParent -> String "before_parent"
     AfterParent  -> String "after_parent"
 
--- should this be parameterized by both the source and the destination backend?
-data RelInfo (b :: BackendType)
-  = RelInfo
-  { riName        :: !RelName
-  , riType        :: !RelType
-  , riMapping     :: !(HashMap (Column b) (Column b))
-  , riRTable      :: !(TableName b)
-  , riIsManual    :: !Bool
-  , riIsNullable  :: !Bool
-  , riInsertOrder :: !InsertOrder
-  } deriving (Generic)
-deriving instance Backend b => Show (RelInfo b)
-deriving instance Backend b => Eq   (RelInfo b)
-instance Backend b => NFData (RelInfo b)
-instance Backend b => Cacheable (RelInfo b)
-instance Backend b => Hashable (RelInfo b)
-instance Backend b => FromJSON (RelInfo b) where
-  parseJSON = genericParseJSON hasuraJSON
-instance Backend b => ToJSON (RelInfo b) where
-  toJSON = genericToJSON hasuraJSON
 
 -- | Postgres OIDs. <https://www.postgresql.org/docs/12/datatype-oid.html>
 newtype OID = OID { unOID :: Int }
@@ -182,12 +156,9 @@ newtype FieldName
   = FieldName { getFieldNameTxt :: Text }
   deriving ( Show, Eq, Ord, Hashable, FromJSON, ToJSON
            , FromJSONKey, ToJSONKey, Data, Generic
-           , IsString, Arbitrary, NFData, Cacheable
+           , IsString, NFData, Cacheable
            , Semigroup
            )
-
-instance PG.IsIdentifier FieldName where
-  toIdentifier (FieldName f) = PG.Identifier f
 
 instance ToTxt FieldName where
   toTxt (FieldName c) = c
@@ -221,9 +192,6 @@ instance Hashable SourceName
 instance NFData SourceName
 instance Cacheable SourceName
 
-instance Arbitrary SourceName where
-  arbitrary = SNName <$> arbitrary
-
 defaultSource :: SourceName
 defaultSource = SNDefault
 
@@ -235,15 +203,6 @@ data InpValInfo
   , _iviType   :: !G.GType
   } deriving (Show, Eq, TH.Lift, Generic)
 instance Cacheable InpValInfo
-
-instance EquatableGType InpValInfo where
-  type EqProps InpValInfo = (G.Name, G.GType)
-  getEqProps ity = (,) (_iviName ity) (_iviType ity)
-
--- | Typeclass for equating relevant properties of various GraphQL types defined below
-class EquatableGType a where
-  type EqProps a
-  getEqProps :: a -> EqProps a
 
 newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
   deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, NFData, Cacheable)
@@ -296,11 +255,13 @@ instance FromJSON NonNegativeDiffTime where
 
 newtype ResolvedWebhook
   = ResolvedWebhook { unResolvedWebhook :: Text}
-  deriving ( Show, Eq, FromJSON, ToJSON, Hashable, ToTxt)
+  deriving ( Show, Eq, FromJSON, ToJSON, Hashable, ToTxt, Generic)
+instance NFData ResolvedWebhook
+instance Cacheable ResolvedWebhook
 
 newtype InputWebhook
   = InputWebhook {unInputWebhook :: URLTemplate}
-  deriving (Show, Eq, Generic, Arbitrary)
+  deriving (Show, Eq, Generic)
 instance NFData InputWebhook
 instance Cacheable InputWebhook
 instance Hashable InputWebhook
@@ -335,42 +296,131 @@ instance FromJSON Timeout where
       True  -> return $ Timeout timeout
       False -> fail "timeout value cannot be negative"
 
-instance Arbitrary Timeout where
-  arbitrary = Timeout <$> QC.choose (0, 10000000)
-
 defaultActionTimeoutSecs :: Timeout
 defaultActionTimeoutSecs = Timeout 30
 
+-- | See API reference here:
+--   https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconnectionparameters
+data PGConnectionParams = PGConnectionParams
+  { _pgcpHost     :: !Text
+  , _pgcpUsername :: !Text
+  , _pgcpPassword :: !(Maybe Text)
+  , _pgcpPort     :: !Int
+  , _pgcpDatabase :: !Text
+  } deriving (Show, Eq, Generic)
+instance NFData PGConnectionParams
+instance Cacheable PGConnectionParams
+instance Hashable PGConnectionParams
+$(makeLenses ''PGConnectionParams)
+$(deriveToJSON hasuraJSON{omitNothingFields = True} ''PGConnectionParams)
+
+instance FromJSON PGConnectionParams where
+  parseJSON = withObject "PGConnectionParams" $ \o ->
+    PGConnectionParams
+      <$> o .:  "host"
+      <*> o .:  "username"
+      <*> o .:? "password"
+      <*> o .:  "port"
+      <*> o .:  "database"
+
 data UrlConf
   = UrlValue !InputWebhook
+  -- ^ the database connection string
   | UrlFromEnv !T.Text
+  -- ^ the name of environment variable containing the connection string
+  | UrlFromParams !PGConnectionParams
+  -- ^ the minimum required `connection parameters` to construct a valid connection string
   deriving (Show, Eq, Generic)
 instance NFData UrlConf
 instance Cacheable UrlConf
 instance Hashable UrlConf
 
 instance ToJSON UrlConf where
-  toJSON (UrlValue w)      = toJSON w
-  toJSON (UrlFromEnv wEnv) = object ["from_env" .= wEnv ]
+  toJSON (UrlValue w)            = toJSON w
+  toJSON (UrlFromEnv wEnv)       = object [ "from_env" .= wEnv ]
+  toJSON (UrlFromParams wParams) = object [ "connection_parameters" .= wParams ]
 
 instance FromJSON UrlConf where
-  parseJSON (Object o) = UrlFromEnv <$> o .: "from_env"
+  parseJSON (Object o) = do
+    mFromEnv    <- (fmap . fmap) UrlFromEnv    (o .:? "from_env")
+    mFromParams <- (fmap . fmap) UrlFromParams (o .:? "connection_parameters")
+    case (mFromEnv, mFromParams) of
+      (Just fromEnv, Nothing)    -> pure fromEnv
+      (Nothing, Just fromParams) -> pure fromParams
+      (Just _, Just _)           -> fail $ commonJSONParseErrorMessage "Only one of "
+      (Nothing, Nothing)         -> fail $ commonJSONParseErrorMessage "Either "
+      where
+          -- NOTE(Sam): Maybe this could be put with other string manipulation utils
+          -- helper to apply `dquote` for values of type `String`
+          dquoteStr :: String -> String
+          dquoteStr = T.unpack . dquote . T.pack
+
+          -- helper for formatting error messages within this instance
+          commonJSONParseErrorMessage :: String -> String
+          commonJSONParseErrorMessage strToBePrepended =
+            strToBePrepended <> dquoteStr "from_env" <> " or "
+            <> dquoteStr "connection_parameters" <> " should be provided"
+
   parseJSON t@(String _) =
     case (fromJSON t) of
       Error s   -> fail s
       Success a -> pure $ UrlValue a
-  parseJSON _          = fail "one of string or object must be provided for url/webhook"
 
-instance Arbitrary UrlConf where
-  arbitrary = genericArbitrary
+  parseJSON _            = fail "one of string or object must be provided for url/webhook"
 
-resolveUrlConf
-  :: MonadError QErr m => Env.Environment -> UrlConf -> m Text
+getConnOptionsFromConnParams :: PGConnectionParams -> Q.ConnOptions
+getConnOptionsFromConnParams PGConnectionParams{..} =
+  Q.ConnOptions {
+    connHost     = T.unpack _pgcpHost
+  , connUser     = T.unpack _pgcpUsername
+  , connPort     = _pgcpPort
+  , connDatabase = T.unpack _pgcpDatabase
+  , connPassword = T.unpack $ fromMaybe "" _pgcpPassword
+  , connOptions  = Nothing
+  }
+
+-- | Construct a Postgres connection URI as a String from 'PGConnectionParams'.
+--
+-- NOTE: This function takes care to properly escape all URI components, as
+-- Postgres requires that a connection URI is percent-encoded if it includes
+-- symbols with "special meaning".
+--
+-- See the @libpq@ documentation for details: https://www.postgresql.org/docs/13/libpq-connect.html#id-1.7.3.8.3.6
+getPGConnectionStringFromParams :: PGConnectionParams -> String
+getPGConnectionStringFromParams PGConnectionParams{..} =
+  let uriAuth = rectifyAuth $ URIAuth {
+        uriUserInfo = getURIAuthUserInfo _pgcpUsername _pgcpPassword
+      , uriRegName  = unpackEscape _pgcpHost
+      , uriPort     = show _pgcpPort
+      }
+      pgConnectionURI = rectify $ URI {
+        uriScheme    = "postgresql"
+      , uriAuthority = Just uriAuth
+      , uriPath      = "/" <> unpackEscape _pgcpDatabase
+      , uriQuery     = ""
+      , uriFragment  = ""
+      }
+  in
+  uriToString id pgConnectionURI $ "" -- NOTE: this is done because uriToString returns a value of type ShowS
+  where
+    -- Helper to manage proper escaping in URI components.
+    unpackEscape = escapeURIString isUnescapedInURIComponent . T.unpack
+
+    -- Construct the 'URIAuth' 'uriUserInfo' component string from a username
+    -- and optional password provided by 'PGConnectionParams'.
+    getURIAuthUserInfo :: Text -> Maybe Text -> String
+    getURIAuthUserInfo username mPassword = case mPassword of
+      Nothing       -> unpackEscape username
+      Just password -> unpackEscape username <> ":" <> unpackEscape password
+
+resolveUrlConf :: MonadError QErr m => Env.Environment -> UrlConf -> m Text
 resolveUrlConf env = \case
-  UrlValue v        -> unResolvedWebhook <$> resolveWebhook env v
-  UrlFromEnv envVar -> getEnv env envVar
+  UrlValue v               -> unResolvedWebhook <$> resolveWebhook env v
+  UrlFromEnv envVar        -> getEnv env envVar
+  UrlFromParams connParams ->
+    pure . T.pack $ getPGConnectionStringFromParams connParams
 
-getEnv :: QErrM m => Env.Environment -> T.Text -> m T.Text
+getEnv :: QErrM m => Env.Environment -> Text -> m Text
 getEnv env k = do
   let mEnv = Env.lookupEnv env (T.unpack k)
   case mEnv of
@@ -384,28 +434,6 @@ floatScalar  = $$(G.litName "Float")
 stringScalar = $$(G.litName "String")
 boolScalar   = $$(G.litName "Boolean")
 idScalar     = $$(G.litName "ID")
-
--- TODO: This has to move into a Postgres specific module
-mkScalarTypeName :: MonadError QErr m => PG.PGScalarType -> m G.Name
-mkScalarTypeName PG.PGInteger  = pure intScalar
-mkScalarTypeName PG.PGBoolean  = pure boolScalar
-mkScalarTypeName PG.PGFloat    = pure floatScalar
-mkScalarTypeName PG.PGText     = pure stringScalar
-mkScalarTypeName PG.PGVarchar  = pure stringScalar
-mkScalarTypeName (PG.PGCompositeScalar compositeScalarType) =
-  -- When the function argument is a row type argument
-  -- then it's possible that there can be an object type
-  -- with the table name depending upon whether the table
-  -- is tracked or not. As a result, we get a conflict between
-  -- both these types (scalar and object type with same name).
-  -- To avoid this, we suffix the table name with `_scalar`
-  -- and create a new scalar type
-  (<> $$(G.litName "_scalar")) <$> G.mkName compositeScalarType `onNothing` throw400 ValidationFailed
-  ("cannot use SQL type " <> compositeScalarType <<> " in the GraphQL schema because its name is not a "
-  <> "valid GraphQL identifier")
-mkScalarTypeName scalarType = G.mkName (toSQLTxt scalarType) `onNothing` throw400 ValidationFailed
-  ("cannot use SQL type " <> scalarType <<> " in the GraphQL schema because its name is not a "
-  <> "valid GraphQL identifier")
 
 -- | Various user-controlled configuration for metrics used by Pro
 data MetricsConfig

@@ -20,6 +20,9 @@ class TestCustomEndpoints:
     def test_missing_endpoint(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_missing.yaml', transport)
 
+    def test_endpoint_as_user_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/endpoint_as_user_err.yaml', transport)
+
     def test_simple_endpoint(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_simple.yaml', transport)
 

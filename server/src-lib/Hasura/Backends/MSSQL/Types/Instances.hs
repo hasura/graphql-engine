@@ -149,15 +149,6 @@ instance ToJSONKey ScalarType
 deriving newtype instance ToJSONKey ColumnName
 deriving newtype instance FromJSONKey ColumnName
 
-instance Arbitrary ColumnName where
-  arbitrary = genericArbitrary
-
-instance Arbitrary TableName where
-  arbitrary = genericArbitrary
-
-instance ToTxt () where
-  toTxt = tshow
-
 
 --------------------------------------------------------------------------------
 -- Manual instances

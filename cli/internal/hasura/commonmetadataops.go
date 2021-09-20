@@ -3,11 +3,10 @@ package hasura
 import (
 	"io"
 
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
-// general hasura metadata API requests
-// these are not dependent on the connected source type
+// CommonMetadataOperations represents Metadata API's which are not source type specific
 type CommonMetadataOperations interface {
 	ExportMetadata() (metadata io.Reader, err error)
 	ClearMetadata() (io.Reader, error)
@@ -15,7 +14,7 @@ type CommonMetadataOperations interface {
 	DropInconsistentMetadata() (io.Reader, error)
 	ReplaceMetadata(metadata io.Reader) (io.Reader, error)
 	GetInconsistentMetadata() (*GetInconsistentMetadataResponse, error)
-	GetInconsistentMetadataReader() (io.Reader, error)
+	GetInconsistentMetadataRaw() (io.Reader, error)
 	SendCommonMetadataOperation(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
 }
 

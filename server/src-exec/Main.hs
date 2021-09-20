@@ -3,40 +3,36 @@
 
 module Main where
 
-import           Control.Applicative
+import           Hasura.Prelude
+
+import qualified Control.Concurrent.Extended as C
+import qualified Data.ByteString.Char8       as BC
+import qualified Data.Environment            as Env
+import qualified Database.PG.Query           as Q
+import qualified System.Exit                 as Sys
+import qualified System.Metrics              as EKG
+import qualified System.Posix.Signals        as Signals
+
 import           Control.Exception
-import           Control.Monad.Trans.Managed        (ManagedT (..), lowerManagedT)
-import           Data.Int                           (Int64)
-import           Data.Text.Conversions              (convertText)
-import           Data.Time.Clock                    (getCurrentTime)
-import           Data.Time.Clock.POSIX              (getPOSIXTime)
+import           Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
+import           Data.Int                    (Int64)
+import           Data.Kind                   (Type)
+import           Data.Text.Conversions       (convertText)
+import           Data.Time.Clock             (getCurrentTime)
+import           Data.Time.Clock.POSIX       (getPOSIXTime)
+import           GHC.TypeLits                (Symbol)
+
+import qualified Hasura.GC                   as GC
 
 import           Hasura.App
-import           Hasura.Logging                     (Hasura, LogLevel (..),
-                                                     defaultEnabledEngineLogTypes)
-import           Hasura.Metadata.Class
-import           Hasura.Prelude
+import           Hasura.Logging              (Hasura, LogLevel (..), defaultEnabledEngineLogTypes)
 import           Hasura.RQL.DDL.Schema
-import           Hasura.RQL.DDL.Schema.Cache.Common
-import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
-import           Hasura.Server.Migrate              (downgradeCatalog)
-import           Hasura.Server.Types                (MaintenanceMode (..))
+import           Hasura.Server.Metrics       (ServerMetricsSpec, createServerMetrics)
+import           Hasura.Server.Migrate       (downgradeCatalog)
 import           Hasura.Server.Version
-
-import qualified Control.Concurrent.Extended        as C
-import qualified Data.ByteString.Char8              as BC
-import qualified Data.ByteString.Lazy               as BL
-import qualified Data.ByteString.Lazy.Char8         as BLC
-import qualified Data.Environment                   as Env
-import qualified Database.PG.Query                  as Q
-import qualified Hasura.GC                          as GC
-import qualified Hasura.Tracing                     as Tracing
-import qualified System.Exit                        as Sys
-import qualified System.Metrics                     as EKG
-import qualified System.Posix.Signals               as Signals
-
+import           Hasura.Server.Version.TH
 
 main :: IO ()
 main = do
@@ -53,19 +49,23 @@ runApp :: Env.Environment -> HGEOptions Hasura -> IO ()
 runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
   initTime <- liftIO getCurrentTime
   globalCtx@GlobalCtx{..} <- initGlobalCtx env metadataDbUrl rci
-  let (maybeDefaultPgConnInfo, maybeRetries) = _gcDefaultPostgresConnInfo
+  let
+    (maybeDefaultPgConnInfo, maybeRetries) = _gcDefaultPostgresConnInfo
 
   withVersion $$(getVersionFromEnvironment) $ case hgeCmd of
     HCServe serveOptions -> do
-      ekgStore <- liftIO do
-        s <- EKG.newStore
-        EKG.registerGcMetrics s
+      (ekgStore, serverMetrics) <- liftIO $ do
+        store <- EKG.newStore @AppMetricsSpec
+        EKG.register (EKG.subset GcSubset store) EKG.registerGcMetrics
 
         let getTimeMs :: IO Int64
             getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
+        EKG.register store $ EKG.registerCounter ServerTimestampMs () getTimeMs
 
-        EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs s
-        pure s
+        serverMetrics <-
+          liftIO $ createServerMetrics $ EKG.subset ServerSubset store
+
+        pure (EKG.subset EKG.emptyOf store, serverMetrics)
 
       -- It'd be nice if we didn't have to call runManagedT twice here, but
       -- there is a data dependency problem since the call to runPGMetadataStorageApp
@@ -92,8 +92,7 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
         _idleGCThread <- C.forkImmortal "ourIdleGC" logger $
           GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
-        serverMetrics <- liftIO $ createServerMetrics ekgStore
-        flip runPGMetadataStorageApp (_scMetadataDbPool serveCtx, pgLogger) . lowerManagedT $ do
+        flip runPGMetadataStorageAppT (_scMetadataDbPool serveCtx, pgLogger) . lowerManagedT $ do
           runHGEServer (const $ pure ()) env serveOptions serveCtx initTime Nothing serverMetrics ekgStore
 
     HCExport -> do
@@ -104,32 +103,6 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo dropHdbCatalogSchema
       let cleanSuccessMsg = "successfully cleaned graphql-engine related data"
       either (printErrJExit MetadataCleanError) (const $ liftIO $ putStrLn cleanSuccessMsg) res
-
-    HCExecute -> do
-      queryBs <- liftIO BL.getContents
-      let sqlGenCtx = SQLGenCtx False False
-          remoteSchemaPermsCtx = RemoteSchemaPermsDisabled
-          pgLogger = print
-          pgSourceResolver = mkPgSourceResolver pgLogger
-          functionPermsCtx = FunctionPermissionsInferred
-          maintenanceMode = MaintenanceModeDisabled
-          serverConfigCtx =
-            ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode mempty
-          cacheBuildParams =
-            CacheBuildParams _gcHttpManager pgSourceResolver serverConfigCtx
-      runManagedT (mkMinimalPool _gcMetadataDbConnInfo) $ \metadataDbPool -> do
-        res <- flip runPGMetadataStorageApp (metadataDbPool, pgLogger) $
-          runMetadataStorageT $ liftEitherM do
-          (metadata, _) <- fetchMetadata
-          runAsAdmin _gcHttpManager serverConfigCtx $ do
-            schemaCache <- runCacheBuild cacheBuildParams $
-                           buildRebuildableSchemaCache env metadata
-            execQuery env queryBs
-              & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
-              & runMetadataT metadata
-              & runCacheRWT schemaCache
-              & fmap (\((res, _), _, _) -> res)
-        either (printErrJExit ExecuteProcessError) (liftIO . BLC.putStrLn) res
 
     HCDowngrade opts -> do
       let defaultSourceConfig = maybeDefaultPgConnInfo <&> \(dbUrlConf, _) ->
@@ -155,3 +128,19 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
       pgLogger <- _lsPgLogger <$> mkLoggers defaultEnabledEngineLogTypes LevelInfo
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
       liftIO $ Q.initPGPool connInfo connParams pgLogger
+
+-- | A specification of all EKG metrics tracked in `runApp`.
+data AppMetricsSpec
+  :: Symbol -- Metric name
+  -> EKG.MetricType -- Metric type, e.g. Counter, Gauge
+  -> Type -- Tag structure
+  -> Type
+  where
+  ServerSubset
+    :: ServerMetricsSpec name metricType tags
+    -> AppMetricsSpec name metricType tags
+  GcSubset
+    :: EKG.GcMetrics name metricType tags
+    -> AppMetricsSpec name metricType tags
+  ServerTimestampMs
+    :: AppMetricsSpec "ekg.server_timestamp_ms" 'EKG.CounterType ()

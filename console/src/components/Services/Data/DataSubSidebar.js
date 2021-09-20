@@ -72,6 +72,7 @@ const DataSubSidebar = props => {
     pathname,
     dataSources,
     sidebarLoadingState,
+    currentTable,
   } = props;
   const { setDriver } = useDataSource();
 
@@ -233,7 +234,7 @@ const DataSubSidebar = props => {
         setTreeViewItems(newItems);
       }
     );
-  }, [sources.length, tables, functions, enums, schemaList]);
+  }, [sources.length, tables, functions, enums, schemaList, currentTable]);
 
   const loadStyle = {
     pointerEvents: 'none',
@@ -325,6 +326,7 @@ const mapStateToProps = state => {
       .flat().length,
     currentDataSource: state.tables.currentDataSource,
     currentSchema: state.tables.currentSchema,
+    currentTable: state.tables.currentTable,
     schemaList: state.tables.schemaList,
     allSourcesSchemas: state.tables?.allSourcesSchemas,
     pathname: state?.routing?.locationBeforeTransitions?.pathname,

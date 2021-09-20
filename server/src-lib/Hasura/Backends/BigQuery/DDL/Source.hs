@@ -9,15 +9,17 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                         as Env
-import qualified Data.HashMap.Strict                      as HM
-import qualified Data.Text                                as T
+import qualified Data.Aeson                          as J
+import qualified Data.ByteString.Lazy                as L
+import qualified Data.Environment                    as Env
+import qualified Data.HashMap.Strict                 as HM
+import qualified Data.Text                           as T
+import qualified Data.Text.Encoding                  as T
 
-import           Control.Concurrent.MVar                  (newMVar)
+import           Control.Concurrent.MVar             (newMVar)
 import           Data.Time.Clock.System
 
 import           Hasura.Backends.BigQuery.Connection
-import           Hasura.Backends.BigQuery.Instances.Types ()
 import           Hasura.Backends.BigQuery.Meta
 import           Hasura.Backends.BigQuery.Source
 import           Hasura.Backends.BigQuery.Types
@@ -29,19 +31,34 @@ import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 
 
+defaultGlobalSelectLimit :: Int
+defaultGlobalSelectLimit = 1000
+
+
 resolveSourceConfig ::
   MonadIO m =>
   SourceName ->
   BigQueryConnSourceConfig ->
+  Env.Environment ->
   m (Either QErr BigQuerySourceConfig)
-resolveSourceConfig _name BigQueryConnSourceConfig{..} = runExceptT $ do
-  env <- liftIO Env.getEnvironment
+resolveSourceConfig _name BigQueryConnSourceConfig{..} env = runExceptT $ do
   eSA <- resolveConfigurationJson env _cscServiceAccount
   case eSA of
     Left e -> throw400 Unexpected $ T.pack e
     Right _scServiceAccount -> do
       _scDatasets <- resolveConfigurationInputs env _cscDatasets
       _scProjectId <- resolveConfigurationInput env _cscProjectId
+      _scGlobalSelectLimit <- resolveConfigurationInput env `mapM` _cscGlobalSelectLimit >>= \case
+         Nothing -> pure defaultGlobalSelectLimit
+         Just i ->
+           -- This works around the inconsistency between JSON and
+           -- environment variables. The config handling module should be
+           -- reworked to handle non-text values better.
+           case readMaybe (T.unpack i) <|> J.decode (L.fromStrict (T.encodeUtf8 i)) of
+             Nothing -> throw400 Unexpected $ "Need a non-negative integer for global select limit"
+             Just i' -> do
+               when (i' < 0) $ throw400 Unexpected "Need the integer for the global select limit to be non-negative"
+               pure i'
       trMVar <- liftIO $ newMVar Nothing -- `runBigQuery` initializes the token
       pure BigQuerySourceConfig
              { _scAccessTokenMVar = trMVar

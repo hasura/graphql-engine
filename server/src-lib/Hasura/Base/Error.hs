@@ -3,6 +3,7 @@
 module Hasura.Base.Error
   ( Code(..)
   , QErr(..)
+  , QErrExtra(..)
   , encodeJSONPath
   , encodeQErr
   , encodeGQLErr
@@ -63,107 +64,88 @@ import qualified Database.PG.Query      as Q
 import qualified Network.HTTP.Types     as N
 
 data Code
-  = PermissionDenied
-  | NotNullViolation
-  | NotExists
+  = AccessDenied
+  | ActionWebhookCode !Text
   | AlreadyExists
-  | PostgresError
-  | PostgresMaxConnectionsError
-  | MSSQLError
-  | DatabaseConnectionTimeout
-  | BigQueryError
-  | NotSupported
-  | DependencyError
-  | InvalidHeaders
-  | InvalidJSON
-  | AccessDenied
-  | ParseFailed
-  | ConstraintError
-  | PermissionError
-  | NotFound
-  | Unexpected
-  | UnexpectedPayload
-  | NoUpdate
   | AlreadyTracked
   | AlreadyUntracked
-  | InvalidParams
-  | AlreadyInit
-  | ConstraintViolation
-  | DataException
   | BadRequest
-  | MethodNotAllowed
-  | Conflict
-  | InvalidConfiguration
-  -- Graphql error
-  | NoTables
-  | ValidationFailed
+  | BigQueryError
   | Busy
-  -- JWT Auth errors
-  | JWTRoleClaimMissing
-  | JWTInvalidClaims
-  | JWTInvalid
-  | JWTInvalidKey
-  -- Remote schemas
-  | RemoteSchemaError
-  | RemoteSchemaConflicts
   | CoercionError
-  -- Websocket/Subscription errors
-  | StartFailed
-  | InvalidCustomTypes
-  -- Actions Webhook code
-  | ActionWebhookCode !Text
-  -- Custom code for extending this sum-type easily
-  | CustomCode !Text
-  deriving (Eq)
+  | Conflict
+  | ConstraintError
+  | ConstraintViolation
+  | CustomCode !Text -- ^ Custom code for extending this sum-type easily
+  | CyclicDependency
+  | DataException
+  | DependencyError
+  | InvalidConfiguration
+  | InvalidHeaders
+  | InvalidJSON
+  | InvalidParams
+  | JWTInvalid
+  | JWTInvalidClaims
+  | JWTRoleClaimMissing
+  | MSSQLError
+  | MethodNotAllowed
+  | NotExists
+  | NotFound
+  | NotSupported
+  | ParseFailed
+  | PermissionDenied
+  | PermissionError
+  | PostgresError
+  | PostgresMaxConnectionsError
+  | RemoteSchemaConflicts
+  | RemoteSchemaError
+  | StartFailed -- ^ Websockets
+  | Unexpected
+  | UnexpectedPayload
+  | ValidationFailed
+  deriving (Show, Eq)
 
-instance Show Code where
-  show = \case
-    NotNullViolation            -> "not-null-violation"
-    DataException               -> "data-exception"
-    BadRequest                  -> "bad-request"
-    ConstraintViolation         -> "constraint-violation"
-    PermissionDenied            -> "permission-denied"
-    NotExists                   -> "not-exists"
+instance ToJSON Code where
+  toJSON code = String $ case code of
+    AccessDenied                -> "access-denied"
+    ActionWebhookCode t         -> t
     AlreadyExists               -> "already-exists"
     AlreadyTracked              -> "already-tracked"
     AlreadyUntracked            -> "already-untracked"
-    PostgresError               -> "postgres-error"
-    PostgresMaxConnectionsError -> "postgres-max-connections-error"
-    MSSQLError                  -> "mssql-error"
-    DatabaseConnectionTimeout   -> "connection-timeout-error"
-    -- TODO (Naveen): We don't use the above error anywhere, do we remove this?
-    NotSupported                -> "not-supported"
+    BadRequest                  -> "bad-request"
+    BigQueryError               -> "bigquery-error"
+    Busy                        -> "busy"
+    CoercionError               -> "coercion-error"
+    Conflict                    -> "conflict"
+    ConstraintError             -> "constraint-error"
+    ConstraintViolation         -> "constraint-violation"
+    CustomCode t                -> t
+    CyclicDependency            -> "cyclic-dependency"
+    DataException               -> "data-exception"
     DependencyError             -> "dependency-error"
+    InvalidConfiguration        -> "invalid-configuration"
     InvalidHeaders              -> "invalid-headers"
     InvalidJSON                 -> "invalid-json"
-    AccessDenied                -> "access-denied"
-    ParseFailed                 -> "parse-failed"
-    ConstraintError             -> "constraint-error"
-    PermissionError             -> "permission-error"
+    InvalidParams               -> "invalid-params"
+    JWTInvalid                  -> "invalid-jwt"
+    JWTInvalidClaims            -> "jwt-invalid-claims"
+    JWTRoleClaimMissing         -> "jwt-missing-role-claims"
+    MSSQLError                  -> "mssql-error"
+    MethodNotAllowed            -> "method-not-allowed"
+    NotExists                   -> "not-exists"
     NotFound                    -> "not-found"
+    NotSupported                -> "not-supported"
+    ParseFailed                 -> "parse-failed"
+    PermissionDenied            -> "permission-denied"
+    PermissionError             -> "permission-error"
+    PostgresError               -> "postgres-error"
+    PostgresMaxConnectionsError -> "postgres-max-connections-error"
+    RemoteSchemaConflicts       -> "remote-schema-conflicts"
+    RemoteSchemaError           -> "remote-schema-error"
+    StartFailed                 -> "start-failed"
     Unexpected                  -> "unexpected"
     UnexpectedPayload           -> "unexpected-payload"
-    NoUpdate                    -> "no-update"
-    InvalidParams               -> "invalid-params"
-    AlreadyInit                 -> "already-initialised"
-    NoTables                    -> "no-tables"
     ValidationFailed            -> "validation-failed"
-    Busy                        -> "busy"
-    JWTRoleClaimMissing         -> "jwt-missing-role-claims"
-    JWTInvalidClaims            -> "jwt-invalid-claims"
-    JWTInvalid                  -> "invalid-jwt"
-    JWTInvalidKey               -> "invalid-jwt-key"
-    RemoteSchemaError           -> "remote-schema-error"
-    RemoteSchemaConflicts       -> "remote-schema-conflicts"
-    CoercionError               -> "coercion-error"
-    StartFailed                 -> "start-failed"
-    InvalidCustomTypes          -> "invalid-custom-types"
-    MethodNotAllowed            -> "method-not-allowed"
-    Conflict                    -> "conflict"
-    BigQueryError               -> "bigquery-error"
-    InvalidConfiguration        -> "invalid-configuration"
-    ActionWebhookCode t         -> T.unpack t
-    CustomCode t                -> T.unpack t
 
 data QErr
   = QErr
@@ -171,45 +153,69 @@ data QErr
   , qeStatus   :: !N.Status
   , qeError    :: !Text
   , qeCode     :: !Code
-  , qeInternal :: !(Maybe Value)
+  , qeInternal :: !(Maybe QErrExtra)
   } deriving (Show, Eq)
+
+-- | Extra context for a QErr, which can either be information from an internal
+-- error (e.g. from Postgres, or from a network operation timing out), or
+-- context provided when an external service or operation fails, for instance, a
+-- webhook error response may provide additional context in the `extensions`
+-- key.
+data QErrExtra
+  = ExtraExtensions !Value
+  | ExtraInternal !Value
+  deriving (Show, Eq)
+
+instance ToJSON QErrExtra where
+  toJSON = \case
+    ExtraExtensions v -> v
+    ExtraInternal v   -> v
 
 instance ToJSON QErr where
   toJSON (QErr jPath _ msg code Nothing) =
     object
     [ "path"  .= encodeJSONPath jPath
     , "error" .= msg
-    , "code"  .= show code
+    , "code"  .= code
     ]
-  toJSON (QErr jPath _ msg code (Just ie)) =
-    object
-    [ "path"  .= encodeJSONPath jPath
-    , "error" .= msg
-    , "code"  .= show code
-    , "internal" .= ie
-    ]
+  toJSON (QErr jPath _ msg code (Just extra)) = object $
+    case extra of
+      ExtraInternal e   -> err ++ [ "internal" .= e ]
+      ExtraExtensions{} -> err
+    where
+      err =
+        [ "path"  .= encodeJSONPath jPath
+        , "error" .= msg
+        , "code"  .= code
+        ]
 
 noInternalQErrEnc :: QErr -> Value
 noInternalQErrEnc (QErr jPath _ msg code _) =
   object
   [ "path"  .= encodeJSONPath jPath
   , "error" .= msg
-  , "code"  .= show code
+  , "code"  .= code
   ]
 
 encodeGQLErr :: Bool -> QErr -> Value
-encodeGQLErr includeInternal (QErr jPath _ msg code mIE) =
+encodeGQLErr includeInternal (QErr jPath _ msg code maybeExtra) =
   object
   [ "message" .= msg
   , "extensions" .= extnsObj
   ]
   where
-    extnsObj = object $ bool codeAndPath
-               (codeAndPath ++ internal) includeInternal
-    codeAndPath = [ "code" .= show code
-                  , "path" .= encodeJSONPath jPath
-                  ]
-    internal = maybe [] (\ie -> ["internal" .= ie]) mIE
+    appendIf cond a b = if cond then a ++ b else a
+
+    extnsObj = case maybeExtra of
+      Nothing -> object codeAndPath
+      -- if an `extensions` key is given in the error response from the webhook,
+      -- we ignore the `code` key regardless of whether the `extensions` object
+      -- contains a `code` field:
+      Just (ExtraExtensions v) -> v
+      Just (ExtraInternal v) ->
+        object $ appendIf includeInternal codeAndPath ["internal" .= v]
+    codeAndPath = ["path" .= encodeJSONPath jPath,
+                   "code" .= code]
 
 -- whether internal should be included or not
 encodeQErr :: Bool -> QErr -> Value
@@ -245,17 +251,17 @@ instance Q.FromPGConnErr QErr where
   fromPGConnErr c
     | "too many clients" `T.isInfixOf` (Q.getConnErr c) =
       let e = err500 PostgresMaxConnectionsError "max connections reached on postgres"
-      in e {qeInternal = Just $ toJSON c}
+      in e {qeInternal = Just $ ExtraInternal $ toJSON c}
 
   fromPGConnErr c =
     let e = err500 PostgresError "connection error"
-    in e {qeInternal = Just $ toJSON c}
+    in e {qeInternal = Just $ ExtraInternal $ toJSON c}
 
 -- Postgres Transaction error
 instance Q.FromPGTxErr QErr where
   fromPGTxErr txe =
     let e = err500 PostgresError "postgres tx error"
-    in e {qeInternal = Just $ toJSON txe}
+    in e {qeInternal = Just $ ExtraInternal $ toJSON txe}
 
 err400 :: Code -> Text -> QErr
 err400 c t = QErr [] N.status400 t c Nothing
@@ -303,7 +309,7 @@ internalError = err500 Unexpected
 
 throw500WithDetail :: (QErrM m) => Text -> Value -> m a
 throw500WithDetail t detail =
-  throwError $ (err500 Unexpected t) {qeInternal = Just detail}
+  throwError $ (err500 Unexpected t) {qeInternal = Just $ ExtraInternal detail}
 
 modifyQErr :: (QErrM m)
            => (QErr -> QErr) -> m a -> m a

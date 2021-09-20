@@ -10,7 +10,7 @@ var _ = Describe("actions_create", func() {
 	var teardown func()
 	BeforeEach(func() {
 		dirName = testutil.RandDirName()
-		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraVersion)
+		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: []string{"init", dirName},
@@ -61,9 +61,9 @@ var _ = Describe("actions_create", func() {
 			}
 
 			for _, keyword := range wantKeywordList {
-				Eventually(session, 60*40).Should(Say(keyword))
+				Eventually(session.Wait(timeout)).Should(Say(keyword))
 			}
-			Eventually(session, 60*40).Should(Exit(0))
+			Eventually(session, timeout).Should(Exit(0))
 		})
 	})
 })

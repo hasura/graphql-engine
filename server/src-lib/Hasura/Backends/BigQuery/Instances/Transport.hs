@@ -11,7 +11,6 @@ import qualified Hasura.Logging                             as L
 import qualified Hasura.Tracing                             as Tracing
 
 import           Hasura.Backends.BigQuery.Instances.Execute ()
-import           Hasura.Backends.MSSQL.Instances.Execute    ()
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Backend

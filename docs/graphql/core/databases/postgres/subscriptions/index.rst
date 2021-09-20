@@ -21,18 +21,14 @@ changes upstream.
 Subscriptions are supported for all kinds of queries. All the concepts of
 :ref:`queries <queries>` hold true for subscriptions as well.
 
-Execution
----------
+Implementation
+--------------
 
 The Hasura GraphQL engine subscriptions are actually **live queries**, i.e. a subscription will return the
 latest result of the query being made and not necessarily all the individual events leading up to the result.
+By default, updates are delivered to clients every **1 sec**.
 
-By default updates are delivered to clients every **1 sec**. This interval can be configured via the
-``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL`` env var or the
-``--live-queries-multiplexed-refetch-interval`` flag. See the
-:ref:`server config reference <server_flag_reference>` for info on setting the flag/env var.
-
-You can read more about the implementation of subscriptions in the `architecture doc <https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md>`__.
+See more details on :ref:`subscriptions execution and performance <subscriptions_execution_and_performance>`.
 
 Convert a query to a subscription
 ---------------------------------
@@ -56,8 +52,11 @@ Communication protocol
 
 Hasura GraphQL engine uses the `GraphQL over WebSocket Protocol
 <https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md>`__ by the
-`apollographql/subscriptions-transport-ws <https://github.com/apollographql/subscriptions-transport-ws>`__ library
-for sending and receiving events.
+`apollographql/subscriptions-transport-ws <https://github.com/apollographql/subscriptions-transport-ws>`__ library and the 
+`GraphQL over WebSocket Protocol <https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md>`__
+by the `graphql-ws <https://github.com/enisdenjo/graphql-ws>`__ library for sending and receiving events. The support for 
+``graphql-ws`` is currently considered as ``BETA``. The graphql-engine uses the ``Sec-WebSocket-Protocol`` header to determine
+the server Implementation that'll be used. By default, the graphql-engine will use the ``apollographql/subscriptions-transport-ws`` implementation.
 
 .. admonition:: Setting headers for subscriptions with Apollo client
 
@@ -114,3 +113,4 @@ It uses the provided CORS configuration (as per :ref:`configure-cors`).
   :hidden:
 
   Sample use cases <use-cases>
+  Execution and performance <execution-and-performance>
