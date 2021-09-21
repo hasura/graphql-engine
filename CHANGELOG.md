@@ -20,6 +20,7 @@
 - server: `introspect_remote_schema` API now returns original remote schema instead of customized schema
 - server: prevent empty subscription roots in the schema (#6898)
 - console: support tracking of functions with return a single row
+- console: add GraphQL customisation under Remote schema edit tab
 
 ## v2.0.9
 
