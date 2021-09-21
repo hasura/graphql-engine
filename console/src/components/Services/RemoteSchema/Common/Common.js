@@ -10,6 +10,7 @@ import {
 } from '../Add/addRemoteSchemaReducer';
 
 import CommonHeader from '../../../Common/Layout/ReusableHeader/Header';
+import GraphQLCustomizationEdit from './GraphQLCustomization/GraphQLCustomizationEdit';
 
 class Common extends React.Component {
   getPlaceHolderText(valType) {
@@ -22,6 +23,10 @@ class Common extends React.Component {
   handleInputChange(e) {
     const fieldName = e.target.getAttribute('data-key');
     this.props.dispatch(inputChange(fieldName, e.target.value));
+  }
+
+  handleCustomizationInputChange(updateValue) {
+    this.props.dispatch(inputChange('customization', updateValue));
   }
 
   toggleUrlParam(e) {
@@ -44,7 +49,9 @@ class Common extends React.Component {
       forwardClientHeaders,
       comment,
       isNew = false,
+      customization,
     } = this.props;
+
     const { isModify } = this.props.editState;
 
     const isDisabled = !isNew && !isModify;
@@ -252,6 +259,32 @@ class Common extends React.Component {
             data-test="remote-schema-comment"
           />
         </label>
+        <hr className="my-lg" />
+        {/* <GraphQLCustomization mode="edit" customization={customization} dispatch={this.props.dispatch} /> */}
+        {isNew ? null : (
+          <>
+            <div className="text-lg font-bold">
+              GraphQL Customizations{' '}
+              <OverlayTrigger
+                placement="right"
+                overlay={
+                  <Tooltip id="tooltip-cascade">
+                    Individual Types and Fields will be editable after saving.
+                  </Tooltip>
+                }
+              >
+                <i className="fa fa-question-circle" aria-hidden="true" />
+              </OverlayTrigger>
+            </div>
+            <GraphQLCustomizationEdit
+              remoteSchemaName={name}
+              graphQLCustomization={customization}
+              dispatch={this.props.dispatch}
+              onChange={this.handleCustomizationInputChange.bind(this)}
+              isDisabled={isDisabled}
+            />
+          </>
+        )}
       </div>
     );
   }

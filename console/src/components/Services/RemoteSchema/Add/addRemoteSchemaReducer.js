@@ -21,6 +21,7 @@ const ENV_URL_CHANGED = '@addRemoteSchema/ENV_URL_CHANGED';
 const NAME_CHANGED = '@addRemoteSchema/NAME_CHANGED';
 const TIMEOUT_CONF_CHANGED = '@addRemoteSchema/TIMEOUT_CONF_CHANGED';
 const COMMENT_CHANGED = '@addRemoteSchema/COMMENT_CHANGED';
+const CUSTOMIZATION_CHANGED = '@addRemoteSchema/CUSTOMIZATION_CHANGED';
 // const HEADER_CHANGED = '@addRemoteSchema/HEADER_CHANGED';
 const ADDING_REMOTE_SCHEMA = '@addRemoteSchema/ADDING_REMOTE_SCHEMA';
 const ADD_REMOTE_SCHEMA_FAIL = '@addRemoteSchema/ADD_REMOTE_SCHEMA_FAIL';
@@ -48,6 +49,7 @@ const inputEventMap = {
   manualUrl: MANUAL_URL_CHANGED,
   timeoutConf: TIMEOUT_CONF_CHANGED,
   comment: COMMENT_CHANGED,
+  customization: CUSTOMIZATION_CHANGED,
 };
 
 /* Action creators */
@@ -251,6 +253,7 @@ const modifyRemoteSchema = () => (dispatch, getState) => {
     timeout_seconds: timeoutSeconds,
     forward_client_headers: currState.forwardClientHeaders,
     headers: getReqHeader(getState().remoteSchemas.headerData.headers),
+    customization: currState.customization,
   };
   const remoteSchemaComment = currState?.comment;
 
@@ -281,6 +284,7 @@ const modifyRemoteSchema = () => (dispatch, getState) => {
     timeout_seconds: oldTimeout,
     headers: currState.editState.originalHeaders,
     forward_client_headers: currState.editState.originalForwardClientHeaders,
+    currState: currState.editState.oldCustomization,
   };
 
   if (!currState.editState.originalUrl) {
@@ -360,6 +364,11 @@ const addRemoteSchemaReducer = (state = addState, action) => {
         ...state,
         comment: action.data,
       };
+    case CUSTOMIZATION_CHANGED:
+      return {
+        ...state,
+        customization: action.data,
+      };
     case ADDING_REMOTE_SCHEMA:
       return {
         ...state,
@@ -404,6 +413,7 @@ const addRemoteSchemaReducer = (state = addState, action) => {
           : '60',
         forwardClientHeaders: action.data.definition.forward_client_headers,
         comment: action.data?.comment || '',
+        customization: action.data.definition?.customization,
         editState: {
           ...state,
           isModify: false,
@@ -414,6 +424,7 @@ const addRemoteSchemaReducer = (state = addState, action) => {
           originalForwardClientHeaders:
             action.data.definition.forward_client_headers || false,
           originalComment: action.data?.comment || '',
+          originalCustomization: action.data.definition?.customization,
         },
         isFetching: false,
         isFetchError: null,

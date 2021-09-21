@@ -512,7 +512,7 @@ const isEnumType = (type: GraphQLInputType): boolean => {
 };
 
 // Check if type belongs to default gql scalar types
-const checkDefaultGQLScalarType = (typeName: string): boolean => {
+export const checkDefaultGQLScalarType = (typeName: string): boolean => {
   const gqlDefaultTypes = ['Boolean', 'Float', 'String', 'Int', 'ID'];
   if (gqlDefaultTypes.indexOf(typeName) > -1) return true;
   return false;
