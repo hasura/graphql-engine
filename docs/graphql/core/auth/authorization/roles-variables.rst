@@ -97,15 +97,15 @@ Examples:
   Session variables are analogous to *attributes* in a typical `attribute-based access control <https://en.wikipedia.org/wiki/Attribute-based_access_control>`__ (ABAC) system.
 
 
-Modelling Roles in Hasura
+Modeling Roles in Hasura
 -------------------------
 
-General guidelines for modelling roles in Hasura.
+General guidelines for modeling roles in Hasura.
 
 Roles are typically modelled in two ways:
 
 1. **Hierarchical roles**: Access scopes are nested depending on available roles. `Roles in GitHub for organisations <https://help.github.com/en/articles/managing-peoples-access-to-your-organization-with-roles>`_
-   is a great example of such modelling where access scopes are inherited by deeper roles:
+   is a great example of such modeling where access scopes are inherited by deeper roles:
 
    .. thumbnail:: /img/graphql/core/auth/github-org-hierarchical-roles.png
       :alt: Hierarchical roles

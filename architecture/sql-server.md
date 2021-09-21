@@ -164,7 +164,7 @@ Here are a few examples of types of authorization rules that can be implemented 
 
 #### Ex 3: Compare column values
 - Comparing column values allows access to be controlled by a dynamically changing value in another part of the database
-- This makes modelling things like "access tiers" in a subscription plan, or a lookup from a dynamic ACL table very simple
+- This makes modeling things like "access tiers" in a subscription plan, or a lookup from a dynamic ACL table very simple
   ```yaml
   role: user
   table: article

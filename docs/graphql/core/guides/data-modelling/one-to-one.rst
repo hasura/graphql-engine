@@ -4,7 +4,7 @@
 
 .. _one_to_one_modelling:
 
-Modelling one-to-one table relationships
+Modeling one-to-one table relationships
 ========================================
 
 .. contents:: Table of contents

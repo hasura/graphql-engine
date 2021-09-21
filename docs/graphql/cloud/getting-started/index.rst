@@ -139,7 +139,7 @@ For a full hands-on tour of Hasura, check out our `30-Minute Hasura Basics Cours
 Database operations
 ^^^^^^^^^^^^^^^^^^^
 
-- :ref:`Database modelling <schema>`: Learn how to model your database schema, as well as how to extend it.
+- :ref:`Database modeling <schema>`: Learn how to model your database schema, as well as how to extend it.
 - :ref:`Querying data <queries>`: Use GraphQL queries to query data from your GraphQL API.
 - :ref:`Inserting data <mutations>`: Use GraphQL mutations to insert data into your GraphQL API.
 

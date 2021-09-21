@@ -22,7 +22,7 @@ Blogposts
 - `Build a Login app using React-native and Hasura without Redux <https://codeburst.io/making-a-login-app-using-react-native-and-hasura-without-redux-bb31d102038d>`__
 - `Build file upload and download for your Hasura app with S3 <https://hasura.io/blog/building-file-upload-downloads-for-your-hasura-app/>`__
 - `Public GraphQL queries with Hasura (unauthenticated users) <https://dev.to/mikewheaton/public-graphql-queries-with-hasura-2n06>`__
-- `Modelling teams and user security with Hasura <https://dev.to/lineup-ninja/modelling-teams-and-user-security-with-hasura-204i>`__
+- `Modeling teams and user security with Hasura <https://dev.to/lineup-ninja/modelling-teams-and-user-security-with-hasura-204i>`__
 - `Django JWT authentication with Hasura <https://medium.com/@sejuba/django-jwt-authentication-with-hasura-graphql-engine-e522b2c90869>`__
 
 Repositories

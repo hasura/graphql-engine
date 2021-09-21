@@ -16,7 +16,7 @@ The Hasura GraphQL engine automatically generates your GraphQL schema and resolv
 in BigQuery. **You don't need to write a GraphQL schema or resolvers.** See
 :ref:`How Hasura GraphQL engine works <how_it_works>` for more details.
 
-The Hasura console gives you UI tools that speed up your data-modelling process, or working with your existing database.
+The Hasura console gives you UI tools that speed up your data-modeling process, or working with your existing database.
 
 The Hasura GraphQL engine lets you do anything you would usually do with BigQuery by giving you GraphQL over native
 BigQuery constructs.

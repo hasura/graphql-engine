@@ -64,7 +64,7 @@ The only order that's important is that the parent sdof the inherited roles shou
 The ordering of the roles can be done by the function (stronglyConnComp)[https://hackage.haskell.org/package/containers-0.6.4.1/docs/Data-Graph.html#v:stronglyConnComp], this function
 also returns if there are any cycles in the roles.
 
-### Modelling of Permissions
+### Modeling of Permissions
 
 ```haskell
 data CheckPermissions permissionType = Undefined | Defined permissionType | Inconsistent

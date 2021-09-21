@@ -16,7 +16,7 @@ Guides / Tutorials / Resources
    :maxdepth: 2
    :titlesonly:
 
-   Data modelling guides <data-modelling/index>
+   Data modeling guides <data-modelling/index>
    Postgres basics <postgres/index>
    Docker networking <docker-networking>
    Sample apps & boilerplates <sample-apps/index>
