@@ -526,5 +526,6 @@ insertFunctionArg argName idx value (FunctionArgsExp positional named) =
 -- Lenses
 
 $(makeLenses ''AnnSelectG)
+$(makeLenses ''SelectArgsG)
 $(makePrisms ''AnnFieldG)
 $(makePrisms ''AnnotatedOrderByElement)

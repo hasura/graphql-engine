@@ -1137,7 +1137,6 @@ class TestUnauthorizedRolePermission:
     def test_unauth_role(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/unauthorized_role.yaml', transport, False)
 
-@pytest.mark.parametrize("backend", ['postgres', 'mssql'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLExplain:
     @classmethod
@@ -1154,14 +1153,32 @@ class TestGraphQLExplain:
         st_code, resp = hge_ctx.v1GraphqlExplain(q, {"x-hasura-role": "random_user"})
         assert st_code == 400, resp
 
+    @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
     def test_simple_query_as_admin_with_user_role(self, hge_ctx, backend):
         self.with_admin_secret(hge_ctx, self.dir() + hge_ctx.backend_suffix('/permissions_query') + ".yaml")
 
+    @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
     def test_simple_query(self, hge_ctx, backend):
         self.with_admin_secret(hge_ctx, self.dir() + hge_ctx.backend_suffix('/simple_query') + ".yaml")
 
+    @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
     def test_permissions_query(self, hge_ctx, backend):
         self.with_admin_secret(hge_ctx, self.dir() + hge_ctx.backend_suffix('/permissions_query') + ".yaml")
+
+    def test_limit_query(self, hge_ctx):
+        self.with_admin_secret(hge_ctx, self.dir() + '/limit_query.yaml')
+
+    def test_limit_orderby_column_query(self, hge_ctx):
+        self.with_admin_secret(hge_ctx, self.dir() + '/limit_orderby_column_query.yaml')
+
+    def test_limit_orderby_relationship_query(self, hge_ctx):
+        self.with_admin_secret(hge_ctx, self.dir() + '/limit_orderby_relationship_query.yaml')
+
+    def test_limit_offset_orderby_relationship_query(self, hge_ctx):
+        self.with_admin_secret(hge_ctx, self.dir() + '/limit_offset_orderby_relationship_query.yaml')
+
+    def test_orderby_array_relationship_query(self, hge_ctx):
+        self.with_admin_secret(hge_ctx, self.dir() + '/orderby_array_relationship_query.yaml')
 
     def with_admin_secret(self, hge_ctx, f, hdrs=None, req_st=200):
         conf = get_conf_f(f)
