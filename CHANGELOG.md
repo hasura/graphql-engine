@@ -3,6 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: optimize SQL query generation with LIMITs
 - server: add GraphQL request query in the payload for synchronous actions
 - server: improve the event trigger logging on errors
   NOTE: This change introduces a breaking change, earlier when there
