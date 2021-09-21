@@ -361,8 +361,8 @@ class ApiRequest extends Component {
                   <input
                     type="checkbox"
                     name="sponsored"
-                    style={{ outline: 'none' }}
-                    className="mr-1 border-gray-400 rounded outline-none focus:outline-none focus:ring-2 focus:ring-offset-2  focus:ring-yellow-400"
+                    style={{ marginTop: '4px' }}
+                    className="legacy-input-fix"
                     id={i + 1}
                     checked={header.isActive}
                     data-header-id={i}
