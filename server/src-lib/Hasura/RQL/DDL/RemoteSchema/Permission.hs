@@ -566,7 +566,7 @@ validateEnumTypeDefinition providedEnum upstreamEnum = do
   when (providedName /= upstreamName) $
     dispute $ pure $
       UnexpectedNonMatchingNames providedName upstreamName Enum
-  validateDirectives providedDirectives upstreamDirectives G.TSDLENUM $ (Enum, providedName)
+  void $ validateDirectives providedDirectives upstreamDirectives G.TSDLENUM $ (Enum, providedName)
   onJust (NE.nonEmpty $ S.toList $ duplicates providedEnumValNames) $ \dups -> do
     refute $ pure $ DuplicateEnumValues providedName dups
   onJust (NE.nonEmpty $ S.toList fieldsDifference) $ \nonExistingEnumVals ->
@@ -654,7 +654,7 @@ validateInputObjectTypeDefinition providedInputObj upstreamInputObj = do
   when (providedName /= upstreamName) $
     dispute $ pure $
       UnexpectedNonMatchingNames providedName upstreamName InputObject
-  validateDirectives providedDirectives upstreamDirectives G.TSDLINPUT_OBJECT $ (InputObject, providedName)
+  void $ validateDirectives providedDirectives upstreamDirectives G.TSDLINPUT_OBJECT $ (InputObject, providedName)
   args <- validateArguments providedArgs upstreamArgs $ providedName
   pure $ providedInputObj { G._iotdValueDefinitions = args }
   where
@@ -674,7 +674,7 @@ validateFieldDefinition providedFieldDefinition upstreamFieldDefinition (parentT
   when (providedName /= upstreamName) $
     dispute $ pure $
       UnexpectedNonMatchingNames providedName upstreamName (Field parentType)
-  validateDirectives providedDirectives upstreamDirectives G.TSDLFIELD_DEFINITION $ (Field parentType, parentTypeName)
+  void $ validateDirectives providedDirectives upstreamDirectives G.TSDLFIELD_DEFINITION $ (Field parentType, parentTypeName)
   when (providedType /= upstreamType) $
     dispute $ pure $ NonMatchingType providedName (Field parentType) upstreamType providedType
   args <- validateArguments providedArgs upstreamArgs $ providedName
@@ -714,7 +714,7 @@ validateInterfaceDefinition providedInterfaceDefn upstreamInterfaceDefn = do
   when (providedName /= upstreamName) $
     dispute $ pure $
       UnexpectedNonMatchingNames providedName upstreamName Interface
-  validateDirectives providedDirectives upstreamDirectives G.TSDLINTERFACE $ (Interface, providedName)
+  void $ validateDirectives providedDirectives upstreamDirectives G.TSDLINTERFACE $ (Interface, providedName)
   fieldDefinitions <- validateFieldDefinitions providedFieldDefns upstreamFieldDefns $ (InterfaceField, providedName)
   pure $ providedInterfaceDefn { G._itdFieldsDefinition = fieldDefinitions }
   where
@@ -770,7 +770,7 @@ validateObjectDefinition providedObj upstreamObj interfacesDeclared = do
   when (providedName /= upstreamName) $
     dispute $ pure $
       UnexpectedNonMatchingNames providedName upstreamName Object
-  validateDirectives providedDirectives upstreamDirectives G.TSDLOBJECT $ (Object, providedName)
+  void $ validateDirectives providedDirectives upstreamDirectives G.TSDLOBJECT $ (Object, providedName)
   onJust (NE.nonEmpty $ S.toList customInterfaces) $ \ifaces ->
     dispute $ pure $ CustomInterfacesNotAllowed providedName ifaces
   onJust (NE.nonEmpty nonExistingInterfaces) $ \ifaces ->

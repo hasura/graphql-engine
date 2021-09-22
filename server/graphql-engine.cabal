@@ -38,7 +38,6 @@ common common-all
   default-language: Haskell2010
   default-extensions:
     AllowAmbiguousTypes
-    ApplicativeDo
     BangPatterns
     BlockArguments
     ConstraintKinds

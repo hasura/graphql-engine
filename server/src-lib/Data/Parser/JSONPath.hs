@@ -9,6 +9,7 @@ import qualified Data.Text            as T
 import           Prelude
 
 import           Control.Applicative
+import           Control.Monad        (void)
 import           Data.Aeson.Internal  (JSONPath, JSONPathElement (..))
 import           Data.Attoparsec.Text
 
@@ -40,17 +41,17 @@ name = go <?> "property name" where
 -- > ['你好']
 bracketElement :: Parser JSONPathElement
 bracketElement = do
-  optional (char '.') *> char '['
+  void $ optional (char '.') *> char '['
   result <- Index <$> decimal
         <|>   Key <$> quotedString '"'
         <|>   Key <$> quotedString '\''
-  char ']'
+  void $ char ']'
   pure result
   where
     quotedString delimiter = do
-      char delimiter
+      void $ char delimiter
       result <- T.pack <$> many' (charOrEscape delimiter)
-      char delimiter
+      void $ char delimiter
       pure result
 
     charOrEscape delimiter = (char '\\' *> anyChar) <|> notChar delimiter

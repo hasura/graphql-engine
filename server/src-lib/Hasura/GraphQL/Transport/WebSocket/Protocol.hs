@@ -295,7 +295,7 @@ getNewWSTimer :: Seconds -> IO WSConnInitTimer
 getNewWSTimer timeout = do
     timerState <- newTVarIO Running
     timer      <- newEmptyTMVarIO
-    forkIO $ do
+    void $ forkIO $ do
         sleep (seconds timeout)
         atomically $ do
             runTimerState <- readTVar timerState

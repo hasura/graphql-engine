@@ -1,3 +1,4 @@
+{-# LANGUAGE ApplicativeDo #-}
 module Hasura.GraphQL.Schema.BoolExp
   ( boolExp
   , mkBoolOperator

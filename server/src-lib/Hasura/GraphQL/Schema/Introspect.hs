@@ -1,3 +1,4 @@
+{-# LANGUAGE ApplicativeDo #-}
 module Hasura.GraphQL.Schema.Introspect where
 
 import           Hasura.Prelude

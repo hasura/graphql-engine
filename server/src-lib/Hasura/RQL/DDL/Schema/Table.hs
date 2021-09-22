@@ -529,7 +529,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
               <> commaSeparated (map (dquote . erTable) $ toList enumReferences) <> ")"
 
     assertNoDuplicateFieldNames columns =
-      flip Map.traverseWithKey (Map.groupOn pgiName columns) \name columnsWithName ->
+      void $ flip Map.traverseWithKey (Map.groupOn pgiName columns) \name columnsWithName ->
         case columnsWithName of
           one:two:more -> throw400 AlreadyExists $ "the definitions of columns "
             <> englishList "and" (dquote . pgiColumn <$> (one:|two:more))

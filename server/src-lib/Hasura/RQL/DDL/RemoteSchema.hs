@@ -86,7 +86,7 @@ runAddRemoteSchemaPermissions q = do
   when (doesRemoteSchemaPermissionExist metadata name role) $
     throw400 AlreadyExists $ "permissions for role: " <> role <<> " for remote schema:"
       <> name <<> " already exists"
-  resolveRoleBasedRemoteSchema providedSchemaDoc remoteSchemaCtx
+  void $ resolveRoleBasedRemoteSchema providedSchemaDoc remoteSchemaCtx
   buildSchemaCacheFor (MORemoteSchemaPermissions name role) $
     MetadataModifier $ metaRemoteSchemas.ix name.rsmPermissions %~ (:) remoteSchemaPermMeta
   pure successMsg
@@ -107,7 +107,7 @@ runDropRemoteSchemaPermissions
 runDropRemoteSchemaPermissions (DropRemoteSchemaPermissions name roleName) = do
   metadata <- getMetadata
   remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
-  onNothing (Map.lookup name remoteSchemaMap) $
+  void $ onNothing (Map.lookup name remoteSchemaMap) $
     throw400 NotExists $ "remote schema " <> name <<> " doesn't exist"
   unless (doesRemoteSchemaPermissionExist metadata name roleName)$
     throw400 NotExists $ "permissions for role: " <> roleName <<> " for remote schema:"
@@ -138,7 +138,7 @@ runRemoveRemoteSchema
   :: (QErrM m, UserInfoM m, CacheRWM m, MetadataM m)
   => RemoteSchemaNameQuery -> m EncJSON
 runRemoveRemoteSchema (RemoteSchemaNameQuery rsn) = do
-  removeRemoteSchemaP1 rsn
+  void $ removeRemoteSchemaP1 rsn
   withNewInconsistentObjsCheck $ buildSchemaCache $
     dropRemoteSchemaInMetadata rsn
   pure successMsg

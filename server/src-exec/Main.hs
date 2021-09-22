@@ -56,11 +56,11 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
     HCServe serveOptions -> do
       (ekgStore, serverMetrics) <- liftIO $ do
         store <- EKG.newStore @AppMetricsSpec
-        EKG.register (EKG.subset GcSubset store) EKG.registerGcMetrics
+        void $ EKG.register (EKG.subset GcSubset store) EKG.registerGcMetrics
 
         let getTimeMs :: IO Int64
             getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
-        EKG.register store $ EKG.registerCounter ServerTimestampMs () getTimeMs
+        void $ EKG.register store $ EKG.registerCounter ServerTimestampMs () getTimeMs
 
         serverMetrics <-
           liftIO $ createServerMetrics $ EKG.subset ServerSubset store

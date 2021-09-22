@@ -1,4 +1,4 @@
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ApplicativeDo #-}
 
 module Hasura.GraphQL.Schema.Mutation
   ( insertIntoTable
