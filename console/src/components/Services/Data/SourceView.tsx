@@ -149,6 +149,7 @@ const SourceView: React.FC<Props> = props => {
               return (
                 <div
                   className={`${styles.padd_small} ${styles.padd_left_remove}`}
+                  key={key}
                 >
                   <Button
                     color="white"
