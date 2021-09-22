@@ -420,7 +420,8 @@ fromAnnColumnField _stringifyNumbers annColumnField = do
      then pure $ MethodExpression (ColumnExpression fieldName) "STAsText" []
      else pure (ColumnExpression fieldName)
   where
-    IR.AnnColumnField { _acfInfo = IR.ColumnInfo{pgiColumn=pgCol,pgiType=typ}
+    IR.AnnColumnField { _acfColumn = pgCol
+                      , _acfType = typ
                       , _acfAsText = _asText :: Bool
                       , _acfOp = _ :: Maybe (IR.ColumnOp 'MySQL)
                       } = annColumnField

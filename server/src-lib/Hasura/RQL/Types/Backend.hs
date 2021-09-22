@@ -93,6 +93,14 @@ class
   , Typeable (ConstraintName b)
   , Typeable b
   , HasTag b
+  -- Type constraints.
+  , Eq (CountType b)
+  , Show (CountType b)
+  -- Extension constraints.
+  , Eq (XNodesAgg b)
+  , Show (XNodesAgg b)
+  , Eq (XRelay b)
+  , Show (XRelay b)
   ) => Backend (b :: BackendType) where
   -- types
   type SourceConfig            b :: Type

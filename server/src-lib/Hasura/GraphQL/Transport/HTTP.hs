@@ -283,7 +283,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                           tx
                           genSql
                 finalResponse <-
-                  RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins
+                  RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
                 pure $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
               E.ExecStepRemote rsi resultCustomizer gqlReq -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
@@ -294,7 +294,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                 (time, (resp, _)) <- doQErr $ do
                   (time, (resp, hdrs)) <- EA.runActionExecution userInfo aep
                   finalResponse <-
-                    RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins
+                    RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
                   pure (time, (finalResponse, hdrs))
                 pure $ ResultsFragment time Telem.Empty resp []
               E.ExecStepRaw json -> do
@@ -358,7 +358,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                           genSql
 
                 finalResponse <-
-                    RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins
+                    RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
                 pure $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse responseHeaders
               E.ExecStepRemote rsi resultCustomizer gqlReq -> do
                 logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
@@ -368,7 +368,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                 (time, (resp, hdrs)) <- doQErr $ do
                   (time, (resp, hdrs)) <- EA.runActionExecution userInfo aep
                   finalResponse <-
-                    RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins
+                    RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
                   pure (time, (finalResponse, hdrs))
                 pure $ ResultsFragment time Telem.Empty resp $ fromMaybe [] hdrs
               E.ExecStepRaw json -> do

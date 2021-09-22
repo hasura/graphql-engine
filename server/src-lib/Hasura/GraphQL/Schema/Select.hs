@@ -19,59 +19,67 @@ module Hasura.GraphQL.Schema.Select
   , tableDistinctArg
   , tableLimitArg
   , tableOffsetArg
+  , tablePermissionsInfo
   , tableSelectionSet
   , tableSelectionList
   , nodePG
   , nodeField
   ) where
 
-import           Hasura.Prelude
+import                          Hasura.Prelude
 
-import qualified Data.Aeson                                 as J
-import qualified Data.Aeson.Extended                        as J
-import qualified Data.Aeson.Internal                        as J
-import qualified Data.ByteString.Lazy                       as BL
-import qualified Data.HashMap.Strict                        as Map
-import qualified Data.HashSet                               as Set
-import qualified Data.List.NonEmpty                         as NE
-import qualified Data.Sequence                              as Seq
-import qualified Data.Sequence.NonEmpty                     as NESeq
-import qualified Data.Text                                  as T
-import qualified Language.GraphQL.Draft.Syntax              as G
+import                qualified Data.Aeson                                 as J
+import                qualified Data.Aeson.Extended                        as J
+import                qualified Data.Aeson.Internal                        as J
+import                qualified Data.ByteString.Lazy                       as BL
+import                qualified Data.HashMap.Strict                        as Map
+import                qualified Data.HashSet                               as Set
+import                qualified Data.List.NonEmpty                         as NE
+import                qualified Data.Sequence                              as Seq
+import                qualified Data.Sequence.NonEmpty                     as NESeq
+import                qualified Data.Text                                  as T
+import                          Data.These                                 (partitionThese)
+import                qualified Language.GraphQL.Draft.Syntax              as G
 
-import           Control.Lens                               hiding (index)
-import           Data.Align                                 (align)
-import           Data.Has
-import           Data.Int                                   (Int64)
-import           Data.Parser.JSONPath
-import           Data.Text.Extended
-import           Data.These                                 (partitionThese)
-import           Data.Traversable                           (mapAccumL)
+import                          Control.Lens                               hiding (index)
+import                          Data.Align                                 (align)
+import                          Data.Has
+import                          Data.Int                                   (Int64)
+import                          Data.Parser.JSONPath
+import                          Data.Text.Extended
+import                          Data.Traversable                           (mapAccumL)
 
-import qualified Hasura.Backends.Postgres.SQL.Types         as PG
-import qualified Hasura.GraphQL.Execute.Types               as ET
-import qualified Hasura.GraphQL.Parser                      as P
-import qualified Hasura.GraphQL.Parser.Internal.Parser      as P
-import qualified Hasura.RQL.IR                              as IR
-import qualified Hasura.SQL.AnyBackend                      as AB
+import                qualified Hasura.Backends.Postgres.SQL.Types         as PG
+import                qualified Hasura.GraphQL.Execute.Types               as ET
+import                qualified Hasura.GraphQL.Parser                      as P
+import                qualified Hasura.GraphQL.Parser.Internal.Parser      as P
+import                qualified Hasura.RQL.IR                              as IR
+import                qualified Hasura.SQL.AnyBackend                      as AB
 
-import           Hasura.Base.Error
-import           Hasura.GraphQL.Parser                      (FieldParser, InputFieldsParser,
-                                                             Kind (..), Parser,
-                                                             UnpreparedValue (..), mkParameter)
-import           Hasura.GraphQL.Parser.Class                (MonadParse (parseErrorWith, withPath),
-                                                             MonadSchema (..), MonadTableInfo,
-                                                             askRoleName, askTableInfo, parseError)
-import           Hasura.GraphQL.Schema.Backend
-import           Hasura.GraphQL.Schema.BoolExp
-import           Hasura.GraphQL.Schema.Common
-import           Hasura.GraphQL.Schema.OrderBy
-import           Hasura.GraphQL.Schema.Remote
-import           Hasura.GraphQL.Schema.Table
-import           Hasura.RQL.DDL.RemoteRelationship.Validate
-import           Hasura.RQL.Types
-import           Hasura.Server.Utils                        (executeJSONPath)
-import           Hasura.Session
+import                          Hasura.Base.Error
+import                          Hasura.GraphQL.Parser                      (FieldParser,
+                                                                            InputFieldsParser,
+                                                                            Kind (..), Parser,
+                                                                            UnpreparedValue (..),
+                                                                            mkParameter)
+import                          Hasura.GraphQL.Parser.Class                (MonadParse (parseErrorWith, withPath),
+                                                                            MonadSchema (..),
+                                                                            MonadTableInfo,
+                                                                            askRoleName,
+                                                                            askTableInfo,
+                                                                            parseError)
+import {-# SOURCE #-}           Hasura.GraphQL.Schema.RemoteSource
+
+import                          Hasura.GraphQL.Schema.Backend
+import                          Hasura.GraphQL.Schema.BoolExp
+import                          Hasura.GraphQL.Schema.Common
+import                          Hasura.GraphQL.Schema.OrderBy
+import                          Hasura.GraphQL.Schema.Remote
+import                          Hasura.GraphQL.Schema.Table
+import                          Hasura.RQL.DDL.RemoteRelationship.Validate
+import                          Hasura.RQL.Types
+import                          Hasura.Server.Utils                        (executeJSONPath)
+import                          Hasura.Session
 
 
 --------------------------------------------------------------------------------
@@ -990,7 +998,7 @@ fieldSelection sourceName table maybePkeyColumns fieldInfo selectPermissions = d
                  nullability = pgiIsNullable columnInfo || isJust caseBoolExp
              field <- lift $ columnParser (pgiType columnInfo) (G.Nullability nullability)
              pure $ P.selection fieldName (pgiDescription columnInfo) pathArg field
-               <&> IR.mkAnnColumnField columnInfo caseBoolExpUnpreparedValue
+               <&> IR.mkAnnColumnField (pgiColumn columnInfo) (pgiType columnInfo) caseBoolExpUnpreparedValue
 
     FIRelationship relationshipInfo ->
       concat . maybeToList <$> relationshipField sourceName table relationshipInfo
@@ -1177,7 +1185,8 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
   -- The above issue is easily fixable by removing the following guard and 'MaybeT' monad transformation
   guard $ queryType == ET.QueryHasura
   case remoteFieldInfo of
-    RFISource _remoteSource -> throw500 "not supported yet"
+    RFISource remoteSource ->
+      lift $ remoteSourceField remoteSource
     RFISchema remoteSchema -> do
       let RemoteSchemaFieldInfo name params hasuraFields remoteFields remoteSchemaInfo remoteSchemaInputValueDefns remoteSchemaName (table, source) = remoteSchema
       RemoteRelationshipQueryContext roleIntrospectionResultOriginal _ remoteSchemaCustomizer <-

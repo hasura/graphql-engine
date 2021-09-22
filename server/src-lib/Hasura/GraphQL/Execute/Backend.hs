@@ -13,6 +13,7 @@ import           Data.Kind                               (Type)
 import           Data.SqlCommenter
 import           Data.Tagged
 import           Data.Text.Extended
+import           Data.Text.NonEmpty                      (mkNonEmptyTextUnsafe)
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol  as GH
 import qualified Hasura.SQL.AnyBackend                   as AB
@@ -27,6 +28,7 @@ import           Hasura.QueryTags
 import           Hasura.RQL.IR
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Backend
+import           Hasura.RQL.Types.Column                 (ColumnType, fromCol)
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.QueryTags              (QueryTagsSourceConfig)
 import           Hasura.RQL.Types.RemoteSchema
@@ -108,6 +110,79 @@ class ( Backend b
       )
     => LiveQueryPlan b (MultiplexedQuery b)
     -> m LiveQueryPlanExplanation
+
+  mkDBRemoteRelationshipPlan
+    :: forall m
+     . ( MonadError QErr m
+       , MonadQueryTags m
+       )
+    => UserInfo
+    -> SourceName
+    -> SourceConfig b
+    -> NonEmpty J.Object
+    -- ^ List of json objects, each of which becomes a row of the table.
+    -> HashMap FieldName (Column b, ScalarType b)
+    -- ^ The above objects have this schema.
+    -> FieldName
+    -- ^ This is a field name from the lhs that *has* to be selected in the
+    -- response along with the relationship.
+    -> (FieldName, SourceRelationshipSelection b (Const Void) UnpreparedValue)
+    -> m (DBStepInfo b)
+
+-- | This is a helper function to convert a remote source's relationship to a
+-- normal relationship to a temporary table. This function can be used to
+-- implement executeRemoteRelationship function in databases which support
+-- constructing a temporary table for a list of json objects.
+convertRemoteSourceRelationship
+  :: forall b. (Backend b)
+  => HashMap (Column b) (Column b)
+  -- ^ Join columns for the relationship
+  -> SelectFromG b (UnpreparedValue b)
+  -- ^ The LHS of the join, this is the expression which selects from json
+  -- objects
+  -> Column b
+  -- ^ This is the __argument__ id column, that needs to be added to the response
+  -- This is used by by the remote joins processing logic to convert the
+  -- response from upstream to join indices
+  -> ColumnType b
+  -- ^ This is the type of the __argument__ id column
+  -> (FieldName, SourceRelationshipSelection b (Const Void) UnpreparedValue)
+  -- ^ The relationship column and its name (how it should be selected in the
+  -- response)
+  -> QueryDB b (Const Void) (UnpreparedValue b)
+convertRemoteSourceRelationship columnMapping selectFrom argumentIdColumn argumentIdColumnType
+  (relationshipName, relationship) =
+  QDBMultipleRows simpleSelect
+  where
+    -- TODO: FieldName should have also been a wrapper around NonEmptyText
+    relName = RelName $ mkNonEmptyTextUnsafe $ getFieldNameTxt relationshipName
+
+    relationshipField = case relationship of
+      SourceRelationshipObject s ->
+        AFObjectRelation $ AnnRelationSelectG relName columnMapping s
+      SourceRelationshipArray s ->
+        AFArrayRelation $ ASSimple $ AnnRelationSelectG relName columnMapping s
+      SourceRelationshipArrayAggregate s ->
+        AFArrayRelation $ ASAggregate $ AnnRelationSelectG relName columnMapping s
+
+    argumentIdField =
+      ( fromCol @b argumentIdColumn
+      , AFColumn $
+        AnnColumnField { _acfColumn = argumentIdColumn
+                       , _acfType = argumentIdColumnType
+                       , _acfAsText = False
+                       , _acfOp = Nothing
+                       , _acfCaseBoolExpression = Nothing
+                       }
+      )
+
+    simpleSelect =
+      AnnSelectG { _asnFields = [argumentIdField, (relationshipName, relationshipField)]
+                 , _asnFrom = selectFrom
+                 , _asnPerm = TablePerm annBoolExpTrue Nothing
+                 , _asnArgs = noSelectArgs
+                 , _asnStrfyNum = False
+                 }
 
 data DBStepInfo b = DBStepInfo
   { dbsiSourceName    :: SourceName

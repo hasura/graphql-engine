@@ -809,7 +809,7 @@ fromAnnColumnField _stringifyNumbers annColumnField = do
            ex' <- (traverse fromAnnBoolExpFld >=> fromGBoolExp) (coerce ex)
            pure (ConditionalProjection ex' fieldName)
   where
-    Ir.AnnColumnField { _acfInfo = Rql.ColumnInfo{pgiColumn=pgCol,pgiType=_typ}
+    Ir.AnnColumnField { _acfColumn = pgCol
                       , _acfAsText = asText :: Bool
                       , _acfOp = _ :: Maybe (Ir.ColumnOp 'BigQuery) -- TODO: What's this?
                       , _acfCaseBoolExpression = caseBoolExpMaybe :: Maybe (Ir.AnnColumnCaseBoolExp 'BigQuery Expression)

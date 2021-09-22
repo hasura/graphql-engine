@@ -40,10 +40,17 @@ instance BackendExecute 'BigQuery where
   mkDBQueryPlan = bqDBQueryPlan
   mkDBMutationPlan = bqDBMutationPlan
   mkDBSubscriptionPlan _ _ _ _ _ =
-    throwError $ E.internalError "Cannot currently perform subscriptions on BigQuery sources."
+    throw500 "Cannot currently perform subscriptions on BigQuery sources."
   mkDBQueryExplain = bqDBQueryExplain
   mkLiveQueryExplain _ =
-    throwError $ E.internalError "Cannot currently retrieve query execution plans on BigQuery sources."
+    throw500 "Cannot currently retrieve query execution plans on BigQuery sources."
+
+  -- NOTE: Currently unimplemented!.
+  --
+  -- This function is just a stub for future implementation; for now it just
+  -- throws a 500 error.
+  mkDBRemoteRelationshipPlan =
+    bqDBRemoteRelationshipPlan
 
 
 -- query
@@ -150,3 +157,42 @@ selectSQLTextForExplain :: BigQuery.Select -> Text
 selectSQLTextForExplain =
   LT.toStrict .
   LT.toLazyText . fst . ToQuery.renderBuilderPretty . ToQuery.fromSelect
+
+--------------------------------------------------------------------------------
+-- Remote Relationships (e.g. DB-to-DB Joins, remote schema joins, etc.)
+--------------------------------------------------------------------------------
+
+-- | Construct an action (i.e. 'DBStepInfo') which can marshal some remote
+-- relationship information into a form that BigQuery can query against.
+--
+-- XXX: Currently unimplemented; the Postgres implementation uses
+-- @jsonb_to_recordset@ to query the remote relationship, however this
+-- functionality doesn't exist in BigQuery.
+--
+-- NOTE: The following typeclass constraints will be necessary when implementing
+-- this function for real:
+--
+-- @
+--   MonadQueryTags m
+--   Backend 'BigQuery
+-- @
+bqDBRemoteRelationshipPlan
+  :: forall m
+   . ( MonadError QErr m
+     )
+  => UserInfo
+  -> SourceName
+  -> SourceConfig 'BigQuery
+  -- | List of json objects, each of which becomes a row of the table.
+  -> NonEmpty Aeson.Object
+  -- | The above objects have this schema
+  --
+  -- XXX: What is this for/what does this mean?
+  -> HashMap FieldName (Column 'BigQuery, ScalarType 'BigQuery)
+  -- | This is a field name from the lhs that *has* to be selected in the
+  -- response along with the relationship.
+  -> FieldName
+  -> (FieldName, SourceRelationshipSelection 'BigQuery (Const Void) UnpreparedValue)
+  -> m (DBStepInfo 'BigQuery)
+bqDBRemoteRelationshipPlan _userInfo _sourceName _sourceConfig _lhs _lhsSchema _argumentId _relationship = do
+  throw500 "mkDBRemoteRelationshipPlan: BigQuery does not currently support generalized joins."

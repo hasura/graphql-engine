@@ -104,7 +104,7 @@ data SelectNode
   = SelectNode
   { _snExtractors :: !(HM.HashMap PG.Alias PG.SQLExp)
   , _snJoinTree   :: !JoinTree
-  }
+  } deriving stock (Eq)
 
 instance Semigroup SelectNode where
   SelectNode lExtrs lJoinTree <> SelectNode rExtrs rJoinTree =
@@ -144,7 +144,7 @@ data MultiRowSelectNode
   = MultiRowSelectNode
   { _mrsnTopExtractors :: ![PG.Extractor]
   , _mrsnSelectNode    :: !SelectNode
-  }
+  } deriving stock (Eq)
 
 instance Semigroup MultiRowSelectNode where
   MultiRowSelectNode lTopExtrs lSelNode <> MultiRowSelectNode rTopExtrs rSelNode =
@@ -177,7 +177,7 @@ data JoinTree
   , _jtArrayRelations         :: !(HM.HashMap ArrayRelationSource MultiRowSelectNode)
   , _jtArrayConnections       :: !(HM.HashMap ArrayConnectionSource MultiRowSelectNode)
   , _jtComputedFieldTableSets :: !(HM.HashMap ComputedFieldTableSetSource MultiRowSelectNode)
-  }
+  } deriving stock (Eq)
 
 instance Semigroup JoinTree where
   JoinTree lObjs lArrs lArrConns lCfts <> JoinTree rObjs rArrs rArrConns rCfts =

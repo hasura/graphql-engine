@@ -3,12 +3,11 @@
 
 module Hasura.GraphQL.Execute.RemoteJoin.Types
   ( RemoteJoin(..)
-  , eqRemoteJoin
   , getPhantomFields
   , getJoinColumnMapping
   , getRemoteSchemaJoins
   , RemoteSchemaJoin(..)
-  , eqRemoteSchemaJoin
+  , RemoteSourceJoin(..)
   , RemoteJoins
   , JoinColumnAlias(..)
   , getAliasFieldName
@@ -24,7 +23,7 @@ module Hasura.GraphQL.Execute.RemoteJoin.Types
 
 import           Hasura.Prelude
 
-import           Data.Semigroup                (All (..))
+import           Control.Lens                  (_1, view)
 
 import qualified Data.Aeson.Ordered            as AO
 import qualified Data.HashMap.Strict           as Map
@@ -33,6 +32,8 @@ import qualified Data.List.NonEmpty            as NE
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Hasura.GraphQL.Parser         as P
+import qualified Hasura.RQL.IR.Select          as IR
+import qualified Hasura.SQL.AnyBackend         as AB
 
 import           Hasura.RQL.Types
 
@@ -81,24 +82,20 @@ data JoinNode a
 
 type RemoteJoins = JoinTree RemoteJoin
 
--- | Currently a remote join is only possible to a remote schema, but this
--- should change soon when we merge the last of generalized joins work
-newtype RemoteJoin
-  = RemoteJoinRemoteSchema RemoteSchemaJoin
-  deriving stock (Generic)
-
--- | Ad-hoc equality check for 'RemoteJoin', necessary due to the fact that
--- 'RemoteSchemaJoin' contains fields that do not support equality checks.
-eqRemoteJoin :: RemoteJoin -> RemoteJoin -> Bool
-eqRemoteJoin (RemoteJoinRemoteSchema a) (RemoteJoinRemoteSchema b) =
-  a `eqRemoteSchemaJoin` b
+-- | TODO(jkachmar): Documentation
+data RemoteJoin
+  = RemoteJoinSource !(AB.AnyBackend RemoteSourceJoin) !(Maybe RemoteJoins)
+  | RemoteJoinRemoteSchema !RemoteSchemaJoin
+  deriving stock (Eq, Generic)
 
 -- | This collects all the remote joins from a join tree
 getRemoteSchemaJoins :: RemoteJoins -> [RemoteSchemaJoin]
-getRemoteSchemaJoins = map getRemoteSchemaJoin . toList
+getRemoteSchemaJoins = mapMaybe getRemoteSchemaJoin . toList
   where
-    getRemoteSchemaJoin :: RemoteJoin -> RemoteSchemaJoin
-    getRemoteSchemaJoin (RemoteJoinRemoteSchema s) = s
+    getRemoteSchemaJoin :: RemoteJoin -> Maybe RemoteSchemaJoin
+    getRemoteSchemaJoin = \case
+      RemoteJoinSource _ _     -> Nothing
+      RemoteJoinRemoteSchema s -> Just s
 
 getPhantomFields :: RemoteJoin -> [FieldName]
 getPhantomFields =
@@ -111,8 +108,32 @@ getPhantomFields =
 
 getJoinColumnMapping :: RemoteJoin -> Map.HashMap FieldName JoinColumnAlias
 getJoinColumnMapping = \case
-  RemoteJoinRemoteSchema remoteSchemaJoin ->
-    _rsjJoinColumnAliases remoteSchemaJoin
+  RemoteJoinSource sourceJoin _ -> AB.runBackend sourceJoin
+    \RemoteSourceJoin{_rsjJoinColumns} ->
+      fmap (view _1) _rsjJoinColumns
+  RemoteJoinRemoteSchema RemoteSchemaJoin{_rsjJoinColumnAliases} ->
+    _rsjJoinColumnAliases
+
+-- | TODO(jkachmar): Documentation.
+data RemoteSourceJoin b = RemoteSourceJoin {
+  _rsjSource       :: !SourceName,
+  _rsjSourceConfig :: !(SourceConfig b),
+  _rsjRelationship :: !(IR.SourceRelationshipSelection b (Const Void) P.UnpreparedValue),
+  _rsjJoinColumns  :: !(Map.HashMap FieldName (JoinColumnAlias, ScalarType b, Column b))
+} deriving (Generic)
+
+deriving instance
+  ( Backend b
+  , Show (ScalarValue b)
+  , Show (SourceConfig b)
+  , Show (BooleanOperators b (P.UnpreparedValue b))
+  ) => Show (RemoteSourceJoin b)
+
+deriving instance
+  ( Backend b
+  , Eq (ScalarValue b)
+  , Eq (BooleanOperators b (P.UnpreparedValue b))
+  ) => Eq (RemoteSourceJoin b)
 
 -- | Disambiguates between 'FieldName's which are provided as part of the
 -- GraphQL selection provided by the user (i.e. 'JCSelected') and those which
@@ -136,34 +157,28 @@ getAliasFieldName = \case
   JCSelected f -> f
   JCPhantom f  -> f
 
--- | A 'RemoteJoin' represents the context of remote relationship to be
+-- | A 'RemoteSchemaJoin' represents the context of a remote relationship to be
 -- extracted from 'AnnFieldG's.
-data RemoteSchemaJoin
-  = RemoteSchemaJoin
-  { _rsjArgs              :: !(Map.HashMap G.Name (P.InputValue RemoteSchemaVariable))
+data RemoteSchemaJoin = RemoteSchemaJoin {
+  _rsjArgs              :: !(Map.HashMap G.Name (P.InputValue RemoteSchemaVariable)),
   -- ^ User-provided arguments with variables.
-  , _rsjResultCustomizer  :: !RemoteResultCustomizer
-  -- ^ Customizer for JSON result from the remote server
-  , _rsjSelSet            :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)
-    -- ^ User-provided selection set of remote field.
-  , _rsjJoinColumnAliases :: !(Map.HashMap FieldName JoinColumnAlias)
-    -- ^ A map of the join column to its alias in the response
-  , _rsjFieldCall         :: !(NonEmpty FieldCall)
-    -- ^ Remote server fields.
-  , _rsjRemoteSchema      :: !RemoteSchemaInfo
-    -- ^ The remote schema server info.
-  } deriving stock (Generic)
+  _rsjResultCustomizer  :: !RemoteResultCustomizer,
+  -- ^ Customizer for JSON result from the remote server.
+  _rsjSelSet            :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable),
+  -- ^ User-provided selection set of remote field.
+  _rsjJoinColumnAliases :: !(Map.HashMap FieldName JoinColumnAlias),
+  -- ^ A map of the join column to its alias in the response
+  _rsjFieldCall         :: !(NonEmpty FieldCall),
+  -- ^ Remote server fields.
+  _rsjRemoteSchema      :: !RemoteSchemaInfo
+  -- ^ The remote schema server info.
+} deriving stock (Generic)
 
--- | Ad-hoc equality check for 'RemoteSchemaJoin', performed only against the
--- fields that admit a valid equality check (i.e. not '_rsjResultCustomizer').
-eqRemoteSchemaJoin :: RemoteSchemaJoin -> RemoteSchemaJoin -> Bool
-eqRemoteSchemaJoin a b = getAll $ foldMap All
-  [ _rsjArgs a              == _rsjArgs b
-  , _rsjSelSet a            == _rsjSelSet b
-  , _rsjJoinColumnAliases a == _rsjJoinColumnAliases b
-  , _rsjFieldCall a         == _rsjFieldCall b
-  , _rsjRemoteSchema a      == _rsjRemoteSchema b
-  ]
+-- NOTE: This cannot be derived automatically, as 'RemoteResultCustomizer' does
+-- not permit a proper 'Eq' instance (it's a newtype around a function).
+instance Eq RemoteSchemaJoin where
+  (==) = on (==) \RemoteSchemaJoin{..} ->
+    (_rsjArgs, _rsjSelSet, _rsjJoinColumnAliases, _rsjFieldCall, _rsjRemoteSchema)
 
 -- | A unique id that gets assigned to each 'RemoteJoin' (this is to avoid the
 -- requirement of Ord/Hashable implementation for RemoteJoin)
@@ -177,7 +192,7 @@ type JoinCallId = Int
 -- a join argument for this join would have the values of columns 'code' and
 -- 'state_code' for each 'city' row that participates in the join
 newtype JoinArgument
-  = JoinArgument { unJoinArugment :: Map.HashMap FieldName AO.Value }
+  = JoinArgument { unJoinArgument :: Map.HashMap FieldName AO.Value }
   deriving stock (Eq, Generic, Show)
   deriving newtype (Hashable)
 
@@ -199,4 +214,11 @@ data JoinArguments
   -- NOTE: 'Map.HashMap' is used to deduplicate multiple 'JoinArgument's so that
   -- we avoid fetching more data from a remote than is necessary (i.e. in the
   -- case of duplicate arguments).
+  , _jalFieldName :: !FieldName
+  -- ^ The 'FieldName' associated with the "replacement token" for this join
+  -- argument.
+  --
+  -- NOTE: We need this for query logging; ideally we would use the full path
+  -- for the GraphQL query associated with this remote join, but we don't have
+  -- access to that here so this is the next best thing to do.
   } deriving stock (Generic)

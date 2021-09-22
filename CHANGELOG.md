@@ -20,6 +20,7 @@
 - server: fix explicit `null` values not allowed in nested object relationship inserts (#7484)
 - server: `introspect_remote_schema` API now returns original remote schema instead of customized schema
 - server: prevent empty subscription roots in the schema (#6898)
+- server: support database-to-database joins (for now, limited to Postgres as the target side of the join)
 - console: support tracking of functions with return a single row
 - console: add GraphQL customisation under Remote schema edit tab
 - console: fix cross-schema array relationship suggestions

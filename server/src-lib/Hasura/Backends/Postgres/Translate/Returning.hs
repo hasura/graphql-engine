@@ -54,9 +54,12 @@ pgColsToSelFlds
   -> [(FieldName, AnnField ('Postgres pgKind))]
 pgColsToSelFlds cols =
   flip map cols $
-  \pgColInfo -> (fromCol @('Postgres pgKind) $ pgiColumn pgColInfo, mkAnnColumnField pgColInfo Nothing Nothing)
-  --                                                                         ^^ Nothing because mutations aren't supported
-  --                                                                         with inherited role
+  \pgColInfo ->
+    ( fromCol @('Postgres pgKind) $ pgiColumn pgColInfo
+    , mkAnnColumnField (pgiColumn pgColInfo) (pgiType pgColInfo) Nothing Nothing
+    --  ^^ Nothing because mutations aren't supported
+    --  with inherited role
+    )
 
 mkDefaultMutFlds
   :: Backend ('Postgres pgKind)

@@ -15,6 +15,7 @@ import qualified Data.Text                               as T
 import           Control.Lens                            (Traversal', _2, preview)
 import           Control.Monad.Writer
 
+import qualified Hasura.SQL.AnyBackend                   as AB
 
 import           Hasura.GraphQL.Execute.RemoteJoin.Types
 import           Hasura.GraphQL.Parser.Column            (UnpreparedValue (..))
@@ -266,9 +267,9 @@ transformObjectSelect select@AnnObjectSelectG{_aosFields = fields} = do
   pure select{_aosFields = transformedFields}
 
 transformAnnFields
-  :: forall b . Backend b
-  => AnnFieldsG b (RemoteSelect UnpreparedValue) (UnpreparedValue b)
-  -> Collector (AnnFieldsG b (Const Void) (UnpreparedValue b))
+  :: forall src. Backend src
+  => AnnFieldsG src (RemoteSelect UnpreparedValue) (UnpreparedValue src)
+  -> Collector (AnnFieldsG src (Const Void) (UnpreparedValue src))
 transformAnnFields fields = do
   -- Produces a list of transformed fields that may or may not have an
   -- associated remote join.
@@ -327,6 +328,28 @@ transformAnnFields fields = do
         in
           pure (remoteAnnPlaceholder, annotatedJoin)
 
+      AFRemote (RemoteSelectSource anySourceSelect) -> AB.dispatchAnyBackend @Backend anySourceSelect
+        -- NOTE: This is necessary to bring 'tgt' into scope, so that it can be
+        -- passed to the helper function as a type argument.
+        \(RemoteSourceSelect{..} :: RemoteSourceSelect src UnpreparedValue tgt) ->
+          let
+            (transformedSourceRelationship, sourceRelationshipJoins) =
+              getRemoteJoinsSourceRelation _rssSelection
+            annotatedJoinColumns = annotateSourceJoin @tgt <$> _rssJoinMapping
+            phantomColumns = annotatedJoinColumns & Map.mapMaybe \(columnInfo, (alias, _, _)) ->
+              case alias of
+                JCSelected _ -> Nothing
+                JCPhantom a  -> Just (columnInfo, a)
+            anySourceJoin = AB.mkAnyBackend $ RemoteSourceJoin
+              _rssName
+              _rssConfig
+              transformedSourceRelationship
+              (fmap snd annotatedJoinColumns)
+            remoteJoin = RemoteJoinSource anySourceJoin sourceRelationshipJoins
+            annotatedJoin = Just (phantomColumns, remoteJoin)
+          in
+            pure (remoteAnnPlaceholder, annotatedJoin)
+
   let
     transformedFields = (fmap . fmap) fst annotatedFields
     remoteJoins = annotatedFields & mapMaybe \(fieldName, (_, mRemoteJoin)) ->
@@ -339,7 +362,7 @@ transformAnnFields fields = do
           (Map.elems . Map.unions . map (fst . snd) $ remoteJoins) <&>
             \(joinField, alias) -> case joinField of
               JoinColumn columnInfo ->
-                let column = AFColumn $ AnnColumnField columnInfo False Nothing Nothing
+                let column = AFColumn $ AnnColumnField (pgiColumn columnInfo) (pgiType columnInfo) False Nothing Nothing
                 in (alias, column)
               JoinComputedField computedFieldInfo ->
                 (alias, mkScalarComputedFieldSelect computedFieldInfo)
@@ -347,17 +370,18 @@ transformAnnFields fields = do
       pure $ transformedFields <> phantomFields
   where
     -- Placeholder text to annotate a remote relationship field.
-    remoteAnnPlaceholder :: AnnFieldG b (Const Void) (UnpreparedValue b)
+    remoteAnnPlaceholder :: AnnFieldG src (Const Void) (UnpreparedValue src)
     remoteAnnPlaceholder = AFExpression "remote relationship placeholder"
 
     -- Annotate a 'DBJoinField' with its field name and an alias so that it may
     -- be used to construct a remote join.
-    annotateDBJoinField :: DBJoinField b -> (FieldName, (DBJoinField b, JoinColumnAlias))
+    annotateDBJoinField
+      :: DBJoinField src -> (FieldName, (DBJoinField src, JoinColumnAlias))
     annotateDBJoinField = \case
       jc@(JoinColumn columnInfo) ->
         let
           column = pgiColumn columnInfo
-          columnFieldName = fromCol @b $ column
+          columnFieldName = fromCol @src column
           alias = getJoinColumnAlias columnFieldName column columnFields
         in
           (columnFieldName, (jc, alias))
@@ -368,6 +392,20 @@ transformAnnFields fields = do
         in
           (computedFieldName, (jcf, alias))
 
+    -- Annotate an element a remote source join from '_rssJoinMapping' so that
+    -- a remote join can be constructed.
+    annotateSourceJoin
+      :: forall tgt
+       . (ColumnInfo src, ScalarType tgt, Column tgt)
+      -> (DBJoinField src, (JoinColumnAlias, ScalarType tgt, Column tgt))
+    annotateSourceJoin (columnInfo, rhsColumnType, rhsColumn) =
+      let
+        lhsColumn = pgiColumn columnInfo
+        lhsColumnFieldName = fromCol @src lhsColumn
+        alias = getJoinColumnAlias lhsColumnFieldName lhsColumn columnFields
+      in
+        (JoinColumn columnInfo, (alias, rhsColumnType, rhsColumn))
+
     -- Get the fields targeted by some 'Traversal' for an arbitrary list of
     -- tuples, discarding any elements whose fields cannot be focused upon.
     getFields :: Traversal' super sub -> [(any, super)] -> [(any, sub)]
@@ -375,9 +413,9 @@ transformAnnFields fields = do
 
     -- This is a map of column name to its alias of all columns in the
     -- selection set.
-    columnFields :: HashMap (Column b) FieldName
+    columnFields :: HashMap (Column src) FieldName
     columnFields = Map.fromList $
-      [ (pgiColumn . _acfInfo $ annColumn, alias)
+      [ (_acfColumn annColumn, alias)
       | (alias, annColumn) <- getFields _AFColumn fields
       ]
 
@@ -419,9 +457,9 @@ transformAnnFields fields = do
       in JCPhantom $ fieldName <> FieldName suffix
 
     transformAnnRelation
-      :: (t -> Collector a)
-      -> AnnRelationSelectG b t
-      -> Collector (AnnRelationSelectG b a)
+      :: (a -> Collector b)
+      -> AnnRelationSelectG src a
+      -> Collector (AnnRelationSelectG src b)
     transformAnnRelation transform relation@(AnnRelationSelectG _ _ select) = do
       transformedSelect <- transform select
       pure $ relation{ aarAnnSelect = transformedSelect }
@@ -435,3 +473,17 @@ transformAnnFields fields = do
           fieldSelect = flip CFSScalar Nothing
             $ ComputedFieldScalarSelect _scfFunction functionArgs _scfType Nothing
       in AFComputedField _scfXField _scfName fieldSelect
+
+getRemoteJoinsSourceRelation
+  :: Backend b
+  => SourceRelationshipSelection b (RemoteSelect UnpreparedValue) UnpreparedValue
+  -> (SourceRelationshipSelection b (Const Void) UnpreparedValue, Maybe RemoteJoins)
+getRemoteJoinsSourceRelation = runCollector . transformSourceRelation
+  where
+    transformSourceRelation = \case
+      SourceRelationshipObject objectSelect ->
+        SourceRelationshipObject <$> transformObjectSelect objectSelect
+      SourceRelationshipArray simpleSelect ->
+        SourceRelationshipArray <$> transformSelect simpleSelect
+      SourceRelationshipArrayAggregate aggregateSelect ->
+        SourceRelationshipArrayAggregate <$> transformAggregateSelect aggregateSelect

@@ -17,7 +17,8 @@ import qualified Data.Text.Extended                    as T
 import qualified Database.ODBC.SQLServer               as ODBC
 import qualified Language.GraphQL.Draft.Syntax         as G
 
-import qualified Hasura.RQL.Types.Column               as RQL
+import qualified Hasura.RQL.Types                      as RQLTypes
+import qualified Hasura.RQL.Types.Column               as RQLColumn
 import qualified Hasura.SQL.AnyBackend                 as AB
 
 import           Hasura.Backends.MSSQL.Connection
@@ -47,6 +48,13 @@ instance BackendExecute 'MSSQL where
   mkDBSubscriptionPlan = msDBSubscriptionPlan
   mkDBQueryExplain = msDBQueryExplain
   mkLiveQueryExplain = msDBLiveQueryExplain
+
+  -- NOTE: Currently unimplemented!.
+  --
+  -- This function is just a stub for future implementation; for now it just
+  -- throws a 500 error.
+  mkDBRemoteRelationshipPlan =
+    msDBRemoteRelationshipPlan
 
 
 -- Multiplexed query
@@ -284,13 +292,13 @@ validateVariables sourceConfig sessionVariableValues prepState = do
         expSes, expNamed, expPos :: [Aliased Expression]
         expSes = sessionReference <$> getSessionVariables occSessionVars
         expNamed = map (
-                      \(n, v) -> Aliased (ValueExpression (RQL.cvValue v)) (G.unName n)
+                      \(n, v) -> Aliased (ValueExpression (RQLColumn.cvValue v)) (G.unName n)
                       )
                    $ Map.toList $ namedArguments
 
         -- For positional args we need to be a bit careful not to capture names
         -- from expNamed and expSes (however unlikely)
-        expPos = zipWith (\n v -> Aliased (ValueExpression (RQL.cvValue v)) n)
+        expPos = zipWith (\n v -> Aliased (ValueExpression (RQLColumn.cvValue v)) n)
                            (freshVars (expNamed <> expSes)) positionalArguments
 
         projAll :: [Projection]
@@ -339,3 +347,42 @@ validateVariables sourceConfig sessionVariableValues prepState = do
 
       sessionReference :: Text -> Aliased Expression
       sessionReference var = Aliased (ColumnExpression (TSQL.FieldName var "session")) var
+
+--------------------------------------------------------------------------------
+-- Remote Relationships (e.g. DB-to-DB Joins, remote schema joins, etc.)
+--------------------------------------------------------------------------------
+
+-- | Construct an action (i.e. 'DBStepInfo') which can marshal some remote
+-- relationship information into a form that SQL Server can query against.
+--
+-- XXX: Currently unimplemented; the Postgres implementation uses
+-- @jsonb_to_recordset@ to query the remote relationship, however this
+-- functionality doesn't exist in SQL Server.
+--
+-- NOTE: The following typeclass constraints will be necessary when implementing
+-- this function for real:
+--
+-- @
+--   MonadQueryTags m
+--   Backend 'MSSQL
+-- @
+msDBRemoteRelationshipPlan
+  :: forall m
+   . ( MonadError QErr m
+     )
+  => UserInfo
+  -> SourceName
+  -> SourceConfig 'MSSQL
+  -- | List of json objects, each of which becomes a row of the table.
+  -> NonEmpty J.Object
+  -- | The above objects have this schema
+  --
+  -- XXX: What is this for/what does this mean?
+  -> HashMap RQLTypes.FieldName (RQLTypes.Column 'MSSQL, RQLTypes.ScalarType 'MSSQL)
+  -- | This is a field name from the lhs that *has* to be selected in the
+  -- response along with the relationship.
+  -> RQLTypes.FieldName
+  -> (RQLTypes.FieldName, SourceRelationshipSelection 'MSSQL (Const Void) UnpreparedValue)
+  -> m (DBStepInfo 'MSSQL)
+msDBRemoteRelationshipPlan _userInfo _sourceName _sourceConfig _lhs _lhsSchema _argumentId _relationship = do
+  throw500 "mkDBRemoteRelationshipPlan: SQL Server (MSSQL) does not currently support generalized joins."
