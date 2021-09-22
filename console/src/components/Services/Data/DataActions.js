@@ -142,45 +142,34 @@ const setUntrackedRelations = () => (dispatch, getState) => {
 };
 
 // todo: it's called 4 times on start
-const loadSchema = configOptions => {
+const loadSchema = (configOptions = {}) => {
   return (dispatch, getState) => {
     const url = Endpoints.query;
 
     let allSchemas = getState().tables.allSchemas;
     const source = getState().tables.currentDataSource;
+    const { currentSchema, schemaList } = getState().tables;
 
-    if (
-      !configOptions ||
-      ((!configOptions.schemas || configOptions.schemas.length === 0) &&
-        (!configOptions.tables || configOptions.tables.length === 0))
-    ) {
-      configOptions = {
-        schemas: [
-          getState().tables.currentSchema || getState().tables.schemaList[0],
-        ],
-      };
+    if (!configOptions?.schemas?.length && !configOptions?.tables?.length) {
+      configOptions.schemas = [currentSchema || schemaList[0]];
     }
 
-    if (configOptions) {
-      if (configOptions.schemas) {
-        allSchemas = allSchemas.filter(
-          schemaInfo =>
-            !configOptions.schemas.some(
-              item => item === schemaInfo.table_schema
-            )
-        );
-      }
+    if (configOptions?.schemas) {
+      allSchemas = allSchemas.filter(
+        schemaInfo =>
+          !configOptions.schemas.some(item => item === schemaInfo.table_schema)
+      );
+    }
 
-      if (configOptions.tables) {
-        allSchemas = allSchemas.filter(
-          schemaInfo =>
-            !configOptions.tables.some(
-              item =>
-                item.table_schema === schemaInfo.table_schema &&
-                item.table_name === schemaInfo.table_name
-            )
-        );
-      }
+    if (configOptions?.tables) {
+      allSchemas = allSchemas.filter(
+        schemaInfo =>
+          !configOptions.tables.some(
+            item =>
+              item.table_schema === schemaInfo.table_schema &&
+              item.table_name === schemaInfo.table_name
+          )
+      );
     }
     const body = {
       type: 'bulk',

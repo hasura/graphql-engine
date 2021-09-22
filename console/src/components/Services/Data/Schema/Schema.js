@@ -169,11 +169,15 @@ class Schema extends Component {
     };
 
     this.props.dispatch(fetchFunctionInit());
-    this.props.dispatch(
-      updateSchemaInfo({ schemas: [this.props.currentSchema] })
-    );
+    this.props.dispatch(updateSchemaInfo({ schemas: this.props.schemaList }));
 
     this.schemaNameInputRef = React.createRef(null);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.currentSchema !== this.props.currentSchema) {
+      this.props.dispatch(updateSchemaInfo({ schemas: this.props.schemaList }));
+    }
   }
 
   cancelCreateNewSchema = () => {
