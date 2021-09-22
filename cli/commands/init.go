@@ -10,6 +10,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 	crontriggers "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/cron_triggers"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/functions"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/network"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/sources"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/tables"
 
@@ -253,6 +254,7 @@ func (o *InitOptions) createFiles() error {
 		plugins = append(plugins, remoteschemas.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, actions.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, crontriggers.New(o.EC, o.EC.MetadataDir))
+		plugins = append(plugins, network.New(o.EC, o.EC.MetadataDir))
 		if config.Version == cli.V3 {
 			plugins = append(plugins, sources.New(o.EC, o.EC.MetadataDir))
 		} else {

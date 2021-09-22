@@ -1,0 +1,6 @@
+tls_allowlist:
+- certtest.dev.hasura.io
+- host: certtest.dev.hasura.io
+  port: 443
+  permit:
+  - self-signed
