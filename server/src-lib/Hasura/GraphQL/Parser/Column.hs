@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Hasura.GraphQL.Parser.Column
   ( UnpreparedValue(..)
   , ValueWithOrigin(..)
@@ -34,6 +36,18 @@ data UnpreparedValue (b :: BackendType)
   | UVSession
   -- | A single session variable.
   | UVSessionVar (SessionVarType b) SessionVariable
+
+deriving instance
+  ( Backend b
+  , Eq (ColumnValue b)
+  , Eq (ScalarValue b)
+  ) => Eq (UnpreparedValue b)
+
+deriving instance
+  ( Backend b
+  , Show (ColumnValue b)
+  , Show (ScalarValue b)
+  ) => Show (UnpreparedValue b)
 
 -- | This indicates whether a variable value came from a certain GraphQL variable
 data ValueWithOrigin a

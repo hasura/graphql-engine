@@ -48,10 +48,10 @@ data BooleanOperators a
   | AMatches         !a
   | AMatchesAny      !a
   | AMatchesFulltext !a
-  deriving (Eq, Generic, Functor, Foldable, Traversable)
+  deriving stock (Eq, Generic, Foldable, Functor, Traversable, Show)
 
-instance NFData    a => NFData   (BooleanOperators a)
-instance Hashable  a => Hashable (BooleanOperators a)
+instance NFData    a => NFData    (BooleanOperators a)
+instance Hashable  a => Hashable  (BooleanOperators a)
 instance Cacheable a => Cacheable (BooleanOperators a)
 
 

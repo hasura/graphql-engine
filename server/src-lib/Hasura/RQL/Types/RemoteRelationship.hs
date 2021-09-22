@@ -378,8 +378,7 @@ instance FromJSON RemoteRelationshipDef where
       (Just source, _)   -> RemoteSourceRelDef <$> parseJSON source
       (_, Just schema)   ->
         case schema of
-          Object _ -> -- RemoteSchemaRelDef RFSchemaAndSource <$> parseJSON schema
-                      fail "remote_schema is expected to be a String"
+          Object _ -> RemoteSchemaRelDef RFSchemaAndSource <$> parseJSON schema
           _        -> do -- old parser format
             fmap (RemoteSchemaRelDef RFRemoteSchemaOnly) $ RemoteSchemaRelationshipDef
               <$> o .: "remote_schema"
@@ -416,13 +415,10 @@ instance (Backend b) => ToJSON (RemoteRelationship b) where
   toJSON = genericToJSON hasuraJSON
 
 instance (Backend b) => FromJSON (RemoteRelationship b) where
-  parseJSON = withObject "RemoteRelationship" $ \o -> do
-    hasuraFields <- o .: "hasura_fields"
-    name         <- o .: "remote_schema" <|> o .: "remote_schema_name"
-    remoteField  <- o .: "remote_field"
+  parseJSON = withObject "RemoteRelationship" $ \o ->
     RemoteRelationship
       <$> o .: "name"
       <*> o .:? "source" .!= defaultSource
       <*> o .: "table"
-      <*> pure (RemoteSchemaRelDef RFRemoteSchemaOnly $ RemoteSchemaRelationshipDef  name hasuraFields remoteField)
+      <*> parseJSON (Object o)
 $(makeLenses ''RemoteRelationship)

@@ -703,7 +703,8 @@ fromAnnColumnField _stringifyNumbers annColumnField = do
                 ex' <- fromGBoolExp (coerce ex)
                 pure (ConditionalProjection ex' fieldName)
   where
-    IR.AnnColumnField { _acfInfo = IR.ColumnInfo{pgiColumn=pgCol,pgiType=typ}
+    IR.AnnColumnField { _acfColumn = pgCol
+                      , _acfType = typ
                       , _acfAsText = _asText :: Bool
                       , _acfOp = _ :: Maybe (IR.ColumnOp 'MSSQL) -- TODO: What's this?
                       , _acfCaseBoolExpression = caseBoolExpMaybe

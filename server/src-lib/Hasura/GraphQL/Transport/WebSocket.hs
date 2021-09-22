@@ -426,7 +426,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                        tx
                        genSql
               finalResponse <-
-                RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins
+                RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
               pure $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
             E.ExecStepRemote rsi resultCustomizer gqlReq -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
@@ -436,7 +436,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
               (time, (resp, _)) <- doQErr $ do
                 (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                 finalResponse <-
-                  RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins
+                  RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
                 pure (time, (finalResponse, hdrs))
               pure $ ResultsFragment time Telem.Empty resp []
             E.ExecStepRaw json -> do
@@ -490,14 +490,14 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                          tx
                          genSql
               finalResponse <-
-                RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins
+                RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
               pure $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
             E.ExecStepAction actionExecPlan _ remoteJoins -> do
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
               (time, (resp, hdrs)) <- doQErr $ do
                 (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                 finalResponse <-
-                  RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins
+                  RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
                 pure (time, (finalResponse, hdrs))
               pure $ ResultsFragment time Telem.Empty resp $ fromMaybe [] hdrs
             E.ExecStepRemote rsi resultCustomizer gqlReq -> do

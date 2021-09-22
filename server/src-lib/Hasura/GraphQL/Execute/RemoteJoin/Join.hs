@@ -4,7 +4,8 @@ module Hasura.GraphQL.Execute.RemoteJoin.Join
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Ordered                             as AO
+import qualified Data.Aeson                                     as J
+import qualified Data.Aeson.Ordered                             as JO
 import qualified Data.Environment                               as Env
 import qualified Data.HashMap.Strict                            as Map
 import qualified Data.HashMap.Strict.Extended                   as Map
@@ -16,19 +17,29 @@ import qualified Data.Text                                      as T
 import qualified Network.HTTP.Client                            as HTTP
 import qualified Network.HTTP.Types                             as N
 
+import           Control.Lens                                   ((^?))
+import           Data.Aeson.Lens                                (_Integral, _Number)
 import           Data.Tuple                                     (swap)
 
+import qualified Hasura.GraphQL.Execute.Backend                 as EB
+import           Hasura.GraphQL.Execute.Instances               ()
 import qualified Hasura.GraphQL.Execute.RemoteJoin.RemoteSchema as RS
+import qualified Hasura.GraphQL.Transport.Backend               as TB
+import           Hasura.GraphQL.Transport.Instances             ()
 import qualified Hasura.Logging                                 as L
+import qualified Hasura.SQL.AnyBackend                          as AB
 import qualified Hasura.Tracing                                 as Tracing
 
 import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.RemoteJoin.Types
+import           Hasura.GraphQL.Logging                         (MonadQueryLog)
+import           Hasura.GraphQL.Transport.HTTP.Protocol         (GQLReqUnparsed)
 import           Hasura.RQL.Types
 import           Hasura.Server.Types                            (RequestId)
 import           Hasura.Server.Version                          (HasVersion)
 import           Hasura.Session
+import qualified Language.GraphQL.Draft.Syntax                  as G
 
 forRemoteJoins
   :: (Applicative f)
@@ -43,6 +54,8 @@ processRemoteJoins
   :: ( HasVersion
      , MonadError QErr m
      , MonadIO m
+     , EB.MonadQueryTags m
+     , MonadQueryLog m
      , Tracing.MonadTrace m
      )
   => RequestId
@@ -53,18 +66,22 @@ processRemoteJoins
   -> UserInfo
   -> EncJSON
   -> Maybe RemoteJoins
+  -> GQLReqUnparsed
   -> m EncJSON
-processRemoteJoins requestId logger env manager reqHdrs userInfo lhs joinTree = do
+processRemoteJoins requestId logger env manager reqHdrs userInfo lhs joinTree gqlreq = do
   forRemoteJoins joinTree lhs $ \remoteJoins -> do
-    lhsParsed <- onLeft (AO.eitherDecode $ encJToLBS lhs) (throw500 . T.pack)
+    lhsParsed <- onLeft (JO.eitherDecode $ encJToLBS lhs) (throw500 . T.pack)
     encJFromOrderedValue . runIdentity <$>
       processRemoteJoins_ requestId logger env manager
       reqHdrs userInfo (Identity lhsParsed) remoteJoins
+      gqlreq
 
 processRemoteJoins_
   :: ( HasVersion
      , MonadError QErr m
      , MonadIO m
+     , EB.MonadQueryTags m
+     , MonadQueryLog m
      , Tracing.MonadTrace m
      , Traversable f
      )
@@ -74,15 +91,16 @@ processRemoteJoins_
   -> HTTP.Manager
   -> [N.Header]
   -> UserInfo
-  -> f AO.Value
+  -> f JO.Value
   -> RemoteJoins
-  -> m (f AO.Value)
-processRemoteJoins_ _requestId _logger env manager reqHdrs userInfo lhs joinTree = do
+  -> GQLReqUnparsed
+  -> m (f JO.Value)
+processRemoteJoins_ requestId logger env manager reqHdrs userInfo lhs joinTree gqlreq = do
   (compositeValue, joins) <- collectJoinArguments (assignJoinIds joinTree) lhs
   joinIndices <- fmap (IntMap.mapMaybe id) $ for joins $ \JoinArguments{..} -> do
     let joinArguments = IntMap.fromList $ map swap $ Map.toList _jalArguments
     case _jalJoin of
-      (RemoteJoinRemoteSchema remoteSchemaJoin) -> do
+      RemoteJoinRemoteSchema remoteSchemaJoin -> do
         -- construct a remote call for
         remoteCall <- RS.buildRemoteSchemaCall userInfo remoteSchemaJoin joinArguments
         -- A remote call could be Nothing if there are no join arguments
@@ -91,23 +109,97 @@ processRemoteJoins_ _requestId _logger env manager reqHdrs userInfo lhs joinTree
             RS.getRemoteSchemaResponse env manager reqHdrs userInfo rsc
           -- extract the join values from the remote's response
           RS.buildJoinIndex remoteResponse responsePaths
+
+      RemoteJoinSource sourceJoin childJoinTree -> AB.dispatchAnyBackend @TB.BackendTransport sourceJoin \(RemoteSourceJoin{..} :: RemoteSourceJoin b) -> do
+        let rows = flip map (IntMap.toList joinArguments) $ \(argumentId, argument) ->
+                Map.insert "__argument_id__" (J.toJSON argumentId) $
+                Map.fromList $ map (getFieldNameTxt *** JO.fromOrdered) $
+                Map.toList $ unJoinArgument argument
+            rowSchema = fmap (\(_, rhsType, rhsColumn) -> (rhsColumn, rhsType)) _rsjJoinColumns
+
+        for (NE.nonEmpty rows) $ \nonEmptyRows -> do
+          stepInfo <- EB.mkDBRemoteRelationshipPlan
+            userInfo _rsjSource _rsjSourceConfig nonEmptyRows rowSchema
+            (FieldName "__argument_id__") (FieldName "f", _rsjRelationship)
+
+          (_, sourceResponse) <- TB.runDBQuery @b
+            requestId
+            gqlreq
+            -- NOTE: We're making an assumption that the 'FieldName' propagated
+            -- upwards from 'collectJoinArguments' is reasonable to use for
+            -- logging.
+            (G.unsafeMkName . getFieldNameTxt $ _jalFieldName)
+            userInfo
+            logger
+            _rsjSourceConfig
+            (EB.dbsiAction stepInfo)
+            (EB.dbsiPreparedQuery stepInfo)
+
+          preRemoteJoinResults <- buildSourceDataJoinIndex sourceResponse
+          forRemoteJoins childJoinTree preRemoteJoinResults $ \childRemoteJoins -> do
+            results <- processRemoteJoins_ requestId logger env manager reqHdrs userInfo
+              (IntMap.elems preRemoteJoinResults) childRemoteJoins gqlreq
+            pure $ IntMap.fromAscList $ zip (IntMap.keys preRemoteJoinResults) results
+
   joinResults joinIndices compositeValue
+
+-- | Attempt to construct a 'JoinIndex' from some 'EncJSON' source response.
+buildSourceDataJoinIndex :: MonadError QErr m => EncJSON -> m JoinIndex
+buildSourceDataJoinIndex response = do
+  json <- JO.eitherDecode (encJToLBS response) `onLeft` \err ->
+    throwInvalidJsonErr $ T.pack err
+  case json of
+    JO.Array arr -> fmap IntMap.fromList $ for (toList arr) \case
+      JO.Object obj -> do
+        argumentResult <-
+          JO.lookup "f" obj
+            `onNothing` throwMissingRelationshipDataErr
+        argumentIdValue <-
+          JO.lookup "__argument_id__" obj
+            `onNothing` throwMissingArgumentIdErr
+        argumentId <-
+          (argumentIdValue ^? _Number . _Integral)
+            `onNothing` throwInvalidArgumentIdTypeErr
+        pure (argumentId, argumentResult)
+      _ -> throwNoNestedObjectErr
+    _ -> throwNoListOfObjectsErr
+  where
+    throwInvalidJsonErr errMsg =
+      throw500 $
+        "failed to decode JSON response from the source: " <> errMsg
+    throwMissingRelationshipDataErr =
+      throw500 $
+        "cannot find relationship data (aliased as 'f') within the source \
+        \response"
+    throwMissingArgumentIdErr =
+      throw500 $
+        "cannot find '__argument_id__' within the source response"
+    throwInvalidArgumentIdTypeErr =
+      throw500 $ "expected 'argument_id' to be an integer"
+    throwNoNestedObjectErr =
+      throw500 $
+        "expected an object one level deep in the remote schema's response, \
+        \but found an array/scalar value instead"
+    throwNoListOfObjectsErr =
+      throw500 $
+        "expected a list of objects in the remote schema's response, but found \
+        \an object/scalar value instead"
 
 type CompositeObject a = OMap.InsOrdHashMap Text (CompositeValue a)
 
 -- | A hybrid JSON value representation which captures the context of remote join field in type parameter.
 data CompositeValue a
-  = CVOrdValue !AO.Value
+  = CVOrdValue !JO.Value
   | CVObject !(CompositeObject a)
   | CVObjectArray ![CompositeValue a]
   | CVFromRemote !a
   deriving (Show, Eq, Functor, Foldable, Traversable)
 
-compositeValueToJSON :: CompositeValue AO.Value -> AO.Value
+compositeValueToJSON :: CompositeValue JO.Value -> JO.Value
 compositeValueToJSON = \case
   CVOrdValue v       -> v
-  CVObject obj       -> AO.object $ OMap.toList $ OMap.map compositeValueToJSON obj
-  CVObjectArray vals -> AO.array $ map compositeValueToJSON vals
+  CVObject obj       -> JO.object $ OMap.toList $ OMap.map compositeValueToJSON obj
+  CVObjectArray vals -> JO.array $ map compositeValueToJSON vals
   CVFromRemote v     -> v
 
 -- | A token used to uniquely identify the results within a join call that are
@@ -122,13 +214,13 @@ data ReplacementToken = ReplacementToken {
 joinResults
   :: forall f m
    . (MonadError QErr m, Traversable f)
-  => IntMap.IntMap (IntMap.IntMap AO.Value)
+  => IntMap.IntMap (IntMap.IntMap JO.Value)
   -> f (CompositeValue ReplacementToken)
-  -> m (f AO.Value)
+  -> m (f JO.Value)
 joinResults remoteResults compositeValues = do
   traverse (fmap compositeValueToJSON . traverse replaceToken) compositeValues
   where
-    replaceToken :: ReplacementToken -> m AO.Value
+    replaceToken :: ReplacementToken -> m JO.Value
     replaceToken (ReplacementToken joinCallId argumentId) = do
       joinCallResults <- onNothing (IntMap.lookup joinCallId remoteResults) $
         throw500 $ "couldn't find results for the join with id: "
@@ -156,7 +248,7 @@ assignJoinIds joinTree =
       -> State (JoinCallId, [(JoinCallId, RemoteJoin)]) (JoinCallId, RemoteJoin)
     assignId remoteJoin = do
       (joinCallId, joinIds) <- get
-      let mJoinId = joinIds & find \(_, j) -> j `eqRemoteJoin` remoteJoin
+      let mJoinId = joinIds & find \(_, j) -> j == remoteJoin
       mJoinId `onNothing` do
         put (joinCallId + 1, (joinCallId, remoteJoin):joinIds)
         pure (joinCallId, remoteJoin)
@@ -165,7 +257,7 @@ collectJoinArguments
   :: forall f m
    . (MonadError QErr m, Traversable f)
   => JoinTree (JoinCallId, RemoteJoin)
-  -> f AO.Value
+  -> f JO.Value
   -> m (f (CompositeValue ReplacementToken), IntMap.IntMap JoinArguments)
 collectJoinArguments joinTree lhs = do
   result <- flip runStateT (0, mempty) $ traverse (traverseValue joinTree) lhs
@@ -176,14 +268,21 @@ collectJoinArguments joinTree lhs = do
       :: IntMap.Key
       -> RemoteJoin
       -> JoinArgument
+      -> FieldName
       -> StateT
            (JoinArgumentId, IntMap.IntMap JoinArguments)
            m
            ReplacementToken
-    getReplacementToken joinId remoteJoin argument = do
+    getReplacementToken joinId remoteJoin argument fieldName = do
       (counter, joins) <- get
       case IntMap.lookup joinId joins of
-        Just (JoinArguments _remoteJoin arguments) ->
+        -- XXX: We're making an explicit decision to ignore the existing
+        -- 'fieldName' and replace it with the argument provided to this
+        -- function.
+        --
+        -- This needs to be tested so we can verify that the result of this
+        -- function call is reasonable.
+        Just (JoinArguments _remoteJoin arguments _fieldName) ->
           case Map.lookup argument arguments of
             Just argumentId -> pure $ ReplacementToken joinId argumentId
             Nothing         -> addNewArgument counter joins arguments
@@ -191,20 +290,23 @@ collectJoinArguments joinTree lhs = do
       where
         addNewArgument counter joins arguments = do
           let argumentId = counter
-              newArguments = JoinArguments remoteJoin
-                (Map.insert argument argumentId arguments)
+              newArguments =
+                JoinArguments
+                  remoteJoin
+                  (Map.insert argument argumentId arguments)
+                  fieldName
           put (counter + 1, IntMap.insert joinId newArguments joins)
           pure $ ReplacementToken joinId argumentId
 
     traverseValue
       :: JoinTree (IntMap.Key, RemoteJoin)
-      -> AO.Value
+      -> JO.Value
       -> StateT
            (JoinArgumentId, IntMap.IntMap JoinArguments)
            m
            (CompositeValue ReplacementToken)
     traverseValue joinTree_ = \case
-      -- 'AO.Null' is a special case of scalar value here, which indicates that
+      -- 'JO.Null' is a special case of scalar value here, which indicates that
       -- the previous step did not return enough data for us to continue
       -- traversing down this path.
       --
@@ -226,14 +328,14 @@ collectJoinArguments joinTree lhs = do
       --      }
       --    }
       -- }
-      AO.Null          -> pure $ CVOrdValue AO.Null
-      AO.Object object -> CVObject <$> traverseObject joinTree_ object
-      AO.Array array   -> CVObjectArray <$> mapM (traverseValue joinTree_) (toList array)
+      JO.Null          -> pure $ CVOrdValue JO.Null
+      JO.Object object -> CVObject <$> traverseObject joinTree_ object
+      JO.Array array   -> CVObjectArray <$> mapM (traverseValue joinTree_) (toList array)
       _                -> throw500 "found a scalar value when traversing with a non-empty join tree"
 
     traverseObject
       :: JoinTree (IntMap.Key, RemoteJoin)
-      -> AO.Object
+      -> JO.Object
       -> StateT
            (JoinArgumentId, IntMap.IntMap JoinArguments)
            m
@@ -249,19 +351,19 @@ collectJoinArguments joinTree lhs = do
       -- placeholder value in the response. If this weren't present it would
       -- involve a lot more book-keeping to preserve the order of the original
       -- selection set in the response
-      compositeObject <- for (AO.toList object) $ \(fieldName, value_) ->
+      compositeObject <- for (JO.toList object) $ \(fieldName, value_) ->
         (fieldName,) <$> case Map.lookup fieldName joinTreeNodes of
           Just (Leaf (joinId, remoteJoin)) -> do
             joinArgument <- forM (getJoinColumnMapping remoteJoin) $ \alias -> do
               let aliasTxt = getFieldNameTxt $ getAliasFieldName alias
-              onNothing (AO.lookup aliasTxt object) $
+              onNothing (JO.lookup aliasTxt object) $
                 throw500 $ "a join column is missing from the response: " <> aliasTxt
-            if Map.null (Map.filter (== AO.Null) joinArgument)
+            if Map.null (Map.filter (== JO.Null) joinArgument)
                then Just . CVFromRemote <$>
-                 getReplacementToken joinId remoteJoin (JoinArgument joinArgument)
+                 getReplacementToken joinId remoteJoin (JoinArgument joinArgument) (FieldName fieldName)
                -- we do not join with the remote field if any of the leaves of
                -- the join argument are null
-               else pure $ Just $ CVOrdValue AO.Null
+               else pure $ Just $ CVOrdValue JO.Null
           Just (Tree joinSubTree) ->
             Just <$> traverseValue joinSubTree value_
           Nothing ->

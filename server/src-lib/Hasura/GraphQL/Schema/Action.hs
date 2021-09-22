@@ -201,9 +201,7 @@ actionOutputFields outputType annotatedObject = do
           selection   = P.selection_ fieldName description $ case objectFieldType of
             AOFTScalar def -> customScalarParser def
             AOFTEnum   def -> customEnumParser   def
-          pgColumnInfo =
-            ColumnInfo (unsafePGCol $ G.unName fieldName) fieldName 0 (ColumnScalar PGJSON) (G.isNullable gType) Nothing
-      in P.wrapFieldParser gType selection $> RQL.mkAnnColumnField pgColumnInfo Nothing Nothing
+      in P.wrapFieldParser gType selection $> RQL.mkAnnColumnField (unsafePGCol $ G.unName fieldName) (ColumnScalar PGJSON) Nothing Nothing
 
     relationshipFieldParser
       :: TypeRelationship (TableInfo ('Postgres 'Vanilla)) (ColumnInfo ('Postgres 'Vanilla))

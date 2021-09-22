@@ -37,6 +37,8 @@ import           Control.Lens.TH                     (makeLenses, makePrisms)
 import           Data.Int                            (Int64)
 import           Data.Kind                           (Type)
 
+import qualified Hasura.SQL.AnyBackend               as AB
+
 import           Hasura.GraphQL.Parser.Schema        (InputValue)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.OrderBy
@@ -73,6 +75,20 @@ data AnnSelectG (b :: BackendType) (r :: BackendType -> Type) (f :: Type -> Type
   , _asnStrfyNum :: !Bool
   } deriving (Functor, Foldable, Traversable)
 
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b v)
+  , Eq v
+  , Eq (f v)
+  ) => Eq (AnnSelectG b r f v)
+
+deriving instance
+  ( Backend b
+  , Show (BooleanOperators b v)
+  , Show v
+  , Show (f v)
+  ) => Show (AnnSelectG b r f v)
+
 type AnnSimpleSelectG    b r v = AnnSelectG b r (AnnFieldG            b r) v
 type AnnAggregateSelectG b r v = AnnSelectG b r (TableAggregateFieldG b r) v
 type AnnSimpleSelect     b     = AnnSimpleSelectG    b (Const Void) (SQLExpression b)
@@ -90,13 +106,45 @@ data ConnectionSelect (b :: BackendType) (r :: BackendType -> Type) v
   , _csSelect            :: !(AnnSelectG b r (ConnectionField b r) v)
   } deriving (Functor, Foldable, Traversable)
 
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b v)
+  , Eq v
+  , Eq (r b)
+  ) => Eq (ConnectionSelect b r v)
+
+deriving instance
+  ( Backend b
+  , Show (BooleanOperators b v)
+  , Show v
+  , Show (r b)
+  ) => Show (ConnectionSelect b r v)
+
 data ConnectionSplit (b :: BackendType) v
   = ConnectionSplit
   { _csKind    :: !ConnectionSplitKind
   , _csValue   :: !v
   , _csOrderBy :: !(OrderByItemG b (AnnotatedOrderByElement b v))
   } deriving (Functor, Generic, Foldable, Traversable)
-instance (Backend b, Hashable (ColumnInfo b), Hashable v, Hashable (BooleanOperators b v)) => Hashable (ConnectionSplit b v)
+
+deriving stock instance
+  ( Backend b
+  , Eq v
+  , Eq (BooleanOperators b v)
+  ) => Eq (ConnectionSplit b v)
+
+deriving stock instance
+  ( Backend b
+  , Show v
+  , Show (BooleanOperators b v)
+  ) => Show (ConnectionSplit b v)
+
+instance
+  ( Backend b
+  , Hashable (BooleanOperators b v)
+  , Hashable (ColumnInfo b)
+  , Hashable v
+  ) => Hashable (ConnectionSplit b v)
 
 data ConnectionSlice
   = SliceFirst !Int
@@ -121,6 +169,9 @@ data SelectFromG (b :: BackendType) v
                  -- a definition list
                  !(Maybe [(Column b, ScalarType b)])
   deriving (Functor, Foldable, Traversable, Generic)
+deriving instance (Backend b, Eq v  ) => Eq (SelectFromG b v)
+deriving instance (Backend b, Show v) => Show (SelectFromG b v)
+
 instance (Backend b, Hashable v) => Hashable (SelectFromG b v)
 
 type SelectFrom b = SelectFromG b (SQLExpression b)
@@ -149,6 +200,12 @@ instance
   , Hashable v
   ) => Hashable (SelectArgsG b v)
 
+deriving instance
+  ( Backend b
+  , Show (BooleanOperators b v)
+  , Show v
+  ) => Show (SelectArgsG b v)
+
 type SelectArgs b = SelectArgsG b (SQLExpression b)
 
 noSelectArgs :: SelectArgsG backend v
@@ -166,7 +223,9 @@ data ComputedFieldOrderByElement (b :: BackendType) v
     !(AnnotatedAggregateOrderBy b)
   -- ^ Sort by aggregation fields of table rows returned by computed field
   deriving (Generic, Functor, Foldable, Traversable)
-deriving instance (Backend b, Eq v, Eq (BooleanOperators b v)) => Eq (ComputedFieldOrderByElement b v)
+deriving instance (Backend b, Eq v,   Eq   (BooleanOperators b v)) => Eq   (ComputedFieldOrderByElement b v)
+deriving instance (Backend b, Show v, Show (BooleanOperators b v)) => Show (ComputedFieldOrderByElement b v)
+
 instance (Backend b, Hashable v, Hashable (BooleanOperators b v)) => Hashable (ComputedFieldOrderByElement b v)
 
 data ComputedFieldOrderBy (b :: BackendType) v
@@ -177,7 +236,9 @@ data ComputedFieldOrderBy (b :: BackendType) v
   , _cfobFunctionArgsExp :: !(FunctionArgsExpTableRow b v)
   , _cfobOrderByElement  :: !(ComputedFieldOrderByElement b v)
   } deriving (Generic, Functor, Foldable, Traversable)
-deriving instance (Backend b, Eq v, Eq (BooleanOperators b v)) => Eq (ComputedFieldOrderBy b v)
+deriving instance (Backend b, Eq v,   Eq   (BooleanOperators b v)) => Eq   (ComputedFieldOrderBy b v)
+deriving instance (Backend b, Show v, Show (BooleanOperators b v)) => Show (ComputedFieldOrderBy b v)
+
 instance (Backend b, Hashable v, Hashable (BooleanOperators b v)) => Hashable (ComputedFieldOrderBy b v)
 
 data AnnotatedOrderByElement (b :: BackendType) v
@@ -190,14 +251,18 @@ data AnnotatedOrderByElement (b :: BackendType) v
     !(AnnotatedAggregateOrderBy b)
   | AOCComputedField !(ComputedFieldOrderBy b v)
   deriving (Generic, Functor, Foldable, Traversable)
-deriving instance (Backend b, Eq v, Eq (BooleanOperators b v)) => Eq (AnnotatedOrderByElement b v)
+deriving instance (Backend b, Eq v,   Eq   (BooleanOperators b v)) => Eq   (AnnotatedOrderByElement b v)
+deriving instance (Backend b, Show v, Show (BooleanOperators b v)) => Show (AnnotatedOrderByElement b v)
+
 instance (Backend b, Hashable v, Hashable (BooleanOperators b v)) => Hashable (AnnotatedOrderByElement b v)
 
 data AnnotatedAggregateOrderBy (b :: BackendType)
   = AAOCount
   | AAOOp !Text !(ColumnInfo b)
   deriving (Generic)
-deriving instance (Backend b) => Eq (AnnotatedAggregateOrderBy b)
+deriving instance (Backend b) => Eq   (AnnotatedAggregateOrderBy b)
+deriving instance (Backend b) => Show (AnnotatedAggregateOrderBy b)
+
 instance (Backend b) => Hashable (AnnotatedAggregateOrderBy b)
 
 type AnnotatedOrderByItemG b v = OrderByItemG b (AnnotatedOrderByElement b v)
@@ -224,22 +289,37 @@ data AnnFieldG (b :: BackendType) (r :: BackendType -> Type) v
   | AFExpression !Text
   deriving (Functor, Foldable, Traversable)
 
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b v)
+  , Eq v
+  , Eq (r b)
+  ) => Eq (AnnFieldG b r v)
+
+deriving instance
+  ( Backend b
+  , Show (BooleanOperators b v)
+  , Show v
+  , Show (r b)
+  ) => Show (AnnFieldG b r v)
+
 type AnnField  b = AnnFieldG  b (Const Void) (SQLExpression b)
 type AnnFields b = AnnFieldsG b (Const Void) (SQLExpression b)
 
 mkAnnColumnField
-  :: ColumnInfo backend
+  :: Column backend
+  -> ColumnType backend
   -> Maybe (AnnColumnCaseBoolExp backend v)
   -> Maybe (ColumnOp backend)
   -> AnnFieldG backend r v
-mkAnnColumnField ci caseBoolExp colOpM =
-  AFColumn (AnnColumnField ci False colOpM caseBoolExp)
+mkAnnColumnField col typ caseBoolExp colOpM =
+  AFColumn (AnnColumnField col typ False colOpM caseBoolExp)
 
 mkAnnColumnFieldAsText
   :: ColumnInfo backend
   -> AnnFieldG backend r v
 mkAnnColumnFieldAsText ci =
-  AFColumn (AnnColumnField ci True Nothing Nothing)
+  AFColumn (AnnColumnField (pgiColumn ci) (pgiType ci) True Nothing Nothing)
 
 -- Aggregation fields
 
@@ -249,20 +329,37 @@ data TableAggregateFieldG (b :: BackendType) (r :: BackendType -> Type) v
   | TAFExp !Text
   deriving (Functor, Foldable, Traversable)
 
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b v)
+  , Eq v
+  , Eq (r b)
+  ) => Eq (TableAggregateFieldG b r v)
+
+deriving instance
+  ( Backend b
+  , Show (BooleanOperators b v)
+  , Show v
+  , Show (r b)
+  ) => Show (TableAggregateFieldG b r v)
+
 data AggregateField (b :: BackendType)
   = AFCount !(CountType b)
   | AFOp !(AggregateOp b)
   | AFExp !Text
+deriving instance (Backend b) => Eq   (AggregateField b)
+deriving instance (Backend b) => Show (AggregateField b)
 
 data AggregateOp (b :: BackendType)
   = AggregateOp
   { _aoOp     :: !Text
   , _aoFields :: !(ColumnFields b)
-  }
+  } deriving stock (Eq, Show)
 
 data ColFld (b :: BackendType)
   = CFCol !(Column b) !(ColumnType b)
   | CFExp !Text
+  deriving stock (Eq, Show)
 
 type TableAggregateField   b     = TableAggregateFieldG  b (Const Void) (SQLExpression b)
 type TableAggregateFields  b     = TableAggregateFieldsG b (Const Void) (SQLExpression b)
@@ -281,6 +378,20 @@ data ConnectionField (b :: BackendType) (r :: BackendType -> Type) v
   | ConnectionEdges !(EdgeFields b r v)
   deriving (Functor, Foldable, Traversable)
 
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b v)
+  , Eq v
+  , Eq (r b)
+  ) => Eq (ConnectionField b r v)
+
+deriving instance
+  ( Backend b
+  , Show (BooleanOperators b v)
+  , Show v
+  , Show (r b)
+  ) => Show (ConnectionField b r v)
+
 data PageInfoField
   = PageInfoTypename !Text
   | PageInfoHasNextPage
@@ -295,6 +406,20 @@ data EdgeField (b :: BackendType) (r :: BackendType -> Type) v
   | EdgeNode !(AnnFieldsG b r v)
   deriving (Functor, Foldable, Traversable)
 
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b v)
+  , Eq v
+  , Eq (r b)
+  ) => Eq (EdgeField b r v)
+
+deriving instance
+  ( Backend b
+  , Show (BooleanOperators b v)
+  , Show v
+  , Show (r b)
+  ) => Show (EdgeField b r v)
+
 type ConnectionFields b r v = Fields (ConnectionField b r v)
 
 type PageInfoFields   = Fields PageInfoField
@@ -304,7 +429,8 @@ type EdgeFields b r v = Fields (EdgeField b r v)
 
 data AnnColumnField (b :: BackendType) v
   = AnnColumnField
-  { _acfInfo               :: !(ColumnInfo b)
+  { _acfColumn             :: !(Column b)
+  , _acfType               :: !(ColumnType b)
   , _acfAsText             :: !Bool
   -- ^ If this field is 'True', columns are explicitly casted to @text@ when fetched, which avoids
   -- an issue that occurs because we don’t currently have proper support for array types. See
@@ -317,6 +443,18 @@ data AnnColumnField (b :: BackendType) v
   -- column will be outputted when `c` evaluates to `true` and `null`
   -- when `c` evaluates to `false`.
   } deriving (Functor, Foldable, Traversable)
+
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b v)
+  , Eq v
+  ) => Eq (AnnColumnField b v)
+
+deriving instance
+  ( Backend b
+  , Show (BooleanOperators b v)
+  , Show v
+  ) => Show (AnnColumnField b v)
 
 data ColumnOp (b :: BackendType)
   = ColumnOp
@@ -353,6 +491,19 @@ data ComputedFieldSelect (b :: BackendType) (r :: BackendType -> Type) v
   | CFSTable !JsonAggSelect !(AnnSimpleSelectG b r v)
   deriving (Functor, Foldable, Traversable)
 
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b v)
+  , Eq v
+  , Eq (r b)
+  ) => Eq (ComputedFieldSelect b r v)
+
+deriving instance
+  ( Backend b
+  , Show (BooleanOperators b v)
+  , Show v
+  , Show (r b)
+  ) => Show (ComputedFieldSelect b r v)
 
 -- Local relationship
 
@@ -362,6 +513,8 @@ data AnnRelationSelectG (b :: BackendType) a
   , aarColumnMapping    :: !(HashMap (Column b) (Column b)) -- Column of left table to join with
   , aarAnnSelect        :: !a -- Current table. Almost ~ to SQL Select
   } deriving  (Functor, Foldable, Traversable)
+deriving instance (Backend b, Eq   v) => Eq   (AnnRelationSelectG b v)
+deriving instance (Backend b, Show v) => Show (AnnRelationSelectG b v)
 
 type ArrayRelationSelectG  b r v = AnnRelationSelectG b (AnnSimpleSelectG    b r v)
 type ArrayAggregateSelectG b r v = AnnRelationSelectG b (AnnAggregateSelectG b r v)
@@ -375,6 +528,20 @@ data AnnObjectSelectG (b :: BackendType) (r :: BackendType -> Type) v
   , _aosTableFilter :: !(AnnBoolExp b v)
   } deriving (Functor, Foldable, Traversable)
 
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b v)
+  , Eq v
+  , Eq (r b)
+  ) => Eq (AnnObjectSelectG b r v)
+
+deriving instance
+  ( Backend b
+  , Show (BooleanOperators b v)
+  , Show v
+  , Show (r b)
+  ) => Show (AnnObjectSelectG b r v)
+
 type AnnObjectSelect b r = AnnObjectSelectG b r (SQLExpression b)
 
 type ObjectRelationSelectG b r v = AnnRelationSelectG b (AnnObjectSelectG b r v)
@@ -386,6 +553,20 @@ data ArraySelectG (b :: BackendType) (r :: BackendType -> Type) v
   | ASAggregate  !(ArrayAggregateSelectG b r v)
   | ASConnection !(ArrayConnectionSelect b r v)
   deriving (Functor, Foldable, Traversable)
+
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b v)
+  , Eq v
+  , Eq (r b)
+  ) => Eq (ArraySelectG b r v)
+
+deriving instance
+  ( Backend b
+  , Show (BooleanOperators b v)
+  , Show v
+  , Show (r b)
+  ) => Show (ArraySelectG b r v)
 
 type ArraySelect b = ArraySelectG b (Const Void) (SQLExpression b)
 type ArraySelectFieldsG b r v = Fields (ArraySelectG b r v)
@@ -418,6 +599,20 @@ data SourceRelationshipSelection
   | SourceRelationshipArray !(AnnSimpleSelectG b r (vf b))
   | SourceRelationshipArrayAggregate !(AnnAggregateSelectG b r (vf b))
 
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b (v b))
+  , Eq (v b)
+  , Eq (r b)
+  ) => Eq (SourceRelationshipSelection b r v)
+
+deriving instance
+  ( Backend b
+  , Show (BooleanOperators b (v b))
+  , Show (v b)
+  , Show (r b)
+  ) => Show (SourceRelationshipSelection b r v)
+
 -- | A relationship to a remote source. 'vf' (could use a better name) is
 -- analogous to 'v' in other IR types such as 'AnnFieldG'. vf's kind is
 -- (BackendType -> Type) instead of v's 'Type' so that 'v' of 'AnnFieldG' can
@@ -428,10 +623,10 @@ data RemoteSourceSelect
     (vf :: BackendType -> Type)
     (tgt :: BackendType)
   = RemoteSourceSelect
-    { _rssSourceName   :: !SourceName
-    , _rssSourceConfig :: !(SourceConfig tgt)
-    , _rssSelection    :: !(SourceRelationshipSelection tgt (RemoteSelect vf) vf)
-    , _rssJoinMapping  :: !(HM.HashMap FieldName (ColumnInfo src, ScalarType tgt, Column tgt))
+    { _rssName        :: !SourceName
+    , _rssConfig      :: !(SourceConfig tgt)
+    , _rssSelection   :: !(SourceRelationshipSelection tgt (RemoteSelect vf) vf)
+    , _rssJoinMapping :: !(HM.HashMap FieldName (ColumnInfo src, ScalarType tgt, Column tgt))
     -- ^ Additional information about the source's join columns:
     -- (ColumnInfo src) so that we can add the join column to the AST
     -- (ScalarType tgt) so that the remote can interpret the join values coming
@@ -446,7 +641,7 @@ data RemoteSelect
     (vf :: BackendType -> Type)
     (src :: BackendType)
   = RemoteSelectRemoteSchema !(RemoteSchemaSelect src)
-  -- | RemoteSelectSource !(AB.AnyBackend (RemoteSourceSelect src vf))
+  | RemoteSelectSource !(AB.AnyBackend (RemoteSourceSelect src vf))
   -- ^ AnyBackend is used here to capture a relationship to an arbitrary target
 
 -- Permissions
@@ -456,6 +651,18 @@ data TablePermG (b :: BackendType) v
   { _tpFilter :: !(AnnBoolExp b v)
   , _tpLimit  :: !(Maybe Int)
   } deriving (Generic, Functor, Foldable, Traversable)
+
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b v)
+  , Eq v
+  ) => Eq (TablePermG b v)
+
+deriving instance
+  ( Backend b
+  , Show (BooleanOperators b v)
+  , Show v
+  ) => Show (TablePermG b v)
 
 instance
   ( Backend b

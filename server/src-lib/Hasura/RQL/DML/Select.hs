@@ -193,13 +193,13 @@ convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
       (colInfo, caseBoolExpMaybe) <- convExtSimple fieldInfoMap selPermInfo pgCol
       resolvedCaseBoolExp <-
         traverse (convAnnColumnCaseBoolExpPartialSQL sessVarBldr) caseBoolExpMaybe
-      pure (fromCol @('Postgres 'Vanilla) pgCol, mkAnnColumnField colInfo resolvedCaseBoolExp Nothing)
+      pure (fromCol @('Postgres 'Vanilla) pgCol, mkAnnColumnField (pgiColumn colInfo) (pgiType colInfo) resolvedCaseBoolExp Nothing)
     (ECRel relName mAlias relSelQ) -> do
       annRel <- convExtRel fieldInfoMap relName mAlias
                 relSelQ sessVarBldr prepValBldr
       pure ( fromRel $ fromMaybe relName mAlias
-             , either AFObjectRelation AFArrayRelation annRel
-             )
+           , either AFObjectRelation AFArrayRelation annRel
+           )
 
   annOrdByML <- forM (sqOrderBy selQ) $ \(OrderByExp obItems) ->
     withPathK "order_by" $ indexedForM obItems $ mapM $

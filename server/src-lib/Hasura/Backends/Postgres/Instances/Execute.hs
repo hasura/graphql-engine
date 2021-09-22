@@ -8,14 +8,19 @@ module Hasura.Backends.Postgres.Instances.Execute
 import           Hasura.Prelude
 
 import qualified Control.Monad.Trans.Control                as MT
+import qualified Data.Aeson                                 as J
+import qualified Data.HashMap.Strict                        as Map
 import qualified Data.IntMap                                as IntMap
 import qualified Data.Sequence                              as Seq
+import qualified Data.Tagged                                as Tagged
 import qualified Database.PG.Query                          as Q
 import qualified Language.GraphQL.Draft.Syntax              as G
 
 import qualified Hasura.Backends.Postgres.Execute.LiveQuery as PGL
 import qualified Hasura.Backends.Postgres.Execute.Mutation  as PGE
 import qualified Hasura.Backends.Postgres.SQL.DML           as S
+import qualified Hasura.Backends.Postgres.SQL.Types         as PG
+import qualified Hasura.Backends.Postgres.SQL.Value         as PG
 import qualified Hasura.Backends.Postgres.Translate.Select  as DS
 import qualified Hasura.RQL.IR.Delete                       as IR
 import qualified Hasura.RQL.IR.Insert                       as IR
@@ -25,21 +30,34 @@ import qualified Hasura.RQL.IR.Update                       as IR
 import qualified Hasura.SQL.AnyBackend                      as AB
 import qualified Hasura.Tracing                             as Tracing
 
-import           Hasura.Backends.Postgres.Connection
-import           Hasura.Backends.Postgres.Execute.Insert
-import           Hasura.Backends.Postgres.Execute.Prepare
+import           Hasura.Backends.Postgres.Connection        (runTx)
+import           Hasura.Backends.Postgres.Execute.Insert    (convertToSQLTransaction)
+import           Hasura.Backends.Postgres.Execute.Prepare   (PlanningSt (..), PrepArgMap,
+                                                             initPlanningSt, prepareWithPlan,
+                                                             prepareWithoutPlan,
+                                                             resolveUnpreparedValue, withUserVars)
+import           Hasura.Backends.Postgres.Execute.Types     (PGSourceConfig (..))
 import           Hasura.Backends.Postgres.Translate.Select  (PostgresAnnotatedFieldJSON)
-import           Hasura.Base.Error
-import           Hasura.EncJSON
-import           Hasura.GraphQL.Execute.Backend
-import           Hasura.GraphQL.Execute.LiveQuery.Plan
-import           Hasura.GraphQL.Parser
-import           Hasura.QueryTags
+import           Hasura.Base.Error                          (QErr)
+import           Hasura.EncJSON                             (EncJSON, encJFromJValue)
+import           Hasura.GraphQL.Execute.Backend             (BackendExecute (..), DBStepInfo (..),
+                                                             ExplainPlan (..), MonadQueryTags (..),
+                                                             convertRemoteSourceRelationship)
+import           Hasura.GraphQL.Execute.LiveQuery.Plan      (LiveQueryPlan (..),
+                                                             LiveQueryPlanExplanation (..),
+                                                             ParameterizedLiveQueryPlan (..),
+                                                             mkCohortVariables, newCohortId)
+import           Hasura.GraphQL.Parser                      (UnpreparedValue (..))
+import           Hasura.QueryTags                           (QueryTagsComment (..),
+                                                             encodeOptionalQueryTags)
 import           Hasura.RQL.DML.Internal                    (dmlTxErrorHandler)
-import           Hasura.RQL.IR
-import           Hasura.RQL.Types
+import           Hasura.RQL.IR                              (MutationDB (..), QueryDB (..))
+import           Hasura.RQL.Types                           (Backend (..), BackendType (Postgres),
+                                                             FieldName, JsonAggSelect (..),
+                                                             SourceName, getFieldNameTxt, liftTx)
+import           Hasura.RQL.Types.Column                    (ColumnType (..), ColumnValue (..))
 import           Hasura.Server.Version                      (HasVersion)
-import           Hasura.Session
+import           Hasura.Session                             (UserInfo (..))
 
 
 data PreparedSql
@@ -62,6 +80,7 @@ instance
   mkDBSubscriptionPlan = pgDBSubscriptionPlan
   mkDBQueryExplain = pgDBQueryExplain
   mkLiveQueryExplain = pgDBLiveQueryExplain
+  mkDBRemoteRelationshipPlan = pgDBRemoteRelationshipPlan
 
 
 -- query
@@ -97,8 +116,8 @@ pgDBQueryExplain
   -> SourceConfig ('Postgres pgKind)
   -> QueryDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
   -> m (AB.AnyBackend DBStepInfo)
-pgDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
-  preparedQuery <- traverse (resolveUnpreparedValue userInfo) qrf
+pgDBQueryExplain fieldName userInfo sourceName sourceConfig rootSelection = do
+  preparedQuery <- traverse (resolveUnpreparedValue userInfo) rootSelection
   let PreparedSql querySQL _ = irToRootFieldPlan mempty preparedQuery
       textSQL = Q.getQueryText querySQL
       -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
@@ -315,3 +334,65 @@ appendSQLWithQueryTags :: Q.Query -> QueryTagsComment -> Q.Query
 appendSQLWithQueryTags query queryTags = query {Q.getQueryText = queryText <> (_unQueryTagsComment queryTags)}
   where
     queryText = Q.getQueryText query
+
+
+--------------------------------------------------------------------------------
+-- Remote Relationships (e.g. DB-to-DB Joins, remote schema joins, etc.)
+--------------------------------------------------------------------------------
+
+-- | Construct an action (i.e. 'DBStepInfo') which can marshal some remote
+-- relationship information into a form that Postgres can query against.
+pgDBRemoteRelationshipPlan
+  :: forall pgKind m
+   . ( MonadError QErr m
+     , MonadQueryTags m
+     , Backend ('Postgres pgKind)
+     , PostgresAnnotatedFieldJSON pgKind
+     )
+  => UserInfo
+  -> SourceName
+  -> SourceConfig ('Postgres pgKind)
+  -- | List of json objects, each of which becomes a row of the table.
+  -> NonEmpty J.Object
+  -- | The above objects have this schema
+  --
+  -- XXX: What is this for/what does this mean?
+  -> HashMap FieldName (Column ('Postgres pgKind), ScalarType ('Postgres pgKind))
+  -- | This is a field name from the lhs that *has* to be selected in the
+  -- response along with the relationship.
+  -> FieldName
+  -> (FieldName, IR.SourceRelationshipSelection ('Postgres pgKind) (Const Void) UnpreparedValue)
+  -> m (DBStepInfo ('Postgres pgKind))
+pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship = do
+  -- NOTE: 'QueryTags' currently cannot support remote relationship queries.
+  --
+  -- In the future if we want to add support we'll need to add a new type of
+  -- metadata (e.g. 'ParameterizedQueryHash' doesn't make sense here) and find
+  -- a root field name that makes sense to attach to it.
+  let queryTags = QueryTagsComment . Tagged.untag $ createQueryTags @m Nothing (encodeOptionalQueryTags Nothing)
+  pgDBQueryPlan userInfo sourceName sourceConfig rootSelection queryTags
+
+  where
+    coerceToColumn = PG.unsafePGCol . getFieldNameTxt
+    joinColumnMapping = mapKeys coerceToColumn lhsSchema
+
+    rowsArgument :: UnpreparedValue ('Postgres pgKind)
+    rowsArgument =
+      UVParameter Nothing $ ColumnValue (ColumnScalar PG.PGJSONB) $
+        PG.PGValJSONB $ Q.JSONB $ J.toJSON lhs
+    jsonToRecordSet :: IR.SelectFromG ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
+
+    recordSetDefinitionList =
+      (coerceToColumn argumentId, PG.PGBigInt):Map.toList (fmap snd joinColumnMapping)
+    jsonToRecordSet =
+      IR.FromFunction
+        (PG.QualifiedObject "pg_catalog" $ PG.FunctionName "jsonb_to_recordset")
+        (IR.FunctionArgsExp [IR.AEInput rowsArgument] mempty)
+        (Just recordSetDefinitionList)
+
+    rootSelection = convertRemoteSourceRelationship
+                      (fst <$> joinColumnMapping)
+                      jsonToRecordSet
+                      (PG.unsafePGCol $ getFieldNameTxt argumentId)
+                      (ColumnScalar PG.PGBigInt)
+                      relationship

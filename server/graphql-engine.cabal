@@ -609,6 +609,7 @@ library
                      , Hasura.GraphQL.Schema.OrderBy
                      , Hasura.GraphQL.Schema.Postgres
                      , Hasura.GraphQL.Schema.Remote
+                     , Hasura.GraphQL.Schema.RemoteSource
                      , Hasura.GraphQL.Schema.Select
                      , Hasura.GraphQL.Schema.Table
                      , Hasura.GraphQL.Transport.Backend

@@ -1055,11 +1055,11 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
     baseTableIdentifier = mkBaseTableAlias sourcePrefix
 
     toSQLCol :: AnnColumnField ('Postgres pgKind) S.SQLExp -> m S.SQLExp
-    toSQLCol (AnnColumnField col asText colOpM caseBoolExpMaybe) = do
+    toSQLCol (AnnColumnField col typ asText colOpM caseBoolExpMaybe) = do
       strfyNum <- ask
       let sqlExpression =
             withColumnOp colOpM $
-            S.mkQIdenExp baseTableIdentifier $ pgiColumn col
+            S.mkQIdenExp baseTableIdentifier col
           finalSQLExpression =
             -- Check out [SQL generation for inherited role]
             case caseBoolExpMaybe of
@@ -1069,7 +1069,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
                       S.simplifyBoolExp $ toSQLBoolExp (S.QualifiedIdentifier baseTableIdentifier Nothing) $
                       _accColCaseBoolExpField <$> caseBoolExp
                 in S.SECond boolExp sqlExpression S.SENull
-      pure $ toJSONableExp strfyNum (pgiType col) asText finalSQLExpression
+      pure $ toJSONableExp strfyNum typ asText finalSQLExpression
 
     fromScalarComputedField :: ComputedFieldScalarSelect ('Postgres pgKind) S.SQLExp -> m S.SQLExp
     fromScalarComputedField computedFieldScalar = do

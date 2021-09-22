@@ -149,14 +149,20 @@ resolveActionExecution env logger userInfo annAction execContext gqlQueryText =
         forwardClientHeaders resolvedWebhook handlerPayload timeout metadataTransform
 
 -- | Build action response from the Webhook JSON response when there are no relationships defined
-makeActionResponseNoRelations :: RS.AnnFieldsG b r v -> ActionWebhookResponse -> AO.Value
+makeActionResponseNoRelations :: RS.AnnFieldsG ('Postgres 'Vanilla) r v -> ActionWebhookResponse -> AO.Value
 makeActionResponseNoRelations annFields webhookResponse =
   let mkResponseObject obj =
         AO.object $ flip mapMaybe annFields $ \(fieldName, annField) ->
           let fieldText = getFieldNameTxt fieldName
           in (fieldText,) <$> case annField of
             RS.AFExpression t -> Just $ AO.String t
-            RS.AFColumn     c -> AO.toOrdered <$> Map.lookup (pgiName $ RS._acfInfo c) obj
+            RS.AFColumn     c -> AO.toOrdered <$> Map.lookup (G.unsafeMkName . getPGColTxt $ RS._acfColumn c) obj
+                                -- NOTE (Phil): Coercing the name like this using unsafeMkName (instead
+                                -- of using something like pgiName is safe (here) because of how we
+                                -- construct ColumnInfo objects in mkPGColumnInfo. Really, we should get
+                                -- rid of ColumnInfo altogether, but right now action responses are
+                                -- represented as if they were rows in some temp PG table, which is why
+                                -- they appear here.
             _                 -> AO.toOrdered <$> Map.lookup fieldText (mapKeys G.unName obj)
                                 -- NOTE (Sam): This case would still not allow for aliased fields to be
                                 -- a part of the response. Also, seeing that none of the other `annField`
@@ -271,10 +277,10 @@ resolveAsyncActionQuery userInfo annAction =
     errorsColumn = (unsafePGCol "errors", PGJSONB)
     sessionVarsColumn = (unsafePGCol "session_variables", PGJSONB)
 
-    -- TODO (from master):- Avoid using ColumnInfo
-    mkAnnFldFromPGCol columnInfoArgs =
-      RS.mkAnnColumnField (mkPGColumnInfo columnInfoArgs) Nothing Nothing
+    mkAnnFldFromPGCol (column', columnType) =
+      RS.mkAnnColumnField column' (ColumnScalar columnType) Nothing Nothing
 
+    -- TODO (from master):- Avoid using ColumnInfo
     mkPGColumnInfo (column', columnType) =
       ColumnInfo column' (G.unsafeMkName $ getPGColTxt column') 0 (ColumnScalar columnType) True Nothing
 
