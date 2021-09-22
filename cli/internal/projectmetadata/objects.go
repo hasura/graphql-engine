@@ -10,6 +10,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/functions"
 	graphqlschemaintrospection "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/graphql_schema_introspection"
 	inheritedroles "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/inherited_roles"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/network"
 	querytags "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/query_tags"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/querycollections"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/remoteschemas"
@@ -49,6 +50,7 @@ func GetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) metadata
 		objects = append(objects, allowlist.New(ec, metadataDir))
 		objects = append(objects, actions.New(ec, metadataDir))
 		objects = append(objects, crontriggers.New(ec, metadataDir))
+		objects = append(objects, network.New(ec, metadataDir))
 
 		if ec.HasMetadataV3 && ec.Config.Version >= cli.V3 {
 			// metadata objects supported in metadata v3

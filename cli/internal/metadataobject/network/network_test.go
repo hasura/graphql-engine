@@ -1,4 +1,4 @@
-package apilimits
+package network
 
 import (
 	"io/ioutil"
@@ -35,21 +35,21 @@ func TestMetadataObject_Build(t *testing.T) {
 			},
 			args{
 				metadata: new(yaml.MapSlice),
-			},
-			`api_limits:
-  disabled: false
-  rate_limit:
-    per_role: {}
-    global:
-      unique_params: IP
-      max_reqs_per_min: 1
+			}, `
+network:
+  tls_allowlist:
+   - certtest.dev.hasura.io
+   - host: certtest.dev.hasura.io
+     port: 443
+     permit:
+      - self-signed
 `,
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := &MetadataObject{
+			m := &NetworkObject{
 				MetadataDir: tt.fields.MetadataDir,
 				logger:      tt.fields.logger,
 			}
@@ -59,7 +59,8 @@ func TestMetadataObject_Build(t *testing.T) {
 			} else {
 				b, err := yaml.Marshal(tt.args.metadata)
 				assert.NoError(t, err)
-				assert.Equal(t, tt.want, string(b))
+				yamlBytes := []byte(tt.want)
+				assert.YAMLEq(t, string(yamlBytes), string(b))
 			}
 		})
 	}
@@ -81,7 +82,7 @@ func TestMetadataObject_Export(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"can export metadata with api_limits",
+			"can export metadata with network object",
 			fields{
 				MetadataDir: "testdata/metadata",
 				logger:      logrus.New(),
@@ -96,12 +97,12 @@ func TestMetadataObject_Export(t *testing.T) {
 				}(),
 			},
 			map[string][]byte{
-				"testdata/metadata/api_limits.yaml": []byte(`disabled: false
-rate_limit:
-  per_role: {}
-  global:
-    unique_params: IP
-    max_reqs_per_min: 1
+				"testdata/metadata/network.yaml": []byte(`tls_allowlist:
+- certtest.dev.hasura.io
+- host: certtest.dev.hasura.io
+  port: 443
+  permit:
+  - self-signed
 `),
 			},
 			false,
@@ -109,7 +110,7 @@ rate_limit:
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			obj := &MetadataObject{
+			obj := &NetworkObject{
 				MetadataDir: tt.fields.MetadataDir,
 				logger:      tt.fields.logger,
 			}

@@ -22,6 +22,7 @@
 - server: prevent empty subscription roots in the schema (#6898)
 - console: support tracking of functions with return a single row
 - console: add GraphQL customisation under Remote schema edit tab
+- cli: add support for `network` metadata object
 
 ## v2.0.9
 
