@@ -43,7 +43,7 @@ parseMaxAge t = do
   where
     parseErr = "could not find max-age/s-maxage"
     checkMaxAgeToken = \case
-      CCDOnlyToken token -> token == "max-age" || token == "s-maxage"
+      CCDOnlyToken token      -> token == "max-age" || token == "s-maxage"
       CCDTokenWithVal token _ -> token == "max-age" || token == "s-maxage"
 
 
@@ -75,7 +75,7 @@ cacheDirectiveParser = tokenWithValue <|> onlyToken
     onlyToken = CCDOnlyToken <$> tokenParser
     tokenWithValue = do
       tok <- tokenParser
-      AT.char '='
+      void $ AT.char '='
       val <- tokenParser <|> quotedStringParser
       return $ CCDTokenWithVal tok val
 

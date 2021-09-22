@@ -53,7 +53,7 @@ runAddComputedField
   => AddComputedField b
   -> m EncJSON
 runAddComputedField q = do
-  withPathK "table" $ askTabInfo @b source table
+  void $ withPathK "table" $ askTabInfo @b source table
   let metadataObj = MOSourceObjId source
                       $ AB.mkAnyBackend
                       $ SMOTableObj @b table

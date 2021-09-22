@@ -1,3 +1,4 @@
+{-# LANGUAGE ApplicativeDo #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hasura.Backends.BigQuery.Instances.Schema () where

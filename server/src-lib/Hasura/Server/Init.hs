@@ -1,6 +1,7 @@
 -- | Types and functions related to the server initialisation
 {-# OPTIONS_GHC -O0 #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE CPP           #-}
 module Hasura.Server.Init
   ( module Hasura.Server.Init
   , module Hasura.Server.Init.Config
