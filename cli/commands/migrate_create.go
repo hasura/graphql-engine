@@ -223,6 +223,19 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 	if err != nil {
 		return 0, errors.Wrap(err, "error creating migration files")
 	}
+	if o.fromServer {
+		opts := &MigrateApplyOptions{
+			EC:               o.EC,
+			SkipExecution:    true,
+			VersionMigration: fmt.Sprintf("%d", timestamp),
+			Source:           o.Source,
+		}
+		err := opts.Run()
+		if err != nil {
+			o.EC.Logger.Warnf("cannot mark created migration %d as applied: %v", timestamp, err)
+			o.EC.Logger.Warnf("manually mark it as applied using command:  hasura migrate apply --skip-execution --version %d", timestamp)
+		}
+	}
 	return timestamp, nil
 }
 

@@ -25,6 +25,7 @@
 - console: add GraphQL customisation under Remote schema edit tab
 - console: fix cross-schema array relationship suggestions
 - cli: add support for `network` metadata object
+- cli: `migrate create --from-server` creates the migration and marks it as applied on the server
 
 ## v2.0.9
 
