@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/cheggaaa/pb/v3"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
@@ -56,13 +56,17 @@ const (
 )
 
 func newProgressBar(str string, w io.Writer, pbLogs bool) *pb.ProgressBar {
+	// Default behaviour in non-interactive mode
+	if !pbLogs && !term.IsTerminal(int(os.Stdout.Fd())) {
+		return nil
+	}
 	// bar template configuration
 	str = fmt.Sprintf(`"%v: "`, str)
 	var barTemplateConfiguration string = fmt.Sprintf(`{{ cyan %s }} {{ counters .}} {{ bar . "[" "=" ">" "." "]"}} {{percent .}}`, str)
 	bar := pb.ProgressBarTemplate(barTemplateConfiguration).New(0)
 	bar.SetRefreshRate(time.Millisecond)
-	if pbLogs && !terminal.IsTerminal(int(os.Stdin.Fd())) {
-		bar.SetWidth(210)
+	// non-interactive mode with progressbar-logs flag
+	if pbLogs && !term.IsTerminal(int(os.Stdout.Fd())) {
 		bar.Set(pb.Terminal, true)
 	}
 	bar.Set(pb.CleanOnFinish, true)
@@ -70,6 +74,36 @@ func newProgressBar(str string, w io.Writer, pbLogs bool) *pb.ProgressBar {
 		bar.SetWriter(w)
 	}
 	return bar
+}
+
+func startProgressBar(bar *pb.ProgressBar) {
+	if bar != nil {
+		bar.Start()
+	}
+}
+
+func finishProgressBar(bar *pb.ProgressBar) {
+	if bar != nil {
+		bar.Finish()
+	}
+}
+
+func incrementProgressBar(bar *pb.ProgressBar) {
+	if bar != nil {
+		bar.Increment()
+	}
+}
+
+func setTotalProgressBar(bar *pb.ProgressBar, val int64) {
+	if bar != nil {
+		bar.SetTotal(val)
+	}
+}
+
+func setWidthProgressBar(bar *pb.ProgressBar, pbLogs bool) {
+	if pbLogs && !term.IsTerminal(int(os.Stdout.Fd())) && bar.Width() == 0 {
+		bar.SetWidth(220)
+	}
 }
 
 // ErrShortLimit is an error returned when not enough migrations
@@ -861,7 +895,7 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 func (m *Migrate) read(version uint64, direction string, ret chan<- interface{}, bar *pb.ProgressBar) {
 	defer close(ret)
 
-	bar.SetTotal(1)
+	setTotalProgressBar(bar, 1)
 
 	if direction == "up" {
 		if m.stop() {
@@ -987,9 +1021,9 @@ func (m *Migrate) readUp(limit int64, ret chan<- interface{}, bar *pb.ProgressBa
 			return
 		}
 
-		bar.SetTotal(int64(noOfUnappliedMigrations))
+		setTotalProgressBar(bar, int64(noOfUnappliedMigrations))
 	} else {
-		bar.SetTotal(limit)
+		setTotalProgressBar(bar, limit)
 	}
 
 	count := int64(0)
@@ -1144,9 +1178,9 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}, bar *pb.Progress
 				noOfAppliedMigrations++
 			}
 		}
-		bar.SetTotal(int64(noOfAppliedMigrations))
+		setTotalProgressBar(bar, int64(noOfAppliedMigrations))
 	} else {
-		bar.SetTotal(limit)
+		setTotalProgressBar(bar, limit)
 	}
 
 	count := int64(0)
@@ -1218,8 +1252,9 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}, bar *pb.Progress
 // to stop execution because it might have received a stop signal on the
 // GracefulStop channel.
 func (m *Migrate) runMigrations(ret <-chan interface{}, bar *pb.ProgressBar) error {
-	bar.Start()
-	defer bar.Finish()
+	startProgressBar(bar)
+	setWidthProgressBar(bar, m.ProgressBarLogs)
+	defer finishProgressBar(bar)
 	for r := range ret {
 		if m.stop() {
 			return nil
@@ -1239,7 +1274,7 @@ func (m *Migrate) runMigrations(ret <-chan interface{}, bar *pb.ProgressBar) err
 						return err
 					}
 				}
-				bar.Increment()
+				incrementProgressBar(bar)
 				version := int64(migr.Version)
 				// Insert Version number into the table
 				if err := m.databaseDrv.SetVersion(version, false); err != nil {
@@ -1711,7 +1746,7 @@ func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}
 		return
 	}
 
-	bar.SetTotal(int64(noOfUnappliedMigrations))
+	setTotalProgressBar(bar, int64(noOfUnappliedMigrations))
 
 	for {
 		if m.stop() {
@@ -1832,7 +1867,7 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 		return
 	}
 
-	bar.SetTotal(int64(noOfAppliedMigrations))
+	setTotalProgressBar(bar, int64(noOfAppliedMigrations))
 
 	for {
 		if m.stop() {
