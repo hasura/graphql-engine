@@ -27,6 +27,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/pgdump"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1graphql"
 	"github.com/hasura/graphql-engine/cli/v2/migrate/database/hasuradb"
+	"golang.org/x/term"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1metadata"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1query"
@@ -56,7 +57,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/subosito/gotenv"
-	"golang.org/x/crypto/ssh/terminal"
 	"gopkg.in/yaml.v2"
 )
 
@@ -487,7 +487,7 @@ func (ec *ExecutionContext) Prepare() error {
 	}
 	ec.CMDName = cmdName
 
-	ec.IsTerminal = terminal.IsTerminal(int(os.Stdout.Fd()))
+	ec.IsTerminal = term.IsTerminal(int(os.Stdout.Fd()))
 
 	// set spinner
 	ec.setupSpinner()

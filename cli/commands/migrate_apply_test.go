@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/Pallinder/go-randomdata"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
@@ -162,7 +162,7 @@ var testProgressBar = func(projectDirectory string) {
 			WorkingDirectory: projectDirectory,
 		})
 
-		if !terminal.IsTerminal(int(os.Stdin.Fd())) {
+		if !term.IsTerminal(int(os.Stdout.Fd())) {
 			Eventually(session.Err, 60*40).ShouldNot(Say(progressBar))
 		} else {
 			Eventually(session.Err, 60*40).Should(Say(progressBar))
