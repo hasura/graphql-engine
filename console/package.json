@@ -24,6 +24,7 @@
     "build-unused": "webpack --verbose --colors --display-error-details --config webpack/prod.config.js --json | webpack-unused -s src",
     "cypress": "cypress open --config-file cypress-local.json",
     "test": "cypress run --spec 'cypress/integration/**/**/test.ts' --key $CYPRESS_KEY --parallel --record",
+    "buildkite-test": "cypress run --spec 'cypress/integration/**/**/test.ts' --key $CYPRESS_KEY --ci-build-id $BUILDKITE_BUILD_ID --parallel --record",
     "lint": "eslint -c .eslintrc src --ext .js,.ts,.tsx",
     "lint:quiet": "eslint --quiet -c .eslintrc src --ext .js,.ts,.tsx",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
