@@ -17,6 +17,12 @@ import {
 import { currentDriver, useDataSource } from '../../../dataSources';
 import SourceView from './SourceView';
 import { getSourceDriver, isInconsistentSource } from './utils';
+import {
+  findTable,
+  generateTableDef,
+  getSchemaTables,
+} from '../../../dataSources/common';
+import { isTableRoute } from '../../Common/utils/routesUtils';
 
 type Params = {
   source?: string;
@@ -36,6 +42,9 @@ const DataSourceContainer = ({
   currentSource,
   location,
   inconsistentObjects,
+  currentSchema,
+  currentTable,
+  allSchemas,
 }: DataSourceContainerProps) => {
   const { setDriver, dataSource } = useDataSource();
   const [dataLoaded, setDataLoaded] = useState(false);
@@ -114,7 +123,26 @@ const DataSourceContainer = ({
   }, [currentSource, dataLoaded, dispatch, currentDriver]);
 
   if (!currentSource || !dataLoaded) {
-    return <div style={{ margin: '20px' }}>Loading...</div>;
+    return <div style={{ margin: '20px' }}>Loading data...</div>;
+  }
+
+  if (isTableRoute(location.pathname) && currentSchema) {
+    const table = findTable(
+      allSchemas,
+      generateTableDef(currentTable, currentSchema)
+    );
+
+    if (!table) {
+      // TODO: detect more accurately if table data is still loading
+      // HACK: if schemaTables are present => schema data has been loaded at some point,
+      // hence if table is not found => 404
+      // This condition will always pass if schema has no tables or in case we have stale
+      // data that doesnt have the current table data
+      const schemaTables = getSchemaTables(allSchemas, currentSchema);
+      if (schemaTables.length === 0) {
+        return <div style={{ margin: '20px' }}>Loading data...</div>;
+      }
+    }
   }
 
   return <>{children || <SourceView />}</>;
@@ -124,6 +152,9 @@ const mapStateToProps = (state: ReduxState) => {
   return {
     schemaList: state.tables.schemaList,
     dataSources: getDataSources(state),
+    allSchemas: state.tables.allSchemas,
+    currentSchema: state.tables.currentSchema,
+    currentTable: state.tables.currentTable,
     currentSource: state.tables.currentDataSource,
     inconsistentObjects: state.metadata.inconsistentObjects,
   };
