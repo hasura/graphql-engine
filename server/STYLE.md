@@ -1,117 +1,29 @@
 # Code conventions and style guide
 
-This is a short document describing the preferred coding style for this project. We've tried to cover the major areas of formatting and naming. When something isn't covered by this guide, err on the side of consistency with existing code.
+This is a short document describing the preferred coding style for this
+project. We've tried to cover the major areas of formatting and naming. When
+something isn't covered by this guide, err on the side of consistency with
+existing code.
 
 ### Formatting
 
-Use [stylish-haskell](https://github.com/jaspervdj/stylish-haskell) to format your code.
+We use [ormolu](https://github.com/tweag/ormolu) to format our code. The
+top-level `Makefile` has targets `format` and `check-format` that can be
+used for this.
 
 #### Line Length
 
-We do not enforce a hard limit on line length, but we try to keep lines under 80 characters where possible to make it easier to tile files horizontally. It’s okay if long lines spill into the 80–100 character range if wrapping them would harm readability. In particular, we don’t want to discourage descriptive variable names, nor do we want to discourage introducing local variables, so consider 80 characters a target length rather than a limit.
+We do not enforce a hard limit on line length, but we try to keep lines under
+80 characters where possible to make it easier to tile files horizontally.
+It’s okay if long lines spill into the 80–100 character range if wrapping
+them would harm readability. In particular, we don’t want to discourage
+descriptive variable names, nor do we want to discourage introducing local
+variables, so consider 80 characters a target length rather than a limit.
 
-One exception to the above is multiline comments, which should almost always be wrapped to 80 characters. Most editors support automatically reflowing blocks of text with a configurable line length; consider learning the relevant hotkey in your editor of choice.
-
-#### Whitespace
-
-Do not use tabs. Use spaces for indenting. Indent your code blocks with **2
-spaces**. Indent the `where` keyword two spaces to set it apart from the rest of
-the code and indent the definitions in a `where` clause 2 spaces. Some examples:
-
-```haskell
-sayHello :: IO ()
-sayHello = do
-  name <- getLine
-  putStrLn $ greeting name
-  where
-    greeting name = "Hello, " ++ name ++ "!"
-
-filter :: (a -> Bool) -> [a] -> [a]
-filter _ []   = []
-filter p (x:xs)
-  | p x       = x : filter p xs
-  | otherwise = filter p xs
-```
-
-Include newlines at the ends of files. Do not include other trailing whitespace on the end of lines.
-
-#### Data Declarations
-
-Align the constructors in a data type definition. Example:
-
-```haskell
-data Tree a
-  = Branch !a !(Tree a) !(Tree a)
-  | Leaf
-```
-
-```haskell
-data HttpException
-  = InvalidStatusCode Int
-  | MissingContentHeader
-```
-
-Format records as follows:
-
-```haskell
-data Person = Person
-  { firstName :: !String  -- ^ First name
-  , lastName  :: !String  -- ^ Last name
-  , age       :: !Int     -- ^ Age
-  } deriving (Eq, Show)
-```
-
-#### List Declarations
-
-Align the elements in the list.  Example:
-
-```haskell
-exceptions =
-  [ InvalidStatusCode
-  , MissingContentHeader
-  , InternalServerError
-  ]
-```
-
-Optionally, you can skip the first newline.  Use your judgement.
-
-```haskell
-directions = [ North
-             , East
-             , South
-             , West
-             ]
-```
-
-#### Export Lists
-
-Format export lists as follows:
-
-```haskell
-module Data.Set
-  ( -- * The @Set@ type
-    Set
-  , empty
-  , singleton
-
-    -- * Querying
-  , member
-  ) where
-```
-
-### Imports
-
-Imports should be grouped in the following order:
-
-1. `Hasura.Prelude`
-2. `qualified` imports of standard library / third party imports
-3. unqualified standard library imports / related third party imports
-4. `qualified` imports of local application/library specific imports
-5. unqualified local application/library specific imports
-
-Put a blank line between each group of imports. The imports in each group should
-be sorted alphabetically, by module name (this is done by `stylish-haskell`
-automatically).
+One exception to the above is multiline comments, which should almost always
+be wrapped to 80 characters. Most editors support automatically reflowing
+blocks of text with a configurable line length; consider learning the
+relevant hotkey in your editor of choice.
 
 ### Naming
 
@@ -306,7 +218,8 @@ Use line comments (comments that start with `--`) for short comments (1–3
 lines). For longer comments, use multiline comments (comments that begin with
 `{-` and end with `-}`).
 
-Use [Haddock syntax](https://haskell-haddock.readthedocs.io/en/latest/markup.html) for documentation comments. Running Haddock should always complete successfully.
+Use [Haddock syntax](https://haskell-haddock.readthedocs.io/en/latest/markup.html)
+for documentation comments. Running Haddock should always complete successfully.
 
 #### Module headers
 
@@ -463,7 +376,11 @@ runSelectQuery tables constraints cache shouldPrepare =
 
 #### Out-of-line `Note`s
 
-For especially tricky details that deserve thorough explanation and may need to be referenced from multiple places, we emulate [GHC’s Notes](https://www.stackbuilders.com/news/the-notes-of-ghc). A `Note` is an out-of-line comment written at the top-level of a module, written with a short title header:
+For especially tricky details that deserve thorough explanation and may need
+to be referenced from multiple places, we emulate [GHC’s
+Notes](https://www.stackbuilders.com/news/the-notes-of-ghc). A `Note` is an
+out-of-line comment written at the top-level of a module, written with a
+short title header:
 
 ```haskell
 {- Note [Checking metadata consistency in run_sql]
@@ -476,7 +393,8 @@ metadata to track the table under its new name instead of its old one.
 ... -}
 ```
 
-At any point where the comment is relevant, we add a short comment referring to the note:
+At any point where the comment is relevant, we add a short comment referring
+to the note:
 
 ```haskell
 -- see Note [Checking metadata consistency in run_sql]
@@ -484,9 +402,14 @@ containsDDLKeyword :: Text -> Bool
 containsDDLKeyword = TDFA.match $$(quoteRegex ...)
 ```
 
-A key advantage of notes is that they can be referenced from multiple places, so information does not necessarily need to be connected to any particular binding the way it must be for Haddock comments.
+A key advantage of notes is that they can be referenced from multiple places,
+so information does not necessarily need to be connected to any particular
+binding the way it must be for Haddock comments.
 
-When updating a piece of code that includes a reference to a `Note`, take care to ensure the `Note` is updated as well if necessary! Inevitably, some will get stale and go out of sync with the code, but that’s okay—just fix them up when you find some information is outdated.
+When updating a piece of code that includes a reference to a `Note`, take
+care to ensure the `Note` is updated as well if necessary! Inevitably, some
+will get stale and go out of sync with the code, but that’s okay—just fix
+them up when you find some information is outdated.
 
 ### Misc
 

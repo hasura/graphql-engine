@@ -301,9 +301,17 @@ The backend-specific and common test suites are disjoint; for example, run `pyte
 
 ## Code conventions
 
-This helps enforce a uniform style for all committers.
+The following conventions help us maintain a uniform style for all committers:
+make sure your contributions are in line with them.
 
-- Compiler warnings are turned on, make sure your code has no warnings.
-- Use [hlint](https://github.com/ndmitchell/hlint) to make sure your code has no warnings.
-  You can use our custom hlint config with `$ hlint --hint=server/.hlint.yaml .`
-- Use [stylish-haskell](https://github.com/jaspervdj/stylish-haskell) to format your code.
+We enforce these by means of CI hooks which will fail the build if any of these
+are not met.
+
+- No compiler warnings: Make sure your code builds with no warnings (adding
+  `-Werror` to `ghc-options` in your `cabal.project` is a good way of checking
+  this.)
+- No lint failures: Use [hlint](https://github.com/ndmitchell/hlint) with our
+  custom config to validate your code, using `hlint --hint=server/.hlint.yaml`.
+- Consistent formatting: Use [ormolu](https://github.com/tweag/ormolu) to
+  format your code. `ormolu -ei '*.hs'` will format all files with a `.hs`
+  extension in the current directory.
