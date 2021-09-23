@@ -8,6 +8,7 @@ module Hasura.Prelude
   , onJust
   , withJust
   , onLeft
+  , mapLeft
   , whenMaybe
   , choice
   , afold
@@ -120,6 +121,10 @@ withJust m action = maybe (pure Nothing) action m
 
 onLeft :: Applicative m => Either e a -> (e -> m a) -> m a
 onLeft e f = either f pure e
+
+mapLeft :: (e1 -> e2) -> Either e1 a -> Either e2 a
+mapLeft f (Left e1) = Left (f e1)
+mapLeft _ (Right a) = Right a
 
 whenMaybe :: Applicative m => Bool -> m a -> m (Maybe a)
 whenMaybe True  = fmap Just
