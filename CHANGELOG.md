@@ -3,6 +3,7 @@
 ## Next release
 
 (Add entries below in the order of server, console, cli, docs, others)
+- console: add performance fixes for handle large db schemas
 
 ## v2.0.9
 
