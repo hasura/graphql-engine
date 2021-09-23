@@ -1,0 +1,23 @@
+description: The explained Postgres subscription in our documentation
+url: /v1/graphql/explain
+status: 200
+response:
+  sql: "SELECT  \"_subs\".\"result_id\" , \"_fld_resp\".\"root\" AS \"result\" FROM UNNEST(($1)::uuid[], ($2)::json[]) AS \"_subs\"(\"result_id\", \"result_vars\") LEFT OUTER JOIN LATERAL (SELECT  json_build_object('user', \"user\".\"root\" ) AS \"root\" FROM  (SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\" FROM  (SELECT  row_to_json((SELECT  \"_1_e\"  FROM  (SELECT  \"_0_root.base\".\"name\" AS \"name\"       ) AS \"_1_e\"      ) ) AS \"root\" FROM  (SELECT  *  FROM \"public\".\"user\"  WHERE ('true')     ) AS \"_0_root.base\"      ) AS \"_2_root\"      ) AS \"user\"      ) AS \"_fld_resp\" ON ('true')      "
+  plan:
+  - 'Nested Loop Left Join  (cost=40.01..42.28 rows=100 width=48)'
+  - '  ->  Function Scan on _subs  (cost=0.01..1.00 rows=100 width=16)'
+  - '  ->  Materialize  (cost=40.00..40.03 rows=1 width=32)'
+  - '        ->  Subquery Scan on \"user\"  (cost=40.00..40.02 rows=1 width=32)'
+  - '              ->  Aggregate  (cost=40.00..40.01 rows=1 width=32)'
+  - '                    ->  Seq Scan on \"user\" user_1  (cost=0.00..22.00 rows=1200 width=32)'
+  - '                    SubPlan 1'
+  - '                      ->  Result  (cost=0.00..0.01 rows=1 width=32)'
+query:
+  query:
+    query: |
+      subscription getUsers {
+        user {
+          name
+        }
+      }
+    operationName: "getUsers"
