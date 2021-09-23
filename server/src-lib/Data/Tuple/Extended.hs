@@ -6,8 +6,6 @@ module Data.Tuple.Extended
   , uncurry4
   ) where
 
-import           Prelude
-
 import           Data.Tuple
 
 curry3 :: ((a, b, c) -> d) -> a -> b -> c -> d
