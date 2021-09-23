@@ -1,50 +1,46 @@
 -- | This module contains types which are common to event triggers and scheduled triggers.
 module Hasura.RQL.Types.Eventing where
 
-import           Hasura.Prelude
-
-import qualified Data.TByteString           as TBS
-import qualified Database.PG.Query          as Q
-import qualified Database.PG.Query.PTI      as PTI
-import qualified PostgreSQL.Binary.Encoding as PE
-
-
-import           Data.Aeson
-import           Data.Aeson.TH
-import           Data.Text.Extended
-
-import           Hasura.Incremental         (Cacheable)
-import           Hasura.RQL.DDL.Headers
+import Data.Aeson
+import Data.Aeson.TH
+import Data.TByteString qualified as TBS
+import Data.Text.Extended
+import Database.PG.Query qualified as Q
+import Database.PG.Query.PTI qualified as PTI
+import Hasura.Incremental (Cacheable)
+import Hasura.Prelude
+import Hasura.RQL.DDL.Headers
+import PostgreSQL.Binary.Encoding qualified as PE
 
 newtype EventId = EventId {unEventId :: Text}
   deriving (Show, Eq, Ord, Hashable, ToTxt, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, NFData, Cacheable)
 
-
 -- | There are two types of events: EventType (for event triggers) and ScheduledType (for scheduled triggers)
 data TriggerTypes = EventType | ScheduledType
 
-data WebhookRequest
-  = WebhookRequest
-  { _rqPayload :: Value
-  , _rqHeaders :: [HeaderConf]
-  , _rqVersion :: Text
+data WebhookRequest = WebhookRequest
+  { _rqPayload :: Value,
+    _rqHeaders :: [HeaderConf],
+    _rqVersion :: Text
   }
-$(deriveToJSON hasuraJSON{omitNothingFields=True} ''WebhookRequest)
 
-data WebhookResponse
-  = WebhookResponse
-  { _wrsBody    :: TBS.TByteString
-  , _wrsHeaders :: [HeaderConf]
-  , _wrsStatus  :: Int
+$(deriveToJSON hasuraJSON {omitNothingFields = True} ''WebhookRequest)
+
+data WebhookResponse = WebhookResponse
+  { _wrsBody :: TBS.TByteString,
+    _wrsHeaders :: [HeaderConf],
+    _wrsStatus :: Int
   }
-$(deriveToJSON hasuraJSON{omitNothingFields=True} ''WebhookResponse)
 
-newtype ClientError =  ClientError { _ceMessage :: TBS.TByteString}
-$(deriveToJSON hasuraJSON{omitNothingFields=True} ''ClientError)
+$(deriveToJSON hasuraJSON {omitNothingFields = True} ''WebhookResponse)
 
+newtype ClientError = ClientError {_ceMessage :: TBS.TByteString}
 
-data Response (a :: TriggerTypes) =
-  ResponseHTTP WebhookResponse | ResponseError ClientError
+$(deriveToJSON hasuraJSON {omitNothingFields = True} ''ClientError)
+
+data Response (a :: TriggerTypes)
+  = ResponseHTTP WebhookResponse
+  | ResponseError ClientError
 
 type InvocationVersion = Text
 
@@ -55,40 +51,42 @@ invocationVersionST :: InvocationVersion
 invocationVersionST = "1"
 
 instance ToJSON (Response 'EventType) where
-  toJSON (ResponseHTTP resp) = object
-    [ "type" .= String "webhook_response"
-    , "data" .= toJSON resp
-    , "version" .= invocationVersionET
-    ]
-  toJSON (ResponseError err) = object
-    [ "type" .= String "client_error"
-    , "data" .= toJSON err
-    , "version" .= invocationVersionET
-    ]
+  toJSON (ResponseHTTP resp) =
+    object
+      [ "type" .= String "webhook_response",
+        "data" .= toJSON resp,
+        "version" .= invocationVersionET
+      ]
+  toJSON (ResponseError err) =
+    object
+      [ "type" .= String "client_error",
+        "data" .= toJSON err,
+        "version" .= invocationVersionET
+      ]
 
 instance ToJSON (Response 'ScheduledType) where
-  toJSON (ResponseHTTP resp) = object
-    [ "type" .= String "webhook_response"
-    , "data" .= toJSON resp
-    , "version" .= invocationVersionST
-    ]
-  toJSON (ResponseError err) = object
-    [ "type" .= String "client_error"
-    , "data" .= toJSON err
-    , "version" .= invocationVersionST
-    ]
+  toJSON (ResponseHTTP resp) =
+    object
+      [ "type" .= String "webhook_response",
+        "data" .= toJSON resp,
+        "version" .= invocationVersionST
+      ]
+  toJSON (ResponseError err) =
+    object
+      [ "type" .= String "client_error",
+        "data" .= toJSON err,
+        "version" .= invocationVersionST
+      ]
 
-data Invocation (a :: TriggerTypes)
-  = Invocation
-  { iEventId  :: EventId
-  , iStatus   :: Maybe Int
-  , iRequest  :: WebhookRequest
-  , iResponse :: Response a
+data Invocation (a :: TriggerTypes) = Invocation
+  { iEventId :: EventId,
+    iStatus :: Maybe Int,
+    iRequest :: WebhookRequest,
+    iResponse :: Response a
   }
 
 -- | PGTextArray is only used for PG array encoding
-newtype PGTextArray =
-  PGTextArray { unPGTextArray :: [Text]}
+newtype PGTextArray = PGTextArray {unPGTextArray :: [Text]}
   deriving (Show, Eq)
 
 instance Q.ToPrepArg PGTextArray where

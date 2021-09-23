@@ -1,86 +1,94 @@
 module Hasura.GraphQL.Schema.Common where
 
-import           Hasura.Prelude
+import Data.Aeson qualified as J
+import Data.Either (isRight)
+import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.Text qualified as T
+import Data.Text.Extended
+import Hasura.Backends.Postgres.SQL.Types qualified as PG
+import Hasura.Base.Error
+import Hasura.GraphQL.Execute.Types qualified as ET (GraphQLQueryType)
+import Hasura.GraphQL.Parser (UnpreparedValue)
+import Hasura.GraphQL.Parser qualified as P
+import Hasura.Prelude
+import Hasura.RQL.IR.Select qualified as IR
+import Hasura.RQL.Types
+import Language.GraphQL.Draft.Syntax as G
 
-import qualified Data.Aeson                         as J
-import qualified Data.HashMap.Strict                as Map
-import qualified Data.HashMap.Strict.InsOrd         as OMap
-import qualified Data.Text                          as T
+type SelectExp b = IR.AnnSimpleSelectG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
 
-import           Data.Either                        (isRight)
-import           Data.Text.Extended
-import           Language.GraphQL.Draft.Syntax      as G
+type AggSelectExp b = IR.AnnAggregateSelectG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
 
-import qualified Hasura.Backends.Postgres.SQL.Types as PG
-import qualified Hasura.GraphQL.Execute.Types       as ET (GraphQLQueryType)
-import qualified Hasura.GraphQL.Parser              as P
-import qualified Hasura.RQL.IR.Select               as IR
+type ConnectionSelectExp b = IR.ConnectionSelect b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
 
-import           Hasura.Base.Error
-import           Hasura.GraphQL.Parser              (UnpreparedValue)
-import           Hasura.RQL.Types
+type SelectArgs b = IR.SelectArgsG b (UnpreparedValue b)
 
+type TablePerms b = IR.TablePermG b (UnpreparedValue b)
 
-type SelectExp           b = IR.AnnSimpleSelectG    b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
-type AggSelectExp        b = IR.AnnAggregateSelectG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
-type ConnectionSelectExp b = IR.ConnectionSelect    b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
-type SelectArgs          b = IR.SelectArgsG         b                                   (UnpreparedValue b)
-type TablePerms          b = IR.TablePermG          b                                   (UnpreparedValue b)
-type AnnotatedFields     b = IR.AnnFieldsG          b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
-type AnnotatedField      b = IR.AnnFieldG           b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
-type ConnectionFields    b = IR.ConnectionFields    b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
-type EdgeFields          b = IR.EdgeFields          b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+type AnnotatedFields b = IR.AnnFieldsG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
 
-data RemoteRelationshipQueryContext
-  = RemoteRelationshipQueryContext
-  { _rrscIntrospectionResultOriginal :: !IntrospectionResult
-  , _rrscParsedIntrospection         :: !ParsedIntrospection
-  , _rrscRemoteSchemaCustomizer      :: !RemoteSchemaCustomizer
+type AnnotatedField b = IR.AnnFieldG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+
+type ConnectionFields b = IR.ConnectionFields b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+
+type EdgeFields b = IR.EdgeFields b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+
+data RemoteRelationshipQueryContext = RemoteRelationshipQueryContext
+  { _rrscIntrospectionResultOriginal :: !IntrospectionResult,
+    _rrscParsedIntrospection :: !ParsedIntrospection,
+    _rrscRemoteSchemaCustomizer :: !RemoteSchemaCustomizer
   }
 
-data QueryContext =
-  QueryContext
-  { qcStringifyNum              :: !Bool
-  , qcDangerousBooleanCollapse  :: !Bool -- ^ should boolean fields be collapsed to True when null is given?
-  , qcQueryType                 :: !ET.GraphQLQueryType
-  , qcRemoteRelationshipContext :: !(HashMap RemoteSchemaName RemoteRelationshipQueryContext)
-  , qcFunctionPermsContext      :: !FunctionPermissionsCtx
+data QueryContext = QueryContext
+  { qcStringifyNum :: !Bool,
+    -- | should boolean fields be collapsed to True when null is given?
+    qcDangerousBooleanCollapse :: !Bool,
+    qcQueryType :: !ET.GraphQLQueryType,
+    qcRemoteRelationshipContext :: !(HashMap RemoteSchemaName RemoteRelationshipQueryContext),
+    qcFunctionPermsContext :: !FunctionPermissionsCtx
   }
 
 textToName :: MonadError QErr m => Text -> m G.Name
-textToName textName = G.mkName textName `onNothing` throw400 ValidationFailed
-                      ("cannot include " <> textName <<> " in the GraphQL schema because "
-                       <> " it is not a valid GraphQL identifier")
+textToName textName =
+  G.mkName textName
+    `onNothing` throw400
+      ValidationFailed
+      ( "cannot include " <> textName <<> " in the GraphQL schema because "
+          <> " it is not a valid GraphQL identifier"
+      )
 
 partialSQLExpToUnpreparedValue :: PartialSQLExp b -> P.UnpreparedValue b
 partialSQLExpToUnpreparedValue (PSESessVar pftype var) = P.UVSessionVar pftype var
-partialSQLExpToUnpreparedValue PSESession              = P.UVSession
-partialSQLExpToUnpreparedValue (PSESQLExp sqlExp)      = P.UVLiteral sqlExp
+partialSQLExpToUnpreparedValue PSESession = P.UVSession
+partialSQLExpToUnpreparedValue (PSESQLExp sqlExp) = P.UVLiteral sqlExp
 
-mapField
-  :: Functor m
-  => P.InputFieldsParser m (Maybe a)
-  -> (a -> b)
-  -> P.InputFieldsParser m (Maybe b)
+mapField ::
+  Functor m =>
+  P.InputFieldsParser m (Maybe a) ->
+  (a -> b) ->
+  P.InputFieldsParser m (Maybe b)
 mapField fp f = fmap (fmap f) fp
 
-parsedSelectionsToFields
-  :: (Text -> a) -- ^ how to handle @__typename@ fields
-  -> OMap.InsOrdHashMap G.Name (P.ParsedSelection a)
-  -> IR.Fields a
-parsedSelectionsToFields mkTypename = OMap.toList
-  >>> map (FieldName . G.unName *** P.handleTypename (mkTypename . G.unName))
+parsedSelectionsToFields ::
+  -- | how to handle @__typename@ fields
+  (Text -> a) ->
+  OMap.InsOrdHashMap G.Name (P.ParsedSelection a) ->
+  IR.Fields a
+parsedSelectionsToFields mkTypename =
+  OMap.toList
+    >>> map (FieldName . G.unName *** P.handleTypename (mkTypename . G.unName))
 
 numericAggOperators :: [G.Name]
 numericAggOperators =
-  [ $$(G.litName "sum")
-  , $$(G.litName "avg")
-  , $$(G.litName "stddev")
-  , $$(G.litName "stddev_samp")
-  , $$(G.litName "stddev_pop")
-  , $$(G.litName "variance")
-  , $$(G.litName "var_samp")
-  , $$(G.litName "var_pop")
+  [ $$(G.litName "sum"),
+    $$(G.litName "avg"),
+    $$(G.litName "stddev"),
+    $$(G.litName "stddev_samp"),
+    $$(G.litName "stddev_pop"),
+    $$(G.litName "variance"),
+    $$(G.litName "var_samp"),
+    $$(G.litName "var_pop")
   ]
 
 comparisonAggOperators :: [G.Name]
@@ -105,7 +113,7 @@ instance J.FromJSON NodeIdVersion where
 
 mkDescriptionWith :: Maybe PG.PGDescription -> Text -> G.Description
 mkDescriptionWith descM defaultTxt = G.Description $ case descM of
-  Nothing                         -> defaultTxt
+  Nothing -> defaultTxt
   Just (PG.PGDescription descTxt) -> T.unlines [descTxt, "\n", defaultTxt]
 
 -- TODO why do we do these validations at this point? What does it mean to track
@@ -122,8 +130,8 @@ takeValidTables = Map.filterWithKey graphQLTableFilter . Map.filter tableFilter
     graphQLTableFilter tableName tableInfo =
       -- either the table name should be GraphQL compliant
       -- or it should have a GraphQL custom name set with it
-      isRight (tableGraphQLName @b tableName) ||
-      isJust (_tcCustomName $ _tciCustomConfig $ _tiCoreInfo tableInfo)
+      isRight (tableGraphQLName @b tableName)
+        || isJust (_tcCustomName $ _tciCustomConfig $ _tiCoreInfo tableInfo)
 
 -- TODO and what about graphql-compliant function names here too?
 takeValidFunctions :: forall b. FunctionCache b -> FunctionCache b
@@ -131,19 +139,18 @@ takeValidFunctions = Map.filter functionFilter
   where
     functionFilter = not . isSystemDefined . _fiSystemDefined
 
-
 -- root field builder helpers
 
-requiredFieldParser
-  :: (Functor n, Functor m)
-  => (a -> b)
-  -> m (P.FieldParser n a)
-  -> m (Maybe (P.FieldParser n b))
+requiredFieldParser ::
+  (Functor n, Functor m) =>
+  (a -> b) ->
+  m (P.FieldParser n a) ->
+  m (Maybe (P.FieldParser n b))
 requiredFieldParser f = fmap $ Just . fmap f
 
-optionalFieldParser
-  :: (Functor n, Functor m)
-  => (a -> b)
-  -> m (Maybe (P.FieldParser n a))
-  -> m (Maybe (P.FieldParser n b))
+optionalFieldParser ::
+  (Functor n, Functor m) =>
+  (a -> b) ->
+  m (Maybe (P.FieldParser n a)) ->
+  m (Maybe (P.FieldParser n b))
 optionalFieldParser = fmap . fmap . fmap

@@ -1,21 +1,19 @@
 module Hasura.RQL.DDL.Network where
 
-import           Hasura.Prelude
+import Data.Text (pack)
+import Data.Text.Extended
+import Hasura.Base.Error
+import Hasura.EncJSON
+import Hasura.Metadata.Class ()
+import Hasura.Prelude
+import Hasura.RQL.Types
+import Hasura.RQL.Types.Network ()
 
-import           Data.Text                (pack)
-import           Data.Text.Extended
-
-import           Hasura.Base.Error
-import           Hasura.EncJSON
-import           Hasura.Metadata.Class    ()
-import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Network ()
-
-runAddHostToTLSAllowlist
-  :: (QErrM m, CacheRWM m, MetadataM m)
-  => TlsAllow
-  -> m EncJSON
-runAddHostToTLSAllowlist tlsAllowListEntry@TlsAllow{..} = do
+runAddHostToTLSAllowlist ::
+  (QErrM m, CacheRWM m, MetadataM m) =>
+  TlsAllow ->
+  m EncJSON
+runAddHostToTLSAllowlist tlsAllowListEntry@TlsAllow {..} = do
   networkMetadata <- _metaNetwork <$> getMetadata
 
   when (null taHost) $ do
@@ -25,18 +23,18 @@ runAddHostToTLSAllowlist tlsAllowListEntry@TlsAllow{..} = do
     throw400 AlreadyExists $
       "the host " <> dquote (pack taHost) <> " already exists in the allowlist"
 
-  withNewInconsistentObjsCheck
-    $ buildSchemaCacheFor (MOHostTlsAllowlist taHost)
-    $ addHostToTLSAllowList tlsAllowListEntry
+  withNewInconsistentObjsCheck $
+    buildSchemaCacheFor (MOHostTlsAllowlist taHost) $
+      addHostToTLSAllowList tlsAllowListEntry
 
   pure successMsg
   where
     tlsList nm = networkTlsAllowlist nm
 
-runDropHostFromTLSAllowlist
-  :: (QErrM m, CacheRWM m, MetadataM m)
-  => DropHostFromTLSAllowlist
-  -> m EncJSON
+runDropHostFromTLSAllowlist ::
+  (QErrM m, CacheRWM m, MetadataM m) =>
+  DropHostFromTLSAllowlist ->
+  m EncJSON
 runDropHostFromTLSAllowlist (DropHostFromTLSAllowlist hostname) = do
   networkMetadata <- _metaNetwork <$> getMetadata
 
@@ -47,21 +45,21 @@ runDropHostFromTLSAllowlist (DropHostFromTLSAllowlist hostname) = do
     throw400 NotExists $
       "the host " <> dquote (pack hostname) <> " isn't present in the allowlist"
 
-  withNewInconsistentObjsCheck
-    $ buildSchemaCache
-    $ dropHostFromAllowList hostname
+  withNewInconsistentObjsCheck $
+    buildSchemaCache $
+      dropHostFromAllowList hostname
 
   pure successMsg
 
 addHostToTLSAllowList :: TlsAllow -> MetadataModifier
 addHostToTLSAllowList tlsaObj = MetadataModifier $ \m ->
-  m { _metaNetwork = Network $ (tlsList m) ++ [tlsaObj] }
+  m {_metaNetwork = Network $ (tlsList m) ++ [tlsaObj]}
   where
     tlsList md = networkTlsAllowlist (_metaNetwork md)
 
 dropHostFromAllowList :: String -> MetadataModifier
 dropHostFromAllowList host = MetadataModifier $ \m ->
-  m { _metaNetwork = Network $ filteredList m }
+  m {_metaNetwork = Network $ filteredList m}
   where
     tlsList md = networkTlsAllowlist (_metaNetwork md)
 
