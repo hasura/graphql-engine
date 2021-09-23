@@ -130,9 +130,8 @@ buildSubscriptionPlan
   => UserInfo
   -> InsOrdHashMap G.Name (IR.QueryRootField UnpreparedValue)
   -> ParameterizedQueryHash
-  -> QueryTagsConfig
   -> m SubscriptionExecution
-buildSubscriptionPlan userInfo rootFields parameterizedQueryHash queryTagsConfig = do
+buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
   (onSourceFields, noRelationActionFields) <- foldlM go (mempty, mempty) (OMap.toList rootFields)
 
   if | null onSourceFields -> do
@@ -151,7 +150,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash queryTagsConfig
                  queryDB   = case EA._aaqseJsonAggSelect dbExecution of
                    JASMultipleRows -> IR.QDBMultipleRows selectAST
                    JASSingleObject -> IR.QDBSingleRow    selectAST
-             pure $ (sourceName, AB.mkAnyBackend $ IR.SourceConfigWith srcConfig $ IR.QDBR queryDB)
+             pure $ (sourceName, AB.mkAnyBackend $ IR.SourceConfigWith srcConfig Nothing (IR.QDBR queryDB))
 
          case OMap.toList sourceSubFields of
            []                      -> throw500 "empty selset for subscription"
@@ -165,11 +164,11 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash queryTagsConfig
       IR.RFRemote _      -> throw400 NotSupported "subscription to remote server is not supported"
       IR.RFRaw _         -> throw400 NotSupported "Introspection not supported over subscriptions"
       IR.RFDB src e      -> do
-        newQDB <- AB.traverseBackend @EB.BackendExecute e \(IR.SourceConfigWith sc (IR.QDBR qdb)) -> do
+        newQDB <- AB.traverseBackend @EB.BackendExecute e \(IR.SourceConfigWith srcConfig queryTagsConfig (IR.QDBR qdb)) -> do
           let (newQDB, remoteJoins) = RJ.getRemoteJoins qdb
           unless (isNothing remoteJoins) $
             throw400 NotSupported "Remote relationships are not allowed in subscriptions"
-          pure $ IR.SourceConfigWith sc (IR.QDBR newQDB)
+          pure $ IR.SourceConfigWith srcConfig queryTagsConfig (IR.QDBR newQDB)
         pure $ first (OMap.insert gName (Right (src, newQDB))) accFields
       IR.RFAction action -> do
         let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
@@ -187,13 +186,12 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash queryTagsConfig
 
     buildAction (sourceName, exists) allFields rootFieldName = do
       lqp <- AB.dispatchAnyBackend @EB.BackendExecute exists
-        \(IR.SourceConfigWith sourceConfig _ :: IR.SourceConfigWith db b) -> do
+        \(IR.SourceConfigWith sourceConfig queryTagsConfig _ :: IR.SourceConfigWith db b) -> do
            qdbs <- traverse (checkField @b sourceName) allFields
            let subscriptionQueryTagsAttributes = encodeQueryTags $  QTLiveQuery $ LivequeryMetadata rootFieldName parameterizedQueryHash
-           let qtSourceConfig = getQueryTagsSourceConfig queryTagsConfig sourceName
-           let queryTagsComment = QueryTagsComment $ Tagged.untag $ EB.createQueryTags @m (Just qtSourceConfig) subscriptionQueryTagsAttributes
+           let queryTagsComment = Tagged.untag $ EB.createQueryTags @m subscriptionQueryTagsAttributes queryTagsConfig
            LQP . AB.mkAnyBackend . MultiplexedLiveQueryPlan
-             <$> EB.mkDBSubscriptionPlan userInfo sourceName sourceConfig qdbs queryTagsComment
+             <$> flip runReaderT queryTagsComment (EB.mkDBSubscriptionPlan userInfo sourceName sourceConfig qdbs)
       pure (sourceName, lqp)
 
     checkField
@@ -205,7 +203,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash queryTagsConfig
       | sourceName /= src = throw400 NotSupported "all fields of a subscription must be from the same source"
       | otherwise         = case AB.unpackAnyBackend exists of
           Nothing -> throw500 "internal error: two sources share the same name but are tied to different backends"
-          Just (IR.SourceConfigWith _ (IR.QDBR qdb)) -> pure qdb
+          Just (IR.SourceConfigWith _ _ (IR.QDBR qdb)) -> pure qdb
 
 checkQueryInAllowlist
   :: (MonadError QErr m) => Bool -> UserInfo -> GQLReqParsed -> SchemaCache -> m ()
@@ -254,7 +252,6 @@ getResolvedExecPlan env logger userInfo sqlGenCtx
   (gCtx, queryParts) <- getExecPlanPartial userInfo sc queryType reqParsed
 
   let maybeOperationName = (Just <$> _unOperationName) =<< _grOperationName reqParsed
-  let queryTagsConfig = scQueryTagsConfig sc
 
   (parameterizedQueryHash, resolvedExecPlan) <-
     case queryParts of
@@ -262,13 +259,13 @@ getResolvedExecPlan env logger userInfo sqlGenCtx
         (executionPlan, queryRootFields, dirMap, parameterizedQueryHash) <-
           EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders directives inlinedSelSet
             varDefs reqUnparsed (scSetGraphqlIntrospectionOptions sc)
-            reqId maybeOperationName queryTagsConfig
+            reqId maybeOperationName
         pure $ (parameterizedQueryHash, QueryExecutionPlan executionPlan queryRootFields dirMap)
       G.TypedOperationDefinition G.OperationTypeMutation _ varDefs directives inlinedSelSet -> do
         (executionPlan, parameterizedQueryHash) <-
           EM.convertMutationSelectionSet env logger gCtx sqlGenCtx userInfo httpManager reqHeaders
             directives inlinedSelSet varDefs reqUnparsed (scSetGraphqlIntrospectionOptions sc)
-            reqId maybeOperationName queryTagsConfig
+            reqId maybeOperationName
         pure $ (parameterizedQueryHash, MutationExecutionPlan executionPlan)
       G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> do
         -- Parse as query to check correctness
@@ -288,7 +285,7 @@ getResolvedExecPlan env logger userInfo sqlGenCtx
           []  -> throw500 "empty selset for subscription"
           _   -> unless allowMultipleRootFields $
             throw400 ValidationFailed "subscriptions must select one top level field"
-        subscriptionPlan <- buildSubscriptionPlan userInfo unpreparedAST parameterizedQueryHash queryTagsConfig
+        subscriptionPlan <- buildSubscriptionPlan userInfo unpreparedAST parameterizedQueryHash
         pure (parameterizedQueryHash, SubscriptionExecutionPlan subscriptionPlan)
   -- the parameterized query hash is calculated here because it is used in multiple
   -- places and instead of calculating it separately, this is a common place to calculate

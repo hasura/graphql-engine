@@ -294,7 +294,6 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     , scMetricsConfig = _boMetricsConfig resolvedOutputs
     , scMetadataResourceVersion = Nothing
     , scSetGraphqlIntrospectionOptions = _metaSetGraphqlIntrospectionOptions metadata
-    , scQueryTagsConfig = _boQueryTagsConfig resolvedOutputs
     , scTlsAllowlist = _boTlsAllowlist resolvedOutputs
     }
   where
@@ -417,7 +416,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
          , OrderedRoles
          ) `arr` BackendSourceInfo
     buildSource = proc (allSources, sourceMetadata, sourceConfig, tablesRawInfo, _dbTables, dbFunctions, remoteSchemaMap, invalidationKeys, orderedRoles) -> do
-      let SourceMetadata source tables functions _ = sourceMetadata
+      let SourceMetadata source tables functions _ queryTagsConfig = sourceMetadata
           tablesMetadata = OMap.elems tables
           (_ , nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
           eventTriggers = map (_tmTable &&& OMap.elems . _tmEventTriggers) tablesMetadata
@@ -481,7 +480,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
         >-> (\infos -> M.catMaybes infos >- returnA)
 
-      returnA -< AB.mkAnyBackend $ SourceInfo source tableCache functionCache sourceConfig
+      returnA -< AB.mkAnyBackend $ SourceInfo source tableCache functionCache sourceConfig queryTagsConfig
 
     buildAndCollectInfo
       :: forall arr m
@@ -494,13 +493,13 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
       let Metadata sources remoteSchemas collections allowlists
             customTypes actions cronTriggers endpoints apiLimits metricsConfig inheritedRoles
-            _introspectionDisabledRoles queryTagsConfig networkConfig = metadata
+            _introspectionDisabledRoles networkConfig = metadata
           actionRoles = map _apmRole . _amPermissions =<< OMap.elems actions
           remoteSchemaRoles = map _rspmRole . _rsmPermissions =<< OMap.elems remoteSchemas
           sourceRoles =
             HS.fromList $ concat $
             OMap.elems sources >>= \e ->
-               AB.dispatchAnyBackend @Backend e \(SourceMetadata _ tables _functions _) -> do
+               AB.dispatchAnyBackend @Backend e \(SourceMetadata _ tables _functions _ _) -> do
                  table <- OMap.elems tables
                  pure $ OMap.keys (_tmInsertPermissions table) <>
                         OMap.keys (_tmSelectPermissions table) <>
@@ -676,7 +675,6 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         , _boApiLimits     = apiLimits
         , _boMetricsConfig = metricsConfig
         , _boRoles         = mapFromL _rRoleName $ _unOrderedRoles orderedRoles
-        , _boQueryTagsConfig = queryTagsConfig
         , _boTlsAllowlist  = (networkTlsAllowlist networkConfig)
         }
 

@@ -20,6 +20,7 @@ import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Instances          ()
+import           Hasura.RQL.Types.QueryTags
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Tag
@@ -28,10 +29,11 @@ import           Hasura.Session
 
 data SourceInfo b
   = SourceInfo
-  { _siName          :: !SourceName
-  , _siTables        :: !(TableCache b)
-  , _siFunctions     :: !(FunctionCache b)
-  , _siConfiguration :: !(SourceConfig b)
+  { _siName            :: !SourceName
+  , _siTables          :: !(TableCache b)
+  , _siFunctions       :: !(FunctionCache b)
+  , _siConfiguration   :: !(SourceConfig b)
+  , _siQueryTagsConfig :: !(Maybe QueryTagsConfig)
   } deriving (Generic)
 $(makeLenses ''SourceInfo)
 instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (SourceInfo b) where
@@ -54,7 +56,7 @@ unsafeSourceInfo = AB.unpackAnyBackend
 unsafeSourceName :: BackendSourceInfo -> SourceName
 unsafeSourceName bsi = AB.dispatchAnyBackend @Backend bsi go
   where
-    go (SourceInfo name _ _ _) = name
+    go (SourceInfo name _ _ _ _) = name
 
 unsafeSourceTables :: forall b. HasTag b => BackendSourceInfo -> Maybe (TableCache b)
 unsafeSourceTables = fmap _siTables . unsafeSourceInfo @b

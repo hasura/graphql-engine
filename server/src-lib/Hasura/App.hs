@@ -67,6 +67,7 @@ import           Hasura.GraphQL.Transport.HTTP              (CacheStoreSuccess (
 import           Hasura.GraphQL.Transport.HTTP.Protocol     (toParsed)
 import           Hasura.Logging
 import           Hasura.Metadata.Class
+import           Hasura.QueryTags
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Catalog
@@ -87,6 +88,7 @@ import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
 import           Network.HTTP.Client.DynamicTlsPermissions  (mkMgr)
+
 
 data ExitCode
 -- these are used during server initialization:
@@ -738,7 +740,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
       -- event triggers should be tied to the life cycle of a source
       lockedEvents <- readTVarIO leEvents
       forM_ sources $ \backendSourceInfo -> do
-        AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo sourceName _ _ sourceConfig :: SourceInfo b) -> do
+        AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo sourceName _ _ sourceConfig _ :: SourceInfo b) -> do
           let sourceNameString = T.unpack $ sourceNameToText sourceName
           logger $ mkGenericStrLog LevelInfo "event_triggers" $ "unlocking events of source: " ++ sourceNameString
           onJust (HM.lookup sourceName lockedEvents) $ \sourceLockedEvents -> do
@@ -880,7 +882,7 @@ instance (Monad m) => MonadResolveSource (PGMetadataStorageAppT m) where
   getSourceResolver = mkPgSourceResolver <$> asks snd
 
 instance (Monad m) => EB.MonadQueryTags (PGMetadataStorageAppT m) where
-  createQueryTags _qtSourceConfig _attributes = mempty
+  createQueryTags _attributes _qtSourceConfig = return $ emptyQueryTagsComment
 
 runInSeparateTx
   :: (MonadIO m)

@@ -61,6 +61,7 @@ class PostgresSchema (pgKind :: PostgresKind) where
     :: BS.MonadBuildSchema ('Postgres pgKind) r m n
     => SourceName
     -> SourceConfig ('Postgres pgKind)
+    -> Maybe QueryTagsConfig
     -> TableName ('Postgres pgKind)
     -> TableInfo ('Postgres pgKind)
     -> G.Name
@@ -71,6 +72,7 @@ class PostgresSchema (pgKind :: PostgresKind) where
     :: BS.MonadBuildSchema ('Postgres pgKind) r m n
     => SourceName
     -> SourceConfig ('Postgres pgKind)
+    -> Maybe QueryTagsConfig
     -> FunctionName ('Postgres pgKind)
     -> FunctionInfo ('Postgres pgKind)
     -> TableName ('Postgres pgKind)
@@ -101,8 +103,8 @@ instance PostgresSchema 'Vanilla where
   pgkNode = nodePG
 
 instance PostgresSchema 'Citus where
-  pgkBuildTableRelayQueryFields     _ _ _ _ _ _ _ = pure []
-  pgkBuildFunctionRelayQueryFields  _ _ _ _ _ _ _ = pure []
+  pgkBuildTableRelayQueryFields     _ _ _ _ _ _ _ _ = pure []
+  pgkBuildFunctionRelayQueryFields  _ _ _ _ _ _ _ _ = pure []
   pgkRelayExtension = Nothing
   pgkNode = undefined
 
@@ -156,17 +158,18 @@ buildTableRelayQueryFields
    . MonadBuildSchema ('Postgres pgKind) r m n
   => SourceName
   -> SourceConfig ('Postgres pgKind)
+  -> Maybe QueryTagsConfig
   -> TableName    ('Postgres pgKind)
   -> TableInfo    ('Postgres pgKind)
   -> G.Name
   -> NESeq (ColumnInfo ('Postgres pgKind))
   -> SelPermInfo  ('Postgres pgKind)
   -> m [FieldParser n (QueryRootField UnpreparedValue)]
-buildTableRelayQueryFields sourceName sourceInfo tableName tableInfo gqlName pkeyColumns selPerms = do
+buildTableRelayQueryFields sourceName sourceInfo queryTagsConfig tableName tableInfo gqlName pkeyColumns selPerms = do
   let
     mkRF = RFDB sourceName
              . AB.mkAnyBackend
-             . SourceConfigWith sourceInfo
+             . SourceConfigWith sourceInfo queryTagsConfig
              . QDBR
     fieldName = gqlName <> $$(G.litName "_connection")
     fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
@@ -179,18 +182,19 @@ buildFunctionRelayQueryFields
    . MonadBuildSchema ('Postgres pgKind) r m n
   => SourceName
   -> SourceConfig ('Postgres pgKind)
+  -> Maybe QueryTagsConfig
   -> FunctionName ('Postgres pgKind)
   -> FunctionInfo ('Postgres pgKind)
   -> TableName    ('Postgres pgKind)
   -> NESeq (ColumnInfo ('Postgres pgKind))
   -> SelPermInfo  ('Postgres pgKind)
   -> m [FieldParser n (QueryRootField UnpreparedValue)]
-buildFunctionRelayQueryFields sourceName sourceInfo functionName functionInfo tableName pkeyColumns selPerms = do
+buildFunctionRelayQueryFields sourceName sourceInfo queryTagsConfig functionName functionInfo tableName pkeyColumns selPerms = do
   funcName <- functionGraphQLName @('Postgres pgKind) functionName `onLeft` throwError
   let
     mkRF = RFDB sourceName
              . AB.mkAnyBackend
-             . SourceConfigWith sourceInfo
+             . SourceConfigWith sourceInfo queryTagsConfig
              . QDBR
     fieldName = funcName <> $$(G.litName "_connection")
     fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName

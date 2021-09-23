@@ -9,7 +9,6 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                          as M
 import qualified Data.Sequence                                as DS
-import qualified Data.Tagged                                  as Tagged
 import qualified Database.PG.Query                            as Q
 
 import           Control.Monad.Trans.Control                  (MonadBaseControl)
@@ -34,8 +33,6 @@ import           Hasura.RQL.IR.Update
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Session
-
-import           Hasura.GraphQL.Execute.Backend
 
 
 convInc
@@ -196,14 +193,12 @@ runUpdate
     . ( QErrM m, UserInfoM m, CacheRM m
       , HasServerConfigCtx m, MonadBaseControl IO m
       , MonadIO m, Tracing.MonadTrace m, MetadataM m
-      , MonadQueryTags m
       )
   => UpdateQuery -> m EncJSON
 runUpdate q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (uqSource q)
   userInfo <- askUserInfo
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
-  let queryTags = QueryTagsComment $ Tagged.untag $ createQueryTags @m Nothing (encodeOptionalQueryTags Nothing)
   validateUpdateQuery q
     >>= runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadWrite
-        . flip runReaderT queryTags . execUpdateQuery strfyNum userInfo
+        . flip runReaderT  emptyQueryTagsComment . execUpdateQuery strfyNum userInfo

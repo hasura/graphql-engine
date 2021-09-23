@@ -260,6 +260,7 @@ data SourceMetadata b
   , _smTables        :: !(Tables b)
   , _smFunctions     :: !(Functions b)
   , _smConfiguration :: !(SourceConnConfiguration b)
+  , _smQueryTags     :: !(Maybe QueryTagsConfig)
   } deriving (Generic)
 $(makeLenses ''SourceMetadata)
 deriving instance (Backend b) => Show (SourceMetadata b)
@@ -271,6 +272,7 @@ instance (Backend b) => FromJSON (SourceMetadata b) where
     _smTables        <- oMapFromL _tmTable <$> o .: "tables"
     _smFunctions     <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
     _smConfiguration <- o .: "configuration"
+    _smQueryTags     <- o .:? "query_tags"
     pure SourceMetadata{..}
 
 mkSourceMetadata
@@ -280,7 +282,7 @@ mkSourceMetadata
   -> SourceConnConfiguration b
   -> BackendSourceMetadata
 mkSourceMetadata name config =
-  AB.mkAnyBackend $ SourceMetadata @b name mempty mempty config
+  AB.mkAnyBackend $ SourceMetadata @b name mempty mempty config Nothing
 
 type BackendSourceMetadata = AB.AnyBackend SourceMetadata
 
@@ -305,7 +307,6 @@ parseNonSourcesMetadata
      , MetricsConfig
      , InheritedRoles
      , SetGraphqlIntrospectionOptions
-     , QueryTagsConfig
      )
 parseNonSourcesMetadata o = do
   remoteSchemas <- parseListAsMap "remote schemas" _rsmName $
@@ -323,10 +324,9 @@ parseNonSourcesMetadata o = do
   inheritedRoles <- parseListAsMap "inherited roles" _rRoleName $
                   o .:? "inherited_roles" .!= []
   introspectionDisabledForRoles <- o .:? "graphql_schema_introspection" .!= mempty
-  queryTagsConfig <- o .:? "query_tags" .!= emptyQueryTagsConfig
   pure ( remoteSchemas, queryCollections, allowlist, customTypes
        , actions, cronTriggers, apiLimits, metricsConfig, inheritedRoles
-       , introspectionDisabledForRoles, queryTagsConfig
+       , introspectionDisabledForRoles
        )
 
 -- | A complete GraphQL Engine metadata representation to be stored,
@@ -345,7 +345,6 @@ data Metadata
   , _metaMetricsConfig                  :: !MetricsConfig
   , _metaInheritedRoles                 :: !InheritedRoles
   , _metaSetGraphqlIntrospectionOptions :: !SetGraphqlIntrospectionOptions
-  , _metaQueryTagsConfig                :: !QueryTagsConfig
   , _metaNetwork                        :: !Network
   } deriving (Show, Eq, Generic)
 
@@ -362,10 +361,10 @@ instance FromJSON Metadata where
     network <- o .:? "network" .!= emptyNetwork
     (remoteSchemas, queryCollections, allowlist, customTypes,
      actions, cronTriggers, apiLimits, metricsConfig, inheritedRoles,
-     disabledSchemaIntrospectionRoles, queryTagsConfig) <- parseNonSourcesMetadata o
+     disabledSchemaIntrospectionRoles) <- parseNonSourcesMetadata o
     pure $ Metadata sources remoteSchemas queryCollections allowlist
            customTypes actions cronTriggers endpoints apiLimits metricsConfig inheritedRoles disabledSchemaIntrospectionRoles
-           queryTagsConfig network
+           network
     where
       parseSourceMetadata :: Value -> Parser (AB.AnyBackend SourceMetadata)
       parseSourceMetadata = withObject "SourceMetadata" \o -> do
@@ -375,7 +374,7 @@ instance FromJSON Metadata where
 emptyMetadata :: Metadata
 emptyMetadata =
   Metadata mempty mempty mempty mempty emptyCustomTypes mempty mempty mempty
-    emptyApiLimit emptyMetricsConfig mempty mempty emptyQueryTagsConfig emptyNetwork
+    emptyApiLimit emptyMetricsConfig mempty mempty emptyNetwork
 
 tableMetadataSetter
   :: (BackendMetadata b)
@@ -413,7 +412,7 @@ instance FromJSON MetadataNoSources where
           pure (tables, functions)
         MVVersion3 -> fail "unexpected version for metadata without sources: 3"
     (remoteSchemas, queryCollections, allowlist, customTypes,
-     actions, cronTriggers, _, _, _, _, _) <- parseNonSourcesMetadata o
+     actions, cronTriggers, _, _, _, _) <- parseNonSourcesMetadata o
     pure $ MetadataNoSources tables functions remoteSchemas queryCollections
                              allowlist customTypes actions cronTriggers
 
@@ -456,7 +455,6 @@ metadataToOrdJSON ( Metadata
                     metricsConfig
                     inheritedRoles
                     introspectionDisabledRoles
-                    queryTagsConfig
                     networkConfig
                   ) = AO.object $ [ versionPair , sourcesPair] <>
                       catMaybes [ remoteSchemasPair
@@ -470,7 +468,6 @@ metadataToOrdJSON ( Metadata
                                 , metricsConfigPair
                                 , inheritedRolesPair
                                 , introspectionDisabledRolesPair
-                                , queryTagsConfigPair
                                 , networkPair
                                 ]
   where
@@ -503,9 +500,6 @@ metadataToOrdJSON ( Metadata
                     then Just ("network", AO.toOrdered networkConfig)
                     else Nothing
 
-    queryTagsConfigPair = if queryTagsConfig == emptyQueryTagsConfig then Nothing
-                          else Just ("query_tags", AO.toOrdered queryTagsConfig)
-
     sourceMetaToOrdJSON :: BackendSourceMetadata -> AO.Value
     sourceMetaToOrdJSON exists =
       AB.dispatchAnyBackend @BackendMetadata exists $ \(SourceMetadata {..} :: SourceMetadata b) ->
@@ -517,7 +511,9 @@ metadataToOrdJSON ( Metadata
 
             configurationPair = [("configuration", AO.toOrdered _smConfiguration)]
 
-        in AO.object $ [sourceNamePair, sourceKindPair, tablesPair] <> maybeToList functionsPair <> configurationPair
+            queryTagsConfigPair = maybe [] (\queryTagsConfig -> [("query_tags", AO.toOrdered queryTagsConfig)]) _smQueryTags
+
+        in AO.object $ [sourceNamePair, sourceKindPair, tablesPair] <> maybeToList functionsPair <> configurationPair <> queryTagsConfigPair
 
     tableMetaToOrdJSON :: (Backend b) => TableMetadata b -> AO.Value
     tableMetaToOrdJSON ( TableMetadata

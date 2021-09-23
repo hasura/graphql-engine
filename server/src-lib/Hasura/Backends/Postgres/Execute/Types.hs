@@ -27,7 +27,6 @@ import           Hasura.Backends.Postgres.SQL.Error
 import           Hasura.Base.Error
 import           Hasura.Incremental                 (Cacheable (..))
 
-
 -- See Note [Existentially Quantified Types]
 type RunTx =
   forall m a. (MonadIO m, MonadBaseControl IO m) => Q.TxET QErr m a -> ExceptT QErr m a

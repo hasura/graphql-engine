@@ -13,27 +13,30 @@ import qualified Network.URI.Encode as URI
 
 import           Data.Text.Extended (commaSeparated)
 
-type Attribute = (Text, Text)
+import           Hasura.QueryTags
+
 
 -- | query-tags format as defined in the Spec <https://google.github.io/sqlcommenter/spec/#sql-commenter>
-sqlCommenterGoogle :: [Attribute] -> Text
-sqlCommenterGoogle attributes
-  | null attributes = mempty
-  | otherwise = createSQLComment $ generateCommentTags (NE.fromList attributes)
+sqlCommenterGoogle :: QueryTagsAttributes -> QueryTagsComment
+sqlCommenterGoogle qtAttributes
+  | null attributes = emptyQueryTagsComment
+  | otherwise = QueryTagsComment $ createSQLComment $ generateCommentTags (NE.fromList attributes)
   where
     createSQLComment comment = " /* " <> comment <> " */"
+    attributes = _unQueryTagsAttributes qtAttributes
 
 -- | Default 'Query Tags' format in the Hasura GraphQL Engine
 -- Creates simple 'key=value' pairs of query tags. No sorting, No URL encoding.
 -- If the format of query tags is not mentioned in the metadata then, query-tags
 -- are formatted using hte below format
-sqlCommenterStandard :: [Attribute] -> Text
-sqlCommenterStandard attributes
-  | null attributes = mempty
-  | otherwise = createSQLComment $ generateComment (NE.fromList attributes)
+sqlCommenterStandard :: QueryTagsAttributes -> QueryTagsComment
+sqlCommenterStandard qtAttributes
+  | null attributes = emptyQueryTagsComment
+  | otherwise = QueryTagsComment $ createSQLComment $ generateComment (NE.fromList attributes)
   where
     generateComment attr =  commaSeparated [ k <> "=" <> v | (k, v) <- NE.toList attr ]
     createSQLComment comment = " /* " <> comment <> " */"
+    attributes = _unQueryTagsAttributes qtAttributes
 
 -- | Top-level algorithm to generate the string comment from list of
 -- 'Attribute's

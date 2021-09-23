@@ -16,7 +16,6 @@ import           Hasura.EncJSON                   (encJFromText)
 import           Hasura.GraphQL.Execute.Backend   (BackendExecute (..), DBStepInfo (..),
                                                    PreparedQuery)
 import           Hasura.GraphQL.Parser            (UnpreparedValue)
-import           Hasura.QueryTags                 (QueryTagsComment (..))
 import           Hasura.RQL.IR                    (QueryDB, SourceRelationshipSelection)
 import           Hasura.RQL.Types                 (BackendType (MySQL), SourceConfig, SourceName)
 import qualified Hasura.RQL.Types                 as RQLTypes
@@ -47,9 +46,8 @@ mysqlDBQueryPlan
   -> RQLTypes.SourceName
   -> RQLTypes.SourceConfig 'MySQL
   -> QueryDB 'MySQL (Const Void) (UnpreparedValue 'MySQL)
-  -> QueryTagsComment
   -> m (DBStepInfo 'MySQL)
-mysqlDBQueryPlan userInfo sourceName sourceConfig qrf _qtc = do
+mysqlDBQueryPlan userInfo sourceName sourceConfig qrf = do
   let sessionVariables = _uiSession userInfo
   statement :: MySQL.Select <- planQuery sessionVariables qrf
   let printer :: Printer = fromSelect statement

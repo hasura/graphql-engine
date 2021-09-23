@@ -206,14 +206,14 @@ buildRoleContext
                         , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
                         , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
                         )
-    buildSource (SourceInfo sourceName tables functions sourceConfig) = do
+    buildSource (SourceInfo sourceName tables functions sourceConfig queryTagsConfig) = do
       let validFunctions = takeValidFunctions functions
           validTables    = takeValidTables tables
 
       (,,)
-        <$> buildQueryFields             sourceName sourceConfig validTables validFunctions
-        <*> buildMutationFields Frontend sourceName sourceConfig validTables validFunctions
-        <*> buildMutationFields Backend  sourceName sourceConfig validTables validFunctions
+        <$> buildQueryFields             sourceName sourceConfig validTables validFunctions queryTagsConfig
+        <*> buildMutationFields Frontend sourceName sourceConfig validTables validFunctions queryTagsConfig
+        <*> buildMutationFields Backend  sourceName sourceConfig validTables validFunctions queryTagsConfig
 
 
 buildRelayRoleContext
@@ -275,14 +275,14 @@ buildRelayRoleContext
                           , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
                           , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
                           )
-    buildSource (SourceInfo sourceName tables functions sourceConfig) = do
+    buildSource (SourceInfo sourceName tables functions sourceConfig queryTagsConfig) = do
       let validFunctions = takeValidFunctions functions
           validTables    = takeValidTables tables
 
       (,,)
-        <$> buildRelayQueryFields        sourceName sourceConfig validTables validFunctions
-        <*> buildMutationFields Frontend sourceName sourceConfig validTables validFunctions
-        <*> buildMutationFields Backend  sourceName sourceConfig validTables validFunctions
+        <$> buildRelayQueryFields        sourceName sourceConfig validTables validFunctions queryTagsConfig
+        <*> buildMutationFields Frontend sourceName sourceConfig validTables validFunctions queryTagsConfig
+        <*> buildMutationFields Backend  sourceName sourceConfig validTables validFunctions queryTagsConfig
 
 
 buildFullestDBSchema
@@ -315,13 +315,13 @@ buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes =
         ConcreteSchemaT m ( [FieldParser (P.ParseT Identity) (QueryRootField    UnpreparedValue)]
                           , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
                           )
-    buildSource (SourceInfo sourceName tables functions sourceConfig) = do
+    buildSource (SourceInfo sourceName tables functions sourceConfig queryTagsConfig) = do
       let validFunctions = takeValidFunctions functions
           validTables    = takeValidTables tables
 
       (,)
-        <$> buildQueryFields sourceName sourceConfig validTables validFunctions
-        <*> buildMutationFields Frontend sourceName sourceConfig validTables validFunctions
+        <$> buildQueryFields sourceName sourceConfig validTables validFunctions queryTagsConfig
+        <*> buildMutationFields Frontend sourceName sourceConfig validTables validFunctions queryTagsConfig
 
 
 -- The `unauthenticatedContext` is used when the user queries the graphql-engine
@@ -428,15 +428,16 @@ buildQueryFields
   -> SourceConfig b
   -> TableCache b
   -> FunctionCache b
+  -> Maybe QueryTagsConfig
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
-buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> functions) = do
+buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> functions) queryTagsConfig = do
   roleName <- askRoleName
   functionPermsCtx <- asks $ qcFunctionPermsContext . getter
   tableSelectExpParsers <- for (Map.toList tables) \(tableName, tableInfo) -> do
     tableGQLName <- getTableGQLName @b tableInfo
     -- FIXME: retrieve permissions directly from tableInfo to avoid a sourceCache lookup
     selectPerms  <- tableSelectPermissions tableInfo
-    for selectPerms $ buildTableQueryFields sourceName sourceConfig tableName tableInfo tableGQLName
+    for selectPerms $ buildTableQueryFields sourceName sourceConfig queryTagsConfig tableName tableInfo tableGQLName
   functionSelectExpParsers <- for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
     guard
       $ roleName == adminRoleName
@@ -445,7 +446,7 @@ buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> funct
     let targetTableName = _fiReturnType functionInfo
     targetTableInfo <- askTableInfo sourceName targetTableName
     selectPerms <- MaybeT $ tableSelectPermissions targetTableInfo
-    lift $ buildFunctionQueryFields sourceName sourceConfig functionName functionInfo targetTableName selectPerms
+    lift $ buildFunctionQueryFields sourceName sourceConfig queryTagsConfig functionName functionInfo targetTableName selectPerms
   pure $ concat $ catMaybes $ tableSelectExpParsers <> functionSelectExpParsers
 
 buildRelayQueryFields
@@ -455,21 +456,22 @@ buildRelayQueryFields
   -> SourceConfig b
   -> TableCache b
   -> FunctionCache b
+  -> Maybe QueryTagsConfig
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
-buildRelayQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> functions) = do
+buildRelayQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> functions) queryTagsConfig = do
   tableConnectionFields <- for (Map.toList tables) \(tableName, tableInfo) -> runMaybeT do
     tableGQLName <- getTableGQLName @b tableInfo
     pkeyColumns  <- hoistMaybe $ tableInfo ^? tiCoreInfo.tciPrimaryKey._Just.pkColumns
     -- FIXME: retrieve permissions directly from tableInfo to avoid a sourceCache lookup
     selectPerms  <- MaybeT $ tableSelectPermissions tableInfo
-    lift $ buildTableRelayQueryFields sourceName sourceConfig tableName tableInfo tableGQLName pkeyColumns selectPerms
+    lift $ buildTableRelayQueryFields sourceName sourceConfig  queryTagsConfig tableName tableInfo tableGQLName pkeyColumns selectPerms
   functionConnectionFields <- for (Map.toList functions) $ \(functionName, functionInfo) -> runMaybeT do
     let returnTableName = _fiReturnType functionInfo
     -- FIXME: only extract the TableInfo once to avoid redundant cache lookups
     returnTableInfo <- lift $ askTableInfo sourceName returnTableName
     pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns) <$> pure returnTableInfo
     selectPerms <- MaybeT $ tableSelectPermissions returnTableInfo
-    lift $ buildFunctionRelayQueryFields sourceName sourceConfig functionName functionInfo returnTableName pkeyColumns selectPerms
+    lift $ buildFunctionRelayQueryFields sourceName sourceConfig queryTagsConfig  functionName functionInfo returnTableName pkeyColumns selectPerms
   pure $ concat $ catMaybes $ tableConnectionFields <> functionConnectionFields
 
 buildMutationFields
@@ -480,8 +482,9 @@ buildMutationFields
   -> SourceConfig b
   -> TableCache b
   -> FunctionCache b
+  -> Maybe QueryTagsConfig
   -> m [P.FieldParser n (MutationRootField UnpreparedValue)]
-buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMutation -> functions) = do
+buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMutation -> functions) queryTagsConfig = do
   roleName <- askRoleName
   tableMutations <- for (Map.toList tables) \(tableName, tableInfo) -> do
     tableGQLName  <- getTableGQLName @b tableInfo
@@ -498,16 +501,16 @@ buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMu
             then Nothing
             else Just insertPerms
         lift $
-          buildTableInsertMutationFields sourceName sourceConfig tableName tableInfo
+          buildTableInsertMutationFields sourceName sourceConfig queryTagsConfig  tableName tableInfo
                                  tableGQLName insertPerms _permSel _permUpd
       updates <- runMaybeT $ do
         guard $ isMutable viIsUpdatable viewInfo
         updatePerms <- hoistMaybe _permUpd
-        lift $ buildTableUpdateMutationFields sourceName sourceConfig tableName tableInfo tableGQLName updatePerms _permSel
+        lift $ buildTableUpdateMutationFields sourceName sourceConfig queryTagsConfig  tableName tableInfo tableGQLName updatePerms _permSel
       deletes <- runMaybeT $ do
         guard $ isMutable viIsDeletable viewInfo
         deletePerms <- hoistMaybe _permDel
-        lift $ buildTableDeleteMutationFields sourceName sourceConfig tableName tableInfo tableGQLName deletePerms _permSel
+        lift $ buildTableDeleteMutationFields sourceName sourceConfig queryTagsConfig  tableName tableInfo tableGQLName deletePerms _permSel
       pure $ concat $ catMaybes [inserts, updates, deletes]
   functionMutations <- for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
     let targetTableName = _fiReturnType functionInfo
@@ -519,7 +522,7 @@ buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMu
       -- when function permissions are inferred, we don't expose the
       -- mutation functions for non-admin roles. See Note [Function Permissions]
       roleName == adminRoleName || roleName `Map.member` (_fiPermissions functionInfo)
-    lift $ buildFunctionMutationFields sourceName sourceConfig functionName functionInfo targetTableName selectPerms
+    lift $ buildFunctionMutationFields sourceName sourceConfig queryTagsConfig  functionName functionInfo targetTableName selectPerms
   pure $ concat $ catMaybes $ tableMutations <> functionMutations
 
 

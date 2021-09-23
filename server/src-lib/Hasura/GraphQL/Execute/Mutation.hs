@@ -84,10 +84,9 @@ convertMutationSelectionSet
   -> RequestId
   -> Maybe G.Name
   -- ^ Graphql Operation Name
-  -> QueryTagsConfig
   -> m (ExecutionPlan, ParameterizedQueryHash)
 convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userInfo manager reqHeaders
-  directives fields varDefs gqlUnparsed introspectionDisabledRoles reqId maybeOperationName queryTagsConfig = do
+  directives fields varDefs gqlUnparsed introspectionDisabledRoles reqId maybeOperationName = do
   mutationParser <- onNothing (gqlMutationParser gqlContext) $
     throw400 ValidationFailed "no mutations exist"
 
@@ -108,13 +107,12 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
     case rootFieldUnpreparedValue of
       RFDB sourceName exists ->
         AB.dispatchAnyBackend @BackendExecute exists
-          \(SourceConfigWith (sourceConfig :: SourceConfig b) (MDBR db)) -> do
+          \(SourceConfigWith (sourceConfig :: SourceConfig b) queryTagsConfig (MDBR db)) -> do
 
             let mutationQueryTagsAttributes = encodeQueryTags $ QTMutation $ MutationMetadata reqId maybeOperationName rootFieldName parameterizedQueryHash
-            let qtSourceConfig = getQueryTagsSourceConfig queryTagsConfig sourceName
-            let mutationQueryTags = QueryTagsComment $ Tagged.untag $ createQueryTags @m (Just qtSourceConfig) mutationQueryTagsAttributes
+            let queryTagsComment = Tagged.untag $ createQueryTags @m mutationQueryTagsAttributes queryTagsConfig
             let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsMutationDB db
-            dbStepInfo <- mkDBMutationPlan @b userInfo stringifyNum sourceName sourceConfig noRelsDBAST mutationQueryTags
+            dbStepInfo <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b userInfo stringifyNum sourceName sourceConfig noRelsDBAST
             pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
       RFRemote remoteField -> do
         RemoteFieldG remoteSchemaInfo resultCustomizer resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField

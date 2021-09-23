@@ -62,7 +62,7 @@ explainQueryField userInfo fieldName rootField = do
     RFRaw _    -> pure $ encJFromJValue $ ExplainPlan fieldName Nothing Nothing
     RFDB sourceName exists   -> do
       step <- AB.dispatchAnyBackend @BackendExecute exists
-        \(SourceConfigWith sourceConfig (QDBR db)) -> do
+        \(SourceConfigWith sourceConfig _ (QDBR db)) -> do
            let (newDB, remoteJoins) = RJ.getRemoteJoins db
            unless (isNothing remoteJoins) $
              throw400 InvalidParams "queries with remote relationships cannot be explained"
@@ -104,7 +104,7 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
       -- TODO: validate directives here
       -- query-tags are not necessary for EXPLAIN API
-      validSubscription <-  E.buildSubscriptionPlan userInfo unpreparedQueries parameterizedQueryHash emptyQueryTagsConfig
+      validSubscription <- E.buildSubscriptionPlan userInfo unpreparedQueries parameterizedQueryHash
       case validSubscription of
         E.SEAsyncActionsWithNoRelationships _ -> throw400 NotSupported "async action query fields without relationships to table cannot be explained"
         E.SEOnSourceDB actionIds liveQueryBuilder -> do
