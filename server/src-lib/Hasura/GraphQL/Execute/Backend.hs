@@ -10,7 +10,6 @@ import qualified Network.HTTP.Types                      as HTTP
 
 import           Control.Monad.Trans.Control             (MonadBaseControl)
 import           Data.Kind                               (Type)
-import           Data.SqlCommenter
 import           Data.Tagged
 import           Data.Text.Extended
 import           Data.Text.NonEmpty                      (mkNonEmptyTextUnsafe)
@@ -30,7 +29,7 @@ import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column                 (ColumnType, fromCol)
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.QueryTags              (QueryTagsSourceConfig)
+import           Hasura.RQL.Types.QueryTags              (QueryTagsConfig)
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Backend
 import           Hasura.Server.Version                   (HasVersion)
@@ -62,36 +61,36 @@ class ( Backend b
     :: forall m
      . ( MonadError QErr m
        , MonadQueryTags m
+       , MonadReader QueryTagsComment m
        )
     => UserInfo
     -> SourceName
     -> SourceConfig b
     -> QueryDB b (Const Void) (UnpreparedValue b)
-    -> QueryTagsComment
     -> m (DBStepInfo b)
   mkDBMutationPlan
     :: forall m
      . ( MonadError QErr m
        , HasVersion
        , MonadQueryTags m
+       , MonadReader QueryTagsComment m
        )
     => UserInfo
     -> Bool
     -> SourceName
     -> SourceConfig b
     -> MutationDB b (Const Void) (UnpreparedValue b)
-    -> QueryTagsComment
     -> m (DBStepInfo b)
   mkDBSubscriptionPlan
     :: forall m
      . ( MonadError QErr m
        , MonadIO m
+       , MonadReader QueryTagsComment m
        )
     => UserInfo
     -> SourceName
     -> SourceConfig b
     -> InsOrdHashMap G.Name (QueryDB b (Const Void) (UnpreparedValue b))
-    -> QueryTagsComment
     -> m (LiveQueryPlan b (MultiplexedQuery b))
   mkDBQueryExplain
     :: forall m
@@ -242,28 +241,28 @@ class (Monad m) => MonadQueryTags m where
   -- | Creates Query Tags. These are appended to the Generated SQL.
   -- Helps users to use native database monitoring tools to get some 'application-context'.
   createQueryTags
-    :: (Maybe QueryTagsSourceConfig) -> [Attribute] -> Tagged m Text
+    :: QueryTagsAttributes  -> Maybe QueryTagsConfig -> Tagged m QueryTagsComment
 
 instance (MonadQueryTags m) => MonadQueryTags (ReaderT r m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (ReaderT r m) Text
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (ReaderT r m) QueryTagsComment
 
 instance (MonadQueryTags m) => MonadQueryTags (ExceptT e m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (ExceptT e m) Text
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (ExceptT e m) QueryTagsComment
 
 instance (MonadQueryTags m) => MonadQueryTags (TraceT m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (TraceT m) Text
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (TraceT m) QueryTagsComment
 
 instance (MonadQueryTags m) => MonadQueryTags (MetadataStorageT m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (MetadataStorageT m) Text
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (MetadataStorageT m) QueryTagsComment
 
 instance (MonadQueryTags m) => MonadQueryTags (Q.TxET QErr m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (Q.TxET QErr m) Text
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (Q.TxET QErr m) QueryTagsComment
 
 instance (MonadQueryTags m) => MonadQueryTags (MetadataT m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (MetadataT m) Text
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (MetadataT m) QueryTagsComment
 
 instance (MonadQueryTags m) => MonadQueryTags (CacheRWT m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (CacheRWT m) Text
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (CacheRWT m) QueryTagsComment
 
 instance (MonadQueryTags m) => MonadQueryTags (RunT m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (RunT m) Text
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (RunT m) QueryTagsComment

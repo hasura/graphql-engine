@@ -75,76 +75,82 @@ msBuildTableRelayQueryFields
   :: MonadBuildSchema 'MSSQL r m n
   => SourceName
   -> SourceConfig 'MSSQL
+  -> Maybe QueryTagsConfig
   -> TableName    'MSSQL
   -> TableInfo    'MSSQL
   -> G.Name
   -> NESeq (ColumnInfo 'MSSQL)
   -> SelPermInfo  'MSSQL
   -> m [FieldParser n (QueryRootField UnpreparedValue)]
-msBuildTableRelayQueryFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
+msBuildTableRelayQueryFields _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
   pure []
 
 msBuildTableUpdateMutationFields
   :: MonadBuildSchema 'MSSQL r m n
   => SourceName
   -> SourceConfig 'MSSQL
+  -> Maybe QueryTagsConfig
   -> TableName 'MSSQL
   -> TableInfo 'MSSQL
   -> G.Name
   -> UpdPermInfo 'MSSQL
   -> Maybe (SelPermInfo 'MSSQL)
   -> m [FieldParser n (MutationRootField UnpreparedValue)]
-msBuildTableUpdateMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _updPerns _selPerms =
+msBuildTableUpdateMutationFields _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _updPerns _selPerms =
   pure []
 
 msBuildTableDeleteMutationFields
   :: MonadBuildSchema 'MSSQL r m n
   => SourceName
   -> SourceConfig 'MSSQL
+  -> Maybe QueryTagsConfig
   -> TableName 'MSSQL
   -> TableInfo 'MSSQL
   -> G.Name
   -> DelPermInfo 'MSSQL
   -> Maybe (SelPermInfo 'MSSQL)
   -> m [FieldParser n (MutationRootField UnpreparedValue)]
-msBuildTableDeleteMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _delPerns _selPerms =
+msBuildTableDeleteMutationFields _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _delPerns _selPerms =
   pure []
 
 msBuildFunctionQueryFields
     :: MonadBuildSchema 'MSSQL r m n
     => SourceName
     -> SourceConfig 'MSSQL
+    -> Maybe QueryTagsConfig
     -> FunctionName 'MSSQL
     -> FunctionInfo 'MSSQL
     -> TableName 'MSSQL
     -> SelPermInfo 'MSSQL
     -> m [FieldParser n (QueryRootField UnpreparedValue)]
-msBuildFunctionQueryFields _ _ _ _ _ _ =
+msBuildFunctionQueryFields _ _ _ _ _ _ _ =
   pure []
 
 msBuildFunctionRelayQueryFields
   :: MonadBuildSchema 'MSSQL r m n
   => SourceName
   -> SourceConfig 'MSSQL
+  -> Maybe QueryTagsConfig
   -> FunctionName 'MSSQL
   -> FunctionInfo 'MSSQL
   -> TableName    'MSSQL
   -> NESeq (ColumnInfo 'MSSQL)
   -> SelPermInfo  'MSSQL
   -> m [FieldParser n (QueryRootField UnpreparedValue)]
-msBuildFunctionRelayQueryFields _sourceName _sourceInfo _functionName _functionInfo _tableName _pkeyColumns _selPerms =
+msBuildFunctionRelayQueryFields _sourceName _sourceInfo _queryTagsConfig _functionName _functionInfo _tableName _pkeyColumns _selPerms =
   pure []
 
 msBuildFunctionMutationFields
     :: MonadBuildSchema 'MSSQL r m n
     => SourceName
     -> SourceConfig 'MSSQL
+    -> Maybe QueryTagsConfig
     -> FunctionName 'MSSQL
     -> FunctionInfo 'MSSQL
     -> TableName 'MSSQL
     -> SelPermInfo 'MSSQL
     -> m [FieldParser n (MutationRootField UnpreparedValue)]
-msBuildFunctionMutationFields _ _ _ _ _ _ =
+msBuildFunctionMutationFields _ _ _ _ _ _ _ =
   pure []
 
 

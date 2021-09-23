@@ -163,7 +163,6 @@ import           Hasura.RQL.Types.GraphqlSchemaIntrospection
 import           Hasura.RQL.Types.Metadata.Object
 import           Hasura.RQL.Types.Network                    (TlsAllow)
 import           Hasura.RQL.Types.QueryCollection
-import           Hasura.RQL.Types.QueryTags
 import           Hasura.RQL.Types.Relationship
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.ScheduledTrigger
@@ -332,7 +331,6 @@ data SchemaCache
   , scMetricsConfig                  :: !MetricsConfig
   , scMetadataResourceVersion        :: !(Maybe MetadataResourceVersion)
   , scSetGraphqlIntrospectionOptions :: !SetGraphqlIntrospectionOptions
-  , scQueryTagsConfig                :: !QueryTagsConfig
   , scTlsAllowlist                   :: ![TlsAllow]
   }
 

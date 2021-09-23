@@ -418,7 +418,7 @@ instance FromJSON PostgresSourceConnInfo where
     PostgresSourceConnInfo
       <$> o .: "database_url"
       <*> o .:? "pool_settings"
-      <*> o .:? "use_prepared_statements" .!= False -- By default preparing statements is OFF for postgres source
+      <*> o .:? "use_prepared_statements" .!= False -- By default, preparing statements is OFF for postgres source
       <*> o .:? "isolation_level" .!= Q.ReadCommitted
       <*> o .:? "ssl_configuration"
 

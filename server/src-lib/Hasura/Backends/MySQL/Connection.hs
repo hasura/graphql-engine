@@ -32,7 +32,9 @@ import           Hasura.RQL.Types.Source
 import           Hasura.SQL.Backend
 
 
-resolveSourceConfig :: (MonadIO m) => SourceName -> ConnSourceConfig -> Env.Environment -> m (Either QErr SourceConfig)
+resolveSourceConfig
+  :: (MonadIO m)
+  => SourceName -> ConnSourceConfig -> Env.Environment -> m (Either QErr SourceConfig)
 resolveSourceConfig _name csc@ConnSourceConfig{_cscPoolSettings = ConnPoolSettings{..}, ..} _env = do
   let connectInfo =
         defaultConnectInfo

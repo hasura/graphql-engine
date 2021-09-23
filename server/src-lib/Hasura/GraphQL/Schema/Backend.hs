@@ -68,6 +68,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     :: MonadBuildSchema b r m n
     => SourceName
     -> SourceConfig b
+    -> Maybe QueryTagsConfig
     -> TableName b
     -> TableInfo b
     -> G.Name
@@ -77,6 +78,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     :: MonadBuildSchema b r m n
     => SourceName
     -> SourceConfig b
+    -> Maybe QueryTagsConfig
     -> TableName b
     -> TableInfo b
     -> G.Name
@@ -87,6 +89,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     :: MonadBuildSchema b r m n
     => SourceName
     -> SourceConfig b
+    -> Maybe QueryTagsConfig
     -> TableName b
     -> TableInfo b
     -> G.Name
@@ -98,6 +101,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     :: MonadBuildSchema b r m n
     => SourceName
     -> SourceConfig b
+    -> Maybe QueryTagsConfig
     -> TableName b
     -> TableInfo b
     -> G.Name
@@ -108,6 +112,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     :: MonadBuildSchema b r m n
     => SourceName
     -> SourceConfig b
+    -> Maybe QueryTagsConfig
     -> TableName b
     -> TableInfo b
     -> G.Name
@@ -118,6 +123,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     :: MonadBuildSchema b r m n
     => SourceName
     -> SourceConfig b
+    -> Maybe QueryTagsConfig
     -> FunctionName b
     -> FunctionInfo b
     -> TableName b
@@ -127,6 +133,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     :: MonadBuildSchema b r m n
     => SourceName
     -> SourceConfig b
+    -> Maybe QueryTagsConfig
     -> FunctionName b
     -> FunctionInfo b
     -> TableName b
@@ -137,6 +144,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     :: MonadBuildSchema b r m n
     => SourceName
     -> SourceConfig b
+    -> Maybe QueryTagsConfig
     -> FunctionName b
     -> FunctionInfo b
     -> TableName b

@@ -17,7 +17,6 @@ import qualified Network.HTTP.Types                        as HTTP
 import qualified Hasura.GraphQL.Execute.RemoteJoin.Collect as RJ
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
 import qualified Hasura.Logging                            as L
-import qualified Hasura.RQL.Types.QueryTags                as RQL
 import qualified Hasura.SQL.AnyBackend                     as AB
 
 import           Hasura.Base.Error
@@ -76,10 +75,9 @@ convertQuerySelSet
   -> RequestId
   -> Maybe G.Name
   -- ^ Graphql Operation Name
-  -> RQL.QueryTagsConfig
   -> m (ExecutionPlan, [QueryRootField UnpreparedValue], DirectiveMap, ParameterizedQueryHash)
 convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs gqlUnparsed
-  introspectionDisabledRoles reqId maybeOperationName queryTagsConfig = do
+  introspectionDisabledRoles reqId maybeOperationName = do
 
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, normalizedDirectives, normalizedSelectionSet) <-
@@ -98,12 +96,11 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
     case rootFieldUnpreparedValue of
       RFDB sourceName exists ->
         AB.dispatchAnyBackend @BackendExecute exists
-            \(SourceConfigWith (sourceConfig :: (SourceConfig b)) (QDBR db)) -> do
+            \(SourceConfigWith (sourceConfig :: (SourceConfig b)) queryTagsConfig (QDBR db)) -> do
               let queryTagsAttributes = encodeQueryTags $  QTQuery $ QueryMetadata reqId maybeOperationName rootFieldName parameterizedQueryHash
-              let qtSourceConfig = getQueryTagsSourceConfig queryTagsConfig sourceName
-              let queryTagsText = QueryTagsComment $ Tagged.untag $ createQueryTags @m (Just qtSourceConfig) queryTagsAttributes
+              let queryTagsComment = Tagged.untag $ createQueryTags @m queryTagsAttributes queryTagsConfig
               let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoins db
-              dbStepInfo <- mkDBQueryPlan @b userInfo sourceName sourceConfig noRelsDBAST queryTagsText
+              dbStepInfo <- flip runReaderT queryTagsComment $ mkDBQueryPlan @b userInfo sourceName sourceConfig noRelsDBAST
               pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
       RFRemote rf -> do
         RemoteFieldG remoteSchemaInfo resultCustomizer remoteField <- runVariableCache $ for rf $ resolveRemoteVariable userInfo

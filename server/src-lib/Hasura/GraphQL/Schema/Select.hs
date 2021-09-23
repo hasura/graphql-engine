@@ -1516,7 +1516,7 @@ nodeField = do
       return
         $ IR.RFDB source
         $ AB.mkAnyBackend
-        $ IR.SourceConfigWith sourceConfig
+        $ IR.SourceConfigWith sourceConfig Nothing
         $ IR.QDBR
         $ IR.QDBSingleRow
         $ IR.AnnSelectG

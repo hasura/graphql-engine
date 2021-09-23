@@ -35,12 +35,12 @@ defaultGlobalSelectLimit :: Int
 defaultGlobalSelectLimit = 1000
 
 
-resolveSourceConfig ::
-  MonadIO m =>
-  SourceName ->
-  BigQueryConnSourceConfig ->
-  Env.Environment ->
-  m (Either QErr BigQuerySourceConfig)
+resolveSourceConfig
+  :: MonadIO m
+  => SourceName
+  -> BigQueryConnSourceConfig
+  -> Env.Environment
+  -> m (Either QErr BigQuerySourceConfig)
 resolveSourceConfig _name BigQueryConnSourceConfig{..} env = runExceptT $ do
   eSA <- resolveConfigurationJson env _cscServiceAccount
   case eSA of

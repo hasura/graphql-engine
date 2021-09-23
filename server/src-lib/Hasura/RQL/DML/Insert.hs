@@ -7,7 +7,6 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict                          as HM
 import qualified Data.HashSet                                 as HS
 import qualified Data.Sequence                                as DS
-import qualified Data.Tagged                                  as Tagged
 import qualified Database.PG.Query                            as Q
 
 import           Control.Monad.Trans.Control                  (MonadBaseControl)
@@ -30,8 +29,6 @@ import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.Insert
 import           Hasura.RQL.Types
 import           Hasura.Session
-
-import           Hasura.GraphQL.Execute.Backend
 
 
 convObj
@@ -212,7 +209,6 @@ runInsert
       , CacheRM m, HasServerConfigCtx m
       , MonadIO m, Tracing.MonadTrace m
       , MonadBaseControl IO m, MetadataM m
-      , MonadQueryTags m
       )
   => InsertQuery -> m EncJSON
 runInsert q = do
@@ -220,9 +216,8 @@ runInsert q = do
   userInfo <- askUserInfo
   res <- convInsQ q
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
-  let queryTags = QueryTagsComment $ Tagged.untag $ createQueryTags @m Nothing (encodeOptionalQueryTags Nothing)
   runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadWrite $
-    runReaderT (execInsertQuery strfyNum userInfo res) queryTags
+    flip runReaderT emptyQueryTagsComment $ execInsertQuery strfyNum userInfo res
 
 decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj ('Postgres 'Vanilla)]
 decodeInsObjs v = do

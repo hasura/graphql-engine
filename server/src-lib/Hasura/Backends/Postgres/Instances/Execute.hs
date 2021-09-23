@@ -12,7 +12,6 @@ import qualified Data.Aeson                                 as J
 import qualified Data.HashMap.Strict                        as Map
 import qualified Data.IntMap                                as IntMap
 import qualified Data.Sequence                              as Seq
-import qualified Data.Tagged                                as Tagged
 import qualified Database.PG.Query                          as Q
 import qualified Language.GraphQL.Draft.Syntax              as G
 
@@ -41,7 +40,7 @@ import           Hasura.Backends.Postgres.Translate.Select  (PostgresAnnotatedFi
 import           Hasura.Base.Error                          (QErr)
 import           Hasura.EncJSON                             (EncJSON, encJFromJValue)
 import           Hasura.GraphQL.Execute.Backend             (BackendExecute (..), DBStepInfo (..),
-                                                             ExplainPlan (..), MonadQueryTags (..),
+                                                             ExplainPlan (..),
                                                              convertRemoteSourceRelationship)
 import           Hasura.GraphQL.Execute.LiveQuery.Plan      (LiveQueryPlan (..),
                                                              LiveQueryPlanExplanation (..),
@@ -49,7 +48,7 @@ import           Hasura.GraphQL.Execute.LiveQuery.Plan      (LiveQueryPlan (..),
                                                              mkCohortVariables, newCohortId)
 import           Hasura.GraphQL.Parser                      (UnpreparedValue (..))
 import           Hasura.QueryTags                           (QueryTagsComment (..),
-                                                             encodeOptionalQueryTags)
+                                                             emptyQueryTagsComment)
 import           Hasura.RQL.DML.Internal                    (dmlTxErrorHandler)
 import           Hasura.RQL.IR                              (MutationDB (..), QueryDB (..))
 import           Hasura.RQL.Types                           (Backend (..), BackendType (Postgres),
@@ -90,17 +89,18 @@ pgDBQueryPlan
    . ( MonadError QErr m
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
+     , MonadReader QueryTagsComment m
      )
   => UserInfo
   -> SourceName
   -> SourceConfig ('Postgres pgKind)
   -> QueryDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
-  -> QueryTagsComment
   -> m (DBStepInfo ('Postgres pgKind))
-pgDBQueryPlan userInfo sourceName sourceConfig qrf queryTags = do
+pgDBQueryPlan userInfo sourceName sourceConfig qrf = do
   (preparedQuery, PlanningSt _ _ planVals) <-
     flip runStateT initPlanningSt $ traverse (prepareWithPlan userInfo) qrf
-  let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags (irToRootFieldPlan planVals preparedQuery) queryTags
+  queryTagsComment <- ask
+  let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags (irToRootFieldPlan planVals preparedQuery) queryTagsComment
   let (action, preparedSQL) = mkCurPlanTx userInfo preparedSQLWithQueryTags
   pure $ DBStepInfo @('Postgres pgKind) sourceName sourceConfig preparedSQL action
 
@@ -237,20 +237,21 @@ pgDBMutationPlan
      , HasVersion
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
+     , MonadReader QueryTagsComment m
      )
   => UserInfo
   -> Bool
   -> SourceName
   -> SourceConfig ('Postgres pgKind)
   -> MutationDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))
-  -> QueryTagsComment
   -> m (DBStepInfo ('Postgres pgKind))
-pgDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf queryTags  =
+pgDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf = do
+    mutationQueryTagsComment <- ask
     go <$> case mrf of
-    MDBInsert s              -> convertInsert userInfo s stringifyNum queryTags
-    MDBUpdate s              -> convertUpdate userInfo s stringifyNum queryTags
-    MDBDelete s              -> convertDelete userInfo s stringifyNum queryTags
-    MDBFunction returnsSet s -> convertFunction userInfo returnsSet s queryTags
+      MDBInsert s              -> convertInsert userInfo s stringifyNum mutationQueryTagsComment
+      MDBUpdate s              -> convertUpdate userInfo s stringifyNum mutationQueryTagsComment
+      MDBDelete s              -> convertDelete userInfo s stringifyNum mutationQueryTagsComment
+      MDBFunction returnsSet s -> convertFunction userInfo returnsSet s mutationQueryTagsComment
   where
     go v = DBStepInfo @('Postgres pgKind) sourceName sourceConfig Nothing v
 
@@ -262,18 +263,20 @@ pgDBSubscriptionPlan
      , MonadIO m
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
+     , MonadReader QueryTagsComment m
      )
   => UserInfo
   -> SourceName
   -> SourceConfig ('Postgres pgKind)
   -> InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind)))
-  -> QueryTagsComment
   -> m (LiveQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)))
-pgDBSubscriptionPlan userInfo _sourceName sourceConfig unpreparedAST queryTags = do
+pgDBSubscriptionPlan userInfo _sourceName sourceConfig unpreparedAST = do
   (preparedAST, PGL.QueryParametersInfo{..}) <- flip runStateT mempty $
     for unpreparedAST $ traverse (PGL.resolveMultiplexedValue $ _uiSession userInfo)
+  mutationQueryTagsComment <- ask
   let multiplexedQuery = PGL.mkMultiplexedQuery preparedAST
-      multiplexedQueryWithQueryTags = multiplexedQuery { PGL.unMultiplexedQuery = appendSQLWithQueryTags (PGL.unMultiplexedQuery multiplexedQuery) queryTags}
+      multiplexedQueryWithQueryTags =
+        multiplexedQuery { PGL.unMultiplexedQuery = appendSQLWithQueryTags (PGL.unMultiplexedQuery multiplexedQuery) mutationQueryTagsComment}
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedLiveQueryPlan roleName multiplexedQueryWithQueryTags
 
@@ -331,7 +334,7 @@ appendPreparedSQLWithQueryTags preparedSQL queryTags =
     query = _psQuery preparedSQL
 
 appendSQLWithQueryTags :: Q.Query -> QueryTagsComment -> Q.Query
-appendSQLWithQueryTags query queryTags = query {Q.getQueryText = queryText <> (_unQueryTagsComment queryTags)}
+appendSQLWithQueryTags query queryTags = query {Q.getQueryText = queryText <> _unQueryTagsComment queryTags}
   where
     queryText = Q.getQueryText query
 
@@ -345,7 +348,6 @@ appendSQLWithQueryTags query queryTags = query {Q.getQueryText = queryText <> (_
 pgDBRemoteRelationshipPlan
   :: forall pgKind m
    . ( MonadError QErr m
-     , MonadQueryTags m
      , Backend ('Postgres pgKind)
      , PostgresAnnotatedFieldJSON pgKind
      )
@@ -369,8 +371,7 @@ pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
   -- In the future if we want to add support we'll need to add a new type of
   -- metadata (e.g. 'ParameterizedQueryHash' doesn't make sense here) and find
   -- a root field name that makes sense to attach to it.
-  let queryTags = QueryTagsComment . Tagged.untag $ createQueryTags @m Nothing (encodeOptionalQueryTags Nothing)
-  pgDBQueryPlan userInfo sourceName sourceConfig rootSelection queryTags
+  flip runReaderT emptyQueryTagsComment $ pgDBQueryPlan userInfo sourceName sourceConfig rootSelection
 
   where
     coerceToColumn = PG.unsafePGCol . getFieldNameTxt
