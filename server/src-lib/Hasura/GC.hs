@@ -1,12 +1,10 @@
 module Hasura.GC where
-  
-import           Hasura.Prelude
-  
-import           GHC.Stats
-import           Hasura.Logging
-import           System.Mem                  (performMajorGC)
 
-import qualified Control.Concurrent.Extended as C
+import Control.Concurrent.Extended qualified as C
+import GHC.Stats
+import Hasura.Logging
+import Hasura.Prelude
+import System.Mem (performMajorGC)
 
 -- | The RTS's idle GC doesn't work for us:
 --
@@ -23,12 +21,15 @@ import qualified Control.Concurrent.Extended as C
 --
 -- ...so we hack together our own using GHC.Stats, which should have
 -- insignificant runtime overhead.
-ourIdleGC
-  :: Logger Hasura
-  -> DiffTime -- ^ Run a major GC when we've been "idle" for idleInterval
-  -> DiffTime -- ^ ...as long as it has been > minGCInterval time since the last major GC
-  -> DiffTime -- ^ Additionally, if it has been > maxNoGCInterval time, force a GC regardless.
-  -> IO void
+ourIdleGC ::
+  Logger Hasura ->
+  -- | Run a major GC when we've been "idle" for idleInterval
+  DiffTime ->
+  -- | ...as long as it has been > minGCInterval time since the last major GC
+  DiffTime ->
+  -- | Additionally, if it has been > maxNoGCInterval time, force a GC regardless.
+  DiffTime ->
+  IO void
 ourIdleGC (Logger logger) idleInterval minGCInterval maxNoGCInterval =
   startTimer >>= go 0 0
   where
@@ -38,26 +39,28 @@ ourIdleGC (Logger logger) idleInterval minGCInterval maxNoGCInterval =
         -- no need to check idle until we've passed the minGCInterval:
         C.sleep (minGCInterval - timeSinceLastGC)
 
-      RTSStats{gcs, major_gcs} <- getRTSStats
+      RTSStats {gcs, major_gcs} <- getRTSStats
       -- We use minor GCs as a proxy for "activity", which seems to work
       -- well-enough (in tests it stays stable for a few seconds when we're
       -- logically "idle" and otherwise increments quickly)
       let areIdle = gcs == gcs_prev
           areOverdue = timeSinceLastGC > maxNoGCInterval
 
-         -- a major GC was run since last iteration (cool!), reset timer:
-      if | major_gcs > major_gcs_prev -> do
-             startTimer >>= go gcs major_gcs
+      -- a major GC was run since last iteration (cool!), reset timer:
+      if
+          | major_gcs > major_gcs_prev -> do
+            startTimer >>= go gcs major_gcs
 
-         -- we are idle and its a good time to do a GC, or we're overdue and must run a GC:
-         | areIdle || areOverdue -> do
-             when (areOverdue && not areIdle) $
-               logger $ UnstructuredLog LevelWarn $
-                 "Overdue for a major GC: forcing one even though we don't appear to be idle"
-             performMajorGC
-             startTimer >>= go (gcs+1) (major_gcs+1)
+          -- we are idle and its a good time to do a GC, or we're overdue and must run a GC:
+          | areIdle || areOverdue -> do
+            when (areOverdue && not areIdle) $
+              logger $
+                UnstructuredLog LevelWarn $
+                  "Overdue for a major GC: forcing one even though we don't appear to be idle"
+            performMajorGC
+            startTimer >>= go (gcs + 1) (major_gcs + 1)
 
-         -- else keep the timer running, waiting for us to go idle:
-         | otherwise -> do
-             C.sleep idleInterval
-             go gcs major_gcs timerSinceLastMajorGC
+          -- else keep the timer running, waiting for us to go idle:
+          | otherwise -> do
+            C.sleep idleInterval
+            go gcs major_gcs timerSinceLastMajorGC

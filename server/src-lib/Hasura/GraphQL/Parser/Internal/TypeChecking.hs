@@ -1,19 +1,14 @@
 -- | Here are all functions related to type-checking within the schema. This
 -- includes functions that deal with variables, and functions that craft error
 -- messages.
-
 module Hasura.GraphQL.Parser.Internal.TypeChecking where
 
-import           Hasura.Prelude
-
-import qualified Data.Aeson                        as A
-
-import           Data.Text.Extended
-import           Language.GraphQL.Draft.Syntax     hiding (Definition)
-
-import           Hasura.GraphQL.Parser.Class.Parse
-import           Hasura.GraphQL.Parser.Schema
-
+import Data.Aeson qualified as A
+import Data.Text.Extended
+import Hasura.GraphQL.Parser.Class.Parse
+import Hasura.GraphQL.Parser.Schema
+import Hasura.Prelude
+import Language.GraphQL.Draft.Syntax hiding (Definition)
 
 -- | Peeling a variable.
 --
@@ -40,7 +35,6 @@ import           Hasura.GraphQL.Parser.Schema
 --      were to change.  We no longer cache execution plans; but we might do it
 --      again in the future, which is why we haven't removed some of the code
 --      that deals with re-usability.
-
 peelVariable :: MonadParse m => GType -> InputValue Variable -> m (InputValue Variable)
 peelVariable = peelVariableWith False
 
@@ -50,7 +44,6 @@ peelVariableWith locationHasDefaultValue locationType = \case
     typeCheck locationHasDefaultValue locationType var
     pure $ absurd <$> vValue var
   value -> pure value
-
 
 -- | Type-checking.
 --
@@ -70,72 +63,78 @@ peelVariableWith locationHasDefaultValue locationType = \case
 -- has a non-null default value. That's because GraphQL conflates nullability
 -- and optionality (see Note [Optional fields and nullability] for more
 -- details).
-
 typeCheck :: MonadParse m => Bool -> GType -> Variable -> m ()
-typeCheck locationHasDefaultValue locationType variable@Variable { vInfo, vType } =
-  unless (isVariableUsageAllowed locationHasDefaultValue locationType variable)
-    $ parseError
-    $ "variable " <> dquote (getName vInfo) <> " is declared as "
-      <> showGT vType <> ", but used where "
-      <> showGT locationType <> " is expected"
+typeCheck locationHasDefaultValue locationType variable@Variable {vInfo, vType} =
+  unless (isVariableUsageAllowed locationHasDefaultValue locationType variable) $
+    parseError $
+      "variable " <> dquote (getName vInfo) <> " is declared as "
+        <> showGT vType
+        <> ", but used where "
+        <> showGT locationType
+        <> " is expected"
 
-isVariableUsageAllowed
-  :: Bool      -- ^ does the location have a default value
-  -> GType     -- ^ the location type
-  -> Variable  -- ^ the variable
-  -> Bool
+isVariableUsageAllowed ::
+  -- | does the location have a default value
+  Bool ->
+  -- | the location type
+  GType ->
+  -- | the variable
+  Variable ->
+  Bool
 isVariableUsageAllowed locationHasDefaultValue locationType variable
-  | isNullable locationType       = areTypesCompatible locationType variableType
+  | isNullable locationType = areTypesCompatible locationType variableType
   | not $ isNullable variableType = areTypesCompatible locationType variableType
-  | locationHasDefaultValue       = areTypesCompatible locationType variableType
-  | hasNonNullDefault variable    = areTypesCompatible locationType variableType
-  | otherwise                     = False
+  | locationHasDefaultValue = areTypesCompatible locationType variableType
+  | hasNonNullDefault variable = areTypesCompatible locationType variableType
+  | otherwise = False
   where
-    areTypesCompatible = compareTypes `on` \case
-      TypeNamed _ n -> TypeNamed (Nullability True) n
-      TypeList  _ n -> TypeList  (Nullability True) n
+    areTypesCompatible =
+      compareTypes `on` \case
+        TypeNamed _ n -> TypeNamed (Nullability True) n
+        TypeList _ n -> TypeList (Nullability True) n
     variableType = vType variable
-    hasNonNullDefault = vInfo >>> \case
-      VIRequired _       -> False
-      VIOptional _ value -> value /= VNull
+    hasNonNullDefault =
+      vInfo >>> \case
+        VIRequired _ -> False
+        VIOptional _ value -> value /= VNull
     compareTypes = curry \case
-      (TypeList lNull lType, TypeList vNull vType)
-        -> checkNull lNull vNull && areTypesCompatible lType vType
-      (TypeNamed lNull lType, TypeNamed vNull vType)
-        -> checkNull lNull vNull && lType == vType
+      (TypeList lNull lType, TypeList vNull vType) ->
+        checkNull lNull vNull && areTypesCompatible lType vType
+      (TypeNamed lNull lType, TypeNamed vNull vType) ->
+        checkNull lNull vNull && lType == vType
       _ -> False
     checkNull (Nullability expectedNull) (Nullability actualNull) =
       expectedNull || not actualNull
 
-
 -- Error handling functions
 
 typeMismatch :: MonadParse m => Name -> Text -> InputValue Variable -> m a
-typeMismatch name expected given = parseError $
-  "expected " <> expected <> " for type " <> name <<> ", but found " <> describeValue given
+typeMismatch name expected given =
+  parseError $
+    "expected " <> expected <> " for type " <> name <<> ", but found " <> describeValue given
 
 describeValue :: InputValue Variable -> Text
 describeValue = describeValueWith (describeValueWith absurd . vValue)
 
 describeValueWith :: (var -> Text) -> InputValue var -> Text
 describeValueWith describeVariable = \case
-  JSONValue    jval -> describeJSON    jval
+  JSONValue jval -> describeJSON jval
   GraphQLValue gval -> describeGraphQL gval
   where
     describeJSON = \case
-      A.Null     -> "null"
-      A.Bool _   -> "a boolean"
+      A.Null -> "null"
+      A.Bool _ -> "a boolean"
       A.String _ -> "a string"
       A.Number _ -> "a number"
-      A.Array  _ -> "a list"
+      A.Array _ -> "a list"
       A.Object _ -> "an object"
     describeGraphQL = \case
       VVariable var -> describeVariable var
-      VInt _        -> "an integer"
-      VFloat _      -> "a float"
-      VString _     -> "a string"
-      VBoolean _    -> "a boolean"
-      VNull         -> "null"
-      VEnum _       -> "an enum value"
-      VList _       -> "a list"
-      VObject _     -> "an object"
+      VInt _ -> "an integer"
+      VFloat _ -> "a float"
+      VString _ -> "a string"
+      VBoolean _ -> "a boolean"
+      VNull -> "null"
+      VEnum _ -> "an enum value"
+      VList _ -> "a list"
+      VObject _ -> "an object"

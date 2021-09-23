@@ -1,25 +1,25 @@
 module Data.List.Extended
-       ( duplicates
-       , uniques
-       , getDifference
-       , getDifferenceOn
-       , getOverlapWith
-       , hasNoDuplicates
-       , module L
-       ) where
+  ( duplicates,
+    uniques,
+    getDifference,
+    getDifferenceOn,
+    getOverlapWith,
+    hasNoDuplicates,
+    module L,
+  )
+where
 
-import           Data.Function                (on)
-import           Data.Hashable                (Hashable)
-import           Prelude
-
-import qualified Data.HashMap.Strict.Extended as Map
-import qualified Data.HashSet                 as Set
-import qualified Data.List                    as L
-import qualified Data.List.NonEmpty           as NE
+import Data.Function (on)
+import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashSet qualified as Set
+import Data.Hashable (Hashable)
+import Data.List qualified as L
+import Data.List.NonEmpty qualified as NE
+import Prelude
 
 duplicates :: (Eq a, Hashable a) => [a] -> Set.HashSet a
 duplicates =
-  Set.fromList . Map.keys . Map.filter (> 1) . Map.fromListWith (+) . map (,1::Int)
+  Set.fromList . Map.keys . Map.filter (> 1) . Map.fromListWith (+) . map (,1 :: Int)
 
 uniques :: Eq a => [a] -> [a]
 uniques = map NE.head . NE.group

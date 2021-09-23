@@ -2,43 +2,43 @@
 -- and efficient operations to construct them
 
 module Hasura.EncJSON
-  ( EncJSON
-  , encJFromBuilder
-  , encJToLBS
-  , encJToBS
-  , encJFromJValue
-  , encJFromChar
-  , encJFromText
-  , encJFromBS
-  , encJFromLBS
-  , encJFromList
-  , encJFromAssocList
-  , encJFromInsOrdHashMap
-  , encJFromOrderedValue
-  ) where
+  ( EncJSON,
+    encJFromBuilder,
+    encJToLBS,
+    encJToBS,
+    encJFromJValue,
+    encJFromChar,
+    encJFromText,
+    encJFromBS,
+    encJFromLBS,
+    encJFromList,
+    encJFromAssocList,
+    encJFromInsOrdHashMap,
+    encJFromOrderedValue,
+  )
+where
 
-import           Hasura.Prelude
-
-import qualified Data.Aeson                 as J
-import qualified Data.Aeson.Ordered         as JO
-import qualified Data.ByteString            as B
-import qualified Data.ByteString.Builder    as BB
-import qualified Data.ByteString.Lazy       as BL
-import qualified Data.HashMap.Strict.InsOrd as OMap
-import qualified Data.Text.Encoding         as TE
-import qualified Data.Vector                as V
-import qualified Database.PG.Query          as Q
+import Data.Aeson qualified as J
+import Data.Aeson.Ordered qualified as JO
+import Data.ByteString qualified as B
+import Data.ByteString.Builder qualified as BB
+import Data.ByteString.Lazy qualified as BL
+import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.Text.Encoding qualified as TE
+import Data.Vector qualified as V
+import Database.PG.Query qualified as Q
+import Hasura.Prelude
 
 -- encoded json
 -- TODO (from master): can be improved with gadts capturing bytestring, lazybytestring
 -- and builder
-newtype EncJSON
-  = EncJSON { unEncJSON :: BB.Builder }
+newtype EncJSON = EncJSON {unEncJSON :: BB.Builder}
   deriving (Semigroup, Monoid, IsString)
 
 instance Show EncJSON where
-  showsPrec d x = showParen (d > 10) $
-    showString "encJFromBS " . showsPrec 11 (encJToLBS x)
+  showsPrec d x =
+    showParen (d > 10) $
+      showString "encJFromBS " . showsPrec 11 (encJToLBS x)
 
 instance Eq EncJSON where
   (==) = (==) `on` encJToLBS
@@ -80,21 +80,24 @@ encJFromText = encJFromBS . TE.encodeUtf8
 
 encJFromList :: [EncJSON] -> EncJSON
 encJFromList = \case
-  []   -> "[]"
-  x:xs -> encJFromChar '['
-          <> x
-          <> foldr go (encJFromChar ']') xs
-    where go v b  = encJFromChar ',' <> v <> b
+  [] -> "[]"
+  x : xs ->
+    encJFromChar '['
+      <> x
+      <> foldr go (encJFromChar ']') xs
+    where
+      go v b = encJFromChar ',' <> v <> b
 
 -- from association list
 encJFromAssocList :: [(Text, EncJSON)] -> EncJSON
 encJFromAssocList = \case
-  []   -> "{}"
-  x:xs -> encJFromChar '{'
-          <> builder' x
-          <> foldr go (encJFromChar '}') xs
+  [] -> "{}"
+  x : xs ->
+    encJFromChar '{'
+      <> builder' x
+      <> foldr go (encJFromChar '}') xs
   where
-    go v b  = encJFromChar ',' <> builder' v <> b
+    go v b = encJFromChar ',' <> builder' v <> b
     -- builds "key":value from (key,value)
     builder' (t, v) =
       encJFromChar '"' <> encJFromText t <> encJFromText "\":" <> v

@@ -1,11 +1,9 @@
 module Hasura.RQL.Types.CommonSpec (spec) where
 
-import           Hasura.Prelude
-
-import           Hasura.RQL.Types.Common (PGConnectionParams (..), getPGConnectionStringFromParams)
-import           Network.URI             (isAbsoluteURI)
-
-import           Test.Hspec
+import Hasura.Prelude
+import Hasura.RQL.Types.Common (PGConnectionParams (..), getPGConnectionStringFromParams)
+import Network.URI (isAbsoluteURI)
+import Test.Hspec
 
 noPasswordParams :: PGConnectionParams
 noPasswordParams =

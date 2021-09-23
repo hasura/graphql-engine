@@ -1,147 +1,162 @@
 module Hasura.RQL.DDL.QueryCollection
-  ( runCreateCollection
-  , runDropCollection
-  , runAddQueryToCollection
-  , runDropQueryFromCollection
-  , runAddCollectionToAllowlist
-  , runDropCollectionFromAllowlist
-  , fetchAllCollections
-  , fetchAllowlist
-  , module Hasura.RQL.Types.QueryCollection
-  ) where
+  ( runCreateCollection,
+    runDropCollection,
+    runAddQueryToCollection,
+    runDropQueryFromCollection,
+    runAddCollectionToAllowlist,
+    runDropCollectionFromAllowlist,
+    fetchAllCollections,
+    fetchAllowlist,
+    module Hasura.RQL.Types.QueryCollection,
+  )
+where
 
-import           Hasura.Prelude
+import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashSet.InsOrd qualified as HSIns
+import Data.List.Extended (duplicates)
+import Data.Text.Extended
+import Data.Text.NonEmpty
+import Hasura.Base.Error
+import Hasura.EncJSON
+import Hasura.Prelude
+import Hasura.RQL.Types
+import Hasura.RQL.Types.QueryCollection
+import Hasura.Session
 
-import qualified Data.HashMap.Strict.InsOrd       as OMap
-import qualified Data.HashSet.InsOrd              as HSIns
-
-import           Data.List.Extended               (duplicates)
-import           Data.Text.Extended
-import           Data.Text.NonEmpty
-
-import           Hasura.Base.Error
-import           Hasura.EncJSON
-import           Hasura.RQL.Types
-import           Hasura.RQL.Types.QueryCollection
-import           Hasura.Session
-
-
-addCollectionP2
-  :: (QErrM m)
-  => CollectionDef -> m ()
+addCollectionP2 ::
+  (QErrM m) =>
+  CollectionDef ->
+  m ()
 addCollectionP2 (CollectionDef queryList) =
   withPathK "queries" $
-    unless (null duplicateNames) $ throw400 NotSupported $
-      "found duplicate query names "
-      <> dquoteList (unNonEmptyText . unQueryName <$> toList duplicateNames)
+    unless (null duplicateNames) $
+      throw400 NotSupported $
+        "found duplicate query names "
+          <> dquoteList (unNonEmptyText . unQueryName <$> toList duplicateNames)
   where
     duplicateNames = duplicates $ map _lqName queryList
 
-runCreateCollection
-  :: (QErrM m, CacheRWM m, MetadataM m)
-  => CreateCollection -> m EncJSON
+runCreateCollection ::
+  (QErrM m, CacheRWM m, MetadataM m) =>
+  CreateCollection ->
+  m EncJSON
 runCreateCollection cc = do
   collDetM <- getCollectionDefM collName
   withPathK "name" $
-    onJust collDetM $ const $ throw400 AlreadyExists $
-      "query collection with name " <> collName <<> " already exists"
+    onJust collDetM $
+      const $
+        throw400 AlreadyExists $
+          "query collection with name " <> collName <<> " already exists"
   withPathK "definition" $ addCollectionP2 def
-  withNewInconsistentObjsCheck
-    $ buildSchemaCache
-    $ MetadataModifier
-    $ metaQueryCollections %~ OMap.insert collName cc
+  withNewInconsistentObjsCheck $
+    buildSchemaCache $
+      MetadataModifier $
+        metaQueryCollections %~ OMap.insert collName cc
   return successMsg
   where
     CreateCollection collName def _ = cc
 
-runAddQueryToCollection
-  :: (CacheRWM m, MonadError QErr m, MetadataM m)
-  => AddQueryToCollection -> m EncJSON
+runAddQueryToCollection ::
+  (CacheRWM m, MonadError QErr m, MetadataM m) =>
+  AddQueryToCollection ->
+  m EncJSON
 runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
   (CreateCollection _ (CollectionDef qList) comment) <- getCollectionDef collName
   let queryExists = flip any qList $ \q -> _lqName q == queryName
 
-  when queryExists $ throw400 AlreadyExists $ "query with name "
-    <> queryName <<> " already exists in collection " <>> collName
+  when queryExists $
+    throw400 AlreadyExists $
+      "query with name "
+        <> queryName <<> " already exists in collection " <>> collName
   let collDef = CollectionDef $ qList <> pure listQ
-  withNewInconsistentObjsCheck
-    $ buildSchemaCache
-    $ MetadataModifier
-    $ metaQueryCollections
-      %~ OMap.insert collName (CreateCollection collName collDef comment)
+  withNewInconsistentObjsCheck $
+    buildSchemaCache $
+      MetadataModifier $
+        metaQueryCollections
+          %~ OMap.insert collName (CreateCollection collName collDef comment)
   return successMsg
   where
     listQ = ListedQuery queryName query
 
-runDropCollection
-  :: (MonadError QErr m, MetadataM m, CacheRWM m)
-  => DropCollection -> m EncJSON
+runDropCollection ::
+  (MonadError QErr m, MetadataM m, CacheRWM m) =>
+  DropCollection ->
+  m EncJSON
 runDropCollection (DropCollection collName cascade) = do
   allowlistModifier <- withPathK "collection" $ do
     void $ getCollectionDef collName
     allowlist <- fetchAllowlist
-    if collName `elem` allowlist && not cascade then
-        throw400 DependencyError $ "query collection with name "
-          <> collName <<> " is present in allowlist; cannot proceed to drop"
-      else
-        pure $ metaAllowlist %~ HSIns.delete (CollectionReq collName)
+    if collName `elem` allowlist && not cascade
+      then
+        throw400 DependencyError $
+          "query collection with name "
+            <> collName <<> " is present in allowlist; cannot proceed to drop"
+      else pure $ metaAllowlist %~ HSIns.delete (CollectionReq collName)
 
-  withNewInconsistentObjsCheck
-    $ buildSchemaCache
-    $ MetadataModifier
-    $ allowlistModifier . (metaQueryCollections %~ OMap.delete collName)
+  withNewInconsistentObjsCheck $
+    buildSchemaCache $
+      MetadataModifier $
+        allowlistModifier . (metaQueryCollections %~ OMap.delete collName)
 
   pure successMsg
 
-runDropQueryFromCollection
-  :: (CacheRWM m, MonadError QErr m, MetadataM m)
-  => DropQueryFromCollection -> m EncJSON
+runDropQueryFromCollection ::
+  (CacheRWM m, MonadError QErr m, MetadataM m) =>
+  DropQueryFromCollection ->
+  m EncJSON
 runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
   CreateCollection _ (CollectionDef qList) _ <- getCollectionDef collName
   let queryExists = flip any qList $ \q -> _lqName q == queryName
-  unless queryExists $ throw400 NotFound $ "query with name "
-    <> queryName <<> " not found in collection " <>> collName
+  unless queryExists $
+    throw400 NotFound $
+      "query with name "
+        <> queryName <<> " not found in collection " <>> collName
 
-  withNewInconsistentObjsCheck
-    $ buildSchemaCache
-    $ MetadataModifier
-    $ metaQueryCollections.ix collName.ccDefinition.cdQueries
-      %~ filter ((/=) queryName . _lqName)
+  withNewInconsistentObjsCheck $
+    buildSchemaCache $
+      MetadataModifier $
+        metaQueryCollections . ix collName . ccDefinition . cdQueries
+          %~ filter ((/=) queryName . _lqName)
   pure successMsg
 
-runAddCollectionToAllowlist
-  :: (MonadError QErr m, MetadataM m, CacheRWM m)
-  => CollectionReq -> m EncJSON
+runAddCollectionToAllowlist ::
+  (MonadError QErr m, MetadataM m, CacheRWM m) =>
+  CollectionReq ->
+  m EncJSON
 runAddCollectionToAllowlist req@(CollectionReq collName) = do
   void $ withPathK "collection" $ getCollectionDef collName
-  withNewInconsistentObjsCheck
-    $ buildSchemaCache
-    $ MetadataModifier
-    $ metaAllowlist %~ HSIns.insert req
+  withNewInconsistentObjsCheck $
+    buildSchemaCache $
+      MetadataModifier $
+        metaAllowlist %~ HSIns.insert req
   pure successMsg
 
-runDropCollectionFromAllowlist
-  :: (UserInfoM m, MonadError QErr m, MetadataM m, CacheRWM m)
-  => CollectionReq -> m EncJSON
+runDropCollectionFromAllowlist ::
+  (UserInfoM m, MonadError QErr m, MetadataM m, CacheRWM m) =>
+  CollectionReq ->
+  m EncJSON
 runDropCollectionFromAllowlist req@(CollectionReq collName) = do
   void $ withPathK "collection" $ getCollectionDef collName
-  withNewInconsistentObjsCheck
-    $ buildSchemaCache
-    $ MetadataModifier
-    $ metaAllowlist %~ HSIns.delete req
+  withNewInconsistentObjsCheck $
+    buildSchemaCache $
+      MetadataModifier $
+        metaAllowlist %~ HSIns.delete req
   return successMsg
 
-getCollectionDef
-  :: (QErrM m, MetadataM m)
-  => CollectionName -> m CreateCollection
+getCollectionDef ::
+  (QErrM m, MetadataM m) =>
+  CollectionName ->
+  m CreateCollection
 getCollectionDef collName = do
   detM <- getCollectionDefM collName
-  onNothing detM $ throw400 NotExists $
-    "query collection with name " <> collName <<> " does not exist"
+  onNothing detM $
+    throw400 NotExists $
+      "query collection with name " <> collName <<> " does not exist"
 
-getCollectionDefM
-  :: (QErrM m, MetadataM m)
-  => CollectionName -> m (Maybe CreateCollection)
+getCollectionDefM ::
+  (QErrM m, MetadataM m) =>
+  CollectionName ->
+  m (Maybe CreateCollection)
 getCollectionDefM collName =
   OMap.lookup collName <$> fetchAllCollections
 

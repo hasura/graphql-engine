@@ -1,36 +1,34 @@
-{-# LANGUAGE Arrows               #-}
-{-# LANGUAGE PatternSynonyms      #-}
+{-# LANGUAGE Arrows #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE ViewPatterns         #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Control.Arrow.Trans
-  ( ArrowTrans(..)
+  ( ArrowTrans (..),
+    ArrowError (..),
+    liftEitherA,
+    mapErrorA,
+    ErrorA (..),
+    ArrowReader (..),
+    ReaderA (..),
+    ArrowWriter (..),
+    WriterA (WriterA, runWriterA),
+  )
+where
 
-  , ArrowError(..)
-  , liftEitherA
-  , mapErrorA
-  , ErrorA(..)
-
-  , ArrowReader(..)
-  , ReaderA(..)
-
-  , ArrowWriter(..)
-  , WriterA(WriterA, runWriterA)
-  ) where
-
-import           Prelude                    hiding (id, (.))
-
-import           Control.Arrow
-import           Control.Category
-import           Control.Monad.Error.Class
-import           Control.Monad.Reader.Class
-import           Control.Monad.Writer.Class
+import Control.Arrow
+import Control.Category
+import Control.Monad.Error.Class
+import Control.Monad.Reader.Class
+import Control.Monad.Writer.Class
+import Prelude hiding (id, (.))
 
 class (Arrow arr, Arrow (t arr)) => ArrowTrans t arr where
   liftA :: arr a b -> t arr a b
 
 class (Arrow arr) => ArrowError e arr | arr -> e where
   throwA :: arr e a
+
   -- see Note [Weird control operator types]
   catchA :: arr (a, s) b -> arr (a, (e, s)) b -> arr (a, s) b
 
@@ -44,6 +42,7 @@ mapErrorA f = proc (a, (g, s)) -> (f -< (a, s)) `catchA` \e -> throwA -< g e
 
 class (Arrow arr) => ArrowReader r arr | arr -> r where
   askA :: arr a r
+
   -- see Note [Weird control operator types]
   localA :: arr (a, s) b -> arr (a, (r, s)) b
 
@@ -63,18 +62,18 @@ instance (MonadWriter w m) => ArrowWriter w (Kleisli m) where
   tellA = Kleisli tell
   listenA (Kleisli f) = Kleisli (listen . f)
 
-newtype ErrorA e arr a b = ErrorA { runErrorA :: arr a (Either e b) }
+newtype ErrorA e arr a b = ErrorA {runErrorA :: arr a (Either e b)}
   deriving (Functor)
 
 instance (ArrowChoice arr) => Category (ErrorA e arr) where
   id = ErrorA (arr Right)
   {-# INLINE id #-}
   ErrorA f . ErrorA g = ErrorA ((arr Left ||| f) . g)
-  {-# INLINABLE (.) #-}
+  {-# INLINEABLE (.) #-}
 
 sequenceFirst :: (Functor f) => (f a, b) -> f (a, b)
-sequenceFirst (a, b) = (, b) <$> a
-{-# INLINABLE sequenceFirst #-}
+sequenceFirst (a, b) = (,b) <$> a
+{-# INLINEABLE sequenceFirst #-}
 
 instance (ArrowChoice arr) => Arrow (ErrorA e arr) where
   arr f = ErrorA (arr (Right . f))
@@ -105,22 +104,23 @@ instance (ArrowChoice arr) => ArrowError e (ErrorA e arr) where
   catchA (ErrorA f) (ErrorA g) = ErrorA proc (a, s) -> do
     r <- f -< (a, s)
     case r of
-      Left  e -> g -< (a, (e, s))
+      Left e -> g -< (a, (e, s))
       Right v -> returnA -< Right v
-  {-# INLINABLE catchA #-}
+  {-# INLINEABLE catchA #-}
 
 instance (ArrowReader r arr, ArrowChoice arr) => ArrowReader r (ErrorA e arr) where
   askA = liftA askA
   {-# INLINE askA #-}
   localA (ErrorA f) = ErrorA (localA f)
   {-# INLINE localA #-}
+
 instance (ArrowWriter w arr, ArrowChoice arr) => ArrowWriter w (ErrorA e arr) where
   tellA = liftA tellA
   {-# INLINE tellA #-}
   listenA (ErrorA f) = ErrorA (arr sequenceFirst . listenA f)
   {-# INLINE listenA #-}
 
-newtype ReaderA r arr a b = ReaderA { runReaderA :: arr (a, r) b }
+newtype ReaderA r arr a b = ReaderA {runReaderA :: arr (a, r) b}
 
 instance (Arrow arr) => Category (ReaderA r arr) where
   id = ReaderA (arr fst)
@@ -140,10 +140,10 @@ instance (Arrow arr) => Arrow (ReaderA r arr) where
 
 instance (ArrowChoice arr) => ArrowChoice (ReaderA r arr) where
   left (ReaderA f) = ReaderA proc (e, r) -> case e of
-    Left  a -> arr Left . f -< (a, r)
+    Left a -> arr Left . f -< (a, r)
     Right b -> returnA -< Right b
   {-# INLINE left #-}
-  ReaderA f ||| ReaderA g = ReaderA ((f ||| g) . arr \(e, r) -> ((, r) +++ (, r)) e)
+  ReaderA f ||| ReaderA g = ReaderA ((f ||| g) . arr \(e, r) -> ((,r) +++ (,r)) e)
   {-# INLINE (|||) #-}
 
 instance (ArrowApply arr) => ArrowApply (ReaderA r arr) where
@@ -166,6 +166,7 @@ instance (ArrowError e arr) => ArrowError e (ReaderA r arr) where
   catchA (ReaderA f) (ReaderA g) = ReaderA proc ((a, s), r) ->
     (f -< ((a, s), r)) `catchA` \e -> g -< ((a, (e, s)), r)
   {-# INLINE catchA #-}
+
 instance (ArrowWriter w arr) => ArrowWriter w (ReaderA r arr) where
   tellA = liftA tellA
   {-# INLINE tellA #-}
@@ -173,14 +174,16 @@ instance (ArrowWriter w arr) => ArrowWriter w (ReaderA r arr) where
   {-# INLINE listenA #-}
 
 newtype WriterA w arr a b
-  -- Internally defined using state passing to avoid space leaks. The real constructor should be
-  -- left unexported to avoid misuse.
-  = MkWriterA (arr (a, w) (b, w))
+  = -- Internally defined using state passing to avoid space leaks. The real constructor should be
+    -- left unexported to avoid misuse.
+    MkWriterA (arr (a, w) (b, w))
 
 pattern WriterA :: (Monoid w, Arrow arr) => arr a (b, w) -> WriterA w arr a b
-pattern WriterA { runWriterA } <- MkWriterA (\f -> f . arr (, mempty) -> runWriterA)
+pattern WriterA {runWriterA} <-
+  MkWriterA (\f -> f . arr (,mempty) -> runWriterA)
   where
     WriterA f = MkWriterA (arr (\((b, w), w1) -> let !w2 = w1 <> w in (b, w2)) . first f)
+
 {-# COMPLETE WriterA #-}
 
 instance (Category arr) => Category (WriterA w arr) where
@@ -199,7 +202,7 @@ instance (Arrow arr) => Arrow (WriterA w arr) where
 
 instance (ArrowChoice arr) => ArrowChoice (WriterA w arr) where
   left (MkWriterA f) = MkWriterA proc (e, w) -> case e of
-    Left  a -> arr (first Left) . f -< (a, w)
+    Left a -> arr (first Left) . f -< (a, w)
     Right b -> returnA -< (Right b, w)
   {-# INLINE left #-}
   f ||| g = arr (either id id) . right g . left f
@@ -224,6 +227,7 @@ instance (ArrowError e arr) => ArrowError e (WriterA w arr) where
   catchA (MkWriterA f) (MkWriterA g) = MkWriterA proc ((a, s), w) ->
     (f -< ((a, s), w)) `catchA` \e -> g -< ((a, (e, s)), w)
   {-# INLINE catchA #-}
+
 instance (ArrowReader r arr) => ArrowReader r (WriterA w arr) where
   askA = liftA askA
   {-# INLINE askA #-}

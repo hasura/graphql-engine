@@ -1,25 +1,23 @@
 -- | A simple URL templating that enables interpolating environment variables
 module Data.URL.Template
-  ( URLTemplate
-  , TemplateItem
-  , Variable
-  , printURLTemplate
-  , mkPlainURLTemplate
-  , parseURLTemplate
-  , renderURLTemplate
-  , genURLTemplate
+  ( URLTemplate,
+    TemplateItem,
+    Variable,
+    printURLTemplate,
+    mkPlainURLTemplate,
+    parseURLTemplate,
+    renderURLTemplate,
+    genURLTemplate,
   )
 where
 
-import           Hasura.Prelude
-
-import qualified Data.Environment           as Env
-import qualified Data.Text                  as T
-
-import           Data.Attoparsec.Combinator (lookAhead)
-import           Data.Attoparsec.Text
-import           Data.Text.Extended
-import           Test.QuickCheck
+import Data.Attoparsec.Combinator (lookAhead)
+import Data.Attoparsec.Text
+import Data.Environment qualified as Env
+import Data.Text qualified as T
+import Data.Text.Extended
+import Hasura.Prelude
+import Test.QuickCheck
 
 newtype Variable = Variable {unVariable :: Text}
   deriving (Show, Eq, Generic, Hashable)
@@ -31,11 +29,12 @@ data TemplateItem
   = TIText !Text
   | TIVariable !Variable
   deriving (Show, Eq, Generic)
+
 instance Hashable TemplateItem
 
 printTemplateItem :: TemplateItem -> Text
 printTemplateItem = \case
-  TIText t     -> t
+  TIText t -> t
   TIVariable v -> printVariable v
 
 -- | A String with environment variables enclosed in '{{' and '}}'
@@ -62,7 +61,7 @@ parseURLTemplate t = parseOnly parseTemplate t
     parseTemplateItem :: Parser TemplateItem
     parseTemplateItem =
       (TIVariable <$> parseVariable)
-      <|> (TIText . T.pack <$> manyTill anyChar (lookAhead $ string "{{"))
+        <|> (TIText . T.pack <$> manyTill anyChar (lookAhead $ string "{{"))
 
     parseVariable :: Parser Variable
     parseVariable =
@@ -72,8 +71,11 @@ renderURLTemplate :: Env.Environment -> URLTemplate -> Either String Text
 renderURLTemplate env template =
   case errorVariables of
     [] -> Right $ T.concat $ rights eitherResults
-    _  -> Left $ T.unpack $ "Value for environment variables not found: "
-          <> commaSeparated errorVariables
+    _ ->
+      Left $
+        T.unpack $
+          "Value for environment variables not found: "
+            <> commaSeparated errorVariables
   where
     eitherResults = map renderTemplateItem $ unURLTemplate template
     errorVariables = lefts eitherResults
@@ -81,9 +83,9 @@ renderURLTemplate env template =
       TIText t -> Right t
       TIVariable (Variable var) ->
         let maybeEnvValue = Env.lookupEnv env $ T.unpack var
-          in case maybeEnvValue of
-                  Nothing    -> Left var
-                  Just value -> Right $ T.pack value
+         in case maybeEnvValue of
+              Nothing -> Left var
+              Just value -> Right $ T.pack value
 
 -- QuickCheck generators
 instance Arbitrary Variable where

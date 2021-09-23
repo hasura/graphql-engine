@@ -1,18 +1,18 @@
 module Data.Aeson.Extended
-  ( module J
-  , encodeToStrictText
-  , ToJSONKeyValue (..)
-  , FromJSONKeyValue (..)
-  ) where
+  ( module J,
+    encodeToStrictText,
+    ToJSONKeyValue (..),
+    FromJSONKeyValue (..),
+  )
+where
 
-import           Hasura.Prelude
-
-import           Data.Aeson             as J
-import           Data.Aeson.Text        (encodeToTextBuilder)
-import           Data.Aeson.Types       (Parser)
-import           Data.Functor.Const
-import           Data.Text.Lazy         (toStrict)
-import           Data.Text.Lazy.Builder (toLazyText)
+import Data.Aeson as J
+import Data.Aeson.Text (encodeToTextBuilder)
+import Data.Aeson.Types (Parser)
+import Data.Functor.Const
+import Data.Text.Lazy (toStrict)
+import Data.Text.Lazy.Builder (toLazyText)
+import Hasura.Prelude
 
 encodeToStrictText :: (ToJSON a) => a -> Text
 encodeToStrictText = toStrict . toLazyText . encodeToTextBuilder

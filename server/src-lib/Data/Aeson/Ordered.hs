@@ -5,51 +5,49 @@
 -- Copyright:
 --              (c) 2011-2016 Bryan O'Sullivan
 --              (c) 2011 MailRank, Inc.
-
 module Data.Aeson.Ordered
-  ( Value(..)
-  , Object
-  , Array
-  , safeUnion
-  , value
-  , decode
-  , Data.Aeson.Ordered.toList
-  , fromList
-  , asObject
-  , object
-  , array
-  , insert
-  , delete
-  , adjust
-  , empty
-  , eitherDecode
-  , Data.Aeson.Ordered.lookup
-  , toOrdered
-  , fromOrdered
-  ) where
+  ( Value (..),
+    Object,
+    Array,
+    safeUnion,
+    value,
+    decode,
+    Data.Aeson.Ordered.toList,
+    fromList,
+    asObject,
+    object,
+    array,
+    insert,
+    delete,
+    adjust,
+    empty,
+    eitherDecode,
+    Data.Aeson.Ordered.lookup,
+    toOrdered,
+    fromOrdered,
+  )
+where
 
-import           Control.Applicative              hiding (empty)
-import           Control.Lens                     (prism)
-import           Data.Aeson.Lens                  (AsNumber (..))
-import           Data.Aeson.Parser                (jstring)
-import           Data.Attoparsec.ByteString       (Parser)
-import           Data.Bifunctor                   (second)
-import           Data.ByteString                  (ByteString)
-import           Data.Data                        (Typeable)
-import           Data.Hashable                    (Hashable (..))
-import           Data.Scientific                  (Scientific)
-import           Data.Vector                      (Vector)
-
-import qualified Data.Aeson                       as J
-import qualified Data.Attoparsec.ByteString       as A
-import qualified Data.Attoparsec.ByteString.Char8 as A8
-import qualified Data.ByteString.Lazy             as L
-import qualified Data.HashMap.Strict              as Map
-import qualified Data.HashMap.Strict.InsOrd       as OMap
-import qualified Data.Text                        as T
-import qualified Data.Vector                      as V
-
-import           Hasura.Prelude                   hiding (empty, first, second)
+import Control.Applicative hiding (empty)
+import Control.Lens (prism)
+import Data.Aeson qualified as J
+import Data.Aeson.Lens (AsNumber (..))
+import Data.Aeson.Parser (jstring)
+import Data.Attoparsec.ByteString (Parser)
+import Data.Attoparsec.ByteString qualified as A
+import Data.Attoparsec.ByteString.Char8 qualified as A8
+import Data.Bifunctor (second)
+import Data.ByteString (ByteString)
+import Data.ByteString.Lazy qualified as L
+import Data.Data (Typeable)
+import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.Hashable (Hashable (..))
+import Data.Scientific (Scientific)
+import Data.Text qualified as T
+import Data.Vector (Vector)
+import Data.Vector qualified as V
+import Hasura.Prelude hiding (empty, first, second)
 
 --------------------------------------------------------------------------------
 -- Copied constants from aeson
@@ -75,7 +73,7 @@ import           Hasura.Prelude                   hiding (empty, first, second)
 
 -- | A JSON \"object\" (key\/value map). This is where this type
 -- differs to the 'aeson' package.
-newtype Object = Object_ { unObject_ :: InsOrdHashMap Text Value}
+newtype Object = Object_ {unObject_ :: InsOrdHashMap Text Value}
   deriving stock (Data, Eq, Generic, Read, Show, Typeable)
   deriving newtype (Hashable)
 
@@ -84,12 +82,14 @@ safeUnion :: Object -> Object -> Either String Object
 safeUnion (Object_ x) (Object_ y) =
   fmap
     Object_
-    (traverse
-       id
-       (OMap.unionWithKey
-          (\k _a _b -> Left ("Duplicate key: " ++ T.unpack k))
-          (fmap Right x)
-          (fmap Right y)))
+    ( traverse
+        id
+        ( OMap.unionWithKey
+            (\k _a _b -> Left ("Duplicate key: " ++ T.unpack k))
+            (fmap Right x)
+            (fmap Right y)
+        )
+    )
 
 -- | Empty object.
 empty :: Object
@@ -99,14 +99,14 @@ empty = Object_ mempty
 -- 'splitAt', which is (take k, drop k). Deletes existing key, if any.
 insert :: (Int, Text) -> Value -> Object -> Object
 insert (idx, key) val =
-  Object_ .
-  OMap.fromList .
-  uncurry (<>) .
-  second ((key, val) :) .
-  splitAt idx .
-  OMap.toList .
-  OMap.delete key .
-  unObject_
+  Object_
+    . OMap.fromList
+    . uncurry (<>)
+    . second ((key, val) :)
+    . splitAt idx
+    . OMap.toList
+    . OMap.delete key
+    . unObject_
 
 -- | Lookup a key.
 lookup :: Text -> Object -> Maybe Value
@@ -120,11 +120,11 @@ adjust :: (Value -> Value) -> Text -> Object -> Object
 adjust f key (Object_ omap) = Object_ (OMap.adjust f key omap)
 
 -- | ToList a key.
-toList :: Object -> [(Text,Value)]
+toList :: Object -> [(Text, Value)]
 toList (Object_ omap) = OMap.toList omap
 
 -- | FromList a key.
-fromList :: [(Text,Value)] -> Object
+fromList :: [(Text, Value)] -> Object
 fromList = Object_ . OMap.fromList
 
 -- | A JSON \"array\" (sequence).
@@ -144,12 +144,12 @@ data Value
 instance Hashable Value where
   -- Lifted from Aeson's implementation for 'Value'.
   hashWithSalt s = \case
-    (Object o)   ->   s `hashWithSalt` (0::Int) `hashWithSalt` o
-    (Array a)    ->   foldl' hashWithSalt (s `hashWithSalt` (1::Int)) a
-    (String str) ->   s `hashWithSalt` (2::Int) `hashWithSalt` str
-    (Number n)   ->   s `hashWithSalt` (3::Int) `hashWithSalt` n
-    (Bool b)     ->   s `hashWithSalt` (4::Int) `hashWithSalt` b
-    Null         ->   s `hashWithSalt` (5::Int)
+    (Object o) -> s `hashWithSalt` (0 :: Int) `hashWithSalt` o
+    (Array a) -> foldl' hashWithSalt (s `hashWithSalt` (1 :: Int)) a
+    (String str) -> s `hashWithSalt` (2 :: Int) `hashWithSalt` str
+    (Number n) -> s `hashWithSalt` (3 :: Int) `hashWithSalt` n
+    (Bool b) -> s `hashWithSalt` (4 :: Int) `hashWithSalt` b
+    Null -> s `hashWithSalt` (5 :: Int)
 
 -- Adapter instance for 'lens-aeson' which lets us write optics over the numeric
 -- values in ordered JSON collections as if they were plain 'Scientific' types.
@@ -159,7 +159,7 @@ instance AsNumber Value where
       upcast = Number
       downcast v = case v of
         Number n -> Right n
-        _        -> Left v
+        _ -> Left v
 
 -- | Value pairs to Value
 object :: [(Text, Value)] -> Value
@@ -172,28 +172,31 @@ array = Array . V.fromList
 -- | Convert Aeson Value to Ordered Value
 toOrdered :: (J.ToJSON a) => a -> Value
 toOrdered v = case J.toJSON v of
-  J.Object obj    -> Object $ fromList $ map (second toOrdered) $ Map.toList obj
-  J.Array arr     -> Array $ V.fromList $ map toOrdered $ V.toList arr
-  J.String text   -> String text
+  J.Object obj -> Object $ fromList $ map (second toOrdered) $ Map.toList obj
+  J.Array arr -> Array $ V.fromList $ map toOrdered $ V.toList arr
+  J.String text -> String text
   J.Number number -> Number number
-  J.Bool boolean  -> Bool boolean
-  J.Null          -> Null
+  J.Bool boolean -> Bool boolean
+  J.Null -> Null
 
 -- | Convert Ordered Value to Aeson Value
 fromOrdered :: Value -> J.Value
 fromOrdered v = case v of
-  Object obj    -> J.Object $ Map.fromList $ map (second fromOrdered) $
-                   Data.Aeson.Ordered.toList obj
-  Array arr     -> J.Array $ V.fromList $ map fromOrdered $ V.toList arr
-  String text   -> J.String text
+  Object obj ->
+    J.Object $
+      Map.fromList $
+        map (second fromOrdered) $
+          Data.Aeson.Ordered.toList obj
+  Array arr -> J.Array $ V.fromList $ map fromOrdered $ V.toList arr
+  String text -> J.String text
   Number number -> J.Number number
-  Bool boolean  -> J.Bool boolean
-  Null          -> J.Null
+  Bool boolean -> J.Bool boolean
+  Null -> J.Null
 
 asObject :: IsString s => Value -> Either s Object
 asObject = \case
   Object o -> Right o
-  _        -> Left "expecting ordered object"
+  _ -> Left "expecting ordered object"
 
 --------------------------------------------------------------------------------
 -- Top-level entry points
@@ -220,8 +223,8 @@ arrayValues = do
       v <- (value A.<?> "json list value") <* skipSpace
       ch <- A.satisfy (\w -> w == COMMA || w == CLOSE_SQUARE) A.<?> "',' or ']'"
       if ch == COMMA
-        then skipSpace >> loop (v:acc) (len+1)
-        else return (V.reverse (V.fromListN len (v:acc)))
+        then skipSpace >> loop (v : acc) (len + 1)
+        else return (V.reverse (V.fromListN len (v : acc)))
 {-# INLINE arrayValues #-}
 
 -- Copied from aeson package.
@@ -232,17 +235,17 @@ objectValues = do
   if w == CLOSE_CURLY
     then A.anyWord8 >> return OMap.empty
     else loop OMap.empty
- where
-  -- Why use acc pattern here, you may ask? because 'H.fromList' use 'unsafeInsert'
-  -- and it's much faster because it's doing in place update to the 'HashMap'!
-  loop acc = do
-    k <- (jstring A.<?> "object key") <* skipSpace <* (A8.char ':' A.<?> "':'")
-    v <- (value A.<?> "object value") <* skipSpace
-    ch <- A.satisfy (\w -> w == COMMA || w == CLOSE_CURLY) A.<?> "',' or '}'"
-    let acc' = OMap.insert k v acc
-    if ch == COMMA
-      then skipSpace >> loop acc'
-      else pure acc'
+  where
+    -- Why use acc pattern here, you may ask? because 'H.fromList' use 'unsafeInsert'
+    -- and it's much faster because it's doing in place update to the 'HashMap'!
+    loop acc = do
+      k <- (jstring A.<?> "object key") <* skipSpace <* (A8.char ':' A.<?> "':'")
+      v <- (value A.<?> "object value") <* skipSpace
+      ch <- A.satisfy (\w -> w == COMMA || w == CLOSE_CURLY) A.<?> "',' or '}'"
+      let acc' = OMap.insert k v acc
+      if ch == COMMA
+        then skipSpace >> loop acc'
+        else pure acc'
 {-# INLINE objectValues #-}
 
 -- Copied from aeson package.
@@ -251,18 +254,20 @@ value = do
   skipSpace
   w <- A.peekWord8'
   case w of
-    DOUBLE_QUOTE  -> String <$> jstring
-    OPEN_CURLY    -> A.anyWord8 *> (Object . Object_ <$> objectValues)
-    OPEN_SQUARE   -> A.anyWord8 *> (Array <$> arrayValues)
-    C_f           -> A8.string "false" $> Bool False
-    C_t           -> A8.string "true" $> Bool True
-    C_n           -> A8.string "null" $> Null
-    _              | w >= 48 && w <= 57 || w == 45
-                  -> Number <$> A8.scientific
+    DOUBLE_QUOTE -> String <$> jstring
+    OPEN_CURLY -> A.anyWord8 *> (Object . Object_ <$> objectValues)
+    OPEN_SQUARE -> A.anyWord8 *> (Array <$> arrayValues)
+    C_f -> A8.string "false" $> Bool False
+    C_t -> A8.string "true" $> Bool True
+    C_n -> A8.string "null" $> Null
+    _
+      | w >= 48 && w <= 57 || w == 45 ->
+        Number <$> A8.scientific
       | otherwise -> fail "not a valid json value"
 {-# INLINE value #-}
 
 -- Copied from aeson package.
+
 -- | The only valid whitespace in a JSON document is space, newline,
 -- carriage return, and tab.
 skipSpace :: Parser ()

@@ -1,56 +1,55 @@
 module Network.HTTP.Client.Transformable
-  ( Request
-  , mkRequestThrow
-  , mkRequestEither
-  , url
-  , Network.HTTP.Client.Transformable.method
-  , headers
-  , host
-  , body
-  , port
-  , path
-  , queryParams
-  , timeout
-  , getReqSize
-  , getQueryStr
-  , performRequest
-  , Client.Response(..)
-  , Client.ResponseTimeout
-  , Client.HttpException(..)
-  , Internal.HttpExceptionContent(..)
-  , Client.Manager
-  , Client.responseTimeoutDefault
-  , Client.responseTimeoutMicro
-  , Client.newManager
-  , module Types
-  , module TLSClient
-  ) where
+  ( Request,
+    mkRequestThrow,
+    mkRequestEither,
+    url,
+    Network.HTTP.Client.Transformable.method,
+    headers,
+    host,
+    body,
+    port,
+    path,
+    queryParams,
+    timeout,
+    getReqSize,
+    getQueryStr,
+    performRequest,
+    Client.Response (..),
+    Client.ResponseTimeout,
+    Client.HttpException (..),
+    Internal.HttpExceptionContent (..),
+    Client.Manager,
+    Client.responseTimeoutDefault,
+    Client.responseTimeoutMicro,
+    Client.newManager,
+    module Types,
+    module TLSClient,
+  )
+where
 
-import           Prelude
-
-import           Control.Exception            (throw)
-import           Control.Lens                 (Lens', lens, set, view)
-import           Control.Monad.Catch          (MonadThrow, fromException)
-import           Data.Bifunctor               (bimap)
-import           Data.ByteString              (ByteString)
-import           Data.Function                ((&))
-import           Data.Int                     (Int64)
-import           Data.Maybe                   (fromMaybe)
-import           Network.HTTP.Client.TLS      as TLSClient
-import           Network.HTTP.Types           as Types
-
-import qualified Data.Aeson                   as J
-import qualified Data.ByteString              as B
-import qualified Data.ByteString.Char8        as C8
-import qualified Data.ByteString.Lazy         as BL
-import qualified Data.CaseInsensitive         as CI
-import qualified Data.Text                    as T
-import qualified Data.Text.Encoding           as TE
-import qualified Network.HTTP.Client          as Client
-import qualified Network.HTTP.Client.Internal as Internal
-import qualified Network.HTTP.Conduit         as NHS
-import qualified Network.HTTP.Simple          as NHS
-import qualified Network.URI                  as URI
+import Control.Exception (throw)
+import Control.Lens (Lens', lens, set, view)
+import Control.Monad.Catch (MonadThrow, fromException)
+import Data.Aeson qualified as J
+import Data.Bifunctor (bimap)
+import Data.ByteString (ByteString)
+import Data.ByteString qualified as B
+import Data.ByteString.Char8 qualified as C8
+import Data.ByteString.Lazy qualified as BL
+import Data.CaseInsensitive qualified as CI
+import Data.Function ((&))
+import Data.Int (Int64)
+import Data.Maybe (fromMaybe)
+import Data.Text qualified as T
+import Data.Text.Encoding qualified as TE
+import Network.HTTP.Client qualified as Client
+import Network.HTTP.Client.Internal qualified as Internal
+import Network.HTTP.Client.TLS as TLSClient
+import Network.HTTP.Conduit qualified as NHS
+import Network.HTTP.Simple qualified as NHS
+import Network.HTTP.Types as Types
+import Network.URI qualified as URI
+import Prelude
 
 -- | @Network.HTTP.Client@.'Client.Request' stores the request body in a sum
 -- type which has a case containing IO along with some other unwieldy cases.
@@ -76,24 +75,25 @@ import qualified Network.URI                  as URI
 --
 -- >  import qualified Network.HTTP.Client.Transformable as Transformable
 data Request = Request
-  { rdRequest :: Client.Request
-  , rdBody    :: Maybe BL.ByteString
-  } deriving Show
+  { rdRequest :: Client.Request,
+    rdBody :: Maybe BL.ByteString
+  }
+  deriving (Show)
 
 instance J.ToJSON Request where
-  toJSON req@Request{..} =
+  toJSON req@Request {..} =
     J.object
-      [ "url"             J..= view url req
-      , "method"          J..= TE.decodeUtf8 (view method req)
-      , "headers"         J..= fmap (bimap (TE.decodeUtf8 . CI.original) TE.decodeUtf8) (view headers req)
-      , "body"            J..= fmap (TE.decodeUtf8 . BL.toStrict) rdBody
-      , "query_string"     J..= TE.decodeUtf8 (Client.queryString rdRequest)
-      , "response_timeout" J..= serializeRT (view timeout req)
+      [ "url" J..= view url req,
+        "method" J..= TE.decodeUtf8 (view method req),
+        "headers" J..= fmap (bimap (TE.decodeUtf8 . CI.original) TE.decodeUtf8) (view headers req),
+        "body" J..= fmap (TE.decodeUtf8 . BL.toStrict) rdBody,
+        "query_string" J..= TE.decodeUtf8 (Client.queryString rdRequest),
+        "response_timeout" J..= serializeRT (view timeout req)
       ]
     where
       serializeRT = \case
         Internal.ResponseTimeoutMicro i -> show i
-        Internal.ResponseTimeoutNone    -> "None"
+        Internal.ResponseTimeoutNone -> "None"
         Internal.ResponseTimeoutDefault -> "default"
 
 -- | Convert a URL into a Request value. This function can throw
@@ -110,7 +110,7 @@ mkRequestEither url' =
     Right res -> Right res
     Left e -> case fromException @Client.HttpException e of
       Just httpExcept -> Left httpExcept
-      Nothing         -> throw e
+      Nothing -> throw e
 
 -- | Url is 'materialized view' into `Request` consisting of
 -- concatenation of `host`, `port`, `queryParams`, and `path`.
@@ -122,78 +122,79 @@ url :: Lens' Request T.Text
 url = lens getUrl setUrl
   where
     getUrl :: Request -> T.Text
-    getUrl Request{rdRequest} = T.pack $ URI.uriToString id (Client.getUri rdRequest) mempty
+    getUrl Request {rdRequest} = T.pack $ URI.uriToString id (Client.getUri rdRequest) mempty
 
     setUrl :: Request -> T.Text -> Request
     setUrl req url' = fromMaybe req $ do
       uri <- URI.parseURI (T.unpack url')
-      URI.URIAuth{..} <- URI.uriAuthority uri
+      URI.URIAuth {..} <- URI.uriAuthority uri
       let host' = C8.pack $ uriUserInfo <> uriRegName
           port' = case uriPort of
-            ':':newPort -> read @Int newPort
-            _           -> 80
+            ':' : newPort -> read @Int newPort
+            _ -> 80
           queryString = Types.queryTextToQuery $ Types.parseQueryText $ C8.pack $ URI.uriQuery uri
           path' = C8.pack $ URI.uriPath uri
 
-      pure $ req & set host host'
-                 & set port port'
-                 & set queryParams queryString
-                 & set path path'
+      pure $
+        req & set host host'
+          & set port port'
+          & set queryParams queryString
+          & set path path'
 
 body :: Lens' Request (Maybe BL.ByteString)
 body = lens rdBody setBody
   where
     setBody :: Request -> Maybe BL.ByteString -> Request
-    setBody req body' = req { rdBody = body' }
+    setBody req body' = req {rdBody = body'}
 
 headers :: Lens' Request [Types.Header]
 headers = lens getHeaders setHeaders
   where
     getHeaders :: Request -> [Types.Header]
-    getHeaders Request{rdRequest} = Client.requestHeaders rdRequest
+    getHeaders Request {rdRequest} = Client.requestHeaders rdRequest
 
     setHeaders :: Request -> [Types.Header] -> Request
-    setHeaders req@Request{rdRequest} headers' =
-      req { rdRequest = NHS.setRequestHeaders headers' rdRequest }
+    setHeaders req@Request {rdRequest} headers' =
+      req {rdRequest = NHS.setRequestHeaders headers' rdRequest}
 
 host :: Lens' Request B.ByteString
 host = lens getHost setHost
   where
     getHost :: Request -> B.ByteString
-    getHost Request{rdRequest} = Client.host rdRequest
+    getHost Request {rdRequest} = Client.host rdRequest
 
     setHost :: Request -> B.ByteString -> Request
-    setHost req@Request{rdRequest} host' =
-      req { rdRequest = NHS.setRequestHost host' rdRequest }
+    setHost req@Request {rdRequest} host' =
+      req {rdRequest = NHS.setRequestHost host' rdRequest}
 
 method :: Lens' Request B.ByteString
 method = lens getMethod setMethod
   where
     getMethod :: Request -> B.ByteString
-    getMethod Request{rdRequest} = Client.method rdRequest
+    getMethod Request {rdRequest} = Client.method rdRequest
 
     setMethod :: Request -> B.ByteString -> Request
-    setMethod req@Request{rdRequest} method' = req { rdRequest = NHS.setRequestMethod method' rdRequest }
+    setMethod req@Request {rdRequest} method' = req {rdRequest = NHS.setRequestMethod method' rdRequest}
 
 path :: Lens' Request B.ByteString
 path = lens getPath setPath
   where
     getPath :: Request -> B.ByteString
-    getPath Request{rdRequest} = Client.path rdRequest
+    getPath Request {rdRequest} = Client.path rdRequest
 
     setPath :: Request -> B.ByteString -> Request
-    setPath  req@Request{rdRequest} p =
-      req { rdRequest = rdRequest { Client.path = p } }
+    setPath req@Request {rdRequest} p =
+      req {rdRequest = rdRequest {Client.path = p}}
 
 port :: Lens' Request Int
 port = lens getPort setPort
   where
     getPort :: Request -> Int
-    getPort Request{rdRequest} = Client.port rdRequest
+    getPort Request {rdRequest} = Client.port rdRequest
 
     setPort :: Request -> Int -> Request
-    setPort req@Request{rdRequest} i =
-      req { rdRequest = NHS.setRequestPort i rdRequest }
+    setPort req@Request {rdRequest} i =
+      req {rdRequest = NHS.setRequestPort i rdRequest}
 
 getQueryStr :: Request -> ByteString
 getQueryStr = Types.renderQuery True . view queryParams
@@ -202,28 +203,28 @@ queryParams :: Lens' Request NHS.Query
 queryParams = lens getQueryParams setQueryParams
   where
     getQueryParams :: Request -> NHS.Query
-    getQueryParams Request{rdRequest} = NHS.getRequestQueryString rdRequest
+    getQueryParams Request {rdRequest} = NHS.getRequestQueryString rdRequest
 
     setQueryParams :: Request -> NHS.Query -> Request
-    setQueryParams req@Request{rdRequest} params = req { rdRequest = NHS.setQueryString params rdRequest }
+    setQueryParams req@Request {rdRequest} params = req {rdRequest = NHS.setQueryString params rdRequest}
 
 timeout :: Lens' Request Client.ResponseTimeout
 timeout = lens getTimeout setTimeout
   where
     getTimeout :: Request -> Client.ResponseTimeout
-    getTimeout Request{rdRequest} = Client.responseTimeout rdRequest
+    getTimeout Request {rdRequest} = Client.responseTimeout rdRequest
 
     setTimeout :: Request -> Client.ResponseTimeout -> Request
-    setTimeout req@Request{rdRequest} timeout' =
-      let updatedReq = rdRequest { Client.responseTimeout = timeout' }
-      in req { rdRequest = updatedReq }
+    setTimeout req@Request {rdRequest} timeout' =
+      let updatedReq = rdRequest {Client.responseTimeout = timeout'}
+       in req {rdRequest = updatedReq}
 
 getReqSize :: Request -> Int64
-getReqSize Request{rdBody} = maybe 0 BL.length rdBody
+getReqSize Request {rdBody} = maybe 0 BL.length rdBody
 
 toRequest :: Request -> Client.Request
-toRequest Request{..} = case rdBody of
-  Nothing    -> rdRequest
+toRequest Request {..} = case rdBody of
+  Nothing -> rdRequest
   Just body' -> NHS.setRequestBody (Client.RequestBodyLBS body') rdRequest
 
 performRequest :: Request -> Client.Manager -> IO (Client.Response BL.ByteString)

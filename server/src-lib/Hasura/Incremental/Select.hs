@@ -1,35 +1,34 @@
 {-# OPTIONS_HADDOCK not-home #-}
 
 module Hasura.Incremental.Select
-  ( Select(..)
-  , ConstS(..)
-  , selectKey
-  , FieldS(..)
-  , UniqueS
-  , newUniqueS
-  , DMapS(..)
+  ( Select (..),
+    ConstS (..),
+    selectKey,
+    FieldS (..),
+    UniqueS,
+    newUniqueS,
+    DMapS (..),
 
-  -- * Re-exports
-  , GEq(..)
-  , GCompare(..)
-  , GOrdering(..)
-  , (:~:)(..)
-  ) where
+    -- * Re-exports
+    GEq (..),
+    GCompare (..),
+    GOrdering (..),
+    (:~:) (..),
+  )
+where
 
-import           Hasura.Prelude
-
-import qualified Data.Dependent.Map   as DM
-import qualified Data.HashMap.Strict  as M
-
-import           Control.Monad.Unique
-import           Data.GADT.Compare
-import           Data.Kind
-import           Data.Proxy           (Proxy (..))
-import           Data.Type.Equality
-import           GHC.OverloadedLabels (IsLabel (..))
-import           GHC.Records          (HasField (..))
-import           GHC.TypeLits         (KnownSymbol, sameSymbol, symbolVal)
-import           Unsafe.Coerce        (unsafeCoerce)
+import Control.Monad.Unique
+import Data.Dependent.Map qualified as DM
+import Data.GADT.Compare
+import Data.HashMap.Strict qualified as M
+import Data.Kind
+import Data.Proxy (Proxy (..))
+import Data.Type.Equality
+import GHC.OverloadedLabels (IsLabel (..))
+import GHC.Records (HasField (..))
+import GHC.TypeLits (KnownSymbol, sameSymbol, symbolVal)
+import Hasura.Prelude
+import Unsafe.Coerce (unsafeCoerce)
 
 -- | The 'Select' class provides a way to access subparts of a product type using a reified
 -- 'Selector'. A @'Selector' a b@ is essentially a function from @a@ to @b@, and indeed 'select'
@@ -69,7 +68,7 @@ selectKey = select . ConstS
 
 instance (Eq k) => GEq (ConstS k a) where
   ConstS a `geq` ConstS b
-    | a == b    = Just Refl
+    | a == b = Just Refl
     | otherwise = Nothing
 
 instance (Ord k) => GCompare (ConstS k a) where
@@ -91,7 +90,7 @@ instance GEq (FieldS r) where
     -- dependency to enforce this rather than a type family, and functional dependencies don’t
     -- provide evidence, so we have to use `unsafeCoerce` here. Yuck!
     Just Refl -> Just (unsafeCoerce Refl)
-    Nothing   -> Nothing
+    Nothing -> Nothing
 
 instance GCompare (FieldS r) where
   FieldS a `gcompare` FieldS b = case sameSymbol a b of
@@ -107,6 +106,7 @@ instance GCompare (FieldS r) where
 -- creation of a dynamically-extensible sum type, where new constructors can be created at runtime
 -- using 'newUniqueS'.
 type role UniqueS nominal
+
 newtype UniqueS a = UniqueS Unique
   deriving (Eq)
 
@@ -119,7 +119,7 @@ instance GEq UniqueS where
     -- This use of `unsafeCoerce` is safe as long as we don’t export the constructor of `UniqueS`.
     -- Because a `UniqueS` is, in fact, unique, then we can be certain that equality of 'UniqueS's
     -- implies equality of their argument types.
-    | a == b    = Just (unsafeCoerce Refl)
+    | a == b = Just (unsafeCoerce Refl)
     | otherwise = Nothing
 
 instance GCompare UniqueS where
@@ -135,7 +135,7 @@ data DMapS k f a where
 instance (GEq k) => GEq (DMapS k f) where
   DMapS a `geq` DMapS b = case a `geq` b of
     Just Refl -> Just Refl
-    Nothing   -> Nothing
+    Nothing -> Nothing
 
 instance (GCompare k) => GCompare (DMapS k f) where
   DMapS a `gcompare` DMapS b = case a `gcompare` b of

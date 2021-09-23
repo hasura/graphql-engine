@@ -1,44 +1,49 @@
 module Hasura.RQL.Types.QueryTags where
 
-import           Hasura.Prelude
-
-import           Data.Aeson
-import qualified Data.Aeson.Casing  as J
-import qualified Data.Aeson.TH      as J
-import qualified Data.Text          as T
-import           Hasura.Incremental (Cacheable (..))
+import Data.Aeson
+import Data.Aeson.Casing qualified as J
+import Data.Aeson.TH qualified as J
+import Data.Text qualified as T
+import Hasura.Incremental (Cacheable (..))
+import Hasura.Prelude
 
 data QueryTagsFormat
   = Standard
   | SQLCommenter
   deriving (Show, Eq, Generic)
-instance Cacheable QueryTagsFormat
-instance Hashable  QueryTagsFormat
-instance NFData    QueryTagsFormat
 
+instance Cacheable QueryTagsFormat
+
+instance Hashable QueryTagsFormat
+
+instance NFData QueryTagsFormat
 
 instance ToJSON QueryTagsFormat where
   toJSON = \case
-    Standard     -> "standard"
+    Standard -> "standard"
     SQLCommenter -> "sqlcommenter"
 
 instance FromJSON QueryTagsFormat where
   parseJSON = withText "QueryTagsFormat" $
     \t -> case T.toLower t of
-      "standard"     -> pure Standard
+      "standard" -> pure Standard
       "sqlcommenter" -> pure SQLCommenter
-      _              -> fail errMsg
+      _ -> fail errMsg
     where
       errMsg = "Not a valid query tags format value. Use either standard or sqlcommenter"
 
-data QueryTagsConfig
-  = QueryTagsConfig
-  { _qtcDisabled :: !Bool
-  , _qtcFormat   :: !QueryTagsFormat
-  } deriving (Show, Eq, Generic)
+data QueryTagsConfig = QueryTagsConfig
+  { _qtcDisabled :: !Bool,
+    _qtcFormat :: !QueryTagsFormat
+  }
+  deriving (Show, Eq, Generic)
+
 instance Cacheable QueryTagsConfig
+
 instance Hashable QueryTagsConfig
+
 instance NFData QueryTagsConfig
+
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''QueryTagsConfig)
 
 instance FromJSON QueryTagsConfig where

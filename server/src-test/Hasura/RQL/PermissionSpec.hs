@@ -1,17 +1,14 @@
 module Hasura.RQL.PermissionSpec (spec) where
 
-import           Hasura.Prelude
-
-import           Hasura.RQL.DDL.Schema.Cache
-import           Hasura.RQL.DDL.Schema.Cache.Permission
-import           Hasura.RQL.Types.Action
-import           Hasura.RQL.Types.Roles
-import           Hasura.Session
-
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashSet                           as Set
-
-import           Test.Hspec
+import Data.HashMap.Strict qualified as Map
+import Data.HashSet qualified as Set
+import Hasura.Prelude
+import Hasura.RQL.DDL.Schema.Cache
+import Hasura.RQL.DDL.Schema.Cache.Permission
+import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.Roles
+import Hasura.Session
+import Test.Hspec
 
 spec :: Spec
 spec = do
@@ -47,7 +44,7 @@ booleanPermissionSpec = do
       Map.lookup inheritedRole1Name processedPermissions
         `shouldBe` (Just (ActionPermissionInfo inheritedRole1Name))
     it "when a role doesn't have a metadata permission and at least one of its parents has, then the inherited role should inherit the permission" $
-      Map.lookup  inheritedRole2Name processedPermissions
+      Map.lookup inheritedRole2Name processedPermissions
         `shouldBe` (Just (ActionPermissionInfo inheritedRole2Name))
     it "when a role doesn't have a metadata permission and none of the parents have permissions, then the inherited role should not inherit the permission" $
-      Map.lookup inheritedRole3Name processedPermissions`shouldBe` Nothing
+      Map.lookup inheritedRole3Name processedPermissions `shouldBe` Nothing

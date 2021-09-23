@@ -1,16 +1,14 @@
 -- | Module related to async action query subscriptions
 module Hasura.GraphQL.Execute.Action.Subscription where
 
-import           Hasura.Metadata.Class
-import           Hasura.Prelude
-
-import           Hasura.GraphQL.Execute.Action
-import           Hasura.GraphQL.Execute.LiveQuery.State
-
-import qualified Control.Concurrent.Extended            as C
-import qualified Control.Concurrent.STM                 as STM
-import qualified Data.List.NonEmpty                     as NE
-import qualified Hasura.GraphQL.Execute.LiveQuery.TMap  as TMap
+import Control.Concurrent.Extended qualified as C
+import Control.Concurrent.STM qualified as STM
+import Data.List.NonEmpty qualified as NE
+import Hasura.GraphQL.Execute.Action
+import Hasura.GraphQL.Execute.LiveQuery.State
+import Hasura.GraphQL.Execute.LiveQuery.TMap qualified as TMap
+import Hasura.Metadata.Class
+import Hasura.Prelude
 
 {- Note [Async action subscriptions]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -39,17 +37,17 @@ We can't support multiple async query fields of different kinds in a single subs
 
 -- | A forever running thread which processes async action subscriptions.
 -- See Note [Async action subscriptions]
-asyncActionSubscriptionsProcessor
-  :: ( MonadIO m
-     , MonadMetadataStorage (MetadataStorageT m)
-     )
-  => AsyncActionSubscriptionState -> m void
+asyncActionSubscriptionsProcessor ::
+  ( MonadIO m,
+    MonadMetadataStorage (MetadataStorageT m)
+  ) =>
+  AsyncActionSubscriptionState ->
+  m void
 asyncActionSubscriptionsProcessor subsState = forever do
   -- Collect all active async query subscription operations
   opList <- liftIO $ STM.atomically do
     l <- TMap.toList subsState
     onNothing (NE.nonEmpty l) STM.retry -- Continue only if there are any active subscription operations
-
   for_ opList $ \(opId, AsyncActionQueryLive actionIds onError op) -> do
     -- Fetch action webhook responses from the metadata storage
     actionLogMapE <- runExceptT $ fetchActionLogResponses $ toList actionIds
@@ -64,20 +62,20 @@ asyncActionSubscriptionsProcessor subsState = forever do
             when actionsComplete $ do
               sendCompleted
               removeAsyncActionLiveQuery subsState opId
-
           LAAQOnSourceDB (LiveAsyncActionQueryOnSource currLqId prevLogMap lqRestarter) -> do
             -- Actions webhook responses aren't updated in metadata storage, hence no need to restart the live query
             unless (prevLogMap == actionLogMap) $ do
               maybeNewLqId <- lqRestarter currLqId actionLogMap
-              if actionsComplete then removeAsyncActionLiveQuery subsState opId
+              if actionsComplete
+                then removeAsyncActionLiveQuery subsState opId
                 else do
-                case maybeNewLqId of
-                  Nothing      ->
-                    -- Happens only when restarting a live query fails.
-                    -- There's no point in holding the operation in the state.
-                    removeAsyncActionLiveQuery subsState opId
-                  Just newLqId ->
-                    addAsyncActionLiveQuery subsState opId actionIds onError $
-                      LAAQOnSourceDB $ LiveAsyncActionQueryOnSource newLqId actionLogMap lqRestarter
+                  case maybeNewLqId of
+                    Nothing ->
+                      -- Happens only when restarting a live query fails.
+                      -- There's no point in holding the operation in the state.
+                      removeAsyncActionLiveQuery subsState opId
+                    Just newLqId ->
+                      addAsyncActionLiveQuery subsState opId actionIds onError $
+                        LAAQOnSourceDB $ LiveAsyncActionQueryOnSource newLqId actionLogMap lqRestarter
   -- Sleep for a second
   liftIO $ C.sleep $ seconds 1

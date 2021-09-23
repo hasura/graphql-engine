@@ -1,40 +1,40 @@
 -- | A simple implementation of /incremental build rules/, which can be used to avoid unnecessary
 -- recomputation on incrementally-changing input. See 'Rule' for more details.
-module Hasura.Incremental (
-  -- * The @Rule@ datatype
-    Rule
-  , Result
-  , build
-  , rebuild
-  , rebuildRule
-  , result
+module Hasura.Incremental
+  ( -- * The @Rule@ datatype
+    Rule,
+    Result,
+    build,
+    rebuild,
+    rebuildRule,
+    result,
 
-  -- * Abstract interface
-  , ArrowDistribute(..)
-  , ArrowCache(..)
-  , MonadDepend(..)
-  , DependT
+    -- * Abstract interface
+    ArrowDistribute (..),
+    ArrowCache (..),
+    MonadDepend (..),
+    DependT,
 
-  -- * Fine-grained dependencies
-  , Dependency
-  , Select(Selector)
-  , selectD
-  , selectKeyD
-  , Cacheable(..)
-  , Accesses
+    -- * Fine-grained dependencies
+    Dependency,
+    Select (Selector),
+    selectD,
+    selectKeyD,
+    Cacheable (..),
+    Accesses,
 
-  -- * Cache invalidation
-  , InvalidationKey
-  , initialInvalidationKey
-  , invalidate
-  ) where
+    -- * Cache invalidation
+    InvalidationKey,
+    initialInvalidationKey,
+    invalidate,
+  )
+where
 
-import           Hasura.Prelude
-
-import           Hasura.Incremental.Internal.Cache
-import           Hasura.Incremental.Internal.Dependency
-import           Hasura.Incremental.Internal.Rule
-import           Hasura.Incremental.Select
+import Hasura.Incremental.Internal.Cache
+import Hasura.Incremental.Internal.Dependency
+import Hasura.Incremental.Internal.Rule
+import Hasura.Incremental.Select
+import Hasura.Prelude
 
 -- | A simple helper type that can be used to implement explicit cache invalidation. Internally,
 -- each 'InvalidationKey' is a counter; 'initialInvalidationKey' starts the counter at 0 and

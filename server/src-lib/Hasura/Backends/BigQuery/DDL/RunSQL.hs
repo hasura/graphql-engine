@@ -1,52 +1,46 @@
-{- |
-Working example:
-
-$ curl -XPOST http://localhost:8080/v2/query -d @- <<EOF
-{
-  "type":"bigquery_run_sql",
-  "args": {
-    "sql":"select 3 * 4 as foo, \"Hello, World!\" as bar",
-    "source":"chinook"
-  }
-}
-EOF
-{"result_type":"TuplesOk","result":[["foo","bar"],["12","Hello, World!"]]}
--}
-
+-- |
+-- Working example:
+--
+-- \$ curl -XPOST http://localhost:8080/v2/query -d @- <<EOF
+-- {
+--   "type":"bigquery_run_sql",
+--   "args": {
+--     "sql":"select 3 * 4 as foo, \"Hello, World!\" as bar",
+--     "source":"chinook"
+--   }
+-- }
+-- EOF
+-- {"result_type":"TuplesOk","result":[["foo","bar"],["12","Hello, World!"]]}
 module Hasura.Backends.BigQuery.DDL.RunSQL
-  ( runSQL
-  , runDatabaseInspection
-  , BigQueryRunSQL
+  ( runSQL,
+    runDatabaseInspection,
+    BigQueryRunSQL,
   )
 where
 
-import           Hasura.Prelude
+import Data.Aeson qualified as J
+import Data.Aeson.TH (deriveJSON)
+import Data.Aeson.Text (encodeToLazyText)
+import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.Text qualified as T
+import Data.Text.Lazy qualified as LT
+import Data.Vector qualified as V
+import Hasura.Backends.BigQuery.Execute qualified as Execute
+import Hasura.Backends.BigQuery.Source (BigQuerySourceConfig (..))
+import Hasura.Backends.BigQuery.Types qualified as BigQuery
+import Hasura.Base.Error
+import Hasura.EncJSON
+import Hasura.Prelude
+import Hasura.RQL.DDL.Schema (RunSQLRes (..))
+import Hasura.RQL.Types (CacheRWM, MetadataM, SourceName, askSourceConfig)
+import Hasura.SQL.Backend
 
-import qualified Data.Aeson                       as J
-import qualified Data.HashMap.Strict.InsOrd       as OMap
-import qualified Data.Text                        as T
-import qualified Data.Text.Lazy                   as LT
-import qualified Data.Vector                      as V
+data BigQueryRunSQL = BigQueryRunSQL
+  { _mrsSql :: Text,
+    _mrsSource :: !SourceName
+  }
+  deriving (Show, Eq)
 
-import           Data.Aeson.TH                    (deriveJSON)
-import           Data.Aeson.Text                  (encodeToLazyText)
-
-import qualified Hasura.Backends.BigQuery.Execute as Execute
-import qualified Hasura.Backends.BigQuery.Types   as BigQuery
-
-import           Hasura.Backends.BigQuery.Source  (BigQuerySourceConfig (..))
-import           Hasura.Base.Error
-import           Hasura.EncJSON
-import           Hasura.RQL.DDL.Schema            (RunSQLRes (..))
-import           Hasura.RQL.Types                 (CacheRWM, MetadataM, SourceName, askSourceConfig)
-import           Hasura.SQL.Backend
-
-
-data BigQueryRunSQL
-  = BigQueryRunSQL
-  { _mrsSql    :: Text
-  , _mrsSource :: !SourceName
-  } deriving (Show, Eq)
 $(deriveJSON hasuraJSON ''BigQueryRunSQL)
 
 runSQL ::
@@ -61,10 +55,15 @@ runDatabaseInspection ::
   BigQueryRunSQL ->
   m EncJSON
 runDatabaseInspection (BigQueryRunSQL _query source) = do
-  BigQuerySourceConfig{_scDatasets = dataSets} <- askSourceConfig @'BigQuery source
-  let queries = ["SELECT *, ARRAY(SELECT as STRUCT * from " <>
-                dataSet <> ".INFORMATION_SCHEMA.COLUMNS WHERE table_name = t.table_name) as columns from " <>
-                dataSet <> ".INFORMATION_SCHEMA.TABLES as t" | dataSet <- dataSets]
+  BigQuerySourceConfig {_scDatasets = dataSets} <- askSourceConfig @'BigQuery source
+  let queries =
+        [ "SELECT *, ARRAY(SELECT as STRUCT * from "
+            <> dataSet
+            <> ".INFORMATION_SCHEMA.COLUMNS WHERE table_name = t.table_name) as columns from "
+            <> dataSet
+            <> ".INFORMATION_SCHEMA.TABLES as t"
+          | dataSet <- dataSets
+        ]
       query' = T.intercalate " UNION ALL " queries
   runSQL_ recordSetAsSchema (BigQueryRunSQL query' source)
 
@@ -83,8 +82,9 @@ runSQL_ f (BigQueryRunSQL query source) = do
     Left queryError -> throw400 BigQueryError (tshow queryError) -- TODO: Pretty print the error type.
     Right recordSet ->
       pure
-        (encJFromJValue
-           (RunSQLRes "TuplesOk" (f recordSet)))
+        ( encJFromJValue
+            (RunSQLRes "TuplesOk" (f recordSet))
+        )
 
 recordSetAsHeaderAndRows :: Execute.RecordSet -> J.Value
 recordSetAsHeaderAndRows Execute.RecordSet {rows} = J.toJSON (thead : tbody)
@@ -100,6 +100,10 @@ recordSetAsHeaderAndRows Execute.RecordSet {rows} = J.toJSON (thead : tbody)
 recordSetAsSchema :: Execute.RecordSet -> J.Value
 recordSetAsSchema rs@(Execute.RecordSet {rows}) =
   recordSetAsHeaderAndRows $
-    rs { Execute.rows = OMap.adjust
-                  (Execute.TextOutputValue . LT.toStrict . encodeToLazyText . J.toJSON)
-                  (Execute.FieldNameText "columns") <$> rows }
+    rs
+      { Execute.rows =
+          OMap.adjust
+            (Execute.TextOutputValue . LT.toStrict . encodeToLazyText . J.toJSON)
+            (Execute.FieldNameText "columns")
+            <$> rows
+      }
