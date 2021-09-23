@@ -135,6 +135,66 @@ var testMigrateApplySkipExecution = func(projectDirectory string, globalFlags []
 	})
 }
 
+var testMigrateApplyAllDatabases = func(projectDirectory string, databases ...string) {
+	Context("migrate apply", func() {
+		for _, database := range databases {
+			testutil.RunCommandAndSucceed(testutil.CmdOpts{
+				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;", "--database-name", database},
+				WorkingDirectory: projectDirectory,
+			})
+		}
+
+		session := testutil.Hasura(testutil.CmdOpts{
+			Args:             []string{"migrate", "apply", "--all-databases"},
+			WorkingDirectory: projectDirectory,
+		})
+		wantKeywordList := []string{
+			"migrations applied",
+		}
+
+		Eventually(session, timeout).Should(Exit(0))
+		for _, keyword := range wantKeywordList {
+			Expect(session.Err.Contents()).Should(ContainSubstring(keyword))
+		}
+	})
+}
+
+var testMigrateApplyAllDatabasesWithError = func(projectDirectory string, databases ...string) {
+	Context("migrate apply", func() {
+		for _, database := range databases {
+			testutil.RunCommandAndSucceed(testutil.CmdOpts{
+				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;", "--database-name", database},
+				WorkingDirectory: projectDirectory,
+			})
+		}
+
+		if len(databases) > 0 {
+			testutil.RunCommandAndSucceed(testutil.CmdOpts{
+				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;", "--database-name", databases[0]},
+				WorkingDirectory: projectDirectory,
+			})
+		}
+
+		session := testutil.Hasura(testutil.CmdOpts{
+			Args:             []string{"migrate", "apply", "--all-databases"},
+			WorkingDirectory: projectDirectory,
+		})
+		wantKeywordList := []string{
+			fmt.Sprintf("operation failed on : %s", databases[0]),
+		}
+
+		if len(databases) > 0 {
+			Eventually(session, timeout).Should(Exit(1))
+			for _, keyword := range wantKeywordList {
+				Expect(session.Err.Contents()).Should(ContainSubstring(keyword))
+			}
+		} else {
+			Eventually(session, timeout).Should(Exit(0))
+		}
+
+	})
+}
+
 var testProgressBar = func(projectDirectory string) {
 	progressBar := "Applying migrations:  . / 8 .*%"
 	Context("migrate apply should display progress bar", func() {
@@ -287,6 +347,45 @@ var _ = Describe("hasura migrate apply (config v3)", func() {
 }
 `, pgSource)
 		createTable := strings.NewReader(createTableString)
+		testByRunningAPI(hgeEndpoint, "v2/query", createTable)
+	})
+	It("should apply the migrations on all-databases", func() {
+		testMigrateApplyAllDatabases(projectDirectory, pgSource, citusSource, mssqlSource)
+		pgBody := fmt.Sprintf(`
+{
+    "type": "run_sql",
+    "args": {
+        "sql": "CREATE TABLE testing.test();",
+		"source": "%s"
+    }
+}
+`, pgSource)
+		createTable := strings.NewReader(pgBody)
+		testByRunningAPI(hgeEndpoint, "v2/query", createTable)
+		citusBody := fmt.Sprintf(`
+{
+    "type": "citus_run_sql",
+    "args": {
+        "sql": "CREATE TABLE testing.test();",
+		"source": "%s"
+    }
+}
+`, citusSource)
+		createTable = strings.NewReader(citusBody)
+		testByRunningAPI(hgeEndpoint, "v2/query", createTable)
+	})
+	It("should the migrations on all-databases except first database and it should exit with code 1", func() {
+		testMigrateApplyAllDatabasesWithError(projectDirectory, pgSource, citusSource, mssqlSource)
+		citusBody := fmt.Sprintf(`
+{
+    "type": "citus_run_sql",
+    "args": {
+        "sql": "CREATE TABLE testing.test();",
+		"source": "%s"
+    }
+}
+`, citusSource)
+		createTable := strings.NewReader(citusBody)
 		testByRunningAPI(hgeEndpoint, "v2/query", createTable)
 	})
 })

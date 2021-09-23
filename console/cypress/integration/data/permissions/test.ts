@@ -16,7 +16,7 @@ import { getIndexRoute } from '../../../helpers/dataHelpers';
 
 const setup = () => {
   describe('Check Data Tab', () => {
-    it('Clicking on Data tab opens the correct route', () => {
+    it('Visiting the data URL opens the correct route', () => {
       // Visit the index route
       cy.visit(getIndexRoute());
       // Get and set validation metadata
