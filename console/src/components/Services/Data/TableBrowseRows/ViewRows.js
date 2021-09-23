@@ -938,18 +938,17 @@ const ViewRows = props => {
     const PaginationWithOnlyNav = () => {
       const newPage = curFilter.offset / curFilter.limit;
       return (
-        <div className={`row flex justify-around`}>
-          <div>
+        <div className={`row`} style={{ maxWidth: '500px' }}>
+          <div className="col-xs-2">
             <button
-              className="btn bg-gray-100"
+              className="btn"
               onClick={() => handlePageChange(newPage - 1)}
               disabled={curFilter.offset === 0}
-              data-test="custom-pagination-prev"
             >
               prev
             </button>
           </div>
-          <div style={{ minWidth: '35%' }}>
+          <div className="col-xs-4">
             <select
               value={curFilter.limit}
               onChange={e => {
@@ -957,7 +956,6 @@ const ViewRows = props => {
                 handlePageSizeChange(parseInt(e.target.value, 10) || 10);
               }}
               className="form-control"
-              data-test="pagination-select"
             >
               <option disabled value="">
                 --
@@ -970,12 +968,11 @@ const ViewRows = props => {
               <option value={100}>100 rows</option>
             </select>
           </div>
-          <div>
+          <div className="col-xs-2">
             <button
-              className="btn bg-gray-100"
+              className="btn"
               onClick={() => handlePageChange(newPage + 1)}
               disabled={curRows.length === 0}
-              data-test="custom-pagination-next"
             >
               next
             </button>
@@ -1019,7 +1016,7 @@ const ViewRows = props => {
           persistColumnOrderChange(curTableName, currentSchema, reorderData)
         }
         defaultReorders={columnsOrder}
-        showPagination={!shouldHidePagination || useCustomPagination}
+        showPagination={!shouldHidePagination}
         {...paginationProps}
       />
     );

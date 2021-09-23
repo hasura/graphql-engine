@@ -350,7 +350,6 @@ class Main extends React.Component {
                   : ''
               }
               to={appPrefix + path}
-              data-test={`${title.toLowerCase()}-tab-link`}
             >
               <div className={styles.iconCenter} data-test={block}>
                 <i className={`fa ${icon}`} aria-hidden="true" />

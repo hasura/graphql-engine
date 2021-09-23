@@ -1,0 +1,21 @@
+- description: Clear metadata
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: admin
+  status: 200
+  response:
+    payload: world
+    headers:
+      - - content-type
+        - application/json
+    method: GET
+    webhook_url: http://localhost:1234/
+  query:
+    type: validate_webhook_transform
+    args:
+      webhook_url: http://localhost:1234
+      payload:
+        hello: world
+      transformer:
+        body: "{{ $.hello }}"
+        template_engine: Kriti

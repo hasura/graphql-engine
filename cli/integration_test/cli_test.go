@@ -139,11 +139,6 @@ func TestCommands(t *testing.T) {
 		t.Run("seed apply commands", func(t *testing.T) {
 			v3.TestSeedsApplyCmd(t, ec)
 		})
-
-		skip(t)
-		t.Run("deploy commands", func(t *testing.T) {
-			v3.TestDeployCmd(t, ec)
-		})
 	})
 }
 

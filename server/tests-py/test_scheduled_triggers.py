@@ -16,7 +16,6 @@ import time
 def stringify_datetime(dt):
     return dt.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-@pytest.mark.skip(msg="See https://github.com/hasura/graphql-engine-mono/pull/2467 for the details")
 class TestScheduledEvent(object):
 
     webhook_payload = {"foo":"baz"}

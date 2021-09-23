@@ -1,16 +1,17 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Network.URI.Extended
-  ( module Network.URI,
+  ( module Network.URI
   )
-where
+  where
 
-import Data.Aeson
-import Data.Aeson.Types
-import Data.Hashable
-import Data.Text qualified as T
-import Hasura.Prelude
-import Network.URI
+import           Data.Aeson
+import           Data.Aeson.Types
+import           Data.Hashable
+import           Hasura.Prelude
+import           Network.URI
+
+import qualified Data.Text        as T
 
 instance {-# INCOHERENT #-} FromJSON URI where
   parseJSON (String uri) = do

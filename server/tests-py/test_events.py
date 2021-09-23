@@ -807,7 +807,7 @@ class TestManualEvents(object):
             st_code, resp = hge_ctx.v1metadataq(reload_metadata_q)
             assert st_code == 200, resp
 
-            self.test_basic(hge_ctx, evts_webhook)
+            self.test_basic(hge_ctx, evts_webhook)           
 
 @usefixtures('per_method_tests_db_state')
 class TestEventsAsynchronousExecution(object):
@@ -869,6 +869,31 @@ class TestEventTransform(object):
                                 headers={"foo": "bar"},
                                 removedHeaders=["user-agent"],
                                 webhook_path=expectedPath)
+        assert st_code == 200, resp
+
+    def test_bad_template_equals_id(self, hge_ctx, evts_webhook):
+        # GIVEN
+        check_query_f(hge_ctx, self.dir() + '/bad_template_transform.yaml')
+
+        # WHEN
+        table = {"schema": "hge_tests", "name": "test_t1"}
+        insert_row = {"id": 0, "first_name": "Simon", "last_name": "Marlow"}
+        st_code, resp = insert(hge_ctx, table, insert_row)
+
+        # THEN
+        expected_body = {
+            'error_code': 'ParseErrorCode',
+            'source_position': {'start_line': 1, 'start_column': 1},
+            'message': '\nunexpected Bling'
+        }
+
+        #{
+        #    "old": None,
+        #    "new": insert_row
+        #}
+
+        check_event_transformed(hge_ctx, evts_webhook, expected_body)
+        #check_event(hge_ctx, evts_webhook, "sample_trigger", table, "INSERT", expected_event_data)
         assert st_code == 200, resp
 
     def test_content_type_allows_json(self, hge_ctx, evts_webhook):

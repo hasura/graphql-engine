@@ -75,14 +75,6 @@ For example, in the below query the number of nodes is 3 and they are ``author``
     }
   }
 
-Time limits
-^^^^^^^^^^^
-Restricts the time that a GraphQL operation is allowed to take. The duration
-is specified in seconds.
-
-Any upstream database queries are also cancelled for supported sources.
-Currently, cancellation only works for Postgres sources.
-
 Manage API limits
 -----------------
 
@@ -132,11 +124,6 @@ You can configure api limits using the ``set_api_limits`` API.
             max_reqs_per_min: # Mandatory Field
             unique_params: # Optional Field
 
-      time_limit: # Optional API Limit
-        global: # Mandatory Field
-        per_role: # Optional Field
-          <role_name>: <limit value> # Eg: user: 5
-
 In the above metadata spec:
 
 1. The API Limits are ``Enabled`` by default, i.e the default value of ``disabled`` is ``False``
@@ -178,11 +165,6 @@ Example Metadata Spec:
             - x-hasura-user-id
             - x-hasura-team-id
             max_reqs_per_min: 20
-   
-      time_limit:
-        global: 10
-        per_role:
-          user: 5
 
 
 Removing API Limits

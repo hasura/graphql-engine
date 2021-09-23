@@ -9,7 +9,6 @@ registry := hasura
 packager_ver := 20210218
 pg_dump_ver := 13
 build_output := /build/_server_output
-docs_output := /build/_server_output/docs.tar.gz
 
 # Getting access to the built products with the `cabal v2-*` commands is really awkward; see
 # <https://www.haskell.org/cabal/users-guide/nix-local-build.html#where-are-my-build-products> for a
@@ -31,13 +30,6 @@ ci-build:
 	mkdir -p '$(build_output)'
 	echo '$(VERSION)' > '$(build_output)/version.txt'
 	shopt -s failglob globstar && cp $(executables_glob) '$(build_output)/'
-
-# assumes this is built in circleci
-ci-docs:
-	# build
-	cabal haddock
-	# copy
-	cd ../dist-newstyle/build/*/*/graphql-engine-*/**/doc/html/graphql-engine/ && tar czf $(docs_output) *
 
 # assumes this is built in circleci
 ci-image:

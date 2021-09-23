@@ -157,7 +157,7 @@ func (ec *ExecutionContext) setupGlobalConfig() error {
 		ec.Logger.Debugf("global config file written at '%s' with content '%v'", ec.GlobalConfigFile, gc)
 
 		// also show a notice about telemetry
-		ec.Logger.Info(TelemetryNotice)
+		ec.Logger.Info(StrTelemetryNotice)
 
 	} else if os.IsExist(err) || err == nil {
 

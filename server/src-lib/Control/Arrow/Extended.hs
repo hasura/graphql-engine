@@ -1,38 +1,40 @@
-{-# LANGUAGE Arrows #-}
-{-# LANGUAGE CPP #-}
+{-# OPTIONS_GHC -Wno-inline-rule-shadowing -Wno-orphans #-} -- see Note [Arrow rewrite rules]
+
+{-# LANGUAGE Arrows               #-}
 {-# LANGUAGE UndecidableInstances #-}
--- see Note [Arrow rewrite rules]
-{-# OPTIONS_GHC -Wno-inline-rule-shadowing -Wno-orphans #-}
+{-# LANGUAGE CPP                  #-}
 
 -- | The missing standard library for arrows. Some of the functionality in this module is similar to
 -- Paterson’s original @arrows@ library, but it has been modernized to work with recent versions of
 -- GHC.
 module Control.Arrow.Extended
-  ( module Control.Arrow,
-    module Control.Arrow.Trans,
-    (>->),
-    (<-<),
-    dup,
-    bothA,
-    orA,
-    foldlA',
-    traverseA_,
-    traverseA,
-    onNothingA,
-    ArrowKleisli (..),
-    bindA,
-  )
-where
+  ( module Control.Arrow
+  , module Control.Arrow.Trans
 
-import Control.Arrow
-import Control.Arrow.Trans
-import Control.Category
-import Control.Monad
-import Data.Foldable
-import Prelude hiding (id, (.))
+  , (>->)
+  , (<-<)
+  , dup
+  , bothA
+  , orA
+
+  , foldlA'
+  , traverseA_
+  , traverseA
+  , onNothingA
+
+  , ArrowKleisli(..)
+  , bindA
+  ) where
+
+import           Prelude             hiding (id, (.))
+
+import           Control.Arrow
+import           Control.Arrow.Trans
+import           Control.Category
+import           Control.Monad
+import           Data.Foldable
 
 infixl 1 >->
-
 infixr 1 <-<
 
 -- | The analog to '>>=' for arrow commands. In @proc@ notation, '>->' can be used to chain the
@@ -61,25 +63,23 @@ orA :: (ArrowChoice arr) => arr a Bool -> arr b Bool -> arr (a, b) Bool
 orA f g = proc (a, b) -> do
   c <- f -< a
   if c then returnA -< True else g -< b
-{-# INLINEABLE orA #-}
-
+{-# INLINABLE orA #-}
 {-# RULES "orA/arr" forall f g. arr f `orA` arr g = arr (f `orA` g) #-}
 
 -- | 'foldl'' lifted to arrows. See also Note [Weird control operator types].
 foldlA' :: (ArrowChoice arr, Foldable t) => arr (e, (b, (a, s))) b -> arr (e, (b, (t a, s))) b
-foldlA' f = arr (\(e, (v, (xs, s))) -> (e, (v, (toList xs, s)))) >>> go
-  where
-    go = uncons >>> (id ||| step)
-    uncons = arr \(e, (v, (xs, s))) -> case xs of
-      [] -> Left v
-      x : xs' -> Right ((e, (v, (x, s))), (e, (xs', s)))
-    step = first f >>> arr (\(!v, (e, (xs, s))) -> (e, (v, (xs, s)))) >>> go
-{-# INLINEABLE foldlA' #-}
+foldlA' f = arr (\(e, (v, (xs, s))) -> (e, (v, (toList xs, s)))) >>> go where
+  go = uncons >>> (id ||| step)
+  uncons = arr \(e, (v, (xs, s))) -> case xs of
+    []    -> Left v
+    x:xs' -> Right ((e, (v, (x, s))), (e, (xs', s)))
+  step = first f >>> arr (\(!v, (e, (xs, s))) -> (e, (v, (xs, s)))) >>> go
+{-# INLINABLE foldlA' #-}
 
 traverseA_ :: (ArrowChoice arr, Foldable t) => arr (e, (a, s)) b -> arr (e, (t a, s)) ()
 traverseA_ f = proc (e, (xs, s)) ->
-  (| foldlA' (\() x -> do (e, (x, s)) >- f; () >- returnA) |) () xs
-{-# INLINEABLE traverseA_ #-}
+  (| foldlA' (\() x -> do { (e, (x, s)) >- f; () >- returnA }) |) () xs
+{-# INLINABLE traverseA_ #-}
 
 -- | An indexed version of Twan van Laarhoven’s @FunList@ type (see
 -- <https://twanvl.nl/blog/haskell/non-regular1>). A value of type @'Traversal' a b (t b)@ is a
@@ -98,7 +98,7 @@ instance Functor (Traversal a r) where
 instance Applicative (Traversal a r) where
   pure = Done
   tf <*> tx = case tf of
-    Done f -> fmap f tx
+    Done f    -> fmap f tx
     Yield v k -> Yield v ((<*> tx) . k)
 
 traversal :: (Traversable t) => t a -> Traversal a b (t b)
@@ -106,31 +106,29 @@ traversal = traverse (`Yield` Done)
 
 -- | 'traverse' lifted to arrows. See also Note [Weird control operator types].
 traverseA :: (ArrowChoice arr, Traversable t) => arr (e, (a, s)) b -> arr (e, (t a, s)) (t b)
-traverseA f = second (first $ arr traversal) >>> go
-  where
-    go = proc (e, (as, s)) -> case as of
-      Done bs -> returnA -< bs
-      Yield a k -> do
-        b <- f -< (e, (a, s))
-        go -< (e, (k b, s))
-{-# NOINLINE [1] traverseA #-}
+traverseA f = second (first $ arr traversal) >>> go where
+  go = proc (e, (as, s)) -> case as of
+    Done bs -> returnA -< bs
+    Yield a k -> do
+      b <- f -< (e, (a, s))
+      go -< (e, (k b, s))
+{-# NOINLINE[1] traverseA #-}
 
 -- In the common case of using traverseA on Maybe, the general traverseA generates needlessly
 -- complex code due to the combination of recursion and indirection through Traversal. Since Maybe
 -- is finite, we can do much better by avoiding the recursion completely.
 traverseA_Maybe :: (ArrowChoice arr) => arr (e, (a, s)) b -> arr (e, (Maybe a, s)) (Maybe b)
 traverseA_Maybe f = proc (e, (v, s)) -> case v of
-  Just a -> arr Just . f -< (e, (a, s))
+  Just a  -> arr Just . f -< (e, (a, s))
   Nothing -> returnA -< Nothing
-{-# INLINEABLE traverseA_Maybe #-}
-
+{-# INLINABLE traverseA_Maybe #-}
 {-# RULES "traverseA @Maybe" traverseA = traverseA_Maybe #-}
 
 onNothingA :: (ArrowChoice arr) => arr (e, s) a -> arr (e, (Maybe a, s)) a
 onNothingA f = proc (e, (v, s)) -> case v of
-  Just a -> returnA -< a
+  Just a  -> returnA -< a
   Nothing -> f -< (e, s)
-{-# INLINEABLE onNothingA #-}
+{-# INLINABLE onNothingA #-}
 
 -- These rules are missing from Control.Arrow; see Note [Arrow rewrite rules]
 #ifndef __HLINT__
@@ -207,11 +205,9 @@ instance (Monad m) => ArrowKleisli m (Kleisli m) where
 instance (ArrowKleisli m arr, ArrowChoice arr) => ArrowKleisli m (ErrorA e arr) where
   arrM = liftA . arrM
   {-# INLINE arrM #-}
-
 instance (ArrowKleisli m arr) => ArrowKleisli m (ReaderA r arr) where
   arrM = liftA . arrM
   {-# INLINE arrM #-}
-
 instance (ArrowKleisli m arr) => ArrowKleisli m (WriterA w arr) where
   arrM = liftA . arrM
   {-# INLINE arrM #-}
@@ -278,6 +274,7 @@ User’s Guide on arrow notation:
     https://downloads.haskell.org/ghc/8.8.1/docs/html/users_guide/glasgow_exts.html#arrow-notation
 
 Yes, this all kind of sucks. Sorry.
+
 
 Note [Arrow rewrite rules]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

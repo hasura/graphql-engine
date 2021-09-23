@@ -14,11 +14,10 @@ function add_sources() {
             add_mssql_source "$hasura_graphql_server_port" "$MSSQL_CONN_STR"
         ;;
         mysql)
-            add_mysql_source "$hasura_graphql_server_port"
+            add_mysql_source "$hasura_graphql_server_port" "$MSSQL_CONN_STR"
         ;;
-        bigquery)
-            add_bigquery_source "$hasura_graphql_server_port"
-        ;;
+        # bigquery deliberately omitted as its test setup is atypical. See:
+        # https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#running-the-python-test-suite-on-bigquery
     esac
 
     echo ""
@@ -67,41 +66,6 @@ function add_mysql_source() {
     echo "Adding MySQL source"
     curl "$metadata_url" \
     --data-raw '{"type":"replace_metadata","args":{"version":3,"sources":[{"name":"mysql","kind":"mysql","tables":[],"configuration":{"database":"hasura","user":"'"$MYSQL_USER"'","password":"'"$MYSQL_PASSWORD"'","host":"127.0.0.1","port":'"$MYSQL_PORT"',"pool_settings":{}}}]}}'
-}
-
-function add_bigquery_source() {
-    hasura_graphql_server_port=${1}
-    metadata_url=http://127.0.0.1:$hasura_graphql_server_port/v1/metadata
-
-    echo ""
-    echo "Adding BigQuery source"
-    curl "$metadata_url" \
-    --data-raw '
-    {
-      "type": "replace_metadata",
-      "args": {
-        "allow_inconsistent_metadata": true,
-        "metadata": {
-          "version": 3,
-          "sources": [
-            {
-              "name": "hasura_global_limited",
-              "kind": "bigquery",
-              "tables": [],
-              "configuration": {
-                "global_select_limit": 1,
-                "service_account": {
-                  "from_env": "HASURA_BIGQUERY_SERVICE_ACCOUNT"
-                },
-                "project_id": { "from_env": "HASURA_BIGQUERY_PROJECT_ID" },
-                "datasets": ["hasura_test"]
-              }
-            }
-          ]
-        }
-      }
-    }
-    '
 }
 
 function verify_bigquery_pytest_env() {

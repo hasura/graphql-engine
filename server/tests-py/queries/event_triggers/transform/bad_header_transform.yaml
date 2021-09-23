@@ -2,7 +2,7 @@
   url: /v1/metadata
   status: 400
   response:
-    path: $.args.request_transform.request_headers.remove_headers[0]
+    path: $.args.transform.request_headers.remove_headers[0]
     error: "Error when parsing command create_event_trigger.\nSee our documentation at https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index.html#metadata-apis.\nInternal error message: Restricted Header: Content-Type"
     code: parse-failed
   query:
@@ -21,10 +21,10 @@
           - first_name
           - last_name
       replace: false
-      request_transform:
+      transform:
         template_engine: Kriti
         request_headers:
           add_headers:
-            foo: "\"bar\""
+            foo: bar
           remove_headers:
             - Content-Type

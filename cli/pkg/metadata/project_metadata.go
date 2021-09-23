@@ -1,10 +1,13 @@
 package metadata
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 
 	"io"
 
+	"github.com/hasura/graphql-engine/cli/v2/commands"
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
 	"github.com/spf13/viper"
@@ -18,12 +21,36 @@ type ProjectMetadata struct {
 
 // Parse metadata in project as JSON
 func (p *ProjectMetadata) Parse() (io.Reader, error) {
-	return getModeHandler(p.ec.MetadataMode).Parse(p)
+	metadataHandler := projectmetadata.NewHandlerFromEC(p.ec)
+	jsonMetadata, err := metadataHandler.MakeJSONMetadata()
+	if err != nil {
+		return nil, fmt.Errorf("parsing project metadata to json failed: %w", err)
+	}
+	return bytes.NewReader(jsonMetadata), nil
 }
 
 // Apply metadata from in the project and provide raw response from hge server
 func (p *ProjectMetadata) Apply() (io.Reader, error) {
-	return getModeHandler(p.ec.MetadataMode).Apply(p)
+	metadataHandler := projectmetadata.NewHandlerFromEC(p.ec)
+	if p.ec.Config.Version == cli.V2 {
+		r, err := metadataHandler.V1ApplyMetadata()
+		if err != nil {
+			return nil, err
+		}
+		return r, nil
+	}
+	if p.ec.Config.Version >= cli.V3 {
+		replaceMetadataResponse, err := metadataHandler.V2ApplyMetadata()
+		if err != nil {
+			return nil, err
+		}
+		b := new(bytes.Buffer)
+		if err := json.NewEncoder(b).Encode(replaceMetadataResponse); err != nil {
+			return nil, fmt.Errorf("encoding json reponse from server: %w", err)
+		}
+		return b, nil
+	}
+	return nil, nil
 }
 
 // Reload metadata on hge server and provides raw response from hge server
@@ -39,7 +66,16 @@ func (p *ProjectMetadata) GetInconsistentMetadata() (io.Reader, error) {
 
 // Diff will return the differences between metadata in the project (in JSON) and on the server
 func (p *ProjectMetadata) Diff() (io.Reader, error) {
-	return getModeHandler(p.ec.MetadataMode).Diff(p)
+	w := new(bytes.Buffer)
+	opts := &commands.MetadataDiffOptions{
+		EC:           p.ec,
+		Output:       w,
+		DisableColor: true,
+	}
+	if err := opts.Run(); err != nil {
+		return nil, err
+	}
+	return w, nil
 }
 
 type ProjectMetadataOption func(*ProjectMetadata)

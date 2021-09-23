@@ -52,8 +52,7 @@ Track an SQL function called ``search_articles`` with a Hasura session argument:
            "source": "default",
            "configuration": {
                "session_argument": "hasura_session"
-           },
-           "comment": "This function helps search for articles"
+           }
        }
    }
 
@@ -122,11 +121,6 @@ Args syntax
      - false
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the function (default: ``default``)
-   * - comment
-     - false
-     - String
-     - Comment for the function. This comment would replace the auto-generated 
-       comment for the function field in the GraphQL schema.
 
 .. _pg_untrack_function:
 

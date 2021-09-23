@@ -2,7 +2,7 @@
   url: /v1/metadata
   status: 400
   response:
-    path: $.args.request_transform.content_type
+    path: $.args.transform.content_type
     error: "Error when parsing command create_event_trigger.\nSee our documentation at https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index.html#metadata-apis.\nInternal error message: Invalid ContentType"
     code: parse-failed
   query:
@@ -21,6 +21,6 @@
           - first_name
           - last_name
       replace: false
-      request_transform:
+      transform:
         template_engine: Kriti
         content_type: multipart/form-data

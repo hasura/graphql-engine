@@ -1,12 +1,13 @@
 {-# LANGUAGE FlexibleContexts #-}
-
 module Main where
 
+import           Control.Monad                (fail, void)
+
 import qualified Control.Concurrent.STM.TMVar as TMVar
-import Control.Monad (fail, void)
-import qualified Network.WebSockets as WS
-import qualified System.Directory as Dir
-import Wrk.Server
+import qualified Network.WebSockets           as WS
+import qualified System.Directory             as Dir
+
+import           Wrk.Server
 
 main :: IO ()
 main = do
@@ -20,3 +21,4 @@ checkIfWrksPresent = mapM findExec ["wrk", "wrk2"]
   where
     findExec e = Dir.findExecutable e >>= maybe (noExecErr e) return
     noExecErr e = fail $ "Could not find executable " <> e
+

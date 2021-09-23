@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
@@ -158,17 +157,12 @@ func (o *MigrateApplyOptions) Run() error {
 	if err != nil {
 		return err
 	}
-	var failedSources []string
 	for result := range results {
 		if result.Error != nil {
-			failedSources = append(failedSources, result.DatabaseName)
 			o.EC.Logger.Errorf("%v", result.Error)
 		} else if len(result.Message) > 0 {
 			o.EC.Logger.Infof(result.Message)
 		}
-	}
-	if len(failedSources) != 0 {
-		return fmt.Errorf("operation failed on : %s", strings.Join(failedSources, ","))
 	}
 	return nil
 }

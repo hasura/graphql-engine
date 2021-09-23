@@ -1,24 +1,26 @@
 module Data.Text.Extended
-  ( ToTxt (..),
-    bquote,
-    squote,
-    dquote,
-    dquoteList,
-    commaSeparated,
-    paren,
-    parenB,
-    (<~>),
-    (<>>),
-    (<<>),
-  )
-where
+       ( ToTxt(..)
+       , bquote
+       , squote
+       , dquote
+       , dquoteList
+       , commaSeparated
+       , paren
+       , parenB
+       , (<~>)
+       , (<>>)
+       , (<<>)
+       ) where
 
-import Data.Text as DT
-import Database.ODBC.SQLServer qualified as ODBC
-import Hasura.Prelude
-import Language.GraphQL.Draft.Printer qualified as G
-import Language.GraphQL.Draft.Syntax qualified as G
-import Text.Builder qualified as TB
+import           Hasura.Prelude
+
+import qualified Database.ODBC.SQLServer        as ODBC
+import qualified Language.GraphQL.Draft.Printer as G
+import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Text.Builder                   as TB
+
+import           Data.Text                      as DT
+
 
 class ToTxt a where
   toTxt :: a -> Text
@@ -47,6 +49,7 @@ instance ToTxt (G.Value Void) where
 instance ToTxt ODBC.Query where
   toTxt = ODBC.renderQuery
 
+
 bquote :: ToTxt t => t -> Text
 bquote t = DT.singleton '`' <> toTxt t <> DT.singleton '`'
 
@@ -68,17 +71,15 @@ dquoteList = DT.intercalate ", " . fmap dquote . toList
 commaSeparated :: (ToTxt t, Foldable f) => f t -> Text
 commaSeparated = DT.intercalate ", " . fmap toTxt . toList
 
-infixr 6 <>>
 
+infixr 6 <>>
 (<>>) :: ToTxt t => Text -> t -> Text
 (<>>) lTxt a = lTxt <> dquote a
 
 infixr 6 <<>
-
 (<<>) :: ToTxt t => t -> Text -> Text
 (<<>) a rTxt = dquote a <> rTxt
 
 infixr 6 <~>
-
 (<~>) :: TB.Builder -> TB.Builder -> TB.Builder
 (<~>) l r = l <> TB.char ' ' <> r

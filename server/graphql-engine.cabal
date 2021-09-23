@@ -57,7 +57,6 @@ common common-all
     FunctionalDependencies
     GADTs
     GeneralizedNewtypeDeriving
-    ImportQualifiedPost
     InstanceSigs
     LambdaCase
     MultiParamTypeClasses
@@ -115,7 +114,6 @@ library
                      , deepseq
                      , dependent-map >=0.4 && <0.5
                      , dependent-sum
-                     , either
                      , exceptions
                      , fast-logger
                      , ghc-heap-view
@@ -433,7 +431,6 @@ library
                      , Hasura.Server.Utils
                      , Hasura.Server.Version
                      , Hasura.Server.Version.TH
-                     , Hasura.Server.Limits
                      , Hasura.Server.Logging
                      , Hasura.Server.Migrate
                      , Hasura.Server.Compression
@@ -519,7 +516,6 @@ library
                      , Hasura.RQL.DDL.Permission
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.QueryCollection
-                     , Hasura.RQL.DDL.QueryTags
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.DDL.Relationship.Rename
                      , Hasura.RQL.DDL.RemoteRelationship
@@ -557,6 +553,7 @@ library
                      , Hasura.RQL.IR.OrderBy
                      , Hasura.RQL.IR.Returning
                      , Hasura.RQL.IR.Select
+                     , Hasura.RQL.IR.RemoteSchema
                      , Hasura.RQL.IR.Update
                      , Hasura.RQL.IR.Root
                      , Hasura.RQL.IR

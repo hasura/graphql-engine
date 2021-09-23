@@ -13,19 +13,19 @@ import (
 
 var _ = Describe("hasura metadata diff", func() {
 
-	var projectDirectory string
+	var dirName string
 	var teardown func()
 	BeforeEach(func() {
-		projectDirectory = testutil.RandDirName()
+		dirName = testutil.RandDirName()
 		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
-			Args: []string{"init", projectDirectory},
+			Args: []string{"init", dirName},
 		})
-		editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
+		editEndpointInConfig(filepath.Join(dirName, defaultConfigFilename), hgeEndpoint)
 
 		teardown = func() {
-			os.RemoveAll(projectDirectory)
+			os.RemoveAll(dirName)
 			teardownHGE()
 		}
 	})
@@ -38,7 +38,7 @@ var _ = Describe("hasura metadata diff", func() {
 		It("should output diff between metadata on server and local project", func() {
 			session := testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"metadata", "diff"},
-				WorkingDirectory: projectDirectory,
+				WorkingDirectory: dirName,
 			})
 			Eventually(session, timeout).Should(Exit(0))
 			stdout := session.Out.Contents()
@@ -47,36 +47,6 @@ var _ = Describe("hasura metadata diff", func() {
 			Expect(stdout).Should(ContainSubstring("-  kind: postgres"))
 			Expect(stdout).Should(ContainSubstring("-  name: default"))
 			Expect(stdout).Should(ContainSubstring("-  tables: []"))
-
-			editMetadataFileInConfig(filepath.Join(projectDirectory, defaultConfigFilename), "metadata.yaml")
-			session = testutil.Hasura(testutil.CmdOpts{
-				Args:             []string{"metadata", "diff"},
-				WorkingDirectory: projectDirectory,
-			})
-			Eventually(session, timeout).Should(Exit(0))
-			stdout = session.Out.Contents()
-			Expect(stdout).Should(ContainSubstring("-sources:"))
-			Expect(stdout).Should(ContainSubstring("-  kind: postgres"))
-			Expect(stdout).Should(ContainSubstring("-- name: default"))
-			Expect(stdout).Should(ContainSubstring("-  tables: []"))
-
-			editMetadataFileInConfig(filepath.Join(projectDirectory, defaultConfigFilename), "metadata.json")
-			session = testutil.Hasura(testutil.CmdOpts{
-				Args:             []string{"metadata", "diff"},
-				WorkingDirectory: projectDirectory,
-			})
-			Eventually(session, timeout).Should(Exit(0))
-			stdout = session.Out.Contents()
-			want := `-  "version": 3,
--  "sources": [
--    {
--      "name": "default",
--      "kind": "postgres",
--      "tables": [],
--      "configuration": {
-`
-
-			Expect(stdout).Should(ContainSubstring(want))
 		})
 	})
 })

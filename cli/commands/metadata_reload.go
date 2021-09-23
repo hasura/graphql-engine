@@ -9,7 +9,7 @@ import (
 )
 
 func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
-	opts := &MetadataReloadOptions{
+	opts := &metadataReloadOptions{
 		EC: ec,
 	}
 
@@ -26,31 +26,28 @@ func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura metadata export --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.runWithInfo()
+			opts.EC.Spin("Reloading metadata...")
+			err := opts.run()
+			opts.EC.Spinner.Stop()
+			if err != nil {
+				return errors.Wrap(err, "failed to reload metadata")
+			}
+			opts.EC.Logger.Info("Metadata reloaded")
+			return nil
 		},
 	}
 
 	return metadataReloadCmd
 }
 
-type MetadataReloadOptions struct {
+type metadataReloadOptions struct {
 	EC *cli.ExecutionContext
 }
 
-func (o *MetadataReloadOptions) runWithInfo() error {
-	o.EC.Spin("Reloading metadata...")
-	err := o.run()
-	o.EC.Spinner.Stop()
-	if err != nil {
-		return errors.Wrap(err, "failed to reload metadata")
-	}
-	o.EC.Logger.Info("Metadata reloaded")
-	return nil
-}
+func (o *metadataReloadOptions) run() error {
 
-func (o *MetadataReloadOptions) run() error {
 	var err error
-	metadataHandler := projectmetadata.NewHandlerFromEC(o.EC)
+	metadataHandler := projectmetadata.NewHandlerFromEC(ec)
 	_, err = metadataHandler.ReloadMetadata()
 	if err != nil {
 		return errors.Wrap(err, "Cannot reload metadata")

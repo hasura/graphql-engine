@@ -1897,10 +1897,6 @@ RequestTransformation
      - false
      - String
      - Replace the Content-Type with this value. Only "application/json" and "application/x-www-form-urlencoded" are allowed. Default: "application/json"
-   * - query_params
-     - false
-     - Object (String : String)
-     - Replace the query params on the URL with this value.
    * - request_headers
      - false
      - :ref:`TransformHeaders`
@@ -1909,18 +1905,6 @@ RequestTransformation
      - false
      - :ref:`TemplateEngine`
      - Template language to be used for this transformation. Default: "Kriti"
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - required
-     - Schema
-     - Description
-   * - Key
-     - required
-     - Schema
-     - Description
 
 .. _TransformHeaders
 

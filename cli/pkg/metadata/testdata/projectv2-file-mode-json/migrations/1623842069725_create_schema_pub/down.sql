@@ -1,1 +1,0 @@
-drop schema "pub" cascade;

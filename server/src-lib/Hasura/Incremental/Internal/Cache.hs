@@ -1,14 +1,16 @@
-{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_HADDOCK not-home #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Incremental.Internal.Cache where
 
-import Control.Arrow.Extended
-import Control.Monad.Unique
-import Hasura.Incremental.Internal.Dependency
-import Hasura.Incremental.Internal.Rule
-import Hasura.Incremental.Select
-import Hasura.Prelude
+import           Hasura.Prelude
+
+import           Control.Arrow.Extended
+import           Control.Monad.Unique
+
+import           Hasura.Incremental.Internal.Dependency
+import           Hasura.Incremental.Internal.Rule
+import           Hasura.Incremental.Select
 
 class (ArrowKleisli m arr) => ArrowCache m arr | arr -> m where
   -- | Adds equality-based caching to the given arrow. After each execution of the arrow, its input
@@ -67,15 +69,14 @@ instance (MonadUnique m) => ArrowCache m (Rule m) where
       listenAccesses (Rule r) = Rule \s a k -> r mempty a \s' b r' ->
         (k $! (s <> s')) (b, s') (listenAccesses r')
 
-      cached accesses a b (Rule r) = Rule \s a' k ->
-        if
-            | unchanged accesses a a' -> (k $! (s <> accesses)) b (cached accesses a b (Rule r))
-            | otherwise -> r s a' \s' (b', accesses') r' -> k s' b' (cached accesses' a' b' r')
+      cached accesses a b (Rule r) = Rule \s a' k -> if
+        | unchanged accesses a a' -> (k $! (s <> accesses)) b (cached accesses a b (Rule r))
+        | otherwise -> r s a' \s' (b', accesses') r' -> k s' b' (cached accesses' a' b' r')
 
   newDependency = Rule \s a k -> do
     key <- DependencyRoot <$> newUniqueS
     k s (Dependency key a) (arr (Dependency key))
-  {-# INLINEABLE newDependency #-}
+  {-# INLINABLE newDependency #-}
 
   dependOn = Rule \s (Dependency key v) k -> (k $! recordAccess key AccessedAll s) v dependOn
 
@@ -89,7 +90,7 @@ class (Monad m) => MonadDepend m where
 instance (MonadDepend m) => MonadDepend (ExceptT e m) where
   dependOnM = lift . dependOnM
 
-newtype DependT m a = DependT {unDependT :: StateT Accesses m a}
+newtype DependT m a = DependT { unDependT :: StateT Accesses m a }
   deriving (Functor, Applicative, Monad, MonadTrans, MonadError e)
 
 instance (Monad m) => MonadDepend (DependT m) where

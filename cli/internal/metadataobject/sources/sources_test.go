@@ -55,9 +55,6 @@ func TestSourceConfig_Export(t *testing.T) {
         max_connections: 50
         retries: 1
       use_prepared_statements: true
-  query_tags:
-    disabled: false
-    format: standard
   tables: "!include default/tables/tables.yaml"
   functions: "!include default/functions/functions.yaml"
 - name: bg
@@ -153,6 +150,8 @@ xyz_test:
 			for k, v := range tt.want {
 				wantContent[k] = string(v)
 			}
+			assert.NoError(t, err)
+			assert.NoError(t, err)
 			if diff := cmp.Diff(wantContent, gotContent); diff != "" {
 				t.Errorf("Export() mismatch (-want +got):\n%s", diff)
 			}
@@ -204,9 +203,6 @@ func TestSourceConfig_Build(t *testing.T) {
       schema: public
   kind: postgres
   name: s1
-  query_tags:
-    disabled: false
-    format: standard
   tables:
   - table:
       name: t1

@@ -14,7 +14,6 @@ export type updateSecurityFeaturesActionType = {
     disabled: boolean;
     depth_limit?: APILimitInputType<number>;
     node_limit?: APILimitInputType<number>;
-    time_limit?: APILimitInputType<number>;
     rate_limit?: APILimitInputType<{
       unique_params: Nullable<'IP' | string[]>;
       max_reqs_per_min: number;

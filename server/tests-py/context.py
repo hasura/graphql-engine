@@ -395,7 +395,6 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             return response, HTTPStatus.BAD_REQUEST
 
         response = resp['data']['insert_user_one']
-
         return response, HTTPStatus.OK
 
     def create_users(self):

@@ -578,8 +578,8 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     },
     browse: {
       enabled: true,
-      aggregation: false,
-      customPagination: true,
+      aggregation: true,
+      customPagination: false,
     },
     insert: {
       enabled: true,

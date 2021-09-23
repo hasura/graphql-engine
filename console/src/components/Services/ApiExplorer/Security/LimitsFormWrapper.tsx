@@ -28,10 +28,6 @@ export const labels: Record<
     info:
       'Set a request rate limit for this role. You can also combine additional unique parameters for more granularity.',
   },
-  time_limit: {
-    title: 'Timeout',
-    info: 'Global timeout for GraphQL operations.',
-  },
 };
 
 interface LimitsFormWrapperProps extends TableFormProps<RoleLimits> {
@@ -51,7 +47,6 @@ const LimitsFormWrapper: React.FC<LimitsFormWrapperProps> = ({
   const api_limits = useSelector((state: ApiLimitsFormSate) => state);
   const rateLimit = useSelector((state: ApiLimitsFormSate) => state.rate_limit);
   const nodeLimit = useSelector((state: ApiLimitsFormSate) => state.node_limit);
-  const timeLimit = useSelector((state: ApiLimitsFormSate) => state.time_limit);
   const depthLimit = useSelector(
     (state: ApiLimitsFormSate) => state.depth_limit
   );
@@ -86,7 +81,6 @@ const LimitsFormWrapper: React.FC<LimitsFormWrapperProps> = ({
     const disabled_for_role =
       isEmpty(depthLimit?.global) &&
       isEmpty(nodeLimit?.global) &&
-      isEmpty(timeLimit?.global) &&
       isEmpty(rateLimit?.global);
     return currentRole !== 'global' && disabled_for_role;
   };
@@ -105,8 +99,6 @@ const LimitsFormWrapper: React.FC<LimitsFormWrapperProps> = ({
         return dispatch(apiLimitActions.updateDepthLimitState(state));
       case 'node_limit':
         return dispatch(apiLimitActions.updateNodeLimitState(state));
-      case 'time_limit':
-        return dispatch(apiLimitActions.updateTimeLimitState(state));
       default:
         return dispatch(apiLimitActions.updateRateLimitState(state));
     }
@@ -126,10 +118,6 @@ const LimitsFormWrapper: React.FC<LimitsFormWrapperProps> = ({
           return dispatch(
             apiLimitActions.updateNodeLimitRole({ role, limit: value })
           );
-        case 'time_limit':
-          return dispatch(
-            apiLimitActions.updateTimeLimitRole({ role, limit: value })
-          );
         default:
           return dispatch(
             apiLimitActions.updateMaxReqPerMin({ role, limit: value })
@@ -141,8 +129,6 @@ const LimitsFormWrapper: React.FC<LimitsFormWrapperProps> = ({
         return dispatch(apiLimitActions.updateGlobalDepthLimit(value));
       case 'node_limit':
         return dispatch(apiLimitActions.updateGlobalNodeLimit(value));
-      case 'time_limit':
-        return dispatch(apiLimitActions.updateGlobalTimeLimit(value));
       default:
         return dispatch(apiLimitActions.updateGlobalMaxReqPerMin(value));
     }
@@ -176,7 +162,6 @@ const LimitsFormWrapper: React.FC<LimitsFormWrapperProps> = ({
           return (
             <LimitsForm
               limit={limit}
-              key={key}
               label={label}
               role={role}
               state={api_limits[limit]?.state ?? RoleState.global}

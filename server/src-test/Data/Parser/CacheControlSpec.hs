@@ -1,8 +1,11 @@
 module Data.Parser.CacheControlSpec (spec) where
 
-import Data.Parser.CacheControl qualified as CCP
-import Hasura.Prelude
-import Test.Hspec
+import           Hasura.Prelude
+
+import qualified Data.Parser.CacheControl as CCP
+
+import           Test.Hspec
+
 
 spec :: Spec
 spec = do

@@ -1,9 +1,6 @@
 import pytest
-from validate import assert_response_code, check_query_f, check_query, get_conf_f
+from validate import check_query_f, check_query, get_conf_f
 from context import PytestConf
-
-import json
-import textwrap
 
 # Mark that all tests in this module can be run as server upgrade tests
 pytestmark = pytest.mark.allow_server_upgrade_test
@@ -1113,9 +1110,6 @@ class TestGraphQLQueryComputedFields:
     def test_table_computed_field_filter_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/table_computed_field_filter_fail.yaml')
 
-    def test_table_computed_field_filter_session_argument(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/table_computed_field_filter_session_argument.yaml')
-
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryCaching:
@@ -1161,40 +1155,32 @@ class TestGraphQLExplain:
 
     @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
     def test_simple_query_as_admin_with_user_role(self, hge_ctx, backend):
-        self.with_admin_secret("query", hge_ctx, self.dir() + hge_ctx.backend_suffix('/permissions_query') + ".yaml")
+        self.with_admin_secret(hge_ctx, self.dir() + hge_ctx.backend_suffix('/permissions_query') + ".yaml")
 
     @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
     def test_simple_query(self, hge_ctx, backend):
-        self.with_admin_secret("query", hge_ctx, self.dir() + hge_ctx.backend_suffix('/simple_query') + ".yaml")
+        self.with_admin_secret(hge_ctx, self.dir() + hge_ctx.backend_suffix('/simple_query') + ".yaml")
 
     @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
     def test_permissions_query(self, hge_ctx, backend):
-        self.with_admin_secret("query", hge_ctx, self.dir() + hge_ctx.backend_suffix('/permissions_query') + ".yaml")
+        self.with_admin_secret(hge_ctx, self.dir() + hge_ctx.backend_suffix('/permissions_query') + ".yaml")
 
     def test_limit_query(self, hge_ctx):
-        self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_query.yaml')
+        self.with_admin_secret(hge_ctx, self.dir() + '/limit_query.yaml')
 
     def test_limit_orderby_column_query(self, hge_ctx):
-        self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_orderby_column_query.yaml')
+        self.with_admin_secret(hge_ctx, self.dir() + '/limit_orderby_column_query.yaml')
 
     def test_limit_orderby_relationship_query(self, hge_ctx):
-        self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_orderby_relationship_query.yaml')
+        self.with_admin_secret(hge_ctx, self.dir() + '/limit_orderby_relationship_query.yaml')
 
     def test_limit_offset_orderby_relationship_query(self, hge_ctx):
-        self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_offset_orderby_relationship_query.yaml')
+        self.with_admin_secret(hge_ctx, self.dir() + '/limit_offset_orderby_relationship_query.yaml')
 
     def test_orderby_array_relationship_query(self, hge_ctx):
-        self.with_admin_secret("query", hge_ctx, self.dir() + '/orderby_array_relationship_query.yaml')
+        self.with_admin_secret(hge_ctx, self.dir() + '/orderby_array_relationship_query.yaml')
 
-    @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
-    def test_documented_query(self, hge_ctx, backend):
-        self.with_admin_secret("query", hge_ctx, self.dir() + hge_ctx.backend_suffix('/docs_query') + ".yaml")
-
-    @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
-    def test_documented_subscription(self, hge_ctx, backend):
-        self.with_admin_secret("subscription", hge_ctx, self.dir() + hge_ctx.backend_suffix('/docs_subscription') + ".yaml")
-
-    def with_admin_secret(self, explain_query_type, hge_ctx, f, hdrs=None, req_st=200):
+    def with_admin_secret(self, hge_ctx, f, hdrs=None, req_st=200):
         conf = get_conf_f(f)
         admin_secret = hge_ctx.hge_key
         headers = {}
@@ -1203,31 +1189,16 @@ class TestGraphQLExplain:
         elif admin_secret and hdrs == None:
             headers['X-Hasura-Admin-Secret'] = admin_secret
         status_code, resp_json, _ = hge_ctx.anyq(conf['url'], conf['query'], headers)
-        assert_response_code(conf['url'], conf['query'], status_code, req_st, resp_json)
+        assert status_code == req_st, resp_json
 
         if req_st != 200:
             # return early in case we're testing for failures
             return
 
-        if explain_query_type == "query":
-            # This test is specific to queries with a single field.
-            # Comparing only with generated 'sql' since the 'plan' may differ.
-            resp_sql = resp_json[0]['sql']
-            exp_sql = conf['response'][0]['sql']
-            # Outputing response for embedding in test
-            assert resp_sql == exp_sql, \
-                f"Unexpected explain SQL in response:\n{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}"
-        elif explain_query_type == "subscription":
-            # Comparing only with generated 'sql' since the 'plan' may differ.
-            # In particular, we ignore the subscription's cohort variables.
-            resp_sql = resp_json['sql']
-            exp_sql = conf['response']['sql']
-            # Outputing response for embedding in test
-            assert resp_sql == exp_sql, \
-                f"Unexpected explain SQL in response:\n{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}"
-        else:
-            assert False, "Test programmer error"
-
+        # Comparing only with generated 'sql' since the 'plan' may differ
+        resp_sql = resp_json[0]['sql']
+        exp_sql = conf['response'][0]['sql']
+        assert resp_sql == exp_sql, resp_json
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')

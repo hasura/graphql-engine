@@ -24,16 +24,14 @@
     "build-unused": "webpack --verbose --colors --display-error-details --config webpack/prod.config.js --json | webpack-unused -s src",
     "cypress": "cypress open --config-file cypress-local.json",
     "test": "cypress run --spec 'cypress/integration/**/**/test.ts' --key $CYPRESS_KEY --parallel --record",
-    "buildkite-test": "cypress run --spec 'cypress/integration/**/**/test.ts' --key $CYPRESS_KEY --ci-build-id $BUILDKITE_BUILD_ID --parallel --record",
     "lint": "eslint -c .eslintrc src --ext .js,.ts,.tsx",
     "lint:quiet": "eslint --quiet -c .eslintrc src --ext .js,.ts,.tsx",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\"",
     "jest-watch": "jest --watch --setupFiles dotenv/config",
     "jest": "jest --setupFiles dotenv/config",
-    "chromatic": "npx chromatic",
     "storybook": "start-storybook -p 6006 -s static --no-manager-cache",
-    "build-storybook": "build-storybook -s static"
+    "build-storybook": "build-storybook"
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [

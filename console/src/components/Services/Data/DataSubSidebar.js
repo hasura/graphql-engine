@@ -108,9 +108,7 @@ const DataSubSidebar = props => {
     setSchemaLoading(true);
     dispatch(updateCurrentSchema(value, currentDataSource))
       .then(() => {
-        if (value === currentSchema) {
-          dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
-        }
+        dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
       })
       .finally(() => {
         setSchemaLoading(false);
@@ -238,6 +236,11 @@ const DataSubSidebar = props => {
     );
   }, [sources.length, tables, functions, enums, schemaList, currentTable]);
 
+  const loadStyle = {
+    pointerEvents: 'none',
+    cursor: 'progress',
+  };
+
   const databasesCount = treeViewItems?.length || 0;
 
   return (
@@ -284,16 +287,12 @@ const DataSubSidebar = props => {
       <ul className={styles.subSidebarListUL} data-test="table-links">
         <div
           style={
-            // // block sidebar interaction during data fetch
-            // schemaLoading ||
-            // databaseLoading ||
-            // sidebarLoadingState ||
-            // isFetching ?
-            //   {
-            //     pointerEvents: 'none',
-            //     cursor: 'progress',
-            //   } :
-            { pointerEvents: 'auto' }
+            schemaLoading ||
+            databaseLoading ||
+            sidebarLoadingState ||
+            isFetching
+              ? loadStyle
+              : { pointerEvents: 'auto' }
           }
         >
           <TreeView

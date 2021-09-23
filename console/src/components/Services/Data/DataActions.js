@@ -381,9 +381,6 @@ const fetchDataInit = (source, driver) => (dispatch, getState) => {
   );
 };
 
-/**
- * @param {string| string[]} [schema=null]
- */
 const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
   const url = Endpoints.query;
   const source = getState().tables.currentDataSource;

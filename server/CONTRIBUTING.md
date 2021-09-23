@@ -11,7 +11,7 @@ own machine and how to contribute.
 
 For building console and running test suite:
 
-- [Node.js](https://nodejs.org/en/) (v12+, it is recommended that you use `node` with version `v12.x.x` A.K.A `erbium` or version `14.x.x` A.K.A `Fermium`)
+- [Node.js](https://nodejs.org/en/) (>= v8.9)
 - npm >= 5.7
 - python >= 3.5 with pip3 and virtualenv
 
@@ -301,17 +301,9 @@ The backend-specific and common test suites are disjoint; for example, run `pyte
 
 ## Code conventions
 
-The following conventions help us maintain a uniform style for all committers:
-make sure your contributions are in line with them.
+This helps enforce a uniform style for all committers.
 
-We enforce these by means of CI hooks which will fail the build if any of these
-are not met.
-
-- No compiler warnings: Make sure your code builds with no warnings (adding
-  `-Werror` to `ghc-options` in your `cabal.project` is a good way of checking
-  this.)
-- No lint failures: Use [hlint](https://github.com/ndmitchell/hlint) with our
-  custom config to validate your code, using `hlint --hint=server/.hlint.yaml`.
-- Consistent formatting: Use [ormolu](https://github.com/tweag/ormolu) to
-  format your code. `ormolu -ei '*.hs'` will format all files with a `.hs`
-  extension in the current directory.
+- Compiler warnings are turned on, make sure your code has no warnings.
+- Use [hlint](https://github.com/ndmitchell/hlint) to make sure your code has no warnings.
+  You can use our custom hlint config with `$ hlint --hint=server/.hlint.yaml .`
+- Use [stylish-haskell](https://github.com/jaspervdj/stylish-haskell) to format your code.

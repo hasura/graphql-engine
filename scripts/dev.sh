@@ -508,7 +508,6 @@ elif [ "$MODE" = "test" ]; then
     echo ""
     echo " Ok"
 
-    export HASURA_BIGQUERY_SERVICE_ACCOUNT=$(cat "$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE")
     add_sources $HASURA_GRAPHQL_SERVER_PORT
 
     cd "$PROJECT_ROOT/server/tests-py"

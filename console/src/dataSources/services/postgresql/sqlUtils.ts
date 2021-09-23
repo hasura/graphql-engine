@@ -828,7 +828,7 @@ const functionWhereStatement = {
 };
 
 export const getFunctionDefinitionSql = (
-  schemaName: string | string[],
+  schemaName: string,
   functionName?: string | null,
   type?: keyof typeof functionWhereStatement
 ) => `
@@ -883,12 +883,7 @@ AND NOT(EXISTS (
     1 FROM pg_aggregate
   WHERE
     pg_aggregate.aggfnoid::oid = p.oid))) as info
--- WHERE function_schema='${schemaName}'
-WHERE ${
-  Array.isArray(schemaName)
-    ? `function_schema IN (${schemaName.map(s => `'${s}'`).join(', ')})`
-    : `function_schema='${schemaName}'`
-}
+WHERE function_schema='${schemaName}'
 ${functionName ? `AND function_name='${functionName}'` : ''}
 ${type ? functionWhereStatement[type] : ''}
 ORDER BY function_name ASC

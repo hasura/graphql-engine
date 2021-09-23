@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -31,30 +30,6 @@ var testExportMetadataToStdout = func(projectDirectory string) {
 		Eventually(session, timeout).Should(Exit(0))
 		stdout = session.Out.Contents()
 		Eventually(isJSON(stdout)).Should(BeTrue())
-	})
-}
-
-var testMetadataFileMode = func(projectDirectory string) {
-	Context("metadata file mode", func() {
-		editMetadataFileInConfig(filepath.Join(projectDirectory, defaultConfigFilename), "metadata.json")
-		session := testutil.Hasura(testutil.CmdOpts{
-			Args:             []string{"metadata", "export"},
-			WorkingDirectory: projectDirectory,
-		})
-		Eventually(session, timeout).Should(Exit(0))
-		fileContents, err := ioutil.ReadFile(filepath.Join(projectDirectory, "metadata.json"))
-		Expect(err).To(BeNil())
-		Eventually(isJSON(fileContents)).Should(BeTrue())
-
-		editMetadataFileInConfig(filepath.Join(projectDirectory, defaultConfigFilename), "metadata.yaml")
-		session = testutil.Hasura(testutil.CmdOpts{
-			Args:             []string{"metadata", "export"},
-			WorkingDirectory: projectDirectory,
-		})
-		Eventually(session, timeout).Should(Exit(0))
-		fileContents, err = ioutil.ReadFile(filepath.Join(projectDirectory, "metadata.json"))
-		Expect(err).To(BeNil())
-		Eventually(isYAML(fileContents)).Should(BeTrue())
 	})
 }
 
@@ -100,7 +75,6 @@ var _ = Describe("hasura metadata export (config v3)", func() {
 			Expect(filepath.Join(projectDirectory, "metadata", "databases", sourceName, "tables", "public_albums.yaml")).Should(BeAnExistingFile())
 		})
 		testExportMetadataToStdout(projectDirectory)
-		testMetadataFileMode(projectDirectory)
 	})
 
 })
@@ -142,7 +116,6 @@ var _ = Describe("hasura metadata export (config v2)", func() {
 			Expect(filepath.Join(projectDirectory, "metadata", "tables.yaml")).Should(BeAnExistingFile())
 		})
 		testExportMetadataToStdout(projectDirectory)
-		testMetadataFileMode(projectDirectory)
 	})
 
 })

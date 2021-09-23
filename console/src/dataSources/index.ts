@@ -322,7 +322,7 @@ export interface DataSourcesAPI {
   getFunctionDefinitionSql:
     | null
     | ((
-        schemaName: string | string[],
+        schemaName: string,
         functionName?: string | null | undefined,
         type?: 'trackable' | 'non-trackable' | undefined
       ) => string);

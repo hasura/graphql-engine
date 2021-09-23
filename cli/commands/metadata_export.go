@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -32,16 +33,9 @@ func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura metadata export --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(opts.output) == 0 {
-				ec.Spin("Exporting metadata...")
-			}
 			err := opts.Run()
-			ec.Spinner.Stop()
 			if err != nil {
 				return err
-			}
-			if len(opts.output) == 0 {
-				ec.Logger.Info("Metadata exported")
 			}
 			return nil
 		},
@@ -49,7 +43,7 @@ func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	f := metadataExportCmd.Flags()
-	f.StringVarP(&opts.output, "output", "o", "", `write metadata to standard output in given format for exported metadata (note: this won't modify project metadata) Allowed values: json, yaml")`)
+	f.StringVarP(&opts.output, "output", "o", "", `specify an output format for exported metadata (note: this won't modify project metadata) Allowed values: json, yaml")`)
 
 	return metadataExportCmd
 }
@@ -64,7 +58,19 @@ func (o *MetadataExportOptions) Run() error {
 	if len(o.output) != 0 {
 		return getMetadataFromServerAndWriteToStdoutByFormat(o.EC, rawOutputFormat(o.output))
 	}
-	return getMetadataModeHandler(o.EC.MetadataMode).Export(o)
+	o.EC.Spin("Exporting metadata...")
+	metadataHandler := projectmetadata.NewHandlerFromEC(o.EC)
+	files, err := metadataHandler.ExportMetadata()
+	o.EC.Spinner.Stop()
+	if err != nil {
+		return errors.Wrap(err, "failed to export metadata")
+	}
+	err = metadataHandler.WriteMetadata(files)
+	if err != nil {
+		return errors.Wrap(err, "cannot write metadata to project")
+	}
+	o.EC.Logger.Info("Metadata exported")
+	return nil
 }
 
 func getMetadataFromServerAndWriteToStdoutByFormat(ec *cli.ExecutionContext, format rawOutputFormat) error {

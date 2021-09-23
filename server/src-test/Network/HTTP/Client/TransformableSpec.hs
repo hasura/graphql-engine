@@ -1,16 +1,16 @@
 module Network.HTTP.Client.TransformableSpec where
 
---import           Data.Aeson                        (eitherDecodeStrict)
+import           Hasura.Prelude
 
+import           Control.Lens
+--import           Data.Aeson                        (eitherDecodeStrict)
+import qualified Data.Text                         as T
+import           Test.Hspec
 --import           Test.QuickCheck
 
-import Control.Exception (Exception (displayException))
-import Control.Lens
-import Data.CaseInsensitive qualified as CI
-import Data.Text qualified as T
-import Hasura.Prelude
-import Network.HTTP.Client.Transformable qualified as Client
-import Test.Hspec
+import           Control.Exception                 (Exception (displayException))
+import qualified Data.CaseInsensitive              as CI
+import qualified Network.HTTP.Client.Transformable as Client
 
 spec :: Spec
 spec = do
@@ -27,7 +27,7 @@ spec = do
 
 specMkRequest :: Spec
 specMkRequest = describe "mRequestEither" $ do
-  it "Constructs a valid request" $ do
+  it "Constructs a valid request"$ do
     -- GIVEN
     let url' = "http://localhost:1234/foo/bar?baz=bam"
 
@@ -155,9 +155,9 @@ specUrlLens = describe "url lens" $ do
 
   it "get url s ≡ a" $ do
     -- THEN
-    view Client.url req `shouldBe` url'
-    view Client.path req `shouldBe` "/foo/bar"
-    view Client.port req `shouldBe` 1234
+    view Client.url         req `shouldBe` url'
+    view Client.path        req `shouldBe` "/foo/bar"
+    view Client.port        req `shouldBe` 1234
     view Client.queryParams req `shouldBe` [("baz", Just "bam")]
 
   it "get url . set url b ≡ b" $ do

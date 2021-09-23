@@ -1,48 +1,52 @@
 module Hasura.GraphQL.Transport.HTTP.Protocol
-  ( GQLReq (..),
-    GQLBatchedReqs (..),
-    GQLReqUnparsed,
-    GQLReqParsed,
-    GQLReqOutgoing,
-    renderGQLReqOutgoing,
-    SingleOperation,
-    getSingleOperation,
-    toParsed,
-    GQLQueryText (..),
-    GQLExecDoc (..),
-    OperationName (..),
-    VariableValues,
-    encodeGQErr,
-    encodeGQResp,
-    decodeGQResp,
-    encodeHTTPResp,
-    GQResult,
-    GQExecError (..),
-    GQResponse,
-    isExecError,
-    ReqsText,
-  )
-where
+  ( GQLReq(..)
+  , GQLBatchedReqs(..)
+  , GQLReqUnparsed
+  , GQLReqParsed
+  , GQLReqOutgoing
+  , renderGQLReqOutgoing
+  , SingleOperation
+  , getSingleOperation
+  , toParsed
+  , GQLQueryText(..)
+  , GQLExecDoc(..)
+  , OperationName(..)
+  , VariableValues
+  , encodeGQErr
+  , encodeGQResp
+  , decodeGQResp
+  , encodeHTTPResp
+  , GQResult
+  , GQExecError(..)
+  , GQResponse
+  , isExecError
+  , ReqsText
+  ) where
 
-import Data.Aeson qualified as J
-import Data.Aeson.Casing qualified as J
-import Data.Aeson.TH qualified as J
-import Data.ByteString.Lazy qualified as BL
-import Data.Either (isLeft)
-import Data.HashMap.Strict qualified as Map
-import Data.Text.Extended (dquote)
-import Hasura.Base.Error
-import Hasura.Base.Instances ()
-import Hasura.EncJSON
-import Hasura.GraphQL.Execute.Inline qualified as EI
-import Hasura.Prelude
-import Language.GraphQL.Draft.Parser qualified as G
-import Language.GraphQL.Draft.Printer qualified as G
-import Language.GraphQL.Draft.Syntax qualified as G
-import Language.Haskell.TH.Syntax (Lift)
+import           Data.Text.Extended             (dquote)
+import           Hasura.Prelude
+
+import qualified Data.Aeson                     as J
+import qualified Data.Aeson.Casing              as J
+import qualified Data.Aeson.TH                  as J
+import qualified Data.ByteString.Lazy           as BL
+import qualified Data.HashMap.Strict            as Map
+import qualified Hasura.GraphQL.Execute.Inline  as EI
+import qualified Language.GraphQL.Draft.Parser  as G
+import qualified Language.GraphQL.Draft.Printer as G
+import qualified Language.GraphQL.Draft.Syntax  as G
+
+import           Data.Either                    (isLeft)
+import           Language.Haskell.TH.Syntax     (Lift)
+
+import           Hasura.Base.Error
+import           Hasura.Base.Instances          ()
+import           Hasura.EncJSON
+
 
 -- TODO: why not just `G.ExecutableDocument G.Name`?
-newtype GQLExecDoc = GQLExecDoc {unGQLExecDoc :: [G.ExecutableDefinition G.Name]}
+newtype GQLExecDoc
+  = GQLExecDoc { unGQLExecDoc :: [G.ExecutableDefinition G.Name] }
   deriving (Ord, Show, Eq, Hashable, Lift)
 
 instance J.FromJSON GQLExecDoc where
@@ -51,7 +55,8 @@ instance J.FromJSON GQLExecDoc where
 instance J.ToJSON GQLExecDoc where
   toJSON = J.toJSON . G.ExecutableDocument . unGQLExecDoc
 
-newtype OperationName = OperationName {_unOperationName :: G.Name}
+newtype OperationName
+  = OperationName { _unOperationName :: G.Name }
   deriving (Ord, Show, Eq, Hashable, J.ToJSON, Lift)
 
 instance J.FromJSON OperationName where
@@ -62,14 +67,14 @@ type VariableValues = Map.HashMap G.Name J.Value
 -- | https://graphql.org/learn/serving-over-http/#post-request
 --
 -- See 'GQLReqParsed' for invariants.
-data GQLReq a = GQLReq
-  { _grOperationName :: !(Maybe OperationName),
-    _grQuery :: !a,
-    _grVariables :: !(Maybe VariableValues)
-  }
-  deriving (Show, Eq, Generic, Functor, Lift)
+data GQLReq a
+  = GQLReq
+  { _grOperationName :: !(Maybe OperationName)
+  , _grQuery         :: !a
+  , _grVariables     :: !(Maybe VariableValues)
+  } deriving (Show, Eq, Generic, Functor, Lift)
 
-$(J.deriveJSON (J.aesonPrefix J.camelCase) {J.omitNothingFields = True} ''GQLReq)
+$(J.deriveJSON (J.aesonPrefix J.camelCase){J.omitNothingFields=True} ''GQLReq)
 
 instance (Hashable a) => Hashable (GQLReq a)
 
@@ -85,17 +90,17 @@ data GQLBatchedReqs a
 
 instance J.ToJSON a => J.ToJSON (GQLBatchedReqs a) where
   toJSON (GQLSingleRequest q) = J.toJSON q
-  toJSON (GQLBatchedReqs qs) = J.toJSON qs
+  toJSON (GQLBatchedReqs qs)  = J.toJSON qs
 
 instance J.FromJSON a => J.FromJSON (GQLBatchedReqs a) where
-  parseJSON arr@J.Array {} = GQLBatchedReqs <$> J.parseJSON arr
-  parseJSON other = GQLSingleRequest <$> J.parseJSON other
+  parseJSON arr@J.Array{} = GQLBatchedReqs <$> J.parseJSON arr
+  parseJSON other         = GQLSingleRequest <$> J.parseJSON other
 
-newtype GQLQueryText = GQLQueryText
+newtype GQLQueryText
+  = GQLQueryText
   { _unGQLQueryText :: Text
-  }
-  deriving (Show, Eq, Ord, Hashable, IsString)
-  deriving newtype (J.FromJSON, J.ToJSON)
+  } deriving (Show, Eq, Ord, Hashable, IsString)
+    deriving newtype (J.FromJSON, J.ToJSON)
 
 -- | We've not yet parsed the graphql query string parameter of the POST.
 type GQLReqUnparsed = GQLReq GQLQueryText
@@ -133,11 +138,10 @@ renderGQLReqOutgoing :: GQLReqOutgoing -> GQLReqUnparsed
 renderGQLReqOutgoing = fmap (GQLQueryText . G.renderExecutableDoc . toExecDoc . inlineFrags)
   where
     -- This is essentially a 'coerce' (TODO unsafeCoerce optimization possible)?
-    inlineFrags ::
-      G.TypedOperationDefinition G.NoFragments var ->
-      G.TypedOperationDefinition G.FragmentSpread var
+    inlineFrags :: G.TypedOperationDefinition G.NoFragments var
+                -> G.TypedOperationDefinition G.FragmentSpread var
     inlineFrags opDef =
-      opDef {G._todSelectionSet = G.fmapSelectionSetFragment G.inline $ G._todSelectionSet opDef}
+      opDef { G._todSelectionSet = G.fmapSelectionSetFragment G.inline $ G._todSelectionSet opDef }
     toExecDoc =
       G.ExecutableDocument . pure . G.ExecutableDefinitionOperation . G.OperationDefinitionTyped
 
@@ -148,46 +152,43 @@ renderGQLReqOutgoing = fmap (GQLQueryText . G.renderExecutableDoc . toExecDoc . 
 --
 --     https://spec.graphql.org/June2018/#sec-Executable-Definitions  and...
 --     https://graphql.org/learn/serving-over-http/
-getSingleOperation ::
-  MonadError QErr m =>
-  GQLReqParsed ->
-  m SingleOperation
+getSingleOperation
+  :: MonadError QErr m
+  => GQLReqParsed
+  -> m SingleOperation
 getSingleOperation (GQLReq opNameM q _varValsM) = do
   let (selSets, opDefs, fragments) = G.partitionExDefs $ unGQLExecDoc q
-  G.TypedOperationDefinition {..} <-
+  G.TypedOperationDefinition{..} <-
     case (opNameM, selSets, opDefs) of
       (Just opName, [], _) -> do
         let n = _unOperationName opName
             opDefM = find (\opDef -> G._todName opDef == Just n) opDefs
-        onNothing opDefM $
-          throw400 ValidationFailed $
-            "no such operation found in the document: " <> dquote n
-      (Just _, _, _) ->
-        throw400 ValidationFailed $
-          "operationName cannot be used when "
-            <> "an anonymous operation exists in the document"
+        onNothing opDefM $ throw400 ValidationFailed $
+          "no such operation found in the document: " <> dquote n
+      (Just _, _, _)  ->
+        throw400 ValidationFailed $ "operationName cannot be used when " <>
+        "an anonymous operation exists in the document"
       (Nothing, [selSet], []) ->
         return $ G.TypedOperationDefinition G.OperationTypeQuery Nothing [] [] selSet
-      (Nothing, [], [opDef]) ->
+      (Nothing, [], [opDef])  ->
         return opDef
       (Nothing, _, _) ->
-        throw400 ValidationFailed $
-          "exactly one operation has to be present "
-            <> "in the document when operationName is not specified"
+        throw400 ValidationFailed $ "exactly one operation has to be present " <>
+        "in the document when operationName is not specified"
 
   inlinedSelSet <- EI.inlineSelectionSet fragments _todSelectionSet
-  pure $ G.TypedOperationDefinition {_todSelectionSet = inlinedSelSet, ..}
+  pure $ G.TypedOperationDefinition{_todSelectionSet = inlinedSelSet, ..}
 
-toParsed :: (MonadError QErr m) => GQLReqUnparsed -> m GQLReqParsed
+toParsed :: (MonadError QErr m ) => GQLReqUnparsed -> m GQLReqParsed
 toParsed req = case G.parseExecutableDoc gqlText of
-  Left _ -> withPathK "query" $ throw400 ValidationFailed "not a valid graphql query"
-  Right a -> return $ req {_grQuery = GQLExecDoc $ G.getExecutableDefinitions a}
+  Left _  -> withPathK "query" $ throw400 ValidationFailed "not a valid graphql query"
+  Right a -> return $ req { _grQuery = GQLExecDoc $ G.getExecutableDefinitions a }
   where
     gqlText = _unGQLQueryText $ _grQuery req
 
 encodeGQErr :: Bool -> QErr -> J.Value
 encodeGQErr includeInternal qErr =
-  J.object ["errors" J..= [encodeGQLErr includeInternal qErr]]
+  J.object [ "errors" J..= [encodeGQLErr includeInternal qErr]]
 
 type GQResult a = Either GQExecError a
 
@@ -203,7 +204,7 @@ encodeGQResp :: GQResponse -> EncJSON
 encodeGQResp gqResp =
   encJFromAssocList $ case gqResp of
     Right r -> [("data", encJFromLBS r)]
-    Left e -> [("data", "null"), ("errors", encJFromJValue e)]
+    Left e  -> [("data", "null"), ("errors", encJFromJValue e)]
 
 -- We don't want to force the `Maybe GQResponse` unless absolutely necessary
 -- Decode EncJSON from Cache for HTTP endpoints
@@ -214,12 +215,12 @@ decodeGQResp encJson =
           Just (J.Object v) ->
             case Map.lookup "error" v of
               Just err -> Just (Right $ J.encode err)
-              Nothing -> Right . J.encode <$> Map.lookup "data" v
+              Nothing  -> Right . J.encode <$> Map.lookup "data" v
           _ -> Nothing
-   in (gqResp, encJson)
+  in (gqResp, encJson)
 
 -- Encode for HTTP Response without `data` envelope
 encodeHTTPResp :: GQResponse -> EncJSON
 encodeHTTPResp = \case
   Right r -> encJFromLBS r
-  Left e -> encJFromJValue e
+  Left e  -> encJFromJValue e

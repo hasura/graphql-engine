@@ -3,16 +3,17 @@
 -- | GHC.AssertNF.CPP localizes our use of CPP around calls
 -- to 'assertNFHere', primarily to give tooling (e.g. ormolu)
 -- an easier time.
-module GHC.AssertNF.CPP
-  ( assertNFHere,
-    disableAssertNF,
-    GHC.AssertNF.assertNFNamed,
-  )
-where
 
-import GHC.AssertNF qualified
-import Hasura.Prelude
-import Language.Haskell.TH
+module GHC.AssertNF.CPP
+  ( assertNFHere
+  , disableAssertNF
+  , GHC.AssertNF.assertNFNamed
+  )
+  where
+
+import qualified GHC.AssertNF
+import           Hasura.Prelude
+import           Language.Haskell.TH
 #ifndef PROFILING
 import           Text.Printf         (printf)
 #endif

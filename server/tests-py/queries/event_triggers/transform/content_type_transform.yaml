@@ -19,5 +19,5 @@
           - first_name
           - last_name
       replace: false
-      request_transform:
+      transform:
         content_type: application/json

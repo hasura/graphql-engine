@@ -44,13 +44,6 @@ module.exports = {
         lg: ['1.125rem', { lineHeight: '1.5rem' }],
         xl: ['2.25rem', { lineHeight: '2.5rem' }],
       },
-      typography: {
-        DEFAULT: {
-          css: {
-            maxWidth: '100%',
-          },
-        },
-      },
     },
   },
   plugins: [require('@tailwindcss/typography'), require('@tailwindcss/forms')],

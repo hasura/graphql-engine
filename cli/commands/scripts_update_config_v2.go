@@ -121,7 +121,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 						if err != nil {
 							return errors.Wrapf(err, "unable to marshal run_sql args in %s", upMetaMigration.Raw)
 						}
-						var to hasura.PGRunSQLInput
+						var to hasuradb.RunSQLInput
 						err = yaml.Unmarshal(argByt, &to)
 						if err != nil {
 							return errors.Wrapf(err, "unable to unmarshal run_sql args in %s", upMetaMigration.Raw)
@@ -195,7 +195,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 						if err != nil {
 							return errors.Wrapf(err, "unable to marshal run_sql args in %s", downMetaMigration.Raw)
 						}
-						var to hasura.PGRunSQLInput
+						var to hasuradb.RunSQLInput
 						err = yaml.Unmarshal(argByt, &to)
 						if err != nil {
 							return errors.Wrapf(err, "unable to unmarshal run_sql args in %s", downMetaMigration.Raw)

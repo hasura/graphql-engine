@@ -113,9 +113,6 @@ actions: "!include actions.yaml"
             max_connections: 50
             retries: 1
         use_prepared_statements: true
-  query_tags:
-    disabled: false
-    format: standard
   tables:
     - table:
         name: t1

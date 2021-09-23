@@ -1,34 +1,39 @@
--- |
--- Description: Add/Drop computed fields in metadata
+{- |
+Description: Add/Drop computed fields in metadata
+-}
 module Hasura.RQL.DDL.ComputedField
-  ( AddComputedField (..),
-    ComputedFieldDefinition (..),
-    runAddComputedField,
-    DropComputedField,
-    runDropComputedField,
-    dropComputedFieldInMetadata,
-  )
-where
+  ( AddComputedField(..)
+  , ComputedFieldDefinition(..)
+  , runAddComputedField
+  , DropComputedField
+  , runDropComputedField
+  , dropComputedFieldInMetadata
+  ) where
 
-import Data.Aeson
-import Data.HashMap.Strict.InsOrd qualified as OMap
-import Data.Text.Extended
-import Hasura.Base.Error
-import Hasura.EncJSON
-import Hasura.Prelude
-import Hasura.RQL.DDL.Deps
-import Hasura.RQL.DDL.Permission
-import Hasura.RQL.Types
-import Hasura.SQL.AnyBackend qualified as AB
+import           Hasura.Prelude
 
-data AddComputedField b = AddComputedField
-  { _afcSource :: !SourceName,
-    _afcTable :: !(TableName b),
-    _afcName :: !ComputedFieldName,
-    _afcDefinition :: !(ComputedFieldDefinition b),
-    _afcComment :: !(Maybe Text)
-  }
-  deriving stock (Generic)
+import qualified Data.HashMap.Strict.InsOrd as OMap
+
+import           Data.Aeson
+import           Data.Text.Extended
+
+import qualified Hasura.SQL.AnyBackend      as AB
+
+import           Hasura.Base.Error
+import           Hasura.EncJSON
+import           Hasura.RQL.DDL.Deps
+import           Hasura.RQL.DDL.Permission
+import           Hasura.RQL.Types
+
+
+data AddComputedField b
+  = AddComputedField
+  { _afcSource     :: !SourceName
+  , _afcTable      :: !(TableName b)
+  , _afcName       :: !ComputedFieldName
+  , _afcDefinition :: !(ComputedFieldDefinition b)
+  , _afcComment    :: !(Maybe Text)
+  } deriving stock (Generic)
 
 instance (Backend b) => ToJSON (AddComputedField b) where
   toJSON = genericToJSON hasuraJSON
@@ -42,34 +47,34 @@ instance (Backend b) => FromJSON (AddComputedField b) where
       <*> o .: "definition"
       <*> o .:? "comment"
 
-runAddComputedField ::
-  forall b m.
-  (BackendMetadata b, MonadError QErr m, CacheRWM m, MetadataM m) =>
-  AddComputedField b ->
-  m EncJSON
+runAddComputedField
+  :: forall b m
+   . (BackendMetadata b, MonadError QErr m, CacheRWM m, MetadataM m)
+  => AddComputedField b
+  -> m EncJSON
 runAddComputedField q = do
   void $ withPathK "table" $ askTabInfo @b source table
-  let metadataObj =
-        MOSourceObjId source $
-          AB.mkAnyBackend $
-            SMOTableObj @b table $
-              MTOComputedField computedFieldName
+  let metadataObj = MOSourceObjId source
+                      $ AB.mkAnyBackend
+                      $ SMOTableObj @b table
+                      $ MTOComputedField computedFieldName
       metadata = ComputedFieldMetadata computedFieldName (_afcDefinition q) (_afcComment q)
-  buildSchemaCacheFor metadataObj $
-    MetadataModifier $
-      tableMetadataSetter source table . tmComputedFields
-        %~ OMap.insert computedFieldName metadata
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ tableMetadataSetter source table.tmComputedFields
+      %~ OMap.insert computedFieldName metadata
   pure successMsg
   where
     source = _afcSource q
     table = _afcTable q
     computedFieldName = _afcName q
 
-data DropComputedField b = DropComputedField
-  { _dccSource :: !SourceName,
-    _dccTable :: !(TableName b),
-    _dccName :: !ComputedFieldName,
-    _dccCascade :: !Bool
+data DropComputedField b
+  = DropComputedField
+  { _dccSource  :: !SourceName
+  , _dccTable   :: !(TableName b)
+  , _dccName    :: !ComputedFieldName
+  , _dccCascade :: !Bool
   }
 
 instance (Backend b) => FromJSON (DropComputedField b) where
@@ -80,11 +85,10 @@ instance (Backend b) => FromJSON (DropComputedField b) where
       <*> o .: "name"
       <*> o .:? "cascade" .!= False
 
-runDropComputedField ::
-  forall b m.
-  (QErrM m, CacheRWM m, MetadataM m, BackendMetadata b) =>
-  DropComputedField b ->
-  m EncJSON
+runDropComputedField
+  :: forall b m
+   . (QErrM m, CacheRWM m, MetadataM m, BackendMetadata b)
+  => DropComputedField b -> m EncJSON
 runDropComputedField (DropComputedField source table computedField cascade) = do
   -- Validation
   fields <- withPathK "table" $ _tciFieldInfoMap <$> askTableCoreInfo @b source table
@@ -92,20 +96,18 @@ runDropComputedField (DropComputedField source table computedField cascade) = do
 
   -- Dependencies check
   sc <- askSchemaCache
-  let deps =
-        getDependentObjs sc $
-          SOSourceObj source $
-            AB.mkAnyBackend $
-              SOITableObj @b table $
-                TOComputedField computedField
+  let deps = getDependentObjs sc
+               $ SOSourceObj source
+               $ AB.mkAnyBackend
+               $ SOITableObj @b table
+               $ TOComputedField computedField
   when (not cascade && not (null deps)) $ reportDeps deps
 
   withNewInconsistentObjsCheck do
     metadataModifiers <- mapM purgeComputedFieldDependency deps
-    buildSchemaCache $
-      MetadataModifier $
-        tableMetadataSetter @b source table
-          %~ dropComputedFieldInMetadata computedField . foldl' (.) id metadataModifiers
+    buildSchemaCache $ MetadataModifier $
+      tableMetadataSetter @b source table
+      %~ dropComputedFieldInMetadata computedField . foldl' (.) id metadataModifiers
   pure successMsg
   where
     purgeComputedFieldDependency = \case
@@ -113,16 +115,13 @@ runDropComputedField (DropComputedField source table computedField cascade) = do
       -- i.e, the only allowed dependent objects on a computed fields are permissions
       -- on the same table
       SOSourceObj _ exists
-        | Just (SOITableObj _ (TOPerm roleName permType)) <-
-            AB.unpackAnyBackend @b exists ->
-          pure $ dropPermissionInMetadata roleName permType
-      d ->
-        throw500 $
-          "unexpected dependency for computed field "
-            <> computedField <<> "; "
-            <> reportSchemaObj d
+        | Just (SOITableObj _ (TOPerm roleName permType))
+            <- AB.unpackAnyBackend @b exists ->
+              pure $ dropPermissionInMetadata roleName permType
+      d -> throw500 $ "unexpected dependency for computed field "
+           <> computedField <<> "; " <> reportSchemaObj d
 
-dropComputedFieldInMetadata ::
-  ComputedFieldName -> TableMetadata b -> TableMetadata b
+dropComputedFieldInMetadata
+  :: ComputedFieldName -> TableMetadata b -> TableMetadata b
 dropComputedFieldInMetadata name =
   tmComputedFields %~ OMap.delete name
