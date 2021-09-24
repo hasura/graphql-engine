@@ -115,15 +115,7 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 			return err
 		}
 		o.Metadata[1] = args[1]
-<<<<<<< HEAD
-		if args[0] == args[1] {
-			return errors.New("directories passed are the same")
-		}
-		messageEnd := fmt.Sprintf("the %s directory", o.Metadata[1])
-		message = fmt.Sprintf(messageFormat, o.Metadata[0], messageEnd)
-=======
 		to = o.Metadata[1]
->>>>>>> hq-origin/master
 	}
 	message = fmt.Sprintf(messageFormat, from, to)
 	o.EC.Logger.Info(message)
