@@ -166,7 +166,9 @@ buildFunctionQueryFields sourceName sourceInfo queryTagsConfig functionName func
           . SourceConfigWith sourceInfo queryTagsConfig
           . QDBR
       -- select function
-      funcDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
+      funcDesc =
+        Just . G.Description $
+          flip fromMaybe (_fiComment functionInfo) $ "execute function " <> functionName <<> " which returns " <>> tableName
       -- select function agg
       funcAggName = funcName <> $$(G.litName "_aggregate")
       funcAggDesc = Just $ G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> tableName

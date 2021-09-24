@@ -59,8 +59,9 @@ buildFunctionInfo ::
   FunctionConfig ->
   FunctionPermissionsMap ->
   RawFunctionInfo ('Postgres pgKind) ->
+  Maybe Text ->
   m (FunctionInfo ('Postgres pgKind), SchemaDependency)
-buildFunctionInfo source qf systemDefined FunctionConfig {..} permissions rawFuncInfo =
+buildFunctionInfo source qf systemDefined FunctionConfig {..} permissions rawFuncInfo comment =
   either (throw400 NotSupported . showErrors) pure
     =<< MV.runValidateT validateFunction
   where
@@ -124,6 +125,7 @@ buildFunctionInfo source qf systemDefined FunctionConfig {..} permissions rawFun
               (getPGDescription <$> descM)
               permissions
               retJsonAggSelect
+              comment
 
       pure
         ( functionInfo,

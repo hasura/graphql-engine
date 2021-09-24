@@ -267,7 +267,8 @@ instance (Backend b) => FromJSON (TableMetadata b) where
 data FunctionMetadata b = FunctionMetadata
   { _fmFunction :: !(FunctionName b),
     _fmConfiguration :: !FunctionConfig,
-    _fmPermissions :: ![FunctionPermissionInfo]
+    _fmPermissions :: ![FunctionPermissionInfo],
+    _fmComment :: !(Maybe Text)
   }
   deriving (Generic)
 
@@ -288,6 +289,7 @@ instance (Backend b) => FromJSON (FunctionMetadata b) where
       <$> o .: "function"
       <*> o .:? "configuration" .!= emptyFunctionConfig
       <*> o .:? "permissions" .!= []
+      <*> o .:? "comment"
 
 type Tables b = InsOrdHashMap (TableName b) (TableMetadata b)
 
@@ -511,7 +513,7 @@ instance FromJSON MetadataNoSources where
           functionList <- o .:? "functions" .!= []
           let functions = OM.fromList $
                 flip map functionList $
-                  \function -> (function, FunctionMetadata function emptyFunctionConfig mempty)
+                  \function -> (function, FunctionMetadata function emptyFunctionConfig mempty Nothing)
           pure (tables, functions)
         MVVersion2 -> do
           tables <- oMapFromL _tmTable <$> o .: "tables"
@@ -835,7 +837,11 @@ metadataToOrdJSON
               if null _fmPermissions
                 then []
                 else pure ("permissions", AO.toOrdered _fmPermissions)
-         in AO.object $ [("function", AO.toOrdered _fmFunction)] <> confKeyPair <> permissionsKeyPair
+            commentKeyPair =
+              if isNothing _fmComment
+                then []
+                else pure ("comment", AO.toOrdered _fmComment)
+         in AO.object $ [("function", AO.toOrdered _fmFunction)] <> confKeyPair <> permissionsKeyPair <> commentKeyPair
 
       inheritedRolesQToOrdJSON :: InheritedRole -> AO.Value
       inheritedRolesQToOrdJSON (Role roleName roleSet) =
