@@ -1,19 +1,23 @@
--- | This file contains the handlers that are used within websocket server
+{-# LANGUAGE CPP #-}
+
+-- | This file contains the handlers that are used within websocket server.
+--
+-- This module export three main handlers for the websocket server ('onConn',
+-- 'onMessage', 'onClose'), and two helpers for sending messages to the client
+-- ('sendMsg', 'sendCloseWithMsg').
+--
+-- NOTE!
+--  The handler functions 'onClose', 'onMessage', etc. depend for correctness on two properties:
+--    - they run with async exceptions masked
+--    - they do not race on the same connection
 module Hasura.GraphQL.Transport.WebSocket
-  ( -- | the main handlers for the websocket server
-    onConn,
+  ( onConn,
     onMessage,
     onClose,
-    -- | helpers for sending messages to the client
     sendMsg,
     sendCloseWithMsg,
   )
 where
-
--- NOTE!:
---   The handler functions 'onClose', 'onMessage', etc. depend for correctness on two properties:
---     - they run with async exceptions masked
---     - they do not race on the same connection
 
 import Control.Concurrent.Extended (sleep)
 import Control.Concurrent.STM qualified as STM
