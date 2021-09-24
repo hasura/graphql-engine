@@ -179,14 +179,6 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		createOptions.SetSQLUp(string(data))
 	}
 
-	if o.flags.Changed("metadata-from-file") {
-		// metadata-file flag is set
-		err := createOptions.SetMetaUpFromFile(o.metaDataFile)
-		if err != nil {
-			return 0, errors.Wrap(err, "cannot set metadata file")
-		}
-	}
-
 	// create pure sql based migrations here
 	if o.flags.Changed("up-sql") {
 		err = createOptions.SetSQLUp(o.upSQL)
@@ -200,12 +192,6 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		if err != nil {
 			return 0, errors.Wrap(err, "down migration with SQL string could not be created")
 		}
-	}
-
-	if !o.flags.Changed("sql-from-file") && !o.flags.Changed("metadata-from-file") && !o.metaDataServer && !o.sqlServer && o.EC.Config.Version == cli.V1 && !o.flags.Changed("up-sql") && !o.flags.Changed("down-sql") {
-		// Set empty data for [up|down].yaml
-		createOptions.MetaUp = []byte(`[]`)
-		createOptions.MetaDown = []byte(`[]`)
 	}
 
 	if !o.flags.Changed("sql-from-file") && !o.flags.Changed("metadata-from-file") && !o.metaDataServer && !o.sqlServer && o.EC.Config.Version != cli.V1 && !o.flags.Changed("up-sql") && !o.flags.Changed("down-sql") {
