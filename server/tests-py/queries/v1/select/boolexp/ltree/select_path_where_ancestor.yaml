@@ -1,0 +1,36 @@
+- description: Select ancestors of an `ltree` argument
+  url: /v1/query
+  status: 200
+  response:
+    - path: Tree
+    - path: Tree.Collections
+    - path: Tree.Collections.Pictures
+    - path: Tree.Collections.Pictures.Astronomy
+    - path: Tree.Collections.Pictures.Astronomy.Astronauts
+  query:
+    type: select
+    args:
+      table: tree
+      where:
+        path:
+          $ancestor: "Tree.Collections.Pictures.Astronomy.Astronauts"
+      columns:
+        - path
+
+- description: Select ancestors of an invalid `ltree` argument
+  url: /v1/query
+  status: 400
+  response:
+    path: $.args.where.path['$ancestor']
+    error: 'Expecting label path: a sequence of zero or more labels separated by dots,
+      for example L1.L2.L3'
+    code: parse-failed
+  query:
+    type: select
+    args:
+      table: tree
+      where:
+        path:
+          $ancestor: "Tree.Collections.Pictures.Astronomy.Astronauts."
+      columns:
+        - path

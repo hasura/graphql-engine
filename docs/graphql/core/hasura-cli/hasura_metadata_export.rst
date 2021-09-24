@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use hasura metadata export to export Hasura metadata from the database with the Hasura CLI
+   :description: Export Hasura GraphQL engine metadata from the database using the Hasura CLI
    :keywords: hasura, docs, CLI, hasura metadata export
 
 .. _hasura_metadata_export:
@@ -7,14 +7,14 @@
 Hasura CLI: hasura metadata export
 ----------------------------------
 
-Export Hasura GraphQL engine metadata from the database
+Export Hasura GraphQL engine metadata from the database.
 
 Synopsis
 ~~~~~~~~
 
 
-Export Hasura metadata and save it in the ``migrations/metadata.yaml`` file.
-The output is a yaml file which captures all the metadata required
+Export Hasura metadata and save it in the ``/metadata`` directory.
+The output is a bunch of yaml files which captures all the metadata required
 by the GraphQL engine. This includes info about tables that are tracked,
 permission rules, relationships and event triggers that are defined
 on those tables.
@@ -42,22 +42,23 @@ Options
 
 ::
 
-  -h, --help   help for export
+  -h, --help            help for export
+  -o, --output string   specify an output format for exported metadata (note: this won't modify project metadata) Allowed values: json, yaml")
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
-      --admin-secret string            admin secret for Hasura GraphQL Engine
-      --certificate-authority string   path to a cert file for the certificate authority
-      --endpoint string                http(s) endpoint for Hasura GraphQL engine 
+      --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
+      --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
+      --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
       --envfile string                 .env filename to load ENV vars from (default ".env")
-      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false)
+      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
       --log-level string               log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color                       do not colorize output (default: false)
       --project string                 directory where commands are executed (default: current dir)
-      --skip-update-check              Skip automatic update check on command execution
+      --skip-update-check              skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

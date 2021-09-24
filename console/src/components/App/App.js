@@ -31,16 +31,22 @@ const App = ({
     document.getElementById('content').className = className + ' show';
     document.getElementById('loading').style.display = 'none';
   }, []);
+  const telemetryShown = React.useRef(false);
+  // should be true only in the case of hasura cloud
+  const isContextCloud = globals.consoleType === 'cloud';
 
   React.useEffect(() => {
     if (
       telemetry.console_opts &&
-      !telemetry.console_opts.telemetryNotificationShown
+      !telemetry.console_opts.telemetryNotificationShown &&
+      !telemetryShown.current &&
+      !isContextCloud
     ) {
-      dispatch(telemetryNotificationShown());
+      telemetryShown.current = true;
       dispatch(showTelemetryNotification());
+      dispatch(telemetryNotificationShown());
     }
-  }, [telemetry]);
+  }, [dispatch, telemetry, isContextCloud]);
 
   let connectionFailMsg = null;
   if (connectionFailed) {

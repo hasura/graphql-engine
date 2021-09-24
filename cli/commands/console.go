@@ -2,13 +2,13 @@ package commands
 
 import (
 	"os"
-	"sync"
 
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/pkg/console"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/console"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,8 +22,8 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	consoleCmd := &cobra.Command{
 		Use:   "console",
-		Short: "Open console to manage database and try out APIs",
-		Long:  "Run a web server to serve Hasura Console for GraphQL Engine to manage database and build queries",
+		Short: "Open the console to manage the database and try out APIs",
+		Long:  "Run a web server to serve the Hasura console for the GraphQL engine to manage the database and build queries",
 		Example: `  # Start console:
   hasura console
 
@@ -45,7 +45,10 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return ec.Validate()
+			if err := ec.Validate(); err != nil {
+				return err
+			}
+			return scripts.CheckIfUpdateToConfigV3IsRequired(ec)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return opts.Run()
@@ -61,9 +64,9 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.Browser, "browser", "", "open console in a specific browser")
 	f.BoolVar(&opts.UseServerAssets, "use-server-assets", false, "when rendering console, use assets provided by HGE server")
 
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
+	f.String("access-key", "", "access key for Hasura GraphQL engine")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
 	f.String("certificate-authority", "", "path to a cert file for the certificate authority")
@@ -87,8 +90,6 @@ type ConsoleOptions struct {
 
 	DontOpenBrowser bool
 
-	WG *sync.WaitGroup
-
 	StaticDir       string
 	Browser         string
 	UseServerAssets bool
@@ -108,9 +109,9 @@ func (o *ConsoleOptions) Run() error {
 	}
 
 	// Setup console server
-	const basePath = "/pkg/console/templates/gohtml/"
+	const basePath = "templates/gohtml/"
 	const templateFilename = "console.gohtml"
-	templateProvider := console.NewDefaultTemplateProvider(basePath, templateFilename)
+	templateProvider := console.NewDefaultTemplateProvider(basePath, templateFilename, console.ConsoleFS)
 	consoleTemplateVersion := templateProvider.GetTemplateVersion(o.EC.Version)
 	consoleAssetsVersion := templateProvider.GetAssetsVersion(o.EC.Version)
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
@@ -129,6 +130,7 @@ func (o *ConsoleOptions) Run() error {
 		"dataApiVersion":       "",
 		"hasAccessKey":         adminSecretHeader == cli.XHasuraAccessKey,
 		"adminSecret":          o.EC.Config.ServerConfig.AdminSecret,
+		"assetsPath":           templateProvider.GetAssetsCDN(),
 		"assetsVersion":        consoleAssetsVersion,
 		"enableTelemetry":      o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":              o.EC.GlobalConfig.UUID,
@@ -153,7 +155,6 @@ func (o *ConsoleOptions) Run() error {
 		TemplateProvider: templateProvider,
 	})
 
-	o.WG = new(sync.WaitGroup)
 	// start console and API HTTP Servers
 	serveOpts := &console.ServeOpts{
 		APIServer:               apiServer,
@@ -166,7 +167,6 @@ func (o *ConsoleOptions) Run() error {
 		Address:                 o.Address,
 		SignalChanConsoleServer: o.ConsoleServerInterruptSignal,
 		SignalChanAPIServer:     o.APIServerInterruptSignal,
-		WG:                      o.WG,
 	}
 
 	return console.Serve(serveOpts)

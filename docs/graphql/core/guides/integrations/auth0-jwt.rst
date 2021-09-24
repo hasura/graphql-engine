@@ -31,7 +31,7 @@ Create an Auth0 Application
 Configure Auth0 Rules & Callback URLs
 -------------------------------------
 
-In the settings of the application, add appropriate (e.g: http://localhost:3000/callback) URLs as ``Allowed Callback
+In the settings of the application, add appropriate (e.g: ``http://localhost:3000/callback``) URLs as ``Allowed Callback
 URLs`` and ``Allowed Web Origins``. Add domain specific URLs as well for production apps (e.g: https://myapp.com/callback).
 
 Auth0 has multiple versions of its SDK available and unfortunately they have different semantics
@@ -103,7 +103,7 @@ Test auth0 login and generate sample JWTs for testing
 
 You don't need to integrate your UI with auth0 for testing. You can follow the steps below:
 
-1. Login to your auth0 app by heading to this URL: ``https://<auth0-domain>.auth0.com/login?client=<client_id>&protocol=oauth2&response_type=token%20id_token&redirect_uri=<callback_uri>&scope=openid%20profile``.
+1. Login to your auth0 app by heading to this URL: ``https://<auth0-domain>.auth0.com/authorize?client_id=<client_id>&response_type=token%20id_token&redirect_uri=<callback_uri>&scope=openid%20profile&nonce=mynonce``.
 
    - Replace ``<auth0-domain>`` with your auth0 app domain.
    - Replace ``<client-id>`` with your auth0 app client id. Get your client id from the app settings page on the auth0 dashboard.
@@ -186,7 +186,7 @@ And use it in the ``key`` field:
 
 An easier way to generate the above config is to use the following UI:
 
-https://hasura.io/jwt-config.
+https://hasura.io/jwt-config/.
 
 The generated config can be used in env ``HASURA_GRAPHQL_JWT_SECRET`` or ``--jwt-secret`` flag.
 The config generated from this page can be directly pasted in ``yaml`` files and command line arguments as it takes care of

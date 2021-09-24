@@ -94,7 +94,7 @@ Network config
          - Config
          - Comment
        * - **Hasura to API (outside Docker)**
-         - ``docker.for.win.localhost:3000``
+         - ``host.docker.internal:3000``
          - Assuming the API is running on port ``3000``
        * - **API (outside Docker) to Hasura**
          - ``localhost:8080``

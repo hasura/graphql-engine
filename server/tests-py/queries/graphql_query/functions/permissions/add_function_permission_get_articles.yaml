@@ -1,0 +1,4 @@
+type: pg_create_function_permission
+args:
+  role: user
+  function: get_articles

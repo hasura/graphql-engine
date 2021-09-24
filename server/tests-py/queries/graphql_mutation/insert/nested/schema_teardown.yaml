@@ -8,13 +8,24 @@ args:
       schema: public
       name: author
 
+- type: drop_relationship
+  args:
+    relationship: detail_manual
+    table:
+      schema: public
+      name: author
+
+- type: drop_relationship
+  args:
+    relationship: detail_fk
+    table:
+      schema: public
+      name: author
+
 - type: run_sql
   args:
     sql: |
-      drop table article cascade
-    cascade: true
-- type: run_sql
-  args:
-    sql: |
-      drop table author
+      drop table author_detail cascade;
+      drop table article cascade;
+      drop table author;
     cascade: true

@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +23,7 @@ func newActionsUseCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	actionsUseCodegenCmd := &cobra.Command{
 		Use:   "use-codegen",
-		Short: "Configure the codegen module",
+		Short: "Use the codegen to generate code for Hasura actions",
 		Example: `  # Use codegen by providing framework
   hasura actions use-codegen --framework nodejs-express
 
@@ -117,7 +117,7 @@ func (o *actionsUseCodegenOptions) run() error {
 		if err != nil {
 			return errors.Wrap(err, "error in getting input from user")
 		}
-		o.withStarterKit = shouldCloneStarterKit == "y"
+		o.withStarterKit = shouldCloneStarterKit
 	}
 
 	// clone the starter kit

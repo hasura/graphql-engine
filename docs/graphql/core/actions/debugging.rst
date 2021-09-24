@@ -67,7 +67,8 @@ of the webhook calls in the ``extensions.internal`` field.
                   "input": {
                     "email": "foo@boo.com",
                     "name": "Foo"
-                  }
+                  },
+                  "request_query": "mutation {\n    create_user(email: \"foo@bar.com\", name: \"Foo\"){\n      id\n      user {\n        name\n        email\n      }\n    }\n  }\n"
                 }
               }
             }
@@ -75,3 +76,7 @@ of the webhook calls in the ``extensions.internal`` field.
         }
       ]
     }
+    
+.. admonition:: Additional Resources
+
+  Introduction to Hasura Actions - `View Recording <https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=>`__.

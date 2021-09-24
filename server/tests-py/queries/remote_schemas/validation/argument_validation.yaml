@@ -16,7 +16,7 @@
           code: validation-failed
         message: '"user" has no argument named "foo"'
 
-- description: query the remote with a non-existing input argument 'foo'
+- description: query the remote with a string literal for an int
   url: /v1/graphql
   status: 200
   query:
@@ -28,11 +28,12 @@
         }
       }
   response:
+    data:
     errors:
-      - extensions:
-          path: $.selectionSet.user.args.id
-          code: validation-failed
-        message: "expected a 32-bit integer for type \"Int\", but found a string"
+    - message: "Argument \"id\" has invalid value \"1\".\nExpected type \"Int\", found \"1\"."
+      locations:
+      - line: 1
+        column: 19
 
 - description: query the remote with a non-existing input object field 'foo'
   url: /v1/graphql
@@ -53,3 +54,51 @@
           path: $.selectionSet.createUserInputObj.args.userData.foo
           code: validation-failed
         message: "field \"foo\" not found in type: 'UserDetailsInput'"
+
+- description: an argument expecting a list of input objects should work properly
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        objectPassedToArrayType: user(id:1, userInfo: {id: 1, username: "foo"}) {
+          id
+          username
+        }
+        user(id:1, userInfo: {id: 1, username: "foo"}) {
+          id
+          username
+        }
+      }
+  response:
+    data:
+      objectPassedToArrayType:
+        id: 1
+        username: jane
+      user:
+        id: 1
+        username: jane
+
+- description: an argument expecting a list of input objects should work properly
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        objectPassedToArrayType: user(id:1, userInfo: {id: 1, username: "foo"}) {
+          id
+          username
+        }
+        user(id:1, userInfo: [{id: 1, username: "foo"}]) {
+          id
+          username
+        }
+      }
+  response:
+    data:
+      objectPassedToArrayType:
+        id: 1
+        username: jane
+      user:
+        id: 1
+        username: jane

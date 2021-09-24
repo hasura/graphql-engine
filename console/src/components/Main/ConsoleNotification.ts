@@ -31,7 +31,6 @@ export type ConsoleNotification = {
   scope?: NotificationScope;
 };
 
-// FIXME? : we may have to remove this
 export const defaultNotification: ConsoleNotification = {
   subject: 'No updates available at the moment',
   created_at: Date.now(),

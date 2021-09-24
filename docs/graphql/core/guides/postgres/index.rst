@@ -45,6 +45,7 @@ The following are some Postgres features that can be used to manage your data an
 - :ref:`Functions <postgres_functions>`
 - :ref:`Triggers <postgres_triggers>`
 - :ref:`Indexes <postgres_indexes>`
+- :ref:`Import data from CSV <postgres_import_data_from_csv>`
 
 .. toctree::
   :maxdepth: 1
@@ -55,3 +56,4 @@ The following are some Postgres features that can be used to manage your data an
   Functions <functions>
   Triggers <triggers>
   Indexes <indexes>
+  Import data from CSV <import-data-from-csv>

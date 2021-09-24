@@ -32,6 +32,7 @@ class TestAllowlistQueries:
         # test only for http
         transport = 'http'
         check_query_f(hge_ctx, self.dir() + '/update_query.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/add_duplicate_query.yaml')
 
     @classmethod
     def dir(cls):

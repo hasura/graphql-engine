@@ -54,7 +54,7 @@ const JsonInput = props => {
   };
 
   const handleKeyUpEvent = e => {
-    if ((e.ctrlKey || event.metaKey) && e.which === 32) {
+    if ((e.ctrlKey || e.metaKey) && e.which === 32) {
       updateState(toggleEditorType);
     }
   };
@@ -88,7 +88,7 @@ const JsonInput = props => {
         theme="github"
         name="jsontoggler"
         minLines={10}
-        maxLines={100}
+        maxLines={30}
         width="100%"
         value={data}
         showPrintMargin={false}

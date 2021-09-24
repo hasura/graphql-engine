@@ -4,8 +4,8 @@
 
 .. _api_computed_field:
 
-Schema/Metadata API Reference: Computed Fields
-==============================================
+Schema/Metadata API Reference: Computed Fields (Deprecated)
+===========================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -21,6 +21,13 @@ Currenty, the Hasura GraphQL engine supports functions returning
 `base types <https://www.postgresql.org/docs/current/extend-type-system.html#id-1.8.3.5.9>`__ or
 `table row types <https://www.postgresql.org/docs/current/rowtypes.html#ROWTYPES-DECLARING>`__
 as computed fields.
+
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
 .. _add_computed_field:
 
@@ -80,40 +87,12 @@ Args syntax
      - Name of the new computed field
    * - definition
      - true
-     - ComputedFieldDefinition_
+     - :ref:`ComputedFieldDefinition`
      - The computed field definition
    * - comment
      - false
      - text
      - comment
-
-.. _ComputedFieldDefinition:
-
-ComputedFieldDefinition
-&&&&&&&&&&&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - function
-     - true
-     - :ref:`FunctionName <FunctionName>`
-     - The SQL function
-   * - table_argument
-     - false
-     - String
-     - Name of the argument which accepts a table row type. If omitted, the first
-       argument is considered a table argument
-   * - session_argument
-     - false
-     - String
-     - Name of the argument which accepts the Hasura session object as
-       a JSON/JSONB value. If omitted, the Hasura session object is
-       not passed to the function
 
 .. _drop_computed_field:
 

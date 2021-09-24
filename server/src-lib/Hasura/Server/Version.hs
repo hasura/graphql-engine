@@ -1,29 +1,21 @@
 {-# LANGUAGE ImplicitParams #-}
 
 module Hasura.Server.Version
-  ( Version(..)
-  , getVersionFromEnvironment
-
-  , HasVersion
-  , currentVersion
-  , consoleAssetsVersion
-  , withVersion
+  ( Version (..),
+    HasVersion,
+    currentVersion,
+    consoleAssetsVersion,
+    withVersion,
   )
 where
 
-import           Hasura.Prelude
-
-import qualified Data.SemVer                as V
-import qualified Data.Text                  as T
-import qualified Language.Haskell.TH.Syntax as TH
-
-import           Text.Regex.TDFA           ((=~~))
-import           Control.Lens               ((^.), (^?))
-import           Data.Aeson                 (FromJSON (..), ToJSON (..))
-import           Data.Text.Conversions      (FromText (..), ToText (..))
-
-import           Hasura.RQL.Instances       ()
-import           Hasura.Server.Utils        (getValFromEnvOrScript)
+import Control.Lens ((^.), (^?))
+import Data.Aeson (FromJSON (..), ToJSON (..))
+import Data.SemVer qualified as V
+import Data.Text qualified as T
+import Data.Text.Conversions (FromText (..), ToText (..))
+import Hasura.Prelude
+import Text.Regex.TDFA ((=~~))
 
 data Version
   = VersionDev !Text
@@ -37,7 +29,7 @@ instance ToText Version where
 
 instance FromText Version where
   fromText txt = case V.fromText $ T.dropWhile (== 'v') txt of
-    Left _        -> VersionDev txt
+    Left _ -> VersionDev txt
     Right version -> VersionRelease version
 
 instance ToJSON Version where
@@ -45,11 +37,6 @@ instance ToJSON Version where
 
 instance FromJSON Version where
   parseJSON = fmap fromText . parseJSON
-
-getVersionFromEnvironment :: TH.Q (TH.TExp Version)
-getVersionFromEnvironment = do
-  let txt = getValFromEnvOrScript "VERSION" "../scripts/get-version.sh"
-  [|| fromText $ T.dropWhileEnd (== '\n') $ T.pack $$(txt) ||]
 
 -- | Lots of random things need access to the current version. It would be very convenient to define
 -- @version :: 'Version'@ in this module and export it, and indeed, that’s what we used to do! But
@@ -77,24 +64,25 @@ consoleAssetsVersion = case currentVersion of
   VersionDev txt -> "versioned/" <> txt
   VersionRelease v -> case getReleaseChannel v of
     Nothing -> "versioned/" <> vMajMin
-    Just c  -> "channel/" <> c <> "/" <> vMajMin
+    Just c -> "channel/" <> c <> "/" <> vMajMin
     where
       vMajMin = T.pack ("v" <> show (v ^. V.major) <> "." <> show (v ^. V.minor))
   where
     getReleaseChannel :: V.Version -> Maybe Text
     getReleaseChannel sv = case sv ^. V.release of
-      []     -> Just "stable"
-      (mr:_) -> case getTextFromId mr of
+      [] -> Just "stable"
+      (mr : _) -> case getTextFromId mr of
         Nothing -> Nothing
-        Just r  -> if
-          | T.null r   -> Nothing
-          | otherwise  -> T.pack <$> (getChannelFromPreRelease $ T.unpack r)
+        Just r ->
+          if
+              | T.null r -> Nothing
+              | otherwise -> T.pack <$> getChannelFromPreRelease (T.unpack r)
 
     getChannelFromPreRelease :: String -> Maybe String
-    getChannelFromPreRelease sv = sv =~~ ("^([a-z]+)"::String)
+    getChannelFromPreRelease sv = sv =~~ ("^([a-z]+)" :: String)
 
     getTextFromId :: V.Identifier -> Maybe Text
     getTextFromId i = Just i ^? (toTextualM . V._Textual)
       where
-        toTextualM _ Nothing  = pure Nothing
+        toTextualM _ Nothing = pure Nothing
         toTextualM f (Just a) = f a

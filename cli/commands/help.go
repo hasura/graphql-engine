@@ -2,10 +2,9 @@ package commands
 
 import (
 	"fmt"
-	"os"
 	"text/tabwriter"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/spf13/cobra"
 )
 
@@ -73,7 +72,7 @@ func (o *helpOptions) run() {
 		if cmd.Name() == "hasura" {
 			// root command
 			fmt.Println(cmd.Long)
-			w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+			w := tabwriter.NewWriter(o.EC.Stdout, 0, 0, 3, ' ', 0)
 			for _, g := range topLevelCommands {
 				fmt.Println(g.Title + ":")
 				for _, gc := range g.Commands {

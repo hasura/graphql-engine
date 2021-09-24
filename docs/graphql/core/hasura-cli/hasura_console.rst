@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use hasura console to open the Hasura console from the Hasura CLI
+   :description: Open the console to manage the database and try out APIs using the Hasura CLI
    :keywords: hasura, docs, CLI, hasura console
 
 .. _hasura_console:
@@ -45,16 +45,17 @@ Options
 ::
 
       --address string                 address to serve console and migration API from (default "localhost")
-      --admin-secret string            admin secret for Hasura GraphQL Engine 
+      --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
       --api-port string                port for serving migrate api (default "9693")
       --browser string                 open console in a specific browser
-      --certificate-authority string   path to a cert file for the certificate authority 
+      --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
       --console-port string            port for serving console (default "9695")
-      --endpoint string                http(s) endpoint for Hasura GraphQL Engine 
+      --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
   -h, --help                           help for console
-      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) 
+      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
       --no-browser                     do not automatically open console in browser
       --static-dir string              directory where static assets mentioned in the console html template can be served from
+      --use-server-assets              when rendering console, use assets provided by HGE server
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

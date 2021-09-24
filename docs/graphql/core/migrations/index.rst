@@ -1,11 +1,11 @@
 .. meta::
-   :description: Manage Hasura migrations and metadata
-   :keywords: hasura, docs, migration, metadata
+   :description: Manage Hasura migrations and metadata in CI/CD
+   :keywords: hasura, docs, migration, metadata, ci, cd
 
 .. _migrations:
 
-Migrations & Metadata
-=====================
+Migrations & Metadata (CI/CD)
+=============================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -21,10 +21,10 @@ a dev -> staging -> production environment promotion scenario.
 
 .. note::
 
-  This documentation is for Hasura migrations ``config v2``, supported from
-  ``v1.2.0``. (See :ref:`upgrade guide <migrations_upgrade_v2>`).
+  This documentation is for Hasura migrations ``config v3``, supported from
+  ``v2.0.0-alpha.1``. (See :ref:`upgrade guide <migrations_upgrade_v3>`).
 
-  For ``config v1``, see :ref:`migrations_v1`.
+  For ``config v2``, see :ref:`migrations_v2`.
 
 How is Hasura state managed?
 ----------------------------
@@ -78,16 +78,18 @@ Reference documentation
 -----------------------
 
 - :ref:`migrations_how_it_works`
-- :ref:`Migration file format <migration_file_format_v2>`
-- :ref:`Metadata format <metadata_format_v2>`
+- :ref:`Migration file format <migration_file_format>`
+- :ref:`Metadata format <metadata_format>`
 
 .. toctree::
-  :maxdepth: 1
+  :maxdepth: 10
   :hidden:
 
   Setting up migrations <migrations-setup>
   Managing metadata <manage-metadata>
   Advanced use cases <advanced/index>
   Reference documentation <reference/index>
-  Upgrading to config v2 <upgrade-v2>
+  Upgrading to config v3 <upgrade-v3>
+  Config v2 <config-v2/index>
   Config v1 <config-v1/index>
+

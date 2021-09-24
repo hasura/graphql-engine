@@ -1,0 +1,27 @@
+description: Select author and their articles
+url: /v1/graphql
+status: 200
+response:
+  data:
+    hasura_author:
+    - id: '1'
+      name: Author 1
+      articles:
+      - id: '2'
+        title: Title 2
+        content: Content 2
+query:
+  query: |-
+    query {
+      hasura_author (order_by: {id: asc}, where: {name: {_eq: "Author 1"}}) {
+        id
+        name
+        articles (order_by: {id: asc},
+        where: {is_published: {_eq: true}}
+        ) {
+          id
+          title
+          content
+        }
+      }
+    }

@@ -53,6 +53,7 @@ Commands
 - :ref:`hasura migrate <hasura_migrate>`
 - :ref:`hasura migrate apply <hasura_migrate_apply>`
 - :ref:`hasura migrate create <hasura_migrate_create>`
+- :ref:`hasura migrate delete <hasura_migrate_delete>`
 - :ref:`hasura migrate squash <hasura_migrate_squash>`
 - :ref:`hasura migrate status <hasura_migrate_status>`
 - :ref:`hasura plugins <hasura_plugins>`
@@ -62,6 +63,7 @@ Commands
 - :ref:`hasura plugins upgrade <hasura_plugins_upgrade>`
 - :ref:`hasura scripts <hasura_scripts>`
 - :ref:`hasura scripts update-project-v2 <hasura_scripts_update-project-v2>`
+- :ref:`hasura scripts update-project-v3 <hasura_scripts_update-project-v3>`
 - :ref:`hasura seed <hasura_seed>`
 - :ref:`hasura seed apply <hasura_seed_apply>`
 - :ref:`hasura seed create <hasura_seed_create>`
@@ -101,6 +103,7 @@ Refer to :ref:`uninstall_hasura_cli`.
    hasura migrate <hasura_migrate>
    hasura migrate apply <hasura_migrate_apply>
    hasura migrate create <hasura_migrate_create>
+   hasura migrate delete <hasura_migrate_delete>
    hasura migrate squash <hasura_migrate_squash>
    hasura migrate status <hasura_migrate_status>
    hasura plugins <hasura_plugins>
@@ -110,6 +113,7 @@ Refer to :ref:`uninstall_hasura_cli`.
    hasura plugins upgrade <hasura_plugins_upgrade>
    hasura scripts <hasura_scripts>
    hasura scripts update-project-v2 <hasura_scripts_update-project-v2>
+   hasura scripts update-project-v3 <hasura_scripts_update-project-v3>
    hasura seed <hasura_seed>
    hasura seed apply <hasura_seed_apply>
    hasura seed create <hasura_seed_create>

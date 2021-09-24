@@ -8,12 +8,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/migrate"
-	"github.com/sirupsen/logrus"
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
 	"github.com/aryann/difflib"
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata"
+
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hexops/gotextdiff"
+	"github.com/hexops/gotextdiff/myers"
+	"github.com/hexops/gotextdiff/span"
 	"github.com/mgutz/ansi"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -26,10 +28,11 @@ const (
 )
 
 type MetadataDiffOptions struct {
-	EC     *cli.ExecutionContext
-	Output io.Writer
-	Args   []string
-
+	EC           *cli.ExecutionContext
+	Output       io.Writer
+	Args         []string
+	DiffType     string
+	DisableColor bool
 	// two Metadata to diff, 2nd is server if it's empty
 	Metadata [2]string
 }
@@ -37,14 +40,14 @@ type MetadataDiffOptions struct {
 func newMetadataDiffCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &MetadataDiffOptions{
 		EC:     ec,
-		Output: os.Stdout,
+		Output: ec.Stdout,
 	}
 
 	metadataDiffCmd := &cobra.Command{
 		Use:   "diff [file1] [file2]",
 		Short: "(PREVIEW) Show a highlighted diff of Hasura metadata",
 		Long: `(PREVIEW) Show changes between two different sets of Hasura metadata.
-By default, shows changes between exported metadata file and server metadata.`,
+By default, it shows changes between the exported metadata file and server metadata`,
 		Example: `  # NOTE: This command is in preview, usage and diff format may change.
 
   # Show changes between server metadata and the exported metadata file:
@@ -59,8 +62,11 @@ By default, shows changes between exported metadata file and server metadata.`,
   # Show changes among multiple metadata folders (v2 config only):
   hasura metadata diff metadata1 metadata2
 
-  # Apply admin secret for Hasura GraphQL Engine:
+  # Apply admin secret for Hasura GraphQL engine:
   hasura metadata diff --admin-secret "<admin-secret>"
+
+  # For unified diff as the default diff just outputs only the difference:
+  hasura metadata diff --type "unified-common"
 
   # Diff metadata on a different Hasura instance:
   hasura metadata diff --endpoint "<endpoint>"`,
@@ -71,17 +77,23 @@ By default, shows changes between exported metadata file and server metadata.`,
 		},
 	}
 
+	f := metadataDiffCmd.Flags()
+
+	f.StringVar(&opts.DiffType, "type", "default", fmt.Sprintf(`specify a type of diff [allowed values: %v]`, DifftypeUnifiedCommon))
+
 	return metadataDiffCmd
 }
 
 func (o *MetadataDiffOptions) runv2(args []string) error {
 	messageFormat := "Showing diff between %s directory and %s..."
 	message := ""
-
+	metadataHandler := projectmetadata.NewHandlerFromEC(o.EC)
+	from := "project"
+	to := "server"
 	switch len(args) {
 	case 0:
 		o.Metadata[0] = o.EC.MetadataDir
-		message = fmt.Sprintf(messageFormat, o.Metadata[0], "the server")
+		from = "project"
 	case 1:
 		// 1 arg, diff given directory and the metadata on server
 		err := checkDirAndFile(args[0], folderType)
@@ -89,51 +101,55 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 			return err
 		}
 		o.Metadata[0] = args[0]
-		message = fmt.Sprintf(messageFormat, o.Metadata[0], "the server")
+		from = o.Metadata[0]
 	case 2:
 		err := checkDirAndFile(args[0], folderType)
 		if err != nil {
 			return err
 		}
 		o.Metadata[0] = args[0]
+		from = o.Metadata[0]
+
 		err = checkDirAndFile(args[1], folderType)
 		if err != nil {
 			return err
 		}
 		o.Metadata[1] = args[1]
+<<<<<<< HEAD
 		if args[0] == args[1] {
 			return errors.New("directories passed are the same")
 		}
 		messageEnd := fmt.Sprintf("the %s directory", o.Metadata[1])
 		message = fmt.Sprintf(messageFormat, o.Metadata[0], messageEnd)
+=======
+		to = o.Metadata[1]
+>>>>>>> hq-origin/master
 	}
+	message = fmt.Sprintf(messageFormat, from, to)
 	o.EC.Logger.Info(message)
 	var oldYaml, newYaml []byte
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
-	if err != nil {
-		return err
-	}
 	if o.Metadata[1] == "" {
 		tmpDir, err := ioutil.TempDir("", "*")
 		if err != nil {
 			return err
 		}
 		defer os.RemoveAll(tmpDir)
-		migrate.SetMetadataPluginsWithDir(o.EC, migrateDrv, tmpDir)
-		files, err := migrateDrv.ExportMetadata()
+		metadataHandler.SetMetadataObjects(projectmetadata.GetMetadataObjectsWithDir(o.EC, tmpDir))
+		var files map[string][]byte
+		files, err = metadataHandler.ExportMetadata()
 		if err != nil {
 			return err
 		}
-		err = migrateDrv.WriteMetadata(files)
+		err = metadataHandler.WriteMetadata(files)
 		if err != nil {
 			return err
 		}
 	} else {
-		migrate.SetMetadataPluginsWithDir(o.EC, migrateDrv, o.Metadata[1])
+		metadataHandler.SetMetadataObjects(projectmetadata.GetMetadataObjectsWithDir(o.EC, o.Metadata[1]))
 	}
 
 	// build server metadata
-	serverMeta, err := migrateDrv.BuildMetadata()
+	serverMeta, err := metadataHandler.BuildMetadata()
 	if err != nil {
 		return err
 	}
@@ -143,8 +159,8 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 	}
 
 	// build local metadata
-	migrate.SetMetadataPluginsWithDir(o.EC, migrateDrv, o.Metadata[0])
-	localMeta, err := migrateDrv.BuildMetadata()
+	metadataHandler.SetMetadataObjects(projectmetadata.GetMetadataObjectsWithDir(o.EC, o.Metadata[0]))
+	localMeta, err := metadataHandler.BuildMetadata()
 	if err != nil {
 		return err
 	}
@@ -153,111 +169,68 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 		return errors.Wrap(err, "cannot unmarshal local metadata")
 	}
 
-	printDiff(string(oldYaml), string(newYaml), o.Output, o.EC.Logger)
-	return nil
-}
-
-func (o *MetadataDiffOptions) runv1(args []string) error {
-	messageFormat := "Showing diff between %s and %s..."
-	message := ""
-
-	switch len(args) {
-	case 0:
-		// no args, diff exported metadata and metadata on server
-		m := metadata.New(o.EC, o.EC.MigrationDir)
-		filename, err := m.GetExistingMetadataFile()
-		if err != nil {
-			return errors.Wrap(err, "failed getting metadata file")
-		}
-		o.Metadata[0] = filename
-		message = fmt.Sprintf(messageFormat, filename, "the server")
-	case 1:
-		// 1 arg, diff given filename and the metadata on server
-		// we are modifying this since we got
-		modifiedFilePath := includeMetadataFileInPath(args[0])
-		if modifiedFilePath == "" {
-			err := checkDirAndFile(args[0], fileType)
-			if err != nil {
-				return err
-			}
-			o.Metadata[0] = args[0]
-		} else {
-			o.Metadata[0] = modifiedFilePath
-		}
-		message = fmt.Sprintf(messageFormat, o.Metadata[0], "the server")
-	case 2:
-		// 2 args, diff given filenames
-		modifiedFilePath := includeMetadataFileInPath(args[0])
-		if modifiedFilePath == "" {
-			err := checkDirAndFile(args[0], fileType)
-			if err != nil {
-				return err
-			}
-			o.Metadata[0] = args[0]
-		} else {
-			o.Metadata[0] = modifiedFilePath
-		}
-		modifiedFilePath = includeMetadataFileInPath(args[1])
-		if modifiedFilePath == "" {
-			err := checkDirAndFile(args[1], fileType)
-			if err != nil {
-				return err
-			}
-			o.Metadata[1] = args[1]
-		} else {
-			o.Metadata[1] = modifiedFilePath
-		}
-		message = fmt.Sprintf(messageFormat, o.Metadata[0], o.Metadata[1])
-	}
-
-	o.EC.Logger.Info(message)
-	var oldYaml, newYaml []byte
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
+	// Here oldYaml is project's metadata and newYaml is server's metadata for having diff similar to git diff i.e taking server has base before has been taken as server's metadata
+	err = printDiff(string(newYaml), string(oldYaml), to, from, o.Output, o.DiffType, o.DisableColor)
 	if err != nil {
 		return err
 	}
-
-	if o.Metadata[1] == "" {
-		// get metadata from server
-		files, err := migrateDrv.ExportMetadata()
-		if err != nil {
-			return errors.Wrap(err, "cannot fetch metadata from server")
-		}
-
-		// export metadata will always return single file for metadata.yaml
-		for _, content := range files {
-			newYaml = content
-		}
-	} else {
-		newYaml, err = ioutil.ReadFile(o.Metadata[1])
-		if err != nil {
-			return errors.Wrap(err, "cannot read file")
-		}
-	}
-
-	oldYaml, err = ioutil.ReadFile(o.Metadata[0])
-	if err != nil {
-		return errors.Wrap(err, "cannot read file")
-	}
-
-	printDiff(string(oldYaml), string(newYaml), o.Output, o.EC.Logger)
 	return nil
 }
 
 func (o *MetadataDiffOptions) Run() error {
-	if o.EC.Config.Version == cli.V2 && o.EC.MetadataDir != "" {
+	if o.EC.Config.Version >= cli.V2 && o.EC.MetadataDir != "" {
 		return o.runv2(o.Args)
+	} else {
+		return fmt.Errorf("metadata diff for config %d not supported", o.EC.Config.Version)
 	}
-	return o.runv1(o.Args)
 }
 
-// Move to using myers diffing algo
-func printDiff(before, after string, to io.Writer, logger *logrus.Logger) {
+type Difftype string
+
+const DifftypeUnifiedCommon Difftype = "unified-common"
+
+func printDiff(before, after, from, to string, writer io.Writer, difftype string, disableColor bool) error {
+	diffType := Difftype(difftype)
+	switch diffType {
+	case DifftypeUnifiedCommon:
+		printDiffv1(before, after, writer)
+	default:
+		return printDiffv2(before, after, from, to, writer, disableColor)
+	}
+	return nil
+}
+
+func printDiffv2(before, after, from, to string, writer io.Writer, disableColor bool) error {
+	edits := myers.ComputeEdits(span.URIFromPath("a.txt"), before, after)
+	text := fmt.Sprint(gotextdiff.ToUnified(from, to, before, edits))
+	makeDiffLine := func(line, color string) string {
+		if disableColor {
+			return line
+		}
+		return ansi.Color(line, color)
+	}
+	lines := strings.Split(text, "\n")
+	for _, line := range lines {
+		if line == "" {
+			break
+		}
+		if (string)(line[0]) == "-" {
+			fmt.Fprintf(writer, "%s\n", makeDiffLine(line, "red"))
+		} else if (string)(line[0]) == "+" {
+			fmt.Fprintf(writer, "%s\n", makeDiffLine(line, "yellow"))
+		} else if (string)(line[0]) == "@" {
+			fmt.Fprintf(writer, "%s\n", makeDiffLine(line, "cyan"))
+		}
+	}
+
+	return nil
+}
+
+func printDiffv1(before, after string, to io.Writer) {
 	diffs := difflib.Diff(strings.Split(before, "\n"), strings.Split(after, "\n"))
 
-	isThereADiff := false
-
 	for _, diff := range diffs {
+		text := diff.Payload
 		switch diff.Delta {
 		case difflib.LeftOnly:
 		case difflib.RightOnly:

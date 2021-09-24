@@ -1,0 +1,20 @@
+- description: Run get_user_by_email_2 query action with valid email, the response should be an object and response should be cached
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query ($email: String!) @cached(ttl: 300) {
+        get_user_by_email_2(email: $email){
+          user
+        }
+      }
+  variables:
+    email: clarke2@gmail.com
+  resp_headers:
+    Cache-Control: max-age=300
+    X-Hasura-Query-Cache-Key: 928537e2f3e76a263eaaa45686e0c0bccd2a9b7e
+    X-Hasura-Query-Family-Cache-Key: ae504392da7b9e98ee4679693b8bc0efd350e0d7
+  response:
+    data:
+      get_user_by_email_2:
+        user: Clarke 2

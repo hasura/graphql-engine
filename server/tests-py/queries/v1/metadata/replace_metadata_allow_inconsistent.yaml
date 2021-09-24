@@ -1,0 +1,53 @@
+description: Replace schema cache (metadata)
+url: /v1/metadata
+status: 200
+response:
+  is_consistent: true
+  inconsistent_objects: []
+query:
+  type: replace_metadata
+  version: 2
+  args:
+    allow_inconsistent_metadata: true
+    metadata:
+      remote_schemas:
+      - name: test
+        comment: testing replace metadata with remote schemas
+        definition:
+          url: http://localhost:5000/hello-graphql
+          forward_client_headers: false
+      tables:
+      - table: author
+        object_relationships: []
+        array_relationships:
+        - using:
+            foreign_key_constraint_on:
+              column: author_id
+              table: article
+          name: articles
+          comment: List all articles of the author
+        insert_permissions: []
+        select_permissions: []
+        update_permissions: []
+        delete_permissions: []
+        event_triggers: []
+        computed_fields:
+        - name: get_articles
+          comment: null
+          definition:
+            function: fetch_articles
+            table_argument: author_row
+      - table: article
+        object_relationships:
+        - using:
+            foreign_key_constraint_on: author_id
+          name: author
+          comment: null
+        array_relationships: []
+        insert_permissions: []
+        select_permissions: []
+        update_permissions: []
+        delete_permissions: []
+        event_triggers: []
+      functions:
+      - search_articles

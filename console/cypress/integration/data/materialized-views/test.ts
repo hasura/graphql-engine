@@ -14,13 +14,13 @@ import {
 } from './spec';
 import { testMode } from '../../../helpers/common';
 import { setMetaData } from '../../validators/validators';
+import { getIndexRoute } from '../../../helpers/dataHelpers';
 
 const setup = () => {
   describe('Setup route', () => {
     it('Visit the index route', () => {
       // Visit the index route
-      cy.visit('/data/schema/public');
-      cy.wait(7000);
+      cy.visit(getIndexRoute());
       // Get and set validation metadata
       setMetaData();
     });

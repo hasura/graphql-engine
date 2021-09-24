@@ -20,11 +20,6 @@ and manage your projects.
 
 You can use any GraphQL client and use the API with the right authentication header.
 
-.. note::
-
-   Please note that the API is still in beta and might change before the
-   stable release.
-
 Endpoint
 --------
 
@@ -52,15 +47,15 @@ distinct "Tenant ID" which is different from "Project ID". Each Project is
 associated with a Tenant. In some cases, like Metrics API, the Project ID is
 used instead of Tenant ID.
 
-List of APIs:
+List of some useful APIs:
 
 .. contents::
   :backlinks: none
   :depth: 1
   :local:
 
-Create a Tenant
-^^^^^^^^^^^^^^^
+Create a Project
+^^^^^^^^^^^^^^^^
 
 .. code-block:: graphql
 
@@ -68,12 +63,27 @@ Create a Tenant
      createTenant(
        cloud: "aws"
        region: "us-east-2"
-       databaseUrl: "postgres://username:password@database-host.com:5432/dbname"
      ) {
        id
        name
      }
    }
+
+Get Project tenant id
+^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: graphql
+
+  query getProjectTenantId {
+    projects_by_pk(
+      id: "7a79cf94-0e53-4520-a560-1b02bf522f08"
+    ) {
+      id
+      tenant {
+        id
+      }
+    }
+}
 
 Get Tenant details
 ^^^^^^^^^^^^^^^^^^

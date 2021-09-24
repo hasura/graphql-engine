@@ -1,5 +1,5 @@
 description: export metadata
-url: /v1/query
+url: /v1/metadata
 status: 200
 query:
   type: export_metadata
@@ -112,6 +112,14 @@ response:
             name: test2
           column_mapping:
             id: id
+  - table:
+      schema: public
+      name: user address
+    configuration:
+      custom_name: user_address
+      custom_root_fields: {}
+      custom_column_names: {}
+
   functions:
   - function:
       schema: public

@@ -1,0 +1,21 @@
+type: bulk
+args:
+
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "user address" (
+        id serial primary key,
+        name text unique,
+        config jsonb
+      );
+      ALTER INDEX "user address_pkey" RENAME TO user_address_pkey;
+      ALTER INDEX "user address_name_key" RENAME TO user_address_name_key;
+
+- type: track_table
+  version: 2
+  args:
+    table: user address
+    configuration:
+      custom_name: user_address

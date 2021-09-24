@@ -7,15 +7,11 @@ import {
   ScheduledTrigger,
   EventKind,
 } from './types';
-import {
-  TableColumn,
-  findTable,
-  Table,
-  generateTableDef,
-} from '../../Common/utils/pgUtils';
-import { TableDefinition } from '../../Common/utils/v1QueryUtils';
 import { convertDateTimeToLocale } from '../../Common/utils/jsUtils';
 import { Nullable } from '../../Common/utils/tsUtils';
+import { TableColumn, Table } from '../../../dataSources/types';
+import { generateTableDef, findTable } from '../../../dataSources';
+import { QualifiedTable } from '../../../metadata/types';
 
 export const parseServerWebhook = (
   webhook: Nullable<string>,
@@ -81,7 +77,7 @@ export const sanitiseRow = (column: string, row: Record<string, string>) => {
   return content;
 };
 
-export const getLogsTableDef = (kind: EventKind): TableDefinition => {
+export const getLogsTableDef = (kind: EventKind): QualifiedTable => {
   let tableName: string;
   switch (kind) {
     case 'data':
@@ -98,4 +94,34 @@ export const getLogsTableDef = (kind: EventKind): TableDefinition => {
       break;
   }
   return generateTableDef(tableName, 'hdb_catalog');
+};
+
+const sanitiseValue = (value?: string | number) => {
+  if (value === 'f') return false;
+  if (value === 't') return true;
+  return value;
+};
+
+export const parseEventsSQLResp = (
+  result: string[][] = []
+): Record<string, string | number | boolean>[] => {
+  const allKeys: string[] = result?.[0];
+  const resultsData: string[][] = result?.slice(1);
+  const formattedData: Record<string, any>[] = [];
+  resultsData.forEach((values: string[]) => {
+    const dataObj: Record<string, any> = {};
+    allKeys.forEach((key: string, idx: number) => {
+      if (!dataObj[key]) {
+        if (key === 'request' || key === 'response') {
+          try {
+            dataObj[key] = JSON.parse(values[idx]);
+          } catch {
+            dataObj[key] = values[idx];
+          }
+        } else dataObj[key] = sanitiseValue(values[idx]);
+      }
+    });
+    formattedData.push(dataObj);
+  });
+  return formattedData;
 };

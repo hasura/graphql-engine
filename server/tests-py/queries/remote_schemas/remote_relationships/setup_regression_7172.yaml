@@ -1,0 +1,11 @@
+type: create_remote_relationship
+args:
+  name: project
+  table: regression_7172
+  hasura_fields:
+    - id
+  remote_schema: my-remote-schema
+  remote_field:
+    message:
+      arguments:
+        id: "$id"

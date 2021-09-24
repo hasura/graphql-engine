@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"io/ioutil"
+	"io"
 
 	"github.com/briandowns/spinner"
 	"github.com/mattn/go-colorable"
@@ -15,7 +15,8 @@ type spinnerHook struct {
 
 func newSpinnerHandlerHook(parent *logrus.Logger, spinner *spinner.Spinner, isTerminal, noColor bool) *spinnerHook {
 	logger := logrus.New()
-	if parent.Out != ioutil.Discard {
+	logger.Out = parent.Out
+	if parent.Out != io.Discard {
 		if isTerminal {
 			if noColor {
 				logger.Formatter = &logrus.TextFormatter{
@@ -28,12 +29,12 @@ func newSpinnerHandlerHook(parent *logrus.Logger, spinner *spinner.Spinner, isTe
 					DisableTimestamp: true,
 				}
 			}
+			logger.Out = colorable.NewColorableStderr()
 		} else {
 			logger.Formatter = &logrus.JSONFormatter{
 				PrettyPrint: false,
 			}
 		}
-		logger.Out = colorable.NewColorableStdout()
 		logger.Level = parent.GetLevel()
 	}
 	return &spinnerHook{

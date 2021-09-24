@@ -134,7 +134,9 @@ JSON object:
      "claims_format": "json|stringified_json",
      "audience": <optional-string-or-list-of-strings-to-verify-audience>,
      "issuer": "<optional-string-to-verify-issuer>",
-     "claims_map": "<optional-object-of-session-variable-to-claim-jsonpath-or-literal-value>"
+     "claims_map": "<optional-object-of-session-variable-to-claim-jsonpath-or-literal-value>",
+     "allowed_skew": "<optional-number-of-seconds-in-integer>",
+     "header": "<optional-key-to-indicate-cookie-or-authorization-header>"
    }
 
 (``type``, ``key``) pair or ``jwk_url``, **one of them has to be present**.
@@ -142,12 +144,13 @@ JSON object:
 ``type``
 ^^^^^^^^
 Valid values are : ``HS256``, ``HS384``, ``HS512``, ``RS256``,
-``RS384``, ``RS512``. (see https://jwt.io).
+``RS384``, ``RS512``, ``Ed25519``. (see https://jwt.io).
 
-``HS*`` is for HMAC-SHA based algorithms. ``RS*`` is for RSA based signing. For
+``HS*`` is for HMAC-SHA based algorithms. ``RS*`` is for RSA based signing. ``Ed*`` is
+for Edwards-curve Digital Signature algorithms. For
 example, if your auth server is using HMAC-SHA256 for signing the JWTs, then
-use ``HS256``. If it is using RSA with SHA-512, then use ``RS512``. EC
-public keys are not yet supported.
+use ``HS256``. If it is using RSA with SHA-512, then use ``RS512``. If it is using EdDSA instance of
+Edwards25519, then use ``Ed25519``. EC public keys are not yet supported.
 
 This is an optional field. This is required only if you are using ``key`` in the config.
 
@@ -156,7 +159,7 @@ This is an optional field. This is required only if you are using ``key`` in the
 - In case of symmetric key (i.e. HMAC based key), the key as it is. (e.g. -
   "abcdef..."). The key must be long enough for the algorithm chosen,
   (e.g. for HS256 it must be at least 32 characters long).
-- In case of asymmetric keys (RSA etc.), only the public key, in a PEM encoded
+- In case of asymmetric keys (RSA, EdDSA etc.), only the public key, in a PEM encoded
   string or as a X509 certificate.
 
 This is an optional field. You can also provide a URL to fetch JWKs from using
@@ -494,6 +497,44 @@ The corresponding JWT config should be:
 In the above example, the ``x-hasura-allowed-roles`` and ``x-hasura-default-role`` values are set in the JWT
 config and the value of the ``x-hasura-user-id`` is a JSON path to the value in the JWT token.
 
+``allowed_skew``
+^^^^^^^^^^^^^^^^
+
+``allowed_skew`` is an optional field to provide some leeway (to account for clock skews) while comparing the JWT expiry time. This field
+expects an integer value which will be the number of seconds of the skew value.
+
+``header``
+^^^^^^^^^^
+This is an optional field, which indicates which request header to read the JWT
+from. This field is an object.
+
+Following are the possible values:
+
+- ``{"type": "Authorization"}``
+- ``{"type": "Cookie", "name": "cookie_name" }``
+
+Default is ``{"type": "Authorization"}``.
+
+In the default mode, Hasura expects an ``Authorization`` header with a ``Bearer`` token.
+
+In the cookie mode, Hasura will try to parse the cookie header with the given
+cookie name. The value of the cookie should be the exact JWT.
+
+Example:-
+
+If ``header`` is ``{"type": "Authorization"}`` then JWT header should look like:
+
+.. code-block:: none
+
+   Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
+
+If ``header`` is ``{"type": "Cookie", "name": "cookie_name" }`` then JWT header should look like:
+
+
+.. code-block:: none
+
+   Cookie: cookie_name=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
+
 
 Examples
 ^^^^^^^^
@@ -543,7 +584,31 @@ the JWT config only needs to have the public key.
       "jwk_url": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
     }
 
+EdDSA based
++++++++++++
+If your auth server is using EdDSA to sign JWTs, and is using the Ed25519 variant key,
+the JWT config only needs to have the public key.
 
+**Example 1**: public key in PEM format (not OpenSSH format):
+
+.. code-block:: json
+
+    {
+      "type":"Ed25519", 
+      "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAG9I+toAAJicilbPt36tiC4wi7E1Dp9rMmfnwdKyVXi0=\n-----END PUBLIC KEY-----"
+    }
+
+**Example 2**: public key as X509 certificate:
+
+.. code-block:: json
+
+    {
+      "type":"Ed25519",
+      "key": "-----BEGIN CERTIFICATE REQUEST-----\nMIIBAzCBtgIBADAnMQswCQYDVQQGEwJERTEYMBYGA1UEAwwPd3d3LmV4YW1wbGUu\nY29tMCowBQYDK2VwAyEA/9DV/InajW02Q0tC/tyr9mCSbSnNP1txICXVJrTGKDSg\nXDBaBgkqhkiG9w0BCQ4xTTBLMAsGA1UdDwQEAwIEMDATBgNVHSUEDDAKBggrBgEF\nBQcDATAnBgNVHREEIDAegg93d3cuZXhhbXBsZS5jb22CC2V4YW1wbGUuY29tMAUG\nAytlcANBAKbTqnTyPcf4ZkVuq2tC108pBGY19VgyoI+PP2wD2KaRz4QAO7Bjd+7S\nljyJoN83UDdtdtgb7aFgb611gx9W4go=\n-----END CERTIFICATE REQUEST-----
+      "
+    }
+
+    
 Running with JWT
 ^^^^^^^^^^^^^^^^
 Using the flag:
@@ -553,9 +618,9 @@ Using the flag:
   $ docker run -p 8080:8080 \
       hasura/graphql-engine:latest \
       graphql-engine \
-      --database-url postgres://username:password@hostname:port/dbname \
+      --database-url postgres://<username>:<password>@<hostname>:<port>/<dbname> \
       serve \
-      --admin-secret myadminsecretkey \
+      --admin-secret <myadminsecretkey> \
       --jwt-secret '{"type":"HS256", "key": "3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
 
 Using env vars:
@@ -563,11 +628,11 @@ Using env vars:
 .. code-block:: shell
 
   $ docker run -p 8080:8080 \
-      -e HASURA_GRAPHQL_ADMIN_SECRET="myadminsecretkey" \
+      -e HASURA_GRAPHQL_ADMIN_SECRET="<myadminsecretkey>" \
       -e HASURA_GRAPHQL_JWT_SECRET='{"type":"RS512", "key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd\nUWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQs\nHUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5D\no2kQ+X5xK9cipRgEKwIDAQAB\n-----END PUBLIC KEY-----\n"}' \
       hasura/graphql-engine:latest \
       graphql-engine \
-      --database-url postgres://username:password@hostname:port/dbname \
+      --database-url postgres://<username>:<password>@<hostname>:<port>/<dbname> \
       serve
 
 
@@ -676,8 +741,15 @@ Auth JWT Examples
 Here are some sample apps that use JWT authorization. You can follow the instructions in the READMEs of the
 repositories to get started.
 
+- :ref:`Custom JWT server with Hasura actions<actions_codegen_python_flask>`:
+  A simple Python / Flask API that implements ``Signup`` and ``Login`` methods as actions returning JWTs
+
 - `Auth0 JWT example <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/todo-auth0-jwt>`__:
   A todo app that uses Hasura GraphQL engine and Auth0 JWT
 
 - `Firebase JWT example <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/firebase-jwt>`__:
   Barebones example to show how to have Firebase Auth integrated with Hasura JWT mode
+
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

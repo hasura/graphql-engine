@@ -1,12 +1,14 @@
 package version
 
 const (
-	untaggedBuild   = "untagged build, there could be inconsistencies"
-	taggedBuild     = "older cli version might not be compatible with latest server apis, please update cli"
-	noServerVersion = "server with no version treated as pre-release build"
-	noCLIVersion    = "cli version is empty, indicates a broken build"
-	untaggedCLI     = "untagged cli build can work with tagged server build"
-	devCLI          = "dev version of cli, there could be inconsistencies"
+	compatibleCLIAndServer = "compatible CLI and Server"
+	untaggedBuild          = "untagged build, there could be inconsistencies"
+	olderCLIVersion        = "older cli version might not be compatible with latest server apis, please update cli"
+	versionMismatch        = "cli and server does not match"
+	noServerVersion        = "server with no version treated as pre-release build"
+	noCLIVersion           = "cli version is empty, indicates a broken build"
+	untaggedCLI            = "untagged cli build can work with tagged server build"
+	devCLI                 = "dev version of cli, there could be inconsistencies"
 )
 
 // CheckCLIServerCompatibility compares server and cli for compatibility,
@@ -42,10 +44,16 @@ func (v *Version) CheckCLIServerCompatibility() (compatible bool, reason string)
 	if v.Server != "" && v.ServerSemver != nil {
 		// cli is also tagged build
 		if v.CLI != "" && v.CLISemver != nil {
-			if (v.CLISemver.Major() >= v.ServerSemver.Major()) && (v.CLISemver.Minor() >= v.ServerSemver.Minor()) {
-				return true, taggedBuild
+			if v.CLISemver.Major() < v.ServerSemver.Major() {
+				return false, olderCLIVersion
 			}
-			return false, taggedBuild
+			if v.CLISemver.Major() > v.ServerSemver.Major() {
+				return false, versionMismatch
+			}
+			if v.CLISemver.Major() == v.ServerSemver.Major() && v.CLISemver.Minor() != v.ServerSemver.Minor() {
+				return true, versionMismatch
+			}
+			return true, compatibleCLIAndServer
 		}
 	}
 

@@ -7,12 +7,11 @@ const DerivedFrom = ({ shouldDerive, parentMutation, toggleDerivation }) => {
   if (!parentMutation) return null;
 
   const tooltip =
-    'This code is generated based on the assumption that mutation was derived from another mutation. If the assumption is wrong, you can disable the derivation.';
-
+    'This code is generated based on the assumption that operation was derived from another operation. If the assumption is wrong, you can disable the derivation.';
   return (
     <div>
       <h2 className={`${styles.subheading_text} ${styles.add_mar_bottom}`}>
-        Derived mutation
+        Derived operation
         <Tooltip
           id="action-name"
           text={tooltip}
@@ -24,7 +23,7 @@ const DerivedFrom = ({ shouldDerive, parentMutation, toggleDerivation }) => {
           <input
             type="checkbox"
             checked={shouldDerive}
-            className={`${styles.cursorPointer} ${styles.add_mar_right_mid}`}
+            className={`${styles.cursorPointer} ${styles.add_mar_right_mid} legacy-input-fix`}
           />
           Generate code with delegation to the derived mutation
         </label>

@@ -34,6 +34,7 @@ export const generateActionDefinition = ({
   actionType,
   headers,
   forwardClientHeaders,
+  timeout,
 }) => {
   return {
     arguments: filterNameLessTypeLess(args),
@@ -43,6 +44,7 @@ export const generateActionDefinition = ({
     type: actionType,
     headers: transformHeaders(headers),
     forward_client_headers: forwardClientHeaders,
+    timeout,
   };
 };
 
@@ -243,9 +245,11 @@ export const getActionTypes = (currentAction, allTypes) => {
     }
   };
 
-  actionArgs.forEach(a => {
-    getDependentTypes(a.type);
-  });
+  if (actionArgs.length) {
+    actionArgs.forEach(a => {
+      getDependentTypes(a.type);
+    });
+  }
 
   getDependentTypes(actionOutputType);
 
@@ -258,9 +262,7 @@ export const getOverlappingTypeConfirmation = (
   allTypes,
   overlappingTypenames
 ) => {
-  const otherActions = allActions.filter(
-    a => a.action_name !== currentActionName
-  );
+  const otherActions = allActions.filter(a => a.name !== currentActionName);
 
   const typeCollisionMap = {};
 

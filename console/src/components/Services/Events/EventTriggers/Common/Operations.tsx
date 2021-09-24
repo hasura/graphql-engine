@@ -43,7 +43,7 @@ const Operations = ({
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>
           &nbsp;&nbsp;
-          <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/event-triggers/invoke-trigger-console.html" />
+          <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/event-triggers/invoke-trigger-console.html" />
         </span>
       ) : (
         capitalize(o)
@@ -60,7 +60,7 @@ const Operations = ({
           <input
             onChange={o.onChange}
             data-test={o.testIdentifier}
-            className={`${styles.display_inline} ${styles.add_mar_right_small} ${styles.cursorPointer}`}
+            className={`${styles.display_inline} ${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
             type="checkbox"
             name={o.name}
             checked={o.isChecked}

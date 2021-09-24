@@ -10,14 +10,12 @@ component/cli. If you're new to the CLI codebase, you can checkout the
 [`good-first-issue`](https://github.com/hasura/graphql-engine/issues?q=is%3Aissue+is%3Aopen+label%3Ac%2Fcli+label%3A%22good+first+issue%22) label for issues that
 are fairly easy to implement.
 
-For first-time contributors, we have set aside some time slots for
-one-on-one pair programming with the team, to get you started quickly. :smile:
-If you're interested in setting up a chat, please feel free to pick a slot
-from [shahidhk](https://github.com/shahidhk)'s [calendar](https://calendly.com/shahidhk).
+If you are a first-time contributor, feel free to post your doubts/questions in `#contrib` channel on [hasura discord server](https://discord.com/invite/hasura).
 
 ## Pre-requisites
 
-- [Go >= 1.11](https://golang.org/doc/install)
+- [Go >= 1.16](https://golang.org/doc/install)
+- [Node.js >= 10.19.0 and npm >= 6.14.4](https://nodejs.org/en/download/)
 - [GNU Make](https://www.gnu.org/software/make/) (optional)
 
 You can follow your existing Golang workflow to fork, work on a branch and
@@ -30,6 +28,7 @@ follow the instructions below to make sure the import paths are correct:
 - `git remote add upstream https://github.com/hasura/graphql-engine`
 - `git checkout -b <branch-name>`
 - `make deps`
+- `make build-cli-ext`
 - Work on the feature/fix
 - If you modify files in `assets/`, run `make assets`
 - Add tests and ensure all tests are passing (check [Tests](#tests) section below)
@@ -53,7 +52,7 @@ Compose](https://github.com/hasura/graphql-engine/tree/stable/install-manifests)
 Once the server is running, you can run the tests by executing the make command:  
 
 ```bash
-HASURA_GRAPHQL_TEST_ENDPOINT=http://localhost:8080 VERSION=dev make test
+HASURA_TEST_CLI_HGE_DOCKER_IMAGE="hasura/graphql-engine:v2.0.1" HASURA_GRAPHQL_TEST_ENDPOINT=http://localhost:8080 VERSION=dev make test
 ```
 
 ## Builds

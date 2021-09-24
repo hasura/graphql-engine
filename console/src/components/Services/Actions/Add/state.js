@@ -38,6 +38,8 @@ const state = {
   derive: {
     operation: '',
   },
+  timeout: '',
+  comment: '',
 };
 
 export default state;

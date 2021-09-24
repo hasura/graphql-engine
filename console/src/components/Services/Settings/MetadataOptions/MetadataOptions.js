@@ -34,8 +34,8 @@ const MetadataOptions = props => {
         <div key="meta_data_1" className={styles.intro_note}>
           <h4>Reload metadata</h4>
           <div className={styles.content_width}>
-            Refresh Hasura metadata, typically required if you have changed the
-            underlying postgres or if you have updated your remote schemas.
+            Refresh Hasura metadata, typically required if you have changes in
+            the underlying databases or if you have updated your remote schemas.
           </div>
         </div>
 
@@ -72,7 +72,7 @@ const MetadataOptions = props => {
           permissions, etc. that is used to generate the GraphQL schema and
           API.&nbsp;
           <a
-            href="https://hasura.io/docs/1.0/graphql/manual/how-it-works/metadata-schema.html"
+            href="https://hasura.io/docs/latest/graphql/core/how-it-works/metadata-schema.html"
             target="_blank"
             rel="noopener noreferrer"
           >
