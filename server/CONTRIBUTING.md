@@ -11,7 +11,7 @@ own machine and how to contribute.
 
 For building console and running test suite:
 
-- [Node.js](https://nodejs.org/en/) (>= v8.9)
+- [Node.js](https://nodejs.org/en/) (v12+, it is recommended that you use `node` with version `v12.x.x` A.K.A `erbium` or version `14.x.x` A.K.A `Fermium`)
 - npm >= 5.7
 - python >= 3.5 with pip3 and virtualenv
 
