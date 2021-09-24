@@ -154,6 +154,46 @@ class TestMetadata:
     def test_pg_multisource_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_multisource_query.yaml')
 
+    def test_pg_function_tracking_with_comment(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/pg_track_function_with_comment_setup.yaml')
+        
+        # make an introspection query to see if the description of the function has changed
+        introspection_query = """{
+            __schema {
+                queryType {
+                fields {
+                    name
+                    description
+                }
+                }
+            }
+        }"""
+        url = "/v1/graphql"
+        query = {
+            "query": introspection_query,
+            "variables": {}
+        }
+        headers = {}
+        if hge_ctx.hge_key is not None:
+            headers['x-hasura-admin-secret'] = hge_ctx.hge_key
+
+        st, resp, _ = hge_ctx.anyq(url, query, headers)
+        assert st == 200, resp
+
+        fn_name = 'search_authors_s1'
+        fn_description = 'this function helps fetch articles based on the title'
+
+        resp_fields = resp['data']['__schema']['queryType']['fields']
+        if resp_fields is not None:
+            comment_found = False
+            for field_info in resp_fields:
+                if field_info['name'] == fn_name and field_info['description'] == fn_description:
+                    comment_found = True
+                    break
+            assert comment_found == True, resp
+
+        check_query_f(hge_ctx, self.dir() + '/pg_track_function_with_comment_teardown.yaml')
+
     def test_validate_webhook_transform_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/validate_webhook_transform_success.yaml')
 

@@ -118,10 +118,12 @@ data FunctionInfo (b :: BackendType) = FunctionInfo
     -- automatically created; so strictly speaking this field means "the function
     -- returns the composite type corresponding to this table".
     _fiReturnType :: !(TableName b),
+    -- | this field represents the description of the function as present on the database
     _fiDescription :: !(Maybe Text),
     _fiPermissions :: !FunctionPermissionsMap,
     -- | Roles to which the function is accessible
-    _fiJsonAggSelect :: !JsonAggSelect
+    _fiJsonAggSelect :: !JsonAggSelect,
+    _fiComment :: !(Maybe Text)
   }
   deriving (Generic)
 

@@ -513,7 +513,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         (mapFromL _fmFunction (OMap.elems functions) >- returnA)
           >-> (|
                 Inc.keyed
-                  ( \_ (FunctionMetadata qf config functionPermissions) -> do
+                  ( \_ (FunctionMetadata qf config functionPermissions comment) -> do
                       let systemDefined = SystemDefined False
                           definition = toJSON $ TrackFunction @b qf
                           metadataObject =
@@ -537,7 +537,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                                     rawfunctionInfo <- bindErrorA -< handleMultipleFunctions @b qf funcDefs
                                     let metadataPermissions = mapFromL _fpmRole functionPermissions
                                         permissionsMap = mkBooleanPermissionMap FunctionPermissionInfo metadataPermissions orderedRoles
-                                    (functionInfo, dep) <- bindErrorA -< buildFunctionInfo source qf systemDefined config permissionsMap rawfunctionInfo
+                                    (functionInfo, dep) <- bindErrorA -< buildFunctionInfo source qf systemDefined config permissionsMap rawfunctionInfo comment
                                     recordDependencies -< (metadataObject, schemaObject, [dep])
                                     returnA -< functionInfo
                                 )

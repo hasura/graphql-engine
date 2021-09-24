@@ -1,0 +1,67 @@
+- description: PG add source
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_add_source
+    args:
+      name: new_pg_db
+      configuration:
+        connection_info:
+          database_url:
+            from_env: HASURA_GRAPHQL_PG_SOURCE_URL_1
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+            retries: 1
+
+- description: create table
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: new_pg_db
+      sql: |
+        create table author_s1(
+            id serial primary key,
+            name text unique
+        );
+        INSERT INTO author_s1 (name)
+          VALUES ('Author 1'), ('Author 2');
+        create function search_authors_s1(search text)
+        returns setof author_s1 as $$
+            select *
+            from author_s1
+            where
+              name ilike ('%' || search || '%');
+        $$ language sql stable;
+
+- description: track table
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_track_table
+    args:
+      table: author_s1
+      source: new_pg_db
+
+- description: track function with comment
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_track_function
+    args:
+      function:
+        schema: public
+        name: search_authors_s1
+      source: new_pg_db
+      comment: this function helps fetch articles based on the title
