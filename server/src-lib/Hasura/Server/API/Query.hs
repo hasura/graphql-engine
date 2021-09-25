@@ -175,14 +175,14 @@ runQuery ::
 runQuery env logger instanceId userInfo sc hMgr serverConfigCtx query = do
   (metadata, currentResourceVersion) <- fetchMetadata
   result <-
-    runReaderT (runQueryM env query) logger & Tracing.interpTraceT \x -> do
-      (((js, tracemeta), meta), rsc, ci) <-
+    runReaderT (runQueryM env query) logger & \x -> do
+      ((js, meta), rsc, ci) <-
         x & runMetadataT metadata
           & runCacheRWT sc
           & peelRun runCtx
           & runExceptT
           & liftEitherM
-      pure ((js, rsc, ci, meta), tracemeta)
+      pure (js, rsc, ci, meta)
   withReload currentResourceVersion result
   where
     runCtx = RunCtx userInfo hMgr serverConfigCtx
