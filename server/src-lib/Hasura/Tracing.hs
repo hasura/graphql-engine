@@ -155,7 +155,28 @@ class Monad m => MonadTrace m where
   attachMetadata :: TracingMetadata -> m ()
 
 -- | Reinterpret a 'TraceT' action in another 'MonadTrace'.
--- This can be useful when you need to reorganize a monad transformer stack.
+-- This can be useful when you need to reorganize a monad transformer stack, for
+-- example, to embed an action in some monadic computation, while preserving tracing
+-- metadata and context.
+--
+-- For example, we use this function in various places in 'BackendExecute',
+-- where we receive an action to execute in some concrete monad transformer stack.
+-- See the various implementations of 'runQuery' for examples.
+-- Ideally, the input computation's type would be sufficiently polymorphic that
+-- we would not need to reorder monads inthe transformer stack. However, the monad
+-- transformer stacks must be concrete, because their types are defined by
+-- an associated type family 'ExecutionMonad'. Hence, we need to use this function
+-- to peel off the outermost 'TraceT' constructor, and embed the computation in some
+-- other 'MonadTrace'.
+--
+-- A second example is related to caching. The 'cacheLookup' function returns an
+-- action in a concrete transformer stack, again because we are constrained by the
+-- usage of a type class. We need to reinterpret the 'TraceT' component of this
+-- concrete stack in some other abstract monad transformer stack, using this function.
+--
+-- Laws:
+--
+-- > interpTraceT id (hoist f (TraceT x)) = interpTraceT f (TraceT x)
 interpTraceT ::
   MonadTrace n =>
   (m (a, TracingMetadata) -> n (b, TracingMetadata)) ->
