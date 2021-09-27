@@ -44,7 +44,6 @@ module Hasura.RQL.Types.SchemaCache
     ViewInfo (..),
     isMutable,
     IntrospectionResult (..),
-    -- , ParsedIntrospection(..)
     RemoteSchemaCustomizer (..),
     remoteSchemaCustomizeTypeName,
     remoteSchemaCustomizeFieldName,
@@ -54,7 +53,6 @@ module Hasura.RQL.Types.SchemaCache
     rscName,
     rscInfo,
     rscIntroOriginal,
-    -- , rscParsed
     rscRawIntrospectionResult,
     rscPermissions,
     RemoteSchemaMap,
