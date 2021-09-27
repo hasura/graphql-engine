@@ -4,16 +4,15 @@
 module Hasura.RQL.IR.RemoteSchema
   ( SelectionSet (..),
     convertSelectionSet,
-    RemoteFieldG(..),
+    RemoteFieldG (..),
     rfRemoteSchemaInfo,
     rfResultCustomizer,
     rfField,
-    RemoteRootField(..),
+    RemoteRootField (..),
     getRemoteFieldSelectionSet,
     RawRemoteField,
     RemoteField,
     realRemoteField,
-
     Field (..),
     Typename (..),
     AliasedFields,
@@ -25,45 +24,46 @@ module Hasura.RQL.IR.RemoteSchema
   )
 where
 
-import           Control.Lens.TH                (makeLenses)
-
-import Hasura.Prelude
+import Control.Lens.TH (makeLenses)
+import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Hasura.GraphQL.Parser (Variable)
+import Hasura.Prelude
+import Hasura.RQL.Types.RemoteSchema qualified as RQL
+import Language.GraphQL.Draft.Syntax qualified as G
 
-import qualified Data.HashMap.Strict as Map
-import qualified Data.HashMap.Strict.InsOrd.Extended as OMap
-import qualified Hasura.RQL.Types.RemoteSchema as RQL
-import qualified Language.GraphQL.Draft.Syntax as G
-
-data RemoteFieldG f
-  = RemoteFieldG
-  { _rfRemoteSchemaInfo :: !RQL.RemoteSchemaInfo
-  , _rfResultCustomizer :: !RQL.RemoteResultCustomizer
-  , _rfField            :: !f
-  } deriving (Functor, Foldable, Traversable)
+data RemoteFieldG f = RemoteFieldG
+  { _rfRemoteSchemaInfo :: !RQL.RemoteSchemaInfo,
+    _rfResultCustomizer :: !RQL.RemoteResultCustomizer,
+    _rfField :: !f
+  }
+  deriving (Functor, Foldable, Traversable)
 
 $(makeLenses ''RemoteFieldG)
 
 -- | An RemoteRootField could either be a real field on the remote server
 -- or represent a virtual namespace that only exists in the Hasura schema.
 data RemoteRootField var
-  = RRFNamespaceField !(ObjectSelectionSet var) -- ^ virtual namespace field
-  | RRFRealField !(Field var) -- ^ a real field on the remote server
+  = -- | virtual namespace field
+    RRFNamespaceField !(ObjectSelectionSet var)
+  | -- | a real field on the remote server
+    RRFRealField !(Field var)
   deriving (Show, Eq, Functor, Foldable, Traversable)
 
 -- | For a real remote field gives a SelectionSet for selecting the field itself.
 --   For a virtual field gives the unwrapped SelectionSet for the field.
 getRemoteFieldSelectionSet :: RemoteRootField Variable -> G.SelectionSet G.NoFragments Variable
-getRemoteFieldSelectionSet = convertSelectionSet . SelectionSetObject . \case
+getRemoteFieldSelectionSet =
+  convertSelectionSet . SelectionSetObject . \case
     RRFNamespaceField selSet -> selSet
-    RRFRealField fld         -> OMap.singleton (_fName fld) fld
+    RRFRealField fld -> OMap.singleton (_fName fld) fld
 
 type RawRemoteField = RemoteFieldG (Field RQL.RemoteSchemaVariable)
 
 type RemoteField = RemoteFieldG (RemoteRootField RQL.RemoteSchemaVariable)
 
 realRemoteField :: RawRemoteField -> RemoteField
-realRemoteField RemoteFieldG{..} = RemoteFieldG{_rfField = RRFRealField _rfField, ..}
+realRemoteField RemoteFieldG {..} = RemoteFieldG {_rfField = RRFRealField _rfField, ..}
 
 -- | Ordered fields
 type AliasedFields f = OMap.InsOrdHashMap G.Name f
@@ -76,13 +76,13 @@ type ObjectSelectionSetMap var =
 data Typename = Typename
   deriving (Show, Eq, Generic)
 
-data ScopedSelectionSet f var
-  = ScopedSelectionSet
+data ScopedSelectionSet f var = ScopedSelectionSet
   { -- | Fields that aren't explicitly defined for member types
-    _sssBaseSelectionSet :: !(AliasedFields f)
+    _sssBaseSelectionSet :: !(AliasedFields f),
     -- | SelectionSets of individual member types
-  , _sssMemberSelectionSets :: !(ObjectSelectionSetMap var)
-  } deriving (Show, Eq, Functor, Generic)
+    _sssMemberSelectionSets :: !(ObjectSelectionSetMap var)
+  }
+  deriving (Show, Eq, Functor, Generic)
 
 emptyScopedSelectionSet :: ScopedSelectionSet f var
 emptyScopedSelectionSet =
@@ -93,11 +93,12 @@ type InterfaceSelectionSet var = ScopedSelectionSet (Field var) var
 type UnionSelectionSet var = ScopedSelectionSet Typename var
 
 data Field var = Field
-  { _fName :: !G.Name
-  , _fArguments :: !(HashMap G.Name (G.Value var))
-  , _fDirectives :: ![G.Directive var]
-  , _fSelectionSet :: !(SelectionSet var)
-  } deriving (Show, Eq, Functor, Foldable, Traversable)
+  { _fName :: !G.Name,
+    _fArguments :: !(HashMap G.Name (G.Value var)),
+    _fDirectives :: ![G.Directive var],
+    _fSelectionSet :: !(SelectionSet var)
+  }
+  deriving (Show, Eq, Functor, Foldable, Traversable)
 
 convertField :: Field Variable -> G.Field G.NoFragments Variable
 convertField = undefined
@@ -118,6 +119,6 @@ instance Functor SelectionSet where
     SelectionSetUnion s -> undefined
     SelectionSetInterface s -> undefined
 
-instance Foldable SelectionSet where
-instance Traversable SelectionSet where
+instance Foldable SelectionSet
 
+instance Traversable SelectionSet

@@ -1,26 +1,23 @@
 -- | Functions and datatypes for interpreting Postgres errors.
 module Hasura.Backends.Postgres.SQL.Error
-  ( PGErrorType(..)
-  , _PGDataException
-  , _PGIntegrityConstraintViolation
-  , _PGSyntaxErrorOrAccessRuleViolation
-  , pgErrorType
+  ( PGErrorType (..),
+    _PGDataException,
+    _PGIntegrityConstraintViolation,
+    _PGSyntaxErrorOrAccessRuleViolation,
+    pgErrorType,
+    PGErrorCode (..),
+    _PGErrorGeneric,
+    _PGErrorSpecific,
+    PGDataException (..),
+    PGIntegrityConstraintViolation (..),
+    PGSyntaxErrorOrAccessRuleViolation (..),
+  )
+where
 
-  , PGErrorCode(..)
-  , _PGErrorGeneric
-  , _PGErrorSpecific
-
-  , PGDataException(..)
-  , PGIntegrityConstraintViolation(..)
-  , PGSyntaxErrorOrAccessRuleViolation(..)
-  ) where
-
-import           Hasura.Prelude
-
-import qualified Data.Text                    as T
-import qualified Database.PG.Query.Connection as Q
-
-import           Control.Lens.TH              (makePrisms)
+import Control.Lens.TH (makePrisms)
+import Data.Text qualified as T
+import Database.PG.Query.Connection qualified as Q
+import Hasura.Prelude
 
 -- | The top-level error code type. Errors in Postgres are divided into different /classes/, which
 -- are further subdivided into individual error codes. Even if a particular status code is not known
@@ -32,10 +29,10 @@ data PGErrorType
   deriving (Show, Eq)
 
 data PGErrorCode a
-  = PGErrorGeneric
-  -- ^ represents errors that have the non-specific @000@ status code
-  | PGErrorSpecific !a
-  -- ^ represents errors with a known, more specific status code
+  = -- | represents errors that have the non-specific @000@ status code
+    PGErrorGeneric
+  | -- | represents errors with a known, more specific status code
+    PGErrorSpecific !a
   deriving (Show, Eq, Functor)
 
 data PGDataException
@@ -65,26 +62,33 @@ $(makePrisms ''PGErrorCode)
 pgErrorType :: Q.PGStmtErrDetail -> Maybe PGErrorType
 pgErrorType errorDetails = parseTypes =<< Q.edStatusCode errorDetails
   where
-    parseTypes fullCodeText = choice
-      [ withClass "22" PGDataException
-        [ code "007" PGInvalidDatetimeFormat
-        , code "023" PGInvalidParameterValue
-        , code "025" PGInvalidEscapeSequence
-        , code "P02" PGInvalidTextRepresentation
+    parseTypes fullCodeText =
+      choice
+        [ withClass
+            "22"
+            PGDataException
+            [ code "007" PGInvalidDatetimeFormat,
+              code "023" PGInvalidParameterValue,
+              code "025" PGInvalidEscapeSequence,
+              code "P02" PGInvalidTextRepresentation
+            ],
+          withClass
+            "23"
+            PGIntegrityConstraintViolation
+            [ code "001" PGRestrictViolation,
+              code "502" PGNotNullViolation,
+              code "503" PGForeignKeyViolation,
+              code "505" PGUniqueViolation,
+              code "514" PGCheckViolation,
+              code "P01" PGExclusionViolation
+            ],
+          withClass
+            "42"
+            PGSyntaxErrorOrAccessRuleViolation
+            [ code "704" PGUndefinedObject,
+              code "P10" PGInvalidColumnReference
+            ]
         ]
-      , withClass "23" PGIntegrityConstraintViolation
-        [ code "001" PGRestrictViolation
-        , code "502" PGNotNullViolation
-        , code "503" PGForeignKeyViolation
-        , code "505" PGUniqueViolation
-        , code "514" PGCheckViolation
-        , code "P01" PGExclusionViolation
-        ]
-      , withClass "42" PGSyntaxErrorOrAccessRuleViolation
-        [ code "704" PGUndefinedObject
-        , code "P10" PGInvalidColumnReference
-        ]
-      ]
       where
         (classText, codeText) = T.splitAt 2 fullCodeText
 

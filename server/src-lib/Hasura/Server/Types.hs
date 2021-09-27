@@ -1,43 +1,36 @@
 module Hasura.Server.Types where
 
-import           Hasura.Prelude
+import Data.Aeson
+import Data.HashSet qualified as Set
+import Database.PG.Query qualified as Q
+import Hasura.Prelude
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.RemoteSchema
+import Hasura.Server.Utils
+import Network.HTTP.Types qualified as HTTP
 
-import           Data.Aeson
-
-import qualified Data.HashSet                  as Set
-import qualified Database.PG.Query             as Q
-import qualified Network.HTTP.Types            as HTTP
-
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Function
-import           Hasura.RQL.Types.RemoteSchema
-import           Hasura.Server.Utils
-
-newtype RequestId
-  = RequestId { unRequestId :: Text }
+newtype RequestId = RequestId {unRequestId :: Text}
   deriving (Show, Eq, ToJSON, FromJSON, Hashable)
 
 getRequestId :: (MonadIO m) => [HTTP.Header] -> m (RequestId, [HTTP.Header])
 getRequestId headers = do
   -- generate a request id for every request if the client has not sent it
   let mkHeader = (requestIdHeader,)
-  case getRequestHeader requestIdHeader headers  of
-    Nothing    -> do
+  case getRequestHeader requestIdHeader headers of
+    Nothing -> do
       reqId <- liftIO generateFingerprint
       let r = RequestId reqId
       pure (r, mkHeader (txtToBs reqId) : headers)
     Just reqId -> pure (RequestId $ bsToTxt reqId, headers)
 
-newtype DbUid
-  = DbUid { getDbUid :: Text }
+newtype DbUid = DbUid {getDbUid :: Text}
   deriving (Show, Eq, ToJSON, FromJSON)
 
-newtype PGVersion
-  = PGVersion { unPGVersion :: Int }
+newtype PGVersion = PGVersion {unPGVersion :: Int}
   deriving (Show, Eq, ToJSON)
 
-newtype InstanceId
-  = InstanceId { getInstanceId :: Text }
+newtype InstanceId = InstanceId {getInstanceId :: Text}
   deriving (Show, Eq, ToJSON, FromJSON, Q.FromCol, Q.ToPrepArg)
 
 data ExperimentalFeature
@@ -53,7 +46,7 @@ instance Hashable ExperimentalFeature
 instance FromJSON ExperimentalFeature where
   parseJSON = withText "ExperimentalFeature" $ \case
     "inherited_roles" -> pure EFInheritedRoles
-    _                 -> fail "ExperimentalFeature can only be one of these value: inherited_roles "
+    _ -> fail "ExperimentalFeature can only be one of these value: inherited_roles "
 
 instance ToJSON ExperimentalFeature where
   toJSON = \case
@@ -63,17 +56,18 @@ data MaintenanceMode = MaintenanceModeEnabled | MaintenanceModeDisabled
   deriving (Show, Eq)
 
 instance FromJSON MaintenanceMode where
-  parseJSON = withBool "MaintenanceMode" $
-    pure . bool MaintenanceModeDisabled MaintenanceModeEnabled
+  parseJSON =
+    withBool "MaintenanceMode" $
+      pure . bool MaintenanceModeDisabled MaintenanceModeEnabled
 
 instance ToJSON MaintenanceMode where
   toJSON = Bool . (== MaintenanceModeEnabled)
 
-data ServerConfigCtx
-  = ServerConfigCtx
-  { _sccFunctionPermsCtx     :: !FunctionPermissionsCtx
-  , _sccRemoteSchemaPermsCtx :: !RemoteSchemaPermsCtx
-  , _sccSQLGenCtx            :: !SQLGenCtx
-  , _sccMaintenanceMode      :: !MaintenanceMode
-  , _sccExperimentalFeatures :: !(Set.HashSet ExperimentalFeature)
-  } deriving (Show, Eq)
+data ServerConfigCtx = ServerConfigCtx
+  { _sccFunctionPermsCtx :: !FunctionPermissionsCtx,
+    _sccRemoteSchemaPermsCtx :: !RemoteSchemaPermsCtx,
+    _sccSQLGenCtx :: !SQLGenCtx,
+    _sccMaintenanceMode :: !MaintenanceMode,
+    _sccExperimentalFeatures :: !(Set.HashSet ExperimentalFeature)
+  }
+  deriving (Show, Eq)

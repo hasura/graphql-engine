@@ -1,17 +1,14 @@
 module Hasura.RQL.Types.Network where
 
-import           Hasura.Prelude
+import Data.Aeson as A
+import Data.Text qualified as T
+import Hasura.Prelude
+import Test.QuickCheck.Arbitrary as Q
 
-import qualified Data.Text                 as T
-
-import           Data.Aeson                as A
-import           Test.QuickCheck.Arbitrary as Q
-
-
-data Network
-  = Network
-  { networkTlsAllowlist  :: ![TlsAllow]
-  } deriving (Show, Eq, Generic)
+data Network = Network
+  { networkTlsAllowlist :: ![TlsAllow]
+  }
+  deriving (Show, Eq, Generic)
 
 instance Q.Arbitrary Network where
   -- TODO: Decide if the arbitrary instance should be extended to actual arbitrary networks
@@ -28,32 +25,34 @@ instance ToJSON Network where
 emptyNetwork :: Network
 emptyNetwork = Network []
 
-data TlsAllow
-  = TlsAllow
-  { taHost   :: !String
-  , taSuffix :: !(Maybe String)
-  , taPermit :: !(Maybe [TlsPermission])
-  } deriving (Show, Eq, Generic)
+data TlsAllow = TlsAllow
+  { taHost :: !String,
+    taSuffix :: !(Maybe String),
+    taPermit :: !(Maybe [TlsPermission])
+  }
+  deriving (Show, Eq, Generic)
 
 instance FromJSON TlsAllow where
   parseJSON j = aString j <|> anObject j
     where
-      aString  = withText "TlsAllow" $ \s ->
+      aString = withText "TlsAllow" $ \s ->
         if T.null s
           then fail "missing \"host\" field in input"
           else pure $ TlsAllow (T.unpack s) Nothing Nothing
 
-      anObject = withObject "TlsAllow" $ \o -> TlsAllow
-        <$> o .: "host"
-        <*> o .:? "suffix"
-        <*> o .:? "permissions"
+      anObject = withObject "TlsAllow" $ \o ->
+        TlsAllow
+          <$> o .: "host"
+          <*> o .:? "suffix"
+          <*> o .:? "permissions"
 
 instance ToJSON TlsAllow where
-  toJSON (TlsAllow h p a) = object
-    [ "host"        A..= h
-    , "suffix"      A..= p
-    , "permissions" A..= a
-    ]
+  toJSON (TlsAllow h p a) =
+    object
+      [ "host" A..= h,
+        "suffix" A..= p,
+        "permissions" A..= a
+      ]
 
 data TlsPermission
   = SelfSigned
@@ -61,15 +60,16 @@ data TlsPermission
 
 instance FromJSON TlsPermission where
   parseJSON (String "self-signed") = pure SelfSigned
-  parseJSON _ = fail $
-    "TlsPermission expecting one of " <> intercalate ", " (map (show :: TlsPermission -> String) [minBound .. maxBound])
+  parseJSON _ =
+    fail $
+      "TlsPermission expecting one of " <> intercalate ", " (map (show :: TlsPermission -> String) [minBound .. maxBound])
 
 instance ToJSON TlsPermission where
   toJSON SelfSigned = String "self-signed"
 
 type AddHostToTLSAllowlist = TlsAllow
 
-data DropHostFromTLSAllowlist = DropHostFromTLSAllowlist { _dhftaHost :: !String }
+data DropHostFromTLSAllowlist = DropHostFromTLSAllowlist {_dhftaHost :: !String}
   deriving (Show, Eq)
 
 instance FromJSON DropHostFromTLSAllowlist where

@@ -1,17 +1,16 @@
 module Hasura.RQL.RequestTransformSpec (spec) where
 
-import           Data.Aeson
-import           Hasura.Prelude
-import           Hasura.RQL.DDL.RequestTransform
-import           Test.Hspec
-import           Test.Hspec.Hedgehog
-
-import qualified Data.CaseInsensitive            as CI
-import qualified Data.HashMap.Strict             as M
-import qualified Data.Set                        as S
-import qualified Data.Text                       as T
-import qualified Hedgehog.Gen                    as Gen
-import qualified Hedgehog.Range                  as Range
+import Data.Aeson
+import Data.CaseInsensitive qualified as CI
+import Data.HashMap.Strict qualified as M
+import Data.Set qualified as S
+import Data.Text qualified as T
+import Hasura.Prelude
+import Hasura.RQL.DDL.RequestTransform
+import Hedgehog.Gen qualified as Gen
+import Hedgehog.Range qualified as Range
+import Test.Hspec
+import Test.Hspec.Hedgehog
 
 spec :: Spec
 spec = do
@@ -30,15 +29,15 @@ spec = do
   it "TransformHeaders" $
     hedgehog $ do
       headers <- forAll genTransformHeaders
-      let sortH TransformHeaders{..} = TransformHeaders (sort addHeaders) (sort removeHeaders)
+      let sortH TransformHeaders {..} = TransformHeaders (sort addHeaders) (sort removeHeaders)
           headersMaybe = decode $ encode headers
       Just (sortH headers) === fmap sortH headersMaybe
 
   it "MetadataTransform RoundTrip" $
     hedgehog $ do
       transform <- forAll genMetadataTransform
-      let sortH TransformHeaders{..} = TransformHeaders (sort addHeaders) (sort removeHeaders)
-          sortMT mt@MetadataTransform{mtRequestHeaders} = mt { mtRequestHeaders = sortH <$> mtRequestHeaders }
+      let sortH TransformHeaders {..} = TransformHeaders (sort addHeaders) (sort removeHeaders)
+          sortMT mt@MetadataTransform {mtRequestHeaders} = mt {mtRequestHeaders = sortH <$> mtRequestHeaders}
           transformMaybe = decode $ encode transform
       Just (sortMT transform) === fmap sortMT transformMaybe
 
@@ -93,5 +92,10 @@ genMetadataTransform = do
   queryParams <- Gen.maybe $ genQueryParams
   reqHeaders <- Gen.maybe $ genTransformHeaders
   MetadataTransform
-    method url bodyTransform contentType queryParams reqHeaders
+    method
+    url
+    bodyTransform
+    contentType
+    queryParams
+    reqHeaders
     <$> genTemplatingEngine

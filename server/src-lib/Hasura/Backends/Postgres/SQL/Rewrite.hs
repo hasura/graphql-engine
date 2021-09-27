@@ -1,15 +1,13 @@
 module Hasura.Backends.Postgres.SQL.Rewrite
-  ( prefixNumToAliases
-  , prefixNumToAliasesSelectWith
-  ) where
+  ( prefixNumToAliases,
+    prefixNumToAliasesSelectWith,
+  )
+where
 
-import           Hasura.Prelude
-
-import qualified Data.HashMap.Strict                as Map
-
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
-
-import           Hasura.Backends.Postgres.SQL.Types (Identifier (..))
+import Data.HashMap.Strict qualified as Map
+import Hasura.Backends.Postgres.SQL.DML qualified as S
+import Hasura.Backends.Postgres.SQL.Types (Identifier (..))
+import Hasura.Prelude
 
 {- Note [Postgres identifier length limitations]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -23,18 +21,18 @@ prefixNumToAliases :: S.Select -> S.Select
 prefixNumToAliases s =
   uSelect s `evalState` UniqSt 0 Map.empty
 
-prefixNumToAliasesSelectWith
-  :: S.SelectWithG S.Select -> S.SelectWithG S.Select
+prefixNumToAliasesSelectWith ::
+  S.SelectWithG S.Select -> S.SelectWithG S.Select
 prefixNumToAliasesSelectWith s =
   uSelectWith s `evalState` UniqSt 0 Map.empty
 
 type Rewrite a = State a
 
-data UniqSt
-  = UniqSt
-  { _uqVar   :: !Int
-  , _uqIdens :: !(Map.HashMap Identifier Int)
-  } deriving (Show, Eq)
+data UniqSt = UniqSt
+  { _uqVar :: !Int,
+    _uqIdens :: !(Map.HashMap Identifier Int)
+  }
+  deriving (Show, Eq)
 
 type Uniq = Rewrite UniqSt
 
@@ -61,7 +59,7 @@ restoringIdens action = do
   UniqSt _ idens <- get
   res <- action
   -- restore the idens to before the action
-  modify' $ \s -> s { _uqIdens = idens }
+  modify' $ \s -> s {_uqIdens = idens}
   return res
 
 uSelectWith :: S.SelectWithG S.Select -> Uniq (S.SelectWithG S.Select)
@@ -73,25 +71,35 @@ uSelectWith (S.SelectWith ctes baseSelect) =
 uSelect :: S.Select -> Uniq S.Select
 uSelect sel = do
   -- this has to be the first thing to process
-  newFromM  <- mapM uFromExp fromM
+  newFromM <- mapM uFromExp fromM
   newCTEs <- for ctes $ \(alias, cte) -> (,) <$> addAlias alias <*> uSelect cte
 
   newWhereM <- forM whereM $
-               \(S.WhereFrag be) -> S.WhereFrag <$> uBoolExp be
-  newGrpM   <- forM grpM $
-               \(S.GroupByExp l) -> S.GroupByExp <$> mapM uSqlExp l
-  newHavnM  <- forM havnM $
-               \(S.HavingExp be) -> S.HavingExp <$> uBoolExp be
-  newOrdM   <- mapM uOrderBy ordByM
-  newDistM  <- mapM uDistinct distM
-  newExtrs  <- mapM uExtractor extrs
-  return $ S.Select newCTEs newDistM newExtrs newFromM newWhereM newGrpM
-    newHavnM newOrdM limitM offM
+    \(S.WhereFrag be) -> S.WhereFrag <$> uBoolExp be
+  newGrpM <- forM grpM $
+    \(S.GroupByExp l) -> S.GroupByExp <$> mapM uSqlExp l
+  newHavnM <- forM havnM $
+    \(S.HavingExp be) -> S.HavingExp <$> uBoolExp be
+  newOrdM <- mapM uOrderBy ordByM
+  newDistM <- mapM uDistinct distM
+  newExtrs <- mapM uExtractor extrs
+  return $
+    S.Select
+      newCTEs
+      newDistM
+      newExtrs
+      newFromM
+      newWhereM
+      newGrpM
+      newHavnM
+      newOrdM
+      limitM
+      offM
   where
     S.Select ctes distM extrs fromM whereM grpM havnM ordByM limitM offM = sel
     uDistinct = \case
       S.DistinctSimple -> return S.DistinctSimple
-      S.DistinctOn l   -> S.DistinctOn <$> mapM uSqlExp l
+      S.DistinctOn l -> S.DistinctOn <$> mapM uSqlExp l
     uExtractor (S.Extractor e alM) =
       S.Extractor <$> uSqlExp e <*> return alM
 
@@ -134,38 +142,39 @@ uFromItem fromItem = case fromItem of
     return $ S.FISelectWith isLateral newSelectWith newAls
   S.FIValues (S.ValuesExp tups) als mCols -> do
     newValExp <- fmap S.ValuesExp $
-                 forM tups $ \(S.TupleExp ts) ->
-                               S.TupleExp <$> mapM uSqlExp ts
+      forM tups $ \(S.TupleExp ts) ->
+        S.TupleExp <$> mapM uSqlExp ts
     return $ S.FIValues newValExp als mCols
   S.FIJoin joinExp ->
     S.FIJoin <$> uJoinExp joinExp
 
 uJoinExp :: S.JoinExpr -> Uniq S.JoinExpr
 uJoinExp (S.JoinExpr left ty right joinCond) = do
-  leftN  <- uFromItem left
+  leftN <- uFromItem left
   rightN <- uFromItem right
   S.JoinExpr leftN ty rightN <$> uJoinCond joinCond
 
 uJoinCond :: S.JoinCond -> Uniq S.JoinCond
 uJoinCond joinCond = case joinCond of
-  S.JoinOn be      -> S.JoinOn <$> uBoolExp be
+  S.JoinOn be -> S.JoinOn <$> uBoolExp be
   S.JoinUsing cols -> return $ S.JoinUsing cols
 
 uBoolExp :: S.BoolExp -> Uniq S.BoolExp
-uBoolExp = restoringIdens . \case
-  S.BELit b -> return $ S.BELit b
-  S.BEBin op left right ->
-    S.BEBin <$> return op <*> uBoolExp left <*> uBoolExp right
-  S.BENot b -> S.BENot <$> uBoolExp b
-  S.BECompare op left right ->
-    S.BECompare <$> return op <*> uSqlExp left <*> uSqlExp right
-  S.BECompareAny op left right ->
-    S.BECompareAny <$> return op <*> uSqlExp left <*> uSqlExp right
-  S.BENull e -> S.BENull <$> uSqlExp e
-  S.BENotNull e -> S.BENotNull <$> uSqlExp e
-  S.BEExists sel -> S.BEExists <$> uSelect sel
-  S.BEIN left exps -> S.BEIN <$> uSqlExp left <*> mapM uSqlExp exps
-  S.BEExp e -> S.BEExp <$> uSqlExp e
+uBoolExp =
+  restoringIdens . \case
+    S.BELit b -> return $ S.BELit b
+    S.BEBin op left right ->
+      S.BEBin <$> return op <*> uBoolExp left <*> uBoolExp right
+    S.BENot b -> S.BENot <$> uBoolExp b
+    S.BECompare op left right ->
+      S.BECompare <$> return op <*> uSqlExp left <*> uSqlExp right
+    S.BECompareAny op left right ->
+      S.BECompareAny <$> return op <*> uSqlExp left <*> uSqlExp right
+    S.BENull e -> S.BENull <$> uSqlExp e
+    S.BENotNull e -> S.BENotNull <$> uSqlExp e
+    S.BEExists sel -> S.BEExists <$> uSelect sel
+    S.BEIN left exps -> S.BEIN <$> uSqlExp left <*> mapM uSqlExp exps
+    S.BEExp e -> S.BEExp <$> uSqlExp e
 
 uOrderBy :: S.OrderByExp -> Uniq S.OrderByExp
 uOrderBy (S.OrderByExp ordByItems) =
@@ -173,57 +182,58 @@ uOrderBy (S.OrderByExp ordByItems) =
   where
     uOrderByItem (S.OrderByItem e ordTyM nullsOrdM) =
       S.OrderByItem
-      <$> uSqlExp e
-      <*> return ordTyM
-      <*> return nullsOrdM
+        <$> uSqlExp e
+        <*> return ordTyM
+        <*> return nullsOrdM
 
 uSqlExp :: S.SQLExp -> Uniq S.SQLExp
-uSqlExp = restoringIdens . \case
-  S.SEPrep i                    -> return $ S.SEPrep i
-  S.SENull                      -> return S.SENull
-  S.SELit t                     -> return $ S.SELit t
-  S.SEUnsafe t                  -> return $ S.SEUnsafe t
-  S.SESelect s                  -> S.SESelect <$> uSelect s
-  S.SEStar qual                 -> S.SEStar <$> traverse uQual qual
-  -- this is for row expressions
-  -- todo: check if this is always okay
-  S.SEIdentifier iden                 -> return $ S.SEIdentifier iden
-  S.SERowIdentifier iden              -> S.SERowIdentifier <$> getIdentifier iden
-  S.SEQIdentifier (S.QIdentifier qual iden) -> do
-    newQual <- uQual qual
-    return $ S.SEQIdentifier $ S.QIdentifier newQual iden
-  S.SEFnApp fn args ordByM      ->
-    S.SEFnApp
-    <$> return fn
-    <*> mapM uSqlExp args
-    <*> mapM uOrderBy ordByM
-  S.SEOpApp op args             ->
-    S.SEOpApp op
-    <$> mapM uSqlExp args
-  S.SETyAnn e ty                ->
-    S.SETyAnn
-    <$> uSqlExp e
-    <*> return ty
-  S.SECond be onTrue onFalse    ->
-    S.SECond
-    <$> uBoolExp be
-    <*> uSqlExp onTrue
-    <*> uSqlExp onFalse
-  S.SEBool be                   ->
-    S.SEBool <$> uBoolExp be
-  S.SEExcluded t                ->
-    S.SEExcluded <$> return t
-  S.SEArray l                   ->
-    S.SEArray <$> mapM uSqlExp l
-  S.SEArrayIndex arrayExp indexExp ->
-    S.SEArrayIndex <$> uSqlExp arrayExp <*> uSqlExp indexExp
-  S.SETuple (S.TupleExp l)      ->
-    S.SETuple . S.TupleExp <$> mapM uSqlExp l
-  S.SECount cty                 -> return $ S.SECount cty
-  S.SENamedArg arg val          -> S.SENamedArg arg <$> uSqlExp val
-  S.SEFunction funcExp          -> S.SEFunction <$> uFunctionExp funcExp
+uSqlExp =
+  restoringIdens . \case
+    S.SEPrep i -> return $ S.SEPrep i
+    S.SENull -> return S.SENull
+    S.SELit t -> return $ S.SELit t
+    S.SEUnsafe t -> return $ S.SEUnsafe t
+    S.SESelect s -> S.SESelect <$> uSelect s
+    S.SEStar qual -> S.SEStar <$> traverse uQual qual
+    -- this is for row expressions
+    -- todo: check if this is always okay
+    S.SEIdentifier iden -> return $ S.SEIdentifier iden
+    S.SERowIdentifier iden -> S.SERowIdentifier <$> getIdentifier iden
+    S.SEQIdentifier (S.QIdentifier qual iden) -> do
+      newQual <- uQual qual
+      return $ S.SEQIdentifier $ S.QIdentifier newQual iden
+    S.SEFnApp fn args ordByM ->
+      S.SEFnApp
+        <$> return fn
+        <*> mapM uSqlExp args
+        <*> mapM uOrderBy ordByM
+    S.SEOpApp op args ->
+      S.SEOpApp op
+        <$> mapM uSqlExp args
+    S.SETyAnn e ty ->
+      S.SETyAnn
+        <$> uSqlExp e
+        <*> return ty
+    S.SECond be onTrue onFalse ->
+      S.SECond
+        <$> uBoolExp be
+        <*> uSqlExp onTrue
+        <*> uSqlExp onFalse
+    S.SEBool be ->
+      S.SEBool <$> uBoolExp be
+    S.SEExcluded t ->
+      S.SEExcluded <$> return t
+    S.SEArray l ->
+      S.SEArray <$> mapM uSqlExp l
+    S.SEArrayIndex arrayExp indexExp ->
+      S.SEArrayIndex <$> uSqlExp arrayExp <*> uSqlExp indexExp
+    S.SETuple (S.TupleExp l) ->
+      S.SETuple . S.TupleExp <$> mapM uSqlExp l
+    S.SECount cty -> return $ S.SECount cty
+    S.SENamedArg arg val -> S.SENamedArg arg <$> uSqlExp val
+    S.SEFunction funcExp -> S.SEFunction <$> uFunctionExp funcExp
   where
     uQual = \case
       S.QualifiedIdentifier iden ty -> S.QualifiedIdentifier <$> getIdentifier iden <*> pure ty
-      S.QualTable t                 -> return $ S.QualTable t
-      S.QualVar t                   -> return $ S.QualVar t
+      S.QualTable t -> return $ S.QualTable t
+      S.QualVar t -> return $ S.QualVar t

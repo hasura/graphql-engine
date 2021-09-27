@@ -1,98 +1,104 @@
 module Hasura.RQL.DDL.Schema.Diff where
 
-import           Hasura.Prelude
+import Control.Lens ((.~))
+import Data.Aeson
+import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashSet qualified as HS
+import Data.List.Extended
+import Data.List.NonEmpty qualified as NE
+import Data.Text.Extended
+import Hasura.Backends.Postgres.SQL.Types hiding (ConstraintName, FunctionName, TableName)
+import Hasura.Base.Error
+import Hasura.Prelude
+import Hasura.RQL.DDL.Schema.Rename
+import Hasura.RQL.DDL.Schema.Table
+import Hasura.RQL.Types hiding (fmFunction, tmComputedFields, tmTable)
+import Hasura.SQL.AnyBackend qualified as AB
+import Language.GraphQL.Draft.Syntax qualified as G
 
-import qualified Data.HashMap.Strict                as M
-import qualified Data.HashMap.Strict.InsOrd         as OMap
-import qualified Data.HashSet                       as HS
-import qualified Data.List.NonEmpty                 as NE
-import qualified Language.GraphQL.Draft.Syntax      as G
+data FunctionMeta b = FunctionMeta
+  { fmOid :: !OID,
+    fmFunction :: !(FunctionName b),
+    fmType :: !FunctionVolatility
+  }
+  deriving (Generic)
 
-import           Control.Lens                       ((.~))
-import           Data.Aeson
-import           Data.List.Extended
-import           Data.Text.Extended
-
-import qualified Hasura.SQL.AnyBackend              as AB
-
-import           Hasura.Backends.Postgres.SQL.Types hiding (ConstraintName, FunctionName, TableName)
-import           Hasura.Base.Error
-import           Hasura.RQL.DDL.Schema.Rename
-import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.Types                   hiding (fmFunction, tmComputedFields, tmTable)
-
-
-data FunctionMeta b
-  = FunctionMeta
-  { fmOid      :: !OID
-  , fmFunction :: !(FunctionName b)
-  , fmType     :: !FunctionVolatility
-  } deriving (Generic)
 deriving instance (Backend b) => Show (FunctionMeta b)
+
 deriving instance (Backend b) => Eq (FunctionMeta b)
 
 instance (Backend b) => FromJSON (FunctionMeta b) where
   parseJSON = genericParseJSON hasuraJSON
+
 instance (Backend b) => ToJSON (FunctionMeta b) where
   toJSON = genericToJSON hasuraJSON
 
-data ComputedFieldMeta b
-  = ComputedFieldMeta
-  { ccmName         :: !ComputedFieldName
-  , ccmFunctionMeta :: !(FunctionMeta b)
-  } deriving (Generic, Show, Eq)
+data ComputedFieldMeta b = ComputedFieldMeta
+  { ccmName :: !ComputedFieldName,
+    ccmFunctionMeta :: !(FunctionMeta b)
+  }
+  deriving (Generic, Show, Eq)
 
 instance (Backend b) => FromJSON (ComputedFieldMeta b) where
-  parseJSON = genericParseJSON hasuraJSON{omitNothingFields=True}
+  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
+
 instance (Backend b) => ToJSON (ComputedFieldMeta b) where
-  toJSON = genericToJSON hasuraJSON{omitNothingFields=True}
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
 
-data TableMeta (b :: BackendType)
-  = TableMeta
-  { tmTable          :: !(TableName b)
-  , tmInfo           :: !(DBTableMetadata b)
-  , tmComputedFields :: ![ComputedFieldMeta b]
-  } deriving (Show, Eq)
-
-data ComputedFieldDiff (b :: BackendType)
-  = ComputedFieldDiff
-  { _cfdDropped    :: [ComputedFieldName]
-  , _cfdAltered    :: [(ComputedFieldMeta b, ComputedFieldMeta b)]
-  , _cfdOverloaded :: [(ComputedFieldName, FunctionName b)]
+data TableMeta (b :: BackendType) = TableMeta
+  { tmTable :: !(TableName b),
+    tmInfo :: !(DBTableMetadata b),
+    tmComputedFields :: ![ComputedFieldMeta b]
   }
+  deriving (Show, Eq)
+
+data ComputedFieldDiff (b :: BackendType) = ComputedFieldDiff
+  { _cfdDropped :: [ComputedFieldName],
+    _cfdAltered :: [(ComputedFieldMeta b, ComputedFieldMeta b)],
+    _cfdOverloaded :: [(ComputedFieldName, FunctionName b)]
+  }
+
 deriving instance (Backend b) => Show (ComputedFieldDiff b)
+
 deriving instance (Backend b) => Eq (ComputedFieldDiff b)
 
-data TableDiff (b :: BackendType)
-  = TableDiff
-  { _tdNewName         :: !(Maybe (TableName b))
-  , _tdDroppedCols     :: ![Column b]
-  , _tdAlteredCols     :: ![(RawColumnInfo b, RawColumnInfo b)]
-  , _tdDroppedFKeyCons :: ![ConstraintName b]
-  , _tdComputedFields  :: !(ComputedFieldDiff b)
-  -- The final list of uniq/primary constraint names
-  -- used for generating types on_conflict clauses
-  -- TODO: this ideally should't be part of TableDiff
-  , _tdUniqOrPriCons   :: ![ConstraintName b]
-  , _tdNewDescription  :: !(Maybe PGDescription)
+data TableDiff (b :: BackendType) = TableDiff
+  { _tdNewName :: !(Maybe (TableName b)),
+    _tdDroppedCols :: ![Column b],
+    _tdAlteredCols :: ![(RawColumnInfo b, RawColumnInfo b)],
+    _tdDroppedFKeyCons :: ![ConstraintName b],
+    _tdComputedFields :: !(ComputedFieldDiff b),
+    -- The final list of uniq/primary constraint names
+    -- used for generating types on_conflict clauses
+    -- TODO: this ideally should't be part of TableDiff
+    _tdUniqOrPriCons :: ![ConstraintName b],
+    _tdNewDescription :: !(Maybe PGDescription)
   }
 
-getTableDiff
-  :: Backend b
-  => TableMeta b
-  -> TableMeta b
-  -> TableDiff b
+getTableDiff ::
+  Backend b =>
+  TableMeta b ->
+  TableMeta b ->
+  TableDiff b
 getTableDiff oldtm newtm =
-  TableDiff mNewName droppedCols alteredCols
-  droppedFKeyConstraints computedFieldDiff uniqueOrPrimaryCons mNewDesc
+  TableDiff
+    mNewName
+    droppedCols
+    alteredCols
+    droppedFKeyConstraints
+    computedFieldDiff
+    uniqueOrPrimaryCons
+    mNewDesc
   where
     mNewName = bool (Just $ tmTable newtm) Nothing $ tmTable oldtm == tmTable newtm
     oldCols = _ptmiColumns $ tmInfo oldtm
     newCols = _ptmiColumns $ tmInfo newtm
 
-    uniqueOrPrimaryCons = map _cName $
-      maybeToList (_pkConstraint <$> _ptmiPrimaryKey (tmInfo newtm))
-        <> toList (_ptmiUniqueConstraints $ tmInfo newtm)
+    uniqueOrPrimaryCons =
+      map _cName $
+        maybeToList (_pkConstraint <$> _ptmiPrimaryKey (tmInfo newtm))
+          <> toList (_ptmiUniqueConstraints $ tmInfo newtm)
 
     mNewDesc = _ptmiDescription $ tmInfo newtm
 
@@ -102,21 +108,26 @@ getTableDiff oldtm newtm =
 
     -- foreign keys are considered dropped only if their oid
     -- and (ref-table, column mapping) are changed
-    droppedFKeyConstraints = map (_cName . _fkConstraint) $ HS.toList $
-      droppedFKeysWithOid `HS.intersection` droppedFKeysWithUniq
+    droppedFKeyConstraints =
+      map (_cName . _fkConstraint) $
+        HS.toList $
+          droppedFKeysWithOid `HS.intersection` droppedFKeysWithUniq
     tmForeignKeys = fmap unForeignKeyMetadata . toList . _ptmiForeignKeys . tmInfo
-    droppedFKeysWithOid = HS.fromList $
-      (getDifferenceOn (_cOid . _fkConstraint) `on` tmForeignKeys) oldtm newtm
-    droppedFKeysWithUniq = HS.fromList $
-      (getDifferenceOn mkFKeyUniqId `on` tmForeignKeys) oldtm newtm
+    droppedFKeysWithOid =
+      HS.fromList $
+        (getDifferenceOn (_cOid . _fkConstraint) `on` tmForeignKeys) oldtm newtm
+    droppedFKeysWithUniq =
+      HS.fromList $
+        (getDifferenceOn mkFKeyUniqId `on` tmForeignKeys) oldtm newtm
     mkFKeyUniqId (ForeignKey _ reftn colMap) = (reftn, colMap)
 
     -- calculate computed field diff
     oldComputedFieldMeta = tmComputedFields oldtm
     newComputedFieldMeta = tmComputedFields newtm
 
-    droppedComputedFields = map ccmName $
-      getDifferenceOn (fmOid . ccmFunctionMeta) oldComputedFieldMeta newComputedFieldMeta
+    droppedComputedFields =
+      map ccmName $
+        getDifferenceOn (fmOid . ccmFunctionMeta) oldComputedFieldMeta newComputedFieldMeta
 
     alteredComputedFields =
       getOverlapWith (fmOid . ccmFunctionMeta) oldComputedFieldMeta newComputedFieldMeta
@@ -124,69 +135,76 @@ getTableDiff oldtm newtm =
     overloadedComputedFieldFunctions =
       let getFunction = fmFunction . ccmFunctionMeta
           getSecondElement (_ NE.:| list) = listToMaybe list
-      in mapMaybe (fmap ((&&&) ccmName getFunction) . getSecondElement) $
-         flip NE.groupBy newComputedFieldMeta $ \l r ->
-         ccmName l == ccmName r && getFunction l == getFunction r
+       in mapMaybe (fmap ((&&&) ccmName getFunction) . getSecondElement) $
+            flip NE.groupBy newComputedFieldMeta $ \l r ->
+              ccmName l == ccmName r && getFunction l == getFunction r
 
-    computedFieldDiff = ComputedFieldDiff droppedComputedFields alteredComputedFields
-                      overloadedComputedFieldFunctions
+    computedFieldDiff =
+      ComputedFieldDiff
+        droppedComputedFields
+        alteredComputedFields
+        overloadedComputedFieldFunctions
 
-getTableChangeDeps
-  :: forall b m
-   . (QErrM m, CacheRM m, Backend b)
-  => SourceName
-  -> TableName b
-  -> TableDiff b
-  -> m [SchemaObjId]
+getTableChangeDeps ::
+  forall b m.
+  (QErrM m, CacheRM m, Backend b) =>
+  SourceName ->
+  TableName b ->
+  TableDiff b ->
+  m [SchemaObjId]
 getTableChangeDeps source tn tableDiff = do
   sc <- askSchemaCache
   -- for all the dropped columns
-  droppedColDeps <- fmap concat $ forM droppedCols $ \droppedCol -> do
-    let objId = SOSourceObj source
-                  $ AB.mkAnyBackend
-                  $ SOITableObj @b tn
-                  $ TOCol @b droppedCol
-    return $ getDependentObjs sc objId
+  droppedColDeps <- fmap concat $
+    forM droppedCols $ \droppedCol -> do
+      let objId =
+            SOSourceObj source $
+              AB.mkAnyBackend $
+                SOITableObj @b tn $
+                  TOCol @b droppedCol
+      return $ getDependentObjs sc objId
   -- for all dropped constraints
-  droppedConsDeps <- fmap concat $ forM droppedFKeyConstraints $ \droppedCons -> do
-    let objId = SOSourceObj source
-                  $ AB.mkAnyBackend
-                  $ SOITableObj @b tn
-                  $ TOForeignKey @b droppedCons
-    return $ getDependentObjs sc objId
+  droppedConsDeps <- fmap concat $
+    forM droppedFKeyConstraints $ \droppedCons -> do
+      let objId =
+            SOSourceObj source $
+              AB.mkAnyBackend $
+                SOITableObj @b tn $
+                  TOForeignKey @b droppedCons
+      return $ getDependentObjs sc objId
   return $ droppedConsDeps <> droppedColDeps <> droppedComputedFieldDeps
   where
     TableDiff _ droppedCols _ droppedFKeyConstraints computedFieldDiff _ _ = tableDiff
     droppedComputedFieldDeps =
       map
-        (SOSourceObj source
-          . AB.mkAnyBackend
-          . SOITableObj @b tn
-          . TOComputedField)
+        ( SOSourceObj source
+            . AB.mkAnyBackend
+            . SOITableObj @b tn
+            . TOComputedField
+        )
         $ _cfdDropped computedFieldDiff
 
-data SchemaDiff (b :: BackendType)
-  = SchemaDiff
-  { _sdDroppedTables :: ![TableName b]
-  , _sdAlteredTables :: ![(TableName b, TableDiff b)]
+data SchemaDiff (b :: BackendType) = SchemaDiff
+  { _sdDroppedTables :: ![TableName b],
+    _sdAlteredTables :: ![(TableName b, TableDiff b)]
   }
 
-getSchemaDiff
-  :: (Backend b) => [TableMeta b] -> [TableMeta b] -> SchemaDiff b
+getSchemaDiff ::
+  (Backend b) => [TableMeta b] -> [TableMeta b] -> SchemaDiff b
 getSchemaDiff oldMeta newMeta =
   SchemaDiff droppedTables survivingTables
   where
     droppedTables = map tmTable $ getDifferenceOn (_ptmiOid . tmInfo) oldMeta newMeta
     survivingTables =
       flip map (getOverlapWith (_ptmiOid . tmInfo) oldMeta newMeta) $ \(oldtm, newtm) ->
-      (tmTable oldtm, getTableDiff oldtm newtm)
+        (tmTable oldtm, getTableDiff oldtm newtm)
 
-getSchemaChangeDeps
-  :: forall b m
-   . (QErrM m, CacheRM m, Backend b)
-  => SourceName
-  -> SchemaDiff b
-  -> m [SchemaObjId]
+getSchemaChangeDeps ::
+  forall b m.
+  (QErrM m, CacheRM m, Backend b) =>
+  SourceName ->
+  SchemaDiff b ->
+  m [SchemaObjId]
 getSchemaChangeDeps source schemaDiff = do
   sc <- askSchemaCache
   let tableIds = SOSourceObj source . AB.mkAnyBackend . SOITable @b <$> droppedTables
@@ -200,23 +218,24 @@ getSchemaChangeDeps source schemaDiff = do
     isIndirectDep = \case
       -- table objects in the same source
       SOSourceObj s obj
-        | s == source
-        , Just (SOITableObj tn _) <- AB.unpackAnyBackend @b obj
-        ->  not $ tn `HS.member` HS.fromList droppedTables
+        | s == source,
+          Just (SOITableObj tn _) <- AB.unpackAnyBackend @b obj ->
+          not $ tn `HS.member` HS.fromList droppedTables
       -- table objects in any other source
-      SOSourceObj _ obj
-        -> AB.runBackend obj \case
-           SOITableObj {} -> True
-           _              -> False
+      SOSourceObj _ obj ->
+        AB.runBackend obj \case
+          SOITableObj {} -> True
+          _ -> False
       -- any other kind of schema object
       _ -> False
 
-data FunctionDiff b
-  = FunctionDiff
-  { fdDropped :: ![FunctionName b]
-  , fdAltered :: ![(FunctionName b, FunctionVolatility)]
+data FunctionDiff b = FunctionDiff
+  { fdDropped :: ![FunctionName b],
+    fdAltered :: ![(FunctionName b, FunctionVolatility)]
   }
+
 deriving instance (Backend b) => Show (FunctionDiff b)
+
 deriving instance (Backend b) => Eq (FunctionDiff b)
 
 getFuncDiff :: [FunctionMeta b] -> [FunctionMeta b] -> FunctionDiff b
@@ -228,47 +247,51 @@ getFuncDiff oldMeta newMeta =
     mkAltered (oldfm, newfm) =
       let isTypeAltered = fmType oldfm /= fmType newfm
           alteredFunc = (fmFunction oldfm, fmType newfm)
-      in bool Nothing (Just alteredFunc) isTypeAltered
+       in bool Nothing (Just alteredFunc) isTypeAltered
 
-getOverloadedFuncs
-  :: (Backend b) => [FunctionName b] -> [FunctionMeta b] -> [FunctionName b]
+getOverloadedFuncs ::
+  (Backend b) => [FunctionName b] -> [FunctionMeta b] -> [FunctionName b]
 getOverloadedFuncs trackedFuncs newFuncMeta =
   toList $ duplicates $ map fmFunction trackedMeta
   where
     trackedMeta = flip filter newFuncMeta $ \fm ->
       fmFunction fm `elem` trackedFuncs
 
-processSchemaDiff
-  :: forall b m
-   . ( MonadError QErr m
-     , CacheRM m
-     , MonadWriter MetadataModifier m
-     , BackendMetadata b
-     )
-  => SourceName
-  -> TableCache b
-  -> SchemaDiff b
-  -> m ()
+processSchemaDiff ::
+  forall b m.
+  ( MonadError QErr m,
+    CacheRM m,
+    MonadWriter MetadataModifier m,
+    BackendMetadata b
+  ) =>
+  SourceName ->
+  TableCache b ->
+  SchemaDiff b ->
+  m ()
 processSchemaDiff source preActionTables schemaDiff = do
   -- Purge the dropped tables
   dropTablesInMetadata @b source droppedTables
 
   for_ alteredTables $ \(oldQtn, tableDiff) -> do
-    ti <- onNothing
-      (M.lookup oldQtn preActionTables)
-      (throw500 $ "old table metadata not found in cache : " <>> oldQtn)
+    ti <-
+      onNothing
+        (M.lookup oldQtn preActionTables)
+        (throw500 $ "old table metadata not found in cache : " <>> oldQtn)
     alterTableInMetadata source (_tiCoreInfo ti) tableDiff
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
 
-alterTableInMetadata
-  :: forall m b
-   . ( MonadError QErr m
-     , CacheRM m
-     , MonadWriter MetadataModifier m
-     , BackendMetadata b
-     )
-  => SourceName -> TableCoreInfo b -> TableDiff b -> m ()
+alterTableInMetadata ::
+  forall m b.
+  ( MonadError QErr m,
+    CacheRM m,
+    MonadWriter MetadataModifier m,
+    BackendMetadata b
+  ) =>
+  SourceName ->
+  TableCoreInfo b ->
+  TableDiff b ->
+  m ()
 alterTableInMetadata source ti tableDiff = do
   -- If table rename occurs then don't replace constraints and
   -- process dropped/added columns, because schema reload happens eventually
@@ -295,78 +318,86 @@ alterTableInMetadata source ti tableDiff = do
     tableFields = _tciFieldInfoMap ti
 
     processComputedFieldDiff :: TableName b -> m ()
-    processComputedFieldDiff table  = do
+    processComputedFieldDiff table = do
       let ComputedFieldDiff _ altered overloaded = computedFieldDiff
           getFunction = fmFunction . ccmFunctionMeta
       forM_ overloaded $ \(columnName, function) ->
-        throw400 NotSupported $ "The function " <> function
-        <<> " associated with computed field" <> columnName
-        <<> " of table " <> table <<> " is being overloaded"
+        throw400 NotSupported $
+          "The function " <> function
+            <<> " associated with computed field" <> columnName
+            <<> " of table " <> table
+            <<> " is being overloaded"
       forM_ altered $ \(old, new) ->
-        if | (fmType . ccmFunctionMeta) new == FTVOLATILE ->
-             throw400 NotSupported $ "The type of function " <> getFunction old
-             <<> " associated with computed field " <> ccmName old
-             <<> " of table " <> table <<> " is being altered to \"VOLATILE\""
-           | otherwise -> pure ()
+        if
+            | (fmType . ccmFunctionMeta) new == FTVOLATILE ->
+              throw400 NotSupported $
+                "The type of function " <> getFunction old
+                  <<> " associated with computed field " <> ccmName old
+                  <<> " of table " <> table
+                  <<> " is being altered to \"VOLATILE\""
+            | otherwise -> pure ()
 
-dropTablesInMetadata
-  :: forall b m
-   . ( MonadWriter MetadataModifier m
-     , BackendMetadata b
-     )
-  => SourceName
-  -> [TableName b]
-  -> m ()
+dropTablesInMetadata ::
+  forall b m.
+  ( MonadWriter MetadataModifier m,
+    BackendMetadata b
+  ) =>
+  SourceName ->
+  [TableName b] ->
+  m ()
 dropTablesInMetadata source droppedTables =
   forM_ droppedTables $
-  \tn -> tell $ MetadataModifier $ metaSources.ix source.toSourceMetadata.(smTables @b) %~ OMap.delete tn
+    \tn -> tell $ MetadataModifier $ metaSources . ix source . toSourceMetadata . (smTables @b) %~ OMap.delete tn
 
-alterColumnsInMetadata
-  :: forall b m
-   . ( MonadError QErr m
-     , CacheRM m
-     , MonadWriter MetadataModifier m
-     , BackendMetadata b
-     )
-  => SourceName
-  -> [(RawColumnInfo b, RawColumnInfo b)]
-  -> FieldInfoMap (FieldInfo b)
-  -> SchemaCache
-  -> TableName b
-  -> m ()
-alterColumnsInMetadata source alteredCols fields sc tn = for_ alteredCols $
-  \( RawColumnInfo{prciName = oldName, prciType = oldType}
-   , RawColumnInfo{prciName = newName, prciType = newType}) -> do
-    if | oldName /= newName ->
-         renameColumnInMetadata oldName newName source tn fields
+alterColumnsInMetadata ::
+  forall b m.
+  ( MonadError QErr m,
+    CacheRM m,
+    MonadWriter MetadataModifier m,
+    BackendMetadata b
+  ) =>
+  SourceName ->
+  [(RawColumnInfo b, RawColumnInfo b)] ->
+  FieldInfoMap (FieldInfo b) ->
+  SchemaCache ->
+  TableName b ->
+  m ()
+alterColumnsInMetadata source alteredCols fields sc tn =
+  for_ alteredCols $
+    \( RawColumnInfo {prciName = oldName, prciType = oldType},
+       RawColumnInfo {prciName = newName, prciType = newType}
+       ) -> do
+        if
+            | oldName /= newName ->
+              renameColumnInMetadata oldName newName source tn fields
+            | oldType /= newType -> do
+              let colId =
+                    SOSourceObj source $
+                      AB.mkAnyBackend $
+                        SOITableObj @b tn $
+                          TOCol @b oldName
+                  typeDepObjs = getDependentObjsWith (== DROnType) sc colId
 
-       | oldType /= newType -> do
-          let colId =
-                SOSourceObj source
-                  $ AB.mkAnyBackend
-                  $ SOITableObj @b tn
-                  $ TOCol @b oldName
-              typeDepObjs = getDependentObjsWith (== DROnType) sc colId
+              unless (null typeDepObjs) $
+                throw400 DependencyError $
+                  "cannot change type of column " <> oldName <<> " in table "
+                    <> tn <<> " because of the following dependencies : "
+                    <> reportSchemaObjs typeDepObjs
+            | otherwise -> pure ()
 
-          unless (null typeDepObjs) $ throw400 DependencyError $
-            "cannot change type of column " <> oldName <<> " in table "
-            <> tn <<> " because of the following dependencies : " <>
-            reportSchemaObjs typeDepObjs
-
-       | otherwise -> pure ()
-
-alterCustomColumnNamesInMetadata
-  :: forall b m
-   . (MonadWriter MetadataModifier m, BackendMetadata b)
-  => SourceName
-  -> [Column b]
-  -> TableCoreInfo b
-  -> m ()
+alterCustomColumnNamesInMetadata ::
+  forall b m.
+  (MonadWriter MetadataModifier m, BackendMetadata b) =>
+  SourceName ->
+  [Column b] ->
+  TableCoreInfo b ->
+  m ()
 alterCustomColumnNamesInMetadata source droppedCols ti = do
   let TableConfig customFields customColumnNames customName = _tciCustomConfig ti
       tn = _tciName ti
       modifiedCustomColumnNames = foldl' (flip M.delete) customColumnNames droppedCols
   when (modifiedCustomColumnNames /= customColumnNames) $
-    tell $ MetadataModifier $
-      tableMetadataSetter @b source tn.tmConfiguration .~
-      TableConfig @b customFields modifiedCustomColumnNames customName
+    tell $
+      MetadataModifier $
+        tableMetadataSetter @b source tn . tmConfiguration
+          .~ TableConfig @b customFields modifiedCustomColumnNames customName

@@ -2,40 +2,36 @@
 
 -- | Convert the simple BigQuery AST to an SQL query, ready to be passed
 -- to the odbc package's query/exec functions.
-
 module Hasura.Backends.BigQuery.ToQuery
-  ( fromSelect
-  , fromReselect
-  , fromExpression
-  , toBuilderFlat
-  , toBuilderPretty
-  , toTextFlat
-  , toTextPretty
-  , Printer(..)
-  , renderBuilderFlat
-  , renderBuilderPretty
-  , paramName
-  ) where
+  ( fromSelect,
+    fromReselect,
+    fromExpression,
+    toBuilderFlat,
+    toBuilderPretty,
+    toTextFlat,
+    toTextPretty,
+    Printer (..),
+    renderBuilderFlat,
+    renderBuilderPretty,
+    paramName,
+  )
+where
 
-import           Hasura.Prelude                 hiding (second)
-
-import qualified Data.HashMap.Strict.InsOrd     as OMap
-import qualified Data.List.NonEmpty             as NE
-import qualified Data.Text                      as T
-import qualified Data.Text.Lazy                 as LT
-import qualified Data.Text.Lazy.Builder         as LT
-import qualified Data.Vector                    as V
-
-import           Data.Aeson                     (ToJSON (..))
-import           Data.Bifunctor
-import           Data.Containers.ListUtils
-import           Data.List                      (intersperse)
-import           Data.String
-import           Data.Text.Lazy.Builder         (Builder)
-import           Data.Tuple
-
-import           Hasura.Backends.BigQuery.Types
-
+import Data.Aeson (ToJSON (..))
+import Data.Bifunctor
+import Data.Containers.ListUtils
+import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.List (intersperse)
+import Data.List.NonEmpty qualified as NE
+import Data.String
+import Data.Text qualified as T
+import Data.Text.Lazy qualified as LT
+import Data.Text.Lazy.Builder (Builder)
+import Data.Text.Lazy.Builder qualified as LT
+import Data.Tuple
+import Data.Vector qualified as V
+import Hasura.Backends.BigQuery.Types
+import Hasura.Prelude hiding (second)
 
 --------------------------------------------------------------------------------
 -- Types
@@ -53,8 +49,7 @@ instance IsString Printer where
   fromString = UnsafeTextPrinter . fromString
 
 (<+>) :: Printer -> Printer -> Printer
-(<+>) x y = SeqPrinter [x,y]
-
+(<+>) x y = SeqPrinter [x, y]
 
 --------------------------------------------------------------------------------
 -- Instances
@@ -63,7 +58,6 @@ instance IsString Printer where
 -- dependency between this module and Types.hs.
 instance ToJSON Expression where
   toJSON = toJSON . toTextPretty . fromExpression
-
 
 --------------------------------------------------------------------------------
 -- Printer generators
@@ -82,17 +76,21 @@ fromExpression =
     AndExpression xs ->
       SepByPrinter
         (NewlinePrinter <+> "AND ")
-        (toList
-           (fmap
-              (\x -> "(" <+> fromExpression x <+> ")")
-              (fromMaybe (pure trueExpression) (NE.nonEmpty xs))))
+        ( toList
+            ( fmap
+                (\x -> "(" <+> fromExpression x <+> ")")
+                (fromMaybe (pure trueExpression) (NE.nonEmpty xs))
+            )
+        )
     OrExpression xs ->
       SepByPrinter
         (NewlinePrinter <+> " OR ")
-        (toList
-           (fmap
-              (\x -> "(" <+> fromExpression x <+> ")")
-              (fromMaybe (pure falseExpression) (NE.nonEmpty xs))))
+        ( toList
+            ( fmap
+                (\x -> "(" <+> fromExpression x <+> ")")
+                (fromMaybe (pure falseExpression) (NE.nonEmpty xs))
+            )
+        )
     NotExpression expression -> "NOT " <+> (fromExpression expression)
     ExistsExpression select ->
       "EXISTS (" <+> IndentPrinter 9 (fromSelect select) <+> ")"
@@ -109,51 +107,58 @@ fromExpression =
     SelectExpression s -> "(" <+> IndentPrinter 1 (fromSelect s) <+> ")"
     ListExpression xs -> " UNNEST ([" <+> (SepByPrinter ", " $ fromExpression <$> xs) <+> "])"
     OpExpression op x y ->
-      "(" <+>
-      fromExpression x <+>
-      ") " <+> fromOp op <+> fromExpression y
+      "("
+        <+> fromExpression x
+        <+> ") "
+        <+> fromOp op
+        <+> fromExpression y
     ConditionalProjection expression fieldName ->
-      "(CASE WHEN(" <+> fromExpression expression <+>
-      ") THEN " <+> fromFieldName fieldName <+>
-      " ELSE NULL END)"
+      "(CASE WHEN(" <+> fromExpression expression
+        <+> ") THEN "
+        <+> fromFieldName fieldName
+        <+> " ELSE NULL END)"
 
 fromScalarType :: ScalarType -> Printer
 fromScalarType =
   \case
-    StringScalarType     -> "STRING"
-    BytesScalarType      -> "BYTES"
-    IntegerScalarType    -> "INT64"
-    FloatScalarType      -> "FLOAT64"
-    BoolScalarType       -> "BOOL"
-    TimestampScalarType  -> "TIMESTAMP"
-    DateScalarType       -> "DATE"
-    TimeScalarType       -> "TIME"
-    DatetimeScalarType   -> "DATETIME"
-    GeographyScalarType  -> "GEOGRAPHY"
-    StructScalarType     -> "STRUCT"
-    DecimalScalarType    -> "DECIMAL"
+    StringScalarType -> "STRING"
+    BytesScalarType -> "BYTES"
+    IntegerScalarType -> "INT64"
+    FloatScalarType -> "FLOAT64"
+    BoolScalarType -> "BOOL"
+    TimestampScalarType -> "TIMESTAMP"
+    DateScalarType -> "DATE"
+    TimeScalarType -> "TIME"
+    DatetimeScalarType -> "DATETIME"
+    GeographyScalarType -> "GEOGRAPHY"
+    StructScalarType -> "STRUCT"
+    DecimalScalarType -> "DECIMAL"
     BigDecimalScalarType -> "BIGDECIMAL"
 
 fromOp :: Op -> Printer
 fromOp =
   \case
-    LessOp        -> "<"
-    MoreOp        -> ">"
+    LessOp -> "<"
+    MoreOp -> ">"
     MoreOrEqualOp -> ">="
     LessOrEqualOp -> "<="
-    InOp          -> "IN"
-    NotInOp       -> "NOT IN"
-
+    InOp -> "IN"
+    NotInOp -> "NOT IN"
 
 fromPath :: JsonPath -> Printer
 fromPath path =
   ", " <+> string path
   where
-    string = fromExpression .
-             ValueExpression . StringValue . LT.toStrict . LT.toLazyText . go
+    string =
+      fromExpression
+        . ValueExpression
+        . StringValue
+        . LT.toStrict
+        . LT.toLazyText
+        . go
     go =
       \case
-        RootPath      -> "$"
+        RootPath -> "$"
         IndexPath r i -> go r <> "[" <> LT.fromString (show i) <> "]"
         FieldPath r f -> go r <> "." <> LT.fromText f
 
@@ -172,53 +177,57 @@ fromSelect Select {..} = finalExpression
     inner =
       SepByPrinter
         NewlinePrinter
-        [ "SELECT " <+> IndentPrinter 7 projections
-        , "FROM " <+> IndentPrinter 5 (fromFrom selectFrom)
-        , SepByPrinter
+        [ "SELECT " <+> IndentPrinter 7 projections,
+          "FROM " <+> IndentPrinter 5 (fromFrom selectFrom),
+          SepByPrinter
             NewlinePrinter
-            (map
-               (\Join {..} ->
-                  SeqPrinter
-                    [ "LEFT OUTER JOIN " <+>
-                      IndentPrinter 16 (fromJoinSource joinSource)
-                    , NewlinePrinter
-                    , "AS " <+> fromJoinAlias joinAlias
-                    , NewlinePrinter
-                    , "ON (" <+>
-                      IndentPrinter
-                        4
-                        (SepByPrinter
-                           (", " <+> NewlinePrinter)
-                           (map fromOn joinOn)) <+>
-                      ")"
-                    ])
-               selectJoins)
-        , fromWhere selectWhere
-        , fromOrderBys selectTop selectOffset selectOrderBy
-        , case selectGroupBy of
+            ( map
+                ( \Join {..} ->
+                    SeqPrinter
+                      [ "LEFT OUTER JOIN "
+                          <+> IndentPrinter 16 (fromJoinSource joinSource),
+                        NewlinePrinter,
+                        "AS " <+> fromJoinAlias joinAlias,
+                        NewlinePrinter,
+                        "ON ("
+                          <+> IndentPrinter
+                            4
+                            ( SepByPrinter
+                                (", " <+> NewlinePrinter)
+                                (map fromOn joinOn)
+                            )
+                          <+> ")"
+                      ]
+                )
+                selectJoins
+            ),
+          fromWhere selectWhere,
+          fromOrderBys selectTop selectOffset selectOrderBy,
+          case selectGroupBy of
             [] -> ""
             fieldNames ->
               "GROUP BY " <+> SepByPrinter ", " (map fromFieldName fieldNames)
         ]
 
 fromOn :: (FieldName, FieldName) -> Printer
-fromOn (x,y) = fromFieldName x <+> " = " <+> fromFieldName y
+fromOn (x, y) = fromFieldName x <+> " = " <+> fromFieldName y
 
 fromJoinSource :: JoinSource -> Printer
 fromJoinSource =
   \case
     JoinSelect select -> "(" <+> IndentPrinter 1 (fromSelect select) <+> ")"
-    -- We're not using existingJoins at the moment, which was used to
-    -- avoid re-joining on the same table twice.
-    -- JoinReselect reselect -> "(" <+> fromReselect reselect <+> ")"
+
+-- We're not using existingJoins at the moment, which was used to
+-- avoid re-joining on the same table twice.
+-- JoinReselect reselect -> "(" <+> fromReselect reselect <+> ")"
 
 fromReselect :: Reselect -> Printer
 fromReselect Reselect {..} =
   SepByPrinter
     NewlinePrinter
-    [ "SELECT " <+>
-      IndentPrinter 7 projections
-    , fromWhere reselectWhere
+    [ "SELECT "
+        <+> IndentPrinter 7 projections,
+      fromWhere reselectWhere
     ]
   where
     projections =
@@ -227,7 +236,7 @@ fromReselect Reselect {..} =
         (map fromProjection (toList (cleanProjections reselectProjections)))
 
 fromOrderBys ::
-     Top -> Maybe Expression -> Maybe (NonEmpty OrderBy) -> Printer
+  Top -> Maybe Expression -> Maybe (NonEmpty OrderBy) -> Printer
 fromOrderBys NoTop Nothing Nothing = "" -- An ORDER BY is wasteful if not needed.
 fromOrderBys top moffset morderBys =
   SepByPrinter
@@ -236,49 +245,50 @@ fromOrderBys top moffset morderBys =
         Nothing -> ""
         Just orderBys ->
           SeqPrinter
-            [ "ORDER BY "
-            , SepByPrinter
+            [ "ORDER BY ",
+              SepByPrinter
                 ("," <+> NewlinePrinter)
                 (map fromOrderBy (toList orderBys))
-            ]
-    , case (top, moffset) of
+            ],
+      case (top, moffset) of
         (NoTop, Nothing) -> ""
         (NoTop, Just offset) ->
           "LIMIT 9223372036854775807 /* Maximum */"
-          -- Above: OFFSET is not supported without a LIMIT, therefore
-          -- we set LIMIT to the maximum integer value. Such a large
-          -- number of rows (9 quintillion) would not be possible to
-          -- service: 9223 petabytes. No machine has such capacity at
-          -- present.
-           <+>
-          " OFFSET " <+> fromExpression offset
+            -- Above: OFFSET is not supported without a LIMIT, therefore
+            -- we set LIMIT to the maximum integer value. Such a large
+            -- number of rows (9 quintillion) would not be possible to
+            -- service: 9223 petabytes. No machine has such capacity at
+            -- present.
+            <+> " OFFSET "
+            <+> fromExpression offset
         (Top n, Nothing) -> "LIMIT " <+> fromValue (IntegerValue (intToInt64 n))
         (Top n, Just offset) ->
-          "LIMIT " <+>
-          fromValue (IntegerValue (intToInt64 n)) <+>
-          " OFFSET " <+> fromExpression offset
+          "LIMIT "
+            <+> fromValue (IntegerValue (intToInt64 n))
+            <+> " OFFSET "
+            <+> fromExpression offset
     ]
 
 fromOrderBy :: OrderBy -> Printer
 fromOrderBy OrderBy {..} =
-  "(" <+>
-  fromFieldName orderByFieldName <+>
-  ") " <+>
-  fromOrder orderByOrder <+>
-  fromNullsOrder orderByNullsOrder
+  "("
+    <+> fromFieldName orderByFieldName
+    <+> ") "
+    <+> fromOrder orderByOrder
+    <+> fromNullsOrder orderByNullsOrder
 
 fromOrder :: Order -> Printer
 fromOrder =
   \case
-    AscOrder  -> "ASC"
+    AscOrder -> "ASC"
     DescOrder -> "DESC"
 
 fromNullsOrder :: NullsOrder -> Printer
 fromNullsOrder =
   \case
     NullsAnyOrder -> ""
-    NullsFirst    -> " NULLS FIRST"
-    NullsLast     -> " NULLS LAST"
+    NullsFirst -> " NULLS FIRST"
+    NullsLast -> " NULLS LAST"
 
 fromJoinAlias :: EntityAlias -> Printer
 fromJoinAlias EntityAlias {entityAliasText} =
@@ -297,97 +307,114 @@ fromProjection =
       fromAliased (fmap fromAggregate aliasedAggregate)
     AggregateProjections aliasedAggregates ->
       fromAliased
-        (fmap
-           (\aggs ->
-              "STRUCT(" <+>
-              IndentPrinter
-                7
-                (SepByPrinter
-                   ", "
-                   (fmap (fromAliased . fmap fromAggregate) (toList aggs))) <+>
-              ")")
-           aliasedAggregates)
+        ( fmap
+            ( \aggs ->
+                "STRUCT("
+                  <+> IndentPrinter
+                    7
+                    ( SepByPrinter
+                        ", "
+                        (fmap (fromAliased . fmap fromAggregate) (toList aggs))
+                    )
+                  <+> ")"
+            )
+            aliasedAggregates
+        )
     StarProjection -> "*"
     ArrayAggProjection aliasedAgg -> fromAliased (fmap fromArrayAgg aliasedAgg)
     EntityProjection aliasedEntity ->
       fromAliased
-        (fmap
-           (\(fields :: [(FieldName, FieldOrigin)]) ->
-              -- Example:
-              --   STRUCT(
-              --     IFNULL(
-              --       `aa_articles1`.`aggregate`,
-              --       STRUCT(0 as count, struct(null as id) as sum)
-              --     ) as aggregate
-              --   ) AS `articles_aggregate`
-              --
-              -- The (AS `articles_aggregate`) part at the end is rendered by 'fromAliased' evaluating
-              -- at the root of this branch, and not by anything below
-              "STRUCT(" <+>
-                (SepByPrinter ", "
-                  (fields <&>
-                    \(fName@FieldName{..}, fieldOrigin :: FieldOrigin) ->
-                      "IFNULL(" <+> fromFieldName fName <+> ", " <+> fromFieldOrigin fieldOrigin <+>
-                      ") AS " <+> fromNameText fieldName
-                  )
-                ) <+>
-              ")")
-           aliasedEntity)
+        ( fmap
+            ( \(fields :: [(FieldName, FieldOrigin)]) ->
+                -- Example:
+                --   STRUCT(
+                --     IFNULL(
+                --       `aa_articles1`.`aggregate`,
+                --       STRUCT(0 as count, struct(null as id) as sum)
+                --     ) as aggregate
+                --   ) AS `articles_aggregate`
+                --
+                -- The (AS `articles_aggregate`) part at the end is rendered by 'fromAliased' evaluating
+                -- at the root of this branch, and not by anything below
+                "STRUCT("
+                  <+> ( SepByPrinter
+                          ", "
+                          ( fields
+                              <&> \(fName@FieldName {..}, fieldOrigin :: FieldOrigin) ->
+                                "IFNULL(" <+> fromFieldName fName <+> ", " <+> fromFieldOrigin fieldOrigin
+                                  <+> ") AS "
+                                  <+> fromNameText fieldName
+                          )
+                      )
+                  <+> ")"
+            )
+            aliasedEntity
+        )
     ArrayEntityProjection entityAlias aliasedEntity ->
       fromAliased
-        (fmap
-           (\aggs ->
-              "ARRAY(SELECT AS STRUCT " <+>
-              IndentPrinter
-                7
-                (SepByPrinter ", " (fmap fromFieldNameNaked (toList aggs))) <+>
-              " FROM " <+> fromJoinAlias entityAlias <+> ".agg)")
-           aliasedEntity)
-      where fromFieldNameNaked :: FieldName -> Printer
-            fromFieldNameNaked (FieldName {..}) =
-              fromNameText fieldName
+        ( fmap
+            ( \aggs ->
+                "ARRAY(SELECT AS STRUCT "
+                  <+> IndentPrinter
+                    7
+                    (SepByPrinter ", " (fmap fromFieldNameNaked (toList aggs)))
+                  <+> " FROM "
+                  <+> fromJoinAlias entityAlias
+                  <+> ".agg)"
+            )
+            aliasedEntity
+        )
+      where
+        fromFieldNameNaked :: FieldName -> Printer
+        fromFieldNameNaked (FieldName {..}) =
+          fromNameText fieldName
 
 fromFieldOrigin :: FieldOrigin -> Printer
 fromFieldOrigin = \case
   NoOrigin -> "NULL"
   AggregateOrigin aliasedAggregates ->
-    "STRUCT(" <+>
-    -- Example: "0 AS count, STRUCT(NULL AS id) AS sum"
-    SepByPrinter ", " (fromAliased . fmap fromNullAggregate <$> aliasedAggregates) <+>
-    ")"
+    "STRUCT("
+      <+>
+      -- Example: "0 AS count, STRUCT(NULL AS id) AS sum"
+      SepByPrinter ", " (fromAliased . fmap fromNullAggregate <$> aliasedAggregates)
+      <+> ")"
 
 fromWindowFunction :: WindowFunction -> Printer
 fromWindowFunction (RowNumberOverPartitionBy fieldNames morderBys) =
-  "ROW_NUMBER() OVER(PARTITION BY " <+>
-  SepByPrinter ", " (fmap fromFieldName (toList fieldNames)) <+>
-  (case morderBys of
-     Just {} -> " " <+> fromOrderBys NoTop Nothing morderBys
-     Nothing -> "") <+>
-  ")"
+  "ROW_NUMBER() OVER(PARTITION BY "
+    <+> SepByPrinter ", " (fmap fromFieldName (toList fieldNames))
+    <+> ( case morderBys of
+            Just {} -> " " <+> fromOrderBys NoTop Nothing morderBys
+            Nothing -> ""
+        )
+    <+> ")"
 
 fromArrayAgg :: ArrayAgg -> Printer
 fromArrayAgg ArrayAgg {..} =
   SeqPrinter
-    [ "ARRAY_AGG("
-    , IndentPrinter 10 $
-      SepByPrinter
-        " "
-        [ "STRUCT(" <+> IndentPrinter 7 projections <+> ")"
-        , fromOrderBys
-            arrayAggTop
-            Nothing
-            (fmap
-               (fmap
-                  (\orderBy ->
-                     orderBy
-                       { orderByNullsOrder = NullsAnyOrder
-                       -- Because BigQuery reports:
-                       -- > NULLS FIRST not supported with descending sort order in aggregate functions
-                       -- And the same error with 'ascending'.
-                       }))
-               arrayAggOrderBy)
-        ]
-    , ")"
+    [ "ARRAY_AGG(",
+      IndentPrinter 10 $
+        SepByPrinter
+          " "
+          [ "STRUCT(" <+> IndentPrinter 7 projections <+> ")",
+            fromOrderBys
+              arrayAggTop
+              Nothing
+              ( fmap
+                  ( fmap
+                      ( \orderBy ->
+                          orderBy
+                            { orderByNullsOrder = NullsAnyOrder
+                            -- Because BigQuery reports:
+                            -- > NULLS FIRST not supported with descending sort order in aggregate functions
+                            -- And the same error with 'ascending'.
+                            }
+                      )
+                  )
+                  arrayAggOrderBy
+              )
+          ],
+      ")"
     ]
   where
     projections =
@@ -410,17 +437,23 @@ fromAggregate =
     OpAggregate text arg ->
       UnsafeTextPrinter text <+> "(" <+> fromExpression arg <+> ")"
     OpAggregates text args ->
-      "STRUCT(" <+>
-      IndentPrinter
-        7
-        (SepByPrinter
-           ", "
-           (map
-              (\(alias, arg) ->
-                 UnsafeTextPrinter text <+>
-                 "(" <+> fromExpression arg <+> ") AS " <+> fromNameText alias)
-              (toList args))) <+>
-      ")"
+      "STRUCT("
+        <+> IndentPrinter
+          7
+          ( SepByPrinter
+              ", "
+              ( map
+                  ( \(alias, arg) ->
+                      UnsafeTextPrinter text
+                        <+> "("
+                        <+> fromExpression arg
+                        <+> ") AS "
+                        <+> fromNameText alias
+                  )
+                  (toList args)
+              )
+          )
+        <+> ")"
     TextAggregate text -> fromExpression (ValueExpression (StringValue text))
 
 fromCountable :: Countable FieldName -> Printer
@@ -430,8 +463,8 @@ fromCountable =
     NonNullFieldCountable fields ->
       SepByPrinter ", " (map fromFieldName (toList fields))
     DistinctCountable fields ->
-      "DISTINCT " <+>
-      SepByPrinter ", " (map fromFieldName (toList fields))
+      "DISTINCT "
+        <+> SepByPrinter ", " (map fromFieldName (toList fields))
 
 fromWhere :: Where -> Printer
 fromWhere =
@@ -440,12 +473,13 @@ fromWhere =
       case (filter ((/= trueExpression) . collapse)) expressions of
         [] -> ""
         collapsedExpressions ->
-          "WHERE " <+>
-          IndentPrinter 6 (fromExpression (AndExpression collapsedExpressions))
-      where collapse (AndExpression [x]) = collapse x
-            collapse (AndExpression [])  = trueExpression
-            collapse (OrExpression [x])  = collapse x
-            collapse x                   = x
+          "WHERE "
+            <+> IndentPrinter 6 (fromExpression (AndExpression collapsedExpressions))
+      where
+        collapse (AndExpression [x]) = collapse x
+        collapse (AndExpression []) = trueExpression
+        collapse (OrExpression [x]) = collapse x
+        collapse x = x
 
 fromFrom :: From -> Printer
 fromFrom =
@@ -460,8 +494,8 @@ fromTableName TableName {tableName, tableNameSchema} =
 
 fromAliased :: Aliased Printer -> Printer
 fromAliased Aliased {..} =
-  aliasedThing <+>
-  ((" AS " <+>) . fromNameText) aliasedAlias
+  aliasedThing
+    <+> ((" AS " <+>) . fromNameText) aliasedAlias
 
 fromNameText :: Text -> Printer
 fromNameText t = UnsafeTextPrinter ("`" <> t <> "`")
@@ -478,7 +512,6 @@ fromValue = ValuePrinter
 parens :: Printer -> Printer
 parens x = "(" <+> IndentPrinter 1 x <+> ")"
 
-
 --------------------------------------------------------------------------------
 -- Quick and easy query printer
 
@@ -494,22 +527,20 @@ toTextPretty = LT.toStrict . LT.toLazyText . toBuilderPretty
 toTextFlat :: Printer -> Text
 toTextFlat = LT.toStrict . LT.toLazyText . toBuilderFlat
 
-
 --------------------------------------------------------------------------------
 -- Printer ready for consumption
 
 -- | Produces a query with holes, and a mapping for each
 renderBuilderFlat :: Printer -> (Builder, InsOrdHashMap Int Value)
 renderBuilderFlat =
-  second (OMap.fromList . map swap . OMap.toList) . flip runState mempty .
-  runBuilderFlat
+  second (OMap.fromList . map swap . OMap.toList) . flip runState mempty
+    . runBuilderFlat
 
 -- | Produces a query with holes, and a mapping for each
 renderBuilderPretty :: Printer -> (Builder, InsOrdHashMap Int Value)
 renderBuilderPretty =
-  second (OMap.fromList . map swap . OMap.toList) . flip runState mempty .
-  runBuilderPretty
-
+  second (OMap.fromList . map swap . OMap.toList) . flip runState mempty
+    . runBuilderPretty
 
 --------------------------------------------------------------------------------
 -- Real printer engines
@@ -532,14 +563,15 @@ runBuilderFlat = go 0
         ValuePrinter (ArrayValue x) | V.null x -> pure "[]"
         ValuePrinter v -> do
           themap <- get
-          next <- OMap.lookup v themap `onNothing` do
-            next <- gets OMap.size
-            modify (OMap.insert v next)
-            pure next
+          next <-
+            OMap.lookup v themap `onNothing` do
+              next <- gets OMap.size
+              modify (OMap.insert v next)
+              pure next
           pure ("@" <> paramName next)
     notEmpty = (/= mempty)
 
-runBuilderPretty :: Printer -> State (InsOrdHashMap Value Int)  Builder
+runBuilderPretty :: Printer -> State (InsOrdHashMap Value Int) Builder
 runBuilderPretty = go 0
   where
     go level =
@@ -555,10 +587,11 @@ runBuilderPretty = go 0
           | V.null x -> pure "[]"
         ValuePrinter v -> do
           themap <- get
-          next <- OMap.lookup v themap `onNothing` do
-            next <- gets OMap.size
-            modify (OMap.insert v next)
-            pure next
+          next <-
+            OMap.lookup v themap `onNothing` do
+              next <- gets OMap.size
+              modify (OMap.insert v next)
+              pure next
           pure ("@" <> paramName next)
     indentation n = LT.fromText (T.replicate n " ")
     notEmpty = (/= mempty)
@@ -573,5 +606,6 @@ runBuilderPretty = go 0
 -- Plus, a warning issued about duplicates might be useful.
 cleanProjections :: NonEmpty Projection -> NonEmpty Projection
 cleanProjections = neOrdNub
-  where neOrdNub :: NonEmpty Projection -> NonEmpty Projection
-        neOrdNub = NE.fromList . nubOrdOn projectionAlias . NE.toList
+  where
+    neOrdNub :: NonEmpty Projection -> NonEmpty Projection
+    neOrdNub = NE.fromList . nubOrdOn projectionAlias . NE.toList
