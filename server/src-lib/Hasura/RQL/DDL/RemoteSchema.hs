@@ -14,7 +14,6 @@ module Hasura.RQL.DDL.RemoteSchema
 where
 
 import Control.Lens ((^.))
-import Control.Monad.Unique
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
@@ -37,7 +36,6 @@ runAddRemoteSchema ::
     QErrM m,
     CacheRWM m,
     MonadIO m,
-    MonadUnique m,
     HasHttpManagerM m,
     MetadataM m,
     Tracing.MonadTrace m
@@ -128,7 +126,7 @@ addRemoteSchemaP1 name = do
         <> name <<> " already exists"
 
 addRemoteSchemaP2Setup ::
-  (HasVersion, QErrM m, MonadIO m, MonadUnique m, HasHttpManagerM m, Tracing.MonadTrace m) =>
+  (HasVersion, QErrM m, MonadIO m, HasHttpManagerM m, Tracing.MonadTrace m) =>
   Env.Environment ->
   AddRemoteSchemaQuery ->
   m RemoteSchemaCtx
@@ -217,7 +215,6 @@ runUpdateRemoteSchema ::
     QErrM m,
     CacheRWM m,
     MonadIO m,
-    MonadUnique m,
     HasHttpManagerM m,
     MetadataM m,
     Tracing.MonadTrace m

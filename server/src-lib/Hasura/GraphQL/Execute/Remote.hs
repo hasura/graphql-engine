@@ -70,10 +70,11 @@ buildExecStepRemote ::
   RemoteSchemaInfo ->
   RemoteResultCustomizer ->
   G.OperationType ->
-  G.SelectionSet G.NoFragments Variable ->
+  IR.ObjectSelectionSet Variable ->
   ExecutionStep
-buildExecStepRemote remoteSchemaInfo resultCustomizer tp selSet =
-  let unresolvedSelSet = unresolveVariables selSet
+buildExecStepRemote remoteSchemaInfo resultCustomizer tp objectSelSet =
+  let selSet = IR.convertSelectionSet $ IR.SelectionSetObject objectSelSet
+      unresolvedSelSet = unresolveVariables selSet
       allVars = map mkVariableDefinitionAndValue $ Set.toList $ collectVariables selSet
       varValues = Map.fromList $ map snd allVars
       varValsM = bool (Just varValues) Nothing $ Map.null varValues

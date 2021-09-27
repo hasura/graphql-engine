@@ -12,7 +12,6 @@ where
 import Control.Arrow.Extended (left)
 import Control.Exception (try)
 import Control.Lens (set, (^.))
-import Control.Monad.Unique
 import Data.Aeson ((.:), (.:?))
 import Data.Aeson qualified as J
 import Data.Aeson.Types qualified as J
@@ -28,9 +27,7 @@ import Data.Tuple (swap)
 import Debug.Trace
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Collect ()
-import Hasura.GraphQL.Parser.Monad qualified as P
 -- Needed for GHCi and HLS due to TH in cyclically dependent modules (see https://gitlab.haskell.org/ghc/ghc/-/issues/1012)
-import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.HTTP
 import Hasura.Prelude
@@ -146,7 +143,7 @@ validateSchemaCustomizationsDistinct remoteSchemaCustomizer (RemoteSchemaIntrosp
 -- and also is called by schema cache rebuilding code in "Hasura.RQL.DDL.Schema.Cache".
 fetchRemoteSchema ::
   forall m.
-  (HasVersion, MonadIO m, MonadUnique m, MonadError QErr m, Tracing.MonadTrace m) =>
+  (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m) =>
   Env.Environment ->
   HTTP.Manager ->
   RemoteSchemaName ->
@@ -166,9 +163,6 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
   validateSchemaCustomizations rsCustomizer (irDoc _rscIntroOriginal)
 
   let _rscInfo = RemoteSchemaInfo {..}
-  -- Check that the parsed GraphQL type info is valid by running the schema generation
-  -- (piQuery, piMutation, piSubscription) <-
-  --   P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser _rscIntroOriginal _rscInfo
 
   -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
   -- the introspection result of the remote server. We store this in the

@@ -557,7 +557,6 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         Inc.ArrowCache m arr,
         ArrowWriter (Seq CollectedInfo) arr,
         MonadIO m,
-        MonadUnique m,
         MonadError QErr m,
         MonadReader BuildReason m,
         MonadBaseControl IO m,
@@ -1128,7 +1127,6 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         ArrowWriter (Seq CollectedInfo) arr,
         Inc.ArrowCache m arr,
         MonadIO m,
-        MonadUnique m,
         HasHttpManagerM m
       ) =>
       ( Inc.Dependency (HashMap RemoteSchemaName Inc.InvalidationKey),
