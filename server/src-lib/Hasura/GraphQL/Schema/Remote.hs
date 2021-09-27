@@ -22,6 +22,7 @@ import Control.Lens.Extended
 import Control.Monad.State.Lazy qualified as Lazy
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
+import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Monoid (Any (..))
 import Data.Parser.JSONPath
@@ -734,35 +735,11 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
       [(G.Name, IR.ObjectSelectionSet RemoteSchemaVariable)] ->
       IR.InterfaceSelectionSet RemoteSchemaVariable
     constructInterfaceSelectionSet objNameAndFields =
-      let -- common interface fields that exist in every
-          -- selection set provided
-          -- #1 of Note [Querying remote schema Interfaces]
-          commonInterfaceFields = []
-          -- OMap.elems $
-          -- OMap.mapMaybe (allTheSame . toList) $
-          -- OMap.groupListWith G._fName $
-          -- concatMap (OMap.filter ((`elem` interfaceFieldNames) . G._fName) . snd) $
-          -- objNameAndFields
-
-          interfaceFieldNames = map G._fldName fields
-
-          allTheSame (x : xs) | all (== x) xs = Just x
-          allTheSame _ = Nothing
-
-          -- #2 of Note [Querying remote schema interface fields]
-          -- nonCommonInterfaceFields =
-          --   catMaybes $ flip map objNameAndFields $ \(objName, objFields) ->
-          --     let nonCommonFields = filter (not . flip elem commonInterfaceFields) objFields
-          --     in mkObjInlineFragment (objName, map G.SelectionField nonCommonFields)
-
-          -- helper function for #4 of Note [Querying remote schema interface fields]
-          mkObjInlineFragment (_, []) = Nothing
-          mkObjInlineFragment (objName, selSet) =
-            Just $
-              G.SelectionInlineFragment $
-                G.InlineFragment (Just objName) mempty selSet
+      let interfaceFieldNames = Set.fromList $ map G._fldName fields
        in -- #5 of Note [Querying remote schema interface fields]
-          IR.ScopedSelectionSet mempty $ Map.fromList objNameAndFields
+          IR.mkScopedSelectionSet
+            (\fieldName -> Set.member fieldName interfaceFieldNames || fieldName == $$(G.litName "__typename"))
+            objNameAndFields
 
 -- in fmap G.SelectionField commonInterfaceFields <> nonCommonInterfaceFields
 
@@ -780,9 +757,7 @@ remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _direct
       throw400 RemoteSchemaError $ "List of member types cannot be empty for union type " <> squote name
     pure $
       P.selectionSetUnion name description objs
-        <&> ( \objNameAndFields ->
-                IR.ScopedSelectionSet mempty $ Map.fromList $ filter (not . OMap.null . snd) objNameAndFields
-            )
+        <&> IR.mkScopedSelectionSet (== $$(G.litName "__typename"))
   where
     getObject :: G.Name -> m (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)
     getObject objectName =

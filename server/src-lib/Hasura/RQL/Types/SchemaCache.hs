@@ -126,7 +126,6 @@ import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection qualified as PG
 import Hasura.Base.Error
 import Hasura.GraphQL.Context (GQLContext, RoleContext)
-import Hasura.GraphQL.Parser qualified as P
 import Hasura.Incremental
   ( Cacheable,
     Dependency,

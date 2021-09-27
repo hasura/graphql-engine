@@ -58,7 +58,6 @@ import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.IR
-import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Init.Config

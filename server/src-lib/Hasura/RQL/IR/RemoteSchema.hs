@@ -19,7 +19,8 @@ module Hasura.RQL.IR.RemoteSchema
     ObjectSelectionSet,
     InterfaceSelectionSet,
     UnionSelectionSet,
-    ScopedSelectionSet (..),
+    ScopedSelectionSet,
+    mkScopedSelectionSet,
     emptyScopedSelectionSet,
   )
 where
@@ -66,9 +67,9 @@ realRemoteField :: RawRemoteField -> RemoteField
 realRemoteField RemoteFieldG {..} = RemoteFieldG {_rfField = RRFRealField _rfField, ..}
 
 -- | Ordered fields
-type AliasedFields f = OMap.InsOrdHashMap G.Name f
+type AliasedFields var = OMap.InsOrdHashMap G.Name (Field var)
 
-type ObjectSelectionSet var = AliasedFields (Field var)
+type ObjectSelectionSet var = AliasedFields var
 
 type ObjectSelectionSetMap var =
   Map.HashMap G.Name (ObjectSelectionSet var)
@@ -76,21 +77,43 @@ type ObjectSelectionSetMap var =
 data Typename = Typename
   deriving (Show, Eq, Generic)
 
-data ScopedSelectionSet f var = ScopedSelectionSet
+data ScopedSelectionSet var = ScopedSelectionSet
   { -- | Fields that aren't explicitly defined for member types
-    _sssBaseSelectionSet :: !(AliasedFields f),
+    _sssBaseSelectionSet :: !(AliasedFields var),
     -- | SelectionSets of individual member types
     _sssMemberSelectionSets :: !(ObjectSelectionSetMap var)
   }
-  deriving (Show, Eq, Functor, Generic)
+  deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 
-emptyScopedSelectionSet :: ScopedSelectionSet f var
+mkScopedSelectionSet :: Eq var => (G.Name -> Bool) -> [(G.Name, ObjectSelectionSet var)] -> ScopedSelectionSet var
+mkScopedSelectionSet isBaseMember selectionSets =
+  ScopedSelectionSet
+    { _sssBaseSelectionSet = baseSelectionSet,
+      _sssMemberSelectionSets = Map.fromList memberSelectionSets
+    }
+  where
+    sharedSelectionSetPrefix = sharedPrefix $ map (OMap.toList . snd) selectionSets
+    baseSelectionSet = OMap.fromList $ takeWhile (isBaseMember . _fName . snd) sharedSelectionSetPrefix
+    memberSelectionSets =
+      -- remove member selection sets that are subsumed by base selection set
+      filter (not . null . snd) $
+        -- remove the common prefix from member selection sets
+        map (second (OMap.fromList . drop (OMap.size baseSelectionSet) . OMap.toList)) selectionSets
+
+sharedPrefix :: Eq a => [[a]] -> [a]
+sharedPrefix = \case
+  [] -> []
+  (x : xs) -> foldr prefix x xs
+  where
+    prefix l1 l2 = map fst $ takeWhile (uncurry (==)) $ zip l1 l2
+
+emptyScopedSelectionSet :: ScopedSelectionSet var
 emptyScopedSelectionSet =
   ScopedSelectionSet mempty mempty
 
-type InterfaceSelectionSet var = ScopedSelectionSet (Field var) var
+type InterfaceSelectionSet var = ScopedSelectionSet var
 
-type UnionSelectionSet var = ScopedSelectionSet Typename var
+type UnionSelectionSet var = ScopedSelectionSet var
 
 data Field var = Field
   { _fName :: !G.Name,
@@ -100,25 +123,43 @@ data Field var = Field
   }
   deriving (Show, Eq, Functor, Foldable, Traversable)
 
-convertField :: Field Variable -> G.Field G.NoFragments Variable
-convertField = undefined
+convertField :: G.Name -> Field var -> G.Field G.NoFragments var
+convertField alias Field {..} =
+  G.Field
+    { G._fAlias = Just alias,
+      G._fName = _fName,
+      G._fArguments = _fArguments,
+      G._fDirectives = mempty,
+      G._fSelectionSet = convertSelectionSet _fSelectionSet
+    }
 
 convertSelectionSet :: SelectionSet var -> G.SelectionSet G.NoFragments var
-convertSelectionSet = undefined
+convertSelectionSet = \case
+  SelectionSetObject s -> convertObjectSelectionSet s
+  SelectionSetUnion s -> convertScopedSelectionSet s
+  SelectionSetInterface s -> convertScopedSelectionSet s
+  SelectionSetNone -> mempty
+  where
+    convertAliasedFields aliasedFields =
+      map (uncurry convertField) $ OMap.toList aliasedFields
+
+    convertObjectSelectionSet =
+      map G.SelectionField . convertAliasedFields
+
+    convertScopedSelectionSet (ScopedSelectionSet base members) =
+      let commonFields = map G.SelectionField $ convertAliasedFields base
+          concreteTypeSelectionSets =
+            flip map (Map.toList members) \(concreteType, selectionSet) ->
+              G.InlineFragment
+                { G._ifTypeCondition = Just concreteType,
+                  G._ifDirectives = mempty,
+                  G._ifSelectionSet = convertObjectSelectionSet selectionSet
+                }
+       in commonFields <> map G.SelectionInlineFragment concreteTypeSelectionSets
 
 data SelectionSet var
   = SelectionSetObject !(ObjectSelectionSet var)
   | SelectionSetUnion !(UnionSelectionSet var)
   | SelectionSetInterface !(InterfaceSelectionSet var)
   | SelectionSetNone
-  deriving (Show, Eq)
-
-instance Functor SelectionSet where
-  fmap f = \case
-    SelectionSetObject s -> SelectionSetObject $ fmap (fmap f) s
-    SelectionSetUnion s -> undefined
-    SelectionSetInterface s -> undefined
-
-instance Foldable SelectionSet
-
-instance Traversable SelectionSet
+  deriving (Show, Eq, Functor, Foldable, Traversable)
