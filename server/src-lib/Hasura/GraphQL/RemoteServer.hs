@@ -24,7 +24,6 @@ import Data.List.Extended (duplicates)
 import Data.Text qualified as T
 import Data.Text.Extended (dquoteList, (<<>))
 import Data.Tuple (swap)
-import Debug.Trace
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Collect ()
 -- Needed for GHCi and HLS due to TH in cyclically dependent modules (see https://gitlab.haskell.org/ghc/ghc/-/issues/1012)
@@ -174,7 +173,6 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
         ..
       }
   where
-    -- , _rscParsed = ParsedIntrospection{..}
 
     -- If there is no explicit mutation or subscription root type we need to check for
     -- objects type definitions with the default names "Mutation" and "Subscription".
@@ -424,7 +422,7 @@ execRemoteGQ ::
   -- HTTP request to complete
   m (DiffTime, [HTTP.Header], BL.ByteString)
 execRemoteGQ env manager userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
-  let gqlReqUnparsed = traceShowId $ renderGQLReqOutgoing gqlReq
+  let gqlReqUnparsed = renderGQLReqOutgoing gqlReq
 
   when (G._todType _grQuery == G.OperationTypeSubscription) $
     throwRemoteSchema "subscription to remote server is not supported"
