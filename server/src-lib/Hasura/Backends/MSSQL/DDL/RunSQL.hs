@@ -56,7 +56,7 @@ runSQL
   => MSSQLRunSQL
   -> m EncJSON
 runSQL (MSSQLRunSQL sqlText source) = do
-  SourceInfo _ tableCache _ sourceConfig <- askSourceInfo @'MSSQL source
+  SourceInfo _ tableCache _ sourceConfig _ <- askSourceInfo @'MSSQL source
   let pool = _mscConnectionPool sourceConfig
   results <- if sqlContainsDDLKeyword sqlText then withMetadataCheck tableCache pool else runSQLQuery pool
   pure $ encJFromJValue $ toResult results

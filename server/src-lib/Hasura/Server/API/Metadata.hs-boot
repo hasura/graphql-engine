@@ -6,6 +6,7 @@ import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryCollection
+import           Hasura.RQL.DDL.QueryTags
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
 import           Hasura.RQL.DDL.RemoteRelationship
@@ -137,6 +138,9 @@ data RQLMetadataV1
   -- Network
   | RMAddHostToTLSAllowlist !AddHostToTLSAllowlist
   | RMDropHostFromTLSAllowlist !DropHostFromTLSAllowlist
+
+  -- QueryTags
+  | RMSetQueryTagsConfig !SetQueryTagsConfig
 
   -- Debug
   | RMDumpInternalState !DumpInternalState

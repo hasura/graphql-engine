@@ -26,7 +26,6 @@ import           Hasura.Base.Error
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Parser
-import           Hasura.QueryTags
 import           Hasura.RQL.IR
 import           Hasura.RQL.Types
 import           Hasura.Session
@@ -39,7 +38,7 @@ instance BackendExecute 'BigQuery where
 
   mkDBQueryPlan = bqDBQueryPlan
   mkDBMutationPlan = bqDBMutationPlan
-  mkDBSubscriptionPlan _ _ _ _ _ =
+  mkDBSubscriptionPlan _ _ _ _ =
     throw500 "Cannot currently perform subscriptions on BigQuery sources."
   mkDBQueryExplain = bqDBQueryExplain
   mkLiveQueryExplain _ =
@@ -63,9 +62,8 @@ bqDBQueryPlan
   -> SourceName
   -> SourceConfig 'BigQuery
   -> QueryDB 'BigQuery (Const Void) (UnpreparedValue 'BigQuery)
-  -> QueryTagsComment
   -> m (DBStepInfo 'BigQuery)
-bqDBQueryPlan userInfo sourceName sourceConfig qrf _queryTag = do
+bqDBQueryPlan userInfo sourceName sourceConfig qrf = do
   -- TODO (naveen): Append query tags to the query
   select <- planNoPlan (BigQuery.bigQuerySourceConfigToFromIrConfig sourceConfig) userInfo qrf
   let action = do
@@ -123,9 +121,8 @@ bqDBMutationPlan
   -> SourceName
   -> SourceConfig 'BigQuery
   -> MutationDB 'BigQuery (Const Void) (UnpreparedValue 'BigQuery)
-  -> QueryTagsComment
   -> m (DBStepInfo 'BigQuery)
-bqDBMutationPlan _userInfo _stringifyNum _sourceName _sourceConfig _mrf _queryTags =
+bqDBMutationPlan _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
   throw500 "mutations are not supported in BigQuery; this should be unreachable"
 
 

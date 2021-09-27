@@ -33,7 +33,7 @@ Hasura attaches query tags (*unless disabled*) to the generated SQL statement it
 
 .. code-block:: sql
 
-    SELECT * FROM child /* request_id=487c2ed5-08a4-429a-b0e0-4666a82e3cc6, field_name=child, operation_name=GetChild */
+    SELECT name FROM child /* request_id=487c2ed5-08a4-429a-b0e0-4666a82e3cc6, field_name=child, operation_name=GetChild */
 
 Formats of Query Tags
 ----------------------
@@ -53,7 +53,7 @@ For eg:
 
 .. code-block:: sql
 
-    SELECT * FROM child /* request_id=487c2ed5-08a4-429a-b0e0-4666a82e3cc6, field_name=child, parameterized_query_hash=b2a71ce23928ca7f0021f9060e5d590e9f9bb00f, operation_name=GetChild */
+    SELECT name FROM child /* request_id=487c2ed5-08a4-429a-b0e0-4666a82e3cc6, field_name=child, parameterized_query_hash=b2a71ce23928ca7f0021f9060e5d590e9f9bb00f, operation_name=GetChild */
 
 SQLCommenter
 ^^^^^^^^^^^^
@@ -64,7 +64,7 @@ For eg:
 
 .. code-block:: sql
 
-    SELECT * FROM child /* field_name='child', operation_name='GetChild', parameterized_query_hash='b2a71ce23928ca7f0021f9060e5d590e9f9bb00f' ,  request_id='487c2ed5-08a4-429a-b0e0-4666a82e3cc6' */
+    SELECT name FROM child /* field_name='child', operation_name='GetChild', parameterized_query_hash='b2a71ce23928ca7f0021f9060e5d590e9f9bb00f' ,  request_id='487c2ed5-08a4-429a-b0e0-4666a82e3cc6' */
 
 
 Information in Query Tags
@@ -89,36 +89,51 @@ Metadata Specification
 
 .. code-block:: yaml
 
-    query_tags:
-      default_format: # Optional Field (Values can be sqlcommenter or standard)
-      per_source_configuration: # Optional Field
-        source_name: # Name of the database
-          format: # Optional Field (Values can be sqlcommenter or standard)
-          disabled: # Optional Field (Values can be true or false)
+   sources:
+     name: # Name of the source
+     configuration :
+     query_tags: # Optional Field
+       disabled: # Optional Field | Type: Bool | Values: true or false
+       format:   # Optinal Field  | Values: standard or sqlcommenter
 
 .. note::
-
-     The default format for the Query Tags is ``Standard`` and they are always appended to the SQL statements. To disable or configure them you have to edit the metadata directly.
+     The default format for the Query Tags is ``Standard`` and it is enabled by default for all sources.
 
 In the above metadata spec:
 
-1. If ``default_format`` is not specified, ``Standard`` is used as the default format
-2. The ``format`` in the ``source_name`` could be used to override the ``default_format``
-3. If the ``default_format`` and the ``format`` for a source is not mentioned then ``Standard`` is used as format.
-4. If ``disabled`` is not set for any source, ``False`` is used i.e Query Tags are always enabled by default
+1. The `query_tags` field is optional. If the `query_tags` field is not present for a source, then query tags is enabled for the source and the format used is `standard`.
+2. To disable query tags for any source, set the value of `disabled` field to `true`.
+3. To override the default format (`Standard`) for query tags, use the `format` field.
 
 Example Metadata Specification
 ------------------------------
 
 .. code-block:: yaml
 
-    query_tags:
-      default_format: sqlcommenter
-      per_source_configuration: 
-        avengers_database:
-          format: standard
-        marvel_database:
-          disabled: true
-        dc_database:
-          format: sqlcommenter
-          disable: true
+   sources:
+     - name: test_db
+       configuration:
+       query_tags:
+         disabled: true
+
+     - name: hasura_db_herokou
+         configuration:
+         query_tags:
+           format: sqlcommenter
+
+     - name: hasura_db_2
+         configuration:
+         query_tags:
+           format: standard
+           disabled: true
+
+Metadata API To Set Query Tags
+------------------------------
+
+.. code-block:: yaml
+
+   type: "set_query_tags"
+   args:
+     source_name: # Name of the source | Required
+     disabled:    # Optional Field | Type: Bool | Values: true or false
+     format:      # Optinal Field  | Values: standard or sqlcommenter

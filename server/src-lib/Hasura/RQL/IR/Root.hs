@@ -20,6 +20,7 @@ import           Data.Kind                     (Type)
 import qualified Hasura.RQL.Types.Action       as RQL
 import qualified Hasura.RQL.Types.Backend      as RQL
 import qualified Hasura.RQL.Types.Common       as RQL
+import qualified Hasura.RQL.Types.QueryTags    as RQL
 import qualified Hasura.SQL.AnyBackend         as AB
 
 import           Hasura.RQL.IR.Delete
@@ -31,7 +32,7 @@ import           Hasura.SQL.Backend
 
 
 data SourceConfigWith (db :: BackendType -> Type) (b :: BackendType) =
-  SourceConfigWith (RQL.SourceConfig b) (db b)
+  SourceConfigWith (RQL.SourceConfig b) (Maybe RQL.QueryTagsConfig) (db b)
 
 data RootField (db :: BackendType -> Type) remote action raw where
   RFDB

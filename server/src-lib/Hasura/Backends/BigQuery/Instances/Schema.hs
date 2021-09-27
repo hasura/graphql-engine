@@ -75,19 +75,21 @@ bqBuildTableRelayQueryFields
   :: MonadBuildSchema 'BigQuery r m n
   => SourceName
   -> SourceConfig 'BigQuery
+  -> Maybe QueryTagsConfig
   -> TableName    'BigQuery
   -> TableInfo    'BigQuery
   -> G.Name
   -> NESeq (ColumnInfo 'BigQuery)
   -> SelPermInfo  'BigQuery
   -> m [FieldParser n (QueryRootField UnpreparedValue)]
-bqBuildTableRelayQueryFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
+bqBuildTableRelayQueryFields _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
   pure []
 
 bqBuildTableInsertMutationFields
   :: MonadBuildSchema 'BigQuery r m n
   => SourceName
   -> SourceConfig 'BigQuery
+  -> Maybe QueryTagsConfig
   -> TableName 'BigQuery
   -> TableInfo 'BigQuery
   -> G.Name
@@ -95,70 +97,75 @@ bqBuildTableInsertMutationFields
   -> Maybe (SelPermInfo 'BigQuery)
   -> Maybe (UpdPermInfo 'BigQuery)
   -> m [FieldParser n (MutationRootField UnpreparedValue)]
-bqBuildTableInsertMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
+bqBuildTableInsertMutationFields _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
   pure []
 
 bqBuildTableUpdateMutationFields
   :: MonadBuildSchema 'BigQuery r m n
   => SourceName
   -> SourceConfig 'BigQuery
+  -> Maybe QueryTagsConfig
   -> TableName 'BigQuery
   -> TableInfo 'BigQuery
   -> G.Name
   -> UpdPermInfo 'BigQuery
   -> Maybe (SelPermInfo 'BigQuery)
   -> m [FieldParser n (MutationRootField UnpreparedValue)]
-bqBuildTableUpdateMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _updPerns _selPerms =
+bqBuildTableUpdateMutationFields _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _updPerns _selPerms =
   pure []
 
 bqBuildTableDeleteMutationFields
   :: MonadBuildSchema 'BigQuery r m n
   => SourceName
   -> SourceConfig 'BigQuery
+  -> Maybe QueryTagsConfig
   -> TableName 'BigQuery
   -> TableInfo 'BigQuery
   -> G.Name
   -> DelPermInfo 'BigQuery
   -> Maybe (SelPermInfo 'BigQuery)
   -> m [FieldParser n (MutationRootField UnpreparedValue)]
-bqBuildTableDeleteMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _delPerns _selPerms =
+bqBuildTableDeleteMutationFields _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _delPerns _selPerms =
   pure []
 
 bqBuildFunctionQueryFields
     :: MonadBuildSchema 'BigQuery r m n
     => SourceName
     -> SourceConfig 'BigQuery
+    -> Maybe QueryTagsConfig
     -> FunctionName 'BigQuery
     -> FunctionInfo 'BigQuery
     -> TableName 'BigQuery
     -> SelPermInfo 'BigQuery
     -> m [FieldParser n (QueryRootField UnpreparedValue)]
-bqBuildFunctionQueryFields _ _ _ _ _ _ =
+bqBuildFunctionQueryFields _ _ _ _ _ _ _ =
   pure []
 
 bqBuildFunctionRelayQueryFields
   :: MonadBuildSchema 'BigQuery r m n
   => SourceName
   -> SourceConfig 'BigQuery
+  -> Maybe QueryTagsConfig
   -> FunctionName 'BigQuery
   -> FunctionInfo 'BigQuery
   -> TableName    'BigQuery
   -> NESeq (ColumnInfo 'BigQuery)
   -> SelPermInfo  'BigQuery
   -> m [FieldParser n (QueryRootField UnpreparedValue)]
-bqBuildFunctionRelayQueryFields _sourceName _sourceInfo _functionName _functionInfo _tableName _pkeyColumns _selPerms =
+bqBuildFunctionRelayQueryFields _sourceName _sourceInfo _queryTagsConfig _functionName _functionInfo _tableName _pkeyColumns _selPerms =
   pure []
 
 bqBuildFunctionMutationFields
     :: MonadBuildSchema 'BigQuery r m n
     => SourceName
     -> SourceConfig 'BigQuery
+    -> Maybe QueryTagsConfig
     -> FunctionName 'BigQuery
     -> FunctionInfo 'BigQuery
     -> TableName 'BigQuery
     -> SelPermInfo 'BigQuery
     -> m [FieldParser n (MutationRootField UnpreparedValue)]
-bqBuildFunctionMutationFields _ _ _ _ _ _ =
+bqBuildFunctionMutationFields _ _ _ _ _ _ _ =
   pure []
 
 

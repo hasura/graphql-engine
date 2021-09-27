@@ -76,13 +76,14 @@ buildTableRelayQueryFields' ::
   MonadBuildSchema 'MySQL r m n =>
   SourceName ->
   RQL.SourceConfig 'MySQL ->
+  Maybe RQL.QueryTagsConfig ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   G.Name ->
   NESeq (ColumnInfo 'MySQL) ->
   SelPermInfo 'MySQL ->
   m [FieldParser n (QueryRootField UnpreparedValue)]
-buildTableRelayQueryFields' _sourceName _sourceInfo _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
+buildTableRelayQueryFields' _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
   pure []
 
 
@@ -90,6 +91,7 @@ buildTableInsertMutationFields' ::
   MonadBuildSchema 'MySQL r m n =>
   SourceName ->
   RQL.SourceConfig 'MySQL ->
+  Maybe RQL.QueryTagsConfig ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   G.Name ->
@@ -97,7 +99,7 @@ buildTableInsertMutationFields' ::
   Maybe (SelPermInfo 'MySQL) ->
   Maybe (UpdPermInfo 'MySQL) ->
   m [FieldParser n (MutationRootField UnpreparedValue)]
-buildTableInsertMutationFields' _sourceName _sourceInfo _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
+buildTableInsertMutationFields' _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
   pure []
 
 
@@ -105,13 +107,14 @@ buildTableUpdateMutationFields' ::
   MonadBuildSchema 'MySQL r m n =>
   SourceName ->
   RQL.SourceConfig 'MySQL ->
+  Maybe RQL.QueryTagsConfig ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   G.Name ->
   UpdPermInfo 'MySQL ->
   Maybe (SelPermInfo 'MySQL) ->
   m [FieldParser n (MutationRootField UnpreparedValue)]
-buildTableUpdateMutationFields' _sourceName _sourceInfo _tableName _tableInfo _gqlName _updPerns _selPerms =
+buildTableUpdateMutationFields' _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _updPerns _selPerms =
   pure []
 
 
@@ -119,13 +122,14 @@ buildTableDeleteMutationFields' ::
   MonadBuildSchema 'MySQL r m n =>
   SourceName ->
   RQL.SourceConfig 'MySQL ->
+  Maybe RQL.QueryTagsConfig ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   G.Name ->
   DelPermInfo 'MySQL ->
   Maybe (SelPermInfo 'MySQL) ->
   m [FieldParser n (MutationRootField UnpreparedValue)]
-buildTableDeleteMutationFields' _sourceName _sourceInfo _tableName _tableInfo _gqlName _delPerns _selPerms =
+buildTableDeleteMutationFields' _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _delPerns _selPerms =
   pure []
 
 
@@ -133,12 +137,13 @@ buildFunctionQueryFields' ::
   MonadBuildSchema 'MySQL r m n =>
   SourceName ->
   RQL.SourceConfig 'MySQL ->
+  Maybe RQL.QueryTagsConfig ->
   FunctionName 'MySQL ->
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
   SelPermInfo 'MySQL ->
   m [FieldParser n (QueryRootField UnpreparedValue)]
-buildFunctionQueryFields' _ _ _ _ _ _ =
+buildFunctionQueryFields' _ _ _ _ _ _ _ =
   pure []
 
 
@@ -146,13 +151,14 @@ buildFunctionRelayQueryFields' ::
   MonadBuildSchema 'MySQL r m n =>
   SourceName ->
   RQL.SourceConfig 'MySQL ->
+  Maybe RQL.QueryTagsConfig ->
   FunctionName 'MySQL ->
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
   NESeq (ColumnInfo 'MySQL) ->
   SelPermInfo 'MySQL ->
   m [FieldParser n (QueryRootField UnpreparedValue)]
-buildFunctionRelayQueryFields' _sourceName _sourceInfo _functionName _functionInfo _tableName _pkeyColumns _selPerms =
+buildFunctionRelayQueryFields' _sourceName _sourceInfo _queryTagsConfig _functionName _functionInfo _tableName _pkeyColumns _selPerms =
   pure []
 
 
@@ -160,12 +166,13 @@ buildFunctionMutationFields' ::
   MonadBuildSchema 'MySQL r m n =>
   SourceName ->
   RQL.SourceConfig 'MySQL ->
+  Maybe RQL.QueryTagsConfig ->
   FunctionName 'MySQL ->
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
   SelPermInfo 'MySQL ->
   m [FieldParser n (MutationRootField UnpreparedValue)]
-buildFunctionMutationFields' _ _ _ _ _ _ =
+buildFunctionMutationFields' _ _ _ _ _ _ _ =
   pure []
 
 bsParser :: MonadParse m => Parser 'Both m ByteString

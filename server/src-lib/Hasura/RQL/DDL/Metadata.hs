@@ -85,8 +85,7 @@ runClearMetadata _ = do
             let emptyDefaultSource =
                   AB.dispatchAnyBackend @Backend exists \(s :: SourceMetadata b) ->
                     AB.mkAnyBackend @b
-                    $ SourceMetadata @b defaultSource mempty mempty
-                    $ _smConfiguration @b s
+                    $ SourceMetadata @b defaultSource mempty mempty (_smConfiguration @b s) Nothing
             in emptyMetadata
                & metaSources %~ OMap.insert defaultSource emptyDefaultSource
   runReplaceMetadataV1 $ RMWithSources emptyMetadata'
@@ -161,11 +160,6 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
   when (inheritedRoles /= mempty && EFInheritedRoles `notElem` experimentalFeatures) $
     throw400 ConstraintViolation "inherited_roles can only be added when it's enabled in the experimental features"
 
-  let queryTagsConfig =
-        case _rmv2Metadata of
-          RMWithSources m    -> _metaQueryTagsConfig m
-          RMWithoutSources _ -> emptyQueryTagsConfig
-
   oldMetadata <- getMetadata
 
   (cronTriggersMetadata, cronTriggersToBeAdded) <- processCronTriggers oldMetadata
@@ -183,7 +177,7 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
       pure $ Metadata (OMap.singleton defaultSource newDefaultSourceMetadata)
                         _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist
                         _mnsCustomTypes _mnsActions cronTriggersMetadata (_metaRestEndpoints oldMetadata)
-                        emptyApiLimit emptyMetricsConfig mempty introspectionDisabledRoles queryTagsConfig emptyNetwork
+                        emptyApiLimit emptyMetricsConfig mempty introspectionDisabledRoles emptyNetwork
   putMetadata metadata
 
   case _rmv2AllowInconsistentMetadata of

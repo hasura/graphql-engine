@@ -36,6 +36,7 @@ import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Network
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryCollection
+import           Hasura.RQL.DDL.QueryTags
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
 import           Hasura.RQL.DDL.RemoteRelationship
@@ -179,6 +180,9 @@ data RQLMetadataV1
   | RMAddHostToTLSAllowlist !AddHostToTLSAllowlist
   | RMDropHostFromTLSAllowlist !DropHostFromTLSAllowlist
 
+  -- QueryTags
+  | RMSetQueryTagsConfig  !SetQueryTagsConfig
+
   -- Debug
   | RMDumpInternalState !DumpInternalState
   | RMGetCatalogState  !GetCatalogState
@@ -256,6 +260,8 @@ instance FromJSON RQLMetadataV1 where
       "set_graphql_schema_introspection_options" -> RMSetGraphqlSchemaIntrospectionOptions <$> args
 
       "validate_webhook_transform"               -> RMValidateWebhookTransform             <$> args
+
+      "set_query_tags"                           -> RMSetQueryTagsConfig                   <$> args
 
       "bulk"                                     -> RMBulk                                 <$> args
 
@@ -531,6 +537,8 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMGetCatalogState q                      -> runGetCatalogState q
   RMSetCatalogState q                      -> runSetCatalogState q
   RMValidateWebhookTransform q             -> runValidateWebhookTransform q
+
+  RMSetQueryTagsConfig q                   -> runSetQueryTagsConfig q
 
   RMBulk q                                 -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
   where
