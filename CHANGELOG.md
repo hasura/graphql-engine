@@ -29,6 +29,7 @@
 - cli: add support for `network` metadata object
 - cli: `hasura migrate apply --all-databases` will return a non zero exit code if operation failed on atleast one database (#7499)
 - cli: `migrate create --from-server` creates the migration and marks it as applied on the server
+- cli: update `hasura metadata diff` to accept filepaths (close #5433)
 
 ## v2.0.9
 
