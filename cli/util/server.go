@@ -2,6 +2,10 @@ package util
 
 import (
 	"crypto/tls"
+	"fmt"
+	"net/http"
+	"net/url"
+	"path"
 
 	"github.com/parnurzeal/gorequest"
 	"github.com/sirupsen/logrus"
@@ -90,4 +94,20 @@ func GetServerState(endpoint string, adminSecret string, config *tls.Config, has
 	}
 	return state
 
+}
+
+func GetServerStatus(endpoint string) (err error) {
+	uri, err := url.Parse(endpoint)
+	if err != nil {
+		return fmt.Errorf("error while parsing the endpoint :%w", err)
+	}
+	uri.Path = path.Join(uri.Path, "healthz")
+	resp, err := http.Get(uri.String())
+	if err != nil {
+		return fmt.Errorf("making http request failed: %s", err.Error())
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("request failed: url: %s status code: %v status: %s", uri.String(), resp.StatusCode, resp.Status)
+	}
+	return nil
 }
