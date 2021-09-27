@@ -21,6 +21,7 @@
 - server: `introspect_remote_schema` API now returns original remote schema instead of customized schema
 - server: prevent empty subscription roots in the schema (#6898)
 - server: support database-to-database joins (for now, limited to Postgres as the target side of the join)
+- server: add support for user comments for trackable functions (#7490)
 - console: support tracking of functions with return a single row
 - console: add GraphQL customisation under Remote schema edit tab
 - console: fix cross-schema array relationship suggestions

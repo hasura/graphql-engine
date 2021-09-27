@@ -76,6 +76,8 @@ class
     FunctionConfig ->
     FunctionPermissionsMap ->
     RawFunctionInfo b ->
+    -- | the function comment
+    Maybe Text ->
     m (FunctionInfo b, SchemaDependency)
 
   updateColumnInEventTrigger ::

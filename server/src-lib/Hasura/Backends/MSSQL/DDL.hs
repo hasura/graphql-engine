@@ -59,8 +59,9 @@ buildFunctionInfo ::
   FunctionConfig ->
   FunctionPermissionsMap ->
   RawFunctionInfo 'MSSQL ->
+  Maybe Text ->
   m (FunctionInfo 'MSSQL, SchemaDependency)
-buildFunctionInfo _ _ _ _ _ _ =
+buildFunctionInfo _ _ _ _ _ _ _ =
   throw400 NotSupported "SQL Functions are not supported for MSSQL source"
 
 updateColumnInEventTrigger ::

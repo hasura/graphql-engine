@@ -46,13 +46,14 @@ trackFunctionP2 ::
   SourceName ->
   FunctionName b ->
   FunctionConfig ->
+  Maybe Text ->
   m EncJSON
-trackFunctionP2 sourceName qf config = do
+trackFunctionP2 sourceName qf config comment = do
   buildSchemaCacheFor
     (MOSourceObjId sourceName $ AB.mkAnyBackend $ SMOFunction @b qf)
     $ MetadataModifier $
       metaSources . ix sourceName . toSourceMetadata . (smFunctions @b)
-        %~ OMap.insert qf (FunctionMetadata qf config mempty)
+        %~ OMap.insert qf (FunctionMetadata qf config mempty comment)
   pure successMsg
 
 handleMultipleFunctions ::
@@ -74,7 +75,7 @@ runTrackFunc ::
 runTrackFunc (TrackFunction qf) = do
   -- v1 track_function lacks a means to take extra arguments
   trackFunctionP1 @b defaultSource qf
-  trackFunctionP2 @b defaultSource qf emptyFunctionConfig
+  trackFunctionP2 @b defaultSource qf emptyFunctionConfig Nothing
 
 -- | JSON API payload for v2 of 'track_function':
 --
@@ -82,7 +83,8 @@ runTrackFunc (TrackFunction qf) = do
 data TrackFunctionV2 (b :: BackendType) = TrackFunctionV2
   { _tfv2Source :: !SourceName,
     _tfv2Function :: !(FunctionName b),
-    _tfv2Configuration :: !FunctionConfig
+    _tfv2Configuration :: !FunctionConfig,
+    _tfv2Comment :: !(Maybe Text)
   }
 
 instance Backend b => FromJSON (TrackFunctionV2 b) where
@@ -91,15 +93,16 @@ instance Backend b => FromJSON (TrackFunctionV2 b) where
       <$> o .:? "source" .!= defaultSource
       <*> o .: "function"
       <*> o .:? "configuration" .!= emptyFunctionConfig
+      <*> o .:? "comment"
 
 runTrackFunctionV2 ::
   forall b m.
   (BackendMetadata b, QErrM m, CacheRWM m, MetadataM m) =>
   TrackFunctionV2 b ->
   m EncJSON
-runTrackFunctionV2 (TrackFunctionV2 source qf config) = do
+runTrackFunctionV2 (TrackFunctionV2 source qf config comment) = do
   trackFunctionP1 @b source qf
-  trackFunctionP2 @b source qf config
+  trackFunctionP2 @b source qf config comment
 
 -- | JSON API payload for 'untrack_function':
 --

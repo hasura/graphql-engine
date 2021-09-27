@@ -60,8 +60,9 @@ buildFunctionInfo ::
   FunctionConfig ->
   FunctionPermissionsMap ->
   RawFunctionInfo 'BigQuery ->
+  Maybe Text ->
   m (FunctionInfo 'BigQuery, SchemaDependency)
-buildFunctionInfo _ _ _ _ _ _ =
+buildFunctionInfo _ _ _ _ _ _ _ =
   throw400 NotSupported "SQL Functions are not supported for BigQuery source"
 
 updateColumnInEventTrigger ::

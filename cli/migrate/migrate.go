@@ -438,7 +438,7 @@ func (m *Migrate) Query(data interface{}) error {
 // the squashed SQL for all UP steps: us
 // the squashed metadata for all down steps: dm
 // the squashed SQL for all down steps: ds
-func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm []interface{}, ds []byte, err error) {
+func (m *Migrate) Squash(v uint64) (vs []int64, us []byte, ds []byte, err error) {
 	// check the migration mode on the database
 	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {
@@ -496,9 +496,6 @@ func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm 
 				// it's SQL, concat all of them
 				buf.WriteString("\n")
 				buf.Write(data)
-			case interface{}:
-				// it's metadata, append into the array
-				um = append(um, data)
 			}
 		}
 		// set us as the bytes written into buf
@@ -523,9 +520,6 @@ func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm 
 				// it's SQL, concat all of them
 				buf.WriteString("\n")
 				buf.Write(data)
-			case interface{}:
-				// it's metadata, append into the array
-				dm = append(dm, data)
 			}
 		}
 		// set ds as the bytes written into buf
@@ -757,16 +751,6 @@ func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
 			// from it
 			go migr.Buffer()
 
-			// read next version of meta up migration
-			// even if a migration file does'nt exist in the source
-			// a empty migration will be returned
-			migr, err = m.metanewMigration(version, int64(version))
-			if err != nil {
-				ret <- err
-				return
-			}
-			ret <- migr
-			go migr.Buffer()
 			count++
 		}
 
@@ -806,14 +790,6 @@ func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
 		ret <- migr
 		go migr.Buffer()
 
-		migr, err = m.metanewMigration(next, int64(next))
-		if err != nil {
-			ret <- err
-			return
-		}
-
-		ret <- migr
-		go migr.Buffer()
 		currentVersion = next
 		count++
 	}
@@ -840,15 +816,7 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 
 		prev, err := m.sourceDrv.Prev(from)
 		if os.IsNotExist(err) {
-			migr, err := m.metanewMigration(from, -1)
-			if err != nil {
-				ret <- err
-				return
-			}
-			ret <- migr
-			go migr.Buffer()
-
-			migr, err = m.newMigration(from, -1)
+			migr, err := m.newMigration(from, -1)
 			if err != nil {
 				ret <- err
 				return
@@ -863,16 +831,7 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 
 		err = m.versionDownExists(from)
 		if err == nil {
-			migr, err := m.metanewMigration(from, int64(prev))
-			if err != nil {
-				ret <- err
-				return
-			}
-
-			ret <- migr
-			go migr.Buffer()
-
-			migr, err = m.newMigration(from, int64(prev))
+			migr, err := m.newMigration(from, int64(prev))
 			if err != nil {
 				ret <- err
 				return
@@ -923,16 +882,6 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{},
 
 		ret <- migr
 		go migr.Buffer()
-
-		migr, err = m.metanewMigration(version, int64(version))
-		if err != nil {
-			ret <- err
-			return
-		}
-
-		ret <- migr
-		go migr.Buffer()
-
 	} else {
 		// it's going down
 		if m.stop() {
@@ -953,16 +902,7 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{},
 
 		prev, err := m.sourceDrv.Prev(version)
 		if os.IsNotExist(err) {
-			// apply nil migration
-			migr, err := m.metanewMigration(version, -1)
-			if err != nil {
-				ret <- err
-				return
-			}
-			ret <- migr
-			go migr.Buffer()
-
-			migr, err = m.newMigration(version, -1)
+			migr, err := m.newMigration(version, -1)
 			if err != nil {
 				ret <- err
 				return
@@ -975,16 +915,7 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{},
 			return
 		}
 
-		migr, err := m.metanewMigration(version, int64(prev))
-		if err != nil {
-			ret <- err
-			return
-		}
-
-		ret <- migr
-		go migr.Buffer()
-
-		migr, err = m.newMigration(version, int64(prev))
+		migr, err := m.newMigration(version, int64(prev))
 		if err != nil {
 			ret <- err
 			return
@@ -1061,13 +992,6 @@ func (m *Migrate) readUp(limit int64, ret chan<- interface{}, bar *pb.ProgressBa
 			ret <- migr
 			go migr.Buffer()
 
-			migr, err = m.metanewMigration(firstVersion, int64(firstVersion))
-			if err != nil {
-				ret <- err
-				return
-			}
-			ret <- migr
-			go migr.Buffer()
 			from = int64(firstVersion)
 			count++
 			continue
@@ -1127,14 +1051,6 @@ func (m *Migrate) readUp(limit int64, ret chan<- interface{}, bar *pb.ProgressBa
 		ret <- migr
 		go migr.Buffer()
 
-		migr, err = m.metanewMigration(next, int64(next))
-		if err != nil {
-			ret <- err
-			return
-		}
-
-		ret <- migr
-		go migr.Buffer()
 		from = int64(next)
 		count++
 	}
@@ -1199,15 +1115,7 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}, bar *pb.Progress
 		if !ok {
 			// no limit or haven't reached limit, apply "first" migration
 			if limit == -1 || limit-count > 0 {
-				migr, err := m.metanewMigration(suint64(from), -1)
-				if err != nil {
-					ret <- err
-					return
-				}
-				ret <- migr
-				go migr.Buffer()
-
-				migr, err = m.newMigration(suint64(from), -1)
+				migr, err := m.newMigration(suint64(from), -1)
 				if err != nil {
 					ret <- err
 					return
@@ -1223,16 +1131,7 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}, bar *pb.Progress
 			return
 		}
 
-		migr, err := m.metanewMigration(suint64(from), int64(prev.Version))
-		if err != nil {
-			ret <- err
-			return
-		}
-
-		ret <- migr
-		go migr.Buffer()
-
-		migr, err = m.newMigration(suint64(from), int64(prev.Version))
+		migr, err := m.newMigration(suint64(from), int64(prev.Version))
 		if err != nil {
 			ret <- err
 			return
@@ -1529,61 +1428,6 @@ func (m *Migrate) newMigration(version uint64, targetVersion int64) (*Migration,
 	return migr, nil
 }
 
-// metanewMigration is a helper func that returns a *Migration for the
-// specified version and targetVersion (yaml).
-func (m *Migrate) metanewMigration(version uint64, targetVersion int64) (*Migration, error) {
-	var migr *Migration
-
-	if targetVersion >= int64(version) {
-		r, identifier, fileName, err := m.sourceDrv.ReadMetaUp(version)
-		if os.IsNotExist(err) {
-			// create "empty" migration
-			migr, err = NewMigration(nil, "", version, targetVersion, "meta", "")
-			if err != nil {
-				return nil, err
-			}
-
-		} else if err != nil {
-			return nil, err
-
-		} else {
-			// create migration from up source
-			migr, err = NewMigration(r, identifier, version, targetVersion, "meta", fileName)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-	} else {
-		r, identifier, fileName, err := m.sourceDrv.ReadMetaDown(version)
-		if os.IsNotExist(err) {
-			// create "empty" migration
-			migr, err = NewMigration(nil, "", version, targetVersion, "meta", "")
-			if err != nil {
-				return nil, err
-			}
-
-		} else if err != nil {
-			return nil, err
-
-		} else {
-			// create migration from down source
-			migr, err = NewMigration(r, identifier, version, targetVersion, "meta", fileName)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	if m.PrefetchMigrations > 0 && migr.Body != nil {
-		//m.logVerbosePrintf("Start buffering %v\n", migr.LogString())
-	} else {
-		//m.logVerbosePrintf("Scheduled %v\n", migr.LogString())
-	}
-
-	return migr, nil
-}
-
 // stop returns true if no more migrations should be run against the database
 // because a stop signal was received on the GracefulStop channel.
 // Calls are cheap and this function is not blocking.
@@ -1785,14 +1629,6 @@ func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}
 			ret <- migr
 			go migr.Buffer()
 
-			migr, err = m.metanewMigration(firstVersion, int64(firstVersion))
-			if err != nil {
-				ret <- err
-				return
-			}
-			ret <- migr
-
-			go migr.Buffer()
 			from = int64(firstVersion)
 			continue
 		}
@@ -1826,14 +1662,6 @@ func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}
 		ret <- migr
 		go migr.Buffer()
 
-		migr, err = m.metanewMigration(next, int64(next))
-		if err != nil {
-			ret <- err
-			return
-		}
-
-		ret <- migr
-		go migr.Buffer()
 		from = int64(next)
 	}
 }
@@ -1890,17 +1718,7 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 			// Check if any prev version available in source
 			prev.Version, err = m.sourceDrv.Prev(suint64(from))
 			if os.IsNotExist(err) && to == -1 {
-				// apply nil migration
-				migr, err := m.metanewMigration(suint64(from), -1)
-				if err != nil {
-					ret <- err
-					return
-				}
-
-				ret <- migr
-				go migr.Buffer()
-
-				migr, err = m.newMigration(suint64(from), -1)
+				migr, err := m.newMigration(suint64(from), -1)
 				if err != nil {
 					ret <- err
 					return
@@ -1919,16 +1737,7 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 			return
 		}
 
-		migr, err := m.metanewMigration(suint64(from), int64(prev.Version))
-		if err != nil {
-			ret <- err
-			return
-		}
-
-		ret <- migr
-		go migr.Buffer()
-
-		migr, err = m.newMigration(suint64(from), int64(prev.Version))
+		migr, err := m.newMigration(suint64(from), int64(prev.Version))
 		if err != nil {
 			ret <- err
 			return

@@ -6,7 +6,6 @@ module Hasura.Backends.Postgres.Instances.Transport
   )
 where
 
-import Control.Monad.Morph (hoist)
 import Data.Aeson qualified as J
 import Data.ByteString qualified as B
 import Data.HashMap.Strict.InsOrd qualified as OMap
@@ -64,7 +63,7 @@ runPGQuery reqId query fieldName _userInfo logger sourceConfig tx genSql = do
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
   withElapsedTime $
     trace ("Postgres Query for root field " <>> fieldName) $
-      Tracing.interpTraceT id $ hoist (runQueryTx $ _pscExecCtx sourceConfig) tx
+      Tracing.interpTraceT (runQueryTx $ _pscExecCtx sourceConfig) tx
 
 runPGMutation ::
   ( MonadIO m,
@@ -80,8 +79,6 @@ runPGMutation ::
   SourceConfig ('Postgres pgKind) ->
   Tracing.TraceT (Q.TxET QErr IO) EncJSON ->
   Maybe EQ.PreparedSql ->
-  -- | Also return 'Mutation' when the operation was a mutation, and the time
-  -- spent in the PG query; for telemetry.
   m (DiffTime, EncJSON)
 runPGMutation reqId query fieldName userInfo logger sourceConfig tx _genSql = do
   -- log the graphql query

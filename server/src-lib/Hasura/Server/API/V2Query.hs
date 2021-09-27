@@ -72,14 +72,14 @@ runQuery ::
 runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuery = do
   (metadata, currentResourceVersion) <- fetchMetadata
   result <-
-    runQueryM env rqlQuery & Tracing.interpTraceT \x -> do
-      (((js, tracemeta), meta), rsc, ci) <-
+    runQueryM env rqlQuery & \x -> do
+      ((js, meta), rsc, ci) <-
         x & runMetadataT metadata
           & runCacheRWT schemaCache
           & peelRun runCtx
           & runExceptT
           & liftEitherM
-      pure ((js, rsc, ci, meta), tracemeta)
+      pure (js, rsc, ci, meta)
   withReload currentResourceVersion result
   where
     runCtx = RunCtx userInfo httpManager serverConfigCtx

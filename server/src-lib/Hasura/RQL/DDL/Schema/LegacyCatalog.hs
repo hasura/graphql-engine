@@ -79,7 +79,7 @@ saveMetadataToHdbTables
     -- sql functions
     withPathK "functions" $
       indexedForM_ functions $
-        \(FunctionMetadata function config _) -> addFunctionToCatalog function config
+        \(FunctionMetadata function config _ _) -> addFunctionToCatalog function config
 
     -- query collections
     systemDefined <- askSystemDefined
@@ -517,7 +517,7 @@ fetchMetadataFromHdbTables = liftTx do
             -- function permissions were only introduced post 43rd
             -- migration, so it's impossible we get any permissions
             -- here
-            FunctionMetadata (QualifiedObject sn fn) config []
+            FunctionMetadata (QualifiedObject sn fn) config [] Nothing
 
     fetchRemoteSchemas =
       map fromRow
