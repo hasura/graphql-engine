@@ -144,7 +144,8 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
 data UpdateAction = UpdateAction
   { _uaName :: !ActionName,
     _uaDefinition :: !ActionDefinitionInput,
-    _uaComment :: !(Maybe Text)
+    _uaComment :: !(Maybe Text),
+    _uaTransform :: !(Maybe MetadataTransform)
   }
 
 $(J.deriveFromJSON hasuraJSON ''UpdateAction)
@@ -154,7 +155,7 @@ runUpdateAction ::
   (QErrM m, CacheRWM m, MetadataM m) =>
   UpdateAction ->
   m EncJSON
-runUpdateAction (UpdateAction actionName actionDefinition actionComment) = do
+runUpdateAction (UpdateAction actionName actionDefinition actionComment transform) = do
   sc <- askSchemaCache
   let actionsMap = scActions sc
   void $
@@ -168,6 +169,7 @@ runUpdateAction (UpdateAction actionName actionDefinition actionComment) = do
       MetadataModifier $
         (metaActions . ix actionName . amDefinition .~ def)
           . (metaActions . ix actionName . amComment .~ comment)
+          . (metaActions . ix actionName . amMetadataTransform .~ transform)
 
 newtype ClearActionData = ClearActionData {unClearActionData :: Bool}
   deriving (Show, Eq, J.FromJSON, J.ToJSON)
