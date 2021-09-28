@@ -10,6 +10,9 @@
         max_connections: 50
         retries: 1
       use_prepared_statements: true
+  query_tags:
+    disabled: false
+    format: standard
   tables: !include "s1/tables/tables.yaml"
   functions: !include "s1/functions/functions.yaml"
 - name: s2

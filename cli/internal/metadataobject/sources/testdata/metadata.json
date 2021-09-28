@@ -84,6 +84,10 @@
           },
           "use_prepared_statements": true
         }
+      },
+      "query_tags": {
+        "disabled": false,
+        "format": "standard"
       }
     },
     {
