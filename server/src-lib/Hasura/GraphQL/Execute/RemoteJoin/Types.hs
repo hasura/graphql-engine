@@ -106,8 +106,7 @@ getJoinColumnMapping :: RemoteJoin -> Map.HashMap FieldName JoinColumnAlias
 getJoinColumnMapping = \case
   RemoteJoinSource sourceJoin _ -> AB.runBackend
     sourceJoin
-    \RemoteSourceJoin {_rsjJoinColumns} ->
-      fmap (view _1) _rsjJoinColumns
+    \RemoteSourceJoin {_rsjLHSColumnAliases} -> _rsjLHSColumnAliases
   RemoteJoinRemoteSchema RemoteSchemaJoin {_rsjJoinColumnAliases} ->
     _rsjJoinColumnAliases
 
@@ -116,7 +115,8 @@ data RemoteSourceJoin b = RemoteSourceJoin
   { _rsjSource :: !SourceName,
     _rsjSourceConfig :: !(SourceConfig b),
     _rsjRelationship :: !(IR.SourceRelationshipSelection b (Const Void) P.UnpreparedValue),
-    _rsjJoinColumns :: !(Map.HashMap FieldName (JoinColumnAlias, ScalarType b, Column b))
+    _rsjLHSColumnAliases :: !(Map.HashMap FieldName JoinColumnAlias),
+    _rsjJoinColumns :: !(Map.HashMap FieldName (ScalarType b, Column b))
   }
   deriving (Generic)
 

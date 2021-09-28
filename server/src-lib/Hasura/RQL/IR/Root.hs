@@ -9,12 +9,13 @@ module Hasura.RQL.IR.Root
     SubscriptionRootField,
     QueryDBRoot (..),
     MutationDBRoot (..),
-    RemoteSelect(..),
-    RemoteSourceSelect(..)
+    RemoteSelect (..),
+    RemoteSourceSelect (..),
   )
 where
 
 import Data.Aeson.Ordered qualified as JO
+import Data.HashMap.Strict qualified as Map
 import Data.Kind (Type)
 import Hasura.Prelude
 import Hasura.RQL.IR.Delete
@@ -23,6 +24,7 @@ import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Update
 import Hasura.RQL.Types.Action qualified as RQL
+import Hasura.RQL.Types.Column qualified as RQL
 import Hasura.RQL.Types.Backend qualified as RQL
 import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.RQL.Types.QueryTags qualified as RQL
@@ -79,7 +81,7 @@ data
     (src :: BackendType)
   = RemoteSelectRemoteSchema !(HashSet (RQL.DBJoinField src)) !RemoteSchemaSelect
   | -- | AnyBackend is used here to capture a relationship to an arbitrary target
-    RemoteSelectSource !(AB.AnyBackend (RemoteSourceSelect (RemoteSelect vf) src vf))
+    RemoteSelectSource !(Map.HashMap RQL.FieldName (RQL.ColumnInfo src)) !(AB.AnyBackend (RemoteSourceSelect (RemoteSelect vf) vf))
 
 -- | Represents a query root field to an action
 type QueryActionRoot v =

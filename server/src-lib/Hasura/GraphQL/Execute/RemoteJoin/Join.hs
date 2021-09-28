@@ -120,7 +120,7 @@ processRemoteJoins_ requestId logger env manager reqHdrs userInfo lhs joinTree g
                   Map.fromList $
                     map (getFieldNameTxt *** JO.fromOrdered) $
                       Map.toList $ unJoinArgument argument
-              rowSchema = fmap (\(_, rhsType, rhsColumn) -> (rhsColumn, rhsType)) _rsjJoinColumns
+              rowSchema = fmap swap _rsjJoinColumns
 
           for (NE.nonEmpty rows) $ \nonEmptyRows -> do
             stepInfo <-

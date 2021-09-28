@@ -650,7 +650,6 @@ deriving instance
 data
   RemoteSourceSelect
     r
-    (src :: BackendType)
     (vf :: BackendType -> Type)
     (tgt :: BackendType) = RemoteSourceSelect
   { _rssName :: !SourceName,
@@ -662,7 +661,7 @@ data
     -- from src
     -- (Column tgt) so that an appropriate join condition / IN clause can be built
     -- by the remote
-    _rssJoinMapping :: !(HM.HashMap FieldName (ColumnInfo src, ScalarType tgt, Column tgt))
+    _rssJoinMapping :: !(HM.HashMap FieldName (ScalarType tgt, Column tgt))
   }
 -- Permissions
 

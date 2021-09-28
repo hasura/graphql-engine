@@ -327,16 +327,16 @@ transformAnnFields fields = do
                   _rselRemoteSchema
             annotatedJoin = Just (phantomColumns, remoteJoin)
          in pure (remoteAnnPlaceholder, annotatedJoin)
-      AFRemote (RemoteSelectSource anySourceSelect) -> AB.dispatchAnyBackend @Backend
+      AFRemote (RemoteSelectSource srcMapping anySourceSelect) -> AB.dispatchAnyBackend @Backend
         anySourceSelect
         -- NOTE: This is necessary to bring 'tgt' into scope, so that it can be
         -- passed to the helper function as a type argument.
-        \(RemoteSourceSelect {..} :: RemoteSourceSelect (RemoteSelect UnpreparedValue) src UnpreparedValue tgt) ->
+        \(RemoteSourceSelect {..} :: RemoteSourceSelect (RemoteSelect UnpreparedValue) UnpreparedValue tgt) ->
           let (transformedSourceRelationship, sourceRelationshipJoins) =
                 getRemoteJoinsSourceRelation _rssSelection
-              annotatedJoinColumns = annotateSourceJoin @tgt <$> _rssJoinMapping
+              annotatedJoinColumns = annotateSourceJoin <$> srcMapping
               phantomColumns =
-                annotatedJoinColumns & Map.mapMaybe \(columnInfo, (alias, _, _)) ->
+                annotatedJoinColumns & Map.mapMaybe \(columnInfo, alias) ->
                   case alias of
                     JCSelected _ -> Nothing
                     JCPhantom a -> Just (columnInfo, a)
@@ -347,6 +347,7 @@ transformAnnFields fields = do
                     _rssConfig
                     transformedSourceRelationship
                     (fmap snd annotatedJoinColumns)
+                    _rssJoinMapping
               remoteJoin = RemoteJoinSource anySourceJoin sourceRelationshipJoins
               annotatedJoin = Just (phantomColumns, remoteJoin)
            in pure (remoteAnnPlaceholder, annotatedJoin)
@@ -391,14 +392,13 @@ transformAnnFields fields = do
     -- Annotate an element a remote source join from '_rssJoinMapping' so that
     -- a remote join can be constructed.
     annotateSourceJoin ::
-      forall tgt.
-      (ColumnInfo src, ScalarType tgt, Column tgt) ->
-      (DBJoinField src, (JoinColumnAlias, ScalarType tgt, Column tgt))
-    annotateSourceJoin (columnInfo, rhsColumnType, rhsColumn) =
+      ColumnInfo src ->
+      (DBJoinField src, JoinColumnAlias)
+    annotateSourceJoin columnInfo =
       let lhsColumn = pgiColumn columnInfo
           lhsColumnFieldName = fromCol @src lhsColumn
           alias = getJoinColumnAlias lhsColumnFieldName lhsColumn columnFields
-       in (JoinColumn columnInfo, (alias, rhsColumnType, rhsColumn))
+       in (JoinColumn columnInfo, alias)
 
     -- Get the fields targeted by some 'Traversal' for an arbitrary list of
     -- tuples, discarding any elements whose fields cannot be focused upon.

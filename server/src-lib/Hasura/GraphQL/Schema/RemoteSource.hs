@@ -10,8 +10,8 @@ import Hasura.GraphQL.Schema.Instances ()
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
-import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Root qualified as IR
+import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Common (RelType (..))
 import Hasura.RQL.Types.RemoteRelationship
 import Hasura.SQL.AnyBackend
@@ -59,6 +59,10 @@ remoteSourceField remoteDB = dispatchAnyBackend @BackendSchema remoteDB buildFie
           pure $
             parsers <&> fmap \select ->
               IR.AFRemote $
-                IR.RemoteSelectSource $
+                IR.RemoteSelectSource (fmap (\(lhsColumn, _, _) -> lhsColumn) _rsriMapping) $
                   mkAnyBackend @tgt $
-                    IR.RemoteSourceSelect _rsriSource _rsriSourceConfig select _rsriMapping
+                    IR.RemoteSourceSelect
+                      _rsriSource
+                      _rsriSourceConfig
+                      select
+                      (fmap (\(_, rhsType, rhsColumn) -> (rhsType, rhsColumn)) _rsriMapping)
