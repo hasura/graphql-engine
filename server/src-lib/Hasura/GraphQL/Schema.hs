@@ -67,11 +67,17 @@ buildGQLContext queryType sources allRemoteSchemas allActions nonObjectCustomTyp
   ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx@(SQLGenCtx stringifyNum boolCollapse) _maintenanceMode _experimentalFeatures <-
     askServerConfigCtx
 
-  adminRemoteRelationshipQueryCtx <- for allRemoteSchemas $ \(RemoteSchemaCtx {..}, _) -> do
+  annotatedRemoteSchemas <- for allRemoteSchemas $ \(remoteSchemaCtx, metadataObject) -> do
     (queryParsers, mutationParsers, subscriptionParsers) <-
-      P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser _rscIntroOriginal _rscInfo
-    let parsedIntrospection = ParsedIntrospection queryParsers mutationParsers subscriptionParsers
-    pure $ RemoteRelationshipQueryContext _rscIntroOriginal parsedIntrospection $ rsCustomizer _rscInfo
+      P.runSchemaT @m @(P.ParseT Identity) $
+        buildRemoteParser
+          (_rscIntroOriginal remoteSchemaCtx)
+          (_rscInfo remoteSchemaCtx)
+    pure
+      ( remoteSchemaCtx,
+        ParsedIntrospection queryParsers mutationParsers subscriptionParsers,
+        metadataObject
+      )
 
   let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
 
@@ -82,6 +88,12 @@ buildGQLContext queryType sources allRemoteSchemas allActions nonObjectCustomTyp
       allActionInfos = Map.elems allActions
 
       allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
+      adminRemoteRelationshipQueryCtx =
+        annotatedRemoteSchemas
+          <&> ( \(RemoteSchemaCtx {..}, parsedIntrospection, _metadataObj) ->
+                  RemoteRelationshipQueryContext _rscIntroOriginal parsedIntrospection $ rsCustomizer _rscInfo
+              )
+
       allRoles :: Set.HashSet RoleName
       allRoles = nonTableRoles <> allTableRoles
       -- The function permissions context doesn't actually matter because the
@@ -117,9 +129,8 @@ buildGQLContext queryType sources allRemoteSchemas allActions nonObjectCustomTyp
           _ -> []
 
   -- This block of code checks that there are no conflicting root field names between remotes.
-  -- let (remotes, remoteErrors) =
-  --       runState (remoteSchemaFields queryFieldNames mutationFieldNames allRemoteSchemas) mempty
-  let remotes = Map.toList adminRemoteRelationshipQueryCtx
+  let (remotes, remoteErrors) =
+        runState (remoteSchemaFields queryFieldNames mutationFieldNames annotatedRemoteSchemas) mempty
 
   let adminQueryRemotes = concatMap (piQuery . _rrscParsedIntrospection . snd) remotes
       adminMutationRemotes = concatMap (concat . piMutation . _rrscParsedIntrospection . snd) remotes
@@ -146,7 +157,7 @@ buildGQLContext queryType sources allRemoteSchemas allActions nonObjectCustomTyp
             role
 
   unauthenticated <- unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsCtx
-  pure (roleContexts, unauthenticated, mempty)
+  pure (roleContexts, unauthenticated, remoteErrors)
 
 buildRoleContext ::
   forall m.
@@ -407,51 +418,55 @@ buildRoleBasedRemoteSchemaParser roleName remoteSchemaCache = do
 
 -- checks that there are no conflicting root field names between remotes and
 -- hasura fields
--- remoteSchemaFields
---   :: forall m
---    . MonadState (Seq InconsistentMetadata) m
---   => [G.Name]
---   -> [G.Name]
---   -> HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
---   -> m [( RemoteSchemaName , RemoteRelationshipQueryContext)]
--- remoteSchemaFields queryFieldNames mutationFieldNames allRemoteSchemas = do
---   foldlM go [] $ Map.toList allRemoteSchemas
---   where
---     go :: [( RemoteSchemaName , RemoteRelationshipQueryContext)]
---        -> (RemoteSchemaName, (RemoteSchemaCtx, MetadataObject))
---        -> m [( RemoteSchemaName , RemoteRelationshipQueryContext)]
---     go okSchemas (newSchemaName, (RemoteSchemaCtx{..}, newMetadataObject)) = do
---       let (queryOld, mutationOld) =
---             unzip $ fmap ((\case ParsedIntrospection q m _ -> (q,m)) . _rrscParsedIntrospection . snd) okSchemas
---       let ParsedIntrospection queryNew mutationNew _subscriptionNew
---             = _rscParsed
---       checkedDuplicates <- runExceptT do
---         -- First we check for conflicts in query_root
---         -- Check for conflicts between remotes
---         for_ (duplicates (fmap (P.getName . fDefinition) (queryNew ++ concat queryOld))) $
---           \name -> throwError (newMetadataObject, "Duplicate remote field " <> squote name)
---         -- Check for conflicts between this remote and the tables
---         for_ (duplicates (fmap (P.getName . fDefinition) queryNew ++ queryFieldNames)) $
---           \name -> throwError (newMetadataObject, "Field cannot be overwritten by remote field " <> squote name)
---         -- Ditto, but for mutations - i.e. with mutation_root
---         onJust mutationNew \ms -> do
---           -- Check for conflicts between remotes
---           for_ (duplicates (fmap (P.getName . fDefinition) (ms ++ concat (catMaybes mutationOld)))) $
---             \name -> throwError (newMetadataObject, "Duplicate remote field " <> squote name)
---           -- Check for conflicts between this remote and the tables
---           for_ (duplicates (fmap (P.getName . fDefinition) ms ++ mutationFieldNames)) $
---             \name -> throwError (newMetadataObject, "Field cannot be overwritten by remote field " <> squote name)
---         -- No need to check for conflicts with other subscriptions, since remote subscriptions are not supported
+remoteSchemaFields ::
+  forall m.
+  MonadState (Seq InconsistentMetadata) m =>
+  [G.Name] ->
+  [G.Name] ->
+  HashMap RemoteSchemaName (RemoteSchemaCtx, ParsedIntrospection, MetadataObject) ->
+  m [(RemoteSchemaName, RemoteRelationshipQueryContext)]
+remoteSchemaFields queryFieldNames mutationFieldNames allRemoteSchemas = do
+  foldlM go [] $ Map.toList allRemoteSchemas
+  where
+    go ::
+      [(RemoteSchemaName, RemoteRelationshipQueryContext)] ->
+      (RemoteSchemaName, (RemoteSchemaCtx, ParsedIntrospection, MetadataObject)) ->
+      m [(RemoteSchemaName, RemoteRelationshipQueryContext)]
+    go okSchemas (newSchemaName, (RemoteSchemaCtx {..}, parsedIntrospection, newMetadataObject)) = do
+      let (queryOld, mutationOld) =
+            unzip $ fmap ((\case ParsedIntrospection q m _ -> (q, m)) . _rrscParsedIntrospection . snd) okSchemas
+      let ParsedIntrospection queryNew mutationNew _subscriptionNew = parsedIntrospection
+      checkedDuplicates <- runExceptT do
+        -- First we check for conflicts in query_root
+        -- Check for conflicts between remotes
+        for_ (duplicates (fmap (P.getName . fDefinition) (queryNew ++ concat queryOld))) $
+          \name -> throwError (newMetadataObject, "Duplicate remote field " <> squote name)
+        -- Check for conflicts between this remote and the tables
+        for_ (duplicates (fmap (P.getName . fDefinition) queryNew ++ queryFieldNames)) $
+          \name -> throwError (newMetadataObject, "Field cannot be overwritten by remote field " <> squote name)
+        -- Ditto, but for mutations - i.e. with mutation_root
+        onJust mutationNew \ms -> do
+          -- Check for conflicts between remotes
+          for_ (duplicates (fmap (P.getName . fDefinition) (ms ++ concat (catMaybes mutationOld)))) $
+            \name -> throwError (newMetadataObject, "Duplicate remote field " <> squote name)
+          -- Check for conflicts between this remote and the tables
+          for_ (duplicates (fmap (P.getName . fDefinition) ms ++ mutationFieldNames)) $
+            \name -> throwError (newMetadataObject, "Field cannot be overwritten by remote field " <> squote name)
+      -- No need to check for conflicts with other subscriptions, since remote subscriptions are not supported
 
---       -- Only add remote if no errors found
---       case checkedDuplicates of
---         Left (meta, reason) -> do
---           withRecordInconsistency' reason meta
---           return $ okSchemas
---         Right () ->
---           return $ (newSchemaName, RemoteRelationshipQueryContext _rscIntroOriginal _rscParsed $ rsCustomizer _rscInfo):okSchemas
---     -- variant of 'withRecordInconsistency' that works with 'MonadState' rather than 'ArrowWriter'
---     withRecordInconsistency' reason metadata = modify' (InconsistentObject reason Nothing metadata Seq.:<|)
+      -- Only add remote if no errors found
+      case checkedDuplicates of
+        Left (meta, reason) -> do
+          withRecordInconsistency' reason meta
+          return okSchemas
+        Right () ->
+          return $
+            ( newSchemaName,
+              RemoteRelationshipQueryContext _rscIntroOriginal parsedIntrospection $ rsCustomizer _rscInfo
+            ) :
+            okSchemas
+    -- variant of 'withRecordInconsistency' that works with 'MonadState' rather than 'ArrowWriter'
+    withRecordInconsistency' reason metadata = modify' (InconsistentObject reason Nothing metadata Seq.:<|)
 
 buildQueryFields ::
   forall b r m n.
