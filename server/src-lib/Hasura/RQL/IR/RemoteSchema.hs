@@ -6,6 +6,7 @@ module Hasura.RQL.IR.RemoteSchema
     convertSelectionSet,
     RemoteFieldG (..),
     Field (..),
+    mkField,
     ObjectSelectionSet,
     InterfaceSelectionSet,
     UnionSelectionSet,
@@ -56,12 +57,23 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | A normalized representation of a GraphQL field
 data Field var = Field
-  { _fName :: !G.Name,
+  { _fAlias :: !G.Name,
+    _fName :: !G.Name,
     _fArguments :: !(HashMap G.Name (G.Value var)),
     _fDirectives :: ![G.Directive var],
     _fSelectionSet :: !(SelectionSet var)
   }
   deriving (Show, Eq, Functor, Foldable, Traversable)
+
+mkField ::
+  Maybe G.Name ->
+  G.Name ->
+  HashMap G.Name (G.Value var) ->
+  [G.Directive var] ->
+  SelectionSet var ->
+  Field var
+mkField alias name =
+  Field (fromMaybe name alias) name
 
 type ObjectSelectionSet var = OMap.InsOrdHashMap G.Name (Field var)
 
@@ -233,10 +245,10 @@ convertSelectionSet = \case
   SelectionSetInterface s -> convertAbstractTypeSelectionSet s
   SelectionSetNone -> mempty
   where
-    convertField :: G.Name -> Field var -> G.Field G.NoFragments var
-    convertField alias Field {..} =
+    convertField :: Field var -> G.Field G.NoFragments var
+    convertField Field {..} =
       G.Field
-        { G._fAlias = Just alias,
+        { G._fAlias = Just _fAlias,
           G._fName = _fName,
           G._fArguments = _fArguments,
           G._fDirectives = mempty,
@@ -244,7 +256,7 @@ convertSelectionSet = \case
         }
 
     convertObjectSelectionSet =
-      map (G.SelectionField . uncurry convertField) . OMap.toList
+      map (G.SelectionField . convertField . snd) . OMap.toList
 
     convertAbstractTypeSelectionSet (AbstractTypeSelectionSet base members) =
       let commonFields = convertObjectSelectionSet base
@@ -282,7 +294,7 @@ data RemoteRootField var
 getRemoteFieldSelectionSet :: RemoteRootField Variable -> ObjectSelectionSet Variable
 getRemoteFieldSelectionSet = \case
   RRFNamespaceField selSet -> selSet
-  RRFRealField fld -> OMap.singleton (_fName fld) fld
+  RRFRealField fld -> OMap.singleton (_fAlias fld) fld
 
 type RawRemoteField = RemoteFieldG (Field RQL.RemoteSchemaVariable)
 

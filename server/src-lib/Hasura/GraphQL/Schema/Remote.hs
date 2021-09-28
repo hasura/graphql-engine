@@ -533,7 +533,7 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
           ( \alias -> \case
               P.SelectField fld -> fld
               P.SelectTypename _ ->
-                IR.Field $$(G.litName "__typename") mempty mempty IR.SelectionSetNone
+                IR.mkField (Just alias) $$(G.litName "__typename") mempty mempty IR.SelectionSetNone
           )
   where
     getInterface :: G.Name -> m (G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition)
@@ -845,7 +845,7 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
       FieldParser n (IR.Field RemoteSchemaVariable)
     mkFieldParserWithoutSelectionSet argsParser outputParser =
       P.rawSelection fieldName description argsParser outputParser
-        <&> \(_alias, _, (_, args)) -> IR.Field fieldName args mempty IR.SelectionSetNone
+        <&> \(alias, _, (_, args)) -> IR.mkField alias fieldName args mempty IR.SelectionSetNone
 
     mkFieldParserWithSelectionSet ::
       InputFieldsParser n (Altered, HashMap G.Name (G.Value RemoteSchemaVariable)) ->
@@ -853,7 +853,7 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
       FieldParser n (IR.Field RemoteSchemaVariable)
     mkFieldParserWithSelectionSet argsParser outputParser =
       P.rawSubselection fieldName description argsParser outputParser
-        <&> \(_alias, _, (_, args), selSet) -> IR.Field fieldName args mempty selSet
+        <&> \(alias, _, (_, args), selSet) -> IR.mkField alias fieldName args mempty selSet
 
 -- | helper function to get a parser of an object with it's name
 --   This function is called from 'remoteSchemaInterface' and
@@ -891,7 +891,13 @@ addCustomNamespace remoteSchemaInfo rootTypeName namespace fieldParsers =
               P.SelectTypename fld ->
                 -- In P.selectionSet we lose the resultCustomizer from __typename fields so we need to put it back
                 let resultCustomizer = modifyFieldByName alias $ customizeTypeNameString $ _rscCustomizeTypeName $ rsCustomizer remoteSchemaInfo
-                 in IR.RemoteFieldG remoteSchemaInfo resultCustomizer $ IR.Field $$(G.litName "__typename") mempty mempty IR.SelectionSetNone
+                 in IR.RemoteFieldG remoteSchemaInfo resultCustomizer $
+                      IR.mkField
+                        (Just alias)
+                        $$(G.litName "__typename")
+                        mempty
+                        mempty
+                        IR.SelectionSetNone
           )
 
     remoteFieldParser :: Parser 'Output m IR.RemoteField
