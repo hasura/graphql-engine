@@ -31,8 +31,9 @@
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\"",
     "jest-watch": "jest --watch --setupFiles dotenv/config",
     "jest": "jest --setupFiles dotenv/config",
+    "chromatic": "npx chromatic",
     "storybook": "start-storybook -p 6006 -s static --no-manager-cache",
-    "build-storybook": "build-storybook"
+    "build-storybook": "build-storybook -s static"
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [

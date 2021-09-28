@@ -1,27 +1,23 @@
 const util = require('util');
 const webpack = require('webpack');
 
+const isConfigDebugMode = process.env.STORYBOOK_CONFIG_LOG === 'debug';
+
 module.exports = {
-  features: {
-    previewCsfV3: true,
-  },
   stories: [
     '../src/**/*.stories.mdx',
     '../src/**/*.stories.@(js|jsx|ts|tsx|mdx)',
   ],
   babel: async options => {
-    console.log('------BABEL--------');
-    console.log(util.inspect(options, { showHidden: false, depth: null }));
+    if (isConfigDebugMode) {
+      console.log('------BABEL--------');
+      console.log(util.inspect(options, { showHidden: false, depth: null }));
+    }
     return options;
   },
   webpackFinal: async (config, { configType }) => {
     const newConfig = {
       ...config,
-      entry: [
-        'bootstrap-loader?extractStyles',
-        'font-awesome-webpack!./src/theme/font-awesome.config.js',
-        ...config.entry,
-      ],
       module: {
         ...config.module,
         rules: [
@@ -56,10 +52,6 @@ module.exports = {
       },
       plugins: [
         ...config.plugins,
-        new webpack.ProvidePlugin({
-          $: 'jquery',
-          jQuery: 'jquery',
-        }),
         new webpack.DefinePlugin({
           CONSOLE_ASSET_VERSION: Date.now().toString(),
           'process.hrtime': () => null,
@@ -71,9 +63,10 @@ module.exports = {
       ],
     };
 
-    console.log('------WEBPACK--------');
-    console.log(util.inspect(newConfig, { showHidden: false, depth: null }));
-    // console.log(util.inspect(config, { showHidden: false, depth: null }));
+    if (isConfigDebugMode) {
+      console.log('------WEBPACK--------');
+      console.log(util.inspect(newConfig, { showHidden: false, depth: null }));
+    }
 
     // Return the altered config
     return newConfig;
