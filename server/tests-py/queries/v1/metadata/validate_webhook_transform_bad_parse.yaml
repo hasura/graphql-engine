@@ -9,7 +9,7 @@
       source_position:
         start_line: 1
         start_column: 1
-      message: "\nunexpected Bling"
+      message: "sourceName:1:2:\n  |\n1 | \n  | \nunexpected \"$\"\n"
     headers:
     - - content-type
       - application/json
