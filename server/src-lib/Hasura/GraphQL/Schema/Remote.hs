@@ -713,7 +713,9 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
     -- types in the schema document that claim to implement this interface.  We
     -- should have a check that expresses that that collection of objects is equal
     -- to 'possibleTypes'.
-    pure $ P.selectionSetInterface name description subFieldParsers objs <&> constructInterfaceSelectionSet
+    pure $
+      P.selectionSetInterface name description subFieldParsers objs
+        <&> IR.mkInterfaceSelectionSet (Set.fromList $ map G._fldName fields)
   where
     getObject :: G.Name -> m (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)
     getObject objectName =
@@ -730,19 +732,6 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
                 <> " can only include object types. It cannot include "
                 <> squote objectName
 
-    -- 'constructInterfaceQuery' constructs a remote interface query.
-    constructInterfaceSelectionSet ::
-      [(G.Name, IR.ObjectSelectionSet RemoteSchemaVariable)] ->
-      IR.InterfaceSelectionSet RemoteSchemaVariable
-    constructInterfaceSelectionSet objNameAndFields =
-      let interfaceFieldNames = Set.fromList $ map G._fldName fields
-       in -- #5 of Note [Querying remote schema interface fields]
-          IR.mkAbstractTypeSelectionSet
-            (\fieldName -> Set.member fieldName interfaceFieldNames || fieldName == $$(G.litName "__typename"))
-            objNameAndFields
-
--- in fmap G.SelectionField commonInterfaceFields <> nonCommonInterfaceFields
-
 -- | 'remoteSchemaUnion' returns a output parser for a given 'UnionTypeDefinition'.
 remoteSchemaUnion ::
   forall n m.
@@ -755,9 +744,7 @@ remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _direct
     objs <- traverse (getObjectParser schemaDoc getObject) objectNames
     when (null objs) $
       throw400 RemoteSchemaError $ "List of member types cannot be empty for union type " <> squote name
-    pure $
-      P.selectionSetUnion name description objs
-        <&> IR.mkAbstractTypeSelectionSet (== $$(G.litName "__typename"))
+    pure $ P.selectionSetUnion name description objs <&> IR.mkUnionSelectionSet
   where
     getObject :: G.Name -> m (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)
     getObject objectName =
