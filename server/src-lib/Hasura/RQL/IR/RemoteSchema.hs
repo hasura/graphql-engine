@@ -30,7 +30,7 @@ module Hasura.RQL.IR.RemoteSchema
     RemoteFieldG (..),
     GraphQLField (..),
     mkField,
-    Field(..),
+    Field (..),
     ObjectSelectionSet,
     InterfaceSelectionSet,
     UnionSelectionSet,
@@ -44,6 +44,8 @@ module Hasura.RQL.IR.RemoteSchema
     RawRemoteField,
     RemoteField,
     realRemoteField,
+    RemoteFieldArgument (..),
+    RemoteSchemaSelect (..),
   )
 where
 
@@ -52,7 +54,10 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as Set
 import Hasura.GraphQL.Parser (Variable)
+import Hasura.GraphQL.Parser.Schema (InputValue)
 import Hasura.Prelude
+import Hasura.RQL.Types.RemoteRelationship
+import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.RemoteSchema qualified as RQL
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -307,9 +312,10 @@ data RemoteRootField r var
 -- | For a real remote field gives a SelectionSet for selecting the field itself.
 --   For a virtual field gives the unwrapped SelectionSet for the field.
 getRemoteFieldSelectionSet :: RemoteRootField r Variable -> ObjectSelectionSet r Variable
-getRemoteFieldSelectionSet = fmap FieldGraphQL . \case
-  RRFNamespaceField selSet -> selSet
-  RRFRealField fld -> OMap.singleton (_fAlias fld) fld
+getRemoteFieldSelectionSet =
+  fmap FieldGraphQL . \case
+    RRFNamespaceField selSet -> selSet
+    RRFRealField fld -> OMap.singleton (_fAlias fld) fld
 
 type RawRemoteField r = RemoteFieldG (GraphQLField r RQL.RemoteSchemaVariable)
 
@@ -317,5 +323,21 @@ type RemoteField r = RemoteFieldG (RemoteRootField r RQL.RemoteSchemaVariable)
 
 realRemoteField :: RawRemoteField r -> RemoteField r
 realRemoteField RemoteFieldG {..} = RemoteFieldG {_rfField = RRFRealField _rfField, ..}
+
+-- Remote schema relationships
+
+data RemoteFieldArgument = RemoteFieldArgument
+  { _rfaArgument :: !G.Name,
+    _rfaValue :: !(InputValue RemoteSchemaVariable)
+  }
+  deriving (Eq, Show)
+
+data RemoteSchemaSelect = RemoteSchemaSelect
+  { _rselArgs :: ![RemoteFieldArgument],
+    _rselResultCustomizer :: !RemoteResultCustomizer,
+    _rselSelection :: !(SelectionSet Void RemoteSchemaVariable),
+    _rselFieldCall :: !(NonEmpty FieldCall),
+    _rselRemoteSchema :: !RemoteSchemaInfo
+  }
 
 $(makeLenses ''RemoteFieldG)

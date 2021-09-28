@@ -896,12 +896,12 @@ addCustomNamespace remoteSchemaInfo rootTypeName namespace fieldParsers =
                 -- In P.selectionSet we lose the resultCustomizer from __typename fields so we need to put it back
                 let resultCustomizer = modifyFieldByName alias $ customizeTypeNameString $ _rscCustomizeTypeName $ rsCustomizer remoteSchemaInfo
                  in IR.RemoteFieldG remoteSchemaInfo resultCustomizer $
-                        IR.mkField
-                          (Just alias)
-                          $$(G.litName "__typename")
-                          mempty
-                          mempty
-                          IR.SelectionSetNone
+                      IR.mkField
+                        (Just alias)
+                        $$(G.litName "__typename")
+                        mempty
+                        mempty
+                        IR.SelectionSetNone
           )
 
     remoteFieldParser :: Parser 'Output m (IR.RemoteField Void)

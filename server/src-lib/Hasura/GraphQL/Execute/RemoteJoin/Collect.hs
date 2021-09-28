@@ -306,9 +306,9 @@ transformAnnFields fields = do
       -- We generate this so that the response has a key with the relationship,
       -- without which preserving the order of fields in the final response
       -- would require a lot of bookkeeping.
-      AFRemote (RemoteSelectRemoteSchema RemoteSchemaSelect {..}) ->
+      AFRemote (RemoteSelectRemoteSchema hasuraFields RemoteSchemaSelect {..}) ->
         let annotatedJoinColumns =
-              Map.fromList $ map annotateDBJoinField (toList _rselHasuraFields)
+              Map.fromList $ map annotateDBJoinField (toList hasuraFields)
             phantomColumns =
               annotatedJoinColumns & Map.mapMaybe \(columnInfo, alias) ->
                 case alias of

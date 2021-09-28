@@ -30,7 +30,6 @@ import Data.Int (Int64)
 import Data.Kind (Type)
 import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
-import Hasura.GraphQL.Parser.Schema (InputValue)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy
@@ -43,10 +42,8 @@ import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Relationship
 import Hasura.RQL.Types.RemoteRelationship
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
-import Language.GraphQL.Draft.Syntax qualified as G
 
 -- Root selection
 
@@ -622,23 +619,6 @@ type ArraySelect b = ArraySelectG b (Const Void) (SQLExpression b)
 
 type ArraySelectFieldsG b r v = Fields (ArraySelectG b r v)
 
--- Remote schema relationships
-
-data RemoteFieldArgument = RemoteFieldArgument
-  { _rfaArgument :: !G.Name,
-    _rfaValue :: !(InputValue RemoteSchemaVariable)
-  }
-  deriving (Eq, Show)
-
-data RemoteSchemaSelect (b :: BackendType) = RemoteSchemaSelect
-  { _rselArgs :: ![RemoteFieldArgument],
-    _rselResultCustomizer :: !RemoteResultCustomizer,
-    _rselSelection :: !(SelectionSet Void RemoteSchemaVariable),
-    _rselHasuraFields :: !(HashSet (DBJoinField b)),
-    _rselFieldCall :: !(NonEmpty FieldCall),
-    _rselRemoteSchema :: !RemoteSchemaInfo
-  }
-
 -- | Captures the selection set of a remote source relationship.
 data
   SourceRelationshipSelection
@@ -693,7 +673,7 @@ data
   RemoteSelect
     (vf :: BackendType -> Type)
     (src :: BackendType)
-  = RemoteSelectRemoteSchema !(RemoteSchemaSelect src)
+  = RemoteSelectRemoteSchema !(HashSet (DBJoinField src)) !RemoteSchemaSelect
   | -- | AnyBackend is used here to capture a relationship to an arbitrary target
     RemoteSelectSource !(AB.AnyBackend (RemoteSourceSelect src vf))
 

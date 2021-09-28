@@ -1394,12 +1394,11 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
                       applyAliasMapping (singletonAliasMapping fname (fcName $ NE.last fieldCalls)) resultCustomizer
               pure $
                 IR.AFRemote $
-                  IR.RemoteSelectRemoteSchema $
+                  IR.RemoteSelectRemoteSchema hasuraFields $
                     IR.RemoteSchemaSelect
                       { _rselArgs = remoteArgs,
                         _rselResultCustomizer = resultCustomizer',
                         _rselSelection = selSet,
-                        _rselHasuraFields = hasuraFields,
                         _rselFieldCall = fieldCalls,
                         _rselRemoteSchema = remoteSchemaInfo
                       }
