@@ -18,9 +18,9 @@ import Hasura.GraphQL.Parser.TestUtils
 import Hasura.GraphQL.RemoteServer (identityCustomizer)
 import Hasura.GraphQL.Schema.Remote
 import Hasura.Prelude
+import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.IR.RemoteSchema
 import Hasura.Session
 import Language.GraphQL.Draft.Parser qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G

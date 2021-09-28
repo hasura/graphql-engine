@@ -173,7 +173,6 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
         ..
       }
   where
-
     -- If there is no explicit mutation or subscription root type we need to check for
     -- objects type definitions with the default names "Mutation" and "Subscription".
     -- If found, we add the default roots explicitly to the IntrospectionResult.

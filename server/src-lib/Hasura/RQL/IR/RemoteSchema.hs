@@ -123,7 +123,6 @@ convertSelectionSet = \case
   SelectionSetInterface s -> convertAbstractTypeSelectionSet s
   SelectionSetNone -> mempty
   where
-
     convertField :: G.Name -> Field var -> G.Field G.NoFragments var
     convertField alias Field {..} =
       G.Field
