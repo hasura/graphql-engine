@@ -9,6 +9,8 @@ module Hasura.RQL.IR.Root
     SubscriptionRootField,
     QueryDBRoot (..),
     MutationDBRoot (..),
+    RemoteSelect(..),
+    RemoteSourceSelect(..)
   )
 where
 
@@ -24,6 +26,7 @@ import Hasura.RQL.Types.Action qualified as RQL
 import Hasura.RQL.Types.Backend qualified as RQL
 import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.RQL.Types.QueryTags qualified as RQL
+import Hasura.RQL.Types.RemoteRelationship qualified as RQL
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 
@@ -67,6 +70,16 @@ data ActionMutation (b :: BackendType) (r :: BackendType -> Type) v
 newtype QueryDBRoot r v b = QDBR (QueryDB b r (v b))
 
 newtype MutationDBRoot r v b = MDBR (MutationDB b r (v b))
+
+-- | A remote relationship to either a remote schema or a remote source.
+-- See RemoteSourceSelect for explanation on 'vf'.
+data
+  RemoteSelect
+    (vf :: BackendType -> Type)
+    (src :: BackendType)
+  = RemoteSelectRemoteSchema !(HashSet (RQL.DBJoinField src)) !RemoteSchemaSelect
+  | -- | AnyBackend is used here to capture a relationship to an arbitrary target
+    RemoteSelectSource !(AB.AnyBackend (RemoteSourceSelect (RemoteSelect vf) src vf))
 
 -- | Represents a query root field to an action
 type QueryActionRoot v =

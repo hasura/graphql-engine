@@ -13,6 +13,7 @@ import Hasura.GraphQL.Parser (UnpreparedValue)
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema qualified as IR
+import Hasura.RQL.IR.Root qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types
 import Language.GraphQL.Draft.Syntax as G

@@ -28,6 +28,7 @@ import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Select
 import Hasura.Prelude
 import Hasura.RQL.DML.Internal qualified as RQL
+import Hasura.RQL.IR.Root qualified as RQL
 import Hasura.RQL.IR.Select qualified as RQL
 import Hasura.RQL.Types
 import Hasura.Session

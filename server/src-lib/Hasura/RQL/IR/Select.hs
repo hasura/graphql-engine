@@ -33,7 +33,6 @@ import Data.Sequence qualified as Seq
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy
-import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
@@ -41,8 +40,6 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Relationship
-import Hasura.RQL.Types.RemoteRelationship
-import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 
 -- Root selection
@@ -652,12 +649,13 @@ deriving instance
 -- we walk down the IR branches which capture relationships to other databases)
 data
   RemoteSourceSelect
+    r
     (src :: BackendType)
     (vf :: BackendType -> Type)
     (tgt :: BackendType) = RemoteSourceSelect
   { _rssName :: !SourceName,
     _rssConfig :: !(SourceConfig tgt),
-    _rssSelection :: !(SourceRelationshipSelection tgt (RemoteSelect vf) vf),
+    _rssSelection :: !(SourceRelationshipSelection tgt r vf),
     -- | Additional information about the source's join columns:
     -- (ColumnInfo src) so that we can add the join column to the AST
     -- (ScalarType tgt) so that the remote can interpret the join values coming
@@ -666,17 +664,6 @@ data
     -- by the remote
     _rssJoinMapping :: !(HM.HashMap FieldName (ColumnInfo src, ScalarType tgt, Column tgt))
   }
-
--- | A remote relationship to either a remote schema or a remote source.
--- See RemoteSourceSelect for explanation on 'vf'.
-data
-  RemoteSelect
-    (vf :: BackendType -> Type)
-    (src :: BackendType)
-  = RemoteSelectRemoteSchema !(HashSet (DBJoinField src)) !RemoteSchemaSelect
-  | -- | AnyBackend is used here to capture a relationship to an arbitrary target
-    RemoteSelectSource !(AB.AnyBackend (RemoteSourceSelect src vf))
-
 -- Permissions
 
 data TablePermG (b :: BackendType) v = TablePerm

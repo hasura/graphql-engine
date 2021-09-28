@@ -11,6 +11,7 @@ import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
 import Hasura.RQL.IR.Select qualified as IR
+import Hasura.RQL.IR.Root qualified as IR
 import Hasura.RQL.Types.Common (RelType (..))
 import Hasura.RQL.Types.RemoteRelationship
 import Hasura.SQL.AnyBackend

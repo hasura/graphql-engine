@@ -32,7 +32,7 @@ import Hasura.Prelude
 import Hasura.RQL.IR.Delete qualified as IR
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Returning qualified as IR
-import Hasura.RQL.IR.Select qualified as IR
+import Hasura.RQL.IR.Root qualified as IR
 import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G

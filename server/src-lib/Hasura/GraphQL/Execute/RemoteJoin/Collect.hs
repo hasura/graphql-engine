@@ -331,7 +331,7 @@ transformAnnFields fields = do
         anySourceSelect
         -- NOTE: This is necessary to bring 'tgt' into scope, so that it can be
         -- passed to the helper function as a type argument.
-        \(RemoteSourceSelect {..} :: RemoteSourceSelect src UnpreparedValue tgt) ->
+        \(RemoteSourceSelect {..} :: RemoteSourceSelect (RemoteSelect UnpreparedValue) src UnpreparedValue tgt) ->
           let (transformedSourceRelationship, sourceRelationshipJoins) =
                 getRemoteJoinsSourceRelation _rssSelection
               annotatedJoinColumns = annotateSourceJoin @tgt <$> _rssJoinMapping
