@@ -27,6 +27,7 @@ type SourceWithNormalFields struct {
 	Name          string      `yaml:"name"`
 	Kind          string      `yaml:"kind"`
 	Configuration interface{} `yaml:"configuration"`
+	QueryTags     interface{} `yaml:"query_tags,omitempty"`
 }
 type Source struct {
 	SourceWithNormalFields `yaml:",inline"`
