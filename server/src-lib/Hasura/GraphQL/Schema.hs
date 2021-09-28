@@ -223,12 +223,12 @@ buildRoleContext
     where
       getQueryRemotes ::
         [ParsedIntrospection] ->
-        [P.FieldParser (P.ParseT Identity) (RemoteField Void)]
+        [P.FieldParser (P.ParseT Identity) (RemoteField (SchemaRelationshipSelect UnpreparedValue))]
       getQueryRemotes = concatMap piQuery
 
       getMutationRemotes ::
         [ParsedIntrospection] ->
-        [P.FieldParser (P.ParseT Identity) (RemoteField Void)]
+        [P.FieldParser (P.ParseT Identity) (RemoteField (SchemaRelationshipSelect UnpreparedValue))]
       getMutationRemotes = concatMap (concat . piMutation)
 
       buildSource ::
@@ -380,8 +380,8 @@ unauthenticatedContext ::
     MonadIO m,
     MonadUnique m
   ) =>
-  [P.FieldParser (P.ParseT Identity) (RemoteField Void)] ->
-  [P.FieldParser (P.ParseT Identity) (RemoteField Void)] ->
+  [P.FieldParser (P.ParseT Identity) (RemoteField (SchemaRelationshipSelect UnpreparedValue))] ->
+  [P.FieldParser (P.ParseT Identity) (RemoteField (SchemaRelationshipSelect UnpreparedValue))] ->
   RemoteSchemaPermsCtx ->
   m GQLContext
 unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsCtx = P.runSchemaT $ do
@@ -593,7 +593,7 @@ buildQueryParser ::
     Has QueryContext r
   ) =>
   [P.FieldParser n (QueryRootField UnpreparedValue)] ->
-  [P.FieldParser n (RemoteField Void)] ->
+  [P.FieldParser n (RemoteField (SchemaRelationshipSelect UnpreparedValue))] ->
   [ActionInfo] ->
   NonObjectTypeMap ->
   Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))) ->
@@ -708,7 +708,7 @@ buildMutationParser ::
     MonadRole r m,
     Has QueryContext r
   ) =>
-  [P.FieldParser n (RemoteField Void)] ->
+  [P.FieldParser n (RemoteField (SchemaRelationshipSelect UnpreparedValue))] ->
   [ActionInfo] ->
   NonObjectTypeMap ->
   [P.FieldParser n (MutationRootField UnpreparedValue)] ->

@@ -129,7 +129,10 @@ convertMutationSelectionSet
               pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
         RFRemote remoteField -> do
           RemoteFieldG remoteSchemaInfo resultCustomizer resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
-          pure $ buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeMutation $ getRemoteFieldSelectionSet resolvedRemoteField
+          let (noRelsRemoteField, remoteJoins) = RJ.getRemoteJoinsGraphQLRootField resolvedRemoteField
+          pure $
+            buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeMutation $
+              getRemoteFieldSelectionSet noRelsRemoteField
         RFAction action -> do
           let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionMutation action
           (actionName, _fch) <- pure $ case noRelsDBAST of

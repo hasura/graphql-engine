@@ -194,7 +194,7 @@ filterVariablesFromQuery ::
   Backend backend =>
   [ RootField
       (QueryDBRoot (RemoteSelect UnpreparedValue) UnpreparedValue)
-      (RemoteField Void)
+      (RemoteField (SchemaRelationshipSelect UnpreparedValue))
       (ActionQuery backend (RemoteSelect UnpreparedValue) (UnpreparedValue backend))
       d
   ] ->

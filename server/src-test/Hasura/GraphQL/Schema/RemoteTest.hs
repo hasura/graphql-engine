@@ -14,11 +14,13 @@ import Hasura.GraphQL.Execute.Resolve
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Parser.Monad
 import Hasura.GraphQL.Parser.Schema
+import Hasura.GraphQL.Parser.Column (UnpreparedValue)
 import Hasura.GraphQL.Parser.TestUtils
 import Hasura.GraphQL.RemoteServer (identityCustomizer)
 import Hasura.GraphQL.Schema.Remote
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema
+import Hasura.RQL.IR.Root
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
 import Hasura.Session
@@ -97,7 +99,7 @@ mkTestVariableValues vars = runIdentity $
 
 buildQueryParsers ::
   RemoteSchemaIntrospection ->
-  IO (P.FieldParser TestMonad (GraphQLField Void RemoteSchemaVariable))
+  IO (P.FieldParser TestMonad (GraphQLField (SchemaRelationshipSelect UnpreparedValue) RemoteSchemaVariable))
 buildQueryParsers introspection = do
   let introResult = IntrospectionResult introspection $$(G.litName "Query") Nothing Nothing
   (query, _, _) <-
@@ -134,7 +136,7 @@ run ::
   Text ->
   -- | variables
   LBS.ByteString ->
-  IO (GraphQLField Void RemoteSchemaVariable)
+  IO (GraphQLField (SchemaRelationshipSelect UnpreparedValue) RemoteSchemaVariable)
 run schema query variables = do
   parser <- buildQueryParsers $ mkTestRemoteSchema schema
   pure $

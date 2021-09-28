@@ -4,6 +4,7 @@ module Hasura.GraphQL.Execute.RemoteJoin.Collect
     getRemoteJoinsMutationDB,
     getRemoteJoinsActionQuery,
     getRemoteJoinsActionMutation,
+    getRemoteJoinsGraphQLRootField,
   )
 where
 
@@ -307,7 +308,9 @@ transformAnnFields fields = do
       -- without which preserving the order of fields in the final response
       -- would require a lot of bookkeeping.
       AFRemote (RemoteSelectRemoteSchema hasuraFields RemoteSchemaSelect {..}) ->
-        let annotatedJoinColumns =
+        let (transformedSchemaRelationship, schemaRelationshipJoins) =
+              getRemoteJoinsGraphQLSelectionSet _rselSelection
+            annotatedJoinColumns =
               Map.fromList $ map annotateDBJoinField (toList hasuraFields)
             phantomColumns =
               annotatedJoinColumns & Map.mapMaybe \(columnInfo, alias) ->
@@ -321,7 +324,7 @@ transformAnnFields fields = do
                 RemoteSchemaJoin
                   (inputArgsToMap _rselArgs)
                   _rselResultCustomizer
-                  _rselSelection
+                  transformedSchemaRelationship
                   joinColumnAliases
                   _rselFieldCall
                   _rselRemoteSchema
@@ -487,3 +490,13 @@ getRemoteJoinsSourceRelation = runCollector . transformSourceRelation
         SourceRelationshipArray <$> transformSelect simpleSelect
       SourceRelationshipArrayAggregate aggregateSelect ->
         SourceRelationshipArrayAggregate <$> transformAggregateSelect aggregateSelect
+
+getRemoteJoinsGraphQLSelectionSet ::
+  SelectionSet (SchemaRelationshipSelect UnpreparedValue) var ->
+  (SelectionSet Void var, Maybe RemoteJoins)
+getRemoteJoinsGraphQLSelectionSet = undefined
+
+getRemoteJoinsGraphQLRootField ::
+  RemoteRootField (SchemaRelationshipSelect UnpreparedValue) var ->
+  (RemoteRootField Void var, Maybe RemoteJoins)
+getRemoteJoinsGraphQLRootField = undefined

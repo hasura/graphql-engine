@@ -11,6 +11,7 @@ module Hasura.RQL.IR.Root
     MutationDBRoot (..),
     RemoteSelect (..),
     RemoteSourceSelect (..),
+    SchemaRelationshipSelect (..),
   )
 where
 
@@ -24,13 +25,14 @@ import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Update
 import Hasura.RQL.Types.Action qualified as RQL
-import Hasura.RQL.Types.Column qualified as RQL
 import Hasura.RQL.Types.Backend qualified as RQL
+import Hasura.RQL.Types.Column qualified as RQL
 import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.RQL.Types.QueryTags qualified as RQL
 import Hasura.RQL.Types.RemoteRelationship qualified as RQL
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
+import Language.GraphQL.Draft.Syntax qualified as G
 
 data SourceConfigWith (db :: BackendType -> Type) (b :: BackendType)
   = SourceConfigWith (RQL.SourceConfig b) (Maybe RQL.QueryTagsConfig) (db b)
@@ -79,9 +81,14 @@ data
   RemoteSelect
     (vf :: BackendType -> Type)
     (src :: BackendType)
-  = RemoteSelectRemoteSchema !(HashSet (RQL.DBJoinField src)) !RemoteSchemaSelect
+  = RemoteSelectRemoteSchema !(HashSet (RQL.DBJoinField src)) !(RemoteSchemaSelect (SchemaRelationshipSelect vf))
   | -- | AnyBackend is used here to capture a relationship to an arbitrary target
     RemoteSelectSource !(Map.HashMap RQL.FieldName (RQL.ColumnInfo src)) !(AB.AnyBackend (RemoteSourceSelect (RemoteSelect vf) vf))
+
+data
+  SchemaRelationshipSelect
+    (vf :: BackendType -> Type)
+  = SchemaRelationshipSource !(HashSet G.Name) !(AB.AnyBackend (RemoteSourceSelect (RemoteSelect vf) vf))
 
 -- | Represents a query root field to an action
 type QueryActionRoot v =
@@ -91,8 +98,19 @@ type QueryActionRoot v =
 type MutationActionRoot v =
   ActionMutation ('Postgres 'Vanilla) (RemoteSelect v) (v ('Postgres 'Vanilla))
 
-type QueryRootField v = RootField (QueryDBRoot (RemoteSelect v) v) (RemoteField Void) (QueryActionRoot v) JO.Value
+type QueryRootField v =
+  RootField
+    (QueryDBRoot (RemoteSelect v) v)
+    (RemoteField (SchemaRelationshipSelect v))
+    (QueryActionRoot v)
+    JO.Value
 
-type MutationRootField v = RootField (MutationDBRoot (RemoteSelect v) v) (RemoteField Void) (MutationActionRoot v) JO.Value
+type MutationRootField v =
+  RootField
+    (MutationDBRoot (RemoteSelect v) v)
+    (RemoteField (SchemaRelationshipSelect v))
+    (MutationActionRoot v)
+    JO.Value
 
-type SubscriptionRootField v = RootField (QueryDBRoot (RemoteSelect v) v) Void Void Void
+type SubscriptionRootField v =
+  RootField (QueryDBRoot (RemoteSelect v) v) Void Void Void

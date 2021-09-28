@@ -201,7 +201,7 @@ data SelectionSet r var
 -- that is common across all the member selection sets and used that as the
 -- base selection.
 mkAbstractTypeSelectionSet ::
-  (Eq var, Eq r) =>
+  Eq var =>
   -- | This function determines whether a field is part of the abstract type
   (G.Name -> Bool) ->
   -- | Selection sets for all the member types
@@ -213,7 +213,7 @@ mkAbstractTypeSelectionSet isBaseMember selectionSets =
       _sssMemberSelectionSets = Map.fromList memberSelectionSets
     }
   where
-    sharedSelectionSetPrefix = sharedPrefix $ map (OMap.toList . snd) selectionSets
+    sharedSelectionSetPrefix = undefined -- sharedPrefix $ map (OMap.toList . snd) selectionSets
     baseSelectionSet = OMap.fromList $ takeWhile (shouldAddToBase . snd) sharedSelectionSetPrefix
     shouldAddToBase = \case
       FieldGraphQL f -> isBaseMember $ _fName f
@@ -232,7 +232,7 @@ mkAbstractTypeSelectionSet isBaseMember selectionSets =
         prefix l1 l2 = map fst $ takeWhile (uncurry (==)) $ zip l1 l2
 
 mkInterfaceSelectionSet ::
-  (Eq var, Eq r) =>
+  Eq var =>
   -- | Member fields of the interface
   Set.HashSet G.Name ->
   -- | Selection sets for all the member types
@@ -243,7 +243,7 @@ mkInterfaceSelectionSet interfaceFields =
     (\fieldName -> Set.member fieldName interfaceFields || fieldName == $$(G.litName "__typename"))
 
 mkUnionSelectionSet ::
-  (Eq var, Eq r) =>
+  Eq var =>
   -- | Selection sets for all the member types
   [(G.Name, ObjectSelectionSet r var)] ->
   InterfaceSelectionSet r var
@@ -332,10 +332,10 @@ data RemoteFieldArgument = RemoteFieldArgument
   }
   deriving (Eq, Show)
 
-data RemoteSchemaSelect = RemoteSchemaSelect
+data RemoteSchemaSelect r = RemoteSchemaSelect
   { _rselArgs :: ![RemoteFieldArgument],
     _rselResultCustomizer :: !RemoteResultCustomizer,
-    _rselSelection :: !(SelectionSet Void RemoteSchemaVariable),
+    _rselSelection :: !(SelectionSet r RemoteSchemaVariable),
     _rselFieldCall :: !(NonEmpty FieldCall),
     _rselRemoteSchema :: !RemoteSchemaInfo
   }
