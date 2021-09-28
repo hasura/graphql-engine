@@ -97,7 +97,7 @@ mkTestVariableValues vars = runIdentity $
 
 buildQueryParsers ::
   RemoteSchemaIntrospection ->
-  IO (P.FieldParser TestMonad (Field RemoteSchemaVariable))
+  IO (P.FieldParser TestMonad (GraphQLField Void RemoteSchemaVariable))
 buildQueryParsers introspection = do
   let introResult = IntrospectionResult introspection $$(G.litName "Query") Nothing Nothing
   (query, _, _) <-
@@ -134,7 +134,7 @@ run ::
   Text ->
   -- | variables
   LBS.ByteString ->
-  IO (Field RemoteSchemaVariable)
+  IO (GraphQLField Void RemoteSchemaVariable)
 run schema query variables = do
   parser <- buildQueryParsers $ mkTestRemoteSchema schema
   pure $

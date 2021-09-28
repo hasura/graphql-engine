@@ -76,8 +76,8 @@ type QueryActionRoot v =
 type MutationActionRoot v =
   ActionMutation ('Postgres 'Vanilla) (RemoteSelect v) (v ('Postgres 'Vanilla))
 
-type QueryRootField v = RootField (QueryDBRoot (RemoteSelect v) v) RemoteField (QueryActionRoot v) JO.Value
+type QueryRootField v = RootField (QueryDBRoot (RemoteSelect v) v) (RemoteField Void) (QueryActionRoot v) JO.Value
 
-type MutationRootField v = RootField (MutationDBRoot (RemoteSelect v) v) RemoteField (MutationActionRoot v) JO.Value
+type MutationRootField v = RootField (MutationDBRoot (RemoteSelect v) v) (RemoteField Void) (MutationActionRoot v) JO.Value
 
 type SubscriptionRootField v = RootField (QueryDBRoot (RemoteSelect v) v) Void Void Void

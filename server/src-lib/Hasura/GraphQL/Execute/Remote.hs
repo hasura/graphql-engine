@@ -70,7 +70,7 @@ buildExecStepRemote ::
   RemoteSchemaInfo ->
   RemoteResultCustomizer ->
   G.OperationType ->
-  IR.ObjectSelectionSet Variable ->
+  IR.ObjectSelectionSet Void Variable ->
   ExecutionStep
 buildExecStepRemote remoteSchemaInfo resultCustomizer tp objectSelSet =
   let selSet = IR.convertSelectionSet $ IR.SelectionSetObject objectSelSet

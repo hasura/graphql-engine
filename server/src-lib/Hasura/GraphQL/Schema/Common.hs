@@ -36,9 +36,9 @@ type ConnectionFields b = IR.ConnectionFields b (IR.RemoteSelect UnpreparedValue
 type EdgeFields b = IR.EdgeFields b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
 
 data ParsedIntrospection = ParsedIntrospection
-  { piQuery :: [P.FieldParser (P.ParseT Identity) IR.RemoteField],
-    piMutation :: Maybe [P.FieldParser (P.ParseT Identity) IR.RemoteField],
-    piSubscription :: Maybe [P.FieldParser (P.ParseT Identity) IR.RemoteField]
+  { piQuery :: [P.FieldParser (P.ParseT Identity) (IR.RemoteField Void)],
+    piMutation :: Maybe [P.FieldParser (P.ParseT Identity) (IR.RemoteField Void)],
+    piSubscription :: Maybe [P.FieldParser (P.ParseT Identity) (IR.RemoteField Void)]
   }
 
 data RemoteRelationshipQueryContext = RemoteRelationshipQueryContext

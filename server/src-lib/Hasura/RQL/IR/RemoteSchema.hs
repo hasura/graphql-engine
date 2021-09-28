@@ -28,8 +28,9 @@ module Hasura.RQL.IR.RemoteSchema
   ( SelectionSet (..),
     convertSelectionSet,
     RemoteFieldG (..),
-    Field (..),
+    GraphQLField (..),
     mkField,
+    Field(..),
     ObjectSelectionSet,
     InterfaceSelectionSet,
     UnionSelectionSet,
@@ -56,12 +57,12 @@ import Hasura.RQL.Types.RemoteSchema qualified as RQL
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | A normalized representation of a GraphQL field
-data Field var = Field
+data GraphQLField r var = GraphQLField
   { _fAlias :: !G.Name,
     _fName :: !G.Name,
     _fArguments :: !(HashMap G.Name (G.Value var)),
     _fDirectives :: ![G.Directive var],
-    _fSelectionSet :: !(SelectionSet var)
+    _fSelectionSet :: !(SelectionSet r var)
   }
   deriving (Show, Eq, Functor, Foldable, Traversable)
 
@@ -70,12 +71,17 @@ mkField ::
   G.Name ->
   HashMap G.Name (G.Value var) ->
   [G.Directive var] ->
-  SelectionSet var ->
-  Field var
+  SelectionSet r var ->
+  GraphQLField r var
 mkField alias name =
-  Field (fromMaybe name alias) name
+  GraphQLField (fromMaybe name alias) name
 
-type ObjectSelectionSet var = OMap.InsOrdHashMap G.Name (Field var)
+type ObjectSelectionSet r var = OMap.InsOrdHashMap G.Name (Field r var)
+
+data Field r var
+  = FieldGraphQL !(GraphQLField r var)
+  | FieldRemote !r
+  deriving (Show, Eq, Functor, Foldable, Traversable)
 
 -- | Represents the normalized selection set of an interface/union type
 --
@@ -83,22 +89,22 @@ type ObjectSelectionSet var = OMap.InsOrdHashMap G.Name (Field var)
 -- (Map Alias Field)` structure described above. This is done to minimize the
 -- size of the GraphQL query that eventually gets sent to the GraphQL server by
 -- defining as many fields as possible on the abstract type
-data AbstractTypeSelectionSet var = AbstractTypeSelectionSet
+data AbstractTypeSelectionSet r var = AbstractTypeSelectionSet
   { -- | Fields that aren't explicitly defined for member types
-    _sssBaseSelectionSet :: !(ObjectSelectionSet var),
+    _sssBaseSelectionSet :: !(ObjectSelectionSet r var),
     -- | SelectionSets of individual member types
-    _sssMemberSelectionSets :: !(Map.HashMap G.Name (ObjectSelectionSet var))
+    _sssMemberSelectionSets :: !(Map.HashMap G.Name (ObjectSelectionSet r var))
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 
-type InterfaceSelectionSet var = AbstractTypeSelectionSet var
+type InterfaceSelectionSet r var = AbstractTypeSelectionSet r var
 
-type UnionSelectionSet var = AbstractTypeSelectionSet var
+type UnionSelectionSet r var = AbstractTypeSelectionSet r var
 
-data SelectionSet var
-  = SelectionSetObject !(ObjectSelectionSet var)
-  | SelectionSetUnion !(UnionSelectionSet var)
-  | SelectionSetInterface !(InterfaceSelectionSet var)
+data SelectionSet r var
+  = SelectionSetObject !(ObjectSelectionSet r var)
+  | SelectionSetUnion !(UnionSelectionSet r var)
+  | SelectionSetInterface !(InterfaceSelectionSet r var)
   | SelectionSetNone
   deriving (Show, Eq, Functor, Foldable, Traversable)
 
@@ -190,12 +196,12 @@ data SelectionSet var
 -- that is common across all the member selection sets and used that as the
 -- base selection.
 mkAbstractTypeSelectionSet ::
-  Eq var =>
+  (Eq var, Eq r) =>
   -- | This function determines whether a field is part of the abstract type
   (G.Name -> Bool) ->
   -- | Selection sets for all the member types
-  [(G.Name, ObjectSelectionSet var)] ->
-  AbstractTypeSelectionSet var
+  [(G.Name, ObjectSelectionSet r var)] ->
+  AbstractTypeSelectionSet r var
 mkAbstractTypeSelectionSet isBaseMember selectionSets =
   AbstractTypeSelectionSet
     { _sssBaseSelectionSet = baseSelectionSet,
@@ -203,7 +209,10 @@ mkAbstractTypeSelectionSet isBaseMember selectionSets =
     }
   where
     sharedSelectionSetPrefix = sharedPrefix $ map (OMap.toList . snd) selectionSets
-    baseSelectionSet = OMap.fromList $ takeWhile (isBaseMember . _fName . snd) sharedSelectionSetPrefix
+    baseSelectionSet = OMap.fromList $ takeWhile (shouldAddToBase . snd) sharedSelectionSetPrefix
+    shouldAddToBase = \case
+      FieldGraphQL f -> isBaseMember $ _fName f
+      FieldRemote _ -> False
     memberSelectionSets =
       -- remove member selection sets that are subsumed by base selection set
       filter (not . null . snd) $
@@ -218,35 +227,35 @@ mkAbstractTypeSelectionSet isBaseMember selectionSets =
         prefix l1 l2 = map fst $ takeWhile (uncurry (==)) $ zip l1 l2
 
 mkInterfaceSelectionSet ::
-  Eq var =>
+  (Eq var, Eq r) =>
   -- | Member fields of the interface
   Set.HashSet G.Name ->
   -- | Selection sets for all the member types
-  [(G.Name, ObjectSelectionSet var)] ->
-  InterfaceSelectionSet var
+  [(G.Name, ObjectSelectionSet r var)] ->
+  InterfaceSelectionSet r var
 mkInterfaceSelectionSet interfaceFields =
   mkAbstractTypeSelectionSet
     (\fieldName -> Set.member fieldName interfaceFields || fieldName == $$(G.litName "__typename"))
 
 mkUnionSelectionSet ::
-  Eq var =>
+  (Eq var, Eq r) =>
   -- | Selection sets for all the member types
-  [(G.Name, ObjectSelectionSet var)] ->
-  InterfaceSelectionSet var
+  [(G.Name, ObjectSelectionSet r var)] ->
+  InterfaceSelectionSet r var
 mkUnionSelectionSet =
   mkAbstractTypeSelectionSet (== $$(G.litName "__typename"))
 
 -- | Converts a normalized selection set into a selection set as defined in
 -- GraphQL spec
-convertSelectionSet :: SelectionSet var -> G.SelectionSet G.NoFragments var
+convertSelectionSet :: SelectionSet Void var -> G.SelectionSet G.NoFragments var
 convertSelectionSet = \case
   SelectionSetObject s -> convertObjectSelectionSet s
   SelectionSetUnion s -> convertAbstractTypeSelectionSet s
   SelectionSetInterface s -> convertAbstractTypeSelectionSet s
   SelectionSetNone -> mempty
   where
-    convertField :: Field var -> G.Field G.NoFragments var
-    convertField Field {..} =
+    convertGraphQLField :: GraphQLField Void var -> G.Field G.NoFragments var
+    convertGraphQLField GraphQLField {..} =
       G.Field
         -- add the alias only if it is different from the field name. This
         -- keeps the outbound request more readable
@@ -256,6 +265,10 @@ convertSelectionSet = \case
           G._fDirectives = mempty,
           G._fSelectionSet = convertSelectionSet _fSelectionSet
         }
+
+    convertField :: Field Void var -> G.Field G.NoFragments var
+    convertField = \case
+      FieldGraphQL f -> convertGraphQLField f
 
     convertObjectSelectionSet =
       map (G.SelectionField . convertField . snd) . OMap.toList
@@ -284,25 +297,25 @@ data RemoteFieldG f = RemoteFieldG
 
 -- | An RemoteRootField could either be a real field on the remote server
 -- or represent a virtual namespace that only exists in the Hasura schema.
-data RemoteRootField var
+data RemoteRootField r var
   = -- | virtual namespace field
-    RRFNamespaceField !(ObjectSelectionSet var)
+    RRFNamespaceField !(OMap.InsOrdHashMap G.Name (GraphQLField r var))
   | -- | a real field on the remote server
-    RRFRealField !(Field var)
+    RRFRealField !(GraphQLField r var)
   deriving (Show, Eq, Functor, Foldable, Traversable)
 
 -- | For a real remote field gives a SelectionSet for selecting the field itself.
 --   For a virtual field gives the unwrapped SelectionSet for the field.
-getRemoteFieldSelectionSet :: RemoteRootField Variable -> ObjectSelectionSet Variable
-getRemoteFieldSelectionSet = \case
+getRemoteFieldSelectionSet :: RemoteRootField r Variable -> ObjectSelectionSet r Variable
+getRemoteFieldSelectionSet = fmap FieldGraphQL . \case
   RRFNamespaceField selSet -> selSet
   RRFRealField fld -> OMap.singleton (_fAlias fld) fld
 
-type RawRemoteField = RemoteFieldG (Field RQL.RemoteSchemaVariable)
+type RawRemoteField r = RemoteFieldG (GraphQLField r RQL.RemoteSchemaVariable)
 
-type RemoteField = RemoteFieldG (RemoteRootField RQL.RemoteSchemaVariable)
+type RemoteField r = RemoteFieldG (RemoteRootField r RQL.RemoteSchemaVariable)
 
-realRemoteField :: RawRemoteField -> RemoteField
+realRemoteField :: RawRemoteField r -> RemoteField r
 realRemoteField RemoteFieldG {..} = RemoteFieldG {_rfField = RRFRealField _rfField, ..}
 
 $(makeLenses ''RemoteFieldG)

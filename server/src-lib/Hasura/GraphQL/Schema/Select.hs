@@ -1386,10 +1386,12 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
       pure $
         pure $
           remoteFld
-            `P.bindField` \(resultCustomizer, IR.Field {IR._fArguments = args, IR._fSelectionSet = selSet, IR._fName = fname}) -> do
+            `P.bindField` \(resultCustomizer, IR.GraphQLField {IR._fArguments = args, IR._fSelectionSet = selSet, IR._fName = fname}) -> do
               let remoteArgs =
-                    Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue $ argVal
-              let resultCustomizer' = applyFieldCalls fieldCalls $ applyAliasMapping (singletonAliasMapping fname (fcName $ NE.last fieldCalls)) resultCustomizer
+                    Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue argVal
+              let resultCustomizer' =
+                    applyFieldCalls fieldCalls $
+                      applyAliasMapping (singletonAliasMapping fname (fcName $ NE.last fieldCalls)) resultCustomizer
               pure $
                 IR.AFRemote $
                   IR.RemoteSelectRemoteSchema $

@@ -165,7 +165,7 @@ data RemoteSchemaJoin = RemoteSchemaJoin
     -- | Customizer for JSON result from the remote server.
     _rsjResultCustomizer :: !RemoteResultCustomizer,
     -- | User-provided selection set of remote field.
-    _rsjSelSet :: !(IR.SelectionSet RemoteSchemaVariable),
+    _rsjSelSet :: !(IR.SelectionSet Void RemoteSchemaVariable),
     -- | A map of the join column to its alias in the response
     _rsjJoinColumnAliases :: !(Map.HashMap FieldName JoinColumnAlias),
     -- | Remote server fields.
