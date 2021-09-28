@@ -130,6 +130,17 @@ args:
         type: InObject!
       output_type: OutObject
       handler: http://127.0.0.1:5593/mirror-action
+
+- type: update_action
+  args:
+    name: mirror_transformed
+    definition:
+      kind: synchronous
+      arguments:
+      - name: arg
+        type: InObject!
+      output_type: OutObject
+      handler: http://127.0.0.1:5593/mirror-action
     transform:
       template_engine: Kriti
       body: |

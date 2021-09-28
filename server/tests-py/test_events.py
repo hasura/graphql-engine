@@ -871,7 +871,7 @@ class TestEventTransform(object):
                                 webhook_path=expectedPath)
         assert st_code == 200, resp
 
-    def test_bad_template_equals_id(self, hge_ctx, evts_webhook):
+    def test_bad_template_parse_err(self, hge_ctx, evts_webhook):
         # GIVEN
         check_query_f(hge_ctx, self.dir() + '/bad_template_transform.yaml')
 
@@ -884,7 +884,7 @@ class TestEventTransform(object):
         expected_body = {
             'error_code': 'ParseErrorCode',
             'source_position': {'start_line': 1, 'start_column': 1},
-            'message': '\nunexpected Bling'
+            'message': 'sourceName:1:2:\n  |\n1 | \n  | \nunexpected \"$\"\n'
         }
 
         #{
