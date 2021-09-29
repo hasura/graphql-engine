@@ -56,6 +56,7 @@ import Hasura.Server.Auth (AuthMode (..), UserAuthentication (..))
 import Hasura.Server.Compression
 import Hasura.Server.Cors
 import Hasura.Server.Init
+import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Metrics (ServerMetrics)
 import Hasura.Server.Middleware (corsMiddleware)
@@ -289,28 +290,6 @@ mapActionT ::
   Spock.ActionT n a
 mapActionT f tma = MTC.restoreT . pure =<< MTC.liftWith (\run -> f (run tma))
 
--- | Resource limits, represented by a function which modifies IO actions to
--- enforce those limits by throwing errors using 'MonadError' in the case
--- where they are exceeded.
-newtype ResourceLimits = ResourceLimits
-  { runResourceLimits :: forall m a. (MonadBaseControl IO m, MonadError QErr m) => m a -> m a
-  }
-
--- | Monads which support resource (memory, CPU time, etc.) limiting
-class Monad m => HasResourceLimits m where
-  askResourceLimits :: m ResourceLimits
-  -- A default for monad transformer instances
-  default askResourceLimits ::
-    (m ~ t n, MonadTrans t, HasResourceLimits n) =>
-    m ResourceLimits
-  askResourceLimits = lift askResourceLimits
-
-instance HasResourceLimits m => HasResourceLimits (ReaderT r m)
-
-instance HasResourceLimits m => HasResourceLimits (ExceptT e m)
-
-instance HasResourceLimits m => HasResourceLimits (Tracing.TraceT m)
-
 mkSpockAction ::
   (HasVersion, MonadIO m, MonadBaseControl IO m, FromJSON a, UserAuthentication (Tracing.TraceT m), HttpLog m, Tracing.HasReporter m, HasResourceLimits m) =>
   ServerCtx ->
@@ -331,7 +310,7 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
 
   (requestId, headers) <- getRequestId origHeaders
   tracingCtx <- liftIO $ Tracing.extractHttpContext headers
-  limits <- lift askResourceLimits
+  handlerLimit <- lift askHTTPHandlerLimit
 
   let runTraceT ::
         forall m a.
@@ -350,7 +329,8 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
         HandlerCtx ->
         ReaderT HandlerCtx (MetadataStorageT m) a ->
         m (Either QErr a)
-      runHandler st = runMetadataStorageT . flip runReaderT st . runResourceLimits limits
+      runHandler handlerCtx handler =
+        runMetadataStorageT $ flip runReaderT handlerCtx $ runResourceLimits handlerLimit $ handler
 
       getInfo parsedRequest = do
         userInfoE <- fmap fst <$> lift (resolveUserInfo scLogger scManager headers scAuthMode parsedRequest)
@@ -561,7 +541,8 @@ v1Alpha1GQHandler ::
     MonadReader HandlerCtx m,
     HttpLog m,
     MonadMetadataStorage (MetadataStorageT m),
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    HasResourceLimits m
   ) =>
   E.GraphQLQueryType ->
   GH.GQLBatchedReqs (GH.GQLReq GH.GQLQueryText) ->
@@ -618,7 +599,8 @@ v1GQHandler ::
     MonadError QErr m,
     MonadReader HandlerCtx m,
     MonadMetadataStorage (MetadataStorageT m),
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    HasResourceLimits m
   ) =>
   GH.GQLBatchedReqs (GH.GQLReq GH.GQLQueryText) ->
   m (HttpLogMetadata m, HttpResponse EncJSON)
@@ -636,7 +618,8 @@ v1GQRelayHandler ::
     MonadError QErr m,
     MonadReader HandlerCtx m,
     MonadMetadataStorage (MetadataStorageT m),
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    HasResourceLimits m
   ) =>
   GH.GQLBatchedReqs (GH.GQLReq GH.GQLQueryText) ->
   m (HttpLogMetadata m, HttpResponse EncJSON)
@@ -979,7 +962,8 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
           GH.MonadExecuteQuery n,
           MonadMetadataStorage (MetadataStorageT n),
           HttpLog n,
-          EB.MonadQueryTags n
+          EB.MonadQueryTags n,
+          HasResourceLimits n
         ) =>
         RestRequest Spock.SpockMethod ->
         Handler (Tracing.TraceT n) (HttpLogMetadata n, APIResp)

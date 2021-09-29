@@ -26,6 +26,7 @@ import Hasura.HTTP
 import Hasura.Metadata.Class
 import Hasura.Prelude hiding (get, put)
 import Hasura.RQL.Types
+import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Types
 import Hasura.Server.Version
@@ -118,7 +119,8 @@ runCustomEndpoint ::
     GH.MonadExecuteQuery m,
     MonadMetadataStorage (MetadataStorageT m),
     HttpLog m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    HasResourceLimits m
   ) =>
   Env.Environment ->
   E.ExecutionCtx ->

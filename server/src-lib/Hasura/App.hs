@@ -71,6 +71,7 @@ import Hasura.Server.App
 import Hasura.Server.Auth
 import Hasura.Server.CheckUpdates (checkForUpdates)
 import Hasura.Server.Init
+import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Migrate (getMigratedFrom, migrateCatalog)
@@ -904,7 +905,8 @@ runAsAdmin httpManager serverConfigCtx m = do
 instance (Monad m) => Tracing.HasReporter (PGMetadataStorageAppT m)
 
 instance (Monad m) => HasResourceLimits (PGMetadataStorageAppT m) where
-  askResourceLimits = pure (ResourceLimits id)
+  askHTTPHandlerLimit = pure $ ResourceLimits id
+  askGraphqlOperationLimit = pure $ \_ _ -> ResourceLimits id
 
 instance (MonadIO m) => HttpLog (PGMetadataStorageAppT m) where
   type ExtraHttpLogMetadata (PGMetadataStorageAppT m) = ()

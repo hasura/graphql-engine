@@ -4,6 +4,7 @@ import Control.Lens
 import Data.Aeson
 import Data.Aeson.Casing qualified as Casing
 import Data.Text qualified as T
+import Data.Text.Extended (ToTxt (..))
 import Hasura.Prelude
 import Hasura.Server.Utils (isSessionVariable)
 import Hasura.Session (RoleName)
@@ -12,6 +13,7 @@ data ApiLimit = ApiLimit
   { _alRateLimit :: !(Maybe RateLimit),
     _alDepthLimit :: !(Maybe DepthLimit),
     _alNodeLimit :: !(Maybe NodeLimit),
+    _alTimeLimit :: !(Maybe TimeLimit),
     _alDisabled :: !Bool
   }
   deriving (Show, Eq, Generic)
@@ -22,6 +24,7 @@ instance FromJSON ApiLimit where
       <$> o .:? "rate_limit"
       <*> o .:? "depth_limit"
       <*> o .:? "node_limit"
+      <*> o .:? "time_limit"
       <*> o .:? "disabled" .!= False
 
 instance ToJSON ApiLimit where
@@ -29,7 +32,7 @@ instance ToJSON ApiLimit where
     genericToJSON (Casing.aesonPrefix Casing.snakeCase) {omitNothingFields = True}
 
 emptyApiLimit :: ApiLimit
-emptyApiLimit = ApiLimit Nothing Nothing Nothing False
+emptyApiLimit = ApiLimit Nothing Nothing Nothing Nothing False
 
 data Limit a = Limit
   { _lGlobal :: !a,
@@ -50,6 +53,8 @@ type RateLimit = Limit RateLimitConfig
 type DepthLimit = Limit MaxDepth
 
 type NodeLimit = Limit MaxNodes
+
+type TimeLimit = Limit MaxTime
 
 data RateLimitConfig = RateLimitConfig
   { _rlcMaxReqsPerMin :: !Int,
@@ -100,3 +105,14 @@ newtype MaxDepth = MaxDepth {unMaxDepth :: Int}
 newtype MaxNodes = MaxNodes {unMaxNodes :: Int}
   deriving stock (Show, Eq, Ord, Generic)
   deriving newtype (ToJSON, FromJSON)
+
+newtype MaxTime = MaxTime {unMaxTime :: Seconds}
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving newtype (ToJSON, FromJSON)
+
+-- | Defers to the (illegal) DiffTime Show instance.
+--
+-- >>> toTxt (MaxTime 2.5)
+-- "2.5s"
+instance ToTxt MaxTime where
+  toTxt (MaxTime t) = tshow $ seconds t
