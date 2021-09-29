@@ -1,3 +1,5 @@
+{-# LANGUAGE PatternSynonyms #-}
+
 -- |
 -- = Scheduled Triggers
 --
@@ -340,6 +342,17 @@ processScheduledTriggers env logger logBehavior httpMgr getSC LockedEventsCtx {.
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
 
+pattern HttpErr :: e -> Either e (Either e' a)
+pattern HttpErr e = Left e
+
+pattern TransErr :: e' -> Either e (Either e' a)
+pattern TransErr e = Right (Left e)
+
+pattern Resp :: a -> Either e (Either e' a)
+pattern Resp a = Right (Right a)
+
+{-# COMPLETE HttpErr, TransErr, Resp #-}
+
 processScheduledEvent ::
   ( MonadReader r m,
     Has HTTP.Manager r,
@@ -375,15 +388,24 @@ processScheduledEvent logBehavior eventId eventHeaders retryCtx payload webhookU
             extraLogCtx = ExtraLogContext eventId (sewpName payload)
             webhookReqBodyJson = J.toJSON payload
             webhookReqBody = J.encode webhookReqBodyJson
-        eitherRes <- runExceptT $ do
-          -- reqDetails contains the pre and post transformation
-          -- request for logging purposes.
-          reqDetails <- mkRequest headers httpTimeout webhookReqBody Nothing webhookUrl
-          let logger e d = logHTTPForST e extraLogCtx d logBehavior
-          hoistEither =<< lift (invokeRequest reqDetails logger)
+        eitherRes <-
+          runExceptT $
+            mkRequest headers httpTimeout webhookReqBody Nothing webhookUrl >>= \case
+              Left err -> pure $ Left err
+              Right reqDetails -> do
+                let logger e d = logHTTPForST e extraLogCtx d logBehavior
+                resp <- hoistEither =<< lift (invokeRequest reqDetails logger)
+                pure $ Right resp
         case eitherRes of
-          Left e -> processError eventId retryCtx decodedHeaders type' webhookReqBodyJson e
-          Right r -> processSuccess eventId decodedHeaders type' webhookReqBodyJson r
+          Resp r -> processSuccess eventId decodedHeaders type' webhookReqBodyJson r
+          HttpErr e -> processError eventId retryCtx decodedHeaders type' webhookReqBodyJson e
+          TransErr e -> do
+            -- Log The Transformation Error
+            logger :: L.Logger L.Hasura <- asks getter
+            L.unLogger logger $ L.UnstructuredLog L.LevelError (TBS.fromLBS $ J.encode e)
+
+            -- Set event state to Error
+            setScheduledEventOp eventId (SEOpStatus SESError) type'
   where
     traceNote = "Scheduled trigger" <> foldMap ((": " <>) . triggerNameToTxt) (sewpName payload)
 

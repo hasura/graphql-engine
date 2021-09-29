@@ -115,6 +115,7 @@ library
                      , deepseq
                      , dependent-map >=0.4 && <0.5
                      , dependent-sum
+                     , either
                      , exceptions
                      , fast-logger
                      , ghc-heap-view

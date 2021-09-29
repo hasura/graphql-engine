@@ -10,7 +10,7 @@ module Hasura.RQL.DDL.Metadata
     runDropInconsistentMetadata,
     runGetCatalogState,
     runSetCatalogState,
-    runValidateWebhookTransform,
+    runTestWebhookTransform,
     runSetMetricsConfig,
     runRemoveMetricsConfig,
     module Hasura.RQL.DDL.Metadata.Types,
@@ -18,9 +18,8 @@ module Hasura.RQL.DDL.Metadata
 where
 
 import Control.Lens ((.~), (^.), (^?))
-import Data.Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as AO
-import Data.Bifunctor (bimap)
 import Data.CaseInsensitive qualified as CI
 import Data.Has (Has, getter)
 import Data.HashMap.Strict qualified as Map
@@ -397,11 +396,11 @@ runGetInconsistentMetadata _ = do
   inconsObjs <- scInconsistentObjs <$> askSchemaCache
   return $ encJFromJValue $ formatInconsistentObjs inconsObjs
 
-formatInconsistentObjs :: [InconsistentMetadata] -> Value
+formatInconsistentObjs :: [InconsistentMetadata] -> J.Value
 formatInconsistentObjs inconsObjs =
-  object
-    [ "is_consistent" .= null inconsObjs,
-      "inconsistent_objects" .= inconsObjs
+  J.object
+    [ "is_consistent" J..= null inconsObjs,
+      "inconsistent_objects" J..= inconsObjs
     ]
 
 runDropInconsistentMetadata ::
@@ -426,7 +425,7 @@ runDropInconsistentMetadata _ = do
   unless (null droppableInconsistentObjects) $
     throwError
       (err400 Unexpected "cannot continue due to new inconsistent metadata")
-        { qeInternal = Just $ ExtraInternal $ toJSON newInconsistentObjects
+        { qeInternal = Just $ ExtraInternal $ J.toJSON newInconsistentObjects
         }
   return successMsg
 
@@ -490,26 +489,36 @@ runRemoveMetricsConfig = do
         metaMetricsConfig .~ emptyMetricsConfig
   pure successMsg
 
-runValidateWebhookTransform ::
+runTestWebhookTransform ::
   forall m.
   ( QErrM m,
     MonadIO m
   ) =>
-  ValidateWebhookTransform ->
+  TestWebhookTransform ->
   m EncJSON
-runValidateWebhookTransform (ValidateWebhookTransform url payload mt) = do
+runTestWebhookTransform (TestWebhookTransform url payload mt sv) = do
   initReq <- liftIO $ HTTP.mkRequestThrow url
-  let req = initReq & HTTP.body .~ pure (encode payload)
-      dataTransform = mkRequestTransformDebug mt
+  let req = initReq & HTTP.body .~ pure (J.encode payload)
+      dataTransform = mkRequestTransform mt
       -- TODO(Solomon) Add SessionVariables
-      transformed = applyRequestTransform dataTransform req Nothing
-      payload' = decode @Value =<< (transformed ^. HTTP.body)
-      headers' = bimap CI.foldedCase id <$> (transformed ^. HTTP.headers)
-  pure $
-    encJFromJValue $
-      object
-        [ "webhook_url" .= (transformed ^. HTTP.url),
-          "method" .= (transformed ^. HTTP.method),
-          "headers" .= headers',
-          "payload" .= payload'
-        ]
+      transformedE = applyRequestTransform dataTransform req sv
+
+  case transformedE of
+    Right transformed ->
+      pure $
+        encJFromJValue $
+          J.object
+            [ "webhook_url" J..= (transformed ^. HTTP.url),
+              "method" J..= (transformed ^. HTTP.method),
+              "headers" J..= (first CI.foldedCase <$> (transformed ^. HTTP.headers)),
+              "body" J..= (J.decode @J.Value =<< (transformed ^. HTTP.body))
+            ]
+    Left err ->
+      pure $
+        encJFromJValue $
+          J.object
+            [ "webhook_url" J..= (req ^. HTTP.url),
+              "method" J..= (req ^. HTTP.method),
+              "headers" J..= (first CI.foldedCase <$> (req ^. HTTP.headers)),
+              "body" J..= J.toJSON err
+            ]

@@ -107,7 +107,7 @@ saveMetadataToHdbTables
     withPathK "actions" $
       indexedForM_ actions $ \action -> do
         let createAction =
-              CreateAction (_amName action) (_amDefinition action) (_amComment action) (_amMetadataTransform action)
+              CreateAction (_amName action) (_amDefinition action) (_amComment action) (_amRequestTransform action)
         addActionToCatalog createAction
         withPathK "permissions" $
           indexedForM_ (_amPermissions action) $ \permission -> do
