@@ -147,8 +147,8 @@ args:
         {
           "input": {
             "arg": {
-              "id": {{ $.input.arg.name }},
-              "name": {{ $.input.arg.id }}
+              "id": {{ $body.input.arg.name }},
+              "name": {{ $body.input.arg.id }}
             }
           }
         }

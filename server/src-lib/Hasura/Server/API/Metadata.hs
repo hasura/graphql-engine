@@ -157,7 +157,7 @@ data RQLMetadataV1
     RMDumpInternalState !DumpInternalState
   | RMGetCatalogState !GetCatalogState
   | RMSetCatalogState !SetCatalogState
-  | RMValidateWebhookTransform !ValidateWebhookTransform
+  | RMTestWebhookTransform !TestWebhookTransform
   | -- Bulk metadata queries
     RMBulk [RQLMetadataRequest]
 
@@ -214,7 +214,7 @@ instance FromJSON RQLMetadataV1 where
       "get_catalog_state" -> RMGetCatalogState <$> args
       "set_catalog_state" -> RMSetCatalogState <$> args
       "set_graphql_schema_introspection_options" -> RMSetGraphqlSchemaIntrospectionOptions <$> args
-      "validate_webhook_transform" -> RMValidateWebhookTransform <$> args
+      "test_webhook_transform" -> RMTestWebhookTransform <$> args
       "set_query_tags" -> RMSetQueryTagsConfig <$> args
       "bulk" -> RMBulk <$> args
       -- backend specific
@@ -468,7 +468,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDumpInternalState q -> runDumpInternalState q
   RMGetCatalogState q -> runGetCatalogState q
   RMSetCatalogState q -> runSetCatalogState q
-  RMValidateWebhookTransform q -> runValidateWebhookTransform q
+  RMTestWebhookTransform q -> runTestWebhookTransform q
   RMSetQueryTagsConfig q -> runSetQueryTagsConfig q
   RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
   where

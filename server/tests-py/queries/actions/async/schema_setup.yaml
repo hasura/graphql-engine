@@ -63,7 +63,7 @@ args:
         type: String!
       output_type: UserId
       handler: http://127.0.0.1:5593/create-user
-    transform:
+    request_transform:
       template_engine: Kriti
       body: |
         {

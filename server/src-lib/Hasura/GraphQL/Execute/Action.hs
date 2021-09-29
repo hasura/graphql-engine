@@ -32,6 +32,7 @@ import Data.HashMap.Strict qualified as Map
 import Data.IORef
 import Data.IntMap qualified as IntMap
 import Data.Set (Set)
+import Data.TByteString qualified as TBS
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Database.PG.Query qualified as Q
@@ -486,12 +487,23 @@ callWebhook
             & set HTTP.body (Just requestBody)
             & set HTTP.timeout responseTimeout
 
-        transformedReq = (\rt -> applyRequestTransform rt req sessionVars) . mkRequestTransform <$> metadataTransform
-        transformedPayloadSize = pure $ HTTP.getReqSize req
-        actualReq = fromMaybe req transformedReq
+    (transformedReq, transformedReqSize) <- case metadataTransform of
+      Nothing -> pure (Nothing, Nothing)
+      Just transform' ->
+        case applyRequestTransform (mkRequestTransform transform') req sessionVars of
+          Left err -> do
+            -- Log The Transformation Error
+            logger :: L.Logger L.Hasura <- asks getter
+            L.unLogger logger $ L.UnstructuredLog L.LevelError (TBS.fromLBS $ J.encode err)
+
+            -- Throw an exception with the Transformation Error
+            throw500WithDetail "Request Transformation Failed" $ J.toJSON err
+          Right transformedReq ->
+            let transformedPayloadSize = HTTP.getReqSize transformedReq
+             in pure (Just transformedReq, Just transformedPayloadSize)
 
     httpResponse <-
-      Tracing.tracedHttpRequest actualReq $ \request ->
+      Tracing.tracedHttpRequest (fromMaybe req transformedReq) $ \request ->
         liftIO . try $ HTTP.performRequest request manager
 
     let requestInfo =
@@ -512,7 +524,7 @@ callWebhook
 
         -- log the request and response to/from the action handler
         logger :: (L.Logger L.Hasura) <- asks getter
-        L.unLogger logger $ ActionHandlerLog req transformedReq requestBodySize transformedPayloadSize responseBodySize actionName
+        L.unLogger logger $ ActionHandlerLog req transformedReq requestBodySize transformedReqSize responseBodySize actionName
 
         case J.eitherDecode responseBody of
           Left e -> do

@@ -1,0 +1,26 @@
+- description: Test Webhook Transform Bad Eval
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: admin
+  status: 200
+  response:
+    body:
+      - error_code: InvalidPathCode
+        source_position:
+          end_column: 14
+          start_line: 1
+          end_line: 1
+          start_column: 9
+        message: 'Path Lookup Error: "$body.world"'
+    headers: []
+    method: GET
+    webhook_url: http://localhost:1234/
+  query:
+    type: test_webhook_transform
+    args:
+      webhook_url: http://localhost:1234
+      body:
+        hello: world
+      request_transform:
+        body: "{{ $body.world }}"
+        template_engine: Kriti

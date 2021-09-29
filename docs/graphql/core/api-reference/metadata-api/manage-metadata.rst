@@ -352,3 +352,28 @@ drop_inconsistent_metadata
        "type": "drop_inconsistent_metadata",
        "args": {}
    }
+
+.. _test_webhook_transform:
+
+test_webhook_transform
+--------------------------
+
+``test_webhook_transform`` can be used to test out request transformations using mock data.
+
+.. code-block:: http
+
+   POST /v1/metadata HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "test_webhook_transform",
+       "args" : {
+         "webhook_url": "http://localhost:1234",
+         "body": { "hello": "world" },
+         "request_transform": {
+           "body": "{{ $body.world }}",
+           "template_engine": "Kriti"
+         }
+       }
+   }

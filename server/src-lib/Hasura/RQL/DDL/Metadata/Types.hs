@@ -13,7 +13,7 @@ module Hasura.RQL.DDL.Metadata.Types
     ReplaceMetadataV1 (..),
     ReplaceMetadataV2 (..),
     AllowInconsistentMetadata (..),
-    ValidateWebhookTransform (..),
+    TestWebhookTransform (..),
   )
 where
 
@@ -23,6 +23,7 @@ import Data.HashMap.Strict qualified as H
 import Hasura.Prelude
 import Hasura.RQL.DDL.RequestTransform (MetadataTransform)
 import Hasura.RQL.Types
+import Hasura.Session (SessionVariables)
 
 data ClearMetadata
   = ClearMetadata
@@ -169,7 +170,7 @@ data ReplaceMetadata
 
 instance FromJSON ReplaceMetadata where
   parseJSON = withObject "ReplaceMetadata" $ \o -> do
-    if (H.member "metadata" o)
+    if H.member "metadata" o
       then RMReplaceMetadataV2 <$> parseJSON (Object o)
       else RMReplaceMetadataV1 <$> parseJSON (Object o)
 
@@ -178,24 +179,27 @@ instance ToJSON ReplaceMetadata where
     RMReplaceMetadataV1 v1 -> toJSON v1
     RMReplaceMetadataV2 v2 -> toJSON v2
 
-data ValidateWebhookTransform = ValidateWebhookTransform
-  { _vwtWebhookUrl :: Text,
-    _vwtPayload :: Value,
-    _vwtTransformer :: MetadataTransform
+data TestWebhookTransform = TestWebhookTransform
+  { _twtWebhookUrl :: Text,
+    _twtPayload :: Value,
+    _twtTransformer :: MetadataTransform,
+    _twtSessionVariables :: Maybe SessionVariables
   }
   deriving (Eq)
 
-instance FromJSON ValidateWebhookTransform where
-  parseJSON = withObject "ValidateWebhookTransform" $ \o -> do
+instance FromJSON TestWebhookTransform where
+  parseJSON = withObject "TestWebhookTransform" $ \o -> do
     url <- o .: "webhook_url"
-    payload <- o .: "payload"
-    transformer <- o .: "transformer"
-    pure $ ValidateWebhookTransform url payload transformer
+    payload <- o .: "body"
+    transformer <- o .: "request_transform"
+    sessionVars <- o .:? "session_variables"
+    pure $ TestWebhookTransform url payload transformer sessionVars
 
-instance ToJSON ValidateWebhookTransform where
-  toJSON (ValidateWebhookTransform url payload mt) =
+instance ToJSON TestWebhookTransform where
+  toJSON (TestWebhookTransform url payload mt sv) =
     object
       [ "webhook_url" .= url,
-        "payload" .= payload,
-        "transfromer" .= mt
+        "body" .= payload,
+        "request_transform" .= mt,
+        "session_variables" .= sv
       ]

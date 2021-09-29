@@ -10,6 +10,7 @@ module Hasura.Backends.Postgres.DDL.EventTrigger
     setRetry,
     recordSuccess,
     recordError,
+    recordError',
     unlockEventsInSource,
     updateColumnInEventTrigger,
   )
@@ -135,9 +136,20 @@ recordError ::
   Maybe MaintenanceModeVersion ->
   m (Either QErr ())
 recordError sourceConfig event invocation processEventError maintenanceModeVersion =
+  recordError' sourceConfig event (Just invocation) processEventError maintenanceModeVersion
+
+recordError' ::
+  (MonadIO m) =>
+  SourceConfig ('Postgres pgKind) ->
+  Event ('Postgres pgKind) ->
+  Maybe (Invocation 'EventType) ->
+  ProcessEventError ->
+  Maybe MaintenanceModeVersion ->
+  m (Either QErr ())
+recordError' sourceConfig event invocation processEventError maintenanceModeVersion =
   liftIO $
     runPgSourceWriteTx sourceConfig $ do
-      insertInvocation invocation
+      onJust invocation insertInvocation
       case processEventError of
         PESetRetry retryTime -> setRetryTx event retryTime maintenanceModeVersion
         PESetError -> setErrorTx event maintenanceModeVersion

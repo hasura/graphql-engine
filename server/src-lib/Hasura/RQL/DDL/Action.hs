@@ -47,7 +47,7 @@ data CreateAction = CreateAction
   { _caName :: !ActionName,
     _caDefinition :: !ActionDefinitionInput,
     _caComment :: !(Maybe Text),
-    _caTransform :: !(Maybe MetadataTransform)
+    _caRequestTransform :: !(Maybe MetadataTransform)
   }
 
 $(J.deriveJSON hasuraJSON ''CreateAction)
@@ -70,7 +70,7 @@ runCreateAction createAction = do
           (_caComment createAction)
           (_caDefinition createAction)
           []
-          (_caTransform createAction)
+          (_caRequestTransform createAction)
   buildSchemaCacheFor (MOAction actionName) $
     MetadataModifier $
       metaActions %~ OMap.insert actionName metadata
@@ -169,7 +169,7 @@ runUpdateAction (UpdateAction actionName actionDefinition actionComment transfor
       MetadataModifier $
         (metaActions . ix actionName . amDefinition .~ def)
           . (metaActions . ix actionName . amComment .~ comment)
-          . (metaActions . ix actionName . amMetadataTransform .~ transform)
+          . (metaActions . ix actionName . amRequestTransform .~ transform)
 
 newtype ClearActionData = ClearActionData {unClearActionData :: Bool}
   deriving (Show, Eq, J.FromJSON, J.ToJSON)

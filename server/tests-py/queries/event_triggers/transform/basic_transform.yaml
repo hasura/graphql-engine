@@ -19,13 +19,14 @@
           - first_name
           - last_name
       replace: false
-      transform:
+      request_transform:
+        content_type: application/json
         template_engine: Kriti
-        body: "{{ $.event.data.new }}"
-        query_params:
-          foo: bar
+        body: "{{ $body.event.data.new }}"
+        query_params: 
+          "\"foo\"": "\"bar\""
         request_headers:
           add_headers:
-            foo: bar
+            foo: "\"bar\""
           remove_headers:
             - User-Agent
