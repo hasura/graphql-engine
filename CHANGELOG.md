@@ -3,6 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: add webhook transformations for Actions and EventTriggers
 - server: optimize SQL query generation with LIMITs
 - server: add GraphQL request query in the payload for synchronous actions
 - server: improve the event trigger logging on errors
@@ -12,7 +13,6 @@
 - server: support `extensions` field in error responses from action webhook endpoints (fix #4001)
 - server: fix custom-check based permissions for MSSQL (#7429)
 - server: remove identity notion for table columns (fix #7557)
-- server: add webhook transformations for Actions and EventTriggers
 - server: support MSSQL transactions
 - server: log individual operation details in the http-log during a batch graphQL query execution
 - server: update `create_scheduled_event` API to return `event_id` in response
@@ -29,6 +29,8 @@
 - cli: add support for `network` metadata object
 - cli: `hasura migrate apply --all-databases` will return a non zero exit code if operation failed on atleast one database (#7499)
 - cli: `migrate create --from-server` creates the migration and marks it as applied on the server
+- cli: support `query_tags` in metadata
+- cli: add `hasura deploy` command
 
 ## v2.0.9
 

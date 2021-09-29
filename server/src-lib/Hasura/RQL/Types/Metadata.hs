@@ -819,7 +819,7 @@ metadataToOrdJSON
                 [ ("name", AO.toOrdered name),
                   ("definition", AO.toOrdered definition),
                   ("retry_conf", AO.toOrdered retryConf),
-                  ("transform", maybe AO.Null AO.toOrdered metadataTransform)
+                  ("request_transform", maybe AO.Null AO.toOrdered metadataTransform)
                 ]
                   <> catMaybes
                     [ maybeAnyToMaybeOrdPair "webhook" AO.toOrdered webhook,
@@ -984,7 +984,7 @@ metadataToOrdJSON
         AO.object $
           [ ("name", AO.toOrdered name),
             ("definition", actionDefinitionToOrdJSON definition),
-            ("transform", AO.toOrdered metaTransform)
+            ("request_transform", AO.toOrdered metaTransform)
           ]
             <> catMaybes
               [ maybeCommentToMaybeOrdPair comment,

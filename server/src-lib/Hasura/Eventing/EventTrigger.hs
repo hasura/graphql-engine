@@ -1,3 +1,5 @@
+{-# LANGUAGE PatternSynonyms #-}
+
 -- |
 -- = Event Triggers
 --
@@ -48,7 +50,7 @@ import Control.Concurrent.STM.TVar
 import Control.Monad.Catch (MonadMask, bracket_, finally, mask_)
 import Control.Monad.STM
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.TH
 import Data.Has
 import Data.HashMap.Strict qualified as M
@@ -85,7 +87,7 @@ newtype EventInternalErr
   deriving (Show, Eq)
 
 instance L.ToEngineLog EventInternalErr L.Hasura where
-  toEngineLog (EventInternalErr qerr) = (L.LevelError, L.eventTriggerLogType, toJSON qerr)
+  toEngineLog (EventInternalErr qerr) = (L.LevelError, L.eventTriggerLogType, J.toJSON qerr)
 
 {- Note [Maintenance mode]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -134,18 +136,18 @@ newtype QualifiedTableStrict = QualifiedTableStrict
   }
   deriving (Show, Eq)
 
-instance ToJSON QualifiedTableStrict where
+instance J.ToJSON QualifiedTableStrict where
   toJSON (QualifiedTableStrict (QualifiedObject sn tn)) =
-    object
-      [ "schema" .= sn,
-        "name" .= tn
+    J.object
+      [ "schema" J..= sn,
+        "name" J..= tn
       ]
 
 data EventPayload (b :: BackendType) = EventPayload
   { epId :: EventId,
     epTable :: TableName b,
     epTrigger :: TriggerMetadata,
-    epEvent :: Value,
+    epEvent :: J.Value,
     epDeliveryInfo :: DeliveryInfo,
     epCreatedAt :: Time.UTCTime
   }
@@ -155,8 +157,8 @@ deriving instance Backend b => Show (EventPayload b)
 
 deriving instance Backend b => Eq (EventPayload b)
 
-instance Backend b => ToJSON (EventPayload b) where
-  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+instance Backend b => J.ToJSON (EventPayload b) where
+  toJSON = J.genericToJSON hasuraJSON {omitNothingFields = True}
 
 defaultMaxEventThreads :: Int
 defaultMaxEventThreads = 100
@@ -192,6 +194,17 @@ removeEventTriggerEventFromLockedEvents sourceName eventId lockedEvents =
 type BackendEventWithSource = AB.AnyBackend EventWithSource
 
 type FetchEventArguments = ([BackendEventWithSource], Int, Bool)
+
+pattern HttpErr :: e -> Either e (Either e' a)
+pattern HttpErr e = Left e
+
+pattern TransErr :: e' -> Either e (Either e' a)
+pattern TransErr e = Right (Left e)
+
+pattern Resp :: a -> Either e (Either e' a)
+pattern Resp a = Right (Right a)
+
+{-# COMPLETE HttpErr, TransErr, Resp #-}
 
 -- | Service events from our in-DB queue.
 --
@@ -389,31 +402,37 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx {..} 
                   httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
                   (headers, logHeaders) = prepareHeaders logBehavior (etiHeaders eti)
                   ep = createEventPayload retryConf e
-                  payload = encode $ toJSON ep
+                  payload = J.encode $ J.toJSON ep
                   extraLogCtx = ExtraLogContext (epId ep) (Just $ etiName eti)
-                  dataTransform = mkRequestTransform <$> etiMetadataTransform eti
+                  dataTransform = mkRequestTransform <$> etiRequestTransform eti
 
-              res <- runExceptT $ do
-                -- reqDetails contains the pre and post transformation
-                -- request for logging purposes.
-                reqDetails <- mkRequest headers httpTimeout payload dataTransform webhook
-                let logger' res details = logHTTPForET res extraLogCtx details logBehavior
-                -- Event Triggers have a configuration parameter called
-                -- HASURA_GRAPHQL_EVENTS_HTTP_WORKERS, which is used
-                -- to control the concurrency of http delivery.
-                -- This bracket is used to increment and decrement an
-                -- HTTP Worker EKG Gauge for the duration of the
-                -- request invocation
-                bracket_
-                  (liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics)
-                  (liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics)
-                  (hoistEither =<< lift (invokeRequest reqDetails logger'))
+              eitherRes <-
+                runExceptT $
+                  mkRequest headers httpTimeout payload dataTransform webhook >>= \case
+                    Left err -> pure $ Left err
+                    Right reqDetails -> do
+                      let logger' res details = logHTTPForET res extraLogCtx details logBehavior
+                      -- Event Triggers have a configuration parameter called
+                      -- HASURA_GRAPHQL_EVENTS_HTTP_WORKERS, which is used
+                      -- to control the concurrency of http delivery.
+                      -- This bracket is used to increment and decrement an
+                      -- HTTP Worker EKG Gauge for the duration of the
+                      -- request invocation
+                      resp <-
+                        bracket_
+                          (liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics)
+                          (liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics)
+                          (hoistEither =<< lift (invokeRequest reqDetails logger'))
+                      pure $ Right resp
+              case eitherRes of
+                Resp resp -> processSuccess sourceConfig e logHeaders ep maintenanceModeVersion resp >>= flip onLeft logQErr
+                HttpErr err -> processError @b sourceConfig e retryConf logHeaders ep maintenanceModeVersion err >>= flip onLeft logQErr
+                TransErr err -> do
+                  -- Log The Transformation Error
+                  L.unLogger logger $ L.UnstructuredLog L.LevelError (TBS.fromLBS $ J.encode err)
 
-              either
-                (processError @b sourceConfig e retryConf logHeaders ep maintenanceModeVersion)
-                (processSuccess sourceConfig e logHeaders ep maintenanceModeVersion)
-                res
-                >>= flip onLeft logQErr
+                  -- Record an Event Error
+                  recordError' @b sourceConfig e Nothing PESetError maintenanceModeVersion >>= flip onLeft logQErr
       -- removing an event from the _eeCtxLockedEvents after the event has been processed:
       removeEventTriggerEventFromLockedEvents sourceName (eId e) leEvents
 
@@ -466,14 +485,14 @@ processError sourceConfig e retryConf reqHeaders ep maintenanceModeVersion err =
   let invocation = case err of
         HClient httpException ->
           let statusMaybe = getHTTPExceptionStatus httpException
-           in mkInvocation ep statusMaybe reqHeaders (TBS.fromLBS (encode httpException)) []
+           in mkInvocation ep statusMaybe reqHeaders (TBS.fromLBS (J.encode httpException)) []
         HStatus errResp -> do
           let respPayload = hrsBody errResp
               respHeaders = hrsHeaders errResp
               respStatus = hrsStatus errResp
           mkInvocation ep (Just respStatus) reqHeaders respPayload respHeaders
         HOther detail -> do
-          let errMsg = TBS.fromLBS $ encode detail
+          let errMsg = TBS.fromLBS $ J.encode detail
           mkInvocation ep (Just 500) reqHeaders errMsg []
   retryOrError <- retryOrSetError e retryConf err
   recordError @b sourceConfig e invocation retryOrError maintenanceModeVersion
@@ -524,7 +543,7 @@ mkInvocation eventPayload statusMaybe reqHeaders respBody respHeaders =
    in Invocation
         (epId eventPayload)
         statusMaybe
-        (mkWebhookReq (toJSON eventPayload) reqHeaders invocationVersionET)
+        (mkWebhookReq (J.toJSON eventPayload) reqHeaders invocationVersionET)
         resp
 
 logQErr :: (MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m) => QErr -> m ()

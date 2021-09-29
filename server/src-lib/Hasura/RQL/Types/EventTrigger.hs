@@ -198,7 +198,7 @@ data EventTriggerConf (b :: BackendType) = EventTriggerConf
     etcWebhookFromEnv :: !(Maybe Text),
     etcRetryConf :: !RetryConf,
     etcHeaders :: !(Maybe [HeaderConf]),
-    etcTransform :: !(Maybe MetadataTransform)
+    etcRequestTransform :: !(Maybe MetadataTransform)
   }
   deriving (Show, Eq, Generic)
 
@@ -270,7 +270,7 @@ data EventTriggerInfo (b :: BackendType) = EventTriggerInfo
     -- | Custom headers can be added to an event trigger. Each webhook request will have these
     -- headers added.
     etiHeaders :: ![EventHeaderInfo],
-    etiMetadataTransform :: !(Maybe MetadataTransform)
+    etiRequestTransform :: !(Maybe MetadataTransform)
   }
   deriving (Generic, Eq)
 
