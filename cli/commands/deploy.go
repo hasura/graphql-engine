@@ -201,10 +201,14 @@ func (a *applyingMetadataAction) Execute(ctx fsm.EventContext) eventType {
 	opts := MetadataApplyOptions{
 		EC: context.ec,
 	}
+	opts.EC.Spin("Applying metadata...")
 	if err := opts.Run(); err != nil {
+		opts.EC.Spinner.Stop()
 		context.err = err
 		return applyMetadataFailed
 	}
+	opts.EC.Spinner.Stop()
+	opts.EC.Logger.Info("Metadata applied")
 	return reloadMetadata
 }
 
