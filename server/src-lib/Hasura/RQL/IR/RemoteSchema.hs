@@ -1,6 +1,29 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeFamilyDependencies #-}
 
+-- | Normalized representation of GraphQL queries
+--
+-- The selection set of an incoming GraphQL query consists of fields, named
+-- fragments, and inline fragments. However having named fragments in the IR
+-- presents various challenges in the context of remote joins.
+--
+-- Hence, the parts of a GraphQL query that are serviced from remote GraphQL
+-- servers have a simplified / normalized representation in the IR. Let's look
+-- at the normalized variants of selection sets for various GraphQL types
+--
+-- 1. For scalars and enums, there is no selection set
+--
+-- 1. For object types, the selection set need not have any fragments, named or
+-- inline. Any fragment defined on an object type can be recursively inlined
+-- and merged to eventually end up with only 'fields'. So a selection set of
+-- an object type can be represented as `Map Alias Field`.
+--
+-- 1. For abstract types such as interfaces and unions, the selection set can
+-- be normalized to 'selection sets on concrete member types' (the
+-- member types of interface and union types can only be object types as of
+-- this writing). The haskell representation would be along these lines:
+-- `Map ConcreteMemberTypeName (Map Alias Field)`
+
 module Hasura.RQL.IR.RemoteSchema
   ( SelectionSet (..),
     convertSelectionSet,
@@ -31,29 +54,6 @@ import Hasura.GraphQL.Parser (Variable)
 import Hasura.Prelude
 import Hasura.RQL.Types.RemoteSchema qualified as RQL
 import Language.GraphQL.Draft.Syntax qualified as G
-
--- | Normalized representation of GraphQL queries
---
--- The selection set of an incoming GraphQL query consists of fields, named
--- fragments, and inline fragments. However having named fragments in the IR
--- presents various challenges in the context of remote joins.
---
--- Hence, the parts of a GraphQL query that are serviced from remote GraphQL
--- servers have a simplified / normalized representation in the IR. Let's look
--- at the normalized variants of selection sets for various GraphQL types
---
--- 1. For scalars and enums, there is no selection set
---
--- 1. For object types, the selection set need not have any fragments, named or
--- inline. Any fragment defined on an object type can be recursively inlined
--- and merged to eventually end up with only 'fields'. So a selection set of
--- an object type can be represented as `Map Alias Field`.
---
--- 1. For abstract types such as interfaces and unions, the selection set can
--- be normalized to 'selection sets on concrete member types' (the
--- member types of interface and union types can only be object types as of
--- this writing). The haskell representation would be along these lines:
--- `Map ConcreteMemberTypeName (Map Alias Field)`
 
 -- | A normalized representation of a GraphQL field
 data Field var = Field
