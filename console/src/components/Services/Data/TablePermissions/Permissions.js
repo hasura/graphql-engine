@@ -115,7 +115,7 @@ class Permissions extends Component {
 
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
-    dispatch(fetchFunctionInit());
+    dispatch(fetchFunctionInit(this.props.schemaList));
 
     if (this.props.permissionsState.inconsistentInhertiedRole) {
       const tableSchema = findTable(
