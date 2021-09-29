@@ -9,7 +9,7 @@ registry := hasura
 packager_ver := 20210218
 pg_dump_ver := 13
 build_output := /build/_server_output
-docs_output := /build/_docs_output.tar.gz
+docs_output := /build/_server_output/docs.tar.gz
 
 # Getting access to the built products with the `cabal v2-*` commands is really awkward; see
 # <https://www.haskell.org/cabal/users-guide/nix-local-build.html#where-are-my-build-products> for a

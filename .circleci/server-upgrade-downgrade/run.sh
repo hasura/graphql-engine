@@ -82,12 +82,13 @@ log() { echo $'\e[1;33m'"--> $*"$'\e[0m'; }
 : ${HASURA_PROJECT_DIR:=$ROOT/hasura}
 : ${API_SERVER_DIR:=$ROOT/api-server}
 : ${SERVER_OUTPUT_DIR:=/build/_server_output}
+: ${SERVER_TEST_OUTPUT_DIR:=/build/_server_test_output}
 : ${SERVER_BINARY:=/build/_server_output/graphql-engine}
 : ${LATEST_SERVER_BINARY:=/bin/graphql-engine-latest}
 : ${HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES:=true}
 
-LATEST_SERVER_LOG=$SERVER_OUTPUT_DIR/upgrade-test-latest-release-server.log
-CURRENT_SERVER_LOG=$SERVER_OUTPUT_DIR/upgrade-test-current-server.log
+LATEST_SERVER_LOG=$SERVER_TEST_OUTPUT_DIR/upgrade-test-latest-release-server.log
+CURRENT_SERVER_LOG=$SERVER_TEST_OUTPUT_DIR/upgrade-test-current-server.log
 
 HGE_ENDPOINT=http://localhost:$HASURA_GRAPHQL_SERVER_PORT
 PYTEST_DIR="${ROOT}/../../server/tests-py"
@@ -117,6 +118,7 @@ fail_if_port_busy 5000
 
 log "setting up directories"
 mkdir -p $SERVER_OUTPUT_DIR
+mkdir -p $SERVER_TEST_OUTPUT_DIR
 touch $LATEST_SERVER_LOG
 touch $CURRENT_SERVER_LOG
 
