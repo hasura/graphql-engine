@@ -30,6 +30,7 @@
 - cli: `hasura migrate apply --all-databases` will return a non zero exit code if operation failed on atleast one database (#7499)
 - cli: `migrate create --from-server` creates the migration and marks it as applied on the server
 - cli: support `query_tags` in metadata
+- cli: add `hasura deploy` command
 
 ## v2.0.9
 
