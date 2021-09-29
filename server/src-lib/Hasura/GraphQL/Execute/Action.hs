@@ -574,11 +574,7 @@ callWebhook
 
       -- Webhook response object should conform to action output fields
       validateResponseObject obj = do
-        -- Fields not specified in the output type shouldn't be present in the response
-        let extraFields = filter (not . flip Map.member outputFields) $ Map.keys obj
-        unless (null extraFields) $
-          throwUnexpected $
-            "unexpected fields in webhook response: " <> commaSeparated extraFields
+        -- Note: Fields not specified in the output are ignored
 
         void $
           flip Map.traverseWithKey outputFields $ \fieldName fieldTy ->

@@ -3,6 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: Ignore unexpected fields in action responses (#5731)
 - server: add webhook transformations for Actions and EventTriggers
 - server: optimize SQL query generation with LIMITs
 - server: add GraphQL request query in the payload for synchronous actions
