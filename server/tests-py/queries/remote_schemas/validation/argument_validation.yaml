@@ -33,7 +33,7 @@
     - message: "Argument \"id\" has invalid value \"1\".\nExpected type \"Int\", found \"1\"."
       locations:
       - line: 1
-        column: 19
+        column: 25
 
 - description: query the remote with a non-existing input object field 'foo'
   url: /v1/graphql
