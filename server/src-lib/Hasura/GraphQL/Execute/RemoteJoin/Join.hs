@@ -104,8 +104,8 @@ processRemoteJoins_ requestId logger env manager reqHdrs userInfo lhs joinTree g
   joinIndices <- fmap (IntMap.mapMaybe id) $
     for joins $ \JoinArguments {..} -> do
       let joinArguments = IntMap.fromList $ map swap $ Map.toList _jalArguments
-      case _jalJoin of
-        RemoteJoinRemoteSchema remoteSchemaJoin -> do
+      previousStep <- case _jalJoin of
+        RemoteJoinRemoteSchema remoteSchemaJoin childJoinTree -> do
           -- construct a remote call for
           remoteCall <- RS.buildRemoteSchemaCall userInfo remoteSchemaJoin joinArguments
           -- A remote call could be Nothing if there are no join arguments
@@ -113,7 +113,7 @@ processRemoteJoins_ requestId logger env manager reqHdrs userInfo lhs joinTree g
             remoteResponse <-
               RS.getRemoteSchemaResponse env manager reqHdrs userInfo rsc
             -- extract the join values from the remote's response
-            RS.buildJoinIndex remoteResponse responsePaths
+            (childJoinTree,) <$> RS.buildJoinIndex remoteResponse responsePaths
         RemoteJoinSource sourceJoin childJoinTree -> AB.dispatchAnyBackend @TB.BackendTransport sourceJoin \(RemoteSourceJoin {..} :: RemoteSourceJoin b) -> do
           let rows = flip map (IntMap.toList joinArguments) $ \(argumentId, argument) ->
                 Map.insert "__argument_id__" (J.toJSON argumentId) $
@@ -146,21 +146,21 @@ processRemoteJoins_ requestId logger env manager reqHdrs userInfo lhs joinTree g
                 _rsjSourceConfig
                 (EB.dbsiAction stepInfo)
                 (EB.dbsiPreparedQuery stepInfo)
+            (childJoinTree,) <$> buildSourceDataJoinIndex sourceResponse
 
-            preRemoteJoinResults <- buildSourceDataJoinIndex sourceResponse
-            forRemoteJoins childJoinTree preRemoteJoinResults $ \childRemoteJoins -> do
-              results <-
-                processRemoteJoins_
-                  requestId
-                  logger
-                  env
-                  manager
-                  reqHdrs
-                  userInfo
-                  (IntMap.elems preRemoteJoinResults)
-                  childRemoteJoins
-                  gqlreq
-              pure $ IntMap.fromAscList $ zip (IntMap.keys preRemoteJoinResults) results
+      for previousStep $ \(childJoinTree, joinIndex) -> forRemoteJoins childJoinTree joinIndex $ \childRemoteJoins -> do
+        results <-
+          processRemoteJoins_
+            requestId
+            logger
+            env
+            manager
+            reqHdrs
+            userInfo
+            (IntMap.elems joinIndex)
+            childRemoteJoins
+            gqlreq
+        pure $ IntMap.fromAscList $ zip (IntMap.keys joinIndex) results
 
   joinResults joinIndices compositeValue
 

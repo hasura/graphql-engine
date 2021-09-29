@@ -52,7 +52,6 @@ import Control.Lens.TH (makeLenses)
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as Set
-import Hasura.GraphQL.Parser (Variable)
 import Hasura.GraphQL.Parser.Schema (InputValue)
 import Hasura.Prelude
 import Hasura.RQL.Types.RemoteRelationship

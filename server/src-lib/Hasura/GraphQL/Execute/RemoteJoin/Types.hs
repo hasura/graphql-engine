@@ -21,7 +21,6 @@ module Hasura.GraphQL.Execute.RemoteJoin.Types
   )
 where
 
-import Control.Lens (view, _1)
 import Data.Aeson.Ordered qualified as AO
 import Data.HashMap.Strict qualified as Map
 import Data.IntMap.Strict qualified as IntMap
@@ -81,17 +80,17 @@ type RemoteJoins = JoinTree RemoteJoin
 -- | TODO(jkachmar): Documentation
 data RemoteJoin
   = RemoteJoinSource !(AB.AnyBackend RemoteSourceJoin) !(Maybe RemoteJoins)
-  | RemoteJoinRemoteSchema !RemoteSchemaJoin
+  | RemoteJoinRemoteSchema !RemoteSchemaJoin !(Maybe RemoteJoins)
   deriving stock (Eq, Generic)
 
 -- | This collects all the remote joins from a join tree
 getRemoteSchemaJoins :: RemoteJoins -> [RemoteSchemaJoin]
-getRemoteSchemaJoins = mapMaybe getRemoteSchemaJoin . toList
+getRemoteSchemaJoins = concatMap getRemoteSchemaJoin . toList
   where
-    getRemoteSchemaJoin :: RemoteJoin -> Maybe RemoteSchemaJoin
+    getRemoteSchemaJoin :: RemoteJoin -> [RemoteSchemaJoin]
     getRemoteSchemaJoin = \case
-      RemoteJoinSource _ _ -> Nothing
-      RemoteJoinRemoteSchema s -> Just s
+      RemoteJoinSource _ remoteJoins -> maybe [] getRemoteSchemaJoins remoteJoins
+      RemoteJoinRemoteSchema s remoteJoins -> s: maybe [] getRemoteSchemaJoins remoteJoins
 
 getPhantomFields :: RemoteJoin -> [FieldName]
 getPhantomFields =
@@ -107,7 +106,7 @@ getJoinColumnMapping = \case
   RemoteJoinSource sourceJoin _ -> AB.runBackend
     sourceJoin
     \RemoteSourceJoin {_rsjLHSColumnAliases} -> _rsjLHSColumnAliases
-  RemoteJoinRemoteSchema RemoteSchemaJoin {_rsjJoinColumnAliases} ->
+  RemoteJoinRemoteSchema RemoteSchemaJoin {_rsjJoinColumnAliases} _ ->
     _rsjJoinColumnAliases
 
 -- | TODO(jkachmar): Documentation.

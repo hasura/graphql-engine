@@ -322,8 +322,7 @@ transformAnnFields fields = do
                   JCPhantom a -> Just (columnInfo, a)
             joinColumnAliases = fmap snd annotatedJoinColumns
             inputArgsToMap = Map.fromList . map (_rfaArgument &&& _rfaValue)
-            remoteJoin =
-              RemoteJoinRemoteSchema $
+            remoteSchemaJoin =
                 RemoteSchemaJoin
                   (inputArgsToMap _rselArgs)
                   _rselResultCustomizer
@@ -331,13 +330,14 @@ transformAnnFields fields = do
                   joinColumnAliases
                   _rselFieldCall
                   _rselRemoteSchema
+            remoteJoin = RemoteJoinRemoteSchema remoteSchemaJoin schemaRelationshipJoins
             annotatedJoin = Just (phantomColumns, remoteJoin)
          in pure (remoteAnnPlaceholder, annotatedJoin)
       AFRemote (RemoteSelectSource srcMapping anySourceSelect) -> AB.dispatchAnyBackend @Backend
         anySourceSelect
         -- NOTE: This is necessary to bring 'tgt' into scope, so that it can be
         -- passed to the helper function as a type argument.
-        \(RemoteSourceSelect {..} :: RemoteSourceSelect (RemoteSelect UnpreparedValue) UnpreparedValue tgt) ->
+        \RemoteSourceSelect {..} ->
           let (transformedSourceRelationship, sourceRelationshipJoins) =
                 getRemoteJoinsSourceRelation _rssSelection
               annotatedJoinColumns = annotateSourceJoin <$> srcMapping
