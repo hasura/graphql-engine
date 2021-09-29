@@ -11,10 +11,10 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Inline
 import Hasura.GraphQL.Execute.Remote (resolveRemoteVariable, runVariableCache)
 import Hasura.GraphQL.Execute.Resolve
+import Hasura.GraphQL.Parser.Column (UnpreparedValue)
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Parser.Monad
 import Hasura.GraphQL.Parser.Schema
-import Hasura.GraphQL.Parser.Column (UnpreparedValue)
 import Hasura.GraphQL.Parser.TestUtils
 import Hasura.GraphQL.RemoteServer (identityCustomizer)
 import Hasura.GraphQL.Schema.Remote

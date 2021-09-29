@@ -663,6 +663,7 @@ data
     -- by the remote
     _rssJoinMapping :: !(HM.HashMap FieldName (ScalarType tgt, Column tgt))
   }
+
 -- Permissions
 
 data TablePermG (b :: BackendType) v = TablePerm

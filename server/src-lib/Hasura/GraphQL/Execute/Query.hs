@@ -115,8 +115,7 @@ convertQuerySelSet
           RemoteFieldG remoteSchemaInfo resultCustomizer remoteField <- runVariableCache $ for rf $ traverse (resolveRemoteVariable userInfo)
           let (noRelsRemoteField, remoteJoins) = RJ.getRemoteJoinsGraphQLRootField remoteField
           pure $
-            buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeQuery $
-              getRemoteFieldSelectionSet noRelsRemoteField
+            buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeQuery noRelsRemoteField
         RFAction action -> do
           let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
           (actionExecution, actionName, fch) <- pure $ case noRelsDBAST of

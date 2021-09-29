@@ -23,7 +23,6 @@
 -- member types of interface and union types can only be object types as of
 -- this writing). The haskell representation would be along these lines:
 -- `Map ConcreteMemberTypeName (Map Alias Field)`
-
 module Hasura.RQL.IR.RemoteSchema
   ( SelectionSet (..),
     convertSelectionSet,
@@ -311,7 +310,7 @@ data RemoteRootField r var
 
 -- | For a real remote field gives a SelectionSet for selecting the field itself.
 --   For a virtual field gives the unwrapped SelectionSet for the field.
-getRemoteFieldSelectionSet :: RemoteRootField r Variable -> ObjectSelectionSet r Variable
+getRemoteFieldSelectionSet :: RemoteRootField r var -> ObjectSelectionSet r var
 getRemoteFieldSelectionSet =
   fmap FieldGraphQL . \case
     RRFNamespaceField selSet -> selSet

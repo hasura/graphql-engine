@@ -12,6 +12,7 @@ import Control.Lens (Traversal', preview, _2)
 import Control.Monad.Writer
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
+import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Hasura.GraphQL.Execute.RemoteJoin.Types
@@ -379,6 +380,8 @@ transformAnnFields fields = do
     remoteAnnPlaceholder :: AnnFieldG src (Const Void) (UnpreparedValue src)
     remoteAnnPlaceholder = AFExpression "remote relationship placeholder"
 
+    allAliases = map fst fields
+
     -- Annotate a 'DBJoinField' with its field name and an alias so that it may
     -- be used to construct a remote join.
     annotateDBJoinField ::
@@ -387,11 +390,11 @@ transformAnnFields fields = do
       jc@(JoinColumn columnInfo) ->
         let column = pgiColumn columnInfo
             columnFieldName = fromCol @src column
-            alias = getJoinColumnAlias columnFieldName column columnFields
+            alias = getJoinColumnAlias columnFieldName column columnFields allAliases
          in (columnFieldName, (jc, alias))
       jcf@(JoinComputedField ScalarComputedField {..}) ->
         let computedFieldName = fromComputedField _scfName
-            alias = getJoinColumnAlias computedFieldName _scfName computedFields
+            alias = getJoinColumnAlias computedFieldName _scfName computedFields allAliases
          in (computedFieldName, (jcf, alias))
 
     -- Annotate an element a remote source join from '_rssJoinMapping' so that
@@ -402,7 +405,7 @@ transformAnnFields fields = do
     annotateSourceJoin columnInfo =
       let lhsColumn = pgiColumn columnInfo
           lhsColumnFieldName = fromCol @src lhsColumn
-          alias = getJoinColumnAlias lhsColumnFieldName lhsColumn columnFields
+          alias = getJoinColumnAlias lhsColumnFieldName lhsColumn columnFields allAliases
        in (JoinColumn columnInfo, alias)
 
     -- Get the fields targeted by some 'Traversal' for an arbitrary list of
@@ -431,34 +434,6 @@ transformAnnFields fields = do
             (alias, fieldName) <- getFields (_AFComputedField . _2) fields
         ]
 
-    getJoinColumnAlias ::
-      (Eq field, Hashable field) =>
-      FieldName ->
-      field ->
-      HashMap field FieldName ->
-      JoinColumnAlias
-    getJoinColumnAlias fieldName field selectedFields =
-      case Map.lookup field selectedFields of
-        Nothing -> makeUniqueAlias fieldName
-        Just fieldAlias -> JCSelected fieldAlias
-
-    longestAliasLength = maximum $ map (T.length . coerce . fst) fields
-
-    -- This generates an alias for a phantom field that does not conflict with
-    -- any of the existing aliases in the seleciton set
-    --
-    -- If we generate a unique name for each field name which is longer than
-    -- the longest alias in the selection set, the generated name would be
-    -- unique
-    makeUniqueAlias :: FieldName -> JoinColumnAlias
-    makeUniqueAlias fieldName =
-      let suffix =
-            "_join_column"
-              <>
-              -- 12 is the length of "_join_column"
-              T.replicate ((longestAliasLength - (T.length (coerce fieldName) + 12)) + 1) "_"
-       in JCPhantom $ fieldName <> FieldName suffix
-
     transformAnnRelation ::
       (a -> Collector b) ->
       AnnRelationSelectG src a ->
@@ -479,6 +454,35 @@ transformAnnFields fields = do
               ComputedFieldScalarSelect _scfFunction functionArgs _scfType Nothing
        in AFComputedField _scfXField _scfName fieldSelect
 
+getJoinColumnAlias ::
+  (Eq field, Hashable field) =>
+  FieldName ->
+  field ->
+  HashMap field FieldName ->
+  [FieldName] ->
+  JoinColumnAlias
+getJoinColumnAlias fieldName field selectedFields allAliases =
+  case Map.lookup field selectedFields of
+    Nothing -> JCPhantom uniqueAlias
+    Just fieldAlias -> JCSelected fieldAlias
+  where
+    -- This generates an alias for a phantom field that does not conflict with
+    -- any of the existing aliases in the seleciton set
+    --
+    -- If we generate a unique name for each field name which is longer than
+    -- the longest alias in the selection set, the generated name would be
+    -- unique
+    uniqueAlias :: FieldName
+    uniqueAlias =
+      let suffix =
+            "_join_column"
+              <>
+              -- 12 is the length of "_join_column"
+              T.replicate ((longestAliasLength - (T.length (coerce fieldName) + 12)) + 1) "_"
+       in fieldName <> FieldName suffix
+      where
+        longestAliasLength = maximum $ map (T.length . coerce) allAliases
+
 getRemoteJoinsSourceRelation ::
   Backend b =>
   SourceRelationshipSelection b (RemoteSelect UnpreparedValue) UnpreparedValue ->
@@ -493,41 +497,105 @@ getRemoteJoinsSourceRelation = runCollector . transformSourceRelation
       SourceRelationshipArrayAggregate aggregateSelect ->
         SourceRelationshipArrayAggregate <$> transformAggregateSelect aggregateSelect
 
-transformRemoteField ::
-  Field (SchemaRelationshipSelect UnpreparedValue) var ->
-  Collector (Field Void var)
-transformRemoteField = \case
-  FieldGraphQL f -> undefined
-  FieldRemote r -> undefined
-
 transformGraphQLSelectionSet ::
   SelectionSet (SchemaRelationshipSelect UnpreparedValue) var ->
   Collector (SelectionSet Void var)
 transformGraphQLSelectionSet = \case
   SelectionSetNone -> pure SelectionSetNone
-  SelectionSetObject s -> transformObjectSelectionSet s
+  SelectionSetObject s -> SelectionSetObject <$> transformObjectSelectionSet s
   where
-    transformObjectSelectionSet selectionSet =
-      flip OMap.traverseWithKey selectionSet \alias field -> withField (FieldName $ G.unName alias) do
-        case field of
-          FieldGraphQL f -> (,Nothing) <$> transformGraphQLField f
-          FieldRemote (SchemaRelationshipSource lhsJoinFields anySourceSelect) -> do
-            AB.dispatchAnyBackend @Backend anySourceSelect \RemoteSourceSelect {..} -> do
-              let (transformedRelationship, relationshipJoins) =
-                    getRemoteJoinsSourceRelation _rssSelection
-              undefined
 
-    transformGraphQLField ::
-      GraphQLField (SchemaRelationshipSelect UnpreparedValue) var ->
-      Collector (GraphQLField Void var)
-    transformGraphQLField = undefined
+transformObjectSelectionSet ::
+  ObjectSelectionSet (SchemaRelationshipSelect UnpreparedValue) var ->
+  Collector (ObjectSelectionSet Void var)
+transformObjectSelectionSet selectionSet = do
+  annotatedFields <- flip OMap.traverseWithKey selectionSet \alias field ->
+    withField (FieldName $ G.unName alias) do
+      case field of
+        FieldGraphQL f -> (,Nothing) <$> transformGraphQLField f
+        FieldRemote (SchemaRelationshipSource lhsJoinFields anySourceSelect) -> do
+          AB.dispatchAnyBackend @Backend anySourceSelect \RemoteSourceSelect {..} ->
+            let (transformedRelationship, relationshipJoins) =
+                  getRemoteJoinsSourceRelation _rssSelection
+
+                annotatedJoinColumns =
+                  Map.fromList $
+                    flip map (Set.toList lhsJoinFields) $ \lhsJoinField ->
+                      (lhsJoinField, annotateLHSJoinField lhsJoinField)
+
+                anySourceJoin =
+                  AB.mkAnyBackend $
+                    RemoteSourceJoin
+                      _rssName
+                      _rssConfig
+                      transformedRelationship
+                      (Map.fromList $ map (nameToField *** snd) $ Map.toList annotatedJoinColumns)
+                      _rssJoinMapping
+
+                phantomColumns =
+                  annotatedJoinColumns & Map.mapMaybe \(joinField, joinFieldAlias) ->
+                    case joinFieldAlias of
+                      JCSelected _ -> Nothing
+                      JCPhantom a -> Just (joinField, a)
+
+                remoteJoin = RemoteJoinSource anySourceJoin relationshipJoins
+             in pure (mkPlaceholderField alias, Just (phantomColumns, remoteJoin))
+  let transformedFields = fmap fst annotatedFields
+      remoteJoins = OMap.mapMaybe snd annotatedFields
+  case NE.nonEmpty $ OMap.toList remoteJoins of
+    Nothing -> pure $ fmap FieldGraphQL transformedFields
+    Just neRemoteJoins -> do
+      let phantomFields =
+            (Map.elems . Map.unions . map fst $ OMap.elems remoteJoins)
+              <&> \(joinField, alias) -> (G.unsafeMkName $ getFieldNameTxt alias, joinField)
+      collect $ flip fmap neRemoteJoins $ \(alias, (_, rj)) -> (nameToField alias, rj)
+      pure $ fmap FieldGraphQL (transformedFields <> OMap.fromList phantomFields)
+  where
+    nameToField = FieldName . G.unName
+    allAliases = map (nameToField . fst) $ OMap.toList selectionSet
+
+    mkPlaceholderField alias =
+      mkField (Just alias) $$(G.litName "__typename") mempty mempty SelectionSetNone
+
+    annotateLHSJoinField lhsJoinField =
+      let columnAlias =
+            getJoinColumnAlias (nameToField lhsJoinField) lhsJoinField noArgsGraphQLFields allAliases
+       in ( mkField
+              (Just $ G.unsafeMkName $ getFieldNameTxt $ getAliasFieldName columnAlias)
+              lhsJoinField
+              mempty
+              mempty
+              SelectionSetNone,
+            columnAlias
+          )
+
+    -- A map of graphql scalar fields (without any arguments) to their aliases
+    -- in the selection set. We do not yet support lhs join fields which take
+    -- arguments. To be consistent with that, we ignore fields with arguments
+    noArgsGraphQLFields =
+      Map.fromList $
+        flip mapMaybe (OMap.toList selectionSet) \(alias, field) -> case field of
+          FieldGraphQL f ->
+            if null (_fArguments f)
+              then Just (_fName f, FieldName $ G.unName alias)
+              else Nothing
+          FieldRemote _ -> Nothing
+
+transformGraphQLField ::
+  GraphQLField (SchemaRelationshipSelect UnpreparedValue) var ->
+  Collector (GraphQLField Void var)
+transformGraphQLField GraphQLField {..} = do
+  transformedSelectionSet <- transformGraphQLSelectionSet _fSelectionSet
+  pure $ GraphQLField {_fSelectionSet = transformedSelectionSet, ..}
 
 getRemoteJoinsGraphQLSelectionSet ::
   SelectionSet (SchemaRelationshipSelect UnpreparedValue) var ->
   (SelectionSet Void var, Maybe RemoteJoins)
-getRemoteJoinsGraphQLSelectionSet = undefined
+getRemoteJoinsGraphQLSelectionSet =
+  runCollector . transformGraphQLSelectionSet
 
 getRemoteJoinsGraphQLRootField ::
   RemoteRootField (SchemaRelationshipSelect UnpreparedValue) var ->
-  (RemoteRootField Void var, Maybe RemoteJoins)
-getRemoteJoinsGraphQLRootField = undefined
+  (ObjectSelectionSet Void var, Maybe RemoteJoins)
+getRemoteJoinsGraphQLRootField =
+  runCollector . transformObjectSelectionSet . getRemoteFieldSelectionSet
