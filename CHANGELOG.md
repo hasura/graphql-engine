@@ -27,6 +27,7 @@
 - console: add GraphQL customisation under Remote schema edit tab
 - console: fix cross-schema array relationship suggestions
 - console: add performance fixes for handle large db schemas
+- console: fix missing cross-schema computed fields in permission builder
 - cli: add support for `network` metadata object
 - cli: `hasura migrate apply --all-databases` will return a non zero exit code if operation failed on atleast one database (#7499)
 - cli: `migrate create --from-server` creates the migration and marks it as applied on the server
