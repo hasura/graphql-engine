@@ -291,6 +291,7 @@ mkServeOptions rso = do
       connLifetime <- withEnv cl (fst pgConnLifetimeEnv) <&> parseConnLifeTime
       allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
       poolTimeout <- withEnv pt (fst pgPoolTimeoutEnv)
+      let allowCancel = True
       return $
         Q.ConnParams
           stripes
@@ -299,6 +300,7 @@ mkServeOptions rso = do
           allowPrepare
           connLifetime
           poolTimeout
+          allowCancel
 
     mkAuthHook (AuthHookG mUrl mType) = do
       mUrlEnv <- withEnv mUrl $ fst authHookEnv

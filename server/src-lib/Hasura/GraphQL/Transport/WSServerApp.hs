@@ -33,6 +33,7 @@ import Hasura.Server.Init.Config
   ( KeepAliveDelay,
     WSConnectionInitTimeout,
   )
+import Hasura.Server.Limits
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Version (HasVersion)
 import Hasura.Tracing qualified as Tracing
@@ -52,7 +53,8 @@ createWSServerApp ::
     Tracing.HasReporter m,
     MonadExecuteQuery m,
     MonadMetadataStorage (MetadataStorageT m),
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    HasResourceLimits m
   ) =>
   Env.Environment ->
   HashSet (L.EngineLogType L.Hasura) ->

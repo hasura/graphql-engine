@@ -61,6 +61,7 @@ import Hasura.RQL.IR
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Init.Config
+import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Logging qualified as L
 import Hasura.Server.Telemetry.Counters qualified as Telem
@@ -232,7 +233,8 @@ runGQ ::
     MonadTrace m,
     MonadExecuteQuery m,
     MonadMetadataStorage (MetadataStorageT m),
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    HasResourceLimits m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
@@ -251,6 +253,9 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
     reqParsed <-
       E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
         >>= flip onLeft throwError
+
+    operationLimit <- askGraphqlOperationLimit
+    let runLimits = runResourceLimits $ operationLimit userInfo (scApiLimits sc)
 
     (parameterizedQueryHash, execPlan) <-
       E.getResolvedExecPlan
@@ -291,7 +296,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           Just cachedResponseData -> do
             logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindCached
             pure (Telem.Query, 0, Telem.Local, HttpResponse cachedResponseData responseHeaders, parameterizedQueryHash)
-          Nothing -> do
+          Nothing -> runLimits $ do
             conclusion <- runExceptT $
               forWithKey queryPlans $ \fieldName -> \case
                 E.ExecStepDB _headers exists remoteJoins -> doQErr $ do
@@ -338,7 +343,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                     (Left CacheStoreNotEnoughCapacity) -> [("warning", "199 - cache-store-capacity-exceeded")]
                     (Left (CacheStoreBackendError _)) -> [("warning", "199 - cache-store-error")]
                in pure $ out & _4 %~ addHttpResponseHeaders headers
-      E.MutationExecutionPlan mutationPlans -> do
+      E.MutationExecutionPlan mutationPlans -> runLimits $ do
         {- Note [Backwards-compatible transaction optimisation]
 
            For backwards compatibility, we perform the following optimisation: if all mutation steps
@@ -566,7 +571,8 @@ runGQBatched ::
     MonadExecuteQuery m,
     HttpLog m,
     MonadMetadataStorage (MetadataStorageT m),
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    HasResourceLimits m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->

@@ -433,6 +433,7 @@ library
                      , Hasura.Server.Utils
                      , Hasura.Server.Version
                      , Hasura.Server.Version.TH
+                     , Hasura.Server.Limits
                      , Hasura.Server.Logging
                      , Hasura.Server.Migrate
                      , Hasura.Server.Compression
