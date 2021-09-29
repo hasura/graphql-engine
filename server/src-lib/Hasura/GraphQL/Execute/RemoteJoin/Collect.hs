@@ -11,6 +11,7 @@ where
 import Control.Lens (Traversal', preview, _2)
 import Control.Monad.Writer
 import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Hasura.GraphQL.Execute.RemoteJoin.Types
@@ -20,6 +21,7 @@ import Hasura.RQL.IR
 import Hasura.RQL.IR.Returning
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
+import Language.GraphQL.Draft.Syntax qualified as G
 
 {- Note: [Remote Joins Architecture]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -490,6 +492,35 @@ getRemoteJoinsSourceRelation = runCollector . transformSourceRelation
         SourceRelationshipArray <$> transformSelect simpleSelect
       SourceRelationshipArrayAggregate aggregateSelect ->
         SourceRelationshipArrayAggregate <$> transformAggregateSelect aggregateSelect
+
+transformRemoteField ::
+  Field (SchemaRelationshipSelect UnpreparedValue) var ->
+  Collector (Field Void var)
+transformRemoteField = \case
+  FieldGraphQL f -> undefined
+  FieldRemote r -> undefined
+
+transformGraphQLSelectionSet ::
+  SelectionSet (SchemaRelationshipSelect UnpreparedValue) var ->
+  Collector (SelectionSet Void var)
+transformGraphQLSelectionSet = \case
+  SelectionSetNone -> pure SelectionSetNone
+  SelectionSetObject s -> transformObjectSelectionSet s
+  where
+    transformObjectSelectionSet selectionSet =
+      flip OMap.traverseWithKey selectionSet \alias field -> withField (FieldName $ G.unName alias) do
+        case field of
+          FieldGraphQL f -> (,Nothing) <$> transformGraphQLField f
+          FieldRemote (SchemaRelationshipSource lhsJoinFields anySourceSelect) -> do
+            AB.dispatchAnyBackend @Backend anySourceSelect \RemoteSourceSelect {..} -> do
+              let (transformedRelationship, relationshipJoins) =
+                    getRemoteJoinsSourceRelation _rssSelection
+              undefined
+
+    transformGraphQLField ::
+      GraphQLField (SchemaRelationshipSelect UnpreparedValue) var ->
+      Collector (GraphQLField Void var)
+    transformGraphQLField = undefined
 
 getRemoteJoinsGraphQLSelectionSet ::
   SelectionSet (SchemaRelationshipSelect UnpreparedValue) var ->
