@@ -265,7 +265,7 @@ func copyStateToCatalogStateAPIIfRequired(ec *cli.ExecutionContext, sourceName s
 
 			runsqlResp, err := ec.APIClient.V2Query.PGRunSQL(query)
 			if err != nil {
-				ec.Logger.Warn("encountered error when trying to move migrations from hdb_catalog.schema_migrations to catalog state\n", err,
+				ec.Logger.Debug("encountered error when trying to move migrations from hdb_catalog.schema_migrations to catalog state\n", err,
 					"\nnote: ignore this if you are not updating your project from config v2 -> config v3")
 				ec.Logger.Debug("marking IsStateCopyCompleted as true %w", markStateMigrationCompleted())
 				return false, nil

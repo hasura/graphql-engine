@@ -114,6 +114,23 @@ func (c *CreateOptions) Delete() error {
 	return nil
 }
 
+func (c *CreateOptions) MoveToDir(destDir string) error {
+	files, err := ioutil.ReadDir(c.Directory)
+	if err != nil {
+		return err
+	}
+
+	for _, fi := range files {
+		if strings.HasPrefix(fi.Name(), fmt.Sprintf("%s_", c.Version)) {
+			if fi.IsDir() {
+				path := filepath.Join(c.Directory, fi.Name())
+				return os.Rename(path, filepath.Join(destDir, fi.Name()))
+			}
+		}
+	}
+	return nil
+}
+
 func createFile(fname string, data []byte) error {
 	file, err := os.Create(fname)
 	if err != nil {
@@ -153,8 +170,8 @@ func DownCmd(m *migrate.Migrate, limit int64) error {
 	}
 }
 
-func SquashCmd(m *migrate.Migrate, from uint64, version int64, name, directory string) (versions []int64, err error) {
-	versions, upSql, downSql, err := m.Squash(from)
+func SquashCmd(m *migrate.Migrate, from uint64, to int64, version int64, name, directory string) (versions []int64, err error) {
+	versions, upSql, downSql, err := m.Squash(from, to)
 	if err != nil {
 		return
 	}
