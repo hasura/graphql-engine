@@ -54,6 +54,21 @@ var commonMetadataCommandsTest = func(projectDirectory string) {
 		serverStdout := serverSession.Out.Contents()
 		Expect(serverStdout).Should(MatchJSON(projectStdout))
 	})
+	Context("metadata modes", func() {
+		editMetadataFileInConfig(filepath.Join(projectDirectory, defaultConfigFilename), "metadata.random")
+		session := testutil.Hasura(testutil.CmdOpts{
+			Args:             []string{"metadata", "apply"},
+			WorkingDirectory: projectDirectory,
+		})
+		Eventually(session, timeout).ShouldNot(Exit(0))
+
+		editMetadataFileInConfig(filepath.Join(projectDirectory, defaultConfigFilename), "metadata.json")
+		session = testutil.Hasura(testutil.CmdOpts{
+			Args:             []string{"metadata", "apply"},
+			WorkingDirectory: projectDirectory,
+		})
+		Eventually(session, timeout).ShouldNot(Exit(0))
+	})
 }
 
 var testConfigV2 = func(projectDirectory string) {

@@ -48,6 +48,24 @@ func editEndpointInConfig(configFilePath, endpoint string) {
 
 }
 
+func editMetadataFileInConfig(configFilePath, path string) {
+	var config cli.Config
+	b, err := ioutil.ReadFile(configFilePath)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	err = yaml.Unmarshal(b, &config)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	config.MetadataFile = path
+
+	b, err = yaml.Marshal(&config)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	err = ioutil.WriteFile(configFilePath, b, 0655)
+	Expect(err).ShouldNot(HaveOccurred())
+
+}
+
 func editSourceNameInConfigV3ProjectTemplate(projectDir, sourceName, postgresConnectionString string) {
 	// assumes it's renaming a copy of commands/testdata/config-v3-test-project
 	Expect(os.Rename(filepath.Join(projectDir, "migrations", "pg"), filepath.Join(projectDir, "migrations", sourceName))).To(BeNil())

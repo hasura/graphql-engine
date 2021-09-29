@@ -3,11 +3,8 @@ package commands
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
 	"github.com/aryann/difflib"
 
@@ -16,9 +13,7 @@ import (
 	"github.com/hexops/gotextdiff/myers"
 	"github.com/hexops/gotextdiff/span"
 	"github.com/mgutz/ansi"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 )
 
 type MetadataDiffOptions struct {
@@ -75,94 +70,9 @@ By default, it shows changes between the exported metadata file and server metad
 	return metadataDiffCmd
 }
 
-func (o *MetadataDiffOptions) runv2(args []string) error {
-	messageFormat := "Showing diff between %s and %s..."
-	message := ""
-	metadataHandler := projectmetadata.NewHandlerFromEC(o.EC)
-	from := "project"
-	to := "server"
-	switch len(args) {
-	case 0:
-		o.Metadata[0] = o.EC.MetadataDir
-		from = "project"
-	case 1:
-		// 1 arg, diff given directory and the metadata on server
-		err := checkDir(args[0])
-		if err != nil {
-			return err
-		}
-		o.Metadata[0] = args[0]
-		from = o.Metadata[0]
-	case 2:
-		err := checkDir(args[0])
-		if err != nil {
-			return err
-		}
-		o.Metadata[0] = args[0]
-		from = o.Metadata[0]
-
-		err = checkDir(args[1])
-		if err != nil {
-			return err
-		}
-		o.Metadata[1] = args[1]
-		to = o.Metadata[1]
-	}
-	message = fmt.Sprintf(messageFormat, from, to)
-	o.EC.Logger.Info(message)
-	var oldYaml, newYaml []byte
-	if o.Metadata[1] == "" {
-		tmpDir, err := ioutil.TempDir("", "*")
-		if err != nil {
-			return err
-		}
-		defer os.RemoveAll(tmpDir)
-		metadataHandler.SetMetadataObjects(projectmetadata.GetMetadataObjectsWithDir(o.EC, tmpDir))
-		var files map[string][]byte
-		files, err = metadataHandler.ExportMetadata()
-		if err != nil {
-			return err
-		}
-		err = metadataHandler.WriteMetadata(files)
-		if err != nil {
-			return err
-		}
-	} else {
-		metadataHandler.SetMetadataObjects(projectmetadata.GetMetadataObjectsWithDir(o.EC, o.Metadata[1]))
-	}
-
-	// build server metadata
-	serverMeta, err := metadataHandler.BuildMetadata()
-	if err != nil {
-		return err
-	}
-	newYaml, err = yaml.Marshal(serverMeta)
-	if err != nil {
-		return errors.Wrap(err, "cannot unmarshall server metadata")
-	}
-
-	// build local metadata
-	metadataHandler.SetMetadataObjects(projectmetadata.GetMetadataObjectsWithDir(o.EC, o.Metadata[0]))
-	localMeta, err := metadataHandler.BuildMetadata()
-	if err != nil {
-		return err
-	}
-	oldYaml, err = yaml.Marshal(localMeta)
-	if err != nil {
-		return errors.Wrap(err, "cannot unmarshal local metadata")
-	}
-
-	// Here oldYaml is project's metadata and newYaml is server's metadata for having diff similar to git diff i.e taking server has base before has been taken as server's metadata
-	err = printDiff(string(newYaml), string(oldYaml), to, from, o.Output, o.DiffType, o.DisableColor)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (o *MetadataDiffOptions) Run() error {
 	if o.EC.Config.Version >= cli.V2 && o.EC.MetadataDir != "" {
-		return o.runv2(o.Args)
+		return getMetadataModeHandler(o.EC.MetadataMode).Diff(o)
 	} else {
 		return fmt.Errorf("metadata diff for config %d not supported", o.EC.Config.Version)
 	}

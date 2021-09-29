@@ -32,6 +32,7 @@
 - cli: `migrate create --from-server` creates the migration and marks it as applied on the server
 - cli: support `query_tags` in metadata
 - cli: add `hasura deploy` command
+- cli: allow exporting and applying metadata from `yaml/json` files
 
 ## v2.0.9
 
