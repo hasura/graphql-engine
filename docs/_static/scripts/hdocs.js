@@ -5,7 +5,11 @@ window.hdocs = (function () {
     setup: function () {
       Array.from(document.getElementsByClassName('menuLink')).forEach(function (el) { el.addEventListener('click', hdocs.toggleMenu) });
 
-      Array.from(document.getElementsByClassName('tracked')).forEach(function (el) { el.addEventListener('click', function () { hdocs.trackGA(el.getAttribute('data-label')) }) });
+      Array.from(document.getElementsByClassName('tracked')).forEach(function (el) { el.addEventListener('click', function () {
+        const dataLabel = el.getAttribute('data-label');
+        hdocs.trackGA(dataLabel);
+        hdocs.saTrack(dataLabel);
+      }) });
 
       document.getElementById('nav_tree_icon').addEventListener('click', hdocs.handleNavClick);
       document.getElementById('sidebar-close').addEventListener('click', hdocs.handleNavClick);
@@ -52,6 +56,13 @@ window.hdocs = (function () {
         category: 'Docs Custom',
         action: action || 'Link Click',
         label: label
+      })
+    },
+    saTrack: function (label) {
+      window.analytics = window.analytics || [];
+      window.analytics.track("Clicked " + label, {
+        category: 'Docs Custom',
+        placement: 'header',
       })
     },
     toggleMenu: function () {
