@@ -53,7 +53,7 @@ runAddRemoteSchema env q@(AddRemoteSchemaQuery name defn comment) = do
   where
     -- NOTE: permissions here are empty, manipulated via a separate API with
     -- runAddRemoteSchemaPermissions below
-    remoteSchemaMeta = RemoteSchemaMetadata name defn comment mempty
+    remoteSchemaMeta = RemoteSchemaMetadata name defn comment mempty mempty
 
 doesRemoteSchemaPermissionExist :: Metadata -> RemoteSchemaName -> RoleName -> Bool
 doesRemoteSchemaPermissionExist metadata remoteSchemaName roleName =
@@ -259,4 +259,4 @@ runUpdateRemoteSchema env (AddRemoteSchemaQuery name defn comment) = do
 
   pure successMsg
   where
-    remoteSchemaMeta perms = RemoteSchemaMetadata name defn comment perms
+    remoteSchemaMeta perms = RemoteSchemaMetadata name defn comment perms mempty

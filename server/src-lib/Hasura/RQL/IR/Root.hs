@@ -29,7 +29,7 @@ import Hasura.RQL.Types.Backend qualified as RQL
 import Hasura.RQL.Types.Column qualified as RQL
 import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.RQL.Types.QueryTags qualified as RQL
-import Hasura.RQL.Types.RemoteRelationship qualified as RQL
+import Hasura.RQL.Types.Relationships.FromSource qualified as RQL
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G

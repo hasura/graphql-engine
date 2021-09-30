@@ -1,13 +1,4 @@
-module Hasura.RQL.DDL.RemoteRelationship
-  ( runCreateRemoteRelationship,
-    runDeleteRemoteRelationship,
-    runUpdateRemoteRelationship,
-    DeleteRemoteRelationship,
-    dropRemoteRelationshipInMetadata,
-    PartiallyResolvedSource (..),
-    buildRemoteFieldInfo,
-  )
-where
+module Hasura.RQL.DDL.RemoteRelationship where
 
 import Data.Aeson
 import Data.Aeson qualified as J
@@ -20,52 +11,53 @@ import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.DDL.RemoteRelationship.Validate
 import Hasura.RQL.Types
+import Hasura.RQL.Types.Relationships.FromSchema
 import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Hasura.SQL.AnyBackend qualified as AB
 
 runCreateRemoteRelationship ::
   forall b m.
   (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
-  RemoteRelationship b ->
+  FromSourceRelationship b ->
   m EncJSON
-runCreateRemoteRelationship RemoteRelationship {..} = do
-  void $ askTabInfo @b _rtrSource _rtrTable
+runCreateRemoteRelationship FromSourceRelationship {..} = do
+  void $ askTabInfo @b _fsrSource _fsrTable
   let metadataObj =
-        MOSourceObjId _rtrSource $
+        MOSourceObjId _fsrSource $
           AB.mkAnyBackend $
-            SMOTableObj @b _rtrTable $
-              MTORemoteRelationship _rtrName
-      metadata = RemoteRelationshipMetadata _rtrName _rtrDefinition
+            SMOTableObj @b _fsrTable $
+              MTORemoteRelationship _fsrName
+      metadata = SourceRelationshipMetadata _fsrName _fsrDefinition
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
-      tableMetadataSetter @b _rtrSource _rtrTable . tmRemoteRelationships
-        %~ OMap.insert _rtrName metadata
+      tableMetadataSetter @b _fsrSource _fsrTable . tmRemoteRelationships
+        %~ OMap.insert _fsrName metadata
   pure successMsg
 
 runUpdateRemoteRelationship ::
   forall b m.
   (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
-  RemoteRelationship b ->
+  FromSourceRelationship b ->
   m EncJSON
-runUpdateRemoteRelationship RemoteRelationship {..} = do
-  fieldInfoMap <- askFieldInfoMap @b _rtrSource _rtrTable
-  void $ askRemoteRel fieldInfoMap _rtrName
+runUpdateRemoteRelationship FromSourceRelationship {..} = do
+  fieldInfoMap <- askFieldInfoMap @b _fsrSource _fsrTable
+  void $ askRemoteRel fieldInfoMap _fsrName
   let metadataObj =
-        MOSourceObjId _rtrSource $
+        MOSourceObjId _fsrSource $
           AB.mkAnyBackend $
-            SMOTableObj @b _rtrTable $
-              MTORemoteRelationship _rtrName
-      metadata = RemoteRelationshipMetadata _rtrName _rtrDefinition
+            SMOTableObj @b _fsrTable $
+              MTORemoteRelationship _fsrName
+      metadata = SourceRelationshipMetadata _fsrName _fsrDefinition
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
-      tableMetadataSetter @b _rtrSource _rtrTable . tmRemoteRelationships
-        %~ OMap.insert _rtrName metadata
+      tableMetadataSetter @b _fsrSource _fsrTable . tmRemoteRelationships
+        %~ OMap.insert _fsrName metadata
   pure successMsg
 
 data DeleteRemoteRelationship (b :: BackendType) = DeleteRemoteRelationship
   { _drrSource :: !SourceName,
     _drrTable :: !(TableName b),
-    _drrName :: !RemoteRelationshipName
+    _drrName :: !RelName
   }
 
 instance Backend b => FromJSON (DeleteRemoteRelationship b) where
@@ -94,7 +86,9 @@ runDeleteRemoteRelationship (DeleteRemoteRelationship source table relName) = do
   pure successMsg
 
 dropRemoteRelationshipInMetadata ::
-  RemoteRelationshipName -> TableMetadata b -> TableMetadata b
+  RelName ->
+  TableMetadata b ->
+  TableMetadata b
 dropRemoteRelationshipInMetadata name =
   tmRemoteRelationships %~ OMap.delete name
 
@@ -123,23 +117,23 @@ buildRemoteFieldInfo ::
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
-  RemoteRelationship b ->
+  FromSourceRelationship b ->
   HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->
   RemoteSchemaMap ->
   m (RemoteFieldInfo b, [SchemaDependency])
-buildRemoteFieldInfo sourceSource sourceTable fields RemoteRelationship {..} allSources remoteSchemaMap =
-  case _rtrDefinition of
-    RemoteSourceRelDef RemoteSourceRelationshipDef {..} -> do
+buildRemoteFieldInfo sourceSource sourceTable fields FromSourceRelationship {..} allSources remoteSchemaMap =
+  case _fsrDefinition of
+    FromSourceToSourceRelDef FromSourceToSourceRelationshipDef {..} -> do
       targetTables <-
-        Map.lookup _rsrSource allSources
-          `onNothing` throw400 NotFound ("source not found: " <>> _rsrSource)
+        Map.lookup _fstsrdSource allSources
+          `onNothing` throw400 NotFound ("source not found: " <>> _fstsrdSource)
       AB.dispatchAnyBackend @Backend targetTables \(partiallyResolvedSource :: PartiallyResolvedSource b') -> do
         let PartiallyResolvedSource _ targetSourceInfo targetTablesInfo = partiallyResolvedSource
-        (targetTable :: TableName b') <- runAesonParser J.parseJSON _rsrTable
+        (targetTable :: TableName b') <- runAesonParser J.parseJSON _fstsrdTable
         targetColumns <-
           fmap _tciFieldInfoMap $
             onNothing (Map.lookup targetTable targetTablesInfo) $ throwTableDoesNotExist @b' targetTable
-        columnPairs <- for (Map.toList _rsrFieldMapping) \(srcFieldName, tgtFieldName) -> do
+        columnPairs <- for (Map.toList _fstsrdFieldMapping) \(srcFieldName, tgtFieldName) -> do
           srcField <- askFieldInfo fields srcFieldName
           tgtField <- askFieldInfo targetColumns tgtFieldName
           srcColumn <- case srcField of
@@ -152,31 +146,65 @@ buildRemoteFieldInfo sourceSource sourceTable fields RemoteRelationship {..} all
             ColumnEnumReference _ -> throw400 NotSupported "relationships to enum fields are not supported yet"
           pure (srcFieldName, (srcColumn, tgtScalar, pgiColumn tgtColumn))
         let sourceConfig = _rsConfig targetSourceInfo
-            rsri = RemoteSourceRelationshipInfo _rtrName _rsrRelationshipType _rsrSource sourceConfig targetTable $ Map.fromList mapping
+            rsri = RemoteSourceFieldInfo _fsrName _fstsrdRelationshipType _fstsrdSource sourceConfig targetTable $ Map.fromList mapping
             tableDependencies =
               [ SchemaDependency (SOSourceObj sourceSource $ AB.mkAnyBackend $ SOITable @b sourceTable) DRTable,
-                SchemaDependency (SOSourceObj _rsrSource $ AB.mkAnyBackend $ SOITable @b' targetTable) DRTable
+                SchemaDependency (SOSourceObj _fstsrdSource $ AB.mkAnyBackend $ SOITable @b' targetTable) DRTable
               ]
             columnDependencies = flip concatMap columnPairs \(_, srcColumn, tgtColumn) ->
               [ SchemaDependency (SOSourceObj sourceSource $ AB.mkAnyBackend $ SOITableObj @b sourceTable $ TOCol @b $ pgiColumn srcColumn) DRRemoteRelationship,
-                SchemaDependency (SOSourceObj _rsrSource $ AB.mkAnyBackend $ SOITableObj @b' targetTable $ TOCol @b' $ pgiColumn tgtColumn) DRRemoteRelationship
+                SchemaDependency (SOSourceObj _fstsrdSource $ AB.mkAnyBackend $ SOITableObj @b' targetTable $ TOCol @b' $ pgiColumn tgtColumn) DRRemoteRelationship
               ]
         pure (RFISource $ mkAnyBackend @b' rsri, tableDependencies <> columnDependencies)
-    RemoteSchemaRelDef _ remoteRelationship@RemoteSchemaRelationshipDef {..} -> do
+    FromSourceToSchemaRelDef _ remoteRelationship@FromSourceToSchemaRelationshipDef {..} -> do
       RemoteSchemaCtx {..} <-
-        onNothing (Map.lookup _rrdRemoteSchemaName remoteSchemaMap) $
-          throw400 RemoteSchemaError $ "remote schema with name " <> _rrdRemoteSchemaName <<> " not found"
+        onNothing (Map.lookup _fstrrdRemoteSchemaName remoteSchemaMap) $
+          throw400 RemoteSchemaError $ "remote schema with name " <> _fstrrdRemoteSchemaName <<> " not found"
       remoteField <-
-        validateRemoteSchemaRelationship remoteRelationship _rtrTable _rtrName _rtrSource (_rscInfo, _rscIntroOriginal) fields
+        validateSourceToSchemaRelationship remoteRelationship _fsrTable _fsrName _fsrSource (_rscInfo, _rscIntroOriginal) fields
           `onLeft` (throw400 RemoteSchemaError . errorToText)
-      let tableDep = SchemaDependency (SOSourceObj _rtrSource $ AB.mkAnyBackend $ SOITable @b _rtrTable) DRTable
-          remoteSchemaDep = SchemaDependency (SORemoteSchema _rrdRemoteSchemaName) DRRemoteSchema
+      let tableDep = SchemaDependency (SOSourceObj _fsrSource $ AB.mkAnyBackend $ SOITable @b _fsrTable) DRTable
+          remoteSchemaDep = SchemaDependency (SORemoteSchema _fstrrdRemoteSchemaName) DRRemoteSchema
           fieldsDep =
-            S.toList (_rfiHasuraFields remoteField) <&> \case
+            S.toList (_rrfiHasuraFields remoteField) <&> \case
               JoinColumn columnInfo ->
                 -- TODO: shouldn't this be DRColumn??
-                mkColDep @b DRRemoteRelationship _rtrSource _rtrTable $ pgiColumn columnInfo
+                mkColDep @b DRRemoteRelationship _fsrSource _fsrTable $ pgiColumn columnInfo
               JoinComputedField computedFieldInfo ->
-                mkComputedFieldDep @b DRRemoteRelationship _rtrSource _rtrTable $ _scfName computedFieldInfo
+                mkComputedFieldDep @b DRRemoteRelationship _fsrSource _fsrTable $ _scfName computedFieldInfo
           schemaDependencies = (tableDep : remoteSchemaDep : fieldsDep)
       pure (RFISchema remoteField, schemaDependencies)
+
+buildFromSchemaRelationship ::
+  MonadError QErr m =>
+  FromSchemaRelationshipDef ->
+  HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->
+  m (AB.AnyBackend ResolvedFromSchemaRelationship)
+buildFromSchemaRelationship definition allSources = case definition of
+  FromSchemaToSourceRelDef FromSchemaToSourceRelationshipDef {..} -> do
+    targetTables <-
+      Map.lookup _frtsrdSource allSources
+        `onNothing` throw400 NotFound ("source not found: " <>> _frtsrdSource)
+    AB.traverseBackend @Backend targetTables \(partiallyResolvedSource :: PartiallyResolvedSource b) -> do
+      let PartiallyResolvedSource _ targetSourceInfo targetTablesInfo = partiallyResolvedSource
+          sourceConfig = _rsConfig targetSourceInfo
+      targetTable <- runAesonParser J.parseJSON _frtsrdTable
+      targetColumns <-
+        fmap _tciFieldInfoMap (Map.lookup targetTable targetTablesInfo)
+          `onNothing` throwTableDoesNotExist @b targetTable
+      mapping <- for _frtsrdFieldMapping \tgtFieldName -> do
+        tgtColumn <- askFieldInfo targetColumns tgtFieldName
+        tgtScalar <- case pgiType tgtColumn of
+          ColumnScalar scalarType -> pure scalarType
+          ColumnEnumReference _ -> throw400 NotSupported "relationships to enum fields are not supported yet"
+        pure (tgtScalar, pgiColumn tgtColumn)
+      pure $
+        ResolvedFromSchemaToSourceRel $
+          ResolvedFromSchemaToSourceRelationship
+            { _rfrtsdrLHSTypeName = _frtsrdLHSTypeName,
+              _rfrtsdrRelationshipType = _frtsrdRelationshipType,
+              _rfrtsdrSource = _frtsrdSource,
+              _rfrtsdrSourceConfig = sourceConfig,
+              _rfrtsdrTable = targetTable,
+              _rfrtsdrFieldMapping = mapping
+            }

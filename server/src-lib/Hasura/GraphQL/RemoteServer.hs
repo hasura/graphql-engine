@@ -163,11 +163,14 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
 
   let _rscInfo = RemoteSchemaInfo {..}
 
+  -- At this point, we can't resolve remote relationships; we store an empty map.
+  let _rscRemoteRelationships = mempty
+
   -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
   -- the introspection result of the remote server. We store this in the
   -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
   -- is called by simple encoding the result to JSON.
-  return
+  pure
     RemoteSchemaCtx
       { _rscPermissions = mempty,
         ..

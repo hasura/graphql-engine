@@ -87,7 +87,7 @@ addNonColumnFields =
 
     rawRemoteRelationshipInfos <-
       buildInfoMapPreservingMetadata
-        (_rrmName . (^. _3))
+        (_srmName . (^. _3))
         (mkRemoteRelationshipMetadataObject @b)
         buildRemoteRelationship
         -<
@@ -289,17 +289,17 @@ buildComputedField = proc (trackedTableNames, (source, pgFunctions, table, cf@Co
 mkRemoteRelationshipMetadataObject ::
   forall b.
   Backend b =>
-  (SourceName, TableName b, RemoteRelationshipMetadata) ->
+  (SourceName, TableName b, SourceRelationshipMetadata) ->
   MetadataObject
-mkRemoteRelationshipMetadataObject (source, table, RemoteRelationshipMetadata {..}) =
+mkRemoteRelationshipMetadataObject (source, table, SourceRelationshipMetadata {..}) =
   let objectId =
         MOSourceObjId source $
           AB.mkAnyBackend $
             SMOTableObj @b table $
-              MTORemoteRelationship _rrmName
+              MTORemoteRelationship _srmName
    in MetadataObject objectId $
         toJSON $
-          RemoteRelationship @b _rrmName source table _rrmDefinition
+          FromSourceRelationship @b _srmName source table _srmDefinition
 
 buildRemoteRelationship ::
   forall b arr m.
@@ -310,13 +310,13 @@ buildRemoteRelationship ::
     BackendMetadata b
   ) =>
   ( (HashMap SourceName (AB.AnyBackend PartiallyResolvedSource), FieldInfoMap (FieldInfo b), RemoteSchemaMap),
-    (SourceName, TableName b, RemoteRelationshipMetadata)
+    (SourceName, TableName b, SourceRelationshipMetadata)
   )
     `arr` Maybe (RemoteFieldInfo b)
 buildRemoteRelationship =
   proc
     ( (allSources, allColumns, remoteSchemaMap),
-      (source, table, rrm@RemoteRelationshipMetadata {..})
+      (source, table, rrm@SourceRelationshipMetadata {..})
       )
   -> do
     let metadataObject = mkRemoteRelationshipMetadataObject @b (source, table, rrm)
@@ -324,13 +324,13 @@ buildRemoteRelationship =
           SOSourceObj source $
             AB.mkAnyBackend $
               SOITableObj @b table $
-                TORemoteRel _rrmName
-        addRemoteRelationshipContext e = "in remote relationship" <> _rrmName <<> ": " <> e
-        def = _rrmDefinition
+                TORemoteRel _srmName
+        addRemoteRelationshipContext e = "in remote relationship" <> _srmName <<> ": " <> e
+        def = _srmDefinition
         remoteRelationship =
-          RemoteRelationship
+          FromSourceRelationship
             @b
-            _rrmName
+            _srmName
             source
             table
             def

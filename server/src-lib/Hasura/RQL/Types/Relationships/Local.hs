@@ -1,4 +1,4 @@
-module Hasura.RQL.Types.Relationship where
+module Hasura.RQL.Types.Relationships.Local where
 
 import Control.Lens (makeLenses)
 import Data.Aeson.TH

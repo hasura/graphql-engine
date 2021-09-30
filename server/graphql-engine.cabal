@@ -416,7 +416,6 @@ library
                      , Hasura.Backends.MySQL.ToQuery
                      , Hasura.Backends.MySQL.Instances.API
 
-                     -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
                      , Hasura.Logging
                      , Hasura.HTTP
@@ -450,11 +449,9 @@ library
                      , Hasura.RQL.Types.Run
                      , Hasura.Session
 
-                     -- exposed for Pro
                      , Hasura.Server.API.Config
                      , Hasura.Server.Telemetry
                      , Hasura.Server.Metrics
-                     -- Exposed for testing:
                      , Hasura.Server.Telemetry.Counters
                      , Hasura.Server.Auth.JWT
                      , Hasura.GC
@@ -494,8 +491,9 @@ library
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.Types.QueryTags
-                     , Hasura.RQL.Types.Relationship
-                     , Hasura.RQL.Types.RemoteRelationship
+                     , Hasura.RQL.Types.Relationships.Local
+                     , Hasura.RQL.Types.Relationships.FromSource
+                     , Hasura.RQL.Types.Relationships.FromSchema
                      , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.Types.ScheduledTrigger
                      , Hasura.RQL.Types.SchemaCache

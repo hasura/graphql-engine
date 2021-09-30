@@ -56,8 +56,8 @@ import Hasura.RQL.Types.Network as R
 import Hasura.RQL.Types.Permission as R
 import Hasura.RQL.Types.QueryCollection as R
 import Hasura.RQL.Types.QueryTags as R
-import Hasura.RQL.Types.Relationship as R
-import Hasura.RQL.Types.RemoteRelationship as R
+import Hasura.RQL.Types.Relationships.FromSource as R
+import Hasura.RQL.Types.Relationships.Local as R
 import Hasura.RQL.Types.RemoteSchema as R
 import Hasura.RQL.Types.Roles as R
 import Hasura.RQL.Types.ScheduledTrigger as R
@@ -352,7 +352,7 @@ askRelType m r msg = do
 askRemoteRel ::
   (MonadError QErr m) =>
   FieldInfoMap (FieldInfo backend) ->
-  RemoteRelationshipName ->
+  RelName ->
   m (RemoteFieldInfo backend)
 askRemoteRel fieldInfoMap relName = do
   fieldInfo <- askFieldInfo fieldInfoMap (fromRemoteRelationship relName)

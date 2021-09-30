@@ -54,7 +54,7 @@ import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as Set
 import Hasura.GraphQL.Parser.Schema (InputValue)
 import Hasura.Prelude
-import Hasura.RQL.Types.RemoteRelationship
+import Hasura.RQL.Types.Relationships.FromSource
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.RemoteSchema qualified as RQL
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -211,7 +211,6 @@ data SelectionSet r var
 -- have picked the selection set (that can be defined on the abstract type)
 -- that is common across all the member selection sets and used that as the
 -- base selection.
-
 reduceAbstractTypeSelectionSet ::
   (Eq var) =>
   AbstractTypeSelectionSet Void var ->

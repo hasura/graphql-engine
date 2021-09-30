@@ -52,7 +52,7 @@ import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.EventTrigger (buildEventTriggerInfo)
 import Hasura.RQL.DDL.InheritedRoles (resolveInheritedRole)
-import Hasura.RQL.DDL.RemoteRelationship (PartiallyResolvedSource (..))
+import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.RemoteSchema
 import Hasura.RQL.DDL.RemoteSchema.Permission (resolveRoleBasedRemoteSchema)
 import Hasura.RQL.DDL.ScheduledTrigger
@@ -619,64 +619,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
       remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, OMap.elems remoteSchemas)
-
-      -- remote schema permissions
-      remoteSchemaCache <-
-        (remoteSchemaMap >- returnA)
-          >-> ( \info ->
-                  (info, M.groupOn _arspRemoteSchema remoteSchemaPermissions)
-                    >-
-                      alignExtraRemoteSchemaInfo mkRemoteSchemaPermissionMetadataObject
-              )
-          >-> (|
-                Inc.keyed
-                  ( \_ ((remoteSchemaCtx, metadataObj), remoteSchemaPerms) -> do
-                      metadataPermissionsMap <-
-                        buildRemoteSchemaPermissions -< (remoteSchemaCtx, remoteSchemaPerms)
-                      -- convert to the intermediate form `CheckPermission` whose `Semigroup`
-                      -- instance is used to combine permissions
-                      let metadataCheckPermissionsMap = CPDefined <$> metadataPermissionsMap
-                      allRolesUnresolvedPermissionsMap <-
-                        bindA
-                          -<
-                            if isInheritedRolesEnabled
-                              then
-                                foldM
-                                  ( \accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) -> do
-                                      rolePermission <- onNothing (M.lookup roleName accumulatedRolePermMap) $ do
-                                        parentRolePermissions <-
-                                          for (toList parentRoles) $ \role ->
-                                            onNothing (M.lookup role accumulatedRolePermMap) $
-                                              throw500 $
-                                                "remote schema permissions: bad ordering of roles, could not find the permission of role: " <>> role
-                                        let combinedPermission = sconcat <$> nonEmpty parentRolePermissions
-                                        pure $ fromMaybe CPUndefined combinedPermission
-                                      pure $ M.insert roleName rolePermission accumulatedRolePermMap
-                                  )
-                                  metadataCheckPermissionsMap
-                                  (_unOrderedRoles orderedRoles)
-                              else pure metadataCheckPermissionsMap
-                      -- traverse through `allRolesUnresolvedPermissionsMap` to record any inconsistencies (if exists)
-                      resolvedPermissions <-
-                        (|
-                          traverseA
-                            ( \(roleName, checkPermission) -> do
-                                let inconsistentRoleEntity = InconsistentRemoteSchemaPermission $ _rscName remoteSchemaCtx
-                                resolvedCheckPermission <- resolveCheckPermission -< (checkPermission, roleName, inconsistentRoleEntity)
-                                returnA -< (roleName, resolvedCheckPermission)
-                            )
-                          |) (M.toList allRolesUnresolvedPermissionsMap)
-                      returnA
-                        -<
-                          ( remoteSchemaCtx
-                              { _rscPermissions = M.mapMaybe id $ M.fromList resolvedPermissions
-                              },
-                            metadataObj
-                          )
-                  )
-              |)
-
-      let remoteSchemaCtxMap = M.map fst remoteSchemaMap
+      let remoteSchemaCtxMap = M.map (fst . fst) remoteSchemaMap
 
       -- sources are build in two steps
       -- first we resolve them, and build the table cache
@@ -750,6 +693,77 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                     )
             )
           |) partiallyResolvedSources
+
+      -- remote schema permissions
+      remoteSchemaCache <-
+        (remoteSchemaMap >- returnA)
+          >-> ( \info ->
+                  (info, M.groupOn _arspRemoteSchema remoteSchemaPermissions)
+                    >-
+                      alignExtraRemoteSchemaInfo mkRemoteSchemaPermissionMetadataObject
+              )
+          >-> (|
+                Inc.keyed
+                  ( \_ (((remoteSchemaCtx, relationships), metadataObj), remoteSchemaPerms) -> do
+                      metadataPermissionsMap <-
+                        buildRemoteSchemaPermissions -< (remoteSchemaCtx, remoteSchemaPerms)
+                      -- convert to the intermediate form `CheckPermission` whose `Semigroup`
+                      -- instance is used to combine permissions
+                      let metadataCheckPermissionsMap = CPDefined <$> metadataPermissionsMap
+                      allRolesUnresolvedPermissionsMap <-
+                        bindA
+                          -<
+                            if isInheritedRolesEnabled
+                              then
+                                foldM
+                                  ( \accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) -> do
+                                      rolePermission <- onNothing (M.lookup roleName accumulatedRolePermMap) $ do
+                                        parentRolePermissions <-
+                                          for (toList parentRoles) $ \role ->
+                                            onNothing (M.lookup role accumulatedRolePermMap) $
+                                              throw500 $
+                                                "remote schema permissions: bad ordering of roles, could not find the permission of role: " <>> role
+                                        let combinedPermission = sconcat <$> nonEmpty parentRolePermissions
+                                        pure $ fromMaybe CPUndefined combinedPermission
+                                      pure $ M.insert roleName rolePermission accumulatedRolePermMap
+                                  )
+                                  metadataCheckPermissionsMap
+                                  (_unOrderedRoles orderedRoles)
+                              else pure metadataCheckPermissionsMap
+                      -- traverse through `allRolesUnresolvedPermissionsMap` to record any inconsistencies (if exists)
+                      resolvedPermissions <-
+                        (|
+                          traverseA
+                            ( \(roleName, checkPermission) -> do
+                                let inconsistentRoleEntity = InconsistentRemoteSchemaPermission $ _rscName remoteSchemaCtx
+                                resolvedCheckPermission <- resolveCheckPermission -< (checkPermission, roleName, inconsistentRoleEntity)
+                                returnA -< (roleName, resolvedCheckPermission)
+                            )
+                          |) (M.toList allRolesUnresolvedPermissionsMap)
+                      resolvedRelationships <-
+                        (|
+                          traverseA
+                            ( \(typeName, typeRelationships) -> do
+                                resolvedRelationships <-
+                                  (|
+                                    traverseA
+                                      ( \fromSchemaDef ->
+                                          bindA -< buildFromSchemaRelationship (_rrmDefinition fromSchemaDef) partiallyResolvedSources
+                                      )
+                                    |) (typeRelationships)
+                                returnA -< (typeName, resolvedRelationships)
+                            )
+                          |) (OMap.toList relationships)
+                      returnA
+                        -<
+                          ( remoteSchemaCtx
+                              { _rscPermissions = M.mapMaybe id $ M.fromList resolvedPermissions,
+                                _rscRemoteRelationships = OMap.fromList resolvedRelationships
+                              },
+                            metadataObj
+                          )
+                  )
+              |)
 
       -- allow list
       let allowList =
@@ -1132,22 +1146,20 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       ( Inc.Dependency (HashMap RemoteSchemaName Inc.InvalidationKey),
         [RemoteSchemaMetadata]
       )
-        `arr` HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
+        `arr` HashMap RemoteSchemaName ((RemoteSchemaCtx, SchemaRemoteRelationships), MetadataObject)
     buildRemoteSchemas =
       buildInfoMapPreservingMetadata _rsmName mkRemoteSchemaMetadataObject buildRemoteSchema
       where
         -- We want to cache this call because it fetches the remote schema over HTTP, and we don’t
         -- want to re-run that if the remote schema definition hasn’t changed.
-        buildRemoteSchema = Inc.cache proc (invalidationKeys, remoteSchema@(RemoteSchemaMetadata name defn comment _)) -> do
+        buildRemoteSchema = Inc.cache proc (invalidationKeys, remoteSchema@(RemoteSchemaMetadata name defn comment _ relationships)) -> do
           -- TODO is it strange how we convert from RemoteSchemaMetadata back
           --      to AddRemoteSchemaQuery here? Document types please.
           let addRemoteSchemaQuery = AddRemoteSchemaQuery name defn comment
           Inc.dependOn -< Inc.selectKeyD name invalidationKeys
           (|
             withRecordInconsistency
-              ( liftEitherA <<< bindA
-                  -<
-                    runExceptT $ noopTrace $ addRemoteSchemaP2Setup env addRemoteSchemaQuery
+              ( liftEitherA <<< bindA -< (fmap . fmap) (,relationships) $ runExceptT $ noopTrace $ addRemoteSchemaP2Setup env addRemoteSchemaQuery
               )
             |) (mkRemoteSchemaMetadataObject remoteSchema)
         -- TODO continue propagating MonadTrace up calls so that we can get tracing for remote schema introspection.

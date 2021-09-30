@@ -514,7 +514,7 @@ updateColInRemoteRelationshipLHS ::
     BackendMetadata b
   ) =>
   SourceName ->
-  RemoteRelationshipName ->
+  RelName ->
   RenameCol b ->
   m ()
 updateColInRemoteRelationshipLHS source remoteRelationshipName (RenameItem qt oldCol newCol) = do
@@ -539,15 +539,15 @@ updateColInRemoteRelationshipLHS source remoteRelationshipName (RenameItem qt ol
         fmap \v -> if v == oldColName then newColName else v
 
       remoteRelationshipLens =
-        tableMetadataSetter @b source qt . tmRemoteRelationships . ix remoteRelationshipName . rrmDefinition
+        tableMetadataSetter @b source qt . tmRemoteRelationships . ix remoteRelationshipName . srmDefinition
 
       remoteSchemaLHSModifier =
-        remoteRelationshipLens . _RemoteSchemaRelDef . _2
-          %~ (rrdHasuraFields %~ updateSet)
-            . (rrdRemoteField %~ updateFieldCalls)
+        remoteRelationshipLens . _FromSourceToSchemaRelDef . _2
+          %~ (fstrrdHasuraFields %~ updateSet)
+            . (fstrrdRemoteField %~ updateFieldCalls)
 
       remoteSourceLHSModifier =
-        remoteRelationshipLens . _RemoteSourceRelDef . rsrFieldMapping %~ updateMapKey
+        remoteRelationshipLens . _FromSourceToSourceRelDef . fstsrdFieldMapping %~ updateMapKey
 
   tell $ MetadataModifier $ remoteSchemaLHSModifier . remoteSourceLHSModifier
   where
@@ -571,7 +571,7 @@ updateColInRemoteRelationshipRHS ::
   ) =>
   SourceName ->
   TableName source ->
-  RemoteRelationshipName ->
+  RelName ->
   RenameCol target ->
   m ()
 updateColInRemoteRelationshipRHS source tableName remoteRelationshipName (RenameItem _ oldCol newCol) =
@@ -580,9 +580,9 @@ updateColInRemoteRelationshipRHS source tableName remoteRelationshipName (Rename
       tableMetadataSetter @source source tableName
         . tmRemoteRelationships
         . ix remoteRelationshipName
-        . rrmDefinition
-        . _RemoteSourceRelDef
-        . rsrFieldMapping
+        . srmDefinition
+        . _FromSourceToSourceRelDef
+        . fstsrdFieldMapping
         %~ updateMapValue
   where
     oldFieldName = fromCol @target oldCol
@@ -607,7 +607,7 @@ updateTableInRemoteRelationshipRHS ::
   ) =>
   SourceName ->
   TableName source ->
-  RemoteRelationshipName ->
+  RelName ->
   RenameTable target ->
   m ()
 updateTableInRemoteRelationshipRHS source tableName remoteRelationshipName (_, newTableName) =
@@ -616,9 +616,9 @@ updateTableInRemoteRelationshipRHS source tableName remoteRelationshipName (_, n
       tableMetadataSetter @source source tableName
         . tmRemoteRelationships
         . ix remoteRelationshipName
-        . rrmDefinition
-        . _RemoteSourceRelDef
-        . rsrTable
+        . srmDefinition
+        . _FromSourceToSourceRelDef
+        . fstsrdTable
         .~ toJSON newTableName
 
 updateColInObjRel ::

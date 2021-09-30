@@ -33,8 +33,9 @@ import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.QueryTags
-import Hasura.RQL.Types.Relationship
-import Hasura.RQL.Types.RemoteRelationship
+import Hasura.RQL.Types.Relationships.FromSchema
+import Hasura.RQL.Types.Relationships.FromSource
+import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.ScheduledTrigger
@@ -113,16 +114,27 @@ instance (Backend b) => ToJSON (ComputedFieldMetadata b) where
 instance (Backend b) => FromJSON (ComputedFieldMetadata b) where
   parseJSON = genericParseJSON hasuraJSON
 
-data RemoteRelationshipMetadata = RemoteRelationshipMetadata
-  { _rrmName :: !RemoteRelationshipName,
-    _rrmDefinition :: !RemoteRelationshipDef
+data SourceRelationshipMetadata = SourceRelationshipMetadata
+  { _srmName :: !RelName,
+    _srmDefinition :: !FromSourceRelationshipDef
   }
   deriving (Show, Eq, Generic)
 
-instance Cacheable RemoteRelationshipMetadata
+instance Cacheable SourceRelationshipMetadata
 
-$(deriveJSON hasuraJSON ''RemoteRelationshipMetadata)
-$(makeLenses ''RemoteRelationshipMetadata)
+$(deriveJSON hasuraJSON ''SourceRelationshipMetadata)
+$(makeLenses ''SourceRelationshipMetadata)
+
+data SchemaRelationshipMetadata = SchemaRelationshipMetadata
+  { _rrmName :: !RelName,
+    _rrmDefinition :: !FromSchemaRelationshipDef
+  }
+  deriving (Show, Eq, Generic)
+
+instance Cacheable SchemaRelationshipMetadata
+
+$(deriveJSON hasuraJSON ''SchemaRelationshipMetadata)
+$(makeLenses ''SchemaRelationshipMetadata)
 
 data RemoteSchemaPermissionMetadata = RemoteSchemaPermissionMetadata
   { _rspmRole :: !RoleName,
@@ -136,36 +148,40 @@ instance Cacheable RemoteSchemaPermissionMetadata
 $(deriveJSON hasuraJSON {omitNothingFields = True} ''RemoteSchemaPermissionMetadata)
 $(makeLenses ''RemoteSchemaPermissionMetadata)
 
+type Relationships a = InsOrdHashMap RelName a
+
+type ComputedFields b = InsOrdHashMap ComputedFieldName (ComputedFieldMetadata b)
+
+type SourceRemoteRelationships = InsOrdHashMap RelName SourceRelationshipMetadata
+
+type SchemaRemoteRelationships = InsOrdHashMap G.Name (InsOrdHashMap RelName SchemaRelationshipMetadata)
+
+type Permissions a = InsOrdHashMap RoleName a
+
+type EventTriggers b = InsOrdHashMap TriggerName (EventTriggerConf b)
+
 data RemoteSchemaMetadata = RemoteSchemaMetadata
-  { _rsmName :: !RemoteSchemaName,
-    _rsmDefinition :: !RemoteSchemaDef,
-    _rsmComment :: !(Maybe Text),
-    _rsmPermissions :: ![RemoteSchemaPermissionMetadata]
+  { _rsmName :: RemoteSchemaName,
+    _rsmDefinition :: RemoteSchemaDef,
+    _rsmComment :: Maybe Text,
+    _rsmPermissions :: [RemoteSchemaPermissionMetadata],
+    _rmsRelationships :: SchemaRemoteRelationships
   }
   deriving (Show, Eq, Generic)
 
 instance Cacheable RemoteSchemaMetadata
 
 instance FromJSON RemoteSchemaMetadata where
-  parseJSON = withObject "RemoteSchemaMetadata" $ \obj ->
+  parseJSON = withObject "RemoteSchemaMetadata" \obj ->
     RemoteSchemaMetadata
       <$> obj .: "name"
       <*> obj .: "definition"
       <*> obj .:? "comment"
       <*> obj .:? "permissions" .!= mempty
+      <*> obj .:? "relationships" .!= mempty
 
 $(deriveToJSON hasuraJSON ''RemoteSchemaMetadata)
 $(makeLenses ''RemoteSchemaMetadata)
-
-type Relationships a = InsOrdHashMap RelName a
-
-type ComputedFields b = InsOrdHashMap ComputedFieldName (ComputedFieldMetadata b)
-
-type RemoteRelationships = InsOrdHashMap RemoteRelationshipName RemoteRelationshipMetadata
-
-type Permissions a = InsOrdHashMap RoleName a
-
-type EventTriggers b = InsOrdHashMap TriggerName (EventTriggerConf b)
 
 data TableMetadata b = TableMetadata
   { _tmTable :: !(TableName b),
@@ -174,7 +190,7 @@ data TableMetadata b = TableMetadata
     _tmObjectRelationships :: !(Relationships (ObjRelDef b)),
     _tmArrayRelationships :: !(Relationships (ArrRelDef b)),
     _tmComputedFields :: !(ComputedFields b),
-    _tmRemoteRelationships :: !RemoteRelationships,
+    _tmRemoteRelationships :: !SourceRemoteRelationships,
     _tmInsertPermissions :: !(Permissions (InsPermDef b)),
     _tmSelectPermissions :: !(Permissions (SelPermDef b)),
     _tmUpdatePermissions :: !(Permissions (UpdPermDef b)),
@@ -225,7 +241,7 @@ instance (Backend b) => FromJSON (TableMetadata b) where
       <*> parseListAsMap "object relationships" _rdName (o .:? orKey .!= [])
       <*> parseListAsMap "array relationships" _rdName (o .:? arKey .!= [])
       <*> parseListAsMap "computed fields" _cfmName (o .:? cfKey .!= [])
-      <*> parseListAsMap "remote relationships" _rrmName (o .:? rrKey .!= [])
+      <*> parseListAsMap "remote relationships" _srmName (o .:? rrKey .!= [])
       <*> parseListAsMap "insert permissions" _pdRole (o .:? ipKey .!= [])
       <*> parseListAsMap "select permissions" _pdRole (o .:? spKey .!= [])
       <*> parseListAsMap "update permissions" _pdRole (o .:? upKey .!= [])
@@ -645,9 +661,7 @@ metadataToOrdJSON
               sourceKindPair = ("kind", AO.String sourceKind)
               tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems _smTables)
               functionsPair = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions
-
               configurationPair = [("configuration", AO.toOrdered _smConfiguration)]
-
               queryTagsConfigPair = maybe [] (\queryTagsConfig -> [("query_tags", AO.toOrdered queryTagsConfig)]) _smQueryTags
            in AO.object $ [sourceNamePair, sourceKindPair, tablesPair] <> maybeToList functionsPair <> configurationPair <> queryTagsConfigPair
 
@@ -710,7 +724,7 @@ metadataToOrdJSON
               listToMaybeOrdPairSort
                 "remote_relationships"
                 AO.toOrdered
-                _rrmName
+                _srmName
                 remoteRelationships
             insertPermissionsPair =
               listToMaybeOrdPairSort
@@ -851,7 +865,7 @@ metadataToOrdJSON
           ]
 
       remoteSchemaQToOrdJSON :: RemoteSchemaMetadata -> AO.Value
-      remoteSchemaQToOrdJSON (RemoteSchemaMetadata name definition comment permissions) =
+      remoteSchemaQToOrdJSON (RemoteSchemaMetadata name definition comment permissions _) =
         AO.object $
           [ ("name", AO.toOrdered name),
             ("definition", remoteSchemaDefToOrdJSON definition)
