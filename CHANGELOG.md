@@ -3,6 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: Ignore unexpected fields in action responses (#5731)
 - server: add webhook transformations for Actions and EventTriggers
 - server: optimize SQL query generation with LIMITs
 - server: add GraphQL request query in the payload for synchronous actions
@@ -26,11 +27,14 @@
 - console: add GraphQL customisation under Remote schema edit tab
 - console: fix cross-schema array relationship suggestions
 - console: add performance fixes for handle large db schemas
+- console: fix missing cross-schema computed fields in permission builder
 - cli: add support for `network` metadata object
 - cli: `hasura migrate apply --all-databases` will return a non zero exit code if operation failed on atleast one database (#7499)
 - cli: `migrate create --from-server` creates the migration and marks it as applied on the server
 - cli: support `query_tags` in metadata
 - cli: add `hasura deploy` command
+- cli: allow exporting and applying metadata from `yaml/json` files
+- cli: allow squashing specific set of migrations. A new `--to` flag is introduced in `migrate squash` command. eg: `hasura migrate squash --from <v1> --to <v4>` 
 
 ## v2.0.9
 

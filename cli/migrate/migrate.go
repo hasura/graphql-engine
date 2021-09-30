@@ -438,7 +438,7 @@ func (m *Migrate) Query(data interface{}) error {
 // the squashed SQL for all UP steps: us
 // the squashed metadata for all down steps: dm
 // the squashed SQL for all down steps: ds
-func (m *Migrate) Squash(v uint64) (vs []int64, us []byte, ds []byte, err error) {
+func (m *Migrate) Squash(v1 uint64, v2 int64) (vs []int64, us []byte, ds []byte, err error) {
 	// check the migration mode on the database
 	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {
@@ -455,13 +455,13 @@ func (m *Migrate) Squash(v uint64) (vs []int64, us []byte, ds []byte, err error)
 	// read all up migrations from source and send each migration
 	// to the returned channel
 	retUp := make(chan interface{}, m.PrefetchMigrations)
-	go m.squashUp(v, retUp)
+	go m.squashUp(v1, v2, retUp)
 
 	// concurrently squash all down migrations
 	// read all down migrations from source and send each migration
 	// to the returned channel
 	retDown := make(chan interface{}, m.PrefetchMigrations)
-	go m.squashDown(v, retDown)
+	go m.squashDown(v1, v2, retDown)
 
 	// combine squashed up and down migrations into a single one when they're ready
 	dataUp := make(chan interface{}, m.PrefetchMigrations)
@@ -717,9 +717,9 @@ func (m *Migrate) Down() error {
 	}
 }
 
-func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
+func (m *Migrate) squashUp(from uint64, to int64, ret chan<- interface{}) {
 	defer close(ret)
-	currentVersion := version
+	currentVersion := from
 	count := int64(0)
 	limit := int64(-1)
 	if m.stop() {
@@ -727,10 +727,13 @@ func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
 	}
 
 	for limit == -1 {
-		if currentVersion == version {
+		if int64(from) == to {
+			return
+		}
+		if currentVersion == from {
 			// during the first iteration of the loop
 			// check if a next version exists for "--from" version
-			if err := m.versionUpExists(version); err != nil {
+			if err := m.versionUpExists(from); err != nil {
 				ret <- err
 				return
 			}
@@ -740,7 +743,7 @@ func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
 			// this reads the SQL up migration
 			// even if a migration file does'nt exist in the source
 			// a empty migration will be returned
-			migr, err := m.newMigration(version, int64(version))
+			migr, err := m.newMigration(from, int64(from))
 			if err != nil {
 				ret <- err
 				return
@@ -789,20 +792,27 @@ func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
 
 		ret <- migr
 		go migr.Buffer()
-
+		if int64(next) == to {
+			return
+		}
 		currentVersion = next
 		count++
 	}
 }
 
-func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
+func (m *Migrate) squashDown(v1 uint64, v2 int64, ret chan<- interface{}) {
 	defer close(ret)
-
 	// get the last version from the source driver
-	from, err := m.sourceDrv.GetLocalVersion()
-	if err != nil {
-		ret <- err
-		return
+	var err error
+	var from uint64
+	if v2 == -1 {
+		from, err = m.sourceDrv.GetLocalVersion()
+		if err != nil {
+			ret <- err
+			return
+		}
+	} else {
+		from = uint64(v2)
 	}
 
 	for {
@@ -810,7 +820,7 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 			return
 		}
 
-		if from < version {
+		if from < v1 {
 			return
 		}
 
