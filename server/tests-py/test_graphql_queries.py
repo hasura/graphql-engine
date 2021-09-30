@@ -1113,6 +1113,9 @@ class TestGraphQLQueryComputedFields:
     def test_table_computed_field_filter_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/table_computed_field_filter_fail.yaml')
 
+    def test_table_computed_field_filter_session_argument(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/table_computed_field_filter_session_argument.yaml')
+
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryCaching:

@@ -1,0 +1,21 @@
+description: Test computed field with session argument in where expression
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: admin
+  X-Hasura-Offset-Int: '1'
+query:
+  query: |
+    query {
+      float_test(where: {sum_float_offset: {_gt: 10}}){
+        id
+        first_int
+        second_int
+      }
+    }
+response:
+  data:
+    float_test:
+      - id: 3
+        first_int: 4
+        second_int: 6
