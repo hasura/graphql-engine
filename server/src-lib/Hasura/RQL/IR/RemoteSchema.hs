@@ -248,7 +248,9 @@ convertSelectionSet = \case
     convertField :: Field var -> G.Field G.NoFragments var
     convertField Field {..} =
       G.Field
-        { G._fAlias = Just _fAlias,
+        -- add the alias only if it is different from the field name. This
+        -- keeps the outbound request more readable
+        { G._fAlias = if _fAlias /= _fName then Just _fAlias else Nothing,
           G._fName = _fName,
           G._fArguments = _fArguments,
           G._fDirectives = mempty,
