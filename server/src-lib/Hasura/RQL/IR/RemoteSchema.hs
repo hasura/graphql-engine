@@ -94,12 +94,25 @@ data Field r var
 -- defining as many fields as possible on the abstract type
 data AbstractTypeSelectionSet r var = AbstractTypeSelectionSet
   { -- | Fields that aren't explicitly defined for member types
-    _sssBaseSelectionSet :: !(ObjectSelectionSet r var),
+    _atssCommonFields :: !(Set.HashSet G.Name),
     -- | SelectionSets of individual member types
-    _sssMemberSelectionSets :: !(Map.HashMap G.Name (ObjectSelectionSet r var))
+    _atssMemberSelectionSets :: !(Map.HashMap G.Name (ObjectSelectionSet r var))
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 
+-- | Represents the normalized selection set of an interface/union type
+--
+-- Note that this is slightly different than the `Map ConcreteMemberTypeName
+-- (Map Alias Field)` structure described above. This is done to minimize the
+-- size of the GraphQL query that eventually gets sent to the GraphQL server by
+-- defining as many fields as possible on the abstract type
+-- data AbstractTypeSelectionSet r var = AbstractTypeSelectionSet
+--   { -- | Fields that aren't explicitly defined for member types
+--     _sssBaseSelectionSet :: !(ObjectSelectionSet r var),
+--     -- | SelectionSets of individual member types
+--     _sssMemberSelectionSets :: !(Map.HashMap G.Name (ObjectSelectionSet r var))
+--   }
+--   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 type InterfaceSelectionSet r var = AbstractTypeSelectionSet r var
 
 type UnionSelectionSet r var = AbstractTypeSelectionSet r var
@@ -198,29 +211,26 @@ data SelectionSet r var
 -- have picked the selection set (that can be defined on the abstract type)
 -- that is common across all the member selection sets and used that as the
 -- base selection.
-mkAbstractTypeSelectionSet ::
-  Eq var =>
-  -- | This function determines whether a field is part of the abstract type
-  (G.Name -> Bool) ->
-  -- | Selection sets for all the member types
-  [(G.Name, ObjectSelectionSet r var)] ->
-  AbstractTypeSelectionSet r var
-mkAbstractTypeSelectionSet isBaseMember selectionSets =
-  AbstractTypeSelectionSet
-    { _sssBaseSelectionSet = baseSelectionSet,
-      _sssMemberSelectionSets = Map.fromList memberSelectionSets
-    }
+
+reduceAbstractTypeSelectionSet ::
+  (Eq var) =>
+  AbstractTypeSelectionSet Void var ->
+  (ObjectSelectionSet Void var, Map.HashMap G.Name (ObjectSelectionSet Void var))
+reduceAbstractTypeSelectionSet (AbstractTypeSelectionSet baseMemberFields selectionSets) =
+  (baseSelectionSet, Map.fromList memberSelectionSets)
   where
-    sharedSelectionSetPrefix = undefined -- sharedPrefix $ map (OMap.toList . snd) selectionSets
+    sharedSelectionSetPrefix = sharedPrefix $ map (OMap.toList . snd) $ Map.toList selectionSets
+
     baseSelectionSet = OMap.fromList $ takeWhile (shouldAddToBase . snd) sharedSelectionSetPrefix
+
     shouldAddToBase = \case
-      FieldGraphQL f -> isBaseMember $ _fName f
-      FieldRemote _ -> False
+      FieldGraphQL f -> Set.member (_fName f) baseMemberFields
+
     memberSelectionSets =
       -- remove member selection sets that are subsumed by base selection set
       filter (not . null . snd) $
         -- remove the common prefix from member selection sets
-        map (second (OMap.fromList . drop (OMap.size baseSelectionSet) . OMap.toList)) selectionSets
+        map (second (OMap.fromList . drop (OMap.size baseSelectionSet) . OMap.toList)) $ Map.toList selectionSets
 
     sharedPrefix :: Eq a => [[a]] -> [a]
     sharedPrefix = \case
@@ -230,54 +240,56 @@ mkAbstractTypeSelectionSet isBaseMember selectionSets =
         prefix l1 l2 = map fst $ takeWhile (uncurry (==)) $ zip l1 l2
 
 mkInterfaceSelectionSet ::
-  Eq var =>
   -- | Member fields of the interface
   Set.HashSet G.Name ->
   -- | Selection sets for all the member types
   [(G.Name, ObjectSelectionSet r var)] ->
   InterfaceSelectionSet r var
-mkInterfaceSelectionSet interfaceFields =
-  mkAbstractTypeSelectionSet
-    (\fieldName -> Set.member fieldName interfaceFields || fieldName == $$(G.litName "__typename"))
+mkInterfaceSelectionSet interfaceFields selectionSets =
+  AbstractTypeSelectionSet
+    (Set.insert $$(G.litName "__typename") interfaceFields)
+    (Map.fromList selectionSets)
 
 mkUnionSelectionSet ::
-  Eq var =>
   -- | Selection sets for all the member types
   [(G.Name, ObjectSelectionSet r var)] ->
   InterfaceSelectionSet r var
-mkUnionSelectionSet =
-  mkAbstractTypeSelectionSet (== $$(G.litName "__typename"))
+mkUnionSelectionSet selectionSets =
+  AbstractTypeSelectionSet
+    (Set.singleton $$(G.litName "__typename"))
+    (Map.fromList selectionSets)
 
 -- | Converts a normalized selection set into a selection set as defined in
 -- GraphQL spec
-convertSelectionSet :: SelectionSet Void var -> G.SelectionSet G.NoFragments var
+convertSelectionSet :: (Eq var) => SelectionSet Void var -> G.SelectionSet G.NoFragments var
 convertSelectionSet = \case
   SelectionSetObject s -> convertObjectSelectionSet s
   SelectionSetUnion s -> convertAbstractTypeSelectionSet s
   SelectionSetInterface s -> convertAbstractTypeSelectionSet s
   SelectionSetNone -> mempty
   where
-    convertGraphQLField :: GraphQLField Void var -> G.Field G.NoFragments var
+    convertGraphQLField :: (Eq var) => GraphQLField Void var -> G.Field G.NoFragments var
     convertGraphQLField GraphQLField {..} =
       G.Field
-        -- add the alias only if it is different from the field name. This
-        -- keeps the outbound request more readable
-        { G._fAlias = if _fAlias /= _fName then Just _fAlias else Nothing,
+        { -- add the alias only if it is different from the field name. This
+          -- keeps the outbound request more readable
+          G._fAlias = if _fAlias /= _fName then Just _fAlias else Nothing,
           G._fName = _fName,
           G._fArguments = _fArguments,
           G._fDirectives = mempty,
           G._fSelectionSet = convertSelectionSet _fSelectionSet
         }
 
-    convertField :: Field Void var -> G.Field G.NoFragments var
+    convertField :: (Eq var) => Field Void var -> G.Field G.NoFragments var
     convertField = \case
       FieldGraphQL f -> convertGraphQLField f
 
     convertObjectSelectionSet =
       map (G.SelectionField . convertField . snd) . OMap.toList
 
-    convertAbstractTypeSelectionSet (AbstractTypeSelectionSet base members) =
-      let commonFields = convertObjectSelectionSet base
+    convertAbstractTypeSelectionSet abstractSelectionSet =
+      let (base, members) = reduceAbstractTypeSelectionSet abstractSelectionSet
+          commonFields = convertObjectSelectionSet base
           concreteTypeSelectionSets =
             flip map (Map.toList members) \(concreteType, selectionSet) ->
               G.InlineFragment
