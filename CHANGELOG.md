@@ -3,6 +3,8 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+## v2.1.0-beta.1
+
 - server: Ignore unexpected fields in action responses (#5731)
 - server: add webhook transformations for Actions and EventTriggers
 - server: optimize SQL query generation with LIMITs
