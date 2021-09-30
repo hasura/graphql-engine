@@ -323,13 +323,13 @@ transformAnnFields fields = do
             joinColumnAliases = fmap snd annotatedJoinColumns
             inputArgsToMap = Map.fromList . map (_rfaArgument &&& _rfaValue)
             remoteSchemaJoin =
-                RemoteSchemaJoin
-                  (inputArgsToMap _rselArgs)
-                  _rselResultCustomizer
-                  transformedSchemaRelationship
-                  joinColumnAliases
-                  _rselFieldCall
-                  _rselRemoteSchema
+              RemoteSchemaJoin
+                (inputArgsToMap _rselArgs)
+                _rselResultCustomizer
+                transformedSchemaRelationship
+                joinColumnAliases
+                _rselFieldCall
+                _rselRemoteSchema
             remoteJoin = RemoteJoinRemoteSchema remoteSchemaJoin schemaRelationshipJoins
             annotatedJoin = Just (phantomColumns, remoteJoin)
          in pure (remoteAnnPlaceholder, annotatedJoin)
@@ -596,6 +596,10 @@ getRemoteJoinsGraphQLSelectionSet =
 
 getRemoteJoinsGraphQLRootField ::
   RemoteRootField (SchemaRelationshipSelect UnpreparedValue) var ->
-  (ObjectSelectionSet Void var, Maybe RemoteJoins)
+  (RemoteRootField Void var, Maybe RemoteJoins)
 getRemoteJoinsGraphQLRootField =
-  runCollector . transformObjectSelectionSet . getRemoteFieldSelectionSet
+  runCollector . \case
+    RRFNamespaceField fields -> fmap RRFNamespaceField $
+      flip OMap.traverseWithKey fields $ \alias field ->
+        withField (FieldName $ G.unName alias) $ transformGraphQLField field
+    RRFRealField field -> RRFRealField <$> transformGraphQLField field

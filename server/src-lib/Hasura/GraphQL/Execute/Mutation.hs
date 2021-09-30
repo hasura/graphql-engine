@@ -131,7 +131,7 @@ convertMutationSelectionSet
           RemoteFieldG remoteSchemaInfo resultCustomizer resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
           let (noRelsRemoteField, remoteJoins) = RJ.getRemoteJoinsGraphQLRootField resolvedRemoteField
           pure $
-            buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeMutation noRelsRemoteField
+            buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeMutation noRelsRemoteField remoteJoins
         RFAction action -> do
           let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionMutation action
           (actionName, _fch) <- pure $ case noRelsDBAST of

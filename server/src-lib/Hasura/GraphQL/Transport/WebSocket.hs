@@ -95,6 +95,7 @@ import Network.HTTP.Client qualified as H
 import Network.HTTP.Types qualified as H
 import Network.WebSockets qualified as WS
 import StmContainers.Map qualified as STMMap
+import Hasura.GraphQL.Execute.RemoteJoin.Types (RemoteJoins)
 
 -- | 'LQ.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and
@@ -492,9 +493,9 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                   finalResponse <-
                     RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
                   pure $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
-                E.ExecStepRemote rsi resultCustomizer gqlReq -> do
+                E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
                   logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
-                  runRemoteGQ fieldName userInfo reqHdrs rsi resultCustomizer gqlReq
+                  runRemoteGQ requestId q fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins
                 E.ExecStepAction actionExecPlan _ remoteJoins -> do
                   logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
                   (time, (resp, _)) <- doQErr $ do
@@ -571,9 +572,9 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                       RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
                     pure (time, (finalResponse, hdrs))
                   pure $ ResultsFragment time Telem.Empty resp $ fromMaybe [] hdrs
-                E.ExecStepRemote rsi resultCustomizer gqlReq -> do
+                E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
                   logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
-                  runRemoteGQ fieldName userInfo reqHdrs rsi resultCustomizer gqlReq
+                  runRemoteGQ requestId q fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins
                 E.ExecStepRaw json -> do
                   logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
                   buildRaw json
@@ -700,19 +701,35 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         Telem.recordTimingMetric Telem.RequestDimensions {..} Telem.RequestTimings {..}
 
     runRemoteGQ ::
+      RequestId ->
+      GQLReqUnparsed ->
       G.Name ->
       UserInfo ->
       [H.Header] ->
       RemoteSchemaInfo ->
       RemoteResultCustomizer ->
       GQLReqOutgoing ->
+      Maybe RemoteJoins ->
       ExceptT (Either GQExecError QErr) (ExceptT () m) ResultsFragment
-    runRemoteGQ fieldName userInfo reqHdrs rsi resultCustomizer gqlReq = do
+    runRemoteGQ requestId reqUnparsed fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins = do
       (telemTimeIO_DT, _respHdrs, resp) <-
         doQErr $
           E.execRemoteGQ env httpMgr userInfo reqHdrs (rsDef rsi) gqlReq
       value <- mapExceptT lift $ extractFieldFromResponse fieldName rsi resultCustomizer resp
-      return $ ResultsFragment telemTimeIO_DT Telem.Remote (encJFromOrderedValue value) []
+      finalResponse <-
+        doQErr $
+          RJ.processRemoteJoins
+            requestId
+            logger
+            env
+            httpMgr
+            reqHdrs
+            userInfo
+            -- TODO: avoid encode and decode here
+            (encJFromOrderedValue value)
+            remoteJoins
+            reqUnparsed
+      return $ ResultsFragment telemTimeIO_DT Telem.Remote finalResponse []
 
     WSServerEnv
       logger

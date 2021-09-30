@@ -17,6 +17,7 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Backend
+import Hasura.GraphQL.Execute.RemoteJoin.Types (RemoteJoins)
 import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
@@ -70,10 +71,11 @@ buildExecStepRemote ::
   RemoteSchemaInfo ->
   RemoteResultCustomizer ->
   G.OperationType ->
-  IR.ObjectSelectionSet Void Variable ->
+  IR.RemoteRootField Void Variable ->
+  Maybe RemoteJoins ->
   ExecutionStep
-buildExecStepRemote remoteSchemaInfo resultCustomizer tp objectSelSet =
-  let selSet = IR.convertSelectionSet $ IR.SelectionSetObject objectSelSet
+buildExecStepRemote remoteSchemaInfo resultCustomizer tp objectSelSet remoteJoins =
+  let selSet = IR.convertSelectionSet $ IR.SelectionSetObject $ IR.getRemoteFieldSelectionSet objectSelSet
       unresolvedSelSet = unresolveVariables selSet
       allVars = map mkVariableDefinitionAndValue $ Set.toList $ collectVariables selSet
       varValues = Map.fromList $ map snd allVars
@@ -81,7 +83,7 @@ buildExecStepRemote remoteSchemaInfo resultCustomizer tp objectSelSet =
       varDefs = map fst allVars
       _grQuery = G.TypedOperationDefinition tp Nothing varDefs [] unresolvedSelSet
       _grVariables = varValsM
-   in ExecStepRemote remoteSchemaInfo resultCustomizer GH.GQLReq {_grOperationName = Nothing, ..}
+   in ExecStepRemote remoteSchemaInfo resultCustomizer GH.GQLReq {_grOperationName = Nothing, ..} remoteJoins
 
 -- | Association between keys uniquely identifying some remote JSON variable and
 -- an 'Int' identifier that will be used to construct a valid variable name to

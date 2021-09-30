@@ -321,9 +321,9 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                   finalResponse <-
                     RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
                   pure $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
-                E.ExecStepRemote rsi resultCustomizer gqlReq -> do
+                E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
                   logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
-                  runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq
+                  runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq remoteJoins
                 E.ExecStepAction aep _ remoteJoins -> do
                   logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
 
@@ -397,9 +397,9 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                   finalResponse <-
                     RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
                   pure $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse responseHeaders
-                E.ExecStepRemote rsi resultCustomizer gqlReq -> do
+                E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
                   logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
-                  runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq
+                  runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq remoteJoins
                 E.ExecStepAction aep _ remoteJoins -> do
                   logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
                   (time, (resp, hdrs)) <- doQErr $ do
@@ -431,12 +431,25 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 
     forWithKey = flip OMap.traverseWithKey
 
-    runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq = do
+    runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq remoteJoins = do
       (telemTimeIO_DT, remoteResponseHeaders, resp) <-
         doQErr $ E.execRemoteGQ env httpManager userInfo reqHeaders (rsDef rsi) gqlReq
       value <- extractFieldFromResponse fieldName rsi resultCustomizer resp
+      finalResponse <-
+        doQErr $
+          RJ.processRemoteJoins
+            reqId
+            logger
+            env
+            httpManager
+            reqHeaders
+            userInfo
+            -- TODO: avoid encode and decode here
+            (encJFromOrderedValue value)
+            remoteJoins
+            reqUnparsed
       let filteredHeaders = filter ((== "Set-Cookie") . fst) remoteResponseHeaders
-      pure $ ResultsFragment telemTimeIO_DT Telem.Remote (encJFromOrderedValue value) filteredHeaders
+      pure $ ResultsFragment telemTimeIO_DT Telem.Remote finalResponse filteredHeaders
 
     buildResultFromFragments ::
       Telem.QueryType ->
