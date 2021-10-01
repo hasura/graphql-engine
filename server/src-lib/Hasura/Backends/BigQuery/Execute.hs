@@ -21,7 +21,7 @@ import Control.Concurrent
 import Control.Exception.Safe
 import Control.Monad.Except
 import Control.Monad.Reader
-import Data.Aeson ((.:), (.:?), (.=))
+import Data.Aeson ((.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Types qualified as Aeson
 import Data.ByteString.Lazy qualified as L
@@ -353,10 +353,7 @@ streamBigQuery ::
 streamBigQuery credentials bigquery = do
   jobResult <- createQueryJob credentials bigquery
   case jobResult of
-    Right job -> do
-      records <- loop Nothing Nothing
-      -- liftIO (print records)
-      pure records
+    Right job -> loop Nothing Nothing
       where
         loop pageToken mrecordSet = do
           results <- getJobResults credentials job Fetch {pageToken}
@@ -568,8 +565,8 @@ createQueryJob sc@BigQuerySourceConfig {..} BigQuery {..} =
 
 parseRecordSetPayload :: Aeson.Object -> Aeson.Parser RecordSet
 parseRecordSetPayload resp = do
-  schema <- resp .: "schema"
-  columns <- schema .: "fields" :: Aeson.Parser (Vector BigQueryField)
+  mSchema <- resp .:? "schema"
+  columns <- maybe mempty (.: "fields") mSchema :: Aeson.Parser (Vector BigQueryField)
   rowsJSON <- fmap (fromMaybe mempty) (resp .:? "rows" :: Aeson.Parser (Maybe (Vector Aeson.Value)))
   rows <-
     V.imapM
@@ -754,7 +751,7 @@ instance Aeson.FromJSON BigQueryField where
                       fields <- o .: "fields"
                       pure (FieldSTRUCT fields)
                   | otherwise -> fail ("Unsupported field type: " ++ show flag)
-          mode <- o .: "mode"
+          mode <- o .:? "mode" .!= Nullable
           pure BigQueryField {..}
       )
 
