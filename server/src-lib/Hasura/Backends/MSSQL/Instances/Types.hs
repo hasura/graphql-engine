@@ -16,12 +16,12 @@ import Language.GraphQL.Draft.Syntax qualified as G
 instance Backend 'MSSQL where
   type SourceConfig 'MSSQL = MSSQL.MSSQLSourceConfig
   type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
-  type Identifier 'MSSQL = Void
+  type Identifier 'MSSQL = Text
   type TableName 'MSSQL = MSSQL.TableName
   type RawFunctionInfo 'MSSQL = Void
   type FunctionName 'MSSQL = MSSQL.FunctionName
   type FunctionArgType 'MSSQL = Void
-  type ConstraintName 'MSSQL = ()
+  type ConstraintName 'MSSQL = Text
   type BasicOrderType 'MSSQL = MSSQL.Order
   type NullsOrderType 'MSSQL = MSSQL.NullsOrder
   type CountType 'MSSQL = MSSQL.Countable MSSQL.ColumnName
@@ -33,11 +33,13 @@ instance Backend 'MSSQL where
   type SQLOperator 'MSSQL = MSSQL.Op
 
   type ExtraTableMetadata 'MSSQL = [MSSQL.ColumnName] -- List of identity columns
+  type ExtraInsertData 'MSSQL = MSSQL.MSSQLExtraInsertData
 
   type XComputedField 'MSSQL = XDisable
   type XRelay 'MSSQL = XDisable
   type XNodesAgg 'MSSQL = XEnable
   type XNestedInserts 'MSSQL = XDisable
+  type XOnConflict 'MSSQL = XDisable
 
   functionArgScalarType :: FunctionArgType 'MSSQL -> ScalarType 'MSSQL
   functionArgScalarType = absurd

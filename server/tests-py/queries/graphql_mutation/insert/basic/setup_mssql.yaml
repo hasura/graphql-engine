@@ -1,0 +1,14 @@
+type: bulk
+args:
+
+# track tables
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: test_types
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: table_no_pk
