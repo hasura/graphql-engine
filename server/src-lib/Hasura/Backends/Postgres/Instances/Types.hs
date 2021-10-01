@@ -72,11 +72,13 @@ instance
   type SQLOperator ('Postgres pgKind) = PG.SQLOp
 
   type ExtraTableMetadata ('Postgres pgKind) = PgExtraTableMetadata pgKind
+  type ExtraInsertData ('Postgres pgKind) = ()
 
   type XComputedField ('Postgres pgKind) = XEnable
   type XRelay ('Postgres pgKind) = XEnable
   type XNodesAgg ('Postgres pgKind) = XEnable
   type XNestedInserts ('Postgres pgKind) = XEnable
+  type XOnConflict ('Postgres pgKind) = XEnable
 
   functionArgScalarType = PG.mkFunctionArgScalarType
   isComparableType = PG.isComparableType

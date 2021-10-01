@@ -1,0 +1,25 @@
+type: bulk
+args:
+  - type: mssql_track_table
+    args:
+      source: mssql
+      table:
+        name: author
+  - type: mssql_track_table
+    args:
+      source: mssql
+      table:
+        name: article
+  - type: mssql_create_insert_permission
+    args:
+      source: mssql
+      table:
+        name: article
+      role: user
+      permission:
+        check:
+          author_id: X-Hasura-User-Id
+        columns:
+        - title
+        - content
+        - author_id

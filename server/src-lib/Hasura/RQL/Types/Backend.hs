@@ -122,6 +122,9 @@ class
 
   type ExtraTableMetadata b :: Type
 
+  -- | Extra backend specific context needed for insert mutations.
+  type ExtraInsertData b :: Type
+
   -- extension types
   type XComputedField b :: Type
   type XRelay b :: Type
@@ -129,6 +132,9 @@ class
 
   -- | Extension to flag the availability of object and array relationships in inserts (aka nested inserts).
   type XNestedInserts b :: Type
+
+  -- | Extension to flag the availability of `on_conflict` input field in inserts (aka upsert feature)
+  type XOnConflict b :: Type
 
   -- functions on types
   functionArgScalarType :: FunctionArgType b -> ScalarType b

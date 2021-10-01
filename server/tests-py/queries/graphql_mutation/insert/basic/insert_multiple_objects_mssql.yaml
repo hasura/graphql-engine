@@ -1,0 +1,32 @@
+description: Insert multiple objects
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation{
+      insert_test_types(
+        objects: [
+          { c_pkey: 1
+          , c13_text: "one"
+          },
+          { c_pkey: 2
+          , c13_text: "two"
+          }
+        ]
+      ){
+        affected_rows
+        returning{
+          c_pkey
+          c13_text
+        }
+      }
+    }
+response:
+  data:
+    insert_test_types:
+      affected_rows: 2
+      returning:
+      - c_pkey: 1
+        c13_text: one
+      - c_pkey: 2
+        c13_text: two

@@ -2,7 +2,8 @@
 SELECT ISNULL(
     (SELECT object.name, object.schema_id, object.object_id, object.type_desc,
            JSON_QUERY([schema].json) AS [joined_sys_schema],
-           JSON_QUERY([column].json) AS [joined_sys_column]
+           JSON_QUERY([column].json) AS [joined_sys_column],
+           JSON_QUERY([primary_key].json) AS [joined_sys_primary_key]
     FROM sys.objects object
            CROSS APPLY (SELECT [column].name, [column].column_id, [column].is_nullable, [column].is_identity, [column].user_type_id,
                                JSON_QUERY([types].json) AS [joined_sys_type],
@@ -39,6 +40,21 @@ SELECT ISNULL(
                         WHERE [schema].schema_id = object.schema_id
                         FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
              AS [schema](json)
+           CROSS APPLY (SELECT pk.name, pk.index_id, JSON_QUERY([cols].json) AS columns
+                          FROM sys.indexes pk
+                               CROSS APPLY (SELECT col.name
+                                              FROM sys.index_columns ic
+                                                   INNER JOIN sys.columns col
+                                                       ON col.column_id = ic.column_id
+                                                       AND col.object_id = ic.object_id
+                                             WHERE ic.object_id = pk.object_id
+                                               AND ic.index_id = pk.index_id
+                                                   FOR JSON PATH)
+                                 AS [cols](json)
+                         WHERE pk.object_id = object.object_id
+                           AND pk.is_primary_key = 1
+                               FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
+             AS [primary_key](json)
     WHERE object.type_desc IN ('USER_TABLE', 'VIEW')
     FOR JSON PATH)
     , '[]')

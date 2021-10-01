@@ -1,0 +1,26 @@
+description: Insert into article with user role
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '2'
+query:
+  query: |
+    mutation {
+      insert_article(
+        objects: [
+          { title: "Article by Author 1"
+          , content: "Some content"
+          , author_id: 1
+          }
+        ]
+      ){
+        affected_rows
+      }
+    }
+response:
+  errors:
+  - extensions:
+      path: "$"
+      code: permission-error
+    message: check constraint of an insert permission has failed

@@ -76,7 +76,7 @@ insertMultipleObjects ::
 insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput planVars stringifyNum =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
-    IR.AnnIns insObjs table conflictClause checkCondition columnInfos defVals = multiObjIns
+    IR.AnnIns insObjs table conflictClause checkCondition columnInfos defVals () = multiObjIns
     allInsObjRels = concatMap IR.getInsertObjectRelationships insObjs
     allInsArrRels = concatMap IR.getInsertArrayRelationships insObjs
     anyRelsToInsert = not $ null allInsArrRels && null allInsObjRels
@@ -91,7 +91,7 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
               table
               columnNames
               columnValues
-              conflictClause
+              (snd <$> conflictClause)
               checkCondition
               mutationOutput
               columnInfos
@@ -102,7 +102,7 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
 
     withRelsInsert = do
       insertRequests <- indexedForM insObjs \obj -> do
-        let singleObj = IR.AnnIns (IR.Single obj) table conflictClause checkCondition columnInfos defVals
+        let singleObj = IR.AnnIns (IR.Single obj) table conflictClause checkCondition columnInfos defVals ()
         insertObject singleObj additionalColumns userInfo planVars stringifyNum
       let affectedRows = sum $ map fst insertRequests
           columnValues = mapMaybe snd insertRequests
@@ -143,7 +143,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tra
       objRelDeterminedCols = concatMap snd objInsRes
       finalInsCols = columns <> objRelDeterminedCols <> additionalColumns
 
-  cte <- mkInsertQ table onConflict finalInsCols defaultValues checkCond
+  cte <- mkInsertQ table (snd <$> onConflict) finalInsCols defaultValues checkCond
 
   PGE.MutateResp affRows colVals <-
     liftTx $
@@ -155,7 +155,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tra
 
   return (totAffRows, colValM)
   where
-    IR.AnnIns (IR.Single annObj) table onConflict checkCond allColumns defaultValues = singleObjIns
+    IR.AnnIns (IR.Single annObj) table onConflict checkCond allColumns defaultValues () = singleObjIns
     columns = IR.getInsertColumns annObj
     objectRels = IR.getInsertObjectRelationships annObj
     arrayRels = IR.getInsertArrayRelationships annObj
@@ -184,6 +184,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tra
         _aiCheckCond
         _aiTableCols
         _aiDefVals
+        _aiExtraInsertData
 
     withArrRels ::
       Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal) ->

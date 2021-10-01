@@ -21,6 +21,7 @@ import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Select
 import Hasura.Prelude
 import Hasura.RQL.IR
+import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.Types
@@ -33,7 +34,7 @@ instance BackendSchema 'MSSQL where
   -- top level parsers
   buildTableQueryFields = GSB.buildTableQueryFields
   buildTableRelayQueryFields = msBuildTableRelayQueryFields
-  buildTableInsertMutationFields = GSB.buildTableInsertMutationFields
+  buildTableInsertMutationFields = msBuildTableInsertMutationFields
   buildTableUpdateMutationFields = msBuildTableUpdateMutationFields
   buildTableDeleteMutationFields = msBuildTableDeleteMutationFields
   buildFunctionQueryFields = msBuildFunctionQueryFields
@@ -43,10 +44,10 @@ instance BackendSchema 'MSSQL where
   -- backend extensions
   relayExtension = Nothing
   nodesAggExtension = Just ()
-  nestedInsertsExtension = Nothing
 
   -- table arguments
   tableArguments = msTableArgs
+  mkRelationshipParser = msMkRelationshipParser
 
   -- individual components
   columnParser = msColumnParser
@@ -61,6 +62,16 @@ instance BackendSchema 'MSSQL where
 
   -- SQL literals
   columnDefaultValue = msColumnDefaultValue
+
+  -- Extra insert data
+  getExtraInsertData tableInfo =
+    let pkeyColumns = fmap (map pgiColumn . toList . _pkColumns) . _tciPrimaryKey . _tiCoreInfo $ tableInfo
+        identityColumns = _tciExtraTableMetadata $ _tiCoreInfo tableInfo
+     in MSSQL.MSSQLExtraInsertData (fromMaybe [] pkeyColumns) identityColumns
+
+-- | MSSQL only supports inserts into tables that have a primary key defined.
+supportsInserts :: TableInfo 'MSSQL -> Bool
+supportsInserts = isJust . _tciPrimaryKey . _tiCoreInfo
 
 ----------------------------------------------------------------
 -- Top level parsers
@@ -78,6 +89,42 @@ msBuildTableRelayQueryFields ::
   m [FieldParser n (QueryRootField UnpreparedValue)]
 msBuildTableRelayQueryFields _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
   pure []
+
+msBuildTableInsertMutationFields ::
+  forall r m n.
+  MonadBuildSchema 'MSSQL r m n =>
+  SourceName ->
+  SourceConfig 'MSSQL ->
+  Maybe QueryTagsConfig ->
+  TableName 'MSSQL ->
+  TableInfo 'MSSQL ->
+  G.Name ->
+  InsPermInfo 'MSSQL ->
+  Maybe (SelPermInfo 'MSSQL) ->
+  Maybe (UpdPermInfo 'MSSQL) ->
+  m [FieldParser n (MutationRootField UnpreparedValue)]
+msBuildTableInsertMutationFields
+  sourceName
+  sourceInfo
+  queryTagsConfig
+  tableName
+  tableInfo
+  gqlName
+  insPerms
+  mSelPerms
+  mUpdPerms
+    | supportsInserts tableInfo =
+      GSB.buildTableInsertMutationFields
+        sourceName
+        sourceInfo
+        queryTagsConfig
+        tableName
+        tableInfo
+        gqlName
+        insPerms
+        mSelPerms
+        mUpdPerms
+    | otherwise = return []
 
 msBuildTableUpdateMutationFields ::
   MonadBuildSchema 'MSSQL r m n =>
@@ -174,6 +221,25 @@ msTableArgs sourceName tableInfo selectPermissions = do
           -- not supported on MSSQL for now
           IR._saDistinct = Nothing
         }
+
+msMkRelationshipParser ::
+  forall r m n.
+  MonadBuildSchema 'MSSQL r m n =>
+  SourceName ->
+  RelInfo 'MSSQL ->
+  m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsert 'MSSQL (UnpreparedValue 'MSSQL)))))
+msMkRelationshipParser _sourceName _relationshipInfo = do
+  -- When we support nested inserts, we also need to ensure we limit ourselves
+  -- to inserting into tables whch supports inserts:
+  {-
+    import Hasura.GraphQL.Schema.Mutation qualified as GSB
+
+    runMaybeT $ do
+      let otherTableName = riRTable relationshipInfo
+      otherTableInfo <- lift $ askTableInfo sourceName otherTableName
+      guard (supportsInserts otherTableInfo)
+  -}
+  return Nothing
 
 ----------------------------------------------------------------
 -- Individual components

@@ -25,21 +25,6 @@ import Hasura.RQL.Types hiding (TableName, tmTable)
 import Hasura.Server.Utils (quoteRegex)
 import Text.Regex.TDFA qualified as TDFA
 
-odbcValueToJValue :: ODBC.Value -> J.Value
-odbcValueToJValue = \case
-  ODBC.TextValue t -> J.String t
-  ODBC.ByteStringValue b -> J.String $ bsToTxt b
-  ODBC.BinaryValue b -> J.String $ bsToTxt $ ODBC.unBinary b
-  ODBC.BoolValue b -> J.Bool b
-  ODBC.DoubleValue d -> J.toJSON d
-  ODBC.FloatValue f -> J.toJSON f
-  ODBC.IntValue i -> J.toJSON i
-  ODBC.ByteValue b -> J.toJSON b
-  ODBC.DayValue d -> J.toJSON d
-  ODBC.TimeOfDayValue td -> J.toJSON td
-  ODBC.LocalTimeValue l -> J.toJSON l
-  ODBC.NullValue -> J.Null
-
 data MSSQLRunSQL = MSSQLRunSQL
   { _mrsSql :: Text,
     _mrsSource :: !SourceName
