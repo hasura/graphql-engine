@@ -337,6 +337,7 @@ queryModifiesMetadata = \case
       RMGetScheduledEvents _ -> False
       RMCreateScheduledEvent _ -> False
       RMDeleteScheduledEvent _ -> False
+      RMTestWebhookTransform _ -> False
       RMBulk qs -> any queryModifiesMetadata qs
       _ -> True
   RMV2 q ->
