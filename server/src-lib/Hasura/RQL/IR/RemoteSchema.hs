@@ -30,6 +30,7 @@ module Hasura.RQL.IR.RemoteSchema
     GraphQLField (..),
     mkField,
     Field (..),
+    AbstractTypeSelectionSet(..),
     ObjectSelectionSet,
     InterfaceSelectionSet,
     UnionSelectionSet,

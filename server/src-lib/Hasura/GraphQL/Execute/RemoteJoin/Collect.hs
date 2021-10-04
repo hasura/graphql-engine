@@ -503,11 +503,19 @@ transformGraphQLSelectionSet ::
 transformGraphQLSelectionSet = \case
   SelectionSetNone -> pure SelectionSetNone
   SelectionSetObject s -> SelectionSetObject <$> transformObjectSelectionSet s
-  SelectionSetUnion _ -> error "DO NOT SUBMIT"
-  SelectionSetInterface _ -> error "DO NOT SUBMIT"
+  SelectionSetUnion s -> SelectionSetUnion <$> transformAbstractTypeSelectionSet s
+  SelectionSetInterface s -> SelectionSetInterface <$> transformAbstractTypeSelectionSet s
   where
-
--- FIXME!
+    -- FIXME: this traversal is incorrect as the join tree of the last
+    -- traversed member selection will remain. This can only be fixed when a
+    -- better IR can be emitted from the parsers
+    transformAbstractTypeSelectionSet AbstractTypeSelectionSet {..} = do
+      transformedMemberSelectionSets <- traverse transformObjectSelectionSet _atssMemberSelectionSets
+      pure
+        AbstractTypeSelectionSet
+          { _atssMemberSelectionSets = transformedMemberSelectionSets,
+            ..
+          }
 
 transformObjectSelectionSet ::
   ObjectSelectionSet (SchemaRelationshipSelect UnpreparedValue) var ->
