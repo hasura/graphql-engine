@@ -61,11 +61,11 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | A normalized representation of a GraphQL field
 data GraphQLField r var = GraphQLField
-  { _fAlias :: !G.Name,
-    _fName :: !G.Name,
-    _fArguments :: !(HashMap G.Name (G.Value var)),
-    _fDirectives :: ![G.Directive var],
-    _fSelectionSet :: !(SelectionSet r var)
+  { _fAlias :: G.Name,
+    _fName :: G.Name,
+    _fArguments :: HashMap G.Name (G.Value var),
+    _fDirectives :: [G.Directive var],
+    _fSelectionSet :: SelectionSet r var
   }
   deriving (Show, Eq, Functor, Foldable, Traversable)
 

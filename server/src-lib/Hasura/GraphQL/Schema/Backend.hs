@@ -46,13 +46,18 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 -- TODO: it might make sense to add those constraints to MonadSchema directly?
 type MonadBuildSchema b r m n =
-  ( Backend b,
-    BackendSchema b,
-    MonadError QErr m,
+  ( BackendSchema b,
+    MonadBuildSchemaBase r m n
+  )
+
+-- TODO: this doesn't belong here either
+type MonadBuildSchemaBase r m n =
+  ( MonadError QErr m,
     MonadSchema n m,
     MonadTableInfo r m,
     MonadRole r m,
-    Has QueryContext r
+    Has QueryContext r,
+    Has RemoteSchemaMap r
   )
 
 class Backend b => BackendSchema (b :: BackendType) where

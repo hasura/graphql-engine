@@ -503,7 +503,11 @@ transformGraphQLSelectionSet ::
 transformGraphQLSelectionSet = \case
   SelectionSetNone -> pure SelectionSetNone
   SelectionSetObject s -> SelectionSetObject <$> transformObjectSelectionSet s
+  SelectionSetUnion _ -> error "DO NOT SUBMIT"
+  SelectionSetInterface _ -> error "DO NOT SUBMIT"
   where
+
+-- FIXME!
 
 transformObjectSelectionSet ::
   ObjectSelectionSet (SchemaRelationshipSelect UnpreparedValue) var ->

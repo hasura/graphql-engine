@@ -77,17 +77,12 @@ newtype MutationDBRoot r v b = MDBR (MutationDB b r (v b))
 
 -- | A remote relationship to either a remote schema or a remote source.
 -- See RemoteSourceSelect for explanation on 'vf'.
-data
-  RemoteSelect
-    (vf :: BackendType -> Type)
-    (src :: BackendType)
+data RemoteSelect (vf :: BackendType -> Type) (src :: BackendType)
   = RemoteSelectRemoteSchema !(HashSet (RQL.DBJoinField src)) !(RemoteSchemaSelect (SchemaRelationshipSelect vf))
   | -- | AnyBackend is used here to capture a relationship to an arbitrary target
     RemoteSelectSource !(Map.HashMap RQL.FieldName (RQL.ColumnInfo src)) !(AB.AnyBackend (RemoteSourceSelect (RemoteSelect vf) vf))
 
-data
-  SchemaRelationshipSelect
-    (vf :: BackendType -> Type)
+data SchemaRelationshipSelect (vf :: BackendType -> Type)
   = SchemaRelationshipSource !(HashSet G.Name) !(AB.AnyBackend (RemoteSourceSelect (RemoteSelect vf) vf))
 
 -- | Represents a query root field to an action

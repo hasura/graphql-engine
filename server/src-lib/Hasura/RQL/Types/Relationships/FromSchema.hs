@@ -7,6 +7,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Instances ()
+import Hasura.SQL.AnyBackend
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -61,7 +62,7 @@ instance ToJSON FromSchemaRelationshipDef where
 -- FIXME: move this to Hasura/Metadata
 data FromSchemaToSourceRelationshipDef = FromSchemaToSourceRelationshipDef
   { _frtsrdLHSTypeName :: !G.Name,
-    _frtsrdFieldMapping :: !(HashMap G.Name FieldName),
+    _frtsrdFieldMapping :: !(HashMap FieldName FieldName),
     _frtsrdRelationshipType :: !RelType,
     _frtsrdSource :: !SourceName,
     _frtsrdTable :: !Value
@@ -89,16 +90,16 @@ instance ToJSON FromSchemaToSourceRelationshipDef where
 
 -- | A resolved remote relationship from a schema targets either another remote
 -- schema or a source. For now, we only support targeting another source.
-data ResolvedFromSchemaRelationship (b :: BackendType)
-  = ResolvedFromSchemaToSourceRel !(ResolvedFromSchemaToSourceRelationship b)
+data ResolvedFromSchemaRelationship
+  = ResolvedFromSchemaToSourceRel (AnyBackend ResolvedFromSchemaToSourceRelationship)
 
 data ResolvedFromSchemaToSourceRelationship (b :: BackendType) = ResolvedFromSchemaToSourceRelationship
-  { _rfrtsdrLHSTypeName :: G.Name,
-    _rfrtsdrFieldMapping :: HashMap G.Name (ScalarType b, Column b),
-    _rfrtsdrRelationshipType :: RelType,
-    _rfrtsdrSource :: SourceName,
-    _rfrtsdrSourceConfig :: SourceConfig b,
-    _rfrtsdrTable :: TableName b
+  { _rfrtsrLHSTypeName :: G.Name,
+    _rfrtsrFieldMapping :: HashMap FieldName (ScalarType b, Column b),
+    _rfrtsrRelationshipType :: RelType,
+    _rfrtsrSource :: SourceName,
+    _rfrtsrSourceConfig :: SourceConfig b,
+    _rfrtsrTable :: TableName b
   }
 
 --------------------------------------------------------------------------------

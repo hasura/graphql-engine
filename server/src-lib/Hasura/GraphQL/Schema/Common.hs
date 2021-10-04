@@ -42,19 +42,13 @@ data ParsedIntrospection = ParsedIntrospection
     piSubscription :: Maybe [P.FieldParser (P.ParseT Identity) (IR.RemoteField (IR.SchemaRelationshipSelect UnpreparedValue))]
   }
 
-data RemoteRelationshipQueryContext = RemoteRelationshipQueryContext
-  { _rrscIntrospectionResultOriginal :: !IntrospectionResult,
-    _rrscParsedIntrospection :: !ParsedIntrospection,
-    _rrscRemoteSchemaCustomizer :: !RemoteSchemaCustomizer
-  }
-
 data QueryContext = QueryContext
-  { qcStringifyNum :: !Bool,
+  { qcStringifyNum :: Bool,
     -- | should boolean fields be collapsed to True when null is given?
-    qcDangerousBooleanCollapse :: !Bool,
-    qcQueryType :: !ET.GraphQLQueryType,
-    qcRemoteRelationshipContext :: !(HashMap RemoteSchemaName RemoteRelationshipQueryContext),
-    qcFunctionPermsContext :: !FunctionPermissionsCtx
+    qcDangerousBooleanCollapse :: Bool,
+    qcQueryType :: ET.GraphQLQueryType,
+    qcFunctionPermsContext :: FunctionPermissionsCtx,
+    qcRemoteSchemaPermsCtx :: RemoteSchemaPermsCtx
   }
 
 textToName :: MonadError QErr m => Text -> m G.Name

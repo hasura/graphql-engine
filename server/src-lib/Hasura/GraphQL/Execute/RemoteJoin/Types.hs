@@ -90,7 +90,7 @@ getRemoteSchemaJoins = concatMap getRemoteSchemaJoin . toList
     getRemoteSchemaJoin :: RemoteJoin -> [RemoteSchemaJoin]
     getRemoteSchemaJoin = \case
       RemoteJoinSource _ remoteJoins -> maybe [] getRemoteSchemaJoins remoteJoins
-      RemoteJoinRemoteSchema s remoteJoins -> s: maybe [] getRemoteSchemaJoins remoteJoins
+      RemoteJoinRemoteSchema s remoteJoins -> s : maybe [] getRemoteSchemaJoins remoteJoins
 
 getPhantomFields :: RemoteJoin -> [FieldName]
 getPhantomFields =

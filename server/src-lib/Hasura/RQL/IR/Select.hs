@@ -649,19 +649,19 @@ deriving instance
 -- we walk down the IR branches which capture relationships to other databases)
 data
   RemoteSourceSelect
-    r
+    (r :: BackendType -> Type)
     (vf :: BackendType -> Type)
     (tgt :: BackendType) = RemoteSourceSelect
-  { _rssName :: !SourceName,
-    _rssConfig :: !(SourceConfig tgt),
-    _rssSelection :: !(SourceRelationshipSelection tgt r vf),
+  { _rssName :: SourceName,
+    _rssConfig :: SourceConfig tgt,
+    _rssSelection :: SourceRelationshipSelection tgt r vf,
     -- | Additional information about the source's join columns:
     -- (ColumnInfo src) so that we can add the join column to the AST
     -- (ScalarType tgt) so that the remote can interpret the join values coming
     -- from src
     -- (Column tgt) so that an appropriate join condition / IN clause can be built
     -- by the remote
-    _rssJoinMapping :: !(HM.HashMap FieldName (ScalarType tgt, Column tgt))
+    _rssJoinMapping :: HM.HashMap FieldName (ScalarType tgt, Column tgt)
   }
 
 -- Permissions

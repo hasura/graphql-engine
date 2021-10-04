@@ -49,6 +49,7 @@ module Hasura.RQL.Types.SchemaCache
     remoteSchemaCustomizeFieldName,
     remoteSchemaDecustomizeTypeName,
     remoteSchemaDecustomizeFieldName,
+    RemoteSchemaRelationships,
     RemoteSchemaCtx (..),
     rscName,
     rscInfo,
@@ -222,11 +223,13 @@ data IntrospectionResult = IntrospectionResult
 
 instance Cacheable IntrospectionResult
 
+type RemoteSchemaRelationships = InsOrdHashMap G.Name (InsOrdHashMap RelName ResolvedFromSchemaRelationship)
+
 -- | See 'fetchRemoteSchema'.
 data RemoteSchemaCtx = RemoteSchemaCtx
   { _rscName :: RemoteSchemaName,
     -- | Original remote schema without customizations
-    _rscIntroOriginal :: !IntrospectionResult,
+    _rscIntroOriginal :: IntrospectionResult,
     _rscInfo :: RemoteSchemaInfo,
     -- | The raw response from the introspection query against the remote server.
     -- We store this so we can efficiently service 'introspect_remote_schema'.
@@ -234,7 +237,7 @@ data RemoteSchemaCtx = RemoteSchemaCtx
     -- | FieldParsers with schema customizations applied
     _rscPermissions :: M.HashMap RoleName IntrospectionResult,
     -- | Mapping from GraphQL type to associated relationships
-    _rscRemoteRelationships :: InsOrdHashMap G.Name (InsOrdHashMap RelName (AB.AnyBackend ResolvedFromSchemaRelationship))
+    _rscRemoteRelationships :: RemoteSchemaRelationships
   }
 
 $(makeLenses ''RemoteSchemaCtx)

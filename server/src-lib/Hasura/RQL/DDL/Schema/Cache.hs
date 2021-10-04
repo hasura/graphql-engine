@@ -251,24 +251,24 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     resolveDependencies -< (outputs, unresolvedDependencies)
 
   -- Step 3: Build the GraphQL schema.
-  (gqlContext, gqlContextUnauth, gqlSchemaInconsistentObjects) <-
+  (gqlContext, gqlContextUnauth) <-
     bindA
       -<
         buildGQLContext
           QueryHasura
           (_boSources resolvedOutputs)
-          (_boRemoteSchemas resolvedOutputs)
+          (fst <$> _boRemoteSchemas resolvedOutputs)
           (_boActions resolvedOutputs)
           (_actNonObjects $ _boCustomTypes resolvedOutputs)
 
   -- Step 4: Build the relay GraphQL schema
-  (relayContext, relayContextUnauth, relaySchemaInconsistentObjects) <-
+  (relayContext, relayContextUnauth) <-
     bindA
       -<
         buildGQLContext
           QueryRelay
           (_boSources resolvedOutputs)
-          (_boRemoteSchemas resolvedOutputs)
+          (fst <$> _boRemoteSchemas resolvedOutputs)
           (_boActions resolvedOutputs)
           (_actNonObjects $ _boCustomTypes resolvedOutputs)
 
@@ -322,8 +322,6 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
           scInconsistentObjs =
             inconsistentObjects
               <> dependencyInconsistentObjects
-              <> toList gqlSchemaInconsistentObjects
-              <> toList relaySchemaInconsistentObjects
               <> duplicateRestVariables
               <> invalidRestSegments
               <> ambiguousRestEndpoints,
@@ -694,7 +692,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
             )
           |) partiallyResolvedSources
 
-      -- remote schema permissions
+      -- remote schema permissions and relationships
       remoteSchemaCache <-
         (remoteSchemaMap >- returnA)
           >-> ( \info ->

@@ -47,6 +47,7 @@ import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Execute.LiveQuery.Poll qualified as LQ
 import Hasura.GraphQL.Execute.LiveQuery.State qualified as LQ
 import Hasura.GraphQL.Execute.RemoteJoin qualified as RJ
+import Hasura.GraphQL.Execute.RemoteJoin.Types (RemoteJoins)
 import Hasura.GraphQL.Logging
 import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHash)
 import Hasura.GraphQL.Parser.Directives (cached)
@@ -95,7 +96,6 @@ import Network.HTTP.Client qualified as H
 import Network.HTTP.Types qualified as H
 import Network.WebSockets qualified as WS
 import StmContainers.Map qualified as STMMap
-import Hasura.GraphQL.Execute.RemoteJoin.Types (RemoteJoins)
 
 -- | 'LQ.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and

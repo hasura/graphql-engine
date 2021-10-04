@@ -72,7 +72,7 @@ import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.OrderBy
 import Hasura.GraphQL.Schema.Remote
-import {-# SOURCE #-} Hasura.GraphQL.Schema.RemoteSource
+import {-# SOURCE #-} Hasura.GraphQL.Schema.RemoteJoin
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
 import Hasura.RQL.DDL.RemoteRelationship.Validate
@@ -1328,23 +1328,43 @@ remoteRelationshipField ::
   m (Maybe [FieldParser n (AnnotatedField b)])
 remoteRelationshipField remoteFieldInfo = runMaybeT do
   queryType <- asks $ qcQueryType . getter
-  remoteRelationshipQueryCtx <- asks $ qcRemoteRelationshipContext . getter
+  remoteSchemaCache <- asks getter
+  remoteSchemaPermsCtx <- asks $ qcRemoteSchemaPermsCtx . getter
   -- https://github.com/hasura/graphql-engine/issues/5144
   -- The above issue is easily fixable by removing the following guard and 'MaybeT' monad transformation
   guard $ queryType == ET.QueryHasura
   case remoteFieldInfo of
     RFISource remoteSource ->
-      lift $ remoteSourceField remoteSource
+      lift $ sourceToSourceField remoteSource
     RFISchema remoteSchema -> do
       let RemoteSchemaFieldInfo name params hasuraFields remoteFields remoteSchemaInfo remoteSchemaInputValueDefns remoteSchemaName (table, source) = remoteSchema
-      RemoteRelationshipQueryContext roleIntrospectionResultOriginal _ remoteSchemaCustomizer <-
-        -- The remote relationship field should not be accessible
-        -- if the remote schema is not accessible to the said role
-        hoistMaybe $ Map.lookup remoteSchemaName remoteRelationshipQueryCtx
       role <- askRoleName
-      let hasuraFieldNames = Set.map dbJoinFieldToName hasuraFields
-          relationshipDef = FromSourceToSchemaRelationshipDef remoteSchemaName hasuraFieldNames remoteFields
-      (newInpValDefns :: [(G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)], remoteFieldParamMap) <-
+      remoteSchemaContext <-
+        Map.lookup remoteSchemaName remoteSchemaCache
+          `onNothing` throw500 ("invalid remote schema name: " <>> remoteSchemaName)
+      remoteSchemaIntrospectionResult <-
+        if
+            | -- admin doesn't have a custom annotated introspection, defaulting to the original one
+              role == adminRoleName ->
+              pure $ _rscIntroOriginal remoteSchemaContext
+            | -- if permissions are disabled, the role map will be empty, defaulting to the original one
+              remoteSchemaPermsCtx == RemoteSchemaPermsDisabled ->
+              pure $ _rscIntroOriginal remoteSchemaContext
+            | -- otherwise, look the role up in the map; if we find nothing, then the role doesn't have access
+              otherwise ->
+              hoistMaybe $ Map.lookup role (_rscPermissions remoteSchemaContext)
+      let remoteSchemaRelationships = _rscRemoteRelationships remoteSchemaContext
+          hasuraFieldNames = Set.map dbJoinFieldToName hasuraFields
+          roleIntrospection = irDoc remoteSchemaIntrospectionResult
+          remoteSchemaRoot = irQueryRoot remoteSchemaIntrospectionResult
+          remoteSchemaCustomizer = rsCustomizer $ _rscInfo remoteSchemaContext
+          RemoteSchemaIntrospection typeDefns = roleIntrospection
+
+      -- FIXME: do we really need this?!
+      -- Wouldn't it be enough to test that the information mentioned in the
+      -- remote relationship info is accessible in the role's introspection
+      -- result, rather than rebuilding the remote field info on the fly?
+      (newInpValDefns, remoteFieldParamMap) <-
         if role == adminRoleName
           then do
             -- we don't validate the remote relationship when the role is admin
@@ -1354,34 +1374,38 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
           else do
             fieldInfoMap <- (_tciFieldInfoMap . _tiCoreInfo) <$> askTableInfo @b source table
             roleRemoteField <-
-              afold @(Either _) $
-                validateSourceToSchemaRelationship relationshipDef table name source (remoteSchemaInfo, roleIntrospectionResultOriginal) fieldInfoMap
+              afold @(Either _) do
+                let relationshipDef = FromSourceToSchemaRelationshipDef remoteSchemaName hasuraFieldNames remoteFields
+                validateSourceToSchemaRelationship relationshipDef table name source (remoteSchemaInfo, _rscIntroOriginal remoteSchemaContext) fieldInfoMap
             pure $ (_rrfiInputValueDefinitions roleRemoteField, _rrfiParamMap roleRemoteField)
-      let roleIntrospection@(RemoteSchemaIntrospection typeDefns) = irDoc roleIntrospectionResultOriginal
-          -- add the new input value definitions created by the remote relationship
+
+      let -- add the new input value definitions created by the remote relationship
           -- to the existing schema introspection of the role
+          -- FIXME: is this really required?!
           remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> newInpValDefns
+
+      -- FIXME: store the remote relationship graphql name ahead of time
+      -- https://github.com/hasura/graphql-engine-mono/issues/1748
       fieldName <- textToName $ relNameToTxt name
 
       -- This selection set parser, should be of the remote node's selection set parser, which comes
       -- from the fieldCall
       let fieldCalls = unRemoteFields remoteFields
-          parentTypeName = irQueryRoot roleIntrospectionResultOriginal
-      nestedFieldType <- lift $ lookupNestedFieldType parentTypeName roleIntrospection fieldCalls
+      nestedFieldType <- lift $ lookupNestedFieldType remoteSchemaRoot roleIntrospection fieldCalls
       let typeName = G.getBaseType nestedFieldType
       fieldTypeDefinition <-
-        onNothing (lookupType roleIntrospection typeName)
-        -- the below case will never happen because we get the type name
-        -- from the schema document itself i.e. if a field exists for the
-        -- given role, then it's return type also must exist
-        $
-          throw500 $ "unexpected: " <> typeName <<> " not found "
+        lookupType roleIntrospection typeName
+          -- This error case is theroretically impossible because we get the type
+          -- name from the schema document itself i.e. if a field exists for the
+          -- given role, then its return type also must exist.
+          `onNothing` throw500 ("unexpected: " <> typeName <<> " not found ")
+
       -- These are the arguments that are given by the user while executing a query
       let remoteFieldUserArguments = map snd $ Map.toList remoteFieldParamMap
       remoteFld <-
         lift $
-          customizeFieldParser (,) remoteSchemaCustomizer parentTypeName . P.wrapFieldParser nestedFieldType
-            <$> remoteField remoteRelationshipIntrospection fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
+          customizeFieldParser (,) remoteSchemaCustomizer remoteSchemaRoot . P.wrapFieldParser nestedFieldType
+            <$> remoteField remoteRelationshipIntrospection remoteSchemaRelationships fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
 
       pure $
         pure $

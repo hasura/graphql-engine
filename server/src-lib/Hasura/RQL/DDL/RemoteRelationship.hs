@@ -179,32 +179,37 @@ buildFromSchemaRelationship ::
   MonadError QErr m =>
   FromSchemaRelationshipDef ->
   HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->
-  m (AB.AnyBackend ResolvedFromSchemaRelationship)
+  m ResolvedFromSchemaRelationship
 buildFromSchemaRelationship definition allSources = case definition of
   FromSchemaToSourceRelDef FromSchemaToSourceRelationshipDef {..} -> do
+    -- TODO: check LHS of relationship
+    --   - does the type exist?
+    --   - is it object or interface?
+    --   - do the fields in the LHS of the mapping exist?
+    --     (warning: trikcy; objects could be referrring to interface fields)
     targetTables <-
       Map.lookup _frtsrdSource allSources
         `onNothing` throw400 NotFound ("source not found: " <>> _frtsrdSource)
-    AB.traverseBackend @Backend targetTables \(partiallyResolvedSource :: PartiallyResolvedSource b) -> do
-      let PartiallyResolvedSource _ targetSourceInfo targetTablesInfo = partiallyResolvedSource
-          sourceConfig = _rsConfig targetSourceInfo
-      targetTable <- runAesonParser J.parseJSON _frtsrdTable
-      targetColumns <-
-        fmap _tciFieldInfoMap (Map.lookup targetTable targetTablesInfo)
-          `onNothing` throwTableDoesNotExist @b targetTable
-      mapping <- for _frtsrdFieldMapping \tgtFieldName -> do
-        tgtColumn <- askFieldInfo targetColumns tgtFieldName
-        tgtScalar <- case pgiType tgtColumn of
-          ColumnScalar scalarType -> pure scalarType
-          ColumnEnumReference _ -> throw400 NotSupported "relationships to enum fields are not supported yet"
-        pure (tgtScalar, pgiColumn tgtColumn)
-      pure $
-        ResolvedFromSchemaToSourceRel $
+    ResolvedFromSchemaToSourceRel
+      <$> AB.traverseBackend @Backend targetTables \(partiallyResolvedSource :: PartiallyResolvedSource b) -> do
+        let PartiallyResolvedSource _ targetSourceInfo targetTablesInfo = partiallyResolvedSource
+            sourceConfig = _rsConfig targetSourceInfo
+        targetTable <- runAesonParser J.parseJSON _frtsrdTable
+        targetColumns <-
+          fmap _tciFieldInfoMap (Map.lookup targetTable targetTablesInfo)
+            `onNothing` throwTableDoesNotExist @b targetTable
+        mapping <- for _frtsrdFieldMapping \tgtFieldName -> do
+          tgtColumn <- askFieldInfo targetColumns tgtFieldName
+          tgtScalar <- case pgiType tgtColumn of
+            ColumnScalar scalarType -> pure scalarType
+            ColumnEnumReference _ -> throw400 NotSupported "relationships to enum fields are not supported yet"
+          pure (tgtScalar, pgiColumn tgtColumn)
+        pure $
           ResolvedFromSchemaToSourceRelationship
-            { _rfrtsdrLHSTypeName = _frtsrdLHSTypeName,
-              _rfrtsdrRelationshipType = _frtsrdRelationshipType,
-              _rfrtsdrSource = _frtsrdSource,
-              _rfrtsdrSourceConfig = sourceConfig,
-              _rfrtsdrTable = targetTable,
-              _rfrtsdrFieldMapping = mapping
+            { _rfrtsrLHSTypeName = _frtsrdLHSTypeName,
+              _rfrtsrRelationshipType = _frtsrdRelationshipType,
+              _rfrtsrSource = _frtsrdSource,
+              _rfrtsrSourceConfig = sourceConfig,
+              _rfrtsrTable = targetTable,
+              _rfrtsrFieldMapping = mapping
             }
