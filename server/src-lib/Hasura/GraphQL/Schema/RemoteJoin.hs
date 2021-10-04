@@ -4,6 +4,7 @@ module Hasura.GraphQL.Schema.RemoteJoin
   )
 where
 
+import Data.HashMap.Strict.Extended qualified as Map
 import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
@@ -13,7 +14,7 @@ import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
 import Hasura.RQL.IR.Root qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.Types.Common (RelName (..), RelType (..), relNameToTxt)
+import Hasura.RQL.Types.Common (RelName (..), RelType (..), relNameToTxt, FieldName(..))
 import Hasura.RQL.Types.Relationships.FromSchema
 import Hasura.RQL.Types.Relationships.FromSource
 import Hasura.SQL.AnyBackend
@@ -110,7 +111,7 @@ schemaToSourceField relName relInfo = dispatchAnyBackend @BackendSchema
                 [ Just $ arrayParser <&> IR.SourceRelationshipArray,
                   aggregParser <&> fmap IR.SourceRelationshipArrayAggregate
                 ]
-        let lhsParamOfSorts = undefined -- FIXME
+        let lhsParamOfSorts = Map.keysSet $ _rfrtsrFieldMapping sourceRel
         pure $
           parsers <&> fmap \select ->
             IR.SchemaRelationshipSource lhsParamOfSorts $
@@ -120,5 +121,5 @@ schemaToSourceField relName relInfo = dispatchAnyBackend @BackendSchema
                     _rssConfig = _rfrtsrSourceConfig sourceRel,
                     _rssSelection = select,
                     -- TODO: make sure the customizer is playing nice with the LHS
-                    _rssJoinMapping = _rfrtsrFieldMapping sourceRel
+                    _rssJoinMapping = Map.mapKeys (FieldName . G.unName) $ _rfrtsrFieldMapping sourceRel
                   }
