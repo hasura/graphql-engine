@@ -206,8 +206,7 @@ buildFromSchemaRelationship definition allSources = case definition of
           pure (tgtScalar, pgiColumn tgtColumn)
         pure $
           ResolvedFromSchemaToSourceRelationship
-            { _rfrtsrLHSTypeName = _frtsrdLHSTypeName,
-              _rfrtsrRelationshipType = _frtsrdRelationshipType,
+            { _rfrtsrRelationshipType = _frtsrdRelationshipType,
               _rfrtsrSource = _frtsrdSource,
               _rfrtsrSourceConfig = sourceConfig,
               _rfrtsrTable = targetTable,

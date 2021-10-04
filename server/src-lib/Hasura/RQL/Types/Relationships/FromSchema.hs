@@ -61,8 +61,7 @@ instance ToJSON FromSchemaRelationshipDef where
 --
 -- FIXME: move this to Hasura/Metadata
 data FromSchemaToSourceRelationshipDef = FromSchemaToSourceRelationshipDef
-  { _frtsrdLHSTypeName :: !G.Name,
-    _frtsrdFieldMapping :: !(HashMap G.Name FieldName),
+  { _frtsrdFieldMapping :: !(HashMap G.Name FieldName),
     _frtsrdRelationshipType :: !RelType,
     _frtsrdSource :: !SourceName,
     _frtsrdTable :: !Value
@@ -76,8 +75,7 @@ instance Cacheable FromSchemaToSourceRelationshipDef
 instance FromJSON FromSchemaToSourceRelationshipDef where
   parseJSON = withObject "FromSchemaToSourceRelationshipDef" \o ->
     FromSchemaToSourceRelationshipDef
-      <$> o .: "lhs_type"
-      <*> o .: "field_mapping"
+      <$> o .: "field_mapping"
       <*> o .: "relationship_type"
       <*> o .: "source"
       <*> o .: "table"
@@ -94,8 +92,7 @@ data ResolvedFromSchemaRelationship
   = ResolvedFromSchemaToSourceRel (AnyBackend ResolvedFromSchemaToSourceRelationship)
 
 data ResolvedFromSchemaToSourceRelationship (b :: BackendType) = ResolvedFromSchemaToSourceRelationship
-  { _rfrtsrLHSTypeName :: G.Name,
-    _rfrtsrFieldMapping :: HashMap G.Name (ScalarType b, Column b),
+  { _rfrtsrFieldMapping :: HashMap G.Name (ScalarType b, Column b),
     _rfrtsrRelationshipType :: RelType,
     _rfrtsrSource :: SourceName,
     _rfrtsrSourceConfig :: SourceConfig b,

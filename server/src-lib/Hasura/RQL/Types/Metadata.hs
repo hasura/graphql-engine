@@ -154,7 +154,28 @@ type ComputedFields b = InsOrdHashMap ComputedFieldName (ComputedFieldMetadata b
 
 type SourceRemoteRelationships = InsOrdHashMap RelName SourceRelationshipMetadata
 
-type SchemaRemoteRelationships = InsOrdHashMap G.Name (InsOrdHashMap RelName SchemaRelationshipMetadata)
+type SchemaRemoteRelationships = InsOrdHashMap G.Name RemoteSchemaTypeRelationships
+
+data RemoteSchemaTypeRelationships = RemoteSchemaTypeRelationships
+  { _rstrsName :: G.Name,
+    _rstrsRelationships :: InsOrdHashMap RelName SchemaRelationshipMetadata
+  }
+  deriving (Show, Eq, Generic)
+
+instance FromJSON RemoteSchemaTypeRelationships where
+  parseJSON = withObject "RemoteSchemaMetadata" \obj ->
+    RemoteSchemaTypeRelationships
+      <$> obj .: "type_name"
+      <*> (oMapFromL _rrmName <$> obj .:? "relationships" .!= [])
+
+instance ToJSON RemoteSchemaTypeRelationships where
+  toJSON RemoteSchemaTypeRelationships {..} =
+    object
+      [ "type_name" .= _rstrsName,
+        "relationships" .= OM.elems _rstrsRelationships
+      ]
+
+instance Cacheable RemoteSchemaTypeRelationships
 
 type Permissions a = InsOrdHashMap RoleName a
 
@@ -165,7 +186,7 @@ data RemoteSchemaMetadata = RemoteSchemaMetadata
     _rsmDefinition :: RemoteSchemaDef,
     _rsmComment :: Maybe Text,
     _rsmPermissions :: [RemoteSchemaPermissionMetadata],
-    _rmsRelationships :: SchemaRemoteRelationships
+    _rsmRelationships :: SchemaRemoteRelationships
   }
   deriving (Show, Eq, Generic)
 
@@ -178,9 +199,18 @@ instance FromJSON RemoteSchemaMetadata where
       <*> obj .: "definition"
       <*> obj .:? "comment"
       <*> obj .:? "permissions" .!= mempty
-      <*> obj .:? "relationships" .!= mempty
+      <*> (oMapFromL _rstrsName <$> obj .:? "relationships" .!= [])
 
-$(deriveToJSON hasuraJSON ''RemoteSchemaMetadata)
+instance ToJSON RemoteSchemaMetadata where
+  toJSON RemoteSchemaMetadata {..} =
+    object
+      [ "name" .= _rsmName,
+        "definition" .= _rsmDefinition,
+        "comment" .= _rsmComment,
+        "permissions" .= _rsmPermissions,
+        "relationships" .= OM.elems _rsmRelationships
+      ]
+
 $(makeLenses ''RemoteSchemaMetadata)
 
 data TableMetadata b = TableMetadata
@@ -865,7 +895,7 @@ metadataToOrdJSON
           ]
 
       remoteSchemaQToOrdJSON :: RemoteSchemaMetadata -> AO.Value
-      remoteSchemaQToOrdJSON (RemoteSchemaMetadata name definition comment permissions _) =
+      remoteSchemaQToOrdJSON (RemoteSchemaMetadata name definition comment permissions relationships) =
         AO.object $
           [ ("name", AO.toOrdered name),
             ("definition", remoteSchemaDefToOrdJSON definition)
@@ -875,7 +905,11 @@ metadataToOrdJSON
                 listToMaybeOrdPair
                   "permissions"
                   permsToMaybeOrdJSON
-                  permissions
+                  permissions,
+                listToMaybeOrdPair
+                  "relationships"
+                  AO.toOrdered
+                  relationships
               ]
         where
           permsToMaybeOrdJSON :: RemoteSchemaPermissionMetadata -> AO.Value

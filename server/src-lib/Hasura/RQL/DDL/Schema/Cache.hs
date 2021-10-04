@@ -748,7 +748,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                                       ( \fromSchemaDef ->
                                           bindA -< buildFromSchemaRelationship (_rrmDefinition fromSchemaDef) partiallyResolvedSources
                                       )
-                                    |) (typeRelationships)
+                                    |) (_rstrsRelationships typeRelationships)
                                 returnA -< (typeName, resolvedRelationships)
                             )
                           |) (OMap.toList relationships)
