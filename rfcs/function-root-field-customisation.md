@@ -11,7 +11,7 @@ authors:
    Philip Lykke Carlsen <philip@hasura.io>
 discussion:
    https://github.com/hasura/graphql-engine/issues/7405
-state: draft
+state: published
 ---
 ```
 
@@ -79,18 +79,7 @@ interfere with any other features.
 
 ### Unresolved Questions
 
-We need an API for updating this configuration from the console.
-For table configuration, it is done through `set_table_customization` so we need
-something similar to that for functions too. I'm wondering if it makes sense to
-just add `replace_if_exists` key to `track_function` API instead of a
-`set_function_customization` API.
-
-Amending the the `FunctionConfiguration` with new fields also introduces these
-fields to the deprecated `track_function` (v2) in the `/v1/query` API. Is this
-a problem?
-
-Is there any overlap with the work in https://github.com/hasura/graphql-engine-mono/pull/1616
-that needs to be considered?
+None. See linked discussion for historically unresolved questions.
 
 ## How
 
