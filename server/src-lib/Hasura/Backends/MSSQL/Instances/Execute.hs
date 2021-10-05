@@ -6,17 +6,20 @@ module Hasura.Backends.MSSQL.Instances.Execute
   )
 where
 
+import Control.Monad.Validate qualified as V
 import Data.Aeson.Extended qualified as J
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended qualified as T
+import Database.MSSQL.Transaction qualified as Tx
+import Database.ODBC.Internal qualified as ODBCI
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.FromIr as TSQL
 import Hasura.Backends.MSSQL.Plan
 import Hasura.Backends.MSSQL.SQL.Value (txtEncodedColVal)
-import Hasura.Backends.MSSQL.ToQuery
+import Hasura.Backends.MSSQL.ToQuery as TQ
 import Hasura.Backends.MSSQL.Types as TSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -25,6 +28,7 @@ import Hasura.GraphQL.Execute.LiveQuery.Plan
 import Hasura.GraphQL.Parser
 import Hasura.Prelude
 import Hasura.RQL.IR
+import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types
 import Hasura.RQL.Types qualified as RQLTypes
 import Hasura.RQL.Types.Column qualified as RQLColumn
@@ -76,7 +80,7 @@ msDBQueryPlan userInfo sourceName sourceConfig qrf = do
       queryString = ODBC.renderQuery $ toQueryPretty printer
       pool = _mscConnectionPool sourceConfig
       odbcQuery = encJFromText <$> runJSONPathQuery pool (toQueryFlat printer)
-  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just $ queryString) odbcQuery
+  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) odbcQuery
 
 runShowplan ::
   ODBC.Query -> ODBC.Connection -> IO [Text]
@@ -100,7 +104,7 @@ msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
   let sessionVariables = _uiSession userInfo
   statement <- planQuery sessionVariables qrf
   let query = toQueryPretty (fromSelect statement)
-      queryString = ODBC.renderQuery $ query
+      queryString = ODBC.renderQuery query
       pool = _mscConnectionPool sourceConfig
       odbcQuery =
         withMSSQLPool
@@ -146,7 +150,7 @@ multiplexRootReselect ::
   TSQL.Reselect ->
   TSQL.Select
 multiplexRootReselect variables rootReselect =
-  Select
+  emptySelect
     { selectTop = NoTop,
       selectProjections =
         [ FieldNameProjection
@@ -216,8 +220,206 @@ msDBMutationPlan ::
   SourceConfig 'MSSQL ->
   MutationDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL) ->
   m (DBStepInfo 'MSSQL)
-msDBMutationPlan _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
-  throw400 NotSupported "mutations are not supported in MSSQL"
+msDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf = do
+  go <$> case mrf of
+    MDBInsert annInsert -> executeInsert userInfo stringifyNum sourceConfig annInsert
+    MDBUpdate _annUpdate -> throw400 NotSupported "update mutations are not supported in MSSQL"
+    MDBDelete _annDelete -> throw400 NotSupported "delete mutations are not supported in MSSQL"
+    MDBFunction {} -> throw400 NotSupported "function mutations are not supported in MSSQL"
+  where
+    go v = DBStepInfo @'MSSQL sourceName sourceConfig Nothing v
+
+-- | Execution of a MSSQL insert mutation broadly involves two steps.
+--
+-- --    insert_table(objects: [
+-- --      {column1: value1, column2: value2},
+-- --      {column1: value3, column2: value4}
+-- --     ]
+-- --    ){
+-- --      affected_rows
+-- --      returning {
+-- --        column1
+-- --        column2
+-- --      }
+-- --    }
+-- --
+-- Step 1: Inserting rows into the table
+-- --
+-- -- a. Generate an SQL Insert statement from the GraphQL insert mutation with OUTPUT expression to return
+-- --    primary key column values after insertion.
+-- -- b. Before insert, Set IDENTITY_INSERT to ON if any insert row contains atleast one identity column.
+-- --
+-- --    SET IDENTITY_INSERT some_table ON;
+-- --    INSERT INTO some_table (column1, column2) OUTPUT INSERTED.pkey_column1, INSERTED.pkey_column2 VALUES (value1, value2), (value3, value4);
+-- --
+-- Step 2: Generation of the mutation response
+-- --
+-- --    An SQL statement is generated and when executed it returns the mutation selection set containing 'affected_rows' and 'returning' field values.
+-- --    The statement is generated with multiple sub select queries explained below:
+-- --
+-- -- a. A SQL Select statement to fetch only inserted rows from the table using primary key column values fetched from
+-- --    Step 1 in the WHERE clause
+-- --
+-- --    <table_select> :=
+-- --      SELECT * FROM some_table WHERE (pkey_column1 = value1 AND pkey_column2 = value2) OR (pkey_column1 = value3 AND pkey_column2 = value4)
+-- --
+-- --    The above select statement is referred through a common table expression - "WITH [with_alias] AS (<table_select>)"
+-- --
+-- -- b. The 'affected_rows' field value is obtained by using COUNT aggregation and the 'returning' field selection set is translated to
+-- --    a SQL select statement using @'mkSQLSelect'.
+-- --
+-- --    <mutation_output_select> :=
+-- --      SELECT (SELECT COUNT(*) FROM [with_alias]) AS [affected_rows], (select_from_returning) AS [returning] FOR JSON PATH, INCLUDE_NULL_VALUES, WITHOUT_ARRAY_WRAPPER
+-- --
+-- -- c. Evaluate the check constraint using CASE expression. We use SUM aggregation to check if any inserted row has failed the check constraint.
+-- --
+-- --   <check_constraint_select> :=
+-- --     SELECT SUM(CASE WHEN <check_boolean_expression> THEN 0 ELSE 1 END) FROM [with_alias]
+-- --
+-- -- d. The final select statement look like
+-- --
+-- --    WITH "with_alias" AS (<table_select>)
+-- --    SELECT (<mutation_output_select>) AS [mutation_response], (<check_constraint_select>) AS [check_constraint_select]
+-- --
+-- --    When executed, the above statement returns a single row with mutation response as a string value and check constraint result as an integer value.
+executeInsert ::
+  MonadError QErr m =>
+  UserInfo ->
+  Bool ->
+  SourceConfig 'MSSQL ->
+  AnnInsert 'MSSQL (Const Void) (UnpreparedValue 'MSSQL) ->
+  m (ExceptT QErr IO EncJSON)
+executeInsert userInfo stringifyNum sourceConfig annInsert = do
+  -- Convert the leaf values from @'UnpreparedValue' to sql @'Expression'
+  insert <- traverse (prepareValueQuery sessionVariables) annInsert
+  let insertTx = buildInsertTx insert
+  pure $ liftEitherM $ withMSSQLPool pool $ runExceptT . Tx.runTxE fromMSSQLTxError insertTx
+  where
+    sessionVariables = _uiSession userInfo
+    pool = _mscConnectionPool sourceConfig
+    table = _aiTableName $ _aiData annInsert
+    withSelectTableAlias = "t_" <> tableName table
+    withAlias = "with_alias"
+
+    buildInsertTx :: AnnInsert 'MSSQL (Const Void) Expression -> Tx.TxET QErr IO EncJSON
+    buildInsertTx insert = do
+      let identityColumns = _mssqlIdentityColumns $ _aiExtraInsertData $ _aiData insert
+          insertColumns = concatMap (map fst . getInsertColumns) $ _aiInsObj $ _aiData insert
+
+      -- Set identity insert to ON if insert object contains identity columns
+      when (any (`elem` identityColumns) insertColumns) $
+        Tx.unitQueryE fromMSSQLTxError $
+          toQueryFlat $
+            TQ.fromSetIdentityInsert $
+              SetIdenityInsert (_aiTableName $ _aiData insert) SetON
+
+      -- Generate the INSERT query
+      let insertQuery = toQueryFlat $ TQ.fromInsert $ TSQL.fromInsert insert
+          fromODBCException e =
+            (err400 MSSQLError "insert query exception") {qeInternal = Just (ExtraInternal $ odbcExceptionToJSONValue e)}
+
+      -- Execute the INSERT query and fetch the primary key values
+      primaryKeyValues <- Tx.buildGenericTxE fromODBCException $ \conn -> ODBCI.query conn (ODBC.renderQuery insertQuery)
+      let withSelect = generateWithSelect primaryKeyValues
+          -- WITH [with_alias] AS (select_query)
+          withExpression = With $ pure $ Aliased withSelect withAlias
+
+      mutationOutputSelect <- mkMutationOutputSelect stringifyNum withAlias $ _aiOutput insert
+      let (checkCondition, _) = _aiCheckCond $ _aiData insert
+
+      -- The check constraint is translated to boolean expression
+      checkBoolExp <-
+        V.runValidate (runFromIr $ runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias))
+          `onLeft` (throw500 . tshow)
+
+      -- SELECT (<mutation_output_select>) AS [mutation_response], (<check_constraint_select>) AS [check_constraint_select]
+      let mutationOutputCheckConstraintSelect = selectMutationOutputAndCheckCondition mutationOutputSelect checkBoolExp
+
+          -- WITH "with_alias" AS (<table_select>)
+          -- SELECT (<mutation_output_select>) AS [mutation_response], (<check_constraint_select>) AS [check_constraint_select]
+          finalSelect = mutationOutputCheckConstraintSelect {selectWith = Just withExpression}
+
+      (responseText, checkConditionInt) <- Tx.singleRowQueryE fromMSSQLTxError (toQueryFlat $ TQ.fromSelect finalSelect)
+      unless (checkConditionInt == (0 :: Int)) $
+        throw400 PermissionError "check constraint of an insert permission has failed"
+      pure $ encJFromText responseText
+
+    columnFieldExpression :: ODBCI.Column -> Expression
+    columnFieldExpression column =
+      ColumnExpression $ TSQL.FieldName (ODBCI.columnName column) withSelectTableAlias
+
+    generateWithSelect :: [[(ODBCI.Column, ODBC.Value)]] -> Select
+    generateWithSelect pkeyValues =
+      emptySelect
+        { selectProjections = [StarProjection],
+          selectFrom = Just $ FromQualifiedTable $ Aliased table withSelectTableAlias,
+          selectWhere = whereExpression
+        }
+      where
+        -- WHERE (column1 = value1 AND column2 = value2) OR (column1 = value3 AND column2 = value4)
+        whereExpression =
+          let mkColumnEqExpression (column, value) =
+                OpExpression EQ' (columnFieldExpression column) (ValueExpression value)
+           in Where $ pure $ OrExpression $ map (AndExpression . map mkColumnEqExpression) pkeyValues
+
+    generateCheckConstraintSelect :: Expression -> Select
+    generateCheckConstraintSelect checkBoolExp =
+      let zeroValue = ValueExpression $ ODBC.IntValue 0
+          oneValue = ValueExpression $ ODBC.IntValue 1
+          caseExpression = ConditionalExpression checkBoolExp zeroValue oneValue
+          sumAggregate = OpAggregate "SUM" [caseExpression]
+       in emptySelect
+            { selectProjections = [AggregateProjection (Aliased sumAggregate "check")],
+              selectFrom = Just $ TSQL.FromIdentifier withAlias
+            }
+
+    selectMutationOutputAndCheckCondition :: Select -> Expression -> Select
+    selectMutationOutputAndCheckCondition mutationOutputSelect checkBoolExp =
+      let mutationOutputProjection =
+            ExpressionProjection $ Aliased (SelectExpression mutationOutputSelect) "mutation_response"
+          checkConstraintProjection =
+            ExpressionProjection $ Aliased (SelectExpression (generateCheckConstraintSelect checkBoolExp)) "check_constraint_select"
+       in emptySelect {selectProjections = [mutationOutputProjection, checkConstraintProjection]}
+
+-- | Generate a SQL SELECT statement which outputs the mutation response
+--
+-- For multi row inserts:
+-- SELECT (SELECT COUNT(*) FROM [with_alias]) AS [affected_rows], (select_from_returning) AS [returning] FOR JSON PATH, INCLUDE_NULL_VALUES, WITHOUT_ARRAY_WRAPPER
+--
+-- For single row insert: the selection set is translated to SQL query using @'mkSQLSelect'
+mkMutationOutputSelect ::
+  (MonadError QErr m) =>
+  Bool ->
+  Text ->
+  MutationOutputG 'MSSQL (Const Void) Expression ->
+  m Select
+mkMutationOutputSelect stringifyNum withAlias = \case
+  IR.MOutMultirowFields multiRowFields -> do
+    projections <- forM multiRowFields $ \(fieldName, field') -> do
+      let mkProjection = ExpressionProjection . flip Aliased (getFieldNameTxt fieldName) . SelectExpression
+      mkProjection <$> case field' of
+        IR.MCount -> pure countSelect
+        IR.MExp t -> pure $ textSelect t
+        IR.MRet returningFields -> mkSelect JASMultipleRows returningFields
+    let forJson = JsonFor $ ForJson JsonSingleton NoRoot
+    pure emptySelect {selectFor = forJson, selectProjections = projections}
+  IR.MOutSinglerowObject singleRowField -> mkSelect JASSingleObject singleRowField
+  where
+    mkSelect jsonAggSelect annFields = do
+      let annSelect = IR.AnnSelectG annFields (IR.FromIdentifier withAlias) IR.noTablePermissions IR.noSelectArgs stringifyNum
+      V.runValidate (runFromIr $ mkSQLSelect jsonAggSelect annSelect) `onLeft` (throw500 . tshow)
+
+    -- SELECT COUNT(*) FROM [with_alias]
+    countSelect =
+      let countProjection = AggregateProjection $ Aliased (CountAggregate StarCountable) "count"
+       in emptySelect
+            { selectProjections = [countProjection],
+              selectFrom = Just $ TSQL.FromIdentifier withAlias
+            }
+
+    textSelect t =
+      let textProjection = ExpressionProjection $ Aliased (ValueExpression (ODBC.TextValue t)) "exp"
+       in emptySelect {selectProjections = [textProjection]}
 
 -- subscription
 

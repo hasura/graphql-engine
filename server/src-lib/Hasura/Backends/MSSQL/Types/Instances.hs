@@ -81,6 +81,7 @@ $( fmap concat $ for
        ''ScalarType,
        ''TableName,
        ''Select,
+       ''With,
        ''Top,
        ''FieldName,
        ''JsonPath,

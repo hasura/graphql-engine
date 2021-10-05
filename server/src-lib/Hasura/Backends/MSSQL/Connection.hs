@@ -2,11 +2,13 @@ module Hasura.Backends.MSSQL.Connection where
 
 import Control.Exception
 import Data.Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Casing
 import Data.Aeson.TH
 import Data.Environment qualified as Env
 import Data.Pool qualified as Pool
 import Data.Text (pack, unpack)
+import Database.MSSQL.Transaction
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable (..))
@@ -183,5 +185,32 @@ instance Cacheable MSSQLSourceConfig where
 instance ToJSON MSSQLSourceConfig where
   toJSON = toJSON . _mscConnectionString
 
+odbcValueToJValue :: ODBC.Value -> J.Value
+odbcValueToJValue = \case
+  ODBC.TextValue t -> J.String t
+  ODBC.ByteStringValue b -> J.String $ bsToTxt b
+  ODBC.BinaryValue b -> J.String $ bsToTxt $ ODBC.unBinary b
+  ODBC.BoolValue b -> J.Bool b
+  ODBC.DoubleValue d -> J.toJSON d
+  ODBC.FloatValue f -> J.toJSON f
+  ODBC.IntValue i -> J.toJSON i
+  ODBC.ByteValue b -> J.toJSON b
+  ODBC.DayValue d -> J.toJSON d
+  ODBC.TimeOfDayValue td -> J.toJSON td
+  ODBC.LocalTimeValue l -> J.toJSON l
+  ODBC.NullValue -> J.Null
+
 newtype MSSQLConnErr = MSSQLConnErr {getConnErr :: Text}
   deriving (Show, Eq, ToJSON)
+
+fromMSSQLTxError :: MSSQLTxError -> QErr
+fromMSSQLTxError (MSSQLTxError query exception) =
+  (internalError "database query error")
+    { qeInternal =
+        Just $
+          ExtraInternal $
+            object
+              [ "query" .= ODBC.renderQuery query,
+                "exception" .= odbcExceptionToJSONValue exception
+              ]
+    }

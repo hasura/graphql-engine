@@ -67,7 +67,8 @@ data BooleanOperators a
   | ASTWithin !a
 
 data Select = Select
-  { selectTop :: !Top,
+  { selectWith :: !(Maybe With),
+    selectTop :: !Top,
     selectProjections :: ![Projection],
     selectFrom :: !(Maybe From),
     selectJoins :: ![Join],
@@ -80,7 +81,8 @@ data Select = Select
 emptySelect :: Select
 emptySelect =
   Select
-    { selectFrom = Nothing,
+    { selectWith = Nothing,
+      selectFrom = Nothing,
       selectTop = NoTop,
       selectProjections = [],
       selectJoins = [],
@@ -89,6 +91,28 @@ emptySelect =
       selectFor = NoFor,
       selectOffset = Nothing
     }
+
+newtype OutputColumn = OutputColumn ColumnName
+
+newtype InsertOutput = InsertOutput [OutputColumn]
+
+newtype Values = Values [Expression]
+
+data Insert = Insert
+  { insertTable :: !TableName,
+    insertColumns :: ![ColumnName],
+    insertOutput :: !InsertOutput,
+    insertValues :: ![Values]
+  }
+
+data SetValue
+  = SetON
+  | SetOFF
+
+data SetIdenityInsert = SetIdenityInsert
+  { setTable :: !TableName,
+    setValue :: !SetValue
+  }
 
 data Delete = Delete
   { deleteTable :: !(Aliased TableName),
@@ -157,6 +181,9 @@ data JoinAlias = JoinAlias
 newtype Where
   = Where [Expression]
 
+newtype With
+  = With (NonEmpty (Aliased Select))
+
 data Top
   = NoTop
   | Top Int
@@ -185,7 +212,10 @@ data Expression
   | ListExpression [Expression]
   | STOpExpression SpatialOp Expression Expression
   | CastExpression Expression Text
-  | ConditionalProjection Expression FieldName
+  | -- | "CASE WHEN (expression) THEN (expression) ELSE (expression) END"
+    ConditionalExpression Expression Expression Expression
+  | -- | The 'DEFAULT' value. TODO: Make this as a part of @'ODBC.Value'.
+    DefaultExpression
 
 data JsonPath
   = RootPath
@@ -208,6 +238,7 @@ data From
   = FromQualifiedTable (Aliased TableName)
   | FromOpenJson (Aliased OpenJson)
   | FromSelect (Aliased Select)
+  | FromIdentifier Text
 
 data OpenJson = OpenJson
   { openJsonExpression :: Expression,

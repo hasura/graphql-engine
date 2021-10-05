@@ -31,6 +31,9 @@ class TestMetadata:
     def test_replace_metadata(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/replace_metadata.yaml')
 
+    def test_replace_metadata_no_tables(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata_no_tables.yaml')
+
     def test_replace_metadata_wo_remote_schemas(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/replace_metadata_wo_rs.yaml')
 
@@ -156,7 +159,7 @@ class TestMetadata:
 
     def test_pg_function_tracking_with_comment(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_track_function_with_comment_setup.yaml')
-        
+
         # make an introspection query to see if the description of the function has changed
         introspection_query = """{
             __schema {
@@ -421,3 +424,14 @@ class TestSetTableCustomizationCommon:
 
     def test_set_table_customization(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + hge_ctx.backend_suffix('/set_table_customization') + '.yaml')
+
+@pytest.mark.parametrize("backend", ['bigquery'])
+@usefixtures('per_method_tests_db_state')
+class TestMetadataBigquery:
+
+    def test_replace_metadata_no_tables(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata_no_tables.yaml')
+
+    @classmethod
+    def dir(cls):
+        return "queries/v1/metadata/bigquery"

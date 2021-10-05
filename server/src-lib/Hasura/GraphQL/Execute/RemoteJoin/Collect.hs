@@ -19,7 +19,6 @@ import Hasura.GraphQL.Execute.RemoteJoin.Types
 import Hasura.GraphQL.Parser.Column (UnpreparedValue (..))
 import Hasura.Prelude
 import Hasura.RQL.IR
-import Hasura.RQL.IR.Returning
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G

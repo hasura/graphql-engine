@@ -43,7 +43,6 @@ instance BackendSchema 'BigQuery where
   -- backend extensions
   relayExtension = Nothing
   nodesAggExtension = Just ()
-  nestedInsertsExtension = Nothing
 
   -- table arguments
   tableArguments = bqTableArgs
@@ -61,6 +60,9 @@ instance BackendSchema 'BigQuery where
 
   -- SQL literals
   columnDefaultValue = error "TODO: Make impossible by the type system. BigQuery doesn't support insertions."
+
+  -- Extra insert data
+  getExtraInsertData = const ()
 
 ----------------------------------------------------------------
 -- Top level parsers

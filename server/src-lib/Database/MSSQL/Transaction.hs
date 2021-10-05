@@ -1,5 +1,6 @@
 module Database.MSSQL.Transaction
   ( runTx,
+    runTxE,
     unitQuery,
     unitQueryE,
     singleRowQuery,
@@ -8,6 +9,7 @@ module Database.MSSQL.Transaction
     multiRowQueryE,
     rawQuery,
     rawQueryE,
+    buildGenericTxE,
     TxT,
     TxET (..),
     MSSQLTxError (..),
@@ -146,6 +148,19 @@ rawQueryE ef rf q = TxET $
         execQuery conn q
           >>= liftEither . mapLeft (MSSQLTxError q . ODBC.DataRetrievalError) . rf
 
+-- | Build a generic transaction out of an IO action
+buildGenericTxE ::
+  (MonadIO m) =>
+  -- | Exception modifier
+  (ODBC.ODBCException -> e) ->
+  -- | IO action
+  (ODBC.Connection -> IO a) ->
+  TxET e m a
+buildGenericTxE ef f = TxET $
+  ReaderT $ \conn -> do
+    result <- liftIO $ try $ f conn
+    withExceptT ef $ hoistEither result
+
 execQuery ::
   (MonadIO m) =>
   ODBC.Connection ->
@@ -161,8 +176,17 @@ runTx ::
   TxT m a ->
   ODBC.Connection ->
   ExceptT MSSQLTxError m a
-runTx tx =
-  asTransaction (`execTx` tx)
+runTx = runTxE id
+
+-- | Run a command on the given connection wrapped in a transaction.
+runTxE ::
+  MonadIO m =>
+  (MSSQLTxError -> e) ->
+  TxET e m a ->
+  ODBC.Connection ->
+  ExceptT e m a
+runTxE ef tx =
+  asTransaction ef (`execTx` tx)
 
 {-# INLINE execTx #-}
 execTx :: ODBC.Connection -> TxET e m a -> ExceptT e m a
@@ -170,18 +194,19 @@ execTx conn tx = runReaderT (txHandler tx) conn
 
 asTransaction ::
   MonadIO m =>
-  (ODBC.Connection -> ExceptT MSSQLTxError m a) ->
+  (MSSQLTxError -> e) ->
+  (ODBC.Connection -> ExceptT e m a) ->
   ODBC.Connection ->
-  ExceptT MSSQLTxError m a
-asTransaction f conn = do
+  ExceptT e m a
+asTransaction ef f conn = do
   -- Begin the transaction. If there is an err, do not rollback
-  execTx conn beginTx
+  withExceptT ef $ execTx conn beginTx
   -- Run the transaction and commit. If there is an err, rollback
   flip catchError rollback $ do
     result <- f conn
-    execTx conn commitTx
+    withExceptT ef $ execTx conn commitTx
     pure result
   where
     rollback err = do
-      execTx conn rollbackTx
+      withExceptT ef $ execTx conn rollbackTx
       throwError err

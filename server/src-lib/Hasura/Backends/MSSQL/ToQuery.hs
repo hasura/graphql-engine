@@ -7,6 +7,8 @@ module Hasura.Backends.MSSQL.ToQuery
     fromReselect,
     toQueryFlat,
     toQueryPretty,
+    fromInsert,
+    fromSetIdentityInsert,
     fromDelete,
     Printer (..),
   )
@@ -43,6 +45,10 @@ instance IsString Printer where
 (<+>?) :: Printer -> Maybe Printer -> Printer
 (<+>?) x Nothing = x
 (<+>?) x (Just y) = SeqPrinter [x, y]
+
+(?<+>) :: Maybe Printer -> Printer -> Printer
+(?<+>) Nothing x = x
+(?<+>) (Just x) y = SeqPrinter [x, y]
 
 --------------------------------------------------------------------------------
 -- Instances
@@ -81,7 +87,7 @@ fromExpression =
           SepByPrinter
             (NewlinePrinter <+> "OR ")
             (fmap (\x -> "(" <+> fromExpression x <+> ")") (toList xs))
-    NotExpression expression -> "NOT " <+> (fromExpression expression)
+    NotExpression expression -> "NOT " <+> fromExpression expression
     ExistsExpression sel -> "EXISTS (" <+> fromSelect sel <+> ")"
     IsNullExpression expression ->
       "(" <+> fromExpression expression <+> ") IS NULL"
@@ -111,12 +117,15 @@ fromExpression =
         <+> "("
         <+> fromExpression str
         <+> ") = 1"
-    ConditionalProjection expression fieldName ->
+    ConditionalExpression condition trueExpression falseExpression ->
       "(CASE WHEN("
-        <+> fromExpression expression
+        <+> fromExpression condition
         <+> ") THEN "
-        <+> fromFieldName fieldName
-        <+> " ELSE NULL END)"
+        <+> fromExpression trueExpression
+        <+> " ELSE "
+        <+> fromExpression falseExpression
+        <+> " END)"
+    DefaultExpression -> "DEFAULT"
 
 fromOp :: Op -> Printer
 fromOp =
@@ -153,6 +162,42 @@ fromFieldName :: FieldName -> Printer
 fromFieldName (FieldName {..}) =
   fromNameText fieldNameEntity <+> "." <+> fromNameText fieldName
 
+fromOutputColumn :: OutputColumn -> Printer
+fromOutputColumn (OutputColumn columnName) =
+  "INSERTED." <+> fromNameText (columnNameText columnName)
+
+fromInsertOutput :: InsertOutput -> Printer
+fromInsertOutput (InsertOutput outputColumns) =
+  "OUTPUT " <+> SepByPrinter ", " (map fromOutputColumn outputColumns)
+
+fromValues :: Values -> Printer
+fromValues (Values values) =
+  "( " <+> SepByPrinter ", " (map fromExpression values) <+> " )"
+
+fromInsert :: Insert -> Printer
+fromInsert Insert {..} =
+  SepByPrinter
+    NewlinePrinter
+    [ "INSERT INTO " <+> fromTableName insertTable,
+      "(" <+> SepByPrinter ", " (map (fromNameText . columnNameText) insertColumns) <+> ")",
+      fromInsertOutput insertOutput,
+      "VALUES " <+> SepByPrinter ", " (map fromValues insertValues)
+    ]
+
+fromSetValue :: SetValue -> Printer
+fromSetValue = \case
+  SetON -> "ON"
+  SetOFF -> "OFF"
+
+fromSetIdentityInsert :: SetIdenityInsert -> Printer
+fromSetIdentityInsert SetIdenityInsert {..} =
+  SepByPrinter
+    " "
+    [ "SET IDENTITY_INSERT",
+      fromTableName setTable,
+      fromSetValue setValue
+    ]
+
 fromDelete :: Delete -> Printer
 fromDelete Delete {deleteTable, deleteWhere} =
   SepByPrinter
@@ -163,7 +208,7 @@ fromDelete Delete {deleteTable, deleteWhere} =
     ]
 
 fromSelect :: Select -> Printer
-fromSelect Select {..} = wrapFor selectFor result
+fromSelect Select {..} = fmap fromWith selectWith ?<+> wrapFor selectFor result
   where
     result =
       SepByPrinter
@@ -196,6 +241,13 @@ fromSelect Select {..} = wrapFor selectFor result
                fromOrderBys selectTop selectOffset selectOrderBy,
                fromFor selectFor
              ]
+
+fromWith :: With -> Printer
+fromWith (With withSelects) =
+  "WITH " <+> SepByPrinter ", " (map fromAliasedSelect (toList withSelects)) <+> NewlinePrinter
+  where
+    fromAliasedSelect Aliased {..} =
+      fromNameText aliasedAlias <+> " AS " <+> "( " <+> fromSelect aliasedThing <+> " )"
 
 fromJoinSource :: JoinSource -> Printer
 fromJoinSource =
@@ -385,6 +437,7 @@ fromFrom =
       fromAliased (fmap fromTableName aliasedQualifiedTableName)
     FromOpenJson openJson -> fromAliased (fmap fromOpenJson openJson)
     FromSelect select -> fromAliased (fmap (parens . fromSelect) select)
+    FromIdentifier identifier -> fromNameText identifier
 
 fromOpenJson :: OpenJson -> Printer
 fromOpenJson OpenJson {openJsonExpression, openJsonWith} =
@@ -401,7 +454,7 @@ fromOpenJson OpenJson {openJsonExpression, openJsonWith} =
               5
               ( SepByPrinter
                   ("," <+> NewlinePrinter)
-                  (fmap fromJsonFieldSpec $ toList openJsonWith')
+                  (fromJsonFieldSpec <$> toList openJsonWith')
               )
             <+> ")"
     ]

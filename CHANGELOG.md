@@ -3,6 +3,10 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: support MSSQL insert mutations
+
+## v2.1.0-beta.1
+
 - server: Ignore unexpected fields in action responses (#5731)
 - server: add webhook transformations for Actions and EventTriggers
 - server: optimize SQL query generation with LIMITs
@@ -34,7 +38,7 @@
 - cli: support `query_tags` in metadata
 - cli: add `hasura deploy` command
 - cli: allow exporting and applying metadata from `yaml/json` files
-- cli: allow squashing specific set of migrations. A new `--to` flag is introduced in `migrate squash` command. eg: `hasura migrate squash --from <v1> --to <v4>` 
+- cli: allow squashing specific set of migrations. A new `--to` flag is introduced in `migrate squash` command. eg: `hasura migrate squash --from <v1> --to <v4>`
 
 ## v2.0.9
 

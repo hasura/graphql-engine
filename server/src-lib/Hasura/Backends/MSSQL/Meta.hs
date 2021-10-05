@@ -44,11 +44,29 @@ data SysTable = SysTable
   { staName :: Text,
     staObjectId :: Int,
     staJoinedSysColumn :: [SysColumn],
-    staJoinedSysSchema :: SysSchema
+    staJoinedSysSchema :: SysSchema,
+    staJoinedSysPrimaryKey :: Maybe SysPrimaryKey
   }
   deriving (Show, Generic)
 
 instance FromJSON SysTable where
+  parseJSON = genericParseJSON hasuraJSON
+
+newtype SysPrimaryKeyColumn = SysPrimaryKeyColumn
+  {spkcName :: Text}
+  deriving (Show, Generic)
+
+instance FromJSON SysPrimaryKeyColumn where
+  parseJSON = genericParseJSON hasuraJSON
+
+data SysPrimaryKey = SysPrimaryKey
+  { spkName :: Text,
+    spkIndexId :: Int,
+    spkColumns :: NESeq SysPrimaryKeyColumn
+  }
+  deriving (Show, Generic)
+
+instance FromJSON SysPrimaryKey where
   parseJSON = genericParseJSON hasuraJSON
 
 data SysSchema = SysSchema
@@ -110,6 +128,7 @@ transformTable tableInfo =
       tableOID = OID $ staObjectId tableInfo
       (columns, foreignKeys) = unzip $ transformColumn <$> staJoinedSysColumn tableInfo
       foreignKeysMetadata = HS.fromList $ map ForeignKeyMetadata $ coalesceKeys $ concat foreignKeys
+      primaryKey = transformPrimaryKey <$> staJoinedSysPrimaryKey tableInfo
       identityColumns =
         map (ColumnName . scName) $
           filter scIsIdentity $ staJoinedSysColumn tableInfo
@@ -117,7 +136,7 @@ transformTable tableInfo =
         DBTableMetadata
           tableOID
           columns
-          Nothing -- no primary key information?
+          primaryKey
           HS.empty -- no unique constraints?
           foreignKeysMetadata
           Nothing -- no views, only tables
@@ -137,13 +156,19 @@ transformColumn columnInfo =
       prciType = parseScalarType $ styName $ scJoinedSysType columnInfo
       foreignKeys =
         scJoinedForeignKeyColumns columnInfo <&> \foreignKeyColumn ->
-          let _fkConstraint = Constraint () $ OID $ sfkcConstraintObjectId foreignKeyColumn
+          let _fkConstraint = Constraint "fk_mssql" $ OID $ sfkcConstraintObjectId foreignKeyColumn
 
               schemaName = ssName $ sfkcJoinedReferencedSysSchema foreignKeyColumn
               _fkForeignTable = TableName (sfkcJoinedReferencedTableName foreignKeyColumn) schemaName
               _fkColumnMapping = HM.singleton prciName $ ColumnName $ sfkcJoinedReferencedColumnName foreignKeyColumn
            in ForeignKey {..}
    in (RawColumnInfo {..}, foreignKeys)
+
+transformPrimaryKey :: SysPrimaryKey -> PrimaryKey 'MSSQL (Column 'MSSQL)
+transformPrimaryKey (SysPrimaryKey {..}) =
+  let constraint = Constraint spkName $ OID spkIndexId
+      columns = (ColumnName . spkcName) <$> spkColumns
+   in PrimaryKey constraint columns
 
 --------------------------------------------------------------------------------
 -- Helpers
