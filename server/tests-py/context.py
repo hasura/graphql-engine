@@ -280,7 +280,7 @@ class GraphQLWSClient():
             new_msg['type'] = 'pong'
             self.send(json.dumps(new_msg))
             return
-        
+
         if 'id' in json_msg:
             query_id = json_msg['id']
             if json_msg.get('type') == 'complete':
@@ -290,14 +290,14 @@ class GraphQLWSClient():
                 self.ws_id_query_queues[json_msg['id']] = queue.Queue(maxsize=-1)
             #Put event in the correponding query_queue
             self.ws_id_query_queues[query_id].put(json_msg)
-        
+
         if json_msg['type'] != 'ping':
             self.ws_queue.put(json_msg)
 
     def _on_close(self):
         self.remote_closed = True
         self.init_done = False
-    
+
     def get_conn_close_state(self):
         return self.remote_closed or self.is_closing
 
