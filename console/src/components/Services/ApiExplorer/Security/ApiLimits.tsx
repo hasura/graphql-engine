@@ -15,23 +15,19 @@ const ApiLimitsComponent: React.FC<securitySettingsComponentProps> = ({
   allRoles,
   dispatch,
 }) => {
-  // useEffect(() => {
-  //   dispatch(exportMetadata());
-  // }, [dispatch]);
-
   const headers = [
     'Role',
     'Depth Limit',
     'Node Limit',
     'Rate Limit (RPM)',
-    // 'Operation Timeout (Seconds)',
+    'Timeout (Seconds)',
   ];
   const keys = [
     'role',
     'depth_limit',
     'node_limit',
     'rate_limit',
-    // 'operation_timeout',
+    'time_limit',
   ];
   const roles = allRoles;
   return (

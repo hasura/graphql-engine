@@ -197,7 +197,7 @@ export function TableRow<T>({
                 : styles.justify_center
             } ${singleColumn ? styles.single_column : styles.justify_center}`}
             onClick={onClick(i)}
-            key={i}
+            key={`${index}${i}`}
           >
             {renderCol({
               data,

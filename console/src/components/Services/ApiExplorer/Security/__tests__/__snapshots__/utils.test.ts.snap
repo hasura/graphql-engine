@@ -23,6 +23,13 @@ Array [
     },
     "state": "disabled",
   },
+  Object {
+    "global": -1,
+    "per_role": Object {
+      "user": undefined,
+    },
+    "state": "disabled",
+  },
 ]
 `;
 
@@ -44,6 +51,13 @@ Array [
   },
   Object {
     "global": Object {},
+    "per_role": Object {
+      "new_role": undefined,
+    },
+    "state": "disabled",
+  },
+  Object {
+    "global": -1,
     "per_role": Object {
       "new_role": undefined,
     },
@@ -75,6 +89,13 @@ Array [
     },
     "state": "disabled",
   },
+  Object {
+    "global": -1,
+    "per_role": Object {
+      "test_role": undefined,
+    },
+    "state": "disabled",
+  },
 ]
 `;
 
@@ -101,6 +122,13 @@ Array [
     },
     "state": "disabled",
   },
+  Object {
+    "global": -1,
+    "per_role": Object {
+      "editor": undefined,
+    },
+    "state": "disabled",
+  },
 ]
 `;
 
@@ -118,6 +146,11 @@ Array [
   },
   Object {
     "global": Object {},
+    "per_role": Object {},
+    "state": "disabled",
+  },
+  Object {
+    "global": -1,
     "per_role": Object {},
     "state": "disabled",
   },
