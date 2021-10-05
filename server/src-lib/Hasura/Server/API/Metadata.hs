@@ -493,7 +493,6 @@ runMetadataQueryV2M ::
     CacheRWM m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
-    HasServerConfigCtx m,
     MonadReader r m,
     Has (L.Logger L.Hasura) r
   ) =>

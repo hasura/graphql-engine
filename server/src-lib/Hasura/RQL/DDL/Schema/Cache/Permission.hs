@@ -31,7 +31,6 @@ import Hasura.RQL.Types.Roles.Internal
     rolePermInfoToCombineRolePermInfo,
   )
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Types
 import Hasura.Session
 
 {- Note: [Inherited roles architecture for read queries]
@@ -199,7 +198,6 @@ buildTablePermissions ::
     Inc.ArrowCache m arr,
     MonadError QErr m,
     ArrowWriter (Seq CollectedInfo) arr,
-    HasServerConfigCtx m,
     BackendMetadata b,
     Inc.Cacheable (Proxy b)
   ) =>
@@ -214,8 +212,6 @@ buildTablePermissions ::
 buildTablePermissions = Inc.cache proc (proxy, source, tableCache, tableFields, tablePermissions, orderedRoles) -> do
   let alignedPermissions = alignPermissions tablePermissions
       table = _tpiTable tablePermissions
-  experimentalFeatures <- bindA -< _sccExperimentalFeatures <$> askServerConfigCtx
-  let isInheritedRolesEnabled = EFInheritedRoles `elem` experimentalFeatures
   metadataRolePermissions <-
     (|
       Inc.keyed
@@ -227,35 +223,32 @@ buildTablePermissions = Inc.cache proc (proxy, source, tableCache, tableFields, 
             returnA -< RolePermInfo insert select update delete
         )
       |) alignedPermissions
-  if isInheritedRolesEnabled
-    then
-      (|
-        foldlA'
-          ( \accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) -> do
-              parentRolePermissions <-
-                bindA
-                  -< for (toList parentRoles) $ \role ->
-                    onNothing (M.lookup role accumulatedRolePermMap) $
-                      throw500 $
-                        -- this error will ideally never be thrown, but if it's thrown then
-                        -- it's possible that the permissions for the role do exist, but it's
-                        -- not yet built due to wrong ordering of the roles, check `orderRoles`
-                        "buildTablePermissions: table role permissions for role: " <> role <<> " not found"
-              let combinedParentRolePermInfo = mconcat $ fmap rolePermInfoToCombineRolePermInfo parentRolePermissions
-                  selectPermissionsCount = length $ filter (isJust . _permSel) parentRolePermissions
-              let accumulatedRolePermission = M.lookup roleName accumulatedRolePermMap
-              let roleSelectPermission =
-                    case (_permSel =<< accumulatedRolePermission) of
-                      Just metadataSelectPerm -> Just metadataSelectPerm
-                      Nothing -> combinedSelPermInfoToSelPermInfo selectPermissionsCount <$> (crpiSelPerm combinedParentRolePermInfo)
-              roleInsertPermission <- resolveCheckTablePermission -< (crpiInsPerm combinedParentRolePermInfo, accumulatedRolePermission, _permIns, roleName, source, table, PTInsert)
-              roleUpdatePermission <- resolveCheckTablePermission -< (crpiUpdPerm combinedParentRolePermInfo, accumulatedRolePermission, _permUpd, roleName, source, table, PTUpdate)
-              roleDeletePermission <- resolveCheckTablePermission -< (crpiDelPerm combinedParentRolePermInfo, accumulatedRolePermission, _permDel, roleName, source, table, PTDelete)
-              let rolePermInfo = RolePermInfo roleInsertPermission roleSelectPermission roleUpdatePermission roleDeletePermission
-              returnA -< M.insert roleName rolePermInfo accumulatedRolePermMap
-          )
-      |) metadataRolePermissions (_unOrderedRoles orderedRoles)
-    else returnA -< metadataRolePermissions
+  (|
+    foldlA'
+      ( \accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) -> do
+          parentRolePermissions <-
+            bindA
+              -< for (toList parentRoles) $ \role ->
+                onNothing (M.lookup role accumulatedRolePermMap) $
+                  throw500 $
+                    -- this error will ideally never be thrown, but if it's thrown then
+                    -- it's possible that the permissions for the role do exist, but it's
+                    -- not yet built due to wrong ordering of the roles, check `orderRoles`
+                    "buildTablePermissions: table role permissions for role: " <> role <<> " not found"
+          let combinedParentRolePermInfo = mconcat $ fmap rolePermInfoToCombineRolePermInfo parentRolePermissions
+              selectPermissionsCount = length $ filter (isJust . _permSel) parentRolePermissions
+          let accumulatedRolePermission = M.lookup roleName accumulatedRolePermMap
+          let roleSelectPermission =
+                case (_permSel =<< accumulatedRolePermission) of
+                  Just metadataSelectPerm -> Just metadataSelectPerm
+                  Nothing -> combinedSelPermInfoToSelPermInfo selectPermissionsCount <$> (crpiSelPerm combinedParentRolePermInfo)
+          roleInsertPermission <- resolveCheckTablePermission -< (crpiInsPerm combinedParentRolePermInfo, accumulatedRolePermission, _permIns, roleName, source, table, PTInsert)
+          roleUpdatePermission <- resolveCheckTablePermission -< (crpiUpdPerm combinedParentRolePermInfo, accumulatedRolePermission, _permUpd, roleName, source, table, PTUpdate)
+          roleDeletePermission <- resolveCheckTablePermission -< (crpiDelPerm combinedParentRolePermInfo, accumulatedRolePermission, _permDel, roleName, source, table, PTDelete)
+          let rolePermInfo = RolePermInfo roleInsertPermission roleSelectPermission roleUpdatePermission roleDeletePermission
+          returnA -< M.insert roleName rolePermInfo accumulatedRolePermMap
+      )
+    |) metadataRolePermissions (_unOrderedRoles orderedRoles)
   where
     mkMap :: [PermDef e] -> HashMap RoleName (PermDef e)
     mkMap = mapFromL _pdRole

@@ -41,19 +41,15 @@ it will override the inherited permission, if any.
 
    The above setup won't work because ``inherited_role1`` and ``inherited_role2`` form a cycle.
 
-.. note::
-
-   This feature is currently accessible as an experimental feature and must be
-   explicitly toggled on in order to be enabled.
-   This can be done either by setting the env var ``HASURA_GRAPHQL_EXPERIMENTAL_FEATURES``
-   to ``inherited_roles`` or by providing the server flag ``--experimental-features``
-   to ``inherited_roles``.
-
-   See :ref:`server config reference <server_flag_reference>` for info on setting the flag/env var.
-
 .. admonition:: Supported from
 
-   Inherited roles are supported for versions ``v2.0.0-alpha.4`` and above.
+   Inherited roles will be supported for versions ``v2.0.0-alpha.4`` and above. The inherited roles feature
+   is an experimental feature from the ``v2.0.0-alpha.4`` till the ``v2.1.0-beta.1`` version i.e it must be
+   explicitly toggled in order to be enabled. This can be done either by setting the env
+   var ``HASURA_GRAPHQL_EXPERIMENTAL_FEATURES`` or the server flag ``--experimental-features`` to ``inherited_roles``.
+
+   After the ``v2.1.0-beta.1`` version, inherited roles will be enabled by default in the graphql-engine.
+
 
 Creating inherited roles
 ------------------------

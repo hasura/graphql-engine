@@ -69,8 +69,7 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Tag
 import Hasura.SQL.Tag qualified as Tag
 import Hasura.Server.Types
-  ( ExperimentalFeature (..),
-    MaintenanceMode (..),
+  ( MaintenanceMode (..),
   )
 import Hasura.Server.Version (HasVersion)
 import Hasura.Session
@@ -615,8 +614,6 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
       orderedRoles <- bindA -< orderRoles $ M.elems allRoles
 
-      isInheritedRolesEnabled <- bindA -< (EFInheritedRoles `elem`) . _sccExperimentalFeatures <$> askServerConfigCtx
-
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
       remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, OMap.elems remoteSchemas)
@@ -640,23 +637,20 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                       allRolesUnresolvedPermissionsMap <-
                         bindA
                           -<
-                            if isInheritedRolesEnabled
-                              then
-                                foldM
-                                  ( \accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) -> do
-                                      rolePermission <- onNothing (M.lookup roleName accumulatedRolePermMap) $ do
-                                        parentRolePermissions <-
-                                          for (toList parentRoles) $ \role ->
-                                            onNothing (M.lookup role accumulatedRolePermMap) $
-                                              throw500 $
-                                                "remote schema permissions: bad ordering of roles, could not find the permission of role: " <>> role
-                                        let combinedPermission = sconcat <$> nonEmpty parentRolePermissions
-                                        pure $ fromMaybe CPUndefined combinedPermission
-                                      pure $ M.insert roleName rolePermission accumulatedRolePermMap
-                                  )
-                                  metadataCheckPermissionsMap
-                                  (_unOrderedRoles orderedRoles)
-                              else pure metadataCheckPermissionsMap
+                            foldM
+                              ( \accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) -> do
+                                  rolePermission <- onNothing (M.lookup roleName accumulatedRolePermMap) $ do
+                                    parentRolePermissions <-
+                                      for (toList parentRoles) $ \role ->
+                                        onNothing (M.lookup role accumulatedRolePermMap) $
+                                          throw500 $
+                                            "remote schema permissions: bad ordering of roles, could not find the permission of role: " <>> role
+                                    let combinedPermission = sconcat <$> nonEmpty parentRolePermissions
+                                    pure $ fromMaybe CPUndefined combinedPermission
+                                  pure $ M.insert roleName rolePermission accumulatedRolePermMap
+                              )
+                              metadataCheckPermissionsMap
+                              (_unOrderedRoles orderedRoles)
                       -- traverse through `allRolesUnresolvedPermissionsMap` to record any inconsistencies (if exists)
                       resolvedPermissions <-
                         (|
@@ -676,7 +670,6 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                           )
                   )
               |)
-
       let remoteSchemaCtxMap = M.map fst remoteSchemaMap
 
       -- sources are build in two steps
