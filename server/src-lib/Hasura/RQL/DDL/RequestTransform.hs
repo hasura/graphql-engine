@@ -359,19 +359,20 @@ mkUrlTransform engine template transformCtx =
   case mkTemplateTransform engine template transformCtx of
     Left err -> Left err
     Right (J.String url) ->
-      case URI.parseURI (T.unpack url) of
-        Just _ -> Right url
-        Nothing ->
-          Left $
-            TransformErrorBundle $
-              pure $
-                J.object
-                  [ "error_code" J..= J.String "TransformationError",
-                    -- TODO: This error message is not very
-                    -- helpful. We should find a way to identity what
-                    -- is wrong with the URL.
-                    "message" J..= J.String ("Invalid URL: " <> url)
-                  ]
+      let escapedString = T.pack $ URI.escapeURIString (\c -> not (c == '|')) (T.unpack url)
+       in case URI.parseURI (T.unpack escapedString) of
+            Just _ -> Right url
+            Nothing ->
+              Left $
+                TransformErrorBundle $
+                  pure $
+                    J.object
+                      [ "error_code" J..= J.String "TransformationError",
+                        -- TODO: This error message is not very
+                        -- helpful. We should find a way to identity what
+                        -- is wrong with the URL.
+                        "message" J..= J.String ("Invalid URL: " <> url)
+                      ]
     Right val ->
       Left $
         TransformErrorBundle $
@@ -407,7 +408,7 @@ applyRequestTransform RequestTransform {..} reqData sessionVars =
       bodyFunc body =
         case rtBody of
           Nothing -> pure body
-          Just f -> (pure . J.encode) <$> f transformCtx
+          Just f -> pure . J.encode <$> f transformCtx
 
       urlFunc :: Text -> Either TransformErrorBundle Text
       urlFunc url =
