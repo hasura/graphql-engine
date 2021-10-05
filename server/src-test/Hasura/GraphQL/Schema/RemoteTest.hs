@@ -18,10 +18,12 @@ import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.TestUtils
 import Hasura.GraphQL.RemoteServer (identityCustomizer)
 import Hasura.GraphQL.Schema.Remote
+import Hasura.GraphQL.Schema.Common
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.IR.Root
 import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SchemaCache
 import Hasura.Session
 import Language.GraphQL.Draft.Parser qualified as G
@@ -102,11 +104,19 @@ buildQueryParsers ::
   IO (P.FieldParser TestMonad (GraphQLField (SchemaRelationshipSelect UnpreparedValue) RemoteSchemaVariable))
 buildQueryParsers introspection = do
   let introResult = IntrospectionResult introspection $$(G.litName "Query") Nothing Nothing
+      remoteSchemaInfo = RemoteSchemaInfo (ValidatedRemoteSchemaDef N.nullURI [] False 60 Nothing) identityCustomizer
+      remoteSchemaRels = mempty
+      sourceContext = -- without relationships to sources, this won't be evaluated
+        ( undefined :: RoleName ,
+          undefined :: SourceCache,
+          undefined :: RemoteSchemaMap,
+          undefined :: QueryContext
+        )
   (query, _, _) <-
     runError $
-      runSchemaT $
-        buildRemoteParser introResult $
-          RemoteSchemaInfo (ValidatedRemoteSchemaDef N.nullURI [] False 60 Nothing) identityCustomizer
+      flip runReaderT sourceContext $
+        runSchemaT $
+          buildRemoteParser introResult remoteSchemaRels remoteSchemaInfo
   pure $
     head query <&> \(RemoteFieldG _ _ abstractField) ->
       case abstractField of
