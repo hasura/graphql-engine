@@ -740,7 +740,9 @@ class HGECtx:
         )
         # NOTE: make sure we preserve key ordering so we can test the ordering
         # properties in the graphql spec properly
-        return resp.status_code, resp.json(object_pairs_hook=OrderedDict)
+        # Don't assume `resp` is JSON object
+        resp_obj = {} if resp.status_code == 500 else resp.json(object_pairs_hook=OrderedDict)
+        return resp.status_code, resp_obj
 
 
     def v1q(self, q, headers = {}):
