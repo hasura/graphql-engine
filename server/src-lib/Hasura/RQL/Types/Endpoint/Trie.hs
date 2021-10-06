@@ -10,6 +10,7 @@ module Hasura.RQL.Types.Endpoint.Trie
     singletonMultiMap,
     singletonTrie,
     insertPath,
+    leaves,
     matchPath,
     ambiguousPaths,
     ambiguousPathsGrouped,
@@ -210,3 +211,6 @@ ambiguousPaths (Trie pathMap (MultiMap methodMap)) =
     childNodeAmbiguousPaths pc t = first (pc :) <$> ambiguousPaths (mergeWildcardTrie t)
     wildcardTrie = M.lookup PathParam pathMap
     mergeWildcardTrie = maybe id (<>) wildcardTrie
+
+leaves :: Trie k v -> [v]
+leaves (Trie m v) = v : concatMap leaves (M.elems m)
