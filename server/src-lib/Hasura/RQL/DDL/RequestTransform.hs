@@ -116,17 +116,24 @@ instance NFData MetadataTransform
 
 instance Cacheable MetadataTransform
 
+infixr 8 .=?
+
+(.=?) :: J.ToJSON v => Text -> Maybe v -> Maybe (Text, J.Value)
+(.=?) _ Nothing = Nothing
+(.=?) k (Just v) = Just (k, J.toJSON v)
+
 instance J.ToJSON MetadataTransform where
   toJSON MetadataTransform {..} =
-    J.object
-      [ "method" J..= mtRequestMethod,
-        "url" J..= mtRequestURL,
-        "body" J..= mtBodyTransform,
-        "content_type" J..= mtContentType,
-        "query_params" J..= fmap M.fromList mtQueryParams,
-        "request_headers" J..= mtRequestHeaders,
-        "template_engine" J..= mtTemplatingEngine
-      ]
+    J.object $
+      ["template_engine" J..= mtTemplatingEngine]
+        <> catMaybes
+          [ "method" .=? mtRequestMethod,
+            "url" .=? mtRequestURL,
+            "body" .=? mtBodyTransform,
+            "content_type" .=? mtContentType,
+            "query_params" .=? fmap M.fromList mtQueryParams,
+            "request_headers" .=? mtRequestHeaders
+          ]
 
 instance J.FromJSON MetadataTransform where
   parseJSON = J.withObject "Object" $ \o -> do

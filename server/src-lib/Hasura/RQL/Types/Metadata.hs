@@ -818,13 +818,13 @@ metadataToOrdJSON
               AO.object $
                 [ ("name", AO.toOrdered name),
                   ("definition", AO.toOrdered definition),
-                  ("retry_conf", AO.toOrdered retryConf),
-                  ("request_transform", maybe AO.Null AO.toOrdered metadataTransform)
+                  ("retry_conf", AO.toOrdered retryConf)
                 ]
                   <> catMaybes
                     [ maybeAnyToMaybeOrdPair "webhook" AO.toOrdered webhook,
                       maybeAnyToMaybeOrdPair "webhook_from_env" AO.toOrdered webhookFromEnv,
-                      headers >>= listToMaybeOrdPair "headers" AO.toOrdered
+                      headers >>= listToMaybeOrdPair "headers" AO.toOrdered,
+                      fmap (("request_transform",) . AO.toOrdered) metadataTransform
                     ]
 
       functionMetadataToOrdJSON :: Backend b => FunctionMetadata b -> AO.Value
@@ -983,12 +983,12 @@ metadataToOrdJSON
       actionMetadataToOrdJSON (ActionMetadata name comment definition permissions metaTransform) =
         AO.object $
           [ ("name", AO.toOrdered name),
-            ("definition", actionDefinitionToOrdJSON definition),
-            ("request_transform", AO.toOrdered metaTransform)
+            ("definition", actionDefinitionToOrdJSON definition)
           ]
             <> catMaybes
               [ maybeCommentToMaybeOrdPair comment,
-                listToMaybeOrdPair "permissions" permToOrdJSON permissions
+                listToMaybeOrdPair "permissions" permToOrdJSON permissions,
+                fmap (("request_transform",) . AO.toOrdered) metaTransform
               ]
         where
           argDefinitionToOrdJSON :: ArgumentDefinition GraphQLType -> AO.Value
