@@ -131,6 +131,7 @@ library
                      , monad-loops
                      , monad-validate
                      , mtl
+                     , openapi3
                      , optparse-applicative
                      , parsec
                      , pg-client
@@ -217,7 +218,7 @@ library
                      , template-haskell >= 2.11
 
                      -- websockets interface related
-                     , websockets
+                     , websockets>=0.12
                      , stm
                      , stm-containers
                      , list-t
@@ -440,6 +441,7 @@ library
                      , Hasura.Server.Types
                      , Hasura.Server.API.PGDump
                      , Hasura.Server.Rest
+                     , Hasura.Server.OpenAPI
                      , Hasura.Prelude
 
                      , Hasura.EncJSON

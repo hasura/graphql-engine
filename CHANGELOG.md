@@ -2,6 +2,7 @@
 
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
+- server: add support for openapi json of REST Endpoints
 
 - server: enable inherited roles by default in the graphql-engine
 - server: support MSSQL insert mutations
