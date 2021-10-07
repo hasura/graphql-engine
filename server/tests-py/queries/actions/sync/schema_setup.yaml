@@ -141,7 +141,7 @@ args:
         type: InObject!
       output_type: OutObject
       handler: http://127.0.0.1:5593/mirror-action
-    transform:
+    request_transform:
       template_engine: Kriti
       body: |
         {
