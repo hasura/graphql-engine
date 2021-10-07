@@ -6,6 +6,7 @@
 
 - server: enable inherited roles by default in the graphql-engine
 - server: support MSSQL insert mutations
+- console: fix v2 metadata imports
 
 ## v2.1.0-beta.1
 
