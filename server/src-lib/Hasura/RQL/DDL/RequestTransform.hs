@@ -392,7 +392,7 @@ mkUrlTransform engine template transformCtx =
 -- | Construct a Template Transformation function
 mkTemplateTransform :: TemplatingEngine -> TemplateText -> TransformContext -> Either TransformErrorBundle J.Value
 mkTemplateTransform engine (TemplateText template) TransformContext {..} =
-  let context = [("$url", tcUrl), ("$body", tcBody), ("$session_vars", tcSessionVars), ("$query_params", tcQueryParams)]
+  let context = [("$url", tcUrl), ("$body", tcBody), ("$session_variables", tcSessionVars), ("$query_params", tcQueryParams)]
    in case engine of
         Kriti -> first (TransformErrorBundle . pure . J.toJSON) $ runKriti template context
 
