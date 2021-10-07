@@ -141,6 +141,15 @@
         "*.tsx"
       ],
       "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              "@/features/*/*",
+              "@/new-components/*/*"
+            ]
+          }
+        ],
         "jsx-a11y/label-has-for": [
           0,
           {

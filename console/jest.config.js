@@ -10,6 +10,7 @@ module.exports = {
   moduleDirectories: ['node_modules', 'src'],
   testEnvironment: 'jsdom',
   moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   globals: {
