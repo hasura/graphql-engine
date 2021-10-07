@@ -16,6 +16,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
 import Hasura.SQL.Backend
+import Language.GraphQL.Draft.Syntax (Name)
 
 newtype ComputedFieldName = ComputedFieldName {unComputedFieldName :: NonEmptyText}
   deriving (Show, Eq, Ord, NFData, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, ToTxt, Hashable, Q.FromCol, Generic, Cacheable)
@@ -90,9 +91,18 @@ instance ToJSON FunctionSessionArgument where
   toJSON (FunctionSessionArgument argName _) = toJSON argName
 
 data FunctionTrackedAs (b :: BackendType)
-  = FTAComputedField !ComputedFieldName !SourceName !(TableName b)
-  | FTACustomFunction !(FunctionName b)
+  = FTAComputedField ComputedFieldName SourceName (TableName b)
+  | FTACustomFunction CustomFunctionNames
   deriving (Generic)
+
+-- | The function name and input arguments name for the "args" field parser.
+--
+-- > function_name(args: args_name)
+data CustomFunctionNames = CustomFunctionNames
+  { cfnFunctionName :: Name,
+    cfnArgsName :: Name
+  }
+  deriving (Show, Eq, Generic)
 
 deriving instance Backend b => Show (FunctionTrackedAs b)
 

@@ -536,34 +536,31 @@ selectFunction ::
   SourceName ->
   -- | SQL function info
   FunctionInfo b ->
-  -- | field display name
-  G.Name ->
   -- | field description, if any
   Maybe G.Description ->
   -- | select permissions of the target table
   SelPermInfo b ->
   m (FieldParser n (SelectExp b))
-selectFunction sourceName function fieldName description selectPermissions = do
+selectFunction sourceName fi@FunctionInfo {..} description selectPermissions = do
   stringifyNum <- asks $ qcStringifyNum . getter
-  let tableName = _fiReturnType function
-  tableInfo <- askTableInfo sourceName tableName
+  tableInfo <- askTableInfo sourceName _fiReturnType
   tableArgsParser <- tableArguments sourceName tableInfo selectPermissions
-  functionArgsParser <- customSQLFunctionArgs function
   selectionSetParser <- returnFunctionParser sourceName tableInfo selectPermissions
+  functionArgsParser <- customSQLFunctionArgs fi _fiGQLName _fiGQLArgsName
   let argsParser = liftA2 (,) functionArgsParser tableArgsParser
   pure $
-    P.subselection fieldName description argsParser selectionSetParser
+    P.subselection _fiGQLName description argsParser selectionSetParser
       <&> \((funcArgs, tableArgs'), fields) ->
         IR.AnnSelectG
           { IR._asnFields = fields,
-            IR._asnFrom = IR.FromFunction (_fiName function) funcArgs Nothing,
+            IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
             IR._asnPerm = tablePermissionsInfo selectPermissions,
             IR._asnArgs = tableArgs',
             IR._asnStrfyNum = stringifyNum
           }
   where
     returnFunctionParser =
-      case _fiJsonAggSelect function of
+      case _fiJsonAggSelect of
         JASSingleObject -> tableSelectionSet
         JASMultipleRows -> tableSelectionList
 
@@ -574,22 +571,19 @@ selectFunctionAggregate ::
   SourceName ->
   -- | SQL function info
   FunctionInfo b ->
-  -- | field display name
-  G.Name ->
   -- | field description, if any
   Maybe G.Description ->
   -- | select permissions of the target table
   SelPermInfo b ->
   m (Maybe (FieldParser n (AggSelectExp b)))
-selectFunctionAggregate sourceName function fieldName description selectPermissions = runMaybeT do
-  let tableName = _fiReturnType function
+selectFunctionAggregate sourceName fi@FunctionInfo {..} description selectPermissions = runMaybeT do
   guard $ spiAllowAgg selectPermissions
   xNodesAgg <- hoistMaybe $ nodesAggExtension @b
-  tableInfo <- askTableInfo sourceName tableName
+  tableInfo <- askTableInfo sourceName _fiReturnType
   stringifyNum <- asks $ qcStringifyNum . getter
   tableGQLName <- getTableGQLName tableInfo
   tableArgsParser <- lift $ tableArguments sourceName tableInfo selectPermissions
-  functionArgsParser <- lift $ customSQLFunctionArgs function
+  functionArgsParser <- lift $ customSQLFunctionArgs fi _fiGQLAggregateName _fiGQLArgsName
   aggregateParser <- lift $ tableAggregationFields sourceName tableInfo selectPermissions
   selectionName <- lift $ pure tableGQLName <&> (<> $$(G.litName "_aggregate"))
   nodesParser <- lift $ tableSelectionList sourceName tableInfo selectPermissions
@@ -604,11 +598,11 @@ selectFunctionAggregate sourceName function fieldName description selectPermissi
                 IR.TAFAgg <$> P.subselection_ $$(G.litName "aggregate") Nothing aggregateParser
               ]
   pure $
-    P.subselection fieldName description argsParser aggregationParser
+    P.subselection _fiGQLAggregateName description argsParser aggregationParser
       <&> \((funcArgs, tableArgs'), fields) ->
         IR.AnnSelectG
           { IR._asnFields = fields,
-            IR._asnFrom = IR.FromFunction (_fiName function) funcArgs Nothing,
+            IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
             IR._asnPerm = tablePermissionsInfo selectPermissions,
             IR._asnArgs = tableArgs',
             IR._asnStrfyNum = stringifyNum
@@ -621,8 +615,6 @@ selectFunctionConnection ::
   SourceName ->
   -- | SQL function info
   FunctionInfo ('Postgres pgKind) ->
-  -- | field display name
-  G.Name ->
   -- | field description, if any
   Maybe G.Description ->
   -- | primary key columns of the target table
@@ -630,13 +622,13 @@ selectFunctionConnection ::
   -- | select permissions of the target table
   SelPermInfo ('Postgres pgKind) ->
   m (Maybe (FieldParser n (ConnectionSelectExp ('Postgres pgKind))))
-selectFunctionConnection sourceName function fieldName description pkeyColumns selectPermissions =
+selectFunctionConnection sourceName fi@FunctionInfo {..} description pkeyColumns selectPermissions = do
+  let fieldName = _fiGQLName <> $$(G.litName "_connection")
   for (relayExtension @('Postgres pgKind)) \xRelayInfo -> do
     stringifyNum <- asks $ qcStringifyNum . getter
-    let tableName = _fiReturnType function
-    tableInfo <- askTableInfo sourceName tableName
+    tableInfo <- askTableInfo sourceName _fiReturnType
     tableConnectionArgsParser <- tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions
-    functionArgsParser <- customSQLFunctionArgs function
+    functionArgsParser <- customSQLFunctionArgs fi _fiGQLName _fiGQLArgsName
     selectionSetParser <- tableConnectionSelectionSet sourceName tableInfo selectPermissions
     let argsParser = liftA2 (,) functionArgsParser tableConnectionArgsParser
     pure $
@@ -650,7 +642,7 @@ selectFunctionConnection sourceName function fieldName description pkeyColumns s
               IR._csSelect =
                 IR.AnnSelectG
                   { IR._asnFields = fields,
-                    IR._asnFrom = IR.FromFunction (_fiName function) funcArgs Nothing,
+                    IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
                     IR._asnPerm = tablePermissionsInfo selectPermissions,
                     IR._asnArgs = args,
                     IR._asnStrfyNum = stringifyNum
@@ -1412,8 +1404,18 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
 customSQLFunctionArgs ::
   (BackendSchema b, MonadSchema n m, MonadTableInfo r m) =>
   FunctionInfo b ->
+  G.Name ->
+  G.Name ->
   m (InputFieldsParser n (IR.FunctionArgsExpTableRow b (UnpreparedValue b)))
-customSQLFunctionArgs FunctionInfo {..} = functionArgs (FTACustomFunction _fiName) _fiInputArgs
+customSQLFunctionArgs FunctionInfo {..} functionName functionArgsName =
+  functionArgs
+    ( FTACustomFunction $
+        CustomFunctionNames
+          { cfnFunctionName = functionName,
+            cfnArgsName = functionArgsName
+          }
+    )
+    _fiInputArgs
 
 -- | Parses the arguments to the underlying sql function of a computed field or
 --   a custom function. All arguments to the underlying sql function are parsed
@@ -1463,8 +1465,8 @@ functionArgs functionTrackedAs (toList -> inputArgs) = do
               computedFieldGQLName <- textToName $ computedFieldNameToText computedFieldName
               tableGQLName <- getTableGQLName @b tableInfo
               pure $ computedFieldGQLName <> $$(G.litName "_") <> tableGQLName <> $$(G.litName "_args")
-            FTACustomFunction functionName ->
-              fmap (<> $$(G.litName "_args")) $ functionGraphQLName @b functionName `onLeft` throwError
+            FTACustomFunction (CustomFunctionNames {cfnArgsName}) ->
+              pure cfnArgsName
         let fieldName = $$(G.litName "args")
             fieldDesc =
               case functionTrackedAs of
@@ -1472,8 +1474,8 @@ functionArgs functionTrackedAs (toList -> inputArgs) = do
                   G.Description $
                     "input parameters for computed field "
                       <> computedFieldName <<> " defined on table " <>> tableName
-                FTACustomFunction functionName ->
-                  G.Description $ "input parameters for function " <>> functionName
+                FTACustomFunction (CustomFunctionNames {cfnFunctionName}) ->
+                  G.Description $ "input parameters for function " <>> cfnFunctionName
             objectParser =
               P.object objectName Nothing (sequenceA argumentParsers) `P.bind` \arguments -> do
                 -- After successfully parsing, we create a dictionary of the parsed fields

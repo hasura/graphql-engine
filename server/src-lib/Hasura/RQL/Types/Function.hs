@@ -5,6 +5,7 @@ import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.TH
 import Data.Char (toLower)
+import Data.List.Extended as LE
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
@@ -14,6 +15,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
 import Hasura.Session
+import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | https://www.postgresql.org/docs/current/xfunc-volatility.html
 data FunctionVolatility
@@ -104,26 +106,70 @@ $(deriveJSON hasuraJSON ''FunctionPermissionInfo)
 
 type FunctionPermissionsMap = HashMap RoleName FunctionPermissionInfo
 
+-- | Custom root fields for functions. When set, will be the names exposed
+--   to the user in the schema.
+--
+--   See rfcs/function-root-field-customisation.md for more information.
+data FunctionCustomRootFields = FunctionCustomRootFields
+  { _fcrfFunction :: Maybe G.Name,
+    _fcrfFunctionAggregate :: Maybe G.Name
+  }
+  deriving (Show, Eq, Generic)
+
+instance NFData FunctionCustomRootFields
+
+instance Cacheable FunctionCustomRootFields
+
+$(deriveToJSON hasuraJSON {omitNothingFields = True} ''FunctionCustomRootFields)
+
+instance FromJSON FunctionCustomRootFields where
+  parseJSON = withObject "Object" $ \obj -> do
+    function <- obj .:? "function"
+    functionAggregate <- obj .:? "function_aggregate"
+
+    case (function, functionAggregate) of
+      (Just f, Just fa)
+        | f == fa ->
+          fail $
+            T.unpack $
+              "the following custom root field names are duplicated: "
+                <> toTxt f <<> " and " <>> toTxt fa
+      _ ->
+        pure ()
+
+    pure $ FunctionCustomRootFields function functionAggregate
+
+-- | A function custom root fields without custom names set. This is the default.
+emptyFunctionCustomRootFields :: FunctionCustomRootFields
+emptyFunctionCustomRootFields =
+  FunctionCustomRootFields
+    { _fcrfFunction = Nothing,
+      _fcrfFunctionAggregate = Nothing
+    }
+
 -- | Tracked SQL function metadata. See 'buildFunctionInfo'.
 data FunctionInfo (b :: BackendType) = FunctionInfo
-  { _fiName :: !(FunctionName b),
-    _fiSystemDefined :: !SystemDefined,
-    _fiVolatility :: !FunctionVolatility,
+  { _fiSQLName :: FunctionName b,
+    _fiGQLName :: G.Name,
+    _fiGQLArgsName :: G.Name,
+    _fiGQLAggregateName :: G.Name,
+    _fiSystemDefined :: SystemDefined,
+    _fiVolatility :: FunctionVolatility,
     -- | In which part of the schema should this function be exposed?
     --
     -- See 'mkFunctionInfo' and '_fcExposedAs'.
-    _fiExposedAs :: !FunctionExposedAs,
-    _fiInputArgs :: !(Seq.Seq (FunctionInputArgument b)),
+    _fiExposedAs :: FunctionExposedAs,
+    _fiInputArgs :: Seq.Seq (FunctionInputArgument b),
     -- | NOTE: when a table is created, a new composite type of the same name is
     -- automatically created; so strictly speaking this field means "the function
     -- returns the composite type corresponding to this table".
-    _fiReturnType :: !(TableName b),
+    _fiReturnType :: TableName b,
     -- | this field represents the description of the function as present on the database
-    _fiDescription :: !(Maybe Text),
-    _fiPermissions :: !FunctionPermissionsMap,
+    _fiDescription :: Maybe Text,
     -- | Roles to which the function is accessible
-    _fiJsonAggSelect :: !JsonAggSelect,
-    _fiComment :: !(Maybe Text)
+    _fiPermissions :: FunctionPermissionsMap,
+    _fiJsonAggSelect :: JsonAggSelect,
+    _fiComment :: Maybe Text
   }
   deriving (Generic)
 
@@ -136,6 +182,56 @@ instance (Backend b) => ToJSON (FunctionInfo b) where
 
 $(makeLenses ''FunctionInfo)
 
+-- | Apply function name customization to function arguments, as detailed in
+-- 'rfcs/function-root-field-customisation.md'.  We want the different
+-- variations of a function (i.e. basic, aggregate) to share the same type name
+-- for their arguments.
+getFunctionArgsGQLName ::
+  -- | The GQL version of the DB name of the function
+  G.Name ->
+  FunctionConfig ->
+  G.Name
+getFunctionArgsGQLName
+  funcGivenName
+  FunctionConfig {..} =
+    fromMaybe funcGivenName _fcCustomName <> $$(G.litName "_args")
+
+-- | Apply function name customization to the basic function variation, as
+-- detailed in 'rfcs/function-root-field-customisation.md'.
+getFunctionGQLName ::
+  G.Name ->
+  FunctionConfig ->
+  G.Name
+getFunctionGQLName
+  funcGivenName
+  FunctionConfig
+    { _fcCustomRootFields = FunctionCustomRootFields {..},
+      ..
+    } =
+    choice
+      [ _fcrfFunction,
+        _fcCustomName
+      ]
+      & fromMaybe funcGivenName
+
+-- | Apply function name customization to the aggregate function variation, as
+-- detailed in 'rfcs/function-root-field-customisation.md'.
+getFunctionAggregateGQLName ::
+  G.Name ->
+  FunctionConfig ->
+  G.Name
+getFunctionAggregateGQLName
+  funcGivenName
+  FunctionConfig
+    { _fcCustomRootFields = FunctionCustomRootFields {..},
+      ..
+    } =
+    choice
+      [ _fcrfFunctionAggregate,
+        _fcCustomName <&> (<> $$(G.litName "_aggregate"))
+      ]
+      & fromMaybe (funcGivenName <> $$(G.litName "_aggregate"))
+
 getInputArgs :: FunctionInfo b -> Seq.Seq (FunctionArg b)
 getInputArgs =
   Seq.fromList . mapMaybe (^? _IAUserProvided) . toList . _fiInputArgs
@@ -144,15 +240,18 @@ type FunctionCache b = HashMap (FunctionName b) (FunctionInfo b) -- info of all 
 
 -- Metadata requests related types
 
--- | Tracked function configuration, and payload of the 'track_function' API call.
+-- | Tracked function configuration, and payload of the 'pg_track_function' and
+-- 'pg_set_function_customization' API calls.
 data FunctionConfig = FunctionConfig
-  { _fcSessionArgument :: !(Maybe FunctionArgName),
+  { _fcSessionArgument :: Maybe FunctionArgName,
     -- | In which top-level field should we expose this function?
     --
     -- The user might omit this, in which case we'll infer the location from the
     -- SQL functions volatility. See 'mkFunctionInfo' or the @track_function@ API
     -- docs for details of validation, etc.
-    _fcExposedAs :: !(Maybe FunctionExposedAs)
+    _fcExposedAs :: Maybe FunctionExposedAs,
+    _fcCustomRootFields :: FunctionCustomRootFields,
+    _fcCustomName :: Maybe G.Name
   }
   deriving (Show, Eq, Generic)
 
@@ -160,11 +259,19 @@ instance NFData FunctionConfig
 
 instance Cacheable FunctionConfig
 
-$(deriveJSON hasuraJSON {omitNothingFields = True} ''FunctionConfig)
+instance FromJSON FunctionConfig where
+  parseJSON = withObject "FunctionConfig" $ \obj ->
+    FunctionConfig
+      <$> obj .:? "session_argument"
+      <*> obj .:? "exposed_as"
+      <*> obj .:? "custom_root_fields" .!= emptyFunctionCustomRootFields
+      <*> obj .:? "custom_name"
+
+$(deriveToJSON hasuraJSON {omitNothingFields = True} ''FunctionConfig)
 
 -- | The default function config; v1 of the API implies this.
 emptyFunctionConfig :: FunctionConfig
-emptyFunctionConfig = FunctionConfig Nothing Nothing
+emptyFunctionConfig = FunctionConfig Nothing Nothing emptyFunctionCustomRootFields Nothing
 
 -- Lists are used to model overloaded functions.
 type DBFunctionsMetadata b = HashMap (FunctionName b) [RawFunctionInfo b]

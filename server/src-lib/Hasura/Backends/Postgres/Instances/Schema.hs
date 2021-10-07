@@ -197,17 +197,15 @@ buildFunctionRelayQueryFields ::
   SelPermInfo ('Postgres pgKind) ->
   m [FieldParser n (QueryRootField UnpreparedValue)]
 buildFunctionRelayQueryFields sourceName sourceInfo queryTagsConfig functionName functionInfo tableName pkeyColumns selPerms = do
-  funcName <- functionGraphQLName @('Postgres pgKind) functionName `onLeft` throwError
   let mkRF =
         RFDB sourceName
           . AB.mkAnyBackend
           . SourceConfigWith sourceInfo queryTagsConfig
           . QDBR
-      fieldName = funcName <> $$(G.litName "_connection")
       fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
   fmap afold $
     optionalFieldParser (mkRF . QDBConnection) $
-      selectFunctionConnection sourceName functionInfo fieldName fieldDesc pkeyColumns selPerms
+      selectFunctionConnection sourceName functionInfo fieldDesc pkeyColumns selPerms
 
 ----------------------------------------------------------------
 -- Individual components
