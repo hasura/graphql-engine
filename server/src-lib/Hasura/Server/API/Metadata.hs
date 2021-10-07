@@ -85,6 +85,7 @@ data RQLMetadataV1
   | -- Functions
     RMTrackFunction !(AnyBackend TrackFunctionV2)
   | RMUntrackFunction !(AnyBackend UnTrackFunction)
+  | RMSetFunctionCustomization (AnyBackend SetFunctionCustomization)
   | -- Functions permissions
     RMCreateFunctionPermission !(AnyBackend FunctionPermissionArgument)
   | RMDropFunctionPermission !(AnyBackend FunctionPermissionArgument)
@@ -395,6 +396,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMRenameSource q -> runRenameSource q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
   RMUntrackTable q -> dispatchMetadata runUntrackTableQ q
+  RMSetFunctionCustomization q -> dispatchMetadata runSetFunctionCustomization q
   RMSetTableCustomization q -> dispatchMetadata runSetTableCustomization q
   RMPgSetTableIsEnum q -> runSetExistingTableIsEnumQ q
   RMCreateInsertPermission q -> dispatchMetadata runCreatePerm q

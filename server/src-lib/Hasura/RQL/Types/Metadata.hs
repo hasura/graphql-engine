@@ -489,6 +489,16 @@ tableMetadataSetter ::
 tableMetadataSetter source table =
   metaSources . ix source . toSourceMetadata . smTables . ix table
 
+-- | A lens setter for the metadata of a specific function as identified by
+--   the source name and function name.
+functionMetadataSetter ::
+  (BackendMetadata b) =>
+  SourceName ->
+  FunctionName b ->
+  ASetter' Metadata (FunctionMetadata b)
+functionMetadataSetter source function =
+  metaSources . ix source . toSourceMetadata . smFunctions . ix function
+
 data MetadataNoSources = MetadataNoSources
   { _mnsTables :: !(Tables ('Postgres 'Vanilla)),
     _mnsFunctions :: !(Functions ('Postgres 'Vanilla)),

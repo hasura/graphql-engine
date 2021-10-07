@@ -2,8 +2,17 @@
 
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
-- server: add support for openapi json of REST Endpoints
 
+### Function field names customization (#7405)
+It is now possible to specify the GraphQL names of tracked SQL functions in
+Postgres sources, and different names may be given to the `_aggregate` and
+suffix-less versions.  Aliases may be set by both
+`/v1/metadata/pg_track_function` and the new API endpoint
+`/v1/metadata/pg_set_function_customization.`
+
+### Bug fixes and improvements 
+
+- server: add support for openapi json of REST Endpoints
 - server: enable inherited roles by default in the graphql-engine
 - server: support MSSQL insert mutations
 - console: fix v2 metadata imports
