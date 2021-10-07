@@ -2,13 +2,36 @@ package v2
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/commands"
 )
 
+// TODO: move this to testutil
+func editEndpointInConfig(t *testing.T, configFilePath, endpoint string) {
+	var config cli.Config
+	b, err := ioutil.ReadFile(configFilePath)
+	require.NoError(t, err)
+
+	err = yaml.Unmarshal(b, &config)
+	require.NoError(t, err)
+
+	config.Endpoint = endpoint
+
+	b, err = yaml.Marshal(&config)
+	require.NoError(t, err)
+
+	err = ioutil.WriteFile(configFilePath, b, 0655)
+	require.NoError(t, err)
+
+}
 func TestInitCmd(t *testing.T, ec *cli.ExecutionContext, initDir, hasuraPort string) {
 	tt := []struct {
 		name string
@@ -18,7 +41,6 @@ func TestInitCmd(t *testing.T, ec *cli.ExecutionContext, initDir, hasuraPort str
 		{"only-init-dir", &commands.InitOptions{
 			EC:          ec,
 			Version:     cli.V2,
-			Endpoint:    fmt.Sprintf("http://localhost:%s", hasuraPort),
 			AdminSecret: os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
 			InitDir:     initDir,
 		}, nil},
@@ -30,6 +52,7 @@ func TestInitCmd(t *testing.T, ec *cli.ExecutionContext, initDir, hasuraPort str
 			if err != tc.err {
 				t.Fatalf("%s: expected %v, got %v", tc.name, tc.err, err)
 			}
+			editEndpointInConfig(t, filepath.Join(initDir, "config.yaml"), fmt.Sprintf("http://localhost:%s", hasuraPort))
 			// TODO: (shahidhk) need to verify the contents of the spec generated
 		})
 	}
