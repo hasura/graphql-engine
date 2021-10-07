@@ -51,7 +51,8 @@ suffix-less versions.  Aliases may be set by both
 - cli: support `query_tags` in metadata
 - cli: add `hasura deploy` command
 - cli: allow exporting and applying metadata from `yaml/json` files
-- cli: allow squashing specific set of migrations. A new `--to` flag is introduced in `migrate squash` command. eg: `hasura migrate squash --from <v1> --to <v4>`
+- cli: allow squashing specific set of migrations. A new `--to` flag is introduced in `migrate squash` command. eg: `hasura migrate squash --from <v1> --to <v4>` 
+- cli: `hasura init --endpoint <endpoint>` adds an option to export metadata and create initial migration from the server.
 
 ## v2.0.9
 

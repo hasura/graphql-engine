@@ -48,6 +48,12 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if cmd.Flags().Changed("up-sql") {
+				opts.upSQLChanged = true
+			}
+			if cmd.Flags().Changed("down-sql") {
+				opts.downSQLChanged = true
+			}
 			if cmd.Flags().Changed("metadata-from-server") {
 				return fmt.Errorf("metadata-from-server flag is deprecated")
 			}
@@ -65,6 +71,21 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 					return nil
 				}
 				return err
+			}
+			if cmd.Flags().Changed("metadata-from-file") && ec.Config.Version != cli.V1 {
+				return errors.New("metadata-from-file flag can be set only with config version 1")
+			}
+
+			if cmd.Flags().Changed("metadata-from-server") && ec.Config.Version != cli.V1 {
+				return errors.New("metadata-from-server flag can be set only with config version 1")
+			}
+
+			if cmd.Flags().Changed("up-sql") && !cmd.Flags().Changed("down-sql") {
+				ec.Logger.Warn("you are creating an up migration without a down migration")
+			}
+
+			if cmd.Flags().Changed("down-sql") && !cmd.Flags().Changed("up-sql") {
+				ec.Logger.Warn("you are creating a down migration without an up migration")
 			}
 			return nil
 		},
@@ -115,6 +136,8 @@ type migrateCreateOptions struct {
 	metaDataServer bool
 	schemaNames    []string
 	upSQL          string
+	upSQLChanged   bool
+	downSQLChanged bool
 	downSQL        string
 	Source         cli.Source
 }
@@ -125,46 +148,19 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 
 	if o.fromServer {
 		o.sqlServer = true
-		if o.EC.Config.Version == cli.V1 {
-			o.metaDataServer = true
-		}
-	}
-
-	if o.flags.Changed("metadata-from-file") && o.EC.Config.Version != cli.V1 {
-		return 0, errors.New("metadata-from-file flag can be set only with config version 1")
-	}
-
-	if o.flags.Changed("metadata-from-server") && o.EC.Config.Version != cli.V1 {
-		return 0, errors.New("metadata-from-server flag can be set only with config version 1")
-	}
-
-	if o.flags.Changed("metadata-from-file") && o.sqlServer {
-		return 0, errors.New("only one sql type can be set")
-	}
-
-	if o.flags.Changed("metadata-from-file") && o.metaDataServer {
-		return 0, errors.New("only one metadata type can be set")
-	}
-
-	if o.flags.Changed("up-sql") && !o.flags.Changed("down-sql") {
-		o.EC.Logger.Warn("you are creating an up migration without a down migration")
-	}
-
-	if o.flags.Changed("down-sql") && !o.flags.Changed("up-sql") {
-		o.EC.Logger.Warn("you are creating a down migration without an up migration")
 	}
 
 	var migrateDrv *migrate.Migrate
 	// disabling auto state migrations for migrate create command
 	o.EC.DisableAutoStateMigration = true
-	if o.sqlServer || o.metaDataServer || o.flags.Changed("up-sql") || o.flags.Changed("down-sql") {
+	if o.sqlServer || o.upSQLChanged || o.downSQLChanged {
 		migrateDrv, err = migrate.NewMigrate(o.EC, true, o.Source.Name, o.Source.Kind)
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot create migrate instance")
 		}
 	}
 
-	if o.flags.Changed("sql-from-file") {
+	if o.sqlFile != "" {
 		// sql-file flag is set
 		err := createOptions.SetSQLUpFromFile(o.sqlFile)
 		if err != nil {
@@ -180,21 +176,21 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 	}
 
 	// create pure sql based migrations here
-	if o.flags.Changed("up-sql") {
+	if o.upSQLChanged {
 		err = createOptions.SetSQLUp(o.upSQL)
 		if err != nil {
 			return 0, errors.Wrap(err, "up migration with SQL string could not be created")
 		}
 	}
 
-	if o.flags.Changed("down-sql") {
+	if o.downSQLChanged {
 		err = createOptions.SetSQLDown(o.downSQL)
 		if err != nil {
 			return 0, errors.Wrap(err, "down migration with SQL string could not be created")
 		}
 	}
 
-	if !o.flags.Changed("sql-from-file") && !o.flags.Changed("metadata-from-file") && !o.metaDataServer && !o.sqlServer && o.EC.Config.Version != cli.V1 && !o.flags.Changed("up-sql") && !o.flags.Changed("down-sql") {
+	if o.sqlFile != "" && !o.sqlServer && o.EC.Config.Version != cli.V1 && o.upSQLChanged && o.downSQLChanged {
 		// Set empty data for [up|down].sql
 		createOptions.SQLUp = []byte(``)
 		createOptions.SQLDown = []byte(``)
@@ -209,6 +205,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 	if err != nil {
 		return 0, errors.Wrap(err, "error creating migration files")
 	}
+	o.EC.Logger.Infof("Created Migrations")
 	if o.fromServer {
 		opts := &MigrateApplyOptions{
 			EC:               o.EC,
