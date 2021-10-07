@@ -7,6 +7,8 @@ import {
   QualifiedFunction,
   RestEndpointEntry,
   RemoteSchemaDef,
+  HasuraMetadataV2,
+  HasuraMetadataV3,
 } from './types';
 import { transformHeaders } from '../components/Common/Headers/utils';
 import { LocalEventTriggerState } from '../components/Services/Events/EventTriggers/state';
@@ -18,7 +20,6 @@ import { ConsoleState } from '../telemetry/state';
 import { TriggerOperation } from '../components/Common/FilterQuery/state';
 import { isEmpty } from '../components/Common/utils/jsUtils';
 import { Nullable } from '../components/Common/utils/tsUtils';
-import { ExportMetadataSuccess } from './actions';
 
 export const metadataQueryTypes = [
   'add_source',
@@ -415,10 +416,10 @@ export const exportMetadataQuery = {
 };
 
 export const generateReplaceMetadataQuery = (
-  metadataJson: ExportMetadataSuccess['data']
+  metadata: HasuraMetadataV3 | HasuraMetadataV2
 ) => ({
   type: 'replace_metadata',
-  args: metadataJson.metadata,
+  args: metadata,
 });
 
 export const resetMetadataQuery = {
