@@ -17,6 +17,7 @@ suffix-less versions.  Aliases may be set by both
 - server: support MSSQL insert mutations
 - console: fix v2 metadata imports
 - cli: make `--database-name` optional in `migrate` subcommands when using a single database (#7434)
+- cli: support absolute paths in --envfile (#5689)
 
 ## v2.1.0-beta.1
 
