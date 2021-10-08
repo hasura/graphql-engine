@@ -56,7 +56,7 @@ func UpdateProjectV3(opts UpdateProjectV3Opts) error {
 		return fmt.Errorf("project should be using config V2 to be able to update to V3")
 	}
 	if !opts.EC.HasMetadataV3 {
-		return fmt.Errorf("unsupported server version %v, config V3 is supported only on server with metadata version >= 3", opts.EC.Version.Server)
+		return fmt.Errorf("cannot upgrade: unsupported server version %v, config V3 is supported only on server with metadata version >= 3", opts.EC.Version.Server)
 	}
 	if r, err := opts.EC.APIClient.V1Metadata.GetInconsistentMetadata(); err != nil {
 		return fmt.Errorf("determing server metadata inconsistency: %w", err)
@@ -70,6 +70,7 @@ func UpdateProjectV3(opts UpdateProjectV3Opts) error {
 	opts.Logger.Warn(`Config V3 is expected to be used with servers >=v2.0.0-alpha.1`)
 	opts.Logger.Warn(`During the update process CLI uses the server as the source of truth, so make sure your server is upto date`)
 	opts.Logger.Warn(`The update process replaces project metadata with metadata on the server`)
+	opts.Logger.Infof("Using %s server at %s for update", opts.EC.Version.GetServerVersion(), opts.EC.Config.ServerConfig.Endpoint)
 
 	if !opts.Force {
 		response, err := util.GetYesNoPrompt("continue?")

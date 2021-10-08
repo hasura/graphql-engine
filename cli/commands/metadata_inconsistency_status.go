@@ -27,7 +27,7 @@ func newMetadataInconsistencyStatusCmd(ec *cli.ExecutionContext) *cobra.Command 
 			if opts.isConsistent {
 				opts.EC.Logger.Println("metadata is consistent")
 			} else {
-				return errors.New("metadata is inconsistent, use list command to see the objects")
+				return errors.New("metadata is inconsistent, use 'hasura metadata ic list' command to see the inconsistent objects")
 			}
 			return nil
 		},

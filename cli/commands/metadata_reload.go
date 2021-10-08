@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
@@ -45,6 +47,18 @@ func (o *MetadataReloadOptions) runWithInfo() error {
 		return errors.Wrap(err, "failed to reload metadata")
 	}
 	o.EC.Logger.Info("Metadata reloaded")
+	icListOpts := &metadataInconsistencyListOptions{
+		EC: o.EC,
+	}
+	err = icListOpts.read(projectmetadata.NewHandlerFromEC(icListOpts.EC))
+	if err != nil {
+		return fmt.Errorf("failed to read metadata status: %v", err)
+	}
+	if icListOpts.isConsistent {
+		icListOpts.EC.Logger.Infoln("Metadata is consistent")
+	} else {
+		icListOpts.EC.Logger.Warnln("Metadata is inconsistent, use 'hasura metadata ic list' command to see the inconsistent objects")
+	}
 	return nil
 }
 

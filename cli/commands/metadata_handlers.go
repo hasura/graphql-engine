@@ -65,6 +65,7 @@ func (m *metadataModeDirectoryHandler) Apply(o *MetadataApplyOptions) error {
 			}
 			if !r.IsConsistent {
 				o.EC.Logger.Warn("Metadata is inconsistent")
+				o.EC.Logger.Warn("Use 'hasura metadata ic list' command to list inconsistent objects")
 			}
 			o.EC.Logger.Debug("metadata applied using v2 replace_metadata")
 		}
@@ -277,6 +278,7 @@ func apply(o *MetadataApplyOptions, mode cli.MetadataMode) error {
 	}
 	if !r.IsConsistent {
 		o.EC.Logger.Warn("Metadata is inconsistent")
+		o.EC.Logger.Warn("Use 'hasura metadata ic list' command to list inconsistent objects")
 	}
 	if len(o.rawOutput) != 0 {
 		// if not a dry run fetch metadata from and server and print it to stdout
