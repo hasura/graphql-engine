@@ -16,6 +16,7 @@ suffix-less versions.  Aliases may be set by both
 - server: enable inherited roles by default in the graphql-engine
 - server: support MSSQL insert mutations
 - console: fix v2 metadata imports
+- cli: make `--database-name` optional in `migrate` subcommands when using a single database (#7434)
 
 ## v2.1.0-beta.1
 
