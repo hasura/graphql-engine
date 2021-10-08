@@ -71,7 +71,7 @@ var _ = Describe("hasura metadata reload", func() {
 				Args:             []string{"metadata", "inconsistency", "status"},
 				WorkingDirectory: projectDirectory,
 			})
-			want = `metadata is inconsistent, use list command to see the objects`
+			want = `metadata is inconsistent, use 'hasura metadata ic list' command to see the inconsistent objects`
 			Eventually(session.Wait(timeout)).Should(Exit(1))
 			Expect(session.Err.Contents()).Should(ContainSubstring(want))
 		})
