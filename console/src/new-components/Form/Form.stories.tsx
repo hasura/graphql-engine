@@ -6,17 +6,6 @@ import { z } from 'zod';
 import { Form } from './Form';
 import { InputField } from './InputField';
 
-type FormValues = {
-  title: string;
-  searchLeft: string;
-  searchRight: string;
-  email: string;
-  titleMedium: string;
-  searchLeftMedium: string;
-  searchRightMedium: string;
-  emailMedium: string;
-};
-
 const schema = z.object({
   title: z.string().nonempty(),
   searchLeft: z.string().nonempty(),
@@ -38,7 +27,7 @@ export default {
 
 export const Example: ComponentStory<typeof Form> = () => {
   return (
-    <Form<FormValues>
+    <Form
       onSubmit={async values => {
         alert(JSON.stringify(values, null, 2));
       }}

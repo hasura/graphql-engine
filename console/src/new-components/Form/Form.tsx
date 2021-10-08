@@ -7,7 +7,7 @@ import {
   UseFormProps,
   FormProvider,
 } from 'react-hook-form';
-import { ZodType, ZodTypeDef } from 'zod';
+import { ZodType, ZodTypeDef, infer as zodInfer } from 'zod';
 
 type FormProps<TFormValues, Schema> = {
   className?: string;
@@ -15,7 +15,7 @@ type FormProps<TFormValues, Schema> = {
   children: (methods: UseFormReturn<TFormValues>) => React.ReactNode;
   options?: UseFormProps<TFormValues>;
   id?: string;
-  schema?: Schema;
+  schema: Schema;
 };
 
 export const Form = <
@@ -32,8 +32,8 @@ export const Form = <
   options,
   id,
   schema,
-}: FormProps<TFormValues, Schema>) => {
-  const methods = useForm<TFormValues>({
+}: FormProps<zodInfer<Schema>, Schema>) => {
+  const methods = useForm<zodInfer<Schema>>({
     ...options,
     resolver: schema && zodResolver(schema),
   });
