@@ -131,6 +131,11 @@ input[id*='react-select'][id$='-input']:focus {
   padding: 16px !important;
 }
 
+/* Fixes result loading spinner position */
+.graphiql-container .spinner-container{
+  top: 48px !important;
+}
+
 /* Fixes spacing in operation title namer */
 .graphiql-explorer-root {
   padding-top: 0 !important;
