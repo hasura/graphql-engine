@@ -3,6 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+
 ### Function field names customization (#7405)
 It is now possible to specify the GraphQL names of tracked SQL functions in
 Postgres sources, and different names may be given to the `_aggregate` and
@@ -12,6 +13,7 @@ suffix-less versions.  Aliases may be set by both
 
 ### Bug fixes and improvements 
 
+- server: allow nullable action responses (#4405)
 - server: add support for openapi json of REST Endpoints
 - server: enable inherited roles by default in the graphql-engine
 - server: support MSSQL insert mutations
