@@ -13,8 +13,6 @@ import {
 import { ReduxState } from '../../../../types';
 import { Table } from '../../../../dataSources/types';
 
-import styles from './ModifyTable.scss';
-
 const RootFields: React.FC<ComputedRootFieldsProps> = ({
   tableSchema,
   rootFieldsEdit,
@@ -29,7 +27,7 @@ const RootFields: React.FC<ComputedRootFieldsProps> = ({
 
   return (
     <React.Fragment>
-      <h4 className={styles.subheading_text}>
+      <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
         Custom GraphQL Root Fields
         <Tooltip message="Change the root fields for the table/view in the GraphQL API" />
       </h4>

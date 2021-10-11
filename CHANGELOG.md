@@ -2,7 +2,7 @@
 
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
-
+- console: design cleanup Modify and Add Table forms (close #7454)
 
 ### Function field names customization (#7405)
 It is now possible to specify the GraphQL names of tracked SQL functions in

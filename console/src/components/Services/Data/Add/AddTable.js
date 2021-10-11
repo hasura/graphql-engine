@@ -49,7 +49,6 @@ import {
   tableColumnMaxLengthNotif,
 } from './AddWarning';
 
-import styles from '../../../Common/TableCommon/Table.scss';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import {
   foreignKeyDescription,
@@ -506,21 +505,35 @@ class AddTable extends Component {
     };
 
     return (
-      <div
-        className={`${styles.addTablesBody} ${styles.clear_fix} ${styles.padd_left}`}
-      >
+      <div className="p-lg">
         <Helmet title={`Add Table - Data | Hasura`} />
-        <div className={styles.subHeader}>
-          <h2 className={styles.heading_text}>Add a new table</h2>
-          <div className="clearfix" />
+        <div>
+          <h2 className="text-xl font-semibold mb-lg">Add a New Table</h2>
         </div>
-        <br />
-        <div className={`container-fluid ${styles.padd_left_remove}`}>
-          <div
-            className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
-          >
+
+        <div className="max-w-6xl">
+          <div className="w-full sm:w-6/12 mb-md">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              Table Name
+            </h4>
             <TableName onChange={this.onTableNameChange.bind(this)} />
-            <hr className="my-md" />
+          </div>
+
+          <div className="w-full sm:w-6/12 mb-lg">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              Table Comment
+            </h4>
+            <TableComment onChange={this.onTableCommentChange} />
+          </div>
+
+          <h3 className="text-sm tracking-widest text-gray-400 uppercase font-semibold mb-sm">
+            Configure Fields
+          </h3>
+
+          <div className="w-full mb-lg">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              Columns
+            </h4>
             <TableColumns
               uniqueKeys={uniqueKeys}
               dataTypes={dataTypes}
@@ -542,10 +555,15 @@ class AddTable extends Component {
                 postgresVersion={postgresVersion}
               />
             ) : null}
+          </div>
 
-            <hr className="my-md" />
-            <h4 className={styles.subheading_text}>
-              Primary Key &nbsp; &nbsp;
+          <h3 className="text-sm tracking-widest text-gray-400 uppercase font-semibold mb-sm">
+            Table Properties
+          </h3>
+
+          <div className="w-full sm:w-6/12 mb-md">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              Primary Key
               <ToolTip message={primaryKeyDescription} />
             </h4>
             <PrimaryKeySelector
@@ -554,9 +572,11 @@ class AddTable extends Component {
               setPk={setPk}
               dispatch={dispatch}
             />
-            <hr className="my-md" />
-            <h4 className={styles.subheading_text}>
-              Foreign Keys &nbsp; &nbsp;
+          </div>
+
+          <div className="w-full sm:w-8/12 mb-md">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              Foreign Keys
               <ToolTip message={foreignKeyDescription} />
             </h4>
             <ForeignKeyWrapper
@@ -570,9 +590,11 @@ class AddTable extends Component {
               fkToggled={fkToggled}
               schemaList={schemaList}
             />
-            <hr className="my-md" />
-            <h4 className={styles.subheading_text}>
-              Unique Keys &nbsp; &nbsp;
+          </div>
+
+          <div className="w-full sm:w-6/12 mb-md">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              Unique Keys
               <ToolTip message={uniqueKeyDescription} />
             </h4>
             <UniqueKeyWrapper
@@ -584,18 +606,20 @@ class AddTable extends Component {
               dispatch={dispatch}
               setUniqueKeys={setUniqueKeys}
             />
-            <hr className="my-md" />
-            <h4 className={styles.subheading_text}>
-              Check Constraints &nbsp; &nbsp;
+          </div>
+
+          <div className="w-full sm:w-6/12 mb-lg">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              Check Constraints
               <ToolTip message={checkConstraintsDescription} />
             </h4>
             <CheckConstraints
               constraints={checkConstraints}
               dispatch={dispatch}
             />
-            <hr className="my-md" />
-            <TableComment onChange={this.onTableCommentChange} />
-            <hr className="my-md" />
+          </div>
+
+          <div>
             <Button
               type="submit"
               onClick={this.validateAndSubmit}

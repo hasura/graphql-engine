@@ -11,7 +11,7 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
   const triggers = tableSchema.triggers;
 
   if (!triggers.length) {
-    return <div>No triggers</div>;
+    return <div className="italic text-sm text-gray-600">(No triggers)</div>;
   }
 
   // HACK
@@ -76,13 +76,14 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
 
     const collapsedLabel = () => (
       <div>
-        <div>
-          <b>{triggerName}</b>&nbsp;-&nbsp;
-          <i>
+        <div className="flex items-center">
+          <span className="font-semibold mr-sm">{triggerName}</span>
+          <span className="mr-sm">-</span>
+          <span>
             {trigger.action_timing} {trigger.event_manipulation}
-          </i>
+          </span>
         </div>
-        <div className={styles.text_gray}>{trigger.comment}</div>
+        <div className="text-gray-400 text-sm">{trigger.comment}</div>
       </div>
     );
 
