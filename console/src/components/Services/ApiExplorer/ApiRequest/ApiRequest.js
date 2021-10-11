@@ -577,17 +577,17 @@ class ApiRequest extends Component {
               <thead>
                 <tr className="bg-gray-50">
                   <th
-                    className={`w-16 px-md py-sm max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider ${styles.wd4}`}
+                    className={`w-16 px-sm py-xs max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider ${styles.wd4}`}
                   >
                     Enable
                   </th>
-                  <th className="px-md py-sm max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider">
+                  <th className="px-sm py-xs max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider">
                     Key
                   </th>
-                  <th className="px-md py-sm max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider">
+                  <th className="px-sm py-xs max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider">
                     Value
                   </th>
-                  <th className="w-16 px-md py-sm max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider" />
+                  <th className="w-16 px-sm py-xs max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider" />
                 </tr>
               </thead>
               <tbody className="bg-white">{getHeaderRows()}</tbody>

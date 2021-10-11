@@ -46,6 +46,7 @@ import {
   primaryKeyDescription,
   uniqueKeyDescription,
   checkConstraintsDescription,
+  indexFieldsDescription,
 } from '../Common/TooltipMessages';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { NotSupportedNote } from '../../../Common/NotSupportedNote';
@@ -120,7 +121,7 @@ class ModifyTable extends React.Component {
     const untrackBtn = (
       <Button
         type="submit"
-        className={styles.add_mar_right}
+        className="mr-sm"
         color="white"
         size="sm"
         onClick={() => {
@@ -164,14 +165,13 @@ class ModifyTable extends React.Component {
             toggleEnum={toggleEnum}
             loading={tableEnum.loading}
           />
-          <hr className="my-md" />
         </React.Fragment>
       );
     };
 
     return (
       <RightContainer>
-        <div className={`${styles.container} container-fluid`}>
+        <div>
           <TableHeader
             dispatch={dispatch}
             table={table}
@@ -181,10 +181,8 @@ class ModifyTable extends React.Component {
             readOnlyMode={readOnlyMode}
           />
           <br />
-          <div className={`container-fluid ${styles.padd_left_remove}`}>
-            <div
-              className={`col-xs-10 ${styles.padd_left_remove} ${styles.modifyMinWidth}`}
-            >
+          <div>
+            <div>
               {isFeatureSupported('tables.modify.readOnly') && (
                 <div className={styles.readOnly}>
                   <p className={styles.readOnlyText}>
@@ -200,169 +198,211 @@ class ModifyTable extends React.Component {
 
               {isFeatureSupported('tables.modify.comments.view') && (
                 <>
-                  <TableCommentEditor
-                    tableComment={tableComment}
-                    tableCommentEdit={tableCommentEdit}
-                    tableType="TABLE"
-                    dispatch={dispatch}
-                    readOnly={
-                      !isFeatureSupported('tables.modify.comments.edit')
-                    }
-                  />
-                  <EnumTableModifyWarning isEnum={table.is_enum} />
+                  <div className="w-full sm:w-6/12 mb-lg">
+                    <EnumTableModifyWarning isEnum={table.is_enum} />
+
+                    <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                      Table Comments
+                    </h4>
+                    <TableCommentEditor
+                      tableComment={tableComment}
+                      tableCommentEdit={tableCommentEdit}
+                      tableType="TABLE"
+                      dispatch={dispatch}
+                      readOnly={
+                        !isFeatureSupported('tables.modify.comments.edit')
+                      }
+                    />
+                  </div>
                 </>
               )}
 
-              {isFeatureSupported('tables.modify.columns.view') && (
-                <>
-                  <h4 className={styles.subheading_text}>Columns</h4>
-                  <ColumnEditorList
-                    validTypeCasts={validTypeCasts}
-                    dataTypeIndexMap={dataTypeIndexMap}
-                    tableSchema={table}
-                    columnEdit={columnEdit}
-                    dispatch={dispatch}
-                    readOnlyMode={
-                      !isFeatureSupported('tables.modify.columns.edit')
-                    }
-                    currentSchema={currentSchema}
-                    columnDefaultFunctions={columnDefaultFunctions}
-                    customColumnNames={getTableCustomColumnNames(table)}
-                  />
-                </>
-              )}
-              {isFeatureSupported('tables.modify.columns.edit') && (
-                <>
-                  <ColumnCreator
-                    dispatch={dispatch}
-                    tableName={tableName}
-                    dataTypes={dataTypes}
-                    validTypeCasts={validTypeCasts}
-                    columnDefaultFunctions={columnDefaultFunctions}
-                    postgresVersion={postgresVersion}
-                  />
-                  <hr className="my-md" />
-                </>
-              )}
+              <div className="w-full sm:w-6/12">
+                <h3 className="text-sm tracking-widest text-gray-400 uppercase font-semibold mb-sm">
+                  Configure Fields
+                </h3>
 
-              {isFeatureSupported('tables.modify.computedFields') && (
-                <>
-                  <ConnectedComputedFields tableSchema={table} />
-                  <hr className="my-md" />
-                </>
-              )}
+                {isFeatureSupported('tables.modify.columns.view') && (
+                  <>
+                    <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                      Columns
+                    </h4>
+                    <ColumnEditorList
+                      validTypeCasts={validTypeCasts}
+                      dataTypeIndexMap={dataTypeIndexMap}
+                      tableSchema={table}
+                      columnEdit={columnEdit}
+                      dispatch={dispatch}
+                      readOnlyMode={
+                        !isFeatureSupported('tables.modify.columns.edit')
+                      }
+                      currentSchema={currentSchema}
+                      columnDefaultFunctions={columnDefaultFunctions}
+                      customColumnNames={getTableCustomColumnNames(table)}
+                    />
+                  </>
+                )}
+              </div>
+
+              <div className="w-full mb-lg">
+                {isFeatureSupported('tables.modify.columns.edit') && (
+                  <>
+                    <ColumnCreator
+                      dispatch={dispatch}
+                      tableName={tableName}
+                      dataTypes={dataTypes}
+                      validTypeCasts={validTypeCasts}
+                      columnDefaultFunctions={columnDefaultFunctions}
+                      postgresVersion={postgresVersion}
+                    />
+                  </>
+                )}
+              </div>
+
+              <h3 className="text-sm tracking-widest text-gray-400 uppercase font-semibold mb-sm">
+                Table Properties
+              </h3>
 
               {isFeatureSupported('tables.modify.primaryKeys.view') && (
                 <>
-                  <h4 className={styles.subheading_text}>
-                    Primary Key &nbsp; &nbsp;
-                    <Tooltip message={primaryKeyDescription} />
-                  </h4>
-                  <PrimaryKeyEditor
-                    tableSchema={table}
-                    readOnlyMode={
-                      !isFeatureSupported('tables.modify.primaryKeys.edit')
-                    }
-                    pkModify={pkModify}
-                    dispatch={dispatch}
-                    currentSchema={currentSchema}
-                  />
-                  <hr className="my-md" />
+                  <div className="w-full sm:w-6/12 mb-md">
+                    <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                      Primary Key
+                      <Tooltip message={primaryKeyDescription} />
+                    </h4>
+                    <PrimaryKeyEditor
+                      tableSchema={table}
+                      readOnlyMode={
+                        !isFeatureSupported('tables.modify.primaryKeys.edit')
+                      }
+                      pkModify={pkModify}
+                      dispatch={dispatch}
+                      currentSchema={currentSchema}
+                    />
+                  </div>
                 </>
               )}
 
               {isFeatureSupported('tables.modify.foreignKeys.view') && (
                 <>
-                  <h4 className={styles.subheading_text}>
-                    Foreign Keys &nbsp; &nbsp;
-                    <Tooltip message={foreignKeyDescription} />
-                  </h4>
-                  <ForeignKeyEditor
-                    tableSchema={table}
-                    currentSchema={currentSchema}
-                    allSchemas={allTables}
-                    schemaList={schemaList}
-                    dispatch={dispatch}
-                    fkModify={fkModify}
-                    readOnlyMode={
-                      !isFeatureSupported('tables.modify.foreignKeys.edit')
-                    }
-                  />
-                  <hr className="my-md" />
+                  <div className="w-full sm:w-8/12 mb-md">
+                    <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                      Foreign Keys
+                      <Tooltip message={foreignKeyDescription} />
+                    </h4>
+                    <ForeignKeyEditor
+                      tableSchema={table}
+                      currentSchema={currentSchema}
+                      allSchemas={allTables}
+                      schemaList={schemaList}
+                      dispatch={dispatch}
+                      fkModify={fkModify}
+                      readOnlyMode={
+                        !isFeatureSupported('tables.modify.foreignKeys.edit')
+                      }
+                    />
+                  </div>
                 </>
               )}
 
               {isFeatureSupported('tables.modify.uniqueKeys.view') && (
                 <>
-                  <h4 className={styles.subheading_text}>
-                    Unique Keys &nbsp; &nbsp;
-                    <Tooltip message={uniqueKeyDescription} />
-                  </h4>
-                  <UniqueKeyEditor
-                    tableSchema={table}
-                    currentSchema={currentSchema}
-                    allSchemas={allTables}
-                    dispatch={dispatch}
-                    uniqueKeys={uniqueKeyModify}
-                    setUniqueKeys={setUniqueKeys}
-                    readOnlyMode={
-                      !isFeatureSupported('tables.modify.uniqueKeys.edit')
-                    }
-                  />
-                  <hr className="my-md" />
-                </>
-              )}
-              {isFeatureSupported('tables.modify.indexes.view') ? (
-                <>
-                  <IndexFields tableSchema={table} />
-                  <hr />
-                </>
-              ) : null}
-              {isFeatureSupported('tables.modify.triggers') && (
-                <>
-                  <div className={styles.add_mar_bottom}>
-                    <h4 className={styles.subheading_text_no_padd}>Triggers</h4>
-                    <NotSupportedNote unsupported={['mysql']} />
+                  <div className="w-full sm:w-6/12 mb-md">
+                    <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                      Unique Keys
+                      <Tooltip message={uniqueKeyDescription} />
+                    </h4>
+                    <UniqueKeyEditor
+                      tableSchema={table}
+                      currentSchema={currentSchema}
+                      allSchemas={allTables}
+                      dispatch={dispatch}
+                      uniqueKeys={uniqueKeyModify}
+                      setUniqueKeys={setUniqueKeys}
+                      readOnlyMode={
+                        !isFeatureSupported('tables.modify.uniqueKeys.edit')
+                      }
+                    />
                   </div>
-                  <TriggerEditorList tableSchema={table} dispatch={dispatch} />
-                  <hr className="my-md" />
                 </>
               )}
               {isFeatureSupported('tables.modify.checkConstraints.view') && (
                 <>
-                  <div className={styles.add_mar_bottom}>
-                    <h4 className={styles.subheading_text_no_padd}>
-                      Check Constraints &nbsp; &nbsp;
+                  <div className="w-full sm:w-6/12 mb-md">
+                    <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                      Check Constraints
                       <Tooltip message={checkConstraintsDescription} />
                     </h4>
                     <NotSupportedNote unsupported={['mysql']} />
+                    <CheckConstraints
+                      constraints={table.check_constraints}
+                      checkConstraintsModify={checkConstraintsModify}
+                      dispatch={dispatch}
+                      readOnlyMode={
+                        !isFeatureSupported(
+                          'tables.modify.checkConstraints.edit'
+                        )
+                      }
+                    />
                   </div>
-                  <CheckConstraints
-                    constraints={table.check_constraints}
-                    checkConstraintsModify={checkConstraintsModify}
-                    dispatch={dispatch}
-                    readOnlyMode={
-                      !isFeatureSupported('tables.modify.checkConstraints.edit')
-                    }
-                  />
-                  <hr className="my-md" />
                 </>
               )}
+              {isFeatureSupported('tables.modify.indexes.view') ? (
+                <>
+                  <div className="w-full sm:w-6/12 mb-md">
+                    <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                      Indexes
+                      <Tooltip message={indexFieldsDescription} />
+                    </h4>
+                    <IndexFields tableSchema={table} />
+                  </div>
+                </>
+              ) : null}
+
               {table.table_type === 'PARTITIONED TABLE' && (
                 <PartitionInfo table={table} dispatch={dispatch} />
               )}
+
+              {isFeatureSupported('tables.modify.triggers') && (
+                <>
+                  <div className="w-full sm:w-6/12 mb-lg">
+                    <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                      Triggers
+                    </h4>
+                    <NotSupportedNote unsupported={['mysql']} />
+                    <TriggerEditorList
+                      tableSchema={table}
+                      dispatch={dispatch}
+                    />
+                  </div>
+                </>
+              )}
+
+              <h3 className="text-sm tracking-widest text-gray-400 uppercase font-semibold mb-sm">
+                GraphQL Features
+              </h3>
+
+              {isFeatureSupported('tables.modify.computedFields') && (
+                <>
+                  <div className="w-full sm:w-6/12 mb-md">
+                    <ConnectedComputedFields tableSchema={table} />
+                  </div>
+                </>
+              )}
               {isFeatureSupported('tables.modify.customGqlRoot') && (
                 <>
-                  <RootFields tableSchema={table} />
-                  <hr className="my-md" />
+                  <div className="w-full sm:w-6/12 mb-md">
+                    <RootFields tableSchema={table} />
+                  </div>
                 </>
               )}
               {isFeatureSupported('tables.modify.setAsEnum') &&
                 getEnumsSection()}
-              {isFeatureSupported('tables.modify.untrack') && untrackBtn}
-              {isFeatureSupported('tables.modify.delete') && deleteBtn}
-              <br />
-              <br />
+
+              <div className="mb-lg">
+                {isFeatureSupported('tables.modify.untrack') && untrackBtn}
+                {isFeatureSupported('tables.modify.delete') && deleteBtn}
+              </div>
             </div>
           </div>
         </div>

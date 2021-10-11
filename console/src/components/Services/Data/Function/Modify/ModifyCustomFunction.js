@@ -206,7 +206,7 @@ class ModifyCustomFunction extends React.Component {
     }
 
     return (
-      <div className={'col-xs-8' + ' ' + styles.modifyWrapper}>
+      <div>
         <Helmet
           title={`Edit ${pageTitle} - ${functionName} - ${pageTitle}s | Hasura`}
         />
@@ -221,12 +221,11 @@ class ModifyCustomFunction extends React.Component {
           testPrefix={'functions'}
         />
         <br />
-        <div className={`${styles.display_flex}`}>
-          <h4 className={styles.subheading_text}>
+        <div className="w-full sm:w-6/12 mb-md">
+          <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
             Function Definition:
-            <span className={styles.add_mar_left}>
+            <span className="ml-xs">
               <RawSqlButton
-                className={styles.add_mar_right}
                 sql={functionDefinition}
                 dispatch={dispatch}
                 data-test="modify-view"
@@ -236,25 +235,26 @@ class ModifyCustomFunction extends React.Component {
               </RawSqlButton>
             </span>
           </h4>
+
+          <div className={styles.sqlBlock}>
+            <TextAreaWithCopy
+              copyText={functionDefinition}
+              textLanguage={'sql'}
+              id="copyCustomFunctionSQL"
+            />
+          </div>
         </div>
 
-        <div className={styles.sqlBlock}>
-          <TextAreaWithCopy
-            copyText={functionDefinition}
-            textLanguage={'sql'}
-            id="copyCustomFunctionSQL"
+        <div className="w-full sm:w-6/12 mb-md">
+          <SessionVarSection
+            key={functionName}
+            functionName={functionName}
+            configuration={configuration}
+            loading={loading}
+            onSessVarUpdate={this.onSessVarUpdate}
           />
+          {migrationMode ? [generateMigrateBtns()] : null}
         </div>
-        <SessionVarSection
-          key={functionName}
-          functionName={functionName}
-          configuration={configuration}
-          loading={loading}
-          onSessVarUpdate={this.onSessVarUpdate}
-        />
-        {migrationMode
-          ? [<hr key="modify-custom-function-divider" />, generateMigrateBtns()]
-          : null}
       </div>
     );
   }

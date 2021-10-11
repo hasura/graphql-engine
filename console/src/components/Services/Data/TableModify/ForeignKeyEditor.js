@@ -88,10 +88,8 @@ const ForeignKeyEditor = ({
 
     // Label to show next to the 'Edit' button (the FK configuration)
     const collapsedLabel = () => {
-      const collapsedLabelText =
-        isLast && numFks === 1 ? 'No foreign keys' : getFkConfigLabel(fkConfig);
-
-      return <div>{collapsedLabelText}</div>;
+      const collapsedLabelText = getFkConfigLabel(fkConfig);
+      return <div className="text-gray-600">{collapsedLabelText}</div>;
     };
 
     // The content when the editor is expanded
@@ -112,7 +110,8 @@ const ForeignKeyEditor = ({
     // The collapse button text when the editor is collapsed
     let expandButtonText = 'Edit';
     if (isLast) {
-      expandButtonText = numFks === 1 ? 'Add' : 'Add a new foreign key';
+      expandButtonText =
+        numFks === 1 ? 'Add a foreign key' : 'Add a new foreign key';
     }
 
     // label next to the button when the editor is expanded

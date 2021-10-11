@@ -35,3 +35,7 @@ Action when the reference key is deleted
 export const checkConstraintExpression = `
 Boolean expression that must be satisfied for all rows in the table. e.g. min_price >= 0 AND max_price >= min_price
 `;
+
+export const indexFieldsDescription = `
+Indexes are used to increase query performance based on columns that are queried frequently
+`;

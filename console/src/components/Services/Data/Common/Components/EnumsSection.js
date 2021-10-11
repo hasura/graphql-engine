@@ -1,6 +1,5 @@
 import React from 'react';
 import Toggle from 'react-toggle';
-import styles from '../../../../Common/Common.scss';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 
@@ -13,19 +12,19 @@ export const EnumTableModifyWarning = ({ isEnum }) => {
   }
 
   return (
-    <div className={styles.add_mar_bottom}>
-      <i>
+    <div className="rounded bg-yellow-50 border border-gray-300 border-l-4 border-l-yellow-500  py-sm px-md mb-lg">
+      <p>
         * This table is set as an enum. Modifying it may cause your Hasura
         metadata to become inconsistent.
-        <br />
         <a
           href={enumCompatibilityDocsUrl}
           target="_blank"
           rel="noopener noreferrer"
+          className="ml-xs text-secondary"
         >
           See enum table requirements.
         </a>
-      </i>
+      </p>
     </div>
   );
 };
@@ -54,25 +53,23 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
   // };
 
   return (
-    <div>
-      <h4 className={`${styles.subheading_text}`}>
-        Set table as enum
-        <ToolTip
-          message={
-            'Expose the table values as GraphQL enums in the GraphQL API'
-          }
-        />
-        &nbsp;
+    <div className="mb-lg">
+      <div className="flex items-center mb-formlabel">
+        <h4 className="flex items-center text-gray-600 font-semibold mr-sm">
+          Set Table as Enum
+          <ToolTip
+            message={
+              'Expose the table values as GraphQL enums in the GraphQL API'
+            }
+          />
+        </h4>
         <KnowMoreLink
           href={enumCompatibilityDocsUrl}
           text={'See table requirements'}
         />
-      </h4>
-      <div
-        className={`${styles.display_flex} ${styles.add_mar_bottom}`}
-        title={title}
-        data-toggle="tooltip"
-      >
+      </div>
+
+      <div title={title} data-toggle="tooltip">
         <Toggle checked={isEnum} icons={false} onChange={toggleEnum} />
       </div>
     </div>

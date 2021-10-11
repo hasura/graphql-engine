@@ -117,16 +117,16 @@ const ModifyView = props => {
 
       const columnExpanded = () => {
         return (
-          <div className={`${styles.display_flex}`}>
-            <label className={'col-xs-4'}>
-              GraphQL field name
+          <div className="flex items-center">
+            <label className="flex items-center text-gray-600 font-semibold">
+              GraphQL Field Name
               <Tooltip
                 message={
                   'Expose the column with a different name in the GraphQL API'
                 }
               />
             </label>
-            <div className={'col-xs-6'}>
+            <div className="ml-auto w-6/12">
               <input
                 type="text"
                 className={'form-control'}
@@ -179,8 +179,10 @@ const ModifyView = props => {
 
     return (
       <>
-        <h4 className={styles.subheading_text}>Columns</h4>
-        {columnList}
+        <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+          Columns
+        </h4>
+        <div className="w-full sm:w-6/12 mb-md">{columnList}</div>
       </>
     );
   };
@@ -241,7 +243,7 @@ const ModifyView = props => {
 
   return (
     <RightContainer>
-      <div className={styles.container + ' container-fluid'}>
+      <div>
         <TableHeader
           dispatch={dispatch}
           table={tableSchema}
@@ -251,44 +253,51 @@ const ModifyView = props => {
           source={currentSource}
         />
         <br />
-        <div className={'container-fluid ' + styles.padd_left_remove}>
-          <div className={'col-xs-8 ' + styles.padd_left_remove}>
-            <TableCommentEditor
-              tableComment={tableComment}
-              tableCommentEdit={tableCommentEdit}
-              tableType={tableType}
-              dispatch={dispatch}
-            />
-            <ViewDefinitions
-              dispatch={dispatch}
-              sql={viewDefSql}
-              source={currentSource}
-            />
-            <hr className="my-md" />
-            {getViewColumnsSection()}
-            <hr className="my-md" />
-
-            {isFeatureSupported('tables.modify.computedFields') && (
-              <>
-                <ComputedFields tableSchema={tableSchema} />
-                <hr className="my-md" />
-              </>
-            )}
-
-            {isFeatureSupported('tables.modify.customGqlRoot') && (
-              <>
-                <RootFields tableSchema={tableSchema} />
-                <hr className="my-md" />
-              </>
-            )}
-
-            {untrackBtn}
-            {deleteBtn}
-            <br />
-            <br />
-          </div>
-          <div className={styles.fixed + ' col-xs-3 hidden'}>{alert}</div>
+        <div className="w-full sm:w-6/12 mb-lg">
+          <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+            View Comments
+          </h4>
+          <TableCommentEditor
+            tableComment={tableComment}
+            tableCommentEdit={tableCommentEdit}
+            tableType={tableType}
+            dispatch={dispatch}
+          />
         </div>
+
+        <h3 className="text-sm tracking-widest text-gray-400 uppercase font-semibold mb-sm">
+          View Properties
+        </h3>
+
+        <ViewDefinitions
+          dispatch={dispatch}
+          sql={viewDefSql}
+          source={currentSource}
+        />
+
+        {getViewColumnsSection()}
+
+        {isFeatureSupported('tables.modify.computedFields') && (
+          <>
+            <div className="w-full sm:w-6/12 mb-md">
+              <ComputedFields tableSchema={tableSchema} />
+            </div>
+          </>
+        )}
+
+        {isFeatureSupported('tables.modify.customGqlRoot') && (
+          <>
+            <div className="w-full sm:w-6/12 mb-md">
+              <RootFields tableSchema={tableSchema} />
+            </div>
+          </>
+        )}
+
+        {untrackBtn}
+        {deleteBtn}
+        <br />
+        <br />
+        <div className={styles.fixed + ' col-xs-3 hidden'}>{alert}</div>
       </div>
     </RightContainer>
   );

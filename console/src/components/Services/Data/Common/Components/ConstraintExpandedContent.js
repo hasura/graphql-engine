@@ -1,7 +1,6 @@
 import React from 'react';
 import AceEditor from 'react-ace';
 
-import styles from '../../../../Common/Common.scss';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 import { checkConstraintExpression } from '../TooltipMessages';
@@ -15,22 +14,23 @@ export const ConstraintExpandedContent = ({
 }) => {
   return (
     <div>
-      <div className={styles.add_mar_bottom}>
-        <div className={styles.add_mar_bottom_mid}>
-          <b>Constraint Name:</b>
-        </div>
+      <div className="mb-md">
+        <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+          Constraint Name:
+        </h4>
         <input
           type="text"
           value={name}
           onChange={nameOnChange}
-          className={`form-control ${styles.wd50percent}`}
+          className="form-control"
         />
       </div>
       <div>
-        <div className={styles.add_mar_bottom_mid}>
-          <b>Check Expression: </b>
-          <ToolTip message={checkConstraintExpression} />
-          &nbsp;&nbsp;
+        <div className="flex items-start">
+          <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+            Check Expression:
+            <ToolTip message={checkConstraintExpression} />
+          </h4>
           <KnowMoreLink href="https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS" />
         </div>
         <AceEditor
