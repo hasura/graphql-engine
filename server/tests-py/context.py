@@ -353,6 +353,10 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             resp, status = self.intentional_error()
             self._send_response(status, resp)
 
+        elif req_path == "/null-response":
+            resp, status = self.null_response()
+            self._send_response(status, resp)
+
         else:
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
@@ -471,6 +475,10 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             return resp['data']['user'][0], HTTPStatus.OK
         else:
             return resp['data']['user'], HTTPStatus.OK
+    
+    def null_response(self):
+        response = None
+        return response, HTTPStatus.OK
 
 
 

@@ -28,6 +28,10 @@ args:
   args:
     name: intentional_error
     clear_data: true
+- type: drop_action
+  args:
+    name: null_response
+    clear_data: true
 # clear custom types
 - type: set_custom_types
   args: {}
