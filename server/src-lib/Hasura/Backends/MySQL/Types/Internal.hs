@@ -41,6 +41,7 @@ module Hasura.Backends.MySQL.Types.Internal
     parseMySQLScalarType,
     parseScalarValue,
     mkMySQLScalarTypeName,
+    JoinType (..),
   )
 where
 
@@ -247,6 +248,20 @@ data Join = Join
   { joinSource :: !JoinSource,
     joinJoinAlias :: !JoinAlias
   }
+
+-- | This type is for FromIr to communicate with DataLoader.Execute
+-- the specific type of join to be performed and related information
+-- to achieve it.
+data JoinType
+  = -- | A join without any 'ON x=y' construct. We're querying from a
+    -- table and doing our own WHERE clauses.
+    OnlessJoin
+  | -- | An array join on the given fields.
+    ArrayJoin [(FieldName, FieldName)]
+  | -- | An array aggregate join.
+    ArrayAggregateJoin [(FieldName, FieldName)]
+  | -- | Simple object join on the fields.
+    ObjectJoin [(FieldName, FieldName)]
 
 newtype Where
   = Where [Expression]
