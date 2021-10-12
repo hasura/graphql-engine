@@ -292,6 +292,15 @@ This naming convention enables easier test filtering with [pytest command line f
 
 The backend-specific and common test suites are disjoint; for example, run `pytest --integration -k "Common or MySQL" --backend mysql` to run all MySQL tests.
 
+#### Building with profiling
+
+To build with profiling support, you need to both enable profiling via `cabal`
+and set the `profiling` flag. E.g.
+
+```
+cabal build exe:graphql-engine -f profiling --enable-profiling
+```
+
 ### Create Pull Request
 
 - Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md).
