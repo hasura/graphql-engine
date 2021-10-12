@@ -4,6 +4,8 @@ import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLay
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import tabs from './tabs';
 import styles from '../../../Common/Common.scss';
+import globals from '../../../../Globals';
+import VPCBanner from '../../../Common/VPCBanner/VPCBanner';
 
 const appPrefix = '/data';
 
@@ -40,6 +42,11 @@ const TabbedDSConnection: React.FC<{
           baseUrl={`${appPrefix}/manage`}
           showLoader={false}
           testPrefix="datasource-container-tabs"
+          subHeading={
+            globals.consoleType === 'cloud' && !globals.eeMode ? (
+              <VPCBanner />
+            ) : null
+          }
         />
         <div className={styles.add_pad_top}>{children}</div>
       </div>

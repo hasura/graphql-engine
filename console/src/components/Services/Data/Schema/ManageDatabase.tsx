@@ -25,6 +25,8 @@ import requestAction from '../../../../utils/requestAction';
 import { showErrorNotification } from '../../Common/Notification';
 import { services } from '../../../../dataSources/services';
 import CollapsibleToggle from './CollapsibleToggle';
+import globals from '../../../../Globals';
+import VPCBanner from '../../../Common/VPCBanner/VPCBanner';
 
 type DatabaseListItemProps = {
   dataSource: DataSource;
@@ -284,6 +286,9 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
               Connect Database
             </Button>
           </div>
+          {globals.consoleType === 'cloud' && !globals.eeMode && (
+            <VPCBanner className="mt-md" />
+          )}
         </div>
         <div className={styles.manage_db_content}>
           <hr className="my-md" />
