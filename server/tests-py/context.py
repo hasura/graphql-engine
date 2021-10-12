@@ -280,7 +280,7 @@ class GraphQLWSClient():
             new_msg['type'] = 'pong'
             self.send(json.dumps(new_msg))
             return
-        
+
         if 'id' in json_msg:
             query_id = json_msg['id']
             if json_msg.get('type') == 'complete':
@@ -290,14 +290,14 @@ class GraphQLWSClient():
                 self.ws_id_query_queues[json_msg['id']] = queue.Queue(maxsize=-1)
             #Put event in the correponding query_queue
             self.ws_id_query_queues[query_id].put(json_msg)
-        
+
         if json_msg['type'] != 'ping':
             self.ws_queue.put(json_msg)
 
     def _on_close(self):
         self.remote_closed = True
         self.init_done = False
-    
+
     def get_conn_close_state(self):
         return self.remote_closed or self.is_closing
 
@@ -351,6 +351,10 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
 
         elif req_path == "/intentional-error":
             resp, status = self.intentional_error()
+            self._send_response(status, resp)
+
+        elif req_path == "/null-response":
+            resp, status = self.null_response()
             self._send_response(status, resp)
 
         else:
@@ -471,6 +475,10 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             return resp['data']['user'][0], HTTPStatus.OK
         else:
             return resp['data']['user'], HTTPStatus.OK
+    
+    def null_response(self):
+        response = None
+        return response, HTTPStatus.OK
 
 
 
@@ -740,7 +748,9 @@ class HGECtx:
         )
         # NOTE: make sure we preserve key ordering so we can test the ordering
         # properties in the graphql spec properly
-        return resp.status_code, resp.json(object_pairs_hook=OrderedDict)
+        # Don't assume `resp` is JSON object
+        resp_obj = {} if resp.status_code == 500 else resp.json(object_pairs_hook=OrderedDict)
+        return resp.status_code, resp_obj
 
 
     def v1q(self, q, headers = {}):

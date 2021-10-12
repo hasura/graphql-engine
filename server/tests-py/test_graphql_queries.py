@@ -1019,6 +1019,9 @@ class TestGraphQLQueryFunctions:
     def test_tracking_function_with_composite_type_argument(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_non_base_function_arg_type.yaml')
 
+    def test_tracking_function_with_customized_names(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_customised_names.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/functions'

@@ -80,17 +80,20 @@ $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorResponse)
 data ActionWebhookResponse
   = AWRArray ![Map.HashMap G.Name J.Value]
   | AWRObject !(Map.HashMap G.Name J.Value)
+  | AWRNull
   deriving (Show, Eq)
 
 instance J.FromJSON ActionWebhookResponse where
   parseJSON v = case v of
     J.Array {} -> AWRArray <$> J.parseJSON v
     J.Object {} -> AWRObject <$> J.parseJSON v
-    _ -> fail "expecting object or array of objects for action webhook response"
+    J.Null {} -> pure AWRNull
+    _ -> fail "expecting null, object or array of objects for action webhook response"
 
 instance J.ToJSON ActionWebhookResponse where
   toJSON (AWRArray objects) = J.toJSON objects
   toJSON (AWRObject obj) = J.toJSON obj
+  toJSON (AWRNull) = J.Null
 
 data ActionRequestInfo = ActionRequestInfo
   { _areqiUrl :: !Text,

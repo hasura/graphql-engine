@@ -489,6 +489,16 @@ tableMetadataSetter ::
 tableMetadataSetter source table =
   metaSources . ix source . toSourceMetadata . smTables . ix table
 
+-- | A lens setter for the metadata of a specific function as identified by
+--   the source name and function name.
+functionMetadataSetter ::
+  (BackendMetadata b) =>
+  SourceName ->
+  FunctionName b ->
+  ASetter' Metadata (FunctionMetadata b)
+functionMetadataSetter source function =
+  metaSources . ix source . toSourceMetadata . smFunctions . ix function
+
 data MetadataNoSources = MetadataNoSources
   { _mnsTables :: !(Tables ('Postgres 'Vanilla)),
     _mnsFunctions :: !(Functions ('Postgres 'Vanilla)),
@@ -818,13 +828,13 @@ metadataToOrdJSON
               AO.object $
                 [ ("name", AO.toOrdered name),
                   ("definition", AO.toOrdered definition),
-                  ("retry_conf", AO.toOrdered retryConf),
-                  ("request_transform", maybe AO.Null AO.toOrdered metadataTransform)
+                  ("retry_conf", AO.toOrdered retryConf)
                 ]
                   <> catMaybes
                     [ maybeAnyToMaybeOrdPair "webhook" AO.toOrdered webhook,
                       maybeAnyToMaybeOrdPair "webhook_from_env" AO.toOrdered webhookFromEnv,
-                      headers >>= listToMaybeOrdPair "headers" AO.toOrdered
+                      headers >>= listToMaybeOrdPair "headers" AO.toOrdered,
+                      fmap (("request_transform",) . AO.toOrdered) metadataTransform
                     ]
 
       functionMetadataToOrdJSON :: Backend b => FunctionMetadata b -> AO.Value
@@ -983,12 +993,12 @@ metadataToOrdJSON
       actionMetadataToOrdJSON (ActionMetadata name comment definition permissions metaTransform) =
         AO.object $
           [ ("name", AO.toOrdered name),
-            ("definition", actionDefinitionToOrdJSON definition),
-            ("request_transform", AO.toOrdered metaTransform)
+            ("definition", actionDefinitionToOrdJSON definition)
           ]
             <> catMaybes
               [ maybeCommentToMaybeOrdPair comment,
-                listToMaybeOrdPair "permissions" permToOrdJSON permissions
+                listToMaybeOrdPair "permissions" permToOrdJSON permissions,
+                fmap (("request_transform",) . AO.toOrdered) metaTransform
               ]
         where
           argDefinitionToOrdJSON :: ArgumentDefinition GraphQLType -> AO.Value

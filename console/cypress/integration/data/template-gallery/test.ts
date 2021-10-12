@@ -15,7 +15,7 @@ const setup = () => {
 export const runSchemaSharingTests = () => {
   describe('template gallery', () => {
     it('display content', () => {
-      cy.contains('default').click();
+      cy.get('[data-test=table-links]').contains('default').click();
       const oneToOne = cy.get('table').contains('Relationships: One-to-One');
       oneToOne.click();
       cy.contains('Install Template').click();

@@ -72,16 +72,16 @@ const ListComponent: React.FC<Props> = ({
       <div className="mt-md overflow-x-auto border border-gray-300 rounded">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
-            <th className="px-md py-sm max-w-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
+            <th className="px-sm py-xs max-w-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
               Details
             </th>
-            <th className="px-md py-sm text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
+            <th className="px-sm py-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
               Endpoint
             </th>
-            <th className="px-md py-sm text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
+            <th className="px-sm py-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
               Methods
             </th>
-            <th className="px-md py-sm text-right text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
+            <th className="px-sm py-xs text-right text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
               Modify
             </th>
           </thead>
@@ -90,7 +90,7 @@ const ListComponent: React.FC<Props> = ({
               <>
                 <tr key={`rest_list_endpoint_${endpoint.name}`}>
                   {/* Details */}
-                  <td className="px-md py-sm max-w-xs align-top">
+                  <td className="px-sm py-xs max-w-xs align-top">
                     <div className="flex items-center">
                       <Link
                         to={{
@@ -108,7 +108,7 @@ const ListComponent: React.FC<Props> = ({
                   </td>
 
                   {/* Endpoint */}
-                  <td className="px-md py-sm align-top">
+                  <td className="px-sm py-xs align-top">
                     <div className={styles.rest_list_left_content}>
                       <URLPreview urlInput={endpoint.url} />
                       <CollapsibleToggle
@@ -127,7 +127,7 @@ const ListComponent: React.FC<Props> = ({
                     </div>
                   </td>
 
-                  <td className="px-md py-sm align-top">
+                  <td className="px-sm py-xs align-top">
                     {badgeSort(endpoint.methods).map(method => (
                       <span className="mr-sm" key={`badge-list-${method}`}>
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
@@ -138,7 +138,7 @@ const ListComponent: React.FC<Props> = ({
                   </td>
 
                   {/* Modify Column */}
-                  <td className="px-md py-sm align-top text-right">
+                  <td className="px-sm py-xs align-top text-right">
                     <Button
                       size="sm"
                       onClick={onClickDelete(

@@ -1,4 +1,12 @@
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
+const path = require('path');
+
 module.exports = {
+  resolvePlugins: [
+    new TsconfigPathsPlugin({
+      configFile: path.resolve(__dirname, '..', 'tsconfig.json'),
+    }),
+  ],
   assetsRules: [
     {
       test: /\.css$/,

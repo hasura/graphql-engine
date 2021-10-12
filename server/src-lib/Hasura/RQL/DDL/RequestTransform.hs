@@ -116,17 +116,24 @@ instance NFData MetadataTransform
 
 instance Cacheable MetadataTransform
 
+infixr 8 .=?
+
+(.=?) :: J.ToJSON v => Text -> Maybe v -> Maybe (Text, J.Value)
+(.=?) _ Nothing = Nothing
+(.=?) k (Just v) = Just (k, J.toJSON v)
+
 instance J.ToJSON MetadataTransform where
   toJSON MetadataTransform {..} =
-    J.object
-      [ "method" J..= mtRequestMethod,
-        "url" J..= mtRequestURL,
-        "body" J..= mtBodyTransform,
-        "content_type" J..= mtContentType,
-        "query_params" J..= fmap M.fromList mtQueryParams,
-        "request_headers" J..= mtRequestHeaders,
-        "template_engine" J..= mtTemplatingEngine
-      ]
+    J.object $
+      ["template_engine" J..= mtTemplatingEngine]
+        <> catMaybes
+          [ "method" .=? mtRequestMethod,
+            "url" .=? mtRequestURL,
+            "body" .=? mtBodyTransform,
+            "content_type" .=? mtContentType,
+            "query_params" .=? fmap M.fromList mtQueryParams,
+            "request_headers" .=? mtRequestHeaders
+          ]
 
 instance J.FromJSON MetadataTransform where
   parseJSON = J.withObject "Object" $ \o -> do
@@ -359,19 +366,20 @@ mkUrlTransform engine template transformCtx =
   case mkTemplateTransform engine template transformCtx of
     Left err -> Left err
     Right (J.String url) ->
-      case URI.parseURI (T.unpack url) of
-        Just _ -> Right url
-        Nothing ->
-          Left $
-            TransformErrorBundle $
-              pure $
-                J.object
-                  [ "error_code" J..= J.String "TransformationError",
-                    -- TODO: This error message is not very
-                    -- helpful. We should find a way to identity what
-                    -- is wrong with the URL.
-                    "message" J..= J.String ("Invalid URL: " <> url)
-                  ]
+      let escapedString = T.pack $ URI.escapeURIString (\c -> not (c == '|')) (T.unpack url)
+       in case URI.parseURI (T.unpack escapedString) of
+            Just _ -> Right url
+            Nothing ->
+              Left $
+                TransformErrorBundle $
+                  pure $
+                    J.object
+                      [ "error_code" J..= J.String "TransformationError",
+                        -- TODO: This error message is not very
+                        -- helpful. We should find a way to identity what
+                        -- is wrong with the URL.
+                        "message" J..= J.String ("Invalid URL: " <> url)
+                      ]
     Right val ->
       Left $
         TransformErrorBundle $
@@ -384,7 +392,7 @@ mkUrlTransform engine template transformCtx =
 -- | Construct a Template Transformation function
 mkTemplateTransform :: TemplatingEngine -> TemplateText -> TransformContext -> Either TransformErrorBundle J.Value
 mkTemplateTransform engine (TemplateText template) TransformContext {..} =
-  let context = [("$url", tcUrl), ("$body", tcBody), ("$session_vars", tcSessionVars), ("$query_params", tcQueryParams)]
+  let context = [("$url", tcUrl), ("$body", tcBody), ("$session_variables", tcSessionVars), ("$query_params", tcQueryParams)]
    in case engine of
         Kriti -> first (TransformErrorBundle . pure . J.toJSON) $ runKriti template context
 
@@ -407,7 +415,7 @@ applyRequestTransform RequestTransform {..} reqData sessionVars =
       bodyFunc body =
         case rtBody of
           Nothing -> pure body
-          Just f -> (pure . J.encode) <$> f transformCtx
+          Just f -> pure . J.encode <$> f transformCtx
 
       urlFunc :: Text -> Either TransformErrorBundle Text
       urlFunc url =

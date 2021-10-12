@@ -25,6 +25,7 @@ require (
 	github.com/goccy/go-yaml v1.8.8
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/google/go-cmp v0.5.5
+	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/kr/pretty v0.2.0 // indirect

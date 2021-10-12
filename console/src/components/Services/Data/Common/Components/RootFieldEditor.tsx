@@ -1,10 +1,7 @@
 import React from 'react';
-
 import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
 
 import { getRootFieldLabel } from './utils';
-
-import styles from '../../../../Common/Common.scss';
 
 interface RootFieldEditorProps {
   rootFields: Record<string, string>;
@@ -85,20 +82,11 @@ const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
   const getRow = (
     rfType: string,
     value: string | undefined,
-    onChange: ChangeHandler,
-    boldLabel = false
+    onChange: ChangeHandler
   ) => (
-    <div
-      className={`${styles.display_flex} row ${styles.add_mar_bottom_small}`}
-    >
-      <div
-        className={`${styles.add_mar_right} col-md-3 ${
-          boldLabel ? styles.boldTitle : ''
-        }`}
-      >
-        {getRootFieldLabel(rfType)}
-      </div>
-      <div className="col-md-5">
+    <div className="flex items-center">
+      <div className="text-gray-600">{getRootFieldLabel(rfType)}</div>
+      <div className="ml-auto w-6/12">
         <input
           type="text"
           value={value || ''}
@@ -113,21 +101,21 @@ const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
 
   const getSection = (rfType: string) => {
     return (
-      <div className={`${styles.add_mar_bottom_mid}`}>
+      <div>
         <CollapsibleToggle
           title={rfType === 'query' ? 'Query and Subscription' : 'Mutation'}
           useDefaultTitleStyle
           isOpen
         >
           {rfType === 'query' && (
-            <div className={`${styles.add_pad_left} ${styles.add_pad_right}`}>
+            <div className="space-y-md mb-md">
               {getRow('select', select, selectOnChange)}
               {getRow('select_by_pk', selectByPk, selectByPkOnChange)}
               {getRow('select_aggregate', selectAgg, selectAggOnChange)}
             </div>
           )}
           {rfType === 'mutation' && (
-            <div className={`${styles.add_pad_left} ${styles.add_pad_right}`}>
+            <div className="space-y-md mb-md">
               {getRow('insert', insert, insertOnChange)}
               {getRow('insert_one', insertOne, insertOneOnChange)}
               {getRow('update', update, updateOnChange)}
@@ -143,9 +131,9 @@ const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
 
   return (
     <div>
-      <div className={styles.add_mar_bottom_mid}>
-        <div className={`${styles.add_pad_left} ${styles.add_pad_right}`}>
-          {getRow('custom_name', customName, customNameOnChange, true)}
+      <div>
+        <div className="mb-md">
+          {getRow('custom_name', customName, customNameOnChange)}
         </div>
         {getSection('query')}
         {getSection('mutation')}

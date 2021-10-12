@@ -145,7 +145,7 @@ data UpdateAction = UpdateAction
   { _uaName :: !ActionName,
     _uaDefinition :: !ActionDefinitionInput,
     _uaComment :: !(Maybe Text),
-    _uaTransform :: !(Maybe MetadataTransform)
+    _uaRequestTransform :: !(Maybe MetadataTransform)
   }
 
 $(J.deriveFromJSON hasuraJSON ''UpdateAction)

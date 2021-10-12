@@ -2,9 +2,25 @@
 
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
+- console: design cleanup Modify and Add Table forms (close #7454)
+- server: fix bug which recreated event triggers every time the graphql-engine started up
 
+### Function field names customization (#7405)
+It is now possible to specify the GraphQL names of tracked SQL functions in
+Postgres sources, and different names may be given to the `_aggregate` and
+suffix-less versions.  Aliases may be set by both
+`/v1/metadata/pg_track_function` and the new API endpoint
+`/v1/metadata/pg_set_function_customization.`
+
+### Bug fixes and improvements 
+
+- server: allow nullable action responses (#4405)
+- server: add support for openapi json of REST Endpoints
+- server: enable inherited roles by default in the graphql-engine
 - server: support MSSQL insert mutations
-- server: fix bug which recreated event triggers while the graphql-engine starts up
+- console: fix v2 metadata imports
+- cli: make `--database-name` optional in `migrate` subcommands when using a single database (#7434)
+- cli: support absolute paths in --envfile (#5689)
 
 ## v2.1.0-beta.1
 
@@ -33,13 +49,15 @@
 - console: fix cross-schema array relationship suggestions
 - console: add performance fixes for handle large db schemas
 - console: fix missing cross-schema computed fields in permission builder
+- console: add time limits setting to security settings
 - cli: add support for `network` metadata object
 - cli: `hasura migrate apply --all-databases` will return a non zero exit code if operation failed on atleast one database (#7499)
 - cli: `migrate create --from-server` creates the migration and marks it as applied on the server
 - cli: support `query_tags` in metadata
 - cli: add `hasura deploy` command
 - cli: allow exporting and applying metadata from `yaml/json` files
-- cli: allow squashing specific set of migrations. A new `--to` flag is introduced in `migrate squash` command. eg: `hasura migrate squash --from <v1> --to <v4>`
+- cli: allow squashing specific set of migrations. A new `--to` flag is introduced in `migrate squash` command. eg: `hasura migrate squash --from <v1> --to <v4>` 
+- cli: `hasura init --endpoint <endpoint>` adds an option to export metadata and create initial migration from the server.
 
 ## v2.0.9
 
