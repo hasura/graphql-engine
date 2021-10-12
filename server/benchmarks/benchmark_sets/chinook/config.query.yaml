@@ -73,7 +73,7 @@ queries:
     query: *simple_query
 
   ############################################################################
-  # A more complex query, with some conditions and joins (excercising
+  # A more complex query, with some conditions and joins (exercising
   # bread-and-butter SQL query generation), with variables. We test the same
   # query on both low and high load, and with a small and large response size.
 

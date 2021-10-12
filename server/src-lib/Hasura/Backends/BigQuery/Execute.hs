@@ -239,12 +239,10 @@ getFinalRecordSet recordSet =
     recordSet
       { rows =
           fmap
-            ( \row ->
-                OMap.filterWithKey
-                  ( \(FieldNameText k) _ ->
-                      maybe True (elem k) (wantedFields recordSet)
-                  )
-                  row
+            ( OMap.filterWithKey
+                ( \(FieldNameText k) _ ->
+                    maybe True (elem k) (wantedFields recordSet)
+                )
             )
             (rows recordSet)
       }
@@ -293,14 +291,15 @@ valueType =
     TimestampValue {} -> TIMESTAMP
     ArrayValue values ->
       ARRAY
-        ( case values V.!? 0 of
-            Just v -> valueType v
+        ( maybe
+            STRING
+            -- Above: If the array is null, it doesn't matter what type
+            -- the element is. So we put STRING.
+            valueType
+            (values V.!? 0)
             -- Above: We base the type from the first element. Later,
             -- we could add some kind of sanity check that they are all
             -- the same type.
-            Nothing -> STRING
-            -- Above: If the array is null, it doesn't matter what type
-            -- the element is. So we put STRING.
         )
     NullValue -> STRING
 
@@ -566,8 +565,8 @@ createQueryJob sc@BigQuerySourceConfig {..} BigQuery {..} =
 parseRecordSetPayload :: Aeson.Object -> Aeson.Parser RecordSet
 parseRecordSetPayload resp = do
   mSchema <- resp .:? "schema"
-  columns <- maybe mempty (.: "fields") mSchema :: Aeson.Parser (Vector BigQueryField)
-  rowsJSON <- fmap (fromMaybe mempty) (resp .:? "rows" :: Aeson.Parser (Maybe (Vector Aeson.Value)))
+  columns <- maybe (pure V.empty) (.: "fields") mSchema :: Aeson.Parser (Vector BigQueryField)
+  rowsJSON <- fmap (fromMaybe V.empty) (resp .:? "rows" :: Aeson.Parser (Maybe (Vector Aeson.Value)))
   rows <-
     V.imapM
       (\i row -> parseRow columns row Aeson.<?> Aeson.Index i)

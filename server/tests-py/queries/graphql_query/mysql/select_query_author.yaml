@@ -1,9 +1,9 @@
-description: Simple GraphQL object query on author, excercising multiple operations
+description: Simple GraphQL object query on author, exercising multiple operations
 url: /v1/graphql
 status: 200
 response:
   data:
-    hasura_author:
+    hasura_test_author:
     - name: Author 1
       id: 1
     - name: Author 2
@@ -18,7 +18,7 @@ query:
       }
     }
     query chooseThisOne {
-      hasura_author {
+      hasura_test_author {
         id
         name
       }

@@ -1205,6 +1205,8 @@ admin_users = postgres' > pgbouncer/pgbouncer.ini
     run_hge_with_args serve
     wait_for_port 8080
 
+    add_bigquery_source 8080
+
     # See note [Specifying Pytests with -k flag]
     pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend bigquery -k "Bigquery or Common"
 

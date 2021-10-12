@@ -1,2 +1,25 @@
-type: bulk
-args: []
+type: replace_metadata
+args:
+  version: 3
+  allow_inconsistent_metadata: false
+  sources:
+
+  - name: hasura_global_limited
+    kind: bigquery
+    configuration:
+      service_account: {from_env: HASURA_BIGQUERY_SERVICE_ACCOUNT}
+      project_id: {from_env: HASURA_BIGQUERY_PROJECT_ID}
+      datasets:
+      - hasura_test
+      global_select_limit: 1
+    tables: []
+
+  - name: bigquery
+    kind: bigquery
+    configuration:
+      service_account: {from_env: HASURA_BIGQUERY_SERVICE_ACCOUNT}
+      project_id: {from_env: HASURA_BIGQUERY_PROJECT_ID}
+      datasets:
+      - hasura_test
+      global_select_limit: 10
+    tables: []

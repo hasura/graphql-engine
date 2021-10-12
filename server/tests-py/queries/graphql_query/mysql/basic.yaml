@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    hasura_author:
+    hasura_test_author:
     - name: Author 1
       id: 1
     - name: Author 2
@@ -12,7 +12,7 @@ query:
   # https://graphql.org/learn/serving-over-http/#post-request
   query: |
     query MyQuery {
-      hasura_author {
+      hasura_test_author {
         name
         id
       }
