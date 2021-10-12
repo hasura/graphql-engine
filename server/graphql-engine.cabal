@@ -404,6 +404,8 @@ library
                      , Hasura.Backends.Postgres.Types.Table
                      , Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
 
+                     , Hasura.Backends.MySQL.DataLoader.Execute
+                     , Hasura.Backends.MySQL.DataLoader.Plan
                      , Hasura.Backends.MySQL.Types
                      , Hasura.Backends.MySQL.Types.Internal
                      , Hasura.Backends.MySQL.Types.Instances
