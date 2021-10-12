@@ -51,12 +51,14 @@ import Hasura.RQL.DDL.Schema
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Eventing.Backend (BackendEventTrigger (..))
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Server.Types (ExperimentalFeature (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 runClearMetadata ::
   ( MonadIO m,
     CacheRWM m,
     MetadataM m,
+    HasServerConfigCtx m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
     Has (HL.Logger HL.Hasura) r
@@ -101,6 +103,7 @@ runReplaceMetadata ::
     MetadataM m,
     MonadIO m,
     MonadMetadataStorageQueryAPI m,
+    HasServerConfigCtx m,
     MonadReader r m,
     Has (HL.Logger HL.Hasura) r
   ) =>
@@ -116,6 +119,7 @@ runReplaceMetadataV1 ::
     MetadataM m,
     MonadIO m,
     MonadMetadataStorageQueryAPI m,
+    HasServerConfigCtx m,
     MonadReader r m,
     Has (HL.Logger HL.Hasura) r
   ) =>
@@ -130,6 +134,7 @@ runReplaceMetadataV2 ::
     CacheRWM m,
     MetadataM m,
     MonadIO m,
+    HasServerConfigCtx m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
     Has (HL.Logger HL.Hasura) r
@@ -140,10 +145,18 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
   logger :: (HL.Logger HL.Hasura) <- asks getter
   -- we drop all the future cron trigger events before inserting the new metadata
   -- and re-populating future cron events below
-  let introspectionDisabledRoles =
+  experimentalFeatures <- _sccExperimentalFeatures <$> askServerConfigCtx
+  let inheritedRoles =
+        case _rmv2Metadata of
+          RMWithSources Metadata {_metaInheritedRoles} -> _metaInheritedRoles
+          RMWithoutSources _ -> mempty
+      introspectionDisabledRoles =
         case _rmv2Metadata of
           RMWithSources m -> _metaSetGraphqlIntrospectionOptions m
           RMWithoutSources _ -> mempty
+  when (inheritedRoles /= mempty && EFInheritedRoles `notElem` experimentalFeatures) $
+    throw400 ConstraintViolation "inherited_roles can only be added when it's enabled in the experimental features"
+
   oldMetadata <- getMetadata
 
   (cronTriggersMetadata, cronTriggersToBeAdded) <- processCronTriggers oldMetadata
@@ -297,28 +310,39 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
           m ()
         compose sourceName x y f = AB.composeAnyBackend @BackendEventTrigger f x y (logger $ HL.UnstructuredLog HL.LevelInfo $ TBS.fromText $ "Event trigger clean up couldn't be done on the source " <> sourceName <<> " because it has changed its type")
 
+processExperimentalFeatures :: HasServerConfigCtx m => Metadata -> m Metadata
+processExperimentalFeatures metadata = do
+  experimentalFeatures <- _sccExperimentalFeatures <$> askServerConfigCtx
+  let isInheritedRolesSet = EFInheritedRoles `elem` experimentalFeatures
+  -- export inherited roles only when inherited_roles is set in the experimental features
+  pure $ bool (metadata {_metaInheritedRoles = mempty}) metadata isInheritedRolesSet
+
 -- | Only includes the cron triggers with `included_in_metadata` set to `True`
 processCronTriggersMetadata :: Metadata -> Metadata
 processCronTriggersMetadata metadata =
   let cronTriggersIncludedInMetadata = OMap.filter ctIncludeInMetadata $ _metaCronTriggers metadata
    in metadata {_metaCronTriggers = cronTriggersIncludedInMetadata}
 
+processMetadata :: HasServerConfigCtx m => Metadata -> m Metadata
+processMetadata metadata =
+  processCronTriggersMetadata <$> processExperimentalFeatures metadata
+
 runExportMetadata ::
   forall m.
-  (QErrM m, MetadataM m) =>
+  (QErrM m, MetadataM m, HasServerConfigCtx m) =>
   ExportMetadata ->
   m EncJSON
 runExportMetadata ExportMetadata {} =
-  encJFromOrderedValue . metadataToOrdJSON <$> (processCronTriggersMetadata <$> getMetadata)
+  encJFromOrderedValue . metadataToOrdJSON <$> (getMetadata >>= processMetadata)
 
 runExportMetadataV2 ::
   forall m.
-  (QErrM m, MetadataM m) =>
+  (QErrM m, MetadataM m, HasServerConfigCtx m) =>
   MetadataResourceVersion ->
   ExportMetadata ->
   m EncJSON
 runExportMetadataV2 currentResourceVersion ExportMetadata {} = do
-  exportMetadata <- processCronTriggersMetadata <$> getMetadata
+  exportMetadata <- processMetadata =<< getMetadata
   pure $
     encJFromOrderedValue $
       AO.object

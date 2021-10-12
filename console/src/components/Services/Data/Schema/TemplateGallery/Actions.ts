@@ -266,8 +266,18 @@ export const applyTemplate = createAsyncThunk<
           makeMigrationCall(
             dispatch,
             getState,
-            [generateReplaceMetadataQuery(newMetadata)],
-            [generateReplaceMetadataQuery(newMetadata)],
+            [
+              generateReplaceMetadataQuery({
+                metadata: newMetadata,
+                resource_version: 0,
+              }),
+            ],
+            [
+              generateReplaceMetadataQuery({
+                metadata: newMetadata,
+                resource_version: 0,
+              }),
+            ],
             `apply_metadata_template_${key}`,
             resolve,
             reject,

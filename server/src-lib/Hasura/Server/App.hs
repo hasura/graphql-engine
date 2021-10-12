@@ -60,7 +60,6 @@ import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Metrics (ServerMetrics)
 import Hasura.Server.Middleware (corsMiddleware)
-import Hasura.Server.OpenAPI (serveJSON)
 import Hasura.Server.Rest
 import Hasura.Server.Types
 import Hasura.Server.Utils
@@ -1078,13 +1077,6 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
           onlyAdmin
           respJ <- liftIO $ EL.dumpLiveQueriesState True $ scLQState serverCtx
           return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue respJ) [])
-  Spock.get "api/swagger/json" $
-    spockAction encodeQErr id $
-      mkGetHandler $ do
-        onlyAdmin
-        sc <- getSCFromRef $ scCacheRef serverCtx
-        let json = serveJSON sc
-        return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue json) [])
 
   forM_ [Spock.GET, Spock.POST] $ \m -> Spock.hookAny m $ \_ -> do
     req <- Spock.request

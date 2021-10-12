@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from '../../../../Common/TableCommon/Table.scss';
 
 const UniqueKeySelector = ({
   uniqueKeys,
@@ -54,16 +55,16 @@ const UniqueKeySelector = ({
 
     const removeIcon = (
       <i
-        className="w-4 ml-sm fa fa-times cursor-pointer"
+        className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
         data-test={`remove-uk-${index}-column-${i}`}
         onClick={removeUniqueCol}
       />
     );
 
     return (
-      <div key={i} className="flex items-center">
+      <div key={i} className={`form-group ${styles.pkEditorWrapper}`}>
         <select
-          className="form-control"
+          className={`${styles.select} ${styles.sample} form-control ${styles.add_pad_left}`}
           data-test={`unique-key-${index}-column-${i}`}
           value={uk}
           onChange={setUniqueCol}
@@ -82,9 +83,9 @@ const UniqueKeySelector = ({
   const newSelect = () => {
     const selectUniqueCol = e => dispatchSelectUniqueCol(e, numCols);
     return (
-      <div className="flex" key={numCols}>
+      <div key={numCols} className={`form-group ${styles.pkEditorWrapper}`}>
         <select
-          className="form-control"
+          className={`${styles.select} ${styles.sample} form-control ${styles.add_pad_left}`}
           data-test={`unique-key-${index}-column-${numCols}`}
           onChange={selectUniqueCol}
           value={''}
@@ -94,20 +95,14 @@ const UniqueKeySelector = ({
           </option>
           {getColumnOptions()}
         </select>
-        <div className="ml-sm w-4" />
       </div>
     );
   };
 
   return (
     <div>
-      <span className="flex items-center text-gray-600 font-semibold mb-formlabel">
-        Unique Keys:
-      </span>
-      <div className="space-y-md">
-        {existingSelects}
-        {newSelect()}
-      </div>
+      {existingSelects}
+      {newSelect()}
     </div>
   );
 };

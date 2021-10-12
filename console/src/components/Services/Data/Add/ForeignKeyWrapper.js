@@ -79,11 +79,7 @@ const ForeignKeyWrapper = ({
     if (fkConfig) {
       collapsedLabelText = <b>{fkConfig}</b>;
     } else if (isLast && numFks === 1) {
-      collapsedLabelText = (
-        <span className="italic text-sm text-gray-600">
-          (You can add foreign keys later as well)
-        </span>
-      );
+      collapsedLabelText = <i>(You can add foreign keys later as well)</i>;
     }
 
     const collapsedLabel = () => <div>{collapsedLabelText}</div>;

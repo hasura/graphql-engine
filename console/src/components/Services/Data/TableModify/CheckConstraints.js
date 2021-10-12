@@ -65,6 +65,9 @@ const CheckConstraints = ({
     // constraint name as collapsed label
     const collapsedLabel = () => {
       if (isLast) {
+        if (!constraints.length) {
+          return <div>No check constraints</div>;
+        }
         return null;
       }
 
@@ -82,7 +85,7 @@ const CheckConstraints = ({
       }
 
       return (
-        <div className="text-gray-600">
+        <div>
           <b>{existingConstraintName}</b>
         </div>
       );
@@ -92,7 +95,7 @@ const CheckConstraints = ({
     const expandButtonText = isLast
       ? constraints.length
         ? 'Add a new check constraint'
-        : 'Add a check constraint'
+        : 'Add'
       : 'Edit';
 
     // Check constraint definition in AceEditor for syntax highlighting

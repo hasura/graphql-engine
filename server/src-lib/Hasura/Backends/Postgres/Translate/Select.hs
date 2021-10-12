@@ -1,32 +1,3 @@
--- | This module is a translation layer between IR and postgres-specific select queries.
---
--- There are three main types of selects (as distinguished from the IR):
---
---     * "simple" selects
---
---     * aggregate selects
---
---     * connection selects (used for relay)
---
--- Most exports from this module showcase this distinction. The "interesting" parts
--- of the call tree of these functions is similar:
---
---     * 'selectQuerySQL' -> 'mkSQLSelect' -> 'processAnnSimpleSelect' -> 'processSelectParams'/'processAnnFields'
---
---     * 'selectAggregateQuerySQL' -> 'mkAggregateSelect' -> 'processAnnAggregateSelect' -> 'processSelectParams'/'processAnnFields'
---
---     * 'connetionSelectQuerySQL' -> 'mkConnectionSelect' -> 'processConnectionSelection' -> 'processSelectParams'
---
---
--- Random thoughts that might help when diving deeper in this module:
---
---     * Extractors are a pair of an SQL expression and an alias; they get
---         translated like "[SELECT ...] <expr> as <alias>"
---     * a 'SelectSource' consists of a prefix, a source, a boolean conditional
---         expression, and info on whether sorting or slicing is done
---         (needed to handle the LIMIT optimisation)
---     * For details on creating the selection tree for relationships via
---       @MonadWriter JoinTree@, see 'withWriteJoinTree'
 module Hasura.Backends.Postgres.Translate.Select
   ( selectQuerySQL,
     selectAggregateQuerySQL,
@@ -62,10 +33,6 @@ import Hasura.RQL.IR.Select
 import Hasura.RQL.Types hiding (Identifier)
 import Hasura.SQL.Types
 
--- | Translates IR to Postgres queries for simple SELECTs (select queries that
--- are not aggregations, including subscriptions).
---
--- See 'mkSQLSelect' for the Postgres AST.
 selectQuerySQL ::
   forall pgKind.
   (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) =>
@@ -75,9 +42,6 @@ selectQuerySQL ::
 selectQuerySQL jsonAggSelect sel =
   Q.fromBuilder $ toSQL $ mkSQLSelect jsonAggSelect sel
 
--- | Translates IR to Postgres queries for aggregated SELECTs.
---
--- See 'mkAggregateSelect' for the Postgres AST.
 selectAggregateQuerySQL ::
   forall pgKind.
   (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) =>
@@ -86,9 +50,6 @@ selectAggregateQuerySQL ::
 selectAggregateQuerySQL =
   Q.fromBuilder . toSQL . mkAggregateSelect
 
--- | Translates IR to Postgres queries for "connection" queries (used for Relay).
---
--- See 'mkConnectionSelect' for the Postgres AST.
 connectionSelectQuerySQL ::
   forall pgKind.
   ( Backend ('Postgres pgKind),
@@ -99,13 +60,6 @@ connectionSelectQuerySQL ::
 connectionSelectQuerySQL =
   Q.fromBuilder . toSQL . mkConnectionSelect
 
--- | Helper function with no relation to anything else in the module.
---
--- This function is generally used on the result of 'selectQuerySQL',
--- 'selectAggregateQuerySQL' or 'connectionSelectSQL' to run said query and get
--- back the resulting JSON.
---
--- TODO: Perhaps this helper could find a new home.
 asSingleRowJsonResp ::
   Q.Query ->
   [Q.PrepArg] ->
@@ -114,10 +68,10 @@ asSingleRowJsonResp query args =
   encJFromBS . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler query args True
 
--- | Converts a function name to an identifier.
---
--- If the schema name is public, it will just use its name, otherwise it will
--- prefix it by the schema name.
+-- Conversion of SelectQ happens in 2 Stages.
+-- Stage 1 : Convert input query into an annotated AST
+-- Stage 2 : Convert annotated AST to SQL Select
+
 functionToIdentifier :: QualifiedFunction -> Identifier
 functionToIdentifier = Identifier . qualifiedObjectToText
 
@@ -130,13 +84,11 @@ selectFromToFromItem pfx = \case
       S.FunctionExp qf (fromTableRowArgs pfx args) $
         Just $ S.mkFunctionAlias (functionToIdentifier qf) defListM
 
+-- This function shouldn't be present ideally
 -- You should be able to retrieve this information
 -- from the FromItem generated with selectFromToFromItem
 -- however given from S.FromItem is modelled, it is not
--- possible currently.
---
--- More precisely, 'selectFromToFromItem' is injective but not surjective, so
--- any S.FromItem -> S.Qual function would have to be partial.
+-- possible currently
 selectFromToQual :: SelectFrom ('Postgres pgKind) -> S.Qual
 selectFromToQual = \case
   FromTable table -> S.QualTable table
@@ -467,15 +419,6 @@ getAnnArr (f, annFld) = case annFld of
   AFArrayRelation ar -> Just (f, ar)
   _ -> Nothing
 
--- | This is the lowest level function which deals with @MonadWriter JoinTree@, whose
--- purpose is to essentially create the selection tree across relationships.
---
--- Each type of relationship uses a different kind of update function; see
--- 'withWriteObjectRelation', 'withWriteArrayRelation', 'withWriteArrayConnection',
--- and 'withWriteComputedFieldTableSet'.
---
--- See the definition of 'JoinTree' for details before diving further
--- (particularly its components and Monoid instance).
 withWriteJoinTree ::
   (MonadWriter JoinTree m) =>
   (JoinTree -> b -> JoinTree) ->

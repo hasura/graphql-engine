@@ -46,11 +46,11 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
 
       // show remove icon for all columns except last
       if (i + 1 === numPks) {
-        removeIcon = <div className="ml-sm w-4" />;
+        removeIcon = null;
       } else {
         removeIcon = (
           <i
-            className="ml-sm w-4 fa fa-times cursor-pointer"
+            className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
             data-test={`remove-pk-column-${i}`}
             onClick={dispatchRemove}
           />
@@ -58,10 +58,10 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
       }
 
       return (
-        <div key={i} className="flex items-center">
+        <div key={i} className={`form-group ${styles.pkEditorWrapper}`}>
           <select
             value={pk || ''}
-            className={`w-full form-control ${styles.add_pad_left}`}
+            className={`${styles.select} ${styles.sample} form-control ${styles.add_pad_left}`}
             onChange={dispatchSet}
             data-test={`primary-key-select-${i}`}
           >
@@ -83,7 +83,7 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
       );
     });
   };
-  return <div className="space-y-md">{pkEditors()}</div>;
+  return <div>{pkEditors()}</div>;
 };
 
 export default PrimaryKeySelector;

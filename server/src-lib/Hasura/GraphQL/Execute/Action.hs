@@ -209,7 +209,6 @@ makeActionResponseNoRelations annFields webhookResponse =
       case webhookResponse of
         AWRArray objs -> AO.array $ map mkResponseObject objs
         AWRObject obj -> mkResponseObject obj
-        AWRNull -> AO.Null
 
 {- Note: [Async action architecture]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -544,16 +543,9 @@ callWebhook
             if
                 | HTTP.statusIsSuccessful responseStatus -> do
                   let expectingArray = isListType outputType
-                      expectingNull = isNullableType outputType
                   modifyQErr addInternalToErr $ do
                     webhookResponse <- decodeValue responseValue
                     case webhookResponse of
-                      AWRNull -> do
-                        unless expectingNull $
-                          if expectingArray
-                            then throwUnexpected "expecting array for action webhook response but got null"
-                            else throwUnexpected "expecting object for action webhook response but got null"
-                        validateResponseObject Map.empty
                       AWRArray objs -> do
                         unless expectingArray $
                           throwUnexpected "expecting object for action webhook response but got array"

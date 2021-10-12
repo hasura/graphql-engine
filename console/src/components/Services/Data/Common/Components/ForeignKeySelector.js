@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from '../../../../Common/TableCommon/Table.scss';
 import { fkViolationOnUpdate, fkViolationOnDelete } from '../TooltipMessages';
 import { updateSchemaInfo } from '../../DataActions';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
@@ -51,13 +52,13 @@ const ForeignKeySelector = ({
     };
 
     return (
-      <div className="mb-md sm:w-6/12">
-        <h4 className="flex items-center text-gray-600 font-semibold mb-sm">
-          Reference Schema:
-        </h4>
+      <div className={`${styles.add_mar_bottom}`}>
+        <div className={`${styles.add_mar_bottom_mid}`}>
+          <b>Reference Schema:</b>
+        </div>
         <select
           value={refSchemaName || ''}
-          className="form-control"
+          className={`${styles.select} form-control ${styles.add_pad_left}`}
           data-test={`foreign-key-ref-schema-${index}`}
           onChange={dispatchSetRefSchema}
         >
@@ -117,13 +118,13 @@ const ForeignKeySelector = ({
     };
 
     return (
-      <div className="mb-md sm:w-6/12">
-        <h4 className="flex items-center text-gray-600 font-semibold mb-sm">
-          Reference Table:
-        </h4>
+      <div className={`${styles.add_mar_bottom}`}>
+        <div className={`${styles.add_mar_bottom_mid}`}>
+          <b>Reference Table:</b>
+        </div>
         <select
           value={refTableName || ''}
-          className={`form-control`}
+          className={`${styles.select} form-control ${styles.add_pad_left}`}
           data-test={`foreign-key-ref-table-${index}`}
           onChange={dispatchSetRefTable}
           disabled={!refSchemaName}
@@ -141,19 +142,14 @@ const ForeignKeySelector = ({
       ? 'Please select the reference table'
       : undefined;
     return (
-      <div className="mb-md space-y-md">
-        <div className="grid gap-sm grid-cols-1 sm:grid-cols-3">
-          <div>
-            <span className="flex items-center text-gray-600 font-semibold">
-              From:
-            </span>
+      <div className={`${styles.add_mar_bottom}`}>
+        <div className={`row ${styles.add_mar_bottom_mid}`}>
+          <div className={`col-sm-4 ${styles.add_mar_right}`}>
+            <b>From:</b>
           </div>
-          <div>
-            <span className="flex items-center text-gray-600 font-semibold">
-              To:
-            </span>
+          <div className={`col-sm-4 ${styles.add_mar_right}`}>
+            <b>To:</b>
           </div>
-          <div />
         </div>
         {colMappings.map((colMap, _i) => {
           // from column
@@ -203,7 +199,7 @@ const ForeignKeySelector = ({
           } else {
             removeIcon = (
               <i
-                className="w-4 fa fa-times cursor-pointer"
+                className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
                 onClick={dispatchRemoveCol}
               />
             );
@@ -211,12 +207,12 @@ const ForeignKeySelector = ({
 
           return (
             <div
-              className="grid gap-sm grid-cols-1 sm:grid-cols-3"
+              className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
               key={`fk-col-${index}-${_i}`}
             >
-              <div>
+              <div className={`col-sm-4 ${styles.add_mar_right}`}>
                 <select
-                  className={`form-control`}
+                  className={`form-control ${styles.select} ${styles.wd100Percent}`}
                   value={lc}
                   onChange={dispatchSetLcol}
                   data-test={`foreign-key-${index}-lcol-${_i}`}
@@ -237,9 +233,9 @@ const ForeignKeySelector = ({
                   })}
                 </select>
               </div>
-              <div>
+              <div className={'col-sm-4'}>
                 <select
-                  className={`form-control`}
+                  className={`form-control ${styles.select} ${styles.wd100Percent}`}
                   value={rc}
                   onChange={dispatchSetRcol}
                   disabled={!refTableName}
@@ -261,7 +257,7 @@ const ForeignKeySelector = ({
                     })}
                 </select>
               </div>
-              <div className="flex items-center">{removeIcon}</div>
+              <div>{removeIcon}</div>
             </div>
           );
         })}
@@ -280,7 +276,7 @@ const ForeignKeySelector = ({
     const radios = action => {
       const selected = foreignKey[action];
       return (
-        <div>
+        <div className={'row'}>
           {violiationActions.map(va => {
             const onCheck = () => {
               const newFks = JSON.parse(JSON.stringify(foreignKeys));
@@ -288,17 +284,20 @@ const ForeignKeySelector = ({
               dispatch(setForeignKeys(newFks));
             };
             return (
-              <div className="inline-flex mr-md" key={`${action}_${va}`}>
+              <div
+                className={`col-sm-2 ${styles.display_flex}`}
+                key={`${action}_${va}`}
+              >
                 <input
                   type="radio"
                   checked={selected === va}
                   onChange={onCheck}
                   data-test={`foreign-key-${index}-${action}-${va}`}
-                  className={`legacy-input-fix`}
+                  className={`legacy-input-fix ${styles.add_mar_right_small}`}
                   title={inputTitle}
                   disabled={disabled}
                 />
-                <div className="ml-xs">{va.toLowerCase()}</div>
+                <div>{va.toLowerCase()}</div>
               </div>
             );
           })}
@@ -308,16 +307,16 @@ const ForeignKeySelector = ({
 
     return (
       <div>
-        <div className="mb-md">
-          <div className="mb-sm flex items-center text-gray-600 font-semibold mb-sm">
-            <span>On Update Violation:</span>
+        <div className={`${styles.add_mar_bottom}`}>
+          <div className={`${styles.add_mar_bottom_mid}`}>
+            <b>On Update Violation:</b>&nbsp; &nbsp;
             <ToolTip message={fkViolationOnUpdate} />
           </div>
           {radios('onUpdate')}
         </div>
-        <div>
-          <div className="flex items-center text-gray-600 font-semibold mb-sm">
-            <span>On Delete Violation:</span>
+        <div className={`${styles.add_mar_bottom}`}>
+          <div className={`${styles.add_mar_bottom_mid}`}>
+            <b>On Delete Violation:</b>&nbsp; &nbsp;
             <ToolTip message={fkViolationOnDelete} />
           </div>
           {radios('onDelete')}
@@ -327,7 +326,7 @@ const ForeignKeySelector = ({
   };
 
   return (
-    <div>
+    <div className="form-group">
       {refSchemaSelect()}
       {refTableSelect()}
       {columnSelect()}

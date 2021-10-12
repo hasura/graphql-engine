@@ -61,7 +61,7 @@ buildFunctionInfo ::
   RawFunctionInfo ('Postgres pgKind) ->
   Maybe Text ->
   m (FunctionInfo ('Postgres pgKind), SchemaDependency)
-buildFunctionInfo source qf systemDefined fc@FunctionConfig {..} permissions rawFuncInfo comment =
+buildFunctionInfo source qf systemDefined FunctionConfig {..} permissions rawFuncInfo comment =
   either (throw400 NotSupported . showErrors) pure
     =<< MV.runValidateT validateFunction
   where
@@ -112,17 +112,11 @@ buildFunctionInfo source qf systemDefined fc@FunctionConfig {..} permissions raw
 
       inputArguments <- makeInputArguments
 
-      funcGivenName <- functionGraphQLName @('Postgres pgKind) qf `onLeft` throwError
-
       let retTable = typeToTable returnType
           retJsonAggSelect = bool JASSingleObject JASMultipleRows retSet
-
           functionInfo =
             FunctionInfo
               qf
-              (getFunctionGQLName funcGivenName fc)
-              (getFunctionArgsGQLName funcGivenName fc)
-              (getFunctionAggregateGQLName funcGivenName fc)
               systemDefined
               funVol
               exposeAs

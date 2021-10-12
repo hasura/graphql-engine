@@ -4,7 +4,6 @@ import { addDecorator } from '@storybook/react';
 import { initializeWorker, mswDecorator } from 'msw-storybook-addon';
 import '../src/theme/tailwind.css';
 import { store } from '../src/store';
-import '../src/components/Common/Common.scss';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },

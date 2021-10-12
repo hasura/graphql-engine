@@ -49,7 +49,6 @@ data RQLMetadataV1
   | -- Functions
     RMTrackFunction !(AnyBackend TrackFunctionV2)
   | RMUntrackFunction !(AnyBackend UnTrackFunction)
-  | RMSetFunctionCustomization (AnyBackend SetFunctionCustomization)
   | -- Functions permissions
     RMCreateFunctionPermission !(AnyBackend FunctionPermissionArgument)
   | RMDropFunctionPermission !(AnyBackend FunctionPermissionArgument)

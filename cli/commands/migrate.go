@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-
 	"github.com/pkg/errors"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
@@ -128,17 +127,9 @@ func validateConfigV3Flags(cmd *cobra.Command, ec *cli.ExecutionContext) error {
 		return nil
 	}
 
-	// In case of single database, just choose the source automatically
-	sources, err := metadatautil.GetSources(ec.APIClient.V1Metadata.ExportMetadata)
-	if err != nil {
-		return fmt.Errorf("unable to get available databases: %w", err)
-	}
-	if !cmd.Flags().Changed("database-name") && len(sources) == 1 {
-		ec.Source.Name = sources[0]
-	}
 	// for project using config equal to or greater than v3
 	// database-name flag is required when running in non-terminal mode
-	if (!ec.IsTerminal || ec.Config.DisableInteractive) && ec.Source.Name == "" {
+	if (!ec.IsTerminal || ec.Config.DisableInteractive) && !cmd.Flags().Changed("database-name") {
 		return errDatabaseNameNotSet
 	}
 

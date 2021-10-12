@@ -1,6 +1,3 @@
-@import url('https://fonts.googleapis.com/css?family=Gudea:400,500,700');
-@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -129,11 +126,6 @@ input[id*='react-select'][id$='-input']:focus {
 }
 .docExplorerHide {
   padding: 16px !important;
-}
-
-/* Fixes result loading spinner position */
-.graphiql-container .spinner-container{
-  top: 48px !important;
 }
 
 /* Fixes spacing in operation title namer */

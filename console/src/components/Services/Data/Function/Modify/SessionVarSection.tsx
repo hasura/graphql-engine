@@ -46,19 +46,19 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
 
   return (
     <>
-      <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-        Session Argument
+      <hr className="my-md" />
+      <h4 className={styles.subheading_text}>
+        Session argument
         <ToolTip message="the function argument into which hasura session variables will be passed" />
         <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html#accessing-hasura-session-variables-in-custom-functions" />
       </h4>
       <div
-        className={
-          isEditing
-            ? 'space-y-md block rounded bg-white border border-gray-300 p-md mb-sm'
-            : 'space-y-md block'
-        }
+        className={isEditing ? styles.editorExpanded : styles.editorCollapsed}
       >
-        <div className="mb-md" data-test={`${functionName}-session-argument`}>
+        <div
+          className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}
+          data-test={`${functionName}-session-argument`}
+        >
           <Button
             className={styles.add_mar_small}
             color="white"
@@ -68,17 +68,18 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
           >
             {isEditing ? 'Close' : 'Edit'}
           </Button>
+          {configuration?.session_argument || 'No Session argument'}
         </div>
         {isEditing && (
           <>
             <EditorInput
-              label="Session Argument"
+              label="Session argument"
               value={sessVar}
               onChange={onSessVarChange}
               testID={functionName}
               placeholder="hasura_session"
             />
-            <div className="mt-md">
+            <div className={styles.add_mar_top_small}>
               <Button
                 type="submit"
                 color="yellow"

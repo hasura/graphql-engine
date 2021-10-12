@@ -118,6 +118,7 @@ library
                      , either
                      , exceptions
                      , fast-logger
+                     , ghc-heap-view
                      , hashable
                      , hashable-time
                      , http-client-tls
@@ -130,7 +131,6 @@ library
                      , monad-loops
                      , monad-validate
                      , mtl
-                     , openapi3
                      , optparse-applicative
                      , parsec
                      , pg-client
@@ -217,7 +217,7 @@ library
                      , template-haskell >= 2.11
 
                      -- websockets interface related
-                     , websockets>=0.12
+                     , websockets
                      , stm
                      , stm-containers
                      , list-t
@@ -288,10 +288,6 @@ library
                      -- mysql
                      , mysql
                      , mysql-simple
-
-  if !flag(profiling)
-    -- ghc-heap-view can't be built with profiling
-    build-depends:     ghc-heap-view
 
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Trans
@@ -444,7 +440,6 @@ library
                      , Hasura.Server.Types
                      , Hasura.Server.API.PGDump
                      , Hasura.Server.Rest
-                     , Hasura.Server.OpenAPI
                      , Hasura.Prelude
 
                      , Hasura.EncJSON

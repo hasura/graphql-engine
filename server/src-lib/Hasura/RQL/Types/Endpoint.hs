@@ -21,7 +21,6 @@ module Hasura.RQL.Types.Endpoint
     deName,
     splitPath,
     mkEndpointUrl,
-    unEndpointUrl,
   )
 where
 

@@ -558,27 +558,6 @@ Custom Root Fields
      - ``String``
      - Customise the ``delete_<table-name>_by_pk`` root field
 
-.. _custom_function_root_fields:
-
-Custom Function Root Fields
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - function
-     - false
-     - ``String``
-     - Customise the ``<function-name>`` root field
-   * - function_aggregate
-     - false
-     - ``String``
-     - Customise the ``<function-name>_aggregete`` root field
-
 .. _InsertPermission:
 
 InsertPermission
@@ -1614,16 +1593,6 @@ Function Configuration
      - Required
      - Schema
      - Description
-   * - custom_name
-     - false
-     - ``String``
-     - Customise the ``<function-name>`` with the provided custom name value.
-       The GraphQL nodes for the function will be generated according to the custom name.
-   * - custom_root_fields
-     - false
-     - :ref:`Custom Function Root Fields <custom_function_root_fields>`
-     - Customise the root fields
-
    * - session_argument
      - false
      - `String`

@@ -108,7 +108,6 @@ module.exports = {
   resolve: {
     modules: ['src', 'node_modules'],
     extensions: ['.json', '.js', '.jsx', '.mjs', '.ts', '.tsx'],
-    plugins: commonConfig.resolvePlugins,
   },
   optimization: {
     minimize: true,

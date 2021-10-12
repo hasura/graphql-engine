@@ -3,6 +3,7 @@ import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 
 import Tooltip from '../../../Common/Tooltip/Tooltip';
+import styles from './ModifyTable.scss';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import ComputedFieldsEditor from './ComputedFieldsEditor';
 import { ReduxState } from '../../../../types';
@@ -23,13 +24,11 @@ const ComputedFields = (props: ComputedFieldsProps) => {
 
   return (
     <React.Fragment>
-      <div className="flex items-center mb-formlabel">
-        <h4 className="text-gray-600 font-semibold">
-          Computed Fields
-          <Tooltip message="Add a function as a virtual field in the GraphQL API" />
-        </h4>
+      <h4 className={styles.subheading_text}>
+        Computed fields
+        <Tooltip message="Add a function as a virtual field in the GraphQL API" />
         <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/computed-fields.html" />
-      </div>
+      </h4>
       <ComputedFieldsEditor
         table={tableSchema}
         currentSchema={currentSchema}

@@ -13,16 +13,23 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.Types
+import Hasura.Server.Types (ExperimentalFeature (..))
 import Hasura.Session
 
 runAddInheritedRole ::
   ( MonadError QErr m,
     CacheRWM m,
-    MetadataM m
+    MetadataM m,
+    HasServerConfigCtx m
   ) =>
   InheritedRole ->
   m EncJSON
 runAddInheritedRole addInheritedRoleQ@(Role inheritedRoleName (ParentRoles parentRoles)) = do
+  experimentalFeatures <- _sccExperimentalFeatures <$> askServerConfigCtx
+  unless (EFInheritedRoles `elem` experimentalFeatures) $
+    throw400 ConstraintViolation $
+      "inherited role can only be added when inherited_roles enabled"
+        <> " in the experimental features"
   when (inheritedRoleName `elem` parentRoles) $
     throw400 InvalidParams "an inherited role name cannot be in the role combination"
   buildSchemaCacheFor (MOInheritedRole inheritedRoleName) $

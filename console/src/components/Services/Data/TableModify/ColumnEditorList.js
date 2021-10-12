@@ -144,11 +144,9 @@ const ColumnEditorList = ({
 
       const keyPropertiesString = propertiesList.join(', ');
 
-      propertiesDisplay.push(
-        <span className="ml-xs font-normal" key={'props'}>
-          {keyPropertiesString}
-        </span>
-      );
+      propertiesDisplay.push(<i key={'props'}>{keyPropertiesString}</i>);
+
+      propertiesDisplay.push(<br key={'br1'} />);
 
       propertiesDisplay.push(
         <span key={'comment'} className={styles.text_gray}>
@@ -161,14 +159,14 @@ const ColumnEditorList = ({
 
     const collapsedLabel = () => {
       return (
-        <div className="flex items-center" key={colName}>
-          <div>
-            <span className="font-semibold">{colName}</span>
-            <span className="ml-xs font-semibold">
+        <div key={colName}>
+          <b>
+            {colName}
+            <i>
               {columnProperties.customFieldName &&
                 ` → ${columnProperties.customFieldName}`}
-            </span>
-          </div>{' '}
+            </i>
+          </b>{' '}
           {gqlCompatibilityWarning()} - {keyProperties()}
         </div>
       );

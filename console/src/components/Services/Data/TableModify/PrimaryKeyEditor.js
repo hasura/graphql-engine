@@ -50,11 +50,9 @@ const PrimaryKeyEditor = ({
     );
   }
 
-  const pkEditorCollapsedLabel = () => {
-    if (pkConfigText) {
-      return <div className="text-gray-600">{pkConfigText}</div>;
-    }
-  };
+  const pkEditorCollapsedLabel = () => (
+    <div>{pkConfigText ? pkConfigText : 'No primary key'}</div>
+  );
 
   // label next to the button when the editor is expanded
   const pkEditorExpandedLabel = () => (
@@ -115,7 +113,7 @@ const PrimaryKeyEditor = ({
   };
 
   // Toggle button text when the editor is expanded and collapsed
-  const expandButtonText = pkConfigText ? 'Edit' : 'Add primary key';
+  const expandButtonText = pkConfigText ? 'Edit' : 'Add';
   const collapsedButtonText = pkConfigText ? 'Close' : 'Cancel';
 
   // Wrap inside an expandable editor

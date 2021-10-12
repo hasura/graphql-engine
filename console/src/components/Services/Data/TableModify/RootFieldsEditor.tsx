@@ -6,7 +6,9 @@ import {
   modifyRootFields,
   setCustomRootFields,
 } from './ModifyActions';
+import { isEmpty } from '../../../Common/utils/jsUtils';
 
+import styles from './ModifyTable.scss';
 import { Dispatch } from '../../../../types';
 
 type RootFieldsEditorProps = {
@@ -49,10 +51,8 @@ const RootFieldsEditor = ({
 
     if (existingCustomName) {
       customRootFieldLabels.push(
-        <span className="flex items-center" key={existingCustomName}>
-          <span className="font-semibold mr-xs">custom_table_name</span>{' '}
-          <span className="mr-xs">&rarr;</span>{' '}
-          <span>{existingCustomName}</span>
+        <span className={styles.display_inline} key={existingCustomName}>
+          <i>custom_table_name</i> &rarr; {existingCustomName}
         </span>
       );
     }
@@ -62,17 +62,20 @@ const RootFieldsEditor = ({
       if (customRootField) {
         customRootFieldLabels.push(
           <>
-            <span className="flex items-center" key={rootField}>
-              <span className="font-semibold mr-xs">{rootField}</span>
-              <span className="mr-xs">&rarr;</span>
-              <span>{customRootField}</span>
+            {!isEmpty(customRootFieldLabels) && ', '}
+            <span className={styles.display_inline} key={rootField}>
+              <i>{rootField}</i> &rarr; {customRootField}
             </span>
           </>
         );
       }
     });
 
-    return <div>{customRootFieldLabels}</div>;
+    if (isEmpty(customRootFieldLabels) && !existingCustomName) {
+      customRootFieldLabels.push('No root fields customised');
+    }
+
+    return <span>{customRootFieldLabels}</span>;
   };
 
   const editorExpanded = () => (

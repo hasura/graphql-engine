@@ -85,7 +85,6 @@ data RQLMetadataV1
   | -- Functions
     RMTrackFunction !(AnyBackend TrackFunctionV2)
   | RMUntrackFunction !(AnyBackend UnTrackFunction)
-  | RMSetFunctionCustomization (AnyBackend SetFunctionCustomization)
   | -- Functions permissions
     RMCreateFunctionPermission !(AnyBackend FunctionPermissionArgument)
   | RMDropFunctionPermission !(AnyBackend FunctionPermissionArgument)
@@ -338,7 +337,6 @@ queryModifiesMetadata = \case
       RMGetScheduledEvents _ -> False
       RMCreateScheduledEvent _ -> False
       RMDeleteScheduledEvent _ -> False
-      RMTestWebhookTransform _ -> False
       RMBulk qs -> any queryModifiesMetadata qs
       _ -> True
   RMV2 q ->
@@ -396,7 +394,6 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMRenameSource q -> runRenameSource q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
   RMUntrackTable q -> dispatchMetadata runUntrackTableQ q
-  RMSetFunctionCustomization q -> dispatchMetadata runSetFunctionCustomization q
   RMSetTableCustomization q -> dispatchMetadata runSetTableCustomization q
   RMPgSetTableIsEnum q -> runSetExistingTableIsEnumQ q
   RMCreateInsertPermission q -> dispatchMetadata runCreatePerm q
@@ -495,6 +492,7 @@ runMetadataQueryV2M ::
     CacheRWM m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
+    HasServerConfigCtx m,
     MonadReader r m,
     Has (L.Logger L.Hasura) r
   ) =>

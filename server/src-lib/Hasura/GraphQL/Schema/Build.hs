@@ -177,29 +177,27 @@ buildFunctionQueryFields ::
   SelPermInfo b ->
   m [FieldParser n (QueryRootField UnpreparedValue)]
 buildFunctionQueryFields sourceName sourceInfo queryTagsConfig functionName functionInfo tableName selPerms = do
+  funcName <- functionGraphQLName @b functionName `onLeft` throwError
   let mkRF =
         RFDB sourceName
           . AB.mkAnyBackend
           . SourceConfigWith sourceInfo queryTagsConfig
           . QDBR
-
       -- select function
       funcDesc =
         Just . G.Description $
           flip fromMaybe (_fiComment functionInfo) $ "execute function " <> functionName <<> " which returns " <>> tableName
       -- select function agg
-
+      funcAggName = funcName <> $$(G.litName "_aggregate")
       funcAggDesc = Just $ G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> tableName
-
       queryResultType =
         case _fiJsonAggSelect functionInfo of
           JASMultipleRows -> QDBMultipleRows
           JASSingleObject -> QDBSingleRow
-
   catMaybes
     <$> sequenceA
-      [ requiredFieldParser (mkRF . queryResultType) $ selectFunction sourceName functionInfo funcDesc selPerms,
-        optionalFieldParser (mkRF . QDBAggregation) $ selectFunctionAggregate sourceName functionInfo funcAggDesc selPerms
+      [ requiredFieldParser (mkRF . queryResultType) $ selectFunction sourceName functionInfo funcName funcDesc selPerms,
+        optionalFieldParser (mkRF . QDBAggregation) $ selectFunctionAggregate sourceName functionInfo funcAggName funcAggDesc selPerms
       ]
 
 buildFunctionMutationFields ::
@@ -214,17 +212,16 @@ buildFunctionMutationFields ::
   SelPermInfo b ->
   m [FieldParser n (MutationRootField UnpreparedValue)]
 buildFunctionMutationFields sourceName sourceInfo queryTagsConfig functionName functionInfo tableName selPerms = do
+  funcName <- functionGraphQLName @b functionName `onLeft` throwError
   let mkRF =
         RFDB sourceName
           . AB.mkAnyBackend
           . SourceConfigWith sourceInfo queryTagsConfig
           . MDBR
-
       funcDesc = Just $ G.Description $ "execute VOLATILE function " <> functionName <<> " which returns " <>> tableName
-
       jsonAggSelect = _fiJsonAggSelect functionInfo
   catMaybes
     <$> sequenceA
-      [ requiredFieldParser (mkRF . MDBFunction jsonAggSelect) $ selectFunction sourceName functionInfo funcDesc selPerms
+      [ requiredFieldParser (mkRF . MDBFunction jsonAggSelect) $ selectFunction sourceName functionInfo funcName funcDesc selPerms
       -- TODO: do we want aggregate mutation functions?
       ]

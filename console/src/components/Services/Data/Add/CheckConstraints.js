@@ -42,9 +42,7 @@ const CheckConstraints = ({ dispatch, constraints }) => {
       if (isLast) {
         return addConstraintsState.length === 1 ? (
           <div>
-            <span className="italic text-sm text-gray-600">
-              (You can add check constraints later as well)
-            </span>
+            <i>(You can add check constraints later as well)</i>
           </div>
         ) : null;
       }

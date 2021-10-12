@@ -1,5 +1,6 @@
 import React from 'react';
 import Button from '../../Button/Button';
+import styles from './Editor.scss';
 
 class Editor extends React.Component {
   static getDerivedStateFromProps(nextProps, state) {
@@ -49,9 +50,9 @@ class Editor extends React.Component {
 
     return (
       <Button
+        className={`${styles.add_mar_small}`}
         color="white"
         size="xs"
-        className="mr-sm"
         data-test={`${service}-${isEditing ? 'close' : 'edit'}-${property}`}
         onClick={this.toggleEditor}
         disabled={readOnlyMode}
@@ -70,7 +71,7 @@ class Editor extends React.Component {
         type="submit"
         color={saveButtonColor || 'yellow'}
         size="sm"
-        className="mr-sm"
+        className={styles.add_mar_right}
         onClick={saveWithToggle}
         data-test={`${service}-${property}-save`}
         disabled={isProcessing}
@@ -101,7 +102,7 @@ class Editor extends React.Component {
   actionButtons = () => {
     const { saveFunc, removeFunc } = this.props;
     return (
-      <div className="flex items-center mt-sm">
+      <div>
         {saveFunc && this.saveButton(saveFunc)}
         {removeFunc && this.removeButton(removeFunc)}
       </div>
@@ -124,30 +125,36 @@ class Editor extends React.Component {
     let actionButtons;
 
     if (isEditing) {
-      editorClass = 'block rounded bg-white border border-gray-300 p-md mb-sm';
+      editorClass = styles.editorExpanded;
       editorLabel = expandedLabel && expandedLabel();
       actionButtons = this.actionButtons();
 
       if (editorExpanded) {
-        editorContent = <div>{editorExpanded()}</div>;
+        editorContent = (
+          <div className={styles.editorContent}>{editorExpanded()}</div>
+        );
       }
     } else {
-      editorClass = 'block';
+      editorClass = styles.editorCollapsed;
       editorLabel = collapsedLabel && collapsedLabel();
 
       if (editorCollapsed) {
-        editorContent = <div>{editorCollapsed()}</div>;
+        editorContent = (
+          <div className={styles.editorContent}>{editorCollapsed()}</div>
+        );
       }
     }
 
     return (
-      <div className={`space-y-md ${editorClass}`}>
-        <div className="mb-sm flex items-center">
+      <div className={editorClass}>
+        <div className={styles.display_flex + ' ' + styles.add_mar_bottom_mid}>
           {this.toggleButton()}
           {editorLabel}
         </div>
         {editorContent}
-        {!readOnlyMode && actionButtons}
+        <div className={styles.add_mar_top_small}>
+          {!readOnlyMode && actionButtons}
+        </div>
       </div>
     );
   }

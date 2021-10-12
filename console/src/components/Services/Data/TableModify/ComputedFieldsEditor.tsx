@@ -2,6 +2,7 @@ import React from 'react';
 import AceEditor from 'react-ace';
 import { OptionTypeBase } from 'react-select';
 
+import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import RawSqlButton from '../Common/Components/RawSqlButton';
@@ -131,22 +132,21 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
 
     const collapsedLabel = () => {
       if (isLast) {
+        if (!computedFields.length) {
+          return <div>No computed fields</div>;
+        }
         return null;
       }
 
       return (
         <div>
-          <div className="flex items-center">
-            <span
-              className="font-semibold mr-xs"
-              data-test={`computed-field-${origComputedFieldName}`}
-            >
-              {origComputedFieldName}
-            </span>
-            <span className="mr-xs">-</span>
-            <span>{origComputedFieldFunctionName}</span>
-          </div>
-          <span key="comment" className="text-gray-600 text-sm">
+          <b data-test={`computed-field-${origComputedFieldName}`}>
+            {origComputedFieldName}
+          </b>
+          &nbsp;-&nbsp;
+          <i>{origComputedFieldFunctionName}</i>
+          <br />
+          <span key="comment" className={styles.text_gray}>
             {origComputedFieldComment}
           </span>
         </div>
@@ -157,7 +157,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
     const expandButtonText = isLast
       ? computedFields.length
         ? 'Add a new computed field'
-        : 'Add a computed field'
+        : 'Add'
       : 'Edit';
 
     const expandedLabel = () => {
@@ -175,6 +175,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
         const modifyFunctionBtn = (
           <RawSqlButton
             dataTestId={`modify-function-${computedFieldFunctionName}`}
+            customStyles={`${styles.display_inline} ${styles.add_mar_left}`}
             sql={computedFieldFunctionDefinition}
             dispatch={dispatch}
             source={source}
@@ -184,11 +185,9 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
         );
 
         return (
-          <div className="mb-md">
-            <div className="flex items-center mb-formlabel">
-              <h4 className="text-gray-600 font-semibold mr-auto">
-                Function Definition:{' '}
-              </h4>
+          <div>
+            <div className={`${styles.add_mar_bottom_mid}`}>
+              <b>Function definition: </b>
               {computedFieldFunctionDefinition && modifyFunctionBtn}
             </div>
             <AceEditor
@@ -201,6 +200,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
               maxLines={100}
               width="100%"
               showPrintMargin={false}
+              className={styles.add_mar_top_small}
             />
           </div>
         );
@@ -312,24 +312,23 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
 
       return (
         <div>
-          <div className="mb-md">
-            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-              Computed Field Name:{' '}
-            </h4>
+          <div>
+            <div className={`${styles.add_mar_bottom_mid}`}>
+              <b>Computed field name:</b>
+            </div>
             <input
               type="text"
               value={computedFieldName}
               onChange={handleNameChange}
-              className="form-control"
+              className={`form-control ${styles.wd50percent}`}
               data-test="computed-field-name-input"
             />
           </div>
-
-          <div className="mb-md">
-            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-              Function Schema:{' '}
-            </h4>
-            <div>
+          <div className={`${styles.add_mar_top}`}>
+            <div className={`${styles.add_mar_bottom_mid}`}>
+              <b>Function schema: </b>
+            </div>
+            <div className={styles.wd50percent}>
               <SearchableSelectBox
                 options={schemaList}
                 onChange={handleFnSchemaChange}
@@ -345,15 +344,12 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
               />
             </div>
           </div>
-
-          <div className="mb-md">
-            <div className="flex items-center mb-formlabel">
-              <h4 className="flex items-center text-gray-600 font-semibold mr-auto">
-                Function Name:{' '}
-              </h4>
+          <div className={`${styles.add_mar_top}`}>
+            <div className={`${styles.add_mar_bottom_mid}`}>
+              <b>Function name: </b>
               <RawSqlButton
                 dataTestId="create-function"
-                className=""
+                customStyles={`${styles.display_inline} ${styles.add_mar_left}`}
                 sql=""
                 dispatch={dispatch}
                 source={source}
@@ -361,7 +357,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
                 Create new
               </RawSqlButton>
             </div>
-            <div data-test="functions-dropdown">
+            <div className={styles.wd50percent} data-test="functions-dropdown">
               <SearchableSelectBox
                 options={dataSource
                   .getSchemaFunctions(
@@ -384,14 +380,12 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
               />
             </div>
           </div>
-
-          <div className="">{getFunctionDefinitionSection()}</div>
-
-          <div className="mb-md">
-            <div className="flex items-center mb-formlabel">
-              <h4 className="text-gray-600 font-semibold">
-                Table Row Argument:
-              </h4>
+          <div className={`${styles.add_mar_top}`}>
+            {getFunctionDefinitionSection()}
+          </div>
+          <div className={`${styles.add_mar_top}`}>
+            <div className={`${styles.add_mar_bottom_mid}`}>
+              <b>Table row argument:</b>
               <Tooltip message="The argument of the function to which the table row is passed. By default, the first argument of the function is assumed to be the table row argument" />
             </div>
             <input
@@ -399,19 +393,15 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
               value={computedFieldTableRowArg ?? undefined}
               placeholder="default: first argument"
               onChange={handleTableRowArgChange}
-              className="form-control"
+              className={`form-control ${styles.wd50percent}`}
               data-test="computed-field-first-arg-input"
             />
           </div>
-
-          <div className="mb-md">
-            <div className="flex items-center mb-formlabel">
-              <div className="flex items-center">
-                <h4 className="text-gray-600 font-semibold">
-                  Session Arguement:
-                </h4>
-                <Tooltip message="The function argument into which Hasura session variables will be passed" />
-              </div>
+          <div className={`${styles.add_mar_top}`}>
+            <div className={`${styles.add_mar_bottom_mid}`}>
+              <b>Session argument:</b>
+              <Tooltip message="The function argument into which Hasura session variables will be passed" />
+              &nbsp;
               <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/computed-fields.html#accessing-hasura-session-variables-in-computed-fields" />
             </div>
             <input
@@ -419,19 +409,18 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
               value={computedFieldTableSessionArg ?? ''}
               placeholder="hasura_session"
               onChange={handleTableSesssionArgChange}
-              className="form-control"
+              className={`form-control ${styles.wd50percent}`}
             />
           </div>
-
-          <div className="mb-md">
-            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-              Comments:{' '}
-            </h4>
+          <div className={`${styles.add_mar_top}`}>
+            <div className={`${styles.add_mar_bottom_mid}`}>
+              <b>Comment:</b>
+            </div>
             <input
               type="text"
               value={computedFieldComment ?? ''}
               onChange={handleCommentChange}
-              className="form-control"
+              className={`form-control ${styles.wd50percent}`}
               data-test="computed-field-comment-input"
             />
           </div>

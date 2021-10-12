@@ -962,10 +962,7 @@ func (ec *ExecutionContext) Spin(message string) {
 
 // loadEnvfile loads .env file
 func (ec *ExecutionContext) loadEnvfile() error {
-	envfile := ec.Envfile
-	if !filepath.IsAbs(ec.Envfile) {
-		envfile = filepath.Join(ec.ExecutionDirectory, ec.Envfile)
-	}
+	envfile := filepath.Join(ec.ExecutionDirectory, ec.Envfile)
 	err := gotenv.Load(envfile)
 	if err != nil {
 		// return error if user provided envfile name

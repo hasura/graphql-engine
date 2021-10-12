@@ -12,15 +12,15 @@ interface Props {
 const HighlightedText = ({ value }: { value: string }) => {
   let insideQuotes = false;
   return (
-    <span>
+    <span className={styles.defText}>
       {value.split('').map(k => {
         let res = <span>{k}</span>;
         if (k === `'` || k === `"`) {
-          res = <span>{k}</span>;
+          res = <span className={styles.quoteText}>{k}</span>;
           insideQuotes = !insideQuotes;
         }
         if (insideQuotes) {
-          res = <span>{k}</span>;
+          res = <span className={styles.quoteText}>{k}</span>;
         }
         return res;
       })}
@@ -50,35 +50,39 @@ const PartitionInfo: React.FC<Props> = ({ table, dispatch }) => {
   }, []);
 
   return (
-    <div className="mb-md">
+    <div>
       {partitions && Object.keys(partitions).length > 0 && (
         <>
-          <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-            Partitions
-          </h4>
+          <h4 className={styles.subheading_text}>Partitions</h4>
           {Object.keys(partitions).map(key => (
             <div>
-              <span className="font-semibold mr-xs">
-                <i className="fa fa-columns" aria-hidden="true" />
+              <b>
+                <i
+                  className={`fa fa-columns ${styles.partitionLabel}`}
+                  aria-hidden="true"
+                />
                 created_at -{' '}
-              </span>
-              <span className="mr-xs">{key}</span>
+              </b>
+              <i>{key}</i>
               {partitions[key].map(p => {
                 return (
-                  <div className="mt-sm">
-                    <span className="font-semibold mr-xs">
+                  <div
+                    className={`${styles.paddingTopSm} ${styles.partitionDef}`}
+                  >
+                    <b>
                       <i
                         className={`fa fa-table ${styles.partitionLabel}`}
                         aria-hidden="true"
                       />{' '}
                       {p.partition_name} -{' '}
-                    </span>
+                    </b>
                     <HighlightedText value={p.partition_def} />
                   </div>
                 );
               })}
             </div>
           ))}
+          <hr className="my-md" />
         </>
       )}
     </div>

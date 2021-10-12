@@ -13,6 +13,8 @@ import ToolTip from '../../../Common/Tooltip/Tooltip';
 import { dataSource, isFeatureSupported } from '../../../../dataSources';
 import { fetchTableIndexDetails } from '../DataActions';
 
+import styles from './ModifyTable.scss';
+
 type IndexState = {
   index_name: string;
   index_type: IndexType;
@@ -127,82 +129,75 @@ const CreateIndexForm: React.FC<CreateIndexProps> = ({
   onChangeIndextypeSelect,
   toggleIndexCheckboxState,
 }) => (
-  <div>
-    <div>
-      <div className="mb-md">
-        <div className="flex items-center mb-formlabel">
-          <label htmlFor="index-name" className="text-gray-600 font-semibold">
-            Index Name
-          </label>
-          {formTooltips?.indexName && (
-            <ToolTip message={formTooltips.indexName} />
-          )}
-        </div>
+  <div className={styles.indexEditorContainer}>
+    <div
+      className={`${styles.add_mar_top_small} ${styles.add_mar_bottom} ${styles.indexEditorGrid}`}
+    >
+      <div className={styles.indexNameWidth}>
+        <label htmlFor="index-name" className={styles.indexCreateFormLabel}>
+          Index Name
+        </label>
+        {formTooltips?.indexName && (
+          <ToolTip message={formTooltips.indexName} />
+        )}
         <TextInput
           onChange={e => updateIndexName(e.target.value)}
           value={indexState.index_name}
           id="index-name"
           placeholder="Input Name"
+          bsclass={styles.inputNameStyles}
         />
       </div>
-      <div className="mb-md">
-        <div className="flex items-center mb-formlabel">
-          <label
-            className="text-gray-600 font-semibold"
-            htmlFor="index-type-select"
-          >
-            Index Type
-          </label>
-          {formTooltips?.indexType && (
-            <ToolTip message={formTooltips.indexType} />
-          )}
-        </div>
+      <div className={styles.modifyIndexSelectContainer}>
+        <label
+          htmlFor="index-type-select"
+          className={styles.indexCreateFormLabel}
+        >
+          Index Type
+        </label>
+        {formTooltips?.indexType && (
+          <ToolTip message={formTooltips.indexType} />
+        )}
         <Select
           options={indexTypeOptions}
-          className="legacy-input-fix"
+          className={`${styles.indexColumnSelectStyles} legacy-input-fix`}
           placeholder="-- select index type --"
           onChange={onChangeIndextypeSelect}
         />
       </div>
-      <div className="mb-md">
-        <div className="flex items-center mb-formlabel">
-          <label
-            className="text-gray-600 font-semibold"
-            htmlFor="create-index-columns"
-          >
-            Columns
-          </label>
-          {formTooltips?.indexColumns && (
-            <ToolTip message={formTooltips.indexColumns} />
-          )}
-        </div>
+      <div>
+        <label
+          htmlFor="create-index-columns"
+          className={styles.indexCreateFormLabel}
+        >
+          Columns
+        </label>
+        {formTooltips?.indexColumns && (
+          <ToolTip message={formTooltips.indexColumns} />
+        )}
         <Select
           isMulti={supportedIndex?.multiColumn.includes(indexState.index_type)}
           options={tableColumnOptions}
-          className="legacy-input-fix"
+          className={`${styles.indexColumnSelectStyles} legacy-input-fix`}
           placeholder="-- select columns --"
           onChange={onChangeIndexColumnsSelect}
         />
       </div>
-      <div className="mb-md">
-        <span className="flex items-center">
-          <input
-            type="checkbox"
-            id="index-unique"
-            onChange={toggleIndexCheckboxState(indexState?.unique ?? false)}
-            checked={indexState?.unique ?? false}
-            style={{ margin: 0 }}
-            className="legacy-input-fix"
-          />
-          <label
-            className="ml-xs text-gray-600 font-semibold"
-            htmlFor="index-unique"
-          >
+      <div className={styles.indexOptionsContainer}>
+        <span className={styles.indexOption}>
+          <label htmlFor="index-unique" className={styles.indexCreateFormLabel}>
             Unique?
           </label>
           {formTooltips?.unique ? (
             <ToolTip message={formTooltips.unique} />
           ) : null}
+          <input
+            type="checkbox"
+            id="index-unique"
+            onChange={toggleIndexCheckboxState(indexState?.unique ?? false)}
+            checked={indexState?.unique ?? false}
+            className={`${styles.uniqueCheckbox} legacy-input-fix`}
+          />
         </span>
       </div>
     </div>
@@ -305,11 +300,6 @@ const FieldsEditor: React.FC<IndexFieldsEditorProps> = props => {
     Number(isPrimarykeyIndex(b)) - Number(isPrimarykeyIndex(a));
 
   const numberOfIndexes = indexes.length;
-
-  // const indexCollapsedLabel = () => (
-  //   <div className="italic text-sm text-gray-600">{numberOfIndexes ? '' : '(No primary key)'}</div>
-  // );
-
   const editorExpanded = () => (
     <CreateIndexForm
       indexState={indexState}
@@ -324,38 +314,35 @@ const FieldsEditor: React.FC<IndexFieldsEditorProps> = props => {
 
   return (
     <>
-      <div>
+      <div className={styles.indexesList}>
         {numberOfIndexes
           ? indexes.sort(pkSortFn).map(indexInfo => {
               const indexSql = indexInfo.index_definition_sql;
               return (
-                <div key={indexInfo.index_name} className="mb-sm">
+                <div
+                  key={indexInfo.index_name}
+                  className={styles.indexesListItem}
+                >
                   <Button
                     size="xs"
-                    className="mr-sm"
+                    className={styles.indexRemoveBtn}
                     disabled={isPrimarykeyIndex(indexInfo)}
                     onClick={onClickRemoveIndex(indexInfo)}
                   >
                     Remove
                   </Button>
-                  <span className="font-semibold mr-sm">
+                  <b className={styles.indexListItemIndexName}>
                     {indexInfo.index_name}
-                  </span>
-                  <span>
-                    {isPrimarykeyIndex(indexInfo) && (
-                      <span className="mr-xs">PRIMARY KEY, </span>
-                    )}
-                    {isUnique(indexSql) && (
-                      <span className="mr-xs">UNIQUE</span>
-                    )}
-                    <span className="uppercase mr-xs">
-                      {indexInfo.index_type}
-                    </span>
+                  </b>
+                  <p className={styles.indexDef}>
+                    {isPrimarykeyIndex(indexInfo) && <i>PRIMARY KEY, </i>}
+                    {isUnique(indexSql) && <i>UNIQUE</i>}
+                    <i className={styles.uppercase}>{indexInfo.index_type}</i>
                     <b>
-                      <span className="mr-xs">on</span>
+                      <i>on</i>
                     </b>
                     <span>{getDefCols(indexSql)}</span>
-                  </span>
+                  </p>
                 </div>
               );
             })
@@ -367,7 +354,10 @@ const FieldsEditor: React.FC<IndexFieldsEditorProps> = props => {
           property="create-index"
           service="modify-table"
           saveFunc={onSave}
-          expandButtonText="Add a index"
+          expandButtonText={`Create ${numberOfIndexes ? ' an index' : ''}`}
+          collapsedLabel={() =>
+            `${!numberOfIndexes ? 'No Indexes Present' : ''}`
+          }
           collapseButtonText="Cancel"
           collapseCallback={resetIndexEditState}
         />

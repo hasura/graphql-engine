@@ -42,9 +42,7 @@ const UniqueKeyWrapper = ({
       if (isLast && numUniqueKeys === 1) {
         return (
           <div>
-            <span className="italic text-sm text-gray-600">
-              (You can add unique keys later as well)
-            </span>
+            <i>(You can add unique keys later as well)</i>
           </div>
         );
       }
@@ -76,7 +74,7 @@ const UniqueKeyWrapper = ({
     }
 
     return (
-      <div className="space-y-md" key={`unique-key-${i}`}>
+      <div key={`unique-key-${i}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
           expandedLabel={expandedLabel}

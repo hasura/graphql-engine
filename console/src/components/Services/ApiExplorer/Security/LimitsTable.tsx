@@ -141,7 +141,6 @@ const LimitsTable: React.FC<Props> = ({
             {roles.map(role => (
               <TableRow
                 index={role}
-                key={role}
                 entries={getRowData(role)}
                 renderCol={({ data: { per_role, state } }) => {
                   const roleLimit = per_role?.[role];

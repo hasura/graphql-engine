@@ -33,7 +33,7 @@ const setColumns = () => {
       .click();
 
     if (i === dataTypes.indexOf('text')) {
-      cy.get(getElementFromAlias(`unique-${i}`)).check({ force: true });
+      cy.get(getElementFromAlias(`unique-${i}`)).check();
     }
     // Set appropriate default if the type is not serial
     if (i > 1) {

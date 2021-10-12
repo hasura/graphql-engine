@@ -25,11 +25,6 @@ const initialState = {
       { unique_params: Nullable<'IP' | string[]>; max_reqs_per_min: number }
     >,
   },
-  time_limit: {
-    global: -1,
-    state: RoleState.disabled,
-    per_role: {} as Record<string, number>,
-  },
 };
 
 type LimitPayload<T = number> = {
@@ -56,17 +51,8 @@ const formStateSLice = createSlice({
     updateNodeLimitRole(state, action: PayloadAction<LimitPayload>) {
       state.node_limit.per_role[action.payload.role] = action.payload.limit;
     },
-    updateTimeLimitRole(state, action: PayloadAction<LimitPayload>) {
-      state.time_limit.per_role[action.payload.role] = action.payload.limit;
-    },
     updateNodeLimitState(state, action: PayloadAction<RoleState>) {
       state.node_limit.state = action.payload;
-    },
-    updateTimeLimitState(state, action: PayloadAction<RoleState>) {
-      state.time_limit.state = action.payload;
-    },
-    updateGlobalTimeLimit(state, action: PayloadAction<number>) {
-      state.time_limit.global = action.payload;
     },
     updateUniqueParams(
       state,
@@ -109,7 +95,6 @@ const formStateSLice = createSlice({
       state.depth_limit = action.payload.depth_limit;
       state.node_limit = action.payload.node_limit;
       state.rate_limit = action.payload.rate_limit;
-      state.time_limit = action.payload.time_limit;
     },
     setDisable(state, action: PayloadAction<boolean>) {
       state.disabled = action.payload;

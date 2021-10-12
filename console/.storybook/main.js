@@ -1,12 +1,13 @@
 const util = require('util');
 const webpack = require('webpack');
-const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
-const path = require('path');
 
 const isConfigDebugMode = process.env.STORYBOOK_CONFIG_LOG === 'debug';
 
 module.exports = {
-  stories: ['../src/**/*.stories.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx)'],
+  stories: [
+    '../src/**/*.stories.mdx',
+    '../src/**/*.stories.@(js|jsx|ts|tsx|mdx)',
+  ],
   babel: async options => {
     if (isConfigDebugMode) {
       console.log('------BABEL--------');
@@ -14,7 +15,7 @@ module.exports = {
     }
     return options;
   },
-  webpackFinal: async (config, rest) => {
+  webpackFinal: async (config, { configType }) => {
     const newConfig = {
       ...config,
       module: {
@@ -60,15 +61,6 @@ module.exports = {
           __DEVTOOLS__: true, // <-------- DISABLE redux-devtools HERE
         }),
       ],
-      resolve: {
-        ...config.resolve,
-        plugins: [
-          ...config.resolve.plugins,
-          new TsconfigPathsPlugin({
-            configFile: path.resolve(__dirname, '../tsconfig.json'),
-          }),
-        ],
-      },
     };
 
     if (isConfigDebugMode) {

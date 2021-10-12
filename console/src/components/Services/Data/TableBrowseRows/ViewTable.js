@@ -114,6 +114,8 @@ class ViewTable extends Component {
       throw new NotFoundError();
     }
 
+    const styles = require('../../../Common/Common.scss');
+
     // Is this a view
     const isView = !dataSource.isTable(tableSchema);
 
@@ -165,12 +167,10 @@ class ViewTable extends Component {
     let comment = null;
     if (tableSchema.comment) {
       comment = (
-        <div
-          className={
-            'sm:max-w-xl rounded bg-secondary-light border border-gray-300 border-l-4 border-l-secondary py-sm px-md mt-lg'
-          }
-        >
-          {tableSchema.comment}
+        <div className={styles.add_mar_top}>
+          <div className={styles.commentText + ' alert alert-warning'}>
+            {tableSchema.comment}
+          </div>
         </div>
       );
     }
