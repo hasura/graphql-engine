@@ -62,33 +62,6 @@ class TestGraphQLEmpty:
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['bigquery'])
 @usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryTableCustomizationsBigquery:
-
-    def test_global_limit(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/global_limit.yaml", transport)
-
-    def test_offset_regression(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/offset_regression.yaml", transport)
-
-    def test_track_table_with_customization(self, hge_ctx, transport):
-        if transport == 'http':
-            check_query_f(hge_ctx, self.dir() + '/track_table_with_customization_and_test_query.yaml')
-
-    def test_set_table_customization(self, hge_ctx, transport):
-        if transport == 'http':
-            check_query_f(hge_ctx, self.dir() + '/set_table_customization_and_test_query.yaml')
-
-    def test_replace_metadata_with_customization(self, hge_ctx, transport):
-        if transport == 'http':
-            check_query_f(hge_ctx, self.dir() + '/replace_metadata_with_customization_and_test_query.yaml')
-
-    @classmethod
-    def dir(cls):
-        return 'queries/graphql_query/bigquery'
-
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.parametrize("backend", ['bigquery'])
-@usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicBigquery:
 
     def test_user_perms(self, hge_ctx, transport):
@@ -176,6 +149,14 @@ class TestGraphQLQueryBasicBigquery:
     # aggregates
     def test_select_join_provenance_queries(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_join_provenance.yaml", transport)
+
+    # offsets
+    def test_offset_regression(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/offset_regression.yaml", transport)
+
+    # BigQuery-specific configuration: global_limit
+    def test_global_limit(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/global_limit.yaml", transport)
 
     @classmethod
     def dir(cls):

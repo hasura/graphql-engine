@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    hasura_all_types:
+    hasura_test_all_types:
     - string: STRING
       bytes: AAECAwQF
       integer: '1'
@@ -19,7 +19,7 @@ response:
 query:
   query: |
     query {
-      hasura_all_types {
+      hasura_test_all_types {
         string
         bytes
         integer

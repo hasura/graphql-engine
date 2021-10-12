@@ -3,7 +3,7 @@
   status: 200
   response:
     data:
-      hasura_Artist:
+      hasura_test_Artist:
       - artist_self_id: '1000'
         albums_aggregate:
           nodes:
@@ -24,8 +24,8 @@
             count: '1'
   query:
     query: |
-      query MyQuery {
-        hasura_Artist(order_by: {artist_self_id: asc}) {
+      query {
+        hasura_test_Artist(order_by: {artist_self_id: asc}) {
           artist_self_id
           albums_aggregate(order_by: {album_self_id: asc}, limit: 1) {
             nodes {
@@ -43,7 +43,7 @@
   status: 200
   response:
     data:
-      hasura_Artist:
+      hasura_test_Artist:
       - artist_self_id: '1000'
         albums_aggregate:
           nodes:
@@ -73,8 +73,8 @@
               album_self_id: '4007'
   query:
     query: |
-      query MyQuery {
-        hasura_Artist(order_by: {artist_self_id: asc}) {
+      query {
+        hasura_test_Artist(order_by: {artist_self_id: asc}) {
           artist_self_id
           albums_aggregate(order_by: {album_self_id: asc}) {
             nodes {
@@ -95,7 +95,7 @@
   status: 200
   response:
     data:
-        hasura_Artist:
+        hasura_test_Artist:
         - artist_self_id: '1000'
           albums_aggregate:
             nodes:
@@ -122,8 +122,8 @@
                 album_self_id: '2003'
   query:
     query: |
-      query MyQuery {
-        hasura_Artist(order_by: {artist_self_id: asc}) {
+      query {
+        hasura_test_Artist(order_by: {artist_self_id: asc}) {
           artist_self_id
           albums_aggregate(order_by: {album_self_id: asc}, limit: 1) {
             nodes {
@@ -144,7 +144,7 @@
   status: 200
   response:
     data:
-        hasura_Artist:
+        hasura_test_Artist:
         - artist_self_id: '1000'
           albums_aggregate:
             nodes:
@@ -171,8 +171,8 @@
                 album_self_id: '2004'
   query:
     query: |
-      query MyQuery {
-        hasura_Artist(order_by: {artist_self_id: asc}) {
+      query {
+        hasura_test_Artist(order_by: {artist_self_id: asc}) {
           artist_self_id
           albums_aggregate(order_by: {album_self_id: asc}, offset: 1) {
             nodes {

@@ -414,7 +414,7 @@ class TestMetadataOrder:
         assert export_resp['resource_version'] == export_resp_1['resource_version']
 
 
-@pytest.mark.parametrize("backend", ['citus', 'mssql', 'postgres'])
+@pytest.mark.parametrize("backend", ['citus', 'mssql', 'postgres', 'bigquery'])
 @usefixtures('per_class_tests_db_state')
 class TestSetTableCustomizationCommon:
 

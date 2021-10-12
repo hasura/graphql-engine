@@ -5,14 +5,14 @@
     X-Hasura-Role: test_timestamp_perm
   response:
     data:
-      hasura_article:
+      hasura_test_article:
       - id: '2'
         title: Title 2
         content: Content 2
   query:
     query: |
       query {
-        hasura_article {
+        hasura_test_article {
           id
           title
           content

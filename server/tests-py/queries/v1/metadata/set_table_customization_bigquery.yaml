@@ -1,0 +1,30 @@
+- description: set table custom fields
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: bigquery_set_table_customization
+    args:
+      source: bigquery
+      table:
+        dataset: hasura_test
+        name: table_to_customize
+      configuration:
+        custom_name: customized_table
+        custom_column_names: {column_to_customize: "customized_column"}
+        custom_root_fields: {select: "gather"}
+
+- description: select custom fields
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      gather: []
+  query:
+    query: |
+      query {
+        gather {
+          customized_column
+        }
+      }

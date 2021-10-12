@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    hasura_author:
+    hasura_test_author:
     - createdAt: '2017-09-21 09:39:44'
       name: Author 1
       id: 1
@@ -13,7 +13,7 @@ response:
 query:
   query: |
     query {
-     hasura_author {
+     hasura_test_author {
         id
         name
         createdAt

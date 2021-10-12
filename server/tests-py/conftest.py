@@ -7,6 +7,7 @@ from datetime import datetime
 import sys
 import os
 from collections import OrderedDict
+from validate import assert_response_code
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -37,7 +38,7 @@ def pytest_addoption(parser):
         help="Run Test cases for testing webhook request context"
     )
     parser.addoption(
-        "--hge-jwt-key-file", metavar="HGE_JWT_KEY_FILE", help="File containting the private key used to encode jwt tokens using RS512 algorithm", required=False
+        "--hge-jwt-key-file", metavar="HGE_JWT_KEY_FILE", help="File containing the private key used to encode jwt tokens using RS512 algorithm", required=False
     )
     parser.addoption(
         "--hge-jwt-conf", metavar="HGE_JWT_CONF", help="The JWT conf", required=False
@@ -639,14 +640,14 @@ def setup_and_teardown(request, hge_ctx, setup_files, teardown_files,
     def v2q_f(f):
         if os.path.isfile(f):
             st_code, resp = hge_ctx.v2q_f(f)
-            assert st_code == 200, resp
+            assert_response_code('/v2/query', f, st_code, 200, resp)
     def metadataq_f(f):
         if os.path.isfile(f):
             st_code, resp = hge_ctx.v1metadataq_f(f)
             if st_code != 200:
                 # drop the sql setup, if the metadata calls fail
                 run_on_elem_or_list(v2q_f, sql_schema_teardown_file)
-            assert st_code == 200, resp
+            assert_response_code('/v1/metadata', f, st_code, 200, resp)
     if not skip_setup:
         run_on_elem_or_list(v2q_f, sql_schema_setup_file)
         run_on_elem_or_list(metadataq_f, setup_files)
