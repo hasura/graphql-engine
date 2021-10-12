@@ -118,7 +118,6 @@ library
                      , either
                      , exceptions
                      , fast-logger
-                     , ghc-heap-view
                      , hashable
                      , hashable-time
                      , http-client-tls
@@ -289,6 +288,10 @@ library
                      -- mysql
                      , mysql
                      , mysql-simple
+
+  if !flag(profiling)
+    -- ghc-heap-view can't be built with profiling
+    build-depends:     ghc-heap-view
 
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Trans
