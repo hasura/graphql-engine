@@ -23,15 +23,22 @@ $( fmap concat $ for
      [''Aliased]
      \name ->
        [d|
-  deriving instance Generic ($(conT name) a)
-  instance Hashable a => Hashable ($(conT name) a)
-  instance Cacheable a => Cacheable ($(conT name) a)
-  deriving instance Eq a => Eq ($(conT name) a)
-  instance NFData a => NFData ($(conT name) a)
-  deriving instance Show a => Show ($(conT name) a)
-  deriving instance Functor $(conT name)
-  deriving instance Data a => Data ($(conT name) a)
-  |]
+         deriving instance Generic ($(conT name) a)
+
+         instance Hashable a => Hashable ($(conT name) a)
+
+         instance Cacheable a => Cacheable ($(conT name) a)
+
+         deriving instance Eq a => Eq ($(conT name) a)
+
+         instance NFData a => NFData ($(conT name) a)
+
+         deriving instance Show a => Show ($(conT name) a)
+
+         deriving instance Functor $(conT name)
+
+         deriving instance Data a => Data ($(conT name) a)
+         |]
  )
 
 $( fmap concat $ for
@@ -64,14 +71,20 @@ $( fmap concat $ for
      ]
      \name ->
        [d|
-  deriving instance Generic $(conT name)
-  instance Hashable $(conT name)
-  instance Cacheable $(conT name)
-  deriving instance Eq $(conT name)
-  deriving instance Show $(conT name)
-  deriving instance Data $(conT name)
-  instance NFData $(conT name)
-  |]
+         deriving instance Generic $(conT name)
+
+         instance Hashable $(conT name)
+
+         instance Cacheable $(conT name)
+
+         deriving instance Eq $(conT name)
+
+         deriving instance Show $(conT name)
+
+         deriving instance Data $(conT name)
+
+         instance NFData $(conT name)
+         |]
  )
 
 $( fmap concat $ for
@@ -79,32 +92,38 @@ $( fmap concat $ for
      ]
      \name ->
        [d|
-  deriving instance Generic $(conT name)
-  instance Hashable $(conT name)
-  instance Cacheable $(conT name)
-  deriving instance Data $(conT name)
-  instance NFData $(conT name)
-  |]
+         deriving instance Generic $(conT name)
+
+         instance Hashable $(conT name)
+
+         instance Cacheable $(conT name)
+
+         deriving instance Data $(conT name)
+
+         instance NFData $(conT name)
+         |]
  )
 
 $( fmap concat $ for
      [''TableName, ''ScalarType]
-     \name -> [d|deriving instance Ord $(conT name) |]
+     \name -> [d|deriving instance Ord $(conT name)|]
  )
 
 $( fmap concat $ for
      [''TableName, ''NullsOrder, ''Order]
-     \name -> [d|deriving instance Lift $(conT name) |]
+     \name -> [d|deriving instance Lift $(conT name)|]
  )
 
 $( fmap concat $ for
      [''Order, ''NullsOrder, ''ScalarType, ''FieldName]
      \name ->
        [d|
-  instance ToJSON $(conT name) where
-    toJSON = genericToJSON hasuraJSON
-  instance FromJSON $(conT name) where
-    parseJSON = genericParseJSON hasuraJSON |]
+         instance ToJSON $(conT name) where
+           toJSON = genericToJSON hasuraJSON
+
+         instance FromJSON $(conT name) where
+           parseJSON = genericParseJSON hasuraJSON
+         |]
  )
 
 ----
