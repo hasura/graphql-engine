@@ -35,6 +35,25 @@ func getDockerRepoAndTag(t TestingT, dockerImage string) (repo, version string) 
 	return "", ""
 }
 
+// helper function to configure docker auth properly
+func getDockerAuthConfig(t TestingT) docker.AuthConfiguration {
+	var opts docker.AuthConfiguration
+
+	if os.Getenv("BUILDKITE") == "true" {
+		// docker hub api has a rate limit in place - https://www.docker.com/increase-rate-limits
+		// in order to overcome the rate limit in CI environment, we will need to authenticate
+		// to dockerhub while making calls to docker registry. Hence we are configuring our tests
+		// to use the docker config.json present by default in the buildkite-agent here.
+		authCfg, err := docker.NewAuthConfigurationsFromDockerCfg()
+		if err != nil {
+			t.Fatalf("Could not setup docker config: %s", err)
+		}
+		opts = authCfg.Configs["https://index.docker.io/v1/"]
+	}
+
+	return opts
+}
+
 // TestingT is a workaround for using test helpers on Ginkgo tests
 // and normal go tests this interfaces is introduced
 // ginkgo specs do not have a handle of *testing.T and therefore
@@ -90,6 +109,7 @@ func StartHasuraWithPG(t TestingT, image string, pgConnectionUrl string, dockerO
 		Tag:          tag,
 		Env:          envs,
 		ExposedPorts: []string{"8080/tcp"},
+		Auth:         getDockerAuthConfig(t),
 	}
 	hasura, err := pool.RunWithOptions(hasuraopts, dockerOpts...)
 	if err != nil {
@@ -135,6 +155,7 @@ func StartHasuraWithMetadataDatabase(t TestingT, image string) (port string, tea
 			"POSTGRES_PASSWORD=postgrespassword",
 			"POSTGRES_DB=postgres",
 		},
+		Auth: getDockerAuthConfig(t),
 	}
 	pg, err := pool.RunWithOptions(pgopts)
 	if err != nil {
@@ -168,6 +189,7 @@ func StartHasuraWithMetadataDatabase(t TestingT, image string) (port string, tea
 		Tag:          tag,
 		Env:          envs,
 		ExposedPorts: []string{"8080/tcp"},
+		Auth:         getDockerAuthConfig(t),
 	}
 	hasura, err := pool.RunWithOptions(hasuraopts)
 	if err != nil {
@@ -231,6 +253,7 @@ func StartMSSQLContainer(t TestingT) (string, func()) {
 			fmt.Sprintf("SA_PASSWORD=%s", MSSQLPassword),
 		},
 		ExposedPorts: []string{"1433/tcp"},
+		Auth:         getDockerAuthConfig(t),
 	}
 	mssql, err := pool.RunWithOptions(opts)
 	if err != nil {
@@ -280,6 +303,7 @@ func StartPGContainer(t TestingT) (connectionString string, teardown func()) {
 			fmt.Sprintf("POSTGRES_DB=%s", database),
 		},
 		ExposedPorts: []string{"5432"},
+		Auth:         getDockerAuthConfig(t),
 	}
 	pg, err := pool.RunWithOptions(pgopts)
 	if err != nil {
@@ -443,6 +467,7 @@ func StartCitusContainer(t TestingT) (string, func()) {
 			fmt.Sprintf("POSTGRES_PASSWORD=%s", password),
 		},
 		ExposedPorts: []string{"5432"},
+		Auth:         getDockerAuthConfig(t),
 	}
 	pg, err := pool.RunWithOptions(pgopts)
 	if err != nil {
