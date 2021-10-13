@@ -61,6 +61,7 @@
                 \    }\n  }\n}\n"
             url: http://127.0.0.1:5593/invalid-response
             headers: []
+            transformed_request:
         path: $
         code: parse-failed
       message: expecting null, object or array of objects for action webhook response

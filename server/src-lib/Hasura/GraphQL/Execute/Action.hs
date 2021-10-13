@@ -503,13 +503,14 @@ callWebhook
             let transformedPayloadSize = HTTP.getReqSize transformedReq
              in pure (Just transformedReq, Just transformedPayloadSize)
 
+    let actualReq = fromMaybe req transformedReq
+
     httpResponse <-
-      Tracing.tracedHttpRequest (fromMaybe req transformedReq) $ \request ->
+      Tracing.tracedHttpRequest actualReq $ \request ->
         liftIO . try $ HTTP.performRequest request manager
 
-    let requestInfo =
-          ActionRequestInfo url postPayload $
-            confHeaders <> toHeadersConf clientHeaders
+    let requestInfo = ActionRequestInfo url postPayload (confHeaders <> toHeadersConf clientHeaders) transformedReq
+
     case httpResponse of
       Left e ->
         throw500WithDetail "http exception when calling webhook" $

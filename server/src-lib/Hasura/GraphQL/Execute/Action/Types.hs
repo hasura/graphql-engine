@@ -98,9 +98,10 @@ instance J.ToJSON ActionWebhookResponse where
 data ActionRequestInfo = ActionRequestInfo
   { _areqiUrl :: !Text,
     _areqiBody :: !J.Value,
-    _areqiHeaders :: ![HeaderConf]
+    _areqiHeaders :: ![HeaderConf],
+    _areqiTransformedRequest :: !(Maybe HTTP.Request)
   }
-  deriving (Show, Eq)
+  deriving (Show)
 
 $(J.deriveToJSON (J.aesonDrop 6 J.snakeCase) ''ActionRequestInfo)
 
@@ -118,7 +119,7 @@ data ActionInternalError = ActionInternalError
     _aieRequest :: !ActionRequestInfo,
     _aieResponse :: !(Maybe ActionResponseInfo)
   }
-  deriving (Show, Eq)
+  deriving (Show)
 
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionInternalError)
 

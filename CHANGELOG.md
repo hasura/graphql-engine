@@ -13,6 +13,7 @@ suffix-less versions.  Aliases may be set by both
 
 ### Bug fixes and improvements 
 
+- server: add transformed request to action error responses
 - server: allow nullable action responses (#4405)
 - server: add support for openapi json of REST Endpoints
 - server: enable inherited roles by default in the graphql-engine
