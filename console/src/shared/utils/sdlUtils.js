@@ -207,11 +207,15 @@ export const getActionDefinitionFromSdl = sdl => {
     return definition;
   }
 
-  return {
-    ...definition,
-    type: actionType,
-    ...getActionFromOperationAstDef(sdlDef.fields[0]),
-  };
+  const defObj = sdlDef.fields.length
+    ? {
+        ...definition,
+        type: actionType,
+        ...getActionFromOperationAstDef(sdlDef.fields[0]),
+      }
+    : { ...definition, type: actionType };
+
+  return defObj;
 };
 
 const getArgumentsSdl = args => {
