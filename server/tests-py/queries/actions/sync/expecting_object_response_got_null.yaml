@@ -47,6 +47,7 @@
               request_query: "mutation {\n  create_user {\n    id\n  }\n}\n"
             url: http://127.0.0.1:5593/null-response
             headers: []
+            transformed_request:
         path: $
         code: unexpected
       message: expecting object for action webhook response but got null
