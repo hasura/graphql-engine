@@ -183,7 +183,7 @@ specUrlLens = describe "url lens" $ do
     -- THEN
     view Client.url req' `shouldBe` url''
 
-  it "Setting with no port sets to 80" $ do
+  it "Setting with http:// scheme sets port to 80" $ do
     -- WHEN
     let url'' = "http://www.google.com/foo?bar=baz"
         req' = set Client.url url'' req
@@ -191,6 +191,24 @@ specUrlLens = describe "url lens" $ do
     -- THEN
     view Client.url req' `shouldBe` url''
     view Client.port req' `shouldBe` 80
+
+  it "Setting with https:// scheme sets port to 443" $ do
+    -- WHEN
+    let url'' = "https://www.google.com/foo?bar=baz"
+        req' = set Client.url url'' req
+
+    -- THEN
+    view Client.url req' `shouldBe` url''
+    view Client.port req' `shouldBe` 443
+
+  it "Setting with explicit port sets that port" $ do
+    -- WHEN
+    let url'' = "https://www.google.com:456/foo?bar=baz"
+        req' = set Client.url url'' req
+
+    -- THEN
+    view Client.url req' `shouldBe` url''
+    view Client.port req' `shouldBe` 456
 
   it "Setting with no path clears path" $ do
     -- WHEN

@@ -491,7 +491,7 @@ callWebhook
     (transformedReq, transformedReqSize) <- case metadataTransform of
       Nothing -> pure (Nothing, Nothing)
       Just transform' ->
-        case applyRequestTransform (mkRequestTransform transform') req sessionVars of
+        case applyRequestTransform url (mkRequestTransform transform') req sessionVars of
           Left err -> do
             -- Log The Transformation Error
             logger :: L.Logger L.Hasura <- asks getter
