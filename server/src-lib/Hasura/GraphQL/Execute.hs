@@ -46,7 +46,6 @@ import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (RequestId (..))
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -189,7 +188,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
           let subscriptionQueryTagsAttributes = encodeQueryTags $ QTLiveQuery $ LivequeryMetadata rootFieldName parameterizedQueryHash
           let queryTagsComment = Tagged.untag $ EB.createQueryTags @m subscriptionQueryTagsAttributes queryTagsConfig
           LQP . AB.mkAnyBackend . MultiplexedLiveQueryPlan
-            <$> flip runReaderT queryTagsComment (EB.mkDBSubscriptionPlan userInfo sourceName sourceConfig qdbs)
+            <$> runReaderT (EB.mkDBSubscriptionPlan userInfo sourceName sourceConfig qdbs) queryTagsComment
       pure (sourceName, lqp)
 
     checkField ::
@@ -228,8 +227,7 @@ checkQueryInAllowlist enableAL userInfo req sc =
 
 getResolvedExecPlan ::
   forall m.
-  ( HasVersion,
-    MonadError QErr m,
+  ( MonadError QErr m,
     MonadMetadataStorage (MetadataStorageT m),
     MonadIO m,
     Tracing.MonadTrace m,

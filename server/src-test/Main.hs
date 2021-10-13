@@ -40,8 +40,6 @@ import Hasura.Server.Migrate
 import Hasura.Server.MigrateSpec qualified as MigrateSpec
 import Hasura.Server.TelemetrySpec qualified as TelemetrySpec
 import Hasura.Server.Types
-import Hasura.Server.Version
-import Hasura.Server.Version.TH
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.TLS qualified as HTTP
 import Network.HTTP.Client.TransformableSpec qualified as TransformableSpec
@@ -65,17 +63,16 @@ data TestSuite
 
 main :: IO ()
 main =
-  withVersion $$(getVersionFromEnvironment) $
-    parseArgs >>= \case
-      AllSuites pgConnOptions mssqlConnOptions -> do
-        postgresSpecs <- buildPostgresSpecs pgConnOptions
-        mssqlSpecs <- buildMSSQLSpecs mssqlConnOptions
-        runHspec [] (unitSpecs *> postgresSpecs *> mssqlSpecs)
-      SingleSuite hspecArgs suite ->
-        runHspec hspecArgs =<< case suite of
-          UnitSuite -> pure unitSpecs
-          PostgresSuite pgConnOptions -> buildPostgresSpecs pgConnOptions
-          MSSQLSuite mssqlConnOptions -> buildMSSQLSpecs mssqlConnOptions
+  parseArgs >>= \case
+    AllSuites pgConnOptions mssqlConnOptions -> do
+      postgresSpecs <- buildPostgresSpecs pgConnOptions
+      mssqlSpecs <- buildMSSQLSpecs mssqlConnOptions
+      runHspec [] (unitSpecs *> postgresSpecs *> mssqlSpecs)
+    SingleSuite hspecArgs suite ->
+      runHspec hspecArgs =<< case suite of
+        UnitSuite -> pure unitSpecs
+        PostgresSuite pgConnOptions -> buildPostgresSpecs pgConnOptions
+        MSSQLSuite mssqlConnOptions -> buildMSSQLSpecs mssqlConnOptions
 
 unitSpecs :: Spec
 unitSpecs = do
@@ -118,7 +115,7 @@ mssqlConnectionString =
     "SQL Server database connection string. Example DRIVER={ODBC Driver 17 for SQL Server};SERVER=$IP_ADDRESS,$PORT;Uid=$USER;Pwd=$PASSWORD;"
   )
 
-buildPostgresSpecs :: HasVersion => Maybe URLTemplate -> IO Spec
+buildPostgresSpecs :: Maybe URLTemplate -> IO Spec
 buildPostgresSpecs maybeUrlTemplate = do
   env <- getEnvironment
   let envMap = Env.mkEnvironment env

@@ -19,7 +19,7 @@ import Data.Text.Conversions (UTF8 (..), convertText)
 import Data.Text.Encoding qualified as TE
 import Hasura.Prelude
 import Hasura.Server.Utils (redactSensitiveHeader)
-import Hasura.Server.Version (HasVersion, currentVersion)
+import Hasura.Server.Version (currentVersion)
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Network.Wreq qualified as Wreq
@@ -30,7 +30,7 @@ hdrsToText hdrs =
     | (hdrName, hdrVal) <- hdrs
   ]
 
-wreqOptions :: HasVersion => HTTP.Manager -> [HTTP.Header] -> Wreq.Options
+wreqOptions :: HTTP.Manager -> [HTTP.Header] -> Wreq.Options
 wreqOptions manager hdrs =
   Wreq.defaults
     & Wreq.headers .~ addDefaultHeaders hdrs
@@ -38,15 +38,15 @@ wreqOptions manager hdrs =
     & Wreq.manager .~ Right manager
 
 -- Adds defaults headers overwriting any existing ones
-addDefaultHeaders :: HasVersion => [HTTP.Header] -> [HTTP.Header]
+addDefaultHeaders :: [HTTP.Header] -> [HTTP.Header]
 addDefaultHeaders hdrs = defaultHeaders <> rmDefaultHeaders hdrs
   where
     rmDefaultHeaders = filter (not . isDefaultHeader)
 
-isDefaultHeader :: HasVersion => HTTP.Header -> Bool
+isDefaultHeader :: HTTP.Header -> Bool
 isDefaultHeader (hdrName, _) = hdrName `elem` map fst defaultHeaders
 
-defaultHeaders :: HasVersion => [HTTP.Header]
+defaultHeaders :: [HTTP.Header]
 defaultHeaders = [contentType, userAgent]
   where
     contentType = ("Content-Type", "application/json")

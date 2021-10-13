@@ -35,15 +35,13 @@ import Hasura.Server.Init.Config
   )
 import Hasura.Server.Limits
 import Hasura.Server.Metrics (ServerMetrics (..))
-import Hasura.Server.Version (HasVersion)
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as H
 import Network.WebSockets qualified as WS
 import System.Metrics.Gauge qualified as EKG.Gauge
 
 createWSServerApp ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MC.MonadBaseControl IO m,
     LA.Forall (LA.Pure m),
     UserAuthentication (Tracing.TraceT m),

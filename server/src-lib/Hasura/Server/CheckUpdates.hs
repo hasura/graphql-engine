@@ -16,7 +16,7 @@ import Data.Text.Conversions (toText)
 import Hasura.HTTP
 import Hasura.Logging (LoggerCtx (..))
 import Hasura.Prelude
-import Hasura.Server.Version (HasVersion, Version, currentVersion)
+import Hasura.Server.Version (Version, currentVersion)
 import Network.HTTP.Client qualified as H
 import Network.URI.Encode qualified as URI
 import Network.Wreq qualified as Wreq
@@ -31,7 +31,7 @@ newtype UpdateInfo = UpdateInfo
 -- aesonPrefix, but needs to remain like this for backwards compatibility
 $(A.deriveJSON (A.aesonDrop 2 A.snakeCase) ''UpdateInfo)
 
-checkForUpdates :: HasVersion => LoggerCtx a -> H.Manager -> IO void
+checkForUpdates :: LoggerCtx a -> H.Manager -> IO void
 checkForUpdates (LoggerCtx loggerSet _ _ _) manager = do
   let options = wreqOptions manager []
   url <- getUrl

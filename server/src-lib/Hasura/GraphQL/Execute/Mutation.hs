@@ -28,7 +28,6 @@ import Hasura.RQL.IR
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (RequestId (..))
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -59,8 +58,7 @@ convertMutationAction env logger userInfo manager reqHeaders gqlQueryText = \cas
 
 convertMutationSelectionSet ::
   forall m.
-  ( HasVersion,
-    Tracing.MonadTrace m,
+  ( Tracing.MonadTrace m,
     MonadIO m,
     MonadError QErr m,
     MonadMetadataStorage (MetadataStorageT m),

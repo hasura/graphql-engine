@@ -71,7 +71,6 @@ import Hasura.SQL.Tag qualified as Tag
 import Hasura.Server.Types
   ( MaintenanceMode (..),
   )
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -116,7 +115,6 @@ action/function.
 -}
 
 buildRebuildableSchemaCache ::
-  HasVersion =>
   Env.Environment ->
   Metadata ->
   CacheBuild RebuildableSchemaCache
@@ -124,7 +122,6 @@ buildRebuildableSchemaCache =
   buildRebuildableSchemaCacheWithReason CatalogSync
 
 buildRebuildableSchemaCacheWithReason ::
-  HasVersion =>
   BuildReason ->
   Env.Environment ->
   Metadata ->
@@ -222,8 +219,7 @@ instance
 buildSchemaCacheRule ::
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
   -- what we want!
-  ( HasVersion,
-    ArrowChoice arr,
+  ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
     Inc.ArrowCache m arr,
     MonadIO m,

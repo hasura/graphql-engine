@@ -86,7 +86,6 @@ import Hasura.Server.Limits
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Telemetry.Counters qualified as Telem
 import Hasura.Server.Types (RequestId, getRequestId)
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -376,8 +375,7 @@ onConn wsId requestHead ipAddress onConnHActions = do
 
 onStart ::
   forall m.
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
     Tracing.MonadTrace m,
@@ -837,8 +835,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
     catchAndIgnore m = void $ runExceptT m
 
 onMessage ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     UserAuthentication (Tracing.TraceT m),
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
@@ -932,7 +929,7 @@ stopOperation serverEnv wsConn opId logWhenOpNotExist = do
     opDet n = OperationDetails opId Nothing n ODStopped Nothing Nothing
 
 onConnInit ::
-  (HasVersion, MonadIO m, UserAuthentication (Tracing.TraceT m)) =>
+  (MonadIO m, UserAuthentication (Tracing.TraceT m)) =>
   L.Logger L.Hasura ->
   H.Manager ->
   WSConn ->

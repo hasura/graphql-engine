@@ -70,7 +70,6 @@ import Hasura.RQL.Types
   )
 import Hasura.RQL.Types.Column (ColumnType (..), ColumnValue (..))
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session (UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -208,7 +207,6 @@ convertUpdate userInfo updateOperation stringifyNum queryTags = do
 convertInsert ::
   forall pgKind m.
   ( MonadError QErr m,
-    HasVersion,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
@@ -253,7 +251,6 @@ convertFunction userInfo jsonAggSelect unpreparedQuery queryTags = do
 pgDBMutationPlan ::
   forall pgKind m.
   ( MonadError QErr m,
-    HasVersion,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m

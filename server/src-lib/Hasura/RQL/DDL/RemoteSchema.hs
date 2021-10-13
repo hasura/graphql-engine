@@ -27,14 +27,12 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Deps
 import Hasura.RQL.DDL.RemoteSchema.Permission
 import Hasura.RQL.Types
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 
 runAddRemoteSchema ::
-  ( HasVersion,
-    QErrM m,
+  ( QErrM m,
     CacheRWM m,
     MonadIO m,
     MonadUnique m,
@@ -128,7 +126,7 @@ addRemoteSchemaP1 name = do
         <> name <<> " already exists"
 
 addRemoteSchemaP2Setup ::
-  (HasVersion, QErrM m, MonadIO m, MonadUnique m, HasHttpManagerM m, Tracing.MonadTrace m) =>
+  (QErrM m, MonadIO m, MonadUnique m, HasHttpManagerM m, Tracing.MonadTrace m) =>
   Env.Environment ->
   AddRemoteSchemaQuery ->
   m RemoteSchemaCtx
@@ -213,8 +211,7 @@ runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
   pure $ encJFromLBS _rscRawIntrospectionResult
 
 runUpdateRemoteSchema ::
-  ( HasVersion,
-    QErrM m,
+  ( QErrM m,
     CacheRWM m,
     MonadIO m,
     MonadUnique m,

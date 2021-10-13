@@ -36,7 +36,6 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (makeHeadersFromConf)
 import Hasura.RQL.Types
 import Hasura.Server.Utils
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Parser qualified as G
@@ -145,7 +144,7 @@ validateSchemaCustomizationsDistinct remoteSchemaCustomizer (RemoteSchemaIntrosp
 -- and also is called by schema cache rebuilding code in "Hasura.RQL.DDL.Schema.Cache".
 fetchRemoteSchema ::
   forall m.
-  (HasVersion, MonadIO m, MonadUnique m, MonadError QErr m, Tracing.MonadTrace m) =>
+  (MonadIO m, MonadUnique m, MonadError QErr m, Tracing.MonadTrace m) =>
   Env.Environment ->
   HTTP.Manager ->
   RemoteSchemaName ->
@@ -413,8 +412,7 @@ toObjectTypeDefinition :: G.Name -> G.ObjectTypeDefinition G.InputValueDefinitio
 toObjectTypeDefinition name = G.ObjectTypeDefinition Nothing name [] [] []
 
 execRemoteGQ ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadError QErr m,
     Tracing.MonadTrace m
   ) =>

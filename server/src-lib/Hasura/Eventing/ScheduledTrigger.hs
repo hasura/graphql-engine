@@ -139,7 +139,6 @@ import Hasura.RQL.DDL.EventTrigger (getHeaderInfosFromConf)
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.Types
 import Hasura.SQL.Types
-import Hasura.Server.Version (HasVersion)
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
 import System.Cron
@@ -217,8 +216,7 @@ generateScheduleTimes from n cron = take n $ go from
     go = unfoldr (fmap dup . nextMatch cron)
 
 processCronEvents ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     Tracing.HasReporter m,
     MonadMetadataStorage (MetadataStorageT m)
   ) =>
@@ -268,8 +266,7 @@ processCronEvents logger logBehavior httpMgr cronEvents getSC lockedCronEvents =
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
 
 processOneOffScheduledEvents ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     Tracing.HasReporter m,
     MonadMetadataStorage (MetadataStorageT m)
   ) =>
@@ -312,8 +309,7 @@ processOneOffScheduledEvents
       logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
 
 processScheduledTriggers ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     Tracing.HasReporter m,
     MonadMetadataStorage (MetadataStorageT m)
   ) =>
@@ -357,7 +353,6 @@ processScheduledEvent ::
   ( MonadReader r m,
     Has HTTP.Manager r,
     Has (L.Logger L.Hasura) r,
-    HasVersion,
     MonadIO m,
     Tracing.HasReporter m,
     MonadMetadataStorage m

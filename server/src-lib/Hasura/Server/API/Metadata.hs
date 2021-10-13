@@ -46,7 +46,6 @@ import Hasura.Server.API.Backend
 import Hasura.Server.API.Instances ()
 import Hasura.Server.Types (InstanceId (..), MaintenanceMode (..))
 import Hasura.Server.Utils (APIVersion (..))
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Manager qualified as HTTP
@@ -276,8 +275,7 @@ instance FromJSON RQLMetadata where
     pure RQLMetadata {..}
 
 runMetadataQuery ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     Tracing.MonadTrace m,
     MonadMetadataStorage m,
@@ -347,8 +345,7 @@ queryModifiesMetadata = \case
       _ -> True
 
 runMetadataQueryM ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     CacheRWM m,
     Tracing.MonadTrace m,
@@ -372,8 +369,7 @@ runMetadataQueryM env currentResourceVersion =
 
 runMetadataQueryV1M ::
   forall m r.
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     CacheRWM m,
     Tracing.MonadTrace m,

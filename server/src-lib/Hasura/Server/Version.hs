@@ -1,11 +1,7 @@
-{-# LANGUAGE ImplicitParams #-}
-
 module Hasura.Server.Version
   ( Version (..),
-    HasVersion,
     currentVersion,
     consoleAssetsVersion,
-    withVersion,
   )
 where
 
@@ -15,6 +11,7 @@ import Data.SemVer qualified as V
 import Data.Text qualified as T
 import Data.Text.Conversions (FromText (..), ToText (..))
 import Hasura.Prelude
+import Hasura.Server.Utils (getValFromEnvOrScript)
 import Text.Regex.TDFA ((=~~))
 
 data Version
@@ -38,28 +35,15 @@ instance ToJSON Version where
 instance FromJSON Version where
   parseJSON = fmap fromText . parseJSON
 
--- | Lots of random things need access to the current version. It would be very convenient to define
--- @version :: 'Version'@ in this module and export it, and indeed, that’s what we used to do! But
--- that turns out to cause problems: the version is compiled into the executable via Template
--- Haskell, so the Pro codebase runs into awkward problems. Since the Pro codebase depends on this
--- code as a library, it has to do gymnastics to ensure that this library always gets recompiled in
--- order to use the updated version, and that’s really hacky.
---
--- A better solution is to explicitly plumb the version through to everything that needs it, but
--- that would be noisy, so as a compromise we use an implicit parameter. Since implicit parameters
--- are a little cumbersome, we hide the parameter itself behind this 'HasVersion' constraint,
--- 'currentVersion' can be used to access it, and 'withVersion' can be used to bring a version into
--- scope.
-type HasVersion = ?version :: Version
-
-currentVersion :: HasVersion => Version
-currentVersion = ?version
-
-withVersion :: Version -> (HasVersion => r) -> r
-withVersion version x = let ?version = version in x
+currentVersion :: Version
+currentVersion =
+  fromText $
+    T.dropWhileEnd (== '\n') $
+      T.pack $
+        $$(getValFromEnvOrScript "VERSION" "../scripts/get-version.sh")
 
 -- | A version-based string used to form the CDN URL for fetching console assets.
-consoleAssetsVersion :: HasVersion => Text
+consoleAssetsVersion :: Text
 consoleAssetsVersion = case currentVersion of
   VersionDev txt -> "versioned/" <> txt
   VersionRelease v -> case getReleaseChannel v of
