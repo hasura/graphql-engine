@@ -415,7 +415,10 @@ func (m *Migrate) RemoveVersions(versions []uint64) error {
 	}
 
 	for _, version := range versions {
-		m.databaseDrv.RemoveVersion(int64(version))
+		err = m.databaseDrv.RemoveVersion(int64(version))
+		if err != nil {
+			return err
+		}
 	}
 	return m.unlockErr(nil)
 }
@@ -467,7 +470,11 @@ func (m *Migrate) Squash(v1 uint64, v2 int64) (vs []int64, us []byte, ds []byte,
 	dataUp := make(chan interface{}, m.PrefetchMigrations)
 	dataDown := make(chan interface{}, m.PrefetchMigrations)
 	retVersions := make(chan int64, m.PrefetchMigrations)
-	go m.squashMigrations(retUp, retDown, dataUp, dataDown, retVersions)
+	go func() {
+		if err := m.squashMigrations(retUp, retDown, dataUp, dataDown, retVersions); err != nil {
+			m.Logger.Error(err)
+		}
+	}()
 
 	// make a chan for errors
 	errChn := make(chan error, 2)
@@ -752,7 +759,11 @@ func (m *Migrate) squashUp(from uint64, to int64, ret chan<- interface{}) {
 			// write the body of the migration to reader
 			// the migr instance sent via the channel will then start reading
 			// from it
-			go migr.Buffer()
+			go func(migr *Migration, m *Migrate) {
+				if err := migr.Buffer(); err != nil {
+					m.Logger.Error(err)
+				}
+			}(migr, m)
 
 			count++
 		}
@@ -791,7 +802,11 @@ func (m *Migrate) squashUp(from uint64, to int64, ret chan<- interface{}) {
 		}
 
 		ret <- migr
-		go migr.Buffer()
+		go func(migr *Migration, m *Migrate) {
+			if err := migr.Buffer(); err != nil {
+				m.Logger.Error(err)
+			}
+		}(migr, m)
 		if int64(next) == to {
 			return
 		}
@@ -832,7 +847,11 @@ func (m *Migrate) squashDown(v1 uint64, v2 int64, ret chan<- interface{}) {
 				return
 			}
 			ret <- migr
-			go migr.Buffer()
+			go func(migr *Migration, m *Migrate) {
+				if err := migr.Buffer(); err != nil {
+					m.Logger.Error(err)
+				}
+			}(migr, m)
 			return
 		} else if err != nil {
 			ret <- err
@@ -848,7 +867,11 @@ func (m *Migrate) squashDown(v1 uint64, v2 int64, ret chan<- interface{}) {
 			}
 
 			ret <- migr
-			go migr.Buffer()
+			go func(migr *Migration, m *Migrate) {
+				if err := migr.Buffer(); err != nil {
+					m.Logger.Error(err)
+				}
+			}(migr, m)
 		} else {
 			m.Logger.Warnf("%v", err)
 		}
@@ -891,7 +914,12 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{},
 		}
 
 		ret <- migr
-		go migr.Buffer()
+		go func(migr *Migration, m *Migrate) {
+			if err := migr.Buffer(); err != nil {
+				m.Logger.Error(err)
+			}
+		}(migr, m)
+
 	} else {
 		// it's going down
 		if m.stop() {
@@ -918,7 +946,11 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{},
 				return
 			}
 			ret <- migr
-			go migr.Buffer()
+			go func(migr *Migration, m *Migrate) {
+				if err := migr.Buffer(); err != nil {
+					m.Logger.Error(err)
+				}
+			}(migr, m)
 			return
 		} else if err != nil {
 			ret <- err
@@ -932,7 +964,11 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{},
 		}
 
 		ret <- migr
-		go migr.Buffer()
+		go func(migr *Migration, m *Migrate) {
+			if err := migr.Buffer(); err != nil {
+				m.Logger.Error(err)
+			}
+		}(migr, m)
 	}
 }
 
@@ -1000,7 +1036,11 @@ func (m *Migrate) readUp(limit int64, ret chan<- interface{}, bar *pb.ProgressBa
 				return
 			}
 			ret <- migr
-			go migr.Buffer()
+			go func(migr *Migration, m *Migrate) {
+				if err := migr.Buffer(); err != nil {
+					m.Logger.Error(err)
+				}
+			}(migr, m)
 
 			from = int64(firstVersion)
 			count++
@@ -1059,7 +1099,11 @@ func (m *Migrate) readUp(limit int64, ret chan<- interface{}, bar *pb.ProgressBa
 		}
 
 		ret <- migr
-		go migr.Buffer()
+		go func(migr *Migration, m *Migrate) {
+			if err := migr.Buffer(); err != nil {
+				m.Logger.Error(err)
+			}
+		}(migr, m)
 
 		from = int64(next)
 		count++
@@ -1131,7 +1175,11 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}, bar *pb.Progress
 					return
 				}
 				ret <- migr
-				go migr.Buffer()
+				go func(migr *Migration, m *Migrate) {
+					if err := migr.Buffer(); err != nil {
+						m.Logger.Error(err)
+					}
+				}(migr, m)
 				count++
 			}
 
@@ -1148,7 +1196,11 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}, bar *pb.Progress
 		}
 
 		ret <- migr
-		go migr.Buffer()
+		go func(migr *Migration, m *Migrate) {
+			if err := migr.Buffer(); err != nil {
+				m.Logger.Error(err)
+			}
+		}(migr, m)
 		from = int64(prev.Version)
 		count++
 	}
@@ -1169,27 +1221,26 @@ func (m *Migrate) runMigrations(ret <-chan interface{}, bar *pb.ProgressBar) err
 			return nil
 		}
 
-		switch r.(type) {
+		switch r := r.(type) {
 		case error:
 			// Clear Migration query
 			m.databaseDrv.ResetQuery()
-			return r.(error)
+			return r
 		case *Migration:
-			migr := r.(*Migration)
-			if migr.Body != nil {
+			if r.Body != nil {
 				if !m.SkipExecution {
-					m.Logger.Debugf("applying migration: %s", migr.FileName)
-					if err := m.databaseDrv.Run(migr.BufferedBody, migr.FileType, migr.FileName); err != nil {
+					m.Logger.Debugf("applying migration: %s", r.FileName)
+					if err := m.databaseDrv.Run(r.BufferedBody, r.FileType, r.FileName); err != nil {
 						return err
 					}
 				}
 				incrementProgressBar(bar)
-				version := int64(migr.Version)
+				version := int64(r.Version)
 				// Insert Version number into the table
 				if err := m.databaseDrv.SetVersion(version, false); err != nil {
 					return err
 				}
-				if version != migr.TargetVersion {
+				if version != r.TargetVersion {
 					// Delete Version number from the table
 					if err := m.databaseDrv.RemoveVersion(version); err != nil {
 						return err
@@ -1209,15 +1260,14 @@ func (m *Migrate) runDryRun(ret <-chan interface{}) error {
 			return nil
 		}
 
-		switch r.(type) {
+		switch r := r.(type) {
 		case error:
-			return r.(error)
+			return r
 		case *Migration:
-			migr := r.(*Migration)
-			if migr.Body != nil {
-				version := int64(migr.Version)
+			if r.Body != nil {
+				version := int64(r.Version)
 				if version != lastInsertVersion {
-					migrations = append(migrations, migr)
+					migrations = append(migrations, r)
 					lastInsertVersion = version
 				}
 			}
@@ -1236,7 +1286,7 @@ func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan inte
 		var err error
 
 		squashList := database.CustomList{
-			list.New(),
+			List: list.New(),
 		}
 
 		defer func() {
@@ -1249,21 +1299,20 @@ func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan inte
 			if m.stop() {
 				return
 			}
-			switch r.(type) {
+			switch r := r.(type) {
 			case error:
-				dataUp <- r.(error)
+				dataUp <- r
 			case *Migration:
-				migr := r.(*Migration)
-				if migr.Body != nil {
+				if r.Body != nil {
 					// read migration body and push it to squash list
-					if err = m.databaseDrv.PushToList(migr.BufferedBody, migr.FileType, &squashList); err != nil {
+					if err = m.databaseDrv.PushToList(r.BufferedBody, r.FileType, &squashList); err != nil {
 						dataUp <- err
 						return
 					}
 				}
 
-				version := int64(migr.Version)
-				if version == migr.TargetVersion && version != latestVersion {
+				version := int64(r.Version)
+				if version == r.TargetVersion && version != latestVersion {
 					versions <- version
 					latestVersion = version
 				}
@@ -1276,7 +1325,7 @@ func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan inte
 		var err error
 
 		squashList := database.CustomList{
-			list.New(),
+			List: list.New(),
 		}
 
 		defer func() {
@@ -1289,13 +1338,12 @@ func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan inte
 			if m.stop() {
 				return
 			}
-			switch r.(type) {
+			switch r := r.(type) {
 			case error:
-				dataDown <- r.(error)
+				dataDown <- r
 			case *Migration:
-				migr := r.(*Migration)
-				if migr.Body != nil {
-					if err = m.databaseDrv.PushToList(migr.BufferedBody, migr.FileType, &squashList); err != nil {
+				if r.Body != nil {
+					if err = m.databaseDrv.PushToList(r.BufferedBody, r.FileType, &squashList); err != nil {
 						dataDown <- err
 						return
 					}
@@ -1428,13 +1476,6 @@ func (m *Migrate) newMigration(version uint64, targetVersion int64) (*Migration,
 			}
 		}
 	}
-
-	if m.PrefetchMigrations > 0 && migr.Body != nil {
-		//m.logVerbosePrintf("Start buffering %v\n", migr.LogString())
-	} else {
-		//m.logVerbosePrintf("Scheduled %v\n", migr.LogString())
-	}
-
 	return migr, nil
 }
 
@@ -1496,7 +1537,6 @@ func (m *Migrate) lock() error {
 		} else {
 			errchan <- nil
 		}
-		return
 	}()
 
 	// wait until we either recieve ErrLockTimeout or error from Lock operation
@@ -1637,7 +1677,11 @@ func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}
 				return
 			}
 			ret <- migr
-			go migr.Buffer()
+			go func(migr *Migration, m *Migrate) {
+				if err := migr.Buffer(); err != nil {
+					m.Logger.Error(err)
+				}
+			}(migr, m)
 
 			from = int64(firstVersion)
 			continue
@@ -1670,7 +1714,11 @@ func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}
 		}
 
 		ret <- migr
-		go migr.Buffer()
+		go func(migr *Migration, m *Migrate) {
+			if err := migr.Buffer(); err != nil {
+				m.Logger.Error(err)
+			}
+		}(migr, m)
 
 		from = int64(next)
 	}
@@ -1735,7 +1783,11 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 				}
 
 				ret <- migr
-				go migr.Buffer()
+				go func(migr *Migration, m *Migrate) {
+					if err := migr.Buffer(); err != nil {
+						m.Logger.Error(err)
+					}
+				}(migr, m)
 
 				from = database.NilVersion
 				continue
@@ -1754,7 +1806,11 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 		}
 
 		ret <- migr
-		go migr.Buffer()
+		go func(migr *Migration, m *Migrate) {
+			if err := migr.Buffer(); err != nil {
+				m.Logger.Error(err)
+			}
+		}(migr, m)
 		from = int64(prev.Version)
 	}
 }

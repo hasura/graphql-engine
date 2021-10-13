@@ -79,7 +79,7 @@ var _ = Describe("hasura migrate squash", func() {
 		Eventually(session, timeout).Should(Exit(0))
 		for _, dir := range toSquash {
 			// get version from dir name "1588172670820_create_table_public_table50"
-			Expect(session.Out.Contents()).ToNot(ContainSubstring(fmt.Sprintf(dir)))
+			Expect(session.Out.Contents()).ToNot(ContainSubstring(dir))
 		}
 
 		// assert contents of squashed migration
@@ -159,7 +159,7 @@ var _ = Describe("hasura migrate squash", func() {
 		Eventually(session, timeout).Should(Exit(0))
 		for _, dir := range toSquash {
 			// get version from dir name "1588172670820_create_table_public_table50"
-			Expect(session.Out.Contents()).ToNot(ContainSubstring(fmt.Sprintf(dir)))
+			Expect(session.Out.Contents()).ToNot(ContainSubstring(dir))
 		}
 
 		// assert contents of squashed migration

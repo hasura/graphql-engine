@@ -96,7 +96,7 @@ func (o *actionsCreateOptions) run() error {
 	// if codegen config not present, skip codegen
 	if o.EC.Config.ActionConfig.Codegen.Framework == "" {
 		if o.withCodegen {
-			return fmt.Errorf(`Could not find codegen config. For adding codegen config, run:
+			return fmt.Errorf(`could not find codegen config. For adding codegen config, run:
 
   hasura actions use-codegen`)
 		}

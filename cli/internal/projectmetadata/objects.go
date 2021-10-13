@@ -26,7 +26,10 @@ func GetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) metadata
 	} else {
 		metadataDir = dir[0]
 	}
-	ec.Version.GetServerFeatureFlags()
+	err := ec.Version.GetServerFeatureFlags()
+	if err != nil {
+		ec.Logger.Errorf("error determining server feature flags: %v", err)
+	}
 	objects := make(metadataobject.Objects, 0)
 	if ec.Config.Version >= cli.V2 && metadataDir != "" {
 		// hasura core metadata objects

@@ -18,6 +18,10 @@ endif
 deps:
 	go mod download
 
+.PHONY: lint
+lint:
+	golangci-lint run
+
 # build cli locally, for all given platform/arch
 .PHONY: build
 build: export CGO_ENABLED=0

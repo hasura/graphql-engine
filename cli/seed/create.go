@@ -47,7 +47,10 @@ func CreateSeedFile(fs afero.Fs, opts CreateSeedOpts) (*string, error) {
 	defer file.Close()
 
 	r := bufio.NewReader(opts.Data)
-	io.Copy(file, r)
+	_, err = io.Copy(file, r)
+	if err != nil {
+		return nil, err
+	}
 
 	return &fullFilePath, nil
 }

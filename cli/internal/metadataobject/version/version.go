@@ -19,7 +19,11 @@ type VersionConfig struct {
 }
 
 func New(ec *cli.ExecutionContext, baseDir string) *VersionConfig {
-	ec.Version.GetServerFeatureFlags()
+	err := ec.Version.GetServerFeatureFlags()
+	if err != nil {
+		ec.Logger.Errorf("got error while creating instance of VersionConfig: %v", err)
+		return nil
+	}
 	return &VersionConfig{
 		MetadataDir: baseDir,
 	}

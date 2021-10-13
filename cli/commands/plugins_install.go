@@ -63,7 +63,9 @@ func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f.Var(&opts.Version, "version", "version to be installed")
 	f.StringVar(&opts.ManifestFile, "manifest-file", "", "(dev) speficy local manifest file")
-	f.MarkHidden("manifest-file")
+	if err := f.MarkHidden("manifest-file"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
 
 	return pluginsInstallCmd
 }

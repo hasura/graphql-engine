@@ -59,7 +59,7 @@ func TestMigrationStateStoreHdbTable_SetVersions(t *testing.T) {
 			},
 			args{
 				"default",
-				[]statestore.Version{{1, false}, {2, false}, {3, false}},
+				[]statestore.Version{{Version: 1, Dirty: false}, {Version: 2, Dirty: false}, {Version: 3, Dirty: false}},
 			},
 			false,
 		},

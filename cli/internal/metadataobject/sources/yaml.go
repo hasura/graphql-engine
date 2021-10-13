@@ -103,7 +103,3 @@ func resolveTags(ctx map[string]string, node *yaml.Node) (*yaml.Node, error) {
 	}
 	return node, nil
 }
-
-type IncludeTagVisitor struct {
-	baseDir string
-}

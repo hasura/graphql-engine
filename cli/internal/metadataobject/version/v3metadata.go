@@ -24,7 +24,11 @@ func (a *V3MetadataV2ConfigVersion) Build(metadata *yaml.MapSlice) metadataobjec
 }
 
 func NewV3MetadataVersion(ec *cli.ExecutionContext, baseDir string) *V3MetadataV2ConfigVersion {
-	ec.Version.GetServerFeatureFlags()
+	err := ec.Version.GetServerFeatureFlags()
+	if err != nil {
+		ec.Logger.Errorf("got error while creating instance of V3MetadtaV2ConfigVersion: %v", err)
+		return nil
+	}
 	return &V3MetadataV2ConfigVersion{
 		&VersionConfig{
 			MetadataDir: baseDir,

@@ -87,12 +87,18 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL engine")
 	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL engine")
 	f.StringVar(&opts.Template, "install-manifest", "", "install manifest to be cloned")
-	f.MarkDeprecated("access-key", "use --admin-secret instead")
-	f.MarkDeprecated("directory", "use directory-name argument instead")
+	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
+	if err := f.MarkDeprecated("directory", "use directory-name argument instead"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
 
 	// only used in tests
 	f.BoolVar(&opts.GetMetadataMigrations, "fetch", false, "It fetches the metadata and migrations from server without prompt")
-	f.MarkHidden("fetch")
+	if err := f.MarkHidden("fetch"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
 
 	return initCmd
 }
@@ -201,25 +207,16 @@ func (o *InitOptions) createFiles() error {
 		return errors.Wrap(err, "error creating setup directories")
 	}
 	// set config object
-	var config *cli.Config
-	if o.Version == cli.V1 {
-		config = &cli.Config{
-			ServerConfig: cli.ServerConfig{
-				Endpoint: "http://localhost:8080",
-			},
-		}
-	} else {
-		config = &cli.Config{
-			Version: o.Version,
-			ServerConfig: cli.ServerConfig{
-				Endpoint: "http://localhost:8080",
-			},
-			MetadataDirectory: "metadata",
-			ActionConfig: &actionMetadataFileTypes.ActionExecutionConfig{
-				Kind:                  "synchronous",
-				HandlerWebhookBaseURL: "http://localhost:3000",
-			},
-		}
+	var config = &cli.Config{
+		Version: o.Version,
+		ServerConfig: cli.ServerConfig{
+			Endpoint: defaultEndpoint,
+		},
+		MetadataDirectory: "metadata",
+		ActionConfig: &actionMetadataFileTypes.ActionExecutionConfig{
+			Kind:                  "synchronous",
+			HandlerWebhookBaseURL: "http://localhost:3000",
+		},
 	}
 	if o.Endpoint != "" {
 		if _, err := url.ParseRequestURI(o.Endpoint); err != nil {
@@ -253,7 +250,10 @@ func (o *InitOptions) createFiles() error {
 		if err != nil {
 			return errors.Wrap(err, "cannot write metadata directory")
 		}
-		o.EC.Version.GetServerFeatureFlags()
+		err = o.EC.Version.GetServerFeatureFlags()
+		if err != nil {
+			o.EC.Logger.Warnf("error determining server feature flags: %v", err)
+		}
 
 		// create metadata files
 		plugins := make(metadataobject.Objects, 0)

@@ -215,7 +215,7 @@ func (m *metadataModeYAMLHandler) Diff(o *MetadataDiffOptions) error {
 func export(o *MetadataExportOptions, mode cli.MetadataMode) error {
 	metadata, err := ec.APIClient.V1Metadata.ExportMetadata()
 	if err != nil {
-		fmt.Errorf("exporting metadata from server: %w", err)
+		return fmt.Errorf("exporting metadata from server: %w", err)
 	}
 	var metadataBytes []byte
 	metadataBytes, err = ioutil.ReadAll(metadata)
@@ -293,22 +293,22 @@ func diff(o *MetadataDiffOptions, mode cli.MetadataMode) error {
 	}
 	serverMetadata, err := cli.GetCommonMetadataOps(o.EC).ExportMetadata()
 	if err != nil {
-		fmt.Errorf("exporting metadata from server: %w", err)
+		return fmt.Errorf("exporting metadata from server: %w", err)
 	}
 	var serverMetadataBytes []byte
 	serverMetadataBytes, err = ioutil.ReadAll(serverMetadata)
 	if err != nil {
-		fmt.Errorf("reading server metadata: %w", err)
+		return fmt.Errorf("reading server metadata: %w", err)
 	}
 	if mode == cli.MetadataModeYAML {
 		serverMetadataBytes, err = goyaml.JSONToYAML(serverMetadataBytes)
 		if err != nil {
-			fmt.Errorf("parsing server metadata as yaml: %w", err)
+			return fmt.Errorf("parsing server metadata as yaml: %w", err)
 		}
 	}
 	localMetadataBytes, err := ioutil.ReadFile(o.EC.MetadataFile)
 	if err != nil {
-		fmt.Errorf("reading local metadata: %w", err)
+		return fmt.Errorf("reading local metadata: %w", err)
 	}
 	return printDiff(string(serverMetadataBytes), string(localMetadataBytes), "server", "project", o.Output, o.DiffType, !o.EC.IsTerminal)
 }

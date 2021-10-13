@@ -134,7 +134,6 @@ func (o *actionsUseCodegenOptions) run() error {
 			suffix++
 			err = util.FSCheckIfDirPathExists(starterKitDirname)
 		}
-		err = nil
 
 		// copy the starter kit
 		destinationDir := filepath.Join(o.EC.ExecutionDirectory, starterKitDirname)

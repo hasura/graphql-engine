@@ -47,8 +47,9 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	// deprecated flag
 	f.BoolVar(&opts.FromFile, "from-file", false, "apply metadata from migrations/metadata.[yaml|json]")
-	f.MarkDeprecated("from-file", "deprecation is a side effect of config v1 deprecation from v2.0.0")
-
+	if err := f.MarkDeprecated("from-file", "deprecation is a side effect of config v1 deprecation from v2.0.0"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
 	f.BoolVar(&opts.DryRun, "dry-run", false, "show metadata generated from project directory without applying to server.  generated metadata will be printed as JSON by default, use -o flag for other display formats")
 	f.StringVarP(&opts.rawOutput, "output", "o", "", `specify an output format to show applied metadata. Allowed values: json, yaml (default "json")`)
 	return metadataApplyCmd

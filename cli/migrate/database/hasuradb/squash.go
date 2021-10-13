@@ -24,7 +24,7 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 		tt := &hasura.PGRunSQLInput{
 			SQL: body,
 		}
-		l.PushBack(tt)
+		l.List.PushBack(tt)
 	default:
 		return fmt.Errorf("invalid migration file type")
 	}
@@ -32,10 +32,7 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 }
 
 func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
-	for e := l.Front(); e != nil; e = e.Next() {
-		q := HasuraInterfaceQuery{
-			Args: e.Value,
-		}
+	for e := l.List.Front(); e != nil; e = e.Next() {
 		switch args := e.Value.(type) {
 		case *hasura.PGRunSQLInput:
 			ret <- []byte(args.SQL)
@@ -45,6 +42,5 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			ret <- fmt.Errorf("invalid metadata action")
 			return
 		}
-		ret <- q
 	}
 }

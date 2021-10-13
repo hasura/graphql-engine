@@ -112,8 +112,6 @@ func TestProjectMetadataOps_Parse(t *testing.T) {
 	defer teardown()
 	type fields struct {
 		projectDirectory string
-		adminSecret      string
-		endpointString   string
 	}
 	tests := []struct {
 		name       string
@@ -196,8 +194,6 @@ func TestProjectMetadataOps_Diff(t *testing.T) {
 	defer teardown()
 	type fields struct {
 		projectDirectory string
-		adminSecret      string
-		endpointString   string
 	}
 	tests := []struct {
 		name       string
@@ -245,7 +241,6 @@ func TestProjectMetadata_Reload(t *testing.T) {
 	defer teardown()
 	type fields struct {
 		projectDirectory string
-		adminSecret      string
 		endpointString   string
 	}
 	tests := []struct {

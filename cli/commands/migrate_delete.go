@@ -42,7 +42,7 @@ func newMigrateDeleteCmd(ec *cli.ExecutionContext) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// exit if user inputs n for clearing migrations
-			if cmd.Flags().Changed("all") && !opts.force {
+			if cmd.Flags().Changed("all") && !opts.force && opts.EC.IsTerminal {
 				confirmation, err := util.GetYesNoPrompt("clear all migrations of database and it's history on the server?")
 				if err != nil {
 					return fmt.Errorf("error getting user input: %w", err)
@@ -94,7 +94,6 @@ type MigrateDeleteOptions struct {
 
 func (o *MigrateDeleteOptions) Run() error {
 	o.EC.Spin("Deleting migration...")
-	defer o.EC.Spinner.Stop()
 
 	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Source.Name, o.Source.Kind)
 	if err != nil {
@@ -140,7 +139,7 @@ func (o *MigrateDeleteOptions) Run() error {
 			return fmt.Errorf("error removing migrations from project: %w", err)
 		}
 	}
-
+	o.EC.Spinner.Stop()
 	o.EC.Logger.Infof("Deleted migrations")
 	return nil
 }

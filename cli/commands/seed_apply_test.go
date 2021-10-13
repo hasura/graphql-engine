@@ -63,6 +63,7 @@ var _ = Describe("seed apply (config v2)", func() {
 		editEndpointInConfig(filepath.Join(projectDirectoryConfigV2, defaultConfigFilename), hgeEndpoint)
 
 		err := os.MkdirAll(filepath.Join(filepath.Join(projectDirectoryConfigV2, "seeds")), 0755)
+		Expect(err).To(BeNil())
 		file, err := os.Create(filepath.Join(projectDirectoryConfigV2, "seeds", "table_seed.sql"))
 		Expect(err).To(BeNil())
 

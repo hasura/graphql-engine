@@ -88,7 +88,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 			&commands.MigrateApplyOptions{
 				EC:            ec,
 				DownMigration: "all",
-				Source:        cli.Source{"", hasura.SourceKindPG},
+				Source:        cli.Source{Name: "", Kind: hasura.SourceKindPG},
 			},
 			nil,
 			"",

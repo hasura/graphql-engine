@@ -24,7 +24,7 @@ func (c *Config) findPluginManifestFiles(indexDir string) ([]string, error) {
 	fs := afero.Afero{
 		Fs: afero.NewOsFs(),
 	}
-	fs.Walk(indexDir, func(path string, info os.FileInfo, err error) error {
+	err := fs.Walk(indexDir, func(path string, info os.FileInfo, err error) error {
 		if info == nil {
 			if err != nil {
 				return err
@@ -36,6 +36,9 @@ func (c *Config) findPluginManifestFiles(indexDir string) ([]string, error) {
 		}
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	return out, nil
 }

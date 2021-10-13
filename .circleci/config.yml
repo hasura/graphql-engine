@@ -232,7 +232,7 @@ jobs:
   # changes only contains files in .ciignore
   check_build_worthiness:
     docker:
-      - image: hasura/graphql-engine-cli-builder:20210310
+      - image: hasura/graphql-engine-cli-builder:9657e5303218c015a20cd0d7e252d5600537e6384b172003273b6ebd38c451d8
     working_directory: ~/graphql-engine
     steps:
       - attach_workspace:
@@ -622,7 +622,7 @@ jobs:
 
   build_cli:
     docker:
-      - image: hasura/graphql-engine-cli-builder:20210310
+      - image: hasura/graphql-engine-cli-builder:9657e5303218c015a20cd0d7e252d5600537e6384b172003273b6ebd38c451d8
     working_directory: ~/graphql-engine
     steps:
       - attach_workspace:
@@ -636,6 +636,7 @@ jobs:
           name: build cli
           working_directory: cli
           command: |
+            make lint
             make build
             make compress
             make ci-copy-binary

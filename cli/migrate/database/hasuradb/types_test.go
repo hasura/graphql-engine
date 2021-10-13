@@ -31,7 +31,9 @@ func TestHasuraError_Error(t *testing.T) {
 }
 }`)
 					var v interface{}
-					json.Unmarshal(d, &v)
+					if err := json.Unmarshal(d, &v); err != nil {
+						t.Fatal(err)
+					}
 					return v
 				}(),
 			},
@@ -48,7 +50,9 @@ func TestHasuraError_Error(t *testing.T) {
 }
 }]`)
 					var v interface{}
-					json.Unmarshal(d, &v)
+					if err := json.Unmarshal(d, &v); err != nil {
+						t.Fatal(err)
+					}
 					return v
 				}(),
 			},

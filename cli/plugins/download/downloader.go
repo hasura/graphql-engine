@@ -185,9 +185,9 @@ func detectMIMEType(at io.ReaderAt) (string, error) {
 	if err != nil && err != io.EOF {
 		return "", errors.Wrap(err, "failed to read first 512 bytes")
 	}
-	if n < 512 {
-		//klog.V(5).Infof("Did only read %d of 512 bytes to determine the file type", n)
-	}
+	// if n < 512 {
+	//klog.V(5).Infof("Did only read %d of 512 bytes to determine the file type", n)
+	// }
 
 	// Cut off mime extra info beginning with ';' i.e:
 	// "text/plain; charset=utf-8" should result in "text/plain".

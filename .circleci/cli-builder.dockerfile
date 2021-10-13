@@ -4,7 +4,8 @@ ARG upx_version="3.96"
 
 # install go dependencies
 RUN	go get github.com/mitchellh/gox \
-    && go get github.com/tcnksm/ghr
+    && go get github.com/tcnksm/ghr \
+    && go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1
 
 # install UPX, netcat and gcloud cli
 RUN apt-get update && apt-get install -y \
@@ -17,7 +18,7 @@ RUN apt-get update && apt-get install -y \
     && ACCEPT_EULA=Y apt-get install -y ca-certificates libkrb5-3 libpq5 libnuma1 unixodbc-dev msodbcsql17 apt-transport-https gnupg google-cloud-sdk hub \
     && curl -Lo /tmp/upx-${upx_version}.tar.xz https://github.com/upx/upx/releases/download/v${upx_version}/upx-${upx_version}-amd64_linux.tar.xz \
     && xz -d -c /tmp/upx-${upx_version}.tar.xz \
-       | tar -xOf - upx-${upx_version}-amd64_linux/upx > /bin/upx \
+    | tar -xOf - upx-${upx_version}-amd64_linux/upx > /bin/upx \
     && chmod a+x /bin/upx \
     && apt-get -y auto-remove \
     && rm -rf /var/lib/apt/lists/*
