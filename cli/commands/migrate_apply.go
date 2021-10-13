@@ -87,7 +87,9 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.BoolVar(&opts.DryRun, "dry-run", false, "print the names of migrations which are going to be applied")
 	f.BoolVar(&opts.AllDatabases, "all-databases", false, "set this flag to attempt to apply migrations on all databases present on server")
 	f.BoolVar(&opts.ProgressBarLogs, "progressbar-logs", false, "print the logs of progressbar")
-	f.MarkHidden("progressbar-logs")
+	if err := f.MarkHidden("progressbar-logs"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
 	return migrateApplyCmd
 }
 

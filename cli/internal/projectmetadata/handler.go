@@ -166,7 +166,7 @@ func (h *Handler) GetInconsistentMetadata() (bool, []InconsistentMetadataObject,
 	}
 	var objects []InconsistentMetadataObject
 	err = mapstructure.Decode(inconsistentMetadata.InconsistentObjects, &objects)
-	return inconsistentMetadata.IsConsistent, objects, nil
+	return inconsistentMetadata.IsConsistent, objects, err
 }
 
 func (h *Handler) DropInconsistentMetadata() error {

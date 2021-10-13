@@ -86,7 +86,7 @@ func (h HasuraError) Error() string {
 		errorStrings = append(errorStrings, fmt.Sprintf("File: '%s'", h.migrationFile))
 	}
 	if h.migrationQuery != "" {
-		errorStrings = append(errorStrings, fmt.Sprintf("%s", h.migrationQuery))
+		errorStrings = append(errorStrings, h.migrationQuery)
 	}
 	var internalError SQLInternalError
 	var internalErrors []SQLInternalError

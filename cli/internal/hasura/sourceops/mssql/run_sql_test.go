@@ -19,8 +19,7 @@ func TestHasuraDatabaseOperations_RunSQL(t *testing.T) {
 		path       string
 	}
 	type args struct {
-		input    hasura.MSSQLRunSQLInput
-		database string
+		input hasura.MSSQLRunSQLInput
 	}
 	tests := []struct {
 		name    string

@@ -116,8 +116,12 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.upSQL, "up-sql", "", "sql string/query that is to be used to create an up migration")
 	f.StringVar(&opts.downSQL, "down-sql", "", "sql string/query that is to be used to create a down migration")
 
-	migrateCreateCmd.MarkFlagFilename("sql-from-file")
-	migrateCreateCmd.MarkFlagFilename("metadata-from-file")
+	if err := migrateCreateCmd.MarkFlagFilename("sql-from-file", "sql"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
+	if err := migrateCreateCmd.MarkFlagFilename("metadata-from-file", "json"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
 
 	return migrateCreateCmd
 }
@@ -156,7 +160,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 	if o.sqlServer || o.upSQLChanged || o.downSQLChanged {
 		migrateDrv, err = migrate.NewMigrate(o.EC, true, o.Source.Name, o.Source.Kind)
 		if err != nil {
-			return 0, errors.Wrap(err, "cannot create migrate instance")
+			return 0, fmt.Errorf("cannot create migrate instance: %w", err)
 		}
 	}
 
@@ -164,29 +168,32 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		// sql-file flag is set
 		err := createOptions.SetSQLUpFromFile(o.sqlFile)
 		if err != nil {
-			return 0, errors.Wrap(err, "cannot set sql file")
+			return 0, fmt.Errorf("cannot set sql file: %w", err)
 		}
 	}
 	if o.sqlServer {
 		data, err := migrateDrv.ExportSchemaDump(o.schemaNames, o.Source.Name, o.Source.Kind)
 		if err != nil {
-			return 0, errors.Wrap(err, "cannot fetch schema dump")
+			return 0, fmt.Errorf("cannot fetch schema dump: %w", err)
 		}
-		createOptions.SetSQLUp(string(data))
+		err = createOptions.SetSQLUp(string(data))
+		if err != nil {
+			return 0, fmt.Errorf("while writing data from server into the up.sql file: %w", err)
+		}
 	}
 
 	// create pure sql based migrations here
 	if o.upSQLChanged {
 		err = createOptions.SetSQLUp(o.upSQL)
 		if err != nil {
-			return 0, errors.Wrap(err, "up migration with SQL string could not be created")
+			return 0, fmt.Errorf("up migration with SQL string could not be created: %w", err)
 		}
 	}
 
 	if o.downSQLChanged {
 		err = createOptions.SetSQLDown(o.downSQL)
 		if err != nil {
-			return 0, errors.Wrap(err, "down migration with SQL string could not be created")
+			return 0, fmt.Errorf("down migration with SQL string could not be created: %w", err)
 		}
 	}
 
@@ -198,13 +205,16 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 
 	defer func() {
 		if err != nil {
-			createOptions.Delete()
+			if err := createOptions.Delete(); err != nil {
+				o.EC.Logger.Warnf("cannot delete dangling migrations: %v", err)
+			}
 		}
 	}()
 	err = createOptions.Create()
 	if err != nil {
-		return 0, errors.Wrap(err, "error creating migration files")
+		return 0, fmt.Errorf("error creating migration files: %w", err)
 	}
+	o.EC.Spinner.Stop()
 	o.EC.Logger.Infof("Created Migrations")
 	if o.fromServer {
 		opts := &MigrateApplyOptions{

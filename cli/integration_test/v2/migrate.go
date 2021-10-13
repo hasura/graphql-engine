@@ -36,7 +36,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 	}{
 		{"apply-up-all-migrations", &commands.MigrateApplyOptions{
 			EC:     ec,
-			Source: cli.Source{"", hasura.SourceKindPG},
+			Source: cli.Source{Name: "", Kind: hasura.SourceKindPG},
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -53,7 +53,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{"apply-down-1-migration", &commands.MigrateApplyOptions{
 			EC:            ec,
 			DownMigration: "1",
-			Source:        cli.Source{"", hasura.SourceKindPG},
+			Source:        cli.Source{Name: "", Kind: hasura.SourceKindPG},
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -70,7 +70,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{"apply-down-all-migration", &commands.MigrateApplyOptions{
 			EC:            ec,
 			DownMigration: "all",
-			Source:        cli.Source{"", hasura.SourceKindPG},
+			Source:        cli.Source{Name: "", Kind: hasura.SourceKindPG},
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -87,7 +87,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{"apply-goto-2-migration", &commands.MigrateApplyOptions{
 			EC:          ec,
 			GotoVersion: "2",
-			Source:      cli.Source{"", hasura.SourceKindPG},
+			Source:      cli.Source{Name: "", Kind: hasura.SourceKindPG},
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -104,7 +104,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{"apply-goto-nil-migration", &commands.MigrateApplyOptions{
 			EC:          ec,
 			GotoVersion: "-1",
-			Source:      cli.Source{"", hasura.SourceKindPG},
+			Source:      cli.Source{Name: "", Kind: hasura.SourceKindPG},
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -121,7 +121,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{"apply-up-1-migration", &commands.MigrateApplyOptions{
 			EC:          ec,
 			UpMigration: "1",
-			Source:      cli.Source{"", hasura.SourceKindPG},
+			Source:      cli.Source{Name: "", Kind: hasura.SourceKindPG},
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -138,7 +138,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{"apply-version-2-up-migration", &commands.MigrateApplyOptions{
 			EC:               ec,
 			VersionMigration: "2",
-			Source:           cli.Source{"", hasura.SourceKindPG},
+			Source:           cli.Source{Name: "", Kind: hasura.SourceKindPG},
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -156,7 +156,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 			EC:               ec,
 			VersionMigration: "2",
 			MigrationType:    "down",
-			Source:           cli.Source{"", hasura.SourceKindPG},
+			Source:           cli.Source{Name: "", Kind: hasura.SourceKindPG},
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -185,7 +185,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 			}
 			statusOpts := &commands.MigrateStatusOptions{
 				EC:     ec,
-				Source: cli.Source{"", hasura.SourceKindPG},
+				Source: cli.Source{Name: "", Kind: hasura.SourceKindPG},
 			}
 			actualStatus, err := statusOpts.Run()
 			if err != nil {

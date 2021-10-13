@@ -65,10 +65,7 @@ func (m *Migrations) Next(version uint64) (migrationVersion *MigrationVersion, o
 
 func (m *Migrations) Read(version uint64) (ok bool) {
 	pos := m.findPos(version)
-	if pos >= 0 {
-		return true
-	}
-	return false
+	return pos >= 0
 }
 
 func (m *Migrations) findPos(version uint64) int {

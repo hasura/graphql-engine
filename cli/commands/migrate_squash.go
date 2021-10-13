@@ -56,7 +56,10 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.BoolVar(&opts.deleteSource, "delete-source", false, "delete the source files after squashing without any confirmation")
 
 	// mark flag as required
-	migrateSquashCmd.MarkFlagRequired("from")
+	err := migrateSquashCmd.MarkFlagRequired("from")
+	if err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
 
 	return migrateSquashCmd
 }
@@ -134,7 +137,7 @@ func (o *migrateSquashOptions) run() error {
 	newPath := filepath.Join(o.EC.MigrationDir, o.Source.Name, fmt.Sprintf("%d_%s", toMigration.Version, o.name))
 	err = os.Rename(oldPath, newPath)
 	if err != nil {
-		fmt.Errorf("renaming squashed migrations: %w", err)
+		return fmt.Errorf("renaming squashed migrations: %w", err)
 	}
 
 	o.EC.Logger.Infof("Created '%d_%s' after squashing '%d' till '%d'", toMigration.Version, o.name, versions[0], versions[len(versions)-1])

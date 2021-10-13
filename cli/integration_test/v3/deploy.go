@@ -79,7 +79,7 @@ func TestDeployCmd(t *testing.T, ec *cli.ExecutionContext) {
 
 			if tc.expectedMetadataFolder != "" {
 				assert.DirExists(t, ec.MetadataDir)
-				filepath.Walk(filepath.Join(tc.expectedMetadataFolder), func(path string, info os.FileInfo, err error) error {
+				err = filepath.Walk(filepath.Join(tc.expectedMetadataFolder), func(path string, info os.FileInfo, err error) error {
 					if !info.IsDir() {
 						name := info.Name()
 						expectedByt, err := ioutil.ReadFile(path)
@@ -94,6 +94,9 @@ func TestDeployCmd(t *testing.T, ec *cli.ExecutionContext) {
 					}
 					return nil
 				})
+				if err != nil {
+					t.Fatalf("%s: unable to read metadata, got %v", tc.name, err)
+				}
 			}
 
 			expectedStatusByt, err := json.Marshal(tc.migrateStatus)
