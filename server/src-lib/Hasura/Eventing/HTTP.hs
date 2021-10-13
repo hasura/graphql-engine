@@ -299,7 +299,7 @@ mkRequest headers timeout payload mRequestTransform (ResolvedWebhook webhook) =
                     case J.fromJSON @SessionVariables varVal of
                       J.Success sessionVars' -> pure sessionVars'
                       _ -> Nothing
-               in case applyRequestTransform reqTransform req sessionVars of
+               in case applyRequestTransform webhook reqTransform req sessionVars of
                     Left err -> pure $ Left err
                     Right transformedReq ->
                       let transformedReqSize = HTTP.getReqSize transformedReq

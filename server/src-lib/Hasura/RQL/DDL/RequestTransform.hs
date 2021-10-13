@@ -366,9 +366,9 @@ mkUrlTransform engine template transformCtx =
   case mkTemplateTransform engine template transformCtx of
     Left err -> Left err
     Right (J.String url) ->
-      let escapedString = T.pack $ URI.escapeURIString (\c -> not (c == '|')) (T.unpack url)
-       in case URI.parseURI (T.unpack escapedString) of
-            Just _ -> Right url
+      let escapedUrl = T.pack $ URI.escapeURIString (/= '|') (T.unpack url)
+       in case URI.parseURI (T.unpack escapedUrl) of
+            Just _ -> Right escapedUrl
             Nothing ->
               Left $
                 TransformErrorBundle $
@@ -396,19 +396,33 @@ mkTemplateTransform engine (TemplateText template) TransformContext {..} =
    in case engine of
         Kriti -> first (TransformErrorBundle . pure . J.toJSON) $ runKriti template context
 
-buildTransformContext :: HTTP.Request -> Maybe SessionVariables -> TransformContext
-buildTransformContext reqData sessionVars =
+buildTransformContext :: T.Text -> HTTP.Request -> Maybe SessionVariables -> TransformContext
+buildTransformContext url reqData sessionVars =
   TransformContext
-    { tcUrl = J.toJSON $ view HTTP.url reqData,
+    { tcUrl = J.toJSON url,
       tcBody = fromMaybe J.Null $ J.decode @J.Value =<< view HTTP.body reqData,
       tcSessionVars = J.toJSON sessionVars,
       tcQueryParams = J.toJSON $ bimap TE.decodeUtf8 (fmap TE.decodeUtf8) <$> view HTTP.queryParams reqData
     }
 
 -- | Transform an `HTTP.Request` with a `RequestTransform`.
-applyRequestTransform :: RequestTransform -> HTTP.Request -> Maybe SessionVariables -> Either TransformErrorBundle HTTP.Request
-applyRequestTransform RequestTransform {..} reqData sessionVars =
-  let transformCtx = buildTransformContext reqData sessionVars
+--
+-- Note: we pass in the request url explicitly for use in the
+-- 'TransformContext'. We do this so that we can ensure that the url
+-- is syntactically identical to what the use submits. If we use the
+-- parsed request from the 'HTTP.Request' term then it is possible
+-- that the url is semantically equivalent but syntactically
+-- different. An example of this is the presence or lack of a trailing
+-- slash on the URL path. This important when performing string
+-- interpolation on the request url.
+--
+-- Because of this requirement, we ensure the sequence of
+-- transformation applications. If a query param transformation
+-- occured before the url transformation then the query param
+-- transformation would be wiped out.
+applyRequestTransform :: T.Text -> RequestTransform -> HTTP.Request -> Maybe SessionVariables -> Either TransformErrorBundle HTTP.Request
+applyRequestTransform reqUrl RequestTransform {..} reqData sessionVars =
+  let transformCtx = buildTransformContext reqUrl reqData sessionVars
       method = fmap (TE.encodeUtf8 . renderRequestMethod) rtRequestMethod
 
       bodyFunc :: Maybe BL.ByteString -> Either TransformErrorBundle (Maybe BL.ByteString)
