@@ -1000,6 +1000,7 @@ class TestGraphQLQueryFunctions:
     def test_tracking_function_with_composite_type_argument(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_non_base_function_arg_type.yaml')
 
+    @pytest.mark.skip(reason="FIXME: https://github.com/hasura/graphql-engine-mono/issues/2595")
     def test_tracking_function_with_customized_names(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_customised_names.yaml')
 
