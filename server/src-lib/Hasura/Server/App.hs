@@ -249,13 +249,13 @@ setHeader (headerName, headerValue) =
 -- | Typeclass representing the metadata API authorization effect
 class (Monad m) => MonadMetadataApiAuthorization m where
   authorizeV1QueryApi ::
-    HasVersion => RQLQuery -> HandlerCtx -> m (Either QErr ())
+    RQLQuery -> HandlerCtx -> m (Either QErr ())
 
   authorizeV1MetadataApi ::
-    HasVersion => RQLMetadata -> HandlerCtx -> m (Either QErr ())
+    RQLMetadata -> HandlerCtx -> m (Either QErr ())
 
   authorizeV2QueryApi ::
-    HasVersion => V2Q.RQLQuery -> HandlerCtx -> m (Either QErr ())
+    V2Q.RQLQuery -> HandlerCtx -> m (Either QErr ())
 
 instance MonadMetadataApiAuthorization m => MonadMetadataApiAuthorization (ReaderT r m) where
   authorizeV1QueryApi q hc = lift $ authorizeV1QueryApi q hc
@@ -275,7 +275,6 @@ instance MonadMetadataApiAuthorization m => MonadMetadataApiAuthorization (Traci
 -- | The config API (/v1alpha1/config) handler
 class Monad m => MonadConfigApiHandler m where
   runConfigApiHandler ::
-    HasVersion =>
     ServerCtx ->
     -- | console assets directory
     Maybe Text ->
@@ -292,7 +291,7 @@ mapActionT ::
 mapActionT f tma = MTC.restoreT . pure =<< MTC.liftWith (\run -> f (run tma))
 
 mkSpockAction ::
-  (HasVersion, MonadIO m, MonadBaseControl IO m, FromJSON a, UserAuthentication (Tracing.TraceT m), HttpLog m, Tracing.HasReporter m, HasResourceLimits m) =>
+  (MonadIO m, MonadBaseControl IO m, FromJSON a, UserAuthentication (Tracing.TraceT m), HttpLog m, Tracing.HasReporter m, HasResourceLimits m) =>
   ServerCtx ->
   -- | `QErr` JSON encoder function
   (Bool -> QErr -> Value) ->
@@ -407,8 +406,7 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
       Spock.lazyBytes compressedResp
 
 v1QueryHandler ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     MonadMetadataApiAuthorization m,
     Tracing.MonadTrace m,
@@ -450,8 +448,7 @@ v1QueryHandler query = do
         query
 
 v1MetadataHandler ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     MonadReader HandlerCtx m,
     Tracing.MonadTrace m,
@@ -493,8 +490,7 @@ v1MetadataHandler query = do
   pure $ HttpResponse r []
 
 v2QueryHandler ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     MonadMetadataApiAuthorization m,
     Tracing.MonadTrace m,
@@ -531,8 +527,7 @@ v2QueryHandler query = do
       V2Q.runQuery env instanceId userInfo schemaCache httpMgr serverConfigCtx query
 
 v1Alpha1GQHandler ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
@@ -589,8 +584,7 @@ mkExecutionContext = do
   pure $ E.ExecutionCtx logger sqlGenCtx (lastBuiltSchemaCache sc) scVer manager enableAL
 
 v1GQHandler ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
@@ -608,8 +602,7 @@ v1GQHandler ::
 v1GQHandler = v1Alpha1GQHandler E.QueryHasura
 
 v1GQRelayHandler ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
@@ -691,7 +684,7 @@ consoleAssetsHandler logger enabledLogTypes dir path = do
     headers = ("Content-Type", mimeType) : encHeader
 
 class (Monad m) => ConsoleRenderer m where
-  renderConsole :: HasVersion => Text -> AuthMode -> Bool -> Maybe Text -> m (Either String Text)
+  renderConsole :: Text -> AuthMode -> Bool -> Maybe Text -> m (Either String Text)
 
 instance ConsoleRenderer m => ConsoleRenderer (Tracing.TraceT m) where
   renderConsole a b c d = lift $ renderConsole a b c d
@@ -706,7 +699,7 @@ renderHtmlTemplate template jVal =
 -- | Default implementation of the 'MonadConfigApiHandler'
 configApiGetHandler ::
   forall m.
-  (HasVersion, MonadIO m, MonadBaseControl IO m, UserAuthentication (Tracing.TraceT m), HttpLog m, Tracing.HasReporter m, HasResourceLimits m) =>
+  (MonadIO m, MonadBaseControl IO m, UserAuthentication (Tracing.TraceT m), HttpLog m, Tracing.HasReporter m, HasResourceLimits m) =>
   ServerCtx ->
   Maybe Text ->
   Spock.SpockCtxT () m ()
@@ -737,8 +730,7 @@ data HasuraApp = HasuraApp
 
 mkWaiApp ::
   forall m.
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     --     , MonadUnique m
     MonadStateless IO m,
     LA.Forall (LA.Pure m),
@@ -886,8 +878,7 @@ initialiseCache schemaCache = do
 
 httpApp ::
   forall m.
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     --     , MonadUnique m
     MonadBaseControl IO m,
     ConsoleRenderer m,
@@ -955,8 +946,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
 
   let customEndpointHandler ::
         forall n.
-        ( HasVersion,
-          MonadIO n,
+        ( MonadIO n,
           MonadBaseControl IO n,
           E.MonadGQLExecutionCheck n,
           MonadQueryLog n,

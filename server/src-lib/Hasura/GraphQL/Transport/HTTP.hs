@@ -66,7 +66,6 @@ import Hasura.Server.Logging
 import Hasura.Server.Logging qualified as L
 import Hasura.Server.Telemetry.Counters qualified as Telem
 import Hasura.Server.Types (RequestId)
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing (MonadTrace, TraceT, trace)
 import Hasura.Tracing qualified as Tracing
@@ -223,8 +222,7 @@ filterVariablesFromQuery query = fold $ rootToSessVarPreds =<< query
 -- | Run (execute) a single GraphQL query
 runGQ ::
   forall m.
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     MonadError QErr m,
     MonadReader E.ExecutionCtx m,
@@ -560,8 +558,7 @@ buildRaw json = do
 -- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs').
 runGQBatched ::
   forall m.
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     MonadError QErr m,
     MonadReader E.ExecutionCtx m,

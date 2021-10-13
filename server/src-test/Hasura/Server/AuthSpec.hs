@@ -18,7 +18,6 @@ import Hasura.Prelude
 import Hasura.Server.Auth hiding (getUserInfoWithExpTime, processJwt)
 import Hasura.Server.Auth.JWT hiding (processJwt)
 import Hasura.Server.Utils
-import Hasura.Server.Version
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Types qualified as N
@@ -632,20 +631,19 @@ setupAuthMode' ::
   Maybe RoleName ->
   IO (Either () AuthMode)
 setupAuthMode' mAdminSecretHash mWebHook mJwtSecret mUnAuthRole =
-  withVersion (VersionDev "fake") $
-    -- just throw away the error message for ease of testing:
-    fmap (either (const $ Left ()) Right) $
-      runNoReporter $
-        lowerManagedT $
-          runExceptT $
-            setupAuthMode
-              mAdminSecretHash
-              mWebHook
-              mJwtSecret
-              mUnAuthRole
-              -- NOTE: this won't do any http or launch threads if we don't specify JWT URL:
-              (error "H.Manager")
-              (Logger $ void . return)
+  -- just throw away the error message for ease of testing:
+  fmap (either (const $ Left ()) Right) $
+    runNoReporter $
+      lowerManagedT $
+        runExceptT $
+          setupAuthMode
+            mAdminSecretHash
+            mWebHook
+            mJwtSecret
+            mUnAuthRole
+            -- NOTE: this won't do any http or launch threads if we don't specify JWT URL:
+            (error "H.Manager")
+            (Logger $ void . return)
 
 mkClaimsSetWithUnregisteredClaims :: HashMap Text J.Value -> JWT.ClaimsSet
 mkClaimsSetWithUnregisteredClaims unregisteredClaims =

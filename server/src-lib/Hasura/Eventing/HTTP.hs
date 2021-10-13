@@ -65,7 +65,6 @@ import Hasura.RQL.DDL.RequestTransform (RequestTransform, TransformErrorBundle (
 import Hasura.RQL.Types.Common (ResolvedWebhook (..))
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session (SessionVariables)
 import Hasura.Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
@@ -377,7 +376,6 @@ decodeHeader logBehavior headerInfos (hdrName, hdrVal) =
 -- | Encodes given request headers along with our 'defaultHeaders' and returns
 -- them along with the re-decoded set of headers (for logging purposes).
 prepareHeaders ::
-  HasVersion =>
   LogBehavior ->
   [EventHeaderInfo] ->
   ([HTTP.Header], [HeaderConf])

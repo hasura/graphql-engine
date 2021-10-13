@@ -41,7 +41,6 @@ import Hasura.Prelude
 import Hasura.Server.Auth.JWT hiding (processJwt_)
 import Hasura.Server.Auth.WebHook
 import Hasura.Server.Utils
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as H
@@ -50,7 +49,6 @@ import Network.HTTP.Types qualified as N
 -- | Typeclass representing the @UserInfo@ authorization and resolving effect
 class (Monad m) => UserAuthentication m where
   resolveUserInfo ::
-    HasVersion =>
     Logger Hasura ->
     H.Manager ->
     -- | request headers
@@ -99,8 +97,7 @@ data AuthMode
 --
 -- This must only be run once, on launch.
 setupAuthMode ::
-  ( HasVersion,
-    ForkableMonadIO m,
+  ( ForkableMonadIO m,
     Tracing.HasReporter m
   ) =>
   Maybe AdminSecretHash ->
@@ -144,8 +141,7 @@ setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logge
         <> " --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
 
     mkJwtCtx ::
-      ( HasVersion,
-        ForkableMonadIO m,
+      ( ForkableMonadIO m,
         Tracing.HasReporter m
       ) =>
       JWTConfig ->
@@ -182,7 +178,7 @@ setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logge
 -- | Authenticate the request using the headers and the configured 'AuthMode'.
 getUserInfoWithExpTime ::
   forall m.
-  (HasVersion, MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m) =>
+  (MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m) =>
   Logger Hasura ->
   H.Manager ->
   [N.Header] ->

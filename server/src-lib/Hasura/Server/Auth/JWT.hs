@@ -66,7 +66,6 @@ import Hasura.Server.Utils
     isSessionVariable,
     userRoleHeader,
   )
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
@@ -256,7 +255,7 @@ $(J.deriveJSON hasuraJSON ''HasuraClaims)
 
 -- | An action that refreshes the JWK at intervals in an infinite loop.
 jwkRefreshCtrl ::
-  (HasVersion, MonadIO m, MonadBaseControl IO m, Tracing.HasReporter m) =>
+  (MonadIO m, MonadBaseControl IO m, Tracing.HasReporter m) =>
   Logger Hasura ->
   HTTP.Manager ->
   URI ->
@@ -279,8 +278,7 @@ jwkRefreshCtrl logger manager url ref time = do
 
 -- | Given a JWK url, fetch JWK from it and update the IORef
 updateJwkRef ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     MonadError JwkFetchError m,
     Tracing.MonadTrace m

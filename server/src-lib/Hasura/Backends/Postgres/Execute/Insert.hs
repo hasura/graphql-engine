@@ -27,14 +27,12 @@ import Hasura.QueryTags
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Returning qualified as IR
 import Hasura.RQL.Types
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 
 convertToSQLTransaction ::
   forall pgKind m.
-  ( HasVersion,
-    MonadTx m,
+  ( MonadTx m,
     MonadIO m,
     Tracing.MonadTrace m,
     Backend ('Postgres pgKind),
@@ -58,8 +56,7 @@ convertToSQLTransaction (IR.AnnInsert fieldName isSingle annIns mutationOutput) 
 
 insertMultipleObjects ::
   forall pgKind m.
-  ( HasVersion,
-    MonadTx m,
+  ( MonadTx m,
     MonadIO m,
     Tracing.MonadTrace m,
     Backend ('Postgres pgKind),
@@ -118,8 +115,7 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
 
 insertObject ::
   forall pgKind m.
-  ( HasVersion,
-    MonadTx m,
+  ( MonadTx m,
     MonadIO m,
     Tracing.MonadTrace m,
     Backend ('Postgres pgKind),
@@ -212,8 +208,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tra
 
 insertObjRel ::
   forall pgKind m.
-  ( HasVersion,
-    MonadTx m,
+  ( MonadTx m,
     MonadIO m,
     Tracing.MonadTrace m,
     Backend ('Postgres pgKind),
@@ -248,8 +243,7 @@ insertObjRel planVars userInfo stringifyNum objRelIns =
         <> table <<> " affects zero rows"
 
 insertArrRel ::
-  ( HasVersion,
-    MonadTx m,
+  ( MonadTx m,
     MonadIO m,
     Tracing.MonadTrace m,
     Backend ('Postgres pgKind),

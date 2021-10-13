@@ -11,6 +11,7 @@ import Data.ByteString.Base16 qualified as Base16
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.Char
+import Data.FileEmbed (makeRelativeToProject)
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
@@ -87,16 +88,17 @@ parseStringAsBool t
         ++ ". All values are case insensitive"
 
 -- Get an env var during compile time
-getValFromEnvOrScript :: String -> String -> Q (TExp String)
-getValFromEnvOrScript n s = do
-  maybeVal <- TH.runIO $ lookupEnv n
+getValFromEnvOrScript :: String -> FilePath -> Q (TExp String)
+getValFromEnvOrScript var file = do
+  maybeVal <- TH.runIO $ lookupEnv var
   case maybeVal of
     Just val -> [||val||]
-    Nothing -> runScript s
+    Nothing -> runScript file
 
 -- Run a shell script during compile time
 runScript :: FilePath -> Q (TExp String)
-runScript fp = do
+runScript file = do
+  fp <- makeRelativeToProject file
   TH.addDependentFile fp
   fileContent <- TH.runIO $ TI.readFile fp
   (exitCode, stdOut, stdErr) <-

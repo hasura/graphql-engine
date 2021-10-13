@@ -305,7 +305,7 @@ resolvePostgresConnInfo env dbUrlConf maybeRetries = do
 
 -- | Initializes or migrates the catalog and returns the context required to start the server.
 initialiseServeCtx ::
-  (HasVersion, C.ForkableMonadIO m, MonadCatch m) =>
+  (C.ForkableMonadIO m, MonadCatch m) =>
   Env.Environment ->
   GlobalCtx ->
   ServeOptions Hasura ->
@@ -394,7 +394,7 @@ mkLoggers enabledLogs logLevel = do
 
 -- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
 migrateCatalogSchema ::
-  (HasVersion, MonadIO m, MonadBaseControl IO m) =>
+  (MonadIO m, MonadBaseControl IO m) =>
   Env.Environment ->
   Logger Hasura ->
   Q.PGPool ->
@@ -511,8 +511,7 @@ flushLogger = liftIO . FL.flushLogStr . _lcLoggerSet
 {- HLINT ignore runHGEServer "Avoid lambda" -}
 runHGEServer ::
   forall m impl.
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadMask m,
     MonadStateless IO m,
     LA.Forall (LA.Pure m),
@@ -1083,7 +1082,7 @@ instance MonadMetadataStorageQueryAPI (MetadataStorageT (PGMetadataStorageAppT C
 
 --- helper functions ---
 
-mkConsoleHTML :: HasVersion => Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
+mkConsoleHTML :: Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
 mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
   renderHtmlTemplate consoleTmplt $
     -- variables required to render the template

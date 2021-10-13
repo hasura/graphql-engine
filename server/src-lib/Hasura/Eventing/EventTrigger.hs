@@ -76,7 +76,6 @@ import Hasura.RQL.Types.Eventing.Backend
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Types
-import Hasura.Server.Version (HasVersion)
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP
 import System.Metrics.Distribution qualified as EKG.Distribution
@@ -217,8 +216,7 @@ pattern Resp a = Right (Right a)
 --   - limit webhook HTTP concurrency per HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE
 processEventQueue ::
   forall m.
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     Tracing.HasReporter m,
     MonadBaseControl IO m,
     LA.Forall (LA.Pure m),
@@ -346,8 +344,7 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx {..} 
 
     processEvent ::
       forall io r b.
-      ( HasVersion,
-        MonadIO io,
+      ( MonadIO io,
         MonadReader r io,
         Has HTTP.Manager r,
         Has (L.Logger L.Hasura) r,

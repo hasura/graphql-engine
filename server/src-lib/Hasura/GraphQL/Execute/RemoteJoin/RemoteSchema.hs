@@ -28,7 +28,6 @@ import Hasura.GraphQL.RemoteServer (execRemoteGQ)
 import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReq (..), GQLReqOutgoing)
 import Hasura.Prelude
 import Hasura.RQL.Types
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -124,8 +123,7 @@ buildJoinIndex response responsePaths =
   for responsePaths $ \path -> extractAtPath (AO.Object response) path
 
 getRemoteSchemaResponse ::
-  ( HasVersion,
-    MonadError QErr m,
+  ( MonadError QErr m,
     MonadIO m,
     Tracing.MonadTrace m
   ) =>

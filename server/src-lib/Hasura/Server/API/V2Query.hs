@@ -25,7 +25,6 @@ import Hasura.RQL.DML.Update
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Run
 import Hasura.Server.Types
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP
@@ -53,8 +52,7 @@ $( deriveFromJSON
  )
 
 runQuery ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     Tracing.MonadTrace m,
     MonadMetadataStorage m,
@@ -112,8 +110,7 @@ queryModifiesSchema = \case
   RQBulk l -> any queryModifiesSchema l
 
 runQueryM ::
-  ( HasVersion,
-    MonadError QErr m,
+  ( MonadError QErr m,
     MonadIO m,
     MonadBaseControl IO m,
     UserInfoM m,

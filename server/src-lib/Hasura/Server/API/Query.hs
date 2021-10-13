@@ -40,7 +40,6 @@ import Hasura.RQL.Types
 import Hasura.RQL.Types.Run
 import Hasura.Server.Types
 import Hasura.Server.Utils
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP
@@ -155,8 +154,7 @@ $( deriveFromJSON
  )
 
 runQuery ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     Tracing.MonadTrace m,
     MonadBaseControl IO m,
     MonadMetadataStorage m,
@@ -316,8 +314,7 @@ reconcileAccessModes (Just mode1) (Just mode2)
   | otherwise = Left mode2
 
 runQueryM ::
-  ( HasVersion,
-    CacheRWM m,
+  ( CacheRWM m,
     UserInfoM m,
     MonadBaseControl IO m,
     MonadIO m,

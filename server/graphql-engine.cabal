@@ -438,7 +438,6 @@ library
                      , Hasura.Server.API.V2Query
                      , Hasura.Server.Utils
                      , Hasura.Server.Version
-                     , Hasura.Server.Version.TH
                      , Hasura.Server.Limits
                      , Hasura.Server.Logging
                      , Hasura.Server.Migrate
