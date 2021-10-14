@@ -44,22 +44,22 @@
 
             ```
           responses: {}
-        parameters:
-          - schema:
-              type: string
-            in: header
-            name: x-hasura-admin-secret
-            description: >-
-              Your x-hasura-admin-secret will be used for authentication of the API
-              request.
-          - schema:
-              type: string
-            in: path
-            name: first_name
-          - schema:
-              type: string
-            in: path
-            name: last_name
+          parameters:
+            - schema:
+                type: string
+              in: header
+              name: x-hasura-admin-secret
+              description: >-
+                Your x-hasura-admin-secret will be used for authentication of the API
+                request.
+            - schema:
+                type: string
+              in: path
+              name: first_name
+            - schema:
+                type: string
+              in: path
+              name: last_name
     components: {}
 
 - description: Try to remove the endpoint

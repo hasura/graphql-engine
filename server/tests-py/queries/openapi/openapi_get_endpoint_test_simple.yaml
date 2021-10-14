@@ -38,14 +38,14 @@
             query { test_table { first_name last_name } }
             ```
           responses: {}
-        parameters:
-          - schema:
-              type: string
-            in: header
-            name: x-hasura-admin-secret
-            description: >-
-              Your x-hasura-admin-secret will be used for authentication of the API
-              request.
+          parameters:
+            - schema:
+                type: string
+              in: header
+              name: x-hasura-admin-secret
+              description: >-
+                Your x-hasura-admin-secret will be used for authentication of the API
+                request.
     components: {}
 
 - description: Try to remove the endpoint
