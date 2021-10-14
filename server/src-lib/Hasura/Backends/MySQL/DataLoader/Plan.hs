@@ -13,10 +13,17 @@ module Hasura.Backends.MySQL.DataLoader.Plan
     FieldName (..),
     HeadAndTail (..),
     toFieldName,
+    runPlan,
+    planSelectHeadAndTail,
+    actionsForest,
+    selectQuery,
   )
 where
 
 import Data.Aeson
+import Data.Bifunctor
+import Data.Graph
+import Data.Sequence qualified as Seq
 import Data.String
 import Hasura.Backends.MySQL.Types qualified as MySQL
 import Hasura.Prelude hiding (head, second, tail, tell)
@@ -42,11 +49,9 @@ data Select = Select
     selectFrom :: !(Maybe MySQL.From),
     selectGroupBy :: ![MySQL.FieldName],
     selectHaskellJoins :: ![MySQL.Join],
-    selectSqlOffset :: !(Maybe Int),
     selectOrderBy :: !(Maybe (NonEmpty MySQL.OrderBy)),
     selectProjections :: ![MySQL.Projection],
     selectRelationship :: !(Maybe Relationship),
-    selectSqlTop :: !MySQL.Top,
     selectWhere :: !MySQL.Where,
     selectWantedFields :: !(Maybe [Text])
   }
@@ -137,9 +142,173 @@ data HeadAndTail = HeadAndTail
     tail :: Ref
   }
 
+-- | We're simply accumulating a set of actions with this. The counter
+-- lets us generate unique refs.
+data PlanState = PlanState
+  { actions :: !(Seq PlannedAction),
+    counter :: !Int
+  }
+
+-- | Simple monad to collect actions.
+newtype Plan a = Plan
+  { unPlan :: State PlanState a
+  }
+  deriving (Functor, Applicative, Monad, MonadState PlanState)
+
 --------------------------------------------------------------------------------
 -- Conversions
 
 -- | Note that we're intentionally discarding the table qualification.
 toFieldName :: MySQL.FieldName -> FieldName
 toFieldName (MySQL.FieldName {fName = t}) = FieldName t
+
+joinAliasName :: MySQL.EntityAlias -> Text
+joinAliasName (MySQL.EntityAlias {entityAliasText}) = entityAliasText
+
+-- | Used for display purposes, not semantic content.
+selectFromName :: Maybe MySQL.From -> Text
+selectFromName = \case
+  Nothing -> ""
+  Just x -> case x of
+    MySQL.FromQualifiedTable (MySQL.Aliased {aliasedThing = MySQL.TableName {name}}) -> name
+    -- This constructor will be removed in the subsequent PR.
+    MySQL.FromOpenJson {} -> ""
+
+--------------------------------------------------------------------------------
+-- Run planner
+
+runPlan :: Plan r -> (r, [PlannedAction])
+runPlan =
+  second (toList . actions)
+    . flip runState (PlanState {actions = mempty, counter = 0})
+    . unPlan
+
+--------------------------------------------------------------------------------
+-- Planners
+
+-- | See the documentation for 'HeadAndTail'.
+planSelectHeadAndTail :: Maybe Relationship -> Maybe Text -> MySQL.Select -> Plan HeadAndTail
+planSelectHeadAndTail relationship joinExtractPath select0 = do
+  ref <- generate (selectFromName (MySQL.selectFrom select0))
+  let select = fromSelect relationship joinExtractPath select0
+      action = SelectAction select
+  tell PlannedAction {ref, action}
+  joinsFinalRef <- foldM planJoin ref (selectHaskellJoins select)
+  pure
+    ( let head = ref
+          tail = case selectHaskellJoins select of
+            [] -> ref
+            _ -> joinsFinalRef
+       in HeadAndTail {head, tail}
+    )
+
+-- | Given a left-hand-side table and a join spec, produce a single
+-- reference that refers to the composition of the two.
+planJoin :: Ref -> MySQL.Join -> Plan Ref
+planJoin leftRecordSet join' = do
+  ref <- generate (joinAliasName (MySQL.joinRightTable join'))
+  rightRecordSet <-
+    fmap
+      (\HeadAndTail {..} -> tail)
+      ( planSelectHeadAndTail
+          ( Just
+              ( Relationship
+                  { leftRecordSet,
+                    joinType = MySQL.joinType join',
+                    rightTable = MySQL.joinRightTable join'
+                  }
+              )
+          )
+          Nothing
+          (MySQL.joinSelect join')
+      )
+  let action =
+        JoinAction
+          Join
+            { leftRecordSet,
+              rightRecordSet,
+              wantedFields = MySQL.selectFinalWantedFields (MySQL.joinSelect join'),
+              joinRhsTop = MySQL.joinTop join',
+              joinRhsOffset = MySQL.joinOffset join',
+              joinFieldName = MySQL.joinFieldName join',
+              joinType = MySQL.joinType join',
+              ..
+            }
+  tell PlannedAction {ref, action}
+  pure ref
+
+--------------------------------------------------------------------------------
+-- Monad helpers
+
+-- | Write the planned action to the state, like a writer's @tell@.
+tell :: PlannedAction -> Plan ()
+tell action = modify' (\s -> s {actions = actions s Seq.:|> action})
+
+-- | Generate a unique reference with a label for debugging.
+generate :: Text -> Plan Ref
+generate text = do
+  idx <- gets counter
+  modify' (\s -> s {counter = counter s + 1})
+  pure (Ref {idx, text})
+
+--------------------------------------------------------------------------------
+-- Graphing the plan to a forest
+
+-- | Graph the set of planned actions ready for execution in the correct order.
+actionsForest :: (Graph -> Graph) -> [PlannedAction] -> Forest PlannedAction
+actionsForest transform actions =
+  let (graph, vertex2Node, _key2Vertex) =
+        graphFromEdges
+          ( map
+              ( \PlannedAction {ref, action} ->
+                  ( action,
+                    ref,
+                    map
+                      (\PlannedAction {ref = r} -> r)
+                      (filter (elem ref . plannedActionRefs) actions)
+                  )
+              )
+              actions
+          )
+   in fmap
+        ( fmap
+            ((\(action, ref, _refs) -> PlannedAction {ref, action}) . vertex2Node)
+        )
+        (dff (transform graph))
+  where
+    plannedActionRefs PlannedAction {action} =
+      case action of
+        SelectAction Select {selectRelationship} ->
+          case selectRelationship of
+            Just Relationship {leftRecordSet} -> [leftRecordSet]
+            Nothing -> mempty
+        JoinAction Join {leftRecordSet, rightRecordSet} ->
+          [leftRecordSet, rightRecordSet]
+
+--------------------------------------------------------------------------------
+-- Build a query
+
+-- | Used by the executor to produce a plain old select that can be
+-- sent to the MySQL server.
+selectQuery :: Select -> MySQL.Select
+selectQuery Select {..} =
+  MySQL.Select
+    { selectJoins = selectHaskellJoins,
+      selectProjections = selectProjections,
+      selectTop = MySQL.NoTop,
+      selectOffset = Nothing,
+      selectFor = MySQL.NoFor,
+      ..
+    }
+
+-- | From a plain select, and possibly a parent/left-hand-side
+-- relationship, produce a select that is useful for execution.
+fromSelect :: Maybe Relationship -> Maybe Text -> MySQL.Select -> Select
+fromSelect selectRelationship selectAggUnwrap select@MySQL.Select {..} =
+  Select
+    { selectHaskellJoins = selectJoins,
+      selectWantedFields = MySQL.selectFinalWantedFields select,
+      selectGroupBy = [],
+      selectProjections = toList selectProjections,
+      ..
+    }

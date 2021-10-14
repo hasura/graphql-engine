@@ -578,7 +578,7 @@ fromArrayAggregateSelectG ::
   ReaderT EntityAlias FromIr Join
 fromArrayAggregateSelectG annRelationSelectG = do
   fieldName <- lift (fromRelName aarRelationshipName)
-  joinSelect <- do
+  joinSelect' <- do
     lhsEntityAlias <- ask
     -- With this, the foreign key relations are injected automatically
     -- at the right place by fromSelectAggregate.
@@ -591,7 +591,7 @@ fromArrayAggregateSelectG annRelationSelectG = do
             { joinAliasEntity = alias,
               joinAliasField = pure jsonFieldName
             },
-        joinSource = JoinSelect joinSelect
+        joinSource = JoinSelect joinSelect'
       }
   where
     IR.AnnRelationSelectG
@@ -747,7 +747,7 @@ fromArrayRelationSelectG :: IR.ArrayRelationSelectG 'MySQL (Const Void) Expressi
 fromArrayRelationSelectG annRelationSelectG = do
   fieldName <- lift (fromRelName aarRelationshipName)
   sel <- lift (fromSelectRows annSelectG)
-  joinSelect <-
+  joinSelect' <-
     do
       foreignKeyConditions <- selectFromMapping sel mapping
       pure
@@ -760,7 +760,7 @@ fromArrayRelationSelectG annRelationSelectG = do
             { joinAliasEntity = alias,
               joinAliasField = pure jsonFieldName
             },
-        joinSource = JoinSelect joinSelect
+        joinSource = JoinSelect joinSelect'
       }
   where
     IR.AnnRelationSelectG

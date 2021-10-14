@@ -140,14 +140,14 @@ fetchRecordSetForAction =
       -- the executor know which fields to include after performing a
       -- join.
       pure recordSet {wantedFields = Plan.selectWantedFields select}
-    JoinAction Plan.Join {..} -> do
+    JoinAction Plan.Join {joinType = joinType', joinFieldName = fieldName, ..} -> do
       left <- getRecordSet leftRecordSet
       right <- getRecordSet rightRecordSet
-      case joinType of
+      case joinType' of
         ArrayJoin fields ->
           case leftArrayJoin
             wantedFields
-            joinFieldName
+            fieldName
             (toFieldNames fields)
             joinRhsTop
             joinRhsOffset
@@ -158,13 +158,13 @@ fetchRecordSetForAction =
         ObjectJoin fields ->
           case leftObjectJoin
             wantedFields
-            joinFieldName
+            fieldName
             (toFieldNames fields)
             left
             right of
             Left problem -> throwError (JoinProblem problem)
             Right recordSet -> pure recordSet
-        _ -> throwError (UnsupportedJoinBug joinType)
+        _ -> throwError (UnsupportedJoinBug joinType')
   where
     toFieldNames = fmap (bimap toFieldName toFieldName)
 
