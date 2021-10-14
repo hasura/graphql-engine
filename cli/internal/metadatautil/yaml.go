@@ -1,4 +1,4 @@
-package sources
+package metadatautil
 
 import (
 	"fmt"
@@ -11,21 +11,21 @@ import (
 
 const includeTag = "!include"
 
-type sourcesYamlDecoderOpts struct {
+type YamlDecoderOpts struct {
 	// directory which is to be used as the parent directory to look for filenames
 	// specified in !include tag
 	IncludeTagBaseDirectory string
 }
-type sourcesYamlDecoder struct {
+type yamlDecoder struct {
 	destination interface{}
-	opts        sourcesYamlDecoderOpts
+	opts        YamlDecoderOpts
 }
 
-func newSourcesYamlDecoder(opts sourcesYamlDecoderOpts, destination interface{}) *sourcesYamlDecoder {
-	return &sourcesYamlDecoder{destination, opts}
+func NewYamlDecoder(opts YamlDecoderOpts, destination interface{}) *yamlDecoder {
+	return &yamlDecoder{destination, opts}
 }
 
-func (s *sourcesYamlDecoder) UnmarshalYAML(value *yaml.Node) error {
+func (s *yamlDecoder) UnmarshalYAML(value *yaml.Node) error {
 	ctx := map[string]string{}
 	ctx[includeTag] = s.opts.IncludeTagBaseDirectory
 
@@ -64,6 +64,10 @@ func resolveTags(ctx map[string]string, node *yaml.Node) (*yaml.Node, error) {
 		}
 		fileLocation := filepath.Join(baseDir, node.Value)
 		file, err := ioutil.ReadFile(fileLocation)
+		if filepath.Ext(fileLocation) != ".yaml" {
+			node.Value = string(file)
+			return node, nil
+		}
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", fileLocation, err)
 		}

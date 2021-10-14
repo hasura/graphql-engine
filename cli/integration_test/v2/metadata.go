@@ -2,6 +2,7 @@ package v2
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -123,11 +124,22 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 
 				for _, file := range files {
 					name := file.Name()
-					expectedByt, err := ioutil.ReadFile(filepath.Join(tc.expectedMetadataFolder, name))
+					expectedFileName := filepath.Join(tc.expectedMetadataFolder, name)
+					actualFileName := filepath.Join(ec.MetadataDir, name)
+					fs, err := os.Stat(expectedFileName)
+					if err != nil {
+						t.Fatalf("%s: unable to get info about the expected metadata file %s, got %v", tc.name, name, err)
+					}
+					if fs.IsDir() {
+						// remote_schemas -> remote_schemas/remote_schemas.yaml
+						expectedFileName = filepath.Join(expectedFileName, fmt.Sprintf("%s.yaml", name))
+						actualFileName = filepath.Join(actualFileName, fmt.Sprintf("%s.yaml", name))
+					}
+					expectedByt, err := ioutil.ReadFile(expectedFileName)
 					if err != nil {
 						t.Fatalf("%s: unable to read expected metadata file %s, got %v", tc.name, name, err)
 					}
-					actualByt, err := ioutil.ReadFile(filepath.Join(ec.MetadataDir, name))
+					actualByt, err := ioutil.ReadFile(actualFileName)
 					if err != nil {
 						t.Fatalf("%s: unable to read actual metadata file %s, got %v", tc.name, name, err)
 					}
