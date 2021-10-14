@@ -1,0 +1,6 @@
+- name: tt
+  definition:
+    timeout_seconds: 60
+    url: http://host.docker.internal:4000/graphql
+  comment: ""
+  permissions: "!include tt/permissions/permissions.yaml"

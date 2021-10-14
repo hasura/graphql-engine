@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 
 	"github.com/sirupsen/logrus"
 
@@ -98,8 +99,8 @@ func (t *SourceConfig) Build(metadata *goyaml.MapSlice) metadataobject.ErrParsin
 				return t.error(err)
 			}
 			var tablesKey interface{}
-			err = v3yaml.Unmarshal(tableNodeBytes, newSourcesYamlDecoder(
-				sourcesYamlDecoderOpts{
+			err = v3yaml.Unmarshal(tableNodeBytes, metadatautil.NewYamlDecoder(
+				metadatautil.YamlDecoderOpts{
 					IncludeTagBaseDirectory: filepath.Join(t.MetadataDir, sourcesDirectory),
 				},
 				&tablesKey,
@@ -124,8 +125,8 @@ func (t *SourceConfig) Build(metadata *goyaml.MapSlice) metadataobject.ErrParsin
 				return t.error(err)
 			}
 			var functionsKey interface{}
-			err = v3yaml.Unmarshal(functionsNodeBytes, newSourcesYamlDecoder(
-				sourcesYamlDecoderOpts{
+			err = v3yaml.Unmarshal(functionsNodeBytes, metadatautil.NewYamlDecoder(
+				metadatautil.YamlDecoderOpts{
 					IncludeTagBaseDirectory: filepath.Join(t.MetadataDir, sourcesDirectory),
 				},
 				&functionsKey,

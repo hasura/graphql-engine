@@ -1,0 +1,27 @@
+{
+    "version": 3,
+    "remote_schemas": [
+      {
+        "name": "tt",
+        "definition": {
+          "url": "http://host.docker.internal:4000/graphql",
+          "timeout_seconds": 60
+        },
+        "comment": "",
+        "permissions": [
+          {
+            "role": "manager",
+            "definition": {
+              "schema": "schema  { query: Query }\ntype Query { hello: String\n}"
+            }
+          },
+          {
+            "role": "user",
+            "definition": {
+              "schema": "schema  { query: Query }\ntype Query { hello: String\n}"
+            }
+          }
+        ]
+      }
+    ]
+  }
