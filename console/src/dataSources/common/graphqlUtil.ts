@@ -177,7 +177,10 @@ export const getFullQueryNameBase = (defaultSchema: string) => ({
   const customRootFields = tableConfiguration?.custom_root_fields ?? {};
   if (customRootFields[operation]) return customRootFields[operation]!;
   const withUpdate = operation === 'update' ? 'update_' : '';
-  const withSchema = schema === defaultSchema ? '' : `${schema}_`;
+  const withSchema =
+    schema === defaultSchema || tableConfiguration?.custom_name
+      ? ''
+      : `${schema}_`;
   const withAgg = operation === 'select_aggregate' ? `_aggregate` : '';
   const withDelete = operation === 'delete' ? 'delete_' : '';
   const withInsert = operation === 'insert' ? 'insert_' : '';

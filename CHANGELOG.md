@@ -6,6 +6,7 @@
 - server: fix bug which recreated event triggers every time the graphql-engine started up
 - server: fix bug in OpenAPI when multiple REST endpoints have the same URL path but different method
 - console: design cleanup Modify and Add Table forms (close #7454)
+- console: enable custom graphql root fields for mssql under modify tab
 - cli: split remote schema permissions metadata into seperate files (#7033)
 
 ### Function field names customization (#7405)

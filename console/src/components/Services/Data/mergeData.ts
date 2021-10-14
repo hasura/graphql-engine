@@ -345,7 +345,7 @@ export const mergeDataMssql = (
       view_info: null,
       remote_relationships: [],
       is_enum: false,
-      configuration: undefined,
+      configuration: metadataTable?.configuration as Table['configuration'],
       computed_fields: [],
     };
     result.push(mergedInfo);
