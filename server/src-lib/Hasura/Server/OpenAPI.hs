@@ -19,11 +19,11 @@ import Hasura.RQL.Types.SchemaCache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data EndpointData = EndpointData
-  { endpointUrl :: String,
-    method :: [Text],
-    varList :: [Referenced Param],
-    endpointDescription :: Text, -- contains API comments and graphql query
-    endpointName :: Text
+  { _edUrl :: String,
+    _edMethod :: [Text],
+    _edVarList :: [Referenced Param],
+    _edDescription :: Text, -- contains API comments and graphql query
+    _edName :: Text
   }
 
 getVarList :: EndpointMetadata GQLQueryWithText -> [G.VariableDefinition]
@@ -110,16 +110,13 @@ getURL d =
 
 extractEndpointInfo :: EndpointMethod -> EndpointMetadata GQLQueryWithText -> EndpointData
 extractEndpointInfo method d =
-  let endpointUrl = T.unpack . getURL $ d
-      varList = getVariableDefinitions d
-      endpointDescription = getComment d
-      endpointName = TNE.unNonEmptyText $ unEndpointName $ _ceName d
+  let _edUrl = T.unpack . getURL $ d
+      _edVarList = getVariableDefinitions d
+      _edDescription = getComment d
+      _edName = TNE.unNonEmptyText $ unEndpointName $ _ceName d
    in EndpointData
-        { endpointUrl = endpointUrl,
-          method = [unEndpointMethod method], -- NOTE: Methods are grouped with into matching endpoints - Name used for grouping.
-          varList = varList,
-          endpointDescription = endpointDescription,
-          endpointName = endpointName
+        { _edMethod = [unEndpointMethod method], -- NOTE: Methods are grouped with into matching endpoints - Name used for grouping.
+          ..
         }
 
 getEndpointsData :: SchemaCache -> [EndpointData]
@@ -129,10 +126,10 @@ getEndpointsData sc = map squashEndpointGroup endpointsGrouped
     methodMaps = leaves endpointTrie
     endpointsWithMethods = concatMap (\(m, s) -> map (m,) (S.toList s)) $ concatMap (M.toList . _unMultiMap) methodMaps
     endpointsWithInfo = map (uncurry extractEndpointInfo) endpointsWithMethods
-    endpointsGrouped = LNE.groupBy (\a b -> endpointName a == endpointName b) endpointsWithInfo
+    endpointsGrouped = LNE.groupBy (\a b -> _edName a == _edName b) endpointsWithInfo
 
 squashEndpointGroup :: NonEmpty EndpointData -> EndpointData
-squashEndpointGroup g = (LNE.head g) {method = concatMap method g}
+squashEndpointGroup g = (LNE.head g) {_edMethod = concatMap _edMethod g}
 
 serveJSON :: SchemaCache -> OpenApi
 serveJSON sc = spec & components . schemas .~ defs
@@ -144,12 +141,13 @@ declareOpenApiSpec sc = do
   let mkOperation :: EndpointData -> Operation
       mkOperation ed =
         mempty
-          & description ?~ endpointDescription ed
-          & summary ?~ endpointName ed
+          & description ?~ _edDescription ed
+          & summary ?~ _edName ed
+          & parameters .~ (Inline xHasuraAS : _edVarList ed)
 
       getOPName :: EndpointData -> Text -> Maybe Operation
       getOPName ed methodType =
-        if methodType `elem` method ed
+        if methodType `elem` _edMethod ed
           then Just $ mkOperation ed
           else Nothing
 
@@ -172,13 +170,11 @@ declareOpenApiSpec sc = do
           & put .~ getOPName ed "PUT"
           & delete .~ getOPName ed "DELETE"
           & patch .~ getOPName ed "PATCH"
-          & parameters .~ Inline xHasuraAS :
-        varList ed
 
       endpointLst = getEndpointsData sc
 
       mkOpenAPISchema :: [EndpointData] -> InsOrdHashMap FilePath PathItem
-      mkOpenAPISchema edLst = foldl (\hm ed -> MI.insert (endpointUrl ed) (generatePathItem ed) hm) mempty edLst
+      mkOpenAPISchema edLst = foldl (\hm ed -> MI.insertWith (<>) (_edUrl ed) (generatePathItem ed) hm) mempty edLst
 
       openAPIPaths = mkOpenAPISchema endpointLst
 

@@ -48,6 +48,22 @@
 
             ```
           responses: {}
+          parameters:
+            - schema:
+                type: string
+              in: header
+              name: x-hasura-admin-secret
+              description: >-
+                Your x-hasura-admin-secret will be used for authentication of the API
+                request.
+            - schema:
+                type: string
+              in: query
+              name: first_name
+            - schema:
+                type: string
+              in: query
+              name: last_name
         put:
           summary: multi_method_endpoint
           description: >-
@@ -63,6 +79,22 @@
 
             ```
           responses: {}
+          parameters:
+            - schema:
+                type: string
+              in: header
+              name: x-hasura-admin-secret
+              description: >-
+                Your x-hasura-admin-secret will be used for authentication of the API
+                request.
+            - schema:
+                type: string
+              in: query
+              name: first_name
+            - schema:
+                type: string
+              in: query
+              name: last_name
         post:
           summary: multi_method_endpoint
           description: >-
@@ -78,6 +110,22 @@
 
             ```
           responses: {}
+          parameters:
+            - schema:
+                type: string
+              in: header
+              name: x-hasura-admin-secret
+              description: >-
+                Your x-hasura-admin-secret will be used for authentication of the API
+                request.
+            - schema:
+                type: string
+              in: query
+              name: first_name
+            - schema:
+                type: string
+              in: query
+              name: last_name
         delete:
           summary: multi_method_endpoint
           description: >-
@@ -93,6 +141,22 @@
 
             ```
           responses: {}
+          parameters:
+            - schema:
+                type: string
+              in: header
+              name: x-hasura-admin-secret
+              description: >-
+                Your x-hasura-admin-secret will be used for authentication of the API
+                request.
+            - schema:
+                type: string
+              in: query
+              name: first_name
+            - schema:
+                type: string
+              in: query
+              name: last_name
         patch:
           summary: multi_method_endpoint
           description: >-
@@ -108,22 +172,22 @@
 
             ```
           responses: {}
-        parameters:
-          - schema:
-              type: string
-            in: header
-            name: x-hasura-admin-secret
-            description: >-
-              Your x-hasura-admin-secret will be used for authentication of the API
-              request.
-          - schema:
-              type: string
-            in: query
-            name: first_name
-          - schema:
-              type: string
-            in: query
-            name: last_name
+          parameters:
+            - schema:
+                type: string
+              in: header
+              name: x-hasura-admin-secret
+              description: >-
+                Your x-hasura-admin-secret will be used for authentication of the API
+                request.
+            - schema:
+                type: string
+              in: query
+              name: first_name
+            - schema:
+                type: string
+              in: query
+              name: last_name
     components: {}
 
 - description: Try to remove the endpoint

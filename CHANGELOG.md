@@ -4,6 +4,7 @@
 (Add entries below in the order of server, console, cli, docs, others)
 
 - server: fix bug which recreated event triggers every time the graphql-engine started up
+- server: fix bug in OpenAPI when multiple REST endpoints have the same URL path but different method
 - console: design cleanup Modify and Add Table forms (close #7454)
 - cli: split remote schema permissions metadata into seperate files (#7033)
 
