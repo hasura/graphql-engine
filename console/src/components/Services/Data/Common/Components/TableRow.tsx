@@ -126,6 +126,7 @@ export const TableRow: React.FC<TableRowProps> = ({
       <label className={`${styles.radioLabel} radio-inline`}>
         <input
           type="radio"
+          className="legacy-input-fix"
           ref={node => {
             setRef('insertRadioNode', node);
           }}
@@ -150,6 +151,7 @@ export const TableRow: React.FC<TableRowProps> = ({
       <label className={`${styles.radioLabel} radio-inline`}>
         <input
           type="radio"
+          className="legacy-input-fix"
           ref={node => {
             setRef('nullNode', node);
           }}
@@ -163,6 +165,7 @@ export const TableRow: React.FC<TableRowProps> = ({
       <label className={`${styles.radioLabel} radio-inline`}>
         <input
           type="radio"
+          className="legacy-input-fix"
           ref={node => {
             setRef('defaultNode', node);
           }}

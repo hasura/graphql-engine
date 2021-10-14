@@ -2,11 +2,10 @@ package cli
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-
-	"github.com/sirupsen/logrus"
 
 	"github.com/gofrs/uuid"
 	homedir "github.com/mitchellh/go-homedir"
@@ -45,7 +44,6 @@ type rawGlobalConfig struct {
 	ShowUpdateNotification *bool       `json:"show_update_notification"`
 	CLIEnvironment         Environment `json:"cli_environment"`
 
-	logger      *logrus.Logger
 	shoudlWrite bool
 }
 
@@ -66,7 +64,7 @@ func (c *rawGlobalConfig) validateKeys() error {
 	if c.UUID == nil {
 		u, err := uuid.NewV4()
 		if err != nil {
-			errors.Wrap(err, "failed generating uuid")
+			return fmt.Errorf("failed generating uuid : %w", err)
 		}
 		uid := u.String()
 		c.UUID = &uid
@@ -157,7 +155,7 @@ func (ec *ExecutionContext) setupGlobalConfig() error {
 		ec.Logger.Debugf("global config file written at '%s' with content '%v'", ec.GlobalConfigFile, gc)
 
 		// also show a notice about telemetry
-		ec.Logger.Info(StrTelemetryNotice)
+		ec.Logger.Info(TelemetryNotice)
 
 	} else if os.IsExist(err) || err == nil {
 

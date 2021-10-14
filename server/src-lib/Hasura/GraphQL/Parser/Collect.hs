@@ -1,38 +1,33 @@
-{-# LANGUAGE StrictData #-}
-
-{-| This module implements two parts of the GraphQL specification:
-
-  1. <§ 5.3.2 Field Selection Merging http://spec.graphql.org/June2018/#sec-Field-Selection-Merging>
-  2. <§ 6.3.2 Field Collection http://spec.graphql.org/June2018/#sec-Field-Collection>
-
-These are described in completely different sections of the specification, but
-they’re actually highly related: both essentially normalize fields in a
-selection set. -}
+-- | This module implements two parts of the GraphQL specification:
+--
+--  1. <§ 5.3.2 Field Selection Merging http://spec.graphql.org/June2018/#sec-Field-Selection-Merging>
+--  2. <§ 6.3.2 Field Collection http://spec.graphql.org/June2018/#sec-Field-Collection>
+--
+-- These are described in completely different sections of the specification, but
+-- they’re actually highly related: both essentially normalize fields in a
+-- selection set.
 module Hasura.GraphQL.Parser.Collect
-  ( collectFields
-  ) where
+  ( collectFields,
+  )
+where
 
-import           Hasura.Prelude
-
-import qualified Data.HashMap.Strict.InsOrd       as OMap
-
-import           Data.Text.Extended
-import           Language.GraphQL.Draft.Syntax
-
-import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Parser.Directives
-import           Hasura.GraphQL.Parser.Schema
-
+import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.Text.Extended
+import Hasura.GraphQL.Parser.Class
+import Hasura.GraphQL.Parser.Directives
+import Hasura.GraphQL.Parser.Schema
+import Hasura.Prelude
+import Language.GraphQL.Draft.Syntax
 
 -- | Collects the effective set of fields queried by a selection set by
 -- flattening fragments and merging duplicate fields.
-collectFields
-  :: (MonadParse m, Foldable t)
-  => t Name
-  -- ^ The names of the object types and interface types the 'SelectionSet' is
+collectFields ::
+  (MonadParse m, Foldable t) =>
+  -- | The names of the object types and interface types the 'SelectionSet' is
   -- selecting against.
-  -> SelectionSet NoFragments Variable
-  -> m (InsOrdHashMap Name (Field NoFragments Variable))
+  t Name ->
+  SelectionSet NoFragments Variable ->
+  m (InsOrdHashMap Name (Field NoFragments Variable))
 collectFields objectTypeNames selectionSet =
   mergeFields =<< flattenSelectionSet objectTypeNames selectionSet
 
@@ -86,12 +81,12 @@ collectFields objectTypeNames selectionSet =
 --
 -- This function also applies @\@include@ and @\@skip@ directives, since they
 -- should be applied before fragments are flattened.
-flattenSelectionSet
-  :: (MonadParse m, Foldable t)
-  => t Name
-  -- ^ The name of the object type the 'SelectionSet' is selecting against.
-  -> SelectionSet NoFragments Variable
-  -> m [Field NoFragments Variable]
+flattenSelectionSet ::
+  (MonadParse m, Foldable t) =>
+  -- | The name of the object type the 'SelectionSet' is selecting against.
+  t Name ->
+  SelectionSet NoFragments Variable ->
+  m [Field NoFragments Variable]
 flattenSelectionSet objectTypeNames = fmap concat . traverse flattenSelection
   where
     -- The easy case: just a single field.
@@ -112,7 +107,6 @@ flattenSelectionSet objectTypeNames = fmap concat . traverse flattenSelection
             -- There is a type condition, but it is just the type of the
             -- selection set; the fragment trivially applies.
             | typeName `elem` objectTypeNames -> flattenInlineFragment fragment
-
             -- Otherwise, the fragment must not apply, because we do not currently
             -- support interfaces or unions. According to the GraphQL spec, it is
             -- an *error* to select a fragment that cannot possibly apply to the
@@ -120,17 +114,17 @@ flattenSelectionSet objectTypeNames = fmap concat . traverse flattenSelection
             -- http://spec.graphql.org/June2018/#sec-Fragment-spread-is-possible.
             -- Therefore, we raise an error.
             | otherwise -> return []
-              {- parseError $ "illegal type condition in fragment; type "
-                <> typeName <<> " is unrelated to any of the types " <>
-                Text.intercalate ", " (fmap dquoteTxt (toList objectTypeNames))
-              -}
+    {- parseError $ "illegal type condition in fragment; type "
+      <> typeName <<> " is unrelated to any of the types " <>
+      Text.intercalate ", " (fmap dquoteTxt (toList objectTypeNames))
+    -}
 
-    flattenInlineFragment InlineFragment{ _ifSelectionSet  } = do
+    flattenInlineFragment InlineFragment {_ifSelectionSet} = do
       flattenSelectionSet objectTypeNames _ifSelectionSet
 
     applyInclusionDirectives location directives continue = do
-      dirMap        <- parseDirectives inclusionDirectives (DLExecutable location) directives
-      shouldSkip    <- withDirective dirMap skip    $ pure . fromMaybe False
+      dirMap <- parseDirectives inclusionDirectives (DLExecutable location) directives
+      shouldSkip <- withDirective dirMap skip $ pure . fromMaybe False
       shouldInclude <- withDirective dirMap include $ pure . fromMaybe True
       if shouldInclude && not shouldSkip
         then continue
@@ -138,10 +132,10 @@ flattenSelectionSet objectTypeNames = fmap concat . traverse flattenSelection
 
 -- | Merges fields according to the rules in the GraphQL specification, specifically
 -- <§ 5.3.2 Field Selection Merging http://spec.graphql.org/June2018/#sec-Field-Selection-Merging>.
-mergeFields
-  :: (MonadParse m, Eq var)
-  => [Field NoFragments var]
-  -> m (InsOrdHashMap Name (Field NoFragments var))
+mergeFields ::
+  (MonadParse m, Eq var) =>
+  [Field NoFragments var] ->
+  m (InsOrdHashMap Name (Field NoFragments var))
 mergeFields = foldM addField OMap.empty
   where
     addField fields newField = case OMap.lookup alias fields of
@@ -154,22 +148,25 @@ mergeFields = foldM addField OMap.empty
         alias = fromMaybe (_fName newField) (_fAlias newField)
 
     mergeField alias oldField newField = do
-      unless (_fName oldField == _fName newField) $ parseError $
-        "selection of both " <> _fName oldField <<> " and " <>
-         _fName newField <<> " specify the same response name, " <>> alias
+      unless (_fName oldField == _fName newField) $
+        parseError $
+          "selection of both " <> _fName oldField <<> " and "
+            <> _fName newField <<> " specify the same response name, " <>> alias
 
-      unless (_fArguments oldField == _fArguments newField) $ parseError $
-        "inconsistent arguments between multiple selections of " <>
-        "field " <>> _fName oldField
+      unless (_fArguments oldField == _fArguments newField) $
+        parseError $
+          "inconsistent arguments between multiple selections of "
+            <> "field " <>> _fName oldField
 
-      pure $! Field
-        { _fAlias = Just alias
-        , _fName = _fName oldField
-        , _fArguments = _fArguments oldField
-        , _fDirectives = _fDirectives oldField <> _fDirectives newField
-        -- see Note [Lazily merge selection sets]
-        , _fSelectionSet = _fSelectionSet oldField ++ _fSelectionSet newField
-        }
+      pure
+        $! Field
+          { _fAlias = Just alias,
+            _fName = _fName oldField,
+            _fArguments = _fArguments oldField,
+            _fDirectives = _fDirectives oldField <> _fDirectives newField,
+            -- see Note [Lazily merge selection sets]
+            _fSelectionSet = _fSelectionSet oldField ++ _fSelectionSet newField
+          }
 
 {- Note [Lazily merge selection sets]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

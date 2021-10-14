@@ -22,14 +22,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strings"
 	"syscall"
-	"unicode"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -163,23 +160,6 @@ func HandlePluginCommand(pluginHandler PluginHandler, cmdArgs []string) error {
 	}
 
 	return nil
-}
-
-func ensureDirs(paths ...string) error {
-	for _, p := range paths {
-		if err := os.MkdirAll(p, 0755); err != nil {
-			return errors.Wrapf(err, "failed to ensure create directory %q", p)
-		}
-	}
-	return nil
-}
-
-func indent(s string) string {
-	out := "\\\n"
-	s = strings.TrimRightFunc(s, unicode.IsSpace)
-	out += regexp.MustCompile("(?m)^").ReplaceAllString(s, " | ")
-	out += "\n/"
-	return out
 }
 
 func limitString(s string, length int) string {

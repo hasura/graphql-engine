@@ -41,3 +41,4 @@ There are two types of timed events:
 
    create-cron-trigger
    create-one-off-scheduled-event
+   clean-up

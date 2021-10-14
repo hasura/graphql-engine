@@ -186,6 +186,11 @@ class TestExecution:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'query_with_arr_rel.yaml')
 
+    def test_regression_7172(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_regression_7172.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'regression_7172.yaml')
+
     def test_basic_relationship_joining_singleton_to_array(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_joining_singleton_with_array.yaml')
         assert st_code == 200, resp
@@ -257,6 +262,15 @@ class TestExecution:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_nested_args.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'query_with_errors_arr.yaml')
+
+    def test_with_aliased_remote_join_keys(self, hge_ctx):
+        """
+        Regression test for https://github.com/hasura/graphql-engine/issues/7180.
+        """
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        print(resp)
+        check_query_f(hge_ctx, self.dir() + 'basic_relationship_alias.yaml')
 
     def test_with_scalar_relationship(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_scalar.yaml')
@@ -408,3 +422,15 @@ class TestComputedFieldsInRemoteRelationship:
 
     def test_remote_join_with_computed_field_session(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + 'remote_join_with_computed_field_session.yaml')
+
+@use_test_fixtures
+class TestRemoteRelationshipFieldType:
+
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/remote_relationships"
+
+    def test_remote_relationship_field_type(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + '/setup_remote_rel_nested_args.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + '/remote_relationship_field_type.yaml')

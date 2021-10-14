@@ -127,7 +127,6 @@ rate_limit:
 					wantContent[k] = string(v)
 				}
 				assert.NoError(t, err)
-				assert.NoError(t, err)
 				if diff := cmp.Diff(wantContent, gotContent); diff != "" {
 					t.Errorf("Export() mismatch (-want +got):\n%s", diff)
 				}

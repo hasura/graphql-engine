@@ -38,12 +38,12 @@ of the webhook calls in the ``extensions.internal`` field.
     {
       "errors": [
         {
-          "message": "expecting object or array of objects for action webhook response",
+          "message": "expecting null, object or array of objects for action webhook response",
           "extensions": {
             "code": "parse-failed",
             "path": "$",
             "internal": {
-              "error": "expecting object or array of objects for action webhook response",
+              "error": "expecting null, object or array of objects for action webhook response",
               "response": {
                 "status": 200,
                 "headers": [
@@ -67,7 +67,8 @@ of the webhook calls in the ``extensions.internal`` field.
                   "input": {
                     "email": "foo@boo.com",
                     "name": "Foo"
-                  }
+                  },
+                  "request_query": "mutation {\n    create_user(email: \"foo@bar.com\", name: \"Foo\"){\n      id\n      user {\n        name\n        email\n      }\n    }\n  }\n"
                 }
               }
             }

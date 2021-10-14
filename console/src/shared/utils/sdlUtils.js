@@ -207,11 +207,15 @@ export const getActionDefinitionFromSdl = sdl => {
     return definition;
   }
 
-  return {
-    ...definition,
-    type: actionType,
-    ...getActionFromOperationAstDef(sdlDef.fields[0]),
-  };
+  const defObj = sdlDef.fields.length
+    ? {
+        ...definition,
+        type: actionType,
+        ...getActionFromOperationAstDef(sdlDef.fields[0]),
+      }
+    : { ...definition, type: actionType };
+
+  return defObj;
 };
 
 const getArgumentsSdl = args => {
@@ -227,7 +231,7 @@ const getArgumentsSdl = args => {
 const getFieldsSdl = fields => {
   const fieldsSdl = fields.map(f => {
     const argSdl = f.arguments ? getArgumentsSdl(f.arguments) : '';
-    return `  ${getEntityDescriptionSdl(f)}${f.name} ${argSdl}: ${f.type}`;
+    return `  ${getEntityDescriptionSdl(f)}${f.name}${argSdl}: ${f.type}`;
   });
   return fieldsSdl.join('\n');
 };

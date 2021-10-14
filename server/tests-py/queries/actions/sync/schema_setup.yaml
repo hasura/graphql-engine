@@ -52,6 +52,15 @@ args:
       - name: age
         type: Int
 
+    - name: IntentionalErrorInput
+      fields:
+      - name: message
+        type: String!
+      - name: code
+        type: String
+      - name: extensions
+        type: json
+
     objects:
     - name: UserId
       fields:
@@ -75,6 +84,11 @@ args:
         type: ID! # For issue https://github.com/hasura/graphql-engine/issues/4061
       - name: name
         type: String
+    
+    - name: NullableResp
+      fields:
+      - name: id
+        type: Int
 
 - type: create_action
   args:
@@ -113,6 +127,39 @@ args:
 
 - type: create_action
   args:
+    name: mirror_transformed
+    definition:
+      kind: synchronous
+      arguments:
+      - name: arg
+        type: InObject!
+      output_type: OutObject
+      handler: http://127.0.0.1:5593/mirror-action
+
+- type: update_action
+  args:
+    name: mirror_transformed
+    definition:
+      kind: synchronous
+      arguments:
+      - name: arg
+        type: InObject!
+      output_type: OutObject
+      handler: http://127.0.0.1:5593/mirror-action
+    request_transform:
+      template_engine: Kriti
+      body: |
+        {
+          "input": {
+            "arg": {
+              "id": {{ $body.input.arg.name }},
+              "name": {{ $body.input.arg.id }}
+            }
+          }
+        }
+
+- type: create_action
+  args:
     name: get_user_by_email
     definition:
       type: query
@@ -132,6 +179,27 @@ args:
         type: String!
       output_type: '[UserId]!'
       handler: http://127.0.0.1:5593/get-users-by-email
+
+- type: create_action
+  args:
+    name: intentional_error
+    definition:
+      type: query
+      arguments:
+      - name: blob
+        type: IntentionalErrorInput!
+      # this can be anything, since this action never succeeds
+      output_type: '[UserId]!'
+      handler: http://127.0.0.1:5593/intentional-error
+
+- type: create_action
+  args:
+    name: null_response
+    definition:
+      kind: synchronous
+      arguments:
+      output_type: NullableResp
+      handler: http://127.0.0.1:5593/null-response
 
 - type: create_select_permission
   args:

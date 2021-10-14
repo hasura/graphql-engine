@@ -1,26 +1,28 @@
+{-# LANGUAGE ApplicativeDo #-}
+
 module Hasura.GraphQL.Schema.BoolExp
-  ( boolExp
-  , mkBoolOperator
-  , equalityOperators
-  , comparisonOperators
-  ) where
+  ( boolExp,
+    mkBoolOperator,
+    equalityOperators,
+    comparisonOperators,
+  )
+where
 
-import           Hasura.Prelude
-
-import qualified Language.GraphQL.Draft.Syntax as G
-
-import           Data.Text.Extended
-
-import qualified Hasura.GraphQL.Parser         as P
-
-import           Hasura.GraphQL.Parser         (InputFieldsParser, Kind (..), Parser,
-                                                UnpreparedValue)
-import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Schema.Backend
-import           Hasura.GraphQL.Schema.Common  (partialSQLExpToUnpreparedValue)
-import           Hasura.GraphQL.Schema.Table
-import           Hasura.RQL.Types
-
+import Data.Text.Extended
+import Hasura.GraphQL.Parser
+  ( InputFieldsParser,
+    Kind (..),
+    Parser,
+    UnpreparedValue,
+  )
+import Hasura.GraphQL.Parser qualified as P
+import Hasura.GraphQL.Parser.Class
+import Hasura.GraphQL.Schema.Backend
+import Hasura.GraphQL.Schema.Common (partialSQLExpToUnpreparedValue)
+import Hasura.GraphQL.Schema.Table
+import Hasura.Prelude
+import Hasura.RQL.Types
+import Language.GraphQL.Draft.Syntax qualified as G
 
 -- |
 -- > input type_bool_exp {
@@ -30,49 +32,53 @@ import           Hasura.RQL.Types
 -- >   column: type_comparison_exp
 -- >   ...
 -- > }
-boolExp
-  :: forall b r m n. MonadBuildSchema b r m n
-  => SourceName
-  -> TableInfo b
-  -> Maybe (SelPermInfo b)
-  -> m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
+boolExp ::
+  forall b r m n.
+  MonadBuildSchema b r m n =>
+  SourceName ->
+  TableInfo b ->
+  Maybe (SelPermInfo b) ->
+  m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
 boolExp sourceName tableInfo selectPermissions = memoizeOn 'boolExp (sourceName, tableName) $ do
   tableGQLName <- getTableGQLName tableInfo
   let name = tableGQLName <> $$(G.litName "_bool_exp")
-  let description = G.Description $
-        "Boolean expression to filter rows from the table " <> tableName <<>
-        ". All fields are combined with a logical 'AND'."
+  let description =
+        G.Description $
+          "Boolean expression to filter rows from the table " <> tableName
+            <<> ". All fields are combined with a logical 'AND'."
 
-  tableFieldParsers <- catMaybes <$> maybe
-    (pure [])
-    (traverse mkField <=< tableSelectFields sourceName tableInfo)
-    selectPermissions
+  tableFieldParsers <-
+    catMaybes
+      <$> maybe
+        (pure [])
+        (traverse mkField <=< tableSelectFields sourceName tableInfo)
+        selectPermissions
   recur <- boolExp sourceName tableInfo selectPermissions
   -- Bafflingly, ApplicativeDo doesn’t work if we inline this definition (I
   -- think the TH splices throw it off), so we have to define it separately.
   let specialFieldParsers =
-        [ P.fieldOptional $$(G.litName "_or")  Nothing (BoolOr  <$> P.list recur)
-        , P.fieldOptional $$(G.litName "_and") Nothing (BoolAnd <$> P.list recur)
-        , P.fieldOptional $$(G.litName "_not") Nothing (BoolNot <$> recur)
+        [ P.fieldOptional $$(G.litName "_or") Nothing (BoolOr <$> P.list recur),
+          P.fieldOptional $$(G.litName "_and") Nothing (BoolAnd <$> P.list recur),
+          P.fieldOptional $$(G.litName "_not") Nothing (BoolNot <$> recur)
         ]
 
-  pure $ BoolAnd <$> P.object name (Just description) do
-    tableFields <- map BoolFld . catMaybes <$> sequenceA tableFieldParsers
-    specialFields <- catMaybes <$> sequenceA specialFieldParsers
-    pure (tableFields ++ specialFields)
+  pure $
+    BoolAnd <$> P.object name (Just description) do
+      tableFields <- map BoolFld . catMaybes <$> sequenceA tableFieldParsers
+      specialFields <- catMaybes <$> sequenceA specialFieldParsers
+      pure (tableFields ++ specialFields)
   where
     tableName = tableInfoName tableInfo
 
-    mkField
-      :: FieldInfo b
-      -> m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld b (UnpreparedValue b)))))
+    mkField ::
+      FieldInfo b ->
+      m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld b (UnpreparedValue b)))))
     mkField fieldInfo = runMaybeT do
       fieldName <- hoistMaybe $ fieldInfoGraphQLName fieldInfo
       P.fieldOptional fieldName Nothing <$> case fieldInfo of
         -- field_name: field_type_comparison_exp
         FIColumn columnInfo ->
           lift $ fmap (AVColumn columnInfo) <$> comparisonExps @b (pgiType columnInfo)
-
         -- field_name: field_type_bool_exp
         FIRelationship relationshipInfo -> do
           remoteTableInfo <- askTableInfo sourceName $ riRTable relationshipInfo
@@ -80,9 +86,8 @@ boolExp sourceName tableInfo selectPermissions = memoizeOn 'boolExp (sourceName,
           let remoteTableFilter = (fmap . fmap) partialSQLExpToUnpreparedValue $ maybe annBoolExpTrue spiFilter remotePermissions
           remoteBoolExp <- lift $ boolExp sourceName remoteTableInfo remotePermissions
           pure $ fmap (AVRelationship relationshipInfo . andAnnBoolExps remoteTableFilter) remoteBoolExp
-
-        FIComputedField ComputedFieldInfo{..} -> do
-          let ComputedFieldFunction{..} = _cfiFunction
+        FIComputedField ComputedFieldInfo {..} -> do
+          let ComputedFieldFunction {..} = _cfiFunction
           -- For a computed field to qualify in boolean expression it shouldn't have any input arguments
           case toList _cffInputArgs of
             [] -> do
@@ -90,17 +95,15 @@ boolExp sourceName tableInfo selectPermissions = memoizeOn 'boolExp (sourceName,
                     mkSessionArgumentPresence P.UVSession _cffSessionArgument _cffTableArgument
               fmap (AVComputedField . AnnComputedFieldBoolExp _cfiXComputedFieldInfo _cfiName _cffName sessionArgPresence)
                 <$> case _cfiReturnType of
-                      CFRScalar scalarType -> lift $ fmap CFBEScalar <$> comparisonExps @b (ColumnScalar scalarType)
-                      CFRSetofTable table -> do
-                        info <- askTableInfo sourceName table
-                        permissions <- lift $ tableSelectPermissions info
-                        lift $ fmap (CFBETable table) <$> boolExp sourceName info permissions
-
-            _  -> hoistMaybe Nothing
+                  CFRScalar scalarType -> lift $ fmap CFBEScalar <$> comparisonExps @b (ColumnScalar scalarType)
+                  CFRSetofTable table -> do
+                    info <- askTableInfo sourceName table
+                    permissions <- lift $ tableSelectPermissions info
+                    lift $ fmap (CFBETable table) <$> boolExp sourceName info permissions
+            _ -> hoistMaybe Nothing
 
         -- Using remote relationship fields in boolean expressions is not supported.
         FIRemoteRelationship _ -> empty
-
 
 {- Note [Nullability in comparison operators]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -120,7 +123,6 @@ which in turn would generate a SQL query along the lines of:
 but `= NULL` might not do what they expect. For instance, on Postgres, it always
 evaluates to False!
 
-
 Even operators for which `null` is a valid value must be careful in their
 implementation. An explicit `null` must always be handled explicitly! If,
 instead, an explicit null is ignored:
@@ -136,7 +138,6 @@ then
 Now we’ve gone and deleted every user in the database. Whoops! Hopefully the
 user had backups!
 
-
 In most cases, as mentioned above, we avoid this problem by making the column
 value non-nullable (which is correct, since we never treat a null value as a SQL
 NULL), then creating the field using 'fieldOptional'. This creates a parser that
@@ -146,7 +147,6 @@ nullability] in Hasura.GraphQL.Parser.Internal.Parser for more details.
 
 Additionally, it is worth nothing that the `column` parser *does* handle
 explicit nulls, by creating a Null column value.
-
 
 But... the story doesn't end there. Some of our users WANT this peculiar
 behaviour. For instance, they want to be able to express the following:
@@ -170,49 +170,48 @@ To do so, we have to treat explicit nulls as implicit one: this is what the
 been called at all.
 -}
 
-
 -- This is temporary, and should be removed as soon as possible.
-mkBoolOperator
-  :: (MonadParse n, 'Input P.<: k)
-  => Bool
-  -- ^ shall this be collapsed to True when null is given?
-  -> G.Name
-  -- ^ name of this operator
-  -> Maybe G.Description
-  -- ^ optional description
-  -> Parser k n a
-  -- ^ parser for the underlying value
-  -> InputFieldsParser n (Maybe a)
-mkBoolOperator True  name desc = fmap join . P.fieldOptional name desc . P.nullable
+mkBoolOperator ::
+  (MonadParse n, 'Input P.<: k) =>
+  -- | shall this be collapsed to True when null is given?
+  Bool ->
+  -- | name of this operator
+  G.Name ->
+  -- | optional description
+  Maybe G.Description ->
+  -- | parser for the underlying value
+  Parser k n a ->
+  InputFieldsParser n (Maybe a)
+mkBoolOperator True name desc = fmap join . P.fieldOptional name desc . P.nullable
 mkBoolOperator False name desc = P.fieldOptional name desc
 
-equalityOperators
-  :: (MonadParse n, 'Input P.<: k)
-  => Bool
-  -- ^ shall this be collapsed to True when null is given?
-  -> Parser k n (UnpreparedValue b)
-  -- ^ parser for one column value
-  -> Parser k n (UnpreparedValue b)
-  -- ^ parser for a list of column values
-  -> [InputFieldsParser n (Maybe (OpExpG b (UnpreparedValue b)))]
+equalityOperators ::
+  (MonadParse n, 'Input P.<: k) =>
+  -- | shall this be collapsed to True when null is given?
+  Bool ->
+  -- | parser for one column value
+  Parser k n (UnpreparedValue b) ->
+  -- | parser for a list of column values
+  Parser k n (UnpreparedValue b) ->
+  [InputFieldsParser n (Maybe (OpExpG b (UnpreparedValue b)))]
 equalityOperators collapseIfNull valueParser valueListParser =
-  [ mkBoolOperator collapseIfNull $$(G.litName "_is_null") Nothing $ bool ANISNOTNULL ANISNULL <$> P.boolean
-  , mkBoolOperator collapseIfNull $$(G.litName "_eq")      Nothing $ AEQ True <$> valueParser
-  , mkBoolOperator collapseIfNull $$(G.litName "_neq")     Nothing $ ANE True <$> valueParser
-  , mkBoolOperator collapseIfNull $$(G.litName "_in")      Nothing $ AIN  <$> valueListParser
-  , mkBoolOperator collapseIfNull $$(G.litName "_nin")     Nothing $ ANIN <$> valueListParser
+  [ mkBoolOperator collapseIfNull $$(G.litName "_is_null") Nothing $ bool ANISNOTNULL ANISNULL <$> P.boolean,
+    mkBoolOperator collapseIfNull $$(G.litName "_eq") Nothing $ AEQ True <$> valueParser,
+    mkBoolOperator collapseIfNull $$(G.litName "_neq") Nothing $ ANE True <$> valueParser,
+    mkBoolOperator collapseIfNull $$(G.litName "_in") Nothing $ AIN <$> valueListParser,
+    mkBoolOperator collapseIfNull $$(G.litName "_nin") Nothing $ ANIN <$> valueListParser
   ]
 
-comparisonOperators
-  :: (MonadParse n, 'Input P.<: k)
-  => Bool
-  -- ^ shall this be collapsed to True when null is given?
-  -> Parser k n (UnpreparedValue b)
-  -- ^ parser for one column value
-  -> [InputFieldsParser n (Maybe (OpExpG b (UnpreparedValue b)))]
+comparisonOperators ::
+  (MonadParse n, 'Input P.<: k) =>
+  -- | shall this be collapsed to True when null is given?
+  Bool ->
+  -- | parser for one column value
+  Parser k n (UnpreparedValue b) ->
+  [InputFieldsParser n (Maybe (OpExpG b (UnpreparedValue b)))]
 comparisonOperators collapseIfNull valueParser =
-  [ mkBoolOperator collapseIfNull $$(G.litName "_gt")  Nothing $ AGT  <$> valueParser
-  , mkBoolOperator collapseIfNull $$(G.litName "_lt")  Nothing $ ALT  <$> valueParser
-  , mkBoolOperator collapseIfNull $$(G.litName "_gte") Nothing $ AGTE <$> valueParser
-  , mkBoolOperator collapseIfNull $$(G.litName "_lte") Nothing $ ALTE <$> valueParser
+  [ mkBoolOperator collapseIfNull $$(G.litName "_gt") Nothing $ AGT <$> valueParser,
+    mkBoolOperator collapseIfNull $$(G.litName "_lt") Nothing $ ALT <$> valueParser,
+    mkBoolOperator collapseIfNull $$(G.litName "_gte") Nothing $ AGTE <$> valueParser,
+    mkBoolOperator collapseIfNull $$(G.litName "_lte") Nothing $ ALTE <$> valueParser
   ]

@@ -1,0 +1,9 @@
+description: Replace schema cache (metadata) with no initial tables
+url: /v1/metadata
+status: 200
+response:
+  message: success
+query:
+  type: replace_metadata
+  args:
+    tables: []

@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
@@ -48,7 +49,9 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
 	f.String("access-key", "", "access key for Hasura GraphQL engine")
-	f.MarkDeprecated("access-key", "use --admin-secret instead")
+	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
 	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
 	f.String("certificate-authority", "", "path to a cert file for the certificate authority")
 	f.Bool("disable-interactive", false, "disables interactive prompts (default: false)")
@@ -61,7 +64,9 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	util.BindPFlag(v, "disable_interactive", f.Lookup("disable-interactive"))
 
 	f.BoolVar(&ec.DisableAutoStateMigration, "disable-auto-state-migration", false, "after a config v3 update, disable automatically moving state from hdb_catalog.schema_migrations to catalog state")
-	f.MarkHidden("disable-auto-state-migration")
+	if err := f.MarkHidden("disable-auto-state-migration"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
 
 	migrateCmd.AddCommand(
 		newMigrateApplyCmd(ec),
@@ -127,9 +132,17 @@ func validateConfigV3Flags(cmd *cobra.Command, ec *cli.ExecutionContext) error {
 		return nil
 	}
 
+	// In case of single database, just choose the source automatically
+	sources, err := metadatautil.GetSources(ec.APIClient.V1Metadata.ExportMetadata)
+	if err != nil {
+		return fmt.Errorf("unable to get available databases: %w", err)
+	}
+	if !cmd.Flags().Changed("database-name") && len(sources) == 1 {
+		ec.Source.Name = sources[0]
+	}
 	// for project using config equal to or greater than v3
 	// database-name flag is required when running in non-terminal mode
-	if (!ec.IsTerminal || ec.Config.DisableInteractive) && !cmd.Flags().Changed("database-name") {
+	if (!ec.IsTerminal || ec.Config.DisableInteractive) && ec.Source.Name == "" {
 		return errDatabaseNameNotSet
 	}
 

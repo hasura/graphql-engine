@@ -2,8 +2,8 @@
    :description: Manage scheduled triggers with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, scheduled trigger
 
-Schema/Metadata API Reference: Scheduled Triggers
-=================================================
+Schema/Metadata API Reference: Scheduled Triggers (Deprecated)
+==============================================================
 
 .. contents:: Table of contents
   :backlinks: none

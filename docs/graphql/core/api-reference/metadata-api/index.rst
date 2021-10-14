@@ -137,6 +137,11 @@ The various types of queries are listed in the following table:
      - 1
      - Remove a Postgres SQL function
 
+   * - :ref:`pg_set_function_customization <pg_set_function_customization>`
+     - :ref:`pg_set_function_customization_args <pg_set_function_customization_syntax>`
+     - 1
+     - Set function customization of an already tracked Postgres function
+
    * - :ref:`pg_create_function_permission`
      - :ref:`pg_create_function_permission_args <pg_create_function_permission_syntax>`
      - 1
@@ -247,6 +252,21 @@ The various types of queries are listed in the following table:
      - 1
      - Invoke a trigger with custom payload on a Postgres table
 
+   * - :ref:`bigquery_track_table <bigquery_track_table>`
+     - :ref:`bigquery_track_table_args <bigquery_track_table_syntax>`
+     - 1
+     - Add a BigQuery table/view with configuration
+
+   * - :ref:`bigquery_untrack_table <bigquery_untrack_table>`
+     - :ref:`bigquery_untrack_table_args <bigquery_untrack_table_syntax>`
+     - 1
+     - Remove a BigQuery table/view
+
+   * - :ref:`bigquery_set_table_customization <bigquery_set_table_customization>`
+     - :ref:`bigquery_set_table_customization_args <bigquery_set_table_customization_syntax>`
+     - 1
+     - Set table customization of an already tracked BigQuery table
+
    * - :ref:`mssql_add_source <mssql_add_source>`
      - :ref:`mssql_add_source_args <mssql_add_source_syntax>`
      - 1
@@ -356,6 +376,11 @@ The various types of queries are listed in the following table:
      - :ref:`create_scheduled_event_args <metadata_create_scheduled_event_syntax>`
      - 1
      - Create a new scheduled event
+   
+   * - :ref:`metadata_delete_scheduled_event`
+     - :ref:`delete_scheduled_event_args <metadata_delete_scheduled_event_syntax>`
+     - 1
+     - Delete a scheduled event
 
    * - :ref:`metadata_add_remote_schema`
      - :ref:`add_remote_schema_args <metadata_add_remote_schema_syntax>`
@@ -527,6 +552,16 @@ The various types of queries are listed in the following table:
      - :ref:`set_graphql_schema_introspection_options_args <set_graphql_schema_introspection_options_syntax>`
      - 1
      - Set graphql introspection options
+
+   * - :ref:`metadata_add_host_to_tls_allowlist`
+     - :ref:`add_host_to_tls_allowlist_args <add_host_to_tls_allowlist_syntax>`
+     - 1
+     - Add an endpoint to the TLS Allowlist
+
+   * - :ref:`metadata_drop_host_from_tls_allowlist`
+     - :ref:`drop_host_from_tls_allowlist_args <drop_host_from_tls_allowlist_syntax>`
+     - 1
+     - Drop an endpoint from the TLS Allowlist
 
 
 .. TODO: MSSQL_UNSUPPORTED
@@ -701,3 +736,4 @@ The version is incremented on any operation that modified metadata as well as ``
   Actions <actions>
   Manage Metadata <manage-metadata>
   Introspection options <introspection>
+  Network Options <network>

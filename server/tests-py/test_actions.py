@@ -6,6 +6,7 @@ import subprocess
 
 from validate import check_query_f, check_query, get_conf_f
 from remote_server import NodeGraphQL
+from conftest import use_action_fixtures
 
 """
 TODO:- Test Actions metadata
@@ -18,12 +19,6 @@ def graphql_service():
     yield svc
     svc.stop()
 
-
-use_action_fixtures = pytest.mark.usefixtures(
-    "actions_fixture",
-    'per_class_db_schema_for_mutation_tests',
-    'per_method_db_data_for_mutation_tests'
-)
 
 use_action_fixtures_with_remote_joins = pytest.mark.usefixtures(
     "graphql_service",
@@ -68,11 +63,21 @@ class TestActionsSync:
     def test_invalid_webhook_response(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/invalid_webhook_response.yaml')
 
-    def test_expecting_object_response(self, hge_ctx):
+    def test_null_response(self, hge_ctx):
+        check_query_secret(hge_ctx, self.dir() + '/null_response.yaml')
+        
+    def test_expecting_object_response_got_null(self, hge_ctx):
+        check_query_secret(hge_ctx, self.dir() + '/expecting_object_response_got_null.yaml')
+
+    def test_expecting_array_response_got_null(self, hge_ctx):
+        check_query_secret(hge_ctx, self.dir() + '/expecting_array_response_got_null.yaml')
+
+    def test_expecting_object_response_got_array(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/expecting_object_response.yaml')
 
-    def test_expecting_array_response(self, hge_ctx):
+    def test_expecting_array_response_got_object(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/expecting_array_response.yaml')
+    
 
     # Webhook response validation tests. See https://github.com/hasura/graphql-engine/issues/3977
     def test_mirror_action_not_null(self, hge_ctx):
@@ -86,6 +91,9 @@ class TestActionsSync:
 
     def test_mirror_action_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/mirror_action_success.yaml')
+
+    def test_mirror_action_transformed_success(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/mirror_action_transformed_success.yaml')
 
     #https://github.com/hasura/graphql-engine/issues/6631
     def test_create_users_output_type(self, hge_ctx):
@@ -153,6 +161,25 @@ class TestQueryActions:
     @classmethod
     def dir(cls):
         return 'queries/actions/sync'
+
+    # toplevel, extensions with error
+    def test_query_action_extensions_code_both_codes_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/extensions_code_both_codes.yaml')
+    # toplevel, extensions with no error
+    def test_query_action_extensions_code_toplevel_empty_extensions_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/extensions_code_toplevel_empty_extensions.yaml')
+    # toplevel, no extensions
+    def test_query_action_extensions_code_toplevel_no_extensions_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/extensions_code_toplevel_no_extensions.yaml')
+    # no toplevel, extensions with error
+    def test_query_action_extensions_code_only_extensions_code_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/extensions_code_only_extensions_code.yaml')
+    # no toplevel, extensions with no error
+    def test_query_action_extensions_code_only_empty_extensions_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/extensions_code_only_empty_extensions.yaml')
+    # no toplevel, no extensions
+    def test_query_action_extensions_code_nothing_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/extensions_code_nothing.yaml')
 
     def test_query_action_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/get_user_by_email_fail.yaml')
@@ -452,6 +479,73 @@ class TestActionsAsync:
         # Make request without auth using admin_secret
         check_query_timeout(hge_ctx, conf_user_1, add_auth = False, timeout = 10)
 
+    def test_create_user_transformed_success(self, hge_ctx):
+        graphql_mutation = '''
+        mutation {
+          create_user_transformed(email: "clarke@hasura.io", name: "Clarke")
+        }
+        '''
+        query = {
+            'query': graphql_mutation,
+            'variables': {}
+        }
+        status, resp, _ = hge_ctx.anyq('/v1/graphql', query, mk_headers_with_secret(hge_ctx))
+        assert status == 200, resp
+        assert 'data' in resp
+        action_id = resp['data']['create_user_transformed']
+
+        query_async = '''
+        query ($action_id: uuid!){
+          create_user_transformed(id: $action_id){
+            __typename
+            id
+            output {
+              __typename
+              id
+              user {
+                __typename
+                name
+                email
+                is_admin
+              }
+            }
+          }
+        }
+        '''
+        query = {
+            'query': query_async,
+            'variables': {
+                'action_id': action_id
+            }
+        }
+        response = {
+            'data': {
+                'create_user_transformed': {
+                    '__typename': 'create_user_transformed',
+                    'id': action_id,
+                    'output': {
+                        '__typename': 'UserId',
+                        'id': 1,
+                        'user': {
+                            '__typename': 'user',
+                            'name': 'notClarke',
+                            'email': 'foo@bar.com',
+                            'is_admin': False
+                        }
+                    }
+                }
+            }
+        }
+        conf = {
+            'url': '/v1/graphql',
+            'headers': {},
+            'query': query,
+            'status': 200,
+            'response': response
+        }
+        check_query_timeout(hge_ctx, conf, True, 10)
+
+
 def check_query_timeout(hge_ctx, conf, add_auth, timeout):
     wait_until = time.time() + timeout
     while True:
@@ -520,6 +614,16 @@ class TestActionIntrospection:
     def test_output_types(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/output_types_query.yaml')
 
+@pytest.mark.usefixtures('per_class_tests_db_state')
+class TestFunctionReturnTypeIntrospection:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/actions/introspection/function_return_type'
+
+    def test_function_return_type(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/function_return_type.yaml')
+
 
 @use_action_fixtures
 class TestActionTimeout:
@@ -570,4 +674,4 @@ class TestActionTimeout:
         time.sleep(4)
         response, _ = check_query(hge_ctx, conf)
         assert 'errors' in response['data']['create_user']
-        assert 'ResponseTimeout' == response['data']['create_user']['errors']['internal']['error']['message']
+        assert 'Response timeout' == response['data']['create_user']['errors']['internal']['error']['message']

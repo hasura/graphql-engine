@@ -12,7 +12,11 @@
     "types": ["react"],
     "typeRoots": ["./src/types", "node_modules/@types"],
     "resolveJsonModule": true,
-    "target": "es5"
+    "target": "es5",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "exclude": [
     "node_modules",

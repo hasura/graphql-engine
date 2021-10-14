@@ -31,6 +31,9 @@ class TestMetadata:
     def test_replace_metadata(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/replace_metadata.yaml')
 
+    def test_replace_metadata_no_tables(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata_no_tables.yaml')
+
     def test_replace_metadata_wo_remote_schemas(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/replace_metadata_wo_rs.yaml')
 
@@ -43,11 +46,107 @@ class TestMetadata:
         check_query_f(hge_ctx, self.dir() +
                       '/replace_metadata_allow_inconsistent.yaml')
 
+    def test_replace_metadata_disallow_inconsistent_metadata(self, hge_ctx):
+        st_code, resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
+        assert st_code == 200, resp
+        default_source_config = {}
+        default_source = list(filter(lambda source: (source["name"] == "default"), resp["sources"]))
+        if default_source:
+            default_source_config = default_source[0]["configuration"]
+        else:
+            assert False, "default source config not found"
+            return
+        st_code, resp = hge_ctx.v1metadataq({
+               "type": "replace_metadata",
+               "version": 2,
+               "args": {
+                 "metadata": {
+                   "version": 3,
+                   "sources": [
+                     {
+                       "name": "default",
+                       "kind": "postgres",
+                       "tables": [
+                         {
+                           "table": {
+                             "schema": "public",
+                             "name": "author"
+                           },
+                           "insert_permissions": [
+                             {
+                               "role": "user1",
+                               "permission": {
+                                 "check": {},
+                                 "columns": [
+                                   "id",
+                                   "name"
+                                 ],
+                                 "backend_only": False
+                               }
+                             },
+                             {
+                               "role": "user2",
+                               "permission": {
+                                 "check": {
+                                   "id": {
+                                     "_eq": "X-Hasura-User-Id"
+                                   }
+                                 },
+                                 "columns": [
+                                   "id",
+                                   "name"
+                                 ],
+                                 "backend_only": False
+                               }
+                             }
+                           ]
+                         }
+                       ],
+                       "configuration": default_source_config
+                     }
+                   ],
+                   "inherited_roles": [
+                     {
+                       "role_name": "users",
+                       "role_set": [
+                         "user2",
+                         "user1"
+                       ]
+                     }
+                   ]
+                 }
+               }
+             })
+        assert st_code == 400, resp
+        assert resp == {
+            "internal": [
+                {
+                    "reason": "Could not inherit permission for the role 'users' for the entity: 'insert permission, table: author, source: 'default''",
+                    "name": "users",
+                    "type": "inherited role permission inconsistency",
+                    "entity": {
+                        "permission_type": "insert",
+                        "source": "default",
+                        "table": "author"
+                    }
+                }
+            ],
+            "path": "$.args",
+            "error": "cannot continue due to inconsistent metadata",
+            "code": "unexpected"
+        }
+
     def test_dump_internal_state(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/dump_internal_state.yaml')
 
     def test_pg_add_source(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_add_source.yaml')
+
+    @pytest.mark.skipif(
+        os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_1') != 'postgresql://gql_test@localhost:5432/pg_source_1',
+        reason="This test relies on hardcoded connection parameters that match Circle's setup.")
+    def test_pg_add_source_with_source_parameters(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/pg_add_source_with_parameters.yaml')
 
     def test_pg_track_table_source(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_track_table_source.yaml')
@@ -57,6 +156,55 @@ class TestMetadata:
 
     def test_pg_multisource_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_multisource_query.yaml')
+
+    def test_pg_function_tracking_with_comment(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/pg_track_function_with_comment_setup.yaml')
+
+        # make an introspection query to see if the description of the function has changed
+        introspection_query = """{
+            __schema {
+                queryType {
+                fields {
+                    name
+                    description
+                }
+                }
+            }
+        }"""
+        url = "/v1/graphql"
+        query = {
+            "query": introspection_query,
+            "variables": {}
+        }
+        headers = {}
+        if hge_ctx.hge_key is not None:
+            headers['x-hasura-admin-secret'] = hge_ctx.hge_key
+
+        st, resp, _ = hge_ctx.anyq(url, query, headers)
+        assert st == 200, resp
+
+        fn_name = 'search_authors_s1'
+        fn_description = 'this function helps fetch articles based on the title'
+
+        resp_fields = resp['data']['__schema']['queryType']['fields']
+        if resp_fields is not None:
+            comment_found = False
+            for field_info in resp_fields:
+                if field_info['name'] == fn_name and field_info['description'] == fn_description:
+                    comment_found = True
+                    break
+            assert comment_found == True, resp
+
+        check_query_f(hge_ctx, self.dir() + '/pg_track_function_with_comment_teardown.yaml')
+
+    def test_test_webhook_transform_success(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_success.yaml')
+
+    def test_test_webhook_transform_bad_parse(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_bad_parse.yaml')
+
+    def test_test_webhook_transform_bad_eval(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_bad_eval.yaml')
 
     @pytest.mark.skipif(
         os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_1') == os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_2') or
@@ -266,9 +414,9 @@ class TestMetadataOrder:
         assert export_resp['resource_version'] == export_resp_1['resource_version']
 
 
-@pytest.mark.parametrize("backend", ['citus', 'mssql', 'postgres'])
+@pytest.mark.parametrize("backend", ['citus', 'mssql', 'postgres', 'bigquery'])
 @usefixtures('per_class_tests_db_state')
-class TestSetTableCustomization:
+class TestSetTableCustomizationCommon:
 
     @classmethod
     def dir(cls):
@@ -276,3 +424,14 @@ class TestSetTableCustomization:
 
     def test_set_table_customization(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + hge_ctx.backend_suffix('/set_table_customization') + '.yaml')
+
+@pytest.mark.parametrize("backend", ['bigquery'])
+@usefixtures('per_method_tests_db_state')
+class TestMetadataBigquery:
+
+    def test_replace_metadata_no_tables(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata_no_tables.yaml')
+
+    @classmethod
+    def dir(cls):
+        return "queries/v1/metadata/bigquery"

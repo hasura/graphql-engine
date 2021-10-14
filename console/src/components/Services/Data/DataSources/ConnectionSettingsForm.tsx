@@ -204,10 +204,11 @@ const ConnectionSettingsForm: React.FC<ConnectionSettingsFormProps> = ({
                 <div
                   className={`${styles.add_mar_bottom_mid} ${styles.checkbox_margin_top}`}
                 >
-                  <label>
+                  <label className="inline-flex items-center">
                     <input
                       type="checkbox"
                       checked={connectionDBState.preparedStatements}
+                      className="legacy-input-fix"
                       onChange={e => {
                         connectionDBStateDispatch({
                           type: 'UPDATE_PREPARED_STATEMENTS',

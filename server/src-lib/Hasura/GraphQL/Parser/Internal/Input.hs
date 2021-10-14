@@ -1,35 +1,28 @@
-{-# LANGUAGE StrictData #-}
-
 -- | Defines the 'Parser' type and its primitive combinators.
 module Hasura.GraphQL.Parser.Internal.Input where
 
-import           Hasura.Prelude
-
-import qualified Data.Aeson                                  as A
-import qualified Data.HashMap.Strict.Extended                as M
-import qualified Data.HashSet                                as S
-
-import           Control.Lens.Extended                       hiding (enum, index)
-import           Data.Parser.JSONPath
-import           Data.Text.Extended
-import           Data.Type.Equality
-import           Language.GraphQL.Draft.Syntax               hiding (Definition)
-
-import           Hasura.GraphQL.Parser.Class.Parse
-import           Hasura.GraphQL.Parser.Internal.TypeChecking
-import           Hasura.GraphQL.Parser.Internal.Types
-import           Hasura.GraphQL.Parser.Schema
-import           Hasura.Server.Utils                         (englishList)
-
+import Control.Lens.Extended hiding (enum, index)
+import Data.Aeson qualified as A
+import Data.HashMap.Strict.Extended qualified as M
+import Data.HashSet qualified as S
+import Data.Parser.JSONPath
+import Data.Text.Extended
+import Data.Type.Equality
+import Hasura.GraphQL.Parser.Class.Parse
+import Hasura.GraphQL.Parser.Internal.TypeChecking
+import Hasura.GraphQL.Parser.Internal.Types
+import Hasura.GraphQL.Parser.Schema
+import Hasura.Prelude
+import Hasura.Server.Utils (englishList)
+import Language.GraphQL.Draft.Syntax hiding (Definition)
 
 -- ure that out on its own, so we have to be explicit to give
 -- it a little help.
 inputParserInput :: forall k. 'Input <: k => ParserInput k :~: InputValue Variable
-inputParserInput = case subKind @'Input @k of { KRefl -> Refl; KBoth -> Refl }
+inputParserInput = case subKind @'Input @k of KRefl -> Refl; KBoth -> Refl
 
 pInputParser :: forall k m a. 'Input <: k => Parser k m a -> InputValue Variable -> m a
 pInputParser = gcastWith (inputParserInput @k) pParser
-
 
 -- | Parses some collection of input fields. Build an 'InputFieldsParser' using
 -- 'field', 'fieldWithDefault', or 'fieldOptional', combine several together
@@ -40,16 +33,17 @@ data InputFieldsParser m a = InputFieldsParser
   --     Compose ((,) [Definition (FieldInfo k)])
   --             (ReaderT (HashMap Name (FieldInput k)) m) a
   -- but working with that type sucks.
-  { ifDefinitions :: [Definition InputFieldInfo]
-  , ifParser      :: HashMap Name (InputValue Variable) -> m a
-  } deriving (Functor)
-
+  { ifDefinitions :: [Definition InputFieldInfo],
+    ifParser :: HashMap Name (InputValue Variable) -> m a
+  }
+  deriving (Functor)
 
 instance Applicative m => Applicative (InputFieldsParser m) where
   pure v = InputFieldsParser [] (const $ pure v)
-  a <*> b = InputFieldsParser
-    (ifDefinitions a <> ifDefinitions b)
-    (liftA2 (<*>) (ifParser a) (ifParser b))
+  a <*> b =
+    InputFieldsParser
+      (ifDefinitions a <> ifDefinitions b)
+      (liftA2 (<*>) (ifParser a) (ifParser b))
 
 {- Note [Optional fields and nullability]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -174,23 +168,24 @@ the use of `fieldOptional` above. -}
 -- | Creates a parser for an input field. The field’s nullability is determined
 -- by the nullability of the given value parser; see Note [Optional fields and
 -- nullability] for more details.
-field
-  :: (MonadParse m, 'Input <: k)
-  => Name
-  -> Maybe Description
-  -> Parser k m a
-  -> InputFieldsParser m a
+field ::
+  (MonadParse m, 'Input <: k) =>
+  Name ->
+  Maybe Description ->
+  Parser k m a ->
+  InputFieldsParser m a
 field name description parser = case pType parser of
-  NonNullable typ -> InputFieldsParser
-    { ifDefinitions = [mkDefinition name description $ IFRequired typ]
-    , ifParser = \ values -> withPath (++[Key (unName name)]) do
-        value <- onNothing (M.lookup name values) $
-          parseError ("missing required field " <>> name)
-        pInputParser parser value
-    }
+  NonNullable typ ->
+    InputFieldsParser
+      { ifDefinitions = [mkDefinition name description $ IFRequired typ],
+        ifParser = \values -> withPath (++ [Key (unName name)]) do
+          value <-
+            onNothing (M.lookup name values) $
+              parseError ("missing required field " <>> name)
+          pInputParser parser value
+      }
   -- nullable fields just have an implicit default value of `null`
   Nullable _ -> fieldWithDefault name description VNull parser
-
 
 -- | Creates a parser for a nullable field with no default value. If the field
 -- is omitted, the provided parser /will not be called/. This allows a field to
@@ -200,18 +195,23 @@ field name description parser = case pType parser of
 --
 -- If you want a field with a default value of @null@, combine 'field' with
 -- 'nullable', instead.
-fieldOptional
-  :: (MonadParse m, 'Input <: k)
-  => Name
-  -> Maybe Description
-  -> Parser k m a
-  -> InputFieldsParser m (Maybe a)
-fieldOptional name description parser = InputFieldsParser
-  { ifDefinitions = [mkDefinition name description $
-      IFOptional (nullableType $ pType parser) Nothing]
-  , ifParser = M.lookup name >>> withPath (++[Key (unName name)]) .
-               traverse (pInputParser parser <=< peelVariable expectedType)
-  }
+fieldOptional ::
+  (MonadParse m, 'Input <: k) =>
+  Name ->
+  Maybe Description ->
+  Parser k m a ->
+  InputFieldsParser m (Maybe a)
+fieldOptional name description parser =
+  InputFieldsParser
+    { ifDefinitions =
+        [ mkDefinition name description $
+            IFOptional (nullableType $ pType parser) Nothing
+        ],
+      ifParser =
+        M.lookup name
+          >>> withPath (++ [Key (unName name)])
+            . traverse (pInputParser parser <=< peelVariable expectedType)
+    }
   where
     expectedType = toGraphQLType $ nullableType $ pType parser
 
@@ -219,47 +219,55 @@ fieldOptional name description parser = InputFieldsParser
 -- resulting field will always be nullable, even if the underlying parser
 -- rejects `null` values; see Note [Optional fields and nullability] for more
 -- details.
-fieldWithDefault
-  :: (MonadParse m, 'Input <: k)
-  => Name
-  -> Maybe Description
-  -> Value Void -- ^ default value
-  -> Parser k m a
-  -> InputFieldsParser m a
-fieldWithDefault name description defaultValue parser = InputFieldsParser
-  { ifDefinitions = [mkDefinition name description $ IFOptional (pType parser) (Just defaultValue)]
-  , ifParser = M.lookup name >>> withPath (++[Key (unName name)]) . \case
-      Just value -> peelVariableWith True expectedType value >>= pInputParser parser
-      Nothing    -> pInputParser parser $ GraphQLValue $ literal defaultValue
-  }
+fieldWithDefault ::
+  (MonadParse m, 'Input <: k) =>
+  Name ->
+  Maybe Description ->
+  -- | default value
+  Value Void ->
+  Parser k m a ->
+  InputFieldsParser m a
+fieldWithDefault name description defaultValue parser =
+  InputFieldsParser
+    { ifDefinitions = [mkDefinition name description $ IFOptional (pType parser) (Just defaultValue)],
+      ifParser =
+        M.lookup name
+          >>> withPath (++ [Key (unName name)]) . \case
+            Just value -> peelVariableWith True expectedType value >>= pInputParser parser
+            Nothing -> pInputParser parser $ GraphQLValue $ literal defaultValue
+    }
   where
     expectedType = toGraphQLType $ pType parser
-
 
 -- -----------------------------------------------------------------------------
 -- combinators
 
-enum
-  :: MonadParse m
-  => Name
-  -> Maybe Description
-  -> NonEmpty (Definition EnumValueInfo, a)
-  -> Parser 'Both m a
-enum name description values = Parser
-  { pType = schemaType
-  , pParser = peelVariable (toGraphQLType schemaType) >=> \case
-      JSONValue (A.String stringValue)
-        | Just enumValue <- mkName stringValue -> validate enumValue
-      GraphQLValue (VEnum (EnumValue enumValue)) -> validate enumValue
-      other -> typeMismatch name "an enum value" other
-  }
+enum ::
+  MonadParse m =>
+  Name ->
+  Maybe Description ->
+  NonEmpty (Definition EnumValueInfo, a) ->
+  Parser 'Both m a
+enum name description values =
+  Parser
+    { pType = schemaType,
+      pParser =
+        peelVariable (toGraphQLType schemaType) >=> \case
+          JSONValue (A.String stringValue)
+            | Just enumValue <- mkName stringValue -> validate enumValue
+          GraphQLValue (VEnum (EnumValue enumValue)) -> validate enumValue
+          other -> typeMismatch name "an enum value" other
+    }
   where
     schemaType = NonNullable $ TNamed $ mkDefinition name description $ TIEnum (fst <$> values)
-    valuesMap = M.fromList $ over (traverse._1) dName $ toList values
-    validate value = onNothing (M.lookup value valuesMap) $
-      parseError $ "expected one of the values "
-        <> englishList "or" (toTxt . dName . fst <$> values) <> " for type "
-        <> name <<> ", but found " <>> value
+    valuesMap = M.fromList $ over (traverse . _1) dName $ toList values
+    validate value =
+      onNothing (M.lookup value valuesMap) $
+        parseError $
+          "expected one of the values "
+            <> englishList "or" (toTxt . dName . fst <$> values)
+            <> " for type "
+            <> name <<> ", but found " <>> value
 
 -- -----------------------------------------------------------------------------
 -- helpers
@@ -268,58 +276,71 @@ enum name description values = Parser
 -- that `fieldName` isn't empty, which sadly can't be done at the type level.
 -- This would prevent the creation of an object with no fields, which is against
 -- the spec.
-object
-  :: MonadParse m
-  => Name
-  -> Maybe Description
-  -> InputFieldsParser m a
-  -> Parser 'Input m a
-object name description parser = Parser
-  { pType = schemaType
-  , pParser = peelVariable (toGraphQLType schemaType) >=> \case
-      GraphQLValue (VObject fields) -> parseFields $ GraphQLValue <$> fields
-      JSONValue (A.Object fields) -> do
-        translatedFields <- M.fromList <$> for (M.toList fields) \(key, val) -> do
-          name' <- mkName key `onNothing` parseError
-            ("variable value contains object with key " <> key <<> ", which is not a legal GraphQL name")
-          pure (name', JSONValue val)
-        parseFields translatedFields
-      other -> typeMismatch name "an object" other
-  }
+object ::
+  MonadParse m =>
+  Name ->
+  Maybe Description ->
+  InputFieldsParser m a ->
+  Parser 'Input m a
+object name description parser =
+  Parser
+    { pType = schemaType,
+      pParser =
+        peelVariable (toGraphQLType schemaType) >=> \case
+          GraphQLValue (VObject fields) -> parseFields $ GraphQLValue <$> fields
+          JSONValue (A.Object fields) -> do
+            translatedFields <-
+              M.fromList <$> for (M.toList fields) \(key, val) -> do
+                name' <-
+                  mkName key
+                    `onNothing` parseError
+                      ("variable value contains object with key " <> key <<> ", which is not a legal GraphQL name")
+                pure (name', JSONValue val)
+            parseFields translatedFields
+          other -> typeMismatch name "an object" other
+    }
   where
-    schemaType = NonNullable $ TNamed $ mkDefinition name description $
-                 TIInputObject (InputObjectInfo (ifDefinitions parser))
+    schemaType =
+      NonNullable $
+        TNamed $
+          mkDefinition name description $
+            TIInputObject (InputObjectInfo (ifDefinitions parser))
     fieldNames = S.fromList (dName <$> ifDefinitions parser)
     parseFields fields = do
       -- check for extraneous fields here, since the InputFieldsParser just
       -- handles parsing the fields it cares about
       for_ (M.keys fields) \fieldName ->
-        unless (fieldName `S.member` fieldNames) $ withPath (++[Key (unName fieldName)]) $
-          parseError $ "field " <> dquote fieldName <> " not found in type: " <> squote name
+        unless (fieldName `S.member` fieldNames) $
+          withPath (++ [Key (unName fieldName)]) $
+            parseError $ "field " <> dquote fieldName <> " not found in type: " <> squote name
       ifParser parser fields
 
 list :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m [a]
-list parser = gcastWith (inputParserInput @k) Parser
-  { pType = schemaType
-  , pParser = peelVariable (toGraphQLType schemaType) >=> \case
-      GraphQLValue (VList values) -> for (zip [0..] values) \(index, value) ->
-        withPath (++[Index index]) $ pParser parser $ GraphQLValue value
-      JSONValue (A.Array values) -> for (zip [0..] $ toList values) \(index, value) ->
-        withPath (++[Index index]) $ pParser parser $ JSONValue value
-      -- List Input Coercion
-      --
-      -- According to section 3.11 of the GraphQL spec: iff the value
-      -- passed as an input to a list type is not a list and not the
-      -- null value, then the result of input coercion is a list of
-      -- size one, where the single item value is the result of input
-      -- coercion for the list’s item type on the provided value.
-      --
-      -- We need to explicitly test for VNull here, otherwise we could
-      -- be returning `[null]` if the parser accepts a null value,
-      -- which would contradict the spec.
-      GraphQLValue VNull  -> parseError "expected a list, but found null"
-      JSONValue    A.Null -> parseError "expected a list, but found null"
-      other -> fmap pure $ withPath (++[Index 0]) $ pParser parser other
-  }
+list parser =
+  gcastWith
+    (inputParserInput @k)
+    Parser
+      { pType = schemaType,
+        pParser =
+          peelVariable (toGraphQLType schemaType) >=> \case
+            GraphQLValue (VList values) -> for (zip [0 ..] values) \(index, value) ->
+              withPath (++ [Index index]) $ pParser parser $ GraphQLValue value
+            JSONValue (A.Array values) -> for (zip [0 ..] $ toList values) \(index, value) ->
+              withPath (++ [Index index]) $ pParser parser $ JSONValue value
+            -- List Input Coercion
+            --
+            -- According to section 3.11 of the GraphQL spec: iff the value
+            -- passed as an input to a list type is not a list and not the
+            -- null value, then the result of input coercion is a list of
+            -- size one, where the single item value is the result of input
+            -- coercion for the list’s item type on the provided value.
+            --
+            -- We need to explicitly test for VNull here, otherwise we could
+            -- be returning `[null]` if the parser accepts a null value,
+            -- which would contradict the spec.
+            GraphQLValue VNull -> parseError "expected a list, but found null"
+            JSONValue A.Null -> parseError "expected a list, but found null"
+            other -> fmap pure $ withPath (++ [Index 0]) $ pParser parser other
+      }
   where
     schemaType = NonNullable $ TList $ pType parser

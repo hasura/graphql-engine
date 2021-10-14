@@ -1,203 +1,51 @@
-{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hasura.Generator () where
 
-import           Hasura.Prelude
+import Data.Containers.ListUtils (nubOrd)
+import Data.HashMap.Strict qualified as Map
+import Data.Ratio ((%))
+import Data.Text qualified as T
+import Hasura.Prelude
+import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.SchemaCache (IntrospectionResult (..))
+import Hasura.Server.Utils
+import Hasura.Session
+import Language.GraphQL.Draft.Syntax qualified as G
+import Test.QuickCheck
 
-import qualified Data.Aeson                         as J
-import qualified Data.HashMap.Strict                as Map
-import qualified Data.HashMap.Strict.InsOrd         as OM
-import qualified Data.HashSet                       as Set
-import qualified Data.HashSet.InsOrd                as SetIns
-import qualified Data.Text                          as T
-import qualified Data.Vector                        as V
-import qualified Language.GraphQL.Draft.Syntax      as G
+-- Quickcheck helpers
 
-import           Data.Containers.ListUtils          (nubOrd)
-import           Data.Maybe                         (fromJust)
-import           Data.Scientific
-import           Test.QuickCheck
-import           Test.QuickCheck.Arbitrary.Extended
-import           Test.QuickCheck.Arbitrary.Generic
-import           Test.QuickCheck.Arbitrary.Partial
+distinct :: (Arbitrary a, Ord a) => Gen [a]
+distinct = nubOrd <$> arbitrary
 
-import           Hasura.GraphQL.Parser.Schema       (InputValue, Variable, VariableInfo)
-import           Hasura.RQL.Types
-import           Hasura.Server.Utils
-import           Hasura.Session
+distinct1 :: (Arbitrary a, Ord a) => Gen [a]
+distinct1 = nubOrd <$> listOf1 arbitrary
 
+arbitraryExcluding :: (Arbitrary a, Eq a) => [a] -> Gen a
+arbitraryExcluding exclusions = arbitrary `suchThat` (`notElem` exclusions)
 
--- -- Containers
+distinctExcluding :: (Arbitrary a, Ord a) => [a] -> Gen [a]
+distinctExcluding = fmap nubOrd . listOf . arbitraryExcluding
 
-instance (Arbitrary k, Eq k, Hashable k, Arbitrary v) => Arbitrary (InsOrdHashMap k v) where
-  arbitrary = OM.fromList <$> arbitrary
+distinctExcluding1 :: (Arbitrary a, Ord a) => [a] -> Gen [a]
+distinctExcluding1 = fmap nubOrd . listOf1 . arbitraryExcluding
+
+sublistOf1 :: [a] -> Gen [a]
+sublistOf1 xs = sublistOf xs `suchThat` (not . null)
+
+-- Third party instances
+
+instance Arbitrary Text where
+  arbitrary = T.pack <$> listOf arbitraryUnicodeChar
 
 instance (Arbitrary k, Eq k, Hashable k, Arbitrary v) => Arbitrary (HashMap k v) where
   arbitrary = Map.fromList <$> arbitrary
 
-instance (Arbitrary a, Eq a, Hashable a) => Arbitrary (SetIns.InsOrdHashSet a) where
-  arbitrary = SetIns.fromList <$> arbitrary
-
-instance (Arbitrary a, Eq a, Hashable a) => Arbitrary (Set.HashSet a) where
-  arbitrary = Set.fromList <$> arbitrary
-
-instance (PartialArbitrary k, Eq k, Hashable k, PartialArbitrary v) => PartialArbitrary (HashMap k v) where
-  partialArbitrary = (fmap . fmap) Map.fromList partialArbitrary
-
--- -- Arbitrary instances
--- -- Those types, like Metadata, need an arbitrary instance, but may hit @Void@,
--- -- and therefore delegate their arbitrary instance to 'PartialArbitrary'
-
-instance PartialArbitrary a => Arbitrary (G.Directive a) where
-  arbitrary = fromJust genericPartialArbitrary
-
-instance PartialArbitrary a => Arbitrary (G.Value a) where
-  arbitrary = fromJust genericPartialArbitrary
-
-
--- Regular types.
--- All those types are known to be representable, and we can write a regular
--- Arbitrary instance for each of them. They will use the default generic
--- overlappable instance of PartialArbitrary that simply defers back to
--- Arbitrary.
-
-instance Arbitrary Text where
-  arbitrary = T.pack <$> listOf (elements alphaNumerics)
-
-instance Arbitrary SessionVariable where
-  arbitrary = (mkSessionVariable . (sessionVariablePrefix <>)) <$> arbitrary
-
-instance Arbitrary G.Nullability where
-  arbitrary = genericArbitrary
-
-instance Arbitrary G.GType where
-  arbitrary = genericArbitrary
-
-instance Arbitrary G.ScalarTypeDefinition where
-  arbitrary = genericArbitrary
-
-instance Arbitrary G.InputValueDefinition where
-  arbitrary = genericArbitrary
-
-instance Arbitrary G.RootOperationTypeDefinition where
-  arbitrary = genericArbitrary
-
-instance Arbitrary G.OperationType where
-  arbitrary = genericArbitrary
-
-instance Arbitrary G.UnionTypeDefinition where
-  arbitrary = genericArbitrary
-
-instance Arbitrary G.EnumValueDefinition where
-  arbitrary = genericArbitrary
-
-instance Arbitrary G.EnumTypeDefinition where
-  arbitrary = genericArbitrary
-
-instance (Arbitrary a) => Arbitrary (G.FieldDefinition a) where
-  arbitrary = genericArbitrary
-
-instance (Arbitrary a) => Arbitrary (G.InputObjectTypeDefinition a) where
-  arbitrary = genericArbitrary
-
-instance (Arbitrary a) => Arbitrary (G.ObjectTypeDefinition a) where
-  arbitrary = genericArbitrary
-
-instance (Arbitrary a, Arbitrary b) => Arbitrary (G.InterfaceTypeDefinition a b) where
-  arbitrary = genericArbitrary
-
-instance (Arbitrary a, Arbitrary b) => Arbitrary (G.TypeDefinition a b) where
-  arbitrary = genericArbitrary
-
-instance Arbitrary G.TypeSystemDefinition where
-  arbitrary = genericArbitrary
-
-instance Arbitrary G.SchemaDefinition where
-  arbitrary = genericArbitrary
-
-instance Arbitrary G.SchemaDocument where
-  arbitrary = genericArbitrary
-
-instance Arbitrary RemoteSchemaPermissionDefinition where
-  arbitrary = genericArbitrary
-
-instance Arbitrary (InputValue Void) where
-  arbitrary = genericArbitrary
-
-instance Arbitrary VariableInfo where
-  arbitrary = genericArbitrary
-
-instance Arbitrary Variable where
-  arbitrary = genericArbitrary
-
-instance Arbitrary SessionArgumentPresetInfo  where
-  arbitrary = genericArbitrary
-
-instance Arbitrary RemoteSchemaVariable where
-  arbitrary = genericArbitrary
-
-instance Arbitrary RemoteSchemaInputValueDefinition where
-  arbitrary = genericArbitrary
-
-instance Arbitrary RemoteSchemaIntrospection where
-  arbitrary = genericArbitrary
-
-instance Arbitrary IntrospectionResult where
-  arbitrary = do
-    scalarTypeNames <- nubOrd <$> arbitrary
-    objectTypeNames <- distinctExcluding1 scalarTypeNames
-    interfaceTypeNames <- distinctExcluding $ scalarTypeNames ++ objectTypeNames
-    unionTypeNames <- distinctExcluding $ scalarTypeNames ++ objectTypeNames ++ interfaceTypeNames
-    enumTypeNames <- distinctExcluding $ scalarTypeNames ++ objectTypeNames ++ interfaceTypeNames ++ unionTypeNames
-    let outputTypeNames = scalarTypeNames ++ objectTypeNames ++ interfaceTypeNames ++ unionTypeNames ++ enumTypeNames
-    inputObjectTypeNames <- distinctExcluding outputTypeNames
-    let inputTypeNames = scalarTypeNames ++ enumTypeNames ++ inputObjectTypeNames
-    let genType typeNames = oneof
-          [ G.TypeNamed <$> arbitrary <*> elements typeNames
-          , G.TypeList <$> arbitrary <*> genType typeNames]
-    let genInputValueDefinition =
-          G.InputValueDefinition <$> arbitrary <*> arbitrary <*> genType inputTypeNames <*> arbitrary <*> pure []
-    let genRemoteSchemaInputValueDefinition = RemoteSchemaInputValueDefinition <$> genInputValueDefinition <*> pure Nothing
-    let genRemoteSchemaInputValueDefinitions = case inputTypeNames of
-          [] -> pure []
-          _  -> listOf genRemoteSchemaInputValueDefinition
-    let genFieldDefinitions = do
-          fieldNames <- nubOrd <$> listOf1 arbitrary
-          for fieldNames $ \n ->
-            G.FieldDefinition <$> arbitrary <*> pure n <*> genRemoteSchemaInputValueDefinitions <*> genType outputTypeNames <*> pure []
-    let genEnumValueDefinition = G.EnumValueDefinition <$> arbitrary <*> arbitrary <*> pure []
-
-    scalarTypeDefinitions <- for scalarTypeNames $ \n ->
-      G.ScalarTypeDefinition <$> arbitrary <*> pure n <*> pure []
-    objectTypeDefinitions <- for objectTypeNames $ \n ->
-      G.ObjectTypeDefinition <$> arbitrary <*> pure n <*> sublistOf interfaceTypeNames <*> pure [] <*> genFieldDefinitions
-    interfaceTypeDefinitions <- for interfaceTypeNames $ \n ->
-      G.InterfaceTypeDefinition <$> arbitrary <*> pure n <*> pure [] <*> genFieldDefinitions <*> listOf1 arbitrary
-    unionTypeDefinitions <- for unionTypeNames $ \n ->
-      G.UnionTypeDefinition <$> arbitrary <*> pure n <*> pure [] <*> sublistOf1 objectTypeNames
-    enumTypeDefinitions <- for enumTypeNames $ \n ->
-      G.EnumTypeDefinition <$> arbitrary <*> pure n <*> pure [] <*> listOf1 genEnumValueDefinition
-    inputObjectTypeDefinitions <- for inputObjectTypeNames $ \n ->
-      G.InputObjectTypeDefinition <$> arbitrary <*> pure n <*> pure [] <*> genRemoteSchemaInputValueDefinitions
-    let irDoc = RemoteSchemaIntrospection $
-          map G.TypeDefinitionScalar scalarTypeDefinitions ++
-          map G.TypeDefinitionObject objectTypeDefinitions ++
-          map G.TypeDefinitionInterface interfaceTypeDefinitions ++
-          map G.TypeDefinitionUnion unionTypeDefinitions ++
-          map G.TypeDefinitionEnum enumTypeDefinitions ++
-          map G.TypeDefinitionInputObject inputObjectTypeDefinitions
-    irQueryRoot <- elements objectTypeNames
-    let maybeObjectTypeName = elements $ Nothing : (Just <$> objectTypeNames)
-    irMutationRoot <- maybeObjectTypeName
-    irSubscriptionRoot <- maybeObjectTypeName
-    pure $ IntrospectionResult {..}
-
--- Custom instances
--- All non-generic non-partial instances.
+-- GraphQL syntax instances
 
 instance Arbitrary G.Name where
-  arbitrary = G.unsafeMkName . T.pack <$> listOf1 (elements ['a'..'z'])
+  arbitrary = G.unsafeMkName . T.pack <$> listOf1 (elements ['a' .. 'z'])
 
 instance Arbitrary G.Description where
   arbitrary = G.Description <$> arbitrary
@@ -205,19 +53,197 @@ instance Arbitrary G.Description where
 instance Arbitrary G.EnumValue where
   arbitrary = G.EnumValue <$> arbitrary
 
-instance Arbitrary Scientific where
-  arbitrary = ((fromRational . toRational) :: Int -> Scientific) <$> arbitrary
+instance Arbitrary G.EnumValueDefinition where
+  arbitrary =
+    G.EnumValueDefinition
+      <$> arbitrary
+      <*> arbitrary
+      <*> pure []
 
-instance Arbitrary J.Value where
-  arbitrary = sized sizedArbitraryValue
+instance Arbitrary G.Nullability where
+  arbitrary = G.Nullability <$> arbitrary
+
+instance Arbitrary (G.Value Void) where
+  arbitrary =
+    oneof
+      [ pure G.VNull,
+        G.VInt <$> arbitrary,
+        G.VFloat <$> arbitraryScientific,
+        G.VString <$> arbitrary,
+        G.VBoolean <$> arbitrary,
+        G.VEnum <$> arbitrary,
+        -- reduce the internal size factor at every level, so that this
+        -- recursion is guaranteed to terminate
+        G.VList <$> scale (`div` 2) arbitrary,
+        G.VObject <$> scale (`div` 2) arbitrary
+      ]
     where
-      sizedArbitraryValue n
-        | n <= 0 = oneof [pure J.Null, boolean, number, string]
-        | otherwise = resize n' $ oneof [pure J.Null, boolean, number, string, array, object']
-        where
-          n' = n `div` 2
-          boolean = J.Bool <$> arbitrary
-          number = J.Number <$> arbitrary
-          string = J.String <$> arbitrary
-          array = J.Array . V.fromList <$> arbitrary
-          object' = J.Object <$> arbitrary
+      arbitraryScientific = do
+        -- fromRational can create invalid repeating values that loop forever
+        -- we avoid this by creating known good ratios
+        num :: Integer <- arbitrary
+        dem :: Integer <- elements [1 .. 32]
+        pure $ fromRational $ num % (10 ^ dem)
+
+-- Hasura instances
+
+instance Arbitrary SessionVariable where
+  arbitrary = do
+    name <- arbitrary
+    pure $ mkSessionVariable $ sessionVariablePrefix <> name
+
+instance Arbitrary IntrospectionResult where
+  arbitrary = do
+    -- first, generate distinct names for each kind of object
+    scalarTypeNames <- distinct
+    objectTypeNames <- distinctExcluding1 scalarTypeNames
+    interfaceTypeNames <- distinctExcluding $ scalarTypeNames ++ objectTypeNames
+    unionTypeNames <- distinctExcluding $ scalarTypeNames ++ objectTypeNames ++ interfaceTypeNames
+    enumTypeNames <- distinctExcluding $ scalarTypeNames ++ objectTypeNames ++ interfaceTypeNames ++ unionTypeNames
+    let outputTypeNames = scalarTypeNames ++ objectTypeNames ++ interfaceTypeNames ++ unionTypeNames ++ enumTypeNames
+    inputObjectTypeNames <- distinctExcluding outputTypeNames
+    let inputTypeNames = scalarTypeNames ++ enumTypeNames ++ inputObjectTypeNames
+    let inputValues = case inputTypeNames of
+          [] -> pure []
+          _ -> listOf $ genRemoteSchemaInputValueDefinition inputTypeNames
+
+    -- then, create a matching definition for each name
+    scalarTypeDefinitions <-
+      for scalarTypeNames $
+        genScalarTypeDefinition
+    objectTypeDefinitions <-
+      for objectTypeNames $
+        genObjectTypeDefinition inputValues outputTypeNames interfaceTypeNames
+    interfaceTypeDefinitions <-
+      for interfaceTypeNames $
+        genInterfaceTypeDefinition inputValues outputTypeNames
+    unionTypeDefinitions <-
+      for unionTypeNames $
+        genUnionTypeDefinition objectTypeNames
+    enumTypeDefinitions <-
+      for enumTypeNames $
+        genEnumTypeDefinition
+    inputObjectTypeDefinitions <-
+      for inputObjectTypeNames $
+        genInputObjectTypeDefinition inputValues
+
+    -- finally, create an IntrospectionResult from the aggregated definitions
+    let irDoc =
+          RemoteSchemaIntrospection $
+            concat
+              [ G.TypeDefinitionScalar <$> scalarTypeDefinitions,
+                G.TypeDefinitionObject <$> objectTypeDefinitions,
+                G.TypeDefinitionInterface <$> interfaceTypeDefinitions,
+                G.TypeDefinitionUnion <$> unionTypeDefinitions,
+                G.TypeDefinitionEnum <$> enumTypeDefinitions,
+                G.TypeDefinitionInputObject <$> inputObjectTypeDefinitions
+              ]
+    irQueryRoot <- elements objectTypeNames
+    let maybeObjectTypeName = elements $ Nothing : (Just <$> objectTypeNames)
+    irMutationRoot <- maybeObjectTypeName
+    irSubscriptionRoot <- maybeObjectTypeName
+    pure $ IntrospectionResult {..}
+
+-- Generator helpers
+
+genGType :: [G.Name] -> Gen G.GType
+genGType typeNames =
+  frequency
+    -- bias towards avoiding deeply nested lists
+    [ (7, G.TypeNamed <$> arbitrary <*> elements typeNames),
+      (3, G.TypeList <$> arbitrary <*> genGType typeNames)
+    ]
+
+genInputValueDefinition :: [G.Name] -> Gen G.InputValueDefinition
+genInputValueDefinition inputTypeNames =
+  G.InputValueDefinition
+    <$> arbitrary
+    <*> arbitrary
+    <*> genGType inputTypeNames
+    <*> arbitrary
+    <*> pure []
+
+genScalarTypeDefinition :: G.Name -> Gen G.ScalarTypeDefinition
+genScalarTypeDefinition name =
+  G.ScalarTypeDefinition
+    <$> arbitrary
+    <*> pure name
+    <*> pure []
+
+genEnumTypeDefinition :: G.Name -> Gen G.EnumTypeDefinition
+genEnumTypeDefinition name =
+  G.EnumTypeDefinition
+    <$> arbitrary
+    <*> pure name
+    <*> pure []
+    <*> listOf1 arbitrary
+
+genUnionTypeDefinition :: [G.Name] -> G.Name -> Gen G.UnionTypeDefinition
+genUnionTypeDefinition objectTypeNames name =
+  G.UnionTypeDefinition
+    <$> arbitrary
+    <*> pure name
+    <*> pure []
+    <*> sublistOf1 objectTypeNames
+
+genFieldDefinition ::
+  Gen [inputType] ->
+  [G.Name] ->
+  G.Name ->
+  Gen (G.FieldDefinition inputType)
+genFieldDefinition inputTypes outputTypeNames name =
+  G.FieldDefinition
+    <$> arbitrary
+    <*> pure name
+    <*> inputTypes
+    <*> genGType outputTypeNames
+    <*> pure []
+
+genObjectTypeDefinition ::
+  Gen [inputType] ->
+  [G.Name] ->
+  [G.Name] ->
+  G.Name ->
+  Gen (G.ObjectTypeDefinition inputType)
+genObjectTypeDefinition inputTypes outputTypeNames interfaceTypeNames name =
+  G.ObjectTypeDefinition
+    <$> arbitrary
+    <*> pure name
+    <*> sublistOf interfaceTypeNames
+    <*> pure []
+    <*> fields
+  where
+    fields = distinct1 >>= traverse (genFieldDefinition inputTypes outputTypeNames)
+
+genInterfaceTypeDefinition ::
+  Arbitrary possibleType =>
+  Gen [inputType] ->
+  [G.Name] ->
+  G.Name ->
+  Gen (G.InterfaceTypeDefinition [possibleType] inputType)
+genInterfaceTypeDefinition inputTypes outputTypeNames name =
+  G.InterfaceTypeDefinition
+    <$> arbitrary
+    <*> pure name
+    <*> pure []
+    <*> fields
+    <*> listOf1 arbitrary
+  where
+    fields = distinct1 >>= traverse (genFieldDefinition inputTypes outputTypeNames)
+
+genInputObjectTypeDefinition ::
+  Gen [inputType] ->
+  G.Name ->
+  Gen (G.InputObjectTypeDefinition inputType)
+genInputObjectTypeDefinition values name =
+  G.InputObjectTypeDefinition
+    <$> arbitrary
+    <*> pure name
+    <*> pure []
+    <*> values
+
+genRemoteSchemaInputValueDefinition :: [G.Name] -> Gen RemoteSchemaInputValueDefinition
+genRemoteSchemaInputValueDefinition inputTypeNames =
+  RemoteSchemaInputValueDefinition
+    <$> genInputValueDefinition inputTypeNames
+    <*> pure Nothing

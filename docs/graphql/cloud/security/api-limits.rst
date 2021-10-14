@@ -9,7 +9,7 @@ API limits
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 Introduction
@@ -17,53 +17,71 @@ Introduction
 
 Limiting the depth and/or rate of API requests can help prevent API performance issues caused by malicious or poorly implemented queries. 
 
-Configuring an API limit
-------------------------
+API limit types
+---------------
 
-**Rate limits**
-  Restricts number of GraphQL operations per minute. This uses a sliding window approach. This means whenever Hasura Pro receives a request, it will count the rate of that client starting from the current time to last one minute.
+API limits are defined by **role** (e.g. anonymous, user) and can restrict request rate, depth, or both. Unique request parameters can include
+IP address or session variables (*x-hasura-user-id*, *x-hasura-org-id*, etc.)
 
-  By default, the rate-limit happens on the ``role_name`` i.e the value provided in ``X-HASURA-ROLE``. But you can also combine additional unique parameters for more granularity.
-  
-  The Unique Parameters that are provided are:
+Rate limits
+^^^^^^^^^^^
 
-  1. IP Address
-  2. Session Variables
+Restricts number of GraphQL operations per minute. This uses a sliding window approach. This means whenever Hasura Pro receives a request, it
+will count the rate of that client starting from the current time to last one minute.
 
-  You can choose any one of the above parameters to rate limit the requests.
+By default, the rate-limit happens on the ``role_name`` i.e the value provided in ``X-HASURA-ROLE``. But you can also combine additional unique
+parameters for more granularity.
 
-  **Note**: If you set an `Unique Parameter` then the combination of both the ``role_name`` and the ``Unique Parameter`` will be used to rate-limit requests.
-  
-  Example:
+The Unique Parameters that are provided are:
 
-  If you rate-limit using the ``role_name`` and set the unique parameter for the rate-limit as ``IP Address``, then rate-limit will be applied depending on both those parameteres. i.e If the requests come from a different role but same IP address will **NOT** be rate limited
+1. IP Address
+2. Session Variables
 
-**Depth limits**
-  Restricts a GraphQL operation based on its depth, preventing deeply nested queries.
+You can choose any one of the above parameters to rate limit the requests.
 
-**Node limits**
-  Restricts a GraphQL operation based on the number of nodes. This helps in limiting the number of different pieces of related data to be fetched.
+**Note**: If you set a ``Unique Parameter`` then the combination of both the ``role_name`` and the ``Unique Parameter`` will be used to
+rate-limit requests.
 
-  A node is defined as a field with a selection set. 
-  
-  For example, in the below query the number of nodes is 3 and they are ``author``, ``articles`` and ``homepage_entries``.
+Example:
 
-  .. code-block:: graphql
+If you rate-limit using the ``role_name`` and set the unique parameter for the rate-limit as ``IP Address``, then rate-limit will
+be applied depending on both those parameteres. i.e If the requests come from a different role but same IP address will **NOT** be rate limited
 
-    {
-      author {
-        name
-        articles {
-          id 
-          title
-        }
-      }
-      homepage_entries {
-        article_id
+Depth limits
+^^^^^^^^^^^^
+Restricts a GraphQL operation based on its depth, preventing deeply nested queries.
+
+Node limits
+^^^^^^^^^^^
+
+Restricts a GraphQL operation based on the number of nodes. This helps in limiting the number of different pieces of related data to be fetched.
+
+A node is defined as a field with a selection set.
+
+For example, in the below query the number of nodes is 3 and they are ``author``, ``articles`` and ``homepage_entries``.
+
+.. code-block:: graphql
+
+  {
+    author {
+      name
+      articles {
+        id
+        title
       }
     }
+    homepage_entries {
+      article_id
+    }
+  }
 
-API limits are defined by **role** (anonymous, user) and can restrict request rate, depth, or both. Unique request parameters can include IP address or session variables (*x-hasura-user-id*, *x-hasura-org-id*, etc.)
+Time limits
+^^^^^^^^^^^
+Restricts the time that a GraphQL operation is allowed to take. The duration
+is specified in seconds.
+
+Any upstream database queries are also cancelled for supported sources.
+Currently, cancellation only works for Postgres sources.
 
 Manage API limits
 -----------------
@@ -83,7 +101,9 @@ Metadata Specification
 Hasura provides two metadata API's to manage API limits
 
 Setting API Limits
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
+
+You can configure api limits using the ``set_api_limits`` API.
 
 .. code-block:: yaml
 
@@ -112,18 +132,24 @@ Setting API Limits
             max_reqs_per_min: # Mandatory Field
             unique_params: # Optional Field
 
+      time_limit: # Optional API Limit
+        global: # Mandatory Field
+        per_role: # Optional Field
+          <role_name>: <limit value> # Eg: user: 5
+
 In the above metadata spec:
 
 1. The API Limits are ``Enabled`` by default, i.e the default value of ``disabled`` is ``False``
-2. When ``disabled`` is `False` and none of the API Limits are set then no API limits are applied.
-3. The ``global`` field in all the API Limits is mandatory, and is used as the default API limit if no ``per_role`` option is set for the user.
-4. The ``per_role`` can be used to override the `global` API Limit value
-5. For ``rate_limit`` if no `unique_params` are provided then, the requests will be rate-limited on the ``role_name`` i.e the ``X-HASURA-ROLE`` that is used to issue the request
+2. When ``disabled`` is ``False`` and none of the API Limits are set then no API limits are applied.
+3. The ``global`` field in all the API Limits is mandatory, and is used as the default API limit if no
+   ``per_role`` option is set for the user.
+4. The ``per_role`` can be used to override the ``global`` API Limit value
+5. For ``rate_limit`` if no ``unique_params`` are provided then, the requests will be rate-limited on the ``role_name``
+   i.e the ``X-HASURA-ROLE`` that is used to issue the request
 
 Example Metadata Spec:
 
 .. code-block:: yaml
-
 
     type: set_api_limits
     args:
@@ -152,17 +178,19 @@ Example Metadata Spec:
             - x-hasura-user-id
             - x-hasura-team-id
             max_reqs_per_min: 20
+   
+      time_limit:
+        global: 10
+        per_role:
+          user: 5
 
 
+Removing API Limits
+^^^^^^^^^^^^^^^^^^^
 
-
-Remove API Limits
-~~~~~~~~~~~~~~~~~~
-
-You can remove **all** the api limits that have been set using `remove_api_limit` API.
+You can remove **all** the api limits that have been set using ``remove_api_limit`` API.
 
 .. code-block:: yaml
-
 
     type: remove_api_limits
     args: {}

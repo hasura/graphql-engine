@@ -19,7 +19,11 @@ func getCliExtFileContent(ec *cli.ExecutionContext) ([]byte, error) {
 		return ioutil.ReadFile(ec.CliExtSourceBinPath)
 	}
 
-	cliExtFileContent, err := cliExtFS.ReadFile(filepath.Join("static-bin", runtime.GOOS, runtime.GOARCH, "cli-ext"))
+	var cliExtBinName string = "cli-ext"
+	if runtime.GOOS == "windows" {
+		cliExtBinName = "cli-ext.exe"
+	}
+	cliExtFileContent, err := cliExtFS.ReadFile(filepath.ToSlash(filepath.Join("static-bin", runtime.GOOS, runtime.GOARCH, cliExtBinName)))
 	if err == nil {
 		ec.Logger.Debug("cli-ext: setting up using cli-ext embedded in cli binary")
 		return cliExtFileContent, nil

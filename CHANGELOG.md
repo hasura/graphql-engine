@@ -3,13 +3,120 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: fix bug which recreated event triggers every time the graphql-engine started up
+- console: design cleanup Modify and Add Table forms (close #7454)
+- cli: split remote schema permissions metadata into seperate files (#7033)
+
+### Function field names customization (#7405)
+It is now possible to specify the GraphQL names of tracked SQL functions in
+Postgres sources, and different names may be given to the `_aggregate` and
+suffix-less versions.  Aliases may be set by both
+`/v1/metadata/pg_track_function` and the new API endpoint
+`/v1/metadata/pg_set_function_customization.`
+
+### Bug fixes and improvements 
+
+- server: add transformed request to action error responses
+- server: allow nullable action responses (#4405)
+- server: add support for openapi json of REST Endpoints
+- server: enable inherited roles by default in the graphql-engine
+- server: support MSSQL insert mutations
+- console: fix v2 metadata imports
+- cli: make `--database-name` optional in `migrate` subcommands when using a single database (#7434)
+- cli: support absolute paths in --envfile (#5689)
+
+## v2.1.0-beta.1
+
+- server: Ignore unexpected fields in action responses (#5731)
+- server: add webhook transformations for Actions and EventTriggers
+- server: optimize SQL query generation with LIMITs
+- server: add GraphQL request query in the payload for synchronous actions
+- server: improve the event trigger logging on errors
+  NOTE: This change introduces a breaking change, earlier when there
+  was a client error when trying to process an event, then the status was reported as 1000. Now, the status 1000 has been removed and if any status was received by the graphql-engine from the webhook, the status
+  of the invocation will be the same otherwise it will be `NULL`.
+- server: support `extensions` field in error responses from action webhook endpoints (fix #4001)
+- server: fix custom-check based permissions for MSSQL (#7429)
+- server: remove identity notion for table columns (fix #7557)
+- server: support MSSQL transactions
+- server: log individual operation details in the http-log during a batch graphQL query execution
+- server: update `create_scheduled_event` API to return `event_id` in response
+- server: fix bug which allowed inconsistent metadata to exist after the `replace_metadata` API even though `allow_inconsistent_object` is set to `false`.
+- server: fix explicit `null` values not allowed in nested object relationship inserts (#7484)
+- server: `introspect_remote_schema` API now returns original remote schema instead of customized schema
+- server: prevent empty subscription roots in the schema (#6898)
+- server: support database-to-database joins (for now, limited to Postgres as the target side of the join)
+- server: add support for user comments for trackable functions (#7490)
+- console: support tracking of functions with return a single row
+- console: add GraphQL customisation under Remote schema edit tab
+- console: fix cross-schema array relationship suggestions
+- console: add performance fixes for handle large db schemas
+- console: fix missing cross-schema computed fields in permission builder
+- console: add time limits setting to security settings
+- cli: add support for `network` metadata object
+- cli: `hasura migrate apply --all-databases` will return a non zero exit code if operation failed on atleast one database (#7499)
+- cli: `migrate create --from-server` creates the migration and marks it as applied on the server
+- cli: support `query_tags` in metadata
+- cli: add `hasura deploy` command
+- cli: allow exporting and applying metadata from `yaml/json` files
+- cli: allow squashing specific set of migrations. A new `--to` flag is introduced in `migrate squash` command. eg: `hasura migrate squash --from <v1> --to <v4>` 
+- cli: `hasura init --endpoint <endpoint>` adds an option to export metadata and create initial migration from the server.
+
+## v2.0.9
+
+- server: fix export_metadata V2 bug which included cron triggers with `include_in_metadata: false`
+- server: disable mutation for materialised views (#6688)
+- server: set `tracecontext` and `userInfo` for DML actions on Postgres sources
+- server: add support for `connection_parameters` on `pg_add_source` API
+- cli: add progress bar for `migrate apply` command (#4795)
+- cli: embed cli-ext for windows binaries (#7509)
+
+## v2.0.8
+
+- server: fix nullability of object relationships (close #7201)
+- server: update non-existent event trigger, action and query collection error msgs (close #7396)
+- server: fix broken `untrack_function` for non-default source
+- server: Adding support for TLS allowlist by domain and service id (port)
+- server: add support for `graphql-ws` clients
+- console: fix error due to rendering inconsistent object's message
+- console: support insecure TLS allowlist
+- console: support computed fields in remote schema join
+- console: fix data sidebar not updated when a table is renamed
+- cli: fix delay starting console using `hasura console` (#7255)
+
+## v2.0.7
+
+- server: fix v2 -> v1 downgrade bug when cron triggers exist
+- server: add index on the `event_id` column of the `hdb_cron_event_invocation_logs` table
+- server: fix GraphQL type for remote relationship field (close #7284)
+- server: support EdDSA algorithm and key type for JWT
+- server: fix GraphQL type for single-row returning functions (close #7109)
+- console: add support for creation of indexes for Postgres data sources
+- docs: document the cleanup process for scheduled triggers
+- console: allow same named queries and unnamed queries on allowlist file upload
+- console: support computed fields in permission builder
+- console: add custom timeouts to actions
+
+## v2.0.6
+
+- server: Add support for inherited roles for mutations, remote schema, actions and custom function permissions
+- server: fix an issue with remote relationships when join columns are aliased (close #7180)
+- server: fix for incorrect `__typename` value in nested remote joins with a customized remote schema
+- server: fix a bug where some unicode characters in default string values for fields in remote schemas could lead to internal errors
+- server: bigquery: implement `_in` and `_nin` operators. (close #7343)
+- server: bigquery: custom root names, table names and field names for bigquery are included in tests
+- console: fix untracked foreign-key relationships suggestion across schemas
+- console: allow resolution of conflicting inherited role permissions
+- cli: fix SDL formatting in `actions.graphql`(#7296)
+
+## v2.0.5
+
+- server: prevent invalid collisions in remote variable cache key (close #7170)
 - server: preserve unchanged cron triggers in `replace_metadata` API
 - server: fix inherited roles bug where mutations were not accessible when inherited roles was enabled
 - server: reintroduce the unique name constraint in allowed lists
-- server: fix http-log bug where batches with only one request emitted the parameterised query hash as a string instead of in a singleton array
-- console: add template gallery
 - server: subscriptions now validate that all session variables are properly set (#7111)
-- console: add template gallery
+- console: fix metadata out-of-date errors when creating tables with certain configurations (fix #6805) (fix #7233)
 - cli-migrations-v2: fix database url showing up in metadata (#7319)
 
 ## v2.0.4
@@ -22,6 +129,7 @@
 - server: Relax the unique operation name constraint when adding a query to a query collection
 - server: officially deprecate query plan caching, which had already been disabled for a long time
 - server/bigquery: Fix issues related to adding and querying from non-US datasets (closes [6937](https://github.com/hasura/graphql-engine/issues/6937)).
+- console: add template gallery
 - console: add pagination on the Raw SQL results page
 - console: fix issues with replacing invalid graphql identifiers in table and column names
 - console: show error message on inconsistent objects table
@@ -47,8 +155,7 @@ generally, JSON-style aggregates.
 - server: Support computed fields in query filter (`where` argument) (close #7100)
 - server: add a `$.detail.operation.request_mode` field to `http-log` which takes the values `"single"` or `"batched"` to log whether a GraphQL request was executed on its own or as part of a batch
 - server: add `query` field to `http-log` and `websocket-log` in non-error cases
-- server: Add global limit to BigQuery via the `global_select_limit`
-  field in the connection configuration
+- server: Add global limit to BigQuery via the `global_select_limit` field in the connection configuration
 - server: include action and event names in log output
 - server: log all HTTP errors in remote schema calls as `remote-schema-error` with details
 - server: For BigQuery, make `global_select_limit` configuration optional with a default value of

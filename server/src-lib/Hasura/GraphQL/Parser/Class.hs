@@ -1,32 +1,29 @@
 -- | Classes for monads used during schema construction and query parsing.
 module Hasura.GraphQL.Parser.Class
-  ( MonadParse(..)
-  , parseError
-  , module Hasura.GraphQL.Parser.Class
-  ) where
+  ( MonadParse (..),
+    parseError,
+    module Hasura.GraphQL.Parser.Class,
+  )
+where
 
-import           Hasura.Prelude
-
-import qualified Data.HashMap.Strict                  as Map
-import qualified Language.Haskell.TH                  as TH
-
-import           Data.Has
-import           Data.Text.Extended
-import           Data.Tuple.Extended
-import           GHC.Stack                            (HasCallStack)
-import           Type.Reflection                      (Typeable)
-
-import           Hasura.Base.Error
-import           Hasura.GraphQL.Parser.Class.Parse
-import           Hasura.GraphQL.Parser.Internal.Types
-import           Hasura.GraphQL.Parser.Schema         (HasDefinition)
-import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Source
-import           Hasura.RQL.Types.Table
+import Data.Has
+import Data.HashMap.Strict qualified as Map
+import Data.Text.Extended
+import Data.Tuple.Extended
+import GHC.Stack (HasCallStack)
+import Hasura.Base.Error
+import Hasura.GraphQL.Parser.Class.Parse
+import Hasura.GraphQL.Parser.Internal.Types
+import Hasura.GraphQL.Parser.Schema (HasDefinition)
+import Hasura.Prelude
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.Table
 -- import           Hasura.SQL.Backend
-import           Hasura.Session                       (RoleName)
-
+import Hasura.Session (RoleName)
+import Language.Haskell.TH qualified as TH
+import Type.Reflection (Typeable)
 
 {- Note [Tying the knot]
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -105,25 +102,26 @@ class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
   -- 'memoizeOn' :: 'MonadSchema' n m => 'TH.Name' -> a -> m (Parser n b) -> m (Parser n b)
   -- 'memoizeOn' :: 'MonadSchema' n m => 'TH.Name' -> a -> m (FieldParser n b) -> m (FieldParser n b)
   -- @
-  memoizeOn
-    :: forall p d a b
-     . (HasCallStack, HasDefinition (p n b) d, Ord a, Typeable p, Typeable a, Typeable b)
-    => TH.Name
-    -- ^ A unique name used to identify the function being memoized. There isn’t
+  memoizeOn ::
+    forall p d a b.
+    (HasCallStack, HasDefinition (p n b) d, Ord a, Typeable p, Typeable a, Typeable b) =>
+    -- | A unique name used to identify the function being memoized. There isn’t
     -- really any metaprogramming going on here, we just use a Template Haskell
     -- 'TH.Name' as a convenient source for a static, unique identifier.
-    -> a
-    -- ^ The value to use as the memoization key. It’s the caller’s
+    TH.Name ->
+    -- | The value to use as the memoization key. It’s the caller’s
     -- responsibility to ensure multiple calls to the same function don’t use
     -- the same key.
-    -> m (p n b) -> m (p n b)
+    a ->
+    m (p n b) ->
+    m (p n b)
 
 type MonadRole r m = (MonadReader r m, Has RoleName r)
 
 -- | Gets the current role the schema is being built for.
-askRoleName
-  :: MonadRole r m
-  => m RoleName
+askRoleName ::
+  MonadRole r m =>
+  m RoleName
 askRoleName = asks getter
 
 type MonadTableInfo r m = (MonadReader r m, Has SourceCache r, MonadError QErr m)
@@ -131,11 +129,12 @@ type MonadTableInfo r m = (MonadReader r m, Has SourceCache r, MonadError QErr m
 -- | Looks up table information for the given table name. This function
 -- should never fail, since the schema cache construction process is
 -- supposed to ensure all dependencies are resolved.
-askTableInfo
-  :: forall b r m. (Backend b, MonadTableInfo r m)
-  => SourceName
-  -> TableName b
-  -> m (TableInfo b)
+askTableInfo ::
+  forall b r m.
+  (Backend b, MonadTableInfo r m) =>
+  SourceName ->
+  TableName b ->
+  m (TableInfo b)
 askTableInfo sourceName tableName = do
   tableInfo <- asks $ getTableInfo . getter
   -- This should never fail, since the schema cache construction process is
@@ -147,32 +146,52 @@ askTableInfo sourceName tableName = do
 
 -- | A wrapper around 'memoizeOn' that memoizes a function by using its argument
 -- as the key.
-memoize
-  :: (HasCallStack, MonadSchema n m, Ord a, Typeable a, Typeable b, Typeable k)
-  => TH.Name
-  -> (a -> m (Parser k n b))
-  -> (a -> m (Parser k n b))
+memoize ::
+  (HasCallStack, MonadSchema n m, Ord a, Typeable a, Typeable b, Typeable k) =>
+  TH.Name ->
+  (a -> m (Parser k n b)) ->
+  (a -> m (Parser k n b))
 memoize name f a = memoizeOn name a (f a)
 
-memoize2
-  :: (HasCallStack, MonadSchema n m, Ord a, Ord b, Typeable a, Typeable b, Typeable c, Typeable k)
-  => TH.Name
-  -> (a -> b -> m (Parser k n c))
-  -> (a -> b -> m (Parser k n c))
+memoize2 ::
+  (HasCallStack, MonadSchema n m, Ord a, Ord b, Typeable a, Typeable b, Typeable c, Typeable k) =>
+  TH.Name ->
+  (a -> b -> m (Parser k n c)) ->
+  (a -> b -> m (Parser k n c))
 memoize2 name = curry . memoize name . uncurry
 
-memoize3
-  :: ( HasCallStack, MonadSchema n m, Ord a, Ord b, Ord c
-     , Typeable a, Typeable b, Typeable c, Typeable d, Typeable k )
-  => TH.Name
-  -> (a -> b -> c -> m (Parser k n d))
-  -> (a -> b -> c -> m (Parser k n d))
+memoize3 ::
+  ( HasCallStack,
+    MonadSchema n m,
+    Ord a,
+    Ord b,
+    Ord c,
+    Typeable a,
+    Typeable b,
+    Typeable c,
+    Typeable d,
+    Typeable k
+  ) =>
+  TH.Name ->
+  (a -> b -> c -> m (Parser k n d)) ->
+  (a -> b -> c -> m (Parser k n d))
 memoize3 name = curry3 . memoize name . uncurry3
 
-memoize4
-  :: ( HasCallStack, MonadSchema n m, Ord a, Ord b, Ord c, Ord d
-     , Typeable a, Typeable b, Typeable c, Typeable d, Typeable e, Typeable k )
-  => TH.Name
-  -> (a -> b -> c -> d -> m (Parser k n e))
-  -> (a -> b -> c -> d -> m (Parser k n e))
+memoize4 ::
+  ( HasCallStack,
+    MonadSchema n m,
+    Ord a,
+    Ord b,
+    Ord c,
+    Ord d,
+    Typeable a,
+    Typeable b,
+    Typeable c,
+    Typeable d,
+    Typeable e,
+    Typeable k
+  ) =>
+  TH.Name ->
+  (a -> b -> c -> d -> m (Parser k n e)) ->
+  (a -> b -> c -> d -> m (Parser k n e))
 memoize4 name = curry4 . memoize name . uncurry4

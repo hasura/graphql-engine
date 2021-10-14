@@ -1,0 +1,71 @@
+- description: Update actions webhook to another route which returns null response (also, output_type is non-nullable)
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: update_action
+    args:
+      name: create_user
+      definition:
+        kind: synchronous
+        arguments:
+        output_type: UserId!
+        handler: http://127.0.0.1:5593/null-response
+
+- description: Run create_user sync action (with null_response handler)
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+        create_user {
+          id
+        }
+      }
+
+  response:
+    errors:
+    - extensions:
+        internal:
+          error: unexpected response
+          response:
+            status: 200
+            body:
+            headers:
+            - value: application/json
+              name: Content-Type
+            - value: abcd
+              name: Set-Cookie
+          request:
+            body:
+              session_variables:
+                x-hasura-role: admin
+              input: {}
+              action:
+                name: create_user
+              request_query: "mutation {\n  create_user {\n    id\n  }\n}\n"
+            url: http://127.0.0.1:5593/null-response
+            headers: []
+            transformed_request:
+        path: $
+        code: unexpected
+      message: expecting object for action webhook response but got null
+- description: Revert action definition
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: update_action
+    args:
+      name: create_user
+      definition:
+        kind: synchronous
+        arguments:
+        - name: email
+          type: String!
+        - name: name
+          type: String!
+        output_type: UserId
+        handler: http://127.0.0.1:5593/create-user

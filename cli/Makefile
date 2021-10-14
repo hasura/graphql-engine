@@ -18,6 +18,10 @@ endif
 deps:
 	go mod download
 
+.PHONY: lint
+lint:
+	golangci-lint run
+
 # build cli locally, for all given platform/arch
 .PHONY: build
 build: export CGO_ENABLED=0
@@ -57,20 +61,24 @@ copy-cli-ext: clean-cli-ext
 	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node12-linux-arm64 ./internal/cliext/static-bin/linux/arm64/cli-ext
 	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node12-macos-x64 ./internal/cliext/static-bin/darwin/amd64/cli-ext
 	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node16-macos-arm64 ./internal/cliext/static-bin/darwin/arm64/cli-ext
-	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node12-win-x64.exe ./internal/cliext/static-bin/windows/amd64/cli-ext
+	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node12-win-x64.exe ./internal/cliext/static-bin/windows/amd64/cli-ext.exe
 
 # run tests
 .PHONY: test
 test: copy-cli-ext
+	echo "--- :: run test"
 	if [ -z "${HASURA_TEST_CLI_HGE_DOCKER_IMAGE}" ]; then echo "Please set HASURA_TEST_CLI_HGE_DOCKER_IMAGE env for populating testutil.HasuraDockerImage and run test"; exit 1; fi
 	go test -ldflags "-X github.com/hasura/graphql-engine/cli/v2/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" `go list ./... | grep -v integration_test | grep -v commands`
 integration_tests_config_v3: copy-cli-ext
+	echo "--- :: run integration_tests_config_v3"
 	if [ -z "${HASURA_TEST_CLI_HGE_DOCKER_IMAGE}" ]; then echo "Please set HASURA_TEST_CLI_HGE_DOCKER_IMAGE env for populating testutil.HasuraDockerImage and run test"; exit 1; fi
 	go test -ldflags "-X github.com/hasura/graphql-engine/cli/v2/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v3 ./integration_test
 integration_tests_config_v2: copy-cli-ext
+	echo "--- :: run integration_tests_config_v2"
 	if [ -z "${HASURA_TEST_CLI_HGE_DOCKER_IMAGE}" ]; then echo "Please set HASURA_TEST_CLI_HGE_DOCKER_IMAGE env for populating testutil.HasuraDockerImage and run test"; exit 1; fi
 	go test -ldflags "-X github.com/hasura/graphql-engine/cli/v2/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v2 ./integration_test
 test-e2e:
+	echo "--- :: run e2e tests"
 ifndef HAS_GINKGO
 	cd ~ && go get github.com/onsi/ginkgo/ginkgo && cd -
 endif

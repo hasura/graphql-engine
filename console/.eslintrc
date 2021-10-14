@@ -141,6 +141,15 @@
         "*.tsx"
       ],
       "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              "@/features/*/*",
+              "@/new-components/*/*"
+            ]
+          }
+        ],
         "jsx-a11y/label-has-for": [
           0,
           {
@@ -160,7 +169,25 @@
         "camelcase": "off",
         "no-param-reassign": "off",
         "no-use-before-define": "off",
-        "consistent-return": "off",
+        "consistent-return": "off","import/no-extraneous-dependencies": [
+          "error",
+          {
+            "devDependencies": [
+              "src/storybook/**/*",
+              "**/__tests__/**/*",
+              "**/*.test.js",
+              "**/*.test.jsx",
+              "**/*.spec.js",
+              "**/*.spec.jsx",
+              "**/*.test.ts",
+              "**/*.test.tsx",
+              "**/*.spec.ts",
+              "**/*.spec.tsx",
+              "**/*.stories.tsx",
+              "**/*.stories.mdx"
+            ]
+          }
+        ],
         "@typescript-eslint/no-unused-vars": 2,
         "@typescript-eslint/no-use-before-define": "warn",
         "@typescript-eslint/indent": 0,

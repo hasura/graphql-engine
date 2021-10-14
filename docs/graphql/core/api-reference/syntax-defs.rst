@@ -163,8 +163,8 @@ PGSourceConnectionInfo
      - Description
    * - database_url
      - true
-     - ``String`` | FromEnv_
-     - The database connection URL string, or as an environment variable
+     - ``String`` | FromEnv_ | PGConnectionParameters_
+     - The database connection URL as a string, as an environment variable, or as connection parameters.
    * - pool_settings
      - false
      - PGPoolSettings_
@@ -178,7 +178,10 @@ PGSourceConnectionInfo
      - false
      - ``read-committed`` | ``repeatable-read`` | ``serializable``
      - The transaction isolation level in which the queries made to the source will be run with (default: ``read-committed``).
-
+   * - ssl_configuration
+     - false
+     - PGCertSettings_
+     - The client SSL certificate settings for the database (*Only available in Cloud*).
 
 .. _MsSQLSourceConnectionInfo:
 
@@ -219,6 +222,40 @@ FromEnv
      - ``String``
      - Name of the environment variable
 
+.. _PGConnectionParameters:
+
+PGConnectionParameters
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - username
+     - true
+     - ``String``
+     - The Postgres user to be connected
+   * - password
+     - false
+     - ``String``
+     - The Postgres user's password
+   * - database
+     - true
+     - ``String``
+     - The database name
+   * - host
+     - true
+     - ``String``
+     - The name of the host to connect to
+   * - port
+     - true
+     - ``Integer``
+     - The port number to connect with, at the server host
+
+
 .. _PGPoolSettings:
 
 PGPoolSettings
@@ -254,6 +291,38 @@ PGPoolSettings
        created. A value of 0 indicates we should never destroy an active connection. If 0 is
        passed, memory from large query results may not be reclaimed. (default: 600 sec)
 
+.. _PGCertSettings:
+
+PGCertSettings
+^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - sslmode
+     - true
+     - ``String``
+     - The SSL connection mode. See the libpq ssl `support docs <https://www.postgresql.org/docs/9.1/libpq-ssl.html>` for more details.
+   * - sslrootcert
+     - true
+     - FromEnv_
+     - Environment variable which stores trusted certificate authorities.
+   * - sslcert
+     - true
+     - FromEnv_
+     - Environment variable which stores the client certificate.
+   * - sslkey
+     - true
+     - FromEnv_
+     - Environment variable which stores the client private key.
+   * - sslpassword
+     - false
+     - ``String`` | FromEnv_
+     - Password in the case where the sslkey is encrypted.
 
 .. _MsSQLPoolSettings:
 
@@ -488,6 +557,27 @@ Custom Root Fields
      - false
      - ``String``
      - Customise the ``delete_<table-name>_by_pk`` root field
+
+.. _custom_function_root_fields:
+
+Custom Function Root Fields
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - function
+     - false
+     - ``String``
+     - Customise the ``<function-name>`` root field
+   * - function_aggregate
+     - false
+     - ``String``
+     - Customise the ``<function-name>_aggregete`` root field
 
 .. _InsertPermission:
 
@@ -828,7 +918,7 @@ ColumnExp
    :class: haskell-pre
 
    {
-       PGColumn_ : { Operator_ : Value }
+       PGColumn_ | scalar ComputedFieldName_ : { Operator_ : Value }
    }
 
 .. _MetadataOperator:
@@ -1167,7 +1257,7 @@ RemoteSchemaCustomization
      - [RemoteFieldCustomization_]
      - Customization of field names for types in the remote schema
 
-.. _RemoteTypeCustomization
+.. _RemoteTypeCustomization:
 
 RemoteTypeCustomization
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -1200,10 +1290,10 @@ RemoteTypeCustomization
 - Root types, types starting with ``__``,  and standard scalar types may only be customized with an explicit mapping.
 
 
-.. _RemoteFieldCustomization
+.. _RemoteFieldCustomization:
 
 RemoteFieldCustomization
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -1453,6 +1543,10 @@ ActionDefinition
      - false
      - Integer
      - Number of seconds to wait for response before timing out. Default: 30
+   * - transform
+     - false
+     - :ref:`RequestTransformation`
+     - Request Transformation to be applied to this Action's request
 
 
 .. _InputArgument:
@@ -1520,6 +1614,16 @@ Function Configuration
      - Required
      - Schema
      - Description
+   * - custom_name
+     - false
+     - ``String``
+     - Customise the ``<function-name>`` with the provided custom name value.
+       The GraphQL nodes for the function will be generated according to the custom name.
+   * - custom_root_fields
+     - false
+     - :ref:`Custom Function Root Fields <custom_function_root_fields>`
+     - Customise the root fields
+
    * - session_argument
      - false
      - `String`
@@ -1795,6 +1899,114 @@ EventTriggerColumns
    :class: haskell-pre
 
    "*" | [:ref:`PGColumn`]
+
+.. _RequestTransformation:
+
+RequestTransformation
+^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - required
+     - Schema
+     - Description
+   * - method
+     - false
+     - String
+     - Change the request method to this value.
+   * - url
+     - false
+     - String
+     - Change the request URL to this value.
+   * - body
+     - false
+     - String
+     - A template script for transforming the request body.
+   * - content_type
+     - false
+     - String
+     - Replace the Content-Type with this value. Only "application/json" and "application/x-www-form-urlencoded" are allowed. Default: "application/json"
+   * - query_params
+     - false
+     - Object (String : String)
+     - Replace the query params on the URL with this value.
+   * - request_headers
+     - false
+     - :ref:`TransformHeaders`
+     - Transform headers as described here.
+   * - template_engine
+     - false
+     - :ref:`TemplateEngine`
+     - Template language to be used for this transformation. Default: "Kriti"
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - required
+     - Schema
+     - Description
+   * - Key
+     - required
+     - Schema
+     - Description
+
+.. _TransformHeaders
+
+TransformHeaders
+^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - required
+     - Schema
+     - Description
+   * - addHeaders
+     - false
+     - Object (:ref:`HeaderKey` : :ref:`HeaderValue`)
+     - A map of Header Key Value pairs to be added to the request. Content-Type cannot be added via this map.
+   * - removeHeaders
+     - false
+     - Array of (:ref:`HeaderKey`)
+     - Headers to be removed from the request. Content-Type cannot be removed.
+
+
+.. _HeaderKey
+
+HeaderKey
+^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   String
+
+.. _HeaderValue
+
+HeaderKey
+^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   String
+
+.. _TemplateEngine
+
+TemplateEngine
+^^^^^^^^^^^^^^
+
+The JSON templating language to be used for this JSON transformation.
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   "Kriti"
+
 
 .. _RetryConf:
 

@@ -47,6 +47,10 @@ import {
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import { services } from '../../../dataSources/services';
 import insertReducer from './TableInsertItem/InsertActions';
+import {
+  checkFeatureSupport,
+  READ_ONLY_RUN_SQL_QUERIES,
+} from '../../../helpers/versionUtils';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
@@ -85,6 +89,7 @@ const SET_DB_CONNECTION_ENV_VAR = 'Data/SET_DB_CONNECTION_ENV_VAR';
 const RESET_DB_CONNECTION_ENV_VAR = 'Data/RESET_DB_CONNECTION_ENV_VAR';
 
 const SET_ALL_SOURCES_SCHEMAS = 'Data/SET_ALL_SOURCES_SCHEMAS';
+const SET_INCONSISTENT_INHERITED_ROLE = 'Data/SET_INCONSISTENT_INHERITED_ROLE';
 
 export const mergeRemoteRelationshipsWithSchema = (
   remoteRelationships,
@@ -137,45 +142,34 @@ const setUntrackedRelations = () => (dispatch, getState) => {
 };
 
 // todo: it's called 4 times on start
-const loadSchema = configOptions => {
+const loadSchema = (configOptions = {}) => {
   return (dispatch, getState) => {
     const url = Endpoints.query;
 
     let allSchemas = getState().tables.allSchemas;
     const source = getState().tables.currentDataSource;
+    const { currentSchema, schemaList } = getState().tables;
 
-    if (
-      !configOptions ||
-      ((!configOptions.schemas || configOptions.schemas.length === 0) &&
-        (!configOptions.tables || configOptions.tables.length === 0))
-    ) {
-      configOptions = {
-        schemas: [
-          getState().tables.currentSchema || getState().tables.schemaList[0],
-        ],
-      };
+    if (!configOptions?.schemas?.length && !configOptions?.tables?.length) {
+      configOptions.schemas = [currentSchema || schemaList[0]];
     }
 
-    if (configOptions) {
-      if (configOptions.schemas) {
-        allSchemas = allSchemas.filter(
-          schemaInfo =>
-            !configOptions.schemas.some(
-              item => item === schemaInfo.table_schema
-            )
-        );
-      }
+    if (configOptions?.schemas) {
+      allSchemas = allSchemas.filter(
+        schemaInfo =>
+          !configOptions.schemas.some(item => item === schemaInfo.table_schema)
+      );
+    }
 
-      if (configOptions.tables) {
-        allSchemas = allSchemas.filter(
-          schemaInfo =>
-            !configOptions.tables.some(
-              item =>
-                item.table_schema === schemaInfo.table_schema &&
-                item.table_name === schemaInfo.table_name
-            )
-        );
-      }
+    if (configOptions?.tables) {
+      allSchemas = allSchemas.filter(
+        schemaInfo =>
+          !configOptions.tables.some(
+            item =>
+              item.table_schema === schemaInfo.table_schema &&
+              item.table_name === schemaInfo.table_name
+          )
+      );
     }
     const body = {
       type: 'bulk',
@@ -218,7 +212,7 @@ const loadSchema = configOptions => {
     };
 
     return dispatch(exportMetadata()).then(state => {
-      const metadataTables = getTablesInfoSelector(state)(configOptions);
+      const metadataTables = getTablesInfoSelector(state)({});
       return dispatch(requestAction(url, options)).then(
         data => {
           if (!data || !data[0] || !data[0].result) return;
@@ -387,6 +381,9 @@ const fetchDataInit = (source, driver) => (dispatch, getState) => {
   );
 };
 
+/**
+ * @param {string| string[]} [schema=null]
+ */
 const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
   const url = Endpoints.query;
   const source = getState().tables.currentDataSource;
@@ -532,7 +529,7 @@ export const getDatabaseSchemasInfo = (sourceType = 'postgres', sourceName) => (
 ) => {
   const url = Endpoints.query;
   const sql = services[sourceType].getDatabaseInfo;
-  const query = getRunSqlQuery(sql, sourceName);
+  const query = getRunSqlQuery(sql, sourceName, false, true);
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -742,9 +739,9 @@ const makeMigrationCall = (
   errorMsg,
   shouldSkipSchemaReload,
   skipExecution = false,
-  isRetry = false
+  isRetry = false,
+  source = getState().tables.currentDataSource
 ) => {
-  const source = getState().tables.currentDataSource;
   const { resourceVersion } = getState().metadata;
   const upQuery = {
     type: 'bulk',
@@ -1003,6 +1000,46 @@ const fetchPartitionDetails = table => {
   };
 };
 
+export const fetchTableIndexDetails = tableInfo => {
+  return (dispatch, getState) => {
+    const url = Endpoints.query;
+    const currState = getState();
+    const { currentDataSource } = currState.tables;
+    const { table_name: table, table_schema: schema } = tableInfo;
+    const query = getRunSqlQuery(
+      dataSource.tableIndexSql({ table, schema }),
+      currentDataSource,
+      false,
+      checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) || false
+    );
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(query),
+    };
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        try {
+          return JSON.parse(data?.result?.[1]?.[0] ?? '[]');
+        } catch (err) {
+          console.error(err);
+          return [];
+        }
+      },
+      error => {
+        dispatch(
+          showErrorNotification(
+            'Error fetching indexes information',
+            null,
+            error
+          )
+        );
+      }
+    );
+  };
+};
+
 /* ******************************************************* */
 const dataReducer = (state = defaultState, action) => {
   // eslint-disable-line no-unused-vars
@@ -1168,6 +1205,17 @@ const dataReducer = (state = defaultState, action) => {
           dbURL: '',
         },
       };
+    case SET_INCONSISTENT_INHERITED_ROLE:
+      return {
+        ...state,
+        modify: {
+          ...state.modify,
+          permissionsState: {
+            ...state.modify.permissionsState,
+            inconsistentInhertiedRole: action.inconsistent_inherited_role,
+          },
+        },
+      };
     default:
       return state;
   }
@@ -1202,4 +1250,5 @@ export {
   SET_FILTER_SCHEMA,
   SET_FILTER_TABLES,
   fetchPartitionDetails,
+  SET_INCONSISTENT_INHERITED_ROLE,
 };

@@ -30,7 +30,7 @@
 {# TODO: replace react & graphiql imports with a custom directive #}
 {# b/c we're not using any graphiql functionality, only styles #}
 
-{% set deferred_script_files = ['_static/react/react.min.js', '_static/react/react-dom.min.js', '_static/graphiql/graphiql.min.js', '_static/scripts/hdocs.js'] %}
+{% set deferred_script_files = ['_static/react/react-17.0.2.min.js', '_static/react/react-dom-17.0.2.min.js', '_static/graphiql/graphiql-1.4.2.min.js', '_static/scripts/hdocs.js'] %}
 
 {%- if pagename.endswith('mysql-preview') %}
   {% set deferred_script_files = deferred_script_files + ['_static/scripts/mysql-subscribe.js'] %}

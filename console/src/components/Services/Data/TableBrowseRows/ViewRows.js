@@ -150,7 +150,7 @@ const ViewRows = props => {
       Header: (
         <div className={styles.tableCenterContent}>
           <input
-            className={`${styles.inputCheckbox} ${styles.headerInputCheckbox}`}
+            className={`${styles.inputCheckbox} ${styles.headerInputCheckbox} legacy-input-fix`}
             checked={
               curRows.length > 0 && selectedRows.length === curRows.length
             }
@@ -494,7 +494,7 @@ const ViewRows = props => {
       newRow.tableRowSelectAction = (
         <div className={styles.tableCenterContent}>
           <input
-            className={styles.inputCheckbox}
+            className={`${styles.inputCheckbox} legacy-input-fix`}
             type="checkbox"
             disabled={_disableBulkSelect}
             title={_disableBulkSelect ? NO_PRIMARY_KEY_MSG : ''}
@@ -938,17 +938,18 @@ const ViewRows = props => {
     const PaginationWithOnlyNav = () => {
       const newPage = curFilter.offset / curFilter.limit;
       return (
-        <div className={`row`} style={{ maxWidth: '500px' }}>
-          <div className="col-xs-2">
+        <div className={`row flex justify-around`}>
+          <div>
             <button
-              className="btn"
+              className="btn bg-gray-100"
               onClick={() => handlePageChange(newPage - 1)}
               disabled={curFilter.offset === 0}
+              data-test="custom-pagination-prev"
             >
               prev
             </button>
           </div>
-          <div className="col-xs-4">
+          <div style={{ minWidth: '35%' }}>
             <select
               value={curFilter.limit}
               onChange={e => {
@@ -956,6 +957,7 @@ const ViewRows = props => {
                 handlePageSizeChange(parseInt(e.target.value, 10) || 10);
               }}
               className="form-control"
+              data-test="pagination-select"
             >
               <option disabled value="">
                 --
@@ -968,11 +970,12 @@ const ViewRows = props => {
               <option value={100}>100 rows</option>
             </select>
           </div>
-          <div className="col-xs-2">
+          <div>
             <button
-              className="btn"
+              className="btn bg-gray-100"
               onClick={() => handlePageChange(newPage + 1)}
               disabled={curRows.length === 0}
+              data-test="custom-pagination-next"
             >
               next
             </button>
@@ -1016,7 +1019,7 @@ const ViewRows = props => {
           persistColumnOrderChange(curTableName, currentSchema, reorderData)
         }
         defaultReorders={columnsOrder}
-        showPagination={!shouldHidePagination}
+        showPagination={!shouldHidePagination || useCustomPagination}
         {...paginationProps}
       />
     );

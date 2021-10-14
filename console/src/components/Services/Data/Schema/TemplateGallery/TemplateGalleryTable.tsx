@@ -16,7 +16,7 @@ export const TemplateGalleryContentRow: React.VFC<{
   return (
     <tr key={template.key} className={styles.row_content}>
       <td className={styles.td}>
-        <a onClick={openModal} className={styles.on_hover}>
+        <a onClick={openModal} className={`${styles.on_hover} text-secondary`}>
           {template.title}
         </a>
       </td>
@@ -61,7 +61,7 @@ export const TemplateGalleryBody: React.VFC<{ onModalOpen: modalOpenFn }> = ({
   return (
     <>
       <h2
-        className={`${globalStyles.heading_text} ${styles.header_table_description}`}
+        className={`${globalStyles.heading_text} ${styles.header_table_description} mb-sm`}
       >
         Template Gallery
       </h2>
@@ -103,14 +103,14 @@ export const TemplateGalleryBody: React.VFC<{ onModalOpen: modalOpenFn }> = ({
           ))}
         </tbody>
       </table>
-      <p>
+      <p className="mb-lg">
         Want to contribute to the official template gallery?{' '}
         <a
           target="_blank"
           rel="noopener noreferrer"
           href="https://github.com/hasura/template-gallery/discussions/2"
         >
-          Find our more{' '}
+          Find out more{' '}
           <i className="fa fa-share-square-o" aria-hidden="true" />
         </a>
       </p>

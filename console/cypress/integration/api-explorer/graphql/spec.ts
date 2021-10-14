@@ -138,7 +138,7 @@ export const checkSub = () => {
 };
 
 export const delTestTable = () => {
-  cy.get('a').contains('Data').click();
+  cy.get(getElementFromAlias('data-tab-link')).click();
   // Go to the modify section of the table
   cy.get(getElementFromAlias('users')).click();
   cy.get(getElementFromAlias('table-modify')).click();

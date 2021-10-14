@@ -78,7 +78,7 @@ try_jq() {
 
 # Bump this to:
 #  - force a reinstall of python dependencies, etc.
-DEVSH_VERSION=1.4
+DEVSH_VERSION=1.5
 
 case "${1-}" in
   graphql-engine)
@@ -165,7 +165,7 @@ fi
 ####################################
 
 source scripts/containers/postgres
-source scripts/containers/mssql
+source scripts/containers/mssql.sh
 source scripts/containers/citus
 source scripts/containers/mysql.sh
 source scripts/data-sources-util.sh
@@ -243,7 +243,7 @@ function start_dbs() {
 #################################
 
 if [ "$MODE" = "graphql-engine" ]; then
-  cd "$PROJECT_ROOT/server"
+  cd "$PROJECT_ROOT"
   # Existing tix files for a different hge binary will cause issues:
   rm -f graphql-engine.tix
 
@@ -385,7 +385,7 @@ elif [ "$MODE" = "mssql" ]; then
   echo_pretty "    $ $MSSQL_DOCKER -i <import_file>"
   echo_pretty ""
   echo_pretty "Here is the database URL:"
-  echo_pretty "    $MSSQL_DB_URL"
+  echo_pretty "    $MSSQL_CONN_STR"
   echo_pretty ""
   docker logs -f --tail=0 "$MSSQL_CONTAINER_NAME"
 
@@ -429,7 +429,7 @@ elif [ "$MODE" = "test" ]; then
   ########################################
   ###     Integration / unit tests     ###
   ########################################
-  cd "$PROJECT_ROOT/server"
+  cd "$PROJECT_ROOT"
 
   # Until we can use a real webserver for TestEventFlood, limit concurrency
   export HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE=8
@@ -443,25 +443,28 @@ elif [ "$MODE" = "test" ]; then
   export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
   export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
 
-  # It's better UX to build first (possibly failing) before trying to launch
-  # PG, but make sure that new-run uses the exact same build plan, else we risk
-  # rebuilding twice... ugh
-  # Formerly this was a `cabal build` but mixing cabal build and cabal run
-  # seems to conflict now, causing re-linking, haddock runs, etc. Instead do a
-  # `graphql-engine version` to trigger build
-  cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
-      --metadata-database-url="$PG_DB_URL" version
-
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
+    # It's better UX to build first (possibly failing) before trying to launch
+    # PG, but make sure that new-run uses the exact same build plan, else we risk
+    # rebuilding twice... ugh
+    # Formerly this was a `cabal build` but mixing cabal build and cabal run
+    # seems to conflict now, causing re-linking, haddock runs, etc. Instead do a
+    # `graphql-engine version` to trigger build
+    cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
+        --metadata-database-url="$PG_DB_URL" version
     start_dbs
-  else
-    # unit tests just need access to a postgres instance:
-    pg_start
   fi
 
   if [ "$RUN_UNIT_TESTS" = true ]; then
     echo_pretty "Running Haskell test suite"
-    HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
+
+    # unit tests need access to postgres and mssql instances:
+    mssql_start
+    pg_start
+
+    HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" \
+      HASURA_MSSQL_CONN_STR="$MSSQL_CONN_STR" \
+      cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
   fi
 
   if [ "$RUN_HLINT" = true ]; then
@@ -481,6 +484,7 @@ elif [ "$MODE" = "test" ]; then
     # are defined.
     export HASURA_GRAPHQL_PG_SOURCE_URL_1=${HASURA_GRAPHQL_PG_SOURCE_URL_1-$PG_DB_URL}
     export HASURA_GRAPHQL_PG_SOURCE_URL_2=${HASURA_GRAPHQL_PG_SOURCE_URL_2-$PG_DB_URL}
+    export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES="inherited_roles"
 
     # Using --metadata-database-url flag to test multiple backends
     #       HASURA_GRAPHQL_PG_SOURCE_URL_* For a couple multi-source pytests:
@@ -504,6 +508,7 @@ elif [ "$MODE" = "test" ]; then
     echo ""
     echo " Ok"
 
+    export HASURA_BIGQUERY_SERVICE_ACCOUNT=$(cat "$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE")
     add_sources $HASURA_GRAPHQL_SERVER_PORT
 
     cd "$PROJECT_ROOT/server/tests-py"
@@ -528,6 +533,8 @@ elif [ "$MODE" = "test" ]; then
       rm -rf "$PY_VENV"
       echo "$DEVSH_VERSION" > "$DEVSH_VERSION_FILE"
     fi
+    # cryptography 3.4.7 version requires Rust dependencies by default. But we don't need them for our tests, hence disabling them via the following env var => https://stackoverflow.com/a/66334084
+    export CRYPTOGRAPHY_DONT_BUILD_RUST=1
     set +u  # for venv activate
     if [ ! -d "$PY_VENV" ]; then
       python3 -m venv "$PY_VENV"

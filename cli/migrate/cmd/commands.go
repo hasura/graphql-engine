@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -10,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/goccy/go-yaml"
 	"github.com/hasura/graphql-engine/cli/v2/migrate"
 	"github.com/pkg/errors"
 )
@@ -28,8 +26,6 @@ type CreateOptions struct {
 	Version   string
 	Directory string
 	Name      string
-	MetaUp    []byte
-	MetaDown  []byte
 	SQLUp     []byte
 	SQLDown   []byte
 }
@@ -44,55 +40,6 @@ func New(version int64, name, directory string) *CreateOptions {
 		Directory: directory,
 		Name:      name,
 	}
-}
-
-func (c *CreateOptions) SetMetaUp(data interface{}) error {
-	t, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-	yamlData, err := yaml.JSONToYAML(t)
-	if err != nil {
-		return err
-	}
-	c.MetaUp = yamlData
-	return nil
-}
-
-func (c *CreateOptions) SetMetaUpFromFile(filePath string) error {
-	data, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return err
-	}
-
-	var metadata []interface{}
-	var q interface{}
-	err = yaml.Unmarshal(data, &q)
-	if err != nil {
-		return err
-	}
-
-	metadata = append(
-		metadata,
-		map[string]interface{}{
-			"type": "replace_metadata",
-			"args": q,
-		},
-	)
-	return c.SetMetaUp(metadata)
-}
-
-func (c *CreateOptions) SetMetaDown(data interface{}) error {
-	t, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-	yamlData, err := yaml.JSONToYAML(t)
-	if err != nil {
-		return err
-	}
-	c.MetaDown = yamlData
-	return nil
 }
 
 func (c *CreateOptions) SetSQLUp(data string) error {
@@ -123,24 +70,8 @@ func (c *CreateOptions) Create() error {
 	}
 
 	// Check if data has been set in one of the files
-	if c.MetaUp == nil && c.MetaDown == nil && c.SQLUp == nil && c.SQLDown == nil {
+	if c.SQLUp == nil && c.SQLDown == nil {
 		return errors.New("none of the files has been set with data")
-	}
-
-	if c.MetaUp != nil {
-		// Create MetaUp
-		err = createFile(filepath.Join(path, "up.yaml"), c.MetaUp)
-		if err != nil {
-			return err
-		}
-	}
-
-	if c.MetaDown != nil {
-		// Create MetaDown
-		err = createFile(filepath.Join(path, "down.yaml"), c.MetaDown)
-		if err != nil {
-			return err
-		}
 	}
 
 	if c.SQLUp != nil {
@@ -177,6 +108,23 @@ func (c *CreateOptions) Delete() error {
 			err := deleteFile(path)
 			if err != nil {
 				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (c *CreateOptions) MoveToDir(destDir string) error {
+	files, err := ioutil.ReadDir(c.Directory)
+	if err != nil {
+		return err
+	}
+
+	for _, fi := range files {
+		if strings.HasPrefix(fi.Name(), fmt.Sprintf("%s_", c.Version)) {
+			if fi.IsDir() {
+				path := filepath.Join(c.Directory, fi.Name())
+				return os.Rename(path, filepath.Join(destDir, fi.Name()))
 			}
 		}
 	}
@@ -222,27 +170,13 @@ func DownCmd(m *migrate.Migrate, limit int64) error {
 	}
 }
 
-func SquashCmd(m *migrate.Migrate, from uint64, version int64, name, directory string) (versions []int64, err error) {
-	versions, upMeta, upSql, downMeta, downSql, err := m.Squash(from)
+func SquashCmd(m *migrate.Migrate, from uint64, to int64, version int64, name, directory string) (versions []int64, err error) {
+	versions, upSql, downSql, err := m.Squash(from, to)
 	if err != nil {
 		return
 	}
 
 	createOptions := New(version, name, directory)
-	if len(upMeta) != 0 {
-		byteUp, err := yaml.Marshal(upMeta)
-		if err != nil {
-			return versions, errors.Wrap(err, "cannot unmarshall up query")
-		}
-		createOptions.MetaUp = byteUp
-	}
-	if len(downMeta) != 0 {
-		byteDown, err := yaml.Marshal(downMeta)
-		if err != nil {
-			return versions, errors.Wrap(err, "cannot unmarshall down query")
-		}
-		createOptions.MetaDown = byteDown
-	}
 	createOptions.SQLUp = upSql
 	createOptions.SQLDown = downSql
 

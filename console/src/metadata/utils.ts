@@ -122,6 +122,20 @@ export const createAllowListQuery = (
   };
 };
 
+export const addInsecureDomainQuery = (host: string) => {
+  return {
+    type: 'add_host_to_tls_allowlist',
+    args: { host, permissions: ['self-signed'] },
+  };
+};
+
+export const deleteDomain = (host: string) => {
+  return {
+    type: 'drop_host_from_tls_allowlist',
+    args: { host },
+  };
+};
+
 export const reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery = (
   remoteSchemaName: string,
   source: string
@@ -179,6 +193,7 @@ export const updateAPILimitsQuery = ({
     disabled: boolean;
     depth_limit?: APILimitInputType<number>;
     node_limit?: APILimitInputType<number>;
+    time_limit?: APILimitInputType<number>;
     rate_limit?: APILimitInputType<{
       unique_params: Nullable<'IP' | string[]>;
       max_reqs_per_min: number;
@@ -190,7 +205,12 @@ export const updateAPILimitsQuery = ({
     disabled: newAPILimits.disabled,
   };
 
-  const api_limits = ['depth_limit', 'node_limit', 'rate_limit'] as const;
+  const api_limits = [
+    'depth_limit',
+    'node_limit',
+    'rate_limit',
+    'time_limit',
+  ] as const;
 
   api_limits.forEach(key => {
     const role = newAPILimits[key]?.per_role
@@ -267,7 +287,12 @@ export const removeAPILimitsQuery = ({
     };
   }
 
-  const api_limits = ['depth_limit', 'node_limit', 'rate_limit'] as const;
+  const api_limits = [
+    'depth_limit',
+    'node_limit',
+    'rate_limit',
+    'time_limit',
+  ] as const;
 
   api_limits.forEach(key => {
     delete existingAPILimits?.[key]?.per_role?.[role];

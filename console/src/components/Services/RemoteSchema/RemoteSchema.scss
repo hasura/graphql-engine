@@ -318,3 +318,18 @@
   display: flex;
   align-items: center;
 }
+
+.CustomEditor {
+  padding: 15px;
+  background-color: white;
+  border: 1px solid #ccc;
+  max-width: 700px;
+  margin-top: 5px;
+}
+
+.fontAwosomeClose {
+  margin-left: 10px;
+  width: 15px;
+  min-width: 15px;
+  cursor: pointer;
+}

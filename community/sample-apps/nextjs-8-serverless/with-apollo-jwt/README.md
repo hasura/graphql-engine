@@ -6,7 +6,7 @@
 
 - Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
   
-  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
+  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/signup)
 
 - Get the app URL (say `my-app.hasura.app`)
 
@@ -14,10 +14,11 @@
 1. Add your Hasura project URL in `hasura/config.yaml`
 
 ```yaml
+version: 3
 endpoint: https://my-app.hasura.app
 ```
 
-2. Run `hasura migrate apply` and `hasura metadata apply` inside `hasura` directory to create the required tables and permissions for the app.
+2. Run `hasura metadata apply` and `hasura migrate apply` inside `hasura` directory to create the required tables and permissions for the app.
 
 ## Deploy JWT Server
 

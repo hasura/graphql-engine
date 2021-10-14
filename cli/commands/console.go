@@ -2,7 +2,6 @@ package commands
 
 import (
 	"os"
-	"sync"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
 	"github.com/hasura/graphql-engine/cli/v2/util"
@@ -68,7 +67,9 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
 	f.String("access-key", "", "access key for Hasura GraphQL engine")
-	f.MarkDeprecated("access-key", "use --admin-secret instead")
+	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
 	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
 	f.String("certificate-authority", "", "path to a cert file for the certificate authority")
 
@@ -90,8 +91,6 @@ type ConsoleOptions struct {
 	Address     string
 
 	DontOpenBrowser bool
-
-	WG *sync.WaitGroup
 
 	StaticDir       string
 	Browser         string
@@ -158,7 +157,6 @@ func (o *ConsoleOptions) Run() error {
 		TemplateProvider: templateProvider,
 	})
 
-	o.WG = new(sync.WaitGroup)
 	// start console and API HTTP Servers
 	serveOpts := &console.ServeOpts{
 		APIServer:               apiServer,
@@ -171,7 +169,6 @@ func (o *ConsoleOptions) Run() error {
 		Address:                 o.Address,
 		SignalChanConsoleServer: o.ConsoleServerInterruptSignal,
 		SignalChanAPIServer:     o.APIServerInterruptSignal,
-		WG:                      o.WG,
 	}
 
 	return console.Serve(serveOpts)

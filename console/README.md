@@ -24,7 +24,7 @@ Feel free to open pull requests to address these issues or to add/fix  console f
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/en/) (v8.9+)
+- [Node.js](https://nodejs.org/en/) (v12+, it is recommended that you use `node` with version `v12.x.x` A.K.A `erbium` or version `14.x.x` A.K.A `Fermium`)
 - [Hasura GraphQL Engine](https://hasura.io/docs/latest/graphql/core/getting-started/index.html)
 - [Hasura CLI](https://hasura.io/docs/latest/graphql/core/hasura-cli/install-hasura-cli.html) (for working with migrations)
 
@@ -145,6 +145,12 @@ hasura console --endpoint <DATA_API_URL> --admin-secret <your-admin-secret> (opt
 
 ```bash
 npm run dev
+```
+
+###### Start development storybook
+
+```bash
+npm run storybook
 ```
 
 ### Check out the console

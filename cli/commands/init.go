@@ -7,12 +7,17 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/hashicorp/go-multierror"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 	crontriggers "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/cron_triggers"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/functions"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/sources"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/tables"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
+	"github.com/sirupsen/logrus"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/fsm"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions"
 	actionMetadataFileTypes "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/allowlist"
@@ -22,7 +27,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/util"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -30,6 +34,7 @@ import (
 
 const (
 	defaultDirectory string = "hasura"
+	defaultEndpoint  string = "http://localhost:8080"
 )
 
 // NewInitCmd is the definition for init command
@@ -82,8 +87,18 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL engine")
 	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL engine")
 	f.StringVar(&opts.Template, "install-manifest", "", "install manifest to be cloned")
-	f.MarkDeprecated("access-key", "use --admin-secret instead")
-	f.MarkDeprecated("directory", "use directory-name argument instead")
+	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
+	if err := f.MarkDeprecated("directory", "use directory-name argument instead"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
+
+	// only used in tests
+	f.BoolVar(&opts.GetMetadataMigrations, "fetch", false, "It fetches the metadata and migrations from server without prompt")
+	if err := f.MarkHidden("fetch"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
 
 	return initCmd
 }
@@ -91,31 +106,37 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 type InitOptions struct {
 	EC *cli.ExecutionContext
 
-	Version     cli.ConfigVersion
-	Endpoint    string
-	AdminSecret string
-	InitDir     string
+	Version               cli.ConfigVersion
+	Endpoint              string
+	AdminSecret           string
+	InitDir               string
+	GetMetadataMigrations bool
 
 	Template string
 }
 
-func (o *InitOptions) Run() error {
-	var infoMsg string
+func (o *InitOptions) InitRun() error {
 	// prompt for init directory if it's not set already
 	if o.InitDir == "" {
-		p := promptui.Prompt{
-			Label:   "Name of project directory ",
-			Default: defaultDirectory,
-		}
-		r, err := p.Run()
+		r, err := util.GetInputPromptWithDefault("Name of project directory ?", defaultDirectory)
 		if err != nil {
-			return handlePromptError(err)
+			return fmt.Errorf("prompt exited: %w", err)
 		}
 		if strings.TrimSpace(r) != "" {
 			o.InitDir = r
 		} else {
 			o.InitDir = defaultDirectory
 		}
+	}
+	if o.Endpoint != "" && !o.GetMetadataMigrations && o.EC.IsTerminal {
+		r, err := util.GetYesNoPrompt(fmt.Sprintf("Initialize project with metadata & migrations from %s ?", o.Endpoint))
+		if err != nil {
+			return fmt.Errorf("prompt exited: %w", err)
+		}
+		o.GetMetadataMigrations = r
+	}
+	if !o.EC.IsTerminal {
+		o.GetMetadataMigrations = true
 	}
 
 	cwdir, err := os.Getwd()
@@ -136,20 +157,12 @@ func (o *InitOptions) Run() error {
 			return errors.Errorf("current working directory is already a hasura project directory")
 		}
 		o.EC.ExecutionDirectory = cwdir
-		infoMsg = `hasura project initialised. execute the following command to continue:
-  hasura console
-`
 	} else {
 		// create execution directory
 		err := o.createExecutionDirectory()
 		if err != nil {
 			return err
 		}
-		infoMsg = fmt.Sprintf(`directory created. execute the following commands to continue:
-
-  cd %s
-  hasura console
-`, o.EC.ExecutionDirectory)
 	}
 
 	// create template files
@@ -163,8 +176,6 @@ func (o *InitOptions) Run() error {
 	if err != nil {
 		return err
 	}
-
-	o.EC.Logger.Info(infoMsg)
 	return nil
 }
 
@@ -196,25 +207,16 @@ func (o *InitOptions) createFiles() error {
 		return errors.Wrap(err, "error creating setup directories")
 	}
 	// set config object
-	var config *cli.Config
-	if o.Version == cli.V1 {
-		config = &cli.Config{
-			ServerConfig: cli.ServerConfig{
-				Endpoint: "http://localhost:8080",
-			},
-		}
-	} else {
-		config = &cli.Config{
-			Version: o.Version,
-			ServerConfig: cli.ServerConfig{
-				Endpoint: "http://localhost:8080",
-			},
-			MetadataDirectory: "metadata",
-			ActionConfig: &actionMetadataFileTypes.ActionExecutionConfig{
-				Kind:                  "synchronous",
-				HandlerWebhookBaseURL: "http://localhost:3000",
-			},
-		}
+	var config = &cli.Config{
+		Version: o.Version,
+		ServerConfig: cli.ServerConfig{
+			Endpoint: defaultEndpoint,
+		},
+		MetadataDirectory: "metadata",
+		ActionConfig: &actionMetadataFileTypes.ActionExecutionConfig{
+			Kind:                  "synchronous",
+			HandlerWebhookBaseURL: "http://localhost:3000",
+		},
 	}
 	if o.Endpoint != "" {
 		if _, err := url.ParseRequestURI(o.Endpoint); err != nil {
@@ -248,7 +250,10 @@ func (o *InitOptions) createFiles() error {
 		if err != nil {
 			return errors.Wrap(err, "cannot write metadata directory")
 		}
-		o.EC.Version.GetServerFeatureFlags()
+		err = o.EC.Version.GetServerFeatureFlags()
+		if err != nil {
+			o.EC.Logger.Warnf("error determining server feature flags: %v", err)
+		}
 
 		// create metadata files
 		plugins := make(metadataobject.Objects, 0)
@@ -305,9 +310,301 @@ func (o *InitOptions) createTemplateFiles() error {
 	return nil
 }
 
-func handlePromptError(err error) error {
-	if err == promptui.ErrInterrupt {
-		return errors.New("cancelled by user")
+func (o *InitOptions) Run() error {
+	context := &initCtx{
+		ec:      o.EC,
+		initOps: o,
+		logger:  o.EC.Logger,
+		err:     nil,
 	}
-	return errors.Wrap(err, "prompt failed")
+
+	configInitFSM := newInitFSM()
+	if err := configInitFSM.SendEvent(createProjectDirectory, context); err != nil {
+		return err
+	}
+	if configInitFSM.Current == failedOperation {
+		return fmt.Errorf("operation failed: %w", context.err)
+	}
+	return nil
+}
+
+const (
+	creatingProjectDirectory stateType = "Creating project directory"
+	failedCreatingProjectDir stateType = "Failed to create project directory"
+	validatingEndpoint       stateType = "Validating Endpoint"
+	failedValidatingEndpoint stateType = "Failed validating endpoint"
+	exportingMetadata        stateType = "Exporting Metadata"
+	failedExportingMetadata  stateType = "Failed to export Metadata"
+	creatingMigration        stateType = "Creating Migration"
+	failedCreatingMigration  stateType = "Failed creating Migration"
+	endState                 stateType = "End State"
+)
+
+const (
+	createProjectDirectory       eventType = "Create project directory"
+	createProjectDirectoryFailed eventType = "Create project directory failed"
+	validateEndpoint             eventType = "Validate Endpoint"
+	validateEndpointFailed       eventType = "Validate Endpoint Failed"
+	exportMetadata               eventType = "Export Metadata"
+	exportMetadataFailed         eventType = "Export Metadata Failed"
+	createMigration              eventType = "Create migration from server"
+	createMigrationFailed        eventType = "Create migration from server Failed"
+	gotoEndstate                 eventType = "Go to End State"
+)
+
+type initCtx struct {
+	ec      *cli.ExecutionContext
+	initOps *InitOptions
+	logger  *logrus.Logger
+	err     error
+}
+
+type creatingDefaultDirAction struct{}
+
+func (a *creatingDefaultDirAction) Execute(ctx fsm.EventContext) eventType {
+	context := ctx.(*initCtx)
+	opts := context.initOps
+	context.logger.Debug(creatingProjectDirectory)
+	if err := opts.InitRun(); err != nil {
+		context.err = err
+		return createProjectDirectoryFailed
+	}
+	if len(opts.Endpoint) > 0 && opts.GetMetadataMigrations {
+		return validateEndpoint
+	}
+	return gotoEndstate
+}
+
+type failedCreatingDefaultDirAction struct{}
+
+func (a *failedCreatingDefaultDirAction) Execute(ctx fsm.EventContext) eventType {
+	context := ctx.(*initCtx)
+	context.logger.Debug(failedCreatingProjectDir)
+	if context.err != nil {
+		context.logger.Errorln("initializing project directory failed")
+	}
+	return failOperation
+}
+
+type validatingEndpointAction struct{}
+
+func (a *validatingEndpointAction) Execute(ctx fsm.EventContext) eventType {
+	context := ctx.(*initCtx)
+	opts := context.initOps
+	context.logger.Debug(validatingEndpoint)
+	if err := util.GetServerStatus(opts.Endpoint); err != nil {
+		context.err = err
+		return validateEndpointFailed
+	}
+	return exportMetadata
+}
+
+type failedValidatingEndpointAction struct{}
+
+func (a *failedValidatingEndpointAction) Execute(ctx fsm.EventContext) eventType {
+	context := ctx.(*initCtx)
+	context.logger.Debug(failedValidatingEndpoint)
+	if context.err != nil {
+		context.logger.Infoln("validating endpoint failed, server not reachable")
+	}
+	return gotoEndstate
+}
+
+type exportingMetadataAction struct{}
+
+func (a *exportingMetadataAction) Execute(ctx fsm.EventContext) eventType {
+	context := ctx.(*initCtx)
+	opts := MetadataExportOptions{
+		EC: context.ec,
+	}
+	context.logger.Debug(exportingMetadata)
+	if err := context.ec.Validate(); err != nil {
+		context.err = err
+		return exportMetadataFailed
+	}
+	// Note: Here ec won't use the values from `--endpoint` and `--admin-secret` or `--access-key` flags
+	context.ec.Spin("Exporting metadata...")
+	if err := opts.Run(); err != nil {
+		opts.EC.Spinner.Stop()
+		context.err = err
+		return exportMetadataFailed
+	}
+	opts.EC.Spinner.Stop()
+	opts.EC.Logger.Info("Metadata exported")
+	return createMigration
+}
+
+type failedExportingMetadataAction struct{}
+
+func (a *failedExportingMetadataAction) Execute(ctx fsm.EventContext) eventType {
+	context := ctx.(*initCtx)
+	context.logger.Debug(failedExportingMetadata)
+	if context.err != nil {
+		context.logger.Errorf("exporting metadata failed: \n%v\n%s", context.err, "run `hasura metadata export` from your project directory to retry")
+	}
+	return createMigration
+}
+
+type creatingMigrationAction struct{}
+
+func (a *creatingMigrationAction) Execute(ctx fsm.EventContext) eventType {
+	context := ctx.(*initCtx)
+	opts := migrateCreateOptions{
+		EC:         context.ec,
+		name:       "init",
+		fromServer: true,
+	}
+	context.logger.Debug(creatingMigration)
+	if err := context.ec.Validate(); err != nil {
+		context.err = err
+		return createMigrationFailed
+	}
+	// Note: Here ec won't use the values from `--endpoint` and `--admin-secret` or `--access-key` flags
+	if opts.EC.Config.Version == cli.V2 {
+		source := cli.Source{Name: "", Kind: hasura.SourceKindPG}
+		opts.Source = source
+		if _, err := opts.run(); err != nil {
+			context.err = multierror.Append(context.err, err)
+		}
+	} else {
+		sources, err := metadatautil.GetSourcesAndKind(opts.EC.APIClient.V1Metadata.ExportMetadata)
+		if err != nil {
+			context.err = err
+			context.logger.Debugf("getting list of connected databases from server (%s) failed", context.initOps.Endpoint)
+			return createMigrationFailed
+		}
+		for _, source := range sources {
+			opts.EC.Logger.Infof("Creating migrations for source: %s", source.Name)
+			opts.Source = cli.Source(source)
+			if _, err := opts.run(); err != nil {
+				context.err = multierror.Append(context.err, fmt.Errorf("applying migrations on source: %s: %w", source.Name, err))
+			}
+		}
+	}
+	if context.err != nil {
+		return createMigrationFailed
+	}
+
+	return gotoEndstate
+}
+
+type failedCreatingMigrationAction struct{}
+
+func (a *failedCreatingMigrationAction) Execute(ctx fsm.EventContext) eventType {
+	context := ctx.(*initCtx)
+	context.logger.Debug(failedCreatingMigration)
+	if context.err != nil {
+		context.logger.Errorf("creating migrations failed: \n%v\n%s", context.err, "run `hasura migrate create --from-server` from your project directory to retry")
+	}
+	return gotoEndstate
+}
+
+type failedInitOperationAction struct{}
+
+func (a *failedInitOperationAction) Execute(ctx fsm.EventContext) eventType {
+	context := ctx.(*initCtx)
+	context.logger.Debug(failedOperation)
+	return fsm.NoOp
+}
+
+type gotoEndstateAction struct{}
+
+func (a *gotoEndstateAction) Execute(ctx fsm.EventContext) eventType {
+	context := ctx.(*initCtx)
+	opts := context.initOps
+	cwdir, err := os.Getwd()
+	if err != nil {
+		context.logger.Errorf("error getting current working directory : %v", err)
+		return fsm.NoOp
+	}
+	var infoMsg string
+	if opts.EC.ExecutionDirectory != cwdir {
+		infoMsg = fmt.Sprintf(`directory created. execute the following commands to continue:
+
+  cd %s
+  hasura console
+`, opts.EC.ExecutionDirectory)
+	} else {
+		infoMsg = `hasura project initialised. execute the following command to continue:
+		hasura console
+	  `
+	}
+	context.logger.Infoln(infoMsg)
+	return fsm.NoOp
+}
+
+func newInitFSM() *fsm.StateMachine {
+	type State = fsm.State
+	type States = fsm.States
+	type Events = fsm.Events
+	return &fsm.StateMachine{
+		States: States{
+			fsm.Default: State{
+				Events: Events{
+					createProjectDirectory: creatingProjectDirectory,
+				},
+			},
+			creatingProjectDirectory: State{
+				Action: &creatingDefaultDirAction{},
+				Events: Events{
+					createProjectDirectoryFailed: failedCreatingProjectDir,
+					validateEndpoint:             validatingEndpoint,
+					gotoEndstate:                 endState,
+				},
+			},
+			failedCreatingProjectDir: State{
+				Action: &failedCreatingDefaultDirAction{},
+				Events: Events{
+					failOperation: failedOperation,
+				},
+			},
+			validatingEndpoint: State{
+				Action: &validatingEndpointAction{},
+				Events: Events{
+					validateEndpointFailed: failedValidatingEndpoint,
+					exportMetadata:         exportingMetadata,
+				},
+			},
+			failedValidatingEndpoint: State{
+				Action: &failedValidatingEndpointAction{},
+				Events: Events{
+					gotoEndstate: endState,
+				},
+			},
+			exportingMetadata: State{
+				Action: &exportingMetadataAction{},
+				Events: Events{
+					exportMetadataFailed: failedExportingMetadata,
+					createMigration:      creatingMigration,
+				},
+			},
+			failedExportingMetadata: State{
+				Action: &failedExportingMetadataAction{},
+				Events: Events{
+					gotoEndstate:    endState,
+					createMigration: creatingMigration,
+				},
+			},
+			creatingMigration: State{
+				Action: &creatingMigrationAction{},
+				Events: Events{
+					createMigrationFailed: failedCreatingMigration,
+					gotoEndstate:          endState,
+				},
+			},
+			failedCreatingMigration: State{
+				Action: &failedCreatingMigrationAction{},
+				Events: Events{
+					gotoEndstate: endState,
+				},
+			},
+			failedOperation: State{
+				Action: &failedInitOperationAction{},
+			},
+			endState: State{
+				Action: &gotoEndstateAction{},
+				Events: Events{},
+			},
+		},
+	}
 }

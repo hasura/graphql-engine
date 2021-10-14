@@ -4,8 +4,8 @@
 
 .. _api_remote_schemas:
 
-Schema/Metadata API Reference: Remote schemas
-=============================================
+Schema/Metadata API Reference: Remote schemas (Deprecated)
+==========================================================
 
 .. contents:: Table of contents
   :backlinks: none

@@ -2,12 +2,13 @@ package commands
 
 import (
 	"fmt"
-	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
 	"github.com/hasura/graphql-engine/cli/v2/util"
 
@@ -47,6 +48,24 @@ func editEndpointInConfig(configFilePath, endpoint string) {
 
 }
 
+func editMetadataFileInConfig(configFilePath, path string) {
+	var config cli.Config
+	b, err := ioutil.ReadFile(configFilePath)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	err = yaml.Unmarshal(b, &config)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	config.MetadataFile = path
+
+	b, err = yaml.Marshal(&config)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	err = ioutil.WriteFile(configFilePath, b, 0655)
+	Expect(err).ShouldNot(HaveOccurred())
+
+}
+
 func editSourceNameInConfigV3ProjectTemplate(projectDir, sourceName, postgresConnectionString string) {
 	// assumes it's renaming a copy of commands/testdata/config-v3-test-project
 	Expect(os.Rename(filepath.Join(projectDir, "migrations", "pg"), filepath.Join(projectDir, "migrations", sourceName))).To(BeNil())
@@ -72,4 +91,19 @@ func copyTestConfigV3Project(dest string) {
 	p, err := filepath.Abs("testdata/config-v3-test-project")
 	Expect(err).To(BeNil())
 	Expect(util.CopyDir(p, dest)).To(BeNil())
+}
+
+func copyMigrationsToProjectDirectory(projectDirectory, migrationsDirectory string, sources ...string) {
+	projectMigrationsDirectory := filepath.Join(projectDirectory, "migrations")
+	if len(sources) == 0 {
+		// should be a config v2 project
+		Expect(os.RemoveAll(projectMigrationsDirectory)).To(BeNil())
+		Expect(util.CopyDir(migrationsDirectory, filepath.Join(projectDirectory, "migrations"))).To(BeNil())
+	}
+	for _, source := range sources {
+		// remove existing migrations from project directory
+		Expect(os.RemoveAll(projectMigrationsDirectory)).To(BeNil())
+		// move new migrations
+		Expect(util.CopyDir(migrationsDirectory, filepath.Join(projectMigrationsDirectory, source))).To(BeNil())
+	}
 }

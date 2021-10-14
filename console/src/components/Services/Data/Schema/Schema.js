@@ -169,11 +169,15 @@ class Schema extends Component {
     };
 
     this.props.dispatch(fetchFunctionInit());
-    this.props.dispatch(
-      updateSchemaInfo({ schemas: [this.props.currentSchema] })
-    );
+    this.props.dispatch(updateSchemaInfo({ schemas: this.props.schemaList }));
 
     this.schemaNameInputRef = React.createRef(null);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.currentSchema !== this.props.currentSchema) {
+      this.props.dispatch(updateSchemaInfo({ schemas: this.props.schemaList }));
+    }
   }
 
   cancelCreateNewSchema = () => {
@@ -671,9 +675,9 @@ class Schema extends Component {
               </h2>
               {getCreateBtn()}
             </div>
-            <hr />
+            <hr className="my-md" />
             {getCurrentSchemaSection()}
-            <hr />
+            <hr className="my-md" />
             {getUntrackedTablesSection()}
             {isFeatureSupported('tables.relationships.track') &&
               getUntrackedRelationsSection()}
@@ -682,7 +686,7 @@ class Schema extends Component {
             )}
             {isFeatureSupported('functions.nonTrackableFunctions.enabled') &&
               getNonTrackableFunctionsSection()}
-            <hr />
+            <hr className="my-md" />
           </div>
         </div>
       </RightContainer>

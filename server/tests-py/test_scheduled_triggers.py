@@ -16,6 +16,7 @@ import time
 def stringify_datetime(dt):
     return dt.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
+@pytest.mark.skip(msg="See https://github.com/hasura/graphql-engine-mono/pull/2467 for the details")
 class TestScheduledEvent(object):
 
     webhook_payload = {"foo":"baz"}
@@ -46,6 +47,8 @@ class TestScheduledEvent(object):
         }
         st, resp = hge_ctx.v1q(query)
         assert st == 200,resp
+        # ensuring that a valid event_id is returned
+        assert 'event_id' in resp, resp
 
     # Fails immediately, with 'dead'
     def test_create_scheduled_event_with_very_old_scheduled_time(self,hge_ctx):
@@ -60,6 +63,8 @@ class TestScheduledEvent(object):
         }
         st, resp = hge_ctx.v1q(query)
         assert st == 200,resp
+        # ensuring that a valid event_id is returned
+        assert 'event_id' in resp, resp
 
     # Fails on request, trying twice:
     def test_create_trigger_with_error_returning_webhook(self,hge_ctx):
@@ -80,6 +85,8 @@ class TestScheduledEvent(object):
         }
         st, resp = hge_ctx.v1q(query)
         assert st == 200, resp
+        # ensuring that a valid event_id is returned
+        assert 'event_id' in resp, resp
 
     # Here we check the three requests received by the webhook, from above.
     def test_check_fired_webhook_events(self,hge_ctx,scheduled_triggers_evts_webhook):

@@ -29,7 +29,7 @@ func (p *projectMigrationsStatus) Status(opts ...ProjectMigrationStatusOption) (
 	}
 	if p.allDatabases {
 		metadataOps := cli.GetCommonMetadataOps(p.ec)
-		sources, err := metadatautil.GetSourcesAndKind(metadataOps.ExportMetadata)
+		sources, err := metadatautil.GetSourcesAndKindStrict(metadataOps.ExportMetadata)
 		if err != nil {
 			return nil, err
 		}

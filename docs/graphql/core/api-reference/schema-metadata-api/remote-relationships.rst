@@ -2,8 +2,8 @@
    :description: Manage remote relationships with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, remote joins, remote relationships
 
-Schema/Metadata API Reference: Remote Relationships
-===================================================
+Schema/Metadata API Reference: Remote Relationships (Deprecated)
+================================================================
 
 .. contents:: Table of contents
   :backlinks: none

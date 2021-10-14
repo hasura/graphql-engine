@@ -42,7 +42,7 @@ func GetSourceKind(exportMetadata func() (io.Reader, error), sourceName string) 
 	}
 	var sources []struct {
 		Name string            `yaml:"name"`
-		Kind hasura.SourceKind `yaml: "kind"`
+		Kind hasura.SourceKind `yaml:"kind"`
 	}
 	path, err := yaml.PathString("$.sources[*]")
 	if err != nil {
@@ -83,7 +83,7 @@ func GetSources(exportMetadata func() (io.Reader, error)) ([]string, error) {
 }
 
 type Source struct {
-	Name string            `yaml: "name"`
+	Name string            `yaml:"name"`
 	Kind hasura.SourceKind `yaml:"kind"`
 }
 
@@ -106,6 +106,20 @@ func GetSourcesAndKind(exportMetadata func() (io.Reader, error)) ([]Source, erro
 	var sources []Source
 	if err := path.Read(ast.Docs[0], &sources); err != nil {
 		return nil, err
+	}
+	return sources, nil
+}
+
+var ErrNoConnectedSources = errors.New("0 connected sources found on hasura")
+
+// GetSourcesAndKindStrict is like GetSourcesAndKind but will return an error when  no sources are found
+func GetSourcesAndKindStrict(exportMetadata func() (io.Reader, error)) ([]Source, error) {
+	sources, err := GetSourcesAndKind(exportMetadata)
+	if err != nil {
+		return nil, err
+	}
+	if len(sources) == 0 {
+		return nil, ErrNoConnectedSources
 	}
 	return sources, nil
 }

@@ -177,7 +177,7 @@ export const networkStubs = {
   rootJsonWithLoading: rest.get(ROOT_CONFIG_PATH, (req, res, context) => {
     return res(
       context.text(JSON.stringify(MOCK_ROOT_CONFIG)),
-      context.delay(1000)
+      context.delay(20000)
     );
   }),
   rootJsonError: rest.get(ROOT_CONFIG_PATH, (req, res, context) => {
@@ -190,6 +190,20 @@ export const networkStubs = {
           JSON.stringify({
             longDescription: 'long long description',
             imageUrl: 'someImage.url',
+            blogPostLink:
+              'https://hasura.io/blog/whats-new-in-hasura-cloud-may-2021/',
+            sqlFiles: ['./first.sql', './second.sql'],
+            metadataUrl: './meta.json',
+            affectedMetadata: ['some', 'meta'],
+          })
+        )
+      )
+    ),
+    configNoImage: rest.get(`${BASE_PS_URL}/config.json`, (req, res, context) =>
+      res(
+        context.text(
+          JSON.stringify({
+            longDescription: 'long long description',
             blogPostLink:
               'https://hasura.io/blog/whats-new-in-hasura-cloud-may-2021/',
             sqlFiles: ['./first.sql', './second.sql'],

@@ -1,4 +1,4 @@
-- description: Simple GraphQL object query on author, excercising multiple operations
+- description: Simple GraphQL object query on author, exercising multiple operations
   url: /v1/graphql
   status: 200
   response:

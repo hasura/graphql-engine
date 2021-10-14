@@ -2,6 +2,9 @@
 set -euo pipefail
 shopt -s globstar
 
+# NOTE: we want to use --network=host everywhere we use docker here, for
+# performance (supposedly).  We include X:X port mappings which will be used on
+# Mac and Windows(?) where --network=host is ignored.
 
 echo_pretty() {
     echo ">>> $(tput setaf 2)$1$(tput sgr0)"
@@ -52,10 +55,14 @@ function cleanup {
 }
 trap cleanup EXIT
 
+# How can we communicate with localhost from a container?
 if [ $(uname -s) = Darwin ]; then
-  DOCKER_LOCALHOST=host.docker.internal
+  # Docker for mac:
+  LOCALHOST_FROM_CONTAINER=host.docker.internal
+  DOCKER_NETWORK_HOST_MODE=""
 else
-  DOCKER_LOCALHOST=127.0.0.1
+  LOCALHOST_FROM_CONTAINER=127.0.0.1
+  DOCKER_NETWORK_HOST_MODE="--network=host"
 fi
 
 # The beefy c4.8xlarge EC2 instance has two sockets, so we'll try our best to
@@ -87,13 +94,13 @@ fi
 #   Postgres     #
 ##################
 # FYI this is adapted from scripts/containers/postgres, and uses settings
-# (ports, passwords, etc) identical to `dev.sh postgres`
+# (ports, passwords, etc) identical to `dev.sh postgres` for compatibility
+# with `dev.sh graphql-engine`
 
-
-PG_PORT=25430
+PG_PORT=25432
 PG_PASSWORD=postgres
-PG_CONTAINER_NAME="hasura-benchmarks-postgres-$PG_PORT"
-PG_DB_URL="postgres://postgres:$PG_PASSWORD@127.0.0.1:$PG_PORT/postgres"
+PG_CONTAINER_NAME="hasura-dev-postgres-$PG_PORT"
+PG_DB_URL="postgres://postgres:$PG_PASSWORD@$LOCALHOST_FROM_CONTAINER:$PG_PORT/postgres"
 PSQL_DOCKER="docker exec -u postgres -i $PG_CONTAINER_NAME psql $PG_DB_URL"
 
 if [ "$(awk '/^MemTotal:/{print $2}' /proc/meminfo)" -ge "30000000" ]; then
@@ -175,6 +182,7 @@ function pg_launch_container(){
     -p 127.0.0.1:"$PG_PORT":$PG_PORT \
     --expose="$PG_PORT" \
     -e POSTGRES_PASSWORD="$PG_PASSWORD" \
+    $DOCKER_NETWORK_HOST_MODE \
     -d circleci/postgres:11.5-alpine-postgis \
     $CONF_FLAGS
 }
@@ -199,19 +207,22 @@ function pg_cleanup(){
 
 # This matches the default we use in `dev.sh graphql-engine`
 HASURA_GRAPHQL_SERVER_PORT=8181
+# For Mac compatibility, we need to use this URL for hasura when communicating
+# FROM a container (in this case graphql-bench):
+HASURA_URL_FROM_CONTAINER="http://$LOCALHOST_FROM_CONTAINER:$HASURA_GRAPHQL_SERVER_PORT"
+# ...and for anything outside a container, just:
 HASURA_URL="http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT"
-HASURA_DOCKER_URL="http://$DOCKER_LOCALHOST:$HASURA_GRAPHQL_SERVER_PORT"
 
 # Maybe launch the hasura instance we'll benchmark
 function maybe_launch_hasura_container() {
   if [ ! -z "$REQUESTED_HASURA_DOCKER_IMAGE" ]; then
     HASURA_CONTAINER_NAME="graphql-engine-to-benchmark"
-    $TASKSET_HASURA docker run -d -p $HASURA_GRAPHQL_SERVER_PORT:$HASURA_GRAPHQL_SERVER_PORT \
+    $TASKSET_HASURA docker run -d -p 127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT:$HASURA_GRAPHQL_SERVER_PORT \
       --name "$HASURA_CONTAINER_NAME" \
       -e HASURA_GRAPHQL_DATABASE_URL=$PG_DB_URL \
       -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
       -e HASURA_GRAPHQL_SERVER_PORT="$HASURA_GRAPHQL_SERVER_PORT" \
-      --network=host \
+      $DOCKER_NETWORK_HOST_MODE \
       "$REQUESTED_HASURA_DOCKER_IMAGE" \
       graphql-engine serve +RTS -T $HASURA_RTS -RTS
       # ^^^ We run with `+RTS -T` to expose the /dev/rts_stats endpoint for
@@ -224,6 +235,9 @@ function maybe_launch_hasura_container() {
 function hasura_wait() {
   # Wait for the graphql-engine under bench to be ready
   echo -n "Waiting for graphql-engine at $HASURA_URL"
+  if [ -z "$REQUESTED_HASURA_DOCKER_IMAGE" ]; then
+    echo -n " (e.g. from 'dev.sh graphql-engine')"
+  fi
   until curl -s "$HASURA_URL/v1/query" &>/dev/null; do
     echo -n '.' && sleep 0.2
   done
@@ -260,10 +274,10 @@ function run_benchmarks() {
   cd "$BENCH_DIR"
   # This reads config.query.yaml from the current directory, outputting
   # report.json to the same directory
-  $TASKSET_K6 docker run --net=host -v "$PWD":/app/tmp -i $K6_DOCKER_t_OR_init \
+  $TASKSET_K6 docker run $DOCKER_NETWORK_HOST_MODE -v "$PWD":/app/tmp -i $K6_DOCKER_t_OR_init \
     graphql-bench-ci query \
     --config="./tmp/config.query.yaml" \
-    --outfile="./tmp/report.json" --url "$HASURA_DOCKER_URL/v1/graphql"
+    --outfile="./tmp/report.json" --url "$HASURA_URL_FROM_CONTAINER/v1/graphql"
 
   echo_pretty "Done. Report at $PWD/report.json"
   cd -

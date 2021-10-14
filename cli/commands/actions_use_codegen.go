@@ -117,7 +117,7 @@ func (o *actionsUseCodegenOptions) run() error {
 		if err != nil {
 			return errors.Wrap(err, "error in getting input from user")
 		}
-		o.withStarterKit = shouldCloneStarterKit == "y"
+		o.withStarterKit = shouldCloneStarterKit
 	}
 
 	// clone the starter kit
@@ -134,7 +134,6 @@ func (o *actionsUseCodegenOptions) run() error {
 			suffix++
 			err = util.FSCheckIfDirPathExists(starterKitDirname)
 		}
-		err = nil
 
 		// copy the starter kit
 		destinationDir := filepath.Join(o.EC.ExecutionDirectory, starterKitDirname)

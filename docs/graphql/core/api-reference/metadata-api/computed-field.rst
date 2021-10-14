@@ -4,8 +4,8 @@
 
 .. _metadata_api_computed_field:
 
-Metadata API Reference: Computed Fields (v2.0 and above)
-========================================================
+Metadata API Reference: Computed Fields
+=======================================
 
 .. contents:: Table of contents
   :backlinks: none

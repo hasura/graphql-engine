@@ -344,7 +344,7 @@ export const updateEnvVars = (
 };
 
 export const getEmptyEnvVar = (envVars: Record<string, any>) => {
-  const newEnvVarName = 'HEROKU_DATABASE_URL';
+  const newEnvVarName = 'PG_DATABASE_URL';
   let suffix = 0;
   while (
     Object.keys(envVars).some(e => e === `${newEnvVarName}${suffix || ''}`) ||

@@ -41,9 +41,17 @@ func ApplyVersion(version string, direction MigrationDirection) ProjectMigration
 	}
 }
 
-func (p *projectMigrationsApplier) Apply(opts ...ProjectMigrationApplierOption) error {
+func (p *projectMigrationsApplier) apply(opts ...ProjectMigrationApplierOption) ([]ApplyResult, error) {
 	for _, opt := range opts {
 		opt(p)
 	}
-	return p.opts.Run()
+	var results []ApplyResult
+	resultChan, err := p.opts.Apply()
+	if err != nil {
+		return nil, err
+	}
+	for v := range resultChan {
+		results = append(results, ApplyResult(v))
+	}
+	return results, nil
 }

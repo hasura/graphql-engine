@@ -1,14 +1,9 @@
-{-# LANGUAGE StrictData          #-}
-
 -- | Defines the 'Parser' type and its primitive combinators.
 module Hasura.GraphQL.Parser.Internal.Types where
 
-import           Hasura.Prelude
-
-import           Language.GraphQL.Draft.Syntax      hiding (Definition)
-
-import           Hasura.GraphQL.Parser.Schema
-
+import Hasura.GraphQL.Parser.Schema
+import Hasura.Prelude
+import Language.GraphQL.Draft.Syntax hiding (Definition)
 
 -- -----------------------------------------------------------------------------
 -- type definitions
@@ -50,23 +45,24 @@ import           Hasura.GraphQL.Parser.Schema
 -- For some more information about how to interpret the meaning of a 'Parser',
 -- see Note [The meaning of Parser 'Output].
 data Parser k m a = Parser
-  { pType   :: ~(Type k)
-  -- ^ Lazy for knot-tying reasons; see Note [Tying the knot] in
-  -- Hasura.GraphQL.Parser.Class.
-  , pParser :: ParserInput k -> m a
-  } deriving (Functor)
+  { -- | Lazy for knot-tying reasons; see Note [Tying the knot] in
+    -- Hasura.GraphQL.Parser.Class.
+    pType :: ~(Type k),
+    pParser :: ParserInput k -> m a
+  }
+  deriving (Functor)
 
 instance HasName (Parser k m a) where
   getName = getName . pType
 
 instance HasDefinition (Parser k m a) (TypeInfo k) where
-  definitionLens f parser = definitionLens f (pType parser) <&> \pType -> parser { pType }
+  definitionLens f parser = definitionLens f (pType parser) <&> \pType -> parser {pType}
 
 type family ParserInput k where
-  -- see Note [The 'Both kind] in Hasura.GraphQL.Parser.Schema
+-- see Note [The 'Both kind] in Hasura.GraphQL.Parser.Schema
   ParserInput 'Both = InputValue Variable
   ParserInput 'Input = InputValue Variable
-  -- see Note [The meaning of Parser 'Output]
+-- see Note [The meaning of Parser 'Output]
   ParserInput 'Output = SelectionSet NoFragments Variable
 
 parserType :: Parser k m a -> Type k

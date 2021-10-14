@@ -136,6 +136,12 @@ Learn course
 
 For a full hands-on tour of Hasura, check out our `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__.
 
+Stay up to date
+^^^^^^^^^^^^^^^
+
+We release new features every month. Sign up for our newsletter by using the link below. We send newsletters only once a month.
+`https://hasura.io/newsletter/ <https://hasura.io/newsletter/>`__.
+
 Database operations
 ^^^^^^^^^^^^^^^^^^^
 
@@ -173,5 +179,3 @@ quickly. For more detailed instructions on deploying using Docker, check out
 .. admonition:: Additional Resources
 
   Get Started with Hasura today - `Watch video guide <https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=>`__.
-
-  Have additional questions? - `Contact us <https://hasura.io/contact-us/?pg=docs&plcmt=body&cta=getting-started&tech=>`__.

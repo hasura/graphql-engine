@@ -90,7 +90,11 @@ func downloadAsset(url, fileName, filePath string) (*os.File, error) {
 // HasUpdate tells us if there is a new stable or prerelease update available.
 func HasUpdate(currentVersion *semver.Version, timeFile string) (bool, *semver.Version, bool, *semver.Version, error) {
 	if timeFile != "" {
-		defer writeTimeToFile(timeFile, time.Now().UTC())
+		defer func() {
+			if err := writeTimeToFile(timeFile, time.Now().UTC()); err != nil {
+				fmt.Fprintln(os.Stderr, "failed writing last update check time: ", err)
+			}
+		}()
 	}
 
 	latestVersion, preReleaseVersion, err := getLatestVersion()

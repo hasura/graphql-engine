@@ -121,7 +121,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 						if err != nil {
 							return errors.Wrapf(err, "unable to marshal run_sql args in %s", upMetaMigration.Raw)
 						}
-						var to hasuradb.RunSQLInput
+						var to hasura.PGRunSQLInput
 						err = yaml.Unmarshal(argByt, &to)
 						if err != nil {
 							return errors.Wrapf(err, "unable to unmarshal run_sql args in %s", upMetaMigration.Raw)
@@ -195,7 +195,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 						if err != nil {
 							return errors.Wrapf(err, "unable to marshal run_sql args in %s", downMetaMigration.Raw)
 						}
-						var to hasuradb.RunSQLInput
+						var to hasura.PGRunSQLInput
 						err = yaml.Unmarshal(argByt, &to)
 						if err != nil {
 							return errors.Wrapf(err, "unable to unmarshal run_sql args in %s", downMetaMigration.Raw)
@@ -305,10 +305,6 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			ec.Config.ActionConfig.Codegen = nil
 			// run metadata export
 			ec.Spin("Exporting metadata...")
-			migrateDrv, err = migrate.NewMigrate(ec, true, "", hasura.SourceKindPG)
-			if err != nil {
-				return errors.Wrap(err, "unable to initialize migrations driver")
-			}
 			var files map[string][]byte
 			mdHandler := projectmetadata.NewHandlerFromEC(ec)
 			files, err = mdHandler.ExportMetadata()
@@ -361,7 +357,9 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
 	f.String("access-key", "", "access key for Hasura GraphQL engine")
-	f.MarkDeprecated("access-key", "use --admin-secret instead")
+	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
 	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
 	f.String("certificate-authority", "", "path to a cert file for the certificate authority")
 

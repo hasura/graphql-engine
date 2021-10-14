@@ -1,0 +1,14 @@
+type: bulk
+args:
+
+- type: drop_inherited_role
+  args:
+    role_name: inherited_role1
+
+- type: drop_inherited_role
+  args:
+    role_name: inherited_role2
+
+- type: remove_remote_schema
+  args:
+    name: my-remote-schema

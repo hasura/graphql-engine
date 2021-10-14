@@ -1,0 +1,20 @@
+description: Replace schema cache (metadata) with no initial tables
+url: /v1/metadata
+status: 200
+response:
+  message: "success"
+query:
+  type: replace_metadata
+  args:
+    version: 3
+    allow_inconsistent_metadata: false
+    sources:
+    - name: hasura_global_limited
+      kind: bigquery
+      configuration:
+        service_account: {from_env: HASURA_BIGQUERY_SERVICE_ACCOUNT}
+        project_id: {from_env: HASURA_BIGQUERY_PROJECT_ID}
+        datasets:
+        - hasura_test
+        global_select_limit: 1
+      tables: []

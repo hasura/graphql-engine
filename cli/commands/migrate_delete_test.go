@@ -48,24 +48,15 @@ var _ = Describe("hasura migrate delete", func() {
 				WorkingDirectory: projectDirectory,
 			})
 			wantKeywordList := []string{
-				".*Applying migrations...*.",
-				".*migrations*.",
-				".*applied*.",
+				"migrations applied",
 			}
 
 			for _, keyword := range wantKeywordList {
 				Expect(session.Wait(timeout).Err).Should(Say(keyword))
 			}
 
-			session = testutil.Hasura(testutil.CmdOpts{
-				Args:             []string{"migrate", "delete", "--all"},
-				WorkingDirectory: projectDirectory,
-			})
-
-			Expect(session.Wait(timeout).Err).Should(Say("--database-name flag is required"))
-
-			args := strings.Join([]string{"yes", "|", testutil.CLIBinaryPath, "migrate", "delete", "--all", "--database-name", "default"}, " ")
-			cmd := exec.Command("bash", "-c", args)
+			args := []string{"migrate", "delete", "--all", "--database-name", "default", "--force"}
+			cmd := exec.Command(testutil.CLIBinaryPath, args...)
 			cmd.Dir = projectDirectory
 			session, err := Start(
 				cmd,
@@ -105,24 +96,15 @@ var _ = Describe("hasura migrate delete", func() {
 				WorkingDirectory: projectDirectory,
 			})
 			wantKeywordList := []string{
-				".*Applying migrations...*.",
-				".*migrations*.",
-				".*applied*.",
+				"migrations applied",
 			}
 
 			for _, keyword := range wantKeywordList {
 				Expect(session.Wait(timeout).Err).Should(Say(keyword))
 			}
 
-			session = testutil.Hasura(testutil.CmdOpts{
-				Args:             []string{"migrate", "delete", "--all", "--server"},
-				WorkingDirectory: projectDirectory,
-			})
-
-			Expect(session.Wait(timeout).Err).Should(Say("--database-name flag is required"))
-
-			args := strings.Join([]string{"yes", "|", testutil.CLIBinaryPath, "migrate", "delete", "--all", "--server", "--database-name", "default"}, " ")
-			cmd := exec.Command("bash", "-c", args)
+			args := []string{"migrate", "delete", "--all", "--server", "--database-name", "default", "--force"}
+			cmd := exec.Command(testutil.CLIBinaryPath, args...)
 			cmd.Dir = projectDirectory
 			session, err := Start(
 				cmd,
@@ -164,9 +146,7 @@ var _ = Describe("hasura migrate delete", func() {
 				WorkingDirectory: dirName,
 			})
 			wantKeywordList := []string{
-				".*Applying migrations...*.",
-				".*migrations*.",
-				".*applied*.",
+				"migrations applied",
 			}
 
 			for _, keyword := range wantKeywordList {
@@ -209,9 +189,7 @@ var _ = Describe("hasura migrate delete", func() {
 				WorkingDirectory: projectDirectory,
 			})
 			wantKeywordList := []string{
-				".*Applying migrations...*.",
-				".*migrations*.",
-				".*applied*.",
+				"migrations applied",
 			}
 
 			for _, keyword := range wantKeywordList {
@@ -254,9 +232,7 @@ var _ = Describe("hasura migrate delete", func() {
 				WorkingDirectory: projectDirectory,
 			})
 			wantKeywordList := []string{
-				".*Applying migrations...*.",
-				".*migrations*.",
-				".*applied*.",
+				"migrations applied",
 			}
 
 			for _, keyword := range wantKeywordList {
@@ -304,9 +280,7 @@ var _ = Describe("hasura migrate delete", func() {
 				WorkingDirectory: projectDirectory,
 			})
 			wantKeywordList := []string{
-				".*Applying migrations...*.",
-				".*migrations*.",
-				".*applied*.",
+				"migrations applied",
 			}
 
 			for _, keyword := range wantKeywordList {

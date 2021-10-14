@@ -2,7 +2,9 @@ import requestAction from '../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import {
   ConnectionPoolSettings,
+  HasuraMetadataV2,
   HasuraMetadataV3,
+  InconsistentObject,
   IsolationLevelOptions,
   MetadataDataSource,
   RestEndpointEntry,
@@ -29,6 +31,8 @@ import {
   addAllowedQuery,
   getSourceFromInconistentObjects,
   getRemoteSchemaNameFromInconsistentObjects,
+  addInsecureDomainQuery,
+  deleteDomain,
 } from './utils';
 import {
   makeMigrationCall,
@@ -73,7 +77,7 @@ export interface ExportMetadataRequest {
 
 export interface LoadInconsistentObjectsSuccess {
   type: 'Metadata/LOAD_INCONSISTENT_OBJECTS_SUCCESS';
-  data: any;
+  data: InconsistentObject[];
 }
 export interface LoadInconsistentObjectsRequest {
   type: 'Metadata/LOAD_INCONSISTENT_OBJECTS_REQUEST';
@@ -333,7 +337,11 @@ export const addDataSource = (
     onError,
     requestMsg,
     undefined,
-    errorMsg
+    errorMsg,
+    false,
+    false,
+    false,
+    data.payload.name
   );
 };
 
@@ -490,7 +498,7 @@ export const removeDataSource = (
 };
 
 export const replaceMetadata = (
-  newMetadata: ExportMetadataSuccess['data'],
+  newMetadata: HasuraMetadataV2 | ExportMetadataSuccess['data'],
   successCb: () => void,
   errorCb: () => void
 ): Thunk<void, MetadataActions> => (dispatch, getState) => {
@@ -498,8 +506,12 @@ export const replaceMetadata = (
     resource_version: number;
     metadata: HasuraMetadataV3;
   }) => {
-    const upQuery = generateReplaceMetadataQuery(newMetadata);
-    const downQuery = generateReplaceMetadataQuery(oldMetadata);
+    const metadata =
+      (newMetadata as HasuraMetadataV2).version?.toString() === '2'
+        ? (newMetadata as HasuraMetadataV2)
+        : (newMetadata as ExportMetadataSuccess['data']).metadata;
+    const upQuery = generateReplaceMetadataQuery(metadata);
+    const downQuery = generateReplaceMetadataQuery(oldMetadata.metadata);
 
     const migrationName = 'replace_metadata';
 
@@ -618,7 +630,10 @@ export const replaceMetadataFromFile = (
     parsedFileContent = JSON.parse(fileContent);
   } catch (e) {
     dispatch(
-      showErrorNotification('Error parsing metadata file', e.toString())
+      showErrorNotification(
+        'Error parsing metadata file',
+        (e as Error).toString()
+      )
     );
 
     if (errorCb) errorCb();
@@ -1035,6 +1050,71 @@ export const addAllowedQueries = (
       dispatch({ type: 'Metadata/ADD_ALLOWED_QUERIES', data: queries });
       callback();
     };
+
+    const onError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [upQuery],
+      undefined,
+      migrationName,
+      onSuccess,
+      onError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+export const addInsecureDomain = (
+  host: string,
+  callback: any
+): Thunk<void, MetadataActions> => {
+  return (dispatch, getState) => {
+    if (!host.trim().length) {
+      dispatch(showErrorNotification('No domain found'));
+
+      return;
+    }
+    const upQuery = addInsecureDomainQuery(host);
+    const migrationName = `add_insecure_tls_domains`;
+    const requestMsg = 'Adding domain to insecure TLS allow list...';
+    const successMsg = `Domain added to insecure TLS allow list successfully`;
+    const errorMsg = 'Adding domain to insecure TLS allow list failed';
+
+    const onSuccess = () => {
+      callback();
+    };
+
+    const onError = () => {};
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [upQuery],
+      undefined,
+      migrationName,
+      onSuccess,
+      onError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+export const deleteInsecureDomain = (
+  host: string
+): Thunk<void, MetadataActions> => {
+  return (dispatch, getState) => {
+    const upQuery = deleteDomain(host);
+    const migrationName = `delete_insecure_domain`;
+    const requestMsg = 'Deleting Insecure domain...';
+    const successMsg = 'Domain deleted!';
+    const errorMsg = 'Deleting domain failed!';
+
+    const onSuccess = () => {};
 
     const onError = () => {};
 

@@ -171,7 +171,9 @@ export const fetchSchemaConfigurationByName = createAsyncThunk<
     const fullObject: TemplateGalleryTemplateDetailFull = {
       sql: sqlFiles.join('\n'),
       blogPostLink: itemConfig.blogPostLink,
-      imageUrl: `${baseTemplatePath}/${itemConfig.imageUrl}`,
+      imageUrl: itemConfig.imageUrl
+        ? `${baseTemplatePath}/${itemConfig.imageUrl}`
+        : undefined,
       longDescription: itemConfig.longDescription,
       metadataObject,
       publicUrl,
@@ -264,18 +266,8 @@ export const applyTemplate = createAsyncThunk<
           makeMigrationCall(
             dispatch,
             getState,
-            [
-              generateReplaceMetadataQuery({
-                metadata: newMetadata,
-                resource_version: 0,
-              }),
-            ],
-            [
-              generateReplaceMetadataQuery({
-                metadata: newMetadata,
-                resource_version: 0,
-              }),
-            ],
+            [generateReplaceMetadataQuery(newMetadata)],
+            [generateReplaceMetadataQuery(newMetadata)],
             `apply_metadata_template_${key}`,
             resolve,
             reject,

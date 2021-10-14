@@ -167,8 +167,6 @@ You can click the gear icon in the Hasura Cloud dashboard to manage your Hasura 
 
   Get Started with Hasura today - `Watch video guide <https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=>`__.
 
-  Have additional questions? - `Contact us <https://hasura.io/contact-us/?pg=docs&plcmt=body&cta=getting-started&tech=>`__.
-
 .. toctree::
    :maxdepth: 1
    :titlesonly:

@@ -63,6 +63,7 @@ const LimitsTable: React.FC<Props> = ({
                 <input
                   type="radio"
                   id="enable"
+                  className="legacy-input-fix"
                   checked={!apiLimitsDisabled}
                   disabled={loading}
                   onChange={() => updateGlobalAPISetting(false)}
@@ -73,6 +74,7 @@ const LimitsTable: React.FC<Props> = ({
                 <input
                   type="radio"
                   id="disable"
+                  className="legacy-input-fix"
                   disabled={loading}
                   checked={apiLimitsDisabled}
                   onChange={() => updateGlobalAPISetting(true)}
@@ -139,6 +141,7 @@ const LimitsTable: React.FC<Props> = ({
             {roles.map(role => (
               <TableRow
                 index={role}
+                key={role}
                 entries={getRowData(role)}
                 renderCol={({ data: { per_role, state } }) => {
                   const roleLimit = per_role?.[role];

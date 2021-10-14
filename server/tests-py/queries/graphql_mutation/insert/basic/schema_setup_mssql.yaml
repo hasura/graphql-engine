@@ -1,0 +1,42 @@
+type: bulk
+args:
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+
+        CREATE TABLE test_types
+        (
+            c_pkey int identity not null primary key,
+            c1_smallint smallint,
+            c2_integer integer,
+            c4_decimal decimal(5, 2),
+            c5_numeric numeric (4, 3),
+            c6_real real,
+            c7_double_precision double precision,
+            c11_varchar_3 varchar(3),
+            c12_char_4 char(4),
+            c13_text text,
+            c16_date date,
+            c17_time time,
+            c44_xml xml,
+            c45_money money,
+            c47_smallmoney smallmoney,
+            c48_bit bit,
+            c49_tinyint tinyint,
+            c50_float float,
+            c51_real real,
+            c52_datetime datetime,
+            c53_datetime2 datetime2,
+            c54_datetimeoffset datetimeoffset,
+            c55_smalldatetime smalldatetime,
+            c58_hierarchyid hierarchyid,
+            c59_uniqueidentifier uniqueidentifier
+        );
+
+        CREATE TABLE table_no_pk
+        (
+          id int identity not null,
+          name text not null
+        );

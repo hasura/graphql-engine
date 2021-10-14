@@ -18,13 +18,13 @@ response:
           name: author
       reason:
         'Inconsistent object: in table "author": in relationship "articles": no
-        foreign constraint exists on the given column'
+        foreign constraint exists on the given column(s)'
       name: array_relation articles in table author in source default
       type: array_relation
   path: $.args
   error:
     'Inconsistent object: in table "author": in relationship "articles": no foreign
-    constraint exists on the given column'
+    constraint exists on the given column(s)'
   code: invalid-configuration
 query:
   type: create_array_relationship

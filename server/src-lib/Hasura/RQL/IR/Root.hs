@@ -1,59 +1,55 @@
 module Hasura.RQL.IR.Root
-  ( SourceConfigWith(..)
-  , RootField(..)
-  , MutationDB(..)
-  , ActionQuery(..)
-  , ActionMutation(..)
-  , QueryRootField
-  , MutationRootField
-  , SubscriptionRootField
-  , QueryDBRoot(..)
-  , MutationDBRoot(..)
-  ) where
+  ( SourceConfigWith (..),
+    RootField (..),
+    MutationDB (..),
+    ActionQuery (..),
+    ActionMutation (..),
+    QueryRootField,
+    MutationRootField,
+    SubscriptionRootField,
+    QueryDBRoot (..),
+    MutationDBRoot (..),
+  )
+where
 
-import           Hasura.Prelude
+import Data.Aeson.Ordered qualified as JO
+import Data.Kind (Type)
+import Hasura.Prelude
+import Hasura.RQL.IR.Delete
+import Hasura.RQL.IR.Insert
+import Hasura.RQL.IR.Select
+import Hasura.RQL.IR.Update
+import Hasura.RQL.Types.Action qualified as RQL
+import Hasura.RQL.Types.Backend qualified as RQL
+import Hasura.RQL.Types.Common qualified as RQL
+import Hasura.RQL.Types.QueryTags qualified as RQL
+import Hasura.RQL.Types.RemoteSchema qualified as RQL
+import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
 
-import qualified Data.Aeson.Ordered            as JO
-
-import           Data.Kind                     (Type)
-
-import qualified Hasura.RQL.Types.Action       as RQL
-import qualified Hasura.RQL.Types.Backend      as RQL
-import qualified Hasura.RQL.Types.Common       as RQL
-import qualified Hasura.RQL.Types.RemoteSchema as RQL
-import qualified Hasura.SQL.AnyBackend         as AB
-
-import           Hasura.RQL.IR.Delete
-import           Hasura.RQL.IR.Insert
-import           Hasura.RQL.IR.Select
-import           Hasura.RQL.IR.Update
-import           Hasura.SQL.Backend
-
-
-data SourceConfigWith (db :: BackendType -> Type) (b :: BackendType) =
-  SourceConfigWith (RQL.SourceConfig b) (db b)
+data SourceConfigWith (db :: BackendType -> Type) (b :: BackendType)
+  = SourceConfigWith (RQL.SourceConfig b) (Maybe RQL.QueryTagsConfig) (db b)
 
 data RootField (db :: BackendType -> Type) remote action raw where
-  RFDB
-    :: RQL.SourceName
-    -> AB.AnyBackend (SourceConfigWith db)
-    -> RootField db remote action raw
+  RFDB ::
+    RQL.SourceName ->
+    AB.AnyBackend (SourceConfigWith db) ->
+    RootField db remote action raw
   RFRemote :: remote -> RootField db remote action raw
   RFAction :: action -> RootField db remote action raw
-  RFRaw    :: raw    -> RootField db remote action raw
-
+  RFRaw :: raw -> RootField db remote action raw
 
 data MutationDB (b :: BackendType) (r :: BackendType -> Type) v
   = MDBInsert (AnnInsert b r v)
-  | MDBUpdate (AnnUpdG   b r v)
-  | MDBDelete (AnnDelG   b r v)
-  | MDBFunction RQL.JsonAggSelect (AnnSimpleSelectG b r v)
-  -- ^ This represents a VOLATILE function, and is AnnSimpleSelG for easy
-  -- re-use of non-VOLATILE function tracking code.
+  | MDBUpdate (AnnUpdG b r v)
+  | MDBDelete (AnnDelG b r v)
+  | -- | This represents a VOLATILE function, and is AnnSimpleSelG for easy
+    -- re-use of non-VOLATILE function tracking code.
+    MDBFunction RQL.JsonAggSelect (AnnSimpleSelectG b r v)
   deriving stock (Generic, Functor, Foldable, Traversable)
 
 data ActionQuery (b :: BackendType) (r :: BackendType -> Type) v
-  = AQQuery !(RQL.AnnActionExecution  b r v)
+  = AQQuery !(RQL.AnnActionExecution b r v)
   | AQAsync !(RQL.AnnActionAsyncQuery b r v)
   deriving (Functor, Foldable, Traversable)
 
@@ -62,24 +58,26 @@ data ActionMutation (b :: BackendType) (r :: BackendType -> Type) v
   | AMAsync !RQL.AnnActionMutationAsync
   deriving (Functor, Foldable, Traversable)
 
-
 -- The `db` type argument of @RootField@ expects only one type argument, the backend `b`, as not all
 -- types stored in a RootField will have a second parameter like @QueryDB@ does: they all only have
 -- in common the fact that they're parametric over the backend. To define @QueryRootField@ in terms
 -- of @QueryDB@ (and likewise for mutations), we need a type-level function `b -> QueryDB b (v
 -- b)`. Sadly, neither type synonyms nor type families may be partially applied. Hence the need for
 -- @QueryDBRoot@ and @MutationDBRoot@.
-newtype QueryDBRoot    r v b = QDBR (QueryDB    b r (v b))
+newtype QueryDBRoot r v b = QDBR (QueryDB b r (v b))
+
 newtype MutationDBRoot r v b = MDBR (MutationDB b r (v b))
 
 -- | Represents a query root field to an action
-type QueryActionRoot v
-  = ActionQuery ('Postgres 'Vanilla) (RemoteSelect v) (v ('Postgres 'Vanilla))
+type QueryActionRoot v =
+  ActionQuery ('Postgres 'Vanilla) (RemoteSelect v) (v ('Postgres 'Vanilla))
 
 -- | Represents a mutation root field to an action
-type MutationActionRoot v
-  = ActionMutation ('Postgres 'Vanilla) (RemoteSelect v) (v ('Postgres 'Vanilla))
+type MutationActionRoot v =
+  ActionMutation ('Postgres 'Vanilla) (RemoteSelect v) (v ('Postgres 'Vanilla))
 
-type QueryRootField        v = RootField (QueryDBRoot    (RemoteSelect v) v) RQL.RemoteField (QueryActionRoot v)    JO.Value
-type MutationRootField     v = RootField (MutationDBRoot (RemoteSelect v) v) RQL.RemoteField (MutationActionRoot v) JO.Value
-type SubscriptionRootField v = RootField (QueryDBRoot    (RemoteSelect v) v) Void            Void                   Void
+type QueryRootField v = RootField (QueryDBRoot (RemoteSelect v) v) RQL.RemoteField (QueryActionRoot v) JO.Value
+
+type MutationRootField v = RootField (MutationDBRoot (RemoteSelect v) v) RQL.RemoteField (MutationActionRoot v) JO.Value
+
+type SubscriptionRootField v = RootField (QueryDBRoot (RemoteSelect v) v) Void Void Void

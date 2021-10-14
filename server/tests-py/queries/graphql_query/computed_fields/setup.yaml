@@ -99,6 +99,10 @@ args:
       SELECT table_row.first_int::float8 + table_row.second_int::float8
       $$ LANGUAGE SQL STABLE;
 
+      CREATE FUNCTION get_sum_offset(table_row float_test, hasura_session json) returns int AS $$
+      SELECT table_row.first_int + table_row.second_int + (hasura_session ->> 'x-hasura-offset-int')::int
+      $$ LANGUAGE SQL STABLE;
+
 - type: track_table
   args:
     name: author
@@ -195,6 +199,14 @@ args:
     name: sum_float
     definition:
       function: get_sum
+
+- type: add_computed_field
+  args:
+    table: float_test
+    name: sum_float_offset
+    definition:
+      function: get_sum_offset
+      session_argument: hasura_session
 
 - type: track_function
   args:

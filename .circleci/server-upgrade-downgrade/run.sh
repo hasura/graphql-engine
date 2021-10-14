@@ -82,18 +82,22 @@ log() { echo $'\e[1;33m'"--> $*"$'\e[0m'; }
 : ${HASURA_PROJECT_DIR:=$ROOT/hasura}
 : ${API_SERVER_DIR:=$ROOT/api-server}
 : ${SERVER_OUTPUT_DIR:=/build/_server_output}
+: ${SERVER_TEST_OUTPUT_DIR:=/build/_server_test_output}
 : ${SERVER_BINARY:=/build/_server_output/graphql-engine}
 : ${LATEST_SERVER_BINARY:=/bin/graphql-engine-latest}
 : ${HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES:=true}
 
-LATEST_SERVER_LOG=$SERVER_OUTPUT_DIR/upgrade-test-latest-release-server.log
-CURRENT_SERVER_LOG=$SERVER_OUTPUT_DIR/upgrade-test-current-server.log
+LATEST_SERVER_LOG=$SERVER_TEST_OUTPUT_DIR/upgrade-test-latest-release-server.log
+CURRENT_SERVER_LOG=$SERVER_TEST_OUTPUT_DIR/upgrade-test-current-server.log
 
 HGE_ENDPOINT=http://localhost:$HASURA_GRAPHQL_SERVER_PORT
 PYTEST_DIR="${ROOT}/../../server/tests-py"
 
 # This seems to flake out relatively often; try a mirror if so.
 # Might also need to disable ipv6 or use a longer --timeout
+# cryptography 3.4.7 version requires Rust dependencies by default. But we don't need them for our tests, hence disabling them via the following env var => https://stackoverflow.com/a/66334084
+export CRYPTOGRAPHY_DONT_BUILD_RUST=1
+
 pip3 -q install -r "${PYTEST_DIR}/requirements.txt" ||\
 pip3 -q install -i http://mirrors.digitalocean.com/pypi/web/simple --trusted-host mirrors.digitalocean.com  -r "${PYTEST_DIR}/requirements.txt"
 
@@ -114,6 +118,7 @@ fail_if_port_busy 5000
 
 log "setting up directories"
 mkdir -p $SERVER_OUTPUT_DIR
+mkdir -p $SERVER_TEST_OUTPUT_DIR
 touch $LATEST_SERVER_LOG
 touch $CURRENT_SERVER_LOG
 

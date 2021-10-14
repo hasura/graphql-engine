@@ -2,6 +2,7 @@ package util
 
 import (
 	"archive/zip"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -24,7 +25,9 @@ func Unzip(archive, target string) error {
 	for _, file := range reader.File {
 		path := filepath.Join(target, file.Name)
 		if file.FileInfo().IsDir() {
-			os.MkdirAll(path, file.Mode())
+			if err = os.MkdirAll(path, file.Mode()); err != nil {
+				return fmt.Errorf("error while creating directory and it's parent directories: %w", err)
+			}
 			continue
 		}
 

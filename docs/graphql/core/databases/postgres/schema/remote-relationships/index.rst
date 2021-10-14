@@ -14,15 +14,17 @@ Postgres: Remote relationships
 
 Introduction
 ------------
-
+ 
 Remote relationships (aka "remote joins") allow you to join data across tables and remote data sources. The remote data source can either be
-a :ref:`remote schema <remote_schemas>`, or the type returned from an :ref:`action <actions>`. Once you create relationships between types
-from your database and types created from APIs or actions, you can then "join" them by running GraphQL queries.
+a :ref:`remote schema <remote_schemas>`, a table from a second database source, or the type returned from an :ref:`action <actions>`. Once you create relationships between types
+from your database tables and types created from APIs or actions, you can then "join" them by running GraphQL queries.
 
 See the following guides on how to create different types of remote relationships:
 
 - :ref:`pg_remote_schema_relationships`: To join data across tables and remote APIs, such as custom GraphQL servers you write, third party SaaS APIs,
   or even other Hasura instances. For example, you can join customer data from your tables with account data from Stripe, Spotify, or Auth0.
+- :ref:`pg_remote_source_relationships`: To join data across tables between two different database sources, such as order information stored in a SQL Server database,
+  and user information stored in a separate Postgres database.
 - :ref:`pg_action_relationships`: To join data across tables and actions. For example, you can join user data from your database with the response
   from a ``createUser`` action, using the ``id`` field.
 
@@ -52,4 +54,5 @@ Hasura's remote joins architecture provides the following benefits.
   :hidden:
 
   Remote schema relationships <remote-schema-relationships>
+  Remote source relationships <remote-source-relationships>
   Action relationships <action-relationships>
