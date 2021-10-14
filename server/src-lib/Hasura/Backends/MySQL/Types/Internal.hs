@@ -42,6 +42,17 @@ module Hasura.Backends.MySQL.Types.Internal
     parseScalarValue,
     mkMySQLScalarTypeName,
     JoinType (..),
+    -- These stand as API stubs to be implemented in a follow-up PR. The
+    -- changes to FromIr are substantial, and we don't want them in the
+    -- PR presenting this commit.
+
+    selectFinalWantedFields,
+    joinType,
+    joinTop,
+    joinOffset,
+    joinSelect,
+    joinFieldName,
+    joinRightTable,
   )
 where
 
@@ -249,6 +260,30 @@ data Join = Join
     joinJoinAlias :: !JoinAlias
   }
 
+-- TODO: TO be implemented in next PR by adding a field to Join.
+joinType :: Join -> JoinType
+joinType = undefined
+
+-- TODO: TO be implemented in next PR by adding a field to Join.
+joinSelect :: Join -> Select
+joinSelect = undefined
+
+-- TODO: TO be implemented in next PR by adding a field to Join.
+joinOffset :: Join -> Maybe Int
+joinOffset = undefined
+
+-- TODO: TO be implemented in next PR by adding a field to Join.
+joinFieldName :: Join -> Text
+joinFieldName = undefined
+
+-- TODO: TO be implemented in next PR by adding a field to Join.
+joinTop :: Join -> Top
+joinTop = undefined
+
+-- TODO: TO be implemented in next PR by adding a field to Join.
+joinRightTable :: Join -> EntityAlias
+joinRightTable = undefined
+
 -- | This type is for FromIr to communicate with DataLoader.Execute
 -- the specific type of join to be performed and related information
 -- to achieve it.
@@ -311,6 +346,10 @@ data Select = Select
     selectOffset :: !(Maybe Expression),
     selectTop :: !Top
   }
+
+-- TODO: To be implemented in the next PR. Needed by the planner/executor.
+selectFinalWantedFields :: Select -> (Maybe [Text])
+selectFinalWantedFields = undefined
 
 mkMySQLScalarTypeName :: MonadError QErr m => ScalarType -> m G.Name
 mkMySQLScalarTypeName = \case
