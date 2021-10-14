@@ -87,7 +87,7 @@ export const fetchTableListQuery = (options, source) => {
 };
 
 // TODO: move to postgres service
-const postgresFunctionTester = /.*\(\)$/gm;
+const postgresFunctionTester = /.*\(.*\)$/gm;
 export const isPostgresFunction = str =>
   new RegExp(postgresFunctionTester).test(str);
 export const isTypeCast = (str = '') => str.split('::').length > 1;
