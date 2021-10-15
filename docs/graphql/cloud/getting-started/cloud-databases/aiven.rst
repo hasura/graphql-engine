@@ -76,8 +76,8 @@ Then click ``Create service``.
 
    If you're using a database user other than the default one, make sure to give it the right :ref:`Postgres permissions <cloud_postgres_permissions>`.
 
-Step 3: Allow connections to your DB from Hasura Cloud
-------------------------------------------------------
+Step 3: Restrict DB connections to come only from Hasura Cloud
+--------------------------------------------------------------
 
 On the ``Services`` dashboard, click on your DB:
 
@@ -97,7 +97,7 @@ Copy the IP address from the copy icon in the ``Hasura Cloud IP`` field on the p
    :alt: Hasura Cloud IP field
    :width: 1000px
 
-Add the Hasura IP address that you copied, click on the ``+``:
+Remove the ``0.0.0.0`` IP address and add the Hasura IP address that you copied, click on the ``+``:
 
 .. thumbnail:: /img/graphql/cloud/cloud-dbs/aiven/add-hasura-ip.png
    :alt: Add the Hasura IP on Aiven
