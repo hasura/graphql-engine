@@ -561,6 +561,84 @@ Fetch a list of authors whose names begin with A or C:
 
   ``_similar`` is case-sensitive
 
+**Example: _regex**
+
+Fetch a list of articles whose titles match the regex “[ae]met”:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      articles(
+        where: {title: {_regex: "[ae]met"}}
+      ) {
+        id
+        title
+      }
+    }
+  :response:
+    {
+    "data": {
+      "articles": [
+        {
+          "id": 1,
+          "title": "sit amet"
+        },
+        {
+          "id": 3,
+          "title": "cremet justo morbi"
+        },
+        {
+          "id": 9,
+          "title": "sit ametist"
+        }
+      ]
+
+.. note::
+
+  ``_regex`` is case-sensitive. Use ``_iregex`` for case-insensitive search.
+
+.. note::
+
+  This was added in ``v2.0.0``
+
+**Example: _nregex**
+
+Fetch a list of articles whose titles don't match the regex “[ae]met”:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      articles(
+        where: {title: {_nregex: "[ae]met"}}
+      ) {
+        id
+        title
+      }
+    }
+  :response:
+    {
+    "data": {
+      "articles": [
+        {
+          "id": 1,
+          "title": "sit imet"
+        },
+        {
+          "id": 3,
+          "title": "Amet justo morbi"
+        }
+      ]
+
+.. note::
+
+  ``_nregex`` is case-sensitive. Use ``_niregex`` for case-insensitive search.
+
+.. note::
+
+  This operator was added in ``v2.0.0``
+
 JSONB operators (_contains, _has_key, etc.)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
