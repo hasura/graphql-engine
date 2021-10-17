@@ -9,7 +9,8 @@
     "react-bootstrap": "^1.0.0",
     "react-dom": "^16.4.2",
     "react-google-charts": "^3.0.5",
-    "react-scripts": "^3.4.1"
+    "react-scripts": "^3.4.1",
+    "subscriptions-transport-ws": "^0.9.19"
   },
   "scripts": {
     "start": "react-scripts start",
