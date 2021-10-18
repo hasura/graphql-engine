@@ -2,25 +2,22 @@
 
 module Hasura.Backends.MySQL.Instances.Execute where
 
-import Data.Aeson qualified as J
-import Data.String (IsString (..))
-import Hasura.Backends.MySQL.Connection (runJSONPathQuery)
-import Hasura.Backends.MySQL.Plan (planQuery)
-import Hasura.Backends.MySQL.ToQuery (Printer, fromSelect, toQueryFlat, toQueryPretty)
-import Hasura.Backends.MySQL.Types qualified as MySQL
-import Hasura.Base.Error (QErr, throw500)
-import Hasura.EncJSON (encJFromText)
+import Data.Aeson as J
+import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.Text qualified as T
+import Data.Tree
+import Hasura.Backends.MySQL.DataLoader.Execute (OutputValue (..), RecordSet (..))
+import Hasura.Backends.MySQL.DataLoader.Execute qualified as DataLoader
+import Hasura.Backends.MySQL.DataLoader.Plan qualified as DataLoader
+import Hasura.Backends.MySQL.Plan
+import Hasura.Base.Error
+import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
-  ( BackendExecute (..),
-    DBStepInfo (..),
-    PreparedQuery,
-  )
-import Hasura.GraphQL.Parser (UnpreparedValue)
+import Hasura.GraphQL.Parser
 import Hasura.Prelude
-import Hasura.RQL.IR (QueryDB, SourceRelationshipSelection)
-import Hasura.RQL.Types (BackendType (MySQL), SourceConfig, SourceName)
-import Hasura.RQL.Types qualified as RQLTypes
-import Hasura.Session (UserInfo (..))
+import Hasura.RQL.IR
+import Hasura.RQL.Types
+import Hasura.Session
 
 instance BackendExecute 'MySQL where
   type PreparedQuery 'MySQL = Text
@@ -31,67 +28,60 @@ instance BackendExecute 'MySQL where
   mkDBSubscriptionPlan _ _ _ _ = error "mkDBSubscriptionPlan: MySQL backend does not support this operation yet."
   mkDBQueryExplain = error "mkDBQueryExplain: MySQL backend does not support this operation yet."
   mkLiveQueryExplain _ = error "mkLiveQueryExplain: MySQL backend does not support this operation yet."
-
-  -- NOTE: Currently unimplemented!.
-  --
-  -- This function is just a stub for future implementation; for now it just
-  -- throws a 500 error.
-  mkDBRemoteRelationshipPlan =
-    mysqlDBRemoteRelationshipPlan
+  mkDBRemoteRelationshipPlan = error "mkDBRemoteRelationshipPlan: MySQL does not support this operation yet."
 
 mysqlDBQueryPlan ::
   forall m.
   ( MonadError QErr m
   ) =>
   UserInfo ->
-  RQLTypes.SourceName ->
-  RQLTypes.SourceConfig 'MySQL ->
+  SourceName ->
+  SourceConfig 'MySQL ->
   QueryDB 'MySQL (Const Void) (UnpreparedValue 'MySQL) ->
   m (DBStepInfo 'MySQL)
 mysqlDBQueryPlan userInfo sourceName sourceConfig qrf = do
-  let sessionVariables = _uiSession userInfo
-  statement :: MySQL.Select <- planQuery sessionVariables qrf
-  let printer :: Printer = fromSelect statement
-      queryString = toQueryPretty printer
-      pool = MySQL.scConnectionPool sourceConfig
-      mysqlQuery = encJFromText <$> runJSONPathQuery pool (toQueryFlat printer)
-  pure $ DBStepInfo @'MySQL sourceName sourceConfig (Just $ fromString $ show queryString) mysqlQuery
+  (headAndTail, actionsForest) <- queryToActionForest userInfo qrf
+  pure
+    ( DBStepInfo
+        @'MySQL
+        sourceName
+        sourceConfig
+        (Just (T.pack (drawForest (fmap (fmap show) actionsForest))))
+        ( do
+            result <-
+              DataLoader.runExecute
+                sourceConfig
+                headAndTail
+                (DataLoader.execute actionsForest)
+            either
+              (throw500WithDetail "MySQL DataLoader Error" . toJSON . show)
+              (pure . encJFromRecordSet)
+              result
+        )
+    )
 
 --------------------------------------------------------------------------------
--- Remote Relationships (e.g. DB-to-DB Joins, remote schema joins, etc.)
---------------------------------------------------------------------------------
+-- Encoding for Hasura's GraphQL JSON representation
 
--- | Construct an action (i.e. 'DBStepInfo') which can marshal some remote
--- relationship information into a form that MySQL can query against.
---
--- XXX: Currently unimplemented; the Postgres implementation uses
--- @jsonb_to_recordset@ to query the remote relationship, however this
--- functionality doesn't exist in MYSQL.
---
--- NOTE: The following typeclass constraints will be necessary when implementing
--- this function for real:
---
--- @
---   MonadQueryTags m
---   Backend 'MySQL
--- @
-mysqlDBRemoteRelationshipPlan ::
-  forall m.
-  ( MonadError QErr m
-  ) =>
-  UserInfo ->
-  SourceName ->
-  SourceConfig 'MySQL ->
-  -- | List of json objects, each of which becomes a row of the table.
-  NonEmpty J.Object ->
-  -- | The above objects have this schema
-  --
-  -- XXX: What is this for/what does this mean?
-  HashMap RQLTypes.FieldName (RQLTypes.Column 'MySQL, RQLTypes.ScalarType 'MySQL) ->
-  -- | This is a field name from the lhs that *has* to be selected in the
-  -- response along with the relationship.
-  RQLTypes.FieldName ->
-  (RQLTypes.FieldName, SourceRelationshipSelection 'MySQL (Const Void) UnpreparedValue) ->
-  m (DBStepInfo 'MySQL)
-mysqlDBRemoteRelationshipPlan _userInfo _sourceName _sourceConfig _lhs _lhsSchema _argumentId _relationship = do
-  throw500 "mkDBRemoteRelationshipPlan: MySQL does not currently support generalized joins."
+encJFromRecordSet :: RecordSet -> EncJSON
+encJFromRecordSet RecordSet {rows} =
+  encJFromList
+    ( map
+        ( encJFromAssocList
+            . map (first coerce . second encJFromOutputValue)
+            . OMap.toList
+        )
+        (toList rows)
+    )
+
+encJFromOutputValue :: DataLoader.OutputValue -> EncJSON
+encJFromOutputValue =
+  \case
+    ArrayOutputValue array -> encJFromList (map encJFromOutputValue (toList array))
+    RecordOutputValue m ->
+      encJFromAssocList
+        . map (first coerce . second encJFromOutputValue)
+        . OMap.toList
+        $ m
+    ScalarOutputValue value -> encJFromJValue value
+    NullOutputValue {} -> encJFromJValue J.Null
