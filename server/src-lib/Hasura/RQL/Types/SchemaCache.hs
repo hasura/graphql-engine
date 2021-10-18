@@ -491,7 +491,18 @@ getDependentObjsWith f sc objId =
     go (SOITable tn1) (SOITableObj tn2 _) = Just $ tn1 == tn2
     go _ _ = Nothing
 
--- | Build dependencies from an AnnBoolExpPartialSQL.
+-- | The table type context of schema dependency discovery. Boolean expressions
+-- may refer to a so-called 'root table' (identified by a '$'-sign in the
+-- expression input syntax) or the 'current' table.
+data BoolExpCtx b = BoolExpCtx
+  { source :: SourceName,
+    -- | Reference to the 'current' table type.
+    currTable :: TableName b,
+    -- | Reference to the 'root' table type.
+    rootTable :: TableName b
+  }
+
+-- | Discover the schema dependencies of an @AnnBoolExpPartialSQL@.
 getBoolExpDeps ::
   forall b.
   Backend b =>
@@ -499,12 +510,29 @@ getBoolExpDeps ::
   TableName b ->
   AnnBoolExpPartialSQL b ->
   [SchemaDependency]
-getBoolExpDeps source tn = \case
+getBoolExpDeps source tableName =
+  runBoolExpM (BoolExpCtx {source = source, currTable = tableName, rootTable = tableName}) . getBoolExpDeps'
+
+-- | The monad for doing schema dependency discovery for boolean expressions.
+-- maintains the table context of the expressions being translated.
+newtype BoolExpM b a = BoolExpM {unBoolExpM :: Reader (BoolExpCtx b) a}
+  deriving (Functor, Applicative, Monad, MonadReader (BoolExpCtx b))
+
+runBoolExpM :: BoolExpCtx b -> BoolExpM b a -> a
+runBoolExpM ctx = flip runReader ctx . unBoolExpM
+
+getBoolExpDeps' ::
+  forall b.
+  Backend b =>
+  AnnBoolExpPartialSQL b ->
+  BoolExpM b [SchemaDependency]
+getBoolExpDeps' = \case
   BoolAnd exps -> procExps exps
   BoolOr exps -> procExps exps
-  BoolNot e -> getBoolExpDeps source tn e
-  BoolFld fld -> getColExpDeps source tn fld
-  BoolExists (GExists refqt whereExp) ->
+  BoolNot e -> getBoolExpDeps' e
+  BoolFld fld -> getColExpDeps fld
+  BoolExists (GExists refqt whereExp) -> do
+    BoolExpCtx {source} <- ask
     let tableDep =
           SchemaDependency
             ( SOSourceObj source $
@@ -512,47 +540,53 @@ getBoolExpDeps source tn = \case
                   SOITable @b refqt
             )
             DRRemoteTable
-     in tableDep : getBoolExpDeps source refqt whereExp
+    (tableDep :) <$> local (\e -> e {currTable = refqt}) (getBoolExpDeps' whereExp)
   where
-    procExps = concatMap (getBoolExpDeps source tn)
+    procExps :: [AnnBoolExpPartialSQL b] -> BoolExpM b [SchemaDependency]
+    procExps = fmap concat . mapM getBoolExpDeps'
 
 getColExpDeps ::
   forall b.
   Backend b =>
-  SourceName ->
-  TableName b ->
   AnnBoolExpFld b (PartialSQLExp b) ->
-  [SchemaDependency]
-getColExpDeps source tableName = \case
-  AVColumn colInfo opExps ->
-    let columnName = pgiColumn colInfo
-        colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
-        colDep = mkColDep @b colDepReason source tableName columnName
-        colDepsInOpExp = mkOpExpDeps opExps
-     in colDep : colDepsInOpExp
-  AVRelationship relInfo relBoolExp ->
-    let relationshipName = riName relInfo
-        relationshipTable = riRTable relInfo
-        schemaDependency =
-          SchemaDependency
-            ( SOSourceObj source $
-                AB.mkAnyBackend $
-                  SOITableObj @b tableName (TORel relationshipName)
-            )
-            DROnType
-     in schemaDependency : getBoolExpDeps source relationshipTable relBoolExp
-  AVComputedField computedFieldBoolExp ->
-    let mkComputedFieldDep' r =
-          mkComputedFieldDep @b r source tableName $ _acfbName computedFieldBoolExp
-     in case _acfbBoolExp computedFieldBoolExp of
-          CFBEScalar opExps ->
-            let computedFieldDep =
-                  mkComputedFieldDep' $
-                    bool DRSessionVariable DROnType $ any hasStaticExp opExps
-             in computedFieldDep : mkOpExpDeps opExps
-          CFBETable cfTable cfTableBoolExp ->
-            mkComputedFieldDep' DROnType : getBoolExpDeps source cfTable cfTableBoolExp
+  BoolExpM b [SchemaDependency]
+getColExpDeps bexp = do
+  BoolExpCtx {source, currTable} <- ask
+  case bexp of
+    AVColumn colInfo opExps ->
+      let columnName = pgiColumn colInfo
+          colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
+          colDep = mkColDep @b colDepReason source currTable columnName
+       in (colDep :) <$> mkOpExpDeps opExps
+    AVRelationship relInfo relBoolExp ->
+      let relationshipName = riName relInfo
+          relationshipTable = riRTable relInfo
+          schemaDependency =
+            SchemaDependency
+              ( SOSourceObj source $
+                  AB.mkAnyBackend $
+                    SOITableObj @b currTable (TORel relationshipName)
+              )
+              DROnType
+       in (schemaDependency :) <$> local (\e -> e {currTable = relationshipTable}) (getBoolExpDeps' relBoolExp)
+    AVComputedField computedFieldBoolExp ->
+      let mkComputedFieldDep' r =
+            mkComputedFieldDep @b r source currTable $ _acfbName computedFieldBoolExp
+       in case _acfbBoolExp computedFieldBoolExp of
+            CFBEScalar opExps ->
+              let computedFieldDep =
+                    mkComputedFieldDep' $
+                      bool DRSessionVariable DROnType $ any hasStaticExp opExps
+               in (computedFieldDep :) <$> mkOpExpDeps opExps
+            CFBETable cfTable cfTableBoolExp ->
+              (mkComputedFieldDep' DROnType :) <$> local (\e -> e {currTable = cfTable}) (getBoolExpDeps' cfTableBoolExp)
   where
+    mkOpExpDeps :: [OpExpG b (PartialSQLExp b)] -> BoolExpM b [SchemaDependency]
     mkOpExpDeps opExps = do
-      (col, rootTable) <- mapMaybe opExpDepCol opExps
-      pure $ mkColDep @b DROnType source (fromMaybe tableName rootTable) col
+      BoolExpCtx {source, rootTable, currTable} <- ask
+      pure $ do
+        RootOrCurrentColumn rootOrCol col <- mapMaybe opExpDepCol opExps
+        let table = case rootOrCol of
+              IsRoot -> rootTable
+              IsCurrent -> currTable
+        pure $ mkColDep @b DROnType source table col

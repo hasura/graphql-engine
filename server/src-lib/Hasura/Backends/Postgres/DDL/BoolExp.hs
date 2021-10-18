@@ -227,24 +227,24 @@ parseBoolExpOperations rhsParser rootTable fim columnRef value = do
               return $ ASTDWithinGeog $ DWithinGeogOp dist from useSpheroid
             _ -> throwError $ buildMsg colTy [PGGeometry, PGGeography]
 
-        decodeAndValidateRhsCol :: Value -> m (PGCol, Maybe QualifiedTable)
+        decodeAndValidateRhsCol :: Value -> m (RootOrCurrentColumn ('Postgres pgKind))
         decodeAndValidateRhsCol v = case v of
-          String _ -> go Nothing fim v
+          String _ -> go IsCurrent fim v
           Array path -> case toList path of
             [] -> throw400 Unexpected "path cannot be empty"
-            [col] -> go Nothing fim col
+            [col] -> go IsCurrent fim col
             [String "$", col] -> do
               rootTableInfo <-
                 lookupTableCoreInfo rootTable
                   >>= flip onNothing (throw500 $ "unexpected: " <> rootTable <<> " doesn't exist")
-              go (Just rootTable) (_tciFieldInfoMap rootTableInfo) col
+              go IsRoot (_tciFieldInfoMap rootTableInfo) col
             _ -> throw400 NotSupported "Relationship references are not supported in column comparison RHS"
           _ -> throw400 Unexpected "a boolean expression JSON must be either a string or an array"
           where
             go rootInfo fieldsInfoMap columnValue = do
               colName <- decodeValue columnValue
               colInfo <- validateRhsCol fieldsInfoMap colName
-              pure (colInfo, rootInfo)
+              pure $ RootOrCurrentColumn rootInfo colInfo
 
         parseST3DDWithinObj =
           ABackendSpecific <$> do
