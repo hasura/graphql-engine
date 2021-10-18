@@ -9,6 +9,7 @@
 - console: enable custom graphql root fields for mssql under modify tab
 - cli: split remote schema permissions metadata into seperate files (#7033)
 
+
 ### Function field names customization (#7405)
 It is now possible to specify the GraphQL names of tracked SQL functions in
 Postgres sources, and different names may be given to the `_aggregate` and
@@ -18,6 +19,7 @@ suffix-less versions.  Aliases may be set by both
 
 ### Bug fixes and improvements 
 
+- server: Correctly translate permissions on functions to SQL (#7617)
 - server: add transformed request to action error responses
 - server: allow nullable action responses (#4405)
 - server: add support for openapi json of REST Endpoints

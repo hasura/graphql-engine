@@ -1326,10 +1326,14 @@ use_function_permission_fixtures = pytest.mark.usefixtures(
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @use_function_permission_fixtures
 class TestGraphQLQueryFunctionPermissions:
+    # These tests are skipped unless the test-suite is run with '--test-function-permissions'
 
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/functions/permissions/'
+
+    def test_access_function_with_table_permissions(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + 'get_messages_with_table_permissions.yaml')
 
     def test_access_function_without_permission_configured(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + 'get_articles_without_permission_configured.yaml')

@@ -2,19 +2,19 @@
 
 module Hasura.Backends.Postgres.Translate.BoolExp
   ( toSQLBoolExp,
-    getBoolExpDeps,
     annBoolExp,
     BoolExpRHSParser (..),
   )
 where
 
 import Data.HashMap.Strict qualified as M
+import Data.Text.Extended (ToTxt)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.Types.BoolExp
 import Hasura.Base.Error
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types hiding (Identifier)
 import Hasura.SQL.Types
 
 -- | Context to parse a RHS value in a boolean expression
@@ -111,100 +111,119 @@ annColExp rhsParser rootTable colInfoMap (ColExp fieldName colVal) = do
     FIRemoteRelationship {} ->
       throw400 UnexpectedPayload "remote field unsupported"
 
+-- | Translate an IR boolean expression to an SQL boolean expression. References
+-- to columns etc are relative to the given 'rootReference'.
 toSQLBoolExp ::
   forall pgKind.
   Backend ('Postgres pgKind) =>
+  -- | The name of the tabular value in query scope that the boolean expression
+  -- applies to
   S.Qual ->
+  -- | The boolean expression to translate
   AnnBoolExpSQL ('Postgres pgKind) ->
   S.BoolExp
-toSQLBoolExp tq e =
-  evalState (convBoolRhs' tq e) 0
-
-convBoolRhs' ::
-  forall pgKind.
-  Backend ('Postgres pgKind) =>
-  S.Qual ->
-  AnnBoolExpSQL ('Postgres pgKind) ->
-  State Word64 S.BoolExp
-convBoolRhs' tq =
-  foldBoolExp (convColRhs tq)
-
-convColRhs ::
-  forall pgKind.
-  Backend ('Postgres pgKind) =>
-  S.Qual ->
-  AnnBoolExpFldSQL ('Postgres pgKind) ->
-  State Word64 S.BoolExp
-convColRhs tableQual = \case
-  AVColumn colInfo opExps -> do
-    let colFld = fromCol @('Postgres pgKind) $ pgiColumn colInfo
-        bExps = map (mkFieldCompExp tableQual $ LColumn colFld) opExps
-    return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
-  AVRelationship (RelInfo _ _ colMapping relTN _ _) nesAnn -> do
-    -- Convert the where clause on the relationship
-    curVarNum <- get
-    put $ curVarNum + 1
-    let newIdentifier =
-          Identifier $
-            "_be_" <> tshow curVarNum <> "_"
-              <> snakeCaseQualifiedObject relTN
-        newIdenQ = S.QualifiedIdentifier newIdentifier Nothing
-    annRelBoolExp <- convBoolRhs' newIdenQ nesAnn
-    let backCompExp = foldr (S.BEBin S.AndOp) (S.BELit True) $
-          flip map (M.toList colMapping) $ \(lCol, rCol) ->
-            S.BECompare
-              S.SEQ
-              (mkQCol (S.QualifiedIdentifier newIdentifier Nothing) rCol)
-              (mkQCol tableQual lCol)
-        innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
-    return $ S.mkExists (S.FISimple relTN $ Just $ S.Alias newIdentifier) innerBoolExp
-  AVComputedField (AnnComputedFieldBoolExp _ _ function sessionArgPresence cfBoolExp) -> do
-    case cfBoolExp of
-      CFBEScalar opExps -> do
-        -- Convert the where clause on scalar computed field
-        let bExps = map (mkFieldCompExp tableQual $ LComputedField function sessionArgPresence) opExps
-        pure $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
-      CFBETable _ boolExp -> do
-        -- Convert the where clause on table computed field
-        curVarNum <- get
-        put $ curVarNum + 1
-        let newIdentifier =
-              Identifier $
-                "_be_" <> tshow curVarNum <> "_"
-                  <> snakeCaseQualifiedObject function
-            newIdenQ = S.QualifiedIdentifier newIdentifier Nothing
-            functionExp =
-              mkComputedFieldFunctionExp tableQual function sessionArgPresence $
-                Just $ S.Alias newIdentifier
-        S.mkExists (S.FIFunc functionExp) <$> convBoolRhs' newIdenQ boolExp
+toSQLBoolExp rootReference e =
+  evalState
+    ( runReaderT
+        (unBoolExpM (translateBoolExp e))
+        initialCtx
+    )
+    0
   where
-    mkQCol q = S.SEQIdentifier . S.QIdentifier q . toIdentifier
+    initialCtx =
+      BoolExpCtx
+        { currTableReference = rootReference,
+          rootReference = rootReference
+        }
 
-foldExists ::
-  forall pgKind.
-  Backend ('Postgres pgKind) =>
-  GExists ('Postgres pgKind) (AnnBoolExpFldSQL ('Postgres pgKind)) ->
-  State Word64 S.BoolExp
-foldExists (GExists qt wh) = do
-  whereExp <- foldBoolExp (convColRhs (S.QualTable qt)) wh
-  return $ S.mkExists (S.FISimple qt Nothing) whereExp
+-- | The table context of boolean expression translation. This is used to
+-- resolve references to fields, as those may refer to the so-called 'root
+-- table' (identified by a '$'-sign in the expression input syntax) or the
+-- 'current' table.
+data BoolExpCtx = BoolExpCtx
+  { -- | Reference to the current tabular value.
+    currTableReference :: S.Qual,
+    -- | Reference to the root tabular value.
+    rootReference :: S.Qual
+  }
 
-foldBoolExp ::
+-- | The monad that carries the translation of boolean expressions. This
+-- supports the generation of fresh names for aliasing sub-expressions and
+-- maintains the table context of the expressions being translated.
+newtype BoolExpM a = BoolExpM {unBoolExpM :: ReaderT BoolExpCtx (State Word64) a}
+  deriving (Functor, Applicative, Monad, MonadReader BoolExpCtx, MonadState Word64)
+
+-- | Translate a 'GBoolExp' with annotated SQLExpressions in the leaves into a
+-- bare SQL Boolean Expression.
+translateBoolExp ::
   forall pgKind.
-  Backend ('Postgres pgKind) =>
-  (AnnBoolExpFldSQL ('Postgres pgKind) -> State Word64 S.BoolExp) ->
+  (Backend ('Postgres pgKind)) =>
   AnnBoolExpSQL ('Postgres pgKind) ->
-  State Word64 S.BoolExp
-foldBoolExp f = \case
+  BoolExpM S.BoolExp
+translateBoolExp = \case
   BoolAnd bes -> do
-    sqlBExps <- mapM (foldBoolExp f) bes
+    sqlBExps <- mapM translateBoolExp bes
     return $ foldr (S.BEBin S.AndOp) (S.BELit True) sqlBExps
   BoolOr bes -> do
-    sqlBExps <- mapM (foldBoolExp f) bes
+    sqlBExps <- mapM translateBoolExp bes
     return $ foldr (S.BEBin S.OrOp) (S.BELit False) sqlBExps
-  BoolNot notExp -> S.BENot <$> foldBoolExp f notExp
-  BoolExists existsExp -> foldExists existsExp
-  BoolFld ce -> f ce
+  BoolNot notExp -> S.BENot <$> translateBoolExp notExp
+  BoolExists (GExists currTableReference wh) -> do
+    whereExp <- recCurrentTable (S.QualTable currTableReference) wh
+    return $ S.mkExists (S.FISimple currTableReference Nothing) whereExp
+  BoolFld boolExp -> case boolExp of
+    AVColumn colInfo opExps -> do
+      BoolExpCtx {rootReference, currTableReference} <- ask
+      let colFld = fromCol @('Postgres pgKind) $ pgiColumn colInfo
+          bExps = map (mkFieldCompExp rootReference currTableReference $ LColumn colFld) opExps
+      return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
+    AVRelationship (RelInfo _ _ colMapping relTN _ _) nesAnn -> do
+      -- Convert the where clause on the relationship
+      aliasRelTN <- freshIdentifier relTN
+      annRelBoolExp <- recCurrentTable (S.QualifiedIdentifier aliasRelTN Nothing) nesAnn
+      BoolExpCtx {currTableReference} <- ask
+      let backCompExp = foldr (S.BEBin S.AndOp) (S.BELit True) $
+            flip map (M.toList colMapping) $ \(lCol, rCol) ->
+              S.BECompare
+                S.SEQ
+                (mkQCol (S.QualifiedIdentifier aliasRelTN Nothing) rCol)
+                (mkQCol currTableReference lCol)
+          innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
+      return $ S.mkExists (S.FISimple relTN $ Just $ S.Alias aliasRelTN) innerBoolExp
+    AVComputedField (AnnComputedFieldBoolExp _ _ function sessionArgPresence cfBoolExp) -> do
+      case cfBoolExp of
+        CFBEScalar opExps -> do
+          BoolExpCtx {rootReference, currTableReference} <- ask
+          -- Convert the where clause on scalar computed field
+          let bExps = map (mkFieldCompExp rootReference currTableReference $ LComputedField function sessionArgPresence) opExps
+          pure $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
+        CFBETable _ be -> do
+          -- Convert the where clause on table computed field
+          BoolExpCtx {currTableReference} <- ask
+          aliasFunction <- freshIdentifier function
+          let functionExp =
+                mkComputedFieldFunctionExp currTableReference function sessionArgPresence $
+                  Just $ S.Alias aliasFunction
+          S.mkExists (S.FIFunc functionExp) <$> recCurrentTable (S.QualifiedIdentifier aliasFunction Nothing) be
+  where
+    mkQCol :: forall a. IsIdentifier a => S.Qual -> a -> S.SQLExp
+    mkQCol q = S.SEQIdentifier . S.QIdentifier q . toIdentifier
+
+    -- Draw a fresh identifier intended to alias the given object.
+    freshIdentifier :: forall a. ToTxt a => QualifiedObject a -> BoolExpM Identifier
+    freshIdentifier obj = do
+      curVarNum <- get
+      put $ curVarNum + 1
+      let newIdentifier =
+            Identifier $
+              "_be_" <> tshow curVarNum <> "_"
+                <> snakeCaseQualifiedObject obj
+
+      return newIdentifier
+
+    -- Call recursively using the given identifier for the 'current' table.
+    recCurrentTable :: S.Qual -> AnnBoolExpSQL ('Postgres pgKind) -> BoolExpM S.BoolExp
+    recCurrentTable curr = local (\e -> e {currTableReference = curr}) . translateBoolExp
 
 data LHSField b
   = LColumn !FieldName
@@ -226,19 +245,20 @@ mkComputedFieldFunctionExp qual function sessionArgPresence alias =
    in S.FunctionExp function functionArgs $ flip S.FunctionAlias Nothing <$> alias
 
 mkFieldCompExp ::
-  S.Qual -> LHSField ('Postgres pgKind) -> OpExpG ('Postgres pgKind) S.SQLExp -> S.BoolExp
-mkFieldCompExp qual lhsField = mkCompExp qLhsField
+  S.Qual -> S.Qual -> LHSField ('Postgres pgKind) -> OpExpG ('Postgres pgKind) S.SQLExp -> S.BoolExp
+mkFieldCompExp rootReference currTableReference lhsField = mkCompExp qLhsField
   where
     qLhsField = case lhsField of
       LColumn fieldName ->
         -- "qual"."column" =
-        S.SEQIdentifier $ S.QIdentifier qual $ Identifier $ getFieldNameTxt fieldName
+        S.SEQIdentifier $ S.QIdentifier currTableReference $ Identifier $ getFieldNameTxt fieldName
       LComputedField function sessionArgPresence ->
         -- "function_schema"."function_name"("qual".*) =
-        S.SEFunction $ mkComputedFieldFunctionExp qual function sessionArgPresence Nothing
+        S.SEFunction $ mkComputedFieldFunctionExp currTableReference function sessionArgPresence Nothing
 
-    mkQCol (col, Nothing) = S.SEQIdentifier $ S.QIdentifier qual $ toIdentifier col
-    mkQCol (col, Just table) = S.SEQIdentifier $ S.mkQIdentifierTable table $ toIdentifier col
+    mkQCol :: RootOrCurrentColumn ('Postgres pgKind) -> S.SQLExp
+    mkQCol (RootOrCurrentColumn IsRoot col) = S.SEQIdentifier $ S.QIdentifier rootReference $ toIdentifier col
+    mkQCol (RootOrCurrentColumn IsCurrent col) = S.SEQIdentifier $ S.QIdentifier currTableReference $ toIdentifier col
 
     mkCompExp :: SQLExpression ('Postgres pgKind) -> OpExpG ('Postgres pgKind) (SQLExpression ('Postgres pgKind)) -> S.BoolExp
     mkCompExp lhs = \case

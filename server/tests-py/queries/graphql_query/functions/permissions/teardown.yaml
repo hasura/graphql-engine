@@ -6,4 +6,6 @@ args:
     sql: |
       DROP TABLE article cascade;
       DROP TABLE author cascade;
+      DROP TABLE message cascade;
+      DROP TABLE channel_member cascade;
     cascade: true
