@@ -1,10 +1,16 @@
 -- | Planning MySQL queries and subscriptions.
-module Hasura.Backends.MySQL.Plan (planQuery) where
+module Hasura.Backends.MySQL.Plan
+  ( planQuery,
+    queryToActionForest,
+  )
+where
 
 import Control.Monad.Validate
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy (toStrict)
 import Data.Text.Extended
+import Data.Tree
+import Hasura.Backends.MySQL.DataLoader.Plan qualified as DataLoader
 import Hasura.Backends.MySQL.FromIr
 import Hasura.Backends.MySQL.Types
 import Hasura.Base.Error
@@ -14,6 +20,20 @@ import Hasura.RQL.IR
 import Hasura.RQL.Types.Column qualified as RQL
 import Hasura.SQL.Backend
 import Hasura.Session
+
+-- | Plan the query and then produce a forest of actions for the executor.
+queryToActionForest ::
+  MonadError QErr m =>
+  UserInfo ->
+  QueryDB 'MySQL (Const Void) (GraphQL.UnpreparedValue 'MySQL) ->
+  m (DataLoader.HeadAndTail, Forest DataLoader.PlannedAction)
+queryToActionForest userInfo qrf = do
+  select <- planQuery (_uiSession userInfo) qrf
+  let (!headAndTail, !plannedActionsList) =
+        DataLoader.runPlan
+          (DataLoader.planSelectHeadAndTail Nothing Nothing select)
+      !actionsForest = DataLoader.actionsForest id plannedActionsList
+  pure (headAndTail, actionsForest)
 
 planQuery ::
   MonadError QErr m =>
