@@ -46,6 +46,8 @@ const CREATE_WEBSOCKET_CLIENT = 'ApiExplorer/CREATE_WEBSOCKET_CLIENT';
 const FOCUS_ROLE_HEADER = 'ApiExplorer/FOCUS_ROLE_HEADER';
 const UNFOCUS_ROLE_HEADER = 'ApiExplorer/UNFOCUS_ROLE_HEADER';
 
+const TRACK_RESPONSE_DETAILS = 'ApiExplorer/TRACK_RESPONSE_DETAILS';
+
 let websocketSubscriptionClient;
 
 const getSubscriptionInstance = (url, headers) => {
@@ -216,16 +218,30 @@ const isSubscription = graphQlParams => {
   return false;
 };
 
-const graphQLFetcherFinal = (graphQLParams, url, headers, dispatch) => {
+const graphQLFetcherFinal = (
+  graphQLParams,
+  url,
+  headers,
+  dispatch,
+  requestTrackingId
+) => {
   if (isSubscription(graphQLParams)) {
     return graphqlSubscriber(graphQLParams, url, headers);
   }
   return dispatch(
-    requestAction(url, {
-      method: 'POST',
-      headers: getHeadersAsJSON(headers),
-      body: JSON.stringify(graphQLParams),
-    })
+    requestAction(
+      url,
+      {
+        method: 'POST',
+        headers: getHeadersAsJSON([...headers]),
+        body: JSON.stringify(graphQLParams),
+      },
+      undefined,
+      undefined,
+      true,
+      false,
+      requestTrackingId
+    )
   );
 };
 
@@ -460,6 +476,18 @@ const getRemoteQueries = (queryUrl, cb, dispatch) => {
     .catch(e => console.error('Invalid query file URL: ', e));
 };
 
+const processResponseDetails = (
+  responseTime,
+  responseSize,
+  isResponseCached,
+  responseTrackingId
+) => dispatch => {
+  dispatch({
+    type: TRACK_RESPONSE_DETAILS,
+    data: { responseTime, responseSize, isResponseCached, responseTrackingId },
+  });
+};
+
 const apiExplorerReducer = (state = defaultState, action) => {
   switch (action.type) {
     case CHANGE_TAB:
@@ -675,6 +703,20 @@ const apiExplorerReducer = (state = defaultState, action) => {
         ...state,
         loading: action.data,
       };
+    case TRACK_RESPONSE_DETAILS:
+      return {
+        ...state,
+        explorerData: {
+          ...state.explorerData,
+          response: {
+            ...state.explorerData.response,
+            responseTime: action.data.responseTime,
+            responseSize: action.data.responseSize,
+            isResponseCached: action.data.isResponseCached,
+            responseTrackingId: action.data.responseTrackingId,
+          },
+        },
+      };
     default:
       return state;
   }
@@ -707,4 +749,5 @@ export {
   analyzeFetcher,
   verifyJWTToken,
   setHeadersBulk,
+  processResponseDetails,
 };
