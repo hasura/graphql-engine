@@ -47,7 +47,6 @@ LEFT JOIN LATERAL
       'position', "column".attnum,
       'type', coalesce(base_type.typname, "type".typname),
       'is_nullable', NOT "column".attnotnull,
-      'is_identity', coalesce(("info_column".is_identity::boolean), false),
       'description', pg_catalog.col_description("table".oid, "column".attnum)
     )) AS info
     FROM pg_catalog.pg_attribute "column"
@@ -55,10 +54,6 @@ LEFT JOIN LATERAL
       ON "type".oid = "column".atttypid
     LEFT JOIN pg_catalog.pg_type base_type
       ON "type".typtype = 'd' AND base_type.oid = "type".typbasetype
-    LEFT JOIN information_schema.columns "info_column"
-        ON "info_column".column_name = "column".attname
-        AND "info_column".table_name = "table".relname
-        AND "info_column".table_schema = "schema".nspname
     WHERE "column".attrelid = "table".oid
       -- columns where attnum <= 0 are special, system-defined columns
       AND "column".attnum > 0

@@ -3,6 +3,8 @@
 ## Next release
 
 (Add entries below in the order of server, console, cli, docs, others)
+- server: fix bug which recreated event triggers every time the graphql-engine started up
+- server: remove identity notion for table columns (fix #7557)
 - console: add performance fixes for handle large db schemas
 
 ## v2.0.9

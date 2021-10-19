@@ -101,8 +101,7 @@ initCatalogForSource maintenanceMode migrationTime = do
         liftTx createVersionTable
         -- Migrate the catalog from initial version i.e '1'
         migrateSourceCatalogFrom "1"
-        return RETRecreate
-     | otherwise -> migrateSourceCatalog >> return RETRecreate
+     | otherwise -> migrateSourceCatalog
   where
     initPgSourceCatalog = do
       () <- Q.multiQE defaultTxErrorHandler $(makeRelativeToProject "src-rsr/init_pg_source.sql" >>= Q.sqlFromFile)
@@ -148,13 +147,19 @@ initCatalogForSource maintenanceMode migrationTime = do
 --  downgrade pg sources themselves. Improve error message by referring the URL
 --  to the documentation.
 
-migrateSourceCatalog :: MonadTx m => m ()
+migrateSourceCatalog :: MonadTx m => m RecreateEventTriggers
 migrateSourceCatalog =
   getSourceCatalogVersion >>= migrateSourceCatalogFrom
 
-migrateSourceCatalogFrom :: (MonadTx m) => Text -> m ()
+-- | `migrateSourceCatalogFrom` migrates the catalog from a lower to a higher version.
+--    When there are any changes in the source catalog, then re-create the existing event
+--    triggers in the metadata. This is done so that the event triggers be compatible with the
+--    changes introduced in the newly added source catalog migrations. When the source is already
+--    in the latest catalog version, we do nothing because nothing has changed w.r.t the source catalog
+--    so recreating the event triggers will only be extraneous.
+migrateSourceCatalogFrom :: (MonadTx m) => Text -> m RecreateEventTriggers
 migrateSourceCatalogFrom prevVersion
-  | prevVersion == latestSourceCatalogVersionText = pure ()
+  | prevVersion == latestSourceCatalogVersionText = pure RETDoNothing
   | [] <- neededMigrations =
       throw400 NotSupported $
         "Expected source catalog version <= "
@@ -163,6 +168,7 @@ migrateSourceCatalogFrom prevVersion
   | otherwise = do
       traverse_ snd neededMigrations
       setSourceCatalogVersion
+      pure RETRecreate
   where
     neededMigrations =
       dropWhile ((/= prevVersion) . fst) sourceMigrations
