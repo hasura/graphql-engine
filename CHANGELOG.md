@@ -53,6 +53,7 @@ suffix-less versions.  Aliases may be set by both
   of the invocation will be the same otherwise it will be `NULL`.
 - server: support `extensions` field in error responses from action webhook endpoints (fix #4001)
 - server: fix custom-check based permissions for MSSQL (#7429)
+- server: query performance improvements
 - server: remove identity notion for table columns (fix #7557)
 - server: support MSSQL transactions
 - server: log individual operation details in the http-log during a batch graphQL query execution

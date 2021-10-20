@@ -25,15 +25,37 @@ flag profiling
   default: False
   manual: True
 
+-- A single flag to enable all optimization-related settings at once, for all
+-- hasura code.
+-- We share this flag name across our .cabal projects so we can switch it on or
+-- off for all of them at the top level of our cabal.project(.*) files
+flag optimize-hasura
+  description: Compile hasura code with appropriate optimizations 
+  default: True
+  manual: False
+
 common common-all
   ghc-options:
-    -fmax-simplifier-iterations=20 -foptimal-applicative-do
+    -foptimal-applicative-do
     -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
+    -- This is just to keep compile-times in check and might be adjusted later (See mono #2610):
+    -fmax-simplifier-iterations=2
 
   if flag(developer)
     cpp-options: -DDeveloperAPIs
   if flag(profiling)
     cpp-options: -DPROFILING
+
+  if flag(optimize-hasura)
+    ghc-options:
+      -- This is for performance, and works in combination with '-fspecialise-aggressively' 
+      -- in the graphql-engine 'executable' stanza below, and in any other dependent 
+      -- executables (See mono #2610):
+      -fexpose-all-unfoldings
+      -O2
+  else
+    -- we just want to build fast:
+    ghc-options: -O0
 
   default-language: Haskell2010
   default-extensions:
@@ -659,6 +681,12 @@ library
 
 executable graphql-engine
   import: common-all, common-exe
+
+  if flag(optimize-hasura)
+    ghc-options:
+      -- This is for performance (See mono #2610):
+      -fspecialise-aggressively
+       
   hs-source-dirs:    src-exec
   main-is:           Main.hs
   build-depends:     base
