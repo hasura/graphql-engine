@@ -21,6 +21,9 @@ constraints:
   setup.Cabal <3.4
 
 package *
+  -- NOTE: this gets applied to both local (hasura) packages and dependencies,
+  -- but optimizations for local hasura packages are overridden/controlled
+  -- via the 'optimize-hasura' flag.
   optimization: 2
   -- For tooling, e.g. 'weeder', and IDE-like stuff:
   ghc-options: -fwrite-ide-info
