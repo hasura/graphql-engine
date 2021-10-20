@@ -2112,7 +2112,7 @@ const saveIndex = (indexInfo, successCb, errorCb) => (dispatch, getState) => {
     indexType: indexInfo?.index_type,
     unique: indexInfo?.unique,
   });
-  const downSql = dataSource.dropIndexSql(indexInfo?.index_name);
+  const downSql = dataSource.dropIndexSql(indexInfo?.index_name, currentSchema);
 
   upQueries.push(getRunSqlQuery(upSql, currentDataSource));
   downQueries.push(getRunSqlQuery(downSql, currentDataSource));
@@ -2161,7 +2161,7 @@ const removeIndex = (indexInfo, successCb, errorCb) => (dispatch, getState) => {
   const upQueries = [];
   const downQueries = [];
 
-  const upSql = dataSource.dropIndexSql(indexInfo?.index_name);
+  const upSql = dataSource.dropIndexSql(indexInfo?.index_name, currentSchema);
   const downSql = dataSource.createIndexSql({
     indexName: indexInfo?.index_name,
     indexType: indexInfo?.index_type,

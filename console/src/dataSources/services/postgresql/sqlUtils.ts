@@ -1101,8 +1101,8 @@ export const getCreateIndexSql = (indexObj: {
 `;
 };
 
-export const getDropIndexSql = (indexName: string) =>
-  `DROP INDEX IF EXISTS "${indexName}"`;
+export const getDropIndexSql = (indexName: string, schema: string) =>
+  `DROP INDEX IF EXISTS "${schema}"."${indexName}"`;
 
 export const frequentlyUsedColumns: FrequentlyUsedColumn[] = [
   {

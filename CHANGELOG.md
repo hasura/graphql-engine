@@ -1,6 +1,15 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
+(Add entries below in the order of server, console, cli, docs, others)
+
+- server: fix bug which recreated event triggers every time the graphql-engine started up
+- server: fix bug in OpenAPI when multiple REST endpoints have the same URL path but different method
+- console: design cleanup Modify and Add Table forms (close #7454)
+- console: enable custom graphql root fields for mssql under modify tab
+- console: allow dropping indices on all schemas
+- cli: split remote schema permissions metadata into seperate files (#7033)
+
 
 ### Function field names customization (#7405)
 It is now possible to specify the GraphQL names of tracked SQL functions in
