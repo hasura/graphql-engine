@@ -19,7 +19,7 @@ docs_output := /build/_server_output/docs.tar.gz
 # This glob is a pretty heavy hammer designed to work regardless of `cabal-install` version (see the
 # aforementioned link for why that’s tricky). If `cabal v2-*` ever gets a better way to do this,
 # please replace this with something less hacky.
-executables_glob := ../dist-newstyle/build/*/*/graphql-engine-*/**/opt/build/{graphql-engine/graphql-engine,graphql-engine-tests/graphql-engine-tests}
+executables_glob := ../dist-newstyle/build/*/*/graphql-engine-*/**/opt/build/{graphql-engine/graphql-engine,graphql-engine-tests/graphql-engine-tests,graphql-engine-integration-tests/graphql-engine-integration-tests}
 
 # assumes this is built in circleci
 ci-build:

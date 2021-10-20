@@ -8,4 +8,6 @@ cradle:
       component: "graphql-engine:test:graphql-engine-tests"
     - path: "./server/src-bench-cache"
       component: "graphql-engine:bench:cache"
+    - path: "./server/test"
+      component: "graphql-engine:test:graphql-engine-integration-tests"
 

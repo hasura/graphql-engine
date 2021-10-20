@@ -1,6 +1,3 @@
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE RecordWildCards #-}
-
 module Main (main) where
 
 import Control.Concurrent.Extended qualified as C
