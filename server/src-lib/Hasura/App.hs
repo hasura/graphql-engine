@@ -7,7 +7,6 @@ import Control.Concurrent.Extended qualified as C
 import Control.Concurrent.STM qualified as STM
 import Control.Concurrent.STM.TVar (readTVarIO)
 import Control.Exception (bracket_, throwIO)
-import Control.Exception.Lifted qualified as LE
 import Control.Monad.Catch
   ( Exception,
     MonadCatch,
@@ -19,7 +18,7 @@ import Control.Monad.Morph (hoist)
 import Control.Monad.STM (atomically)
 import Control.Monad.Stateless
 import Control.Monad.Trans.Control (MonadBaseControl (..))
-import Control.Monad.Trans.Managed (ManagedT (..))
+import Control.Monad.Trans.Managed (ManagedT (..), allocate_)
 import Control.Monad.Unique
 import Data.Aeson qualified as A
 import Data.ByteString.Char8 qualified as BC
@@ -84,6 +83,7 @@ import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.DynamicTlsPermissions (mkMgr)
 import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
+import Network.Wai (Application)
 import Network.Wai.Handler.Warp qualified as Warp
 import Options.Applicative
 import System.Environment (getEnvironment)
@@ -542,7 +542,81 @@ runHGEServer ::
   ServerMetrics ->
   EKG.Store EKG.EmptyMetrics ->
   ManagedT m ()
-runHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook serverMetrics ekgStore = do
+runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore = do
+  waiApplication <-
+    mkHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore
+
+  let warpSettings :: Warp.Settings
+      warpSettings =
+        Warp.setPort (soPort serveOptions)
+          . Warp.setHost (soHost serveOptions)
+          . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
+          . Warp.setInstallShutdownHandler shutdownHandler
+          . setForkIOWithMetrics
+          $ Warp.defaultSettings
+
+      setForkIOWithMetrics :: Warp.Settings -> Warp.Settings
+      setForkIOWithMetrics = Warp.setFork \f -> do
+        void $
+          C.forkIOWithUnmask
+            ( \unmask ->
+                bracket_
+                  (EKG.Gauge.inc $ smWarpThreads serverMetrics)
+                  (EKG.Gauge.dec $ smWarpThreads serverMetrics)
+                  (f unmask)
+            )
+
+      shutdownHandler :: IO () -> IO ()
+      shutdownHandler closeSocket =
+        LA.link =<< LA.async do
+          waitForShutdown $ _scShutdownLatch serveCtx
+          let logger = _lsLogger $ _scLoggers serveCtx
+          unLogger logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
+          closeSocket
+
+  -- Here we block until the shutdown latch 'MVar' is filled, and then
+  -- shut down the server. Once this blocking call returns, we'll tidy up
+  -- any resources using the finalizers attached using 'ManagedT' above.
+  -- Structuring things using the shutdown latch in this way lets us decide
+  -- elsewhere exactly how we want to control shutdown.
+  liftIO $ Warp.runSettings warpSettings waiApplication
+
+-- | Part of a factorization of 'runHGEServer' to expose the constructed WAI
+-- application for testing purposes. See 'runHGEServer' for documentation.
+mkHGEServer ::
+  forall m impl.
+  ( MonadIO m,
+    MonadMask m,
+    MonadStateless IO m,
+    LA.Forall (LA.Pure m),
+    UserAuthentication (Tracing.TraceT m),
+    HttpLog m,
+    ConsoleRenderer m,
+    MonadMetadataApiAuthorization m,
+    MonadGQLExecutionCheck m,
+    MonadConfigApiHandler m,
+    MonadQueryLog m,
+    WS.MonadWSLog m,
+    MonadExecuteQuery m,
+    Tracing.HasReporter m,
+    HasResourceLimits m,
+    MonadMetadataStorage (MetadataStorageT m),
+    MonadResolveSource m,
+    EB.MonadQueryTags m
+  ) =>
+  (ServerCtx -> Spock.SpockT m ()) ->
+  Env.Environment ->
+  ServeOptions impl ->
+  ServeCtx ->
+  -- and mutations
+
+  -- | start time
+  UTCTime ->
+  Maybe EL.LiveQueryPostPollHook ->
+  ServerMetrics ->
+  EKG.Store EKG.EmptyMetrics ->
+  ManagedT m Application
+mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook serverMetrics ekgStore = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -769,41 +843,11 @@ runHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook
   unLogger logger $
     mkGenericLog LevelInfo "server" $ StartupTimeInfo "starting API server" apiInitTime
 
-  let setForkIOWithMetrics :: Warp.Settings -> Warp.Settings
-      setForkIOWithMetrics = Warp.setFork \f -> do
-        void $
-          C.forkIOWithUnmask
-            ( \unmask ->
-                bracket_
-                  (EKG.Gauge.inc $ smWarpThreads serverMetrics)
-                  (EKG.Gauge.dec $ smWarpThreads serverMetrics)
-                  (f unmask)
-            )
+  -- These cleanup actions are not directly associated with any
+  -- resource, but we still need to make sure we clean them up here.
+  allocate_ (pure ()) (liftIO stopWsServer)
 
-  let shutdownHandler closeSocket =
-        LA.link =<< LA.async do
-          waitForShutdown _scShutdownLatch
-          unLogger logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
-          closeSocket
-
-  let warpSettings =
-        Warp.setPort soPort
-          . Warp.setHost soHost
-          . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
-          . Warp.setInstallShutdownHandler shutdownHandler
-          . setForkIOWithMetrics
-          $ Warp.defaultSettings
-
-  -- Here we block until the shutdown latch 'MVar' is filled, and then
-  -- shut down the server. Once this blocking call returns, we'll tidy up
-  -- any resources using the finalizers attached using 'ManagedT' above.
-  -- Structuring things using the shutdown latch in this way lets us decide
-  -- elsewhere exactly how we want to control shutdown.
-  liftIO $
-    Warp.runSettings warpSettings app `LE.finally` do
-      -- These cleanup actions are not directly associated with any
-      -- resource, but we still need to make sure we clean them up here.
-      stopWsServer
+  pure app
   where
     prepareScheduledEvents (Logger logger) = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "preparing data"
