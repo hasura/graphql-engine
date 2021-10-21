@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 
 import { driverToLabel } from '../../../../dataSources';
 import { DataSource } from '../../../../metadata/types';
-import styles from './styles.scss';
 
 type CollapsibleToggleProps = {
   dataSource: DataSource;
@@ -18,76 +17,89 @@ const CollapsibleToggle: React.FC<CollapsibleToggleProps> = ({
   const toggleHandler = () => setIsOpen(prev => !prev);
 
   return (
-    <div className={styles.collapsibleWrapper}>
-      <div
-        className={styles.collapsibleToggle}
-        onClick={toggleHandler}
-        role="button"
-        tabIndex={0}
-      >
-        <span className={styles.collapsibleIndicatorWrapper}>
-          <i
-            className={`fa fa-chevron-down ${styles.collapsibleIndicator} ${
-              isOpen && styles.collapsibleIndicatorOpen
-            }`}
-          />{' '}
-          {isOpen ? <span>Less Info</span> : <span>More Info</span>}
-        </span>
-
-        <span className={`${styles.titleWrapper} ${styles.add_mar_bottom_mid}`}>
-          <span className={styles.dataSource_label}>{dataSource.name}</span>(
-          {driverToLabel[dataSource.driver]})
-          {!!dataSource?.read_replicas?.length && (
-            <span className={styles.replica_badge}>
-              {dataSource.read_replicas.length} Replicas
+    <div>
+      <div onClick={toggleHandler} role="button" tabIndex={0}>
+        <div className="flex items-center">
+          <div className="text-gray-600 font-semibold mr-xs break-all">
+            {dataSource.name}
+          </div>
+          <div className="flex ml-auto w-full sm:w-6/12">
+            <span className="mr-xs">({driverToLabel[dataSource.driver]})</span>
+            {!!dataSource?.read_replicas?.length && (
+              <span className="mr-xs inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-gray-800">
+                {dataSource.read_replicas.length} Replicas
+              </span>
+            )}
+            <span className="ml-auto text-sm">
+              <i
+                className={`fa ${!isOpen && 'fa-chevron-down'} ${
+                  isOpen && 'fa-chevron-up'
+                }`}
+              />{' '}
+              {isOpen ? <span>Less Info</span> : <span>More Info</span>}
             </span>
-          )}
-        </span>
+          </div>
+        </div>
       </div>
-      <br />
 
       {isOpen ? (
         <>
-          {dbVersion ? (
-            <div
-              className={`${styles.add_mar_bottom_mid} ${styles.display_flex}`}
-            >
-              <div className={styles.dbversion_label}>Database</div>
-              <div>{dbVersion}</div>
-            </div>
-          ) : null}
-          {dataSource.connection_pool_settings?.max_connections ? (
-            <div className={styles.add_mar_bottom_mid}>
-              <span className={styles.dataSource_label}>Max Connections</span>
-              {dataSource.connection_pool_settings?.max_connections}
-            </div>
-          ) : null}
-          {dataSource.connection_pool_settings?.idle_timeout ? (
-            <div className={styles.add_mar_bottom_mid}>
-              <span className={styles.dataSource_label}>Idle Timeout</span>
-              {dataSource.connection_pool_settings?.idle_timeout}
-            </div>
-          ) : null}
-          {dataSource.connection_pool_settings?.retries ? (
-            <div className={styles.add_mar_bottom_mid}>
-              <span className={styles.dataSource_label}>Retries</span>
-              {dataSource.connection_pool_settings?.retries}
-            </div>
-          ) : null}
-          {dataSource.connection_pool_settings?.pool_timeout ? (
-            <div className={styles.add_mar_bottom_mid}>
-              <span className={styles.dataSource_label}>Pool Timeout</span>
-              {dataSource.connection_pool_settings?.pool_timeout}
-            </div>
-          ) : null}
-          {dataSource.connection_pool_settings?.connection_lifetime ? (
-            <div>
-              <span className={styles.dataSource_label}>
-                Connection Lifetime
-              </span>
-              {dataSource.connection_pool_settings?.connection_lifetime}
-            </div>
-          ) : null}
+          <div className="mt-xs space-y-xs">
+            {dbVersion ? (
+              <div className="flex content-start">
+                <div className="text-gray-600 font-semibold">Database</div>
+                <div className="ml-auto w-full sm:w-6/12">{dbVersion}</div>
+              </div>
+            ) : null}
+            {dataSource.connection_pool_settings?.max_connections ? (
+              <div className="flex content-start">
+                <div className="text-gray-600 font-semibold mr-xs">
+                  Max Connections
+                </div>
+                <div className="ml-auto w-full sm:w-6/12">
+                  {dataSource.connection_pool_settings?.max_connections}
+                </div>
+              </div>
+            ) : null}
+            {dataSource.connection_pool_settings?.idle_timeout ? (
+              <div className="flex content-start">
+                <div className="text-gray-600 font-semibold mr-xs">
+                  Idle Timeout
+                </div>
+                <div className="ml-auto w-full sm:w-6/12">
+                  {dataSource.connection_pool_settings?.idle_timeout}
+                </div>
+              </div>
+            ) : null}
+            {dataSource.connection_pool_settings?.retries ? (
+              <div className="flex content-start">
+                <div className="text-gray-600 font-semibold mr-xs">Retries</div>
+                <div className="ml-auto w-full sm:w-6/12">
+                  {dataSource.connection_pool_settings?.retries}
+                </div>
+              </div>
+            ) : null}
+            {dataSource.connection_pool_settings?.pool_timeout ? (
+              <div className="flex content-start">
+                <div className="text-gray-600 font-semibold mr-xs">
+                  Pool Timeout
+                </div>
+                <div className="ml-auto w-full sm:w-6/12">
+                  {dataSource.connection_pool_settings?.pool_timeout}
+                </div>
+              </div>
+            ) : null}
+            {dataSource.connection_pool_settings?.connection_lifetime ? (
+              <div className="flex content-start">
+                <div className="text-gray-600 font-semibold mr-xs">
+                  Connection Lifetime
+                </div>
+                <div className="ml-auto w-full sm:w-6/12">
+                  {dataSource.connection_pool_settings?.connection_lifetime}
+                </div>
+              </div>
+            ) : null}
+          </div>
         </>
       ) : (
         ''

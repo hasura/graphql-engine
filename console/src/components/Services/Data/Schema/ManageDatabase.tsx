@@ -96,15 +96,12 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
     inconsistentObjects
   );
   return (
-    <div
-      className={`${styles.flex_space_between} ${styles.add_pad_min} ${styles.db_list_item}`}
-      data-test={dataSource.name}
-    >
-      <div className={`${styles.display_flex_container} ${styles.flex_width}`}>
+    <tr data-test={dataSource.name}>
+      <td className="px-sm py-xs max-w-xs align-top w-0 whitespace-nowrap">
         <Button
           size="xs"
           color="white"
-          className={styles.add_mar_right_mid}
+          className="mr-xs"
           onClick={viewDB}
           disabled={isInconsistentDataSource}
         >
@@ -113,6 +110,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
         <Button
           size="xs"
           color="white"
+          className="mr-xs"
           onClick={() => {
             setReloading(true);
             onReload(dataSource.name, dataSource.driver, () =>
@@ -125,32 +123,29 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
         <Button
           size="xs"
           color="white"
+          className="mr-xs"
           onClick={() => {
             onEdit(dataSource.name);
           }}
-          className={styles.add_mar_left_mid}
         >
           Edit
         </Button>
         <Button
-          className={`${styles.text_red}`}
           size="xs"
           color="white"
+          className="text-red-600"
           onClick={() => {
             setRemoving(true);
             onRemove(dataSource.name, dataSource.driver, () =>
               setRemoving(false)
             );
           }}
-          style={{ marginLeft: '10px' }}
         >
           {removing ? 'Removing...' : 'Remove'}
         </Button>
-        <div
-          className={`${styles.flexColumn} ${styles.container_max_width} ${styles.displayFlexContainer} ${styles.add_pad_left}`}
-        >
-          <CollapsibleToggle dataSource={dataSource} dbVersion={dbVersion} />
-        </div>
+      </td>
+      <td className="px-sm py-xs max-w-xs align-top">
+        <CollapsibleToggle dataSource={dataSource} dbVersion={dbVersion} />
         {isInconsistentDataSource && (
           <ToolTip
             id={`inconsistent-source-${dataSource.name}`}
@@ -158,13 +153,13 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
             message="Inconsistent Data Source"
           >
             <i
-              className={`fa fa-exclamation-triangle ${styles.inconsistentSourceIcon}`}
+              className="fa fa-exclamation-triangle ml-xs text-red-800"
               aria-hidden="true"
             />
           </ToolTip>
         )}
-      </div>
-      <div className={`${styles.db_large_string_break_words}`}>
+      </td>
+      <td className="px-sm py-xs max-w-xs align-top break-all">
         {showUrl ? (
           typeof dataSource.url === 'string' ? (
             dataSource.url
@@ -173,14 +168,11 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
           )
         ) : (
           <span
-            className={styles.show_connection_string}
+            className="text-secondary flex items-center cursor-pointer"
             onClick={() => setShowUrl(true)}
           >
-            <i
-              className={`${styles.showAdminSecret} fa fa-eye`}
-              aria-hidden="true"
-            />
-            <p style={{ marginLeft: 6 }}>Show Connection String</p>
+            <i className="fa fa-eye" aria-hidden="true" />
+            <p className="ml-xs">Show Connection String</p>
           </span>
         )}
         {showUrl && (
@@ -190,15 +182,14 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
             message="Hide connection string"
           >
             <i
-              className={`${styles.closeHeader} fa fa-times`}
+              className="ml-xs cursor-pointer fa fa-times"
               aria-hidden="true"
               onClick={() => setShowUrl(false)}
-              style={{ paddingLeft: 10 }}
             />
           </ToolTip>
         )}
-      </div>
-    </div>
+      </td>
+    </tr>
   );
 };
 
@@ -292,29 +283,42 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
         </div>
         <div className={styles.manage_db_content}>
           <hr className="my-md" />
-          <h3 className={styles.heading_text}>Connected Databases</h3>
-          <div className={styles.flexColumn}>
-            {dataSources.length ? (
-              dataSources.map(data => (
-                <DatabaseListItem
-                  key={data.name}
-                  dataSource={data}
-                  inconsistentObjects={inconsistentObjects}
-                  pushRoute={pushRoute}
-                  onEdit={onEdit}
-                  onReload={onReload}
-                  onRemove={onRemove}
-                  dispatch={dispatch}
-                  dataHeaders={dataHeaders}
-                />
-              ))
-            ) : (
-              <span style={{ paddingTop: 15 }}>
-                You don&apos;t have any data sources connected.
-              </span>
-            )}
+
+          <div className="overflow-x-auto border border-gray-300 rounded">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <th className="px-sm py-xs max-w-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider" />
+                <th className="px-sm py-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
+                  Database
+                </th>
+                <th className="px-sm py-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
+                  Connection String
+                </th>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {dataSources.length ? (
+                  dataSources.map(data => (
+                    <DatabaseListItem
+                      key={data.name}
+                      dataSource={data}
+                      inconsistentObjects={inconsistentObjects}
+                      pushRoute={pushRoute}
+                      onEdit={onEdit}
+                      onReload={onReload}
+                      onRemove={onRemove}
+                      dispatch={dispatch}
+                      dataHeaders={dataHeaders}
+                    />
+                  ))
+                ) : (
+                  <td colSpan={3} className="text-center px-sm py-xs">
+                    You don&apos;t have any data sources connected, please
+                    connect one to continue.
+                  </td>
+                )}
+              </tbody>
+            </table>
           </div>
-          <hr className="my-md" />
         </div>
       </div>
     </RightContainer>
