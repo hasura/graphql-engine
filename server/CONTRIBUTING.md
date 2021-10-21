@@ -326,3 +326,4 @@ are not met.
 - Consistent formatting: Use [ormolu](https://github.com/tweag/ormolu) to
   format your code. `ormolu -ei '*.hs'` will format all files with a `.hs`
   extension in the current directory.
+- Consistent style: Consider the [style guide](./STYLE.md) when writing new code.
