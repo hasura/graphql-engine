@@ -46,12 +46,14 @@ import Hasura.RQL.Types.RemoteRelationship
 import Hasura.RQL.Types.Table (emptyTableConfig)
 import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Hasura.SQL.Backend (BackendType (..), PostgresKind (..))
+import Hasura.Server.Utils (userIdHeader, userRoleHeader)
 import Hasura.Session (mkRoleName)
 import Hasura.Test.App (withHasuraTestApp)
 import Hasura.Test.Requests (postgresRunSql, replaceMetadata, v1graphql)
 import Network.Wai (Application)
-import Test.Hspec (Spec, SpecWith, aroundAll, describe, it, xit)
-import Test.Hspec.Wai (getState, shouldRespondWith)
+import Test.Hspec (Spec, SpecWith, aroundAll, describe, it)
+import Test.Hspec.Wai (getState, pendingWith, shouldRespondWith)
+import Test.Hspec.Wai.JSON (json)
 import Tests.RemoteSourceSql
   ( RemoteSourceSql (..),
     albums,
@@ -69,6 +71,7 @@ import Tests.RemoteSourceSql
 import Text.Shakespeare.Text (st)
 
 --------------------------------------------------------------------------------
+-- Tests
 
 spec :: Spec
 spec =
@@ -85,13 +88,1250 @@ withMetadata action = do
         liftIO $ action (initialSourceMetadata, hasuraApp)
   onLeft result throwIO
 
+remoteSourcesSpec :: SpecWith (SourceMetadata b, Application)
+remoteSourcesSpec = describe "DB-to-DB joins tests" $ do
+  remoteSourcesBasicSpec
+  remoteSourcesSchemaSpec
+  remoteSourcesPermissionsSpec
+  remoteSourcesExecutionSpec
+
+-- | Basic queries using DB-to-DB joins
+remoteSourcesBasicSpec :: SpecWith (SourceMetadata b, Application)
+remoteSourcesBasicSpec = describe "Basic" $ do
+  it "Self-relationship" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{albums} {
+                #{albums} {
+                  #{title}
+                }
+              }
+            }
+          |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "albums": [
+                  {
+                    "albums": {
+                      "title": "Album 1A"
+                    }
+                  },
+                  {
+                    "albums": {
+                      "title": "Album 1B"
+                    }
+                  },
+                  {
+                    "albums": {
+                      "title": "Album 2A"
+                    }
+                  },
+                  {
+                    "albums": {
+                      "title": "Album 2B"
+                    }
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+  it "Mutual relationships (1)" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{albums} {
+                #{title}
+                #{artists} {
+                  #{id_}
+                  #{albums} {
+                    #{title}
+                  }
+                }
+              }
+            }
+            |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "albums": [
+                  {
+                    "title": "Album 1A",
+                    "artists": {
+                      "id": 1,
+                      "albums": [
+                        {
+                          "title": "Album 1A"
+                        },
+                        {
+                          "title": "Album 1B"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "title": "Album 1B",
+                    "artists": {
+                      "id": 1,
+                      "albums": [
+                        {
+                          "title": "Album 1A"
+                        },
+                        {
+                          "title": "Album 1B"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "title": "Album 2A",
+                    "artists": {
+                      "id": 2,
+                      "albums": [
+                        {
+                          "title": "Album 2A"
+                        },
+                        {
+                          "title": "Album 2B"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "title": "Album 2B",
+                    "artists": {
+                      "id": 2,
+                      "albums": [
+                        {
+                          "title": "Album 2A"
+                        },
+                        {
+                          "title": "Album 2B"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+  it "Mutual relationships (2)" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists} {
+                #{id_}
+                #{albums} {
+                  #{title}
+                  #{artists} {
+                    #{id_}
+                  }
+                }
+              }
+            }
+          |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "artists": [
+                  {
+                    "id": 1,
+                    "albums": [
+                      {
+                        "title": "Album 1A",
+                        "artists": {
+                          "id": 1
+                        }
+                      },
+                      {
+                        "title": "Album 1B",
+                        "artists": {
+                          "id": 1
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": 2,
+                    "albums": [
+                      {
+                        "title": "Album 2A",
+                        "artists": {
+                          "id": 2
+                        }
+                      },
+                      {
+                        "title": "Album 2B",
+                        "artists": {
+                          "id": 2
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+  it "Join over multiple fields (array relationship)" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists} {
+                #{id_}
+                favAlbums {
+                  #{title}
+                }
+              }
+            }
+            |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "artists": [
+                  {
+                    "id": 1,
+                    "favAlbums": [
+                      {
+                        "title": "Album 1A"
+                      }
+                    ]
+                  },
+                  {
+                    "id": 2,
+                    "favAlbums": [
+                      {
+                        "title": "Album 2A"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+  it "Join over multiple fields (object relationship)" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{albums} {
+                #{title}
+                favouriteOf {
+                  #{id_}
+                }
+              }
+            }
+            |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "albums": [
+                  {
+                    "title": "Album 1A",
+                    "favouriteOf": {
+                      "id": 1
+                    }
+                  },
+                  {
+                    "title": "Album 1B",
+                    "favouriteOf": null
+                  },
+                  {
+                    "title": "Album 2A",
+                    "favouriteOf": {
+                      "id": 2
+                    }
+                  },
+                  {
+                    "title": "Album 2B",
+                    "favouriteOf": null
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+-- | Tests for schema generation for DB-to-DB joins
+--
+-- We test presence or absence of fields in the schema by querying the fields
+-- expecting success or a particular error, respectively.
+--
+-- Note: The presence of the 'distinct_on', 'where', 'order_by', 'limit', and
+-- 'offset' fields in array relationships is tested as a part of the execution
+-- tests. See `remoteSourcesExecutionArrRelSpec`.
+remoteSourcesSchemaSpec :: SpecWith (SourceMetadata b, Application)
+remoteSourcesSchemaSpec = describe "Schema generation" $ do
+  it "Object relationships should not be present in 'bool_exp'" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{albums}(where: {#{artists}: {#{id_}: {_gt: 1}}}) {
+                #{title}
+              }
+            }
+          |]
+        expectedResponse =
+          [json|
+            {
+              "errors": [
+                {
+                  "extensions": {
+                    "path": "$.selectionSet.albums.args.where.artists",
+                    "code": "validation-failed"
+                  },
+                  "message": "field \"artists\" not found in type: 'albums_bool_exp'"
+                }
+              ]
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+  it "Object relationships should not be present in 'order_by'" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{albums}(order_by: {#{artists}: {#{id_}: asc}}) {
+                #{title}
+              }
+            }
+          |]
+        expectedResponse =
+          [json|
+            {
+              "errors": [
+                {
+                  "extensions": {
+                    "path": "$.selectionSet.albums.args.order_by[0].artists",
+                    "code": "validation-failed"
+                  },
+                  "message": "field \"artists\" not found in type: 'albums_order_by'"
+                }
+              ]
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+  it "Array relationships should not be present in 'bool_exp'" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists}(where: {#{albums}: {#{id_}: {_gt: 1}}}) {
+                #{name}
+              }
+            }
+          |]
+        expectedResponse =
+          [json|
+            {
+              "errors": [
+                {
+                  "extensions": {
+                    "path": "$.selectionSet.artists.args.where.albums",
+                    "code": "validation-failed"
+                  },
+                  "message": "field \"albums\" not found in type: 'artists_bool_exp'"
+                }
+              ]
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+  it "Array relationships should not be present in 'order_by'" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists}(order_by: {#{albums}_aggregate: {count: asc}}) {
+                #{name}
+              }
+            }
+          |]
+        expectedResponse =
+          [json|
+            {
+              "errors": [
+                {
+                  "extensions": {
+                    "path": "$.selectionSet.artists.args.order_by[0].albums_aggregate",
+                    "code": "validation-failed"
+                  },
+                  "message": "field \"albums_aggregate\" not found in type: 'artists_order_by'"
+                }
+              ]
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+-- | Tests for the interaction of permissions and DB-to-DB joins
+remoteSourcesPermissionsSpec :: SpecWith (SourceMetadata b, Application)
+remoteSourcesPermissionsSpec = describe "Permissions" $ do
+  it "Object relationships respect the row permissions of the target" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{albums} {
+                #{title}
+                #{artists} {
+                  #{id_}
+                }
+              }
+            }
+          |]
+        headers =
+          [ (userRoleHeader, "objRel-user"),
+            (userIdHeader, "1")
+          ]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "albums": [
+                  {
+                    "title": "Album 1A",
+                    "artists": {
+                      "id": 1
+                    }
+                  },
+                  {
+                    "title": "Album 1B",
+                    "artists": {
+                      "id": 1
+                    }
+                  },
+                  {
+                    "title": "Album 2A",
+                    "artists": null
+                  },
+                  {
+                    "title": "Album 2B",
+                    "artists": null
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql headers query `shouldRespondWith` expectedResponse
+
+  it "Object relationships respect the column permissions of the target" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{albums} {
+                #{artists} {
+                  #{name}
+                }
+              }
+            }
+          |]
+        headers =
+          [ (userRoleHeader, "objRel-user"),
+            (userIdHeader, "1")
+          ]
+        expectedResponse =
+          [json|
+            {
+              "errors": [
+                {
+                  "extensions": {
+                    "path": "$.selectionSet.albums.selectionSet.artists.selectionSet.name",
+                    "code": "validation-failed"
+                  },
+                  "message": "field \"name\" not found in type: 'artists'"
+                }
+              ]
+            }
+          |]
+    v1graphql headers query `shouldRespondWith` expectedResponse
+
+  it "Object relationships are not visible without select permissions on the target table" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{albums} {
+                #{artist_id}
+                #{artists} {
+                  #{id_}
+                }
+              }
+            }
+          |]
+        headers = [(userRoleHeader, "only-albums")]
+        expectedResponse =
+          [json|
+            {
+              "errors": [
+                {
+                  "extensions": {
+                    "path": "$.selectionSet.albums.selectionSet.artists",
+                    "code": "validation-failed"
+                  },
+                  "message": "field \"artists\" not found in type: 'albums'"
+                }
+              ]
+            }
+          |]
+    v1graphql headers query `shouldRespondWith` expectedResponse
+
+  it "Array relationships respect the row permissions of the target" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists} {
+                #{id_}
+                #{albums} {
+                  #{artist_id}
+                }
+              }
+            }
+          |]
+        headers =
+          [ (userRoleHeader, "arrRel-user"),
+            (userIdHeader, "1")
+          ]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "artists": [
+                  {
+                    "id": 1,
+                    "albums": [
+                      {
+                        "artist_id": 1
+                      },
+                      {
+                        "artist_id": 1
+                      }
+                    ]
+                  },
+                  {
+                    "id": 2,
+                    "albums": []
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql headers query `shouldRespondWith` expectedResponse
+
+  it "Array relationships respect the column permissions of the target" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists} {
+                #{id_}
+                #{albums} {
+                  #{title}
+                }
+              }
+            }
+          |]
+        headers =
+          [ (userRoleHeader, "arrRel-user"),
+            (userIdHeader, "1")
+          ]
+        expectedResponse =
+          [json|
+            {
+              "errors": [
+                {
+                  "extensions": {
+                    "path": "$.selectionSet.artists.selectionSet.albums.selectionSet.title",
+                    "code": "validation-failed"
+                  },
+                  "message": "field \"title\" not found in type: 'albums'"
+                }
+              ]
+            }
+          |]
+    v1graphql headers query `shouldRespondWith` expectedResponse
+
+  it "Array relationships respect the aggregation permissions of the target" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists} {
+                #{albums}_aggregate {
+                  aggregate {
+                    count
+                  }
+                }
+              }
+            }
+          |]
+        headers =
+          [ (userRoleHeader, "arrRel-user"),
+            (userIdHeader, "1")
+          ]
+        expectedResponse =
+          [json|
+            {
+              "errors": [
+                {
+                  "extensions": {
+                    "path": "$.selectionSet.artists.selectionSet.albums_aggregate",
+                    "code": "validation-failed"
+                  },
+                  "message": "field \"albums_aggregate\" not found in type: 'artists'"
+                }
+              ]
+            }
+          |]
+    v1graphql headers query `shouldRespondWith` expectedResponse
+
+  it "Array relationships are not visible without select permissions on the target table" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists} {
+                #{id_}
+                #{albums} {
+                  #{id_}
+                }
+              }
+            }
+          |]
+        headers = [(userRoleHeader, "only-artists")]
+        expectedResponse =
+          [json|
+            {
+              "errors": [
+                {
+                  "extensions": {
+                    "path": "$.selectionSet.artists.selectionSet.albums",
+                    "code": "validation-failed"
+                  },
+                  "message": "field \"albums\" not found in type: 'artists'"
+                }
+              ]
+            }
+          |]
+    v1graphql headers query `shouldRespondWith` expectedResponse
+
+-- | Tests for specific behaviours of DB-to-DB joins
+remoteSourcesExecutionSpec :: SpecWith (SourceMetadata b, Application)
+remoteSourcesExecutionSpec = describe "Execution" $ do
+  remoteSourcesExecutionNullValuesSpec
+  remoteSourcesExecutionIncompatColsSpec
+  remoteSourcesExecutionArrRelSpec
+
+-- | Tests for DB-to-DB joins behaviour in the presence of null values
+remoteSourcesExecutionNullValuesSpec :: SpecWith (SourceMetadata b, Application)
+remoteSourcesExecutionNullValuesSpec = describe "Null values" $ do
+  it "An object relationship returning a row with null for any join column resolves to null" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{albums} {
+                artists_null {
+                  #{name}
+                }
+              }
+            }
+            |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "albums": [
+                  {
+                    "artists_null": {
+                      "name": "Author"
+                    }
+                  },
+                  {
+                    "artists_null": {
+                      "name": "Author"
+                    }
+                  },
+                  {
+                    "artists_null": null
+                  },
+                  {
+                    "artists_null": null
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+  it "An object relationship with more than one match returns null" $ do
+    pendingWith "Instead of null, one of the multiple matches is returned."
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{albums} {
+                #{title}
+                ambiguous_artist {
+                  #{id_}
+                }
+              }
+            }
+            |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "albums": [
+                  {
+                    "title": "Album 1A",
+                    "ambiguous_artist": null
+                  },
+                  {
+                    "title": "Album 1B",
+                    "ambiguous_artist": null
+                  },
+                  {
+                    "title": "Album 2A",
+                    "ambiguous_artist": null
+                  },
+                  {
+                    "title": "Album 2B",
+                    "ambiguous_artist": null
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+  it "An array relationship excludes rows with null values in any join column" $ do
+    pendingWith $ "Should we return '[]' if any join column of /any/ row is null?"
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists} {
+                albums_null {
+                  #{title}
+                }
+              }
+            }
+            |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "artists": [
+                  {
+                    "albums_null": [
+                      {
+                        "title": "Album 1A"
+                      }
+                    ]
+                  },
+                  {
+                    "albums_null": [
+                      {
+                        "title": "Album 2A"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+-- | Tests for DB-to-DB joins behaviour in the presence of incompatible columns
+remoteSourcesExecutionIncompatColsSpec :: SpecWith (SourceMetadata b, Application)
+remoteSourcesExecutionIncompatColsSpec = describe "Incompatible columns" $ do
+  it "Incompatible join columns (different data types) cause a runtime error" $ do
+    pendingWith "Should we prevent such relationships from being registered to the metadata in the first place?"
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{albums} {
+                artists_incompatible_columns {
+                  #{name}
+                }
+              }
+            }
+            |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "albums": [
+                  {
+                    "artists_incompatible_columns": null
+                  },
+                  {
+                    "artists_incompatible_columns": null
+                  },
+                  {
+                    "artists_incompatible_columns": null
+                  },
+                  {
+                    "artists_incompatible_columns": null
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+-- | Tests for DB-to-DB joins behaviour of array relationships
+--
+-- Note: These array relationship tests also serve as schema generation tests
+-- in that they test for the presence of certain fields.
+remoteSourcesExecutionArrRelSpec :: SpecWith (SourceMetadata b, Application)
+remoteSourcesExecutionArrRelSpec = describe "Array relationships" $ do
+  it "Array relationships work with 'distinct_on'" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists} {
+                #{albums}(distinct_on: #{artist_id}) {
+                  #{artist_id}
+                  #{title}
+                }
+              }
+            }
+            |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "artists": [
+                  {
+                    "albums": [
+                      {
+                        "artist_id": 1,
+                        "title": "Album 1A"
+                      }
+                    ]
+                  },
+                  {
+                    "albums": [
+                      {
+                        "artist_id": 2,
+                        "title": "Album 2A"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+  it "Array relationships work with 'distinct_on' (aggregate)" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists} {
+                #{albums}_aggregate(distinct_on: #{artist_id}) {
+                  nodes {
+                    #{artist_id}
+                    #{title}
+                  }
+                }
+              }
+            }
+            |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "artists": [
+                  {
+                    "albums_aggregate": {
+                      "nodes": [
+                        {
+                          "artist_id": 1,
+                          "title": "Album 1A"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "albums_aggregate": {
+                      "nodes": [
+                        {
+                          "artist_id": 2,
+                          "title": "Album 2A"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+  it "Array relationships work with 'where'" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists} {
+                #{albums}(where: {#{title}: {_like: "%1%"}}) {
+                  #{title}
+                }
+              }
+            }
+            |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "artists": [
+                  {
+                    "albums": [
+                      {
+                        "title": "Album 1A"
+                      },
+                      {
+                        "title": "Album 1B"
+                      }
+                    ]
+                  },
+                  {
+                    "albums": []
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+  it "Array relationships work with 'where' (aggregate)" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists} {
+                #{albums}_aggregate(where: {#{title}: {_like: "%1%"}}) {
+                  nodes {
+                    #{title}
+                  }
+                }
+              }
+            }
+            |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "artists": [
+                  {
+                    "albums_aggregate": {
+                      "nodes": [
+                        {
+                          "title": "Album 1A"
+                        },
+                        {
+                          "title": "Album 1B"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "albums_aggregate": {
+                      "nodes": []
+                    }
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+  it "Array relationships work with 'limit'" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists} {
+                #{albums}(limit: 1) {
+                  #{title}
+                }
+              }
+            }
+            |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "artists": [
+                  {
+                    "albums": [
+                      {
+                        "title": "Album 1A"
+                      }
+                    ]
+                  },
+                  {
+                    "albums": [
+                      {
+                        "title": "Album 2A"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+  it "Array relationships work with 'limit' (aggregate)" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists} {
+                #{albums}_aggregate(limit: 1) {
+                  nodes {
+                    #{title}
+                  }
+                }
+              }
+            }
+            |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "artists": [
+                  {
+                    "albums_aggregate": {
+                      "nodes": [
+                        {
+                          "title": "Album 1A"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "albums_aggregate": {
+                      "nodes": [
+                        {
+                          "title": "Album 2A"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+  it "Array relationships work with 'offset'" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists} {
+                #{albums}(offset: 1) {
+                  #{title}
+                }
+              }
+            }
+            |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "artists": [
+                  {
+                    "albums": [
+                      {
+                        "title": "Album 1B"
+                      }
+                    ]
+                  },
+                  {
+                    "albums": [
+                      {
+                        "title": "Album 2B"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+  it "Array relationships work with 'offset' (aggregate)" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists} {
+                #{albums}_aggregate(offset: 1) {
+                  nodes {
+                    #{title}
+                  }
+                }
+              }
+            }
+            |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "artists": [
+                  {
+                    "albums_aggregate": {
+                      "nodes": [
+                        {
+                          "title": "Album 1B"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "albums_aggregate": {
+                      "nodes": [
+                        {
+                          "title": "Album 2B"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+  it "Array relationships work with 'order_by'" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists} {
+                #{albums}(order_by: {#{id_}: desc}) {
+                  #{id_}
+                }
+              }
+            }
+            |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "artists": [
+                  {
+                    "albums": [
+                      {
+                        "id": 2
+                      },
+                      {
+                        "id": 1
+                      }
+                    ]
+                  },
+                  {
+                    "albums": [
+                      {
+                        "id": 4
+                      },
+                      {
+                        "id": 3
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
+  it "Array relationships work with 'order_by' (aggregate)" $ do
+    let query =
+          T.unpack
+            [st|
+            query {
+              #{artists} {
+                #{albums}_aggregate(order_by: {#{id_}: desc}) {
+                  nodes {
+                    #{id_}
+                  }
+                }
+              }
+            }
+            |]
+        expectedResponse =
+          [json|
+            {
+              "data": {
+                "artists": [
+                  {
+                    "albums_aggregate": {
+                      "nodes": [
+                        {
+                          "id": 2
+                        },
+                        {
+                          "id": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "albums_aggregate": {
+                      "nodes": [
+                        {
+                          "id": 4
+                        },
+                        {
+                          "id": 3
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          |]
+    v1graphql [] query `shouldRespondWith` expectedResponse
+
 --------------------------------------------------------------------------------
 -- Test setup
 
 setup ::
   (Backend b) => RemoteSourceSql b -> SpecWith (SourceMetadata b, Application)
 setup sqlConfig = do
-  describe "DB-to-DB tests setup" $ do
+  describe "Setup for DB-to-DB joins tests" $ do
     it "Setup initial metadata for runSQL" $ do
       initialSourceMetadata <- getState
       let metadata =
@@ -208,7 +1448,7 @@ albumsTable sqlConfig =
                 }
         }
 
-    -- A standard object relationship
+    -- A basic object relationship
     artistsRemoteRel :: RemoteRelationshipMetadata
     artistsRemoteRel =
       RemoteRelationshipMetadata
@@ -224,7 +1464,7 @@ albumsTable sqlConfig =
                 }
         }
 
-    -- An object relationship where some remote join columns are null
+    -- An object relationship where some join columns are null
     artistsNullRemoteRel :: RemoteRelationshipMetadata
     artistsNullRemoteRel =
       RemoteRelationshipMetadata
@@ -264,8 +1504,8 @@ albumsTable sqlConfig =
                 }
         }
 
-    -- A join using this object relationship yields more than one "remote" row
-    -- for some "local" rows.
+    -- An object relationship where some "source" rows are joined with more
+    -- than one "target" row
     ambiguousArtistRemoteRel :: RemoteRelationshipMetadata
     ambiguousArtistRemoteRel =
       RemoteRelationshipMetadata
@@ -284,7 +1524,7 @@ albumsTable sqlConfig =
                 }
         }
 
-    -- A permissive permission for role "objRel-user"
+    -- A permissive select permission for role "objRel-user"
     albumsObjRelUserSelectPermission :: PermDef (SelPerm b)
     albumsObjRelUserSelectPermission =
       PermDef
@@ -300,14 +1540,16 @@ albumsTable sqlConfig =
           _pdComment = Nothing
         }
 
-    -- A permission denying access to the "artists" remote source relationship
+    -- A permissive select permission for the role "only-albums". This role is
+    -- intended to have full select permissions for the "albums" table but no
+    -- select permissions for the "artists" table.
     albumsOnlyTitleSelectPermission :: PermDef (SelPerm b)
     albumsOnlyTitleSelectPermission =
       PermDef
-        { _pdRole = fromJust $ mkRoleName "only-albums-artist_id",
+        { _pdRole = fromJust $ mkRoleName "only-albums",
           _pdPermission =
             SelPerm
-              { spColumns = PCCols [albumsArtistIdColumn sqlConfig],
+              { spColumns = PCStar,
                 spFilter = BoolExp gBoolExpTrue,
                 spLimit = Nothing,
                 spAllowAggregations = True,
@@ -316,8 +1558,8 @@ albumsTable sqlConfig =
           _pdComment = Nothing
         }
 
-    -- This object relationship attempts join incompatible columns. We expect a
-    -- runtime error.
+    -- An object relationship that attempts join incompatible columns. We
+    -- expect a runtime error.
     artistsIncompatibleColumnsRemoteRel :: RemoteRelationshipMetadata
     artistsIncompatibleColumnsRemoteRel =
       RemoteRelationshipMetadata
@@ -337,8 +1579,8 @@ albumsTable sqlConfig =
                 }
         }
 
-    -- A select permission for role "arrRel-user" restricting access to (1)
-    -- rows matching the user's ID and (2) the "artist_id" column, while
+    -- A select permission for the role "arrRel-user" restricting access to (1)
+    -- rows matching the user's ID and (2) the "artist_id" column, while also
     -- denying access to aggregations.
     albumsArrRelUserSelectPermission :: PermDef (SelPerm b)
     albumsArrRelUserSelectPermission =
@@ -353,7 +1595,7 @@ albumsTable sqlConfig =
                       ColExp
                         { ceCol = FieldName artist_id,
                           ceVal =
-                            Object $ HM.singleton "_eq" "X-Hasura-User-Id"
+                            Object $ HM.singleton "_eq" userIdHeader
                         },
                 spLimit = Nothing,
                 spAllowAggregations = False,
@@ -410,7 +1652,7 @@ artistsTable sqlConfig =
     baseTable :: TableMetadata b
     baseTable = mkTableMeta (artistsTableName sqlConfig) False emptyTableConfig
 
-    -- A standard array relationship
+    -- A basic array relationship
     albumsRemoteRel :: RemoteRelationshipMetadata
     albumsRemoteRel =
       RemoteRelationshipMetadata
@@ -426,7 +1668,7 @@ artistsTable sqlConfig =
                 }
         }
 
-    -- An array relationship where some remote join columns are null
+    -- An array relationship where some join columns are null
     albumsNullRemoteRel :: RemoteRelationshipMetadata
     albumsNullRemoteRel =
       RemoteRelationshipMetadata
@@ -466,7 +1708,7 @@ artistsTable sqlConfig =
         }
 
     -- A select permission for role "objRel-user" restricting access to (1)
-    -- rows matching the user's ID and (2) the "id" column, while denying
+    -- rows matching the user's ID and (2) the "id" column, while also denying
     -- access to aggregations.
     artistsObjRelUserSelectPermission :: PermDef (SelPerm b)
     artistsObjRelUserSelectPermission =
@@ -481,7 +1723,7 @@ artistsTable sqlConfig =
                       ColExp
                         { ceCol = FieldName id_,
                           ceVal =
-                            Object $ HM.singleton "_eq" "X-Hasura-User-Id"
+                            Object $ HM.singleton "_eq" userIdHeader
                         },
                 spLimit = Nothing,
                 spAllowAggregations = False,
@@ -490,7 +1732,7 @@ artistsTable sqlConfig =
           _pdComment = Nothing
         }
 
-    -- A permissive permission for role "arrRel-user"
+    -- A permissive select permission for role "arrRel-user"
     artistsArrRelUserSelectPermission :: PermDef (SelPerm b)
     artistsArrRelUserSelectPermission =
       PermDef
@@ -506,14 +1748,16 @@ artistsTable sqlConfig =
           _pdComment = Nothing
         }
 
-    -- A permission denying access to the "albums" remote source relationship
+    -- A permissive select permission for the role "only-artists". This role is
+    -- intended to have full select permissions for the "artists" table but no
+    -- select permissions for the "albums" table.
     artistsOnlyIdSelectPermission :: PermDef (SelPerm b)
     artistsOnlyIdSelectPermission =
       PermDef
-        { _pdRole = fromJust $ mkRoleName "only-artists-id",
+        { _pdRole = fromJust $ mkRoleName "only-artists",
           _pdPermission =
             SelPerm
-              { spColumns = PCCols [artistsIdColumn sqlConfig],
+              { spColumns = PCStar,
                 spFilter = BoolExp gBoolExpTrue,
                 spLimit = Nothing,
                 spAllowAggregations = True,
@@ -521,453 +1765,3 @@ artistsTable sqlConfig =
               },
           _pdComment = Nothing
         }
-
---------------------------------------------------------------------------------
--- Tests
-
--- | These tests are a work-in-progress. They may not properly exercise the
--- functionality they intend to test.
-remoteSourcesSpec :: SpecWith (SourceMetadata b, Application)
-remoteSourcesSpec =
-  describe "DB-to-DB queries" $ do
-    it "Self-join" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{albums} {
-                  #{albums} {
-                    #{albums} {
-                      #{albums} {
-                        #{title}
-                      }
-                    }
-                  }
-                }
-              }
-            |]
-          expectedResponse =
-            "{\"data\":{\"albums\":[{\"albums\":{\"albums\":{\"albums\":{\"title\":\"Album 1A\"}}}},{\"albums\":{\"albums\":{\"albums\":{\"title\":\"Album 1B\"}}}},{\"albums\":{\"albums\":{\"albums\":{\"title\":\"Album 2A\"}}}},{\"albums\":{\"albums\":{\"albums\":{\"title\":\"Album 2B\"}}}}]}}"
-      v1graphql [] query `shouldRespondWith` expectedResponse
-
-    it "Mutually recursive joins (1)" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{albums} {
-                  #{title}
-                  #{artists} {
-                    #{id_}
-                    #{albums} {
-                      #{title}
-                    }
-                  }
-                }
-              }
-              |]
-          expectedResponse =
-            "{\"data\":{\"albums\":[{\"title\":\"Album 1A\",\"artists\":{\"id\":1,\"albums\":[{\"title\":\"Album 1A\"},{\"title\":\"Album 1B\"}]}},{\"title\":\"Album 1B\",\"artists\":{\"id\":1,\"albums\":[{\"title\":\"Album 1A\"},{\"title\":\"Album 1B\"}]}},{\"title\":\"Album 2A\",\"artists\":{\"id\":2,\"albums\":[{\"title\":\"Album 2A\"},{\"title\":\"Album 2B\"}]}},{\"title\":\"Album 2B\",\"artists\":{\"id\":2,\"albums\":[{\"title\":\"Album 2A\"},{\"title\":\"Album 2B\"}]}}]}}"
-      v1graphql [] query `shouldRespondWith` expectedResponse
-
-    it "Mutually recursive joins (2)" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{artists} {
-                  #{id_}
-                  #{albums} {
-                    #{title}
-                    #{artists} {
-                      #{id_}
-                    }
-                  }
-                }
-              }
-            |]
-          expectedResponse =
-            "{\"data\":{\"artists\":[{\"id\":1,\"albums\":[{\"title\":\"Album 1A\",\"artists\":{\"id\":1}},{\"title\":\"Album 1B\",\"artists\":{\"id\":1}}]},{\"id\":2,\"albums\":[{\"title\":\"Album 2A\",\"artists\":{\"id\":2}},{\"title\":\"Album 2B\",\"artists\":{\"id\":2}}]}]}}"
-      v1graphql [] query `shouldRespondWith` expectedResponse
-
-    it "Join over multiple fields, array relationship" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{artists} {
-                  #{id_}
-                  favAlbums {
-                    #{title}
-                  }
-                }
-              }
-              |]
-          expectedResponse =
-            "{\"data\":{\"artists\":[{\"id\":1,\"favAlbums\":[{\"title\":\"Album 1A\"}]},{\"id\":2,\"favAlbums\":[{\"title\":\"Album 2A\"}]}]}}"
-      v1graphql [] query `shouldRespondWith` expectedResponse
-
-    it "Join over multiple fields, object relationship" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{albums} {
-                  #{title}
-                  favouriteOf {
-                    #{id_}
-                  }
-                }
-              }
-              |]
-      v1graphql [] query `shouldRespondWith` "{\"data\":{\"albums\":[{\"title\":\"Album 1A\",\"favouriteOf\":{\"id\":1}},{\"title\":\"Album 1B\",\"favouriteOf\":null},{\"title\":\"Album 2A\",\"favouriteOf\":{\"id\":2}},{\"title\":\"Album 2B\",\"favouriteOf\":null}]}}"
-
-    xit "Object relationship with more than one match" $ do
-      -- Marked as pending for the following reason:
-      -- One might expect a 'null' response, but currently one of the multiple
-      -- matches is returned.
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{albums} {
-                  #{title}
-                  ambiguous_artist {
-                    #{id_}
-                  }
-                }
-              }
-              |]
-          expectedResponse =
-            "{\"data\":{\"albums\":[{\"title\":\"Album 1A\",\"ambiguous_artist\":null},{\"title\":\"Album 1B\",\"ambiguous_artist\":null},{\"title\":\"Album 2A\",\"ambiguous_artist\":null},{\"title\":\"Album 2B\",\"ambiguous_artist\":null}]}}"
-      v1graphql [] query `shouldRespondWith` expectedResponse
-
-    -- Permissions
-
-    it "Object relationships respect the row permissions of the target" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{albums} {
-                  #{title}
-                  #{artists} {
-                    #{id_}
-                  }
-                }
-              }
-            |]
-          expectedResponse = "{\"data\":{\"albums\":[{\"title\":\"Album 1A\",\"artists\":{\"id\":1}},{\"title\":\"Album 1B\",\"artists\":{\"id\":1}},{\"title\":\"Album 2A\",\"artists\":null},{\"title\":\"Album 2B\",\"artists\":null}]}}"
-          headers =
-            [ ("X-Hasura-Role", "objRel-user"),
-              ("X-Hasura-User-Id", "1")
-            ]
-      v1graphql headers query `shouldRespondWith` expectedResponse
-
-    it "Object relationships respect the column permissions of the target" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{albums} {
-                  #{artists} {
-                    #{name}
-                  }
-                }
-              }
-            |]
-          expectedResponse = "{\"errors\":[{\"extensions\":{\"path\":\"$.selectionSet.albums.selectionSet.artists.selectionSet.name\",\"code\":\"validation-failed\"},\"message\":\"field \\\"name\\\" not found in type: 'artists'\"}]}"
-          headers =
-            [ ("X-Hasura-Role", "objRel-user"),
-              ("X-Hasura-User-Id", "1")
-            ]
-      v1graphql headers query `shouldRespondWith` expectedResponse
-
-    -- Note: I'm not sure of the precise conditions under which remote source
-    -- relationships should be visible.
-    it "Object relationships are not visible without authorization" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{albums} {
-                  #{artist_id}
-                  #{artists} {
-                    #{id_}
-                  }
-                }
-              }
-            |]
-          expectedResponse = "{\"errors\":[{\"extensions\":{\"path\":\"$.selectionSet.albums.selectionSet.artists\",\"code\":\"validation-failed\"},\"message\":\"field \\\"artists\\\" not found in type: 'albums'\"}]}"
-          headers = [("X-Hasura-Role", "only-albums-artist_id")]
-      v1graphql headers query `shouldRespondWith` expectedResponse
-
-    it "Array relationships respect the row permissions of the target" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{artists} {
-                  #{id_}
-                  #{albums} {
-                    #{artist_id}
-                  }
-                }
-              }
-            |]
-          expectedResponse = "{\"data\":{\"artists\":[{\"id\":1,\"albums\":[{\"artist_id\":1},{\"artist_id\":1}]},{\"id\":2,\"albums\":[]}]}}"
-          headers =
-            [ ("X-Hasura-Role", "arrRel-user"),
-              ("X-Hasura-User-Id", "1")
-            ]
-      v1graphql headers query `shouldRespondWith` expectedResponse
-
-    it "Array relationships respect the column permissions of the target" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{artists} {
-                  #{id_}
-                  #{albums} {
-                    #{title}
-                  }
-                }
-              }
-            |]
-          expectedResponse = "{\"errors\":[{\"extensions\":{\"path\":\"$.selectionSet.artists.selectionSet.albums.selectionSet.title\",\"code\":\"validation-failed\"},\"message\":\"field \\\"title\\\" not found in type: 'albums'\"}]}"
-          headers =
-            [ ("X-Hasura-Role", "arrRel-user"),
-              ("X-Hasura-User-Id", "1")
-            ]
-      v1graphql headers query `shouldRespondWith` expectedResponse
-
-    it "Array relationships respect the aggregation permissions of the target" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{artists} {
-                  #{albums}_aggregate {
-                    aggregate {
-                      count
-                    }
-                  }
-                }
-              }
-            |]
-          expectedResponse = "{\"errors\":[{\"extensions\":{\"path\":\"$.selectionSet.artists.selectionSet.albums_aggregate\",\"code\":\"validation-failed\"},\"message\":\"field \\\"albums_aggregate\\\" not found in type: 'artists'\"}]}"
-          headers =
-            [ ("X-Hasura-Role", "arrRel-user"),
-              ("X-Hasura-User-Id", "1")
-            ]
-      v1graphql headers query `shouldRespondWith` expectedResponse
-
-    -- Note: I'm not sure of the precise conditions under which remote source
-    -- relationships should be visible.
-    it "Array relationships are not visible without authorization" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{artists} {
-                  #{id_}
-                  #{albums} {
-                    #{id_}
-                  }
-                }
-              }
-            |]
-          expectedResponse = "{\"errors\":[{\"extensions\":{\"path\":\"$.selectionSet.artists.selectionSet.albums\",\"code\":\"validation-failed\"},\"message\":\"field \\\"albums\\\" not found in type: 'artists'\"}]}"
-          headers = [("X-Hasura-Role", "only-artists-id")]
-      v1graphql headers query `shouldRespondWith` expectedResponse
-
-    -- Schema generation
-
-    it "Object remote sources should not be present in bool_exp" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{albums}(where: {#{artists}: {#{id_}: {_gt: 1}}}) {
-                  #{title}
-                }
-              }
-            |]
-          expectedResponse = "{\"errors\":[{\"extensions\":{\"path\":\"$.selectionSet.albums.args.where.artists\",\"code\":\"validation-failed\"},\"message\":\"field \\\"artists\\\" not found in type: 'albums_bool_exp'\"}]}"
-      v1graphql [] query `shouldRespondWith` expectedResponse
-
-    it "Object remote sources should not be present in order_by" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{albums}(order_by: {#{artists}: {#{id_}: asc}}) {
-                  #{title}
-                }
-              }
-            |]
-          expectedResponse = "{\"errors\":[{\"extensions\":{\"path\":\"$.selectionSet.albums.args.order_by[0].artists\",\"code\":\"validation-failed\"},\"message\":\"field \\\"artists\\\" not found in type: 'albums_order_by'\"}]}"
-      v1graphql [] query `shouldRespondWith` expectedResponse
-
-    it "Array remote sources should not be present in bool_exp" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{artists}(where: {#{albums}: {#{id_}: {_gt: 1}}}) {
-                  #{name}
-                }
-              }
-            |]
-          expectedResponse = "{\"errors\":[{\"extensions\":{\"path\":\"$.selectionSet.artists.args.where.albums\",\"code\":\"validation-failed\"},\"message\":\"field \\\"albums\\\" not found in type: 'artists_bool_exp'\"}]}"
-      v1graphql [] query `shouldRespondWith` expectedResponse
-
-    it "Array remote sources should not be present in order_by" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{artists}(order_by: {#{albums}_aggregate: {count: asc}}) {
-                  #{name}
-                }
-              }
-            |]
-          expectedResponse = "{\"errors\":[{\"extensions\":{\"path\":\"$.selectionSet.artists.args.order_by[0].albums_aggregate\",\"code\":\"validation-failed\"},\"message\":\"field \\\"albums_aggregate\\\" not found in type: 'artists_order_by'\"}]}"
-      v1graphql [] query `shouldRespondWith` expectedResponse
-
-    -- Null values
-
-    it "An object relationship returning a row with null for any join column resolves to null" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{albums} {
-                  artists_null {
-                    #{name}
-                  }
-                }
-              }
-              |]
-          expectedResponse = "{\"data\":{\"albums\":[{\"artists_null\":{\"name\":\"Author\"}},{\"artists_null\":{\"name\":\"Author\"}},{\"artists_null\":null},{\"artists_null\":null}]}}"
-      v1graphql [] query `shouldRespondWith` expectedResponse
-
-    xit "An array relationship with rows with null for any join column excludes those rows" $ do
-      -- Marked as pending for the following reason:
-      -- I'm unsure whether this result satisfies our acceptance criteria.
-      -- Should we return '[]' if any join column of /any/ row is null?
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{artists} {
-                  albums_null {
-                    #{title}
-                  }
-                }
-              }
-              |]
-          expectedResponse = "{\"data\":{\"artists\":[{\"albums_null\":[{\"title\":\"Album 1A\"}]},{\"albums_null\":[{\"title\":\"Album 2A\"}]}]}}"
-      v1graphql [] query `shouldRespondWith` expectedResponse
-
-    xit "Incompatible join columns (different data types)" $ do
-      -- Marked as pending for the following reason:
-      -- Not sure what the expected behaviour should be when a remote source
-      -- relationship attempts to join incompatible columns. At the time of
-      -- writing, we return a response with `null` values for the remote source
-      -- relationship, though one might expect that we prevent such
-      -- relationships from being registered to the metadata in the first
-      -- place.
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{albums} {
-                  artists_incompatible_columns {
-                    #{name}
-                  }
-                }
-              }
-              |]
-          expectedResponse = "{\"data\":{\"albums\":[{\"artists_incompatible_columns\":null},{\"artists_incompatible_columns\":null},{\"artists_incompatible_columns\":null},{\"artists_incompatible_columns\":null}]}}"
-      v1graphql [] query `shouldRespondWith` expectedResponse
-
-    -- Array relationship functionality
-
-    it "Array relationships work with 'distinct_on'" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{artists} {
-                  albums(distinct_on: #{artist_id}) {
-                    #{artist_id}
-                    #{title}
-                  }
-                }
-              }
-              |]
-          expectedResponse = "{\"data\":{\"artists\":[{\"albums\":[{\"artist_id\":1,\"title\":\"Album 1A\"}]},{\"albums\":[{\"artist_id\":2,\"title\":\"Album 2A\"}]}]}}"
-      v1graphql [] query `shouldRespondWith` expectedResponse
-
-    it "Array relationships work with 'where'" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{artists} {
-                  albums(where: {#{title}: {_like: "%1%"}}) {
-                    #{title}
-                  }
-                }
-              }
-              |]
-          expectedResponse = "{\"data\":{\"artists\":[{\"albums\":[{\"title\":\"Album 1A\"},{\"title\":\"Album 1B\"}]},{\"albums\":[]}]}}"
-      v1graphql [] query `shouldRespondWith` expectedResponse
-
-    it "Array relationships work with 'limit'" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{artists} {
-                  albums(limit: 1) {
-                    #{title}
-                  }
-                }
-              }
-              |]
-          expectedResponse = "{\"data\":{\"artists\":[{\"albums\":[{\"title\":\"Album 1A\"}]},{\"albums\":[{\"title\":\"Album 2A\"}]}]}}"
-      v1graphql [] query `shouldRespondWith` expectedResponse
-
-    it "Array relationships work with 'offset'" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{artists} {
-                  albums(offset: 1) {
-                    #{title}
-                  }
-                }
-              }
-              |]
-          expectedResponse = "{\"data\":{\"artists\":[{\"albums\":[{\"title\":\"Album 1B\"}]},{\"albums\":[{\"title\":\"Album 2B\"}]}]}}"
-      v1graphql [] query `shouldRespondWith` expectedResponse
-
-    it "Array relationships work with 'order_by'" $ do
-      let query =
-            T.unpack
-              [st|
-              query {
-                #{artists} {
-                  albums(order_by: {#{id_}: desc}) {
-                    #{id_}
-                    #{title}
-                  }
-                }
-              }
-              |]
-          expectedResponse = "{\"data\":{\"artists\":[{\"albums\":[{\"id\":2,\"title\":\"Album 1B\"},{\"id\":1,\"title\":\"Album 1A\"}]},{\"albums\":[{\"id\":4,\"title\":\"Album 2B\"},{\"id\":3,\"title\":\"Album 2A\"}]}]}}"
-      v1graphql [] query `shouldRespondWith` expectedResponse
