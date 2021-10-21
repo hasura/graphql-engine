@@ -718,6 +718,7 @@ test-suite graphql-engine-integration-tests
     , hspec-discover
     , hspec-expectations
     , hspec-wai
+    , hspec-wai-json
     , http-types
     , lens
     , monad-control

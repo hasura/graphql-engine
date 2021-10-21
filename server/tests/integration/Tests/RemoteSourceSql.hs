@@ -86,7 +86,7 @@ CREATE TABLE #{artists}
   ( #{id_} SERIAL PRIMARY KEY
   , #{id_null} INTEGER -- for testing null join columns
   , #{name} TEXT NOT NULL
-  , #{fav_album} TEXT -- for testing joins over multiple fields (might be redundant now?)
+  , #{fav_album} TEXT -- for testing joins over multiple fields
   );
 
 INSERT INTO #{artists} (#{id_null}, #{name}, #{fav_album}) VALUES
