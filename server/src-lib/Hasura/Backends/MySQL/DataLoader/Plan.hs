@@ -23,6 +23,7 @@ where
 import Data.Aeson
 import Data.Bifunctor
 import Data.Graph
+import Data.HashSet.InsOrd qualified as OSet
 import Data.Sequence qualified as Seq
 import Data.String
 import Hasura.Backends.MySQL.Types qualified as MySQL
@@ -46,14 +47,16 @@ instance Hashable Ref
 -- with some fields used for planning and executing.
 data Select = Select
   { selectAggUnwrap :: !(Maybe Text),
-    selectFrom :: !(Maybe MySQL.From),
+    selectFrom :: !MySQL.From,
     selectGroupBy :: ![MySQL.FieldName],
     selectHaskellJoins :: ![MySQL.Join],
     selectOrderBy :: !(Maybe (NonEmpty MySQL.OrderBy)),
     selectProjections :: ![MySQL.Projection],
     selectRelationship :: !(Maybe Relationship),
     selectWhere :: !MySQL.Where,
-    selectWantedFields :: !(Maybe [Text])
+    selectWantedFields :: !(Maybe [Text]),
+    selectSqlOffset :: !(Maybe Int),
+    selectSqlTop :: !MySQL.Top
   }
   deriving (Show)
 
@@ -166,13 +169,13 @@ joinAliasName :: MySQL.EntityAlias -> Text
 joinAliasName (MySQL.EntityAlias {entityAliasText}) = entityAliasText
 
 -- | Used for display purposes, not semantic content.
-selectFromName :: Maybe MySQL.From -> Text
-selectFromName = \case
-  Nothing -> ""
-  Just x -> case x of
-    MySQL.FromQualifiedTable (MySQL.Aliased {aliasedThing = MySQL.TableName {name}}) -> name
-    -- This constructor will be removed in the subsequent PR.
-    MySQL.FromOpenJson {} -> ""
+selectFromName :: MySQL.From -> Text
+selectFromName =
+  \case
+    MySQL.FromQualifiedTable (MySQL.Aliased {aliasedThing = MySQL.TableName {name}}) ->
+      name
+    MySQL.FromSelect (MySQL.Aliased {aliasedThing = MySQL.Select {selectFrom}}) ->
+      selectFromName selectFrom
 
 --------------------------------------------------------------------------------
 -- Run planner
@@ -294,10 +297,8 @@ selectQuery :: Select -> MySQL.Select
 selectQuery Select {..} =
   MySQL.Select
     { selectJoins = selectHaskellJoins,
-      selectProjections = selectProjections,
-      selectTop = MySQL.NoTop,
-      selectOffset = Nothing,
-      selectFor = MySQL.NoFor,
+      selectProjections = OSet.fromList selectProjections,
+      selectFinalWantedFields = selectWantedFields,
       ..
     }
 

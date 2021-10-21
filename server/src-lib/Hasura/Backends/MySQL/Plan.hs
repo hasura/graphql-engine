@@ -47,8 +47,6 @@ planQuery sessionVariables queryDB = do
       `onLeft` (throw400 NotSupported . tshow)
   pure $
     sel
-      { selectFor = NoFor
-      }
 
 -- | Prepare a value without any query planning; we just execute the
 -- query with the values embedded.

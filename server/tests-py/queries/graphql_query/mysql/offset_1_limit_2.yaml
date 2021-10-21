@@ -1,0 +1,122 @@
+- description: Nested select on article with offset 1 and limit 2
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      hasura_article:
+      - id: 2
+        title: Article 2
+        content: Sample article content 2
+        author:
+          id: 1
+          name: Author 1
+      - id: 1
+        title: Article 1
+        content: Sample article content 1
+        author:
+          id: 1
+          name: Author 1
+  query:
+    query: |
+      query {
+        hasura_article(limit: 2, offset: 1, order_by: {id: desc}) {
+          id
+          title
+          content
+          author {
+            id
+            name
+          }
+        }
+      }
+- description: Limit on array relation should apply properly
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      hasura_author:
+       - name: Author 1
+         id: 1
+         articles:
+         - content: Sample article content 1
+           id: 1
+           title: Article 1
+       - name: Author 2
+         id: 2
+         articles:
+         - content: Sample article content 3
+           id: 3
+           title: Article 3
+  query:
+    query: |-
+      query {
+        hasura_author {
+          name
+          id
+          articles (limit: 1) {
+            content
+            id
+            title
+          }
+        }
+      }
+- description: Limit on array relation should apply properly, including with order by
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      hasura_author:
+       - name: Author 1
+         id: 1
+         articles:
+         - content: Sample article content 2
+           id: 2
+           title: Article 2
+       - name: Author 2
+         id: 2
+         articles:
+         - content: Sample article content 3
+           id: 3
+           title: Article 3
+  query:
+    query: |-
+      query {
+        hasura_author {
+          name
+          id
+          articles (limit: 1, order_by: {id: desc}) {
+            content
+            id
+            title
+          }
+        }
+      }
+
+- description: Offset on array relation
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      hasura_author:
+       - name: Author 1
+         id: 1
+         articles:
+         - content: Sample article content 2
+           id: 2
+           title: Article 2
+       - name: Author 2
+         id: 2
+         articles: []
+  query:
+    query: |-
+      query {
+        hasura_author {
+          name
+          id
+          articles (limit: 1, order_by: {id: asc}, offset: 1) {
+            content
+            id
+            title
+          }
+        }
+      }

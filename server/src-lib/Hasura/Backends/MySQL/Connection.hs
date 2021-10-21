@@ -71,6 +71,9 @@ parseFieldResult f@Field {..} mBs =
     VarString ->
       let fvalue :: Text = MySQL.convert f mBs
        in J.String fvalue
+    Blob ->
+      let fvalue :: Text = MySQL.convert f mBs
+       in J.String fvalue
     DateTime -> maybe J.Null (J.String . decodeUtf8) mBs
     _ -> error $ "parseResult: not implemented yet " <> show f <> " " <> show mBs
 

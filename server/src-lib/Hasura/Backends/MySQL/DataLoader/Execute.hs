@@ -16,6 +16,7 @@ import Data.IORef
 import Data.Vector (Vector)
 import Data.Vector qualified as V
 import GHC.TypeLits qualified
+import Hasura.Backends.MySQL.Connection (runQueryYieldingRows)
 import Hasura.Backends.MySQL.DataLoader.Plan hiding
   ( Join (wantedFields),
     Relationship (leftRecordSet),
@@ -23,6 +24,7 @@ import Hasura.Backends.MySQL.DataLoader.Plan hiding
   )
 import Hasura.Backends.MySQL.DataLoader.Plan qualified as DataLoaderPlan
 import Hasura.Backends.MySQL.DataLoader.Plan qualified as Plan
+import Hasura.Backends.MySQL.ToQuery (fromSelect, toQueryFlat)
 import Hasura.Backends.MySQL.Types hiding
   ( FieldName,
     ScalarValue,
@@ -127,15 +129,17 @@ fetchRecordSetForAction :: Action -> Execute RecordSet
 fetchRecordSetForAction =
   \case
     SelectAction select -> do
-      _relationshipIn <-
-        maybe (pure []) makeRelationshipIn (selectRelationship select)
-      -- TODO: This record set is set to empty for now. In a follow-up
-      -- code change, this will be pulled from the Connection
-      -- module. However, it requires changes to the Select type,
-      -- which in turn affect FromIr. In the interest of a simple PR,
-      -- this is omitted. This comment will be removed when the below
-      -- is updated in the follow-up PR.
-      recordSet <- pure (makeRecordSet mempty)
+      recordSet <- do
+        SourceConfig {scConnectionPool} <- asks credentials
+        result <-
+          liftIO $
+            runExceptT $
+              runQueryYieldingRows
+                scConnectionPool
+                (toQueryFlat (fromSelect (selectQuery select)))
+        case result of
+          Left problem -> throwError (JoinProblem problem)
+          Right rows -> pure (makeRecordSet rows)
       -- Update the wanted fields from the original select. This lets
       -- the executor know which fields to include after performing a
       -- join.

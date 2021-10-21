@@ -4,15 +4,12 @@ status: 200
 response:
   data:
     hasura_author:
-    - name: Author 1
-      id: 1
     - name: Author 2
       id: 2
 query:
-  # https://graphql.org/learn/serving-over-http/#post-request
   query: |
-    query MyQuery {
-      hasura_author {
+    query {
+      hasura_author (where: {name: {_eq: "Author 2"}}) {
         name
         id
       }
