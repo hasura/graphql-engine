@@ -1,4 +1,4 @@
-module Hasura.RQL.RequestTransformSpec (spec) where
+module Hasura.RQL.RequestTransformSpec where
 
 import Data.Aeson
 import Data.CaseInsensitive qualified as CI
@@ -52,7 +52,7 @@ genTemplatingEngine = Gen.enumBounded @_ @TemplatingEngine
 -- NOTE: This generator is strictly useful for roundtrip aeson testing
 -- and does not produce valid template snippets.
 genTemplateText :: Gen TemplateText
-genTemplateText = (TemplateText . wrap) <$> Gen.text (Range.constant 3 20) Gen.alphaNum
+genTemplateText = TemplateText . wrap <$> Gen.text (Range.constant 3 20) Gen.alphaNum
   where
     wrap txt = "\"" <> txt <> "\""
 
@@ -64,7 +64,7 @@ genTransformHeaders = do
   numHeaders <- Gen.integral $ Range.constant 1 20
 
   let genHeaderKey = CI.mk <$> Gen.text (Range.constant 1 20) Gen.alphaNum
-      genHeaderValue = genTemplateText
+      genHeaderValue = coerce <$> genTemplateText
 
       genKeys = S.toList <$> Gen.set (Range.singleton numHeaders) genHeaderKey
       genValues = S.toList <$> Gen.set (Range.singleton numHeaders) genHeaderValue
@@ -73,21 +73,20 @@ genTransformHeaders = do
   addHeaders <- liftA2 zip genKeys genValues
   pure $ TransformHeaders addHeaders removeHeaders
 
-genQueryParams :: Gen [(TemplateText, Maybe TemplateText)]
+genQueryParams :: Gen [(StringTemplateText, Maybe StringTemplateText)]
 genQueryParams = do
   numParams <- Gen.integral $ Range.constant 1 20
-  let keyGen = genTemplateText
-      valueGen = Gen.maybe genTemplateText
+  let keyGen = coerce <$> genTemplateText
+      valueGen = Gen.maybe $ coerce <$> genTemplateText
   keys <- Gen.list (Range.singleton numParams) keyGen
   values <- Gen.list (Range.singleton numParams) valueGen
   pure $ nubBy (\a b -> fst a == fst b) $ zip keys values
 
-genUrl :: Gen TemplateText
+genUrl :: Gen StringTemplateText
 genUrl = do
   host <- Gen.text (Range.constant 3 20) Gen.alphaNum
 
-  let wrap txt = "\"" <> txt <> "\""
-  pure $ TemplateText $ wrap $ "http://www." <> host <> ".com"
+  pure $ StringTemplateText $ "http://www." <> host <> ".com"
 
 genMetadataTransform :: Gen MetadataTransform
 genMetadataTransform = do
