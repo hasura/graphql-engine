@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    hasura_test_author:
+    hasura_author:
     - name: Author 1
       id: 1
     - name: Author 2
@@ -18,7 +18,7 @@ query:
       }
     }
     query chooseThisOne {
-      hasura_test_author {
+      hasura_author {
         id
         name
       }

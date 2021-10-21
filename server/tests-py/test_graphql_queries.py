@@ -11,37 +11,87 @@ pytestmark = pytest.mark.allow_server_upgrade_test
 usefixtures = pytest.mark.usefixtures
 
 
+@pytest.mark.parametrize("transport", ['http'])
+@pytest.mark.parametrize("backend", ['mysql'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryReplaceMetadataMySQL:
+
+    # initialize the metadata with default 'http' transport fixture
+    def test_replace_metadata(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/mysql'
+
+
 @pytest.mark.parametrize("backend", ['mysql'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicMySQL:
 
-    # initialize the metadata with default 'http' transport fixture
-    def test_replace_metadata(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/replace_metadata.yaml')
-
-    def test_select_query_author(self, hge_ctx):
+    # basic queries
+    def test_select_query_author(self, hge_ctx): # extra
         check_query_f(hge_ctx, self.dir() + '/basic.yaml')
+
+    def test_select_query_ignore_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml')
+
+    def test_nested_select_query_deep(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/nested_select_query_deep.yaml')
 
     def test_select_quoted_col(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_quoted_col.yaml')
 
+    def test_non_tracked_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_non_tracked_table_err.yaml')
+
+    def test_select_query_non_tracked_table(self, hge_ctx): # may be duplicate of the one above
+        check_query_f(hge_ctx, self.dir() + '/select_query_non_tracked_table.yaml')
+
+    def test_col_not_present(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_col_not_present_err.yaml')
+
+    # offsets / limit
+    def test_offset_1_limit_2(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/offset_1_limit_2.yaml')
+
+    def test_offset_2_limit_1(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/offset_2_limit_1.yaml')
+
     def test_select_offset_limit(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_limit.yaml')
-
-    def test_select_query_ignore_author(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml')
 
     def test_select_offset(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_offset.yaml')
 
     def test_select_limit(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_limit.yaml')
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_limit_offset.yaml')
 
-    def test_col_not_present(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_col_not_present_err.yaml')
 
-    def test_non_tracked_table(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_query_non_tracked_table_err.yaml')
+    # where clause
+    def test_select_query_where(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_where.yaml')
+
+    def test_select_query_where(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/nested_select_where_query_author_article.yaml')
+
+    # order by
+    def test_select_query_author_order_by(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_order_by.yaml')
+
+    # directives
+    def test_select_query_author_with_skip_directive(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_with_skip_directive.yaml')
+
+    def test_select_query_author_with_skip_include_directive(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_with_skip_include_directive.yaml')
+
+    def test_select_query_author_with_wrong_directive_err(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_with_wrong_directive_err.yaml')
+
+    # views
+    def test_query_search_author_view(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_search_author_view.yaml')
 
     @classmethod
     def dir(cls):

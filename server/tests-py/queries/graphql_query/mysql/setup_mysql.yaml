@@ -66,3 +66,23 @@ args:
           name: article
           schema: hasura
         column: co_author_id
+
+
+# track views
+
+- type: mysql_track_table
+  args:
+    source: mysql
+    table:
+      name: search_author_view
+      schema: hasura
+
+
+# # track functions
+
+# - type: mysql_track_function
+#   args:
+#     source: mysql
+#     function:
+#       schema: hasura
+#       name: search_author_viewf
