@@ -1,4 +1,4 @@
-# replace :80 with your domain name to get automatic https via LetsEncrypt
-:80 {
+# replace <your-domain.com> with your domain name (don't keep <>) to get automatic https via LetsEncrypt
+<your-domain.com> {
   reverse_proxy graphql-engine:8080
 }
