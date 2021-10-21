@@ -197,13 +197,13 @@ class TestMetadata:
 
         check_query_f(hge_ctx, self.dir() + '/pg_track_function_with_comment_teardown.yaml')
 
-    def test_test_webhook_transform_success(self, hge_ctx):
+    def test_webhook_transform_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_success.yaml')
 
-    def test_test_webhook_transform_bad_parse(self, hge_ctx):
+    def test_webhook_transform_bad_parse(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_bad_parse.yaml')
 
-    def test_test_webhook_transform_bad_eval(self, hge_ctx):
+    def test_webhook_transform_bad_eval(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_bad_eval.yaml')
 
     @pytest.mark.skipif(

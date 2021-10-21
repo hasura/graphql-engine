@@ -2,6 +2,7 @@ module Hasura.RQL.DDL.RequestTransform
   ( applyRequestTransform,
     mkRequestTransform,
     RequestMethod (..),
+    StringTemplateText (..),
     TemplatingEngine (..),
     TemplateText (..),
     ContentType (..),
@@ -96,7 +97,7 @@ data MetadataTransform = MetadataTransform
   { -- | Change the request method to one provided here. Nothing means POST.
     mtRequestMethod :: Maybe RequestMethod,
     -- | Template script for transforming the URL.
-    mtRequestURL :: Maybe TemplateText,
+    mtRequestURL :: Maybe StringTemplateText,
     -- | Template script for transforming the request body.
     mtBodyTransform :: Maybe TemplateText,
     -- | Replace the Content-Type with this value. Only
@@ -104,7 +105,7 @@ data MetadataTransform = MetadataTransform
     -- allowed.
     mtContentType :: Maybe ContentType,
     -- | A list of template scripts for constructing new Query Params.
-    mtQueryParams :: Maybe [(TemplateText, Maybe TemplateText)],
+    mtQueryParams :: Maybe [(StringTemplateText, Maybe StringTemplateText)],
     -- | Transform headers as defined here.
     mtRequestHeaders :: Maybe TransformHeaders,
     -- | The template engine to use for transformations. Default: Kriti
@@ -118,7 +119,7 @@ instance Cacheable MetadataTransform
 
 infixr 8 .=?
 
-(.=?) :: J.ToJSON v => Text -> Maybe v -> Maybe (Text, J.Value)
+(.=?) :: J.ToJSON v => k -> Maybe v -> Maybe (k, J.Value)
 (.=?) _ Nothing = Nothing
 (.=?) k (Just v) = Just (k, J.toJSON v)
 
@@ -194,8 +195,10 @@ instance NFData TemplatingEngine
 
 instance Cacheable TemplatingEngine
 
+-- | Unparsed Kriti templating code
 newtype TemplateText = TemplateText {unTemplateText :: T.Text}
-  deriving (Show, Eq, Ord, Hashable, Generic, J.ToJSONKey, J.FromJSONKey)
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving newtype (Hashable, J.ToJSONKey, J.FromJSONKey)
 
 instance NFData TemplateText
 
@@ -211,6 +214,39 @@ instance J.FromJSON TemplateText where
 
 instance J.ToJSON TemplateText where
   toJSON = J.String . coerce
+
+-- | Unparsed Kriti templating code for string interpolations only.
+-- NOTE: WE are highly coupled to Kriti at this point and will likely
+-- need to rethink Kriti string interpolation when we start adding
+-- other template engines.
+newtype StringTemplateText = StringTemplateText {unStringTemplateText :: T.Text}
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving newtype (Hashable, J.ToJSONKey, J.FromJSONKey)
+
+instance NFData StringTemplateText
+
+instance Cacheable StringTemplateText
+
+instance J.FromJSON StringTemplateText where
+  parseJSON = J.withText "StringTemplateText" \t ->
+    let wrapped = "\"" <> t <> "\""
+     in case parserAndLexer wrapped of
+          -- NOTE: We can't simplfy use the wrapped value because the
+          -- 'FromJSONKey' instance uses coercion rather then this
+          -- instance to wrap the newtype.  This means we would need to
+          -- handle QueryParam keys explicitly in 'mkQueryParamsTransform'
+          -- while values would be handled implicitliy via this aeson
+          -- instance. That is confusing, so we just handle everything
+          -- explicitly down the call stack.
+          Right _ -> pure $ StringTemplateText t
+          Left RenderedError {_message} -> fail $ T.unpack _message
+
+instance J.ToJSON StringTemplateText where
+  toJSON = J.String . coerce
+
+-- | Wrap a template with escaped double quotes.
+wrapTemplate :: StringTemplateText -> StringTemplateText
+wrapTemplate (StringTemplateText t) = StringTemplateText $ "\"" <> t <> "\""
 
 data ContentType = JSON | XWWWFORM
   deriving (Show, Eq, Enum, Bounded, Generic)
@@ -248,7 +284,7 @@ instance J.FromJSON HeaderKey where
     key -> pure $ HeaderKey key
 
 data TransformHeaders = TransformHeaders
-  { addHeaders :: [(CI.CI Text, TemplateText)],
+  { addHeaders :: [(CI.CI Text, StringTemplateText)],
     removeHeaders :: [CI.CI Text]
   }
   deriving (Show, Eq, Ord, Generic)
@@ -266,7 +302,7 @@ instance J.ToJSON TransformHeaders where
 
 instance J.FromJSON TransformHeaders where
   parseJSON = J.withObject "TransformHeaders" $ \o -> do
-    addHeaders :: M.HashMap Text TemplateText <- fromMaybe mempty <$> o J..:? "add_headers"
+    addHeaders <- fromMaybe mempty <$> o J..:? "add_headers"
     let headers = M.toList $ mapKeys CI.mk addHeaders
     removeHeaders <- o J..:? "remove_headers"
     let removeHeaders' = unHeaderKey <$> fromMaybe mempty removeHeaders
@@ -293,10 +329,10 @@ mkRequestTransform MetadataTransform {..} =
       bodyTransform = mkTemplateTransform mtTemplatingEngine <$> mtBodyTransform
    in RequestTransform mtRequestMethod urlTransform bodyTransform mtContentType queryTransform headerTransform
 
-mkQueryParamsTransform :: TemplatingEngine -> [(TemplateText, Maybe TemplateText)] -> TransformContext -> Either TransformErrorBundle HTTP.Query
+mkQueryParamsTransform :: TemplatingEngine -> [(StringTemplateText, Maybe StringTemplateText)] -> TransformContext -> Either TransformErrorBundle HTTP.Query
 mkQueryParamsTransform engine templates transformCtx =
   let transform t =
-        case mkTemplateTransform engine t transformCtx of
+        case mkTemplateTransform engine (coerce wrapTemplate t) transformCtx of
           Left err -> Left err
           Right (J.String str) -> Right $ str
           Right (J.Number num) -> Right $ tshow num
@@ -326,7 +362,7 @@ mkQueryParamsTransform engine templates transformCtx =
 mkHeaderTransform :: TemplatingEngine -> TransformHeaders -> TransformContext -> Either TransformErrorBundle ([HTTP.Header] -> [HTTP.Header])
 mkHeaderTransform engine TransformHeaders {..} transformCtx =
   let transform t =
-        case mkTemplateTransform engine t transformCtx of
+        case mkTemplateTransform engine (coerce $ wrapTemplate t) transformCtx of
           Left err -> Failure err
           Right (J.String str) -> Success $ TE.encodeUtf8 str
           Right (J.Number num) -> Success $ TE.encodeUtf8 $ tshow num
@@ -361,9 +397,9 @@ mkHeaderTransform engine TransformHeaders {..} transformCtx =
         Failure err -> throwError err
         Success toBeAdded' -> pure (filterHeaders . (toBeAdded' <>))
 
-mkUrlTransform :: TemplatingEngine -> TemplateText -> TransformContext -> Either TransformErrorBundle Text
+mkUrlTransform :: TemplatingEngine -> StringTemplateText -> TransformContext -> Either TransformErrorBundle Text
 mkUrlTransform engine template transformCtx =
-  case mkTemplateTransform engine template transformCtx of
+  case mkTemplateTransform engine (coerce $ wrapTemplate template) transformCtx of
     Left err -> Left err
     Right (J.String url) ->
       let escapedUrl = T.pack $ URI.escapeURIString (/= '|') (T.unpack url)
@@ -392,7 +428,7 @@ mkUrlTransform engine template transformCtx =
 -- | Construct a Template Transformation function
 mkTemplateTransform :: TemplatingEngine -> TemplateText -> TransformContext -> Either TransformErrorBundle J.Value
 mkTemplateTransform engine (TemplateText template) TransformContext {..} =
-  let context = [("$url", tcUrl), ("$body", tcBody), ("$session_variables", tcSessionVars), ("$query_params", tcQueryParams)]
+  let context = [("$base_url", tcUrl), ("$body", tcBody), ("$session_variables", tcSessionVars), ("$query_params", tcQueryParams)]
    in case engine of
         Kriti -> first (TransformErrorBundle . pure . J.toJSON) $ runKriti template context
 
@@ -416,7 +452,7 @@ buildTransformContext url reqData sessionVars =
 -- slash on the URL path. This important when performing string
 -- interpolation on the request url.
 --
--- Because of this requirement, we ensure the sequence of
+-- Because of this requirement, we must ensure the sequence of
 -- transformation applications. If a query param transformation
 -- occured before the url transformation then the query param
 -- transformation would be wiped out.
