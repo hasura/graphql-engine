@@ -473,16 +473,24 @@ export interface ResetReadReplicaState {
   type: 'RESET_READ_REPLICA_STATE';
 }
 
+export interface SetReadReplicaState {
+  type: 'SET_REPLICA_STATE';
+  data: ExtendedConnectDBState[];
+}
+
 export type ReadReplicaActions =
   | AddReadReplicaToState
   | RemoveReadReplicaFromState
-  | ResetReadReplicaState;
+  | ResetReadReplicaState
+  | SetReadReplicaState;
 
 export const readReplicaReducer = (
   state: ReadReplicaState,
   action: ReadReplicaActions
 ): ReadReplicaState => {
   switch (action.type) {
+    case 'SET_REPLICA_STATE':
+      return action.data ?? [];
     case 'ADD_READ_REPLICA':
       return [...state, action.data];
     case 'REMOVE_READ_REPLICA':
