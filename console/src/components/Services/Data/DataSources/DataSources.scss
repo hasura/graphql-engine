@@ -43,11 +43,10 @@
 }
 
 .read_replica_list_item {
-  width: 125%;
-  display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  justify-content: space-between;
+  display: grid;
+  column-gap: 3%;
+  grid-template-columns: 10% 30% 60%;
+  padding-top: 1%;
 }
 
 .remove_replica_btn {
