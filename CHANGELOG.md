@@ -21,6 +21,7 @@ suffix-less versions.  Aliases may be set by both
 ### Bug fixes and improvements 
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: add support for GraphQL block strings
 - server: Correctly translate permissions on functions to SQL (#7617)
 - server: add transformed request to action error responses
 - server: allow nullable action responses (#4405)
