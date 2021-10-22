@@ -16,7 +16,6 @@ import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
-import Hasura.RQL.DDL.Deps
 import Hasura.RQL.DDL.Permission
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
@@ -98,7 +97,7 @@ runDropComputedField (DropComputedField source table computedField cascade) = do
             AB.mkAnyBackend $
               SOITableObj @b table $
                 TOComputedField computedField
-  when (not cascade && not (null deps)) $ reportDeps deps
+  when (not cascade && not (null deps)) $ reportDependentObjectsExist deps
 
   withNewInconsistentObjsCheck do
     metadataModifiers <- mapM purgeComputedFieldDependency deps
@@ -121,8 +120,3 @@ runDropComputedField (DropComputedField source table computedField cascade) = do
           "unexpected dependency for computed field "
             <> computedField <<> "; "
             <> reportSchemaObj d
-
-dropComputedFieldInMetadata ::
-  ComputedFieldName -> TableMetadata b -> TableMetadata b
-dropComputedFieldInMetadata name =
-  tmComputedFields %~ OMap.delete name

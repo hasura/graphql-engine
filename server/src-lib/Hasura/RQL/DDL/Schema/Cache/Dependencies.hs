@@ -112,7 +112,7 @@ pruneDanglingDependents cache =
             "no permission defined on remote schema " <> remoteSchemaName
               <<> " for role " <>> roleName
       SOSourceObj source exists -> do
-        AB.dispatchAnyBackend @BackendMetadata exists $ \sourceObjId -> do
+        AB.dispatchAnyBackend @Backend exists $ \sourceObjId -> do
           sourceInfo <- castSourceInfo source sourceObjId
           case sourceObjId of
             SOITable tableName -> do

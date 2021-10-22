@@ -93,11 +93,6 @@ runDeleteRemoteRelationship (DeleteRemoteRelationship source table relName) = do
       tableMetadataSetter @b source table %~ dropRemoteRelationshipInMetadata relName
   pure successMsg
 
-dropRemoteRelationshipInMetadata ::
-  RemoteRelationshipName -> TableMetadata b -> TableMetadata b
-dropRemoteRelationshipInMetadata name =
-  tmRemoteRelationships %~ OMap.delete name
-
 -- | Internal intermediary step.
 --
 -- We build the output of sources in two steps:

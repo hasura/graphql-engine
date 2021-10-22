@@ -35,6 +35,7 @@ import Data.HashMap.Strict.Extended qualified as M
 import Data.List (nub)
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
+import Database.MSSQL.Transaction qualified as MSSQL
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
@@ -195,6 +196,10 @@ instance (MetadataM m) => MetadataM (StateT r m) where
   putMetadata = lift . putMetadata
 
 instance (MetadataM m) => MetadataM (TraceT m) where
+  getMetadata = lift getMetadata
+  putMetadata = lift . putMetadata
+
+instance (MetadataM m) => MetadataM (MSSQL.TxET e m) where
   getMetadata = lift getMetadata
   putMetadata = lift . putMetadata
 

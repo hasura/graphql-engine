@@ -52,6 +52,7 @@ import Hasura.RQL.Types.Function as R
 import Hasura.RQL.Types.GraphqlSchemaIntrospection as R
 import Hasura.RQL.Types.Metadata as R
 import Hasura.RQL.Types.Metadata.Backend as R
+import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.Metadata.Object as R
 import Hasura.RQL.Types.Network as R
 import Hasura.RQL.Types.Permission as R

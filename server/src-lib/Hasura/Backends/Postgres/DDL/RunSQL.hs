@@ -21,9 +21,7 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
-import Hasura.RQL.DDL.Deps (reportDepsExt)
 import Hasura.RQL.DDL.Schema
-import Hasura.RQL.DDL.Schema.Common
 import Hasura.RQL.DDL.Schema.Diff
 import Hasura.RQL.Types hiding
   ( ConstraintName,
@@ -219,9 +217,9 @@ withMetadataCheck source cascade txAccess action = do
           (postActionTableMeta, postActionFunctionMeta) <- fetchMeta preActionTables preActionFunctions
 
           let preActionTableMeta' = filter (flip M.member preActionTables . tmTable) preActionTableMeta
-              schemaDiff = getSchemaDiff preActionTableMeta' postActionTableMeta
-              FunctionDiff droppedFuncs alteredFuncs = getFuncDiff preActionFunctionMeta postActionFunctionMeta
-              overloadedFuncs = getOverloadedFuncs (M.keys preActionFunctions) postActionFunctionMeta
+              tablesDiff = getTablesDiff preActionTableMeta' postActionTableMeta
+              FunctionsDiff droppedFuncs alteredFuncs = getFunctionsDiff preActionFunctionMeta postActionFunctionMeta
+              overloadedFuncs = getOverloadedFunctions (M.keys preActionFunctions) postActionFunctionMeta
 
           -- Do not allow overloading functions
           unless (null overloadedFuncs) $
@@ -230,8 +228,8 @@ withMetadataCheck source cascade txAccess action = do
                 <> commaSeparated overloadedFuncs
 
           -- Report back with an error if cascade is not set
-          indirectDeps <- getSchemaChangeDeps source schemaDiff
-          when (indirectDeps /= [] && not cascade) $ reportDepsExt indirectDeps []
+          indirectDeps <- getIndirectDependencies source tablesDiff
+          when (indirectDeps /= [] && not cascade) $ reportDependentObjectsExist indirectDeps
 
           metadataUpdater <- execWriterT $ do
             -- Purge all the indirect dependents from state
@@ -257,7 +255,7 @@ withMetadataCheck source cascade txAccess action = do
                   "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
 
             -- update the metadata with the changes
-            processSchemaDiff source preActionTables schemaDiff
+            processTablesDiff source preActionTables tablesDiff
 
           pure (actionResult, metadataUpdater)
 

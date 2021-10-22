@@ -182,7 +182,7 @@ runCreateEventTriggerQuery q = do
 
 runDeleteEventTriggerQuery ::
   forall b m.
-  (BackendEventTrigger b, BackendMetadata b, MonadError QErr m, CacheRWM m, MonadIO m, MetadataM m) =>
+  (BackendEventTrigger b, MonadError QErr m, CacheRWM m, MonadIO m, MetadataM m) =>
   DeleteEventTriggerQuery b ->
   m EncJSON
 runDeleteEventTriggerQuery (DeleteEventTriggerQuery source name) = do
@@ -204,10 +204,6 @@ runDeleteEventTriggerQuery (DeleteEventTriggerQuery source name) = do
   dropTriggerAndArchiveEvents @b (_siConfiguration sourceInfo) name
 
   pure successMsg
-
-dropEventTriggerInMetadata :: TriggerName -> TableMetadata b -> TableMetadata b
-dropEventTriggerInMetadata name =
-  tmEventTriggers %~ OMap.delete name
 
 runRedeliverEvent ::
   forall b m.

@@ -121,7 +121,7 @@ import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as HS
 import Data.Int (Int64)
-import Data.Text.Extended
+import Database.MSSQL.Transaction qualified as MSSQL
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection qualified as PG
 import Hasura.Base.Error
@@ -168,9 +168,6 @@ newtype MetadataResourceVersion = MetadataResourceVersion
 
 initialResourceVersion :: MetadataResourceVersion
 initialResourceVersion = MetadataResourceVersion 0
-
-reportSchemaObjs :: [SchemaObjId] -> Text
-reportSchemaObjs = commaSeparated . sort . map reportSchemaObj
 
 mkParentDep ::
   forall b.
@@ -466,6 +463,9 @@ instance (CacheRM m) => CacheRM (TraceT m) where
   askSchemaCache = lift askSchemaCache
 
 instance (CacheRM m) => CacheRM (Q.TxET QErr m) where
+  askSchemaCache = lift askSchemaCache
+
+instance (CacheRM m) => CacheRM (MSSQL.TxET e m) where
   askSchemaCache = lift askSchemaCache
 
 getDependentObjs :: SchemaCache -> SchemaObjId -> [SchemaObjId]

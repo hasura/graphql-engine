@@ -13,8 +13,6 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.DDL.Deps
-import Hasura.RQL.DDL.Schema.Common
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Logging (MetadataLog (..))
@@ -158,9 +156,7 @@ runDropSource (DropSource name cascade) = do
               getDependentObjs sc (SOSource name)
 
       when (not cascade && indirectDeps /= []) $
-        reportDepsExt
-          (map (SOSourceObj name . AB.mkAnyBackend) indirectDeps)
-          []
+        reportDependentObjectsExist (map (SOSourceObj name . AB.mkAnyBackend) indirectDeps)
 
       metadataModifier <- execWriterT $ do
         mapM_ (purgeDependentObject name >=> tell) indirectDeps

@@ -11,6 +11,7 @@ import Data.HashSet qualified as HS
 import Data.String
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
+import Database.MSSQL.Transaction qualified as Tx
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Instances.Types ()
@@ -25,14 +26,11 @@ import Hasura.SQL.Backend
 --------------------------------------------------------------------------------
 -- Loader
 
-loadDBMetadata ::
-  (MonadError QErr m, MonadIO m) =>
-  MSSQLPool ->
-  m (DBTablesMetadata 'MSSQL)
-loadDBMetadata pool = do
+loadDBMetadata :: (MonadIO m) => Tx.TxET QErr m (DBTablesMetadata 'MSSQL)
+loadDBMetadata = do
   let queryBytes = $(makeRelativeToProject "src-rsr/mssql_table_metadata.sql" >>= embedFile)
       odbcQuery :: ODBC.Query = fromString . BSUTF8.toString $ queryBytes
-  sysTablesText <- runJSONPathQuery pool odbcQuery
+  sysTablesText <- runIdentity <$> Tx.singleRowQueryE fromMSSQLTxError odbcQuery
   case Aeson.eitherDecodeStrict (T.encodeUtf8 sysTablesText) of
     Left e -> throw500 $ T.pack $ "error loading sql server database schema: " <> e
     Right sysTables -> pure $ HM.fromList $ map transformTable sysTables

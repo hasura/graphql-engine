@@ -167,16 +167,6 @@ runUntrackFunc (UnTrackFunction functionName sourceName) = do
       dropFunctionInMetadata @b sourceName functionName
   pure successMsg
 
-dropFunctionInMetadata ::
-  forall b.
-  (BackendMetadata b) =>
-  SourceName ->
-  FunctionName b ->
-  MetadataModifier
-dropFunctionInMetadata source function =
-  MetadataModifier $
-    metaSources . ix source . toSourceMetadata . (smFunctions @b) %~ OMap.delete function
-
 {- Note [Function Permissions]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Before we started supporting tracking volatile functions, permissions

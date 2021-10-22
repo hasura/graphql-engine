@@ -103,7 +103,7 @@ queryModifiesSchema = \case
   RQCount _ -> False
   RQRunSql q -> Postgres.isSchemaCacheBuildRequiredRunSQL q
   RQCitusRunSql q -> Postgres.isSchemaCacheBuildRequiredRunSQL q
-  RQMssqlRunSql q -> MSSQL.sqlContainsDDLKeyword $ MSSQL._mrsSql q
+  RQMssqlRunSql q -> MSSQL.isSchemaCacheBuildRequiredRunSQL q
   RQMysqlRunSql _ -> False
   RQBigqueryRunSql _ -> False
   RQBigqueryDatabaseInspection _ -> False

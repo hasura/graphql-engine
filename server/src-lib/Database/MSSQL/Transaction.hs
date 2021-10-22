@@ -25,7 +25,7 @@ import Control.Monad.Except
     withExceptT,
   )
 import Control.Monad.IO.Class (MonadIO (..))
-import Control.Monad.Morph (hoist)
+import Control.Monad.Morph (MFunctor (hoist), MonadTrans (..))
 import Control.Monad.Reader (MonadFix, MonadReader, ReaderT (..))
 import Database.ODBC.SQLServer (FromRow)
 import Database.ODBC.SQLServer qualified as ODBC
@@ -46,6 +46,9 @@ newtype MSSQLResult = MSSQLResult [[ODBC.Value]]
 -- a - the successful result type
 newtype TxET e m a = TxET {txHandler :: ReaderT ODBC.Connection (ExceptT e m) a}
   deriving (Functor, Applicative, Monad, MonadError e, MonadIO, MonadReader ODBC.Connection, MonadFix)
+
+instance MonadTrans (TxET e) where
+  lift = TxET . lift . lift
 
 -- | The transaction command to run,
 -- returning an MSSQLTxError or the result

@@ -6,12 +6,14 @@ import Data.Aeson.Types
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
+import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Instances ()
+import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.RemoteRelationship
 import Hasura.RQL.Types.RemoteSchema
@@ -84,6 +86,9 @@ reportSchemaObj = \case
   where
     inSource s t = t <> " in source " <>> s
 
+reportSchemaObjs :: [SchemaObjId] -> Text
+reportSchemaObjs = commaSeparated . sort . map reportSchemaObj
+
 instance Show SchemaObjId where
   show soi = T.unpack $ reportSchemaObj soi
 
@@ -145,3 +150,32 @@ data SchemaDependency = SchemaDependency
 $(deriveToJSON hasuraJSON ''SchemaDependency)
 
 instance Hashable SchemaDependency
+
+reportDependentObjectsExist :: (MonadError QErr m) => [SchemaObjId] -> m ()
+reportDependentObjectsExist dependentObjects =
+  throw400 DependencyError $
+    "cannot drop due to the following dependent objects : "
+      <> reportSchemaObjs dependentObjects
+
+purgeDependentObject ::
+  forall b m.
+  (MonadError QErr m, Backend b) =>
+  SourceName ->
+  SourceObjId b ->
+  m MetadataModifier
+purgeDependentObject source sourceObjId = case sourceObjId of
+  SOITableObj tn tableObj ->
+    pure $
+      MetadataModifier $
+        tableMetadataSetter @b source tn %~ case tableObj of
+          TOPerm rn pt -> dropPermissionInMetadata rn pt
+          TORel rn -> dropRelationshipInMetadata rn
+          TOTrigger trn -> dropEventTriggerInMetadata trn
+          TOComputedField ccn -> dropComputedFieldInMetadata ccn
+          TORemoteRel rrn -> dropRemoteRelationshipInMetadata rrn
+          _ -> id
+  SOIFunction qf -> pure $ dropFunctionInMetadata @b source qf
+  _ ->
+    throw500 $
+      "unexpected dependent object: "
+        <> reportSchemaObj (SOSourceObj source $ AB.mkAnyBackend sourceObjId)
