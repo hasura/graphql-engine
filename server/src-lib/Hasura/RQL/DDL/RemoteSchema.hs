@@ -24,7 +24,6 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.RemoteServer
 import Hasura.Prelude
-import Hasura.RQL.DDL.Deps
 import Hasura.RQL.DDL.RemoteSchema.Permission
 import Hasura.RQL.Types
 import Hasura.Session
@@ -165,7 +164,7 @@ removeRemoteSchemaP1 rsn = do
 
   -- we only report the non permission dependencies because we
   -- drop the related permissions
-  unless (null nonPermDependentObjs) $ reportDeps nonPermDependentObjs
+  unless (null nonPermDependentObjs) $ reportDependentObjectsExist nonPermDependentObjs
   pure roles
   where
     remoteSchemaDepId = SORemoteSchema rsn

@@ -3,6 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: add cascade option to `mssql_run_sql` metadata API
 - server: fix bug which recreated event triggers every time the graphql-engine started up
 - server: fix bug in OpenAPI when multiple REST endpoints have the same URL path but different method
 - console: design cleanup Modify and Add Table forms (close #7454)
@@ -18,7 +19,7 @@ suffix-less versions.  Aliases may be set by both
 `/v1/metadata/pg_track_function` and the new API endpoint
 `/v1/metadata/pg_set_function_customization.`
 
-### Bug fixes and improvements 
+### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
 - server: add support for GraphQL block strings
@@ -77,7 +78,7 @@ suffix-less versions.  Aliases may be set by both
 - cli: support `query_tags` in metadata
 - cli: add `hasura deploy` command
 - cli: allow exporting and applying metadata from `yaml/json` files
-- cli: allow squashing specific set of migrations. A new `--to` flag is introduced in `migrate squash` command. eg: `hasura migrate squash --from <v1> --to <v4>` 
+- cli: allow squashing specific set of migrations. A new `--to` flag is introduced in `migrate squash` command. eg: `hasura migrate squash --from <v1> --to <v4>`
 - cli: `hasura init --endpoint <endpoint>` adds an option to export metadata and create initial migration from the server.
 
 ## v2.0.9

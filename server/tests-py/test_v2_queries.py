@@ -23,3 +23,17 @@ class TestV2SelectBasic: # Basic RQL Tests on v2/query
     # TODO: Fix this test for JWT
     # def test_select_query_author_with_user_role_failure(self, hge_ctx):
     #     check_query_f(hge_ctx, self.dir() + '/select_article_role_error.yaml')
+
+@pytest.mark.parametrize("backend", ['mssql'])
+@usefixtures('per_class_tests_db_state')
+class TestRunSQLMSSQL:
+
+    def test_drop_article_table_without_cascade(self, hge_ctx, backend):
+        check_query_f(hge_ctx, self.dir() + '/drop_article_table_without_cascade.yaml')
+
+    def test_drop_article_table_with_cascade(self, hge_ctx, backend):
+        check_query_f(hge_ctx, self.dir() + '/drop_article_table_with_cascade.yaml')
+
+    @classmethod
+    def dir(cls):
+        return 'queries/v2/mssql/run_sql'

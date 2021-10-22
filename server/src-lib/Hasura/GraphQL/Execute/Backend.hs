@@ -79,6 +79,7 @@ class
     forall m.
     ( MonadError QErr m,
       MonadIO m,
+      MonadBaseControl IO m,
       MonadReader QueryTagsComment m
     ) =>
     UserInfo ->
