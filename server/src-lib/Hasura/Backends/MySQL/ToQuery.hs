@@ -328,7 +328,7 @@ parens x = "(" <+> IndentPrinter 1 x <+> ")"
 
 fromTableName :: TableName -> Printer
 fromTableName TableName {name, schema} =
-  fromNameText schema <+> "." <+> fromNameText name
+  maybe "" ((<+> ".") . fromNameText) schema <+> fromNameText name
 
 fromAliased :: Aliased Printer -> Printer
 fromAliased Aliased {..} =

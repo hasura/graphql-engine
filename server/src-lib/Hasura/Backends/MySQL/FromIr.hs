@@ -19,7 +19,7 @@ import Data.Text qualified as T
 import Database.MySQL.Base.Types qualified as MySQL
 import Hasura.Backends.MySQL.Instances.Types ()
 import Hasura.Backends.MySQL.Types
-import Hasura.Prelude
+import Hasura.Prelude hiding (GT)
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Column qualified as IR
 import Hasura.RQL.Types.Common qualified as IR

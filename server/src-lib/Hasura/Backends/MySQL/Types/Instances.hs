@@ -151,11 +151,11 @@ instance FromJSON n => FromJSON (Countable n)
 
 instance FromJSON TableName where
   parseJSON v@(String _) =
-    TableName <$> parseJSON v <*> pure "dbo"
+    TableName <$> parseJSON v <*> pure Nothing
   parseJSON (Object o) =
     TableName
       <$> o .: "name"
-      <*> o .:? "schema" .!= "dbo"
+      <*> o .:? "schema"
   parseJSON _ =
     fail "expecting a string/object for TableName"
 
@@ -163,7 +163,9 @@ instance ToJSON TableName where
   toJSON TableName {..} = object ["name" .= name, "schema" .= schema]
 
 instance ToJSONKey TableName where
-  toJSONKey = toJSONKeyText $ \(TableName schema name) -> schema <> "." <> name
+  toJSONKey =
+    toJSONKeyText $ \(TableName {schema, name}) ->
+      maybe "" (<> ".") schema <> name
 
 instance ToJSONKey ScalarType
 

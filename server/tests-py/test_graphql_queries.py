@@ -83,6 +83,46 @@ class TestGraphQLQueryBasicMySQL:
     def test_select_query_author_with_skip_directive(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_with_skip_directive.yaml')
 
+    # TODO select_query_author_with_include_directive
+
+    def test_select_query_author_with_skip_include_directive(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_with_skip_include_directive.yaml')
+
+    def test_select_query_author_with_wrong_directive_err(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_with_wrong_directive_err.yaml')
+
+    # views
+    def test_query_search_author_view(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_search_author_view.yaml')
+
+    def test_offset_2_limit_1(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/offset_2_limit_1.yaml')
+
+    def test_select_offset_limit(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_limit.yaml')
+
+    def test_select_offset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_offset.yaml')
+
+    def test_select_limit(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_limit_offset.yaml')
+
+
+    # where clause
+    def test_select_query_where(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_where.yaml')
+
+    def test_select_query_where(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/nested_select_where_query_author_article.yaml')
+
+    # order by
+    def test_select_query_author_order_by(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_order_by.yaml')
+
+    # directives
+    def test_select_query_author_with_skip_directive(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_with_skip_directive.yaml')
+
     def test_select_query_author_with_skip_include_directive(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_with_skip_include_directive.yaml')
 
@@ -1194,15 +1234,11 @@ class TestGraphQLExplain:
         st_code, resp = hge_ctx.v1GraphqlExplain(q, {"x-hasura-role": "random_user"})
         assert st_code == 400, resp
 
-    @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
-    def test_simple_query_as_admin_with_user_role(self, hge_ctx, backend):
-        self.with_admin_secret("query", hge_ctx, self.dir() + hge_ctx.backend_suffix('/permissions_query') + ".yaml")
-
-    @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
+    @pytest.mark.parametrize("backend", ['postgres', 'mssql', 'mysql'])
     def test_simple_query(self, hge_ctx, backend):
         self.with_admin_secret("query", hge_ctx, self.dir() + hge_ctx.backend_suffix('/simple_query') + ".yaml")
 
-    @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
+    @pytest.mark.parametrize("backend", ['postgres', 'mssql', 'mysql'])
     def test_permissions_query(self, hge_ctx, backend):
         self.with_admin_secret("query", hge_ctx, self.dir() + hge_ctx.backend_suffix('/permissions_query') + ".yaml")
 
