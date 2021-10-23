@@ -4,6 +4,8 @@ module Hasura.Backends.MySQL.Connection
     resolveDatabaseMetadata,
     fetchAllRows,
     runQueryYieldingRows,
+    withMySQLPool,
+    parseTextRows,
   )
 where
 
@@ -145,3 +147,9 @@ fetchAllRows r = reverse <$> go [] r
       fetchRow res >>= \case
         [] -> pure acc
         r' -> go (r' : acc) res
+
+parseTextRows :: [Field] -> [[Maybe ByteString]] -> [[Text]]
+parseTextRows columns rows = map (\(column, row) -> map (MySQL.convert column) row) (zip columns rows)
+
+withMySQLPool :: (MonadIO m) => Pool Connection -> (Connection -> IO a) -> m a
+withMySQLPool pool = liftIO . withResource pool

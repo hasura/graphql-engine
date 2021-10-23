@@ -209,7 +209,7 @@ data Projection
 
 data TableName = TableName
   { name :: !Text,
-    schema :: !Text
+    schema :: !(Maybe Text)
   }
 
 data From
@@ -351,8 +351,6 @@ parseMySQLScalarType scalarType =
     "BIT(1)" -> MySQLTypes.Bit
     -- _ -> MySQLTypes.Null
 
-    -- Specific sized types that we can match based on prefixes
-    -- satisfactorily, unless we want to enforce size bounds in HGE
     txt | "INT" `T.isPrefixOf` txt -> MySQLTypes.Long
     txt -> error $ "parseMySQLScalartype: " <> show txt
 

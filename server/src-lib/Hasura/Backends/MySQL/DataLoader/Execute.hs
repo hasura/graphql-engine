@@ -68,7 +68,9 @@ data ExecuteReader = ExecuteReader
 
 -- | Any problem encountered while executing the plan.
 data ExecuteProblem
-  = JoinProblem ExecuteProblem
+  = GetJobDecodeProblem String
+  | CreateQueryJobDecodeProblem String
+  | JoinProblem ExecuteProblem
   | UnsupportedJoinBug JoinType
   | MissingRecordSetBug Ref
   deriving (Show)
