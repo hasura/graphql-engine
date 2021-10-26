@@ -37,6 +37,7 @@ import Data.String
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Time.Clock qualified as TC
+import Data.Word (Word16)
 import GHC.AssertNF.CPP
 import Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
 import Hasura.Base.Error
@@ -221,17 +222,20 @@ sendCloseWithMsg ::
   WSConn ->
   ServerErrorCode ->
   Maybe ServerMsg ->
+  Maybe Word16 ->
+  -- ^ code for closing the connection (default: 1000 "Normal Closure")
   m ()
-sendCloseWithMsg logger wsConn errCode mErrServerMsg = do
+sendCloseWithMsg logger wsConn errCode mErrServerMsg mCode = do
   case mErrServerMsg of
     Just errServerMsg -> do
       sendMsg wsConn errServerMsg
     Nothing -> pure ()
   logWSEvent logger wsConn EClosed
-  liftIO $ WS.sendClose wsc errMsg
+  liftIO $ WS.sendCloseCode wsc errCloseCode errMsg
   where
     wsc = WS.getRawWebSocketConnection wsConn
     errMsg = encodeServerErrorMsg errCode
+    errCloseCode = flip $ fromMaybe mCode (1000 :: Word16)
 
 sendMsgWithMetadata ::
   (MonadIO m) =>
@@ -650,6 +654,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
     sendDataMsg = WS._wsaGetDataMessageType onMessageActions
     closeConnAction = WS._wsaConnectionCloseAction onMessageActions
     postExecErrAction = WS._wsaPostExecErrMessageAction onMessageActions
+    fmtErrorMessage = WS._wsaErrorMsgFormat onMessageActions
 
     getExecStepActionWithActionInfo acc execStep = case execStep of
       E.ExecStepAction _ actionInfo _remoteJoins -> (actionInfo : acc)
@@ -764,7 +769,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
       logOpEv (ODQueryErr qErr) (Just reqId) Nothing
       let err = case errRespTy of
             ERTLegacy -> errFn False qErr
-            ERTGraphqlCompliant -> J.object ["errors" J..= [errFn False qErr]]
+            ERTGraphqlCompliant -> fmtErrorMessage [ errFn False qErr ]
       sendMsg wsConn (SMErr $ ErrorMsg opId err)
 
     sendSuccResp ::

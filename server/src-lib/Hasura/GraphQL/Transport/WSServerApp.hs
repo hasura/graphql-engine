@@ -9,7 +9,7 @@ import Control.Concurrent.Async.Lifted.Safe qualified as LA
 import Control.Concurrent.STM qualified as STM
 import Control.Exception.Lifted
 import Control.Monad.Trans.Control qualified as MC
-import Data.Aeson (toJSON)
+import Data.Aeson (toJSON, object, (.=))
 import Data.ByteString.Char8 qualified as B (pack)
 import Data.Environment qualified as Env
 import Data.Text (pack, unpack)
@@ -137,15 +137,16 @@ mkWSActions logger subProtocol =
     keepAliveAction
     getServerMsgType
     mkAcceptRequest
+    fmtErrorMessage
   where
     mkPostExecErrMessageAction wsConn opId execErr =
       sendMsg wsConn $ case subProtocol of
         Apollo -> SMData $ DataMsg opId $ throwError execErr
         GraphQLWS -> SMErr $ ErrorMsg opId $ toJSON execErr
 
-    mkOnErrorMessageAction wsConn err mErrMsg = case subProtocol of
+    mkOnErrorMessageAction wsConn err mErrMsg mCode = case subProtocol of
       Apollo -> sendMsg wsConn $ SMConnErr err
-      GraphQLWS -> sendCloseWithMsg logger wsConn (GenericError4400 $ (fromMaybe "" mErrMsg) <> (unpack . unConnErrMsg $ err)) Nothing
+      GraphQLWS -> sendCloseWithMsg logger wsConn (GenericError4400 $ (fromMaybe "" mErrMsg) <> (unpack . unConnErrMsg $ err)) Nothing mCode
 
     mkConnectionCloseAction wsConn opId errMsg =
       when (subProtocol == GraphQLWS) $
@@ -164,3 +165,7 @@ mkWSActions logger subProtocol =
       WS.defaultAcceptRequest
         { WS.acceptSubprotocol = Just . B.pack . showSubProtocol $ subProtocol
         }
+    
+    fmtErrorMessage errMsgs = case subProtocol of
+      Apollo -> object [ "errors" .= errMsgs ]
+      GraphQLWS -> toJSON errMsgs
