@@ -3,22 +3,19 @@
 }
 
 .App-logo {
-  /* animation: App-logo-spin infinite 20s linear;
-  height: 80px; */
   width: 90px;
   display: inline-block;
   margin-right: 50px;
 }
-.displayFlex
-{
+.displayFlex {
   display: flex;
   align-items: center;
 }
 .hasura-logo a:hover {
-    text-decoration: none;
+  text-decoration: none;
 }
 .hasura-logo img {
-    height: 30px;
+  height: 30px;
 }
 .App-header {
   background-color: #222;
@@ -71,13 +68,17 @@ pre {
   width: 100%;
 }
 @keyframes App-logo-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .footer-small-text {
-    padding-top: 10px;
-    font-size: 0.8em;
+  padding-top: 10px;
+  font-size: 0.8em;
 }
 
 .online-users {
@@ -87,22 +88,22 @@ pre {
   margin-top: 30px;
 }
 .online-users .alert {
-    margin-bottom: 0px;
+  margin-bottom: 0px;
 }
 
 .poll-result-chart-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    max-width: 900px;
-    width: 100%;
-    min-height: 350px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 900px;
+  width: 100%;
+  min-height: 350px;
 }
 
-@media(max-width: 767px) {
-    .displayFlex {
-        display: block;
-    }
+@media (max-width: 767px) {
+  .displayFlex {
+    display: block;
+  }
 }
 
 .hasura-logo img {
