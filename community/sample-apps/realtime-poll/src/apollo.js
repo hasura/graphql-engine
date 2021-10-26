@@ -1,52 +1,26 @@
-// Remove the apollo-boost import and change to this:
-import ApolloClient from "apollo-client";
+import { ApolloClient, HttpLink, InMemoryCache, split } from "@apollo/client";
+import { WebSocketLink } from "@apollo/client/link/ws";
+import { getMainDefinition } from "@apollo/client/utilities";
 
-// Setup the network "links"
-import { WebSocketLink } from 'apollo-link-ws';
-import { HttpLink } from 'apollo-link-http';
-import { split } from 'apollo-link';
-import { getMainDefinition } from 'apollo-utilities';
+const scheme = (proto) =>
+  window.location.protocol === "https:" ? `${proto}s` : proto;
 
-import { InMemoryCache } from 'apollo-cache-inmemory';
-
-export const HASURA_GRAPHQL_ENGINE_HOSTNAME = 'realtime-poll.hasura.app';
-
-const scheme = (proto) => {
-  return window.location.protocol === 'https:' ? `${proto}s` : proto;
-}
-
-const wsurl = `${scheme('ws')}://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/v1/graphql`;
-const httpurl = `${scheme('http')}://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/v1/graphql`;
-
-const wsLink = new WebSocketLink({
-  uri: wsurl,
-  options: {
-    reconnect: true,
-  }
-});
-
-const httpLink = new HttpLink({
-  uri: httpurl,
-});
-
-const link = split(
-  // split based on operation type
-  ({ query }) => {
-    const { kind, operation } = getMainDefinition(query);
-    return kind === 'OperationDefinition' && operation === 'subscription';
-  },
-  wsLink,
-  httpLink,
-);
-
-const createApolloClient = () => {
-  return new ApolloClient({
-    link,
-    cache: new InMemoryCache()
-  });
+const splitter = ({ query }) => {
+  const { kind, operation } = getMainDefinition(query) || {};
+  const isSubscription =
+    kind === "OperationDefinition" && operation === "subscription";
+  return isSubscription;
 };
 
+const GRAPHQL_ENDPOINT = "realtime-poll.hasura.app";
+const cache = new InMemoryCache();
+const options = { reconnect: true };
 
-const client = createApolloClient();
+const wsURI = `${scheme("ws")}://${GRAPHQL_ENDPOINT}/v1/graphql`;
+const httpurl = `${scheme("https")}://${GRAPHQL_ENDPOINT}/v1/graphql`;
 
+const wsLink = new WebSocketLink({ uri: wsURI, options });
+const httpLink = new HttpLink({ uri: httpurl });
+const link = split(splitter, wsLink, httpLink);
+const client = new ApolloClient({ link, cache });
 export default client;
