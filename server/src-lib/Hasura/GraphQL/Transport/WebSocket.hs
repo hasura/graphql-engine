@@ -52,9 +52,9 @@ import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHash)
 import Hasura.GraphQL.Parser.Directives (cached)
 import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP
-  ( MonadExecuteQuery (..),
+  ( AnnotatedResponsePart (..),
+    MonadExecuteQuery (..),
     QueryCacheKey (..),
-    ResultsFragment (..),
     buildRaw,
     coalescePostgresMutations,
     extractFieldFromResponse,
@@ -489,7 +489,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                           genSql
                   finalResponse <-
                     RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
-                  pure $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
+                  pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
                 E.ExecStepRemote rsi resultCustomizer gqlReq -> do
                   logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
                   runRemoteGQ fieldName userInfo reqHdrs rsi resultCustomizer gqlReq
@@ -500,7 +500,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                     finalResponse <-
                       RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
                     pure (time, (finalResponse, hdrs))
-                  pure $ ResultsFragment time Telem.Empty resp []
+                  pure $ AnnotatedResponsePart time Telem.Empty resp []
                 E.ExecStepRaw json -> do
                   logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
                   buildRaw json
@@ -514,7 +514,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                 Tracing.interpTraceT (withExceptT mempty) $
                   cacheStore cacheKey cachedDirective $
                     encJFromInsOrdHashMap $
-                      rfResponse <$> OMap.mapKeys G.unName results
+                      arpResponse <$> OMap.mapKeys G.unName results
 
       liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
     E.MutationExecutionPlan mutationPlan -> do
@@ -560,7 +560,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                           genSql
                   finalResponse <-
                     RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
-                  pure $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
+                  pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
                 E.ExecStepAction actionExecPlan _ remoteJoins -> do
                   logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
                   (time, (resp, hdrs)) <- doQErr $ do
@@ -568,7 +568,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                     finalResponse <-
                       RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
                     pure (time, (finalResponse, hdrs))
-                  pure $ ResultsFragment time Telem.Empty resp $ fromMaybe [] hdrs
+                  pure $ AnnotatedResponsePart time Telem.Empty resp $ fromMaybe [] hdrs
                 E.ExecStepRemote rsi resultCustomizer gqlReq -> do
                   logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
                   runRemoteGQ fieldName userInfo reqHdrs rsi resultCustomizer gqlReq
@@ -689,11 +689,11 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
 
     sendResultFromFragments telemQueryType timerTot requestId r opName pqh =
       handleResult requestId r \results -> do
-        let telemLocality = foldMap rfLocality results
-            telemTimeIO = convertDuration $ sum $ fmap rfTimeIO results
+        let telemLocality = foldMap arpLocality results
+            telemTimeIO = convertDuration $ sum $ fmap arpTimeIO results
         telemTimeTot <- Seconds <$> timerTot
-        sendSuccResp (encJFromInsOrdHashMap (fmap rfResponse (OMap.mapKeys G.unName results))) opName pqh $
-          LQ.LiveQueryMetadata $ sum $ fmap rfTimeIO results
+        sendSuccResp (encJFromInsOrdHashMap (fmap arpResponse (OMap.mapKeys G.unName results))) opName pqh $
+          LQ.LiveQueryMetadata $ sum $ fmap arpTimeIO results
         -- Telemetry. NOTE: don't time network IO:
         Telem.recordTimingMetric Telem.RequestDimensions {..} Telem.RequestTimings {..}
 
@@ -704,13 +704,13 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
       RemoteSchemaInfo ->
       RemoteResultCustomizer ->
       GQLReqOutgoing ->
-      ExceptT (Either GQExecError QErr) (ExceptT () m) ResultsFragment
+      ExceptT (Either GQExecError QErr) (ExceptT () m) AnnotatedResponsePart
     runRemoteGQ fieldName userInfo reqHdrs rsi resultCustomizer gqlReq = do
       (telemTimeIO_DT, _respHdrs, resp) <-
         doQErr $
           E.execRemoteGQ env httpMgr userInfo reqHdrs (rsDef rsi) gqlReq
       value <- mapExceptT lift $ extractFieldFromResponse fieldName rsi resultCustomizer resp
-      return $ ResultsFragment telemTimeIO_DT Telem.Remote (encJFromOrderedValue value) []
+      return $ AnnotatedResponsePart telemTimeIO_DT Telem.Remote (encJFromOrderedValue value) []
 
     WSServerEnv
       logger
