@@ -5,13 +5,13 @@ response:
   errors:
   - extensions:
       code: validation-failed
-      path: $.selectionSet.hasura_test_author.selectionSet.notPresentCol
+      path: $.selectionSet.hasura_author.selectionSet.notPresentCol
     message: |-
-      field "notPresentCol" not found in type: 'hasura_test_author'
+      field "notPresentCol" not found in type: 'hasura_author'
 query:
   query: |
     query {
-      hasura_test_author {
+      hasura_author {
         id
         name
         notPresentCol

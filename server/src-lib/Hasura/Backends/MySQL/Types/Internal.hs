@@ -1,35 +1,30 @@
+{-# OPTIONS -fno-warn-orphans #-}
 {-# LANGUAGE DeriveAnyClass #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Hasura.Backends.MySQL.Types.Internal
   ( Aliased (..),
     ConnSourceConfig (..),
     SourceConfig (..),
     Column (..),
+    JoinType (..),
     ScalarValue (..),
     Expression (..),
     Top (..),
     Op (..),
     ConnPoolSettings (..),
     FieldName (..),
+    FieldOrigin (..),
     EntityAlias (..),
     Countable (..),
     Aggregate (..),
     Projection (..),
     TableName (..),
-    OpenJson (..),
-    JsonPath (..),
-    JsonFieldSpec (..),
     From (..),
-    JoinSource (..),
     Reselect (..),
     JoinAlias (..),
     Join (..),
     Where (..),
-    ForJson (..),
-    JsonCardinality (..),
-    Root (..),
-    For (..),
     Order (..),
     NullsOrder (..),
     ScalarType,
@@ -41,24 +36,13 @@ module Hasura.Backends.MySQL.Types.Internal
     parseMySQLScalarType,
     parseScalarValue,
     mkMySQLScalarTypeName,
-    JoinType (..),
-    -- These stand as API stubs to be implemented in a follow-up PR. The
-    -- changes to FromIr are substantial, and we don't want them in the
-    -- PR presenting this commit.
-
-    selectFinalWantedFields,
-    joinType,
-    joinTop,
-    joinOffset,
-    joinSelect,
-    joinFieldName,
-    joinRightTable,
   )
 where
 
 import Data.Aeson qualified as J
 import Data.ByteString
 import Data.Data
+import Data.HashSet.InsOrd (InsOrdHashSet)
 import Data.Hashable
 import Data.Int
 import Data.Pool
@@ -163,6 +147,7 @@ data Expression
   | OrExpression [Expression]
   | NotExpression Expression
   | ExistsExpression Select
+  | InExpression Expression [Expression]
   | OpExpression Op Expression Expression
   | ColumnExpression FieldName
   | -- expression.text(e1, e2, ..)
@@ -195,6 +180,10 @@ data FieldName = FieldName
     fNameEntity :: !Text
   }
 
+data FieldOrigin
+  = NoOrigin
+  | AggregateOrigin [Aliased Aggregate]
+
 newtype EntityAlias = EntityAlias
   { entityAliasText :: Text
   }
@@ -212,41 +201,23 @@ data Aggregate
 data Projection
   = ExpressionProjection (Aliased Expression)
   | FieldNameProjection (Aliased FieldName)
+  | AggregateProjections (Aliased (NonEmpty (Aliased Aggregate)))
   | AggregateProjection (Aliased Aggregate)
   | StarProjection
+  | EntityProjection (Aliased [(FieldName, FieldOrigin)])
+  | ArrayEntityProjection EntityAlias (Aliased [FieldName])
 
 data TableName = TableName
   { name :: !Text,
-    schema :: !Text
+    schema :: !(Maybe Text)
   }
-
-data OpenJson = OpenJson
-  { openJsonExpression :: Expression,
-    openJsonWith :: NonEmpty JsonFieldSpec
-  }
-
-data JsonPath
-  = RootPath
-  | FieldPath JsonPath Text
-  | IndexPath JsonPath Integer
-
-data JsonFieldSpec
-  = IntField Text (Maybe JsonPath)
-  | JsonField Text (Maybe JsonPath)
-  | StringField Text (Maybe JsonPath)
-  | UuidField Text (Maybe JsonPath)
 
 data From
   = FromQualifiedTable (Aliased TableName)
-  | FromOpenJson (Aliased OpenJson)
-
-data JoinSource
-  = JoinSelect Select
-  | JoinReselect Reselect
+  | FromSelect (Aliased Select)
 
 data Reselect = Reselect
   { reselectProjections :: ![Projection],
-    reselectFor :: !For,
     reselectWhere :: !Where
   }
 
@@ -256,37 +227,18 @@ data JoinAlias = JoinAlias
   }
 
 data Join = Join
-  { joinSource :: !JoinSource,
-    joinJoinAlias :: !JoinAlias
+  { -- | For display/debug purposes.
+    joinRightTable :: !EntityAlias,
+    -- | Where to pull the data from.
+    joinSelect :: !Select,
+    -- | Type of join to perform in-Haskell.
+    joinType :: !JoinType,
+    -- | Wrap the output in this field name.
+    joinFieldName :: !Text,
+    joinTop :: !Top,
+    joinOffset :: !(Maybe Int)
   }
 
--- TODO: TO be implemented in next PR by adding a field to Join.
-joinType :: Join -> JoinType
-joinType = undefined
-
--- TODO: TO be implemented in next PR by adding a field to Join.
-joinSelect :: Join -> Select
-joinSelect = undefined
-
--- TODO: TO be implemented in next PR by adding a field to Join.
-joinOffset :: Join -> Maybe Int
-joinOffset = undefined
-
--- TODO: TO be implemented in next PR by adding a field to Join.
-joinFieldName :: Join -> Text
-joinFieldName = undefined
-
--- TODO: TO be implemented in next PR by adding a field to Join.
-joinTop :: Join -> Top
-joinTop = undefined
-
--- TODO: TO be implemented in next PR by adding a field to Join.
-joinRightTable :: Join -> EntityAlias
-joinRightTable = undefined
-
--- | This type is for FromIr to communicate with DataLoader.Execute
--- the specific type of join to be performed and related information
--- to achieve it.
 data JoinType
   = -- | A join without any 'ON x=y' construct. We're querying from a
     -- table and doing our own WHERE clauses.
@@ -300,23 +252,6 @@ data JoinType
 
 newtype Where
   = Where [Expression]
-
-data ForJson = ForJson
-  { jsonCardinality :: JsonCardinality,
-    jsonRoot :: Root
-  }
-
-data JsonCardinality
-  = JsonArray
-  | JsonSingleton
-
-data Root
-  = NoRoot
-  | Root Text
-
-data For
-  = JsonFor ForJson
-  | NoFor
 
 data Order
   = Asc
@@ -337,19 +272,16 @@ data OrderBy = OrderBy
   }
 
 data Select = Select
-  { selectProjections :: ![Projection],
-    selectFrom :: !(Maybe From),
+  { selectProjections :: !(InsOrdHashSet Projection),
+    selectFrom :: !From,
     selectJoins :: ![Join],
     selectWhere :: !Where,
-    selectFor :: !For,
     selectOrderBy :: !(Maybe (NonEmpty OrderBy)),
-    selectOffset :: !(Maybe Expression),
-    selectTop :: !Top
+    selectSqlOffset :: !(Maybe Int),
+    selectSqlTop :: !Top,
+    selectGroupBy :: [FieldName],
+    selectFinalWantedFields :: !(Maybe [Text])
   }
-
--- TODO: To be implemented in the next PR. Needed by the planner/executor.
-selectFinalWantedFields :: Select -> (Maybe [Text])
-selectFinalWantedFields = undefined
 
 mkMySQLScalarTypeName :: MonadError QErr m => ScalarType -> m G.Name
 mkMySQLScalarTypeName = \case
@@ -418,6 +350,8 @@ parseMySQLScalarType scalarType =
     "INT UNSIGNED" -> MySQLTypes.Long
     "BIT(1)" -> MySQLTypes.Bit
     -- _ -> MySQLTypes.Null
+
+    txt | "INT" `T.isPrefixOf` txt -> MySQLTypes.Long
     txt -> error $ "parseMySQLScalartype: " <> show txt
 
 parseScalarValue :: ScalarType -> J.Value -> Either QErr (ScalarValue)

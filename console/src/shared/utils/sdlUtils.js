@@ -1,4 +1,5 @@
 import { parse as sdlParse } from 'graphql/language/parser';
+import { print as sdlPrint } from 'graphql/language/printer';
 import { getAstTypeMetadata, wrapTypename } from './wrappingTypeUtils';
 import {
   reformCustomTypes,
@@ -366,4 +367,47 @@ export const getSdlComplete = (allActions, allTypes) => {
 
   sdl += getTypesSdl(allTypes);
   return sdl;
+};
+
+export const toggleCacheDirective = operationString => {
+  let operationAst;
+  try {
+    operationAst = sdlParse(operationString);
+  } catch (e) {
+    console.error(e);
+    return;
+  }
+
+  const shouldAddCacheDirective = !operationAst.definitions.some(def => {
+    return def.directives.some(dir => dir.name.value === 'cached');
+  });
+
+  const newOperationAst = JSON.parse(JSON.stringify(operationAst));
+
+  newOperationAst.definitions = operationAst.definitions.map(def => {
+    if (def.kind === 'OperationDefinition' && def.operation === 'query') {
+      const newDef = {
+        ...def,
+        directives: def.directives.filter(dir => dir.name.value !== 'cached'),
+      };
+      if (shouldAddCacheDirective) {
+        newDef.directives.push({
+          kind: 'Directive',
+          name: {
+            kind: 'Name',
+            value: 'cached',
+          },
+        });
+      }
+      return newDef;
+    }
+    return def;
+  });
+
+  try {
+    const newString = sdlPrint(newOperationAst);
+    return newString;
+  } catch {
+    throw new Error('cannot build the operation string');
+  }
 };

@@ -35,6 +35,8 @@ module Hasura.RQL.IR.BoolExp
     AnnBoolExpPartialSQL,
     PreSetColsG,
     PreSetColsPartial,
+    RootOrCurrentColumn (..),
+    RootOrCurrent (..),
   )
 where
 
@@ -235,21 +237,44 @@ data OpExpG (b :: BackendType) a
   | ALTE !a
   | ALIKE !a -- LIKE
   | ANLIKE !a -- NOT LIKE
-  | -- column comparison operators, the (Maybe (TableName b))
-    -- is for setting the root table if there's a comparison
-    -- of a relationship column with a column of the root table
-    -- it will be set, otherwise it will be Nothing
-
-    CEQ !(Column b, Maybe (TableName b))
-  | CNE !(Column b, Maybe (TableName b))
-  | CGT !(Column b, Maybe (TableName b))
-  | CLT !(Column b, Maybe (TableName b))
-  | CGTE !(Column b, Maybe (TableName b))
-  | CLTE !(Column b, Maybe (TableName b))
+  | CEQ (RootOrCurrentColumn b)
+  | CNE (RootOrCurrentColumn b)
+  | CGT (RootOrCurrentColumn b)
+  | CLT (RootOrCurrentColumn b)
+  | CGTE (RootOrCurrentColumn b)
+  | CLTE (RootOrCurrentColumn b)
   | ANISNULL -- IS NULL
   | ANISNOTNULL -- IS NOT NULL
   | ABackendSpecific !(BooleanOperators b a)
   deriving (Generic)
+
+data RootOrCurrentColumn b = RootOrCurrentColumn RootOrCurrent (Column b)
+  deriving (Generic)
+
+deriving instance Backend b => Show (RootOrCurrentColumn b)
+
+deriving instance Backend b => Eq (RootOrCurrentColumn b)
+
+instance Backend b => NFData (RootOrCurrentColumn b)
+
+instance Backend b => Cacheable (RootOrCurrentColumn b)
+
+instance Backend b => Hashable (RootOrCurrentColumn b)
+
+instance Backend b => ToJSON (RootOrCurrentColumn b)
+
+-- | The arguments of column-operators may refer to either the so-called 'root
+-- tabular value' or 'current tabular value'.
+data RootOrCurrent = IsRoot | IsCurrent
+  deriving (Eq, Show, Generic)
+
+instance NFData RootOrCurrent
+
+instance Cacheable RootOrCurrent
+
+instance Hashable RootOrCurrent
+
+instance ToJSON RootOrCurrent
 
 deriving instance (Backend b) => Functor (OpExpG b)
 
@@ -290,7 +315,7 @@ instance (Backend b, ToJSONKeyValue (BooleanOperators b a), ToJSON a) => ToJSONK
     ANISNOTNULL -> ("_is_null", toJSON False)
     ABackendSpecific b -> toJSONKeyValue b
 
-opExpDepCol :: OpExpG backend a -> Maybe (Column backend, Maybe (TableName backend))
+opExpDepCol :: OpExpG backend a -> Maybe (RootOrCurrentColumn backend)
 opExpDepCol = \case
   CEQ c -> Just c
   CNE c -> Just c

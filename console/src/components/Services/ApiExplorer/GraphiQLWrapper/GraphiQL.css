@@ -2150,3 +2150,37 @@ li.CodeMirror-hint-active {
 .CodeMirror-hint-deprecation :last-child {
   margin-bottom: 0;
 }
+
+.graphiql_footer {
+  display: flex;
+  align-items: center;
+  position: sticky;
+  bottom: 0;
+  width: 100%;
+  padding: 8px;
+  background: #eee;
+  z-index: 100;
+}
+
+.graphiql_footer_label {
+  font-size: 10px;
+  color: #777777;
+  font-weight: 600;
+  margin-right: 8px;
+  text-transform: uppercase;
+}
+
+.graphiql_footer_value {
+  margin-right: 16px;
+  font-size: 13px;
+}
+
+.graphiql_footer_icon {
+  color: #777;
+  margin-right: 8px;
+  margin-left: 0px;
+}
+
+.color_green {
+  color: #047857 !important;
+}

@@ -23,10 +23,10 @@
         content_type: application/json
         template_engine: Kriti
         body: "{{ $body.event.data.new }}"
-        query_params: 
-          "\"foo\"": "\"bar\""
+        query_params:
+          "foo": "bar"
         request_headers:
           add_headers:
-            foo: "\"bar\""
+            foo: "bar"
           remove_headers:
             - User-Agent

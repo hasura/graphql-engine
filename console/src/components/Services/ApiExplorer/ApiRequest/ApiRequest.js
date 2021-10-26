@@ -609,6 +609,7 @@ class ApiRequest extends Component {
                 dispatch={this.props.dispatch}
                 headerFocus={this.props.headerFocus}
                 urlParams={this.props.urlParams}
+                response={this.props.explorerData.response}
               />
             </div>
           );

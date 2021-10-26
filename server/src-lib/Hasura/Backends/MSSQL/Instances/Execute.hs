@@ -6,6 +6,7 @@ module Hasura.Backends.MSSQL.Instances.Execute
   )
 where
 
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Validate qualified as V
 import Data.Aeson.Extended qualified as J
 import Data.HashMap.Strict qualified as Map
@@ -109,7 +110,7 @@ msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
       odbcQuery =
         withMSSQLPool
           pool
-          ( \conn -> do
+          ( \conn -> liftIO do
               showplan <- runShowplan query conn
               pure
                 ( encJFromJValue $
@@ -124,14 +125,14 @@ msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
       DBStepInfo @'MSSQL sourceName sourceConfig Nothing odbcQuery
 
 msDBLiveQueryExplain ::
-  (MonadIO m, MonadError QErr m) =>
+  (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
   LiveQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL) ->
   m LiveQueryPlanExplanation
 msDBLiveQueryExplain (LiveQueryPlan plan sourceConfig variables) = do
   let (MultiplexedQuery' reselect) = _plqpQuery plan
       query = toQueryPretty $ fromSelect $ multiplexRootReselect [(dummyCohortId, variables)] reselect
       pool = _mscConnectionPool sourceConfig
-  explainInfo <- withMSSQLPool pool (runShowplan query)
+  explainInfo <- withMSSQLPool pool (liftIO . runShowplan query)
   pure $ LiveQueryPlanExplanation (T.toTxt query) explainInfo variables
 
 --------------------------------------------------------------------------------
@@ -293,7 +294,7 @@ executeInsert userInfo stringifyNum sourceConfig annInsert = do
   -- Convert the leaf values from @'UnpreparedValue' to sql @'Expression'
   insert <- traverse (prepareValueQuery sessionVariables) annInsert
   let insertTx = buildInsertTx insert
-  pure $ liftEitherM $ withMSSQLPool pool $ runExceptT . Tx.runTxE fromMSSQLTxError insertTx
+  pure $ withMSSQLPool pool $ Tx.runTxE fromMSSQLTxError insertTx
   where
     sessionVariables = _uiSession userInfo
     pool = _mscConnectionPool sourceConfig
@@ -426,7 +427,8 @@ mkMutationOutputSelect stringifyNum withAlias = \case
 msDBSubscriptionPlan ::
   forall m.
   ( MonadError QErr m,
-    MonadIO m
+    MonadIO m,
+    MonadBaseControl IO m
   ) =>
   UserInfo ->
   SourceName ->
@@ -441,7 +443,7 @@ msDBSubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig roo
   pure $
     LiveQueryPlan parameterizedPlan sourceConfig cohortVariables
 
-prepareStateCohortVariables :: (MonadError QErr m, MonadIO m) => SourceConfig 'MSSQL -> SessionVariables -> PrepareState -> m CohortVariables
+prepareStateCohortVariables :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m) => SourceConfig 'MSSQL -> SessionVariables -> PrepareState -> m CohortVariables
 prepareStateCohortVariables sourceConfig session prepState = do
   (namedVars, posVars) <- validateVariables sourceConfig session prepState
   let PrepareState {sessionVariables} = prepState
@@ -460,7 +462,7 @@ prepareStateCohortVariables sourceConfig session prepState = do
 --
 -- c.f. https://github.com/hasura/graphql-engine-mono/issues/1210.
 validateVariables ::
-  (MonadError QErr m, MonadIO m) =>
+  (MonadError QErr m, MonadIO m, MonadBaseControl IO m) =>
   SourceConfig 'MSSQL ->
   SessionVariables ->
   PrepareState ->

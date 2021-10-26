@@ -1,7 +1,4 @@
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE RecordWildCards #-}
-
-module Main where
+module Main (main) where
 
 import Control.Concurrent.Extended qualified as C
 import Control.Exception

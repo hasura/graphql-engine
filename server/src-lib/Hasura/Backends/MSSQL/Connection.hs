@@ -1,6 +1,7 @@
 module Hasura.Backends.MSSQL.Connection where
 
-import Control.Exception
+import Control.Exception.Lifted qualified as EL
+import Control.Monad.Trans.Control
 import Data.Aeson
 import Data.Aeson qualified as J
 import Data.Aeson.Casing
@@ -149,7 +150,7 @@ odbcExceptionToJSONValue =
   $(mkToJSON defaultOptions {constructorTagModifier = snakeCase} ''ODBC.ODBCException)
 
 runJSONPathQuery ::
-  (MonadError QErr m, MonadIO m) =>
+  (MonadError QErr m, MonadIO m, MonadBaseControl IO m) =>
   MSSQLPool ->
   ODBC.Query ->
   m Text
@@ -157,12 +158,12 @@ runJSONPathQuery pool query =
   mconcat <$> withMSSQLPool pool (`ODBC.query` query)
 
 withMSSQLPool ::
-  (MonadError QErr m, MonadIO m) =>
+  (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
   MSSQLPool ->
-  (ODBC.Connection -> IO a) ->
+  (ODBC.Connection -> m a) ->
   m a
 withMSSQLPool (MSSQLPool pool) f = do
-  res <- liftIO $ try $ Pool.withResource pool f
+  res <- EL.try $ Pool.withResource pool f
   onLeft res $ \e ->
     throw500WithDetail "sql server exception" $ odbcExceptionToJSONValue e
 

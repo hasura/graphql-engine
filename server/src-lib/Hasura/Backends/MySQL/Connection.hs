@@ -4,6 +4,8 @@ module Hasura.Backends.MySQL.Connection
     resolveDatabaseMetadata,
     fetchAllRows,
     runQueryYieldingRows,
+    withMySQLPool,
+    parseTextRows,
   )
 where
 
@@ -69,6 +71,9 @@ parseFieldResult f@Field {..} mBs =
       let fvalue :: Double = MySQL.convert f mBs
        in Number $ fromFloatDigits fvalue
     VarString ->
+      let fvalue :: Text = MySQL.convert f mBs
+       in J.String fvalue
+    Blob ->
       let fvalue :: Text = MySQL.convert f mBs
        in J.String fvalue
     DateTime -> maybe J.Null (J.String . decodeUtf8) mBs
@@ -142,3 +147,9 @@ fetchAllRows r = reverse <$> go [] r
       fetchRow res >>= \case
         [] -> pure acc
         r' -> go (r' : acc) res
+
+parseTextRows :: [Field] -> [[Maybe ByteString]] -> [[Text]]
+parseTextRows columns rows = map (\(column, row) -> map (MySQL.convert column) row) (zip columns rows)
+
+withMySQLPool :: (MonadIO m) => Pool Connection -> (Connection -> IO a) -> m a
+withMySQLPool pool = liftIO . withResource pool

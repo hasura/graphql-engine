@@ -5,7 +5,9 @@ module Hasura.Backends.MSSQL.DDL.Source
   )
 where
 
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Environment qualified as Env
+import Database.MSSQL.Transaction qualified as Tx
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Meta
 import Hasura.Base.Error
@@ -25,11 +27,11 @@ resolveSourceConfig _name (MSSQLConnConfiguration connInfo) env = runExceptT do
   pure $ MSSQLSourceConfig connString mssqlPool
 
 resolveDatabaseMetadata ::
-  (MonadIO m) =>
+  (MonadIO m, MonadBaseControl IO m) =>
   MSSQLSourceConfig ->
   m (Either QErr (ResolvedSource 'MSSQL))
 resolveDatabaseMetadata config = runExceptT do
-  dbTablesMetadata <- loadDBMetadata pool
+  dbTablesMetadata <- withMSSQLPool pool $ Tx.runTxE fromMSSQLTxError loadDBMetadata
   pure $ ResolvedSource config dbTablesMetadata mempty mempty
   where
     MSSQLSourceConfig _connString pool = config

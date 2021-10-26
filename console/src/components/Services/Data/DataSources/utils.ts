@@ -1,7 +1,11 @@
 import { addSource } from './../../../../metadata/sourcesUtils';
 import { isObject, isEqual } from './../../../Common/utils/jsUtils';
 import { Table } from '../../../../dataSources/types';
-import { MetadataDataSource } from '../../../../metadata/types';
+import {
+  MetadataDataSource,
+  SourceConnectionInfo,
+} from '../../../../metadata/types';
+import { connectionTypes } from './state';
 
 export const getErrorMessageFromMissingFields = (
   host: string,
@@ -114,4 +118,25 @@ export const dataSourceIsEqual = (
     }, {});
 
   return isEqual(filterFields(sourceFromMetaData), filterFields(data));
+};
+
+export const getReadReplicaDBUrlInfo = (replica: SourceConnectionInfo) => {
+  if (!replica.database_url) return null;
+  if (typeof replica.database_url === 'string')
+    return {
+      connectionType: connectionTypes.DATABASE_URL,
+      databaseURLState: {
+        dbURL: replica.database_url,
+        serviceAccount: '',
+        global_select_limit: 1000,
+        projectId: '',
+        datasets: '',
+      },
+    };
+  return {
+    connectionType: connectionTypes.ENV_VAR,
+    envVarState: {
+      envVar: replica.database_url.from_env,
+    },
+  };
 };

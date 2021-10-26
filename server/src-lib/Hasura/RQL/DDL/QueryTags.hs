@@ -43,7 +43,7 @@ runSetQueryTagsConfig (SetQueryTagsConfig sourceName queryTagsConfig) = do
   where
     getBackendType :: BackendSourceMetadata -> BackendType
     getBackendType exists =
-      AB.dispatchAnyBackend @BackendMetadata exists $ \(_sourceMetadata :: SourceMetadata b) ->
+      AB.dispatchAnyBackend @Backend exists $ \(_sourceMetadata :: SourceMetadata b) ->
         reify $ backendTag @b
 
     setQueryTagsConfigInMetadata exists qtConfig = do
@@ -54,5 +54,5 @@ runSetQueryTagsConfig (SetQueryTagsConfig sourceName queryTagsConfig) = do
     queryTagsNotSupported backendType = throw400 NotSupported $ toTxt backendType <> " sources do not support query-tags yet"
 
     queryTagsMetadataModifier exists qtConfig =
-      AB.dispatchAnyBackend @BackendMetadata exists $ \(_sourceMetadata :: SourceMetadata b) ->
+      AB.dispatchAnyBackend @Backend exists $ \(_sourceMetadata :: SourceMetadata b) ->
         MetadataModifier $ metaSources . ix sourceName . toSourceMetadata @b . smQueryTags .~ qtConfig

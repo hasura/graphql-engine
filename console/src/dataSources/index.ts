@@ -344,7 +344,7 @@ export interface DataSourcesAPI {
     columns: string[];
     unique?: boolean;
   }) => string;
-  dropIndexSql?: (indexName: string) => string;
+  dropIndexSql?: (indexName: string, schema: string) => string;
   indexFormToolTips?: IndexFormToolTips;
   indexTypes?: Record<string, IndexType>;
   supportedIndex?: {

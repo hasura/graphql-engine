@@ -22,7 +22,6 @@ import Data.Tuple (swap)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
-import Hasura.RQL.DDL.Deps
 import Hasura.RQL.DDL.Permission
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
@@ -286,17 +285,8 @@ runDropRel (DropRel source qt rn cascade) = do
                     SOITableObj @b qt $
                       TORel rn
               )
-      when (depObjs /= [] && not cascade) $ reportDeps depObjs
+      when (depObjs /= [] && not cascade) $ reportDependentObjectsExist depObjs
       pure depObjs
-
-dropRelationshipInMetadata ::
-  RelName -> TableMetadata b -> TableMetadata b
-dropRelationshipInMetadata relName =
-  -- Since the name of a relationship is unique in a table, the relationship
-  -- with given name may present in either array or object relationships but
-  -- not in both.
-  (tmObjectRelationships %~ OMap.delete relName)
-    . (tmArrayRelationships %~ OMap.delete relName)
 
 purgeRelDep ::
   forall b m.
