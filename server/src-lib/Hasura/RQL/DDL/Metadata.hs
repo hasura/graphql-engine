@@ -476,7 +476,6 @@ runTestWebhookTransform (TestWebhookTransform url payload mt sv) = do
   initReq <- liftIO $ HTTP.mkRequestThrow url
   let req = initReq & HTTP.body .~ pure (J.encode payload)
       dataTransform = mkRequestTransform mt
-      -- TODO(Solomon) Add SessionVariables
       transformedE = applyRequestTransform url dataTransform req sv
 
   case transformedE of
