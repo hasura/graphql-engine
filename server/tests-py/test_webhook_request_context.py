@@ -36,19 +36,20 @@ class QueryEchoWebhookHandler(http.server.BaseHTTPRequestHandler):
         content_len = self.headers.get("Content-Length")
         req_body = self.rfile.read(int(content_len)).decode("utf-8")
         req_json = json.loads(req_body)
-        req_headers = self.headers
         print(json.dumps(req_json))
         user_id_header = req_json["headers"]["auth-user-id"]
-        req_path = self.path
-        h = {
+        user_vars = {
             "x-hasura-role":"user",
             "x-hasura-user-id": user_id_header
         }
         self.send_response(http.HTTPStatus.OK)
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
-        self.server.resp_queue.put({"request": req_json["request"]})
-        self.wfile.write(json.dumps(h).encode('utf-8'))
+        self.server.resp_queue.put({
+            "request": req_json["request"],
+            "headers": user_vars,
+        })
+        self.wfile.write(json.dumps(user_vars).encode('utf-8'))
 
 
 class QueryEchoWebhookServer(http.server.HTTPServer):
@@ -109,8 +110,22 @@ class TestWebhookRequestContext(object):
         assert code == 200, resp
 
         ev_full = query_echo_webhook.get_event(3)
-        exp_result = {"request": query_obj}
         assert ev_full['request'] == query_obj
+
+    def test_query_invalid(self, hge_ctx, query_echo_webhook):
+        """
+        Even when an invalid query is sent, the webhook should still resolve
+        the user id header correctly
+        """
+        query_obj = "invalid-query"
+        user_id_header = '1'
+        headers = dict()
+        headers['auth-user-id'] = user_id_header
+        code, resp, _ = hge_ctx.anyq('/v1/graphql', query_obj, headers)
+        assert code == 200, resp
+
+        ev_full = query_echo_webhook.get_event(3)
+        assert ev_full['headers']['x-hasura-user-id'] == user_id_header
 
     def test_mutation_with_vars(self, hge_ctx, query_echo_webhook):
         query = """

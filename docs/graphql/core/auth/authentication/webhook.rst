@@ -112,6 +112,9 @@ with variables `{"a": 1}`, the webhook will receive a request of the following f
 
 If you configure your webhook to use ``POST``, then Hasura **will send all client headers in payload**.
 
+.. note::
+   If an invalid JSON request is sent, then the request body is not forwarded to the webhook
+
 .. _webhook_response:
 
 Response
