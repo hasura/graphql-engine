@@ -26,9 +26,9 @@ import Hasura.HTTP
 import Hasura.Metadata.Class
 import Hasura.Prelude hiding (get, put)
 import Hasura.RQL.Types
+import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Types
-import Hasura.Server.Version
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -108,8 +108,7 @@ data RestRequest method = RestRequest
 -- handler.
 runCustomEndpoint ::
   forall m.
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadError QErr m,
     Tracing.MonadTrace m,
     MonadBaseControl IO m,
@@ -118,7 +117,8 @@ runCustomEndpoint ::
     GH.MonadExecuteQuery m,
     MonadMetadataStorage (MetadataStorageT m),
     HttpLog m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    HasResourceLimits m
   ) =>
   Env.Environment ->
   E.ExecutionCtx ->

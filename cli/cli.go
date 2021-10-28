@@ -27,7 +27,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/pgdump"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1graphql"
 	"github.com/hasura/graphql-engine/cli/v2/migrate/database/hasuradb"
-	"golang.org/x/term"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1metadata"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1query"
@@ -47,6 +46,7 @@ import (
 
 	"github.com/Masterminds/semver"
 	"github.com/briandowns/spinner"
+	"github.com/cockroachdb/redact"
 	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
 	"github.com/hasura/graphql-engine/cli/v2/plugins"
@@ -57,6 +57,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/subosito/gotenv"
+	"golang.org/x/term"
 	"gopkg.in/yaml.v2"
 )
 
@@ -80,9 +81,8 @@ const (
 	XHasuraAccessKey   = "X-Hasura-Access-Key"
 )
 
-// String constants
 const (
-	StrTelemetryNotice = `Help us improve Hasura! The cli collects anonymized usage stats which
+	TelemetryNotice = `Help us improve Hasura! The cli collects anonymized usage stats which
 allow us to keep improving Hasura at warp speed. To opt-out or read more,
 visit https://hasura.io/docs/latest/graphql/core/guides/telemetry.html
 `
@@ -97,6 +97,14 @@ const (
 	// V2 represents config version 2
 	V2
 	V3
+)
+
+type MetadataMode int
+
+const (
+	MetadataModeDirectory MetadataMode = iota
+	MetadataModeJSON
+	MetadataModeYAML
 )
 
 // ServerAPIPaths has the custom paths defined for server api
@@ -340,10 +348,14 @@ type Config struct {
 
 	// MetadataDirectory defines the directory where the metadata files were stored.
 	MetadataDirectory string `yaml:"metadata_directory,omitempty"`
+	// MetadataFile defines the path in which a JSON/YAML metadata file should be stored
+	MetadataFile string `yaml:"metadata_file,omitempty"`
+
 	// MigrationsDirectory defines the directory where the migration files were stored.
 	MigrationsDirectory string `yaml:"migrations_directory,omitempty"`
 	// SeedsDirectory defines the directory where seed files will be stored
 	SeedsDirectory string `yaml:"seeds_directory,omitempty"`
+
 	// ActionConfig defines the config required to create or generate codegen for an action.
 	ActionConfig *types.ActionExecutionConfig `yaml:"actions,omitempty"`
 }
@@ -375,8 +387,12 @@ type ExecutionContext struct {
 	Envfile string
 	// MigrationDir is the name of directory where migrations are stored.
 	MigrationDir string
+
 	// MetadataDir is the name of directory where metadata files are stored.
 	MetadataDir string
+	// MetadataFile is the name of json/yaml file where metadata will be stored
+	MetadataFile string
+
 	// Seed directory -- directory in which seed files are to be stored
 	SeedsDirectory string
 	// ConfigFile is the file where endpoint etc. are stored.
@@ -458,6 +474,8 @@ type ExecutionContext struct {
 	// proPluginVersionValidated is used to avoid validating pro plugin multiple times
 	// while preparing the execution context
 	proPluginVersionValidated bool
+
+	MetadataMode MetadataMode
 }
 
 type Source struct {
@@ -471,6 +489,7 @@ func NewExecutionContext() *ExecutionContext {
 		Stderr: os.Stderr,
 		Stdout: os.Stdout,
 	}
+	ec.MetadataMode = MetadataModeDirectory
 	ec.Telemetry = telemetry.BuildEvent()
 	ec.Telemetry.Version = version.BuildVersion
 	return ec
@@ -674,9 +693,25 @@ func (ec *ExecutionContext) Validate() error {
 	}
 
 	if ec.Config.Version >= V2 && ec.Config.MetadataDirectory != "" {
+		if len(ec.Config.MetadataFile) > 0 {
+			ec.MetadataFile = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataFile)
+			if _, err := os.Stat(ec.MetadataFile); os.IsNotExist(err) {
+				if err := ioutil.WriteFile(ec.MetadataFile, []byte(""), os.ModePerm); err != nil {
+					return err
+				}
+			}
+			switch filepath.Ext(ec.MetadataFile) {
+			case ".json":
+				ec.MetadataMode = MetadataModeJSON
+			case ".yaml":
+				ec.MetadataMode = MetadataModeYAML
+			default:
+				return fmt.Errorf("unrecogonized file extension. only .json/.yaml files are allowed for value of metadata_file")
+			}
+		}
 		// set name of metadata directory
 		ec.MetadataDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataDirectory)
-		if _, err := os.Stat(ec.MetadataDir); os.IsNotExist(err) {
+		if _, err := os.Stat(ec.MetadataDir); os.IsNotExist(err) && !(len(ec.MetadataFile) > 0) {
 			err = os.MkdirAll(ec.MetadataDir, os.ModePerm)
 			if err != nil {
 				return errors.Wrap(err, "cannot create metadata directory")
@@ -685,7 +720,7 @@ func (ec *ExecutionContext) Validate() error {
 	}
 
 	ec.Logger.Debug("graphql engine endpoint: ", ec.Config.ServerConfig.Endpoint)
-	ec.Logger.Debug("graphql engine admin_secret: ", ec.Config.ServerConfig.AdminSecret)
+	ec.Logger.Debug(redact.Sprintf("graphql engine admin_secret: %s", ec.Config.ServerConfig.AdminSecret).Redact())
 
 	uri, err := url.Parse(ec.Config.Endpoint)
 	if err != nil {
@@ -869,6 +904,7 @@ func (ec *ExecutionContext) readConfig() error {
 			CAPath:                v.GetString("certificate_authority"),
 		},
 		MetadataDirectory:   v.GetString("metadata_directory"),
+		MetadataFile:        v.GetString("metadata_file"),
 		MigrationsDirectory: v.GetString("migrations_directory"),
 		SeedsDirectory:      v.GetString("seeds_directory"),
 		ActionConfig: &types.ActionExecutionConfig{
@@ -926,7 +962,10 @@ func (ec *ExecutionContext) Spin(message string) {
 
 // loadEnvfile loads .env file
 func (ec *ExecutionContext) loadEnvfile() error {
-	envfile := filepath.Join(ec.ExecutionDirectory, ec.Envfile)
+	envfile := ec.Envfile
+	if !filepath.IsAbs(ec.Envfile) {
+		envfile = filepath.Join(ec.ExecutionDirectory, ec.Envfile)
+	}
 	err := gotenv.Load(envfile)
 	if err != nil {
 		// return error if user provided envfile name

@@ -2,7 +2,7 @@
 -- Description: Create/delete SQL functions to/from Hasura metadata.
 module Hasura.RQL.DDL.Schema.Function where
 
-import Control.Lens ((^.))
+import Control.Lens ((.~), (^.))
 import Data.Aeson
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
@@ -167,16 +167,6 @@ runUntrackFunc (UnTrackFunction functionName sourceName) = do
       dropFunctionInMetadata @b sourceName functionName
   pure successMsg
 
-dropFunctionInMetadata ::
-  forall b.
-  (BackendMetadata b) =>
-  SourceName ->
-  FunctionName b ->
-  MetadataModifier
-dropFunctionInMetadata source function =
-  MetadataModifier $
-    metaSources . ix source . toSourceMetadata . (smFunctions @b) %~ OMap.delete function
-
 {- Note [Function Permissions]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Before we started supporting tracking volatile functions, permissions
@@ -289,3 +279,37 @@ runDropFunctionPermission (FunctionPermissionArgument functionName source role) 
     )
     $ dropFunctionPermissionInMetadata @b source functionName role
   pure successMsg
+
+-- | Represents the payload of the API command 'pg_set_function_customization'.
+--
+--   See the Hasura API reference for a detailed description.
+data SetFunctionCustomization b = SetFunctionCustomization
+  { _sfcSource :: SourceName,
+    _sfcFunction :: FunctionName b,
+    _sfcConfiguration :: FunctionConfig
+  }
+
+deriving instance Backend b => Show (SetFunctionCustomization b)
+
+deriving instance Backend b => Eq (SetFunctionCustomization b)
+
+instance (Backend b) => FromJSON (SetFunctionCustomization b) where
+  parseJSON = withObject "set function customization" $ \o ->
+    SetFunctionCustomization
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "function"
+      <*> o .: "configuration"
+
+-- | Changes the custom names of a function. Used in the API command 'pg_set_function_customization'.
+runSetFunctionCustomization ::
+  forall b m.
+  (QErrM m, CacheRWM m, MetadataM m, Backend b, BackendMetadata b) =>
+  SetFunctionCustomization b ->
+  m EncJSON
+runSetFunctionCustomization (SetFunctionCustomization source function config) = do
+  void $ askFunInfo @b source function
+  buildSchemaCacheFor
+    (MOSourceObjId source $ AB.mkAnyBackend $ SMOFunction @b function)
+    $ MetadataModifier $
+      ((functionMetadataSetter @b source function) . fmConfiguration) .~ config
+  return successMsg

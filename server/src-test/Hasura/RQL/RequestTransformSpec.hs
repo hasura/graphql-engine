@@ -1,10 +1,9 @@
-module Hasura.RQL.RequestTransformSpec (spec) where
+module Hasura.RQL.RequestTransformSpec where
 
 import Data.Aeson
 import Data.CaseInsensitive qualified as CI
-import Data.HashMap.Strict qualified as M
+import Data.List (nubBy)
 import Data.Set qualified as S
-import Data.Text qualified as T
 import Hasura.Prelude
 import Hasura.RQL.DDL.RequestTransform
 import Hedgehog.Gen qualified as Gen
@@ -37,7 +36,7 @@ spec = do
     hedgehog $ do
       transform <- forAll genMetadataTransform
       let sortH TransformHeaders {..} = TransformHeaders (sort addHeaders) (sort removeHeaders)
-          sortMT mt@MetadataTransform {mtRequestHeaders} = mt {mtRequestHeaders = sortH <$> mtRequestHeaders}
+          sortMT mt@MetadataTransform {mtRequestHeaders, mtQueryParams} = mt {mtRequestHeaders = sortH <$> mtRequestHeaders, mtQueryParams = sort <$> mtQueryParams}
           transformMaybe = decode $ encode transform
       Just (sortMT transform) === fmap sortMT transformMaybe
 
@@ -53,7 +52,9 @@ genTemplatingEngine = Gen.enumBounded @_ @TemplatingEngine
 -- NOTE: This generator is strictly useful for roundtrip aeson testing
 -- and does not produce valid template snippets.
 genTemplateText :: Gen TemplateText
-genTemplateText = TemplateText <$> Gen.text (Range.constant 3 20) Gen.alphaNum
+genTemplateText = TemplateText . wrap <$> Gen.text (Range.constant 3 20) Gen.alphaNum
+  where
+    wrap txt = "\"" <> txt <> "\""
 
 genContentType :: Gen ContentType
 genContentType = Gen.enumBounded @_ @ContentType
@@ -63,7 +64,7 @@ genTransformHeaders = do
   numHeaders <- Gen.integral $ Range.constant 1 20
 
   let genHeaderKey = CI.mk <$> Gen.text (Range.constant 1 20) Gen.alphaNum
-      genHeaderValue = Gen.text (Range.constant 3 20) Gen.alphaNum
+      genHeaderValue = coerce <$> genTemplateText
 
       genKeys = S.toList <$> Gen.set (Range.singleton numHeaders) genHeaderKey
       genValues = S.toList <$> Gen.set (Range.singleton numHeaders) genHeaderValue
@@ -72,21 +73,27 @@ genTransformHeaders = do
   addHeaders <- liftA2 zip genKeys genValues
   pure $ TransformHeaders addHeaders removeHeaders
 
-genQueryParams :: Gen (M.HashMap T.Text (Maybe T.Text))
+genQueryParams :: Gen [(StringTemplateText, Maybe StringTemplateText)]
 genQueryParams = do
   numParams <- Gen.integral $ Range.constant 1 20
-  let keyGen = Gen.text (Range.constant 1 20) Gen.alphaNum
-      valueGen = Gen.maybe $ Gen.text (Range.constant 1 20) Gen.alphaNum
+  let keyGen = coerce <$> genTemplateText
+      valueGen = Gen.maybe $ coerce <$> genTemplateText
   keys <- Gen.list (Range.singleton numParams) keyGen
   values <- Gen.list (Range.singleton numParams) valueGen
-  pure $ M.fromList $ zip keys values
+  pure $ nubBy (\a b -> fst a == fst b) $ zip keys values
+
+genUrl :: Gen StringTemplateText
+genUrl = do
+  host <- Gen.text (Range.constant 3 20) Gen.alphaNum
+
+  pure $ StringTemplateText $ "http://www." <> host <> ".com"
 
 genMetadataTransform :: Gen MetadataTransform
 genMetadataTransform = do
   method <- Gen.maybe genRequestMethod
   -- NOTE: At the moment no need to generate valid urls or templates
   -- but such instances maybe useful in the future.
-  url <- Gen.maybe $ Gen.text (Range.constant 3 20) Gen.alphaNum
+  url <- Gen.maybe $ genUrl
   bodyTransform <- Gen.maybe $ genTemplateText
   contentType <- Gen.maybe $ genContentType
   queryParams <- Gen.maybe $ genQueryParams

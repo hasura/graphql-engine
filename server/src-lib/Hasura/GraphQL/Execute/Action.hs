@@ -32,6 +32,7 @@ import Data.HashMap.Strict qualified as Map
 import Data.IORef
 import Data.IntMap qualified as IntMap
 import Data.Set (Set)
+import Data.TByteString qualified as TBS
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Database.PG.Query qualified as Q
@@ -208,6 +209,7 @@ makeActionResponseNoRelations annFields webhookResponse =
       case webhookResponse of
         AWRArray objs -> AO.array $ map mkResponseObject objs
         AWRObject obj -> mkResponseObject obj
+        AWRNull -> AO.Null
 
 {- Note: [Async action architecture]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -486,17 +488,29 @@ callWebhook
             & set HTTP.body (Just requestBody)
             & set HTTP.timeout responseTimeout
 
-        transformedReq = (\rt -> applyRequestTransform rt req sessionVars) . mkRequestTransform <$> metadataTransform
-        transformedPayloadSize = pure $ HTTP.getReqSize req
-        actualReq = fromMaybe req transformedReq
+    (transformedReq, transformedReqSize) <- case metadataTransform of
+      Nothing -> pure (Nothing, Nothing)
+      Just transform' ->
+        case applyRequestTransform url (mkRequestTransform transform') req sessionVars of
+          Left err -> do
+            -- Log The Transformation Error
+            logger :: L.Logger L.Hasura <- asks getter
+            L.unLogger logger $ L.UnstructuredLog L.LevelError (TBS.fromLBS $ J.encode err)
+
+            -- Throw an exception with the Transformation Error
+            throw500WithDetail "Request Transformation Failed" $ J.toJSON err
+          Right transformedReq ->
+            let transformedPayloadSize = HTTP.getReqSize transformedReq
+             in pure (Just transformedReq, Just transformedPayloadSize)
+
+    let actualReq = fromMaybe req transformedReq
 
     httpResponse <-
       Tracing.tracedHttpRequest actualReq $ \request ->
         liftIO . try $ HTTP.performRequest request manager
 
-    let requestInfo =
-          ActionRequestInfo url postPayload $
-            confHeaders <> toHeadersConf clientHeaders
+    let requestInfo = ActionRequestInfo url postPayload (confHeaders <> toHeadersConf clientHeaders) transformedReq
+
     case httpResponse of
       Left e ->
         throw500WithDetail "http exception when calling webhook" $
@@ -512,7 +526,7 @@ callWebhook
 
         -- log the request and response to/from the action handler
         logger :: (L.Logger L.Hasura) <- asks getter
-        L.unLogger logger $ ActionHandlerLog req transformedReq requestBodySize transformedPayloadSize responseBodySize actionName
+        L.unLogger logger $ ActionHandlerLog req transformedReq requestBodySize transformedReqSize responseBodySize actionName
 
         case J.eitherDecode responseBody of
           Left e -> do
@@ -531,9 +545,16 @@ callWebhook
             if
                 | HTTP.statusIsSuccessful responseStatus -> do
                   let expectingArray = isListType outputType
+                      expectingNull = isNullableType outputType
                   modifyQErr addInternalToErr $ do
                     webhookResponse <- decodeValue responseValue
                     case webhookResponse of
+                      AWRNull -> do
+                        unless expectingNull $
+                          if expectingArray
+                            then throwUnexpected "expecting array for action webhook response but got null"
+                            else throwUnexpected "expecting object for action webhook response but got null"
+                        validateResponseObject Map.empty
                       AWRArray objs -> do
                         unless expectingArray $
                           throwUnexpected "expecting object for action webhook response but got array"
@@ -562,11 +583,7 @@ callWebhook
 
       -- Webhook response object should conform to action output fields
       validateResponseObject obj = do
-        -- Fields not specified in the output type shouldn't be present in the response
-        let extraFields = filter (not . flip Map.member outputFields) $ Map.keys obj
-        unless (null extraFields) $
-          throwUnexpected $
-            "unexpected fields in webhook response: " <> commaSeparated extraFields
+        -- Note: Fields not specified in the output are ignored
 
         void $
           flip Map.traverseWithKey outputFields $ \fieldName fieldTy ->

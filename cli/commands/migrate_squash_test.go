@@ -14,7 +14,7 @@ import (
 )
 
 var _ = Describe("hasura migrate squash", func() {
-	test := func(projectDirectory string, globalFlags []string, sourceName string) {
+	testFromFlag := func(projectDirectory string, globalFlags []string, sourceName string) {
 		toSquash := []string{
 			"1588172669699_create_table_public_table30",
 			"1588172669752_create_table_public_table31",
@@ -67,6 +67,10 @@ var _ = Describe("hasura migrate squash", func() {
 			Expect(filepath.Join(migrationsDirectory, dir)).ShouldNot(BeADirectory())
 		}
 
+		// verify squashed migrations are permanently deleted
+		squashedMigrationsDirectory := filepath.Join(migrationsDirectory, "squashed_1588172669699_to_1588172670820")
+		Expect(squashedMigrationsDirectory).ShouldNot(BeADirectory())
+
 		// verify squashed migrations are deleted in statestore
 		session = testutil.Hasura(testutil.CmdOpts{
 			Args:             append([]string{"migrate", "status"}, globalFlags...),
@@ -75,15 +79,13 @@ var _ = Describe("hasura migrate squash", func() {
 		Eventually(session, timeout).Should(Exit(0))
 		for _, dir := range toSquash {
 			// get version from dir name "1588172670820_create_table_public_table50"
-			parts := strings.Split(dir, "_")
-			Expect(len(parts)).ToNot(BeZero())
-			version := parts[0]
-			Expect(session.Out.Contents()).ToNot(ContainSubstring(version))
+			Expect(session.Out.Contents()).ToNot(ContainSubstring(dir))
 		}
 
 		// assert contents of squashed migration
 		files, err := ioutil.ReadDir(migrationsDirectory)
 		Expect(err).To(BeNil())
+		Expect(files).NotTo(BeEmpty())
 		for _, f := range files {
 			if strings.Contains(f.Name(), "squashed") {
 				gotUpSQL, err := ioutil.ReadFile(filepath.Join(migrationsDirectory, f.Name(), "up.sql"))
@@ -91,9 +93,9 @@ var _ = Describe("hasura migrate squash", func() {
 				gotDownSQL, err := ioutil.ReadFile(filepath.Join(migrationsDirectory, f.Name(), "down.sql"))
 				Expect(err).To(BeNil())
 
-				wantUpSQL, err := ioutil.ReadFile("testdata/migrate-squash-test/want.up.sql")
+				wantUpSQL, err := ioutil.ReadFile("testdata/migrate-squash-test/want_from.up.sql")
 				Expect(err).To(BeNil())
-				wantDownSQL, err := ioutil.ReadFile("testdata/migrate-squash-test/want.down.sql")
+				wantDownSQL, err := ioutil.ReadFile("testdata/migrate-squash-test/want_from.down.sql")
 				Expect(err).To(BeNil())
 
 				Expect(string(gotUpSQL)).To(Equal(string(wantUpSQL)))
@@ -103,7 +105,86 @@ var _ = Describe("hasura migrate squash", func() {
 			}
 		}
 	}
+	testToFlag := func(projectDirectory string, globalFlags []string, sourceName string) {
+		toSquash := []string{
+			"1588172668232_create_table_public_table4",
+			"1588172668287_create_table_public_table5",
+			"1588172668342_create_table_public_table6",
+			"1588172668394_create_table_public_table7",
+			"1588172668471_create_table_public_table8",
+			"1588172668531_create_table_public_table9",
+		}
+		session := testutil.Hasura(testutil.CmdOpts{
+			Args: append([]string{
+				"migrate",
+				"squash",
+				"--from",
+				// testdata/migrate-squash-test/migrations/1588172668232_create_table_public_table4
+				"1588172668232",
+				"--to",
+				"1588172668531",
+			}, globalFlags...),
+			WorkingDirectory: projectDirectory,
+		})
 
+		wantKeywordList := []string{
+			"Squashing migrations from",
+			"Created",
+			"after squashing",
+			"till",
+		}
+
+		Eventually(session, timeout).Should(Exit(0))
+		for _, keyword := range wantKeywordList {
+			Expect(session.Err.Contents()).Should(ContainSubstring(keyword))
+		}
+
+		// verify squashed migrations are deleted
+		migrationsDirectory := filepath.Join(projectDirectory, "migrations", sourceName)
+		for _, dir := range toSquash {
+			Expect(filepath.Join(migrationsDirectory, dir)).ShouldNot(BeADirectory())
+		}
+
+		// verify squashed migrations are moved to squashed_1588172668232_1588172668531
+		squashedMigrationsDirectory := filepath.Join(migrationsDirectory, "squashed_1588172668232_to_1588172668531")
+		for _, migration := range toSquash {
+			Expect(filepath.Join(squashedMigrationsDirectory, migration)).Should(BeADirectory())
+		}
+
+		// verify squashed migrations are deleted in statestore
+		session = testutil.Hasura(testutil.CmdOpts{
+			Args:             append([]string{"migrate", "status"}, globalFlags...),
+			WorkingDirectory: projectDirectory,
+		})
+		Eventually(session, timeout).Should(Exit(0))
+		for _, dir := range toSquash {
+			// get version from dir name "1588172670820_create_table_public_table50"
+			Expect(session.Out.Contents()).ToNot(ContainSubstring(dir))
+		}
+
+		// assert contents of squashed migration
+		files, err := ioutil.ReadDir(migrationsDirectory)
+		Expect(err).To(BeNil())
+		Expect(files).NotTo(BeEmpty())
+		for _, f := range files {
+			if strings.Contains(f.Name(), "squashed") && strings.Contains(f.Name(), "1588172668531") {
+				gotUpSQL, err := ioutil.ReadFile(filepath.Join(migrationsDirectory, f.Name(), "up.sql"))
+				Expect(err).To(BeNil())
+				gotDownSQL, err := ioutil.ReadFile(filepath.Join(migrationsDirectory, f.Name(), "down.sql"))
+				Expect(err).To(BeNil())
+
+				wantUpSQL, err := ioutil.ReadFile("testdata/migrate-squash-test/want_from_to.up.sql")
+				Expect(err).To(BeNil())
+				wantDownSQL, err := ioutil.ReadFile("testdata/migrate-squash-test/want_from_to.down.sql")
+				Expect(err).To(BeNil())
+
+				Expect(string(gotUpSQL)).To(Equal(string(wantUpSQL)))
+				Expect(string(gotDownSQL)).To(Equal(string(wantDownSQL)))
+
+				break
+			}
+		}
+	}
 	var projectDirectoryLatestConfigV3, projectDirectoryLatestConfigV2, projectDirectoryV13 string
 	var teardown func()
 	BeforeEach(func() {
@@ -144,8 +225,17 @@ var _ = Describe("hasura migrate squash", func() {
 	AfterEach(func() { teardown() })
 
 	It("can squash the migrations in local project dir", func() {
-		Context("config v3", func() { test(projectDirectoryLatestConfigV3, []string{"--database-name", "default"}, "default") })
-		Context("config v2 (latest)", func() { test(projectDirectoryLatestConfigV2, nil, "") })
-		Context("config v2 v1.3.3", func() { test(projectDirectoryV13, nil, "") })
+		Context("config v3", func() {
+			testFromFlag(projectDirectoryLatestConfigV3, []string{"--database-name", "default"}, "default")
+			testToFlag(projectDirectoryLatestConfigV3, []string{"--database-name", "default"}, "default")
+		})
+		Context("config v2 (latest)", func() {
+			testFromFlag(projectDirectoryLatestConfigV2, nil, "")
+			testToFlag(projectDirectoryLatestConfigV2, nil, "")
+		})
+		Context("config v2 v1.3.3", func() {
+			testFromFlag(projectDirectoryV13, nil, "")
+			testToFlag(projectDirectoryV13, nil, "")
+		})
 	})
 })

@@ -34,7 +34,7 @@ mergeMetadata :: InformationSchema -> DBTablesMetadata 'MySQL -> DBTablesMetadat
 mergeMetadata InformationSchema {..} =
   HM.insertWith
     mergeDBTableMetadata
-    (TableName isTableName isTableSchema)
+    (TableName {name = isTableName, schema = pure isTableSchema})
     $ DBTableMetadata
       { _ptmiOid = OID 0,
         _ptmiColumns =
@@ -77,8 +77,9 @@ mergeMetadata InformationSchema {..} =
                             (OID $ fromIntegral $ fromMaybe 0 isConstraintOrdinalPosition)
                         )
                         ( TableName
-                            (fromMaybe "" isReferencedTableName)
-                            (fromMaybe "" isReferencedTableSchema)
+                            { name = (fromMaybe "" isReferencedTableName),
+                              schema = isReferencedTableSchema
+                            }
                         )
                         ( HM.singleton
                             (Column isColumnName)

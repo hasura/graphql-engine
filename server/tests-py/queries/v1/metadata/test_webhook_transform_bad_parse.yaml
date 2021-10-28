@@ -1,0 +1,18 @@
+- description: Test Webhook Transform Bad Parse
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: admin
+  status: 400
+  response:
+    path: "$.args.request_transform.body"
+    error: "sourceName:1:2:\n  |\n1 | \n  | \nunexpected \"$\"\n"
+    code: "parse-failed"
+  query:
+    type: test_webhook_transform
+    args:
+      webhook_url: http://localhost:1234
+      body:
+        hello: world
+      request_transform:
+        body: "$body.hello }}"
+        template_engine: Kriti

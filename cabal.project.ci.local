@@ -11,6 +11,9 @@ package *
     -- the 16G of available memory.
     +RTS -M15000m -RTS
 
+-- Enable optimizations in all local (hasura) packages:
+flags: +optimize-hasura
+
 package graphql-engine
   ghc-options:
     -Werror
@@ -28,7 +31,7 @@ package graphql-engine
 
 package graphql-engine-pro
   ghc-options:
-    -O2 -Werror
+    -Werror
     -- Tune for the circleci `2xlarge` resource class, which provides
     -- 16 vcpus.
     -j14

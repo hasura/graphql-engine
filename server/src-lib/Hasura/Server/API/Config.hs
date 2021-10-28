@@ -17,7 +17,7 @@ import Hasura.RQL.Types
 import Hasura.Server.Auth
 import Hasura.Server.Auth.JWT
 import Hasura.Server.Types (ExperimentalFeature)
-import Hasura.Server.Version (HasVersion, Version, currentVersion)
+import Hasura.Server.Version (Version, currentVersion)
 
 data JWTInfo = JWTInfo
   { jwtiClaimsNamespace :: !JWTNamespace,
@@ -46,7 +46,6 @@ data ServerConfig = ServerConfig
 $(deriveToJSON hasuraJSON ''ServerConfig)
 
 runGetConfig ::
-  HasVersion =>
   FunctionPermissionsCtx ->
   RemoteSchemaPermsCtx ->
   AuthMode ->

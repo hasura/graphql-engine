@@ -4,11 +4,13 @@
 -- | Instances that're slow to compile.
 module Hasura.Backends.MySQL.Types.Instances where
 
+import Control.DeepSeq
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.Extended
 import Data.Aeson.TH qualified as J
 import Data.Aeson.Types
+import Data.HashSet.InsOrd (InsOrdHashSet, toHashSet)
 import Data.Pool
 import Data.Text.Extended (ToTxt (..))
 import Database.MySQL.Base (Connection)
@@ -18,6 +20,10 @@ import Hasura.Incremental.Internal.Dependency
 import Hasura.Prelude
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
+
+-- Orphan instance, InsOrdHashSet doesn't have it.
+instance NFData a => NFData (InsOrdHashSet a) where
+  rnf = rnf . toHashSet
 
 $( fmap concat $ for
      [''Aliased]
@@ -43,12 +49,8 @@ $( fmap concat $ for
 
 $( fmap concat $ for
      [ ''Where,
-       ''For,
        ''Aggregate,
        ''EntityAlias,
-       ''ForJson,
-       ''JsonCardinality,
-       ''Root,
        ''OrderBy,
        ''JoinAlias,
        ''Reselect,
@@ -59,14 +61,12 @@ $( fmap concat $ for
        ''TableName,
        ''Select,
        ''FieldName,
-       ''JsonPath,
+       ''FieldOrigin,
        ''Projection,
        ''From,
-       ''OpenJson,
-       ''JsonFieldSpec,
        ''Join,
-       ''JoinSource,
-       ''Op
+       ''Op,
+       ''JoinType
      ]
      \name ->
        [d|
@@ -151,11 +151,11 @@ instance FromJSON n => FromJSON (Countable n)
 
 instance FromJSON TableName where
   parseJSON v@(String _) =
-    TableName <$> parseJSON v <*> pure "dbo"
+    TableName <$> parseJSON v <*> pure Nothing
   parseJSON (Object o) =
     TableName
       <$> o .: "name"
-      <*> o .:? "schema" .!= "dbo"
+      <*> o .:? "schema"
   parseJSON _ =
     fail "expecting a string/object for TableName"
 
@@ -163,7 +163,9 @@ instance ToJSON TableName where
   toJSON TableName {..} = object ["name" .= name, "schema" .= schema]
 
 instance ToJSONKey TableName where
-  toJSONKey = toJSONKeyText $ \(TableName schema name) -> schema <> "." <> name
+  toJSONKey =
+    toJSONKeyText $ \(TableName {schema, name}) ->
+      maybe "" (<> ".") schema <> name
 
 instance ToJSONKey ScalarType
 

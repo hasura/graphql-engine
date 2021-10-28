@@ -41,10 +41,11 @@ data AnnInsert (b :: BackendType) (r :: BackendType -> Type) v = AnnInsert
 data AnnIns (b :: BackendType) (f :: Type -> Type) (v :: Type) = AnnIns
   { _aiInsObj :: !(f (AnnotatedInsertRow b v)),
     _aiTableName :: !(TableName b),
-    _aiConflictClause :: !(Maybe (ConflictClauseP1 b v)),
+    _aiConflictClause :: !(Maybe (XOnConflict b, ConflictClauseP1 b v)),
     _aiCheckCond :: !(AnnBoolExp b v, Maybe (AnnBoolExp b v)),
     _aiTableCols :: ![ColumnInfo b],
-    _aiDefVals :: !(PreSetColsG b v)
+    _aiDefVals :: !(PreSetColsG b v),
+    _aiExtraInsertData :: !(ExtraInsertData b)
   }
   deriving (Functor, Foldable, Traversable)
 

@@ -111,7 +111,6 @@ mkPayload dbId instanceId version metrics = do
 -- hours. The send time depends on when the server was started and will
 -- naturally drift.
 runTelemetry ::
-  HasVersion =>
   Logger Hasura ->
   HTTP.Manager ->
   -- | an action that always returns the latest schema cache

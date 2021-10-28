@@ -111,6 +111,22 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     Maybe MaintenanceModeVersion ->
     m (Either QErr ())
 
+  -- | @recordError'@ records an erronous event invocation, it does a couple
+  --   of things,
+  --
+  --   1. If present, insert the invocation in the invocation logs table
+  --   2. Depending on the value of `ProcessEventError`, it will either,
+  --        - Set a retry for the given event
+  --        - Mark the event as 'error'
+  recordError' ::
+    MonadIO m =>
+    SourceConfig b ->
+    Event b ->
+    Maybe (Invocation 'EventType) ->
+    ProcessEventError ->
+    Maybe MaintenanceModeVersion ->
+    m (Either QErr ())
+
   -- | @dropTriggerAndArchiveEvents@ drops the database trigger and
   --   marks all the events related to the event trigger as archived.
   --   See Note [Cleanup for dropped triggers]
@@ -155,6 +171,7 @@ instance BackendEventTrigger ('Postgres 'Vanilla) where
   getMaintenanceModeVersion = PG.getMaintenanceModeVersion
   recordSuccess = PG.recordSuccess
   recordError = PG.recordError
+  recordError' = PG.recordError'
   dropTriggerAndArchiveEvents = PG.dropTriggerAndArchiveEvents
   redeliverEvent = PG.redeliverEvent
   unlockEventsInSource = PG.unlockEventsInSource
@@ -167,6 +184,7 @@ instance BackendEventTrigger ('Postgres 'Citus) where
   recordSuccess _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
   getMaintenanceModeVersion _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
   recordError _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
+  recordError' _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
   dropTriggerAndArchiveEvents _ _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
@@ -179,6 +197,7 @@ instance BackendEventTrigger 'MSSQL where
   recordSuccess _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
   getMaintenanceModeVersion _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
   recordError _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
+  recordError' _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
   dropTriggerAndArchiveEvents _ _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
@@ -191,6 +210,7 @@ instance BackendEventTrigger 'BigQuery where
   recordSuccess _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   getMaintenanceModeVersion _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   recordError _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
+  recordError' _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   dropTriggerAndArchiveEvents _ _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
@@ -203,6 +223,7 @@ instance BackendEventTrigger 'MySQL where
   recordSuccess _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
   getMaintenanceModeVersion _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
   recordError _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
+  recordError' _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
   dropTriggerAndArchiveEvents _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"

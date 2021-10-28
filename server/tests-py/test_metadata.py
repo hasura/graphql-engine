@@ -31,6 +31,9 @@ class TestMetadata:
     def test_replace_metadata(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/replace_metadata.yaml')
 
+    def test_replace_metadata_no_tables(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata_no_tables.yaml')
+
     def test_replace_metadata_wo_remote_schemas(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/replace_metadata_wo_rs.yaml')
 
@@ -156,7 +159,7 @@ class TestMetadata:
 
     def test_pg_function_tracking_with_comment(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_track_function_with_comment_setup.yaml')
-        
+
         # make an introspection query to see if the description of the function has changed
         introspection_query = """{
             __schema {
@@ -194,14 +197,14 @@ class TestMetadata:
 
         check_query_f(hge_ctx, self.dir() + '/pg_track_function_with_comment_teardown.yaml')
 
-    def test_validate_webhook_transform_success(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/validate_webhook_transform_success.yaml')
+    def test_webhook_transform_success(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_success.yaml')
 
-    def test_validate_webhook_transform_bad_parse(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/validate_webhook_transform_bad_parse.yaml')
+    def test_webhook_transform_bad_parse(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_bad_parse.yaml')
 
-    def test_validate_webhook_transform_bad_eval(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/validate_webhook_transform_bad_eval.yaml')
+    def test_webhook_transform_bad_eval(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_bad_eval.yaml')
 
     @pytest.mark.skipif(
         os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_1') == os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_2') or
@@ -411,7 +414,7 @@ class TestMetadataOrder:
         assert export_resp['resource_version'] == export_resp_1['resource_version']
 
 
-@pytest.mark.parametrize("backend", ['citus', 'mssql', 'postgres'])
+@pytest.mark.parametrize("backend", ['citus', 'mssql', 'postgres', 'bigquery'])
 @usefixtures('per_class_tests_db_state')
 class TestSetTableCustomizationCommon:
 
@@ -421,3 +424,14 @@ class TestSetTableCustomizationCommon:
 
     def test_set_table_customization(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + hge_ctx.backend_suffix('/set_table_customization') + '.yaml')
+
+@pytest.mark.parametrize("backend", ['bigquery'])
+@usefixtures('per_method_tests_db_state')
+class TestMetadataBigquery:
+
+    def test_replace_metadata_no_tables(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata_no_tables.yaml')
+
+    @classmethod
+    def dir(cls):
+        return "queries/v1/metadata/bigquery"

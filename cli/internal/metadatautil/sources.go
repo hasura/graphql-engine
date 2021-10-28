@@ -42,7 +42,7 @@ func GetSourceKind(exportMetadata func() (io.Reader, error), sourceName string) 
 	}
 	var sources []struct {
 		Name string            `yaml:"name"`
-		Kind hasura.SourceKind `yaml: "kind"`
+		Kind hasura.SourceKind `yaml:"kind"`
 	}
 	path, err := yaml.PathString("$.sources[*]")
 	if err != nil {
@@ -83,7 +83,7 @@ func GetSources(exportMetadata func() (io.Reader, error)) ([]string, error) {
 }
 
 type Source struct {
-	Name string            `yaml: "name"`
+	Name string            `yaml:"name"`
 	Kind hasura.SourceKind `yaml:"kind"`
 }
 

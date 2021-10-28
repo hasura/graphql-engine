@@ -3,6 +3,52 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: call auth webhooks even when the request is malformed JSON or otherwise fails to parse (close #7532)
+- server: updates kriti to v0.2.1 which adds an `escapeUri` function
+- server: add cascade option to `mssql_run_sql` metadata API
+- server: fix bug which recreated event triggers every time the graphql-engine started up
+- server: fix bug in OpenAPI when multiple REST endpoints have the same URL path but different method
+- console: design cleanup Modify and Add Table forms (close #7454)
+- console: enable custom graphql root fields for mssql under modify tab
+- console: allow dropping indices on all schemas
+- cli: split remote schema permissions metadata into seperate files (#7033)
+
+
+### Function field names customization (#7405)
+It is now possible to specify the GraphQL names of tracked SQL functions in
+Postgres sources, and different names may be given to the `_aggregate` and
+suffix-less versions.  Aliases may be set by both
+`/v1/metadata/pg_track_function` and the new API endpoint
+`/v1/metadata/pg_set_function_customization.`
+
+### Bug fixes and improvements
+(Add entries below in the order of server, console, cli, docs, others)
+
+- server: add support for GraphQL block strings
+- server: Correctly translate permissions on functions to SQL (#7617)
+- server: add transformed request to action error responses
+- server: allow nullable action responses (#4405)
+- server: add support for openapi json of REST Endpoints
+- server: enable inherited roles by default in the graphql-engine
+- server: support MSSQL insert mutations
+- server: fix bug in OpenAPI when multiple REST endpoints have the same URL path but different method
+- console: fix v2 metadata imports
+- console: design cleanup Modify and Add Table forms (close #7454)
+- console: enable custom graphql root fields for mssql under modify tab
+- cli: make `--database-name` optional in `migrate` subcommands when using a single database (#7434)
+- cli: support absolute paths in --envfile (#5689)
+- cli: split remote schema permissions metadata into seperate files (#7033)
+
+## v2.0.10
+
+- server: fix bug which recreated event triggers every time the graphql-engine started up
+- server: remove identity notion for table columns (fix #7557)
+- console: add performance fixes for handling large db schemas
+
+## v2.1.0-beta.1
+
+- server: Ignore unexpected fields in action responses (#5731)
+- server: add webhook transformations for Actions and EventTriggers
 - server: optimize SQL query generation with LIMITs
 - server: add GraphQL request query in the payload for synchronous actions
 - server: improve the event trigger logging on errors
@@ -11,8 +57,8 @@
   of the invocation will be the same otherwise it will be `NULL`.
 - server: support `extensions` field in error responses from action webhook endpoints (fix #4001)
 - server: fix custom-check based permissions for MSSQL (#7429)
+- server: query performance improvements
 - server: remove identity notion for table columns (fix #7557)
-- server: add webhook transformations for Actions and EventTriggers
 - server: support MSSQL transactions
 - server: log individual operation details in the http-log during a batch graphQL query execution
 - server: update `create_scheduled_event` API to return `event_id` in response
@@ -26,10 +72,16 @@
 - console: add GraphQL customisation under Remote schema edit tab
 - console: fix cross-schema array relationship suggestions
 - console: add performance fixes for handle large db schemas
+- console: fix missing cross-schema computed fields in permission builder
+- console: add time limits setting to security settings
 - cli: add support for `network` metadata object
 - cli: `hasura migrate apply --all-databases` will return a non zero exit code if operation failed on atleast one database (#7499)
 - cli: `migrate create --from-server` creates the migration and marks it as applied on the server
 - cli: support `query_tags` in metadata
+- cli: add `hasura deploy` command
+- cli: allow exporting and applying metadata from `yaml/json` files
+- cli: allow squashing specific set of migrations. A new `--to` flag is introduced in `migrate squash` command. eg: `hasura migrate squash --from <v1> --to <v4>`
+- cli: `hasura init --endpoint <endpoint>` adds an option to export metadata and create initial migration from the server.
 
 ## v2.0.9
 

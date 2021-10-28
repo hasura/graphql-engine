@@ -1,0 +1,42 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      create table test_table(
+          first_name text,
+          last_name text,
+          id UUID NOT NULL DEFAULT gen_random_uuid()
+      );
+
+- type: track_table
+  args:
+    schema: public
+    name: test_table
+
+- type: run_sql
+  args:
+    sql: |
+      insert into test_table (first_name, last_name)
+      values
+      ('Foo', 'Bar'),
+      ('Baz', 'Qux'),
+      ('X%20Y', 'Test');
+
+- type: create_query_collection
+  args:
+    name: test_collection
+    definition:
+      queries:
+      - name: simple_query
+        query: "query { test_table { first_name last_name } }"
+      - name: query_with_arg
+        query: "query ($first_name:String!) { test_table(where: {first_name: { _eq: $first_name } }) { first_name last_name } }"
+      - name: query_with_args
+        query: "query ($first_name: String!, $last_name:String!) { test_table(where: {first_name: { _eq: $first_name } last_name: { _eq: $last_name }}) { first_name last_name } }"
+      - name: query_with_uuid_arg
+        query: "query ($id: uuid!) { test_table(where: {id: { _neq: $id }}) { first_name last_name } }"
+      - name: query_with_default_arg
+        query: "query ($first_name:String=\"Foo\") { test_table(where: {first_name: { _eq: $first_name } }) { first_name last_name } }"
+      - name: mutation_with_args
+        query: "mutation ($first_name: String!, $last_name: String!) { insert_test_table( objects: {first_name: $first_name, last_name: $last_name }) { returning { id } affected_rows } }"

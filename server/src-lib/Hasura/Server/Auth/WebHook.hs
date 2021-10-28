@@ -24,7 +24,6 @@ import Hasura.Logging
 import Hasura.Prelude
 import Hasura.Server.Logging
 import Hasura.Server.Utils
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as H
@@ -59,7 +58,7 @@ hookMethod authHook = case ahType authHook of
 --   for finer-grained auth. (#2666)
 userInfoFromAuthHook ::
   forall m.
-  (HasVersion, MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m) =>
+  (MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m) =>
   Logger Hasura ->
   H.Manager ->
   AuthHook ->

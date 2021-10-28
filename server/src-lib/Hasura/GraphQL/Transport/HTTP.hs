@@ -16,7 +16,7 @@ module Hasura.GraphQL.Transport.HTTP
     GQLExecDoc (..),
     OperationName (..),
     GQLQueryText (..),
-    ResultsFragment (..),
+    AnnotatedResponsePart (..),
     CacheStoreSuccess (..),
     CacheStoreFailure (..),
     SessVarPred,
@@ -25,7 +25,7 @@ module Hasura.GraphQL.Transport.HTTP
   )
 where
 
-import Control.Lens (Traversal', toListOf, _4)
+import Control.Lens (Traversal', toListOf)
 import Control.Monad.Morph (hoist)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
@@ -49,7 +49,7 @@ import Hasura.GraphQL.Logging
   )
 import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.GraphQL.Parser.Column (UnpreparedValue (..))
-import Hasura.GraphQL.Parser.Directives (CachedDirective (..), cached)
+import Hasura.GraphQL.Parser.Directives (CachedDirective (..), DirectiveMap, cached)
 import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.Instances ()
@@ -61,15 +61,16 @@ import Hasura.RQL.IR
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Init.Config
+import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Logging qualified as L
 import Hasura.Server.Telemetry.Counters qualified as Telem
 import Hasura.Server.Types (RequestId)
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing (MonadTrace, TraceT, trace)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
+import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Network.Wai.Extended qualified as Wai
 
@@ -160,16 +161,64 @@ instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m)
 
 instance MonadExecuteQuery m => MonadExecuteQuery (MetadataStorageT m)
 
--- | A partial result, e.g. from a remote schema or postgres, which we'll
--- assemble into the final result for the client.
---
--- Nothing to do with graphql fragments...
-data ResultsFragment = ResultsFragment
-  { rfTimeIO :: DiffTime,
-    rfLocality :: Telem.Locality,
-    rfResponse :: EncJSON,
-    rfHeaders :: HTTP.ResponseHeaders
+-- | A partial response, e.g. from a remote schema call or postgres
+-- postgres query, which we'll assemble into the final response for
+-- the client. It is annotated with timing metadata.
+data AnnotatedResponsePart = AnnotatedResponsePart
+  { arpTimeIO :: DiffTime,
+    arpLocality :: Telem.Locality,
+    arpResponse :: EncJSON,
+    arpHeaders :: HTTP.ResponseHeaders
   }
+
+-- | A full response, annotated with timing metadata.
+data AnnotatedResponse = AnnotatedResponse
+  { arQueryType :: Telem.QueryType,
+    arTimeIO :: DiffTime,
+    arLocality :: Telem.Locality,
+    arResponse :: HttpResponse (Maybe GQResponse, EncJSON)
+  }
+
+-- | Merge response parts into a full response.
+buildResponseFromParts ::
+  (MonadError QErr m) =>
+  Telem.QueryType ->
+  Either (Either GQExecError QErr) (InsOrdHashMap G.Name AnnotatedResponsePart) ->
+  HTTP.ResponseHeaders ->
+  m AnnotatedResponse
+buildResponseFromParts telemType partsErr cacheHeaders =
+  buildResponse telemType partsErr \parts ->
+    let responseData = Right $ encJToLBS $ encJFromInsOrdHashMap $ arpResponse <$> OMap.mapKeys G.unName parts
+     in AnnotatedResponse
+          { arQueryType = telemType,
+            arTimeIO = sum (fmap arpTimeIO parts),
+            arLocality = foldMap arpLocality parts,
+            arResponse =
+              HttpResponse
+                (Just responseData, encodeGQResp responseData)
+                (cacheHeaders <> foldMap arpHeaders parts)
+          }
+
+buildResponse ::
+  (MonadError QErr m) =>
+  Telem.QueryType ->
+  Either (Either GQExecError QErr) a ->
+  (a -> AnnotatedResponse) ->
+  m AnnotatedResponse
+buildResponse telemType res f = case res of
+  Right a -> pure $ f a
+  Left (Right err) -> throwError err
+  Left (Left err) ->
+    pure $
+      AnnotatedResponse
+        { arQueryType = telemType,
+          arTimeIO = 0,
+          arLocality = Telem.Remote,
+          arResponse =
+            HttpResponse
+              (Just (Left err), encodeGQResp $ Left err)
+              []
+        }
 
 -- | A predicate on session variables. The 'Monoid' instance makes it simple
 -- to combine several predicates disjunctively.
@@ -222,8 +271,7 @@ filterVariablesFromQuery query = fold $ rootToSessVarPreds =<< query
 -- | Run (execute) a single GraphQL query
 runGQ ::
   forall m.
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     MonadError QErr m,
     MonadReader E.ExecutionCtx m,
@@ -232,7 +280,8 @@ runGQ ::
     MonadTrace m,
     MonadExecuteQuery m,
     MonadMetadataStorage (MetadataStorageT m),
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    HasResourceLimits m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
@@ -244,13 +293,16 @@ runGQ ::
   GQLReqUnparsed ->
   m (GQLQueryOperationSuccessLog, HttpResponse (Maybe GQResponse, EncJSON))
 runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
-  (totalTime, (telemQueryType, telemTimeIO_DT, telemLocality, resp, parameterizedQueryHash)) <- withElapsedTime $ do
+  (totalTime, (response, parameterizedQueryHash)) <- withElapsedTime $ do
     E.ExecutionCtx _ sqlGenCtx sc scVer httpManager enableAL <- ask
 
     -- run system authorization on the GraphQL API
     reqParsed <-
       E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
         >>= flip onLeft throwError
+
+    operationLimit <- askGraphqlOperationLimit
+    let runLimits = runResourceLimits $ operationLimit userInfo (scApiLimits sc)
 
     (parameterizedQueryHash, execPlan) <-
       E.getResolvedExecPlan
@@ -266,79 +318,56 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         (reqUnparsed, reqParsed)
         reqId
 
-    case execPlan of
-      E.QueryExecutionPlan queryPlans asts dirMap -> trace "Query" $ do
-        let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
-            cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
-            remoteSchemas =
-              OMap.elems queryPlans >>= \case
-                E.ExecStepDB _headers _dbAST remoteJoins -> do
-                  maybe [] (map RJ._rsjRemoteSchema . RJ.getRemoteSchemaJoins) remoteJoins
-                _ -> []
-            actionsInfo =
-              foldl getExecStepActionWithActionInfo [] $
-                OMap.elems $
-                  OMap.filter
-                    ( \case
-                        E.ExecStepAction _ _ _remoteJoins -> True
-                        _ -> False
-                    )
-                    queryPlans
-            cachedDirective = runIdentity <$> DM.lookup cached dirMap
+    response <- executePlan httpManager reqParsed runLimits execPlan
+    return (response, parameterizedQueryHash)
 
-        (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup remoteSchemas actionsInfo cacheKey cachedDirective
+  recordTimings totalTime response
+  let requestSize = LBS.length $ J.encode reqUnparsed
+      responseSize = LBS.length $ encJToLBS $ snd $ _hrBody $ arResponse $ response
+  return
+    ( GQLQueryOperationSuccessLog reqUnparsed totalTime responseSize requestSize parameterizedQueryHash,
+      arResponse response
+    )
+  where
+    doQErr :: ExceptT QErr m a -> ExceptT (Either GQExecError QErr) m a
+    doQErr = withExceptT Right
+
+    forWithKey = flip OMap.traverseWithKey
+
+    executePlan ::
+      HTTP.Manager ->
+      GQLReqParsed ->
+      (m AnnotatedResponse -> m AnnotatedResponse) ->
+      E.ResolvedExecutionPlan ->
+      m AnnotatedResponse
+    executePlan httpManager reqParsed runLimits execPlan = case execPlan of
+      E.QueryExecutionPlan queryPlans asts dirMap -> trace "Query" $ do
+        let (keyedLookup, keyedStore) = cacheAccess reqParsed queryPlans asts dirMap
+        (cachingHeaders, cachedValue) <- keyedLookup
         case fmap decodeGQResp cachedValue of
           Just cachedResponseData -> do
             logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindCached
-            pure (Telem.Query, 0, Telem.Local, HttpResponse cachedResponseData responseHeaders, parameterizedQueryHash)
-          Nothing -> do
-            conclusion <- runExceptT $
-              forWithKey queryPlans $ \fieldName -> \case
-                E.ExecStepDB _headers exists remoteJoins -> doQErr $ do
-                  (telemTimeIO_DT, resp) <-
-                    AB.dispatchAnyBackend @BackendTransport
-                      exists
-                      \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
-                        runDBQuery @b
-                          reqId
-                          reqUnparsed
-                          fieldName
-                          userInfo
-                          logger
-                          sourceConfig
-                          tx
-                          genSql
-                  finalResponse <-
-                    RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
-                  pure $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse []
-                E.ExecStepRemote rsi resultCustomizer gqlReq -> do
-                  logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
-                  runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq
-                E.ExecStepAction aep _ remoteJoins -> do
-                  logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
-
-                  (time, (resp, _)) <- doQErr $ do
-                    (time, (resp, hdrs)) <- EA.runActionExecution userInfo aep
-                    finalResponse <-
-                      RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
-                    pure (time, (finalResponse, hdrs))
-                  pure $ ResultsFragment time Telem.Empty resp []
-                E.ExecStepRaw json -> do
-                  logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection
-                  buildRaw json
-            out@(_, _, _, HttpResponse responseData _, _) <-
-              buildResultFromFragments Telem.Query conclusion responseHeaders parameterizedQueryHash
-            Tracing.interpTraceT (liftEitherM . runExceptT) do
-              cacheStoreRes <- cacheStore cacheKey cachedDirective (snd responseData)
-              let headers = case cacheStoreRes of
-                    -- Note: Warning header format: "Warning: <warn-code> <warn-agent> <warn-text> [warn-date]"
-                    -- See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Warning
-                    Right _ -> []
-                    (Left CacheStoreLimitReached) -> [("warning", "199 - cache-store-size-limit-exceeded")]
-                    (Left CacheStoreNotEnoughCapacity) -> [("warning", "199 - cache-store-capacity-exceeded")]
-                    (Left (CacheStoreBackendError _)) -> [("warning", "199 - cache-store-error")]
-               in pure $ out & _4 %~ addHttpResponseHeaders headers
-      E.MutationExecutionPlan mutationPlans -> do
+            pure $
+              AnnotatedResponse
+                { arQueryType = Telem.Query,
+                  arTimeIO = 0,
+                  arLocality = Telem.Local,
+                  arResponse = HttpResponse cachedResponseData cachingHeaders
+                }
+          Nothing -> runLimits $ do
+            conclusion <- runExceptT $ forWithKey queryPlans $ executeQueryStep httpManager
+            result <- buildResponseFromParts Telem.Query conclusion cachingHeaders
+            let response@(HttpResponse responseData _) = arResponse result
+            cacheStoreRes <- keyedStore (snd responseData)
+            let headers = case cacheStoreRes of
+                  -- Note: Warning header format: "Warning: <warn-code> <warn-agent> <warn-text> [warn-date]"
+                  -- See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Warning
+                  Right _ -> []
+                  (Left CacheStoreLimitReached) -> [("warning", "199 - cache-store-size-limit-exceeded")]
+                  (Left CacheStoreNotEnoughCapacity) -> [("warning", "199 - cache-store-capacity-exceeded")]
+                  (Left (CacheStoreBackendError _)) -> [("warning", "199 - cache-store-error")]
+             in pure $ result {arResponse = addHttpResponseHeaders headers response}
+      E.MutationExecutionPlan mutationPlans -> runLimits $ do
         {- Note [Backwards-compatible transaction optimisation]
 
            For backwards compatibility, we perform the following optimisation: if all mutation steps
@@ -349,141 +378,144 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         case coalescePostgresMutations mutationPlans of
           -- we are in the aforementioned case; we circumvent the normal process
           Just (sourceConfig, pgMutations) -> do
-            resp <-
+            res <-
               runExceptT $
                 doQErr $
                   runPGMutationTransaction reqId reqUnparsed userInfo logger sourceConfig pgMutations
-            -- we do not construct result fragments since we have only one result
-            buildResult Telem.Mutation parameterizedQueryHash resp \(telemTimeIO_DT, results) ->
-              let responseData = Right $ encJToLBS $ encJFromInsOrdHashMap $ OMap.mapKeys G.unName results
-               in ( Telem.Mutation,
-                    telemTimeIO_DT,
-                    Telem.Local,
-                    HttpResponse
-                      (Just responseData, encodeGQResp responseData)
-                      [],
-                    parameterizedQueryHash
-                  )
+            -- we do not construct response parts since we have only one part
+            buildResponse Telem.Mutation res \(telemTimeIO_DT, parts) ->
+              let responseData = Right $ encJToLBS $ encJFromInsOrdHashMap $ OMap.mapKeys G.unName parts
+               in AnnotatedResponse
+                    { arQueryType = Telem.Mutation,
+                      arTimeIO = telemTimeIO_DT,
+                      arLocality = Telem.Local,
+                      arResponse =
+                        HttpResponse
+                          (Just responseData, encodeGQResp responseData)
+                          []
+                    }
 
           -- we are not in the transaction case; proceeding normally
           Nothing -> do
-            conclusion <- runExceptT $
-              forWithKey mutationPlans $ \fieldName -> \case
-                E.ExecStepDB responseHeaders exists remoteJoins -> doQErr $ do
-                  (telemTimeIO_DT, resp) <-
-                    AB.dispatchAnyBackend @BackendTransport
-                      exists
-                      \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
-                        runDBMutation @b
-                          reqId
-                          reqUnparsed
-                          fieldName
-                          userInfo
-                          logger
-                          sourceConfig
-                          tx
-                          genSql
-
-                  finalResponse <-
-                    RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
-                  pure $ ResultsFragment telemTimeIO_DT Telem.Local finalResponse responseHeaders
-                E.ExecStepRemote rsi resultCustomizer gqlReq -> do
-                  logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
-                  runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq
-                E.ExecStepAction aep _ remoteJoins -> do
-                  logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
-                  (time, (resp, hdrs)) <- doQErr $ do
-                    (time, (resp, hdrs)) <- EA.runActionExecution userInfo aep
-                    finalResponse <-
-                      RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
-                    pure (time, (finalResponse, hdrs))
-                  pure $ ResultsFragment time Telem.Empty resp $ fromMaybe [] hdrs
-                E.ExecStepRaw json -> do
-                  logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection
-                  buildRaw json
-            buildResultFromFragments Telem.Mutation conclusion [] parameterizedQueryHash
+            conclusion <- runExceptT $ forWithKey mutationPlans $ executeMutationStep httpManager
+            buildResponseFromParts Telem.Mutation conclusion []
       E.SubscriptionExecutionPlan _sub ->
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
-  -- The response and misc telemetry data:
-  let telemTimeIO = convertDuration telemTimeIO_DT
-      telemTimeTot = convertDuration totalTime
-      telemTransport = Telem.HTTP
-      requestSize = LBS.length $ J.encode reqUnparsed
-      responseSize = LBS.length $ encJToLBS $ snd $ _hrBody resp
-  Telem.recordTimingMetric Telem.RequestDimensions {..} Telem.RequestTimings {..}
-  return (GQLQueryOperationSuccessLog reqUnparsed totalTime responseSize requestSize parameterizedQueryHash, resp)
-  where
-    getExecStepActionWithActionInfo acc execStep = case execStep of
-      EB.ExecStepAction _ actionInfo _remoteJoins -> (actionInfo : acc)
-      _ -> acc
 
-    doQErr = withExceptT Right
+    executeQueryStep ::
+      HTTP.Manager ->
+      G.Name ->
+      EB.ExecutionStep ->
+      ExceptT (Either GQExecError QErr) m AnnotatedResponsePart
+    executeQueryStep httpManager fieldName = \case
+      E.ExecStepDB _headers exists remoteJoins -> doQErr $ do
+        (telemTimeIO_DT, resp) <-
+          AB.dispatchAnyBackend @BackendTransport
+            exists
+            \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
+              runDBQuery @b reqId reqUnparsed fieldName userInfo logger sourceConfig tx genSql
+        finalResponse <-
+          RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
+        pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
+      E.ExecStepRemote rsi resultCustomizer gqlReq -> do
+        logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
+        runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq
+      E.ExecStepAction aep _ remoteJoins -> do
+        logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
+        (time, resp) <- doQErr $ do
+          (time, (resp, _)) <- EA.runActionExecution userInfo aep
+          finalResponse <-
+            RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
+          pure (time, finalResponse)
+        pure $ AnnotatedResponsePart time Telem.Empty resp []
+      E.ExecStepRaw json -> do
+        logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection
+        buildRaw json
 
-    forWithKey = flip OMap.traverseWithKey
+    executeMutationStep ::
+      HTTP.Manager ->
+      G.Name ->
+      EB.ExecutionStep ->
+      ExceptT (Either GQExecError QErr) m AnnotatedResponsePart
+    executeMutationStep httpManager fieldName = \case
+      E.ExecStepDB responseHeaders exists remoteJoins -> doQErr $ do
+        (telemTimeIO_DT, resp) <-
+          AB.dispatchAnyBackend @BackendTransport
+            exists
+            \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
+              runDBMutation @b reqId reqUnparsed fieldName userInfo logger sourceConfig tx genSql
+        finalResponse <-
+          RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
+        pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse responseHeaders
+      E.ExecStepRemote rsi resultCustomizer gqlReq -> do
+        logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
+        runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq
+      E.ExecStepAction aep _ remoteJoins -> do
+        logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
+        (time, (resp, hdrs)) <- doQErr $ do
+          (time, (resp, hdrs)) <- EA.runActionExecution userInfo aep
+          finalResponse <-
+            RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
+          pure (time, (finalResponse, hdrs))
+        pure $ AnnotatedResponsePart time Telem.Empty resp $ fromMaybe [] hdrs
+      E.ExecStepRaw json -> do
+        logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection
+        buildRaw json
 
     runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq = do
       (telemTimeIO_DT, remoteResponseHeaders, resp) <-
         doQErr $ E.execRemoteGQ env httpManager userInfo reqHeaders (rsDef rsi) gqlReq
       value <- extractFieldFromResponse fieldName rsi resultCustomizer resp
       let filteredHeaders = filter ((== "Set-Cookie") . fst) remoteResponseHeaders
-      pure $ ResultsFragment telemTimeIO_DT Telem.Remote (encJFromOrderedValue value) filteredHeaders
+      pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Remote (encJFromOrderedValue value) filteredHeaders
 
-    buildResultFromFragments ::
-      Telem.QueryType ->
-      Either (Either GQExecError QErr) (InsOrdHashMap G.Name ResultsFragment) ->
-      HTTP.ResponseHeaders ->
-      ParameterizedQueryHash ->
-      m
-        ( Telem.QueryType,
-          DiffTime,
-          Telem.Locality,
-          HttpResponse (Maybe GQResponse, EncJSON),
-          ParameterizedQueryHash
-        )
-    buildResultFromFragments telemType fragments cacheHeaders parameterizedQueryHash =
-      buildResult telemType parameterizedQueryHash fragments \results ->
-        let responseData = Right $ encJToLBS $ encJFromInsOrdHashMap $ rfResponse <$> OMap.mapKeys G.unName results
-         in ( telemType,
-              sum (fmap rfTimeIO results),
-              foldMap rfLocality results,
-              HttpResponse
-                (Just responseData, encodeGQResp responseData)
-                (cacheHeaders <> foldMap rfHeaders results),
-              parameterizedQueryHash
-            )
-
-    buildResult ::
-      Telem.QueryType ->
-      ParameterizedQueryHash ->
-      Either (Either GQExecError QErr) a ->
-      ( a ->
-        ( Telem.QueryType,
-          DiffTime,
-          Telem.Locality,
-          HttpResponse (Maybe GQResponse, EncJSON),
-          ParameterizedQueryHash
-        )
-      ) ->
-      m
-        ( Telem.QueryType,
-          DiffTime,
-          Telem.Locality,
-          HttpResponse (Maybe GQResponse, EncJSON),
-          ParameterizedQueryHash
-        )
-    buildResult telemType parameterizedQueryHash result f = case result of
-      Right a -> pure $ f a
-      Left (Right err) -> throwError err
-      Left (Left err) ->
-        pure
-          ( telemType,
-            0,
-            Telem.Remote,
-            HttpResponse
-              (Just (Left err), encodeGQResp $ Left err)
-              [],
-            parameterizedQueryHash
+    cacheAccess ::
+      GQLReqParsed ->
+      EB.ExecutionPlan ->
+      [QueryRootField UnpreparedValue] ->
+      DirectiveMap ->
+      ( m (HTTP.ResponseHeaders, Maybe EncJSON),
+        EncJSON -> m CacheStoreResponse
+      )
+    cacheAccess reqParsed queryPlans asts dirMap =
+      let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
+          remoteSchemas =
+            OMap.elems queryPlans >>= \case
+              E.ExecStepDB _headers _dbAST remoteJoins -> do
+                maybe [] (map RJ._rsjRemoteSchema . RJ.getRemoteSchemaJoins) remoteJoins
+              _ -> []
+          getExecStepActionWithActionInfo acc execStep = case execStep of
+            EB.ExecStepAction _ actionInfo _remoteJoins -> (actionInfo : acc)
+            _ -> acc
+          actionsInfo =
+            foldl getExecStepActionWithActionInfo [] $
+              OMap.elems $
+                OMap.filter
+                  ( \case
+                      E.ExecStepAction _ _ _remoteJoins -> True
+                      _ -> False
+                  )
+                  queryPlans
+          cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
+          cachedDirective = runIdentity <$> DM.lookup cached dirMap
+       in ( Tracing.interpTraceT (liftEitherM . runExceptT) $
+              cacheLookup remoteSchemas actionsInfo cacheKey cachedDirective,
+            Tracing.interpTraceT (liftEitherM . runExceptT)
+              . cacheStore cacheKey cachedDirective
           )
+
+    recordTimings :: DiffTime -> AnnotatedResponse -> m ()
+    recordTimings totalTime result = do
+      Telem.recordTimingMetric
+        Telem.RequestDimensions
+          { telemTransport = Telem.HTTP,
+            telemQueryType = arQueryType result,
+            telemLocality = arLocality result
+          }
+        Telem.RequestTimings
+          { telemTimeIO = convertDuration $ arTimeIO result,
+            telemTimeTot = convertDuration totalTime
+          }
 
 coalescePostgresMutations ::
   EB.ExecutionPlan ->
@@ -546,17 +578,16 @@ extractFieldFromResponse fieldName rsi resultCustomizer resp = do
     do400 = withExceptT Right . throw400 RemoteSchemaError
     doGQExecError = withExceptT Left . throwError . GQExecError
 
-buildRaw :: Applicative m => JO.Value -> m ResultsFragment
+buildRaw :: Applicative m => JO.Value -> m AnnotatedResponsePart
 buildRaw json = do
   let obj = encJFromOrderedValue json
       telemTimeIO_DT = 0
-  pure $ ResultsFragment telemTimeIO_DT Telem.Local obj []
+  pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local obj []
 
 -- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs').
 runGQBatched ::
   forall m.
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     MonadError QErr m,
     MonadReader E.ExecutionCtx m,
@@ -566,7 +597,8 @@ runGQBatched ::
     MonadExecuteQuery m,
     HttpLog m,
     MonadMetadataStorage (MetadataStorageT m),
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    HasResourceLimits m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->

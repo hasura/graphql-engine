@@ -135,26 +135,26 @@ const ReadReplicaListItem: React.FC<ReadReplicaListItemProps> = ({
     }
   }
   const host = isFromEnvVar ? '' : parseURI(connectionString)?.host ?? '';
-
   return (
     <div
       className={styles.read_replica_list_item}
       key={`read-replica-item-${currentState.displayName}`}
     >
-      <Button
-        color="white"
-        size="xs"
-        onClick={onClickRemove}
-        className={styles.remove_replica_btn}
-      >
-        Remove
-      </Button>
+      <span>
+        <Button
+          color="white"
+          size="xs"
+          onClick={onClickRemove}
+          className={styles.remove_replica_btn}
+        >
+          Remove
+        </Button>
+      </span>
+
       <p>{isFromEnvVar ? currentState.envVarState.envVar : host}</p>
       {/* The connection string is redundant if it's provided via ENV VAR */}
       {!isFromEnvVar && (
-        <span
-          className={`${styles.db_large_string_break_words} ${styles.add_pad_top_10}`}
-        >
+        <span className={`${styles.db_large_string_break_words}`}>
           {showUrl ? (
             connectionString
           ) : (
@@ -231,8 +231,10 @@ const ReadReplicaForm: React.FC<ReadReplicaProps> = ({
 
   return (
     <>
-      <div className={styles.flexColumn}>
-        <h5 className={styles.read_replicas_heading}>Read Replicas</h5>
+      <div className={`${styles.flexColumn} my-1.5`}>
+        <h5 className={`${styles.read_replicas_heading} my-1.5`}>
+          Read Replicas
+        </h5>
         <p>
           Hasura Cloud can load balance queries and subscriptions across read
           replicas while sending all mutations and metadata API calls to the
@@ -245,19 +247,23 @@ const ReadReplicaForm: React.FC<ReadReplicaProps> = ({
             <i>(Read More)</i>
           </a>
         </p>
-        {readReplicaState.map(stateVar => (
+        {readReplicaState.map((stateVar, index) => (
           <ReadReplicaListItem
             currentState={stateVar}
             onClickRemove={onClickRemoveReadReplica(stateVar.displayName)}
+            key={index}
           />
         ))}
         {!isReadReplicaButtonClicked ? (
-          <Button
-            onClick={onClickAddReadReplica}
-            className={styles.add_button_styles}
-          >
-            Add Read Replica
-          </Button>
+          <span className="py-1.5">
+            <Button
+              size="xs"
+              onClick={onClickAddReadReplica}
+              className={styles.add_button_styles}
+            >
+              Add Read Replica
+            </Button>
+          </span>
         ) : (
           <Form
             connectDBState={connectDBState}

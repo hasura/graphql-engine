@@ -38,7 +38,7 @@ module Hasura.RQL.Types.Action
     amComment,
     amDefinition,
     amPermissions,
-    amMetadataTransform,
+    amRequestTransform,
     ActionPermissionMetadata (..),
     ActionSourceInfo (..),
     getActionSourceInfo,
@@ -280,7 +280,7 @@ data ActionMetadata = ActionMetadata
     _amComment :: !(Maybe Text),
     _amDefinition :: !ActionDefinitionInput,
     _amPermissions :: ![ActionPermissionMetadata],
-    _amMetadataTransform :: !(Maybe MetadataTransform)
+    _amRequestTransform :: !(Maybe MetadataTransform)
   }
   deriving (Show, Eq, Generic)
 
@@ -298,7 +298,7 @@ instance J.FromJSON ActionMetadata where
       <*> o J..:? "comment"
       <*> o J..: "definition"
       <*> o J..:? "permissions" J..!= []
-      <*> o J..:? "transform"
+      <*> o J..:? "request_transform"
 
 ----------------- Resolve Types ----------------
 

@@ -9,7 +9,7 @@ registry := hasura
 packager_ver := 20210218
 pg_dump_ver := 13
 build_output := /build/_server_output
-docs_output := /build/_docs_output.tar.gz
+docs_output := /build/_server_output/docs.tar.gz
 
 # Getting access to the built products with the `cabal v2-*` commands is really awkward; see
 # <https://www.haskell.org/cabal/users-guide/nix-local-build.html#where-are-my-build-products> for a
@@ -19,7 +19,7 @@ docs_output := /build/_docs_output.tar.gz
 # This glob is a pretty heavy hammer designed to work regardless of `cabal-install` version (see the
 # aforementioned link for why that’s tricky). If `cabal v2-*` ever gets a better way to do this,
 # please replace this with something less hacky.
-executables_glob := ../dist-newstyle/build/*/*/graphql-engine-*/**/opt/build/{graphql-engine/graphql-engine,graphql-engine-tests/graphql-engine-tests}
+executables_glob := ../dist-newstyle/build/*/*/graphql-engine-*/**/opt/build/{graphql-engine/graphql-engine,graphql-engine-tests/graphql-engine-tests,graphql-engine-integration-tests/graphql-engine-integration-tests}
 
 # assumes this is built in circleci
 ci-build:

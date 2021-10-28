@@ -63,11 +63,21 @@ class TestActionsSync:
     def test_invalid_webhook_response(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/invalid_webhook_response.yaml')
 
-    def test_expecting_object_response(self, hge_ctx):
+    def test_null_response(self, hge_ctx):
+        check_query_secret(hge_ctx, self.dir() + '/null_response.yaml')
+        
+    def test_expecting_object_response_got_null(self, hge_ctx):
+        check_query_secret(hge_ctx, self.dir() + '/expecting_object_response_got_null.yaml')
+
+    def test_expecting_array_response_got_null(self, hge_ctx):
+        check_query_secret(hge_ctx, self.dir() + '/expecting_array_response_got_null.yaml')
+
+    def test_expecting_object_response_got_array(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/expecting_object_response.yaml')
 
-    def test_expecting_array_response(self, hge_ctx):
+    def test_expecting_array_response_got_object(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/expecting_array_response.yaml')
+    
 
     # Webhook response validation tests. See https://github.com/hasura/graphql-engine/issues/3977
     def test_mirror_action_not_null(self, hge_ctx):

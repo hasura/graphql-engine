@@ -46,7 +46,6 @@ import Hasura.Server.API.Backend
 import Hasura.Server.API.Instances ()
 import Hasura.Server.Types (InstanceId (..), MaintenanceMode (..))
 import Hasura.Server.Utils (APIVersion (..))
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Manager qualified as HTTP
@@ -85,6 +84,7 @@ data RQLMetadataV1
   | -- Functions
     RMTrackFunction !(AnyBackend TrackFunctionV2)
   | RMUntrackFunction !(AnyBackend UnTrackFunction)
+  | RMSetFunctionCustomization (AnyBackend SetFunctionCustomization)
   | -- Functions permissions
     RMCreateFunctionPermission !(AnyBackend FunctionPermissionArgument)
   | RMDropFunctionPermission !(AnyBackend FunctionPermissionArgument)
@@ -157,7 +157,7 @@ data RQLMetadataV1
     RMDumpInternalState !DumpInternalState
   | RMGetCatalogState !GetCatalogState
   | RMSetCatalogState !SetCatalogState
-  | RMValidateWebhookTransform !ValidateWebhookTransform
+  | RMTestWebhookTransform !TestWebhookTransform
   | -- Bulk metadata queries
     RMBulk [RQLMetadataRequest]
 
@@ -214,7 +214,7 @@ instance FromJSON RQLMetadataV1 where
       "get_catalog_state" -> RMGetCatalogState <$> args
       "set_catalog_state" -> RMSetCatalogState <$> args
       "set_graphql_schema_introspection_options" -> RMSetGraphqlSchemaIntrospectionOptions <$> args
-      "validate_webhook_transform" -> RMValidateWebhookTransform <$> args
+      "test_webhook_transform" -> RMTestWebhookTransform <$> args
       "set_query_tags" -> RMSetQueryTagsConfig <$> args
       "bulk" -> RMBulk <$> args
       -- backend specific
@@ -275,8 +275,7 @@ instance FromJSON RQLMetadata where
     pure RQLMetadata {..}
 
 runMetadataQuery ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     Tracing.MonadTrace m,
     MonadMetadataStorage m,
@@ -337,6 +336,7 @@ queryModifiesMetadata = \case
       RMGetScheduledEvents _ -> False
       RMCreateScheduledEvent _ -> False
       RMDeleteScheduledEvent _ -> False
+      RMTestWebhookTransform _ -> False
       RMBulk qs -> any queryModifiesMetadata qs
       _ -> True
   RMV2 q ->
@@ -345,8 +345,7 @@ queryModifiesMetadata = \case
       _ -> True
 
 runMetadataQueryM ::
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     CacheRWM m,
     Tracing.MonadTrace m,
@@ -370,8 +369,7 @@ runMetadataQueryM env currentResourceVersion =
 
 runMetadataQueryV1M ::
   forall m r.
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     CacheRWM m,
     Tracing.MonadTrace m,
@@ -394,6 +392,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMRenameSource q -> runRenameSource q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
   RMUntrackTable q -> dispatchMetadata runUntrackTableQ q
+  RMSetFunctionCustomization q -> dispatchMetadata runSetFunctionCustomization q
   RMSetTableCustomization q -> dispatchMetadata runSetTableCustomization q
   RMPgSetTableIsEnum q -> runSetExistingTableIsEnumQ q
   RMCreateInsertPermission q -> dispatchMetadata runCreatePerm q
@@ -468,7 +467,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDumpInternalState q -> runDumpInternalState q
   RMGetCatalogState q -> runGetCatalogState q
   RMSetCatalogState q -> runSetCatalogState q
-  RMValidateWebhookTransform q -> runValidateWebhookTransform q
+  RMTestWebhookTransform q -> runTestWebhookTransform q
   RMSetQueryTagsConfig q -> runSetQueryTagsConfig q
   RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
   where
@@ -492,7 +491,6 @@ runMetadataQueryV2M ::
     CacheRWM m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
-    HasServerConfigCtx m,
     MonadReader r m,
     Has (L.Logger L.Hasura) r
   ) =>

@@ -31,7 +31,6 @@ import Hasura.Prelude
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (RequestId)
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -48,8 +47,7 @@ forRemoteJoins remoteJoins onNoJoins f =
   maybe (pure onNoJoins) f remoteJoins
 
 processRemoteJoins ::
-  ( HasVersion,
-    MonadError QErr m,
+  ( MonadError QErr m,
     MonadIO m,
     EB.MonadQueryTags m,
     MonadQueryLog m,
@@ -81,8 +79,7 @@ processRemoteJoins requestId logger env manager reqHdrs userInfo lhs joinTree gq
         gqlreq
 
 processRemoteJoins_ ::
-  ( HasVersion,
-    MonadError QErr m,
+  ( MonadError QErr m,
     MonadIO m,
     EB.MonadQueryTags m,
     MonadQueryLog m,

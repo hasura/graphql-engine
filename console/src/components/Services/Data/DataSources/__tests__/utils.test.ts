@@ -3,7 +3,11 @@ import {
   MetadataDataSource,
 } from '../../../../../metadata/types';
 import { Driver } from '../../../../../dataSources/index';
-import { AddSourceArg, dataSourceIsEqual } from '../utils';
+import {
+  AddSourceArg,
+  dataSourceIsEqual,
+  getReadReplicaDBUrlInfo,
+} from '../utils';
 
 describe('dataSourceIsEqual works', () => {
   it('works for postgres source', () => {
@@ -104,5 +108,50 @@ describe('dataSourceIsEqual works', () => {
       },
     };
     expect(dataSourceIsEqual(metadataSource, request)).toEqual(false);
+  });
+});
+
+describe('getReadReplicaDBUrlInfo gives the correct result', () => {
+  it('for read replicas with db urls', () => {
+    const res = getReadReplicaDBUrlInfo({
+      use_prepared_statements: false,
+      database_url: 'postgres://postgres:test@172.17.0.1:6001/chinook',
+      isolation_level: 'read-committed',
+      pool_settings: {
+        connection_lifetime: 600,
+      },
+    });
+    expect(res).toMatchInlineSnapshot(`
+      Object {
+        "connectionType": "DATABASE_URL",
+        "databaseURLState": Object {
+          "datasets": "",
+          "dbURL": "postgres://postgres:test@172.17.0.1:6001/chinook",
+          "global_select_limit": 1000,
+          "projectId": "",
+          "serviceAccount": "",
+        },
+      }
+    `);
+  });
+  it('for read replicas with env vars', () => {
+    const res = getReadReplicaDBUrlInfo({
+      use_prepared_statements: false,
+      database_url: {
+        from_env: 'HASURA_GRAPHQL_DATABASE_URL',
+      },
+      isolation_level: 'read-committed',
+      pool_settings: {
+        connection_lifetime: 600,
+      },
+    });
+    expect(res).toMatchInlineSnapshot(`
+      Object {
+        "connectionType": "ENVIRONMENT_VARIABLES",
+        "envVarState": Object {
+          "envVar": "HASURA_GRAPHQL_DATABASE_URL",
+        },
+      }
+    `);
   });
 });

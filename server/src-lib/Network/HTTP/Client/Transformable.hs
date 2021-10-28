@@ -10,6 +10,7 @@ module Network.HTTP.Client.Transformable
     port,
     path,
     queryParams,
+    secure,
     timeout,
     getReqSize,
     getQueryStr,
@@ -113,9 +114,17 @@ mkRequestEither url' =
       Nothing -> throw e
 
 -- | Url is 'materialized view' into `Request` consisting of
--- concatenation of `host`, `port`, `queryParams`, and `path`.
+-- concatenation of `host`, `port`, `queryParams`, and `path` in the
+-- underlying request object, as well as a literal url field that
+-- stores the textual representation that was supplied from metadata.
 --
--- We use `Network.HTTP.Client.getUri` to `view` the value but we must
+-- The reason why we store the textual URL in addition to the parsed
+-- URL in the request is that the parsed URL loses syntactic information
+-- such as "does http://foo.com end in a slash?" which is important
+-- when a template user has expectations about the $url variable
+-- matching the string that was configured in the action.
+--
+-- We use the literal field to `view` the value but we must
 -- carefully set the subcomponents by hand during `set` operations. Be
 -- careful modifying this lens and verify against the unit tests..
 url :: Lens' Request T.Text
@@ -129,14 +138,15 @@ url = lens getUrl setUrl
       uri <- URI.parseURI (T.unpack url')
       URI.URIAuth {..} <- URI.uriAuthority uri
       let host' = C8.pack $ uriUserInfo <> uriRegName
+          ssl = URI.uriScheme uri == "https:"
           port' = case uriPort of
             ':' : newPort -> read @Int newPort
-            _ -> 80
+            _ -> if ssl then 443 else 80
           queryString = Types.queryTextToQuery $ Types.parseQueryText $ C8.pack $ URI.uriQuery uri
           path' = C8.pack $ URI.uriPath uri
-
       pure $
         req & set host host'
+          & set secure ssl
           & set port port'
           & set queryParams queryString
           & set path path'
@@ -166,6 +176,16 @@ host = lens getHost setHost
     setHost :: Request -> B.ByteString -> Request
     setHost req@Request {rdRequest} host' =
       req {rdRequest = NHS.setRequestHost host' rdRequest}
+
+secure :: Lens' Request Bool
+secure = lens getSecure setSecure
+  where
+    getSecure :: Request -> Bool
+    getSecure Request {rdRequest} = Client.secure rdRequest
+
+    setSecure :: Request -> Bool -> Request
+    setSecure req@Request {rdRequest} ssl =
+      req {rdRequest = NHS.setRequestSecure ssl rdRequest}
 
 method :: Lens' Request B.ByteString
 method = lens getMethod setMethod

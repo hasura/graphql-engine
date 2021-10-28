@@ -31,7 +31,6 @@ import Hasura.RQL.Types.Run (RunT (..))
 import Hasura.RQL.Types.SchemaCache.Build (MetadataT (..))
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Hasura.Tracing (TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -67,7 +66,6 @@ class
   mkDBMutationPlan ::
     forall m.
     ( MonadError QErr m,
-      HasVersion,
       MonadQueryTags m,
       MonadReader QueryTagsComment m
     ) =>
@@ -81,6 +79,7 @@ class
     forall m.
     ( MonadError QErr m,
       MonadIO m,
+      MonadBaseControl IO m,
       MonadReader QueryTagsComment m
     ) =>
     UserInfo ->

@@ -5,7 +5,7 @@
     X-Hasura-Role: user
   response:
     data:
-      hasura_article:
+      hasura_test_article:
       - id: '1'
         title: Title 1
         content: Content 1
@@ -18,7 +18,7 @@
   query:
     query: |
       query {
-        hasura_article(order_by: {id: asc}) {
+        hasura_test_article(order_by: {id: asc}) {
           id
           title
           content

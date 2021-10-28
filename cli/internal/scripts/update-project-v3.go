@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	"github.com/hasura/graphql-engine/cli/v2/util"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 )
@@ -56,7 +55,7 @@ func UpdateProjectV3(opts UpdateProjectV3Opts) error {
 		return fmt.Errorf("project should be using config V2 to be able to update to V3")
 	}
 	if !opts.EC.HasMetadataV3 {
-		return fmt.Errorf("unsupported server version %v, config V3 is supported only on server with metadata version >= 3", opts.EC.Version.Server)
+		return fmt.Errorf("cannot upgrade: unsupported server version %v, config V3 is supported only on server with metadata version >= 3", opts.EC.Version.Server)
 	}
 	if r, err := opts.EC.APIClient.V1Metadata.GetInconsistentMetadata(); err != nil {
 		return fmt.Errorf("determing server metadata inconsistency: %w", err)
@@ -70,8 +69,9 @@ func UpdateProjectV3(opts UpdateProjectV3Opts) error {
 	opts.Logger.Warn(`Config V3 is expected to be used with servers >=v2.0.0-alpha.1`)
 	opts.Logger.Warn(`During the update process CLI uses the server as the source of truth, so make sure your server is upto date`)
 	opts.Logger.Warn(`The update process replaces project metadata with metadata on the server`)
+	opts.Logger.Infof("Using %s server at %s for update", opts.EC.Version.GetServerVersion(), opts.EC.Config.ServerConfig.Endpoint)
 
-	if !opts.Force {
+	if !opts.Force && opts.EC.IsTerminal {
 		response, err := util.GetYesNoPrompt("continue?")
 		if err != nil {
 			return err
@@ -124,34 +124,34 @@ func UpdateProjectV3(opts UpdateProjectV3Opts) error {
 	// get directory names to move
 	migrationDirectoriesToMove, err := getMigrationDirectoryNames(opts.Fs, opts.MigrationsAbsDirectoryPath)
 	if err != nil {
-		return errors.Wrap(err, "getting list of migrations to move")
+		return fmt.Errorf("getting list of migrations to move: %w", err)
 	}
 	// move seed child directories
 	// get directory names to move
 	seedFilesToMove, err := getSeedFiles(opts.Fs, opts.SeedsAbsDirectoryPath)
 	if err != nil {
-		return errors.Wrap(err, "getting list of seed files to move")
+		return fmt.Errorf("getting list of seed files to move: %w", err)
 	}
 
 	// create a new directory for TargetDatabase
 	targetMigrationsDirectoryName := filepath.Join(opts.MigrationsAbsDirectoryPath, targetDatabase)
 	if err = opts.Fs.Mkdir(targetMigrationsDirectoryName, 0755); err != nil {
-		errors.Wrap(err, "creating target migrations directory")
+		return fmt.Errorf("creating target migrations directory: %w", err)
 	}
 
 	// create a new directory for TargetDatabase
 	targetSeedsDirectoryName := filepath.Join(opts.SeedsAbsDirectoryPath, targetDatabase)
 	if err = opts.Fs.Mkdir(targetSeedsDirectoryName, 0755); err != nil {
-		errors.Wrap(err, "creating target seeds directory")
+		return fmt.Errorf("creating target seeds directory: %w", err)
 	}
 
 	// move migration directories to target database directory
 	if err := copyMigrations(opts.Fs, migrationDirectoriesToMove, opts.MigrationsAbsDirectoryPath, targetMigrationsDirectoryName); err != nil {
-		return errors.Wrap(err, "moving migrations to target database directory")
+		return fmt.Errorf("moving migrations to target database directory: %w", err)
 	}
 	// move seed directories to target database directory
 	if err := copyFiles(opts.Fs, seedFilesToMove, opts.SeedsAbsDirectoryPath, targetSeedsDirectoryName); err != nil {
-		return errors.Wrap(err, "moving seeds to target database directory")
+		return fmt.Errorf("moving seeds to target database directory: %w", err)
 	}
 	opts.EC.Logger.Debug("completed: copy old migrations to new directory structure")
 
@@ -170,11 +170,11 @@ func UpdateProjectV3(opts UpdateProjectV3Opts) error {
 	opts.EC.Spin("Cleaning project directory ")
 	// delete original migrations
 	if err := removeDirectories(opts.Fs, opts.MigrationsAbsDirectoryPath, migrationDirectoriesToMove); err != nil {
-		return errors.Wrap(err, "removing up original migrations")
+		return fmt.Errorf("removing up original migrations: %w", err)
 	}
 	// delete original seeds
 	if err := removeDirectories(opts.Fs, opts.SeedsAbsDirectoryPath, seedFilesToMove); err != nil {
-		return errors.Wrap(err, "removing up original migrations")
+		return fmt.Errorf("removing up original migrations: %w", err)
 	}
 	// remove functions.yaml and tables.yaml files
 	metadataFiles := []string{"functions.yaml", "tables.yaml"}
@@ -216,12 +216,12 @@ func copyMigrations(fs afero.Fs, dirs []string, parentDir, target string) error 
 			if f.IsDir() {
 				err := util.CopyDirAfero(fs, filepath.Join(parentDir, dir), filepath.Join(target, dir))
 				if err != nil {
-					return errors.Wrapf(err, "moving %s to %s", dir, target)
+					return fmt.Errorf("moving %s to %s : %w", dir, target, err)
 				}
 			} else {
 				err := util.CopyFileAfero(fs, filepath.Join(parentDir, dir), filepath.Join(target, dir))
 				if err != nil {
-					return errors.Wrapf(err, "moving %s to %s", dir, target)
+					return fmt.Errorf("moving %s to %s : %w", dir, target, err)
 				}
 			}
 		}
@@ -234,7 +234,7 @@ func copyFiles(fs afero.Fs, files []string, parentDir, target string) error {
 	for _, dir := range files {
 		err := util.CopyFileAfero(fs, filepath.Join(parentDir, dir), filepath.Join(target, dir))
 		if err != nil {
-			return errors.Wrapf(err, "moving %s to %s", dir, target)
+			return fmt.Errorf("moving %s to %s : %w", dir, target, err)
 		}
 	}
 	return nil
@@ -314,11 +314,11 @@ func CopyState(ec *cli.ExecutionContext, sourceDatabase, destDatabase string) er
 	}
 	cliState, err := statestore.NewCLICatalogState(ec.APIClient.V1Metadata).Get()
 	if err != nil {
-		return fmt.Errorf("error while fetching catalog state: %v", err)
+		return fmt.Errorf("error while fetching catalog state: %w", err)
 	}
 	cliState.IsStateCopyCompleted = true
 	if _, err := statestore.NewCLICatalogState(ec.APIClient.V1Metadata).Set(*cliState); err != nil {
-		return fmt.Errorf("cannot set catalog state: %v", err)
+		return fmt.Errorf("cannot set catalog state: %w", err)
 	}
 	return nil
 }
@@ -327,7 +327,7 @@ func CheckIfUpdateToConfigV3IsRequired(ec *cli.ExecutionContext) error {
 	// see if an update to config V3 is necessary
 	if ec.Config.Version <= cli.V1 && ec.HasMetadataV3 {
 		ec.Logger.Info("config v1 is deprecated from v1.4")
-		return errors.New("please upgrade your project to a newer version.\nuse " + color.New(color.FgCyan).SprintFunc()("hasura scripts update-project-v2") + " to upgrade your project to config v2")
+		return fmt.Errorf("please upgrade your project to a newer version.\nuse " + color.New(color.FgCyan).SprintFunc()("hasura scripts update-project-v2") + " to upgrade your project to config v2")
 	}
 	if ec.Config.Version < cli.V3 && ec.HasMetadataV3 {
 		sources, err := metadatautil.GetSources(ec.APIClient.V1Metadata.ExportMetadata)
@@ -337,7 +337,7 @@ func CheckIfUpdateToConfigV3IsRequired(ec *cli.ExecutionContext) error {
 		upgrade := func() error {
 			ec.Logger.Info("Looks like you are trying to use hasura with multiple databases, which requires some changes on your project directory\n")
 			ec.Logger.Info("please use " + color.New(color.FgCyan).SprintFunc()("hasura scripts update-project-v3") + " to make this change")
-			return errors.New("update to config V3")
+			return fmt.Errorf("update to config V3")
 		}
 		if len(sources) == 0 {
 			return fmt.Errorf("no connected databases found on hasura")

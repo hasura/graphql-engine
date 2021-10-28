@@ -10,7 +10,7 @@ module Hasura.RQL.DDL.Metadata
     runDropInconsistentMetadata,
     runGetCatalogState,
     runSetCatalogState,
-    runValidateWebhookTransform,
+    runTestWebhookTransform,
     runSetMetricsConfig,
     runRemoveMetricsConfig,
     module Hasura.RQL.DDL.Metadata.Types,
@@ -18,9 +18,8 @@ module Hasura.RQL.DDL.Metadata
 where
 
 import Control.Lens ((.~), (^.), (^?))
-import Data.Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as AO
-import Data.Bifunctor (bimap)
 import Data.CaseInsensitive qualified as CI
 import Data.Has (Has, getter)
 import Data.HashMap.Strict qualified as Map
@@ -52,14 +51,12 @@ import Hasura.RQL.DDL.Schema
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Eventing.Backend (BackendEventTrigger (..))
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Types (ExperimentalFeature (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 runClearMetadata ::
   ( MonadIO m,
     CacheRWM m,
     MetadataM m,
-    HasServerConfigCtx m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
     Has (HL.Logger HL.Hasura) r
@@ -104,7 +101,6 @@ runReplaceMetadata ::
     MetadataM m,
     MonadIO m,
     MonadMetadataStorageQueryAPI m,
-    HasServerConfigCtx m,
     MonadReader r m,
     Has (HL.Logger HL.Hasura) r
   ) =>
@@ -120,7 +116,6 @@ runReplaceMetadataV1 ::
     MetadataM m,
     MonadIO m,
     MonadMetadataStorageQueryAPI m,
-    HasServerConfigCtx m,
     MonadReader r m,
     Has (HL.Logger HL.Hasura) r
   ) =>
@@ -135,7 +130,6 @@ runReplaceMetadataV2 ::
     CacheRWM m,
     MetadataM m,
     MonadIO m,
-    HasServerConfigCtx m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
     Has (HL.Logger HL.Hasura) r
@@ -146,18 +140,10 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
   logger :: (HL.Logger HL.Hasura) <- asks getter
   -- we drop all the future cron trigger events before inserting the new metadata
   -- and re-populating future cron events below
-  experimentalFeatures <- _sccExperimentalFeatures <$> askServerConfigCtx
-  let inheritedRoles =
-        case _rmv2Metadata of
-          RMWithSources Metadata {_metaInheritedRoles} -> _metaInheritedRoles
-          RMWithoutSources _ -> mempty
-      introspectionDisabledRoles =
+  let introspectionDisabledRoles =
         case _rmv2Metadata of
           RMWithSources m -> _metaSetGraphqlIntrospectionOptions m
           RMWithoutSources _ -> mempty
-  when (inheritedRoles /= mempty && EFInheritedRoles `notElem` experimentalFeatures) $
-    throw400 ConstraintViolation "inherited_roles can only be added when it's enabled in the experimental features"
-
   oldMetadata <- getMetadata
 
   (cronTriggersMetadata, cronTriggersToBeAdded) <- processCronTriggers oldMetadata
@@ -311,39 +297,28 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
           m ()
         compose sourceName x y f = AB.composeAnyBackend @BackendEventTrigger f x y (logger $ HL.UnstructuredLog HL.LevelInfo $ TBS.fromText $ "Event trigger clean up couldn't be done on the source " <> sourceName <<> " because it has changed its type")
 
-processExperimentalFeatures :: HasServerConfigCtx m => Metadata -> m Metadata
-processExperimentalFeatures metadata = do
-  experimentalFeatures <- _sccExperimentalFeatures <$> askServerConfigCtx
-  let isInheritedRolesSet = EFInheritedRoles `elem` experimentalFeatures
-  -- export inherited roles only when inherited_roles is set in the experimental features
-  pure $ bool (metadata {_metaInheritedRoles = mempty}) metadata isInheritedRolesSet
-
 -- | Only includes the cron triggers with `included_in_metadata` set to `True`
 processCronTriggersMetadata :: Metadata -> Metadata
 processCronTriggersMetadata metadata =
   let cronTriggersIncludedInMetadata = OMap.filter ctIncludeInMetadata $ _metaCronTriggers metadata
    in metadata {_metaCronTriggers = cronTriggersIncludedInMetadata}
 
-processMetadata :: HasServerConfigCtx m => Metadata -> m Metadata
-processMetadata metadata =
-  processCronTriggersMetadata <$> processExperimentalFeatures metadata
-
 runExportMetadata ::
   forall m.
-  (QErrM m, MetadataM m, HasServerConfigCtx m) =>
+  (QErrM m, MetadataM m) =>
   ExportMetadata ->
   m EncJSON
 runExportMetadata ExportMetadata {} =
-  encJFromOrderedValue . metadataToOrdJSON <$> (getMetadata >>= processMetadata)
+  encJFromOrderedValue . metadataToOrdJSON <$> (processCronTriggersMetadata <$> getMetadata)
 
 runExportMetadataV2 ::
   forall m.
-  (QErrM m, MetadataM m, HasServerConfigCtx m) =>
+  (QErrM m, MetadataM m) =>
   MetadataResourceVersion ->
   ExportMetadata ->
   m EncJSON
 runExportMetadataV2 currentResourceVersion ExportMetadata {} = do
-  exportMetadata <- processMetadata =<< getMetadata
+  exportMetadata <- processCronTriggersMetadata <$> getMetadata
   pure $
     encJFromOrderedValue $
       AO.object
@@ -397,11 +372,11 @@ runGetInconsistentMetadata _ = do
   inconsObjs <- scInconsistentObjs <$> askSchemaCache
   return $ encJFromJValue $ formatInconsistentObjs inconsObjs
 
-formatInconsistentObjs :: [InconsistentMetadata] -> Value
+formatInconsistentObjs :: [InconsistentMetadata] -> J.Value
 formatInconsistentObjs inconsObjs =
-  object
-    [ "is_consistent" .= null inconsObjs,
-      "inconsistent_objects" .= inconsObjs
+  J.object
+    [ "is_consistent" J..= null inconsObjs,
+      "inconsistent_objects" J..= inconsObjs
     ]
 
 runDropInconsistentMetadata ::
@@ -426,7 +401,7 @@ runDropInconsistentMetadata _ = do
   unless (null droppableInconsistentObjects) $
     throwError
       (err400 Unexpected "cannot continue due to new inconsistent metadata")
-        { qeInternal = Just $ ExtraInternal $ toJSON newInconsistentObjects
+        { qeInternal = Just $ ExtraInternal $ J.toJSON newInconsistentObjects
         }
   return successMsg
 
@@ -490,26 +465,35 @@ runRemoveMetricsConfig = do
         metaMetricsConfig .~ emptyMetricsConfig
   pure successMsg
 
-runValidateWebhookTransform ::
+runTestWebhookTransform ::
   forall m.
   ( QErrM m,
     MonadIO m
   ) =>
-  ValidateWebhookTransform ->
+  TestWebhookTransform ->
   m EncJSON
-runValidateWebhookTransform (ValidateWebhookTransform url payload mt) = do
+runTestWebhookTransform (TestWebhookTransform url payload mt sv) = do
   initReq <- liftIO $ HTTP.mkRequestThrow url
-  let req = initReq & HTTP.body .~ pure (encode payload)
-      dataTransform = mkRequestTransformDebug mt
-      -- TODO(Solomon) Add SessionVariables
-      transformed = applyRequestTransform dataTransform req Nothing
-      payload' = decode @Value =<< (transformed ^. HTTP.body)
-      headers' = bimap CI.foldedCase id <$> (transformed ^. HTTP.headers)
-  pure $
-    encJFromJValue $
-      object
-        [ "webhook_url" .= (transformed ^. HTTP.url),
-          "method" .= (transformed ^. HTTP.method),
-          "headers" .= headers',
-          "payload" .= payload'
-        ]
+  let req = initReq & HTTP.body .~ pure (J.encode payload)
+      dataTransform = mkRequestTransform mt
+      transformedE = applyRequestTransform url dataTransform req sv
+
+  case transformedE of
+    Right transformed ->
+      pure $
+        encJFromJValue $
+          J.object
+            [ "webhook_url" J..= (transformed ^. HTTP.url),
+              "method" J..= (transformed ^. HTTP.method),
+              "headers" J..= (first CI.foldedCase <$> (transformed ^. HTTP.headers)),
+              "body" J..= (J.decode @J.Value =<< (transformed ^. HTTP.body))
+            ]
+    Left err ->
+      pure $
+        encJFromJValue $
+          J.object
+            [ "webhook_url" J..= (req ^. HTTP.url),
+              "method" J..= (req ^. HTTP.method),
+              "headers" J..= (first CI.foldedCase <$> (req ^. HTTP.headers)),
+              "body" J..= J.toJSON err
+            ]

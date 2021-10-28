@@ -1,7 +1,4 @@
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE RecordWildCards #-}
-
-module Main where
+module Main (main) where
 
 import Control.Concurrent.Extended qualified as C
 import Control.Exception
@@ -25,7 +22,6 @@ import Hasura.Server.Init
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Migrate (downgradeCatalog)
 import Hasura.Server.Version
-import Hasura.Server.Version.TH
 import System.Exit qualified as Sys
 import System.Metrics qualified as EKG
 import System.Posix.Signals qualified as Signals
@@ -48,7 +44,7 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
   globalCtx@GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
   let (maybeDefaultPgConnInfo, maybeRetries) = _gcDefaultPostgresConnInfo
 
-  withVersion $$(getVersionFromEnvironment) $ case hgeCmd of
+  case hgeCmd of
     HCServe serveOptions -> do
       (ekgStore, serverMetrics) <- liftIO $ do
         store <- EKG.newStore @AppMetricsSpec

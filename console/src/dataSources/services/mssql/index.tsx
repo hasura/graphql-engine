@@ -158,7 +158,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
         view: false,
         edit: false,
       },
-      customGqlRoot: false,
+      customGqlRoot: true,
       setAsEnum: false,
       untrack: true,
       delete: true,

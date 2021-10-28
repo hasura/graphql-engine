@@ -27,6 +27,7 @@ module Hasura.Backends.MSSQL.FromIr
     runFromIr,
     FromIr,
     jsonFieldName,
+    fromInsert,
     fromDelete,
   )
 where
@@ -124,6 +125,7 @@ fromSelectRows annSelectG = do
   selectFrom <-
     case from of
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
+      IR.FromIdentifier identifier -> pure $ FromIdentifier identifier
       IR.FromFunction {} -> refute $ pure FunctionNotSupported
   Args
     { argsOrderBy,
@@ -143,8 +145,8 @@ fromSelectRows annSelectG = do
     runReaderT (fromGBoolExp permFilter) (fromAlias selectFrom)
   let selectProjections =
         concatMap (toList . fieldSourceProjections) fieldSources
-  pure
-    Select
+  pure $
+    emptySelect
       { selectOrderBy = argsOrderBy,
         selectTop = permissionBasedTop <> argsTop,
         selectProjections,
@@ -178,7 +180,7 @@ mkNodesSelect Args {..} foreignKeyConditions filterExpression permissionBasedTop
           Aliased
             { aliasedThing =
                 SelectExpression $
-                  Select
+                  emptySelect
                     { selectProjections = projections,
                       selectTop = permissionBasedTop <> argsTop,
                       selectFrom = pure selectFrom,
@@ -214,7 +216,7 @@ mkAggregateSelect Args {..} foreignKeyConditions selectFrom aggregates =
             { aliasedThing =
                 JsonQueryExpression $
                   SelectExpression $
-                    Select
+                    emptySelect
                       { selectProjections = projections,
                         selectTop = NoTop,
                         selectFrom =
@@ -223,7 +225,7 @@ mkAggregateSelect Args {..} foreignKeyConditions selectFrom aggregates =
                               Aliased
                                 { aliasedAlias = aggSubselectName,
                                   aliasedThing =
-                                    Select
+                                    emptySelect
                                       { selectProjections = pure StarProjection,
                                         selectTop = argsTop,
                                         selectFrom = pure selectFrom,
@@ -268,6 +270,7 @@ fromSelectAggregate
     do
       selectFrom <- case from of
         IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
+        IR.FromIdentifier identifier -> pure $ FromIdentifier identifier
         IR.FromFunction {} -> refute $ pure FunctionNotSupported
       -- Below: When we're actually a RHS of a query (of CROSS APPLY),
       -- then we'll have a LHS table that we're joining on. So we get the
@@ -287,7 +290,7 @@ fromSelectAggregate
         flip runReaderT (fromAlias selectFrom) $ sequence $ mapMaybe (fromTableNodesFieldG argsExistingJoins stringifyNumbers) fields
       let aggregates :: [(Int, (IR.FieldName, [Projection]))] = mapMaybe fromTableAggFieldG fields
       pure
-        Select
+        emptySelect
           { selectProjections =
               concatMap snd $
                 sortBy (comparing fst) $
@@ -419,7 +422,7 @@ unfurlAnnotatedOrderByElement =
                   Join
                     { joinSource =
                         JoinSelect
-                          Select
+                          emptySelect
                             { selectTop = NoTop,
                               selectProjections = [StarProjection],
                               selectFrom = Just selectFrom,
@@ -465,7 +468,7 @@ unfurlAnnotatedOrderByElement =
                     Join
                       { joinSource =
                           JoinSelect
-                            Select
+                            emptySelect
                               { selectTop = NoTop,
                                 selectProjections =
                                   [ AggregateProjection
@@ -539,7 +542,7 @@ fromAnnBoolExpFld =
         local (const (fromAlias selectFrom)) (fromGBoolExp annBoolExp)
       pure
         ( ExistsExpression
-            Select
+            emptySelect
               { selectOrderBy = Nothing,
                 selectProjections =
                   [ ExpressionProjection
@@ -728,7 +731,8 @@ fromAnnColumnField _stringifyNumbers annColumnField = do
       Nothing -> pure (ColumnExpression fieldName)
       Just ex -> do
         ex' <- fromGBoolExp (coerce ex)
-        pure (ConditionalProjection ex' fieldName)
+        let nullValue = ValueExpression ODBC.NullValue
+        pure (ConditionalExpression ex' (ColumnExpression fieldName) nullValue)
   where
     IR.AnnColumnField
       { _acfColumn = pgCol,
@@ -820,7 +824,7 @@ fromObjectRelationSelectG existingJoins annRelationSelectG = do
           { joinJoinAlias,
             joinSource =
               JoinSelect
-                Select
+                emptySelect
                   { selectOrderBy = Nothing,
                     selectTop = NoTop,
                     selectProjections,
@@ -1044,7 +1048,7 @@ fromGBoolExp =
         local (const (fromAlias selectFrom)) (fromGBoolExp _geWhere)
       pure $
         ExistsExpression $
-          Select
+          emptySelect
             { selectOrderBy = Nothing,
               selectProjections =
                 [ ExpressionProjection
@@ -1061,6 +1065,50 @@ fromGBoolExp =
               selectFor = NoFor,
               selectOffset = Nothing
             }
+
+--------------------------------------------------------------------------------
+-- Insert
+
+fromInsert :: IR.AnnInsert 'MSSQL (Const Void) Expression -> Insert
+fromInsert IR.AnnInsert {..} =
+  let IR.AnnIns {..} = _aiData
+      insertRows = normalizeInsertRows _aiData $ map (IR.getInsertColumns) _aiInsObj
+      insertColumnNames = maybe [] (map fst) $ listToMaybe insertRows
+      insertValues = map (Values . map snd) insertRows
+      primaryKeyColumns = map OutputColumn $ _mssqlPrimaryKeyColumns _aiExtraInsertData
+   in Insert _aiTableName insertColumnNames (InsertOutput primaryKeyColumns) insertValues
+
+-- | Normalize a row by adding missing columns with 'DEFAULT' value and sort by column name to make sure
+-- all rows are consistent in column values and order.
+--
+-- Example: A table "author" is defined as
+--
+--   CREATE TABLE author ([id] INTEGER NOT NULL PRIMARY KEY, name TEXT NOT NULL, age INTEGER)
+--
+--  Consider the following mutation;
+--
+--   mutation {
+--     insert_author(
+--       objects: [{id: 1, name: "Foo", age: 21}, {id: 2, name: "Bar"}]
+--     ){
+--       affected_rows
+--     }
+--   }
+--
+-- We consider 'DEFAULT' value for "age" column which is missing in second insert row. The INSERT statement look like
+--
+-- INSERT INTO author (id, name, age) OUTPUT INSERTED.id VALUES (1, 'Foo', 21), (2, 'Bar', DEFAULT)
+normalizeInsertRows :: IR.AnnIns 'MSSQL [] Expression -> [[(Column 'MSSQL, Expression)]] -> [[(Column 'MSSQL, Expression)]]
+normalizeInsertRows IR.AnnIns {..} insertRows =
+  let isIdentityColumn column =
+        IR.pgiColumn column `elem` _mssqlIdentityColumns _aiExtraInsertData
+      allColumnsWithDefaultValue =
+        -- DEFAULT or NULL are not allowed as explicit identity values.
+        map ((,DefaultExpression) . IR.pgiColumn) $ filter (not . isIdentityColumn) _aiTableCols
+      addMissingColumns insertRow =
+        HM.toList $ HM.fromList insertRow `HM.union` HM.fromList allColumnsWithDefaultValue
+      sortByColumn = sortBy (\l r -> compare (fst l) (fst r))
+   in map (sortByColumn . addMissingColumns) insertRows
 
 --------------------------------------------------------------------------------
 -- Delete
@@ -1138,6 +1186,7 @@ fromAlias :: From -> EntityAlias
 fromAlias (FromQualifiedTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromOpenJson Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromSelect Aliased {aliasedAlias}) = EntityAlias aliasedAlias
+fromAlias (FromIdentifier identifier) = EntityAlias identifier
 
 columnNameToFieldName :: ColumnName -> EntityAlias -> FieldName
 columnNameToFieldName (ColumnName fieldName) EntityAlias {entityAliasText = fieldNameEntity} =

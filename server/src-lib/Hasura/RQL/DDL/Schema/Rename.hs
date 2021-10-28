@@ -97,7 +97,7 @@ renameTableInMetadata source newQT oldQT = do
           _ -> otherDeps errMsg sobj
     -- the dependend object is a source object in a different source
     sobj@(SOSourceObj depSourceName exists) ->
-      AB.dispatchAnyBackend @BackendMetadata exists \(sourceObjId :: SourceObjId b') ->
+      AB.dispatchAnyBackend @Backend exists \(sourceObjId :: SourceObjId b') ->
         case sourceObjId of
           SOITableObj tableName (TORemoteRel remoteRelationshipName) -> do
             updateTableInRemoteRelationshipRHS @b' @b depSourceName tableName remoteRelationshipName (oldQT, newQT)
@@ -172,7 +172,7 @@ renameColumnInMetadata oCol nCol source qt fieldInfo = do
           _ -> otherDeps errMsg sobj
     -- the dependend object is a source object in a different source
     sobj@(SOSourceObj depSourceName exists) ->
-      AB.dispatchAnyBackend @BackendMetadata exists \(sourceObjId :: SourceObjId b') ->
+      AB.dispatchAnyBackend @Backend exists \(sourceObjId :: SourceObjId b') ->
         case sourceObjId of
           SOITableObj tableName (TORemoteRel remoteRelationshipName) -> do
             updateColInRemoteRelationshipRHS @b' @b depSourceName tableName remoteRelationshipName renameItem
@@ -566,8 +566,8 @@ updateColInRemoteRelationshipLHS source remoteRelationshipName (RenameItem qt ol
 updateColInRemoteRelationshipRHS ::
   forall source target m.
   ( MonadWriter MetadataModifier m,
-    BackendMetadata source,
-    BackendMetadata target
+    Backend source,
+    Backend target
   ) =>
   SourceName ->
   TableName source ->
@@ -602,8 +602,8 @@ updateColInRemoteRelationshipRHS source tableName remoteRelationshipName (Rename
 updateTableInRemoteRelationshipRHS ::
   forall source target m.
   ( MonadWriter MetadataModifier m,
-    BackendMetadata source,
-    BackendMetadata target
+    Backend source,
+    Backend target
   ) =>
   SourceName ->
   TableName source ->

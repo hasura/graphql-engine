@@ -193,14 +193,6 @@ runDropPerm dp@(DropPerm source table role) = do
         tableMetadataSetter @b source table %~ dropPermissionInMetadata role permType
   return successMsg
 
-dropPermissionInMetadata ::
-  RoleName -> PermType -> TableMetadata b -> TableMetadata b
-dropPermissionInMetadata rn = \case
-  PTInsert -> tmInsertPermissions %~ OMap.delete rn
-  PTSelect -> tmSelectPermissions %~ OMap.delete rn
-  PTDelete -> tmDeletePermissions %~ OMap.delete rn
-  PTUpdate -> tmUpdatePermissions %~ OMap.delete rn
-
 buildInsPermInfo ::
   forall b m.
   (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>

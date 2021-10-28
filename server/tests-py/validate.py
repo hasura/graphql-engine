@@ -57,7 +57,12 @@ def validate_event_webhook(ev_webhook_path, webhook_path):
 
 # Make some assertions on a single event recorded by webhook. Waits up to 3
 # seconds by default for an event to appear
-def check_event(hge_ctx, evts_webhook, trig_name, table, operation, exp_ev_data,
+def check_event(hge_ctx,
+                evts_webhook,
+                trig_name,
+                table,
+                operation,
+                exp_ev_data,
                 headers = {},
                 webhook_path = '/',
                 session_variables = {'x-hasura-role': 'admin'},
@@ -75,7 +80,9 @@ def check_event(hge_ctx, evts_webhook, trig_name, table, operation, exp_ev_data,
     assert ev_full['body']['delivery_info']['current_retry'] == retry
 
 
-def check_event_transformed(hge_ctx, evts_webhook, exp_payload,
+def check_event_transformed(hge_ctx,
+                            evts_webhook,
+                            exp_payload,
                             headers = {},
                             webhook_path = '/',
                             session_variables = {'x-hasura-role': 'admin'},

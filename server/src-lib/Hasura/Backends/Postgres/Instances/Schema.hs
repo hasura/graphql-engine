@@ -34,6 +34,7 @@ import Hasura.GraphQL.Schema.Backend qualified as BS
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.Mutation qualified as GSB
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
@@ -132,14 +133,15 @@ instance
 
   -- table components
   tableArguments = defaultTableArgs
+  mkRelationshipParser = GSB.mkDefaultRelationshipParser ()
 
   -- backend extensions
   relayExtension = pgkRelayExtension @pgKind
   nodesAggExtension = Just ()
-  nestedInsertsExtension = Just ()
 
   -- indivdual components
   columnParser = columnParser
+  conflictObject = GSB.defaultConflictObject ()
   jsonPathArg = jsonPathArg
   orderByOperators = orderByOperators
   comparisonExps = comparisonExps
@@ -151,6 +153,9 @@ instance
 
   -- SQL literals
   columnDefaultValue = const PG.columnDefaultValue
+
+  -- Extra insert data
+  getExtraInsertData = const ()
 
 ----------------------------------------------------------------
 -- Top level parsers
@@ -192,17 +197,15 @@ buildFunctionRelayQueryFields ::
   SelPermInfo ('Postgres pgKind) ->
   m [FieldParser n (QueryRootField UnpreparedValue)]
 buildFunctionRelayQueryFields sourceName sourceInfo queryTagsConfig functionName functionInfo tableName pkeyColumns selPerms = do
-  funcName <- functionGraphQLName @('Postgres pgKind) functionName `onLeft` throwError
   let mkRF =
         RFDB sourceName
           . AB.mkAnyBackend
           . SourceConfigWith sourceInfo queryTagsConfig
           . QDBR
-      fieldName = funcName <> $$(G.litName "_connection")
       fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
   fmap afold $
     optionalFieldParser (mkRF . QDBConnection) $
-      selectFunctionConnection sourceName functionInfo fieldName fieldDesc pkeyColumns selPerms
+      selectFunctionConnection sourceName functionInfo fieldDesc pkeyColumns selPerms
 
 ----------------------------------------------------------------
 -- Individual components

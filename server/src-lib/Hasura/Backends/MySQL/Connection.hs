@@ -3,6 +3,9 @@ module Hasura.Backends.MySQL.Connection
     resolveSourceConfig,
     resolveDatabaseMetadata,
     fetchAllRows,
+    runQueryYieldingRows,
+    withMySQLPool,
+    parseTextRows,
   )
 where
 
@@ -12,15 +15,19 @@ import Data.Aeson.Text (encodeToTextBuilder)
 import Data.ByteString (ByteString)
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Pool
 import Data.Scientific (fromFloatDigits)
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8)
 import Data.Text.Lazy (toStrict)
 import Data.Text.Lazy.Builder (toLazyText)
+import Data.Vector (Vector)
+import Data.Vector qualified as V
 import Database.MySQL.Base
 import Database.MySQL.Base.Types (Field (..))
 import Database.MySQL.Simple.Result qualified as MySQL
+import Hasura.Backends.MySQL.DataLoader.Plan qualified as DataLoaderPlan
 import Hasura.Backends.MySQL.Meta (getMetadata)
 import Hasura.Backends.MySQL.ToQuery (Query (..))
 import Hasura.Backends.MySQL.Types
@@ -30,12 +37,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Source
 import Hasura.SQL.Backend
 
-resolveSourceConfig ::
-  (MonadIO m) =>
-  SourceName ->
-  ConnSourceConfig ->
-  Env.Environment ->
-  m (Either QErr SourceConfig)
+resolveSourceConfig :: (MonadIO m) => SourceName -> ConnSourceConfig -> Env.Environment -> m (Either QErr SourceConfig)
 resolveSourceConfig _name csc@ConnSourceConfig {_cscPoolSettings = ConnPoolSettings {..}, ..} _env = do
   let connectInfo =
         defaultConnectInfo
@@ -71,6 +73,9 @@ parseFieldResult f@Field {..} mBs =
     VarString ->
       let fvalue :: Text = MySQL.convert f mBs
        in J.String fvalue
+    Blob ->
+      let fvalue :: Text = MySQL.convert f mBs
+       in J.String fvalue
     DateTime -> maybe J.Null (J.String . decodeUtf8) mBs
     _ -> error $ "parseResult: not implemented yet " <> show f <> " " <> show mBs
 
@@ -101,6 +106,40 @@ runJSONPathQuery pool (Query querySql) = do
       pure $ fieldsToAeson fields rows
   pure $ toStrict $ toLazyText $ encodeToTextBuilder $ toJSON result
 
+-- | Used by the dataloader to produce rows of records. Those rows of
+-- records are then manipulated by the dataloader to do Haskell-side
+-- joins. Is a Vector of HashMaps the most efficient choice? A
+-- pandas-style data frame could also be more efficient,
+-- dependingly. However, this is a legible approach; efficiency
+-- improvements can be added later.
+parseAndCollectRows ::
+  [Field] ->
+  [[Maybe ByteString]] ->
+  Vector (InsOrdHashMap DataLoaderPlan.FieldName J.Value)
+parseAndCollectRows columns rows =
+  V.fromList
+    [ OMap.fromList
+        [ (DataLoaderPlan.FieldName . decodeUtf8 . fieldName $ column, parseFieldResult column value)
+          | (column, value) <- zip columns row :: [(Field, Maybe ByteString)]
+        ]
+      | row <- rows :: [[Maybe ByteString]]
+    ]
+
+-- | Run a query immediately and parse up the results into a vector.
+runQueryYieldingRows ::
+  (MonadIO m) =>
+  Pool Connection ->
+  Query ->
+  m (Vector (InsOrdHashMap DataLoaderPlan.FieldName J.Value))
+runQueryYieldingRows pool (Query querySql) = do
+  liftIO $
+    withResource pool $ \conn -> do
+      query conn querySql
+      result <- storeResult conn
+      fields <- fetchFields result
+      rows <- fetchAllRows result
+      pure (parseAndCollectRows fields rows)
+
 fetchAllRows :: Result -> IO [[Maybe ByteString]]
 fetchAllRows r = reverse <$> go [] r
   where
@@ -108,3 +147,9 @@ fetchAllRows r = reverse <$> go [] r
       fetchRow res >>= \case
         [] -> pure acc
         r' -> go (r' : acc) res
+
+parseTextRows :: [Field] -> [[Maybe ByteString]] -> [[Text]]
+parseTextRows columns rows = map (\(column, row) -> map (MySQL.convert column) row) (zip columns rows)
+
+withMySQLPool :: (MonadIO m) => Pool Connection -> (Connection -> IO a) -> m a
+withMySQLPool pool = liftIO . withResource pool

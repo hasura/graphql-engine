@@ -38,9 +38,7 @@ import Hasura.GraphQL.Context
 import Hasura.GraphQL.Schema.Common (textToName)
 import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
-import Hasura.RQL.DDL.Deps
 import Hasura.RQL.DDL.Schema.Cache.Common
-import Hasura.RQL.DDL.Schema.Common
 import Hasura.RQL.DDL.Schema.Enum (resolveEnumReferences)
 import Hasura.RQL.IR
 import Hasura.RQL.Types hiding (fmFunction)
@@ -344,9 +342,7 @@ unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsis
       indirectDeps = mapMaybe getIndirectDep allDeps
   -- Report bach with an error if cascade is not set
   when (indirectDeps /= [] && not cascade) $
-    reportDepsExt
-      (map (SOSourceObj source . AB.mkAnyBackend) indirectDeps)
-      []
+    reportDependentObjectsExist (map (SOSourceObj source . AB.mkAnyBackend) indirectDeps)
   -- Purge all the dependents from state
   metadataModifier <- execWriterT do
     mapM_ (purgeDependentObject source >=> tell) indirectDeps
@@ -366,15 +362,6 @@ unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsis
             if not (s == source && qtn == dtn) then Just v else Nothing
           v -> Just v
       _ -> Nothing
-
-dropTableInMetadata ::
-  forall b.
-  (BackendMetadata b) =>
-  SourceName ->
-  TableName b ->
-  MetadataModifier
-dropTableInMetadata source table =
-  MetadataModifier $ metaSources . ix source . (toSourceMetadata @b) . smTables %~ OMap.delete table
 
 runUntrackTableQ ::
   forall b m.

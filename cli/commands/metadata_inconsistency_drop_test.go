@@ -47,7 +47,7 @@ var _ = Describe("hasura metadata inconsistency drop", func() {
 				WorkingDirectory: projectDirectory,
 			})
 			Eventually(session, timeout).Should(Exit(1))
-			Expect(session.Err.Contents()).Should(ContainSubstring("metadata is inconsistent, use list command to see the objects"))
+			Expect(session.Err.Contents()).Should(ContainSubstring("metadata is inconsistent, use 'hasura metadata ic list' command to see the inconsistent objects"))
 
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
 				Args:             []string{"metadata", "inconsistency", "drop"},

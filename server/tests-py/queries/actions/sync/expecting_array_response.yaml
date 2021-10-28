@@ -61,6 +61,7 @@
                 \    }\n  }\n}\n"
             url: http://127.0.0.1:5593/create-user
             headers: []
+            transformed_request:
         path: $
         code: unexpected
       message: expecting array for action webhook response but got object

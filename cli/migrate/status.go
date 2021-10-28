@@ -63,16 +63,6 @@ func (i *Status) Read(version uint64) (m *MigrationStatus, ok bool) {
 	return nil, false
 }
 
-func (i *Status) findPos(version uint64) int {
-	if len(i.Index) > 0 {
-		ix := i.Index.Search(version)
-		if ix < len(i.Index) && i.Index[ix] == version {
-			return ix
-		}
-	}
-	return -1
-}
-
 type uint64Slice []uint64
 
 func (s uint64Slice) Len() int {

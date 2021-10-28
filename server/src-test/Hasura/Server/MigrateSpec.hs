@@ -26,7 +26,6 @@ import Hasura.Server.API.PGDump
 import Hasura.Server.Init (DowngradeOptions (..))
 import Hasura.Server.Migrate
 import Hasura.Server.Types (MaintenanceMode (..))
-import Hasura.Server.Version (HasVersion)
 import Hasura.Session
 import Network.HTTP.Client.Manager qualified as HTTP
 import Test.Hspec.Core.Spec
@@ -94,8 +93,7 @@ singleTransaction = id
 
 spec ::
   forall m.
-  ( HasVersion,
-    MonadIO m,
+  ( MonadIO m,
     MonadBaseControl IO m,
     HTTP.HasHttpManagerM m,
     HasServerConfigCtx m,

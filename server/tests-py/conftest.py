@@ -7,6 +7,7 @@ from datetime import datetime
 import sys
 import os
 from collections import OrderedDict
+from validate import assert_response_code
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -37,7 +38,7 @@ def pytest_addoption(parser):
         help="Run Test cases for testing webhook request context"
     )
     parser.addoption(
-        "--hge-jwt-key-file", metavar="HGE_JWT_KEY_FILE", help="File containting the private key used to encode jwt tokens using RS512 algorithm", required=False
+        "--hge-jwt-key-file", metavar="HGE_JWT_KEY_FILE", help="File containing the private key used to encode jwt tokens using RS512 algorithm", required=False
     )
     parser.addoption(
         "--hge-jwt-conf", metavar="HGE_JWT_CONF", help="The JWT conf", required=False
@@ -422,20 +423,31 @@ def per_class_db_schema_for_mutation_tests(request, hge_ctx):
     # setting the default metadata API version to v1
     setup_metadata_api_version = getattr(request.cls, 'setup_metadata_api_version',"v1")
 
-    (setup, teardown, schema_setup, schema_teardown) = [ 'setup.yaml',
-                                                         'teardown.yaml',
-                                                         'schema_setup.yaml',
-                                                         'schema_teardown.yaml']
+    (setup, teardown, schema_setup, schema_teardown) = [
+        hge_ctx.backend_suffix(filename) + ".yaml"
+        for filename in ['setup', 'teardown', 'schema_setup', 'schema_teardown']
+    ]
 
-    if setup_metadata_api_version == "v1":
-        yield from db_context_with_schema_common(
-            request, hge_ctx, 'schema_setup_files', 'schema_setup.yaml', 'schema_teardown_files', 'schema_teardown.yaml', True
-        )
+    # only lookup files relevant to the tests being run.
+    # defaults to postgres file lookup
+    check_file_exists = hge_ctx.backend == backend
+
+    if hge_ctx.is_default_backend:
+        if setup_metadata_api_version == "v1":
+            db_context = db_context_with_schema_common(
+                request, hge_ctx, 'schema_setup_files', 'schema_setup.yaml', 'schema_teardown_files', 'schema_teardown.yaml', check_file_exists
+            )
+        else:
+            db_context = db_context_with_schema_common_new (
+                request, hge_ctx, 'schema_setup_files', setup, 'schema_teardown_files', teardown,
+                schema_setup, schema_teardown, check_file_exists
+            )
     else:
-        yield from db_context_with_schema_common_new (
+        db_context = db_context_with_schema_common_new (
             request, hge_ctx, 'schema_setup_files', setup, 'schema_teardown_files', teardown,
-            schema_setup, schema_teardown, True
+            schema_setup, schema_teardown, check_file_exists
         )
+    yield from db_context
 
 @pytest.fixture(scope='function')
 def per_method_db_data_for_mutation_tests(request, hge_ctx, per_class_db_schema_for_mutation_tests):
@@ -447,9 +459,17 @@ def per_method_db_data_for_mutation_tests(request, hge_ctx, per_class_db_schema_
     The class may provide `values_setup_files` variables which contains the list of data setup files,
     Or the `values_teardown_files` variable which provides the list of data teardown files.
     """
+
+    # Non-default (Postgres) backend tests expect separate setup and schema_setup
+    # files for v1/metadata and v2/query requests, respectively.
+    (values_setup, values_teardown) = [
+        hge_ctx.backend_suffix(filename) + ".yaml"
+        for filename in ['values_setup', 'values_teardown']
+    ]
+
     yield from db_context_common(
-        request, hge_ctx, 'values_setup_files', 'values_setup.yaml',
-        'values_teardown_files', 'values_teardown.yaml',
+        request, hge_ctx, 'values_setup_files', values_setup,
+        'values_teardown_files', values_teardown,
         False, False, False
     )
 
@@ -552,7 +572,11 @@ def db_context_common(
         return files
     setup = get_files(setup_files_attr, setup_default_file)
     teardown = get_files(teardown_files_attr, teardown_default_file)
-    yield from setup_and_teardown_v1q(request, hge_ctx, setup, teardown, check_file_exists, skip_setup, skip_teardown)
+    if hge_ctx.is_default_backend:
+        yield from setup_and_teardown_v1q(request, hge_ctx, setup, teardown, check_file_exists, skip_setup, skip_teardown)
+    else:
+        yield from setup_and_teardown_v2q(request, hge_ctx, setup, teardown, check_file_exists, skip_setup, skip_teardown)
+
 
 def db_context_common_new(
         request, hge_ctx, setup_files_attr, setup_default_file,
@@ -588,6 +612,23 @@ def setup_and_teardown_v1q(request, hge_ctx, setup_files, teardown_files, check_
     if request.session.testsfailed > 0 or not skip_teardown:
         run_on_elem_or_list(v1q_f, teardown_files)
 
+def setup_and_teardown_v2q(request, hge_ctx, setup_files, teardown_files, check_file_exists=True, skip_setup=False, skip_teardown=False):
+    def assert_file_exists(f):
+        assert os.path.isfile(f), 'Could not find file ' + f
+    if check_file_exists:
+        for o in [setup_files, teardown_files]:
+            run_on_elem_or_list(assert_file_exists, o)
+    def v2q_f(f):
+        if os.path.isfile(f):
+            st_code, resp = hge_ctx.v2q_f(f)
+            assert st_code == 200, resp
+    if not skip_setup:
+        run_on_elem_or_list(v2q_f, setup_files)
+    yield
+    # Teardown anyway if any of the tests have failed
+    if request.session.testsfailed > 0 or not skip_teardown:
+        run_on_elem_or_list(v2q_f, teardown_files)
+
 def setup_and_teardown(request, hge_ctx, setup_files, teardown_files,
                        sql_schema_setup_file,sql_schema_teardown_file,
                        check_file_exists=True, skip_setup=False, skip_teardown=False):
@@ -599,14 +640,14 @@ def setup_and_teardown(request, hge_ctx, setup_files, teardown_files,
     def v2q_f(f):
         if os.path.isfile(f):
             st_code, resp = hge_ctx.v2q_f(f)
-            assert st_code == 200, resp
+            assert_response_code('/v2/query', f, st_code, 200, resp)
     def metadataq_f(f):
         if os.path.isfile(f):
             st_code, resp = hge_ctx.v1metadataq_f(f)
             if st_code != 200:
                 # drop the sql setup, if the metadata calls fail
                 run_on_elem_or_list(v2q_f, sql_schema_teardown_file)
-            assert st_code == 200, resp
+            assert_response_code('/v1/metadata', f, st_code, 200, resp)
     if not skip_setup:
         run_on_elem_or_list(v2q_f, sql_schema_setup_file)
         run_on_elem_or_list(metadataq_f, setup_files)

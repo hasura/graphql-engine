@@ -1,4 +1,15 @@
-module Hasura.RQL.DDL.Schema.Diff where
+module Hasura.RQL.DDL.Schema.Diff
+  ( TableMeta (..),
+    FunctionMeta (..),
+    FunctionsDiff (..),
+    ComputedFieldMeta (..),
+    getTablesDiff,
+    processTablesDiff,
+    getIndirectDependencies,
+    getFunctionsDiff,
+    getOverloadedFunctions,
+  )
+where
 
 import Control.Lens ((.~))
 import Data.Aeson
@@ -184,35 +195,35 @@ getTableChangeDeps source tn tableDiff = do
         )
         $ _cfdDropped computedFieldDiff
 
-data SchemaDiff (b :: BackendType) = SchemaDiff
+data TablesDiff (b :: BackendType) = TablesDiff
   { _sdDroppedTables :: ![TableName b],
     _sdAlteredTables :: ![(TableName b, TableDiff b)]
   }
 
-getSchemaDiff ::
-  (Backend b) => [TableMeta b] -> [TableMeta b] -> SchemaDiff b
-getSchemaDiff oldMeta newMeta =
-  SchemaDiff droppedTables survivingTables
+getTablesDiff ::
+  (Backend b) => [TableMeta b] -> [TableMeta b] -> TablesDiff b
+getTablesDiff oldMeta newMeta =
+  TablesDiff droppedTables survivingTables
   where
     droppedTables = map tmTable $ getDifferenceOn (_ptmiOid . tmInfo) oldMeta newMeta
     survivingTables =
       flip map (getOverlapWith (_ptmiOid . tmInfo) oldMeta newMeta) $ \(oldtm, newtm) ->
         (tmTable oldtm, getTableDiff oldtm newtm)
 
-getSchemaChangeDeps ::
+getIndirectDependencies ::
   forall b m.
   (QErrM m, CacheRM m, Backend b) =>
   SourceName ->
-  SchemaDiff b ->
+  TablesDiff b ->
   m [SchemaObjId]
-getSchemaChangeDeps source schemaDiff = do
+getIndirectDependencies source tablesDiff = do
   sc <- askSchemaCache
   let tableIds = SOSourceObj source . AB.mkAnyBackend . SOITable @b <$> droppedTables
       tableDropDeps = concatMap (getDependentObjs sc) tableIds
   tableModDeps <- concat <$> traverse (uncurry (getTableChangeDeps source)) alteredTables
   pure $ filter isIndirectDep $ HS.toList $ HS.fromList $ tableDropDeps <> tableModDeps
   where
-    SchemaDiff droppedTables alteredTables = schemaDiff
+    TablesDiff droppedTables alteredTables = tablesDiff
     -- we keep all table objects that are not tied to a deleted table
     isIndirectDep :: SchemaObjId -> Bool
     isIndirectDep = \case
@@ -229,18 +240,18 @@ getSchemaChangeDeps source schemaDiff = do
       -- any other kind of schema object
       _ -> False
 
-data FunctionDiff b = FunctionDiff
+data FunctionsDiff b = FunctionsDiff
   { fdDropped :: ![FunctionName b],
     fdAltered :: ![(FunctionName b, FunctionVolatility)]
   }
 
-deriving instance (Backend b) => Show (FunctionDiff b)
+deriving instance (Backend b) => Show (FunctionsDiff b)
 
-deriving instance (Backend b) => Eq (FunctionDiff b)
+deriving instance (Backend b) => Eq (FunctionsDiff b)
 
-getFuncDiff :: [FunctionMeta b] -> [FunctionMeta b] -> FunctionDiff b
-getFuncDiff oldMeta newMeta =
-  FunctionDiff droppedFuncs alteredFuncs
+getFunctionsDiff :: [FunctionMeta b] -> [FunctionMeta b] -> FunctionsDiff b
+getFunctionsDiff oldMeta newMeta =
+  FunctionsDiff droppedFuncs alteredFuncs
   where
     droppedFuncs = map fmFunction $ getDifferenceOn fmOid oldMeta newMeta
     alteredFuncs = mapMaybe mkAltered $ getOverlapWith fmOid oldMeta newMeta
@@ -249,15 +260,15 @@ getFuncDiff oldMeta newMeta =
           alteredFunc = (fmFunction oldfm, fmType newfm)
        in bool Nothing (Just alteredFunc) isTypeAltered
 
-getOverloadedFuncs ::
+getOverloadedFunctions ::
   (Backend b) => [FunctionName b] -> [FunctionMeta b] -> [FunctionName b]
-getOverloadedFuncs trackedFuncs newFuncMeta =
+getOverloadedFunctions trackedFuncs newFuncMeta =
   toList $ duplicates $ map fmFunction trackedMeta
   where
     trackedMeta = flip filter newFuncMeta $ \fm ->
       fmFunction fm `elem` trackedFuncs
 
-processSchemaDiff ::
+processTablesDiff ::
   forall b m.
   ( MonadError QErr m,
     CacheRM m,
@@ -266,9 +277,9 @@ processSchemaDiff ::
   ) =>
   SourceName ->
   TableCache b ->
-  SchemaDiff b ->
+  TablesDiff b ->
   m ()
-processSchemaDiff source preActionTables schemaDiff = do
+processTablesDiff source preActionTables tablesDiff = do
   -- Purge the dropped tables
   dropTablesInMetadata @b source droppedTables
 
@@ -279,7 +290,7 @@ processSchemaDiff source preActionTables schemaDiff = do
         (throw500 $ "old table metadata not found in cache : " <>> oldQtn)
     alterTableInMetadata source (_tiCoreInfo ti) tableDiff
   where
-    SchemaDiff droppedTables alteredTables = schemaDiff
+    TablesDiff droppedTables alteredTables = tablesDiff
 
 alterTableInMetadata ::
   forall m b.

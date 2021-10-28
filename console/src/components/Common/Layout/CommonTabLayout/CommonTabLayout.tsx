@@ -15,6 +15,7 @@ type Props = {
   baseUrl: string;
   showLoader: boolean;
   testPrefix: string;
+  subHeading?: React.ReactNode;
 };
 
 const CommonTabLayout: React.FC<Props> = props => {
@@ -27,6 +28,7 @@ const CommonTabLayout: React.FC<Props> = props => {
     baseUrl,
     showLoader,
     testPrefix,
+    subHeading,
   } = props;
 
   return (
@@ -35,6 +37,7 @@ const CommonTabLayout: React.FC<Props> = props => {
       <h2 className={`${styles.heading_text} ${styles.set_line_height}`}>
         {heading || ''}
       </h2>
+      {subHeading || null}
       <Tabs
         appPrefix={appPrefix}
         tabName={currentTab}

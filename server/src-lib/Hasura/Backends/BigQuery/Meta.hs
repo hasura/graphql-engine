@@ -59,7 +59,7 @@ instance FromJSON RestTableList where
           case kind of
             ("bigquery#tableList" :: Text) -> do
               nextPageToken <- o .:? "nextPageToken"
-              tables <- o .: "tables"
+              tables <- o .:? "tables" .!= []
               pure RestTableList {..}
             _ -> fail "Expected kind of bigquery#tableList"
       )
@@ -117,7 +117,7 @@ instance FromJSON RestFieldSchema where
       ( \o -> do
           type' <- o .: "type"
           name <- o .: "name"
-          mode <- fmap (fromMaybe Nullable) (o .:? "mode")
+          mode <- o .:? "mode" .!= Nullable
           pure RestFieldSchema {..}
       )
 

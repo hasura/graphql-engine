@@ -34,6 +34,8 @@ func TestCommands(t *testing.T) {
 		ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
 		ec.Spinner.Writer = ioutil.Discard
 		ec.Viper = viper.New()
+		ec.Stdout = os.Stdout
+		ec.Stderr = os.Stderr
 
 		initDir := filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000)))
 		defer os.RemoveAll(initDir)
@@ -91,6 +93,8 @@ func TestCommands(t *testing.T) {
 		ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
 		ec.Spinner.Writer = ioutil.Discard
 		ec.Viper = viper.New()
+		ec.Stdout = os.Stdout
+		ec.Stderr = os.Stderr
 
 		initDir := filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000)))
 		defer os.RemoveAll(initDir)
@@ -138,6 +142,11 @@ func TestCommands(t *testing.T) {
 		skip(t)
 		t.Run("seed apply commands", func(t *testing.T) {
 			v3.TestSeedsApplyCmd(t, ec)
+		})
+
+		skip(t)
+		t.Run("deploy commands", func(t *testing.T) {
+			v3.TestDeployCmd(t, ec)
 		})
 	})
 }

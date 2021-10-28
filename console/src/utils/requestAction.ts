@@ -11,6 +11,7 @@ import {
   CONNECTION_FAILED,
 } from '../components/App/Actions';
 import { globalCookiePolicy } from '../Endpoints';
+import { processResponseDetails } from '../components/Services/ApiExplorer/Actions';
 
 const requestAction = <T = any>(
   url: string,
@@ -18,7 +19,8 @@ const requestAction = <T = any>(
   SUCCESS?: string,
   ERROR?: string,
   includeCredentials = true,
-  includeAdminHeaders = false
+  includeAdminHeaders = false,
+  requestTrackingId?: string
 ): Thunk<Promise<T>> => {
   return (dispatch: any, getState: any) => {
     const requestOptions = { ...options };
@@ -35,10 +37,12 @@ const requestAction = <T = any>(
     }
     return new Promise((resolve, reject) => {
       dispatch({ type: LOAD_REQUEST });
+      const startTime = new Date().getTime();
       fetch(url, requestOptions).then(
         response => {
           const contentType = response.headers.get('Content-Type');
           const isResponseJson = `${contentType}`.includes('application/json');
+
           if (response.ok) {
             if (!isResponseJson) {
               return response.text().then(responseBody => {
@@ -56,6 +60,21 @@ const requestAction = <T = any>(
                 dispatch({ type: SUCCESS, data: results });
               }
               dispatch({ type: DONE_REQUEST });
+              if (requestTrackingId) {
+                const endTime = new Date().getTime();
+                const responseTimeMs = endTime - startTime;
+                const isResponseCached = response.headers.has('Cache-Control');
+                const responseSize = JSON.stringify(results).length * 2;
+                dispatch(
+                  processResponseDetails(
+                    responseTimeMs,
+                    responseSize,
+                    isResponseCached,
+                    requestTrackingId
+                  )
+                );
+              }
+
               resolve(results);
             });
           }

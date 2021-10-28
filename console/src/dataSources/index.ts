@@ -322,7 +322,7 @@ export interface DataSourcesAPI {
   getFunctionDefinitionSql:
     | null
     | ((
-        schemaName: string,
+        schemaName: string | string[],
         functionName?: string | null | undefined,
         type?: 'trackable' | 'non-trackable' | undefined
       ) => string);
@@ -344,7 +344,7 @@ export interface DataSourcesAPI {
     columns: string[];
     unique?: boolean;
   }) => string;
-  dropIndexSql?: (indexName: string) => string;
+  dropIndexSql?: (indexName: string, schema: string) => string;
   indexFormToolTips?: IndexFormToolTips;
   indexTypes?: Record<string, IndexType>;
   supportedIndex?: {

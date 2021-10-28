@@ -49,6 +49,7 @@ data RQLMetadataV1
   | -- Functions
     RMTrackFunction !(AnyBackend TrackFunctionV2)
   | RMUntrackFunction !(AnyBackend UnTrackFunction)
+  | RMSetFunctionCustomization (AnyBackend SetFunctionCustomization)
   | -- Functions permissions
     RMCreateFunctionPermission !(AnyBackend FunctionPermissionArgument)
   | RMDropFunctionPermission !(AnyBackend FunctionPermissionArgument)
@@ -121,7 +122,7 @@ data RQLMetadataV1
     RMDumpInternalState !DumpInternalState
   | RMGetCatalogState !GetCatalogState
   | RMSetCatalogState !SetCatalogState
-  | RMValidateWebhookTransform !ValidateWebhookTransform
+  | RMTestWebhookTransform !TestWebhookTransform
   | -- Bulk metadata queries
     RMBulk [RQLMetadataRequest]
 

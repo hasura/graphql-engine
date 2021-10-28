@@ -3,6 +3,7 @@ module Hasura.RQL.Types.CustomTypes
     emptyCustomTypes,
     GraphQLType (..),
     isListType,
+    isNullableType,
     EnumTypeName (..),
     EnumValueDefinition (..),
     EnumTypeDefinition (..),
@@ -78,6 +79,9 @@ instance J.FromJSON GraphQLType where
 
 isListType :: GraphQLType -> Bool
 isListType (GraphQLType ty) = G.isListType ty
+
+isNullableType :: GraphQLType -> Bool
+isNullableType (GraphQLType ty) = G.isNullable ty
 
 newtype InputObjectFieldName = InputObjectFieldName {unInputObjectFieldName :: G.Name}
   deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Generic, NFData, Cacheable)

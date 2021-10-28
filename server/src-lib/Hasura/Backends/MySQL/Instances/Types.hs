@@ -34,7 +34,9 @@ instance Backend 'MySQL where
   type XRelay 'MySQL = Void
   type XNodesAgg 'MySQL = XEnable
   type ExtraTableMetadata 'MySQL = ()
+  type ExtraInsertData 'MySQL = ()
   type XNestedInserts 'MySQL = XDisable
+  type XOnConflict 'MySQL = XDisable
 
   functionArgScalarType :: FunctionArgType 'MySQL -> ScalarType 'MySQL
   functionArgScalarType = error "functionArgScalarType: not implemented yet"
@@ -90,7 +92,7 @@ instance Backend 'MySQL where
 
   tableGraphQLName :: TableName 'MySQL -> Either QErr G.Name
   tableGraphQLName MySQL.TableName {..} =
-    let gName = schema <> "_" <> name
+    let gName = maybe "" (<> "_") schema <> name
      in (G.mkName gName)
           `onNothing` throw400 ValidationFailed ("TableName " <> gName <> " is not a valid GraphQL identifier")
 
@@ -101,4 +103,5 @@ instance Backend 'MySQL where
   scalarTypeGraphQLName = error "scalarTypeGraphQLName: MySQL backend does not support this operation yet."
 
   snakeCaseTableName :: TableName 'MySQL -> Text
-  snakeCaseTableName MySQL.TableName {name, schema} = schema <> "_" <> name
+  snakeCaseTableName MySQL.TableName {name, schema} =
+    maybe "" (<> "_") schema <> name

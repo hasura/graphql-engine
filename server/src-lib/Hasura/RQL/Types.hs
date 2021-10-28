@@ -16,6 +16,7 @@ module Hasura.RQL.Types
     askTabInfoSource,
     askTableCoreInfo,
     askTableCoreInfoSource,
+    askFunInfo,
     askFieldInfoMap,
     askFieldInfoMapSource,
     assertColumnExists,
@@ -51,6 +52,7 @@ import Hasura.RQL.Types.Function as R
 import Hasura.RQL.Types.GraphqlSchemaIntrospection as R
 import Hasura.RQL.Types.Metadata as R
 import Hasura.RQL.Types.Metadata.Backend as R
+import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.Metadata.Object as R
 import Hasura.RQL.Types.Network as R
 import Hasura.RQL.Types.Permission as R
@@ -116,6 +118,22 @@ askTabInfo sourceName tableName = do
     `onNothing` throw400 NotExists errMsg
   where
     errMsg = "table " <> tableName <<> " does not exist in source: " <> sourceNameToText sourceName
+
+-- | Tries to extract the function information from the metadata.
+--
+--   If the function does not exist, will throw a 'not-exists' error.
+askFunInfo ::
+  forall b m.
+  (QErrM m, CacheRM m, Backend b) =>
+  SourceName ->
+  FunctionName b ->
+  m (FunctionInfo b)
+askFunInfo sourceName functionName = do
+  rawSchemaCache <- askSchemaCache
+  unsafeFunctionInfo sourceName functionName (scSources rawSchemaCache)
+    `onNothing` throw400 NotExists errMsg
+  where
+    errMsg = "function " <> functionName <<> " does not exist in source: " <> sourceNameToText sourceName
 
 askTabInfoSource ::
   forall b m.

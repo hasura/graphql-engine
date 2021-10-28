@@ -11,6 +11,7 @@ import Data.HashSet qualified as HS
 import Data.String
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
+import Database.MSSQL.Transaction qualified as Tx
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Instances.Types ()
@@ -25,14 +26,11 @@ import Hasura.SQL.Backend
 --------------------------------------------------------------------------------
 -- Loader
 
-loadDBMetadata ::
-  (MonadError QErr m, MonadIO m) =>
-  MSSQLPool ->
-  m (DBTablesMetadata 'MSSQL)
-loadDBMetadata pool = do
+loadDBMetadata :: (MonadIO m) => Tx.TxET QErr m (DBTablesMetadata 'MSSQL)
+loadDBMetadata = do
   let queryBytes = $(makeRelativeToProject "src-rsr/mssql_table_metadata.sql" >>= embedFile)
       odbcQuery :: ODBC.Query = fromString . BSUTF8.toString $ queryBytes
-  sysTablesText <- runJSONPathQuery pool odbcQuery
+  sysTablesText <- runIdentity <$> Tx.singleRowQueryE fromMSSQLTxError odbcQuery
   case Aeson.eitherDecodeStrict (T.encodeUtf8 sysTablesText) of
     Left e -> throw500 $ T.pack $ "error loading sql server database schema: " <> e
     Right sysTables -> pure $ HM.fromList $ map transformTable sysTables
@@ -44,11 +42,29 @@ data SysTable = SysTable
   { staName :: Text,
     staObjectId :: Int,
     staJoinedSysColumn :: [SysColumn],
-    staJoinedSysSchema :: SysSchema
+    staJoinedSysSchema :: SysSchema,
+    staJoinedSysPrimaryKey :: Maybe SysPrimaryKey
   }
   deriving (Show, Generic)
 
 instance FromJSON SysTable where
+  parseJSON = genericParseJSON hasuraJSON
+
+newtype SysPrimaryKeyColumn = SysPrimaryKeyColumn
+  {spkcName :: Text}
+  deriving (Show, Generic)
+
+instance FromJSON SysPrimaryKeyColumn where
+  parseJSON = genericParseJSON hasuraJSON
+
+data SysPrimaryKey = SysPrimaryKey
+  { spkName :: Text,
+    spkIndexId :: Int,
+    spkColumns :: NESeq SysPrimaryKeyColumn
+  }
+  deriving (Show, Generic)
+
+instance FromJSON SysPrimaryKey where
   parseJSON = genericParseJSON hasuraJSON
 
 data SysSchema = SysSchema
@@ -110,6 +126,7 @@ transformTable tableInfo =
       tableOID = OID $ staObjectId tableInfo
       (columns, foreignKeys) = unzip $ transformColumn <$> staJoinedSysColumn tableInfo
       foreignKeysMetadata = HS.fromList $ map ForeignKeyMetadata $ coalesceKeys $ concat foreignKeys
+      primaryKey = transformPrimaryKey <$> staJoinedSysPrimaryKey tableInfo
       identityColumns =
         map (ColumnName . scName) $
           filter scIsIdentity $ staJoinedSysColumn tableInfo
@@ -117,7 +134,7 @@ transformTable tableInfo =
         DBTableMetadata
           tableOID
           columns
-          Nothing -- no primary key information?
+          primaryKey
           HS.empty -- no unique constraints?
           foreignKeysMetadata
           Nothing -- no views, only tables
@@ -137,13 +154,19 @@ transformColumn columnInfo =
       prciType = parseScalarType $ styName $ scJoinedSysType columnInfo
       foreignKeys =
         scJoinedForeignKeyColumns columnInfo <&> \foreignKeyColumn ->
-          let _fkConstraint = Constraint () $ OID $ sfkcConstraintObjectId foreignKeyColumn
+          let _fkConstraint = Constraint "fk_mssql" $ OID $ sfkcConstraintObjectId foreignKeyColumn
 
               schemaName = ssName $ sfkcJoinedReferencedSysSchema foreignKeyColumn
               _fkForeignTable = TableName (sfkcJoinedReferencedTableName foreignKeyColumn) schemaName
               _fkColumnMapping = HM.singleton prciName $ ColumnName $ sfkcJoinedReferencedColumnName foreignKeyColumn
            in ForeignKey {..}
    in (RawColumnInfo {..}, foreignKeys)
+
+transformPrimaryKey :: SysPrimaryKey -> PrimaryKey 'MSSQL (Column 'MSSQL)
+transformPrimaryKey (SysPrimaryKey {..}) =
+  let constraint = Constraint spkName $ OID spkIndexId
+      columns = (ColumnName . spkcName) <$> spkColumns
+   in PrimaryKey constraint columns
 
 --------------------------------------------------------------------------------
 -- Helpers

@@ -6,9 +6,9 @@
   query:
     type: bigquery_set_table_customization
     args:
-      source: hasura
+      source: bigquery
       table:
-        dataset: hasura
+        dataset: hasura_test
         name: article
       configuration:
         custom_root_fields:

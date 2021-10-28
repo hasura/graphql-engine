@@ -62,26 +62,44 @@ buildTableInsertMutationFields ::
   Maybe (SelPermInfo b) ->
   Maybe (UpdPermInfo b) ->
   m [FieldParser n (MutationRootField UnpreparedValue)]
-buildTableInsertMutationFields sourceName sourceInfo queryTagsConfig tableName tableInfo gqlName insPerms mSelPerms mUpdPerms = do
-  let mkRF =
-        RFDB sourceName
-          . AB.mkAnyBackend
-          . SourceConfigWith sourceInfo queryTagsConfig
-          . MDBR
-      customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
-      -- insert into table
-      insertName = fromMaybe ($$(G.litName "insert_") <> gqlName) $ _tcrfInsert customRootFields
-      insertDesc = Just $ G.Description $ "insert data into the table: " <>> tableName
-      -- insert one into table
-      insertOneName = fromMaybe ($$(G.litName "insert_") <> gqlName <> $$(G.litName "_one")) $ _tcrfInsertOne customRootFields
-      insertOneDesc = Just $ G.Description $ "insert a single row into the table: " <>> tableName
-  insert <- insertIntoTable sourceName tableInfo insertName insertDesc insPerms mSelPerms mUpdPerms
-  -- Select permissions are required for insertOne: the selection set is the
-  -- same as a select on that table, and it therefore can't be populated if the
-  -- user doesn't have select permissions.
-  insertOne <- for mSelPerms \selPerms ->
-    insertOneIntoTable sourceName tableInfo insertOneName insertOneDesc insPerms selPerms mUpdPerms
-  pure $ fmap (mkRF . MDBInsert) <$> insert : maybeToList insertOne
+buildTableInsertMutationFields
+  sourceName
+  sourceInfo
+  queryTagsConfig
+  tableName
+  tableInfo
+  gqlName
+  insPerms
+  mSelPerms
+  mUpdPerms =
+    do
+      let mkRF ::
+            FieldParser
+              n
+              (AnnInsert b (RemoteSelect UnpreparedValue) (UnpreparedValue b)) ->
+            FieldParser n (MutationRootField UnpreparedValue)
+          mkRF =
+            fmap
+              ( RFDB sourceName
+                  . AB.mkAnyBackend
+                  . SourceConfigWith sourceInfo queryTagsConfig
+                  . MDBR
+                  . MDBInsert
+              )
+          customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
+          -- insert into table
+          insertName = fromMaybe ($$(G.litName "insert_") <> gqlName) $ _tcrfInsert customRootFields
+          insertDesc = Just $ G.Description $ "insert data into the table: " <>> tableName
+          -- insert one into table
+          insertOneName = fromMaybe ($$(G.litName "insert_") <> gqlName <> $$(G.litName "_one")) $ _tcrfInsertOne customRootFields
+          insertOneDesc = Just $ G.Description $ "insert a single row into the table: " <>> tableName
+      insert <- insertIntoTable sourceName tableInfo insertName insertDesc insPerms mSelPerms mUpdPerms
+      -- Select permissions are required for insertOne: the selection set is the
+      -- same as a select on that table, and it therefore can't be populated if the
+      -- user doesn't have select permissions.
+      insertOne <- for mSelPerms \selPerms ->
+        insertOneIntoTable sourceName tableInfo insertOneName insertOneDesc insPerms selPerms mUpdPerms
+      pure $ map mkRF (insert : maybeToList insertOne)
 
 buildTableUpdateMutationFields ::
   forall b r m n.
@@ -159,27 +177,29 @@ buildFunctionQueryFields ::
   SelPermInfo b ->
   m [FieldParser n (QueryRootField UnpreparedValue)]
 buildFunctionQueryFields sourceName sourceInfo queryTagsConfig functionName functionInfo tableName selPerms = do
-  funcName <- functionGraphQLName @b functionName `onLeft` throwError
   let mkRF =
         RFDB sourceName
           . AB.mkAnyBackend
           . SourceConfigWith sourceInfo queryTagsConfig
           . QDBR
+
       -- select function
       funcDesc =
         Just . G.Description $
           flip fromMaybe (_fiComment functionInfo) $ "execute function " <> functionName <<> " which returns " <>> tableName
       -- select function agg
-      funcAggName = funcName <> $$(G.litName "_aggregate")
+
       funcAggDesc = Just $ G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> tableName
+
       queryResultType =
         case _fiJsonAggSelect functionInfo of
           JASMultipleRows -> QDBMultipleRows
           JASSingleObject -> QDBSingleRow
+
   catMaybes
     <$> sequenceA
-      [ requiredFieldParser (mkRF . queryResultType) $ selectFunction sourceName functionInfo funcName funcDesc selPerms,
-        optionalFieldParser (mkRF . QDBAggregation) $ selectFunctionAggregate sourceName functionInfo funcAggName funcAggDesc selPerms
+      [ requiredFieldParser (mkRF . queryResultType) $ selectFunction sourceName functionInfo funcDesc selPerms,
+        optionalFieldParser (mkRF . QDBAggregation) $ selectFunctionAggregate sourceName functionInfo funcAggDesc selPerms
       ]
 
 buildFunctionMutationFields ::
@@ -194,16 +214,17 @@ buildFunctionMutationFields ::
   SelPermInfo b ->
   m [FieldParser n (MutationRootField UnpreparedValue)]
 buildFunctionMutationFields sourceName sourceInfo queryTagsConfig functionName functionInfo tableName selPerms = do
-  funcName <- functionGraphQLName @b functionName `onLeft` throwError
   let mkRF =
         RFDB sourceName
           . AB.mkAnyBackend
           . SourceConfigWith sourceInfo queryTagsConfig
           . MDBR
+
       funcDesc = Just $ G.Description $ "execute VOLATILE function " <> functionName <<> " which returns " <>> tableName
+
       jsonAggSelect = _fiJsonAggSelect functionInfo
   catMaybes
     <$> sequenceA
-      [ requiredFieldParser (mkRF . MDBFunction jsonAggSelect) $ selectFunction sourceName functionInfo funcName funcDesc selPerms
+      [ requiredFieldParser (mkRF . MDBFunction jsonAggSelect) $ selectFunction sourceName functionInfo funcDesc selPerms
       -- TODO: do we want aggregate mutation functions?
       ]

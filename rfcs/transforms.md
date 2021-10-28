@@ -347,11 +347,11 @@ with the json data and return the results.
 
 ```
 {
-    "type" : "validate_webhook_transform",
+    "type" : "test_webhook_transform",
     "args" : {
         "webhook_url": "https://localhost:1234",
-        "payload": { "hello": "world" },
-        "transformer": {
+        "body": { "hello": "world" },
+        "request_transform": {
           "body": "{{ $.hello }}",
           "template_engine": "Kriti"
          }

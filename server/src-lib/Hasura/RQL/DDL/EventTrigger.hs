@@ -48,7 +48,7 @@ data CreateEventTriggerQuery (b :: BackendType) = CreateEventTriggerQuery
     _cetqWebhookFromEnv :: !(Maybe Text),
     _cetqHeaders :: !(Maybe [HeaderConf]),
     _cetqReplace :: !Bool,
-    _cetqMetadataTransform :: !(Maybe MetadataTransform)
+    _cetqRequestTransform :: !(Maybe MetadataTransform)
   }
 
 instance Backend b => FromJSON (CreateEventTriggerQuery b) where
@@ -65,7 +65,7 @@ instance Backend b => FromJSON (CreateEventTriggerQuery b) where
     webhookFromEnv <- o .:? "webhook_from_env"
     headers <- o .:? "headers"
     replace <- o .:? "replace" .!= False
-    transform <- o .:? "transform"
+    requestTransform <- o .:? "request_transform"
     let regex = "^[A-Za-z]+[A-Za-z0-9_\\-]*$" :: LBS.ByteString
         compiledRegex = TDFA.makeRegex regex :: TDFA.Regex
         isMatch = TDFA.match compiledRegex . T.unpack $ triggerNameToTxt name
@@ -81,7 +81,7 @@ instance Backend b => FromJSON (CreateEventTriggerQuery b) where
       (Just _, Just _) -> fail "only one of webhook or webhook_from_env should be given"
       _ -> fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
-    return $ CreateEventTriggerQuery sourceName name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace transform
+    return $ CreateEventTriggerQuery sourceName name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace requestTransform
     where
       checkEmptyCols spec =
         case spec of
@@ -182,7 +182,7 @@ runCreateEventTriggerQuery q = do
 
 runDeleteEventTriggerQuery ::
   forall b m.
-  (BackendEventTrigger b, BackendMetadata b, MonadError QErr m, CacheRWM m, MonadIO m, MetadataM m) =>
+  (BackendEventTrigger b, MonadError QErr m, CacheRWM m, MonadIO m, MetadataM m) =>
   DeleteEventTriggerQuery b ->
   m EncJSON
 runDeleteEventTriggerQuery (DeleteEventTriggerQuery source name) = do
@@ -204,10 +204,6 @@ runDeleteEventTriggerQuery (DeleteEventTriggerQuery source name) = do
   dropTriggerAndArchiveEvents @b (_siConfiguration sourceInfo) name
 
   pure successMsg
-
-dropEventTriggerInMetadata :: TriggerName -> TableMetadata b -> TableMetadata b
-dropEventTriggerInMetadata name =
-  tmEventTriggers %~ OMap.delete name
 
 runRedeliverEvent ::
   forall b m.

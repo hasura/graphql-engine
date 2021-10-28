@@ -472,8 +472,8 @@ Fetch a list of those authors whose names are NOT part of a list:
       }
     }
 
-Text search or pattern matching operators (_like, _similar, etc.)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Text search or pattern matching operators (_like, _similar, _regex, etc.)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``_like``, ``_nlike``, ``_ilike``, ``_nilike``, ``_similar``, ``_nsimilar``, ``_regex``, ``_nregex``, ``_iregex``, ``_niregex`` operators are used for
 pattern matching on string/text fields.
@@ -497,21 +497,23 @@ Fetch a list of articles whose titles contain the word “amet”:
     }
   :response:
     {
-    "data": {
-      "articles": [
-        {
-          "id": 1,
-          "title": "sit amet"
-        },
-        {
-          "id": 3,
-          "title": "amet justo morbi"
-        },
-        {
-          "id": 9,
-          "title": "sit amet"
-        }
-      ]
+      "data": {
+        "articles": [
+          {
+            "id": 1,
+            "title": "sit amet"
+          },
+          {
+            "id": 3,
+            "title": "amet justo morbi"
+          },
+          {
+            "id": 9,
+            "title": "sit amet"
+          }
+        ]
+      }
+    }
 
 .. note::
 
@@ -560,6 +562,49 @@ Fetch a list of authors whose names begin with A or C:
 .. note::
 
   ``_similar`` is case-sensitive
+
+**Example: _regex**
+
+Fetch a list of articles whose titles match the regex “[ae]met”:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      articles(
+        where: {title: {_regex: "[ae]met"}}
+      ) {
+        id
+        title
+      }
+    }
+  :response:
+    {
+      "data": {
+        "articles": [
+          {
+            "id": 1,
+            "title": "sit amet"
+          },
+          {
+            "id": 3,
+            "title": "cremet justo morbi"
+          },
+          {
+            "id": 9,
+            "title": "sit ametist"
+          }
+        ]
+      }
+    }  
+
+.. note::
+
+  ``_regex`` is case-sensitive. Use ``_iregex`` for case-insensitive search.
+
+.. note::
+
+  ``regex`` operators are supported in in ``v2.0.0`` and above
 
 JSONB operators (_contains, _has_key, etc.)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

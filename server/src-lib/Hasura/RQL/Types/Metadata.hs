@@ -27,8 +27,6 @@ import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
-import Hasura.RQL.Types.Metadata.Backend
-import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
@@ -337,7 +335,7 @@ instance (Backend b) => FromJSON (SourceMetadata b) where
 
 mkSourceMetadata ::
   forall (b :: BackendType).
-  BackendMetadata b =>
+  Backend b =>
   SourceName ->
   SourceConnConfiguration b ->
   BackendSourceMetadata
@@ -346,11 +344,11 @@ mkSourceMetadata name config =
 
 type BackendSourceMetadata = AB.AnyBackend SourceMetadata
 
-toSourceMetadata :: forall b. (BackendMetadata b) => Prism' BackendSourceMetadata (SourceMetadata b)
+toSourceMetadata :: forall b. (Backend b) => Prism' BackendSourceMetadata (SourceMetadata b)
 toSourceMetadata = prism' AB.mkAnyBackend AB.unpackAnyBackend
 
 getSourceName :: BackendSourceMetadata -> SourceName
-getSourceName e = AB.dispatchAnyBackend @BackendMetadata e _smName
+getSourceName e = AB.dispatchAnyBackend @Backend e _smName
 
 type Sources = InsOrdHashMap SourceName BackendSourceMetadata
 
@@ -482,12 +480,22 @@ emptyMetadata =
     emptyNetwork
 
 tableMetadataSetter ::
-  (BackendMetadata b) =>
+  (Backend b) =>
   SourceName ->
   TableName b ->
   ASetter' Metadata (TableMetadata b)
 tableMetadataSetter source table =
   metaSources . ix source . toSourceMetadata . smTables . ix table
+
+-- | A lens setter for the metadata of a specific function as identified by
+--   the source name and function name.
+functionMetadataSetter ::
+  (Backend b) =>
+  SourceName ->
+  FunctionName b ->
+  ASetter' Metadata (FunctionMetadata b)
+functionMetadataSetter source function =
+  metaSources . ix source . toSourceMetadata . smFunctions . ix function
 
 data MetadataNoSources = MetadataNoSources
   { _mnsTables :: !(Tables ('Postgres 'Vanilla)),
@@ -553,6 +561,48 @@ instance Monoid MetadataModifier where
 
 noMetadataModify :: MetadataModifier
 noMetadataModify = mempty
+
+dropTableInMetadata ::
+  forall b. (Backend b) => SourceName -> TableName b -> MetadataModifier
+dropTableInMetadata source table =
+  MetadataModifier $ metaSources . ix source . (toSourceMetadata @b) . smTables %~ OM.delete table
+
+dropRelationshipInMetadata ::
+  RelName -> TableMetadata b -> TableMetadata b
+dropRelationshipInMetadata relName =
+  -- Since the name of a relationship is unique in a table, the relationship
+  -- with given name may present in either array or object relationships but
+  -- not in both.
+  (tmObjectRelationships %~ OM.delete relName)
+    . (tmArrayRelationships %~ OM.delete relName)
+
+dropPermissionInMetadata ::
+  RoleName -> PermType -> TableMetadata b -> TableMetadata b
+dropPermissionInMetadata rn = \case
+  PTInsert -> tmInsertPermissions %~ OM.delete rn
+  PTSelect -> tmSelectPermissions %~ OM.delete rn
+  PTDelete -> tmDeletePermissions %~ OM.delete rn
+  PTUpdate -> tmUpdatePermissions %~ OM.delete rn
+
+dropComputedFieldInMetadata ::
+  ComputedFieldName -> TableMetadata b -> TableMetadata b
+dropComputedFieldInMetadata name =
+  tmComputedFields %~ OM.delete name
+
+dropEventTriggerInMetadata :: TriggerName -> TableMetadata b -> TableMetadata b
+dropEventTriggerInMetadata name =
+  tmEventTriggers %~ OM.delete name
+
+dropRemoteRelationshipInMetadata ::
+  RemoteRelationshipName -> TableMetadata b -> TableMetadata b
+dropRemoteRelationshipInMetadata name =
+  tmRemoteRelationships %~ OM.delete name
+
+dropFunctionInMetadata ::
+  forall b. (Backend b) => SourceName -> FunctionName b -> MetadataModifier
+dropFunctionInMetadata source function =
+  MetadataModifier $
+    metaSources . ix source . toSourceMetadata . (smFunctions @b) %~ OM.delete function
 
 -- | Encode 'Metadata' to JSON with deterministic ordering (e.g. "version" being at the top).
 -- The CLI system stores metadata in files and has option to show changes in git diff style.
@@ -639,7 +689,7 @@ metadataToOrdJSON
 
       sourceMetaToOrdJSON :: BackendSourceMetadata -> AO.Value
       sourceMetaToOrdJSON exists =
-        AB.dispatchAnyBackend @BackendMetadata exists $ \(SourceMetadata {..} :: SourceMetadata b) ->
+        AB.dispatchAnyBackend @Backend exists $ \(SourceMetadata {..} :: SourceMetadata b) ->
           let sourceNamePair = ("name", AO.toOrdered _smName)
               sourceKind = T.toTxt $ reify $ backendTag @b
               sourceKindPair = ("kind", AO.String sourceKind)
@@ -818,13 +868,13 @@ metadataToOrdJSON
               AO.object $
                 [ ("name", AO.toOrdered name),
                   ("definition", AO.toOrdered definition),
-                  ("retry_conf", AO.toOrdered retryConf),
-                  ("transform", maybe AO.Null AO.toOrdered metadataTransform)
+                  ("retry_conf", AO.toOrdered retryConf)
                 ]
                   <> catMaybes
                     [ maybeAnyToMaybeOrdPair "webhook" AO.toOrdered webhook,
                       maybeAnyToMaybeOrdPair "webhook_from_env" AO.toOrdered webhookFromEnv,
-                      headers >>= listToMaybeOrdPair "headers" AO.toOrdered
+                      headers >>= listToMaybeOrdPair "headers" AO.toOrdered,
+                      fmap (("request_transform",) . AO.toOrdered) metadataTransform
                     ]
 
       functionMetadataToOrdJSON :: Backend b => FunctionMetadata b -> AO.Value
@@ -983,12 +1033,12 @@ metadataToOrdJSON
       actionMetadataToOrdJSON (ActionMetadata name comment definition permissions metaTransform) =
         AO.object $
           [ ("name", AO.toOrdered name),
-            ("definition", actionDefinitionToOrdJSON definition),
-            ("transform", AO.toOrdered metaTransform)
+            ("definition", actionDefinitionToOrdJSON definition)
           ]
             <> catMaybes
               [ maybeCommentToMaybeOrdPair comment,
-                listToMaybeOrdPair "permissions" permToOrdJSON permissions
+                listToMaybeOrdPair "permissions" permToOrdJSON permissions,
+                fmap (("request_transform",) . AO.toOrdered) metaTransform
               ]
         where
           argDefinitionToOrdJSON :: ArgumentDefinition GraphQLType -> AO.Value

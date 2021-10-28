@@ -21,7 +21,7 @@ import Control.Concurrent
 import Control.Exception.Safe
 import Control.Monad.Except
 import Control.Monad.Reader
-import Data.Aeson ((.:), (.:?), (.=))
+import Data.Aeson ((.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Types qualified as Aeson
 import Data.ByteString.Lazy qualified as L
@@ -239,12 +239,10 @@ getFinalRecordSet recordSet =
     recordSet
       { rows =
           fmap
-            ( \row ->
-                OMap.filterWithKey
-                  ( \(FieldNameText k) _ ->
-                      maybe True (elem k) (wantedFields recordSet)
-                  )
-                  row
+            ( OMap.filterWithKey
+                ( \(FieldNameText k) _ ->
+                    maybe True (elem k) (wantedFields recordSet)
+                )
             )
             (rows recordSet)
       }
@@ -293,14 +291,15 @@ valueType =
     TimestampValue {} -> TIMESTAMP
     ArrayValue values ->
       ARRAY
-        ( case values V.!? 0 of
-            Just v -> valueType v
+        ( maybe
+            STRING
+            -- Above: If the array is null, it doesn't matter what type
+            -- the element is. So we put STRING.
+            valueType
+            (values V.!? 0)
             -- Above: We base the type from the first element. Later,
             -- we could add some kind of sanity check that they are all
             -- the same type.
-            Nothing -> STRING
-            -- Above: If the array is null, it doesn't matter what type
-            -- the element is. So we put STRING.
         )
     NullValue -> STRING
 
@@ -353,10 +352,7 @@ streamBigQuery ::
 streamBigQuery credentials bigquery = do
   jobResult <- createQueryJob credentials bigquery
   case jobResult of
-    Right job -> do
-      records <- loop Nothing Nothing
-      -- liftIO (print records)
-      pure records
+    Right job -> loop Nothing Nothing
       where
         loop pageToken mrecordSet = do
           results <- getJobResults credentials job Fetch {pageToken}
@@ -568,9 +564,9 @@ createQueryJob sc@BigQuerySourceConfig {..} BigQuery {..} =
 
 parseRecordSetPayload :: Aeson.Object -> Aeson.Parser RecordSet
 parseRecordSetPayload resp = do
-  schema <- resp .: "schema"
-  columns <- schema .: "fields" :: Aeson.Parser (Vector BigQueryField)
-  rowsJSON <- fmap (fromMaybe mempty) (resp .:? "rows" :: Aeson.Parser (Maybe (Vector Aeson.Value)))
+  mSchema <- resp .:? "schema"
+  columns <- maybe (pure V.empty) (.: "fields") mSchema :: Aeson.Parser (Vector BigQueryField)
+  rowsJSON <- fmap (fromMaybe V.empty) (resp .:? "rows" :: Aeson.Parser (Maybe (Vector Aeson.Value)))
   rows <-
     V.imapM
       (\i row -> parseRow columns row Aeson.<?> Aeson.Index i)
@@ -754,7 +750,7 @@ instance Aeson.FromJSON BigQueryField where
                       fields <- o .: "fields"
                       pure (FieldSTRUCT fields)
                   | otherwise -> fail ("Unsupported field type: " ++ show flag)
-          mode <- o .: "mode"
+          mode <- o .:? "mode" .!= Nullable
           pure BigQueryField {..}
       )
 

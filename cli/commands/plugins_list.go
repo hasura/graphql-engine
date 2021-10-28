@@ -94,7 +94,6 @@ func (p *pluginListOptions) run() error {
 		var version string
 		if _, ok := installed[name]; ok {
 			status = "yes"
-			version = installed[name]
 		} else if _, ok, err := plugins.MatchPlatform(plugin.Platforms); err != nil {
 			return errors.Wrapf(err, "failed to get the matching platform for plugin %s", name)
 		} else if ok {

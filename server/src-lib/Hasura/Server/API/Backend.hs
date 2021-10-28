@@ -86,7 +86,8 @@ tablePermissionsCommands =
   ]
 functionCommands =
   [ commandParser "track_function" $ RMTrackFunction . mkAnyBackend @b,
-    commandParser "untrack_function" $ RMUntrackFunction . mkAnyBackend @b
+    commandParser "untrack_function" $ RMUntrackFunction . mkAnyBackend @b,
+    commandParser "set_function_customization" $ RMSetFunctionCustomization . mkAnyBackend @b
   ]
 functionPermissionsCommands =
   [ commandParser "create_function_permission" $ RMCreateFunctionPermission . mkAnyBackend @b,
