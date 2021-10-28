@@ -235,7 +235,7 @@ sendCloseWithMsg logger wsConn errCode mErrServerMsg mCode = do
   where
     wsc = WS.getRawWebSocketConnection wsConn
     errMsg = encodeServerErrorMsg errCode
-    errCloseCode = flip $ fromMaybe mCode (1000 :: Word16)
+    errCloseCode = fromMaybe (1000 :: Word16) mCode
 
 sendMsgWithMetadata ::
   (MonadIO m) =>

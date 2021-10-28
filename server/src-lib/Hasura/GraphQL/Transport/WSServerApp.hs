@@ -144,13 +144,14 @@ mkWSActions logger subProtocol =
         Apollo -> SMData $ DataMsg opId $ throwError execErr
         GraphQLWS -> SMErr $ ErrorMsg opId $ toJSON execErr
 
-    mkOnErrorMessageAction wsConn err mErrMsg mCode = case subProtocol of
+    mkOnErrorMessageAction wsConn err mErrMsg = case subProtocol of
       Apollo -> sendMsg wsConn $ SMConnErr err
-      GraphQLWS -> sendCloseWithMsg logger wsConn (GenericError4400 $ (fromMaybe "" mErrMsg) <> (unpack . unConnErrMsg $ err)) Nothing mCode
+      GraphQLWS -> sendCloseWithMsg logger wsConn (GenericError4400 $ (fromMaybe "" mErrMsg) <> (unpack . unConnErrMsg $ err)) Nothing (Just 1011)
+      -- refer https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1 for error codes of GraphQLWS
 
     mkConnectionCloseAction wsConn opId errMsg =
       when (subProtocol == GraphQLWS) $
-        sendCloseWithMsg logger wsConn (GenericError4400 errMsg) (Just . SMErr $ ErrorMsg opId $ toJSON (pack errMsg))
+        sendCloseWithMsg logger wsConn (GenericError4400 errMsg) (Just . SMErr $ ErrorMsg opId $ toJSON (pack errMsg)) (Just 1000)
 
     getServerMsgType = case subProtocol of
       Apollo -> SMData
