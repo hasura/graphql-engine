@@ -146,8 +146,7 @@ mkWSActions logger subProtocol =
 
     mkOnErrorMessageAction wsConn err mErrMsg = case subProtocol of
       Apollo -> sendMsg wsConn $ SMConnErr err
-      GraphQLWS -> sendCloseWithMsg logger wsConn (GenericError4400 $ (fromMaybe "" mErrMsg) <> (unpack . unConnErrMsg $ err)) Nothing (Just 1011)
-      -- refer https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1 for error codes of GraphQLWS
+      GraphQLWS -> sendCloseWithMsg logger wsConn (GenericError4400 $ (fromMaybe "" mErrMsg) <> (unpack . unConnErrMsg $ err)) Nothing Nothing
 
     mkConnectionCloseAction wsConn opId errMsg =
       when (subProtocol == GraphQLWS) $
