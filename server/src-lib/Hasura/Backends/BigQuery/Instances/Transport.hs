@@ -13,6 +13,7 @@ import Hasura.GraphQL.Logging
     QueryLog (..),
     QueryLogKind (QueryLogKindDatabase),
   )
+import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
@@ -22,7 +23,6 @@ import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing
 import Hasura.Tracing qualified as Tracing
-import Language.GraphQL.Draft.Syntax qualified as G
 
 instance BackendTransport 'BigQuery where
   runDBQuery = runQuery
@@ -38,7 +38,7 @@ runQuery ::
   ) =>
   RequestId ->
   GQLReqUnparsed ->
-  G.Name ->
+  RootFieldAlias ->
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig 'BigQuery ->
@@ -65,7 +65,7 @@ runMutation ::
   ) =>
   RequestId ->
   GQLReqUnparsed ->
-  G.Name ->
+  RootFieldAlias ->
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig 'BigQuery ->
@@ -85,7 +85,7 @@ run action = do
 
 mkQueryLog ::
   GQLReqUnparsed ->
-  G.Name ->
+  RootFieldAlias ->
   Maybe Text ->
   RequestId ->
   QueryLog

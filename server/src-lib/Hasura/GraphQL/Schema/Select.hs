@@ -272,8 +272,8 @@ selectTableAggregate sourceName tableInfo fieldName description selectPermission
     tableArgsParser <- tableArguments sourceName tableInfo selectPermissions
     aggregateParser <- tableAggregationFields sourceName tableInfo selectPermissions
     nodesParser <- tableSelectionList sourceName tableInfo selectPermissions
-    let selectionName = tableGQLName <> $$(G.litName "_aggregate")
-        aggregationParser =
+    selectionName <- P.mkTypename $ tableGQLName <> $$(G.litName "_aggregate")
+    let aggregationParser =
           P.nonNullableParser $
             parsedSelectionsToFields IR.TAFExp
               <$> P.selectionSet
@@ -366,6 +366,7 @@ tableSelectionSet ::
   m (Parser 'Output n (AnnotatedFields b))
 tableSelectionSet sourceName tableInfo selectPermissions = memoizeOn 'tableSelectionSet (sourceName, tableName) do
   tableGQLName <- getTableGQLName tableInfo
+  objectTypename <- P.mkTypename tableGQLName
   let xRelay = relayExtension @b
       tableFields = Map.elems $ _tciFieldInfoMap tableCoreInfo
       tablePkeyColumns = _pkColumns <$> _tciPrimaryKey tableCoreInfo
@@ -394,11 +395,11 @@ tableSelectionSet sourceName tableInfo selectPermissions = memoizeOn 'tableSelec
           allFieldParsers = fieldParsers <> [nodeIdFieldParser]
       nodeInterface <- node @b
       pure $
-        P.selectionSetObject tableGQLName description allFieldParsers [nodeInterface]
+        P.selectionSetObject objectTypename description allFieldParsers [nodeInterface]
           <&> parsedSelectionsToFields IR.AFExpression
     _ ->
       pure $
-        P.selectionSetObject tableGQLName description fieldParsers []
+        P.selectionSetObject objectTypename description fieldParsers []
           <&> parsedSelectionsToFields IR.AFExpression
   where
     tableName = tableInfoName tableInfo
@@ -449,8 +450,8 @@ tableConnectionSelectionSet ::
 tableConnectionSelectionSet sourceName tableInfo selectPermissions = memoizeOn 'tableConnectionSelectionSet (sourceName, tableName) do
   tableGQLName <- getTableGQLName tableInfo
   edgesParser <- tableEdgesSelectionSet tableGQLName
-  let connectionTypeName = tableGQLName <> $$(G.litName "Connection")
-      pageInfo =
+  connectionTypeName <- P.mkTypename $ tableGQLName <> $$(G.litName "Connection")
+  let pageInfo =
         P.subselection_
           $$(G.litName "pageInfo")
           Nothing
@@ -503,15 +504,15 @@ tableConnectionSelectionSet sourceName tableInfo selectPermissions = memoizeOn '
               hasPreviousPageField
             ]
        in P.nonNullableParser $
-            P.selectionSet $$(G.litName "PageInfo") Nothing allFields
+            P.selectionSet (P.Typename $$(G.litName "PageInfo")) Nothing allFields
               <&> parsedSelectionsToFields IR.PageInfoTypename
 
     tableEdgesSelectionSet ::
       G.Name -> m (Parser 'Output n (EdgeFields b))
     tableEdgesSelectionSet tableGQLName = do
       edgeNodeParser <- P.nonNullableParser <$> tableSelectionSet sourceName tableInfo selectPermissions
-      let edgesType = tableGQLName <> $$(G.litName "Edge")
-          cursor =
+      edgesType <- P.mkTypename $ tableGQLName <> $$(G.litName "Edge")
+      let cursor =
             P.selection_
               $$(G.litName "cursor")
               Nothing
@@ -548,8 +549,9 @@ selectFunction sourceName fi@FunctionInfo {..} description selectPermissions = d
   selectionSetParser <- returnFunctionParser sourceName tableInfo selectPermissions
   functionArgsParser <- customSQLFunctionArgs fi _fiGQLName _fiGQLArgsName
   let argsParser = liftA2 (,) functionArgsParser tableArgsParser
+  functionFieldName <- mkRootFieldName _fiGQLName
   pure $
-    P.subselection _fiGQLName description argsParser selectionSetParser
+    P.subselection functionFieldName description argsParser selectionSetParser
       <&> \((funcArgs, tableArgs'), fields) ->
         IR.AnnSelectG
           { IR._asnFields = fields,
@@ -585,8 +587,9 @@ selectFunctionAggregate sourceName fi@FunctionInfo {..} description selectPermis
   tableArgsParser <- lift $ tableArguments sourceName tableInfo selectPermissions
   functionArgsParser <- lift $ customSQLFunctionArgs fi _fiGQLAggregateName _fiGQLArgsName
   aggregateParser <- lift $ tableAggregationFields sourceName tableInfo selectPermissions
-  selectionName <- lift $ pure tableGQLName <&> (<> $$(G.litName "_aggregate"))
+  selectionName <- P.mkTypename =<< lift (pure tableGQLName <&> (<> $$(G.litName "_aggregate")))
   nodesParser <- lift $ tableSelectionList sourceName tableInfo selectPermissions
+  aggregateFieldName <- mkRootFieldName _fiGQLAggregateName
   let argsParser = liftA2 (,) functionArgsParser tableArgsParser
       aggregationParser =
         fmap (parsedSelectionsToFields IR.TAFExp) $
@@ -598,7 +601,7 @@ selectFunctionAggregate sourceName fi@FunctionInfo {..} description selectPermis
                 IR.TAFAgg <$> P.subselection_ $$(G.litName "aggregate") Nothing aggregateParser
               ]
   pure $
-    P.subselection _fiGQLAggregateName description argsParser aggregationParser
+    P.subselection aggregateFieldName description argsParser aggregationParser
       <&> \((funcArgs, tableArgs'), fields) ->
         IR.AnnSelectG
           { IR._asnFields = fields,
@@ -623,7 +626,7 @@ selectFunctionConnection ::
   SelPermInfo ('Postgres pgKind) ->
   m (Maybe (FieldParser n (ConnectionSelectExp ('Postgres pgKind))))
 selectFunctionConnection sourceName fi@FunctionInfo {..} description pkeyColumns selectPermissions = do
-  let fieldName = _fiGQLName <> $$(G.litName "_connection")
+  fieldName <- mkRootFieldName $ _fiGQLName <> $$(G.litName "_connection")
   for (relayExtension @('Postgres pgKind)) \xRelayInfo -> do
     stringifyNum <- asks $ qcStringifyNum . getter
     tableInfo <- askTableInfo sourceName _fiReturnType
@@ -965,9 +968,10 @@ tableAggregationFields sourceName tableInfo selectPermissions = memoizeOn 'table
   allColumns <- tableSelectColumns sourceName tableInfo selectPermissions
   let numericColumns = onlyNumCols allColumns
       comparableColumns = onlyComparableCols allColumns
-      selectName = tableGQLName <> $$(G.litName "_aggregate_fields")
       description = G.Description $ "aggregate fields of " <>> tableInfoName tableInfo
+  selectName <- P.mkTypename $ tableGQLName <> $$(G.litName "_aggregate_fields")
   count <- countField
+  mkTypename <- asks getter
   numericAndComparable <-
     fmap concat $
       sequenceA $
@@ -978,7 +982,7 @@ tableAggregationFields sourceName tableInfo selectPermissions = memoizeOn 'table
               else Just $
                 for numericAggOperators $ \operator -> do
                   numFields <- mkNumericAggFields operator numericColumns
-                  pure $ parseAggOperator operator tableGQLName numFields,
+                  pure $ parseAggOperator mkTypename operator tableGQLName numFields,
             -- operators on comparable columns
             if null comparableColumns
               then Nothing
@@ -986,7 +990,7 @@ tableAggregationFields sourceName tableInfo selectPermissions = memoizeOn 'table
                 comparableFields <- traverse mkColumnAggField comparableColumns
                 pure $
                   comparisonAggOperators & map \operator ->
-                    parseAggOperator operator tableGQLName comparableFields
+                    parseAggOperator mkTypename operator tableGQLName comparableFields
           ]
   let aggregateFields = count : numericAndComparable
   pure $
@@ -1026,13 +1030,14 @@ tableAggregationFields sourceName tableInfo selectPermissions = memoizeOn 'table
       pure $ IR.AFCount <$> P.selection $$(G.litName "count") Nothing args P.int
 
     parseAggOperator ::
+      P.MkTypename ->
       G.Name ->
       G.Name ->
       [FieldParser n (IR.ColFld b)] ->
       FieldParser n (IR.AggregateField b)
-    parseAggOperator operator tableGQLName columns =
+    parseAggOperator mkTypename operator tableGQLName columns =
       let opText = G.unName operator
-          setName = tableGQLName <> $$(G.litName "_") <> operator <> $$(G.litName "_fields")
+          setName = mkTypename $ tableGQLName <> $$(G.litName "_") <> operator <> $$(G.litName "_fields")
           setDesc = Just $ G.Description $ "aggregate " <> opText <> " on columns"
           subselectionParser =
             P.selectionSet setName setDesc columns
@@ -1395,14 +1400,14 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
                       }
   where
     -- Apply parent field calls so that the result customizer modifies the nested field
-    applyFieldCalls :: NonEmpty FieldCall -> RemoteResultCustomizer -> RemoteResultCustomizer
+    applyFieldCalls :: NonEmpty FieldCall -> ResultCustomizer -> ResultCustomizer
     applyFieldCalls fieldCalls resultCustomizer =
       foldr (modifyFieldByName . fcName) resultCustomizer $ NE.init fieldCalls
 
 -- | The custom SQL functions' input "args" field parser
 -- > function_name(args: function_args)
 customSQLFunctionArgs ::
-  (BackendSchema b, MonadSchema n m, MonadTableInfo r m) =>
+  (BackendSchema b, MonadSchema n m, MonadTableInfo r m, Has P.MkTypename r) =>
   FunctionInfo b ->
   G.Name ->
   G.Name ->
@@ -1432,7 +1437,8 @@ functionArgs ::
   forall b m n r.
   ( BackendSchema b,
     MonadSchema n m,
-    MonadTableInfo r m
+    MonadTableInfo r m,
+    Has P.MkTypename r
   ) =>
   FunctionTrackedAs b ->
   Seq.Seq (FunctionInputArgument b) ->
@@ -1459,14 +1465,15 @@ functionArgs functionTrackedAs (toList -> inputArgs) = do
         -- There are user-provided arguments: we need to parse an args object.
         argumentParsers <- sequenceA $ optional <> mandatory
         objectName <-
-          case functionTrackedAs of
-            FTAComputedField computedFieldName sourceName tableName -> do
-              tableInfo <- askTableInfo sourceName tableName
-              computedFieldGQLName <- textToName $ computedFieldNameToText computedFieldName
-              tableGQLName <- getTableGQLName @b tableInfo
-              pure $ computedFieldGQLName <> $$(G.litName "_") <> tableGQLName <> $$(G.litName "_args")
-            FTACustomFunction (CustomFunctionNames {cfnArgsName}) ->
-              pure cfnArgsName
+          P.mkTypename
+            =<< case functionTrackedAs of
+              FTAComputedField computedFieldName sourceName tableName -> do
+                tableInfo <- askTableInfo sourceName tableName
+                computedFieldGQLName <- textToName $ computedFieldNameToText computedFieldName
+                tableGQLName <- getTableGQLName @b tableInfo
+                pure $ computedFieldGQLName <> $$(G.litName "_") <> tableGQLName <> $$(G.litName "_args")
+              FTACustomFunction (CustomFunctionNames {cfnArgsName}) ->
+                pure cfnArgsName
         let fieldName = $$(G.litName "args")
             fieldDesc =
               case functionTrackedAs of
@@ -1650,17 +1657,20 @@ nodePG = memoizeOn 'nodePG () do
         (source, sourceInfo) <- Map.toList sources
         tableName <- maybe [] (Map.keys . takeValidTables) $ unsafeSourceTables @('Postgres 'Vanilla) sourceInfo
         sourceConfig <- maybeToList $ unsafeSourceConfiguration @('Postgres 'Vanilla) sourceInfo
-        pure (tableName, (source, sourceConfig))
+        pure (tableName, (source, sourceConfig, AB.runBackend sourceInfo _siCustomization))
   tables <-
-    Map.mapMaybe id <$> flip Map.traverseWithKey allTables \table (source, sourceConfig) -> runMaybeT do
+    Map.mapMaybe id <$> flip Map.traverseWithKey allTables \table (source, sourceConfig, sourceCustomization) -> runMaybeT do
       tableInfo <- lift $ askTableInfo source table
       tablePkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
       selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
-      annotatedFieldsParser <- lift $ tableSelectionSet source tableInfo selectPermissions
+      annotatedFieldsParser <-
+        lift $
+          P.withTypenameCustomization (mkCustomizedTypename $ _scTypeNames sourceCustomization) $
+            tableSelectionSet source tableInfo selectPermissions
       pure $ (source,sourceConfig,selectPermissions,tablePkeyColumns,) <$> annotatedFieldsParser
   pure $
     P.selectionSetInterface
-      $$(G.litName "Node")
+      (P.Typename $$(G.litName "Node"))
       (Just nodeInterfaceDescription)
       [idField]
       tables

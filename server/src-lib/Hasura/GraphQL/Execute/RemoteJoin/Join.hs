@@ -23,6 +23,7 @@ import Hasura.GraphQL.Execute.Instances ()
 import Hasura.GraphQL.Execute.RemoteJoin.RemoteSchema qualified as RS
 import Hasura.GraphQL.Execute.RemoteJoin.Types
 import Hasura.GraphQL.Logging (MonadQueryLog)
+import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Transport.Backend qualified as TB
 import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
 import Hasura.GraphQL.Transport.Instances ()
@@ -137,7 +138,7 @@ processRemoteJoins_ requestId logger env manager reqHdrs userInfo lhs joinTree g
                 -- NOTE: We're making an assumption that the 'FieldName' propagated
                 -- upwards from 'collectJoinArguments' is reasonable to use for
                 -- logging.
-                (G.unsafeMkName . getFieldNameTxt $ _jalFieldName)
+                (mkUnNamespacedRootFieldAlias $ G.unsafeMkName . getFieldNameTxt $ _jalFieldName)
                 userInfo
                 logger
                 _rsjSourceConfig

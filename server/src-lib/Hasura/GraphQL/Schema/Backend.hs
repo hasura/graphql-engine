@@ -53,7 +53,9 @@ type MonadBuildSchema b r m n =
     MonadSchema n m,
     MonadTableInfo r m,
     MonadRole r m,
-    Has QueryContext r
+    Has QueryContext r,
+    Has MkTypename r,
+    Has MkRootFieldName r
   )
 
 class Backend b => BackendSchema (b :: BackendType) where
@@ -168,7 +170,7 @@ class Backend b => BackendSchema (b :: BackendType) where
 
   -- individual components
   columnParser ::
-    (MonadSchema n m, MonadError QErr m) =>
+    (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
     ColumnType b ->
     Nullability ->
     m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
@@ -205,7 +207,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     ColumnType b ->
     m (Parser 'Input n [ComparisonExp b])
   updateOperators ::
-    (MonadSchema n m, MonadTableInfo r m) =>
+    (MonadSchema n m, MonadTableInfo r m, MonadReader r m, Has MkTypename r) =>
     TableInfo b ->
     UpdPermInfo b ->
     m (Maybe (InputFieldsParser n [(Column b, IR.UpdOpExpG (UnpreparedValue b))]))

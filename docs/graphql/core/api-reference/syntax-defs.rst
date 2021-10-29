@@ -1323,6 +1323,90 @@ RemoteFieldCustomization
 - Fields that are part of an interface must be renamed consistently across all object types that implement that interface.
 
 
+.. _SourceCustomization:
+
+SourceCustomization
+^^^^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+  {
+    "root_fields": {
+      "namespace": String,
+      "prefix": String,
+      "suffix": String
+    },
+    "type_names": {
+      "prefix": String,
+      "suffix": String
+    }
+  }
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - ``root_fields``
+     - false
+     - RootFieldsCustomization_
+     - Customization of root field names for a source
+   * - ``type_names``
+     - false
+     - SourceTypeCustomization_
+     - Customization of type names for a source
+
+
+.. _RootFieldsCustomization:
+
+RootFieldsCustomization
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - ``namespace``
+     - false
+     - String
+     - Namespace root field under which fields for this source will be nested
+   * - ``prefix``
+     - false
+     - String
+     - Prefix to be prepended to all root fields in this source
+   * - ``suffix``
+     - false
+     - String
+     - Suffix to be appended to all root fields in this source
+
+
+.. _SourceTypeCustomization:
+
+SourceTypeCustomization
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - ``prefix``
+     - false
+     - String
+     - Prefix to be prepended to all type names in this source
+   * - ``suffix``
+     - false
+     - String
+     - Suffix to be appended to all type names in this source
+
+
 .. _CollectionName:
 
 CollectionName

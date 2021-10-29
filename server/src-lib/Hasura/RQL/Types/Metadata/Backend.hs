@@ -15,6 +15,7 @@ import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationship
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
@@ -57,6 +58,7 @@ class
   resolveDatabaseMetadata ::
     (MonadIO m, MonadBaseControl IO m, MonadResolveSource m) =>
     SourceConfig b ->
+    SourceTypeCustomization ->
     m (Either QErr (ResolvedSource b))
 
   parseBoolExpOperations ::

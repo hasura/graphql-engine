@@ -27,6 +27,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (..))
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.Server.Migrate.Internal
@@ -60,14 +61,15 @@ resolveDatabaseMetadata ::
   forall pgKind m.
   (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadIO m, MonadBaseControl IO m) =>
   SourceConfig ('Postgres pgKind) ->
+  SourceTypeCustomization ->
   m (Either QErr (ResolvedSource ('Postgres pgKind)))
-resolveDatabaseMetadata sourceConfig = runExceptT do
+resolveDatabaseMetadata sourceConfig sourceCustomization = runExceptT do
   (tablesMeta, functionsMeta, pgScalars) <- runTx (_pscExecCtx sourceConfig) Q.ReadOnly $ do
     tablesMeta <- fetchTableMetadata
     functionsMeta <- fetchFunctionMetadata
     pgScalars <- fetchPgScalars
     pure (tablesMeta, functionsMeta, pgScalars)
-  pure $ ResolvedSource sourceConfig tablesMeta functionsMeta pgScalars
+  pure $ ResolvedSource sourceConfig sourceCustomization tablesMeta functionsMeta pgScalars
 
 -- | Initialise catalog tables for a source, including those required by the event delivery subsystem.
 initCatalogForSource ::

@@ -4,8 +4,10 @@ module Hasura.Generator () where
 
 import Data.Containers.ListUtils (nubOrd)
 import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Ratio ((%))
 import Data.Text qualified as T
+import Hasura.GraphQL.Namespace
 import Hasura.Prelude
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache (IntrospectionResult (..))
@@ -41,6 +43,10 @@ instance Arbitrary Text where
 
 instance (Arbitrary k, Eq k, Hashable k, Arbitrary v) => Arbitrary (HashMap k v) where
   arbitrary = Map.fromList <$> arbitrary
+
+instance (Arbitrary k, Eq k, Hashable k, Arbitrary v) => Arbitrary (InsOrdHashMap k v) where
+  arbitrary = OMap.fromList <$> arbitrary
+  shrink = fmap OMap.fromList . shrink . OMap.toList
 
 -- GraphQL syntax instances
 
@@ -247,3 +253,7 @@ genRemoteSchemaInputValueDefinition inputTypeNames =
   RemoteSchemaInputValueDefinition
     <$> genInputValueDefinition inputTypeNames
     <*> pure Nothing
+
+instance Arbitrary a => Arbitrary (NamespacedField a) where
+  arbitrary = oneof [NotNamespaced <$> arbitrary, Namespaced <$> arbitrary]
+  shrink = namespacedField (fmap NotNamespaced . shrink) (fmap Namespaced . shrink)

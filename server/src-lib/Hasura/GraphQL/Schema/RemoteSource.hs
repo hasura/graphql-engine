@@ -13,6 +13,7 @@ import Hasura.Prelude
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Common (RelType (..))
 import Hasura.RQL.Types.RemoteRelationship
+import Hasura.RQL.Types.SourceCustomization (mkCustomizedTypename)
 import Hasura.SQL.AnyBackend
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -29,35 +30,36 @@ remoteSourceField remoteDB = dispatchAnyBackend @BackendSchema remoteDB buildFie
       BackendSchema tgt =>
       RemoteSourceRelationshipInfo src tgt ->
       m [FieldParser n (AnnotatedField src)]
-    buildField (RemoteSourceRelationshipInfo {..}) = do
-      tableInfo <- askTableInfo @tgt _rsriSource _rsriTable
-      fieldName <- textToName $ remoteRelationshipNameToText _rsriName
-      maybePerms <- tableSelectPermissions @tgt tableInfo
-      case maybePerms of
-        Nothing -> pure []
-        Just tablePerms -> do
-          parsers <- case _rsriType of
-            ObjRel -> do
-              selectionSetParser <- tableSelectionSet _rsriSource tableInfo tablePerms
-              pure $
+    buildField (RemoteSourceRelationshipInfo {..}) =
+      withTypenameCustomization (mkCustomizedTypename $ Just _rsriSourceCustomization) do
+        tableInfo <- askTableInfo @tgt _rsriSource _rsriTable
+        fieldName <- textToName $ remoteRelationshipNameToText _rsriName
+        maybePerms <- tableSelectPermissions @tgt tableInfo
+        case maybePerms of
+          Nothing -> pure []
+          Just tablePerms -> do
+            parsers <- case _rsriType of
+              ObjRel -> do
+                selectionSetParser <- tableSelectionSet _rsriSource tableInfo tablePerms
                 pure $
-                  subselection_ fieldName Nothing selectionSetParser <&> \fields ->
-                    IR.SourceRelationshipObject $
-                      IR.AnnObjectSelectG fields _rsriTable $
-                        IR._tpFilter $
-                          tablePermissionsInfo tablePerms
-            ArrRel -> do
-              let aggFieldName = fieldName <> $$(G.litName "_aggregate")
-              selectionSetParser <- selectTable _rsriSource tableInfo fieldName Nothing tablePerms
-              aggSelectionSetParser <- selectTableAggregate _rsriSource tableInfo aggFieldName Nothing tablePerms
-              pure $
-                catMaybes
-                  [ Just $ selectionSetParser <&> IR.SourceRelationshipArray,
-                    aggSelectionSetParser <&> fmap IR.SourceRelationshipArrayAggregate
-                  ]
-          pure $
-            parsers <&> fmap \select ->
-              IR.AFRemote $
-                IR.RemoteSelectSource $
-                  mkAnyBackend @tgt $
-                    IR.RemoteSourceSelect _rsriSource _rsriSourceConfig select _rsriMapping
+                  pure $
+                    subselection_ fieldName Nothing selectionSetParser <&> \fields ->
+                      IR.SourceRelationshipObject $
+                        IR.AnnObjectSelectG fields _rsriTable $
+                          IR._tpFilter $
+                            tablePermissionsInfo tablePerms
+              ArrRel -> do
+                let aggFieldName = fieldName <> $$(G.litName "_aggregate")
+                selectionSetParser <- selectTable _rsriSource tableInfo fieldName Nothing tablePerms
+                aggSelectionSetParser <- selectTableAggregate _rsriSource tableInfo aggFieldName Nothing tablePerms
+                pure $
+                  catMaybes
+                    [ Just $ selectionSetParser <&> IR.SourceRelationshipArray,
+                      aggSelectionSetParser <&> fmap IR.SourceRelationshipArrayAggregate
+                    ]
+            pure $
+              parsers <&> fmap \select ->
+                IR.AFRemote $
+                  IR.RemoteSelectSource $
+                    mkAnyBackend @tgt $
+                      IR.RemoteSourceSelect _rsriSource _rsriSourceConfig select _rsriMapping

@@ -16,6 +16,7 @@ import Hasura.GraphQL.Execute.Instances ()
 import Hasura.GraphQL.Execute.Remote
 import Hasura.GraphQL.Execute.RemoteJoin.Collect qualified as RJ
 import Hasura.GraphQL.Execute.Resolve
+import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Parser.Directives
@@ -103,7 +104,7 @@ convertMutationSelectionSet
     (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe Map.empty (GH._grVariables gqlUnparsed)) directives fields
     -- Parse the GraphQL query into the RQL AST
     unpreparedQueries ::
-      OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue) <-
+      RootFieldMap (MutationRootField UnpreparedValue) <-
       (mutationParser >>> (`onLeft` reportParseErrors)) resolvedSelSet
 
     -- Process directives on the mutation

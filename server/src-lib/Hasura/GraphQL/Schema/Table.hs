@@ -12,6 +12,7 @@ module Hasura.GraphQL.Schema.Table
   )
 where
 
+import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.Text.Extended
@@ -56,7 +57,7 @@ getTableGQLName tableInfo = do
 -- permissions for.
 tableSelectColumnsEnum ::
   forall m n r b.
-  (BackendSchema b, MonadSchema n m, MonadRole r m, MonadTableInfo r m) =>
+  (BackendSchema b, MonadSchema n m, MonadRole r m, MonadTableInfo r m, Has P.MkTypename r) =>
   SourceName ->
   TableInfo b ->
   SelPermInfo b ->
@@ -64,8 +65,8 @@ tableSelectColumnsEnum ::
 tableSelectColumnsEnum sourceName tableInfo selectPermissions = do
   tableGQLName <- getTableGQLName @b tableInfo
   columns <- tableSelectColumns sourceName tableInfo selectPermissions
-  let enumName = tableGQLName <> $$(G.litName "_select_column")
-      description =
+  enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_select_column")
+  let description =
         Just $
           G.Description $
             "select columns of table " <>> tableInfoName tableInfo
@@ -91,16 +92,16 @@ tableSelectColumnsEnum sourceName tableInfo selectPermissions = do
 -- permissions, this functions returns an enum that only contains a
 -- placeholder, so as to still allow this type to exist in the schema.
 tableUpdateColumnsEnum ::
-  forall m n b.
-  (BackendSchema b, MonadSchema n m, MonadError QErr m) =>
+  forall m n r b.
+  (BackendSchema b, MonadSchema n m, MonadError QErr m, MonadReader r m, Has P.MkTypename r) =>
   TableInfo b ->
   UpdPermInfo b ->
   m (Parser 'Both n (Maybe (Column b)))
 tableUpdateColumnsEnum tableInfo updatePermissions = do
   tableGQLName <- getTableGQLName tableInfo
   columns <- tableUpdateColumns tableInfo updatePermissions
-  let enumName = tableGQLName <> $$(G.litName "_update_column")
-      tableName = tableInfoName tableInfo
+  enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_update_column")
+  let tableName = tableInfoName tableInfo
       enumDesc = Just $ G.Description $ "update columns of table " <>> tableName
       altDesc = Just $ G.Description $ "placeholder for update columns of table " <> tableName <<> " (current role has no relevant permissions)"
       enumValues = do
@@ -111,7 +112,7 @@ tableUpdateColumnsEnum tableInfo updatePermissions = do
     Nothing -> P.enum enumName altDesc $ pure (placeholder, Nothing)
   where
     define name = P.mkDefinition name (Just $ G.Description "column name") P.EnumValueInfo
-    placeholder = P.mkDefinition $$(G.litName "_PLACEHOLDER") (Just $ G.Description "placeholder (do not use)") P.EnumValueInfo
+    placeholder = P.mkDefinition @P.EnumValueInfo $$(G.litName "_PLACEHOLDER") (Just $ G.Description "placeholder (do not use)") P.EnumValueInfo
 
 tablePermissions ::
   forall m n r b.

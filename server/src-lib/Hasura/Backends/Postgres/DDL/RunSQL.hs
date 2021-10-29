@@ -196,7 +196,7 @@ withMetadataCheck ::
   Q.TxET QErr m a ->
   m a
 withMetadataCheck source cascade txAccess action = do
-  SourceInfo _ preActionTables preActionFunctions sourceConfig _ <- askSourceInfo @('Postgres pgKind) source
+  SourceInfo _ preActionTables preActionFunctions sourceConfig _ _ <- askSourceInfo @('Postgres pgKind) source
 
   (actionResult, metadataUpdater) <-
     liftEitherM $
