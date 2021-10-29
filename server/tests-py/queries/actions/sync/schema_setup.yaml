@@ -84,7 +84,7 @@ args:
         type: ID! # For issue https://github.com/hasura/graphql-engine/issues/4061
       - name: name
         type: String
-    
+
     - name: NullableResp
       fields:
       - name: id
@@ -146,17 +146,17 @@ args:
         type: InObject!
       output_type: OutObject
       handler: http://127.0.0.1:5593/mirror-action
-    request_transform:
-      template_engine: Kriti
-      body: |
-        {
-          "input": {
-            "arg": {
-              "id": {{ $body.input.arg.name }},
-              "name": {{ $body.input.arg.id }}
+      request_transform:
+        template_engine: Kriti
+        body: |
+          {
+            "input": {
+              "arg": {
+                "id": {{ $body.input.arg.name }},
+                "name": {{ $body.input.arg.id }}
+              }
             }
           }
-        }
 
 - type: create_action
   args:

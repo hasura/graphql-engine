@@ -3,6 +3,9 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: moves `request_transform` into the Action Definition the `create_action` metadata API call.
+- server: call auth webhooks even when the request is malformed JSON or otherwise fails to parse (close #7532)
+- server: updates kriti to v0.2.1 which adds an `escapeUri` function
 - server: add cascade option to `mssql_run_sql` metadata API
 - server: fix bug which recreated event triggers every time the graphql-engine started up
 - server: fix bug in OpenAPI when multiple REST endpoints have the same URL path but different method

@@ -362,8 +362,11 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
       -- in this case we parse the request _first_ and then send the request to the webhook for auth
       AHGraphQLRequest handler -> do
         (queryJSON, parsedReq) <-
-          runExcept (parseBody reqBody) `onLeft` \e ->
-            logErrorAndResp Nothing requestId req (reqBody, Nothing) False origHeaders $ qErrModifier e
+          runExcept (parseBody reqBody) `onLeft` \e -> do
+            -- if the request fails to parse, call the webhook without a request body
+            -- TODO should we signal this to the webhook somehow?
+            (userInfo, _, _) <- getInfo Nothing
+            logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) False origHeaders $ qErrModifier e
         (userInfo, handlerState, includeInternal) <- getInfo (Just parsedReq)
         res <- lift $ runHandler handlerState $ handler parsedReq
         pure (res, userInfo, includeInternal, Just queryJSON)
