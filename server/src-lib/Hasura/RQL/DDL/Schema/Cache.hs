@@ -375,7 +375,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         Just sourceConfig ->
           (|
             withRecordInconsistency
-              ( liftEitherA <<< bindA -< resolveDatabaseMetadata sourceConfig
+              ( liftEitherA <<< bindA -< resolveDatabaseMetadata sourceConfig (getSourceTypeCustomization $ _smCustomization sourceMetadata)
               )
           |) metadataObj
 
@@ -463,7 +463,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       )
         `arr` BackendSourceInfo
     buildSource = proc (allSources, sourceMetadata, sourceConfig, tablesRawInfo, _dbTables, dbFunctions, remoteSchemaMap, invalidationKeys, orderedRoles) -> do
-      let SourceMetadata source tables functions _ queryTagsConfig = sourceMetadata
+      let SourceMetadata source tables functions _ queryTagsConfig sourceCustomization = sourceMetadata
           tablesMetadata = OMap.elems tables
           (_, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
           eventTriggers = map (_tmTable &&& OMap.elems . _tmEventTriggers) tablesMetadata
@@ -543,7 +543,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
               |)
           >-> (\infos -> M.catMaybes infos >- returnA)
 
-      returnA -< AB.mkAnyBackend $ SourceInfo source tableCache functionCache sourceConfig queryTagsConfig
+      returnA -< AB.mkAnyBackend $ SourceInfo source tableCache functionCache sourceConfig queryTagsConfig sourceCustomization
 
     buildAndCollectInfo ::
       forall arr m.
@@ -582,7 +582,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
             HS.fromList $
               concat $
                 OMap.elems sources >>= \e ->
-                  AB.dispatchAnyBackend @Backend e \(SourceMetadata _ tables _functions _ _) -> do
+                  AB.dispatchAnyBackend @Backend e \(SourceMetadata _ tables _functions _ _ _) -> do
                     table <- OMap.elems tables
                     pure $
                       OMap.keys (_tmInsertPermissions table)
@@ -718,7 +718,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                         )
                     -> do
                       let PartiallyResolvedSource sourceMetadata resolvedSource tablesInfo = partiallyResolvedSource
-                          ResolvedSource sourceConfig tablesMeta functionsMeta scalars = resolvedSource
+                          ResolvedSource sourceConfig _sourceCustomization tablesMeta functionsMeta scalars = resolvedSource
                       so <-
                         buildSource
                           -<

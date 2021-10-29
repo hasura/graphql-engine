@@ -6,6 +6,7 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.LiveQuery.Plan
 import Hasura.GraphQL.Logging (MonadQueryLog)
+import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Prelude
@@ -14,7 +15,6 @@ import Hasura.SQL.Backend
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing
-import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | This typeclass enacapsulates how a given backend sends queries and mutations over the
 -- network. Each backend is currently responsible for both logging and tracing, for now.
@@ -28,7 +28,7 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
     ) =>
     RequestId ->
     GQLReqUnparsed ->
-    G.Name ->
+    RootFieldAlias ->
     UserInfo ->
     L.Logger L.Hasura ->
     SourceConfig b ->
@@ -44,7 +44,7 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
     ) =>
     RequestId ->
     GQLReqUnparsed ->
-    G.Name ->
+    RootFieldAlias ->
     UserInfo ->
     L.Logger L.Hasura ->
     SourceConfig b ->

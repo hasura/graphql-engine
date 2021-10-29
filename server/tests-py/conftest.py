@@ -423,9 +423,9 @@ def per_class_db_schema_for_mutation_tests(request, hge_ctx):
     # setting the default metadata API version to v1
     setup_metadata_api_version = getattr(request.cls, 'setup_metadata_api_version',"v1")
 
-    (setup, teardown, schema_setup, schema_teardown) = [
+    (setup, teardown, schema_setup, schema_teardown, pre_setup, post_teardown) = [
         hge_ctx.backend_suffix(filename) + ".yaml"
-        for filename in ['setup', 'teardown', 'schema_setup', 'schema_teardown']
+        for filename in ['setup', 'teardown', 'schema_setup', 'schema_teardown', 'pre_setup', 'post_teardown']
     ]
 
     # only lookup files relevant to the tests being run.
@@ -440,12 +440,12 @@ def per_class_db_schema_for_mutation_tests(request, hge_ctx):
         else:
             db_context = db_context_with_schema_common_new (
                 request, hge_ctx, 'schema_setup_files', setup, 'schema_teardown_files', teardown,
-                schema_setup, schema_teardown, check_file_exists
+                schema_setup, schema_teardown, pre_setup, post_teardown, check_file_exists
             )
     else:
         db_context = db_context_with_schema_common_new (
             request, hge_ctx, 'schema_setup_files', setup, 'schema_teardown_files', teardown,
-            schema_setup, schema_teardown, check_file_exists
+            schema_setup, schema_teardown, pre_setup, post_teardown, check_file_exists
         )
     yield from db_context
 
@@ -495,9 +495,9 @@ def per_backend_tests(hge_ctx, backend):
 def db_state_context(request, hge_ctx):
     # Non-default (Postgres) backend tests expect separate setup and schema_setup
     # files for v1/metadata and v2/query requests, respectively.
-    (setup, teardown, schema_setup, schema_teardown) = [
+    (setup, teardown, schema_setup, schema_teardown, pre_setup, post_teardown) = [
         hge_ctx.backend_suffix(filename) + ".yaml"
-        for filename in ['setup', 'teardown', 'schema_setup', 'schema_teardown']
+        for filename in ['setup', 'teardown', 'schema_setup', 'schema_teardown', 'pre_setup', 'post_teardown']
     ]
 
     # only lookup files relevant to the tests being run.
@@ -517,22 +517,23 @@ def db_state_context(request, hge_ctx):
             # setup the metadata using the "/v1/metadata" and the DB schema using the `/v2/query` endpoints
             db_context = db_context_with_schema_common_new (
                 request, hge_ctx, 'setup_files', setup, 'teardown_files',
-                teardown, schema_setup, schema_teardown, check_file_exists
+                teardown, schema_setup, schema_teardown, pre_setup, post_teardown, check_file_exists
             )
     else:
         # setup the metadata using the "/v1/metadata" and the DB schema using the `/v2/query` endpoints
         db_context = db_context_with_schema_common_new (
             request, hge_ctx, 'setup_files', setup, 'teardown_files',
-            teardown, schema_setup, schema_teardown, check_file_exists
+            teardown, schema_setup, schema_teardown, pre_setup, post_teardown, check_file_exists
         )
     yield from db_context
 
 def db_state_context_new(
     request, hge_ctx, setup='setup.yaml', teardown='teardown.yaml',
-        schema_setup='schema_setup.yaml', schema_teardown='schema_teardown.yaml'):
+        schema_setup='schema_setup.yaml', schema_teardown='schema_teardown.yaml',
+        pre_setup='pre_setup.yaml', post_teardown='post_teardown.yaml'):
     yield from db_context_with_schema_common_new (
         request, hge_ctx, 'setup_files', setup, 'teardown_files',
-        teardown, schema_setup, schema_teardown, True
+        teardown, schema_setup, schema_teardown, pre_setup, post_teardown, True
     )
 
 def db_context_with_schema_common(
@@ -550,7 +551,7 @@ def db_context_with_schema_common(
 
 def db_context_with_schema_common_new (
     request, hge_ctx, setup_files_attr, setup_default_file,
-        teardown_files_attr, teardown_default_file, setup_sql_file, teardown_sql_file, check_file_exists=True):
+        teardown_files_attr, teardown_default_file, setup_sql_file, teardown_sql_file, pre_setup_file, post_teardown_file, check_file_exists=True):
     (skip_setup, skip_teardown) = [
         request.config.getoption('--' + x)
         for x in ['skip-schema-setup', 'skip-schema-teardown']
@@ -558,6 +559,7 @@ def db_context_with_schema_common_new (
     yield from db_context_common_new (
         request, hge_ctx, setup_files_attr, setup_default_file, setup_sql_file,
         teardown_files_attr, teardown_default_file, teardown_sql_file,
+        pre_setup_file, post_teardown_file,
         check_file_exists, skip_setup, skip_teardown
     )
 
@@ -582,6 +584,7 @@ def db_context_common_new(
         request, hge_ctx, setup_files_attr, setup_default_file,
         setup_default_sql_file,
         teardown_files_attr, teardown_default_file, teardown_default_sql_file,
+        pre_setup_file, post_teardown_file,
         check_file_exists=True, skip_setup=True, skip_teardown=True ):
     def get_files(attr, default_file):
         files = getattr(request.cls, attr, None)
@@ -592,8 +595,11 @@ def db_context_common_new(
     teardown = get_files(teardown_files_attr, teardown_default_file)
     setup_default_sql_file = os.path.join(request.cls.dir(), setup_default_sql_file)
     teardown_default_sql_file = os.path.join(request.cls.dir(), teardown_default_sql_file)
+    pre_setup_default_file = os.path.join(request.cls.dir(), pre_setup_file)
+    post_teardown_default_file = os.path.join(request.cls.dir(), post_teardown_file)
     yield from setup_and_teardown( request, hge_ctx, setup, teardown,
-                                   setup_default_sql_file, teardown_default_sql_file, check_file_exists, skip_setup, skip_teardown)
+                                   setup_default_sql_file, teardown_default_sql_file, pre_setup_default_file, post_teardown_default_file,
+                                   check_file_exists, skip_setup, skip_teardown)
 
 def setup_and_teardown_v1q(request, hge_ctx, setup_files, teardown_files, check_file_exists=True, skip_setup=False, skip_teardown=False):
     def assert_file_exists(f):
@@ -631,6 +637,7 @@ def setup_and_teardown_v2q(request, hge_ctx, setup_files, teardown_files, check_
 
 def setup_and_teardown(request, hge_ctx, setup_files, teardown_files,
                        sql_schema_setup_file,sql_schema_teardown_file,
+                       pre_setup_file, post_teardown_file,
                        check_file_exists=True, skip_setup=False, skip_teardown=False):
     def assert_file_exists(f):
         assert os.path.isfile(f), 'Could not find file ' + f
@@ -640,6 +647,8 @@ def setup_and_teardown(request, hge_ctx, setup_files, teardown_files,
     def v2q_f(f):
         if os.path.isfile(f):
             st_code, resp = hge_ctx.v2q_f(f)
+            if st_code != 200:
+                run_on_elem_or_list(pre_post_metadataq_f, post_teardown_file)
             assert_response_code('/v2/query', f, st_code, 200, resp)
     def metadataq_f(f):
         if os.path.isfile(f):
@@ -647,8 +656,14 @@ def setup_and_teardown(request, hge_ctx, setup_files, teardown_files,
             if st_code != 200:
                 # drop the sql setup, if the metadata calls fail
                 run_on_elem_or_list(v2q_f, sql_schema_teardown_file)
+                run_on_elem_or_list(pre_post_metadataq_f, post_teardown_file)
+            assert_response_code('/v1/metadata', f, st_code, 200, resp)
+    def pre_post_metadataq_f(f):
+        if os.path.isfile(f):
+            st_code, resp = hge_ctx.v1metadataq_f(f)
             assert_response_code('/v1/metadata', f, st_code, 200, resp)
     if not skip_setup:
+        run_on_elem_or_list(pre_post_metadataq_f, pre_setup_file)
         run_on_elem_or_list(v2q_f, sql_schema_setup_file)
         run_on_elem_or_list(metadataq_f, setup_files)
     yield
@@ -656,6 +671,7 @@ def setup_and_teardown(request, hge_ctx, setup_files, teardown_files,
     if request.session.testsfailed > 0 or not skip_teardown:
         run_on_elem_or_list(metadataq_f, teardown_files)
         run_on_elem_or_list(v2q_f, sql_schema_teardown_file)
+        run_on_elem_or_list(pre_post_metadataq_f, post_teardown_file)
 
 def run_on_elem_or_list(f, x):
     if isinstance(x, str):

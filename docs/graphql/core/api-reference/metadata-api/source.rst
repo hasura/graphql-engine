@@ -57,7 +57,18 @@ Add a database with name ``pg1``:
           "isolation_level": "read-committed",
         }
       },
-      "replace_configuration": false
+      "replace_configuration": false,
+      "customization": {
+        "root_fields": {
+          "namespace": "some_field_name",
+          "prefix": "some_field_name_prefix",
+          "suffix": "some_field_name_suffix"
+        },
+        "type_names": {
+          "prefix": "some_type_name_prefix",
+          "suffix": "some_type_name_suffix"
+        }
+      }
     }
   }
 
@@ -86,6 +97,10 @@ Args syntax
      - Boolean
      - If set to ``true`` the configuration will be replaced if the source with
        given name already exists (default: ``false``)
+   * - customization
+     - false
+     - :ref:`SourceCustomization`
+     - Customize root fields and type names for the source
 
 .. _pg_drop_source:
 
@@ -206,6 +221,17 @@ Add a database with name ``mssql1``:
             "idle_timeout": 180
           }
         }
+      },
+      "customization": {
+        "root_fields": {
+          "namespace": "some_field_name",
+          "prefix": "some_field_name_prefix",
+          "suffix": "some_field_name_suffix"
+        },
+        "type_names": {
+          "prefix": "some_type_name_prefix",
+          "suffix": "some_type_name_suffix"
+        }
       }
     }
   }
@@ -235,6 +261,10 @@ Args syntax
      - Boolean
      - If set to ``true`` the configuration will be replaced if the source with
        given name already exists (default: ``false``)
+   * - customization
+     - false
+     - :ref:`SourceCustomization`
+     - Customize root fields and type names for the source
 
 .. _mssql_drop_source:
 
@@ -303,6 +333,17 @@ Add a database with name ``bigquery1``:
         "service_account": "bigquery_service_account",
         "project_id": "bigquery_project_id",
         "datasets": "dataset1, dataset2"
+      },
+      "customization": {
+        "root_fields": {
+          "namespace": "some_field_name",
+          "prefix": "some_field_name_prefix",
+          "suffix": "some_field_name_suffix"
+        },
+        "type_names": {
+          "prefix": "some_type_name_prefix",
+          "suffix": "some_type_name_suffix"
+        }
       }
     }
   }
@@ -332,6 +373,10 @@ Args syntax
      - Boolean
      - If set to ``true`` the configuration will be replaced if the source with
        given name already exists (default: ``false``)
+   * - customization
+     - false
+     - :ref:`SourceCustomization`
+     - Customize root fields and type names for the source
 
 .. _bigquery_drop_source:
 

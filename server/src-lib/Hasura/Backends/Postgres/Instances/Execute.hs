@@ -9,6 +9,7 @@ where
 import Control.Monad.Trans.Control qualified as MT
 import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.IntMap qualified as IntMap
 import Data.Sequence qualified as Seq
 import Database.PG.Query qualified as Q
@@ -45,6 +46,10 @@ import Hasura.GraphQL.Execute.LiveQuery.Plan
     ParameterizedLiveQueryPlan (..),
     mkCohortVariables,
     newCohortId,
+  )
+import Hasura.GraphQL.Namespace
+  ( RootFieldAlias (..),
+    RootFieldMap,
   )
 import Hasura.GraphQL.Parser (UnpreparedValue (..))
 import Hasura.Prelude
@@ -124,7 +129,7 @@ pgDBQueryExplain ::
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
-  G.Name ->
+  RootFieldAlias ->
   UserInfo ->
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
@@ -284,14 +289,15 @@ pgDBSubscriptionPlan ::
   UserInfo ->
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
-  InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))) ->
+  Maybe G.Name ->
+  RootFieldMap (QueryDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))) ->
   m (LiveQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)))
-pgDBSubscriptionPlan userInfo _sourceName sourceConfig unpreparedAST = do
+pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST = do
   (preparedAST, PGL.QueryParametersInfo {..}) <-
     flip runStateT mempty $
       for unpreparedAST $ traverse (PGL.resolveMultiplexedValue $ _uiSession userInfo)
   mutationQueryTagsComment <- ask
-  let multiplexedQuery = PGL.mkMultiplexedQuery preparedAST
+  let multiplexedQuery = PGL.mkMultiplexedQuery $ OMap.mapKeys _rfaAlias preparedAST
       multiplexedQueryWithQueryTags =
         multiplexedQuery {PGL.unMultiplexedQuery = appendSQLWithQueryTags (PGL.unMultiplexedQuery multiplexedQuery) mutationQueryTagsComment}
       roleName = _uiRole userInfo
@@ -311,7 +317,7 @@ pgDBSubscriptionPlan userInfo _sourceName sourceConfig unpreparedAST = do
           validatedQueryVars
           validatedSyntheticVars
 
-  pure $ LiveQueryPlan parameterizedPlan sourceConfig cohortVariables
+  pure $ LiveQueryPlan parameterizedPlan sourceConfig cohortVariables namespace
 
 -- turn the current plan into a transaction
 mkCurPlanTx ::

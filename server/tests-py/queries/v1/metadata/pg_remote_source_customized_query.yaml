@@ -1,0 +1,230 @@
+- description: PG add source 1
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_add_source
+    args:
+      name: pg1
+      configuration:
+        connection_info:
+          database_url:
+            from_env: HASURA_GRAPHQL_PG_SOURCE_URL_1
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+            retries: 1
+      customization:
+        root_fields:
+          namespace: s1
+          prefix: f1_
+        type_names:
+          prefix: t1_
+
+- description: create table 1
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg1
+      sql: |
+        create table author(
+            id serial primary key,
+            name text unique
+        );
+        INSERT INTO author (name)
+          VALUES ('Author 1'), ('Author 2');
+
+- description: track table 1
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_track_table
+    args:
+      table: author
+      source: pg1
+
+- description: PG add source 2
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_add_source
+    args:
+      name: pg2
+      configuration:
+        connection_info:
+          database_url:
+            from_env: HASURA_GRAPHQL_PG_SOURCE_URL_2
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+            retries: 1
+      customization:
+        root_fields:
+          namespace: s2
+          prefix: f2_
+        type_names:
+          prefix: t2_
+
+- description: create table 2
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg2
+      sql: |
+        create table author(
+            id serial primary key,
+            location text unique
+        );
+        INSERT INTO author (location)
+          VALUES ('Location 1'), ('Location 2');
+
+- description: track table 2
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_track_table
+    args:
+      table: author
+      source: pg2
+
+- description: create remote relationship
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_create_remote_relationship
+    args:
+      name: author_location
+      source: pg1
+      table: author
+      remote_source:
+        relationship_type: object
+        field_mapping:
+          id: id
+        source: pg2
+        table: author
+
+- description: Query using remote relationship
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      s1:
+        f1_author:
+          - __typename: t1_author
+            name: Author 1
+            id: 1
+            author_location:
+              __typename: t2_author
+              id: 1
+              location: Location 1
+          - __typename: t1_author
+            name: Author 2
+            id: 2
+            author_location:
+              __typename: t2_author
+              id: 2
+              location: Location 2
+  query:
+    query: |
+      query MyQuery {
+        s1 {
+          f1_author {
+            __typename
+            name
+            id
+            author_location {
+              __typename
+              id
+              location
+            }
+          }
+        }
+      }
+
+
+- description: untrack table 1
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_untrack_table
+    args:
+      table: author
+      source: pg1
+
+- description: drop table 1
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg1
+      sql: |
+        drop table author;
+
+- description: PG Drop Source 1
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_drop_source
+    args:
+      name: pg1
+
+- description: untrack table 2
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_untrack_table
+    args:
+      table: author
+      source: pg2
+
+- description: drop table 2
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg2
+      sql: |
+        drop table author;
+
+- description: PG Drop Source 2
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_drop_source
+    args:
+      name: pg2

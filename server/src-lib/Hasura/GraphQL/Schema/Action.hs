@@ -129,6 +129,7 @@ actionAsyncQuery actionInfo = runMaybeT do
   errorsFieldParser <-
     lift $ columnParser @('Postgres 'Vanilla) (ColumnScalar PGJSON) (G.Nullability True)
 
+  outputTypeName <- P.mkTypename $ unActionName actionName
   let fieldName = unActionName actionName
       description = G.Description <$> comment
       actionIdInputField =
@@ -155,8 +156,7 @@ actionAsyncQuery actionInfo = runMaybeT do
                 <&> AsyncOutput
          in [idField, createdAtField, errorsField, outputField]
       selectionSet =
-        let outputTypeName = unActionName actionName
-            desc = G.Description $ "fields of action: " <>> actionName
+        let desc = G.Description $ "fields of action: " <>> actionName
          in P.selectionSet outputTypeName (Just desc) allFieldParsers
               <&> parsedSelectionsToFields AsyncTypename
 
@@ -194,10 +194,10 @@ actionOutputFields outputType annotatedObject = do
   let outputObject = _aotDefinition annotatedObject
       scalarOrEnumFields = map outputFieldParser $ toList $ _otdFields outputObject
   relationshipFields <- forM (_otdRelationships outputObject) $ traverse relationshipFieldParser
+  outputTypeName <- P.mkTypename $ unObjectTypeName $ _otdName outputObject
   let allFieldParsers =
         scalarOrEnumFields
           <> maybe [] (concat . catMaybes . toList) relationshipFields
-      outputTypeName = unObjectTypeName $ _otdName outputObject
       outputTypeDescription = _otdDescription outputObject
   pure $
     outputParserModifier outputType $
@@ -318,7 +318,7 @@ actionInputArguments nonObjectTypeMap arguments = do
                     `onNothing` throw500 "object type for a field found in custom input object type"
                 (fieldName,) <$> argumentParser fieldName fieldDesc fieldType nonObjectFieldType
             pure $
-              P.object objectName objectDesc $
+              P.object (P.Typename objectName) objectDesc $
                 J.Object <$> inputFieldsToObject inputFieldsParsers
 
 mkArgumentInputFieldParser ::
@@ -358,9 +358,9 @@ customScalarParser = \case
         | _stdName == floatScalar -> J.toJSON <$> P.float
         | _stdName == stringScalar -> J.toJSON <$> P.string
         | _stdName == boolScalar -> J.toJSON <$> P.boolean
-        | otherwise -> P.jsonScalar _stdName _stdDescription
+        | otherwise -> P.jsonScalar (P.Typename _stdName) _stdDescription
   ASTReusedScalar name pgScalarType ->
-    let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
+    let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition (P.Typename name) Nothing P.TIScalar
      in P.Parser
           { pType = schemaType,
             pParser =
@@ -385,4 +385,4 @@ customEnumParser (EnumTypeDefinition typeName description enumValues) =
                   valueName
                   (_evdDescription enumValue)
                   P.EnumValueInfo
-   in P.enum enumName description enumValueDefinitions
+   in P.enum (P.Typename enumName) description enumValueDefinitions

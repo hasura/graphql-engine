@@ -77,7 +77,7 @@ runClearMetadata _ = do
           let emptyDefaultSource =
                 AB.dispatchAnyBackend @Backend exists \(s :: SourceMetadata b) ->
                   AB.mkAnyBackend @b $
-                    SourceMetadata @b defaultSource mempty mempty (_smConfiguration @b s) Nothing
+                    SourceMetadata @b defaultSource mempty mempty (_smConfiguration @b s) Nothing emptySourceCustomization
            in emptyMetadata
                 & metaSources %~ OMap.insert defaultSource emptyDefaultSource
   runReplaceMetadataV1 $ RMWithSources emptyMetadata'

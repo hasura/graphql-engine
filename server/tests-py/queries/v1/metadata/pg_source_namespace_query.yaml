@@ -1,0 +1,113 @@
+- description: PG add source
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_add_source
+    args:
+      name: pg1
+      configuration:
+        connection_info:
+          database_url:
+            from_env: HASURA_GRAPHQL_PG_SOURCE_URL_1
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+            retries:
+      customization:
+        root_fields:
+          namespace: my_source
+        type_names:
+          prefix: foo_
+
+- description: create table 1
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg1
+      sql: |
+        create table author(
+            id serial primary key,
+            name text unique
+        );
+        INSERT INTO author (name)
+          VALUES ('Author 1'), ('Author 2');
+
+- description: track table
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_track_table
+    args:
+      table: author
+      source: pg1
+
+
+- description: Simple GraphQL query to fetch items from the source table
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      my_source:
+        __typename: foo_my_source_query
+        author:
+        - id: 1
+          name: 'Author 1'
+          __typename: foo_author
+        - id: 2
+          name: 'Author 2'
+          __typename: foo_author
+  query:
+    query: |
+      query {
+        my_source {
+          __typename
+          author {
+            id
+            name
+            __typename
+          }
+        }
+      }
+
+- description: untrack table
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_untrack_table
+    args:
+      table: author
+      source: pg1
+
+- description: drop table
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg1
+      sql: |
+        drop table author;
+
+- description: PG Drop Source 1
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_drop_source
+    args:
+      name: pg1

@@ -7,6 +7,7 @@ where
 
 import Data.Aeson qualified as J
 import Data.Aeson.TH
+import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
@@ -26,8 +27,8 @@ data RoleContext a = RoleContext
 $(deriveToJSON hasuraJSON ''RoleContext)
 
 data GQLContext = GQLContext
-  { gqlQueryParser :: ParserFn (InsOrdHashMap G.Name (IR.QueryRootField UnpreparedValue)),
-    gqlMutationParser :: Maybe (ParserFn (InsOrdHashMap G.Name (IR.MutationRootField UnpreparedValue)))
+  { gqlQueryParser :: ParserFn (RootFieldMap (IR.QueryRootField UnpreparedValue)),
+    gqlMutationParser :: Maybe (ParserFn (RootFieldMap (IR.MutationRootField UnpreparedValue)))
   }
 
 instance J.ToJSON GQLContext where

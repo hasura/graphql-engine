@@ -6,6 +6,7 @@ import json
 import queue
 import ruamel.yaml as yaml
 from validate import check_query_f
+from collections import OrderedDict
 
 usefixtures = pytest.mark.usefixtures
 
@@ -195,7 +196,7 @@ class TestSubscriptionBasic:
         ev = ws_client.get_ws_query_event('2',3)
         assert ev['type'] == 'complete' and ev['id'] == '2', ev
 
-## NOTE: The same tests as in TestSubcscriptionBasic but with 
+## NOTE: The same tests as in TestSubcscriptionBasic but with
 ##       the subscription transport being used is `graphql-ws`
 ## FIXME: There's an issue with the tests being parametrized with both
 ##        postgres and mssql data sources enabled(See issue #2084).
@@ -566,3 +567,79 @@ class TestSubscriptionUDFWithSessionArg:
         ev = next(resp)
         assert ev['type'] == 'data', ev
         assert ev['payload']['data'] == {'me': [{'id': '42', 'name': 'Charlie'}]}, ev['payload']['data']
+
+@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
+@usefixtures('per_class_tests_db_state', 'ws_conn_init')
+class TestSubscriptionCustomizedSourceCommon:
+    @classmethod
+    def dir(cls):
+        return 'queries/subscriptions/customized_source'
+
+    setup_metadata_api_version = "v2"
+
+    '''
+        Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_complete
+    '''
+
+    def test_complete(self, hge_ctx, ws_client):
+        query = """
+        subscription MySubscription {
+            a: my_source {
+                b: fpref_author_fsuff {
+                    id
+                    name
+                }
+            }
+        }
+        """
+        obj = {
+            'id': '1',
+            'payload': {
+                'query': query
+            },
+            'type': 'start'
+        }
+        ws_client.send(obj)
+        '''
+            Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_data
+        '''
+        ev = ws_client.get_ws_query_event('1',15)
+        assert ev['type'] == 'data' and ev['id'] == '1', ev
+        assert ev['payload']['data']['a'] == OrderedDict([('b', [OrderedDict([('id', 1), ('name', 'Author 1')]), OrderedDict([('id', 2), ('name', 'Author 2')])])]), ev
+
+    def test_double_alias(self, hge_ctx, ws_client):
+        '''
+        This should give an error even though @_multiple_top_level_fields is specified.
+        The two different aliases for `my_source` mean that we would have to wrap different
+        parts of the DB response in different namespace fields, which is not currently possible.
+        '''
+        query = """
+        subscription MySubscription @_multiple_top_level_fields {
+            alias1: my_source {
+                fpref_author_fsuff {
+                    id
+                    name
+                }
+            }
+            alias2: my_source {
+                fpref_author_fsuff {
+                    id
+                    name
+                }
+            }
+        }
+        """
+        obj = {
+            'id': '2',
+            'payload': {
+                'query': query
+            },
+            'type': 'start'
+        }
+        ws_client.send(obj)
+        '''
+            Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_data
+        '''
+        ev = ws_client.get_ws_query_event('2',15)
+        assert ev['type'] == 'error' and ev['id'] == '2', ev
+        assert ev['payload']['errors'] == [OrderedDict([('extensions', OrderedDict([('path', '$'), ('code', 'validation-failed')])), ('message', 'subscriptions must select one top level field')])], ev

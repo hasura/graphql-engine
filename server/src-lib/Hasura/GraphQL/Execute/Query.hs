@@ -18,6 +18,7 @@ import Hasura.GraphQL.Execute.Instances ()
 import Hasura.GraphQL.Execute.Remote
 import Hasura.GraphQL.Execute.RemoteJoin.Collect qualified as RJ
 import Hasura.GraphQL.Execute.Resolve
+import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Parser.Directives
@@ -42,7 +43,7 @@ parseGraphQLQuery ::
   [G.Directive G.Name] ->
   G.SelectionSet G.NoFragments G.Name ->
   m
-    ( InsOrdHashMap G.Name (QueryRootField UnpreparedValue),
+    ( RootFieldMap (QueryRootField UnpreparedValue),
       [G.Directive Variable],
       G.SelectionSet G.NoFragments Variable
     )

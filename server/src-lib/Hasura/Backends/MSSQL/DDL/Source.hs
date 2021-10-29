@@ -14,6 +14,7 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.Backend
 
 resolveSourceConfig ::
@@ -29,10 +30,11 @@ resolveSourceConfig _name (MSSQLConnConfiguration connInfo) env = runExceptT do
 resolveDatabaseMetadata ::
   (MonadIO m, MonadBaseControl IO m) =>
   MSSQLSourceConfig ->
+  SourceTypeCustomization ->
   m (Either QErr (ResolvedSource 'MSSQL))
-resolveDatabaseMetadata config = runExceptT do
+resolveDatabaseMetadata config customization = runExceptT do
   dbTablesMetadata <- withMSSQLPool pool $ Tx.runTxE fromMSSQLTxError loadDBMetadata
-  pure $ ResolvedSource config dbTablesMetadata mempty mempty
+  pure $ ResolvedSource config customization dbTablesMetadata mempty mempty
   where
     MSSQLSourceConfig _connString pool = config
 

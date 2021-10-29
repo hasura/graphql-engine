@@ -308,7 +308,7 @@ typeField =
           _ -> J.Null
    in applyPrinter
         <$> P.selectionSet
-          $$(G.litName "__Type")
+          (P.Typename $$(G.litName "__Type"))
           Nothing
           [ kind,
             name,
@@ -356,7 +356,7 @@ inputValue =
             _ -> J.Null
    in applyPrinter
         <$> P.selectionSet
-          $$(G.litName "__InputValue")
+          (P.Typename $$(G.litName "__InputValue"))
           Nothing
           [ name,
             description,
@@ -396,7 +396,7 @@ enumValue =
           $> const J.Null
    in applyPrinter
         <$> P.selectionSet
-          $$(G.litName "__EnumValue")
+          (P.Typename $$(G.litName "__EnumValue"))
           Nothing
           [ name,
             description,
@@ -422,7 +422,7 @@ typeKind ::
   Parser 'Both n ()
 typeKind =
   P.enum
-    $$(G.litName "__TypeKind")
+    (P.Typename $$(G.litName "__TypeKind"))
     Nothing
     ( NE.fromList
         [ mkDefinition $$(G.litName "ENUM"),
@@ -482,7 +482,7 @@ fieldField =
           $> const J.Null
    in applyPrinter
         <$> P.selectionSet
-          $$(G.litName "__Field")
+          (P.Typename $$(G.litName "__Field"))
           Nothing
           [ name,
             description,
@@ -529,7 +529,7 @@ directiveSet =
           $> const J.Null
    in applyPrinter
         <$> P.selectionSet
-          $$(G.litName "__Directive")
+          (P.Typename $$(G.litName "__Directive"))
           Nothing
           [ name,
             description,
@@ -601,7 +601,7 @@ schemaSet fakeSchema =
         return $ J.array $ map printer $ sDirectives fakeSchema
    in selectionSetToJSON . fmap (P.handleTypename nameAsJSON)
         <$> P.selectionSet
-          $$(G.litName "__Schema")
+          (P.Typename $$(G.litName "__Schema"))
           Nothing
           [ description,
             types,
@@ -622,5 +622,5 @@ applyPrinter ::
   J.Value
 applyPrinter = flip (\x -> selectionSetToJSON . fmap (($ x) . P.handleTypename (const . nameAsJSON)))
 
-nameAsJSON :: G.Name -> J.Value
-nameAsJSON = J.String . G.unName
+nameAsJSON :: P.HasName a => a -> J.Value
+nameAsJSON = J.String . G.unName . P.getName

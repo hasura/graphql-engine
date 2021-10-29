@@ -17,6 +17,7 @@ import Hasura.Base.Error
 import Hasura.Base.Error qualified as E
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
+import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Parser
 import Hasura.Prelude
 import Hasura.RQL.IR
@@ -24,7 +25,6 @@ import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Language.GraphQL.Draft.Syntax qualified as G
 
 instance BackendExecute 'BigQuery where
   type PreparedQuery 'BigQuery = Text
@@ -33,7 +33,7 @@ instance BackendExecute 'BigQuery where
 
   mkDBQueryPlan = bqDBQueryPlan
   mkDBMutationPlan = bqDBMutationPlan
-  mkDBSubscriptionPlan _ _ _ _ =
+  mkDBSubscriptionPlan _ _ _ _ _ =
     throw500 "Cannot currently perform subscriptions on BigQuery sources."
   mkDBQueryExplain = bqDBQueryExplain
   mkLiveQueryExplain _ =
@@ -122,7 +122,7 @@ bqDBMutationPlan _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
 
 bqDBQueryExplain ::
   MonadError E.QErr m =>
-  G.Name ->
+  RootFieldAlias ->
   UserInfo ->
   SourceName ->
   SourceConfig 'BigQuery ->

@@ -178,8 +178,8 @@ buildTableRelayQueryFields sourceName sourceInfo queryTagsConfig tableName table
           . AB.mkAnyBackend
           . SourceConfigWith sourceInfo queryTagsConfig
           . QDBR
-      fieldName = gqlName <> $$(G.litName "_connection")
       fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
+  fieldName <- mkRootFieldName $ gqlName <> $$(G.litName "_connection")
   fmap afold $
     optionalFieldParser (mkRF . QDBConnection) $
       selectTableConnection sourceName tableInfo fieldName fieldDesc pkeyColumns selPerms
@@ -211,7 +211,7 @@ buildFunctionRelayQueryFields sourceName sourceInfo queryTagsConfig functionName
 -- Individual components
 
 columnParser ::
-  (MonadSchema n m, MonadError QErr m) =>
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has P.MkTypename r) =>
   ColumnType ('Postgres pgKind) ->
   G.Nullability ->
   m (Parser 'Both n (ValueWithOrigin (ColumnValue ('Postgres pgKind))))
@@ -235,7 +235,7 @@ columnParser columnType (G.Nullability isNullable) =
         -- not accept strings.
         --
         -- TODO: introduce new dedicated scalars for Postgres column types.
-        name <- mkScalarTypeName scalarType
+        name <- P.Typename <$> mkScalarTypeName scalarType
         let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
         pure $
           Parser
@@ -250,7 +250,7 @@ columnParser columnType (G.Nullability isNullable) =
     ColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (Map.toList enumValues) of
         Just enumValuesList -> do
-          name <- qualifiedObjectToName tableName <&> (<> $$(G.litName "_enum"))
+          name <- qualifiedObjectToName tableName <&> (<> $$(G.litName "_enum")) >>= P.mkTypename
           pure $ possiblyNullable PGText $ P.enum name Nothing (mkEnumValue <$> enumValuesList)
         Nothing -> throw400 ValidationFailed "empty enum values"
   where
@@ -313,7 +313,8 @@ comparisonExps ::
     MonadSchema n m,
     MonadError QErr m,
     MonadReader r m,
-    Has QueryContext r
+    Has QueryContext r,
+    Has MkTypename r
   ) =>
   ColumnType ('Postgres pgKind) ->
   m (Parser 'Input n [ComparisonExp ('Postgres pgKind)])
@@ -334,7 +335,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
   -- `ltxtquery` represents a full-text-search-like pattern for matching `ltree` values.
   ltxtqueryParser <- columnParser (ColumnScalar PGLtxtquery) (G.Nullability False)
   maybeCastParser <- castExp columnType
-  let name = P.getName typedParser <> $$(G.litName "_comparison_exp")
+  let name = P.Typename $ P.getName typedParser <> $$(G.litName "_comparison_exp")
       desc =
         G.Description $
           "Boolean expression to compare columns of type "
@@ -585,11 +586,11 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
         targetName <- mkScalarTypeName targetScalar
         targetOpExps <- comparisonExps $ ColumnScalar targetScalar
         let field = P.fieldOptional targetName Nothing $ (targetScalar,) <$> targetOpExps
-        pure $ P.object sourceName Nothing $ M.fromList . maybeToList <$> field
+        pure $ P.object (P.Typename sourceName) Nothing $ M.fromList . maybeToList <$> field
 
 geographyWithinDistanceInput ::
-  forall pgKind m n.
-  (MonadSchema n m, MonadError QErr m) =>
+  forall pgKind m n r.
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
   m (Parser 'Input n (DWithinGeogOp (UnpreparedValue ('Postgres pgKind))))
 geographyWithinDistanceInput = do
   geographyParser <- columnParser (ColumnScalar PGGeography) (G.Nullability False)
@@ -602,44 +603,44 @@ geographyWithinDistanceInput = do
   booleanParser <- columnParser (ColumnScalar PGBoolean) (G.Nullability True)
   floatParser <- columnParser (ColumnScalar PGFloat) (G.Nullability False)
   pure $
-    P.object $$(G.litName "st_d_within_geography_input") Nothing $
+    P.object (P.Typename $$(G.litName "st_d_within_geography_input")) Nothing $
       DWithinGeogOp <$> (mkParameter <$> P.field $$(G.litName "distance") Nothing floatParser)
         <*> (mkParameter <$> P.field $$(G.litName "from") Nothing geographyParser)
         <*> (mkParameter <$> P.fieldWithDefault $$(G.litName "use_spheroid") Nothing (G.VBoolean True) booleanParser)
 
 geometryWithinDistanceInput ::
-  forall pgKind m n.
-  (MonadSchema n m, MonadError QErr m) =>
+  forall pgKind m n r.
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
   m (Parser 'Input n (DWithinGeomOp (UnpreparedValue ('Postgres pgKind))))
 geometryWithinDistanceInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
   floatParser <- columnParser (ColumnScalar PGFloat) (G.Nullability False)
   pure $
-    P.object $$(G.litName "st_d_within_input") Nothing $
+    P.object (P.Typename $$(G.litName "st_d_within_input")) Nothing $
       DWithinGeomOp <$> (mkParameter <$> P.field $$(G.litName "distance") Nothing floatParser)
         <*> (mkParameter <$> P.field $$(G.litName "from") Nothing geometryParser)
 
 intersectsNbandGeomInput ::
-  forall pgKind m n.
-  (MonadSchema n m, MonadError QErr m) =>
+  forall pgKind m n r.
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
   m (Parser 'Input n (STIntersectsNbandGeommin (UnpreparedValue ('Postgres pgKind))))
 intersectsNbandGeomInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
   integerParser <- columnParser (ColumnScalar PGInteger) (G.Nullability False)
   pure $
-    P.object $$(G.litName "st_intersects_nband_geom_input") Nothing $
+    P.object (P.Typename $$(G.litName "st_intersects_nband_geom_input")) Nothing $
       STIntersectsNbandGeommin <$> (mkParameter <$> P.field $$(G.litName "nband") Nothing integerParser)
         <*> (mkParameter <$> P.field $$(G.litName "geommin") Nothing geometryParser)
 
 intersectsGeomNbandInput ::
-  forall pgKind m n.
-  (MonadSchema n m, MonadError QErr m) =>
+  forall pgKind m n r.
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
   m (Parser 'Input n (STIntersectsGeomminNband (UnpreparedValue ('Postgres pgKind))))
 intersectsGeomNbandInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
   integerParser <- columnParser (ColumnScalar PGInteger) (G.Nullability False)
   pure $
-    P.object $$(G.litName "st_intersects_geom_nband_input") Nothing $
+    P.object (P.Typename $$(G.litName "st_intersects_geom_nband_input")) Nothing $
       STIntersectsGeomminNband
         <$> (mkParameter <$> P.field $$(G.litName "geommin") Nothing geometryParser)
         <*> (fmap mkParameter <$> P.fieldOptional $$(G.litName "nband") Nothing integerParser)
@@ -652,7 +653,7 @@ mkCountType _ (Just cols) = PG.CTSimple cols
 -- | Various update operators
 updateOperators ::
   forall pgKind m n r.
-  (BackendSchema ('Postgres pgKind), MonadSchema n m, MonadTableInfo r m) =>
+  (BackendSchema ('Postgres pgKind), MonadSchema n m, MonadTableInfo r m, Has MkTypename r) =>
   -- | table info
   TableInfo ('Postgres pgKind) ->
   -- | update permissions of the table
@@ -681,7 +682,7 @@ updateOperators tableInfo updatePermissions = do
             IR.UpdInc
             numericCols
             "increments the numeric columns with given value of the filtered values"
-            (G.Description $"input type for incrementing numeric columns in table " <>> tableName),
+            (G.Description $ "input type for incrementing numeric columns in table " <>> tableName),
           let desc = "prepend existing jsonb value of filtered columns with new jsonb value"
            in updateOperator
                 tableGQLName
@@ -781,7 +782,7 @@ updateOperators tableInfo updatePermissions = do
           pure $
             P.fieldOptional fieldName fieldDesc fieldParser
               `mapField` \value -> (pgiColumn columnInfo, updOpExp value)
-        let objName = tableGQLName <> opName <> $$(G.litName "_input")
+        objName <- P.mkTypename $ tableGQLName <> opName <> $$(G.litName "_input")
         pure $
           (G.unName opName,) $
             P.fieldOptional opName (Just opDesc) $

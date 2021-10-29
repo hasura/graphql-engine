@@ -1,0 +1,4 @@
+type: mssql_track_table
+args:
+  table: author
+  source: mssql1

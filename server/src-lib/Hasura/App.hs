@@ -870,7 +870,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
       -- event triggers should be tied to the life cycle of a source
       lockedEvents <- readTVarIO leEvents
       forM_ sources $ \backendSourceInfo -> do
-        AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo sourceName _ _ sourceConfig _ :: SourceInfo b) -> do
+        AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo sourceName _ _ sourceConfig _ _ :: SourceInfo b) -> do
           let sourceNameString = T.unpack $ sourceNameToText sourceName
           logger $ mkGenericStrLog LevelInfo "event_triggers" $ "unlocking events of source: " ++ sourceNameString
           onJust (HM.lookup sourceName lockedEvents) $ \sourceLockedEvents -> do

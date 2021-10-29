@@ -1,0 +1,4 @@
+type: pg_track_table
+args:
+  table: author
+  source: pg1

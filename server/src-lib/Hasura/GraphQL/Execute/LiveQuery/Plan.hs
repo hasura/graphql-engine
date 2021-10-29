@@ -238,7 +238,10 @@ type ValidatedSyntheticVariables = ValidatedVariables []
 data LiveQueryPlan (b :: BackendType) q = LiveQueryPlan
   { _lqpParameterizedPlan :: !(ParameterizedLiveQueryPlan b q),
     _lqpSourceConfig :: !(SourceConfig b),
-    _lqpVariables :: !CohortVariables
+    _lqpVariables :: !CohortVariables,
+    -- | We need to know if the source has a namespace so that we can wrap it around
+    -- the response from the DB
+    _lqpNamespace :: !(Maybe G.Name)
   }
 
 data ParameterizedLiveQueryPlan (b :: BackendType) q = ParameterizedLiveQueryPlan

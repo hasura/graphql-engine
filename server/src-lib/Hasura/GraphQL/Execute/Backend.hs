@@ -14,6 +14,7 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Action.Types (ActionExecutionPlan)
 import Hasura.GraphQL.Execute.LiveQuery.Plan
 import Hasura.GraphQL.Execute.RemoteJoin.Types
+import Hasura.GraphQL.Namespace (RootFieldAlias, RootFieldMap)
 import Hasura.GraphQL.Parser hiding (Type)
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Metadata.Class
@@ -27,6 +28,7 @@ import Hasura.RQL.Types.Column (ColumnType, fromCol)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.QueryTags (QueryTagsConfig)
 import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.Run (RunT (..))
 import Hasura.RQL.Types.SchemaCache.Build (MetadataT (..))
 import Hasura.SQL.AnyBackend qualified as AB
@@ -85,13 +87,14 @@ class
     UserInfo ->
     SourceName ->
     SourceConfig b ->
-    InsOrdHashMap G.Name (QueryDB b (Const Void) (UnpreparedValue b)) ->
+    Maybe G.Name ->
+    RootFieldMap (QueryDB b (Const Void) (UnpreparedValue b)) ->
     m (LiveQueryPlan b (MultiplexedQuery b))
   mkDBQueryExplain ::
     forall m.
     ( MonadError QErr m
     ) =>
-    G.Name ->
+    RootFieldAlias ->
     UserInfo ->
     SourceName ->
     SourceConfig b ->
@@ -197,7 +200,7 @@ data DBStepInfo b = DBStepInfo
 -- as an intermediary step, and immediately tranform any value we obtain into an equivalent JSON
 -- representation.
 data ExplainPlan = ExplainPlan
-  { _fpField :: !G.Name,
+  { _fpField :: !RootFieldAlias,
     _fpSql :: !(Maybe Text),
     _fpPlan :: !(Maybe [Text])
   }
@@ -223,7 +226,7 @@ data ExecutionStep where
   -- | A graphql query to execute against a remote schema
   ExecStepRemote ::
     !RemoteSchemaInfo ->
-    !RemoteResultCustomizer ->
+    !ResultCustomizer ->
     !GH.GQLReqOutgoing ->
     ExecutionStep
   -- | Output a plain JSON object
@@ -234,7 +237,7 @@ data ExecutionStep where
 -- | The series of steps that need to be executed for a given query. For now, those steps are all
 -- independent. In the future, when we implement a client-side dataloader and generalized joins,
 -- this will need to be changed into an annotated tree.
-type ExecutionPlan = InsOrdHashMap G.Name ExecutionStep
+type ExecutionPlan = RootFieldMap ExecutionStep
 
 class (Monad m) => MonadQueryTags m where
   -- | Creates Query Tags. These are appended to the Generated SQL.

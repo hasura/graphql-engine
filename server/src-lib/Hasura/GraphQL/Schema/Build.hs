@@ -34,14 +34,14 @@ buildTableQueryFields sourceName sourceInfo queryTagsConfig tableName tableInfo 
           . QDBR
       customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
       -- select table
-      selectName = fromMaybe gqlName $ _tcrfSelect customRootFields
       selectDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
       -- select table by pk
-      selectPKName = fromMaybe (gqlName <> $$(G.litName "_by_pk")) $ _tcrfSelectByPk customRootFields
       selectPKDesc = Just $ G.Description $ "fetch data from the table: " <> tableName <<> " using primary key columns"
       -- select table aggregate
-      selectAggName = fromMaybe (gqlName <> $$(G.litName "_aggregate")) $ _tcrfSelectAggregate customRootFields
       selectAggDesc = Just $ G.Description $ "fetch aggregated fields from the table: " <>> tableName
+  selectName <- mkRootFieldName $ fromMaybe gqlName $ _tcrfSelect customRootFields
+  selectPKName <- mkRootFieldName $ fromMaybe (gqlName <> $$(G.litName "_by_pk")) $ _tcrfSelectByPk customRootFields
+  selectAggName <- mkRootFieldName $ fromMaybe (gqlName <> $$(G.litName "_aggregate")) $ _tcrfSelectAggregate customRootFields
   catMaybes
     <$> sequenceA
       [ requiredFieldParser (mkRF . QDBMultipleRows) $ selectTable sourceName tableInfo selectName selectDesc selPerms,
@@ -88,11 +88,11 @@ buildTableInsertMutationFields
               )
           customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
           -- insert into table
-          insertName = fromMaybe ($$(G.litName "insert_") <> gqlName) $ _tcrfInsert customRootFields
           insertDesc = Just $ G.Description $ "insert data into the table: " <>> tableName
           -- insert one into table
-          insertOneName = fromMaybe ($$(G.litName "insert_") <> gqlName <> $$(G.litName "_one")) $ _tcrfInsertOne customRootFields
           insertOneDesc = Just $ G.Description $ "insert a single row into the table: " <>> tableName
+      insertName <- mkRootFieldName $ fromMaybe ($$(G.litName "insert_") <> gqlName) $ _tcrfInsert customRootFields
+      insertOneName <- mkRootFieldName $ fromMaybe ($$(G.litName "insert_") <> gqlName <> $$(G.litName "_one")) $ _tcrfInsertOne customRootFields
       insert <- insertIntoTable sourceName tableInfo insertName insertDesc insPerms mSelPerms mUpdPerms
       -- Select permissions are required for insertOne: the selection set is the
       -- same as a select on that table, and it therefore can't be populated if the
@@ -121,11 +121,11 @@ buildTableUpdateMutationFields sourceName sourceInfo queryTagsConfig tableName t
           . MDBR
       customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
       -- update table
-      updateName = fromMaybe ($$(G.litName "update_") <> gqlName) $ _tcrfUpdate customRootFields
       updateDesc = Just $ G.Description $ "update data of the table: " <>> tableName
       -- update table by pk
-      updatePKName = fromMaybe ($$(G.litName "update_") <> gqlName <> $$(G.litName "_by_pk")) $ _tcrfUpdateByPk customRootFields
       updatePKDesc = Just $ G.Description $ "update single row of the table: " <>> tableName
+  updateName <- mkRootFieldName $ fromMaybe ($$(G.litName "update_") <> gqlName) $ _tcrfUpdate customRootFields
+  updatePKName <- mkRootFieldName $ fromMaybe ($$(G.litName "update_") <> gqlName <> $$(G.litName "_by_pk")) $ _tcrfUpdateByPk customRootFields
   update <- updateTable sourceName tableInfo updateName updateDesc updPerms mSelPerms
   -- Primary keys can only be tested in the `where` clause if the user has
   -- select permissions for them, which at the very least requires select
@@ -153,11 +153,11 @@ buildTableDeleteMutationFields sourceName sourceInfo queryTagsConfig tableName t
           . MDBR
       customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
       -- delete from table
-      deleteName = fromMaybe ($$(G.litName "delete_") <> gqlName) $ _tcrfDelete customRootFields
       deleteDesc = Just $ G.Description $ "delete data from the table: " <>> tableName
       -- delete from table by pk
-      deletePKName = fromMaybe ($$(G.litName "delete_") <> gqlName <> $$(G.litName "_by_pk")) $ _tcrfDeleteByPk customRootFields
       deletePKDesc = Just $ G.Description $ "delete single row from the table: " <>> tableName
+  deleteName <- mkRootFieldName $ fromMaybe ($$(G.litName "delete_") <> gqlName) $ _tcrfDelete customRootFields
+  deletePKName <- mkRootFieldName $ fromMaybe ($$(G.litName "delete_") <> gqlName <> $$(G.litName "_by_pk")) $ _tcrfDeleteByPk customRootFields
   delete <- deleteFromTable sourceName tableInfo deleteName deleteDesc delPerms mSelPerms
   -- Primary keys can only be tested in the `where` clause if the user has
   -- select permissions for them, which at the very least requires select

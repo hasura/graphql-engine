@@ -43,6 +43,7 @@ import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Relationship
 import Hasura.RQL.Types.RemoteRelationship
 import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.ResultCustomization
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -631,7 +632,7 @@ data RemoteFieldArgument = RemoteFieldArgument
 
 data RemoteSchemaSelect (b :: BackendType) = RemoteSchemaSelect
   { _rselArgs :: ![RemoteFieldArgument],
-    _rselResultCustomizer :: !RemoteResultCustomizer,
+    _rselResultCustomizer :: !ResultCustomizer,
     _rselSelection :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable),
     _rselHasuraFields :: !(HashSet (DBJoinField b)),
     _rselFieldCall :: !(NonEmpty FieldCall),

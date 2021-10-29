@@ -67,7 +67,7 @@ collectVariablesFromSelectionSet =
 
 buildExecStepRemote ::
   RemoteSchemaInfo ->
-  RemoteResultCustomizer ->
+  ResultCustomizer ->
   G.OperationType ->
   G.SelectionSet G.NoFragments Variable ->
   ExecutionStep

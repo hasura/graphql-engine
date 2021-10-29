@@ -1,0 +1,5 @@
+type: mssql_run_sql
+args:
+  source: mssql1
+  sql: |
+    drop table author;

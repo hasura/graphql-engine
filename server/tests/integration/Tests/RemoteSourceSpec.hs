@@ -43,6 +43,7 @@ import Hasura.RQL.Types.RemoteRelationship
     RemoteRelationshipName (..),
     RemoteSourceRelationshipDef (..),
   )
+import Hasura.RQL.Types.SourceCustomization (emptySourceCustomization)
 import Hasura.RQL.Types.Table (emptyTableConfig)
 import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Hasura.SQL.Backend (BackendType (..), PostgresKind (..))
@@ -1400,7 +1401,8 @@ albumsSource sqlConfig connConfig =
          in OM.fromList $ map withName [albumsTable sqlConfig],
       _smFunctions = mempty,
       _smConfiguration = connConfig,
-      _smQueryTags = Nothing
+      _smQueryTags = Nothing,
+      _smCustomization = emptySourceCustomization
     }
 
 albumsTable :: forall b. (Backend b) => RemoteSourceSql b -> TableMetadata b
@@ -1623,7 +1625,8 @@ artistsSource sqlConfig connConfig =
          in OM.fromList $ map withName [artistsTable sqlConfig],
       _smFunctions = mempty,
       _smConfiguration = connConfig,
-      _smQueryTags = Nothing
+      _smQueryTags = Nothing,
+      _smCustomization = emptySourceCustomization
     }
 
 artistsTable :: forall b. (Backend b) => RemoteSourceSql b -> TableMetadata b

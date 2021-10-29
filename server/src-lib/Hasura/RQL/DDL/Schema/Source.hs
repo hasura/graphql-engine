@@ -23,7 +23,8 @@ import Hasura.Server.Logging (MetadataLog (..))
 data AddSource b = AddSource
   { _asName :: !SourceName,
     _asConfiguration :: !(SourceConnConfiguration b),
-    _asReplaceConfiguration :: !Bool
+    _asReplaceConfiguration :: !Bool,
+    _asCustomization :: !SourceCustomization
   }
 
 instance (Backend b) => FromJSON (AddSource b) where
@@ -32,13 +33,14 @@ instance (Backend b) => FromJSON (AddSource b) where
       <$> o .: "name"
       <*> o .: "configuration"
       <*> o .:? "replace_configuration" .!= False
+      <*> o .:? "customization" .!= emptySourceCustomization
 
 runAddSource ::
   forall m b.
   (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
   AddSource b ->
   m EncJSON
-runAddSource (AddSource name sourceConfig replaceConfiguration) = do
+runAddSource (AddSource name sourceConfig replaceConfiguration sourceCustomization) = do
   sources <- scSources <$> askSchemaCache
 
   metadataModifier <-
@@ -49,7 +51,7 @@ runAddSource (AddSource name sourceConfig replaceConfiguration) = do
             then pure $ metaSources . ix name . toSourceMetadata @b . smConfiguration .~ sourceConfig
             else throw400 AlreadyExists $ "source with name " <> name <<> " already exists"
         else do
-          let sourceMetadata = mkSourceMetadata @b name sourceConfig
+          let sourceMetadata = mkSourceMetadata @b name sourceConfig sourceCustomization
           pure $ metaSources %~ OMap.insert name sourceMetadata
 
   buildSchemaCacheFor (MOSource name) metadataModifier

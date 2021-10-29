@@ -20,6 +20,11 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.LiveQuery.Plan
 import Hasura.GraphQL.Logging
+import Hasura.GraphQL.Namespace
+  ( RootFieldAlias,
+    RootFieldMap,
+    mkUnNamespacedRootFieldAlias,
+  )
 import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
@@ -50,7 +55,7 @@ runPGQuery ::
   ) =>
   RequestId ->
   GQLReqUnparsed ->
-  G.Name ->
+  RootFieldAlias ->
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig ('Postgres pgKind) ->
@@ -73,7 +78,7 @@ runPGMutation ::
   ) =>
   RequestId ->
   GQLReqUnparsed ->
-  G.Name ->
+  RootFieldAlias ->
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig ('Postgres pgKind) ->
@@ -122,7 +127,7 @@ runPGQueryExplain (DBStepInfo _ sourceConfig _ action) =
 
 mkQueryLog ::
   GQLReqUnparsed ->
-  G.Name ->
+  RootFieldAlias ->
   Maybe EQ.PreparedSql ->
   RequestId ->
   QueryLog
@@ -147,10 +152,10 @@ runPGMutationTransaction ::
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig ('Postgres pgKind) ->
-  InsOrdHashMap G.Name (DBStepInfo ('Postgres pgKind)) ->
-  m (DiffTime, InsOrdHashMap G.Name EncJSON)
+  RootFieldMap (DBStepInfo ('Postgres pgKind)) ->
+  m (DiffTime, RootFieldMap EncJSON)
 runPGMutationTransaction reqId query userInfo logger sourceConfig mutations = do
-  logQueryLog logger $ mkQueryLog query $$(G.litName "transaction") Nothing reqId
+  logQueryLog logger $ mkQueryLog query (mkUnNamespacedRootFieldAlias $$(G.litName "transaction")) Nothing reqId
   ctx <- Tracing.currentContext
   withElapsedTime $ do
     Tracing.interpTraceT

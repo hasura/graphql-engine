@@ -122,7 +122,7 @@ multiple parser = parser {pType = Nullable $ TList $ pType parser}
 -- | A variant of 'selectionSetObject' which doesn't implement any interfaces
 selectionSet ::
   MonadParse m =>
-  Name ->
+  Typename ->
   Maybe Description ->
   [FieldParser m a] ->
   Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a))
@@ -130,7 +130,7 @@ selectionSet name desc fields = selectionSetObject name desc fields []
 
 safeSelectionSet ::
   (MonadError QErr n, MonadParse m) =>
-  Name ->
+  Typename ->
   Maybe Description ->
   [FieldParser m a] ->
   n (Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a)))
@@ -147,7 +147,7 @@ safeSelectionSet name desc fields
 -- See also Note [Selectability of tables].
 selectionSetObject ::
   MonadParse m =>
-  Name ->
+  Typename ->
   Maybe Description ->
   -- | Fields of this object, including any fields that are required from the
   -- interfaces that it implements.  Note that we can't derive those fields from
@@ -182,12 +182,12 @@ selectionSetObject name description parsers implementsInterfaces =
 
         -- TODO(PDV) This probably accepts invalid queries, namely queries that use
         -- type names that do not exist.
-        fields <- collectFields (name : parsedInterfaceNames) input
+        fields <- collectFields (getName name : parsedInterfaceNames) input
         for fields \selectionField@Field {_fName, _fAlias, _fDirectives} -> do
           parsedValue <-
             if
                 | _fName == $$(litName "__typename") ->
-                  pure $ SelectTypename name
+                  pure $ SelectTypename $ getName name
                 | Just parser <- M.lookup _fName parserMap ->
                   withPath (++ [Key (unName _fName)]) $
                     SelectField <$> parser selectionField
@@ -208,7 +208,7 @@ selectionSetObject name description parsers implementsInterfaces =
 
 selectionSetInterface ::
   (MonadParse n, Traversable t) =>
-  Name ->
+  Typename ->
   Maybe Description ->
   -- | Fields defined in this interface
   [FieldParser n a] ->
@@ -239,7 +239,7 @@ selectionSetInterface name description fields objectImplementations =
 
 selectionSetUnion ::
   (MonadParse n, Traversable t) =>
-  Name ->
+  Typename ->
   Maybe Description ->
   -- | The member object types.
   t (Parser 'Output n b) ->

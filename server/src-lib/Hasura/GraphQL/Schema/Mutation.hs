@@ -156,8 +156,8 @@ tableFieldsInput sourceName tableInfo insertPerms =
   memoizeOn 'tableFieldsInput (sourceName, tableName) do
     tableGQLName <- getTableGQLName tableInfo
     objectFields <- traverse mkFieldParser (Map.elems allFields)
-    let objectName = tableGQLName <> $$(G.litName "_insert_input")
-        objectDesc = G.Description $ "input type for inserting data into table " <>> tableName
+    objectName <- P.mkTypename $ tableGQLName <> $$(G.litName "_insert_input")
+    let objectDesc = G.Description $ "input type for inserting data into table " <>> tableName
     pure $ P.object objectName (Just objectDesc) $ coalesceFields objectFields
   where
     allFields = _tciFieldInfoMap . _tiCoreInfo $ tableInfo
@@ -247,8 +247,8 @@ objectRelationshipInput sourceName tableInfo insertPerms selectPerms updatePerms
     tableGQLName <- getTableGQLName tableInfo
     objectParser <- tableFieldsInput sourceName tableInfo insertPerms
     conflictParser <- withJust updatePerms $ conflictObject sourceName tableInfo selectPerms
+    inputName <- P.mkTypename $ tableGQLName <> $$(G.litName "_obj_rel_insert_input")
     let objectName = $$(G.litName "data")
-        inputName = tableGQLName <> $$(G.litName "_obj_rel_insert_input")
         inputDesc = G.Description $ "input type for inserting object relation for remote table " <>> tableName
         inputParser = do
           conflict <- mkConflictArg conflictParser
@@ -279,8 +279,8 @@ arrayRelationshipInput sourceName tableInfo insertPerms selectPerms updatePerms 
     tableGQLName <- getTableGQLName tableInfo
     objectParser <- tableFieldsInput sourceName tableInfo insertPerms
     conflictParser <- withJust updatePerms $ conflictObject sourceName tableInfo selectPerms
+    inputName <- P.mkTypename $ tableGQLName <> $$(G.litName "_arr_rel_insert_input")
     let objectsName = $$(G.litName "data")
-        inputName = tableGQLName <> $$(G.litName "_arr_rel_insert_input")
         inputDesc = G.Description $ "input type for inserting array relation for remote table " <>> tableName
         inputParser = do
           conflict <- mkConflictArg conflictParser
@@ -343,9 +343,9 @@ defaultConflictObject xOnConflict sourceName tableInfo selectPerms updatePerms =
   constraints <- hoistMaybe $ tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo $ tableInfo
   constraintParser <- lift $ conflictConstraint constraints sourceName tableInfo
   whereExpParser <- lift $ boolExp sourceName tableInfo selectPerms
+  objectName <- P.mkTypename $ tableGQLName <> $$(G.litName "_on_conflict")
   let presetColumns = partialSQLExpToUnpreparedValue <$> upiSet updatePerms
       updateFilter = fmap partialSQLExpToUnpreparedValue <$> upiFilter updatePerms
-      objectName = tableGQLName <> $$(G.litName "_on_conflict")
       objectDesc = G.Description $ "on conflict condition type for table " <>> tableInfoName tableInfo
       constraintName = $$(G.litName "constraint")
       columnsName = $$(G.litName "update_columns")
@@ -388,8 +388,8 @@ conflictConstraint constraints sourceName tableInfo =
         ( P.mkDefinition name (Just "unique or primary key constraint") P.EnumValueInfo,
           _cName constraint
         )
-    let enumName = tableGQLName <> $$(G.litName "_constraint")
-        enumDesc = G.Description $ "unique or primary key constraints on table " <>> tableName
+    enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_constraint")
+    let enumDesc = G.Description $ "unique or primary key constraints on table " <>> tableName
     pure $ P.enum enumName (Just enumDesc) constraintEnumValues
   where
     tableName = tableInfoName tableInfo
@@ -455,8 +455,8 @@ updateTableByPk sourceName tableInfo fieldName description updatePerms selectPer
   pkArgs <- MaybeT $ primaryKeysArguments tableInfo selectPerms
   opArgs <- MaybeT $ updateOperators tableInfo updatePerms
   selection <- lift $ tableSelectionSet sourceName tableInfo selectPerms
+  pkObjectName <- P.mkTypename $ tableGQLName <> $$(G.litName "_pk_columns_input")
   let pkFieldName = $$(G.litName "pk_columns")
-      pkObjectName = tableGQLName <> $$(G.litName "_pk_columns_input")
       pkObjectDesc = G.Description $ "primary key columns input for table: " <> G.unName tableGQLName
       pkParser = P.object pkObjectName (Just pkObjectDesc) pkArgs
       argsParser = do
@@ -585,9 +585,9 @@ mutationSelectionSet sourceName tableInfo selectPerms =
       let returningName = $$(G.litName "returning")
           returningDesc = "data from the rows affected by the mutation"
       pure $ IR.MRet <$> P.subselection_ returningName (Just returningDesc) tableSet
+    selectionName <- P.mkTypename $ tableGQLName <> $$(G.litName "_mutation_response")
     let affectedRowsName = $$(G.litName "affected_rows")
         affectedRowsDesc = "number of rows affected by the mutation"
-        selectionName = tableGQLName <> $$(G.litName "_mutation_response")
         selectionDesc = G.Description $ "response of any mutation on the table " <>> tableName
 
         selectionFields =

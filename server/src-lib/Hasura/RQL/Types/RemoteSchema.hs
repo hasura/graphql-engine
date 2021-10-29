@@ -2,12 +2,10 @@ module Hasura.RQL.Types.RemoteSchema where
 
 import Control.Lens.TH (makeLenses)
 import Data.Aeson qualified as J
-import Data.Aeson.Ordered qualified as JO
 import Data.Aeson.TH qualified as J
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
-import Data.Monoid (Endo (..))
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
@@ -18,6 +16,7 @@ import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (HeaderConf (..))
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ResultCustomization
 import Hasura.Session
 import Language.GraphQL.Draft.Printer qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -395,69 +394,9 @@ getRemoteFieldSelectionSet = \case
   RRFNamespaceField selSet -> selSet
   RRFRealField fld -> [G.SelectionField fld]
 
--- | Mapping that can be provided to a RemoteResultCustomizer
--- to map top-level field aliases that were not available at field parse time.
--- E.g. for aliases created in the remote server query for remote joins.
-newtype AliasMapping = AliasMapping {unAliasMapping :: Endo G.Name}
-  deriving (Semigroup, Monoid)
-
--- | AliasMapping that maps a single field name to an alias
-singletonAliasMapping :: G.Name -> G.Name -> AliasMapping
-singletonAliasMapping fieldName alias = AliasMapping $
-  Endo $ \fieldName' ->
-    if fieldName == fieldName' then alias else fieldName'
-
--- | Function to modify JSON values returned from the remote server
--- e.g. to map values of __typename fields to customized type names.
--- The customizer uses Maybe to allow short-circuiting subtrees
--- where no customizations are needed.
-newtype RemoteResultCustomizer = RemoteResultCustomizer {unRemoteResultCustomizer :: Maybe (AliasMapping -> Endo JO.Value)}
-  deriving (Semigroup, Monoid)
-
--- | Apply a RemoteResultCustomizer to a JSON value
-applyRemoteResultCustomizer :: RemoteResultCustomizer -> JO.Value -> JO.Value
-applyRemoteResultCustomizer = maybe id (appEndo . ($ mempty)) . unRemoteResultCustomizer
-
--- | Apply an AliasMapping to a RemoteResultCustomizer.
-applyAliasMapping :: AliasMapping -> RemoteResultCustomizer -> RemoteResultCustomizer
-applyAliasMapping aliasMapping (RemoteResultCustomizer m) =
-  RemoteResultCustomizer $
-    m <&> \g aliasMapping' -> g $ aliasMapping' <> aliasMapping
-
--- | Take a RemoteResultCustomizer for a JSON subtree, and a fieldName,
--- and produce a RemoteResultCustomizer for a parent object or array of objects
--- that applies the subtree customizer to the subtree at the given fieldName.
-modifyFieldByName :: G.Name -> RemoteResultCustomizer -> RemoteResultCustomizer
-modifyFieldByName fieldName (RemoteResultCustomizer m) =
-  RemoteResultCustomizer $
-    m <&> \g aliasMapping ->
-      Endo $
-        let Endo f = g mempty -- AliasMapping is only applied to the top level so use mempty for nested customizers
-            modifyFieldByName' = \case
-              JO.Object o -> JO.Object $ JO.adjust f (G.unName $ (appEndo $ unAliasMapping aliasMapping) fieldName) o
-              JO.Array a -> JO.Array $ modifyFieldByName' <$> a
-              v -> v
-         in modifyFieldByName'
-
--- | Create a RemoteResultCustomizer that applies the typeNameMap
--- to a JSON string value, e.g. for use in customizing a __typename field value.
-customizeTypeNameString :: HashMap G.Name G.Name -> RemoteResultCustomizer
-customizeTypeNameString typeNameMap =
-  if Map.null typeNameMap
-    then mempty
-    else RemoteResultCustomizer $
-      Just $
-        const $
-          Endo $ \case
-            JO.String t -> JO.String $ G.unName $ customizeTypeName $ G.unsafeMkName t
-            v -> v
-  where
-    customizeTypeName :: G.Name -> G.Name
-    customizeTypeName typeName = Map.lookupDefault typeName typeName typeNameMap
-
 data RemoteFieldG f var = RemoteFieldG
   { _rfRemoteSchemaInfo :: !RemoteSchemaInfo,
-    _rfResultCustomizer :: !RemoteResultCustomizer,
+    _rfResultCustomizer :: !ResultCustomizer,
     _rfField :: !(f var)
   }
   deriving (Functor, Foldable, Traversable)

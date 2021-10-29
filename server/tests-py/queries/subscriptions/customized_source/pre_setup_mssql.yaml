@@ -1,0 +1,18 @@
+type: mssql_add_source
+args:
+  name: mssql1
+  configuration:
+    connection_info:
+      connection_string:
+        from_env: HASURA_GRAPHQL_MSSQL_SOURCE_URL
+      pool_settings:
+        max_connections: 50
+        idle_timeout: 180
+  customization:
+    root_fields:
+      namespace: my_source
+      prefix: fpref_
+      suffix: _fsuff
+    type_names:
+      prefix: tpref_
+      suffix: _tsuff

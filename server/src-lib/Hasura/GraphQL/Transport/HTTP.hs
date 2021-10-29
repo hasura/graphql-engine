@@ -8,6 +8,8 @@ module Hasura.GraphQL.Transport.HTTP
     coalescePostgresMutations,
     extractFieldFromResponse,
     buildRaw,
+    encodeAnnotatedResponseParts,
+    encodeEncJSONResults,
 
     -- * imported from HTTP.Protocol; required by pro
     GQLReq (..),
@@ -47,6 +49,7 @@ import Hasura.GraphQL.Logging
     QueryLog (..),
     QueryLogKind (..),
   )
+import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.GraphQL.Parser.Column (UnpreparedValue (..))
 import Hasura.GraphQL.Parser.Directives (CachedDirective (..), DirectiveMap, cached)
@@ -183,12 +186,12 @@ data AnnotatedResponse = AnnotatedResponse
 buildResponseFromParts ::
   (MonadError QErr m) =>
   Telem.QueryType ->
-  Either (Either GQExecError QErr) (InsOrdHashMap G.Name AnnotatedResponsePart) ->
+  Either (Either GQExecError QErr) (RootFieldMap AnnotatedResponsePart) ->
   HTTP.ResponseHeaders ->
   m AnnotatedResponse
 buildResponseFromParts telemType partsErr cacheHeaders =
   buildResponse telemType partsErr \parts ->
-    let responseData = Right $ encJToLBS $ encJFromInsOrdHashMap $ arpResponse <$> OMap.mapKeys G.unName parts
+    let responseData = Right $ encJToLBS $ encodeAnnotatedResponseParts parts
      in AnnotatedResponse
           { arQueryType = telemType,
             arTimeIO = sum (fmap arpTimeIO parts),
@@ -384,7 +387,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                   runPGMutationTransaction reqId reqUnparsed userInfo logger sourceConfig pgMutations
             -- we do not construct response parts since we have only one part
             buildResponse Telem.Mutation res \(telemTimeIO_DT, parts) ->
-              let responseData = Right $ encJToLBS $ encJFromInsOrdHashMap $ OMap.mapKeys G.unName parts
+              let responseData = Right $ encJToLBS $ encodeEncJSONResults parts
                in AnnotatedResponse
                     { arQueryType = Telem.Mutation,
                       arTimeIO = telemTimeIO_DT,
@@ -404,7 +407,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 
     executeQueryStep ::
       HTTP.Manager ->
-      G.Name ->
+      RootFieldAlias ->
       EB.ExecutionStep ->
       ExceptT (Either GQExecError QErr) m AnnotatedResponsePart
     executeQueryStep httpManager fieldName = \case
@@ -434,7 +437,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 
     executeMutationStep ::
       HTTP.Manager ->
-      G.Name ->
+      RootFieldAlias ->
       EB.ExecutionStep ->
       ExceptT (Either GQExecError QErr) m AnnotatedResponsePart
     executeMutationStep httpManager fieldName = \case
@@ -521,7 +524,7 @@ coalescePostgresMutations ::
   EB.ExecutionPlan ->
   Maybe
     ( SourceConfig ('Postgres 'Vanilla),
-      InsOrdHashMap G.Name (EB.DBStepInfo ('Postgres 'Vanilla))
+      InsOrdHashMap RootFieldAlias (EB.DBStepInfo ('Postgres 'Vanilla))
     )
 coalescePostgresMutations plan = do
   -- we extract the name and config of the first mutation root, if any
@@ -545,18 +548,19 @@ coalescePostgresMutations plan = do
 extractFieldFromResponse ::
   forall m.
   Monad m =>
-  G.Name ->
+  RootFieldAlias ->
   RemoteSchemaInfo ->
-  RemoteResultCustomizer ->
+  ResultCustomizer ->
   LBS.ByteString ->
   ExceptT (Either GQExecError QErr) m JO.Value
 extractFieldFromResponse fieldName rsi resultCustomizer resp = do
   let namespace = fmap G.unName $ _rscNamespaceFieldName $ rsCustomizer rsi
-      fieldName' = G.unName fieldName
+      fieldName' = G.unName $ _rfaAlias fieldName
+  -- TODO: use RootFieldAlias for remote fields
   val <- onLeft (JO.eitherDecode resp) $ do400 . T.pack
   valObj <- onLeft (JO.asObject val) do400
   dataVal <-
-    applyRemoteResultCustomizer resultCustomizer <$> case JO.toList valObj of
+    applyResultCustomizer resultCustomizer <$> case JO.toList valObj of
       [("data", v)] -> pure v
       _ -> case JO.lookup "errors" valObj of
         Just (JO.Array err) -> doGQExecError $ toList $ fmap JO.fromOrdered err
@@ -583,6 +587,15 @@ buildRaw json = do
   let obj = encJFromOrderedValue json
       telemTimeIO_DT = 0
   pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local obj []
+
+encodeAnnotatedResponseParts :: RootFieldMap AnnotatedResponsePart -> EncJSON
+encodeAnnotatedResponseParts = encodeEncJSONResults . fmap arpResponse
+
+encodeEncJSONResults :: RootFieldMap EncJSON -> EncJSON
+encodeEncJSONResults =
+  encNameMap . fmap (namespacedField id encNameMap) . unflattenNamespaces
+  where
+    encNameMap = encJFromInsOrdHashMap . OMap.mapKeys G.unName
 
 -- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs').
 runGQBatched ::

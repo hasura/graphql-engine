@@ -20,6 +20,7 @@ import Hasura.App
     mkPgSourceResolver,
   )
 import Hasura.EventingSpec qualified as EventingSpec
+import Hasura.GraphQL.NamespaceSpec qualified as NamespaceSpec
 import Hasura.GraphQL.Parser.DirectivesTest qualified as GraphQLDirectivesSpec
 import Hasura.GraphQL.RemoteServerSpec qualified as RemoteServerSpec
 import Hasura.GraphQL.Schema.RemoteTest qualified as GraphRemoteSchemaSpec
@@ -86,6 +87,7 @@ unitSpecs = do
   describe "Hasura.Incremental" IncrementalSpec.spec
   describe "Hasura.RQL.Types.Common" CommonTypesSpec.spec
   describe "Hasura.RQL.Types.Endpoint" EndpointSpec.spec
+  describe "Hasura.GraphQL.Namespace" NamespaceSpec.spec
   describe "Hasura.GraphQL.RemoteServer" RemoteServerSpec.spec
   describe "Hasura.SQL.WKT" WKTSpec.spec
   describe "Hasura.Server.Auth" AuthSpec.spec

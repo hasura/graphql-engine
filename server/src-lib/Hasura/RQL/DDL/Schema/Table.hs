@@ -35,6 +35,7 @@ import Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Context
+import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Schema.Common (textToName)
 import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
@@ -170,7 +171,7 @@ checkConflictingNode sc tnGQL = do
   case queryParser introspectionQuery of
     Left _ -> pure ()
     Right results -> do
-      case OMap.lookup $$(G.litName "__schema") results of
+      case OMap.lookup (mkUnNamespacedRootFieldAlias $$(G.litName "__schema")) results of
         Just (RFRaw (JO.Object schema)) -> do
           let names = do
                 JO.Object queryType <- JO.lookup "queryType" schema

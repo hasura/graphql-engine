@@ -162,7 +162,7 @@ data RemoteSchemaJoin = RemoteSchemaJoin
   { -- | User-provided arguments with variables.
     _rsjArgs :: !(Map.HashMap G.Name (P.InputValue RemoteSchemaVariable)),
     -- | Customizer for JSON result from the remote server.
-    _rsjResultCustomizer :: !RemoteResultCustomizer,
+    _rsjResultCustomizer :: !ResultCustomizer,
     -- | User-provided selection set of remote field.
     _rsjSelSet :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable),
     -- | A map of the join column to its alias in the response

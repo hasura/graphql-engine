@@ -20,6 +20,7 @@ import Hasura.Backends.MySQL.Types qualified as MySQL
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
+import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser
 import Hasura.Prelude hiding (first, second)
 import Hasura.RQL.IR
@@ -27,7 +28,6 @@ import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Language.GraphQL.Draft.Syntax qualified as G
 
 instance BackendExecute 'MySQL where
   type PreparedQuery 'MySQL = Text
@@ -75,7 +75,7 @@ mysqlDBQueryPlan userInfo sourceName sourceConfig qrf = do
 
 mysqlDBQueryExplain ::
   MonadError QErr m =>
-  G.Name ->
+  RootFieldAlias ->
   UserInfo ->
   SourceName ->
   SourceConfig 'MySQL ->

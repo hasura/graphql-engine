@@ -11,19 +11,20 @@ where
 
 import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as Map
+import Data.Text.Extended
+import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.Server.Types (RequestId)
 import Hasura.Tracing (TraceT)
-import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | A GraphQL query, optionally generated SQL, and the request id makes up the
 -- | 'QueryLog'
 data QueryLog = QueryLog
   { _qlQuery :: !GQLReqUnparsed,
-    _qlGeneratedSql :: !(Maybe (G.Name, GeneratedQuery)),
+    _qlGeneratedSql :: !(Maybe (RootFieldAlias, GeneratedQuery)),
     _qlRequestId :: !RequestId,
     _qlKind :: !QueryLogKind
   }
@@ -58,7 +59,7 @@ instance J.ToJSON QueryLog where
         "kind" J..= kind
       ]
     where
-      fromPair p = Map.fromList [first G.unName p]
+      fromPair p = Map.fromList [first toTxt p]
 
 instance J.ToJSON GeneratedQuery where
   toJSON (GeneratedQuery queryString preparedArgs) =

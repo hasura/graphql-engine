@@ -35,6 +35,7 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.Backend
 
 resolveSourceConfig :: (MonadIO m) => SourceName -> ConnSourceConfig -> Env.Environment -> m (Either QErr SourceConfig)
@@ -58,11 +59,11 @@ resolveSourceConfig _name csc@ConnSourceConfig {_cscPoolSettings = ConnPoolSetti
             (fromIntegral _cscMaxConnections)
         )
 
-resolveDatabaseMetadata :: (MonadIO m) => SourceConfig -> m (Either QErr (ResolvedSource 'MySQL))
-resolveDatabaseMetadata sc@SourceConfig {..} =
+resolveDatabaseMetadata :: (MonadIO m) => SourceConfig -> SourceTypeCustomization -> m (Either QErr (ResolvedSource 'MySQL))
+resolveDatabaseMetadata sc@SourceConfig {..} sourceCustomization =
   runExceptT $ do
     metadata <- liftIO $ withResource scConnectionPool (getMetadata scConfig)
-    pure $ ResolvedSource sc metadata mempty mempty
+    pure $ ResolvedSource sc sourceCustomization metadata mempty mempty
 
 parseFieldResult :: Field -> Maybe ByteString -> Value
 parseFieldResult f@Field {..} mBs =

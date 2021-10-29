@@ -17,6 +17,7 @@ import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Instances ()
 import Hasura.GraphQL.Execute.Query qualified as E
 import Hasura.GraphQL.Execute.RemoteJoin.Collect qualified as RJ
+import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Transport.Backend
@@ -49,7 +50,7 @@ explainQueryField ::
     MonadIO m
   ) =>
   UserInfo ->
-  G.Name ->
+  RootFieldAlias ->
   QueryRootField UnpreparedValue ->
   m EncJSON
 explainQueryField userInfo fieldName rootField = do

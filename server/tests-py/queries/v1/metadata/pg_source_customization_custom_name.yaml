@@ -1,0 +1,217 @@
+- description: PG add source
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_add_source
+    args:
+      name: pg1
+      configuration:
+        connection_info:
+          database_url:
+            from_env: HASURA_GRAPHQL_PG_SOURCE_URL_1
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+            retries:
+      customization:
+        root_fields:
+          namespace: my_source
+          prefix: fpref_
+          suffix: _fsuff
+        type_names:
+          prefix: tpref_
+          suffix: _tsuff
+
+- description: create table 1
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg1
+      sql: |
+        create table author(
+            id serial primary key,
+            name text unique
+        );
+        INSERT INTO author (name)
+          VALUES ('Author 1'), ('Author 2');
+
+- description: track table
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_track_table
+    args:
+      table: author
+      source: pg1
+      configuration:
+        custom_name: foo
+        custom_root_fields:
+          select_by_pk: bar
+
+
+- description: Simple GraphQL query to fetch items from the source table
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      my_source:
+        __typename: tpref_my_source_query_tsuff
+        fpref_foo_fsuff:
+        - id: 1
+          name: 'Author 1'
+          __typename: tpref_foo_tsuff
+        - id: 2
+          name: 'Author 2'
+          __typename: tpref_foo_tsuff
+  query:
+    query: |
+      query {
+        my_source {
+          __typename
+          fpref_foo_fsuff {
+            id
+            name
+            __typename
+          }
+        }
+      }
+
+- description: Lookup by pk
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      my_source:
+        fpref_bar_fsuff:
+          id: 1
+          name: 'Author 1'
+          __typename: tpref_foo_tsuff
+  query:
+    query: |
+      query {
+        my_source {
+          fpref_bar_fsuff(id: 1) {
+            id
+            name
+            __typename
+          }
+        }
+      }
+
+- description: Aggregate
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      my_source:
+        fpref_foo_aggregate_fsuff:
+          __typename: tpref_foo_aggregate_tsuff
+          aggregate:
+            __typename: tpref_foo_aggregate_fields_tsuff
+            count: 1
+  query:
+    query: |
+      query MyQuery {
+        my_source {
+          fpref_foo_aggregate_fsuff(where: {name: {_eq: "Author 2"}}) {
+            __typename
+            aggregate {
+              __typename
+              count
+            }
+          }
+        }
+      }
+
+- description: Insert
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      my_source:
+        fpref_insert_foo_fsuff:
+          __typename: tpref_foo_mutation_response_tsuff
+          returning:
+          - __typename: tpref_foo_tsuff
+            id: 3
+            name: Author 3
+  query:
+    query: |
+      mutation MyMutation {
+        my_source {
+          fpref_insert_foo_fsuff(objects: {name: "Author 3", id: 3}) {
+            __typename
+            returning {
+              __typename
+              id
+              name
+            }
+          }
+        }
+      }
+
+
+- description: Delete by pk
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      my_source:
+        fpref_delete_foo_by_pk_fsuff:
+          __typename: tpref_foo_tsuff
+          id: 3
+          name: Author 3
+  query:
+    query: |
+      mutation MyMutation {
+        my_source {
+          fpref_delete_foo_by_pk_fsuff(id: 3) {
+            __typename
+            id
+            name
+          }
+        }
+      }
+
+- description: untrack table
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_untrack_table
+    args:
+      table: author
+      source: pg1
+
+- description: drop table
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg1
+      sql: |
+        drop table author;
+
+- description: PG Drop Source 1
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_drop_source
+    args:
+      name: pg1
