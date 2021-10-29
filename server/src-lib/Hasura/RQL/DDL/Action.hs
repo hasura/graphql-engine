@@ -28,7 +28,6 @@ import Hasura.EncJSON
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.CustomTypes (lookupPGScalar)
-import Hasura.RQL.DDL.RequestTransform
 import Hasura.RQL.Types
 import Hasura.SQL.Tag
 import Hasura.Session
@@ -46,8 +45,7 @@ getActionInfo actionName = do
 data CreateAction = CreateAction
   { _caName :: !ActionName,
     _caDefinition :: !ActionDefinitionInput,
-    _caComment :: !(Maybe Text),
-    _caRequestTransform :: !(Maybe MetadataTransform)
+    _caComment :: !(Maybe Text)
   }
 
 $(J.deriveJSON hasuraJSON ''CreateAction)
@@ -70,7 +68,6 @@ runCreateAction createAction = do
           (_caComment createAction)
           (_caDefinition createAction)
           []
-          (_caRequestTransform createAction)
   buildSchemaCacheFor (MOAction actionName) $
     MetadataModifier $
       metaActions %~ OMap.insert actionName metadata
@@ -137,15 +134,15 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
         _adHeaders
         _adForwardClientHeaders
         _adTimeout
-        resolvedWebhook,
+        resolvedWebhook
+        _adRequestTransform,
       outputObject
     )
 
 data UpdateAction = UpdateAction
   { _uaName :: !ActionName,
     _uaDefinition :: !ActionDefinitionInput,
-    _uaComment :: !(Maybe Text),
-    _uaRequestTransform :: !(Maybe MetadataTransform)
+    _uaComment :: !(Maybe Text)
   }
 
 $(J.deriveFromJSON hasuraJSON ''UpdateAction)
@@ -155,7 +152,7 @@ runUpdateAction ::
   (QErrM m, CacheRWM m, MetadataM m) =>
   UpdateAction ->
   m EncJSON
-runUpdateAction (UpdateAction actionName actionDefinition actionComment transform) = do
+runUpdateAction (UpdateAction actionName actionDefinition actionComment) = do
   sc <- askSchemaCache
   let actionsMap = scActions sc
   void $
@@ -169,7 +166,6 @@ runUpdateAction (UpdateAction actionName actionDefinition actionComment transfor
       MetadataModifier $
         (metaActions . ix actionName . amDefinition .~ def)
           . (metaActions . ix actionName . amComment .~ comment)
-          . (metaActions . ix actionName . amRequestTransform .~ transform)
 
 newtype ClearActionData = ClearActionData {unClearActionData :: Bool}
   deriving (Show, Eq, J.FromJSON, J.ToJSON)

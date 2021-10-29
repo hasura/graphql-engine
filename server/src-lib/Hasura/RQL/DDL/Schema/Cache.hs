@@ -873,8 +873,8 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
             (MOCronTrigger (ctName catalogCronTrigger))
             definition
 
-    mkActionMetadataObject (ActionMetadata name comment defn _ metadataTransform) =
-      MetadataObject (MOAction name) (toJSON $ CreateAction name defn comment metadataTransform)
+    mkActionMetadataObject (ActionMetadata name comment defn _) =
+      MetadataObject (MOAction name) (toJSON $ CreateAction name defn comment)
 
     mkRemoteSchemaMetadataObject remoteSchema =
       MetadataObject (MORemoteSchema (_rsmName remoteSchema)) (toJSON remoteSchema)
@@ -1089,7 +1089,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     buildActions = buildInfoMap _amName mkActionMetadataObject buildAction
       where
         buildAction = proc ((resolvedCustomTypes, scalarsMap, orderedRoles), action) -> do
-          let ActionMetadata name comment def actionPermissions metadataTransform = action
+          let ActionMetadata name comment def actionPermissions = action
               addActionContext e = "in action " <> name <<> "; " <> e
           (|
             withRecordInconsistency
@@ -1105,7 +1105,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                             permissionsMap = mkBooleanPermissionMap ActionPermissionInfo metadataPermissionMap orderedRoles
                             forwardClientHeaders = _adForwardClientHeaders resolvedDef
                             outputType = unGraphQLType $ _adOutputType def
-                        returnA -< ActionInfo name (outputType, outObject) resolvedDef permissionsMap forwardClientHeaders comment metadataTransform
+                        returnA -< ActionInfo name (outputType, outObject) resolvedDef permissionsMap forwardClientHeaders comment
                     )
                 |) addActionContext
               )

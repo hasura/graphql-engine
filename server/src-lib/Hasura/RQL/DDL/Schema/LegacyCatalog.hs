@@ -107,7 +107,7 @@ saveMetadataToHdbTables
     withPathK "actions" $
       indexedForM_ actions $ \action -> do
         let createAction =
-              CreateAction (_amName action) (_amDefinition action) (_amComment action) (_amRequestTransform action)
+              CreateAction (_amName action) (_amDefinition action) (_amComment action)
         addActionToCatalog createAction
         withPathK "permissions" $
           indexedForM_ (_amPermissions action) $ \permission -> do
@@ -295,7 +295,7 @@ setCustomTypesInCatalog customTypes = liftTx do
         False
 
 addActionToCatalog :: (MonadTx m) => CreateAction -> m ()
-addActionToCatalog (CreateAction actionName actionDefinition comment _) = do
+addActionToCatalog (CreateAction actionName actionDefinition comment) = do
   liftTx $
     Q.unitQE
       defaultTxErrorHandler

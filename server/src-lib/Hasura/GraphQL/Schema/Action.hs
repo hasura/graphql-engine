@@ -73,10 +73,10 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
             _aaeStrfyNum = stringifyNum,
             _aaeTimeOut = _adTimeout definition,
             _aaeSource = getActionSourceInfo outputObject,
-            _aaeRequestTransform = _aiRequestTransform actionInfo
+            _aaeRequestTransform = _adRequestTransform definition
           }
   where
-    ActionInfo actionName (outputType, outputObject) definition permissions _ comment _ = actionInfo
+    ActionInfo actionName (outputType, outputObject) definition permissions _ comment = actionInfo
 
 -- | actionAsyncMutation is used to execute a asynchronous mutation action. An
 --   asynchronous action expects the field name and the input arguments to the
@@ -100,7 +100,7 @@ actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
     P.selection fieldName description inputArguments actionIdParser
       <&> AnnActionMutationAsync actionName forwardClientHeaders
   where
-    ActionInfo actionName _ definition permissions forwardClientHeaders comment _ = actionInfo
+    ActionInfo actionName _ definition permissions forwardClientHeaders comment = actionInfo
 
 -- | actionAsyncQuery is used to query/subscribe to the result of an
 --   asynchronous mutation action. The only input argument to an
@@ -175,7 +175,7 @@ actionAsyncQuery actionInfo = runMaybeT do
             _aaaqSource = getActionSourceInfo outputObject
           }
   where
-    ActionInfo actionName (outputType, outputObject) definition permissions forwardClientHeaders comment dataTransform = actionInfo
+    ActionInfo actionName (outputType, outputObject) definition permissions forwardClientHeaders comment = actionInfo
     idFieldName = $$(G.litName "id")
     idFieldDescription = "the unique id of an action"
 

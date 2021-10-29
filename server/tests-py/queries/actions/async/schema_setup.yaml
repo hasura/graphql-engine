@@ -63,12 +63,12 @@ args:
         type: String!
       output_type: UserId
       handler: http://127.0.0.1:5593/create-user
-    request_transform:
-      template_engine: Kriti
-      body: |
-        {
-          "input": {
-            "email": "foo@bar.com",
-            "name": "notClarke"
+      request_transform:
+        template_engine: Kriti
+        body: |
+          {
+            "input": {
+              "email": "foo@bar.com",
+              "name": "notClarke"
+            }
           }
-        }

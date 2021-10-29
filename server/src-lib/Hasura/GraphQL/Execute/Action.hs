@@ -412,7 +412,7 @@ asyncActionsProcessor env logger cacheRef lockedActionEvents httpManager sleepTi
               timeout = _adTimeout definition
               outputType = _adOutputType definition
               actionContext = ActionContext actionName
-              metadataTransform = _aiRequestTransform actionInfo
+              metadataTransform = _adRequestTransform definition
           eitherRes <-
             runExceptT $
               flip runReaderT logger $
