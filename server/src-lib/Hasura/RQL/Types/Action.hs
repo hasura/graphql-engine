@@ -14,6 +14,7 @@ module Hasura.RQL.Types.Action
     adHeaders,
     adHandler,
     adTimeout,
+    adRequestTransform,
     ActionType (..),
     _ActionMutation,
     ActionDefinitionInput,
@@ -30,7 +31,6 @@ module Hasura.RQL.Types.Action
     aiForwardedClientHeaders,
     aiComment,
     defaultActionTimeoutSecs,
-    aiRequestTransform,
     ActionPermissionInfo (..),
     ActionPermissionMap,
     ActionMetadata (..),
@@ -38,7 +38,6 @@ module Hasura.RQL.Types.Action
     amComment,
     amDefinition,
     amPermissions,
-    amRequestTransform,
     ActionPermissionMetadata (..),
     ActionSourceInfo (..),
     getActionSourceInfo,
@@ -178,7 +177,8 @@ data ActionDefinition a b = ActionDefinition
     -- | If the timeout is not provided by the user, then
     -- the default timeout of 30 seconds will be used
     _adTimeout :: !Timeout,
-    _adHandler :: !b
+    _adHandler :: !b,
+    _adRequestTransform :: !(Maybe MetadataTransform)
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 
@@ -201,10 +201,11 @@ instance (J.FromJSON a, J.FromJSON b) => J.FromJSON (ActionDefinition a b) where
       "mutation" -> ActionMutation <$> o J..:? "kind" J..!= ActionSynchronous
       "query" -> pure ActionQuery
       t -> fail $ "expected mutation or query, but found " <> t
+    _adRequestTransform <- o J..:? "request_transform"
     return ActionDefinition {..}
 
 instance (J.ToJSON a, J.ToJSON b) => J.ToJSON (ActionDefinition a b) where
-  toJSON (ActionDefinition args outputType actionType headers forwardClientHeaders timeout handler) =
+  toJSON (ActionDefinition args outputType actionType headers forwardClientHeaders timeout handler requestTransform) =
     let typeAndKind = case actionType of
           ActionQuery -> ["type" J..= ("query" :: String)]
           ActionMutation kind ->
@@ -219,6 +220,7 @@ instance (J.ToJSON a, J.ToJSON b) => J.ToJSON (ActionDefinition a b) where
             "handler" J..= handler,
             "timeout" J..= timeout
           ]
+            <> catMaybes [(\trans -> "request_transform" J..= trans) <$> requestTransform]
             <> typeAndKind
 
 type ResolvedActionDefinition =
@@ -245,8 +247,7 @@ data ActionInfo = ActionInfo
     _aiDefinition :: !ResolvedActionDefinition,
     _aiPermissions :: !ActionPermissionMap,
     _aiForwardedClientHeaders :: !Bool,
-    _aiComment :: !(Maybe Text),
-    _aiRequestTransform :: !(Maybe MetadataTransform)
+    _aiComment :: !(Maybe Text)
   }
   deriving (Generic)
 
@@ -279,8 +280,7 @@ data ActionMetadata = ActionMetadata
   { _amName :: !ActionName,
     _amComment :: !(Maybe Text),
     _amDefinition :: !ActionDefinitionInput,
-    _amPermissions :: ![ActionPermissionMetadata],
-    _amRequestTransform :: !(Maybe MetadataTransform)
+    _amPermissions :: ![ActionPermissionMetadata]
   }
   deriving (Show, Eq, Generic)
 
@@ -298,7 +298,6 @@ instance J.FromJSON ActionMetadata where
       <*> o J..:? "comment"
       <*> o J..: "definition"
       <*> o J..:? "permissions" J..!= []
-      <*> o J..:? "request_transform"
 
 ----------------- Resolve Types ----------------
 

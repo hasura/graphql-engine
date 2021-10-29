@@ -1543,7 +1543,7 @@ ActionDefinition
      - false
      - Integer
      - Number of seconds to wait for response before timing out. Default: 30
-   * - transform
+   * - request_transform
      - false
      - :ref:`RequestTransformation`
      - Request Transformation to be applied to this Action's request
@@ -1941,19 +1941,7 @@ RequestTransformation
      - :ref:`TemplateEngine`
      - Template language to be used for this transformation. Default: "Kriti"
 
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - required
-     - Schema
-     - Description
-   * - Key
-     - required
-     - Schema
-     - Description
-
-.. _TransformHeaders
+.. _TransformHeaders:
 
 TransformHeaders
 ^^^^^^^^^^^^^^^^
@@ -1975,7 +1963,7 @@ TransformHeaders
      - Headers to be removed from the request. Content-Type cannot be removed.
 
 
-.. _HeaderKey
+.. _HeaderKey:
 
 HeaderKey
 ^^^^^^^^^
@@ -1985,7 +1973,7 @@ HeaderKey
 
    String
 
-.. _HeaderValue
+.. _HeaderValue:
 
 HeaderKey
 ^^^^^^^^^
@@ -1995,7 +1983,7 @@ HeaderKey
 
    String
 
-.. _TemplateEngine
+.. _TemplateEngine:
 
 TemplateEngine
 ^^^^^^^^^^^^^^

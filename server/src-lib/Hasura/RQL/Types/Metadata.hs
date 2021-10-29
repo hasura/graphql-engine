@@ -1030,15 +1030,14 @@ metadataToOrdJSON
                 <> catMaybes [maybeDescriptionToMaybeOrdPair descM]
 
       actionMetadataToOrdJSON :: ActionMetadata -> AO.Value
-      actionMetadataToOrdJSON (ActionMetadata name comment definition permissions metaTransform) =
+      actionMetadataToOrdJSON (ActionMetadata name comment definition permissions) =
         AO.object $
           [ ("name", AO.toOrdered name),
             ("definition", actionDefinitionToOrdJSON definition)
           ]
             <> catMaybes
               [ maybeCommentToMaybeOrdPair comment,
-                listToMaybeOrdPair "permissions" permToOrdJSON permissions,
-                fmap (("request_transform",) . AO.toOrdered) metaTransform
+                listToMaybeOrdPair "permissions" permToOrdJSON permissions
               ]
         where
           argDefinitionToOrdJSON :: ArgumentDefinition GraphQLType -> AO.Value
@@ -1059,6 +1058,7 @@ metadataToOrdJSON
                 frwrdClientHdrs
                 timeout
                 handler
+                requestTransform
               ) =
               let typeAndKind = case actionType of
                     ActionQuery -> [("type", AO.toOrdered ("query" :: String))]
@@ -1073,7 +1073,8 @@ metadataToOrdJSON
                       <> [("forward_client_headers", AO.toOrdered frwrdClientHdrs) | frwrdClientHdrs]
                       <> catMaybes
                         [ listToMaybeOrdPair "headers" AO.toOrdered headers,
-                          listToMaybeOrdPair "arguments" argDefinitionToOrdJSON args
+                          listToMaybeOrdPair "arguments" argDefinitionToOrdJSON args,
+                          fmap (("request_transform",) . AO.toOrdered) requestTransform
                         ]
                       <> typeAndKind
                       <> bool [("timeout", AO.toOrdered timeout)] mempty (timeout == defaultActionTimeoutSecs)
