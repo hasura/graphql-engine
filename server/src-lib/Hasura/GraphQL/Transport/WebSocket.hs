@@ -216,6 +216,8 @@ sendMsg :: (MonadIO m) => WSConn -> ServerMsg -> m ()
 sendMsg wsConn msg =
   liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse (encodeServerMsg msg) Nothing
 
+-- sendCloseWithMsg closes the websocket server with an error code that can be supplied as (Maybe Word16),
+-- if there is `Nothing`, the server will be closed with an error code derived from ServerErrorCode
 sendCloseWithMsg ::
   (MonadIO m) =>
   L.Logger L.Hasura ->
@@ -223,7 +225,6 @@ sendCloseWithMsg ::
   ServerErrorCode ->
   Maybe ServerMsg ->
   Maybe Word16 ->
-  -- ^ code for closing the connection (default: 1000 "Normal Closure")
   m ()
 sendCloseWithMsg logger wsConn errCode mErrServerMsg mCode = do
   case mErrServerMsg of
@@ -235,7 +236,16 @@ sendCloseWithMsg logger wsConn errCode mErrServerMsg mCode = do
   where
     wsc = WS.getRawWebSocketConnection wsConn
     errMsg = encodeServerErrorMsg errCode
-    errCloseCode = flip $ fromMaybe mCode (1000 :: Word16)
+    errCloseCode = fromMaybe (getErrCode errCode) mCode
+    getErrCode :: ServerErrorCode -> Word16
+    getErrCode err = case err of
+      ProtocolError1002 -> 1002
+      GenericError4400 _ -> 4400
+      Unauthorized4401 -> 4401
+      Forbidden4403 -> 4403
+      ConnectionInitTimeout4408 -> 4408
+      NonUniqueSubscription4409 _ -> 4409
+      TooManyRequests4429 -> 4429
 
 sendMsgWithMetadata ::
   (MonadIO m) =>
