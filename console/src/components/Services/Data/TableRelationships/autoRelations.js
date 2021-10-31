@@ -12,7 +12,7 @@ const checkEqual = (arr1, arr2) => {
   );
 };
 
-const isExistingObjRel = (currentObjRels, lcol, rcol = []) => {
+const isExistingObjRel = (currentObjRels, lcol, fkTableName, rcol = []) => {
   let _isExistingObjRel = false;
 
   for (let k = 0; k < currentObjRels.length; k++) {
@@ -27,6 +27,11 @@ const isExistingObjRel = (currentObjRels, lcol, rcol = []) => {
         (rcol.length === 1 &&
           objRelDef.foreign_key_constraint_on.column === rcol[0])
       ) {
+        const relTableName = objRelDef.foreign_key_constraint_on?.table?.name;
+        if (relTableName && fkTableName && relTableName !== fkTableName) {
+          continue;
+        }
+
         _isExistingObjRel = true;
         break;
       }
@@ -113,7 +118,7 @@ const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
 
     const lcol = Object.keys(fk_obj.column_mapping);
 
-    if (!isExistingObjRel(currentObjRels, lcol)) {
+    if (!isExistingObjRel(currentObjRels, lcol, fk_obj.table_name)) {
       objRels.push({
         lTable: fk_obj.table_name,
         lSchema: fk_obj.table_schema,
@@ -156,7 +161,7 @@ const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
 
     if (is_primary_key || is_unique_key) {
       // if opp foreign key is also unique or primary key, make obj rel
-      if (!isExistingObjRel(currentObjRels, lcol, rcol)) {
+      if (!isExistingObjRel(currentObjRels, lcol, rTable, rcol)) {
         objRels.push({
           lTable: o_fk_obj.ref_table,
           lSchema: o_fk_obj.ref_table_table_schema,
