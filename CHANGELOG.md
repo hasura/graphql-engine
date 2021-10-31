@@ -12,6 +12,7 @@
 - console: design cleanup Modify and Add Table forms (close #7454)
 - console: enable custom graphql root fields for mssql under modify tab
 - console: allow dropping indices on all schemas
+- console: fix bug with displaying 1-to-1 relationship with the same column mapping (close #7552)
 - cli: split remote schema permissions metadata into seperate files (#7033)
 
 
