@@ -49,7 +49,7 @@ LEFT JOIN LATERAL
     WHERE "column".attrelid = "table".oid
       -- columns where attnum <= 0 are special, system-defined columns
       AND "column".attnum > 0
-      -- dropped columns still exist in the system catalog as “zombie” columns, so ignore those
+      -- dropped columns still exist in the system catalog as "zombie" columns, so ignore those
       AND NOT "column".attisdropped
   ) columns ON true
 
