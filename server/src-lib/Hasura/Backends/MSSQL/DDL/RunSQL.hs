@@ -57,7 +57,7 @@ runSQL ::
   MSSQLRunSQL ->
   m EncJSON
 runSQL mssqlRunSQL@MSSQLRunSQL {..} = do
-  SourceInfo _ tableCache _ sourceConfig _ <- askSourceInfo @'MSSQL _mrsSource
+  SourceInfo _ tableCache _ sourceConfig _ _ <- askSourceInfo @'MSSQL _mrsSource
   let pool = _mscConnectionPool sourceConfig
   results <- withMSSQLPool pool $ \conn ->
     -- If the SQL modifies the schema of the database then check for any metadata changes

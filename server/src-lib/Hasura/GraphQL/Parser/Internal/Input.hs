@@ -244,7 +244,7 @@ fieldWithDefault name description defaultValue parser =
 
 enum ::
   MonadParse m =>
-  Name ->
+  Typename ->
   Maybe Description ->
   NonEmpty (Definition EnumValueInfo, a) ->
   Parser 'Both m a
@@ -278,7 +278,7 @@ enum name description values =
 -- the spec.
 object ::
   MonadParse m =>
-  Name ->
+  Typename ->
   Maybe Description ->
   InputFieldsParser m a ->
   Parser 'Input m a

@@ -16,6 +16,7 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.LiveQuery.Plan
 import Hasura.GraphQL.Logging
+import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
@@ -24,7 +25,6 @@ import Hasura.RQL.Types
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing
-import Language.GraphQL.Draft.Syntax qualified as G
 
 instance BackendTransport 'MSSQL where
   runDBQuery = runQuery
@@ -48,7 +48,7 @@ runQuery ::
   ) =>
   RequestId ->
   GQLReqUnparsed ->
-  G.Name ->
+  RootFieldAlias ->
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig 'MSSQL ->
@@ -78,7 +78,7 @@ runMutation ::
   ) =>
   RequestId ->
   GQLReqUnparsed ->
-  G.Name ->
+  RootFieldAlias ->
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig 'MSSQL ->
@@ -125,7 +125,7 @@ run action = do
 
 mkQueryLog ::
   GQLReqUnparsed ->
-  G.Name ->
+  RootFieldAlias ->
   Maybe (PreparedQuery 'MSSQL) ->
   RequestId ->
   QueryLog

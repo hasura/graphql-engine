@@ -16,6 +16,7 @@ module Hasura.GraphQL.Execute
 where
 
 import Data.Aeson qualified as J
+import Data.Containers.ListUtils (nubOrd)
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
@@ -32,6 +33,7 @@ import Hasura.GraphQL.Execute.Mutation qualified as EM
 import Hasura.GraphQL.Execute.Query qualified as EQ
 import Hasura.GraphQL.Execute.RemoteJoin qualified as RJ
 import Hasura.GraphQL.Execute.Types qualified as ET
+import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.GraphQL.Parser.Column (UnpreparedValue (..))
 import Hasura.GraphQL.Parser.Directives
@@ -113,7 +115,7 @@ newtype LiveQueryPlan = LQP (AB.AnyBackend MultiplexedLiveQueryPlan)
 -- 2. Source database query fields from same source and also can be mixed with async
 --    action query fields whose relationships are defined to tables in the source
 data SubscriptionExecution
-  = SEAsyncActionsWithNoRelationships !(InsOrdHashMap G.Name (ActionId, ActionLogResponse -> Either QErr EncJSON))
+  = SEAsyncActionsWithNoRelationships !(RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON))
   | SEOnSourceDB
       !(HashSet ActionId)
       !(ActionLogResponseMap -> ExceptT QErr IO (SourceName, LiveQueryPlan))
@@ -122,7 +124,7 @@ buildSubscriptionPlan ::
   forall m.
   (MonadError QErr m, EB.MonadQueryTags m) =>
   UserInfo ->
-  InsOrdHashMap G.Name (IR.QueryRootField UnpreparedValue) ->
+  RootFieldMap (IR.QueryRootField UnpreparedValue) ->
   ParameterizedQueryHash ->
   m SubscriptionExecution
 buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
@@ -156,6 +158,23 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
           NotSupported
           "async action queries with no relationships aren't expected to mix with normal source database queries"
   where
+    go ::
+      ( RootFieldMap
+          ( Either
+              (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (UnpreparedValue ('Postgres 'Vanilla))))
+              (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)))
+          ),
+        RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON)
+      ) ->
+      (RootFieldAlias, IR.QueryRootField UnpreparedValue) ->
+      m
+        ( RootFieldMap
+            ( Either
+                (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (UnpreparedValue ('Postgres 'Vanilla))))
+                (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)))
+            ),
+          RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON)
+        )
     go accFields (gName, field) = case field of
       IR.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"
       IR.RFRaw _ -> throw400 NotSupported "Introspection not supported over subscriptions"
@@ -180,6 +199,12 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
                 pure $ first (OMap.insert gName (Left (actionId, (srcConfig, dbExecution)))) accFields
           IR.AQQuery _ -> throw400 NotSupported "query actions cannot be run as a subscription"
 
+    buildAction ::
+      (SourceName, AB.AnyBackend (IR.SourceConfigWith b)) ->
+      RootFieldMap
+        (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue))) ->
+      RootFieldAlias ->
+      ExceptT QErr IO (SourceName, LiveQueryPlan)
     buildAction (sourceName, exists) allFields rootFieldName = do
       lqp <- AB.dispatchAnyBackend @EB.BackendExecute
         exists
@@ -188,7 +213,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
           let subscriptionQueryTagsAttributes = encodeQueryTags $ QTLiveQuery $ LivequeryMetadata rootFieldName parameterizedQueryHash
           let queryTagsComment = Tagged.untag $ EB.createQueryTags @m subscriptionQueryTagsAttributes queryTagsConfig
           LQP . AB.mkAnyBackend . MultiplexedLiveQueryPlan
-            <$> runReaderT (EB.mkDBSubscriptionPlan userInfo sourceName sourceConfig qdbs) queryTagsComment
+            <$> runReaderT (EB.mkDBSubscriptionPlan userInfo sourceName sourceConfig (_rfaNamespace rootFieldName) qdbs) queryTagsComment
       pure (sourceName, lqp)
 
     checkField ::
@@ -317,7 +342,7 @@ getResolvedExecPlan
             [_] -> pure ()
             [] -> throw500 "empty selset for subscription"
             _ ->
-              unless allowMultipleRootFields $
+              unless (allowMultipleRootFields && isSingleNamespace unpreparedAST) $
                 throw400 ValidationFailed "subscriptions must select one top level field"
           subscriptionPlan <- buildSubscriptionPlan userInfo unpreparedAST parameterizedQueryHash
           pure (parameterizedQueryHash, SubscriptionExecutionPlan subscriptionPlan)
@@ -325,3 +350,13 @@ getResolvedExecPlan
     -- places and instead of calculating it separately, this is a common place to calculate
     -- the parameterized query hash and then thread it to the required places
     pure $ (parameterizedQueryHash, resolvedExecPlan)
+
+-- | Even when directive _multiple_top_level_fields is given, we can't allow
+-- fields within differently-aliased namespaces.
+-- This is because the namespace is added to the result by wrapping
+-- the bytestring response we get back from the DB.
+isSingleNamespace :: RootFieldMap a -> Bool
+isSingleNamespace fieldMap =
+  case nubOrd (_rfaNamespace <$> OMap.keys fieldMap) of
+    [_] -> True
+    _ -> False

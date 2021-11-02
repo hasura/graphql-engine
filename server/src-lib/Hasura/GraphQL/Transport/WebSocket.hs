@@ -25,6 +25,7 @@ import Control.Monad.Trans.Control qualified as MC
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.TH qualified as J
+import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as LBS
 import Data.CaseInsensitive qualified as CI
 import Data.Dependent.Map qualified as DM
@@ -45,23 +46,16 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.Action qualified as EA
 import Hasura.GraphQL.Execute.Backend qualified as EB
+import Hasura.GraphQL.Execute.LiveQuery.Plan qualified as LQ
 import Hasura.GraphQL.Execute.LiveQuery.Poll qualified as LQ
 import Hasura.GraphQL.Execute.LiveQuery.State qualified as LQ
 import Hasura.GraphQL.Execute.RemoteJoin qualified as RJ
 import Hasura.GraphQL.Logging
+import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHash)
 import Hasura.GraphQL.Parser.Directives (cached)
 import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP
-  ( AnnotatedResponsePart (..),
-    MonadExecuteQuery (..),
-    QueryCacheKey (..),
-    buildRaw,
-    coalescePostgresMutations,
-    extractFieldFromResponse,
-    filterVariablesFromQuery,
-    runSessVarPred,
-  )
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.GraphQL.Transport.WebSocket.Protocol
@@ -71,6 +65,7 @@ import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.SchemaCache (scApiLimits)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Auth
@@ -89,7 +84,7 @@ import Hasura.Server.Telemetry.Counters qualified as Telem
 import Hasura.Server.Types (RequestId, getRequestId)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Language.GraphQL.Draft.Syntax qualified as G
+import Language.GraphQL.Draft.Syntax (Name (..))
 import ListT qualified
 import Network.HTTP.Client qualified as H
 import Network.HTTP.Types qualified as H
@@ -526,9 +521,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
               --       the WS client will respond correctly to multiple messages.
               void $
                 Tracing.interpTraceT (withExceptT mempty) $
-                  cacheStore cacheKey cachedDirective $
-                    encJFromInsOrdHashMap $
-                      arpResponse <$> OMap.mapKeys G.unName results
+                  cacheStore cacheKey cachedDirective $ encodeAnnotatedResponseParts results
 
       liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
     E.MutationExecutionPlan mutationPlan -> do
@@ -547,7 +540,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                 telemLocality = Telem.Local
                 telemTimeIO = convertDuration telemTimeIO_DT
             telemTimeTot <- Seconds <$> timerTot
-            sendSuccResp (encJFromInsOrdHashMap $ OMap.mapKeys G.unName results) opName parameterizedQueryHash $
+            sendSuccResp (encodeEncJSONResults results) opName parameterizedQueryHash $
               LQ.LiveQueryMetadata telemTimeIO_DT
             -- Telemetry. NOTE: don't time network IO:
             Telem.recordTimingMetric Telem.RequestDimensions {..} Telem.RequestTimings {..}
@@ -596,7 +589,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         E.SEAsyncActionsWithNoRelationships actions -> do
           logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
           liftIO do
-            let allActionIds = map fst $ OMap.elems actions
+            let allActionIds = map fst $ toList actions
             case NE.nonEmpty allActionIds of
               Nothing -> sendCompleted (Just requestId) (Just parameterizedQueryHash)
               Just actionIds -> do
@@ -616,7 +609,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                                   DataMsg opId $
                                     pure $
                                       encJToLBS $
-                                        encJFromInsOrdHashMap $ OMap.mapKeys G.unName results
+                                        encodeEncJSONResults results
                           sendMsgWithMetadata wsConn dataMsg opName (Just parameterizedQueryHash) $ LQ.LiveQueryMetadata dTime
 
                     asyncActionQueryLive =
@@ -707,17 +700,17 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         let telemLocality = foldMap arpLocality results
             telemTimeIO = convertDuration $ sum $ fmap arpTimeIO results
         telemTimeTot <- Seconds <$> timerTot
-        sendSuccResp (encJFromInsOrdHashMap (fmap arpResponse (OMap.mapKeys G.unName results))) opName pqh $
+        sendSuccResp (encodeAnnotatedResponseParts results) opName pqh $
           LQ.LiveQueryMetadata $ sum $ fmap arpTimeIO results
         -- Telemetry. NOTE: don't time network IO:
         Telem.recordTimingMetric Telem.RequestDimensions {..} Telem.RequestTimings {..}
 
     runRemoteGQ ::
-      G.Name ->
+      RootFieldAlias ->
       UserInfo ->
       [H.Header] ->
       RemoteSchemaInfo ->
-      RemoteResultCustomizer ->
+      ResultCustomizer ->
       GQLReqOutgoing ->
       ExceptT (Either GQExecError QErr) (ExceptT () m) AnnotatedResponsePart
     runRemoteGQ fieldName userInfo reqHdrs rsi resultCustomizer gqlReq = do
@@ -825,7 +818,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
               opName
               requestId
               liveQueryPlan
-              (liveQOnChange opName parameterizedQueryHash)
+              (liveQOnChange opName parameterizedQueryHash $ LQ._lqpNamespace liveQueryPlan)
         liftIO $ $assertNFHere (lqId, opName) -- so we don't write thunks to mutable vars
         STM.atomically $
           -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
@@ -833,18 +826,24 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         pure lqId
 
     -- on change, send message on the websocket
-    liveQOnChange :: Maybe OperationName -> ParameterizedQueryHash -> LQ.OnChange
-    liveQOnChange opName queryHash = \case
+    liveQOnChange :: Maybe OperationName -> ParameterizedQueryHash -> Maybe Name -> LQ.OnChange
+    liveQOnChange opName queryHash namespace = \case
       Right (LQ.LiveQueryResponse bs dTime) ->
         sendMsgWithMetadata
           wsConn
-          (sendDataMsg $ DataMsg opId $ pure $ LBS.fromStrict bs)
+          (sendDataMsg $ DataMsg opId $ pure $ maybe LBS.fromStrict wrapNamespace namespace bs)
           opName
           (Just queryHash)
           (LQ.LiveQueryMetadata dTime)
       resp ->
         sendMsg wsConn $
           sendDataMsg $ DataMsg opId $ LBS.fromStrict . LQ._lqrPayload <$> resp
+
+    -- If the source has a namespace then we need to wrap the response
+    -- from the DB in that namespace.
+    wrapNamespace :: Name -> ByteString -> LBS.ByteString
+    wrapNamespace namespace bs =
+      encJToLBS $ encJFromAssocList [(unName namespace, encJFromBS bs)]
 
     catchAndIgnore :: ExceptT () m () -> m ()
     catchAndIgnore m = void $ runExceptT m

@@ -1,0 +1,159 @@
+- description: PG add source
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_add_source
+    args:
+      name: pg1
+      configuration:
+        connection_info:
+          database_url:
+            from_env: HASURA_GRAPHQL_PG_SOURCE_URL_1
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+            retries:
+      customization:
+        root_fields:
+          prefix: foo_
+        type_names:
+          prefix: bar_
+
+- description: create table 1
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg1
+      sql: |
+        create table author_1(
+            id serial primary key,
+            name text unique
+        );
+        INSERT INTO author_1 (name)
+          VALUES ('Author 1'), ('Author 2');
+        create function search_authors(search text)
+        returns setof author_1 as $$
+            select *
+            from author_1
+            where
+              name ilike ('%' || search || '%');
+        $$ language sql stable;
+
+- description: track table
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_track_table
+    args:
+      table: author_1
+      source: pg1
+
+- description: track function
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_track_function
+    args:
+      function:
+        schema: public
+        name: search_authors
+      source: pg1
+
+- description: Simple GraphQL query to fetch items from the source table
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      foo_author_1:
+      - __typename: bar_author_1
+        id: 1
+        name: 'Author 1'
+      - __typename: bar_author_1
+        id: 2
+        name: 'Author 2'
+  query:
+    query: |
+      query {
+        foo_author_1 {
+          __typename
+          id
+          name
+        }
+      }
+
+- description: Query calling function
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      foo_search_authors:
+      - __typename: bar_author_1
+        id: 1
+        name: 'Author 1'
+  query:
+    query: |
+      query {
+        foo_search_authors( args: {search: "Author 1"}) {
+          __typename
+          id
+          name
+        }
+      }
+
+- description: untrack function
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_untrack_function
+    args:
+      function:
+        schema: public
+        name: search_authors
+      source: pg1
+
+- description: untrack table
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_untrack_table
+    args:
+      table: author_1
+      source: pg1
+
+- description: drop table
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg1
+      sql: |
+        drop table author_1 cascade;
+
+- description: PG Drop Source 1
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_drop_source
+    args:
+      name: pg1

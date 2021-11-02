@@ -253,7 +253,7 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx {..} 
       liftIO . fmap concat $
         -- fetch pending events across all the sources asynchronously
         LA.forConcurrently (M.toList allSources) \(sourceName, sourceCache) ->
-          AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo _sourceName tableCache _functionCache sourceConfig _queryTagsConfig :: SourceInfo b) -> do
+          AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo _sourceName tableCache _functionCache sourceConfig _queryTagsConfig _sourceCustomization :: SourceInfo b) -> do
             let tables = M.elems tableCache
             let eventTriggerCount = sum (M.size . _tiEventTriggerInfoMap <$> tables)
 

@@ -41,7 +41,7 @@ boolExp ::
   m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
 boolExp sourceName tableInfo selectPermissions = memoizeOn 'boolExp (sourceName, tableName) $ do
   tableGQLName <- getTableGQLName tableInfo
-  let name = tableGQLName <> $$(G.litName "_bool_exp")
+  name <- P.mkTypename $ tableGQLName <> $$(G.litName "_bool_exp")
   let description =
         G.Description $
           "Boolean expression to filter rows from the table " <> tableName

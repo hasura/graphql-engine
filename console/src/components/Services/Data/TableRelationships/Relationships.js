@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import TableHeader from '../TableCommon/TableHeader';
 import {
@@ -134,11 +134,9 @@ const AddRelationship = ({
     t => t.table_name === tableName && t.table_schema === currentSchema
   );
 
-  const suggestedRelationshipsData = suggestedRelationshipsRaw(
-    tableName,
-    allSchemas,
-    currentSchema
-  );
+  const suggestedRelationshipsData = useMemo(() => {
+    return suggestedRelationshipsRaw(tableName, allSchemas, currentSchema);
+  }, [tableName, allSchemas, currentSchema]);
 
   if (
     suggestedRelationshipsData.objectRel.length < 1 &&

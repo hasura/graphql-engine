@@ -24,6 +24,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 
@@ -65,8 +66,9 @@ resolveSourceConfig _name BigQueryConnSourceConfig {..} env = runExceptT $ do
 resolveSource ::
   (MonadIO m) =>
   BigQuerySourceConfig ->
+  SourceTypeCustomization ->
   m (Either QErr (ResolvedSource 'BigQuery))
-resolveSource sourceConfig =
+resolveSource sourceConfig customization =
   runExceptT $ do
     result <- getTables sourceConfig
     case result of
@@ -78,6 +80,7 @@ resolveSource sourceConfig =
         pure
           ( ResolvedSource
               { _rsConfig = sourceConfig,
+                _rsCustomization = customization,
                 _rsTables =
                   HM.fromList
                     [ ( restTableReferenceToTableName tableReference,

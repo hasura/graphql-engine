@@ -108,10 +108,10 @@ isVariableUsageAllowed locationHasDefaultValue locationType variable
 
 -- Error handling functions
 
-typeMismatch :: MonadParse m => Name -> Text -> InputValue Variable -> m a
+typeMismatch :: (HasName n, MonadParse m) => n -> Text -> InputValue Variable -> m a
 typeMismatch name expected given =
   parseError $
-    "expected " <> expected <> " for type " <> name <<> ", but found " <> describeValue given
+    "expected " <> expected <> " for type " <> getName name <<> ", but found " <> describeValue given
 
 describeValue :: InputValue Variable -> Text
 describeValue = describeValueWith (describeValueWith absurd . vValue)

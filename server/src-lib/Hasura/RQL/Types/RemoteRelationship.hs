@@ -51,6 +51,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -84,6 +85,7 @@ data RemoteSourceRelationshipInfo src tgt = RemoteSourceRelationshipInfo
     _rsriType :: !RelType,
     _rsriSource :: !SourceName,
     _rsriSourceConfig :: !(SourceConfig tgt),
+    _rsriSourceCustomization :: !SourceTypeCustomization,
     _rsriTable :: !(TableName tgt), -- this is parsed from `Value`
     _rsriMapping :: !(HM.HashMap FieldName (ColumnInfo src, ScalarType tgt, Column tgt))
   }

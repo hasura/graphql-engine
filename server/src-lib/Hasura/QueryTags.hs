@@ -2,6 +2,8 @@
 -- generated/executed query
 module Hasura.QueryTags where
 
+import Data.Text.Extended
+import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.Prelude
 import Hasura.Server.Types (RequestId (..))
@@ -26,7 +28,7 @@ emptyQueryTagsComment = QueryTagsComment mempty
 data QueryMetadata = QueryMetadata
   { qmRequestId :: !RequestId,
     qmOperationName :: !(Maybe GQL.Name),
-    qmFieldName :: !GQL.Name,
+    qmFieldName :: !RootFieldAlias,
     qmParameterizedQueryHash :: !ParameterizedQueryHash
   }
   deriving (Show)
@@ -34,13 +36,13 @@ data QueryMetadata = QueryMetadata
 data MutationMetadata = MutationMetadata
   { mmRequestId :: !RequestId,
     mmOperationName :: !(Maybe GQL.Name),
-    mmFieldName :: !GQL.Name,
+    mmFieldName :: !RootFieldAlias,
     mmParameterizedQueryHash :: !ParameterizedQueryHash
   }
   deriving (Show)
 
 data LivequeryMetadata = LivequeryMetadata
-  { lqmFieldName :: !GQL.Name,
+  { lqmFieldName :: !RootFieldAlias,
     lqmParameterizedQueryHash :: !ParameterizedQueryHash
   }
   deriving (Show)
@@ -51,22 +53,24 @@ encodeQueryTags = \case
   QTMutation mutationMetadata -> QueryTagsAttributes $ encodeMutationMetadata mutationMetadata
   QTLiveQuery livequeryMetadata -> QueryTagsAttributes $ encodeLivequeryMetadata livequeryMetadata
   where
+    -- TODO: how do we want to encode RootFieldAlias?
+    -- Currently uses ToTxt instance, which produces "namespace.fieldname"
     encodeQueryMetadata QueryMetadata {..} =
       [ ("request_id", unRequestId qmRequestId),
-        ("field_name", GQL.unName qmFieldName),
+        ("field_name", toTxt qmFieldName),
         ("parameterized_query_hash", bsToTxt $ unParamQueryHash qmParameterizedQueryHash)
       ]
         <> operationNameAttributes qmOperationName
 
     encodeMutationMetadata MutationMetadata {..} =
       [ ("request_id", unRequestId mmRequestId),
-        ("field_name", GQL.unName mmFieldName),
+        ("field_name", toTxt mmFieldName),
         ("parameterized_query_hash", bsToTxt $ unParamQueryHash mmParameterizedQueryHash)
       ]
         <> operationNameAttributes mmOperationName
 
     encodeLivequeryMetadata LivequeryMetadata {..} =
-      [ ("field_name", GQL.unName lqmFieldName),
+      [ ("field_name", toTxt lqmFieldName),
         ("parameterized_query_hash", bsToTxt $ unParamQueryHash lqmParameterizedQueryHash)
       ]
 

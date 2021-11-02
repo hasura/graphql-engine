@@ -65,7 +65,7 @@ parseGraphQLName txt =
 -- See 'buildRemoteSchemaCall' for details.
 data RemoteSchemaCall = RemoteSchemaCall
   { _rscInfo :: !RemoteSchemaInfo,
-    _rscCustomizer :: !RemoteResultCustomizer,
+    _rscCustomizer :: !ResultCustomizer,
     _rscGQLRequest :: !GQLReqOutgoing,
     _rscResponsePaths :: !(IntMap.IntMap ResponsePath)
   }
@@ -145,7 +145,7 @@ getRemoteSchemaResponse env manager requestHeaders userInfo (RemoteSchemaCall rs
         case AO.lookup "data" respObj of
           Nothing -> throw500 "\"data\" field not found in remote response"
           Just v ->
-            let v' = applyRemoteResultCustomizer customizer v
+            let v' = applyResultCustomizer customizer v
              in AO.asObject v' `onLeft` throw500
       | otherwise ->
         throwError

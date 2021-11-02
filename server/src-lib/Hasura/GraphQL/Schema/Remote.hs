@@ -36,6 +36,7 @@ import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (stringScalar)
 import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.SchemaCache (IntrospectionResult (IntrospectionResult, irMutationRoot, irQueryRoot, irSubscriptionRoot))
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -341,7 +342,7 @@ remoteFieldScalarParser (G.ScalarTypeDefinition description name _directives) =
             pure $ QueryVariable var
     }
   where
-    schemaType = NonNullable $ TNamed $ mkDefinition name description TIScalar
+    schemaType = NonNullable $ TNamed $ mkDefinition (Typename name) description TIScalar
     gType = toGraphQLType schemaType
 
 remoteFieldEnumParser ::
@@ -354,7 +355,7 @@ remoteFieldEnumParser (G.EnumTypeDefinition desc name _directives valueDefns) =
           ( mkDefinition (G.unEnumValue enumName) enumDesc P.EnumValueInfo,
             G.VEnum enumName
           )
-   in fmap (Altered False,) $ P.enum name desc $ NE.fromList enumValDefns
+   in fmap (Altered False,) $ P.enum (Typename name) desc $ NE.fromList enumValDefns
 
 -- | remoteInputObjectParser returns an input parser for a given 'G.InputObjectTypeDefinition'
 --
@@ -401,7 +402,7 @@ remoteInputObjectParser schemaDoc defn@(G.InputObjectTypeDefinition desc name _ 
 
       Right <$> P.memoizeOn 'remoteInputObjectParser defn do
         argsParser <- argumentsParser valueDefns schemaDoc
-        pure $ fmap G.VObject <$> P.object name desc argsParser
+        pure $ fmap G.VObject <$> P.object (Typename name) desc argsParser
 
 -- | Variable expansion optimization.
 -- Since each parser returns a value that indicates whether it was altered, we can detect when no
@@ -527,13 +528,11 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
     -- TODO: also check sub-interfaces, when these are supported in a future graphql spec
     traverse_ validateImplementsFields interfaceDefs
     pure $
-      P.selectionSetObject name description subFieldParsers implements
+      P.selectionSetObject (Typename name) description subFieldParsers implements
         <&> toList
           . OMap.mapWithKey
-            ( \alias -> \case
-                P.SelectField fld -> fld
-                P.SelectTypename _ ->
-                  G.Field (Just alias) $$(G.litName "__typename") mempty mempty mempty
+            ( \alias -> handleTypename $ \_ ->
+                G.Field (Just alias) $$(G.litName "__typename") mempty mempty mempty
             )
   where
     getInterface :: G.Name -> m (G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition)
@@ -713,7 +712,7 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
     -- types in the schema document that claim to implement this interface.  We
     -- should have a check that expresses that that collection of objects is equal
     -- to 'possibleTypes'.
-    pure $ P.selectionSetInterface name description subFieldParsers objs <&> constructInterfaceSelectionSet
+    pure $ P.selectionSetInterface (Typename name) description subFieldParsers objs <&> constructInterfaceSelectionSet
   where
     getObject :: G.Name -> m (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)
     getObject objectName =
@@ -779,7 +778,7 @@ remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _direct
     when (null objs) $
       throw400 RemoteSchemaError $ "List of member types cannot be empty for union type " <> squote name
     pure $
-      P.selectionSetUnion name description objs
+      P.selectionSetUnion (Typename name) description objs
         <&> ( \objNameAndFields ->
                 catMaybes $
                   objNameAndFields <&> \(objName, fields) ->
@@ -945,7 +944,7 @@ addCustomNamespace remoteSchemaInfo rootTypeName namespace fieldParsers =
   where
     rawRemoteFieldsParser :: Parser 'Output m [RawRemoteField]
     rawRemoteFieldsParser =
-      P.selectionSet rootTypeName Nothing fieldParsers
+      P.selectionSet (Typename rootTypeName) Nothing fieldParsers
         <&> toList
           . OMap.mapWithKey
             ( \alias -> \case
@@ -984,7 +983,7 @@ customizeFieldParsers remoteSchemaInfo@RemoteSchemaInfo {..} rootTypeName fieldP
 customizeFieldParser ::
   forall n a b.
   (MonadParse n) =>
-  (RemoteResultCustomizer -> a -> b) ->
+  (ResultCustomizer -> a -> b) ->
   RemoteSchemaCustomizer ->
   G.Name ->
   P.FieldParser n a ->
@@ -997,7 +996,7 @@ customizeFieldParser setResultCustomizer remoteSchemaCustomizer rootTypeName =
 customizeFieldParser' ::
   forall m n a b.
   (MonadState MemoState m, MonadFix m, MonadParse n) =>
-  (RemoteResultCustomizer -> a -> b) ->
+  (ResultCustomizer -> a -> b) ->
   RemoteSchemaCustomizer ->
   G.Name ->
   P.FieldParser n a ->
@@ -1013,7 +1012,7 @@ customizeFieldParser' setResultCustomizer remoteSchemaCustomizer rootTypeName P.
         fDefinition = customizedDefinition
       }
   where
-    fParserWithResultCustomizer :: (RemoteResultCustomizer, G.Field G.NoFragments Variable) -> n b
+    fParserWithResultCustomizer :: (ResultCustomizer, G.Field G.NoFragments Variable) -> n b
     fParserWithResultCustomizer (resultCustomizer, fld) =
       setResultCustomizer resultCustomizer <$> fParser fld
 
@@ -1025,14 +1024,14 @@ customizeFieldParser' setResultCustomizer remoteSchemaCustomizer rootTypeName P.
       G.TypeNamed nullability name -> G.TypeNamed nullability $ remoteSchemaDecustomizeTypeName remoteSchemaCustomizer name
       G.TypeList nullability gtype -> G.TypeList nullability $ customizeGraphQLType gtype
 
-    customizeField :: G.Name -> P.FieldInfo -> G.Field G.NoFragments var -> n (RemoteResultCustomizer, G.Field G.NoFragments var)
+    customizeField :: G.Name -> P.FieldInfo -> G.Field G.NoFragments var -> n (ResultCustomizer, G.Field G.NoFragments var)
     customizeField parentTypeName (P.FieldInfo _ fieldType) (G.Field alias fieldName args directives selSet) = do
       let fieldName' =
             if "__" `T.isPrefixOf` G.unName fieldName
               then fieldName
               else remoteSchemaDecustomizeFieldName remoteSchemaCustomizer parentTypeName fieldName
           alias' = alias <|> if fieldName' == fieldName then Nothing else Just fieldName
-      selSet' :: [(RemoteResultCustomizer, G.Selection G.NoFragments var)] <- withPath (++ [Key "selectionSet"]) $
+      selSet' :: [(ResultCustomizer, G.Selection G.NoFragments var)] <- withPath (++ [Key "selectionSet"]) $
         case fieldType ^. definitionLens of
           typeDef@(Definition _ _ _ TIObject {}) -> traverse (customizeSelection typeDef) selSet
           typeDef@(Definition _ _ _ TIInterface {}) -> traverse (customizeSelection typeDef) selSet
@@ -1045,7 +1044,7 @@ customizeFieldParser' setResultCustomizer remoteSchemaCustomizer rootTypeName P.
                 else foldMap fst selSet'
       pure $ (resultCustomizer, G.Field alias' fieldName' args directives $ snd <$> selSet')
 
-    customizeSelection :: Definition (TypeInfo 'Output) -> G.Selection G.NoFragments var -> n (RemoteResultCustomizer, G.Selection G.NoFragments var)
+    customizeSelection :: Definition (TypeInfo 'Output) -> G.Selection G.NoFragments var -> n (ResultCustomizer, G.Selection G.NoFragments var)
     customizeSelection parentTypeDef = \case
       G.SelectionField fld@G.Field {..} ->
         withPath (++ [Key $ G.unName _fName]) $ do
@@ -1071,7 +1070,7 @@ customizeFieldParser' setResultCustomizer remoteSchemaCustomizer rootTypeName P.
     findField :: G.Name -> G.Name -> TypeInfo 'Output -> n P.FieldInfo
     findField fieldName parentTypeName parentTypeInfo =
       if fieldName == $$(G.litName "__typename") -- TODO can we avoid checking for __typename in two different places?
-        then pure $ P.FieldInfo [] $ NonNullable $ TNamed $ mkDefinition stringScalar Nothing TIScalar
+        then pure $ P.FieldInfo [] $ NonNullable $ TNamed $ mkDefinition (Typename stringScalar) Nothing TIScalar
         else do
           fields <- case parentTypeInfo of
             TIObject objectInfo -> pure $ oiFields objectInfo

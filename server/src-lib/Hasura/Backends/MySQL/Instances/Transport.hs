@@ -9,6 +9,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Logging
+import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
@@ -18,7 +19,6 @@ import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing
 import Hasura.Tracing qualified as Tracing
-import Language.GraphQL.Draft.Syntax qualified as G
 
 instance BackendTransport 'MySQL where
   runDBQuery = runQuery
@@ -34,7 +34,7 @@ runQuery ::
   ) =>
   RequestId ->
   GQLReqUnparsed ->
-  G.Name ->
+  RootFieldAlias ->
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig 'MySQL ->
@@ -63,7 +63,7 @@ runQueryExplain (DBStepInfo _ _ _ action) = run $ runTraceTWithReporter noReport
 
 mkQueryLog ::
   GQLReqUnparsed ->
-  G.Name ->
+  RootFieldAlias ->
   Maybe (PreparedQuery 'MySQL) ->
   RequestId ->
   QueryLog

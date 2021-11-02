@@ -36,6 +36,7 @@ import Hasura.RQL.Types.RemoteRelationship
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.ScheduledTrigger
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
@@ -312,7 +313,8 @@ data SourceMetadata b = SourceMetadata
     _smTables :: !(Tables b),
     _smFunctions :: !(Functions b),
     _smConfiguration :: !(SourceConnConfiguration b),
-    _smQueryTags :: !(Maybe QueryTagsConfig)
+    _smQueryTags :: !(Maybe QueryTagsConfig),
+    _smCustomization :: !SourceCustomization
   }
   deriving (Generic)
 
@@ -331,6 +333,7 @@ instance (Backend b) => FromJSON (SourceMetadata b) where
     _smFunctions <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
     _smConfiguration <- o .: "configuration"
     _smQueryTags <- o .:? "query_tags"
+    _smCustomization <- o .:? "customization" .!= emptySourceCustomization
     pure SourceMetadata {..}
 
 mkSourceMetadata ::
@@ -338,9 +341,10 @@ mkSourceMetadata ::
   Backend b =>
   SourceName ->
   SourceConnConfiguration b ->
+  SourceCustomization ->
   BackendSourceMetadata
-mkSourceMetadata name config =
-  AB.mkAnyBackend $ SourceMetadata @b name mempty mempty config Nothing
+mkSourceMetadata name config customization =
+  AB.mkAnyBackend $ SourceMetadata @b name mempty mempty config Nothing customization
 
 type BackendSourceMetadata = AB.AnyBackend SourceMetadata
 
@@ -699,7 +703,11 @@ metadataToOrdJSON
               configurationPair = [("configuration", AO.toOrdered _smConfiguration)]
 
               queryTagsConfigPair = maybe [] (\queryTagsConfig -> [("query_tags", AO.toOrdered queryTagsConfig)]) _smQueryTags
-           in AO.object $ [sourceNamePair, sourceKindPair, tablesPair] <> maybeToList functionsPair <> configurationPair <> queryTagsConfigPair
+
+              customizationPair =
+                guard (_smCustomization /= emptySourceCustomization)
+                  *> [("customization", AO.toOrdered _smCustomization)]
+           in AO.object $ [sourceNamePair, sourceKindPair, tablesPair] <> maybeToList functionsPair <> configurationPair <> queryTagsConfigPair <> customizationPair
 
       tableMetaToOrdJSON :: (Backend b) => TableMetadata b -> AO.Value
       tableMetaToOrdJSON

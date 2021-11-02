@@ -23,6 +23,7 @@ import Hasura.RQL.Types.Common
     UrlConf (UrlValue),
   )
 import Hasura.RQL.Types.Metadata (SourceMetadata (..))
+import Hasura.RQL.Types.SourceCustomization (emptySourceCustomization)
 import Hasura.SQL.Backend (BackendType (..), PostgresKind (..))
 
 --------------------------------------------------------------------------------
@@ -52,7 +53,8 @@ initialSourceMetadata dbUrl =
       _smTables = mempty,
       _smFunctions = mempty,
       _smConfiguration = defaultPostgresConfig dbUrl,
-      _smQueryTags = Nothing
+      _smQueryTags = Nothing,
+      _smCustomization = emptySourceCustomization
     }
 
 -- Arbitrary

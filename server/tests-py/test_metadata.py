@@ -157,6 +157,24 @@ class TestMetadata:
     def test_pg_multisource_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_multisource_query.yaml')
 
+    def test_pg_remote_source_query(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/pg_remote_source_query.yaml')
+
+    def test_pg_remote_source_customized_query(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/pg_remote_source_customized_query.yaml')
+
+    def test_pg_source_namespace_query(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/pg_source_namespace_query.yaml')
+
+    def test_pg_source_prefix_query(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/pg_source_prefix_query.yaml')
+
+    def test_pg_source_customization(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/pg_source_customization.yaml')
+
+    def test_pg_source_cust_custom_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/pg_source_customization_custom_name.yaml')
+
     def test_pg_function_tracking_with_comment(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_track_function_with_comment_setup.yaml')
 

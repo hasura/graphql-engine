@@ -12,6 +12,7 @@
 - console: design cleanup Modify and Add Table forms (close #7454)
 - console: enable custom graphql root fields for mssql under modify tab
 - console: allow dropping indices on all schemas
+- console: fix bug with displaying 1-to-1 relationship with the same column mapping (close #7552)
 - cli: split remote schema permissions metadata into seperate files (#7033)
 
 
@@ -21,6 +22,12 @@ Postgres sources, and different names may be given to the `_aggregate` and
 suffix-less versions.  Aliases may be set by both
 `/v1/metadata/pg_track_function` and the new API endpoint
 `/v1/metadata/pg_set_function_customization.`
+
+### Root field name and type name customization per source (#6974)
+When adding a source it is now possible to specify prefixes and suffixes
+that will be added to all root field names and type names generated for that
+source. It is also possible to specify a root "namespace" field to use for the
+source.
 
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)

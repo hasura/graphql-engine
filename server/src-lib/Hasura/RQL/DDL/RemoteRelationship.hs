@@ -147,7 +147,8 @@ buildRemoteFieldInfo sourceSource sourceTable fields RemoteRelationship {..} all
             ColumnEnumReference _ -> throw400 NotSupported "relationships to enum fields are not supported yet"
           pure (srcFieldName, (srcColumn, tgtScalar, pgiColumn tgtColumn))
         let sourceConfig = _rsConfig targetSourceInfo
-            rsri = RemoteSourceRelationshipInfo _rtrName _rsrRelationshipType _rsrSource sourceConfig targetTable $ Map.fromList mapping
+            sourceCustomization = _rsCustomization targetSourceInfo
+            rsri = RemoteSourceRelationshipInfo _rtrName _rsrRelationshipType _rsrSource sourceConfig sourceCustomization targetTable $ Map.fromList mapping
             tableDependencies =
               [ SchemaDependency (SOSourceObj sourceSource $ AB.mkAnyBackend $ SOITable @b sourceTable) DRTable,
                 SchemaDependency (SOSourceObj _rsrSource $ AB.mkAnyBackend $ SOITable @b' targetTable) DRTable
