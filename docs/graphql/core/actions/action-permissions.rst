@@ -57,7 +57,7 @@ Set action permissions
 
   .. tab:: API
 
-    Action permissions can be set by using the :ref:`create_action_permission metadata API <create_action_permission>`:
+    Action permissions can be set by using the :ref:`create_action_permission metadata API <metadata_create_action_permission>`:
 
     .. code-block:: http
 

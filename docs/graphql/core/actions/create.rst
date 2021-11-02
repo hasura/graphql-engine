@@ -72,7 +72,7 @@ Setup
 
   .. tab:: API
 
-    There is no setup required for defining actions via the :ref:`actions metadata API <api_actions>`.
+    There is no setup required for defining actions via the :ref:`actions metadata API <metadata_api_actions>`.
 
 Mutation type action
 --------------------
@@ -145,7 +145,7 @@ in the GraphQL schema.
 
   .. tab:: API
 
-    It is essential that the custom types used in the action are defined *beforehand* via the :ref:`set_custom_types metadata API <set_custom_types>`:
+    It is essential that the custom types used in the action are defined *beforehand* via the :ref:`set_custom_types metadata API <metadata_set_custom_types>`:
 
     .. code-block:: http
 
@@ -173,7 +173,7 @@ in the GraphQL schema.
         }
       }
 
-    Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_action>`:
+    Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <metadata_create_action>`:
 
     .. code-block:: http
 
@@ -258,9 +258,9 @@ Now, set the handler for the action:
 
   .. tab:: API
 
-    The action handler must be set when creating an action via the :ref:`create_action metadata API <create_action>`.
+    The action handler must be set when creating an action via the :ref:`create_action metadata API <metadata_create_action>`.
 
-    It can be updated later by using the :ref:`update_action metadata API <update_action>`.
+    It can be updated later by using the :ref:`update_action metadata API <metadata_update_action>`.
 
 .. admonition:: URL templating
 
@@ -293,7 +293,7 @@ Finally, to save the action:
 
   .. tab:: API
 
-    An action will be created when sending a request to the :ref:`create_action metadata API <create_action>`.
+    An action will be created when sending a request to the :ref:`create_action metadata API <metadata_create_action>`.
 
 Step 4: Try it out
 ~~~~~~~~~~~~~~~~~~
@@ -391,7 +391,7 @@ the GraphQL schema.
 
   .. tab:: API
 
-    It is essential that the custom types used in the action are defined *beforehand* via the :ref:`set_custom_types metadata API <set_custom_types>`:
+    It is essential that the custom types used in the action are defined *beforehand* via the :ref:`set_custom_types metadata API <metadata_set_custom_types>`:
 
     .. code-block:: http
 
@@ -419,7 +419,7 @@ the GraphQL schema.
         }
       }
 
-    Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_action>`:
+    Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <metadata_create_action>`:
 
     .. code-block:: http
 
@@ -506,9 +506,9 @@ Now, set the handler for the action:
 
   .. tab:: API
 
-    The action handler must be set when creating an action via the Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <create_action>`.
+    The action handler must be set when creating an action via the Once the custom types are defined, we can create an action via the :ref:`create_action metadata API <metadata_create_action>`.
 
-    It can be updated later by using the :ref:`update_action metadata API <update_action>`.
+    It can be updated later by using the :ref:`update_action metadata API <metadata_update_action>`.
 
 .. admonition:: URL templating
 
@@ -536,7 +536,7 @@ Finally, to save the action:
 
   .. tab:: API
 
-    An action will be created when sending a request to the :ref:`create_action metadata API <create_action>`.
+    An action will be created when sending a request to the :ref:`create_action metadata API <metadata_create_action>`.
 
 
 Step 4: Try it out

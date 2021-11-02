@@ -83,7 +83,7 @@ Get Project tenant id
         id
       }
     }
-}
+  }
 
 Get Tenant details
 ^^^^^^^^^^^^^^^^^^

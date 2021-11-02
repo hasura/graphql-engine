@@ -129,7 +129,7 @@ You can create relationships for custom output types by:
 
   .. tab:: API
 
-    Action relationships can be added while defining custom types via the :ref:`set_custom_types metadata API <set_custom_types>`:
+    Action relationships can be added while defining custom types via the :ref:`set_custom_types metadata API <metadata_set_custom_types>`:
 
     .. code-block:: http
       :emphasize-lines: 20-29
