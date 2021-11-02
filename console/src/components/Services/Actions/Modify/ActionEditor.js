@@ -114,7 +114,7 @@ const ActionEditor = ({
   }
 
   const updateActionComment = e =>
-    dispatch(setActionComment(e.target.value?.trim()));
+    dispatch(setActionComment(e.target.value));
 
   return (
     <div>
